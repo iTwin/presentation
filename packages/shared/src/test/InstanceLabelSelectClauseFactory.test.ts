@@ -5,14 +5,15 @@
 
 import { expect } from "chai";
 import sinon from "sinon";
-import { ECSql, trimWhitespace } from "@itwin/presentation-shared";
+import { createConcatenatedValueJsonSelector, createRawPropertyValueSelector } from "../shared/ecsql-snippets/ECSqlValueSelectorSnippets";
 import {
   BisInstanceLabelSelectClauseFactory,
   ClassBasedInstanceLabelSelectClauseFactory,
   DefaultInstanceLabelSelectClauseFactory,
   IInstanceLabelSelectClauseFactory,
-} from "../../hierarchies/queries/InstanceLabelSelectClauseFactory";
-import { createMetadataProviderStub } from "../Utils";
+} from "../shared/InstanceLabelSelectClauseFactory";
+import { trimWhitespace } from "../shared/Utils";
+import { createMetadataProviderStub } from "./MetadataProviderStub";
 
 describe("DefaultInstanceLabelSelectClauseFactory", () => {
   let factory: DefaultInstanceLabelSelectClauseFactory;
@@ -26,17 +27,17 @@ describe("DefaultInstanceLabelSelectClauseFactory", () => {
     });
     expect(trimWhitespace(result)).to.eq(
       trimWhitespace(`(
-        SELECT ${ECSql.createConcatenatedValueJsonSelector([
+        SELECT ${createConcatenatedValueJsonSelector([
           {
             selector: `COALESCE(
-              ${ECSql.createRawPropertyValueSelector("c", "DisplayLabel")},
-              ${ECSql.createRawPropertyValueSelector("c", "Name")}
+              ${createRawPropertyValueSelector("c", "DisplayLabel")},
+              ${createRawPropertyValueSelector("c", "Name")}
             )`,
           },
           { value: ` [`, type: "String" },
-          { selector: `CAST(base36(${ECSql.createRawPropertyValueSelector("test", "ECInstanceId")} >> 40) AS TEXT)` },
+          { selector: `CAST(base36(${createRawPropertyValueSelector("test", "ECInstanceId")} >> 40) AS TEXT)` },
           { value: `-`, type: "String" },
-          { selector: `CAST(base36(${ECSql.createRawPropertyValueSelector("test", "ECInstanceId")} & ((1 << 40) - 1)) AS TEXT)` },
+          { selector: `CAST(base36(${createRawPropertyValueSelector("test", "ECInstanceId")} & ((1 << 40) - 1)) AS TEXT)` },
           { value: `]`, type: "String" },
         ])}
         FROM [meta].[ECClassDef] AS [c]
@@ -237,17 +238,17 @@ describe("BisInstanceLabelSelectClauseFactory", () => {
           IIF(
             [test].[ECClassId] IS (BisCore.GeometricElement),
             COALESCE(
-              ${ECSql.createRawPropertyValueSelector("test", "CodeValue")},
-              ${ECSql.createConcatenatedValueJsonSelector(
+              ${createRawPropertyValueSelector("test", "CodeValue")},
+              ${createConcatenatedValueJsonSelector(
                 [
-                  { selector: ECSql.createRawPropertyValueSelector("test", "UserLabel") },
+                  { selector: createRawPropertyValueSelector("test", "UserLabel") },
                   { value: ` [`, type: "String" },
-                  { selector: `CAST(base36(${ECSql.createRawPropertyValueSelector("test", "ECInstanceId")} >> 40) AS TEXT)` },
+                  { selector: `CAST(base36(${createRawPropertyValueSelector("test", "ECInstanceId")} >> 40) AS TEXT)` },
                   { value: `-`, type: "String" },
-                  { selector: `CAST(base36(${ECSql.createRawPropertyValueSelector("test", "ECInstanceId")} & ((1 << 40) - 1)) AS TEXT)` },
+                  { selector: `CAST(base36(${createRawPropertyValueSelector("test", "ECInstanceId")} & ((1 << 40) - 1)) AS TEXT)` },
                   { value: `]`, type: "String" },
                 ],
-                `${ECSql.createRawPropertyValueSelector("test", "UserLabel")} IS NOT NULL`,
+                `${createRawPropertyValueSelector("test", "UserLabel")} IS NOT NULL`,
               )}
             ),
             NULL
@@ -255,8 +256,8 @@ describe("BisInstanceLabelSelectClauseFactory", () => {
           IIF(
             [test].[ECClassId] IS (BisCore.Element),
             COALESCE(
-              ${ECSql.createRawPropertyValueSelector("test", "UserLabel")},
-              ${ECSql.createRawPropertyValueSelector("test", "CodeValue")}
+              ${createRawPropertyValueSelector("test", "UserLabel")},
+              ${createRawPropertyValueSelector("test", "CodeValue")}
             ),
             NULL
           ),
@@ -277,17 +278,17 @@ describe("BisInstanceLabelSelectClauseFactory", () => {
           IIF(
             [test].[ECClassId] IS (BisCore.GeometricElement),
             COALESCE(
-              ${ECSql.createRawPropertyValueSelector("test", "CodeValue")},
-              ${ECSql.createConcatenatedValueJsonSelector(
+              ${createRawPropertyValueSelector("test", "CodeValue")},
+              ${createConcatenatedValueJsonSelector(
                 [
-                  { selector: ECSql.createRawPropertyValueSelector("test", "UserLabel") },
+                  { selector: createRawPropertyValueSelector("test", "UserLabel") },
                   { value: ` [`, type: "String" },
-                  { selector: `CAST(base36(${ECSql.createRawPropertyValueSelector("test", "ECInstanceId")} >> 40) AS TEXT)` },
+                  { selector: `CAST(base36(${createRawPropertyValueSelector("test", "ECInstanceId")} >> 40) AS TEXT)` },
                   { value: `-`, type: "String" },
-                  { selector: `CAST(base36(${ECSql.createRawPropertyValueSelector("test", "ECInstanceId")} & ((1 << 40) - 1)) AS TEXT)` },
+                  { selector: `CAST(base36(${createRawPropertyValueSelector("test", "ECInstanceId")} & ((1 << 40) - 1)) AS TEXT)` },
                   { value: `]`, type: "String" },
                 ],
-                `${ECSql.createRawPropertyValueSelector("test", "UserLabel")} IS NOT NULL`,
+                `${createRawPropertyValueSelector("test", "UserLabel")} IS NOT NULL`,
               )}
             ),
             NULL
@@ -295,8 +296,8 @@ describe("BisInstanceLabelSelectClauseFactory", () => {
           IIF(
             [test].[ECClassId] IS (BisCore.Element),
             COALESCE(
-              ${ECSql.createRawPropertyValueSelector("test", "UserLabel")},
-              ${ECSql.createRawPropertyValueSelector("test", "CodeValue")}
+              ${createRawPropertyValueSelector("test", "UserLabel")},
+              ${createRawPropertyValueSelector("test", "CodeValue")}
             ),
             NULL
           ),

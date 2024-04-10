@@ -4,7 +4,6 @@
  *--------------------------------------------------------------------------------------------*/
 
 import {
-  BisInstanceLabelSelectClauseFactory,
   ClassBasedHierarchyLevelDefinitionsFactory,
   DefineHierarchyLevelProps,
   DefineInstanceNodeChildHierarchyLevelProps,
@@ -13,13 +12,22 @@ import {
   HierarchyNode,
   HierarchyNodeIdentifiersPath,
   IHierarchyLevelDefinitionsFactory,
-  IInstanceLabelSelectClauseFactory,
   ILimitingECSqlQueryExecutor,
   NodeSelectClauseColumnNames,
   NodeSelectQueryFactory,
   ProcessedHierarchyNode,
 } from "@itwin/presentation-hierarchies";
-import { EC, ECSql, ECSqlBinding, Id64String, IMetadataProvider, InstanceKey, parseFullClassName } from "@itwin/presentation-shared";
+import {
+  BisInstanceLabelSelectClauseFactory,
+  EC,
+  ECSql,
+  ECSqlBinding,
+  Id64String,
+  IInstanceLabelSelectClauseFactory,
+  IMetadataProvider,
+  InstanceKey,
+  parseFullClassName,
+} from "@itwin/presentation-shared";
 
 interface ModelsTreeDefinitionProps {
   metadataProvider: IMetadataProvider;

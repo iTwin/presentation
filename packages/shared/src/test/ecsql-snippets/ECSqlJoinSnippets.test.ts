@@ -9,20 +9,19 @@ import * as sinon from "sinon";
 import { createRelationshipPathJoinClause } from "../../shared/ecsql-snippets/ECSqlJoinSnippets";
 import * as m from "../../shared/Metadata";
 import { trimWhitespace } from "../../shared/Utils";
+import { createMetadataProviderStub } from "../MetadataProviderStub";
 
 import EC = m.EC;
-
 describe("createRelationshipPathJoinClause", () => {
-  const metadata = {} as unknown as m.IMetadataProvider;
+  let metadata: ReturnType<typeof createMetadataProviderStub>;
   const schemaName = "x";
-  let getClassStub: sinon.SinonStub<Parameters<typeof m.getClass>, ReturnType<typeof m.getClass>>;
 
   beforeEach(() => {
-    getClassStub = sinon.stub(m, "getClass");
+    metadata = createMetadataProviderStub();
   });
 
   afterEach(() => {
-    getClassStub.restore();
+    sinon.restore();
   });
 
   it("returns empty string if given empty relationship path", async () => {
@@ -411,101 +410,73 @@ describe("createRelationshipPathJoinClause", () => {
       direction: props.navigationPropertyDirection,
       relationshipClass: navigationRelationshipRes,
     } as unknown as EC.NavigationProperty;
-    const sourceClass = (function () {
-      if (typeof props.source === "object") {
-        return props.source;
-      }
-      const classStub = createClassStub(props.source ?? "source", {
-        isEntityClass: () => true,
-        getProperties: async () => (props.navigationPropertyDirection === "Forward" ? [navigationProperty] : []),
-      });
-      getClassStub.withArgs(metadata, classStub.fullName).resolves(classStub);
-      return classStub;
-    })();
-    const targetClass = (function () {
-      if (typeof props.target === "object") {
-        return props.target;
-      }
-      const classStub = createClassStub(props.target ?? "target", {
-        isEntityClass: () => true,
-        getProperties: async () => (props.navigationPropertyDirection === "Backward" ? [navigationProperty] : []),
-      });
-      getClassStub.withArgs(metadata, classStub.fullName).resolves(classStub);
-      return classStub;
-    })();
-    const relationship = (function () {
-      if (typeof props.relationship === "object") {
-        return props.relationship;
-      }
-      const classStub = createClassStub<EC.RelationshipClass>(props.relationship ?? "relationship", {
-        isRelationshipClass: () => true,
-        direction: "Forward",
-        source: {
-          polymorphic: false,
-          abstractConstraint: Promise.resolve(sourceClass),
-        },
-        target: {
-          polymorphic: false,
-          abstractConstraint: Promise.resolve(targetClass),
-        },
-      });
-      getClassStub.withArgs(metadata, classStub.fullName).resolves(classStub);
-      return classStub;
-    })();
+    const sourceClass =
+      typeof props.source === "object"
+        ? props.source
+        : metadata.stubEntityClass({
+            schemaName,
+            className: props.source ?? "source",
+            properties: props.navigationPropertyDirection === "Forward" ? [navigationProperty] : [],
+          });
+    const targetClass =
+      typeof props.target === "object"
+        ? props.target
+        : metadata.stubEntityClass({
+            schemaName,
+            className: props.target ?? "target",
+            properties: props.navigationPropertyDirection === "Backward" ? [navigationProperty] : [],
+          });
+    const relationship =
+      typeof props.relationship === "object"
+        ? props.relationship
+        : metadata.stubRelationshipClass({
+            schemaName,
+            className: props.relationship ?? "relationship",
+            direction: "Forward",
+            source: {
+              polymorphic: false,
+              abstractConstraint: Promise.resolve(sourceClass),
+            },
+            target: {
+              polymorphic: false,
+              abstractConstraint: Promise.resolve(targetClass),
+            },
+          });
     await navigationRelationshipRes.resolve(relationship);
     return { sourceClass, targetClass, relationship, navigationProperty };
   }
 
   function setupLinkTableRelationshipClasses(props?: { source?: EC.Class | string; target?: EC.Class | string; relationship?: EC.RelationshipClass | string }) {
-    const sourceClass = (function () {
-      if (typeof props?.source === "object") {
-        return props.source;
-      }
-      const classStub = createClassStub(props?.source ?? "source", {
-        isEntityClass: () => true,
-      });
-      getClassStub.withArgs(metadata, classStub.fullName).resolves(classStub);
-      return classStub;
-    })();
-    const targetClass = (function () {
-      if (typeof props?.target === "object") {
-        return props.target;
-      }
-      const classStub = createClassStub(props?.target ?? "target", {
-        isEntityClass: () => true,
-      });
-      getClassStub.withArgs(metadata, classStub.fullName).resolves(classStub);
-      return classStub;
-    })();
-    const relationship = (function () {
-      if (typeof props?.relationship === "object") {
-        return props.relationship;
-      }
-      const classStub = createClassStub<EC.RelationshipClass>(props?.relationship ?? "relationship", {
-        isRelationshipClass: () => true,
-        direction: "Forward",
-        source: {
-          polymorphic: false,
-          abstractConstraint: Promise.resolve(sourceClass),
-        },
-        target: {
-          polymorphic: false,
-          abstractConstraint: Promise.resolve(targetClass),
-        },
-      });
-      getClassStub.withArgs(metadata, classStub.fullName).resolves(classStub);
-      return classStub;
-    })();
+    const sourceClass =
+      typeof props?.source === "object"
+        ? props.source
+        : metadata.stubEntityClass({
+            schemaName,
+            className: props?.source ?? "source",
+          });
+    const targetClass =
+      typeof props?.target === "object"
+        ? props.target
+        : metadata.stubEntityClass({
+            schemaName,
+            className: props?.target ?? "target",
+          });
+    const relationship =
+      typeof props?.relationship === "object"
+        ? props.relationship
+        : metadata.stubRelationshipClass({
+            schemaName,
+            className: props?.relationship ?? "relationship",
+            direction: "Forward",
+            source: {
+              polymorphic: false,
+              abstractConstraint: Promise.resolve(sourceClass),
+            },
+            target: {
+              polymorphic: false,
+              abstractConstraint: Promise.resolve(targetClass),
+            },
+          });
     return { sourceClass, targetClass, relationship };
-  }
-
-  function createClassStub<TClass extends EC.EntityClass | EC.RelationshipClass>(name: string, properties: Partial<TClass> = {}): TClass {
-    return {
-      schema: { name: schemaName },
-      name,
-      fullName: `${schemaName}.${name}`,
-      getProperties: async () => [],
-      ...properties,
-    } as unknown as TClass;
   }
 });
