@@ -36,7 +36,8 @@
     "check-internal": "node ../../scripts/checkInternal.js --apiSummary ./api/presentation-core-interop.api.md"
   },
   "dependencies": {
-    "rxjs": "^7.8.1"
+    "rxjs": "^7.8.1",
+    "@itwin/presentation-shared": "workspace:^"
   },
   "peerDependencies": {
     "@itwin/core-bentley": "^4.1.0",

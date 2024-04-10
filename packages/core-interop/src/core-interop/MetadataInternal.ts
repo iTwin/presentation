@@ -28,30 +28,10 @@ import {
   SchemaItemType,
   StrengthDirection,
 } from "@itwin/ecschema-metadata";
-import {
-  ECArrayProperty,
-  ECClass,
-  ECEntityClass,
-  ECEnumeration,
-  ECEnumerationArrayProperty,
-  ECEnumerationProperty,
-  ECKindOfQuantity,
-  ECMixin,
-  ECNavigationProperty,
-  ECPrimitiveArrayProperty,
-  ECPrimitiveProperty,
-  ECProperty,
-  ECRelationshipClass,
-  ECRelationshipConstraint,
-  ECSchema,
-  ECSchemaItem,
-  ECStructArrayProperty,
-  ECStructClass,
-  ECStructProperty,
-} from "@itwin/presentation-hierarchies";
+import { EC } from "@itwin/presentation-shared";
 
 /** @internal */
-export function createECSchema(schema: CoreSchema): ECSchema {
+export function createECSchema(schema: CoreSchema): EC.Schema {
   return {
     name: schema.name,
     async getClass(name) {
@@ -61,11 +41,11 @@ export function createECSchema(schema: CoreSchema): ECSchema {
   };
 }
 
-abstract class ECSchemaItemImpl<TCoreSchemaItem extends CoreSchemaItem> implements ECSchemaItem {
-  private _schema: ECSchema;
+abstract class ECSchemaItemImpl<TCoreSchemaItem extends CoreSchemaItem> implements EC.SchemaItem {
+  private _schema: EC.Schema;
   protected constructor(
     protected _coreSchemaItem: TCoreSchemaItem,
-    schema?: ECSchema,
+    schema?: EC.Schema,
   ) {
     this._schema = schema ?? createECSchema(this._coreSchemaItem.schema);
   }
@@ -84,7 +64,7 @@ abstract class ECSchemaItemImpl<TCoreSchemaItem extends CoreSchemaItem> implemen
 }
 
 /** @internal */
-export function createECClass(coreClass: CoreClass, schema?: ECSchema): ECClass {
+export function createECClass(coreClass: CoreClass, schema?: EC.Schema): EC.Class {
   switch (coreClass.schemaItemType) {
     case SchemaItemType.EntityClass:
       return new ECEntityClassImpl(coreClass as CoreEntityClass, schema);
@@ -98,52 +78,52 @@ export function createECClass(coreClass: CoreClass, schema?: ECSchema): ECClass 
   throw new Error(`Invalid class type "${coreClass.schemaItemType}" for class ${coreClass.fullName}`);
 }
 
-abstract class ECClassImpl<TCoreClass extends CoreClass> extends ECSchemaItemImpl<TCoreClass> implements ECClass {
-  protected constructor(coreClass: TCoreClass, schema?: ECSchema) {
+abstract class ECClassImpl<TCoreClass extends CoreClass> extends ECSchemaItemImpl<TCoreClass> implements EC.Class {
+  protected constructor(coreClass: TCoreClass, schema?: EC.Schema) {
     super(coreClass, schema);
   }
-  public isEntityClass(): this is ECEntityClass {
+  public isEntityClass(): this is EC.EntityClass {
     return false;
   }
-  public isRelationshipClass(): this is ECRelationshipClass {
+  public isRelationshipClass(): this is EC.RelationshipClass {
     return false;
   }
-  public isStructClass(): this is ECStructClass {
+  public isStructClass(): this is EC.StructClass {
     return false;
   }
-  public isMixin(): this is ECMixin {
+  public isMixin(): this is EC.Mixin {
     return false;
   }
-  public async is(classOrClassName: ECClass | string, schemaName?: string) {
+  public async is(classOrClassName: EC.Class | string, schemaName?: string) {
     if (typeof classOrClassName === "string") {
       return this._coreSchemaItem.is(classOrClassName, schemaName!);
     }
     return this._coreSchemaItem.is(classOrClassName.name, classOrClassName.schema.name);
   }
-  public async getProperty(name: string): Promise<ECProperty | undefined> {
+  public async getProperty(name: string): Promise<EC.Property | undefined> {
     const coreProperty = await this._coreSchemaItem.getProperty(name, true);
     return coreProperty ? createECProperty(coreProperty, this) : undefined;
   }
-  public async getProperties(): Promise<Array<ECProperty>> {
+  public async getProperties(): Promise<Array<EC.Property>> {
     const coreProperties = await this._coreSchemaItem.getProperties();
     return coreProperties.map((coreProperty) => createECProperty(coreProperty, this));
   }
 }
 
-class ECEntityClassImpl extends ECClassImpl<CoreEntityClass> implements ECEntityClass {
-  constructor(coreClass: CoreEntityClass, schema?: ECSchema) {
+class ECEntityClassImpl extends ECClassImpl<CoreEntityClass> implements EC.EntityClass {
+  constructor(coreClass: CoreEntityClass, schema?: EC.Schema) {
     super(coreClass, schema);
   }
-  public override isEntityClass(): this is ECEntityClass {
+  public override isEntityClass(): this is EC.EntityClass {
     return true;
   }
 }
 
-class ECRelationshipClassImpl extends ECClassImpl<CoreRelationshipClass> implements ECRelationshipClass {
-  constructor(coreClass: CoreRelationshipClass, schema?: ECSchema) {
+class ECRelationshipClassImpl extends ECClassImpl<CoreRelationshipClass> implements EC.RelationshipClass {
+  constructor(coreClass: CoreRelationshipClass, schema?: EC.Schema) {
     super(coreClass, schema);
   }
-  public override isRelationshipClass(): this is ECRelationshipClass {
+  public override isRelationshipClass(): this is EC.RelationshipClass {
     return true;
   }
   public get direction() {
@@ -162,26 +142,26 @@ class ECRelationshipClassImpl extends ECClassImpl<CoreRelationshipClass> impleme
   }
 }
 
-class ECStructClassImpl extends ECClassImpl<CoreStructClass> implements ECStructClass {
-  constructor(coreClass: CoreStructClass, schema?: ECSchema) {
+class ECStructClassImpl extends ECClassImpl<CoreStructClass> implements EC.StructClass {
+  constructor(coreClass: CoreStructClass, schema?: EC.Schema) {
     super(coreClass, schema);
   }
-  public override isStructClass(): this is ECStructClass {
+  public override isStructClass(): this is EC.StructClass {
     return true;
   }
 }
 
-class ECMixinImpl extends ECClassImpl<CoreMixin> implements ECMixin {
-  constructor(coreClass: CoreMixin, schema?: ECSchema) {
+class ECMixinImpl extends ECClassImpl<CoreMixin> implements EC.Mixin {
+  constructor(coreClass: CoreMixin, schema?: EC.Schema) {
     super(coreClass, schema);
   }
-  public override isMixin(): this is ECMixin {
+  public override isMixin(): this is EC.Mixin {
     return true;
   }
 }
 
 /** @internal */
-export function createECProperty(coreProperty: CoreProperty, ecClass: ECClass): ECProperty {
+export function createECProperty(coreProperty: CoreProperty, ecClass: EC.Class): EC.Property {
   if (coreProperty.isArray()) {
     if (coreProperty.isPrimitive()) {
       return new ECPrimitivesArrayPropertyImpl(coreProperty, ecClass);
@@ -204,24 +184,24 @@ export function createECProperty(coreProperty: CoreProperty, ecClass: ECClass): 
   return new ECPrimitivePropertyImpl(coreProperty, ecClass);
 }
 
-abstract class ECPropertyImpl<TCoreProperty extends CoreProperty> implements ECProperty {
+abstract class ECPropertyImpl<TCoreProperty extends CoreProperty> implements EC.Property {
   protected constructor(
     protected _coreProperty: TCoreProperty,
-    protected _class: ECClass,
+    protected _class: EC.Class,
   ) {}
-  public isArray(): this is ECArrayProperty {
+  public isArray(): this is EC.ArrayProperty {
     return false;
   }
-  public isStruct(): this is ECStructProperty {
+  public isStruct(): this is EC.StructProperty {
     return false;
   }
-  public isPrimitive(): this is ECPrimitiveProperty {
+  public isPrimitive(): this is EC.PrimitiveProperty {
     return false;
   }
-  public isEnumeration(): this is ECEnumerationProperty {
+  public isEnumeration(): this is EC.EnumerationProperty {
     return false;
   }
-  public isNavigation(): this is ECNavigationProperty {
+  public isNavigation(): this is EC.NavigationProperty {
     return false;
   }
   public get class() {
@@ -233,16 +213,16 @@ abstract class ECPropertyImpl<TCoreProperty extends CoreProperty> implements ECP
   public get label() {
     return this._coreProperty.label;
   }
-  public get kindOfQuantity(): Promise<ECKindOfQuantity | undefined> {
+  public get kindOfQuantity(): Promise<EC.KindOfQuantity | undefined> {
     return createFromOptionalLazyLoaded(this._coreProperty.kindOfQuantity, (coreKindOfQuantity) => new ECKindOfQuantityImpl(coreKindOfQuantity));
   }
 }
 
-class ECPrimitivePropertyImpl<TCoreProperty extends CorePrimitiveProperty> extends ECPropertyImpl<TCoreProperty> implements ECPrimitiveProperty {
-  constructor(coreProperty: TCoreProperty, c: ECClass) {
+class ECPrimitivePropertyImpl<TCoreProperty extends CorePrimitiveProperty> extends ECPropertyImpl<TCoreProperty> implements EC.PrimitiveProperty {
+  constructor(coreProperty: TCoreProperty, c: EC.Class) {
     super(coreProperty, c);
   }
-  public override isPrimitive(): this is ECPrimitiveProperty {
+  public override isPrimitive(): this is EC.PrimitiveProperty {
     return true;
   }
   public get extendedTypeName() {
@@ -275,11 +255,11 @@ class ECPrimitivePropertyImpl<TCoreProperty extends CorePrimitiveProperty> exten
   }
 }
 
-class ECNavigationPropertyImpl extends ECPropertyImpl<CoreNavigationProperty> implements ECNavigationProperty {
-  constructor(coreProperty: CoreNavigationProperty, c: ECClass) {
+class ECNavigationPropertyImpl extends ECPropertyImpl<CoreNavigationProperty> implements EC.NavigationProperty {
+  constructor(coreProperty: CoreNavigationProperty, c: EC.Class) {
     super(coreProperty, c);
   }
-  public override isNavigation(): this is ECNavigationProperty {
+  public override isNavigation(): this is EC.NavigationProperty {
     return true;
   }
   public get relationshipClass() {
@@ -295,11 +275,11 @@ class ECNavigationPropertyImpl extends ECPropertyImpl<CoreNavigationProperty> im
   }
 }
 
-class ECEnumerationPropertyImpl<TCoreProperty extends CoreEnumerationProperty> extends ECPropertyImpl<TCoreProperty> implements ECEnumerationProperty {
-  constructor(coreProperty: TCoreProperty, c: ECClass) {
+class ECEnumerationPropertyImpl<TCoreProperty extends CoreEnumerationProperty> extends ECPropertyImpl<TCoreProperty> implements EC.EnumerationProperty {
+  constructor(coreProperty: TCoreProperty, c: EC.Class) {
     super(coreProperty, c);
   }
-  public override isEnumeration(): this is ECEnumerationProperty {
+  public override isEnumeration(): this is EC.EnumerationProperty {
     return true;
   }
   public get enumeration() {
@@ -310,23 +290,23 @@ class ECEnumerationPropertyImpl<TCoreProperty extends CoreEnumerationProperty> e
   }
 }
 
-class ECStructPropertyImpl<TCoreProperty extends CoreStructProperty> extends ECPropertyImpl<TCoreProperty> implements ECStructProperty {
-  constructor(coreProperty: TCoreProperty, c: ECClass) {
+class ECStructPropertyImpl<TCoreProperty extends CoreStructProperty> extends ECPropertyImpl<TCoreProperty> implements EC.StructProperty {
+  constructor(coreProperty: TCoreProperty, c: EC.Class) {
     super(coreProperty, c);
   }
-  public override isStruct(): this is ECStructProperty {
+  public override isStruct(): this is EC.StructProperty {
     return true;
   }
-  public get structClass(): ECStructClass {
+  public get structClass(): EC.StructClass {
     return new ECStructClassImpl(this._coreProperty.structClass);
   }
 }
 
-class ECPrimitivesArrayPropertyImpl extends ECPrimitivePropertyImpl<CorePrimitiveArrayProperty> implements ECPrimitiveArrayProperty {
-  constructor(coreProperty: CorePrimitiveArrayProperty, c: ECClass) {
+class ECPrimitivesArrayPropertyImpl extends ECPrimitivePropertyImpl<CorePrimitiveArrayProperty> implements EC.PrimitiveArrayProperty {
+  constructor(coreProperty: CorePrimitiveArrayProperty, c: EC.Class) {
     super(coreProperty, c);
   }
-  public override isArray(): this is ECArrayProperty {
+  public override isArray(): this is EC.ArrayProperty {
     return true;
   }
   public get minOccurs() {
@@ -337,11 +317,11 @@ class ECPrimitivesArrayPropertyImpl extends ECPrimitivePropertyImpl<CorePrimitiv
   }
 }
 
-class ECEnumerationArrayPropertyImpl extends ECEnumerationPropertyImpl<CoreEnumerationArrayProperty> implements ECEnumerationArrayProperty {
-  constructor(coreProperty: CoreEnumerationArrayProperty, c: ECClass) {
+class ECEnumerationArrayPropertyImpl extends ECEnumerationPropertyImpl<CoreEnumerationArrayProperty> implements EC.EnumerationArrayProperty {
+  constructor(coreProperty: CoreEnumerationArrayProperty, c: EC.Class) {
     super(coreProperty, c);
   }
-  public override isArray(): this is ECArrayProperty {
+  public override isArray(): this is EC.ArrayProperty {
     return true;
   }
   public get minOccurs() {
@@ -352,11 +332,11 @@ class ECEnumerationArrayPropertyImpl extends ECEnumerationPropertyImpl<CoreEnume
   }
 }
 
-class ECStructArrayPropertyImpl extends ECStructPropertyImpl<CoreStructArrayProperty> implements ECStructArrayProperty {
-  constructor(coreProperty: CoreStructArrayProperty, c: ECClass) {
+class ECStructArrayPropertyImpl extends ECStructPropertyImpl<CoreStructArrayProperty> implements EC.StructArrayProperty {
+  constructor(coreProperty: CoreStructArrayProperty, c: EC.Class) {
     super(coreProperty, c);
   }
-  public override isArray(): this is ECArrayProperty {
+  public override isArray(): this is EC.ArrayProperty {
     return true;
   }
   public get minOccurs() {
@@ -384,10 +364,10 @@ async function createFromOptionalLazyLoaded<TSource extends CoreSchemaItem, TTar
   return source.then(convert);
 }
 
-class ECRelationshipConstraintImpl implements ECRelationshipConstraint {
+class ECRelationshipConstraintImpl implements EC.RelationshipConstraint {
   constructor(
     private _coreConstraint: CoreRelationshipConstraint,
-    private _schema: ECSchema,
+    private _schema: EC.Schema,
   ) {}
   public get multiplicity() {
     return this._coreConstraint.multiplicity
@@ -400,18 +380,18 @@ class ECRelationshipConstraintImpl implements ECRelationshipConstraint {
   public get polymorphic() {
     return this._coreConstraint.polymorphic ?? false;
   }
-  public get abstractConstraint(): Promise<ECEntityClass | ECMixin | ECRelationshipClass | undefined> {
+  public get abstractConstraint(): Promise<EC.EntityClass | EC.Mixin | EC.RelationshipClass | undefined> {
     return createFromOptionalLazyLoaded(this._coreConstraint.abstractConstraint, (coreConstraint) => createECClass(coreConstraint, this._schema));
   }
 }
 
-class ECKindOfQuantityImpl extends ECSchemaItemImpl<CoreKindOfQuantity> implements ECKindOfQuantity {
+class ECKindOfQuantityImpl extends ECSchemaItemImpl<CoreKindOfQuantity> implements EC.KindOfQuantity {
   constructor(coreKindOfQuantity: CoreKindOfQuantity) {
     super(coreKindOfQuantity);
   }
 }
 
-class ECEnumerationImpl extends ECSchemaItemImpl<CoreEnumeration> implements ECEnumeration {
+class ECEnumerationImpl extends ECSchemaItemImpl<CoreEnumeration> implements EC.Enumeration {
   constructor(coreEnumeration: CoreEnumeration) {
     super(coreEnumeration);
   }

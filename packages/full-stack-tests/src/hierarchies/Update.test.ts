@@ -37,7 +37,8 @@ import { BriefcaseConnection, IpcApp, NullRenderSystem } from "@itwin/core-front
 import { ECSchemaRpcInterface } from "@itwin/ecschema-rpcinterface-common";
 import { ECSchemaRpcImpl } from "@itwin/ecschema-rpcinterface-impl";
 import { registerTxnListeners } from "@itwin/presentation-core-interop";
-import { ECSqlSnippets, IHierarchyLevelDefinitionsFactory, NodeSelectQueryFactory } from "@itwin/presentation-hierarchies";
+import { IHierarchyLevelDefinitionsFactory, NodeSelectQueryFactory } from "@itwin/presentation-hierarchies";
+import { ECSql } from "@itwin/presentation-shared";
 import { createFileNameFromString } from "@itwin/presentation-testing/lib/cjs/presentation-testing/InternalUtils";
 import { setupOutputFileLocation } from "../IModelUtils";
 import { NodeValidators, validateHierarchyLevel } from "./HierarchyValidation";
@@ -575,7 +576,7 @@ describe("Hierarchies", () => {
                         ecClassId: { selector: `this.ECClassId` },
                         ecInstanceId: { selector: `this.ECInstanceId` },
                         nodeLabel: {
-                          selector: ECSqlSnippets.createConcatenatedValueJsonSelector([
+                          selector: ECSql.createConcatenatedValueJsonSelector([
                             { propertyClassName: Element.classFullName, propertyClassAlias: "modeledElement", propertyName: "CodeValue" },
                             { type: "String", value: ". IsPrivate: " },
                             { propertyClassName: PhysicalModel.classFullName, propertyClassAlias: "this", propertyName: "IsPrivate" },

@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { assert } from "@itwin/core-bentley";
-import { ECClass, IMetadataProvider } from "../../../ECMetadata";
+import { ArrayElement, EC, getClass, IMetadataProvider, IPrimitiveValueFormatter, TypedPrimitiveValue } from "@itwin/presentation-shared";
 import {
   HierarchyNode,
   HierarchyNodeKey,
@@ -15,11 +15,7 @@ import {
   ProcessedInstanceHierarchyNode,
   PropertyGroupingNodeKey,
 } from "../../../HierarchyNode";
-import { ArrayElement } from "../../../Utils";
-import { IPrimitiveValueFormatter } from "../../../values/Formatting";
-import { TypedPrimitiveValue } from "../../../values/Values";
 import { BaseClassChecker } from "../../Common";
-import { getClass } from "../../GetClass";
 import { GroupingHandler, GroupingHandlerResult, ProcessedInstancesGroupingHierarchyNode } from "../Grouping";
 
 interface DisplayablePropertyGroupingInfo {
@@ -40,7 +36,7 @@ export interface PropertiesGroupingLocalizedStrings {
 
 /** @internal */
 export interface PropertyGroupInfo {
-  ecClass: ECClass;
+  ecClass: EC.Class;
   previousPropertiesGroupingInfo: PreviousPropertiesGroupingInfo;
   propertyGroup: Omit<HierarchyNodePropertyGroup, "propertyValue">;
 }

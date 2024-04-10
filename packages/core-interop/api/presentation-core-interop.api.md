@@ -5,10 +5,10 @@
 ```ts
 
 import { ECSqlReader } from '@itwin/core-common';
-import { IECSqlQueryExecutor } from '@itwin/presentation-hierarchies';
-import { ILogger } from '@itwin/presentation-hierarchies';
-import { IMetadataProvider } from '@itwin/presentation-hierarchies';
-import { IPrimitiveValueFormatter } from '@itwin/presentation-hierarchies';
+import { IECSqlQueryExecutor } from '@itwin/presentation-shared';
+import { ILogger } from '@itwin/presentation-shared';
+import { IMetadataProvider } from '@itwin/presentation-shared';
+import { IPrimitiveValueFormatter } from '@itwin/presentation-shared';
 import { LogLevel } from '@itwin/core-bentley';
 import { QueryBinder } from '@itwin/core-common';
 import { QueryOptions } from '@itwin/core-common';
