@@ -7,11 +7,10 @@ import { expect } from "chai";
 import { ResolvablePromise } from "presentation-test-utilities";
 import * as sinon from "sinon";
 import { createRelationshipPathJoinClause } from "../../shared/ecsql-snippets/ECSqlJoinSnippets";
-import * as m from "../../shared/Metadata";
+import { EC } from "../../shared/Metadata";
 import { trimWhitespace } from "../../shared/Utils";
 import { createMetadataProviderStub } from "../MetadataProviderStub";
 
-import EC = m.EC;
 describe("createRelationshipPathJoinClause", () => {
   let metadata: ReturnType<typeof createMetadataProviderStub>;
   const schemaName = "x";
