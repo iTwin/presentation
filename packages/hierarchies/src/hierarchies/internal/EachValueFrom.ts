@@ -10,7 +10,7 @@ import { Observable } from "rxjs";
  * - https://github.com/benlesh/rxjs-for-await/blob/94f9cf9cb015ac3700dfd1850eb81d36962eb70f/src/index.ts#L33,
  * - https://github.com/ReactiveX/rxjs/blob/2587ee852eb43eeb0883a7787bac2944d823392b/packages/observable/src/observable.ts#L922.
  *
- * Out implementation uses a linked list rather than an array to store values, which is more efficient.
+ * Our implementation uses a linked list rather than an array to store values, which is more efficient.
  *
  * @internal
  */
