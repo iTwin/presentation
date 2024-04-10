@@ -108,6 +108,15 @@ describe("usePresentationTreeState", () => {
     await waitFor(() => expect(result.current?.nodeLoader).to.not.eq(oldNodeLoader));
   });
 
+  it("creates new reporting nodeLoader when `onNodeLoaded` callback passed", async () => {
+    const { result, rerender } = renderHook((props: UsePresentationTreeStateProps) => usePresentationTreeState(props), { initialProps });
+    const oldNodeLoader = await waitForState(result);
+
+    rerender({ ...initialProps, pagingSize: 20, onNodeLoaded: () => {} });
+
+    await waitFor(() => expect(result.current?.nodeLoader).to.not.eq(oldNodeLoader));
+  });
+
   describe("auto-updating model source", () => {
     beforeEach(() => {
       initialProps.enableHierarchyAutoUpdate = true;

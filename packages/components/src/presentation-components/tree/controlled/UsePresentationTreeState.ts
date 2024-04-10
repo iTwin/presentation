@@ -19,6 +19,7 @@ import {
 } from "@itwin/components-react";
 import { PresentationTreeDataProvider, PresentationTreeDataProviderProps } from "../DataProvider";
 import { IFilteredPresentationTreeDataProvider, IPresentationTreeDataProvider } from "../IPresentationTreeDataProvider";
+import { ReportingTreeNodeLoader } from "../ReportingTreeNodeLoader";
 import { useFilteredNodeLoader, useNodeHighlightingProps } from "./UseControlledTreeFiltering";
 import { ReloadedTree, useTreeReload } from "./UseTreeReload";
 
@@ -65,6 +66,16 @@ export interface UsePresentationTreeStateProps<TEventHandler extends TreeEventHa
     /** Current active filter match. It is used to create [HighlightableTreeNodeProps]($components-react) for highlighting and stepping through filter matches. */
     activeMatchIndex?: number;
   };
+
+  /**
+   * Callback for when a tree node is loaded.
+   */
+  onNodeLoaded?: (props: {
+    /** ID of the loaded node, undefined if it is the root. */
+    node: string | undefined;
+    /** Duration how long the load took in milliseconds. */
+    duration: number;
+  }) => void;
 }
 
 /**
@@ -111,11 +122,12 @@ export interface PresentationTreeEventHandlerProps {
 interface TreeStateProps extends PresentationTreeDataProviderProps {
   pagingSize: number;
   treeModel?: TreeModel;
+  onNodeLoaded?: (props: { node: string | undefined; duration: number }) => void;
 }
 
 interface TreeState {
   dataProvider: PresentationTreeDataProvider;
-  nodeLoader: AbstractTreeNodeLoaderWithProvider<PresentationTreeDataProvider>;
+  nodeLoader: PagedTreeNodeLoader<PresentationTreeDataProvider>;
 }
 
 /**
@@ -124,6 +136,7 @@ interface TreeState {
  */
 export function usePresentationTreeState<TEventHandler extends TreeEventHandler = TreeEventHandler>({
   eventHandlerFactory,
+  onNodeLoaded,
   seedTreeModel,
   enableHierarchyAutoUpdate,
   filteringParams,
@@ -131,12 +144,15 @@ export function usePresentationTreeState<TEventHandler extends TreeEventHandler 
 }: UsePresentationTreeStateProps<TEventHandler>): UsePresentationTreeStateResult<TEventHandler> | undefined {
   const firstRenderRef = useRef(true);
   const treeStateProps = useMemo(
-    (): TreeStateProps => ({ ...dataProviderProps, treeModel: firstRenderRef.current ? seedTreeModel : undefined }),
+    (): TreeStateProps => ({
+      ...dataProviderProps,
+      treeModel: firstRenderRef.current ? seedTreeModel : undefined,
+      onNodeLoaded,
+    }),
     Object.values(dataProviderProps), // eslint-disable-line react-hooks/exhaustive-deps
   );
 
   const { state, onReload } = useTreeState(treeStateProps);
-
   const renderedItems = useRef<RenderedItemsRange | undefined>(undefined);
   // istanbul ignore next
   const onItemsRendered = useCallback((items: RenderedItemsRange) => {
@@ -198,7 +214,8 @@ function useTreeState(props: TreeStateProps) {
     const { treeModel, ...providerProps } = props;
     const modelSource = new TreeModelSource(new MutableTreeModel(treeModel));
     const dataProvider = new PresentationTreeDataProvider(providerProps);
-    const nodeLoader = new PagedTreeNodeLoader(dataProvider, modelSource, providerProps.pagingSize);
+    const pagedLoader = new PagedTreeNodeLoader(dataProvider, modelSource, providerProps.pagingSize);
+    const nodeLoader = props.onNodeLoaded ? new ReportingTreeNodeLoader(pagedLoader, props.onNodeLoaded) : pagedLoader;
 
     const newState = {
       modelSource,

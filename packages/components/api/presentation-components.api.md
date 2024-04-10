@@ -861,7 +861,7 @@ export interface UsePresentationTableWithUnifiedSelectionResult<TColumns, TRow> 
 export function usePresentationTreeNodeLoader(props: PresentationTreeNodeLoaderProps): PresentationTreeNodeLoaderResult;
 
 // @public
-export function usePresentationTreeState<TEventHandler extends TreeEventHandler = TreeEventHandler>({ eventHandlerFactory, seedTreeModel, enableHierarchyAutoUpdate, filteringParams, ...dataProviderProps }: UsePresentationTreeStateProps<TEventHandler>): UsePresentationTreeStateResult<TEventHandler> | undefined;
+export function usePresentationTreeState<TEventHandler extends TreeEventHandler = TreeEventHandler>({ eventHandlerFactory, onNodeLoaded, seedTreeModel, enableHierarchyAutoUpdate, filteringParams, ...dataProviderProps }: UsePresentationTreeStateProps<TEventHandler>): UsePresentationTreeStateResult<TEventHandler> | undefined;
 
 // @public
 export interface UsePresentationTreeStateProps<TEventHandler extends TreeEventHandler = TreeEventHandler> extends PresentationTreeDataProviderProps {
@@ -872,6 +872,10 @@ export interface UsePresentationTreeStateProps<TEventHandler extends TreeEventHa
         filter: string;
         activeMatchIndex?: number;
     };
+    onNodeLoaded?: (props: {
+        node: string | undefined;
+        duration: number;
+    }) => void;
     pagingSize: number;
     seedTreeModel?: TreeModel;
 }
