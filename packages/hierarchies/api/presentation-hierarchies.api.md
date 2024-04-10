@@ -4,6 +4,10 @@
 
 ```ts
 
+import { ConcatenatedValue } from '@itwin/presentation-shared';
+import { ECSqlQueryDef } from '@itwin/presentation-shared';
+import { ECSqlQueryReader } from '@itwin/presentation-shared';
+import { ECSqlQueryReaderOptions } from '@itwin/presentation-shared';
 import { GenericInstanceFilter } from '@itwin/core-common';
 import { GenericInstanceFilterRelatedInstanceDescription } from '@itwin/core-common';
 import { GenericInstanceFilterRelationshipStep } from '@itwin/core-common';
@@ -12,14 +16,14 @@ import { GenericInstanceFilterRuleGroup } from '@itwin/core-common';
 import { GenericInstanceFilterRuleGroupOperator } from '@itwin/core-common';
 import { GenericInstanceFilterRuleOperator } from '@itwin/core-common';
 import { GenericInstanceFilterRuleValue } from '@itwin/core-common';
-
-// @beta
-export interface ArrayPropertyAttributes {
-    // (undocumented)
-    maxOccurs?: number;
-    // (undocumented)
-    minOccurs: number;
-}
+import { Id64String } from '@itwin/presentation-shared';
+import { IECSqlQueryExecutor } from '@itwin/presentation-shared';
+import { ILogger } from '@itwin/presentation-shared';
+import { IMetadataProvider } from '@itwin/presentation-shared';
+import { InstanceKey } from '@itwin/presentation-shared';
+import { IPrimitiveValueFormatter } from '@itwin/presentation-shared';
+import { OmitOverUnion } from '@itwin/presentation-shared';
+import { PrimitiveValue } from '@itwin/presentation-shared';
 
 // @beta
 export interface BaseHierarchyNode {
@@ -30,19 +34,6 @@ export interface BaseHierarchyNode {
     };
     label: string;
     parentKeys: HierarchyNodeKey[];
-}
-
-// @beta
-export class BisInstanceLabelSelectClauseFactory implements IInstanceLabelSelectClauseFactory {
-    constructor(props: BisInstanceLabelSelectClauseFactoryProps);
-    // (undocumented)
-    createSelectClause(props: CreateInstanceLabelSelectClauseProps): Promise<string>;
-}
-
-// @beta
-export interface BisInstanceLabelSelectClauseFactoryProps {
-    // (undocumented)
-    metadataProvider: IMetadataProvider;
 }
 
 // @beta
@@ -67,60 +58,9 @@ export class ClassBasedHierarchyLevelDefinitionsFactory implements IHierarchyLev
 }
 
 // @beta
-export class ClassBasedInstanceLabelSelectClauseFactory implements IInstanceLabelSelectClauseFactory {
-    constructor(props: ClassBasedInstanceLabelSelectClauseFactoryProps);
-    // (undocumented)
-    createSelectClause(props: CreateInstanceLabelSelectClauseProps): Promise<string>;
-}
-
-// @beta
-export interface ClassBasedInstanceLabelSelectClauseFactoryProps {
-    clauses: ClassBasedLabelSelectClause[];
-    defaultClauseFactory?: IInstanceLabelSelectClauseFactory;
-    metadataProvider: IMetadataProvider;
-}
-
-// @beta
-export interface ClassBasedLabelSelectClause {
-    className: string;
-    clause: (props: CreateInstanceLabelSelectClauseProps) => Promise<string>;
-}
-
-// @beta
 export interface ClassGroupingNodeKey {
     className: string;
     type: "class-grouping";
-}
-
-// @beta
-export type ConcatenatedValue = ConcatenatedValuePart | ConcatenatedValuePart[];
-
-// @beta (undocumented)
-export namespace ConcatenatedValue {
-    export function serialize(parts: ConcatenatedValue, partFormatter: (part: ConcatenatedValuePart) => Promise<string>): Promise<string>;
-}
-
-// @beta
-export type ConcatenatedValuePart = PropertyValue | TypedPrimitiveValue | string;
-
-// @beta (undocumented)
-export namespace ConcatenatedValuePart {
-    // (undocumented)
-    export function isPrimitive(part: ConcatenatedValuePart): part is TypedPrimitiveValue;
-    // (undocumented)
-    export function isProperty(part: ConcatenatedValuePart): part is PropertyValue;
-    // (undocumented)
-    export function isString(part: ConcatenatedValuePart): part is string;
-}
-
-// @beta
-export function createDefaultValueFormatter(): IPrimitiveValueFormatter;
-
-// @beta
-export interface CreateInstanceLabelSelectClauseProps {
-    classAlias: string;
-    className?: string;
-    selectorsConcatenator?: (selectors: TypedValueSelectClauseProps[], checkSelector?: string) => string;
 }
 
 // @beta
@@ -138,12 +78,6 @@ export interface CustomNodeChildHierarchyLevelDefinition {
 }
 
 // @beta
-export class DefaultInstanceLabelSelectClauseFactory implements IInstanceLabelSelectClauseFactory {
-    // (undocumented)
-    createSelectClause(props: CreateInstanceLabelSelectClauseProps): Promise<string>;
-}
-
-// @beta
 export interface DefineHierarchyLevelProps {
     instanceFilter?: GenericInstanceFilter;
     parentNode: HierarchyDefinitionParentNode | undefined;
@@ -157,224 +91,6 @@ export type DefineInstanceNodeChildHierarchyLevelProps = DefineHierarchyLevelPro
 
 // @beta
 export type DefineRootHierarchyLevelProps = Omit<DefineHierarchyLevelProps, "parentNode">;
-
-// @beta
-export type ECArrayProperty = ECStructArrayProperty | ECEnumerationArrayProperty | ECPrimitiveArrayProperty;
-
-// @beta
-export interface ECClass extends ECSchemaItem {
-    // (undocumented)
-    getProperties(): Promise<Array<ECProperty>>;
-    // (undocumented)
-    getProperty(name: string): Promise<ECProperty | undefined>;
-    // (undocumented)
-    is(className: string, schemaName: string): Promise<boolean>;
-    // (undocumented)
-    is(other: ECClass): Promise<boolean>;
-    // (undocumented)
-    isEntityClass(): this is ECEntityClass;
-    // (undocumented)
-    isMixin(): this is ECMixin;
-    // (undocumented)
-    isRelationshipClass(): this is ECRelationshipClass;
-    // (undocumented)
-    isStructClass(): this is ECStructClass;
-}
-
-// @beta
-export type ECEntityClass = ECClass;
-
-// @beta
-export interface ECEnumeration extends ECSchemaItem {
-    // (undocumented)
-    enumerators: Array<ECEnumerator<string | number>>;
-    // (undocumented)
-    isStrict: boolean;
-    // (undocumented)
-    type: "String" | "Number";
-}
-
-// @beta
-export type ECEnumerationArrayProperty = ECEnumerationProperty & ArrayPropertyAttributes;
-
-// @beta
-export interface ECEnumerationProperty extends ECProperty {
-    // (undocumented)
-    enumeration: Promise<ECEnumeration | undefined>;
-    // (undocumented)
-    extendedTypeName?: string;
-}
-
-// @beta
-export interface ECEnumerator<T> {
-    // (undocumented)
-    description?: string;
-    // (undocumented)
-    label?: string;
-    // (undocumented)
-    name: string;
-    // (undocumented)
-    value: T;
-}
-
-// @beta
-export type ECKindOfQuantity = ECSchemaItem;
-
-// @beta
-export type ECMixin = ECClass;
-
-// @beta
-export interface ECNavigationProperty extends ECProperty {
-    // (undocumented)
-    direction: "Forward" | "Backward";
-    // (undocumented)
-    relationshipClass: Promise<ECRelationshipClass>;
-}
-
-// @beta
-export type ECPrimitiveArrayProperty = ECPrimitiveProperty & ArrayPropertyAttributes;
-
-// @beta
-export interface ECPrimitiveProperty extends ECProperty {
-    // (undocumented)
-    extendedTypeName?: string;
-    // (undocumented)
-    primitiveType: ECPrimitiveType;
-}
-
-// @beta
-export type ECPrimitiveType = "Binary" | "Boolean" | "DateTime" | "Double" | "Integer" | "Long" | "Point2d" | "Point3d" | "String" | "IGeometry";
-
-// @beta
-export interface ECProperty {
-    // (undocumented)
-    class: ECClass;
-    // (undocumented)
-    isArray(): this is ECArrayProperty;
-    // (undocumented)
-    isEnumeration(): this is ECEnumerationProperty;
-    // (undocumented)
-    isNavigation(): this is ECNavigationProperty;
-    // (undocumented)
-    isPrimitive(): this is ECPrimitiveProperty;
-    // (undocumented)
-    isStruct(): this is ECStructProperty;
-    // (undocumented)
-    kindOfQuantity: Promise<ECKindOfQuantity | undefined>;
-    // (undocumented)
-    label?: string;
-    // (undocumented)
-    name: string;
-}
-
-// @beta
-export interface ECRelationshipClass extends ECClass {
-    // (undocumented)
-    direction: "Forward" | "Backward";
-    // (undocumented)
-    source: ECRelationshipConstraint;
-    // (undocumented)
-    target: ECRelationshipConstraint;
-}
-
-// @beta
-export interface ECRelationshipConstraint {
-    // (undocumented)
-    abstractConstraint: Promise<ECEntityClass | ECMixin | ECRelationshipClass | undefined>;
-    // (undocumented)
-    multiplicity?: ECRelationshipConstraintMultiplicity;
-    // (undocumented)
-    polymorphic: boolean;
-}
-
-// @beta
-export interface ECRelationshipConstraintMultiplicity {
-    // (undocumented)
-    lowerLimit: number;
-    // (undocumented)
-    upperLimit: number;
-}
-
-// @beta
-export interface ECSchema {
-    // (undocumented)
-    getClass(name: string): Promise<ECClass | undefined>;
-    // (undocumented)
-    name: string;
-}
-
-// @beta
-export interface ECSchemaItem {
-    // (undocumented)
-    fullName: string;
-    // (undocumented)
-    label?: string;
-    // (undocumented)
-    name: string;
-    // (undocumented)
-    schema: ECSchema;
-}
-
-// @beta
-export type ECSqlBinding = {
-    type: "boolean";
-    value?: boolean;
-} | {
-    type: "double" | "int" | "long";
-    value?: number;
-} | {
-    type: "id";
-    value?: Id64String;
-} | {
-    type: "idset";
-    value?: Id64String[];
-} | {
-    type: "string";
-    value?: string;
-} | {
-    type: "point2d";
-    value?: {
-        x: number;
-        y: number;
-    };
-} | {
-    type: "point3d";
-    value?: {
-        x: number;
-        y: number;
-        z: number;
-    };
-};
-
-// @beta
-export type ECSqlBindingType = "boolean" | "double" | "id" | "idset" | "int" | "long" | "string" | "point2d" | "point3d";
-
-// @beta
-export interface ECSqlQueryDef {
-    bindings?: ECSqlBinding[];
-    ctes?: string[];
-    ecsql: string;
-}
-
-// @beta
-export type ECSqlQueryReader = AsyncIterableIterator<ECSqlQueryRow>;
-
-// @beta
-export interface ECSqlQueryReaderOptions {
-    // (undocumented)
-    rowFormat?: ECSqlQueryRowFormat;
-}
-
-// @beta
-export interface ECSqlQueryRow {
-    // (undocumented)
-    [propertyName: string]: any;
-    // (undocumented)
-    [propertyIndex: number]: any;
-}
-
-// @beta
-export type ECSqlQueryRowFormat = "ECSqlPropertyNames" | "Indexes";
 
 // @beta
 export interface ECSqlSelectClauseBaseClassGroupingParams extends ECSqlSelectClauseGroupingParamsBase {
@@ -448,35 +164,9 @@ export interface ECSqlSelectClausePropertyValueRange {
 }
 
 // @beta
-export const ECSqlSnippets: {
-    createRawPropertyValueSelector(classAlias: string, propertyName: string, componentName?: string | undefined): string;
-    createRawPrimitiveValueSelector(value: PrimitiveValue | undefined): string;
-    createNullableSelector(props: {
-        checkSelector: string;
-        valueSelector: string;
-    }): string;
-    createConcatenatedValueJsonSelector(selectors: ECSqlValueSnippets.TypedValueSelectClauseProps[], checkSelector?: string | undefined): string;
-    createConcatenatedValueStringSelector(selectors: ECSqlValueSnippets.TypedValueSelectClauseProps[], checkSelector?: string | undefined): string;
-    TypedValueSelectClauseProps: typeof ECSqlValueSnippets.TypedValueSelectClauseProps;
-    createRelationshipPathJoinClause(props: ECSqlJoinSnippets.CreateRelationshipPathJoinClauseProps): Promise<string>;
-};
-
-// @beta
 export interface ECSqlValueSelector {
     // (undocumented)
     selector: string;
-}
-
-// @beta
-export type ECStructArrayProperty = ECStructProperty & ArrayPropertyAttributes;
-
-// @beta
-export type ECStructClass = ECClass;
-
-// @beta
-export interface ECStructProperty extends ECProperty {
-    // (undocumented)
-    structClass: ECStructClass;
 }
 
 export { GenericInstanceFilter }
@@ -746,15 +436,6 @@ export interface HierarchyProviderProps {
 }
 
 // @beta
-export type Id64String = string;
-
-// @beta
-export interface IECSqlQueryExecutor {
-    // (undocumented)
-    createQueryReader(ecsql: string, bindings?: ECSqlBinding[], config?: ECSqlQueryReaderOptions): ECSqlQueryReader;
-}
-
-// @beta
 export interface IHierarchyLevelDefinitionsFactory {
     defineHierarchyLevel(props: DefineHierarchyLevelProps): Promise<HierarchyLevelDefinition>;
     parseNode?: INodeParser;
@@ -763,35 +444,10 @@ export interface IHierarchyLevelDefinitionsFactory {
 }
 
 // @beta
-export interface IInstanceLabelSelectClauseFactory {
-    createSelectClause(props: CreateInstanceLabelSelectClauseProps): Promise<string>;
-}
-
-// @beta
 export interface ILimitingECSqlQueryExecutor {
     createQueryReader(query: ECSqlQueryDef, config?: ECSqlQueryReaderOptions & {
         limit?: number | "unbounded";
     }): ECSqlQueryReader;
-}
-
-// @beta
-export interface ILogger {
-    // (undocumented)
-    isEnabled: (category: string, level: LogLevel) => boolean;
-    // (undocumented)
-    logError: LogFunction;
-    // (undocumented)
-    logInfo: LogFunction;
-    // (undocumented)
-    logTrace: LogFunction;
-    // (undocumented)
-    logWarning: LogFunction;
-}
-
-// @beta
-export interface IMetadataProvider {
-    // (undocumented)
-    getSchema(schemaName: string): Promise<ECSchema | undefined>;
 }
 
 // @beta
@@ -809,18 +465,6 @@ export type INodePreProcessor = <TNode extends ProcessedCustomHierarchyNode | Pr
 export interface InstanceHierarchyNodeProcessingParams extends HierarchyNodeProcessingParamsBase {
     // (undocumented)
     grouping?: HierarchyNodeGroupingParams;
-}
-
-// @beta
-export interface InstanceKey {
-    className: string;
-    id: Id64String;
-}
-
-// @beta (undocumented)
-export namespace InstanceKey {
-    export function compare(lhs: InstanceKey, rhs: InstanceKey): number;
-    export function equals(lhs: InstanceKey, rhs: InstanceKey): boolean;
 }
 
 // @beta
@@ -842,20 +486,11 @@ export interface InstancesNodeKey {
 }
 
 // @beta
-export type IPrimitiveValueFormatter = (value: TypedPrimitiveValue) => Promise<string>;
-
-// @beta
 export interface LabelGroupingNodeKey {
     groupId?: string;
     label: string;
     type: "label-grouping";
 }
-
-// @beta (undocumented)
-export type LogFunction = (category: string, message: string) => void;
-
-// @beta (undocumented)
-export type LogLevel = "error" | "warning" | "info" | "trace";
 
 // @beta
 export enum NodeSelectClauseColumnNames {
@@ -918,9 +553,6 @@ export interface NonGroupingHierarchyNode extends BaseHierarchyNode {
 }
 
 // @beta
-export type OmitOverUnion<T, K extends PropertyKey> = T extends T ? Omit<T, K> : never;
-
-// @beta
 export type ParentHierarchyNode<TBase = HierarchyNode> = OmitOverUnion<TBase, "children">;
 
 // @beta
@@ -935,44 +567,6 @@ export type ParsedHierarchyNode = ParsedCustomHierarchyNode | ParsedInstanceHier
 export type ParsedInstanceHierarchyNode = Omit<ProcessedInstanceHierarchyNode, "label" | "parentKeys"> & {
     label: string | ConcatenatedValue;
 };
-
-// @beta
-export function parseFullClassName(fullClassName: string): {
-    schemaName: string;
-    className: string;
-};
-
-// @beta
-export interface Point2d {
-    // (undocumented)
-    x: number;
-    // (undocumented)
-    y: number;
-}
-
-// @beta
-export interface Point3d {
-    // (undocumented)
-    x: number;
-    // (undocumented)
-    y: number;
-    // (undocumented)
-    z: number;
-}
-
-// @beta
-export type PrimitiveValue = Id64String | string | number | boolean | Date | Point2d | Point3d;
-
-// @beta (undocumented)
-export namespace PrimitiveValue {
-    // (undocumented)
-    export function isPoint2d(value: PrimitiveValue): value is Point2d;
-    // (undocumented)
-    export function isPoint3d(value: PrimitiveValue): value is Point3d;
-}
-
-// @beta
-export type PrimitiveValueType = "Id" | Exclude<ECPrimitiveType, "Binary" | "IGeometry">;
 
 // @beta
 export type ProcessedCustomHierarchyNode = Omit<NonGroupingHierarchyNode, "key" | "children"> & {
@@ -1009,16 +603,6 @@ export interface PropertyOtherValuesGroupingNodeKey {
 }
 
 // @beta
-export interface PropertyValue {
-    // (undocumented)
-    className: string;
-    // (undocumented)
-    propertyName: string;
-    // (undocumented)
-    value: PrimitiveValue;
-}
-
-// @beta
 export interface PropertyValueGroupingNodeKey {
     formattedPropertyValue: string;
     propertyClassName: string;
@@ -1036,17 +620,6 @@ export interface PropertyValueRangeGroupingNodeKey {
 }
 
 // @beta
-export type RelationshipPath<TStep extends RelationshipPathStep = RelationshipPathStep> = TStep[];
-
-// @beta
-export interface RelationshipPathStep {
-    relationshipName: string;
-    relationshipReverse?: boolean;
-    sourceClassName: string;
-    targetClassName: string;
-}
-
-// @beta
 export class RowsLimitExceededError extends Error {
     constructor(limit: number);
     // (undocumented)
@@ -1058,41 +631,6 @@ export function setLogger(logger: ILogger | undefined): void;
 
 // @beta
 export type StandardHierarchyNodeKey = InstancesNodeKey | GroupingNodeKey;
-
-// @beta
-export type TypedPrimitiveValue = ({
-    value: number;
-    type: "Integer" | "Long";
-} | {
-    value: number;
-    type: "Double";
-    koqName?: string;
-} | {
-    value: boolean;
-    type: "Boolean";
-} | {
-    value: Id64String;
-    type: "Id";
-} | {
-    value: string;
-    type: "String";
-} | {
-    value: number | string | Date;
-    type: "DateTime";
-} | {
-    value: Point2d;
-    type: "Point2d";
-} | {
-    value: Point3d;
-    type: "Point3d";
-}) & {
-    extendedType?: string;
-};
-
-// @beta
-export namespace TypedPrimitiveValue {
-    export function create(value: PrimitiveValue, type: PrimitiveValueType, koqName?: string, extendedType?: string): TypedPrimitiveValue;
-}
 
 // (No @packageDocumentation comment for this package)
 

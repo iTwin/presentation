@@ -3,7 +3,10 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-export * as ECSql from "./shared/ecsql-snippets";
+// eslint-disable-next-line @itwin/no-internal-barrel-imports
+import * as ECSql from "./shared/ecsql-snippets";
+
+export { ECSql };
 
 export * from "./shared/ConcatenatedValue";
 export * from "./shared/ECSqlCore";
