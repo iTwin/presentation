@@ -4,10 +4,11 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { expect } from "chai";
+import { ResolvablePromise } from "presentation-test-utilities";
 import { ECClass, ECNavigationProperty, ECRelationshipClass, IMetadataProvider } from "../../../hierarchies/ECMetadata";
 import { createRelationshipPathJoinClause } from "../../../hierarchies/queries/ecsql-snippets/ECSqlJoinSnippets";
 import { trimWhitespace } from "../../../hierarchies/Utils";
-import { ClassStubs, createClassStubs, ResolvablePromise } from "../../Utils";
+import { ClassStubs, createClassStubs } from "../../Utils";
 
 describe("createRelationshipPathJoinClause", () => {
   const metadata = {} as unknown as IMetadataProvider;

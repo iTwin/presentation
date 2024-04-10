@@ -53,6 +53,7 @@
     "eslint": "^8.56.0",
     "mocha": "^10.3.0",
     "nyc": "^15.1.0",
+    "presentation-test-utilities": "workspace:^",
     "sinon": "^17.0.1",
     "sinon-chai": "^3.7.0",
     "source-map-support": "^0.5.21",

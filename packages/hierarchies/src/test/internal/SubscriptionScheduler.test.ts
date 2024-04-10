@@ -4,6 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { expect } from "chai";
+import { ResolvablePromise } from "presentation-test-utilities";
 import {
   asapScheduler,
   asyncScheduler,
@@ -19,7 +20,6 @@ import {
 } from "rxjs";
 import sinon from "sinon";
 import { SubscriptionScheduler } from "../../hierarchies/internal/SubscriptionScheduler";
-import { ResolvablePromise } from "../Utils";
 
 describe("SubscriptionScheduler", () => {
   const concurrentSubscriptions = 3;

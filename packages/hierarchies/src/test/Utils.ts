@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { Observable } from "rxjs";
+import { from, ObservableInput } from "rxjs";
 import sinon from "sinon";
 import { BeDuration, Logger, LogLevel, StopWatch } from "@itwin/core-bentley";
 import { ECClass, ECEntityClass, ECProperty, ECRelationshipClass, ECRelationshipConstraint, IMetadataProvider } from "../hierarchies/ECMetadata";
@@ -26,10 +26,10 @@ export function setupLogging(levels: Array<{ namespace: string; level: LogLevel 
   levels.forEach(({ namespace, level }) => Logger.setLevel(namespace, level));
 }
 
-export async function getObservableResult<T>(obs: Observable<T>): Promise<Array<T>> {
+export async function collect<T>(obs: ObservableInput<T>): Promise<Array<T>> {
   const arr = new Array<T>();
   return new Promise((resolve, reject) => {
-    obs.subscribe({
+    from(obs).subscribe({
       next(item: T) {
         arr.push(item);
       },
@@ -41,14 +41,6 @@ export async function getObservableResult<T>(obs: Observable<T>): Promise<Array<
       },
     });
   });
-}
-
-export async function toArray<T>(asyncIter: AsyncIterableIterator<T>): Promise<Array<T>> {
-  const arr = [];
-  for await (const item of asyncIter) {
-    arr.push(item);
-  }
-  return arr;
 }
 
 export function createTestParsedCustomNode(src?: Partial<ParsedCustomHierarchyNode>): ParsedCustomHierarchyNode {
@@ -200,36 +192,6 @@ export function createClassStubs(schemas: IMetadataProvider): ClassStubs {
     return res;
   };
   return { stubEntityClass, stubRelationshipClass, stubOtherClass, resetHistory: () => stub.resetHistory(), restore: () => stub.restore(), stub };
-}
-
-/** Creates Promise */
-export class ResolvablePromise<T> implements Promise<T> {
-  private _wrapped: Promise<T>;
-  private _resolve!: (value: T) => void;
-  public constructor() {
-    this._wrapped = new Promise<T>((resolve: (value: T) => void) => {
-      this._resolve = resolve;
-    });
-  }
-  public [Symbol.toStringTag] = "ResolvablePromise";
-  public async then<TResult1 = T, TResult2 = never>(
-    onFulfilled?: ((value: T) => TResult1 | Promise<TResult1>) | undefined | null,
-    onRejected?: ((reason: any) => TResult2 | Promise<TResult2>) | undefined | null,
-  ): Promise<TResult1 | TResult2> {
-    return this._wrapped.then(onFulfilled, onRejected);
-  }
-  public async resolve(result: T) {
-    this._resolve(result);
-    await new Promise<void>((resolve: () => void) => {
-      setImmediate(resolve);
-    });
-  }
-  public async catch<TResult = never>(onRejected?: ((reason: any) => TResult | PromiseLike<TResult>) | null | undefined): Promise<T | TResult> {
-    return this._wrapped.catch(onRejected);
-  }
-  public async finally(onFinally?: (() => void) | null | undefined): Promise<T> {
-    return this._wrapped.finally(onFinally);
-  }
 }
 
 export async function waitFor<T>(check: () => Promise<T> | T, timeout?: number): Promise<T> {

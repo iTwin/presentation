@@ -10,7 +10,7 @@ import { defaultNodesParser, RowDef, TreeQueryResultsReader } from "../../hierar
 import { ILimitingECSqlQueryExecutor } from "../../hierarchies/queries/LimitingECSqlQueryExecutor";
 import { NodeSelectClauseColumnNames } from "../../hierarchies/queries/NodeSelectQueryFactory";
 import { ConcatenatedValue } from "../../hierarchies/values/ConcatenatedValue";
-import { createFakeQueryReader, createTestParsedInstanceNode, toArray } from "../Utils";
+import { collect, createFakeQueryReader, createTestParsedInstanceNode } from "../Utils";
 
 describe("TreeQueryResultsReader", () => {
   const parser = sinon.stub<[{ [columnName: string]: any }], ParsedInstanceHierarchyNode>();
@@ -37,7 +37,7 @@ describe("TreeQueryResultsReader", () => {
 
     const reader = new TreeQueryResultsReader({ parser });
     const query = { ecsql: "QUERY", ctes: ["CTE1, CTE2"] };
-    const result = await toArray(reader.read(executor, query));
+    const result = await collect(reader.read(executor, query));
     expect(executor.createQueryReader).to.be.calledOnceWith(query, { rowFormat: "ECSqlPropertyNames" });
     expect(parser).to.be.calledThrice;
     expect(result).to.deep.eq(nodes);
@@ -47,7 +47,7 @@ describe("TreeQueryResultsReader", () => {
     executor.createQueryReader.returns(createFakeQueryReader([]));
     const reader = new TreeQueryResultsReader({ parser });
     const query = { ecsql: "QUERY" };
-    await toArray(reader.read(executor, query, 123));
+    await collect(reader.read(executor, query, 123));
     expect(executor.createQueryReader).to.be.calledOnceWith(query, { rowFormat: "ECSqlPropertyNames", limit: 123 });
   });
 });
