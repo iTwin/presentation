@@ -41,6 +41,7 @@ export class ReportingTreeNodeLoader<IPresentationTreeDataProvider extends TreeD
       tap({
         subscribe: () => (time = performance.now()),
         unsubscribe: () => this._trackedRequests.delete(parentId),
+        error: () => this._trackedRequests.delete(parentId),
         complete: () => {
           if (this._trackedRequests.has(parentId)) {
             this._trackedRequests.delete(parentId);

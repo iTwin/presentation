@@ -27,6 +27,7 @@ import {
   UsePresentationTreeStateResult,
 } from "../../../presentation-components/tree/controlled/UsePresentationTreeState";
 import { PresentationTreeDataProvider } from "../../../presentation-components/tree/DataProvider";
+import { ReportingTreeNodeLoader } from "../../../presentation-components/tree/ReportingTreeNodeLoader";
 import { createTreeNodeItem } from "../../../presentation-components/tree/Utils";
 import { renderHook, waitFor } from "../../TestUtils";
 
@@ -46,7 +47,6 @@ describe("usePresentationTreeState", () => {
     imodel,
     ruleset: rulesetId,
     pagingSize: 5,
-    onNodeLoaded: undefined,
   };
 
   beforeEach(async () => {
@@ -110,12 +110,13 @@ describe("usePresentationTreeState", () => {
   });
 
   it("creates new reporting nodeLoader when `onNodeLoaded` callback passed", async () => {
-    const { result, rerender } = renderHook((props: UsePresentationTreeStateProps) => usePresentationTreeState(props), { initialProps });
-    const oldNodeLoader = await waitForState(result);
+    const { result, rerender } = renderHook((props: UsePresentationTreeStateProps) => usePresentationTreeState({ ...props, onNodeLoaded: () => {} }), {
+      initialProps,
+    });
 
     rerender({ ...initialProps, onNodeLoaded: () => {} });
 
-    await waitFor(() => expect(result.current?.nodeLoader).to.not.eq(oldNodeLoader));
+    await waitFor(() => expect(result.current?.nodeLoader instanceof ReportingTreeNodeLoader).to.be.true);
   });
 
   describe("auto-updating model source", () => {
@@ -124,12 +125,11 @@ describe("usePresentationTreeState", () => {
     });
 
     it("doesn't create a new nodeLoader when `PresentationManager` raises `onIModelHierarchyChanged` event with unrelated ruleset", async () => {
-      const { result } = renderHook((props: UsePresentationTreeStateProps) => usePresentationTreeState(props), { initialProps });
-      const oldNodeLoader = await waitForState(result);
+      const { result } = renderHook((props: UsePresentationTreeStateProps) => usePresentationTreeState({ ...props, onNodeLoaded: () => {} }), { initialProps });
 
       onIModelHierarchyChanged.raiseEvent({ rulesetId: "unrelated", updateInfo: "FULL", imodelKey: imodel.key });
 
-      await waitFor(() => expect(result.current?.nodeLoader).to.eq(oldNodeLoader));
+      await waitFor(() => expect(result.current?.nodeLoader instanceof ReportingTreeNodeLoader).to.be.true);
     });
 
     it("doesn't create a new nodeLoader when `PresentationManager` raises `onIModelHierarchyChanged` event with unrelated imodel", async () => {

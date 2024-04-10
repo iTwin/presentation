@@ -135,6 +135,7 @@ interface TreeState {
  * @public
  */
 export function usePresentationTreeState<TEventHandler extends TreeEventHandler = TreeEventHandler>({
+  onNodeLoaded,
   eventHandlerFactory,
   seedTreeModel,
   enableHierarchyAutoUpdate,
@@ -142,8 +143,10 @@ export function usePresentationTreeState<TEventHandler extends TreeEventHandler 
   ...dataProviderProps
 }: UsePresentationTreeStateProps<TEventHandler>): UsePresentationTreeStateResult<TEventHandler> | undefined {
   const firstRenderRef = useRef(true);
+  const onNodeLoadedRef = useRef(onNodeLoaded);
   const treeStateProps = useMemo(
     (): TreeStateProps => ({
+      onNodeLoaded: onNodeLoadedRef.current,
       ...dataProviderProps,
       treeModel: firstRenderRef.current ? seedTreeModel : undefined,
     }),
