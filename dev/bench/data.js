@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1712649011951,
+  "lastUpdate": 1712750028813,
   "repoUrl": "https://github.com/iTwin/presentation",
   "entries": {
     "Benchmark": [
@@ -3891,6 +3891,140 @@ window.BENCHMARK_DATA = {
             "value": 177,
             "unit": "ms",
             "extra": "count: 9\nmax: 177\np95: 177\nmedian: 40"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "35135765+grigasp@users.noreply.github.com",
+            "name": "Grigas",
+            "username": "grigasp"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "6a8b5084c8eb690ea9f03be8a82ea745bd83d7c5",
+          "message": "Introduce `@itwin/presentation-shared` package for shared code (#521)\n\n* set up a `presentation-shared` package\r\n\r\n* Move logging API to the shared package\r\n\r\n* Move utility APIs from `hierarchies` to `shared`\r\n\r\n* Move metadata APIs from `hierarchies` to `shared`\r\n\r\n* Move value APIs from `hierarchies` to `shared`\r\n\r\n* Move `ConcatenatedValue` from `hierarchies` to `shared`\r\n\r\n* Move formatting APIs from `hierarchies` to `shared`\r\n\r\n* Move ECSQL APIs from `hierarchies` to `shared`\r\n\r\n* Add `shared` package debug config\r\n\r\n* Move instance label factories from `hierarchies` to `shared`\r\n\r\n* Move some files\r\n\r\n* extract-api",
+          "timestamp": "2024-04-10T11:50:59Z",
+          "tree_id": "e5e650f238c4c821d45baa0a70edc6dc0bcc1869",
+          "url": "https://github.com/iTwin/presentation/commit/6a8b5084c8eb690ea9f03be8a82ea745bd83d7c5"
+        },
+        "date": 1712750028416,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "flat 50k elements list",
+            "value": 4712.8,
+            "unit": "ms"
+          },
+          {
+            "name": "flat 50k elements list (P95 of main thread blocks)",
+            "value": 67,
+            "unit": "ms",
+            "extra": "count: 5\nmax: 67\np95: 67\nmedian: 35"
+          },
+          {
+            "name": "grouping by label",
+            "value": 6764.14,
+            "unit": "ms"
+          },
+          {
+            "name": "grouping by label (P95 of main thread blocks)",
+            "value": 75,
+            "unit": "ms",
+            "extra": "count: 48\nmax: 198\np95: 75\nmedian: 49.5"
+          },
+          {
+            "name": "grouping by class",
+            "value": 6628.58,
+            "unit": "ms"
+          },
+          {
+            "name": "grouping by class (P95 of main thread blocks)",
+            "value": 110,
+            "unit": "ms",
+            "extra": "count: 44\nmax: 196\np95: 110\nmedian: 46.5"
+          },
+          {
+            "name": "grouping by property",
+            "value": 7432.27,
+            "unit": "ms"
+          },
+          {
+            "name": "grouping by property (P95 of main thread blocks)",
+            "value": 148,
+            "unit": "ms",
+            "extra": "count: 48\nmax: 386\np95: 148\nmedian: 48"
+          },
+          {
+            "name": "grouping by base class (10 classes)",
+            "value": 6170.92,
+            "unit": "ms"
+          },
+          {
+            "name": "grouping by base class (10 classes) (P95 of main thread blocks)",
+            "value": 585,
+            "unit": "ms",
+            "extra": "count: 7\nmax: 585\np95: 585\nmedian: 143"
+          },
+          {
+            "name": "grouping by multiple attributes",
+            "value": 10368.4,
+            "unit": "ms"
+          },
+          {
+            "name": "grouping by multiple attributes (P95 of main thread blocks)",
+            "value": 121,
+            "unit": "ms",
+            "extra": "count: 52\nmax: 148\np95: 121\nmedian: 46.5"
+          },
+          {
+            "name": "hide if no children required to finalize root, w/o children",
+            "value": 50524.59,
+            "unit": "ms"
+          },
+          {
+            "name": "hide if no children required to finalize root, w/o children (P95 of main thread blocks)",
+            "value": 41,
+            "unit": "ms",
+            "extra": "count: 17\nmax: 41\np95: 41\nmedian: 29"
+          },
+          {
+            "name": "hide if no children required to finalize root, w/ children",
+            "value": 165.52,
+            "unit": "ms"
+          },
+          {
+            "name": "hide if no children required to finalize root, w/ children (P95 of main thread blocks)",
+            "value": 27,
+            "unit": "ms",
+            "extra": "count: 1\nmax: 27\np95: 27\nmedian: 27"
+          },
+          {
+            "name": "models tree initial (Baytown)",
+            "value": 43.53,
+            "unit": "ms"
+          },
+          {
+            "name": "models tree initial (Baytown) (P95 of main thread blocks)",
+            "value": 0,
+            "unit": "ms",
+            "extra": "count: 0\nmax: N/A\np95: N/A\nmedian: N/A"
+          },
+          {
+            "name": "models tree full (Baytown)",
+            "value": 1651.18,
+            "unit": "ms"
+          },
+          {
+            "name": "models tree full (Baytown) (P95 of main thread blocks)",
+            "value": 181,
+            "unit": "ms",
+            "extra": "count: 11\nmax: 181\np95: 181\nmedian: 30"
           }
         ]
       }
