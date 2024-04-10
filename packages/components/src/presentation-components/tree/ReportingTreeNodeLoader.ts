@@ -17,26 +17,36 @@ import { toRxjsObservable } from "./Utils";
  */
 export class ReportingTreeNodeLoader<IPresentationTreeDataProvider extends TreeDataProvider> extends PagedTreeNodeLoader<IPresentationTreeDataProvider> {
   private _nodeLoader: PagedTreeNodeLoader<IPresentationTreeDataProvider>;
-  private _onNodeLoaded: (props: { node: string | undefined; duration: number }) => void;
+  private _onNodeLoaded: (props: { node: string; duration: number }) => void;
+  private _trackedRequests: Set<string>;
 
-  constructor(nodeLoader: PagedTreeNodeLoader<IPresentationTreeDataProvider>, onNodeLoaded: (props: { node: string | undefined; duration: number }) => void) {
+  constructor(nodeLoader: PagedTreeNodeLoader<IPresentationTreeDataProvider>, onNodeLoaded: (props: { node: string; duration: number }) => void) {
     super(nodeLoader.dataProvider, nodeLoader.modelSource, nodeLoader.pageSize);
     this._nodeLoader = nodeLoader;
     this._onNodeLoaded = onNodeLoaded;
+    this._trackedRequests = new Set();
   }
 
   public override loadNode(parent: TreeModelNode | TreeModelRootNode, childIndex: number): Observable<TreeNodeLoadResult> {
     const observable = this._nodeLoader.loadNode(parent, childIndex);
+    const parentId = parent.id ?? "root";
 
-    if (childIndex !== 0) {
+    if (childIndex !== 0 || this._trackedRequests.has(parentId)) {
       return observable;
     }
 
     let time: number;
+    this._trackedRequests.add(parentId);
     const tracked = toRxjsObservable(observable).pipe(
       tap({
         subscribe: () => (time = performance.now()),
-        complete: () => this._onNodeLoaded({ node: parent.id, duration: performance.now() - time }),
+        unsubscribe: () => this._trackedRequests.delete(parentId),
+        complete: () => {
+          if (this._trackedRequests.has(parentId)) {
+            this._trackedRequests.delete(parentId);
+            this._onNodeLoaded({ node: parentId, duration: performance.now() - time });
+          }
+        },
       }),
     );
     return tracked;

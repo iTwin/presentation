@@ -4,9 +4,9 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { expect } from "chai";
-import { of } from "rxjs";
+import { of, Observable as RxjsObservable, take } from "rxjs";
 import sinon from "sinon";
-import { ITreeNodeLoader, PagedTreeNodeLoader, TreeDataProvider, TreeModelNode, TreeNodeItem, TreeNodeLoadResult } from "@itwin/components-react";
+import { ITreeNodeLoader, Observable, PagedTreeNodeLoader, TreeDataProvider, TreeModelNode, TreeNodeItem, TreeNodeLoadResult } from "@itwin/components-react";
 import { ReportingTreeNodeLoader } from "../../presentation-components/tree/ReportingTreeNodeLoader";
 import { waitFor } from "../TestUtils";
 
@@ -35,6 +35,10 @@ describe("ReportingTreeNodeLoader", () => {
     reportStub.reset();
   });
 
+  function toRxjsObservable<T>(source: Observable<T>): RxjsObservable<T> {
+    return new RxjsObservable((subscriber) => source.subscribe(subscriber));
+  }
+
   describe("loadNode", () => {
     it("reports node loading duration", async () => {
       const performanceStub = sinon.stub(performance, "now");
@@ -56,8 +60,8 @@ describe("ReportingTreeNodeLoader", () => {
     });
 
     it("only reports the first page", async () => {
-      const observable = reportingNodeLoader.loadNode({ id: undefined, depth: -1, numChildren: undefined }, 5);
       let loadedNodes: TreeNodeItem[] = [];
+      const observable = reportingNodeLoader.loadNode({ id: undefined, depth: -1, numChildren: undefined }, 5);
 
       observable.subscribe({
         next: (result) => (loadedNodes = [...loadedNodes, ...result.loadedNodes]),
@@ -66,6 +70,49 @@ describe("ReportingTreeNodeLoader", () => {
       await waitFor(() => {
         expect(loadedNodes).to.not.be.undefined;
         expect(loadedNodes).to.have.lengthOf(3);
+        expect(reportStub).to.not.be.called;
+      });
+    });
+
+    it("does not report the same request twice", async () => {
+      let loadedNodes: TreeNodeItem[] = [];
+      const observable1 = reportingNodeLoader.loadNode({ id: "id" } as TreeModelNode, 0);
+      const observable2 = reportingNodeLoader.loadNode({ id: "id" } as TreeModelNode, 0);
+
+      observable1.subscribe({
+        next: (result) => (loadedNodes = [...loadedNodes, ...result.loadedNodes]),
+      });
+
+      observable2.subscribe({
+        next: (result) => (loadedNodes = [...loadedNodes, ...result.loadedNodes]),
+      });
+
+      await waitFor(() => {
+        expect(loadedNodes).to.not.be.undefined;
+        expect(loadedNodes).to.have.lengthOf(6);
+        expect(reportStub).to.be.calledOnce;
+      });
+    });
+
+    it("does not report if no longer subscribed", async () => {
+      let loadedNodes: TreeNodeItem[] = [];
+      const observable = reportingNodeLoader.loadNode({ id: "id" } as TreeModelNode, 0);
+
+      toRxjsObservable(observable)
+        .pipe(take(1))
+        .subscribe({
+          next: (result) => {
+            loadedNodes = [...loadedNodes, ...result.loadedNodes];
+          },
+        });
+
+      observable.subscribe({
+        next: (result) => (loadedNodes = [...loadedNodes, ...result.loadedNodes]),
+      });
+
+      await waitFor(() => {
+        expect(loadedNodes).to.not.be.undefined;
+        expect(loadedNodes).to.have.lengthOf(4);
         expect(reportStub).to.not.be.called;
       });
     });

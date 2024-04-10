@@ -71,8 +71,8 @@ export interface UsePresentationTreeStateProps<TEventHandler extends TreeEventHa
    * Callback for when a tree node is loaded.
    */
   onNodeLoaded?: (props: {
-    /** ID of the loaded node, undefined if it is the root. */
-    node: string | undefined;
+    /** ID of the loaded node, `root` if it is the root. */
+    node: string;
     /** Duration how long the load took in milliseconds. */
     duration: number;
   }) => void;
@@ -122,7 +122,7 @@ export interface PresentationTreeEventHandlerProps {
 interface TreeStateProps extends PresentationTreeDataProviderProps {
   pagingSize: number;
   treeModel?: TreeModel;
-  onNodeLoaded?: (props: { node: string | undefined; duration: number }) => void;
+  onNodeLoaded?: (props: { node: string; duration: number }) => void;
 }
 
 interface TreeState {
@@ -136,7 +136,6 @@ interface TreeState {
  */
 export function usePresentationTreeState<TEventHandler extends TreeEventHandler = TreeEventHandler>({
   eventHandlerFactory,
-  onNodeLoaded,
   seedTreeModel,
   enableHierarchyAutoUpdate,
   filteringParams,
@@ -147,7 +146,6 @@ export function usePresentationTreeState<TEventHandler extends TreeEventHandler 
     (): TreeStateProps => ({
       ...dataProviderProps,
       treeModel: firstRenderRef.current ? seedTreeModel : undefined,
-      onNodeLoaded,
     }),
     Object.values(dataProviderProps), // eslint-disable-line react-hooks/exhaustive-deps
   );
@@ -229,13 +227,17 @@ function useTreeState(props: TreeStateProps) {
     };
   }, [props]);
 
-  const onReload = useCallback((reloadedTree: ReloadedTree) => {
-    prevStateRef.current?.dataProvider.dispose();
+  const onReload = useCallback(
+    (reloadedTree: ReloadedTree) => {
+      prevStateRef.current?.dataProvider.dispose();
 
-    const { modelSource, dataProvider } = reloadedTree;
-    const nodeLoader = new PagedTreeNodeLoader(dataProvider, modelSource, dataProvider.pagingSize!);
-    setState({ dataProvider, nodeLoader });
-  }, []);
+      const { modelSource, dataProvider } = reloadedTree;
+      const pagedLoader = new PagedTreeNodeLoader(dataProvider, modelSource, dataProvider.pagingSize!);
+      const nodeLoader = props.onNodeLoaded ? new ReportingTreeNodeLoader(pagedLoader, props.onNodeLoaded) : pagedLoader;
+      setState({ dataProvider, nodeLoader });
+    },
+    [props.onNodeLoaded],
+  );
 
   return { state, onReload };
 }

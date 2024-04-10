@@ -46,6 +46,7 @@ describe("usePresentationTreeState", () => {
     imodel,
     ruleset: rulesetId,
     pagingSize: 5,
+    onNodeLoaded: undefined,
   };
 
   beforeEach(async () => {
@@ -112,7 +113,7 @@ describe("usePresentationTreeState", () => {
     const { result, rerender } = renderHook((props: UsePresentationTreeStateProps) => usePresentationTreeState(props), { initialProps });
     const oldNodeLoader = await waitForState(result);
 
-    rerender({ ...initialProps, pagingSize: 20, onNodeLoaded: () => {} });
+    rerender({ ...initialProps, onNodeLoaded: () => {} });
 
     await waitFor(() => expect(result.current?.nodeLoader).to.not.eq(oldNodeLoader));
   });
@@ -142,7 +143,7 @@ describe("usePresentationTreeState", () => {
 
     it("creates a new nodeLoader when `PresentationManager` raises a related `onIModelHierarchyChanged event`", async () => {
       const { result } = renderHook((props: UsePresentationTreeStateProps) => usePresentationTreeState(props), {
-        initialProps: { ...initialProps, ruleset: rulesetId },
+        initialProps: { ...initialProps, ruleset: rulesetId, onNodeLoaded: () => {} },
       });
       const oldNodeLoader = await waitForState(result);
 
