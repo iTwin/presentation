@@ -28,7 +28,7 @@ import {
   FilteredHierarchyNode,
 } from "../hierarchies/internal/FilteringHierarchyLevelDefinitionsFactory";
 import { RowDef } from "../hierarchies/internal/TreeNodesReader";
-import { ECSqlSelectClauseGroupingParams, NodeSelectClauseColumnNames } from "../hierarchies/queries/NodeSelectQueryFactory";
+import { ECSqlSelectClauseGroupingParams, NodeSelectClauseColumnNames } from "../hierarchies/NodeSelectQueryFactory";
 import { collect, createFakeQueryReader, createMetadataProviderStub, waitFor } from "./Utils";
 
 describe("HierarchyProvider", () => {

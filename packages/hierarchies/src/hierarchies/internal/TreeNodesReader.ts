@@ -6,8 +6,8 @@
 import { ConcatenatedValue, ECSqlQueryDef, Id64String } from "@itwin/presentation-shared";
 import { INodeParser } from "../HierarchyDefinition";
 import { InstanceHierarchyNodeProcessingParams, ParsedHierarchyNode, ParsedInstanceHierarchyNode } from "../HierarchyNode";
-import { ILimitingECSqlQueryExecutor } from "../queries/LimitingECSqlQueryExecutor";
-import { NodeSelectClauseColumnNames } from "../queries/NodeSelectQueryFactory";
+import { ILimitingECSqlQueryExecutor } from "../LimitingECSqlQueryExecutor";
+import { NodeSelectClauseColumnNames } from "../NodeSelectQueryFactory";
 
 /** @internal */
 export interface TreeQueryResultsReaderProps {

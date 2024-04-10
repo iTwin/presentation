@@ -13,8 +13,8 @@ import {
   GenericInstanceFilterRuleOperator,
 } from "@itwin/core-common";
 import { EC, trimWhitespace } from "@itwin/presentation-shared";
-import { NodeSelectClauseColumnNames, NodeSelectQueryFactory } from "../../hierarchies/queries/NodeSelectQueryFactory";
-import { createMetadataProviderStub } from "../Utils";
+import { NodeSelectClauseColumnNames, NodeSelectQueryFactory } from "../hierarchies/NodeSelectQueryFactory";
+import { createMetadataProviderStub } from "./Utils";
 
 describe("NodeSelectQueryFactory", () => {
   let metadataProvider: ReturnType<typeof createMetadataProviderStub>;

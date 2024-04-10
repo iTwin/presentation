@@ -7,7 +7,7 @@ import { expect } from "chai";
 import sinon from "sinon";
 import { IECSqlQueryExecutor, trimWhitespace } from "@itwin/presentation-shared";
 import { RowsLimitExceededError } from "../../hierarchies/HierarchyErrors";
-import { createLimitingECSqlQueryExecutor } from "../../hierarchies/queries/LimitingECSqlQueryExecutor";
+import { createLimitingECSqlQueryExecutor } from "../../hierarchies/LimitingECSqlQueryExecutor";
 import { collect, createFakeQueryReader } from "../Utils";
 
 describe("createLimitingECSqlQueryExecutor", () => {

@@ -74,8 +74,8 @@ import { shareReplayWithErrors } from "./internal/operators/ShareReplayWithError
 import { sortNodesByLabelOperator } from "./internal/operators/Sorting";
 import { SubscriptionScheduler } from "./internal/SubscriptionScheduler";
 import { TreeQueryResultsReader } from "./internal/TreeNodesReader";
-import { ILimitingECSqlQueryExecutor } from "./queries/LimitingECSqlQueryExecutor";
-import { NodeSelectClauseColumnNames } from "./queries/NodeSelectQueryFactory";
+import { ILimitingECSqlQueryExecutor } from "./LimitingECSqlQueryExecutor";
+import { NodeSelectClauseColumnNames } from "./NodeSelectQueryFactory";
 
 const LOGGING_NAMESPACE = `${CommonLoggingNamespace}.HierarchyProvider`;
 const DEFAULT_QUERY_CONCURRENCY = 10;

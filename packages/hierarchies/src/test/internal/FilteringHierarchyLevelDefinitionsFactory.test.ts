@@ -22,7 +22,7 @@ import {
   FilteringHierarchyLevelDefinitionsFactory,
 } from "../../hierarchies/internal/FilteringHierarchyLevelDefinitionsFactory";
 import * as reader from "../../hierarchies/internal/TreeNodesReader";
-import { NodeSelectClauseColumnNames } from "../../hierarchies/queries/NodeSelectQueryFactory";
+import { NodeSelectClauseColumnNames } from "../../hierarchies/NodeSelectQueryFactory";
 import {
   createMetadataProviderStub,
   createTestInstanceKey,

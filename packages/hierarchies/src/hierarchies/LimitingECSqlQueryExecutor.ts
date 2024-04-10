@@ -5,10 +5,10 @@
 
 import { StopWatch } from "@itwin/core-bentley";
 import { ECSqlQueryDef, ECSqlQueryReader, ECSqlQueryReaderOptions, ECSqlQueryRow, IECSqlQueryExecutor } from "@itwin/presentation-shared";
-import { RowsLimitExceededError } from "../HierarchyErrors";
-import { LOGGING_NAMESPACE as CommonLoggingNamespace } from "../internal/Common";
-import { MainThreadBlockHandler } from "../internal/MainThreadBlockHandler";
-import { getLogger } from "../Logging";
+import { RowsLimitExceededError } from "./HierarchyErrors";
+import { LOGGING_NAMESPACE as CommonLoggingNamespace } from "./internal/Common";
+import { MainThreadBlockHandler } from "./internal/MainThreadBlockHandler";
+import { getLogger } from "./Logging";
 
 /**
  * An interface for something that knows how to create a limiting ECSQL query reader.
