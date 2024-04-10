@@ -3,13 +3,11 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
+import { ConcatenatedValue, ECSqlQueryDef, Id64String } from "@itwin/presentation-shared";
 import { INodeParser } from "../HierarchyDefinition";
 import { InstanceHierarchyNodeProcessingParams, ParsedHierarchyNode, ParsedInstanceHierarchyNode } from "../HierarchyNode";
-import { ECSqlQueryDef } from "../queries/ECSqlCore";
-import { ILimitingECSqlQueryExecutor } from "../queries/LimitingECSqlQueryExecutor";
-import { NodeSelectClauseColumnNames } from "../queries/NodeSelectQueryFactory";
-import { ConcatenatedValue } from "../values/ConcatenatedValue";
-import { Id64String } from "../values/Values";
+import { ILimitingECSqlQueryExecutor } from "../LimitingECSqlQueryExecutor";
+import { NodeSelectClauseColumnNames } from "../NodeSelectQueryFactory";
 
 /** @internal */
 export interface TreeQueryResultsReaderProps {

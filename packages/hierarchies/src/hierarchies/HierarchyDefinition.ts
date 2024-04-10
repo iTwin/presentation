@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { GenericInstanceFilter } from "@itwin/core-common";
-import { IMetadataProvider } from "./ECMetadata";
+import { ECSqlQueryDef, getClass, Id64String, IMetadataProvider, InstanceKey, parseFullClassName } from "@itwin/presentation-shared";
 import {
   HierarchyNode,
   HierarchyNodeKey,
@@ -15,10 +15,6 @@ import {
   ProcessedHierarchyNode,
   ProcessedInstanceHierarchyNode,
 } from "./HierarchyNode";
-import { getClass } from "./internal/GetClass";
-import { parseFullClassName } from "./Metadata";
-import { ECSqlQueryDef } from "./queries/ECSqlCore";
-import { Id64String, InstanceKey } from "./values/Values";
 
 /**
  * A nodes definition that returns a single custom defined node.

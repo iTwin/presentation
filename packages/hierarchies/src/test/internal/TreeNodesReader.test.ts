@@ -5,11 +5,11 @@
 
 import { expect } from "chai";
 import sinon from "sinon";
+import { ConcatenatedValue } from "@itwin/presentation-shared";
 import { ParsedHierarchyNode, ParsedInstanceHierarchyNode } from "../../hierarchies/HierarchyNode";
 import { defaultNodesParser, RowDef, TreeQueryResultsReader } from "../../hierarchies/internal/TreeNodesReader";
-import { ILimitingECSqlQueryExecutor } from "../../hierarchies/queries/LimitingECSqlQueryExecutor";
-import { NodeSelectClauseColumnNames } from "../../hierarchies/queries/NodeSelectQueryFactory";
-import { ConcatenatedValue } from "../../hierarchies/values/ConcatenatedValue";
+import { ILimitingECSqlQueryExecutor } from "../../hierarchies/LimitingECSqlQueryExecutor";
+import { NodeSelectClauseColumnNames } from "../../hierarchies/NodeSelectQueryFactory";
 import { collect, createFakeQueryReader, createTestParsedInstanceNode } from "../Utils";
 
 describe("TreeQueryResultsReader", () => {

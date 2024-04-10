@@ -6,8 +6,9 @@
 import { expect } from "chai";
 import { of } from "rxjs";
 import sinon from "sinon";
+import { ILogger, LogLevel } from "@itwin/presentation-shared";
 import { doLog, log } from "../../hierarchies/internal/LoggingUtils";
-import { ILogger, LogLevel, setLogger } from "../../hierarchies/Logging";
+import { setLogger } from "../../hierarchies/Logging";
 
 describe("LoggingUtils", () => {
   let logger: sinon.SinonStubbedInstance<ILogger>;

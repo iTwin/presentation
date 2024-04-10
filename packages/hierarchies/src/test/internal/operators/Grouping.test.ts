@@ -7,7 +7,7 @@ import { expect } from "chai";
 import { from } from "rxjs";
 import sinon from "sinon";
 import { LogLevel } from "@itwin/core-bentley";
-import { IMetadataProvider } from "../../../hierarchies/ECMetadata";
+import { createDefaultValueFormatter, IMetadataProvider, IPrimitiveValueFormatter } from "@itwin/presentation-shared";
 import { BaseClassChecker } from "../../../hierarchies/internal/Common";
 import { createGroupingHandlers, createGroupingOperator, GroupingHandlerResult, LOGGING_NAMESPACE } from "../../../hierarchies/internal/operators/Grouping";
 import * as autoExpand from "../../../hierarchies/internal/operators/grouping/AutoExpand";
@@ -16,7 +16,6 @@ import * as classGrouping from "../../../hierarchies/internal/operators/grouping
 import * as groupHiding from "../../../hierarchies/internal/operators/grouping/GroupHiding";
 import * as labelGrouping from "../../../hierarchies/internal/operators/grouping/LabelGrouping";
 import * as propertiesGrouping from "../../../hierarchies/internal/operators/grouping/PropertiesGrouping";
-import { createDefaultValueFormatter, IPrimitiveValueFormatter } from "../../../hierarchies/values/Formatting";
 import {
   collect,
   createTestProcessedCustomNode,

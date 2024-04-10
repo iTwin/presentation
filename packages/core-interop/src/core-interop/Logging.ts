@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { LogLevel as CoreLogLevel } from "@itwin/core-bentley";
-import { ILogger, LogLevel } from "@itwin/presentation-hierarchies";
+import { ILogger, LogLevel } from "@itwin/presentation-shared";
 
 /**
  * Defines input for `createLogger`. Generally, this is the [Logger](https://www.itwinjs.org/reference/core-bentley/logging/logger/)
@@ -19,8 +19,8 @@ interface ICoreLogger {
 }
 
 /**
- * Creates an `ILogger` that uses [Logger](https://www.itwinjs.org/reference/core-bentley/logging/logger/)
- * API to log messages.
+ * Creates a presentation `ILogger` instance that forwards all logging calls to the
+ * [Logger](https://www.itwinjs.org/reference/core-bentley/logging/logger/) API.
  *
  * Usage example:
  *
