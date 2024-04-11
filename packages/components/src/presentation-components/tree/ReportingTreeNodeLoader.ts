@@ -43,10 +43,8 @@ export class ReportingTreeNodeLoader<IPresentationTreeDataProvider extends TreeD
         unsubscribe: () => this._trackedRequests.delete(parentId),
         error: () => this._trackedRequests.delete(parentId),
         complete: () => {
-          if (this._trackedRequests.has(parentId)) {
-            this._trackedRequests.delete(parentId);
-            this._onNodeLoaded({ node: parentId, duration: performance.now() - time });
-          }
+          this._trackedRequests.delete(parentId);
+          this._onNodeLoaded({ node: parentId, duration: performance.now() - time });
         },
       }),
     );

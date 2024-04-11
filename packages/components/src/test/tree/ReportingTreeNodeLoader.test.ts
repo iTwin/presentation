@@ -42,10 +42,11 @@ describe("ReportingTreeNodeLoader", () => {
       observable.subscribe({ next: (result) => (loadedNodes = [...loadedNodes, ...result.loadedNodes]) });
 
       loadNodeSubject.next({ loadedNodes: [{ id: "node 1" }] } as TreeNodeLoadResult);
+      loadNodeSubject.next({ loadedNodes: [{ id: "node 2" }] } as TreeNodeLoadResult);
       loadNodeSubject.complete();
 
       await waitFor(() => {
-        expect(loadedNodes).to.have.lengthOf(1);
+        expect(loadedNodes).to.have.lengthOf(2);
         expect(reportStub).to.be.calledWithMatch({ node: "id", duration: 300 });
       });
     });
@@ -81,7 +82,7 @@ describe("ReportingTreeNodeLoader", () => {
       });
     });
 
-    it.only("does not report on error", async () => {
+    it("does not report on error", async () => {
       let loadedNodes: TreeNodeItem[] = [];
       const observable = reportingNodeLoader.loadNode({ id: "id" } as TreeModelNode, 0);
 

@@ -110,11 +110,9 @@ describe("usePresentationTreeState", () => {
   });
 
   it("creates new reporting nodeLoader when `onNodeLoaded` callback passed", async () => {
-    const { result, rerender } = renderHook((props: UsePresentationTreeStateProps) => usePresentationTreeState({ ...props, onNodeLoaded: () => {} }), {
-      initialProps,
+    const { result } = renderHook((props: UsePresentationTreeStateProps) => usePresentationTreeState(props), {
+      initialProps: { ...initialProps, onNodeLoaded: () => {} },
     });
-
-    rerender({ ...initialProps, onNodeLoaded: () => {} });
 
     await waitFor(() => expect(result.current?.nodeLoader instanceof ReportingTreeNodeLoader).to.be.true);
   });
@@ -125,7 +123,9 @@ describe("usePresentationTreeState", () => {
     });
 
     it("doesn't create a new nodeLoader when `PresentationManager` raises `onIModelHierarchyChanged` event with unrelated ruleset", async () => {
-      const { result } = renderHook((props: UsePresentationTreeStateProps) => usePresentationTreeState({ ...props, onNodeLoaded: () => {} }), { initialProps });
+      const { result } = renderHook((props: UsePresentationTreeStateProps) => usePresentationTreeState(props), {
+        initialProps: { ...initialProps, onNodeLoaded: () => {} },
+      });
 
       onIModelHierarchyChanged.raiseEvent({ rulesetId: "unrelated", updateInfo: "FULL", imodelKey: imodel.key });
 
