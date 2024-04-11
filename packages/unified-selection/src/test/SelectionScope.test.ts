@@ -7,7 +7,7 @@ import { expect } from "chai";
 import sinon from "sinon";
 import { ECSqlBinding, ECSqlQueryReader, ECSqlQueryReaderOptions, ECSqlQueryRow } from "../unified-selection/queries/ECSqlCore";
 import { SelectableInstanceKey } from "../unified-selection/Selectable";
-import { computeSelection, SelectionScopeProps } from "../unified-selection/SelectionScope";
+import { ElementSelectionScopeProps, SelectionScope, computeSelection } from "../unified-selection/SelectionScope";
 import { createSelectableInstanceKey } from "./_helpers/SelectablesCreator";
 
 describe("SelectionScope", () => {
@@ -31,7 +31,7 @@ describe("SelectionScope", () => {
         .returns(createFakeQueryReader<ECSqlQueryRow>(result.map((key) => ({ ECInstanceId: key.id, ClassName: key.className }))));
     }
 
-    async function getSelection(keys: SelectableInstanceKey[], scope: SelectionScopeProps): Promise<SelectableInstanceKey[]> {
+    async function getSelection(keys: SelectableInstanceKey[], scope: ElementSelectionScopeProps | SelectionScope): Promise<SelectableInstanceKey[]> {
       const selectables: SelectableInstanceKey[] = [];
       for await (const selectable of computeSelection({
         queryExecutor,
@@ -43,7 +43,7 @@ describe("SelectionScope", () => {
       return selectables;
     }
 
-    function selectionScopeTestCases(scope: SelectionScopeProps, query: string) {
+    function selectionScopeTestCases(scope: ElementSelectionScopeProps | SelectionScope, query: string) {
       it("returns element keys", async () => {
         const keys = [createSelectableInstanceKey(), createSelectableInstanceKey()];
         mockQuery(query, keys);

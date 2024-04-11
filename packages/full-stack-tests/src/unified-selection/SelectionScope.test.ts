@@ -23,8 +23,7 @@ import { ECSchemaRpcImpl } from "@itwin/ecschema-rpcinterface-impl";
 import { createECSqlQueryExecutor } from "@itwin/presentation-core-interop";
 import { buildTestIModel, initialize, terminate } from "@itwin/presentation-testing";
 import { computeSelection, SelectableInstanceKey } from "@itwin/unified-selection";
-
-type SelectionScope = "element" | "category" | "model" | "functional";
+import { SelectionScope } from "@itwin/unified-selection/lib/cjs/unified-selection/SelectionScope";
 
 describe("SelectionScope", () => {
   let iModel: IModelConnection;
