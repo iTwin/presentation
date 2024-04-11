@@ -10,7 +10,7 @@ import { UiComponents } from "@itwin/components-react";
 import { Logger, LogLevel, ProcessDetector } from "@itwin/core-bentley";
 import { BentleyCloudRpcManager } from "@itwin/core-common";
 import { ElectronApp } from "@itwin/core-electron/lib/cjs/ElectronFrontend";
-import { IModelApp, IModelAppOptions } from "@itwin/core-frontend";
+import { IModelApp, IModelAppOptions, IModelConnection } from "@itwin/core-frontend";
 import { ITwinLocalization } from "@itwin/core-i18n";
 // __PUBLISH_EXTRACT_START__ Presentation.Frontend.Imports
 import { createFavoritePropertiesStorage, DefaultFavoritePropertiesStorageTypes, Presentation } from "@itwin/presentation-frontend";
@@ -65,11 +65,14 @@ async function initializePresentation() {
     presentation: {
       // specify locale for localizing presentation data, it can be changed afterwards
       activeLocale: IModelApp.localization.getLanguageList()[0],
-
-      schemaContextProvider: MyAppFrontend.getSchemaContext.bind(MyAppFrontend),
+      schemaContextProvider: (imodel) => MyAppFrontend.getSchemaContext(imodel),
     },
     favorites: {
       storage: createFavoritePropertiesStorage(DefaultFavoritePropertiesStorageTypes.UserPreferencesStorage),
+    },
+    selection: {
+      // tell @itwin/presentation-frontend to use our selection storage - this enables interop with @itwin/unified-selection
+      selectionStorage: MyAppFrontend.selectionStorage,
     },
   });
   // __PUBLISH_EXTRACT_END__
@@ -77,6 +80,11 @@ async function initializePresentation() {
   // __PUBLISH_EXTRACT_START__ Presentation.Frontend.SetSelectionScope
   Presentation.selection.scopes.activeScope = "top-assembly";
   // __PUBLISH_EXTRACT_END__
+
+  // clear selection storage when iModel is closed
+  IModelConnection.onClose.addListener((imodel) => {
+    MyAppFrontend.selectionStorage.clearStorage({ iModelKey: imodel.key });
+  });
 }
 
 void (async () => {
