@@ -217,6 +217,9 @@ importers:
       '@itwin/presentation-models-tree':
         specifier: workspace:*
         version: link:../../packages/models-tree
+      '@itwin/presentation-shared':
+        specifier: workspace:*
+        version: link:../../packages/shared
       as-table:
         specifier: ^1.0.55
         version: 1.0.55
@@ -505,7 +508,7 @@ importers:
         version: 18.2.18
       '@vitejs/plugin-react':
         specifier: ^4.2.1
-        version: 4.2.1(vite@5.1.0)
+        version: 4.2.1(vite@5.1.7)
       classnames:
         specifier: ^2.3.2
         version: 2.3.2
@@ -546,11 +549,11 @@ importers:
         specifier: ~5.0.4
         version: 5.0.4
       vite:
-        specifier: ^5.1.0
-        version: 5.1.0(@types/node@18.17.7)(sass@1.70.0)
+        specifier: ^5.1.7
+        version: 5.1.7(@types/node@18.17.7)(sass@1.70.0)
       vite-plugin-static-copy:
         specifier: ^1.0.1
-        version: 1.0.1(vite@5.1.0)
+        version: 1.0.1(vite@5.1.7)
 
   packages/components:
     dependencies:
@@ -717,6 +720,9 @@ importers:
       nyc:
         specifier: ^15.1.0
         version: 15.1.0
+      presentation-test-utilities:
+        specifier: workspace:^
+        version: link:../test-utilities
       react:
         specifier: ^18.2.0
         version: 18.2.0
@@ -744,6 +750,9 @@ importers:
 
   packages/core-interop:
     dependencies:
+      '@itwin/presentation-shared':
+        specifier: workspace:^
+        version: link:../shared
       rxjs:
         specifier: ^7.8.1
         version: 7.8.1
@@ -898,6 +907,9 @@ importers:
       '@itwin/presentation-models-tree':
         specifier: workspace:^
         version: link:../models-tree
+      '@itwin/presentation-shared':
+        specifier: workspace:^
+        version: link:../shared
       '@itwin/presentation-testing':
         specifier: workspace:^
         version: link:../testing
@@ -1039,15 +1051,15 @@ importers:
       '@itwin/core-geometry':
         specifier: ^4.4.0
         version: 4.4.0
+      '@itwin/presentation-shared':
+        specifier: workspace:^
+        version: link:../shared
       natural-compare-lite:
         specifier: ^1.4.0
         version: 1.4.0
       rxjs:
         specifier: ^7.8.1
         version: 7.8.1
-      rxjs-for-await:
-        specifier: ^1.0.0
-        version: 1.0.0(rxjs@7.8.1)
     devDependencies:
       '@itwin/build-tools':
         specifier: ^4.4.0
@@ -1100,6 +1112,9 @@ importers:
       nyc:
         specifier: ^15.1.0
         version: 15.1.0
+      presentation-test-utilities:
+        specifier: workspace:^
+        version: link:../test-utilities
       sinon:
         specifier: ^17.0.1
         version: 17.0.1
@@ -1230,11 +1245,18 @@ importers:
       sinon-chai:
         specifier: ^3.7.0
         version: 3.7.0(chai@4.4.1)(sinon@17.0.1)
+      source-map-support:
+        specifier: ^0.5.21
+        version: 0.5.21
       typescript:
         specifier: ~5.0.4
         version: 5.0.4
 
   packages/models-tree:
+    dependencies:
+      '@itwin/presentation-shared':
+        specifier: workspace:^
+        version: link:../shared
     devDependencies:
       '@itwin/build-tools':
         specifier: ^4.4.0
@@ -1317,6 +1339,76 @@ importers:
       nyc:
         specifier: ^15.1.0
         version: 15.1.0
+      rimraf:
+        specifier: ^5.0.5
+        version: 5.0.5
+      sinon:
+        specifier: ^17.0.1
+        version: 17.0.1
+      sinon-chai:
+        specifier: ^3.7.0
+        version: 3.7.0(chai@4.4.1)(sinon@17.0.1)
+      source-map-support:
+        specifier: ^0.5.21
+        version: 0.5.21
+      typescript:
+        specifier: ~5.0.4
+        version: 5.0.4
+
+  packages/shared:
+    dependencies:
+      '@itwin/core-bentley':
+        specifier: ^4.4.0
+        version: 4.4.0
+    devDependencies:
+      '@itwin/build-tools':
+        specifier: ^4.4.0
+        version: 4.4.0(@types/node@18.17.7)
+      '@itwin/eslint-plugin':
+        specifier: 4.0.0-dev.48
+        version: 4.0.0-dev.48(eslint@8.56.0)(typescript@5.0.4)
+      '@types/chai':
+        specifier: ^4.3.11
+        version: 4.3.11
+      '@types/chai-as-promised':
+        specifier: ^7.1.8
+        version: 7.1.8
+      '@types/chai-subset':
+        specifier: ^1.3.5
+        version: 1.3.5
+      '@types/mocha':
+        specifier: ^10.0.6
+        version: 10.0.6
+      '@types/node':
+        specifier: ^18.17.7
+        version: 18.17.7
+      '@types/sinon':
+        specifier: ^17.0.3
+        version: 17.0.3
+      '@types/sinon-chai':
+        specifier: ^3.2.12
+        version: 3.2.12
+      chai:
+        specifier: ^4.4.1
+        version: 4.4.1
+      chai-as-promised:
+        specifier: ^7.1.1
+        version: 7.1.1(chai@4.4.1)
+      chai-subset:
+        specifier: ^1.6.0
+        version: 1.6.0
+      eslint:
+        specifier: ^8.56.0
+        version: 8.56.0
+      mocha:
+        specifier: ^10.3.0
+        version: 10.3.0
+      nyc:
+        specifier: ^15.1.0
+        version: 15.1.0
+      presentation-test-utilities:
+        specifier: workspace:^
+        version: link:../test-utilities
       rimraf:
         specifier: ^5.0.5
         version: 5.0.5
@@ -1551,6 +1643,9 @@ importers:
       nyc:
         specifier: ^15.1.0
         version: 15.1.0
+      presentation-test-utilities:
+        specifier: workspace:^
+        version: link:../test-utilities
       sinon:
         specifier: ^17.0.1
         version: 17.0.1
@@ -5331,7 +5426,7 @@ packages:
     dependencies:
       '@types/http-cache-semantics': 4.0.4
       '@types/keyv': 3.1.4
-      '@types/node': 18.17.7
+      '@types/node': 18.19.26
       '@types/responselike': 1.0.3
     dev: false
 
@@ -5358,7 +5453,7 @@ packages:
   /@types/cli-progress@3.11.5:
     resolution: {integrity: sha512-D4PbNRbviKyppS5ivBGyFO29POlySLmA2HyUFE4p5QGazAMM3CwkKWcvTl8gvElSuxRh6FPKL8XmidX873ou4g==}
     dependencies:
-      '@types/node': 18.17.7
+      '@types/node': 18.19.26
     dev: false
 
   /@types/cpx@1.5.5:
@@ -5400,7 +5495,7 @@ packages:
   /@types/keyv@3.1.4:
     resolution: {integrity: sha512-BQ5aZNSCpj7D6K2ksrRCTmKRLEpnPvWDiLPfoGyhZ++8YtiK9d/3DBKPJgry359X/P1PfruyYwvnvwFjuEiEIg==}
     dependencies:
-      '@types/node': 18.17.7
+      '@types/node': 18.19.26
     dev: false
 
   /@types/minimist@1.2.5:
@@ -5417,7 +5512,7 @@ packages:
   /@types/node-fetch@2.6.11:
     resolution: {integrity: sha512-24xFj9R5+rfQJLRyM56qh+wnVSYhyXC2tkoBndtY0U+vubqNsYXGjufB2nn8Q6gt0LrARwL6UBtMCSVCwl4B1g==}
     dependencies:
-      '@types/node': 18.17.7
+      '@types/node': 18.19.26
       form-data: 4.0.0
 
   /@types/node@12.20.55:
@@ -5468,7 +5563,7 @@ packages:
   /@types/responselike@1.0.3:
     resolution: {integrity: sha512-H/+L+UkTV33uf49PH5pCAUBVPNj2nDBXTN+qS1dOwyyg24l3CcicicCA7ca+HMvJBZcFgl5r8e+RR6elsb4Lyw==}
     dependencies:
-      '@types/node': 18.17.7
+      '@types/node': 18.19.26
     dev: false
 
   /@types/scheduler@0.16.8:
@@ -5514,7 +5609,7 @@ packages:
   /@types/tunnel@0.0.3:
     resolution: {integrity: sha512-sOUTGn6h1SfQ+gbgqC364jLFBw2lnFqkgF3q0WovEHRLMrVD1sd5aufqi/aJObLekJO+Aq5z646U4Oxy6shXMA==}
     dependencies:
-      '@types/node': 18.17.7
+      '@types/node': 18.19.26
 
   /@types/yauzl@2.10.3:
     resolution: {integrity: sha512-oJoftv0LSuaDZE3Le4DbKX+KS9G36NzOeSap90UIK0yMA/NhKJhqlSGtNDORNRaIbQfzjXDrQa0ytJ6mNRGz/Q==}
@@ -5706,7 +5801,7 @@ packages:
   /@ungap/structured-clone@1.2.0:
     resolution: {integrity: sha512-zuVdFrMJiuCDQUMCzQaD6KL28MjnqqN8XnAqiEq9PNm/hCPTSGfrXCOfwj1ow4LFb/tNymJPwsNbVePc1xFqrQ==}
 
-  /@vitejs/plugin-react@4.2.1(vite@5.1.0):
+  /@vitejs/plugin-react@4.2.1(vite@5.1.7):
     resolution: {integrity: sha512-oojO9IDc4nCUUi8qIR11KoQm0XFFLIwsRBwHRR4d/88IWghn1y6ckz/bJ8GHDCsYEJee8mDzqtJxh15/cisJNQ==}
     engines: {node: ^14.18.0 || >=16.0.0}
     peerDependencies:
@@ -5717,7 +5812,7 @@ packages:
       '@babel/plugin-transform-react-jsx-source': 7.24.1(@babel/core@7.24.3)
       '@types/babel__core': 7.20.5
       react-refresh: 0.14.0
-      vite: 5.1.0(@types/node@18.17.7)(sass@1.70.0)
+      vite: 5.1.7(@types/node@18.17.7)(sass@1.70.0)
     transitivePeerDependencies:
       - supports-color
     dev: false
@@ -8777,7 +8872,7 @@ packages:
       fs.realpath: 1.0.0
       inflight: 1.0.6
       inherits: 2.0.4
-      minimatch: 5.0.1
+      minimatch: 5.1.6
       once: 1.4.0
 
   /global-agent@3.0.0:
@@ -10261,7 +10356,6 @@ packages:
     engines: {node: '>=10'}
     dependencies:
       brace-expansion: 2.0.1
-    dev: false
 
   /minimatch@7.4.6:
     resolution: {integrity: sha512-sBz8G/YjVniEz6lKPNpKxXwazJe4c19fEfV2GDMX6AjFz+MX9uDWIZW8XreVhkFW3fkIdTv/gxWr/Kks5FFAVw==}
@@ -11156,7 +11250,7 @@ packages:
       '@protobufjs/path': 1.1.2
       '@protobufjs/pool': 1.1.0
       '@protobufjs/utf8': 1.1.0
-      '@types/node': 18.17.7
+      '@types/node': 18.19.26
       long: 5.2.3
     dev: false
 
@@ -12865,7 +12959,7 @@ packages:
     engines: {node: '>= 0.8'}
     dev: false
 
-  /vite-plugin-static-copy@1.0.1(vite@5.1.0):
+  /vite-plugin-static-copy@1.0.1(vite@5.1.7):
     resolution: {integrity: sha512-3eGL4mdZoPJMDBT68pv/XKIHR4MgVolStIxxv1gIBP4R8TpHn9C9EnaU0hesqlseJ4ycLGUxckFTu/jpuJXQlA==}
     engines: {node: ^18.0.0 || >=20.0.0}
     peerDependencies:
@@ -12875,11 +12969,11 @@ packages:
       fast-glob: 3.3.2
       fs-extra: 11.2.0
       picocolors: 1.0.0
-      vite: 5.1.0(@types/node@18.17.7)(sass@1.70.0)
+      vite: 5.1.7(@types/node@18.17.7)(sass@1.70.0)
     dev: false
 
-  /vite@5.1.0(@types/node@18.17.7)(sass@1.70.0):
-    resolution: {integrity: sha512-STmSFzhY4ljuhz14bg9LkMTk3d98IO6DIArnTY6MeBwiD1Za2StcQtz7fzOUnRCqrHSD5+OS2reg4HOz1eoLnw==}
+  /vite@5.1.7(@types/node@18.17.7)(sass@1.70.0):
+    resolution: {integrity: sha512-sgnEEFTZYMui/sTlH1/XEnVNHMujOahPLGMxn1+5sIT45Xjng1Ec1K78jRP15dSmVgg5WBin9yO81j3o9OxofA==}
     engines: {node: ^18.0.0 || >=20.0.0}
     hasBin: true
     peerDependencies:

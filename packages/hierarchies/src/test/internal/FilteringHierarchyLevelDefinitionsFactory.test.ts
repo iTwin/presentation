@@ -5,7 +5,7 @@
 
 import { expect } from "chai";
 import sinon from "sinon";
-import { IMetadataProvider } from "../../hierarchies/ECMetadata";
+import { IMetadataProvider, trimWhitespace } from "@itwin/presentation-shared";
 import {
   CustomHierarchyNodeDefinition,
   HierarchyDefinitionParentNode,
@@ -22,11 +22,9 @@ import {
   FilteringHierarchyLevelDefinitionsFactory,
 } from "../../hierarchies/internal/FilteringHierarchyLevelDefinitionsFactory";
 import * as reader from "../../hierarchies/internal/TreeNodesReader";
-import { NodeSelectClauseColumnNames } from "../../hierarchies/queries/NodeSelectQueryFactory";
-import { trimWhitespace } from "../../hierarchies/Utils";
+import { NodeSelectClauseColumnNames } from "../../hierarchies/NodeSelectQueryFactory";
 import {
-  ClassStubs,
-  createClassStubs,
+  createMetadataProviderStub,
   createTestInstanceKey,
   createTestParsedCustomNode,
   createTestProcessedCustomNode,
@@ -222,10 +220,9 @@ describe("FilteringHierarchyLevelDefinitionsFactory", () => {
   });
 
   describe("defineHierarchyLevel", () => {
-    const metadataProvider = {} as unknown as IMetadataProvider;
-    let classStubs: ClassStubs;
+    let metadataProvider: ReturnType<typeof createMetadataProviderStub>;
     beforeEach(() => {
-      classStubs = createClassStubs(metadataProvider);
+      metadataProvider = createMetadataProviderStub();
     });
 
     it("returns source definitions when filtered instance paths is undefined", async () => {
@@ -238,6 +235,7 @@ describe("FilteringHierarchyLevelDefinitionsFactory", () => {
         defineHierarchyLevel: async () => sourceDefinitions,
       };
       const filteringFactory = createFilteringHierarchyLevelsFactory({
+        metadataProvider,
         sourceFactory,
       });
       const result = await filteringFactory.defineHierarchyLevel({
@@ -255,6 +253,7 @@ describe("FilteringHierarchyLevelDefinitionsFactory", () => {
         ],
       };
       const filteringFactory = createFilteringHierarchyLevelsFactory({
+        metadataProvider,
         sourceFactory,
       });
       const result = await filteringFactory.defineHierarchyLevel({ parentNode: undefined });
@@ -263,7 +262,7 @@ describe("FilteringHierarchyLevelDefinitionsFactory", () => {
 
     describe("filtering custom node definitions", () => {
       it("omits source custom node definition when using instance key filter", async () => {
-        const filterClass = classStubs.stubEntityClass({ schemaName: "BisCore", className: "FilterClassName", is: async () => false });
+        const filterClass = metadataProvider.stubEntityClass({ schemaName: "BisCore", className: "FilterClassName", is: async () => false });
         const sourceDefinition: CustomHierarchyNodeDefinition = {
           node: {
             key: "custom",
@@ -275,6 +274,7 @@ describe("FilteringHierarchyLevelDefinitionsFactory", () => {
           defineHierarchyLevel: async () => [sourceDefinition],
         } as unknown as IHierarchyLevelDefinitionsFactory;
         const filteringFactory = createFilteringHierarchyLevelsFactory({
+          metadataProvider,
           sourceFactory,
           nodeIdentifierPaths: [[{ className: filterClass.fullName, id: "0x123" }]],
         });
@@ -294,6 +294,7 @@ describe("FilteringHierarchyLevelDefinitionsFactory", () => {
           defineHierarchyLevel: async () => [sourceDefinition],
         } as unknown as IHierarchyLevelDefinitionsFactory;
         const filteringFactory = createFilteringHierarchyLevelsFactory({
+          metadataProvider,
           sourceFactory,
           nodeIdentifierPaths: [[{ key: "xxx" }]],
         });
@@ -313,6 +314,7 @@ describe("FilteringHierarchyLevelDefinitionsFactory", () => {
           defineHierarchyLevel: async () => [sourceDefinition],
         } as unknown as IHierarchyLevelDefinitionsFactory;
         const filteringFactory = createFilteringHierarchyLevelsFactory({
+          metadataProvider,
           sourceFactory,
           nodeIdentifierPaths: [[]],
         });
@@ -337,6 +339,7 @@ describe("FilteringHierarchyLevelDefinitionsFactory", () => {
           defineHierarchyLevel: async () => [sourceDefinition1, sourceDefinition2],
         };
         const filteringFactory = createFilteringHierarchyLevelsFactory({
+          metadataProvider,
           sourceFactory,
           nodeIdentifierPaths: [[{ key: "custom 2" }]],
         });
@@ -363,6 +366,7 @@ describe("FilteringHierarchyLevelDefinitionsFactory", () => {
           defineHierarchyLevel: async () => [sourceDefinition],
         } as unknown as IHierarchyLevelDefinitionsFactory;
         const filteringFactory = createFilteringHierarchyLevelsFactory({
+          metadataProvider,
           sourceFactory,
           nodeIdentifierPaths: [
             [{ key: "custom" }, { key: "123" }],
@@ -384,7 +388,7 @@ describe("FilteringHierarchyLevelDefinitionsFactory", () => {
 
     describe("filtering instance node query definitions", () => {
       it("omits source instance node query definition when using custom node filter", async () => {
-        const queryClass = classStubs.stubEntityClass({ schemaName: "BisCore", className: "SourceQueryClassName", is: async () => false });
+        const queryClass = metadataProvider.stubEntityClass({ schemaName: "BisCore", className: "SourceQueryClassName", is: async () => false });
         const sourceDefinition: InstanceNodesQueryDefinition = {
           fullClassName: queryClass.fullName,
           query: {
@@ -395,6 +399,7 @@ describe("FilteringHierarchyLevelDefinitionsFactory", () => {
           defineHierarchyLevel: async () => [sourceDefinition],
         } as unknown as IHierarchyLevelDefinitionsFactory;
         const filteringFactory = createFilteringHierarchyLevelsFactory({
+          metadataProvider,
           sourceFactory,
           nodeIdentifierPaths: [[{ key: "xxx" }]],
         });
@@ -403,8 +408,8 @@ describe("FilteringHierarchyLevelDefinitionsFactory", () => {
       });
 
       it("omits source instance node query definition if filter class doesn't match query class", async () => {
-        const queryClass = classStubs.stubEntityClass({ schemaName: "BisCore", className: "SourceQueryClassName", is: async () => false });
-        const filterPathClass = classStubs.stubEntityClass({ schemaName: "BisCore", className: "FilterPathClassName", is: async () => false });
+        const queryClass = metadataProvider.stubEntityClass({ schemaName: "BisCore", className: "SourceQueryClassName", is: async () => false });
+        const filterPathClass = metadataProvider.stubEntityClass({ schemaName: "BisCore", className: "FilterPathClassName", is: async () => false });
         const sourceDefinition: InstanceNodesQueryDefinition = {
           fullClassName: queryClass.fullName,
           query: {
@@ -415,6 +420,7 @@ describe("FilteringHierarchyLevelDefinitionsFactory", () => {
           defineHierarchyLevel: async () => [sourceDefinition],
         } as unknown as IHierarchyLevelDefinitionsFactory;
         const filteringFactory = createFilteringHierarchyLevelsFactory({
+          metadataProvider,
           sourceFactory,
           nodeIdentifierPaths: [[{ className: filterPathClass.fullName, id: "0x123" }]],
         });
@@ -423,7 +429,7 @@ describe("FilteringHierarchyLevelDefinitionsFactory", () => {
       });
 
       it("omits source instance node query definition when filter filtering by empty path", async () => {
-        const queryClass = classStubs.stubEntityClass({ schemaName: "BisCore", className: "SourceQueryClassName", is: async () => false });
+        const queryClass = metadataProvider.stubEntityClass({ schemaName: "BisCore", className: "SourceQueryClassName", is: async () => false });
         const sourceDefinition: InstanceNodesQueryDefinition = {
           fullClassName: queryClass.fullName,
           query: {
@@ -434,6 +440,7 @@ describe("FilteringHierarchyLevelDefinitionsFactory", () => {
           defineHierarchyLevel: async () => [sourceDefinition],
         } as unknown as IHierarchyLevelDefinitionsFactory;
         const filteringFactory = createFilteringHierarchyLevelsFactory({
+          metadataProvider,
           sourceFactory,
           nodeIdentifierPaths: [[]],
         });
@@ -442,7 +449,7 @@ describe("FilteringHierarchyLevelDefinitionsFactory", () => {
       });
 
       it("returns unfiltered source instance node query definitions when filtering filter target parent node", async () => {
-        const queryClass = classStubs.stubEntityClass({ schemaName: "BisCore", className: "SourceQueryClassName", is: async () => false });
+        const queryClass = metadataProvider.stubEntityClass({ schemaName: "BisCore", className: "SourceQueryClassName", is: async () => false });
         const sourceDefinition: InstanceNodesQueryDefinition = {
           fullClassName: queryClass.fullName,
           query: {
@@ -453,6 +460,7 @@ describe("FilteringHierarchyLevelDefinitionsFactory", () => {
           defineHierarchyLevel: async () => [sourceDefinition],
         } as unknown as IHierarchyLevelDefinitionsFactory;
         const filteringFactory = createFilteringHierarchyLevelsFactory({
+          metadataProvider,
           sourceFactory,
           nodeIdentifierPaths: [],
         });
@@ -466,13 +474,13 @@ describe("FilteringHierarchyLevelDefinitionsFactory", () => {
       });
 
       it("returns filtered source instance node query definitions when filter class matches query class", async () => {
-        const queryClass = classStubs.stubEntityClass({ schemaName: "BisCore", className: "SourceQueryClassName", is: async () => false });
-        const filterPathClass1 = classStubs.stubEntityClass({
+        const queryClass = metadataProvider.stubEntityClass({ schemaName: "BisCore", className: "SourceQueryClassName", is: async () => false });
+        const filterPathClass1 = metadataProvider.stubEntityClass({
           schemaName: "BisCore",
           className: "FilterPathClassName1",
           is: async (other) => other === queryClass.fullName,
         });
-        const filterPathClass2 = classStubs.stubEntityClass({ schemaName: "BisCore", className: "FilterPathClassName2", is: async () => false });
+        const filterPathClass2 = metadataProvider.stubEntityClass({ schemaName: "BisCore", className: "FilterPathClassName2", is: async () => false });
         const sourceDefinition: InstanceNodesQueryDefinition = {
           fullClassName: queryClass.fullName,
           query: {
@@ -483,6 +491,7 @@ describe("FilteringHierarchyLevelDefinitionsFactory", () => {
           defineHierarchyLevel: async () => [sourceDefinition],
         } as unknown as IHierarchyLevelDefinitionsFactory;
         const filteringFactory = createFilteringHierarchyLevelsFactory({
+          metadataProvider,
           sourceFactory,
           nodeIdentifierPaths: [
             [
@@ -503,13 +512,13 @@ describe("FilteringHierarchyLevelDefinitionsFactory", () => {
       });
 
       it("returns source instance node query definition filtered with multiple matching paths", async () => {
-        const queryClass = classStubs.stubEntityClass({ schemaName: "BisCore", className: "SourceQueryClassName", is: async () => false });
-        const filterPathClass1 = classStubs.stubEntityClass({
+        const queryClass = metadataProvider.stubEntityClass({ schemaName: "BisCore", className: "SourceQueryClassName", is: async () => false });
+        const filterPathClass1 = metadataProvider.stubEntityClass({
           schemaName: "BisCore",
           className: "FilterPathClassName1",
           is: async (other) => other === queryClass.fullName,
         });
-        const filterPathClass2 = classStubs.stubEntityClass({
+        const filterPathClass2 = metadataProvider.stubEntityClass({
           schemaName: "BisCore",
           className: "FilterPathClassName2",
           is: async (other) => other === queryClass.fullName,
@@ -524,6 +533,7 @@ describe("FilteringHierarchyLevelDefinitionsFactory", () => {
           defineHierarchyLevel: async () => [sourceDefinition],
         } as unknown as IHierarchyLevelDefinitionsFactory;
         const filteringFactory = createFilteringHierarchyLevelsFactory({
+          metadataProvider,
           sourceFactory,
           nodeIdentifierPaths: [[{ className: filterPathClass1.fullName, id: "0x123" }], [{ className: filterPathClass2.fullName, id: "0x456" }]],
         });
@@ -542,14 +552,14 @@ describe("FilteringHierarchyLevelDefinitionsFactory", () => {
       });
 
       it("returns source instance node query definition filtered with multiple matching paths having same beginning", async () => {
-        const queryClass = classStubs.stubEntityClass({ schemaName: "BisCore", className: "SourceQueryClassName", is: async () => false });
-        const filterPathClass0 = classStubs.stubEntityClass({
+        const queryClass = metadataProvider.stubEntityClass({ schemaName: "BisCore", className: "SourceQueryClassName", is: async () => false });
+        const filterPathClass0 = metadataProvider.stubEntityClass({
           schemaName: "BisCore",
           className: "FilterPathClassName0",
           is: async (other) => other === queryClass.fullName,
         });
-        const filterPathClass1 = classStubs.stubEntityClass({ schemaName: "BisCore", className: "FilterPathClassName1", is: async () => false });
-        const filterPathClass2 = classStubs.stubEntityClass({ schemaName: "BisCore", className: "FilterPathClassName2", is: async () => false });
+        const filterPathClass1 = metadataProvider.stubEntityClass({ schemaName: "BisCore", className: "FilterPathClassName1", is: async () => false });
+        const filterPathClass2 = metadataProvider.stubEntityClass({ schemaName: "BisCore", className: "FilterPathClassName2", is: async () => false });
         const sourceDefinition: InstanceNodesQueryDefinition = {
           fullClassName: queryClass.fullName,
           query: {
@@ -560,6 +570,7 @@ describe("FilteringHierarchyLevelDefinitionsFactory", () => {
           defineHierarchyLevel: async () => [sourceDefinition],
         } as unknown as IHierarchyLevelDefinitionsFactory;
         const filteringFactory = createFilteringHierarchyLevelsFactory({
+          metadataProvider,
           sourceFactory,
           nodeIdentifierPaths: [
             [
@@ -590,8 +601,8 @@ describe("FilteringHierarchyLevelDefinitionsFactory", () => {
     });
 
     it("uses filtering paths from parent node", async () => {
-      const queryClass = classStubs.stubEntityClass({ schemaName: "BisCore", className: "SourceQueryClassName", is: async () => false });
-      const childFilterClass = classStubs.stubEntityClass({
+      const queryClass = metadataProvider.stubEntityClass({ schemaName: "BisCore", className: "SourceQueryClassName", is: async () => false });
+      const childFilterClass = metadataProvider.stubEntityClass({
         schemaName: "BisCore",
         className: "ChildFilterClass",
         is: async (other) => other === queryClass.fullName,
@@ -606,6 +617,7 @@ describe("FilteringHierarchyLevelDefinitionsFactory", () => {
         defineHierarchyLevel: async () => [sourceDefinition],
       };
       const filteringFactory = createFilteringHierarchyLevelsFactory({
+        metadataProvider,
         sourceFactory,
         nodeIdentifierPaths: [], // this doesn't matter as we're going to look at what's in the parent node
       });
@@ -632,6 +644,7 @@ describe("FilteringHierarchyLevelDefinitionsFactory", () => {
         defineHierarchyLevel: async () => [matchingSourceDefinition, nonMatchingSourceDefinition],
       };
       const filteringFactory = createFilteringHierarchyLevelsFactory({
+        metadataProvider,
         sourceFactory,
         nodeIdentifierPaths: [], // this doesn't matter as we're going to look at what's in the parent node
       });
@@ -728,7 +741,7 @@ function createFilteringHierarchyLevelsFactory(props?: {
 }) {
   const { metadataProvider, sourceFactory, nodeIdentifierPaths } = props ?? {};
   return new FilteringHierarchyLevelDefinitionsFactory({
-    metadataProvider: metadataProvider ?? ({} as unknown as IMetadataProvider),
+    metadataProvider: metadataProvider ?? createMetadataProviderStub(),
     source: sourceFactory ?? ({} as unknown as IHierarchyLevelDefinitionsFactory),
     nodeIdentifierPaths: nodeIdentifierPaths ?? [],
   });

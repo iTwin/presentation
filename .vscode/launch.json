@@ -147,6 +147,25 @@
       }
     },
     {
+      "name": "Tests: Shared",
+      "cwd": "${workspaceFolder}/packages/shared",
+      "type": "node",
+      "request": "launch",
+      "program": "${workspaceFolder}/packages/shared/node_modules/mocha/bin/_mocha",
+      "args": [
+        "--config",
+        "./.mocharc.json",
+        "--no-timeouts",
+        "lib/cjs/test/**/*.test.js"
+      ],
+      "outFiles": [
+        "${workspaceFolder}/packages/shared/lib/**/*.js"
+      ],
+      "env": {
+        "NODE_ENV": "development"
+      }
+    },
+    {
       "name": "Tests: Hierarchies",
       "cwd": "${workspaceFolder}/packages/hierarchies",
       "type": "node",
@@ -221,6 +240,25 @@
       ],
       "outFiles": [
         "${workspaceFolder}/packages/unified-selection/lib/**/*.js"
+      ],
+      "env": {
+        "NODE_ENV": "development"
+      }
+    },
+    {
+      "name": "Tests: Hierarchies React",
+      "cwd": "${workspaceFolder}/packages/hierarchies-react",
+      "type": "node",
+      "request": "launch",
+      "program": "${workspaceFolder}/packages/hierarchies-react/node_modules/mocha/bin/_mocha",
+      "args": [
+        "--config",
+        "./.mocharc.json",
+        "--no-timeouts",
+        "lib/cjs/test/**/*.test.js"
+      ],
+      "outFiles": [
+        "${workspaceFolder}/packages/hierarchies-react/lib/**/*.js"
       ],
       "env": {
         "NODE_ENV": "development"

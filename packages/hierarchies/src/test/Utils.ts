@@ -3,10 +3,10 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { Observable } from "rxjs";
+import { from, ObservableInput } from "rxjs";
 import sinon from "sinon";
 import { BeDuration, Logger, LogLevel, StopWatch } from "@itwin/core-bentley";
-import { ECClass, ECEntityClass, ECProperty, ECRelationshipClass, ECRelationshipConstraint, IMetadataProvider } from "../hierarchies/ECMetadata";
+import * as shared from "@itwin/presentation-shared";
 import {
   ParsedCustomHierarchyNode,
   ParsedInstanceHierarchyNode,
@@ -15,10 +15,12 @@ import {
   ProcessedInstanceHierarchyNode,
 } from "../hierarchies/HierarchyNode";
 import { HierarchyProviderLocalizedStrings } from "../hierarchies/HierarchyProvider";
-import * as getClass from "../hierarchies/internal/GetClass";
-import { parseFullClassName } from "../hierarchies/Metadata";
-import { ECSqlQueryReader } from "../hierarchies/queries/ECSqlCore";
-import { InstanceKey } from "../hierarchies/values/Values";
+
+import EC = shared.EC;
+const { parseFullClassName } = shared;
+type ECSqlQueryReader = shared.ECSqlQueryReader;
+type IMetadataProvider = shared.IMetadataProvider;
+type InstanceKey = shared.InstanceKey;
 
 export function setupLogging(levels: Array<{ namespace: string; level: LogLevel }>) {
   Logger.initializeToConsole();
@@ -26,10 +28,10 @@ export function setupLogging(levels: Array<{ namespace: string; level: LogLevel 
   levels.forEach(({ namespace, level }) => Logger.setLevel(namespace, level));
 }
 
-export async function getObservableResult<T>(obs: Observable<T>): Promise<Array<T>> {
+export async function collect<T>(obs: ObservableInput<T>): Promise<Array<T>> {
   const arr = new Array<T>();
   return new Promise((resolve, reject) => {
-    obs.subscribe({
+    from(obs).subscribe({
       next(item: T) {
         arr.push(item);
       },
@@ -41,14 +43,6 @@ export async function getObservableResult<T>(obs: Observable<T>): Promise<Array<
       },
     });
   });
-}
-
-export async function toArray<T>(asyncIter: AsyncIterableIterator<T>): Promise<Array<T>> {
-  const arr = [];
-  for await (const item of asyncIter) {
-    arr.push(item);
-  }
-  return arr;
 }
 
 export function createTestParsedCustomNode(src?: Partial<ParsedCustomHierarchyNode>): ParsedCustomHierarchyNode {
@@ -119,32 +113,43 @@ export interface StubClassFuncProps {
   schemaName: string;
   className: string;
   classLabel?: string;
-  properties?: ECProperty[];
+  properties?: EC.Property[];
   is?: (fullClassName: string) => Promise<boolean>;
 }
 export interface StubRelationshipClassFuncProps extends StubClassFuncProps {
-  source?: ECRelationshipConstraint;
-  target?: ECRelationshipConstraint;
+  source?: EC.RelationshipConstraint;
+  target?: EC.RelationshipConstraint;
   direction?: "Forward" | "Backward";
 }
-export type TStubClassFunc = (props: StubClassFuncProps) => ECClass;
-export type TStubEntityClassFunc = (props: StubClassFuncProps) => ECEntityClass;
-export type TStubRelationshipClassFunc = (props: StubRelationshipClassFuncProps) => ECRelationshipClass;
+export type TStubClassFunc = (props: StubClassFuncProps) => EC.Class;
+export type TStubEntityClassFunc = (props: StubClassFuncProps) => EC.EntityClass;
+export type TStubRelationshipClassFunc = (props: StubRelationshipClassFuncProps) => EC.RelationshipClass;
 export interface ClassStubs {
   stubEntityClass: TStubEntityClassFunc;
   stubRelationshipClass: TStubRelationshipClassFunc;
   stubOtherClass: TStubClassFunc;
   resetHistory: () => void;
   restore: () => void;
-  stub: sinon.SinonStub<[metadata: IMetadataProvider, fullClassName: string], Promise<ECClass>>;
+  stub: sinon.SinonStub<[metadata: IMetadataProvider, fullClassName: string], Promise<EC.Class>>;
 }
-export function createClassStubs(schemas: IMetadataProvider): ClassStubs {
-  const stub = sinon.stub(getClass, "getClass");
-  const createFullClassNameMatcher = (props: { schemaName: string; className: string }) =>
-    sinon.match((candidate: string) => {
-      const { schemaName, className } = parseFullClassName(candidate);
-      return schemaName === props.schemaName && className === props.className;
-    });
+export function createMetadataProviderStub() {
+  const schemaStubs: { [schemaName: string]: sinon.SinonStubbedInstance<EC.Schema> } = {};
+  const stub = {
+    getSchema: sinon.fake(async (schemaName: string): Promise<EC.Schema | undefined> => {
+      return schemaStubs[schemaName];
+    }),
+  };
+  const getSchemaStub = (schemaName: string) => {
+    let schemaStub = schemaStubs[schemaName];
+    if (!schemaStub) {
+      schemaStub = {
+        name: schemaName,
+        getClass: sinon.stub(),
+      };
+      schemaStubs[schemaName] = schemaStub;
+    }
+    return schemaStub;
+  };
   const createBaseClassProps = (props: StubClassFuncProps) => ({
     schema: {
       name: props.schemaName,
@@ -152,14 +157,14 @@ export function createClassStubs(schemas: IMetadataProvider): ClassStubs {
     fullName: `${props.schemaName}.${props.className}`,
     name: props.className,
     label: props.classLabel,
-    getProperty: async (propertyName: string): Promise<ECProperty | undefined> => {
+    getProperty: async (propertyName: string): Promise<EC.Property | undefined> => {
       if (!props.properties) {
         return undefined;
       }
       return props.properties.find((p) => p.name === propertyName);
     },
-    getProperties: async (): Promise<Array<ECProperty>> => props.properties ?? [],
-    is: sinon.fake(async (targetClassOrClassName: ECClass | string, schemaName?: string) => {
+    getProperties: async (): Promise<Array<EC.Property>> => props.properties ?? [],
+    is: sinon.fake(async (targetClassOrClassName: EC.Class | string, schemaName?: string) => {
       if (!props.is) {
         return false;
       }
@@ -177,8 +182,8 @@ export function createClassStubs(schemas: IMetadataProvider): ClassStubs {
     const res = {
       ...createBaseClassProps(props),
       isEntityClass: () => true,
-    } as unknown as ECEntityClass;
-    stub.withArgs(schemas, createFullClassNameMatcher(props)).resolves(res);
+    } as unknown as EC.EntityClass;
+    getSchemaStub(props.schemaName).getClass.withArgs(props.className).resolves(res);
     return res;
   };
   const stubRelationshipClass: TStubRelationshipClassFunc = (props) => {
@@ -188,48 +193,30 @@ export function createClassStubs(schemas: IMetadataProvider): ClassStubs {
       source: props.source ?? { polymorphic: true, abstractConstraint: async () => undefined },
       target: props.target ?? { polymorphic: true, abstractConstraint: async () => undefined },
       isRelationshipClass: () => true,
-    } as unknown as ECRelationshipClass;
-    stub.withArgs(schemas, createFullClassNameMatcher(props)).resolves(res);
+    } as unknown as EC.RelationshipClass;
+    getSchemaStub(props.schemaName).getClass.withArgs(props.className).resolves(res);
     return res;
   };
   const stubOtherClass: TStubClassFunc = (props) => {
     const res = {
       ...createBaseClassProps(props),
-    } as unknown as ECClass;
-    stub.withArgs(schemas, createFullClassNameMatcher(props)).resolves(res);
+    } as unknown as EC.Class;
+    getSchemaStub(props.schemaName).getClass.withArgs(props.className).resolves(res);
     return res;
   };
-  return { stubEntityClass, stubRelationshipClass, stubOtherClass, resetHistory: () => stub.resetHistory(), restore: () => stub.restore(), stub };
-}
-
-/** Creates Promise */
-export class ResolvablePromise<T> implements Promise<T> {
-  private _wrapped: Promise<T>;
-  private _resolve!: (value: T) => void;
-  public constructor() {
-    this._wrapped = new Promise<T>((resolve: (value: T) => void) => {
-      this._resolve = resolve;
-    });
-  }
-  public [Symbol.toStringTag] = "ResolvablePromise";
-  public async then<TResult1 = T, TResult2 = never>(
-    onFulfilled?: ((value: T) => TResult1 | Promise<TResult1>) | undefined | null,
-    onRejected?: ((reason: any) => TResult2 | Promise<TResult2>) | undefined | null,
-  ): Promise<TResult1 | TResult2> {
-    return this._wrapped.then(onFulfilled, onRejected);
-  }
-  public async resolve(result: T) {
-    this._resolve(result);
-    await new Promise<void>((resolve: () => void) => {
-      setImmediate(resolve);
-    });
-  }
-  public async catch<TResult = never>(onRejected?: ((reason: any) => TResult | PromiseLike<TResult>) | null | undefined): Promise<T | TResult> {
-    return this._wrapped.catch(onRejected);
-  }
-  public async finally(onFinally?: (() => void) | null | undefined): Promise<T> {
-    return this._wrapped.finally(onFinally);
-  }
+  return {
+    ...stub,
+    stubEntityClass,
+    stubRelationshipClass,
+    stubOtherClass,
+    getClassRequestCount(props: { schemaName: string; className: string }): number {
+      const schemaStub = schemaStubs[props.schemaName];
+      if (!schemaStub) {
+        return 0;
+      }
+      return schemaStub.getClass.getCalls().filter((call) => call.args[0] === props.className).length;
+    },
+  };
 }
 
 export async function waitFor<T>(check: () => Promise<T> | T, timeout?: number): Promise<T> {

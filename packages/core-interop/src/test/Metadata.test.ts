@@ -24,19 +24,7 @@ import {
   SchemaKey,
   StrengthDirection,
 } from "@itwin/ecschema-metadata";
-import {
-  ECClass,
-  ECEnumerationArrayProperty,
-  ECEnumerationProperty,
-  ECNavigationProperty,
-  ECPrimitiveArrayProperty,
-  ECPrimitiveProperty,
-  ECPrimitiveType,
-  ECRelationshipClass,
-  ECSchema,
-  ECStructArrayProperty,
-  ECStructProperty,
-} from "@itwin/presentation-hierarchies";
+import { EC } from "@itwin/presentation-shared";
 import { createMetadataProvider } from "../core-interop/Metadata";
 import { createECClass, createECProperty, createECSchema } from "../core-interop/MetadataInternal";
 
@@ -154,7 +142,7 @@ describe("createECSchema", () => {
 });
 
 describe("createECClass", () => {
-  const schema: ECSchema = {
+  const schema: EC.Schema = {
     name: "s",
     async getClass() {
       return undefined;
@@ -379,7 +367,7 @@ describe("createECClass", () => {
         const rel = createECClass(
           { ...coreRelationshipClass, strengthDirection: StrengthDirection.Forward } as unknown as CoreClass,
           schema,
-        ) as ECRelationshipClass;
+        ) as EC.RelationshipClass;
         expect(rel.direction).to.eq("Forward");
       });
 
@@ -387,25 +375,25 @@ describe("createECClass", () => {
         const rel = createECClass(
           { ...coreRelationshipClass, strengthDirection: StrengthDirection.Backward } as unknown as CoreClass,
           schema,
-        ) as ECRelationshipClass;
+        ) as EC.RelationshipClass;
         expect(rel.direction).to.eq("Backward");
       });
     });
 
     describe("source & target", () => {
       it("returns source constraint", () => {
-        const rel = createECClass({ ...coreRelationshipClass, source: {} } as unknown as CoreClass, schema) as ECRelationshipClass;
+        const rel = createECClass({ ...coreRelationshipClass, source: {} } as unknown as CoreClass, schema) as EC.RelationshipClass;
         expect(rel.source).to.not.be.undefined;
       });
 
       it("returns target constraint", () => {
-        const rel = createECClass({ ...coreRelationshipClass, target: {} } as unknown as CoreClass, schema) as ECRelationshipClass;
+        const rel = createECClass({ ...coreRelationshipClass, target: {} } as unknown as CoreClass, schema) as EC.RelationshipClass;
         expect(rel.target).to.not.be.undefined;
       });
 
       describe("ECRelationshipConstraint implementation", () => {
         it("returns undefined multiplicity from core constraint", () => {
-          const rel = createECClass({ ...coreRelationshipClass, source: { multiplicity: undefined } } as unknown as CoreClass, schema) as ECRelationshipClass;
+          const rel = createECClass({ ...coreRelationshipClass, source: { multiplicity: undefined } } as unknown as CoreClass, schema) as EC.RelationshipClass;
           expect(rel.source.multiplicity).to.be.undefined;
         });
 
@@ -413,7 +401,7 @@ describe("createECClass", () => {
           const rel = createECClass(
             { ...coreRelationshipClass, source: { multiplicity: new RelationshipMultiplicity(123, 456) } } as unknown as CoreClass,
             schema,
-          ) as ECRelationshipClass;
+          ) as EC.RelationshipClass;
           expect(rel.source.multiplicity).to.deep.eq({ lowerLimit: 123, upperLimit: 456 });
         });
 
@@ -426,7 +414,7 @@ describe("createECClass", () => {
             const rel = createECClass(
               { ...coreRelationshipClass, source: { polymorphic: testEntry.in } } as unknown as CoreClass,
               schema,
-            ) as ECRelationshipClass;
+            ) as EC.RelationshipClass;
             expect(rel.source.polymorphic).to.eq(testEntry.expectation);
           });
         });
@@ -441,7 +429,7 @@ describe("createECClass", () => {
           const rel = createECClass(
             { ...coreRelationshipClass, source: { abstractConstraint: Promise.resolve(coreAbstractConstraint) } } as unknown as CoreClass,
             schema,
-          ) as ECRelationshipClass;
+          ) as EC.RelationshipClass;
           const constraint = (await rel.source.abstractConstraint)!;
           expect(constraint.isEntityClass()).to.be.true;
           expect(constraint.fullName).to.eq(coreAbstractConstraint.fullName);
@@ -452,7 +440,7 @@ describe("createECClass", () => {
 });
 
 describe("createECProperty", () => {
-  const propertyClass: ECClass = {} as unknown as ECClass;
+  const propertyClass: EC.Class = {} as unknown as EC.Class;
   const propertyStub = {
     isArray: () => false,
     isEnumeration: () => false,
@@ -472,7 +460,7 @@ describe("createECProperty", () => {
         label: "Test property",
         extendedTypeName: "extended",
       } as unknown as CorePrimitiveProperty;
-      const property = createECProperty(coreProperty, propertyClass) as ECPrimitiveProperty;
+      const property = createECProperty(coreProperty, propertyClass) as EC.PrimitiveProperty;
       expect(property.class).to.eq(propertyClass);
       expect(property.isArray()).to.be.false;
       expect(property.isEnumeration()).to.be.false;
@@ -485,7 +473,7 @@ describe("createECProperty", () => {
     });
 
     it("maps primitive types", async () => {
-      const types: [PrimitiveType, ECPrimitiveType][] = [
+      const types: [PrimitiveType, EC.PrimitiveType][] = [
         [PrimitiveType.Binary, "Binary"],
         [PrimitiveType.Boolean, "Boolean"],
         [PrimitiveType.DateTime, "DateTime"],
@@ -504,7 +492,7 @@ describe("createECProperty", () => {
           name: "test-property",
           primitiveType: coreType,
         } as unknown as CorePrimitiveProperty;
-        const property = createECProperty(coreProperty, propertyClass) as ECPrimitiveProperty;
+        const property = createECProperty(coreProperty, propertyClass) as EC.PrimitiveProperty;
         expect(property.primitiveType).to.eq(expectation);
       });
 
@@ -518,7 +506,7 @@ describe("createECProperty", () => {
             primitiveType: coreType,
           } as unknown as CorePrimitiveProperty,
           propertyClass,
-        ) as ECPrimitiveProperty;
+        ) as EC.PrimitiveProperty;
         expect(() => uninitializedProperty.primitiveType).to.throw();
       });
     });
@@ -535,7 +523,7 @@ describe("createECProperty", () => {
           },
         }),
       } as unknown as CorePrimitiveProperty;
-      const property = createECProperty(coreProperty, propertyClass) as ECPrimitiveProperty;
+      const property = createECProperty(coreProperty, propertyClass) as EC.PrimitiveProperty;
       const koq = (await property.kindOfQuantity)!;
       expect(koq.fullName).to.eq("SchemaName.TestKoq");
 
@@ -551,7 +539,7 @@ describe("createECProperty", () => {
         name: "test-property",
         label: "Test property",
       } as unknown as CoreNavigationProperty;
-      const property = createECProperty(coreProperty, propertyClass) as ECNavigationProperty;
+      const property = createECProperty(coreProperty, propertyClass) as EC.NavigationProperty;
       expect(property.class).to.eq(propertyClass);
       expect(property.isArray()).to.be.false;
       expect(property.isEnumeration()).to.be.false;
@@ -574,7 +562,7 @@ describe("createECProperty", () => {
           name: "test-property",
           direction: coreDirection,
         } as unknown as CoreNavigationProperty;
-        const property = createECProperty(coreProperty, propertyClass) as ECNavigationProperty;
+        const property = createECProperty(coreProperty, propertyClass) as EC.NavigationProperty;
         expect(property.direction).to.eq(expectation);
       });
     });
@@ -591,7 +579,7 @@ describe("createECProperty", () => {
           },
         }),
       } as unknown as CoreNavigationProperty;
-      const property = createECProperty(coreProperty, propertyClass) as ECNavigationProperty;
+      const property = createECProperty(coreProperty, propertyClass) as EC.NavigationProperty;
       const relationshipClass = await property.relationshipClass;
       expect(relationshipClass.fullName).to.eq("SchemaName.RelationshipClass");
     });
@@ -606,7 +594,7 @@ describe("createECProperty", () => {
         label: "Test property",
         extendedTypeName: "extended",
       } as unknown as CoreEnumerationProperty;
-      const property = createECProperty(coreProperty, propertyClass) as ECEnumerationProperty;
+      const property = createECProperty(coreProperty, propertyClass) as EC.EnumerationProperty;
       expect(property.class).to.eq(propertyClass);
       expect(property.isArray()).to.be.false;
       expect(property.isEnumeration()).to.be.true;
@@ -629,7 +617,7 @@ describe("createECProperty", () => {
           },
         }),
       } as unknown as CoreEnumerationProperty;
-      const property = createECProperty(coreProperty, propertyClass) as ECEnumerationProperty;
+      const property = createECProperty(coreProperty, propertyClass) as EC.EnumerationProperty;
       expect(await property.enumeration).to.not.be.undefined;
     });
 
@@ -648,10 +636,10 @@ describe("createECProperty", () => {
         name: "test-property",
         enumeration: Promise.resolve(coreEnumeration),
       } as unknown as CoreEnumerationProperty;
-      let property: ECEnumerationProperty;
+      let property: EC.EnumerationProperty;
 
       beforeEach(async () => {
-        property = createECProperty(coreEnumerationProperty, propertyClass) as ECEnumerationProperty;
+        property = createECProperty(coreEnumerationProperty, propertyClass) as EC.EnumerationProperty;
       });
 
       it("returns `isStrict` flag", async () => {
@@ -694,7 +682,7 @@ describe("createECProperty", () => {
         name: "test-property",
         label: "Test property",
       } as unknown as CoreStructProperty;
-      const property = createECProperty(coreProperty, propertyClass) as ECStructProperty;
+      const property = createECProperty(coreProperty, propertyClass) as EC.StructProperty;
       expect(property.class).to.eq(propertyClass);
       expect(property.isArray()).to.be.false;
       expect(property.isEnumeration()).to.be.false;
@@ -717,7 +705,7 @@ describe("createECProperty", () => {
           },
         },
       } as unknown as CoreStructProperty;
-      const property = createECProperty(coreProperty, propertyClass) as ECStructProperty;
+      const property = createECProperty(coreProperty, propertyClass) as EC.StructProperty;
       expect(property.structClass.fullName).to.eq("SchemaName.StructClass");
     });
   });
@@ -733,7 +721,7 @@ describe("createECProperty", () => {
         minOccurs: 123,
         maxOccurs: 456,
       } as unknown as CorePrimitiveArrayProperty;
-      const property = createECProperty(coreProperty, propertyClass) as ECPrimitiveArrayProperty;
+      const property = createECProperty(coreProperty, propertyClass) as EC.PrimitiveArrayProperty;
       expect(property.class).to.eq(propertyClass);
       expect(property.isArray()).to.be.true;
       expect(property.isEnumeration()).to.be.false;
@@ -756,7 +744,7 @@ describe("createECProperty", () => {
         minOccurs: 123,
         maxOccurs: 456,
       } as unknown as CoreEnumerationArrayProperty;
-      const property = createECProperty(coreProperty, propertyClass) as ECEnumerationArrayProperty;
+      const property = createECProperty(coreProperty, propertyClass) as EC.EnumerationArrayProperty;
       expect(property.class).to.eq(propertyClass);
       expect(property.isArray()).to.be.true;
       expect(property.isEnumeration()).to.be.true;
@@ -779,7 +767,7 @@ describe("createECProperty", () => {
         minOccurs: 123,
         maxOccurs: 456,
       } as unknown as CoreStructArrayProperty;
-      const property = createECProperty(coreProperty, propertyClass) as ECStructArrayProperty;
+      const property = createECProperty(coreProperty, propertyClass) as EC.StructArrayProperty;
       expect(property.class).to.eq(propertyClass);
       expect(property.isArray()).to.be.true;
       expect(property.isEnumeration()).to.be.false;

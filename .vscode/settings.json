@@ -1,12 +1,16 @@
 {
   "cSpell.words": [
+    "concatenator",
+    "deferreds",
     "ecschema",
+    "ecsql",
     "hilite",
     "hilited",
     "hilites",
     "imodel",
     "itwin",
     "itwinjs",
+    "julianday",
     "ruleset",
     "selectable",
     "selectables",
@@ -54,7 +58,7 @@
   "importSorter.importStringConfiguration.trailingComma": "multiLine",
   "importSorter.generalConfiguration.sortOnBeforeSave": true,
   "importSorter.sortConfiguration.customOrderingRules.defaultNumberOfEmptyLinesAfterGroup": 0,
-  "importSorter.sortConfiguration.removeUnusedImports": true,
+  "importSorter.sortConfiguration.removeUnusedImports": false,
   "importSorter.sortConfiguration.importMembers.order": "unsorted",
   "importSorter.sortConfiguration.customOrderingRules.rules": [
     {

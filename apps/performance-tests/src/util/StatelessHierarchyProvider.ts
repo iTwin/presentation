@@ -3,28 +3,20 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { expand, filter, from, mergeAll, of, tap } from "rxjs";
+import { expand, filter, from, of, tap } from "rxjs";
 import { IModelDb } from "@itwin/core-backend";
 import { SchemaContext, SchemaJsonLocater } from "@itwin/ecschema-metadata";
 import { createECSqlQueryExecutor, createMetadataProvider } from "@itwin/presentation-core-interop";
-import {
-  createLimitingECSqlQueryExecutor,
-  HierarchyNode,
-  HierarchyProvider,
-  IHierarchyLevelDefinitionsFactory,
-  IMetadataProvider,
-} from "@itwin/presentation-hierarchies";
+import { createLimitingECSqlQueryExecutor, HierarchyNode, HierarchyProvider, IHierarchyLevelDefinitionsFactory } from "@itwin/presentation-hierarchies";
+import { IMetadataProvider } from "@itwin/presentation-shared";
 
 export interface ProviderOptions {
   iModel: IModelDb;
   rowLimit?: number | "unbounded";
-  nodeRequestLimit?: number | "unbounded";
-
   getHierarchyFactory(metadataProvider: IMetadataProvider): IHierarchyLevelDefinitionsFactory;
 }
 
 const DEFAULT_ROW_LIMIT = 1000;
-const DEFAULT_NODE_REQUEST_LIMIT = 10;
 
 export class StatelessHierarchyProvider {
   private readonly _provider: HierarchyProvider;
@@ -36,24 +28,14 @@ export class StatelessHierarchyProvider {
   public async loadHierarchy(props?: { depth?: number }): Promise<number> {
     const depth = props?.depth;
 
-    let nodeRequestLimit: number | undefined;
-    if (this._props.nodeRequestLimit === undefined) {
-      nodeRequestLimit = DEFAULT_NODE_REQUEST_LIMIT;
-    } else if (this._props.nodeRequestLimit !== "unbounded") {
-      nodeRequestLimit = this._props.nodeRequestLimit;
-    }
-
     let nodeCount = 0;
     return new Promise<number>((resolve, reject) => {
       const nodesObservable = of<HierarchyNode | undefined>(undefined).pipe(
-        expand(
-          (parentNode) =>
-            from(this._provider.getNodes({ parentNode })).pipe(
-              mergeAll(),
-              tap(() => ++nodeCount),
-              filter((node) => node.children && (!depth || getNodeDepth(node) < depth)),
-            ),
-          nodeRequestLimit,
+        expand((parentNode) =>
+          from(this._provider.getNodes({ parentNode })).pipe(
+            tap(() => ++nodeCount),
+            filter((node) => node.children && (!depth || getNodeDepth(node) < depth)),
+          ),
         ),
       );
       nodesObservable.subscribe({

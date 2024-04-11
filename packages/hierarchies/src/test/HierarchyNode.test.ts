@@ -4,6 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { expect } from "chai";
+import { InstanceKey } from "@itwin/presentation-shared";
 import {
   GroupingHierarchyNode,
   HierarchyNode,
@@ -12,7 +13,6 @@ import {
   PropertyValueGroupingNodeKey,
   PropertyValueRangeGroupingNodeKey,
 } from "../hierarchies/HierarchyNode";
-import { InstanceKey } from "../hierarchies/values/Values";
 
 describe("HierarchyNodeKey", () => {
   describe("equals", () => {

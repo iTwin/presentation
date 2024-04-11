@@ -4,3 +4,4 @@
  *--------------------------------------------------------------------------------------------*/
 
 export * from "./test-utilities/IModelUtils";
+export * from "./test-utilities/ResolvablePromise";

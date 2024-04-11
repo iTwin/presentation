@@ -13,6 +13,7 @@ import { isPresentationTreeNodeItem, PresentationTreeDataProvider, PresentationT
 import { createLogger } from "@itwin/presentation-core-interop";
 import { ClassGroupingNodeKey, HierarchyNode, InstancesNodeKey, setLogger } from "@itwin/presentation-hierarchies";
 import { initialize, terminate } from "../../IntegrationTests";
+import { collect } from "../Utils";
 import { createModelsTreeProvider } from "./ModelsTreeTestUtils";
 
 describe("Hierarchies", () => {
@@ -75,7 +76,7 @@ describe("Hierarchies", () => {
 
       let statelessChildren: HierarchyNode[];
       try {
-        statelessChildren = await statelessProvider.getNodes({ parentNode: props.statelessParent });
+        statelessChildren = await collect(statelessProvider.getNodes({ parentNode: props.statelessParent }));
       } catch (e) {
         // eslint-disable-next-line no-console
         console.error(`Error creating children using stateless provider: ${(e as Error).message}. At: ${createNativeAncestorsPath(props.nativeAncestors)}`);

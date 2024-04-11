@@ -759,8 +759,6 @@ export class UnifiedSelectionTreeEventHandler extends TreeEventHandler implement
     // @deprecated (undocumented)
     protected getNodeKey(node: TreeNodeItem): NodeKey;
     // (undocumented)
-    get modelSource(): TreeModelSource;
-    // (undocumented)
     onSelectionModified({ modifications }: TreeSelectionModificationEventArgs): Subscription | undefined;
     // (undocumented)
     onSelectionReplaced({ replacements }: TreeSelectionReplacementEventArgs): Subscription | undefined;

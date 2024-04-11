@@ -7,7 +7,7 @@ import { useEffect, useState } from "react";
 import { HierarchyNode } from "@itwin/presentation-hierarchies";
 import { Selectable, Selectables, SelectionStorage } from "@itwin/unified-selection";
 import { useUnifiedSelectionContext } from "../UnifiedSelectionContext";
-import { isTreeModelHierarchyNode, TreeModelHierarchyNode, TreeModelRootNode } from "./TreeModel";
+import { isTreeModelHierarchyNode, TreeModelNode, TreeModelRootNode } from "./TreeModel";
 
 /** @internal */
 export interface TreeSelectionOptions {
@@ -19,15 +19,15 @@ export interface TreeSelectionOptions {
 export interface UseUnifiedTreeSelectionProps {
   imodelKey: string;
   sourceName: string;
-  getNode: (nodeId: string) => TreeModelHierarchyNode | TreeModelRootNode | undefined;
+  getNode: (nodeId: string) => TreeModelNode | TreeModelRootNode | undefined;
 }
 
 /** @internal */
 export function useUnifiedTreeSelection({ imodelKey, sourceName, getNode }: UseUnifiedTreeSelectionProps): TreeSelectionOptions {
-  const [options, setOptions] = useState<TreeSelectionOptions>({
-    isNodeSelected: () => false,
-    selectNode: () => {},
-  });
+  const [options, setOptions] = useState<TreeSelectionOptions>(() => ({
+    isNodeSelected: /* istanbul ignore next */ () => false,
+    selectNode: /* istanbul ignore next */ () => {},
+  }));
 
   const selectionStorage = useUnifiedSelectionContext();
   useEffect(() => {
@@ -55,16 +55,9 @@ export function useUnifiedTreeSelection({ imodelKey, sourceName, getNode }: UseU
 function createOptions(
   key: string,
   source: string,
-  storage: SelectionStorage | undefined,
-  getNode: (nodeId: string) => TreeModelHierarchyNode | TreeModelRootNode | undefined,
+  storage: SelectionStorage,
+  getNode: (nodeId: string) => TreeModelNode | TreeModelRootNode | undefined,
 ): TreeSelectionOptions {
-  if (!storage) {
-    return {
-      isNodeSelected: () => false,
-      selectNode: () => {},
-    };
-  }
-
   return {
     isNodeSelected: (nodeId: string) => {
       const node = getNode(nodeId);

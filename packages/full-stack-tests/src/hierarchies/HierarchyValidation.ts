@@ -4,8 +4,10 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { Logger } from "@itwin/core-bentley";
-import { HierarchyNode, HierarchyProvider, InstanceKey, NonGroupingHierarchyNode } from "@itwin/presentation-hierarchies";
+import { HierarchyNode, HierarchyProvider, NonGroupingHierarchyNode } from "@itwin/presentation-hierarchies";
 import { hasChildren } from "@itwin/presentation-hierarchies/lib/cjs/hierarchies/internal/Common";
+import { InstanceKey } from "@itwin/presentation-shared";
+import { collect } from "./Utils";
 
 const loggingNamespace = `Presentation.HierarchyBuilder.HierarchyValidation`;
 
@@ -283,7 +285,7 @@ export namespace NodeValidators {
 
 export async function validateHierarchy(props: { provider: HierarchyProvider; parentNode?: HierarchyNode; expect: ExpectedHierarchyDef[] }) {
   const parentIdentifier = props.parentNode ? props.parentNode.label : "<root>";
-  const nodes = await props.provider.getNodes({ parentNode: props.parentNode });
+  const nodes = await collect(props.provider.getNodes({ parentNode: props.parentNode }));
   Logger.logInfo(loggingNamespace, `Received ${nodes.length} child nodes for ${parentIdentifier}`);
 
   if (nodes.length !== props.expect.length) {

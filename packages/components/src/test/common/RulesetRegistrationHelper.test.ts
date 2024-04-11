@@ -4,13 +4,13 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { expect } from "chai";
+import { ResolvablePromise } from "presentation-test-utilities";
 import * as sinon from "sinon";
 import { BeDuration, using } from "@itwin/core-bentley";
 import { RegisteredRuleset } from "@itwin/presentation-common";
 import { Presentation, RulesetManager } from "@itwin/presentation-frontend";
 import { RulesetRegistrationHelper } from "../../presentation-components/common/RulesetRegistrationHelper";
 import { createTestRuleset } from "../_helpers/Common";
-import { ResolvablePromise } from "../_helpers/Promises";
 import { createStub } from "../TestUtils";
 
 describe("RulesetRegistrationHelper", () => {

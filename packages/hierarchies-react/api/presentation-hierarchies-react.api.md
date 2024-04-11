@@ -17,11 +17,9 @@ export { GenericInstanceFilter }
 // @beta (undocumented)
 export interface HierarchyLevelFilteringOptions {
     // (undocumented)
-    applyFilter: (filter?: GenericInstanceFilter) => void;
-    // (undocumented)
     currentFilter?: GenericInstanceFilter;
     // (undocumented)
-    hierarchyNode: HierarchyNode | undefined;
+    hierarchyNode: HierarchyNode;
 }
 
 export { HierarchyNode }
@@ -29,7 +27,7 @@ export { HierarchyNode }
 export { HierarchyProvider }
 
 // @beta (undocumented)
-export type InfoNodeTypes = "ResultSetTooLarge" | "ChildrenPlaceholder" | "Unknown";
+export type InfoNodeTypes = "ResultSetTooLarge" | "ChildrenPlaceholder" | "NoFilterMatchingNodes" | "Unknown";
 
 // @beta (undocumented)
 export function isPresentationHierarchyNode(node: PresentationTreeNode): node is PresentationHierarchyNode;
@@ -75,7 +73,7 @@ export type PresentationTreeNode = PresentationHierarchyNode | PresentationInfoN
 export { SelectionStorage }
 
 // @beta (undocumented)
-export function TreeRenderer({ rootNodes, expandNode, selectNode, isNodeSelected, setHierarchyLevelLimit, getHierarchyLevelFilteringOptions, removeHierarchyLevelFilter, onFilterClick, getIcon, }: TreeRendererProps): JSX_2.Element;
+export function TreeRenderer({ rootNodes, expandNode, selectNode, isNodeSelected, setHierarchyLevelLimit, setHierarchyLevelFilter, onFilterClick, getIcon, }: TreeRendererProps): JSX_2.Element;
 
 // @beta (undocumented)
 export function UnifiedSelectionProvider({ storage, children }: PropsWithChildren<Props>): JSX_2.Element;

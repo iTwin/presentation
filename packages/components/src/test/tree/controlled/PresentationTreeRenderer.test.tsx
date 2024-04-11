@@ -4,6 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { expect } from "chai";
+import { ResolvablePromise } from "presentation-test-utilities";
 import { EMPTY, Subject } from "rxjs";
 import sinon from "sinon";
 import { StandardTypeNames } from "@itwin/appui-abstract";
@@ -29,7 +30,6 @@ import { IPresentationTreeDataProvider } from "../../../presentation-components/
 import { PresentationTreeNodeItem } from "../../../presentation-components/tree/PresentationTreeNodeItem";
 import { createTestPropertyInfo, stubDOMMatrix, stubRaf } from "../../_helpers/Common";
 import { createTestContentDescriptor, createTestPropertiesContentField } from "../../_helpers/Content";
-import { ResolvablePromise } from "../../_helpers/Promises";
 import { act, render, waitFor } from "../../TestUtils";
 import { createTreeModelNodeInput } from "./Helpers";
 

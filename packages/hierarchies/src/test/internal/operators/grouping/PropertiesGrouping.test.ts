@@ -5,21 +5,19 @@
 
 import { expect } from "chai";
 import sinon from "sinon";
-import { ECClass, ECProperty, IMetadataProvider } from "../../../../hierarchies/ECMetadata";
+import { createDefaultValueFormatter, EC, IPrimitiveValueFormatter } from "@itwin/presentation-shared";
 import { GroupingNodeKey, HierarchyNodePropertyGroup, PropertyOtherValuesGroupingNodeKey } from "../../../../hierarchies/HierarchyNode";
 import { BaseClassChecker } from "../../../../hierarchies/internal/Common";
 import * as propertiesGrouping from "../../../../hierarchies/internal/operators/grouping/PropertiesGrouping";
-import { createDefaultValueFormatter, IPrimitiveValueFormatter } from "../../../../hierarchies/values/Formatting";
-import { ClassStubs, createClassStubs, createTestProcessedGroupingNode, createTestProcessedInstanceNode, testLocalizedStrings } from "../../../Utils";
+import { createMetadataProviderStub, createTestProcessedGroupingNode, createTestProcessedInstanceNode, testLocalizedStrings } from "../../../Utils";
 
 describe("PropertiesGrouping", () => {
-  const metadataProvider = {} as unknown as IMetadataProvider;
-  let classStubs: ClassStubs;
+  let metadataProvider: ReturnType<typeof createMetadataProviderStub>;
   let formatter: IPrimitiveValueFormatter;
 
   beforeEach(() => {
     formatter = createDefaultValueFormatter();
-    classStubs = createClassStubs(metadataProvider);
+    metadataProvider = createMetadataProviderStub();
   });
 
   afterEach(() => {
@@ -68,7 +66,7 @@ describe("PropertiesGrouping", () => {
           },
         }),
       ];
-      classStubs.stubEntityClass({
+      metadataProvider.stubEntityClass({
         schemaName: "TestSchema",
         className: "Class",
       });
@@ -102,7 +100,7 @@ describe("PropertiesGrouping", () => {
           },
         }),
       ];
-      classStubs.stubEntityClass({
+      metadataProvider.stubEntityClass({
         schemaName: "TestSchema",
         className: "Class",
       });
@@ -154,7 +152,7 @@ describe("PropertiesGrouping", () => {
           },
         }),
       ];
-      classStubs.stubEntityClass({
+      metadataProvider.stubEntityClass({
         schemaName: "TestSchema",
         className: "Class",
       });
@@ -208,7 +206,7 @@ describe("PropertiesGrouping", () => {
         }),
       ];
 
-      classStubs.stubEntityClass({
+      metadataProvider.stubEntityClass({
         schemaName: "TestSchema",
         className: "Class",
       });
@@ -254,7 +252,7 @@ describe("PropertiesGrouping", () => {
 
     it("omits property groups up to parent property value grouping node", async () => {
       const className = "TestSchema.Class";
-      classStubs.stubEntityClass({ schemaName: "TestSchema", className: "Class" });
+      metadataProvider.stubEntityClass({ schemaName: "TestSchema", className: "Class" });
 
       const grandParentNode = createTestProcessedGroupingNode({
         key: { type: "class-grouping", className },
@@ -295,7 +293,7 @@ describe("PropertiesGrouping", () => {
 
     it("omits property groups up to parent property range grouping node", async () => {
       const className = "TestSchema.Class";
-      classStubs.stubEntityClass({ schemaName: "TestSchema", className: "Class" });
+      metadataProvider.stubEntityClass({ schemaName: "TestSchema", className: "Class" });
 
       const parentNode = createTestProcessedGroupingNode({
         key: { type: "property-grouping:range", propertyClassName: className, propertyName: "PropertyName1", fromValue: 1, toValue: 9 },
@@ -335,7 +333,7 @@ describe("PropertiesGrouping", () => {
 
     it("omits property groups up to parent property other values grouping node", async () => {
       const className = "TestSchema.Class";
-      classStubs.stubEntityClass({ schemaName: "TestSchema", className: "Class" });
+      metadataProvider.stubEntityClass({ schemaName: "TestSchema", className: "Class" });
 
       const parentNode = createTestProcessedGroupingNode({
         key: { type: "property-grouping:other", properties: [{ className, propertyName: "PropertyName1" }] },
@@ -376,7 +374,7 @@ describe("PropertiesGrouping", () => {
 
     it("doesn't omit property groups when parent is not a property grouping node", async () => {
       const className = "TestSchema.Class";
-      classStubs.stubEntityClass({ schemaName: "TestSchema", className: "Class" });
+      metadataProvider.stubEntityClass({ schemaName: "TestSchema", className: "Class" });
 
       const parentNode = createTestProcessedGroupingNode({
         key: { type: "class-grouping", className },
@@ -580,7 +578,7 @@ describe("PropertiesGrouping", () => {
             },
           }),
         ];
-        const ecClass = { fullName: "TestSchema.Other" } as unknown as ECClass;
+        const ecClass = { fullName: "TestSchema.Other" } as unknown as EC.Class;
         const propertyInfo: propertiesGrouping.PropertyGroupInfo = {
           ecClass,
           previousPropertiesGroupingInfo: [],
@@ -609,7 +607,7 @@ describe("PropertiesGrouping", () => {
             },
           }),
         ];
-        const ecClass = { fullName: "TestSchema.Class" } as unknown as ECClass;
+        const ecClass = { fullName: "TestSchema.Class" } as unknown as EC.Class;
         const propertyInfo: propertiesGrouping.PropertyGroupInfo = {
           ecClass,
           previousPropertiesGroupingInfo: [{ propertiesClassName: "TestSchema.Class", propertyName: "PropertyName2" }],
@@ -638,7 +636,7 @@ describe("PropertiesGrouping", () => {
             },
           }),
         ];
-        const ecClass = { fullName: "TestSchema.Class" } as unknown as ECClass;
+        const ecClass = { fullName: "TestSchema.Class" } as unknown as EC.Class;
         const propertyInfo: propertiesGrouping.PropertyGroupInfo = {
           ecClass,
           previousPropertiesGroupingInfo: [],
@@ -667,7 +665,7 @@ describe("PropertiesGrouping", () => {
             },
           }),
         ];
-        const ecClass = { fullName: "TestSchema.Class" } as unknown as ECClass;
+        const ecClass = { fullName: "TestSchema.Class" } as unknown as EC.Class;
         const propertyInfo: propertiesGrouping.PropertyGroupInfo = {
           ecClass,
           previousPropertiesGroupingInfo: [],
@@ -682,7 +680,7 @@ describe("PropertiesGrouping", () => {
         });
       });
 
-      it("doesn't group when nodes' ECClass isn't a child of provided ECClass", async () => {
+      it("doesn't group when nodes' EC.Class isn't a child of provided EC.Class", async () => {
         const nodes = [
           createTestProcessedInstanceNode({
             key: { type: "instances", instanceKeys: [{ className: "TestSchema.Class", id: "0x1" }] },
@@ -696,9 +694,9 @@ describe("PropertiesGrouping", () => {
             },
           }),
         ];
-        const ecClass = { fullName: "TestSchema.Class" } as unknown as ECClass;
+        const ecClass = { fullName: "TestSchema.Class" } as unknown as EC.Class;
 
-        classStubs.stubEntityClass({
+        metadataProvider.stubEntityClass({
           schemaName: "TestSchema",
           className: "Class",
           is: async () => false,
@@ -734,8 +732,8 @@ describe("PropertiesGrouping", () => {
             },
           }),
         ];
-        const ecClass = { fullName: "TestSchema.Class" } as unknown as ECClass;
-        classStubs.stubEntityClass({
+        const ecClass = { fullName: "TestSchema.Class" } as unknown as EC.Class;
+        metadataProvider.stubEntityClass({
           schemaName: "TestSchema",
           className: "Class",
           is: async () => true,
@@ -761,7 +759,7 @@ describe("PropertiesGrouping", () => {
           key: { type: "instances", instanceKeys: [{ className: "TestSchema.Class", id: "0x1" }] },
         }),
       ];
-      const ecClass = { fullName: "TestSchema.Class" } as unknown as ECClass;
+      const ecClass = { fullName: "TestSchema.Class" } as unknown as EC.Class;
       const propertyInfo: propertiesGrouping.PropertyGroupInfo = {
         ecClass,
         previousPropertiesGroupingInfo: [],
@@ -791,8 +789,8 @@ describe("PropertiesGrouping", () => {
             },
           }),
         ];
-        const property = { name: "PropertyName", isPrimitive: () => false } as unknown as ECProperty;
-        const stubbedClass = classStubs.stubEntityClass({
+        const property = { name: "PropertyName", isPrimitive: () => false } as unknown as EC.Property;
+        const stubbedClass = metadataProvider.stubEntityClass({
           schemaName: "TestSchema",
           className: "Class",
           is: async () => true,
@@ -812,7 +810,7 @@ describe("PropertiesGrouping", () => {
         });
       });
 
-      it("doesn't call getClass when it was called before with the same className", async () => {
+      it("doesn't request ECClass when it was requested before with the same className", async () => {
         const nodes = [
           createTestProcessedInstanceNode({
             key: { type: "instances", instanceKeys: [{ className: "TestSchema.Class", id: "0x1" }] },
@@ -837,8 +835,8 @@ describe("PropertiesGrouping", () => {
             },
           }),
         ];
-        const property = { name: "PropertyName", isPrimitive: () => false } as unknown as ECProperty;
-        const stubbedClass = classStubs.stubEntityClass({
+        const property = { name: "PropertyName", isPrimitive: () => false } as unknown as EC.Property;
+        const stubbedClass = metadataProvider.stubEntityClass({
           schemaName: "TestSchema",
           className: "Class",
           is: async () => false,
@@ -850,7 +848,7 @@ describe("PropertiesGrouping", () => {
           propertyGroup: { propertyName: "PropertyName" },
         };
         await propertiesGrouping.createPropertyGroups(nodes, [], propertyInfo, formatter, testLocalizedStrings, new BaseClassChecker(metadataProvider, 1));
-        expect(classStubs.stub).to.be.calledOnce;
+        expect(metadataProvider.getClassRequestCount({ schemaName: "TestSchema", className: "Class" })).to.eq(1);
       });
 
       it("doesn't group, when property value isn't set and createGroupForUnspecifiedValues isn't set", async () => {
@@ -867,8 +865,8 @@ describe("PropertiesGrouping", () => {
             },
           }),
         ];
-        const property = { name: "PropertyName", isPrimitive: () => true } as unknown as ECProperty;
-        const stubbedClass = classStubs.stubEntityClass({
+        const property = { name: "PropertyName", isPrimitive: () => true } as unknown as EC.Property;
+        const stubbedClass = metadataProvider.stubEntityClass({
           schemaName: "TestSchema",
           className: "Class",
           is: async () => true,
@@ -903,8 +901,8 @@ describe("PropertiesGrouping", () => {
             },
           }),
         ];
-        const property = { name: "PropertyName", isPrimitive: () => true } as unknown as ECProperty;
-        const stubbedClass = classStubs.stubEntityClass({
+        const property = { name: "PropertyName", isPrimitive: () => true } as unknown as EC.Property;
+        const stubbedClass = metadataProvider.stubEntityClass({
           schemaName: "TestSchema",
           className: "Class",
           is: async () => true,
@@ -951,8 +949,8 @@ describe("PropertiesGrouping", () => {
             },
           }),
         ];
-        const property = { name: "PropertyName", isPrimitive: () => true, primitiveType: "String" } as unknown as ECProperty;
-        const stubbedClass = classStubs.stubEntityClass({
+        const property = { name: "PropertyName", isPrimitive: () => true, primitiveType: "String" } as unknown as EC.Property;
+        const stubbedClass = metadataProvider.stubEntityClass({
           schemaName: "TestSchema",
           className: "Class",
           is: async () => true,
@@ -1010,8 +1008,8 @@ describe("PropertiesGrouping", () => {
             },
           }),
         ];
-        const property = { name: "PropertyName", isPrimitive: () => true, primitiveType: "String" } as unknown as ECProperty;
-        const stubbedClass = classStubs.stubEntityClass({
+        const property = { name: "PropertyName", isPrimitive: () => true, primitiveType: "String" } as unknown as EC.Property;
+        const stubbedClass = metadataProvider.stubEntityClass({
           schemaName: "TestSchema",
           className: "Class",
           is: async () => true,
@@ -1069,8 +1067,8 @@ describe("PropertiesGrouping", () => {
             },
           }),
         ];
-        const property = { name: "PropertyName", isPrimitive: () => true, primitiveType: "String" } as unknown as ECProperty;
-        const stubbedClass = classStubs.stubEntityClass({
+        const property = { name: "PropertyName", isPrimitive: () => true, primitiveType: "String" } as unknown as EC.Property;
+        const stubbedClass = metadataProvider.stubEntityClass({
           schemaName: "TestSchema",
           className: "Class",
           is: async () => true,
@@ -1140,8 +1138,8 @@ describe("PropertiesGrouping", () => {
             },
           }),
         ];
-        const property = { name: "PropertyName1", isPrimitive: () => true, primitiveType: "String" } as unknown as ECProperty;
-        const stubbedClass = classStubs.stubEntityClass({
+        const property = { name: "PropertyName1", isPrimitive: () => true, primitiveType: "String" } as unknown as EC.Property;
+        const stubbedClass = metadataProvider.stubEntityClass({
           schemaName: "TestSchema",
           className: "Class",
           is: async () => true,
@@ -1190,8 +1188,8 @@ describe("PropertiesGrouping", () => {
             },
           }),
         ];
-        const property = { name: "PropertyName", isPrimitive: () => true } as unknown as ECProperty;
-        const stubbedClass = classStubs.stubEntityClass({
+        const property = { name: "PropertyName", isPrimitive: () => true } as unknown as EC.Property;
+        const stubbedClass = metadataProvider.stubEntityClass({
           schemaName: "TestSchema",
           className: "Class",
           is: async () => true,
@@ -1226,8 +1224,8 @@ describe("PropertiesGrouping", () => {
             },
           }),
         ];
-        const property = { name: "PropertyName", isPrimitive: () => true } as unknown as ECProperty;
-        const stubbedClass = classStubs.stubEntityClass({
+        const property = { name: "PropertyName", isPrimitive: () => true } as unknown as EC.Property;
+        const stubbedClass = metadataProvider.stubEntityClass({
           schemaName: "TestSchema",
           className: "Class",
           is: async () => true,
@@ -1280,8 +1278,8 @@ describe("PropertiesGrouping", () => {
             },
           }),
         ];
-        const property = { name: "PropertyName", isPrimitive: () => true } as unknown as ECProperty;
-        const stubbedClass = classStubs.stubEntityClass({
+        const property = { name: "PropertyName", isPrimitive: () => true } as unknown as EC.Property;
+        const stubbedClass = metadataProvider.stubEntityClass({
           schemaName: "TestSchema",
           className: "Class",
           is: async () => true,
@@ -1328,8 +1326,8 @@ describe("PropertiesGrouping", () => {
             },
           }),
         ];
-        const property = { name: "PropertyName", isPrimitive: () => true } as unknown as ECProperty;
-        const stubbedClass = classStubs.stubEntityClass({
+        const property = { name: "PropertyName", isPrimitive: () => true } as unknown as EC.Property;
+        const stubbedClass = metadataProvider.stubEntityClass({
           schemaName: "TestSchema",
           className: "Class",
           is: async () => true,
@@ -1410,11 +1408,11 @@ describe("PropertiesGrouping", () => {
           nodes,
           [],
           {
-            ecClass: classStubs.stubEntityClass({
+            ecClass: metadataProvider.stubEntityClass({
               schemaName: "TestSchema",
               className: "Class1",
               is: async () => true,
-              properties: [{ name: "PropertyName1", isPrimitive: () => true } as unknown as ECProperty],
+              properties: [{ name: "PropertyName1", isPrimitive: () => true } as unknown as EC.Property],
             }),
             previousPropertiesGroupingInfo: [],
             propertyGroup: { propertyName: "PropertyName1", ranges: [{ fromValue: 1, toValue: 5 }] },
@@ -1454,11 +1452,11 @@ describe("PropertiesGrouping", () => {
             res.ungrouped,
             res.grouped,
             {
-              ecClass: classStubs.stubEntityClass({
+              ecClass: metadataProvider.stubEntityClass({
                 schemaName: "TestSchema",
                 className: "Class2",
                 is: async () => true,
-                properties: [{ name: "PropertyName2", isPrimitive: () => true } as unknown as ECProperty],
+                properties: [{ name: "PropertyName2", isPrimitive: () => true } as unknown as EC.Property],
               }),
               previousPropertiesGroupingInfo: [],
               propertyGroup: { propertyName: "PropertyName2", ranges: [{ fromValue: 7, toValue: 10 }] },
@@ -1499,8 +1497,8 @@ describe("PropertiesGrouping", () => {
             },
           }),
         ];
-        const property = { name: "PropertyName", isPrimitive: () => true } as unknown as ECProperty;
-        const stubbedClass = classStubs.stubEntityClass({
+        const property = { name: "PropertyName", isPrimitive: () => true } as unknown as EC.Property;
+        const stubbedClass = metadataProvider.stubEntityClass({
           schemaName: "TestSchema",
           className: "Class",
           is: async () => true,
@@ -1548,8 +1546,8 @@ describe("PropertiesGrouping", () => {
             },
           }),
         ];
-        const property = { name: "PropertyName", isPrimitive: () => true } as unknown as ECProperty;
-        const stubbedClass = classStubs.stubEntityClass({
+        const property = { name: "PropertyName", isPrimitive: () => true } as unknown as EC.Property;
+        const stubbedClass = metadataProvider.stubEntityClass({
           schemaName: "TestSchema",
           className: "Class",
           is: async () => true,
@@ -1608,8 +1606,8 @@ describe("PropertiesGrouping", () => {
             },
           }),
         ];
-        const property = { name: "PropertyName", isPrimitive: () => true } as unknown as ECProperty;
-        const stubbedClass = classStubs.stubEntityClass({
+        const property = { name: "PropertyName", isPrimitive: () => true } as unknown as EC.Property;
+        const stubbedClass = metadataProvider.stubEntityClass({
           schemaName: "TestSchema",
           className: "Class",
           is: async () => true,
@@ -1668,8 +1666,8 @@ describe("PropertiesGrouping", () => {
             },
           }),
         ];
-        const property = { name: "PropertyName", isPrimitive: () => true } as unknown as ECProperty;
-        const stubbedClass = classStubs.stubEntityClass({
+        const property = { name: "PropertyName", isPrimitive: () => true } as unknown as EC.Property;
+        const stubbedClass = metadataProvider.stubEntityClass({
           schemaName: "TestSchema",
           className: "Class",
           is: async () => true,
@@ -1726,8 +1724,8 @@ describe("PropertiesGrouping", () => {
             },
           }),
         ];
-        const property = { name: "PropertyName", isPrimitive: () => true } as unknown as ECProperty;
-        const stubbedClass = classStubs.stubEntityClass({
+        const property = { name: "PropertyName", isPrimitive: () => true } as unknown as EC.Property;
+        const stubbedClass = metadataProvider.stubEntityClass({
           schemaName: "TestSchema",
           className: "Class",
           is: async () => true,
@@ -1810,8 +1808,8 @@ describe("PropertiesGrouping", () => {
             },
           }),
         ];
-        const property = { name: "PropertyName", isPrimitive: () => true } as unknown as ECProperty;
-        const stubbedClass = classStubs.stubEntityClass({
+        const property = { name: "PropertyName", isPrimitive: () => true } as unknown as EC.Property;
+        const stubbedClass = metadataProvider.stubEntityClass({
           schemaName: "TestSchema",
           className: "Class",
           is: async () => true,
@@ -1886,7 +1884,7 @@ describe("PropertiesGrouping", () => {
           },
         }),
       ];
-      classStubs.stubEntityClass({
+      metadataProvider.stubEntityClass({
         schemaName: "TestSchema",
         className: "Class",
       });

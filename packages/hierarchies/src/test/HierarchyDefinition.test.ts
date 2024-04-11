@@ -5,7 +5,7 @@
 
 import { expect } from "chai";
 import sinon from "sinon";
-import { IMetadataProvider } from "../hierarchies/ECMetadata";
+
 import {
   ClassBasedHierarchyLevelDefinitionsFactory,
   CustomHierarchyNodeDefinition,
@@ -14,7 +14,7 @@ import {
   HierarchyNodesDefinition,
   InstanceNodesQueryDefinition,
 } from "../hierarchies/HierarchyDefinition";
-import { ClassStubs, createClassStubs, createTestParsedCustomNode } from "./Utils";
+import { createMetadataProviderStub, createTestParsedCustomNode } from "./Utils";
 
 describe("HierarchyNodesDefinition", () => {
   const customNodeDefinition = createCustomNodeDefinition();
@@ -36,10 +36,9 @@ describe("HierarchyNodesDefinition", () => {
 });
 
 describe("ClassBasedHierarchyLevelDefinitionsFactory", () => {
-  const metadataProvider = {} as unknown as IMetadataProvider;
-  let classStubs: ClassStubs;
+  let metadataProvider: ReturnType<typeof createMetadataProviderStub>;
   beforeEach(() => {
-    classStubs = createClassStubs(metadataProvider);
+    metadataProvider = createMetadataProviderStub();
   });
   afterEach(() => {
     sinon.restore();
@@ -112,10 +111,10 @@ describe("ClassBasedHierarchyLevelDefinitionsFactory", () => {
       },
     });
 
-    classStubs.stubEntityClass({ schemaName: "TestSchema", className: "BaseOfX", is: async () => false });
-    classStubs.stubEntityClass({ schemaName: "TestSchema", className: "ClassX", is: async (other) => other === "TestSchema.BaseOfX" });
-    classStubs.stubEntityClass({ schemaName: "TestSchema", className: "DerivedFromX", is: async (other) => other === "TestSchema.ClassX" });
-    classStubs.stubEntityClass({ schemaName: "TestSchema", className: "UnrelatedClass", is: async () => false });
+    metadataProvider.stubEntityClass({ schemaName: "TestSchema", className: "BaseOfX", is: async () => false });
+    metadataProvider.stubEntityClass({ schemaName: "TestSchema", className: "ClassX", is: async (other) => other === "TestSchema.BaseOfX" });
+    metadataProvider.stubEntityClass({ schemaName: "TestSchema", className: "DerivedFromX", is: async (other) => other === "TestSchema.ClassX" });
+    metadataProvider.stubEntityClass({ schemaName: "TestSchema", className: "UnrelatedClass", is: async () => false });
 
     const def1: HierarchyLevelDefinition = [createCustomNodeDefinition({ node: createTestParsedCustomNode({ label: "1" }) })];
     const def2: HierarchyLevelDefinition = [createCustomNodeDefinition({ node: createTestParsedCustomNode({ label: "2" }) })];
@@ -171,7 +170,7 @@ describe("ClassBasedHierarchyLevelDefinitionsFactory", () => {
       },
     });
 
-    classStubs.stubEntityClass({ schemaName: "TestSchema", className: "ClassX", is: async (other) => other === "TestSchema.ClassX" });
+    metadataProvider.stubEntityClass({ schemaName: "TestSchema", className: "ClassX", is: async (other) => other === "TestSchema.ClassX" });
 
     const spy = sinon.stub().resolves([]);
     const factory = new ClassBasedHierarchyLevelDefinitionsFactory({

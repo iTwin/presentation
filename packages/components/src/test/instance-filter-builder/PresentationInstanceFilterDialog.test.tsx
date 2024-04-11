@@ -4,6 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { expect } from "chai";
+import { ResolvablePromise } from "presentation-test-utilities";
 import sinon from "sinon";
 import { PropertyValueFormat as AbstractPropertyValueFormat, PrimitiveValue } from "@itwin/appui-abstract";
 import { UiComponents } from "@itwin/components-react";
@@ -21,7 +22,6 @@ import {
 } from "../../presentation-components/instance-filter-builder/PresentationInstanceFilterDialog";
 import { createTestECClassInfo, stubDOMMatrix, stubRaf } from "../_helpers/Common";
 import { createTestCategoryDescription, createTestContentDescriptor, createTestPropertiesContentField } from "../_helpers/Content";
-import { ResolvablePromise } from "../_helpers/Promises";
 import { act, render, waitFor, waitForElement, within } from "../TestUtils";
 
 describe("PresentationInstanceFilterDialog", () => {

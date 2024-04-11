@@ -3,19 +3,13 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { catchError, defer, expand, from, map, mergeMap, Observable, of } from "rxjs";
-import {
-  GenericInstanceFilter,
-  HierarchyNode,
-  HierarchyNodeKey,
-  HierarchyProvider,
-  ParentHierarchyNode,
-  RowsLimitExceededError,
-} from "@itwin/presentation-hierarchies";
+import { catchError, expand, from, map, mergeMap, Observable, of, toArray } from "rxjs";
+import { GenericInstanceFilter, HierarchyNode, HierarchyProvider, RowsLimitExceededError } from "@itwin/presentation-hierarchies";
 import { isTreeModelHierarchyNode, TreeModelHierarchyNode, TreeModelInfoNode, TreeModelNode, TreeModelRootNode } from "./TreeModel";
+import { createNodeId, sameNodes } from "./Utils";
 
 /** @internal */
-export interface LoadedHierarchyPart {
+export interface LoadedTreePart {
   parentId: string | undefined;
   loadedNodes: TreeModelNode[];
 }
@@ -24,33 +18,36 @@ export interface LoadedHierarchyPart {
 export interface ReloadOptions {
   expandedNodes: TreeModelHierarchyNode[];
   collapsedNodes: TreeModelHierarchyNode[];
-  getInstanceFilter: (node: TreeModelRootNode | TreeModelHierarchyNode<ParentHierarchyNode>) => GenericInstanceFilter | undefined;
+  getInstanceFilter: (node: TreeModelRootNode | TreeModelHierarchyNode) => GenericInstanceFilter | undefined;
   buildNode: (node: TreeModelHierarchyNode) => TreeModelHierarchyNode;
   ignoreCache?: boolean;
 }
 
 /** @internal */
-export interface IHierarchyLoader {
+export interface ITreeLoader {
   getNodes(
-    parent: TreeModelHierarchyNode<ParentHierarchyNode> | TreeModelRootNode,
-    getInstanceFilter: (node: TreeModelRootNode | TreeModelHierarchyNode<ParentHierarchyNode>) => GenericInstanceFilter | undefined,
-    shouldLoadChildren: (node: TreeModelHierarchyNode<ParentHierarchyNode>) => boolean,
+    parent: TreeModelHierarchyNode | TreeModelRootNode,
+    getInstanceFilter: (node: TreeModelRootNode | TreeModelHierarchyNode) => GenericInstanceFilter | undefined,
+    shouldLoadChildren: (node: TreeModelHierarchyNode) => boolean,
     ignoreCache?: boolean,
-  ): Observable<LoadedHierarchyPart>;
-  reloadNodes(parent: TreeModelHierarchyNode<ParentHierarchyNode> | TreeModelRootNode, options: ReloadOptions): Observable<LoadedHierarchyPart>;
+  ): Observable<LoadedTreePart>;
+  reloadNodes(parent: TreeModelHierarchyNode | TreeModelRootNode, options: ReloadOptions): Observable<LoadedTreePart>;
 }
 
 /** @internal */
-export class HierarchyLoader implements IHierarchyLoader {
+export class TreeLoader implements ITreeLoader {
   constructor(private _hierarchyProvider: HierarchyProvider) {}
 
   private loadChildren(
-    parent: TreeModelHierarchyNode<ParentHierarchyNode> | TreeModelRootNode,
-    getInstanceFilter: (node: TreeModelRootNode | TreeModelHierarchyNode<ParentHierarchyNode>) => GenericInstanceFilter | undefined,
+    parent: TreeModelHierarchyNode | TreeModelRootNode,
+    getInstanceFilter: (node: TreeModelRootNode | TreeModelHierarchyNode) => GenericInstanceFilter | undefined,
     buildNode?: (node: TreeModelHierarchyNode) => TreeModelHierarchyNode,
     ignoreCache?: boolean,
   ) {
-    return defer(async () =>
+    const instanceFilter = getInstanceFilter(parent);
+    const infoNodeIdBase = `${parent.id ?? "<root>"}`;
+    const treeModelNodesFactory = createTreeModelNodesFactory(buildNode);
+    return from(
       this._hierarchyProvider.getNodes({
         parentNode: parent.nodeData,
         hierarchyLevelSizeLimit: parent.hierarchyLimit,
@@ -58,9 +55,10 @@ export class HierarchyLoader implements IHierarchyLoader {
         ignoreCache,
       }),
     ).pipe(
+      toArray(),
       catchError((err) => {
         const nodeProps = {
-          id: `${parent.id ?? ""}-${err.message}`,
+          id: `${infoNodeIdBase}-${err.message}`,
           parentId: parent.id,
         };
         if (err instanceof RowsLimitExceededError) {
@@ -69,18 +67,28 @@ export class HierarchyLoader implements IHierarchyLoader {
         return of([{ ...nodeProps, type: "Unknown" as const, message: "Failed to create hierarchy level" }]);
       }),
       map(
-        (childNodes): LoadedHierarchyPart => ({
+        (childNodes): LoadedTreePart => ({
           parentId: parent.id,
-          loadedNodes: childNodes.map(createTreeModelNodesFactory(buildNode)),
+          loadedNodes:
+            instanceFilter && childNodes.length === 0
+              ? [
+                  {
+                    id: `${infoNodeIdBase}-no-filter-matches`,
+                    parentId: parent.id,
+                    type: "NoFilterMatchingNodes" as const,
+                    message: "No child nodes match current filter",
+                  },
+                ]
+              : childNodes.map(treeModelNodesFactory),
         }),
       ),
     );
   }
 
   private loadNodes(
-    parent: TreeModelHierarchyNode<ParentHierarchyNode> | TreeModelRootNode,
-    getInstanceFilter: (node: TreeModelRootNode | TreeModelHierarchyNode<ParentHierarchyNode>) => GenericInstanceFilter | undefined,
-    shouldLoadChildren: (node: TreeModelHierarchyNode<ParentHierarchyNode>) => boolean,
+    parent: TreeModelHierarchyNode | TreeModelRootNode,
+    getInstanceFilter: (node: TreeModelRootNode | TreeModelHierarchyNode) => GenericInstanceFilter | undefined,
+    shouldLoadChildren: (node: TreeModelHierarchyNode) => boolean,
     buildNode?: (node: TreeModelHierarchyNode) => TreeModelHierarchyNode,
     ignoreCache?: boolean,
   ) {
@@ -94,22 +102,22 @@ export class HierarchyLoader implements IHierarchyLoader {
   }
 
   public getNodes(
-    parent: TreeModelHierarchyNode<ParentHierarchyNode> | TreeModelRootNode,
-    getInstanceFilter: (node: TreeModelRootNode | TreeModelHierarchyNode<ParentHierarchyNode>) => GenericInstanceFilter | undefined,
-    shouldLoadChildren: (node: TreeModelHierarchyNode<ParentHierarchyNode>) => boolean,
+    parent: TreeModelHierarchyNode | TreeModelRootNode,
+    getInstanceFilter: (node: TreeModelRootNode | TreeModelHierarchyNode) => GenericInstanceFilter | undefined,
+    shouldLoadChildren: (node: TreeModelHierarchyNode) => boolean,
     ignoreCache?: boolean,
   ) {
     return this.loadNodes(parent, getInstanceFilter, shouldLoadChildren, undefined, ignoreCache);
   }
 
   public reloadNodes(
-    parent: TreeModelHierarchyNode<ParentHierarchyNode> | TreeModelRootNode,
+    parent: TreeModelHierarchyNode | TreeModelRootNode,
     { expandedNodes, collapsedNodes, getInstanceFilter, buildNode, ignoreCache }: ReloadOptions,
   ) {
     return this.loadNodes(
       parent,
       getInstanceFilter,
-      (node: TreeModelHierarchyNode<ParentHierarchyNode>) => {
+      (node: TreeModelHierarchyNode) => {
         if (expandedNodes.findIndex((expandedNode) => sameNodes(expandedNode.nodeData, node.nodeData)) !== -1) {
           return true;
         }
@@ -144,40 +152,4 @@ function createTreeModelNodesFactory(
 
 function isHierarchyNode(node: TreeModelInfoNode | HierarchyNode): node is HierarchyNode {
   return "key" in node && node.key !== undefined;
-}
-
-export function createNodeId(node: Pick<HierarchyNode, "key" | "parentKeys">) {
-  return [...node.parentKeys.map(serializeNodeKey), serializeNodeKey(node.key)].join(",");
-}
-
-export function serializeNodeKey(key: HierarchyNodeKey): string {
-  return HierarchyNodeKey.isCustom(key) ? key : convertObjectValuesToString(key);
-}
-
-function convertObjectValuesToString(obj: object): string {
-  return Object.entries(obj)
-    .map(([, value]) => {
-      if (typeof value === "object") {
-        return convertObjectValuesToString(value);
-      }
-      return String(value);
-    })
-    .join(",");
-}
-
-function sameNodes(lhs: ParentHierarchyNode, rhs: ParentHierarchyNode): boolean {
-  if (HierarchyNodeKey.compare(lhs.key, rhs.key) !== 0) {
-    return false;
-  }
-
-  if (lhs.parentKeys.length !== rhs.parentKeys.length) {
-    return false;
-  }
-
-  for (let i = lhs.parentKeys.length - 1; i >= 0; --i) {
-    if (HierarchyNodeKey.compare(lhs.parentKeys[i], rhs.parentKeys[i]) !== 0) {
-      return false;
-    }
-  }
-  return true;
 }

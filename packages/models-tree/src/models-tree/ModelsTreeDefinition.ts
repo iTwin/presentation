@@ -4,40 +4,42 @@
  *--------------------------------------------------------------------------------------------*/
 
 import {
-  BisInstanceLabelSelectClauseFactory,
   ClassBasedHierarchyLevelDefinitionsFactory,
   DefineHierarchyLevelProps,
   DefineInstanceNodeChildHierarchyLevelProps,
   DefineRootHierarchyLevelProps,
-  ECSchema,
-  ECSqlBinding,
-  ECSqlSnippets,
   HierarchyLevelDefinition,
   HierarchyNode,
   HierarchyNodeIdentifiersPath,
-  Id64String,
   IHierarchyLevelDefinitionsFactory,
-  IInstanceLabelSelectClauseFactory,
   ILimitingECSqlQueryExecutor,
-  IMetadataProvider,
-  InstanceKey,
   NodeSelectClauseColumnNames,
   NodeSelectQueryFactory,
-  parseFullClassName,
   ProcessedHierarchyNode,
 } from "@itwin/presentation-hierarchies";
+import {
+  BisInstanceLabelSelectClauseFactory,
+  EC,
+  ECSql,
+  ECSqlBinding,
+  Id64String,
+  IInstanceLabelSelectClauseFactory,
+  IMetadataProvider,
+  InstanceKey,
+  parseFullClassName,
+} from "@itwin/presentation-shared";
 
-export interface ModelsTreeDefinitionProps {
+interface ModelsTreeDefinitionProps {
   metadataProvider: IMetadataProvider;
 }
 
-export interface ModelsTreeInstanceKeyPathsFromInstanceKeysProps {
+interface ModelsTreeInstanceKeyPathsFromInstanceKeysProps {
   metadataProvider: IMetadataProvider;
   queryExecutor: ILimitingECSqlQueryExecutor;
   keys: InstanceKey[];
 }
 
-export interface ModelsTreeInstanceKeyPathsFromInstanceLabelProps {
+interface ModelsTreeInstanceKeyPathsFromInstanceLabelProps {
   metadataProvider: IMetadataProvider;
   queryExecutor: ILimitingECSqlQueryExecutor;
   label: string;
@@ -112,7 +114,7 @@ export class ModelsTreeDefinition implements IHierarchyLevelDefinitionsFactory {
           ecsql: `
             SELECT
               ${await this._selectQueryFactory.createSelectClause({
-                ecClassId: { selector: ECSqlSnippets.createRawPropertyValueSelector("this", "ECClassId") },
+                ecClassId: { selector: ECSql.createRawPropertyValueSelector("this", "ECClassId") },
                 ecInstanceId: { selector: "this.ECInstanceId" },
                 nodeLabel: {
                   selector: await this._nodeLabelSelectClauseFactory.createSelectClause({
@@ -199,7 +201,7 @@ export class ModelsTreeDefinition implements IHierarchyLevelDefinitionsFactory {
           ecsql: `
             SELECT
               ${Object.values(NodeSelectClauseColumnNames)
-                .map((name) => `cs.${name} AS ${name}`)
+                .map((name: string) => `cs.${name} AS ${name}`)
                 .join(", ")},
               ParentId
             FROM child_subjects cs
@@ -517,7 +519,7 @@ async function createInstanceKeyPathsCTEs(labelsFactory: IInstanceLabelSelectCla
           classAlias: "e",
           className: "BisCore.GeometricElement3d",
           // eslint-disable-next-line @typescript-eslint/unbound-method
-          selectorsConcatenator: ECSqlSnippets.createConcatenatedValueStringSelector,
+          selectorsConcatenator: ECSql.createConcatenatedValueStringSelector,
         })},
         e.ECClassId,
         e.ECInstanceId,
@@ -553,7 +555,7 @@ async function createInstanceKeyPathsCTEs(labelsFactory: IInstanceLabelSelectCla
           classAlias: "c",
           className: "BisCore.SpatialCategory",
           // eslint-disable-next-line @typescript-eslint/unbound-method
-          selectorsConcatenator: ECSqlSnippets.createConcatenatedValueStringSelector,
+          selectorsConcatenator: ECSql.createConcatenatedValueStringSelector,
         })}
       FROM bis.SpatialCategory c
     )`,
@@ -567,7 +569,7 @@ async function createInstanceKeyPathsCTEs(labelsFactory: IInstanceLabelSelectCla
           classAlias: "p",
           className: "BisCore.Element",
           // eslint-disable-next-line @typescript-eslint/unbound-method
-          selectorsConcatenator: ECSqlSnippets.createConcatenatedValueStringSelector,
+          selectorsConcatenator: ECSql.createConcatenatedValueStringSelector,
         })}
       FROM bis.GeometricModel3d m
       JOIN bis.Element p on p.ECInstanceId = m.ModeledElement.Id
@@ -624,7 +626,7 @@ async function createInstanceKeyPathsCTEs(labelsFactory: IInstanceLabelSelectCla
           classAlias: "s",
           className: "BisCore.Subject",
           // eslint-disable-next-line @typescript-eslint/unbound-method
-          selectorsConcatenator: ECSqlSnippets.createConcatenatedValueStringSelector,
+          selectorsConcatenator: ECSql.createConcatenatedValueStringSelector,
         })},
         s.ECClassId,
         s.ECInstanceId,
@@ -843,7 +845,7 @@ async function getClass(metadata: IMetadataProvider, fullClassName: string) {
   return getSchemaClass(schema, className);
 }
 
-async function getSchemaClass(schema: ECSchema, className: string) {
+async function getSchemaClass(schema: EC.Schema, className: string) {
   const ecClass = await schema.getClass(className);
   if (!ecClass) {
     throw new Error(`Class "${className}" not found in schema "${schema.name}"`);
