@@ -13,6 +13,9 @@ export interface CachingHiliteSetProvider {
 }
 
 // @beta
+export function computeSelection(props: ComputeSelectionProps): AsyncIterableIterator<SelectableInstanceKey>;
+
+// @beta
 export function createCachingHiliteSetProvider(props: CachingHiliteSetProviderProps): CachingHiliteSetProvider;
 
 // @beta
@@ -88,19 +91,6 @@ export namespace Selectables {
 export interface SelectionChangeEvent {
     addListener(listener: StorageSelectionChangesListener): () => void;
     removeListener(listener: StorageSelectionChangesListener): void;
-}
-
-// @beta
-export interface SelectionScope {
-    description?: string;
-    id: string;
-    label: string;
-}
-
-// @beta (undocumented)
-export namespace SelectionScope {
-    export function computeSelection(queryExecutor: IECSqlQueryExecutor, elementIds: string[], scope: SelectionScopeProps): AsyncIterableIterator<SelectableInstanceKey>;
-    export function getSelectionScopes(): SelectionScope[];
 }
 
 // @beta

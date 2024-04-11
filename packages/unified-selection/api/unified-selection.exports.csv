@@ -1,6 +1,7 @@
 sep=;
 Release Tag;API Item
 beta;CachingHiliteSetProvider
+beta;computeSelection(props: ComputeSelectionProps): AsyncIterableIterator
 beta;createCachingHiliteSetProvider(props: CachingHiliteSetProviderProps): CachingHiliteSetProvider
 beta;createHiliteSetProvider(props: HiliteSetProviderProps): HiliteSetProvider
 beta;createStorage(): SelectionStorage
@@ -14,8 +15,6 @@ beta;SelectableInstanceKey
 beta;Selectables
 beta;Selectables
 beta;SelectionChangeEvent
-beta;SelectionScope
-beta;SelectionScope
 beta;SelectionStorage
 beta;StorageSelectionChangeEventArgs
 beta;StorageSelectionChangesListener = (args: StorageSelectionChangeEventArgs, storage: SelectionStorage) => void
