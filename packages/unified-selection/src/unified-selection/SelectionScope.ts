@@ -37,7 +37,7 @@ export interface ElementSelectionScopeProps {
 export type SelectionScopeProps = ElementSelectionScopeProps | { id: SelectionScope } | SelectionScope;
 
 /**
- * Props for computing selection based on selection scope.
+ * Props for `computeSelection`.
  * @internal Not exported through barrel, but used in public API as an argument. May be supplemented with optional attributes any time.
  */
 export interface ComputeSelectionProps {
@@ -84,12 +84,14 @@ async function* computeElementSelection(
   elementIds: string[],
   ancestorLevel: number,
 ): AsyncIterableIterator<SelectableInstanceKey> {
-  const bindings: ECSqlBinding[] = [{ type: "int", value: ancestorLevel }];
+  const bindings: ECSqlBinding[] = [];
   const recurseUntilRoot = ancestorLevel < 0;
   const query = `
     WITH RECURSIVE
       AncestorElements (ECInstanceId, ECClassId, Depth, ParentId) AS (
-        SELECT ECInstanceId, ECClassId, ?, Parent.Id FROM BisCore.Element WHERE ${formIdBindings("ECInstanceId", elementIds, bindings)}
+        SELECT ECInstanceId, ECClassId, ${formAncestorLevelBinding(ancestorLevel, bindings)}, Parent.Id
+        FROM BisCore.Element
+        WHERE ${formIdBindings("ECInstanceId", elementIds, bindings)}
         UNION ALL
         SELECT pe.ECInstanceId, pe.ECClassId, a.Depth - 1, pe.Parent.Id FROM AncestorElements a
           JOIN BisCore.Element pe ON pe.ECInstanceId = a.ParentId
@@ -167,7 +169,7 @@ async function* computeFunctionalElementSelection(
         SELECT ECInstanceId, ECClassId FROM Non3dElementsWithoutFunctionalElement
       ),
       Non3dElementAncestorElements (ECInstanceId, ECClassId, Depth, ParentId) AS (
-        SELECT e.ECInstanceId, e.ECClassId, ${ancestorLevel}, e.Parent.Id
+        SELECT e.ECInstanceId, e.ECClassId, ${formAncestorLevelBinding(ancestorLevel, bindings)}, e.Parent.Id
         FROM BisCore.Element e
           JOIN Non3dElements n3e ON n3e.ECInstanceId = e.ECInstanceId
         UNION ALL
@@ -177,7 +179,7 @@ async function* computeFunctionalElementSelection(
         WHERE ${recurseUntilRoot ? "" : "Depth > 0 AND"} ParentId IS NOT NULL
       ),
       Element3dAncestorElements (ECInstanceId, ECClassId, Depth, ParentId) AS (
-        SELECT ge.ECInstanceId, ge.ECClassId, ${ancestorLevel}, ge.Parent.Id
+        SELECT ge.ECInstanceId, ge.ECClassId, ${formAncestorLevelBinding(ancestorLevel, bindings)}, ge.Parent.Id
         FROM BisCore.GeometricElement3d ge
         WHERE ${formIdBindings("ge.ECInstanceId", ids, bindings)}
         UNION ALL
@@ -201,6 +203,11 @@ async function* computeFunctionalElementSelection(
       SELECT DISTINCT ECInstanceId, ClassName FROM Element3dAncestorRelatedFunctionalElement;`;
 
   yield* executeQuery(queryExecutor, query, bindings);
+}
+
+function formAncestorLevelBinding(ancestorLevel: number, bindings: ECSqlBinding[]) {
+  bindings.push({ type: "int", value: ancestorLevel });
+  return "?";
 }
 
 async function* executeQuery(queryExecutor: IECSqlQueryExecutor, query: string, bindings?: ECSqlBinding[]): AsyncIterableIterator<SelectableInstanceKey> {

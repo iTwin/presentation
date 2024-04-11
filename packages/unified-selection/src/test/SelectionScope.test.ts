@@ -65,8 +65,14 @@ describe("SelectionScope", () => {
 
     describe("scope: 'element'", () => {
       selectionScopeTestCases("element", "Element");
-      selectionScopeTestCases({ id: "element", ancestorLevel: 1 }, "Element");
-      selectionScopeTestCases({ id: "element", ancestorLevel: -1 }, "Element");
+
+      describe("ancestor level = 1", () => {
+        selectionScopeTestCases({ id: "element", ancestorLevel: 1 }, "Element");
+      });
+
+      describe("ancestor level = -1", () => {
+        selectionScopeTestCases({ id: "element", ancestorLevel: -1 }, "Element");
+      });
     });
 
     describe("scope: 'category'", () => {
@@ -79,8 +85,13 @@ describe("SelectionScope", () => {
 
     describe("scope: 'functional'", () => {
       selectionScopeTestCases("functional", "Functional");
-      selectionScopeTestCases({ id: "functional", ancestorLevel: 1 }, "Functional");
-      selectionScopeTestCases({ id: "functional", ancestorLevel: -1 }, "Functional");
+
+      describe("ancestor level = 1", () => {
+        selectionScopeTestCases({ id: "functional", ancestorLevel: 1 }, "Functional");
+      });
+      describe("ancestor level = -1", () => {
+        selectionScopeTestCases({ id: "functional", ancestorLevel: -1 }, "Functional");
+      });
     });
   });
 });
