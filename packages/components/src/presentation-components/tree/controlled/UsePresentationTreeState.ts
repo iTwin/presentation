@@ -122,7 +122,11 @@ export interface PresentationTreeEventHandlerProps {
 interface TreeStateProps extends PresentationTreeDataProviderProps {
   pagingSize: number;
   treeModel?: TreeModel;
-  onNodeLoaded?: (props: { node: string; duration: number }) => void;
+}
+
+interface UseTreeStateProps {
+  treeStateProps: TreeStateProps;
+  onNodeLoaded?: (callbackProps: { node: string; duration: number }) => void;
 }
 
 interface TreeState {
@@ -143,17 +147,15 @@ export function usePresentationTreeState<TEventHandler extends TreeEventHandler 
   ...dataProviderProps
 }: UsePresentationTreeStateProps<TEventHandler>): UsePresentationTreeStateResult<TEventHandler> | undefined {
   const firstRenderRef = useRef(true);
-  const onNodeLoadedRef = useRef(onNodeLoaded);
   const treeStateProps = useMemo(
     (): TreeStateProps => ({
-      onNodeLoaded: onNodeLoadedRef.current,
       ...dataProviderProps,
       treeModel: firstRenderRef.current ? seedTreeModel : undefined,
     }),
     Object.values(dataProviderProps), // eslint-disable-line react-hooks/exhaustive-deps
   );
 
-  const { state, onReload } = useTreeState(treeStateProps);
+  const { state, onReload } = useTreeState({ treeStateProps, onNodeLoaded });
   const renderedItems = useRef<RenderedItemsRange | undefined>(undefined);
   // istanbul ignore next
   const onItemsRendered = useCallback((items: RenderedItemsRange) => {
@@ -204,19 +206,24 @@ interface PresentationTreeFilteringProps {
   activeMatchIndex?: number;
 }
 
-function useTreeState(props: TreeStateProps) {
+function useTreeState(props: UseTreeStateProps) {
   const [state, setState] = useState<TreeState>();
+  const onNodeLoadedRef = useRef(props.onNodeLoaded);
+  useEffect(() => {
+    onNodeLoadedRef.current = props.onNodeLoaded;
+  }, [props.onNodeLoaded]);
+
   const prevStateRef = useRef(state);
   useEffect(() => {
     prevStateRef.current = state;
   }, [state]);
 
   useEffect(() => {
-    const { treeModel, ...providerProps } = props;
+    const { treeModel, ...providerProps } = props.treeStateProps;
     const modelSource = new TreeModelSource(new MutableTreeModel(treeModel));
     const dataProvider = new PresentationTreeDataProvider(providerProps);
     const pagedLoader = new PagedTreeNodeLoader(dataProvider, modelSource, providerProps.pagingSize);
-    const nodeLoader = props.onNodeLoaded ? new ReportingTreeNodeLoader(pagedLoader, props.onNodeLoaded) : pagedLoader;
+    const nodeLoader = new ReportingTreeNodeLoader(pagedLoader, () => onNodeLoadedRef.current);
 
     const newState = {
       modelSource,
@@ -228,19 +235,16 @@ function useTreeState(props: TreeStateProps) {
     return () => {
       prevStateRef.current?.dataProvider.dispose();
     };
-  }, [props]);
+  }, [props.treeStateProps]);
 
-  const onReload = useCallback(
-    (reloadedTree: ReloadedTree) => {
-      prevStateRef.current?.dataProvider.dispose();
+  const onReload = useCallback((reloadedTree: ReloadedTree) => {
+    prevStateRef.current?.dataProvider.dispose();
 
-      const { modelSource, dataProvider } = reloadedTree;
-      const pagedLoader = new PagedTreeNodeLoader(dataProvider, modelSource, dataProvider.pagingSize!);
-      const nodeLoader = props.onNodeLoaded ? new ReportingTreeNodeLoader(pagedLoader, props.onNodeLoaded) : pagedLoader;
-      setState({ dataProvider, nodeLoader });
-    },
-    [props.onNodeLoaded],
-  );
+    const { modelSource, dataProvider } = reloadedTree;
+    const pagedLoader = new PagedTreeNodeLoader(dataProvider, modelSource, dataProvider.pagingSize!);
+    const nodeLoader = new ReportingTreeNodeLoader(pagedLoader, () => onNodeLoadedRef.current);
+    setState({ dataProvider, nodeLoader });
+  }, []);
 
   return { state, onReload };
 }

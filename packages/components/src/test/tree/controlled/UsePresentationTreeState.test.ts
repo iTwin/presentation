@@ -62,12 +62,16 @@ describe("usePresentationTreeState", () => {
     } as RulesetVariablesManager);
 
     presentationManager.getNodesAndCount.resolves({ count: 0, nodes: [] });
+    const localization = new EmptyLocalization();
 
+    sinon.stub(IModelApp, "initialized").get(() => true);
     sinon.stub(Presentation, "presentation").get(() => presentationManager);
+    sinon.stub(Presentation, "localization").get(() => localization);
     sinon.stub(IModelApp, "quantityFormatter").get(() => ({
       onActiveFormattingUnitSystemChanged,
     }));
-    await UiComponents.initialize(new EmptyLocalization());
+    await Presentation.initialize();
+    await UiComponents.initialize(localization);
   });
 
   afterEach(() => {
@@ -110,11 +114,18 @@ describe("usePresentationTreeState", () => {
   });
 
   it("creates new reporting nodeLoader when `onNodeLoaded` callback passed", async () => {
+    const onNodeLoaded = sinon.stub<[{ node: string | undefined; duration: number }], void>();
     const { result } = renderHook((props: UsePresentationTreeStateProps) => usePresentationTreeState(props), {
-      initialProps: { ...initialProps, onNodeLoaded: () => {} },
+      initialProps: { ...initialProps, onNodeLoaded },
     });
 
-    await waitFor(() => expect(result.current?.nodeLoader instanceof ReportingTreeNodeLoader).to.be.true);
+    const observable = result.current?.nodeLoader.loadNode({ id: undefined, depth: -1, numChildren: 1 }, 0);
+    observable?.subscribe();
+
+    await waitFor(() => {
+      expect(onNodeLoaded).to.be.calledOnce;
+      expect(result.current?.nodeLoader instanceof ReportingTreeNodeLoader).to.be.true;
+    });
   });
 
   describe("auto-updating model source", () => {
@@ -142,14 +153,19 @@ describe("usePresentationTreeState", () => {
     });
 
     it("creates a new nodeLoader when `PresentationManager` raises a related `onIModelHierarchyChanged event`", async () => {
+      const onNodeLoaded = sinon.stub<[{ node: string | undefined; duration: number }], void>();
       const { result } = renderHook((props: UsePresentationTreeStateProps) => usePresentationTreeState(props), {
-        initialProps: { ...initialProps, ruleset: rulesetId, onNodeLoaded: () => {} },
+        initialProps: { ...initialProps, ruleset: rulesetId, onNodeLoaded },
       });
       const oldNodeLoader = await waitForState(result);
 
       onIModelHierarchyChanged.raiseEvent({ rulesetId, updateInfo: "FULL", imodelKey: imodel.key });
-
       await waitFor(() => expect(result.current?.nodeLoader).to.not.eq(oldNodeLoader));
+
+      const observable = result.current?.nodeLoader.loadNode({ id: undefined, depth: -1, numChildren: 1 }, 0);
+      observable?.subscribe();
+
+      await waitFor(() => expect(onNodeLoaded).to.be.calledOnce);
     });
 
     it("doesn't create a new nodeLoader when `RulesetsManager` raises an unrelated `onRulesetModified` event", async () => {

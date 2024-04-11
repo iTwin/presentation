@@ -17,13 +17,16 @@ import { toRxjsObservable } from "./Utils";
  */
 export class ReportingTreeNodeLoader<IPresentationTreeDataProvider extends TreeDataProvider> extends PagedTreeNodeLoader<IPresentationTreeDataProvider> {
   private _nodeLoader: PagedTreeNodeLoader<IPresentationTreeDataProvider>;
-  private _onNodeLoaded: (props: { node: string; duration: number }) => void;
+  private _getOnNodeLoadedCallback: () => ((props: { node: string; duration: number }) => void) | undefined;
   private _trackedRequests: Set<string>;
 
-  constructor(nodeLoader: PagedTreeNodeLoader<IPresentationTreeDataProvider>, onNodeLoaded: (props: { node: string; duration: number }) => void) {
+  constructor(
+    nodeLoader: PagedTreeNodeLoader<IPresentationTreeDataProvider>,
+    getOnNodeLoadedCallback: () => ((props: { node: string; duration: number }) => void) | undefined,
+  ) {
     super(nodeLoader.dataProvider, nodeLoader.modelSource, nodeLoader.pageSize);
     this._nodeLoader = nodeLoader;
-    this._onNodeLoaded = onNodeLoaded;
+    this._getOnNodeLoadedCallback = getOnNodeLoadedCallback;
     this._trackedRequests = new Set();
   }
 
@@ -44,7 +47,7 @@ export class ReportingTreeNodeLoader<IPresentationTreeDataProvider extends TreeD
         error: () => this._trackedRequests.delete(parentId),
         complete: () => {
           this._trackedRequests.delete(parentId);
-          this._onNodeLoaded({ node: parentId, duration: performance.now() - time });
+          this._getOnNodeLoadedCallback()?.({ node: parentId, duration: performance.now() - time });
         },
       }),
     );

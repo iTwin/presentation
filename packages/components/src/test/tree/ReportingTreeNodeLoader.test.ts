@@ -23,7 +23,7 @@ describe("ReportingTreeNodeLoader", () => {
   beforeEach(() => {
     loadNodeSubject = new Subject<TreeNodeLoadResult>();
     nodeLoaderStub.loadNode.returns(loadNodeSubject);
-    reportingNodeLoader = new ReportingTreeNodeLoader(nodeLoaderStub as unknown as PagedTreeNodeLoader<TreeDataProvider>, reportStub);
+    reportingNodeLoader = new ReportingTreeNodeLoader(nodeLoaderStub as unknown as PagedTreeNodeLoader<TreeDataProvider>, () => reportStub);
   });
 
   afterEach(() => {
