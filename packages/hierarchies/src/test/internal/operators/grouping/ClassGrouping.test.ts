@@ -5,18 +5,16 @@
 
 import { expect } from "chai";
 import sinon from "sinon";
-import { IMetadataProvider } from "../../../../hierarchies/ECMetadata";
 import { GroupingNodeKey } from "../../../../hierarchies/HierarchyNode";
 import { GroupingHandlerResult } from "../../../../hierarchies/internal/operators/Grouping";
 import { createClassGroups } from "../../../../hierarchies/internal/operators/grouping/ClassGrouping";
-import { ClassStubs, createClassStubs, createTestProcessedGroupingNode, createTestProcessedInstanceNode } from "../../../Utils";
+import { createMetadataProviderStub, createTestProcessedGroupingNode, createTestProcessedInstanceNode } from "../../../Utils";
 
 describe("ClassGrouping", () => {
-  const metadataProvider = {} as unknown as IMetadataProvider;
-  let classStubs: ClassStubs;
+  let metadataProvider: ReturnType<typeof createMetadataProviderStub>;
 
   beforeEach(() => {
-    classStubs = createClassStubs(metadataProvider);
+    metadataProvider = createMetadataProviderStub();
   });
 
   afterEach(() => {
@@ -31,7 +29,7 @@ describe("ClassGrouping", () => {
         processingParams: { grouping: { byClass: true } },
       }),
     ];
-    const classInfo = classStubs.stubEntityClass({ schemaName: "TestSchema", className: "TestClass" });
+    const classInfo = metadataProvider.stubEntityClass({ schemaName: "TestSchema", className: "TestClass" });
     const expectedClassGroupingNodeKey: GroupingNodeKey = {
       type: "class-grouping",
       className: classInfo.fullName,
@@ -66,7 +64,7 @@ describe("ClassGrouping", () => {
         processingParams: { grouping: { byClass: true } },
       }),
     ];
-    const classA = classStubs.stubEntityClass({ schemaName: "TestSchema", className: "A", classLabel: "Class A" });
+    const classA = metadataProvider.stubEntityClass({ schemaName: "TestSchema", className: "A", classLabel: "Class A" });
     const expectedClassGroupingNodeKey: GroupingNodeKey = {
       type: "class-grouping",
       className: classA.fullName,
@@ -101,12 +99,12 @@ describe("ClassGrouping", () => {
         processingParams: { grouping: { byClass: true } },
       }),
     ];
-    const classA = classStubs.stubEntityClass({ schemaName: "TestSchema", className: "A", classLabel: "Class A" });
+    const classA = metadataProvider.stubEntityClass({ schemaName: "TestSchema", className: "A", classLabel: "Class A" });
     const expectedClassAGroupingNodeKey: GroupingNodeKey = {
       type: "class-grouping",
       className: classA.fullName,
     };
-    const classB = classStubs.stubEntityClass({ schemaName: "TestSchema", className: "B", classLabel: "Class B" });
+    const classB = metadataProvider.stubEntityClass({ schemaName: "TestSchema", className: "B", classLabel: "Class B" });
     const expectedClassBGroupingNodeKey: GroupingNodeKey = {
       type: "class-grouping",
       className: classB.fullName,
@@ -147,7 +145,7 @@ describe("ClassGrouping", () => {
         processingParams: { grouping: { byClass: true } },
       }),
     ];
-    classStubs.stubEntityClass({ schemaName: "TestSchema", className: "TestClass" });
+    metadataProvider.stubEntityClass({ schemaName: "TestSchema", className: "TestClass" });
     expect(await createClassGroups(metadataProvider, parentNode, nodes)).to.deep.eq({
       groupingType: "class",
       grouped: [],

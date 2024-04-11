@@ -20,7 +20,7 @@ import { ECSchemaRpcLocater } from "@itwin/ecschema-rpcinterface-common";
 import { InstanceKey } from "@itwin/presentation-common";
 import { createECSqlQueryExecutor, createMetadataProvider } from "@itwin/presentation-core-interop";
 import { HierarchyNodeIdentifier, HierarchyNodeIdentifiersPath, HierarchyProvider } from "@itwin/presentation-hierarchies";
-import { addCTEs } from "@itwin/presentation-hierarchies/lib/cjs/hierarchies/queries/LimitingECSqlQueryExecutor";
+import { addCTEs } from "@itwin/presentation-hierarchies/lib/cjs/hierarchies/LimitingECSqlQueryExecutor";
 import { ModelsTreeDefinition } from "@itwin/presentation-models-tree";
 import { buildTestIModel, TestIModelBuilder } from "@itwin/presentation-testing";
 import { buildIModel } from "../../IModelUtils";

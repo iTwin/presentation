@@ -5,8 +5,8 @@
 
 import { expect } from "chai";
 import { IModelDb, SnapshotDb } from "@itwin/core-backend";
-import { IMetadataProvider } from "@itwin/presentation-hierarchies";
 import { ModelsTreeDefinition } from "@itwin/presentation-models-tree";
+import { IMetadataProvider } from "@itwin/presentation-shared";
 import { Datasets } from "./util/Datasets";
 import { StatelessHierarchyProvider } from "./util/StatelessHierarchyProvider";
 import { run } from "./util/TestUtilities";

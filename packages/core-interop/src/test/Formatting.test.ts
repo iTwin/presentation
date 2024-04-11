@@ -19,7 +19,7 @@ import {
   Unit,
   UnitSystem,
 } from "@itwin/ecschema-metadata";
-import { IPrimitiveValueFormatter, TypedPrimitiveValue } from "@itwin/presentation-hierarchies";
+import { IPrimitiveValueFormatter, TypedPrimitiveValue } from "@itwin/presentation-shared";
 import { createValueFormatter } from "../core-interop/Formatting";
 
 describe("createValueFormatter", () => {

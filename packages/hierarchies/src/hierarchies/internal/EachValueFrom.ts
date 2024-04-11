@@ -6,13 +6,16 @@
 import { Observable } from "rxjs";
 
 /**
- * This is pretty much a copy of https://github.com/benlesh/rxjs-for-await/blob/94f9cf9cb015ac3700dfd1850eb81d36962eb70f/src/index.ts#L33,
- * except that we're using a linked list-based queue rather than an array-based one.
+ * This is pretty much a combination of:
+ * - https://github.com/benlesh/rxjs-for-await/blob/94f9cf9cb015ac3700dfd1850eb81d36962eb70f/src/index.ts#L33,
+ * - https://github.com/ReactiveX/rxjs/blob/2587ee852eb43eeb0883a7787bac2944d823392b/packages/observable/src/observable.ts#L922.
+ *
+ * Our implementation uses a linked list rather than an array to store values, which is more efficient.
  *
  * @internal
  */
 export async function* eachValueFrom<T>(source: Observable<T>): AsyncIterableIterator<T> {
-  const deferreds = new Queue<ResolvablePromise<{ value?: T; done: boolean }>>();
+  const deferreds = new Queue<{ resolve: (value: IteratorResult<T>) => void; reject: (reason: unknown) => void }>();
   const values = new Queue<T>();
   let error;
   let completed = false;
@@ -51,43 +54,18 @@ export async function* eachValueFrom<T>(source: Observable<T>): AsyncIterableIte
       if (error) {
         throw error;
       }
-      const d = new ResolvablePromise<{ value?: T; done: boolean }>();
-      deferreds.push(d);
-      const result = await d;
+      const result = await new Promise<IteratorResult<T>>((resolve, reject) => {
+        deferreds.push({ resolve, reject });
+      });
       if (result.done) {
         return;
       }
-      yield result.value!;
+      yield result.value;
     }
   } catch (err) {
     throw err;
   } finally {
     subs.unsubscribe();
-  }
-}
-
-class ResolvablePromise<T> {
-  private _wrapped: Promise<T>;
-  private _resolve!: (value: T) => void;
-  private _reject!: (err: any) => void;
-  public constructor() {
-    this._wrapped = new Promise<T>((resolve: (value: T) => void, reject: (err: any) => void) => {
-      this._resolve = resolve;
-      this._reject = reject;
-    });
-  }
-  public [Symbol.toStringTag] = "ResolvablePromise";
-  public resolve(result: T) {
-    this._resolve(result);
-  }
-  public reject(err: any) {
-    this._reject(err);
-  }
-  public async then<TResult1 = T, TResult2 = never>(
-    onFulfilled?: ((value: T) => TResult1 | Promise<TResult1>) | undefined | null,
-    onRejected?: ((reason: any) => TResult2 | Promise<TResult2>) | undefined | null,
-  ): Promise<TResult1 | TResult2> {
-    return this._wrapped.then(onFulfilled, onRejected);
   }
 }
 

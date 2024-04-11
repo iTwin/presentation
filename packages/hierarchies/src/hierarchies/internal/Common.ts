@@ -5,7 +5,7 @@
 
 import naturalCompare from "natural-compare-lite";
 import { assert, LRUMap } from "@itwin/core-bentley";
-import { ECClass, IMetadataProvider } from "../ECMetadata";
+import { EC, getClass, IMetadataProvider } from "@itwin/presentation-shared";
 import {
   HierarchyNode,
   HierarchyNodeKey,
@@ -17,7 +17,6 @@ import {
   ProcessedCustomHierarchyNode,
   ProcessedInstanceHierarchyNode,
 } from "../HierarchyNode";
-import { getClass } from "./GetClass";
 
 /** @internal */
 export const LOGGING_NAMESPACE = "Presentation.Hierarchies";
@@ -107,12 +106,6 @@ export function createOperatorLoggingNamespace(operatorName: string) {
 }
 
 /** @internal */
-export function julianToDateTime(julianDate: number): Date {
-  const millis = (julianDate - 2440587.5) * 86400000;
-  return new Date(millis);
-}
-
-/** @internal */
 export function compareNodesByLabel<TLhsNode extends { label: string }, TRhsNode extends { label: string }>(lhs: TLhsNode, rhs: TRhsNode): number {
   return naturalCompare(lhs.label.toLocaleLowerCase(), rhs.label.toLocaleLowerCase());
 }
@@ -131,7 +124,7 @@ export class BaseClassChecker {
     return `${className}${baseClassName}`;
   }
 
-  public isECClassOfBaseECClass(ecClassNameToCheck: string, baseECClass: ECClass): Promise<boolean> | boolean {
+  public isECClassOfBaseECClass(ecClassNameToCheck: string, baseECClass: EC.Class): Promise<boolean> | boolean {
     const cacheKey = this.createCacheKey(ecClassNameToCheck, baseECClass.fullName);
     let isCurrentNodeClassOfBase = this._map.get(cacheKey);
     if (isCurrentNodeClassOfBase === undefined) {

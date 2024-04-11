@@ -7,13 +7,8 @@ import { expand, filter, from, of, tap } from "rxjs";
 import { IModelDb } from "@itwin/core-backend";
 import { SchemaContext, SchemaJsonLocater } from "@itwin/ecschema-metadata";
 import { createECSqlQueryExecutor, createMetadataProvider } from "@itwin/presentation-core-interop";
-import {
-  createLimitingECSqlQueryExecutor,
-  HierarchyNode,
-  HierarchyProvider,
-  IHierarchyLevelDefinitionsFactory,
-  IMetadataProvider,
-} from "@itwin/presentation-hierarchies";
+import { createLimitingECSqlQueryExecutor, HierarchyNode, HierarchyProvider, IHierarchyLevelDefinitionsFactory } from "@itwin/presentation-hierarchies";
+import { IMetadataProvider } from "@itwin/presentation-shared";
 
 export interface ProviderOptions {
   iModel: IModelDb;

@@ -28,7 +28,18 @@ import {
 } from "rxjs";
 import { assert, StopWatch } from "@itwin/core-bentley";
 import { GenericInstanceFilter } from "@itwin/core-common";
-import { IMetadataProvider } from "./ECMetadata";
+import {
+  ConcatenatedValue,
+  ConcatenatedValuePart,
+  createDefaultValueFormatter,
+  ECSqlBinding,
+  ECSqlQueryDef,
+  getClass,
+  IMetadataProvider,
+  InstanceKey,
+  IPrimitiveValueFormatter,
+  TypedPrimitiveValue,
+} from "@itwin/presentation-shared";
 import { DefineHierarchyLevelProps, HierarchyNodesDefinition, IHierarchyLevelDefinitionsFactory } from "./HierarchyDefinition";
 import { RowsLimitExceededError } from "./HierarchyErrors";
 import {
@@ -53,7 +64,6 @@ import {
 } from "./internal/Common";
 import { eachValueFrom } from "./internal/EachValueFrom";
 import { FilteringHierarchyLevelDefinitionsFactory } from "./internal/FilteringHierarchyLevelDefinitionsFactory";
-import { getClass } from "./internal/GetClass";
 import { createQueryLogMessage, doLog, log } from "./internal/LoggingUtils";
 import { createDetermineChildrenOperator } from "./internal/operators/DetermineChildren";
 import { createGroupingOperator } from "./internal/operators/Grouping";
@@ -64,12 +74,8 @@ import { shareReplayWithErrors } from "./internal/operators/ShareReplayWithError
 import { sortNodesByLabelOperator } from "./internal/operators/Sorting";
 import { SubscriptionScheduler } from "./internal/SubscriptionScheduler";
 import { TreeQueryResultsReader } from "./internal/TreeNodesReader";
-import { ECSqlBinding, ECSqlQueryDef } from "./queries/ECSqlCore";
-import { ILimitingECSqlQueryExecutor } from "./queries/LimitingECSqlQueryExecutor";
-import { NodeSelectClauseColumnNames } from "./queries/NodeSelectQueryFactory";
-import { ConcatenatedValue, ConcatenatedValuePart } from "./values/ConcatenatedValue";
-import { createDefaultValueFormatter, IPrimitiveValueFormatter } from "./values/Formatting";
-import { InstanceKey, TypedPrimitiveValue } from "./values/Values";
+import { ILimitingECSqlQueryExecutor } from "./LimitingECSqlQueryExecutor";
+import { NodeSelectClauseColumnNames } from "./NodeSelectQueryFactory";
 
 const LOGGING_NAMESPACE = `${CommonLoggingNamespace}.HierarchyProvider`;
 const DEFAULT_QUERY_CONCURRENCY = 10;
@@ -562,7 +568,7 @@ async function applyLabelsFormatting<TNode extends { label: string | Concatenate
   }
   return {
     ...node,
-    label: await ConcatenatedValue.serialize(node.label, async (part: ConcatenatedValuePart) => {
+    label: await ConcatenatedValue.serialize(node.label, async (part) => {
       // strings are converted to typed strings
       if (typeof part === "string") {
         part = {
