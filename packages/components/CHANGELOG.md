@@ -1,5 +1,16 @@
 # Change Log - @itwin/presentation-components
 
+## 5.1.0
+
+### Minor Changes
+
+- [#499](https://github.com/iTwin/presentation/pull/499): Added `PresentationInstanceFilter.createPrimitiveValueEqualityCondition` function to provide a convenient way for creating equality filter conditions compatible with `UniquePropertyValuesSelector`.
+- [#520](https://github.com/iTwin/presentation/pull/520): Added callback to `usePresentationTreeState` for reporting node load durations.
+
+### Patch Changes
+
+- [#519](https://github.com/iTwin/presentation/pull/519): Use private fields in `UnifiedSelectionTreeEventHandler` to avoid clashing private property names when extending it.
+
 ## 5.0.1
 
 ### Patch Changes
