@@ -41,7 +41,7 @@
   },
   "devDependencies": {
     "@itwin/build-tools": "^4.4.0",
-    "@itwin/eslint-plugin": "4.0.0-dev.48",
+    "@itwin/eslint-plugin": "^4.0.0",
     "@types/chai": "^4.3.11",
     "@types/chai-as-promised": "^7.1.8",
     "@types/mocha": "^10.0.6",
@@ -59,6 +59,6 @@
     "sinon": "^17.0.1",
     "sinon-chai": "^3.7.0",
     "source-map-support": "^0.5.21",
-    "typescript": "~5.0.4"
+    "typescript": "~5.4.5"
   }
 }

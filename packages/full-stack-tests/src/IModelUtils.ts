@@ -50,7 +50,7 @@ export class ECDbBuilder {
         .join(", ")})
     `;
     const binder = (stmt: ECSqlStatement) => {
-      Object.values(props!).forEach((value, i) => {
+      Object.values(props).forEach((value, i) => {
         const bindingIndex = i + 1;
         switch (typeof value) {
           case "undefined":
