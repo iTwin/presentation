@@ -4,9 +4,9 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { expect } from "chai";
+import { collect } from "presentation-test-utilities";
 import { from, Subject, throwError } from "rxjs";
 import { eachValueFrom } from "../../hierarchies/internal/EachValueFrom";
-import { collect } from "../Utils";
 
 describe("eachValueFrom", () => {
   it("returns observable values when they're emitted quicker than consumed", async () => {

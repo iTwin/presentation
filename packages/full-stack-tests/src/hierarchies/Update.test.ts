@@ -5,6 +5,7 @@
 /* eslint-disable no-console */
 
 import * as fs from "fs";
+import { collect } from "presentation-test-utilities";
 import {
   Element,
   ElementOwnsExternalSourceAspects,
@@ -42,7 +43,7 @@ import { ECSql } from "@itwin/presentation-shared";
 import { createFileNameFromString } from "@itwin/presentation-testing/lib/cjs/presentation-testing/InternalUtils";
 import { setupOutputFileLocation } from "../IModelUtils";
 import { NodeValidators, validateHierarchyLevel } from "./HierarchyValidation";
-import { collect, createClassECSqlSelector, createMetadataProvider, createProvider } from "./Utils";
+import { createClassECSqlSelector, createMetadataProvider, createProvider } from "./Utils";
 
 describe("Hierarchies", () => {
   describe("Updating hierarchies upon iModel change", () => {

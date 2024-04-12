@@ -4,13 +4,14 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { expect } from "chai";
+import { collect } from "presentation-test-utilities";
 import { DictionaryModel, InformationPartitionElement, LinkModel, Model, Subject } from "@itwin/core-backend";
 import { IModelConnection } from "@itwin/core-frontend";
 import { HierarchyNode, IHierarchyLevelDefinitionsFactory, NodeSelectQueryFactory } from "@itwin/presentation-hierarchies";
 import { InstanceKey } from "@itwin/presentation-shared";
 import { buildTestIModel } from "@itwin/presentation-testing";
 import { initialize, terminate } from "../IntegrationTests";
-import { collect, createClassECSqlSelector, createMetadataProvider, createProvider } from "./Utils";
+import { createClassECSqlSelector, createMetadataProvider, createProvider } from "./Utils";
 
 describe("Hierarchies", () => {
   describe("Hierarchy level instance keys", () => {

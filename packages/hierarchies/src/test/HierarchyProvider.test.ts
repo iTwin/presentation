@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { expect } from "chai";
-import { ResolvablePromise } from "presentation-test-utilities";
+import { collect, createAsyncIterator, ResolvablePromise, waitFor } from "presentation-test-utilities";
 import sinon from "sinon";
 import { omit } from "@itwin/core-bentley";
 import { GenericInstanceFilter } from "@itwin/core-common";
@@ -29,7 +29,7 @@ import {
 } from "../hierarchies/internal/FilteringHierarchyLevelDefinitionsFactory";
 import { RowDef } from "../hierarchies/internal/TreeNodesReader";
 import { ECSqlSelectClauseGroupingParams, NodeSelectClauseColumnNames } from "../hierarchies/NodeSelectQueryFactory";
-import { collect, createFakeQueryReader, createMetadataProviderStub, waitFor } from "./Utils";
+import { createMetadataProviderStub } from "./Utils";
 
 describe("HierarchyProvider", () => {
   let metadataProvider: ReturnType<typeof createMetadataProviderStub>;
@@ -71,7 +71,7 @@ describe("HierarchyProvider", () => {
 
   it("loads root instance nodes", async () => {
     queryExecutor.createQueryReader.returns(
-      createFakeQueryReader<RowDef>([
+      createAsyncIterator<RowDef>([
         {
           [NodeSelectClauseColumnNames.FullClassName]: "a.b",
           [NodeSelectClauseColumnNames.ECInstanceId]: "0x123",
@@ -167,7 +167,7 @@ describe("HierarchyProvider", () => {
         })(),
       );
 
-      queryExecutor.createQueryReader.onThirdCall().returns(createFakeQueryReader([]));
+      queryExecutor.createQueryReader.onThirdCall().returns(createAsyncIterator([]));
 
       void provider.queryScheduler.schedule({ ecsql: "1" }).next();
       await waitFor(() => expect(queryExecutor.createQueryReader).to.be.calledOnce);
@@ -198,7 +198,7 @@ describe("HierarchyProvider", () => {
         [NodeSelectClauseColumnNames.ECInstanceId]: "0x123",
         [NodeSelectClauseColumnNames.DisplayLabel]: "test label",
       };
-      queryExecutor.createQueryReader.returns(createFakeQueryReader([row]));
+      queryExecutor.createQueryReader.returns(createAsyncIterator([row]));
       const hierarchyDefinition: IHierarchyLevelDefinitionsFactory = {
         parseNode: parser,
         async defineHierarchyLevel({ parentNode }) {
@@ -335,7 +335,7 @@ describe("HierarchyProvider", () => {
   describe("Grouping", () => {
     it("returns grouping node children", async () => {
       queryExecutor.createQueryReader.returns(
-        createFakeQueryReader<RowDef>([
+        createAsyncIterator<RowDef>([
           {
             [NodeSelectClauseColumnNames.FullClassName]: "a.b",
             [NodeSelectClauseColumnNames.ECInstanceId]: "0x123",
@@ -691,7 +691,7 @@ describe("HierarchyProvider", () => {
         is: async (fullClassName) => fullClassName === "a.b",
       });
       queryExecutor.createQueryReader.returns(
-        createFakeQueryReader<RowDef & { [ECSQL_COLUMN_NAME_FilteredChildrenPaths]: string }>([
+        createAsyncIterator<RowDef & { [ECSQL_COLUMN_NAME_FilteredChildrenPaths]: string }>([
           {
             [NodeSelectClauseColumnNames.FullClassName]: "a.b",
             [NodeSelectClauseColumnNames.ECInstanceId]: "0x123",
@@ -866,7 +866,7 @@ describe("HierarchyProvider", () => {
 
     it("returns instance nodes' keys", async () => {
       queryExecutor.createQueryReader.returns(
-        createFakeQueryReader([
+        createAsyncIterator([
           {
             [0]: "a.b",
             [1]: "0x123",
@@ -917,7 +917,7 @@ describe("HierarchyProvider", () => {
         },
       };
       queryExecutor.createQueryReader.returns(
-        createFakeQueryReader([
+        createAsyncIterator([
           {
             [0]: "a.b",
             [1]: "0x123",
@@ -954,7 +954,7 @@ describe("HierarchyProvider", () => {
 
     it("returns child instance nodes' keys of hidden instance node", async () => {
       queryExecutor.createQueryReader.onFirstCall().returns(
-        createFakeQueryReader([
+        createAsyncIterator([
           {
             [0]: "a.b",
             [1]: "0x123",
@@ -963,7 +963,7 @@ describe("HierarchyProvider", () => {
         ]),
       );
       queryExecutor.createQueryReader.onSecondCall().returns(
-        createFakeQueryReader([
+        createAsyncIterator([
           {
             [0]: "c.d",
             [1]: "0x456",
@@ -1005,7 +1005,7 @@ describe("HierarchyProvider", () => {
 
     it("merges same-class instance keys under a single parent node when requesting child node keys for hidden parent instance nodes", async () => {
       queryExecutor.createQueryReader.onFirstCall().returns(
-        createFakeQueryReader([
+        createAsyncIterator([
           {
             [0]: "a.b",
             [1]: "0x123",
@@ -1019,7 +1019,7 @@ describe("HierarchyProvider", () => {
         ]),
       );
       queryExecutor.createQueryReader.onSecondCall().returns(
-        createFakeQueryReader([
+        createAsyncIterator([
           {
             [0]: "c.d",
             [1]: "0x789",
@@ -1169,7 +1169,7 @@ describe("HierarchyProvider", () => {
 
   describe("Caching", () => {
     it("doesn't query same root nodes more than once", async () => {
-      queryExecutor.createQueryReader.returns(createFakeQueryReader([]));
+      queryExecutor.createQueryReader.returns(createAsyncIterator([]));
       const hierarchyDefinition: IHierarchyLevelDefinitionsFactory = {
         async defineHierarchyLevel({ parentNode }) {
           if (!parentNode) {
@@ -1194,7 +1194,7 @@ describe("HierarchyProvider", () => {
     });
 
     it("doesn't query same child nodes more than once", async () => {
-      queryExecutor.createQueryReader.returns(createFakeQueryReader([]));
+      queryExecutor.createQueryReader.returns(createAsyncIterator([]));
       const hierarchyDefinition: IHierarchyLevelDefinitionsFactory = {
         async defineHierarchyLevel({ parentNode }) {
           if (!parentNode) {
@@ -1224,7 +1224,7 @@ describe("HierarchyProvider", () => {
     });
 
     it("queries the same root nodes more than once when `ignoreCache` is set to true", async () => {
-      queryExecutor.createQueryReader.returns(createFakeQueryReader([]));
+      queryExecutor.createQueryReader.returns(createAsyncIterator([]));
       const hierarchyDefinition: IHierarchyLevelDefinitionsFactory = {
         async defineHierarchyLevel({ parentNode }) {
           if (!parentNode) {
@@ -1249,7 +1249,7 @@ describe("HierarchyProvider", () => {
     });
 
     it("queries variations of the same hierarchy level", async () => {
-      queryExecutor.createQueryReader.returns(createFakeQueryReader([]));
+      queryExecutor.createQueryReader.returns(createAsyncIterator([]));
       const hierarchyDefinition: IHierarchyLevelDefinitionsFactory = {
         async defineHierarchyLevel({ parentNode, instanceFilter }) {
           if (!parentNode) {
@@ -1278,7 +1278,7 @@ describe("HierarchyProvider", () => {
       metadataProvider.stubEntityClass({ schemaName: "x", className: "y", classLabel: "Class Y" });
       queryExecutor.createQueryReader.callsFake((query) => {
         if (query.ecsql.includes("ROOT")) {
-          return createFakeQueryReader<RowDef>([
+          return createAsyncIterator<RowDef>([
             {
               [NodeSelectClauseColumnNames.FullClassName]: `x.y`,
               [NodeSelectClauseColumnNames.ECInstanceId]: `0x1`,
@@ -1290,7 +1290,7 @@ describe("HierarchyProvider", () => {
             },
           ]);
         } else if (query.ecsql.includes("CHILD")) {
-          return createFakeQueryReader<RowDef>([
+          return createAsyncIterator<RowDef>([
             {
               [NodeSelectClauseColumnNames.FullClassName]: `x.y`,
               [NodeSelectClauseColumnNames.ECInstanceId]: `0x2`,
@@ -1299,7 +1299,7 @@ describe("HierarchyProvider", () => {
             },
           ]);
         }
-        return createFakeQueryReader([]);
+        return createAsyncIterator([]);
       });
       const hierarchyDefinition: IHierarchyLevelDefinitionsFactory = {
         async defineHierarchyLevel({ parentNode }) {
@@ -1406,7 +1406,7 @@ describe("HierarchyProvider", () => {
     });
 
     it("getNodes doesn't requery with same props and a different formatter", async () => {
-      queryExecutor.createQueryReader.returns(createFakeQueryReader([]));
+      queryExecutor.createQueryReader.returns(createAsyncIterator([]));
       const hierarchyDefinition: IHierarchyLevelDefinitionsFactory = {
         async defineHierarchyLevel({ parentNode }) {
           if (!parentNode) {
@@ -1489,7 +1489,7 @@ describe("HierarchyProvider", () => {
 
   describe("notifyDataSourceChanged", () => {
     it("getNodes clears cache on data source change", async () => {
-      queryExecutor.createQueryReader.returns(createFakeQueryReader([]));
+      queryExecutor.createQueryReader.returns(createAsyncIterator([]));
       const hierarchyDefinition: IHierarchyLevelDefinitionsFactory = {
         async defineHierarchyLevel() {
           return [

@@ -4,9 +4,10 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { expect } from "chai";
+import { collect } from "presentation-test-utilities";
 import { from } from "rxjs";
 import { sortNodesByLabelOperator } from "../../../hierarchies/internal/operators/Sorting";
-import { collect, createTestProcessedCustomNode } from "../../Utils";
+import { createTestProcessedCustomNode } from "../../Utils";
 
 describe("Sorting", () => {
   it("sorts nodes", async () => {

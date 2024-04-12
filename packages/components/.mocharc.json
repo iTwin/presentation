@@ -1,5 +1,5 @@
 {
-  "require": ["ignore-styles"],
+  "require": ["ignore-styles", "source-map-support/register"],
   "checkLeaks": true,
   "global": ["IS_REACT_ACT_ENVIRONMENT"],
   "timeout": 60000,

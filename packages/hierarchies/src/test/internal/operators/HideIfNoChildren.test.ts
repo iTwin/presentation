@@ -3,11 +3,12 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 import { expect } from "chai";
+import { collect, waitFor } from "presentation-test-utilities";
 import { EMPTY, from, of, Subject } from "rxjs";
 import sinon from "sinon";
 import { LogLevel } from "@itwin/core-bentley";
 import { createHideIfNoChildrenOperator, LOGGING_NAMESPACE } from "../../../hierarchies/internal/operators/HideIfNoChildren";
-import { collect, createTestProcessedCustomNode, setupLogging, waitFor } from "../../Utils";
+import { createTestProcessedCustomNode, setupLogging } from "../../Utils";
 
 describe("HideIfNoChildrenOperator", () => {
   before(() => {

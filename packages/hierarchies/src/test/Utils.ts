@@ -3,9 +3,8 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { from, ObservableInput } from "rxjs";
 import sinon from "sinon";
-import { BeDuration, Logger, LogLevel, StopWatch } from "@itwin/core-bentley";
+import { Logger, LogLevel } from "@itwin/core-bentley";
 import * as shared from "@itwin/presentation-shared";
 import {
   ParsedCustomHierarchyNode,
@@ -18,7 +17,6 @@ import { HierarchyProviderLocalizedStrings } from "../hierarchies/HierarchyProvi
 
 import EC = shared.EC;
 const { parseFullClassName } = shared;
-type ECSqlQueryReader = shared.ECSqlQueryReader;
 type IMetadataProvider = shared.IMetadataProvider;
 type InstanceKey = shared.InstanceKey;
 
@@ -26,23 +24,6 @@ export function setupLogging(levels: Array<{ namespace: string; level: LogLevel 
   Logger.initializeToConsole();
   Logger.turnOffCategories();
   levels.forEach(({ namespace, level }) => Logger.setLevel(namespace, level));
-}
-
-export async function collect<T>(obs: ObservableInput<T>): Promise<Array<T>> {
-  const arr = new Array<T>();
-  return new Promise((resolve, reject) => {
-    from(obs).subscribe({
-      next(item: T) {
-        arr.push(item);
-      },
-      complete() {
-        resolve(arr);
-      },
-      error(reason) {
-        reject(reason);
-      },
-    });
-  });
 }
 
 export function createTestParsedCustomNode(src?: Partial<ParsedCustomHierarchyNode>): ParsedCustomHierarchyNode {
@@ -217,32 +198,6 @@ export function createMetadataProviderStub() {
       return schemaStub.getClass.getCalls().filter((call) => call.args[0] === props.className).length;
     },
   };
-}
-
-export async function waitFor<T>(check: () => Promise<T> | T, timeout?: number): Promise<T> {
-  if (timeout === undefined) {
-    timeout = 5000;
-  }
-  const timer = new StopWatch(undefined, true);
-  let lastError: unknown;
-  do {
-    try {
-      const res = check();
-      return res instanceof Promise ? await res : res;
-    } catch (e) {
-      lastError = e;
-      await BeDuration.wait(0);
-    }
-  } while (timer.current.milliseconds < timeout);
-  throw lastError;
-}
-
-export function createFakeQueryReader<TRow extends object>(rows: TRow[]): ECSqlQueryReader {
-  return (async function* () {
-    for (const row of rows) {
-      yield row;
-    }
-  })();
 }
 
 export const testLocalizedStrings: HierarchyProviderLocalizedStrings = {

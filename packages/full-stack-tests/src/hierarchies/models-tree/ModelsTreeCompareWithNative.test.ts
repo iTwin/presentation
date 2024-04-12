@@ -4,6 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { expect } from "chai";
+import { collect } from "presentation-test-utilities";
 import { PrimitiveValue } from "@itwin/appui-abstract";
 import { DelayLoadedTreeNodeItem } from "@itwin/components-react";
 import { assert, Logger, OrderedId64Iterable } from "@itwin/core-bentley";
@@ -13,7 +14,6 @@ import { isPresentationTreeNodeItem, PresentationTreeDataProvider, PresentationT
 import { createLogger } from "@itwin/presentation-core-interop";
 import { ClassGroupingNodeKey, HierarchyNode, InstancesNodeKey, setLogger } from "@itwin/presentation-hierarchies";
 import { initialize, terminate } from "../../IntegrationTests";
-import { collect } from "../Utils";
 import { createModelsTreeProvider } from "./ModelsTreeTestUtils";
 
 describe("Hierarchies", () => {
