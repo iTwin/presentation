@@ -1,6 +1,7 @@
 sep=;
 Release Tag;API Item
 beta;CachingHiliteSetProvider
+beta;computeSelection(props: ComputeSelectionProps): AsyncIterableIterator
 beta;createCachingHiliteSetProvider(props: CachingHiliteSetProviderProps): CachingHiliteSetProvider
 beta;createHiliteSetProvider(props: HiliteSetProviderProps): HiliteSetProvider
 beta;createStorage(): SelectionStorage
