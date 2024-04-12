@@ -37,7 +37,7 @@
     "check-internal": "node ../../scripts/checkInternal.js --apiSummary ./api/presentation-testing.api.md"
   },
   "dependencies": {
-    "@itwin/presentation-components": "workspace:*",
+    "@itwin/presentation-components": "workspace:^",
     "rimraf": "^5.0.5",
     "sanitize-filename": "^1.6.3"
   },
