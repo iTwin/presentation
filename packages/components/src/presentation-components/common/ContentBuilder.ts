@@ -3,6 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
+import { inPlaceSort } from "fast-sort";
 import {
   ArrayValue,
   PrimitiveValue,
@@ -37,7 +38,6 @@ import {
 } from "@itwin/presentation-common";
 import { NumericEditorName } from "../properties/editors/NumericPropertyEditor";
 import { QuantityEditorName } from "../properties/editors/QuantityPropertyEditor";
-import { inPlaceSort } from "fast-sort";
 
 /** @internal */
 export interface FieldInfo {

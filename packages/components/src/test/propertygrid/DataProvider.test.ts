@@ -78,8 +78,14 @@ describe("PropertyDataProvider", () => {
     presentationManager = sinon.createStubInstance(PresentationManager);
 
     favoritePropertiesManager = sinon.createStubInstance(FavoritePropertiesManager);
+    favoritePropertiesManager.hasAsync.callsFake(async () => false);
+    // eslint-disable-next-line deprecation/deprecation
     favoritePropertiesManager.has.callsFake(() => false);
-    Object.assign(favoritePropertiesManager, { onFavoritesChanged, sortFields: (_imodel: IModelConnection, fields: Field[]) => fields });
+    Object.assign(favoritePropertiesManager, {
+      onFavoritesChanged,
+      sortFieldsAsync: async (_imodel: IModelConnection, fields: Field[]) => fields,
+      sortFields: (_imodel: IModelConnection, fields: Field[]) => fields,
+    });
 
     sinon.stub(Presentation, "presentation").get(() => presentationManager);
     sinon.stub(Presentation, "favoriteProperties").get(() => favoritePropertiesManager);
@@ -184,11 +190,20 @@ describe("PropertyDataProvider", () => {
   });
 
   describe("isFieldFavorite", () => {
-    it("calls FavoritePropertiesManager", () => {
+    it("calls `FavoritePropertiesManager.hasAsync` when it's available", () => {
       provider = new Provider({ imodel, ruleset: rulesetId });
 
       const field = createTestSimpleContentField();
       (provider as any).isFieldFavorite(field);
+      expect(favoritePropertiesManager.hasAsync).to.be.calledOnceWith(field, imodel, FavoritePropertiesScope.IModel);
+    });
+
+    it("calls `FavoritePropertiesManager.has` when `hasAsync` is not available", () => {
+      Object.assign(favoritePropertiesManager, { hasAsync: undefined });
+      provider = new Provider({ imodel, ruleset: rulesetId });
+      const field = createTestSimpleContentField();
+      (provider as any).isFieldFavorite(field);
+      // eslint-disable-next-line deprecation/deprecation
       expect(favoritePropertiesManager.has).to.be.calledOnceWith(field, imodel, FavoritePropertiesScope.IModel);
     });
   });
@@ -1265,8 +1280,34 @@ describe("PropertyDataProvider", () => {
         });
 
         describe("favorite properties handling", () => {
+          it("doesn't create favorite fields category if `disableFavoritesCategory` is set", async () => {
+            provider.dispose();
+            provider = new Provider({ imodel, ruleset: rulesetId, disableFavoritesCategory: true });
+
+            favoritePropertiesManager.hasAsync.resetBehavior();
+            favoritePropertiesManager.hasAsync.callsFake(async () => true);
+
+            const descriptor = createTestContentDescriptor({
+              fields: [
+                createTestSimpleContentField({ name: "field1", category: createTestCategoryDescription({ name: "category1" }) }),
+                createTestSimpleContentField({ name: "field2", category: createTestCategoryDescription({ name: "category1" }) }),
+                createTestSimpleContentField({ name: "field3", category: createTestCategoryDescription({ name: "category2" }) }),
+              ],
+            });
+            const values: ValuesDictionary<any> = {};
+            const displayValues: ValuesDictionary<any> = {};
+            const record = createTestContentItem({ values, displayValues });
+            (provider as any).getContent = async () => new Content(descriptor, [record]);
+
+            const data = await provider.getData();
+            expect(data.categories.length).to.eq(2);
+            data.categories.forEach((category) => {
+              expect(category.name).to.not.contain(FAVORITES_CATEGORY_NAME);
+            });
+          });
+
           it("makes records favorite according to isFieldFavorite callback", async () => {
-            (provider as any).isFieldFavorite = (_field: Field) => true;
+            (provider as any).isFieldFavorite = async (_field: Field) => true;
             const descriptor = createTestContentDescriptor({
               fields: [
                 createTestSimpleContentField({ name: "field1", category: createTestCategoryDescription({ name: "category1" }) }),
@@ -1303,6 +1344,94 @@ describe("PropertyDataProvider", () => {
             }
           });
 
+          it("sorts favorite records using `FavoritePropertiesManager.sortFieldsAsync` when it's available", async () => {
+            Object.assign(favoritePropertiesManager, {
+              hasAsync: () => true,
+              sortFieldsAsync: async (_imodel: IModelConnection, fields: Field[]) =>
+                fields.sort((lhs: Field, rhs: Field): number => {
+                  if (lhs.label < rhs.label) {
+                    return -1;
+                  }
+                  if (lhs.label > rhs.label) {
+                    return 1;
+                  }
+                  return 0;
+                }),
+            });
+            const category = createTestCategoryDescription();
+            const descriptor = createTestContentDescriptor({
+              fields: [
+                createTestSimpleContentField({ category, name: "b", priority: 1, label: "b" }),
+                createTestSimpleContentField({ category, name: "c", priority: 2, label: "c" }),
+                createTestSimpleContentField({ category, name: "a", priority: 3, label: "a" }),
+              ],
+            });
+            const values: ValuesDictionary<any> = {};
+            const displayValues: ValuesDictionary<any> = {};
+            const record = createTestContentItem({ values, displayValues });
+            (provider as any).getContent = async () => new Content(descriptor, [record]);
+
+            const data = await provider.getData();
+            const records = data.records[category.name];
+            expect(records.length).to.eq(3);
+            expect(records).to.containSubset([
+              {
+                property: { displayLabel: "a" },
+              },
+              {
+                property: { displayLabel: "b" },
+              },
+              {
+                property: { displayLabel: "c" },
+              },
+            ]);
+          });
+
+          it("sorts favorite records using `FavoritePropertiesManager.sortFields` when `sortFieldsAsync` is not available", async () => {
+            Object.assign(favoritePropertiesManager, {
+              hasAsync: undefined,
+              sortFieldsAsync: undefined,
+              has: () => true,
+              sortFields: (_imodel: IModelConnection, fields: Field[]) =>
+                fields.sort((lhs: Field, rhs: Field): number => {
+                  if (lhs.label < rhs.label) {
+                    return -1;
+                  }
+                  if (lhs.label > rhs.label) {
+                    return 1;
+                  }
+                  return 0;
+                }),
+            });
+            const category = createTestCategoryDescription();
+            const descriptor = createTestContentDescriptor({
+              fields: [
+                createTestSimpleContentField({ category, name: "b", priority: 1, label: "b" }),
+                createTestSimpleContentField({ category, name: "c", priority: 2, label: "c" }),
+                createTestSimpleContentField({ category, name: "a", priority: 3, label: "a" }),
+              ],
+            });
+            const values: ValuesDictionary<any> = {};
+            const displayValues: ValuesDictionary<any> = {};
+            const record = createTestContentItem({ values, displayValues });
+            (provider as any).getContent = async () => new Content(descriptor, [record]);
+
+            const data = await provider.getData();
+            const records = data.records[category.name];
+            expect(records.length).to.eq(3);
+            expect(records).to.containSubset([
+              {
+                property: { displayLabel: "a" },
+              },
+              {
+                property: { displayLabel: "b" },
+              },
+              {
+                property: { displayLabel: "c" },
+              },
+            ]);
+          });
+
           describe("with nested content", () => {
             it("puts primitive records of nested content fields into favorite category", async () => {
               const parentCategory = createTestCategoryDescription({ name: "parent-category", label: "Parent" });
@@ -1316,7 +1445,7 @@ describe("PropertyDataProvider", () => {
               });
               const descriptor = createTestContentDescriptor({ fields: [nestedContentField] });
 
-              favoritePropertiesManager.has.callsFake((field) => {
+              favoritePropertiesManager.hasAsync.callsFake(async (field) => {
                 return field.name === "primitive-property";
               });
 
@@ -1397,7 +1526,7 @@ describe("PropertyDataProvider", () => {
               });
               const descriptor = createTestContentDescriptor({ fields: [nestedContentField, propertiesField2] });
 
-              favoritePropertiesManager.has.callsFake((field) => {
+              favoritePropertiesManager.hasAsync.callsFake(async (field) => {
                 return field.name === nestedContentField.name || field.name === propertiesField1.name || field.name === propertiesField2.name;
               });
 
@@ -1518,7 +1647,7 @@ describe("PropertyDataProvider", () => {
               });
               const descriptor = createTestContentDescriptor({ fields: [nestedContentField] });
 
-              favoritePropertiesManager.has.callsFake((field) => {
+              favoritePropertiesManager.hasAsync.callsFake(async (field) => {
                 return field.name === propertiesField.name;
               });
 
@@ -1573,7 +1702,7 @@ describe("PropertyDataProvider", () => {
               });
               const descriptor = createTestContentDescriptor({ fields: [nestedContentField] });
 
-              favoritePropertiesManager.has.callsFake((field) => {
+              favoritePropertiesManager.hasAsync.callsFake(async (field) => {
                 return field.name === propertiesField1.name || field.name === propertiesField2.name;
               });
 
@@ -1679,7 +1808,7 @@ describe("PropertyDataProvider", () => {
         });
 
         it("sorts records according to sortFields callback", async () => {
-          (provider as any).sortFields = (_cat: CategoryDescription, fields: Field[]) => {
+          (provider as any).sortFields = async (_cat: CategoryDescription, fields: Field[]) => {
             fields.sort((lhs: Field, rhs: Field): number => {
               if (lhs.label < rhs.label) {
                 return -1;
