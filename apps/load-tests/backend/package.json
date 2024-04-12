@@ -32,6 +32,6 @@
     "inversify": "^6.0.2",
     "reflect-metadata": "^0.1.14",
     "rimraf": "^5.0.5",
-    "typescript": "~5.0.4"
+    "typescript": "~5.4.5"
   }
 }

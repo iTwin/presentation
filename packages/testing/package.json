@@ -94,6 +94,6 @@
     "reflect-metadata": "^0.1.14",
     "sinon": "^17.0.1",
     "sinon-chai": "^3.7.0",
-    "typescript": "~5.0.4"
+    "typescript": "~5.4.5"
   }
 }

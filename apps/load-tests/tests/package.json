@@ -35,6 +35,6 @@
     "eslint": "^8.56.0",
     "rxjs": "^7.8.1",
     "rimraf": "^5.0.5",
-    "typescript": "~5.0.4"
+    "typescript": "~5.4.5"
   }
 }
