@@ -13,6 +13,9 @@ export interface CachingHiliteSetProvider {
 }
 
 // @beta
+export function computeSelection(props: ComputeSelectionProps): AsyncIterableIterator<SelectableInstanceKey>;
+
+// @beta
 export function createCachingHiliteSetProvider(props: CachingHiliteSetProviderProps): CachingHiliteSetProvider;
 
 // @beta

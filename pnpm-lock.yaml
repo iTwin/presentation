@@ -1591,6 +1591,9 @@ importers:
 
   packages/unified-selection:
     dependencies:
+      '@itwin/core-bentley':
+        specifier: ^4.4.0
+        version: 4.4.0
       rxjs:
         specifier: ^7.8.1
         version: 7.8.1

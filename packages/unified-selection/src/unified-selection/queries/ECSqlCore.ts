@@ -73,3 +73,20 @@ export type ECSqlQueryReader = AsyncIterableIterator<ECSqlQueryRow>;
 export interface IECSqlQueryExecutor {
   createQueryReader(ecsql: string, bindings?: ECSqlBinding[], config?: ECSqlQueryReaderOptions): ECSqlQueryReader;
 }
+
+/**
+ * Forms ECSql bindings from given ID's.
+ */
+export function formIdBindings(property: string, ids: string[], bindings: ECSqlBinding[]): string {
+  if (ids.length > 1000) {
+    bindings.push({ type: "idset", value: ids });
+    return `InVirtualSet(?, ${property})`;
+  }
+
+  if (ids.length === 0) {
+    return `FALSE`;
+  }
+
+  ids.forEach((id) => bindings.push({ type: "id", value: id }));
+  return `${property} IN (${ids.map(() => "?").join(",")})`;
+}
