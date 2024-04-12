@@ -62,16 +62,13 @@ describe("usePresentationTreeState", () => {
     } as RulesetVariablesManager);
 
     presentationManager.getNodesAndCount.resolves({ count: 0, nodes: [] });
-    const localization = new EmptyLocalization();
 
-    sinon.stub(IModelApp, "initialized").get(() => true);
     sinon.stub(Presentation, "presentation").get(() => presentationManager);
-    sinon.stub(Presentation, "localization").get(() => localization);
     sinon.stub(IModelApp, "quantityFormatter").get(() => ({
       onActiveFormattingUnitSystemChanged,
     }));
-    await Presentation.initialize();
-    await UiComponents.initialize(localization);
+    sinon.stub(Presentation, "initialize").callsFake(async () => {});
+    await UiComponents.initialize(new EmptyLocalization());
   });
 
   afterEach(() => {
