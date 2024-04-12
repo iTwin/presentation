@@ -1146,10 +1146,10 @@ importers:
         specifier: ^3.4.2
         version: 3.4.2(react-dom@18.2.0)(react@18.2.0)
       '@itwin/presentation-hierarchies':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../hierarchies
       '@itwin/unified-selection':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../unified-selection
       classnames:
         specifier: ^2.3.2
@@ -1465,7 +1465,7 @@ importers:
   packages/testing:
     dependencies:
       '@itwin/presentation-components':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../components
       rimraf:
         specifier: ^5.0.5
