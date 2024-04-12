@@ -67,7 +67,6 @@ describe("usePresentationTreeState", () => {
     sinon.stub(IModelApp, "quantityFormatter").get(() => ({
       onActiveFormattingUnitSystemChanged,
     }));
-    sinon.stub(Presentation, "initialize").callsFake(async () => {});
     await UiComponents.initialize(new EmptyLocalization());
   });
 
