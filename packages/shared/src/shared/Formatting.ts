@@ -3,6 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
+import { assert } from "@itwin/core-bentley";
 import { julianToDateTime } from "./InternalUtils";
 import { TypedPrimitiveValue } from "./Values";
 
@@ -37,7 +38,8 @@ export function createDefaultValueFormatter(): IPrimitiveValueFormatter {
         return result;
       }
     }
-    // eslint-disable-next-line @typescript-eslint/no-base-to-string
+
+    assert(typeof value.value === "undefined" || typeof value.value === "boolean" || typeof value.value === "number" || typeof value.value === "string");
     return value.value.toString();
   };
 }
