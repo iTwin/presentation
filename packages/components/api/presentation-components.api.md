@@ -204,7 +204,7 @@ export class FavoritePropertiesDataFilterer extends PropertyDataFiltererBase {
 export interface FavoritePropertiesDataFiltererProps {
     favoritesScope: FavoritePropertiesScope;
     isActive?: boolean;
-    isFavorite?: (field: Field, imodel: IModelConnection, scope: FavoritePropertiesScope) => boolean;
+    isFavorite?: (field: Field, imodel: IModelConnection, scope: FavoritePropertiesScope) => boolean | Promise<boolean>;
     source: IPresentationPropertyDataProvider;
 }
 
@@ -499,14 +499,14 @@ export class PresentationPropertyDataProvider extends ContentDataProvider implem
     get includeFieldsWithNoValues(): boolean;
     set includeFieldsWithNoValues(value: boolean);
     protected invalidateCache(props: CacheInvalidationProps): void;
-    protected isFieldFavorite: (field: Field) => boolean;
+    protected isFieldFavorite(field: Field): boolean | Promise<boolean>;
     protected isFieldHidden(field: Field): boolean;
     get isNestedPropertyCategoryGroupingEnabled(): boolean;
     set isNestedPropertyCategoryGroupingEnabled(value: boolean);
     // (undocumented)
     onDataChanged: PropertyDataChangeEvent;
     protected sortCategories(categories: CategoryDescription[]): void;
-    protected sortFields: (category: CategoryDescription, fields: Field[]) => void;
+    protected sortFields(category: CategoryDescription, fields: Field[]): void | Promise<void>;
 }
 
 // @public
@@ -556,13 +556,21 @@ export class PresentationTreeDataProvider implements IPresentationTreeDataProvid
 export interface PresentationTreeDataProviderDataSourceEntryPoints {
     // (undocumented)
     getFilteredNodePaths: (requestOptions: FilterByTextHierarchyRequestOptions<IModelConnection>) => Promise<NodePathElement[]>;
-    // (undocumented)
-    getNodesAndCount: (requestOptions: Paged<HierarchyRequestOptions<IModelConnection, NodeKey>>) => Promise<{
+    // @deprecated (undocumented)
+    getNodesAndCount?: (requestOptions: Paged<HierarchyRequestOptions<IModelConnection, NodeKey>>) => Promise<{
         nodes: Node_2[];
         count: number;
     }>;
     // @deprecated (undocumented)
     getNodesCount?: (requestOptions: HierarchyRequestOptions<IModelConnection, NodeKey>) => Promise<number>;
+    // (undocumented)
+    getNodesIterator: (requestOptions: Paged<HierarchyRequestOptions<IModelConnection, NodeKey> & {
+        maxParallelRequests?: number;
+        batchSize?: number;
+    }>) => Promise<{
+        total: number;
+        items: AsyncIterableIterator<Node_2>;
+    }>;
 }
 
 // @public
