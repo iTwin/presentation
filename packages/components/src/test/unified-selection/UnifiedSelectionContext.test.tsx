@@ -36,6 +36,7 @@ describe("UnifiedSelectionContext", () => {
   beforeEach(() => {
     const selectionManager = new SelectionManager({ scopes: undefined as any });
     sinon.stub(Presentation, "selection").get(() => selectionManager);
+    IModelConnection.onOpen.raiseEvent(testIModel);
   });
 
   afterEach(() => {
@@ -47,21 +48,23 @@ describe("UnifiedSelectionContext", () => {
     expect(result.current.selectionLevel).to.be.equal(0);
   });
 
-  it("updates context when selection changes on one level above", () => {
+  it("updates context when selection changes on one level above", async () => {
     const { result } = renderUnifiedSelectionContextHook(testIModel, 1);
     const firstResult = result.current;
 
     act(() => {
       Presentation.selection.addToSelection("", testIModel, [{ className: "test", id: "1" }], 0);
     });
-    const secondResult = result.current;
 
-    expect(firstResult).not.to.be.equal(secondResult);
-    expect(firstResult.getSelection).not.to.be.equal(secondResult.getSelection);
-    expect(firstResult.replaceSelection).to.be.equal(secondResult.replaceSelection);
-    expect(firstResult.addToSelection).to.be.equal(secondResult.addToSelection);
-    expect(firstResult.clearSelection).to.be.equal(secondResult.clearSelection);
-    expect(firstResult.removeFromSelection).to.be.equal(secondResult.removeFromSelection);
+    await waitFor(() => {
+      const secondResult = result.current;
+      expect(firstResult).not.to.be.equal(secondResult);
+      expect(firstResult.getSelection).not.to.be.equal(secondResult.getSelection);
+      expect(firstResult.replaceSelection).to.be.equal(secondResult.replaceSelection);
+      expect(firstResult.addToSelection).to.be.equal(secondResult.addToSelection);
+      expect(firstResult.clearSelection).to.be.equal(secondResult.clearSelection);
+      expect(firstResult.removeFromSelection).to.be.equal(secondResult.removeFromSelection);
+    });
   });
 
   it("does not update context when selection changes one level deeper", () => {
@@ -150,25 +153,29 @@ describe("UnifiedSelectionContext", () => {
         expect(firstKeySet).not.to.be.equal(secondKeySet);
       });
 
-      it("returns different KeySet reference after selection changes", () => {
+      it("returns different KeySet reference after selection changes", async () => {
         const { result } = renderUnifiedSelectionContextHook(testIModel);
         const firstKeySet = result.current.getSelection();
 
         act(() => result.current.addToSelection([{ className: "test", id: "1" }]));
-        const secondKeySet = result.current.getSelection();
 
-        expect(firstKeySet).not.to.be.equal(secondKeySet);
+        await waitFor(() => {
+          const secondKeySet = result.current.getSelection();
+          expect(firstKeySet).not.to.be.equal(secondKeySet);
+        });
       });
 
-      it("returns a working KeySet", () => {
+      it("returns a working KeySet", async () => {
         stubGetSelection.restore();
         const { result } = renderUnifiedSelectionContextHook(testIModel);
 
         const key = { className: "test", id: "1" };
         act(() => result.current.addToSelection([key]));
 
-        const returnedKeySet = result.current.getSelection();
-        expect(returnedKeySet.has(key)).to.be.true;
+        await waitFor(() => {
+          const returnedKeySet = result.current.getSelection();
+          expect(returnedKeySet.has(key)).to.be.true;
+        });
       });
     });
 

@@ -7,26 +7,25 @@ import { expect } from "chai";
 import { getByText, waitFor } from "@testing-library/react";
 
 export async function ensureTableHasRowsWithCellValues(container: HTMLElement, propertyLabel: string, cellValues: string[]) {
-  const table = await waitFor(() => {
-    const sel = container.querySelector("table");
-    expect(sel).is.not.null;
-    return sel;
-  });
+  await waitFor(() => {
+    const table = container.querySelector("table");
+    expect(table).is.not.null;
 
-  const columns = table!.querySelectorAll("thead td");
-  let columnIndex = -1;
-  columns.forEach((column, key) => {
-    if (column.innerHTML === propertyLabel) {
-      columnIndex = key;
-    }
-  });
-  expect(columnIndex).to.not.eq(-1);
+    const columns = table!.querySelectorAll("thead td");
+    let columnIndex = -1;
+    columns.forEach((column, key) => {
+      if (column.innerHTML === propertyLabel) {
+        columnIndex = key;
+      }
+    });
+    expect(columnIndex).to.not.eq(-1);
 
-  const rows = table!.querySelectorAll("tbody tr");
-  expect(rows).to.be.lengthOf(cellValues.length);
+    const rows = table!.querySelectorAll("tbody tr");
+    expect(rows).to.be.lengthOf(cellValues.length);
 
-  rows.forEach((row, key) => {
-    const cell = row.children[columnIndex] as HTMLElement;
-    getByText(cell, cellValues[key]);
+    rows.forEach((row, key) => {
+      const cell = row.children[columnIndex] as HTMLElement;
+      getByText(cell, cellValues[key]);
+    });
   });
 }

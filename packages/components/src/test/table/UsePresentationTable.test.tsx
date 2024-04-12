@@ -266,9 +266,11 @@ describe("usePresentationTableWithUnifiedSelection", () => {
     const instanceKey = createTestECInstanceKey();
     setupPresentationManager([instanceKey]);
 
+    const otherIModel = { key: "other_imodel" } as IModelConnection;
+    IModelConnection.onOpen.raiseEvent(otherIModel);
     act(() => {
       // select the row to get loaded onto the component
-      Presentation.selection.addToSelection(selectionSource, { key: "other_imodel" } as IModelConnection, new KeySet([instanceKey]), 0);
+      Presentation.selection.addToSelection(selectionSource, otherIModel, new KeySet([instanceKey]), 0);
     });
 
     await waitFor(() => {
