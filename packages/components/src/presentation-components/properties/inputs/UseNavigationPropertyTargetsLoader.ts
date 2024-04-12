@@ -7,12 +7,14 @@
  */
 
 import { useCallback, useEffect, useState } from "react";
+import { EMPTY, from, map, mergeMap, toArray } from "rxjs";
 import { PropertyDescription } from "@itwin/appui-abstract";
 import { IModelConnection } from "@itwin/core-frontend";
 import {
   ContentFlags,
   ContentSpecificationTypes,
   InstanceKey,
+  Item,
   KeySet,
   LabelDefinition,
   NavigationPropertyInfo,
@@ -51,7 +53,7 @@ export function useNavigationPropertyTargetsLoader(props: UseNavigationPropertyT
         return { options: [], hasMore: false };
       }
 
-      const content = await Presentation.presentation.getContent({
+      const requestProps = {
         imodel,
         rulesetOrId: ruleset,
         keys: new KeySet(),
@@ -60,15 +62,27 @@ export function useNavigationPropertyTargetsLoader(props: UseNavigationPropertyT
           fieldsFilterExpression: filter ? `/DisplayLabel/ ~ \"%${filter}%\"` : undefined,
         },
         paging: { start: loadedOptionsCount, size: NAVIGATION_PROPERTY_TARGETS_BATCH_SIZE },
+      };
+      const items = await new Promise<Item[]>((resolve, reject) => {
+        (Presentation.presentation.getContentIterator
+          ? from(Presentation.presentation.getContentIterator(requestProps)).pipe(
+              mergeMap((result) => (result ? result.items : EMPTY)),
+              toArray(),
+            )
+          : // eslint-disable-next-line deprecation/deprecation
+            from(Presentation.presentation.getContent(requestProps)).pipe(map((content) => (content ? content.contentSet : [])))
+        ).subscribe({
+          next: resolve,
+          error: reject,
+        });
       });
 
       return {
-        options:
-          content?.contentSet.map((item) => ({
-            label: item.label,
-            key: item.primaryKeys[0],
-          })) ?? [],
-        hasMore: content !== undefined && content.contentSet.length === NAVIGATION_PROPERTY_TARGETS_BATCH_SIZE,
+        options: items.map((item) => ({
+          label: item.label,
+          key: item.primaryKeys[0],
+        })),
+        hasMore: items.length === NAVIGATION_PROPERTY_TARGETS_BATCH_SIZE,
       };
     },
     [ruleset, imodel],
