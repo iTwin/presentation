@@ -8,10 +8,16 @@ import chaiSubset from "chai-subset";
 import globalJsdom from "global-jsdom";
 import * as jsdom from "jsdom";
 import sinonChai from "sinon-chai";
+import sourceMapSupport from "source-map-support";
 
 // setup chai
 chai.use(sinonChai);
 chai.use(chaiSubset);
+
+// see https://github.com/babel/babel/issues/4605
+sourceMapSupport.install({
+  environment: "node",
+});
 
 // get rid of various xhr errors in the console
 globalJsdom(undefined, {

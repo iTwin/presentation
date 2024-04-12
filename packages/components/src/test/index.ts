@@ -12,12 +12,18 @@ import * as jsdom from "jsdom";
 import path from "path";
 import ResizeObserver from "resize-observer-polyfill";
 import sinonChai from "sinon-chai";
+import sourceMapSupport from "source-map-support";
 
 // setup chai
 chai.use(chaiAsPromised);
 chai.use(chaiJestSnapshot);
 chai.use(sinonChai);
 chai.use(chaiSubset);
+
+// see https://github.com/babel/babel/issues/4605
+sourceMapSupport.install({
+  environment: "node",
+});
 
 // get rid of various xhr errors in the console
 globalJsdom(undefined, {
