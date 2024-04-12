@@ -814,6 +814,9 @@ importers:
       nyc:
         specifier: ^15.1.0
         version: 15.1.0
+      rimraf:
+        specifier: ^5.0.5
+        version: 5.0.5
       rxjs-for-await:
         specifier: ^1.0.0
         version: 1.0.0(rxjs@7.8.1)
@@ -1115,6 +1118,9 @@ importers:
       presentation-test-utilities:
         specifier: workspace:^
         version: link:../test-utilities
+      rimraf:
+        specifier: ^5.0.5
+        version: 5.0.5
       sinon:
         specifier: ^17.0.1
         version: 17.0.1
@@ -1273,6 +1279,9 @@ importers:
       eslint:
         specifier: ^8.56.0
         version: 8.56.0
+      rimraf:
+        specifier: ^5.0.5
+        version: 5.0.5
       source-map-support:
         specifier: ^0.5.21
         version: 0.5.21
@@ -1531,6 +1540,9 @@ importers:
       '@types/mocha':
         specifier: ^10.0.6
         version: 10.0.6
+      '@types/node':
+        specifier: ^18.17.7
+        version: 18.17.7
       '@types/sinon':
         specifier: ^17.0.3
         version: 17.0.3
@@ -1646,6 +1658,9 @@ importers:
       presentation-test-utilities:
         specifier: workspace:^
         version: link:../test-utilities
+      rimraf:
+        specifier: ^5.0.5
+        version: 5.0.5
       sinon:
         specifier: ^17.0.1
         version: 17.0.1
