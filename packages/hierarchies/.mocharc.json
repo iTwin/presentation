@@ -1,5 +1,4 @@
 {
-  "require": ["source-map-support/register"],
   "checkLeaks": true,
   "timeout": 60000,
   "file": ["./lib/cjs/test/index.js"],

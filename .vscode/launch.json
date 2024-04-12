@@ -87,7 +87,8 @@
         "${workspaceFolder}/packages/components/lib/**/*.js"
       ],
       "env": {
-        "NODE_ENV": "development"
+        "NODE_ENV": "development",
+        "NODE_OPTIONS": "--enable-source-maps"
       }
     },
     {
@@ -106,7 +107,8 @@
         "${workspaceFolder}/packages/opentelemetry/lib/**/*.js"
       ],
       "env": {
-        "NODE_ENV": "development"
+        "NODE_ENV": "development",
+        "NODE_OPTIONS": "--enable-source-maps"
       }
     },
     {
@@ -125,7 +127,8 @@
         "${workspaceFolder}/packages/testing/lib/**/*.js"
       ],
       "env": {
-        "NODE_ENV": "development"
+        "NODE_ENV": "development",
+        "NODE_OPTIONS": "--enable-source-maps"
       }
     },
     {
@@ -133,16 +136,15 @@
       "cwd": "${workspaceFolder}/apps/performance-tests",
       "type": "node",
       "request": "launch",
-      "runtimeExecutable": "npx",
+      "program": "${workspaceFolder}/apps/performance-tests/node_modules/mocha/bin/_mocha",
       "runtimeArgs": [
-        "mocha",
         "--config",
         "./.mocharc.json",
-        "--timeout",
-        "0",
+        "--no-timeouts",
         "./lib/*test.js"
       ],
       "env": {
+        "NODE_ENV": "development",
         "NODE_OPTIONS": "--enable-source-maps"
       }
     },
@@ -162,7 +164,8 @@
         "${workspaceFolder}/packages/shared/lib/**/*.js"
       ],
       "env": {
-        "NODE_ENV": "development"
+        "NODE_ENV": "development",
+        "NODE_OPTIONS": "--enable-source-maps"
       }
     },
     {
@@ -181,7 +184,8 @@
         "${workspaceFolder}/packages/hierarchies/lib/**/*.js"
       ],
       "env": {
-        "NODE_ENV": "development"
+        "NODE_ENV": "development",
+        "NODE_OPTIONS": "--enable-source-maps"
       }
     },
     {
@@ -200,7 +204,8 @@
         "${workspaceFolder}/packages/core-interop/lib/**/*.js"
       ],
       "env": {
-        "NODE_ENV": "development"
+        "NODE_ENV": "development",
+        "NODE_OPTIONS": "--enable-source-maps"
       }
     },
     {
@@ -223,7 +228,8 @@
         "${workspaceFolder}/packages/full-stack-tests/lib/**/*.js"
       ],
       "env": {
-        "NODE_ENV": "development"
+        "NODE_ENV": "development",
+        "NODE_OPTIONS": "--enable-source-maps"
       }
     },
     {
@@ -242,7 +248,8 @@
         "${workspaceFolder}/packages/unified-selection/lib/**/*.js"
       ],
       "env": {
-        "NODE_ENV": "development"
+        "NODE_ENV": "development",
+        "NODE_OPTIONS": "--enable-source-maps"
       }
     },
     {
@@ -261,7 +268,8 @@
         "${workspaceFolder}/packages/hierarchies-react/lib/**/*.js"
       ],
       "env": {
-        "NODE_ENV": "development"
+        "NODE_ENV": "development",
+        "NODE_OPTIONS": "--enable-source-maps"
       }
     }
   ],

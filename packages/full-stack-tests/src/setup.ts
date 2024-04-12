@@ -14,15 +14,9 @@ import * as jsdom from "jsdom";
 import * as path from "path";
 import ResizeObserver from "resize-observer-polyfill";
 import sinonChai from "sinon-chai";
-import sourceMapSupport from "source-map-support";
 
 // eslint-disable-next-line no-console
 console.log(`Backend PID: ${process.pid}`);
-
-// see https://github.com/babel/babel/issues/4605
-sourceMapSupport.install({
-  environment: "node",
-});
 
 // get rid of various xhr errors in the console
 globalJsdom(undefined, {
