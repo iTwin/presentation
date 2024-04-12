@@ -19,6 +19,7 @@ import {
 } from "@itwin/components-react";
 import { PresentationTreeDataProvider, PresentationTreeDataProviderProps } from "../DataProvider";
 import { IFilteredPresentationTreeDataProvider, IPresentationTreeDataProvider } from "../IPresentationTreeDataProvider";
+import { ReportingTreeNodeLoader } from "../ReportingTreeNodeLoader";
 import { useFilteredNodeLoader, useNodeHighlightingProps } from "./UseControlledTreeFiltering";
 import { ReloadedTree, useTreeReload } from "./UseTreeReload";
 
@@ -65,6 +66,16 @@ export interface UsePresentationTreeStateProps<TEventHandler extends TreeEventHa
     /** Current active filter match. It is used to create [HighlightableTreeNodeProps]($components-react) for highlighting and stepping through filter matches. */
     activeMatchIndex?: number;
   };
+
+  /**
+   * Callback for when a tree node is loaded.
+   */
+  onNodeLoaded?: (props: {
+    /** ID of the loaded node, `root` if it is the root. */
+    node: string;
+    /** Duration how long the load took in milliseconds. */
+    duration: number;
+  }) => void;
 }
 
 /**
@@ -113,9 +124,14 @@ interface TreeStateProps extends PresentationTreeDataProviderProps {
   treeModel?: TreeModel;
 }
 
+interface UseTreeStateProps {
+  treeStateProps: TreeStateProps;
+  onNodeLoaded?: (callbackProps: { node: string; duration: number }) => void;
+}
+
 interface TreeState {
   dataProvider: PresentationTreeDataProvider;
-  nodeLoader: AbstractTreeNodeLoaderWithProvider<PresentationTreeDataProvider>;
+  nodeLoader: PagedTreeNodeLoader<PresentationTreeDataProvider>;
 }
 
 /**
@@ -123,6 +139,7 @@ interface TreeState {
  * @public
  */
 export function usePresentationTreeState<TEventHandler extends TreeEventHandler = TreeEventHandler>({
+  onNodeLoaded,
   eventHandlerFactory,
   seedTreeModel,
   enableHierarchyAutoUpdate,
@@ -131,12 +148,14 @@ export function usePresentationTreeState<TEventHandler extends TreeEventHandler 
 }: UsePresentationTreeStateProps<TEventHandler>): UsePresentationTreeStateResult<TEventHandler> | undefined {
   const firstRenderRef = useRef(true);
   const treeStateProps = useMemo(
-    (): TreeStateProps => ({ ...dataProviderProps, treeModel: firstRenderRef.current ? seedTreeModel : undefined }),
+    (): TreeStateProps => ({
+      ...dataProviderProps,
+      treeModel: firstRenderRef.current ? seedTreeModel : undefined,
+    }),
     Object.values(dataProviderProps), // eslint-disable-line react-hooks/exhaustive-deps
   );
 
-  const { state, onReload } = useTreeState(treeStateProps);
-
+  const { state, onReload } = useTreeState({ treeStateProps, onNodeLoaded });
   const renderedItems = useRef<RenderedItemsRange | undefined>(undefined);
   // istanbul ignore next
   const onItemsRendered = useCallback((items: RenderedItemsRange) => {
@@ -187,18 +206,24 @@ interface PresentationTreeFilteringProps {
   activeMatchIndex?: number;
 }
 
-function useTreeState(props: TreeStateProps) {
+function useTreeState(props: UseTreeStateProps) {
   const [state, setState] = useState<TreeState>();
+  const onNodeLoadedRef = useRef(props.onNodeLoaded);
+  useEffect(() => {
+    onNodeLoadedRef.current = props.onNodeLoaded;
+  }, [props.onNodeLoaded]);
+
   const prevStateRef = useRef(state);
   useEffect(() => {
     prevStateRef.current = state;
   }, [state]);
 
   useEffect(() => {
-    const { treeModel, ...providerProps } = props;
+    const { treeModel, ...providerProps } = props.treeStateProps;
     const modelSource = new TreeModelSource(new MutableTreeModel(treeModel));
     const dataProvider = new PresentationTreeDataProvider(providerProps);
-    const nodeLoader = new PagedTreeNodeLoader(dataProvider, modelSource, providerProps.pagingSize);
+    const pagedLoader = new PagedTreeNodeLoader(dataProvider, modelSource, providerProps.pagingSize);
+    const nodeLoader = new ReportingTreeNodeLoader(pagedLoader, () => onNodeLoadedRef.current);
 
     const newState = {
       modelSource,
@@ -210,13 +235,14 @@ function useTreeState(props: TreeStateProps) {
     return () => {
       prevStateRef.current?.dataProvider.dispose();
     };
-  }, [props]);
+  }, [props.treeStateProps]);
 
   const onReload = useCallback((reloadedTree: ReloadedTree) => {
     prevStateRef.current?.dataProvider.dispose();
 
     const { modelSource, dataProvider } = reloadedTree;
-    const nodeLoader = new PagedTreeNodeLoader(dataProvider, modelSource, dataProvider.pagingSize!);
+    const pagedLoader = new PagedTreeNodeLoader(dataProvider, modelSource, dataProvider.pagingSize!);
+    const nodeLoader = new ReportingTreeNodeLoader(pagedLoader, () => onNodeLoadedRef.current);
     setState({ dataProvider, nodeLoader });
   }, []);
 
