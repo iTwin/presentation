@@ -37,6 +37,7 @@ export function createDefaultValueFormatter(): IPrimitiveValueFormatter {
         return result;
       }
     }
+    // eslint-disable-next-line @typescript-eslint/no-base-to-string
     return value.value.toString();
   };
 }

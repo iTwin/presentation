@@ -21,7 +21,7 @@
     "@itwin/core-quantity": "^4.4.0",
     "@itwin/ecschema-metadata": "^4.4.0",
     "@itwin/ecschema-rpcinterface-common": "^4.4.0",
-    "@itwin/eslint-plugin": "4.0.0-dev.48",
+    "@itwin/eslint-plugin": "^4.0.0",
     "@itwin/presentation-common": "^4.4.0",
     "eslint": "^8.56.0",
     "rimraf": "^5.0.5",

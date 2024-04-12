@@ -21,7 +21,7 @@
     "@itwin/ecschema-metadata": "^4.4.0",
     "@itwin/ecschema-rpcinterface-common": "^4.4.0",
     "@itwin/ecschema-rpcinterface-impl": "^4.4.0",
-    "@itwin/eslint-plugin": "4.0.0-dev.48",
+    "@itwin/eslint-plugin": "^4.0.0",
     "@itwin/express-server": "^4.4.0",
     "@itwin/presentation-backend": "^4.4.0",
     "@itwin/presentation-common": "^4.4.0",
