@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "test": "cross-env NODE_OPTIONS=\"--enable-source-maps\" mocha --config ./.mocharc.json ./lib/*test.js",
+    "test": "mocha --enable-source-maps --config ./.mocharc.json ./lib/*test.js",
     "test:recreate": "cross-env RECREATE=true npm run test",
     "benchmark": "npm run test -- -O BENCHMARK_OUTPUT_PATH=./benchmark.json",
     "build": "tsc",

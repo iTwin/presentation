@@ -826,9 +826,6 @@ importers:
       sinon-chai:
         specifier: ^3.7.0
         version: 3.7.0(chai@4.4.1)(sinon@17.0.1)
-      source-map-support:
-        specifier: ^0.5.21
-        version: 0.5.21
       typescript:
         specifier: ~5.4.5
         version: 5.4.5
@@ -970,9 +967,6 @@ importers:
       '@types/sinon-chai':
         specifier: ^3.2.12
         version: 3.2.12
-      '@types/source-map-support':
-        specifier: ^0.5.6
-        version: 0.5.6
       chai:
         specifier: ^4.4.1
         version: 4.4.1
@@ -1036,9 +1030,6 @@ importers:
       sinon-chai:
         specifier: ^3.7.0
         version: 3.7.0(chai@4.4.1)(sinon@17.0.1)
-      source-map-support:
-        specifier: ^0.5.21
-        version: 0.5.21
       typescript:
         specifier: ~5.4.5
         version: 5.4.5
@@ -1127,9 +1118,6 @@ importers:
       sinon-chai:
         specifier: ^3.7.0
         version: 3.7.0(chai@4.4.1)(sinon@17.0.1)
-      source-map-support:
-        specifier: ^0.5.21
-        version: 0.5.21
       typescript:
         specifier: ~5.4.5
         version: 5.4.5
@@ -1251,9 +1239,6 @@ importers:
       sinon-chai:
         specifier: ^3.7.0
         version: 3.7.0(chai@4.4.1)(sinon@17.0.1)
-      source-map-support:
-        specifier: ^0.5.21
-        version: 0.5.21
       typescript:
         specifier: ~5.4.5
         version: 5.4.5
@@ -1282,9 +1267,6 @@ importers:
       rimraf:
         specifier: ^5.0.5
         version: 5.0.5
-      source-map-support:
-        specifier: ^0.5.21
-        version: 0.5.21
       typescript:
         specifier: ~5.4.5
         version: 5.4.5
@@ -1357,9 +1339,6 @@ importers:
       sinon-chai:
         specifier: ^3.7.0
         version: 3.7.0(chai@4.4.1)(sinon@17.0.1)
-      source-map-support:
-        specifier: ^0.5.21
-        version: 0.5.21
       typescript:
         specifier: ~5.4.5
         version: 5.4.5
@@ -1427,9 +1406,6 @@ importers:
       sinon-chai:
         specifier: ^3.7.0
         version: 3.7.0(chai@4.4.1)(sinon@17.0.1)
-      source-map-support:
-        specifier: ^0.5.21
-        version: 0.5.21
       typescript:
         specifier: ~5.4.5
         version: 5.4.5
@@ -1667,9 +1643,6 @@ importers:
       sinon-chai:
         specifier: ^3.7.0
         version: 3.7.0(chai@4.4.1)(sinon@17.0.1)
-      source-map-support:
-        specifier: ^0.5.21
-        version: 0.5.21
       typescript:
         specifier: ~5.4.5
         version: 5.4.5
@@ -5612,12 +5585,6 @@ packages:
     resolution: {integrity: sha512-0vWLNK2D5MT9dg0iOo8GlKguPAU02QjmZitPEsXRuJXU/OGIOt9vT9Fc26wtYuavLxtO45v9PGleoL9Z0k1LHg==}
     dev: false
 
-  /@types/source-map-support@0.5.6:
-    resolution: {integrity: sha512-b2nJ9YyXmkhGaa2b8VLM0kJ04xxwNyijcq12/kDoomCt43qbHBeK2SLNJ9iJmETaAj+bKUT05PQUu3Q66GvLhQ==}
-    dependencies:
-      source-map: 0.6.1
-    dev: false
-
   /@types/tough-cookie@4.0.5:
     resolution: {integrity: sha512-/Ad8+nIOV7Rl++6f1BdKxFSMgmoqEoYbHRpPcx3JEfv8VRsQe9Z4mCXeJBzxs7mbHY/XOZZuXlRNfhpVPbs6ZA==}
 
@@ -6608,9 +6575,6 @@ packages:
   /buffer-equal-constant-time@1.0.1:
     resolution: {integrity: sha512-zRpUiDwd/xk6ADqPMATG8vc9VPrkck7T07OIx0gnjmJAnHnTVXNQG3vfvWNuiZIkwu9KrKdA1iJKfsfTVxE6NA==}
     dev: false
-
-  /buffer-from@1.1.2:
-    resolution: {integrity: sha512-E+XQCRwSbaaiChtv6k6Dwgc+bx+Bs6vuKJHHl5kox/BaKbhiXzqQOwK4cO22yElGp2OCmjwVhT3HmxgyPGnJfQ==}
 
   /buffer@4.9.2:
     resolution: {integrity: sha512-xq+q3SRMOxGivLhBNaUdC64hDTQwejJ+H0T/NB1XMtTVEwNTrfFF3gAxiyW0Bu/xWEGhjVKgUcMhCrUy2+uCWg==}
@@ -12185,12 +12149,6 @@ packages:
     dependencies:
       source-map: 0.1.32
     dev: false
-
-  /source-map-support@0.5.21:
-    resolution: {integrity: sha512-uBHU3L3czsIyYXKX88fdrGovxdSCoTGDRZ6SYXtSRxLZUzHg5P/66Ht6uoUlHu9EZod+inXhKo3qQgwXUT/y1w==}
-    dependencies:
-      buffer-from: 1.1.2
-      source-map: 0.6.1
 
   /source-map@0.1.32:
     resolution: {integrity: sha512-htQyLrrRLkQ87Zfrir4/yN+vAUd6DNjVayEjTSHXu29AYQJw57I4/xEL/M6p6E/woPNJwvZt6rVlzc7gFEJccQ==}
