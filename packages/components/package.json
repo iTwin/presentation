@@ -104,7 +104,6 @@
     "@types/react-dom": "^18.2.18",
     "@types/sinon": "^17.0.3",
     "@types/sinon-chai": "^3.2.12",
-    "@types/source-map-support": "^0.5.3",
     "chai": "^4.4.1",
     "chai-as-promised": "^7.1.1",
     "chai-jest-snapshot": "^2.0.0",
