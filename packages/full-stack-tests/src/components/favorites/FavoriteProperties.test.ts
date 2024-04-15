@@ -36,7 +36,6 @@ describe("Favorite properties", () => {
   beforeEach(async () => {
     propertiesDataProvider = new PresentationPropertyDataProvider({ imodel, ruleset: DEFAULT_PROPERTY_GRID_RULESET });
     propertiesDataProvider.isNestedPropertyCategoryGroupingEnabled = false;
-    await Presentation.favoriteProperties.initializeConnection(imodel);
   });
 
   const getPropertyRecordByLabel = (props: PropertyData, label: string): PropertyRecord | undefined => {
@@ -245,7 +244,7 @@ describe("Favorite properties", () => {
       expect(propertyData.records[FAVORITES_CATEGORY_NAME][1].property.displayLabel).to.eq("area");
       expect(propertyData.records[FAVORITES_CATEGORY_NAME][2].property.displayLabel).to.eq("Country");
 
-      propertiesDataProvider.keys = new KeySet([{ className: "PCJ_TestSchema:TestClass", id: "0x65" }]); // element withtout `area` property
+      propertiesDataProvider.keys = new KeySet([{ className: "PCJ_TestSchema:TestClass", id: "0x65" }]); // element without `area` property
       propertyData = await propertiesDataProvider.getData();
 
       const visibleFavoriteFields = await Promise.all(
@@ -287,7 +286,6 @@ describe("Favorite properties", () => {
           storage: createFavoritePropertiesStorage(DefaultFavoritePropertiesStorageTypes.UserPreferencesStorage),
         },
       });
-      await Presentation.favoriteProperties.initializeConnection(imodel);
     });
 
     after(() => {
@@ -319,7 +317,6 @@ describe("Favorite properties", () => {
           storage: createFavoritePropertiesStorage(DefaultFavoritePropertiesStorageTypes.UserPreferencesStorage),
         },
       });
-      await Presentation.favoriteProperties.initializeConnection(imodel);
 
       propertiesDataProvider = new PresentationPropertyDataProvider({ imodel, ruleset: DEFAULT_PROPERTY_GRID_RULESET });
       propertiesDataProvider.isNestedPropertyCategoryGroupingEnabled = false;
