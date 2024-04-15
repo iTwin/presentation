@@ -5,6 +5,8 @@
 Start using new features available in `@itwin/presentation-frontend` `4.5` release.
 
 - Added support for `FavoritePropertiesDataFiltererProps.isFavorite` to return `Promise<boolean>` in addition to already supported `boolean`.
-- Added support for `PresentationPropertyDataProvider.isFieldFavorite` to return `Promise<boolean>` in addition to already supported `boolean`.
-- Added support for `PresentationPropertyDataProvider.sortFields` to return a `Promise<void>`.
-- Deprecated `PresentationTreeDataProviderDataSourceEntryPoints.getNodesAndCount` in favor of `getNodesIterator`. The deprecated override is still used, if supplied.
+- Added `PresentationPropertyDataProvider.isFieldFavoriteAsync` in favor of now deprecated `isFieldFavorite`.
+- Added `PresentationPropertyDataProvider.sortFieldsAsync` in favor of now deprecated `sortFields`.
+- Added `PresentationTreeDataProviderDataSourceEntryPoints.getNodesIterator` in favor of now deprecated `getNodesAndCount`.
+
+In all of the above cases the deprecated overrides are still being used, if supplied.
