@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1713165258523,
+  "lastUpdate": 1713177860734,
   "repoUrl": "https://github.com/iTwin/presentation",
   "entries": {
     "Benchmark": [
@@ -4561,6 +4561,140 @@ window.BENCHMARK_DATA = {
             "value": 155,
             "unit": "ms",
             "extra": "count: 12\nmax: 155\np95: 155\nmedian: 28.5"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "35135765+grigasp@users.noreply.github.com",
+            "name": "Grigas",
+            "username": "grigasp"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "53d51a0fd0876b6e5c223958266043447bbc92a5",
+          "message": "Update `itwinjs-core` package dependencies to `4.5.1` (#527)\n\n* Update `itwinjs-core` dependencies `4.4.0` -> `4.5.1`\r\n\r\n* Move more test utilities to the `presentation-test-utilities` package. Add source map support in `components` package.\r\n\r\n* Fix test failures\r\n\r\n* Tell `source-map-support` it's in node environment to remove XHR warnings when debugging\r\n\r\n* Use iterator APIs instead of duplicated ones, where possible\r\n\r\n* Use the new `FavoritePropertiesManager` `hasAsync` and `sortFieldsAsync` functions when available\r\n\r\n* fixup lockfile\r\n\r\n* extract-api\r\n\r\n* changeset\r\n\r\n* fix `presentation-testing` build\r\n\r\n* Fixup test app\r\n\r\n* Avoid breaking changes\r\n\r\n* Connection doesn't need to be initialized for favorite properties manager to work anymore\r\n\r\n* Revert \"Tell `source-map-support` it's in node environment to remove XHR warnings when debugging\"\r\n\r\nThis reverts commit 8d1c9d2b39cc154fa36666c2fba3d489bdd54b94.\r\n\r\n* Revert `source-map-support` addition to `presentation-components`\r\n\r\n* lint\r\n\r\n* update changeset",
+          "timestamp": "2024-04-15T13:41:27+03:00",
+          "tree_id": "a79d53ea0498a6389eb9a734eb31ca83cfcb8cf6",
+          "url": "https://github.com/iTwin/presentation/commit/53d51a0fd0876b6e5c223958266043447bbc92a5"
+        },
+        "date": 1713177859744,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "flat 50k elements list",
+            "value": 4824.18,
+            "unit": "ms"
+          },
+          {
+            "name": "flat 50k elements list (P95 of main thread blocks)",
+            "value": 70,
+            "unit": "ms",
+            "extra": "count: 6\nmax: 70\np95: 70\nmedian: 36"
+          },
+          {
+            "name": "grouping by label",
+            "value": 6875.5,
+            "unit": "ms"
+          },
+          {
+            "name": "grouping by label (P95 of main thread blocks)",
+            "value": 75,
+            "unit": "ms",
+            "extra": "count: 44\nmax: 185\np95: 75\nmedian: 46.5"
+          },
+          {
+            "name": "grouping by class",
+            "value": 6747.75,
+            "unit": "ms"
+          },
+          {
+            "name": "grouping by class (P95 of main thread blocks)",
+            "value": 119,
+            "unit": "ms",
+            "extra": "count: 48\nmax: 186\np95: 119\nmedian: 48.5"
+          },
+          {
+            "name": "grouping by property",
+            "value": 7512.98,
+            "unit": "ms"
+          },
+          {
+            "name": "grouping by property (P95 of main thread blocks)",
+            "value": 163,
+            "unit": "ms",
+            "extra": "count: 47\nmax: 366\np95: 163\nmedian: 47"
+          },
+          {
+            "name": "grouping by base class (10 classes)",
+            "value": 6232.79,
+            "unit": "ms"
+          },
+          {
+            "name": "grouping by base class (10 classes) (P95 of main thread blocks)",
+            "value": 594,
+            "unit": "ms",
+            "extra": "count: 8\nmax: 594\np95: 594\nmedian: 91"
+          },
+          {
+            "name": "grouping by multiple attributes",
+            "value": 10431.35,
+            "unit": "ms"
+          },
+          {
+            "name": "grouping by multiple attributes (P95 of main thread blocks)",
+            "value": 128,
+            "unit": "ms",
+            "extra": "count: 54\nmax: 144\np95: 128\nmedian: 47.5"
+          },
+          {
+            "name": "hide if no children required to finalize root, w/o children",
+            "value": 52735.53,
+            "unit": "ms"
+          },
+          {
+            "name": "hide if no children required to finalize root, w/o children (P95 of main thread blocks)",
+            "value": 43,
+            "unit": "ms",
+            "extra": "count: 17\nmax: 43\np95: 43\nmedian: 29"
+          },
+          {
+            "name": "hide if no children required to finalize root, w/ children",
+            "value": 150.4,
+            "unit": "ms"
+          },
+          {
+            "name": "hide if no children required to finalize root, w/ children (P95 of main thread blocks)",
+            "value": 23,
+            "unit": "ms",
+            "extra": "count: 1\nmax: 23\np95: 23\nmedian: 23"
+          },
+          {
+            "name": "models tree initial (Baytown)",
+            "value": 40.61,
+            "unit": "ms"
+          },
+          {
+            "name": "models tree initial (Baytown) (P95 of main thread blocks)",
+            "value": 0,
+            "unit": "ms",
+            "extra": "count: 0\nmax: N/A\np95: N/A\nmedian: N/A"
+          },
+          {
+            "name": "models tree full (Baytown)",
+            "value": 1674.92,
+            "unit": "ms"
+          },
+          {
+            "name": "models tree full (Baytown) (P95 of main thread blocks)",
+            "value": 197,
+            "unit": "ms",
+            "extra": "count: 13\nmax: 197\np95: 197\nmedian: 33"
           }
         ]
       }
