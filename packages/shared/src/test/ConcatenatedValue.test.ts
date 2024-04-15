@@ -39,7 +39,7 @@ describe("ConcatenatedValue", () => {
     it("serializes one part", async () => {
       expect(
         await ConcatenatedValue.serialize({ type: "Integer", value: 123 }, async (part) => {
-          return (part as TypedPrimitiveValue).value.toString();
+          return ((part as TypedPrimitiveValue).value as number).toString();
         }),
       ).to.eq("123");
     });

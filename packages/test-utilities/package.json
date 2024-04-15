@@ -20,10 +20,10 @@
     "rxjs": "^7.8.1"
   },
   "devDependencies": {
-    "@itwin/eslint-plugin": "4.0.0-dev.48",
+    "@itwin/eslint-plugin": "^4.0.0",
     "@types/node": "^18.17.7",
     "eslint": "^8.56.0",
     "rimraf": "^5.0.5",
-    "typescript": "~5.0.4"
+    "typescript": "~5.4.5"
   }
 }

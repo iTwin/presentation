@@ -27,7 +27,7 @@
     "@itwin/core-react": "^4.10.0",
     "@itwin/ecschema-metadata": "^4.5.1",
     "@itwin/ecschema-rpcinterface-common": "^4.5.1",
-    "@itwin/eslint-plugin": "4.0.0-dev.48",
+    "@itwin/eslint-plugin": "^4.0.0",
     "@itwin/imodel-components-react": "^4.10.0",
     "@itwin/itwinui-react": "^3.4.2",
     "@itwin/itwinui-icons-react": "^2.8.0",
@@ -59,7 +59,7 @@
     "reflect-metadata": "^0.1.14",
     "rxjs": "^7.8.1",
     "sass": "^1.70.0",
-    "typescript": "~5.0.4",
+    "typescript": "~5.4.5",
     "vite": "^5.1.7",
     "vite-plugin-static-copy": "^1.0.1"
   }

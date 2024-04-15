@@ -36,7 +36,7 @@
     "clean": "rimraf lib build",
     "cover": "nyc npm -s test",
     "lint": "eslint ./src/**/*.{ts,tsx}",
-    "test": "mocha --config ./.mocharc.json \"./lib/cjs/test/**/*.test.js\"",
+    "test": "mocha --enable-source-maps --config ./.mocharc.json \"./lib/cjs/test/**/*.test.js\"",
     "test:watch": "npm -s test -- --reporter min --watch-extensions ts,tsx --watch",
     "docs": "npm run -s docs:extract && npm run -s docs:reference && npm run -s docs:changelog",
     "docs:changelog": "cpx ./CHANGELOG.md ./build/docs/reference/presentation-components",
@@ -86,7 +86,7 @@
     "@itwin/core-quantity": "^4.5.1",
     "@itwin/core-react": "^4.10.0",
     "@itwin/ecschema-metadata": "^4.5.1",
-    "@itwin/eslint-plugin": "4.0.0-dev.48",
+    "@itwin/eslint-plugin": "^4.0.0",
     "@itwin/imodel-components-react": "^4.10.0",
     "@itwin/presentation-common": "^4.5.1",
     "@itwin/presentation-frontend": "^4.5.1",
@@ -125,6 +125,6 @@
     "rimraf": "^5.0.5",
     "sinon": "^17.0.1",
     "sinon-chai": "^3.7.0",
-    "typescript": "~5.0.4"
+    "typescript": "~5.4.5"
   }
 }

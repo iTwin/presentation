@@ -9,7 +9,7 @@
     "clean": "rimraf lib build",
     "cover": "npm run -s test",
     "lint": "eslint ./src/**/*.{ts,tsx}",
-    "test": "mocha --config ./.mocharc.json",
+    "test": "mocha --enable-source-maps --config ./.mocharc.json",
     "docs": "betools extract --fileExt=ts,tsx --extractFrom=./src --recursive --out=./build/docs/extract"
   },
   "dependencies": {
@@ -29,7 +29,7 @@
     "@itwin/ecschema-rpcinterface-common": "^4.5.1",
     "@itwin/ecschema-rpcinterface-impl": "^4.5.1",
     "@bentley/functional-schema": "^1.0.4",
-    "@itwin/eslint-plugin": "4.0.0-dev.48",
+    "@itwin/eslint-plugin": "^4.0.0",
     "@itwin/imodel-components-react": "^4.10.0",
     "@itwin/presentation-backend": "^4.5.1",
     "@itwin/presentation-common": "^4.5.1",
@@ -58,7 +58,6 @@
     "@types/react-dom": "^18.2.18",
     "@types/sinon": "^17.0.3",
     "@types/sinon-chai": "^3.2.12",
-    "@types/source-map-support": "^0.5.6",
     "chai": "^4.4.1",
     "chai-jest-snapshot": "^2.0.0",
     "chai-subset": "^1.6.0",
@@ -80,7 +79,6 @@
     "rimraf": "^5.0.5",
     "sinon": "^17.0.1",
     "sinon-chai": "^3.7.0",
-    "source-map-support": "^0.5.21",
-    "typescript": "~5.0.4"
+    "typescript": "~5.4.5"
   }
 }

@@ -541,6 +541,7 @@ describe("HierarchyProvider", () => {
   });
 
   describe("Labels formatting", () => {
+    // eslint-disable-next-line @typescript-eslint/no-base-to-string
     const formatter = sinon.fake(async (v: TypedPrimitiveValue) => `_${v.value.toString()}_`);
 
     afterEach(() => {

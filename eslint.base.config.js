@@ -20,6 +20,7 @@ module.exports = [
           tag: ["internal"],
         },
       ],
+      "@typescript-eslint/no-unsafe-enum-comparison": "off",
       "@typescript-eslint/restrict-template-expressions": [
         "error",
         {
