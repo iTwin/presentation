@@ -16,6 +16,7 @@ import {
   addFieldHierarchy,
   CategoryDescription,
   ContentFlags,
+  createFieldHierarchies,
   DefaultContentDisplayTypes,
   Descriptor,
   DescriptorOverrides,
@@ -32,7 +33,6 @@ import {
   StartContentProps,
   StartStructProps,
   traverseContentItem,
-  traverseFieldHierarchy,
   Value,
   ValuesMap,
 } from "@itwin/presentation-common";
@@ -218,10 +218,25 @@ export class PresentationPropertyDataProvider extends ContentDataProvider implem
     this.invalidateCache({ content: true });
   }
 
+  /* eslint-disable deprecation/deprecation */
+  /**
+   * Should the specified field be included in the favorites category.
+   * @deprecated in 5.2. Use `isFieldFavoriteAsync` instead.
+   */
+  protected isFieldFavorite(field: Field): boolean {
+    return this._shouldCreateFavoritesCategory && Presentation.favoriteProperties.has(field, this.imodel, FavoritePropertiesScope.IModel);
+  }
   /** Should the specified field be included in the favorites category. */
-  // eslint-disable-next-line @typescript-eslint/naming-convention
-  protected isFieldFavorite = (field: Field): boolean =>
-    this._shouldCreateFavoritesCategory && Presentation.favoriteProperties.has(field, this.imodel, FavoritePropertiesScope.IModel);
+  protected async isFieldFavoriteAsync(field: Field): Promise<boolean> {
+    if (this.isFieldFavorite === PresentationPropertyDataProvider.prototype.isFieldFavorite) {
+      // if the actual `isFieldFavorite` matches the one in prototype, it means it wasn't overridden,
+      // so we can just ignore it and use the new async version
+      return this._shouldCreateFavoritesCategory ? isFieldFavorite(field, this.imodel) : false;
+    }
+    // otherwise, we need to call the deprecated method to stay backwards compatible...
+    return this.isFieldFavorite(field);
+  }
+  /* eslint-enable deprecation/deprecation */
 
   /**
    * Sorts the specified list of categories by priority. May be overriden
@@ -231,18 +246,35 @@ export class PresentationPropertyDataProvider extends ContentDataProvider implem
     inPlaceSort(categories).by([{ desc: (c) => c.priority }, { asc: (c) => c.label, comparer: labelsComparer }]);
   }
 
+  /* eslint-disable deprecation/deprecation */
   /**
-   * Sorts the specified list of fields by priority. May be overriden
-   * to supply a different sorting algorithm.
+   * Sorts the specified list of fields by priority. May be overriden to supply a different sorting algorithm.
+   * @deprecated in 5.2. Use `sortFieldsAsync` instead.
    */
-  // eslint-disable-next-line @typescript-eslint/naming-convention
-  protected sortFields = (category: CategoryDescription, fields: Field[]) => {
+  protected sortFields(category: CategoryDescription, fields: Field[]): void {
+    // istanbul ignore if
     if (category.name === FAVORITES_CATEGORY_NAME) {
       Presentation.favoriteProperties.sortFields(this.imodel, fields);
     } else {
       inPlaceSort(fields).by([{ desc: (f) => f.priority }, { asc: (f) => f.label, comparer: labelsComparer }]);
     }
-  };
+  }
+  /**
+   * Sorts the specified list of fields by priority. May be overriden to supply a different sorting algorithm.
+   */
+  protected async sortFieldsAsync(category: CategoryDescription, fields: Field[]): Promise<void> {
+    if (this.sortFields === PresentationPropertyDataProvider.prototype.sortFields) {
+      // if the actual `sortFields` matches the one in prototype, it means it wasn't overridden,
+      // so we can just ignore it and use the new async version
+      category.name === FAVORITES_CATEGORY_NAME
+        ? await sortFavoriteFields(fields, this.imodel)
+        : inPlaceSort(fields).by([{ desc: (f) => f.priority }, { asc: (f) => f.label, comparer: labelsComparer }]);
+      return;
+    }
+    // otherwise, we need to call the deprecated method to stay backwards compatible...
+    this.sortFields(category, fields);
+  }
+  /* eslint-enable deprecation/deprecation */
 
   /**
    * Returns property data.
@@ -257,12 +289,13 @@ export class PresentationPropertyDataProvider extends ContentDataProvider implem
 
     const contentItem = content.contentSet[0];
     const callbacks: PropertyPaneCallbacks = {
-      isFavorite: this.isFieldFavorite,
-      isHidden: this.isFieldHidden,
-      sortCategories: this.sortCategories,
-      sortFields: this.sortFields,
+      isFavorite: async (field) => this.isFieldFavoriteAsync(field),
+      isHidden: (field) => this.isFieldHidden(field),
+      sortCategories: (categories) => this.sortCategories(categories),
+      sortFields: async (category, fields) => this.sortFieldsAsync(category, fields),
     };
-    const builder = new PropertyDataBuilder({
+    const builder = await PropertyDataBuilder.create({
+      descriptor: content.descriptor,
       // eslint-disable-next-line deprecation/deprecation
       includeWithNoValues: this.includeFieldsWithNoValues,
       // eslint-disable-next-line deprecation/deprecation
@@ -331,6 +364,23 @@ export class PresentationPropertyDataProvider extends ContentDataProvider implem
   }
 }
 
+async function isFieldFavorite(field: Field, imodel: IModelConnection) {
+  if (Presentation.favoriteProperties.hasAsync) {
+    return Presentation.favoriteProperties.hasAsync(field, imodel, FavoritePropertiesScope.IModel);
+  }
+  // eslint-disable-next-line deprecation/deprecation
+  return Presentation.favoriteProperties.has(field, imodel, FavoritePropertiesScope.IModel);
+}
+
+async function sortFavoriteFields(fields: Field[], imodel: IModelConnection) {
+  if (Presentation.favoriteProperties.sortFieldsAsync) {
+    await Presentation.favoriteProperties.sortFieldsAsync(imodel, fields);
+    return;
+  }
+  // eslint-disable-next-line deprecation/deprecation
+  Presentation.favoriteProperties.sortFields(imodel, fields);
+}
+
 const createDefaultPropertyData = (): PropertyData => ({
   label: PropertyRecord.fromString("", "label"),
   categories: [],
@@ -338,12 +388,13 @@ const createDefaultPropertyData = (): PropertyData => ({
 });
 
 interface PropertyPaneCallbacks {
-  isFavorite(field: Field): boolean;
+  isFavorite(field: Field): Promise<boolean>;
   isHidden(field: Field): boolean;
   sortCategories(categories: CategoryDescription[]): void;
-  sortFields: (category: CategoryDescription, fields: Field[]) => void;
+  sortFields: (category: CategoryDescription, fields: Field[]) => Promise<void>;
 }
 interface PropertyDataBuilderProps {
+  descriptor: Descriptor;
   includeWithNoValues: boolean;
   includeWithCompositeValues: boolean;
   callbacks: PropertyPaneCallbacks;
@@ -355,8 +406,9 @@ class PropertyDataBuilder extends InternalPropertyRecordsBuilder {
   private _categoriesCache: PropertyCategoriesCache;
   private _categorizedRecords = new Map<string, FieldHierarchyRecord[]>();
   private _favoriteFieldHierarchies: FieldHierarchy[] = [];
+  private _asyncTasks: Array<Promise<void>> = [];
 
-  constructor(props: PropertyDataBuilderProps) {
+  private constructor(props: PropertyDataBuilderProps) {
     super((item) => ({
       item,
       append: (record: FieldHierarchyRecord): void => {
@@ -373,7 +425,19 @@ class PropertyDataBuilder extends InternalPropertyRecordsBuilder {
     this._categoriesCache = new PropertyCategoriesCache(props.wantNestedCategories);
   }
 
-  public getPropertyData(): PropertyData {
+  public static async create(props: PropertyDataBuilderProps) {
+    const builder = new PropertyDataBuilder(props);
+    await builder.initFavoriteFields(props.descriptor);
+    return builder;
+  }
+
+  private async initFavoriteFields(descriptor: Descriptor) {
+    const fieldHierarchies = createFieldHierarchies(descriptor.fields);
+    this._favoriteFieldHierarchies = await this.createFavoriteFieldsList(fieldHierarchies);
+  }
+
+  public async getPropertyData() {
+    await Promise.all(this._asyncTasks);
     assert(this._result !== undefined);
     return this._result;
   }
@@ -390,9 +454,14 @@ class PropertyDataBuilder extends InternalPropertyRecordsBuilder {
       destructureRecords(recs);
       // istanbul ignore else
       if (recs.length) {
-        const sortedFields = recs.map((r) => r.fieldHierarchy.field);
-        this._props.callbacks.sortFields(this._categoriesCache.getEntry(categoryName)!, sortedFields);
-        categorizedRecords[categoryName] = sortedFields.map((field) => recs.find((r) => r.fieldHierarchy.field === field)!.record);
+        // note: will await on all async tasks before returning the result
+        this._asyncTasks.push(
+          (async () => {
+            const sortedFields = recs.map((r) => r.fieldHierarchy.field);
+            await this._props.callbacks.sortFields(this._categoriesCache.getEntry(categoryName)!, sortedFields);
+            categorizedRecords[categoryName] = sortedFields.map((field) => recs.find((r) => r.fieldHierarchy.field === field)!.record);
+          })(),
+        );
       }
     });
     assert(IPropertiesAppender.isRoot(this.currentPropertiesAppender));
@@ -511,23 +580,23 @@ class PropertyDataBuilder extends InternalPropertyRecordsBuilder {
       childFields: hierarchy.childFields.map((c) => this.createFavoriteFieldsHierarchy(c)),
     };
   }
-  private createFavoriteFieldsList(fieldHierarchies: FieldHierarchy[]): FieldHierarchy[] {
+  private async createFavoriteFieldsList(fieldHierarchies: FieldHierarchy[]): Promise<FieldHierarchy[]> {
     const favorites: FieldHierarchy[] = [];
-    fieldHierarchies.forEach((fh) =>
-      traverseFieldHierarchy(fh, (hierarchy) => {
-        if (!this._props.callbacks.isFavorite(hierarchy.field)) {
-          return true;
-        }
-
-        addFieldHierarchy(favorites, this.createFavoriteFieldsHierarchy(hierarchy));
-        return false;
-      }),
+    await Promise.all(
+      fieldHierarchies.map(async (fh) =>
+        traverseFieldHierarchy(fh, async (hierarchy) => {
+          if (!(await this._props.callbacks.isFavorite(hierarchy.field))) {
+            return true;
+          }
+          addFieldHierarchy(favorites, this.createFavoriteFieldsHierarchy(hierarchy));
+          return false;
+        }),
+      ),
     );
     return favorites;
   }
   public override processFieldHierarchies(props: ProcessFieldHierarchiesProps): void {
     super.processFieldHierarchies(props);
-    this._favoriteFieldHierarchies = this.createFavoriteFieldsList(props.hierarchies);
     props.hierarchies.push(...this._favoriteFieldHierarchies);
   }
 
@@ -556,15 +625,15 @@ class PropertyDataBuilder extends InternalPropertyRecordsBuilder {
   }
 
   private shouldSkipField(field: Field, isValueEmpty: () => boolean): boolean {
-    const isFieldFavorite = this._favoriteFieldHierarchies.find((h) => h.field.name === field.name) !== undefined;
+    const isFavorite = this._favoriteFieldHierarchies.find((h) => h.field.name === field.name) !== undefined;
 
     // skip values of hidden fields
-    if (!isFieldFavorite && this._props.callbacks.isHidden(field)) {
+    if (!isFavorite && this._props.callbacks.isHidden(field)) {
       return true;
     }
 
     // skip empty values
-    if (!isFieldFavorite && !this._props.includeWithNoValues && isValueEmpty()) {
+    if (!isFavorite && !this._props.includeWithNoValues && isValueEmpty()) {
       return true;
     }
 
@@ -797,5 +866,11 @@ function destructureRecords(records: FieldHierarchyRecord[]) {
     shouldDestructureArrayField(records[0].fieldHierarchy.field)
   ) {
     records[0].record.property.hideCompositePropertyLabel = true;
+  }
+}
+
+async function traverseFieldHierarchy(hierarchy: FieldHierarchy, cb: (h: FieldHierarchy) => Promise<boolean>) {
+  if (await cb(hierarchy)) {
+    await Promise.all(hierarchy.childFields.map(async (childHierarchy) => traverseFieldHierarchy(childHierarchy, cb)));
   }
 }

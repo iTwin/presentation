@@ -4,13 +4,14 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { expect } from "chai";
+import { collect, createAsyncIterator } from "presentation-test-utilities";
 import sinon from "sinon";
 import { ConcatenatedValue } from "@itwin/presentation-shared";
 import { ParsedHierarchyNode, ParsedInstanceHierarchyNode } from "../../hierarchies/HierarchyNode";
 import { defaultNodesParser, RowDef, TreeQueryResultsReader } from "../../hierarchies/internal/TreeNodesReader";
 import { ILimitingECSqlQueryExecutor } from "../../hierarchies/LimitingECSqlQueryExecutor";
 import { NodeSelectClauseColumnNames } from "../../hierarchies/NodeSelectQueryFactory";
-import { collect, createFakeQueryReader, createTestParsedInstanceNode } from "../Utils";
+import { createTestParsedInstanceNode } from "../Utils";
 
 describe("TreeQueryResultsReader", () => {
   const parser = sinon.stub<[{ [columnName: string]: any }], ParsedInstanceHierarchyNode>();
@@ -32,7 +33,7 @@ describe("TreeQueryResultsReader", () => {
         children: false,
       }),
     );
-    executor.createQueryReader.returns(createFakeQueryReader(ids.map((id) => ({ id }))));
+    executor.createQueryReader.returns(createAsyncIterator(ids.map((id) => ({ id }))));
     ids.forEach((_, i) => parser.onCall(i).returns(nodes[i]));
 
     const reader = new TreeQueryResultsReader({ parser });
@@ -44,7 +45,7 @@ describe("TreeQueryResultsReader", () => {
   });
 
   it("passes limit override to query executor", async () => {
-    executor.createQueryReader.returns(createFakeQueryReader([]));
+    executor.createQueryReader.returns(createAsyncIterator([]));
     const reader = new TreeQueryResultsReader({ parser });
     const query = { ecsql: "QUERY" };
     await collect(reader.read(executor, query, 123));

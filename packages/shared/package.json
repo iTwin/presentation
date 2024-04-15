@@ -18,10 +18,10 @@
   "module": "lib/esm/presentation-shared.js",
   "types": "lib/cjs/presentation-shared.d.ts",
   "dependencies": {
-    "@itwin/core-bentley": "^4.4.0"
+    "@itwin/core-bentley": "^4.5.1"
   },
   "devDependencies": {
-    "@itwin/build-tools": "^4.4.0",
+    "@itwin/build-tools": "^4.5.1",
     "@itwin/eslint-plugin": "^4.0.0",
     "presentation-test-utilities": "workspace:^",
     "@types/chai": "^4.3.11",

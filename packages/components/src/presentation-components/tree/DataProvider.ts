@@ -109,7 +109,11 @@ export interface PresentationTreeDataProviderProps extends DiagnosticsProps {
 export interface PresentationTreeDataProviderDataSourceEntryPoints {
   /** @deprecated in 4.0 The entry point is not used anymore, it's usage has been replaced by [[getNodesAndCount]]. */
   getNodesCount?: (requestOptions: HierarchyRequestOptions<IModelConnection, NodeKey>) => Promise<number>;
-  getNodesAndCount: (requestOptions: Paged<HierarchyRequestOptions<IModelConnection, NodeKey>>) => Promise<{ nodes: Node[]; count: number }>;
+  /** @deprecated in 5.2 The entry point is not used anymore, it's usage has been replaced by [[getNodesIterator]]. */
+  getNodesAndCount?: (requestOptions: Paged<HierarchyRequestOptions<IModelConnection, NodeKey>>) => Promise<{ nodes: Node[]; count: number }>;
+  getNodesIterator: (
+    requestOptions: Paged<HierarchyRequestOptions<IModelConnection, NodeKey> & { maxParallelRequests?: number; batchSize?: number }>,
+  ) => Promise<{ total: number; items: AsyncIterableIterator<Node> }>;
   getFilteredNodePaths: (requestOptions: FilterByTextHierarchyRequestOptions<IModelConnection>) => Promise<NodePathElement[]>;
 }
 
@@ -138,8 +142,22 @@ export class PresentationTreeDataProvider implements IPresentationTreeDataProvid
     };
 
     this._dataSource = {
-      getNodesAndCount: async (requestOptions: Paged<HierarchyRequestOptions<IModelConnection, NodeKey>>) =>
-        Presentation.presentation.getNodesAndCount(requestOptions),
+      getNodesIterator: async (requestOptions) => {
+        // we can't just drop support for the `getNodesAndCount` override, so if it's set - need to take data from it
+        /* eslint-disable deprecation/deprecation */
+        if (props.dataSourceOverrides?.getNodesAndCount) {
+          return createNodesIteratorFromDeprecatedResponse(await props.dataSourceOverrides.getNodesAndCount(requestOptions));
+        }
+        /* eslint-enable deprecation/deprecation */
+
+        // the `PresentationManager.getNodesIterator` has only been added to @itwin/presentation-frontend in 4.5.1, and our peerDependency is
+        // set to 4.0.0, so we need to check if the method is really there
+        if (Presentation.presentation.getNodesIterator) {
+          return Presentation.presentation.getNodesIterator(requestOptions);
+        }
+        // eslint-disable-next-line deprecation/deprecation
+        return createNodesIteratorFromDeprecatedResponse(await Presentation.presentation.getNodesAndCount(requestOptions));
+      },
       getFilteredNodePaths: async (requestOptions: FilterByTextHierarchyRequestOptions<IModelConnection>) =>
         Presentation.presentation.getFilteredNodePaths(requestOptions),
       ...props.dataSourceOverrides,
@@ -252,7 +270,7 @@ export class PresentationTreeDataProvider implements IPresentationTreeDataProvid
       const parentKey = parentNode && isPresentationTreeNodeItem(parentNode) ? parentNode.key : undefined;
       const requestOptions = this.createPagedRequestOptions(parentKey, pageOptions, instanceFilter);
       return createNodesAndCountResult(
-        async () => this._dataSource.getNodesAndCount(requestOptions),
+        async () => this._dataSource.getNodesIterator(requestOptions),
         this.createBaseRequestOptions(),
         (node, parentId) => this.createTreeNodeItem(node, parentId),
         parentNode,
@@ -333,7 +351,7 @@ function getConcatenatedDistinctClassInfos(appliedFilters: PresentationInstanceF
 }
 
 async function createNodesAndCountResult(
-  resultFactory: () => Promise<{ nodes: Node[]; count: number }>,
+  resultFactory: () => Promise<{ items: AsyncIterableIterator<Node>; total: number }>,
   baseOptions: RequestOptionsWithRuleset<IModelConnection>,
   treeItemFactory: (node: Node, parentId?: string) => PresentationTreeNodeItem,
   parentNode?: TreeNodeItem,
@@ -341,12 +359,12 @@ async function createNodesAndCountResult(
 ) {
   try {
     const result = await resultFactory();
-    const { nodes, count } = result;
+    const { items, total: count } = result;
     const isParentFiltered = parentNode && isPresentationTreeNodeItem(parentNode) && parentNode.filtering?.active;
-    if (nodes.length === 0 && isParentFiltered) {
+    if (count === 0 && isParentFiltered) {
       return createStatusNodeResult(parentNode, "tree.no-filtered-children", InfoTreeNodeItemType.NoChildren);
     }
-    return { nodes: createTreeItems(nodes, baseOptions, treeItemFactory, parentNode), count };
+    return { nodes: await createTreeItems(items, baseOptions, treeItemFactory, parentNode), count };
   } catch (e) {
     if (e instanceof PresentationError) {
       switch (e.errorNumber) {
@@ -380,8 +398,8 @@ function createStatusNodeResult(parentNode: TreeNodeItem | undefined, labelKey: 
   };
 }
 
-function createTreeItems(
-  nodes: Node[],
+async function createTreeItems(
+  nodes: AsyncIterableIterator<Node>,
   baseOptions: RequestOptionsWithRuleset<IModelConnection>,
   treeItemFactory: (node: Node, parentId?: string) => PresentationTreeNodeItem,
   parentNode?: TreeNodeItem,
@@ -396,7 +414,7 @@ function createTreeItems(
       ? [...parentNode.filtering.ancestorFilters, ...(parentNode.filtering.active ? [parentNode.filtering.active] : [])]
       : [];
 
-  for (const node of nodes) {
+  for await (const node of nodes) {
     const item = treeItemFactory(node, parentNode?.id);
     if (node.supportsFiltering) {
       item.filtering = {
@@ -434,4 +452,15 @@ class MemoizationHelpers {
     }
     return true;
   }
+}
+
+function createNodesIteratorFromDeprecatedResponse({ count, nodes }: { count: number; nodes: Node[] }): { total: number; items: AsyncIterableIterator<Node> } {
+  return {
+    total: count,
+    items: (async function* () {
+      for (const node of nodes) {
+        yield node;
+      }
+    })(),
+  };
 }

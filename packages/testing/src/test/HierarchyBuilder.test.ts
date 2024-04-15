@@ -4,6 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { expect } from "chai";
+import { createAsyncIterator } from "presentation-test-utilities";
 import sinon from "sinon";
 import { TreeNodeItem } from "@itwin/components-react";
 import { BeEvent, Guid } from "@itwin/core-bentley";
@@ -19,12 +20,12 @@ async function getRootNodes() {
     hasChildren: true,
     key: { type: "", version: 0, pathFromRoot: ["root"] },
   };
-  return { nodes: [root], count: 1 };
+  return { items: createAsyncIterator([root]), total: 1 };
 }
 
 async function getChildrenNodes(opts: HierarchyRequestOptions<IModelConnection, NodeKey>) {
   if (opts.parentKey?.pathFromRoot[0] !== "root" || opts?.parentKey.pathFromRoot.length !== 1) {
-    return { nodes: [], count: 0 };
+    return { items: createAsyncIterator([]), total: 0 };
   }
 
   const child1: Node = {
@@ -35,7 +36,7 @@ async function getChildrenNodes(opts: HierarchyRequestOptions<IModelConnection, 
     label: LabelDefinition.fromLabelString("Child 2"),
     key: { type: "", version: 0, pathFromRoot: ["root", "child2"] },
   };
-  return { nodes: [child1, child2], count: 2 };
+  return { items: createAsyncIterator([child1, child2]), total: 2 };
 }
 
 describe("HierarchyBuilder", () => {
@@ -65,7 +66,7 @@ describe("HierarchyBuilder", () => {
     context("without data", () => {
       beforeEach(() => {
         sinon.stub(Presentation, "presentation").get(() => presentationManager);
-        presentationManager.getNodesAndCount.resolves({ nodes: [], count: 0 });
+        presentationManager.getNodesIterator.resolves({ items: createAsyncIterator([]), total: 0 });
       });
 
       afterEach(() => {
@@ -88,7 +89,7 @@ describe("HierarchyBuilder", () => {
     context("with data", () => {
       beforeEach(() => {
         sinon.stub(Presentation, "presentation").get(() => presentationManager);
-        presentationManager.getNodesAndCount.callsFake(async (opts) => (opts.parentKey === undefined ? getRootNodes() : getChildrenNodes(opts)));
+        presentationManager.getNodesIterator.callsFake(async (opts) => (opts.parentKey === undefined ? getRootNodes() : getChildrenNodes(opts)));
       });
 
       afterEach(() => {

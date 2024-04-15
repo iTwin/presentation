@@ -4,9 +4,9 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { expect } from "chai";
+import { collect } from "presentation-test-utilities";
 import { from, of } from "rxjs";
 import { reduceToMergeMapItem, reduceToMergeMapList } from "../../../hierarchies/internal/operators/ReduceToMergeMap";
-import { collect } from "../../Utils";
 
 describe("reduceToMergeMapItem", () => {
   it("creates different entries for items with different keys", async () => {

@@ -7,8 +7,9 @@
  */
 
 import memoize from "micro-memoize";
+import { bufferCount, from, map, mergeAll, mergeMap, reduce } from "rxjs";
 import { IModelConnection } from "@itwin/core-frontend";
-import { DEFAULT_KEYS_BATCH_SIZE, InstanceKey, LabelDefinition } from "@itwin/presentation-common";
+import { DEFAULT_KEYS_BATCH_SIZE, InstanceKey } from "@itwin/presentation-common";
 import { Presentation } from "@itwin/presentation-frontend";
 
 /**
@@ -65,18 +66,33 @@ export class PresentationLabelsProvider implements IPresentationLabelsProvider {
   }
 
   private async getLabelsInternal(keys: InstanceKey[]) {
-    const labelPromises = new Array<Promise<LabelDefinition[]>>();
-    const tempKeys = [...keys];
-
-    while (tempKeys.length) {
-      const batch = tempKeys.splice(0, DEFAULT_KEYS_BATCH_SIZE);
-      labelPromises.push(Presentation.presentation.getDisplayLabelDefinitions({ imodel: this.imodel, keys: batch }));
-    }
-
-    return (await Promise.all(labelPromises)).reduce((displayValues, labels) => {
-      displayValues.push(...labels.map((def) => def.displayValue));
-      return displayValues;
-    }, new Array<string>());
+    return new Promise<string[]>((resolve, reject) => {
+      from(keys)
+        .pipe(
+          bufferCount(DEFAULT_KEYS_BATCH_SIZE),
+          mergeMap((keysBatch, batchIndex) => {
+            if (Presentation.presentation.getDisplayLabelDefinitionsIterator) {
+              return from(Presentation.presentation.getDisplayLabelDefinitionsIterator({ imodel: this.imodel, keys: keysBatch })).pipe(
+                mergeMap((result) => result.items),
+                map((item, itemIndex) => ({ value: item.displayValue, index: batchIndex * DEFAULT_KEYS_BATCH_SIZE + itemIndex })),
+              );
+            }
+            // eslint-disable-next-line deprecation/deprecation
+            return from(Presentation.presentation.getDisplayLabelDefinitions({ imodel: this.imodel, keys: keysBatch })).pipe(
+              mergeAll(),
+              map((item, valueIndex) => ({ value: item.displayValue, index: batchIndex * DEFAULT_KEYS_BATCH_SIZE + valueIndex })),
+            );
+          }),
+          reduce((result, { value, index }) => {
+            result[index] = value;
+            return result;
+          }, new Array<string>(keys.length)),
+        )
+        .subscribe({
+          next: resolve,
+          error: reject,
+        });
+    });
   }
 
   // eslint-disable-next-line @typescript-eslint/naming-convention

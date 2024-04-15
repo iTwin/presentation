@@ -4,6 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { expect } from "chai";
+import { createAsyncIterator } from "presentation-test-utilities";
 import sinon from "sinon";
 import { PrimitiveValue } from "@itwin/appui-abstract";
 import {
@@ -61,7 +62,7 @@ describe("usePresentationNodeLoader", () => {
       onVariableChanged: onRulesetVariableChanged,
     } as RulesetVariablesManager);
 
-    presentationManager.getNodesAndCount.resolves({ count: 0, nodes: [] });
+    presentationManager.getNodesIterator.callsFake(async () => ({ total: 0, items: createAsyncIterator([]) }));
 
     sinon.stub(Presentation, "presentation").get(() => presentationManager);
     sinon.stub(IModelApp, "quantityFormatter").get(() => ({

@@ -4,13 +4,16 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { expect } from "chai";
+import { createAsyncIterator } from "presentation-test-utilities";
+import { PropsWithChildren, useState } from "react";
 import sinon from "sinon";
 import { PropertyDescription, PropertyValue, PropertyValueFormat } from "@itwin/appui-abstract";
 import { omit } from "@itwin/core-bentley";
 import { EmptyLocalization } from "@itwin/core-common";
 import { IModelApp, IModelConnection } from "@itwin/core-frontend";
 import { combineFieldNames, ContentInstancesOfSpecificClassesSpecification, ContentRule, KeySet, RelatedClassInfo, Ruleset } from "@itwin/presentation-common";
-import { Presentation } from "@itwin/presentation-frontend";
+import { Presentation, PresentationManager } from "@itwin/presentation-frontend";
+import { PortalTargetContextProvider } from "../../../presentation-components/common/PortalTargetContext";
 import { serializeUniqueValues, UniqueValue } from "../../../presentation-components/common/Utils";
 import { UniquePropertyValuesSelector } from "../../../presentation-components/properties/inputs/UniquePropertyValuesSelector";
 import { createTestECClassInfo, createTestPropertyInfo, createTestRelatedClassInfo, createTestRelationshipPath } from "../../_helpers/Common";
@@ -22,8 +25,6 @@ import {
 } from "../../_helpers/Content";
 import { createTestECInstancesNodeKey } from "../../_helpers/Hierarchy";
 import { render, waitFor } from "../../TestUtils";
-import { PropsWithChildren, useState } from "react";
-import { PortalTargetContextProvider } from "../../../presentation-components/common/PortalTargetContext";
 
 function TestComponentWithPortalTarget({ children }: PropsWithChildren) {
   const [portalTarget, setPortalTarget] = useState<HTMLElement | null>(null);
@@ -36,16 +37,25 @@ function TestComponentWithPortalTarget({ children }: PropsWithChildren) {
 }
 
 describe("UniquePropertyValuesSelector", () => {
+  let presentationManagerStub: sinon.SinonStub;
+  const getDistinctValuesIteratorStub = sinon.stub<
+    Parameters<PresentationManager["getDistinctValuesIterator"]>,
+    ReturnType<PresentationManager["getDistinctValuesIterator"]>
+  >();
+
   beforeEach(async () => {
     window.innerHeight = 1000;
     const localization = new EmptyLocalization();
     sinon.stub(IModelApp, "initialized").get(() => true);
     sinon.stub(IModelApp, "localization").get(() => localization);
-    await Presentation.initialize();
+    sinon.stub(Presentation, "localization").get(() => localization);
+    presentationManagerStub = sinon.stub(Presentation, "presentation").get(() => ({
+      getDistinctValuesIterator: getDistinctValuesIteratorStub,
+    }));
   });
 
   afterEach(async () => {
-    Presentation.terminate();
+    getDistinctValuesIteratorStub.reset();
     sinon.restore();
   });
 
@@ -84,14 +94,41 @@ describe("UniquePropertyValuesSelector", () => {
 
   const testImodel = {} as IModelConnection;
 
+  it("loads values using `getPagedDistinctValues` when `getDistinctValuesIterator` is not available", async () => {
+    presentationManagerStub.resetBehavior();
+    presentationManagerStub.get(() => ({
+      getPagedDistinctValues: async () => ({
+        total: 2,
+        items: [
+          { displayValue: "TestValue1", groupedRawValues: ["TestValue1"] },
+          { displayValue: "TestValue2", groupedRawValues: ["TestValue2"] },
+        ],
+      }),
+    }));
+
+    const { getByText, user } = render(
+      <TestComponentWithPortalTarget>
+        <UniquePropertyValuesSelector property={propertyDescription} onChange={() => {}} imodel={testImodel} descriptor={descriptor} />,
+      </TestComponentWithPortalTarget>,
+    );
+
+    // open menu
+    const selector = await waitFor(() => getByText("unique-values-property-editor.select-values"));
+    await user.click(selector);
+
+    // ensure both menu items are shown
+    await waitFor(() => getByText("TestValue1"));
+    await waitFor(() => getByText("TestValue2"));
+  });
+
   it("opens menu upwards when not enough space below", async () => {
     window.innerHeight = 0;
-    sinon.stub(Presentation.presentation, "getPagedDistinctValues").resolves({
+    getDistinctValuesIteratorStub.resolves({
       total: 2,
-      items: [
+      items: createAsyncIterator([
         { displayValue: "TestValue1", groupedRawValues: ["TestValue1"] },
         { displayValue: "TestValue2", groupedRawValues: ["TestValue2"] },
-      ],
+      ]),
     });
 
     const { getByText, user } = render(
@@ -114,12 +151,12 @@ describe("UniquePropertyValuesSelector", () => {
   it("invokes `onChange` when item from the menu is selected", async () => {
     const spy = sinon.spy();
 
-    sinon.stub(Presentation.presentation, "getPagedDistinctValues").resolves({
+    getDistinctValuesIteratorStub.resolves({
       total: 2,
-      items: [
+      items: createAsyncIterator([
         { displayValue: "TestValue1", groupedRawValues: ["TestValue1"] },
         { displayValue: "TestValue2", groupedRawValues: ["TestValue2"] },
-      ],
+      ]),
     });
 
     const { getByText, user } = render(
@@ -146,12 +183,12 @@ describe("UniquePropertyValuesSelector", () => {
   it("invokes `onChange` with multiple values when additional item is selected", async () => {
     const spy = sinon.spy();
 
-    sinon.stub(Presentation.presentation, "getPagedDistinctValues").resolves({
+    getDistinctValuesIteratorStub.resolves({
       total: 2,
-      items: [
+      items: createAsyncIterator([
         { displayValue: "TestValue1", groupedRawValues: ["TestValue1"] },
         { displayValue: "TestValue2", groupedRawValues: ["TestValue2"] },
-      ],
+      ]),
     });
 
     const initialValue = convertToPropertyValue([
@@ -189,12 +226,12 @@ describe("UniquePropertyValuesSelector", () => {
   it("invokes `onChange` when item from the menu is deselected", async () => {
     const spy = sinon.spy();
 
-    sinon.stub(Presentation.presentation, "getPagedDistinctValues").resolves({
+    getDistinctValuesIteratorStub.resolves({
       total: 2,
-      items: [
+      items: createAsyncIterator([
         { displayValue: "TestValue1", groupedRawValues: ["TestValue1"] },
         { displayValue: "TestValue2", groupedRawValues: ["TestValue2"] },
-      ],
+      ]),
     });
 
     const initialValue = convertToPropertyValue([
@@ -234,12 +271,12 @@ describe("UniquePropertyValuesSelector", () => {
   it("invokes `onChange` when selected items are cleared", async () => {
     const spy = sinon.spy();
 
-    sinon.stub(Presentation.presentation, "getPagedDistinctValues").resolves({
+    getDistinctValuesIteratorStub.resolves({
       total: 2,
-      items: [
+      items: createAsyncIterator([
         { displayValue: "TestValue1", groupedRawValues: ["TestValue1"] },
         { displayValue: "TestValue2", groupedRawValues: ["TestValue2"] },
-      ],
+      ]),
     });
 
     const initialValue = convertToPropertyValue([
@@ -277,12 +314,12 @@ describe("UniquePropertyValuesSelector", () => {
   });
 
   it("menu shows `No values` message when there is no `fieldDescriptor`", async () => {
-    sinon.stub(Presentation.presentation, "getPagedDistinctValues").resolves({
+    getDistinctValuesIteratorStub.resolves({
       total: 2,
-      items: [
+      items: createAsyncIterator([
         { displayValue: "TestValue1", groupedRawValues: ["TestValue1"] },
         { displayValue: "TestValue2", groupedRawValues: ["TestValue2"] },
-      ],
+      ]),
     });
     const description: PropertyDescription = {
       name: "",
@@ -364,9 +401,9 @@ describe("UniquePropertyValuesSelector", () => {
   });
 
   it("does not load a row with undefined values", async () => {
-    sinon.stub(Presentation.presentation, "getPagedDistinctValues").resolves({
+    getDistinctValuesIteratorStub.resolves({
       total: 1,
-      items: [{ displayValue: undefined, groupedRawValues: [undefined] }],
+      items: createAsyncIterator([{ displayValue: undefined, groupedRawValues: [undefined] }]),
     });
 
     const { queryByText, user } = render(
@@ -383,9 +420,9 @@ describe("UniquePropertyValuesSelector", () => {
   });
 
   it("does not load a row with a displayLabel but no defined groupedRawValues", async () => {
-    sinon.stub(Presentation.presentation, "getPagedDistinctValues").resolves({
+    getDistinctValuesIteratorStub.resolves({
       total: 1,
-      items: [{ displayValue: "TestValue", groupedRawValues: [undefined] }],
+      items: createAsyncIterator([{ displayValue: "TestValue", groupedRawValues: [undefined] }]),
     });
 
     const { queryByText, user } = render(
@@ -402,9 +439,9 @@ describe("UniquePropertyValuesSelector", () => {
   });
 
   it("loads row with empty string as displayValue and sets it to an 'Empty Value' string", async () => {
-    sinon.stub(Presentation.presentation, "getPagedDistinctValues").resolves({
+    getDistinctValuesIteratorStub.resolves({
       total: 1,
-      items: [{ displayValue: "", groupedRawValues: [""] }],
+      items: createAsyncIterator([{ displayValue: "", groupedRawValues: [""] }]),
     });
 
     const { queryByText, user } = render(
@@ -422,9 +459,9 @@ describe("UniquePropertyValuesSelector", () => {
   });
 
   it("loads row even if one of the groupedRawValues is undefined ", async () => {
-    sinon.stub(Presentation.presentation, "getPagedDistinctValues").resolves({
+    getDistinctValuesIteratorStub.resolves({
       total: 1,
-      items: [{ displayValue: "TestValue", groupedRawValues: [undefined, ""] }],
+      items: createAsyncIterator([{ displayValue: "TestValue", groupedRawValues: [undefined, ""] }]),
     });
 
     const { queryByText, user } = render(
@@ -443,9 +480,9 @@ describe("UniquePropertyValuesSelector", () => {
 
   describe("Date formatting", () => {
     it(`displays date in valid format when typename is 'shortDate'`, async () => {
-      sinon.stub(Presentation.presentation, "getPagedDistinctValues").resolves({
+      getDistinctValuesIteratorStub.resolves({
         total: 1,
-        items: [{ displayValue: "1410-07-15", groupedRawValues: [""] }],
+        items: createAsyncIterator([{ displayValue: "1410-07-15", groupedRawValues: [""] }]),
       });
       const datePropertyDescription = {
         name: "#propertyName",
@@ -469,9 +506,9 @@ describe("UniquePropertyValuesSelector", () => {
     });
 
     it(`displays empty value string when typename is 'dateTime' but date is set as empty string`, async () => {
-      sinon.stub(Presentation.presentation, "getPagedDistinctValues").resolves({
+      getDistinctValuesIteratorStub.resolves({
         total: 1,
-        items: [{ displayValue: "", groupedRawValues: [""] }],
+        items: createAsyncIterator([{ displayValue: "", groupedRawValues: [""] }]),
       });
       const datePropertyDescription = {
         name: "#propertyName",
@@ -495,9 +532,9 @@ describe("UniquePropertyValuesSelector", () => {
     });
 
     it(`displays date in valid format when typename is 'dateTime'`, async () => {
-      sinon.stub(Presentation.presentation, "getPagedDistinctValues").resolves({
+      getDistinctValuesIteratorStub.resolves({
         total: 1,
-        items: [{ displayValue: "1410-07-15T12:34:00Z", groupedRawValues: [""] }],
+        items: createAsyncIterator([{ displayValue: "1410-07-15T12:34:00Z", groupedRawValues: [""] }]),
       });
       const datePropertyDescription = {
         name: "#propertyName",
@@ -520,7 +557,7 @@ describe("UniquePropertyValuesSelector", () => {
     });
   });
 
-  describe("Ruleset Creation", () => {
+  describe("Ruleset creation", () => {
     const getSchemaAndClassNamesFromRuleset = (ruleset: Ruleset) => {
       expect(ruleset.rules.length).to.be.equal(1);
       const contentRule = ruleset.rules[0] as ContentRule;
@@ -534,7 +571,7 @@ describe("UniquePropertyValuesSelector", () => {
       return omit(specification.classes, ["arePolymorphic"]);
     };
 
-    it("calls 'getPagedDistinctValues' with a ruleset that is supplied by the descriptor", async () => {
+    it("calls 'getDistinctValuesIterator' with ruleset that is supplied by the descriptor", async () => {
       const testProperty = {
         name: "#testField",
         displayLabel: "propertiesField",
@@ -545,8 +582,6 @@ describe("UniquePropertyValuesSelector", () => {
         fields: [createTestPropertiesContentField({ name: "testField", properties: [] })],
         ruleset: { id: "TestRuleset", rules: [] },
       });
-
-      const spy = sinon.spy(Presentation.presentation, "getPagedDistinctValues");
 
       const { queryByText, user } = render(
         <UniquePropertyValuesSelector
@@ -562,7 +597,7 @@ describe("UniquePropertyValuesSelector", () => {
       const selector = await waitFor(() => queryByText("unique-values-property-editor.select-values"));
       await user.click(selector!);
 
-      const getPagedDistinctValuesCallArguments = spy.firstCall.args[0];
+      const getPagedDistinctValuesCallArguments = getDistinctValuesIteratorStub.firstCall.args[0];
       const ruleset = getPagedDistinctValuesCallArguments.rulesetOrId as Ruleset;
       const expectedKeySet = new KeySet([descriptorInputKeys]);
 
@@ -570,7 +605,7 @@ describe("UniquePropertyValuesSelector", () => {
       expect(getPagedDistinctValuesCallArguments.keys.nodeKeys).to.be.deep.equal(expectedKeySet.nodeKeys);
     });
 
-    it("calls 'getPagedDistinctValues' with ruleset that is created from a 'NestedContentField'", async () => {
+    it("calls 'getDistinctValuesIterator' with ruleset that is created from a 'NestedContentField'", async () => {
       const testProperty = {
         name: `#${combineFieldNames("testField", "parentField")}`,
         displayLabel: "propertiesField",
@@ -591,8 +626,6 @@ describe("UniquePropertyValuesSelector", () => {
         fields: [parentField],
       });
 
-      const spy = sinon.spy(Presentation.presentation, "getPagedDistinctValues");
-
       const { queryByText, user } = render(
         <UniquePropertyValuesSelector property={testProperty} onChange={() => {}} imodel={testImodel} descriptor={testDescriptor} />,
       );
@@ -602,13 +635,13 @@ describe("UniquePropertyValuesSelector", () => {
       await user.click(selector!);
 
       const [expectedSchemaName, expectedClassName] = lastStepOfRelationshipPath.targetClassInfo.name.split(":");
-      expect(getSchemaAndClassNamesFromRuleset(spy.firstCall.args[0].rulesetOrId as Ruleset)).to.deep.eq({
+      expect(getSchemaAndClassNamesFromRuleset(getDistinctValuesIteratorStub.firstCall.args[0].rulesetOrId as Ruleset)).to.deep.eq({
         schemaName: expectedSchemaName,
         classNames: [expectedClassName],
       });
     });
 
-    it("calls 'getPagedDistinctValues' with ruleset that is created from a 'NestedContentField' with multiple layers of nesting", async () => {
+    it("calls 'getDistinctValuesIterator' with ruleset that is created from a 'NestedContentField' with multiple layers of nesting", async () => {
       const testProperty = {
         name: `#${combineFieldNames("testField", `${combineFieldNames("parentField", "grandParentField")}`)}`,
         displayLabel: "propertiesField",
@@ -634,8 +667,6 @@ describe("UniquePropertyValuesSelector", () => {
         fields: [grandParentField],
       });
 
-      const spy = sinon.spy(Presentation.presentation, "getPagedDistinctValues");
-
       const { queryByText, user } = render(
         <UniquePropertyValuesSelector property={testProperty} onChange={() => {}} imodel={testImodel} descriptor={testDescriptor} />,
       );
@@ -645,13 +676,13 @@ describe("UniquePropertyValuesSelector", () => {
       await user.click(selector!);
 
       const [expectedSchemaName, expectedClassName] = lastStepOfRelationshipPath.targetClassInfo.name.split(":");
-      expect(getSchemaAndClassNamesFromRuleset(spy.firstCall.args[0].rulesetOrId as Ruleset)).to.deep.eq({
+      expect(getSchemaAndClassNamesFromRuleset(getDistinctValuesIteratorStub.firstCall.args[0].rulesetOrId as Ruleset)).to.deep.eq({
         schemaName: expectedSchemaName,
         classNames: [expectedClassName],
       });
     });
 
-    it("calls 'getPagedDistinctValues' with ruleset that is created from a 'PropertiesField' with a single property", async () => {
+    it("calls 'getDistinctValuesIterator' with ruleset that is created from a 'PropertiesField' with a single property", async () => {
       const testProperty = {
         name: "#testField",
         displayLabel: "testField",
@@ -668,8 +699,6 @@ describe("UniquePropertyValuesSelector", () => {
         fields: [testField],
       });
 
-      const spy = sinon.spy(Presentation.presentation, "getPagedDistinctValues");
-
       const { queryByText, user } = render(
         <UniquePropertyValuesSelector property={testProperty} onChange={() => {}} imodel={testImodel} descriptor={testDescriptor} />,
       );
@@ -679,13 +708,13 @@ describe("UniquePropertyValuesSelector", () => {
       await user.click(selector!);
 
       const [expectedSchemaName, expectedClassName] = testClassInfo.name.split(":");
-      expect(getSchemaAndClassNamesFromRuleset(spy.firstCall.args[0].rulesetOrId as Ruleset)).to.deep.eq({
+      expect(getSchemaAndClassNamesFromRuleset(getDistinctValuesIteratorStub.firstCall.args[0].rulesetOrId as Ruleset)).to.deep.eq({
         schemaName: expectedSchemaName,
         classNames: [expectedClassName],
       });
     });
 
-    it("calls 'getPagedDistinctValues' with ruleset that is created from a 'PropertiesField' with multiple properties", async () => {
+    it("calls 'getDistinctValuesIterator' with ruleset that is created from a 'PropertiesField' with multiple properties", async () => {
       const testProperty = {
         name: "#testField",
         displayLabel: "testField",
@@ -707,8 +736,6 @@ describe("UniquePropertyValuesSelector", () => {
         fields: [testField],
       });
 
-      const spy = sinon.spy(Presentation.presentation, "getPagedDistinctValues");
-
       const { queryByText, user } = render(
         <UniquePropertyValuesSelector property={testProperty} onChange={() => {}} imodel={testImodel} descriptor={testDescriptor} />,
       );
@@ -717,7 +744,7 @@ describe("UniquePropertyValuesSelector", () => {
       const selector = await waitFor(() => queryByText("unique-values-property-editor.select-values"));
       await user.click(selector!);
 
-      expect(getSchemaAndClassNamesFromRuleset(spy.firstCall.args[0].rulesetOrId as Ruleset)).to.deep.eq([
+      expect(getSchemaAndClassNamesFromRuleset(getDistinctValuesIteratorStub.firstCall.args[0].rulesetOrId as Ruleset)).to.deep.eq([
         {
           schemaName: "testSchema1",
           classNames: ["testClass1", "testClass2"],
@@ -729,7 +756,7 @@ describe("UniquePropertyValuesSelector", () => {
       ]);
     });
 
-    it("does not create ruleset when field is a 'NestedContentField' with no parent, thus 'getPagedDistinctValues' is not called", async () => {
+    it("does not create ruleset when field is a 'NestedContentField' with no parent, thus 'getDistinctValuesIterator' is not called", async () => {
       const testProperty = {
         name: "#testField",
         displayLabel: "testField",
@@ -740,8 +767,6 @@ describe("UniquePropertyValuesSelector", () => {
         fields: [createTestNestedContentField({ name: "testField", nestedFields: [] })],
       });
 
-      const spy = sinon.spy(Presentation.presentation, "getPagedDistinctValues");
-
       const { queryByText, user } = render(
         <UniquePropertyValuesSelector property={testProperty} onChange={() => {}} imodel={testImodel} descriptor={testDescriptor} />,
       );
@@ -750,7 +775,7 @@ describe("UniquePropertyValuesSelector", () => {
       const selector = await waitFor(() => queryByText("unique-values-property-editor.select-values"));
       await user.click(selector!);
 
-      expect(spy).to.not.be.called;
+      expect(getDistinctValuesIteratorStub).to.not.be.called;
     });
   });
 });

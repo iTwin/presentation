@@ -129,7 +129,7 @@ describe("Learning snippets", () => {
       await ensureTableHasRowsWithCellValues(container, "User Label", ["My Element 1", "My Element 2"]);
 
       // simulate a network error in RPC request
-      sinon.stub(Presentation.presentation, "getContentAndSize").throws(new Error("Network error"));
+      sinon.stub(Presentation.presentation, "getContentIterator").throws(new Error("Network error"));
 
       // re-render the component, ensure we now get an error
       rerender(<MyTable imodel={imodel} keys={new KeySet([modelKey])} />);

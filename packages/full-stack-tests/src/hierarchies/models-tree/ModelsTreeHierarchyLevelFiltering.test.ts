@@ -5,6 +5,7 @@
 
 import { expect } from "chai";
 import {
+  collect,
   insertExternalSourceAspect,
   insertPhysicalElement,
   insertPhysicalModelWithPartition,
@@ -23,7 +24,6 @@ import { buildTestIModel } from "@itwin/presentation-testing";
 import { buildIModel } from "../../IModelUtils";
 import { initialize, terminate } from "../../IntegrationTests";
 import { NodeValidators, validateHierarchyLevel } from "../HierarchyValidation";
-import { collect } from "../Utils";
 import { createModelsTreeProvider, importTestSchema } from "./ModelsTreeTestUtils";
 
 describe("Hierarchies", () => {

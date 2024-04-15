@@ -5,6 +5,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { ActionMeta, MultiValue } from "react-select";
+import { from, map, mergeMap, toArray } from "rxjs";
 import { PropertyDescription, PropertyValue, PropertyValueFormat } from "@itwin/appui-abstract";
 import { IModelConnection } from "@itwin/core-frontend";
 import {
@@ -12,6 +13,7 @@ import {
   ContentSpecificationTypes,
   Descriptor,
   DisplayValue,
+  DisplayValueGroup,
   Field,
   Keys,
   KeySet,
@@ -163,19 +165,19 @@ function useUniquePropertyValuesRuleset(descriptorRuleset?: Ruleset, field?: Fie
 }
 
 function createSchemaClasses(infos: ClassInfo[]): MultiSchemaClassesSpecification | MultiSchemaClassesSpecification[] {
-  const map = new Map<string, string[]>();
+  const schemaClassMap = new Map<string, string[]>();
   infos.forEach((info) => {
     const [schemaName, className] = info.name.split(":");
-    let classNames = map.get(schemaName);
+    let classNames = schemaClassMap.get(schemaName);
     if (!classNames) {
       classNames = [];
-      map.set(schemaName, classNames);
+      schemaClassMap.set(schemaName, classNames);
     }
     if (!classNames.includes(className)) {
       classNames.push(className);
     }
   });
-  const schemaClasses = [...map.entries()].map(([schemaName, classNames]) => ({ schemaName, classNames, arePolymorphic: true }));
+  const schemaClasses = [...schemaClassMap.entries()].map(([schemaName, classNames]) => ({ schemaName, classNames, arePolymorphic: true }));
   return schemaClasses.length === 1 ? schemaClasses[0] : schemaClasses;
 }
 
@@ -206,17 +208,30 @@ function useUniquePropertyValuesLoader({ imodel, ruleset, field, descriptorInput
         return { options: [], hasMore: false };
       }
 
-      const content = await Presentation.presentation.getPagedDistinctValues({
+      const requestProps = {
         imodel,
         descriptor: {},
         fieldDescriptor: field.getFieldDescriptor(),
         rulesetOrId: ruleset,
         paging: { start: loadedOptionsCount, size: UNIQUE_PROPERTY_VALUES_BATCH_SIZE },
         keys: new KeySet(descriptorInputKeys),
+      };
+      const items = await new Promise<DisplayValueGroup[]>((resolve, reject) => {
+        (Presentation.presentation.getDistinctValuesIterator
+          ? from(Presentation.presentation.getDistinctValuesIterator(requestProps)).pipe(
+              mergeMap((result) => result.items),
+              toArray(),
+            )
+          : // eslint-disable-next-line deprecation/deprecation
+            from(Presentation.presentation.getPagedDistinctValues(requestProps)).pipe(map((result) => result.items))
+        ).subscribe({
+          next: resolve,
+          error: reject,
+        });
       });
 
       const filteredOptions: UniqueValue[] = [];
-      for (const option of content.items) {
+      for (const option of items) {
         if (option.displayValue === undefined || !DisplayValue.isPrimitive(option.displayValue)) {
           continue;
         }
@@ -228,7 +243,7 @@ function useUniquePropertyValuesLoader({ imodel, ruleset, field, descriptorInput
 
       return {
         options: filteredOptions,
-        hasMore: content.items.length === UNIQUE_PROPERTY_VALUES_BATCH_SIZE,
+        hasMore: items.length === UNIQUE_PROPERTY_VALUES_BATCH_SIZE,
       };
     },
     [imodel, ruleset, field, descriptorInputKeys],

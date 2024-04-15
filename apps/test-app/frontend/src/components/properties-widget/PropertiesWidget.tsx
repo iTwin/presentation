@@ -21,7 +21,6 @@ import {
   PropertyCategoryLabelFilterer,
   PropertyData,
   PropertyGridContextMenuArgs,
-  useAsyncValue,
   useDebouncedAsyncValue,
   VirtualizedPropertyGridWithDataProvider,
 } from "@itwin/components-react";
@@ -297,7 +296,7 @@ function PropertiesWidgetContextMenu(props: PropertiesWidgetContextMenuProps) {
       const field = await dataProvider.getFieldByPropertyDescription(record.property);
       const items: ContextMenuItemInfo[] = [];
       if (field !== undefined) {
-        if (Presentation.favoriteProperties.has(field, imodel, FAVORITES_SCOPE)) {
+        if (await Presentation.favoriteProperties.hasAsync(field, imodel, FAVORITES_SCOPE)) {
           items.push({
             id: "remove-favorite",
             onSelect: async () => removeFavorite(field),
@@ -341,28 +340,32 @@ function PropertiesWidgetContextMenu(props: PropertiesWidgetContextMenuProps) {
 
 function FavoritePropertyActionButton(props: ActionButtonRendererProps & { dataProvider: PresentationPropertyDataProvider }) {
   const { property: record, dataProvider } = props;
-  const field = useAsyncValue(useMemo(async () => dataProvider.getFieldByPropertyDescription(record.property), [dataProvider, record.property]));
+  const { value: field } = useDebouncedAsyncValue(
+    useCallback(async () => dataProvider.getFieldByPropertyDescription(record.property), [dataProvider, record.property]),
+  );
+  const { value: isFieldFavorite } = useDebouncedAsyncValue(
+    useCallback(async () => field && Presentation.favoriteProperties.hasAsync(field, dataProvider.imodel, FAVORITES_SCOPE), [field, dataProvider]),
+  );
   return (
-    <div>
-      {field && (Presentation.favoriteProperties.has(field, dataProvider.imodel, FAVORITES_SCOPE) || props.isPropertyHovered) ? (
-        <FavoriteFieldActionButton field={field} imodel={dataProvider.imodel} />
-      ) : undefined}
-    </div>
+    <div>{field && (isFieldFavorite || props.isPropertyHovered) ? <FavoriteFieldActionButton field={field} imodel={dataProvider.imodel} /> : undefined}</div>
   );
 }
 
 function FavoriteFieldActionButton(props: { imodel: IModelConnection; field: Field }) {
   const { field, imodel } = props;
   const toggleFavoriteProperty = useCallback(async () => {
-    if (Presentation.favoriteProperties.has(field, imodel, FAVORITES_SCOPE)) {
+    if (await Presentation.favoriteProperties.hasAsync(field, imodel, FAVORITES_SCOPE)) {
       await Presentation.favoriteProperties.remove(field, imodel, FAVORITES_SCOPE);
     } else {
       await Presentation.favoriteProperties.add(field, imodel, FAVORITES_SCOPE);
     }
   }, [field, imodel]);
+  const { value: isFieldFavorite } = useDebouncedAsyncValue(
+    useCallback(async () => field && Presentation.favoriteProperties.hasAsync(field, props.imodel, FAVORITES_SCOPE), [field, props.imodel]),
+  );
   return (
     <div className="favorite-action-button" onClick={toggleFavoriteProperty} onKeyDown={toggleFavoriteProperty} role="button" tabIndex={0}>
-      {Presentation.favoriteProperties.has(field, imodel, FAVORITES_SCOPE) ? (
+      {isFieldFavorite ? (
         <div style={{ width: "20px", height: "20px", background: "orange" }} />
       ) : (
         <div style={{ width: "20px", height: "20px", background: "blue" }} />

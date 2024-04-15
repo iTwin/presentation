@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { expect } from "chai";
-import { ResolvablePromise } from "presentation-test-utilities";
+import { createAsyncIterator, ResolvablePromise } from "presentation-test-utilities";
 import * as sinon from "sinon";
 import { PropertyRecord } from "@itwin/appui-abstract";
 import { PageOptions } from "@itwin/components-react";
@@ -119,8 +119,8 @@ describe("TreeDataProvider", () => {
       const parentKey = createTestECInstancesNodeKeyWithId("0x3");
       const parentNode = createTestTreeNodeItem(parentKey);
 
-      presentationManager.getNodesAndCount.callsFake(async (options) =>
-        options.parentKey === parentKey ? { nodes: resultNodes, count: resultNodes.length } : { nodes: [], count: 0 },
+      presentationManager.getNodesIterator.callsFake(async (options) =>
+        options.parentKey === parentKey ? { items: createAsyncIterator(resultNodes), total: resultNodes.length } : { items: createAsyncIterator([]), total: 0 },
       );
 
       const actualResult = await provider.getNodesCount(parentNode);
@@ -130,30 +130,35 @@ describe("TreeDataProvider", () => {
     it("memoizes result", async () => {
       const parentKeys = [createTestECInstancesNodeKeyWithId("0x1"), createTestECInstancesNodeKeyWithId("0x2")];
       const parentNodes = parentKeys.map((key, i) => createTestTreeNodeItem(key, { id: `node_id_${i}` }));
-      const resultContainers = [new ResolvablePromise<{ nodes: Node[]; count: number }>(), new ResolvablePromise<{ nodes: Node[]; count: number }>()];
+      const resultContainers = [
+        new ResolvablePromise<{ items: AsyncIterableIterator<Node>; total: number }>(),
+        new ResolvablePromise<{ items: AsyncIterableIterator<Node>; total: number }>(),
+      ];
 
-      presentationManager.getNodesAndCount.callsFake(async (options) => {
+      presentationManager.getNodesIterator.callsFake(async (options) => {
         if (options.parentKey === parentKeys[0]) {
           return resultContainers[0].promise;
         }
         if (options.parentKey === parentKeys[1]) {
           return resultContainers[1].promise;
         }
-        return { nodes: [], count: 0 };
+        return { items: createAsyncIterator([]), total: 0 };
       });
 
       provider.pagingSize = 10;
       const promises = [provider.getNodesCount(parentNodes[0]), provider.getNodesCount(parentNodes[0]), provider.getNodesCount(parentNodes[1])];
-      resultContainers.forEach((c, index) => c.resolveSync({ nodes: [createTestECInstancesNode(), createTestECInstancesNode()], count: index }));
+      resultContainers.forEach((c, index) =>
+        c.resolveSync({ items: createAsyncIterator([createTestECInstancesNode(), createTestECInstancesNode()]), total: index }),
+      );
       const results = await Promise.all(promises);
       expect(results[0]).to.eq(results[1]).to.eq(0);
       expect(results[2]).to.eq(1);
 
-      expect(presentationManager.getNodesAndCount).to.be.calledTwice;
-      expect(presentationManager.getNodesAndCount).to.be.calledWith(
+      expect(presentationManager.getNodesIterator).to.be.calledTwice;
+      expect(presentationManager.getNodesIterator).to.be.calledWith(
         matchOptions(({ parentKey }) => compareKeys(parentKey as ECInstancesNodeKey, parentKeys[0])),
       );
-      expect(presentationManager.getNodesAndCount).to.be.calledWith(
+      expect(presentationManager.getNodesIterator).to.be.calledWith(
         matchOptions(({ parentKey }) => compareKeys(parentKey as ECInstancesNodeKey, parentKeys[1])),
       );
     });
@@ -162,14 +167,14 @@ describe("TreeDataProvider", () => {
       const parentKey = createTestECInstancesNodeKey();
       const parentNode = createTestTreeNodeItem(parentKey);
 
-      presentationManager.getNodesAndCount.resolves({ nodes: [createTestECInstancesNode(), createTestECInstancesNode()], count: 2 });
+      presentationManager.getNodesIterator.resolves({ items: createAsyncIterator([createTestECInstancesNode(), createTestECInstancesNode()]), total: 2 });
 
       provider.pagingSize = 10;
       await provider.getNodesCount(parentNode);
       onVariableChanged.raiseEvent("testVar");
       await provider.getNodesCount(parentNode);
 
-      expect(presentationManager.getNodesAndCount).to.be.calledTwice;
+      expect(presentationManager.getNodesIterator).to.be.calledTwice;
     });
 
     it("passes instance filter to presentation manager", async () => {
@@ -179,11 +184,11 @@ describe("TreeDataProvider", () => {
       const { filterDefinition, filteringInfo } = createInstanceFilteringInfo("prop1");
       parentNode.filtering = filteringInfo;
 
-      presentationManager.getNodesAndCount.resolves({ nodes: [createTestECInstancesNode()], count: 1 });
+      presentationManager.getNodesIterator.resolves({ items: createAsyncIterator([createTestECInstancesNode()]), total: 1 });
 
       const actualResult = await provider.getNodesCount(parentNode);
       expect(actualResult).to.eq(1);
-      expect(presentationManager.getNodesAndCount).to.be.calledWith(
+      expect(presentationManager.getNodesIterator).to.be.calledWith(
         matchOptions(({ instanceFilter }) => instanceFilter?.expression === filterDefinition?.expression),
       );
     });
@@ -195,21 +200,21 @@ describe("TreeDataProvider", () => {
       const parentNode = createTestTreeNodeItem(parentKey);
       const pageOptions: PageOptions = { start: 0, size: 5 };
 
-      presentationManager.getNodesAndCount.resolves({ nodes: [createTestECInstancesNode(), createTestECInstancesNode()], count: 2 });
+      presentationManager.getNodesIterator.resolves({ items: createAsyncIterator([createTestECInstancesNode(), createTestECInstancesNode()]), total: 2 });
 
       const actualResult = await provider.getNodes(parentNode, pageOptions);
       expect(actualResult).to.matchSnapshot();
-      expect(presentationManager.getNodesAndCount).to.be.calledWith(matchOptions(({ paging }) => paging?.start === 0 && paging.size === 5));
+      expect(presentationManager.getNodesIterator).to.be.calledWith(matchOptions(({ paging }) => paging?.start === 0 && paging.size === 5));
     });
 
     it("memoizes result", async () => {
       const parentKeys = [createTestECInstancesNodeKeyWithId("0x1"), createTestECInstancesNodeKeyWithId("0x2")];
       const parentNodes = parentKeys.map((key, i) => createTestTreeNodeItem(key, { id: `node_id_${i}` }));
-      const resultNodesFirstPageContainer0 = new ResolvablePromise<{ nodes: Node[]; count: number }>();
-      const resultNodesFirstPageContainer1 = new ResolvablePromise<{ nodes: Node[]; count: number }>();
-      const resultNodesNonFirstPageContainer = new ResolvablePromise<{ nodes: Node[]; count: number }>();
+      const resultNodesFirstPageContainer0 = new ResolvablePromise<{ items: AsyncIterableIterator<Node>; total: number }>();
+      const resultNodesFirstPageContainer1 = new ResolvablePromise<{ items: AsyncIterableIterator<Node>; total: number }>();
+      const resultNodesNonFirstPageContainer = new ResolvablePromise<{ items: AsyncIterableIterator<Node>; total: number }>();
 
-      presentationManager.getNodesAndCount.callsFake(async ({ paging, parentKey }) => {
+      presentationManager.getNodesIterator.callsFake(async ({ paging, parentKey }) => {
         if (paging === undefined && parentKey === parentKeys[0]) {
           return resultNodesFirstPageContainer0.promise;
         }
@@ -219,7 +224,7 @@ describe("TreeDataProvider", () => {
         if (paging?.start === 0 && paging.size === 1 && parentKey === parentKeys[1]) {
           return resultNodesFirstPageContainer1.promise;
         }
-        return { nodes: [], count: 0 };
+        return { items: createAsyncIterator([]), total: 0 };
       });
 
       const promises = [
@@ -232,9 +237,9 @@ describe("TreeDataProvider", () => {
         provider.getNodes(parentNodes[1], { start: 0, size: 1 }),
         provider.getNodes(parentNodes[1], { start: 0, size: 1 }),
       ];
-      resultNodesFirstPageContainer0.resolveSync({ nodes: [createTestECInstancesNode()], count: 1 });
-      resultNodesFirstPageContainer1.resolveSync({ nodes: [createTestECInstancesNode()], count: 1 });
-      resultNodesNonFirstPageContainer.resolveSync({ nodes: [createTestECInstancesNode()], count: 1 });
+      resultNodesFirstPageContainer0.resolveSync({ items: createAsyncIterator([createTestECInstancesNode()]), total: 1 });
+      resultNodesFirstPageContainer1.resolveSync({ items: createAsyncIterator([createTestECInstancesNode()]), total: 1 });
+      resultNodesNonFirstPageContainer.resolveSync({ items: createAsyncIterator([createTestECInstancesNode()]), total: 1 });
       const results = await Promise.all(promises);
 
       expect(results[0]).to.eq(results[1], "results[0] should eq results[1]");
@@ -242,31 +247,49 @@ describe("TreeDataProvider", () => {
       expect(results[4]).to.eq(results[5], "results[4] should eq results[5]");
       expect(results[6]).to.eq(results[7], "results[6] should eq results[7]");
 
-      expect(presentationManager.getNodesAndCount).to.be.calledThrice;
-      expect(presentationManager.getNodesAndCount).to.be.calledWith(
+      expect(presentationManager.getNodesIterator).to.be.calledThrice;
+      expect(presentationManager.getNodesIterator).to.be.calledWith(
         matchOptions(({ paging, parentKey }) => paging === undefined && compareKeys(parentKey as ECInstancesNodeKey, parentKeys[0])),
       );
-      expect(presentationManager.getNodesAndCount).to.be.calledWith(
+      expect(presentationManager.getNodesIterator).to.be.calledWith(
         matchOptions(({ paging, parentKey }) => paging?.start === 1 && paging.size === 0 && compareKeys(parentKey as ECInstancesNodeKey, parentKeys[0])),
       );
-      expect(presentationManager.getNodesAndCount).to.be.calledWith(
+      expect(presentationManager.getNodesIterator).to.be.calledWith(
         matchOptions(({ paging, parentKey }) => paging?.start === 0 && paging.size === 1 && compareKeys(parentKey as ECInstancesNodeKey, parentKeys[1])),
       );
     });
 
     it("uses `getNodesAndCount` data source override if supplied", async () => {
-      const override = sinon.mock().resolves({ count: 0, nodes: [] });
+      const override = sinon.mock().resolves({ count: 1, nodes: [createTestECInstancesNode()] });
       provider = new PresentationTreeDataProvider({ imodel, ruleset: rulesetId, dataSourceOverrides: { getNodesAndCount: override } });
       await provider.getNodes();
       expect(override).to.be.calledOnce;
-      expect(presentationManager.getNodesAndCount).to.not.be.called;
+      expect(presentationManager.getNodesIterator).to.not.be.called;
+    });
+
+    it("uses `getNodesIterator` data source override if supplied", async () => {
+      const override = sinon.mock().resolves({ total: 1, items: createAsyncIterator([createTestECInstancesNode()]) });
+      provider = new PresentationTreeDataProvider({ imodel, ruleset: rulesetId, dataSourceOverrides: { getNodesIterator: override } });
+      await provider.getNodes();
+      expect(override).to.be.calledOnce;
+      expect(presentationManager.getNodesIterator).to.not.be.called;
+    });
+
+    it("uses `PresentationManager.getNodesAndCount` if `getNodesIterator` is not available", async () => {
+      /* eslint-disable deprecation/deprecation */
+      Object.assign(presentationManager, { getNodesIterator: undefined });
+      presentationManager.getNodesAndCount.resolves({ count: 1, nodes: [createTestECInstancesNode()] });
+      provider = new PresentationTreeDataProvider({ imodel, ruleset: rulesetId });
+      await provider.getNodes();
+      expect(presentationManager.getNodesAndCount).to.be.calledOnce;
+      /* eslint-enable deprecation/deprecation */
     });
 
     it("logs a warning when requesting nodes and pagingSize is not the same as passed pageOptions", async () => {
       const pageOptions: PageOptions = { start: 0, size: 10 };
       const loggerSpy = sinon.spy(Logger, "logWarning");
-      const result = { nodes: [createTestECInstancesNode(), createTestECInstancesNode()], count: 2 };
-      presentationManager.getNodesAndCount.resolves(result);
+      const result = { items: createAsyncIterator([createTestECInstancesNode(), createTestECInstancesNode()]), total: 2 };
+      presentationManager.getNodesIterator.resolves(result);
 
       // Paging size is not set and pageOptions are passed
       await provider.getNodes(undefined, pageOptions);
@@ -298,19 +321,19 @@ describe("TreeDataProvider", () => {
       parentNode.filtering = filteringInfo0;
 
       const pageOptions: PageOptions = { start: 0, size: 2 };
-      presentationManager.getNodesAndCount.callsFake(async ({ instanceFilter }) => {
+      presentationManager.getNodesIterator.callsFake(async ({ instanceFilter }) => {
         if (instanceFilter?.expression === instanceFilter0?.expression) {
-          return { nodes: [createTestECInstancesNode()], count: 1 };
+          return { items: createAsyncIterator([createTestECInstancesNode()]), total: 1 };
         }
         if (instanceFilter?.expression === instanceFilter1?.expression) {
-          return { nodes: [createTestECInstancesNode(), createTestECInstancesNode()], count: 2 };
+          return { items: createAsyncIterator([createTestECInstancesNode(), createTestECInstancesNode()]), total: 2 };
         }
-        return { nodes: [], count: 0 };
+        return { items: createAsyncIterator([]), total: 0 };
       });
 
       const actualResult0 = await provider.getNodes(parentNode, pageOptions);
       expect(actualResult0).to.have.lengthOf(1);
-      expect(presentationManager.getNodesAndCount).to.be.calledWith(
+      expect(presentationManager.getNodesIterator).to.be.calledWith(
         matchOptions(({ instanceFilter }) => instanceFilter?.expression === instanceFilter0?.expression),
       );
 
@@ -320,7 +343,7 @@ describe("TreeDataProvider", () => {
       const actualResult1 = await provider.getNodes(parentNode, pageOptions);
       expect(actualResult1).to.have.lengthOf(2);
 
-      expect(presentationManager.getNodesAndCount).to.be.calledWith(
+      expect(presentationManager.getNodesIterator).to.be.calledWith(
         matchOptions(({ instanceFilter }) => instanceFilter?.expression === instanceFilter1?.expression),
       );
     });
@@ -332,12 +355,12 @@ describe("TreeDataProvider", () => {
       nodeItem.filtering = filteringInfo;
 
       const pageOptions: PageOptions = { start: 0, size: 2 };
-      presentationManager.getNodesAndCount.resolves({ nodes: [createTestECInstancesNode()], count: 1 });
+      presentationManager.getNodesIterator.resolves({ items: createAsyncIterator([createTestECInstancesNode()]), total: 1 });
 
       const actualResult = await provider.getNodes(nodeItem, pageOptions);
       expect(actualResult).to.have.lengthOf(1);
 
-      expect(presentationManager.getNodesAndCount).to.be.calledWith(
+      expect(presentationManager.getNodesIterator).to.be.calledWith(
         matchOptions(({ instanceFilter }) => instanceFilter?.expression === filterDefinition?.expression),
       );
     });
@@ -352,9 +375,9 @@ describe("TreeDataProvider", () => {
         [createTestECClassInfo({ id: classId }), createTestECClassInfo({ id: classId })],
       );
       nodeItem.filtering = filteringInfo;
-      presentationManager.getNodesAndCount.resolves({ nodes: [], count: 0 });
+      presentationManager.getNodesIterator.resolves({ items: createAsyncIterator([]), total: 0 });
       await provider.getNodes(nodeItem, { start: 0, size: 2 });
-      expect(presentationManager.getNodesAndCount).to.be.calledWithMatch({
+      expect(presentationManager.getNodesIterator).to.be.calledWithMatch({
         instanceFilter: {
           expression: `(this.filter1 = NULL AND this.filter2 = NULL) AND (this.IsOfClass(${classId}))`,
           selectClassName: "SchemaName:ClassName",
@@ -370,12 +393,12 @@ describe("TreeDataProvider", () => {
       nodeItem.filtering = filteringInfo;
 
       const pageOptions: PageOptions = { start: 0, size: 2 };
-      presentationManager.getNodesAndCount.resolves({ nodes: [createTestECInstancesNode()], count: 1 });
+      presentationManager.getNodesIterator.resolves({ items: createAsyncIterator([createTestECInstancesNode()]), total: 1 });
 
       const actualResult = await provider.getNodes(nodeItem, pageOptions);
       expect(actualResult).to.have.lengthOf(1);
 
-      expect(presentationManager.getNodesAndCount).to.be.calledWith(
+      expect(presentationManager.getNodesIterator).to.be.calledWith(
         matchOptions(({ instanceFilter }) => instanceFilter?.expression === filterDefinition?.expression),
       );
     });
@@ -398,12 +421,12 @@ describe("TreeDataProvider", () => {
       };
 
       const pageOptions: PageOptions = { start: 0, size: 2 };
-      presentationManager.getNodesAndCount.resolves({ nodes: [createTestECInstancesNode()], count: 1 });
+      presentationManager.getNodesIterator.resolves({ items: createAsyncIterator([createTestECInstancesNode()]), total: 1 });
 
       const actualResult = await provider.getNodes(nodeItem, pageOptions);
       expect(actualResult).to.have.lengthOf(1);
 
-      expect(presentationManager.getNodesAndCount).to.be.calledWith(
+      expect(presentationManager.getNodesIterator).to.be.calledWith(
         matchOptions(({ instanceFilter }) => instanceFilter?.expression === `(this.IsOfClass(0x1) OR this.IsOfClass(0x2))`),
       );
     });
@@ -415,23 +438,23 @@ describe("TreeDataProvider", () => {
       nodeItem.filtering = filteringInfo;
 
       const pageOptions: PageOptions = { start: 0, size: 2 };
-      presentationManager.getNodesAndCount.resolves({ nodes: [createTestECInstancesNode()], count: 1 });
+      presentationManager.getNodesIterator.resolves({ items: createAsyncIterator([createTestECInstancesNode()]), total: 1 });
 
       const actualResult = await provider.getNodes(nodeItem, pageOptions);
       expect(actualResult).to.have.lengthOf(1);
 
-      expect(presentationManager.getNodesAndCount).to.be.calledWith(matchOptions(({ instanceFilter }) => instanceFilter === undefined));
+      expect(presentationManager.getNodesIterator).to.be.calledWith(matchOptions(({ instanceFilter }) => instanceFilter === undefined));
     });
 
     it("passes hierarchy level size limit to presentation manager", async () => {
       const parentKey = createTestECInstancesNodeKey();
       const parentNode = createTestTreeNodeItem(parentKey);
       const limit = 999;
-      presentationManager.getNodesAndCount.resolves({ nodes: [createTestECInstancesNode()], count: 1 });
+      presentationManager.getNodesIterator.resolves({ items: createAsyncIterator([createTestECInstancesNode()]), total: 1 });
 
       provider.hierarchyLevelSizeLimit = limit;
       await provider.getNodes(parentNode);
-      expect(presentationManager.getNodesAndCount).to.be.calledWith(matchOptions(({ sizeLimit }) => sizeLimit === limit));
+      expect(presentationManager.getNodesIterator).to.be.calledWith(matchOptions(({ sizeLimit }) => sizeLimit === limit));
     });
 
     it("returns info node if filtered hierarchy level does not have children", async () => {
@@ -441,7 +464,7 @@ describe("TreeDataProvider", () => {
       parentNode.filtering = filteringInfo;
 
       const pageOptions: PageOptions = { start: 0, size: 2 };
-      presentationManager.getNodesAndCount.resolves({ nodes: [], count: 0 });
+      presentationManager.getNodesIterator.resolves({ items: createAsyncIterator([]), total: 0 });
 
       const actualResult = await provider.getNodes(parentNode, pageOptions);
       expect(actualResult).to.have.lengthOf(1);
@@ -449,7 +472,7 @@ describe("TreeDataProvider", () => {
     });
 
     it("returns info node if hierarchy level exceeds given limit", async () => {
-      presentationManager.getNodesAndCount.callsFake(async () => {
+      presentationManager.getNodesIterator.callsFake(async () => {
         throw new PresentationError(PresentationStatus.ResultSetTooLarge);
       });
 
@@ -462,7 +485,7 @@ describe("TreeDataProvider", () => {
     });
 
     it("returns info node on timeout", async () => {
-      presentationManager.getNodesAndCount.callsFake(async () => {
+      presentationManager.getNodesIterator.callsFake(async () => {
         throw new PresentationError(PresentationStatus.BackendTimeout);
       });
 
@@ -472,7 +495,7 @@ describe("TreeDataProvider", () => {
     });
 
     it("returns info node on generic error", async () => {
-      presentationManager.getNodesAndCount.callsFake(async () => {
+      presentationManager.getNodesIterator.callsFake(async () => {
         throw new Error("test");
       });
 
@@ -482,7 +505,7 @@ describe("TreeDataProvider", () => {
     });
 
     it("returns empty result on cancellation", async () => {
-      presentationManager.getNodesAndCount.callsFake(async () => {
+      presentationManager.getNodesIterator.callsFake(async () => {
         throw new PresentationError(PresentationStatus.Canceled);
       });
 
@@ -521,9 +544,9 @@ describe("TreeDataProvider", () => {
         ruleDiagnostics: { severity: "error", handler: diagnosticsHandler },
       });
 
-      presentationManager.getNodesAndCount.resolves({ nodes: [], count: 0 });
+      presentationManager.getNodesIterator.resolves({ items: createAsyncIterator([]), total: 0 });
       await provider.getNodesCount();
-      expect(presentationManager.getNodesAndCount).to.be.calledWith(
+      expect(presentationManager.getNodesIterator).to.be.calledWith(
         matchOptions(({ diagnostics }) => diagnostics?.editor === "error" && diagnostics.handler === diagnosticsHandler),
       );
     });
@@ -538,9 +561,9 @@ describe("TreeDataProvider", () => {
         devDiagnostics: { backendVersion: true, perf: true, severity: "error", handler: diagnosticsHandler },
       });
 
-      presentationManager.getNodesAndCount.resolves({ nodes: [], count: 0 });
+      presentationManager.getNodesIterator.resolves({ items: createAsyncIterator([]), total: 0 });
       await provider.getNodesCount();
-      expect(presentationManager.getNodesAndCount).to.be.calledWith(
+      expect(presentationManager.getNodesIterator).to.be.calledWith(
         matchOptions(
           ({ diagnostics }) =>
             diagnostics?.backendVersion === true && diagnostics.perf === true && diagnostics?.dev === "error" && diagnostics.handler === diagnosticsHandler,
@@ -561,7 +584,7 @@ describe("TreeDataProvider", () => {
     it("sets filtering info if nodes supports filtering", async () => {
       const nodes = [createTestECInstancesNode(), createTestECInstancesNode({ supportsFiltering: true })];
 
-      presentationManager.getNodesAndCount.resolves({ nodes, count: 0 });
+      presentationManager.getNodesIterator.resolves({ items: createAsyncIterator(nodes), total: 2 });
 
       const actualResult = await provider.getNodes();
       expect(actualResult).to.have.lengthOf(2);
@@ -572,7 +595,7 @@ describe("TreeDataProvider", () => {
     it("loads node descriptor for filtering", async () => {
       const nodes = [createTestECInstancesNode({ supportsFiltering: true })];
 
-      presentationManager.getNodesAndCount.resolves({ nodes, count: 0 });
+      presentationManager.getNodesIterator.resolves({ items: createAsyncIterator(nodes), total: 2 });
       presentationManager.getNodesDescriptor.resolves(createTestContentDescriptor({ fields: [] }));
 
       const actualResult = await provider.getNodes();
@@ -586,7 +609,7 @@ describe("TreeDataProvider", () => {
     it("throws if cannot load node descriptor for filtering", async () => {
       const nodes = [createTestECInstancesNode({ supportsFiltering: true })];
 
-      presentationManager.getNodesAndCount.resolves({ nodes, count: 0 });
+      presentationManager.getNodesIterator.resolves({ items: createAsyncIterator(nodes), total: 2 });
       presentationManager.getNodesDescriptor.resolves(undefined);
 
       const actualResult = await provider.getNodes();
@@ -606,7 +629,7 @@ describe("TreeDataProvider", () => {
       };
       const groupingNode = createTestECInstancesNode({ key: createTestECClassGroupingNodeKey(), supportsFiltering: true });
 
-      presentationManager.getNodesAndCount.resolves({ nodes: [groupingNode], count: 1 });
+      presentationManager.getNodesIterator.resolves({ items: createAsyncIterator([groupingNode]), total: 1 });
 
       const result = await provider.getNodes(parentTreeNodeItem);
       const groupingNodeItem = result[0] as PresentationTreeNodeItem;
@@ -622,7 +645,7 @@ describe("TreeDataProvider", () => {
       };
       const groupingNode = createTestECInstancesNode({ key: createTestECClassGroupingNodeKey(), supportsFiltering: true });
 
-      presentationManager.getNodesAndCount.resolves({ nodes: [groupingNode], count: 1 });
+      presentationManager.getNodesIterator.resolves({ items: createAsyncIterator([groupingNode]), total: 1 });
 
       const result = await provider.getNodes(parentTreeNodeItem);
       const groupingNodeItem = result[0] as PresentationTreeNodeItem;
@@ -638,7 +661,7 @@ describe("TreeDataProvider", () => {
         extendedData,
       };
 
-      presentationManager.getNodesAndCount.resolves({ nodes: [node], count: 1 });
+      presentationManager.getNodesIterator.resolves({ items: createAsyncIterator([node]), total: 1 });
     }
 
     it("uses ExtendedDataRule to set tree item icon", async () => {

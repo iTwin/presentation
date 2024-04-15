@@ -38,7 +38,7 @@
     "@itwin/presentation-hierarchies": "workspace:^"
   },
   "devDependencies": {
-    "@itwin/build-tools": "^4.4.0",
+    "@itwin/build-tools": "^4.5.1",
     "@itwin/eslint-plugin": "^4.0.0",
     "@itwin/presentation-hierarchies": "workspace:^",
     "cpx2": "^7.0.1",

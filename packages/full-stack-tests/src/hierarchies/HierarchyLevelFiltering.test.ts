@@ -3,11 +3,12 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
+import { collect } from "presentation-test-utilities";
 import { GroupingHierarchyNode, IHierarchyLevelDefinitionsFactory, NodeSelectQueryFactory, ParentHierarchyNode } from "@itwin/presentation-hierarchies";
 import { importSchema, withECDb } from "../IModelUtils";
 import { initialize, terminate } from "../IntegrationTests";
 import { NodeValidators, validateHierarchyLevel } from "./HierarchyValidation";
-import { collect, createMetadataProvider, createProvider } from "./Utils";
+import { createMetadataProvider, createProvider } from "./Utils";
 
 describe("Hierarchies", () => {
   describe("Hierarchy level filtering", () => {

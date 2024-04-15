@@ -4,6 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { expect } from "chai";
+import { collect } from "presentation-test-utilities";
 import { from } from "rxjs";
 import sinon from "sinon";
 import { LogLevel } from "@itwin/core-bentley";
@@ -17,7 +18,6 @@ import * as groupHiding from "../../../hierarchies/internal/operators/grouping/G
 import * as labelGrouping from "../../../hierarchies/internal/operators/grouping/LabelGrouping";
 import * as propertiesGrouping from "../../../hierarchies/internal/operators/grouping/PropertiesGrouping";
 import {
-  collect,
   createTestProcessedCustomNode,
   createTestProcessedGroupingNode,
   createTestProcessedInstanceNode,
