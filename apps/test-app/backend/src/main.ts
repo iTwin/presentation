@@ -55,7 +55,7 @@ void (async () => {
   });
   telemetry.start();
   process.on("SIGTERM", () => {
-    telemetry.shutdown().finally(() => process.exit(0));
+    void telemetry.shutdown().finally(() => process.exit(0));
   });
   // __PUBLISH_EXTRACT_END__
 
