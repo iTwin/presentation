@@ -14,12 +14,9 @@ import { Geometry } from "@itwin/core-geometry";
 import { UnitSystemKey } from "@itwin/core-quantity";
 import { ElementSeparator, Orientation } from "@itwin/core-react";
 import { ThemeProvider, ToggleSwitch } from "@itwin/itwinui-react";
-import { InstanceKey, Key, KeySet, PresentationQuery, PresentationQueryBinding, StandardNodeTypes } from "@itwin/presentation-common";
 import { SchemaMetadataContextProvider, UnifiedSelectionContextProvider } from "@itwin/presentation-components";
-import { HiliteSet, Presentation, SelectionChangeEventArgs, SelectionChangeType } from "@itwin/presentation-frontend";
-import { ClassGroupingNodeKey, GroupingHierarchyNode } from "@itwin/presentation-hierarchies";
+import { HiliteSet, Presentation, SelectionChangeEventArgs } from "@itwin/presentation-frontend";
 import { UnifiedSelectionProvider } from "@itwin/presentation-hierarchies-react";
-import { createStorage, Selectable, Selectables } from "@itwin/unified-selection";
 import { MyAppFrontend, MyAppSettings } from "../../api/MyAppFrontend";
 import { IModelSelector } from "../imodel-selector/IModelSelector";
 import { PropertiesWidget } from "../properties-widget/PropertiesWidget";
@@ -37,17 +34,10 @@ export interface State {
   persistSettings: boolean;
 }
 
-const selectionStorage = createStorage();
-
 export function App() {
   const [state, setState] = useAppState();
 
   const onIModelSelected = (imodel: IModelConnection | undefined, path?: string) => {
-    if (imodel) {
-      imodel.onClose.addOnce(() => {
-        selectionStorage.clearStorage({ iModelKey: imodel.key });
-      });
-    }
     setState((prev) => ({
       ...prev,
       imodel,
@@ -76,8 +66,6 @@ export function App() {
       persistSettings: e.target.checked,
     }));
   };
-
-  useSyncedUnifiedSelection(state.imodel);
 
   useEffect(() => {
     const cancel = new Subject<void>();
@@ -223,7 +211,7 @@ function IModelComponents(props: IModelComponentsProps) {
     >
       <SchemaMetadataContextProvider imodel={imodel} schemaContextProvider={MyAppFrontend.getSchemaContext.bind(MyAppFrontend)}>
         <UnifiedSelectionContextProvider imodel={imodel} selectionLevel={0}>
-          <UnifiedSelectionProvider storage={selectionStorage}>
+          <UnifiedSelectionProvider storage={MyAppFrontend.selectionStorage}>
             <div className="app-content-left">
               <div className="app-content-left-top">
                 <ViewportContentControl imodel={imodel} />
@@ -287,106 +275,4 @@ function useResizableElement<T extends Element>({ min, max, initial }: { min: nu
     width,
     onResize,
   };
-}
-
-// simple implementation to sync `presentation-frontend` unified selection with `@itwin/unified-selection` storage.
-// TODO: remove when `presentation-frontend` can use supplied unified selection storage.
-function useSyncedUnifiedSelection(imodel?: IModelConnection) {
-  useEffect(() => {
-    if (!imodel) {
-      return;
-    }
-
-    const selectionChangeDispose = Presentation.selection.selectionChange.addListener((args) => {
-      if (args.source === "sync" || args.imodel.key !== imodel.key) {
-        return;
-      }
-
-      switch (args.changeType) {
-        case SelectionChangeType.Add:
-          return selectionStorage.addToSelection({ source: "sync", iModelKey: imodel.key, selectables: keysToSelectable(args.keys), level: args.level });
-        case SelectionChangeType.Remove:
-          return selectionStorage.removeFromSelection({ source: "sync", iModelKey: imodel.key, selectables: keysToSelectable(args.keys), level: args.level });
-        case SelectionChangeType.Replace:
-          return selectionStorage.replaceSelection({ source: "sync", iModelKey: imodel.key, selectables: keysToSelectable(args.keys), level: args.level });
-        case SelectionChangeType.Clear:
-          return selectionStorage.clearSelection({ source: "sync", iModelKey: imodel.key, level: args.level });
-      }
-    });
-
-    const selectionStorageChangeDispose = selectionStorage.selectionChangeEvent.addListener((args) => {
-      if (args.source === "sync" || args.iModelKey !== imodel.key) {
-        return;
-      }
-
-      switch (args.changeType) {
-        case "add":
-          return Presentation.selection.addToSelection("sync", imodel, selectablesToKeys(args.selectables), args.level);
-        case "remove":
-          return Presentation.selection.removeFromSelection("sync", imodel, selectablesToKeys(args.selectables), args.level);
-        case "replace":
-          return Presentation.selection.replaceSelection("sync", imodel, selectablesToKeys(args.selectables), args.level);
-        case "clear":
-          return Presentation.selection.clearSelection("sync", imodel, args.level);
-      }
-    });
-
-    return () => {
-      selectionChangeDispose();
-      selectionStorageChangeDispose();
-    };
-  }, [imodel]);
-}
-
-function keysToSelectable(keys: Readonly<KeySet>) {
-  const selectables: Selectable[] = [];
-  keys.forEach((key) => {
-    if ("id" in key) {
-      selectables.push(key);
-    }
-  });
-  return selectables;
-}
-
-function selectablesToKeys(selectables: Selectables): Key[] {
-  const keys: Key[] = [];
-
-  Selectables.forEach(selectables, (selectable) => {
-    if (Selectable.isInstanceKey(selectable)) {
-      keys.push(selectable);
-      return;
-    }
-
-    const hierarchyNode = selectable.data as GroupingHierarchyNode;
-    keys.push({
-      version: 3,
-      type: StandardNodeTypes.ECClassGroupingNode,
-      className: (hierarchyNode.key as ClassGroupingNodeKey).className,
-      pathFromRoot: [selectable.identifier],
-      groupedInstancesCount: hierarchyNode.groupedInstanceKeys.length,
-      instanceKeysSelectQuery: createInstanceKeysSelectQuery(hierarchyNode.groupedInstanceKeys),
-    });
-  });
-
-  return keys;
-}
-
-function createInstanceKeysSelectQuery(keys: InstanceKey[]): PresentationQuery {
-  let query = "";
-  const bindings: PresentationQueryBinding[] = [];
-  new KeySet(keys).instanceKeys.forEach((idsSet, fullClassName) => {
-    const { schemaName, className } = parseFullClassName(fullClassName);
-    const ids = [...idsSet];
-    if (query.length > 0) {
-      query += ` UNION ALL `;
-    }
-    query += `SELECT ECClassId, ECInstanceId FROM [${schemaName}].[${className}] WHERE ECInstanceId IN (${ids.map(() => "?").join(",")})`;
-    ids.forEach((id) => bindings.push({ type: "Id" as const, value: id }));
-  });
-  return { query, bindings };
-}
-
-function parseFullClassName(fullClassName: string) {
-  const [schemaName, className] = fullClassName.split(/[\.:]/);
-  return { schemaName, className };
 }
