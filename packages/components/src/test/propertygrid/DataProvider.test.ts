@@ -56,8 +56,14 @@ class Provider extends PresentationPropertyDataProvider {
   public override sortCategories(categories: CategoryDescription[]) {
     return super.sortCategories(categories);
   }
+  public override async sortFieldsAsync(category: CategoryDescription, fields: Field[]) {
+    return super.sortFieldsAsync(category, fields);
+  }
   public override isFieldHidden(field: Field) {
     return super.isFieldHidden(field);
+  }
+  public override async isFieldFavoriteAsync(field: Field) {
+    return super.isFieldFavoriteAsync(field);
   }
 }
 
@@ -189,22 +195,35 @@ describe("PropertyDataProvider", () => {
     });
   });
 
-  describe("isFieldFavorite", () => {
-    it("calls `FavoritePropertiesManager.hasAsync` when it's available", () => {
-      provider = new Provider({ imodel, ruleset: rulesetId });
+  describe("isFieldFavoriteAsync", () => {
+    const field = createTestSimpleContentField();
 
-      const field = createTestSimpleContentField();
-      (provider as any).isFieldFavorite(field);
+    it("calls `FavoritePropertiesManager.hasAsync` when it's available", async () => {
+      await provider.isFieldFavoriteAsync(field);
       expect(favoritePropertiesManager.hasAsync).to.be.calledOnceWith(field, imodel, FavoritePropertiesScope.IModel);
     });
 
-    it("calls `FavoritePropertiesManager.has` when `hasAsync` is not available", () => {
+    it("calls `FavoritePropertiesManager.has` when `hasAsync` is not available", async () => {
       Object.assign(favoritePropertiesManager, { hasAsync: undefined });
-      provider = new Provider({ imodel, ruleset: rulesetId });
-      const field = createTestSimpleContentField();
-      (provider as any).isFieldFavorite(field);
+      await provider.isFieldFavoriteAsync(field);
       // eslint-disable-next-line deprecation/deprecation
       expect(favoritePropertiesManager.has).to.be.calledOnceWith(field, imodel, FavoritePropertiesScope.IModel);
+    });
+
+    it("calls deprecated `isFieldFavorite` when it's overriden by a subclass", async () => {
+      class Subclass extends Provider {
+        public override isFieldFavorite(f: Field): boolean {
+          // eslint-disable-next-line deprecation/deprecation
+          return super.isFieldFavorite(f);
+        }
+      }
+      await using(new Subclass({ imodel, ruleset: rulesetId }), async (subclassProvider) => {
+        const spy = sinon.spy(subclassProvider, "isFieldFavorite");
+        await subclassProvider.isFieldFavoriteAsync(field);
+        expect(spy).to.be.calledOnce;
+        // eslint-disable-next-line deprecation/deprecation
+        expect(favoritePropertiesManager.has).to.be.calledOnceWith(field, imodel, FavoritePropertiesScope.IModel);
+      });
     });
   });
 
@@ -221,16 +240,31 @@ describe("PropertyDataProvider", () => {
     });
   });
 
-  describe("sortFields", () => {
-    it("sorts fields by priority", () => {
+  describe("sortFieldsAsync", () => {
+    it("sorts fields by priority", async () => {
       const fields = [0, 1, 2].map(() => createTestSimpleContentField());
       fields[0].priority = 2;
       fields[1].priority = 3;
       fields[2].priority = 1;
-      (provider as any).sortFields(createTestCategoryDescription(), fields);
+      await provider.sortFieldsAsync(createTestCategoryDescription(), fields);
       expect(fields[0].priority).to.eq(3);
       expect(fields[1].priority).to.eq(2);
       expect(fields[2].priority).to.eq(1);
+    });
+
+    it("calls deprecated `sortFields` when it's overriden by a subclass", async () => {
+      class Subclass extends Provider {
+        public override sortFields(category: CategoryDescription, fields: Field[]) {
+          // eslint-disable-next-line deprecation/deprecation
+          super.sortFields(category, fields);
+        }
+      }
+      await using(new Subclass({ imodel, ruleset: rulesetId }), async (subclassProvider) => {
+        const spy = sinon.spy(subclassProvider, "sortFields");
+        const fields = [0, 1, 2].map(() => createTestSimpleContentField());
+        await subclassProvider.sortFieldsAsync(createTestCategoryDescription(), fields);
+        expect(spy).to.be.calledOnce;
+      });
     });
   });
 

@@ -499,14 +499,18 @@ export class PresentationPropertyDataProvider extends ContentDataProvider implem
     get includeFieldsWithNoValues(): boolean;
     set includeFieldsWithNoValues(value: boolean);
     protected invalidateCache(props: CacheInvalidationProps): void;
-    protected isFieldFavorite(field: Field): boolean | Promise<boolean>;
+    // @deprecated
+    protected isFieldFavorite(field: Field): boolean;
+    protected isFieldFavoriteAsync(field: Field): Promise<boolean>;
     protected isFieldHidden(field: Field): boolean;
     get isNestedPropertyCategoryGroupingEnabled(): boolean;
     set isNestedPropertyCategoryGroupingEnabled(value: boolean);
     // (undocumented)
     onDataChanged: PropertyDataChangeEvent;
     protected sortCategories(categories: CategoryDescription[]): void;
-    protected sortFields(category: CategoryDescription, fields: Field[]): void | Promise<void>;
+    // @deprecated
+    protected sortFields(category: CategoryDescription, fields: Field[]): void;
+    protected sortFieldsAsync(category: CategoryDescription, fields: Field[]): Promise<void>;
 }
 
 // @public
