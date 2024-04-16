@@ -166,3 +166,21 @@ const queryExecutor = createECSqlQueryExecutor(imodel);
 // Returns the parent element, or the element itself if it does not have a parent, for each element specified in `elementIds` argument.
 const selection = computeSelection({ queryExecutor, elementIds, scope: { id: "element", ancestorLevel: 1 } });
 ```
+
+## Viewport synchronization with unified selection
+
+The `@itwin/unified-selection` package delivers a `syncViewportWithUnifiedSelection` to enable synchronization between a viewport and a `SelectionStorage`. When called it returns a cleanup function that should be used to disable the synchronization between viewport and unified selection. For example, this function can be used inside a `useEffect` hook in a viewport component as follows:
+
+```ts
+import { createECSqlQueryExecutor, createMetadataProvider } from "@itwin/presentation-core-interop";
+useEffect(() => {
+  return syncViewportWithUnifiedSelection({
+    iModel,
+    selectionStorage,
+    cachingHiliteSetProvider,
+    queryExecutor: createECSqlQueryExecutor(iModel),
+    metadataProvider: createMetadataProvider(iModel),
+    activeScopeProvider: () => "element",
+  });
+}, [iModel]);
+```
