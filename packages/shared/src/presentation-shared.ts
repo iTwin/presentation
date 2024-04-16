@@ -9,7 +9,7 @@ import * as ECSql from "./shared/ecsql-snippets";
 export { ECSql };
 
 export { ConcatenatedValue, ConcatenatedValuePart } from "./shared/ConcatenatedValue";
-export { ECSqlBinding, ECSqlQueryDef, IECSqlQueryExecutor, ECSqlQueryReader, ECSqlQueryReaderOptions, ECSqlQueryRow } from "./shared/ECSqlCore";
+export { ECSqlBinding, ECSqlQueryDef, IECSqlQueryExecutor, ECSqlQueryReaderOptions, ECSqlQueryRow } from "./shared/ECSqlCore";
 export { IPrimitiveValueFormatter, createDefaultValueFormatter } from "./shared/Formatting";
 export {
   IInstanceLabelSelectClauseFactory,

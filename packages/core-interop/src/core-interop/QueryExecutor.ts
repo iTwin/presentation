@@ -6,7 +6,7 @@
 import { OrderedId64Iterable } from "@itwin/core-bentley";
 import { ECSqlReader, QueryBinder, QueryOptions, QueryOptionsBuilder, QueryRowFormat } from "@itwin/core-common";
 import { Point2d, Point3d } from "@itwin/core-geometry";
-import { ECSqlBinding, ECSqlQueryDef, ECSqlQueryReader, ECSqlQueryReaderOptions, ECSqlQueryRow, IECSqlQueryExecutor } from "@itwin/presentation-shared";
+import { ECSqlBinding, ECSqlQueryDef, ECSqlQueryReaderOptions, ECSqlQueryRow, IECSqlQueryExecutor } from "@itwin/presentation-shared";
 
 /**
  * Defines input for `createECSqlQueryExecutor`. Generally, this is an instance of either [IModelDb](https://www.itwinjs.org/reference/core-backend/imodels/imodeldb/)
@@ -37,7 +37,7 @@ interface ICoreECSqlReaderFactory {
  */
 export function createECSqlQueryExecutor(imodel: ICoreECSqlReaderFactory): IECSqlQueryExecutor {
   return {
-    createQueryReader(query: ECSqlQueryDef, config?: ECSqlQueryReaderOptions): ECSqlQueryReader {
+    createQueryReader(query: ECSqlQueryDef, config?: ECSqlQueryReaderOptions) {
       const { ctes, ecsql, bindings } = query;
       const opts = new QueryOptionsBuilder();
       switch (config?.rowFormat) {
@@ -56,7 +56,7 @@ export function createECSqlQueryExecutor(imodel: ICoreECSqlReaderFactory): IECSq
   };
 }
 
-class ECSqlQueryReaderImpl implements ECSqlQueryReader {
+class ECSqlQueryReaderImpl implements ReturnType<IECSqlQueryExecutor["createQueryReader"]> {
   public constructor(
     private _coreReader: ECSqlReader,
     private _format: "array" | "object",

@@ -6,7 +6,6 @@
 
 import { ConcatenatedValue } from '@itwin/presentation-shared';
 import { ECSqlQueryDef } from '@itwin/presentation-shared';
-import { ECSqlQueryReader } from '@itwin/presentation-shared';
 import { ECSqlQueryReaderOptions } from '@itwin/presentation-shared';
 import { GenericInstanceFilter } from '@itwin/core-common';
 import { GenericInstanceFilterRelatedInstanceDescription } from '@itwin/core-common';
@@ -16,7 +15,7 @@ import { GenericInstanceFilterRuleGroup } from '@itwin/core-common';
 import { GenericInstanceFilterRuleGroupOperator } from '@itwin/core-common';
 import { GenericInstanceFilterRuleOperator } from '@itwin/core-common';
 import { GenericInstanceFilterRuleValue } from '@itwin/core-common';
-import { Id64String } from '@itwin/presentation-shared';
+import { Id64String } from '@itwin/core-bentley';
 import { IECSqlQueryExecutor } from '@itwin/presentation-shared';
 import { ILogger } from '@itwin/presentation-shared';
 import { IMetadataProvider } from '@itwin/presentation-shared';
@@ -447,7 +446,7 @@ export interface IHierarchyLevelDefinitionsFactory {
 export interface ILimitingECSqlQueryExecutor {
     createQueryReader(query: ECSqlQueryDef, config?: ECSqlQueryReaderOptions & {
         limit?: number | "unbounded";
-    }): ECSqlQueryReader;
+    }): ReturnType<IECSqlQueryExecutor["createQueryReader"]>;
 }
 
 // @beta

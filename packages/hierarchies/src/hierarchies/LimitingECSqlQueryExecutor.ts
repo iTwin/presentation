@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { StopWatch } from "@itwin/core-bentley";
-import { ECSqlQueryDef, ECSqlQueryReader, ECSqlQueryReaderOptions, ECSqlQueryRow, IECSqlQueryExecutor } from "@itwin/presentation-shared";
+import { ECSqlQueryDef, ECSqlQueryReaderOptions, ECSqlQueryRow, IECSqlQueryExecutor } from "@itwin/presentation-shared";
 import { RowsLimitExceededError } from "./HierarchyErrors";
 import { LOGGING_NAMESPACE as CommonLoggingNamespace } from "./internal/Common";
 import { MainThreadBlockHandler } from "./internal/MainThreadBlockHandler";
@@ -16,10 +16,14 @@ import { getLogger } from "./Logging";
  */
 export interface ILimitingECSqlQueryExecutor {
   /**
-   * Creates an `ECSqlQueryReader` for given query, but makes sure it doesn't return more than the configured
-   * limit of rows. In case that happens, a `RowsLimitExceededError` is thrown during async iteration.
+   * Creates a query reader for given query, but makes sure it doesn't return more than the configured
+   * limit of rows.
+   * @throws `RowsLimitExceededError` when the query returns more than configured limit of rows.
    */
-  createQueryReader(query: ECSqlQueryDef, config?: ECSqlQueryReaderOptions & { limit?: number | "unbounded" }): ECSqlQueryReader;
+  createQueryReader(
+    query: ECSqlQueryDef,
+    config?: ECSqlQueryReaderOptions & { limit?: number | "unbounded" },
+  ): ReturnType<IECSqlQueryExecutor["createQueryReader"]>;
 }
 
 /**

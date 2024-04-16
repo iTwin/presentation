@@ -51,7 +51,7 @@ export interface ECSqlQueryDef {
 
   /**
    * The ECSQL query to execute.
-   * @note In case the query uses CTEs, they should be specified in the `ctes` rather than included in the query.
+   * @note In case the query uses CTEs, they should be specified in the `ctes` rather than included in the `ecsql`.
    */
   ecsql: string;
 
@@ -90,13 +90,13 @@ export interface ECSqlQueryRow {
 /**
  * Represents ECSQL query results reader.
  * @see [ECSqlReader](https://www.itwinjs.org/reference/core-common/imodels/ecsqlreader/)
- * @beta
  */
-export type ECSqlQueryReader = AsyncIterableIterator<ECSqlQueryRow>;
+type ECSqlQueryReader = AsyncIterableIterator<ECSqlQueryRow>;
 
 /**
  * An interface for something that knows how to create an ECSQL query reader.
  * @beta
+ * @see `createECSqlQueryExecutor` in `@itwin/presentation-core-interop`.
  */
 export interface IECSqlQueryExecutor {
   createQueryReader(query: ECSqlQueryDef, config?: ECSqlQueryReaderOptions): ECSqlQueryReader;

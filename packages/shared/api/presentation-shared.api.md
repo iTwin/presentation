@@ -253,9 +253,6 @@ export interface ECSqlQueryDef {
 }
 
 // @beta
-export type ECSqlQueryReader = AsyncIterableIterator<ECSqlQueryRow>;
-
-// @beta
 export interface ECSqlQueryReaderOptions {
     // (undocumented)
     rowFormat?: ECSqlQueryRowFormat;

@@ -12,7 +12,6 @@ beta;createDefaultValueFormatter(): IPrimitiveValueFormatter
 beta;EC
 beta;ECSqlBinding =
 beta;ECSqlQueryDef
-beta;ECSqlQueryReader = AsyncIterableIterator
 beta;ECSqlQueryReaderOptions
 beta;ECSqlQueryRow
 beta;getClass(metadata: IMetadataProvider, fullClassName: string): Promise
