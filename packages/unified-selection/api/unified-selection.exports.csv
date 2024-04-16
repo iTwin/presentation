@@ -18,3 +18,4 @@ beta;SelectionChangeEvent
 beta;SelectionStorage
 beta;StorageSelectionChangeEventArgs
 beta;StorageSelectionChangesListener = (args: StorageSelectionChangeEventArgs, storage: SelectionStorage) => void
+beta;syncViewportWithUnifiedSelection(props: SyncViewportWithUnifiedSelectionProps): () => void
