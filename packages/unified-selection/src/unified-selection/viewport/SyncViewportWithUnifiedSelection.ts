@@ -17,7 +17,7 @@ import { ViewportSelectionHandler } from "./ViewportSelectionHandler";
 
 /**
  * Props for `syncViewportWithUnifiedSelection`.
- * @beta
+ * @internal Not exported through barrel, but used in public API as an argument. May be supplemented with optional attributes any time.
  */
 export interface SyncViewportWithUnifiedSelectionProps {
   /** iModel to synchronize selection for. */
