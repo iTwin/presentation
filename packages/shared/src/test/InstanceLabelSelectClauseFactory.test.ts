@@ -7,18 +7,18 @@ import { expect } from "chai";
 import sinon from "sinon";
 import { createConcatenatedValueJsonSelector, createRawPropertyValueSelector } from "../shared/ecsql-snippets/ECSqlValueSelectorSnippets";
 import {
-  BisInstanceLabelSelectClauseFactory,
-  ClassBasedInstanceLabelSelectClauseFactory,
-  DefaultInstanceLabelSelectClauseFactory,
+  createBisInstanceLabelSelectClauseFactory,
+  createClassBasedInstanceLabelSelectClauseFactory,
+  createDefaultInstanceLabelSelectClauseFactory,
   IInstanceLabelSelectClauseFactory,
 } from "../shared/InstanceLabelSelectClauseFactory";
 import { trimWhitespace } from "../shared/Utils";
 import { createMetadataProviderStub } from "./MetadataProviderStub";
 
-describe("DefaultInstanceLabelSelectClauseFactory", () => {
-  let factory: DefaultInstanceLabelSelectClauseFactory;
+describe("createDefaultInstanceLabelSelectClauseFactory", () => {
+  let factory: IInstanceLabelSelectClauseFactory;
   beforeEach(() => {
-    factory = new DefaultInstanceLabelSelectClauseFactory();
+    factory = createDefaultInstanceLabelSelectClauseFactory();
   });
 
   it("returns valid clause", async () => {
@@ -47,7 +47,7 @@ describe("DefaultInstanceLabelSelectClauseFactory", () => {
   });
 });
 
-describe("ClassBasedInstanceLabelSelectClauseFactory", () => {
+describe("createClassBasedInstanceLabelSelectClauseFactory", () => {
   const defaultClauseFactory: IInstanceLabelSelectClauseFactory = {
     async createSelectClause() {
       return "default selector";
@@ -62,7 +62,7 @@ describe("ClassBasedInstanceLabelSelectClauseFactory", () => {
   });
 
   it("returns default clause when given an empty list of clauses", async () => {
-    const factory = new ClassBasedInstanceLabelSelectClauseFactory({
+    const factory = createClassBasedInstanceLabelSelectClauseFactory({
       metadataProvider,
       defaultClauseFactory,
       clauses: [],
@@ -74,7 +74,7 @@ describe("ClassBasedInstanceLabelSelectClauseFactory", () => {
   });
 
   it("returns default clause when none of given clause classes match query class", async () => {
-    const factory = new ClassBasedInstanceLabelSelectClauseFactory({
+    const factory = createClassBasedInstanceLabelSelectClauseFactory({
       metadataProvider,
       defaultClauseFactory,
       clauses: [
@@ -99,7 +99,7 @@ describe("ClassBasedInstanceLabelSelectClauseFactory", () => {
   });
 
   it("returns combination of all clauses if class name prop is not set", async () => {
-    const factory = new ClassBasedInstanceLabelSelectClauseFactory({
+    const factory = createClassBasedInstanceLabelSelectClauseFactory({
       metadataProvider,
       defaultClauseFactory,
       clauses: [
@@ -136,7 +136,7 @@ describe("ClassBasedInstanceLabelSelectClauseFactory", () => {
   });
 
   it("returns clauses for classes that derive from query class", async () => {
-    const factory = new ClassBasedInstanceLabelSelectClauseFactory({
+    const factory = createClassBasedInstanceLabelSelectClauseFactory({
       metadataProvider,
       defaultClauseFactory,
       clauses: [
@@ -172,7 +172,7 @@ describe("ClassBasedInstanceLabelSelectClauseFactory", () => {
   });
 
   it("returns clauses for base classes of query class", async () => {
-    const factory = new ClassBasedInstanceLabelSelectClauseFactory({
+    const factory = createClassBasedInstanceLabelSelectClauseFactory({
       metadataProvider,
       defaultClauseFactory,
       clauses: [
@@ -210,10 +210,10 @@ describe("ClassBasedInstanceLabelSelectClauseFactory", () => {
 
 describe("BisInstanceLabelSelectClauseFactory", () => {
   let metadataProvider: ReturnType<typeof createMetadataProviderStub>;
-  let factory: BisInstanceLabelSelectClauseFactory;
+  let factory: IInstanceLabelSelectClauseFactory;
   beforeEach(() => {
     metadataProvider = createMetadataProviderStub();
-    factory = new BisInstanceLabelSelectClauseFactory({ metadataProvider });
+    factory = createBisInstanceLabelSelectClauseFactory({ metadataProvider });
     metadataProvider.stubEntityClass({
       schemaName: "BisCore",
       className: "GeometricElement",
@@ -261,7 +261,7 @@ describe("BisInstanceLabelSelectClauseFactory", () => {
             ),
             NULL
           ),
-          ${await new DefaultInstanceLabelSelectClauseFactory().createSelectClause({ classAlias: "test" })}
+          ${await createDefaultInstanceLabelSelectClauseFactory().createSelectClause({ classAlias: "test" })}
         )
       `),
     );
@@ -301,7 +301,7 @@ describe("BisInstanceLabelSelectClauseFactory", () => {
             ),
             NULL
           ),
-          ${await new DefaultInstanceLabelSelectClauseFactory().createSelectClause({ classAlias: "test" })}
+          ${await createDefaultInstanceLabelSelectClauseFactory().createSelectClause({ classAlias: "test" })}
         )
       `),
     );
@@ -327,7 +327,7 @@ describe("BisInstanceLabelSelectClauseFactory", () => {
             ),
             NULL
           ),
-          ${await new DefaultInstanceLabelSelectClauseFactory().createSelectClause({ classAlias: "test" })}
+          ${await createDefaultInstanceLabelSelectClauseFactory().createSelectClause({ classAlias: "test" })}
         )
       `),
     );

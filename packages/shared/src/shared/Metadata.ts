@@ -17,13 +17,14 @@ export interface IMetadataProvider {
 
 /**
  * A namespace containing various [EC types](https://www.itwinjs.org/bis/ec/).
- * @beta
+ * @beta This is a container for "return-only" types used in public API.
+ * @see `IMetadataProvider`
  */
 export namespace EC {
   /**
    * Represents an ECSchema that contains classes, relationships, etc.
    * @see https://www.itwinjs.org/reference/ecschema-metadata/metadata/schema/
-   * @beta
+   * @beta This is a "return-only" type used in public API.
    */
   export interface Schema {
     name: string;
@@ -33,7 +34,7 @@ export namespace EC {
   /**
    * Represents an ECSchema item - a class, relationship, etc.
    * @see https://www.itwinjs.org/reference/ecschema-metadata/metadata/schemaitem/
-   * @beta
+   * @beta This is a "return-only" type used in public API.
    */
   export interface SchemaItem {
     schema: Schema;
@@ -45,7 +46,7 @@ export namespace EC {
   /**
    * Represents an ECClass.
    * @see https://www.itwinjs.org/reference/ecschema-metadata/metadata/ecclass/
-   * @beta
+   * @beta This is a "return-only" type used in public API.
    */
   export interface Class extends SchemaItem {
     is(className: string, schemaName: string): Promise<boolean>;
@@ -61,35 +62,35 @@ export namespace EC {
   /**
    * Represents an entity class.
    * @see https://www.itwinjs.org/reference/ecschema-metadata/metadata/entityclass/
-   * @beta
+   * @beta This is a "return-only" type used in public API.
    */
   export type EntityClass = Class;
 
   /**
    * Represents a struct class.
    * @see https://www.itwinjs.org/reference/ecschema-metadata/metadata/structclass/
-   * @beta
+   * @beta This is a "return-only" type used in public API.
    */
   export type StructClass = Class;
 
   /**
    * Represents a mixin.
    * @see https://www.itwinjs.org/reference/ecschema-metadata/metadata/mixin/
-   * @beta
+   * @beta This is a "return-only" type used in public API.
    */
   export type Mixin = Class;
 
   /**
    * Represents a kind of quantity.
    * @see https://www.itwinjs.org/reference/ecschema-metadata/metadata/kindofquantity/
-   * @beta
+   * @beta This is a "return-only" type used in public API.
    */
   export type KindOfQuantity = SchemaItem;
 
   /**
    * Represents a relationship constraint multiplicity.
    * @see https://www.itwinjs.org/reference/ecschema-metadata/metadata/relationshipmultiplicity/
-   * @beta
+   * @beta This is a "return-only" type used in public API.
    */
   export interface RelationshipConstraintMultiplicity {
     lowerLimit: number;
@@ -99,7 +100,7 @@ export namespace EC {
   /**
    * Represents a relationship constraint.
    * @see https://www.itwinjs.org/reference/ecschema-metadata/metadata/relationshipconstraint/
-   * @beta
+   * @beta This is a "return-only" type used in public API.
    */
   export interface RelationshipConstraint {
     multiplicity?: RelationshipConstraintMultiplicity;
@@ -110,7 +111,7 @@ export namespace EC {
   /**
    * Represents a relationship class.
    * @see https://www.itwinjs.org/reference/ecschema-metadata/metadata/relationshipclass/
-   * @beta
+   * @beta This is a "return-only" type used in public API.
    */
   export interface RelationshipClass extends Class {
     direction: "Forward" | "Backward";
@@ -121,7 +122,7 @@ export namespace EC {
   /**
    * Represents an enumerator.
    * @see https://www.itwinjs.org/reference/ecschema-metadata/metadata/enumerator/
-   * @beta
+   * @beta This is a "return-only" type used in public API.
    */
   export interface Enumerator<T> {
     name: string;
@@ -133,7 +134,7 @@ export namespace EC {
   /**
    * Represents an enumeration.
    * @see https://www.itwinjs.org/reference/ecschema-metadata/metadata/enumeration/
-   * @beta
+   * @beta This is a "return-only" type used in public API.
    */
   export interface Enumeration extends SchemaItem {
     enumerators: Array<Enumerator<string | number>>;
@@ -144,7 +145,7 @@ export namespace EC {
   /**
    * Represents a property.
    * @see https://www.itwinjs.org/reference/ecschema-metadata/metadata/property/
-   * @beta
+   * @beta This is a "return-only" type used in public API.
    */
   export interface Property {
     name: string;
@@ -162,7 +163,7 @@ export namespace EC {
   /**
    * Defines array property attributes.
    * @see https://www.itwinjs.org/reference/ecschema-metadata/metadata/arrayproperty/
-   * @beta
+   * @beta This is a "return-only" type used in public API.
    */
   export interface ArrayPropertyAttributes {
     minOccurs: number;
@@ -172,32 +173,32 @@ export namespace EC {
   /**
    * Defines a structs array property.
    * @see https://www.itwinjs.org/reference/ecschema-metadata/metadata/structarrayproperty/
-   * @beta
+   * @beta This is a "return-only" type used in public API.
    */
   export type StructArrayProperty = StructProperty & ArrayPropertyAttributes;
   /**
    * Defines an enumerations array property.
    * @see https://www.itwinjs.org/reference/ecschema-metadata/metadata/enumerationarrayproperty/
-   * @beta
+   * @beta This is a "return-only" type used in public API.
    */
   export type EnumerationArrayProperty = EnumerationProperty & ArrayPropertyAttributes;
   /**
    * Defines a primitives array property.
    * @see https://www.itwinjs.org/reference/ecschema-metadata/metadata/primitivearrayproperty/
-   * @beta
+   * @beta This is a "return-only" type used in public API.
    */
   export type PrimitiveArrayProperty = PrimitiveProperty & ArrayPropertyAttributes;
   /**
    * Defines an array property.
    * @see https://www.itwinjs.org/reference/ecschema-metadata/metadata/anyarrayproperty/
-   * @beta
+   * @beta This is a "return-only" type used in public API.
    */
   export type ArrayProperty = StructArrayProperty | EnumerationArrayProperty | PrimitiveArrayProperty;
 
   /**
    * Defines a struct property.
    * @see https://www.itwinjs.org/reference/ecschema-metadata/metadata/structproperty/
-   * @beta
+   * @beta This is a "return-only" type used in public API.
    */
   export interface StructProperty extends Property {
     structClass: StructClass;
@@ -206,7 +207,7 @@ export namespace EC {
   /**
    * Defines an enumeration property.
    * @see https://www.itwinjs.org/reference/ecschema-metadata/metadata/enumerationproperty/
-   * @beta
+   * @beta This is a "return-only" type used in public API.
    */
   export interface EnumerationProperty extends Property {
     enumeration: Promise<Enumeration | undefined>;
@@ -216,7 +217,7 @@ export namespace EC {
   /**
    * Defines a navigation property.
    * @see https://www.itwinjs.org/reference/ecschema-metadata/metadata/navigationproperty/
-   * @beta
+   * @beta This is a "return-only" type used in public API.
    */
   export interface NavigationProperty extends Property {
     relationshipClass: Promise<RelationshipClass>;
@@ -226,14 +227,14 @@ export namespace EC {
   /**
    * Defines a primitive property type.
    * @see https://www.itwinjs.org/reference/ecschema-metadata/metadata/primitivetype/
-   * @beta
+   * @beta This is a "return-only" type used in public API.
    */
   export type PrimitiveType = "Binary" | "Boolean" | "DateTime" | "Double" | "Integer" | "Long" | "Point2d" | "Point3d" | "String" | "IGeometry";
 
   /**
    * Defines a primitive property.
    * @see https://www.itwinjs.org/reference/ecschema-metadata/metadata/primitiveproperty/
-   * @beta
+   * @beta This is a "return-only" type used in public API.
    */
   export interface PrimitiveProperty extends Property {
     primitiveType: PrimitiveType;
@@ -243,13 +244,13 @@ export namespace EC {
 
 /**
  * An identifiers' union of all supported primitive value types.
- * @beta
+ * @internal This is an internal type used in public API.
  */
 export type PrimitiveValueType = "Id" | Exclude<EC.PrimitiveType, "Binary" | "IGeometry">;
 
 /**
  * Describes a single step through an ECRelationship from source ECClass to target ECClass.
- * @beta
+ * @internal This is an internal type used in public API.
  */
 export interface RelationshipPathStep {
   /** Full name of the source ECClass */
@@ -268,13 +269,13 @@ export interface RelationshipPathStep {
 
 /**
  * Describes a path from source ECClass to target ECClass through multiple ECRelationships.
- * @beta
+ * @internal This is an internal type used in public API.
  */
 export type RelationshipPath<TStep extends RelationshipPathStep = RelationshipPathStep> = TStep[];
 
 /**
  * Finds a class with the specified full class name using the given `IMetadataProvider`.
- * @throws
+ * @throws Error if the schema or class is not found.
  * @beta
  */
 export async function getClass(metadata: IMetadataProvider, fullClassName: string): Promise<EC.Class> {

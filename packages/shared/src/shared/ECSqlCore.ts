@@ -3,13 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { Id64String } from "./Values";
-
-/**
- * Types of values that can be bound to an ECSql query.
- * @beta
- */
-export type ECSqlBindingType = "boolean" | "double" | "id" | "idset" | "int" | "long" | "string" | "point2d" | "point3d";
+import { Id64String } from "@itwin/core-bentley";
 
 /**
  * Defines an ECSql binding consisting of a value and its type. Necessary to differentiate between numeric
@@ -48,7 +42,7 @@ export type ECSqlBinding =
     };
 
 /**
- * Defines a query with its bindings.
+ * Defines an ECSQL query and its bindings.
  * @beta
  */
 export interface ECSqlQueryDef {
@@ -57,25 +51,26 @@ export interface ECSqlQueryDef {
 
   /**
    * The ECSQL query to execute.
-   *
-   * **Note:** In case the query uses CTEs, they should be specified in the `ctes` rather than included in the query.
+   * @note In case the query uses CTEs, they should be specified in the `ctes` rather than included in the query.
    */
   ecsql: string;
 
-  /** Values to bind to the query. */
+  /**
+   * Values to bind to the query.
+   * @see https://www.itwinjs.org/learning/ecsql/#ecsql-parameters
+   */
   bindings?: ECSqlBinding[];
 }
 
 /**
  * Defines requested ECSQL result row format.
- * @see [QueryRowFormat]($core-common)
- * @beta
+ * @see [QueryRowFormat](https://www.itwinjs.org/reference/core-common/imodels/queryrowformat/)
  */
-export type ECSqlQueryRowFormat = "ECSqlPropertyNames" | "Indexes";
+type ECSqlQueryRowFormat = "ECSqlPropertyNames" | "Indexes";
 
 /**
  * Defines options for ECSQL query reader.
- * @see [QueryOptions]($core-common)
+ * @see [QueryOptions](https://www.itwinjs.org/reference/core-common/imodels/queryoptions/)
  * @beta
  */
 export interface ECSqlQueryReaderOptions {
@@ -84,7 +79,7 @@ export interface ECSqlQueryReaderOptions {
 
 /**
  * Represents a single row of an ECSQL query result.
- * @see [QueryRowProxy]($core-common)
+ * @see [QueryRowProxy](https://www.itwinjs.org/reference/core-common/imodels/queryrowproxy/)
  * @beta
  */
 export interface ECSqlQueryRow {
@@ -94,7 +89,7 @@ export interface ECSqlQueryRow {
 
 /**
  * Represents ECSQL query results reader.
- * @see [ECSqlReader]($core-common)
+ * @see [ECSqlReader](https://www.itwinjs.org/reference/core-common/imodels/ecsqlreader/)
  * @beta
  */
 export type ECSqlQueryReader = AsyncIterableIterator<ECSqlQueryRow>;
@@ -104,5 +99,5 @@ export type ECSqlQueryReader = AsyncIterableIterator<ECSqlQueryRow>;
  * @beta
  */
 export interface IECSqlQueryExecutor {
-  createQueryReader(ecsql: string, bindings?: ECSqlBinding[], config?: ECSqlQueryReaderOptions): ECSqlQueryReader;
+  createQueryReader(query: ECSqlQueryDef, config?: ECSqlQueryReaderOptions): ECSqlQueryReader;
 }

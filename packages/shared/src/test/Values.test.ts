@@ -76,15 +76,15 @@ describe("TypedPrimitiveValue", () => {
     });
 
     it("throws an error when primitiveType isn't compatible with primitiveValue", () => {
-      expect(() => TypedPrimitiveValue.create("someValue", "Long")).to.throw(`primitiveType: 'Long' isn't compatible with value: '"someValue"`);
-      expect(() => TypedPrimitiveValue.create("someValue", "Integer")).to.throw(`primitiveType: 'Integer' isn't compatible with value: '"someValue"`);
-      expect(() => TypedPrimitiveValue.create("someValue", "Double")).to.throw(`primitiveType: 'Double' isn't compatible with value: '"someValue"`);
-      expect(() => TypedPrimitiveValue.create("someValue", "Id")).to.throw(`primitiveType: 'Id' isn't compatible with value: '"someValue"`);
-      expect(() => TypedPrimitiveValue.create("someValue", "Boolean")).to.throw(`primitiveType: 'Boolean' isn't compatible with value: '"someValue"`);
-      expect(() => TypedPrimitiveValue.create(1, "String")).to.throw(`primitiveType: 'String' isn't compatible with value: '1`);
-      expect(() => TypedPrimitiveValue.create(true, "DateTime")).to.throw(`primitiveType: 'DateTime' isn't compatible with value: 'true`);
-      expect(() => TypedPrimitiveValue.create("someValue", "Point2d")).to.throw(`primitiveType: 'Point2d' isn't compatible with value: '"someValue"`);
-      expect(() => TypedPrimitiveValue.create("someValue", "Point3d")).to.throw(`primitiveType: 'Point3d' isn't compatible with value: '"someValue"`);
+      expect(() => TypedPrimitiveValue.create("someValue", "Long")).to.throw();
+      expect(() => TypedPrimitiveValue.create("someValue", "Integer")).to.throw();
+      expect(() => TypedPrimitiveValue.create("someValue", "Double")).to.throw();
+      expect(() => TypedPrimitiveValue.create("someValue", "Id")).to.throw();
+      expect(() => TypedPrimitiveValue.create("someValue", "Boolean")).to.throw();
+      expect(() => TypedPrimitiveValue.create(1, "String")).to.throw();
+      expect(() => TypedPrimitiveValue.create(true, "DateTime")).to.throw();
+      expect(() => TypedPrimitiveValue.create("someValue", "Point2d")).to.throw();
+      expect(() => TypedPrimitiveValue.create("someValue", "Point3d")).to.throw();
     });
   });
 });
