@@ -31,12 +31,11 @@ export function createLimitingECSqlQueryExecutor(baseExecutor: IECSqlQueryExecut
     async *createQueryReader(query: ECSqlQueryDef, config?: ECSqlQueryReaderOptions & { limit?: number | "unbounded" }) {
       const { limit: configLimit, ...restConfig } = config ?? {};
       const limit = configLimit ?? defaultLimit;
-      const ecsql = addCTEs(addLimit(query.ecsql, limit), query.ctes);
       const perfLogger = createQueryPerformanceLogger();
       const blockHandler = new MainThreadBlockHandler();
 
       // handle "unbounded" case without a buffer
-      const reader = baseExecutor.createQueryReader(ecsql, query.bindings, restConfig);
+      const reader = baseExecutor.createQueryReader({ ...query, ecsql: addLimit(query.ecsql, limit) }, restConfig);
       if (limit === "unbounded") {
         try {
           for await (const row of reader) {
@@ -71,12 +70,6 @@ export function createLimitingECSqlQueryExecutor(baseExecutor: IECSqlQueryExecut
       }
     },
   };
-}
-
-/** @internal */
-export function addCTEs(ecsql: string, ctes: string[] | undefined) {
-  const ctesPrefix = ctes?.length ? `WITH RECURSIVE ${ctes.join(", ")} ` : "";
-  return `${ctesPrefix}${ecsql}`;
 }
 
 function addLimit(ecsql: string, limit: number | "unbounded") {

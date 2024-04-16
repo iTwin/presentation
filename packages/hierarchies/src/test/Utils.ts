@@ -5,7 +5,7 @@
 
 import sinon from "sinon";
 import { Logger, LogLevel } from "@itwin/core-bentley";
-import * as shared from "@itwin/presentation-shared";
+import { EC, IMetadataProvider, InstanceKey, parseFullClassName } from "@itwin/presentation-shared";
 import {
   ParsedCustomHierarchyNode,
   ParsedInstanceHierarchyNode,
@@ -14,11 +14,6 @@ import {
   ProcessedInstanceHierarchyNode,
 } from "../hierarchies/HierarchyNode";
 import { HierarchyProviderLocalizedStrings } from "../hierarchies/HierarchyProvider";
-
-import EC = shared.EC;
-const { parseFullClassName } = shared;
-type IMetadataProvider = shared.IMetadataProvider;
-type InstanceKey = shared.InstanceKey;
 
 export function setupLogging(levels: Array<{ namespace: string; level: LogLevel }>) {
   Logger.initializeToConsole();

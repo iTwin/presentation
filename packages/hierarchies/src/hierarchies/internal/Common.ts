@@ -149,14 +149,3 @@ export function createNodeIdentifierForLogging(node: ParentHierarchyNode | Hiera
   const parentKeys = "parentKeys" in node ? node.parentKeys : "<unknown>";
   return JSON.stringify({ label, key, parentKeys });
 }
-
-/** @internal */
-export function normalizeFullClassName(fullClassName: string): string {
-  const colonPos = fullClassName.indexOf(":");
-  if (-1 === colonPos) {
-    return fullClassName;
-  }
-  const schemaName = fullClassName.slice(0, colonPos);
-  const className = fullClassName.slice(colonPos + 1);
-  return `${schemaName}.${className}`;
-}

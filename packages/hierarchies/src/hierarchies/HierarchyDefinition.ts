@@ -3,8 +3,9 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
+import { Id64String } from "@itwin/core-bentley";
 import { GenericInstanceFilter } from "@itwin/core-common";
-import { ECSqlQueryDef, getClass, Id64String, IMetadataProvider, InstanceKey, parseFullClassName } from "@itwin/presentation-shared";
+import { ECSqlQueryDef, getClass, IMetadataProvider, InstanceKey, parseFullClassName } from "@itwin/presentation-shared";
 import {
   HierarchyNode,
   HierarchyNodeKey,

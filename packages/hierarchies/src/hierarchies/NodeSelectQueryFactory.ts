@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { assert } from "@itwin/core-bentley";
+import { assert, Id64String } from "@itwin/core-bentley";
 import {
   GenericInstanceFilter,
   GenericInstanceFilterRelationshipStep,
@@ -13,7 +13,7 @@ import {
   GenericInstanceFilterRuleOperator,
   GenericInstanceFilterRuleValue,
 } from "@itwin/core-common";
-import { EC, ECSql, getClass, Id64String, IMetadataProvider, parseFullClassName, PrimitiveValue } from "@itwin/presentation-shared";
+import { EC, ECSql, getClass, IMetadataProvider, parseFullClassName, PrimitiveValue } from "@itwin/presentation-shared";
 
 /**
  * Column names of the SELECT clause created by [[NodeSelectClauseFactory]]. Order of the names matches the order of columns
@@ -643,16 +643,17 @@ function getECSqlComparisonOperator(op: Exclude<GenericInstanceFilterRuleOperato
   }
 }
 
+type JoinRelationshipPath = Parameters<typeof ECSql.createRelationshipPathJoinClause>[0]["path"];
 function assignRelationshipPathAliases(
   path: GenericInstanceFilterRelationshipStep[],
   pathIndex: number,
   sourceAlias: string,
   targetAlias: string,
-): ECSql.JoinRelationshipPath {
+): JoinRelationshipPath {
   function createAlias(fullClassName: string, index: number) {
     return `rel_${pathIndex}_${fullClassName.replaceAll(/[\.:]/g, "_")}_${index}`;
   }
-  const result: ECSql.JoinRelationshipPath = [];
+  const result: JoinRelationshipPath = [];
   path.forEach((step, i) => {
     result.push({
       targetClassName: step.targetClassName,

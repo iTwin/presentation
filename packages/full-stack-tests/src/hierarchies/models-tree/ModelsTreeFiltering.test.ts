@@ -20,7 +20,6 @@ import { ECSchemaRpcLocater } from "@itwin/ecschema-rpcinterface-common";
 import { InstanceKey } from "@itwin/presentation-common";
 import { createECSqlQueryExecutor, createMetadataProvider } from "@itwin/presentation-core-interop";
 import { HierarchyNodeIdentifier, HierarchyNodeIdentifiersPath, HierarchyProvider } from "@itwin/presentation-hierarchies";
-import { addCTEs } from "@itwin/presentation-hierarchies/lib/cjs/hierarchies/LimitingECSqlQueryExecutor";
 import { ModelsTreeDefinition } from "@itwin/presentation-models-tree";
 import { buildTestIModel, TestIModelBuilder } from "@itwin/presentation-testing";
 import { buildIModel } from "../../IModelUtils";
@@ -805,11 +804,7 @@ describe("Hierarchies", () => {
       const actualInstanceKeyPaths = (
         await ModelsTreeDefinition.createInstanceKeyPaths({
           metadataProvider,
-          queryExecutor: {
-            createQueryReader(query, config) {
-              return createECSqlQueryExecutor(imodel).createQueryReader(addCTEs(query.ecsql, query.ctes), query.bindings, config);
-            },
-          },
+          queryExecutor: createECSqlQueryExecutor(imodel),
           label: formattedECInstanceId,
         })
       ).sort(instanceKeyPathSorter);

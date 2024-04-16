@@ -3,6 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
+import { Id64String } from "@itwin/core-bentley";
 import {
   ClassBasedHierarchyLevelDefinitionsFactory,
   DefineHierarchyLevelProps,
@@ -18,11 +19,10 @@ import {
   ProcessedHierarchyNode,
 } from "@itwin/presentation-hierarchies";
 import {
-  BisInstanceLabelSelectClauseFactory,
+  createBisInstanceLabelSelectClauseFactory,
   EC,
   ECSql,
   ECSqlBinding,
-  Id64String,
   IInstanceLabelSelectClauseFactory,
   IMetadataProvider,
   InstanceKey,
@@ -57,7 +57,7 @@ export namespace ModelsTreeInstanceKeyPathsProps {
 export class ModelsTreeDefinition implements IHierarchyLevelDefinitionsFactory {
   private _impl: ClassBasedHierarchyLevelDefinitionsFactory;
   private _selectQueryFactory: NodeSelectQueryFactory;
-  private _nodeLabelSelectClauseFactory: BisInstanceLabelSelectClauseFactory;
+  private _nodeLabelSelectClauseFactory: IInstanceLabelSelectClauseFactory;
 
   public constructor(props: ModelsTreeDefinitionProps) {
     this._impl = new ClassBasedHierarchyLevelDefinitionsFactory({
@@ -89,7 +89,7 @@ export class ModelsTreeDefinition implements IHierarchyLevelDefinitionsFactory {
       },
     });
     this._selectQueryFactory = new NodeSelectQueryFactory(props.metadataProvider);
-    this._nodeLabelSelectClauseFactory = new BisInstanceLabelSelectClauseFactory({ metadataProvider: props.metadataProvider });
+    this._nodeLabelSelectClauseFactory = createBisInstanceLabelSelectClauseFactory({ metadataProvider: props.metadataProvider });
   }
 
   public async postProcessNode(node: ProcessedHierarchyNode): Promise<ProcessedHierarchyNode> {
@@ -494,7 +494,7 @@ export class ModelsTreeDefinition implements IHierarchyLevelDefinitionsFactory {
 
   public static async createInstanceKeyPaths(props: ModelsTreeInstanceKeyPathsProps) {
     if (ModelsTreeInstanceKeyPathsProps.isLabelProps(props)) {
-      const labelsFactory = new BisInstanceLabelSelectClauseFactory({ metadataProvider: props.metadataProvider });
+      const labelsFactory = createBisInstanceLabelSelectClauseFactory({ metadataProvider: props.metadataProvider });
       return createInstanceKeyPathsFromInstanceLabel({ ...props, labelsFactory });
     }
     return createInstanceKeyPathsFromInstanceKeys(props);

@@ -38,6 +38,7 @@ import {
   IMetadataProvider,
   InstanceKey,
   IPrimitiveValueFormatter,
+  normalizeFullClassName,
   TypedPrimitiveValue,
 } from "@itwin/presentation-shared";
 import { DefineHierarchyLevelProps, HierarchyNodesDefinition, IHierarchyLevelDefinitionsFactory } from "./HierarchyDefinition";
@@ -55,13 +56,7 @@ import {
   ProcessedInstanceHierarchyNode,
 } from "./HierarchyNode";
 import { CachedNodesObservableEntry, ChildNodeObservablesCache, ParsedQueryNodesObservable } from "./internal/ChildNodeObservablesCache";
-import {
-  BaseClassChecker,
-  LOGGING_NAMESPACE as CommonLoggingNamespace,
-  createNodeIdentifierForLogging,
-  hasChildren,
-  normalizeFullClassName,
-} from "./internal/Common";
+import { BaseClassChecker, LOGGING_NAMESPACE as CommonLoggingNamespace, createNodeIdentifierForLogging, hasChildren } from "./internal/Common";
 import { eachValueFrom } from "./internal/EachValueFrom";
 import { FilteringHierarchyLevelDefinitionsFactory } from "./internal/FilteringHierarchyLevelDefinitionsFactory";
 import { createQueryLogMessage, doLog, log } from "./internal/LoggingUtils";
@@ -452,14 +447,14 @@ export class HierarchyProvider {
           of(def.query).pipe(
             mergeMap(async (query) => {
               const ecsql = `
-              SELECT
-                ${NodeSelectClauseColumnNames.FullClassName},
-                ${NodeSelectClauseColumnNames.ECInstanceId},
-                ${NodeSelectClauseColumnNames.HideNodeInHierarchy}
-              FROM (
-                ${query.ecsql}
-              )
-            `;
+                SELECT
+                  ${NodeSelectClauseColumnNames.FullClassName},
+                  ${NodeSelectClauseColumnNames.ECInstanceId},
+                  ${NodeSelectClauseColumnNames.HideNodeInHierarchy}
+                FROM (
+                  ${query.ecsql}
+                )
+              `;
               const reader = this.queryExecutor.createQueryReader({ ...query, ecsql }, { rowFormat: "Indexes", limit: "unbounded" });
               return from(reader).pipe(
                 map((row) => ({
@@ -568,35 +563,38 @@ async function applyLabelsFormatting<TNode extends { label: string | Concatenate
   }
   return {
     ...node,
-    label: await ConcatenatedValue.serialize(node.label, async (part) => {
-      // strings are converted to typed strings
-      if (typeof part === "string") {
-        part = {
-          value: part,
-          type: "String",
-        };
-      }
-      // for property parts - find property metadata and create `TypedPrimitiveValue` for them.
-      if (ConcatenatedValuePart.isProperty(part)) {
-        const property = await getProperty(part, metadata);
-        if (!property?.isPrimitive()) {
-          throw new Error(`Labels formatter expects a primitive property, but it's not.`);
+    label: await ConcatenatedValue.serialize({
+      parts: node.label,
+      partFormatter: async (part) => {
+        // strings are converted to typed strings
+        if (ConcatenatedValuePart.isString(part)) {
+          part = {
+            value: part,
+            type: "String",
+          };
         }
-        if (property.primitiveType === "IGeometry") {
-          throw new Error(`Labels formatter does not support "IGeometry" values, but the provided ${part.className}.${part.propertyName} property is.`);
+        // for property parts - find property metadata and create `TypedPrimitiveValue` for them.
+        if (ConcatenatedValuePart.isProperty(part)) {
+          const property = await getProperty(part, metadata);
+          if (!property?.isPrimitive()) {
+            throw new Error(`Labels formatter expects a primitive property, but it's not.`);
+          }
+          if (property.primitiveType === "IGeometry") {
+            throw new Error(`Labels formatter does not support "IGeometry" values, but the provided ${part.className}.${part.propertyName} property is.`);
+          }
+          if (property.primitiveType === "Binary") {
+            throw new Error(`Labels formatter does not support "Binary" values, but the provided ${part.className}.${part.propertyName} property is.`);
+          }
+          part = {
+            type: property.primitiveType,
+            extendedType: property.extendedTypeName,
+            koqName: (await property.kindOfQuantity)?.fullName,
+            value: part.value,
+          } as TypedPrimitiveValue;
         }
-        if (property.primitiveType === "Binary") {
-          throw new Error(`Labels formatter does not support "Binary" values, but the provided ${part.className}.${part.propertyName} property is.`);
-        }
-        part = {
-          type: property.primitiveType,
-          extendedType: property.extendedTypeName,
-          koqName: (await property.kindOfQuantity)?.fullName,
-          value: part.value,
-        } as TypedPrimitiveValue;
-      }
-      // finally, use provided value formatter to create a string from `TypedPrimitiveValue`
-      return valueFormatter(part);
+        // finally, use provided value formatter to create a string from `TypedPrimitiveValue`
+        return valueFormatter(part);
+      },
     }),
   };
 }
