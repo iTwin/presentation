@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { Schema as CoreSchema, SchemaKey as CoreSchemaKey } from "@itwin/ecschema-metadata";
-import { EC, IMetadataProvider } from "@itwin/presentation-shared";
+import { EC, IECMetadataProvider } from "@itwin/presentation-shared";
 import { createECSchema } from "./MetadataInternal";
 
 /**
@@ -16,7 +16,7 @@ interface ICoreSchemaContext {
 }
 
 /**
- * Creates an `IMetadataProvider` for given [SchemaContext](https://www.itwinjs.org/reference/ecschema-metadata/context/schemacontext/).
+ * Creates an `IECMetadataProvider` for given [SchemaContext](https://www.itwinjs.org/reference/ecschema-metadata/context/schemacontext/).
  *
  * Usage example:
  *
@@ -31,7 +31,7 @@ interface ICoreSchemaContext {
  *
  * @beta
  */
-export function createMetadataProvider(schemaContext: ICoreSchemaContext): IMetadataProvider {
+export function createMetadataProvider(schemaContext: ICoreSchemaContext): IECMetadataProvider {
   const schemaCache = new Map<string, Promise<EC.Schema | undefined>>();
   return {
     async getSchema(name) {

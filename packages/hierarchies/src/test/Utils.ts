@@ -5,7 +5,7 @@
 
 import sinon from "sinon";
 import { Logger, LogLevel } from "@itwin/core-bentley";
-import { EC, IMetadataProvider, InstanceKey, parseFullClassName } from "@itwin/presentation-shared";
+import { EC, IECMetadataProvider, InstanceKey, parseFullClassName } from "@itwin/presentation-shared";
 import {
   ParsedCustomHierarchyNode,
   ParsedInstanceHierarchyNode,
@@ -106,7 +106,7 @@ export interface ClassStubs {
   stubOtherClass: TStubClassFunc;
   resetHistory: () => void;
   restore: () => void;
-  stub: sinon.SinonStub<[metadata: IMetadataProvider, fullClassName: string], Promise<EC.Class>>;
+  stub: sinon.SinonStub<[metadata: IECMetadataProvider, fullClassName: string], Promise<EC.Class>>;
 }
 export function createMetadataProviderStub() {
   const schemaStubs: { [schemaName: string]: sinon.SinonStubbedInstance<EC.Schema> } = {};

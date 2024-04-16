@@ -5,7 +5,7 @@
 
 import { concatAll, concatMap, from, Observable, of, toArray } from "rxjs";
 import { assert } from "@itwin/core-bentley";
-import { IMetadataProvider, IPrimitiveValueFormatter } from "@itwin/presentation-shared";
+import { IECMetadataProvider, IPrimitiveValueFormatter } from "@itwin/presentation-shared";
 import {
   HierarchyNode,
   HierarchyNodeKey,
@@ -30,7 +30,7 @@ export const LOGGING_NAMESPACE = createOperatorLoggingNamespace(OPERATOR_NAME);
 
 /** @internal */
 export function createGroupingOperator(
-  metadata: IMetadataProvider,
+  metadata: IECMetadataProvider,
   parentNode: ParentHierarchyNode | undefined,
   valueFormatter: IPrimitiveValueFormatter,
   localizedStrings: PropertiesGroupingLocalizedStrings,
@@ -153,7 +153,7 @@ function mergeInPlace<T>(target: T[] | undefined, source: T[]) {
 
 /** @internal */
 export async function createGroupingHandlers(
-  metadata: IMetadataProvider,
+  metadata: IECMetadataProvider,
   parentNode: ParentHierarchyNode | undefined,
   processedInstanceNodes: ProcessedInstanceHierarchyNode[],
   valueFormatter: IPrimitiveValueFormatter,

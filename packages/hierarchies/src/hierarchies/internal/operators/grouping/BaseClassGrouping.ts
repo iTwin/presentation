@@ -3,14 +3,14 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { EC, getClass, IMetadataProvider } from "@itwin/presentation-shared";
+import { EC, getClass, IECMetadataProvider } from "@itwin/presentation-shared";
 import { ClassGroupingNodeKey, HierarchyNode, ParentHierarchyNode, ProcessedInstanceHierarchyNode } from "../../../HierarchyNode";
 import { BaseClassChecker } from "../../Common";
 import { GroupingHandler, GroupingHandlerResult } from "../Grouping";
 
 /** @internal */
 export async function getBaseClassGroupingECClasses(
-  metadata: IMetadataProvider,
+  metadata: IECMetadataProvider,
   parentNode: ParentHierarchyNode | undefined,
   nodes: ProcessedInstanceHierarchyNode[],
 ): Promise<EC.Class[]> {
@@ -117,7 +117,7 @@ async function sortByBaseClass(classes: EC.Class[]): Promise<EC.Class[]> {
 
 /** @internal */
 export async function createBaseClassGroupingHandlers(
-  metadata: IMetadataProvider,
+  metadata: IECMetadataProvider,
   parentNode: ParentHierarchyNode | undefined,
   nodes: ProcessedInstanceHierarchyNode[],
   baseClassChecker: BaseClassChecker,

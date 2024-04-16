@@ -5,7 +5,7 @@
 
 import { Id64String } from "@itwin/core-bentley";
 import { GenericInstanceFilter } from "@itwin/core-common";
-import { ECSqlQueryDef, getClass, IMetadataProvider, InstanceKey, parseFullClassName } from "@itwin/presentation-shared";
+import { ECSqlQueryDef, getClass, IECMetadataProvider, InstanceKey, parseFullClassName } from "@itwin/presentation-shared";
 import {
   HierarchyNode,
   HierarchyNodeKey,
@@ -229,7 +229,7 @@ export interface ClassBasedHierarchyDefinition {
  */
 export interface ClassBasedHierarchyDefinitionsFactoryProps {
   /** Access to iModel's metadata. */
-  metadataProvider: IMetadataProvider;
+  metadataProvider: IECMetadataProvider;
   /** Hierarchy level definitions based on parent instance node's class or custom node's key. */
   hierarchy: ClassBasedHierarchyDefinition;
 }
@@ -242,7 +242,7 @@ export interface ClassBasedHierarchyDefinitionsFactoryProps {
  * @beta
  */
 export class ClassBasedHierarchyLevelDefinitionsFactory implements IHierarchyLevelDefinitionsFactory {
-  private _metadataProvider: IMetadataProvider;
+  private _metadataProvider: IECMetadataProvider;
   private _definition: ClassBasedHierarchyDefinition;
 
   public constructor(props: ClassBasedHierarchyDefinitionsFactoryProps) {
@@ -290,7 +290,7 @@ export class ClassBasedHierarchyLevelDefinitionsFactory implements IHierarchyLev
 }
 
 async function createHierarchyLevelDefinitions(
-  metadataProvider: IMetadataProvider,
+  metadataProvider: IECMetadataProvider,
   defs: InstancesNodeChildHierarchyLevelDefinition[],
   parentNodeClassName: string,
   parentNodeInstanceIds: Id64String[],

@@ -11,14 +11,14 @@ import { parseFullClassName } from "./Utils";
  *
  * @beta
  */
-export interface IMetadataProvider {
+export interface IECMetadataProvider {
   getSchema(schemaName: string): Promise<EC.Schema | undefined>;
 }
 
 /**
  * A namespace containing various [EC types](https://www.itwinjs.org/bis/ec/).
  * @beta This is a container for "return-only" types used in public API.
- * @see `IMetadataProvider`
+ * @see `IECMetadataProvider`
  */
 export namespace EC {
   /**
@@ -274,11 +274,11 @@ export interface RelationshipPathStep {
 export type RelationshipPath<TStep extends RelationshipPathStep = RelationshipPathStep> = TStep[];
 
 /**
- * Finds a class with the specified full class name using the given `IMetadataProvider`.
+ * Finds a class with the specified full class name using the given `IECMetadataProvider`.
  * @throws Error if the schema or class is not found.
  * @beta
  */
-export async function getClass(metadata: IMetadataProvider, fullClassName: string): Promise<EC.Class> {
+export async function getClass(metadata: IECMetadataProvider, fullClassName: string): Promise<EC.Class> {
   const { schemaName, className } = parseFullClassName(fullClassName);
   const schema = await metadata.getSchema(schemaName);
   if (!schema) {

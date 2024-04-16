@@ -8,12 +8,12 @@ import { IModelDb } from "@itwin/core-backend";
 import { SchemaContext, SchemaJsonLocater } from "@itwin/ecschema-metadata";
 import { createECSqlQueryExecutor, createMetadataProvider } from "@itwin/presentation-core-interop";
 import { createLimitingECSqlQueryExecutor, HierarchyNode, HierarchyProvider, IHierarchyLevelDefinitionsFactory } from "@itwin/presentation-hierarchies";
-import { IMetadataProvider } from "@itwin/presentation-shared";
+import { IECMetadataProvider } from "@itwin/presentation-shared";
 
 export interface ProviderOptions {
   iModel: IModelDb;
   rowLimit?: number | "unbounded";
-  getHierarchyFactory(metadataProvider: IMetadataProvider): IHierarchyLevelDefinitionsFactory;
+  getHierarchyFactory(metadataProvider: IECMetadataProvider): IHierarchyLevelDefinitionsFactory;
 }
 
 const DEFAULT_ROW_LIMIT = 1000;

@@ -16,9 +16,9 @@ import { GenericInstanceFilterRuleGroupOperator } from '@itwin/core-common';
 import { GenericInstanceFilterRuleOperator } from '@itwin/core-common';
 import { GenericInstanceFilterRuleValue } from '@itwin/core-common';
 import { Id64String } from '@itwin/core-bentley';
+import { IECMetadataProvider } from '@itwin/presentation-shared';
 import { IECSqlQueryExecutor } from '@itwin/presentation-shared';
 import { ILogger } from '@itwin/presentation-shared';
-import { IMetadataProvider } from '@itwin/presentation-shared';
 import { InstanceKey } from '@itwin/presentation-shared';
 import { IPrimitiveValueFormatter } from '@itwin/presentation-shared';
 import { OmitOverUnion } from '@itwin/presentation-shared';
@@ -44,7 +44,7 @@ export interface ClassBasedHierarchyDefinition {
 // @beta
 export interface ClassBasedHierarchyDefinitionsFactoryProps {
     hierarchy: ClassBasedHierarchyDefinition;
-    metadataProvider: IMetadataProvider;
+    metadataProvider: IECMetadataProvider;
 }
 
 // @beta
@@ -428,7 +428,7 @@ export interface HierarchyProviderProps {
     formatter?: IPrimitiveValueFormatter;
     hierarchyDefinition: IHierarchyLevelDefinitionsFactory;
     localizedStrings?: HierarchyProviderLocalizedStrings;
-    metadataProvider: IMetadataProvider;
+    metadataProvider: IECMetadataProvider;
     queryCacheSize?: number;
     queryConcurrency?: number;
     queryExecutor: ILimitingECSqlQueryExecutor;
@@ -533,7 +533,7 @@ export interface NodeSelectClauseProps {
 
 // @beta
 export class NodeSelectQueryFactory {
-    constructor(_metadataProvider: IMetadataProvider);
+    constructor(_metadataProvider: IECMetadataProvider);
     createFilterClauses(def: GenericInstanceFilter | undefined, contentClass: {
         fullName: string;
         alias: string;

@@ -8,7 +8,7 @@ import { collect } from "presentation-test-utilities";
 import { from } from "rxjs";
 import sinon from "sinon";
 import { LogLevel } from "@itwin/core-bentley";
-import { createDefaultValueFormatter, IMetadataProvider, IPrimitiveValueFormatter } from "@itwin/presentation-shared";
+import { createDefaultValueFormatter, IECMetadataProvider, IPrimitiveValueFormatter } from "@itwin/presentation-shared";
 import { BaseClassChecker } from "../../../hierarchies/internal/Common";
 import { createGroupingHandlers, createGroupingOperator, GroupingHandlerResult, LOGGING_NAMESPACE } from "../../../hierarchies/internal/operators/Grouping";
 import * as autoExpand from "../../../hierarchies/internal/operators/grouping/AutoExpand";
@@ -26,7 +26,7 @@ import {
 } from "../../Utils";
 
 describe("Grouping", () => {
-  const metadataProvider = {} as unknown as IMetadataProvider;
+  const metadataProvider = {} as unknown as IECMetadataProvider;
   const baseClassChecker = sinon.createStubInstance(BaseClassChecker);
   let formatter: IPrimitiveValueFormatter;
 

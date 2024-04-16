@@ -35,7 +35,7 @@ import {
   ECSqlBinding,
   ECSqlQueryDef,
   getClass,
-  IMetadataProvider,
+  IECMetadataProvider,
   InstanceKey,
   IPrimitiveValueFormatter,
   normalizeFullClassName,
@@ -101,7 +101,7 @@ export interface HierarchyProviderLocalizedStrings {
  */
 export interface HierarchyProviderProps {
   /** IModel metadata provider for ECSchemas, ECClasses, ECProperties, etc. */
-  metadataProvider: IMetadataProvider;
+  metadataProvider: IECMetadataProvider;
   /** A definition that describes how the hierarchy should be created. */
   hierarchyDefinition: IHierarchyLevelDefinitionsFactory;
 
@@ -160,7 +160,7 @@ export interface GetHierarchyNodesProps {
  * @beta
  */
 export class HierarchyProvider {
-  private _metadataProvider: IMetadataProvider;
+  private _metadataProvider: IECMetadataProvider;
   private _queryReader: TreeQueryResultsReader;
   private _valuesFormatter: IPrimitiveValueFormatter;
   private _localizedStrings: HierarchyProviderLocalizedStrings;
@@ -554,7 +554,7 @@ function processNodes<TNode>(processor: (node: TNode) => Promise<TNode | undefin
 
 async function applyLabelsFormatting<TNode extends { label: string | ConcatenatedValue }>(
   node: TNode,
-  metadata: IMetadataProvider,
+  metadata: IECMetadataProvider,
   valueFormatter: (value: TypedPrimitiveValue) => Promise<string>,
 ): Promise<TNode & { label: string }> {
   if (typeof node.label === "string") {
@@ -599,7 +599,7 @@ async function applyLabelsFormatting<TNode extends { label: string | Concatenate
   };
 }
 
-async function getProperty({ className, propertyName }: { className: string; propertyName: string }, metadata: IMetadataProvider) {
+async function getProperty({ className, propertyName }: { className: string; propertyName: string }, metadata: IECMetadataProvider) {
   const propertyClass = await getClass(metadata, className);
   return propertyClass.getProperty(propertyName);
 }

@@ -5,7 +5,7 @@
 
 import { expect } from "chai";
 import sinon from "sinon";
-import { IMetadataProvider, trimWhitespace } from "@itwin/presentation-shared";
+import { IECMetadataProvider, trimWhitespace } from "@itwin/presentation-shared";
 import {
   CustomHierarchyNodeDefinition,
   HierarchyDefinitionParentNode,
@@ -735,7 +735,7 @@ describe("FilteringHierarchyLevelDefinitionsFactory", () => {
 });
 
 function createFilteringHierarchyLevelsFactory(props?: {
-  metadataProvider?: IMetadataProvider;
+  metadataProvider?: IECMetadataProvider;
   sourceFactory?: IHierarchyLevelDefinitionsFactory;
   nodeIdentifierPaths?: HierarchyNodeIdentifiersPath[];
 }) {

@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { createConcatenatedValueJsonSelector, createRawPropertyValueSelector, TypedValueSelectClauseProps } from "./ecsql-snippets/ECSqlValueSelectorSnippets";
-import { getClass, IMetadataProvider } from "./Metadata";
+import { getClass, IECMetadataProvider } from "./Metadata";
 
 /**
  * Props for `IInstanceLabelSelectClauseFactory.createSelectClause`.
@@ -115,7 +115,7 @@ interface ClassBasedLabelSelectClause {
  */
 interface ClassBasedInstanceLabelSelectClauseFactoryProps {
   /** Access to iModel metadata */
-  metadataProvider: IMetadataProvider;
+  metadataProvider: IECMetadataProvider;
 
   /** A list of instance label selectors associated to classes they should be applied to */
   clauses: ClassBasedLabelSelectClause[];
@@ -198,7 +198,7 @@ export function createClassBasedInstanceLabelSelectClauseFactory(props: ClassBas
  * Props for `createBisInstanceLabelSelectClauseFactory`.
  */
 interface BisInstanceLabelSelectClauseFactoryProps {
-  metadataProvider: IMetadataProvider;
+  metadataProvider: IECMetadataProvider;
 }
 
 /**

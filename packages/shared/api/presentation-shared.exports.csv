@@ -14,11 +14,11 @@ beta;ECSqlBinding =
 beta;ECSqlQueryDef
 beta;ECSqlQueryReaderOptions
 beta;ECSqlQueryRow
-beta;getClass(metadata: IMetadataProvider, fullClassName: string): Promise
+beta;getClass(metadata: IECMetadataProvider, fullClassName: string): Promise
+beta;IECMetadataProvider
 beta;IECSqlQueryExecutor
 beta;IInstanceLabelSelectClauseFactory
 beta;ILogger
-beta;IMetadataProvider
 beta;InstanceKey
 beta;InstanceKey
 beta;IPrimitiveValueFormatter = (value: TypedPrimitiveValue) => Promise

@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { getClass, IMetadataProvider, InstanceKey } from "@itwin/presentation-shared";
+import { getClass, IECMetadataProvider, InstanceKey } from "@itwin/presentation-shared";
 import {
   CustomHierarchyNodeDefinition,
   DefineHierarchyLevelProps,
@@ -27,7 +27,7 @@ import { defaultNodesParser } from "./TreeNodesReader";
 
 /** @internal */
 export interface FilteringQueryBuilderProps {
-  metadataProvider: IMetadataProvider;
+  metadataProvider: IECMetadataProvider;
   source: IHierarchyLevelDefinitionsFactory;
   nodeIdentifierPaths: HierarchyNodeIdentifiersPath[];
 }
@@ -40,7 +40,7 @@ export type FilteredHierarchyNode<TNode = ProcessedHierarchyNode> = TNode & {
 
 /** @internal */
 export class FilteringHierarchyLevelDefinitionsFactory implements IHierarchyLevelDefinitionsFactory {
-  private _metadataProvider: IMetadataProvider;
+  private _metadataProvider: IECMetadataProvider;
   private _source: IHierarchyLevelDefinitionsFactory;
   private _nodeIdentifierPaths: HierarchyNodeIdentifiersPath[];
 

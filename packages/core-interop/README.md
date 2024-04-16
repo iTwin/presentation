@@ -30,7 +30,7 @@ for await (const row of executor.createQueryReader(MY_QUERY)) {
 
 ### `createMetadataProvider`
 
-Maps an instance of `itwinjs-core` [SchemaContext](https://www.itwinjs.org/reference/ecschema-metadata/context/schemacontext/) class to an instance of `IMetadataProvider`, used in `@itwin/presentation-hierarchies` and `@itwin/unified-selection` packages.
+Maps an instance of `itwinjs-core` [SchemaContext](https://www.itwinjs.org/reference/ecschema-metadata/context/schemacontext/) class to an instance of `IECMetadataProvider`, used in `@itwin/presentation-hierarchies` and `@itwin/unified-selection` packages.
 
 Example:
 

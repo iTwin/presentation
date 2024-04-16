@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { EC, getClass, IMetadataProvider, RelationshipPath, RelationshipPathStep } from "../Metadata";
+import { EC, getClass, IECMetadataProvider, RelationshipPath, RelationshipPathStep } from "../Metadata";
 import { createRawPropertyValueSelector } from "./ECSqlValueSelectorSnippets";
 
 /**
@@ -25,7 +25,7 @@ type JoinRelationshipPath = RelationshipPath<JoinRelationshipPathStep>;
  * Props for `createRelationshipPathJoinClause`.
  */
 interface CreateRelationshipPathJoinClauseProps {
-  metadata: IMetadataProvider;
+  metadata: IECMetadataProvider;
   path: JoinRelationshipPath;
 }
 
@@ -130,7 +130,7 @@ type ResolvedRelationshipPathStep = Omit<JoinRelationshipPathStep, "sourceClassN
   target: EC.Class;
 };
 
-async function getRelationshipPathStepClasses(metadata: IMetadataProvider, step: JoinRelationshipPathStep): Promise<ResolvedRelationshipPathStep> {
+async function getRelationshipPathStepClasses(metadata: IECMetadataProvider, step: JoinRelationshipPathStep): Promise<ResolvedRelationshipPathStep> {
   const { sourceClassName, relationshipName, targetClassName, ...rest } = step;
   return {
     ...rest,

@@ -13,7 +13,7 @@ import {
   GenericInstanceFilterRuleOperator,
   GenericInstanceFilterRuleValue,
 } from "@itwin/core-common";
-import { EC, ECSql, getClass, IMetadataProvider, parseFullClassName, PrimitiveValue } from "@itwin/presentation-shared";
+import { EC, ECSql, getClass, IECMetadataProvider, parseFullClassName, PrimitiveValue } from "@itwin/presentation-shared";
 
 /**
  * Column names of the SELECT clause created by [[NodeSelectClauseFactory]]. Order of the names matches the order of columns
@@ -223,7 +223,7 @@ export interface ECSqlSelectClauseBaseClassGroupingParams extends ECSqlSelectCla
  * @beta
  */
 export class NodeSelectQueryFactory {
-  public constructor(private _metadataProvider: IMetadataProvider) {}
+  public constructor(private _metadataProvider: IECMetadataProvider) {}
 
   /** Create a SELECT clause in a format understood by results reader of the library. */
   public async createSelectClause(props: NodeSelectClauseProps) {
@@ -670,7 +670,7 @@ function assignRelationshipPathAliases(
 }
 
 interface SpecializeContentClassProps {
-  metadata: IMetadataProvider;
+  metadata: IECMetadataProvider;
   contentClassName: string;
   filterClassNames: string[];
 }
@@ -689,7 +689,7 @@ async function specializeContentClass(props: SpecializeContentClassProps) {
   return undefined;
 }
 
-async function getSpecializedPropertyClass(metadata: IMetadataProvider, classes: string[]) {
+async function getSpecializedPropertyClass(metadata: IECMetadataProvider, classes: string[]) {
   if (classes.length === 0) {
     return undefined;
   }

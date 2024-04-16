@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { assert } from "@itwin/core-bentley";
-import { ArrayElement, EC, getClass, IMetadataProvider, IPrimitiveValueFormatter, TypedPrimitiveValue } from "@itwin/presentation-shared";
+import { ArrayElement, EC, getClass, IECMetadataProvider, IPrimitiveValueFormatter, TypedPrimitiveValue } from "@itwin/presentation-shared";
 import {
   HierarchyNode,
   HierarchyNodeKey,
@@ -280,7 +280,7 @@ function createNodePropertyGroupPathMatchers(node: ParentHierarchyNode): Array<(
 
 /** @internal */
 export async function getUniquePropertiesGroupInfo(
-  metadata: IMetadataProvider,
+  metadata: IECMetadataProvider,
   parentNode: ParentHierarchyNode | undefined,
   nodes: ProcessedInstanceHierarchyNode[],
 ): Promise<Array<PropertyGroupInfo>> {
@@ -414,7 +414,7 @@ export function doRangesMatch(ranges1: HierarchyNodePropertyValueRange[] | undef
 
 /** @internal */
 export async function createPropertiesGroupingHandlers(
-  metadata: IMetadataProvider,
+  metadata: IECMetadataProvider,
   parentNode: ParentHierarchyNode | undefined,
   nodes: ProcessedInstanceHierarchyNode[],
   valueFormatter: IPrimitiveValueFormatter,

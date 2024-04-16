@@ -267,7 +267,13 @@ export interface ECSqlQueryRow {
 }
 
 // @beta
-export function getClass(metadata: IMetadataProvider, fullClassName: string): Promise<EC.Class>;
+export function getClass(metadata: IECMetadataProvider, fullClassName: string): Promise<EC.Class>;
+
+// @beta
+export interface IECMetadataProvider {
+    // (undocumented)
+    getSchema(schemaName: string): Promise<EC.Schema | undefined>;
+}
 
 // @beta
 export interface IECSqlQueryExecutor {
@@ -292,12 +298,6 @@ export interface ILogger {
     logTrace: LogFunction;
     // (undocumented)
     logWarning: LogFunction;
-}
-
-// @beta
-export interface IMetadataProvider {
-    // (undocumented)
-    getSchema(schemaName: string): Promise<EC.Schema | undefined>;
 }
 
 // @beta

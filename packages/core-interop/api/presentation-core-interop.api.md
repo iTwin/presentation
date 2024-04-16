@@ -5,9 +5,9 @@
 ```ts
 
 import { ECSqlReader } from '@itwin/core-common';
+import { IECMetadataProvider } from '@itwin/presentation-shared';
 import { IECSqlQueryExecutor } from '@itwin/presentation-shared';
 import { ILogger } from '@itwin/presentation-shared';
-import { IMetadataProvider } from '@itwin/presentation-shared';
 import { IPrimitiveValueFormatter } from '@itwin/presentation-shared';
 import { LogLevel } from '@itwin/core-bentley';
 import { QueryBinder } from '@itwin/core-common';
@@ -24,7 +24,7 @@ export function createECSqlQueryExecutor(imodel: ICoreECSqlReaderFactory): IECSq
 export function createLogger(coreLogger: ICoreLogger): ILogger;
 
 // @beta
-export function createMetadataProvider(schemaContext: ICoreSchemaContext): IMetadataProvider;
+export function createMetadataProvider(schemaContext: ICoreSchemaContext): IECMetadataProvider;
 
 // @beta
 export function createValueFormatter(props: CreateValueFormatterProps): IPrimitiveValueFormatter;

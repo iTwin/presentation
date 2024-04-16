@@ -23,24 +23,24 @@ import {
   EC,
   ECSql,
   ECSqlBinding,
+  IECMetadataProvider,
   IInstanceLabelSelectClauseFactory,
-  IMetadataProvider,
   InstanceKey,
   parseFullClassName,
 } from "@itwin/presentation-shared";
 
 interface ModelsTreeDefinitionProps {
-  metadataProvider: IMetadataProvider;
+  metadataProvider: IECMetadataProvider;
 }
 
 interface ModelsTreeInstanceKeyPathsFromInstanceKeysProps {
-  metadataProvider: IMetadataProvider;
+  metadataProvider: IECMetadataProvider;
   queryExecutor: ILimitingECSqlQueryExecutor;
   keys: InstanceKey[];
 }
 
 interface ModelsTreeInstanceKeyPathsFromInstanceLabelProps {
-  metadataProvider: IMetadataProvider;
+  metadataProvider: IECMetadataProvider;
   queryExecutor: ILimitingECSqlQueryExecutor;
   label: string;
 }
@@ -836,7 +836,7 @@ function flatten<T>(source: Array<ArrayOrValue<T>>): T[] {
   }, new Array<T>());
 }
 
-async function getClass(metadata: IMetadataProvider, fullClassName: string) {
+async function getClass(metadata: IECMetadataProvider, fullClassName: string) {
   const { schemaName, className } = parseFullClassName(fullClassName);
   const schema = await metadata.getSchema(schemaName);
   if (!schema) {
