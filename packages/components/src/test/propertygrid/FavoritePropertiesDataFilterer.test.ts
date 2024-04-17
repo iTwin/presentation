@@ -33,13 +33,36 @@ describe("FavoritePropertiesDataFilterer", () => {
     sinon.restore();
   });
 
-  it("uses `FavoritePropertiesManager` to determine favorites if callback is not provided through props", async () => {
+  it("uses `FavoritePropertiesManager.hasAsync` to determine favorites if it's available and callback is not provided through props", async () => {
     const record = createPrimitiveStringProperty("Property", "Value");
     const matchingField = createTestSimpleContentField();
 
     dataProvider.getFieldByPropertyDescription.resolves(matchingField);
 
     const manager = sinon.createStubInstance(FavoritePropertiesManager);
+    manager.hasAsync.callsFake(async (field) => field === matchingField);
+
+    sinon.stub(Presentation, "favoriteProperties").get(() => manager);
+
+    const filterer = new FavoritePropertiesDataFilterer({
+      source: getProvider(),
+      favoritesScope: FavoritePropertiesScope.Global,
+      isActive: true,
+    });
+    const matchResult = await filterer.recordMatchesFilter(record, []);
+    expect(manager.hasAsync).to.be.called;
+    expect(matchResult).to.deep.eq({ matchesFilter: true, shouldExpandNodeParents: true });
+  });
+
+  it("uses `FavoritePropertiesManager.has` to determine favorites if `hasAsync` is not available and callback is not provided through props", async () => {
+    const record = createPrimitiveStringProperty("Property", "Value");
+    const matchingField = createTestSimpleContentField();
+
+    dataProvider.getFieldByPropertyDescription.resolves(matchingField);
+
+    const manager = sinon.createStubInstance(FavoritePropertiesManager);
+    Object.assign(manager, { hasAsync: undefined });
+    // eslint-disable-next-line deprecation/deprecation
     manager.has.callsFake((field) => field === matchingField);
 
     sinon.stub(Presentation, "favoriteProperties").get(() => manager);
@@ -50,6 +73,7 @@ describe("FavoritePropertiesDataFilterer", () => {
       isActive: true,
     });
     const matchResult = await filterer.recordMatchesFilter(record, []);
+    // eslint-disable-next-line deprecation/deprecation
     expect(manager.has).to.be.called;
     expect(matchResult).to.deep.eq({ matchesFilter: true, shouldExpandNodeParents: true });
   });

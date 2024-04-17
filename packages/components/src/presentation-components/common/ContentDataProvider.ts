@@ -407,7 +407,6 @@ export class ContentDataProvider implements IContentDataProvider {
         Logger.logWarning(PresentationComponentsLoggerCategory.Content, msg);
       }
 
-      const requestSize = undefined !== pageOptions && 0 === pageOptions.start && undefined !== pageOptions.size;
       const options = {
         ...this.createRequestOptions(),
         descriptor: descriptorOverrides,
@@ -415,10 +414,32 @@ export class ContentDataProvider implements IContentDataProvider {
         paging: pageOptions,
       };
 
+      if (Presentation.presentation.getContentIterator) {
+        const result = await Presentation.presentation.getContentIterator(options);
+        return result
+          ? {
+              size: result.total,
+              content: new Content(
+                result.descriptor,
+                await (async () => {
+                  const items = [];
+                  for await (const item of result.items) {
+                    items.push(item);
+                  }
+                  return items;
+                })(),
+              ),
+            }
+          : undefined;
+      }
+
+      const requestSize = undefined !== pageOptions && 0 === pageOptions.start && undefined !== pageOptions.size;
       if (requestSize) {
+        // eslint-disable-next-line deprecation/deprecation
         return Presentation.presentation.getContentAndSize(options);
       }
 
+      // eslint-disable-next-line deprecation/deprecation
       const content = await Presentation.presentation.getContent(options);
       return content ? { content, size: content.contentSet.length } : undefined;
     },

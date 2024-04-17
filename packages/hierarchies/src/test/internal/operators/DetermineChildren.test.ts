@@ -4,12 +4,13 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { expect } from "chai";
+import { collect } from "presentation-test-utilities";
 import { delay, from, Observable, of } from "rxjs";
 import sinon from "sinon";
 import { LogLevel } from "@itwin/core-bentley";
 import { ProcessedHierarchyNode } from "../../../hierarchies/HierarchyNode";
 import { createDetermineChildrenOperator, LOGGING_NAMESPACE } from "../../../hierarchies/internal/operators/DetermineChildren";
-import { collect, createTestProcessedCustomNode, setupLogging } from "../../Utils";
+import { createTestProcessedCustomNode, setupLogging } from "../../Utils";
 
 describe("DetermineChildren", () => {
   before(() => {

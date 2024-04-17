@@ -12,7 +12,7 @@ import { IModelApp, IModelConnection } from "@itwin/core-frontend";
 import { Presentation, SelectionManager } from "@itwin/presentation-frontend";
 import { InstanceKeyValueRenderer } from "../../presentation-components/properties/InstanceKeyValueRenderer";
 import { UnifiedSelectionContextProvider } from "../../presentation-components/unified-selection/UnifiedSelectionContext";
-import { act, cleanup, render } from "../TestUtils";
+import { act, cleanup, render, waitFor } from "../TestUtils";
 
 describe("InstanceKeyValueRenderer", () => {
   const renderer = new InstanceKeyValueRenderer();
@@ -86,7 +86,7 @@ describe("InstanceKeyValueRenderer", () => {
         expect(getByRole("link").textContent).to.be.empty;
       });
 
-      it("changes current selection when clicked", () => {
+      it("changes current selection when clicked", async () => {
         const record = createNavigationPropertyRecord(createPrimitiveValue(instanceKey));
         const { getByRole } = render(
           <UnifiedSelectionContextProvider imodel={testIModel} selectionLevel={10}>
@@ -98,7 +98,7 @@ describe("InstanceKeyValueRenderer", () => {
           getByRole("link").click();
         });
 
-        expect(Presentation.selection.getSelection(testIModel, 10).has(instanceKey)).to.be.true;
+        await waitFor(() => expect(Presentation.selection.getSelection(testIModel, 10).has(instanceKey)).to.be.true);
       });
 
       it("renders non-clickable display value when UnifiedSelectionContext is not present", () => {

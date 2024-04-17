@@ -82,7 +82,7 @@ describe("Learning snippets", () => {
       await waitFor(() => getNodeByLabel(container, `A element 2`));
 
       // simulate a network error for B model node's children
-      sinon.stub(Presentation.presentation, "getNodesAndCount").throws(new Error("Network error"));
+      sinon.stub(Presentation.presentation, "getNodesIterator").throws(new Error("Network error"));
 
       // find & expand model B node
       const modelNodeB = await waitFor(() => getNodeByLabel(container, "My Model B"));

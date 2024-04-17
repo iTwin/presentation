@@ -7,7 +7,7 @@
  */
 
 import { useEffect, useRef, useState } from "react";
-import { EMPTY, from, mergeMap, Observable, Subject } from "rxjs";
+import { EMPTY, from, map, mergeMap, Observable, of, Subject, toArray } from "rxjs";
 import { assert } from "@itwin/core-bentley";
 import { IModelApp, IModelConnection } from "@itwin/core-frontend";
 import { Content, DefaultContentDisplayTypes, KeySet, PageOptions, Ruleset, StartItemProps, traverseContent } from "@itwin/presentation-common";
@@ -203,7 +203,7 @@ async function loadRows(
   paging: Required<PageOptions>,
   options: TableOptions,
 ): Promise<RowsLoadResult> {
-  const result = await Presentation.presentation.getContentAndSize({
+  const requestProps = {
     imodel,
     keys: new KeySet(keys),
     descriptor: {
@@ -213,21 +213,52 @@ async function loadRows(
     },
     rulesetOrId: ruleset,
     paging,
-  });
-
-  if (!result) {
-    return {
-      rowDefinitions: [],
-      total: 0,
-      offset: 0,
-    };
-  }
-
-  return {
-    rowDefinitions: createRows(result.content),
-    total: result.size,
-    offset: paging.start,
   };
+  return new Promise((resolve, reject) => {
+    (Presentation.presentation.getContentIterator
+      ? from(Presentation.presentation.getContentIterator(requestProps)).pipe(
+          mergeMap((result) => {
+            if (!result) {
+              return of(undefined);
+            }
+            return from(result.items).pipe(
+              toArray(),
+              map((items) => ({ total: result.total, content: new Content(result.descriptor, items) })),
+            );
+          }),
+        )
+      : // eslint-disable-next-line deprecation/deprecation
+        from(Presentation.presentation.getContentAndSize(requestProps)).pipe(
+          map((result) =>
+            result
+              ? {
+                  total: result.size,
+                  content: result.content,
+                }
+              : undefined,
+          ),
+        )
+    )
+      .pipe(
+        map((result) =>
+          result
+            ? {
+                rowDefinitions: createRows(result.content),
+                total: result.total,
+                offset: paging.start,
+              }
+            : {
+                rowDefinitions: [],
+                total: 0,
+                offset: 0,
+              },
+        ),
+      )
+      .subscribe({
+        next: resolve,
+        error: reject,
+      });
+  });
 }
 
 function createRows(content: Content) {

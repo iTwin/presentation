@@ -4,10 +4,11 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { expect } from "chai";
+import { createAsyncIterator } from "presentation-test-utilities";
 import sinon from "sinon";
 import { BeUiEvent } from "@itwin/core-bentley";
 import { FormattingUnitSystemChangedArgs, IModelApp, IModelConnection } from "@itwin/core-frontend";
-import { Content, ContentDescriptorRequestOptions, InstanceKey, Item, KeySet, RulesetVariable } from "@itwin/presentation-common";
+import { ContentDescriptorRequestOptions, InstanceKey, Item, KeySet, RulesetVariable } from "@itwin/presentation-common";
 import { Presentation, PresentationManager, SelectionManager } from "@itwin/presentation-frontend";
 import { TableColumnDefinition, TableRowDefinition } from "../../presentation-components/table/Types";
 import {
@@ -59,7 +60,7 @@ describe("usePresentationTable", () => {
     });
 
     presentationManager.getContentDescriptor.resolves(descriptor);
-    presentationManager.getContentAndSize.resolves({ content: new Content(descriptor, [item]), size: 1 });
+    presentationManager.getContentIterator.callsFake(async () => ({ descriptor, items: createAsyncIterator([item]), total: 1 }));
 
     const { result } = renderHook((props: UsePresentationTableProps<TableColumnDefinition, TableRowDefinition>) => usePresentationTable(props), {
       initialProps,
@@ -129,7 +130,7 @@ describe("usePresentationTableWithUnifiedSelection", () => {
     sinon.stub(Presentation.selection, "getSelection").returns(keys);
 
     presentationManager.getContentDescriptor.resolves(descriptor);
-    presentationManager.getContentAndSize.resolves({ content: new Content(descriptor, [item]), size: 1 });
+    presentationManager.getContentIterator.callsFake(async () => ({ descriptor, items: createAsyncIterator([item]), total: 1 }));
 
     const { result } = renderHook(() => usePresentationTableWithUnifiedSelection(initialProps));
 
@@ -155,14 +156,14 @@ describe("usePresentationTableWithUnifiedSelection", () => {
     expect(presentationManager.getContentDescriptor).to.be.calledWith(
       sinon.match((options: ContentDescriptorRequestOptions<IModelConnection, KeySet, RulesetVariable>) => options.keys.size === keys.size),
     );
-    expect(presentationManager.getContentAndSize).to.be.calledWith(
+    expect(presentationManager.getContentIterator).to.be.calledWith(
       sinon.match((options: ContentDescriptorRequestOptions<IModelConnection, KeySet, RulesetVariable>) => options.keys.size === keys.size),
     );
   });
 
   it("loads columns and rows with no keys when unified selection is empty", async () => {
     presentationManager.getContentDescriptor.resolves(undefined);
-    presentationManager.getContentAndSize.resolves(undefined);
+    presentationManager.getContentIterator.callsFake(async () => undefined);
 
     const { result } = renderHook(() => usePresentationTableWithUnifiedSelection(initialProps));
 
@@ -266,9 +267,11 @@ describe("usePresentationTableWithUnifiedSelection", () => {
     const instanceKey = createTestECInstanceKey();
     setupPresentationManager([instanceKey]);
 
+    const otherIModel = { key: "other_imodel" } as IModelConnection;
+    IModelConnection.onOpen.raiseEvent(otherIModel);
     act(() => {
       // select the row to get loaded onto the component
-      Presentation.selection.addToSelection(selectionSource, { key: "other_imodel" } as IModelConnection, new KeySet([instanceKey]), 0);
+      Presentation.selection.addToSelection(selectionSource, otherIModel, new KeySet([instanceKey]), 0);
     });
 
     await waitFor(() => {
@@ -502,7 +505,7 @@ describe("usePresentationTableWithUnifiedSelection", () => {
   /** Creates rows for the provided keys */
   function setupPresentationManager(keys: InstanceKey[] = [createTestECInstanceKey()]) {
     presentationManager.getContentDescriptor.reset();
-    presentationManager.getContentAndSize.reset();
+    presentationManager.getContentIterator.reset();
 
     const propertiesField = createTestPropertiesContentField({
       name: "first_field",
@@ -523,6 +526,6 @@ describe("usePresentationTableWithUnifiedSelection", () => {
     });
 
     presentationManager.getContentDescriptor.resolves(descriptor);
-    presentationManager.getContentAndSize.resolves({ content: new Content(descriptor, items), size: keys.length });
+    presentationManager.getContentIterator.callsFake(async () => ({ descriptor, items: createAsyncIterator(items), total: keys.length }));
   }
 });

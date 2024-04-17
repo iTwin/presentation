@@ -9,6 +9,7 @@ import { BriefcaseConnection, IModelConnection, IpcApp, SnapshotConnection } fro
 import { UnitSystemKey } from "@itwin/core-quantity";
 import { SchemaContext } from "@itwin/ecschema-metadata";
 import { ECSchemaRpcLocater } from "@itwin/ecschema-rpcinterface-common";
+import { createStorage } from "@itwin/unified-selection";
 import { PRESENTATION_TEST_APP_IPC_CHANNEL_NAME, SampleIpcInterface, SampleRpcInterface } from "@test-app/common";
 
 const LOCAL_STORAGE_KEY_AppSettings = "presentation-test-app/settings";
@@ -23,6 +24,7 @@ export interface MyAppSettings {
 export class MyAppFrontend {
   private static _ipcProxy = IpcApp.makeIpcProxy<SampleIpcInterface>(PRESENTATION_TEST_APP_IPC_CHANNEL_NAME);
   private static _schemaContextsCache = new Map<string, SchemaContext>();
+  private static _selectionStorage = createStorage();
 
   public static async getSampleImodels(): Promise<string[]> {
     return SampleRpcInterface.getClient().getSampleImodels();
@@ -47,6 +49,8 @@ export class MyAppFrontend {
 
     return imodel;
   }
+
+  public static get selectionStorage() {return this._selectionStorage;}
 
   public static get settings(): MyAppSettings {
     let strValue = window.localStorage.getItem(LOCAL_STORAGE_KEY_AppSettings);

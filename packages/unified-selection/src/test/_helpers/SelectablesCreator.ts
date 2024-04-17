@@ -2,6 +2,8 @@
  * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
+
+import { createAsyncIterator } from "presentation-test-utilities";
 import { CustomSelectable, SelectableInstanceKey } from "../../unified-selection/Selectable";
 
 /**
@@ -30,15 +32,7 @@ export const createSelectableInstanceKey = (id: number = 1, className: string = 
 export const createCustomSelectable = (id: number = 1, instanceKeys?: SelectableInstanceKey[]): CustomSelectable => {
   return {
     identifier: createECInstanceId(id),
-    async *loadInstanceKeys() {
-      if (!instanceKeys) {
-        return;
-      }
-
-      for (const key of instanceKeys) {
-        yield key;
-      }
-    },
+    loadInstanceKeys: () => createAsyncIterator(instanceKeys ?? []),
     data: {},
   };
 };

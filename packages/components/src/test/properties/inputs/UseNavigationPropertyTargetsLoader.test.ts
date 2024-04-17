@@ -4,6 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { expect } from "chai";
+import { createAsyncIterator } from "presentation-test-utilities";
 import sinon from "sinon";
 import { PropertyDescription } from "@itwin/appui-abstract";
 import { EmptyLocalization } from "@itwin/core-common";
@@ -20,17 +21,14 @@ import { createTestContentDescriptor, createTestContentItem } from "../../_helpe
 import { renderHook, waitFor } from "../../TestUtils";
 
 describe("useNavigationPropertyTargetsLoader", () => {
+  let presentationManagerStub: sinon.SinonStub;
   const testImodel = {} as IModelConnection;
-  const getContentStub = sinon.stub<Parameters<PresentationManager["getContent"]>, ReturnType<PresentationManager["getContent"]>>();
 
   before(() => {
     const localization = new EmptyLocalization();
     sinon.stub(IModelApp, "initialized").get(() => true);
     sinon.stub(IModelApp, "localization").get(() => localization);
     sinon.stub(Presentation, "localization").get(() => localization);
-    sinon.stub(Presentation, "presentation").get(() => ({
-      getContent: getContentStub,
-    }));
   });
 
   after(() => {
@@ -38,67 +36,161 @@ describe("useNavigationPropertyTargetsLoader", () => {
   });
 
   beforeEach(() => {
-    getContentStub.reset();
+    presentationManagerStub = sinon.stub(Presentation, "presentation");
   });
 
   it("returns empty targets array if ruleset is undefined", async () => {
     const { result } = renderHook(useNavigationPropertyTargetsLoader, { initialProps: { imodel: testImodel } });
 
     const { options, hasMore } = await result.current("", 0);
-    expect(getContentStub).to.not.be.called;
     expect(options).to.be.empty;
     expect(hasMore).to.be.false;
   });
 
-  it("loads targets", async () => {
-    const contentItem = createTestContentItem({
-      label: LabelDefinition.fromLabelString("testLabel"),
-      primaryKeys: [{ className: "class", id: "1" }],
-      displayValues: {},
-      values: {},
+  describe("when `getContentIterator` is available", () => {
+    const getContentIteratorStub = sinon.stub<Parameters<PresentationManager["getContentIterator"]>, ReturnType<PresentationManager["getContentIterator"]>>();
+
+    beforeEach(() => {
+      getContentIteratorStub.reset();
+      presentationManagerStub.get(() => ({
+        getContentIterator: getContentIteratorStub,
+      }));
     });
-    getContentStub.resolves(new Content(createTestContentDescriptor({ fields: [] }), [contentItem]));
 
-    const { result } = renderHook(useNavigationPropertyTargetsLoader, { initialProps: { imodel: testImodel, ruleset: { id: "testRuleset", rules: [] } } });
+    it("returns empty targets array if there's no content", async () => {
+      getContentIteratorStub.resolves(undefined);
+      const { result } = renderHook(useNavigationPropertyTargetsLoader, { initialProps: { imodel: testImodel, ruleset: { id: "testRuleset", rules: [] } } });
+      const { options, hasMore } = await result.current("", 0);
+      expect(options).to.be.empty;
+      expect(hasMore).to.be.false;
+    });
 
-    const { options, hasMore } = await result.current("", 0);
-    expect(options).to.have.lengthOf(1);
-    expect(options[0]).to.contain({ label: contentItem.label, key: contentItem.primaryKeys[0] });
-    expect(hasMore).to.be.false;
+    it("loads targets", async () => {
+      const contentItem = createTestContentItem({
+        label: LabelDefinition.fromLabelString("testLabel"),
+        primaryKeys: [{ className: "class", id: "1" }],
+        displayValues: {},
+        values: {},
+      });
+      getContentIteratorStub.resolves({ total: 1, descriptor: createTestContentDescriptor({ fields: [] }), items: createAsyncIterator([contentItem]) });
+
+      const { result } = renderHook(useNavigationPropertyTargetsLoader, { initialProps: { imodel: testImodel, ruleset: { id: "testRuleset", rules: [] } } });
+
+      const { options, hasMore } = await result.current("", 0);
+      expect(options).to.have.lengthOf(1);
+      expect(options[0]).to.contain({ label: contentItem.label, key: contentItem.primaryKeys[0] });
+      expect(hasMore).to.be.false;
+    });
+
+    it("loads targets with offset", async () => {
+      getContentIteratorStub.resolves({ total: 0, descriptor: createTestContentDescriptor({ fields: [], categories: [] }), items: createAsyncIterator([]) });
+      const { result } = renderHook(useNavigationPropertyTargetsLoader, { initialProps: { imodel: testImodel, ruleset: { id: "testRuleset", rules: [] } } });
+
+      const loadedTargets: NavigationPropertyTarget[] = [
+        { label: LabelDefinition.fromLabelString("test1"), key: { className: "class", id: "1" } },
+        { label: LabelDefinition.fromLabelString("test2"), key: { className: "class", id: "2" } },
+      ];
+      await result.current("", loadedTargets.length);
+      expect(getContentIteratorStub).to.be.calledOnce;
+      expect(getContentIteratorStub.getCall(0).args[0]).to.containSubset({ paging: { start: loadedTargets.length } });
+    });
+
+    it("loads full batch of targets and sets 'hasMore' flag to true", async () => {
+      const contentItems = Array.from({ length: NAVIGATION_PROPERTY_TARGETS_BATCH_SIZE }, () => createTestContentItem({ displayValues: {}, values: {} }));
+      getContentIteratorStub.resolves({
+        total: contentItems.length,
+        descriptor: createTestContentDescriptor({ fields: [], categories: [] }),
+        items: createAsyncIterator(contentItems),
+      });
+
+      const { result } = renderHook(useNavigationPropertyTargetsLoader, { initialProps: { imodel: testImodel, ruleset: { id: "testRuleset", rules: [] } } });
+
+      const { options, hasMore } = await result.current("", 0);
+      expect(options).to.have.lengthOf(NAVIGATION_PROPERTY_TARGETS_BATCH_SIZE);
+      expect(hasMore).to.be.true;
+    });
+
+    it("loads targets using provided filter string", async () => {
+      getContentIteratorStub.resolves({ total: 0, descriptor: createTestContentDescriptor({ fields: [], categories: [] }), items: createAsyncIterator([]) });
+
+      const { result } = renderHook(useNavigationPropertyTargetsLoader, { initialProps: { imodel: testImodel, ruleset: { id: "testRuleset", rules: [] } } });
+
+      await result.current("testFilter", 0);
+      expect(getContentIteratorStub).to.be.calledOnce;
+      const descriptor = getContentIteratorStub.getCall(0).args[0].descriptor;
+      expect(descriptor.fieldsFilterExpression).to.contain("testFilter");
+    });
   });
 
-  it("loads targets with offset", async () => {
-    const { result } = renderHook(useNavigationPropertyTargetsLoader, { initialProps: { imodel: testImodel, ruleset: { id: "testRuleset", rules: [] } } });
+  describe("when `getContentIterator` is not available", () => {
+    const getContentStub = sinon.stub<Parameters<PresentationManager["getContent"]>, ReturnType<PresentationManager["getContent"]>>();
 
-    const loadedTargets: NavigationPropertyTarget[] = [
-      { label: LabelDefinition.fromLabelString("test1"), key: { className: "class", id: "1" } },
-      { label: LabelDefinition.fromLabelString("test2"), key: { className: "class", id: "2" } },
-    ];
-    await result.current("", loadedTargets.length);
-    expect(getContentStub).to.be.calledOnce;
-    expect(getContentStub.getCall(0).args[0]).to.containSubset({ paging: { start: loadedTargets.length } });
-  });
+    beforeEach(() => {
+      getContentStub.reset();
+      presentationManagerStub.get(() => ({
+        getContent: getContentStub,
+      }));
+    });
 
-  it("loads full batch of targets and sets 'hasMore' flag to true", async () => {
-    const contentItems = Array.from({ length: NAVIGATION_PROPERTY_TARGETS_BATCH_SIZE }, () => createTestContentItem({ displayValues: {}, values: {} }));
-    getContentStub.resolves(new Content(createTestContentDescriptor({ fields: [], categories: [] }), contentItems));
+    it("returns empty targets array if there's no content", async () => {
+      getContentStub.resolves(undefined);
+      const { result } = renderHook(useNavigationPropertyTargetsLoader, { initialProps: { imodel: testImodel, ruleset: { id: "testRuleset", rules: [] } } });
+      const { options, hasMore } = await result.current("", 0);
+      expect(options).to.be.empty;
+      expect(hasMore).to.be.false;
+    });
 
-    const { result } = renderHook(useNavigationPropertyTargetsLoader, { initialProps: { imodel: testImodel, ruleset: { id: "testRuleset", rules: [] } } });
+    it("loads targets", async () => {
+      const contentItem = createTestContentItem({
+        label: LabelDefinition.fromLabelString("testLabel"),
+        primaryKeys: [{ className: "class", id: "1" }],
+        displayValues: {},
+        values: {},
+      });
+      getContentStub.resolves(new Content(createTestContentDescriptor({ fields: [] }), [contentItem]));
 
-    const { options, hasMore } = await result.current("", 0);
-    expect(options).to.have.lengthOf(NAVIGATION_PROPERTY_TARGETS_BATCH_SIZE);
-    expect(hasMore).to.be.true;
-  });
+      const { result } = renderHook(useNavigationPropertyTargetsLoader, { initialProps: { imodel: testImodel, ruleset: { id: "testRuleset", rules: [] } } });
 
-  it("loads targets using provided filter string", async () => {
-    getContentStub.resolves(new Content(createTestContentDescriptor({ fields: [], categories: [] }), []));
+      const { options, hasMore } = await result.current("", 0);
+      expect(options).to.have.lengthOf(1);
+      expect(options[0]).to.contain({ label: contentItem.label, key: contentItem.primaryKeys[0] });
+      expect(hasMore).to.be.false;
+    });
 
-    const { result } = renderHook(useNavigationPropertyTargetsLoader, { initialProps: { imodel: testImodel, ruleset: { id: "testRuleset", rules: [] } } });
+    it("loads targets with offset", async () => {
+      getContentStub.resolves(new Content(createTestContentDescriptor({ fields: [], categories: [] }), []));
+      const { result } = renderHook(useNavigationPropertyTargetsLoader, { initialProps: { imodel: testImodel, ruleset: { id: "testRuleset", rules: [] } } });
 
-    await result.current("testFilter", 0);
-    expect(getContentStub).to.be.calledOnce;
-    const descriptor = getContentStub.getCall(0).args[0].descriptor;
-    expect(descriptor.fieldsFilterExpression).to.contain("testFilter");
+      const loadedTargets: NavigationPropertyTarget[] = [
+        { label: LabelDefinition.fromLabelString("test1"), key: { className: "class", id: "1" } },
+        { label: LabelDefinition.fromLabelString("test2"), key: { className: "class", id: "2" } },
+      ];
+      await result.current("", loadedTargets.length);
+      expect(getContentStub).to.be.calledOnce;
+      expect(getContentStub.getCall(0).args[0]).to.containSubset({ paging: { start: loadedTargets.length } });
+    });
+
+    it("loads full batch of targets and sets 'hasMore' flag to true", async () => {
+      const contentItems = Array.from({ length: NAVIGATION_PROPERTY_TARGETS_BATCH_SIZE }, () => createTestContentItem({ displayValues: {}, values: {} }));
+      getContentStub.resolves(new Content(createTestContentDescriptor({ fields: [], categories: [] }), contentItems));
+
+      const { result } = renderHook(useNavigationPropertyTargetsLoader, { initialProps: { imodel: testImodel, ruleset: { id: "testRuleset", rules: [] } } });
+
+      const { options, hasMore } = await result.current("", 0);
+      expect(options).to.have.lengthOf(NAVIGATION_PROPERTY_TARGETS_BATCH_SIZE);
+      expect(hasMore).to.be.true;
+    });
+
+    it("loads targets using provided filter string", async () => {
+      getContentStub.resolves(new Content(createTestContentDescriptor({ fields: [], categories: [] }), []));
+
+      const { result } = renderHook(useNavigationPropertyTargetsLoader, { initialProps: { imodel: testImodel, ruleset: { id: "testRuleset", rules: [] } } });
+
+      await result.current("testFilter", 0);
+      expect(getContentStub).to.be.calledOnce;
+      const descriptor = getContentStub.getCall(0).args[0].descriptor;
+      expect(descriptor.fieldsFilterExpression).to.contain("testFilter");
+    });
   });
 });
 

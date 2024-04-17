@@ -3,11 +3,11 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
+import { collect } from "presentation-test-utilities";
 import { Logger } from "@itwin/core-bentley";
 import { HierarchyNode, HierarchyProvider, NonGroupingHierarchyNode } from "@itwin/presentation-hierarchies";
 import { hasChildren } from "@itwin/presentation-hierarchies/lib/cjs/hierarchies/internal/Common";
 import { InstanceKey } from "@itwin/presentation-shared";
-import { collect } from "./Utils";
 
 const loggingNamespace = `Presentation.HierarchyBuilder.HierarchyValidation`;
 

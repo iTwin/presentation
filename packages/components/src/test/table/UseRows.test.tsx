@@ -4,6 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { expect } from "chai";
+import { createAsyncIterator } from "presentation-test-utilities";
 import sinon from "sinon";
 import { BeUiEvent } from "@itwin/core-bentley";
 import { FormattingUnitSystemChangedArgs, IModelApp, IModelConnection, QuantityFormatter } from "@itwin/core-frontend";
@@ -31,11 +32,13 @@ describe("useRows", () => {
     options: {},
   };
 
-  const getContentAndSizeStub = sinon.stub<Parameters<PresentationManager["getContentAndSize"]>, ReturnType<PresentationManager["getContentAndSize"]>>();
+  let presentationManagerStub: sinon.SinonStub;
+  const getContentIteratorStub = sinon.stub<Parameters<PresentationManager["getContentIterator"]>, ReturnType<PresentationManager["getContentIterator"]>>();
 
-  before(() => {
-    sinon.stub(Presentation, "presentation").get(() => ({
-      getContentAndSize: getContentAndSizeStub,
+  beforeEach(() => {
+    presentationManagerStub = sinon.stub(Presentation, "presentation");
+    presentationManagerStub.get(() => ({
+      getContentIterator: getContentIteratorStub,
     }));
     onActiveFormattingUnitSystemChanged = new BeUiEvent<FormattingUnitSystemChangedArgs>();
     sinon.stub(IModelApp, "quantityFormatter").get(() => ({
@@ -43,15 +46,55 @@ describe("useRows", () => {
     }));
   });
 
-  after(() => {
+  afterEach(() => {
     sinon.restore();
   });
 
   afterEach(() => {
-    getContentAndSizeStub.reset();
+    getContentIteratorStub.reset();
   });
 
-  it("loads rows", async () => {
+  describe("when `getContentIterator` is not available", () => {
+    const getContentAndSizeStub = sinon.stub<Parameters<PresentationManager["getContentAndSize"]>, ReturnType<PresentationManager["getContentAndSize"]>>();
+
+    beforeEach(() => {
+      presentationManagerStub.resetBehavior();
+      presentationManagerStub.get(() => ({
+        getContentAndSize: getContentAndSizeStub,
+      }));
+    });
+
+    it("loads rows", async () => {
+      const propertiesField = createTestPropertiesContentField({
+        name: "first_field",
+        label: "First Field",
+        properties: [{ property: createTestPropertyInfo() }],
+      });
+      const descriptor = createTestContentDescriptor({ fields: [propertiesField] });
+      const item = createTestContentItem({
+        values: { [propertiesField.name]: "test_value" },
+        displayValues: { [propertiesField.name]: "Test value" },
+      });
+      getContentAndSizeStub.resolves({ content: new Content(descriptor, [item]), size: 1 });
+
+      const { result } = renderHook((props: UseRowsProps) => useRows(props), { initialProps });
+
+      await waitFor(() => expect(result.current.rows).to.have.lengthOf(1));
+      const cell = result.current.rows[0].cells[0];
+      expect(cell).to.containSubset({
+        key: propertiesField.name,
+      });
+    });
+
+    it("returns empty rows list if there are no content", async () => {
+      getContentAndSizeStub.callsFake(async () => undefined);
+      const { result } = renderHook((props: UseRowsProps) => useRows(props), { initialProps });
+      await waitFor(() => expect(result.current.isLoading).to.be.false);
+      expect(result.current.rows).to.have.lengthOf(0);
+    });
+  });
+
+  it("loads rows when `getContentIterator` is available", async () => {
     const propertiesField = createTestPropertiesContentField({
       name: "first_field",
       label: "First Field",
@@ -62,7 +105,7 @@ describe("useRows", () => {
       values: { [propertiesField.name]: "test_value" },
       displayValues: { [propertiesField.name]: "Test value" },
     });
-    getContentAndSizeStub.resolves({ content: new Content(descriptor, [item]), size: 1 });
+    getContentIteratorStub.callsFake(async () => ({ descriptor, items: createAsyncIterator([item]), total: 1 }));
 
     const { result } = renderHook((props: UseRowsProps) => useRows(props), { initialProps });
 
@@ -107,7 +150,7 @@ describe("useRows", () => {
         },
       },
     });
-    getContentAndSizeStub.resolves({ content: new Content(descriptor, [item]), size: 1 });
+    getContentIteratorStub.callsFake(async () => ({ descriptor, items: createAsyncIterator([item]), total: 1 }));
 
     const { result } = renderHook((props: UseRowsProps) => useRows(props), { initialProps });
 
@@ -134,12 +177,12 @@ describe("useRows", () => {
       values: { [propertiesField.name]: "test_value_2" },
       displayValues: { [propertiesField.name]: "Test value 2" },
     });
-    getContentAndSizeStub.callsFake(async (options) => {
+    getContentIteratorStub.callsFake(async (options) => {
       if (options.paging?.start === 0) {
-        return { content: new Content(descriptor, [item1]), size: 2 };
+        return { descriptor, items: createAsyncIterator([item1]), total: 2 };
       }
       if (options.paging?.start === 1) {
-        return { content: new Content(descriptor, [item2]), size: 2 };
+        return { descriptor, items: createAsyncIterator([item2]), total: 2 };
       }
       return undefined;
     });
@@ -166,22 +209,22 @@ describe("useRows", () => {
       values: { [propertiesField.name]: "test_value_1" },
       displayValues: { [propertiesField.name]: "Test value 1" },
     });
-    getContentAndSizeStub.resolves({ content: new Content(descriptor, [item]), size: 1 });
+    getContentIteratorStub.callsFake(async () => ({ descriptor, items: createAsyncIterator([item]), total: 1 }));
 
     const { result } = renderHook((props: UseRowsProps) => useRows(props), { initialProps: { ...initialProps, pageSize: 1 } });
 
     await waitFor(() => expect(result.current.rows).to.have.lengthOf(1));
-    getContentAndSizeStub.reset();
+    getContentIteratorStub.reset();
 
     act(() => {
       result.current.loadMoreRows();
     });
 
-    expect(getContentAndSizeStub).to.not.be.called;
+    expect(getContentIteratorStub).to.not.be.called;
   });
 
   it("throws in React render loop on failure to get content", async () => {
-    getContentAndSizeStub.throws(new Error("Failed to load"));
+    getContentIteratorStub.throws(new Error("Failed to load"));
 
     const errorSpy = sinon.spy();
     function TestComponent() {
@@ -200,7 +243,7 @@ describe("useRows", () => {
   });
 
   it("returns empty rows list if there are no content", async () => {
-    getContentAndSizeStub.resolves(undefined);
+    getContentIteratorStub.callsFake(async () => undefined);
     const { result } = renderHook((props: UseRowsProps) => useRows(props), { initialProps });
 
     await waitFor(() => expect(result.current.isLoading).to.be.false);
@@ -213,20 +256,20 @@ describe("useRows", () => {
 
     await waitFor(() => expect(result.current.isLoading).to.be.false);
     expect(result.current.rows).to.have.lengthOf(0);
-    expect(getContentAndSizeStub).to.not.be.called;
+    expect(getContentIteratorStub).to.not.be.called;
   });
 
   it("applies fields filter expression", async () => {
     const filterExpression = "propField = 1";
-    getContentAndSizeStub.resolves({ content: new Content(createTestContentDescriptor({ fields: [] }), []), size: 0 });
+    getContentIteratorStub.callsFake(async () => ({ descriptor: createTestContentDescriptor({ fields: [] }), items: createAsyncIterator([]), total: 0 }));
 
     const { result } = renderHook((props: UseRowsProps) => useRows(props), {
       initialProps: { ...initialProps, options: { fieldsFilterExpression: filterExpression } },
     });
 
     await waitFor(() => expect(result.current.isLoading).to.be.false);
-    expect(getContentAndSizeStub).to.be.calledWith(
-      sinon.match((options: Parameters<typeof getContentAndSizeStub>[0]) => options.descriptor.fieldsFilterExpression === filterExpression),
+    expect(getContentIteratorStub).to.be.calledWith(
+      sinon.match((options: Parameters<typeof getContentIteratorStub>[0]) => options.descriptor.fieldsFilterExpression === filterExpression),
     );
   });
 
@@ -241,14 +284,14 @@ describe("useRows", () => {
       field: fieldDescriptor,
       direction: SortDirection.Descending,
     };
-    getContentAndSizeStub.resolves({ content: new Content(createTestContentDescriptor({ fields: [] }), []), size: 0 });
+    getContentIteratorStub.callsFake(async () => ({ descriptor: createTestContentDescriptor({ fields: [] }), items: createAsyncIterator([]), total: 0 }));
 
     const { result } = renderHook((props: UseRowsProps) => useRows(props), { initialProps: { ...initialProps, options: { sorting } } });
 
     await waitFor(() => expect(result.current.isLoading).to.be.false);
-    expect(getContentAndSizeStub).to.be.calledWith(
+    expect(getContentIteratorStub).to.be.calledWith(
       sinon.match(
-        (options: Parameters<typeof getContentAndSizeStub>[0]) => (options.descriptor as DescriptorOverrides).sorting?.direction === SortDirection.Descending,
+        (options: Parameters<typeof getContentIteratorStub>[0]) => (options.descriptor as DescriptorOverrides).sorting?.direction === SortDirection.Descending,
       ),
     );
   });
@@ -269,13 +312,13 @@ describe("useRows", () => {
       displayValues: { [propertiesField.name]: "Test value 2" },
     });
 
-    getContentAndSizeStub.resolves({ content: new Content(descriptor, [item1, item2]), size: 2 });
+    getContentIteratorStub.callsFake(async () => ({ descriptor, items: createAsyncIterator([item1, item2]), total: 2 }));
     const { result } = renderHook((props: UseRowsProps) => useRows(props), { initialProps: { ...initialProps, pageSize: 10 } });
 
     await waitFor(() => expect(result.current.rows).to.have.lengthOf(2));
     // initial rows load request
-    expect(getContentAndSizeStub).to.be.calledWith(
-      sinon.match(({ paging }: Parameters<typeof getContentAndSizeStub>[0]) => paging?.start === 0 && paging?.size === 10),
+    expect(getContentIteratorStub).to.be.calledWith(
+      sinon.match(({ paging }: Parameters<typeof getContentIteratorStub>[0]) => paging?.start === 0 && paging?.size === 10),
     );
 
     act(() => {
@@ -285,8 +328,8 @@ describe("useRows", () => {
     await waitFor(() => {
       expect(result.current.rows).to.have.lengthOf(2);
       // reload request should have page options to get only previously loaded rows.
-      expect(getContentAndSizeStub).to.be.calledWith(
-        sinon.match(({ paging }: Parameters<typeof getContentAndSizeStub>[0]) => paging?.start === 0 && paging?.size === 2),
+      expect(getContentIteratorStub).to.be.calledWith(
+        sinon.match(({ paging }: Parameters<typeof getContentIteratorStub>[0]) => paging?.start === 0 && paging?.size === 2),
       );
     });
   });
@@ -298,7 +341,7 @@ describe("useRows", () => {
       properties: [{ property: createTestPropertyInfo() }],
     });
     const descriptor = createTestContentDescriptor({ fields: [propertiesField] });
-    getContentAndSizeStub.resolves({ content: new Content(descriptor, []), size: 0 });
+    getContentIteratorStub.callsFake(async () => ({ descriptor, items: createAsyncIterator([]), total: 0 }));
 
     const { result } = renderHook((props: UseRowsProps) => useRows(props), { initialProps: { ...initialProps, pageSize: 10 } });
 
@@ -308,10 +351,10 @@ describe("useRows", () => {
     });
 
     // initial load request
-    expect(getContentAndSizeStub).to.be.calledWith(
-      sinon.match(({ paging }: Parameters<typeof getContentAndSizeStub>[0]) => paging?.start === 0 && paging?.size === 10),
+    expect(getContentIteratorStub).to.be.calledWith(
+      sinon.match(({ paging }: Parameters<typeof getContentIteratorStub>[0]) => paging?.start === 0 && paging?.size === 10),
     );
-    getContentAndSizeStub.resetHistory();
+    getContentIteratorStub.resetHistory();
 
     act(() => {
       onActiveFormattingUnitSystemChanged.raiseEvent({ system: "metric" });
@@ -319,7 +362,7 @@ describe("useRows", () => {
 
     await waitFor(() => {
       expect(result.current.rows).to.have.lengthOf(0);
-      expect(getContentAndSizeStub).to.not.be.called;
+      expect(getContentIteratorStub).to.not.be.called;
     });
   });
 
@@ -338,7 +381,7 @@ describe("useRows", () => {
       }),
     );
 
-    getContentAndSizeStub.resolves({ content: new Content(descriptor, items), size: itemsCount });
+    getContentIteratorStub.callsFake(async () => ({ descriptor, items: createAsyncIterator(items), total: itemsCount }));
 
     // all items should be loaded with single request
     const { result } = renderHook((props: UseRowsProps) => useRows(props), { initialProps: { ...initialProps, pageSize: itemsCount } });
@@ -347,13 +390,13 @@ describe("useRows", () => {
     });
 
     // setup presentation manager for rows reload
-    getContentAndSizeStub.reset();
-    getContentAndSizeStub.callsFake(async (options) => {
+    getContentIteratorStub.reset();
+    getContentIteratorStub.callsFake(async (options) => {
       if (options.paging?.start === 0 && options.paging?.size === ROWS_RELOAD_PAGE_SIZE) {
-        return { content: new Content(descriptor, items.slice(0, ROWS_RELOAD_PAGE_SIZE)), size: ROWS_RELOAD_PAGE_SIZE };
+        return { descriptor, items: createAsyncIterator(items.slice(0, ROWS_RELOAD_PAGE_SIZE)), total: ROWS_RELOAD_PAGE_SIZE };
       }
       if (options.paging?.start === ROWS_RELOAD_PAGE_SIZE && options.paging?.size === 1) {
-        return { content: new Content(descriptor, items.slice(ROWS_RELOAD_PAGE_SIZE)), size: 1 };
+        return { descriptor, items: createAsyncIterator(items.slice(ROWS_RELOAD_PAGE_SIZE)), total: 1 };
       }
       return undefined;
     });
@@ -364,11 +407,11 @@ describe("useRows", () => {
 
     await waitFor(() => {
       expect(result.current.rows).to.have.lengthOf(itemsCount);
-      expect(getContentAndSizeStub).to.be.calledWith(
-        sinon.match(({ paging }: Parameters<typeof getContentAndSizeStub>[0]) => paging?.start === 0 && paging?.size === ROWS_RELOAD_PAGE_SIZE),
+      expect(getContentIteratorStub).to.be.calledWith(
+        sinon.match(({ paging }: Parameters<typeof getContentIteratorStub>[0]) => paging?.start === 0 && paging?.size === ROWS_RELOAD_PAGE_SIZE),
       );
-      expect(getContentAndSizeStub).to.be.calledWith(
-        sinon.match(({ paging }: Parameters<typeof getContentAndSizeStub>[0]) => paging?.start === ROWS_RELOAD_PAGE_SIZE && paging?.size === 1),
+      expect(getContentIteratorStub).to.be.calledWith(
+        sinon.match(({ paging }: Parameters<typeof getContentIteratorStub>[0]) => paging?.start === ROWS_RELOAD_PAGE_SIZE && paging?.size === 1),
       );
     });
   });

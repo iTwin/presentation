@@ -36,16 +36,6 @@ export function createStub<T extends (...args: any[]) => any>() {
   return sinon.stub<Parameters<T>, ReturnType<T>>();
 }
 
-export async function* createAsyncIterator<T>(values: T[]): AsyncIterableIterator<T> {
-  for (const value of values) {
-    yield value;
-  }
-}
-
-export async function* throwingAsyncIterator(error: Error): AsyncIterableIterator<never> {
-  throw error;
-}
-
 export function getHierarchyNode(model: TreeModel, id: string | undefined) {
   const node = TreeModel.getNode(model, id);
   return node && isTreeModelHierarchyNode(node) ? node : undefined;

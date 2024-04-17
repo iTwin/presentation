@@ -4,12 +4,13 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { expect } from "chai";
+import { createAsyncIterator, throwingAsyncIterator } from "presentation-test-utilities";
 import { Observable } from "rxjs";
 import sinon from "sinon";
 import { GenericInstanceFilter, GetHierarchyNodesProps, HierarchyProvider, RowsLimitExceededError } from "@itwin/presentation-hierarchies";
 import { LoadedTreePart, TreeLoader } from "../../presentation-hierarchies-react/internal/TreeLoader";
 import { TreeModelHierarchyNode, TreeModelInfoNode, TreeModelNode } from "../../presentation-hierarchies-react/internal/TreeModel";
-import { createAsyncIterator, createTestHierarchyNode, createTreeModelNode, throwingAsyncIterator } from "../TestUtils";
+import { createTestHierarchyNode, createTreeModelNode } from "../TestUtils";
 
 describe("TreeLoader", () => {
   const hierarchyProvider = {

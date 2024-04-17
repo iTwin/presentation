@@ -28,7 +28,7 @@ export interface FavoritePropertiesDataFiltererProps {
   isActive?: boolean;
 
   /** Callback to check whether a property is favorite or not. Defaults to calling `Presentation.favoriteProperties` to get this information. */
-  isFavorite?: (field: Field, imodel: IModelConnection, scope: FavoritePropertiesScope) => boolean;
+  isFavorite?: (field: Field, imodel: IModelConnection, scope: FavoritePropertiesScope) => boolean | Promise<boolean>;
 }
 
 /**
@@ -38,7 +38,7 @@ export interface FavoritePropertiesDataFiltererProps {
 export class FavoritePropertiesDataFilterer extends PropertyDataFiltererBase {
   private _source: IPresentationPropertyDataProvider;
   private _favoritesScope: FavoritePropertiesScope;
-  private _favoritesCheckCallback: (field: Field, imodel: IModelConnection, scope: FavoritePropertiesScope) => boolean;
+  private _favoritesCheckCallback: (field: Field, imodel: IModelConnection, scope: FavoritePropertiesScope) => Promise<boolean> | boolean;
   private _isActive: boolean;
 
   public constructor(props: FavoritePropertiesDataFiltererProps) {
@@ -62,7 +62,7 @@ export class FavoritePropertiesDataFilterer extends PropertyDataFiltererBase {
 
   private async isFavorite(record: PropertyRecord): Promise<boolean> {
     const field = await this._source.getFieldByPropertyDescription(record.property);
-    return !!field && this._favoritesCheckCallback(field, this._source.imodel, this._favoritesScope);
+    return !!field && (await this._favoritesCheckCallback(field, this._source.imodel, this._favoritesScope));
   }
 
   public async recordMatchesFilter(node: PropertyRecord, parents: PropertyRecord[]): Promise<PropertyDataFilterResult> {
@@ -90,6 +90,10 @@ export class FavoritePropertiesDataFilterer extends PropertyDataFiltererBase {
   }
 }
 
-function defaultFavoritePropertyCheckCallback(field: Field, imodel: IModelConnection, scope: FavoritePropertiesScope) {
+async function defaultFavoritePropertyCheckCallback(field: Field, imodel: IModelConnection, scope: FavoritePropertiesScope) {
+  if (Presentation.favoriteProperties.hasAsync) {
+    return Presentation.favoriteProperties.hasAsync(field, imodel, scope);
+  }
+  // eslint-disable-next-line deprecation/deprecation
   return Presentation.favoriteProperties.has(field, imodel, scope);
 }

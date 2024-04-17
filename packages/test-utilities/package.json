@@ -14,15 +14,16 @@
   "module": "lib/esm/presentation-test-utilities.js",
   "types": "lib/cjs/presentation-test-utilities.d.ts",
   "dependencies": {
-    "@itwin/core-bentley": "^4.4.0",
-    "@itwin/core-common": "^4.4.0",
-    "@itwin/core-geometry": "^4.4.0"
+    "@itwin/core-bentley": "^4.5.1",
+    "@itwin/core-common": "^4.5.1",
+    "@itwin/core-geometry": "^4.5.1",
+    "rxjs": "^7.8.1"
   },
   "devDependencies": {
-    "@itwin/eslint-plugin": "4.0.0-dev.48",
+    "@itwin/eslint-plugin": "^4.0.0",
     "@types/node": "^18.17.7",
     "eslint": "^8.56.0",
     "rimraf": "^5.0.5",
-    "typescript": "~5.0.4"
+    "typescript": "~5.4.5"
   }
 }

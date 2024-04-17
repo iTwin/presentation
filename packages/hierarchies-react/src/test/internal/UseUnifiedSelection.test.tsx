@@ -5,11 +5,12 @@
 
 import { expect } from "chai";
 import { describe } from "mocha";
+import { collect, createAsyncIterator } from "presentation-test-utilities";
 import { PropsWithChildren } from "react";
 import { act } from "react-dom/test-utils";
 import sinon from "sinon";
 import { InstancesNodeKey } from "@itwin/presentation-hierarchies";
-import { createStorage, SelectableInstanceKey, Selectables, StorageSelectionChangeEventArgs, StorageSelectionChangesListener } from "@itwin/unified-selection";
+import { createStorage, Selectables, StorageSelectionChangeEventArgs, StorageSelectionChangesListener } from "@itwin/unified-selection";
 import { TreeModelNode } from "../../presentation-hierarchies-react/internal/TreeModel";
 import { useUnifiedTreeSelection } from "../../presentation-hierarchies-react/internal/UseUnifiedSelection";
 import { UnifiedSelectionProvider } from "../../presentation-hierarchies-react/UnifiedSelectionContext";
@@ -104,7 +105,7 @@ describe("useUnifiesSelection", () => {
       storage.addToSelection({
         iModelKey,
         source,
-        selectables: [{ identifier: "grouping-node", loadInstanceKeys: createIterator([instanceKey2]), data: nodes[1] }],
+        selectables: [{ identifier: "grouping-node", loadInstanceKeys: () => createAsyncIterator([instanceKey2]), data: nodes[1] }],
       });
 
       getNode.callsFake((id) => nodes.find((node) => node.id === id));
@@ -190,7 +191,7 @@ describe("useUnifiesSelection", () => {
         }),
       );
       const selectable = changeListener.firstCall.args[0].selectables.custom.get("grouping-node");
-      const keys = await collectKeys(selectable!.loadInstanceKeys());
+      const keys = await collect(selectable!.loadInstanceKeys());
       expect(keys).to.have.members([instanceKey]);
       expect(selectable?.data).to.be.eq(groupingNode);
 
@@ -217,7 +218,7 @@ describe("useUnifiesSelection", () => {
         }),
       );
       const selectable = changeListener.firstCall.args[0].selectables.custom.get("custom-node");
-      const keys = await collectKeys(selectable!.loadInstanceKeys());
+      const keys = await collect(selectable!.loadInstanceKeys());
       expect(keys).to.be.empty;
       expect(selectable?.data).to.be.eq(hierarchyNode);
     });
@@ -267,7 +268,7 @@ describe("useUnifiesSelection", () => {
       storage.addToSelection({
         iModelKey,
         source,
-        selectables: [{ identifier: "grouping-node", loadInstanceKeys: createIterator([instanceKey]), data: groupingNode }],
+        selectables: [{ identifier: "grouping-node", loadInstanceKeys: () => createAsyncIterator([instanceKey]), data: groupingNode }],
       });
       changeListener.reset();
 
@@ -283,7 +284,7 @@ describe("useUnifiesSelection", () => {
         }),
       );
       const selectable = changeListener.firstCall.args[0].selectables.custom.get("grouping-node");
-      const keys = await collectKeys(selectable!.loadInstanceKeys());
+      const keys = await collect(selectable!.loadInstanceKeys());
       expect(keys).to.have.members([instanceKey]);
       expect(selectable?.data).to.be.eq(groupingNode);
     });
@@ -293,7 +294,11 @@ describe("useUnifiesSelection", () => {
       const nodes = [createTreeModelNode({ id: "custom-node", nodeData: hierarchyNode })];
       getNode.callsFake((id) => nodes.find((node) => node.id === id));
 
-      storage.addToSelection({ iModelKey, source, selectables: [{ identifier: "custom-node", loadInstanceKeys: createIterator([]), data: hierarchyNode }] });
+      storage.addToSelection({
+        iModelKey,
+        source,
+        selectables: [{ identifier: "custom-node", loadInstanceKeys: () => createAsyncIterator([]), data: hierarchyNode }],
+      });
       changeListener.reset();
 
       const { result } = renderHook(useUnifiedTreeSelection, { initialProps, wrapper: Wrapper });
@@ -308,7 +313,7 @@ describe("useUnifiesSelection", () => {
         }),
       );
       const selectable = changeListener.firstCall.args[0].selectables.custom.get("custom-node");
-      const keys = await collectKeys(selectable!.loadInstanceKeys());
+      const keys = await collect(selectable!.loadInstanceKeys());
       expect(keys).to.be.empty;
       expect(selectable?.data).to.be.eq(hierarchyNode);
     });
@@ -355,19 +360,3 @@ describe("useUnifiesSelection", () => {
     });
   });
 });
-
-function createIterator(keys: SelectableInstanceKey[]): () => AsyncIterableIterator<SelectableInstanceKey> {
-  return async function* () {
-    for (const key of keys) {
-      yield key;
-    }
-  };
-}
-
-async function collectKeys(iterator: AsyncIterableIterator<SelectableInstanceKey>) {
-  const keys = [];
-  for await (const key of iterator) {
-    keys.push(key);
-  }
-  return keys;
-}

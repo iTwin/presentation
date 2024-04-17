@@ -4,11 +4,12 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { expect } from "chai";
+import { createAsyncIterator } from "presentation-test-utilities";
 import { firstValueFrom, Subject } from "rxjs";
 import { GenericInstanceFilter, GetHierarchyNodesProps, HierarchyNode, HierarchyProvider } from "@itwin/presentation-hierarchies";
 import { TreeActions } from "../../presentation-hierarchies-react/internal/TreeActions";
 import { TreeModel } from "../../presentation-hierarchies-react/internal/TreeModel";
-import { createAsyncIterator, createStub, createTestGroupingNode, createTestHierarchyNode, createTreeModel, getHierarchyNode, waitFor } from "../TestUtils";
+import { createStub, createTestGroupingNode, createTestHierarchyNode, createTreeModel, getHierarchyNode, waitFor } from "../TestUtils";
 
 describe("TreeActions", () => {
   const provider = {
