@@ -32,6 +32,9 @@ export interface CustomSelectable {
 }
 
 // @beta
+export function enableUnifiedSelectionSyncWithIModel(props: EnableUnifiedSelectionSyncWithIModelProps): () => void;
+
+// @beta
 export interface HiliteSet {
     // (undocumented)
     elements: string[];
@@ -154,9 +157,6 @@ export type StorageSelectionChangeType =
 | "replace"
 /** Selection was cleared. */
 | "clear";
-
-// @beta
-export function syncViewportWithUnifiedSelection(props: SyncViewportWithUnifiedSelectionProps): () => void;
 
 // (No @packageDocumentation comment for this package)
 

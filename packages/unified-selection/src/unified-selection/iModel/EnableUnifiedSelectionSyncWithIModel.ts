@@ -8,18 +8,18 @@
  */
 
 import { CachingHiliteSetProvider } from "../CachingHiliteSetProvider";
-import { IModelConnection } from "../iModel/IModel";
 import { IMetadataProvider } from "../queries/ECMetadata";
 import { IECSqlQueryExecutor } from "../queries/ECSqlCore";
 import { ElementSelectionScopeProps, SelectionScope } from "../SelectionScope";
 import { SelectionStorage } from "../SelectionStorage";
-import { ViewportSelectionHandler } from "./ViewportSelectionHandler";
+import { IModelConnection } from "./IModel";
+import { IModelSelectionHandler } from "./IModelSelectionHandler";
 
 /**
- * Props for `syncViewportWithUnifiedSelection`.
+ * Props for `enableUnifiedSelectionSyncWithIModel`.
  * @internal Not exported through barrel, but used in public API as an argument. May be supplemented with optional attributes any time.
  */
-export interface SyncViewportWithUnifiedSelectionProps {
+export interface EnableUnifiedSelectionSyncWithIModelProps {
   /** iModel to synchronize selection for. */
   iModel: IModelConnection;
   /** SelectionStorage to synchronize selection with. */
@@ -35,12 +35,12 @@ export interface SyncViewportWithUnifiedSelectionProps {
 }
 
 /**
- * Enables synchronization between viewport selection and unified selection.
+ * Enables synchronization between iModel selection and unified selection.
  * @param iModel iModel to synchronize selection for.
  * @returns function for disposing the synchronization.
  * @beta
  */
-export function syncViewportWithUnifiedSelection(props: SyncViewportWithUnifiedSelectionProps): () => void {
-  const selectionHandler = new ViewportSelectionHandler(props);
+export function enableUnifiedSelectionSyncWithIModel(props: EnableUnifiedSelectionSyncWithIModelProps): () => void {
+  const selectionHandler = new IModelSelectionHandler(props);
   return () => selectionHandler.dispose();
 }

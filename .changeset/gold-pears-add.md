@@ -2,4 +2,4 @@
 "@itwin/unified-selection": minor
 ---
 
-Added API for enabling synchronization between viewport and unified selection.
+Added API for enabling synchronization between iModel selection and unified selection.

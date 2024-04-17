@@ -9,18 +9,18 @@ import sinon from "sinon";
 import { using } from "@itwin/core-bentley";
 import * as hiliteSetProvider from "../../unified-selection/HiliteSetProvider";
 import { IdArg, IModelConnection, SelectionSet, SelectionSetEvent, SelectionSetEventType } from "../../unified-selection/iModel/IModel";
+import { IModelSelectionHandler } from "../../unified-selection/iModel/IModelSelectionHandler";
 import { IMetadataProvider } from "../../unified-selection/queries/ECMetadata";
 import { ECSqlBinding, ECSqlQueryReader, ECSqlQueryReaderOptions, ECSqlQueryRow } from "../../unified-selection/queries/ECSqlCore";
 import { Selectable, SelectableInstanceKey, Selectables } from "../../unified-selection/Selectable";
 import { StorageSelectionChangeType } from "../../unified-selection/SelectionChangeEvent";
 import { createStorage, SelectionStorage } from "../../unified-selection/SelectionStorage";
-import { ViewportSelectionHandler } from "../../unified-selection/viewport/ViewportSelectionHandler";
 import { createSelectableInstanceKey } from "../_helpers/SelectablesCreator";
 import { waitFor } from "../_helpers/Utils";
 
-describe("ViewportSelectionHandler", () => {
+describe("IModelSelectionHandler", () => {
   let factory: sinon.SinonStub<[hiliteSetProvider.HiliteSetProviderProps], hiliteSetProvider.HiliteSetProvider>;
-  let handler: ViewportSelectionHandler;
+  let handler: IModelSelectionHandler;
   const cachingProvider = {
     getHiliteSet: sinon.stub<[{ iModelKey: string }], AsyncIterableIterator<hiliteSetProvider.HiliteSet>>(),
     dispose: () => {},
@@ -88,11 +88,11 @@ describe("ViewportSelectionHandler", () => {
     cachingProvider.getHiliteSet.callsFake(emptyGenerator);
   }
 
-  function createHandler(storage: SelectionStorage): ViewportSelectionHandler {
+  function createHandler(storage: SelectionStorage): IModelSelectionHandler {
     resetProviderStub();
     resetSelectionSetStub();
     resetHilitedStub();
-    return new ViewportSelectionHandler({
+    return new IModelSelectionHandler({
       iModel,
       selectionStorage: storage,
       cachingHiliteSetProvider: cachingProvider,
@@ -102,7 +102,7 @@ describe("ViewportSelectionHandler", () => {
     });
   }
 
-  describe("reacting to viewport selection changes", () => {
+  describe("reacting to iModel selection changes", () => {
     let triggerSelectionChange: (ev: SelectionSetEvent) => void;
 
     const selectionStorageStub = {
@@ -286,7 +286,7 @@ describe("ViewportSelectionHandler", () => {
       }
       cachingProvider.getHiliteSet.callsFake(() => generator());
 
-      handler = new ViewportSelectionHandler({
+      handler = new IModelSelectionHandler({
         iModel,
         selectionStorage,
         cachingHiliteSetProvider: cachingProvider,

@@ -6,14 +6,14 @@
 import { expect } from "chai";
 import sinon from "sinon";
 import { HiliteSet } from "../../unified-selection/HiliteSetProvider";
+import { enableUnifiedSelectionSyncWithIModel } from "../../unified-selection/iModel/EnableUnifiedSelectionSyncWithIModel";
 import { IModelConnection } from "../../unified-selection/iModel/IModel";
 import { IMetadataProvider } from "../../unified-selection/queries/ECMetadata";
 import { IECSqlQueryExecutor } from "../../unified-selection/queries/ECSqlCore";
 import { StorageSelectionChangesListener } from "../../unified-selection/SelectionChangeEvent";
 import { SelectionStorage } from "../../unified-selection/SelectionStorage";
-import { syncViewportWithUnifiedSelection } from "../../unified-selection/viewport/SyncViewportWithUnifiedSelection";
 
-describe("syncViewportWithUnifiedSelection", () => {
+describe("enableUnifiedSelectionSyncWithIModel", () => {
   const selectionStorage = {
     selectionChangeEvent: {
       addListener: sinon.stub<[StorageSelectionChangesListener], () => void>(),
@@ -55,8 +55,8 @@ describe("syncViewportWithUnifiedSelection", () => {
     sinon.restore();
   });
 
-  it("creates and disposes ViewportSelectionHandler", () => {
-    const cleanup = syncViewportWithUnifiedSelection({
+  it("creates and disposes IModelSelectionHandler", () => {
+    const cleanup = enableUnifiedSelectionSyncWithIModel({
       iModel,
       selectionStorage: selectionStorage as unknown as SelectionStorage,
       cachingHiliteSetProvider: provider,

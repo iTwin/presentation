@@ -11,16 +11,16 @@ import { from, Subject, takeUntil } from "rxjs";
 import { using } from "@itwin/core-bentley";
 import { CachingHiliteSetProvider } from "../CachingHiliteSetProvider";
 import { createHiliteSetProvider, HiliteSet, HiliteSetProvider } from "../HiliteSetProvider";
-import { IdArg, IModelConnection, SelectionSetEvent, SelectionSetEventType } from "../iModel/IModel";
 import { IMetadataProvider } from "../queries/ECMetadata";
 import { IECSqlQueryExecutor } from "../queries/ECSqlCore";
 import { SelectableInstanceKey, Selectables } from "../Selectable";
 import { StorageSelectionChangeEventArgs, StorageSelectionChangeType } from "../SelectionChangeEvent";
 import { computeSelection, ElementSelectionScopeProps, SelectionScope } from "../SelectionScope";
 import { SelectionStorage } from "../SelectionStorage";
+import { IdArg, IModelConnection, SelectionSetEvent, SelectionSetEventType } from "./IModel";
 
 /** @internal */
-export interface ViewportSelectionHandlerProps {
+export interface IModelSelectionHandlerProps {
   iModel: IModelConnection;
   selectionStorage: SelectionStorage;
   cachingHiliteSetProvider: CachingHiliteSetProvider;
@@ -31,13 +31,10 @@ export interface ViewportSelectionHandlerProps {
 
 /**
  * A handler that syncs selection between unified selection storage
- * (`SelectionStorage`) and a viewport (`imodel.hilited`).
- * It has nothing to do with the viewport component itself - the
- * viewport updates its highlighted elements when `imodel.hilited`
- * changes.
+ * (`SelectionStorage`) and an iModel (`iModel.selectionSet`, `iModel.hilited`).
  * @internal
  */
-export class ViewportSelectionHandler {
+export class IModelSelectionHandler {
   private _selectionSourceName = "Tool";
 
   private _iModel: IModelConnection;
@@ -50,9 +47,9 @@ export class ViewportSelectionHandler {
   private _isSuspended: boolean;
   private _cancelOngoingChanges = new Subject<void>();
   private _unifiedSelectionListenerDisposeFunc: () => void;
-  private _viewportListenerDisposeFunc: () => void;
+  private _iModelListenerDisposeFunc: () => void;
 
-  public constructor(props: ViewportSelectionHandlerProps) {
+  public constructor(props: IModelSelectionHandlerProps) {
     this._iModel = props.iModel;
     this._selectionStorage = props.selectionStorage;
     this._cachingHiliteSetProvider = props.cachingHiliteSetProvider;
@@ -61,7 +58,7 @@ export class ViewportSelectionHandler {
     this._isSuspended = false;
 
     this._hiliteSetProvider = createHiliteSetProvider({ queryExecutor: props.queryExecutor, metadataProvider: props.metadataProvider });
-    this._viewportListenerDisposeFunc = this._iModel.selectionSet.onChanged.addListener(this.onViewportSelectionChanged);
+    this._iModelListenerDisposeFunc = this._iModel.selectionSet.onChanged.addListener(this.onIModelSelectionChanged);
     this._unifiedSelectionListenerDisposeFunc = this._selectionStorage.selectionChangeEvent.addListener(this.onUnifiedSelectionChanged);
 
     // stop imodel from syncing tool selection with hilited list - we want to override that behavior
@@ -71,7 +68,7 @@ export class ViewportSelectionHandler {
 
   public dispose() {
     this._cancelOngoingChanges.next();
-    this._viewportListenerDisposeFunc();
+    this._iModelListenerDisposeFunc();
     this._unifiedSelectionListenerDisposeFunc();
   }
 
@@ -114,7 +111,7 @@ export class ViewportSelectionHandler {
   }
 
   private onUnifiedSelectionChanged = (args: StorageSelectionChangeEventArgs) => {
-    // viewports are only interested in top-level selection changes
+    // iModels are only interested in top-level selection changes
     if (args.iModelKey !== this._iModel.key || args.level !== 0) {
       return;
     }
@@ -170,7 +167,7 @@ export class ViewportSelectionHandler {
     });
   }
 
-  private onViewportSelectionChanged = async (event: SelectionSetEvent): Promise<void> => {
+  private onIModelSelectionChanged = async (event: SelectionSetEvent): Promise<void> => {
     if (this._isSuspended || event.set.iModel !== this._iModel) {
       return;
     }
@@ -182,10 +179,10 @@ export class ViewportSelectionHandler {
 
     const elementIds = this.getSelectionSetChangeIds(event);
     const scopedSelection = computeSelection({ queryExecutor: this._queryExecutor, elementIds, scope: this._activeScopeProvider() });
-    await this.handleViewportSelectionChange(event.type, scopedSelection);
+    await this.handleIModelSelectionChange(event.type, scopedSelection);
   };
 
-  private async handleViewportSelectionChange(type: SelectionSetEventType, iterator: AsyncIterableIterator<SelectableInstanceKey>) {
+  private async handleIModelSelectionChange(type: SelectionSetEventType, iterator: AsyncIterableIterator<SelectableInstanceKey>) {
     if (type === SelectionSetEventType.Replace) {
       this._selectionStorage.clearSelection({ iModelKey: this._iModel.key, source: this._selectionSourceName });
     }
