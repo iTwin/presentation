@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { assert } from "@itwin/core-bentley";
+import { assert, Id64String } from "@itwin/core-bentley";
 import {
   GenericInstanceFilter,
   GenericInstanceFilterRelationshipStep,
@@ -13,7 +13,16 @@ import {
   GenericInstanceFilterRuleOperator,
   GenericInstanceFilterRuleValue,
 } from "@itwin/core-common";
-import { EC, ECSql, getClass, Id64String, IMetadataProvider, parseFullClassName, PrimitiveValue } from "@itwin/presentation-shared";
+import {
+  createCachingECClassHierarchyInspector,
+  EC,
+  ECSql,
+  getClass,
+  IECClassHierarchyInspector,
+  IECMetadataProvider,
+  parseFullClassName,
+  PrimitiveValue,
+} from "@itwin/presentation-shared";
 
 /**
  * Column names of the SELECT clause created by [[NodeSelectClauseFactory]]. Order of the names matches the order of columns
@@ -223,7 +232,13 @@ export interface ECSqlSelectClauseBaseClassGroupingParams extends ECSqlSelectCla
  * @beta
  */
 export class NodeSelectQueryFactory {
-  public constructor(private _metadataProvider: IMetadataProvider) {}
+  private _metadataProvider: IECMetadataProvider;
+  private _classHierarchy: IECClassHierarchyInspector;
+
+  public constructor(props: { metadataProvider: IECMetadataProvider; classHierarchyInspector?: IECClassHierarchyInspector }) {
+    this._metadataProvider = props.metadataProvider;
+    this._classHierarchy = props.classHierarchyInspector ?? createCachingECClassHierarchyInspector({ metadataProvider: props.metadataProvider });
+  }
 
   /** Create a SELECT clause in a format understood by results reader of the library. */
   public async createSelectClause(props: NodeSelectClauseProps) {
@@ -270,7 +285,7 @@ export class NodeSelectQueryFactory {
     }
 
     const from = await specializeContentClass({
-      metadata: this._metadataProvider,
+      classHierarchyInspector: this._classHierarchy,
       contentClassName: contentClass.fullName,
       filterClassNames: def.propertyClassNames,
     });
@@ -643,16 +658,17 @@ function getECSqlComparisonOperator(op: Exclude<GenericInstanceFilterRuleOperato
   }
 }
 
+type JoinRelationshipPath = Parameters<typeof ECSql.createRelationshipPathJoinClause>[0]["path"];
 function assignRelationshipPathAliases(
   path: GenericInstanceFilterRelationshipStep[],
   pathIndex: number,
   sourceAlias: string,
   targetAlias: string,
-): ECSql.JoinRelationshipPath {
+): JoinRelationshipPath {
   function createAlias(fullClassName: string, index: number) {
     return `rel_${pathIndex}_${fullClassName.replaceAll(/[\.:]/g, "_")}_${index}`;
   }
-  const result: ECSql.JoinRelationshipPath = [];
+  const result: JoinRelationshipPath = [];
   path.forEach((step, i) => {
     result.push({
       targetClassName: step.targetClassName,
@@ -669,36 +685,34 @@ function assignRelationshipPathAliases(
 }
 
 interface SpecializeContentClassProps {
-  metadata: IMetadataProvider;
+  classHierarchyInspector: IECClassHierarchyInspector;
   contentClassName: string;
   filterClassNames: string[];
 }
-async function specializeContentClass(props: SpecializeContentClassProps) {
-  const filterClass = await getSpecializedPropertyClass(props.metadata, props.filterClassNames);
+async function specializeContentClass(props: SpecializeContentClassProps): Promise<string | undefined> {
+  const filterClass = await getSpecializedPropertyClass(props.classHierarchyInspector, props.filterClassNames);
   if (!filterClass) {
     return props.contentClassName;
   }
-  const contentClass = await getClass(props.metadata, props.contentClassName);
-  if (await filterClass.is(contentClass)) {
-    return filterClass.fullName;
+  if (await props.classHierarchyInspector.classDerivesFrom(filterClass, props.contentClassName)) {
+    return filterClass;
   }
-  if (await contentClass.is(filterClass)) {
+  if (await props.classHierarchyInspector.classDerivesFrom(props.contentClassName, filterClass)) {
     return props.contentClassName;
   }
   return undefined;
 }
 
-async function getSpecializedPropertyClass(metadata: IMetadataProvider, classes: string[]) {
+async function getSpecializedPropertyClass(classHierarchyInspector: IECClassHierarchyInspector, classes: string[]): Promise<string | undefined> {
   if (classes.length === 0) {
     return undefined;
   }
   const [currClassName, ...restClasses] = classes;
-  let currClass = await getClass(metadata, currClassName);
+  let resolvedClassName = currClassName;
   for (const propClassName of restClasses) {
-    const propClass = await getClass(metadata, propClassName);
-    if (await propClass.is(currClass)) {
-      currClass = propClass;
+    if (await classHierarchyInspector.classDerivesFrom(propClassName, resolvedClassName)) {
+      resolvedClassName = propClassName;
     }
   }
-  return currClass;
+  return resolvedClassName;
 }

@@ -39,55 +39,48 @@ describe("createMetadataProvider", () => {
           .resolves({
             name: "y",
           } as unknown as CoreSchema),
-      } as unknown as SchemaContext;
+      };
 
-      const provider = createMetadataProvider(schemaContext);
+      const provider = createMetadataProvider(schemaContext as unknown as SchemaContext);
       const schema = await provider.getSchema("x");
       assert(schema !== undefined);
 
-      // eslint-disable-next-line @typescript-eslint/unbound-method
       expect(schemaContext.getSchema).to.be.calledOnceWith(matchSchemaName);
       expect(schema.name).to.eq("y");
       expect(typeof schema.getClass === "function").to.be.true;
     });
 
-    it("caches schema request", async () => {
-      const matchSchemaName = sinon.match((key: SchemaKey) => key.compareByName("x"));
+    // a test for our workaround for https://github.com/iTwin/itwinjs-core/issues/6542
+    it("handles duplicate schema in cache error", async () => {
       const schemaContext = {
-        getSchema: sinon
-          .stub<[SchemaKey], CoreSchema>()
-          .withArgs(matchSchemaName)
-          .resolves({
-            name: "y",
-          } as unknown as CoreSchema),
-      } as unknown as SchemaContext;
+        getSchema: sinon.stub<[SchemaKey], CoreSchema>(),
+      };
+      schemaContext.getSchema.onFirstCall().resolves({ name: "x" });
+      schemaContext.getSchema.onSecondCall().rejects(new Error("The schema, x.01.02.03, already exists within this cache"));
+      schemaContext.getSchema.onThirdCall().resolves({ name: "x" });
 
-      const provider = createMetadataProvider(schemaContext);
+      const provider = createMetadataProvider(schemaContext as unknown as SchemaContext);
       await Promise.all([provider.getSchema("x"), provider.getSchema("x")]);
 
-      // eslint-disable-next-line @typescript-eslint/unbound-method
-      expect(schemaContext.getSchema).to.be.calledOnce;
+      expect(schemaContext.getSchema).to.be.calledThrice;
     });
 
-    it("removes schema request from cache when error occurs", async () => {
-      const matchSchemaName = sinon.match((key: SchemaKey) => key.compareByName("x"));
+    it("re-throws SchemaContext errors", async () => {
       const schemaContext = {
-        getSchema: sinon.stub<[SchemaKey], CoreSchema>().withArgs(matchSchemaName).rejects(),
-      } as unknown as SchemaContext;
+        getSchema: sinon.stub<[SchemaKey], CoreSchema>(),
+      };
+      schemaContext.getSchema.rejects(new Error("Unknown error"));
 
-      const provider = createMetadataProvider(schemaContext);
+      const provider = createMetadataProvider(schemaContext as unknown as SchemaContext);
       await expect(provider.getSchema("x")).to.eventually.be.rejected;
-      await expect(provider.getSchema("x")).to.eventually.be.rejected;
-
-      // eslint-disable-next-line @typescript-eslint/unbound-method
-      expect(schemaContext.getSchema).to.be.calledTwice;
+      expect(schemaContext.getSchema).to.be.calledOnce;
     });
 
     it("returns undefined from schema context", async () => {
       const matchSchemaName = sinon.match((key: SchemaKey) => key.compareByName("x"));
       const schemaContext = {
         getSchema: sinon.stub().resolves(undefined),
-      } as unknown as SchemaContext;
+      };
 
       const provider = createMetadataProvider(schemaContext);
       const schema = await provider.getSchema("x");

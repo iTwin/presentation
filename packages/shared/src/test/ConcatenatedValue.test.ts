@@ -38,8 +38,11 @@ describe("ConcatenatedValue", () => {
   describe("serialize", () => {
     it("serializes one part", async () => {
       expect(
-        await ConcatenatedValue.serialize({ type: "Integer", value: 123 }, async (part) => {
-          return ((part as TypedPrimitiveValue).value as number).toString();
+        await ConcatenatedValue.serialize({
+          parts: [{ type: "Integer", value: 123 }],
+          partFormatter: async (part) => {
+            return ((part as TypedPrimitiveValue).value as number).toString();
+          },
         }),
       ).to.eq("123");
     });
@@ -47,15 +50,28 @@ describe("ConcatenatedValue", () => {
     it("serializes all parts in order", async () => {
       const parts: ConcatenatedValuePart[] = ["str", { type: "Integer", value: 123 }, { className: "s.c", propertyName: "p", value: "test" }];
       expect(
-        await ConcatenatedValue.serialize(parts, async (part) => {
-          const partIndex = parts.indexOf(part);
-          if (partIndex === 1) {
-            // sleep for a bit to ensure we get parts in correct order even if they resolve in different order
-            await BeDuration.wait(10);
-          }
-          return `_${partIndex.toString()}_`;
+        await ConcatenatedValue.serialize({
+          parts,
+          partFormatter: async (part) => {
+            const partIndex = parts.indexOf(part);
+            if (partIndex === 1) {
+              // sleep for a bit to ensure we get parts in correct order even if they resolve in different order
+              await BeDuration.wait(10);
+            }
+            return `_${partIndex.toString()}_`;
+          },
         }),
       ).to.eq("_0__1__2_");
+    });
+
+    it("joins parts with given separator", async () => {
+      expect(
+        await ConcatenatedValue.serialize({
+          parts: ["x", "y"],
+          partFormatter: async (part) => part as string,
+          separator: "-",
+        }),
+      ).to.eq("x-y");
     });
   });
 });

@@ -18,7 +18,7 @@ describe("createECSqlQueryExecutor", () => {
       };
 
       const executor = createECSqlQueryExecutor(imodel);
-      const reader = executor.createQueryReader("ecsql");
+      const reader = executor.createQueryReader({ ecsql: "ecsql" });
       for await (const _ of reader) {
       }
 
@@ -30,13 +30,27 @@ describe("createECSqlQueryExecutor", () => {
       );
     });
 
-    it("calls IModel's `createQueryReader` with ECSqlPropertyNames row format", async () => {
+    it("calls IModel's `createQueryReader` with CTEs", async () => {
+      const imodel = {
+        createQueryReader: sinon.stub().returns(createCoreECSqlReaderStub([{}, {}])),
+      };
+
+      const executor = createECSqlQueryExecutor(imodel);
+      const reader = executor.createQueryReader({ ctes: ["cte1", "cte2"], ecsql: "ecsql" });
+      for await (const _ of reader) {
+      }
+
+      // eslint-disable-next-line @typescript-eslint/unbound-method
+      expect(imodel.createQueryReader).to.be.calledOnceWith("WITH RECURSIVE cte1, cte2 ecsql");
+    });
+
+    it("calls IModel's `createQueryReader` with `ECSqlPropertyNames` row format", async () => {
       const imodel = {
         createQueryReader: sinon.stub().returns(createCoreECSqlReaderStub([])),
       };
 
       const executor = createECSqlQueryExecutor(imodel);
-      const reader = executor.createQueryReader("ecsql", undefined, { rowFormat: "ECSqlPropertyNames" });
+      const reader = executor.createQueryReader({ ecsql: "ecsql" }, { rowFormat: "ECSqlPropertyNames" });
       for await (const _ of reader) {
       }
 
@@ -48,13 +62,13 @@ describe("createECSqlQueryExecutor", () => {
       );
     });
 
-    it("calls IModel's `createQueryReader` with Indexes row format", async () => {
+    it("calls IModel's `createQueryReader` with `Indexes` row format", async () => {
       const imodel = {
         createQueryReader: sinon.stub().returns(createCoreECSqlReaderStub([])),
       };
 
       const executor = createECSqlQueryExecutor(imodel);
-      const reader = executor.createQueryReader("ecsql", undefined, { rowFormat: "Indexes" });
+      const reader = executor.createQueryReader({ ecsql: "ecsql" }, { rowFormat: "Indexes" });
       for await (const _ of reader) {
       }
 
@@ -124,7 +138,7 @@ describe("createECSqlQueryExecutor", () => {
       expectedBinder.bindNull(10);
 
       const executor = createECSqlQueryExecutor(imodel);
-      const reader = executor.createQueryReader("ecsql", bindings, undefined);
+      const reader = executor.createQueryReader({ ecsql: "ecsql", bindings }, undefined);
       for await (const _ of reader) {
       }
 
@@ -143,7 +157,7 @@ describe("createECSqlQueryExecutor", () => {
       };
 
       const executor = createECSqlQueryExecutor(imodel);
-      const reader = executor.createQueryReader("ecsql", undefined, { rowFormat: "ECSqlPropertyNames" });
+      const reader = executor.createQueryReader({ ecsql: "ecsql" }, { rowFormat: "ECSqlPropertyNames" });
 
       const resultRows = new Array<any>();
       for await (const row of reader) {
@@ -163,7 +177,7 @@ describe("createECSqlQueryExecutor", () => {
       };
 
       const executor = createECSqlQueryExecutor(imodel);
-      const reader = executor.createQueryReader("ecsql", undefined, { rowFormat: "Indexes" });
+      const reader = executor.createQueryReader({ ecsql: "ecsql" }, { rowFormat: "Indexes" });
 
       const resultRows = new Array<any>();
       for await (const row of reader) {

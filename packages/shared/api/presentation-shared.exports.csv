@@ -1,32 +1,26 @@
 sep=;
 Release Tag;API Item
 beta;ArrayElement
-beta;BisInstanceLabelSelectClauseFactory 
-beta;BisInstanceLabelSelectClauseFactoryProps
-beta;ClassBasedInstanceLabelSelectClauseFactory 
-beta;ClassBasedInstanceLabelSelectClauseFactoryProps
-beta;ClassBasedLabelSelectClause
-beta;ConcatenatedValue = ConcatenatedValuePart | ConcatenatedValuePart[]
+beta;ConcatenatedValue = ConcatenatedValuePart[]
 beta;ConcatenatedValue
-beta;ConcatenatedValuePart = PropertyValue | TypedPrimitiveValue | string
+beta;ConcatenatedValuePart = PrimitivePropertyValue | TypedPrimitiveValue | string
 beta;ConcatenatedValuePart
+beta;createBisInstanceLabelSelectClauseFactory(props: BisInstanceLabelSelectClauseFactoryProps): IInstanceLabelSelectClauseFactory
+beta;createCachingECClassHierarchyInspector(props:
+beta;createClassBasedInstanceLabelSelectClauseFactory(props: ClassBasedInstanceLabelSelectClauseFactoryProps): IInstanceLabelSelectClauseFactory
+beta;createDefaultInstanceLabelSelectClauseFactory(): IInstanceLabelSelectClauseFactory
 beta;createDefaultValueFormatter(): IPrimitiveValueFormatter
-beta;CreateInstanceLabelSelectClauseProps
-beta;DefaultInstanceLabelSelectClauseFactory 
 beta;EC
 beta;ECSqlBinding =
-beta;ECSqlBindingType = "boolean" | "double" | "id" | "idset" | "int" | "long" | "string" | "point2d" | "point3d"
 beta;ECSqlQueryDef
-beta;ECSqlQueryReader = AsyncIterableIterator
 beta;ECSqlQueryReaderOptions
 beta;ECSqlQueryRow
-beta;ECSqlQueryRowFormat = "ECSqlPropertyNames" | "Indexes"
-beta;getClass(metadata: IMetadataProvider, fullClassName: string): Promise
-beta;Id64String = string
+beta;getClass(metadata: IECMetadataProvider, fullClassName: string): Promise
+beta;IECClassHierarchyInspector
+beta;IECMetadataProvider
 beta;IECSqlQueryExecutor
 beta;IInstanceLabelSelectClauseFactory
 beta;ILogger
-beta;IMetadataProvider
 beta;InstanceKey
 beta;InstanceKey
 beta;IPrimitiveValueFormatter = (value: TypedPrimitiveValue) => Promise
@@ -36,14 +30,8 @@ beta;NOOP_LOGGER: ILogger
 beta;normalizeFullClassName(fullClassName: string): string
 beta;OmitOverUnion
 beta;parseFullClassName(fullClassName: string):
-beta;Point2d
-beta;Point3d
 beta;PrimitiveValue = Id64String | string | number | boolean | Date | Point2d | Point3d
 beta;PrimitiveValue
-beta;PrimitiveValueType = "Id" | Exclude
-beta;PropertyValue
-beta;RelationshipPath
-beta;RelationshipPathStep
 beta;trimWhitespace(str: string): string
 beta;trimWhitespace(str: string | undefined): string | undefined
 beta;TypedPrimitiveValue

@@ -9,7 +9,7 @@ import { TypedPrimitiveValue } from "./Values";
 
 /**
  * A type definition for a function that knows how to create a display string for a typed primitive value.
- * @see [[createDefaultValueFormatter]]
+ * @see `createDefaultValueFormatter`
  * @beta
  */
 export type IPrimitiveValueFormatter = (value: TypedPrimitiveValue) => Promise<string>;
@@ -27,6 +27,7 @@ export type IPrimitiveValueFormatter = (value: TypedPrimitiveValue) => Promise<s
  * - `Point2d` values are formatted in `(x, y)` format.
  * - `Point3d` values are formatted in `(x, y, z)` format.
  * - `String` and `Id` values are turned as-is.
+ *
  * @beta
  */
 export function createDefaultValueFormatter(): IPrimitiveValueFormatter {

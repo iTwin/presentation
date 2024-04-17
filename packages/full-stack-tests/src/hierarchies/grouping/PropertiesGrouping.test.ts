@@ -30,7 +30,7 @@ describe("Hierarchies", () => {
       imodel: IModelConnection,
       specifiedGrouping: ECSqlSelectClausePropertiesGroupingParams,
     ): IHierarchyLevelDefinitionsFactory {
-      const selectQueryFactory = new NodeSelectQueryFactory(createMetadataProvider(imodel));
+      const selectQueryFactory = new NodeSelectQueryFactory({ metadataProvider: createMetadataProvider(imodel) });
       return {
         async defineHierarchyLevel({ parentNode }) {
           if (!parentNode) {
@@ -179,7 +179,7 @@ describe("Hierarchies", () => {
           return { childSubject1, childSubject2 };
         });
 
-        const selectQueryFactory = new NodeSelectQueryFactory(createMetadataProvider(imodel));
+        const selectQueryFactory = new NodeSelectQueryFactory({ metadataProvider: createMetadataProvider(imodel) });
         const customHierarchy: IHierarchyLevelDefinitionsFactory = {
           async defineHierarchyLevel({ parentNode }) {
             if (!parentNode) {
@@ -308,7 +308,7 @@ describe("Hierarchies", () => {
             return { schema, x1, x2 };
           },
           async (imodel, { schema, x1, x2 }) => {
-            const selectQueryFactory = new NodeSelectQueryFactory(createMetadataProvider(imodel));
+            const selectQueryFactory = new NodeSelectQueryFactory({ metadataProvider: createMetadataProvider(imodel) });
             const hierarchy: IHierarchyLevelDefinitionsFactory = {
               async defineHierarchyLevel({ parentNode }) {
                 if (!parentNode) {
@@ -373,7 +373,7 @@ describe("Hierarchies", () => {
             return { schema, x1 };
           },
           async (imodel, { schema, x1 }) => {
-            const selectQueryFactory = new NodeSelectQueryFactory(createMetadataProvider(imodel));
+            const selectQueryFactory = new NodeSelectQueryFactory({ metadataProvider: createMetadataProvider(imodel) });
             const hierarchy: IHierarchyLevelDefinitionsFactory = {
               async defineHierarchyLevel({ parentNode }) {
                 if (!parentNode) {
@@ -441,7 +441,7 @@ describe("Hierarchies", () => {
             return { schema, x1, x2 };
           },
           async (imodel, { schema, x1, x2 }) => {
-            const selectQueryFactory = new NodeSelectQueryFactory(createMetadataProvider(imodel));
+            const selectQueryFactory = new NodeSelectQueryFactory({ metadataProvider: createMetadataProvider(imodel) });
             const hierarchy: IHierarchyLevelDefinitionsFactory = {
               async defineHierarchyLevel({ parentNode }) {
                 if (!parentNode) {
@@ -524,7 +524,7 @@ describe("Hierarchies", () => {
             return { schema, x1 };
           },
           async (imodel, { schema, x1 }) => {
-            const selectQueryFactory = new NodeSelectQueryFactory(createMetadataProvider(imodel));
+            const selectQueryFactory = new NodeSelectQueryFactory({ metadataProvider: createMetadataProvider(imodel) });
             const hierarchy: IHierarchyLevelDefinitionsFactory = {
               async defineHierarchyLevel({ parentNode }) {
                 if (!parentNode) {
@@ -583,7 +583,7 @@ describe("Hierarchies", () => {
             return { schema, x1, x2 };
           },
           async (imodel, { schema, x1, x2 }) => {
-            const selectQueryFactory = new NodeSelectQueryFactory(createMetadataProvider(imodel));
+            const selectQueryFactory = new NodeSelectQueryFactory({ metadataProvider: createMetadataProvider(imodel) });
             const hierarchy: IHierarchyLevelDefinitionsFactory = {
               async defineHierarchyLevel({ parentNode }) {
                 if (!parentNode) {
@@ -652,7 +652,7 @@ describe("Hierarchies", () => {
             return { schema, x, y };
           },
           async (imodel, { schema, x, y }) => {
-            const selectQueryFactory = new NodeSelectQueryFactory(createMetadataProvider(imodel));
+            const selectQueryFactory = new NodeSelectQueryFactory({ metadataProvider: createMetadataProvider(imodel) });
             const hierarchy: IHierarchyLevelDefinitionsFactory = {
               async defineHierarchyLevel({ parentNode }) {
                 if (!parentNode) {

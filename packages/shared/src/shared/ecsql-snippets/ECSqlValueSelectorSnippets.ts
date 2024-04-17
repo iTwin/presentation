@@ -11,20 +11,16 @@ import { PrimitiveValue, TypedPrimitiveValue } from "../Values";
  * A union of property types that need special handling when creating a property value selector.
  * For example, Guid values are stored as binary and need to be selected with `GuidToStr` function to
  * get a meaningful value.
- *
- * @beta
  */
-export type SpecialPropertyType = "Navigation" | "Guid" | "Point2d" | "Point3d";
+type SpecialPropertyType = "Navigation" | "Guid" | "Point2d" | "Point3d";
 
 /**
  * Props for selecting property value along with its metadata.
  *
  * It's recommended to only select properties with metadata only when they need additional formatting and
- * otherwise use [[createPropertyValueSelector]] to select their value.
- *
- * @beta
+ * otherwise use `createPropertyValueSelector` to select their value.
  */
-export interface PropertyValueSelectClauseProps {
+interface PropertyValueSelectClauseProps {
   /** Full class name of the property. Format: `SchemaName.ClassName`. */
   propertyClassName: string;
   /** Query alias of the class that contains the property. */
@@ -37,9 +33,8 @@ export interface PropertyValueSelectClauseProps {
 
 /**
  * Props for selecting a primitive value using given ECSQL selector.
- * @beta
  */
-export interface PrimitiveValueSelectorProps {
+interface PrimitiveValueSelectorProps {
   /** ECSQL selector to query the value */
   selector: string;
   /** Type of the value. Defaults to `String`. */
@@ -48,23 +43,22 @@ export interface PrimitiveValueSelectorProps {
 
 /**
  * A union of prop types for selecting a value and its metadata in ECSQL query.
- * @see [[createTypedValueSelector]]
- * @beta
+ * @internal This is an internal type used in public API.
  */
 export type TypedValueSelectClauseProps = PropertyValueSelectClauseProps | TypedPrimitiveValue | PrimitiveValueSelectorProps;
 
-/** @beta */
+/** @internal */
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export namespace TypedValueSelectClauseProps {
-  /** @beta */
+  /** @internal */
   export function isPropertySelector(props: TypedValueSelectClauseProps): props is PropertyValueSelectClauseProps {
     return !!(props as PropertyValueSelectClauseProps).propertyName;
   }
-  /** @beta */
+  /** @internal */
   export function isPrimitiveValue(props: TypedValueSelectClauseProps): props is TypedPrimitiveValue {
     return !!(props as TypedPrimitiveValue).value;
   }
-  /** @beta */
+  /** @internal */
   export function isPrimitiveValueSelector(props: TypedValueSelectClauseProps): props is PrimitiveValueSelectorProps {
     return !!(props as PrimitiveValueSelectorProps).selector;
   }
@@ -121,7 +115,7 @@ export function createRawPrimitiveValueSelector(value: PrimitiveValue | undefine
  * otherwise. Example result: `IIF(CHECK_SELECTOR, VALUE_SELECTOR, NULL)`.
  *
  * @note In SQL `NULL` is not considered falsy, so when checking for `NULL` values, the `checkSelector` should
- * be like `{selector} IS NOT NULL`.
+ * be like `{selector} IS NOT NULL` rather than just `${selector}`.
  *
  * @beta
  */
@@ -139,10 +133,10 @@ export function createNullableSelector(props: { checkSelector: string; valueSele
  * `NULL` result when the argument selector results in `NULL`. Example result with `checkSelector`:
  * `IIF(CHECK_SELECTOR, json_array(VALUE_SELECTOR_1, VALUE_SELECTOR_2, ...), NULL)`.
  *
- * @note The resulting JSON is of [[ConcatenatedValue]] type and it's recommended to use [[ConcatenatedValue.serialize]] to
+ * @note The resulting JSON is of `ConcatenatedValue` type and it's recommended to use `ConcatenatedValue.serialize` to
  * handle each individual part.
  *
- * @see ConcatenatedValue
+ * @see `ConcatenatedValue`
  *
  * @beta
  */
@@ -228,12 +222,12 @@ function createPrimitiveValueJsonSelector(value: PrimitiveValue): string {
  * `NULL` result when `checkSelector` results in a falsy value. Example result with `checkSelector`:
  * `IIF(CHECK_SELECTOR, VALUE_SELECTOR_1 || VALUE_SELECTOR_2 || ..., NULL)`.
  *
- * @note Not all types of [[TypedValueSelectClauseProps]] can be serialized to a user-friendly string, e.g. when
+ * @note Not all types of `TypedValueSelectClauseProps` can be serialized to a user-friendly string, e.g. when
  * selecting a numeric value with units, this function is going to select the raw value. To create properly formatted
  * concatenated values:
- * 1. They should be selected with [[createConcatenatedValueJsonSelector]], which returns a serialized JSON object.
- * 2. The JSON should be parsed from resulting string and passed to [[ConcatenatedValue.serialize]], which additionally
- *    takes a formatter. One can be created using [[createDefaultValueFormatter]].
+ * 1. They should be selected with `createConcatenatedValueJsonSelector`, which returns a serialized JSON object.
+ * 2. The JSON should be parsed from resulting string and passed to `ConcatenatedValue.serialize`, which additionally
+ *    takes a formatter. One can be created using `createDefaultValueFormatter`.
  *
  * @beta
  */

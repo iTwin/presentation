@@ -4,8 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import naturalCompare from "natural-compare-lite";
-import { assert, LRUMap } from "@itwin/core-bentley";
-import { EC, getClass, IMetadataProvider } from "@itwin/presentation-shared";
+import { assert } from "@itwin/core-bentley";
 import {
   HierarchyNode,
   HierarchyNodeKey,
@@ -111,35 +110,6 @@ export function compareNodesByLabel<TLhsNode extends { label: string }, TRhsNode
 }
 
 /** @internal */
-export class BaseClassChecker {
-  private _map: LRUMap<string, Promise<boolean> | boolean>;
-  private _metadataProvider: IMetadataProvider;
-
-  public constructor(metadataProvider: IMetadataProvider, cacheSize: number = 0) {
-    this._map = new LRUMap(cacheSize);
-    this._metadataProvider = metadataProvider;
-  }
-
-  private createCacheKey(className: string, baseClassName: string) {
-    return `${className}${baseClassName}`;
-  }
-
-  public isECClassOfBaseECClass(ecClassNameToCheck: string, baseECClass: EC.Class): Promise<boolean> | boolean {
-    const cacheKey = this.createCacheKey(ecClassNameToCheck, baseECClass.fullName);
-    let isCurrentNodeClassOfBase = this._map.get(cacheKey);
-    if (isCurrentNodeClassOfBase === undefined) {
-      isCurrentNodeClassOfBase = getClass(this._metadataProvider, ecClassNameToCheck).then(async (currentNodeECClass) => {
-        const result = await currentNodeECClass.is(baseECClass);
-        this._map.set(cacheKey, result);
-        return result;
-      });
-      this._map.set(cacheKey, isCurrentNodeClassOfBase);
-    }
-    return isCurrentNodeClassOfBase;
-  }
-}
-
-/** @internal */
 // istanbul ignore next
 export function createNodeIdentifierForLogging(node: ParentHierarchyNode | HierarchyNode | ParsedHierarchyNode | undefined) {
   if (!node) {
@@ -148,15 +118,4 @@ export function createNodeIdentifierForLogging(node: ParentHierarchyNode | Hiera
   const { label, key } = node;
   const parentKeys = "parentKeys" in node ? node.parentKeys : "<unknown>";
   return JSON.stringify({ label, key, parentKeys });
-}
-
-/** @internal */
-export function normalizeFullClassName(fullClassName: string): string {
-  const colonPos = fullClassName.indexOf(":");
-  if (-1 === colonPos) {
-    return fullClassName;
-  }
-  const schemaName = fullClassName.slice(0, colonPos);
-  const className = fullClassName.slice(colonPos + 1);
-  return `${schemaName}.${className}`;
 }

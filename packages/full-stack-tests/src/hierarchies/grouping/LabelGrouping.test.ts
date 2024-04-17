@@ -36,7 +36,7 @@ describe("Hierarchies", () => {
         return { childSubject1, childSubject2, childSubject3, childSubject4 };
       });
 
-      const selectQueryFactory = new NodeSelectQueryFactory(createMetadataProvider(imodel));
+      const selectQueryFactory = new NodeSelectQueryFactory({ metadataProvider: createMetadataProvider(imodel) });
       const hierarchy: IHierarchyLevelDefinitionsFactory = {
         async defineHierarchyLevel(props) {
           if (!props.parentNode) {
@@ -108,7 +108,7 @@ describe("Hierarchies", () => {
         return { childSubject1, childSubject2, childSubject3, childSubject4 };
       });
 
-      const selectQueryFactory = new NodeSelectQueryFactory(createMetadataProvider(imodel));
+      const selectQueryFactory = new NodeSelectQueryFactory({ metadataProvider: createMetadataProvider(imodel) });
       const hierarchy: IHierarchyLevelDefinitionsFactory = {
         async defineHierarchyLevel(props) {
           if (!props.parentNode) {
@@ -182,7 +182,7 @@ describe("Hierarchies", () => {
         return { rootSubject, childSubject1, childSubject2, childSubject3 };
       });
 
-      const selectQueryFactory = new NodeSelectQueryFactory(createMetadataProvider(imodel));
+      const selectQueryFactory = new NodeSelectQueryFactory({ metadataProvider: createMetadataProvider(imodel) });
       const hierarchy: IHierarchyLevelDefinitionsFactory = {
         async defineHierarchyLevel(props) {
           if (!props.parentNode) {
@@ -235,7 +235,7 @@ describe("Hierarchies", () => {
         return { rootSubject, childSubject1, childSubject2 };
       });
 
-      const selectQueryFactory = new NodeSelectQueryFactory(createMetadataProvider(imodel));
+      const selectQueryFactory = new NodeSelectQueryFactory({ metadataProvider: createMetadataProvider(imodel) });
       const hierarchy: IHierarchyLevelDefinitionsFactory = {
         async defineHierarchyLevel(props) {
           if (!props.parentNode) {
@@ -282,7 +282,7 @@ describe("Hierarchies", () => {
         return { rootSubject, visibleSubject1, visibleSubject2 };
       });
 
-      const selectQueryFactory = new NodeSelectQueryFactory(createMetadataProvider(imodel));
+      const selectQueryFactory = new NodeSelectQueryFactory({ metadataProvider: createMetadataProvider(imodel) });
       const hierarchy: IHierarchyLevelDefinitionsFactory = {
         async defineHierarchyLevel(props) {
           if (!props.parentNode) {

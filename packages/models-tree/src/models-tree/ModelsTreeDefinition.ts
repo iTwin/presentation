@@ -3,6 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
+import { Id64String } from "@itwin/core-bentley";
 import {
   ClassBasedHierarchyLevelDefinitionsFactory,
   DefineHierarchyLevelProps,
@@ -18,29 +19,29 @@ import {
   ProcessedHierarchyNode,
 } from "@itwin/presentation-hierarchies";
 import {
-  BisInstanceLabelSelectClauseFactory,
-  EC,
+  createBisInstanceLabelSelectClauseFactory,
+  createCachingECClassHierarchyInspector,
   ECSql,
   ECSqlBinding,
-  Id64String,
+  IECClassHierarchyInspector,
+  IECMetadataProvider,
   IInstanceLabelSelectClauseFactory,
-  IMetadataProvider,
   InstanceKey,
-  parseFullClassName,
 } from "@itwin/presentation-shared";
 
 interface ModelsTreeDefinitionProps {
-  metadataProvider: IMetadataProvider;
+  metadataProvider: IECMetadataProvider;
+  classHierarchyInspector?: IECClassHierarchyInspector;
 }
 
 interface ModelsTreeInstanceKeyPathsFromInstanceKeysProps {
-  metadataProvider: IMetadataProvider;
+  classHierarchyInspector: IECClassHierarchyInspector;
   queryExecutor: ILimitingECSqlQueryExecutor;
   keys: InstanceKey[];
 }
 
 interface ModelsTreeInstanceKeyPathsFromInstanceLabelProps {
-  metadataProvider: IMetadataProvider;
+  classHierarchyInspector: IECClassHierarchyInspector;
   queryExecutor: ILimitingECSqlQueryExecutor;
   label: string;
 }
@@ -57,11 +58,12 @@ export namespace ModelsTreeInstanceKeyPathsProps {
 export class ModelsTreeDefinition implements IHierarchyLevelDefinitionsFactory {
   private _impl: ClassBasedHierarchyLevelDefinitionsFactory;
   private _selectQueryFactory: NodeSelectQueryFactory;
-  private _nodeLabelSelectClauseFactory: BisInstanceLabelSelectClauseFactory;
+  private _nodeLabelSelectClauseFactory: IInstanceLabelSelectClauseFactory;
 
   public constructor(props: ModelsTreeDefinitionProps) {
+    const classHierarchyInspector = props.classHierarchyInspector ?? createCachingECClassHierarchyInspector({ metadataProvider: props.metadataProvider });
     this._impl = new ClassBasedHierarchyLevelDefinitionsFactory({
-      metadataProvider: props.metadataProvider,
+      classHierarchyInspector,
       hierarchy: {
         rootNodes: async (requestProps) => this.createRootHierarchyLevelDefinition(requestProps),
         childNodes: [
@@ -88,8 +90,8 @@ export class ModelsTreeDefinition implements IHierarchyLevelDefinitionsFactory {
         ],
       },
     });
-    this._selectQueryFactory = new NodeSelectQueryFactory(props.metadataProvider);
-    this._nodeLabelSelectClauseFactory = new BisInstanceLabelSelectClauseFactory({ metadataProvider: props.metadataProvider });
+    this._selectQueryFactory = new NodeSelectQueryFactory({ metadataProvider: props.metadataProvider, classHierarchyInspector });
+    this._nodeLabelSelectClauseFactory = createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector });
   }
 
   public async postProcessNode(node: ProcessedHierarchyNode): Promise<ProcessedHierarchyNode> {
@@ -494,7 +496,7 @@ export class ModelsTreeDefinition implements IHierarchyLevelDefinitionsFactory {
 
   public static async createInstanceKeyPaths(props: ModelsTreeInstanceKeyPathsProps) {
     if (ModelsTreeInstanceKeyPathsProps.isLabelProps(props)) {
-      const labelsFactory = new BisInstanceLabelSelectClauseFactory({ metadataProvider: props.metadataProvider });
+      const labelsFactory = createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: props.classHierarchyInspector });
       return createInstanceKeyPathsFromInstanceLabel({ ...props, labelsFactory });
     }
     return createInstanceKeyPathsFromInstanceKeys(props);
@@ -679,21 +681,13 @@ async function createInstanceKeyPathsFromInstanceKeys(props: ModelsTreeInstanceK
     subjects: new Array<Id64String>(),
     elements: new Array<Id64String>(),
   };
-  const bisSchema = await props.metadataProvider.getSchema("BisCore");
-  if (!bisSchema) {
-    throw new Error("Failed to load `BisCore` schema");
-  }
-  const subjectClass = await getSchemaClass(bisSchema, "Subject");
-  const modelClass = await getSchemaClass(bisSchema, "Model");
-  const categoryClass = await getSchemaClass(bisSchema, "SpatialCategory");
   await Promise.all(
     props.keys.map(async (key) => {
-      const keyClass = await getClass(props.metadataProvider, key.className);
-      if (await keyClass.is(subjectClass)) {
+      if (await props.classHierarchyInspector.classDerivesFrom(key.className, "BisCore.Subject")) {
         ids.subjects.push(key.id);
-      } else if (await keyClass.is(modelClass)) {
+      } else if (await props.classHierarchyInspector.classDerivesFrom(key.className, "BisCore.Model")) {
         ids.models.push(key.id);
-      } else if (await keyClass.is(categoryClass)) {
+      } else if (await props.classHierarchyInspector.classDerivesFrom(key.className, "BisCore.SpatialCategory")) {
         ids.categories.push(key.id);
       } else {
         ids.elements.push(key.id);
@@ -834,21 +828,4 @@ function flatten<T>(source: Array<ArrayOrValue<T>>): T[] {
   return source.reduce<T[]>((flat, item): T[] => {
     return [...flat, ...(Array.isArray(item) ? flatten(item) : [item])];
   }, new Array<T>());
-}
-
-async function getClass(metadata: IMetadataProvider, fullClassName: string) {
-  const { schemaName, className } = parseFullClassName(fullClassName);
-  const schema = await metadata.getSchema(schemaName);
-  if (!schema) {
-    throw new Error(`Schema "${schemaName}" not found`);
-  }
-  return getSchemaClass(schema, className);
-}
-
-async function getSchemaClass(schema: EC.Schema, className: string) {
-  const ecClass = await schema.getClass(className);
-  if (!ecClass) {
-    throw new Error(`Class "${className}" not found in schema "${schema.name}"`);
-  }
-  return ecClass;
 }

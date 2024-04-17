@@ -8,12 +8,17 @@ import * as ECSql from "./shared/ecsql-snippets";
 
 export { ECSql };
 
-export * from "./shared/ConcatenatedValue";
-export * from "./shared/ECSqlCore";
-export * from "./shared/Formatting";
-export * from "./shared/InstanceLabelSelectClauseFactory";
-export * from "./shared/Logging";
-export * from "./shared/MappedTypes";
-export * from "./shared/Metadata";
-export * from "./shared/Utils";
-export * from "./shared/Values";
+export { ConcatenatedValue, ConcatenatedValuePart } from "./shared/ConcatenatedValue";
+export { ECSqlBinding, ECSqlQueryDef, IECSqlQueryExecutor, ECSqlQueryReaderOptions, ECSqlQueryRow } from "./shared/ECSqlCore";
+export { IPrimitiveValueFormatter, createDefaultValueFormatter } from "./shared/Formatting";
+export {
+  IInstanceLabelSelectClauseFactory,
+  createDefaultInstanceLabelSelectClauseFactory,
+  createClassBasedInstanceLabelSelectClauseFactory,
+  createBisInstanceLabelSelectClauseFactory,
+} from "./shared/InstanceLabelSelectClauseFactory";
+export { ILogger, NOOP_LOGGER, LogFunction, LogLevel } from "./shared/Logging";
+export { ArrayElement, OmitOverUnion } from "./shared/MappedTypes";
+export { createCachingECClassHierarchyInspector, EC, getClass, IECClassHierarchyInspector, IECMetadataProvider } from "./shared/Metadata";
+export { normalizeFullClassName, parseFullClassName, trimWhitespace } from "./shared/Utils";
+export { InstanceKey, PrimitiveValue, TypedPrimitiveValue } from "./shared/Values";

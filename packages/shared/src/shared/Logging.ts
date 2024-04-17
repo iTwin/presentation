@@ -3,10 +3,16 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-/** @beta */
+/**
+ * Defines a type for a logging function.
+ * @beta
+ */
 export type LogFunction = (category: string, message: string) => void;
 
-/** @beta */
+/**
+ * Defines logging severities.
+ * @beta
+ */
 export type LogLevel = "error" | "warning" | "info" | "trace";
 
 /**
@@ -22,7 +28,7 @@ export interface ILogger {
 }
 
 /**
- * A logger implementation does nothing.
+ * A logger implementation that does nothing.
  * @beta
  */
 // istanbul ignore next

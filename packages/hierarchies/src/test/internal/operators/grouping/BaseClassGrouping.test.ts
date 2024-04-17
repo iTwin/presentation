@@ -7,7 +7,6 @@ import { expect } from "chai";
 import sinon from "sinon";
 import { EC } from "@itwin/presentation-shared";
 import { GroupingNodeKey } from "../../../../hierarchies/HierarchyNode";
-import { BaseClassChecker } from "../../../../hierarchies/internal/Common";
 import * as baseClassGrouping from "../../../../hierarchies/internal/operators/grouping/BaseClassGrouping";
 import { createMetadataProviderStub, createTestProcessedGroupingNode, createTestProcessedInstanceNode } from "../../../Utils";
 
@@ -206,7 +205,7 @@ describe("BaseClassGrouping", () => {
         }),
       ];
       const ecClass = { fullName: "TestSchema.ParentClass", label: "ParentClass" } as unknown as EC.Class;
-      expect(await baseClassGrouping.createBaseClassGroupsForSingleBaseClass(nodes, ecClass, new BaseClassChecker(metadataProvider))).to.deep.eq({
+      expect(await baseClassGrouping.createBaseClassGroupsForSingleBaseClass(nodes, ecClass, metadataProvider.classHierarchyInspector)).to.deep.eq({
         groupingType: "base-class",
         grouped: [],
         ungrouped: nodes,
@@ -235,7 +234,7 @@ describe("BaseClassGrouping", () => {
         type: "class-grouping",
         className: eCClass.fullName,
       };
-      expect(await baseClassGrouping.createBaseClassGroupsForSingleBaseClass(nodes, eCClass, new BaseClassChecker(metadataProvider))).to.deep.eq({
+      expect(await baseClassGrouping.createBaseClassGroupsForSingleBaseClass(nodes, eCClass, metadataProvider.classHierarchyInspector)).to.deep.eq({
         groupingType: "base-class",
         grouped: [
           createTestProcessedGroupingNode({
@@ -248,40 +247,6 @@ describe("BaseClassGrouping", () => {
         ],
         ungrouped: [],
       });
-    });
-
-    it("doesn't request ECClass when it was requested before with the same className", async () => {
-      const nodes = [
-        createTestProcessedInstanceNode({
-          key: { type: "instances", instanceKeys: [{ className: "TestSchema.A", id: "0x1" }] },
-          parentKeys: ["x"],
-          label: "1",
-          processingParams: {
-            grouping: {
-              byBaseClasses: {
-                fullClassNames: ["TestSchema.ParentClass"],
-              },
-            },
-          },
-        }),
-        createTestProcessedInstanceNode({
-          key: { type: "instances", instanceKeys: [{ className: "TestSchema.A", id: "0x2" }] },
-          parentKeys: ["x"],
-          label: "2",
-          processingParams: {
-            grouping: {
-              byBaseClasses: {
-                fullClassNames: ["TestSchema.ParentClass"],
-              },
-            },
-          },
-        }),
-      ];
-      metadataProvider.stubEntityClass({ schemaName: "TestSchema", className: "A", classLabel: "Class A", is: async () => true });
-      const ecClass = { fullName: "TestSchema.ParentClass", label: "ParentClass" } as unknown as EC.Class;
-
-      await baseClassGrouping.createBaseClassGroupsForSingleBaseClass(nodes, ecClass, new BaseClassChecker(metadataProvider, 1));
-      expect(metadataProvider.getClassRequestCount({ schemaName: "TestSchema", className: "A" })).to.eq(1);
     });
 
     it("groups multiple instance nodes", async () => {
@@ -321,7 +286,7 @@ describe("BaseClassGrouping", () => {
         className: ecClass.fullName,
       };
 
-      expect(await baseClassGrouping.createBaseClassGroupsForSingleBaseClass(nodes, ecClass, new BaseClassChecker(metadataProvider))).to.deep.eq({
+      expect(await baseClassGrouping.createBaseClassGroupsForSingleBaseClass(nodes, ecClass, metadataProvider.classHierarchyInspector)).to.deep.eq({
         groupingType: "base-class",
         grouped: [
           createTestProcessedGroupingNode({
@@ -372,7 +337,7 @@ describe("BaseClassGrouping", () => {
         className: ecClass.fullName,
       };
 
-      expect(await baseClassGrouping.createBaseClassGroupsForSingleBaseClass(nodes, ecClass, new BaseClassChecker(metadataProvider))).to.deep.eq({
+      expect(await baseClassGrouping.createBaseClassGroupsForSingleBaseClass(nodes, ecClass, metadataProvider.classHierarchyInspector)).to.deep.eq({
         groupingType: "base-class",
         grouped: [
           createTestProcessedGroupingNode({
@@ -408,7 +373,7 @@ describe("BaseClassGrouping", () => {
       });
       metadataProvider.stubEntityClass({ schemaName: "TestSchema", className: "TestClass", is: async () => true });
 
-      const result = await baseClassGrouping.createBaseClassGroupingHandlers(metadataProvider, undefined, nodes, new BaseClassChecker(metadataProvider));
+      const result = await baseClassGrouping.createBaseClassGroupingHandlers(metadataProvider, undefined, nodes, metadataProvider.classHierarchyInspector);
       expect(result.length).to.eq(1);
       const handlerResult = await result[0](nodes, []);
       expect(handlerResult.groupingType).to.eq("base-class");

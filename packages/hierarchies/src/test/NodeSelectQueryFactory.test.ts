@@ -21,7 +21,7 @@ describe("NodeSelectQueryFactory", () => {
   let factory: NodeSelectQueryFactory;
   beforeEach(() => {
     metadataProvider = createMetadataProviderStub();
-    factory = new NodeSelectQueryFactory(metadataProvider);
+    factory = new NodeSelectQueryFactory({ metadataProvider });
   });
   afterEach(() => {
     sinon.restore();
