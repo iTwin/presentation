@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1713177860734,
+  "lastUpdate": 1713359869939,
   "repoUrl": "https://github.com/iTwin/presentation",
   "entries": {
     "Benchmark": [
@@ -4695,6 +4695,140 @@ window.BENCHMARK_DATA = {
             "value": 197,
             "unit": "ms",
             "extra": "count: 13\nmax: 197\np95: 197\nmedian: 33"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "35135765+grigasp@users.noreply.github.com",
+            "name": "Grigas",
+            "username": "grigasp"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "bd8c509b3212ab2fefcf0a0c23f5c6f00742d68e",
+          "message": "shared: API cleanup (#532)\n\n* Reduce the scope of `presentation-shared` public API\r\n\r\n* React to some API changes\r\n\r\n* Remove `ECSqlQueryReader` from public API\r\n\r\n* `IMetadataProvider` -> `IECMetadataProvider` to make it clear what metadata we're talking about\r\n\r\n* Promote internal `BaseClassChecker` to public `IECClassHierarchyInspector`. Change `IECMetadataConsumers` that only care about class hierarchy to accept `IECClassHierarchyInspector` instead.\r\n\r\n* Remove \"input-only\" and \"return-only\" comments on types, since they only make sense in the context of a single package\r\n\r\n* Apply a different workaround for https://github.com/iTwin/itwinjs-core/issues/6542",
+          "timestamp": "2024-04-17T16:14:53+03:00",
+          "tree_id": "21c82037ab9bd4957cfb9642042cfcb373cc2e64",
+          "url": "https://github.com/iTwin/presentation/commit/bd8c509b3212ab2fefcf0a0c23f5c6f00742d68e"
+        },
+        "date": 1713359869260,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "flat 50k elements list",
+            "value": 4837.07,
+            "unit": "ms"
+          },
+          {
+            "name": "flat 50k elements list (P95 of main thread blocks)",
+            "value": 67,
+            "unit": "ms",
+            "extra": "count: 5\nmax: 67\np95: 67\nmedian: 31"
+          },
+          {
+            "name": "grouping by label",
+            "value": 6863.68,
+            "unit": "ms"
+          },
+          {
+            "name": "grouping by label (P95 of main thread blocks)",
+            "value": 101,
+            "unit": "ms",
+            "extra": "count: 45\nmax: 193\np95: 101\nmedian: 48"
+          },
+          {
+            "name": "grouping by class",
+            "value": 6745.77,
+            "unit": "ms"
+          },
+          {
+            "name": "grouping by class (P95 of main thread blocks)",
+            "value": 115,
+            "unit": "ms",
+            "extra": "count: 45\nmax: 187\np95: 115\nmedian: 46"
+          },
+          {
+            "name": "grouping by property",
+            "value": 7603.1,
+            "unit": "ms"
+          },
+          {
+            "name": "grouping by property (P95 of main thread blocks)",
+            "value": 138,
+            "unit": "ms",
+            "extra": "count: 44\nmax: 382\np95: 138\nmedian: 47.5"
+          },
+          {
+            "name": "grouping by base class (10 classes)",
+            "value": 6361.93,
+            "unit": "ms"
+          },
+          {
+            "name": "grouping by base class (10 classes) (P95 of main thread blocks)",
+            "value": 573,
+            "unit": "ms",
+            "extra": "count: 7\nmax: 573\np95: 573\nmedian: 151"
+          },
+          {
+            "name": "grouping by multiple attributes",
+            "value": 10820.74,
+            "unit": "ms"
+          },
+          {
+            "name": "grouping by multiple attributes (P95 of main thread blocks)",
+            "value": 125,
+            "unit": "ms",
+            "extra": "count: 55\nmax: 169\np95: 125\nmedian: 49"
+          },
+          {
+            "name": "hide if no children required to finalize root, w/o children",
+            "value": 54269.55,
+            "unit": "ms"
+          },
+          {
+            "name": "hide if no children required to finalize root, w/o children (P95 of main thread blocks)",
+            "value": 42,
+            "unit": "ms",
+            "extra": "count: 15\nmax: 42\np95: 42\nmedian: 28"
+          },
+          {
+            "name": "hide if no children required to finalize root, w/ children",
+            "value": 168.54,
+            "unit": "ms"
+          },
+          {
+            "name": "hide if no children required to finalize root, w/ children (P95 of main thread blocks)",
+            "value": 0,
+            "unit": "ms",
+            "extra": "count: 0\nmax: N/A\np95: N/A\nmedian: N/A"
+          },
+          {
+            "name": "models tree initial (Baytown)",
+            "value": 65.9,
+            "unit": "ms"
+          },
+          {
+            "name": "models tree initial (Baytown) (P95 of main thread blocks)",
+            "value": 23,
+            "unit": "ms",
+            "extra": "count: 1\nmax: 23\np95: 23\nmedian: 23"
+          },
+          {
+            "name": "models tree full (Baytown)",
+            "value": 1772.71,
+            "unit": "ms"
+          },
+          {
+            "name": "models tree full (Baytown) (P95 of main thread blocks)",
+            "value": 168,
+            "unit": "ms",
+            "extra": "count: 11\nmax: 168\np95: 168\nmedian: 30"
           }
         ]
       }
