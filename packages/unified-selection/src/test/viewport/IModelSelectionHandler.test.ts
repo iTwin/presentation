@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { expect } from "chai";
-import { ResolvablePromise } from "presentation-test-utilities";
+import { ResolvablePromise, waitFor } from "presentation-test-utilities";
 import sinon from "sinon";
 import { using } from "@itwin/core-bentley";
 import * as hiliteSetProvider from "../../unified-selection/HiliteSetProvider";
@@ -16,7 +16,6 @@ import { Selectable, SelectableInstanceKey, Selectables } from "../../unified-se
 import { StorageSelectionChangeType } from "../../unified-selection/SelectionChangeEvent";
 import { createStorage, SelectionStorage } from "../../unified-selection/SelectionStorage";
 import { createSelectableInstanceKey } from "../_helpers/SelectablesCreator";
-import { waitFor } from "../_helpers/Utils";
 
 describe("IModelSelectionHandler", () => {
   let factory: sinon.SinonStub<[hiliteSetProvider.HiliteSetProviderProps], hiliteSetProvider.HiliteSetProvider>;
