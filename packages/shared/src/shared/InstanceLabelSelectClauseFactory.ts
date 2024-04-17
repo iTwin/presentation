@@ -4,15 +4,14 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { createConcatenatedValueJsonSelector, createRawPropertyValueSelector, TypedValueSelectClauseProps } from "./ecsql-snippets/ECSqlValueSelectorSnippets";
-import { getClass, IMetadataProvider } from "./Metadata";
+import { IECClassHierarchyInspector } from "./Metadata";
 
 /**
- * Props for [[IInstanceLabelSelectClauseFactory.createSelectClause]].
- * @beta
+ * Props for `IInstanceLabelSelectClauseFactory.createSelectClause`.
  */
-export interface CreateInstanceLabelSelectClauseProps {
+interface CreateInstanceLabelSelectClauseProps {
   /**
-   * Alias of an ECSQL class referring to the target instance whole label should be selected.
+   * Alias of an ECSQL class referring to the target instance whose label should be selected.
    *
    * Example:
    * ```ts
@@ -25,7 +24,7 @@ export interface CreateInstanceLabelSelectClauseProps {
   classAlias: string;
 
   /**
-   * An optional full name of a class whose instance label is to be selected.
+   * An optional full name of the class whose instance label is to be selected.
    *
    * The attribute's purpose is purely for optimization and `IInstanceLabelSelectClauseFactory` should not
    * rely on this to be set to a leaf class or set at all. However, when this name is provided, some factory
@@ -35,32 +34,35 @@ export interface CreateInstanceLabelSelectClauseProps {
   className?: string;
 
   /**
-   * An optional function for concatenating multiple [[TypedValueSelectClauseProps]]. Selectors' concatenation
+   * An optional function for concatenating multiple `TypedValueSelectClauseProps`. Selectors' concatenation
    * is used when a label consists of multiple pieces, e.g.:
    * - `[` - string,
    * - `this.PropertyX` - property value selector,
    * - `]` - string.
    *
    * It's concatenator's job to serialize those pieces into a single selector and, depending on the use case,
-   * it may do that in multiple ways.
+   * it may do that in multiple ways. For example:
    *
-   * - [[createConcatenatedValueJsonSelector]] serializes parts into a JSON array. This allows the array to
+   * - `createConcatenatedValueJsonSelector` serializes parts into a JSON array selector. This allows the array to
    *   be parsed after the query is run, where each part can be handled individually without losing its metadata.
    *   This is the default value.
    *
-   * - [[createConcatenatedValueStringSelector]] concatenates parts into a string using SQLite's `||` operator. While
+   * - `createConcatenatedValueStringSelector` concatenates parts into a string using SQLite's `||` operator. While
    *   this way of concatenation looses metadata (thus disabling formatting of the values), it tries to produce the
    *   value to be as close as possible to the formatted one. This concatenator may be used to create a label for using
-   *   in the query `WHERE` clause, for example.
+   *   in the query `WHERE` clause.
    *
-   * @see createConcatenatedValueJsonSelector
-   * @see createConcatenatedValueStringSelector
+   * @see `createConcatenatedValueJsonSelector`
+   * @see `createConcatenatedValueStringSelector`
    */
   selectorsConcatenator?: (selectors: TypedValueSelectClauseProps[], checkSelector?: string) => string;
 }
 
 /**
  * An interface for a factory that knows how create instance label select clauses.
+ * @see `createDefaultInstanceLabelSelectClauseFactory`
+ * @see `createClassBasedInstanceLabelSelectClauseFactory`
+ * @see `createBisInstanceLabelSelectClauseFactory`
  * @beta
  */
 export interface IInstanceLabelSelectClauseFactory {
@@ -77,30 +79,31 @@ export interface IInstanceLabelSelectClauseFactory {
  * @see https://www.itwinjs.org/presentation/advanced/defaultbisrules/#label-overrides
  * @beta
  */
-export class DefaultInstanceLabelSelectClauseFactory implements IInstanceLabelSelectClauseFactory {
-  public async createSelectClause(props: CreateInstanceLabelSelectClauseProps): Promise<string> {
-    return `(
-      SELECT
-        ${concatenate(props, [
-          {
-            selector: `COALESCE(
-              ${createRawPropertyValueSelector("c", "DisplayLabel")},
-              ${createRawPropertyValueSelector("c", "Name")}
-            )`,
-          },
-          ...createECInstanceIdSuffixSelectors(props.classAlias),
-        ])}
-      FROM [meta].[ECClassDef] AS [c]
-      WHERE [c].[ECInstanceId] = ${createRawPropertyValueSelector(props.classAlias, "ECClassId")}
-    )`;
-  }
+export function createDefaultInstanceLabelSelectClauseFactory(): IInstanceLabelSelectClauseFactory {
+  return {
+    async createSelectClause(props: CreateInstanceLabelSelectClauseProps): Promise<string> {
+      return `(
+        SELECT
+          ${concatenate(props, [
+            {
+              selector: `COALESCE(
+                ${createRawPropertyValueSelector("c", "DisplayLabel")},
+                ${createRawPropertyValueSelector("c", "Name")}
+              )`,
+            },
+            ...createECInstanceIdSuffixSelectors(props.classAlias),
+          ])}
+        FROM [meta].[ECClassDef] AS [c]
+        WHERE [c].[ECInstanceId] = ${createRawPropertyValueSelector(props.classAlias, "ECClassId")}
+      )`;
+    },
+  };
 }
 
 /**
  * An association of a class and an instance label select clause factory method.
- * @beta
  */
-export interface ClassBasedLabelSelectClause {
+interface ClassBasedLabelSelectClause {
   /** Full class name */
   className: string;
   /** A factory method to create an instance label select clause */
@@ -108,19 +111,18 @@ export interface ClassBasedLabelSelectClause {
 }
 
 /**
- * Props for [[ClassBasedInstanceLabelSelectClauseFactory]].
- * @beta
+ * Props for `createClassBasedInstanceLabelSelectClauseFactory`.
  */
-export interface ClassBasedInstanceLabelSelectClauseFactoryProps {
-  /** Access to iModel metadata */
-  metadataProvider: IMetadataProvider;
+interface ClassBasedInstanceLabelSelectClauseFactoryProps {
+  /** Access to ECClass hierarchy in the iModel */
+  classHierarchyInspector: IECClassHierarchyInspector;
 
   /** A list of instance label selectors associated to classes they should be applied to */
   clauses: ClassBasedLabelSelectClause[];
 
   /**
-   * A fallback label clause factory for when [[ClassBasedInstanceLabelSelectClauseFactory]] doesn't produce a label.
-   * Defaults to [[DefaultInstanceLabelSelectClauseFactory]].
+   * A fallback label clause factory for when class-based factory doesn't produce a label.
+   * Defaults to the result of `createDefaultInstanceLabelSelectClauseFactory`.
    */
   defaultClauseFactory?: IInstanceLabelSelectClauseFactory;
 }
@@ -129,62 +131,18 @@ export interface ClassBasedInstanceLabelSelectClauseFactoryProps {
  * Creates an instance label select clause based on its class.
  * @beta
  */
-export class ClassBasedInstanceLabelSelectClauseFactory implements IInstanceLabelSelectClauseFactory {
-  private _defaultFactory: IInstanceLabelSelectClauseFactory;
-  private _labelClausesByClass: ClassBasedLabelSelectClause[];
-  private _metadataProvider: IMetadataProvider;
-
-  public constructor(props: ClassBasedInstanceLabelSelectClauseFactoryProps) {
-    // istanbul ignore next
-    this._defaultFactory = props.defaultClauseFactory ?? new DefaultInstanceLabelSelectClauseFactory();
-    this._labelClausesByClass = props.clauses;
-    this._metadataProvider = props.metadataProvider;
-  }
-
-  public async createSelectClause(props: CreateInstanceLabelSelectClauseProps): Promise<string> {
-    if (this._labelClausesByClass.length === 0) {
-      return this._defaultFactory.createSelectClause(props);
-    }
-
-    const labelClausePromises = props.className ? await this.getLabelClausesForClass(props.className) : this._labelClausesByClass;
-    if (labelClausePromises.length === 0) {
-      return this._defaultFactory.createSelectClause(props);
-    }
-
-    const labelClauses = await Promise.all(
-      labelClausePromises.map(async ({ className, clause }) => ({
-        className,
-        clause: await clause(props),
-      })),
-    );
-
-    return `COALESCE(
-      ${labelClauses
-        .map(({ className, clause }) =>
-          `
-            IIF(
-              ${createRawPropertyValueSelector(props.classAlias, "ECClassId")} IS (${className}),
-              ${clause.trim()},
-              NULL
-            )
-          `.trim(),
-        )
-        .join(", ")},
-      ${await this._defaultFactory.createSelectClause(props)}
-    )`;
-  }
-
-  private async getLabelClausesForClass(queryClassName: string) {
-    const queryClass = await getClass(this._metadataProvider, queryClassName);
+export function createClassBasedInstanceLabelSelectClauseFactory(props: ClassBasedInstanceLabelSelectClauseFactoryProps): IInstanceLabelSelectClauseFactory {
+  const { classHierarchyInspector, clauses: labelClausesByClass } = props;
+  const defaultClauseFactory = props.defaultClauseFactory ?? createDefaultInstanceLabelSelectClauseFactory();
+  async function getLabelClausesForClass(queryClassName: string) {
     const matchingLabelClauses = await Promise.all(
-      this._labelClausesByClass.map(async (entry) => {
-        const clauseClass = await getClass(this._metadataProvider, entry.className);
-        if (await clauseClass.is(queryClass)) {
+      labelClausesByClass.map(async (entry) => {
+        if (await classHierarchyInspector.classDerivesFrom(entry.className, queryClassName)) {
           // label selector is intended for a more specific class than we're selecting from - need to include it
           // as query results (on polymorphic select) are going to include more specific class instances too
           return entry;
         }
-        if (await queryClass.is(clauseClass)) {
+        if (await classHierarchyInspector.classDerivesFrom(queryClassName, entry.className)) {
           // label selector is intended for a base class of what query is selecting - need to include it as
           // we want base class label selectors to apply to subclass instances
           return entry;
@@ -197,65 +155,93 @@ export class ClassBasedInstanceLabelSelectClauseFactory implements IInstanceLabe
     }
     return matchingLabelClauses.filter(filterNotUndefined);
   }
+  return {
+    async createSelectClause(clauseProps: CreateInstanceLabelSelectClauseProps): Promise<string> {
+      if (labelClausesByClass.length === 0) {
+        return defaultClauseFactory.createSelectClause(clauseProps);
+      }
+
+      const labelClausePromises = clauseProps.className ? await getLabelClausesForClass(clauseProps.className) : labelClausesByClass;
+      if (labelClausePromises.length === 0) {
+        return defaultClauseFactory.createSelectClause(clauseProps);
+      }
+
+      const labelClauses = await Promise.all(
+        labelClausePromises.map(async ({ className, clause }) => ({
+          className,
+          clause: await clause(clauseProps),
+        })),
+      );
+
+      return `COALESCE(
+        ${labelClauses
+          .map(({ className, clause }) =>
+            `
+              IIF(
+                ${createRawPropertyValueSelector(clauseProps.classAlias, "ECClassId")} IS (${className}),
+                ${clause.trim()},
+                NULL
+              )
+            `.trim(),
+          )
+          .join(", ")},
+        ${await defaultClauseFactory.createSelectClause(clauseProps)}
+      )`;
+    },
+  };
 }
 
 /**
- * Props for [[BisInstanceLabelSelectClauseFactory]].
- * @beta
+ * Props for `createBisInstanceLabelSelectClauseFactory`.
  */
-export interface BisInstanceLabelSelectClauseFactoryProps {
-  metadataProvider: IMetadataProvider;
+interface BisInstanceLabelSelectClauseFactoryProps {
+  classHierarchyInspector: IECClassHierarchyInspector;
 }
 
 /**
  * Creates a label select clause according to BIS instance label rules.
- *
  * @see https://www.itwinjs.org/presentation/advanced/defaultbisrules/#label-overrides
  * @beta
  */
-export class BisInstanceLabelSelectClauseFactory implements IInstanceLabelSelectClauseFactory {
-  private _impl: ClassBasedInstanceLabelSelectClauseFactory;
-  public constructor(props: BisInstanceLabelSelectClauseFactoryProps) {
-    this._impl = new ClassBasedInstanceLabelSelectClauseFactory({
-      metadataProvider: props.metadataProvider,
-      clauses: [
-        {
-          className: "BisCore.GeometricElement",
-          clause: async ({ classAlias, ...rest }) => `
-            COALESCE(
-              ${createRawPropertyValueSelector(classAlias, "CodeValue")},
-              ${concatenate(
-                rest,
-                [{ selector: createRawPropertyValueSelector(classAlias, "UserLabel") }, ...createECInstanceIdSuffixSelectors(classAlias)],
-                `${createRawPropertyValueSelector(classAlias, "UserLabel")} IS NOT NULL`,
-              )}
-            )
-          `,
-        },
-        {
-          className: "BisCore.Element",
-          clause: async ({ classAlias }) => `
-            COALESCE(
-              ${createRawPropertyValueSelector(classAlias, "UserLabel")},
-              ${createRawPropertyValueSelector(classAlias, "CodeValue")}
-            )
-          `,
-        },
-        {
-          className: "BisCore.Model",
-          clause: async ({ classAlias, ...rest }) => `(
-            SELECT ${await this.createSelectClause({ ...rest, classAlias: "e", className: "BisCore.Element" })}
-            FROM [bis].[Element] AS [e]
-            WHERE [e].[ECInstanceId] = ${createRawPropertyValueSelector(classAlias, "ModeledElement", "Id")}
-          )`,
-        },
-      ],
-    });
-  }
-
-  public async createSelectClause(props: CreateInstanceLabelSelectClauseProps) {
-    return this._impl.createSelectClause(props);
-  }
+export function createBisInstanceLabelSelectClauseFactory(props: BisInstanceLabelSelectClauseFactoryProps): IInstanceLabelSelectClauseFactory {
+  const clauses: ClassBasedLabelSelectClause[] = [];
+  const factory = createClassBasedInstanceLabelSelectClauseFactory({
+    classHierarchyInspector: props.classHierarchyInspector,
+    clauses,
+  });
+  clauses.push(
+    {
+      className: "BisCore.GeometricElement",
+      clause: async ({ classAlias, ...rest }) => `
+        COALESCE(
+          ${createRawPropertyValueSelector(classAlias, "CodeValue")},
+          ${concatenate(
+            rest,
+            [{ selector: createRawPropertyValueSelector(classAlias, "UserLabel") }, ...createECInstanceIdSuffixSelectors(classAlias)],
+            `${createRawPropertyValueSelector(classAlias, "UserLabel")} IS NOT NULL`,
+          )}
+        )
+      `,
+    },
+    {
+      className: "BisCore.Element",
+      clause: async ({ classAlias }) => `
+        COALESCE(
+          ${createRawPropertyValueSelector(classAlias, "UserLabel")},
+          ${createRawPropertyValueSelector(classAlias, "CodeValue")}
+        )
+      `,
+    },
+    {
+      className: "BisCore.Model",
+      clause: async ({ classAlias, ...rest }) => `(
+        SELECT ${await factory.createSelectClause({ ...rest, classAlias: "e", className: "BisCore.Element" })}
+        FROM [bis].[Element] AS [e]
+        WHERE [e].[ECInstanceId] = ${createRawPropertyValueSelector(classAlias, "ModeledElement", "Id")}
+      )`,
+    },
+  );
+  return factory;
 }
 
 function createECInstanceIdSuffixSelectors(classAlias: string): TypedValueSelectClauseProps[] {

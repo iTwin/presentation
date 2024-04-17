@@ -3,6 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
+import { LRUMap } from "@itwin/core-bentley";
 import { parseFullClassName } from "./Utils";
 
 /**
@@ -11,13 +12,55 @@ import { parseFullClassName } from "./Utils";
  *
  * @beta
  */
-export interface IMetadataProvider {
+export interface IECMetadataProvider {
   getSchema(schemaName: string): Promise<EC.Schema | undefined>;
+}
+
+/**
+ * An interface for a class hierarchy inspector that can be used to determine if one class derives from another.
+ * @beta
+ */
+export interface IECClassHierarchyInspector {
+  classDerivesFrom(derivedClassFullName: string, candidateBaseClassFullName: string): Promise<boolean> | boolean;
+}
+
+/**
+ * Creates a new `IECClassHierarchyInspector` that caches results of `derivesFrom` calls.
+ * @beta
+ */
+export function createCachingECClassHierarchyInspector(props: {
+  /** Metadata provider that provides access to ECClass metadata */
+  metadataProvider: IECMetadataProvider;
+  /** Optional cache size, describing the number of derived/base class combinations to store in cache. Defaults to `0`, which means no caching. */
+  cacheSize?: number;
+}): IECClassHierarchyInspector {
+  const map = new LRUMap<string, Promise<boolean> | boolean>(props.cacheSize ?? 0);
+  function createCacheKey(derivedClassName: string, baseClassName: string) {
+    return `${derivedClassName}/${baseClassName}`;
+  }
+  return {
+    classDerivesFrom(derivedClassFullName: string, candidateBaseClassFullName: string): Promise<boolean> | boolean {
+      const cacheKey = createCacheKey(derivedClassFullName, candidateBaseClassFullName);
+      let result = map.get(cacheKey);
+      if (result === undefined) {
+        result = Promise.all([getClass(props.metadataProvider, derivedClassFullName), getClass(props.metadataProvider, candidateBaseClassFullName)]).then(
+          async ([derivedClass, baseClass]) => {
+            const resolvedResult = await derivedClass.is(baseClass);
+            map.set(cacheKey, resolvedResult);
+            return resolvedResult;
+          },
+        );
+        map.set(cacheKey, result);
+      }
+      return result;
+    },
+  };
 }
 
 /**
  * A namespace containing various [EC types](https://www.itwinjs.org/bis/ec/).
  * @beta
+ * @see `IECMetadataProvider`
  */
 export namespace EC {
   /**
@@ -243,13 +286,13 @@ export namespace EC {
 
 /**
  * An identifiers' union of all supported primitive value types.
- * @beta
+ * @internal This is an internal type used in public API.
  */
 export type PrimitiveValueType = "Id" | Exclude<EC.PrimitiveType, "Binary" | "IGeometry">;
 
 /**
  * Describes a single step through an ECRelationship from source ECClass to target ECClass.
- * @beta
+ * @internal This is an internal type used in public API.
  */
 export interface RelationshipPathStep {
   /** Full name of the source ECClass */
@@ -268,16 +311,16 @@ export interface RelationshipPathStep {
 
 /**
  * Describes a path from source ECClass to target ECClass through multiple ECRelationships.
- * @beta
+ * @internal This is an internal type used in public API.
  */
 export type RelationshipPath<TStep extends RelationshipPathStep = RelationshipPathStep> = TStep[];
 
 /**
- * Finds a class with the specified full class name using the given `IMetadataProvider`.
- * @throws
+ * Finds a class with the specified full class name using the given `IECMetadataProvider`.
+ * @throws Error if the schema or class is not found.
  * @beta
  */
-export async function getClass(metadata: IMetadataProvider, fullClassName: string): Promise<EC.Class> {
+export async function getClass(metadata: IECMetadataProvider, fullClassName: string): Promise<EC.Class> {
   const { schemaName, className } = parseFullClassName(fullClassName);
   const schema = await metadata.getSchema(schemaName);
   if (!schema) {

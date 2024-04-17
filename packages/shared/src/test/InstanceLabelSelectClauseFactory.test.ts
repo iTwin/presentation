@@ -7,18 +7,17 @@ import { expect } from "chai";
 import sinon from "sinon";
 import { createConcatenatedValueJsonSelector, createRawPropertyValueSelector } from "../shared/ecsql-snippets/ECSqlValueSelectorSnippets";
 import {
-  BisInstanceLabelSelectClauseFactory,
-  ClassBasedInstanceLabelSelectClauseFactory,
-  DefaultInstanceLabelSelectClauseFactory,
+  createBisInstanceLabelSelectClauseFactory,
+  createClassBasedInstanceLabelSelectClauseFactory,
+  createDefaultInstanceLabelSelectClauseFactory,
   IInstanceLabelSelectClauseFactory,
 } from "../shared/InstanceLabelSelectClauseFactory";
 import { trimWhitespace } from "../shared/Utils";
-import { createMetadataProviderStub } from "./MetadataProviderStub";
 
-describe("DefaultInstanceLabelSelectClauseFactory", () => {
-  let factory: DefaultInstanceLabelSelectClauseFactory;
+describe("createDefaultInstanceLabelSelectClauseFactory", () => {
+  let factory: IInstanceLabelSelectClauseFactory;
   beforeEach(() => {
-    factory = new DefaultInstanceLabelSelectClauseFactory();
+    factory = createDefaultInstanceLabelSelectClauseFactory();
   });
 
   it("returns valid clause", async () => {
@@ -47,23 +46,22 @@ describe("DefaultInstanceLabelSelectClauseFactory", () => {
   });
 });
 
-describe("ClassBasedInstanceLabelSelectClauseFactory", () => {
+describe("createClassBasedInstanceLabelSelectClauseFactory", () => {
   const defaultClauseFactory: IInstanceLabelSelectClauseFactory = {
     async createSelectClause() {
       return "default selector";
     },
   };
-  let metadataProvider: ReturnType<typeof createMetadataProviderStub>;
+  const classHierarchyInspector = {
+    classDerivesFrom: sinon.stub(),
+  };
   beforeEach(() => {
-    metadataProvider = createMetadataProviderStub();
-  });
-  afterEach(() => {
-    sinon.restore();
+    classHierarchyInspector.classDerivesFrom.reset();
   });
 
   it("returns default clause when given an empty list of clauses", async () => {
-    const factory = new ClassBasedInstanceLabelSelectClauseFactory({
-      metadataProvider,
+    const factory = createClassBasedInstanceLabelSelectClauseFactory({
+      classHierarchyInspector,
       defaultClauseFactory,
       clauses: [],
     });
@@ -74,8 +72,8 @@ describe("ClassBasedInstanceLabelSelectClauseFactory", () => {
   });
 
   it("returns default clause when none of given clause classes match query class", async () => {
-    const factory = new ClassBasedInstanceLabelSelectClauseFactory({
-      metadataProvider,
+    const factory = createClassBasedInstanceLabelSelectClauseFactory({
+      classHierarchyInspector,
       defaultClauseFactory,
       clauses: [
         {
@@ -88,9 +86,7 @@ describe("ClassBasedInstanceLabelSelectClauseFactory", () => {
         },
       ],
     });
-    metadataProvider.stubEntityClass({ schemaName: "Schema", className: "QueryClass", is: async () => false });
-    metadataProvider.stubEntityClass({ schemaName: "Schema", className: "ClassA", is: async () => false });
-    metadataProvider.stubEntityClass({ schemaName: "Schema", className: "ClassB", is: async () => false });
+    classHierarchyInspector.classDerivesFrom.resolves(false);
     const result = await factory.createSelectClause({
       classAlias: "class-alias",
       className: "Schema.QueryClass",
@@ -99,8 +95,8 @@ describe("ClassBasedInstanceLabelSelectClauseFactory", () => {
   });
 
   it("returns combination of all clauses if class name prop is not set", async () => {
-    const factory = new ClassBasedInstanceLabelSelectClauseFactory({
-      metadataProvider,
+    const factory = createClassBasedInstanceLabelSelectClauseFactory({
+      classHierarchyInspector,
       defaultClauseFactory,
       clauses: [
         {
@@ -136,8 +132,8 @@ describe("ClassBasedInstanceLabelSelectClauseFactory", () => {
   });
 
   it("returns clauses for classes that derive from query class", async () => {
-    const factory = new ClassBasedInstanceLabelSelectClauseFactory({
-      metadataProvider,
+    const factory = createClassBasedInstanceLabelSelectClauseFactory({
+      classHierarchyInspector,
       defaultClauseFactory,
       clauses: [
         {
@@ -150,9 +146,7 @@ describe("ClassBasedInstanceLabelSelectClauseFactory", () => {
         },
       ],
     });
-    metadataProvider.stubEntityClass({ schemaName: "Schema", className: "QueryClass", is: async () => false });
-    metadataProvider.stubEntityClass({ schemaName: "Schema", className: "ClassA", is: async (other) => other === "Schema.QueryClass" });
-    metadataProvider.stubEntityClass({ schemaName: "Schema", className: "ClassB", is: async () => false });
+    classHierarchyInspector.classDerivesFrom.callsFake(async (derived, base) => derived === "Schema.ClassA" && base === "Schema.QueryClass");
     const result = await factory.createSelectClause({
       classAlias: "class-alias",
       className: "Schema.QueryClass",
@@ -172,8 +166,8 @@ describe("ClassBasedInstanceLabelSelectClauseFactory", () => {
   });
 
   it("returns clauses for base classes of query class", async () => {
-    const factory = new ClassBasedInstanceLabelSelectClauseFactory({
-      metadataProvider,
+    const factory = createClassBasedInstanceLabelSelectClauseFactory({
+      classHierarchyInspector,
       defaultClauseFactory,
       clauses: [
         {
@@ -186,9 +180,7 @@ describe("ClassBasedInstanceLabelSelectClauseFactory", () => {
         },
       ],
     });
-    metadataProvider.stubEntityClass({ schemaName: "Schema", className: "QueryClass", is: async (other) => other === "Schema.ClassB" });
-    metadataProvider.stubEntityClass({ schemaName: "Schema", className: "ClassA", is: async () => false });
-    metadataProvider.stubEntityClass({ schemaName: "Schema", className: "ClassB", is: async () => false });
+    classHierarchyInspector.classDerivesFrom.callsFake(async (derived, base) => derived === "Schema.QueryClass" && base === "Schema.ClassB");
     const result = await factory.createSelectClause({
       classAlias: "class-alias",
       className: "Schema.QueryClass",
@@ -209,18 +201,25 @@ describe("ClassBasedInstanceLabelSelectClauseFactory", () => {
 });
 
 describe("BisInstanceLabelSelectClauseFactory", () => {
-  let metadataProvider: ReturnType<typeof createMetadataProviderStub>;
-  let factory: BisInstanceLabelSelectClauseFactory;
+  const classHierarchyInspector = {
+    classDerivesFrom: sinon.stub(),
+  };
+  let factory: IInstanceLabelSelectClauseFactory;
   beforeEach(() => {
-    metadataProvider = createMetadataProviderStub();
-    factory = new BisInstanceLabelSelectClauseFactory({ metadataProvider });
-    metadataProvider.stubEntityClass({
-      schemaName: "BisCore",
-      className: "GeometricElement",
-      is: async (other) => other === "BisCore.Element" || other === "BisCore.GeometricElement",
+    factory = createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector });
+    classHierarchyInspector.classDerivesFrom.reset();
+    classHierarchyInspector.classDerivesFrom.callsFake(async (derived, base) => {
+      if (derived === "BisCore.GeometricElement") {
+        return base === "BisCore.Element" || base === "BisCore.GeometricElement";
+      }
+      if (derived === "BisCore.Element") {
+        return base === "BisCore.Element";
+      }
+      if (derived === "BisCore.Model") {
+        return base === "BisCore.Model";
+      }
+      return false;
     });
-    metadataProvider.stubEntityClass({ schemaName: "BisCore", className: "Element", is: async (other) => other === "BisCore.Element" });
-    metadataProvider.stubEntityClass({ schemaName: "BisCore", className: "Model", is: async (other) => other === "BisCore.Model" });
   });
 
   afterEach(() => {
@@ -261,7 +260,7 @@ describe("BisInstanceLabelSelectClauseFactory", () => {
             ),
             NULL
           ),
-          ${await new DefaultInstanceLabelSelectClauseFactory().createSelectClause({ classAlias: "test" })}
+          ${await createDefaultInstanceLabelSelectClauseFactory().createSelectClause({ classAlias: "test" })}
         )
       `),
     );
@@ -301,7 +300,7 @@ describe("BisInstanceLabelSelectClauseFactory", () => {
             ),
             NULL
           ),
-          ${await new DefaultInstanceLabelSelectClauseFactory().createSelectClause({ classAlias: "test" })}
+          ${await createDefaultInstanceLabelSelectClauseFactory().createSelectClause({ classAlias: "test" })}
         )
       `),
     );
@@ -327,7 +326,7 @@ describe("BisInstanceLabelSelectClauseFactory", () => {
             ),
             NULL
           ),
-          ${await new DefaultInstanceLabelSelectClauseFactory().createSelectClause({ classAlias: "test" })}
+          ${await createDefaultInstanceLabelSelectClauseFactory().createSelectClause({ classAlias: "test" })}
         )
       `),
     );

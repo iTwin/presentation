@@ -13,18 +13,12 @@ import { ECDb, ECSqlStatement, IModelJsFs } from "@itwin/core-backend";
 import { BentleyError, DbResult, Id64, Id64String, OrderedId64Iterable } from "@itwin/core-bentley";
 import { LocalFileName } from "@itwin/core-common";
 import { IModelConnection } from "@itwin/core-frontend";
-import { ECSqlBinding, parseFullClassName, Point2d, Point3d, PrimitiveValue } from "@itwin/presentation-shared";
+import { ECSqlBinding, parseFullClassName, PrimitiveValue } from "@itwin/presentation-shared";
 import { buildTestIModel, TestIModelBuilder } from "@itwin/presentation-testing";
 import { createFileNameFromString } from "@itwin/presentation-testing/lib/cjs/presentation-testing/InternalUtils";
 
 function isBinding(value: ECSqlBinding | PrimitiveValue): value is ECSqlBinding {
   return typeof value === "object" && (value as ECSqlBinding).type !== undefined && (value as ECSqlBinding).value !== undefined;
-}
-function isPoint2d(value: ECSqlBinding | PrimitiveValue): value is Point2d {
-  return typeof value === "object" && (value as Point2d).x !== undefined && (value as Point2d).y !== undefined;
-}
-function isPoint3d(value: ECSqlBinding | PrimitiveValue): value is Point3d {
-  return typeof value === "object" && (value as Point3d).x !== undefined && (value as Point3d).y !== undefined && (value as Point3d).z !== undefined;
 }
 
 export class ECDbBuilder {
@@ -76,10 +70,6 @@ export class ECDbBuilder {
           case "object":
             if (value instanceof Date) {
               stmt.bindDateTime(bindingIndex, value.toISOString());
-            } else if (isPoint2d(value)) {
-              stmt.bindPoint2d(bindingIndex, value);
-            } else if (isPoint3d(value)) {
-              stmt.bindPoint3d(bindingIndex, value);
             } else if (isBinding(value)) {
               if (value.value === undefined) {
                 stmt.bindNull(bindingIndex);
@@ -112,6 +102,10 @@ export class ECDbBuilder {
                   stmt.bindString(bindingIndex, value.value);
                   break;
               }
+            } else if (PrimitiveValue.isPoint3d(value)) {
+              stmt.bindPoint3d(bindingIndex, value);
+            } else if (PrimitiveValue.isPoint2d(value)) {
+              stmt.bindPoint2d(bindingIndex, value);
             }
         }
       });

@@ -4,62 +4,47 @@
 
 ```ts
 
+import { Id64String } from '@itwin/core-bentley';
+
 // @beta
 export type ArrayElement<ArrayType extends readonly unknown[]> = ArrayType extends readonly (infer ElementType)[] ? ElementType : never;
 
 // @beta
-export class BisInstanceLabelSelectClauseFactory implements IInstanceLabelSelectClauseFactory {
-    constructor(props: BisInstanceLabelSelectClauseFactoryProps);
-    // (undocumented)
-    createSelectClause(props: CreateInstanceLabelSelectClauseProps): Promise<string>;
-}
-
-// @beta
-export interface BisInstanceLabelSelectClauseFactoryProps {
-    // (undocumented)
-    metadataProvider: IMetadataProvider;
-}
-
-// @beta
-export class ClassBasedInstanceLabelSelectClauseFactory implements IInstanceLabelSelectClauseFactory {
-    constructor(props: ClassBasedInstanceLabelSelectClauseFactoryProps);
-    // (undocumented)
-    createSelectClause(props: CreateInstanceLabelSelectClauseProps): Promise<string>;
-}
-
-// @beta
-export interface ClassBasedInstanceLabelSelectClauseFactoryProps {
-    clauses: ClassBasedLabelSelectClause[];
-    defaultClauseFactory?: IInstanceLabelSelectClauseFactory;
-    metadataProvider: IMetadataProvider;
-}
-
-// @beta
-export interface ClassBasedLabelSelectClause {
-    className: string;
-    clause: (props: CreateInstanceLabelSelectClauseProps) => Promise<string>;
-}
-
-// @beta
-export type ConcatenatedValue = ConcatenatedValuePart | ConcatenatedValuePart[];
+export type ConcatenatedValue = ConcatenatedValuePart[];
 
 // @beta (undocumented)
 export namespace ConcatenatedValue {
-    export function serialize(parts: ConcatenatedValue, partFormatter: (part: ConcatenatedValuePart) => Promise<string>): Promise<string>;
+    export function serialize(props: {
+        parts: ConcatenatedValue;
+        partFormatter: (part: ConcatenatedValuePart) => Promise<string>;
+        separator?: string;
+    }): Promise<string>;
 }
 
 // @beta
-export type ConcatenatedValuePart = PropertyValue | TypedPrimitiveValue | string;
+export type ConcatenatedValuePart = PrimitivePropertyValue | TypedPrimitiveValue | string;
 
 // @beta (undocumented)
 export namespace ConcatenatedValuePart {
     // (undocumented)
     export function isPrimitive(part: ConcatenatedValuePart): part is TypedPrimitiveValue;
     // (undocumented)
-    export function isProperty(part: ConcatenatedValuePart): part is PropertyValue;
+    export function isProperty(part: ConcatenatedValuePart): part is PrimitivePropertyValue;
     // (undocumented)
     export function isString(part: ConcatenatedValuePart): part is string;
 }
+
+// @beta
+export function createBisInstanceLabelSelectClauseFactory(props: BisInstanceLabelSelectClauseFactoryProps): IInstanceLabelSelectClauseFactory;
+
+// @beta
+export function createCachingECClassHierarchyInspector(props: {
+    metadataProvider: IECMetadataProvider;
+    cacheSize?: number;
+}): IECClassHierarchyInspector;
+
+// @beta
+export function createClassBasedInstanceLabelSelectClauseFactory(props: ClassBasedInstanceLabelSelectClauseFactoryProps): IInstanceLabelSelectClauseFactory;
 
 // @beta
 function createConcatenatedValueJsonSelector(selectors: TypedValueSelectClauseProps[], checkSelector?: string): string;
@@ -68,14 +53,10 @@ function createConcatenatedValueJsonSelector(selectors: TypedValueSelectClausePr
 function createConcatenatedValueStringSelector(selectors: TypedValueSelectClauseProps[], checkSelector?: string): string;
 
 // @beta
-export function createDefaultValueFormatter(): IPrimitiveValueFormatter;
+export function createDefaultInstanceLabelSelectClauseFactory(): IInstanceLabelSelectClauseFactory;
 
 // @beta
-export interface CreateInstanceLabelSelectClauseProps {
-    classAlias: string;
-    className?: string;
-    selectorsConcatenator?: (selectors: TypedValueSelectClauseProps[], checkSelector?: string) => string;
-}
+export function createDefaultValueFormatter(): IPrimitiveValueFormatter;
 
 // @beta
 function createNullableSelector(props: {
@@ -91,20 +72,6 @@ function createRawPropertyValueSelector(classAlias: string, propertyName: string
 
 // @beta
 function createRelationshipPathJoinClause(props: CreateRelationshipPathJoinClauseProps): Promise<string>;
-
-// @beta
-interface CreateRelationshipPathJoinClauseProps {
-    // (undocumented)
-    metadata: IMetadataProvider;
-    // (undocumented)
-    path: JoinRelationshipPath;
-}
-
-// @beta
-export class DefaultInstanceLabelSelectClauseFactory implements IInstanceLabelSelectClauseFactory {
-    // (undocumented)
-    createSelectClause(props: CreateInstanceLabelSelectClauseProps): Promise<string>;
-}
 
 // @beta
 export namespace EC {
@@ -248,14 +215,7 @@ declare namespace ECSql {
         createNullableSelector,
         createConcatenatedValueJsonSelector,
         createConcatenatedValueStringSelector,
-        SpecialPropertyType,
-        PropertyValueSelectClauseProps,
-        PrimitiveValueSelectorProps,
-        TypedValueSelectClauseProps,
-        createRelationshipPathJoinClause,
-        JoinRelationshipPathStep,
-        JoinRelationshipPath,
-        CreateRelationshipPathJoinClauseProps
+        createRelationshipPathJoinClause
     }
 }
 export { ECSql }
@@ -292,17 +252,11 @@ export type ECSqlBinding = {
 };
 
 // @beta
-export type ECSqlBindingType = "boolean" | "double" | "id" | "idset" | "int" | "long" | "string" | "point2d" | "point3d";
-
-// @beta
 export interface ECSqlQueryDef {
     bindings?: ECSqlBinding[];
     ctes?: string[];
     ecsql: string;
 }
-
-// @beta
-export type ECSqlQueryReader = AsyncIterableIterator<ECSqlQueryRow>;
 
 // @beta
 export interface ECSqlQueryReaderOptions {
@@ -319,18 +273,24 @@ export interface ECSqlQueryRow {
 }
 
 // @beta
-export type ECSqlQueryRowFormat = "ECSqlPropertyNames" | "Indexes";
+export function getClass(metadata: IECMetadataProvider, fullClassName: string): Promise<EC.Class>;
 
 // @beta
-export function getClass(metadata: IMetadataProvider, fullClassName: string): Promise<EC.Class>;
+export interface IECClassHierarchyInspector {
+    // (undocumented)
+    classDerivesFrom(derivedClassFullName: string, candidateBaseClassFullName: string): Promise<boolean> | boolean;
+}
 
 // @beta
-export type Id64String = string;
+export interface IECMetadataProvider {
+    // (undocumented)
+    getSchema(schemaName: string): Promise<EC.Schema | undefined>;
+}
 
 // @beta
 export interface IECSqlQueryExecutor {
     // (undocumented)
-    createQueryReader(ecsql: string, bindings?: ECSqlBinding[], config?: ECSqlQueryReaderOptions): ECSqlQueryReader;
+    createQueryReader(query: ECSqlQueryDef, config?: ECSqlQueryReaderOptions): ECSqlQueryReader;
 }
 
 // @beta
@@ -353,12 +313,6 @@ export interface ILogger {
 }
 
 // @beta
-export interface IMetadataProvider {
-    // (undocumented)
-    getSchema(schemaName: string): Promise<EC.Schema | undefined>;
-}
-
-// @beta
 export interface InstanceKey {
     className: string;
     id: Id64String;
@@ -374,24 +328,9 @@ export namespace InstanceKey {
 export type IPrimitiveValueFormatter = (value: TypedPrimitiveValue) => Promise<string>;
 
 // @beta
-type JoinRelationshipPath = RelationshipPath<JoinRelationshipPathStep>;
-
-// @beta
-interface JoinRelationshipPathStep extends RelationshipPathStep {
-    // (undocumented)
-    joinType?: "inner" | "outer";
-    // (undocumented)
-    relationshipAlias: string;
-    // (undocumented)
-    sourceAlias: string;
-    // (undocumented)
-    targetAlias: string;
-}
-
-// @beta (undocumented)
 export type LogFunction = (category: string, message: string) => void;
 
-// @beta (undocumented)
+// @beta
 export type LogLevel = "error" | "warning" | "info" | "trace";
 
 // @beta
@@ -410,74 +349,13 @@ export function parseFullClassName(fullClassName: string): {
 };
 
 // @beta
-export interface Point2d {
-    // (undocumented)
-    x: number;
-    // (undocumented)
-    y: number;
-}
-
-// @beta
-export interface Point3d {
-    // (undocumented)
-    x: number;
-    // (undocumented)
-    y: number;
-    // (undocumented)
-    z: number;
-}
-
-// @beta
 export type PrimitiveValue = Id64String | string | number | boolean | Date | Point2d | Point3d;
 
 // @beta (undocumented)
 export namespace PrimitiveValue {
-    // (undocumented)
     export function isPoint2d(value: PrimitiveValue): value is Point2d;
-    // (undocumented)
     export function isPoint3d(value: PrimitiveValue): value is Point3d;
 }
-
-// @beta
-interface PrimitiveValueSelectorProps {
-    selector: string;
-    type?: PrimitiveValueType;
-}
-
-// @beta
-export type PrimitiveValueType = "Id" | Exclude<EC.PrimitiveType, "Binary" | "IGeometry">;
-
-// @beta
-export interface PropertyValue {
-    // (undocumented)
-    className: string;
-    // (undocumented)
-    propertyName: string;
-    // (undocumented)
-    value: PrimitiveValue;
-}
-
-// @beta
-interface PropertyValueSelectClauseProps {
-    propertyClassAlias: string;
-    propertyClassName: string;
-    propertyName: string;
-    specialType?: SpecialPropertyType;
-}
-
-// @beta
-export type RelationshipPath<TStep extends RelationshipPathStep = RelationshipPathStep> = TStep[];
-
-// @beta
-export interface RelationshipPathStep {
-    relationshipName: string;
-    relationshipReverse?: boolean;
-    sourceClassName: string;
-    targetClassName: string;
-}
-
-// @beta
-type SpecialPropertyType = "Navigation" | "Guid" | "Point2d" | "Point3d";
 
 // @beta
 export function trimWhitespace(str: string): string;
@@ -515,22 +393,9 @@ export type TypedPrimitiveValue = ({
     extendedType?: string;
 };
 
-// @beta
+// @beta (undocumented)
 export namespace TypedPrimitiveValue {
     export function create(value: PrimitiveValue, type: PrimitiveValueType, koqName?: string, extendedType?: string): TypedPrimitiveValue;
-}
-
-// @beta
-type TypedValueSelectClauseProps = PropertyValueSelectClauseProps | TypedPrimitiveValue | PrimitiveValueSelectorProps;
-
-// @beta (undocumented)
-namespace TypedValueSelectClauseProps {
-    // (undocumented)
-    function isPrimitiveValue(props: TypedValueSelectClauseProps): props is TypedPrimitiveValue;
-    // (undocumented)
-    function isPrimitiveValueSelector(props: TypedValueSelectClauseProps): props is PrimitiveValueSelectorProps;
-    // (undocumented)
-    function isPropertySelector(props: TypedValueSelectClauseProps): props is PropertyValueSelectClauseProps;
 }
 
 // (No @packageDocumentation comment for this package)

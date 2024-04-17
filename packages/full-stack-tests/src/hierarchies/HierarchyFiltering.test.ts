@@ -5,9 +5,10 @@
 
 import { insertSubject } from "presentation-test-utilities";
 import { Subject } from "@itwin/core-backend";
+import { Id64String } from "@itwin/core-bentley";
 import { IModel } from "@itwin/core-common";
 import { HierarchyNode, IHierarchyLevelDefinitionsFactory, NodeSelectQueryFactory } from "@itwin/presentation-hierarchies";
-import { ECSqlBinding, Id64String } from "@itwin/presentation-shared";
+import { ECSqlBinding } from "@itwin/presentation-shared";
 import { buildIModel, importSchema, withECDb } from "../IModelUtils";
 import { initialize, terminate } from "../IntegrationTests";
 import { NodeValidators, validateHierarchy } from "./HierarchyValidation";
@@ -35,7 +36,7 @@ describe("Hierarchies", () => {
           return { rootSubject, childSubject1, childSubject2 };
         });
 
-        const selectQueryFactory = new NodeSelectQueryFactory(createMetadataProvider(imodel));
+        const selectQueryFactory = new NodeSelectQueryFactory({ metadataProvider: createMetadataProvider(imodel) });
         const hierarchy: IHierarchyLevelDefinitionsFactory = {
           async defineHierarchyLevel({ parentNode }) {
             if (!parentNode) {
@@ -123,7 +124,7 @@ describe("Hierarchies", () => {
           return { rootSubject, childSubject1, childSubject2 };
         });
 
-        const selectQueryFactory = new NodeSelectQueryFactory(createMetadataProvider(imodel));
+        const selectQueryFactory = new NodeSelectQueryFactory({ metadataProvider: createMetadataProvider(imodel) });
         const hierarchy: IHierarchyLevelDefinitionsFactory = {
           async defineHierarchyLevel({ parentNode }) {
             if (!parentNode) {
@@ -192,7 +193,7 @@ describe("Hierarchies", () => {
           return { rootSubject, childSubject1, childSubject2 };
         });
 
-        const selectQueryFactory = new NodeSelectQueryFactory(createMetadataProvider(imodel));
+        const selectQueryFactory = new NodeSelectQueryFactory({ metadataProvider: createMetadataProvider(imodel) });
         const hierarchy: IHierarchyLevelDefinitionsFactory = {
           async defineHierarchyLevel({ parentNode }) {
             if (!parentNode) {
@@ -279,7 +280,7 @@ describe("Hierarchies", () => {
           return { rootSubject, childSubject1, childSubject2 };
         });
 
-        const selectQueryFactory = new NodeSelectQueryFactory(createMetadataProvider(imodel));
+        const selectQueryFactory = new NodeSelectQueryFactory({ metadataProvider: createMetadataProvider(imodel) });
         const hierarchy: IHierarchyLevelDefinitionsFactory = {
           async defineHierarchyLevel({ parentNode }) {
             if (!parentNode) {
@@ -359,7 +360,7 @@ describe("Hierarchies", () => {
           return { rootSubject, childSubject1, childSubject2, childSubject3 };
         });
 
-        const selectQueryFactory = new NodeSelectQueryFactory(createMetadataProvider(imodel));
+        const selectQueryFactory = new NodeSelectQueryFactory({ metadataProvider: createMetadataProvider(imodel) });
         const hierarchy: IHierarchyLevelDefinitionsFactory = {
           async defineHierarchyLevel({ parentNode }) {
             if (!parentNode) {
@@ -452,7 +453,7 @@ describe("Hierarchies", () => {
             return { schema, x, y, z };
           },
           async (imodel, { schema, x, y, z }) => {
-            const selectQueryFactory = new NodeSelectQueryFactory(createMetadataProvider(imodel));
+            const selectQueryFactory = new NodeSelectQueryFactory({ metadataProvider: createMetadataProvider(imodel) });
             const hierarchy: IHierarchyLevelDefinitionsFactory = {
               async defineHierarchyLevel({ parentNode }) {
                 if (!parentNode) {
@@ -547,7 +548,7 @@ describe("Hierarchies", () => {
             return { schema, x, y1, y2 };
           },
           async (imodel, { schema, x, y1, y2 }) => {
-            const selectQueryFactory = new NodeSelectQueryFactory(createMetadataProvider(imodel));
+            const selectQueryFactory = new NodeSelectQueryFactory({ metadataProvider: createMetadataProvider(imodel) });
             const hierarchy: IHierarchyLevelDefinitionsFactory = {
               async defineHierarchyLevel({ parentNode }) {
                 if (!parentNode) {

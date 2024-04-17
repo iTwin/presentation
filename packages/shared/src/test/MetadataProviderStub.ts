@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as sinon from "sinon";
-import { EC, IMetadataProvider } from "../shared/Metadata";
+import { EC, IECMetadataProvider } from "../shared/Metadata";
 import { parseFullClassName } from "../shared/Utils";
 
 export interface StubClassFuncProps {
@@ -28,7 +28,7 @@ export interface ClassStubs {
   stubOtherClass: TStubClassFunc;
   resetHistory: () => void;
   restore: () => void;
-  stub: sinon.SinonStub<[metadata: IMetadataProvider, fullClassName: string], Promise<EC.Class>>;
+  stub: sinon.SinonStub<[metadata: IECMetadataProvider, fullClassName: string], Promise<EC.Class>>;
 }
 export function createMetadataProviderStub() {
   const schemaStubs: { [schemaName: string]: sinon.SinonStubbedInstance<EC.Schema> } = {};

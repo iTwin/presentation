@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { Schema as CoreSchema, SchemaKey as CoreSchemaKey } from "@itwin/ecschema-metadata";
-import { EC, IMetadataProvider } from "@itwin/presentation-shared";
+import { IECMetadataProvider } from "@itwin/presentation-shared";
 import { createECSchema } from "./MetadataInternal";
 
 /**
@@ -16,7 +16,7 @@ interface ICoreSchemaContext {
 }
 
 /**
- * Creates an `IMetadataProvider` for given [SchemaContext](https://www.itwinjs.org/reference/ecschema-metadata/context/schemacontext/).
+ * Creates an `IECMetadataProvider` for given [SchemaContext](https://www.itwinjs.org/reference/ecschema-metadata/context/schemacontext/).
  *
  * Usage example:
  *
@@ -31,19 +31,26 @@ interface ICoreSchemaContext {
  *
  * @beta
  */
-export function createMetadataProvider(schemaContext: ICoreSchemaContext): IMetadataProvider {
-  const schemaCache = new Map<string, Promise<EC.Schema | undefined>>();
+export function createMetadataProvider(schemaContext: ICoreSchemaContext): IECMetadataProvider {
+  async function getSchemaUnprotected(schemaName: string) {
+    const coreSchema = await schemaContext.getSchema(new CoreSchemaKey(schemaName));
+    return coreSchema ? createECSchema(coreSchema) : undefined;
+  }
+  async function getSchemaProtected(schemaName: string, handledExistingSchemaErrors: Set<string>) {
+    // workaround for https://github.com/iTwin/itwinjs-core/issues/6542
+    try {
+      return await getSchemaUnprotected(schemaName);
+    } catch (e) {
+      if (e instanceof Error && e.message.includes("already exists within this cache") && !handledExistingSchemaErrors.has(schemaName)) {
+        handledExistingSchemaErrors.add(schemaName);
+        return getSchemaProtected(schemaName, handledExistingSchemaErrors);
+      }
+      throw e;
+    }
+  }
   return {
     async getSchema(name) {
-      // workaround for https://github.com/iTwin/itwinjs-core/issues/6542
-      let schema = schemaCache.get(name);
-      // istanbul ignore else
-      if (!schema) {
-        schema = schemaContext.getSchema(new CoreSchemaKey(name)).then((coreSchema) => (coreSchema ? createECSchema(coreSchema) : undefined));
-        schema.catch(() => schemaCache.delete(name));
-        schemaCache.set(name, schema);
-      }
-      return schema;
+      return getSchemaProtected(name, new Set());
     },
   };
 }

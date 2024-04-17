@@ -43,7 +43,7 @@ describe("Hierarchies", () => {
           return { schema, x1, x2, y1, y2 };
         },
         async (db, { schema, y1, y2 }) => {
-          const selectQueryFactory = new NodeSelectQueryFactory(createMetadataProvider(db));
+          const selectQueryFactory = new NodeSelectQueryFactory({ metadataProvider: createMetadataProvider(db) });
           const hierarchy: IHierarchyLevelDefinitionsFactory = {
             async defineHierarchyLevel({ parentNode }) {
               if (!parentNode) {

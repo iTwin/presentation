@@ -31,13 +31,16 @@ import { GenericInstanceFilter } from "@itwin/core-common";
 import {
   ConcatenatedValue,
   ConcatenatedValuePart,
+  createCachingECClassHierarchyInspector,
   createDefaultValueFormatter,
   ECSqlBinding,
   ECSqlQueryDef,
   getClass,
-  IMetadataProvider,
+  IECClassHierarchyInspector,
+  IECMetadataProvider,
   InstanceKey,
   IPrimitiveValueFormatter,
+  normalizeFullClassName,
   TypedPrimitiveValue,
 } from "@itwin/presentation-shared";
 import { DefineHierarchyLevelProps, HierarchyNodesDefinition, IHierarchyLevelDefinitionsFactory } from "./HierarchyDefinition";
@@ -55,13 +58,7 @@ import {
   ProcessedInstanceHierarchyNode,
 } from "./HierarchyNode";
 import { CachedNodesObservableEntry, ChildNodeObservablesCache, ParsedQueryNodesObservable } from "./internal/ChildNodeObservablesCache";
-import {
-  BaseClassChecker,
-  LOGGING_NAMESPACE as CommonLoggingNamespace,
-  createNodeIdentifierForLogging,
-  hasChildren,
-  normalizeFullClassName,
-} from "./internal/Common";
+import { LOGGING_NAMESPACE as CommonLoggingNamespace, createNodeIdentifierForLogging, hasChildren } from "./internal/Common";
 import { eachValueFrom } from "./internal/EachValueFrom";
 import { FilteringHierarchyLevelDefinitionsFactory } from "./internal/FilteringHierarchyLevelDefinitionsFactory";
 import { createQueryLogMessage, doLog, log } from "./internal/LoggingUtils";
@@ -106,7 +103,13 @@ export interface HierarchyProviderLocalizedStrings {
  */
 export interface HierarchyProviderProps {
   /** IModel metadata provider for ECSchemas, ECClasses, ECProperties, etc. */
-  metadataProvider: IMetadataProvider;
+  metadataProvider: IECMetadataProvider;
+  /**
+   * An optional class hierarchy inspector, which may be supplied to be shared across multiple components.
+   * If not provided, the provider creates its own instance of the inspector using `metadataProvider`.
+   */
+  classHierarchyInspector?: IECClassHierarchyInspector;
+
   /** A definition that describes how the hierarchy should be created. */
   hierarchyDefinition: IHierarchyLevelDefinitionsFactory;
 
@@ -165,13 +168,13 @@ export interface GetHierarchyNodesProps {
  * @beta
  */
 export class HierarchyProvider {
-  private _metadataProvider: IMetadataProvider;
+  private _metadataProvider: IECMetadataProvider;
   private _queryReader: TreeQueryResultsReader;
   private _valuesFormatter: IPrimitiveValueFormatter;
   private _localizedStrings: HierarchyProviderLocalizedStrings;
   private _queryScheduler: SubscriptionScheduler;
   private _nodesCache: ChildNodeObservablesCache;
-  private _baseClassChecker: BaseClassChecker;
+  private _classHierarchyInspector: IECClassHierarchyInspector;
 
   /**
    * Hierarchy level definitions factory used by this provider.
@@ -190,9 +193,12 @@ export class HierarchyProvider {
 
   public constructor(props: HierarchyProviderProps) {
     this._metadataProvider = props.metadataProvider;
+    this._classHierarchyInspector =
+      props.classHierarchyInspector ??
+      createCachingECClassHierarchyInspector({ metadataProvider: this._metadataProvider, cacheSize: DEFAULT_BASE_CHECKER_CACHE_SIZE });
     if (props.filtering) {
       const filteringDefinition = new FilteringHierarchyLevelDefinitionsFactory({
-        metadataProvider: this._metadataProvider,
+        classHierarchy: this._classHierarchyInspector,
         source: props.hierarchyDefinition,
         nodeIdentifierPaths: props.filtering.paths,
       });
@@ -211,7 +217,6 @@ export class HierarchyProvider {
       variationsCount: 1,
     });
     this.queryExecutor = props.queryExecutor;
-    this._baseClassChecker = new BaseClassChecker(this._metadataProvider, DEFAULT_BASE_CHECKER_CACHE_SIZE);
   }
 
   /**
@@ -291,7 +296,7 @@ export class HierarchyProvider {
     props: GetHierarchyNodesProps,
   ): Observable<ProcessedHierarchyNode> {
     return preprocessedNodesObservable.pipe(
-      createGroupingOperator(this._metadataProvider, props.parentNode, this._valuesFormatter, this._localizedStrings, this._baseClassChecker, (gn) =>
+      createGroupingOperator(this._metadataProvider, props.parentNode, this._valuesFormatter, this._localizedStrings, this._classHierarchyInspector, (gn) =>
         this.onGroupingNodeCreated(gn, props),
       ),
     );
@@ -452,14 +457,14 @@ export class HierarchyProvider {
           of(def.query).pipe(
             mergeMap(async (query) => {
               const ecsql = `
-              SELECT
-                ${NodeSelectClauseColumnNames.FullClassName},
-                ${NodeSelectClauseColumnNames.ECInstanceId},
-                ${NodeSelectClauseColumnNames.HideNodeInHierarchy}
-              FROM (
-                ${query.ecsql}
-              )
-            `;
+                SELECT
+                  ${NodeSelectClauseColumnNames.FullClassName},
+                  ${NodeSelectClauseColumnNames.ECInstanceId},
+                  ${NodeSelectClauseColumnNames.HideNodeInHierarchy}
+                FROM (
+                  ${query.ecsql}
+                )
+              `;
               const reader = this.queryExecutor.createQueryReader({ ...query, ecsql }, { rowFormat: "Indexes", limit: "unbounded" });
               return from(reader).pipe(
                 map((row) => ({
@@ -559,7 +564,7 @@ function processNodes<TNode>(processor: (node: TNode) => Promise<TNode | undefin
 
 async function applyLabelsFormatting<TNode extends { label: string | ConcatenatedValue }>(
   node: TNode,
-  metadata: IMetadataProvider,
+  metadata: IECMetadataProvider,
   valueFormatter: (value: TypedPrimitiveValue) => Promise<string>,
 ): Promise<TNode & { label: string }> {
   if (typeof node.label === "string") {
@@ -568,40 +573,43 @@ async function applyLabelsFormatting<TNode extends { label: string | Concatenate
   }
   return {
     ...node,
-    label: await ConcatenatedValue.serialize(node.label, async (part) => {
-      // strings are converted to typed strings
-      if (typeof part === "string") {
-        part = {
-          value: part,
-          type: "String",
-        };
-      }
-      // for property parts - find property metadata and create `TypedPrimitiveValue` for them.
-      if (ConcatenatedValuePart.isProperty(part)) {
-        const property = await getProperty(part, metadata);
-        if (!property?.isPrimitive()) {
-          throw new Error(`Labels formatter expects a primitive property, but it's not.`);
+    label: await ConcatenatedValue.serialize({
+      parts: node.label,
+      partFormatter: async (part) => {
+        // strings are converted to typed strings
+        if (ConcatenatedValuePart.isString(part)) {
+          part = {
+            value: part,
+            type: "String",
+          };
         }
-        if (property.primitiveType === "IGeometry") {
-          throw new Error(`Labels formatter does not support "IGeometry" values, but the provided ${part.className}.${part.propertyName} property is.`);
+        // for property parts - find property metadata and create `TypedPrimitiveValue` for them.
+        if (ConcatenatedValuePart.isProperty(part)) {
+          const property = await getProperty(part, metadata);
+          if (!property?.isPrimitive()) {
+            throw new Error(`Labels formatter expects a primitive property, but it's not.`);
+          }
+          if (property.primitiveType === "IGeometry") {
+            throw new Error(`Labels formatter does not support "IGeometry" values, but the provided ${part.className}.${part.propertyName} property is.`);
+          }
+          if (property.primitiveType === "Binary") {
+            throw new Error(`Labels formatter does not support "Binary" values, but the provided ${part.className}.${part.propertyName} property is.`);
+          }
+          part = {
+            type: property.primitiveType,
+            extendedType: property.extendedTypeName,
+            koqName: (await property.kindOfQuantity)?.fullName,
+            value: part.value,
+          } as TypedPrimitiveValue;
         }
-        if (property.primitiveType === "Binary") {
-          throw new Error(`Labels formatter does not support "Binary" values, but the provided ${part.className}.${part.propertyName} property is.`);
-        }
-        part = {
-          type: property.primitiveType,
-          extendedType: property.extendedTypeName,
-          koqName: (await property.kindOfQuantity)?.fullName,
-          value: part.value,
-        } as TypedPrimitiveValue;
-      }
-      // finally, use provided value formatter to create a string from `TypedPrimitiveValue`
-      return valueFormatter(part);
+        // finally, use provided value formatter to create a string from `TypedPrimitiveValue`
+        return valueFormatter(part);
+      },
     }),
   };
 }
 
-async function getProperty({ className, propertyName }: { className: string; propertyName: string }, metadata: IMetadataProvider) {
+async function getProperty({ className, propertyName }: { className: string; propertyName: string }, metadata: IECMetadataProvider) {
   const propertyClass = await getClass(metadata, className);
   return propertyClass.getProperty(propertyName);
 }

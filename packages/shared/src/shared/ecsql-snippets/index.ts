@@ -3,5 +3,11 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-export * from "./ECSqlValueSelectorSnippets";
-export * from "./ECSqlJoinSnippets";
+export {
+  createRawPropertyValueSelector,
+  createRawPrimitiveValueSelector,
+  createNullableSelector,
+  createConcatenatedValueJsonSelector,
+  createConcatenatedValueStringSelector,
+} from "./ECSqlValueSelectorSnippets";
+export { createRelationshipPathJoinClause } from "./ECSqlJoinSnippets";

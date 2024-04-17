@@ -20,10 +20,10 @@ import { RpcConfiguration, RpcManager } from "@itwin/core-common";
 import { IModelConnection } from "@itwin/core-frontend";
 import { ECSchemaRpcInterface } from "@itwin/ecschema-rpcinterface-common";
 import { ECSchemaRpcImpl } from "@itwin/ecschema-rpcinterface-impl";
-import { createECSqlQueryExecutor } from "@itwin/presentation-core-interop";
 import { buildTestIModel, initialize, terminate } from "@itwin/presentation-testing";
 import { computeSelection, SelectableInstanceKey } from "@itwin/unified-selection";
 import { SelectionScope } from "@itwin/unified-selection/lib/cjs/unified-selection/SelectionScope";
+import { createECSqlQueryExecutor } from "./Utils";
 
 describe("SelectionScope", () => {
   let iModel: IModelConnection;
