@@ -541,7 +541,7 @@ describe("UniquePropertyValuesSelector", () => {
     expect(getDistinctValuesIteratorStub).to.be.calledOnce;
   });
 
-  it("resets loaded options when descriptor changes", async () => {
+  it("resets loaded options when property changes", async () => {
     getDistinctValuesIteratorStub.onCall(0).resolves({
       total: 2,
       items: createAsyncIterator([
@@ -590,8 +590,8 @@ describe("UniquePropertyValuesSelector", () => {
     menuSelector = await waitFor(() => getByText("unique-values-property-editor.select-values"));
     await user.click(menuSelector);
 
-    // ensure new filter is applied
-    await waitFor(() => getByText("Value3"), { timeout: 2000 });
+    // ensure values for changed property are returned
+    await waitFor(() => getByText("Value3"));
     await waitFor(() => getByText("TestValue4"));
     expect(getDistinctValuesIteratorStub).to.be.calledTwice;
   });
@@ -633,7 +633,7 @@ describe("UniquePropertyValuesSelector", () => {
     const searchSelector = await waitFor(() => container.querySelector(".presentation-async-select-values-container"));
     await user.type(searchSelector!, "Searched");
 
-    // ensure both searched for values are shown
+    // ensure all searched for values are shown
     await waitFor(() => getByText("SearchedValue1"));
     await waitFor(() => getByText("SearchedValue2"));
     await waitFor(() => getByText("SearchedValue3"));
