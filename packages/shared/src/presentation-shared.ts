@@ -19,6 +19,6 @@ export {
 } from "./shared/InstanceLabelSelectClauseFactory";
 export { ILogger, NOOP_LOGGER, LogFunction, LogLevel } from "./shared/Logging";
 export { ArrayElement, OmitOverUnion } from "./shared/MappedTypes";
-export { EC, getClass, IECMetadataProvider } from "./shared/Metadata";
+export { createCachingECClassHierarchyInspector, EC, getClass, IECClassHierarchyInspector, IECMetadataProvider } from "./shared/Metadata";
 export { normalizeFullClassName, parseFullClassName, trimWhitespace } from "./shared/Utils";
 export { InstanceKey, PrimitiveValue, TypedPrimitiveValue } from "./shared/Values";

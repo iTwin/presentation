@@ -67,7 +67,7 @@ describe("Hierarchies", () => {
         return { childSubject1, childSubject2, childPartition3, childPartition4, childPartition5 };
       });
 
-      const selectQueryFactory = new NodeSelectQueryFactory(createMetadataProvider(imodel));
+      const selectQueryFactory = new NodeSelectQueryFactory({ metadataProvider: createMetadataProvider(imodel) });
       const customHierarchy: IHierarchyLevelDefinitionsFactory = {
         async defineHierarchyLevel({ parentNode }) {
           if (!parentNode) {

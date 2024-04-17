@@ -5,7 +5,6 @@
 
 import { expect } from "chai";
 import sinon from "sinon";
-
 import {
   ClassBasedHierarchyLevelDefinitionsFactory,
   CustomHierarchyNodeDefinition,
@@ -47,7 +46,7 @@ describe("ClassBasedHierarchyLevelDefinitionsFactory", () => {
   it("returns root hierarchy level definition", async () => {
     const rootHierarchyLevel: HierarchyLevelDefinition = [createCustomNodeDefinition(), createInstanceNodesQueryDefinition()];
     const factory = new ClassBasedHierarchyLevelDefinitionsFactory({
-      metadataProvider,
+      classHierarchyInspector: metadataProvider.classHierarchyInspector,
       hierarchy: {
         rootNodes: async () => rootHierarchyLevel,
         childNodes: [],
@@ -66,7 +65,7 @@ describe("ClassBasedHierarchyLevelDefinitionsFactory", () => {
     const def4: HierarchyLevelDefinition = [createCustomNodeDefinition({ node: createTestParsedCustomNode({ label: "4" }) })];
 
     const factory = new ClassBasedHierarchyLevelDefinitionsFactory({
-      metadataProvider,
+      classHierarchyInspector: metadataProvider.classHierarchyInspector,
       hierarchy: {
         rootNodes: async () => [],
         childNodes: [
@@ -122,7 +121,7 @@ describe("ClassBasedHierarchyLevelDefinitionsFactory", () => {
     const def4: HierarchyLevelDefinition = [createCustomNodeDefinition({ node: createTestParsedCustomNode({ label: "4" }) })];
 
     const factory = new ClassBasedHierarchyLevelDefinitionsFactory({
-      metadataProvider,
+      classHierarchyInspector: metadataProvider.classHierarchyInspector,
       hierarchy: {
         rootNodes: async () => [],
         childNodes: [
@@ -174,7 +173,7 @@ describe("ClassBasedHierarchyLevelDefinitionsFactory", () => {
 
     const spy = sinon.stub().resolves([]);
     const factory = new ClassBasedHierarchyLevelDefinitionsFactory({
-      metadataProvider,
+      classHierarchyInspector: metadataProvider.classHierarchyInspector,
       hierarchy: {
         rootNodes: async () => [],
         childNodes: [

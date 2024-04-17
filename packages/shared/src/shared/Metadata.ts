@@ -3,6 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
+import { LRUMap } from "@itwin/core-bentley";
 import { parseFullClassName } from "./Utils";
 
 /**
@@ -13,6 +14,47 @@ import { parseFullClassName } from "./Utils";
  */
 export interface IECMetadataProvider {
   getSchema(schemaName: string): Promise<EC.Schema | undefined>;
+}
+
+/**
+ * An interface for a class hierarchy inspector that can be used to determine if one class derives from another.
+ * @beta
+ */
+export interface IECClassHierarchyInspector {
+  classDerivesFrom(derivedClassFullName: string, candidateBaseClassFullName: string): Promise<boolean> | boolean;
+}
+
+/**
+ * Creates a new `IECClassHierarchyInspector` that caches results of `derivesFrom` calls.
+ * @beta
+ */
+export function createCachingECClassHierarchyInspector(props: {
+  /** Metadata provider that provides access to ECClass metadata */
+  metadataProvider: IECMetadataProvider;
+  /** Optional cache size, describing the number of derived/base class combinations to store in cache. Defaults to `0`, which means no caching. */
+  cacheSize?: number;
+}): IECClassHierarchyInspector {
+  const map = new LRUMap<string, Promise<boolean> | boolean>(props.cacheSize ?? 0);
+  function createCacheKey(derivedClassName: string, baseClassName: string) {
+    return `${derivedClassName}/${baseClassName}`;
+  }
+  return {
+    classDerivesFrom(derivedClassFullName: string, candidateBaseClassFullName: string): Promise<boolean> | boolean {
+      const cacheKey = createCacheKey(derivedClassFullName, candidateBaseClassFullName);
+      let result = map.get(cacheKey);
+      if (result === undefined) {
+        result = Promise.all([getClass(props.metadataProvider, derivedClassFullName), getClass(props.metadataProvider, candidateBaseClassFullName)]).then(
+          async ([derivedClass, baseClass]) => {
+            const resolvedResult = await derivedClass.is(baseClass);
+            map.set(cacheKey, resolvedResult);
+            return resolvedResult;
+          },
+        );
+        map.set(cacheKey, result);
+      }
+      return result;
+    },
+  };
 }
 
 /**

@@ -16,6 +16,7 @@ import { GenericInstanceFilterRuleGroupOperator } from '@itwin/core-common';
 import { GenericInstanceFilterRuleOperator } from '@itwin/core-common';
 import { GenericInstanceFilterRuleValue } from '@itwin/core-common';
 import { Id64String } from '@itwin/core-bentley';
+import { IECClassHierarchyInspector } from '@itwin/presentation-shared';
 import { IECMetadataProvider } from '@itwin/presentation-shared';
 import { IECSqlQueryExecutor } from '@itwin/presentation-shared';
 import { ILogger } from '@itwin/presentation-shared';
@@ -43,8 +44,8 @@ export interface ClassBasedHierarchyDefinition {
 
 // @beta
 export interface ClassBasedHierarchyDefinitionsFactoryProps {
+    classHierarchyInspector: IECClassHierarchyInspector;
     hierarchy: ClassBasedHierarchyDefinition;
-    metadataProvider: IECMetadataProvider;
 }
 
 // @beta
@@ -422,6 +423,7 @@ export interface HierarchyProviderLocalizedStrings {
 
 // @beta
 export interface HierarchyProviderProps {
+    classHierarchyInspector?: IECClassHierarchyInspector;
     filtering?: {
         paths: HierarchyNodeIdentifiersPath[];
     };
@@ -533,7 +535,10 @@ export interface NodeSelectClauseProps {
 
 // @beta
 export class NodeSelectQueryFactory {
-    constructor(_metadataProvider: IECMetadataProvider);
+    constructor(props: {
+        metadataProvider: IECMetadataProvider;
+        classHierarchyInspector?: IECClassHierarchyInspector;
+    });
     createFilterClauses(def: GenericInstanceFilter | undefined, contentClass: {
         fullName: string;
         alias: string;

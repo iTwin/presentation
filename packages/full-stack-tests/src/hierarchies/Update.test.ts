@@ -509,7 +509,7 @@ describe("Hierarchies", () => {
         });
 
         function createRootSubjectChildrenProvider(props: { label: "codeValue" | "aspectIdentifier" } = { label: "codeValue" }) {
-          const selectQueryFactory = new NodeSelectQueryFactory(createMetadataProvider(imodel));
+          const selectQueryFactory = new NodeSelectQueryFactory({ metadataProvider: createMetadataProvider(imodel) });
           const hierarchy: IHierarchyLevelDefinitionsFactory = {
             async defineHierarchyLevel() {
               return [
@@ -537,7 +537,7 @@ describe("Hierarchies", () => {
         }
 
         function createRootSubjectReferredElementsProvider() {
-          const selectQueryFactory = new NodeSelectQueryFactory(createMetadataProvider(imodel));
+          const selectQueryFactory = new NodeSelectQueryFactory({ metadataProvider: createMetadataProvider(imodel) });
           const hierarchy: IHierarchyLevelDefinitionsFactory = {
             async defineHierarchyLevel() {
               return [
@@ -565,7 +565,7 @@ describe("Hierarchies", () => {
         }
 
         function createPhysicalModelsProvider() {
-          const selectQueryFactory = new NodeSelectQueryFactory(createMetadataProvider(imodel));
+          const selectQueryFactory = new NodeSelectQueryFactory({ metadataProvider: createMetadataProvider(imodel) });
           const hierarchy: IHierarchyLevelDefinitionsFactory = {
             async defineHierarchyLevel() {
               return [

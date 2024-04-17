@@ -4,8 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import naturalCompare from "natural-compare-lite";
-import { assert, LRUMap } from "@itwin/core-bentley";
-import { EC, getClass, IECMetadataProvider } from "@itwin/presentation-shared";
+import { assert } from "@itwin/core-bentley";
 import {
   HierarchyNode,
   HierarchyNodeKey,
@@ -108,35 +107,6 @@ export function createOperatorLoggingNamespace(operatorName: string) {
 /** @internal */
 export function compareNodesByLabel<TLhsNode extends { label: string }, TRhsNode extends { label: string }>(lhs: TLhsNode, rhs: TRhsNode): number {
   return naturalCompare(lhs.label.toLocaleLowerCase(), rhs.label.toLocaleLowerCase());
-}
-
-/** @internal */
-export class BaseClassChecker {
-  private _map: LRUMap<string, Promise<boolean> | boolean>;
-  private _metadataProvider: IECMetadataProvider;
-
-  public constructor(metadataProvider: IECMetadataProvider, cacheSize: number = 0) {
-    this._map = new LRUMap(cacheSize);
-    this._metadataProvider = metadataProvider;
-  }
-
-  private createCacheKey(className: string, baseClassName: string) {
-    return `${className}${baseClassName}`;
-  }
-
-  public isECClassOfBaseECClass(ecClassNameToCheck: string, baseECClass: EC.Class): Promise<boolean> | boolean {
-    const cacheKey = this.createCacheKey(ecClassNameToCheck, baseECClass.fullName);
-    let isCurrentNodeClassOfBase = this._map.get(cacheKey);
-    if (isCurrentNodeClassOfBase === undefined) {
-      isCurrentNodeClassOfBase = getClass(this._metadataProvider, ecClassNameToCheck).then(async (currentNodeECClass) => {
-        const result = await currentNodeECClass.is(baseECClass);
-        this._map.set(cacheKey, result);
-        return result;
-      });
-      this._map.set(cacheKey, isCurrentNodeClassOfBase);
-    }
-    return isCurrentNodeClassOfBase;
-  }
 }
 
 /** @internal */

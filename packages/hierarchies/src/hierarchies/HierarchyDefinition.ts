@@ -5,7 +5,7 @@
 
 import { Id64String } from "@itwin/core-bentley";
 import { GenericInstanceFilter } from "@itwin/core-common";
-import { ECSqlQueryDef, getClass, IECMetadataProvider, InstanceKey, parseFullClassName } from "@itwin/presentation-shared";
+import { ECSqlQueryDef, IECClassHierarchyInspector, InstanceKey } from "@itwin/presentation-shared";
 import {
   HierarchyNode,
   HierarchyNodeKey,
@@ -228,8 +228,8 @@ export interface ClassBasedHierarchyDefinition {
  * @beta
  */
 export interface ClassBasedHierarchyDefinitionsFactoryProps {
-  /** Access to iModel's metadata. */
-  metadataProvider: IECMetadataProvider;
+  /** Access to ECClass hierarchy in the iModel */
+  classHierarchyInspector: IECClassHierarchyInspector;
   /** Hierarchy level definitions based on parent instance node's class or custom node's key. */
   hierarchy: ClassBasedHierarchyDefinition;
 }
@@ -242,11 +242,11 @@ export interface ClassBasedHierarchyDefinitionsFactoryProps {
  * @beta
  */
 export class ClassBasedHierarchyLevelDefinitionsFactory implements IHierarchyLevelDefinitionsFactory {
-  private _metadataProvider: IECMetadataProvider;
+  private _classHierarchyInspector: IECClassHierarchyInspector;
   private _definition: ClassBasedHierarchyDefinition;
 
   public constructor(props: ClassBasedHierarchyDefinitionsFactoryProps) {
-    this._metadataProvider = props.metadataProvider;
+    this._classHierarchyInspector = props.classHierarchyInspector;
     this._definition = props.hierarchy;
   }
 
@@ -274,7 +274,7 @@ export class ClassBasedHierarchyLevelDefinitionsFactory implements IHierarchyLev
       return (
         await Promise.all(
           [...instanceIdsByClass.entries()].map(async ([parentNodeClassName, parentNodeInstanceIds]) =>
-            createHierarchyLevelDefinitions(this._metadataProvider, instancesParentNodeDefs, parentNodeClassName, parentNodeInstanceIds, {
+            createHierarchyLevelDefinitions(this._classHierarchyInspector, instancesParentNodeDefs, parentNodeClassName, parentNodeInstanceIds, {
               ...props,
               parentNode,
             }),
@@ -290,18 +290,16 @@ export class ClassBasedHierarchyLevelDefinitionsFactory implements IHierarchyLev
 }
 
 async function createHierarchyLevelDefinitions(
-  metadataProvider: IECMetadataProvider,
+  classHierarchy: IECClassHierarchyInspector,
   defs: InstancesNodeChildHierarchyLevelDefinition[],
   parentNodeClassName: string,
   parentNodeInstanceIds: Id64String[],
   requestProps: DefineHierarchyLevelProps & { parentNode: HierarchyDefinitionParentNode },
 ) {
-  const parentNodeClass = await getClass(metadataProvider, parentNodeClassName);
   return (
     await Promise.all(
       defs.map(async (def) => {
-        const { schemaName, className } = parseFullClassName(def.parentNodeClassName);
-        if (await parentNodeClass.is(className, schemaName)) {
+        if (await classHierarchy.classDerivesFrom(parentNodeClassName, def.parentNodeClassName)) {
           return def.definitions({ ...requestProps, parentNodeInstanceIds });
         }
         return [];

@@ -34,7 +34,7 @@ describe("Hierarchies", () => {
       specifiedGrouping: ECSqlSelectClauseGroupingParams,
       labelProperty?: string,
     ): IHierarchyLevelDefinitionsFactory {
-      const selectQueryFactory = new NodeSelectQueryFactory(createMetadataProvider(imodel));
+      const selectQueryFactory = new NodeSelectQueryFactory({ metadataProvider: createMetadataProvider(imodel) });
       return {
         async defineHierarchyLevel({ parentNode }) {
           if (!parentNode) {

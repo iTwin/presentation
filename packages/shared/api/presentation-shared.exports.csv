@@ -6,6 +6,7 @@ beta;ConcatenatedValue
 beta;ConcatenatedValuePart = PrimitivePropertyValue | TypedPrimitiveValue | string
 beta;ConcatenatedValuePart
 beta;createBisInstanceLabelSelectClauseFactory(props: BisInstanceLabelSelectClauseFactoryProps): IInstanceLabelSelectClauseFactory
+beta;createCachingECClassHierarchyInspector(props:
 beta;createClassBasedInstanceLabelSelectClauseFactory(props: ClassBasedInstanceLabelSelectClauseFactoryProps): IInstanceLabelSelectClauseFactory
 beta;createDefaultInstanceLabelSelectClauseFactory(): IInstanceLabelSelectClauseFactory
 beta;createDefaultValueFormatter(): IPrimitiveValueFormatter
@@ -15,6 +16,7 @@ beta;ECSqlQueryDef
 beta;ECSqlQueryReaderOptions
 beta;ECSqlQueryRow
 beta;getClass(metadata: IECMetadataProvider, fullClassName: string): Promise
+beta;IECClassHierarchyInspector
 beta;IECMetadataProvider
 beta;IECSqlQueryExecutor
 beta;IInstanceLabelSelectClauseFactory

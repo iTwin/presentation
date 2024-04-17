@@ -185,12 +185,20 @@ export function createMetadataProviderStub() {
     stubEntityClass,
     stubRelationshipClass,
     stubOtherClass,
-    getClassRequestCount(props: { schemaName: string; className: string }): number {
-      const schemaStub = schemaStubs[props.schemaName];
-      if (!schemaStub) {
-        return 0;
-      }
-      return schemaStub.getClass.getCalls().filter((call) => call.args[0] === props.className).length;
+    classHierarchyInspector: {
+      classDerivesFrom: async (derived: string, base: string) => {
+        const { schemaName: derivedSchemaName, className: derivedClassName } = parseFullClassName(derived);
+        const { schemaName: baseSchemaName, className: baseClassName } = parseFullClassName(base);
+        const schemaStub = schemaStubs[derivedSchemaName];
+        if (!schemaStub) {
+          return false;
+        }
+        const derivedClass = await schemaStub.getClass(derivedClassName);
+        if (!derivedClass) {
+          return false;
+        }
+        return derivedClass.is(baseClassName, baseSchemaName);
+      },
     },
   };
 }

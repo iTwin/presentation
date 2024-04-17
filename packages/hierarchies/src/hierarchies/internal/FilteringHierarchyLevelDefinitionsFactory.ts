@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { getClass, IECMetadataProvider, InstanceKey } from "@itwin/presentation-shared";
+import { IECClassHierarchyInspector, InstanceKey } from "@itwin/presentation-shared";
 import {
   CustomHierarchyNodeDefinition,
   DefineHierarchyLevelProps,
@@ -27,7 +27,7 @@ import { defaultNodesParser } from "./TreeNodesReader";
 
 /** @internal */
 export interface FilteringQueryBuilderProps {
-  metadataProvider: IECMetadataProvider;
+  classHierarchy: IECClassHierarchyInspector;
   source: IHierarchyLevelDefinitionsFactory;
   nodeIdentifierPaths: HierarchyNodeIdentifiersPath[];
 }
@@ -40,12 +40,12 @@ export type FilteredHierarchyNode<TNode = ProcessedHierarchyNode> = TNode & {
 
 /** @internal */
 export class FilteringHierarchyLevelDefinitionsFactory implements IHierarchyLevelDefinitionsFactory {
-  private _metadataProvider: IECMetadataProvider;
+  private _classHierarchy: IECClassHierarchyInspector;
   private _source: IHierarchyLevelDefinitionsFactory;
   private _nodeIdentifierPaths: HierarchyNodeIdentifiersPath[];
 
   public constructor(props: FilteringQueryBuilderProps) {
-    this._metadataProvider = props.metadataProvider;
+    this._classHierarchy = props.classHierarchy;
     this._source = props.source;
     this._nodeIdentifierPaths = props.nodeIdentifierPaths;
   }
@@ -119,7 +119,6 @@ export class FilteringHierarchyLevelDefinitionsFactory implements IHierarchyLeve
             },
           );
         } else {
-          const queryClass = await getClass(this._metadataProvider, definition.fullClassName);
           matchedDefinition = await matchFilters<InstanceKey>(
             definition,
             { filteredNodePaths, isParentFilterTarget },
@@ -127,8 +126,7 @@ export class FilteringHierarchyLevelDefinitionsFactory implements IHierarchyLeve
               if (!HierarchyNodeIdentifier.isInstanceNodeIdentifier(id)) {
                 return false;
               }
-              const pathClass = await getClass(this._metadataProvider, id.className);
-              return pathClass.is(queryClass);
+              return this._classHierarchy.classDerivesFrom(id.className, definition.fullClassName);
             },
             (def, matchingFilters, isFilterTarget) => applyECInstanceIdsFilter(def, matchingFilters, isFilterTarget, !!isParentFilterTarget),
           );

@@ -31,10 +31,12 @@ import { GenericInstanceFilter } from "@itwin/core-common";
 import {
   ConcatenatedValue,
   ConcatenatedValuePart,
+  createCachingECClassHierarchyInspector,
   createDefaultValueFormatter,
   ECSqlBinding,
   ECSqlQueryDef,
   getClass,
+  IECClassHierarchyInspector,
   IECMetadataProvider,
   InstanceKey,
   IPrimitiveValueFormatter,
@@ -56,7 +58,7 @@ import {
   ProcessedInstanceHierarchyNode,
 } from "./HierarchyNode";
 import { CachedNodesObservableEntry, ChildNodeObservablesCache, ParsedQueryNodesObservable } from "./internal/ChildNodeObservablesCache";
-import { BaseClassChecker, LOGGING_NAMESPACE as CommonLoggingNamespace, createNodeIdentifierForLogging, hasChildren } from "./internal/Common";
+import { LOGGING_NAMESPACE as CommonLoggingNamespace, createNodeIdentifierForLogging, hasChildren } from "./internal/Common";
 import { eachValueFrom } from "./internal/EachValueFrom";
 import { FilteringHierarchyLevelDefinitionsFactory } from "./internal/FilteringHierarchyLevelDefinitionsFactory";
 import { createQueryLogMessage, doLog, log } from "./internal/LoggingUtils";
@@ -102,6 +104,12 @@ export interface HierarchyProviderLocalizedStrings {
 export interface HierarchyProviderProps {
   /** IModel metadata provider for ECSchemas, ECClasses, ECProperties, etc. */
   metadataProvider: IECMetadataProvider;
+  /**
+   * An optional class hierarchy inspector, which may be supplied to be shared across multiple components.
+   * If not provided, the provider creates its own instance of the inspector using `metadataProvider`.
+   */
+  classHierarchyInspector?: IECClassHierarchyInspector;
+
   /** A definition that describes how the hierarchy should be created. */
   hierarchyDefinition: IHierarchyLevelDefinitionsFactory;
 
@@ -166,7 +174,7 @@ export class HierarchyProvider {
   private _localizedStrings: HierarchyProviderLocalizedStrings;
   private _queryScheduler: SubscriptionScheduler;
   private _nodesCache: ChildNodeObservablesCache;
-  private _baseClassChecker: BaseClassChecker;
+  private _classHierarchyInspector: IECClassHierarchyInspector;
 
   /**
    * Hierarchy level definitions factory used by this provider.
@@ -185,9 +193,12 @@ export class HierarchyProvider {
 
   public constructor(props: HierarchyProviderProps) {
     this._metadataProvider = props.metadataProvider;
+    this._classHierarchyInspector =
+      props.classHierarchyInspector ??
+      createCachingECClassHierarchyInspector({ metadataProvider: this._metadataProvider, cacheSize: DEFAULT_BASE_CHECKER_CACHE_SIZE });
     if (props.filtering) {
       const filteringDefinition = new FilteringHierarchyLevelDefinitionsFactory({
-        metadataProvider: this._metadataProvider,
+        classHierarchy: this._classHierarchyInspector,
         source: props.hierarchyDefinition,
         nodeIdentifierPaths: props.filtering.paths,
       });
@@ -206,7 +217,6 @@ export class HierarchyProvider {
       variationsCount: 1,
     });
     this.queryExecutor = props.queryExecutor;
-    this._baseClassChecker = new BaseClassChecker(this._metadataProvider, DEFAULT_BASE_CHECKER_CACHE_SIZE);
   }
 
   /**
@@ -286,7 +296,7 @@ export class HierarchyProvider {
     props: GetHierarchyNodesProps,
   ): Observable<ProcessedHierarchyNode> {
     return preprocessedNodesObservable.pipe(
-      createGroupingOperator(this._metadataProvider, props.parentNode, this._valuesFormatter, this._localizedStrings, this._baseClassChecker, (gn) =>
+      createGroupingOperator(this._metadataProvider, props.parentNode, this._valuesFormatter, this._localizedStrings, this._classHierarchyInspector, (gn) =>
         this.onGroupingNodeCreated(gn, props),
       ),
     );

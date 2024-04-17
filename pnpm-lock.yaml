@@ -482,6 +482,9 @@ importers:
       '@itwin/presentation-models-tree':
         specifier: workspace:*
         version: link:../../../packages/models-tree
+      '@itwin/presentation-shared':
+        specifier: workspace:*
+        version: link:../../../packages/shared
       '@itwin/unified-selection':
         specifier: workspace:*
         version: link:../../../packages/unified-selection

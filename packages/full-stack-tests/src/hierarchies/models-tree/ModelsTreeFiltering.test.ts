@@ -21,6 +21,7 @@ import { InstanceKey } from "@itwin/presentation-common";
 import { createECSqlQueryExecutor, createMetadataProvider } from "@itwin/presentation-core-interop";
 import { HierarchyNodeIdentifier, HierarchyNodeIdentifiersPath, HierarchyProvider } from "@itwin/presentation-hierarchies";
 import { ModelsTreeDefinition } from "@itwin/presentation-models-tree";
+import { createCachingECClassHierarchyInspector } from "@itwin/presentation-shared";
 import { buildTestIModel, TestIModelBuilder } from "@itwin/presentation-testing";
 import { buildIModel } from "../../IModelUtils";
 import { initialize, terminate } from "../../IntegrationTests";
@@ -758,7 +759,7 @@ describe("Hierarchies", () => {
 
           const actualInstanceKeyPaths = (
             await ModelsTreeDefinition.createInstanceKeyPaths({
-              metadataProvider,
+              classHierarchyInspector: createCachingECClassHierarchyInspector({ metadataProvider }),
               queryExecutor: hierarchyProvider.queryExecutor,
               keys: targetInstanceKeys,
             })
@@ -773,7 +774,7 @@ describe("Hierarchies", () => {
 
           const actualInstanceKeyPaths = (
             await ModelsTreeDefinition.createInstanceKeyPaths({
-              metadataProvider,
+              classHierarchyInspector: createCachingECClassHierarchyInspector({ metadataProvider }),
               queryExecutor: hierarchyProvider.queryExecutor,
               label: targetInstanceLabel,
             })
@@ -803,7 +804,7 @@ describe("Hierarchies", () => {
 
       const actualInstanceKeyPaths = (
         await ModelsTreeDefinition.createInstanceKeyPaths({
-          metadataProvider,
+          classHierarchyInspector: createCachingECClassHierarchyInspector({ metadataProvider }),
           queryExecutor: createECSqlQueryExecutor(imodel),
           label: formattedECInstanceId,
         })

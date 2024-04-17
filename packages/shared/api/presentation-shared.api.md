@@ -38,6 +38,12 @@ export namespace ConcatenatedValuePart {
 export function createBisInstanceLabelSelectClauseFactory(props: BisInstanceLabelSelectClauseFactoryProps): IInstanceLabelSelectClauseFactory;
 
 // @beta
+export function createCachingECClassHierarchyInspector(props: {
+    metadataProvider: IECMetadataProvider;
+    cacheSize?: number;
+}): IECClassHierarchyInspector;
+
+// @beta
 export function createClassBasedInstanceLabelSelectClauseFactory(props: ClassBasedInstanceLabelSelectClauseFactoryProps): IInstanceLabelSelectClauseFactory;
 
 // @beta
@@ -268,6 +274,12 @@ export interface ECSqlQueryRow {
 
 // @beta
 export function getClass(metadata: IECMetadataProvider, fullClassName: string): Promise<EC.Class>;
+
+// @beta
+export interface IECClassHierarchyInspector {
+    // (undocumented)
+    classDerivesFrom(derivedClassFullName: string, candidateBaseClassFullName: string): Promise<boolean> | boolean;
+}
 
 // @beta
 export interface IECMetadataProvider {

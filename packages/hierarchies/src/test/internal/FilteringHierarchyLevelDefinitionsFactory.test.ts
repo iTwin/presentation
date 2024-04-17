@@ -5,7 +5,7 @@
 
 import { expect } from "chai";
 import sinon from "sinon";
-import { IECMetadataProvider, trimWhitespace } from "@itwin/presentation-shared";
+import { IECClassHierarchyInspector, trimWhitespace } from "@itwin/presentation-shared";
 import {
   CustomHierarchyNodeDefinition,
   HierarchyDefinitionParentNode,
@@ -235,7 +235,7 @@ describe("FilteringHierarchyLevelDefinitionsFactory", () => {
         defineHierarchyLevel: async () => sourceDefinitions,
       };
       const filteringFactory = createFilteringHierarchyLevelsFactory({
-        metadataProvider,
+        classHierarchy: metadataProvider.classHierarchyInspector,
         sourceFactory,
       });
       const result = await filteringFactory.defineHierarchyLevel({
@@ -253,7 +253,7 @@ describe("FilteringHierarchyLevelDefinitionsFactory", () => {
         ],
       };
       const filteringFactory = createFilteringHierarchyLevelsFactory({
-        metadataProvider,
+        classHierarchy: metadataProvider.classHierarchyInspector,
         sourceFactory,
       });
       const result = await filteringFactory.defineHierarchyLevel({ parentNode: undefined });
@@ -274,7 +274,7 @@ describe("FilteringHierarchyLevelDefinitionsFactory", () => {
           defineHierarchyLevel: async () => [sourceDefinition],
         } as unknown as IHierarchyLevelDefinitionsFactory;
         const filteringFactory = createFilteringHierarchyLevelsFactory({
-          metadataProvider,
+          classHierarchy: metadataProvider.classHierarchyInspector,
           sourceFactory,
           nodeIdentifierPaths: [[{ className: filterClass.fullName, id: "0x123" }]],
         });
@@ -294,7 +294,7 @@ describe("FilteringHierarchyLevelDefinitionsFactory", () => {
           defineHierarchyLevel: async () => [sourceDefinition],
         } as unknown as IHierarchyLevelDefinitionsFactory;
         const filteringFactory = createFilteringHierarchyLevelsFactory({
-          metadataProvider,
+          classHierarchy: metadataProvider.classHierarchyInspector,
           sourceFactory,
           nodeIdentifierPaths: [[{ key: "xxx" }]],
         });
@@ -314,7 +314,7 @@ describe("FilteringHierarchyLevelDefinitionsFactory", () => {
           defineHierarchyLevel: async () => [sourceDefinition],
         } as unknown as IHierarchyLevelDefinitionsFactory;
         const filteringFactory = createFilteringHierarchyLevelsFactory({
-          metadataProvider,
+          classHierarchy: metadataProvider.classHierarchyInspector,
           sourceFactory,
           nodeIdentifierPaths: [[]],
         });
@@ -339,7 +339,7 @@ describe("FilteringHierarchyLevelDefinitionsFactory", () => {
           defineHierarchyLevel: async () => [sourceDefinition1, sourceDefinition2],
         };
         const filteringFactory = createFilteringHierarchyLevelsFactory({
-          metadataProvider,
+          classHierarchy: metadataProvider.classHierarchyInspector,
           sourceFactory,
           nodeIdentifierPaths: [[{ key: "custom 2" }]],
         });
@@ -366,7 +366,7 @@ describe("FilteringHierarchyLevelDefinitionsFactory", () => {
           defineHierarchyLevel: async () => [sourceDefinition],
         } as unknown as IHierarchyLevelDefinitionsFactory;
         const filteringFactory = createFilteringHierarchyLevelsFactory({
-          metadataProvider,
+          classHierarchy: metadataProvider.classHierarchyInspector,
           sourceFactory,
           nodeIdentifierPaths: [
             [{ key: "custom" }, { key: "123" }],
@@ -399,7 +399,7 @@ describe("FilteringHierarchyLevelDefinitionsFactory", () => {
           defineHierarchyLevel: async () => [sourceDefinition],
         } as unknown as IHierarchyLevelDefinitionsFactory;
         const filteringFactory = createFilteringHierarchyLevelsFactory({
-          metadataProvider,
+          classHierarchy: metadataProvider.classHierarchyInspector,
           sourceFactory,
           nodeIdentifierPaths: [[{ key: "xxx" }]],
         });
@@ -420,7 +420,7 @@ describe("FilteringHierarchyLevelDefinitionsFactory", () => {
           defineHierarchyLevel: async () => [sourceDefinition],
         } as unknown as IHierarchyLevelDefinitionsFactory;
         const filteringFactory = createFilteringHierarchyLevelsFactory({
-          metadataProvider,
+          classHierarchy: metadataProvider.classHierarchyInspector,
           sourceFactory,
           nodeIdentifierPaths: [[{ className: filterPathClass.fullName, id: "0x123" }]],
         });
@@ -440,7 +440,7 @@ describe("FilteringHierarchyLevelDefinitionsFactory", () => {
           defineHierarchyLevel: async () => [sourceDefinition],
         } as unknown as IHierarchyLevelDefinitionsFactory;
         const filteringFactory = createFilteringHierarchyLevelsFactory({
-          metadataProvider,
+          classHierarchy: metadataProvider.classHierarchyInspector,
           sourceFactory,
           nodeIdentifierPaths: [[]],
         });
@@ -460,7 +460,7 @@ describe("FilteringHierarchyLevelDefinitionsFactory", () => {
           defineHierarchyLevel: async () => [sourceDefinition],
         } as unknown as IHierarchyLevelDefinitionsFactory;
         const filteringFactory = createFilteringHierarchyLevelsFactory({
-          metadataProvider,
+          classHierarchy: metadataProvider.classHierarchyInspector,
           sourceFactory,
           nodeIdentifierPaths: [],
         });
@@ -491,7 +491,7 @@ describe("FilteringHierarchyLevelDefinitionsFactory", () => {
           defineHierarchyLevel: async () => [sourceDefinition],
         } as unknown as IHierarchyLevelDefinitionsFactory;
         const filteringFactory = createFilteringHierarchyLevelsFactory({
-          metadataProvider,
+          classHierarchy: metadataProvider.classHierarchyInspector,
           sourceFactory,
           nodeIdentifierPaths: [
             [
@@ -533,7 +533,7 @@ describe("FilteringHierarchyLevelDefinitionsFactory", () => {
           defineHierarchyLevel: async () => [sourceDefinition],
         } as unknown as IHierarchyLevelDefinitionsFactory;
         const filteringFactory = createFilteringHierarchyLevelsFactory({
-          metadataProvider,
+          classHierarchy: metadataProvider.classHierarchyInspector,
           sourceFactory,
           nodeIdentifierPaths: [[{ className: filterPathClass1.fullName, id: "0x123" }], [{ className: filterPathClass2.fullName, id: "0x456" }]],
         });
@@ -570,7 +570,7 @@ describe("FilteringHierarchyLevelDefinitionsFactory", () => {
           defineHierarchyLevel: async () => [sourceDefinition],
         } as unknown as IHierarchyLevelDefinitionsFactory;
         const filteringFactory = createFilteringHierarchyLevelsFactory({
-          metadataProvider,
+          classHierarchy: metadataProvider.classHierarchyInspector,
           sourceFactory,
           nodeIdentifierPaths: [
             [
@@ -617,7 +617,7 @@ describe("FilteringHierarchyLevelDefinitionsFactory", () => {
         defineHierarchyLevel: async () => [sourceDefinition],
       };
       const filteringFactory = createFilteringHierarchyLevelsFactory({
-        metadataProvider,
+        classHierarchy: metadataProvider.classHierarchyInspector,
         sourceFactory,
         nodeIdentifierPaths: [], // this doesn't matter as we're going to look at what's in the parent node
       });
@@ -644,7 +644,7 @@ describe("FilteringHierarchyLevelDefinitionsFactory", () => {
         defineHierarchyLevel: async () => [matchingSourceDefinition, nonMatchingSourceDefinition],
       };
       const filteringFactory = createFilteringHierarchyLevelsFactory({
-        metadataProvider,
+        classHierarchy: metadataProvider.classHierarchyInspector,
         sourceFactory,
         nodeIdentifierPaths: [], // this doesn't matter as we're going to look at what's in the parent node
       });
@@ -735,13 +735,13 @@ describe("FilteringHierarchyLevelDefinitionsFactory", () => {
 });
 
 function createFilteringHierarchyLevelsFactory(props?: {
-  metadataProvider?: IECMetadataProvider;
+  classHierarchy?: IECClassHierarchyInspector;
   sourceFactory?: IHierarchyLevelDefinitionsFactory;
   nodeIdentifierPaths?: HierarchyNodeIdentifiersPath[];
 }) {
-  const { metadataProvider, sourceFactory, nodeIdentifierPaths } = props ?? {};
+  const { classHierarchy, sourceFactory, nodeIdentifierPaths } = props ?? {};
   return new FilteringHierarchyLevelDefinitionsFactory({
-    metadataProvider: metadataProvider ?? createMetadataProviderStub(),
+    classHierarchy: classHierarchy ?? { classDerivesFrom: async () => false },
     source: sourceFactory ?? ({} as unknown as IHierarchyLevelDefinitionsFactory),
     nodeIdentifierPaths: nodeIdentifierPaths ?? [],
   });

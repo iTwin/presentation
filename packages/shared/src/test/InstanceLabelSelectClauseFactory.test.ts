@@ -13,7 +13,6 @@ import {
   IInstanceLabelSelectClauseFactory,
 } from "../shared/InstanceLabelSelectClauseFactory";
 import { trimWhitespace } from "../shared/Utils";
-import { createMetadataProviderStub } from "./MetadataProviderStub";
 
 describe("createDefaultInstanceLabelSelectClauseFactory", () => {
   let factory: IInstanceLabelSelectClauseFactory;
@@ -53,17 +52,16 @@ describe("createClassBasedInstanceLabelSelectClauseFactory", () => {
       return "default selector";
     },
   };
-  let metadataProvider: ReturnType<typeof createMetadataProviderStub>;
+  const classHierarchyInspector = {
+    classDerivesFrom: sinon.stub(),
+  };
   beforeEach(() => {
-    metadataProvider = createMetadataProviderStub();
-  });
-  afterEach(() => {
-    sinon.restore();
+    classHierarchyInspector.classDerivesFrom.reset();
   });
 
   it("returns default clause when given an empty list of clauses", async () => {
     const factory = createClassBasedInstanceLabelSelectClauseFactory({
-      metadataProvider,
+      classHierarchyInspector,
       defaultClauseFactory,
       clauses: [],
     });
@@ -75,7 +73,7 @@ describe("createClassBasedInstanceLabelSelectClauseFactory", () => {
 
   it("returns default clause when none of given clause classes match query class", async () => {
     const factory = createClassBasedInstanceLabelSelectClauseFactory({
-      metadataProvider,
+      classHierarchyInspector,
       defaultClauseFactory,
       clauses: [
         {
@@ -88,9 +86,7 @@ describe("createClassBasedInstanceLabelSelectClauseFactory", () => {
         },
       ],
     });
-    metadataProvider.stubEntityClass({ schemaName: "Schema", className: "QueryClass", is: async () => false });
-    metadataProvider.stubEntityClass({ schemaName: "Schema", className: "ClassA", is: async () => false });
-    metadataProvider.stubEntityClass({ schemaName: "Schema", className: "ClassB", is: async () => false });
+    classHierarchyInspector.classDerivesFrom.resolves(false);
     const result = await factory.createSelectClause({
       classAlias: "class-alias",
       className: "Schema.QueryClass",
@@ -100,7 +96,7 @@ describe("createClassBasedInstanceLabelSelectClauseFactory", () => {
 
   it("returns combination of all clauses if class name prop is not set", async () => {
     const factory = createClassBasedInstanceLabelSelectClauseFactory({
-      metadataProvider,
+      classHierarchyInspector,
       defaultClauseFactory,
       clauses: [
         {
@@ -137,7 +133,7 @@ describe("createClassBasedInstanceLabelSelectClauseFactory", () => {
 
   it("returns clauses for classes that derive from query class", async () => {
     const factory = createClassBasedInstanceLabelSelectClauseFactory({
-      metadataProvider,
+      classHierarchyInspector,
       defaultClauseFactory,
       clauses: [
         {
@@ -150,9 +146,7 @@ describe("createClassBasedInstanceLabelSelectClauseFactory", () => {
         },
       ],
     });
-    metadataProvider.stubEntityClass({ schemaName: "Schema", className: "QueryClass", is: async () => false });
-    metadataProvider.stubEntityClass({ schemaName: "Schema", className: "ClassA", is: async (other) => other === "Schema.QueryClass" });
-    metadataProvider.stubEntityClass({ schemaName: "Schema", className: "ClassB", is: async () => false });
+    classHierarchyInspector.classDerivesFrom.callsFake(async (derived, base) => derived === "Schema.ClassA" && base === "Schema.QueryClass");
     const result = await factory.createSelectClause({
       classAlias: "class-alias",
       className: "Schema.QueryClass",
@@ -173,7 +167,7 @@ describe("createClassBasedInstanceLabelSelectClauseFactory", () => {
 
   it("returns clauses for base classes of query class", async () => {
     const factory = createClassBasedInstanceLabelSelectClauseFactory({
-      metadataProvider,
+      classHierarchyInspector,
       defaultClauseFactory,
       clauses: [
         {
@@ -186,9 +180,7 @@ describe("createClassBasedInstanceLabelSelectClauseFactory", () => {
         },
       ],
     });
-    metadataProvider.stubEntityClass({ schemaName: "Schema", className: "QueryClass", is: async (other) => other === "Schema.ClassB" });
-    metadataProvider.stubEntityClass({ schemaName: "Schema", className: "ClassA", is: async () => false });
-    metadataProvider.stubEntityClass({ schemaName: "Schema", className: "ClassB", is: async () => false });
+    classHierarchyInspector.classDerivesFrom.callsFake(async (derived, base) => derived === "Schema.QueryClass" && base === "Schema.ClassB");
     const result = await factory.createSelectClause({
       classAlias: "class-alias",
       className: "Schema.QueryClass",
@@ -209,18 +201,25 @@ describe("createClassBasedInstanceLabelSelectClauseFactory", () => {
 });
 
 describe("BisInstanceLabelSelectClauseFactory", () => {
-  let metadataProvider: ReturnType<typeof createMetadataProviderStub>;
+  const classHierarchyInspector = {
+    classDerivesFrom: sinon.stub(),
+  };
   let factory: IInstanceLabelSelectClauseFactory;
   beforeEach(() => {
-    metadataProvider = createMetadataProviderStub();
-    factory = createBisInstanceLabelSelectClauseFactory({ metadataProvider });
-    metadataProvider.stubEntityClass({
-      schemaName: "BisCore",
-      className: "GeometricElement",
-      is: async (other) => other === "BisCore.Element" || other === "BisCore.GeometricElement",
+    factory = createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector });
+    classHierarchyInspector.classDerivesFrom.reset();
+    classHierarchyInspector.classDerivesFrom.callsFake(async (derived, base) => {
+      if (derived === "BisCore.GeometricElement") {
+        return base === "BisCore.Element" || base === "BisCore.GeometricElement";
+      }
+      if (derived === "BisCore.Element") {
+        return base === "BisCore.Element";
+      }
+      if (derived === "BisCore.Model") {
+        return base === "BisCore.Model";
+      }
+      return false;
     });
-    metadataProvider.stubEntityClass({ schemaName: "BisCore", className: "Element", is: async (other) => other === "BisCore.Element" });
-    metadataProvider.stubEntityClass({ schemaName: "BisCore", className: "Model", is: async (other) => other === "BisCore.Model" });
   });
 
   afterEach(() => {

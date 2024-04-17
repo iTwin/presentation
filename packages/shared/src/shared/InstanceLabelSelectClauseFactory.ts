@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { createConcatenatedValueJsonSelector, createRawPropertyValueSelector, TypedValueSelectClauseProps } from "./ecsql-snippets/ECSqlValueSelectorSnippets";
-import { getClass, IECMetadataProvider } from "./Metadata";
+import { IECClassHierarchyInspector } from "./Metadata";
 
 /**
  * Props for `IInstanceLabelSelectClauseFactory.createSelectClause`.
@@ -114,8 +114,8 @@ interface ClassBasedLabelSelectClause {
  * Props for `createClassBasedInstanceLabelSelectClauseFactory`.
  */
 interface ClassBasedInstanceLabelSelectClauseFactoryProps {
-  /** Access to iModel metadata */
-  metadataProvider: IECMetadataProvider;
+  /** Access to ECClass hierarchy in the iModel */
+  classHierarchyInspector: IECClassHierarchyInspector;
 
   /** A list of instance label selectors associated to classes they should be applied to */
   clauses: ClassBasedLabelSelectClause[];
@@ -132,20 +132,17 @@ interface ClassBasedInstanceLabelSelectClauseFactoryProps {
  * @beta
  */
 export function createClassBasedInstanceLabelSelectClauseFactory(props: ClassBasedInstanceLabelSelectClauseFactoryProps): IInstanceLabelSelectClauseFactory {
-  const metadataProvider = props.metadataProvider;
-  const labelClausesByClass = props.clauses;
-  const defaultFactory = props.defaultClauseFactory ?? createDefaultInstanceLabelSelectClauseFactory();
+  const { classHierarchyInspector, clauses: labelClausesByClass } = props;
+  const defaultClauseFactory = props.defaultClauseFactory ?? createDefaultInstanceLabelSelectClauseFactory();
   async function getLabelClausesForClass(queryClassName: string) {
-    const queryClass = await getClass(metadataProvider, queryClassName);
     const matchingLabelClauses = await Promise.all(
       labelClausesByClass.map(async (entry) => {
-        const clauseClass = await getClass(metadataProvider, entry.className);
-        if (await clauseClass.is(queryClass)) {
+        if (await classHierarchyInspector.classDerivesFrom(entry.className, queryClassName)) {
           // label selector is intended for a more specific class than we're selecting from - need to include it
           // as query results (on polymorphic select) are going to include more specific class instances too
           return entry;
         }
-        if (await queryClass.is(clauseClass)) {
+        if (await classHierarchyInspector.classDerivesFrom(queryClassName, entry.className)) {
           // label selector is intended for a base class of what query is selecting - need to include it as
           // we want base class label selectors to apply to subclass instances
           return entry;
@@ -161,12 +158,12 @@ export function createClassBasedInstanceLabelSelectClauseFactory(props: ClassBas
   return {
     async createSelectClause(clauseProps: CreateInstanceLabelSelectClauseProps): Promise<string> {
       if (labelClausesByClass.length === 0) {
-        return defaultFactory.createSelectClause(clauseProps);
+        return defaultClauseFactory.createSelectClause(clauseProps);
       }
 
       const labelClausePromises = clauseProps.className ? await getLabelClausesForClass(clauseProps.className) : labelClausesByClass;
       if (labelClausePromises.length === 0) {
-        return defaultFactory.createSelectClause(clauseProps);
+        return defaultClauseFactory.createSelectClause(clauseProps);
       }
 
       const labelClauses = await Promise.all(
@@ -188,7 +185,7 @@ export function createClassBasedInstanceLabelSelectClauseFactory(props: ClassBas
             `.trim(),
           )
           .join(", ")},
-        ${await defaultFactory.createSelectClause(clauseProps)}
+        ${await defaultClauseFactory.createSelectClause(clauseProps)}
       )`;
     },
   };
@@ -198,7 +195,7 @@ export function createClassBasedInstanceLabelSelectClauseFactory(props: ClassBas
  * Props for `createBisInstanceLabelSelectClauseFactory`.
  */
 interface BisInstanceLabelSelectClauseFactoryProps {
-  metadataProvider: IECMetadataProvider;
+  classHierarchyInspector: IECClassHierarchyInspector;
 }
 
 /**
@@ -209,7 +206,7 @@ interface BisInstanceLabelSelectClauseFactoryProps {
 export function createBisInstanceLabelSelectClauseFactory(props: BisInstanceLabelSelectClauseFactoryProps): IInstanceLabelSelectClauseFactory {
   const clauses: ClassBasedLabelSelectClause[] = [];
   const factory = createClassBasedInstanceLabelSelectClauseFactory({
-    metadataProvider: props.metadataProvider,
+    classHierarchyInspector: props.classHierarchyInspector,
     clauses,
   });
   clauses.push(

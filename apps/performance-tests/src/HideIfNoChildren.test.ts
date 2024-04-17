@@ -26,10 +26,10 @@ describe("hide if no children", () => {
     test: async (iModel) => {
       const provider = new StatelessHierarchyProvider({
         iModel,
-        getHierarchyFactory: (metadataProvider) => {
-          const queryFactory = new NodeSelectQueryFactory(metadataProvider);
+        getHierarchyFactory: (metadataProvider, classHierarchyInspector) => {
+          const queryFactory = new NodeSelectQueryFactory({ metadataProvider, classHierarchyInspector });
           return new ClassBasedHierarchyLevelDefinitionsFactory({
-            metadataProvider,
+            classHierarchyInspector,
             hierarchy: {
               rootNodes: async () => createPhysicalElementsHierarchyLevelDefinition({ queryFactory, limit: 5 }),
               childNodes: [
@@ -63,10 +63,10 @@ describe("hide if no children", () => {
     test: async (iModel) => {
       const provider = new StatelessHierarchyProvider({
         iModel,
-        getHierarchyFactory: (metadataProvider) => {
-          const queryFactory = new NodeSelectQueryFactory(metadataProvider);
+        getHierarchyFactory: (metadataProvider, classHierarchyInspector) => {
+          const queryFactory = new NodeSelectQueryFactory({ metadataProvider, classHierarchyInspector });
           return new ClassBasedHierarchyLevelDefinitionsFactory({
-            metadataProvider,
+            classHierarchyInspector,
             hierarchy: {
               rootNodes: async () => createPhysicalElementsHierarchyLevelDefinition({ queryFactory, limit: 5 }),
               childNodes: [

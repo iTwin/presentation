@@ -3,9 +3,8 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { EC, getClass, IECMetadataProvider } from "@itwin/presentation-shared";
+import { EC, getClass, IECClassHierarchyInspector, IECMetadataProvider } from "@itwin/presentation-shared";
 import { ClassGroupingNodeKey, HierarchyNode, ParentHierarchyNode, ProcessedInstanceHierarchyNode } from "../../../HierarchyNode";
-import { BaseClassChecker } from "../../Common";
 import { GroupingHandler, GroupingHandlerResult } from "../Grouping";
 
 /** @internal */
@@ -39,7 +38,7 @@ export async function getBaseClassGroupingECClasses(
 export async function createBaseClassGroupsForSingleBaseClass(
   nodes: ProcessedInstanceHierarchyNode[],
   baseECClass: EC.Class,
-  baseClassChecker: BaseClassChecker,
+  classHierarchyInspector: IECClassHierarchyInspector,
 ): Promise<GroupingHandlerResult> {
   const groupedNodes = new Array<ProcessedInstanceHierarchyNode>();
   const ungroupedNodes = new Array<ProcessedInstanceHierarchyNode>();
@@ -54,7 +53,8 @@ export async function createBaseClassGroupsForSingleBaseClass(
     }
     const fullCurrentNodeClassName = node.key.instanceKeys[0].className;
 
-    const baseCheckerResult = baseClassChecker.isECClassOfBaseECClass(fullCurrentNodeClassName, baseECClass);
+    const baseCheckerResult = classHierarchyInspector.classDerivesFrom(fullCurrentNodeClassName, baseClassFullName);
+    // istanbul ignore next
     const isCurrentNodeClassOfBase = baseCheckerResult instanceof Promise ? await baseCheckerResult : baseCheckerResult;
 
     if (isCurrentNodeClassOfBase) {
@@ -120,8 +120,10 @@ export async function createBaseClassGroupingHandlers(
   metadata: IECMetadataProvider,
   parentNode: ParentHierarchyNode | undefined,
   nodes: ProcessedInstanceHierarchyNode[],
-  baseClassChecker: BaseClassChecker,
+  classHierarchyInspector: IECClassHierarchyInspector,
 ): Promise<GroupingHandler[]> {
   const baseClassGroupingECClasses = await getBaseClassGroupingECClasses(metadata, parentNode, nodes);
-  return baseClassGroupingECClasses.map((baseECClass) => async (allNodes) => createBaseClassGroupsForSingleBaseClass(allNodes, baseECClass, baseClassChecker));
+  return baseClassGroupingECClasses.map(
+    (baseECClass) => async (allNodes) => createBaseClassGroupsForSingleBaseClass(allNodes, baseECClass, classHierarchyInspector),
+  );
 }
