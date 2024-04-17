@@ -43,7 +43,7 @@ interface PrimitiveValueSelectorProps {
 
 /**
  * A union of prop types for selecting a value and its metadata in ECSQL query.
- * @internal This is an "input-only" type used in public API.
+ * @internal This is an internal type used in public API.
  */
 export type TypedValueSelectClauseProps = PropertyValueSelectClauseProps | TypedPrimitiveValue | PrimitiveValueSelectorProps;
 
