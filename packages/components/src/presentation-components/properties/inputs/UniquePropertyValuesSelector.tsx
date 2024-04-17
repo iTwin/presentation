@@ -4,7 +4,8 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { ActionMeta, MultiValue } from "react-select";
+import { ActionMeta, GroupBase, MultiValue, OptionsOrGroups } from "react-select";
+import { FilterOptionOption } from "react-select/dist/declarations/src/filters";
 import { from, map, mergeMap, toArray } from "rxjs";
 import { PropertyDescription, PropertyValue, PropertyValueFormat } from "@itwin/appui-abstract";
 import { IModelConnection } from "@itwin/core-frontend";
@@ -49,10 +50,15 @@ export interface UniquePropertyValuesSelectorProps {
 export function UniquePropertyValuesSelector(props: UniquePropertyValuesSelectorProps) {
   const { imodel, descriptor, property, onChange, value, descriptorInputKeys } = props;
   const [field, setField] = useState<Field | undefined>(() => findField(descriptor, getInstanceFilterFieldName(property)));
+  const [searchInput, setSearchInput] = useState<string>("");
+  const [loadedOptions, setLoadedOptions] = useState<UniqueValue[]>([]);
+  const [hasMoreOptions, setHasMoreOptions] = useState<boolean>(false);
   const selectedValues = useMemo(() => getUniqueValueFromProperty(value), [value]);
 
   useEffect(() => {
     setField(findField(descriptor, getInstanceFilterFieldName(property)));
+    setLoadedOptions([]);
+    setSearchInput("");
   }, [descriptor, property]);
 
   const onValueChange = (_: MultiValue<UniqueValue>, action: ActionMeta<UniqueValue>) => {
@@ -87,24 +93,43 @@ export function UniquePropertyValuesSelector(props: UniquePropertyValuesSelector
   };
 
   const isOptionSelected = (option: UniqueValue): boolean => selectedValues.map((selectedValue) => selectedValue.displayValue).includes(option.displayValue);
-
   const ruleset = useUniquePropertyValuesRuleset(descriptor.ruleset, field);
-  const loadTargets = useUniquePropertyValuesLoader({ imodel, ruleset, field, descriptorInputKeys });
+  const loadValues = useUniquePropertyValuesLoader({ imodel, ruleset, field, descriptorInputKeys });
+
+  const loadOptions = async (
+    _input: string,
+    options: OptionsOrGroups<UniqueValue, GroupBase<UniqueValue>>,
+  ): Promise<{ options: UniqueValue[]; hasMore: boolean }> => {
+    if (options.length === 0 && loadedOptions.length > 0) {
+      return { options: loadedOptions, hasMore: hasMoreOptions };
+    }
+
+    const loaded = await loadValues(loadedOptions.length);
+    setLoadedOptions([...loadedOptions, ...loaded.options]);
+    setHasMoreOptions(loaded.hasMore);
+    return loaded;
+  };
+
+  const filterOption = (option: FilterOptionOption<UniqueValue>, _input: string) => {
+    return searchInput ? option.data.displayValue.toLowerCase().includes(searchInput) : true;
+  };
 
   return (
     <AsyncSelect
       value={selectedValues}
-      loadOptions={async (_, options) => loadTargets(options.length)}
+      loadOptions={loadOptions}
       placeholder={translate("unique-values-property-editor.select-values")}
       onChange={onValueChange}
       isOptionSelected={isOptionSelected}
-      cacheUniqs={[property]}
+      cacheUniqs={[property, searchInput]}
       hideSelectedOptions={false}
-      isSearchable={false}
+      isSearchable={true}
       closeMenuOnSelect={false}
       tabSelectsValue={false}
       getOptionLabel={(option) => formatOptionLabel(option.displayValue, property.typename)}
       getOptionValue={(option) => option.displayValue}
+      onInputChange={(input) => setSearchInput(input.toLowerCase())}
+      filterOption={filterOption}
     />
   );
 }

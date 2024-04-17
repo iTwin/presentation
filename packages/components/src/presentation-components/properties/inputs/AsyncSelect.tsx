@@ -140,7 +140,8 @@ export function AsyncSelect<OptionType, Group extends GroupBase<OptionType>, Add
           indicatorSeparator: (base) => ({ ...base, marginTop: undefined, marginBottom: undefined, margin: "0 var(--iui-size-xs)" }),
           clearIndicator: () => ({}),
           dropdownIndicator: () => ({}),
-          placeholder: () => ({ width: "100%", display: "block", whiteSpace: "nowrap", textOverflow: "ellipsis", overflow: "hidden" }),
+          placeholder: () => ({ width: "100%", display: "block", whiteSpace: "nowrap", textOverflow: "ellipsis", overflow: "hidden", position: "absolute" }),
+          input: () => ({ color: "inherit" }),
         }}
         components={{
           Control,
