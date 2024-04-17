@@ -481,6 +481,24 @@ describe("UniquePropertyValuesSelector", () => {
     });
   });
 
+  it("menu shows `No values` message when an error occurs loading values", async () => {
+    getDistinctValuesIteratorStub.rejects();
+
+    const { getByText, user } = render(
+      <TestComponentWithPortalTarget>
+        <UniquePropertyValuesSelector property={propertyDescription} onChange={() => {}} imodel={testImodel} descriptor={descriptor} />,
+      </TestComponentWithPortalTarget>,
+    );
+
+    // open menu
+    const menuSelector = await waitFor(() => getByText("unique-values-property-editor.select-values"));
+    await user.click(menuSelector);
+
+    // ensure only one page was loaded
+    await waitFor(() => getByText("unique-values-property-editor.no-values"));
+    expect(getDistinctValuesIteratorStub).to.be.calledOnce;
+  });
+
   describe("search", () => {
     function matchPageStart(start: number) {
       return sinon.match((options: { paging: { start: number } }) => options.paging.start === start);
