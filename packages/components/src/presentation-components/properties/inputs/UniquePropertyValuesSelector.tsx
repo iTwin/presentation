@@ -237,7 +237,7 @@ function useUniquePropertyValuesLoader({ imodel, property, descriptor, ruleset, 
         paging: { start: loadedCount, size: UNIQUE_PROPERTY_VALUES_BATCH_SIZE },
         keys: new KeySet(descriptorInputKeys),
       };
-      const items = await new Promise<DisplayValueGroup[]>((resolve, reject) => {
+      const items = await new Promise<DisplayValueGroup[]>((resolve) => {
         (Presentation.presentation.getDistinctValuesIterator
           ? from(Presentation.presentation.getDistinctValuesIterator(requestProps)).pipe(
               mergeMap((result) => result.items),
@@ -247,7 +247,7 @@ function useUniquePropertyValuesLoader({ imodel, property, descriptor, ruleset, 
             from(Presentation.presentation.getPagedDistinctValues(requestProps)).pipe(map((result) => result.items))
         ).subscribe({
           next: resolve,
-          error: reject,
+          error: () => resolve([]),
         });
       });
 
