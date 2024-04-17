@@ -481,6 +481,27 @@ describe("UniquePropertyValuesSelector", () => {
     });
   });
 
+  it("does not try to fetch another page on error", async () => {
+    getDistinctValuesIteratorStub.rejects();
+
+    const { getByText, user } = render(
+      <TestComponentWithPortalTarget>
+        <UniquePropertyValuesSelector property={propertyDescription} onChange={() => {}} imodel={testImodel} descriptor={descriptor} />,
+      </TestComponentWithPortalTarget>,
+    );
+
+    // open menu
+    const menuSelector = await waitFor(() => getByText("unique-values-property-editor.select-values"));
+    await user.click(menuSelector);
+
+    // add some delay to see if a second page load will be requested
+    await new Promise((f) => setTimeout(f, 1000));
+
+    // ensure only one page was loaded
+    await waitFor(() => getByText("unique-values-property-editor.no-values"));
+    expect(getDistinctValuesIteratorStub).to.be.calledOnce;
+  });
+
   describe("search", () => {
     function matchPageStart(start: number) {
       return sinon.match((options: { paging: { start: number } }) => options.paging.start === start);
@@ -701,27 +722,6 @@ describe("UniquePropertyValuesSelector", () => {
       await waitFor(() => getByText("SearchedValue2"));
       await waitFor(() => getByText("SearchedValue3"));
       expect(getDistinctValuesIteratorStub).to.be.calledTwice;
-    });
-
-    it("does not try to fetch another page on error", async () => {
-      getDistinctValuesIteratorStub.rejects();
-
-      const { getByText, user } = render(
-        <TestComponentWithPortalTarget>
-          <UniquePropertyValuesSelector property={propertyDescription} onChange={() => {}} imodel={testImodel} descriptor={descriptor} />,
-        </TestComponentWithPortalTarget>,
-      );
-
-      // open menu
-      const menuSelector = await waitFor(() => getByText("unique-values-property-editor.select-values"));
-      await user.click(menuSelector);
-
-      // add some delay to see if a second page load will be requested
-      await new Promise((f) => setTimeout(f, 1000));
-
-      // ensure only one page was loaded
-      await waitFor(() => getByText("unique-values-property-editor.no-values"));
-      expect(getDistinctValuesIteratorStub).to.be.calledOnce;
     });
   });
 
