@@ -3,15 +3,8 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { compareStrings, Id64 } from "@itwin/core-bentley";
+import { compareStrings, Id64, Id64String } from "@itwin/core-bentley";
 import { PrimitiveValueType } from "./Metadata";
-
-/**
- * A string representing a 64 bit number in hex.
- * @see [Id64String]($core-bentley)
- * @beta
- */
-export type Id64String = string;
 
 /**
  * A data structure uniquely identifying an ECInstance in an iModel.
@@ -51,7 +44,7 @@ export namespace InstanceKey {
 
 /**
  * A data structure for a 2d point.
- * @beta
+ * @internal This is an internal type used in public API.
  */
 export interface Point2d {
   x: number;
@@ -60,7 +53,7 @@ export interface Point2d {
 
 /**
  * A data structure for a 3d point.
- * @beta
+ * @internal This is an internal type used in public API.
  */
 export interface Point3d {
   x: number;
@@ -77,7 +70,11 @@ export type PrimitiveValue = Id64String | string | number | boolean | Date | Poi
 /** @beta */
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export namespace PrimitiveValue {
-  /** @beta */
+  /**
+   * Checks whether the given value is a `Point2d`.
+   * @note Since `Point3d` is a superset of `Point2d`, this function will return `true` for `Point3d` as well.
+   * @beta
+   */
   export function isPoint2d(value: PrimitiveValue): value is Point2d {
     if (typeof value !== "object") {
       return false;
@@ -85,7 +82,11 @@ export namespace PrimitiveValue {
     const pt = value as Point2d;
     return pt.x !== undefined && pt.y !== undefined;
   }
-  /** @beta */
+
+  /**
+   * Checks whether the given value is a `Point3d`.
+   * @beta
+   */
   export function isPoint3d(value: PrimitiveValue): value is Point3d {
     if (typeof value !== "object") {
       return false;
@@ -97,6 +98,7 @@ export namespace PrimitiveValue {
 
 /**
  * A type for a primitive value, its type and, optionally, its extended type.
+ * @note Use `TypedPrimitiveValue.create` to create an instance of this type.
  * @beta
  */
 export type TypedPrimitiveValue = (
@@ -137,14 +139,12 @@ export type TypedPrimitiveValue = (
   extendedType?: string;
 };
 
-/**
- * A namespace for a primitive value.
- * @beta
- */
+/** @beta */
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export namespace TypedPrimitiveValue {
   /**
-   * A function for a creating a [[TypedPrimitiveValue]] object. Throws if primitive type and value is incompatible.
+   * A function for a creating a `TypedPrimitiveValue` object.
+   * @throws Error if primitive type and value are incompatible.
    * @beta
    */
   export function create(value: PrimitiveValue, type: PrimitiveValueType, koqName?: string, extendedType?: string): TypedPrimitiveValue {
@@ -205,15 +205,6 @@ export namespace TypedPrimitiveValue {
           };
         }
         break;
-      case "Point2d":
-        if (PrimitiveValue.isPoint2d(value)) {
-          return {
-            type,
-            extendedType,
-            value,
-          };
-        }
-        break;
       case "Point3d":
         if (PrimitiveValue.isPoint3d(value)) {
           return {
@@ -223,18 +214,29 @@ export namespace TypedPrimitiveValue {
           };
         }
         break;
+      case "Point2d":
+        if (PrimitiveValue.isPoint2d(value)) {
+          return {
+            type,
+            extendedType,
+            value,
+          };
+        }
+        break;
     }
-
-    throw new Error(`primitiveType: '${type}' isn't compatible with value: '${JSON.stringify(value)}'`);
+    throw new Error(`PrimitiveValueType ${type} isn't compatible with value ${JSON.stringify(value)}`);
   }
 }
 
 /**
  * A type for a primitive property value and its metadata - property name and its class full name.
- * @beta
+ * @internal This is an internal type used in public API.
  */
-export interface PropertyValue {
+export interface PrimitivePropertyValue {
+  /** Full name of the class containing the property with `propertyName` name. */
   className: string;
+  /** Name of the primitive property whose value this data structure holds. */
   propertyName: string;
+  /** Raw value of the primitive property. */
   value: PrimitiveValue;
 }

@@ -5,7 +5,7 @@
 
 import { concatAll, concatMap, from, Observable, of, toArray } from "rxjs";
 import { assert } from "@itwin/core-bentley";
-import { IMetadataProvider, IPrimitiveValueFormatter } from "@itwin/presentation-shared";
+import { IECClassHierarchyInspector, IECMetadataProvider, IPrimitiveValueFormatter } from "@itwin/presentation-shared";
 import {
   HierarchyNode,
   HierarchyNodeKey,
@@ -14,7 +14,7 @@ import {
   ProcessedHierarchyNode,
   ProcessedInstanceHierarchyNode,
 } from "../../HierarchyNode";
-import { BaseClassChecker, createNodeIdentifierForLogging, createOperatorLoggingNamespace } from "../Common";
+import { createNodeIdentifierForLogging, createOperatorLoggingNamespace } from "../Common";
 import { log } from "../LoggingUtils";
 import { assignAutoExpand } from "./grouping/AutoExpand";
 import { createBaseClassGroupingHandlers } from "./grouping/BaseClassGrouping";
@@ -30,11 +30,11 @@ export const LOGGING_NAMESPACE = createOperatorLoggingNamespace(OPERATOR_NAME);
 
 /** @internal */
 export function createGroupingOperator(
-  metadata: IMetadataProvider,
+  metadata: IECMetadataProvider,
   parentNode: ParentHierarchyNode | undefined,
   valueFormatter: IPrimitiveValueFormatter,
   localizedStrings: PropertiesGroupingLocalizedStrings,
-  baseClassChecker: BaseClassChecker,
+  classHierarchyInspector: IECClassHierarchyInspector,
   onGroupingNodeCreated?: (groupingNode: ProcessedGroupingHierarchyNode) => void,
   groupingHandlers?: GroupingHandler[],
 ) {
@@ -46,7 +46,7 @@ export function createGroupingOperator(
         const { instanceNodes, restNodes } = partitionInstanceNodes(resolvedNodes);
         const groupingHandlersObs = groupingHandlers
           ? of(groupingHandlers)
-          : from(createGroupingHandlers(metadata, parentNode, instanceNodes, valueFormatter, localizedStrings, baseClassChecker));
+          : from(createGroupingHandlers(metadata, parentNode, instanceNodes, valueFormatter, localizedStrings, classHierarchyInspector));
         return groupingHandlersObs.pipe(
           concatMap(async (createdGroupingHandlers) => {
             const grouped: ProcessedHierarchyNode[] = await groupInstanceNodes(
@@ -153,22 +153,22 @@ function mergeInPlace<T>(target: T[] | undefined, source: T[]) {
 
 /** @internal */
 export async function createGroupingHandlers(
-  metadata: IMetadataProvider,
+  metadata: IECMetadataProvider,
   parentNode: ParentHierarchyNode | undefined,
   processedInstanceNodes: ProcessedInstanceHierarchyNode[],
   valueFormatter: IPrimitiveValueFormatter,
   localizedStrings: PropertiesGroupingLocalizedStrings,
-  baseClassChecker: BaseClassChecker,
+  classHierarchyInspector: IECClassHierarchyInspector,
 ): Promise<GroupingHandler[]> {
   const groupingLevel = getNodeGroupingLevel(parentNode);
   const groupingHandlers: GroupingHandler[] = new Array<GroupingHandler>();
   if (groupingLevel <= GroupingLevel.Class) {
-    groupingHandlers.push(...(await createBaseClassGroupingHandlers(metadata, parentNode, processedInstanceNodes, baseClassChecker)));
+    groupingHandlers.push(...(await createBaseClassGroupingHandlers(metadata, parentNode, processedInstanceNodes, classHierarchyInspector)));
     groupingHandlers.push(async (allNodes) => createClassGroups(metadata, parentNode, allNodes));
   }
   if (groupingLevel <= GroupingLevel.Property) {
     groupingHandlers.push(
-      ...(await createPropertiesGroupingHandlers(metadata, parentNode, processedInstanceNodes, valueFormatter, localizedStrings, baseClassChecker)),
+      ...(await createPropertiesGroupingHandlers(metadata, parentNode, processedInstanceNodes, valueFormatter, localizedStrings, classHierarchyInspector)),
     );
   }
   if (groupingLevel < GroupingLevel.Label) {

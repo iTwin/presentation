@@ -482,6 +482,9 @@ importers:
       '@itwin/presentation-models-tree':
         specifier: workspace:*
         version: link:../../../packages/models-tree
+      '@itwin/presentation-shared':
+        specifier: workspace:*
+        version: link:../../../packages/shared
       '@itwin/unified-selection':
         specifier: workspace:*
         version: link:../../../packages/unified-selection
@@ -751,7 +754,7 @@ importers:
   packages/core-interop:
     dependencies:
       '@itwin/presentation-shared':
-        specifier: workspace:^
+        specifier: workspace:~
         version: link:../shared
       rxjs:
         specifier: ^7.8.1
@@ -778,9 +781,6 @@ importers:
       '@itwin/eslint-plugin':
         specifier: ^4.0.0
         version: 4.0.0(eslint@8.56.0)(typescript@5.4.5)
-      '@itwin/presentation-hierarchies':
-        specifier: workspace:^
-        version: link:../hierarchies
       '@types/chai':
         specifier: ^4.3.11
         version: 4.3.11
@@ -1248,6 +1248,9 @@ importers:
 
   packages/models-tree:
     dependencies:
+      '@itwin/core-bentley':
+        specifier: ^4.5.1
+        version: 4.5.1
       '@itwin/presentation-shared':
         specifier: workspace:^
         version: link:../shared

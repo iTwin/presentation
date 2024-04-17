@@ -3,14 +3,13 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { EC, getClass, IMetadataProvider, RelationshipPath, RelationshipPathStep } from "../Metadata";
+import { EC, getClass, IECMetadataProvider, RelationshipPath, RelationshipPathStep } from "../Metadata";
 import { createRawPropertyValueSelector } from "./ECSqlValueSelectorSnippets";
 
 /**
  * Describes a single JOIN step from source to target through a relationship.
- * @beta
  */
-export interface JoinRelationshipPathStep extends RelationshipPathStep {
+interface JoinRelationshipPathStep extends RelationshipPathStep {
   sourceAlias: string;
   targetAlias: string;
   relationshipAlias: string;
@@ -19,18 +18,17 @@ export interface JoinRelationshipPathStep extends RelationshipPathStep {
 
 /**
  * Describes a path of JOINs from source to target.
- * @beta
  */
-export type JoinRelationshipPath = RelationshipPath<JoinRelationshipPathStep>;
+type JoinRelationshipPath = RelationshipPath<JoinRelationshipPathStep>;
 
 /**
- * Props for [[createRelationshipPathJoinClause]].
- * @beta
+ * Props for `createRelationshipPathJoinClause`.
  */
-export interface CreateRelationshipPathJoinClauseProps {
-  metadata: IMetadataProvider;
+interface CreateRelationshipPathJoinClauseProps {
+  metadata: IECMetadataProvider;
   path: JoinRelationshipPath;
 }
+
 /**
  * Creates an ECSQL JOIN snippet for given relationships' path.
  *
@@ -39,7 +37,7 @@ export interface CreateRelationshipPathJoinClauseProps {
  *   ```SQL
  *   INNER JOIN [target_schema_name].[target_class_name] [target_alias] ON [target_alias].[navigation_property_name].[Id] = [source_alias].[ECInstanceId]
  *   ```
- * - When outer joining through a non-navigation-property-relationship:
+ * - When outer joining through a non-navigation-property relationship:
  *   ```SQL
  *   LEFT JOIN (
  *     SELECT [relationship_alias].*
@@ -48,7 +46,7 @@ export interface CreateRelationshipPathJoinClauseProps {
  *   ) [relationship_alias]
  *   LEFT JOIN [target_schema_name].[target_class_name] [target_alias] ON [target_alias].[ECInstanceId] = [relationship_alias].[TargetECInstanceId]
  *   ```
- * - When inner joining through a non-navigation-property-relationship:
+ * - When inner joining through a non-navigation-property relationship:
  *   ```SQL
  *   INNER JOIN [relationship_schema_name].[relationship_class_name] [relationship_alias] ON [relationship_alias].[SourceECInstanceId] = [source_alias].[ECInstanceId]
  *   INNER JOIN [target_schema_name].[target_class_name] [target_alias] ON [target_alias].[ECInstanceId] = [relationship_alias].[TargetECInstanceId]
@@ -132,7 +130,7 @@ type ResolvedRelationshipPathStep = Omit<JoinRelationshipPathStep, "sourceClassN
   target: EC.Class;
 };
 
-async function getRelationshipPathStepClasses(metadata: IMetadataProvider, step: JoinRelationshipPathStep): Promise<ResolvedRelationshipPathStep> {
+async function getRelationshipPathStepClasses(metadata: IECMetadataProvider, step: JoinRelationshipPathStep): Promise<ResolvedRelationshipPathStep> {
   const { sourceClassName, relationshipName, targetClassName, ...rest } = step;
   return {
     ...rest,

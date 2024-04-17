@@ -5,7 +5,7 @@
 
 import sinon from "sinon";
 import { Logger, LogLevel } from "@itwin/core-bentley";
-import * as shared from "@itwin/presentation-shared";
+import { EC, IECMetadataProvider, InstanceKey, parseFullClassName } from "@itwin/presentation-shared";
 import {
   ParsedCustomHierarchyNode,
   ParsedInstanceHierarchyNode,
@@ -14,11 +14,6 @@ import {
   ProcessedInstanceHierarchyNode,
 } from "../hierarchies/HierarchyNode";
 import { HierarchyProviderLocalizedStrings } from "../hierarchies/HierarchyProvider";
-
-import EC = shared.EC;
-const { parseFullClassName } = shared;
-type IMetadataProvider = shared.IMetadataProvider;
-type InstanceKey = shared.InstanceKey;
 
 export function setupLogging(levels: Array<{ namespace: string; level: LogLevel }>) {
   Logger.initializeToConsole();
@@ -111,7 +106,7 @@ export interface ClassStubs {
   stubOtherClass: TStubClassFunc;
   resetHistory: () => void;
   restore: () => void;
-  stub: sinon.SinonStub<[metadata: IMetadataProvider, fullClassName: string], Promise<EC.Class>>;
+  stub: sinon.SinonStub<[metadata: IECMetadataProvider, fullClassName: string], Promise<EC.Class>>;
 }
 export function createMetadataProviderStub() {
   const schemaStubs: { [schemaName: string]: sinon.SinonStubbedInstance<EC.Schema> } = {};
@@ -190,12 +185,20 @@ export function createMetadataProviderStub() {
     stubEntityClass,
     stubRelationshipClass,
     stubOtherClass,
-    getClassRequestCount(props: { schemaName: string; className: string }): number {
-      const schemaStub = schemaStubs[props.schemaName];
-      if (!schemaStub) {
-        return 0;
-      }
-      return schemaStub.getClass.getCalls().filter((call) => call.args[0] === props.className).length;
+    classHierarchyInspector: {
+      classDerivesFrom: async (derived: string, base: string) => {
+        const { schemaName: derivedSchemaName, className: derivedClassName } = parseFullClassName(derived);
+        const { schemaName: baseSchemaName, className: baseClassName } = parseFullClassName(base);
+        const schemaStub = schemaStubs[derivedSchemaName];
+        if (!schemaStub) {
+          return false;
+        }
+        const derivedClass = await schemaStub.getClass(derivedClassName);
+        if (!derivedClass) {
+          return false;
+        }
+        return derivedClass.is(baseClassName, baseSchemaName);
+      },
     },
   };
 }

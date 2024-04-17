@@ -30,7 +30,7 @@ describe("Hierarchies", () => {
       await terminate();
     });
     it("doesn't create grouping nodes if provided classes aren't base for node class", async function () {
-      const selectQueryFactory = new NodeSelectQueryFactory(createMetadataProvider(emptyIModel));
+      const selectQueryFactory = new NodeSelectQueryFactory({ metadataProvider: createMetadataProvider(emptyIModel) });
       const customHierarchy: IHierarchyLevelDefinitionsFactory = {
         async defineHierarchyLevel({ parentNode }) {
           if (!parentNode) {
@@ -74,7 +74,7 @@ describe("Hierarchies", () => {
     });
 
     it("doesn't create grouping nodes if provided classes aren't of entity or relationship type", async function () {
-      const selectQueryFactory = new NodeSelectQueryFactory(createMetadataProvider(emptyIModel));
+      const selectQueryFactory = new NodeSelectQueryFactory({ metadataProvider: createMetadataProvider(emptyIModel) });
       const customHierarchy: IHierarchyLevelDefinitionsFactory = {
         async defineHierarchyLevel({ parentNode }) {
           if (!parentNode) {
@@ -119,7 +119,7 @@ describe("Hierarchies", () => {
 
     it("creates grouping nodes if provided class is base for node class", async function () {
       const baseClassName = "BisCore.InformationContentElement";
-      const selectQueryFactory = new NodeSelectQueryFactory(createMetadataProvider(emptyIModel));
+      const selectQueryFactory = new NodeSelectQueryFactory({ metadataProvider: createMetadataProvider(emptyIModel) });
       const customHierarchy: IHierarchyLevelDefinitionsFactory = {
         async defineHierarchyLevel({ parentNode }) {
           if (!parentNode) {
@@ -178,7 +178,7 @@ describe("Hierarchies", () => {
         return { childPartition1 };
       });
 
-      const selectQueryFactory = new NodeSelectQueryFactory(createMetadataProvider(imodel));
+      const selectQueryFactory = new NodeSelectQueryFactory({ metadataProvider: createMetadataProvider(imodel) });
       const customHierarchy: IHierarchyLevelDefinitionsFactory = {
         async defineHierarchyLevel({ parentNode }) {
           if (!parentNode) {
@@ -255,7 +255,7 @@ describe("Hierarchies", () => {
         return { childPartition1, childPartition2 };
       });
 
-      const selectQueryFactory = new NodeSelectQueryFactory(createMetadataProvider(imodel));
+      const selectQueryFactory = new NodeSelectQueryFactory({ metadataProvider: createMetadataProvider(imodel) });
       const customHierarchy: IHierarchyLevelDefinitionsFactory = {
         async defineHierarchyLevel({ parentNode }) {
           if (!parentNode) {
@@ -365,7 +365,7 @@ describe("Hierarchies", () => {
         return { childSubject1, childPartition2 };
       });
 
-      const selectQueryFactory = new NodeSelectQueryFactory(createMetadataProvider(imodel));
+      const selectQueryFactory = new NodeSelectQueryFactory({ metadataProvider: createMetadataProvider(imodel) });
       const customHierarchy: IHierarchyLevelDefinitionsFactory = {
         async defineHierarchyLevel({ parentNode }) {
           if (!parentNode) {

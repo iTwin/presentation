@@ -8,16 +8,7 @@ import { collect, createAsyncIterator, ResolvablePromise, waitFor } from "presen
 import sinon from "sinon";
 import { omit } from "@itwin/core-bentley";
 import { GenericInstanceFilter } from "@itwin/core-common";
-import {
-  ConcatenatedValue,
-  EC,
-  ECSqlQueryDef,
-  ECSqlQueryReader,
-  ECSqlQueryReaderOptions,
-  InstanceKey,
-  trimWhitespace,
-  TypedPrimitiveValue,
-} from "@itwin/presentation-shared";
+import { ConcatenatedValue, EC, ECSqlQueryDef, InstanceKey, trimWhitespace, TypedPrimitiveValue } from "@itwin/presentation-shared";
 import { DefineHierarchyLevelProps, IHierarchyLevelDefinitionsFactory } from "../hierarchies/HierarchyDefinition";
 import { RowsLimitExceededError } from "../hierarchies/HierarchyErrors";
 import { GroupingHierarchyNode, GroupingNodeKey, HierarchyNode, ParsedCustomHierarchyNode } from "../hierarchies/HierarchyNode";
@@ -28,13 +19,14 @@ import {
   FilteredHierarchyNode,
 } from "../hierarchies/internal/FilteringHierarchyLevelDefinitionsFactory";
 import { RowDef } from "../hierarchies/internal/TreeNodesReader";
+import { ILimitingECSqlQueryExecutor } from "../hierarchies/LimitingECSqlQueryExecutor";
 import { ECSqlSelectClauseGroupingParams, NodeSelectClauseColumnNames } from "../hierarchies/NodeSelectQueryFactory";
 import { createMetadataProviderStub } from "./Utils";
 
 describe("HierarchyProvider", () => {
   let metadataProvider: ReturnType<typeof createMetadataProviderStub>;
   const queryExecutor = {
-    createQueryReader: sinon.stub<[ECSqlQueryDef, (ECSqlQueryReaderOptions & { limit?: number | "unbounded" }) | undefined], ECSqlQueryReader>(),
+    createQueryReader: sinon.stub<Parameters<ILimitingECSqlQueryExecutor["createQueryReader"]>, ReturnType<ILimitingECSqlQueryExecutor["createQueryReader"]>>(),
   };
 
   beforeEach(() => {
@@ -153,7 +145,7 @@ describe("HierarchyProvider", () => {
 
       const queryTimeout1 = new ResolvablePromise();
       queryExecutor.createQueryReader.onFirstCall().returns(
-        (async function* (): ECSqlQueryReader {
+        (async function* () {
           // the reader yields nothing, but waits for queryTimeout2 to resolve
           await queryTimeout1;
         })(),
@@ -161,7 +153,7 @@ describe("HierarchyProvider", () => {
 
       const queryTimeout2 = new ResolvablePromise();
       queryExecutor.createQueryReader.onSecondCall().returns(
-        (async function* (): ECSqlQueryReader {
+        (async function* () {
           // the reader yields nothing, but waits for queryTimeout2 to resolve
           await queryTimeout2;
         })(),

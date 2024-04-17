@@ -3,7 +3,8 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { ConcatenatedValue, ECSqlQueryDef, Id64String } from "@itwin/presentation-shared";
+import { Id64String } from "@itwin/core-bentley";
+import { ConcatenatedValue, ECSqlQueryDef } from "@itwin/presentation-shared";
 import { INodeParser } from "../HierarchyDefinition";
 import { InstanceHierarchyNodeProcessingParams, ParsedHierarchyNode, ParsedInstanceHierarchyNode } from "../HierarchyNode";
 import { ILimitingECSqlQueryExecutor } from "../LimitingECSqlQueryExecutor";
@@ -74,7 +75,7 @@ export function defaultNodesParser(row: { [columnName: string]: any }): ParsedIn
   };
 }
 
-function parseLabel(value: string | undefined): ConcatenatedValue | string {
+function parseLabel(value: string): ConcatenatedValue | string {
   if (!value) {
     return "";
   }

@@ -4,7 +4,15 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { assert } from "@itwin/core-bentley";
-import { ArrayElement, EC, getClass, IMetadataProvider, IPrimitiveValueFormatter, TypedPrimitiveValue } from "@itwin/presentation-shared";
+import {
+  ArrayElement,
+  EC,
+  getClass,
+  IECClassHierarchyInspector,
+  IECMetadataProvider,
+  IPrimitiveValueFormatter,
+  TypedPrimitiveValue,
+} from "@itwin/presentation-shared";
 import {
   HierarchyNode,
   HierarchyNodeKey,
@@ -15,7 +23,6 @@ import {
   ProcessedInstanceHierarchyNode,
   PropertyGroupingNodeKey,
 } from "../../../HierarchyNode";
-import { BaseClassChecker } from "../../Common";
 import { GroupingHandler, GroupingHandlerResult, ProcessedInstancesGroupingHierarchyNode } from "../Grouping";
 
 interface DisplayablePropertyGroupingInfo {
@@ -51,7 +58,7 @@ export async function createPropertyGroups(
   handlerGroupingParams: PropertyGroupInfo,
   valueFormatter: IPrimitiveValueFormatter,
   localizedStrings: PropertiesGroupingLocalizedStrings,
-  baseClassChecker: BaseClassChecker,
+  classHierarchyInspector: IECClassHierarchyInspector,
 ): Promise<GroupingHandlerResult> {
   let otherValuesGrouping: { node: ProcessedInstancesGroupingHierarchyNode; new: boolean } | undefined;
   const getOtherValuesGroupingNode = () => {
@@ -84,7 +91,7 @@ export async function createPropertyGroups(
       groupings.ungrouped.push(node);
       continue;
     }
-    if (!(await shouldCreatePropertyGroup(handlerGroupingParams, byProperties, node.key.instanceKeys[0].className, baseClassChecker))) {
+    if (!(await shouldCreatePropertyGroup(handlerGroupingParams, byProperties, node.key.instanceKeys[0].className, classHierarchyInspector))) {
       groupings.ungrouped.push(node);
       continue;
     }
@@ -280,7 +287,7 @@ function createNodePropertyGroupPathMatchers(node: ParentHierarchyNode): Array<(
 
 /** @internal */
 export async function getUniquePropertiesGroupInfo(
-  metadata: IMetadataProvider,
+  metadata: IECMetadataProvider,
   parentNode: ParentHierarchyNode | undefined,
   nodes: ProcessedInstanceHierarchyNode[],
 ): Promise<Array<PropertyGroupInfo>> {
@@ -348,7 +355,7 @@ async function shouldCreatePropertyGroup(
   handlerGroupingParams: PropertyGroupInfo,
   nodePropertyGroupingParams: HierarchyNodePropertiesGroupingParams,
   nodeFullClassName: string,
-  baseClassChecker: BaseClassChecker,
+  classHierarchyInspector: IECClassHierarchyInspector,
 ): Promise<boolean> {
   if (
     nodePropertyGroupingParams.propertiesClassName !== handlerGroupingParams.ecClass.fullName ||
@@ -366,7 +373,7 @@ async function shouldCreatePropertyGroup(
   if (!doPreviousPropertiesMatch(handlerGroupingParams.previousPropertiesGroupingInfo, nodePropertyGroupingParams)) {
     return false;
   }
-  return baseClassChecker.isECClassOfBaseECClass(nodeFullClassName, handlerGroupingParams.ecClass);
+  return classHierarchyInspector.classDerivesFrom(nodeFullClassName, handlerGroupingParams.ecClass.fullName);
 }
 
 /** @internal */
@@ -414,16 +421,16 @@ export function doRangesMatch(ranges1: HierarchyNodePropertyValueRange[] | undef
 
 /** @internal */
 export async function createPropertiesGroupingHandlers(
-  metadata: IMetadataProvider,
+  metadata: IECMetadataProvider,
   parentNode: ParentHierarchyNode | undefined,
   nodes: ProcessedInstanceHierarchyNode[],
   valueFormatter: IPrimitiveValueFormatter,
   localizedStrings: PropertiesGroupingLocalizedStrings,
-  baseClassChecker: BaseClassChecker,
+  classHierarchyInspector: IECClassHierarchyInspector,
 ): Promise<GroupingHandler[]> {
   const propertiesGroupInfo = await getUniquePropertiesGroupInfo(metadata, parentNode, nodes);
   return propertiesGroupInfo.map(
     (propertyInfo) => async (nodesToGroup, nodesAlreadyGrouped) =>
-      createPropertyGroups(nodesToGroup, nodesAlreadyGrouped, propertyInfo, valueFormatter, localizedStrings, baseClassChecker),
+      createPropertyGroups(nodesToGroup, nodesAlreadyGrouped, propertyInfo, valueFormatter, localizedStrings, classHierarchyInspector),
   );
 }

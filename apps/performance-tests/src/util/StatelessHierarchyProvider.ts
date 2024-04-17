@@ -8,12 +8,12 @@ import { IModelDb } from "@itwin/core-backend";
 import { SchemaContext, SchemaJsonLocater } from "@itwin/ecschema-metadata";
 import { createECSqlQueryExecutor, createMetadataProvider } from "@itwin/presentation-core-interop";
 import { createLimitingECSqlQueryExecutor, HierarchyNode, HierarchyProvider, IHierarchyLevelDefinitionsFactory } from "@itwin/presentation-hierarchies";
-import { IMetadataProvider } from "@itwin/presentation-shared";
+import { createCachingECClassHierarchyInspector, IECClassHierarchyInspector, IECMetadataProvider } from "@itwin/presentation-shared";
 
 export interface ProviderOptions {
   iModel: IModelDb;
   rowLimit?: number | "unbounded";
-  getHierarchyFactory(metadataProvider: IMetadataProvider): IHierarchyLevelDefinitionsFactory;
+  getHierarchyFactory(metadataProvider: IECMetadataProvider, classHierarchyInspector: IECClassHierarchyInspector): IHierarchyLevelDefinitionsFactory;
 }
 
 const DEFAULT_ROW_LIMIT = 1000;
@@ -55,10 +55,12 @@ export class StatelessHierarchyProvider {
 
   private createProvider() {
     const metadataProvider = this.createMetadataProvider();
+    const classHierarchyInspector = createCachingECClassHierarchyInspector({ metadataProvider, cacheSize: 1000 });
     const rowLimit = this._props.rowLimit ?? DEFAULT_ROW_LIMIT;
     return new HierarchyProvider({
       metadataProvider,
-      hierarchyDefinition: this._props.getHierarchyFactory(metadataProvider),
+      classHierarchyInspector,
+      hierarchyDefinition: this._props.getHierarchyFactory(metadataProvider, classHierarchyInspector),
       queryExecutor: createLimitingECSqlQueryExecutor(createECSqlQueryExecutor(this._props.iModel), rowLimit),
     });
   }

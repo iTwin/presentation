@@ -139,10 +139,12 @@ describe("defaultNodesParser", () => {
   });
 
   it("parses complex label of one part", () => {
-    const labelPart: ConcatenatedValue = {
-      type: "Boolean",
-      value: true,
-    };
+    const labelPart: ConcatenatedValue = [
+      {
+        type: "Boolean",
+        value: true,
+      },
+    ];
     const row: RowDef = {
       [NodeSelectClauseColumnNames.FullClassName]: "schema.class",
       [NodeSelectClauseColumnNames.ECInstanceId]: "0x1",
@@ -171,5 +173,15 @@ describe("defaultNodesParser", () => {
     };
     const node = defaultNodesParser(row);
     expect(node.label).to.deep.eq(labelParts);
+  });
+
+  it("parses string label that looks like JSON but is not", () => {
+    const row: RowDef = {
+      [NodeSelectClauseColumnNames.FullClassName]: "schema.class",
+      [NodeSelectClauseColumnNames.ECInstanceId]: "0x1",
+      [NodeSelectClauseColumnNames.DisplayLabel]: "{x}",
+    };
+    const node = defaultNodesParser(row);
+    expect(node.label).to.eq("{x}");
   });
 });

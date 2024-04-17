@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { StopWatch } from "@itwin/core-bentley";
-import { ECSqlQueryDef, ECSqlQueryReader, ECSqlQueryReaderOptions, ECSqlQueryRow, IECSqlQueryExecutor } from "@itwin/presentation-shared";
+import { ECSqlQueryDef, ECSqlQueryReaderOptions, ECSqlQueryRow, IECSqlQueryExecutor } from "@itwin/presentation-shared";
 import { RowsLimitExceededError } from "./HierarchyErrors";
 import { LOGGING_NAMESPACE as CommonLoggingNamespace } from "./internal/Common";
 import { MainThreadBlockHandler } from "./internal/MainThreadBlockHandler";
@@ -16,10 +16,14 @@ import { getLogger } from "./Logging";
  */
 export interface ILimitingECSqlQueryExecutor {
   /**
-   * Creates an `ECSqlQueryReader` for given query, but makes sure it doesn't return more than the configured
-   * limit of rows. In case that happens, a `RowsLimitExceededError` is thrown during async iteration.
+   * Creates a query reader for given query, but makes sure it doesn't return more than the configured
+   * limit of rows.
+   * @throws `RowsLimitExceededError` when the query returns more than configured limit of rows.
    */
-  createQueryReader(query: ECSqlQueryDef, config?: ECSqlQueryReaderOptions & { limit?: number | "unbounded" }): ECSqlQueryReader;
+  createQueryReader(
+    query: ECSqlQueryDef,
+    config?: ECSqlQueryReaderOptions & { limit?: number | "unbounded" },
+  ): ReturnType<IECSqlQueryExecutor["createQueryReader"]>;
 }
 
 /**
@@ -31,12 +35,11 @@ export function createLimitingECSqlQueryExecutor(baseExecutor: IECSqlQueryExecut
     async *createQueryReader(query: ECSqlQueryDef, config?: ECSqlQueryReaderOptions & { limit?: number | "unbounded" }) {
       const { limit: configLimit, ...restConfig } = config ?? {};
       const limit = configLimit ?? defaultLimit;
-      const ecsql = addCTEs(addLimit(query.ecsql, limit), query.ctes);
       const perfLogger = createQueryPerformanceLogger();
       const blockHandler = new MainThreadBlockHandler();
 
       // handle "unbounded" case without a buffer
-      const reader = baseExecutor.createQueryReader(ecsql, query.bindings, restConfig);
+      const reader = baseExecutor.createQueryReader({ ...query, ecsql: addLimit(query.ecsql, limit) }, restConfig);
       if (limit === "unbounded") {
         try {
           for await (const row of reader) {
@@ -71,12 +74,6 @@ export function createLimitingECSqlQueryExecutor(baseExecutor: IECSqlQueryExecut
       }
     },
   };
-}
-
-/** @internal */
-export function addCTEs(ecsql: string, ctes: string[] | undefined) {
-  const ctesPrefix = ctes?.length ? `WITH RECURSIVE ${ctes.join(", ")} ` : "";
-  return `${ctesPrefix}${ecsql}`;
 }
 
 function addLimit(ecsql: string, limit: number | "unbounded") {

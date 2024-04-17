@@ -5,7 +5,7 @@
 
 import { expect } from "chai";
 import { InstanceHierarchyNodeProcessingParams } from "../../hierarchies/HierarchyNode";
-import { hasChildren, mergeNodes, normalizeFullClassName } from "../../hierarchies/internal/Common";
+import { hasChildren, mergeNodes } from "../../hierarchies/internal/Common";
 import { createTestProcessedCustomNode, createTestProcessedInstanceNode } from "../Utils";
 
 describe("mergeNodes", () => {
@@ -246,15 +246,5 @@ describe("hasChildren", () => {
     expect(hasChildren({ children: [] })).to.be.false;
     expect(hasChildren({ children: true })).to.be.true;
     expect(hasChildren({ children: [1] })).to.be.true;
-  });
-});
-
-describe("normalizeFullClassName", () => {
-  it("doesn't change normalized class names", () => {
-    expect(normalizeFullClassName("a.b")).to.eq("a.b");
-  });
-
-  it("replaces colon with a dot", () => {
-    expect(normalizeFullClassName("a:b")).to.eq("a.b");
   });
 });

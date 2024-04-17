@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { getClass, IMetadataProvider } from "@itwin/presentation-shared";
+import { getClass, IECMetadataProvider } from "@itwin/presentation-shared";
 import { ClassGroupingNodeKey, HierarchyNode, ParentHierarchyNode, ProcessedInstanceHierarchyNode } from "../../../HierarchyNode";
 import { GroupingHandlerResult, ProcessedInstancesGroupingHierarchyNode } from "../Grouping";
 
@@ -20,7 +20,7 @@ interface ClassGroupingInformation {
 
 /** @internal */
 export async function createClassGroups(
-  metadata: IMetadataProvider,
+  metadata: IECMetadataProvider,
   parentNode: ParentHierarchyNode | undefined,
   nodes: ProcessedInstanceHierarchyNode[],
 ): Promise<GroupingHandlerResult> {

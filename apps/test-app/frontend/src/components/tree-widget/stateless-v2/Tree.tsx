@@ -22,10 +22,12 @@ import { Presentation } from "@itwin/presentation-frontend";
 import { createLimitingECSqlQueryExecutor, GenericInstanceFilter, HierarchyProvider, ILimitingECSqlQueryExecutor } from "@itwin/presentation-hierarchies";
 import { HierarchyLevelFilteringOptions, PresentationHierarchyNode, TreeRenderer, useUnifiedSelectionTree } from "@itwin/presentation-hierarchies-react";
 import { ModelsTreeDefinition } from "@itwin/presentation-models-tree";
+import { createCachingECClassHierarchyInspector, IECClassHierarchyInspector, IECMetadataProvider } from "@itwin/presentation-shared";
 
-interface MetadataProviders {
+interface IModelAccess {
   queryExecutor: ILimitingECSqlQueryExecutor;
-  metadataProvider: ReturnType<typeof createMetadataProvider>;
+  metadataProvider: IECMetadataProvider;
+  classHierarchyInspector: IECClassHierarchyInspector;
 }
 
 export function StatelessTreeV2(props: { imodel: IModelConnection; height: number; width: number }) {
@@ -33,7 +35,7 @@ export function StatelessTreeV2(props: { imodel: IModelConnection; height: numbe
 }
 
 function Tree({ imodel, height, width }: { imodel: IModelConnection; height: number; width: number }) {
-  const [metadata, setMetadata] = useState<MetadataProviders>();
+  const [imodelAccess, setIModelAccess] = useState<IModelAccess>();
   const [hierarchyProvider, setHierarchyProvider] = useState<HierarchyProvider>();
   const [filter, setFilter] = useState("");
   const [isFiltering, setIsFiltering] = useState(false);
@@ -41,42 +43,45 @@ function Tree({ imodel, height, width }: { imodel: IModelConnection; height: num
   useEffect(() => {
     const schemas = new SchemaContext();
     schemas.addLocater(new ECSchemaRpcLocater(imodel.getRpcProps()));
-    setMetadata({
+    const metadataProvider = createMetadataProvider(schemas);
+    setIModelAccess({
       queryExecutor: createLimitingECSqlQueryExecutor(createECSqlQueryExecutor(imodel), 1000),
-      metadataProvider: createMetadataProvider(schemas),
+      metadataProvider,
+      classHierarchyInspector: createCachingECClassHierarchyInspector({ metadataProvider, cacheSize: 1000 }),
     });
   }, [imodel]);
 
   const { value: filteredPaths } = useDebouncedAsyncValue(
     useCallback(async () => {
       setIsFiltering(false);
-      if (!metadata) {
+      if (!imodelAccess) {
         return undefined;
       }
       if (filter !== "") {
         setIsFiltering(true);
         const paths = await ModelsTreeDefinition.createInstanceKeyPaths({
-          metadataProvider: metadata.metadataProvider,
-          queryExecutor: metadata.queryExecutor,
+          classHierarchyInspector: imodelAccess.classHierarchyInspector,
+          queryExecutor: imodelAccess.queryExecutor,
           label: filter,
         });
         return paths;
       }
       return undefined;
-    }, [metadata, filter]),
+    }, [imodelAccess, filter]),
   );
 
   useEffect(() => {
     setIsFiltering(false);
-    if (!metadata) {
+    if (!imodelAccess) {
       return;
     }
 
     setHierarchyProvider(
       new HierarchyProvider({
-        metadataProvider: metadata.metadataProvider,
-        queryExecutor: metadata.queryExecutor,
-        hierarchyDefinition: new ModelsTreeDefinition({ metadataProvider: metadata.metadataProvider }),
+        metadataProvider: imodelAccess.metadataProvider,
+        classHierarchyInspector: imodelAccess.classHierarchyInspector,
+        queryExecutor: imodelAccess.queryExecutor,
+        hierarchyDefinition: new ModelsTreeDefinition({ metadataProvider: imodelAccess.metadataProvider }),
         filtering: filteredPaths
           ? {
               paths: filteredPaths,
@@ -84,7 +89,7 @@ function Tree({ imodel, height, width }: { imodel: IModelConnection; height: num
           : undefined,
       }),
     );
-  }, [metadata, filteredPaths]);
+  }, [imodelAccess, filteredPaths]);
 
   const { rootNodes, isLoading, getHierarchyLevelFilteringOptions, ...treeProps } = useUnifiedSelectionTree({
     imodelKey: imodel.key,

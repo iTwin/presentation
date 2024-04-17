@@ -108,7 +108,7 @@ describe("Hierarchies", () => {
           return { schema, model, category, element };
         });
 
-        const selectQueryFactory = new NodeSelectQueryFactory(createMetadataProvider(imodel));
+        const selectQueryFactory = new NodeSelectQueryFactory({ metadataProvider: createMetadataProvider(imodel) });
         const hierarchy: IHierarchyLevelDefinitionsFactory = {
           async defineHierarchyLevel({ parentNode }) {
             if (!parentNode) {
@@ -228,7 +228,7 @@ describe("Hierarchies", () => {
 
     describe("DateTime", () => {
       it("formats instance node labels", async function () {
-        const selectQueryFactory = new NodeSelectQueryFactory(createMetadataProvider(emptyIModel));
+        const selectQueryFactory = new NodeSelectQueryFactory({ metadataProvider: createMetadataProvider(emptyIModel) });
         const hierarchy: IHierarchyLevelDefinitionsFactory = {
           async defineHierarchyLevel({ parentNode }) {
             if (!parentNode) {
@@ -358,7 +358,7 @@ describe("Hierarchies", () => {
           return { modelClassName: m2.className };
         });
 
-        const selectQueryFactory = new NodeSelectQueryFactory(createMetadataProvider(imodel));
+        const selectQueryFactory = new NodeSelectQueryFactory({ metadataProvider: createMetadataProvider(imodel) });
         const hierarchy: IHierarchyLevelDefinitionsFactory = {
           async defineHierarchyLevel({ parentNode }) {
             if (!parentNode) {
@@ -438,7 +438,7 @@ describe("Hierarchies", () => {
           return { category: insertSpatialCategory({ builder, codeValue: "category", rank: Rank.Application }) };
         });
 
-        const selectQueryFactory = new NodeSelectQueryFactory(createMetadataProvider(imodel));
+        const selectQueryFactory = new NodeSelectQueryFactory({ metadataProvider: createMetadataProvider(imodel) });
         const hierarchy: IHierarchyLevelDefinitionsFactory = {
           async defineHierarchyLevel({ parentNode }) {
             if (!parentNode) {
@@ -527,7 +527,7 @@ describe("Hierarchies", () => {
           });
           return { model, category, element };
         });
-        const selectQueryFactory = new NodeSelectQueryFactory(createMetadataProvider(imodel));
+        const selectQueryFactory = new NodeSelectQueryFactory({ metadataProvider: createMetadataProvider(imodel) });
         const hierarchy: IHierarchyLevelDefinitionsFactory = {
           async defineHierarchyLevel({ parentNode }) {
             if (!parentNode) {
@@ -615,7 +615,7 @@ describe("Hierarchies", () => {
           });
           return { model, category, element };
         });
-        const selectQueryFactory = new NodeSelectQueryFactory(createMetadataProvider(imodel));
+        const selectQueryFactory = new NodeSelectQueryFactory({ metadataProvider: createMetadataProvider(imodel) });
         const hierarchy: IHierarchyLevelDefinitionsFactory = {
           async defineHierarchyLevel({ parentNode }) {
             if (!parentNode) {
@@ -703,7 +703,7 @@ describe("Hierarchies", () => {
           });
           return { model, category, element };
         });
-        const selectQueryFactory = new NodeSelectQueryFactory(createMetadataProvider(imodel));
+        const selectQueryFactory = new NodeSelectQueryFactory({ metadataProvider: createMetadataProvider(imodel) });
         const hierarchy: IHierarchyLevelDefinitionsFactory = {
           async defineHierarchyLevel({ parentNode }) {
             if (!parentNode) {
@@ -789,7 +789,7 @@ describe("Hierarchies", () => {
           });
           return { model, category, element };
         });
-        const selectQueryFactory = new NodeSelectQueryFactory(createMetadataProvider(imodel));
+        const selectQueryFactory = new NodeSelectQueryFactory({ metadataProvider: createMetadataProvider(imodel) });
         const hierarchy: IHierarchyLevelDefinitionsFactory = {
           async defineHierarchyLevel({ parentNode }) {
             if (!parentNode) {
@@ -836,7 +836,7 @@ describe("Hierarchies", () => {
     });
 
     it("reacts to changed formatter without running queries", async function () {
-      const selectQueryFactory = new NodeSelectQueryFactory(createMetadataProvider(emptyIModel));
+      const selectQueryFactory = new NodeSelectQueryFactory({ metadataProvider: createMetadataProvider(emptyIModel) });
       const hierarchy: IHierarchyLevelDefinitionsFactory = {
         async defineHierarchyLevel({ parentNode }) {
           if (!parentNode) {
