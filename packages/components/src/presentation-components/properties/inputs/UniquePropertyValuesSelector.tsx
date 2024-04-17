@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { ActionMeta, MultiValue } from "react-select";
 import { from, map, mergeMap, toArray } from "rxjs";
 import { PropertyDescription, PropertyValue, PropertyValueFormat } from "@itwin/appui-abstract";
@@ -95,7 +95,8 @@ export function UniquePropertyValuesSelector(props: UniquePropertyValuesSelector
   return (
     <AsyncSelect
       value={selectedValues}
-      loadOptions={async (_, options) => loadValues(searchInput, options.length)}
+      debounceTimeout={500}
+      loadOptions={async (input, options) => loadValues(input, options.length)}
       placeholder={translate("unique-values-property-editor.select-values")}
       onChange={onValueChange}
       isOptionSelected={isOptionSelected}
@@ -212,76 +213,64 @@ function useUniquePropertyValuesLoader({ imodel, property, descriptor, ruleset, 
     setLoadedOptions({ count: 0, options: [], hasMore: false });
   }, [property, descriptor]);
 
-  const loadTargets = useCallback(
-    async (searchInput: string, loadedOptionsCount: number) => {
-      const matchesSearchInput = (option: UniqueValue) => {
-        return !searchInput || option.displayValue.toLowerCase().includes(searchInput);
-      };
+  return async (searchInput: string, loadedOptionsCount: number) => {
+    searchInput = searchInput.toLowerCase();
+    const matchesSearchInput = (option: UniqueValue) => {
+      return !searchInput || option.displayValue.toLowerCase().includes(searchInput);
+    };
 
-      if (!ruleset || !field) {
-        return { options: [], hasMore: false };
-      }
+    if (!ruleset || !field) {
+      return { options: [], hasMore: false };
+    }
 
-      // if the first page is requested and we already have the options loaded, return previous values.
-      if (loadedOptionsCount === 0 && loadedOptions.count > 0) {
-        return { options: loadedOptions.options.filter(matchesSearchInput), hasMore: loadedOptions.hasMore };
-      }
+    // if the first page is requested and we already have the options loaded, return previous values.
+    if (loadedOptionsCount === 0 && loadedOptions.count > 0) {
+      return { options: loadedOptions.options.filter(matchesSearchInput), hasMore: loadedOptions.hasMore };
+    }
 
-      const requestProps = {
-        imodel,
-        descriptor: {},
-        fieldDescriptor: field.getFieldDescriptor(),
-        rulesetOrId: ruleset,
-        paging: { start: loadedOptions.count, size: UNIQUE_PROPERTY_VALUES_BATCH_SIZE },
-        keys: new KeySet(descriptorInputKeys),
-      };
-      const items = await new Promise<DisplayValueGroup[]>((resolve) => {
-        (Presentation.presentation.getDistinctValuesIterator
-          ? from(Presentation.presentation.getDistinctValuesIterator(requestProps)).pipe(
-              mergeMap((result) => result.items),
-              toArray(),
-            )
-          : // eslint-disable-next-line deprecation/deprecation
-            from(Presentation.presentation.getPagedDistinctValues(requestProps)).pipe(map((result) => result.items))
-        ).subscribe({
-          next: resolve,
-          error: () => resolve([]),
-        });
+    const requestProps = {
+      imodel,
+      descriptor: {},
+      fieldDescriptor: field.getFieldDescriptor(),
+      rulesetOrId: ruleset,
+      paging: { start: loadedOptions.count, size: UNIQUE_PROPERTY_VALUES_BATCH_SIZE },
+      keys: new KeySet(descriptorInputKeys),
+    };
+    const items = await new Promise<DisplayValueGroup[]>((resolve) => {
+      (Presentation.presentation.getDistinctValuesIterator
+        ? from(Presentation.presentation.getDistinctValuesIterator(requestProps)).pipe(
+            mergeMap((result) => result.items),
+            toArray(),
+          )
+        : // eslint-disable-next-line deprecation/deprecation
+          from(Presentation.presentation.getPagedDistinctValues(requestProps)).pipe(map((result) => result.items))
+      ).subscribe({
+        next: resolve,
+        error: () => resolve([]),
       });
+    });
 
-      const options: UniqueValue[] = [];
-      const filteredOptions: UniqueValue[] = [];
-      for (const option of items) {
-        if (option.displayValue === undefined || !DisplayValue.isPrimitive(option.displayValue)) {
-          continue;
-        }
-        const groupedValues = option.groupedRawValues.filter((value) => value !== undefined);
-
-        if (groupedValues.length === 0) {
-          continue;
-        }
-
-        const uniqueValue = { displayValue: option.displayValue, groupedRawValues: groupedValues };
-        options.push(uniqueValue);
-
-        if (matchesSearchInput(uniqueValue)) {
-          filteredOptions.push(uniqueValue);
-        }
+    const options: UniqueValue[] = [];
+    for (const option of items) {
+      if (option.displayValue === undefined || !DisplayValue.isPrimitive(option.displayValue)) {
+        continue;
       }
+      const groupedValues = option.groupedRawValues.filter((value) => value !== undefined);
 
-      setLoadedOptions((prev) => ({
-        count: prev.count + items.length,
-        options: [...prev.options, ...options],
-        hasMore: options.length === UNIQUE_PROPERTY_VALUES_BATCH_SIZE,
-      }));
+      if (groupedValues.length !== 0) {
+        options.push({ displayValue: option.displayValue, groupedRawValues: groupedValues });
+      }
+    }
 
-      return {
-        options: filteredOptions,
-        hasMore: items.length === UNIQUE_PROPERTY_VALUES_BATCH_SIZE,
-      };
-    },
-    [ruleset, field, loadedOptions, imodel, descriptorInputKeys],
-  );
+    setLoadedOptions((prev) => ({
+      count: prev.count + items.length,
+      options: [...prev.options, ...options],
+      hasMore: options.length === UNIQUE_PROPERTY_VALUES_BATCH_SIZE,
+    }));
 
-  return loadTargets;
+    return {
+      options: options.filter(matchesSearchInput),
+      hasMore: items.length === UNIQUE_PROPERTY_VALUES_BATCH_SIZE,
+    };
+  };
 }
