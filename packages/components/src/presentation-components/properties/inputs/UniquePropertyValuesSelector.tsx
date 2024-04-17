@@ -206,12 +206,10 @@ interface UseUniquePropertyValuesLoaderProps {
 }
 
 function useUniquePropertyValuesLoader({ imodel, property, descriptor, ruleset, field, descriptorInputKeys }: UseUniquePropertyValuesLoaderProps) {
-  const [loadedCount, setLoadedCount] = useState(0);
-  const [loadedOptions, setLoadedOptions] = useState<UniqueValue[]>([]);
-  const [hasMore, setHasMore] = useState(false);
+  const [loadedOptions, setLoadedOptions] = useState<{ count: number; options: UniqueValue[]; hasMore: boolean }>({ count: 0, options: [], hasMore: false });
 
   useEffect(() => {
-    setLoadedOptions([]);
+    setLoadedOptions({ count: 0, options: [], hasMore: false });
   }, [property, descriptor]);
 
   const loadTargets = useCallback(
@@ -225,8 +223,8 @@ function useUniquePropertyValuesLoader({ imodel, property, descriptor, ruleset, 
       }
 
       // if the first page is requested and we already have the options loaded, return previous values.
-      if (loadedOptionsCount === 0 && loadedOptions.length > 0) {
-        return { options: loadedOptions.filter(matchesSearchInput), hasMore };
+      if (loadedOptionsCount === 0 && loadedOptions.count > 0) {
+        return { options: loadedOptions.options.filter(matchesSearchInput), hasMore: loadedOptions.hasMore };
       }
 
       const requestProps = {
@@ -234,7 +232,7 @@ function useUniquePropertyValuesLoader({ imodel, property, descriptor, ruleset, 
         descriptor: {},
         fieldDescriptor: field.getFieldDescriptor(),
         rulesetOrId: ruleset,
-        paging: { start: loadedCount, size: UNIQUE_PROPERTY_VALUES_BATCH_SIZE },
+        paging: { start: loadedOptions.count, size: UNIQUE_PROPERTY_VALUES_BATCH_SIZE },
         keys: new KeySet(descriptorInputKeys),
       };
       const items = await new Promise<DisplayValueGroup[]>((resolve) => {
@@ -271,16 +269,18 @@ function useUniquePropertyValuesLoader({ imodel, property, descriptor, ruleset, 
         }
       }
 
-      setLoadedCount((prev) => prev + items.length);
-      setLoadedOptions([...loadedOptions, ...options]);
-      setHasMore(options.length === UNIQUE_PROPERTY_VALUES_BATCH_SIZE);
+      setLoadedOptions((prev) => ({
+        count: prev.count + items.length,
+        options: [...prev.options, ...options],
+        hasMore: options.length === UNIQUE_PROPERTY_VALUES_BATCH_SIZE,
+      }));
 
       return {
         options: filteredOptions,
         hasMore: items.length === UNIQUE_PROPERTY_VALUES_BATCH_SIZE,
       };
     },
-    [ruleset, field, loadedOptions, imodel, loadedCount, descriptorInputKeys, hasMore],
+    [ruleset, field, loadedOptions, imodel, descriptorInputKeys],
   );
 
   return loadTargets;

@@ -481,238 +481,248 @@ describe("UniquePropertyValuesSelector", () => {
     });
   });
 
-  it("filters values based on search input", async () => {
-    getDistinctValuesIteratorStub.resolves({
-      total: 2,
-      items: createAsyncIterator([
-        { displayValue: "Value1", groupedRawValues: ["TestValue1"] },
-        { displayValue: "TestValue2", groupedRawValues: ["TestValue2"] },
-      ]),
-    });
-
-    const { getByText, user, container } = render(
-      <TestComponentWithPortalTarget>
-        <UniquePropertyValuesSelector property={propertyDescription} onChange={() => {}} imodel={testImodel} descriptor={descriptor} />,
-      </TestComponentWithPortalTarget>,
-    );
-
-    // open menu
-    const menuSelector = await waitFor(() => getByText("unique-values-property-editor.select-values"));
-    await user.click(menuSelector);
-
-    // type in search
-    const searchSelector = await waitFor(() => container.querySelector(".presentation-async-select-values-container"));
-    await user.type(searchSelector!, "test");
-
-    // ensure only the searched for value is shown
-    await waitFor(() => getByText("TestValue2"));
-    expect(getDistinctValuesIteratorStub).to.be.calledOnce;
-  });
-
-  it("changes filter when search input changes", async () => {
-    getDistinctValuesIteratorStub.resolves({
-      total: 2,
-      items: createAsyncIterator([
-        { displayValue: "Value1", groupedRawValues: ["TestValue1"] },
-        { displayValue: "TestValue2", groupedRawValues: ["TestValue2"] },
-      ]),
-    });
-
-    const { getByText, user, container } = render(
-      <TestComponentWithPortalTarget>
-        <UniquePropertyValuesSelector property={propertyDescription} onChange={() => {}} imodel={testImodel} descriptor={descriptor} />,
-      </TestComponentWithPortalTarget>,
-    );
-
-    // open menu
-    const menuSelector = await waitFor(() => getByText("unique-values-property-editor.select-values"));
-    await user.click(menuSelector);
-
-    // type in search
-    const searchSelector = await waitFor(() => container.querySelector(".presentation-async-select-values-container"));
-    await user.type(searchSelector!, "test");
-    await waitFor(() => getByText("TestValue2"));
-
-    // change search input
-    await user.type(searchSelector!, "value1");
-
-    // ensure new filter is applied
-    await waitFor(() => getByText("Value1"));
-    expect(getDistinctValuesIteratorStub).to.be.calledOnce;
-  });
-
-  it("resets loaded options when property changes", async () => {
-    getDistinctValuesIteratorStub.onCall(0).resolves({
-      total: 2,
-      items: createAsyncIterator([
-        { displayValue: "Value1", groupedRawValues: ["TestValue1"] },
-        { displayValue: "TestValue2", groupedRawValues: ["TestValue2"] },
-      ]),
-    });
-    getDistinctValuesIteratorStub.onCall(1).resolves({
-      total: 2,
-      items: createAsyncIterator([
-        { displayValue: "Value3", groupedRawValues: ["TestValue3"] },
-        { displayValue: "TestValue4", groupedRawValues: ["TestValue4"] },
-      ]),
-    });
-
-    const { getByText, user, container, rerender } = render(
-      <TestComponentWithPortalTarget>
-        <UniquePropertyValuesSelector property={propertyDescription} onChange={() => {}} imodel={testImodel} descriptor={descriptor} />,
-      </TestComponentWithPortalTarget>,
-    );
-
-    // open menu
-    let menuSelector = await waitFor(() => getByText("unique-values-property-editor.select-values"));
-    await user.click(menuSelector);
-
-    // type in search
-    const searchSelector = await waitFor(() => container.querySelector(".presentation-async-select-values-container"));
-    await user.type(searchSelector!, "test");
-    await waitFor(() => getByText("TestValue2"));
-
-    const changedPropertyDescription = {
-      name: "#propertyName",
-      displayLabel: "propertiesField",
-      typename: "string",
-      editor: undefined,
-    };
-
-    rerender(
-      <TestComponentWithPortalTarget>
-        <UniquePropertyValuesSelector property={changedPropertyDescription} onChange={() => {}} imodel={testImodel} descriptor={descriptor} />,
-      </TestComponentWithPortalTarget>,
-    );
-
-    // close and reopen menu
-    await user.click(menuSelector);
-    menuSelector = await waitFor(() => getByText("unique-values-property-editor.select-values"));
-    await user.click(menuSelector);
-
-    // ensure values for changed property are returned
-    await waitFor(() => getByText("Value3"));
-    await waitFor(() => getByText("TestValue4"));
-    expect(getDistinctValuesIteratorStub).to.be.calledTwice;
-  });
-
-  it("resets loaded options when descriptor changes", async () => {
-    getDistinctValuesIteratorStub.onCall(0).resolves({
-      total: 2,
-      items: createAsyncIterator([
-        { displayValue: "Value1", groupedRawValues: ["TestValue1"] },
-        { displayValue: "TestValue2", groupedRawValues: ["TestValue2"] },
-      ]),
-    });
-    getDistinctValuesIteratorStub.onCall(1).resolves({
-      total: 2,
-      items: createAsyncIterator([
-        { displayValue: "Value3", groupedRawValues: ["TestValue3"] },
-        { displayValue: "TestValue4", groupedRawValues: ["TestValue4"] },
-      ]),
-    });
-
-    const { getByText, user, container, rerender } = render(
-      <TestComponentWithPortalTarget>
-        <UniquePropertyValuesSelector property={propertyDescription} onChange={() => {}} imodel={testImodel} descriptor={descriptor} />,
-      </TestComponentWithPortalTarget>,
-    );
-
-    // open menu
-    let menuSelector = await waitFor(() => getByText("unique-values-property-editor.select-values"));
-    await user.click(menuSelector);
-
-    // type in search
-    const searchSelector = await waitFor(() => container.querySelector(".presentation-async-select-values-container"));
-    await user.type(searchSelector!, "test");
-    await waitFor(() => getByText("TestValue2"));
-
-    const changedDescriptor = createTestContentDescriptor({
-      selectClasses: [{ selectClassInfo: classInfo, isSelectPolymorphic: true }],
-      categories: [category],
-      fields: [propertiesField],
-    });
-
-    rerender(
-      <TestComponentWithPortalTarget>
-        <UniquePropertyValuesSelector property={propertyDescription} onChange={() => {}} imodel={testImodel} descriptor={changedDescriptor} />,
-      </TestComponentWithPortalTarget>,
-    );
-
-    // close and reopen menu
-    await user.click(menuSelector);
-    menuSelector = await waitFor(() => getByText("unique-values-property-editor.select-values"));
-    await user.click(menuSelector);
-
-    // ensure values for changed property are returned
-    await waitFor(() => getByText("Value3"));
-    await waitFor(() => getByText("TestValue4"));
-    expect(getDistinctValuesIteratorStub).to.be.calledTwice;
-  });
-
-  it("applies filter to new pages", async () => {
-    const pageItems = [
-      { displayValue: "SearchedValue1", groupedRawValues: ["SearchedValue1"] },
-      { displayValue: "SearchedValue2", groupedRawValues: ["SearchedValue2"] },
-    ];
-
-    for (let i = 2; i < UNIQUE_PROPERTY_VALUES_BATCH_SIZE; i++) {
-      const name = `SkippedValue${i}`;
-      pageItems.push({ displayValue: name, groupedRawValues: [name] });
+  describe("search", () => {
+    function matchPageStart(start: number) {
+      return sinon.match((options: { paging: { start: number } }) => options.paging.start === start);
     }
 
-    getDistinctValuesIteratorStub.onCall(0).resolves({
-      total: UNIQUE_PROPERTY_VALUES_BATCH_SIZE,
-      items: createAsyncIterator(pageItems),
+    it("filters values based on search input", async () => {
+      getDistinctValuesIteratorStub.withArgs(matchPageStart(0)).resolves({
+        total: 2,
+        items: createAsyncIterator([
+          { displayValue: "Value1", groupedRawValues: ["TestValue1"] },
+          { displayValue: "TestValue2", groupedRawValues: ["TestValue2"] },
+        ]),
+      });
+
+      const { getByText, user, container } = render(
+        <TestComponentWithPortalTarget>
+          <UniquePropertyValuesSelector property={propertyDescription} onChange={() => {}} imodel={testImodel} descriptor={descriptor} />,
+        </TestComponentWithPortalTarget>,
+      );
+
+      // open menu
+      const menuSelector = await waitFor(() => getByText("unique-values-property-editor.select-values"));
+      await user.click(menuSelector);
+
+      // type in
+      const searchSelector = await waitFor(() => container.querySelector(".presentation-async-select-values-container"));
+      await user.type(searchSelector!, "test");
+
+      // ensure only the searched for value is shown
+      await waitFor(() => getByText("TestValue2"));
+      expect(getDistinctValuesIteratorStub).to.be.calledOnce;
     });
-    getDistinctValuesIteratorStub.onCall(1).resolves({
-      total: 2,
-      items: createAsyncIterator([
-        { displayValue: "SkippedValue", groupedRawValues: ["SkippedValue"] },
-        { displayValue: "SearchedValue3", groupedRawValues: ["SearchedValue3"] },
-      ]),
+
+    it("changes filter when search input changes", async () => {
+      getDistinctValuesIteratorStub.withArgs(matchPageStart(0)).resolves({
+        total: 2,
+        items: createAsyncIterator([
+          { displayValue: "Value1", groupedRawValues: ["TestValue1"] },
+          { displayValue: "TestValue2", groupedRawValues: ["TestValue2"] },
+        ]),
+      });
+
+      const { getByText, user, container } = render(
+        <TestComponentWithPortalTarget>
+          <UniquePropertyValuesSelector property={propertyDescription} onChange={() => {}} imodel={testImodel} descriptor={descriptor} />,
+        </TestComponentWithPortalTarget>,
+      );
+
+      // open menu
+      const menuSelector = await waitFor(() => getByText("unique-values-property-editor.select-values"));
+      await user.click(menuSelector);
+
+      // type in search
+      const searchSelector = await waitFor(() => container.querySelector(".presentation-async-select-values-container"));
+      await user.type(searchSelector!, "test");
+      await waitFor(() => getByText("TestValue2"));
+
+      // change search input
+      await user.type(searchSelector!, "value1");
+
+      // ensure new filter is applied
+      await waitFor(() => getByText("Value1"));
+      expect(getDistinctValuesIteratorStub).to.be.calledOnce;
     });
 
-    const { getByText, user, container } = render(
-      <TestComponentWithPortalTarget>
-        <UniquePropertyValuesSelector property={propertyDescription} onChange={() => {}} imodel={testImodel} descriptor={descriptor} />,
-      </TestComponentWithPortalTarget>,
-    );
+    it("resets loaded options when property changes", async () => {
+      getDistinctValuesIteratorStub.onFirstCall().resolves({
+        total: 2,
+        items: createAsyncIterator([
+          { displayValue: "Value1", groupedRawValues: ["TestValue1"] },
+          { displayValue: "TestValue2", groupedRawValues: ["TestValue2"] },
+        ]),
+      });
+      getDistinctValuesIteratorStub.onSecondCall().resolves({
+        total: 2,
+        items: createAsyncIterator([
+          { displayValue: "Value3", groupedRawValues: ["TestValue3"] },
+          { displayValue: "TestValue4", groupedRawValues: ["TestValue4"] },
+        ]),
+      });
 
-    // open menu
-    const menuSelector = await waitFor(() => getByText("unique-values-property-editor.select-values"));
-    await user.click(menuSelector);
+      const { getByText, user, container, rerender } = render(
+        <TestComponentWithPortalTarget>
+          <UniquePropertyValuesSelector property={propertyDescription} onChange={() => {}} imodel={testImodel} descriptor={descriptor} />,
+        </TestComponentWithPortalTarget>,
+      );
 
-    // type in search
-    const searchSelector = await waitFor(() => container.querySelector(".presentation-async-select-values-container"));
-    await user.type(searchSelector!, "Searched");
+      // open menu
+      let menuSelector = await waitFor(() => getByText("unique-values-property-editor.select-values"));
+      await user.click(menuSelector);
 
-    // ensure all searched for values are shown
-    await waitFor(() => getByText("SearchedValue1"));
-    await waitFor(() => getByText("SearchedValue2"));
-    await waitFor(() => getByText("SearchedValue3"));
-    expect(getDistinctValuesIteratorStub).to.be.calledTwice;
-  });
+      // type in search
+      const searchSelector = await waitFor(() => container.querySelector(".presentation-async-select-values-container"));
+      await user.type(searchSelector!, "test");
+      await waitFor(() => getByText("TestValue2"));
 
-  it("does not try to fetch another page on error", async () => {
-    getDistinctValuesIteratorStub.rejects();
+      const changedPropertyDescription = {
+        name: "#propertyName",
+        displayLabel: "propertiesField",
+        typename: "string",
+        editor: undefined,
+      };
 
-    const { getByText, user } = render(
-      <TestComponentWithPortalTarget>
-        <UniquePropertyValuesSelector property={propertyDescription} onChange={() => {}} imodel={testImodel} descriptor={descriptor} />,
-      </TestComponentWithPortalTarget>,
-    );
+      rerender(
+        <TestComponentWithPortalTarget>
+          <UniquePropertyValuesSelector property={changedPropertyDescription} onChange={() => {}} imodel={testImodel} descriptor={descriptor} />,
+        </TestComponentWithPortalTarget>,
+      );
 
-    // open menu
-    const menuSelector = await waitFor(() => getByText("unique-values-property-editor.select-values"));
-    await user.click(menuSelector);
+      // close and reopen menu
+      await user.click(menuSelector);
+      menuSelector = await waitFor(() => getByText("unique-values-property-editor.select-values"));
+      await user.click(menuSelector);
 
-    // add some delay to see if a second page load will be requested
-    await new Promise((f) => setTimeout(f, 1000));
+      // ensure values for changed property are returned
+      await waitFor(() => getByText("Value3"));
+      await waitFor(() => getByText("TestValue4"));
+      expect(getDistinctValuesIteratorStub).to.be.calledTwice;
+      expect(getDistinctValuesIteratorStub.getCall(0).calledWith(matchPageStart(0))).to.be.true;
+      expect(getDistinctValuesIteratorStub.getCall(1).calledWith(matchPageStart(0))).to.be.true;
+    });
 
-    // ensure only one page was loaded
-    await waitFor(() => getByText("unique-values-property-editor.no-values"));
-    expect(getDistinctValuesIteratorStub).to.be.calledOnce;
+    it("resets loaded options when descriptor changes", async () => {
+      getDistinctValuesIteratorStub.onFirstCall().resolves({
+        total: 2,
+        items: createAsyncIterator([
+          { displayValue: "Value1", groupedRawValues: ["TestValue1"] },
+          { displayValue: "TestValue2", groupedRawValues: ["TestValue2"] },
+        ]),
+      });
+      getDistinctValuesIteratorStub.onSecondCall().resolves({
+        total: 2,
+        items: createAsyncIterator([
+          { displayValue: "Value3", groupedRawValues: ["TestValue3"] },
+          { displayValue: "TestValue4", groupedRawValues: ["TestValue4"] },
+        ]),
+      });
+
+      const { getByText, user, container, rerender } = render(
+        <TestComponentWithPortalTarget>
+          <UniquePropertyValuesSelector property={propertyDescription} onChange={() => {}} imodel={testImodel} descriptor={descriptor} />,
+        </TestComponentWithPortalTarget>,
+      );
+
+      // open menu
+      let menuSelector = await waitFor(() => getByText("unique-values-property-editor.select-values"));
+      await user.click(menuSelector);
+
+      // type in search
+      const searchSelector = await waitFor(() => container.querySelector(".presentation-async-select-values-container"));
+      await user.type(searchSelector!, "test");
+      await waitFor(() => getByText("TestValue2"));
+
+      const changedDescriptor = createTestContentDescriptor({
+        selectClasses: [{ selectClassInfo: classInfo, isSelectPolymorphic: true }],
+        categories: [category],
+        fields: [propertiesField],
+      });
+
+      rerender(
+        <TestComponentWithPortalTarget>
+          <UniquePropertyValuesSelector property={propertyDescription} onChange={() => {}} imodel={testImodel} descriptor={changedDescriptor} />,
+        </TestComponentWithPortalTarget>,
+      );
+
+      // close and reopen menu
+      await user.click(menuSelector);
+      menuSelector = await waitFor(() => getByText("unique-values-property-editor.select-values"));
+      await user.click(menuSelector);
+
+      // ensure values for changed property are returned
+      await waitFor(() => getByText("Value3"));
+      await waitFor(() => getByText("TestValue4"));
+      expect(getDistinctValuesIteratorStub).to.be.calledTwice;
+      expect(getDistinctValuesIteratorStub.getCall(0).calledWith(matchPageStart(0))).to.be.true;
+      expect(getDistinctValuesIteratorStub.getCall(1).calledWith(matchPageStart(0))).to.be.true;
+    });
+
+    it("applies filter to new pages", async () => {
+      const pageItems = [
+        { displayValue: "SearchedValue1", groupedRawValues: ["SearchedValue1"] },
+        { displayValue: "SearchedValue2", groupedRawValues: ["SearchedValue2"] },
+      ];
+
+      for (let i = 2; i < UNIQUE_PROPERTY_VALUES_BATCH_SIZE; i++) {
+        const name = `SkippedValue${i}`;
+        pageItems.push({ displayValue: name, groupedRawValues: [name] });
+      }
+
+      getDistinctValuesIteratorStub.withArgs(matchPageStart(0)).resolves({
+        total: UNIQUE_PROPERTY_VALUES_BATCH_SIZE,
+        items: createAsyncIterator(pageItems),
+      });
+      getDistinctValuesIteratorStub.withArgs(matchPageStart(UNIQUE_PROPERTY_VALUES_BATCH_SIZE)).resolves({
+        total: 2,
+        items: createAsyncIterator([
+          { displayValue: "SkippedValue", groupedRawValues: ["SkippedValue"] },
+          { displayValue: "SearchedValue3", groupedRawValues: ["SearchedValue3"] },
+        ]),
+      });
+
+      const { getByText, user, container } = render(
+        <TestComponentWithPortalTarget>
+          <UniquePropertyValuesSelector property={propertyDescription} onChange={() => {}} imodel={testImodel} descriptor={descriptor} />,
+        </TestComponentWithPortalTarget>,
+      );
+
+      // open menu
+      const menuSelector = await waitFor(() => getByText("unique-values-property-editor.select-values"));
+      await user.click(menuSelector);
+
+      // type in search
+      const searchSelector = await waitFor(() => container.querySelector(".presentation-async-select-values-container"));
+      await user.type(searchSelector!, "Searched");
+
+      // ensure all searched for values are shown
+      await waitFor(() => getByText("SearchedValue1"));
+      await waitFor(() => getByText("SearchedValue2"));
+      await waitFor(() => getByText("SearchedValue3"));
+      expect(getDistinctValuesIteratorStub).to.be.calledTwice;
+    });
+
+    it("does not try to fetch another page on error", async () => {
+      getDistinctValuesIteratorStub.rejects();
+
+      const { getByText, user } = render(
+        <TestComponentWithPortalTarget>
+          <UniquePropertyValuesSelector property={propertyDescription} onChange={() => {}} imodel={testImodel} descriptor={descriptor} />,
+        </TestComponentWithPortalTarget>,
+      );
+
+      // open menu
+      const menuSelector = await waitFor(() => getByText("unique-values-property-editor.select-values"));
+      await user.click(menuSelector);
+
+      // add some delay to see if a second page load will be requested
+      await new Promise((f) => setTimeout(f, 1000));
+
+      // ensure only one page was loaded
+      await waitFor(() => getByText("unique-values-property-editor.no-values"));
+      expect(getDistinctValuesIteratorStub).to.be.calledOnce;
+    });
   });
 
   describe("Date formatting", () => {
