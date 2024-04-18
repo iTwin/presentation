@@ -5,7 +5,7 @@
 
 import "./AsyncSelect.scss";
 import classnames from "classnames";
-import { Ref, useRef, useState } from "react";
+import { Children, Ref, useRef, useState } from "react";
 import {
   ClearIndicatorProps,
   components,
@@ -77,10 +77,16 @@ function NoOptionsMessage<TOption, IsMulti extends boolean = boolean>({ children
 }
 
 function ValueContainer<TOption, IsMulti extends boolean = boolean>({ children, ...props }: ValueContainerProps<TOption, IsMulti>) {
+  const childrenArray = Children.toArray(children);
+  const values = childrenArray.slice(0, -1);
+  const input = childrenArray[childrenArray.length - 1];
   return (
-    <TagContainer {...props.innerProps} className="presentation-async-select-values-container" as={"div"}>
-      {children}
-    </TagContainer>
+    <div className="presentation-async-select-values-container">
+      {input}
+      <TagContainer {...props.innerProps} className="presentation-async-select-tag-container" overflow="truncate" as={"div"}>
+        {props.selectProps.menuIsOpen && props.selectProps.inputValue.length !== 0 ? undefined : values}
+      </TagContainer>
+    </div>
   );
 }
 
@@ -140,8 +146,16 @@ export function AsyncSelect<OptionType, Group extends GroupBase<OptionType>, Add
           indicatorSeparator: (base) => ({ ...base, marginTop: undefined, marginBottom: undefined, margin: "0 var(--iui-size-xs)" }),
           clearIndicator: () => ({}),
           dropdownIndicator: () => ({}),
-          placeholder: () => ({ width: "100%", display: "block", whiteSpace: "nowrap", textOverflow: "ellipsis", overflow: "hidden", position: "absolute" }),
-          input: () => ({ color: "inherit" }),
+          placeholder: () => ({
+            width: "100%",
+            display: "block",
+            whiteSpace: "nowrap",
+            textOverflow: "ellipsis",
+            overflow: "hidden",
+            position: "absolute",
+            marginTop: "2px",
+          }),
+          input: () => ({ position: "absolute" }),
         }}
         components={{
           Control,

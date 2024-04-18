@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { useEffect, useMemo, useState } from "react";
-import { ActionMeta, MultiValue } from "react-select";
+import { ActionMeta, InputActionMeta, MultiValue } from "react-select";
 import { from, map, mergeMap, toArray } from "rxjs";
 import { PropertyDescription, PropertyValue, PropertyValueFormat } from "@itwin/appui-abstract";
 import { IModelConnection } from "@itwin/core-frontend";
@@ -88,12 +88,20 @@ export function UniquePropertyValuesSelector(props: UniquePropertyValuesSelector
     }
   };
 
+  const onInputChange = (input: string, actionMeta: InputActionMeta) => {
+    // Do not reset search input on option select
+    if (actionMeta.action !== "set-value") {
+      setSearchInput(input);
+    }
+  };
+
   const isOptionSelected = (option: UniqueValue): boolean => selectedValues.map((selectedValue) => selectedValue.displayValue).includes(option.displayValue);
   const ruleset = useUniquePropertyValuesRuleset(descriptor.ruleset, field);
   const loadValues = useUniquePropertyValuesLoader({ imodel, property, descriptor, ruleset, field, descriptorInputKeys });
 
   return (
     <AsyncSelect
+      inputValue={searchInput}
       value={selectedValues}
       debounceTimeout={500}
       loadOptions={async (input, options) => loadValues(input, options.length)}
@@ -104,10 +112,11 @@ export function UniquePropertyValuesSelector(props: UniquePropertyValuesSelector
       hideSelectedOptions={false}
       isSearchable={true}
       closeMenuOnSelect={false}
+      blurInputOnSelect={false}
       tabSelectsValue={false}
       getOptionLabel={(option) => formatOptionLabel(option.displayValue, property.typename)}
       getOptionValue={(option) => option.displayValue}
-      onInputChange={(input) => setSearchInput(input.toLowerCase())}
+      onInputChange={onInputChange}
     />
   );
 }
