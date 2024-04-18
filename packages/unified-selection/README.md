@@ -169,7 +169,7 @@ const selection = computeSelection({ queryExecutor, elementIds, scope: { id: "el
 
 ## iModel selection synchronization with unified selection
 
-The `@itwin/unified-selection` package delivers a `enableUnifiedSelectionSyncWithIModel` function to enable selection synchronization between an iModel and a `SelectionStorage`. When called it returns a cleanup function that should be used to disable the synchronization. There should only be one active synchronization between a single iModel and a `SelectionStorage` at a given time. For example, this function could be used inside a `useEffect` hook in a viewport component but should not be used if there is more than one viewport for the same iModel (in such cases the function could be called in a higher scope so that all viewport components would share the synchronization):
+The `@itwin/unified-selection` package delivers a `enableUnifiedSelectionSyncWithIModel` function to enable selection synchronization between an iModel and a `SelectionStorage`. When called, it returns a cleanup function that should be used to disable the synchronization. There should only be one active synchronization between a single iModel and a `SelectionStorage` at a given time. For example, this function could be used inside a `useEffect` hook in a viewport component but should not be used if there is more than one viewport for the same iModel (in such cases the function could be called in a higher scope so that all viewport components would share the synchronization):
 
 ```ts
 import { createECSqlQueryExecutor, createMetadataProvider } from "@itwin/presentation-core-interop";

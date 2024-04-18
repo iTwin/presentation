@@ -2,4 +2,4 @@
 "@itwin/unified-selection": minor
 ---
 
-Added API for enabling synchronization between iModel selection and unified selection.
+Added `enableUnifiedSelectionSyncWithIModel` for enabling synchronization between iModel's tool selection and unified selection storage.

@@ -8,26 +8,16 @@
  */
 
 import { from, Subject, takeUntil } from "rxjs";
-import { using } from "@itwin/core-bentley";
+import { Id64Arg, using } from "@itwin/core-bentley";
 import { CachingHiliteSetProvider } from "../CachingHiliteSetProvider";
 import { createHiliteSetProvider, HiliteSet, HiliteSetProvider } from "../HiliteSetProvider";
-import { IMetadataProvider } from "../queries/ECMetadata";
 import { IECSqlQueryExecutor } from "../queries/ECSqlCore";
 import { SelectableInstanceKey, Selectables } from "../Selectable";
 import { StorageSelectionChangeEventArgs, StorageSelectionChangeType } from "../SelectionChangeEvent";
 import { computeSelection, ElementSelectionScopeProps, SelectionScope } from "../SelectionScope";
 import { SelectionStorage } from "../SelectionStorage";
-import { IdArg, IModelConnection, SelectionSetEvent, SelectionSetEventType } from "./IModel";
-
-/** @internal */
-export interface IModelSelectionHandlerProps {
-  iModel: IModelConnection;
-  selectionStorage: SelectionStorage;
-  cachingHiliteSetProvider: CachingHiliteSetProvider;
-  queryExecutor: IECSqlQueryExecutor;
-  metadataProvider: IMetadataProvider;
-  activeScopeProvider: () => ElementSelectionScopeProps | { id: SelectionScope } | SelectionScope;
-}
+import { EnableUnifiedSelectionSyncWithIModelProps } from "./EnableUnifiedSelectionSyncWithIModel";
+import { IModelConnection, SelectionSetEvent, SelectionSetEventType } from "./IModel";
 
 /**
  * A handler that syncs selection between unified selection storage
@@ -49,7 +39,7 @@ export class IModelSelectionHandler {
   private _unifiedSelectionListenerDisposeFunc: () => void;
   private _iModelListenerDisposeFunc: () => void;
 
-  public constructor(props: IModelSelectionHandlerProps) {
+  public constructor(props: EnableUnifiedSelectionSyncWithIModelProps) {
     this._iModel = props.iModel;
     this._selectionStorage = props.selectionStorage;
     this._cachingHiliteSetProvider = props.cachingHiliteSetProvider;
@@ -63,7 +53,7 @@ export class IModelSelectionHandler {
 
     // stop imodel from syncing tool selection with hilited list - we want to override that behavior
     this._iModel.hilited.wantSyncWithSelectionSet = false;
-    this.applyCurrentHiliteSet();
+    this.applyCurrentHiliteSet({ activeSelectionAction: "clear" });
   }
 
   public dispose() {
@@ -83,7 +73,7 @@ export class IModelSelectionHandler {
 
   private handleUnifiedSelectionChange(changeType: StorageSelectionChangeType, selectables: Selectables) {
     if (changeType === "clear" || changeType === "replace") {
-      this.applyCurrentHiliteSet();
+      this.applyCurrentHiliteSet({ activeSelectionAction: "clear" });
       return;
     }
 
@@ -92,7 +82,7 @@ export class IModelSelectionHandler {
         .pipe(takeUntil(this._cancelOngoingChanges))
         .subscribe({
           next: (set) => {
-            this.applyHiliteSet(set);
+            this.addHiliteSet(set);
           },
         });
       return;
@@ -105,7 +95,7 @@ export class IModelSelectionHandler {
           this.removeHiliteSet(set);
         },
         complete: () => {
-          this.applyCurrentHiliteSet(false);
+          this.applyCurrentHiliteSet({ activeSelectionAction: "keep" });
         },
       });
   }
@@ -120,8 +110,8 @@ export class IModelSelectionHandler {
     this.handleUnifiedSelectionChange(args.changeType, args.selectables);
   };
 
-  private applyCurrentHiliteSet(clearBefore = true) {
-    if (clearBefore) {
+  private applyCurrentHiliteSet({ activeSelectionAction }: { activeSelectionAction: "clear" | "keep" }) {
+    if (activeSelectionAction === "clear") {
       using(this.suspendIModelToolSelectionSync(), (_) => {
         this._iModel.hilited.clear();
         this._iModel.selectionSet.emptyAll();
@@ -132,12 +122,12 @@ export class IModelSelectionHandler {
       .pipe(takeUntil(this._cancelOngoingChanges))
       .subscribe({
         next: (ids) => {
-          this.applyHiliteSet(ids);
+          this.addHiliteSet(ids);
         },
       });
   }
 
-  private applyHiliteSet(set: HiliteSet) {
+  private addHiliteSet(set: HiliteSet) {
     using(this.suspendIModelToolSelectionSync(), (_) => {
       if (set.models && set.models.length) {
         this._iModel.hilited.models.addIds(set.models);
@@ -183,15 +173,15 @@ export class IModelSelectionHandler {
   };
 
   private async handleIModelSelectionChange(type: SelectionSetEventType, iterator: AsyncIterableIterator<SelectableInstanceKey>) {
-    if (type === SelectionSetEventType.Replace) {
-      this._selectionStorage.clearSelection({ iModelKey: this._iModel.key, source: this._selectionSourceName });
-    }
-
     if (type === SelectionSetEventType.Remove) {
       for await (const selectable of iterator) {
         this._selectionStorage.removeFromSelection({ iModelKey: this._iModel.key, source: this._selectionSourceName, selectables: [selectable] });
       }
       return;
+    }
+
+    if (type === SelectionSetEventType.Replace) {
+      this._selectionStorage.clearSelection({ iModelKey: this._iModel.key, source: this._selectionSourceName });
     }
 
     for await (const selectable of iterator) {
@@ -209,7 +199,7 @@ export class IModelSelectionHandler {
     }
   }
 
-  private idArgToIds(ids: IdArg): string[] {
+  private idArgToIds(ids: Id64Arg): string[] {
     if (typeof ids === "string") {
       return [ids];
     }

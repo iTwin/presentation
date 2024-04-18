@@ -6,9 +6,9 @@
 import { expect } from "chai";
 import { ResolvablePromise, waitFor } from "presentation-test-utilities";
 import sinon from "sinon";
-import { using } from "@itwin/core-bentley";
+import { Id64Arg, using } from "@itwin/core-bentley";
 import * as hiliteSetProvider from "../../unified-selection/HiliteSetProvider";
-import { IdArg, IModelConnection, SelectionSet, SelectionSetEvent, SelectionSetEventType } from "../../unified-selection/iModel/IModel";
+import { IModelConnection, SelectionSetEvent, SelectionSetEventType } from "../../unified-selection/iModel/IModel";
 import { IModelSelectionHandler } from "../../unified-selection/iModel/IModelSelectionHandler";
 import { IMetadataProvider } from "../../unified-selection/queries/ECMetadata";
 import { ECSqlBinding, ECSqlQueryReader, ECSqlQueryReaderOptions, ECSqlQueryRow } from "../../unified-selection/queries/ECSqlCore";
@@ -34,26 +34,28 @@ describe("IModelSelectionHandler", () => {
   const hilited = {
     clear: sinon.stub<[], void>(),
     elements: {
-      addIds: sinon.stub<[IdArg], void>(),
-      deleteIds: sinon.stub<[IdArg], void>(),
+      addIds: sinon.stub<[Id64Arg], void>(),
+      deleteIds: sinon.stub<[Id64Arg], void>(),
     },
     models: {
-      addIds: sinon.stub<[IdArg], void>(),
-      deleteIds: sinon.stub<[IdArg], void>(),
+      addIds: sinon.stub<[Id64Arg], void>(),
+      deleteIds: sinon.stub<[Id64Arg], void>(),
     },
     subcategories: {
-      addIds: sinon.stub<[IdArg], void>(),
-      deleteIds: sinon.stub<[IdArg], void>(),
+      addIds: sinon.stub<[Id64Arg], void>(),
+      deleteIds: sinon.stub<[Id64Arg], void>(),
     },
   };
 
   const selectionSet = {
     iModel: {} as IModelConnection,
     emptyAll: sinon.stub<[], void>(),
-    add: sinon.stub<[IdArg], void>(),
-    remove: sinon.stub<[IdArg], void>(),
+    add: sinon.stub<[Id64Arg], boolean>(),
+    remove: sinon.stub<[Id64Arg], boolean>(),
+    elements: new Set<string>(),
     onChanged: {
       addListener: sinon.stub<[(ev: SelectionSetEvent) => void], () => void>(),
+      removeListener: () => true,
     },
   };
 
@@ -138,7 +140,7 @@ describe("IModelSelectionHandler", () => {
       const addedKeys = [createSelectableInstanceKey(1), createSelectableInstanceKey(2)];
       queryExecutor.createQueryReader.returns(createFakeQueryReader(toQueryResponse(addedKeys)));
 
-      triggerSelectionChange({ type: SelectionSetEventType.Clear, removed: [], set: selectionSet as unknown as SelectionSet });
+      triggerSelectionChange({ type: SelectionSetEventType.Clear, removed: [], set: selectionSet });
 
       await waitFor(() => {
         expect(selectionStorageStub.clearSelection.calledWith({ iModelKey: iModel.key, source: "Tool" })).to.be.true;
@@ -149,7 +151,7 @@ describe("IModelSelectionHandler", () => {
       const addedKeys = [createSelectableInstanceKey(1)];
       queryExecutor.createQueryReader.returns(createFakeQueryReader(toQueryResponse(addedKeys)));
 
-      triggerSelectionChange({ type: SelectionSetEventType.Add, added: addedKeys[0].id, set: selectionSet as unknown as SelectionSet });
+      triggerSelectionChange({ type: SelectionSetEventType.Add, added: addedKeys[0].id, set: selectionSet });
 
       await waitFor(() => {
         expect(selectionStorageStub.addToSelection.calledWith({ iModelKey: iModel.key, source: "Tool", selectables: addedKeys })).to.be.true;
@@ -160,7 +162,7 @@ describe("IModelSelectionHandler", () => {
       const removedKeys = [createSelectableInstanceKey(1), createSelectableInstanceKey(2)];
       queryExecutor.createQueryReader.returns(createFakeQueryReader(toQueryResponse(removedKeys)));
 
-      triggerSelectionChange({ type: SelectionSetEventType.Remove, removed: removedKeys.map((k) => k.id), set: selectionSet as unknown as SelectionSet });
+      triggerSelectionChange({ type: SelectionSetEventType.Remove, removed: removedKeys.map((k) => k.id), set: selectionSet });
 
       await waitFor(() => {
         expect(selectionStorageStub.removeFromSelection.getCall(0).calledWith({ iModelKey: iModel.key, source: "Tool", selectables: [removedKeys[0]] })).to.be
@@ -178,7 +180,7 @@ describe("IModelSelectionHandler", () => {
         type: SelectionSetEventType.Replace,
         added: new Set<string>(addedKeys.map((k) => k.id)),
         removed: [],
-        set: selectionSet as unknown as SelectionSet,
+        set: selectionSet,
       });
 
       await waitFor(() => {
@@ -193,7 +195,7 @@ describe("IModelSelectionHandler", () => {
       queryExecutor.createQueryReader.returns(createFakeQueryReader(toQueryResponse(addedKeys)));
 
       selectionSet.iModel = {} as IModelConnection;
-      triggerSelectionChange({ type: SelectionSetEventType.Clear, removed: [], set: selectionSet as unknown as SelectionSet });
+      triggerSelectionChange({ type: SelectionSetEventType.Clear, removed: [], set: selectionSet });
 
       await waitFor(() => {
         expect(selectionStorageStub.clearSelection).to.not.be.called;
@@ -205,7 +207,7 @@ describe("IModelSelectionHandler", () => {
       queryExecutor.createQueryReader.returns(createFakeQueryReader(toQueryResponse(addedKeys)));
 
       await using(handler.suspendIModelToolSelectionSync(), async (_) => {
-        triggerSelectionChange({ type: SelectionSetEventType.Clear, removed: [], set: selectionSet as unknown as SelectionSet });
+        triggerSelectionChange({ type: SelectionSetEventType.Clear, removed: [], set: selectionSet });
 
         await waitFor(() => {
           expect(selectionStorageStub.clearSelection).to.not.be.called;

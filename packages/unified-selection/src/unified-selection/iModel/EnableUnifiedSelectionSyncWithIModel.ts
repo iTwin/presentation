@@ -10,7 +10,7 @@
 import { CachingHiliteSetProvider } from "../CachingHiliteSetProvider";
 import { IMetadataProvider } from "../queries/ECMetadata";
 import { IECSqlQueryExecutor } from "../queries/ECSqlCore";
-import { ElementSelectionScopeProps, SelectionScope } from "../SelectionScope";
+import { ComputeSelectionProps } from "../SelectionScope";
 import { SelectionStorage } from "../SelectionStorage";
 import { IModelConnection } from "./IModel";
 import { IModelSelectionHandler } from "./IModelSelectionHandler";
@@ -22,16 +22,16 @@ import { IModelSelectionHandler } from "./IModelSelectionHandler";
 export interface EnableUnifiedSelectionSyncWithIModelProps {
   /** iModel to synchronize selection for. */
   iModel: IModelConnection;
-  /** SelectionStorage to synchronize selection with. */
+  /** Selection storage to synchronize IModel's tool selection with. */
   selectionStorage: SelectionStorage;
-  /** Caching hilite set provider. */
+  /** A caching hilite set provider used to retrieve hilite sets for an iModel. */
   cachingHiliteSetProvider: CachingHiliteSetProvider;
   /** iModel ECSql query executor. */
   queryExecutor: IECSqlQueryExecutor;
   /** iModel metadata provider. */
   metadataProvider: IMetadataProvider;
   /** Active scope provider. */
-  activeScopeProvider: () => ElementSelectionScopeProps | { id: SelectionScope } | SelectionScope;
+  activeScopeProvider: () => ComputeSelectionProps["scope"];
 }
 
 /**
