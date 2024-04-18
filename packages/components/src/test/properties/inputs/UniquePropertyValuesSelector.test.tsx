@@ -720,6 +720,40 @@ describe("UniquePropertyValuesSelector", () => {
       await waitFor(() => getByText("SearchedValue3"));
       expect(getDistinctValuesIteratorStub).to.be.calledTwice;
     });
+
+    it("hides clear button when search input is not empty", async () => {
+      getDistinctValuesIteratorStub.resolves({
+        total: 2,
+        items: createAsyncIterator([
+          { displayValue: "TestValue1", groupedRawValues: ["TestValue1"] },
+          { displayValue: "TestValue2", groupedRawValues: ["TestValue2"] },
+        ]),
+      });
+
+      const initialValue = convertToPropertyValue([
+        {
+          displayValue: "TestValue2",
+          groupedRawValues: ["TestValue2"],
+        },
+      ]);
+
+      const { container, queryByText, user } = render(
+        <UniquePropertyValuesSelector property={propertyDescription} onChange={() => {}} imodel={testImodel} descriptor={descriptor} value={initialValue} />,
+      );
+
+      // make sure value is selected
+      await waitFor(() => expect(queryByText("TestValue2")).to.not.be.null);
+
+      // expect "clear" button to be shown
+      await waitFor(() => expect(container.querySelector(".clear-indicator")).to.not.be.null);
+
+      // type in search
+      const searchSelector = await waitFor(() => container.querySelector(".presentation-async-select-values-container"));
+      await user.type(searchSelector!, "Searched");
+
+      // expect "clear" button to not be shown
+      await waitFor(() => expect(container.querySelector(".clear-indicator")).to.be.null);
+    });
   });
 
   describe("Date formatting", () => {

@@ -117,8 +117,8 @@ function DropdownIndicator<TOption, IsMulti extends boolean = boolean>({ childre
 }
 
 function ClearIndicator<TOption, IsMulti extends boolean = boolean>({ children: _, ...props }: ClearIndicatorProps<TOption, IsMulti>) {
-  return (
-    <components.ClearIndicator {...props} className="presentation-async-select-input-icon">
+  return props.selectProps.inputValue.length !== 0 ? undefined : (
+    <components.ClearIndicator {...props} className={classnames("presentation-async-select-input-icon", "clear-indicator")}>
       <SvgCloseSmall />
     </components.ClearIndicator>
   );
