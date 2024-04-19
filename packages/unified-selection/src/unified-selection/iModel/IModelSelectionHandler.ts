@@ -169,7 +169,7 @@ export class IModelSelectionHandler {
   }
 
   private onIModelSelectionChanged = async (event?: SelectionSetEvent): Promise<void> => {
-    if (this._isSuspended || event!.set.iModel !== this._iModelSelection) {
+    if (this._isSuspended) {
       return;
     }
 

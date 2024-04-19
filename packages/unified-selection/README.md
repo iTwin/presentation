@@ -180,7 +180,6 @@ useEffect(() => {
     queryExecutor: createECSqlQueryExecutor(iModel),
     metadataProvider: createMetadataProvider(iModel),
     activeScopeProvider: () => "element",
-    cachingHiliteSetProvider, // optional.
   });
 }, [iModel]);
 ```

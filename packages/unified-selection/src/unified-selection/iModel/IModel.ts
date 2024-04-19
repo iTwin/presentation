@@ -11,7 +11,8 @@ import { Event } from "@itwin/presentation-shared";
  */
 
 /**
- * Identifies the type of changes made to the [[SelectionSet]] to produce a [[SelectionSetEvent]].
+ * Identifies the type of changes made to the `SelectionSet` to produce a `SelectionSetEvent`.
+ * @internal
  */
 export enum SelectionSetEventType {
   /** Elements have been added to the set. */
@@ -25,12 +26,14 @@ export enum SelectionSetEventType {
 }
 
 /**
- * Payload sent to [[SelectionSet.onChanged]] event listeners to describe how the contents of the set have changed.
+ * Payload sent to `SelectionSet.onChanged` event listeners to describe how the contents of the set have changed.
+ * @internal
  */
 export type SelectionSetEvent = SelectAddEvent | SelectRemoveEvent | SelectReplaceEvent;
 
 /**
  * Interface representing a connection to iModel.
+ * @internal
  */
 export interface IModelSelection {
   /** Key of the iModel. */
@@ -42,7 +45,7 @@ export interface IModelSelection {
 }
 
 /**
- * Passed to [[SelectionSet.onChanged]] event listeners when elements are added to the selection set.
+ * Passed to `SelectionSet.onChanged` event listeners when elements are added to the selection set.
  */
 interface SelectAddEvent {
   /** The type of operation that produced this event. */
@@ -54,7 +57,7 @@ interface SelectAddEvent {
 }
 
 /**
- * Passed to [[SelectionSet.onChanged]] event listeners when elements are removed from the selection set.
+ * Passed to `SelectionSet.onChanged` event listeners when elements are removed from the selection set.
  */
 interface SelectRemoveEvent {
   /** The type of operation that produced this event. */
@@ -66,7 +69,7 @@ interface SelectRemoveEvent {
 }
 
 /**
- * Passed to [[SelectionSet.onChanged]] event listeners when elements are simultaneously added to and removed from the selection set.
+ * Passed to `SelectionSet.onChanged` event listeners when elements are simultaneously added to and removed from the selection set.
  */
 interface SelectReplaceEvent {
   /** The type of operation that produced this event. */
@@ -83,8 +86,6 @@ interface SelectReplaceEvent {
  * A set of *currently selected* elements for an IModelConnection.
  */
 interface SelectionSet {
-  /** iModel of the set. */
-  iModel: IModelSelection;
   /** Event called whenever elements are added or removed from this SelectionSet. */
   onChanged: Event<(ev?: SelectionSetEvent) => void>;
   /** The IDs of the selected elements. */
@@ -108,10 +109,10 @@ interface Uint32Set {
 }
 
 /**
- * A set of *hilited* elements for an [[IModelConnection]], by element id.
+ * A set of *hilited* elements for an `IModelConnection`, by element id.
  */
 interface IModelHiliteSet {
-  /** Control whether the hilited elements will be synchronized with the contents of the [[SelectionSet]].*/
+  /** Control whether the hilited elements will be synchronized with the contents of the `SelectionSet`.*/
   set wantSyncWithSelectionSet(want: boolean);
   /** The set of hilited elements. */
   get elements(): Uint32Set;

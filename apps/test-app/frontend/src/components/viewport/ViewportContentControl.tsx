@@ -7,8 +7,6 @@ import "./ViewportContentControl.css";
 import { useCallback, useEffect, useState } from "react";
 import { Id64String } from "@itwin/core-bentley";
 import { IModelConnection } from "@itwin/core-frontend";
-import { SchemaContext } from "@itwin/ecschema-metadata";
-import { ECSchemaRpcLocater } from "@itwin/ecschema-rpcinterface-common";
 import { ViewportComponent } from "@itwin/imodel-components-react";
 import { createECSqlQueryExecutor, createMetadataProvider } from "@itwin/presentation-core-interop";
 import { enableUnifiedSelectionSyncWithIModel } from "@itwin/unified-selection";
@@ -28,13 +26,12 @@ export default function ViewportContentComponent(props: ViewportContentComponent
     setPrevIModel(props.imodel);
   }
   useEffect(() => {
-    const schemas = new SchemaContext();
-    schemas.addLocater(new ECSchemaRpcLocater(props.imodel.getRpcProps()));
     void MyAppFrontend.getViewDefinitions(props.imodel).then((definitions) => {
       if (definitions.length) {
         setSelectedViewDefinitionId(definitions[0].id);
       }
     });
+    const schemas = MyAppFrontend.getSchemaContext(props.imodel);
     const queryExecutor = createECSqlQueryExecutor(props.imodel);
     return enableUnifiedSelectionSyncWithIModel({
       iModelSelection: props.imodel,

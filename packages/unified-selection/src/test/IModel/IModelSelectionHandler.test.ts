@@ -261,18 +261,6 @@ describe("IModelSelectionHandler", () => {
       });
     });
 
-    it("ignores changes of other iModels", async () => {
-      const addedKeys = [createSelectableInstanceKey(1), createSelectableInstanceKey(2)];
-      queryExecutor.createQueryReader.returns(createFakeQueryReader(toQueryResponse(addedKeys)));
-
-      selectionSet.iModel = {} as IModelSelection;
-      triggerSelectionChange({ type: SelectionSetEventType.Clear, removed: [], set: selectionSet });
-
-      await waitFor(() => {
-        expect(selectionStorageStub.clearSelection).to.not.be.called;
-      });
-    });
-
     it("ignores changes when suspended", async () => {
       const addedKeys = [createSelectableInstanceKey(1), createSelectableInstanceKey(2)];
       queryExecutor.createQueryReader.returns(createFakeQueryReader(toQueryResponse(addedKeys)));

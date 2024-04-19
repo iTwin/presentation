@@ -30,7 +30,12 @@ export interface EnableUnifiedSelectionSyncWithIModelProps {
   metadataProvider: IMetadataProvider;
   /** Active scope provider. */
   activeScopeProvider: () => ComputeSelectionProps["scope"];
-  /** A caching hilite set provider used to retrieve hilite sets for an iModel. */
+  /**
+   * A caching hilite set provider used to retrieve hilite sets for an iModel. If not provided, a new `CachingHiliteSetProvider`
+   * will be created for the given iModel using the provided `queryExecutor` and `metadataProvider`.
+   * If the consuming application already has a `CachingHiliteSetProvider` defined, it should be provided instead
+   * to reuse the cache and avoid creating new providers for each iModel.
+   */
   cachingHiliteSetProvider?: CachingHiliteSetProvider;
 }
 
