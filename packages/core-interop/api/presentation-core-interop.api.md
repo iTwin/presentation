@@ -5,6 +5,7 @@
 ```ts
 
 import { ECSqlReader } from '@itwin/core-common';
+import { Event } from '@itwin/presentation-shared';
 import { IECMetadataProvider } from '@itwin/presentation-shared';
 import { IECSqlQueryExecutor } from '@itwin/presentation-shared';
 import { ILogger } from '@itwin/presentation-shared';

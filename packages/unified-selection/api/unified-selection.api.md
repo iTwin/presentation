@@ -4,6 +4,9 @@
 
 ```ts
 
+import { Event as Event_2 } from '@itwin/presentation-shared';
+import { Id64Arg } from '@itwin/core-bentley';
+
 // @beta
 export interface CachingHiliteSetProvider {
     dispose(): void;
