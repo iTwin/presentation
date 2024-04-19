@@ -25,7 +25,7 @@ import {
 } from "@itwin/presentation-shared";
 
 /**
- * Column names of the SELECT clause created by [[NodeSelectClauseFactory]]. Order of the names matches the order of columns
+ * Column names of the SELECT clause created by `NodeSelectClauseFactory`. Order of the names matches the order of columns
  * created by the factory.
  *
  * @beta
@@ -67,7 +67,7 @@ export interface ECSqlValueSelector {
 }
 
 /**
- * Props for [[NodeSelectClauseFactory.createSelectClause]].
+ * Props for `NodeSelectClauseFactory.createSelectClause`.
  * @beta
  */
 export interface NodeSelectClauseProps {

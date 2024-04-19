@@ -39,7 +39,7 @@ export interface InstanceNodesQueryDefinition {
   fullClassName: string;
   /**
    * An ECSQL query that selects nodes from an iModel. `SELECT` clause of the query is expected
-   * to be built using [[NodeSelectQueryFactory.createSelectClause]].
+   * to be built using `NodeSelectQueryFactory.createSelectClause`.
    */
   query: ECSqlQueryDef;
 }
@@ -67,7 +67,7 @@ export namespace HierarchyNodesDefinition {
 export type HierarchyLevelDefinition = HierarchyNodesDefinition[];
 
 /**
- * A type for a function that parses a [[ParsedInstanceHierarchyNode]] from provided ECSQL `row` object.
+ * A type for a function that parses a `ParsedInstanceHierarchyNode` from provided ECSQL `row` object.
  * @beta
  */
 export type INodeParser = (row: { [columnName: string]: any }) => ParsedInstanceHierarchyNode;
@@ -90,16 +90,16 @@ export type INodePreProcessor = <TNode extends ProcessedCustomHierarchyNode | Pr
 export type INodePostProcessor = (node: ProcessedHierarchyNode) => Promise<ProcessedHierarchyNode>;
 
 /**
- * A type of node that can be passed to [[IHierarchyLevelDefinitionsFactory.defineHierarchyLevel]]. This basically means
- * a [[HierarchyNode]] that:
+ * A type of node that can be passed to `IHierarchyLevelDefinitionsFactory.defineHierarchyLevel`. This basically means
+ * a `HierarchyNode` that:
  * - knows nothing about its children,
- * - is either an instances node (key is of [[InstancesNodeKey]] type) or a custom node (key is of `string` type).
+ * - is either an instances node (key is of `InstancesNodeKey` type) or a custom node (key is of `string` type).
  * @beta
  */
 export type HierarchyDefinitionParentNode = Omit<HierarchyNode, "children" | "key"> & { key: InstancesNodeKey | string };
 
 /**
- * Props for [[IHierarchyLevelDefinitionsFactory.defineHierarchyLevel]].
+ * Props for `IHierarchyLevelDefinitionsFactory.defineHierarchyLevel`.
  * @beta
  */
 export interface DefineHierarchyLevelProps {
@@ -117,19 +117,19 @@ export interface IHierarchyLevelDefinitionsFactory {
   /**
    * An optional function for parsing ECInstance node from ECSQL row.
    *
-   * Should be used in situations when the [[IHierarchyLevelDefinitionsFactory]] implementation
+   * Should be used in situations when the `IHierarchyLevelDefinitionsFactory` implementation
    * introduces additional ECSQL columns into the select clause and wants to assign additional
    * data to the nodes it produces.
    *
-   * Defaults to a function that parses all [[HierarchyNode]] attributes.
+   * Defaults to a function that parses all `HierarchyNode` attributes.
    */
   parseNode?: INodeParser;
 
   /**
    * An optional function for pre-processing nodes.
    *
-   * Pre-processing happens immediately after the nodes are loaded based on [[HierarchyLevelDefinition]]
-   * returned by this [[IHierarchyLevelDefinitionsFactory]]. The step allows assigning nodes additional data
+   * Pre-processing happens immediately after the nodes are loaded based on `HierarchyLevelDefinition`
+   * returned by this `IHierarchyLevelDefinitionsFactory`. The step allows assigning nodes additional data
    * or excluding them from the hierarchy based on some attributes.
    */
   preProcessNode?: INodePreProcessor;
@@ -138,7 +138,7 @@ export interface IHierarchyLevelDefinitionsFactory {
    * An optional function for post-processing nodes.
    *
    * Post-processing happens after the loaded nodes go through all the merging, hiding, sorting and grouping
-   * steps. This step allows [[IHierarchyLevelDefinitionsFactory]] implementations to assign additional data
+   * steps. This step allows `IHierarchyLevelDefinitionsFactory` implementations to assign additional data
    * to nodes after they're processed. This is especially true for grouping nodes as they're only created during
    * processing.
    */
@@ -149,7 +149,7 @@ export interface IHierarchyLevelDefinitionsFactory {
 }
 
 /**
- * Props for [[InstancesNodeChildHierarchyLevelDefinition.definitions]] call.
+ * Props for `InstancesNodeChildHierarchyLevelDefinition.definitions` call.
  * @beta
  */
 export type DefineInstanceNodeChildHierarchyLevelProps = DefineHierarchyLevelProps & {
@@ -172,7 +172,7 @@ export interface InstancesNodeChildHierarchyLevelDefinition {
   parentNodeClassName: string;
 
   /**
-   * Called to create a hierarchy level definition when the class check passes (see [[parentNodeClassName]]).
+   * Called to create a hierarchy level definition when the class check passes (see `parentNodeClassName`).
    * @param requestProps Props for creating the hierarchy level definition.
    */
   definitions: (requestProps: DefineInstanceNodeChildHierarchyLevelProps) => Promise<HierarchyLevelDefinition>;
@@ -188,7 +188,7 @@ export interface CustomNodeChildHierarchyLevelDefinition {
    */
   customParentNodeKey: string;
   /**
-   * Called to create a hierarchy level definition when the node key check passes (see [[customParentNodeKey]]).
+   * Called to create a hierarchy level definition when the node key check passes (see `customParentNodeKey`).
    * @param requestProps Props for creating the hierarchy level definition.
    */
   definitions: (requestProps: DefineHierarchyLevelProps) => Promise<HierarchyLevelDefinition>;
@@ -203,7 +203,7 @@ export interface CustomNodeChildHierarchyLevelDefinition {
 export type ClassBasedHierarchyLevelDefinition = InstancesNodeChildHierarchyLevelDefinition | CustomNodeChildHierarchyLevelDefinition;
 
 /**
- * Props for [[ClassBasedHierarchyDefinition.rootNodes]] call.
+ * Props for `ClassBasedHierarchyDefinition.rootNodes` call.
  * @beta
  */
 export type DefineRootHierarchyLevelProps = Omit<DefineHierarchyLevelProps, "parentNode">;
@@ -224,7 +224,7 @@ export interface ClassBasedHierarchyDefinition {
 }
 
 /**
- * Props for [[ClassBasedHierarchyLevelDefinitionsFactory]].
+ * Props for `ClassBasedHierarchyLevelDefinitionsFactory`.
  * @beta
  */
 export interface ClassBasedHierarchyDefinitionsFactoryProps {

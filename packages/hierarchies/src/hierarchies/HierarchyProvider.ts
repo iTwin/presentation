@@ -98,7 +98,7 @@ export interface HierarchyProviderLocalizedStrings {
 }
 
 /**
- * Props for [[HierarchyProvider]].
+ * Props for `HierarchyProvider`.
  * @beta
  */
 export interface HierarchyProviderProps {
@@ -125,7 +125,7 @@ export interface HierarchyProviderProps {
 
   /**
    * A values formatter for formatting node labels. Defaults to the
-   * result of [[createDefaultValueFormatter]] called with default parameters.
+   * result of `createDefaultValueFormatter` called with default parameters.
    */
   formatter?: IPrimitiveValueFormatter;
 
@@ -140,14 +140,14 @@ export interface HierarchyProviderProps {
 }
 
 /**
- * Props for [[HierarchyProvider.getNodes]] call.
+ * Props for `HierarchyProvider.getNodes` call.
  * @beta
  */
 export interface GetHierarchyNodesProps {
   /** Parent node to get children for. Pass `undefined` to get root nodes. */
   parentNode: ParentHierarchyNode | undefined;
 
-  /** Optional hierarchy level filter. Has no effect if `parentNode` is a [[GroupingNode]]. */
+  /** Optional hierarchy level filter. Has no effect if `parentNode` is a `GroupingNode`. */
   instanceFilter?: GenericInstanceFilter;
 
   /**
@@ -155,7 +155,7 @@ export interface GetHierarchyNodesProps {
    * by this provider to override query rows limit per hierarchy level. If not provided, defaults to whatever
    * is used by the limiting query executor.
    *
-   * Has no effect if `parentNode` is a [[GroupingNode]].
+   * Has no effect if `parentNode` is a `GroupingNode`.
    */
   hierarchyLevelSizeLimit?: number | "unbounded";
 
@@ -220,8 +220,8 @@ export class HierarchyProvider {
   }
 
   /**
-   * Sets [[HierarchyProvider]] values formatter that formats nodes' labels. If provided `undefined`, then defaults to the
-   * result of [[createDefaultValueFormatter]] called with default parameters.
+   * Sets `HierarchyProvider` values formatter that formats nodes' labels. If provided `undefined`, then defaults to the
+   * result of `createDefaultValueFormatter` called with default parameters.
    */
   public setFormatter(formatter: IPrimitiveValueFormatter | undefined) {
     this._valuesFormatter = formatter ?? createDefaultValueFormatter();
