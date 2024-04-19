@@ -4,6 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { Id64Arg } from "@itwin/core-bentley";
+import { Event } from "@itwin/presentation-shared";
 
 /** @packageDocumentation
  * @module UnifiedSelection
@@ -31,7 +32,7 @@ export type SelectionSetEvent = SelectAddEvent | SelectRemoveEvent | SelectRepla
 /**
  * Interface representing a connection to iModel.
  */
-export interface IModelConnection {
+export interface IModelSelection {
   /** Key of the iModel. */
   get key(): string;
   /** The set of currently hilited elements for this IModelConnection. */
@@ -79,23 +80,13 @@ interface SelectReplaceEvent {
 }
 
 /**
- * Manages a set of *listeners* for a particular event and notifies them when the event is raised.
- */
-interface Event<T> {
-  /** Registers a Listener to be executed whenever this event is raised. */
-  addListener(listener: T, scope?: any): () => void;
-  /** Un-register a previously registered listener. */
-  removeListener(listener: T, scope?: any): boolean;
-}
-
-/**
  * A set of *currently selected* elements for an IModelConnection.
  */
 interface SelectionSet {
   /** iModel of the set. */
-  iModel: IModelConnection;
+  iModel: IModelSelection;
   /** Event called whenever elements are added or removed from this SelectionSet. */
-  onChanged: Event<(ev: SelectionSetEvent) => void>;
+  onChanged: Event<(ev?: SelectionSetEvent) => void>;
   /** The IDs of the selected elements. */
   get elements(): Set<string>;
   /** Clear current selection set. */

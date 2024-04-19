@@ -1594,6 +1594,9 @@ importers:
       '@itwin/core-bentley':
         specifier: ^4.4.0
         version: 4.5.1
+      '@itwin/presentation-shared':
+        specifier: workspace:*
+        version: link:../shared
       rxjs:
         specifier: ^7.8.1
         version: 7.8.1

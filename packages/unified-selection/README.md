@@ -175,12 +175,12 @@ The `@itwin/unified-selection` package delivers a `enableUnifiedSelectionSyncWit
 import { createECSqlQueryExecutor, createMetadataProvider } from "@itwin/presentation-core-interop";
 useEffect(() => {
   return enableUnifiedSelectionSyncWithIModel({
-    iModel,
+    iModelSelection: iModel,
     selectionStorage,
-    cachingHiliteSetProvider,
     queryExecutor: createECSqlQueryExecutor(iModel),
     metadataProvider: createMetadataProvider(iModel),
     activeScopeProvider: () => "element",
+    cachingHiliteSetProvider, // optional.
   });
 }, [iModel]);
 ```

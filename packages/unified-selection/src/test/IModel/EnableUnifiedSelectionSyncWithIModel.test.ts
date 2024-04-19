@@ -5,9 +5,10 @@
 
 import { expect } from "chai";
 import sinon from "sinon";
+import * as cachingHiliteSetProvider from "../../unified-selection/CachingHiliteSetProvider";
 import { HiliteSet } from "../../unified-selection/HiliteSetProvider";
 import { enableUnifiedSelectionSyncWithIModel } from "../../unified-selection/iModel/EnableUnifiedSelectionSyncWithIModel";
-import { IModelConnection } from "../../unified-selection/iModel/IModel";
+import { IModelSelection } from "../../unified-selection/iModel/IModel";
 import { IMetadataProvider } from "../../unified-selection/queries/ECMetadata";
 import { IECSqlQueryExecutor } from "../../unified-selection/queries/ECSqlCore";
 import { StorageSelectionChangesListener } from "../../unified-selection/SelectionChangeEvent";
@@ -24,7 +25,7 @@ describe("enableUnifiedSelectionSyncWithIModel", () => {
     getHiliteSet: sinon.stub<[{ iModelKey: string }], AsyncIterableIterator<HiliteSet>>(),
     dispose: () => {},
   };
-  const iModel = {
+  const iModelSelection = {
     hilited: {
       wantSyncWithSelectionSet: false,
       clear: () => {},
@@ -35,7 +36,7 @@ describe("enableUnifiedSelectionSyncWithIModel", () => {
         addListener: () => () => {},
       },
     },
-  } as unknown as IModelConnection;
+  } as unknown as IModelSelection;
 
   function resetListeners() {
     selectionStorage.selectionChangeEvent.addListener.reset();
@@ -46,6 +47,7 @@ describe("enableUnifiedSelectionSyncWithIModel", () => {
     async function* emptyGenerator() {}
     provider.getHiliteSet.reset();
     provider.getHiliteSet.callsFake(emptyGenerator);
+    sinon.stub(cachingHiliteSetProvider, "createCachingHiliteSetProvider").returns(provider as unknown as cachingHiliteSetProvider.CachingHiliteSetProvider);
 
     resetListeners();
     selectionStorage.selectionChangeEvent.addListener.returns(selectionStorage.selectionChangeEvent.removeListener);
@@ -57,9 +59,8 @@ describe("enableUnifiedSelectionSyncWithIModel", () => {
 
   it("creates and disposes IModelSelectionHandler", () => {
     const cleanup = enableUnifiedSelectionSyncWithIModel({
-      iModel,
+      iModelSelection,
       selectionStorage: selectionStorage as unknown as SelectionStorage,
-      cachingHiliteSetProvider: provider,
       queryExecutor: {} as IECSqlQueryExecutor,
       metadataProvider: {} as IMetadataProvider,
       activeScopeProvider: () => "element",
