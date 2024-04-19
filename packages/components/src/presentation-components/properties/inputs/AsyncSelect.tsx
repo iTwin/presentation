@@ -84,7 +84,7 @@ function ValueContainer<TOption, IsMulti extends boolean = boolean>({ children, 
   return (
     <div className="presentation-async-select-values-container">
       {nonValues}
-      {props.selectProps.menuIsOpen && props.selectProps.inputValue.length !== 0 ? undefined : (
+      {values.length === 0 || (props.selectProps.menuIsOpen && props.selectProps.inputValue.length !== 0) ? undefined : (
         <TagContainer {...props.innerProps} className="presentation-async-select-tag-container" overflow="truncate" as={"div"}>
           {values}
         </TagContainer>
