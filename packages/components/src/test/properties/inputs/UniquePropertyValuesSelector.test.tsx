@@ -484,7 +484,7 @@ describe("UniquePropertyValuesSelector", () => {
   it("menu shows `No values` message when an error occurs loading values", async () => {
     getDistinctValuesIteratorStub.rejects();
 
-    const { getByText, user } = render(
+    const { getByText, queryByText, user } = render(
       <TestComponentWithPortalTarget>
         <UniquePropertyValuesSelector property={propertyDescription} onChange={() => {}} imodel={testImodel} descriptor={descriptor} />,
       </TestComponentWithPortalTarget>,
@@ -495,7 +495,9 @@ describe("UniquePropertyValuesSelector", () => {
     await user.click(menuSelector);
 
     // ensure only one page was loaded
-    await waitFor(() => getByText("unique-values-property-editor.no-values"));
+    await waitFor(() => {
+      expect(queryByText("unique-values-property-editor.no-values")).to.not.be.null;
+    });
     expect(getDistinctValuesIteratorStub).to.be.calledOnce;
   });
 
@@ -513,7 +515,7 @@ describe("UniquePropertyValuesSelector", () => {
         ]),
       });
 
-      const { getByText, user, container } = render(
+      const { getByText, queryByText, user, container } = render(
         <TestComponentWithPortalTarget>
           <UniquePropertyValuesSelector property={propertyDescription} onChange={() => {}} imodel={testImodel} descriptor={descriptor} />,
         </TestComponentWithPortalTarget>,
@@ -528,7 +530,10 @@ describe("UniquePropertyValuesSelector", () => {
       await user.type(searchSelector!, "test");
 
       // ensure only the searched for value is shown
-      await waitFor(() => getByText("TestValue2"));
+      await waitFor(() => {
+        expect(queryByText("TestValue2")).to.not.be.null;
+        expect(queryByText("Value1")).to.be.null;
+      });
       expect(getDistinctValuesIteratorStub).to.be.calledOnce;
     });
 
@@ -541,7 +546,7 @@ describe("UniquePropertyValuesSelector", () => {
         ]),
       });
 
-      const { getByText, user, container } = render(
+      const { getByText, queryByText, user, container } = render(
         <TestComponentWithPortalTarget>
           <UniquePropertyValuesSelector property={propertyDescription} onChange={() => {}} imodel={testImodel} descriptor={descriptor} />,
         </TestComponentWithPortalTarget>,
@@ -560,7 +565,10 @@ describe("UniquePropertyValuesSelector", () => {
       await user.type(searchSelector!, "value1");
 
       // ensure new filter is applied
-      await waitFor(() => getByText("Value1"));
+      await waitFor(() => {
+        expect(queryByText("Value1")).to.not.be.null;
+        expect(queryByText("TestValue2")).to.be.null;
+      });
       expect(getDistinctValuesIteratorStub).to.be.calledOnce;
     });
 
@@ -580,7 +588,7 @@ describe("UniquePropertyValuesSelector", () => {
         ]),
       });
 
-      const { getByText, user, container, rerender } = render(
+      const { getByText, queryByText, user, container, rerender } = render(
         <TestComponentWithPortalTarget>
           <UniquePropertyValuesSelector property={propertyDescription} onChange={() => {}} imodel={testImodel} descriptor={descriptor} />,
         </TestComponentWithPortalTarget>,
@@ -614,8 +622,12 @@ describe("UniquePropertyValuesSelector", () => {
       await user.click(menuSelector);
 
       // ensure values for changed property are returned
-      await waitFor(() => getByText("Value3"));
-      await waitFor(() => getByText("TestValue4"));
+      await waitFor(() => {
+        expect(queryByText("Value3")).to.not.be.null;
+        expect(queryByText("TestValue4")).to.not.be.null;
+        expect(queryByText("Value1")).to.be.null;
+        expect(queryByText("TestValue2")).to.be.null;
+      });
       expect(getDistinctValuesIteratorStub).to.be.calledTwice;
       expect(getDistinctValuesIteratorStub.getCall(0).calledWith(matchPageStart(0))).to.be.true;
       expect(getDistinctValuesIteratorStub.getCall(1).calledWith(matchPageStart(0))).to.be.true;
@@ -637,7 +649,7 @@ describe("UniquePropertyValuesSelector", () => {
         ]),
       });
 
-      const { getByText, user, container, rerender } = render(
+      const { getByText, queryByText, user, container, rerender } = render(
         <TestComponentWithPortalTarget>
           <UniquePropertyValuesSelector property={propertyDescription} onChange={() => {}} imodel={testImodel} descriptor={descriptor} />,
         </TestComponentWithPortalTarget>,
@@ -670,8 +682,12 @@ describe("UniquePropertyValuesSelector", () => {
       await user.click(menuSelector);
 
       // ensure values for changed property are returned
-      await waitFor(() => getByText("Value3"));
-      await waitFor(() => getByText("TestValue4"));
+      await waitFor(() => {
+        expect(queryByText("Value3")).to.not.be.null;
+        expect(queryByText("TestValue4")).to.not.be.null;
+        expect(queryByText("Value1")).to.be.null;
+        expect(queryByText("TestValue2")).to.be.null;
+      });
       expect(getDistinctValuesIteratorStub).to.be.calledTwice;
       expect(getDistinctValuesIteratorStub.getCall(0).calledWith(matchPageStart(0))).to.be.true;
       expect(getDistinctValuesIteratorStub.getCall(1).calledWith(matchPageStart(0))).to.be.true;
@@ -700,7 +716,7 @@ describe("UniquePropertyValuesSelector", () => {
         ]),
       });
 
-      const { getByText, user, container } = render(
+      const { getByText, queryByText, queryAllByText, user, container } = render(
         <TestComponentWithPortalTarget>
           <UniquePropertyValuesSelector property={propertyDescription} onChange={() => {}} imodel={testImodel} descriptor={descriptor} />,
         </TestComponentWithPortalTarget>,
@@ -715,9 +731,12 @@ describe("UniquePropertyValuesSelector", () => {
       await user.type(searchSelector!, "Searched");
 
       // ensure all searched for values are shown
-      await waitFor(() => getByText("SearchedValue1"));
-      await waitFor(() => getByText("SearchedValue2"));
-      await waitFor(() => getByText("SearchedValue3"));
+      await waitFor(() => {
+        expect(queryByText("SearchedValue1")).to.not.be.null;
+        expect(queryByText("SearchedValue2")).to.not.be.null;
+        expect(queryByText("SearchedValue3")).to.not.be.null;
+        expect(queryAllByText(/SkippedValue/)).to.be.empty;
+      });
       expect(getDistinctValuesIteratorStub).to.be.calledTwice;
     });
 
