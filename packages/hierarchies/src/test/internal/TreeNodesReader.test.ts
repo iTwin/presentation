@@ -128,32 +128,6 @@ describe("defaultNodesParser", () => {
     expect(node.children).to.be.undefined;
   });
 
-  it("parses empty label", () => {
-    const row: RowDef = {
-      [NodeSelectClauseColumnNames.FullClassName]: "schema.class",
-      [NodeSelectClauseColumnNames.ECInstanceId]: "0x1",
-      [NodeSelectClauseColumnNames.DisplayLabel]: "",
-    };
-    const node = defaultNodesParser(row);
-    expect(node.label).to.eq("");
-  });
-
-  it("parses complex label of one part", () => {
-    const labelPart: ConcatenatedValue = [
-      {
-        type: "Boolean",
-        value: true,
-      },
-    ];
-    const row: RowDef = {
-      [NodeSelectClauseColumnNames.FullClassName]: "schema.class",
-      [NodeSelectClauseColumnNames.ECInstanceId]: "0x1",
-      [NodeSelectClauseColumnNames.DisplayLabel]: JSON.stringify(labelPart),
-    };
-    const node = defaultNodesParser(row);
-    expect(node.label).to.deep.eq(labelPart);
-  });
-
   it("parses complex label of multiple parts", () => {
     const labelParts: ConcatenatedValue = [
       {
@@ -173,15 +147,5 @@ describe("defaultNodesParser", () => {
     };
     const node = defaultNodesParser(row);
     expect(node.label).to.deep.eq(labelParts);
-  });
-
-  it("parses string label that looks like JSON but is not", () => {
-    const row: RowDef = {
-      [NodeSelectClauseColumnNames.FullClassName]: "schema.class",
-      [NodeSelectClauseColumnNames.ECInstanceId]: "0x1",
-      [NodeSelectClauseColumnNames.DisplayLabel]: "{x}",
-    };
-    const node = defaultNodesParser(row);
-    expect(node.label).to.eq("{x}");
   });
 });

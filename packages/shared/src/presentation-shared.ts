@@ -10,12 +10,13 @@ export { ECSql };
 
 export { ConcatenatedValue, ConcatenatedValuePart } from "./shared/ConcatenatedValue";
 export { ECSqlBinding, ECSqlQueryDef, IECSqlQueryExecutor, ECSqlQueryReaderOptions, ECSqlQueryRow } from "./shared/ECSqlCore";
-export { IPrimitiveValueFormatter, createDefaultValueFormatter } from "./shared/Formatting";
+export { createDefaultValueFormatter, formatConcatenatedValue, IPrimitiveValueFormatter } from "./shared/Formatting";
 export {
   IInstanceLabelSelectClauseFactory,
   createDefaultInstanceLabelSelectClauseFactory,
   createClassBasedInstanceLabelSelectClauseFactory,
   createBisInstanceLabelSelectClauseFactory,
+  parseInstanceLabel,
 } from "./shared/InstanceLabelSelectClauseFactory";
 export { ILogger, NOOP_LOGGER, LogFunction, LogLevel } from "./shared/Logging";
 export { ArrayElement, OmitOverUnion } from "./shared/MappedTypes";
