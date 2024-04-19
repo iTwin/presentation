@@ -1,5 +1,3 @@
 packages:
- - apps/test-app/*
- - apps/load-tests/*
- - apps/performance-tests
+ - apps/**
  - packages/*
