@@ -78,14 +78,17 @@ function NoOptionsMessage<TOption, IsMulti extends boolean = boolean>({ children
 
 function ValueContainer<TOption, IsMulti extends boolean = boolean>({ children, ...props }: ValueContainerProps<TOption, IsMulti>) {
   const childrenArray = Children.toArray(children);
-  const values = childrenArray.slice(0, -1);
-  const input = childrenArray[childrenArray.length - 1];
+  const selectedCount = props.getValue().length;
+  const values = childrenArray.slice(0, selectedCount);
+  const nonValues = childrenArray.slice(selectedCount);
   return (
     <div className="presentation-async-select-values-container">
-      {input}
-      <TagContainer {...props.innerProps} className="presentation-async-select-tag-container" overflow="truncate" as={"div"}>
-        {props.selectProps.menuIsOpen && props.selectProps.inputValue.length !== 0 ? undefined : values}
-      </TagContainer>
+      {nonValues}
+      {props.selectProps.menuIsOpen && props.selectProps.inputValue.length !== 0 ? undefined : (
+        <TagContainer {...props.innerProps} className="presentation-async-select-tag-container" overflow="truncate" as={"div"}>
+          {values}
+        </TagContainer>
+      )}
     </div>
   );
 }
@@ -147,15 +150,16 @@ export function AsyncSelect<OptionType, Group extends GroupBase<OptionType>, Add
           clearIndicator: () => ({}),
           dropdownIndicator: () => ({}),
           placeholder: () => ({
+            height: "var(--iui-component-height-small)",
             width: "100%",
             display: "block",
             whiteSpace: "nowrap",
             textOverflow: "ellipsis",
             overflow: "hidden",
             position: "absolute",
-            marginTop: "2px",
+            marginTop: "1px",
           }),
-          input: () => ({ position: "absolute" }),
+          input: () => ({ height: "var(--iui-component-height-small)", position: "absolute", marginTop: "1px" }),
         }}
         components={{
           Control,
