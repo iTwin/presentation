@@ -137,39 +137,39 @@ export namespace HierarchyNodeKey {
   export function isCustom(key: HierarchyNodeKey): key is string {
     return typeof key === "string";
   }
-  /** Checks whether the given node key is a [[StandardHierarchyNodeKey]]. */
+  /** Checks whether the given node key is a `StandardHierarchyNodeKey`. */
   export function isStandard(key: HierarchyNodeKey): key is StandardHierarchyNodeKey {
     return !!(key as StandardHierarchyNodeKey).type;
   }
-  /** Checks whether the given node key is an [[InstancesNodeKey]]. */
+  /** Checks whether the given node key is an `InstancesNodeKey`. */
   export function isInstances(key: HierarchyNodeKey): key is InstancesNodeKey {
     return isStandard(key) && key.type === "instances";
   }
-  /** Checks whether the given node key is a [[GroupingNodeKey]]. */
+  /** Checks whether the given node key is a `GroupingNodeKey`. */
   export function isGrouping(key: HierarchyNodeKey): key is GroupingNodeKey {
     return isStandard(key) && !isInstances(key);
   }
-  /** Checks whether the given node key is a [[ClassGroupingNodeKey]]. */
+  /** Checks whether the given node key is a `ClassGroupingNodeKey`. */
   export function isClassGrouping(key: HierarchyNodeKey): key is ClassGroupingNodeKey {
     return isStandard(key) && key.type === "class-grouping";
   }
-  /** Checks whether the given node key is a [[LabelGroupingNodeKey]]. */
+  /** Checks whether the given node key is a `LabelGroupingNodeKey`. */
   export function isLabelGrouping(key: HierarchyNodeKey): key is LabelGroupingNodeKey {
     return isStandard(key) && key.type === "label-grouping";
   }
-  /** Checks whether the given node key is a [[PropertyOtherValuesGroupingNodeKey]]. */
+  /** Checks whether the given node key is a `PropertyOtherValuesGroupingNodeKey`. */
   export function isPropertyOtherValuesGrouping(key: HierarchyNodeKey): key is PropertyOtherValuesGroupingNodeKey {
     return isStandard(key) && key.type === "property-grouping:other";
   }
-  /** Checks whether the given node key is a [[PropertyValueRangeGroupingNodeKey]]. */
+  /** Checks whether the given node key is a `PropertyValueRangeGroupingNodeKey`. */
   export function isPropertyValueRangeGrouping(key: HierarchyNodeKey): key is PropertyValueRangeGroupingNodeKey {
     return isStandard(key) && key.type === "property-grouping:range";
   }
-  /** Checks whether the given node key is a [[PropertyValueGroupingNodeKey]]. */
+  /** Checks whether the given node key is a `PropertyValueGroupingNodeKey`. */
   export function isPropertyValueGrouping(key: HierarchyNodeKey): key is PropertyValueGroupingNodeKey {
     return isStandard(key) && key.type === "property-grouping:value";
   }
-  /** Checks whether the given node key is a [[PropertyGroupingNodeKey]]. */
+  /** Checks whether the given node key is a `PropertyGroupingNodeKey`. */
   export function isPropertyGrouping(key: HierarchyNodeKey): key is PropertyGroupingNodeKey {
     return isPropertyOtherValuesGrouping(key) || isPropertyValueRangeGrouping(key) || isPropertyValueGrouping(key);
   }
@@ -330,8 +330,8 @@ export interface GroupingHierarchyNode extends BaseHierarchyNode {
 export type HierarchyNode = NonGroupingHierarchyNode | GroupingHierarchyNode;
 
 /**
- * A type of [[HierarchyNode]] that doesn't know about its children and is an input when requesting
- * them using [[HierarchyProvider.getNodes]].
+ * A type of `HierarchyNode` that doesn't know about its children and is an input when requesting
+ * them using `HierarchyProvider.getNodes`.
  *
  * @beta
  */
@@ -479,7 +479,7 @@ export interface HierarchyNodeGroupingParamsBase {
   autoExpand?: HierarchyNodeAutoExpandProp;
 }
 /**
- * Defines possible values for [[BaseGroupingParams.autoExpand]] attribute:
+ * Defines possible values for `BaseGroupingParams.autoExpand` attribute:
  * - `single-child` - set the grouping node to auto-expand if it groups a single node.
  * - `always` - always set the grouping node to auto-expand.
  * @beta
@@ -571,7 +571,7 @@ export interface HierarchyNodePropertyValueRange {
   fromValue: number;
   /** Defines the upper bound of the range. */
   toValue: number;
-  /** Defines the range label. Will be used as [[PropertyValueRangeGroupingNode]] node's display label. */
+  /** Defines the range label. Will be used as `PropertyValueRangeGroupingNode` node's display label. */
   rangeLabel?: string;
 }
 
@@ -609,27 +609,27 @@ export type ProcessedGroupingHierarchyNode = Omit<GroupingHierarchyNode, "childr
   children: Array<ProcessedGroupingHierarchyNode | ProcessedInstanceHierarchyNode>;
 };
 /**
- * A [[HierarchyNode]] that may have processing parameters defining whether it should be hidden under some conditions,
+ * A `HierarchyNode` that may have processing parameters defining whether it should be hidden under some conditions,
  * how it should be grouped, sorted, etc.
  * @beta
  */
 export type ProcessedHierarchyNode = ProcessedCustomHierarchyNode | ProcessedInstanceHierarchyNode | ProcessedGroupingHierarchyNode;
 
 /**
- * A [[ProcessedHierarchyNode]] that has an unformatted label in a form of [[ConcatenatedValue]]. Generally this is
+ * A `ProcessedHierarchyNode` that has an unformatted label in a form of `ConcatenatedValue`. Generally this is
  * returned when the node is just parsed from query results.
  * @beta
  */
 export type ParsedHierarchyNode = ParsedCustomHierarchyNode | ParsedInstanceHierarchyNode;
 /**
- * A kind of [[ProcessedCustomHierarchyNode]] that has unformatted label and doesn't know about its ancestors.
+ * A kind of `ProcessedCustomHierarchyNode` that has unformatted label and doesn't know about its ancestors.
  * @beta
  */
 export type ParsedCustomHierarchyNode = Omit<ProcessedCustomHierarchyNode, "label" | "parentKeys"> & {
   label: string | ConcatenatedValue;
 };
 /**
- * A kind of [[ProcessedInstanceHierarchyNode]] that has unformatted label and doesn't know about its ancestors.
+ * A kind of `ProcessedInstanceHierarchyNode` that has unformatted label and doesn't know about its ancestors.
  * @beta
  */
 export type ParsedInstanceHierarchyNode = Omit<ProcessedInstanceHierarchyNode, "label" | "parentKeys"> & {
@@ -639,9 +639,9 @@ export type ParsedInstanceHierarchyNode = Omit<ProcessedInstanceHierarchyNode, "
 /**
  * An identifier that can be used to identify either an ECInstance or a custom node.
  *
- * This is different from [[HierarchyNodeKey]] - the key can represent more types of nodes and,
- * in case of [[InstancesNodeKey]], contains information about all instances the node represents.
- * [[HierarchyNodeIdentifier]], on the other hand, is used for matching a node, so it only needs
+ * This is different from `HierarchyNodeKey` - the key can represent more types of nodes and,
+ * in case of `InstancesNodeKey`, contains information about all instances the node represents.
+ * `HierarchyNodeIdentifier`, on the other hand, is used for matching a node, so it only needs
  * to contain information about a single instance or custom node key.
  *
  * @beta
