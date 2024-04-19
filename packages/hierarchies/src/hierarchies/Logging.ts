@@ -18,7 +18,7 @@ export function setLogger(logger: ILogger | undefined) {
 
 /**
  * Get logger used by this package.
- * @see [[setLogger]]
+ * @see `setLogger`
  * @beta
  */
 export function getLogger(): ILogger {
