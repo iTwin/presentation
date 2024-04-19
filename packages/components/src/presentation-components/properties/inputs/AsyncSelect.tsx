@@ -5,7 +5,7 @@
 
 import "./AsyncSelect.scss";
 import classnames from "classnames";
-import { Ref, useRef, useState } from "react";
+import { Children, Ref, useRef, useState } from "react";
 import {
   ClearIndicatorProps,
   components,
@@ -77,10 +77,19 @@ function NoOptionsMessage<TOption, IsMulti extends boolean = boolean>({ children
 }
 
 function ValueContainer<TOption, IsMulti extends boolean = boolean>({ children, ...props }: ValueContainerProps<TOption, IsMulti>) {
+  const childrenArray = Children.toArray(children);
+  const selectedCount = props.getValue().length;
+  const values = childrenArray.slice(0, selectedCount);
+  const nonValues = childrenArray.slice(selectedCount);
   return (
-    <TagContainer {...props.innerProps} className="presentation-async-select-values-container" as={"div"}>
-      {children}
-    </TagContainer>
+    <div className="presentation-async-select-values-container">
+      {nonValues}
+      {values.length === 0 || (props.selectProps.menuIsOpen && props.selectProps.inputValue.length !== 0) ? undefined : (
+        <TagContainer {...props.innerProps} className="presentation-async-select-tag-container" overflow="truncate" as={"div"}>
+          {values}
+        </TagContainer>
+      )}
+    </div>
   );
 }
 
@@ -111,8 +120,8 @@ function DropdownIndicator<TOption, IsMulti extends boolean = boolean>({ childre
 }
 
 function ClearIndicator<TOption, IsMulti extends boolean = boolean>({ children: _, ...props }: ClearIndicatorProps<TOption, IsMulti>) {
-  return (
-    <components.ClearIndicator {...props} className="presentation-async-select-input-icon">
+  return props.selectProps.inputValue.length !== 0 ? null : (
+    <components.ClearIndicator {...props} className={classnames("presentation-async-select-input-icon", "clear-indicator")}>
       <SvgCloseSmall />
     </components.ClearIndicator>
   );
@@ -140,7 +149,17 @@ export function AsyncSelect<OptionType, Group extends GroupBase<OptionType>, Add
           indicatorSeparator: (base) => ({ ...base, marginTop: undefined, marginBottom: undefined, margin: "0 var(--iui-size-xs)" }),
           clearIndicator: () => ({}),
           dropdownIndicator: () => ({}),
-          placeholder: () => ({ width: "100%", display: "block", whiteSpace: "nowrap", textOverflow: "ellipsis", overflow: "hidden" }),
+          placeholder: () => ({
+            height: "var(--iui-component-height-small)",
+            width: "100%",
+            display: "block",
+            whiteSpace: "nowrap",
+            textOverflow: "ellipsis",
+            overflow: "hidden",
+            position: "absolute",
+            marginTop: "1px",
+          }),
+          input: () => ({ height: "var(--iui-component-height-small)", position: "absolute", marginTop: "1px" }),
         }}
         components={{
           Control,

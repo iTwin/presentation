@@ -3,8 +3,8 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { useCallback, useEffect, useMemo, useState } from "react";
-import { ActionMeta, MultiValue } from "react-select";
+import { useEffect, useMemo, useState } from "react";
+import { ActionMeta, InputActionMeta, MultiValue } from "react-select";
 import { from, map, mergeMap, toArray } from "rxjs";
 import { PropertyDescription, PropertyValue, PropertyValueFormat } from "@itwin/appui-abstract";
 import { IModelConnection } from "@itwin/core-frontend";
@@ -49,10 +49,12 @@ export interface UniquePropertyValuesSelectorProps {
 export function UniquePropertyValuesSelector(props: UniquePropertyValuesSelectorProps) {
   const { imodel, descriptor, property, onChange, value, descriptorInputKeys } = props;
   const [field, setField] = useState<Field | undefined>(() => findField(descriptor, getInstanceFilterFieldName(property)));
+  const [searchInput, setSearchInput] = useState<string>("");
   const selectedValues = useMemo(() => getUniqueValueFromProperty(value), [value]);
 
   useEffect(() => {
     setField(findField(descriptor, getInstanceFilterFieldName(property)));
+    setSearchInput("");
   }, [descriptor, property]);
 
   const onValueChange = (_: MultiValue<UniqueValue>, action: ActionMeta<UniqueValue>) => {
@@ -86,25 +88,35 @@ export function UniquePropertyValuesSelector(props: UniquePropertyValuesSelector
     }
   };
 
-  const isOptionSelected = (option: UniqueValue): boolean => selectedValues.map((selectedValue) => selectedValue.displayValue).includes(option.displayValue);
+  const onInputChange = (input: string, actionMeta: InputActionMeta) => {
+    // Do not reset search input on option select
+    if (actionMeta.action !== "set-value") {
+      setSearchInput(input);
+    }
+  };
 
+  const isOptionSelected = (option: UniqueValue): boolean => selectedValues.map((selectedValue) => selectedValue.displayValue).includes(option.displayValue);
   const ruleset = useUniquePropertyValuesRuleset(descriptor.ruleset, field);
-  const loadTargets = useUniquePropertyValuesLoader({ imodel, ruleset, field, descriptorInputKeys });
+  const loadValues = useUniquePropertyValuesLoader({ imodel, property, descriptor, ruleset, field, descriptorInputKeys });
 
   return (
     <AsyncSelect
+      inputValue={searchInput}
       value={selectedValues}
-      loadOptions={async (_, options) => loadTargets(options.length)}
+      debounceTimeout={500}
+      loadOptions={async (input, options) => loadValues(input, options.length)}
       placeholder={translate("unique-values-property-editor.select-values")}
       onChange={onValueChange}
       isOptionSelected={isOptionSelected}
-      cacheUniqs={[property]}
+      cacheUniqs={[property, searchInput]}
       hideSelectedOptions={false}
-      isSearchable={false}
+      isSearchable={true}
       closeMenuOnSelect={false}
+      blurInputOnSelect={false}
       tabSelectsValue={false}
       getOptionLabel={(option) => formatOptionLabel(option.displayValue, property.typename)}
       getOptionValue={(option) => option.displayValue}
+      onInputChange={onInputChange}
     />
   );
 }
@@ -196,58 +208,78 @@ function getFieldClassInfos(field?: Field) {
 
 interface UseUniquePropertyValuesLoaderProps {
   imodel: IModelConnection;
+  property: PropertyDescription;
+  descriptor: Descriptor;
   ruleset?: Ruleset;
   field?: Field;
   descriptorInputKeys?: Keys;
 }
 
-function useUniquePropertyValuesLoader({ imodel, ruleset, field, descriptorInputKeys }: UseUniquePropertyValuesLoaderProps) {
-  const loadTargets = useCallback(
-    async (loadedOptionsCount: number) => {
-      if (!ruleset || !field) {
-        return { options: [], hasMore: false };
-      }
+function useUniquePropertyValuesLoader({ imodel, property, descriptor, ruleset, field, descriptorInputKeys }: UseUniquePropertyValuesLoaderProps) {
+  const [loadedOptions, setLoadedOptions] = useState<{ count: number; options: UniqueValue[]; hasMore: boolean }>({ count: 0, options: [], hasMore: false });
 
-      const requestProps = {
-        imodel,
-        descriptor: {},
-        fieldDescriptor: field.getFieldDescriptor(),
-        rulesetOrId: ruleset,
-        paging: { start: loadedOptionsCount, size: UNIQUE_PROPERTY_VALUES_BATCH_SIZE },
-        keys: new KeySet(descriptorInputKeys),
-      };
-      const items = await new Promise<DisplayValueGroup[]>((resolve, reject) => {
-        (Presentation.presentation.getDistinctValuesIterator
-          ? from(Presentation.presentation.getDistinctValuesIterator(requestProps)).pipe(
-              mergeMap((result) => result.items),
-              toArray(),
-            )
-          : // eslint-disable-next-line deprecation/deprecation
-            from(Presentation.presentation.getPagedDistinctValues(requestProps)).pipe(map((result) => result.items))
-        ).subscribe({
-          next: resolve,
-          error: reject,
-        });
+  useEffect(() => {
+    setLoadedOptions({ count: 0, options: [], hasMore: false });
+  }, [property, descriptor]);
+
+  return async (searchInput: string, loadedOptionsCount: number) => {
+    searchInput = searchInput.toLowerCase();
+    const matchesSearchInput = (option: UniqueValue) => {
+      return !searchInput || option.displayValue.toLowerCase().includes(searchInput);
+    };
+
+    if (!ruleset || !field) {
+      return { options: [], hasMore: false };
+    }
+
+    // if the first page is requested and we already have the options loaded, return previous values.
+    if (loadedOptionsCount === 0 && loadedOptions.count > 0) {
+      return { options: loadedOptions.options.filter(matchesSearchInput), hasMore: loadedOptions.hasMore };
+    }
+
+    const requestProps = {
+      imodel,
+      descriptor: {},
+      fieldDescriptor: field.getFieldDescriptor(),
+      rulesetOrId: ruleset,
+      paging: { start: loadedOptions.count, size: UNIQUE_PROPERTY_VALUES_BATCH_SIZE },
+      keys: new KeySet(descriptorInputKeys),
+    };
+    const items = await new Promise<DisplayValueGroup[]>((resolve) => {
+      (Presentation.presentation.getDistinctValuesIterator
+        ? from(Presentation.presentation.getDistinctValuesIterator(requestProps)).pipe(
+            mergeMap((result) => result.items),
+            toArray(),
+          )
+        : // eslint-disable-next-line deprecation/deprecation
+          from(Presentation.presentation.getPagedDistinctValues(requestProps)).pipe(map((result) => result.items))
+      ).subscribe({
+        next: resolve,
+        error: () => resolve([]),
       });
+    });
 
-      const filteredOptions: UniqueValue[] = [];
-      for (const option of items) {
-        if (option.displayValue === undefined || !DisplayValue.isPrimitive(option.displayValue)) {
-          continue;
-        }
-        const groupedValues = option.groupedRawValues.filter((value) => value !== undefined);
-        if (groupedValues.length !== 0) {
-          filteredOptions.push({ displayValue: option.displayValue, groupedRawValues: groupedValues });
-        }
+    const options: UniqueValue[] = [];
+    for (const option of items) {
+      if (option.displayValue === undefined || !DisplayValue.isPrimitive(option.displayValue)) {
+        continue;
       }
+      const groupedValues = option.groupedRawValues.filter((value) => value !== undefined);
 
-      return {
-        options: filteredOptions,
-        hasMore: items.length === UNIQUE_PROPERTY_VALUES_BATCH_SIZE,
-      };
-    },
-    [imodel, ruleset, field, descriptorInputKeys],
-  );
+      if (groupedValues.length !== 0) {
+        options.push({ displayValue: option.displayValue, groupedRawValues: groupedValues });
+      }
+    }
 
-  return loadTargets;
+    setLoadedOptions((prev) => ({
+      count: prev.count + items.length,
+      options: [...prev.options, ...options],
+      hasMore: options.length === UNIQUE_PROPERTY_VALUES_BATCH_SIZE,
+    }));
+
+    return {
+      options: options.filter(matchesSearchInput),
+      hasMore: items.length === UNIQUE_PROPERTY_VALUES_BATCH_SIZE,
+    };
+  };
 }
