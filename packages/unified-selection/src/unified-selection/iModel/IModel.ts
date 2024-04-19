@@ -87,7 +87,7 @@ interface SelectReplaceEvent {
  */
 interface SelectionSet {
   /** Event called whenever elements are added or removed from this SelectionSet. */
-  onChanged: Event<(ev?: SelectionSetEvent) => void>;
+  onChanged: Event<(ev: SelectionSetEvent) => void>;
   /** The IDs of the selected elements. */
   get elements(): Set<string>;
   /** Clear current selection set. */

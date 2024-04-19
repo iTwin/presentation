@@ -273,7 +273,7 @@ export interface ECSqlQueryRow {
 }
 
 // @beta
-interface Event_2<TListener extends () => void = () => void> {
+interface Event_2<TListener extends (...args: any[]) => void = () => void> {
     // (undocumented)
     addListener(listener: TListener): () => void;
     // (undocumented)
