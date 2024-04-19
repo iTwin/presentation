@@ -22,3 +22,4 @@ export { ArrayElement, OmitOverUnion } from "./shared/MappedTypes";
 export { createCachingECClassHierarchyInspector, EC, getClass, IECClassHierarchyInspector, IECMetadataProvider } from "./shared/Metadata";
 export { normalizeFullClassName, parseFullClassName, trimWhitespace } from "./shared/Utils";
 export { InstanceKey, PrimitiveValue, TypedPrimitiveValue } from "./shared/Values";
+export { Event } from "./shared/Event";
