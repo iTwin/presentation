@@ -7,13 +7,14 @@ import "./ViewportContentControl.css";
 import { useCallback, useEffect, useState } from "react";
 import { Id64String } from "@itwin/core-bentley";
 import { IModelConnection } from "@itwin/core-frontend";
+import { SchemaContext } from "@itwin/ecschema-metadata";
+import { ECSchemaRpcLocater } from "@itwin/ecschema-rpcinterface-common";
 import { ViewportComponent } from "@itwin/imodel-components-react";
-import { viewWithUnifiedSelection } from "@itwin/presentation-components";
+import { createECSqlQueryExecutor, createMetadataProvider } from "@itwin/presentation-core-interop";
+import { enableUnifiedSelectionSyncWithIModel } from "@itwin/unified-selection";
 import { MyAppFrontend } from "../../api/MyAppFrontend";
 import SelectionScopePicker from "./SelectionScopePicker";
 import ViewDefinitionSelector from "./ViewDefinitionSelector";
-
-const SampleViewport = viewWithUnifiedSelection(ViewportComponent);
 
 export interface ViewportContentComponentProps {
   imodel: IModelConnection;
@@ -27,10 +28,20 @@ export default function ViewportContentComponent(props: ViewportContentComponent
     setPrevIModel(props.imodel);
   }
   useEffect(() => {
+    const schemas = new SchemaContext();
+    schemas.addLocater(new ECSchemaRpcLocater(props.imodel.getRpcProps()));
     void MyAppFrontend.getViewDefinitions(props.imodel).then((definitions) => {
       if (definitions.length) {
         setSelectedViewDefinitionId(definitions[0].id);
       }
+    });
+    const queryExecutor = createECSqlQueryExecutor(props.imodel);
+    return enableUnifiedSelectionSyncWithIModel({
+      iModelSelection: props.imodel,
+      selectionStorage: MyAppFrontend.selectionStorage,
+      queryExecutor: { createQueryReader: (ecsql, bindings, config) => queryExecutor.createQueryReader({ ecsql, bindings }, config) },
+      metadataProvider: createMetadataProvider(schemas),
+      activeScopeProvider: () => "element",
     });
   }, [props.imodel]);
 
@@ -40,7 +51,7 @@ export default function ViewportContentComponent(props: ViewportContentComponent
 
   return (
     <div className="ViewportContentComponent" style={{ height: "100%" }}>
-      {selectedViewDefinitionId ? <SampleViewport imodel={props.imodel} viewDefinitionId={selectedViewDefinitionId} /> : undefined}
+      {selectedViewDefinitionId ? <ViewportComponent imodel={props.imodel} viewDefinitionId={selectedViewDefinitionId} /> : undefined}
       <ViewDefinitionSelector imodel={props.imodel} selectedViewDefinition={selectedViewDefinitionId} onViewDefinitionSelected={onViewDefinitionChanged} />
       <SelectionScopePicker imodel={props.imodel} />
     </div>
