@@ -76,6 +76,11 @@ export interface UsePresentationTreeStateProps<TEventHandler extends TreeEventHa
     /** Duration how long the load took in milliseconds. */
     duration: number;
   }) => void;
+
+  /**
+   * Callback for when the hierarchy limit is exceeded while loading nodes.
+   */
+  onHierarchyLimitExceeded?: () => void;
 }
 
 /**
@@ -127,6 +132,7 @@ interface TreeStateProps extends PresentationTreeDataProviderProps {
 interface UseTreeStateProps {
   treeStateProps: TreeStateProps;
   onNodeLoaded?: (callbackProps: { node: string; duration: number }) => void;
+  onHierarchyLimitExceeded?: () => void;
 }
 
 interface TreeState {
@@ -139,6 +145,7 @@ interface TreeState {
  * @public
  */
 export function usePresentationTreeState<TEventHandler extends TreeEventHandler = TreeEventHandler>({
+  onHierarchyLimitExceeded,
   onNodeLoaded,
   eventHandlerFactory,
   seedTreeModel,
@@ -155,7 +162,7 @@ export function usePresentationTreeState<TEventHandler extends TreeEventHandler 
     Object.values(dataProviderProps), // eslint-disable-line react-hooks/exhaustive-deps
   );
 
-  const { state, onReload } = useTreeState({ treeStateProps, onNodeLoaded });
+  const { state, onReload } = useTreeState({ treeStateProps, onNodeLoaded, onHierarchyLimitExceeded });
   const renderedItems = useRef<RenderedItemsRange | undefined>(undefined);
   // istanbul ignore next
   const onItemsRendered = useCallback((items: RenderedItemsRange) => {
@@ -213,6 +220,11 @@ function useTreeState(props: UseTreeStateProps) {
     onNodeLoadedRef.current = props.onNodeLoaded;
   }, [props.onNodeLoaded]);
 
+  const onHierarchyLimitExceededRef = useRef(props.onHierarchyLimitExceeded);
+  useEffect(() => {
+    onHierarchyLimitExceededRef.current = props.onHierarchyLimitExceeded;
+  }, [props.onHierarchyLimitExceeded]);
+
   const prevStateRef = useRef(state);
   useEffect(() => {
     prevStateRef.current = state;
@@ -221,7 +233,7 @@ function useTreeState(props: UseTreeStateProps) {
   useEffect(() => {
     const { treeModel, ...providerProps } = props.treeStateProps;
     const modelSource = new TreeModelSource(new MutableTreeModel(treeModel));
-    const dataProvider = new PresentationTreeDataProvider(providerProps);
+    const dataProvider = new PresentationTreeDataProvider({ ...providerProps, onHierarchyLimitExceeded: onHierarchyLimitExceededRef.current });
     const pagedLoader = new PagedTreeNodeLoader(dataProvider, modelSource, providerProps.pagingSize);
     const nodeLoader = new ReportingTreeNodeLoader(pagedLoader, () => onNodeLoadedRef.current);
 

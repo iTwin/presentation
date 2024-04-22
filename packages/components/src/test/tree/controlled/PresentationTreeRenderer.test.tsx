@@ -281,6 +281,33 @@ describe("PresentationTreeRenderer", () => {
     subject.complete();
   });
 
+  it("calls `onFilterApplied` when filter is applied", async () => {
+    const onFilterAppliedSpy = sinon.spy();
+
+    const { visibleNodes, nodeLoader } = setupTreeModel((model) => {
+      model.setChildren(
+        undefined,
+        [
+          createTreeModelNodeInput({
+            id: "A",
+            item: { filtering: { descriptor: createTestContentDescriptor({ fields: [propertyField] }), ancestorFilters: [] } },
+          }),
+        ],
+        0,
+      );
+    });
+
+    const result = render(
+      <PresentationTreeRenderer {...baseTreeProps} visibleNodes={visibleNodes} nodeLoader={nodeLoader} onFilterApplied={onFilterAppliedSpy} />,
+    );
+
+    const { queryByText } = result;
+    await waitFor(() => expect(queryByText("A")).to.not.be.null);
+    await applyFilter(result, propertyField.label);
+
+    await waitFor(() => expect(onFilterAppliedSpy).to.be.calledOnce);
+  });
+
   it("renders results count when filtering dialog has valid filter", async () => {
     const { visibleNodes, nodeLoader } = setupTreeModel((model) => {
       model.setChildren(

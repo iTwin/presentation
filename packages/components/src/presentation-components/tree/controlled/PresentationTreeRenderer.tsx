@@ -35,6 +35,7 @@ import { useHierarchyLevelFiltering } from "./UseHierarchyLevelFiltering";
  */
 export interface PresentationTreeRendererProps extends Omit<TreeRendererProps, "nodeRenderer"> {
   nodeLoader: AbstractTreeNodeLoaderWithProvider<IPresentationTreeDataProvider>;
+  onFilterApplied?: () => void;
 }
 
 /**
@@ -53,13 +54,14 @@ export interface FilterableTreeProps {
  */
 export interface useFilterablePresentationTreeProps {
   nodeLoader: AbstractTreeNodeLoaderWithProvider<IPresentationTreeDataProvider>;
+  onFilterApplied?: () => void;
 }
 
 /**
  * Hook that enables hierarchy level filtering with action handlers for setting and clearing filters.
  * @beta
  */
-export function useFilterablePresentationTree({ nodeLoader }: useFilterablePresentationTreeProps): FilterableTreeProps {
+export function useFilterablePresentationTree({ nodeLoader, onFilterApplied }: useFilterablePresentationTreeProps): FilterableTreeProps {
   const { applyFilter, clearFilter } = useHierarchyLevelFiltering({ nodeLoader, modelSource: nodeLoader.modelSource });
   const [filterNode, setFilterNode] = useState<PresentationTreeNodeItem>();
 
@@ -70,6 +72,7 @@ export function useFilterablePresentationTree({ nodeLoader }: useFilterablePrese
         onApply={(info) => {
           info === undefined ? clearFilter(filterNode.id) : applyFilter(filterNode.id, info);
           setFilterNode(undefined);
+          onFilterApplied?.();
         }}
         onClose={() => {
           setFilterNode(undefined);
@@ -97,7 +100,10 @@ export function useFilterablePresentationTree({ nodeLoader }: useFilterablePrese
  * @beta
  */
 export function PresentationTreeRenderer(props: PresentationTreeRendererProps) {
-  const { onClearFilterClick, onFilterClick, filterDialog } = useFilterablePresentationTree({ nodeLoader: props.nodeLoader });
+  const { onClearFilterClick, onFilterClick, filterDialog } = useFilterablePresentationTree({
+    nodeLoader: props.nodeLoader,
+    onFilterApplied: props.onFilterApplied,
+  });
   const filterableNodeRenderer = (nodeProps: TreeNodeRendererProps) => {
     return <PresentationTreeNodeRenderer {...nodeProps} onFilterClick={onFilterClick} onClearFilterClick={onClearFilterClick} />;
   };
