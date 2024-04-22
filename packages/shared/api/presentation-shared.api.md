@@ -273,6 +273,13 @@ export interface ECSqlQueryRow {
 }
 
 // @beta
+export function formatConcatenatedValue(props: {
+    value: ConcatenatedValue | string;
+    metadataProvider: IECMetadataProvider;
+    valueFormatter: IPrimitiveValueFormatter;
+}): Promise<string>;
+
+// @beta
 export function getClass(metadata: IECMetadataProvider, fullClassName: string): Promise<EC.Class>;
 
 // @beta
@@ -347,6 +354,9 @@ export function parseFullClassName(fullClassName: string): {
     schemaName: string;
     className: string;
 };
+
+// @beta
+export function parseInstanceLabel(value: string | undefined): ConcatenatedValue | string;
 
 // @beta
 export type PrimitiveValue = Id64String | string | number | boolean | Date | Point2d | Point3d;

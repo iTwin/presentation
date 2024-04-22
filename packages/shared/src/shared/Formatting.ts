@@ -4,7 +4,9 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { assert } from "@itwin/core-bentley";
+import { ConcatenatedValue, ConcatenatedValuePart } from "./ConcatenatedValue";
 import { julianToDateTime } from "./InternalUtils";
+import { getClass, IECMetadataProvider } from "./Metadata";
 import { TypedPrimitiveValue } from "./Values";
 
 /**
@@ -13,6 +15,66 @@ import { TypedPrimitiveValue } from "./Values";
  * @beta
  */
 export type IPrimitiveValueFormatter = (value: TypedPrimitiveValue) => Promise<string>;
+
+/**
+ * Formats a concatenated value into a string, taking into account different types of `ConcatenatedValuePart` that
+ * the value consists of.
+ *
+ * @throws Error if a `ConcatenatedValuePart` in given `ConcatenatedValue` references a non-primitive, `IGeometry` or `Binary` property.
+ * @beta
+ */
+export async function formatConcatenatedValue(props: {
+  value: ConcatenatedValue | string;
+  metadataProvider: IECMetadataProvider;
+  valueFormatter: IPrimitiveValueFormatter;
+}): Promise<string> {
+  const { value, metadataProvider, valueFormatter } = props;
+  if (typeof value === "string") {
+    return valueFormatter({ value, type: "String" });
+  }
+  return ConcatenatedValue.serialize({
+    parts: value,
+    partFormatter: async (part) => {
+      // strings are converted to typed strings
+      if (ConcatenatedValuePart.isString(part)) {
+        part = {
+          value: part,
+          type: "String",
+        };
+      }
+      // for property parts - find property metadata and create `TypedPrimitiveValue` for them.
+      if (ConcatenatedValuePart.isProperty(part)) {
+        const property = await getProperty(part, metadataProvider);
+        if (!property?.isPrimitive()) {
+          throw new Error(`Concatenated values formatter expects a primitive property, but it's not.`);
+        }
+        if (property.primitiveType === "IGeometry") {
+          throw new Error(
+            `Concatenated values formatter does not support "IGeometry" values, but the provided ${part.className}.${part.propertyName} property is.`,
+          );
+        }
+        if (property.primitiveType === "Binary") {
+          throw new Error(
+            `Concatenated values formatter does not support "Binary" values, but the provided ${part.className}.${part.propertyName} property is.`,
+          );
+        }
+        part = {
+          type: property.primitiveType,
+          extendedType: property.extendedTypeName,
+          koqName: (await property.kindOfQuantity)?.fullName,
+          value: part.value,
+        } as TypedPrimitiveValue;
+      }
+      // finally, use provided value formatter to create a string from `TypedPrimitiveValue`
+      return valueFormatter(part);
+    },
+  });
+}
+
+async function getProperty({ className, propertyName }: { className: string; propertyName: string }, metadata: IECMetadataProvider) {
+  const propertyClass = await getClass(metadata, className);
+  return propertyClass.getProperty(propertyName);
+}
 
 /**
  * A values' formatter that knows how to format the following types:
