@@ -29,15 +29,17 @@
     .presentation-async-select-values-container {
       height: var(--iui-component-height-small);
       overflow: hidden;
-      display: flex;
+    }
+
+    .presentation-async-select-tag-container {
+      height: var(--iui-component-height-small);
       align-items: center;
       width: inherit;
 
       .presentation-async-select-value {
         height: 80%;
         max-height: calc(var(--iui-size-s) * 3);
-        margin-top: 0px;
-        margin-bottom: 0px;
+        margin-top: 2px;
       }
     }
   }
