@@ -280,8 +280,10 @@ export class HierarchyProvider {
 
   private createInitializedNodesObservable(nodes: Observable<ParsedHierarchyNode>, parentNode: ParentHierarchyNode | undefined) {
     return nodes.pipe(
+      // we're going to be mutating the nodes, but don't want to mutate the original one, so just clone it here once
+      map((node) => ({ ...node })),
       // set parent node keys on the parsed node
-      map((node) => ({ ...node, parentKeys: createParentNodeKeysList(parentNode) })),
+      map((node) => Object.assign(node, { parentKeys: createParentNodeKeysList(parentNode) })),
       // format `ConcatenatedValue` labels into string labels
       mergeMap(async (node) => applyLabelsFormatting(node, this._metadataProvider, this._valuesFormatter)),
       // we have `ProcessedHierarchyNode` from here
@@ -341,11 +343,12 @@ export class HierarchyProvider {
       postProcessNodes(this.hierarchyDefinition),
       sortNodesByLabelOperator,
       map((n): HierarchyNode => {
-        const node = { ...n };
-        if (HierarchyNode.isCustom(node) || HierarchyNode.isInstancesNode(node)) {
-          delete node.processingParams;
+        if (HierarchyNode.isCustom(n) || HierarchyNode.isInstancesNode(n)) {
+          delete n.processingParams;
         }
-        return { ...node, children: hasChildren(n) };
+        return Object.assign(n, {
+          children: hasChildren(n),
+        });
       }),
       finalize(() =>
         doLog({

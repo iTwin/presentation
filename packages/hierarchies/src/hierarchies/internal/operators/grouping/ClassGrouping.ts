@@ -59,7 +59,7 @@ function createGroupingNodes(groupings: ClassGroupingInformation): GroupingHandl
       key: groupingNodeKey,
       parentKeys: groupedNodeParentKeys,
       groupedInstanceKeys: entry.groupedNodes.flatMap((groupedInstanceNode) => groupedInstanceNode.key.instanceKeys),
-      children: entry.groupedNodes.map((gn) => ({ ...gn, parentKeys: [...groupedNodeParentKeys, groupingNodeKey] })),
+      children: entry.groupedNodes.map((gn) => Object.assign(gn, { parentKeys: [...groupedNodeParentKeys, groupingNodeKey] })),
     });
   });
   return { grouped: groupedNodes, ungrouped: groupings.ungrouped, groupingType: "class" };

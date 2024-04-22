@@ -53,7 +53,7 @@ export function createHideIfNoChildrenOperator(hasNodes: (node: ProcessedHierarc
                     category: LOGGING_NAMESPACE,
                     message: /* istanbul ignore next */ (childrenFlag) => `${createNodeIdentifierForLogging(n)}: determined children: ${childrenFlag}`,
                   }),
-                  map((children) => ({ ...n, children })),
+                  map((children) => Object.assign(n, { children })),
                 );
               }),
             // Sending child check requests for all nodes without any limit greatly slows down

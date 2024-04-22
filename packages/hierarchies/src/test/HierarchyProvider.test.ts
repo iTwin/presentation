@@ -241,7 +241,9 @@ describe("HierarchyProvider", () => {
       });
       const nodes = await collect(provider.getNodes({ parentNode: undefined }));
       expect(preprocess).to.be.calledOnceWith({ ...node, parentKeys: [] });
-      expect(nodes).to.deep.eq([{ ...node, isPreprocessed: true }]);
+      expect(nodes)
+        .to.have.lengthOf(1)
+        .and.to.containSubset([{ isPreprocessed: true }]);
     });
 
     it("removes node from hierarchy if pre-processor returns `undefined`", async () => {
@@ -295,7 +297,9 @@ describe("HierarchyProvider", () => {
       });
       const nodes = await collect(provider.getNodes({ parentNode: undefined }));
       expect(postprocess).to.be.calledOnceWith({ ...node, parentKeys: [] });
-      expect(nodes).to.deep.eq([{ ...node, isPostprocessed: true }]);
+      expect(nodes)
+        .to.have.lengthOf(1)
+        .to.containSubset([{ isPostprocessed: true }]);
     });
 
     it("removes node from hierarchy if post-processor returns `undefined`", async () => {
@@ -471,7 +475,7 @@ describe("HierarchyProvider", () => {
       expect(rootNodes).to.deep.eq([{ ...rootNode, parentKeys: [], children: true }]);
       expect(hierarchyDefinition.defineHierarchyLevel).to.be.calledTwice;
       expect(hierarchyDefinition.defineHierarchyLevel.firstCall).to.be.calledWith({ parentNode: undefined });
-      expect(hierarchyDefinition.defineHierarchyLevel.secondCall).to.be.calledWith({ parentNode: omit(rootNodes[0], ["children"]) });
+      expect(hierarchyDefinition.defineHierarchyLevel.secondCall).to.be.calledWith({ parentNode: rootNodes[0] });
     });
   });
 
