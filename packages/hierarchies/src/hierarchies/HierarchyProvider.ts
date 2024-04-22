@@ -21,8 +21,6 @@ import {
   Observable,
   ObservableInput,
   of,
-  partition,
-  shareReplay,
   take,
   tap,
 } from "rxjs";
@@ -64,6 +62,7 @@ import { createDetermineChildrenOperator } from "./internal/operators/DetermineC
 import { createGroupingOperator } from "./internal/operators/Grouping";
 import { createHideIfNoChildrenOperator } from "./internal/operators/HideIfNoChildren";
 import { createHideNodesInHierarchyOperator } from "./internal/operators/HideNodesInHierarchy";
+import { partition } from "./internal/operators/Partition";
 import { reduceToMergeMapList } from "./internal/operators/ReduceToMergeMap";
 import { shareReplayWithErrors } from "./internal/operators/ShareReplayWithErrors";
 import { sortNodesByLabelOperator } from "./internal/operators/Sorting";
@@ -490,7 +489,7 @@ export class HierarchyProvider {
 
     // split the definitions based on whether they're for custom nodes or for instance nodes
     const [customDefs, instanceDefs] = partition(
-      from(this.hierarchyDefinition.defineHierarchyLevel({ parentNode })).pipe(mergeAll(), shareReplay()),
+      from(this.hierarchyDefinition.defineHierarchyLevel({ parentNode })).pipe(mergeAll()),
       HierarchyNodesDefinition.isCustomNode,
     );
 
@@ -524,7 +523,6 @@ export class HierarchyProvider {
           ),
         ),
       ),
-      shareReplay(),
     );
     // split the instance keys observable based on whether they should be hidden or not
     const [visibleNodeInstanceKeys, hiddenNodeInstanceKeys] = partition(instanceKeys, ({ hide }) => !hide);
