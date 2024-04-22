@@ -117,7 +117,9 @@ export class IModelSelectionHandler {
       return;
     }
 
-    this._cancelOngoingChanges.next();
+    if (args.changeType === "replace" || args.changeType === "clear") {
+      this._cancelOngoingChanges.next();
+    }
     this.handleUnifiedSelectionChange(args.changeType, args.selectables);
   };
 

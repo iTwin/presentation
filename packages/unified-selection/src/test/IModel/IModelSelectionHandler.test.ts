@@ -53,7 +53,6 @@ describe("IModelSelectionHandler", () => {
   };
 
   const selectionSet = {
-    iModel: {} as IModelSelection,
     emptyAll: sinon.stub<[], void>(),
     add: sinon.stub<[Id64Arg], boolean>(),
     remove: sinon.stub<[Id64Arg], boolean>(),
@@ -150,7 +149,6 @@ describe("IModelSelectionHandler", () => {
     }
 
     beforeEach(() => {
-      selectionSet.iModel = iModelSelection;
       handler = createHandler(selectionStorageStub as unknown as SelectionStorage);
       triggerSelectionChange = selectionSet.onChanged.addListener.getCall(0).args[0];
 
@@ -204,9 +202,6 @@ describe("IModelSelectionHandler", () => {
     });
 
     it("clears selection", async () => {
-      const addedKeys = [createSelectableInstanceKey(1), createSelectableInstanceKey(2)];
-      queryExecutor.createQueryReader.returns(createFakeQueryReader(toQueryResponse(addedKeys)));
-
       triggerSelectionChange({ type: SelectionSetEventType.Clear, removed: [], set: selectionSet });
 
       await waitFor(() => {
@@ -287,7 +282,6 @@ describe("IModelSelectionHandler", () => {
       provider.getHiliteSet.reset();
       provider.getHiliteSet.callsFake(emptyGenerator);
 
-      selectionSet.iModel = iModelSelection;
       selectionStorage = createStorage();
       selectionStorage.addToSelection({ iModelKey: "iModelSelection", source: "Test", selectables: generateSelection() });
       handler = createHandler(selectionStorage);
@@ -426,7 +420,7 @@ describe("IModelSelectionHandler", () => {
         expect(hilited.clear).to.be.calledOnce;
         expect(hilited.models.addIds).to.be.calledOnceWith([id]);
         expect(selectionSet.emptyAll).to.be.calledOnce;
-        expect(selectionSet.add).to.not.be.calledOnce;
+        expect(selectionSet.add).to.not.be.called;
       });
     });
 
@@ -445,7 +439,7 @@ describe("IModelSelectionHandler", () => {
         expect(hilited.clear).to.be.calledOnce;
         expect(hilited.subcategories.addIds).to.be.calledOnceWith([id]);
         expect(selectionSet.emptyAll).to.be.calledOnce;
-        expect(selectionSet.add).to.not.be.calledOnce;
+        expect(selectionSet.add).to.not.be.called;
       });
     });
 
@@ -560,7 +554,7 @@ describe("IModelSelectionHandler", () => {
       });
     });
 
-    it("removes and reads elements to hilite after remove event", async () => {
+    it("removes and re-adds elements to hilite after remove event", async () => {
       const removedIds = ["0x1", "0x2"];
       const hilitedId = "0x3";
 
@@ -593,7 +587,7 @@ describe("IModelSelectionHandler", () => {
       });
     });
 
-    it("removes and reads models to hilite after remove event", async () => {
+    it("removes and re-adds models to hilite after remove event", async () => {
       const removedIds = ["0x1", "0x2"];
       const hilitedId = "0x3";
 
@@ -628,7 +622,7 @@ describe("IModelSelectionHandler", () => {
       });
     });
 
-    it("removes and reads subcategories to hilite after remove event", async () => {
+    it("removes and re-adds subcategories to hilite after remove event", async () => {
       const removedIds = ["0x1", "0x2"];
       const hilitedId = "0x3";
 
@@ -704,7 +698,7 @@ describe("IModelSelectionHandler", () => {
       });
     });
 
-    it("cancels ongoing selection change handling when selection changes again", async () => {
+    it("cancels ongoing selection change handling when selection replaced", async () => {
       const initialElementId = "0x1";
       const result = new ResolvablePromise<hiliteSetProvider.HiliteSet>();
       async function* initialGenerator() {
@@ -761,6 +755,153 @@ describe("IModelSelectionHandler", () => {
         expect(hilited.models.addIds).to.not.be.called;
         expect(hilited.subcategories.addIds).to.not.be.called;
         expect(hilited.elements.addIds).to.not.be.called;
+      });
+    });
+
+    it("cancels ongoing selection change handling when selection cleared", async () => {
+      const initialElementId = "0x1";
+      const result = new ResolvablePromise<hiliteSetProvider.HiliteSet>();
+      async function* initialGenerator() {
+        yield {
+          elements: [initialElementId],
+          subCategories: [],
+          models: [],
+        } as hiliteSetProvider.HiliteSet;
+        yield await result;
+      }
+
+      cachingProvider.getHiliteSet.reset();
+      cachingProvider.getHiliteSet.callsFake(() => initialGenerator());
+
+      triggerSelectionChange({ source: "initial", selectables: [{ className: "BisCore.Element", id: initialElementId }] });
+
+      await waitFor(() => {
+        expect(cachingProvider.getHiliteSet).to.be.calledOnce;
+        expect(hilited.clear).to.be.called;
+        expect(hilited.models.addIds).to.not.be.called;
+        expect(hilited.subcategories.addIds).to.not.be.called;
+        expect(hilited.elements.addIds).to.be.calledOnceWith([initialElementId]);
+      });
+
+      resetHilitedStub();
+
+      const newElementId = "0x3";
+      async function* secondGenerator() {
+        yield {
+          elements: [newElementId],
+          subCategories: [],
+          models: [],
+        } as hiliteSetProvider.HiliteSet;
+      }
+
+      cachingProvider.getHiliteSet.reset();
+      cachingProvider.getHiliteSet.callsFake(() => secondGenerator());
+
+      triggerSelectionChange({ source: "next", changeType: "clear", selectables: [{ className: "BisCore.Element", id: newElementId }] });
+
+      await waitFor(() => {
+        expect(cachingProvider.getHiliteSet).to.be.calledOnce;
+        expect(hilited.clear).to.be.called;
+        expect(hilited.models.addIds).to.not.be.called;
+        expect(hilited.subcategories.addIds).to.not.be.called;
+        expect(hilited.elements.addIds).to.be.calledOnceWith([newElementId]);
+      });
+
+      resetHilitedStub();
+      await result.resolve({ elements: ["0x2"], models: [], subCategories: [] });
+
+      await waitFor(() => {
+        expect(hilited.clear).to.not.be.called;
+        expect(hilited.models.addIds).to.not.be.called;
+        expect(hilited.subcategories.addIds).to.not.be.called;
+        expect(hilited.elements.addIds).to.not.be.called;
+      });
+    });
+
+    it("does not cancel ongoing changes when added or removed from selection", async () => {
+      const initialElementId = "0x1";
+      const result = new ResolvablePromise<hiliteSetProvider.HiliteSet>();
+      async function* initialGenerator() {
+        yield {
+          elements: [initialElementId],
+          subCategories: [],
+          models: [],
+        } as hiliteSetProvider.HiliteSet;
+        yield await result;
+      }
+
+      cachingProvider.getHiliteSet.reset();
+      cachingProvider.getHiliteSet.callsFake(() => initialGenerator());
+
+      triggerSelectionChange({ source: "initial", selectables: [{ className: "BisCore.Element", id: initialElementId }] });
+
+      await waitFor(() => {
+        expect(cachingProvider.getHiliteSet).to.be.calledOnce;
+        expect(hilited.clear).to.be.called;
+        expect(hilited.models.addIds).to.not.be.called;
+        expect(hilited.subcategories.addIds).to.not.be.called;
+        expect(hilited.elements.addIds).to.be.calledOnceWith([initialElementId]);
+      });
+
+      cachingProvider.getHiliteSet.reset();
+      resetHilitedStub();
+
+      const newElementId = "0x3";
+      async function* secondGenerator() {
+        yield {
+          elements: [newElementId],
+          subCategories: [],
+          models: [],
+        } as hiliteSetProvider.HiliteSet;
+      }
+
+      provider.getHiliteSet.reset();
+      provider.getHiliteSet.callsFake(() => secondGenerator());
+
+      triggerSelectionChange({ source: "next", changeType: "add", selectables: [{ className: "BisCore.Element", id: newElementId }] });
+
+      await waitFor(() => {
+        expect(provider.getHiliteSet).to.be.calledOnce;
+        expect(hilited.clear).to.not.be.called;
+        expect(hilited.models.addIds).to.not.be.called;
+        expect(hilited.subcategories.addIds).to.not.be.called;
+        expect(hilited.elements.addIds).to.be.calledOnceWith([newElementId]);
+      });
+
+      resetHilitedStub();
+
+      async function* thirdGenerator() {
+        yield {
+          elements: [initialElementId],
+          subCategories: [],
+          models: [],
+        } as hiliteSetProvider.HiliteSet;
+      }
+
+      provider.getHiliteSet.reset();
+      provider.getHiliteSet.callsFake(() => thirdGenerator());
+
+      cachingProvider.getHiliteSet.reset();
+      cachingProvider.getHiliteSet.callsFake(() => secondGenerator());
+
+      triggerSelectionChange({ source: "next", changeType: "remove", selectables: [{ className: "BisCore.Element", id: initialElementId }] });
+
+      await waitFor(() => {
+        expect(provider.getHiliteSet).to.be.calledOnce;
+        expect(cachingProvider.getHiliteSet).to.be.calledOnce;
+        expect(hilited.clear).to.not.be.called;
+        expect(hilited.models.deleteIds).to.not.be.called;
+        expect(hilited.subcategories.deleteIds).to.not.be.called;
+        expect(hilited.elements.deleteIds).to.be.calledOnceWith([initialElementId]);
+      });
+
+      resetHilitedStub();
+      await result.resolve({ elements: ["0x2"], models: [], subCategories: [] });
+
+      await waitFor(() => {
+        expect(hilited.models.addIds).to.not.be.called;
+        expect(hilited.subcategories.addIds).to.not.be.called;
+        expect(hilited.elements.addIds).to.be.calledOnceWith(["0x2"]);
       });
     });
   });
