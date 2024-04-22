@@ -1,5 +1,5 @@
 ---
-"@itwin/presentation-components": patch
+"@itwin/presentation-components": minor
 ---
 
 Added `onFilterApplied` and `onHierarchyLimitExceeded` callbacks.
