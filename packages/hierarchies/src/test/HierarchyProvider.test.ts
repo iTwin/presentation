@@ -146,7 +146,7 @@ describe("HierarchyProvider", () => {
       const queryTimeout1 = new ResolvablePromise();
       queryExecutor.createQueryReader.onFirstCall().returns(
         (async function* () {
-          // the reader yields nothing, but waits for queryTimeout2 to resolve
+          // the reader yields nothing, but waits for queryTimeout1 to resolve
           await queryTimeout1;
         })(),
       );
@@ -159,7 +159,9 @@ describe("HierarchyProvider", () => {
         })(),
       );
 
-      queryExecutor.createQueryReader.onThirdCall().returns(createAsyncIterator([]));
+      const queryReader3 = createAsyncIterator([]);
+      const queryReader3Spy = sinon.spy(queryReader3, "next");
+      queryExecutor.createQueryReader.onThirdCall().returns(queryReader3);
 
       void provider.queryScheduler.schedule({ ecsql: "1" }).next();
       await waitFor(() => expect(queryExecutor.createQueryReader).to.be.calledOnce);
@@ -168,16 +170,15 @@ describe("HierarchyProvider", () => {
       await waitFor(() => expect(queryExecutor.createQueryReader).to.be.calledTwice);
 
       void provider.queryScheduler.schedule({ ecsql: "3" }).next();
-      // not called for the third time until one of the first queries complete
-      await waitFor(() => expect(queryExecutor.createQueryReader).to.be.calledTwice, 100);
+      // query reader should get created, but shouldn't be iterated until one of the first queries completes
+      await waitFor(() => expect(queryExecutor.createQueryReader).to.be.calledThrice);
+      await waitFor(() => expect(queryReader3Spy).to.not.be.called, 100);
 
       await queryTimeout2.resolve(undefined);
       // now called
-      await waitFor(() => expect(queryExecutor.createQueryReader).to.be.calledThrice);
+      await waitFor(() => expect(queryReader3Spy).to.be.called);
 
       await queryTimeout1.resolve(undefined);
-      // but not called anymore, since all queries are already scheduled
-      await waitFor(() => expect(queryExecutor.createQueryReader).to.be.calledThrice, 100);
     });
   });
 

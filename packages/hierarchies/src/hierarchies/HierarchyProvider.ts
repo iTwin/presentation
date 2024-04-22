@@ -7,7 +7,6 @@ import {
   catchError,
   concat,
   defaultIfEmpty,
-  defer,
   EMPTY,
   filter,
   finalize,
@@ -226,8 +225,7 @@ export class HierarchyProvider {
   /** @internal */
   public get queryScheduler(): { schedule: ILimitingECSqlQueryExecutor["createQueryReader"] } {
     return {
-      schedule: (query, config) =>
-        eachValueFrom(this._queryScheduler.scheduleSubscription(defer(() => from(this.queryExecutor.createQueryReader(query, config))))),
+      schedule: (query, config) => eachValueFrom(this._queryScheduler.scheduleSubscription(from(this.queryExecutor.createQueryReader(query, config)))),
     };
   }
 
@@ -266,7 +264,7 @@ export class HierarchyProvider {
               message: /* istanbul ignore next */ (query) =>
                 `Query direct nodes for parent ${createNodeIdentifierForLogging(props.parentNode)}: ${createQueryLogMessage(query)}`,
             }),
-            mergeMap((query) => defer(() => from(this._queryReader.read(this.queryExecutor, query, props.hierarchyLevelSizeLimit)))),
+            mergeMap((query) => from(this._queryReader.read(this.queryExecutor, query, props.hierarchyLevelSizeLimit))),
           ),
         );
       }),
