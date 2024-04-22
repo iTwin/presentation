@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { concatAll, concatMap, from, Observable, of, toArray } from "rxjs";
+import { from, mergeAll, mergeMap, Observable, of, toArray } from "rxjs";
 import { assert } from "@itwin/core-bentley";
 import { IECClassHierarchyInspector, IECMetadataProvider, IPrimitiveValueFormatter } from "@itwin/presentation-shared";
 import {
@@ -42,13 +42,13 @@ export function createGroupingOperator(
     return nodes.pipe(
       log({ category: LOGGING_NAMESPACE, message: /* istanbul ignore next */ (n) => `in: ${createNodeIdentifierForLogging(n)}` }),
       toArray(),
-      concatMap((resolvedNodes) => {
+      mergeMap((resolvedNodes) => {
         const { instanceNodes, restNodes } = partitionInstanceNodes(resolvedNodes);
         const groupingHandlersObs = groupingHandlers
           ? of(groupingHandlers)
           : from(createGroupingHandlers(metadata, parentNode, instanceNodes, valueFormatter, localizedStrings, classHierarchyInspector));
         return groupingHandlersObs.pipe(
-          concatMap(async (createdGroupingHandlers) => {
+          mergeMap(async (createdGroupingHandlers) => {
             const grouped: ProcessedHierarchyNode[] = await groupInstanceNodes(
               instanceNodes,
               restNodes.length,
@@ -61,7 +61,7 @@ export function createGroupingOperator(
           }),
         );
       }),
-      concatAll(),
+      mergeAll(),
       releaseMainThreadOnItemsCount(100),
       log({ category: LOGGING_NAMESPACE, message: /* istanbul ignore next */ (n) => `out: ${createNodeIdentifierForLogging(n)}` }),
     );

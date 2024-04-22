@@ -6,8 +6,6 @@
 import {
   catchError,
   concat,
-  concatAll,
-  concatMap,
   defaultIfEmpty,
   defer,
   EMPTY,
@@ -246,7 +244,7 @@ export class HierarchyProvider {
     });
     // stream hierarchy level definitions in order
     const definitions = from(this.hierarchyDefinition.defineHierarchyLevel(props)).pipe(
-      concatAll(),
+      mergeAll(),
       finalize(() =>
         doLog({
           category: PERF_LOGGING_NAMESPACE,
@@ -256,7 +254,7 @@ export class HierarchyProvider {
     );
     // pipe definitions to nodes and put "share replay" on it
     return definitions.pipe(
-      concatMap((def): ObservableInput<ParsedHierarchyNode> => {
+      mergeMap((def): ObservableInput<ParsedHierarchyNode> => {
         if (HierarchyNodesDefinition.isCustomNode(def)) {
           return of(def.node);
         }
@@ -599,7 +597,7 @@ function postProcessNodes(hierarchyFactory: IHierarchyLevelDefinitionsFactory) {
 function processNodes<TNode>(processor: (node: TNode) => Promise<TNode | undefined>) {
   return (nodes: Observable<TNode>) =>
     nodes.pipe(
-      concatMap(processor),
+      mergeMap(processor),
       filter((n): n is TNode => !!n),
     );
 }
