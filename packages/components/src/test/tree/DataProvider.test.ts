@@ -60,6 +60,7 @@ type GetFilteredNodePathsOptions = FilterByTextHierarchyRequestOptions<IModelCon
 describe("TreeDataProvider", () => {
   const rulesetId: string = "ruleset_id";
   const onVariableChanged: BeEvent<(variableId: string) => void> = new BeEvent();
+  const onHierarchyLimitExceededSpy = sinon.spy();
 
   let provider: PresentationTreeDataProvider;
   let presentationManager: sinon.SinonStubbedInstance<PresentationManager>;
@@ -74,10 +75,11 @@ describe("TreeDataProvider", () => {
 
     sinon.stub(Presentation, "presentation").get(() => presentationManager);
     sinon.stub(Presentation, "localization").get(() => new EmptyLocalization());
-    provider = new PresentationTreeDataProvider({ imodel, ruleset: rulesetId });
+    provider = new PresentationTreeDataProvider({ imodel, ruleset: rulesetId, onHierarchyLimitExceeded: onHierarchyLimitExceededSpy });
   });
 
   afterEach(() => {
+    onHierarchyLimitExceededSpy.resetHistory();
     provider.dispose();
     sinon.restore();
   });
@@ -482,6 +484,17 @@ describe("TreeDataProvider", () => {
       expect((actualResult[0] as PresentationInfoTreeNodeItem).message).to.contain(
         `${translate("tree.result-limit-exceeded")} ${provider.hierarchyLevelSizeLimit}`,
       );
+    });
+
+    it("calls `onHierarchyLimitExceeded` if hierarchy level exceeds given limit", async () => {
+      presentationManager.getNodesIterator.callsFake(async () => {
+        throw new PresentationError(PresentationStatus.ResultSetTooLarge);
+      });
+
+      provider.hierarchyLevelSizeLimit = 5;
+      const actualResult = await provider.getNodes(undefined);
+      expect(actualResult).to.have.lengthOf(1);
+      expect(onHierarchyLimitExceededSpy).to.be.calledOnce;
     });
 
     it("returns info node on timeout", async () => {

@@ -100,6 +100,11 @@ export interface PresentationTreeDataProviderProps extends DiagnosticsProps {
    * @beta
    */
   dataSourceOverrides?: Partial<PresentationTreeDataProviderDataSourceEntryPoints>;
+  /**
+   * Callback for when the hierarchy limit is exceeded while loading nodes.
+   * @beta
+   */
+  onHierarchyLimitExceeded?: () => void;
 }
 
 /**
@@ -129,6 +134,7 @@ export class PresentationTreeDataProvider implements IPresentationTreeDataProvid
   private _dataSource: PresentationTreeDataProviderDataSourceEntryPoints;
   private _diagnosticsOptions?: ClientDiagnosticsOptions;
   private _nodesCreateProps: CreateTreeNodeItemProps;
+  private _onHierarchyLimitExceeded?: () => void;
   public hierarchyLevelSizeLimit?: number;
 
   /** Constructor. */
@@ -164,6 +170,7 @@ export class PresentationTreeDataProvider implements IPresentationTreeDataProvid
     };
     this._diagnosticsOptions = createDiagnosticsOptions(props);
     this.hierarchyLevelSizeLimit = props.hierarchyLevelSizeLimit;
+    this._onHierarchyLimitExceeded = props.onHierarchyLimitExceeded;
   }
 
   /** Destructor. Must be called to clean up.  */
@@ -275,6 +282,7 @@ export class PresentationTreeDataProvider implements IPresentationTreeDataProvid
         (node, parentId) => this.createTreeNodeItem(node, parentId),
         parentNode,
         this.hierarchyLevelSizeLimit,
+        this._onHierarchyLimitExceeded,
       );
     },
     { isMatchingKey: MemoizationHelpers.areNodesRequestsEqual as any },
@@ -356,6 +364,7 @@ async function createNodesAndCountResult(
   treeItemFactory: (node: Node, parentId?: string) => PresentationTreeNodeItem,
   parentNode?: TreeNodeItem,
   hierarchyLevelSizeLimit?: number,
+  onHierarchyLimitExceeded?: () => void,
 ) {
   try {
     const result = await resultFactory();
@@ -374,6 +383,7 @@ async function createNodesAndCountResult(
           return createStatusNodeResult(parentNode, "tree.timeout", InfoTreeNodeItemType.BackendTimeout);
         case PresentationStatus.ResultSetTooLarge:
           // ResultSetTooLarge error can't occur if hierarchyLevelSizeLimit is undefined.
+          onHierarchyLimitExceeded?.();
           return {
             nodes: [
               createInfoNode(parentNode, `${translate("tree.result-limit-exceeded")} ${hierarchyLevelSizeLimit!}.`, InfoTreeNodeItemType.ResultSetTooLarge),

@@ -19,7 +19,16 @@ import {
 import { BeEvent, BeUiEvent } from "@itwin/core-bentley";
 import { EmptyLocalization } from "@itwin/core-common";
 import { FormattingUnitSystemChangedArgs, IModelApp, IModelConnection, QuantityFormatter } from "@itwin/core-frontend";
-import { LabelDefinition, Node, RegisteredRuleset, Ruleset, StandardNodeTypes, VariableValue } from "@itwin/presentation-common";
+import {
+  LabelDefinition,
+  Node,
+  PresentationError,
+  PresentationStatus,
+  RegisteredRuleset,
+  Ruleset,
+  StandardNodeTypes,
+  VariableValue,
+} from "@itwin/presentation-common";
 import { IModelHierarchyChangeEventArgs, Presentation, PresentationManager, RulesetManager, RulesetVariablesManager } from "@itwin/presentation-frontend";
 import {
   PresentationTreeEventHandlerProps,
@@ -39,6 +48,7 @@ describe("usePresentationTreeState", () => {
     (variableId: string, prevValue: VariableValue | undefined, currValue: VariableValue | undefined) => void
   >();
   const onActiveFormattingUnitSystemChanged: QuantityFormatter["onActiveFormattingUnitSystemChanged"] = new BeUiEvent<FormattingUnitSystemChangedArgs>();
+  let presentationManager: sinon.SinonStubbedInstance<PresentationManager>;
 
   const imodel = {
     key: "test-imodel-key",
@@ -51,7 +61,7 @@ describe("usePresentationTreeState", () => {
   };
 
   beforeEach(async () => {
-    const presentationManager = sinon.createStubInstance(PresentationManager);
+    presentationManager = sinon.createStubInstance(PresentationManager);
     Object.assign(presentationManager, { onIModelHierarchyChanged });
 
     presentationManager.rulesets.returns({
@@ -65,6 +75,7 @@ describe("usePresentationTreeState", () => {
     presentationManager.getNodesIterator.resolves({ total: 0, items: createAsyncIterator([]) });
 
     sinon.stub(Presentation, "presentation").get(() => presentationManager);
+    sinon.stub(Presentation, "localization").get(() => new EmptyLocalization());
     sinon.stub(IModelApp, "quantityFormatter").get(() => ({
       onActiveFormattingUnitSystemChanged,
     }));
@@ -122,6 +133,23 @@ describe("usePresentationTreeState", () => {
     await waitFor(() => {
       expect(onNodeLoaded).to.be.calledOnce;
       expect(result.current?.nodeLoader instanceof ReportingTreeNodeLoader).to.be.true;
+    });
+  });
+
+  it("calls `onHierarchyLimitExceeded` when hierarchy limit exceeded while loading nodes", async () => {
+    const onHierarchyLimitExceeded = sinon.stub<[], void>();
+    const { result } = renderHook((props: UsePresentationTreeStateProps) => usePresentationTreeState(props), {
+      initialProps: { ...initialProps, hierarchyLevelSizeLimit: 0, onHierarchyLimitExceeded },
+    });
+
+    presentationManager.getNodesIterator.callsFake(async () => {
+      throw new PresentationError(PresentationStatus.ResultSetTooLarge);
+    });
+    const observable = result.current?.nodeLoader.loadNode({ id: undefined, depth: -1, numChildren: 1 }, 0);
+    observable?.subscribe();
+
+    await waitFor(() => {
+      expect(onHierarchyLimitExceeded).to.be.calledOnce;
     });
   });
 
