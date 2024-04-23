@@ -12,6 +12,7 @@ export interface LogMessageProps<TMessageArg = void> {
   category: string;
   severity?: LogLevel;
   message: (arg: TMessageArg) => string;
+  prependTimestamp?: boolean;
 }
 
 /** @internal */
@@ -22,7 +23,13 @@ export function doLog(props: LogMessageProps) {
     return;
   }
   const logFunc = getLogFunc(logger, severity);
-  logFunc(props.category, props.message());
+  const prefix = props.prependTimestamp ? `[${new Date().toISOString()}] ` : "";
+  logFunc(props.category, `${prefix}${props.message()}`);
+}
+
+/** @internal */
+export function doPerformanceLog(props: Omit<LogMessageProps, "prependTimestamp">) {
+  doLog({ ...props, prependTimestamp: true });
 }
 
 function getLogFunc(logger: ILogger, severity: LogLevel) {
