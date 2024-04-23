@@ -4,6 +4,7 @@
 
 ```ts
 
+import { ComponentPropsWithoutRef } from 'react';
 import { GenericInstanceFilter } from '@itwin/presentation-hierarchies';
 import { HierarchyNode } from '@itwin/presentation-hierarchies';
 import { HierarchyProvider } from '@itwin/presentation-hierarchies';
@@ -11,8 +12,13 @@ import { JSX as JSX_2 } from 'react/jsx-runtime';
 import { PropsWithChildren } from 'react';
 import { ReactElement } from 'react';
 import { SelectionStorage } from '@itwin/unified-selection';
+import { Tree } from '@itwin/itwinui-react';
+import { TreeNode } from '@itwin/itwinui-react';
 
 export { GenericInstanceFilter }
+
+// @beta (undocumented)
+export function getTreeNode(node: PresentationTreeNode, isNodeSelected: (nodeId: string) => boolean): ReturnType<TreeProps<PresentationTreeNode>["getNode"]>;
 
 // @beta (undocumented)
 export interface HierarchyLevelFilteringOptions {
@@ -40,8 +46,6 @@ export interface PresentationHierarchyNode {
         [key: string]: any;
     };
     // (undocumented)
-    hierarchyLimit?: number | "unbounded";
-    // (undocumented)
     id: string;
     // (undocumented)
     isExpanded: boolean;
@@ -53,6 +57,8 @@ export interface PresentationHierarchyNode {
     isLoading: boolean;
     // (undocumented)
     label: string;
+    // (undocumented)
+    nodeData: HierarchyNode;
 }
 
 // @beta (undocumented)
@@ -71,6 +77,9 @@ export interface PresentationInfoNode {
 export type PresentationTreeNode = PresentationHierarchyNode | PresentationInfoNode;
 
 export { SelectionStorage }
+
+// @beta (undocumented)
+export function TreeNodeRenderer({ node, expandNode, selectNode, getIcon, setHierarchyLevelFilter, onFilterClick, setHierarchyLevelLimit, ...restProps }: TreeNodeRendererProps): JSX_2.Element;
 
 // @beta (undocumented)
 export function TreeRenderer({ rootNodes, expandNode, selectNode, isNodeSelected, setHierarchyLevelLimit, setHierarchyLevelFilter, onFilterClick, getIcon, }: TreeRendererProps): JSX_2.Element;

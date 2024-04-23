@@ -1,11 +1,13 @@
 sep=;
 Release Tag;API Item
+beta;getTreeNode(node: PresentationTreeNode, isNodeSelected: (nodeId: string) => boolean): ReturnType
 beta;HierarchyLevelFilteringOptions
 beta;InfoNodeTypes = "ResultSetTooLarge" | "ChildrenPlaceholder" | "NoFilterMatchingNodes" | "Unknown"
 beta;isPresentationHierarchyNode(node: PresentationTreeNode): node is PresentationHierarchyNode
 beta;PresentationHierarchyNode
 beta;PresentationInfoNode
 beta;PresentationTreeNode = PresentationHierarchyNode | PresentationInfoNode
+beta;TreeNodeRenderer({ node, expandNode, selectNode, getIcon, setHierarchyLevelFilter, onFilterClick, setHierarchyLevelLimit, ...restProps }: TreeNodeRendererProps): JSX_2.Element
 beta;TreeRenderer({ rootNodes, expandNode, selectNode, isNodeSelected, setHierarchyLevelLimit, setHierarchyLevelFilter, onFilterClick, getIcon, }: TreeRendererProps): JSX_2.Element
 beta;UnifiedSelectionProvider({ storage, children }: PropsWithChildren
 beta;useTree(props: UseTreeProps): UseTreeResult
