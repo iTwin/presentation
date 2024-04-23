@@ -17,7 +17,6 @@ import {
   TreeModel,
   TreeModelSource,
 } from "@itwin/components-react";
-import { useLatest } from "../../hooks/UseLatest";
 import { PresentationTreeDataProvider, PresentationTreeDataProviderProps } from "../DataProvider";
 import { IFilteredPresentationTreeDataProvider, IPresentationTreeDataProvider } from "../IPresentationTreeDataProvider";
 import { ReportingTreeNodeLoader } from "../ReportingTreeNodeLoader";
@@ -289,4 +288,13 @@ function usePresentationTreeFiltering({ activeMatchIndex, ...rest }: Presentatio
         matchesCount,
       }
     : undefined;
+}
+
+function useLatest<T>(value: T) {
+  const ref = useRef(value);
+  useEffect(() => {
+    ref.current = value;
+  }, [value]);
+
+  return ref;
 }
