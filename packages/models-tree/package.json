@@ -32,18 +32,18 @@
     "lint": "eslint ./src/**/*.ts"
   },
   "dependencies": {
-    "@itwin/core-bentley": "^4.5.1",
+    "@itwin/core-bentley": "^4.5.2",
     "@itwin/presentation-shared": "workspace:^"
   },
   "peerDependencies": {
     "@itwin/presentation-hierarchies": "workspace:^"
   },
   "devDependencies": {
-    "@itwin/build-tools": "^4.5.1",
+    "@itwin/build-tools": "^4.5.2",
     "@itwin/eslint-plugin": "^4.0.0",
     "@itwin/presentation-hierarchies": "workspace:^",
     "cpx2": "^7.0.1",
-    "eslint": "^8.56.0",
+    "eslint": "^8.57.0",
     "rimraf": "^5.0.5",
     "typescript": "~5.4.5"
   }
