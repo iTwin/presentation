@@ -197,11 +197,16 @@ describe("ViewportSelectionHandler", () => {
 
   describe("reacting to unified selection changes", () => {
     const triggerSelectionChange = ({
-      changeType = SelectionChangeType.Replace,
+      changeType,
       sourceName = "",
       selectionLevel = 0,
       selectionImodel = imodel as unknown as IModelConnection,
-    }: { changeType?: SelectionChangeType; sourceName?: string; selectionLevel?: number; selectionImodel?: IModelConnection } = {}) => {
+    }: {
+      changeType: SelectionChangeType;
+      sourceName?: string;
+      selectionLevel?: number;
+      selectionImodel?: IModelConnection;
+    }) => {
       const selectionChangeArgs: SelectionChangeEventArgs = {
         imodel: selectionImodel,
         changeType,
@@ -238,7 +243,7 @@ describe("ViewportSelectionHandler", () => {
 
     it("ignores selection changes to other imodels", async () => {
       const newImodel = {} as IModelConnection;
-      triggerSelectionChange({ selectionImodel: newImodel });
+      triggerSelectionChange({ changeType: SelectionChangeType.Replace, selectionImodel: newImodel });
       expect(selectionManager.getHiliteSetIterator).to.not.be.called;
       expect(hilited.clear).to.not.be.called;
       expect(hilited.models.addIds).to.not.be.called;
@@ -275,7 +280,7 @@ describe("ViewportSelectionHandler", () => {
     });
 
     it("ignores selection changes to selection levels other than 0", async () => {
-      triggerSelectionChange({ selectionLevel: 1 });
+      triggerSelectionChange({ changeType: SelectionChangeType.Replace, selectionLevel: 1 });
       expect(selectionManager.getHiliteSetIterator).to.not.be.called;
       expect(hilited.clear).to.not.be.called;
       expect(hilited.models.addIds).to.not.be.called;
@@ -306,7 +311,7 @@ describe("ViewportSelectionHandler", () => {
       selectionManager.getHiliteSetIterator.callsFake(() => generator());
 
       // trigger the selection change and wait for event handler to finish
-      triggerSelectionChange();
+      triggerSelectionChange({ changeType: SelectionChangeType.Replace });
 
       await waitFor(() => {
         // verify hilite was changed with expected ids
@@ -329,7 +334,7 @@ describe("ViewportSelectionHandler", () => {
       selectionManager.getHiliteSetIterator.callsFake(() => generator());
 
       // trigger the selection change and wait for event handler to finish
-      triggerSelectionChange();
+      triggerSelectionChange({ changeType: SelectionChangeType.Replace });
 
       await waitFor(() => {
         // verify hilite was changed with expected ids
@@ -352,7 +357,7 @@ describe("ViewportSelectionHandler", () => {
       selectionManager.getHiliteSetIterator.callsFake(() => generator());
 
       // trigger the selection change and wait for event handler to finish
-      triggerSelectionChange();
+      triggerSelectionChange({ changeType: SelectionChangeType.Replace });
 
       await waitFor(() => {
         // verify hilite was changed with expected ids
@@ -379,7 +384,7 @@ describe("ViewportSelectionHandler", () => {
       selectionManager.getHiliteSetIterator.callsFake(() => generator());
 
       // trigger the selection change and wait for event handler to finish
-      triggerSelectionChange();
+      triggerSelectionChange({ changeType: SelectionChangeType.Replace });
 
       await waitFor(() => {
         // verify hilite was changed with expected ids
@@ -390,6 +395,29 @@ describe("ViewportSelectionHandler", () => {
 
         // verify selection set was replaced
         expect(selectionSet.emptyAll).to.be.called;
+        expect(selectionSet.add).to.be.calledOnceWith([elementId]);
+      });
+    });
+
+    it("does not clear selection set if unified selection change was caused by viewport", async () => {
+      const elementId = "0x";
+      async function* generator() {
+        yield {
+          elements: [elementId],
+        } as HiliteSet;
+      }
+      selectionManager.getHiliteSetIterator.callsFake(() => generator());
+
+      // trigger the selection change and wait for event handler to finish
+      triggerSelectionChange({ changeType: SelectionChangeType.Replace, sourceName: "Tool" });
+
+      await waitFor(() => {
+        // verify hilite was changed with expected ids
+        expect(hilited.clear).to.be.calledOnce;
+        expect(hilited.elements.addIds).to.be.calledOnceWith([elementId]);
+
+        // verify selection set was replaced
+        expect(selectionSet.emptyAll).to.not.be.called;
         expect(selectionSet.add).to.be.calledOnceWith([elementId]);
       });
     });
@@ -613,7 +641,7 @@ describe("ViewportSelectionHandler", () => {
       selectionManager.getHiliteSetIterator.callsFake(() => generator());
 
       // trigger the selection change
-      triggerSelectionChange();
+      triggerSelectionChange({ changeType: SelectionChangeType.Replace });
 
       // verify hilite set was not updated while waiting for first batch
       await waitFor(() => {
@@ -659,7 +687,7 @@ describe("ViewportSelectionHandler", () => {
       selectionManager.getHiliteSetIterator.callsFake(() => initialGenerator());
 
       // trigger the selection change
-      triggerSelectionChange({ sourceName: "initial" });
+      triggerSelectionChange({ changeType: SelectionChangeType.Replace, sourceName: "initial" });
       expect(selectionManager.getHiliteSetIterator).to.be.calledOnce;
 
       await waitFor(() => {
@@ -679,7 +707,7 @@ describe("ViewportSelectionHandler", () => {
       }
       selectionManager.getHiliteSetIterator.reset();
       selectionManager.getHiliteSetIterator.callsFake(() => secondGenerator());
-      triggerSelectionChange({ sourceName: "next" });
+      triggerSelectionChange({ changeType: SelectionChangeType.Replace, sourceName: "next" });
 
       expect(selectionManager.getHiliteSetIterator).to.be.calledOnce;
 
