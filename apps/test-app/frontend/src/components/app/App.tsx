@@ -109,26 +109,6 @@ export function App() {
     };
   }, []);
 
-  useEffect(() => {
-    if (!state.imodel) {
-      return;
-    }
-
-    const removeSelectionListener = Presentation.selection.selectionChange.addListener((args: SelectionChangeEventArgs) => {
-      // eslint-disable-next-line no-console
-      console.log("Unified selection changed", args);
-    });
-    const selectionSetListener = state.imodel.selectionSet.onChanged.addListener((args) => {
-      // eslint-disable-next-line no-console
-      console.log("Selection set changed", args);
-    });
-
-    return () => {
-      removeSelectionListener();
-      selectionSetListener();
-    };
-  }, [state.imodel]);
-
   return (
     <ThemeProvider theme="os">
       <div className="app">

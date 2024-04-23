@@ -400,7 +400,7 @@ describe("ViewportSelectionHandler", () => {
     });
 
     it("does not clear selection set if unified selection change was caused by viewport", async () => {
-      const elementId = "0x";
+      const elementId = "0x1";
       async function* generator() {
         yield {
           elements: [elementId],
