@@ -225,7 +225,6 @@ function useTreeState(props: UseTreeStateProps) {
     const dataProvider = new PresentationTreeDataProvider({ ...providerProps, onHierarchyLimitExceeded: () => onHierarchyLimitExceededRef.current?.() });
     const pagedLoader = new PagedTreeNodeLoader(dataProvider, modelSource, providerProps.pagingSize);
     const nodeLoader = new ReportingTreeNodeLoader(pagedLoader, (nodeLoadedProps) => onNodeLoadedRef.current?.(nodeLoadedProps));
-    const prevState = prevStateRef.current;
 
     const newState = {
       modelSource,
@@ -235,7 +234,8 @@ function useTreeState(props: UseTreeStateProps) {
     setState(newState);
 
     return () => {
-      prevState?.dataProvider.dispose();
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+      prevStateRef.current?.dataProvider.dispose();
     };
   }, [props.treeStateProps, onNodeLoadedRef, onHierarchyLimitExceededRef, prevStateRef]);
 
