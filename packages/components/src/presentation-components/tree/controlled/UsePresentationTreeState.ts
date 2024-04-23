@@ -17,6 +17,7 @@ import {
   TreeModel,
   TreeModelSource,
 } from "@itwin/components-react";
+import { useLatest } from "../../hooks/UseLatest";
 import { PresentationTreeDataProvider, PresentationTreeDataProviderProps } from "../DataProvider";
 import { IFilteredPresentationTreeDataProvider, IPresentationTreeDataProvider } from "../IPresentationTreeDataProvider";
 import { ReportingTreeNodeLoader } from "../ReportingTreeNodeLoader";
@@ -215,27 +216,17 @@ interface PresentationTreeFilteringProps {
 
 function useTreeState(props: UseTreeStateProps) {
   const [state, setState] = useState<TreeState>();
-  const onNodeLoadedRef = useRef(props.onNodeLoaded);
-  useEffect(() => {
-    onNodeLoadedRef.current = props.onNodeLoaded;
-  }, [props.onNodeLoaded]);
-
-  const onHierarchyLimitExceededRef = useRef(props.onHierarchyLimitExceeded);
-  useEffect(() => {
-    onHierarchyLimitExceededRef.current = props.onHierarchyLimitExceeded;
-  }, [props.onHierarchyLimitExceeded]);
-
-  const prevStateRef = useRef(state);
-  useEffect(() => {
-    prevStateRef.current = state;
-  }, [state]);
+  const onNodeLoadedRef = useLatest(props.onNodeLoaded);
+  const onHierarchyLimitExceededRef = useLatest(props.onHierarchyLimitExceeded);
+  const prevStateRef = useLatest(state);
 
   useEffect(() => {
     const { treeModel, ...providerProps } = props.treeStateProps;
     const modelSource = new TreeModelSource(new MutableTreeModel(treeModel));
-    const dataProvider = new PresentationTreeDataProvider({ ...providerProps, onHierarchyLimitExceeded: onHierarchyLimitExceededRef.current });
+    const dataProvider = new PresentationTreeDataProvider({ ...providerProps, onHierarchyLimitExceeded: () => onHierarchyLimitExceededRef.current?.() });
     const pagedLoader = new PagedTreeNodeLoader(dataProvider, modelSource, providerProps.pagingSize);
-    const nodeLoader = new ReportingTreeNodeLoader(pagedLoader, () => onNodeLoadedRef.current);
+    const nodeLoader = new ReportingTreeNodeLoader(pagedLoader, (nodeLoadedProps) => onNodeLoadedRef.current?.(nodeLoadedProps));
+    const prevState = prevStateRef.current;
 
     const newState = {
       modelSource,
@@ -245,18 +236,21 @@ function useTreeState(props: UseTreeStateProps) {
     setState(newState);
 
     return () => {
-      prevStateRef.current?.dataProvider.dispose();
+      prevState?.dataProvider.dispose();
     };
-  }, [props.treeStateProps]);
+  }, [props.treeStateProps, onNodeLoadedRef, onHierarchyLimitExceededRef, prevStateRef]);
 
-  const onReload = useCallback((reloadedTree: ReloadedTree) => {
-    prevStateRef.current?.dataProvider.dispose();
+  const onReload = useCallback(
+    (reloadedTree: ReloadedTree) => {
+      prevStateRef.current?.dataProvider.dispose();
 
-    const { modelSource, dataProvider } = reloadedTree;
-    const pagedLoader = new PagedTreeNodeLoader(dataProvider, modelSource, dataProvider.pagingSize!);
-    const nodeLoader = new ReportingTreeNodeLoader(pagedLoader, () => onNodeLoadedRef.current);
-    setState({ dataProvider, nodeLoader });
-  }, []);
+      const { modelSource, dataProvider } = reloadedTree;
+      const pagedLoader = new PagedTreeNodeLoader(dataProvider, modelSource, dataProvider.pagingSize!);
+      const nodeLoader = new ReportingTreeNodeLoader(pagedLoader, (nodeLoadedProps) => onNodeLoadedRef.current?.(nodeLoadedProps));
+      setState({ dataProvider, nodeLoader });
+    },
+    [onNodeLoadedRef, prevStateRef],
+  );
 
   return { state, onReload };
 }

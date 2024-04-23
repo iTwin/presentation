@@ -70,9 +70,13 @@ export function useFilterablePresentationTree({ nodeLoader, onFilterApplied }: u
       <TreeNodeFilterBuilderDialog
         dataProvider={nodeLoader.dataProvider}
         onApply={(info) => {
-          info === undefined ? clearFilter(filterNode.id) : applyFilter(filterNode.id, info);
+          if (info === undefined) {
+            clearFilter(filterNode.id);
+          } else {
+            applyFilter(filterNode.id, info);
+            onFilterApplied?.();
+          }
           setFilterNode(undefined);
-          onFilterApplied?.();
         }}
         onClose={() => {
           setFilterNode(undefined);
