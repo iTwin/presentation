@@ -374,7 +374,7 @@ describe("Grouping", () => {
         }),
       ];
 
-      const result = await createGroupingHandlers(metadataProvider, undefined, nodes, formatter, testLocalizedStrings, classHierarchyInspector);
+      const result = await collect(createGroupingHandlers(metadataProvider, undefined, nodes, formatter, testLocalizedStrings, classHierarchyInspector));
       expect(createBaseClassGroupingHandlersStub.callCount).to.eq(1);
       expect(createBaseClassGroupingHandlersStub.firstCall).to.be.calledWith(metadataProvider, undefined, nodes);
 
@@ -414,7 +414,7 @@ describe("Grouping", () => {
         }),
       ];
 
-      const result = await createGroupingHandlers(metadataProvider, parentNode, nodes, formatter, testLocalizedStrings, classHierarchyInspector);
+      const result = await collect(createGroupingHandlers(metadataProvider, parentNode, nodes, formatter, testLocalizedStrings, classHierarchyInspector));
 
       expect(createBaseClassGroupingHandlersStub.callCount).to.eq(1);
       expect(createBaseClassGroupingHandlersStub.firstCall).to.be.calledWith(metadataProvider, parentNode, nodes);
@@ -455,7 +455,7 @@ describe("Grouping", () => {
         }),
       ];
 
-      const result = await createGroupingHandlers(metadataProvider, parentNode, nodes, formatter, testLocalizedStrings, classHierarchyInspector);
+      const result = await collect(createGroupingHandlers(metadataProvider, parentNode, nodes, formatter, testLocalizedStrings, classHierarchyInspector));
 
       expect(createBaseClassGroupingHandlersStub.callCount).to.eq(0);
 
@@ -487,7 +487,7 @@ describe("Grouping", () => {
         }),
       ];
 
-      const result = await createGroupingHandlers(metadataProvider, parentNode, nodes, formatter, testLocalizedStrings, classHierarchyInspector);
+      const result = await collect(createGroupingHandlers(metadataProvider, parentNode, nodes, formatter, testLocalizedStrings, classHierarchyInspector));
 
       expect(createBaseClassGroupingHandlersStub.callCount).to.eq(0);
       expect(createPropertiesGroupingHandlersStub.callCount).to.eq(0);

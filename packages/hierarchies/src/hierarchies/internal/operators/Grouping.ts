@@ -3,19 +3,18 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { from, mergeAll, mergeMap, Observable, of, toArray } from "rxjs";
-import { assert } from "@itwin/core-bentley";
+import { concat, concatAll, delay, EMPTY, expand, finalize, from, map, merge, mergeMap, Observable, of, reduce, skip, take, tap, toArray } from "rxjs";
+import { assert, StopWatch } from "@itwin/core-bentley";
 import { IECClassHierarchyInspector, IECMetadataProvider, IPrimitiveValueFormatter } from "@itwin/presentation-shared";
 import {
   HierarchyNode,
-  HierarchyNodeKey,
   ParentHierarchyNode,
   ProcessedGroupingHierarchyNode,
   ProcessedHierarchyNode,
   ProcessedInstanceHierarchyNode,
 } from "../../HierarchyNode";
 import { createNodeIdentifierForLogging, createOperatorLoggingNamespace } from "../Common";
-import { log } from "../LoggingUtils";
+import { doLog, log } from "../LoggingUtils";
 import { assignAutoExpand } from "./grouping/AutoExpand";
 import { createBaseClassGroupingHandlers } from "./grouping/BaseClassGrouping";
 import { createClassGroups } from "./grouping/ClassGrouping";
@@ -23,10 +22,12 @@ import { applyGroupHidingParams } from "./grouping/GroupHiding";
 import { createLabelGroups } from "./grouping/LabelGrouping";
 import { createPropertiesGroupingHandlers, PropertiesGroupingLocalizedStrings } from "./grouping/PropertiesGrouping";
 import { releaseMainThreadOnItemsCount } from "./ReleaseMainThread";
+import { tapOnce } from "./TapOnce";
 
 const OPERATOR_NAME = "Grouping";
 /** @internal */
 export const LOGGING_NAMESPACE = createOperatorLoggingNamespace(OPERATOR_NAME);
+const PERF_LOGGING_NAMESPACE = `${LOGGING_NAMESPACE}.Performance`;
 
 /** @internal */
 export function createGroupingOperator(
@@ -41,27 +42,50 @@ export function createGroupingOperator(
   return function (nodes: Observable<ProcessedHierarchyNode>): Observable<ProcessedHierarchyNode> {
     return nodes.pipe(
       log({ category: LOGGING_NAMESPACE, message: /* istanbul ignore next */ (n) => `in: ${createNodeIdentifierForLogging(n)}` }),
-      toArray(),
-      mergeMap((resolvedNodes) => {
-        const { instanceNodes, restNodes } = partitionInstanceNodes(resolvedNodes);
-        const groupingHandlersObs = groupingHandlers
-          ? of(groupingHandlers)
-          : from(createGroupingHandlers(metadata, parentNode, instanceNodes, valueFormatter, localizedStrings, classHierarchyInspector));
-        return groupingHandlersObs.pipe(
-          mergeMap(async (createdGroupingHandlers) => {
-            const grouped: ProcessedHierarchyNode[] = await groupInstanceNodes(
-              instanceNodes,
-              restNodes.length,
-              createdGroupingHandlers,
-              parentNode,
-              onGroupingNodeCreated,
-            );
-            grouped.push(...restNodes);
-            return from(grouped);
-          }),
+      tapOnce(() => {
+        doLog({
+          category: PERF_LOGGING_NAMESPACE,
+          message: /* istanbul ignore next */ () => `Starting grouping`,
+        });
+      }),
+      reduce<ProcessedHierarchyNode, { instanceNodes: ProcessedInstanceHierarchyNode[]; restNodes: ProcessedHierarchyNode[] }>(
+        (resolvedNodes, node) => {
+          if (HierarchyNode.isInstancesNode(node)) {
+            resolvedNodes.instanceNodes.push(node);
+          } else {
+            resolvedNodes.restNodes.push(node);
+          }
+          return resolvedNodes;
+        },
+        { instanceNodes: [], restNodes: [] },
+      ),
+      tap(() => {
+        doLog({
+          category: PERF_LOGGING_NAMESPACE,
+          message: /* istanbul ignore next */ () => `Nodes partitioned`,
+        });
+      }),
+      mergeMap(({ instanceNodes, restNodes }): Observable<ProcessedHierarchyNode> => {
+        const timer = new StopWatch(undefined, true);
+        const groupingHandlersObs: Observable<GroupingHandler> = groupingHandlers
+          ? from(groupingHandlers)
+          : createGroupingHandlers(metadata, parentNode, instanceNodes, valueFormatter, localizedStrings, classHierarchyInspector);
+        return merge(
+          groupingHandlersObs.pipe(
+            toArray(),
+            mergeMap((createdGroupingHandlers) =>
+              groupInstanceNodes(instanceNodes, restNodes.length, createdGroupingHandlers, parentNode, onGroupingNodeCreated),
+            ),
+            finalize(() => {
+              doLog({
+                category: PERF_LOGGING_NAMESPACE,
+                message: /* istanbul ignore next */ () => `Grouping ${instanceNodes.length} nodes took ${timer.elapsedSeconds.toFixed(3)} s`,
+              });
+            }),
+          ),
+          from(restNodes),
         );
       }),
-      mergeAll(),
       releaseMainThreadOnItemsCount(100),
       log({ category: LOGGING_NAMESPACE, message: /* istanbul ignore next */ (n) => `out: ${createNodeIdentifierForLogging(n)}` }),
     );
@@ -89,56 +113,57 @@ export type GroupingHandler = (
   nodesAlreadyGrouped: ProcessedInstancesGroupingHierarchyNode[],
 ) => Promise<GroupingHandlerResult>;
 
-function partitionInstanceNodes<TRestNode extends { key: HierarchyNodeKey }>(
-  nodes: Array<ProcessedInstanceHierarchyNode | TRestNode>,
-): { instanceNodes: ProcessedInstanceHierarchyNode[]; restNodes: TRestNode[] } {
-  const instanceNodes = new Array<ProcessedInstanceHierarchyNode>();
-  const restNodes = new Array<TRestNode>();
-  nodes.forEach((n) => {
-    if (HierarchyNode.isInstancesNode(n)) {
-      instanceNodes.push(n as ProcessedInstanceHierarchyNode);
-    } else {
-      restNodes.push(n);
-    }
-  });
-  return { instanceNodes, restNodes };
-}
-
-async function groupInstanceNodes(
+function groupInstanceNodes(
   nodes: ProcessedInstanceHierarchyNode[],
   extraSiblings: number,
   groupingHandlers: GroupingHandler[],
   parentNode: ParentHierarchyNode | undefined,
   onGroupingNodeCreated?: (groupingNode: ProcessedGroupingHierarchyNode) => void,
-): Promise<Array<ProcessedGroupingHierarchyNode | ProcessedInstanceHierarchyNode>> {
-  let curr: GroupingHandlerResult | undefined;
-  for (const currentHandler of groupingHandlers) {
-    const groupings = assignAutoExpand(applyGroupHidingParams(await currentHandler(curr?.ungrouped ?? nodes, curr?.grouped ?? []), extraSiblings));
-    curr = {
-      groupingType: groupings.groupingType,
-      grouped: mergeInPlace(curr?.grouped, groupings.grouped),
-      ungrouped: groupings.ungrouped,
-    };
+): Observable<ProcessedGroupingHierarchyNode | ProcessedInstanceHierarchyNode> {
+  if (groupingHandlers.length === 0) {
+    return from(nodes);
   }
-  if (!curr) {
-    return nodes;
-  }
-  curr.grouped.forEach((groupingNode) => {
-    onGroupingNodeCreated?.(groupingNode);
-    if (!parentNode) {
-      return;
-    }
-
-    if (HierarchyNode.isGroupingNode(parentNode)) {
-      groupingNode.nonGroupingAncestor = parentNode.nonGroupingAncestor;
-      return;
-    }
-
-    // not sure why type checker doesn't pick this up
-    assert(HierarchyNode.isCustom(parentNode) || HierarchyNode.isInstancesNode(parentNode));
-    groupingNode.nonGroupingAncestor = parentNode;
-  });
-  return mergeInPlace<ProcessedGroupingHierarchyNode | ProcessedInstanceHierarchyNode>(curr.grouped, curr.ungrouped);
+  return of<{ handlerIndex: number; result?: GroupingHandlerResult | undefined }>({ handlerIndex: 0 }).pipe(
+    expand(({ handlerIndex, result: curr }) => {
+      if (handlerIndex >= groupingHandlers.length) {
+        return EMPTY;
+      }
+      const timer = new StopWatch(undefined, true);
+      const currentHandler = groupingHandlers[handlerIndex];
+      return from(currentHandler(curr?.ungrouped ?? nodes, curr?.grouped ?? [])).pipe(
+        log({
+          category: PERF_LOGGING_NAMESPACE,
+          message: /* istanbul ignore next */ () => `Grouping handler ${handlerIndex} exclusively took ${timer.elapsedSeconds.toFixed(3)} s.`,
+        }),
+        map((result) => applyGroupHidingParams(result, extraSiblings)),
+        map((result) => assignAutoExpand(result)),
+        map((result) => ({ handlerIndex: handlerIndex + 1, result: { ...result, grouped: mergeInPlace(curr?.grouped, result.grouped) } })),
+        log({
+          category: PERF_LOGGING_NAMESPACE,
+          message: /* istanbul ignore next */ () => `Total time for grouping handler ${handlerIndex}: ${timer.elapsedSeconds.toFixed(3)} s.`,
+        }),
+        delay(0),
+      );
+    }),
+    skip(groupingHandlers.length),
+    take(1),
+    mergeMap(({ result }) => {
+      result.grouped.forEach((groupingNode) => {
+        onGroupingNodeCreated?.(groupingNode);
+        if (!parentNode) {
+          return;
+        }
+        if (HierarchyNode.isGroupingNode(parentNode)) {
+          groupingNode.nonGroupingAncestor = parentNode.nonGroupingAncestor;
+          return;
+        }
+        // not sure why type checker doesn't pick this up
+        assert(HierarchyNode.isCustom(parentNode) || HierarchyNode.isInstancesNode(parentNode));
+        groupingNode.nonGroupingAncestor = parentNode;
+      });
+      return mergeInPlace<ProcessedGroupingHierarchyNode | ProcessedInstanceHierarchyNode>(result.grouped, result.ungrouped);
+    }),
+  );
 }
 
 function mergeInPlace<T>(target: T[] | undefined, source: T[]) {
@@ -152,29 +177,41 @@ function mergeInPlace<T>(target: T[] | undefined, source: T[]) {
 }
 
 /** @internal */
-export async function createGroupingHandlers(
+export function createGroupingHandlers(
   metadata: IECMetadataProvider,
   parentNode: ParentHierarchyNode | undefined,
   processedInstanceNodes: ProcessedInstanceHierarchyNode[],
   valueFormatter: IPrimitiveValueFormatter,
   localizedStrings: PropertiesGroupingLocalizedStrings,
   classHierarchyInspector: IECClassHierarchyInspector,
-): Promise<GroupingHandler[]> {
+): Observable<GroupingHandler> {
+  doLog({
+    category: PERF_LOGGING_NAMESPACE,
+    message: /* istanbul ignore next */ () => `Start creating grouping handlers`,
+  });
+  const timer = new StopWatch(undefined, true);
   const groupingLevel = getNodeGroupingLevel(parentNode);
-  const groupingHandlers: GroupingHandler[] = new Array<GroupingHandler>();
-  if (groupingLevel <= GroupingLevel.Class) {
-    groupingHandlers.push(...(await createBaseClassGroupingHandlers(metadata, parentNode, processedInstanceNodes, classHierarchyInspector)));
-    groupingHandlers.push(async (allNodes) => createClassGroups(metadata, parentNode, allNodes));
-  }
-  if (groupingLevel <= GroupingLevel.Property) {
-    groupingHandlers.push(
-      ...(await createPropertiesGroupingHandlers(metadata, parentNode, processedInstanceNodes, valueFormatter, localizedStrings, classHierarchyInspector)),
-    );
-  }
-  if (groupingLevel < GroupingLevel.Label) {
-    groupingHandlers.push(async (allNodes) => createLabelGroups(allNodes));
-  }
-  return groupingHandlers;
+  return concat(
+    groupingLevel <= GroupingLevel.Class
+      ? concat(
+          from(createBaseClassGroupingHandlers(metadata, parentNode, processedInstanceNodes, classHierarchyInspector)).pipe(concatAll()),
+          of<GroupingHandler>(async (allNodes) => createClassGroups(metadata, parentNode, allNodes)),
+        )
+      : EMPTY,
+    groupingLevel <= GroupingLevel.Property
+      ? from(createPropertiesGroupingHandlers(metadata, parentNode, processedInstanceNodes, valueFormatter, localizedStrings, classHierarchyInspector)).pipe(
+          concatAll(),
+        )
+      : EMPTY,
+    groupingLevel < GroupingLevel.Label ? of<GroupingHandler>(async (allNodes) => createLabelGroups(allNodes)) : EMPTY,
+  ).pipe(
+    finalize(() => {
+      doLog({
+        category: PERF_LOGGING_NAMESPACE,
+        message: /* istanbul ignore next */ () => `Creating grouping handlers took ${timer.elapsedSeconds.toFixed(3)} s`,
+      });
+    }),
+  );
 }
 
 function getNodeGroupingLevel(node: ParentHierarchyNode | undefined): GroupingLevel {
