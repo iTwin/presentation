@@ -5,14 +5,59 @@
 
 import { expect } from "chai";
 import sinon from "sinon";
+import { ConcatenatedValue } from "../shared/ConcatenatedValue";
 import { createConcatenatedValueJsonSelector, createRawPropertyValueSelector } from "../shared/ecsql-snippets/ECSqlValueSelectorSnippets";
 import {
   createBisInstanceLabelSelectClauseFactory,
   createClassBasedInstanceLabelSelectClauseFactory,
   createDefaultInstanceLabelSelectClauseFactory,
   IInstanceLabelSelectClauseFactory,
+  parseInstanceLabel,
 } from "../shared/InstanceLabelSelectClauseFactory";
 import { trimWhitespace } from "../shared/Utils";
+
+describe("parseInstanceLabel", () => {
+  it("parses empty value", () => {
+    expect(parseInstanceLabel("")).to.eq("");
+  });
+
+  it("parses plain string", () => {
+    expect(parseInstanceLabel("test")).to.eq("test");
+  });
+
+  it("parses complex value of one part", () => {
+    const labelPart: ConcatenatedValue = [
+      {
+        type: "Boolean",
+        value: true,
+      },
+    ];
+    expect(parseInstanceLabel(JSON.stringify(labelPart))).to.deep.eq(labelPart);
+  });
+
+  it("parses complex value of multiple parts", () => {
+    const labelParts: ConcatenatedValue = [
+      {
+        type: "Integer",
+        value: 123,
+      },
+      {
+        className: "x.y",
+        propertyName: "p",
+        value: "test",
+      },
+    ];
+    expect(parseInstanceLabel(JSON.stringify(labelParts))).to.deep.eq(labelParts);
+  });
+
+  it("parses string label that looks like JSON object but is not", () => {
+    expect(parseInstanceLabel("{x}")).to.eq("{x}");
+  });
+
+  it("parses string label that looks like JSON array but is not", () => {
+    expect(parseInstanceLabel("[y]")).to.eq("[y]");
+  });
+});
 
 describe("createDefaultInstanceLabelSelectClauseFactory", () => {
   let factory: IInstanceLabelSelectClauseFactory;

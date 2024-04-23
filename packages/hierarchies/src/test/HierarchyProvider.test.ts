@@ -8,10 +8,10 @@ import { collect, createAsyncIterator, ResolvablePromise, waitFor } from "presen
 import sinon from "sinon";
 import { omit } from "@itwin/core-bentley";
 import { GenericInstanceFilter } from "@itwin/core-common";
-import { ConcatenatedValue, EC, ECSqlQueryDef, InstanceKey, trimWhitespace, TypedPrimitiveValue } from "@itwin/presentation-shared";
+import { ECSqlQueryDef, InstanceKey, trimWhitespace, TypedPrimitiveValue } from "@itwin/presentation-shared";
 import { DefineHierarchyLevelProps, IHierarchyLevelDefinitionsFactory } from "../hierarchies/HierarchyDefinition";
 import { RowsLimitExceededError } from "../hierarchies/HierarchyErrors";
-import { GroupingHierarchyNode, GroupingNodeKey, HierarchyNode, ParsedCustomHierarchyNode } from "../hierarchies/HierarchyNode";
+import { GroupingHierarchyNode, GroupingNodeKey, HierarchyNode } from "../hierarchies/HierarchyNode";
 import { HierarchyProvider } from "../hierarchies/HierarchyProvider";
 import {
   ECSQL_COLUMN_NAME_FilteredChildrenPaths,
@@ -540,126 +540,10 @@ describe("HierarchyProvider", () => {
       formatter.resetHistory();
     });
 
-    it("returns formatted string label", async () => {
-      const { provider } = setupTest({
-        node: createNode("test label"),
-      });
-      const rootNodes = await collect(provider.getNodes({ parentNode: undefined }));
-      expect(formatter).to.be.calledOnceWith({ value: "test label", type: "String" });
-      expect(rootNodes[0].label).to.eq("_test label_");
-    });
-
-    it("returns combined strings label", async () => {
-      const { provider } = setupTest({
-        node: createNode(["test1", "-", "test2"]),
-      });
-      const rootNodes = await collect(provider.getNodes({ parentNode: undefined }));
-      expect(formatter).to.be.calledThrice;
-      expect(formatter.firstCall).to.be.calledWith({ value: "test1", type: "String" });
-      expect(formatter.secondCall).to.be.calledWith({ value: "-", type: "String" });
-      expect(formatter.thirdCall).to.be.calledWith({ value: "test2", type: "String" });
-      expect(rootNodes[0].label).to.eq("_test1__-__test2_");
-    });
-
-    it("returns formatted typed primitive values label", async () => {
-      const { provider } = setupTest({
-        node: createNode([
-          { type: "Integer", value: 123 },
-          { type: "String", value: "!" },
-        ]),
-      });
-      const rootNodes = await collect(provider.getNodes({ parentNode: undefined }));
-      expect(formatter).to.be.calledTwice;
-      expect(formatter.firstCall).to.be.calledWithExactly({ type: "Integer", value: 123 });
-      expect(formatter.secondCall).to.be.calledWithExactly({ type: "String", value: "!" });
-      expect(rootNodes[0].label).to.eq("_123__!_");
-    });
-
-    it("returns formatted primitive property values label", async () => {
-      metadataProvider.stubEntityClass({
-        schemaName: "x",
-        className: "y",
-        properties: [
-          {
-            name: "p",
-            isPrimitive: () => true,
-            primitiveType: "String",
-            extendedTypeName: "extended type",
-            kindOfQuantity: Promise.resolve({ fullName: "s.koq" } as EC.KindOfQuantity),
-          } as EC.PrimitiveProperty,
-        ],
-      });
-      const { provider } = setupTest({
-        node: createNode([{ className: "x.y", propertyName: "p", value: "abc" }]),
-      });
-      const rootNodes = await collect(provider.getNodes({ parentNode: undefined }));
-      expect(formatter).to.be.calledOnceWithExactly({
-        type: "String",
-        extendedType: "extended type",
-        koqName: "s.koq",
-        value: "abc",
-      });
-      expect(rootNodes[0].label).to.eq("_abc_");
-    });
-
-    it("throws when label includes non-primitive property values", async () => {
-      metadataProvider.stubEntityClass({
-        schemaName: "x",
-        className: "y",
-        properties: [
-          {
-            name: "p",
-            isPrimitive: () => false,
-          } as EC.Property,
-        ],
-      });
-      const { provider } = setupTest({
-        node: createNode([{ className: "x.y", propertyName: "p", value: "abc" }]),
-      });
-      await expect(provider.getNodes({ parentNode: undefined }).next()).to.eventually.be.rejected;
-    });
-
-    it("throws when label includes `IGeometry` property values", async () => {
-      metadataProvider.stubEntityClass({
-        schemaName: "x",
-        className: "y",
-        properties: [
-          {
-            name: "p",
-            isPrimitive: () => true,
-            primitiveType: "IGeometry",
-          } as EC.PrimitiveProperty,
-        ],
-      });
-      const { provider } = setupTest({
-        node: createNode([{ className: "x.y", propertyName: "p", value: "abc" }]),
-      });
-      await expect(provider.getNodes({ parentNode: undefined }).next()).to.eventually.be.rejected;
-    });
-
-    it("throws when label includes `Binary` property values", async () => {
-      metadataProvider.stubEntityClass({
-        schemaName: "x",
-        className: "y",
-        properties: [
-          {
-            name: "p",
-            isPrimitive: () => true,
-            primitiveType: "Binary",
-          } as EC.PrimitiveProperty,
-        ],
-      });
-      const { provider } = setupTest({
-        node: createNode([{ className: "x.y", propertyName: "p", value: "abc" }]),
-      });
-      await expect(provider.getNodes({ parentNode: undefined }).next()).to.eventually.be.rejected;
-    });
-
-    function setupTest(props: { node: ParsedCustomHierarchyNode }) {
-      const { node } = props;
+    it("returns formatted label", async () => {
       const hierarchyDefinition: IHierarchyLevelDefinitionsFactory = {
         async defineHierarchyLevel() {
-          return [{ node }];
+          return [{ node: { key: "test", label: "test label", children: false } }];
         },
       };
       const provider = new HierarchyProvider({
@@ -668,12 +552,10 @@ describe("HierarchyProvider", () => {
         hierarchyDefinition,
         formatter,
       });
-      return { hierarchyDefinition, provider };
-    }
-
-    function createNode(label: ConcatenatedValue | string): ParsedCustomHierarchyNode {
-      return { key: "test", label, children: false };
-    }
+      const rootNodes = await collect(provider.getNodes({ parentNode: undefined }));
+      expect(formatter).to.be.calledOnceWith({ value: "test label", type: "String" });
+      expect(rootNodes[0].label).to.eq("_test label_");
+    });
   });
 
   describe("Hierarchy filtering", () => {
