@@ -5,7 +5,6 @@
 
 import { expect } from "chai";
 import sinon from "sinon";
-import { UiComponents } from "@itwin/components-react";
 import { EmptyLocalization } from "@itwin/core-common";
 import { IModelApp } from "@itwin/core-frontend";
 import { Presentation } from "@itwin/presentation-frontend";
@@ -22,7 +21,6 @@ describe("PresentationInstanceFilterProperty", () => {
     const localization = new EmptyLocalization();
     sinon.stub(IModelApp, "initialized").get(() => true);
     sinon.stub(IModelApp, "localization").get(() => localization);
-    sinon.stub(UiComponents, "localization").get(() => localization);
     sinon.stub(Presentation, "localization").get(() => localization);
     Element.prototype.scrollIntoView = sinon.stub();
   });
