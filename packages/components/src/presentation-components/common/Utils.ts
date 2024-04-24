@@ -279,7 +279,7 @@ export function deserializeUniqueValues(serializedDisplayValues: string, seriali
   const displayValues = tryParseJSON(serializedDisplayValues);
   const groupedRawValues = tryParseJSON(serializedGroupedRawValues);
 
-  if (!displayValues || !groupedRawValues) {
+  if (!displayValues || !groupedRawValues || !Array.isArray(displayValues) || Object.keys(groupedRawValues).length !== displayValues.length) {
     return undefined;
   }
 
