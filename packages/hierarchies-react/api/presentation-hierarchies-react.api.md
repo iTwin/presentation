@@ -79,10 +79,10 @@ export type PresentationTreeNode = PresentationHierarchyNode | PresentationInfoN
 export { SelectionStorage }
 
 // @beta (undocumented)
-export function TreeNodeRenderer({ node, expandNode, selectNode, getIcon, setHierarchyLevelFilter, onFilterClick, setHierarchyLevelLimit, ...restProps }: TreeNodeRendererProps): JSX_2.Element;
+export function TreeNodeRenderer({ node, expandNode, selectNode, getIcon, setHierarchyLevelFilter, onFilterClick, setHierarchyLevelLimit, ...nodeProps }: TreeNodeRendererProps_2): JSX_2.Element;
 
 // @beta (undocumented)
-export function TreeRenderer({ rootNodes, expandNode, selectNode, isNodeSelected, setHierarchyLevelLimit, setHierarchyLevelFilter, onFilterClick, getIcon, }: TreeRendererProps): JSX_2.Element;
+export function TreeRenderer({ rootNodes, expandNode, selectNode, isNodeSelected, setHierarchyLevelLimit, setHierarchyLevelFilter, onFilterClick, getIcon, ...treeProps }: TreeRendererProps): JSX_2.Element;
 
 // @beta (undocumented)
 export function UnifiedSelectionProvider({ storage, children }: PropsWithChildren<Props>): JSX_2.Element;
