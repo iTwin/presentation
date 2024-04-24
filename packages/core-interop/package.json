@@ -36,25 +36,25 @@
     "check-internal": "node ../../scripts/checkInternal.js --apiSummary ./api/presentation-core-interop.api.md"
   },
   "dependencies": {
-    "rxjs": "^7.8.1",
-    "@itwin/presentation-shared": "workspace:~"
+    "@itwin/presentation-shared": "workspace:~",
+    "rxjs": "^7.8.1"
   },
   "peerDependencies": {
     "@itwin/core-bentley": "^4.1.0",
-    "@itwin/core-geometry": "^4.1.0",
     "@itwin/core-common": "^4.1.0",
+    "@itwin/core-geometry": "^4.1.0",
     "@itwin/core-quantity": "^4.1.0",
     "@itwin/ecschema-metadata": "^4.1.0"
   },
   "devDependencies": {
-    "@itwin/build-tools": "^4.5.1",
-    "@itwin/core-bentley": "^4.5.1",
-    "@itwin/core-common": "^4.5.1",
-    "@itwin/core-geometry": "^4.5.1",
-    "@itwin/core-quantity": "^4.5.1",
-    "@itwin/ecschema-metadata": "^4.5.1",
+    "@itwin/build-tools": "^4.5.2",
+    "@itwin/core-bentley": "^4.5.2",
+    "@itwin/core-common": "^4.5.2",
+    "@itwin/core-geometry": "^4.5.2",
+    "@itwin/core-quantity": "^4.5.2",
+    "@itwin/ecschema-metadata": "^4.5.2",
     "@itwin/eslint-plugin": "^4.0.0",
-    "@types/chai": "^4.3.11",
+    "@types/chai": "^4.3.14",
     "@types/chai-as-promised": "^7.1.8",
     "@types/mocha": "^10.0.6",
     "@types/sinon": "^17.0.3",
@@ -62,8 +62,8 @@
     "chai": "^4.4.1",
     "chai-as-promised": "^7.1.1",
     "cpx2": "^7.0.1",
-    "eslint": "^8.56.0",
-    "mocha": "^10.3.0",
+    "eslint": "^8.57.0",
+    "mocha": "^10.4.0",
     "nyc": "^15.1.0",
     "rimraf": "^5.0.5",
     "rxjs-for-await": "^1.0.0",

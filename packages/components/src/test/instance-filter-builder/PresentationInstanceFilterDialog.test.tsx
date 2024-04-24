@@ -243,7 +243,7 @@ describe("PresentationInstanceFilterDialog", () => {
       },
     );
 
-    const addButton = getAllByRole("button").find((el) => within(el).queryByText(/filterBuilder.add/))!;
+    const addButton = getAllByRole("button").find((el) => within(el).queryByText("Add"))!;
     await user.click(addButton);
 
     const applyButton = await getApplyButton(container);
