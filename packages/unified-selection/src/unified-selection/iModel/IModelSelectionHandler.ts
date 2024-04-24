@@ -61,7 +61,7 @@ export class IModelSelectionHandler {
 
     // stop imodel from syncing tool selection with hilited list - we want to override that behavior
     this._iModelSelection.hilited.wantSyncWithSelectionSet = false;
-    this.applyCurrentHiliteSet({ activeSelectionAction: "clear" });
+    this.applyCurrentHiliteSet({ activeSelectionAction: "clearAll" });
   }
 
   public dispose() {
@@ -82,9 +82,9 @@ export class IModelSelectionHandler {
     };
   }
 
-  private handleUnifiedSelectionChange(changeType: StorageSelectionChangeType, selectables: Selectables) {
+  private handleUnifiedSelectionChange(changeType: StorageSelectionChangeType, selectables: Selectables, source: string) {
     if (changeType === "clear" || changeType === "replace") {
-      this.applyCurrentHiliteSet({ activeSelectionAction: "clear" });
+      this.applyCurrentHiliteSet({ activeSelectionAction: changeType === "replace" && source === "Tool" ? "clearHilited" : "clearAll" });
       return;
     }
 
@@ -120,14 +120,16 @@ export class IModelSelectionHandler {
     if (args.changeType === "replace" || args.changeType === "clear") {
       this._cancelOngoingChanges.next();
     }
-    this.handleUnifiedSelectionChange(args.changeType, args.selectables);
+    this.handleUnifiedSelectionChange(args.changeType, args.selectables, args.source);
   };
 
-  private applyCurrentHiliteSet({ activeSelectionAction }: { activeSelectionAction: "clear" | "keep" }) {
-    if (activeSelectionAction === "clear") {
+  private applyCurrentHiliteSet({ activeSelectionAction }: { activeSelectionAction: "clearAll" | "clearHilited" | "keep" }) {
+    if (activeSelectionAction !== "keep") {
       using(this.suspendIModelToolSelectionSync(), (_) => {
         this._iModelSelection.hilited.clear();
-        this._iModelSelection.selectionSet.emptyAll();
+        if (activeSelectionAction === "clearAll") {
+          this._iModelSelection.selectionSet.emptyAll();
+        }
       });
     }
 

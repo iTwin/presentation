@@ -904,5 +904,31 @@ describe("IModelSelectionHandler", () => {
         expect(hilited.elements.addIds).to.be.calledOnceWith(["0x2"]);
       });
     });
+
+    it("does not clear selection set if unified selection change was caused by viewport", async () => {
+      const elementId = "0x1";
+      async function* generator() {
+        yield {
+          elements: [elementId],
+          subCategories: [],
+          models: [],
+        } as hiliteSetProvider.HiliteSet;
+      }
+
+      cachingProvider.getHiliteSet.callsFake(() => generator());
+
+      // trigger the selection change and wait for event handler to finish
+      triggerSelectionChange({ source: "Tool" });
+
+      await waitFor(() => {
+        // verify hilite was changed with expected ids
+        expect(hilited.clear).to.be.calledOnce;
+        expect(hilited.elements.addIds).to.be.calledOnceWith([elementId]);
+
+        // verify selection set was replaced
+        expect(selectionSet.emptyAll).to.not.be.called;
+        expect(selectionSet.add).to.be.calledOnceWith([elementId]);
+      });
+    });
   });
 });
