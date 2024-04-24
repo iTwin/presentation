@@ -7,12 +7,22 @@ import { ComponentPropsWithoutRef, useCallback } from "react";
 import { Tree } from "@itwin/itwinui-react";
 import { isPresentationHierarchyNode, PresentationTreeNode } from "./Types";
 import { useTree } from "./UseTree";
-import { TreeNodeRenderer, TreeNodeRendererProps } from "./TreeNodeRenderer";
+import { TreeNodeRenderer } from "./TreeNodeRenderer";
 
-type TreeRendererProps = Omit<ReturnType<typeof useTree>, "rootNodes" | "isLoading" | "reloadTree" | "getHierarchyLevelFilteringOptions"> &
-  Pick<TreeNodeRendererProps, "onFilterClick" | "getIcon"> & {
-    rootNodes: PresentationTreeNode[];
-  };
+type TreeProps<T> = ComponentPropsWithoutRef<typeof Tree<T>>;
+type TreeNodeRendererProps = ComponentPropsWithoutRef<typeof TreeNodeRenderer>;
+
+interface TreeRendererOwnProps {
+  rootNodes: PresentationTreeNode[];
+}
+
+type TreeRendererProps = Pick<
+  ReturnType<typeof useTree>,
+  "rootNodes" | "expandNode" | "selectNode" | "isNodeSelected" | "setHierarchyLevelLimit" | "setHierarchyLevelFilter"
+> &
+  Pick<TreeNodeRendererProps, "onFilterClick" | "getIcon"> &
+  TreeRendererOwnProps &
+  Omit<TreeProps<PresentationTreeNode>, "data" | "nodeRenderer" | "getNode" | "enableVirtualization">;
 
 /** @beta */
 export function TreeRenderer({
@@ -24,6 +34,7 @@ export function TreeRenderer({
   setHierarchyLevelFilter,
   onFilterClick,
   getIcon,
+  ...treeProps
 }: TreeRendererProps) {
   const nodeRenderer = useCallback<TreeProps<PresentationTreeNode>["nodeRenderer"]>(
     (nodeProps) => {
@@ -44,16 +55,7 @@ export function TreeRenderer({
 
   const getNode = useCallback<TreeProps<PresentationTreeNode>["getNode"]>((node) => createTreeNode(node, isNodeSelected), [isNodeSelected]);
 
-  return (
-    <div
-      style={{
-        width: "100%",
-        overflow: "auto",
-      }}
-    >
-      <Tree<PresentationTreeNode> data={rootNodes} nodeRenderer={nodeRenderer} getNode={getNode} enableVirtualization={true} />
-    </div>
-  );
+  return <Tree<PresentationTreeNode> {...treeProps} data={rootNodes} nodeRenderer={nodeRenderer} getNode={getNode} enableVirtualization={true} />;
 }
 
 /** @beta */
@@ -91,5 +93,3 @@ export function createTreeNode(
     isSelected: isNodeSelected(node.id),
   };
 }
-
-type TreeProps<T> = ComponentPropsWithoutRef<typeof Tree<T>>;

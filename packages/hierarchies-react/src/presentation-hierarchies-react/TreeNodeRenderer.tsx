@@ -11,16 +11,15 @@ import { ComponentPropsWithoutRef, ReactElement } from "react";
 import { isPresentationHierarchyNode, PresentationHierarchyNode, PresentationTreeNode } from "./Types";
 import { useTree } from "./UseTree";
 
-/** @internal */
-export type TreeNodeRendererProps = Omit<
-  ReturnType<typeof useTree>,
-  "rootNodes" | "isLoading" | "reloadTree" | "getHierarchyLevelFilteringOptions" | "isNodeSelected"
-> &
-  Omit<TreeNodeProps, "label" | "onExpanded" | "onSelected" | "icon"> & {
-    node: PresentationTreeNode;
-    onFilterClick: (nodeId: string) => void;
-    getIcon?: (node: PresentationHierarchyNode) => ReactElement | undefined;
-  };
+interface TreeNodeRendererOwnProps {
+  node: PresentationTreeNode;
+  onFilterClick: (nodeId: string) => void;
+  getIcon?: (node: PresentationHierarchyNode) => ReactElement | undefined;
+}
+
+type TreeNodeRendererProps = Pick<ReturnType<typeof useTree>, "expandNode" | "selectNode" | "setHierarchyLevelFilter" | "setHierarchyLevelLimit"> &
+  Omit<TreeNodeProps, "label" | "onExpanded" | "onSelected" | "icon"> &
+  TreeNodeRendererOwnProps;
 
 /** @beta */
 export function TreeNodeRenderer({
@@ -31,12 +30,12 @@ export function TreeNodeRenderer({
   setHierarchyLevelFilter,
   onFilterClick,
   setHierarchyLevelLimit,
-  ...restProps
+  ...nodeProps
 }: TreeNodeRendererProps) {
   if (isPresentationHierarchyNode(node)) {
     return (
       <TreeNode
-        {...restProps}
+        {...nodeProps}
         className={cx("stateless-tree-node", { filtered: node.isFiltered })}
         label={node.label}
         onExpanded={(_, isExpanded) => {
@@ -80,13 +79,13 @@ export function TreeNodeRenderer({
   }
 
   if (node.type === "ChildrenPlaceholder") {
-    return <PlaceholderNode {...restProps} label={node.message} />;
+    return <PlaceholderNode {...nodeProps} label={node.message} />;
   }
 
   if (node.type === "ResultSetTooLarge") {
-    return <ResultSetTooLargeNode {...restProps} label={node.message} onRemoveLimit={() => setHierarchyLevelLimit(node.parentNodeId, "unbounded")} />;
+    return <ResultSetTooLargeNode {...nodeProps} label={node.message} onRemoveLimit={() => setHierarchyLevelLimit(node.parentNodeId, "unbounded")} />;
   }
-  return <TreeNode {...restProps} label={node.message} isDisabled={true} onExpanded={/* istanbul ignore next */ () => {}} />;
+  return <TreeNode {...nodeProps} label={node.message} isDisabled={true} onExpanded={/* istanbul ignore next */ () => {}} />;
 }
 
 function PlaceholderNode(props: Omit<TreeNodeProps, "onExpanded">) {
