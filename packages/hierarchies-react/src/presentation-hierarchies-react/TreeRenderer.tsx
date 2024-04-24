@@ -42,7 +42,7 @@ export function TreeRenderer({
     [expandNode, selectNode, setHierarchyLevelLimit, setHierarchyLevelFilter, onFilterClick, getIcon],
   );
 
-  const getNode = useCallback<TreeProps<PresentationTreeNode>["getNode"]>((node) => getTreeNode(node, isNodeSelected), [isNodeSelected]);
+  const getNode = useCallback<TreeProps<PresentationTreeNode>["getNode"]>((node) => createTreeNode(node, isNodeSelected), [isNodeSelected]);
 
   return (
     <div
@@ -57,7 +57,10 @@ export function TreeRenderer({
 }
 
 /** @beta */
-export function getTreeNode(node: PresentationTreeNode, isNodeSelected: (nodeId: string) => boolean): ReturnType<TreeProps<PresentationTreeNode>["getNode"]> {
+export function createTreeNode(
+  node: PresentationTreeNode,
+  isNodeSelected: (nodeId: string) => boolean,
+): ReturnType<TreeProps<PresentationTreeNode>["getNode"]> {
   if (!isPresentationHierarchyNode(node)) {
     return {
       nodeId: node.id,

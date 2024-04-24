@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-export { TreeRenderer, getTreeNode } from "./presentation-hierarchies-react/TreeRenderer";
+export { TreeRenderer, createTreeNode } from "./presentation-hierarchies-react/TreeRenderer";
 export { TreeNodeRenderer } from "./presentation-hierarchies-react/TreeNodeRenderer";
 export * from "./presentation-hierarchies-react/Types";
 export * from "./presentation-hierarchies-react/UseTree";
