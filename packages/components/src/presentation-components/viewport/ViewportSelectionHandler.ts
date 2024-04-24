@@ -73,9 +73,9 @@ export class ViewportSelectionHandler implements IDisposable {
     this.applyCurrentHiliteSet(this._imodel);
   }
 
-  private handleUnifiedSelectionChange(imodel: IModelConnection, changeType: SelectionChangeType, keys: Readonly<KeySet>) {
+  private handleUnifiedSelectionChange(imodel: IModelConnection, changeType: SelectionChangeType, keys: Readonly<KeySet>, source: string) {
     if (changeType === SelectionChangeType.Clear || changeType === SelectionChangeType.Replace) {
-      this.applyCurrentHiliteSet(imodel);
+      this.applyCurrentHiliteSet(imodel, changeType === SelectionChangeType.Replace && source === "Tool" ? "onlyHilited" : "all");
       return;
     }
 
@@ -98,7 +98,7 @@ export class ViewportSelectionHandler implements IDisposable {
           this.removeHiliteSet(imodel, set);
         },
         complete: () => {
-          this.applyCurrentHiliteSet(imodel, false);
+          this.applyCurrentHiliteSet(imodel, "none");
         },
       });
   }
@@ -116,14 +116,16 @@ export class ViewportSelectionHandler implements IDisposable {
     }
 
     this._cancelOngoingChanges.next();
-    this.handleUnifiedSelectionChange(args.imodel, args.changeType, args.keys);
+    this.handleUnifiedSelectionChange(args.imodel, args.changeType, args.keys, args.source);
   };
 
-  private applyCurrentHiliteSet(imodel: IModelConnection, clearBefore = true) {
-    if (clearBefore) {
+  private applyCurrentHiliteSet(imodel: IModelConnection, clearAction: "all" | "onlyHilited" | "none" = "all") {
+    if (clearAction !== "none") {
       using(Presentation.selection.suspendIModelToolSelectionSync(this._imodel), (_) => {
         imodel.hilited.clear();
-        imodel.selectionSet.emptyAll();
+        if (clearAction === "all") {
+          imodel.selectionSet.emptyAll();
+        }
       });
     }
 
