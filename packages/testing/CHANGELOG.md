@@ -1,5 +1,13 @@
 # Change Log - @itwin/presentation-testing
 
+## 5.0.3
+
+### Patch Changes
+
+- [#525](https://github.com/iTwin/presentation/pull/525): Specify `@itwin/presentation-components` dependency with `^`.
+- Updated dependencies:
+  - @itwin/presentation-components@5.2.0
+
 ## 5.0.2
 
 ### Patch Changes
