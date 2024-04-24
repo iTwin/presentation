@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { Id64String } from "@itwin/core-bentley";
-import { ConcatenatedValue, ECSqlQueryDef } from "@itwin/presentation-shared";
+import { ECSqlQueryDef, parseInstanceLabel } from "@itwin/presentation-shared";
 import { INodeParser } from "../HierarchyDefinition";
 import { InstanceHierarchyNodeProcessingParams, ParsedHierarchyNode, ParsedInstanceHierarchyNode } from "../HierarchyNode";
 import { ILimitingECSqlQueryExecutor } from "../LimitingECSqlQueryExecutor";
@@ -62,7 +62,7 @@ export function defaultNodesParser(row: { [columnName: string]: any }): ParsedIn
   };
   return {
     // don't format the label here - we're going to do that at node pre-processing step to handle both - instance and custom nodes
-    label: parseLabel(typedRow.DisplayLabel),
+    label: parseInstanceLabel(typedRow.DisplayLabel),
     key: {
       type: "instances",
       instanceKeys: [{ className: typedRow.FullClassName.replace(":", "."), id: typedRow.ECInstanceId }],
@@ -73,19 +73,4 @@ export function defaultNodesParser(row: { [columnName: string]: any }): ParsedIn
     ...(typedRow.ExtendedData ? { extendedData: JSON.parse(typedRow.ExtendedData) } : undefined),
     ...(Object.keys(processingParams).length > 0 ? { processingParams } : undefined),
   };
-}
-
-function parseLabel(value: string): ConcatenatedValue | string {
-  if (!value) {
-    return "";
-  }
-  if ((value.startsWith("[") && value.endsWith("]")) || (value.startsWith("{") && value.endsWith("}"))) {
-    try {
-      return JSON.parse(value);
-    } catch {
-      // fall through
-    }
-  }
-  // not a JSON object/array
-  return value;
 }

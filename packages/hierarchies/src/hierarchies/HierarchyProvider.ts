@@ -30,18 +30,16 @@ import { assert, StopWatch } from "@itwin/core-bentley";
 import { GenericInstanceFilter } from "@itwin/core-common";
 import {
   ConcatenatedValue,
-  ConcatenatedValuePart,
   createCachingECClassHierarchyInspector,
   createDefaultValueFormatter,
   ECSqlBinding,
   ECSqlQueryDef,
-  getClass,
+  formatConcatenatedValue,
   IECClassHierarchyInspector,
   IECMetadataProvider,
   InstanceKey,
   IPrimitiveValueFormatter,
   normalizeFullClassName,
-  TypedPrimitiveValue,
 } from "@itwin/presentation-shared";
 import { DefineHierarchyLevelProps, HierarchyNodesDefinition, IHierarchyLevelDefinitionsFactory } from "./HierarchyDefinition";
 import { RowsLimitExceededError } from "./HierarchyErrors";
@@ -564,54 +562,17 @@ function processNodes<TNode>(processor: (node: TNode) => Promise<TNode | undefin
 
 async function applyLabelsFormatting<TNode extends { label: string | ConcatenatedValue }>(
   node: TNode,
-  metadata: IECMetadataProvider,
-  valueFormatter: (value: TypedPrimitiveValue) => Promise<string>,
+  metadataProvider: IECMetadataProvider,
+  valueFormatter: IPrimitiveValueFormatter,
 ): Promise<TNode & { label: string }> {
-  if (typeof node.label === "string") {
-    const formattedLabel = await valueFormatter({ value: node.label, type: "String" });
-    return { ...node, label: formattedLabel };
-  }
   return {
     ...node,
-    label: await ConcatenatedValue.serialize({
-      parts: node.label,
-      partFormatter: async (part) => {
-        // strings are converted to typed strings
-        if (ConcatenatedValuePart.isString(part)) {
-          part = {
-            value: part,
-            type: "String",
-          };
-        }
-        // for property parts - find property metadata and create `TypedPrimitiveValue` for them.
-        if (ConcatenatedValuePart.isProperty(part)) {
-          const property = await getProperty(part, metadata);
-          if (!property?.isPrimitive()) {
-            throw new Error(`Labels formatter expects a primitive property, but it's not.`);
-          }
-          if (property.primitiveType === "IGeometry") {
-            throw new Error(`Labels formatter does not support "IGeometry" values, but the provided ${part.className}.${part.propertyName} property is.`);
-          }
-          if (property.primitiveType === "Binary") {
-            throw new Error(`Labels formatter does not support "Binary" values, but the provided ${part.className}.${part.propertyName} property is.`);
-          }
-          part = {
-            type: property.primitiveType,
-            extendedType: property.extendedTypeName,
-            koqName: (await property.kindOfQuantity)?.fullName,
-            value: part.value,
-          } as TypedPrimitiveValue;
-        }
-        // finally, use provided value formatter to create a string from `TypedPrimitiveValue`
-        return valueFormatter(part);
-      },
+    label: await formatConcatenatedValue({
+      value: node.label,
+      metadataProvider,
+      valueFormatter,
     }),
   };
-}
-
-async function getProperty({ className, propertyName }: { className: string; propertyName: string }, metadata: IECMetadataProvider) {
-  const propertyClass = await getClass(metadata, className);
-  return propertyClass.getProperty(propertyName);
 }
 
 function createParentNodeKeysList(parentNode: ParentHierarchyNode | undefined) {

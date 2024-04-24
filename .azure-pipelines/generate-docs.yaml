@@ -70,6 +70,7 @@ stages:
       - template: common/config/azure-pipelines/jobs/docs-build.yaml@itwinjs-core
         parameters:
           checkout: itwinjs-core
+          ignoreAudit: true
           useCurrentPresentationDocsArtifact: true
 
   - stage: Tag_Docs

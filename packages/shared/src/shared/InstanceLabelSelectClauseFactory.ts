@@ -3,6 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
+import { ConcatenatedValue } from "./ConcatenatedValue";
 import { createConcatenatedValueJsonSelector, createRawPropertyValueSelector, TypedValueSelectClauseProps } from "./ecsql-snippets/ECSqlValueSelectorSnippets";
 import { IECClassHierarchyInspector } from "./Metadata";
 
@@ -71,6 +72,28 @@ export interface IInstanceLabelSelectClauseFactory {
 }
 
 /**
+ * Parses an instance label from query result into a string or a `ConcatenatedValue`. The latter type of result
+ * is expected when label selector is created using `IInstanceLabelSelectClauseFactory.createSelectClause` with
+ * `createConcatenatedValueJsonSelector`.
+ *
+ * @beta
+ */
+export function parseInstanceLabel(value: string | undefined): ConcatenatedValue | string {
+  if (!value) {
+    return "";
+  }
+  if ((value.startsWith("[") && value.endsWith("]")) || (value.startsWith("{") && value.endsWith("}"))) {
+    try {
+      return JSON.parse(value);
+    } catch {
+      // fall through
+    }
+  }
+  // not a JSON object/array
+  return value;
+}
+
+/**
  * Creates a label select clause in a format `Class label [base36(briefcase id)-base36(local id)]`, where
  * local and briefcase IDs are calculated based on ECInstance ID:
  * - `{briefcase id} = ECInstanceId >> 40`
@@ -114,10 +137,16 @@ interface ClassBasedLabelSelectClause {
  * Props for `createClassBasedInstanceLabelSelectClauseFactory`.
  */
 interface ClassBasedInstanceLabelSelectClauseFactoryProps {
-  /** Access to ECClass hierarchy in the iModel */
+  /** Access to ECClass hierarchy in the iModel. */
   classHierarchyInspector: IECClassHierarchyInspector;
 
-  /** A list of instance label selectors associated to classes they should be applied to */
+  /**
+   * A prioritized list of instance label selectors associated to classes they should be applied to.
+   *
+   * Because the list may contain clauses for classes in the same class hierarchy, and the factory
+   * handles them in given order, the order of clauses should be from the most specific class to the
+   * most general one.
+   */
   clauses: ClassBasedLabelSelectClause[];
 
   /**

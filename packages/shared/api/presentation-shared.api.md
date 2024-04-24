@@ -273,13 +273,11 @@ export interface ECSqlQueryRow {
 }
 
 // @beta
-interface Event_2<TListener extends (...args: any[]) => void = () => void> {
-    // (undocumented)
-    addListener(listener: TListener): () => void;
-    // (undocumented)
-    removeListener(listener: TListener): void;
-}
-export { Event_2 as Event }
+export function formatConcatenatedValue(props: {
+    value: ConcatenatedValue | string;
+    metadataProvider: IECMetadataProvider;
+    valueFormatter: IPrimitiveValueFormatter;
+}): Promise<string>;
 
 // @beta
 export function getClass(metadata: IECMetadataProvider, fullClassName: string): Promise<EC.Class>;
@@ -356,6 +354,9 @@ export function parseFullClassName(fullClassName: string): {
     schemaName: string;
     className: string;
 };
+
+// @beta
+export function parseInstanceLabel(value: string | undefined): ConcatenatedValue | string;
 
 // @beta
 export type PrimitiveValue = Id64String | string | number | boolean | Date | Point2d | Point3d;

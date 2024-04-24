@@ -76,6 +76,11 @@ export interface UsePresentationTreeStateProps<TEventHandler extends TreeEventHa
     /** Duration how long the load took in milliseconds. */
     duration: number;
   }) => void;
+
+  /**
+   * Callback for when the hierarchy limit is exceeded while loading nodes.
+   */
+  onHierarchyLimitExceeded?: () => void;
 }
 
 /**
@@ -127,6 +132,7 @@ interface TreeStateProps extends PresentationTreeDataProviderProps {
 interface UseTreeStateProps {
   treeStateProps: TreeStateProps;
   onNodeLoaded?: (callbackProps: { node: string; duration: number }) => void;
+  onHierarchyLimitExceeded?: () => void;
 }
 
 interface TreeState {
@@ -139,6 +145,7 @@ interface TreeState {
  * @public
  */
 export function usePresentationTreeState<TEventHandler extends TreeEventHandler = TreeEventHandler>({
+  onHierarchyLimitExceeded,
   onNodeLoaded,
   eventHandlerFactory,
   seedTreeModel,
@@ -155,7 +162,7 @@ export function usePresentationTreeState<TEventHandler extends TreeEventHandler 
     Object.values(dataProviderProps), // eslint-disable-line react-hooks/exhaustive-deps
   );
 
-  const { state, onReload } = useTreeState({ treeStateProps, onNodeLoaded });
+  const { state, onReload } = useTreeState({ treeStateProps, onNodeLoaded, onHierarchyLimitExceeded });
   const renderedItems = useRef<RenderedItemsRange | undefined>(undefined);
   // istanbul ignore next
   const onItemsRendered = useCallback((items: RenderedItemsRange) => {
@@ -208,22 +215,16 @@ interface PresentationTreeFilteringProps {
 
 function useTreeState(props: UseTreeStateProps) {
   const [state, setState] = useState<TreeState>();
-  const onNodeLoadedRef = useRef(props.onNodeLoaded);
-  useEffect(() => {
-    onNodeLoadedRef.current = props.onNodeLoaded;
-  }, [props.onNodeLoaded]);
-
-  const prevStateRef = useRef(state);
-  useEffect(() => {
-    prevStateRef.current = state;
-  }, [state]);
+  const onNodeLoadedRef = useLatest(props.onNodeLoaded);
+  const onHierarchyLimitExceededRef = useLatest(props.onHierarchyLimitExceeded);
+  const prevStateRef = useLatest(state);
 
   useEffect(() => {
     const { treeModel, ...providerProps } = props.treeStateProps;
     const modelSource = new TreeModelSource(new MutableTreeModel(treeModel));
-    const dataProvider = new PresentationTreeDataProvider(providerProps);
+    const dataProvider = new PresentationTreeDataProvider({ ...providerProps, onHierarchyLimitExceeded: () => onHierarchyLimitExceededRef.current?.() });
     const pagedLoader = new PagedTreeNodeLoader(dataProvider, modelSource, providerProps.pagingSize);
-    const nodeLoader = new ReportingTreeNodeLoader(pagedLoader, () => onNodeLoadedRef.current);
+    const nodeLoader = new ReportingTreeNodeLoader(pagedLoader, (nodeLoadedProps) => onNodeLoadedRef.current?.(nodeLoadedProps));
 
     const newState = {
       modelSource,
@@ -233,18 +234,22 @@ function useTreeState(props: UseTreeStateProps) {
     setState(newState);
 
     return () => {
+      // eslint-disable-next-line react-hooks/exhaustive-deps
       prevStateRef.current?.dataProvider.dispose();
     };
-  }, [props.treeStateProps]);
+  }, [props.treeStateProps, onNodeLoadedRef, onHierarchyLimitExceededRef, prevStateRef]);
 
-  const onReload = useCallback((reloadedTree: ReloadedTree) => {
-    prevStateRef.current?.dataProvider.dispose();
+  const onReload = useCallback(
+    (reloadedTree: ReloadedTree) => {
+      prevStateRef.current?.dataProvider.dispose();
 
-    const { modelSource, dataProvider } = reloadedTree;
-    const pagedLoader = new PagedTreeNodeLoader(dataProvider, modelSource, dataProvider.pagingSize!);
-    const nodeLoader = new ReportingTreeNodeLoader(pagedLoader, () => onNodeLoadedRef.current);
-    setState({ dataProvider, nodeLoader });
-  }, []);
+      const { modelSource, dataProvider } = reloadedTree;
+      const pagedLoader = new PagedTreeNodeLoader(dataProvider, modelSource, dataProvider.pagingSize!);
+      const nodeLoader = new ReportingTreeNodeLoader(pagedLoader, (nodeLoadedProps) => onNodeLoadedRef.current?.(nodeLoadedProps));
+      setState({ dataProvider, nodeLoader });
+    },
+    [onNodeLoadedRef, prevStateRef],
+  );
 
   return { state, onReload };
 }
@@ -283,4 +288,13 @@ function usePresentationTreeFiltering({ activeMatchIndex, ...rest }: Presentatio
         matchesCount,
       }
     : undefined;
+}
+
+function useLatest<T>(value: T) {
+  const ref = useRef(value);
+  useEffect(() => {
+    ref.current = value;
+  }, [value]);
+
+  return ref;
 }

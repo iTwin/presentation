@@ -15,6 +15,7 @@ beta;ECSqlBinding =
 beta;ECSqlQueryDef
 beta;ECSqlQueryReaderOptions
 beta;ECSqlQueryRow
+beta;formatConcatenatedValue(props:
 beta;getClass(metadata: IECMetadataProvider, fullClassName: string): Promise
 beta;IECClassHierarchyInspector
 beta;IECMetadataProvider
@@ -30,6 +31,7 @@ beta;NOOP_LOGGER: ILogger
 beta;normalizeFullClassName(fullClassName: string): string
 beta;OmitOverUnion
 beta;parseFullClassName(fullClassName: string):
+beta;parseInstanceLabel(value: string | undefined): ConcatenatedValue | string
 beta;PrimitiveValue = Id64String | string | number | boolean | Date | Point2d | Point3d
 beta;PrimitiveValue
 beta;trimWhitespace(str: string): string
