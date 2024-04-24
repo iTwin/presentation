@@ -1,5 +1,24 @@
 # Change Log - @itwin/presentation-components
 
+## 5.2.0
+
+### Minor Changes
+
+- [#536](https://github.com/iTwin/presentation/pull/536): Added `onFilterApplied` and `onHierarchyLimitExceeded` callbacks for tracking when hierarchy level is filtered or exceeds the limit.
+- [#531](https://github.com/iTwin/presentation/pull/531): Added the ability to search for values in `UniqueValuesSelector`.
+- [#527](https://github.com/iTwin/presentation/pull/527): Start using new features available in `@itwin/presentation-frontend` `4.5` release.
+
+  - Added support for `FavoritePropertiesDataFiltererProps.isFavorite` to return `Promise<boolean>` in addition to already supported `boolean`.
+  - Added `PresentationPropertyDataProvider.isFieldFavoriteAsync` in favor of now deprecated `isFieldFavorite`.
+  - Added `PresentationPropertyDataProvider.sortFieldsAsync` in favor of now deprecated `sortFields`.
+  - Added `PresentationTreeDataProviderDataSourceEntryPoints.getNodesIterator` in favor of now deprecated `getNodesAndCount`.
+
+  In all of the above cases the deprecated overrides are still being used, if supplied.
+
+### Patch Changes
+
+- [#538](https://github.com/iTwin/presentation/pull/538): Avoid removing and adding back elements from/to `selectionSet` when unified selection is changed when selecting something in the `Viewport`.
+
 ## 5.1.0
 
 ### Minor Changes
