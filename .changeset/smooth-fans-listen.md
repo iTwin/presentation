@@ -2,4 +2,4 @@
 "@itwin/presentation-components": patch
 ---
 
-Fixed `PresentationInstanceFilter.toGenericInstanceFilter` convertion with conditions using numeric string values.
+Fixed `PresentationInstanceFilter.toGenericInstanceFilter` conversion when condition is using numeric string values.
