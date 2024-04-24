@@ -1,6 +1,6 @@
 sep=;
 Release Tag;API Item
-beta;getTreeNode(node: PresentationTreeNode, isNodeSelected: (nodeId: string) => boolean): ReturnType
+beta;createTreeNode(node: PresentationTreeNode, isNodeSelected: (nodeId: string) => boolean): ReturnType
 beta;HierarchyLevelFilteringOptions
 beta;InfoNodeTypes = "ResultSetTooLarge" | "ChildrenPlaceholder" | "NoFilterMatchingNodes" | "Unknown"
 beta;isPresentationHierarchyNode(node: PresentationTreeNode): node is PresentationHierarchyNode

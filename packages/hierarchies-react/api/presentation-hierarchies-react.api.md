@@ -15,10 +15,10 @@ import { SelectionStorage } from '@itwin/unified-selection';
 import { Tree } from '@itwin/itwinui-react';
 import { TreeNode } from '@itwin/itwinui-react';
 
-export { GenericInstanceFilter }
-
 // @beta (undocumented)
-export function getTreeNode(node: PresentationTreeNode, isNodeSelected: (nodeId: string) => boolean): ReturnType<TreeProps<PresentationTreeNode>["getNode"]>;
+export function createTreeNode(node: PresentationTreeNode, isNodeSelected: (nodeId: string) => boolean): ReturnType<TreeProps<PresentationTreeNode>["getNode"]>;
+
+export { GenericInstanceFilter }
 
 // @beta (undocumented)
 export interface HierarchyLevelFilteringOptions {
