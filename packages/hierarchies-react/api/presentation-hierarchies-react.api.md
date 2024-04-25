@@ -4,6 +4,7 @@
 
 ```ts
 
+import { ComponentPropsWithoutRef } from 'react';
 import { GenericInstanceFilter } from '@itwin/presentation-hierarchies';
 import { HierarchyNode } from '@itwin/presentation-hierarchies';
 import { HierarchyProvider } from '@itwin/presentation-hierarchies';
@@ -11,6 +12,11 @@ import { JSX as JSX_2 } from 'react/jsx-runtime';
 import { PropsWithChildren } from 'react';
 import { ReactElement } from 'react';
 import { SelectionStorage } from '@itwin/unified-selection';
+import { Tree } from '@itwin/itwinui-react';
+import { TreeNode } from '@itwin/itwinui-react';
+
+// @beta (undocumented)
+export function createTreeNode(node: PresentationTreeNode, isNodeSelected: (nodeId: string) => boolean): ReturnType<TreeProps<PresentationTreeNode>["getNode"]>;
 
 export { GenericInstanceFilter }
 
@@ -40,8 +46,6 @@ export interface PresentationHierarchyNode {
         [key: string]: any;
     };
     // (undocumented)
-    hierarchyLimit?: number | "unbounded";
-    // (undocumented)
     id: string;
     // (undocumented)
     isExpanded: boolean;
@@ -53,6 +57,8 @@ export interface PresentationHierarchyNode {
     isLoading: boolean;
     // (undocumented)
     label: string;
+    // (undocumented)
+    nodeData: HierarchyNode;
 }
 
 // @beta (undocumented)
@@ -73,7 +79,10 @@ export type PresentationTreeNode = PresentationHierarchyNode | PresentationInfoN
 export { SelectionStorage }
 
 // @beta (undocumented)
-export function TreeRenderer({ rootNodes, expandNode, selectNode, isNodeSelected, setHierarchyLevelLimit, setHierarchyLevelFilter, onFilterClick, getIcon, }: TreeRendererProps): JSX_2.Element;
+export function TreeNodeRenderer({ node, expandNode, selectNode, getIcon, setHierarchyLevelFilter, onFilterClick, setHierarchyLevelLimit, ...nodeProps }: TreeNodeRendererProps_2): JSX_2.Element;
+
+// @beta (undocumented)
+export function TreeRenderer({ rootNodes, expandNode, selectNode, isNodeSelected, setHierarchyLevelLimit, setHierarchyLevelFilter, onFilterClick, getIcon, ...treeProps }: TreeRendererProps): JSX_2.Element;
 
 // @beta (undocumented)
 export function UnifiedSelectionProvider({ storage, children }: PropsWithChildren<Props>): JSX_2.Element;

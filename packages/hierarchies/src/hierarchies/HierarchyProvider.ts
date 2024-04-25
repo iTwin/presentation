@@ -72,6 +72,7 @@ import { ILimitingECSqlQueryExecutor } from "./LimitingECSqlQueryExecutor";
 import { NodeSelectClauseColumnNames } from "./NodeSelectQueryFactory";
 
 const LOGGING_NAMESPACE = `${CommonLoggingNamespace}.HierarchyProvider`;
+const PERF_LOGGING_NAMESPACE = `${LOGGING_NAMESPACE}.Performance`;
 const DEFAULT_QUERY_CONCURRENCY = 10;
 const DEFAULT_QUERY_CACHE_SIZE = 50;
 
@@ -232,8 +233,20 @@ export class HierarchyProvider {
   private createParsedQueryNodesObservable(
     props: DefineHierarchyLevelProps & { hierarchyLevelSizeLimit?: number | "unbounded"; filteredInstanceKeys?: InstanceKey[] },
   ): ParsedQueryNodesObservable {
+    doLog({
+      category: PERF_LOGGING_NAMESPACE,
+      message: /* istanbul ignore next */ () => `Requesting hierarchy level definitions for ${createNodeIdentifierForLogging(props.parentNode)}`,
+    });
     // stream hierarchy level definitions in order
-    const definitions = from(this.hierarchyDefinition.defineHierarchyLevel(props)).pipe(concatAll());
+    const definitions = from(this.hierarchyDefinition.defineHierarchyLevel(props)).pipe(
+      concatAll(),
+      finalize(() =>
+        doLog({
+          category: PERF_LOGGING_NAMESPACE,
+          message: /* istanbul ignore next */ () => `Received all hierarchy level definitions for ${createNodeIdentifierForLogging(props.parentNode)}`,
+        }),
+      ),
+    );
     // pipe definitions to nodes and put "share replay" on it
     return definitions.pipe(
       concatMap((def): ObservableInput<ParsedHierarchyNode> => {
@@ -252,6 +265,12 @@ export class HierarchyProvider {
           ),
         );
       }),
+      finalize(() =>
+        doLog({
+          category: PERF_LOGGING_NAMESPACE,
+          message: /* istanbul ignore next */ () => `Read all child nodes ${createNodeIdentifierForLogging(props.parentNode)}`,
+        }),
+      ),
       shareReplayWithErrors(),
     );
   }
@@ -264,6 +283,12 @@ export class HierarchyProvider {
       mergeMap(async (node) => applyLabelsFormatting(node, this._imodelAccess, this._valuesFormatter)),
       // we have `ProcessedHierarchyNode` from here
       preProcessNodes(this.hierarchyDefinition),
+      finalize(() =>
+        doLog({
+          category: PERF_LOGGING_NAMESPACE,
+          message: /* istanbul ignore next */ () => `Finished initializing child nodes for ${createNodeIdentifierForLogging(parentNode)}`,
+        }),
+      ),
     );
   }
 
@@ -278,6 +303,12 @@ export class HierarchyProvider {
         (n) => this.getChildNodesObservables({ ...props, parentNode: n }).processedNodes,
         false,
       ),
+      finalize(() =>
+        doLog({
+          category: PERF_LOGGING_NAMESPACE,
+          message: /* istanbul ignore next */ () => `Finished pre-processing child nodes for ${createNodeIdentifierForLogging(props.parentNode)}`,
+        }),
+      ),
     );
   }
 
@@ -289,10 +320,19 @@ export class HierarchyProvider {
       createGroupingOperator(this._imodelAccess, props.parentNode, this._valuesFormatter, this._localizedStrings, (gn) =>
         this.onGroupingNodeCreated(gn, props),
       ),
+      finalize(() =>
+        doLog({
+          category: PERF_LOGGING_NAMESPACE,
+          message: /* istanbul ignore next */ () => `Finished processing child nodes for ${createNodeIdentifierForLogging(props.parentNode)}`,
+        }),
+      ),
     );
   }
 
-  private createFinalizedNodesObservable(processedNodesObservable: Observable<ProcessedHierarchyNode>): Observable<HierarchyNode> {
+  private createFinalizedNodesObservable(
+    processedNodesObservable: Observable<ProcessedHierarchyNode>,
+    props: GetHierarchyNodesProps,
+  ): Observable<HierarchyNode> {
     return processedNodesObservable.pipe(
       createDetermineChildrenOperator((n) => this.getChildNodesObservables({ parentNode: n }).hasNodes),
       postProcessNodes(this.hierarchyDefinition),
@@ -304,6 +344,12 @@ export class HierarchyProvider {
         }
         return { ...node, children: hasChildren(n) };
       }),
+      finalize(() =>
+        doLog({
+          category: PERF_LOGGING_NAMESPACE,
+          message: /* istanbul ignore next */ () => `Finished finalizing child nodes for ${createNodeIdentifierForLogging(props.parentNode)}`,
+        }),
+      ),
     );
   }
 
@@ -379,7 +425,7 @@ export class HierarchyProvider {
         return {
           processedNodes: post,
           hasNodes: this.createHasNodesObservable(pre, entry.observable),
-          finalizedNodes: this.createFinalizedNodesObservable(post),
+          finalizedNodes: this.createFinalizedNodesObservable(post, props),
         };
       }
       case "pre-processed": {
@@ -387,7 +433,7 @@ export class HierarchyProvider {
         return {
           processedNodes: post,
           hasNodes: this.createHasNodesObservable(entry.observable),
-          finalizedNodes: this.createFinalizedNodesObservable(post),
+          finalizedNodes: this.createFinalizedNodesObservable(post, props),
         };
       }
     }

@@ -5,9 +5,9 @@
 
 import { expect } from "chai";
 import { GenericInstanceFilter } from "@itwin/presentation-hierarchies";
-import { TreeRenderer } from "../presentation-hierarchies-react/Tree";
+import { TreeRenderer } from "../presentation-hierarchies-react/TreeRenderer";
 import { PresentationHierarchyNode, PresentationInfoNode, PresentationTreeNode } from "../presentation-hierarchies-react/Types";
-import { createStub, render, within } from "./TestUtils";
+import { createStub, createTestHierarchyNode, render, within } from "./TestUtils";
 
 describe("Tree", () => {
   const onFilterClick = createStub<(nodeId: string) => void>();
@@ -230,6 +230,7 @@ function createNodes(nodes: Array<PartialHierarchyNode | PresentationInfoNode>):
       isLoading: node.isLoading ?? false,
       label: node.label ?? node.id,
       children: node.children === true ? true : createNodes(node.children ?? []),
+      nodeData: node.nodeData ?? createTestHierarchyNode({ id: node.id }),
     };
     return presentationNode;
   });
