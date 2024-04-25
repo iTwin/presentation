@@ -10,6 +10,7 @@ import { parseFullClassName } from "./Utils";
  * An interface of an iModel metadata provider used to retrieve information about EC metadata (ECSchemas,
  * ECClasses, ECProperties, etc.) in the iModel.
  *
+ * @see `createMetadataProvider` in `@itwin/presentation-core-interop`.
  * @beta
  */
 export interface IECMetadataProvider {
@@ -18,6 +19,7 @@ export interface IECMetadataProvider {
 
 /**
  * An interface for a class hierarchy inspector that can be used to determine if one class derives from another.
+ * @see `createCachingECClassHierarchyInspector`
  * @beta
  */
 export interface IECClassHierarchyInspector {

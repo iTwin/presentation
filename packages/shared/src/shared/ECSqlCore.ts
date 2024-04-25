@@ -95,8 +95,8 @@ type ECSqlQueryReader = AsyncIterableIterator<ECSqlQueryRow>;
 
 /**
  * An interface for something that knows how to create an ECSQL query reader.
- * @beta
  * @see `createECSqlQueryExecutor` in `@itwin/presentation-core-interop`.
+ * @beta
  */
 export interface IECSqlQueryExecutor {
   createQueryReader(query: ECSqlQueryDef, config?: ECSqlQueryReaderOptions): ECSqlQueryReader;
