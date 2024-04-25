@@ -429,6 +429,39 @@ describe("PresentationInstanceFilter", () => {
       expect(actual).to.be.deep.eq(expectedFilter);
     });
 
+    it("converts string unique value condition", () => {
+      const { displayValues, groupedRawValues } = serializeUniqueValues([
+        {
+          displayValue: "10",
+          groupedRawValues: ["10"],
+        },
+      ]);
+      const filter: PresentationInstanceFilter = {
+        operator: "is-equal",
+        field: propertyField1,
+        value: { valueFormat: PropertyValueFormat.Primitive, value: groupedRawValues, displayValue: displayValues },
+      };
+      const actual = PresentationInstanceFilter.toGenericInstanceFilter(filter);
+      const expectedFilter: GenericInstanceFilter = {
+        rules: {
+          operator: "or",
+          rules: [
+            {
+              operator: "is-equal",
+              propertyName: propertyField1.properties[0].property.name,
+              sourceAlias: "this",
+              propertyTypeName: propertyField1.type.typeName,
+              value: { displayValue: "10", rawValue: "10" },
+            },
+          ],
+        },
+        propertyClassNames: ["Schema:A"],
+        relatedInstances: [],
+        filteredClassNames: undefined,
+      };
+      expect(actual).to.be.deep.eq(expectedFilter);
+    });
+
     it("converts condition group", () => {
       const filter: PresentationInstanceFilter = {
         operator: "or",
