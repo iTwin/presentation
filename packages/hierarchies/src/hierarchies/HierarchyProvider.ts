@@ -59,7 +59,7 @@ import { CachedNodesObservableEntry, ChildNodeObservablesCache, ParsedQueryNodes
 import { LOGGING_NAMESPACE as CommonLoggingNamespace, createNodeIdentifierForLogging, hasChildren } from "./internal/Common";
 import { eachValueFrom } from "./internal/EachValueFrom";
 import { FilteringHierarchyLevelDefinitionsFactory } from "./internal/FilteringHierarchyLevelDefinitionsFactory";
-import { createQueryLogMessage, doLog, doPerformanceLog, log } from "./internal/LoggingUtils";
+import { createQueryLogMessage, doLog, log } from "./internal/LoggingUtils";
 import { createDetermineChildrenOperator } from "./internal/operators/DetermineChildren";
 import { createGroupingOperator } from "./internal/operators/Grouping";
 import { createHideIfNoChildrenOperator } from "./internal/operators/HideIfNoChildren";
@@ -241,7 +241,7 @@ export class HierarchyProvider {
   private createParsedQueryNodesObservable(
     props: DefineHierarchyLevelProps & { hierarchyLevelSizeLimit?: number | "unbounded"; filteredInstanceKeys?: InstanceKey[] },
   ): ParsedQueryNodesObservable {
-    doPerformanceLog({
+    doLog({
       category: PERF_LOGGING_NAMESPACE,
       message: /* istanbul ignore next */ () => `Requesting hierarchy level definitions for ${createNodeIdentifierForLogging(props.parentNode)}`,
     });
@@ -249,7 +249,7 @@ export class HierarchyProvider {
     const definitions = from(this.hierarchyDefinition.defineHierarchyLevel(props)).pipe(
       concatAll(),
       finalize(() =>
-        doPerformanceLog({
+        doLog({
           category: PERF_LOGGING_NAMESPACE,
           message: /* istanbul ignore next */ () => `Received all hierarchy level definitions for ${createNodeIdentifierForLogging(props.parentNode)}`,
         }),
@@ -274,7 +274,7 @@ export class HierarchyProvider {
         );
       }),
       finalize(() =>
-        doPerformanceLog({
+        doLog({
           category: PERF_LOGGING_NAMESPACE,
           message: /* istanbul ignore next */ () => `Read all child nodes ${createNodeIdentifierForLogging(props.parentNode)}`,
         }),
@@ -292,7 +292,7 @@ export class HierarchyProvider {
       // we have `ProcessedHierarchyNode` from here
       preProcessNodes(this.hierarchyDefinition),
       finalize(() =>
-        doPerformanceLog({
+        doLog({
           category: PERF_LOGGING_NAMESPACE,
           message: /* istanbul ignore next */ () => `Finished initializing child nodes for ${createNodeIdentifierForLogging(parentNode)}`,
         }),
@@ -312,7 +312,7 @@ export class HierarchyProvider {
         false,
       ),
       finalize(() =>
-        doPerformanceLog({
+        doLog({
           category: PERF_LOGGING_NAMESPACE,
           message: /* istanbul ignore next */ () => `Finished pre-processing child nodes for ${createNodeIdentifierForLogging(props.parentNode)}`,
         }),
@@ -329,7 +329,7 @@ export class HierarchyProvider {
         this.onGroupingNodeCreated(gn, props),
       ),
       finalize(() =>
-        doPerformanceLog({
+        doLog({
           category: PERF_LOGGING_NAMESPACE,
           message: /* istanbul ignore next */ () => `Finished processing child nodes for ${createNodeIdentifierForLogging(props.parentNode)}`,
         }),
@@ -353,7 +353,7 @@ export class HierarchyProvider {
         return { ...node, children: hasChildren(n) };
       }),
       finalize(() =>
-        doPerformanceLog({
+        doLog({
           category: PERF_LOGGING_NAMESPACE,
           message: /* istanbul ignore next */ () => `Finished finalizing child nodes for ${createNodeIdentifierForLogging(props.parentNode)}`,
         }),

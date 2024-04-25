@@ -101,20 +101,6 @@ describe("LoggingUtils", () => {
       expect(messageFunc).to.be.calledOnce;
       expect(logger.logTrace).to.be.calledOnceWith("test category", "test message");
     });
-
-    it("calls log func with timestamp", () => {
-      logger.isEnabled.returns(true);
-      const messageFunc = sinon.stub().returns("test message");
-
-      doLog({ category: "test category", message: messageFunc, prependTimestamp: true });
-
-      expect(logger.isEnabled).to.be.calledOnceWith("test category", "trace");
-      expect(messageFunc).to.be.calledOnce;
-      expect(logger.logTrace).to.be.calledOnceWith(
-        "test category",
-        sinon.match(/\[\d{4}-[01]\d-[0-3]\dT[0-2]\d:[0-5]\d:[0-5]\d\.\d+([+-][0-2]\d:[0-5]\d|Z)\] test message/i),
-      );
-    });
   });
 
   describe("log", () => {
