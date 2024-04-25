@@ -11,7 +11,7 @@ import { ECSqlSelectClauseGroupingParams, IHierarchyLevelDefinitionsFactory, Nod
 import { buildIModel } from "../../IModelUtils";
 import { initialize, terminate } from "../../IntegrationTests";
 import { NodeValidators, validateHierarchy } from "../HierarchyValidation";
-import { createMetadataProvider, createProvider } from "../Utils";
+import { createIModelAccess, createProvider } from "../Utils";
 
 describe("Hierarchies", () => {
   describe("Grouping nodes' hiding", () => {
@@ -34,7 +34,7 @@ describe("Hierarchies", () => {
       specifiedGrouping: ECSqlSelectClauseGroupingParams,
       labelProperty?: string,
     ): IHierarchyLevelDefinitionsFactory {
-      const selectQueryFactory = new NodeSelectQueryFactory({ metadataProvider: createMetadataProvider(imodel) });
+      const selectQueryFactory = new NodeSelectQueryFactory({ imodelAccess: createIModelAccess(imodel) });
       return {
         async defineHierarchyLevel({ parentNode }) {
           if (!parentNode) {

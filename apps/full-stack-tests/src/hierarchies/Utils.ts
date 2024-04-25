@@ -13,9 +13,10 @@ import {
   HierarchyNodeIdentifiersPath,
   HierarchyProvider,
   HierarchyProviderLocalizedStrings,
+  HierarchyProviderProps,
   IHierarchyLevelDefinitionsFactory,
 } from "@itwin/presentation-hierarchies";
-import { IPrimitiveValueFormatter, parseFullClassName } from "@itwin/presentation-shared";
+import { createCachingECClassHierarchyInspector, IPrimitiveValueFormatter, parseFullClassName } from "@itwin/presentation-shared";
 
 function createSchemaContext(imodel: IModelConnection | IModelDb | ECDb) {
   const schemas = new SchemaContext();
@@ -45,13 +46,20 @@ function createSchemaContext(imodel: IModelConnection | IModelDb | ECDb) {
   return schemas;
 }
 
-export function createMetadataProvider(imodel: IModelConnection | IModelDb | ECDb) {
-  return createMetadataProviderInterop(createSchemaContext(imodel));
+export function createIModelAccess(imodel: IModelConnection | IModelDb | ECDb) {
+  const metadataProvider = createMetadataProviderInterop(createSchemaContext(imodel));
+  const classHierarchyInspector = createCachingECClassHierarchyInspector({ metadataProvider });
+  const queryExecutor = createLimitingECSqlQueryExecutor(createECSqlQueryExecutor(imodel), 123);
+  return {
+    ...metadataProvider,
+    ...classHierarchyInspector,
+    ...queryExecutor,
+  };
 }
 
 export function createProvider(props: {
   imodel: IModelConnection | IModelDb | ECDb;
-  hierarchy: IHierarchyLevelDefinitionsFactory;
+  hierarchy: IHierarchyLevelDefinitionsFactory | HierarchyProviderProps["hierarchyDefinitionFactory"];
   formatterFactory?: (schemas: SchemaContext) => IPrimitiveValueFormatter;
   localizedStrings?: HierarchyProviderLocalizedStrings;
   filteredNodePaths?: HierarchyNodeIdentifiersPath[];
@@ -59,9 +67,8 @@ export function createProvider(props: {
 }) {
   const { imodel, hierarchy, formatterFactory, localizedStrings, filteredNodePaths, queryCacheSize } = props;
   return new HierarchyProvider({
-    metadataProvider: createMetadataProvider(imodel),
-    hierarchyDefinition: hierarchy,
-    queryExecutor: createLimitingECSqlQueryExecutor(createECSqlQueryExecutor(imodel), 123),
+    imodelAccess: createIModelAccess(imodel),
+    hierarchyDefinitionFactory: typeof hierarchy === "function" ? hierarchy : () => hierarchy,
     formatter: formatterFactory ? formatterFactory(createSchemaContext(imodel)) : undefined,
     localizedStrings,
     filtering: filteredNodePaths ? { paths: filteredNodePaths } : undefined,

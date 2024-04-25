@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { Id64 } from "@itwin/core-bentley";
-import { ECSqlBinding, formIdBindings, IECSqlQueryExecutor } from "./queries/ECSqlCore";
+import { ECSqlBinding, ECSqlQueryDef, formIdBindings, IECSqlQueryExecutor } from "./queries/ECSqlCore";
 import { SelectableInstanceKey } from "./Selectable";
 
 /**
@@ -81,45 +81,56 @@ async function* computeElementSelection(
 ): AsyncIterableIterator<SelectableInstanceKey> {
   const bindings: ECSqlBinding[] = [];
   const recurseUntilRoot = ancestorLevel < 0;
-  const query = `
-    WITH RECURSIVE
-      AncestorElements (ECInstanceId, ECClassId, Depth, ParentId) AS (
+  const ctes = [
+    `
+      AncestorElements(ECInstanceId, ECClassId, Depth, ParentId) AS (
         SELECT ECInstanceId, ECClassId, ${formAncestorLevelBinding(ancestorLevel, bindings)}, Parent.Id
         FROM BisCore.Element
         WHERE ${formIdBindings("ECInstanceId", elementIds, bindings)}
         UNION ALL
-        SELECT pe.ECInstanceId, pe.ECClassId, a.Depth - 1, pe.Parent.Id FROM AncestorElements a
-          JOIN BisCore.Element pe ON pe.ECInstanceId = a.ParentId
+        SELECT pe.ECInstanceId, pe.ECClassId, a.Depth - 1, pe.Parent.Id
+        FROM AncestorElements a
+        JOIN BisCore.Element pe ON pe.ECInstanceId = a.ParentId
         WHERE ${recurseUntilRoot ? "" : "Depth > 0 AND"} ParentId IS NOT NULL
       )
-      SELECT DISTINCT ECInstanceId, ec_classname(ECClassId, 's.c') AS ClassName FROM AncestorElements
-      WHERE ${recurseUntilRoot ? "" : "Depth = 0 OR"} ParentId IS NULL`;
-
-  yield* executeQuery(queryExecutor, query, bindings);
+    `,
+  ];
+  const ecsql = `
+    SELECT DISTINCT ECInstanceId, ec_classname(ECClassId, 's.c') AS ClassName
+    FROM AncestorElements
+    WHERE ${recurseUntilRoot ? "" : "Depth = 0 OR"} ParentId IS NULL
+  `;
+  yield* executeQuery(queryExecutor, { ctes, ecsql, bindings });
 }
 
 async function* computeCategorySelection(queryExecutor: IECSqlQueryExecutor, ids: string[]): AsyncIterableIterator<SelectableInstanceKey> {
   const bindings: ECSqlBinding[] = [];
-  const query = `
-    SELECT DISTINCT c.ECInstanceId, ec_classname(c.ECClassId, 's.c') AS ClassName
-    FROM BisCore.Category c JOIN BisCore.GeometricElement2d ge ON ge.Category.Id = c.ECInstanceId
-    WHERE ${formIdBindings("ge.ECInstanceId", ids, bindings)}
-    UNION ALL
-    SELECT DISTINCT c.ECInstanceId, ec_classname(c.ECClassId, 's.c') AS ClassName
-    FROM BisCore.Category c JOIN BisCore.GeometricElement3d ge ON ge.Category.Id = c.ECInstanceId
-    WHERE ${formIdBindings("ge.ECInstanceId", ids, bindings)}`;
-
-  yield* executeQuery(queryExecutor, query, bindings);
+  const ecsql = [
+    `
+      SELECT DISTINCT c.ECInstanceId, ec_classname(c.ECClassId, 's.c') AS ClassName
+      FROM BisCore.Category c
+      JOIN BisCore.GeometricElement2d ge ON ge.Category.Id = c.ECInstanceId
+      WHERE ${formIdBindings("ge.ECInstanceId", ids, bindings)}
+    `,
+    `
+      SELECT DISTINCT c.ECInstanceId, ec_classname(c.ECClassId, 's.c') AS ClassName
+      FROM BisCore.Category c
+      JOIN BisCore.GeometricElement3d ge ON ge.Category.Id = c.ECInstanceId
+      WHERE ${formIdBindings("ge.ECInstanceId", ids, bindings)}
+    `,
+  ].join(" UNION ALL ");
+  yield* executeQuery(queryExecutor, { ecsql, bindings });
 }
 
 async function* computeModelSelection(queryExecutor: IECSqlQueryExecutor, ids: string[]): AsyncIterableIterator<SelectableInstanceKey> {
   const bindings: ECSqlBinding[] = [];
-  const query = `
+  const ecsql = `
     SELECT DISTINCT m.ECInstanceId, ec_classname(m.ECClassId, 's.c') AS ClassName
-    FROM BisCore.Model m JOIN BisCore.Element e ON e.Model.Id = m.ECInstanceId
-    WHERE ${formIdBindings("e.ECInstanceId", ids, bindings)}`;
-
-  yield* executeQuery(queryExecutor, query, bindings);
+    FROM BisCore.Model m
+    JOIN BisCore.Element e ON e.Model.Id = m.ECInstanceId
+    WHERE ${formIdBindings("e.ECInstanceId", ids, bindings)}
+  `;
+  yield* executeQuery(queryExecutor, { ecsql, bindings });
 }
 
 async function* computeFunctionalElementSelection(
@@ -129,9 +140,9 @@ async function* computeFunctionalElementSelection(
 ): AsyncIterableIterator<SelectableInstanceKey> {
   const bindings: ECSqlBinding[] = [];
   const recurseUntilRoot = ancestorLevel < 0;
-  const query = `
-    WITH RECURSIVE
-      Elements2dOrNearestFunctionalElements (OriginalECInstanceId, OriginalECClassId, ECInstanceId, ECClassId, ParentId) AS (
+  const ctes = [
+    `
+      Elements2dOrNearestFunctionalElements(OriginalECInstanceId, OriginalECClassId, ECInstanceId, ECClassId, ParentId) AS (
         SELECT ECInstanceId, ECClassId, ECInstanceId, ECClassId, Parent.Id
         FROM BisCore.Element
         WHERE ${formIdBindings("ECInstanceId", ids, bindings)} AND ECClassId IS NOT (BisCore.GeometricElement3d)
@@ -143,61 +154,79 @@ async function* computeFunctionalElementSelection(
           COALESCE(dgrfe.TargetECClassId, pe.ECClassId),
           pe.Parent.Id
         FROM Elements2dOrNearestFunctionalElements e2onfe
-          LEFT JOIN BisCore.Element pe ON pe.ECInstanceId = e2onfe.ParentId
-          LEFT JOIN Functional.DrawingGraphicRepresentsFunctionalElement dgrfe ON dgrfe.SourceECInstanceId = e2onfe.ECInstanceId
+        LEFT JOIN BisCore.Element pe ON pe.ECInstanceId = e2onfe.ParentId
+        LEFT JOIN Functional.DrawingGraphicRepresentsFunctionalElement dgrfe ON dgrfe.SourceECInstanceId = e2onfe.ECInstanceId
         WHERE e2onfe.ECClassId IS NOT (Functional.FunctionalElement) AND (e2onfe.ParentId IS NOT NULL OR dgrfe.TargetECInstanceId IS NOT NULL)
-      ),
-      Element2dNearestFunctionalElements (OriginalECInstanceId, ECInstanceId, ECClassId) AS (
+      )
+    `,
+    `
+      Element2dNearestFunctionalElements(OriginalECInstanceId, ECInstanceId, ECClassId) AS (
         SELECT OriginalECInstanceId, ECInstanceId, ECClassId
         FROM Elements2dOrNearestFunctionalElements
         WHERE ECClassId IS (Functional.FunctionalElement)
-      ),
-      Elements2dWithoutFunctionalElement (ECInstanceId, ECClassId) AS (
+      )
+    `,
+    `
+      Elements2dWithoutFunctionalElement(ECInstanceId, ECClassId) AS (
         SELECT e2wfe.OriginalECInstanceId, OriginalECClassId
         FROM Elements2dOrNearestFunctionalElements e2wfe
-          LEFT JOIN Element2dNearestFunctionalElements e2nfe ON e2nfe.OriginalECInstanceId = e2wfe.OriginalECInstanceId
+        LEFT JOIN Element2dNearestFunctionalElements e2nfe ON e2nfe.OriginalECInstanceId = e2wfe.OriginalECInstanceId
         WHERE e2wfe.ParentId IS NULL AND e2nfe.ECInstanceId IS NULL
-      ),
-      Elements2d (ECInstanceId, ECClassId) AS (
+      )
+    `,
+    `
+      Elements2d(ECInstanceId, ECClassId) AS (
         SELECT ECInstanceId, ECClassId FROM Element2dNearestFunctionalElements
         UNION
         SELECT ECInstanceId, ECClassId FROM Elements2dWithoutFunctionalElement
-      ),
-      Element2dAncestorElements (ECInstanceId, ECClassId, Depth, ParentId) AS (
+      )
+    `,
+    `
+      Element2dAncestorElements(ECInstanceId, ECClassId, Depth, ParentId) AS (
         SELECT e.ECInstanceId, e.ECClassId, ${formAncestorLevelBinding(ancestorLevel, bindings)}, e.Parent.Id
         FROM BisCore.Element e
-          JOIN Elements2d e2d ON e2d.ECInstanceId = e.ECInstanceId
+        JOIN Elements2d e2d ON e2d.ECInstanceId = e.ECInstanceId
         UNION ALL
         SELECT pe.ECInstanceId, pe.ECClassId, e2ae.Depth - 1, pe.Parent.Id
         FROM Element2dAncestorElements e2ae
-          JOIN BisCore.Element pe ON pe.ECInstanceId = e2ae.ParentId
+        JOIN BisCore.Element pe ON pe.ECInstanceId = e2ae.ParentId
         WHERE ${recurseUntilRoot ? "" : "Depth > 0 AND"} ParentId IS NOT NULL
-      ),
-      Element3dAncestorElements (ECInstanceId, ECClassId, Depth, ParentId) AS (
+      )
+    `,
+    `
+      Element3dAncestorElements(ECInstanceId, ECClassId, Depth, ParentId) AS (
         SELECT ge.ECInstanceId, ge.ECClassId, ${formAncestorLevelBinding(ancestorLevel, bindings)}, ge.Parent.Id
         FROM BisCore.GeometricElement3d ge
         WHERE ${formIdBindings("ge.ECInstanceId", ids, bindings)}
         UNION ALL
         SELECT pe.ECInstanceId, pe.ECClassId, e3ae.Depth - 1, pe.Parent.Id
         FROM Element3dAncestorElements e3ae
-          JOIN BisCore.Element pe ON pe.ECInstanceId = e3ae.ParentId
+        JOIN BisCore.Element pe ON pe.ECInstanceId = e3ae.ParentId
         WHERE ${recurseUntilRoot ? "" : "Depth > 0 AND"} ParentId IS NOT NULL
-      ),
-      Element3dAncestorRelatedFunctionalElement (ECInstanceId, ClassName) AS (
+      )
+    `,
+    `
+      Element3dAncestorRelatedFunctionalElement(ECInstanceId, ClassName) AS (
         SELECT
           COALESCE(peff.TargetECInstanceId, e3ae.ECInstanceId),
           ec_classname(COALESCE(peff.TargetECClassId, e3ae.ECClassId), 's.c')
         FROM Element3dAncestorElements e3ae
-          LEFT JOIN Functional.PhysicalElementFulfillsFunction peff ON peff.SourceECInstanceId = e3ae.ECInstanceId
+        LEFT JOIN Functional.PhysicalElementFulfillsFunction peff ON peff.SourceECInstanceId = e3ae.ECInstanceId
         WHERE ${recurseUntilRoot ? "" : "e3ae.Depth = 0 OR"} e3ae.ParentId IS NULL
       )
+    `,
+  ];
+  const ecsql = [
+    `
       SELECT DISTINCT ECInstanceId, ec_classname(ECClassId, 's.c') AS ClassName
-      FROM Element2dAncestorElements
-      WHERE ${recurseUntilRoot ? "" : "Depth = 0 OR"} ParentId IS NULL
-      UNION ALL
-      SELECT DISTINCT ECInstanceId, ClassName FROM Element3dAncestorRelatedFunctionalElement`;
-
-  yield* executeQuery(queryExecutor, query, bindings);
+        FROM Element2dAncestorElements
+       WHERE ${recurseUntilRoot ? "" : "Depth = 0 OR"} ParentId IS NULL
+    `,
+    `
+      SELECT DISTINCT ECInstanceId, ClassName FROM Element3dAncestorRelatedFunctionalElement
+    `,
+  ].join(" UNION ALL ");
+  yield* executeQuery(queryExecutor, { ctes, ecsql, bindings });
 }
 
 function formAncestorLevelBinding(ancestorLevel: number, bindings: ECSqlBinding[]) {
@@ -205,9 +234,8 @@ function formAncestorLevelBinding(ancestorLevel: number, bindings: ECSqlBinding[
   return "?";
 }
 
-async function* executeQuery(queryExecutor: IECSqlQueryExecutor, query: string, bindings?: ECSqlBinding[]): AsyncIterableIterator<SelectableInstanceKey> {
-  const reader = queryExecutor.createQueryReader(query, bindings);
-
+async function* executeQuery(queryExecutor: IECSqlQueryExecutor, query: ECSqlQueryDef): AsyncIterableIterator<SelectableInstanceKey> {
+  const reader = queryExecutor.createQueryReader(query);
   for await (const row of reader) {
     yield { className: row.ClassName, id: row.ECInstanceId };
   }

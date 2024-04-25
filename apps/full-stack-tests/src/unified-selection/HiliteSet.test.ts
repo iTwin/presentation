@@ -27,8 +27,7 @@ import { ECSchemaRpcInterface } from "@itwin/ecschema-rpcinterface-common";
 import { ECSchemaRpcImpl } from "@itwin/ecschema-rpcinterface-impl";
 import { buildTestIModel, initialize, terminate } from "@itwin/presentation-testing";
 import { createHiliteSetProvider, SelectableInstanceKey, Selectables } from "@itwin/unified-selection";
-import { createMetadataProvider } from "../hierarchies/Utils";
-import { createECSqlQueryExecutor } from "./Utils";
+import { createIModelAccess } from "../hierarchies/Utils";
 
 describe("HiliteSet", () => {
   let iModel: IModelConnection;
@@ -46,7 +45,7 @@ describe("HiliteSet", () => {
   });
 
   async function loadHiliteSet(selectables: Selectables) {
-    const provider = createHiliteSetProvider({ queryExecutor: createECSqlQueryExecutor(iModel), metadataProvider: createMetadataProvider(iModel) });
+    const provider = createHiliteSetProvider({ imodelAccess: createIModelAccess(iModel) });
     const iterator = provider.getHiliteSet({ selectables });
 
     const models: string[] = [];

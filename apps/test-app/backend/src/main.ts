@@ -21,7 +21,7 @@ import { context } from "@opentelemetry/api";
 import { Resource } from "@opentelemetry/resources";
 import * as opentelemetry from "@opentelemetry/sdk-node";
 import { ConsoleSpanExporter } from "@opentelemetry/sdk-trace-base";
-import { SemanticResourceAttributes } from "@opentelemetry/semantic-conventions";
+import { SEMRESATTRS_SERVICE_NAME } from "@opentelemetry/semantic-conventions";
 // __PUBLISH_EXTRACT_END__
 import { rpcInterfaces } from "@test-app/common";
 
@@ -50,7 +50,7 @@ void (async () => {
   const telemetry = new opentelemetry.NodeSDK({
     traceExporter: new ConsoleSpanExporter(),
     resource: new Resource({
-      [SemanticResourceAttributes.SERVICE_NAME]: "presentation-test-app",
+      [SEMRESATTRS_SERVICE_NAME]: "presentation-test-app",
     }),
   });
   telemetry.start();

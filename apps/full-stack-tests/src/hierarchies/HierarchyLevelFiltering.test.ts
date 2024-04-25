@@ -8,7 +8,7 @@ import { GroupingHierarchyNode, IHierarchyLevelDefinitionsFactory, NodeSelectQue
 import { importSchema, withECDb } from "../IModelUtils";
 import { initialize, terminate } from "../IntegrationTests";
 import { NodeValidators, validateHierarchyLevel } from "./HierarchyValidation";
-import { createMetadataProvider, createProvider } from "./Utils";
+import { createIModelAccess, createProvider } from "./Utils";
 
 describe("Hierarchies", () => {
   describe("Hierarchy level filtering", () => {
@@ -38,7 +38,7 @@ describe("Hierarchies", () => {
           return { schema, x1, x2 };
         },
         async (imodel, { schema, x1, x2 }) => {
-          const selectQueryFactory = new NodeSelectQueryFactory({ metadataProvider: createMetadataProvider(imodel) });
+          const selectQueryFactory = new NodeSelectQueryFactory({ imodelAccess: createIModelAccess(imodel) });
           const hierarchy: IHierarchyLevelDefinitionsFactory = {
             async defineHierarchyLevel({ instanceFilter }) {
               const filterClauses = await selectQueryFactory.createFilterClauses(instanceFilter, { fullName: schema.items.X.fullName, alias: "this" });
@@ -113,7 +113,7 @@ describe("Hierarchies", () => {
           return { schema, x, y1, y2 };
         },
         async (imodel, { schema, x, y1, y2 }) => {
-          const selectQueryFactory = new NodeSelectQueryFactory({ metadataProvider: createMetadataProvider(imodel) });
+          const selectQueryFactory = new NodeSelectQueryFactory({ imodelAccess: createIModelAccess(imodel) });
           const hierarchy: IHierarchyLevelDefinitionsFactory = {
             async defineHierarchyLevel({ instanceFilter }) {
               const filterClauses = await selectQueryFactory.createFilterClauses(instanceFilter, { fullName: schema.items.Y.fullName, alias: "this" });
@@ -196,7 +196,7 @@ describe("Hierarchies", () => {
           return { schema, x, y1, y2 };
         },
         async (imodel, { schema, x, y1, y2 }) => {
-          const selectQueryFactory = new NodeSelectQueryFactory({ metadataProvider: createMetadataProvider(imodel) });
+          const selectQueryFactory = new NodeSelectQueryFactory({ imodelAccess: createIModelAccess(imodel) });
           const hierarchy: IHierarchyLevelDefinitionsFactory = {
             async defineHierarchyLevel({ instanceFilter }) {
               const filterClauses = await selectQueryFactory.createFilterClauses(instanceFilter, { fullName: schema.items.Y.fullName, alias: "this" });
@@ -284,7 +284,7 @@ describe("Hierarchies", () => {
           return { schema, x, y };
         },
         async (imodel, { schema, x, y }) => {
-          const selectQueryFactory = new NodeSelectQueryFactory({ metadataProvider: createMetadataProvider(imodel) });
+          const selectQueryFactory = new NodeSelectQueryFactory({ imodelAccess: createIModelAccess(imodel) });
           const hierarchy: IHierarchyLevelDefinitionsFactory = {
             async defineHierarchyLevel({ instanceFilter }) {
               const subjectFilterClauses = await selectQueryFactory.createFilterClauses(instanceFilter, { fullName: schema.items.X.fullName, alias: "this" });
@@ -355,7 +355,7 @@ describe("Hierarchies", () => {
           return { schema, x, y };
         },
         async (imodel, { schema, x, y }) => {
-          const selectQueryFactory = new NodeSelectQueryFactory({ metadataProvider: createMetadataProvider(imodel) });
+          const selectQueryFactory = new NodeSelectQueryFactory({ imodelAccess: createIModelAccess(imodel) });
           const hierarchy: IHierarchyLevelDefinitionsFactory = {
             async defineHierarchyLevel({ instanceFilter }) {
               const subjectFilterClauses = await selectQueryFactory.createFilterClauses(instanceFilter, { fullName: schema.items.X.fullName, alias: "this" });
@@ -426,7 +426,7 @@ describe("Hierarchies", () => {
           return { schema, x1, x2 };
         },
         async (imodel, { schema, x1, x2 }) => {
-          const selectQueryFactory = new NodeSelectQueryFactory({ metadataProvider: createMetadataProvider(imodel) });
+          const selectQueryFactory = new NodeSelectQueryFactory({ imodelAccess: createIModelAccess(imodel) });
           const hierarchy: IHierarchyLevelDefinitionsFactory = {
             async defineHierarchyLevel({ instanceFilter }) {
               const subjectFilterClauses = await selectQueryFactory.createFilterClauses(instanceFilter, { fullName: schema.items.X.fullName, alias: "this" });
@@ -512,7 +512,7 @@ describe("Hierarchies", () => {
           return { schema, x1, x2 };
         },
         async (imodel, { schema, x1, x2 }) => {
-          const selectQueryFactory = new NodeSelectQueryFactory({ metadataProvider: createMetadataProvider(imodel) });
+          const selectQueryFactory = new NodeSelectQueryFactory({ imodelAccess: createIModelAccess(imodel) });
           const hierarchy: IHierarchyLevelDefinitionsFactory = {
             async defineHierarchyLevel({ instanceFilter }) {
               const subjectFilterClauses = await selectQueryFactory.createFilterClauses(instanceFilter, { fullName: schema.items.X.fullName, alias: "this" });

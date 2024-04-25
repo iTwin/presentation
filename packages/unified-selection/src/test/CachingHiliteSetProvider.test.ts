@@ -24,7 +24,7 @@ describe("CachingHiliteSetProvider", () => {
   const provider = {
     getHiliteSet: sinon.stub<[{ iModelKey: string }], AsyncIterableIterator<hiliteSetProvider.HiliteSet>>(),
   };
-  const iModelProvider = sinon.stub<[string], { queryExecutor: IECSqlQueryExecutor; metadataProvider: IMetadataProvider }>();
+  const iModelProvider = sinon.stub<[string], IMetadataProvider & IECSqlQueryExecutor>();
   const iModelKey = "iModelKey";
 
   async function loadHiliteSet(imodelKey: string) {
@@ -47,6 +47,13 @@ describe("CachingHiliteSetProvider", () => {
     };
   }
 
+  function stubIModelAccess(): sinon.SinonStubbedInstance<IMetadataProvider & IECSqlQueryExecutor> {
+    return {
+      createQueryReader: sinon.stub(),
+      getSchema: sinon.stub(),
+    };
+  }
+
   beforeEach(() => {
     selectionStorage = createStorage();
 
@@ -54,9 +61,7 @@ describe("CachingHiliteSetProvider", () => {
       selectionStorage,
       iModelProvider,
     });
-    const defaultQueryExecutor = { createQueryReader: () => {} } as unknown as IECSqlQueryExecutor;
-    const defaultMetadataProvider = { getSchema: () => {} } as unknown as IMetadataProvider;
-    iModelProvider.returns({ queryExecutor: defaultQueryExecutor, metadataProvider: defaultMetadataProvider });
+    iModelProvider.returns(stubIModelAccess());
     selectionStorage.addToSelection({ iModelKey, source: "test", selectables: generateSelection() });
 
     provider.getHiliteSet.reset();
@@ -74,21 +79,20 @@ describe("CachingHiliteSetProvider", () => {
 
   describe("getHiliteSet", () => {
     it("creates provider once for iModel", async () => {
-      const executor1 = { createQueryReader: () => {} } as unknown as IECSqlQueryExecutor;
-      const executor2 = { createQueryReader: () => {} } as unknown as IECSqlQueryExecutor;
-      const metadataProvider = { getSchema: () => {} } as unknown as IMetadataProvider;
-      iModelProvider.returns({ queryExecutor: executor1, metadataProvider });
+      const imodel1 = stubIModelAccess();
+      const imodel2 = stubIModelAccess();
+      iModelProvider.returns(imodel1);
 
       hiliteSetCache.getHiliteSet({ iModelKey: "model1" });
-      expect(factory).to.be.calledOnceWith({ queryExecutor: executor1, metadataProvider });
+      expect(factory).to.be.calledOnceWith({ imodelAccess: imodel1 });
       factory.resetHistory();
 
       hiliteSetCache.getHiliteSet({ iModelKey: "model1" });
       expect(factory).to.not.be.called;
 
-      iModelProvider.returns({ queryExecutor: executor2, metadataProvider });
+      iModelProvider.returns(imodel2);
       hiliteSetCache.getHiliteSet({ iModelKey: "model2" });
-      expect(factory).to.be.calledOnceWith({ queryExecutor: executor2, metadataProvider });
+      expect(factory).to.be.calledOnceWith({ imodelAccess: imodel2 });
       factory.resetHistory();
 
       hiliteSetCache.getHiliteSet({ iModelKey: "model1" });
@@ -123,18 +127,17 @@ describe("CachingHiliteSetProvider", () => {
     });
 
     it("clears hilite set providers when iModel is closed", async () => {
-      const queryExecutor = { createQueryReader: () => {} } as unknown as IECSqlQueryExecutor;
-      const metadataProvider = { getSchema: () => {} } as unknown as IMetadataProvider;
-      iModelProvider.returns({ queryExecutor, metadataProvider });
+      const imodelAccess = stubIModelAccess();
+      iModelProvider.returns(imodelAccess);
 
       hiliteSetCache.getHiliteSet({ iModelKey });
-      expect(factory).to.be.calledOnceWith({ queryExecutor, metadataProvider });
+      expect(factory).to.be.calledOnceWith({ imodelAccess });
       factory.resetHistory();
 
       selectionStorage.clearStorage({ iModelKey });
 
       hiliteSetCache.getHiliteSet({ iModelKey });
-      expect(factory).to.be.calledOnceWith({ queryExecutor, metadataProvider });
+      expect(factory).to.be.calledOnceWith({ imodelAccess });
     });
   });
 

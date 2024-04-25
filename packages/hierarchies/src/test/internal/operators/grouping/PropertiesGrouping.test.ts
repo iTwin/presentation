@@ -8,15 +8,15 @@ import sinon from "sinon";
 import { createDefaultValueFormatter, EC, IPrimitiveValueFormatter } from "@itwin/presentation-shared";
 import { GroupingNodeKey, HierarchyNodePropertyGroup, PropertyOtherValuesGroupingNodeKey } from "../../../../hierarchies/HierarchyNode";
 import * as propertiesGrouping from "../../../../hierarchies/internal/operators/grouping/PropertiesGrouping";
-import { createMetadataProviderStub, createTestProcessedGroupingNode, createTestProcessedInstanceNode, testLocalizedStrings } from "../../../Utils";
+import { createIModelAccessStub, createTestProcessedGroupingNode, createTestProcessedInstanceNode, testLocalizedStrings } from "../../../Utils";
 
 describe("PropertiesGrouping", () => {
-  let metadataProvider: ReturnType<typeof createMetadataProviderStub>;
+  let imodelAccess: ReturnType<typeof createIModelAccessStub>;
   let formatter: IPrimitiveValueFormatter;
 
   beforeEach(() => {
     formatter = createDefaultValueFormatter();
-    metadataProvider = createMetadataProviderStub();
+    imodelAccess = createIModelAccessStub();
   });
 
   afterEach(() => {
@@ -42,7 +42,7 @@ describe("PropertiesGrouping", () => {
           key: { type: "instances", instanceKeys: [{ className: "TestSchema.TestClass", id: "0x1" }] },
         }),
       ];
-      const result = await propertiesGrouping.getUniquePropertiesGroupInfo(metadataProvider, undefined, nodes);
+      const result = await propertiesGrouping.getUniquePropertiesGroupInfo(imodelAccess, undefined, nodes);
       expect(result).to.deep.eq([]);
     });
 
@@ -65,11 +65,11 @@ describe("PropertiesGrouping", () => {
           },
         }),
       ];
-      metadataProvider.stubEntityClass({
+      imodelAccess.stubEntityClass({
         schemaName: "TestSchema",
         className: "Class",
       });
-      const result = await propertiesGrouping.getUniquePropertiesGroupInfo(metadataProvider, undefined, nodes);
+      const result = await propertiesGrouping.getUniquePropertiesGroupInfo(imodelAccess, undefined, nodes);
       expect(result.length).to.eq(1);
       checkPropertyGroupInfo(result[0], "TestSchema.Class", [], { propertyName: "PropertyName", ranges: undefined });
     });
@@ -99,12 +99,12 @@ describe("PropertiesGrouping", () => {
           },
         }),
       ];
-      metadataProvider.stubEntityClass({
+      imodelAccess.stubEntityClass({
         schemaName: "TestSchema",
         className: "Class",
       });
 
-      const result = await propertiesGrouping.getUniquePropertiesGroupInfo(metadataProvider, undefined, nodes);
+      const result = await propertiesGrouping.getUniquePropertiesGroupInfo(imodelAccess, undefined, nodes);
       expect(result.length).to.eq(2);
       checkPropertyGroupInfo(result[0], className, [], propertyGroup1);
       checkPropertyGroupInfo(
@@ -151,12 +151,12 @@ describe("PropertiesGrouping", () => {
           },
         }),
       ];
-      metadataProvider.stubEntityClass({
+      imodelAccess.stubEntityClass({
         schemaName: "TestSchema",
         className: "Class",
       });
 
-      const result = await propertiesGrouping.getUniquePropertiesGroupInfo(metadataProvider, undefined, nodes);
+      const result = await propertiesGrouping.getUniquePropertiesGroupInfo(imodelAccess, undefined, nodes);
       expect(result.length).to.eq(2);
       checkPropertyGroupInfo(result[0], className, [], propertyGroup1);
       checkPropertyGroupInfo(result[1], className, [], propertyGroup2);
@@ -205,12 +205,12 @@ describe("PropertiesGrouping", () => {
         }),
       ];
 
-      metadataProvider.stubEntityClass({
+      imodelAccess.stubEntityClass({
         schemaName: "TestSchema",
         className: "Class",
       });
 
-      const result = await propertiesGrouping.getUniquePropertiesGroupInfo(metadataProvider, undefined, nodes);
+      const result = await propertiesGrouping.getUniquePropertiesGroupInfo(imodelAccess, undefined, nodes);
       expect(result.length).to.eq(5);
       checkPropertyGroupInfo(result[0], className, [], propertyGroup1);
       checkPropertyGroupInfo(
@@ -251,7 +251,7 @@ describe("PropertiesGrouping", () => {
 
     it("omits property groups up to parent property value grouping node", async () => {
       const className = "TestSchema.Class";
-      metadataProvider.stubEntityClass({ schemaName: "TestSchema", className: "Class" });
+      imodelAccess.stubEntityClass({ schemaName: "TestSchema", className: "Class" });
 
       const grandParentNode = createTestProcessedGroupingNode({
         key: { type: "class-grouping", className },
@@ -283,7 +283,7 @@ describe("PropertiesGrouping", () => {
         }),
       ];
 
-      const result = await propertiesGrouping.getUniquePropertiesGroupInfo(metadataProvider, parentNode, nodes);
+      const result = await propertiesGrouping.getUniquePropertiesGroupInfo(imodelAccess, parentNode, nodes);
       expect(result.length).to.eq(1);
       checkPropertyGroupInfo(result[0], className, [{ propertiesClassName: className, propertyName: "PropertyName1", isRange: false }], {
         propertyName: "PropertyName2",
@@ -292,7 +292,7 @@ describe("PropertiesGrouping", () => {
 
     it("omits property groups up to parent property range grouping node", async () => {
       const className = "TestSchema.Class";
-      metadataProvider.stubEntityClass({ schemaName: "TestSchema", className: "Class" });
+      imodelAccess.stubEntityClass({ schemaName: "TestSchema", className: "Class" });
 
       const parentNode = createTestProcessedGroupingNode({
         key: { type: "property-grouping:range", propertyClassName: className, propertyName: "PropertyName1", fromValue: 1, toValue: 9 },
@@ -322,7 +322,7 @@ describe("PropertiesGrouping", () => {
         }),
       ];
 
-      const result = await propertiesGrouping.getUniquePropertiesGroupInfo(metadataProvider, parentNode, nodes);
+      const result = await propertiesGrouping.getUniquePropertiesGroupInfo(imodelAccess, parentNode, nodes);
       expect(result.length).to.eq(1);
       checkPropertyGroupInfo(result[0], className, [{ propertiesClassName: className, propertyName: "PropertyName1", isRange: true }], {
         propertyName: "PropertyName2",
@@ -332,7 +332,7 @@ describe("PropertiesGrouping", () => {
 
     it("omits property groups up to parent property other values grouping node", async () => {
       const className = "TestSchema.Class";
-      metadataProvider.stubEntityClass({ schemaName: "TestSchema", className: "Class" });
+      imodelAccess.stubEntityClass({ schemaName: "TestSchema", className: "Class" });
 
       const parentNode = createTestProcessedGroupingNode({
         key: { type: "property-grouping:other", properties: [{ className, propertyName: "PropertyName1" }] },
@@ -363,7 +363,7 @@ describe("PropertiesGrouping", () => {
         }),
       ];
 
-      const result = await propertiesGrouping.getUniquePropertiesGroupInfo(metadataProvider, parentNode, nodes);
+      const result = await propertiesGrouping.getUniquePropertiesGroupInfo(imodelAccess, parentNode, nodes);
       expect(result.length).to.eq(1);
       checkPropertyGroupInfo(result[0], className, [{ propertiesClassName: className, propertyName: "PropertyName1", isRange: true }], {
         propertyName: "PropertyName2",
@@ -373,7 +373,7 @@ describe("PropertiesGrouping", () => {
 
     it("doesn't omit property groups when parent is not a property grouping node", async () => {
       const className = "TestSchema.Class";
-      metadataProvider.stubEntityClass({ schemaName: "TestSchema", className: "Class" });
+      imodelAccess.stubEntityClass({ schemaName: "TestSchema", className: "Class" });
 
       const parentNode = createTestProcessedGroupingNode({
         key: { type: "class-grouping", className },
@@ -401,7 +401,7 @@ describe("PropertiesGrouping", () => {
         }),
       ];
 
-      const result = await propertiesGrouping.getUniquePropertiesGroupInfo(metadataProvider, parentNode, nodes);
+      const result = await propertiesGrouping.getUniquePropertiesGroupInfo(imodelAccess, parentNode, nodes);
       expect(result.length).to.eq(2);
       checkPropertyGroupInfo(result[0], className, [], {
         propertyName: "PropertyName1",
@@ -583,9 +583,7 @@ describe("PropertiesGrouping", () => {
           previousPropertiesGroupingInfo: [],
           propertyGroup: { propertyName: "PropertyName" },
         };
-        expect(
-          await propertiesGrouping.createPropertyGroups(nodes, [], propertyInfo, formatter, testLocalizedStrings, metadataProvider.classHierarchyInspector),
-        ).to.deep.eq({
+        expect(await propertiesGrouping.createPropertyGroups(nodes, [], propertyInfo, formatter, testLocalizedStrings, imodelAccess)).to.deep.eq({
           groupingType: "property",
           grouped: [],
           ungrouped: nodes,
@@ -612,9 +610,7 @@ describe("PropertiesGrouping", () => {
           previousPropertiesGroupingInfo: [{ propertiesClassName: "TestSchema.Class", propertyName: "PropertyName2" }],
           propertyGroup: { propertyName: "PropertyName" },
         };
-        expect(
-          await propertiesGrouping.createPropertyGroups(nodes, [], propertyInfo, formatter, testLocalizedStrings, metadataProvider.classHierarchyInspector),
-        ).to.deep.eq({
+        expect(await propertiesGrouping.createPropertyGroups(nodes, [], propertyInfo, formatter, testLocalizedStrings, imodelAccess)).to.deep.eq({
           groupingType: "property",
           grouped: [],
           ungrouped: nodes,
@@ -641,9 +637,7 @@ describe("PropertiesGrouping", () => {
           previousPropertiesGroupingInfo: [],
           propertyGroup: { propertyName: "Other" },
         };
-        expect(
-          await propertiesGrouping.createPropertyGroups(nodes, [], propertyInfo, formatter, testLocalizedStrings, metadataProvider.classHierarchyInspector),
-        ).to.deep.eq({
+        expect(await propertiesGrouping.createPropertyGroups(nodes, [], propertyInfo, formatter, testLocalizedStrings, imodelAccess)).to.deep.eq({
           groupingType: "property",
           grouped: [],
           ungrouped: nodes,
@@ -670,9 +664,7 @@ describe("PropertiesGrouping", () => {
           previousPropertiesGroupingInfo: [],
           propertyGroup: { propertyName: "PropertyName", ranges: [{ fromValue: 1, toValue: 5 }] },
         };
-        expect(
-          await propertiesGrouping.createPropertyGroups(nodes, [], propertyInfo, formatter, testLocalizedStrings, metadataProvider.classHierarchyInspector),
-        ).to.deep.eq({
+        expect(await propertiesGrouping.createPropertyGroups(nodes, [], propertyInfo, formatter, testLocalizedStrings, imodelAccess)).to.deep.eq({
           groupingType: "property",
           grouped: [],
           ungrouped: nodes,
@@ -695,7 +687,7 @@ describe("PropertiesGrouping", () => {
         ];
         const ecClass = { fullName: "TestSchema.Class" } as unknown as EC.Class;
 
-        metadataProvider.stubEntityClass({
+        imodelAccess.stubEntityClass({
           schemaName: "TestSchema",
           className: "Class",
           is: async () => false,
@@ -705,9 +697,7 @@ describe("PropertiesGrouping", () => {
           previousPropertiesGroupingInfo: [],
           propertyGroup: { propertyName: "PropertyName" },
         };
-        expect(
-          await propertiesGrouping.createPropertyGroups(nodes, [], propertyInfo, formatter, testLocalizedStrings, metadataProvider.classHierarchyInspector),
-        ).to.deep.eq({
+        expect(await propertiesGrouping.createPropertyGroups(nodes, [], propertyInfo, formatter, testLocalizedStrings, imodelAccess)).to.deep.eq({
           groupingType: "property",
           grouped: [],
           ungrouped: nodes,
@@ -732,7 +722,7 @@ describe("PropertiesGrouping", () => {
           }),
         ];
         const ecClass = { fullName: "TestSchema.Class" } as unknown as EC.Class;
-        metadataProvider.stubEntityClass({
+        imodelAccess.stubEntityClass({
           schemaName: "TestSchema",
           className: "Class",
           is: async () => true,
@@ -742,9 +732,7 @@ describe("PropertiesGrouping", () => {
           previousPropertiesGroupingInfo: [{ propertiesClassName: "TestSchema.Class", propertyName: "Other" }],
           propertyGroup: { propertyName: "PropertyName2" },
         };
-        expect(
-          await propertiesGrouping.createPropertyGroups(nodes, [], propertyInfo, formatter, testLocalizedStrings, metadataProvider.classHierarchyInspector),
-        ).to.deep.eq({
+        expect(await propertiesGrouping.createPropertyGroups(nodes, [], propertyInfo, formatter, testLocalizedStrings, imodelAccess)).to.deep.eq({
           groupingType: "property",
           grouped: [],
           ungrouped: nodes,
@@ -764,9 +752,7 @@ describe("PropertiesGrouping", () => {
         previousPropertiesGroupingInfo: [],
         propertyGroup: { propertyName: "PropertyName" },
       };
-      expect(
-        await propertiesGrouping.createPropertyGroups(nodes, [], propertyInfo, formatter, testLocalizedStrings, metadataProvider.classHierarchyInspector),
-      ).to.deep.eq({
+      expect(await propertiesGrouping.createPropertyGroups(nodes, [], propertyInfo, formatter, testLocalizedStrings, imodelAccess)).to.deep.eq({
         groupingType: "property",
         grouped: [],
         ungrouped: nodes,
@@ -789,7 +775,7 @@ describe("PropertiesGrouping", () => {
           }),
         ];
         const property = { name: "PropertyName", isPrimitive: () => false } as unknown as EC.Property;
-        const stubbedClass = metadataProvider.stubEntityClass({
+        const stubbedClass = imodelAccess.stubEntityClass({
           schemaName: "TestSchema",
           className: "Class",
           is: async () => true,
@@ -800,9 +786,7 @@ describe("PropertiesGrouping", () => {
           previousPropertiesGroupingInfo: [],
           propertyGroup: { propertyName: "PropertyName" },
         };
-        expect(
-          await propertiesGrouping.createPropertyGroups(nodes, [], propertyInfo, formatter, testLocalizedStrings, metadataProvider.classHierarchyInspector),
-        ).to.deep.eq({
+        expect(await propertiesGrouping.createPropertyGroups(nodes, [], propertyInfo, formatter, testLocalizedStrings, imodelAccess)).to.deep.eq({
           groupingType: "property",
           grouped: [],
           ungrouped: nodes,
@@ -824,7 +808,7 @@ describe("PropertiesGrouping", () => {
           }),
         ];
         const property = { name: "PropertyName", isPrimitive: () => true } as unknown as EC.Property;
-        const stubbedClass = metadataProvider.stubEntityClass({
+        const stubbedClass = imodelAccess.stubEntityClass({
           schemaName: "TestSchema",
           className: "Class",
           is: async () => true,
@@ -835,9 +819,7 @@ describe("PropertiesGrouping", () => {
           previousPropertiesGroupingInfo: [],
           propertyGroup: { propertyName: "PropertyName" },
         };
-        expect(
-          await propertiesGrouping.createPropertyGroups(nodes, [], propertyInfo, formatter, testLocalizedStrings, metadataProvider.classHierarchyInspector),
-        ).to.deep.eq({
+        expect(await propertiesGrouping.createPropertyGroups(nodes, [], propertyInfo, formatter, testLocalizedStrings, imodelAccess)).to.deep.eq({
           groupingType: "property",
           grouped: [],
           ungrouped: nodes,
@@ -860,7 +842,7 @@ describe("PropertiesGrouping", () => {
           }),
         ];
         const property = { name: "PropertyName", isPrimitive: () => true } as unknown as EC.Property;
-        const stubbedClass = metadataProvider.stubEntityClass({
+        const stubbedClass = imodelAccess.stubEntityClass({
           schemaName: "TestSchema",
           className: "Class",
           is: async () => true,
@@ -877,9 +859,7 @@ describe("PropertiesGrouping", () => {
           propertyClassName: "TestSchema.Class",
           formattedPropertyValue: "",
         };
-        expect(
-          await propertiesGrouping.createPropertyGroups(nodes, [], propertyInfo, formatter, testLocalizedStrings, metadataProvider.classHierarchyInspector),
-        ).to.deep.eq({
+        expect(await propertiesGrouping.createPropertyGroups(nodes, [], propertyInfo, formatter, testLocalizedStrings, imodelAccess)).to.deep.eq({
           groupingType: "property",
           grouped: [
             createTestProcessedGroupingNode({
@@ -908,7 +888,7 @@ describe("PropertiesGrouping", () => {
           }),
         ];
         const property = { name: "PropertyName", isPrimitive: () => true, primitiveType: "String" } as unknown as EC.Property;
-        const stubbedClass = metadataProvider.stubEntityClass({
+        const stubbedClass = imodelAccess.stubEntityClass({
           schemaName: "TestSchema",
           className: "Class",
           is: async () => true,
@@ -925,9 +905,7 @@ describe("PropertiesGrouping", () => {
           propertyClassName: "TestSchema.Class",
           formattedPropertyValue: "PropertyValue",
         };
-        expect(
-          await propertiesGrouping.createPropertyGroups(nodes, [], propertyInfo, formatter, testLocalizedStrings, metadataProvider.classHierarchyInspector),
-        ).to.deep.eq({
+        expect(await propertiesGrouping.createPropertyGroups(nodes, [], propertyInfo, formatter, testLocalizedStrings, imodelAccess)).to.deep.eq({
           groupingType: "property",
           grouped: [
             createTestProcessedGroupingNode({
@@ -967,7 +945,7 @@ describe("PropertiesGrouping", () => {
           }),
         ];
         const property = { name: "PropertyName", isPrimitive: () => true, primitiveType: "String" } as unknown as EC.Property;
-        const stubbedClass = metadataProvider.stubEntityClass({
+        const stubbedClass = imodelAccess.stubEntityClass({
           schemaName: "TestSchema",
           className: "Class",
           is: async () => true,
@@ -984,9 +962,7 @@ describe("PropertiesGrouping", () => {
           propertyClassName: "TestSchema.Class",
           formattedPropertyValue: "PropertyValue",
         };
-        expect(
-          await propertiesGrouping.createPropertyGroups(nodes, [], propertyInfo, formatter, testLocalizedStrings, metadataProvider.classHierarchyInspector),
-        ).to.deep.eq({
+        expect(await propertiesGrouping.createPropertyGroups(nodes, [], propertyInfo, formatter, testLocalizedStrings, imodelAccess)).to.deep.eq({
           groupingType: "property",
           grouped: [
             createTestProcessedGroupingNode({
@@ -1026,7 +1002,7 @@ describe("PropertiesGrouping", () => {
           }),
         ];
         const property = { name: "PropertyName", isPrimitive: () => true, primitiveType: "String" } as unknown as EC.Property;
-        const stubbedClass = metadataProvider.stubEntityClass({
+        const stubbedClass = imodelAccess.stubEntityClass({
           schemaName: "TestSchema",
           className: "Class",
           is: async () => true,
@@ -1049,9 +1025,7 @@ describe("PropertiesGrouping", () => {
           propertyClassName: "TestSchema.Class",
           formattedPropertyValue: "PropertyValue2",
         };
-        expect(
-          await propertiesGrouping.createPropertyGroups(nodes, [], propertyInfo, formatter, testLocalizedStrings, metadataProvider.classHierarchyInspector),
-        ).to.deep.eq({
+        expect(await propertiesGrouping.createPropertyGroups(nodes, [], propertyInfo, formatter, testLocalizedStrings, imodelAccess)).to.deep.eq({
           groupingType: "property",
           grouped: [
             createTestProcessedGroupingNode({
@@ -1097,7 +1071,7 @@ describe("PropertiesGrouping", () => {
           }),
         ];
         const property = { name: "PropertyName1", isPrimitive: () => true, primitiveType: "String" } as unknown as EC.Property;
-        const stubbedClass = metadataProvider.stubEntityClass({
+        const stubbedClass = imodelAccess.stubEntityClass({
           schemaName: "TestSchema",
           className: "Class",
           is: async () => true,
@@ -1114,9 +1088,7 @@ describe("PropertiesGrouping", () => {
           propertyClassName: "TestSchema.Class",
           formattedPropertyValue: "PropertyValue",
         };
-        expect(
-          await propertiesGrouping.createPropertyGroups(nodes, [], propertyInfo, formatter, testLocalizedStrings, metadataProvider.classHierarchyInspector),
-        ).to.deep.eq({
+        expect(await propertiesGrouping.createPropertyGroups(nodes, [], propertyInfo, formatter, testLocalizedStrings, imodelAccess)).to.deep.eq({
           groupingType: "property",
           grouped: [
             createTestProcessedGroupingNode({
@@ -1147,7 +1119,7 @@ describe("PropertiesGrouping", () => {
           }),
         ];
         const property = { name: "PropertyName", isPrimitive: () => true } as unknown as EC.Property;
-        const stubbedClass = metadataProvider.stubEntityClass({
+        const stubbedClass = imodelAccess.stubEntityClass({
           schemaName: "TestSchema",
           className: "Class",
           is: async () => true,
@@ -1158,9 +1130,7 @@ describe("PropertiesGrouping", () => {
           previousPropertiesGroupingInfo: [],
           propertyGroup: { propertyName: "PropertyName", ranges: [{ fromValue: 1, toValue: 5 }] },
         };
-        expect(
-          await propertiesGrouping.createPropertyGroups(nodes, [], propertyInfo, formatter, testLocalizedStrings, metadataProvider.classHierarchyInspector),
-        ).to.deep.eq({
+        expect(await propertiesGrouping.createPropertyGroups(nodes, [], propertyInfo, formatter, testLocalizedStrings, imodelAccess)).to.deep.eq({
           groupingType: "property",
           grouped: [],
           ungrouped: nodes,
@@ -1183,7 +1153,7 @@ describe("PropertiesGrouping", () => {
           }),
         ];
         const property = { name: "PropertyName", isPrimitive: () => true } as unknown as EC.Property;
-        const stubbedClass = metadataProvider.stubEntityClass({
+        const stubbedClass = imodelAccess.stubEntityClass({
           schemaName: "TestSchema",
           className: "Class",
           is: async () => true,
@@ -1203,9 +1173,7 @@ describe("PropertiesGrouping", () => {
             },
           ],
         };
-        expect(
-          await propertiesGrouping.createPropertyGroups(nodes, [], propertyInfo, formatter, testLocalizedStrings, metadataProvider.classHierarchyInspector),
-        ).to.deep.eq({
+        expect(await propertiesGrouping.createPropertyGroups(nodes, [], propertyInfo, formatter, testLocalizedStrings, imodelAccess)).to.deep.eq({
           groupingType: "property",
           grouped: [
             createTestProcessedGroupingNode({
@@ -1237,7 +1205,7 @@ describe("PropertiesGrouping", () => {
           }),
         ];
         const property = { name: "PropertyName", isPrimitive: () => true } as unknown as EC.Property;
-        const stubbedClass = metadataProvider.stubEntityClass({
+        const stubbedClass = imodelAccess.stubEntityClass({
           schemaName: "TestSchema",
           className: "Class",
           is: async () => true,
@@ -1248,9 +1216,7 @@ describe("PropertiesGrouping", () => {
           previousPropertiesGroupingInfo: [],
           propertyGroup: { propertyName: "PropertyName", ranges: [{ fromValue: 1, toValue: 5 }] },
         };
-        expect(
-          await propertiesGrouping.createPropertyGroups(nodes, [], propertyInfo, formatter, testLocalizedStrings, metadataProvider.classHierarchyInspector),
-        ).to.deep.eq({
+        expect(await propertiesGrouping.createPropertyGroups(nodes, [], propertyInfo, formatter, testLocalizedStrings, imodelAccess)).to.deep.eq({
           groupingType: "property",
           grouped: [],
           ungrouped: nodes,
@@ -1285,7 +1251,7 @@ describe("PropertiesGrouping", () => {
           }),
         ];
         const property = { name: "PropertyName", isPrimitive: () => true } as unknown as EC.Property;
-        const stubbedClass = metadataProvider.stubEntityClass({
+        const stubbedClass = imodelAccess.stubEntityClass({
           schemaName: "TestSchema",
           className: "Class",
           is: async () => true,
@@ -1305,9 +1271,7 @@ describe("PropertiesGrouping", () => {
             },
           ],
         };
-        expect(
-          await propertiesGrouping.createPropertyGroups(nodes, [], propertyInfo, formatter, testLocalizedStrings, metadataProvider.classHierarchyInspector),
-        ).to.deep.eq({
+        expect(await propertiesGrouping.createPropertyGroups(nodes, [], propertyInfo, formatter, testLocalizedStrings, imodelAccess)).to.deep.eq({
           groupingType: "property",
           grouped: [
             createTestProcessedGroupingNode({
@@ -1325,7 +1289,6 @@ describe("PropertiesGrouping", () => {
       });
 
       it('groups nodes with different property grouping parameters into a single "other" property grouping node', async () => {
-        const baseClasses = metadataProvider.classHierarchyInspector;
         const nodes = [
           createTestProcessedInstanceNode({
             key: { type: "instances", instanceKeys: [{ className: "TestSchema.Class1", id: "0x1" }] },
@@ -1366,7 +1329,7 @@ describe("PropertiesGrouping", () => {
           nodes,
           [],
           {
-            ecClass: metadataProvider.stubEntityClass({
+            ecClass: imodelAccess.stubEntityClass({
               schemaName: "TestSchema",
               className: "Class1",
               is: async () => true,
@@ -1377,7 +1340,7 @@ describe("PropertiesGrouping", () => {
           },
           formatter,
           testLocalizedStrings,
-          baseClasses,
+          imodelAccess,
         );
         expect(res).to.deep.eq({
           groupingType: "property",
@@ -1410,7 +1373,7 @@ describe("PropertiesGrouping", () => {
             res.ungrouped,
             res.grouped,
             {
-              ecClass: metadataProvider.stubEntityClass({
+              ecClass: imodelAccess.stubEntityClass({
                 schemaName: "TestSchema",
                 className: "Class2",
                 is: async () => true,
@@ -1421,7 +1384,7 @@ describe("PropertiesGrouping", () => {
             },
             formatter,
             testLocalizedStrings,
-            baseClasses,
+            imodelAccess,
           ),
         ).to.deep.eq({
           groupingType: "property",
@@ -1456,7 +1419,7 @@ describe("PropertiesGrouping", () => {
           }),
         ];
         const property = { name: "PropertyName", isPrimitive: () => true } as unknown as EC.Property;
-        const stubbedClass = metadataProvider.stubEntityClass({
+        const stubbedClass = imodelAccess.stubEntityClass({
           schemaName: "TestSchema",
           className: "Class",
           is: async () => true,
@@ -1474,9 +1437,7 @@ describe("PropertiesGrouping", () => {
           fromValue: 1,
           toValue: 5,
         };
-        expect(
-          await propertiesGrouping.createPropertyGroups(nodes, [], propertyInfo, formatter, testLocalizedStrings, metadataProvider.classHierarchyInspector),
-        ).to.deep.eq({
+        expect(await propertiesGrouping.createPropertyGroups(nodes, [], propertyInfo, formatter, testLocalizedStrings, imodelAccess)).to.deep.eq({
           groupingType: "property",
           grouped: [
             createTestProcessedGroupingNode({
@@ -1505,7 +1466,7 @@ describe("PropertiesGrouping", () => {
           }),
         ];
         const property = { name: "PropertyName", isPrimitive: () => true } as unknown as EC.Property;
-        const stubbedClass = metadataProvider.stubEntityClass({
+        const stubbedClass = imodelAccess.stubEntityClass({
           schemaName: "TestSchema",
           className: "Class",
           is: async () => true,
@@ -1523,9 +1484,7 @@ describe("PropertiesGrouping", () => {
           fromValue: 1.5,
           toValue: 5.5,
         };
-        expect(
-          await propertiesGrouping.createPropertyGroups(nodes, [], propertyInfo, formatter, testLocalizedStrings, metadataProvider.classHierarchyInspector),
-        ).to.deep.eq({
+        expect(await propertiesGrouping.createPropertyGroups(nodes, [], propertyInfo, formatter, testLocalizedStrings, imodelAccess)).to.deep.eq({
           groupingType: "property",
           grouped: [
             createTestProcessedGroupingNode({
@@ -1565,7 +1524,7 @@ describe("PropertiesGrouping", () => {
           }),
         ];
         const property = { name: "PropertyName", isPrimitive: () => true } as unknown as EC.Property;
-        const stubbedClass = metadataProvider.stubEntityClass({
+        const stubbedClass = imodelAccess.stubEntityClass({
           schemaName: "TestSchema",
           className: "Class",
           is: async () => true,
@@ -1583,9 +1542,7 @@ describe("PropertiesGrouping", () => {
           fromValue: 1,
           toValue: 5,
         };
-        expect(
-          await propertiesGrouping.createPropertyGroups(nodes, [], propertyInfo, formatter, testLocalizedStrings, metadataProvider.classHierarchyInspector),
-        ).to.deep.eq({
+        expect(await propertiesGrouping.createPropertyGroups(nodes, [], propertyInfo, formatter, testLocalizedStrings, imodelAccess)).to.deep.eq({
           groupingType: "property",
           grouped: [
             createTestProcessedGroupingNode({
@@ -1625,7 +1582,7 @@ describe("PropertiesGrouping", () => {
           }),
         ];
         const property = { name: "PropertyName", isPrimitive: () => true } as unknown as EC.Property;
-        const stubbedClass = metadataProvider.stubEntityClass({
+        const stubbedClass = imodelAccess.stubEntityClass({
           schemaName: "TestSchema",
           className: "Class",
           is: async () => true,
@@ -1643,9 +1600,7 @@ describe("PropertiesGrouping", () => {
           fromValue: 1,
           toValue: 5,
         };
-        expect(
-          await propertiesGrouping.createPropertyGroups(nodes, [], propertyInfo, formatter, testLocalizedStrings, metadataProvider.classHierarchyInspector),
-        ).to.deep.eq({
+        expect(await propertiesGrouping.createPropertyGroups(nodes, [], propertyInfo, formatter, testLocalizedStrings, imodelAccess)).to.deep.eq({
           groupingType: "property",
           grouped: [
             createTestProcessedGroupingNode({
@@ -1683,7 +1638,7 @@ describe("PropertiesGrouping", () => {
           }),
         ];
         const property = { name: "PropertyName", isPrimitive: () => true } as unknown as EC.Property;
-        const stubbedClass = metadataProvider.stubEntityClass({
+        const stubbedClass = imodelAccess.stubEntityClass({
           schemaName: "TestSchema",
           className: "Class",
           is: async () => true,
@@ -1707,9 +1662,7 @@ describe("PropertiesGrouping", () => {
           fromValue: 1,
           toValue: 4,
         };
-        expect(
-          await propertiesGrouping.createPropertyGroups(nodes, [], propertyInfo, formatter, testLocalizedStrings, metadataProvider.classHierarchyInspector),
-        ).to.deep.eq({
+        expect(await propertiesGrouping.createPropertyGroups(nodes, [], propertyInfo, formatter, testLocalizedStrings, imodelAccess)).to.deep.eq({
           groupingType: "property",
           grouped: [
             createTestProcessedGroupingNode({
@@ -1767,7 +1720,7 @@ describe("PropertiesGrouping", () => {
           }),
         ];
         const property = { name: "PropertyName", isPrimitive: () => true } as unknown as EC.Property;
-        const stubbedClass = metadataProvider.stubEntityClass({
+        const stubbedClass = imodelAccess.stubEntityClass({
           schemaName: "TestSchema",
           className: "Class",
           is: async () => true,
@@ -1798,9 +1751,7 @@ describe("PropertiesGrouping", () => {
           fromValue: 1,
           toValue: 4,
         };
-        expect(
-          await propertiesGrouping.createPropertyGroups(nodes, [], propertyInfo, formatter, testLocalizedStrings, metadataProvider.classHierarchyInspector),
-        ).to.deep.eq({
+        expect(await propertiesGrouping.createPropertyGroups(nodes, [], propertyInfo, formatter, testLocalizedStrings, imodelAccess)).to.deep.eq({
           groupingType: "property",
           grouped: [
             createTestProcessedGroupingNode({
@@ -1842,19 +1793,12 @@ describe("PropertiesGrouping", () => {
           },
         }),
       ];
-      metadataProvider.stubEntityClass({
+      imodelAccess.stubEntityClass({
         schemaName: "TestSchema",
         className: "Class",
       });
 
-      const result = await propertiesGrouping.createPropertiesGroupingHandlers(
-        metadataProvider,
-        undefined,
-        nodes,
-        formatter,
-        testLocalizedStrings,
-        metadataProvider.classHierarchyInspector,
-      );
+      const result = await propertiesGrouping.createPropertiesGroupingHandlers(imodelAccess, undefined, nodes, formatter, testLocalizedStrings);
       expect(result.length).to.eq(1);
       const handlerResult = await result[0](nodes, []);
       expect(handlerResult.groupingType).to.eq("property");

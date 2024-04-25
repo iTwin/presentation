@@ -117,13 +117,10 @@ async function sortByBaseClass(classes: EC.Class[]): Promise<EC.Class[]> {
 
 /** @internal */
 export async function createBaseClassGroupingHandlers(
-  metadata: IECMetadataProvider,
+  imodelAccess: IECMetadataProvider & IECClassHierarchyInspector,
   parentNode: ParentHierarchyNode | undefined,
   nodes: ProcessedInstanceHierarchyNode[],
-  classHierarchyInspector: IECClassHierarchyInspector,
 ): Promise<GroupingHandler[]> {
-  const baseClassGroupingECClasses = await getBaseClassGroupingECClasses(metadata, parentNode, nodes);
-  return baseClassGroupingECClasses.map(
-    (baseECClass) => async (allNodes) => createBaseClassGroupsForSingleBaseClass(allNodes, baseECClass, classHierarchyInspector),
-  );
+  const baseClassGroupingECClasses = await getBaseClassGroupingECClasses(imodelAccess, parentNode, nodes);
+  return baseClassGroupingECClasses.map((baseECClass) => async (allNodes) => createBaseClassGroupsForSingleBaseClass(allNodes, baseECClass, imodelAccess));
 }

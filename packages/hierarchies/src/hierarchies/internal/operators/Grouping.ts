@@ -30,11 +30,10 @@ export const LOGGING_NAMESPACE = createOperatorLoggingNamespace(OPERATOR_NAME);
 
 /** @internal */
 export function createGroupingOperator(
-  metadata: IECMetadataProvider,
+  imodelAccess: IECMetadataProvider & IECClassHierarchyInspector,
   parentNode: ParentHierarchyNode | undefined,
   valueFormatter: IPrimitiveValueFormatter,
   localizedStrings: PropertiesGroupingLocalizedStrings,
-  classHierarchyInspector: IECClassHierarchyInspector,
   onGroupingNodeCreated?: (groupingNode: ProcessedGroupingHierarchyNode) => void,
   groupingHandlers?: GroupingHandler[],
 ) {
@@ -46,7 +45,7 @@ export function createGroupingOperator(
         const { instanceNodes, restNodes } = partitionInstanceNodes(resolvedNodes);
         const groupingHandlersObs = groupingHandlers
           ? of(groupingHandlers)
-          : from(createGroupingHandlers(metadata, parentNode, instanceNodes, valueFormatter, localizedStrings, classHierarchyInspector));
+          : from(createGroupingHandlers(imodelAccess, parentNode, instanceNodes, valueFormatter, localizedStrings));
         return groupingHandlersObs.pipe(
           concatMap(async (createdGroupingHandlers) => {
             const grouped: ProcessedHierarchyNode[] = await groupInstanceNodes(
@@ -153,23 +152,20 @@ function mergeInPlace<T>(target: T[] | undefined, source: T[]) {
 
 /** @internal */
 export async function createGroupingHandlers(
-  metadata: IECMetadataProvider,
+  imodelAccess: IECMetadataProvider & IECClassHierarchyInspector,
   parentNode: ParentHierarchyNode | undefined,
   processedInstanceNodes: ProcessedInstanceHierarchyNode[],
   valueFormatter: IPrimitiveValueFormatter,
   localizedStrings: PropertiesGroupingLocalizedStrings,
-  classHierarchyInspector: IECClassHierarchyInspector,
 ): Promise<GroupingHandler[]> {
   const groupingLevel = getNodeGroupingLevel(parentNode);
   const groupingHandlers: GroupingHandler[] = new Array<GroupingHandler>();
   if (groupingLevel <= GroupingLevel.Class) {
-    groupingHandlers.push(...(await createBaseClassGroupingHandlers(metadata, parentNode, processedInstanceNodes, classHierarchyInspector)));
-    groupingHandlers.push(async (allNodes) => createClassGroups(metadata, parentNode, allNodes));
+    groupingHandlers.push(...(await createBaseClassGroupingHandlers(imodelAccess, parentNode, processedInstanceNodes)));
+    groupingHandlers.push(async (allNodes) => createClassGroups(imodelAccess, parentNode, allNodes));
   }
   if (groupingLevel <= GroupingLevel.Property) {
-    groupingHandlers.push(
-      ...(await createPropertiesGroupingHandlers(metadata, parentNode, processedInstanceNodes, valueFormatter, localizedStrings, classHierarchyInspector)),
-    );
+    groupingHandlers.push(...(await createPropertiesGroupingHandlers(imodelAccess, parentNode, processedInstanceNodes, valueFormatter, localizedStrings)));
   }
   if (groupingLevel < GroupingLevel.Label) {
     groupingHandlers.push(async (allNodes) => createLabelGroups(allNodes));

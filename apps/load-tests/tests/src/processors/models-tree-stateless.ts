@@ -121,17 +121,19 @@ function createModelsTreeProvider(context: ScenarioContext, events: EventEmitter
   const metadataProvider = createMetadataProvider(schemas);
 
   const provider = new HierarchyProvider({
-    metadataProvider,
-    hierarchyDefinition: new ModelsTreeDefinition({ metadataProvider }),
-    queryExecutor: createLimitingECSqlQueryExecutor(
-      createECSqlQueryExecutor({
-        createQueryReader(ecsql, bindings, config) {
-          // eslint-disable-next-line @itwin/no-internal
-          return new ECSqlReader(schedulingQueryExecutor, ecsql, bindings, config);
-        },
-      }),
-      1000,
-    ),
+    imodelAccess: {
+      ...metadataProvider,
+      ...createLimitingECSqlQueryExecutor(
+        createECSqlQueryExecutor({
+          createQueryReader(ecsql, bindings, config) {
+            // eslint-disable-next-line @itwin/no-internal
+            return new ECSqlReader(schedulingQueryExecutor, ecsql, bindings, config);
+          },
+        }),
+        1000,
+      ),
+    },
+    hierarchyDefinitionFactory: (imodelAccess) => new ModelsTreeDefinition({ imodelAccess }),
   });
 
   return async (parent: HierarchyNode | undefined) => {

@@ -5,7 +5,7 @@
 
 import sinon from "sinon";
 import { Logger, LogLevel } from "@itwin/core-bentley";
-import { EC, IECMetadataProvider, InstanceKey, parseFullClassName } from "@itwin/presentation-shared";
+import { EC, InstanceKey, parseFullClassName } from "@itwin/presentation-shared";
 import {
   ParsedCustomHierarchyNode,
   ParsedInstanceHierarchyNode,
@@ -100,21 +100,9 @@ export interface StubRelationshipClassFuncProps extends StubClassFuncProps {
 export type TStubClassFunc = (props: StubClassFuncProps) => EC.Class;
 export type TStubEntityClassFunc = (props: StubClassFuncProps) => EC.EntityClass;
 export type TStubRelationshipClassFunc = (props: StubRelationshipClassFuncProps) => EC.RelationshipClass;
-export interface ClassStubs {
-  stubEntityClass: TStubEntityClassFunc;
-  stubRelationshipClass: TStubRelationshipClassFunc;
-  stubOtherClass: TStubClassFunc;
-  resetHistory: () => void;
-  restore: () => void;
-  stub: sinon.SinonStub<[metadata: IECMetadataProvider, fullClassName: string], Promise<EC.Class>>;
-}
+
 export function createMetadataProviderStub() {
   const schemaStubs: { [schemaName: string]: sinon.SinonStubbedInstance<EC.Schema> } = {};
-  const stub = {
-    getSchema: sinon.fake(async (schemaName: string): Promise<EC.Schema | undefined> => {
-      return schemaStubs[schemaName];
-    }),
-  };
   const getSchemaStub = (schemaName: string) => {
     let schemaStub = schemaStubs[schemaName];
     if (!schemaStub) {
@@ -181,25 +169,41 @@ export function createMetadataProviderStub() {
     return res;
   };
   return {
-    ...stub,
     stubEntityClass,
     stubRelationshipClass,
     stubOtherClass,
-    classHierarchyInspector: {
-      classDerivesFrom: async (derived: string, base: string) => {
-        const { schemaName: derivedSchemaName, className: derivedClassName } = parseFullClassName(derived);
-        const { schemaName: baseSchemaName, className: baseClassName } = parseFullClassName(base);
-        const schemaStub = schemaStubs[derivedSchemaName];
-        if (!schemaStub) {
-          return false;
-        }
-        const derivedClass = await schemaStub.getClass(derivedClassName);
-        if (!derivedClass) {
-          return false;
-        }
-        return derivedClass.is(baseClassName, baseSchemaName);
-      },
-    },
+    getSchema: sinon.fake(async (schemaName: string): Promise<EC.Schema | undefined> => {
+      return schemaStubs[schemaName];
+    }),
+  };
+}
+
+export function createClassHierarchyInspectorStub(metadata = createMetadataProviderStub()) {
+  return {
+    stubEntityClass: metadata.stubEntityClass,
+    stubRelationshipClass: metadata.stubRelationshipClass,
+    stubOtherClass: metadata.stubOtherClass,
+    classDerivesFrom: sinon.fake(async (derived: string, base: string) => {
+      const { schemaName: derivedSchemaName, className: derivedClassName } = parseFullClassName(derived);
+      const { schemaName: baseSchemaName, className: baseClassName } = parseFullClassName(base);
+      const schemaStub = await metadata.getSchema(derivedSchemaName);
+      if (!schemaStub) {
+        return false;
+      }
+      const derivedClass = await schemaStub.getClass(derivedClassName);
+      if (!derivedClass) {
+        return false;
+      }
+      return derivedClass.is(baseClassName, baseSchemaName);
+    }),
+  };
+}
+
+export function createIModelAccessStub() {
+  const metadata = createMetadataProviderStub();
+  return {
+    ...metadata,
+    ...createClassHierarchyInspectorStub(metadata),
   };
 }
 
