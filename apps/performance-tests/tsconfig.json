@@ -4,9 +4,7 @@
     "outDir": "./lib",
     "sourceMap": true,
     "esModuleInterop": true,
-    "allowJs": true,
-    "declaration": true,
-    "declarationMap": true
+    "allowJs": true
   },
   "include": ["src"]
 }
