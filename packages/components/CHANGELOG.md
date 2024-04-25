@@ -1,5 +1,11 @@
 # Change Log - @itwin/presentation-components
 
+## 5.2.1
+
+### Patch Changes
+
+- [#541](https://github.com/iTwin/presentation/pull/541): Fixed `PresentationInstanceFilter.toGenericInstanceFilter` conversion when condition is using numeric string values.
+
 ## 5.2.0
 
 ### Minor Changes
