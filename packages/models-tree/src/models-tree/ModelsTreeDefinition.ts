@@ -98,7 +98,9 @@ export class ModelsTreeDefinition implements IHierarchyLevelDefinitionsFactory {
     if (HierarchyNode.isClassGroupingNode(node)) {
       // `imageId` is assigned to instance nodes at query time, but grouping ones need to
       // be handled during post-processing
-      return { ...node, extendedData: { ...node.extendedData, imageId: "icon-ec-class" } };
+      // Add `modelId` and `categoryId` from the first grouped element.
+      const childExtendedData = node.children[0].extendedData;
+      return { ...node, extendedData: { ...node.extendedData, ...childExtendedData, imageId: "icon-ec-class" } };
     }
     return node;
   }
@@ -126,6 +128,7 @@ export class ModelsTreeDefinition implements IHierarchyLevelDefinitionsFactory {
                 },
                 extendedData: {
                   imageId: "icon-imodel-hollow-2",
+                  isSubject: true,
                 },
                 autoExpand: true,
                 supportsFiltering: true,
@@ -176,6 +179,7 @@ export class ModelsTreeDefinition implements IHierarchyLevelDefinitionsFactory {
               grouping: { byLabel: { action: "merge", groupId: "subject" } },
               extendedData: {
                 imageId: "icon-folder",
+                isSubject: true,
               },
               supportsFiltering: true,
             })},
@@ -248,6 +252,7 @@ export class ModelsTreeDefinition implements IHierarchyLevelDefinitionsFactory {
                   hasChildren: true,
                   extendedData: {
                     imageId: "icon-model",
+                    isModel: true,
                   },
                   supportsFiltering: true,
                 })}
@@ -350,6 +355,7 @@ export class ModelsTreeDefinition implements IHierarchyLevelDefinitionsFactory {
                 hasChildren: true,
                 extendedData: {
                   imageId: "icon-layers",
+                  isCategory: true,
                   modelIds: { selector: createModelIdsSelector() },
                 },
                 supportsFiltering: true,
@@ -423,6 +429,8 @@ export class ModelsTreeDefinition implements IHierarchyLevelDefinitionsFactory {
                 },
                 extendedData: {
                   imageId: "icon-item",
+                  modelId: { selector: "printf('0x%x', this.Model.Id)" },
+                  categoryId: { selector: "printf('0x%x', this.Category.Id)" },
                 },
                 supportsFiltering: true,
               })}
@@ -479,6 +487,8 @@ export class ModelsTreeDefinition implements IHierarchyLevelDefinitionsFactory {
                 },
                 extendedData: {
                   imageId: "icon-item",
+                  modelId: { selector: "printf('0x%x', this.Model.Id)" },
+                  categoryId: { selector: "printf('0x%x', this.Category.Id)" },
                 },
                 supportsFiltering: true,
               })}
