@@ -427,8 +427,8 @@ export interface HierarchyProviderProps {
         paths: HierarchyNodeIdentifiersPath[];
     };
     formatter?: IPrimitiveValueFormatter;
-    hierarchyDefinitionFactory: (imodelAccess: Required<HierarchyProviderProps["imodelAccess"]>) => IHierarchyLevelDefinitionsFactory;
-    imodelAccess: IECMetadataProvider & ILimitingECSqlQueryExecutor & Partial<IECClassHierarchyInspector>;
+    hierarchyDefinition: IHierarchyLevelDefinitionsFactory;
+    imodelAccess: IECMetadataProvider & ILimitingECSqlQueryExecutor & IECClassHierarchyInspector;
     localizedStrings?: HierarchyProviderLocalizedStrings;
     queryCacheSize?: number;
     queryConcurrency?: number;
