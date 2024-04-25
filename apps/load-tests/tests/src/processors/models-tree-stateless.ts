@@ -12,6 +12,7 @@ import { ISchemaLocater, Schema, SchemaContext, SchemaInfo, SchemaKey, SchemaMat
 import { createECSqlQueryExecutor, createMetadataProvider } from "@itwin/presentation-core-interop";
 import { createLimitingECSqlQueryExecutor, HierarchyNode, HierarchyProvider, RowsLimitExceededError } from "@itwin/presentation-hierarchies";
 import { ModelsTreeDefinition } from "@itwin/presentation-models-tree";
+import { createCachingECClassHierarchyInspector } from "@itwin/presentation-shared";
 import { doRequest, getCurrentIModelName, getCurrentIModelPath, loadNodes } from "./common";
 
 console.log(`Frontend PID: ${process.pid}`);
@@ -119,21 +120,22 @@ function createModelsTreeProvider(context: ScenarioContext, events: EventEmitter
   const schemas = new SchemaContext();
   schemas.addLocater(schedulingSchemaLocater);
   const metadataProvider = createMetadataProvider(schemas);
-
+  const imodelAccess = {
+    ...metadataProvider,
+    ...createCachingECClassHierarchyInspector({ metadataProvider, cacheSize: 1000 }),
+    ...createLimitingECSqlQueryExecutor(
+      createECSqlQueryExecutor({
+        createQueryReader(ecsql, bindings, config) {
+          // eslint-disable-next-line @itwin/no-internal
+          return new ECSqlReader(schedulingQueryExecutor, ecsql, bindings, config);
+        },
+      }),
+      1000,
+    ),
+  };
   const provider = new HierarchyProvider({
-    imodelAccess: {
-      ...metadataProvider,
-      ...createLimitingECSqlQueryExecutor(
-        createECSqlQueryExecutor({
-          createQueryReader(ecsql, bindings, config) {
-            // eslint-disable-next-line @itwin/no-internal
-            return new ECSqlReader(schedulingQueryExecutor, ecsql, bindings, config);
-          },
-        }),
-        1000,
-      ),
-    },
-    hierarchyDefinitionFactory: (imodelAccess) => new ModelsTreeDefinition({ imodelAccess }),
+    imodelAccess,
+    hierarchyDefinition: new ModelsTreeDefinition({ imodelAccess }),
   });
 
   return async (parent: HierarchyNode | undefined) => {

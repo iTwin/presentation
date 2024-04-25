@@ -30,7 +30,6 @@ import { assert, StopWatch } from "@itwin/core-bentley";
 import { GenericInstanceFilter } from "@itwin/core-common";
 import {
   ConcatenatedValue,
-  createCachingECClassHierarchyInspector,
   createDefaultValueFormatter,
   ECSqlBinding,
   ECSqlQueryDef,
@@ -75,7 +74,6 @@ import { NodeSelectClauseColumnNames } from "./NodeSelectQueryFactory";
 const LOGGING_NAMESPACE = `${CommonLoggingNamespace}.HierarchyProvider`;
 const DEFAULT_QUERY_CONCURRENCY = 10;
 const DEFAULT_QUERY_CACHE_SIZE = 50;
-const DEFAULT_BASE_CHECKER_CACHE_SIZE = 1000;
 
 /**
  * Defines the strings used by hierarchy provider.
@@ -103,20 +101,17 @@ export interface HierarchyProviderProps {
   /**
    * An object that provides access to iModel's data and metadata.
    *
-   * The `IECClassHierarchyInspector` part is optional and if not provided, the provider creates its own instance of
-   * the inspector. However, it's recommended to provide an instance of the inspector in case it's used in other components.
-   *
    * @see `IECMetadataProvider`
    * @see `ILimitingECSqlQueryExecutor`
    * @see `IECClassHierarchyInspector`
    */
-  imodelAccess: IECMetadataProvider & ILimitingECSqlQueryExecutor & Partial<IECClassHierarchyInspector>;
+  imodelAccess: IECMetadataProvider & ILimitingECSqlQueryExecutor & IECClassHierarchyInspector;
 
   /**
    * A function that returns a hierarchy definition, describing how the hierarchy that the provider should be create. The
    * function is called once during the provider's construction.
    */
-  hierarchyDefinitionFactory: (imodelAccess: Required<HierarchyProviderProps["imodelAccess"]>) => IHierarchyLevelDefinitionsFactory;
+  hierarchyDefinition: IHierarchyLevelDefinitionsFactory;
 
   /** Maximum number of queries that the provider attempts to execute in parallel. Defaults to `10`. */
   queryConcurrency?: number;
@@ -193,11 +188,8 @@ export class HierarchyProvider {
   }
 
   public constructor(props: HierarchyProviderProps) {
-    this._imodelAccess = {
-      ...createCachingECClassHierarchyInspector({ metadataProvider: props.imodelAccess, cacheSize: DEFAULT_BASE_CHECKER_CACHE_SIZE }),
-      ...props.imodelAccess,
-    };
-    this.hierarchyDefinition = props.hierarchyDefinitionFactory(this._imodelAccess);
+    this._imodelAccess = props.imodelAccess;
+    this.hierarchyDefinition = props.hierarchyDefinition;
     if (props.filtering) {
       const filteringDefinition = new FilteringHierarchyLevelDefinitionsFactory({
         classHierarchy: this._imodelAccess,

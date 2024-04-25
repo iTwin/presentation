@@ -13,7 +13,6 @@ import {
   HierarchyNodeIdentifiersPath,
   HierarchyProvider,
   HierarchyProviderLocalizedStrings,
-  HierarchyProviderProps,
   IHierarchyLevelDefinitionsFactory,
 } from "@itwin/presentation-hierarchies";
 import { createCachingECClassHierarchyInspector, IPrimitiveValueFormatter, parseFullClassName } from "@itwin/presentation-shared";
@@ -59,7 +58,7 @@ export function createIModelAccess(imodel: IModelConnection | IModelDb | ECDb) {
 
 export function createProvider(props: {
   imodel: IModelConnection | IModelDb | ECDb;
-  hierarchy: IHierarchyLevelDefinitionsFactory | HierarchyProviderProps["hierarchyDefinitionFactory"];
+  hierarchy: IHierarchyLevelDefinitionsFactory;
   formatterFactory?: (schemas: SchemaContext) => IPrimitiveValueFormatter;
   localizedStrings?: HierarchyProviderLocalizedStrings;
   filteredNodePaths?: HierarchyNodeIdentifiersPath[];
@@ -68,7 +67,7 @@ export function createProvider(props: {
   const { imodel, hierarchy, formatterFactory, localizedStrings, filteredNodePaths, queryCacheSize } = props;
   return new HierarchyProvider({
     imodelAccess: createIModelAccess(imodel),
-    hierarchyDefinitionFactory: typeof hierarchy === "function" ? hierarchy : () => hierarchy,
+    hierarchyDefinition: hierarchy,
     formatter: formatterFactory ? formatterFactory(createSchemaContext(imodel)) : undefined,
     localizedStrings,
     filtering: filteredNodePaths ? { paths: filteredNodePaths } : undefined,

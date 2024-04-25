@@ -74,7 +74,7 @@ function Tree({ imodel, height, width }: { imodel: IModelConnection; height: num
     setHierarchyProvider(
       new HierarchyProvider({
         imodelAccess,
-        hierarchyDefinitionFactory: () => new ModelsTreeDefinition({ imodelAccess }),
+        hierarchyDefinition: new ModelsTreeDefinition({ imodelAccess }),
         filtering: filteredPaths
           ? {
               paths: filteredPaths,
