@@ -13,6 +13,7 @@ import { PresentationHierarchyNode, PresentationTreeNode } from "./Types";
 /** @beta */
 export interface HierarchyLevelFilteringOptions {
   hierarchyNode: HierarchyNode;
+  hierarchyLevelSizeLimit?: number | "unbounded";
   currentFilter?: GenericInstanceFilter;
 }
 
@@ -121,6 +122,7 @@ function useTreeInternal({ hierarchyProvider }: UseTreeProps): UseTreeResult & {
       return {
         hierarchyNode,
         currentFilter,
+        hierarchyLevelSizeLimit: node.hierarchyLimit,
       };
     },
     [actions],
