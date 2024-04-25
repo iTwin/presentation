@@ -3,6 +3,8 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
+import { HierarchyNode } from "@itwin/presentation-hierarchies";
+
 /** @beta */
 export type InfoNodeTypes = "ResultSetTooLarge" | "ChildrenPlaceholder" | "NoFilterMatchingNodes" | "Unknown";
 
@@ -15,7 +17,7 @@ export interface PresentationHierarchyNode {
   isLoading: boolean;
   isFilterable: boolean;
   isFiltered: boolean;
-  hierarchyLimit?: number | "unbounded";
+  nodeData: HierarchyNode;
   /** Additional data that may be assigned to this node. */
   extendedData?: { [key: string]: any };
 }
