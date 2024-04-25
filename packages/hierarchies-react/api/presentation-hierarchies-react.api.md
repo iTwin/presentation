@@ -25,6 +25,8 @@ export interface HierarchyLevelFilteringOptions {
     // (undocumented)
     currentFilter?: GenericInstanceFilter;
     // (undocumented)
+    hierarchyLevelSizeLimit?: number | "unbounded";
+    // (undocumented)
     hierarchyNode: HierarchyNode;
 }
 
