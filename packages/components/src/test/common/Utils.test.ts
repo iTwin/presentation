@@ -15,6 +15,7 @@ import { Presentation } from "@itwin/presentation-frontend";
 import {
   AsyncTasksTracker,
   createLabelRecord,
+  deserializeUniqueValues,
   findField,
   getDisplayName,
   initializeLocalization,
@@ -168,5 +169,23 @@ describe("AsyncTasksTracker", () => {
       expect(tracker.pendingAsyncs.size).to.eq(1);
     });
     expect(tracker.pendingAsyncs.size).to.eq(0);
+  });
+});
+
+describe("deserializeUniqueValues", () => {
+  it("returns undefined for non serialized numeric string values", () => {
+    const deserialized = deserializeUniqueValues("50", "50");
+    expect(deserialized).to.be.undefined;
+  });
+
+  it("returns undefined for non serialized string values", () => {
+    const deserialized = deserializeUniqueValues("some value", "some value");
+    expect(deserialized).to.be.undefined;
+  });
+
+  it("returns undefined if display value count does not match raw values count", () => {
+    const deserialized = deserializeUniqueValues(`[1, 2]`, `{"1": [1], "2": [2]}`);
+    expect(deserialized).to.have.lengthOf(2);
+    expect(deserializeUniqueValues(`[1, 2]`, `{"1": [1]}`)).to.be.undefined;
   });
 });
