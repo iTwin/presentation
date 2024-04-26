@@ -11,8 +11,9 @@ import { useUnifiedTreeSelection, UseUnifiedTreeSelectionProps } from "./interna
 import { PresentationHierarchyNode, PresentationTreeNode } from "./Types";
 
 /** @beta */
-export interface HierarchyLevelFilteringOptions {
+export interface HierarchyLevelConfiguration {
   hierarchyNode: HierarchyNode;
+  hierarchyLevelSizeLimit?: number | "unbounded";
   currentFilter?: GenericInstanceFilter;
 }
 
@@ -48,7 +49,7 @@ interface UseTreeResult {
   setHierarchyLevelLimit: (nodeId: string | undefined, limit: undefined | number | "unbounded") => void;
   setHierarchyLevelFilter: (nodeId: string | undefined, filter: GenericInstanceFilter | undefined) => void;
   isNodeSelected: (nodeId: string) => boolean;
-  getHierarchyLevelFilteringOptions: (nodeId: string) => HierarchyLevelFilteringOptions | undefined;
+  getHierarchyLevelConfiguration: (nodeId: string) => HierarchyLevelConfiguration | undefined;
 }
 
 interface TreeState {
@@ -106,8 +107,8 @@ function useTreeInternal({ hierarchyProvider }: UseTreeProps): UseTreeResult & {
 
   const isNodeSelected = useCallback((nodeId: string) => TreeModel.isNodeSelected(state.model, nodeId), [state]);
 
-  const getHierarchyLevelFilteringOptions = useCallback(
-    (nodeId: string): HierarchyLevelFilteringOptions | undefined => {
+  const getHierarchyLevelConfiguration = useCallback(
+    (nodeId: string): HierarchyLevelConfiguration | undefined => {
       const node = actions.getNode(nodeId);
       if (!node || !isTreeModelHierarchyNode(node)) {
         return undefined;
@@ -121,6 +122,7 @@ function useTreeInternal({ hierarchyProvider }: UseTreeProps): UseTreeResult & {
       return {
         hierarchyNode,
         currentFilter,
+        hierarchyLevelSizeLimit: node.hierarchyLimit,
       };
     },
     [actions],
@@ -134,7 +136,7 @@ function useTreeInternal({ hierarchyProvider }: UseTreeProps): UseTreeResult & {
     selectNode,
     isNodeSelected,
     setHierarchyLevelLimit,
-    getHierarchyLevelFilteringOptions,
+    getHierarchyLevelConfiguration,
     getNode,
     setHierarchyLevelFilter,
   };

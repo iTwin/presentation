@@ -240,7 +240,7 @@ describe("useTree", () => {
     });
   });
 
-  it("`getHierarchyLevelFilteringOptions` returns undefined for invalid node", async () => {
+  it("`getHierarchyLevelConfiguration` returns undefined for invalid node", async () => {
     const rootNodes = [createTestHierarchyNode({ id: "root-1" })];
 
     hierarchyProvider.getNodes.callsFake((props) => {
@@ -252,11 +252,11 @@ describe("useTree", () => {
       expect(result.current.rootNodes).to.have.lengthOf(1);
     });
 
-    const filterOptions = result.current.getHierarchyLevelFilteringOptions("invalid");
+    const filterOptions = result.current.getHierarchyLevelConfiguration("invalid");
     expect(filterOptions).to.be.undefined;
   });
 
-  it("`getHierarchyLevelFilteringOptions` returns undefined for grouping node", async () => {
+  it("`getHierarchyLevelConfiguration` returns undefined for grouping node", async () => {
     const rootNodes = [createTestGroupingNode({ id: "grouping-node", children: true, autoExpand: true })];
     const childNodes = [createTestHierarchyNode({ id: "grouped-node-1" }), createTestHierarchyNode({ id: "grouped-node-1" })];
 
@@ -277,11 +277,11 @@ describe("useTree", () => {
       expect((result.current.rootNodes![0] as PresentationHierarchyNode).children).to.have.lengthOf(2);
     });
 
-    const filterOptions = result.current.getHierarchyLevelFilteringOptions(nodeId);
+    const filterOptions = result.current.getHierarchyLevelConfiguration(nodeId);
     expect(filterOptions).to.be.undefined;
   });
 
-  it("`getHierarchyLevelFilteringOptions` returns options for hierarchy node", async () => {
+  it("`getHierarchyLevelConfiguration` returns options for hierarchy node", async () => {
     const rootNodes = [createTestHierarchyNode({ id: "root-1" })];
 
     hierarchyProvider.getNodes.callsFake((props) => {
@@ -294,7 +294,7 @@ describe("useTree", () => {
       expect(result.current.rootNodes).to.have.lengthOf(1);
     });
 
-    const filterOptions = result.current.getHierarchyLevelFilteringOptions(nodeId);
+    const filterOptions = result.current.getHierarchyLevelConfiguration(nodeId);
     expect(filterOptions).to.not.be.undefined;
     expect(filterOptions?.hierarchyNode).to.be.eq(rootNodes[0]);
   });

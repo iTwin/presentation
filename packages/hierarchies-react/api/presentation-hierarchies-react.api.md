@@ -21,9 +21,11 @@ export function createTreeNode(node: PresentationTreeNode, isNodeSelected: (node
 export { GenericInstanceFilter }
 
 // @beta (undocumented)
-export interface HierarchyLevelFilteringOptions {
+export interface HierarchyLevelConfiguration {
     // (undocumented)
     currentFilter?: GenericInstanceFilter;
+    // (undocumented)
+    hierarchyLevelSizeLimit?: number | "unbounded";
     // (undocumented)
     hierarchyNode: HierarchyNode;
 }
