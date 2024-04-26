@@ -920,7 +920,7 @@ describe("HierarchyProvider", () => {
     });
 
     it("applies instance filter", async () => {
-      queryExecutor.createQueryReader.returns(
+      imodelAccess.createQueryReader.returns(
         createAsyncIterator([
           {
             [0]: "a.b",
@@ -948,8 +948,7 @@ describe("HierarchyProvider", () => {
         }),
       };
       const provider = new HierarchyProvider({
-        metadataProvider,
-        queryExecutor,
+        imodelAccess,
         hierarchyDefinition,
       });
       const keys = await collect(provider.getNodeInstanceKeys({ parentNode: undefined, instanceFilter }));
@@ -966,7 +965,7 @@ describe("HierarchyProvider", () => {
     });
 
     it("applies hierarchy level size limit", async () => {
-      queryExecutor.createQueryReader.returns(
+      imodelAccess.createQueryReader.returns(
         createAsyncIterator([
           {
             [0]: "a.b",
@@ -989,8 +988,7 @@ describe("HierarchyProvider", () => {
         }),
       };
       const provider = new HierarchyProvider({
-        metadataProvider,
-        queryExecutor,
+        imodelAccess,
         hierarchyDefinition,
       });
       const keys = await collect(provider.getNodeInstanceKeys({ parentNode: undefined, hierarchyLevelSizeLimit: 1 }));
@@ -998,8 +996,8 @@ describe("HierarchyProvider", () => {
         .to.have.lengthOf(1)
         .and.to.containSubset([{ className: "a.b", id: "0x123" }]);
       expect(hierarchyDefinition.defineHierarchyLevel).to.be.calledOnce;
-      expect(queryExecutor.createQueryReader).to.be.calledOnce;
-      expect(queryExecutor.createQueryReader).to.be.calledWithMatch(
+      expect(imodelAccess.createQueryReader).to.be.calledOnce;
+      expect(imodelAccess.createQueryReader).to.be.calledWithMatch(
         sinon.match.any,
         (config?: ECSqlQueryReaderOptions & { limit?: number | "unbounded" }) => config?.limit === 1,
       );
