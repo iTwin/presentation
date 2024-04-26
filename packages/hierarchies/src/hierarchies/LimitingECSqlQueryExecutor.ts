@@ -7,8 +7,8 @@ import { StopWatch } from "@itwin/core-bentley";
 import { ECSqlQueryDef, ECSqlQueryReaderOptions, ECSqlQueryRow, IECSqlQueryExecutor } from "@itwin/presentation-shared";
 import { RowsLimitExceededError } from "./HierarchyErrors";
 import { LOGGING_NAMESPACE as CommonLoggingNamespace } from "./internal/Common";
+import { doLog } from "./internal/LoggingUtils";
 import { MainThreadBlockHandler } from "./internal/MainThreadBlockHandler";
-import { getLogger } from "./Logging";
 
 /**
  * An interface for something that knows how to create a limiting ECSQL query reader.
@@ -96,16 +96,22 @@ function createQueryPerformanceLogger(firstStepWarningThreshold = 3000, allRowsW
     onStep() {
       if (firstStep) {
         // istanbul ignore next
-        const logFunc = timer.current.milliseconds >= firstStepWarningThreshold ? getLogger().logWarning : getLogger().logTrace;
-        logFunc(LOGGING_NAMESPACE, `First step took ${timer.currentSeconds} s.`);
+        doLog({
+          category: LOGGING_NAMESPACE,
+          severity: timer.current.milliseconds >= firstStepWarningThreshold ? "warning" : "trace",
+          message: () => `First step took ${timer.currentSeconds} s.`,
+        });
         firstStep = false;
       }
       ++rowsCount;
     },
     onComplete() {
       // istanbul ignore next
-      const logFunc = timer.current.milliseconds >= allRowsWarningThreshold ? getLogger().logWarning : getLogger().logTrace;
-      logFunc(LOGGING_NAMESPACE, `Query took ${timer.currentSeconds} s. for ${rowsCount} rows.`);
+      doLog({
+        category: LOGGING_NAMESPACE,
+        severity: timer.current.milliseconds >= allRowsWarningThreshold ? "warning" : "trace",
+        message: () => `Query took ${timer.currentSeconds} s. for ${rowsCount} rows.`,
+      });
     },
   };
 }
