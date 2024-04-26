@@ -5,12 +5,14 @@
 
 /**
  * Types of values that can be bound to an ECSql query.
+ * @internal
  */
 export type ECSqlBindingType = "boolean" | "double" | "id" | "idset" | "int" | "long" | "string" | "point2d" | "point3d";
 
 /**
  * Defines an ECSql binding consisting of a value and its type. Necessary to differentiate between numeric
  * types and `Id64String` vs `string`.
+ * @internal
  */
 export type ECSqlBinding =
   | {
@@ -44,11 +46,13 @@ export type ECSqlBinding =
 
 /**
  * Defines requested ECSQL result row format.
+ * @internal
  */
 export type ECSqlQueryRowFormat = "ECSqlPropertyNames" | "Indexes";
 
 /**
  * Defines options for ECSQL query reader.
+ * @internal
  */
 export interface ECSqlQueryReaderOptions {
   rowFormat?: ECSqlQueryRowFormat;
@@ -56,6 +60,7 @@ export interface ECSqlQueryReaderOptions {
 
 /**
  * Represents a single row of an ECSQL query result.
+ * @internal
  */
 export interface ECSqlQueryRow {
   [propertyName: string]: any;
@@ -64,11 +69,13 @@ export interface ECSqlQueryRow {
 
 /**
  * Represents ECSQL query results reader.
+ * @internal
  */
 export type ECSqlQueryReader = AsyncIterableIterator<ECSqlQueryRow>;
 
 /**
  * An interface for something that knows how to create an ECSQL query reader.
+ * @internal
  */
 export interface IECSqlQueryExecutor {
   createQueryReader(ecsql: string, bindings?: ECSqlBinding[], config?: ECSqlQueryReaderOptions): ECSqlQueryReader;
@@ -76,6 +83,7 @@ export interface IECSqlQueryExecutor {
 
 /**
  * Forms ECSql bindings from given ID's.
+ * @internal
  */
 export function formIdBindings(property: string, ids: string[], bindings: ECSqlBinding[]): string {
   if (ids.length > 1000) {
