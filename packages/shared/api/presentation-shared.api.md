@@ -273,6 +273,15 @@ export interface ECSqlQueryRow {
 }
 
 // @beta
+interface Event_2<TListener extends (...args: any[]) => void = () => void> {
+    // (undocumented)
+    addListener(listener: TListener): () => void;
+    // (undocumented)
+    removeListener(listener: TListener): void;
+}
+export { Event_2 as Event }
+
+// @beta
 export function formatConcatenatedValue(props: {
     value: ConcatenatedValue | string;
     metadataProvider: IECMetadataProvider;
