@@ -20,7 +20,7 @@ import {
 import { createECSqlQueryExecutor, createMetadataProvider } from "@itwin/presentation-core-interop";
 import { Presentation } from "@itwin/presentation-frontend";
 import { createLimitingECSqlQueryExecutor, GenericInstanceFilter, HierarchyProvider, ILimitingECSqlQueryExecutor } from "@itwin/presentation-hierarchies";
-import { HierarchyLevelFilteringOptions, PresentationHierarchyNode, TreeRenderer, useUnifiedSelectionTree } from "@itwin/presentation-hierarchies-react";
+import { HierarchyLevelConfiguration, PresentationHierarchyNode, TreeRenderer, useUnifiedSelectionTree } from "@itwin/presentation-hierarchies-react";
 import { ModelsTreeDefinition } from "@itwin/presentation-models-tree";
 import { createCachingECClassHierarchyInspector, IECClassHierarchyInspector, IECMetadataProvider } from "@itwin/presentation-shared";
 
@@ -91,7 +91,7 @@ function Tree({ imodel, height, width }: { imodel: IModelConnection; height: num
     );
   }, [imodelAccess, filteredPaths]);
 
-  const { rootNodes, isLoading, getHierarchyLevelFilteringOptions, ...treeProps } = useUnifiedSelectionTree({
+  const { rootNodes, isLoading, getHierarchyLevelConfiguration, ...treeProps } = useUnifiedSelectionTree({
     imodelKey: imodel.key,
     sourceName: "StatelessTreeV2",
     hierarchyProvider,
@@ -108,13 +108,13 @@ function Tree({ imodel, height, width }: { imodel: IModelConnection; height: num
     treeProps.reloadTree();
   };
 
-  const [filteringOptions, setFilteringOptions] = useState<{ nodeId: string; options: HierarchyLevelFilteringOptions }>();
+  const [filteringOptions, setFilteringOptions] = useState<{ nodeId: string; options: HierarchyLevelConfiguration }>();
   const onFilterClick = useCallback(
     (nodeId: string) => {
-      const options = getHierarchyLevelFilteringOptions(nodeId);
+      const options = getHierarchyLevelConfiguration(nodeId);
       setFilteringOptions(options ? { nodeId, options } : undefined);
     },
-    [getHierarchyLevelFilteringOptions],
+    [getHierarchyLevelConfiguration],
   );
   const propertiesSource = useMemo<(() => Promise<PresentationInstanceFilterPropertiesSource>) | undefined>(() => {
     if (!hierarchyProvider || !filteringOptions) {
