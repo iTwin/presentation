@@ -6,8 +6,6 @@
 import { ReactElement, useCallback, useEffect, useMemo, useState } from "react";
 import { useDebouncedAsyncValue } from "@itwin/components-react";
 import { IModelConnection } from "@itwin/core-frontend";
-import { SchemaContext } from "@itwin/ecschema-metadata";
-import { ECSchemaRpcLocater } from "@itwin/ecschema-rpcinterface-common";
 import { SvgFolder, SvgImodelHollow, SvgItem, SvgLayers, SvgModel } from "@itwin/itwinui-icons-react";
 import { Flex, ProgressRadial, SearchBox, Text, ToggleSwitch } from "@itwin/itwinui-react";
 import { ClassInfo, DefaultContentDisplayTypes, Descriptor, KeySet } from "@itwin/presentation-common";
@@ -23,6 +21,7 @@ import { createLimitingECSqlQueryExecutor, GenericInstanceFilter, HierarchyProvi
 import { HierarchyLevelFilteringOptions, PresentationHierarchyNode, TreeRenderer, useUnifiedSelectionTree } from "@itwin/presentation-hierarchies-react";
 import { ModelsTreeDefinition } from "@itwin/presentation-models-tree";
 import { createCachingECClassHierarchyInspector, IECClassHierarchyInspector, IECMetadataProvider } from "@itwin/presentation-shared";
+import { MyAppFrontend } from "../../../api/MyAppFrontend";
 
 interface IModelAccess {
   queryExecutor: ILimitingECSqlQueryExecutor;
@@ -41,8 +40,7 @@ function Tree({ imodel, height, width }: { imodel: IModelConnection; height: num
   const [isFiltering, setIsFiltering] = useState(false);
 
   useEffect(() => {
-    const schemas = new SchemaContext();
-    schemas.addLocater(new ECSchemaRpcLocater(imodel.getRpcProps()));
+    const schemas = MyAppFrontend.getSchemaContext(imodel);
     const metadataProvider = createMetadataProvider(schemas);
     setIModelAccess({
       queryExecutor: createLimitingECSqlQueryExecutor(createECSqlQueryExecutor(imodel), 1000),
