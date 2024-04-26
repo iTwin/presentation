@@ -43,7 +43,7 @@ import { ECSql } from "@itwin/presentation-shared";
 import { createFileNameFromString } from "@itwin/presentation-testing/lib/cjs/presentation-testing/InternalUtils";
 import { setupOutputFileLocation } from "../IModelUtils";
 import { NodeValidators, validateHierarchyLevel } from "./HierarchyValidation";
-import { createClassECSqlSelector, createMetadataProvider, createProvider } from "./Utils";
+import { createClassECSqlSelector, createIModelAccess, createProvider } from "./Utils";
 
 describe("Hierarchies", () => {
   describe("Updating hierarchies upon iModel change", () => {
@@ -509,7 +509,7 @@ describe("Hierarchies", () => {
         });
 
         function createRootSubjectChildrenProvider(props: { label: "codeValue" | "aspectIdentifier" } = { label: "codeValue" }) {
-          const selectQueryFactory = new NodeSelectQueryFactory({ metadataProvider: createMetadataProvider(imodel) });
+          const selectQueryFactory = new NodeSelectQueryFactory({ imodelAccess: createIModelAccess(imodel) });
           const hierarchy: IHierarchyLevelDefinitionsFactory = {
             async defineHierarchyLevel() {
               return [
@@ -537,7 +537,7 @@ describe("Hierarchies", () => {
         }
 
         function createRootSubjectReferredElementsProvider() {
-          const selectQueryFactory = new NodeSelectQueryFactory({ metadataProvider: createMetadataProvider(imodel) });
+          const selectQueryFactory = new NodeSelectQueryFactory({ imodelAccess: createIModelAccess(imodel) });
           const hierarchy: IHierarchyLevelDefinitionsFactory = {
             async defineHierarchyLevel() {
               return [
@@ -565,7 +565,7 @@ describe("Hierarchies", () => {
         }
 
         function createPhysicalModelsProvider() {
-          const selectQueryFactory = new NodeSelectQueryFactory({ metadataProvider: createMetadataProvider(imodel) });
+          const selectQueryFactory = new NodeSelectQueryFactory({ imodelAccess: createIModelAccess(imodel) });
           const hierarchy: IHierarchyLevelDefinitionsFactory = {
             async defineHierarchyLevel() {
               return [

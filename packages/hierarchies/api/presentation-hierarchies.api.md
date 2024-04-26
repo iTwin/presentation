@@ -405,7 +405,7 @@ export class HierarchyProvider {
     getNodes(props: GetHierarchyNodesProps): AsyncIterableIterator<HierarchyNode>;
     readonly hierarchyDefinition: IHierarchyLevelDefinitionsFactory;
     notifyDataSourceChanged(): void;
-    readonly queryExecutor: ILimitingECSqlQueryExecutor;
+    get queryExecutor(): ILimitingECSqlQueryExecutor;
     // @internal (undocumented)
     get queryScheduler(): {
         schedule: ILimitingECSqlQueryExecutor["createQueryReader"];
@@ -421,17 +421,15 @@ export interface HierarchyProviderLocalizedStrings {
 
 // @beta
 export interface HierarchyProviderProps {
-    classHierarchyInspector?: IECClassHierarchyInspector;
     filtering?: {
         paths: HierarchyNodeIdentifiersPath[];
     };
     formatter?: IPrimitiveValueFormatter;
     hierarchyDefinition: IHierarchyLevelDefinitionsFactory;
+    imodelAccess: IECMetadataProvider & ILimitingECSqlQueryExecutor & IECClassHierarchyInspector;
     localizedStrings?: HierarchyProviderLocalizedStrings;
-    metadataProvider: IECMetadataProvider;
     queryCacheSize?: number;
     queryConcurrency?: number;
-    queryExecutor: ILimitingECSqlQueryExecutor;
 }
 
 // @beta
@@ -534,8 +532,7 @@ export interface NodeSelectClauseProps {
 // @beta
 export class NodeSelectQueryFactory {
     constructor(props: {
-        metadataProvider: IECMetadataProvider;
-        classHierarchyInspector?: IECClassHierarchyInspector;
+        imodelAccess: IECMetadataProvider & IECClassHierarchyInspector;
     });
     createFilterClauses(def: GenericInstanceFilter | undefined, contentClass: {
         fullName: string;

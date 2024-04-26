@@ -7,10 +7,10 @@ import { expect } from "chai";
 import sinon from "sinon";
 import * as cachingHiliteSetProvider from "../../unified-selection/CachingHiliteSetProvider";
 import { HiliteSet } from "../../unified-selection/HiliteSetProvider";
-import { enableUnifiedSelectionSyncWithIModel } from "../../unified-selection/iModel/EnableUnifiedSelectionSyncWithIModel";
-import { IModelSelection } from "../../unified-selection/iModel/IModel";
-import { IMetadataProvider } from "../../unified-selection/queries/ECMetadata";
-import { IECSqlQueryExecutor } from "../../unified-selection/queries/ECSqlCore";
+import {
+  enableUnifiedSelectionSyncWithIModel,
+  EnableUnifiedSelectionSyncWithIModelProps,
+} from "../../unified-selection/iModel/EnableUnifiedSelectionSyncWithIModel";
 import { StorageSelectionChangesListener } from "../../unified-selection/SelectionChangeEvent";
 import { SelectionStorage } from "../../unified-selection/SelectionStorage";
 
@@ -25,8 +25,8 @@ describe("enableUnifiedSelectionSyncWithIModel", () => {
     getHiliteSet: sinon.stub<[{ iModelKey: string }], AsyncIterableIterator<HiliteSet>>(),
     dispose: () => {},
   };
-  const iModelSelection = {
-    hilited: {
+  const imodelAccess = {
+    hiliteSet: {
       wantSyncWithSelectionSet: false,
       clear: () => {},
     },
@@ -36,7 +36,7 @@ describe("enableUnifiedSelectionSyncWithIModel", () => {
         addListener: () => () => {},
       },
     },
-  } as unknown as IModelSelection;
+  };
 
   function resetListeners() {
     selectionStorage.selectionChangeEvent.addListener.reset();
@@ -59,10 +59,8 @@ describe("enableUnifiedSelectionSyncWithIModel", () => {
 
   it("creates and disposes IModelSelectionHandler", () => {
     const cleanup = enableUnifiedSelectionSyncWithIModel({
-      iModelSelection,
+      imodelAccess: imodelAccess as unknown as EnableUnifiedSelectionSyncWithIModelProps["imodelAccess"],
       selectionStorage: selectionStorage as unknown as SelectionStorage,
-      queryExecutor: {} as IECSqlQueryExecutor,
-      metadataProvider: {} as IMetadataProvider,
       activeScopeProvider: () => "element",
     });
 

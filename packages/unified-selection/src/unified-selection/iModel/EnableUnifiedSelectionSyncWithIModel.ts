@@ -12,7 +12,7 @@ import { IMetadataProvider } from "../queries/ECMetadata";
 import { IECSqlQueryExecutor } from "../queries/ECSqlCore";
 import { ComputeSelectionProps } from "../SelectionScope";
 import { SelectionStorage } from "../SelectionStorage";
-import { IModelSelection } from "./IModel";
+import { CoreIModelHiliteSet, CoreIModelSelectionSet } from "./IModel";
 import { IModelSelectionHandler } from "./IModelSelectionHandler";
 
 /**
@@ -20,16 +20,23 @@ import { IModelSelectionHandler } from "./IModelSelectionHandler";
  * @internal Not exported through barrel, but used in public API as an argument. May be supplemented with optional attributes any time.
  */
 export interface EnableUnifiedSelectionSyncWithIModelProps {
-  /** iModel selection to synchronize with unified selection. */
-  iModelSelection: IModelSelection;
+  /**  */
+  imodelAccess: IECSqlQueryExecutor &
+    IMetadataProvider & {
+      /** Key of the iModel. Generally taken from `IModelConnection.key`. */
+      readonly key: string;
+      /** The set of currently hilited elements taken from `IModelConnection.hilited`. */
+      readonly hiliteSet: CoreIModelHiliteSet;
+      /** The set of currently selected elements taken from `IModelConnection.selectionSet`. */
+      readonly selectionSet: CoreIModelSelectionSet;
+    };
+
   /** Selection storage to synchronize IModel's tool selection with. */
   selectionStorage: SelectionStorage;
-  /** iModel ECSql query executor. */
-  queryExecutor: IECSqlQueryExecutor;
-  /** iModel metadata provider. */
-  metadataProvider: IMetadataProvider;
+
   /** Active scope provider. */
   activeScopeProvider: () => ComputeSelectionProps["scope"];
+
   /**
    * A caching hilite set provider used to retrieve hilite sets for an iModel. If not provided, a new `CachingHiliteSetProvider`
    * will be created for the given iModel using the provided `queryExecutor` and `metadataProvider`.

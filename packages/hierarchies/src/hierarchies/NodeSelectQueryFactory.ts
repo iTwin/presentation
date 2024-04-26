@@ -13,16 +13,7 @@ import {
   GenericInstanceFilterRuleOperator,
   GenericInstanceFilterRuleValue,
 } from "@itwin/core-common";
-import {
-  createCachingECClassHierarchyInspector,
-  EC,
-  ECSql,
-  getClass,
-  IECClassHierarchyInspector,
-  IECMetadataProvider,
-  parseFullClassName,
-  PrimitiveValue,
-} from "@itwin/presentation-shared";
+import { EC, ECSql, getClass, IECClassHierarchyInspector, IECMetadataProvider, parseFullClassName, PrimitiveValue } from "@itwin/presentation-shared";
 
 /**
  * Column names of the SELECT clause created by `NodeSelectClauseFactory`. Order of the names matches the order of columns
@@ -232,12 +223,10 @@ export interface ECSqlSelectClauseBaseClassGroupingParams extends ECSqlSelectCla
  * @beta
  */
 export class NodeSelectQueryFactory {
-  private _metadataProvider: IECMetadataProvider;
-  private _classHierarchy: IECClassHierarchyInspector;
+  private _imodelAccess: IECMetadataProvider & IECClassHierarchyInspector;
 
-  public constructor(props: { metadataProvider: IECMetadataProvider; classHierarchyInspector?: IECClassHierarchyInspector }) {
-    this._metadataProvider = props.metadataProvider;
-    this._classHierarchy = props.classHierarchyInspector ?? createCachingECClassHierarchyInspector({ metadataProvider: props.metadataProvider });
+  public constructor(props: { imodelAccess: IECMetadataProvider & IECClassHierarchyInspector }) {
+    this._imodelAccess = props.imodelAccess;
   }
 
   /** Create a SELECT clause in a format understood by results reader of the library. */
@@ -285,7 +274,7 @@ export class NodeSelectQueryFactory {
     }
 
     const from = await specializeContentClass({
-      classHierarchyInspector: this._classHierarchy,
+      classHierarchyInspector: this._imodelAccess,
       contentClassName: contentClass.fullName,
       filterClassNames: def.propertyClassNames,
     });
@@ -310,7 +299,7 @@ export class NodeSelectQueryFactory {
     const joins = await Promise.all(
       def.relatedInstances.map(async (rel, i) =>
         ECSql.createRelationshipPathJoinClause({
-          metadata: this._metadataProvider,
+          metadata: this._imodelAccess,
           path: assignRelationshipPathAliases(rel.path, i, contentClass.alias, rel.alias),
         }),
       ),
@@ -333,7 +322,7 @@ export class NodeSelectQueryFactory {
       contentClass.alias,
       async (alias) => {
         const aliasClassName = classAliasMap.get(alias);
-        return aliasClassName ? getClass(this._metadataProvider, aliasClassName) : undefined;
+        return aliasClassName ? getClass(this._imodelAccess, aliasClassName) : undefined;
       },
       def.rules,
     );

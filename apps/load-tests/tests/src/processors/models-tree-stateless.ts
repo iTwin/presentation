@@ -12,6 +12,7 @@ import { ISchemaLocater, Schema, SchemaContext, SchemaInfo, SchemaKey, SchemaMat
 import { createECSqlQueryExecutor, createMetadataProvider } from "@itwin/presentation-core-interop";
 import { createLimitingECSqlQueryExecutor, HierarchyNode, HierarchyProvider, RowsLimitExceededError } from "@itwin/presentation-hierarchies";
 import { ModelsTreeDefinition } from "@itwin/presentation-models-tree";
+import { createCachingECClassHierarchyInspector } from "@itwin/presentation-shared";
 import { doRequest, getCurrentIModelName, getCurrentIModelPath, loadNodes } from "./common";
 
 console.log(`Frontend PID: ${process.pid}`);
@@ -119,11 +120,10 @@ function createModelsTreeProvider(context: ScenarioContext, events: EventEmitter
   const schemas = new SchemaContext();
   schemas.addLocater(schedulingSchemaLocater);
   const metadataProvider = createMetadataProvider(schemas);
-
-  const provider = new HierarchyProvider({
-    metadataProvider,
-    hierarchyDefinition: new ModelsTreeDefinition({ metadataProvider }),
-    queryExecutor: createLimitingECSqlQueryExecutor(
+  const imodelAccess = {
+    ...metadataProvider,
+    ...createCachingECClassHierarchyInspector({ metadataProvider, cacheSize: 1000 }),
+    ...createLimitingECSqlQueryExecutor(
       createECSqlQueryExecutor({
         createQueryReader(ecsql, bindings, config) {
           // eslint-disable-next-line @itwin/no-internal
@@ -132,6 +132,10 @@ function createModelsTreeProvider(context: ScenarioContext, events: EventEmitter
       }),
       1000,
     ),
+  };
+  const provider = new HierarchyProvider({
+    imodelAccess,
+    hierarchyDefinition: new ModelsTreeDefinition({ imodelAccess }),
   });
 
   return async (parent: HierarchyNode | undefined) => {

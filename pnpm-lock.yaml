@@ -370,6 +370,9 @@ importers:
       '@itwin/presentation-models-tree':
         specifier: workspace:*
         version: link:../../../packages/models-tree
+      '@itwin/presentation-shared':
+        specifier: workspace:*
+        version: link:../../../packages/shared
       '@types/artillery':
         specifier: ^1.7.4
         version: 1.7.4
