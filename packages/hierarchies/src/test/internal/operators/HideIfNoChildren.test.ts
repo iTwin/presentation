@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 import { expect } from "chai";
 import { collect, waitFor } from "presentation-test-utilities";
-import { EMPTY, from, of, Subject } from "rxjs";
+import { EMPTY, from, Observable, of, Subject } from "rxjs";
 import sinon from "sinon";
 import { LogLevel } from "@itwin/core-bentley";
 import { createHideIfNoChildrenOperator, LOGGING_NAMESPACE } from "../../../hierarchies/internal/operators/HideIfNoChildren";
@@ -109,7 +109,7 @@ describe("HideIfNoChildrenOperator", () => {
   });
 
   it("subscribes to input observable once", async () => {
-    const processedHierarchyNodesObservable = from([]);
+    const processedHierarchyNodesObservable = new Observable<any>();
     const subscriptionSpy = sinon.spy(processedHierarchyNodesObservable, "subscribe");
     const promise = processedHierarchyNodesObservable.pipe(createHideIfNoChildrenOperator(() => of(false)));
     promise.subscribe();

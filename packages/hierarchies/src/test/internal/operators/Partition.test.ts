@@ -28,10 +28,23 @@ describe("partition", () => {
   });
 
   it("subscribes to source observable once", async () => {
-    const source = from([1, 2, 3]);
+    const source = new Observable<number>();
     const subscribe = sinon.spy(source, "subscribe");
     const [matches, nonMatches] = partition(source, (x) => x % 2 === 0);
-    await Promise.all([collect(matches), collect(nonMatches)]);
+    matches.subscribe();
+    nonMatches.subscribe();
     expect(subscribe).to.be.calledOnce;
+  });
+
+  it("unsubscribes from source observable when matches and non-matches are unsubscribed", async () => {
+    const unsubscribeSpy = sinon.spy();
+    const source = new Observable<number>(() => unsubscribeSpy);
+    const result = partition(source, (x) => x % 2 === 0);
+    const subscriptions = result.map((obs) => obs.subscribe());
+    expect(unsubscribeSpy).to.not.be.called;
+    subscriptions[0].unsubscribe();
+    expect(unsubscribeSpy).to.not.be.called;
+    subscriptions[1].unsubscribe();
+    expect(unsubscribeSpy).to.be.calledOnce;
   });
 });
