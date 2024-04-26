@@ -401,9 +401,7 @@ export namespace HierarchyNodesDefinition {
 // @beta
 export class HierarchyProvider {
     constructor(props: HierarchyProviderProps);
-    getNodeInstanceKeys(props: {
-        parentNode: ParentHierarchyNode | undefined;
-    }): AsyncIterableIterator<InstanceKey>;
+    getNodeInstanceKeys(props: Omit<GetHierarchyNodesProps, "ignoreCache">): AsyncIterableIterator<InstanceKey>;
     getNodes(props: GetHierarchyNodesProps): AsyncIterableIterator<HierarchyNode>;
     readonly hierarchyDefinition: IHierarchyLevelDefinitionsFactory;
     notifyDataSourceChanged(): void;

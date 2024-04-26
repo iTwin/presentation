@@ -471,8 +471,8 @@ export class HierarchyProvider {
     );
   }
 
-  private getNodeInstanceKeysObs(props: { parentNode: ParentHierarchyNode | undefined }): Observable<InstanceKey> {
-    const { parentNode } = props;
+  private getNodeInstanceKeysObs(props: Omit<GetHierarchyNodesProps, "ignoreCache">): Observable<InstanceKey> {
+    const { parentNode, instanceFilter, hierarchyLevelSizeLimit = "unbounded" } = props;
 
     if (parentNode && HierarchyNode.isGroupingNode(parentNode)) {
       return from(parentNode.groupedInstanceKeys);
@@ -482,7 +482,7 @@ export class HierarchyProvider {
 
     // split the definitions based on whether they're for custom nodes or for instance nodes
     const [customDefs, instanceDefs] = partition(
-      from(this.hierarchyDefinition.defineHierarchyLevel({ parentNode })).pipe(mergeAll(), shareReplay()),
+      from(this.hierarchyDefinition.defineHierarchyLevel({ parentNode, instanceFilter })).pipe(mergeAll(), shareReplay()),
       HierarchyNodesDefinition.isCustomNode,
     );
 
@@ -501,7 +501,7 @@ export class HierarchyProvider {
                   ${query.ecsql}
                 )
               `;
-              const reader = this.queryExecutor.createQueryReader({ ...query, ecsql }, { rowFormat: "Indexes", limit: "unbounded" });
+              const reader = this.queryExecutor.createQueryReader({ ...query, ecsql }, { rowFormat: "Indexes", limit: hierarchyLevelSizeLimit });
               return from(reader).pipe(
                 map((row) => ({
                   key: {
@@ -560,7 +560,7 @@ export class HierarchyProvider {
    * Creates an iterator for all child hierarchy level instance keys, taking into account any hidden hierarchy levels
    * that there may be under the given parent node.
    */
-  public getNodeInstanceKeys(props: { parentNode: ParentHierarchyNode | undefined }): AsyncIterableIterator<InstanceKey> {
+  public getNodeInstanceKeys(props: Omit<GetHierarchyNodesProps, "ignoreCache">): AsyncIterableIterator<InstanceKey> {
     const loggingCategory = `${LOGGING_NAMESPACE}.GetNodeInstanceKeys`;
     doLog({
       category: loggingCategory,

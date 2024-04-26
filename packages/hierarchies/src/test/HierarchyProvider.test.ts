@@ -8,7 +8,7 @@ import { collect, createAsyncIterator, ResolvablePromise, waitFor } from "presen
 import sinon from "sinon";
 import { omit } from "@itwin/core-bentley";
 import { GenericInstanceFilter } from "@itwin/core-common";
-import { ECSqlQueryDef, InstanceKey, trimWhitespace, TypedPrimitiveValue } from "@itwin/presentation-shared";
+import { ECSqlQueryDef, ECSqlQueryReaderOptions, InstanceKey, trimWhitespace, TypedPrimitiveValue } from "@itwin/presentation-shared";
 import { DefineHierarchyLevelProps, IHierarchyLevelDefinitionsFactory } from "../hierarchies/HierarchyDefinition";
 import { RowsLimitExceededError } from "../hierarchies/HierarchyErrors";
 import { GroupingHierarchyNode, GroupingNodeKey, HierarchyNode } from "../hierarchies/HierarchyNode";
@@ -660,6 +660,23 @@ describe("HierarchyProvider", () => {
   });
 
   describe("Hierarchy level instance keys", () => {
+    const instanceFilter: GenericInstanceFilter = {
+      propertyClassNames: ["x.y"],
+      relatedInstances: [],
+      rules: {
+        operator: "and",
+        rules: [
+          {
+            propertyName: "z",
+            propertyTypeName: "string",
+            sourceAlias: "this",
+            operator: "is-equal",
+            value: { rawValue: "test value", displayValue: "test value" },
+          },
+        ],
+      },
+    };
+
     it("returns grouped instance keys for parent grouping node", async () => {
       const groupingNode: GroupingHierarchyNode = {
         key: { type: "class-grouping", className: "x.y" },
@@ -899,6 +916,92 @@ describe("HierarchyProvider", () => {
           arg.parentNode.key.instanceKeys.length === 2 &&
           InstanceKey.equals(arg.parentNode.key.instanceKeys[0], { className: "a.b", id: "0x123" }) &&
           InstanceKey.equals(arg.parentNode.key.instanceKeys[1], { className: "a.b", id: "0x456" }),
+      );
+    });
+
+    it("applies instance filter", async () => {
+      queryExecutor.createQueryReader.returns(
+        createAsyncIterator([
+          {
+            [0]: "a.b",
+            [1]: "0x123",
+            [2]: false,
+          },
+          {
+            [0]: "a.b",
+            [1]: "0x456",
+            [2]: false,
+          },
+        ]),
+      );
+      const hierarchyDefinition = {
+        defineHierarchyLevel: sinon.fake(async ({ parentNode, instanceFilter: requestedInstanceFilter }: DefineHierarchyLevelProps) => {
+          if (parentNode === undefined && requestedInstanceFilter) {
+            return [
+              {
+                fullClassName: "x.y",
+                query: { ecsql: "root" },
+              },
+            ];
+          }
+          return [];
+        }),
+      };
+      const provider = new HierarchyProvider({
+        metadataProvider,
+        queryExecutor,
+        hierarchyDefinition,
+      });
+      const keys = await collect(provider.getNodeInstanceKeys({ parentNode: undefined, instanceFilter }));
+      expect(keys)
+        .to.have.lengthOf(2)
+        .and.to.containSubset([
+          { className: "a.b", id: "0x123" },
+          { className: "a.b", id: "0x456" },
+        ]);
+      expect(hierarchyDefinition.defineHierarchyLevel).to.be.calledOnce;
+      expect(hierarchyDefinition.defineHierarchyLevel.firstCall).to.be.calledWithMatch(
+        (arg: DefineHierarchyLevelProps) => arg.parentNode === undefined && arg.instanceFilter === instanceFilter,
+      );
+    });
+
+    it("applies hierarchy level size limit", async () => {
+      queryExecutor.createQueryReader.returns(
+        createAsyncIterator([
+          {
+            [0]: "a.b",
+            [1]: "0x123",
+            [2]: false,
+          },
+        ]),
+      );
+      const hierarchyDefinition = {
+        defineHierarchyLevel: sinon.fake(async ({ parentNode }: DefineHierarchyLevelProps) => {
+          if (parentNode === undefined) {
+            return [
+              {
+                fullClassName: "x.y",
+                query: { ecsql: "root" },
+              },
+            ];
+          }
+          return [];
+        }),
+      };
+      const provider = new HierarchyProvider({
+        metadataProvider,
+        queryExecutor,
+        hierarchyDefinition,
+      });
+      const keys = await collect(provider.getNodeInstanceKeys({ parentNode: undefined, hierarchyLevelSizeLimit: 1 }));
+      expect(keys)
+        .to.have.lengthOf(1)
+        .and.to.containSubset([{ className: "a.b", id: "0x123" }]);
+      expect(hierarchyDefinition.defineHierarchyLevel).to.be.calledOnce;
+      expect(queryExecutor.createQueryReader).to.be.calledOnce;
+      expect(queryExecutor.createQueryReader).to.be.calledWithMatch(
+        sinon.match.any,
+        (config?: ECSqlQueryReaderOptions & { limit?: number | "unbounded" }) => config?.limit === 1,
       );
     });
   });
