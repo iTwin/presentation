@@ -4,6 +4,9 @@
 
 ```ts
 
+import { Event as Event_2 } from '@itwin/presentation-shared';
+import { Id64Arg } from '@itwin/core-bentley';
+
 // @beta
 export interface CachingHiliteSetProvider {
     dispose(): void;
@@ -30,6 +33,9 @@ export interface CustomSelectable {
     identifier: string;
     loadInstanceKeys: () => AsyncIterableIterator<SelectableInstanceKey>;
 }
+
+// @beta
+export function enableUnifiedSelectionSyncWithIModel(props: EnableUnifiedSelectionSyncWithIModelProps): () => void;
 
 // @beta
 export interface HiliteSet {

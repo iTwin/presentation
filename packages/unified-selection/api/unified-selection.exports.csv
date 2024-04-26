@@ -6,6 +6,7 @@ beta;createCachingHiliteSetProvider(props: CachingHiliteSetProviderProps): Cachi
 beta;createHiliteSetProvider(props: HiliteSetProviderProps): HiliteSetProvider
 beta;createStorage(): SelectionStorage
 beta;CustomSelectable
+beta;enableUnifiedSelectionSyncWithIModel(props: EnableUnifiedSelectionSyncWithIModelProps): () => void
 beta;HiliteSet
 beta;HiliteSetProvider
 beta;Selectable = SelectableInstanceKey | CustomSelectable
