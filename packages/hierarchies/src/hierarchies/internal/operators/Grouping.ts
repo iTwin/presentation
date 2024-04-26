@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { concat, concatAll, delay, EMPTY, expand, finalize, from, map, merge, mergeMap, Observable, of, reduce, skip, take, tap, toArray } from "rxjs";
+import { concat, concatAll, delay, EMPTY, expand, finalize, from, last, map, merge, mergeMap, Observable, of, reduce, tap, toArray } from "rxjs";
 import { assert, StopWatch } from "@itwin/core-bentley";
 import { IECClassHierarchyInspector, IECMetadataProvider, IPrimitiveValueFormatter } from "@itwin/presentation-shared";
 import {
@@ -145,8 +145,7 @@ function groupInstanceNodes(
         delay(0),
       );
     }),
-    skip(groupingHandlers.length),
-    take(1),
+    last(),
     mergeMap(({ result }) => {
       result.grouped.forEach((groupingNode) => {
         onGroupingNodeCreated?.(groupingNode);
