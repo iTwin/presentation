@@ -109,6 +109,7 @@ function PresentationTreeNodeActions(props: PresentationTreeNodeActionsProps) {
             className="presentation-components-node-action-button"
             styleType="borderless"
             size="small"
+            onMouseDown={(e) => e.stopPropagation()}
             onClick={(e) => {
               e.stopPropagation();
               onClearFilterClick();
@@ -122,6 +123,7 @@ function PresentationTreeNodeActions(props: PresentationTreeNodeActionsProps) {
           className="presentation-components-node-action-button"
           styleType="borderless"
           size="small"
+          onMouseDown={(e) => e.stopPropagation()}
           onClick={(e) => {
             e.stopPropagation();
             onFilterClick();

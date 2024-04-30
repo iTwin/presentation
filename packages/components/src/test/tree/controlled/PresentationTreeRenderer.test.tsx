@@ -317,7 +317,13 @@ describe("PresentationTreeRenderer", () => {
         [
           createTreeModelNodeInput({
             id: "A",
-            item: { filtering: { descriptor: createTestContentDescriptor({ fields: [propertyField] }), ancestorFilters: [] } },
+            item: {
+              filtering: {
+                descriptor: createTestContentDescriptor({ fields: [propertyField] }),
+                ancestorFilters: [],
+                active: {} as unknown as PresentationInstanceFilterInfo,
+              },
+            },
           }),
         ],
         0,
@@ -328,37 +334,19 @@ describe("PresentationTreeRenderer", () => {
       <PresentationTreeRenderer {...baseTreeProps} visibleNodes={visibleNodes} nodeLoader={nodeLoader} onFilterApplied={onFilterAppliedSpy} />,
     );
 
-    const { queryByText, user } = result;
+    const { queryByText, user, getByTitle } = result;
     await waitFor(() => expect(queryByText("A")).to.not.be.null);
 
-    await applyFilter(result, propertyField.label);
-
     // ensure that initially the filter is enabled
-    const nodeItem = modelSource.getModel().getNode("A")?.item as PresentationTreeNodeItem;
+    let nodeItem = modelSource.getModel().getNode("A")?.item as PresentationTreeNodeItem;
     expect(nodeItem.filtering?.active).to.not.be.undefined;
 
-    await openFilterDialog(result);
-
-    const { baseElement } = result;
-
-    // clear all filter selections
-    const resetButton = await waitFor(() => {
-      const button = baseElement.querySelector<HTMLInputElement>(".presentation-instance-filter-dialog-reset-button");
-      expect(button?.disabled).to.be.false;
-      return button;
-    });
-    await user.click(resetButton!);
-
-    // pressing apply on empty filter clears it
-    onFilterAppliedSpy.resetHistory();
-    const applyButton = await waitFor(() => {
-      const button = baseElement.querySelector<HTMLInputElement>(".presentation-instance-filter-dialog-apply-button");
-      return button;
-    });
-    await user.click(applyButton!);
+    const clearFilterButton = await waitFor(() => getByTitle("tree.clear-hierarchy-level-filter"));
+    await user.click(clearFilterButton);
 
     await waitFor(() => {
-      expect(baseElement.querySelector(".presentation-instance-filter-dialog")).to.be.null;
+      nodeItem = modelSource.getModel().getNode("A")?.item as PresentationTreeNodeItem;
+      expect(nodeItem.filtering?.active).to.be.undefined;
     });
 
     expect(onFilterAppliedSpy).to.not.be.called;
