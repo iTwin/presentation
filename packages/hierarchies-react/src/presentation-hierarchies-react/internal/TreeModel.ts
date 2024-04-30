@@ -4,7 +4,6 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { GenericInstanceFilter, HierarchyNode } from "@itwin/presentation-hierarchies";
-import { InfoNodeTypes } from "../Types";
 import { SelectionChangeType } from "../UseSelectionHandler";
 
 export interface TreeModelRootNode {
@@ -27,12 +26,21 @@ export interface TreeModelHierarchyNode {
   instanceFilter?: GenericInstanceFilter;
 }
 
-export interface TreeModelInfoNode {
+export interface TreeModelGenericInfoNode {
   id: string;
-  parentId?: string;
-  type: InfoNodeTypes;
+  parentId: string | undefined;
+  type: "ChildrenPlaceholder" | "NoFilterMatchingNodes" | "Unknown";
   message: string;
 }
+
+export interface TreeModelResultSetTooLargeInfoNode {
+  id: string;
+  parentId: string | undefined;
+  type: "ResultSetTooLarge";
+  resultSetSizeLimit: number;
+}
+
+export type TreeModelInfoNode = TreeModelGenericInfoNode | TreeModelResultSetTooLargeInfoNode;
 
 export type TreeModelNode = TreeModelHierarchyNode | TreeModelInfoNode;
 
@@ -41,7 +49,7 @@ export function isTreeModelHierarchyNode(node: TreeModelHierarchyNode | TreeMode
 }
 
 export function isTreeModelInfoNode(node: TreeModelHierarchyNode | TreeModelInfoNode | TreeModelRootNode): node is TreeModelInfoNode {
-  return "message" in node && node.message !== undefined;
+  return "type" in node && node.type !== undefined;
 }
 
 export interface TreeModel {

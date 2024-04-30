@@ -6,14 +6,14 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { GenericInstanceFilter, HierarchyNode, HierarchyProvider } from "@itwin/presentation-hierarchies";
 import { TreeActions } from "./internal/TreeActions";
-import { isTreeModelHierarchyNode, TreeModel, TreeModelHierarchyNode, TreeModelNode, TreeModelRootNode } from "./internal/TreeModel";
+import { isTreeModelHierarchyNode, isTreeModelInfoNode, TreeModel, TreeModelHierarchyNode, TreeModelNode, TreeModelRootNode } from "./internal/TreeModel";
 import { useUnifiedTreeSelection, UseUnifiedTreeSelectionProps } from "./internal/UseUnifiedSelection";
 import { PresentationHierarchyNode, PresentationTreeNode } from "./Types";
 import { SelectionChangeType } from "./UseSelectionHandler";
 
 /** @beta */
 export interface HierarchyLevelConfiguration {
-  hierarchyNode: HierarchyNode;
+  hierarchyNode: HierarchyNode | undefined;
   hierarchyLevelSizeLimit?: number | "unbounded";
   currentFilter?: GenericInstanceFilter;
 }
@@ -50,7 +50,7 @@ interface UseTreeResult {
   setHierarchyLevelLimit: (nodeId: string | undefined, limit: undefined | number | "unbounded") => void;
   setHierarchyLevelFilter: (nodeId: string | undefined, filter: GenericInstanceFilter | undefined) => void;
   isNodeSelected: (nodeId: string) => boolean;
-  getHierarchyLevelConfiguration: (nodeId: string) => HierarchyLevelConfiguration | undefined;
+  getHierarchyLevelConfiguration: (nodeId: string | undefined) => HierarchyLevelConfiguration | undefined;
 }
 
 interface TreeState {
@@ -109,13 +109,13 @@ function useTreeInternal({ hierarchyProvider }: UseTreeProps): UseTreeResult & {
   const isNodeSelected = useCallback((nodeId: string) => TreeModel.isNodeSelected(state.model, nodeId), [state]);
 
   const getHierarchyLevelConfiguration = useCallback(
-    (nodeId: string): HierarchyLevelConfiguration | undefined => {
+    (nodeId: string | undefined): HierarchyLevelConfiguration | undefined => {
       const node = actions.getNode(nodeId);
-      if (!node || !isTreeModelHierarchyNode(node)) {
+      if (!node || isTreeModelInfoNode(node)) {
         return undefined;
       }
       const hierarchyNode = node.nodeData;
-      if (HierarchyNode.isGroupingNode(hierarchyNode)) {
+      if (hierarchyNode && HierarchyNode.isGroupingNode(hierarchyNode)) {
         return undefined;
       }
 
@@ -153,19 +153,28 @@ function generateTreeStructure(parentNodeId: string | undefined, model: TreeMode
     .map((childId) => model.idToNode.get(childId))
     .filter((node): node is TreeModelNode => !!node)
     .map<PresentationTreeNode>((node) => {
-      if (!isTreeModelHierarchyNode(node)) {
+      if (isTreeModelHierarchyNode(node)) {
+        const children = generateTreeStructure(node.id, model);
+        return {
+          ...toPresentationHierarchyNodeBase(node),
+          children: children ? children : node.children === true ? true : [],
+        };
+      }
+
+      if (node.type === "ResultSetTooLarge") {
         return {
           id: node.id,
           parentNodeId,
           type: node.type,
-          message: node.message,
+          resultSetSizeLimit: node.resultSetSizeLimit,
         };
       }
 
-      const children = generateTreeStructure(node.id, model);
       return {
-        ...toPresentationHierarchyNodeBase(node),
-        children: children ? children : node.children === true ? true : [],
+        id: node.id,
+        parentNodeId,
+        type: node.type,
+        message: node.message,
       };
     });
 }

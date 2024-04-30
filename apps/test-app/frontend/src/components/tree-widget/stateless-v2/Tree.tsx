@@ -105,9 +105,9 @@ function Tree({ imodel, height, width }: { imodel: IModelConnection; height: num
     reloadTree();
   };
 
-  const [filteringOptions, setFilteringOptions] = useState<{ nodeId: string; options: HierarchyLevelConfiguration }>();
+  const [filteringOptions, setFilteringOptions] = useState<{ nodeId: string | undefined; options: HierarchyLevelConfiguration }>();
   const onFilterClick = useCallback(
-    (nodeId: string) => {
+    (nodeId: string | undefined) => {
       const options = getHierarchyLevelConfiguration(nodeId);
       setFilteringOptions(options ? { nodeId, options } : undefined);
     },

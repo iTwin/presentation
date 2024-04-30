@@ -10,7 +10,13 @@ import { act } from "react-dom/test-utils";
 import sinon from "sinon";
 import { GenericInstanceFilter, HierarchyNodeKey, HierarchyProvider, InstancesNodeKey, RowsLimitExceededError } from "@itwin/presentation-hierarchies";
 import { createStorage, Selectables, StorageSelectionChangeEventArgs, StorageSelectionChangesListener } from "@itwin/unified-selection";
-import { PresentationHierarchyNode, PresentationInfoNode, UnifiedSelectionProvider } from "../presentation-hierarchies-react";
+import {
+  PresentationGenericInfoNode,
+  PresentationHierarchyNode,
+  PresentationInfoNode,
+  PresentationResultSetTooLargeInfoNode,
+  UnifiedSelectionProvider,
+} from "../presentation-hierarchies-react";
 import { createNodeId } from "../presentation-hierarchies-react/internal/Utils";
 import { useTree, useUnifiedSelectionTree } from "../presentation-hierarchies-react/UseTree";
 import { cleanup, createStub, createTestGroupingNode, createTestHierarchyNode, renderHook, waitFor } from "./TestUtils";
@@ -37,6 +43,34 @@ describe("useTree", () => {
     await waitFor(() => {
       expect(result.current.rootNodes).to.have.lengthOf(2);
     });
+  });
+
+  it("loads `Unknown` info node when `Error` is thrown", async () => {
+    hierarchyProvider.getNodes.callsFake(() => {
+      return throwingAsyncIterator(new Error("Test Error"));
+    });
+    const { result } = renderHook(useTree, { initialProps });
+
+    await waitFor(() => {
+      expect(result.current.rootNodes).to.have.lengthOf(1);
+    });
+    const node = result.current.rootNodes![0] as PresentationInfoNode;
+    expect(node.type).to.be.eq("Unknown");
+    expect((node as PresentationGenericInfoNode).message).to.be.eq("Failed to create hierarchy level");
+  });
+
+  it("loads `ResultSetTooLarge` info node when `RowsLimitExceededError` is thrown", async () => {
+    hierarchyProvider.getNodes.callsFake(() => {
+      return throwingAsyncIterator(new RowsLimitExceededError(10));
+    });
+    const { result } = renderHook(useTree, { initialProps });
+
+    await waitFor(() => {
+      expect(result.current.rootNodes).to.have.lengthOf(1);
+    });
+    const node = result.current.rootNodes![0] as PresentationInfoNode;
+    expect(node.type).to.be.eq("ResultSetTooLarge");
+    expect((node as PresentationResultSetTooLargeInfoNode).resultSetSizeLimit).to.be.eq(10);
   });
 
   it("expands node", async () => {
