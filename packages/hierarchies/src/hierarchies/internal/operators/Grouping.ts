@@ -31,11 +31,10 @@ const PERF_LOGGING_NAMESPACE = `${LOGGING_NAMESPACE}.Performance`;
 
 /** @internal */
 export function createGroupingOperator(
-  metadata: IECMetadataProvider,
+  imodelAccess: IECMetadataProvider & IECClassHierarchyInspector,
   parentNode: ParentHierarchyNode | undefined,
   valueFormatter: IPrimitiveValueFormatter,
   localizedStrings: PropertiesGroupingLocalizedStrings,
-  classHierarchyInspector: IECClassHierarchyInspector,
   onGroupingNodeCreated?: (groupingNode: ProcessedGroupingHierarchyNode) => void,
   groupingHandlers?: GroupingHandler[],
 ) {
@@ -69,7 +68,7 @@ export function createGroupingOperator(
         const timer = new StopWatch(undefined, true);
         const groupingHandlersObs: Observable<GroupingHandler> = groupingHandlers
           ? from(groupingHandlers)
-          : createGroupingHandlers(metadata, parentNode, instanceNodes, valueFormatter, localizedStrings, classHierarchyInspector);
+          : createGroupingHandlers(imodelAccess, parentNode, instanceNodes, valueFormatter, localizedStrings);
         return merge(
           groupingHandlersObs.pipe(
             toArray(),
@@ -177,12 +176,11 @@ function mergeInPlace<T>(target: T[] | undefined, source: T[]) {
 
 /** @internal */
 export function createGroupingHandlers(
-  metadata: IECMetadataProvider,
+  imodelAccess: IECMetadataProvider & IECClassHierarchyInspector,
   parentNode: ParentHierarchyNode | undefined,
   processedInstanceNodes: ProcessedInstanceHierarchyNode[],
   valueFormatter: IPrimitiveValueFormatter,
   localizedStrings: PropertiesGroupingLocalizedStrings,
-  classHierarchyInspector: IECClassHierarchyInspector,
 ): Observable<GroupingHandler> {
   doLog({
     category: PERF_LOGGING_NAMESPACE,
@@ -193,14 +191,12 @@ export function createGroupingHandlers(
   return concat(
     groupingLevel <= GroupingLevel.Class
       ? concat(
-          from(createBaseClassGroupingHandlers(metadata, parentNode, processedInstanceNodes, classHierarchyInspector)).pipe(concatAll()),
-          of<GroupingHandler>(async (allNodes) => createClassGroups(metadata, parentNode, allNodes)),
+          from(createBaseClassGroupingHandlers(imodelAccess, parentNode, processedInstanceNodes)).pipe(concatAll()),
+          of<GroupingHandler>(async (allNodes) => createClassGroups(imodelAccess, parentNode, allNodes)),
         )
       : EMPTY,
     groupingLevel <= GroupingLevel.Property
-      ? from(createPropertiesGroupingHandlers(metadata, parentNode, processedInstanceNodes, valueFormatter, localizedStrings, classHierarchyInspector)).pipe(
-          concatAll(),
-        )
+      ? from(createPropertiesGroupingHandlers(imodelAccess, parentNode, processedInstanceNodes, valueFormatter, localizedStrings)).pipe(concatAll())
       : EMPTY,
     groupingLevel < GroupingLevel.Label ? of<GroupingHandler>(async (allNodes) => createLabelGroups(allNodes)) : EMPTY,
   ).pipe(

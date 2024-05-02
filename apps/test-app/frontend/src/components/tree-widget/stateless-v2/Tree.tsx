@@ -23,11 +23,7 @@ import { ModelsTreeDefinition } from "@itwin/presentation-models-tree";
 import { createCachingECClassHierarchyInspector, IECClassHierarchyInspector, IECMetadataProvider } from "@itwin/presentation-shared";
 import { MyAppFrontend } from "../../../api/MyAppFrontend";
 
-interface IModelAccess {
-  queryExecutor: ILimitingECSqlQueryExecutor;
-  metadataProvider: IECMetadataProvider;
-  classHierarchyInspector: IECClassHierarchyInspector;
-}
+type IModelAccess = ILimitingECSqlQueryExecutor & IECMetadataProvider & IECClassHierarchyInspector;
 
 export function StatelessTreeV2(props: { imodel: IModelConnection; height: number; width: number }) {
   return <Tree {...props} />;
@@ -43,9 +39,9 @@ function Tree({ imodel, height, width }: { imodel: IModelConnection; height: num
     const schemas = MyAppFrontend.getSchemaContext(imodel);
     const metadataProvider = createMetadataProvider(schemas);
     setIModelAccess({
-      queryExecutor: createLimitingECSqlQueryExecutor(createECSqlQueryExecutor(imodel), 1000),
-      metadataProvider,
-      classHierarchyInspector: createCachingECClassHierarchyInspector({ metadataProvider, cacheSize: 1000 }),
+      ...metadataProvider,
+      ...createCachingECClassHierarchyInspector({ metadataProvider }),
+      ...createLimitingECSqlQueryExecutor(createECSqlQueryExecutor(imodel), 1000),
     });
   }, [imodel]);
 
@@ -58,8 +54,7 @@ function Tree({ imodel, height, width }: { imodel: IModelConnection; height: num
       if (filter !== "") {
         setIsFiltering(true);
         const paths = await ModelsTreeDefinition.createInstanceKeyPaths({
-          classHierarchyInspector: imodelAccess.classHierarchyInspector,
-          queryExecutor: imodelAccess.queryExecutor,
+          imodelAccess,
           label: filter,
         });
         return paths;
@@ -76,10 +71,8 @@ function Tree({ imodel, height, width }: { imodel: IModelConnection; height: num
 
     setHierarchyProvider(
       new HierarchyProvider({
-        metadataProvider: imodelAccess.metadataProvider,
-        classHierarchyInspector: imodelAccess.classHierarchyInspector,
-        queryExecutor: imodelAccess.queryExecutor,
-        hierarchyDefinition: new ModelsTreeDefinition({ metadataProvider: imodelAccess.metadataProvider }),
+        imodelAccess,
+        hierarchyDefinition: new ModelsTreeDefinition({ imodelAccess }),
         filtering: filteredPaths
           ? {
               paths: filteredPaths,

@@ -17,12 +17,14 @@ export function createModelsTreeProvider(imodel: IModelConnection, filteredNodeP
   const schemas = new SchemaContext();
   schemas.addLocater(new ECSchemaRpcLocater(imodel.getRpcProps()));
   const metadataProvider = createMetadataProvider(schemas);
-  const classHierarchyInspector = createCachingECClassHierarchyInspector({ metadataProvider, cacheSize: 100 });
+  const imodelAccess = {
+    ...metadataProvider,
+    ...createCachingECClassHierarchyInspector({ metadataProvider }),
+    ...createLimitingECSqlQueryExecutor(createECSqlQueryExecutor(imodel), 1000),
+  };
   return new HierarchyProvider({
-    metadataProvider,
-    classHierarchyInspector,
-    queryExecutor: createLimitingECSqlQueryExecutor(createECSqlQueryExecutor(imodel), 1000),
-    hierarchyDefinition: new ModelsTreeDefinition({ metadataProvider, classHierarchyInspector }),
+    imodelAccess,
+    hierarchyDefinition: new ModelsTreeDefinition({ imodelAccess }),
     ...(filteredNodePaths ? { filtering: { paths: filteredNodePaths } } : undefined),
   });
 }

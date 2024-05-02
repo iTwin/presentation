@@ -421,16 +421,15 @@ export function doRangesMatch(ranges1: HierarchyNodePropertyValueRange[] | undef
 
 /** @internal */
 export async function createPropertiesGroupingHandlers(
-  metadata: IECMetadataProvider,
+  imodelAccess: IECMetadataProvider & IECClassHierarchyInspector,
   parentNode: ParentHierarchyNode | undefined,
   nodes: ProcessedInstanceHierarchyNode[],
   valueFormatter: IPrimitiveValueFormatter,
   localizedStrings: PropertiesGroupingLocalizedStrings,
-  classHierarchyInspector: IECClassHierarchyInspector,
 ): Promise<GroupingHandler[]> {
-  const propertiesGroupInfo = await getUniquePropertiesGroupInfo(metadata, parentNode, nodes);
+  const propertiesGroupInfo = await getUniquePropertiesGroupInfo(imodelAccess, parentNode, nodes);
   return propertiesGroupInfo.map(
     (propertyInfo) => async (nodesToGroup, nodesAlreadyGrouped) =>
-      createPropertyGroups(nodesToGroup, nodesAlreadyGrouped, propertyInfo, valueFormatter, localizedStrings, classHierarchyInspector),
+      createPropertyGroups(nodesToGroup, nodesAlreadyGrouped, propertyInfo, valueFormatter, localizedStrings, imodelAccess),
   );
 }

@@ -15,7 +15,7 @@ import {
   HierarchyProviderLocalizedStrings,
   IHierarchyLevelDefinitionsFactory,
 } from "@itwin/presentation-hierarchies";
-import { IPrimitiveValueFormatter, parseFullClassName } from "@itwin/presentation-shared";
+import { createCachingECClassHierarchyInspector, IPrimitiveValueFormatter, parseFullClassName } from "@itwin/presentation-shared";
 
 function createSchemaContext(imodel: IModelConnection | IModelDb | ECDb) {
   const schemas = new SchemaContext();
@@ -45,8 +45,15 @@ function createSchemaContext(imodel: IModelConnection | IModelDb | ECDb) {
   return schemas;
 }
 
-export function createMetadataProvider(imodel: IModelConnection | IModelDb | ECDb) {
-  return createMetadataProviderInterop(createSchemaContext(imodel));
+export function createIModelAccess(imodel: IModelConnection | IModelDb | ECDb) {
+  const metadataProvider = createMetadataProviderInterop(createSchemaContext(imodel));
+  const classHierarchyInspector = createCachingECClassHierarchyInspector({ metadataProvider });
+  const queryExecutor = createLimitingECSqlQueryExecutor(createECSqlQueryExecutor(imodel), 123);
+  return {
+    ...metadataProvider,
+    ...classHierarchyInspector,
+    ...queryExecutor,
+  };
 }
 
 export function createProvider(props: {
@@ -59,9 +66,8 @@ export function createProvider(props: {
 }) {
   const { imodel, hierarchy, formatterFactory, localizedStrings, filteredNodePaths, queryCacheSize } = props;
   return new HierarchyProvider({
-    metadataProvider: createMetadataProvider(imodel),
+    imodelAccess: createIModelAccess(imodel),
     hierarchyDefinition: hierarchy,
-    queryExecutor: createLimitingECSqlQueryExecutor(createECSqlQueryExecutor(imodel), 123),
     formatter: formatterFactory ? formatterFactory(createSchemaContext(imodel)) : undefined,
     localizedStrings,
     filtering: filteredNodePaths ? { paths: filteredNodePaths } : undefined,

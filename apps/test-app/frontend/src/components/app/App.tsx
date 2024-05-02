@@ -15,8 +15,10 @@ import { UnitSystemKey } from "@itwin/core-quantity";
 import { ElementSeparator, Orientation } from "@itwin/core-react";
 import { ThemeProvider, ToggleSwitch } from "@itwin/itwinui-react";
 import { SchemaMetadataContextProvider, UnifiedSelectionContextProvider } from "@itwin/presentation-components";
+import { createECSqlQueryExecutor, createMetadataProvider } from "@itwin/presentation-core-interop";
 import { HiliteSet, Presentation, SelectionChangeEventArgs } from "@itwin/presentation-frontend";
 import { UnifiedSelectionProvider } from "@itwin/presentation-hierarchies-react";
+import { enableUnifiedSelectionSyncWithIModel } from "@itwin/unified-selection";
 import { MyAppFrontend, MyAppSettings } from "../../api/MyAppFrontend";
 import { IModelSelector } from "../imodel-selector/IModelSelector";
 import { PropertiesWidget } from "../properties-widget/PropertiesWidget";
@@ -187,6 +189,22 @@ interface IModelComponentsProps {
 
 function IModelComponents(props: IModelComponentsProps) {
   const { imodel, rulesetId } = props;
+
+  useEffect(
+    () =>
+      enableUnifiedSelectionSyncWithIModel({
+        imodelAccess: {
+          ...createECSqlQueryExecutor(imodel),
+          ...createMetadataProvider(MyAppFrontend.getSchemaContext(imodel)),
+          key: imodel.key,
+          hiliteSet: imodel.hilited,
+          selectionSet: imodel.selectionSet,
+        },
+        selectionStorage: MyAppFrontend.selectionStorage,
+        activeScopeProvider: () => "element",
+      }),
+    [imodel],
+  );
 
   const {
     ref: contentRef,

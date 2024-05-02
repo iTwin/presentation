@@ -15,17 +15,14 @@ import {
 import { Id64, Id64String } from "@itwin/core-bentley";
 import { IModel } from "@itwin/core-common";
 import { IModelConnection } from "@itwin/core-frontend";
-import { SchemaContext } from "@itwin/ecschema-metadata";
-import { ECSchemaRpcLocater } from "@itwin/ecschema-rpcinterface-common";
 import { InstanceKey } from "@itwin/presentation-common";
-import { createECSqlQueryExecutor, createMetadataProvider } from "@itwin/presentation-core-interop";
 import { HierarchyNodeIdentifier, HierarchyNodeIdentifiersPath, HierarchyProvider } from "@itwin/presentation-hierarchies";
 import { ModelsTreeDefinition } from "@itwin/presentation-models-tree";
-import { createCachingECClassHierarchyInspector } from "@itwin/presentation-shared";
 import { buildTestIModel, TestIModelBuilder } from "@itwin/presentation-testing";
 import { buildIModel } from "../../IModelUtils";
 import { initialize, terminate } from "../../IntegrationTests";
 import { ExpectedHierarchyDef, NodeValidators, validateHierarchy } from "../HierarchyValidation";
+import { createIModelAccess } from "../Utils";
 import { createModelsTreeProvider, importTestSchema } from "./ModelsTreeTestUtils";
 
 interface TreeFilteringTestCaseDefinition<TIModelSetupResult> {
@@ -753,14 +750,9 @@ describe("Hierarchies", () => {
         });
 
         it("finds instance key paths by target instance key", async function () {
-          const schemas = new SchemaContext();
-          schemas.addLocater(new ECSchemaRpcLocater(imodel.getRpcProps()));
-          const metadataProvider = createMetadataProvider(schemas);
-
           const actualInstanceKeyPaths = (
             await ModelsTreeDefinition.createInstanceKeyPaths({
-              classHierarchyInspector: createCachingECClassHierarchyInspector({ metadataProvider }),
-              queryExecutor: hierarchyProvider.queryExecutor,
+              imodelAccess: createIModelAccess(imodel),
               keys: targetInstanceKeys,
             })
           ).sort(instanceKeyPathSorter);
@@ -768,14 +760,9 @@ describe("Hierarchies", () => {
         });
 
         it("finds instance key paths by target instance label", async function () {
-          const schemas = new SchemaContext();
-          schemas.addLocater(new ECSchemaRpcLocater(imodel.getRpcProps()));
-          const metadataProvider = createMetadataProvider(schemas);
-
           const actualInstanceKeyPaths = (
             await ModelsTreeDefinition.createInstanceKeyPaths({
-              classHierarchyInspector: createCachingECClassHierarchyInspector({ metadataProvider }),
-              queryExecutor: hierarchyProvider.queryExecutor,
+              imodelAccess: createIModelAccess(imodel),
               label: targetInstanceLabel,
             })
           ).sort(instanceKeyPathSorter);
@@ -798,14 +785,9 @@ describe("Hierarchies", () => {
         };
       });
 
-      const schemas = new SchemaContext();
-      schemas.addLocater(new ECSchemaRpcLocater(imodel.getRpcProps()));
-      const metadataProvider = createMetadataProvider(schemas);
-
       const actualInstanceKeyPaths = (
         await ModelsTreeDefinition.createInstanceKeyPaths({
-          classHierarchyInspector: createCachingECClassHierarchyInspector({ metadataProvider }),
-          queryExecutor: createECSqlQueryExecutor(imodel),
+          imodelAccess: createIModelAccess(imodel),
           label: formattedECInstanceId,
         })
       ).sort(instanceKeyPathSorter);

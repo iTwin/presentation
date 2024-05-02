@@ -44,6 +44,24 @@ export type ECSqlBinding =
       value?: { x: number; y: number; z: number };
     };
 
+/** @internal */
+export interface ECSqlQueryDef {
+  /** A list of CTEs used in the query. */
+  ctes?: string[];
+
+  /**
+   * The ECSQL query to execute.
+   * @note In case the query uses CTEs, they should be specified in the `ctes` rather than included in the `ecsql`.
+   */
+  ecsql: string;
+
+  /**
+   * Values to bind to the query.
+   * @see https://www.itwinjs.org/learning/ecsql/#ecsql-parameters
+   */
+  bindings?: ECSqlBinding[];
+}
+
 /**
  * Defines requested ECSQL result row format.
  * @internal
@@ -78,7 +96,7 @@ export type ECSqlQueryReader = AsyncIterableIterator<ECSqlQueryRow>;
  * @internal
  */
 export interface IECSqlQueryExecutor {
-  createQueryReader(ecsql: string, bindings?: ECSqlBinding[], config?: ECSqlQueryReaderOptions): ECSqlQueryReader;
+  createQueryReader(query: ECSqlQueryDef, config?: ECSqlQueryReaderOptions): ECSqlQueryReader;
 }
 
 /**

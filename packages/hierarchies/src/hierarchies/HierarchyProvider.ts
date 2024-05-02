@@ -25,7 +25,6 @@ import { assert, StopWatch } from "@itwin/core-bentley";
 import { GenericInstanceFilter } from "@itwin/core-common";
 import {
   ConcatenatedValue,
-  createCachingECClassHierarchyInspector,
   createDefaultValueFormatter,
   ECSqlBinding,
   ECSqlQueryDef,
@@ -72,7 +71,6 @@ const LOGGING_NAMESPACE = `${CommonLoggingNamespace}.HierarchyProvider`;
 const PERF_LOGGING_NAMESPACE = `${LOGGING_NAMESPACE}.Performance`;
 const DEFAULT_QUERY_CONCURRENCY = 10;
 const DEFAULT_QUERY_CACHE_SIZE = 50;
-const DEFAULT_BASE_CHECKER_CACHE_SIZE = 1000;
 
 /**
  * Defines the strings used by hierarchy provider.
@@ -97,22 +95,21 @@ export interface HierarchyProviderLocalizedStrings {
  * @beta
  */
 export interface HierarchyProviderProps {
-  /** IModel metadata provider for ECSchemas, ECClasses, ECProperties, etc. */
-  metadataProvider: IECMetadataProvider;
   /**
-   * An optional class hierarchy inspector, which may be supplied to be shared across multiple components.
-   * If not provided, the provider creates its own instance of the inspector using `metadataProvider`.
+   * An object that provides access to iModel's data and metadata.
+   *
+   * @see `IECMetadataProvider`
+   * @see `ILimitingECSqlQueryExecutor`
+   * @see `IECClassHierarchyInspector`
    */
-  classHierarchyInspector?: IECClassHierarchyInspector;
+  imodelAccess: IECMetadataProvider & ILimitingECSqlQueryExecutor & IECClassHierarchyInspector;
 
-  /** A definition that describes how the hierarchy should be created. */
+  /**
+   * A function that returns a hierarchy definition, describing how the hierarchy that the provider should be create. The
+   * function is called once during the provider's construction.
+   */
   hierarchyDefinition: IHierarchyLevelDefinitionsFactory;
 
-  /**
-   * IModel ECSQL query executor used to run queries.
-   * @see createLimitingECSqlQueryExecutor
-   */
-  queryExecutor: ILimitingECSqlQueryExecutor;
   /** Maximum number of queries that the provider attempts to execute in parallel. Defaults to `10`. */
   queryConcurrency?: number;
   /** The amount of queries whose results are stored in-memory for quick retrieval. Defaults to `50`. */
@@ -163,13 +160,12 @@ export interface GetHierarchyNodesProps {
  * @beta
  */
 export class HierarchyProvider {
-  private _metadataProvider: IECMetadataProvider;
+  private _imodelAccess: IECMetadataProvider & ILimitingECSqlQueryExecutor & IECClassHierarchyInspector;
   private _queryReader: TreeQueryResultsReader;
   private _valuesFormatter: IPrimitiveValueFormatter;
   private _localizedStrings: HierarchyProviderLocalizedStrings;
   private _queryScheduler: SubscriptionScheduler;
   private _nodesCache: ChildNodeObservablesCache;
-  private _classHierarchyInspector: IECClassHierarchyInspector;
 
   /**
    * Hierarchy level definitions factory used by this provider.
@@ -184,25 +180,22 @@ export class HierarchyProvider {
    * A limiting ECSQL query executor used by this provider.
    * @see HierarchyProviderProps.queryExecutor
    */
-  public readonly queryExecutor: ILimitingECSqlQueryExecutor;
+  public get queryExecutor(): ILimitingECSqlQueryExecutor {
+    return this._imodelAccess;
+  }
 
   public constructor(props: HierarchyProviderProps) {
-    this._metadataProvider = props.metadataProvider;
-    this._classHierarchyInspector =
-      props.classHierarchyInspector ??
-      createCachingECClassHierarchyInspector({ metadataProvider: this._metadataProvider, cacheSize: DEFAULT_BASE_CHECKER_CACHE_SIZE });
+    this._imodelAccess = props.imodelAccess;
+    this.hierarchyDefinition = props.hierarchyDefinition;
     if (props.filtering) {
       const filteringDefinition = new FilteringHierarchyLevelDefinitionsFactory({
-        classHierarchy: this._classHierarchyInspector,
-        source: props.hierarchyDefinition,
+        classHierarchy: this._imodelAccess,
+        source: this.hierarchyDefinition,
         nodeIdentifierPaths: props.filtering.paths,
       });
       this.hierarchyDefinition = filteringDefinition;
-      this._queryReader = new TreeQueryResultsReader({ parser: filteringDefinition.parseNode });
-    } else {
-      this.hierarchyDefinition = props.hierarchyDefinition;
-      this._queryReader = new TreeQueryResultsReader({ parser: props.hierarchyDefinition.parseNode });
     }
+    this._queryReader = new TreeQueryResultsReader({ parser: this.hierarchyDefinition.parseNode });
     this._valuesFormatter = props?.formatter ?? createDefaultValueFormatter();
     this._localizedStrings = props?.localizedStrings ?? { other: "Other", unspecified: "Not specified" };
     this._queryScheduler = new SubscriptionScheduler(props.queryConcurrency ?? DEFAULT_QUERY_CONCURRENCY);
@@ -211,7 +204,6 @@ export class HierarchyProvider {
       size: Math.round((props.queryCacheSize ?? DEFAULT_QUERY_CACHE_SIZE) / 2),
       variationsCount: 1,
     });
-    this.queryExecutor = props.queryExecutor;
   }
 
   /**
@@ -285,7 +277,7 @@ export class HierarchyProvider {
       // set parent node keys on the parsed node
       map((node) => Object.assign(node, { parentKeys: createParentNodeKeysList(parentNode) })),
       // format `ConcatenatedValue` labels into string labels
-      mergeMap(async (node) => applyLabelsFormatting(node, this._metadataProvider, this._valuesFormatter)),
+      mergeMap(async (node) => applyLabelsFormatting(node, this._imodelAccess, this._valuesFormatter)),
       // we have `ProcessedHierarchyNode` from here
       preProcessNodes(this.hierarchyDefinition),
       finalize(() =>
@@ -322,7 +314,7 @@ export class HierarchyProvider {
     props: GetHierarchyNodesProps,
   ): Observable<ProcessedHierarchyNode> {
     return preprocessedNodesObservable.pipe(
-      createGroupingOperator(this._metadataProvider, props.parentNode, this._valuesFormatter, this._localizedStrings, this._classHierarchyInspector, (gn) =>
+      createGroupingOperator(this._imodelAccess, props.parentNode, this._valuesFormatter, this._localizedStrings, (gn) =>
         this.onGroupingNodeCreated(gn, props),
       ),
       finalize(() =>

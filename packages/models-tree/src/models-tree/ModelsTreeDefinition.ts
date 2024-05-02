@@ -20,7 +20,6 @@ import {
 } from "@itwin/presentation-hierarchies";
 import {
   createBisInstanceLabelSelectClauseFactory,
-  createCachingECClassHierarchyInspector,
   ECSql,
   ECSqlBinding,
   IECClassHierarchyInspector,
@@ -30,19 +29,16 @@ import {
 } from "@itwin/presentation-shared";
 
 interface ModelsTreeDefinitionProps {
-  metadataProvider: IECMetadataProvider;
-  classHierarchyInspector?: IECClassHierarchyInspector;
+  imodelAccess: IECMetadataProvider & IECClassHierarchyInspector;
 }
 
 interface ModelsTreeInstanceKeyPathsFromInstanceKeysProps {
-  classHierarchyInspector: IECClassHierarchyInspector;
-  queryExecutor: ILimitingECSqlQueryExecutor;
+  imodelAccess: IECClassHierarchyInspector & ILimitingECSqlQueryExecutor;
   keys: InstanceKey[];
 }
 
 interface ModelsTreeInstanceKeyPathsFromInstanceLabelProps {
-  classHierarchyInspector: IECClassHierarchyInspector;
-  queryExecutor: ILimitingECSqlQueryExecutor;
+  imodelAccess: IECClassHierarchyInspector & ILimitingECSqlQueryExecutor;
   label: string;
 }
 
@@ -61,9 +57,8 @@ export class ModelsTreeDefinition implements IHierarchyLevelDefinitionsFactory {
   private _nodeLabelSelectClauseFactory: IInstanceLabelSelectClauseFactory;
 
   public constructor(props: ModelsTreeDefinitionProps) {
-    const classHierarchyInspector = props.classHierarchyInspector ?? createCachingECClassHierarchyInspector({ metadataProvider: props.metadataProvider });
     this._impl = new ClassBasedHierarchyLevelDefinitionsFactory({
-      classHierarchyInspector,
+      classHierarchyInspector: props.imodelAccess,
       hierarchy: {
         rootNodes: async (requestProps) => this.createRootHierarchyLevelDefinition(requestProps),
         childNodes: [
@@ -90,8 +85,8 @@ export class ModelsTreeDefinition implements IHierarchyLevelDefinitionsFactory {
         ],
       },
     });
-    this._selectQueryFactory = new NodeSelectQueryFactory({ metadataProvider: props.metadataProvider, classHierarchyInspector });
-    this._nodeLabelSelectClauseFactory = createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector });
+    this._selectQueryFactory = new NodeSelectQueryFactory({ imodelAccess: props.imodelAccess });
+    this._nodeLabelSelectClauseFactory = createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: props.imodelAccess });
   }
 
   public async postProcessNode(node: ProcessedHierarchyNode): Promise<ProcessedHierarchyNode> {
@@ -496,7 +491,7 @@ export class ModelsTreeDefinition implements IHierarchyLevelDefinitionsFactory {
 
   public static async createInstanceKeyPaths(props: ModelsTreeInstanceKeyPathsProps) {
     if (ModelsTreeInstanceKeyPathsProps.isLabelProps(props)) {
-      const labelsFactory = createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: props.classHierarchyInspector });
+      const labelsFactory = createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: props.imodelAccess });
       return createInstanceKeyPathsFromInstanceLabel({ ...props, labelsFactory });
     }
     return createInstanceKeyPathsFromInstanceKeys(props);
@@ -683,11 +678,11 @@ async function createInstanceKeyPathsFromInstanceKeys(props: ModelsTreeInstanceK
   };
   await Promise.all(
     props.keys.map(async (key) => {
-      if (await props.classHierarchyInspector.classDerivesFrom(key.className, "BisCore.Subject")) {
+      if (await props.imodelAccess.classDerivesFrom(key.className, "BisCore.Subject")) {
         ids.subjects.push(key.id);
-      } else if (await props.classHierarchyInspector.classDerivesFrom(key.className, "BisCore.Model")) {
+      } else if (await props.imodelAccess.classDerivesFrom(key.className, "BisCore.Model")) {
         ids.models.push(key.id);
-      } else if (await props.classHierarchyInspector.classDerivesFrom(key.className, "BisCore.SpatialCategory")) {
+      } else if (await props.imodelAccess.classDerivesFrom(key.className, "BisCore.SpatialCategory")) {
         ids.categories.push(key.id);
       } else {
         ids.elements.push(key.id);
@@ -749,7 +744,7 @@ async function createInstanceKeyPathsFromInstanceKeys(props: ModelsTreeInstanceK
   ids.models.forEach((id) => bindings.push({ type: "id", value: id }));
   ids.subjects.forEach((id) => bindings.push({ type: "id", value: id }));
 
-  const reader = props.queryExecutor.createQueryReader(
+  const reader = props.imodelAccess.createQueryReader(
     {
       ctes: await createInstanceKeyPathsCTEs({ createSelectClause: async () => "''" }),
       ecsql: queries.join(" UNION ALL "),
@@ -802,7 +797,7 @@ async function createInstanceKeyPathsFromInstanceLabel(
     FROM Subjects s
   `);
 
-  const reader = props.queryExecutor.createQueryReader(
+  const reader = props.imodelAccess.createQueryReader(
     {
       ctes: await createInstanceKeyPathsCTEs(props.labelsFactory),
       ecsql: `

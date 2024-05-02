@@ -21,7 +21,7 @@ import { IMODEL_CLOSE_SELECTION_CLEAR_SOURCE, SelectionStorage } from "./Selecti
  */
 export interface CachingHiliteSetProviderProps {
   selectionStorage: SelectionStorage;
-  iModelProvider: (iModelKey: string) => { queryExecutor: IECSqlQueryExecutor; metadataProvider: IMetadataProvider };
+  iModelProvider: (iModelKey: string) => IMetadataProvider & IECSqlQueryExecutor;
 }
 
 /**
@@ -55,7 +55,7 @@ class CachingHiliteSetProviderImpl implements CachingHiliteSetProvider {
   private _hiliteSetProviders = new Map<string, HiliteSetProvider>();
   private _cache = new Map<string, Observable<HiliteSet>>();
   private _removeListener: () => void;
-  private _iModelProvider: (iModelKey: string) => { queryExecutor: IECSqlQueryExecutor; metadataProvider: IMetadataProvider };
+  private _iModelProvider: (iModelKey: string) => IMetadataProvider & IECSqlQueryExecutor;
 
   constructor(props: CachingHiliteSetProviderProps) {
     this._selectionStorage = props.selectionStorage;
@@ -69,8 +69,8 @@ class CachingHiliteSetProviderImpl implements CachingHiliteSetProvider {
   }
 
   public getHiliteSet({ iModelKey }: { iModelKey: string }): AsyncIterableIterator<HiliteSet> {
-    const { queryExecutor, metadataProvider } = this._iModelProvider(iModelKey);
-    const provider = this.getHiliteSetProvider(iModelKey, queryExecutor, metadataProvider);
+    const imodelAccess = this._iModelProvider(iModelKey);
+    const provider = this.getHiliteSetProvider(iModelKey, imodelAccess);
     let hiliteSet = this._cache.get(iModelKey);
 
     if (!hiliteSet) {
@@ -88,10 +88,10 @@ class CachingHiliteSetProviderImpl implements CachingHiliteSetProvider {
     this._cache = new Map();
   }
 
-  private getHiliteSetProvider(iModelKey: string, queryExecutor: IECSqlQueryExecutor, metadataProvider: IMetadataProvider) {
+  private getHiliteSetProvider(iModelKey: string, imodelAccess: IMetadataProvider & IECSqlQueryExecutor) {
     let provider = this._hiliteSetProviders.get(iModelKey);
     if (!provider) {
-      provider = createHiliteSetProvider({ queryExecutor, metadataProvider });
+      provider = createHiliteSetProvider({ imodelAccess });
       this._hiliteSetProviders.set(iModelKey, provider);
     }
     return provider;

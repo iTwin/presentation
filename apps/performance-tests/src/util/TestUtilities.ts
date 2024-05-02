@@ -80,13 +80,13 @@ export function runHierarchyTest(
       return {
         iModel,
         rowLimit: "unbounded",
-        getHierarchyFactory: (metadataProvider, classHierarchyInspector) => ({
+        getHierarchyFactory: (imodelAccess) => ({
           async defineHierarchyLevel(props) {
             if (props.parentNode) {
               return [];
             }
 
-            const query = new NodeSelectQueryFactory({ metadataProvider, classHierarchyInspector });
+            const query = new NodeSelectQueryFactory({ imodelAccess });
             return [
               {
                 fullClassName,

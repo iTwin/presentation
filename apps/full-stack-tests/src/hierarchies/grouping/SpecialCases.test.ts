@@ -7,7 +7,7 @@ import { HierarchyNode, IHierarchyLevelDefinitionsFactory, NodeSelectQueryFactor
 import { importSchema, withECDb } from "../../IModelUtils";
 import { initialize, terminate } from "../../IntegrationTests";
 import { NodeValidators, validateHierarchy } from "../HierarchyValidation";
-import { createMetadataProvider, createProvider } from "../Utils";
+import { createIModelAccess, createProvider } from "../Utils";
 
 describe("Hierarchies", () => {
   describe("Grouping special cases", () => {
@@ -43,7 +43,7 @@ describe("Hierarchies", () => {
           return { schema, x1, x2, y1, y2 };
         },
         async (db, { schema, y1, y2 }) => {
-          const selectQueryFactory = new NodeSelectQueryFactory({ metadataProvider: createMetadataProvider(db) });
+          const selectQueryFactory = new NodeSelectQueryFactory({ imodelAccess: createIModelAccess(db) });
           const hierarchy: IHierarchyLevelDefinitionsFactory = {
             async defineHierarchyLevel({ parentNode }) {
               if (!parentNode) {

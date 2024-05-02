@@ -10,7 +10,7 @@ import { IHierarchyLevelDefinitionsFactory, NodeSelectQueryFactory } from "@itwi
 import { buildIModel } from "../../IModelUtils";
 import { initialize, terminate } from "../../IntegrationTests";
 import { NodeValidators, validateHierarchy } from "../HierarchyValidation";
-import { createMetadataProvider, createProvider } from "../Utils";
+import { createIModelAccess, createProvider } from "../Utils";
 
 describe("Hierarchies", () => {
   describe("Multi level grouping", () => {
@@ -67,7 +67,7 @@ describe("Hierarchies", () => {
         return { childSubject1, childSubject2, childPartition3, childPartition4, childPartition5 };
       });
 
-      const selectQueryFactory = new NodeSelectQueryFactory({ metadataProvider: createMetadataProvider(imodel) });
+      const selectQueryFactory = new NodeSelectQueryFactory({ imodelAccess: createIModelAccess(imodel) });
       const customHierarchy: IHierarchyLevelDefinitionsFactory = {
         async defineHierarchyLevel({ parentNode }) {
           if (!parentNode) {

@@ -5,14 +5,14 @@
 
 import { expect } from "chai";
 import sinon from "sinon";
-import { ECSqlBinding, ECSqlQueryReader, ECSqlQueryReaderOptions, ECSqlQueryRow } from "../unified-selection/queries/ECSqlCore";
+import { ECSqlQueryDef, ECSqlQueryReader, ECSqlQueryReaderOptions, ECSqlQueryRow } from "../unified-selection/queries/ECSqlCore";
 import { SelectableInstanceKey } from "../unified-selection/Selectable";
 import { computeSelection, ElementSelectionScopeProps, SelectionScope } from "../unified-selection/SelectionScope";
 import { createSelectableInstanceKey } from "./_helpers/SelectablesCreator";
 
 describe("SelectionScope", () => {
   const queryExecutor = {
-    createQueryReader: sinon.stub<[string, ECSqlBinding[] | undefined, ECSqlQueryReaderOptions | undefined], ECSqlQueryReader>(),
+    createQueryReader: sinon.stub<[ECSqlQueryDef, ECSqlQueryReaderOptions | undefined], ECSqlQueryReader>(),
   };
 
   describe("computeSelection", () => {
@@ -24,9 +24,9 @@ describe("SelectionScope", () => {
       })();
     }
 
-    function mockQuery(targetQueryContent: string, result: SelectableInstanceKey[]) {
+    function mockQuery(targetECSqlContent: string, result: SelectableInstanceKey[]) {
       queryExecutor.createQueryReader
-        .withArgs(sinon.match((query: string) => query.includes(targetQueryContent)))
+        .withArgs(sinon.match((query: ECSqlQueryDef) => query.ecsql.includes(targetECSqlContent)))
         // eslint-disable-next-line @typescript-eslint/naming-convention
         .returns(createFakeQueryReader<ECSqlQueryRow>(result.map((key) => ({ ECInstanceId: key.id, ClassName: key.className }))));
     }

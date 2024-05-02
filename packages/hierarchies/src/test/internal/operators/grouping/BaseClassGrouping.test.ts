@@ -8,12 +8,12 @@ import sinon from "sinon";
 import { EC } from "@itwin/presentation-shared";
 import { GroupingNodeKey } from "../../../../hierarchies/HierarchyNode";
 import * as baseClassGrouping from "../../../../hierarchies/internal/operators/grouping/BaseClassGrouping";
-import { createMetadataProviderStub, createTestProcessedGroupingNode, createTestProcessedInstanceNode } from "../../../Utils";
+import { createIModelAccessStub, createTestProcessedGroupingNode, createTestProcessedInstanceNode } from "../../../Utils";
 
 describe("BaseClassGrouping", () => {
-  let metadataProvider: ReturnType<typeof createMetadataProviderStub>;
+  let imodelAccess: ReturnType<typeof createIModelAccessStub>;
   beforeEach(() => {
-    metadataProvider = createMetadataProviderStub();
+    imodelAccess = createIModelAccessStub();
   });
 
   afterEach(() => {
@@ -34,21 +34,21 @@ describe("BaseClassGrouping", () => {
           },
         }),
       ];
-      metadataProvider.stubEntityClass({
+      imodelAccess.stubEntityClass({
         schemaName: "TestSchema",
         className: "Class1",
       });
-      metadataProvider.stubEntityClass({
+      imodelAccess.stubEntityClass({
         schemaName: "TestSchema",
         className: "Class2",
         is: async (className) => className === "TestSchema.Class1",
       });
-      metadataProvider.stubEntityClass({
+      imodelAccess.stubEntityClass({
         schemaName: "TestSchema",
         className: "Class3",
         is: async () => true,
       });
-      const result = await baseClassGrouping.getBaseClassGroupingECClasses(metadataProvider, undefined, nodes);
+      const result = await baseClassGrouping.getBaseClassGroupingECClasses(imodelAccess, undefined, nodes);
       expect(result.length).to.eq(3);
       expect(result[0].fullName).to.eq("TestSchema.Class1");
       expect(result[1].fullName).to.eq("TestSchema.Class2");
@@ -71,27 +71,27 @@ describe("BaseClassGrouping", () => {
           },
         }),
       ];
-      metadataProvider.stubEntityClass({
+      imodelAccess.stubEntityClass({
         schemaName: "TestSchema",
         className: "Class1",
         is: async () => false,
       });
-      metadataProvider.stubEntityClass({
+      imodelAccess.stubEntityClass({
         schemaName: "TestSchema",
         className: "Class2",
         is: async (className) => className === "TestSchema.Class1",
       });
-      metadataProvider.stubEntityClass({
+      imodelAccess.stubEntityClass({
         schemaName: "TestSchema",
         className: "Class3",
         is: async (className) => className === "TestSchema.Class1" || className === "TestSchema.Class2",
       });
-      metadataProvider.stubEntityClass({
+      imodelAccess.stubEntityClass({
         schemaName: "TestSchema",
         className: "Class4",
         is: async () => true,
       });
-      const result = await baseClassGrouping.getBaseClassGroupingECClasses(metadataProvider, parentNode, nodes);
+      const result = await baseClassGrouping.getBaseClassGroupingECClasses(imodelAccess, parentNode, nodes);
       expect(result.length).to.eq(2);
       expect(result[0].fullName).to.eq("TestSchema.Class3");
       expect(result[1].fullName).to.eq("TestSchema.Class4");
@@ -113,17 +113,17 @@ describe("BaseClassGrouping", () => {
           },
         }),
       ];
-      metadataProvider.stubEntityClass({
+      imodelAccess.stubEntityClass({
         schemaName: "TestSchema",
         className: "Class1",
         is: async () => false,
       });
-      metadataProvider.stubEntityClass({
+      imodelAccess.stubEntityClass({
         schemaName: "TestSchema",
         className: "Class2",
         is: async (className) => className === "TestSchema.Class1",
       });
-      const result = await baseClassGrouping.getBaseClassGroupingECClasses(metadataProvider, parentNode, nodes);
+      const result = await baseClassGrouping.getBaseClassGroupingECClasses(imodelAccess, parentNode, nodes);
       expect(result.length).to.eq(0);
     });
 
@@ -143,17 +143,17 @@ describe("BaseClassGrouping", () => {
           },
         }),
       ];
-      metadataProvider.stubEntityClass({
+      imodelAccess.stubEntityClass({
         schemaName: "TestSchema",
         className: "Class1",
         is: async () => false,
       });
-      metadataProvider.stubEntityClass({
+      imodelAccess.stubEntityClass({
         schemaName: "TestSchema",
         className: "Class2",
         is: async (className) => className === "TestSchema.Class1",
       });
-      const result = await baseClassGrouping.getBaseClassGroupingECClasses(metadataProvider, parentNode, nodes);
+      const result = await baseClassGrouping.getBaseClassGroupingECClasses(imodelAccess, parentNode, nodes);
       expect(result.length).to.eq(0);
     });
 
@@ -170,11 +170,11 @@ describe("BaseClassGrouping", () => {
           },
         }),
       ];
-      metadataProvider.stubOtherClass({
+      imodelAccess.stubOtherClass({
         schemaName: "TestSchema",
         className: "Class",
       });
-      const result = await baseClassGrouping.getBaseClassGroupingECClasses(metadataProvider, undefined, nodes);
+      const result = await baseClassGrouping.getBaseClassGroupingECClasses(imodelAccess, undefined, nodes);
       expect(result).to.deep.eq([]);
     });
 
@@ -184,7 +184,7 @@ describe("BaseClassGrouping", () => {
           key: { type: "instances", instanceKeys: [{ className: "TestSchema.TestClass", id: "0x1" }] },
         }),
       ];
-      const result = await baseClassGrouping.getBaseClassGroupingECClasses(metadataProvider, undefined, nodes);
+      const result = await baseClassGrouping.getBaseClassGroupingECClasses(imodelAccess, undefined, nodes);
       expect(result).to.deep.eq([]);
     });
   });
@@ -205,7 +205,7 @@ describe("BaseClassGrouping", () => {
         }),
       ];
       const ecClass = { fullName: "TestSchema.ParentClass", label: "ParentClass" } as unknown as EC.Class;
-      expect(await baseClassGrouping.createBaseClassGroupsForSingleBaseClass(nodes, ecClass, metadataProvider.classHierarchyInspector)).to.deep.eq({
+      expect(await baseClassGrouping.createBaseClassGroupsForSingleBaseClass(nodes, ecClass, imodelAccess)).to.deep.eq({
         groupingType: "base-class",
         grouped: [],
         ungrouped: nodes,
@@ -228,13 +228,13 @@ describe("BaseClassGrouping", () => {
       ];
       const eCClass = { fullName: "TestSchema.ParentClass", name: "Parent Class" } as unknown as EC.Class;
 
-      metadataProvider.stubEntityClass({ schemaName: "TestSchema", className: "TestClass", is: async () => true });
+      imodelAccess.stubEntityClass({ schemaName: "TestSchema", className: "TestClass", is: async () => true });
 
       const expectedGroupingNodeKey: GroupingNodeKey = {
         type: "class-grouping",
         className: eCClass.fullName,
       };
-      expect(await baseClassGrouping.createBaseClassGroupsForSingleBaseClass(nodes, eCClass, metadataProvider.classHierarchyInspector)).to.deep.eq({
+      expect(await baseClassGrouping.createBaseClassGroupsForSingleBaseClass(nodes, eCClass, imodelAccess)).to.deep.eq({
         groupingType: "base-class",
         grouped: [
           createTestProcessedGroupingNode({
@@ -277,8 +277,8 @@ describe("BaseClassGrouping", () => {
         }),
       ];
 
-      metadataProvider.stubEntityClass({ schemaName: "TestSchema", className: "A", classLabel: "Class A", is: async () => true });
-      metadataProvider.stubEntityClass({ schemaName: "TestSchema", className: "B", classLabel: "Class B", is: async () => true });
+      imodelAccess.stubEntityClass({ schemaName: "TestSchema", className: "A", classLabel: "Class A", is: async () => true });
+      imodelAccess.stubEntityClass({ schemaName: "TestSchema", className: "B", classLabel: "Class B", is: async () => true });
       const ecClass = { fullName: "TestSchema.ParentClass", label: "ParentClass" } as unknown as EC.Class;
 
       const expectedGroupingNodeKey: GroupingNodeKey = {
@@ -286,7 +286,7 @@ describe("BaseClassGrouping", () => {
         className: ecClass.fullName,
       };
 
-      expect(await baseClassGrouping.createBaseClassGroupsForSingleBaseClass(nodes, ecClass, metadataProvider.classHierarchyInspector)).to.deep.eq({
+      expect(await baseClassGrouping.createBaseClassGroupsForSingleBaseClass(nodes, ecClass, imodelAccess)).to.deep.eq({
         groupingType: "base-class",
         grouped: [
           createTestProcessedGroupingNode({
@@ -328,8 +328,8 @@ describe("BaseClassGrouping", () => {
           },
         }),
       ];
-      metadataProvider.stubEntityClass({ schemaName: "TestSchema", className: "A", classLabel: "Class A", is: async () => true });
-      metadataProvider.stubEntityClass({ schemaName: "TestSchema", className: "B", classLabel: "Class B", is: async () => false });
+      imodelAccess.stubEntityClass({ schemaName: "TestSchema", className: "A", classLabel: "Class A", is: async () => true });
+      imodelAccess.stubEntityClass({ schemaName: "TestSchema", className: "B", classLabel: "Class B", is: async () => false });
       const ecClass = { fullName: "TestSchema.ParentClass", label: "ParentClass" } as unknown as EC.Class;
 
       const expectedGroupingNodeKey: GroupingNodeKey = {
@@ -337,7 +337,7 @@ describe("BaseClassGrouping", () => {
         className: ecClass.fullName,
       };
 
-      expect(await baseClassGrouping.createBaseClassGroupsForSingleBaseClass(nodes, ecClass, metadataProvider.classHierarchyInspector)).to.deep.eq({
+      expect(await baseClassGrouping.createBaseClassGroupsForSingleBaseClass(nodes, ecClass, imodelAccess)).to.deep.eq({
         groupingType: "base-class",
         grouped: [
           createTestProcessedGroupingNode({
@@ -367,13 +367,13 @@ describe("BaseClassGrouping", () => {
           },
         }),
       ];
-      metadataProvider.stubEntityClass({
+      imodelAccess.stubEntityClass({
         schemaName: "TestSchema",
         className: "Class",
       });
-      metadataProvider.stubEntityClass({ schemaName: "TestSchema", className: "TestClass", is: async () => true });
+      imodelAccess.stubEntityClass({ schemaName: "TestSchema", className: "TestClass", is: async () => true });
 
-      const result = await baseClassGrouping.createBaseClassGroupingHandlers(metadataProvider, undefined, nodes, metadataProvider.classHierarchyInspector);
+      const result = await baseClassGrouping.createBaseClassGroupingHandlers(imodelAccess, undefined, nodes);
       expect(result.length).to.eq(1);
       const handlerResult = await result[0](nodes, []);
       expect(handlerResult.groupingType).to.eq("base-class");
