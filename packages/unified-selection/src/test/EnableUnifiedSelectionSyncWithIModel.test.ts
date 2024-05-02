@@ -7,6 +7,7 @@ import { expect } from "chai";
 import { ResolvablePromise, waitFor } from "presentation-test-utilities";
 import sinon from "sinon";
 import { Id64Arg, using } from "@itwin/core-bentley";
+import { EC, ECSqlQueryDef, ECSqlQueryExecutor, ECSqlQueryReaderOptions, ECSqlQueryRow } from "@itwin/presentation-shared";
 import * as cachingHiliteSetProvider from "../unified-selection/CachingHiliteSetProvider";
 import {
   enableUnifiedSelectionSyncWithIModel,
@@ -17,8 +18,6 @@ import * as hiliteSetProvider from "../unified-selection/HiliteSetProvider";
 import { Selectable, SelectableInstanceKey, Selectables } from "../unified-selection/Selectable";
 import { StorageSelectionChangesListener, StorageSelectionChangeType } from "../unified-selection/SelectionChangeEvent";
 import { createStorage, SelectionStorage } from "../unified-selection/SelectionStorage";
-import { ECSchema } from "../unified-selection/types/ECMetadata";
-import { ECSqlQueryDef, ECSqlQueryReader, ECSqlQueryReaderOptions, ECSqlQueryRow } from "../unified-selection/types/ECSqlCore";
 import { CoreSelectionSetEventType, CoreSelectionSetEventUnsafe } from "../unified-selection/types/IModel";
 import { createSelectableInstanceKey } from "./_helpers/SelectablesCreator";
 
@@ -127,8 +126,8 @@ describe("IModelSelectionHandler", () => {
   };
 
   const imodelAccess = {
-    createQueryReader: sinon.stub<[ECSqlQueryDef, ECSqlQueryReaderOptions | undefined], ECSqlQueryReader>(),
-    getSchema: sinon.stub<[string], Promise<ECSchema | undefined>>(),
+    createQueryReader: sinon.stub<[ECSqlQueryDef, ECSqlQueryReaderOptions | undefined], ReturnType<ECSqlQueryExecutor["createQueryReader"]>>(),
+    getSchema: sinon.stub<[string], Promise<EC.Schema | undefined>>(),
     key: "test",
     hiliteSet,
     selectionSet,
@@ -205,7 +204,9 @@ describe("IModelSelectionHandler", () => {
       return keys.map((key) => ({ ["ClassName"]: key.className, ["ECInstanceId"]: key.id }));
     };
 
-    async function* createFakeQueryReader<TRow extends {} = ECSqlQueryRow>(rows: (TRow | Promise<TRow>)[]): ECSqlQueryReader {
+    async function* createFakeQueryReader<TRow extends {} = ECSqlQueryRow>(
+      rows: (TRow | Promise<TRow>)[],
+    ): ReturnType<ECSqlQueryExecutor["createQueryReader"]> {
       for await (const row of rows) {
         yield row;
       }

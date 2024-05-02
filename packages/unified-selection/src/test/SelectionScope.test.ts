@@ -5,18 +5,18 @@
 
 import { expect } from "chai";
 import sinon from "sinon";
+import { ECSqlQueryDef, ECSqlQueryExecutor, ECSqlQueryReaderOptions, ECSqlQueryRow } from "@itwin/presentation-shared";
 import { SelectableInstanceKey } from "../unified-selection/Selectable";
 import { computeSelection, ElementSelectionScopeProps, SelectionScope } from "../unified-selection/SelectionScope";
-import { ECSqlQueryDef, ECSqlQueryReader, ECSqlQueryReaderOptions, ECSqlQueryRow } from "../unified-selection/types/ECSqlCore";
 import { createSelectableInstanceKey } from "./_helpers/SelectablesCreator";
 
 describe("SelectionScope", () => {
   const queryExecutor = {
-    createQueryReader: sinon.stub<[ECSqlQueryDef, ECSqlQueryReaderOptions | undefined], ECSqlQueryReader>(),
+    createQueryReader: sinon.stub<[ECSqlQueryDef, ECSqlQueryReaderOptions | undefined], ReturnType<ECSqlQueryExecutor["createQueryReader"]>>(),
   };
 
   describe("computeSelection", () => {
-    function createFakeQueryReader<TRow extends object>(rows: TRow[]): ECSqlQueryReader {
+    function createFakeQueryReader<TRow extends object>(rows: TRow[]): ReturnType<ECSqlQueryExecutor["createQueryReader"]> {
       return (async function* () {
         for (const row of rows) {
           yield row;

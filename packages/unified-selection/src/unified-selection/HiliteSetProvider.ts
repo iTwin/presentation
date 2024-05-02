@@ -3,15 +3,11 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-/** @packageDocumentation
- * @module UnifiedSelection
- */
-
 import { EMPTY, filter, forkJoin, from, map, merge, mergeMap, Observable, scan, shareReplay, Subject, toArray } from "rxjs";
 import { eachValueFrom } from "rxjs-for-await";
+import { EC, ECSchemaProvider, ECSqlBinding, ECSqlQueryExecutor, parseFullClassName } from "@itwin/presentation-shared";
 import { SelectableInstanceKey, Selectables } from "./Selectable";
-import { ECClass, ECSchemaProvider, parseFullClassName } from "./types/ECMetadata";
-import { ECSqlBinding, ECSqlQueryExecutor, formIdBindings } from "./types/ECSqlCore";
+import { formIdBindings } from "./Utils";
 
 const HILITE_SET_EMIT_FREQUENCY = 20;
 
@@ -151,7 +147,7 @@ class HiliteSetProviderImpl implements HiliteSetProvider {
     );
   }
 
-  private async checkType(keyClass: ECClass, schemaName: string, className: string, type: InstanceIdType) {
+  private async checkType(keyClass: EC.Class, schemaName: string, className: string, type: InstanceIdType) {
     return (await keyClass.is(className, schemaName)) ? type : undefined;
   }
 
@@ -382,7 +378,7 @@ class HiliteSetProviderImpl implements HiliteSetProvider {
     ];
   }
 
-  private async getClass(fullClassName: string): Promise<ECClass | undefined> {
+  private async getClass(fullClassName: string): Promise<EC.Class | undefined> {
     const { schemaName, className } = parseFullClassName(fullClassName);
     const schema = await this._imodelAccess.getSchema(schemaName);
     if (!schema) {

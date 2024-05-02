@@ -6,10 +6,6 @@
 import { Selectables } from "./Selectable";
 import { SelectionStorage } from "./SelectionStorage";
 
-/** @packageDocumentation
- * @module UnifiedSelection
- */
-
 /**
  * The type of selection change.
  * @beta

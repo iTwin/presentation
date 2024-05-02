@@ -5,12 +5,11 @@
 
 import { expect } from "chai";
 import sinon from "sinon";
+import { ECSchemaProvider, ECSqlQueryExecutor } from "@itwin/presentation-shared";
 import { CachingHiliteSetProvider, createCachingHiliteSetProvider } from "../unified-selection/CachingHiliteSetProvider";
 import * as hiliteSetProvider from "../unified-selection/HiliteSetProvider";
 import { SelectableInstanceKey } from "../unified-selection/Selectable";
 import { createStorage, SelectionStorage } from "../unified-selection/SelectionStorage";
-import { ECSchemaProvider } from "../unified-selection/types/ECMetadata";
-import { ECSqlQueryExecutor } from "../unified-selection/types/ECSqlCore";
 import { createSelectableInstanceKey } from "./_helpers/SelectablesCreator";
 
 const generateSelection = (): SelectableInstanceKey[] => {

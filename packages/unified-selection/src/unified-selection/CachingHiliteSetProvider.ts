@@ -3,17 +3,12 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-/** @packageDocumentation
- * @module UnifiedSelection
- */
-
 import { from, Observable, shareReplay } from "rxjs";
 import { eachValueFrom } from "rxjs-for-await";
+import { ECSchemaProvider, ECSqlQueryExecutor } from "@itwin/presentation-shared";
 import { createHiliteSetProvider, HiliteSet, HiliteSetProvider } from "./HiliteSetProvider";
 import { StorageSelectionChangeEventArgs } from "./SelectionChangeEvent";
 import { IMODEL_CLOSE_SELECTION_CLEAR_SOURCE, SelectionStorage } from "./SelectionStorage";
-import { ECSchemaProvider } from "./types/ECMetadata";
-import { ECSqlQueryExecutor } from "./types/ECSqlCore";
 
 /**
  * Props for creating a `CachingHiliteSetProvider` instance.
