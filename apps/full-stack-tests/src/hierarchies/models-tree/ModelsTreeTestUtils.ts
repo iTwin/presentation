@@ -6,7 +6,7 @@
 import { IModelConnection } from "@itwin/core-frontend";
 import { SchemaContext } from "@itwin/ecschema-metadata";
 import { ECSchemaRpcLocater } from "@itwin/ecschema-rpcinterface-common";
-import { createECSqlQueryExecutor, createMetadataProvider } from "@itwin/presentation-core-interop";
+import { createECSchemaProvider, createECSqlQueryExecutor } from "@itwin/presentation-core-interop";
 import { createLimitingECSqlQueryExecutor, HierarchyNodeIdentifiersPath, HierarchyProvider } from "@itwin/presentation-hierarchies";
 import { ModelsTreeDefinition } from "@itwin/presentation-models-tree";
 import { createCachingECClassHierarchyInspector } from "@itwin/presentation-shared";
@@ -16,10 +16,10 @@ import { importSchema } from "../../IModelUtils";
 export function createModelsTreeProvider(imodel: IModelConnection, filteredNodePaths?: HierarchyNodeIdentifiersPath[]) {
   const schemas = new SchemaContext();
   schemas.addLocater(new ECSchemaRpcLocater(imodel.getRpcProps()));
-  const metadataProvider = createMetadataProvider(schemas);
+  const schemaProvider = createECSchemaProvider(schemas);
   const imodelAccess = {
-    ...metadataProvider,
-    ...createCachingECClassHierarchyInspector({ metadataProvider }),
+    ...schemaProvider,
+    ...createCachingECClassHierarchyInspector({ schemaProvider }),
     ...createLimitingECSqlQueryExecutor(createECSqlQueryExecutor(imodel), 1000),
   };
   return new HierarchyProvider({

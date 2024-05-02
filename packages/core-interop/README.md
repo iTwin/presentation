@@ -13,7 +13,7 @@ Having this interop layer helps us evolve both sides without affecting one anoth
 
 ### `createECSqlQueryExecutor`
 
-Maps an iModel in the form of `itwinjs-core` [IModelDb](https://www.itwinjs.org/reference/core-backend/imodels/imodeldb/) or [IModelConnection](https://www.itwinjs.org/reference/core-frontend/imodelconnection/imodelconnection/) to an instance of `IECSqlQueryExecutor`, used in `@itwin/presentation-hierarchies` and `@itwin/unified-selection` packages.
+Maps an iModel in the form of `itwinjs-core` [IModelDb](https://www.itwinjs.org/reference/core-backend/imodels/imodeldb/) or [IModelConnection](https://www.itwinjs.org/reference/core-frontend/imodelconnection/imodelconnection/) to an instance of `ECSqlQueryExecutor`, used in `@itwin/presentation-hierarchies` and `@itwin/unified-selection` packages.
 
 Example:
 
@@ -28,19 +28,19 @@ for await (const row of executor.createQueryReader(MY_QUERY)) {
 }
 ```
 
-### `createMetadataProvider`
+### `createECSchemaProvider`
 
-Maps an instance of `itwinjs-core` [SchemaContext](https://www.itwinjs.org/reference/ecschema-metadata/context/schemacontext/) class to an instance of `IECMetadataProvider`, used in `@itwin/presentation-hierarchies` and `@itwin/unified-selection` packages.
+Maps an instance of `itwinjs-core` [SchemaContext](https://www.itwinjs.org/reference/ecschema-metadata/context/schemacontext/) class to an instance of `ECSchemaProvider`, used in `@itwin/presentation-hierarchies` and `@itwin/unified-selection` packages.
 
 Example:
 
 ```ts
 import { SchemaContext } from "@itwin/ecschema-metadata";
-import { createMetadataProvider } from "@itwin/presentation-core-interop";
+import { createECSchemaProvider } from "@itwin/presentation-core-interop";
 
 const schemas = new SchemaContext();
-const metadata = createMetadataProvider(schemas);
-// the created metadata provider may be used in `@itwin/presentation-hierarchies` or `@itwin/unified-selection` packages
+const schemaProvider = createECSchemaProvider(schemas);
+// the created schema provider may be used in `@itwin/presentation-hierarchies` or `@itwin/unified-selection` packages
 ```
 
 ### `createValueFormatter`

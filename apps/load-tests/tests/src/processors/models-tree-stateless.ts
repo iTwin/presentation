@@ -9,7 +9,7 @@ import { EventEmitter, Next, ScenarioContext } from "artillery";
 import { Guid, StopWatch } from "@itwin/core-bentley";
 import { DbQueryRequest, DbQueryResponse, DbRequestExecutor, ECSqlReader } from "@itwin/core-common";
 import { ISchemaLocater, Schema, SchemaContext, SchemaInfo, SchemaKey, SchemaMatchType, SchemaProps } from "@itwin/ecschema-metadata";
-import { createECSqlQueryExecutor, createMetadataProvider } from "@itwin/presentation-core-interop";
+import { createECSchemaProvider, createECSqlQueryExecutor } from "@itwin/presentation-core-interop";
 import { createLimitingECSqlQueryExecutor, HierarchyNode, HierarchyProvider, RowsLimitExceededError } from "@itwin/presentation-hierarchies";
 import { ModelsTreeDefinition } from "@itwin/presentation-models-tree";
 import { createCachingECClassHierarchyInspector } from "@itwin/presentation-shared";
@@ -119,10 +119,10 @@ function createModelsTreeProvider(context: ScenarioContext, events: EventEmitter
 
   const schemas = new SchemaContext();
   schemas.addLocater(schedulingSchemaLocater);
-  const metadataProvider = createMetadataProvider(schemas);
+  const schemaProvider = createECSchemaProvider(schemas);
   const imodelAccess = {
-    ...metadataProvider,
-    ...createCachingECClassHierarchyInspector({ metadataProvider, cacheSize: 1000 }),
+    ...schemaProvider,
+    ...createCachingECClassHierarchyInspector({ schemaProvider, cacheSize: 1000 }),
     ...createLimitingECSqlQueryExecutor(
       createECSqlQueryExecutor({
         createQueryReader(ecsql, bindings, config) {

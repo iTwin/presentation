@@ -25,10 +25,10 @@ import {
   StrengthDirection,
 } from "@itwin/ecschema-metadata";
 import { EC } from "@itwin/presentation-shared";
-import { createMetadataProvider } from "../core-interop/Metadata";
+import { createECSchemaProvider } from "../core-interop/Metadata";
 import { createECClass, createECProperty, createECSchema } from "../core-interop/MetadataInternal";
 
-describe("createMetadataProvider", () => {
+describe("createECSchemaProvider", () => {
   describe("getSchema", () => {
     it("returns schema from schema context", async () => {
       const matchSchemaName = sinon.match((key: SchemaKey) => key.compareByName("x"));
@@ -41,7 +41,7 @@ describe("createMetadataProvider", () => {
           } as unknown as CoreSchema),
       };
 
-      const provider = createMetadataProvider(schemaContext as unknown as SchemaContext);
+      const provider = createECSchemaProvider(schemaContext as unknown as SchemaContext);
       const schema = await provider.getSchema("x");
       assert(schema !== undefined);
 
@@ -59,7 +59,7 @@ describe("createMetadataProvider", () => {
       schemaContext.getSchema.onSecondCall().rejects(new Error("The schema, x.01.02.03, already exists within this cache"));
       schemaContext.getSchema.onThirdCall().resolves({ name: "x" });
 
-      const provider = createMetadataProvider(schemaContext as unknown as SchemaContext);
+      const provider = createECSchemaProvider(schemaContext as unknown as SchemaContext);
       await Promise.all([provider.getSchema("x"), provider.getSchema("x")]);
 
       expect(schemaContext.getSchema).to.be.calledThrice;
@@ -71,7 +71,7 @@ describe("createMetadataProvider", () => {
       };
       schemaContext.getSchema.rejects(new Error("Unknown error"));
 
-      const provider = createMetadataProvider(schemaContext as unknown as SchemaContext);
+      const provider = createECSchemaProvider(schemaContext as unknown as SchemaContext);
       await expect(provider.getSchema("x")).to.eventually.be.rejected;
       expect(schemaContext.getSchema).to.be.calledOnce;
     });
@@ -82,7 +82,7 @@ describe("createMetadataProvider", () => {
         getSchema: sinon.stub().resolves(undefined),
       };
 
-      const provider = createMetadataProvider(schemaContext);
+      const provider = createECSchemaProvider(schemaContext);
       const schema = await provider.getSchema("x");
 
       // eslint-disable-next-line @typescript-eslint/unbound-method

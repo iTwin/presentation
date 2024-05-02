@@ -17,6 +17,6 @@ export * from "./hierarchies/HierarchyDefinition";
 export * from "./hierarchies/HierarchyErrors";
 export * from "./hierarchies/HierarchyNode";
 export * from "./hierarchies/HierarchyProvider";
-export { createLimitingECSqlQueryExecutor, ILimitingECSqlQueryExecutor } from "./hierarchies/LimitingECSqlQueryExecutor";
+export { createLimitingECSqlQueryExecutor, LimitingECSqlQueryExecutor } from "./hierarchies/LimitingECSqlQueryExecutor";
 export * from "./hierarchies/Logging";
 export * from "./hierarchies/NodeSelectQueryFactory";

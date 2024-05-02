@@ -8,8 +8,8 @@
  */
 
 import { CachingHiliteSetProvider } from "../CachingHiliteSetProvider";
-import { IMetadataProvider } from "../queries/ECMetadata";
-import { IECSqlQueryExecutor } from "../queries/ECSqlCore";
+import { ECSchemaProvider } from "../queries/ECMetadata";
+import { ECSqlQueryExecutor } from "../queries/ECSqlCore";
 import { ComputeSelectionProps } from "../SelectionScope";
 import { SelectionStorage } from "../SelectionStorage";
 import { CoreIModelHiliteSet, CoreIModelSelectionSet } from "./IModel";
@@ -21,8 +21,8 @@ import { IModelSelectionHandler } from "./IModelSelectionHandler";
  */
 export interface EnableUnifiedSelectionSyncWithIModelProps {
   /**  */
-  imodelAccess: IECSqlQueryExecutor &
-    IMetadataProvider & {
+  imodelAccess: ECSqlQueryExecutor &
+    ECSchemaProvider & {
       /** Key of the iModel. Generally taken from `IModelConnection.key`. */
       readonly key: string;
       /** The set of currently hilited elements taken from `IModelConnection.hilited`. */
@@ -39,7 +39,7 @@ export interface EnableUnifiedSelectionSyncWithIModelProps {
 
   /**
    * A caching hilite set provider used to retrieve hilite sets for an iModel. If not provided, a new `CachingHiliteSetProvider`
-   * will be created for the given iModel using the provided `queryExecutor` and `metadataProvider`.
+   * will be created for the given iModel using the provided `imodelAccess`.
    * If the consuming application already has a `CachingHiliteSetProvider` defined, it should be provided instead
    * to reuse the cache and avoid creating new providers for each iModel.
    */

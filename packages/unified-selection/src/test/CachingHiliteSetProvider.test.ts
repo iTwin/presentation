@@ -7,8 +7,8 @@ import { expect } from "chai";
 import sinon from "sinon";
 import { CachingHiliteSetProvider, createCachingHiliteSetProvider } from "../unified-selection/CachingHiliteSetProvider";
 import * as hiliteSetProvider from "../unified-selection/HiliteSetProvider";
-import { IMetadataProvider } from "../unified-selection/queries/ECMetadata";
-import { IECSqlQueryExecutor } from "../unified-selection/queries/ECSqlCore";
+import { ECSchemaProvider } from "../unified-selection/queries/ECMetadata";
+import { ECSqlQueryExecutor } from "../unified-selection/queries/ECSqlCore";
 import { SelectableInstanceKey } from "../unified-selection/Selectable";
 import { createStorage, SelectionStorage } from "../unified-selection/SelectionStorage";
 import { createSelectableInstanceKey } from "./_helpers/SelectablesCreator";
@@ -24,7 +24,7 @@ describe("CachingHiliteSetProvider", () => {
   const provider = {
     getHiliteSet: sinon.stub<[{ iModelKey: string }], AsyncIterableIterator<hiliteSetProvider.HiliteSet>>(),
   };
-  const iModelProvider = sinon.stub<[string], IMetadataProvider & IECSqlQueryExecutor>();
+  const iModelProvider = sinon.stub<[string], ECSchemaProvider & ECSqlQueryExecutor>();
   const iModelKey = "iModelKey";
 
   async function loadHiliteSet(imodelKey: string) {
@@ -47,7 +47,7 @@ describe("CachingHiliteSetProvider", () => {
     };
   }
 
-  function stubIModelAccess(): sinon.SinonStubbedInstance<IMetadataProvider & IECSqlQueryExecutor> {
+  function stubIModelAccess(): sinon.SinonStubbedInstance<ECSchemaProvider & ECSqlQueryExecutor> {
     return {
       createQueryReader: sinon.stub(),
       getSchema: sinon.stub(),

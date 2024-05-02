@@ -9,8 +9,8 @@
 
 import { EMPTY, filter, forkJoin, from, map, merge, mergeMap, Observable, scan, shareReplay, Subject, toArray } from "rxjs";
 import { eachValueFrom } from "rxjs-for-await";
-import { ECClass, IMetadataProvider, parseFullClassName } from "./queries/ECMetadata";
-import { ECSqlBinding, formIdBindings, IECSqlQueryExecutor } from "./queries/ECSqlCore";
+import { ECClass, ECSchemaProvider, parseFullClassName } from "./queries/ECMetadata";
+import { ECSqlBinding, ECSqlQueryExecutor, formIdBindings } from "./queries/ECSqlCore";
 import { SelectableInstanceKey, Selectables } from "./Selectable";
 
 const HILITE_SET_EMIT_FREQUENCY = 20;
@@ -31,7 +31,7 @@ export interface HiliteSet {
  * @internal Not exported through barrel, but used in public API as an argument. May be supplemented with optional attributes any time.
  */
 export interface HiliteSetProviderProps {
-  imodelAccess: IMetadataProvider & IECSqlQueryExecutor;
+  imodelAccess: ECSchemaProvider & ECSqlQueryExecutor;
 }
 
 /**
@@ -54,7 +54,7 @@ export function createHiliteSetProvider(props: HiliteSetProviderProps): HiliteSe
 }
 
 class HiliteSetProviderImpl implements HiliteSetProvider {
-  private _imodelAccess: IMetadataProvider & IECSqlQueryExecutor;
+  private _imodelAccess: ECSchemaProvider & ECSqlQueryExecutor;
   // Map between a class name and its type
   private _classRelationCache: Map<string, InstanceIdType | Promise<InstanceIdType>>;
 

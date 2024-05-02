@@ -109,11 +109,13 @@ The `@itwin/unified-selection` package delivers APIs for creating a `HiliteSet` 
 ```ts
 // Components may want to get a hilite set for arbitrary set of Selectables - use `createHiliteSetProvider` for that.
 import { IModelConnection } from "@itwin/core-frontend";
-import { createECSqlQueryExecutor, createMetadataProvider } from "@itwin/presentation-core-interop";
+import { createECSqlQueryExecutor, createECSchemaProvider } from "@itwin/presentation-core-interop";
 import { createHiliteSetProvider } from "@itwin/unified-selection";
 const hiliteProvider = createHiliteSetProvider({
-  metadataProvider: createMetadataProvider(imodel),
-  queryExecutor: createECSqlQueryExecutor(imodel),
+  imodelAccess: {
+    ...createECSchemaProvider(imodel),
+    ...createECSqlQueryExecutor(imodel),
+  },
 });
 const hiliteSet = await hiliteProvider.getHiliteSet({ selectables });
 
@@ -121,11 +123,8 @@ const hiliteSet = await hiliteProvider.getHiliteSet({ selectables });
 // recommended to keep a single instance of this provider per application as it caches hilite sets per each iModel's selection.
 import { createCachingHiliteSetProvider } from "@itwin/unified-selection";
 const selectionHiliteProvider = createCachingHiliteSetProvider({
-    selectionStorage,
-    iModelProvider: (iModelKey: string) => {
-        queryExecutor: IECSqlQueryExecutor;
-        metadataProvider: IMetadataProvider;
-    },
+  selectionStorage,
+  iModelProvider: (iModelKey: string) => getIModelByKey(iModelKey),
 });
 const selectionHiliteSet = await selectionHiliteProvider.getHiliteSet({ imodel.key });
 // The caching provider registers a selection change listener and should be disposed, in case its lifetime
@@ -172,12 +171,12 @@ const selection = computeSelection({ queryExecutor, elementIds, scope: { id: "el
 The `@itwin/unified-selection` package delivers a `enableUnifiedSelectionSyncWithIModel` function to enable selection synchronization between an iModel and a `SelectionStorage`. When called, it returns a cleanup function that should be used to disable the synchronization. There should only be one active synchronization between a single iModel and a `SelectionStorage` at a given time. For example, this function could be used inside a `useEffect` hook in a component that holds an iModel:
 
 ```ts
-import { createECSqlQueryExecutor, createMetadataProvider } from "@itwin/presentation-core-interop";
+import { createECSqlQueryExecutor, createECSchemaProvider } from "@itwin/presentation-core-interop";
 useEffect(() => {
   return enableUnifiedSelectionSyncWithIModel({
     imodelAccess: {
       ...createECSqlQueryExecutor(iModel),
-      ...createMetadataProvider(iModel),
+      ...createECSchemaProvider(iModel),
       key: iModel.key,
       hiliteSet: iModel.hilited,
       selectionSet: iModel.selectionSet,

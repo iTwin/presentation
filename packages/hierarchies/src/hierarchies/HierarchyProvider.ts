@@ -26,11 +26,11 @@ import { GenericInstanceFilter } from "@itwin/core-common";
 import {
   ConcatenatedValue,
   createDefaultValueFormatter,
+  ECClassHierarchyInspector,
+  ECSchemaProvider,
   ECSqlBinding,
   ECSqlQueryDef,
   formatConcatenatedValue,
-  IECClassHierarchyInspector,
-  IECMetadataProvider,
   InstanceKey,
   IPrimitiveValueFormatter,
   normalizeFullClassName,
@@ -64,7 +64,7 @@ import { shareReplayWithErrors } from "./internal/operators/ShareReplayWithError
 import { sortNodesByLabelOperator } from "./internal/operators/Sorting";
 import { SubscriptionScheduler } from "./internal/SubscriptionScheduler";
 import { TreeQueryResultsReader } from "./internal/TreeNodesReader";
-import { ILimitingECSqlQueryExecutor } from "./LimitingECSqlQueryExecutor";
+import { LimitingECSqlQueryExecutor } from "./LimitingECSqlQueryExecutor";
 import { NodeSelectClauseColumnNames } from "./NodeSelectQueryFactory";
 
 const LOGGING_NAMESPACE = `${CommonLoggingNamespace}.HierarchyProvider`;
@@ -98,11 +98,11 @@ export interface HierarchyProviderProps {
   /**
    * An object that provides access to iModel's data and metadata.
    *
-   * @see `IECMetadataProvider`
-   * @see `ILimitingECSqlQueryExecutor`
-   * @see `IECClassHierarchyInspector`
+   * @see `ECSchemaProvider`
+   * @see `LimitingECSqlQueryExecutor`
+   * @see `ECClassHierarchyInspector`
    */
-  imodelAccess: IECMetadataProvider & ILimitingECSqlQueryExecutor & IECClassHierarchyInspector;
+  imodelAccess: ECSchemaProvider & LimitingECSqlQueryExecutor & ECClassHierarchyInspector;
 
   /**
    * A function that returns a hierarchy definition, describing how the hierarchy that the provider should be create. The
@@ -143,7 +143,7 @@ export interface GetHierarchyNodesProps {
   instanceFilter?: GenericInstanceFilter;
 
   /**
-   * Optional hierarchy level size limit override. This value is passed to `ILimitingECSqlQueryExecutor` used
+   * Optional hierarchy level size limit override. This value is passed to `LimitingECSqlQueryExecutor` used
    * by this provider to override query rows limit per hierarchy level. If not provided, defaults to whatever
    * is used by the limiting query executor.
    *
@@ -160,7 +160,7 @@ export interface GetHierarchyNodesProps {
  * @beta
  */
 export class HierarchyProvider {
-  private _imodelAccess: IECMetadataProvider & ILimitingECSqlQueryExecutor & IECClassHierarchyInspector;
+  private _imodelAccess: ECSchemaProvider & LimitingECSqlQueryExecutor & ECClassHierarchyInspector;
   private _queryReader: TreeQueryResultsReader;
   private _valuesFormatter: IPrimitiveValueFormatter;
   private _localizedStrings: HierarchyProviderLocalizedStrings;
@@ -180,7 +180,7 @@ export class HierarchyProvider {
    * A limiting ECSQL query executor used by this provider.
    * @see HierarchyProviderProps.queryExecutor
    */
-  public get queryExecutor(): ILimitingECSqlQueryExecutor {
+  public get queryExecutor(): LimitingECSqlQueryExecutor {
     return this._imodelAccess;
   }
 
@@ -215,7 +215,7 @@ export class HierarchyProvider {
   }
 
   /** @internal */
-  public get queryScheduler(): { schedule: ILimitingECSqlQueryExecutor["createQueryReader"] } {
+  public get queryScheduler(): { schedule: LimitingECSqlQueryExecutor["createQueryReader"] } {
     return {
       schedule: (query, config) => eachValueFrom(this._queryScheduler.scheduleSubscription(from(this.queryExecutor.createQueryReader(query, config)))),
     };
@@ -567,7 +567,7 @@ export class HierarchyProvider {
   }
 
   /**
-   * A function that should be called when the underlying data source, used by `HierarchyProviderProps.metadataProvider`,
+   * A function that should be called when the underlying data source, used by `HierarchyProviderProps.schemaProvider`,
    * `HierarchyProviderProps.queryExecutor` or `HierarchyProviderProps.hierarchyDefinition`, changes.
    *
    * Calling the function invalidates internal caches to make sure fresh data is retrieved on new requests.
@@ -597,14 +597,14 @@ function processNodes<TNode>(processor: (node: TNode) => Promise<TNode | undefin
 
 async function applyLabelsFormatting<TNode extends { label: string | ConcatenatedValue }>(
   node: TNode,
-  metadataProvider: IECMetadataProvider,
+  schemaProvider: ECSchemaProvider,
   valueFormatter: IPrimitiveValueFormatter,
 ): Promise<TNode & { label: string }> {
   return {
     ...node,
     label: await formatConcatenatedValue({
       value: node.label,
-      metadataProvider,
+      schemaProvider,
       valueFormatter,
     }),
   };

@@ -10,8 +10,8 @@
 import { from, Observable, shareReplay } from "rxjs";
 import { eachValueFrom } from "rxjs-for-await";
 import { createHiliteSetProvider, HiliteSet, HiliteSetProvider } from "./HiliteSetProvider";
-import { IMetadataProvider } from "./queries/ECMetadata";
-import { IECSqlQueryExecutor } from "./queries/ECSqlCore";
+import { ECSchemaProvider } from "./queries/ECMetadata";
+import { ECSqlQueryExecutor } from "./queries/ECSqlCore";
 import { StorageSelectionChangeEventArgs } from "./SelectionChangeEvent";
 import { IMODEL_CLOSE_SELECTION_CLEAR_SOURCE, SelectionStorage } from "./SelectionStorage";
 
@@ -21,7 +21,7 @@ import { IMODEL_CLOSE_SELECTION_CLEAR_SOURCE, SelectionStorage } from "./Selecti
  */
 export interface CachingHiliteSetProviderProps {
   selectionStorage: SelectionStorage;
-  iModelProvider: (iModelKey: string) => IMetadataProvider & IECSqlQueryExecutor;
+  iModelProvider: (iModelKey: string) => ECSchemaProvider & ECSqlQueryExecutor;
 }
 
 /**
@@ -55,7 +55,7 @@ class CachingHiliteSetProviderImpl implements CachingHiliteSetProvider {
   private _hiliteSetProviders = new Map<string, HiliteSetProvider>();
   private _cache = new Map<string, Observable<HiliteSet>>();
   private _removeListener: () => void;
-  private _iModelProvider: (iModelKey: string) => IMetadataProvider & IECSqlQueryExecutor;
+  private _iModelProvider: (iModelKey: string) => ECSchemaProvider & ECSqlQueryExecutor;
 
   constructor(props: CachingHiliteSetProviderProps) {
     this._selectionStorage = props.selectionStorage;
@@ -88,7 +88,7 @@ class CachingHiliteSetProviderImpl implements CachingHiliteSetProvider {
     this._cache = new Map();
   }
 
-  private getHiliteSetProvider(iModelKey: string, imodelAccess: IMetadataProvider & IECSqlQueryExecutor) {
+  private getHiliteSetProvider(iModelKey: string, imodelAccess: ECSchemaProvider & ECSqlQueryExecutor) {
     let provider = this._hiliteSetProviders.get(iModelKey);
     if (!provider) {
       provider = createHiliteSetProvider({ imodelAccess });

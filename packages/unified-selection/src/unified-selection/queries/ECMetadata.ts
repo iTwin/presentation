@@ -8,11 +8,10 @@
  */
 
 /**
- * An interface of an iModel metadata provider used to retrieve information about ECSchemas,
- * ECClasses, ECProperties, etc.
+ * An interface for an object that knows how to get an ECSchema from an iModel.
  * @internal
  */
-export interface IMetadataProvider {
+export interface ECSchemaProvider {
   getSchema(schemaName: string): Promise<ECSchema | undefined>;
 }
 
