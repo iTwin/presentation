@@ -1,7 +1,21 @@
 {
   "name": "@itwin/presentation-shared",
   "version": "0.0.0",
-  "private": true,
+  "description": "The package contains types and utilities used across different iTwin.js Presentation packages.",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/iTwin/presentation.git",
+    "directory": "packages/shared"
+  },
+  "keywords": [
+    "Bentley",
+    "EC",
+    "ECSQL",
+    "iModel",
+    "iTwin.js",
+    "Presentation"
+  ],
   "scripts": {
     "build": "npm run -s build:cjs && npm run -s build:esm",
     "build:cjs": "tsc -p tsconfig.cjs.json",
