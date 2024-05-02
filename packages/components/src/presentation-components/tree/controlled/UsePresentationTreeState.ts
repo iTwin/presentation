@@ -174,7 +174,7 @@ export function usePresentationTreeState<TEventHandler extends TreeEventHandler 
     pageSize: dataProviderProps.pagingSize,
     modelSource: state?.nodeLoader.modelSource,
     dataProviderProps: treeStateProps,
-    rulesetId: state?.dataProvider.rulesetId,
+    ruleset: dataProviderProps.ruleset,
     onReload,
     renderedItems,
   });

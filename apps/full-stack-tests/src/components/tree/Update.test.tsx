@@ -17,7 +17,7 @@ import {
   TreeModelSource,
 } from "@itwin/components-react";
 import { IModelConnection, SnapshotConnection } from "@itwin/core-frontend";
-import { ChildNodeSpecificationTypes, RuleTypes } from "@itwin/presentation-common";
+import { ChildNodeSpecificationTypes, Ruleset, RuleTypes } from "@itwin/presentation-common";
 import { IPresentationTreeDataProvider, usePresentationTreeState, UsePresentationTreeStateProps } from "@itwin/presentation-components";
 import { Presentation } from "@itwin/presentation-frontend";
 import { renderHook, waitFor } from "@testing-library/react";
@@ -170,7 +170,7 @@ describe("Tree update", () => {
 
     describe("on ruleset variables' modification", () => {
       it("detects a change in rule condition", async () => {
-        const ruleset = await Presentation.presentation.rulesets().add({
+        const ruleset: Ruleset = {
           id: "test_ruleset_id",
           rules: [
             {
@@ -199,10 +199,10 @@ describe("Tree update", () => {
               ],
             },
           ],
-        });
+        };
         await Presentation.presentation.vars(ruleset.id).setBool("use_first", false);
         await Presentation.presentation.vars(ruleset.id).setBool("use_second", false);
-        const hierarchy = await verifyHierarchy({ ...defaultProps, ruleset: ruleset.id }, []);
+        const hierarchy = await verifyHierarchy({ ...defaultProps, ruleset }, []);
 
         await Presentation.presentation.vars(ruleset.id).setBool("use_first", true);
         await hierarchy.verifyChange(["test-1"]);
@@ -215,7 +215,7 @@ describe("Tree update", () => {
       });
 
       it("detects a change in instance filter", async () => {
-        const ruleset = await Presentation.presentation.rulesets().add({
+        const ruleset: Ruleset = {
           id: "test_ruleset_id",
           rules: [
             {
@@ -231,9 +231,9 @@ describe("Tree update", () => {
               ],
             },
           ],
-        });
+        };
         await Presentation.presentation.vars(ruleset.id).setBool("show_nodes", false);
-        const hierarchy = await verifyHierarchy({ ...defaultProps, ruleset: ruleset.id }, []);
+        const hierarchy = await verifyHierarchy({ ...defaultProps, ruleset }, []);
 
         await Presentation.presentation.vars(ruleset.id).setBool("show_nodes", true);
         await hierarchy.verifyChange(["Physical Object [0-38]", "Physical Object [0-39]"]);
@@ -243,7 +243,7 @@ describe("Tree update", () => {
       });
 
       it("detects a change in customization rule's condition", async () => {
-        const ruleset = await Presentation.presentation.rulesets().add({
+        const ruleset: Ruleset = {
           id: "test_ruleset_id",
           rules: [
             {
@@ -263,8 +263,8 @@ describe("Tree update", () => {
               foreColor: `"Red"`,
             },
           ],
-        });
-        const hierarchy = await verifyHierarchy({ ...defaultProps, ruleset: ruleset.id }, ["Physical Object [0-38]", "Physical Object [0-39]"]);
+        };
+        const hierarchy = await verifyHierarchy({ ...defaultProps, ruleset }, ["Physical Object [0-38]", "Physical Object [0-39]"]);
 
         await Presentation.presentation.vars(ruleset.id).setBool("should_customize", true);
         await hierarchy.verifyChange([
@@ -274,7 +274,7 @@ describe("Tree update", () => {
       });
 
       it("detects a change in customization rule's value", async () => {
-        const ruleset = await Presentation.presentation.rulesets().add({
+        const ruleset: Ruleset = {
           id: "test_ruleset_id",
           rules: [
             {
@@ -294,8 +294,8 @@ describe("Tree update", () => {
               foreColor: `GetVariableStringValue("custom_color")`,
             },
           ],
-        });
-        const hierarchy = await verifyHierarchy({ ...defaultProps, ruleset: ruleset.id }, ["Physical Object [0-38]", "Physical Object [0-39]"]);
+        };
+        const hierarchy = await verifyHierarchy({ ...defaultProps, ruleset }, ["Physical Object [0-38]", "Physical Object [0-39]"]);
 
         await Presentation.presentation.vars(ruleset.id).setString("custom_color", "Red");
         await hierarchy.verifyChange([
@@ -311,7 +311,7 @@ describe("Tree update", () => {
       });
 
       it("detects changes of root and expanded nodes", async () => {
-        const ruleset = await Presentation.presentation.rulesets().add({
+        const ruleset: Ruleset = {
           id: "test_ruleset_id",
           rules: [
             {
@@ -354,9 +354,9 @@ describe("Tree update", () => {
               ],
             },
           ],
-        });
+        };
         await Presentation.presentation.vars(ruleset.id).setBool("show_children", true);
-        const hierarchy = await verifyHierarchy({ ...defaultProps, ruleset: ruleset.id }, [{ ["root-1"]: ["child-1"] }, { ["root-2"]: ["child-2"] }]);
+        const hierarchy = await verifyHierarchy({ ...defaultProps, ruleset }, [{ ["root-1"]: ["child-1"] }, { ["root-2"]: ["child-2"] }]);
 
         hierarchy.getModelSource().modifyModel((model) => {
           // expand only the `root-1` node
