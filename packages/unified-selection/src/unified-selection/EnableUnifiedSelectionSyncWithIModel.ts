@@ -3,20 +3,15 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-/** @packageDocumentation
- * @module UnifiedSelection
- */
-
 import { from, Subject, takeUntil } from "rxjs";
 import { assert, Id64Arg, using } from "@itwin/core-bentley";
+import { ECSchemaProvider, ECSqlQueryExecutor } from "@itwin/presentation-shared";
 import { CachingHiliteSetProvider, createCachingHiliteSetProvider } from "./CachingHiliteSetProvider";
 import { createHiliteSetProvider, HiliteSet, HiliteSetProvider } from "./HiliteSetProvider";
 import { SelectableInstanceKey, Selectables } from "./Selectable";
 import { StorageSelectionChangeEventArgs, StorageSelectionChangeType } from "./SelectionChangeEvent";
 import { computeSelection, ComputeSelectionProps } from "./SelectionScope";
 import { SelectionStorage } from "./SelectionStorage";
-import { ECSchemaProvider } from "./types/ECMetadata";
-import { ECSqlQueryExecutor } from "./types/ECSqlCore";
 import { CoreIModelHiliteSet, CoreIModelSelectionSet, CoreSelectionSetEventType, CoreSelectionSetEventUnsafe } from "./types/IModel";
 
 /**

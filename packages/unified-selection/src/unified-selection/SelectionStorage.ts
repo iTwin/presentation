@@ -3,10 +3,6 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-/** @packageDocumentation
- * @module UnifiedSelection
- */
-
 import { Selectable, Selectables } from "./Selectable";
 import { SelectionChangeEvent, SelectionChangeEventImpl, StorageSelectionChangeEventArgs, StorageSelectionChangeType } from "./SelectionChangeEvent";
 
