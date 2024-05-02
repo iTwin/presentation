@@ -5,7 +5,7 @@
 
 import { expect } from "chai";
 import sinon from "sinon";
-import { IECClassHierarchyInspector, trimWhitespace } from "@itwin/presentation-shared";
+import { ECClassHierarchyInspector, trimWhitespace } from "@itwin/presentation-shared";
 import {
   CustomHierarchyNodeDefinition,
   HierarchyDefinitionParentNode,
@@ -735,7 +735,7 @@ describe("FilteringHierarchyLevelDefinitionsFactory", () => {
 });
 
 function createFilteringHierarchyLevelsFactory(props?: {
-  classHierarchy?: IECClassHierarchyInspector;
+  classHierarchy?: ECClassHierarchyInspector;
   sourceFactory?: IHierarchyLevelDefinitionsFactory;
   nodeIdentifierPaths?: HierarchyNodeIdentifiersPath[];
 }) {

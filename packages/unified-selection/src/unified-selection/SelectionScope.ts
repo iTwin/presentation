@@ -4,8 +4,8 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { Id64 } from "@itwin/core-bentley";
-import { ECSqlBinding, ECSqlQueryDef, formIdBindings, IECSqlQueryExecutor } from "./queries/ECSqlCore";
 import { SelectableInstanceKey } from "./Selectable";
+import { ECSqlBinding, ECSqlQueryDef, ECSqlQueryExecutor, formIdBindings } from "./types/ECSqlCore";
 
 /**
  * Available selection scopes.
@@ -36,7 +36,7 @@ export interface ElementSelectionScopeProps {
  * @internal Not exported through barrel, but used in public API as an argument. May be supplemented with optional attributes any time.
  */
 export interface ComputeSelectionProps {
-  queryExecutor: IECSqlQueryExecutor;
+  queryExecutor: ECSqlQueryExecutor;
   elementIds: string[];
   scope: ElementSelectionScopeProps | { id: SelectionScope } | SelectionScope;
 }
@@ -75,7 +75,7 @@ export async function* computeSelection(props: ComputeSelectionProps): AsyncIter
 }
 
 async function* computeElementSelection(
-  queryExecutor: IECSqlQueryExecutor,
+  queryExecutor: ECSqlQueryExecutor,
   elementIds: string[],
   ancestorLevel: number,
 ): AsyncIterableIterator<SelectableInstanceKey> {
@@ -103,7 +103,7 @@ async function* computeElementSelection(
   yield* executeQuery(queryExecutor, { ctes, ecsql, bindings });
 }
 
-async function* computeCategorySelection(queryExecutor: IECSqlQueryExecutor, ids: string[]): AsyncIterableIterator<SelectableInstanceKey> {
+async function* computeCategorySelection(queryExecutor: ECSqlQueryExecutor, ids: string[]): AsyncIterableIterator<SelectableInstanceKey> {
   const bindings: ECSqlBinding[] = [];
   const ecsql = [
     `
@@ -122,7 +122,7 @@ async function* computeCategorySelection(queryExecutor: IECSqlQueryExecutor, ids
   yield* executeQuery(queryExecutor, { ecsql, bindings });
 }
 
-async function* computeModelSelection(queryExecutor: IECSqlQueryExecutor, ids: string[]): AsyncIterableIterator<SelectableInstanceKey> {
+async function* computeModelSelection(queryExecutor: ECSqlQueryExecutor, ids: string[]): AsyncIterableIterator<SelectableInstanceKey> {
   const bindings: ECSqlBinding[] = [];
   const ecsql = `
     SELECT DISTINCT m.ECInstanceId, ec_classname(m.ECClassId, 's.c') AS ClassName
@@ -134,7 +134,7 @@ async function* computeModelSelection(queryExecutor: IECSqlQueryExecutor, ids: s
 }
 
 async function* computeFunctionalElementSelection(
-  queryExecutor: IECSqlQueryExecutor,
+  queryExecutor: ECSqlQueryExecutor,
   ids: string[],
   ancestorLevel: number,
 ): AsyncIterableIterator<SelectableInstanceKey> {
@@ -234,7 +234,7 @@ function formAncestorLevelBinding(ancestorLevel: number, bindings: ECSqlBinding[
   return "?";
 }
 
-async function* executeQuery(queryExecutor: IECSqlQueryExecutor, query: ECSqlQueryDef): AsyncIterableIterator<SelectableInstanceKey> {
+async function* executeQuery(queryExecutor: ECSqlQueryExecutor, query: ECSqlQueryDef): AsyncIterableIterator<SelectableInstanceKey> {
   const reader = queryExecutor.createQueryReader(query);
   for await (const row of reader) {
     yield { className: row.ClassName, id: row.ECInstanceId };

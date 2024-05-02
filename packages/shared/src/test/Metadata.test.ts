@@ -8,16 +8,16 @@ import sinon from "sinon";
 import { createCachingECClassHierarchyInspector, getClass } from "../shared/Metadata";
 
 describe("createCachingECClassHierarchyInspector", () => {
-  const metadataProvider = {
+  const schemaProvider = {
     getSchema: sinon.stub(),
   };
 
   beforeEach(() => {
-    metadataProvider.getSchema.reset();
+    schemaProvider.getSchema.reset();
   });
 
   it("returns `true` when candidate is base class", async () => {
-    metadataProvider.getSchema.resolves({
+    schemaProvider.getSchema.resolves({
       getClass: async (className: string) => {
         switch (className) {
           case "b":
@@ -28,12 +28,12 @@ describe("createCachingECClassHierarchyInspector", () => {
         return undefined;
       },
     });
-    const inspector = createCachingECClassHierarchyInspector({ metadataProvider });
+    const inspector = createCachingECClassHierarchyInspector({ schemaProvider });
     expect(await inspector.classDerivesFrom("a.b", "c.d")).to.be.true;
   });
 
   it("returns `false` when candidate is not base class", async () => {
-    metadataProvider.getSchema.resolves({
+    schemaProvider.getSchema.resolves({
       getClass: async (className: string) => {
         switch (className) {
           case "b":
@@ -44,7 +44,7 @@ describe("createCachingECClassHierarchyInspector", () => {
         return undefined;
       },
     });
-    const inspector = createCachingECClassHierarchyInspector({ metadataProvider });
+    const inspector = createCachingECClassHierarchyInspector({ schemaProvider });
     expect(await inspector.classDerivesFrom("a.b", "c.d")).to.be.false;
   });
 
@@ -58,10 +58,10 @@ describe("createCachingECClassHierarchyInspector", () => {
       }
       return undefined;
     });
-    metadataProvider.getSchema.resolves({
+    schemaProvider.getSchema.resolves({
       getClass: getClassStub,
     });
-    const inspector = createCachingECClassHierarchyInspector({ metadataProvider, cacheSize: 1 });
+    const inspector = createCachingECClassHierarchyInspector({ schemaProvider, cacheSize: 1 });
     const [p1, p2] = [inspector.classDerivesFrom("a.b", "c.d"), inspector.classDerivesFrom("a.b", "c.d")];
     expect(p1).to.be.instanceOf(Promise);
     expect(p2).to.be.instanceOf(Promise);
@@ -82,10 +82,10 @@ describe("createCachingECClassHierarchyInspector", () => {
       }
       return undefined;
     });
-    metadataProvider.getSchema.resolves({
+    schemaProvider.getSchema.resolves({
       getClass: getClassStub,
     });
-    const inspector = createCachingECClassHierarchyInspector({ metadataProvider, cacheSize: 1 });
+    const inspector = createCachingECClassHierarchyInspector({ schemaProvider, cacheSize: 1 });
     const p1 = await inspector.classDerivesFrom("a.b", "c.d");
     const p2 = inspector.classDerivesFrom("a.b", "c.d");
     expect(typeof p1).to.eq("boolean");
@@ -97,47 +97,47 @@ describe("createCachingECClassHierarchyInspector", () => {
 });
 
 describe("getClass", () => {
-  const metadata = {
+  const schemaProvider = {
     getSchema: sinon.stub(),
   };
 
   beforeEach(() => {
-    metadata.getSchema.reset();
+    schemaProvider.getSchema.reset();
   });
 
   it("throws when schema does not exist", async () => {
-    metadata.getSchema.resolves(undefined);
-    await expect(getClass(metadata, "x.y")).to.eventually.be.rejected;
+    schemaProvider.getSchema.resolves(undefined);
+    await expect(getClass(schemaProvider, "x.y")).to.eventually.be.rejected;
   });
 
   it("throws when `getSchema` call throws", async () => {
-    metadata.getSchema.rejects(new Error("some error"));
-    await expect(getClass(metadata, "x.y")).to.eventually.be.rejected;
+    schemaProvider.getSchema.rejects(new Error("some error"));
+    await expect(getClass(schemaProvider, "x.y")).to.eventually.be.rejected;
   });
 
   it("throws when class does not exist", async () => {
-    metadata.getSchema.resolves({
+    schemaProvider.getSchema.resolves({
       getClass: async () => undefined,
     });
-    await expect(getClass(metadata, "x.y")).to.eventually.be.rejected;
+    await expect(getClass(schemaProvider, "x.y")).to.eventually.be.rejected;
   });
 
   it("throws when `getClass` call throws", async () => {
-    metadata.getSchema.resolves({
+    schemaProvider.getSchema.resolves({
       getClass: async () => {
         throw new Error("some error");
       },
     });
-    await expect(getClass(metadata, "x.y")).to.eventually.be.rejected;
+    await expect(getClass(schemaProvider, "x.y")).to.eventually.be.rejected;
   });
 
   it("returns class", async () => {
     const getClassStub = sinon.stub().resolves({ fullName: "result class" });
-    metadata.getSchema.resolves({
+    schemaProvider.getSchema.resolves({
       getClass: getClassStub,
     });
-    const result = await getClass(metadata, "x.y");
-    expect(metadata.getSchema).to.be.calledOnceWithExactly("x");
+    const result = await getClass(schemaProvider, "x.y");
+    expect(schemaProvider.getSchema).to.be.calledOnceWithExactly("x");
     expect(getClassStub).to.be.calledOnceWithExactly("y");
     expect(result).to.deep.eq({ fullName: "result class" });
   });

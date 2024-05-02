@@ -9,7 +9,7 @@ import * as ECSql from "./shared/ecsql-snippets";
 export { ECSql };
 
 export { ConcatenatedValue, ConcatenatedValuePart } from "./shared/ConcatenatedValue";
-export { ECSqlBinding, ECSqlQueryDef, IECSqlQueryExecutor, ECSqlQueryReaderOptions, ECSqlQueryRow } from "./shared/ECSqlCore";
+export { ECSqlBinding, ECSqlQueryDef, ECSqlQueryExecutor, ECSqlQueryReaderOptions, ECSqlQueryRow } from "./shared/ECSqlCore";
 export { createDefaultValueFormatter, formatConcatenatedValue, IPrimitiveValueFormatter } from "./shared/Formatting";
 export {
   IInstanceLabelSelectClauseFactory,
@@ -20,7 +20,7 @@ export {
 } from "./shared/InstanceLabelSelectClauseFactory";
 export { ILogger, NOOP_LOGGER, LogFunction, LogLevel } from "./shared/Logging";
 export { ArrayElement, OmitOverUnion } from "./shared/MappedTypes";
-export { createCachingECClassHierarchyInspector, EC, getClass, IECClassHierarchyInspector, IECMetadataProvider } from "./shared/Metadata";
+export { createCachingECClassHierarchyInspector, EC, getClass, ECClassHierarchyInspector, ECSchemaProvider } from "./shared/Metadata";
 export { normalizeFullClassName, parseFullClassName, trimWhitespace } from "./shared/Utils";
 export { InstanceKey, PrimitiveValue, TypedPrimitiveValue } from "./shared/Values";
 export { Event } from "./shared/Event";

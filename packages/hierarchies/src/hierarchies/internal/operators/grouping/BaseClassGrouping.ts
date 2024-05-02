@@ -3,13 +3,13 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { EC, getClass, IECClassHierarchyInspector, IECMetadataProvider } from "@itwin/presentation-shared";
+import { EC, ECClassHierarchyInspector, ECSchemaProvider, getClass } from "@itwin/presentation-shared";
 import { ClassGroupingNodeKey, HierarchyNode, ParentHierarchyNode, ProcessedInstanceHierarchyNode } from "../../../HierarchyNode";
 import { GroupingHandler, GroupingHandlerResult } from "../Grouping";
 
 /** @internal */
 export async function getBaseClassGroupingECClasses(
-  metadata: IECMetadataProvider,
+  schemaProvider: ECSchemaProvider,
   parentNode: ParentHierarchyNode | undefined,
   nodes: ProcessedInstanceHierarchyNode[],
 ): Promise<EC.Class[]> {
@@ -19,7 +19,7 @@ export async function getBaseClassGroupingECClasses(
     return [];
   }
 
-  const baseClasses = await Promise.all(Array.from(baseClassesFullClassNames).map(async (fullName) => getClass(metadata, fullName)));
+  const baseClasses = await Promise.all(Array.from(baseClassesFullClassNames).map(async (fullName) => getClass(schemaProvider, fullName)));
   const sortedClasses = await sortByBaseClass(baseClasses.filter((baseClass) => baseClass.isRelationshipClass() || baseClass.isEntityClass()));
 
   if (parentNode && HierarchyNode.isClassGroupingNode(parentNode)) {
@@ -38,7 +38,7 @@ export async function getBaseClassGroupingECClasses(
 export async function createBaseClassGroupsForSingleBaseClass(
   nodes: ProcessedInstanceHierarchyNode[],
   baseECClass: EC.Class,
-  classHierarchyInspector: IECClassHierarchyInspector,
+  classHierarchyInspector: ECClassHierarchyInspector,
 ): Promise<GroupingHandlerResult> {
   const groupedNodes = new Array<ProcessedInstanceHierarchyNode>();
   const ungroupedNodes = new Array<ProcessedInstanceHierarchyNode>();
@@ -117,7 +117,7 @@ async function sortByBaseClass(classes: EC.Class[]): Promise<EC.Class[]> {
 
 /** @internal */
 export async function createBaseClassGroupingHandlers(
-  imodelAccess: IECMetadataProvider & IECClassHierarchyInspector,
+  imodelAccess: ECSchemaProvider & ECClassHierarchyInspector,
   parentNode: ParentHierarchyNode | undefined,
   nodes: ProcessedInstanceHierarchyNode[],
 ): Promise<GroupingHandler[]> {

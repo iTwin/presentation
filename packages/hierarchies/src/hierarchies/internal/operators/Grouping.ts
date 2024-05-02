@@ -5,7 +5,7 @@
 
 import { concat, concatAll, delay, EMPTY, expand, finalize, from, last, map, merge, mergeMap, Observable, of, reduce, tap, toArray } from "rxjs";
 import { assert, StopWatch } from "@itwin/core-bentley";
-import { IECClassHierarchyInspector, IECMetadataProvider, IPrimitiveValueFormatter } from "@itwin/presentation-shared";
+import { ECClassHierarchyInspector, ECSchemaProvider, IPrimitiveValueFormatter } from "@itwin/presentation-shared";
 import {
   HierarchyNode,
   ParentHierarchyNode,
@@ -31,7 +31,7 @@ const PERF_LOGGING_NAMESPACE = `${LOGGING_NAMESPACE}.Performance`;
 
 /** @internal */
 export function createGroupingOperator(
-  imodelAccess: IECMetadataProvider & IECClassHierarchyInspector,
+  imodelAccess: ECSchemaProvider & ECClassHierarchyInspector,
   parentNode: ParentHierarchyNode | undefined,
   valueFormatter: IPrimitiveValueFormatter,
   localizedStrings: PropertiesGroupingLocalizedStrings,
@@ -176,7 +176,7 @@ function mergeInPlace<T>(target: T[] | undefined, source: T[]) {
 
 /** @internal */
 export function createGroupingHandlers(
-  imodelAccess: IECMetadataProvider & IECClassHierarchyInspector,
+  imodelAccess: ECSchemaProvider & ECClassHierarchyInspector,
   parentNode: ParentHierarchyNode | undefined,
   processedInstanceNodes: ProcessedInstanceHierarchyNode[],
   valueFormatter: IPrimitiveValueFormatter,

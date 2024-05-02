@@ -9,14 +9,14 @@ import sinon from "sinon";
 import { ConcatenatedValue } from "@itwin/presentation-shared";
 import { ParsedHierarchyNode, ParsedInstanceHierarchyNode } from "../../hierarchies/HierarchyNode";
 import { defaultNodesParser, RowDef, TreeQueryResultsReader } from "../../hierarchies/internal/TreeNodesReader";
-import { ILimitingECSqlQueryExecutor } from "../../hierarchies/LimitingECSqlQueryExecutor";
+import { LimitingECSqlQueryExecutor } from "../../hierarchies/LimitingECSqlQueryExecutor";
 import { NodeSelectClauseColumnNames } from "../../hierarchies/NodeSelectQueryFactory";
 import { createTestParsedInstanceNode } from "../Utils";
 
 describe("TreeQueryResultsReader", () => {
   const parser = sinon.stub<[{ [columnName: string]: any }], ParsedInstanceHierarchyNode>();
   const executor = {
-    createQueryReader: sinon.stub<Parameters<ILimitingECSqlQueryExecutor["createQueryReader"]>, ReturnType<ILimitingECSqlQueryExecutor["createQueryReader"]>>(),
+    createQueryReader: sinon.stub<Parameters<LimitingECSqlQueryExecutor["createQueryReader"]>, ReturnType<LimitingECSqlQueryExecutor["createQueryReader"]>>(),
   };
 
   beforeEach(() => {

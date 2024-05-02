@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { StopWatch } from "@itwin/core-bentley";
-import { ECSqlQueryDef, ECSqlQueryReaderOptions, ECSqlQueryRow, IECSqlQueryExecutor } from "@itwin/presentation-shared";
+import { ECSqlQueryDef, ECSqlQueryExecutor, ECSqlQueryReaderOptions, ECSqlQueryRow } from "@itwin/presentation-shared";
 import { RowsLimitExceededError } from "./HierarchyErrors";
 import { LOGGING_NAMESPACE as CommonLoggingNamespace } from "./internal/Common";
 import { doLog } from "./internal/LoggingUtils";
@@ -14,7 +14,7 @@ import { MainThreadBlockHandler } from "./internal/MainThreadBlockHandler";
  * An interface for something that knows how to create a limiting ECSQL query reader.
  * @beta
  */
-export interface ILimitingECSqlQueryExecutor {
+export interface LimitingECSqlQueryExecutor {
   /**
    * Creates a query reader for given query, but makes sure it doesn't return more than the configured
    * limit of rows.
@@ -23,14 +23,14 @@ export interface ILimitingECSqlQueryExecutor {
   createQueryReader(
     query: ECSqlQueryDef,
     config?: ECSqlQueryReaderOptions & { limit?: number | "unbounded" },
-  ): ReturnType<IECSqlQueryExecutor["createQueryReader"]>;
+  ): ReturnType<ECSqlQueryExecutor["createQueryReader"]>;
 }
 
 /**
- * Creates an `ILimitingECSqlQueryExecutor` that throws `RowsLimitExceededError` if the query exceeds given amount of rows.
+ * Creates an `LimitingECSqlQueryExecutor` that throws `RowsLimitExceededError` if the query exceeds given amount of rows.
  * @beta
  */
-export function createLimitingECSqlQueryExecutor(baseExecutor: IECSqlQueryExecutor, defaultLimit: number | "unbounded"): ILimitingECSqlQueryExecutor {
+export function createLimitingECSqlQueryExecutor(baseExecutor: ECSqlQueryExecutor, defaultLimit: number | "unbounded"): LimitingECSqlQueryExecutor {
   return {
     async *createQueryReader(query: ECSqlQueryDef, config?: ECSqlQueryReaderOptions & { limit?: number | "unbounded" }) {
       const { limit: configLimit, ...restConfig } = config ?? {};

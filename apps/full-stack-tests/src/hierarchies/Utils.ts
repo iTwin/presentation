@@ -7,7 +7,7 @@ import { ECDb, IModelDb } from "@itwin/core-backend";
 import { IModelConnection } from "@itwin/core-frontend";
 import { Schema, SchemaContext, SchemaInfo, SchemaKey, SchemaMatchType } from "@itwin/ecschema-metadata";
 import { ECSchemaRpcLocater } from "@itwin/ecschema-rpcinterface-common";
-import { createECSqlQueryExecutor, createMetadataProvider as createMetadataProviderInterop } from "@itwin/presentation-core-interop";
+import { createECSchemaProvider as createECSchemaProviderInterop, createECSqlQueryExecutor } from "@itwin/presentation-core-interop";
 import {
   createLimitingECSqlQueryExecutor,
   HierarchyNodeIdentifiersPath,
@@ -46,11 +46,11 @@ function createSchemaContext(imodel: IModelConnection | IModelDb | ECDb) {
 }
 
 export function createIModelAccess(imodel: IModelConnection | IModelDb | ECDb) {
-  const metadataProvider = createMetadataProviderInterop(createSchemaContext(imodel));
-  const classHierarchyInspector = createCachingECClassHierarchyInspector({ metadataProvider });
+  const schemaProvider = createECSchemaProviderInterop(createSchemaContext(imodel));
+  const classHierarchyInspector = createCachingECClassHierarchyInspector({ schemaProvider });
   const queryExecutor = createLimitingECSqlQueryExecutor(createECSqlQueryExecutor(imodel), 123);
   return {
-    ...metadataProvider,
+    ...schemaProvider,
     ...classHierarchyInspector,
     ...queryExecutor,
   };

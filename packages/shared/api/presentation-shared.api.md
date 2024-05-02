@@ -39,9 +39,9 @@ export function createBisInstanceLabelSelectClauseFactory(props: BisInstanceLabe
 
 // @beta
 export function createCachingECClassHierarchyInspector(props: {
-    metadataProvider: IECMetadataProvider;
+    schemaProvider: ECSchemaProvider;
     cacheSize?: number;
-}): IECClassHierarchyInspector;
+}): ECClassHierarchyInspector;
 
 // @beta
 export function createClassBasedInstanceLabelSelectClauseFactory(props: ClassBasedInstanceLabelSelectClauseFactoryProps): IInstanceLabelSelectClauseFactory;
@@ -208,6 +208,18 @@ export namespace EC {
     }
 }
 
+// @beta
+export interface ECClassHierarchyInspector {
+    // (undocumented)
+    classDerivesFrom(derivedClassFullName: string, candidateBaseClassFullName: string): Promise<boolean> | boolean;
+}
+
+// @beta
+export interface ECSchemaProvider {
+    // (undocumented)
+    getSchema(schemaName: string): Promise<EC.Schema | undefined>;
+}
+
 declare namespace ECSql {
     export {
         createRawPropertyValueSelector,
@@ -259,6 +271,12 @@ export interface ECSqlQueryDef {
 }
 
 // @beta
+export interface ECSqlQueryExecutor {
+    // (undocumented)
+    createQueryReader(query: ECSqlQueryDef, config?: ECSqlQueryReaderOptions): ECSqlQueryReader;
+}
+
+// @beta
 export interface ECSqlQueryReaderOptions {
     // (undocumented)
     rowFormat?: ECSqlQueryRowFormat;
@@ -284,30 +302,12 @@ export { Event_2 as Event }
 // @beta
 export function formatConcatenatedValue(props: {
     value: ConcatenatedValue | string;
-    metadataProvider: IECMetadataProvider;
+    schemaProvider: ECSchemaProvider;
     valueFormatter: IPrimitiveValueFormatter;
 }): Promise<string>;
 
 // @beta
-export function getClass(metadata: IECMetadataProvider, fullClassName: string): Promise<EC.Class>;
-
-// @beta
-export interface IECClassHierarchyInspector {
-    // (undocumented)
-    classDerivesFrom(derivedClassFullName: string, candidateBaseClassFullName: string): Promise<boolean> | boolean;
-}
-
-// @beta
-export interface IECMetadataProvider {
-    // (undocumented)
-    getSchema(schemaName: string): Promise<EC.Schema | undefined>;
-}
-
-// @beta
-export interface IECSqlQueryExecutor {
-    // (undocumented)
-    createQueryReader(query: ECSqlQueryDef, config?: ECSqlQueryReaderOptions): ECSqlQueryReader;
-}
+export function getClass(schemaProvider: ECSchemaProvider, fullClassName: string): Promise<EC.Class>;
 
 // @beta
 export interface IInstanceLabelSelectClauseFactory {

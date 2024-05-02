@@ -411,7 +411,7 @@ describe("useUnifiedSelectionTree", () => {
   afterEach(() => {
     cleanup();
     storage.selectionChangeEvent.removeListener(changeListener);
-    storage.clearStorage({ iModelKey: imodelKey });
+    storage.clearStorage({ imodelKey });
   });
 
   it("adds nodes to unified selection", async () => {
@@ -442,7 +442,7 @@ describe("useUnifiedSelectionTree", () => {
         sinon.match((args: StorageSelectionChangeEventArgs) => {
           return (
             args.changeType === "add" &&
-            args.iModelKey === imodelKey &&
+            args.imodelKey === imodelKey &&
             args.source === sourceName &&
             Selectables.size(args.selectables) === 1 &&
             Selectables.has(args.selectables, instanceKey)
@@ -474,7 +474,7 @@ describe("useUnifiedSelectionTree", () => {
     });
 
     act(() => {
-      storage.addToSelection({ iModelKey: imodelKey, source: sourceName, selectables: [instanceKey] });
+      storage.addToSelection({ imodelKey, source: sourceName, selectables: [instanceKey] });
     });
 
     await waitFor(() => {

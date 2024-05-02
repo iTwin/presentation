@@ -19,15 +19,15 @@ import {
   FilteredHierarchyNode,
 } from "../hierarchies/internal/FilteringHierarchyLevelDefinitionsFactory";
 import { RowDef } from "../hierarchies/internal/TreeNodesReader";
-import { ILimitingECSqlQueryExecutor } from "../hierarchies/LimitingECSqlQueryExecutor";
+import { LimitingECSqlQueryExecutor } from "../hierarchies/LimitingECSqlQueryExecutor";
 import { ECSqlSelectClauseGroupingParams, NodeSelectClauseColumnNames } from "../hierarchies/NodeSelectQueryFactory";
 import { createIModelAccessStub } from "./Utils";
 
 describe("HierarchyProvider", () => {
   let imodelAccess: ReturnType<typeof createIModelAccessStub> & {
     createQueryReader: sinon.SinonStub<
-      Parameters<ILimitingECSqlQueryExecutor["createQueryReader"]>,
-      ReturnType<ILimitingECSqlQueryExecutor["createQueryReader"]>
+      Parameters<LimitingECSqlQueryExecutor["createQueryReader"]>,
+      ReturnType<LimitingECSqlQueryExecutor["createQueryReader"]>
     >;
   };
 

@@ -9,14 +9,75 @@
 
 import { from, Subject, takeUntil } from "rxjs";
 import { assert, Id64Arg, using } from "@itwin/core-bentley";
-import { CachingHiliteSetProvider, createCachingHiliteSetProvider } from "../CachingHiliteSetProvider";
-import { createHiliteSetProvider, HiliteSet, HiliteSetProvider } from "../HiliteSetProvider";
-import { SelectableInstanceKey, Selectables } from "../Selectable";
-import { StorageSelectionChangeEventArgs, StorageSelectionChangeType } from "../SelectionChangeEvent";
-import { computeSelection, ComputeSelectionProps } from "../SelectionScope";
-import { SelectionStorage } from "../SelectionStorage";
-import { EnableUnifiedSelectionSyncWithIModelProps } from "./EnableUnifiedSelectionSyncWithIModel";
-import { CoreSelectionSetEventType, CoreSelectionSetEventUnsafe } from "./IModel";
+import { CachingHiliteSetProvider, createCachingHiliteSetProvider } from "./CachingHiliteSetProvider";
+import { createHiliteSetProvider, HiliteSet, HiliteSetProvider } from "./HiliteSetProvider";
+import { SelectableInstanceKey, Selectables } from "./Selectable";
+import { StorageSelectionChangeEventArgs, StorageSelectionChangeType } from "./SelectionChangeEvent";
+import { computeSelection, ComputeSelectionProps } from "./SelectionScope";
+import { SelectionStorage } from "./SelectionStorage";
+import { ECSchemaProvider } from "./types/ECMetadata";
+import { ECSqlQueryExecutor } from "./types/ECSqlCore";
+import { CoreIModelHiliteSet, CoreIModelSelectionSet, CoreSelectionSetEventType, CoreSelectionSetEventUnsafe } from "./types/IModel";
+
+/**
+ * Props for `enableUnifiedSelectionSyncWithIModel`.
+ * @internal Not exported through barrel, but used in public API as an argument. May be supplemented with optional attributes any time.
+ */
+export interface EnableUnifiedSelectionSyncWithIModelProps {
+  /**
+   * Provides access to different iModel's features: query executing, metadata access, selection and hilite sets.
+   * It's recommended to use `@itwin/presentation-core-interop` to create `ECSqlQueryExecutor` and `ECSchemaProvider` from
+   * [IModelConnection](https://www.itwinjs.org/reference/core-frontend/imodelconnection/imodelconnection/) and map its `key`,
+   * `hilited` and `selectionSet` attributes like this:
+   *
+   * ```ts
+   * import { createECSqlQueryExecutor, createECSchemaProvider } from "@itwin/presentation-core-interop";
+   * import { IModelConnection } from "@itwin/core-frontend";
+   *
+   * const imodel: IModelConnection = ...
+   * const imodelAccess = {
+   *   ...createECSqlQueryExecutor(imodel),
+   *   ...createECSchemaProvider(MyAppFrontend.getSchemaContext(imodel)),
+   *   key: imodel.key,
+   *   hiliteSet: imodel.hilited,
+   *   selectionSet: imodel.selectionSet,
+   * };
+   * ```.
+   */
+  imodelAccess: ECSqlQueryExecutor &
+    ECSchemaProvider & {
+      /** Key of the iModel. Generally taken from `IModelConnection.key`. */
+      readonly key: string;
+      /** The set of currently hilited elements taken from `IModelConnection.hilited`. */
+      readonly hiliteSet: CoreIModelHiliteSet;
+      /** The set of currently selected elements taken from `IModelConnection.selectionSet`. */
+      readonly selectionSet: CoreIModelSelectionSet;
+    };
+
+  /** Selection storage to synchronize IModel's tool selection with. */
+  selectionStorage: SelectionStorage;
+
+  /** Active scope provider. */
+  activeScopeProvider: () => ComputeSelectionProps["scope"];
+
+  /**
+   * A caching hilite set provider used to retrieve hilite sets for an iModel. If not provided, a new `CachingHiliteSetProvider`
+   * will be created for the given iModel using the provided `imodelAccess`.
+   * If the consuming application already has a `CachingHiliteSetProvider` defined, it should be provided instead
+   * to reuse the cache and avoid creating new providers for each iModel.
+   */
+  cachingHiliteSetProvider?: CachingHiliteSetProvider;
+}
+
+/**
+ * Enables synchronization between iModel selection and unified selection.
+ * @returns function for disposing the synchronization.
+ * @beta
+ */
+export function enableUnifiedSelectionSyncWithIModel(props: EnableUnifiedSelectionSyncWithIModelProps): () => void {
+  const selectionHandler = new IModelSelectionHandler(props);
+  return () => selectionHandler.dispose();
+}
 
 /**
  * A handler that syncs selection between unified selection storage
@@ -35,7 +96,7 @@ export class IModelSelectionHandler {
   private _isSuspended: boolean;
   private _cancelOngoingChanges = new Subject<void>();
   private _unifiedSelectionListenerDisposeFunc: () => void;
-  private _iModelListenerDisposeFunc: () => void;
+  private _imodelListenerDisposeFunc: () => void;
   private _hasCustomCachingHiliteSetProvider: boolean;
 
   public constructor(props: EnableUnifiedSelectionSyncWithIModelProps) {
@@ -49,11 +110,11 @@ export class IModelSelectionHandler {
       props.cachingHiliteSetProvider ??
       createCachingHiliteSetProvider({
         selectionStorage: this._selectionStorage,
-        iModelProvider: () => this._imodelAccess,
+        imodelProvider: () => this._imodelAccess,
       });
 
     this._hiliteSetProvider = createHiliteSetProvider({ imodelAccess: this._imodelAccess });
-    this._iModelListenerDisposeFunc = this._imodelAccess.selectionSet.onChanged.addListener(this.onIModelSelectionChanged);
+    this._imodelListenerDisposeFunc = this._imodelAccess.selectionSet.onChanged.addListener(this.onIModelSelectionChanged);
     this._unifiedSelectionListenerDisposeFunc = this._selectionStorage.selectionChangeEvent.addListener(this.onUnifiedSelectionChanged);
 
     // stop imodel from syncing tool selection with hilited list - we want to override that behavior
@@ -63,7 +124,7 @@ export class IModelSelectionHandler {
 
   public dispose() {
     this._cancelOngoingChanges.next();
-    this._iModelListenerDisposeFunc();
+    this._imodelListenerDisposeFunc();
     this._unifiedSelectionListenerDisposeFunc();
     if (!this._hasCustomCachingHiliteSetProvider) {
       this._cachingHiliteSetProvider.dispose();
@@ -110,7 +171,7 @@ export class IModelSelectionHandler {
 
   private onUnifiedSelectionChanged = (args: StorageSelectionChangeEventArgs) => {
     // iModels are only interested in top-level selection changes
-    if (args.iModelKey !== this._imodelAccess.key || args.level !== 0) {
+    if (args.imodelKey !== this._imodelAccess.key || args.level !== 0) {
       return;
     }
 
@@ -130,7 +191,7 @@ export class IModelSelectionHandler {
       });
     }
 
-    from(this._cachingHiliteSetProvider.getHiliteSet({ iModelKey: this._imodelAccess.key }))
+    from(this._cachingHiliteSetProvider.getHiliteSet({ imodelKey: this._imodelAccess.key }))
       .pipe(takeUntil(this._cancelOngoingChanges))
       .subscribe({
         next: (ids) => {
@@ -175,7 +236,7 @@ export class IModelSelectionHandler {
     }
 
     if (CoreSelectionSetEventType.Clear === event!.type) {
-      this._selectionStorage.clearSelection({ iModelKey: this._imodelAccess.key, source: this._selectionSourceName });
+      this._selectionStorage.clearSelection({ imodelKey: this._imodelAccess.key, source: this._selectionSourceName });
       return;
     }
 
@@ -187,17 +248,17 @@ export class IModelSelectionHandler {
   private async handleIModelSelectionChange(type: CoreSelectionSetEventType, iterator: AsyncIterableIterator<SelectableInstanceKey>) {
     if (type === CoreSelectionSetEventType.Remove) {
       for await (const selectable of iterator) {
-        this._selectionStorage.removeFromSelection({ iModelKey: this._imodelAccess.key, source: this._selectionSourceName, selectables: [selectable] });
+        this._selectionStorage.removeFromSelection({ imodelKey: this._imodelAccess.key, source: this._selectionSourceName, selectables: [selectable] });
       }
       return;
     }
 
     if (type === CoreSelectionSetEventType.Replace) {
-      this._selectionStorage.clearSelection({ iModelKey: this._imodelAccess.key, source: this._selectionSourceName });
+      this._selectionStorage.clearSelection({ imodelKey: this._imodelAccess.key, source: this._selectionSourceName });
     }
 
     for await (const selectable of iterator) {
-      this._selectionStorage.addToSelection({ iModelKey: this._imodelAccess.key, source: this._selectionSourceName, selectables: [selectable] });
+      this._selectionStorage.addToSelection({ imodelKey: this._imodelAccess.key, source: this._selectionSourceName, selectables: [selectable] });
     }
   }
 

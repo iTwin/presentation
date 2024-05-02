@@ -1,7 +1,7 @@
 sep=;
 Release Tag;API Item
-beta;createECSqlQueryExecutor(imodel: ICoreECSqlReaderFactory): IECSqlQueryExecutor
+beta;createECSchemaProvider(schemaContext: CoreSchemaContext): ECSchemaProvider
+beta;createECSqlQueryExecutor(imodel: CoreECSqlReaderFactory): ECSqlQueryExecutor
 beta;createLogger(coreLogger: ICoreLogger): ILogger
-beta;createMetadataProvider(schemaContext: ICoreSchemaContext): IECMetadataProvider
 beta;createValueFormatter(props: CreateValueFormatterProps): IPrimitiveValueFormatter
 beta;registerTxnListeners(txns: ICoreTxnManager, onChanged: () => void): () => void

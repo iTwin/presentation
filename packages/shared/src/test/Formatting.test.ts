@@ -7,9 +7,9 @@ import { expect } from "chai";
 import * as sinon from "sinon";
 import { createDefaultValueFormatter, formatConcatenatedValue, IPrimitiveValueFormatter } from "../shared/Formatting";
 import { julianToDateTime } from "../shared/InternalUtils";
-import { EC, IECMetadataProvider } from "../shared/Metadata";
+import { EC, ECSchemaProvider } from "../shared/Metadata";
 import { TypedPrimitiveValue } from "../shared/Values";
-import { createMetadataProviderStub } from "./MetadataProviderStub";
+import { createECSchemaProviderStub } from "./MetadataProviderStub";
 
 describe("createDefaultValueFormatter", () => {
   let valueFormatter: IPrimitiveValueFormatter;
@@ -82,13 +82,13 @@ describe("formatConcatenatedValue", () => {
   });
 
   it("returns formatted string", async () => {
-    const result = await formatConcatenatedValue({ value: "test label", metadataProvider: {} as unknown as IECMetadataProvider, valueFormatter });
+    const result = await formatConcatenatedValue({ value: "test label", schemaProvider: {} as unknown as ECSchemaProvider, valueFormatter });
     expect(valueFormatter).to.be.calledOnceWith({ value: "test label", type: "String" });
     expect(result).to.eq("_test label_");
   });
 
   it("returns combined strings", async () => {
-    const result = await formatConcatenatedValue({ value: ["test1", "-", "test2"], metadataProvider: {} as unknown as IECMetadataProvider, valueFormatter });
+    const result = await formatConcatenatedValue({ value: ["test1", "-", "test2"], schemaProvider: {} as unknown as ECSchemaProvider, valueFormatter });
     expect(valueFormatter).to.be.calledThrice;
     expect(valueFormatter.firstCall).to.be.calledWith({ value: "test1", type: "String" });
     expect(valueFormatter.secondCall).to.be.calledWith({ value: "-", type: "String" });
@@ -102,7 +102,7 @@ describe("formatConcatenatedValue", () => {
         { type: "Integer", value: 123 },
         { type: "String", value: "!" },
       ],
-      metadataProvider: {} as unknown as IECMetadataProvider,
+      schemaProvider: {} as unknown as ECSchemaProvider,
       valueFormatter,
     });
     expect(valueFormatter).to.be.calledTwice;
@@ -112,8 +112,8 @@ describe("formatConcatenatedValue", () => {
   });
 
   it("returns formatted primitive property value", async () => {
-    const metadataProvider = createMetadataProviderStub();
-    metadataProvider.stubEntityClass({
+    const schemaProvider = createECSchemaProviderStub();
+    schemaProvider.stubEntityClass({
       schemaName: "x",
       className: "y",
       properties: [
@@ -126,7 +126,7 @@ describe("formatConcatenatedValue", () => {
         } as EC.PrimitiveProperty,
       ],
     });
-    const result = await formatConcatenatedValue({ value: [{ className: "x.y", propertyName: "p", value: "abc" }], metadataProvider, valueFormatter });
+    const result = await formatConcatenatedValue({ value: [{ className: "x.y", propertyName: "p", value: "abc" }], schemaProvider, valueFormatter });
     expect(valueFormatter).to.be.calledOnceWithExactly({
       type: "String",
       extendedType: "extended type",
@@ -137,8 +137,8 @@ describe("formatConcatenatedValue", () => {
   });
 
   it("throws when input includes non-primitive property values", async () => {
-    const metadataProvider = createMetadataProviderStub();
-    metadataProvider.stubEntityClass({
+    const schemaProvider = createECSchemaProviderStub();
+    schemaProvider.stubEntityClass({
       schemaName: "x",
       className: "y",
       properties: [
@@ -148,13 +148,13 @@ describe("formatConcatenatedValue", () => {
         } as EC.Property,
       ],
     });
-    await expect(formatConcatenatedValue({ value: [{ className: "x.y", propertyName: "p", value: "abc" }], metadataProvider, valueFormatter })).to.eventually.be
+    await expect(formatConcatenatedValue({ value: [{ className: "x.y", propertyName: "p", value: "abc" }], schemaProvider, valueFormatter })).to.eventually.be
       .rejected;
   });
 
   it("throws when label includes `IGeometry` property values", async () => {
-    const metadataProvider = createMetadataProviderStub();
-    metadataProvider.stubEntityClass({
+    const schemaProvider = createECSchemaProviderStub();
+    schemaProvider.stubEntityClass({
       schemaName: "x",
       className: "y",
       properties: [
@@ -165,13 +165,13 @@ describe("formatConcatenatedValue", () => {
         } as EC.PrimitiveProperty,
       ],
     });
-    await expect(formatConcatenatedValue({ value: [{ className: "x.y", propertyName: "p", value: "abc" }], metadataProvider, valueFormatter })).to.eventually.be
+    await expect(formatConcatenatedValue({ value: [{ className: "x.y", propertyName: "p", value: "abc" }], schemaProvider, valueFormatter })).to.eventually.be
       .rejected;
   });
 
   it("throws when label includes `Binary` property values", async () => {
-    const metadataProvider = createMetadataProviderStub();
-    metadataProvider.stubEntityClass({
+    const schemaProvider = createECSchemaProviderStub();
+    schemaProvider.stubEntityClass({
       schemaName: "x",
       className: "y",
       properties: [
@@ -182,7 +182,7 @@ describe("formatConcatenatedValue", () => {
         } as EC.PrimitiveProperty,
       ],
     });
-    await expect(formatConcatenatedValue({ value: [{ className: "x.y", propertyName: "p", value: "abc" }], metadataProvider, valueFormatter })).to.eventually.be
+    await expect(formatConcatenatedValue({ value: [{ className: "x.y", propertyName: "p", value: "abc" }], schemaProvider, valueFormatter })).to.eventually.be
       .rejected;
   });
 });

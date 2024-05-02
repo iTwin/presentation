@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { EC, getClass, IECMetadataProvider, RelationshipPath, RelationshipPathStep } from "../Metadata";
+import { EC, ECSchemaProvider, getClass, RelationshipPath, RelationshipPathStep } from "../Metadata";
 import { createRawPropertyValueSelector } from "./ECSqlValueSelectorSnippets";
 
 /**
@@ -25,7 +25,7 @@ type JoinRelationshipPath = RelationshipPath<JoinRelationshipPathStep>;
  * Props for `createRelationshipPathJoinClause`.
  */
 interface CreateRelationshipPathJoinClauseProps {
-  metadata: IECMetadataProvider;
+  schemaProvider: ECSchemaProvider;
   path: JoinRelationshipPath;
 }
 
@@ -64,7 +64,7 @@ export async function createRelationshipPathJoinClause(props: CreateRelationship
   };
   let clause = "";
   for (const stepDef of props.path) {
-    const step = await getRelationshipPathStepClasses(props.metadata, stepDef);
+    const step = await getRelationshipPathStepClasses(props.schemaProvider, stepDef);
     const navigationProperty = await getNavigationProperty(step);
     if (navigationProperty) {
       const propertyDirectionMatchesRelationshipDirection = navigationProperty.direction === step.relationship.direction;
@@ -130,13 +130,13 @@ type ResolvedRelationshipPathStep = Omit<JoinRelationshipPathStep, "sourceClassN
   target: EC.Class;
 };
 
-async function getRelationshipPathStepClasses(metadata: IECMetadataProvider, step: JoinRelationshipPathStep): Promise<ResolvedRelationshipPathStep> {
+async function getRelationshipPathStepClasses(schemaProvider: ECSchemaProvider, step: JoinRelationshipPathStep): Promise<ResolvedRelationshipPathStep> {
   const { sourceClassName, relationshipName, targetClassName, ...rest } = step;
   return {
     ...rest,
-    source: await getClass(metadata, sourceClassName),
-    relationship: (await getClass(metadata, relationshipName)) as EC.RelationshipClass,
-    target: await getClass(metadata, targetClassName),
+    source: await getClass(schemaProvider, sourceClassName),
+    relationship: (await getClass(schemaProvider, relationshipName)) as EC.RelationshipClass,
+    target: await getClass(schemaProvider, targetClassName),
   };
 }
 

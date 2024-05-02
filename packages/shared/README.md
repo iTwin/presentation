@@ -14,44 +14,44 @@ The APIs in this group provide access to [iModels' EC metadata](https://www.itwi
 
 The namespace defines all the [EC](https://www.itwinjs.org/bis/ec/) types that Presentation packages need. The types mostly replicate the ones from [`@itwin/ecschema-metadata` package](https://www.npmjs.com/package/@itwin/ecschema-metadata), but provide an abstraction layer and, being interfaces rather than classes, better interoperability between packages and versions.
 
-### `IECMetadataProvider` & `getClass`
+### `ECSchemaProvider` & `getClass`
 
-- `IECMetadataProvider` is an interface for something that knows how to get [EC metadata](https://www.itwinjs.org/bis/ec/) from an iModel. The package itself doesn't provide an implementation for this interface and instead relies on `@itwin/presentation-core-interop` to do that.
+- `ECSchemaProvider` is an interface for something that knows how to get an [ECSchema](https://www.itwinjs.org/bis/ec/ec-schema/) from an iModel. The package itself doesn't provide an implementation for this interface and instead relies on `@itwin/presentation-core-interop` to do that.
 
-- `getClass` is an utility function that makes it easier to get an `EC.Class`, given an `IECMetadataProvider` and a full class name.
+- `getClass` is an utility function that makes it easier to get an `EC.Class`, given an `ECSchemaProvider` and a full class name.
 
 Example usage:
 
 ```ts
 import { SchemaContext } from "@itwin/ecschema-metadata";
-import { createMetadataProvider } from "@itwin/presentation-core-interop";
-import { IECMetadataProvider, getClass } from "@itwin/presentation-shared";
+import { createECSchemaProvider } from "@itwin/presentation-core-interop";
+import { ECSchemaProvider, getClass } from "@itwin/presentation-shared";
 
 const schemas = new SchemaContext();
-const metadataProvider: IECMetadataProvider = createMetadataProvider(schemas);
+const schemaProvider: ECSchemaProvider = createECSchemaProvider(schemas);
 
 // get schema and a class from it
-const ecSchema = await metadataProvider.getSchema("MySchema");
+const ecSchema = await schemaProvider.getSchema("MySchema");
 const ecClassFromSchema = await ecSchema.getClass("MyClass");
 
 // ... or use the `getClass` utility to get straight to the class
-const ecClassFromUtility = await getClass(metadataProvider, "MySchema.MyClass");
+const ecClassFromUtility = await getClass(schemaProvider, "MySchema.MyClass");
 ```
 
-### `IECClassHierarchyInspector` & `createCachingECClassHierarchyInspector`
+### `ECClassHierarchyInspector` & `createCachingECClassHierarchyInspector`
 
-- `IECClassHierarchyInspector` is an interface that knows how to check whether one `EC.Class` derives from another. While that can be achieved through `IECMetadataProvider` by getting a class and calling `EC.Class.is` method, using this interface provides a more streamlined and, possibly, more efficient way to do the check. In addition, the `IECClassHierarchyInspector.classDerivesFrom` returns a `Promise<boolean> | boolean`, which lets the implementation return the result synchronously, if it's already known.
+- `ECClassHierarchyInspector` is an interface for something that knows how to check whether one `EC.Class` derives from another. While that can be achieved through `ECSchemaProvider` by getting an `EC.Class` and calling its `is` method, using this interface provides a more streamlined and, possibly, more efficient way to do the check. In addition, the `ECClassHierarchyInspector.classDerivesFrom` returns a `Promise<boolean> | boolean`, which lets the implementation return the result synchronously, if it's already known.
 
-- `createCachingECClassHierarchyInspector` is a factory method that creates `IECClassHierarchyInspector` instance that uses a LRU cache to store the check results. In Presentation library use cases, class inheritance checks are done very frequently to warrant caching these results.
+- `createCachingECClassHierarchyInspector` is a factory method that creates `ECClassHierarchyInspector` instance that uses a LRU cache to store the check results. In Presentation library use cases, class inheritance checks are done very frequently to warrant caching these results.
 
 Example usage:
 
 ```ts
-import { createCachingECClassHierarchyInspector, IECClassHierarchyInspector } from "@itwin/presentation-shared";
+import { createCachingECClassHierarchyInspector, ECClassHierarchyInspector } from "@itwin/presentation-shared";
 
-const classHierarchyInspector: IECClassHierarchyInspector = createCachingECClassHierarchyInspector({
-  // provide `IECMetadataProvider` that will be used to access EC metadata
-  metadataProvider: getMetadataProvider(),
+const classHierarchyInspector: ECClassHierarchyInspector = createCachingECClassHierarchyInspector({
+  // provide `ECSchemaProvider` that will be used to access iModels schemas
+  schemaProvider: getMetadataProvider(),
   // tell how many entries should be cached in LRU cache (0 or `undefined` stand for "no caching")
   cacheSize: 100,
 });
@@ -62,7 +62,7 @@ const isGeometricElement = await classHierarchyInspector.classDerivesFrom("MySch
 
 The APIs in ECSql group provide an abstraction layer over ECSQL query reader API [on the backend](https://www.itwinjs.org/reference/core-backend/imodels/imodeldb/createqueryreader/) and [on the frontend](https://www.itwinjs.org/reference/core-frontend/imodelconnection/imodelconnection/createqueryreader/).
 
-### `IECSqlQueryExecutor` & related APIs
+### `ECSqlQueryExecutor` & related APIs
 
 - `ECSqlBinding` is a union of type / value pairs for binding the values to parametrized ECSQL queries.
 
@@ -72,17 +72,17 @@ The APIs in ECSql group provide an abstraction layer over ECSQL query reader API
 
 - `ECSqlQueryRow` matches [QueryRowProxy](https://www.itwinjs.org/reference/core-common/imodels/queryrowproxy/) and allows accessing the results by index (when row format is `Indexes`) or by name (when row format is `ECSqlPropertyNames`).
 
-- `IECSqlQueryExecutor` is an interface for the actual query executor that takes `ECSqlQueryDef` with `ECSqlQueryReaderOptions` and returns `ECSqlQueryRow` objects. The package itself doesn't provide an implementation for this interface and instead relies on `@itwin/presentation-core-interop` to do that.
+- `ECSqlQueryExecutor` is an interface for a query executor that takes `ECSqlQueryDef` with `ECSqlQueryReaderOptions` and returns `ECSqlQueryRow` objects. The package itself doesn't provide an implementation for this interface and instead relies on `@itwin/presentation-core-interop` to do that.
 
 Example usage:
 
 ```ts
 import { IModelDb } from "@itwin/core-backend";
 import { createECSqlQueryExecutor } from "@itwin/presentation-core-interop";
-import { IECSqlQueryExecutor } from "@itwin/presentation-shared";
+import { ECSqlQueryExecutor } from "@itwin/presentation-shared";
 
-const iModel: IModelDb = getIModelDb();
-const queryExecutor = createECSqlQueryExecutor(iModel);
+const imodel: IModelDb = getIModelDb();
+const queryExecutor = createECSqlQueryExecutor(imodel);
 const queryReader = queryExecutor.createQueryReader(
   {
     ecsql: "SELECT * FROM BisCore.Element WHERE UserLabel = ?",
@@ -230,7 +230,7 @@ The ECSql utilities group contains a number of functions to help create complex 
   import { ECSql } from "@itwin/presentation-shared";
 
   const selector = ECSql.createRelationshipPathJoinClause({
-    metadata,
+    schemaProvider,
     path: [
       {
         sourceAlias: "my_source",
@@ -329,9 +329,9 @@ This label selectors factory doesn't create labels on its own, but allows assign
 Example usage:
 
 ```ts
-import { createClassBasedInstanceLabelSelectClauseFactory, IECClassHierarchyInspector } from "@itwin/presentation-shared";
+import { createClassBasedInstanceLabelSelectClauseFactory, ECClassHierarchyInspector } from "@itwin/presentation-shared";
 
-const classHierarchyInspector: IECClassHierarchyInspector = getClassHierarchyInspector();
+const classHierarchyInspector: ECClassHierarchyInspector = getClassHierarchyInspector();
 const labelsFactory = createClassBasedInstanceLabelSelectClauseFactory({
   classHierarchyInspector,
   clauses: [
@@ -360,9 +360,9 @@ This label selectors factory creates labels according to [BIS instance label rul
 Example usage:
 
 ```ts
-import { createBisInstanceLabelSelectClauseFactory, IECClassHierarchyInspector } from "@itwin/presentation-shared";
+import { createBisInstanceLabelSelectClauseFactory, ECClassHierarchyInspector } from "@itwin/presentation-shared";
 
-const classHierarchyInspector: IECClassHierarchyInspector = getClassHierarchyInspector();
+const classHierarchyInspector: ECClassHierarchyInspector = getClassHierarchyInspector();
 const labelsFactory = createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector });
 const ecsql = `SELECT ${await labelsFactory.createSelectClause({ classAlias: "element" })} AS [Label] FROM [BisCore].[Element] AS [element]`;
 // ...

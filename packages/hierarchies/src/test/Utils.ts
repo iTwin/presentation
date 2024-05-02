@@ -101,7 +101,7 @@ export type TStubClassFunc = (props: StubClassFuncProps) => EC.Class;
 export type TStubEntityClassFunc = (props: StubClassFuncProps) => EC.EntityClass;
 export type TStubRelationshipClassFunc = (props: StubRelationshipClassFuncProps) => EC.RelationshipClass;
 
-export function createMetadataProviderStub() {
+export function createECSchemaProviderStub() {
   const schemaStubs: { [schemaName: string]: sinon.SinonStubbedInstance<EC.Schema> } = {};
   const getSchemaStub = (schemaName: string) => {
     let schemaStub = schemaStubs[schemaName];
@@ -178,15 +178,15 @@ export function createMetadataProviderStub() {
   };
 }
 
-export function createClassHierarchyInspectorStub(metadata = createMetadataProviderStub()) {
+export function createClassHierarchyInspectorStub(schemaProvider = createECSchemaProviderStub()) {
   return {
-    stubEntityClass: metadata.stubEntityClass,
-    stubRelationshipClass: metadata.stubRelationshipClass,
-    stubOtherClass: metadata.stubOtherClass,
+    stubEntityClass: schemaProvider.stubEntityClass,
+    stubRelationshipClass: schemaProvider.stubRelationshipClass,
+    stubOtherClass: schemaProvider.stubOtherClass,
     classDerivesFrom: sinon.fake(async (derived: string, base: string) => {
       const { schemaName: derivedSchemaName, className: derivedClassName } = parseFullClassName(derived);
       const { schemaName: baseSchemaName, className: baseClassName } = parseFullClassName(base);
-      const schemaStub = await metadata.getSchema(derivedSchemaName);
+      const schemaStub = await schemaProvider.getSchema(derivedSchemaName);
       if (!schemaStub) {
         return false;
       }
@@ -200,10 +200,10 @@ export function createClassHierarchyInspectorStub(metadata = createMetadataProvi
 }
 
 export function createIModelAccessStub() {
-  const metadata = createMetadataProviderStub();
+  const schemaProvider = createECSchemaProviderStub();
   return {
-    ...metadata,
-    ...createClassHierarchyInspectorStub(metadata),
+    ...schemaProvider,
+    ...createClassHierarchyInspectorStub(schemaProvider),
   };
 }
 
