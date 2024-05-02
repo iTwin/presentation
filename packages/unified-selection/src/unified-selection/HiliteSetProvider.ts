@@ -9,9 +9,9 @@
 
 import { EMPTY, filter, forkJoin, from, map, merge, mergeMap, Observable, scan, shareReplay, Subject, toArray } from "rxjs";
 import { eachValueFrom } from "rxjs-for-await";
-import { ECClass, ECSchemaProvider, parseFullClassName } from "./queries/ECMetadata";
-import { ECSqlBinding, ECSqlQueryExecutor, formIdBindings } from "./queries/ECSqlCore";
 import { SelectableInstanceKey, Selectables } from "./Selectable";
+import { ECClass, ECSchemaProvider, parseFullClassName } from "./types/ECMetadata";
+import { ECSqlBinding, ECSqlQueryExecutor, formIdBindings } from "./types/ECSqlCore";
 
 const HILITE_SET_EMIT_FREQUENCY = 20;
 

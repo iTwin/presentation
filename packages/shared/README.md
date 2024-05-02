@@ -81,8 +81,8 @@ import { IModelDb } from "@itwin/core-backend";
 import { createECSqlQueryExecutor } from "@itwin/presentation-core-interop";
 import { ECSqlQueryExecutor } from "@itwin/presentation-shared";
 
-const iModel: IModelDb = getIModelDb();
-const queryExecutor = createECSqlQueryExecutor(iModel);
+const imodel: IModelDb = getIModelDb();
+const queryExecutor = createECSqlQueryExecutor(imodel);
 const queryReader = queryExecutor.createQueryReader(
   {
     ecsql: "SELECT * FROM BisCore.Element WHERE UserLabel = ?",

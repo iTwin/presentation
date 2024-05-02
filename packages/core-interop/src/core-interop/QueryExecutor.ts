@@ -26,8 +26,8 @@ interface CoreECSqlReaderFactory {
  * import { IModelDb } from "@itwin/core-backend";
  * import { createECSqlQueryExecutor } from "@itwin/presentation-core-interop";
  *
- * const iModel: IModelDb = getIModelDb();
- * const executor = createECSqlQueryExecutor(iModel);
+ * const imodel: IModelDb = getIModelDb();
+ * const executor = createECSqlQueryExecutor(imodel);
  * for await (const row of executor.createQueryReader(MY_QUERY)) {
  *   // TODO: do something with `row`
  * }

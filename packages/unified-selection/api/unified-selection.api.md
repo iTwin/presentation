@@ -11,7 +11,7 @@ import { Id64Arg } from '@itwin/core-bentley';
 export interface CachingHiliteSetProvider {
     dispose(): void;
     getHiliteSet(props: {
-        iModelKey: string;
+        imodelKey: string;
     }): AsyncIterableIterator<HiliteSet>;
 }
 
@@ -101,35 +101,26 @@ export interface SelectionChangeEvent {
 
 // @beta
 export interface SelectionStorage {
-    addToSelection(props: {
-        iModelKey: string;
+    addToSelection(props: IModelKeyProp & {
         source: string;
         selectables: Selectable[];
         level?: number;
     }): void;
-    clearSelection(props: {
-        iModelKey: string;
+    clearSelection(props: IModelKeyProp & {
         source: string;
         level?: number;
     }): void;
-    clearStorage(props: {
-        iModelKey: string;
-    }): void;
-    getSelection(props: {
-        iModelKey: string;
+    clearStorage(props: IModelKeyProp): void;
+    getSelection(props: IModelKeyProp & {
         level?: number;
     }): Selectables;
-    getSelectionLevels(props: {
-        iModelKey: string;
-    }): number[];
-    removeFromSelection(props: {
-        iModelKey: string;
+    getSelectionLevels(props: IModelKeyProp): number[];
+    removeFromSelection(props: IModelKeyProp & {
         source: string;
         selectables: Selectable[];
         level?: number;
     }): void;
-    replaceSelection(props: {
-        iModelKey: string;
+    replaceSelection(props: IModelKeyProp & {
         source: string;
         selectables: Selectable[];
         level?: number;
@@ -140,7 +131,9 @@ export interface SelectionStorage {
 // @beta
 export interface StorageSelectionChangeEventArgs {
     changeType: StorageSelectionChangeType;
+    // @deprecated
     iModelKey: string;
+    imodelKey: string;
     level: number;
     selectables: Selectables;
     source: string;

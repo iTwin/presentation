@@ -18,12 +18,12 @@ import { createStub, createTestGroupingNode, createTestHierarchyNode, createTree
 
 describe("useUnifiesSelection", () => {
   const storage = createStorage();
-  const iModelKey = "test-key";
+  const imodelKey = "test-key";
   const source = "test-source";
   const getNode = sinon.stub<[string], TreeModelNode | undefined>();
 
   const initialProps = {
-    imodelKey: iModelKey,
+    imodelKey,
     sourceName: source,
     getNode,
   };
@@ -33,7 +33,7 @@ describe("useUnifiesSelection", () => {
   }
 
   beforeEach(() => {
-    storage.clearStorage({ iModelKey });
+    storage.clearStorage({ imodelKey });
     getNode.reset();
   });
 
@@ -48,7 +48,7 @@ describe("useUnifiesSelection", () => {
       const node = createTreeModelNode({ id: "node-1", nodeData: hierarchyNode });
 
       storage.addToSelection({
-        iModelKey,
+        imodelKey,
         source,
         selectables: [instanceKey],
       });
@@ -77,7 +77,7 @@ describe("useUnifiesSelection", () => {
       ];
 
       storage.addToSelection({
-        iModelKey,
+        imodelKey,
         source,
         selectables: [instanceKey],
       });
@@ -103,7 +103,7 @@ describe("useUnifiesSelection", () => {
       ];
 
       storage.addToSelection({
-        iModelKey,
+        imodelKey,
         source,
         selectables: [{ identifier: "grouping-node", loadInstanceKeys: () => createAsyncIterator([instanceKey2]), data: nodes[1] }],
       });
@@ -159,7 +159,7 @@ describe("useUnifiesSelection", () => {
           return (
             args.changeType === "add" &&
             args.source === source &&
-            args.iModelKey === iModelKey &&
+            args.imodelKey === imodelKey &&
             Selectables.size(args.selectables) === 1 &&
             Selectables.has(args.selectables, instanceKey)
           );
@@ -187,7 +187,7 @@ describe("useUnifiesSelection", () => {
       expect(changeListener).to.be.calledOnce;
       expect(changeListener).be.calledWith(
         sinon.match((args: StorageSelectionChangeEventArgs) => {
-          return args.changeType === "add" && args.source === source && args.iModelKey === iModelKey && Selectables.size(args.selectables) === 1;
+          return args.changeType === "add" && args.source === source && args.imodelKey === imodelKey && Selectables.size(args.selectables) === 1;
         }),
       );
       const selectable = changeListener.firstCall.args[0].selectables.custom.get("grouping-node");
@@ -214,7 +214,7 @@ describe("useUnifiesSelection", () => {
       expect(changeListener).to.be.calledOnce;
       expect(changeListener).be.calledWith(
         sinon.match((args: StorageSelectionChangeEventArgs) => {
-          return args.changeType === "add" && args.source === source && args.iModelKey === iModelKey && Selectables.size(args.selectables) === 1;
+          return args.changeType === "add" && args.source === source && args.imodelKey === imodelKey && Selectables.size(args.selectables) === 1;
         }),
       );
       const selectable = changeListener.firstCall.args[0].selectables.custom.get("custom-node");
@@ -232,7 +232,7 @@ describe("useUnifiesSelection", () => {
       const nodes = [createTreeModelNode({ id: "node-1", nodeData: createTestHierarchyNode({ id: "node-1", key: instancesNodesKey }) })];
       getNode.callsFake((id) => nodes.find((node) => node.id === id));
 
-      storage.addToSelection({ iModelKey, source, selectables: [instanceKey] });
+      storage.addToSelection({ imodelKey, source, selectables: [instanceKey] });
       changeListener.reset();
 
       const { result } = renderHook(useUnifiedTreeSelection, { initialProps, wrapper: Wrapper });
@@ -246,7 +246,7 @@ describe("useUnifiesSelection", () => {
           return (
             args.changeType === "remove" &&
             args.source === source &&
-            args.iModelKey === iModelKey &&
+            args.imodelKey === imodelKey &&
             Selectables.size(args.selectables) === 1 &&
             Selectables.has(args.selectables, instanceKey)
           );
@@ -266,7 +266,7 @@ describe("useUnifiesSelection", () => {
       getNode.callsFake((id) => nodes.find((node) => node.id === id));
 
       storage.addToSelection({
-        iModelKey,
+        imodelKey,
         source,
         selectables: [{ identifier: "grouping-node", loadInstanceKeys: () => createAsyncIterator([instanceKey]), data: groupingNode }],
       });
@@ -280,7 +280,7 @@ describe("useUnifiesSelection", () => {
       expect(changeListener).to.be.calledOnce;
       expect(changeListener).be.calledWith(
         sinon.match((args: StorageSelectionChangeEventArgs) => {
-          return args.changeType === "remove" && args.source === source && args.iModelKey === iModelKey && Selectables.size(args.selectables) === 1;
+          return args.changeType === "remove" && args.source === source && args.imodelKey === imodelKey && Selectables.size(args.selectables) === 1;
         }),
       );
       const selectable = changeListener.firstCall.args[0].selectables.custom.get("grouping-node");
@@ -295,7 +295,7 @@ describe("useUnifiesSelection", () => {
       getNode.callsFake((id) => nodes.find((node) => node.id === id));
 
       storage.addToSelection({
-        iModelKey,
+        imodelKey,
         source,
         selectables: [{ identifier: "custom-node", loadInstanceKeys: () => createAsyncIterator([]), data: hierarchyNode }],
       });
@@ -309,7 +309,7 @@ describe("useUnifiesSelection", () => {
       expect(changeListener).to.be.calledOnce;
       expect(changeListener).be.calledWith(
         sinon.match((args: StorageSelectionChangeEventArgs) => {
-          return args.changeType === "remove" && args.source === source && args.iModelKey === iModelKey && Selectables.size(args.selectables) === 1;
+          return args.changeType === "remove" && args.source === source && args.imodelKey === imodelKey && Selectables.size(args.selectables) === 1;
         }),
       );
       const selectable = changeListener.firstCall.args[0].selectables.custom.get("custom-node");
@@ -326,7 +326,7 @@ describe("useUnifiesSelection", () => {
       const selectNode = result.current.selectNode;
 
       act(() => {
-        storage.addToSelection({ iModelKey, source: "some-source", selectables: [{ id: "0x1", className: "Schema:Class" }] });
+        storage.addToSelection({ imodelKey, source: "some-source", selectables: [{ id: "0x1", className: "Schema:Class" }] });
       });
 
       expect(isSelected).to.not.be.eq(result.current.isNodeSelected);
@@ -339,7 +339,7 @@ describe("useUnifiesSelection", () => {
       const selectNode = result.current.selectNode;
 
       act(() => {
-        storage.addToSelection({ iModelKey: "other-imodel", source: "some-source", selectables: [{ id: "0x1", className: "Schema:Class" }] });
+        storage.addToSelection({ imodelKey: "other-imodel", source: "some-source", selectables: [{ id: "0x1", className: "Schema:Class" }] });
       });
 
       expect(isSelected).to.be.eq(result.current.isNodeSelected);
@@ -352,7 +352,7 @@ describe("useUnifiesSelection", () => {
       const selectNode = result.current.selectNode;
 
       act(() => {
-        storage.addToSelection({ iModelKey, source: "some-source", selectables: [{ id: "0x1", className: "Schema:Class" }], level: 1 });
+        storage.addToSelection({ imodelKey, source: "some-source", selectables: [{ id: "0x1", className: "Schema:Class" }], level: 1 });
       });
 
       expect(isSelected).to.be.eq(result.current.isNodeSelected);

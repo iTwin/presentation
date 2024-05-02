@@ -32,14 +32,14 @@ const unifiedSelection = createStore();
 
 // the store should to be cleaned up when iModels are closed to free up memory, e.g.:
 import { IModelConnection } from "@itwin/core-frontend";
-IModelConnection.onClose.addListener((iModel) => {
-  unifiedSelection.clearStorage(iModel.key);
+IModelConnection.onClose.addListener((imodel) => {
+  unifiedSelection.clearStorage(imodel.key);
 });
 
 // add a demo selection listener
 import { Selectables } from "@itwin/unified-selection";
-unifiedSelection.selectionChangeEvent.addListener(({ iModelKey, source, changeType, selectables }) => {
-  const suffix = `in ${iModelKey} iModel from ${source} component`;
+unifiedSelection.selectionChangeEvent.addListener(({ imodelKey, source, changeType, selectables }) => {
+  const suffix = `in ${imodelKey} iModel from ${source} component`;
   const numSelectables = Selectables.size(selectables);
   switch (changeType) {
     case "add":
@@ -58,8 +58,8 @@ unifiedSelection.selectionChangeEvent.addListener(({ iModelKey, source, changeTy
 });
 
 // in some component
-MyComponent.onECInstanceSelected((iModel: IModelConnection, key: { className: string; id: Id64String }) => {
-  unifiedSelection.addToSelection({ iModelKey: iModel.key, source: "MyComponent", selectables: [key] });
+MyComponent.onECInstanceSelected((imodel: IModelConnection, key: { className: string; id: Id64String }) => {
+  unifiedSelection.addToSelection({ imodelKey: imodel.key, source: "MyComponent", selectables: [key] });
 });
 ```
 
@@ -124,7 +124,7 @@ const hiliteSet = await hiliteProvider.getHiliteSet({ selectables });
 import { createCachingHiliteSetProvider } from "@itwin/unified-selection";
 const selectionHiliteProvider = createCachingHiliteSetProvider({
   selectionStorage,
-  iModelProvider: (iModelKey: string) => getIModelByKey(iModelKey),
+  imodelProvider: (imodelKey: string) => getIModelByKey(imodelKey),
 });
 const selectionHiliteSet = await selectionHiliteProvider.getHiliteSet({ imodel.key });
 // The caching provider registers a selection change listener and should be disposed, in case its lifetime
@@ -175,14 +175,14 @@ import { createECSqlQueryExecutor, createECSchemaProvider } from "@itwin/present
 useEffect(() => {
   return enableUnifiedSelectionSyncWithIModel({
     imodelAccess: {
-      ...createECSqlQueryExecutor(iModel),
-      ...createECSchemaProvider(iModel),
-      key: iModel.key,
-      hiliteSet: iModel.hilited,
-      selectionSet: iModel.selectionSet,
+      ...createECSqlQueryExecutor(imodel),
+      ...createECSchemaProvider(imodel),
+      key: imodel.key,
+      hiliteSet: imodel.hilited,
+      selectionSet: imodel.selectionSet,
     },
     selectionStorage,
     activeScopeProvider: () => "element",
   });
-}, [iModel]);
+}, [imodel]);
 ```

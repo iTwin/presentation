@@ -10,6 +10,19 @@
 import { Selectable, Selectables } from "./Selectable";
 import { SelectionChangeEvent, SelectionChangeEventImpl, StorageSelectionChangeEventArgs, StorageSelectionChangeType } from "./SelectionChangeEvent";
 
+type IModelKeyProp =
+  | {
+      /** Key of the iModel to get selection levels for. */
+      imodelKey: string;
+    }
+  | {
+      /**
+       * Key of the iModel to get selection levels for.
+       * @deprecated in 0.2. Use `imodelKey` instead.
+       */
+      iModelKey: string;
+    };
+
 /**
  * Defines return value of `createStorage`.
  *
@@ -21,70 +34,64 @@ export interface SelectionStorage {
   selectionChangeEvent: SelectionChangeEvent;
 
   /** Get the selection levels currently stored for the specified iModel. */
-  getSelectionLevels(props: {
-    /** Key of the iModel to get selection levels for. */
-    iModelKey: string;
-  }): number[];
+  getSelectionLevels(props: IModelKeyProp): number[];
 
   /** Get the selection stored in the storage. */
-  getSelection(props: {
-    /** Key of the iModel to get selection for. */
-    iModelKey: string;
-    /** Level of the selection. Defaults to `0`. */
-    level?: number;
-  }): Selectables;
+  getSelection(
+    props: IModelKeyProp & {
+      /** Level of the selection. Defaults to `0`. */
+      level?: number;
+    },
+  ): Selectables;
 
   /** Add keys to the selection. */
-  addToSelection(props: {
-    /** Key of the iModel to change selection for. */
-    iModelKey: string;
-    /** Name of the selection source. Generally, this identifies the component that makes the selection change. */
-    source: string;
-    /** The selectables to add to selection. */
-    selectables: Selectable[];
-    /** Level of the selection. Defaults to `0`. */
-    level?: number;
-  }): void;
+  addToSelection(
+    props: IModelKeyProp & {
+      /** Name of the selection source. Generally, this identifies the component that makes the selection change. */
+      source: string;
+      /** The selectables to add to selection. */
+      selectables: Selectable[];
+      /** Level of the selection. Defaults to `0`. */
+      level?: number;
+    },
+  ): void;
 
   /** Remove keys from current selection. */
-  removeFromSelection(props: {
-    /** Key of the iModel to change selection for. */
-    iModelKey: string;
-    /** Name of the selection source. Generally, this identifies the component that makes the selection change. */
-    source: string;
-    /** The selectables to remove from selection. */
-    selectables: Selectable[];
-    /** Level of the selection. Defaults to `0`. */
-    level?: number;
-  }): void;
+  removeFromSelection(
+    props: IModelKeyProp & {
+      /** Name of the selection source. Generally, this identifies the component that makes the selection change. */
+      source: string;
+      /** The selectables to remove from selection. */
+      selectables: Selectable[];
+      /** Level of the selection. Defaults to `0`. */
+      level?: number;
+    },
+  ): void;
 
   /** Replace current selection. */
-  replaceSelection(props: {
-    /** Key of the iModel to change selection for. */
-    iModelKey: string;
-    /** Name of the selection source. Generally, this identifies the component that makes the selection change. */
-    source: string;
-    /** The selectables to add to selection. */
-    selectables: Selectable[];
-    /** Level of the selection. Defaults to `0`. */
-    level?: number;
-  }): void;
+  replaceSelection(
+    props: IModelKeyProp & {
+      /** Name of the selection source. Generally, this identifies the component that makes the selection change. */
+      source: string;
+      /** The selectables to add to selection. */
+      selectables: Selectable[];
+      /** Level of the selection. Defaults to `0`. */
+      level?: number;
+    },
+  ): void;
 
   /** Clear current selection. */
-  clearSelection(props: {
-    /** Key of the iModel to change selection for. */
-    iModelKey: string;
-    /** Name of the selection source. Generally, this identifies the component that makes the selection change. */
-    source: string;
-    /** Level of the selection. Defaults to `0`. */
-    level?: number;
-  }): void;
+  clearSelection(
+    props: IModelKeyProp & {
+      /** Name of the selection source. Generally, this identifies the component that makes the selection change. */
+      source: string;
+      /** Level of the selection. Defaults to `0`. */
+      level?: number;
+    },
+  ): void;
 
   /** Clear storage for an iModel. This function should be called when iModel is closed. */
-  clearStorage(props: {
-    /** Key of the iModel to change selection for. */
-    iModelKey: string;
-  }): void;
+  clearStorage(props: IModelKeyProp): void;
 }
 
 /**
@@ -93,8 +100,8 @@ export interface SelectionStorage {
  * **Note:** `clearSelection` should be called upon iModel close to free-up memory:
  * ```ts
  * import { IModelConnection } from "@itwin/core-frontend";
- * IModelConnection.onClose.addListener((iModel) => {
- *   storage.clearStorage(iModel.key);
+ * IModelConnection.onClose.addListener((imodel) => {
+ *   storage.clearStorage(imodel.key);
  * });
  * ```
  *
@@ -115,48 +122,49 @@ class SelectionStorageImpl implements SelectionStorage {
     this.selectionChangeEvent = new SelectionChangeEventImpl();
   }
 
-  public getSelectionLevels({ iModelKey }: { iModelKey: string }): number[] {
-    return this.getContainer(iModelKey).getSelectionLevels();
+  public getSelectionLevels(props: IModelKeyProp): number[] {
+    return this.getContainer(getIModelKey(props)).getSelectionLevels();
   }
 
-  public getSelection(props: { iModelKey: string; level?: number }): Selectables {
-    const { iModelKey, level } = props;
-    return this.getContainer(iModelKey).getSelection(level ?? 0);
+  public getSelection(props: IModelKeyProp & { level?: number }): Selectables {
+    return this.getContainer(getIModelKey(props)).getSelection(props.level ?? 0);
   }
 
-  public addToSelection(props: { source: string; iModelKey: string; selectables: Selectable[]; level?: number }): void {
+  public addToSelection(props: IModelKeyProp & { source: string; selectables: Selectable[]; level?: number }): void {
     this.handleChange({ ...props, changeType: "add" });
   }
 
-  public removeFromSelection(props: { source: string; iModelKey: string; selectables: Selectable[]; level?: number }): void {
+  public removeFromSelection(props: IModelKeyProp & { source: string; selectables: Selectable[]; level?: number }): void {
     this.handleChange({ ...props, changeType: "remove" });
   }
 
-  public replaceSelection(props: { source: string; iModelKey: string; selectables: Selectable[]; level?: number }): void {
+  public replaceSelection(props: IModelKeyProp & { source: string; selectables: Selectable[]; level?: number }): void {
     this.handleChange({ ...props, changeType: "replace" });
   }
 
-  public clearSelection(props: { source: string; iModelKey: string; level?: number }): void {
+  public clearSelection(props: IModelKeyProp & { source: string; level?: number }): void {
     this.handleChange({ ...props, changeType: "clear", selectables: [] });
   }
 
-  public clearStorage({ iModelKey }: { iModelKey: string }): void {
-    this.clearSelection({ source: IMODEL_CLOSE_SELECTION_CLEAR_SOURCE, iModelKey });
-    this._storage.delete(iModelKey);
+  public clearStorage(props: IModelKeyProp): void {
+    const imodelKey = getIModelKey(props);
+    this.clearSelection({ source: IMODEL_CLOSE_SELECTION_CLEAR_SOURCE, imodelKey });
+    this._storage.delete(imodelKey);
   }
 
-  private getContainer(iModelKey: string): MultiLevelSelectablesContainer {
-    let selectionContainer = this._storage.get(iModelKey);
+  private getContainer(imodelKey: string): MultiLevelSelectablesContainer {
+    let selectionContainer = this._storage.get(imodelKey);
     if (!selectionContainer) {
       selectionContainer = new MultiLevelSelectablesContainer();
-      this._storage.set(iModelKey, selectionContainer);
+      this._storage.set(imodelKey, selectionContainer);
     }
     return selectionContainer;
   }
 
-  private handleChange(props: { source: string; iModelKey: string; level?: number; changeType: StorageSelectionChangeType; selectables: Selectable[] }) {
-    const { iModelKey, source, level: inLevel, changeType, selectables: change } = props;
-    const container = this.getContainer(iModelKey);
+  private handleChange(props: IModelKeyProp & { source: string; level?: number; changeType: StorageSelectionChangeType; selectables: Selectable[] }) {
+    const { source, level: inLevel, changeType, selectables: change } = props;
+    const imodelKey = getIModelKey(props);
+    const container = this.getContainer(imodelKey);
     const level = inLevel ?? 0;
     const selectables = container.getSelection(level);
     const selected = Selectables.create(change);
@@ -188,13 +196,19 @@ class SelectionStorageImpl implements SelectionStorage {
     const event: StorageSelectionChangeEventArgs = {
       source,
       level,
-      iModelKey,
+      imodelKey,
+      iModelKey: imodelKey,
       changeType,
       selectables: selected,
       timestamp: new Date(),
     };
     this.selectionChangeEvent.raiseEvent(event, this);
   }
+}
+
+function getIModelKey(props: IModelKeyProp): string {
+  // eslint-disable-next-line deprecation/deprecation
+  return "imodelKey" in props ? props.imodelKey : props.iModelKey;
 }
 
 class MultiLevelSelectablesContainer {

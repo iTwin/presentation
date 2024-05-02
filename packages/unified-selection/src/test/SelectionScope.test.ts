@@ -5,9 +5,9 @@
 
 import { expect } from "chai";
 import sinon from "sinon";
-import { ECSqlQueryDef, ECSqlQueryReader, ECSqlQueryReaderOptions, ECSqlQueryRow } from "../unified-selection/queries/ECSqlCore";
 import { SelectableInstanceKey } from "../unified-selection/Selectable";
 import { computeSelection, ElementSelectionScopeProps, SelectionScope } from "../unified-selection/SelectionScope";
+import { ECSqlQueryDef, ECSqlQueryReader, ECSqlQueryReaderOptions, ECSqlQueryRow } from "../unified-selection/types/ECSqlCore";
 import { createSelectableInstanceKey } from "./_helpers/SelectablesCreator";
 
 describe("SelectionScope", () => {

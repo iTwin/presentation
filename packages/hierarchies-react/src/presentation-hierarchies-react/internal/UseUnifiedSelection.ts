@@ -41,7 +41,7 @@ export function useUnifiedTreeSelection({ imodelKey, sourceName, getNode }: UseU
 
     setOptions(createOptions(imodelKey, sourceName, selectionStorage, getNode));
     return selectionStorage.selectionChangeEvent.addListener((args) => {
-      if (imodelKey !== args.iModelKey || args.level > 0) {
+      if (imodelKey !== args.imodelKey || args.level > 0) {
         return;
       }
 
@@ -65,7 +65,7 @@ function createOptions(
         return false;
       }
 
-      const selectables = storage.getSelection({ iModelKey: key, level: 0 });
+      const selectables = storage.getSelection({ imodelKey: key, level: 0 });
 
       const hierarchyNode = node.nodeData;
       if (HierarchyNode.isInstancesNode(hierarchyNode)) {
@@ -82,7 +82,7 @@ function createOptions(
       }
 
       const action = isSelected ? storage.addToSelection.bind(storage) : storage.removeFromSelection.bind(storage);
-      action({ iModelKey: key, source, selectables: createSelectables(node.id, node.nodeData), level: 0 });
+      action({ imodelKey: key, source, selectables: createSelectables(node.id, node.nodeData), level: 0 });
     },
   };
 }
