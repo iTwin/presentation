@@ -6,10 +6,12 @@
  * @module Tree
  */
 
-import { useEffect } from "react";
+import { MutableRefObject, useEffect } from "react";
 import { RenderedItemsRange, Subscription, TreeModelSource } from "@itwin/components-react";
 import { IModelApp } from "@itwin/core-frontend";
+import { Ruleset } from "@itwin/presentation-common";
 import { IModelHierarchyChangeEventArgs, Presentation } from "@itwin/presentation-frontend";
+import { getRulesetId } from "../../common/Utils";
 import { PresentationTreeDataProvider, PresentationTreeDataProviderProps } from "../DataProvider";
 import { reloadTree } from "./TreeReloader";
 
@@ -23,10 +25,10 @@ export interface ReloadedTree {
 export interface TreeReloadParams {
   dataProviderProps: PresentationTreeDataProviderProps;
   pageSize: number;
-  rulesetId?: string;
+  ruleset: string | Ruleset;
   modelSource?: TreeModelSource;
   onReload: (params: ReloadedTree) => void;
-  renderedItems: React.MutableRefObject<RenderedItemsRange | undefined>;
+  renderedItems: MutableRefObject<RenderedItemsRange | undefined>;
 }
 
 /** @internal */
@@ -38,96 +40,97 @@ export function useTreeReload(params: TreeReloadParams & { enable: boolean }) {
 }
 
 function useModelSourceUpdateOnIModelHierarchyUpdate(params: TreeReloadParams & { enable: boolean }): void {
-  const { enable, dataProviderProps, rulesetId, pageSize, modelSource, onReload, renderedItems } = params;
+  const { enable, dataProviderProps, ruleset, pageSize, modelSource, onReload, renderedItems } = params;
 
   useEffect(() => {
-    if (!enable || !rulesetId || !modelSource) {
+    if (!enable || !modelSource) {
       return;
     }
 
     let subscription: Subscription | undefined;
     const removeListener = Presentation.presentation.onIModelHierarchyChanged.addListener((args: IModelHierarchyChangeEventArgs) => {
-      if (args.rulesetId !== rulesetId || args.imodelKey !== dataProviderProps.imodel.key) {
+      if (args.rulesetId !== getRulesetId(ruleset) || args.imodelKey !== dataProviderProps.imodel.key) {
         return;
       }
 
-      subscription = startTreeReload({ dataProviderProps, rulesetId, pageSize, modelSource, renderedItems, onReload });
+      subscription = startTreeReload({ dataProviderProps, ruleset, pageSize, modelSource, renderedItems, onReload });
     });
 
     return () => {
       removeListener();
       subscription?.unsubscribe();
     };
-  }, [modelSource, enable, pageSize, dataProviderProps, rulesetId, onReload, renderedItems]);
+  }, [modelSource, enable, pageSize, dataProviderProps, ruleset, onReload, renderedItems]);
 }
 
 function useModelSourceUpdateOnRulesetModification(params: TreeReloadParams & { enable: boolean }): void {
-  const { enable, dataProviderProps, rulesetId, pageSize, modelSource, onReload, renderedItems } = params;
+  const { enable, dataProviderProps, ruleset, pageSize, modelSource, onReload, renderedItems } = params;
 
   useEffect(() => {
-    if (!enable || !rulesetId || !modelSource) {
+    if (!enable || !modelSource) {
       return;
     }
 
     let subscription: Subscription | undefined;
-    const removeListener = Presentation.presentation.rulesets().onRulesetModified.addListener((ruleset) => {
-      if (ruleset.id !== rulesetId) {
+    const removeListener = Presentation.presentation.rulesets().onRulesetModified.addListener((modifiedRuleset) => {
+      if (modifiedRuleset.id !== getRulesetId(ruleset)) {
         return;
       }
 
-      subscription = startTreeReload({ dataProviderProps, rulesetId, pageSize, modelSource, renderedItems, onReload });
+      // use ruleset id as only registered rulesets can be modified.
+      subscription = startTreeReload({ dataProviderProps, ruleset: modifiedRuleset.id, pageSize, modelSource, renderedItems, onReload });
     });
 
     return () => {
       removeListener();
       subscription?.unsubscribe();
     };
-  }, [dataProviderProps, rulesetId, enable, modelSource, pageSize, onReload, renderedItems]);
+  }, [dataProviderProps, ruleset, enable, modelSource, pageSize, onReload, renderedItems]);
 }
 
 function useModelSourceUpdateOnRulesetVariablesChange(params: TreeReloadParams & { enable: boolean }): void {
-  const { enable, dataProviderProps, pageSize, rulesetId, modelSource, onReload, renderedItems } = params;
+  const { enable, dataProviderProps, pageSize, ruleset, modelSource, onReload, renderedItems } = params;
 
   useEffect(() => {
-    if (!enable || !rulesetId || !modelSource) {
+    if (!enable || !modelSource) {
       return;
     }
 
     let subscription: Subscription | undefined;
-    const removeListener = Presentation.presentation.vars(rulesetId).onVariableChanged.addListener(() => {
+    const removeListener = Presentation.presentation.vars(getRulesetId(ruleset)).onVariableChanged.addListener(() => {
       // note: we should probably debounce these events while accumulating changed variables in case multiple vars are changed
-      subscription = startTreeReload({ dataProviderProps, rulesetId, pageSize, modelSource, renderedItems, onReload });
+      subscription = startTreeReload({ dataProviderProps, ruleset, pageSize, modelSource, renderedItems, onReload });
     });
 
     return () => {
       removeListener();
       subscription?.unsubscribe();
     };
-  }, [dataProviderProps, enable, modelSource, pageSize, rulesetId, onReload, renderedItems]);
+  }, [dataProviderProps, enable, modelSource, pageSize, ruleset, onReload, renderedItems]);
 }
 
 function useModelSourceUpdateOnUnitSystemChange(params: TreeReloadParams): void {
-  const { dataProviderProps, pageSize, rulesetId, modelSource, onReload, renderedItems } = params;
+  const { dataProviderProps, pageSize, ruleset, modelSource, onReload, renderedItems } = params;
 
   useEffect(() => {
-    if (!rulesetId || !modelSource) {
+    if (!modelSource) {
       return;
     }
 
     let subscription: Subscription | undefined;
     const removeListener = IModelApp.quantityFormatter.onActiveFormattingUnitSystemChanged.addListener(() => {
-      subscription = startTreeReload({ dataProviderProps, rulesetId, pageSize, modelSource, renderedItems, onReload });
+      subscription = startTreeReload({ dataProviderProps, ruleset, pageSize, modelSource, renderedItems, onReload });
     });
 
     return () => {
       removeListener();
       subscription?.unsubscribe();
     };
-  }, [dataProviderProps, modelSource, pageSize, rulesetId, onReload, renderedItems]);
+  }, [dataProviderProps, modelSource, pageSize, ruleset, onReload, renderedItems]);
 }
 
-function startTreeReload({ dataProviderProps, rulesetId, modelSource, pageSize, renderedItems, onReload }: Required<TreeReloadParams>): Subscription {
-  const dataProvider = new PresentationTreeDataProvider({ ...dataProviderProps, ruleset: rulesetId });
+function startTreeReload({ dataProviderProps, ruleset, modelSource, pageSize, renderedItems, onReload }: Required<TreeReloadParams>): Subscription {
+  const dataProvider = new PresentationTreeDataProvider({ ...dataProviderProps, ruleset });
   return reloadTree(modelSource.getModel(), dataProvider, pageSize, renderedItems.current).subscribe({
     next: (newModelSource) =>
       onReload({
