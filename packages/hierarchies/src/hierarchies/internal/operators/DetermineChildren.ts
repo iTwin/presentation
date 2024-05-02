@@ -30,7 +30,7 @@ export function createDetermineChildrenOperator(hasNodes: (node: ProcessedHierar
             category: LOGGING_NAMESPACE,
             message: /* istanbul ignore next */ (hasChildrenFlag) => `${createNodeIdentifierForLogging(n)}: determined children: ${hasChildrenFlag}`,
           }),
-          map((hasChildrenFlag) => ({ ...n, children: hasChildrenFlag })),
+          map((hasChildrenFlag) => Object.assign(n, { children: hasChildrenFlag })),
         );
       }),
       log({ category: LOGGING_NAMESPACE, message: /* istanbul ignore next */ (n) => `out: ${createNodeIdentifierForLogging(n)}` }),

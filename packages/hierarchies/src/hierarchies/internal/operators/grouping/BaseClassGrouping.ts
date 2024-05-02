@@ -75,7 +75,7 @@ export async function createBaseClassGroupsForSingleBaseClass(
       key: groupingNodeKey,
       parentKeys: [...groupedNodes[0].parentKeys],
       groupedInstanceKeys: groupedNodes.flatMap((groupedInstanceNode) => groupedInstanceNode.key.instanceKeys),
-      children: groupedNodes.map((gn) => ({ ...gn, parentKeys: [...gn.parentKeys, groupingNodeKey] })),
+      children: groupedNodes.map((gn) => Object.assign(gn, { parentKeys: [...gn.parentKeys, groupingNodeKey] })),
     });
   }
   return result;

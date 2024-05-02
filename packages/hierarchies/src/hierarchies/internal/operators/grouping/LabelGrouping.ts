@@ -51,7 +51,7 @@ export async function createLabelGroups(nodes: ProcessedInstanceHierarchyNode[])
       key: groupingNodeKey,
       parentKeys: groupedNodeParentKeys,
       groupedInstanceKeys: entry.flatMap((groupedInstanceNode) => groupedInstanceNode.key.instanceKeys),
-      children: entry.map((gn) => ({ ...gn, parentKeys: [...groupedNodeParentKeys, groupingNodeKey] })),
+      children: entry.map((gn) => Object.assign(gn, { parentKeys: [...groupedNodeParentKeys, groupingNodeKey] })),
     });
   });
 

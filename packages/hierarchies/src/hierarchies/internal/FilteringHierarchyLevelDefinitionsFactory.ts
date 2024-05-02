@@ -69,7 +69,7 @@ export class FilteringHierarchyLevelDefinitionsFactory implements IHierarchyLeve
         HierarchyNode.isClassGroupingNode(node) &&
         node.children.some((child: FilteredHierarchyNode) => child.isFilterTarget || child.filteredChildrenIdentifierPaths)
       ) {
-        return { ...processedNode, autoExpand: true };
+        return Object.assign(processedNode, { autoExpand: true });
       }
       return processedNode;
     };

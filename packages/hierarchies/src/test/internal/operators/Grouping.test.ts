@@ -372,7 +372,7 @@ describe("Grouping", () => {
         }),
       ];
 
-      const result = await createGroupingHandlers(imodelAccess, undefined, nodes, formatter, testLocalizedStrings);
+      const result = await collect(createGroupingHandlers(imodelAccess, undefined, nodes, formatter, testLocalizedStrings));
       expect(createBaseClassGroupingHandlersStub.callCount).to.eq(1);
       expect(createBaseClassGroupingHandlersStub.firstCall).to.be.calledWith(imodelAccess, undefined, nodes);
 
@@ -412,7 +412,7 @@ describe("Grouping", () => {
         }),
       ];
 
-      const result = await createGroupingHandlers(imodelAccess, parentNode, nodes, formatter, testLocalizedStrings);
+      const result = await collect(createGroupingHandlers(imodelAccess, parentNode, nodes, formatter, testLocalizedStrings));
 
       expect(createBaseClassGroupingHandlersStub.callCount).to.eq(1);
       expect(createBaseClassGroupingHandlersStub.firstCall).to.be.calledWith(imodelAccess, parentNode, nodes);
@@ -453,7 +453,7 @@ describe("Grouping", () => {
         }),
       ];
 
-      const result = await createGroupingHandlers(imodelAccess, parentNode, nodes, formatter, testLocalizedStrings);
+      const result = await collect(createGroupingHandlers(imodelAccess, parentNode, nodes, formatter, testLocalizedStrings));
 
       expect(createBaseClassGroupingHandlersStub.callCount).to.eq(0);
 
@@ -485,7 +485,7 @@ describe("Grouping", () => {
         }),
       ];
 
-      const result = await createGroupingHandlers(imodelAccess, parentNode, nodes, formatter, testLocalizedStrings);
+      const result = await collect(createGroupingHandlers(imodelAccess, parentNode, nodes, formatter, testLocalizedStrings));
 
       expect(createBaseClassGroupingHandlersStub.callCount).to.eq(0);
       expect(createPropertiesGroupingHandlersStub.callCount).to.eq(0);

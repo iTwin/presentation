@@ -180,8 +180,8 @@ export async function createPropertyGroups(
           groupingNode.key.properties.push(thisPropertyIdentifier);
         }
         node.key.instanceKeys.forEach((k) => groupingNode.groupedInstanceKeys.push(k));
-        groupingNode.children.push({ ...node, parentKeys: [...node.parentKeys, groupingNode.key] });
         groupingNode.parentKeys = node.parentKeys;
+        groupingNode.children.push(Object.assign(node, { parentKeys: [...node.parentKeys, groupingNode.key] }));
         continue;
       }
       groupings.ungrouped.push(node);

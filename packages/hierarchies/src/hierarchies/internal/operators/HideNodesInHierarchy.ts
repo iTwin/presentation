@@ -3,10 +3,11 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { asapScheduler, concat, defer, EMPTY, filter, finalize, map, merge, mergeAll, mergeMap, Observable, partition, share, subscribeOn, take } from "rxjs";
+import { concat, defer, EMPTY, filter, finalize, map, merge, mergeAll, mergeMap, Observable, take } from "rxjs";
 import { HierarchyNode, InstancesNodeKey, ProcessedCustomHierarchyNode, ProcessedHierarchyNode, ProcessedInstanceHierarchyNode } from "../../HierarchyNode";
 import { createNodeIdentifierForLogging, createOperatorLoggingNamespace, hasChildren, mergeNodes } from "../Common";
 import { doLog, log } from "../LoggingUtils";
+import { partition } from "./Partition";
 import { reduceToMergeMapItem } from "./ReduceToMergeMap";
 
 const OPERATOR_NAME = "HideNodesInHierarchy";
@@ -23,13 +24,9 @@ export function createHideNodesInHierarchyOperator(
   stopOnFirstChild: boolean,
 ) {
   return function (nodes: Observable<ProcessedHierarchyNode>): Observable<ProcessedHierarchyNode> {
-    const sharedNodes = nodes.pipe(
-      log({ category: LOGGING_NAMESPACE, message: /* istanbul ignore next */ (n) => `in: ${createNodeIdentifierForLogging(n)}` }),
-      subscribeOn(asapScheduler),
-      share(),
-    );
+    const inputNodes = nodes.pipe(log({ category: LOGGING_NAMESPACE, message: /* istanbul ignore next */ (n) => `in: ${createNodeIdentifierForLogging(n)}` }));
     const [withFlag, withoutFlag] = partition(
-      sharedNodes,
+      inputNodes,
       (n): n is ProcessedCustomHierarchyNode | ProcessedInstanceHierarchyNode =>
         (HierarchyNode.isCustom(n) || HierarchyNode.isInstancesNode(n)) && !!n.processingParams?.hideInHierarchy,
     );
@@ -63,7 +60,7 @@ export function createHideNodesInHierarchyOperator(
         ? concat(
             // a small hack to handle situation when we're here to only check if parent node has children and one of them has `hideIfNoChildren` flag
             // with a `hasChildren = true` - we just return the hidden node itself in that case to avoid digging deeper into the hierarchy
-            sharedNodes.pipe(
+            inputNodes.pipe(
               filter(hasChildren),
               log({
                 category: LOGGING_NAMESPACE,
