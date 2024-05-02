@@ -5,7 +5,7 @@
 
 import { Id64String } from "@itwin/core-bentley";
 import { GenericInstanceFilter } from "@itwin/core-common";
-import { ECSqlQueryDef, IECClassHierarchyInspector, InstanceKey } from "@itwin/presentation-shared";
+import { ECClassHierarchyInspector, ECSqlQueryDef, InstanceKey } from "@itwin/presentation-shared";
 import {
   HierarchyNode,
   HierarchyNodeKey,
@@ -229,7 +229,7 @@ export interface ClassBasedHierarchyDefinition {
  */
 export interface ClassBasedHierarchyDefinitionsFactoryProps {
   /** Access to ECClass hierarchy in the iModel */
-  classHierarchyInspector: IECClassHierarchyInspector;
+  classHierarchyInspector: ECClassHierarchyInspector;
   /** Hierarchy level definitions based on parent instance node's class or custom node's key. */
   hierarchy: ClassBasedHierarchyDefinition;
 }
@@ -242,7 +242,7 @@ export interface ClassBasedHierarchyDefinitionsFactoryProps {
  * @beta
  */
 export class ClassBasedHierarchyLevelDefinitionsFactory implements IHierarchyLevelDefinitionsFactory {
-  private _classHierarchyInspector: IECClassHierarchyInspector;
+  private _classHierarchyInspector: ECClassHierarchyInspector;
   private _definition: ClassBasedHierarchyDefinition;
 
   public constructor(props: ClassBasedHierarchyDefinitionsFactoryProps) {
@@ -290,7 +290,7 @@ export class ClassBasedHierarchyLevelDefinitionsFactory implements IHierarchyLev
 }
 
 async function createHierarchyLevelDefinitions(
-  classHierarchy: IECClassHierarchyInspector,
+  classHierarchy: ECClassHierarchyInspector,
   defs: InstancesNodeChildHierarchyLevelDefinition[],
   parentNodeClassName: string,
   parentNodeInstanceIds: Id64String[],

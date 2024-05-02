@@ -7,9 +7,9 @@ import { assert } from "@itwin/core-bentley";
 import {
   ArrayElement,
   EC,
+  ECClassHierarchyInspector,
+  ECSchemaProvider,
   getClass,
-  IECClassHierarchyInspector,
-  IECMetadataProvider,
   IPrimitiveValueFormatter,
   TypedPrimitiveValue,
 } from "@itwin/presentation-shared";
@@ -58,7 +58,7 @@ export async function createPropertyGroups(
   handlerGroupingParams: PropertyGroupInfo,
   valueFormatter: IPrimitiveValueFormatter,
   localizedStrings: PropertiesGroupingLocalizedStrings,
-  classHierarchyInspector: IECClassHierarchyInspector,
+  classHierarchyInspector: ECClassHierarchyInspector,
 ): Promise<GroupingHandlerResult> {
   let otherValuesGrouping: { node: ProcessedInstancesGroupingHierarchyNode; new: boolean } | undefined;
   const getOtherValuesGroupingNode = () => {
@@ -287,7 +287,7 @@ function createNodePropertyGroupPathMatchers(node: ParentHierarchyNode): Array<(
 
 /** @internal */
 export async function getUniquePropertiesGroupInfo(
-  metadata: IECMetadataProvider,
+  schemaProvider: ECSchemaProvider,
   parentNode: ParentHierarchyNode | undefined,
   nodes: ProcessedInstanceHierarchyNode[],
 ): Promise<Array<PropertyGroupInfo>> {
@@ -318,7 +318,7 @@ export async function getUniquePropertiesGroupInfo(
       }
       if (!isAlreadyGrouped && !uniqueProperties.get(mapKey)) {
         uniqueProperties.set(mapKey, {
-          ecClass: await getClass(metadata, byProperties.propertiesClassName),
+          ecClass: await getClass(schemaProvider, byProperties.propertiesClassName),
           propertyGroup: {
             propertyName: propertyGroup.propertyName,
             ranges: propertyGroup.ranges,
@@ -355,7 +355,7 @@ async function shouldCreatePropertyGroup(
   handlerGroupingParams: PropertyGroupInfo,
   nodePropertyGroupingParams: HierarchyNodePropertiesGroupingParams,
   nodeFullClassName: string,
-  classHierarchyInspector: IECClassHierarchyInspector,
+  classHierarchyInspector: ECClassHierarchyInspector,
 ): Promise<boolean> {
   if (
     nodePropertyGroupingParams.propertiesClassName !== handlerGroupingParams.ecClass.fullName ||
@@ -421,7 +421,7 @@ export function doRangesMatch(ranges1: HierarchyNodePropertyValueRange[] | undef
 
 /** @internal */
 export async function createPropertiesGroupingHandlers(
-  imodelAccess: IECMetadataProvider & IECClassHierarchyInspector,
+  imodelAccess: ECSchemaProvider & ECClassHierarchyInspector,
   parentNode: ParentHierarchyNode | undefined,
   nodes: ProcessedInstanceHierarchyNode[],
   valueFormatter: IPrimitiveValueFormatter,

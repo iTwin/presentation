@@ -8,13 +8,13 @@ import sinon from "sinon";
 import { GroupingNodeKey } from "../../../../hierarchies/HierarchyNode";
 import { GroupingHandlerResult } from "../../../../hierarchies/internal/operators/Grouping";
 import { createClassGroups } from "../../../../hierarchies/internal/operators/grouping/ClassGrouping";
-import { createMetadataProviderStub, createTestProcessedGroupingNode, createTestProcessedInstanceNode } from "../../../Utils";
+import { createECSchemaProviderStub, createTestProcessedGroupingNode, createTestProcessedInstanceNode } from "../../../Utils";
 
 describe("ClassGrouping", () => {
-  let metadataProvider: ReturnType<typeof createMetadataProviderStub>;
+  let schemaProvider: ReturnType<typeof createECSchemaProviderStub>;
 
   beforeEach(() => {
-    metadataProvider = createMetadataProviderStub();
+    schemaProvider = createECSchemaProviderStub();
   });
 
   afterEach(() => {
@@ -29,12 +29,12 @@ describe("ClassGrouping", () => {
         processingParams: { grouping: { byClass: true } },
       }),
     ];
-    const classInfo = metadataProvider.stubEntityClass({ schemaName: "TestSchema", className: "TestClass" });
+    const classInfo = schemaProvider.stubEntityClass({ schemaName: "TestSchema", className: "TestClass" });
     const expectedClassGroupingNodeKey: GroupingNodeKey = {
       type: "class-grouping",
       className: classInfo.fullName,
     };
-    expect(await createClassGroups(metadataProvider, undefined, nodes)).to.deep.eq({
+    expect(await createClassGroups(schemaProvider, undefined, nodes)).to.deep.eq({
       groupingType: "class",
       grouped: [
         {
@@ -64,12 +64,12 @@ describe("ClassGrouping", () => {
         processingParams: { grouping: { byClass: true } },
       }),
     ];
-    const classA = metadataProvider.stubEntityClass({ schemaName: "TestSchema", className: "A", classLabel: "Class A" });
+    const classA = schemaProvider.stubEntityClass({ schemaName: "TestSchema", className: "A", classLabel: "Class A" });
     const expectedClassGroupingNodeKey: GroupingNodeKey = {
       type: "class-grouping",
       className: classA.fullName,
     };
-    expect(await createClassGroups(metadataProvider, undefined, nodes)).to.deep.eq({
+    expect(await createClassGroups(schemaProvider, undefined, nodes)).to.deep.eq({
       groupingType: "class",
       grouped: [
         {
@@ -99,17 +99,17 @@ describe("ClassGrouping", () => {
         processingParams: { grouping: { byClass: true } },
       }),
     ];
-    const classA = metadataProvider.stubEntityClass({ schemaName: "TestSchema", className: "A", classLabel: "Class A" });
+    const classA = schemaProvider.stubEntityClass({ schemaName: "TestSchema", className: "A", classLabel: "Class A" });
     const expectedClassAGroupingNodeKey: GroupingNodeKey = {
       type: "class-grouping",
       className: classA.fullName,
     };
-    const classB = metadataProvider.stubEntityClass({ schemaName: "TestSchema", className: "B", classLabel: "Class B" });
+    const classB = schemaProvider.stubEntityClass({ schemaName: "TestSchema", className: "B", classLabel: "Class B" });
     const expectedClassBGroupingNodeKey: GroupingNodeKey = {
       type: "class-grouping",
       className: classB.fullName,
     };
-    expect(await createClassGroups(metadataProvider, undefined, nodes)).to.deep.eq({
+    expect(await createClassGroups(schemaProvider, undefined, nodes)).to.deep.eq({
       groupingType: "class",
       grouped: [
         {
@@ -145,8 +145,8 @@ describe("ClassGrouping", () => {
         processingParams: { grouping: { byClass: true } },
       }),
     ];
-    metadataProvider.stubEntityClass({ schemaName: "TestSchema", className: "TestClass" });
-    expect(await createClassGroups(metadataProvider, parentNode, nodes)).to.deep.eq({
+    schemaProvider.stubEntityClass({ schemaName: "TestSchema", className: "TestClass" });
+    expect(await createClassGroups(schemaProvider, parentNode, nodes)).to.deep.eq({
       groupingType: "class",
       grouped: [],
       ungrouped: nodes,

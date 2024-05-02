@@ -13,7 +13,7 @@ import {
   GenericInstanceFilterRuleOperator,
   GenericInstanceFilterRuleValue,
 } from "@itwin/core-common";
-import { EC, ECSql, getClass, IECClassHierarchyInspector, IECMetadataProvider, parseFullClassName, PrimitiveValue } from "@itwin/presentation-shared";
+import { EC, ECClassHierarchyInspector, ECSchemaProvider, ECSql, getClass, parseFullClassName, PrimitiveValue } from "@itwin/presentation-shared";
 
 /**
  * Column names of the SELECT clause created by `NodeSelectClauseFactory`. Order of the names matches the order of columns
@@ -223,9 +223,9 @@ export interface ECSqlSelectClauseBaseClassGroupingParams extends ECSqlSelectCla
  * @beta
  */
 export class NodeSelectQueryFactory {
-  private _imodelAccess: IECMetadataProvider & IECClassHierarchyInspector;
+  private _imodelAccess: ECSchemaProvider & ECClassHierarchyInspector;
 
-  public constructor(props: { imodelAccess: IECMetadataProvider & IECClassHierarchyInspector }) {
+  public constructor(props: { imodelAccess: ECSchemaProvider & ECClassHierarchyInspector }) {
     this._imodelAccess = props.imodelAccess;
   }
 
@@ -299,7 +299,7 @@ export class NodeSelectQueryFactory {
     const joins = await Promise.all(
       def.relatedInstances.map(async (rel, i) =>
         ECSql.createRelationshipPathJoinClause({
-          metadata: this._imodelAccess,
+          schemaProvider: this._imodelAccess,
           path: assignRelationshipPathAliases(rel.path, i, contentClass.alias, rel.alias),
         }),
       ),
@@ -674,7 +674,7 @@ function assignRelationshipPathAliases(
 }
 
 interface SpecializeContentClassProps {
-  classHierarchyInspector: IECClassHierarchyInspector;
+  classHierarchyInspector: ECClassHierarchyInspector;
   contentClassName: string;
   filterClassNames: string[];
 }
@@ -692,7 +692,7 @@ async function specializeContentClass(props: SpecializeContentClassProps): Promi
   return undefined;
 }
 
-async function getSpecializedPropertyClass(classHierarchyInspector: IECClassHierarchyInspector, classes: string[]): Promise<string | undefined> {
+async function getSpecializedPropertyClass(classHierarchyInspector: ECClassHierarchyInspector, classes: string[]): Promise<string | undefined> {
   if (classes.length === 0) {
     return undefined;
   }

@@ -7,13 +7,12 @@ import { LRUMap } from "@itwin/core-bentley";
 import { parseFullClassName } from "./Utils";
 
 /**
- * An interface of an iModel metadata provider used to retrieve information about EC metadata (ECSchemas,
- * ECClasses, ECProperties, etc.) in the iModel.
+ * An interface for an object that knows how to get an ECSchema from an iModel.
  *
- * @see `createMetadataProvider` in `@itwin/presentation-core-interop`.
+ * @see `createECSchemaProvider` in `@itwin/presentation-core-interop`.
  * @beta
  */
-export interface IECMetadataProvider {
+export interface ECSchemaProvider {
   getSchema(schemaName: string): Promise<EC.Schema | undefined>;
 }
 
@@ -22,20 +21,20 @@ export interface IECMetadataProvider {
  * @see `createCachingECClassHierarchyInspector`
  * @beta
  */
-export interface IECClassHierarchyInspector {
+export interface ECClassHierarchyInspector {
   classDerivesFrom(derivedClassFullName: string, candidateBaseClassFullName: string): Promise<boolean> | boolean;
 }
 
 /**
- * Creates a new `IECClassHierarchyInspector` that caches results of `derivesFrom` calls.
+ * Creates a new `ECClassHierarchyInspector` that caches results of `derivesFrom` calls.
  * @beta
  */
 export function createCachingECClassHierarchyInspector(props: {
-  /** Metadata provider that provides access to ECClass metadata */
-  metadataProvider: IECMetadataProvider;
+  /** Schema provider used to load schemas and their classes. */
+  schemaProvider: ECSchemaProvider;
   /** Optional cache size, describing the number of derived/base class combinations to store in cache. Defaults to `0`, which means no caching. */
   cacheSize?: number;
-}): IECClassHierarchyInspector {
+}): ECClassHierarchyInspector {
   const map = new LRUMap<string, Promise<boolean> | boolean>(props.cacheSize ?? 0);
   function createCacheKey(derivedClassName: string, baseClassName: string) {
     return `${derivedClassName}/${baseClassName}`;
@@ -45,7 +44,7 @@ export function createCachingECClassHierarchyInspector(props: {
       const cacheKey = createCacheKey(derivedClassFullName, candidateBaseClassFullName);
       let result = map.get(cacheKey);
       if (result === undefined) {
-        result = Promise.all([getClass(props.metadataProvider, derivedClassFullName), getClass(props.metadataProvider, candidateBaseClassFullName)]).then(
+        result = Promise.all([getClass(props.schemaProvider, derivedClassFullName), getClass(props.schemaProvider, candidateBaseClassFullName)]).then(
           async ([derivedClass, baseClass]) => {
             const resolvedResult = await derivedClass.is(baseClass);
             map.set(cacheKey, resolvedResult);
@@ -62,7 +61,7 @@ export function createCachingECClassHierarchyInspector(props: {
 /**
  * A namespace containing various [EC types](https://www.itwinjs.org/bis/ec/).
  * @beta
- * @see `IECMetadataProvider`
+ * @see `ECSchemaProvider`
  */
 export namespace EC {
   /**
@@ -318,13 +317,13 @@ export interface RelationshipPathStep {
 export type RelationshipPath<TStep extends RelationshipPathStep = RelationshipPathStep> = TStep[];
 
 /**
- * Finds a class with the specified full class name using the given `IECMetadataProvider`.
+ * Finds a class with the specified full class name using the given `ECSchemaProvider`.
  * @throws Error if the schema or class is not found.
  * @beta
  */
-export async function getClass(metadata: IECMetadataProvider, fullClassName: string): Promise<EC.Class> {
+export async function getClass(schemaProvider: ECSchemaProvider, fullClassName: string): Promise<EC.Class> {
   const { schemaName, className } = parseFullClassName(fullClassName);
-  const schema = await metadata.getSchema(schemaName);
+  const schema = await schemaProvider.getSchema(schemaName);
   if (!schema) {
     throw new Error(`Schema "${schemaName}" not found.`);
   }

@@ -15,15 +15,15 @@ import {
   PresentationInstanceFilterInfo,
   PresentationInstanceFilterPropertiesSource,
 } from "@itwin/presentation-components";
-import { createECSqlQueryExecutor, createMetadataProvider } from "@itwin/presentation-core-interop";
+import { createECSchemaProvider, createECSqlQueryExecutor } from "@itwin/presentation-core-interop";
 import { Presentation } from "@itwin/presentation-frontend";
-import { createLimitingECSqlQueryExecutor, GenericInstanceFilter, HierarchyProvider, ILimitingECSqlQueryExecutor } from "@itwin/presentation-hierarchies";
+import { createLimitingECSqlQueryExecutor, GenericInstanceFilter, HierarchyProvider, LimitingECSqlQueryExecutor } from "@itwin/presentation-hierarchies";
 import { HierarchyLevelConfiguration, PresentationHierarchyNode, TreeRenderer, useUnifiedSelectionTree } from "@itwin/presentation-hierarchies-react";
 import { ModelsTreeDefinition } from "@itwin/presentation-models-tree";
-import { createCachingECClassHierarchyInspector, IECClassHierarchyInspector, IECMetadataProvider } from "@itwin/presentation-shared";
+import { createCachingECClassHierarchyInspector, ECClassHierarchyInspector, ECSchemaProvider } from "@itwin/presentation-shared";
 import { MyAppFrontend } from "../../../api/MyAppFrontend";
 
-type IModelAccess = ILimitingECSqlQueryExecutor & IECMetadataProvider & IECClassHierarchyInspector;
+type IModelAccess = LimitingECSqlQueryExecutor & ECSchemaProvider & ECClassHierarchyInspector;
 
 export function StatelessTreeV2(props: { imodel: IModelConnection; height: number; width: number }) {
   return <Tree {...props} />;
@@ -37,10 +37,10 @@ function Tree({ imodel, height, width }: { imodel: IModelConnection; height: num
 
   useEffect(() => {
     const schemas = MyAppFrontend.getSchemaContext(imodel);
-    const metadataProvider = createMetadataProvider(schemas);
+    const schemaProvider = createECSchemaProvider(schemas);
     setIModelAccess({
-      ...metadataProvider,
-      ...createCachingECClassHierarchyInspector({ metadataProvider }),
+      ...schemaProvider,
+      ...createCachingECClassHierarchyInspector({ schemaProvider }),
       ...createLimitingECSqlQueryExecutor(createECSqlQueryExecutor(imodel), 1000),
     });
   }, [imodel]);

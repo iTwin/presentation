@@ -7,9 +7,9 @@ import { expect } from "chai";
 import { ResolvablePromise } from "presentation-test-utilities";
 import sinon from "sinon";
 import { createHiliteSetProvider, HiliteSetProvider } from "../unified-selection/HiliteSetProvider";
-import { ECClass, ECSchema } from "../unified-selection/queries/ECMetadata";
-import { ECSqlQueryDef, ECSqlQueryReader, ECSqlQueryReaderOptions, ECSqlQueryRow } from "../unified-selection/queries/ECSqlCore";
 import { SelectableInstanceKey, Selectables } from "../unified-selection/Selectable";
+import { ECClass, ECSchema } from "../unified-selection/types/ECMetadata";
+import { ECSqlQueryDef, ECSqlQueryReader, ECSqlQueryReaderOptions, ECSqlQueryRow } from "../unified-selection/types/ECSqlCore";
 import { createCustomSelectable, createECInstanceId, createSelectableInstanceKey } from "./_helpers/SelectablesCreator";
 
 describe("HiliteSetProvider", () => {

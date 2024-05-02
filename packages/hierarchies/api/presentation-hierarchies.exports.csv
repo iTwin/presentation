@@ -6,7 +6,7 @@ beta;ClassBasedHierarchyDefinitionsFactoryProps
 beta;ClassBasedHierarchyLevelDefinition = InstancesNodeChildHierarchyLevelDefinition | CustomNodeChildHierarchyLevelDefinition
 beta;ClassBasedHierarchyLevelDefinitionsFactory 
 beta;ClassGroupingNodeKey
-beta;createLimitingECSqlQueryExecutor(baseExecutor: IECSqlQueryExecutor, defaultLimit: number | "unbounded"): ILimitingECSqlQueryExecutor
+beta;createLimitingECSqlQueryExecutor(baseExecutor: ECSqlQueryExecutor, defaultLimit: number | "unbounded"): LimitingECSqlQueryExecutor
 beta;CustomHierarchyNodeDefinition
 beta;CustomNodeChildHierarchyLevelDefinition
 beta;DefineHierarchyLevelProps
@@ -54,7 +54,6 @@ beta;HierarchyProvider
 beta;HierarchyProviderLocalizedStrings
 beta;HierarchyProviderProps
 beta;IHierarchyLevelDefinitionsFactory
-beta;ILimitingECSqlQueryExecutor
 beta;INodeParser = (row:
 beta;INodePostProcessor = (node: ProcessedHierarchyNode) => Promise
 beta;INodePreProcessor = 
@@ -63,6 +62,7 @@ beta;InstanceNodesQueryDefinition
 beta;InstancesNodeChildHierarchyLevelDefinition
 beta;InstancesNodeKey
 beta;LabelGroupingNodeKey
+beta;LimitingECSqlQueryExecutor
 beta;NodeSelectClauseColumnNames
 beta;NodeSelectClauseProps
 beta;NodeSelectQueryFactory

@@ -54,14 +54,14 @@ Breaking API changes
   - `createHiliteSetProvider` (previously `queryExecutor` prop, now `imodelAccess` prop),
   - `createCachingHiliteSetProvider` (`iModelProvider` prop).
 
-- `createHiliteSetProvider` function props `queryExecutor` and `metadataProvider` were merged into a single `imodelAccess` prop with merged type.
+- `createHiliteSetProvider` function props `queryExecutor` and `schemaProvider` were merged into a single `imodelAccess` prop with merged type.
 
   Previously:
 
   ```ts
   createHiliteSetProvider({
     queryExecutor: createECSqlQueryExecutor(iModel),
-    metadataProvider: createMetadataProvider(iModel),
+    schemaProvider: createECSchemaProvider(iModel),
   });
   ```
 
@@ -71,12 +71,12 @@ Breaking API changes
   createHiliteSetProvider({
     imodelAccess: {
       ...createECSqlQueryExecutor(iModel),
-      ...createMetadataProvider(iModel),
+      ...createECSchemaProvider(iModel),
     },
   });
   ```
 
-- `createCachingHiliteSetProvider` function prop `iModelProvider` was changed to return an object of merged type `IMetadataProvider & IECSqlQueryExecutor` rather than `{ queryExecutor: IECSqlQueryExecutor; metadataProvider: IMetadataProvider }`.
+- `createCachingHiliteSetProvider` function prop `iModelProvider` was changed to return an object of merged type `ECSchemaProvider & ECSqlQueryExecutor` rather than `{ queryExecutor: ECSqlQueryExecutor; schemaProvider: ECSchemaProvider }`.
 
   Previously:
 
@@ -85,7 +85,7 @@ Breaking API changes
     selectionStorage,
     iModelProvider: (key) => ({
       queryExecutor: createECSqlQueryExecutor(iModel),
-      metadataProvider: createMetadataProvider(iModel),
+      schemaProvider: createECSchemaProvider(iModel),
     }),
   });
   ```
@@ -97,7 +97,7 @@ Breaking API changes
     selectionStorage,
     iModelProvider: (key) => ({
       ...createECSqlQueryExecutor(iModel),
-      ...createMetadataProvider(iModel),
+      ...createECSchemaProvider(iModel),
     }),
   });
   ```

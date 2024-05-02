@@ -9,14 +9,14 @@ import * as sinon from "sinon";
 import { createRelationshipPathJoinClause } from "../../shared/ecsql-snippets/ECSqlJoinSnippets";
 import { EC } from "../../shared/Metadata";
 import { trimWhitespace } from "../../shared/Utils";
-import { createMetadataProviderStub } from "../MetadataProviderStub";
+import { createECSchemaProviderStub } from "../MetadataProviderStub";
 
 describe("createRelationshipPathJoinClause", () => {
-  let metadata: ReturnType<typeof createMetadataProviderStub>;
+  let schemaProvider: ReturnType<typeof createECSchemaProviderStub>;
   const schemaName = "x";
 
   beforeEach(() => {
-    metadata = createMetadataProviderStub();
+    schemaProvider = createECSchemaProviderStub();
   });
 
   afterEach(() => {
@@ -24,7 +24,7 @@ describe("createRelationshipPathJoinClause", () => {
   });
 
   it("returns empty string if given empty relationship path", async () => {
-    expect(await createRelationshipPathJoinClause({ metadata, path: [] })).to.eq("");
+    expect(await createRelationshipPathJoinClause({ schemaProvider, path: [] })).to.eq("");
   });
 
   describe("using navigation properties", () => {
@@ -35,7 +35,7 @@ describe("createRelationshipPathJoinClause", () => {
       expect(
         trimWhitespace(
           await createRelationshipPathJoinClause({
-            metadata,
+            schemaProvider,
             path: [
               {
                 sourceClassName: sourceClass.fullName,
@@ -58,7 +58,7 @@ describe("createRelationshipPathJoinClause", () => {
       expect(
         trimWhitespace(
           await createRelationshipPathJoinClause({
-            metadata,
+            schemaProvider,
             path: [
               {
                 sourceClassName: sourceClass.fullName,
@@ -81,7 +81,7 @@ describe("createRelationshipPathJoinClause", () => {
       expect(
         trimWhitespace(
           await createRelationshipPathJoinClause({
-            metadata,
+            schemaProvider,
             path: [
               {
                 sourceClassName: targetClass.fullName,
@@ -105,7 +105,7 @@ describe("createRelationshipPathJoinClause", () => {
       expect(
         trimWhitespace(
           await createRelationshipPathJoinClause({
-            metadata,
+            schemaProvider,
             path: [
               {
                 sourceClassName: targetClass.fullName,
@@ -129,7 +129,7 @@ describe("createRelationshipPathJoinClause", () => {
       expect(
         trimWhitespace(
           await createRelationshipPathJoinClause({
-            metadata,
+            schemaProvider,
             path: [
               {
                 sourceClassName: sourceClass.fullName,
@@ -155,7 +155,7 @@ describe("createRelationshipPathJoinClause", () => {
       expect(
         trimWhitespace(
           await createRelationshipPathJoinClause({
-            metadata,
+            schemaProvider,
             path: [
               {
                 sourceClassName: sourceClass.fullName,
@@ -186,7 +186,7 @@ describe("createRelationshipPathJoinClause", () => {
       expect(
         trimWhitespace(
           await createRelationshipPathJoinClause({
-            metadata,
+            schemaProvider,
             path: [
               {
                 sourceClassName: targetClass.fullName,
@@ -228,7 +228,7 @@ describe("createRelationshipPathJoinClause", () => {
       expect(
         trimWhitespace(
           await createRelationshipPathJoinClause({
-            metadata,
+            schemaProvider,
             path: [
               {
                 sourceClassName: step1.sourceClass.fullName,
@@ -271,7 +271,7 @@ describe("createRelationshipPathJoinClause", () => {
       expect(
         trimWhitespace(
           await createRelationshipPathJoinClause({
-            metadata,
+            schemaProvider,
             path: [
               {
                 sourceClassName: step1.sourceClass.fullName,
@@ -318,7 +318,7 @@ describe("createRelationshipPathJoinClause", () => {
       expect(
         trimWhitespace(
           await createRelationshipPathJoinClause({
-            metadata,
+            schemaProvider,
             path: [
               {
                 sourceClassName: step1.sourceClass.fullName,
@@ -364,7 +364,7 @@ describe("createRelationshipPathJoinClause", () => {
       expect(
         trimWhitespace(
           await createRelationshipPathJoinClause({
-            metadata,
+            schemaProvider,
             path: [
               {
                 sourceClassName: step1.sourceClass.fullName,
@@ -412,7 +412,7 @@ describe("createRelationshipPathJoinClause", () => {
     const sourceClass =
       typeof props.source === "object"
         ? props.source
-        : metadata.stubEntityClass({
+        : schemaProvider.stubEntityClass({
             schemaName,
             className: props.source ?? "source",
             properties: props.navigationPropertyDirection === "Forward" ? [navigationProperty] : [],
@@ -420,7 +420,7 @@ describe("createRelationshipPathJoinClause", () => {
     const targetClass =
       typeof props.target === "object"
         ? props.target
-        : metadata.stubEntityClass({
+        : schemaProvider.stubEntityClass({
             schemaName,
             className: props.target ?? "target",
             properties: props.navigationPropertyDirection === "Backward" ? [navigationProperty] : [],
@@ -428,7 +428,7 @@ describe("createRelationshipPathJoinClause", () => {
     const relationship =
       typeof props.relationship === "object"
         ? props.relationship
-        : metadata.stubRelationshipClass({
+        : schemaProvider.stubRelationshipClass({
             schemaName,
             className: props.relationship ?? "relationship",
             direction: "Forward",
@@ -449,21 +449,21 @@ describe("createRelationshipPathJoinClause", () => {
     const sourceClass =
       typeof props?.source === "object"
         ? props.source
-        : metadata.stubEntityClass({
+        : schemaProvider.stubEntityClass({
             schemaName,
             className: props?.source ?? "source",
           });
     const targetClass =
       typeof props?.target === "object"
         ? props.target
-        : metadata.stubEntityClass({
+        : schemaProvider.stubEntityClass({
             schemaName,
             className: props?.target ?? "target",
           });
     const relationship =
       typeof props?.relationship === "object"
         ? props.relationship
-        : metadata.stubRelationshipClass({
+        : schemaProvider.stubRelationshipClass({
             schemaName,
             className: props?.relationship ?? "relationship",
             direction: "Forward",
