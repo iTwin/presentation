@@ -49,7 +49,7 @@ function useModelSourceUpdateOnIModelHierarchyUpdate(params: TreeReloadParams & 
 
     let subscription: Subscription | undefined;
     const removeListener = Presentation.presentation.onIModelHierarchyChanged.addListener((args: IModelHierarchyChangeEventArgs) => {
-      if (args.rulesetId !== ruleset || args.imodelKey !== dataProviderProps.imodel.key) {
+      if (args.rulesetId !== getRulesetId(ruleset) || args.imodelKey !== dataProviderProps.imodel.key) {
         return;
       }
 
