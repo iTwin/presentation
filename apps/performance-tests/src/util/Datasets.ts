@@ -96,7 +96,7 @@ export class Datasets {
       case "50k elements":
         return async (name: string, localPath: string) => this.createFlatIModel(name, localPath, elementCount);
       case "50k nested elements":
-        return async (name: string, localPath: string) => this.createNestedModel(name, localPath, elementCount);
+        return async (name: string, localPath: string) => this.createNestedElementModel(name, localPath, elementCount);
       case "50k group member elements":
         return async (name: string, localPath: string) => this.createNestedGroupModel(name, localPath, elementCount);
       case "1k nested subjects":
@@ -165,7 +165,7 @@ export class Datasets {
     console.log(`${numElements} elements: Done.`);
   }
 
-  private static async createNestedModel(name: string, localPath: string, numElements: number) {
+  private static async createNestedElementModel(name: string, localPath: string, numElements: number) {
     console.log(`${numElements} elements: Creating...`);
 
     await createIModel(name, localPath, async (builder) => {

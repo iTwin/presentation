@@ -226,7 +226,7 @@ async function* computeFunctionalElementSelection(
     `
       SELECT DISTINCT ECInstanceId, ClassName FROM Element3dAncestorRelatedFunctionalElement
     `,
-  ].join(" UNION ALL ");
+  ].join(" UNION ");
   yield* executeQuery(queryExecutor, { ctes, ecsql, bindings });
 }
 
