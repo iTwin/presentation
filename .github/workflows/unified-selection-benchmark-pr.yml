@@ -1,4 +1,4 @@
-name: PR unified-selection performance benchmark
+name: PR performance benchmark
 
 on:
   pull_request:
@@ -60,9 +60,8 @@ jobs:
       - name: Post benchmark summary
         uses: jalextowle/github-action-benchmark@35e54a2ea34188ca73481c2a0ce5919907978f4f
         with:
-          name: unified-selection benchmark
           tool: 'customSmallerIsBetter'
-          output-file-path: ./apps/performance-tests/benchmark.json
+          output-file-path: ./apps/performance-tests/unified-selection-benchmark.json
           github-token: ${{ secrets.GITHUB_TOKEN }}
           save-data-file: false
           comment-on-pull-request: true
