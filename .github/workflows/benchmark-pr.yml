@@ -62,6 +62,7 @@ jobs:
       - name: Post benchmark summary
         uses: jalextowle/github-action-benchmark@35e54a2ea34188ca73481c2a0ce5919907978f4f
         with:
+          name: hierarchies benchmark
           tool: 'customSmallerIsBetter'
           output-file-path: ./apps/performance-tests/hierarchies-benchmark.json
           github-token: ${{ secrets.GITHUB_TOKEN }}
