@@ -5,7 +5,7 @@
 
 import { ConcatenatedValue } from "./ConcatenatedValue";
 import { createConcatenatedValueJsonSelector, createRawPropertyValueSelector, TypedValueSelectClauseProps } from "./ecsql-snippets/ECSqlValueSelectorSnippets";
-import { IECClassHierarchyInspector } from "./Metadata";
+import { ECClassHierarchyInspector } from "./Metadata";
 
 /**
  * Props for `IInstanceLabelSelectClauseFactory.createSelectClause`.
@@ -138,7 +138,7 @@ interface ClassBasedLabelSelectClause {
  */
 interface ClassBasedInstanceLabelSelectClauseFactoryProps {
   /** Access to ECClass hierarchy in the iModel. */
-  classHierarchyInspector: IECClassHierarchyInspector;
+  classHierarchyInspector: ECClassHierarchyInspector;
 
   /**
    * A prioritized list of instance label selectors associated to classes they should be applied to.
@@ -224,7 +224,7 @@ export function createClassBasedInstanceLabelSelectClauseFactory(props: ClassBas
  * Props for `createBisInstanceLabelSelectClauseFactory`.
  */
 interface BisInstanceLabelSelectClauseFactoryProps {
-  classHierarchyInspector: IECClassHierarchyInspector;
+  classHierarchyInspector: ECClassHierarchyInspector;
 }
 
 /**

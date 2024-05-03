@@ -6,10 +6,6 @@
 import { Id64Arg } from "@itwin/core-bentley";
 import { Event } from "@itwin/presentation-shared";
 
-/** @packageDocumentation
- * @module UnifiedSelection
- */
-
 /**
  * Identifies the type of changes made to the `CoreIModelSelectionSet` to produce a `CoreSelectionSetEvent`.
  * @see https://www.itwinjs.org/reference/core-frontend/selectionset/selectionseteventtype/

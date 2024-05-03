@@ -6,14 +6,14 @@
 import { asyncScheduler, expand, filter, from, observeOn, of, tap } from "rxjs";
 import { IModelDb } from "@itwin/core-backend";
 import { SchemaContext, SchemaJsonLocater } from "@itwin/ecschema-metadata";
-import { createECSqlQueryExecutor, createMetadataProvider } from "@itwin/presentation-core-interop";
+import { createECSchemaProvider, createECSqlQueryExecutor } from "@itwin/presentation-core-interop";
 import { createLimitingECSqlQueryExecutor, HierarchyNode, HierarchyProvider, IHierarchyLevelDefinitionsFactory } from "@itwin/presentation-hierarchies";
-import { createCachingECClassHierarchyInspector, IECClassHierarchyInspector, IECMetadataProvider } from "@itwin/presentation-shared";
+import { createCachingECClassHierarchyInspector, ECClassHierarchyInspector, ECSchemaProvider } from "@itwin/presentation-shared";
 
 export interface ProviderOptions {
   iModel: IModelDb;
   rowLimit?: number | "unbounded";
-  getHierarchyFactory(imodelAccess: IECMetadataProvider & IECClassHierarchyInspector): IHierarchyLevelDefinitionsFactory;
+  getHierarchyFactory(imodelAccess: ECSchemaProvider & ECClassHierarchyInspector): IHierarchyLevelDefinitionsFactory;
 }
 
 const DEFAULT_ROW_LIMIT = 1000;
@@ -46,20 +46,20 @@ export class StatelessHierarchyProvider {
     });
   }
 
-  private createMetadataProvider() {
+  private createECSchemaProvider() {
     const iModel = this._props.iModel;
     const schemas = new SchemaContext();
     const locater = new SchemaJsonLocater((schemaName) => iModel.getSchemaProps(schemaName));
     schemas.addLocater(locater);
-    return createMetadataProvider(schemas);
+    return createECSchemaProvider(schemas);
   }
 
   private createProvider() {
-    const metadataProvider = this.createMetadataProvider();
+    const schemaProvider = this.createECSchemaProvider();
     const rowLimit = this._props.rowLimit ?? DEFAULT_ROW_LIMIT;
     const imodelAccess = {
-      ...metadataProvider,
-      ...createCachingECClassHierarchyInspector({ metadataProvider, cacheSize: 1000 }),
+      ...schemaProvider,
+      ...createCachingECClassHierarchyInspector({ schemaProvider, cacheSize: 1000 }),
       ...createLimitingECSqlQueryExecutor(createECSqlQueryExecutor(this._props.iModel), rowLimit),
     };
     return new HierarchyProvider({

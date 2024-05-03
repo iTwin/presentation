@@ -7,7 +7,7 @@ import { Id64String } from "@itwin/core-bentley";
 import { ECSqlQueryDef, parseInstanceLabel } from "@itwin/presentation-shared";
 import { INodeParser } from "../HierarchyDefinition";
 import { InstanceHierarchyNodeProcessingParams, ParsedHierarchyNode, ParsedInstanceHierarchyNode } from "../HierarchyNode";
-import { ILimitingECSqlQueryExecutor } from "../LimitingECSqlQueryExecutor";
+import { LimitingECSqlQueryExecutor } from "../LimitingECSqlQueryExecutor";
 import { NodeSelectClauseColumnNames } from "../NodeSelectQueryFactory";
 
 /** @internal */
@@ -26,7 +26,7 @@ export class TreeQueryResultsReader {
     };
   }
 
-  public async *read(queryExecutor: ILimitingECSqlQueryExecutor, query: ECSqlQueryDef, limit?: number | "unbounded"): AsyncGenerator<ParsedHierarchyNode> {
+  public async *read(queryExecutor: LimitingECSqlQueryExecutor, query: ECSqlQueryDef, limit?: number | "unbounded"): AsyncGenerator<ParsedHierarchyNode> {
     for await (const row of queryExecutor.createQueryReader(query, { rowFormat: "ECSqlPropertyNames", ...(limit !== undefined ? { limit } : undefined) })) {
       yield this._props.parser(row);
     }

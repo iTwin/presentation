@@ -1,9 +1,8 @@
 {
   "name": "@itwin/presentation-core-interop",
-  "version": "0.0.0",
-  "description": "A package that has peer dependencies on both `@itwin/presentation-hierarchies` and core packages and provides an interop layer between them.",
+  "version": "0.1.0",
+  "description": "The package acts as a layer between iTwin.js Core and Presentation packages.",
   "license": "MIT",
-  "private": true,
   "repository": {
     "type": "git",
     "url": "https://github.com/iTwin/presentation.git",
@@ -11,10 +10,9 @@
   },
   "keywords": [
     "Bentley",
-    "Presentation",
+    "iModel",
     "iTwin.js",
-    "Hierarchy",
-    "ECSQL"
+    "Presentation"
   ],
   "author": {
     "name": "Bentley Systems, Inc.",

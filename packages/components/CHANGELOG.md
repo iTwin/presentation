@@ -1,5 +1,12 @@
 # Change Log - @itwin/presentation-components
 
+## 5.2.2
+
+### Patch Changes
+
+- [#550](https://github.com/iTwin/presentation/pull/550): Disabled `onMouseDown` event propagation for hierarchy filtering buttons.
+- [#552](https://github.com/iTwin/presentation/pull/552): Fixed tree reloading when unit system, ruleset variables or data in iModel changes.
+
 ## 5.2.1
 
 ### Patch Changes

@@ -6,13 +6,13 @@
 import { expect } from "chai";
 import { collect, createAsyncIterator } from "presentation-test-utilities";
 import sinon from "sinon";
-import { IECSqlQueryExecutor, trimWhitespace } from "@itwin/presentation-shared";
+import { ECSqlQueryExecutor, trimWhitespace } from "@itwin/presentation-shared";
 import { RowsLimitExceededError } from "../hierarchies/HierarchyErrors";
 import { createLimitingECSqlQueryExecutor } from "../hierarchies/LimitingECSqlQueryExecutor";
 
 describe("createLimitingECSqlQueryExecutor", () => {
   const baseExecutor = {
-    createQueryReader: sinon.stub<Parameters<IECSqlQueryExecutor["createQueryReader"]>, ReturnType<IECSqlQueryExecutor["createQueryReader"]>>(),
+    createQueryReader: sinon.stub<Parameters<ECSqlQueryExecutor["createQueryReader"]>, ReturnType<ECSqlQueryExecutor["createQueryReader"]>>(),
   };
 
   beforeEach(() => {

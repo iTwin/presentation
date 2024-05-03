@@ -6,10 +6,6 @@
 import { Selectables } from "./Selectable";
 import { SelectionStorage } from "./SelectionStorage";
 
-/** @packageDocumentation
- * @module UnifiedSelection
- */
-
 /**
  * The type of selection change.
  * @beta
@@ -40,6 +36,11 @@ export interface StorageSelectionChangeEventArgs {
   /** Selectables affected by this selection change event. */
   selectables: Selectables;
   /** iModel key with which the selection is associated with. */
+  imodelKey: string;
+  /**
+   * iModel key with which the selection is associated with.
+   * @deprecated in 0.2. Use `imodelKey` instead.
+   */
   iModelKey: string;
   /** The timestamp of when the selection change happened */
   timestamp: Date;

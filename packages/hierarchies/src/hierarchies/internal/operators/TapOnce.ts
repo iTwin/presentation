@@ -3,8 +3,18 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-export { createValueFormatter } from "./core-interop/Formatting";
-export { createLogger } from "./core-interop/Logging";
-export { createECSchemaProvider } from "./core-interop/Metadata";
-export { createECSqlQueryExecutor } from "./core-interop/QueryExecutor";
-export { registerTxnListeners } from "./core-interop/Transactions";
+import { MonoTypeOperatorFunction, tap } from "rxjs";
+
+/** @internal */
+export function tapOnce<T>(observer: () => void): MonoTypeOperatorFunction<T> {
+  let first = true;
+  return (source) =>
+    source.pipe(
+      tap(() => {
+        if (first) {
+          first = false;
+          observer();
+        }
+      }),
+    );
+}

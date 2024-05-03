@@ -3,15 +3,10 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-/** @packageDocumentation
- * @module UnifiedSelection
- */
-
 import { from, Observable, shareReplay } from "rxjs";
 import { eachValueFrom } from "rxjs-for-await";
+import { ECSchemaProvider, ECSqlQueryExecutor } from "@itwin/presentation-shared";
 import { createHiliteSetProvider, HiliteSet, HiliteSetProvider } from "./HiliteSetProvider";
-import { IMetadataProvider } from "./queries/ECMetadata";
-import { IECSqlQueryExecutor } from "./queries/ECSqlCore";
 import { StorageSelectionChangeEventArgs } from "./SelectionChangeEvent";
 import { IMODEL_CLOSE_SELECTION_CLEAR_SOURCE, SelectionStorage } from "./SelectionStorage";
 
@@ -21,7 +16,7 @@ import { IMODEL_CLOSE_SELECTION_CLEAR_SOURCE, SelectionStorage } from "./Selecti
  */
 export interface CachingHiliteSetProviderProps {
   selectionStorage: SelectionStorage;
-  iModelProvider: (iModelKey: string) => IMetadataProvider & IECSqlQueryExecutor;
+  imodelProvider: (imodelKey: string) => ECSchemaProvider & ECSqlQueryExecutor;
 }
 
 /**
@@ -34,7 +29,7 @@ export interface CachingHiliteSetProvider {
   /** Get the current hilite set iterator for the specified imodel */
   getHiliteSet(props: {
     /** iModel to get hilite set for */
-    iModelKey: string;
+    imodelKey: string;
   }): AsyncIterableIterator<HiliteSet>;
 
   /** Disposes the cache. */
@@ -55,28 +50,28 @@ class CachingHiliteSetProviderImpl implements CachingHiliteSetProvider {
   private _hiliteSetProviders = new Map<string, HiliteSetProvider>();
   private _cache = new Map<string, Observable<HiliteSet>>();
   private _removeListener: () => void;
-  private _iModelProvider: (iModelKey: string) => IMetadataProvider & IECSqlQueryExecutor;
+  private _imodelProvider: (imodelKey: string) => ECSchemaProvider & ECSqlQueryExecutor;
 
   constructor(props: CachingHiliteSetProviderProps) {
     this._selectionStorage = props.selectionStorage;
-    this._iModelProvider = props.iModelProvider;
+    this._imodelProvider = props.imodelProvider;
     this._removeListener = this._selectionStorage.selectionChangeEvent.addListener((args: StorageSelectionChangeEventArgs) => {
-      this._cache.delete(args.iModelKey);
+      this._cache.delete(args.imodelKey);
       if (args.changeType === "clear" && args.source === IMODEL_CLOSE_SELECTION_CLEAR_SOURCE) {
-        this._hiliteSetProviders.delete(args.iModelKey);
+        this._hiliteSetProviders.delete(args.imodelKey);
       }
     });
   }
 
-  public getHiliteSet({ iModelKey }: { iModelKey: string }): AsyncIterableIterator<HiliteSet> {
-    const imodelAccess = this._iModelProvider(iModelKey);
-    const provider = this.getHiliteSetProvider(iModelKey, imodelAccess);
-    let hiliteSet = this._cache.get(iModelKey);
+  public getHiliteSet({ imodelKey }: { imodelKey: string }): AsyncIterableIterator<HiliteSet> {
+    const imodelAccess = this._imodelProvider(imodelKey);
+    const provider = this.getHiliteSetProvider(imodelKey, imodelAccess);
+    let hiliteSet = this._cache.get(imodelKey);
 
     if (!hiliteSet) {
-      const selectables = this._selectionStorage.getSelection({ iModelKey });
+      const selectables = this._selectionStorage.getSelection({ imodelKey });
       hiliteSet = from(provider.getHiliteSet({ selectables })).pipe(shareReplay({ refCount: true }));
-      this._cache.set(iModelKey, hiliteSet);
+      this._cache.set(imodelKey, hiliteSet);
     }
 
     return eachValueFrom(hiliteSet);
@@ -88,11 +83,11 @@ class CachingHiliteSetProviderImpl implements CachingHiliteSetProvider {
     this._cache = new Map();
   }
 
-  private getHiliteSetProvider(iModelKey: string, imodelAccess: IMetadataProvider & IECSqlQueryExecutor) {
-    let provider = this._hiliteSetProviders.get(iModelKey);
+  private getHiliteSetProvider(imodelKey: string, imodelAccess: ECSchemaProvider & ECSqlQueryExecutor) {
+    let provider = this._hiliteSetProviders.get(imodelKey);
     if (!provider) {
       provider = createHiliteSetProvider({ imodelAccess });
-      this._hiliteSetProviders.set(iModelKey, provider);
+      this._hiliteSetProviders.set(imodelKey, provider);
     }
     return provider;
   }

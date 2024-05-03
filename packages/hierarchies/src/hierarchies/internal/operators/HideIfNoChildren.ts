@@ -3,10 +3,11 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { asapScheduler, defer, filter, map, merge, mergeMap, Observable, partition, share, subscribeOn } from "rxjs";
+import { defer, filter, map, merge, mergeMap, Observable } from "rxjs";
 import { HierarchyNode, ProcessedCustomHierarchyNode, ProcessedHierarchyNode, ProcessedInstanceHierarchyNode } from "../../HierarchyNode";
 import { createNodeIdentifierForLogging, createOperatorLoggingNamespace, hasChildren } from "../Common";
 import { doLog, log } from "../LoggingUtils";
+import { partition } from "./Partition";
 
 const OPERATOR_NAME = "HideIfNoChildren";
 /** @internal */
@@ -19,19 +20,13 @@ export const LOGGING_NAMESPACE = createOperatorLoggingNamespace(OPERATOR_NAME);
  */
 export function createHideIfNoChildrenOperator(hasNodes: (node: ProcessedHierarchyNode) => Observable<boolean>) {
   return function (nodes: Observable<ProcessedHierarchyNode>): Observable<ProcessedHierarchyNode> {
-    const sharedNodes = nodes.pipe(
-      log({ category: LOGGING_NAMESPACE, message: /* istanbul ignore next */ (n) => `in: ${createNodeIdentifierForLogging(n)}` }),
-      // each partitioned observable is going to subscribe to this individually - share to avoid requesting
-      // nodes from source observable multiple times
-      subscribeOn(asapScheduler),
-      share(),
-    );
+    const inputNodes = nodes.pipe(log({ category: LOGGING_NAMESPACE, message: /* istanbul ignore next */ (n) => `in: ${createNodeIdentifierForLogging(n)}` }));
     // split input into 3 pieces:
     // - `doesntNeedHide` - nodes without the flag (return no matter if they have children or not)
     // - `determinedChildren` - nodes with the flag and known children
     // - `undeterminedChildren` - nodes with the flag and unknown children
     const [needsHide, doesntNeedHide] = partition(
-      sharedNodes,
+      inputNodes,
       (n): n is ProcessedCustomHierarchyNode | ProcessedInstanceHierarchyNode =>
         (HierarchyNode.isCustom(n) || HierarchyNode.isInstancesNode(n)) && !!n.processingParams?.hideIfNoChildren,
     );
@@ -58,7 +53,7 @@ export function createHideIfNoChildrenOperator(hasNodes: (node: ProcessedHierarc
                     category: LOGGING_NAMESPACE,
                     message: /* istanbul ignore next */ (childrenFlag) => `${createNodeIdentifierForLogging(n)}: determined children: ${childrenFlag}`,
                   }),
-                  map((children) => ({ ...n, children })),
+                  map((children) => Object.assign(n, { children })),
                 );
               }),
             // Sending child check requests for all nodes without any limit greatly slows down

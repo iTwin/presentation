@@ -6,7 +6,7 @@
 import { assert } from "@itwin/core-bentley";
 import { ConcatenatedValue, ConcatenatedValuePart } from "./ConcatenatedValue";
 import { julianToDateTime } from "./InternalUtils";
-import { getClass, IECMetadataProvider } from "./Metadata";
+import { ECSchemaProvider, getClass } from "./Metadata";
 import { TypedPrimitiveValue } from "./Values";
 
 /**
@@ -25,10 +25,10 @@ export type IPrimitiveValueFormatter = (value: TypedPrimitiveValue) => Promise<s
  */
 export async function formatConcatenatedValue(props: {
   value: ConcatenatedValue | string;
-  metadataProvider: IECMetadataProvider;
+  schemaProvider: ECSchemaProvider;
   valueFormatter: IPrimitiveValueFormatter;
 }): Promise<string> {
-  const { value, metadataProvider, valueFormatter } = props;
+  const { value, schemaProvider, valueFormatter } = props;
   if (typeof value === "string") {
     return valueFormatter({ value, type: "String" });
   }
@@ -44,7 +44,7 @@ export async function formatConcatenatedValue(props: {
       }
       // for property parts - find property metadata and create `TypedPrimitiveValue` for them.
       if (ConcatenatedValuePart.isProperty(part)) {
-        const property = await getProperty(part, metadataProvider);
+        const property = await getProperty(part, schemaProvider);
         if (!property?.isPrimitive()) {
           throw new Error(`Concatenated values formatter expects a primitive property, but it's not.`);
         }
@@ -71,8 +71,8 @@ export async function formatConcatenatedValue(props: {
   });
 }
 
-async function getProperty({ className, propertyName }: { className: string; propertyName: string }, metadata: IECMetadataProvider) {
-  const propertyClass = await getClass(metadata, className);
+async function getProperty({ className, propertyName }: { className: string; propertyName: string }, schemaProvider: ECSchemaProvider) {
+  const propertyClass = await getClass(schemaProvider, className);
   return propertyClass.getProperty(propertyName);
 }
 

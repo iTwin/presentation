@@ -9,7 +9,11 @@
   "updateInternalDependencies": "patch",
   "ignore": [
     "presentation-full-stack-tests",
+    "presentation-performance-tests",
+    "@load-tests/frontend",
     "@test-app/frontend",
+    "@itwin/presentation-models-tree",
+    "@itwin/presentation-hierarchies",
     "@itwin/presentation-hierarchies-react"
   ]
 }

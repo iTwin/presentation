@@ -6,10 +6,7 @@
 import {
   catchError,
   concat,
-  concatAll,
-  concatMap,
   defaultIfEmpty,
-  defer,
   EMPTY,
   filter,
   finalize,
@@ -21,8 +18,6 @@ import {
   Observable,
   ObservableInput,
   of,
-  partition,
-  shareReplay,
   take,
   tap,
 } from "rxjs";
@@ -31,11 +26,11 @@ import { GenericInstanceFilter } from "@itwin/core-common";
 import {
   ConcatenatedValue,
   createDefaultValueFormatter,
+  ECClassHierarchyInspector,
+  ECSchemaProvider,
   ECSqlBinding,
   ECSqlQueryDef,
   formatConcatenatedValue,
-  IECClassHierarchyInspector,
-  IECMetadataProvider,
   InstanceKey,
   IPrimitiveValueFormatter,
   normalizeFullClassName,
@@ -63,12 +58,13 @@ import { createDetermineChildrenOperator } from "./internal/operators/DetermineC
 import { createGroupingOperator } from "./internal/operators/Grouping";
 import { createHideIfNoChildrenOperator } from "./internal/operators/HideIfNoChildren";
 import { createHideNodesInHierarchyOperator } from "./internal/operators/HideNodesInHierarchy";
+import { partition } from "./internal/operators/Partition";
 import { reduceToMergeMapList } from "./internal/operators/ReduceToMergeMap";
 import { shareReplayWithErrors } from "./internal/operators/ShareReplayWithErrors";
 import { sortNodesByLabelOperator } from "./internal/operators/Sorting";
 import { SubscriptionScheduler } from "./internal/SubscriptionScheduler";
 import { TreeQueryResultsReader } from "./internal/TreeNodesReader";
-import { ILimitingECSqlQueryExecutor } from "./LimitingECSqlQueryExecutor";
+import { LimitingECSqlQueryExecutor } from "./LimitingECSqlQueryExecutor";
 import { NodeSelectClauseColumnNames } from "./NodeSelectQueryFactory";
 
 const LOGGING_NAMESPACE = `${CommonLoggingNamespace}.HierarchyProvider`;
@@ -102,11 +98,11 @@ export interface HierarchyProviderProps {
   /**
    * An object that provides access to iModel's data and metadata.
    *
-   * @see `IECMetadataProvider`
-   * @see `ILimitingECSqlQueryExecutor`
-   * @see `IECClassHierarchyInspector`
+   * @see `ECSchemaProvider`
+   * @see `LimitingECSqlQueryExecutor`
+   * @see `ECClassHierarchyInspector`
    */
-  imodelAccess: IECMetadataProvider & ILimitingECSqlQueryExecutor & IECClassHierarchyInspector;
+  imodelAccess: ECSchemaProvider & LimitingECSqlQueryExecutor & ECClassHierarchyInspector;
 
   /**
    * A function that returns a hierarchy definition, describing how the hierarchy that the provider should be create. The
@@ -147,7 +143,7 @@ export interface GetHierarchyNodesProps {
   instanceFilter?: GenericInstanceFilter;
 
   /**
-   * Optional hierarchy level size limit override. This value is passed to `ILimitingECSqlQueryExecutor` used
+   * Optional hierarchy level size limit override. This value is passed to `LimitingECSqlQueryExecutor` used
    * by this provider to override query rows limit per hierarchy level. If not provided, defaults to whatever
    * is used by the limiting query executor.
    *
@@ -164,7 +160,7 @@ export interface GetHierarchyNodesProps {
  * @beta
  */
 export class HierarchyProvider {
-  private _imodelAccess: IECMetadataProvider & ILimitingECSqlQueryExecutor & IECClassHierarchyInspector;
+  private _imodelAccess: ECSchemaProvider & LimitingECSqlQueryExecutor & ECClassHierarchyInspector;
   private _queryReader: TreeQueryResultsReader;
   private _valuesFormatter: IPrimitiveValueFormatter;
   private _localizedStrings: HierarchyProviderLocalizedStrings;
@@ -184,7 +180,7 @@ export class HierarchyProvider {
    * A limiting ECSQL query executor used by this provider.
    * @see HierarchyProviderProps.queryExecutor
    */
-  public get queryExecutor(): ILimitingECSqlQueryExecutor {
+  public get queryExecutor(): LimitingECSqlQueryExecutor {
     return this._imodelAccess;
   }
 
@@ -219,10 +215,9 @@ export class HierarchyProvider {
   }
 
   /** @internal */
-  public get queryScheduler(): { schedule: ILimitingECSqlQueryExecutor["createQueryReader"] } {
+  public get queryScheduler(): { schedule: LimitingECSqlQueryExecutor["createQueryReader"] } {
     return {
-      schedule: (query, config) =>
-        eachValueFrom(this._queryScheduler.scheduleSubscription(defer(() => from(this.queryExecutor.createQueryReader(query, config))))),
+      schedule: (query, config) => eachValueFrom(this._queryScheduler.scheduleSubscription(from(this.queryExecutor.createQueryReader(query, config)))),
     };
   }
 
@@ -239,7 +234,7 @@ export class HierarchyProvider {
     });
     // stream hierarchy level definitions in order
     const definitions = from(this.hierarchyDefinition.defineHierarchyLevel(props)).pipe(
-      concatAll(),
+      mergeAll(),
       finalize(() =>
         doLog({
           category: PERF_LOGGING_NAMESPACE,
@@ -249,7 +244,7 @@ export class HierarchyProvider {
     );
     // pipe definitions to nodes and put "share replay" on it
     return definitions.pipe(
-      concatMap((def): ObservableInput<ParsedHierarchyNode> => {
+      mergeMap((def): ObservableInput<ParsedHierarchyNode> => {
         if (HierarchyNodesDefinition.isCustomNode(def)) {
           return of(def.node);
         }
@@ -261,7 +256,7 @@ export class HierarchyProvider {
               message: /* istanbul ignore next */ (query) =>
                 `Query direct nodes for parent ${createNodeIdentifierForLogging(props.parentNode)}: ${createQueryLogMessage(query)}`,
             }),
-            mergeMap((query) => defer(() => from(this._queryReader.read(this.queryExecutor, query, props.hierarchyLevelSizeLimit)))),
+            mergeMap((query) => from(this._queryReader.read(this.queryExecutor, query, props.hierarchyLevelSizeLimit))),
           ),
         );
       }),
@@ -277,8 +272,10 @@ export class HierarchyProvider {
 
   private createInitializedNodesObservable(nodes: Observable<ParsedHierarchyNode>, parentNode: ParentHierarchyNode | undefined) {
     return nodes.pipe(
+      // we're going to be mutating the nodes, but don't want to mutate the original one, so just clone it here once
+      map((node) => ({ ...node })),
       // set parent node keys on the parsed node
-      map((node) => ({ ...node, parentKeys: createParentNodeKeysList(parentNode) })),
+      map((node) => Object.assign(node, { parentKeys: createParentNodeKeysList(parentNode) })),
       // format `ConcatenatedValue` labels into string labels
       mergeMap(async (node) => applyLabelsFormatting(node, this._imodelAccess, this._valuesFormatter)),
       // we have `ProcessedHierarchyNode` from here
@@ -338,11 +335,12 @@ export class HierarchyProvider {
       postProcessNodes(this.hierarchyDefinition),
       sortNodesByLabelOperator,
       map((n): HierarchyNode => {
-        const node = { ...n };
-        if (HierarchyNode.isCustom(node) || HierarchyNode.isInstancesNode(node)) {
-          delete node.processingParams;
+        if (HierarchyNode.isCustom(n) || HierarchyNode.isInstancesNode(n)) {
+          delete n.processingParams;
         }
-        return { ...node, children: hasChildren(n) };
+        return Object.assign(n, {
+          children: hasChildren(n),
+        });
       }),
       finalize(() =>
         doLog({
@@ -482,7 +480,7 @@ export class HierarchyProvider {
 
     // split the definitions based on whether they're for custom nodes or for instance nodes
     const [customDefs, instanceDefs] = partition(
-      from(this.hierarchyDefinition.defineHierarchyLevel({ parentNode, instanceFilter })).pipe(mergeAll(), shareReplay()),
+      from(this.hierarchyDefinition.defineHierarchyLevel({ parentNode, instanceFilter })).pipe(mergeAll()),
       HierarchyNodesDefinition.isCustomNode,
     );
 
@@ -516,7 +514,6 @@ export class HierarchyProvider {
           ),
         ),
       ),
-      shareReplay(),
     );
     // split the instance keys observable based on whether they should be hidden or not
     const [visibleNodeInstanceKeys, hiddenNodeInstanceKeys] = partition(instanceKeys, ({ hide }) => !hide);
@@ -570,7 +567,7 @@ export class HierarchyProvider {
   }
 
   /**
-   * A function that should be called when the underlying data source, used by `HierarchyProviderProps.metadataProvider`,
+   * A function that should be called when the underlying data source, used by `HierarchyProviderProps.schemaProvider`,
    * `HierarchyProviderProps.queryExecutor` or `HierarchyProviderProps.hierarchyDefinition`, changes.
    *
    * Calling the function invalidates internal caches to make sure fresh data is retrieved on new requests.
@@ -593,21 +590,21 @@ function postProcessNodes(hierarchyFactory: IHierarchyLevelDefinitionsFactory) {
 function processNodes<TNode>(processor: (node: TNode) => Promise<TNode | undefined>) {
   return (nodes: Observable<TNode>) =>
     nodes.pipe(
-      concatMap(processor),
+      mergeMap(processor),
       filter((n): n is TNode => !!n),
     );
 }
 
 async function applyLabelsFormatting<TNode extends { label: string | ConcatenatedValue }>(
   node: TNode,
-  metadataProvider: IECMetadataProvider,
+  schemaProvider: ECSchemaProvider,
   valueFormatter: IPrimitiveValueFormatter,
 ): Promise<TNode & { label: string }> {
   return {
     ...node,
     label: await formatConcatenatedValue({
       value: node.label,
-      metadataProvider,
+      schemaProvider,
       valueFormatter,
     }),
   };

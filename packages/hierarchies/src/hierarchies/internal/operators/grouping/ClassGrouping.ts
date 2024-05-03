@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { getClass, IECMetadataProvider } from "@itwin/presentation-shared";
+import { ECSchemaProvider, getClass } from "@itwin/presentation-shared";
 import { ClassGroupingNodeKey, HierarchyNode, ParentHierarchyNode, ProcessedInstanceHierarchyNode } from "../../../HierarchyNode";
 import { GroupingHandlerResult, ProcessedInstancesGroupingHierarchyNode } from "../Grouping";
 
@@ -20,7 +20,7 @@ interface ClassGroupingInformation {
 
 /** @internal */
 export async function createClassGroups(
-  metadata: IECMetadataProvider,
+  schemaProvider: ECSchemaProvider,
   parentNode: ParentHierarchyNode | undefined,
   nodes: ProcessedInstanceHierarchyNode[],
 ): Promise<GroupingHandlerResult> {
@@ -31,7 +31,7 @@ export async function createClassGroups(
     if (node.processingParams?.grouping?.byClass && nodeClassName !== parentNodeClass) {
       let groupingInfo = groupings.grouped.get(nodeClassName);
       if (!groupingInfo) {
-        const nodeClass = await getClass(metadata, nodeClassName);
+        const nodeClass = await getClass(schemaProvider, nodeClassName);
         groupingInfo = {
           class: nodeClass,
           groupedNodes: [],
@@ -59,7 +59,7 @@ function createGroupingNodes(groupings: ClassGroupingInformation): GroupingHandl
       key: groupingNodeKey,
       parentKeys: groupedNodeParentKeys,
       groupedInstanceKeys: entry.groupedNodes.flatMap((groupedInstanceNode) => groupedInstanceNode.key.instanceKeys),
-      children: entry.groupedNodes.map((gn) => ({ ...gn, parentKeys: [...groupedNodeParentKeys, groupingNodeKey] })),
+      children: entry.groupedNodes.map((gn) => Object.assign(gn, { parentKeys: [...groupedNodeParentKeys, groupingNodeKey] })),
     });
   });
   return { grouped: groupedNodes, ungrouped: groupings.ungrouped, groupingType: "class" };

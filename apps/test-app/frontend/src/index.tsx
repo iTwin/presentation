@@ -83,7 +83,7 @@ async function initializePresentation() {
 
   // clear selection storage when iModel is closed
   IModelConnection.onClose.addListener((imodel) => {
-    MyAppFrontend.selectionStorage.clearStorage({ iModelKey: imodel.key });
+    MyAppFrontend.selectionStorage.clearStorage({ imodelKey: imodel.key });
   });
 }
 

@@ -13,32 +13,32 @@ import {
   HierarchyNode,
   HierarchyNodeIdentifiersPath,
   IHierarchyLevelDefinitionsFactory,
-  ILimitingECSqlQueryExecutor,
+  LimitingECSqlQueryExecutor,
   NodeSelectClauseColumnNames,
   NodeSelectQueryFactory,
   ProcessedHierarchyNode,
 } from "@itwin/presentation-hierarchies";
 import {
   createBisInstanceLabelSelectClauseFactory,
+  ECClassHierarchyInspector,
+  ECSchemaProvider,
   ECSql,
   ECSqlBinding,
-  IECClassHierarchyInspector,
-  IECMetadataProvider,
   IInstanceLabelSelectClauseFactory,
   InstanceKey,
 } from "@itwin/presentation-shared";
 
 interface ModelsTreeDefinitionProps {
-  imodelAccess: IECMetadataProvider & IECClassHierarchyInspector;
+  imodelAccess: ECSchemaProvider & ECClassHierarchyInspector;
 }
 
 interface ModelsTreeInstanceKeyPathsFromInstanceKeysProps {
-  imodelAccess: IECClassHierarchyInspector & ILimitingECSqlQueryExecutor;
+  imodelAccess: ECClassHierarchyInspector & LimitingECSqlQueryExecutor;
   keys: InstanceKey[];
 }
 
 interface ModelsTreeInstanceKeyPathsFromInstanceLabelProps {
-  imodelAccess: IECClassHierarchyInspector & ILimitingECSqlQueryExecutor;
+  imodelAccess: ECClassHierarchyInspector & LimitingECSqlQueryExecutor;
   label: string;
 }
 

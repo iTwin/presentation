@@ -19,15 +19,15 @@ import {
   FilteredHierarchyNode,
 } from "../hierarchies/internal/FilteringHierarchyLevelDefinitionsFactory";
 import { RowDef } from "../hierarchies/internal/TreeNodesReader";
-import { ILimitingECSqlQueryExecutor } from "../hierarchies/LimitingECSqlQueryExecutor";
+import { LimitingECSqlQueryExecutor } from "../hierarchies/LimitingECSqlQueryExecutor";
 import { ECSqlSelectClauseGroupingParams, NodeSelectClauseColumnNames } from "../hierarchies/NodeSelectQueryFactory";
 import { createIModelAccessStub } from "./Utils";
 
 describe("HierarchyProvider", () => {
   let imodelAccess: ReturnType<typeof createIModelAccessStub> & {
     createQueryReader: sinon.SinonStub<
-      Parameters<ILimitingECSqlQueryExecutor["createQueryReader"]>,
-      ReturnType<ILimitingECSqlQueryExecutor["createQueryReader"]>
+      Parameters<LimitingECSqlQueryExecutor["createQueryReader"]>,
+      ReturnType<LimitingECSqlQueryExecutor["createQueryReader"]>
     >;
   };
 
@@ -143,7 +143,7 @@ describe("HierarchyProvider", () => {
       const queryTimeout1 = new ResolvablePromise();
       imodelAccess.createQueryReader.onFirstCall().returns(
         (async function* () {
-          // the reader yields nothing, but waits for queryTimeout2 to resolve
+          // the reader yields nothing, but waits for queryTimeout1 to resolve
           await queryTimeout1;
         })(),
       );
@@ -156,7 +156,9 @@ describe("HierarchyProvider", () => {
         })(),
       );
 
-      imodelAccess.createQueryReader.onThirdCall().returns(createAsyncIterator([]));
+      const queryReader3 = createAsyncIterator([]);
+      const queryReader3Spy = sinon.spy(queryReader3, "next");
+      imodelAccess.createQueryReader.onThirdCall().returns(queryReader3);
 
       void provider.queryScheduler.schedule({ ecsql: "1" }).next();
       await waitFor(() => expect(imodelAccess.createQueryReader).to.be.calledOnce);
@@ -165,16 +167,15 @@ describe("HierarchyProvider", () => {
       await waitFor(() => expect(imodelAccess.createQueryReader).to.be.calledTwice);
 
       void provider.queryScheduler.schedule({ ecsql: "3" }).next();
-      // not called for the third time until one of the first queries complete
-      await waitFor(() => expect(imodelAccess.createQueryReader).to.be.calledTwice, 100);
+      // query reader should get created, but shouldn't be iterated until one of the first queries completes
+      await waitFor(() => expect(imodelAccess.createQueryReader).to.be.calledThrice);
+      await waitFor(() => expect(queryReader3Spy).to.not.be.called, 100);
 
       await queryTimeout2.resolve(undefined);
       // now called
-      await waitFor(() => expect(imodelAccess.createQueryReader).to.be.calledThrice);
+      await waitFor(() => expect(queryReader3Spy).to.be.called);
 
       await queryTimeout1.resolve(undefined);
-      // but not called anymore, since all queries are already scheduled
-      await waitFor(() => expect(imodelAccess.createQueryReader).to.be.calledThrice, 100);
     });
   });
 
@@ -233,7 +234,9 @@ describe("HierarchyProvider", () => {
       });
       const nodes = await collect(provider.getNodes({ parentNode: undefined }));
       expect(preprocess).to.be.calledOnceWith({ ...node, parentKeys: [] });
-      expect(nodes).to.deep.eq([{ ...node, isPreprocessed: true }]);
+      expect(nodes)
+        .to.have.lengthOf(1)
+        .and.to.containSubset([{ isPreprocessed: true }]);
     });
 
     it("removes node from hierarchy if pre-processor returns `undefined`", async () => {
@@ -283,7 +286,9 @@ describe("HierarchyProvider", () => {
       });
       const nodes = await collect(provider.getNodes({ parentNode: undefined }));
       expect(postprocess).to.be.calledOnceWith({ ...node, parentKeys: [] });
-      expect(nodes).to.deep.eq([{ ...node, isPostprocessed: true }]);
+      expect(nodes)
+        .to.have.lengthOf(1)
+        .to.containSubset([{ isPostprocessed: true }]);
     });
 
     it("removes node from hierarchy if post-processor returns `undefined`", async () => {
@@ -450,7 +455,7 @@ describe("HierarchyProvider", () => {
       expect(rootNodes).to.deep.eq([{ ...rootNode, parentKeys: [], children: true }]);
       expect(hierarchyDefinition.defineHierarchyLevel).to.be.calledTwice;
       expect(hierarchyDefinition.defineHierarchyLevel.firstCall).to.be.calledWith({ parentNode: undefined });
-      expect(hierarchyDefinition.defineHierarchyLevel.secondCall).to.be.calledWith({ parentNode: omit(rootNodes[0], ["children"]) });
+      expect(hierarchyDefinition.defineHierarchyLevel.secondCall).to.be.calledWith({ parentNode: rootNodes[0] });
     });
   });
 

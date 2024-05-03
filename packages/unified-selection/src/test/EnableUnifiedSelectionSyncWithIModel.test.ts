@@ -7,16 +7,80 @@ import { expect } from "chai";
 import { ResolvablePromise, waitFor } from "presentation-test-utilities";
 import sinon from "sinon";
 import { Id64Arg, using } from "@itwin/core-bentley";
-import * as cachingHiliteSetProvider from "../../unified-selection/CachingHiliteSetProvider";
-import * as hiliteSetProvider from "../../unified-selection/HiliteSetProvider";
-import { CoreSelectionSetEventType, CoreSelectionSetEventUnsafe } from "../../unified-selection/iModel/IModel";
-import { IModelSelectionHandler } from "../../unified-selection/iModel/IModelSelectionHandler";
-import { ECSchema } from "../../unified-selection/queries/ECMetadata";
-import { ECSqlQueryDef, ECSqlQueryReader, ECSqlQueryReaderOptions, ECSqlQueryRow } from "../../unified-selection/queries/ECSqlCore";
-import { Selectable, SelectableInstanceKey, Selectables } from "../../unified-selection/Selectable";
-import { StorageSelectionChangeType } from "../../unified-selection/SelectionChangeEvent";
-import { createStorage, SelectionStorage } from "../../unified-selection/SelectionStorage";
-import { createSelectableInstanceKey } from "../_helpers/SelectablesCreator";
+import { EC, ECSqlQueryDef, ECSqlQueryExecutor, ECSqlQueryReaderOptions, ECSqlQueryRow } from "@itwin/presentation-shared";
+import * as cachingHiliteSetProvider from "../unified-selection/CachingHiliteSetProvider";
+import {
+  enableUnifiedSelectionSyncWithIModel,
+  EnableUnifiedSelectionSyncWithIModelProps,
+  IModelSelectionHandler,
+} from "../unified-selection/EnableUnifiedSelectionSyncWithIModel";
+import * as hiliteSetProvider from "../unified-selection/HiliteSetProvider";
+import { Selectable, SelectableInstanceKey, Selectables } from "../unified-selection/Selectable";
+import { StorageSelectionChangesListener, StorageSelectionChangeType } from "../unified-selection/SelectionChangeEvent";
+import { createStorage, SelectionStorage } from "../unified-selection/SelectionStorage";
+import { CoreSelectionSetEventType, CoreSelectionSetEventUnsafe } from "../unified-selection/types/IModel";
+import { createSelectableInstanceKey } from "./_helpers/SelectablesCreator";
+
+describe("enableUnifiedSelectionSyncWithIModel", () => {
+  const selectionStorage = {
+    selectionChangeEvent: {
+      addListener: sinon.stub<[StorageSelectionChangesListener], () => void>(),
+      removeListener: sinon.stub<[], void>(),
+    },
+  };
+  const provider = {
+    getHiliteSet: sinon.stub<[{ imodelKey: string }], AsyncIterableIterator<hiliteSetProvider.HiliteSet>>(),
+    dispose: () => {},
+  };
+  const imodelAccess = {
+    hiliteSet: {
+      wantSyncWithSelectionSet: false,
+      clear: () => {},
+    },
+    selectionSet: {
+      emptyAll: () => {},
+      onChanged: {
+        addListener: () => () => {},
+      },
+    },
+  };
+
+  function resetListeners() {
+    selectionStorage.selectionChangeEvent.addListener.reset();
+    selectionStorage.selectionChangeEvent.removeListener.reset();
+  }
+
+  beforeEach(() => {
+    async function* emptyGenerator() {}
+    provider.getHiliteSet.reset();
+    provider.getHiliteSet.callsFake(emptyGenerator);
+    sinon.stub(cachingHiliteSetProvider, "createCachingHiliteSetProvider").returns(provider as unknown as cachingHiliteSetProvider.CachingHiliteSetProvider);
+
+    resetListeners();
+    selectionStorage.selectionChangeEvent.addListener.returns(selectionStorage.selectionChangeEvent.removeListener);
+  });
+
+  afterEach(() => {
+    sinon.restore();
+  });
+
+  it("creates and disposes IModelSelectionHandler", () => {
+    const cleanup = enableUnifiedSelectionSyncWithIModel({
+      imodelAccess: imodelAccess as unknown as EnableUnifiedSelectionSyncWithIModelProps["imodelAccess"],
+      selectionStorage: selectionStorage as unknown as SelectionStorage,
+      activeScopeProvider: () => "element",
+    });
+
+    expect(selectionStorage.selectionChangeEvent.addListener).to.be.calledOnce;
+    expect(selectionStorage.selectionChangeEvent.removeListener).to.not.be.called;
+
+    resetListeners();
+    cleanup();
+
+    expect(selectionStorage.selectionChangeEvent.addListener).to.not.be.called;
+    expect(selectionStorage.selectionChangeEvent.removeListener).to.be.calledOnce;
+  });
+});
 
 describe("IModelSelectionHandler", () => {
   let hiliteSetProviderFactory: sinon.SinonStub<[hiliteSetProvider.HiliteSetProviderProps], hiliteSetProvider.HiliteSetProvider>;
@@ -26,7 +90,7 @@ describe("IModelSelectionHandler", () => {
   >;
   let handler: IModelSelectionHandler;
   const cachingProvider = {
-    getHiliteSet: sinon.stub<[{ iModelKey: string }], AsyncIterableIterator<hiliteSetProvider.HiliteSet>>(),
+    getHiliteSet: sinon.stub<[{ imodelKey: string }], AsyncIterableIterator<hiliteSetProvider.HiliteSet>>(),
     dispose: () => {},
   };
   const provider = {
@@ -62,8 +126,8 @@ describe("IModelSelectionHandler", () => {
   };
 
   const imodelAccess = {
-    createQueryReader: sinon.stub<[ECSqlQueryDef, ECSqlQueryReaderOptions | undefined], ECSqlQueryReader>(),
-    getSchema: sinon.stub<[string], Promise<ECSchema | undefined>>(),
+    createQueryReader: sinon.stub<[ECSqlQueryDef, ECSqlQueryReaderOptions | undefined], ReturnType<ECSqlQueryExecutor["createQueryReader"]>>(),
+    getSchema: sinon.stub<[string], Promise<EC.Schema | undefined>>(),
     key: "test",
     hiliteSet,
     selectionSet,
@@ -140,7 +204,9 @@ describe("IModelSelectionHandler", () => {
       return keys.map((key) => ({ ["ClassName"]: key.className, ["ECInstanceId"]: key.id }));
     };
 
-    async function* createFakeQueryReader<TRow extends {} = ECSqlQueryRow>(rows: (TRow | Promise<TRow>)[]): ECSqlQueryReader {
+    async function* createFakeQueryReader<TRow extends {} = ECSqlQueryRow>(
+      rows: (TRow | Promise<TRow>)[],
+    ): ReturnType<ECSqlQueryExecutor["createQueryReader"]> {
       for await (const row of rows) {
         yield row;
       }
@@ -163,7 +229,7 @@ describe("IModelSelectionHandler", () => {
     it("uses custom `CachingHiliteSetProvider` when provided", () => {
       async function* emptyGenerator() {}
       const customCachingHiliteSetProviderStub = {
-        getHiliteSet: sinon.stub<[{ iModelKey: string }], AsyncIterableIterator<hiliteSetProvider.HiliteSet>>(),
+        getHiliteSet: sinon.stub<[{ imodelKey: string }], AsyncIterableIterator<hiliteSetProvider.HiliteSet>>(),
         dispose: () => {},
       };
       customCachingHiliteSetProviderStub.getHiliteSet.callsFake(emptyGenerator);
@@ -187,7 +253,7 @@ describe("IModelSelectionHandler", () => {
       expect(cachingHiliteSetProviderFactory).to.be.calledOnceWith(
         sinon.match(
           (props: cachingHiliteSetProvider.CachingHiliteSetProviderProps) =>
-            props.selectionStorage === (selectionStorageStub as unknown as SelectionStorage) && props.iModelProvider("not used") === imodelAccess,
+            props.selectionStorage === (selectionStorageStub as unknown as SelectionStorage) && props.imodelProvider("not used") === imodelAccess,
         ),
       );
     });
@@ -196,7 +262,7 @@ describe("IModelSelectionHandler", () => {
       triggerSelectionChange({ type: CoreSelectionSetEventType.Clear, removed: [], set: selectionSet });
 
       await waitFor(() => {
-        expect(selectionStorageStub.clearSelection.calledWith({ iModelKey: imodelAccess.key, source: "Tool" })).to.be.true;
+        expect(selectionStorageStub.clearSelection.calledWith({ imodelKey: imodelAccess.key, source: "Tool" })).to.be.true;
       });
     });
 
@@ -207,7 +273,7 @@ describe("IModelSelectionHandler", () => {
       triggerSelectionChange({ type: CoreSelectionSetEventType.Add, added: addedKeys[0].id, set: selectionSet });
 
       await waitFor(() => {
-        expect(selectionStorageStub.addToSelection.calledWith({ iModelKey: imodelAccess.key, source: "Tool", selectables: addedKeys })).to.be.true;
+        expect(selectionStorageStub.addToSelection.calledWith({ imodelKey: imodelAccess.key, source: "Tool", selectables: addedKeys })).to.be.true;
       });
     });
 
@@ -218,9 +284,9 @@ describe("IModelSelectionHandler", () => {
       triggerSelectionChange({ type: CoreSelectionSetEventType.Remove, removed: removedKeys.map((k) => k.id), set: selectionSet });
 
       await waitFor(() => {
-        expect(selectionStorageStub.removeFromSelection.getCall(0).calledWith({ iModelKey: imodelAccess.key, source: "Tool", selectables: [removedKeys[0]] }))
+        expect(selectionStorageStub.removeFromSelection.getCall(0).calledWith({ imodelKey: imodelAccess.key, source: "Tool", selectables: [removedKeys[0]] }))
           .to.be.true;
-        expect(selectionStorageStub.removeFromSelection.getCall(1).calledWith({ iModelKey: imodelAccess.key, source: "Tool", selectables: [removedKeys[1]] }))
+        expect(selectionStorageStub.removeFromSelection.getCall(1).calledWith({ imodelKey: imodelAccess.key, source: "Tool", selectables: [removedKeys[1]] }))
           .to.be.true;
       });
     });
@@ -237,10 +303,10 @@ describe("IModelSelectionHandler", () => {
       });
 
       await waitFor(() => {
-        expect(selectionStorageStub.clearSelection).to.be.calledOnceWith({ iModelKey: imodelAccess.key, source: "Tool" });
-        expect(selectionStorageStub.addToSelection.getCall(0).calledWith({ iModelKey: imodelAccess.key, source: "Tool", selectables: [addedKeys[0]] })).to.be
+        expect(selectionStorageStub.clearSelection).to.be.calledOnceWith({ imodelKey: imodelAccess.key, source: "Tool" });
+        expect(selectionStorageStub.addToSelection.getCall(0).calledWith({ imodelKey: imodelAccess.key, source: "Tool", selectables: [addedKeys[0]] })).to.be
           .true;
-        expect(selectionStorageStub.addToSelection.getCall(1).calledWith({ iModelKey: imodelAccess.key, source: "Tool", selectables: [addedKeys[1]] })).to.be
+        expect(selectionStorageStub.addToSelection.getCall(1).calledWith({ imodelKey: imodelAccess.key, source: "Tool", selectables: [addedKeys[1]] })).to.be
           .true;
       });
     });
@@ -272,7 +338,7 @@ describe("IModelSelectionHandler", () => {
       provider.getHiliteSet.callsFake(emptyGenerator);
 
       selectionStorage = createStorage();
-      selectionStorage.addToSelection({ iModelKey: imodelAccess.key, source: "Test", selectables: generateSelection() });
+      selectionStorage.addToSelection({ imodelKey: imodelAccess.key, source: "Test", selectables: generateSelection() });
       handler = createHandler(selectionStorage);
       resetStubs();
     });
@@ -287,11 +353,11 @@ describe("IModelSelectionHandler", () => {
     const triggerSelectionChange = ({
       changeType = "replace",
       source = "",
-      iModelKey = imodelAccess.key,
+      imodelKey = imodelAccess.key,
       selectables = [createSelectableInstanceKey()],
       level = 0,
     }: {
-      iModelKey?: string;
+      imodelKey?: string;
       changeType?: StorageSelectionChangeType;
       source?: string;
       selectables?: Selectable[];
@@ -299,16 +365,16 @@ describe("IModelSelectionHandler", () => {
     } = {}) => {
       switch (changeType) {
         case "add":
-          selectionStorage.addToSelection({ iModelKey, source, selectables, level });
+          selectionStorage.addToSelection({ imodelKey, source, selectables, level });
           return;
         case "remove":
-          selectionStorage.removeFromSelection({ iModelKey, source, selectables, level });
+          selectionStorage.removeFromSelection({ imodelKey, source, selectables, level });
           return;
         case "replace":
-          selectionStorage.replaceSelection({ iModelKey, source, selectables, level });
+          selectionStorage.replaceSelection({ imodelKey, source, selectables, level });
           return;
         case "clear":
-          selectionStorage.clearSelection({ iModelKey, source, level });
+          selectionStorage.clearSelection({ imodelKey, source, level });
           return;
       }
     };
@@ -338,7 +404,7 @@ describe("IModelSelectionHandler", () => {
     });
 
     it("ignores selection changes to other imodels", async () => {
-      triggerSelectionChange({ iModelKey: "otherIModel" });
+      triggerSelectionChange({ imodelKey: "otherIModel" });
 
       await waitFor(() => {
         expect(cachingProvider.getHiliteSet).to.not.be.called;

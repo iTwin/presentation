@@ -6,9 +6,8 @@
 import { expect } from "chai";
 import { ResolvablePromise } from "presentation-test-utilities";
 import sinon from "sinon";
+import { EC, ECSqlQueryDef, ECSqlQueryExecutor, ECSqlQueryReaderOptions, ECSqlQueryRow } from "@itwin/presentation-shared";
 import { createHiliteSetProvider, HiliteSetProvider } from "../unified-selection/HiliteSetProvider";
-import { ECClass, ECSchema } from "../unified-selection/queries/ECMetadata";
-import { ECSqlQueryDef, ECSqlQueryReader, ECSqlQueryReaderOptions, ECSqlQueryRow } from "../unified-selection/queries/ECSqlCore";
 import { SelectableInstanceKey, Selectables } from "../unified-selection/Selectable";
 import { createCustomSelectable, createECInstanceId, createSelectableInstanceKey } from "./_helpers/SelectablesCreator";
 
@@ -16,8 +15,8 @@ describe("HiliteSetProvider", () => {
   describe("create", () => {
     it("creates a new HiliteSetProvider instance", () => {
       const imodelAccess = {
-        createQueryReader: sinon.stub<[ECSqlQueryDef, ECSqlQueryReaderOptions | undefined], ECSqlQueryReader>(),
-        getSchema: sinon.stub<[string], Promise<ECSchema | undefined>>(),
+        createQueryReader: sinon.stub<[ECSqlQueryDef, ECSqlQueryReaderOptions | undefined], ReturnType<ECSqlQueryExecutor["createQueryReader"]>>(),
+        getSchema: sinon.stub<[string], Promise<EC.Schema | undefined>>(),
       };
       const result = createHiliteSetProvider({ imodelAccess });
       expect(result).to.not.be.undefined;
@@ -26,15 +25,17 @@ describe("HiliteSetProvider", () => {
 
   describe("getHiliteSet", () => {
     const imodelAccess = {
-      createQueryReader: sinon.stub<[ECSqlQueryDef, ECSqlQueryReaderOptions | undefined], ECSqlQueryReader>(),
-      getSchema: sinon.stub<[string], Promise<ECSchema | undefined>>(),
+      createQueryReader: sinon.stub<[ECSqlQueryDef, ECSqlQueryReaderOptions | undefined], ReturnType<ECSqlQueryExecutor["createQueryReader"]>>(),
+      getSchema: sinon.stub<[string], Promise<EC.Schema | undefined>>(),
     };
     let provider: HiliteSetProvider;
     const schemaMock = {
-      getClass: sinon.stub<[string], Promise<ECClass | undefined>>(),
+      getClass: sinon.stub<[string], Promise<EC.Class | undefined>>(),
     };
 
-    async function* createFakeQueryReader<TRow extends {} = ECSqlQueryRow>(rows: (TRow | Promise<TRow>)[]): ECSqlQueryReader {
+    async function* createFakeQueryReader<TRow extends {} = ECSqlQueryRow>(
+      rows: (TRow | Promise<TRow>)[],
+    ): ReturnType<ECSqlQueryExecutor["createQueryReader"]> {
       for await (const row of rows) {
         yield row;
       }
@@ -47,7 +48,7 @@ describe("HiliteSetProvider", () => {
         },
       };
 
-      schemaMock.getClass.withArgs(className).returns(Promise.resolve(classMock as unknown as ECClass));
+      schemaMock.getClass.withArgs(className).returns(Promise.resolve(classMock as unknown as EC.Class));
     }
 
     function mockQuery(modelKeys: (string | Promise<string>)[], subCategoryKeys: (string | Promise<string>)[], elementKeys: (string | Promise<string>)[]) {
@@ -95,7 +96,7 @@ describe("HiliteSetProvider", () => {
       imodelAccess.getSchema.reset();
       schemaMock.getClass.reset();
 
-      imodelAccess.getSchema.returns(Promise.resolve(schemaMock as unknown as ECSchema));
+      imodelAccess.getSchema.returns(Promise.resolve(schemaMock as unknown as EC.Schema));
       imodelAccess.getSchema.withArgs("Functional").returns(Promise.resolve(undefined));
       provider = createHiliteSetProvider({ imodelAccess });
     });
@@ -119,7 +120,7 @@ describe("HiliteSetProvider", () => {
       });
 
       it("creates result for `GroupInformationElement` element keys", async () => {
-        imodelAccess.getSchema.withArgs("Functional").returns(Promise.resolve({} as unknown as ECSchema));
+        imodelAccess.getSchema.withArgs("Functional").returns(Promise.resolve({} as unknown as EC.Schema));
         const elementKey = createSelectableInstanceKey(1);
         const resultKey = createECInstanceId(2);
         mockClass("TestClass", "BisCore", "GroupInformationElement");
@@ -151,7 +152,7 @@ describe("HiliteSetProvider", () => {
         const elementKey = createSelectableInstanceKey(1);
         const resultKey = createECInstanceId(2);
 
-        imodelAccess.getSchema.withArgs("Functional").returns(Promise.resolve({} as unknown as ECSchema));
+        imodelAccess.getSchema.withArgs("Functional").returns(Promise.resolve({} as unknown as EC.Schema));
         imodelAccess.createQueryReader
           .withArgs(sinon.match((query: ECSqlQueryDef) => query.ecsql.includes("FunctionalElement")))
           .returns(createFakeQueryReader<ECSqlQueryRow>([{ ["ECInstanceId"]: resultKey }]));
@@ -301,7 +302,7 @@ describe("HiliteSetProvider", () => {
           },
         };
 
-        schemaMock.getClass.onCall(0).returns(Promise.resolve(classMock as unknown as ECClass));
+        schemaMock.getClass.onCall(0).returns(Promise.resolve(classMock as unknown as EC.Class));
 
         const elementKey1 = createSelectableInstanceKey(1);
         const elementKey2 = createSelectableInstanceKey(2);

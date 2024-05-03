@@ -5,7 +5,7 @@
 
 import { expect } from "chai";
 import { collect, waitFor } from "presentation-test-utilities";
-import { from } from "rxjs";
+import { from, Observable } from "rxjs";
 import sinon from "sinon";
 import { LogLevel } from "@itwin/core-bentley";
 import { ProcessedHierarchyNode } from "../../../hierarchies/HierarchyNode";
@@ -227,7 +227,7 @@ describe("HideNodesInHierarchyOperator", () => {
     });
 
     it("subscribes to input observable once", async () => {
-      const processedHierarchyNodesObservable = from([]);
+      const processedHierarchyNodesObservable = new Observable<any>();
       const subscriptionSpy = sinon.spy(processedHierarchyNodesObservable, "subscribe");
       const promise = processedHierarchyNodesObservable.pipe(createHideNodesInHierarchyOperator(() => from([]), false));
       promise.subscribe();

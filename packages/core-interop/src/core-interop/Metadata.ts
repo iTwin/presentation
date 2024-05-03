@@ -4,34 +4,34 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { Schema as CoreSchema, SchemaKey as CoreSchemaKey } from "@itwin/ecschema-metadata";
-import { IECMetadataProvider } from "@itwin/presentation-shared";
+import { ECSchemaProvider } from "@itwin/presentation-shared";
 import { createECSchema } from "./MetadataInternal";
 
 /**
- * Defines input for `createMetadataProvider`. Generally, this is an instance of [SchemaContext](https://www.itwinjs.org/reference/ecschema-metadata/context/schemacontext/)
+ * Defines input for `createECSchemaProvider`. Generally, this is an instance of [SchemaContext](https://www.itwinjs.org/reference/ecschema-metadata/context/schemacontext/)
  * class from `@itwin/ecschema-metadata` package.
  */
-interface ICoreSchemaContext {
+interface CoreSchemaContext {
   getSchema(key: CoreSchemaKey): Promise<CoreSchema | undefined>;
 }
 
 /**
- * Creates an `IECMetadataProvider` for given [SchemaContext](https://www.itwinjs.org/reference/ecschema-metadata/context/schemacontext/).
+ * Creates an `ECSchemaProvider` for given [SchemaContext](https://www.itwinjs.org/reference/ecschema-metadata/context/schemacontext/).
  *
  * Usage example:
  *
  * ```ts
  * import { SchemaContext } from "@itwin/ecschema-metadata";
- * import { createMetadataProvider } from "@itwin/presentation-core-interop";
+ * import { createECSchemaProvider } from "@itwin/presentation-core-interop";
  *
- * const schemas = new SchemaContext();
- * const metadata = createMetadataProvider(schemas);
- * // the created metadata provider may be used in `@itwin/presentation-hierarchies` or `@itwin/unified-selection` packages
+ * const schemaContext = new SchemaContext();
+ * const schemaProvider = createECSchemaProvider(schemas);
+ * // the created schema provider may be used in `@itwin/presentation-hierarchies` and other Presentation packages
  * ```
  *
  * @beta
  */
-export function createMetadataProvider(schemaContext: ICoreSchemaContext): IECMetadataProvider {
+export function createECSchemaProvider(schemaContext: CoreSchemaContext): ECSchemaProvider {
   async function getSchemaUnprotected(schemaName: string) {
     const coreSchema = await schemaContext.getSchema(new CoreSchemaKey(schemaName));
     return coreSchema ? createECSchema(coreSchema) : undefined;

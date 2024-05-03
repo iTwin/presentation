@@ -11,15 +11,15 @@ beta;createClassBasedInstanceLabelSelectClauseFactory(props: ClassBasedInstanceL
 beta;createDefaultInstanceLabelSelectClauseFactory(): IInstanceLabelSelectClauseFactory
 beta;createDefaultValueFormatter(): IPrimitiveValueFormatter
 beta;EC
+beta;ECClassHierarchyInspector
+beta;ECSchemaProvider
 beta;ECSqlBinding =
 beta;ECSqlQueryDef
+beta;ECSqlQueryExecutor
 beta;ECSqlQueryReaderOptions
 beta;ECSqlQueryRow
 beta;formatConcatenatedValue(props:
-beta;getClass(metadata: IECMetadataProvider, fullClassName: string): Promise
-beta;IECClassHierarchyInspector
-beta;IECMetadataProvider
-beta;IECSqlQueryExecutor
+beta;getClass(schemaProvider: ECSchemaProvider, fullClassName: string): Promise
 beta;IInstanceLabelSelectClauseFactory
 beta;ILogger
 beta;InstanceKey

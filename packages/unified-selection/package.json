@@ -1,7 +1,7 @@
 {
   "name": "@itwin/unified-selection",
-  "version": "0.2.0",
-  "description": "Package for managing unified selection",
+  "version": "0.3.0",
+  "description": "Package for managing unified selection in iTwin.js applications.",
   "license": "MIT",
   "repository": {
     "type": "git",
@@ -10,9 +10,15 @@
   },
   "keywords": [
     "Bentley",
-    "EC",
-    "Unified selection",
-    "iTwin.js"
+    "Highlight",
+    "Hilite",
+    "iTwin.js",
+    "Presentation",
+    "Selection",
+    "Selection level",
+    "Selection scope",
+    "Selection storage",
+    "Unified selection"
   ],
   "author": {
     "name": "Bentley Systems, Inc.",
@@ -36,7 +42,7 @@
   },
   "dependencies": {
     "@itwin/core-bentley": "^4.5.2",
-    "@itwin/presentation-shared": "workspace:*",
+    "@itwin/presentation-shared": "workspace:^",
     "rxjs": "^7.8.1",
     "rxjs-for-await": "^1.0.0"
   },

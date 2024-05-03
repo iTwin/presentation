@@ -5,7 +5,10 @@
 ```ts
 
 import { ConcatenatedValue } from '@itwin/presentation-shared';
+import { ECClassHierarchyInspector } from '@itwin/presentation-shared';
+import { ECSchemaProvider } from '@itwin/presentation-shared';
 import { ECSqlQueryDef } from '@itwin/presentation-shared';
+import { ECSqlQueryExecutor } from '@itwin/presentation-shared';
 import { ECSqlQueryReaderOptions } from '@itwin/presentation-shared';
 import { GenericInstanceFilter } from '@itwin/core-common';
 import { GenericInstanceFilterRelatedInstanceDescription } from '@itwin/core-common';
@@ -16,9 +19,6 @@ import { GenericInstanceFilterRuleGroupOperator } from '@itwin/core-common';
 import { GenericInstanceFilterRuleOperator } from '@itwin/core-common';
 import { GenericInstanceFilterRuleValue } from '@itwin/core-common';
 import { Id64String } from '@itwin/core-bentley';
-import { IECClassHierarchyInspector } from '@itwin/presentation-shared';
-import { IECMetadataProvider } from '@itwin/presentation-shared';
-import { IECSqlQueryExecutor } from '@itwin/presentation-shared';
 import { ILogger } from '@itwin/presentation-shared';
 import { InstanceKey } from '@itwin/presentation-shared';
 import { IPrimitiveValueFormatter } from '@itwin/presentation-shared';
@@ -44,7 +44,7 @@ export interface ClassBasedHierarchyDefinition {
 
 // @beta
 export interface ClassBasedHierarchyDefinitionsFactoryProps {
-    classHierarchyInspector: IECClassHierarchyInspector;
+    classHierarchyInspector: ECClassHierarchyInspector;
     hierarchy: ClassBasedHierarchyDefinition;
 }
 
@@ -64,7 +64,7 @@ export interface ClassGroupingNodeKey {
 }
 
 // @beta
-export function createLimitingECSqlQueryExecutor(baseExecutor: IECSqlQueryExecutor, defaultLimit: number | "unbounded"): ILimitingECSqlQueryExecutor;
+export function createLimitingECSqlQueryExecutor(baseExecutor: ECSqlQueryExecutor, defaultLimit: number | "unbounded"): LimitingECSqlQueryExecutor;
 
 // @beta
 export interface CustomHierarchyNodeDefinition {
@@ -405,10 +405,10 @@ export class HierarchyProvider {
     getNodes(props: GetHierarchyNodesProps): AsyncIterableIterator<HierarchyNode>;
     readonly hierarchyDefinition: IHierarchyLevelDefinitionsFactory;
     notifyDataSourceChanged(): void;
-    get queryExecutor(): ILimitingECSqlQueryExecutor;
+    get queryExecutor(): LimitingECSqlQueryExecutor;
     // @internal (undocumented)
     get queryScheduler(): {
-        schedule: ILimitingECSqlQueryExecutor["createQueryReader"];
+        schedule: LimitingECSqlQueryExecutor["createQueryReader"];
     };
     setFormatter(formatter: IPrimitiveValueFormatter | undefined): void;
 }
@@ -426,7 +426,7 @@ export interface HierarchyProviderProps {
     };
     formatter?: IPrimitiveValueFormatter;
     hierarchyDefinition: IHierarchyLevelDefinitionsFactory;
-    imodelAccess: IECMetadataProvider & ILimitingECSqlQueryExecutor & IECClassHierarchyInspector;
+    imodelAccess: ECSchemaProvider & LimitingECSqlQueryExecutor & ECClassHierarchyInspector;
     localizedStrings?: HierarchyProviderLocalizedStrings;
     queryCacheSize?: number;
     queryConcurrency?: number;
@@ -438,13 +438,6 @@ export interface IHierarchyLevelDefinitionsFactory {
     parseNode?: INodeParser;
     postProcessNode?: INodePostProcessor;
     preProcessNode?: INodePreProcessor;
-}
-
-// @beta
-export interface ILimitingECSqlQueryExecutor {
-    createQueryReader(query: ECSqlQueryDef, config?: ECSqlQueryReaderOptions & {
-        limit?: number | "unbounded";
-    }): ReturnType<IECSqlQueryExecutor["createQueryReader"]>;
 }
 
 // @beta
@@ -490,6 +483,13 @@ export interface LabelGroupingNodeKey {
 }
 
 // @beta
+export interface LimitingECSqlQueryExecutor {
+    createQueryReader(query: ECSqlQueryDef, config?: ECSqlQueryReaderOptions & {
+        limit?: number | "unbounded";
+    }): ReturnType<ECSqlQueryExecutor["createQueryReader"]>;
+}
+
+// @beta
 export enum NodeSelectClauseColumnNames {
     AutoExpand = "AutoExpand",
     DisplayLabel = "DisplayLabel",
@@ -532,7 +532,7 @@ export interface NodeSelectClauseProps {
 // @beta
 export class NodeSelectQueryFactory {
     constructor(props: {
-        imodelAccess: IECMetadataProvider & IECClassHierarchyInspector;
+        imodelAccess: ECSchemaProvider & ECClassHierarchyInspector;
     });
     createFilterClauses(def: GenericInstanceFilter | undefined, contentClass: {
         fullName: string;

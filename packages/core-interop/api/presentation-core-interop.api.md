@@ -4,10 +4,10 @@
 
 ```ts
 
+import { ECSchemaProvider } from '@itwin/presentation-shared';
+import { ECSqlQueryExecutor } from '@itwin/presentation-shared';
 import { ECSqlReader } from '@itwin/core-common';
 import { Event } from '@itwin/presentation-shared';
-import { IECMetadataProvider } from '@itwin/presentation-shared';
-import { IECSqlQueryExecutor } from '@itwin/presentation-shared';
 import { ILogger } from '@itwin/presentation-shared';
 import { IPrimitiveValueFormatter } from '@itwin/presentation-shared';
 import { LogLevel } from '@itwin/core-bentley';
@@ -19,13 +19,13 @@ import { SchemaKey } from '@itwin/ecschema-metadata';
 import { UnitSystemKey } from '@itwin/core-quantity';
 
 // @beta
-export function createECSqlQueryExecutor(imodel: ICoreECSqlReaderFactory): IECSqlQueryExecutor;
+export function createECSchemaProvider(schemaContext: CoreSchemaContext): ECSchemaProvider;
+
+// @beta
+export function createECSqlQueryExecutor(imodel: CoreECSqlReaderFactory): ECSqlQueryExecutor;
 
 // @beta
 export function createLogger(coreLogger: ICoreLogger): ILogger;
-
-// @beta
-export function createMetadataProvider(schemaContext: ICoreSchemaContext): IECMetadataProvider;
 
 // @beta
 export function createValueFormatter(props: CreateValueFormatterProps): IPrimitiveValueFormatter;

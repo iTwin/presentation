@@ -32,14 +32,14 @@ const unifiedSelection = createStore();
 
 // the store should to be cleaned up when iModels are closed to free up memory, e.g.:
 import { IModelConnection } from "@itwin/core-frontend";
-IModelConnection.onClose.addListener((iModel) => {
-  unifiedSelection.clearStorage(iModel.key);
+IModelConnection.onClose.addListener((imodel) => {
+  unifiedSelection.clearStorage(imodel.key);
 });
 
 // add a demo selection listener
 import { Selectables } from "@itwin/unified-selection";
-unifiedSelection.selectionChangeEvent.addListener(({ iModelKey, source, changeType, selectables }) => {
-  const suffix = `in ${iModelKey} iModel from ${source} component`;
+unifiedSelection.selectionChangeEvent.addListener(({ imodelKey, source, changeType, selectables }) => {
+  const suffix = `in ${imodelKey} iModel from ${source} component`;
   const numSelectables = Selectables.size(selectables);
   switch (changeType) {
     case "add":
@@ -58,8 +58,8 @@ unifiedSelection.selectionChangeEvent.addListener(({ iModelKey, source, changeTy
 });
 
 // in some component
-MyComponent.onECInstanceSelected((iModel: IModelConnection, key: { className: string; id: Id64String }) => {
-  unifiedSelection.addToSelection({ iModelKey: iModel.key, source: "MyComponent", selectables: [key] });
+MyComponent.onECInstanceSelected((imodel: IModelConnection, key: { className: string; id: Id64String }) => {
+  unifiedSelection.addToSelection({ imodelKey: imodel.key, source: "MyComponent", selectables: [key] });
 });
 ```
 
@@ -109,11 +109,13 @@ The `@itwin/unified-selection` package delivers APIs for creating a `HiliteSet` 
 ```ts
 // Components may want to get a hilite set for arbitrary set of Selectables - use `createHiliteSetProvider` for that.
 import { IModelConnection } from "@itwin/core-frontend";
-import { createECSqlQueryExecutor, createMetadataProvider } from "@itwin/presentation-core-interop";
+import { createECSqlQueryExecutor, createECSchemaProvider } from "@itwin/presentation-core-interop";
 import { createHiliteSetProvider } from "@itwin/unified-selection";
 const hiliteProvider = createHiliteSetProvider({
-  metadataProvider: createMetadataProvider(imodel),
-  queryExecutor: createECSqlQueryExecutor(imodel),
+  imodelAccess: {
+    ...createECSchemaProvider(imodel),
+    ...createECSqlQueryExecutor(imodel),
+  },
 });
 const hiliteSet = await hiliteProvider.getHiliteSet({ selectables });
 
@@ -121,11 +123,8 @@ const hiliteSet = await hiliteProvider.getHiliteSet({ selectables });
 // recommended to keep a single instance of this provider per application as it caches hilite sets per each iModel's selection.
 import { createCachingHiliteSetProvider } from "@itwin/unified-selection";
 const selectionHiliteProvider = createCachingHiliteSetProvider({
-    selectionStorage,
-    iModelProvider: (iModelKey: string) => {
-        queryExecutor: IECSqlQueryExecutor;
-        metadataProvider: IMetadataProvider;
-    },
+  selectionStorage,
+  imodelProvider: (imodelKey: string) => getIModelByKey(imodelKey),
 });
 const selectionHiliteSet = await selectionHiliteProvider.getHiliteSet({ imodel.key });
 // The caching provider registers a selection change listener and should be disposed, in case its lifetime
@@ -172,18 +171,18 @@ const selection = computeSelection({ queryExecutor, elementIds, scope: { id: "el
 The `@itwin/unified-selection` package delivers a `enableUnifiedSelectionSyncWithIModel` function to enable selection synchronization between an iModel and a `SelectionStorage`. When called, it returns a cleanup function that should be used to disable the synchronization. There should only be one active synchronization between a single iModel and a `SelectionStorage` at a given time. For example, this function could be used inside a `useEffect` hook in a component that holds an iModel:
 
 ```ts
-import { createECSqlQueryExecutor, createMetadataProvider } from "@itwin/presentation-core-interop";
+import { createECSqlQueryExecutor, createECSchemaProvider } from "@itwin/presentation-core-interop";
 useEffect(() => {
   return enableUnifiedSelectionSyncWithIModel({
     imodelAccess: {
-      ...createECSqlQueryExecutor(iModel),
-      ...createMetadataProvider(iModel),
-      key: iModel.key,
-      hiliteSet: iModel.hilited,
-      selectionSet: iModel.selectionSet,
+      ...createECSqlQueryExecutor(imodel),
+      ...createECSchemaProvider(imodel),
+      key: imodel.key,
+      hiliteSet: imodel.hilited,
+      selectionSet: imodel.selectionSet,
     },
     selectionStorage,
     activeScopeProvider: () => "element",
   });
-}, [iModel]);
+}, [imodel]);
 ```
