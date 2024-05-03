@@ -1,4 +1,4 @@
-name: PR performance benchmark
+name: PR unified-selection performance benchmark
 
 on:
   pull_request:
