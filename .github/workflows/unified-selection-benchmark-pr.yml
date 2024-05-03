@@ -1,4 +1,4 @@
-name: PR performance benchmark
+name: PR unified-selection performance benchmark
 
 on:
   pull_request:
@@ -58,9 +58,10 @@ jobs:
           key: performance-test-dataset-${{ hashFiles('./apps/performance-tests/src/Datasets.ts') }}
 
       - name: Post unified-selection benchmark summary
+        id: post-unified-selection-benchmark
         uses: jalextowle/github-action-benchmark@35e54a2ea34188ca73481c2a0ce5919907978f4f
         with:
-          name: benchmark
+          id: unified-selection-benchmark
           tool: 'customSmallerIsBetter'
           output-file-path: ./apps/performance-tests/unified-selection-benchmark.json
           github-token: ${{ secrets.GITHUB_TOKEN }}
