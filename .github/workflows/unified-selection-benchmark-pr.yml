@@ -7,16 +7,14 @@ on:
       - stable
     paths:
       - apps/performance-tests/**
-      - packages/core-interop/**
-      - packages/hierarchies/**
-      - packages/models-tree/**
+      - packages/unified-selection/**
       - pnpm-lock.yaml
-      - .github/workflows/benchmark-pr.yml
+      - .github/workflows/unified-selection-benchmark-pr.yml
     types: [opened, synchronize, reopened, ready_for_review]
 
 jobs:
   benchmark:
-    name: Benchmark performance (hierarchies)
+    name: Benchmark performance (unified-selection)
     #if: '!github.event.pull_request.draft'
     runs-on: ubuntu-latest
     steps:
@@ -50,7 +48,7 @@ jobs:
           key: performance-test-dataset-${{ hashFiles('./apps/performance-tests/src/Datasets.ts') }}
 
       - name: Run benchmark tests
-        run: pnpm benchmark:hierarchies
+        run: pnpm benchmark:unified-selection
 
       - name: Save generated datasets
         uses: actions/cache/save@v4
