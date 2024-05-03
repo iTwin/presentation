@@ -48,4 +48,8 @@ class BackendTestIModelBuilder implements TestIModelBuilder {
     const fullXml = getFullSchemaXml({ schemaName, schemaContentXml });
     await this._iModel.importSchemaStrings([fullXml]);
   }
+
+  public async importFullSchema(schema: string): Promise<void> {
+    await this._iModel.importSchemaStrings([schema]);
+  }
 }

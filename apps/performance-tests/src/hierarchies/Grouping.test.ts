@@ -3,8 +3,8 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { Datasets } from "./util/Datasets";
-import { runHierarchyTest } from "./util/TestUtilities";
+import { Datasets } from "../util/Datasets";
+import { runHierarchyTest } from "../util/TestUtilities";
 
 describe("grouping", () => {
   const { schemaName, baseClassName, customPropName, itemsPerGroup, defaultClassName } = Datasets.CUSTOM_SCHEMA;

@@ -3,14 +3,18 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "test": "mocha --enable-source-maps --config ./.mocharc.json ./lib/*test.js",
+    "test": "mocha --enable-source-maps --config ./.mocharc.json ./lib/*/*test.js",
+    "test:hierarchies": "mocha --enable-source-maps --config ./.mocharc.json ./lib/hierarchies/*test.js",
+    "test:unified-selection": "mocha --enable-source-maps --config ./.mocharc.json ./lib/unified-selection/*test.js",
     "test:recreate": "cross-env RECREATE=true npm run test",
-    "benchmark": "npm run test -- -O BENCHMARK_OUTPUT_PATH=./benchmark.json",
+    "benchmark:hierarchies": "npm run test:hierarchies -- -O BENCHMARK_OUTPUT_PATH=./benchmark.json",
+    "benchmark:unified-selection": "npm run test:unified-selection -- -O BENCHMARK_OUTPUT_PATH=./benchmark.json",
     "build": "tsc",
     "clean": "rimraf lib temp",
     "lint": "eslint \"./src/**/*.ts\""
   },
   "dependencies": {
+    "@bentley/functional-schema": "^1.0.4",
     "@itwin/core-backend": "^4.5.2",
     "@itwin/core-bentley": "^4.5.2",
     "@itwin/core-common": "^4.5.2",
@@ -21,6 +25,7 @@
     "@itwin/presentation-hierarchies": "workspace:*",
     "@itwin/presentation-models-tree": "workspace:*",
     "@itwin/presentation-shared": "workspace:*",
+    "@itwin/unified-selection": "workspace:*",
     "as-table": "^1.0.55",
     "chai": "^4.4.1",
     "mocha": "^10.4.0",

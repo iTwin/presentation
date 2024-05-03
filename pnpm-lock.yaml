@@ -397,6 +397,9 @@ importers:
 
   apps/performance-tests:
     dependencies:
+      '@bentley/functional-schema':
+        specifier: ^1.0.4
+        version: 1.0.4
       '@itwin/core-backend':
         specifier: ^4.5.2
         version: 4.5.2(@itwin/core-bentley@4.5.2)(@itwin/core-common@4.5.2)(@itwin/core-geometry@4.5.2)(@opentelemetry/api@1.8.0)
@@ -427,6 +430,9 @@ importers:
       '@itwin/presentation-shared':
         specifier: workspace:*
         version: link:../../packages/shared
+      '@itwin/unified-selection':
+        specifier: workspace:*
+        version: link:../../packages/unified-selection
       as-table:
         specifier: ^1.0.55
         version: 1.0.55
