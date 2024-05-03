@@ -6,7 +6,7 @@
 import { expect } from "chai";
 import { SnapshotDb } from "@itwin/core-backend";
 import { SchemaContext, SchemaJsonLocater } from "@itwin/ecschema-metadata";
-import { createECSqlQueryExecutor, createMetadataProvider } from "@itwin/presentation-core-interop";
+import { createECSchemaProvider, createECSqlQueryExecutor } from "@itwin/presentation-core-interop";
 import { createHiliteSetProvider, Selectable, Selectables } from "@itwin/unified-selection";
 import { Datasets, IModelName } from "../util/Datasets";
 import { run, RunOptions } from "../util/TestUtilities";
@@ -15,7 +15,7 @@ describe("hilite", () => {
   const additionalElementCount = 5;
   const additionalFunctionalElement2dCount = 1;
 
-  function generateSelection(fullClassName: string, start: number, count: number) {
+  function createSelection({ fullClassName, start, count }: { fullClassName: string; start: number; count: number }) {
     const selectables: Selectable[] = [];
     for (let i = start; i < start + count + additionalElementCount; i++) {
       selectables.push({ className: fullClassName, id: `0x${i.toString(16)}` });
@@ -26,42 +26,42 @@ describe("hilite", () => {
   runHiliteTest({
     testName: "50k elements",
     iModelName: "50k nested elements",
-    selection: generateSelection("Generic:PhysicalObject", 14, 50_000),
+    selection: createSelection({ fullClassName: "Generic:PhysicalObject", start: 14, count: 50_000 }),
     expectedCounts: { elements: 50000 },
   });
 
   runHiliteTest({
     testName: "50k group elements",
     iModelName: "50k group member elements",
-    selection: generateSelection("Generic:Group", 15, 50_000),
+    selection: createSelection({ fullClassName: "Generic:Group", start: 15, count: 50_000 }),
     expectedCounts: { elements: 50000 },
   });
 
   runHiliteTest({
     testName: "1k subjects",
     iModelName: "1k nested subjects",
-    selection: generateSelection("BisCore:Subject", 11, 2_000),
+    selection: createSelection({ fullClassName: "BisCore:Subject", start: 11, count: 2_000 }),
     expectedCounts: { models: 20 },
   });
 
   runHiliteTest({
     testName: "50k subcategories",
     iModelName: "50k subcategories",
-    selection: generateSelection("BisCore:SpatialCategory", 11, 50_000),
+    selection: createSelection({ fullClassName: "BisCore:SpatialCategory", start: 11, count: 2_000 }),
     expectedCounts: { subCategories: 50001 },
   });
 
   runHiliteTest({
     testName: "50k functional 3D elements",
     iModelName: "50k nested functional 3D elements",
-    selection: generateSelection("Functional:FunctionalElement", 16, 100_000),
+    selection: createSelection({ fullClassName: "Functional:FunctionalElement", start: 16, count: 100_000 }),
     expectedCounts: { elements: 50000 },
   });
 
   runHiliteTest({
     testName: "10k functional 2D elements",
     iModelName: "10k nested functional 2D elements",
-    selection: generateSelection("Functional:FunctionalElement", 17, 20_000),
+    selection: createSelection({ fullClassName: "Functional:FunctionalElement", start: 17, count: 20_000 }),
     expectedCounts: { elements: 10_000 + additionalFunctionalElement2dCount },
   });
 });
@@ -86,7 +86,7 @@ function runHiliteTest(
         iModel,
         provider: createHiliteSetProvider({
           imodelAccess: {
-            ...createMetadataProvider(schemas),
+            ...createECSchemaProvider(schemas),
             ...createECSqlQueryExecutor(iModel),
           },
         }),

@@ -30,7 +30,6 @@ export const IMODEL_NAMES = [
   "50k subcategories",
   "50k nested functional 3D elements",
   "10k nested functional 2D elements",
-  "50k nested functional 2D elements",
 ] as const;
 export type IModelName = (typeof IMODEL_NAMES)[number];
 export type IModelPathsMap = { [_ in IModelName]?: string };
@@ -107,8 +106,6 @@ export class Datasets {
       case "50k nested functional 3D elements":
         return async (name: string, localPath: string) => this.createFunctionalElements3dModel(name, localPath, elementCount);
       case "10k nested functional 2D elements":
-        return async (name: string, localPath: string) => this.createNestedFunctionalElements2dModel(name, localPath, elementCount);
-      case "50k nested functional 2D elements":
         return async (name: string, localPath: string) => this.createNestedFunctionalElements2dModel(name, localPath, elementCount);
       default:
         return async () => {};

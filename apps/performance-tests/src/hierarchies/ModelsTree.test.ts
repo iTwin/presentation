@@ -6,13 +6,13 @@
 import { expect } from "chai";
 import { IModelDb, SnapshotDb } from "@itwin/core-backend";
 import { ModelsTreeDefinition } from "@itwin/presentation-models-tree";
-import { IECClassHierarchyInspector, IECMetadataProvider } from "@itwin/presentation-shared";
+import { ECClassHierarchyInspector, ECSchemaProvider } from "@itwin/presentation-shared";
 import { Datasets } from "../util/Datasets";
 import { StatelessHierarchyProvider } from "../util/StatelessHierarchyProvider";
 import { run } from "../util/TestUtilities";
 
 describe("models tree", () => {
-  const getHierarchyFactory = (imodelAccess: IECMetadataProvider & IECClassHierarchyInspector) => new ModelsTreeDefinition({ imodelAccess });
+  const getHierarchyFactory = (imodelAccess: ECSchemaProvider & ECClassHierarchyInspector) => new ModelsTreeDefinition({ imodelAccess });
   const setup = () => SnapshotDb.openFile(Datasets.getIModelPath("baytown"));
   const cleanup = (iModel: IModelDb) => iModel.close();
 
