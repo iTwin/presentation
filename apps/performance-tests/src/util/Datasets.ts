@@ -29,7 +29,7 @@ export const IMODEL_NAMES = [
   "1k subjects",
   "50k subcategories",
   "50k functional 3D elements",
-  "10k functional 2D elements",
+  "50k functional 2D elements",
 ] as const;
 export type IModelName = (typeof IMODEL_NAMES)[number];
 export type IModelPathsMap = { [_ in IModelName]?: string };
@@ -105,7 +105,7 @@ export class Datasets {
         return async (name: string, localPath: string) => this.createCategoryIModel(name, localPath, elementCount);
       case "50k functional 3D elements":
         return async (name: string, localPath: string) => this.createFunctional3dElementIModel(name, localPath, elementCount);
-      case "10k functional 2D elements":
+      case "50k functional 2D elements":
         return async (name: string, localPath: string) => this.createFunctional2dElementIModel(name, localPath, elementCount);
     }
   }
@@ -246,7 +246,8 @@ export class Datasets {
     await createIModel(name, localPath, async (builder) => {
       const { id: categoryId } = insertSpatialCategory({ builder, fullClassNameSeparator: ":", codeValue: "My Category" });
 
-      for (let i = 0; i < numElements; ++i) {
+      // Insert `numElements` - 1 subcategories as `insertSpatialCategory` provides one additional subcategory
+      for (let i = 0; i < numElements - 1; ++i) {
         insertSubCategory({
           parentCategoryId: categoryId,
           builder,
@@ -361,29 +362,29 @@ export class Datasets {
       const elementsPerGroup = numElements / numberOfGroups;
 
       for (let i = 0; i < numberOfGroups; ++i) {
+        let firstGraphicsElementId: string | undefined;
+        let graphicsElementParentId: string | undefined;
         let functionalElementParentId: string | undefined;
-        let graphicsElementParentId = insertDrawingGraphic({
-          builder,
-          categoryId,
-          modelId: drawingModelId,
-        }).id;
 
-        for (let k = 0; k < elementsPerGroup; ++k) {
-          functionalElementParentId = insertFunctionalElement({
-            parentId: functionalElementParentId,
-            builder,
-            modelId: functionalModelId,
-            representedElementId: k === elementsPerGroup - 1 ? graphicsElementParentId : graphicsElementId,
-            relationshipName: "DrawingGraphicRepresentsFunctionalElement",
-          }).id;
-        }
-
-        for (let j = 0; j < elementsPerGroup - 1; ++j) {
+        for (let j = 0; j < elementsPerGroup; ++j) {
           graphicsElementParentId = insertDrawingGraphic({
             parentId: graphicsElementParentId,
             builder,
             categoryId,
             modelId: drawingModelId,
+          }).id;
+
+          if (j === 0) {
+            firstGraphicsElementId = graphicsElementParentId;
+          }
+
+          functionalElementParentId = insertFunctionalElement({
+            parentId: functionalElementParentId,
+            builder,
+            modelId: functionalModelId,
+            // Last functional element in the chain represents the first graphics element, others represent an element outside the chain.
+            representedElementId: j === elementsPerGroup - 1 ? firstGraphicsElementId! : graphicsElementId,
+            relationshipName: "DrawingGraphicRepresentsFunctionalElement",
           }).id;
         }
       }

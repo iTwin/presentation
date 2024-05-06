@@ -12,12 +12,10 @@ import { Datasets, IModelName } from "../util/Datasets";
 import { run, RunOptions } from "../util/TestUtilities";
 
 describe("hilite", () => {
-  const additionalElementCount = 5;
-  const additionalFunctionalElement2dCount = 1;
-
-  function createSelection({ fullClassName, start, count }: { fullClassName: string; start: number; count: number }) {
+  function createSelection({ fullClassName, start, count, step }: { fullClassName: string; start: number; count: number; step?: number }) {
     const selectables: Selectable[] = [];
-    for (let i = start; i < start + count + additionalElementCount; i++) {
+    const increment = step ?? 1;
+    for (let i = start; i < start + count * increment; i += increment) {
       selectables.push({ className: fullClassName, id: `0x${i.toString(16)}` });
     }
     return Selectables.create(selectables);
@@ -26,43 +24,44 @@ describe("hilite", () => {
   runHiliteTest({
     testName: "50k elements",
     iModelName: "50k elements",
-    selection: createSelection({ fullClassName: "Generic:PhysicalObject", start: 14, count: 50_000 }),
-    expectedCounts: { elements: 50000 },
+    selection: createSelection({ fullClassName: "BisCore:Element", start: 20, count: 50_000 }),
+    expectedCounts: { elements: 50_000 },
   });
 
   runHiliteTest({
     testName: "50k group elements",
     iModelName: "50k group member elements",
-    selection: createSelection({ fullClassName: "Generic:Group", start: 15, count: 50_000 }),
-    expectedCounts: { elements: 50000 },
+    selection: createSelection({ fullClassName: "Generic:Group", start: 21, count: 50_000 }),
+    expectedCounts: { elements: 50_000 },
   });
 
   runHiliteTest({
     testName: "1k subjects",
     iModelName: "1k subjects",
-    selection: createSelection({ fullClassName: "BisCore:Subject", start: 11, count: 2_000 }),
+    selection: createSelection({ fullClassName: "BisCore:Subject", start: 17, count: 1_000, step: 2 }),
     expectedCounts: { models: 20 },
   });
 
   runHiliteTest({
     testName: "50k subcategories",
     iModelName: "50k subcategories",
-    selection: createSelection({ fullClassName: "BisCore:SpatialCategory", start: 11, count: 2_000 }),
-    expectedCounts: { subCategories: 50001 },
+    selection: createSelection({ fullClassName: "BisCore:SpatialCategory", start: 17, count: 1 }),
+    expectedCounts: { subCategories: 50_000 },
   });
 
   runHiliteTest({
     testName: "50k functional 3D elements",
     iModelName: "50k functional 3D elements",
-    selection: createSelection({ fullClassName: "Functional:FunctionalElement", start: 16, count: 100_000 }),
-    expectedCounts: { elements: 50000 },
+    selection: createSelection({ fullClassName: "Functional:FunctionalElement", start: 22, count: 50_000, step: 2 }),
+    expectedCounts: { elements: 50_000 },
   });
 
   runHiliteTest({
-    testName: "10k functional 2D elements",
-    iModelName: "10k functional 2D elements",
-    selection: createSelection({ fullClassName: "Functional:FunctionalElement", start: 17, count: 20_000 }),
-    expectedCounts: { elements: 10_000 + additionalFunctionalElement2dCount },
+    testName: "50k functional 2D elements",
+    iModelName: "50k functional 2D elements",
+    selection: createSelection({ fullClassName: "Functional:FunctionalElement", start: 23, count: 50_000, step: 2 }),
+    // iModel contains one additional 2D element
+    expectedCounts: { elements: 50_001 },
   });
 });
 

@@ -12,11 +12,10 @@ import { Datasets, IModelName } from "../util/Datasets";
 import { run, RunOptions } from "../util/TestUtilities";
 
 describe("compute", () => {
-  const additionalElementCount = 5;
-
-  function createElementIds({ start, count }: { start: number; count: number }) {
+  function createElementIds({ start, count, step }: { start: number; count: number; step?: number }) {
     const elementIds: string[] = [];
-    for (let i = start; i <= start + count + additionalElementCount; ++i) {
+    const increment = step ?? 1;
+    for (let i = start; i <= start + count * increment; i += increment) {
       elementIds.push(`0x${i.toString(16)}`);
     }
     return elementIds;
@@ -25,7 +24,7 @@ describe("compute", () => {
   runSelectionScopeTest({
     testName: "selection for 50k elements",
     iModelName: "50k elements",
-    elementIds: createElementIds({ start: 17, count: 50_000 }),
+    elementIds: createElementIds({ start: 23, count: 50_000 }),
     scope: "element",
     expectedCounts: [
       { className: "Generic.PhysicalObject", count: 25_000 },
@@ -36,7 +35,7 @@ describe("compute", () => {
   runSelectionScopeTest({
     testName: "parent selection for 50k elements",
     iModelName: "50k elements",
-    elementIds: createElementIds({ start: 17, count: 50_000 }),
+    elementIds: createElementIds({ start: 23, count: 50_000 }),
     scope: { id: "element", ancestorLevel: 1 },
     expectedCounts: [
       { className: "Generic.PhysicalObject", count: 24_000 },
@@ -47,7 +46,7 @@ describe("compute", () => {
   runSelectionScopeTest({
     testName: "top ancestor selection for 50k elements",
     iModelName: "50k elements",
-    elementIds: createElementIds({ start: 17, count: 50_000 }),
+    elementIds: createElementIds({ start: 23, count: 50_000 }),
     scope: { id: "element", ancestorLevel: -1 },
     expectedCounts: [
       { className: "Generic.PhysicalObject", count: 1_000 },
@@ -58,7 +57,7 @@ describe("compute", () => {
   runSelectionScopeTest({
     testName: "category selection for 50k elements",
     iModelName: "50k elements",
-    elementIds: createElementIds({ start: 17, count: 50_000 }),
+    elementIds: createElementIds({ start: 23, count: 50_000 }),
     scope: "category",
     expectedCounts: [
       { className: "BisCore.DrawingCategory", count: 1 },
@@ -69,7 +68,7 @@ describe("compute", () => {
   runSelectionScopeTest({
     testName: "model selection for 50k elements",
     iModelName: "50k elements",
-    elementIds: createElementIds({ start: 17, count: 50_000 }),
+    elementIds: createElementIds({ start: 23, count: 50_000 }),
     scope: "model",
     expectedCounts: [
       { className: "BisCore.PhysicalModel", count: 1 },
@@ -80,7 +79,7 @@ describe("compute", () => {
   runSelectionScopeTest({
     testName: "functional selection for 50k 3D elements",
     iModelName: "50k functional 3D elements",
-    elementIds: createElementIds({ start: 16, count: 100_000 }),
+    elementIds: createElementIds({ start: 21, count: 50_000, step: 2 }),
     scope: "functional",
     expectedCounts: [{ className: "Functional.FunctionalComposite", count: 50_000 }],
   });
@@ -88,7 +87,7 @@ describe("compute", () => {
   runSelectionScopeTest({
     testName: "parent functional selection for 50k 3D elements",
     iModelName: "50k functional 3D elements",
-    elementIds: createElementIds({ start: 16, count: 100_000 }),
+    elementIds: createElementIds({ start: 21, count: 50_000, step: 2 }),
     scope: { id: "functional", ancestorLevel: 1 },
     expectedCounts: [{ className: "Functional.FunctionalComposite", count: 49_000 }],
   });
@@ -96,31 +95,31 @@ describe("compute", () => {
   runSelectionScopeTest({
     testName: "top ancestor functional selection for 50k 3D elements",
     iModelName: "50k functional 3D elements",
-    elementIds: createElementIds({ start: 16, count: 100_000 }),
+    elementIds: createElementIds({ start: 21, count: 50_000, step: 2 }),
     scope: { id: "functional", ancestorLevel: -1 },
     expectedCounts: [{ className: "Functional.FunctionalComposite", count: 1_000 }],
   });
 
   runSelectionScopeTest({
     testName: "functional selection for 50k 2D elements",
-    iModelName: "10k functional 2D elements",
-    elementIds: createElementIds({ start: 17, count: 20_000 }),
+    iModelName: "50k functional 2D elements",
+    elementIds: createElementIds({ start: 22, count: 50_000, step: 2 }),
     scope: "functional",
-    expectedCounts: [{ className: "Functional.FunctionalComposite", count: 10_000 }],
+    expectedCounts: [{ className: "Functional.FunctionalComposite", count: 1_000 }],
   });
 
   runSelectionScopeTest({
     testName: "parent functional selection for 50k 2D elements",
-    iModelName: "10k functional 2D elements",
-    elementIds: createElementIds({ start: 17, count: 20_000 }),
+    iModelName: "50k functional 2D elements",
+    elementIds: createElementIds({ start: 22, count: 50_000, step: 2 }),
     scope: { id: "functional", ancestorLevel: 1 },
-    expectedCounts: [{ className: "Functional.FunctionalComposite", count: 9_000 }],
+    expectedCounts: [{ className: "Functional.FunctionalComposite", count: 1_000 }],
   });
 
   runSelectionScopeTest({
     testName: "top ancestor functional selection for 50k 2D elements",
-    iModelName: "10k functional 2D elements",
-    elementIds: createElementIds({ start: 17, count: 20_000 }),
+    iModelName: "50k functional 2D elements",
+    elementIds: createElementIds({ start: 22, count: 50_000, step: 2 }),
     scope: { id: "functional", ancestorLevel: -1 },
     expectedCounts: [{ className: "Functional.FunctionalComposite", count: 1_000 }],
   });
@@ -148,16 +147,20 @@ function runSelectionScopeTest(
     },
     test: async (props) => {
       const iterator = computeSelection({ elementIds: testProps.elementIds, scope: testProps.scope, queryExecutor: props.queryExecutor });
-      const counts = new Map<string, number>();
+      const counts = new Map<string, { count: number }>();
 
       for await (const instanceKey of iterator) {
-        const count = counts.get(instanceKey.className) ?? 0;
-        counts.set(instanceKey.className, count + 1);
+        const res = counts.get(instanceKey.className);
+        if (res) {
+          ++res.count;
+        } else {
+          counts.set(instanceKey.className, { count: 1 });
+        }
       }
 
       if (testProps.expectedCounts !== undefined) {
         for (const entry of testProps.expectedCounts) {
-          expect(counts.get(entry.className)).to.be.eq(entry.count);
+          expect(counts.get(entry.className)?.count).to.be.eq(entry.count);
         }
       }
     },
