@@ -7,9 +7,11 @@ on:
       - master
     paths:
       - apps/performance-tests/**
+      - packages/unified-selection/**
       - packages/core-interop/**
       - packages/hierarchies/**
       - packages/models-tree/**
+      - packages/shared/**
 
 jobs:
   benchmark:
