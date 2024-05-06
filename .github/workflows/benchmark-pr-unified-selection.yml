@@ -6,15 +6,17 @@ on:
       - master
       - stable
     paths:
-      - apps/performance-tests/**
+      - apps/performance-tests/unified-selection/**
+      - apps/performance-tests/util/**
       - packages/unified-selection/**
+      - packages/shared/**
       - pnpm-lock.yaml
-      - .github/workflows/unified-selection-benchmark-pr.yml
+      - .github/workflows/benchmark-pr-unified-selection.yml
     types: [opened, synchronize, reopened, ready_for_review]
 
 jobs:
   benchmark:
-    name: Benchmark performance (unified-selection)
+    name: 'Unified selection: Benchmark performance'
     if: '!github.event.pull_request.draft'
     runs-on: ubuntu-latest
     steps:

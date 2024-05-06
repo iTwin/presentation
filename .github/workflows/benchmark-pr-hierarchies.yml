@@ -6,17 +6,19 @@ on:
       - master
       - stable
     paths:
-      - apps/performance-tests/**
+      - apps/performance-tests/hierarchies/**
+      - apps/performance-tests/util/**
       - packages/core-interop/**
       - packages/hierarchies/**
       - packages/models-tree/**
+      - packages/shared/**
       - pnpm-lock.yaml
-      - .github/workflows/benchmark-pr.yml
+      - .github/workflows/benchmark-pr-hierarchies.yml
     types: [opened, synchronize, reopened, ready_for_review]
 
 jobs:
   benchmark:
-    name: Benchmark performance (hierarchies)
+    name: 'Hierarchies: Benchmark performance'
     if: '!github.event.pull_request.draft'
     runs-on: ubuntu-latest
     steps:
