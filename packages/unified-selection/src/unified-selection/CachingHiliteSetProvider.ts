@@ -5,7 +5,7 @@
 
 import { from, Observable, shareReplay } from "rxjs";
 import { eachValueFrom } from "rxjs-for-await";
-import { ECSchemaProvider, ECSqlQueryExecutor } from "@itwin/presentation-shared";
+import { ECClassHierarchyInspector, ECSqlQueryExecutor } from "@itwin/presentation-shared";
 import { createHiliteSetProvider, HiliteSet, HiliteSetProvider } from "./HiliteSetProvider";
 import { StorageSelectionChangeEventArgs } from "./SelectionChangeEvent";
 import { IMODEL_CLOSE_SELECTION_CLEAR_SOURCE, SelectionStorage } from "./SelectionStorage";
@@ -16,7 +16,7 @@ import { IMODEL_CLOSE_SELECTION_CLEAR_SOURCE, SelectionStorage } from "./Selecti
  */
 export interface CachingHiliteSetProviderProps {
   selectionStorage: SelectionStorage;
-  imodelProvider: (imodelKey: string) => ECSchemaProvider & ECSqlQueryExecutor;
+  imodelProvider: (imodelKey: string) => ECClassHierarchyInspector & ECSqlQueryExecutor;
 }
 
 /**
@@ -50,7 +50,7 @@ class CachingHiliteSetProviderImpl implements CachingHiliteSetProvider {
   private _hiliteSetProviders = new Map<string, HiliteSetProvider>();
   private _cache = new Map<string, Observable<HiliteSet>>();
   private _removeListener: () => void;
-  private _imodelProvider: (imodelKey: string) => ECSchemaProvider & ECSqlQueryExecutor;
+  private _imodelProvider: (imodelKey: string) => ECClassHierarchyInspector & ECSqlQueryExecutor;
 
   constructor(props: CachingHiliteSetProviderProps) {
     this._selectionStorage = props.selectionStorage;
@@ -83,7 +83,7 @@ class CachingHiliteSetProviderImpl implements CachingHiliteSetProvider {
     this._cache = new Map();
   }
 
-  private getHiliteSetProvider(imodelKey: string, imodelAccess: ECSchemaProvider & ECSqlQueryExecutor) {
+  private getHiliteSetProvider(imodelKey: string, imodelAccess: ECClassHierarchyInspector & ECSqlQueryExecutor) {
     let provider = this._hiliteSetProviders.get(imodelKey);
     if (!provider) {
       provider = createHiliteSetProvider({ imodelAccess });

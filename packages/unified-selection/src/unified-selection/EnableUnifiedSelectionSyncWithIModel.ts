@@ -5,7 +5,7 @@
 
 import { from, Subject, takeUntil } from "rxjs";
 import { assert, Id64Arg, using } from "@itwin/core-bentley";
-import { ECSchemaProvider, ECSqlQueryExecutor } from "@itwin/presentation-shared";
+import { ECClassHierarchyInspector, ECSqlQueryExecutor } from "@itwin/presentation-shared";
 import { CachingHiliteSetProvider, createCachingHiliteSetProvider } from "./CachingHiliteSetProvider";
 import { createHiliteSetProvider, HiliteSet, HiliteSetProvider } from "./HiliteSetProvider";
 import { SelectableInstanceKey, Selectables } from "./Selectable";
@@ -20,19 +20,20 @@ import { CoreIModelHiliteSet, CoreIModelSelectionSet, CoreSelectionSetEventType,
  */
 export interface EnableUnifiedSelectionSyncWithIModelProps {
   /**
-   * Provides access to different iModel's features: query executing, metadata access, selection and hilite sets.
+   * Provides access to different iModel's features: query executing, class hierarchy, selection and hilite sets.
    * It's recommended to use `@itwin/presentation-core-interop` to create `ECSqlQueryExecutor` and `ECSchemaProvider` from
    * [IModelConnection](https://www.itwinjs.org/reference/core-frontend/imodelconnection/imodelconnection/) and map its `key`,
    * `hilited` and `selectionSet` attributes like this:
    *
    * ```ts
    * import { createECSqlQueryExecutor, createECSchemaProvider } from "@itwin/presentation-core-interop";
+   * import { createCachingECClassHierarchyInspector } from "@itwin/presentation-shared";
    * import { IModelConnection } from "@itwin/core-frontend";
    *
    * const imodel: IModelConnection = ...
    * const imodelAccess = {
    *   ...createECSqlQueryExecutor(imodel),
-   *   ...createECSchemaProvider(MyAppFrontend.getSchemaContext(imodel)),
+   *   ...createCachingECClassHierarchyInspector({ schemaProvider: createECSchemaProvider(MyAppFrontend.getSchemaContext(imodel)) }),
    *   key: imodel.key,
    *   hiliteSet: imodel.hilited,
    *   selectionSet: imodel.selectionSet,
@@ -40,7 +41,7 @@ export interface EnableUnifiedSelectionSyncWithIModelProps {
    * ```.
    */
   imodelAccess: ECSqlQueryExecutor &
-    ECSchemaProvider & {
+    ECClassHierarchyInspector & {
       /** Key of the iModel. Generally taken from `IModelConnection.key`. */
       readonly key: string;
       /** The set of currently hilited elements taken from `IModelConnection.hilited`. */

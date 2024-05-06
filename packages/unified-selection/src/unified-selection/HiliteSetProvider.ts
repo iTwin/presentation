@@ -5,7 +5,7 @@
 
 import { EMPTY, filter, forkJoin, from, map, merge, mergeMap, Observable, scan, shareReplay, Subject, toArray } from "rxjs";
 import { eachValueFrom } from "rxjs-for-await";
-import { EC, ECSchemaProvider, ECSqlBinding, ECSqlQueryExecutor, parseFullClassName } from "@itwin/presentation-shared";
+import { ECClassHierarchyInspector, ECSqlBinding, ECSqlQueryExecutor } from "@itwin/presentation-shared";
 import { SelectableInstanceKey, Selectables } from "./Selectable";
 import { formIdBindings } from "./Utils";
 
@@ -27,7 +27,7 @@ export interface HiliteSet {
  * @internal Not exported through barrel, but used in public API as an argument. May be supplemented with optional attributes any time.
  */
 export interface HiliteSetProviderProps {
-  imodelAccess: ECSchemaProvider & ECSqlQueryExecutor;
+  imodelAccess: ECClassHierarchyInspector & ECSqlQueryExecutor;
 }
 
 /**
@@ -50,7 +50,7 @@ export function createHiliteSetProvider(props: HiliteSetProviderProps): HiliteSe
 }
 
 class HiliteSetProviderImpl implements HiliteSetProvider {
-  private _imodelAccess: ECSchemaProvider & ECSqlQueryExecutor;
+  private _imodelAccess: ECClassHierarchyInspector & ECSqlQueryExecutor;
   // Map between a class name and its type
   private _classRelationCache: Map<string, InstanceIdType | Promise<InstanceIdType>>;
 
@@ -132,23 +132,23 @@ class HiliteSetProviderImpl implements HiliteSetProvider {
   }
 
   private async getTypeImpl(key: SelectableInstanceKey): Promise<InstanceIdType> {
-    const keyClass = await this.getClass(key.className);
     return (
-      (keyClass &&
-        ((await this.checkType(keyClass, "BisCore", "Subject", "subject")) ??
-          (await this.checkType(keyClass, "BisCore", "Model", "model")) ??
-          (await this.checkType(keyClass, "BisCore", "Category", "category")) ??
-          (await this.checkType(keyClass, "BisCore", "SubCategory", "subCategory")) ??
-          (await this.checkType(keyClass, "Functional", "FunctionalElement", "functionalElement")) ??
-          (await this.checkType(keyClass, "BisCore", "GroupInformationElement", "groupInformationElement")) ??
-          (await this.checkType(keyClass, "BisCore", "GeometricElement", "geometricElement")) ??
-          (await this.checkType(keyClass, "BisCore", "Element", "element")))) ??
+      (await this.checkType(key.className, "BisCore.Subject", "subject")) ??
+      (await this.checkType(key.className, "BisCore.Model", "model")) ??
+      (await this.checkType(key.className, "BisCore.Category", "category")) ??
+      (await this.checkType(key.className, "BisCore.SubCategory", "subCategory")) ??
+      (await this.checkType(key.className, "Functional.FunctionalElement", "functionalElement")) ??
+      (await this.checkType(key.className, "BisCore.GroupInformationElement", "groupInformationElement")) ??
+      (await this.checkType(key.className, "BisCore.GeometricElement", "geometricElement")) ??
+      (await this.checkType(key.className, "BisCore.Element", "element")) ??
       "unknown"
     );
   }
 
-  private async checkType(keyClass: EC.Class, schemaName: string, className: string, type: InstanceIdType) {
-    return (await keyClass.is(className, schemaName)) ? type : undefined;
+  private async checkType(keyClassName: string, checkClassName: string, type: InstanceIdType) {
+    const res = this._imodelAccess.classDerivesFrom(keyClassName, checkClassName);
+    const isOfType = typeof res === "boolean" ? res : await res;
+    return isOfType ? type : undefined;
   }
 
   private getInstancesByType(selectables: Selectables): InstancesByType {
@@ -376,19 +376,6 @@ class HiliteSetProviderImpl implements HiliteSetProvider {
         )
       `,
     ];
-  }
-
-  private async getClass(fullClassName: string): Promise<EC.Class | undefined> {
-    const { schemaName, className } = parseFullClassName(fullClassName);
-    const schema = await this._imodelAccess.getSchema(schemaName);
-    if (!schema) {
-      return undefined;
-    }
-    const schemaClass = await schema.getClass(className);
-    if (!schemaClass) {
-      return undefined;
-    }
-    return schemaClass;
   }
 }
 

@@ -7,7 +7,7 @@ import { expect } from "chai";
 import { ResolvablePromise, waitFor } from "presentation-test-utilities";
 import sinon from "sinon";
 import { Id64Arg, using } from "@itwin/core-bentley";
-import { EC, ECSqlQueryDef, ECSqlQueryExecutor, ECSqlQueryReaderOptions, ECSqlQueryRow } from "@itwin/presentation-shared";
+import { ECSqlQueryDef, ECSqlQueryExecutor, ECSqlQueryReaderOptions, ECSqlQueryRow } from "@itwin/presentation-shared";
 import * as cachingHiliteSetProvider from "../unified-selection/CachingHiliteSetProvider";
 import {
   enableUnifiedSelectionSyncWithIModel,
@@ -127,7 +127,7 @@ describe("IModelSelectionHandler", () => {
 
   const imodelAccess = {
     createQueryReader: sinon.stub<[ECSqlQueryDef, ECSqlQueryReaderOptions | undefined], ReturnType<ECSqlQueryExecutor["createQueryReader"]>>(),
-    getSchema: sinon.stub<[string], Promise<EC.Schema | undefined>>(),
+    classDerivesFrom: sinon.stub<[string, string], Promise<boolean> | boolean>(),
     key: "test",
     hiliteSet,
     selectionSet,
