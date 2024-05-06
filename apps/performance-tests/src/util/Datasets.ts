@@ -219,7 +219,7 @@ export class Datasets {
     console.log(`${numElements} elements: Creating...`);
 
     await createIModel(name, localPath, async (builder) => {
-      const numberOfGroups = 1000;
+      const numberOfGroups = 20;
       const elementsPerGroup = numElements / numberOfGroups;
 
       for (let i = 0; i < numberOfGroups; ++i) {
