@@ -39,12 +39,20 @@ export class ReportingTreeNodeLoader<IPresentationTreeDataProvider extends TreeD
     this._trackedRequests.add(parentId);
     const tracked = toRxjsObservable(observable).pipe(
       tap({
-        subscribe: () => (time = performance.now()),
-        unsubscribe: () => this._trackedRequests.delete(parentId),
-        error: () => this._trackedRequests.delete(parentId),
+        subscribe: () => {
+          time = performance.now();
+        },
+        unsubscribe: () => {
+          this._trackedRequests.delete(parentId);
+        },
+        error: () => {
+          this._trackedRequests.delete(parentId);
+        },
+        next: () => {
+          this._onNodeLoaded({ node: parentId, duration: performance.now() - time });
+        },
         complete: () => {
           this._trackedRequests.delete(parentId);
-          this._onNodeLoaded({ node: parentId, duration: performance.now() - time });
         },
       }),
     );

@@ -100,12 +100,12 @@ describe("ReportingTreeNodeLoader", () => {
       const observable = reportingNodeLoader.loadNode({ id: "id" } as TreeModelNode, 0);
       const subscription = observable.subscribe({ next: (result) => (loadedNodes = [...loadedNodes, ...result.loadedNodes]) });
 
-      loadNodeSubject.next({ loadedNodes: [{ id: "node 1" }] } as TreeNodeLoadResult);
       subscription.unsubscribe();
+      loadNodeSubject.next({ loadedNodes: [{ id: "node 1" }] } as TreeNodeLoadResult);
       loadNodeSubject.complete();
 
       await waitFor(() => {
-        expect(loadedNodes).to.have.lengthOf(1);
+        expect(loadedNodes).to.have.lengthOf(0);
         expect(reportStub).to.not.be.called;
       });
     });
