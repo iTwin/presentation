@@ -2,4 +2,4 @@
 "@itwin/presentation-components": patch
 ---
 
-Report nodes load duration immediately after nodes are loaded.
+Fixed `usePresentationTreeState` callback prop `onNodeLoaded` not being called under certain race conditions.
