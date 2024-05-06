@@ -2,4 +2,4 @@
 "@itwin/presentation-components": patch
 ---
 
-Load only unique property values of instances specified by input keys.
+Fix instance filter builder component's unique values selector not filtering values by provided instance keys.
