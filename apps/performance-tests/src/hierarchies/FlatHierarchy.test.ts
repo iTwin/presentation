@@ -5,4 +5,4 @@
 
 import { runHierarchyTest } from "../util/TestUtilities";
 
-runHierarchyTest({ testName: "flat 50k elements list", iModelName: "50k elements" });
+runHierarchyTest({ testName: "flat 50k elements list", iModelName: "50k flat elements" });

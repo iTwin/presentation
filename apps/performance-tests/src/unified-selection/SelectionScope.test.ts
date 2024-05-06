@@ -14,7 +14,7 @@ import { run, RunOptions } from "../util/TestUtilities";
 describe("compute", () => {
   const additionalElementCount = 5;
 
-  function createElementKeys({ start, count }: { start: number; count: number }) {
+  function createElementIds({ start, count }: { start: number; count: number }) {
     const elementIds: string[] = [];
     for (let i = start; i <= start + count + additionalElementCount; ++i) {
       elementIds.push(`0x${i.toString(16)}`);
@@ -24,8 +24,8 @@ describe("compute", () => {
 
   runSelectionScopeTest({
     testName: "selection for 50k elements",
-    iModelName: "50k nested elements",
-    elementIds: createElementKeys({ start: 17, count: 50_000 }),
+    iModelName: "50k elements",
+    elementIds: createElementIds({ start: 17, count: 50_000 }),
     scope: "element",
     expectedCounts: [
       { className: "Generic.PhysicalObject", count: 25_000 },
@@ -35,8 +35,8 @@ describe("compute", () => {
 
   runSelectionScopeTest({
     testName: "parent selection for 50k elements",
-    iModelName: "50k nested elements",
-    elementIds: createElementKeys({ start: 17, count: 50_000 }),
+    iModelName: "50k elements",
+    elementIds: createElementIds({ start: 17, count: 50_000 }),
     scope: { id: "element", ancestorLevel: 1 },
     expectedCounts: [
       { className: "Generic.PhysicalObject", count: 24_000 },
@@ -46,8 +46,8 @@ describe("compute", () => {
 
   runSelectionScopeTest({
     testName: "top ancestor selection for 50k elements",
-    iModelName: "50k nested elements",
-    elementIds: createElementKeys({ start: 17, count: 50_000 }),
+    iModelName: "50k elements",
+    elementIds: createElementIds({ start: 17, count: 50_000 }),
     scope: { id: "element", ancestorLevel: -1 },
     expectedCounts: [
       { className: "Generic.PhysicalObject", count: 1_000 },
@@ -57,8 +57,8 @@ describe("compute", () => {
 
   runSelectionScopeTest({
     testName: "category selection for 50k elements",
-    iModelName: "50k nested elements",
-    elementIds: createElementKeys({ start: 17, count: 50_000 }),
+    iModelName: "50k elements",
+    elementIds: createElementIds({ start: 17, count: 50_000 }),
     scope: "category",
     expectedCounts: [
       { className: "BisCore.DrawingCategory", count: 1 },
@@ -68,8 +68,8 @@ describe("compute", () => {
 
   runSelectionScopeTest({
     testName: "model selection for 50k elements",
-    iModelName: "50k nested elements",
-    elementIds: createElementKeys({ start: 17, count: 50_000 }),
+    iModelName: "50k elements",
+    elementIds: createElementIds({ start: 17, count: 50_000 }),
     scope: "model",
     expectedCounts: [
       { className: "BisCore.PhysicalModel", count: 1 },
@@ -79,48 +79,48 @@ describe("compute", () => {
 
   runSelectionScopeTest({
     testName: "functional selection for 50k 3D elements",
-    iModelName: "50k nested functional 3D elements",
-    elementIds: createElementKeys({ start: 16, count: 100_000 }),
+    iModelName: "50k functional 3D elements",
+    elementIds: createElementIds({ start: 16, count: 100_000 }),
     scope: "functional",
     expectedCounts: [{ className: "Functional.FunctionalComposite", count: 50_000 }],
   });
 
   runSelectionScopeTest({
     testName: "parent functional selection for 50k 3D elements",
-    iModelName: "50k nested functional 3D elements",
-    elementIds: createElementKeys({ start: 16, count: 100_000 }),
+    iModelName: "50k functional 3D elements",
+    elementIds: createElementIds({ start: 16, count: 100_000 }),
     scope: { id: "functional", ancestorLevel: 1 },
     expectedCounts: [{ className: "Functional.FunctionalComposite", count: 49_000 }],
   });
 
   runSelectionScopeTest({
     testName: "top ancestor functional selection for 50k 3D elements",
-    iModelName: "50k nested functional 3D elements",
-    elementIds: createElementKeys({ start: 16, count: 100_000 }),
+    iModelName: "50k functional 3D elements",
+    elementIds: createElementIds({ start: 16, count: 100_000 }),
     scope: { id: "functional", ancestorLevel: -1 },
     expectedCounts: [{ className: "Functional.FunctionalComposite", count: 1_000 }],
   });
 
   runSelectionScopeTest({
     testName: "functional selection for 50k 2D elements",
-    iModelName: "10k nested functional 2D elements",
-    elementIds: createElementKeys({ start: 17, count: 20_000 }),
+    iModelName: "10k functional 2D elements",
+    elementIds: createElementIds({ start: 17, count: 20_000 }),
     scope: "functional",
     expectedCounts: [{ className: "Functional.FunctionalComposite", count: 10_000 }],
   });
 
   runSelectionScopeTest({
     testName: "parent functional selection for 50k 2D elements",
-    iModelName: "10k nested functional 2D elements",
-    elementIds: createElementKeys({ start: 17, count: 20_000 }),
+    iModelName: "10k functional 2D elements",
+    elementIds: createElementIds({ start: 17, count: 20_000 }),
     scope: { id: "functional", ancestorLevel: 1 },
     expectedCounts: [{ className: "Functional.FunctionalComposite", count: 9_000 }],
   });
 
   runSelectionScopeTest({
     testName: "top ancestor functional selection for 50k 2D elements",
-    iModelName: "10k nested functional 2D elements",
-    elementIds: createElementKeys({ start: 17, count: 20_000 }),
+    iModelName: "10k functional 2D elements",
+    elementIds: createElementIds({ start: 17, count: 20_000 }),
     scope: { id: "functional", ancestorLevel: -1 },
     expectedCounts: [{ className: "Functional.FunctionalComposite", count: 1_000 }],
   });

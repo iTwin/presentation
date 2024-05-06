@@ -25,7 +25,7 @@ describe("hilite", () => {
 
   runHiliteTest({
     testName: "50k elements",
-    iModelName: "50k nested elements",
+    iModelName: "50k elements",
     selection: createSelection({ fullClassName: "Generic:PhysicalObject", start: 14, count: 50_000 }),
     expectedCounts: { elements: 50000 },
   });
@@ -39,7 +39,7 @@ describe("hilite", () => {
 
   runHiliteTest({
     testName: "1k subjects",
-    iModelName: "1k nested subjects",
+    iModelName: "1k subjects",
     selection: createSelection({ fullClassName: "BisCore:Subject", start: 11, count: 2_000 }),
     expectedCounts: { models: 20 },
   });
@@ -53,14 +53,14 @@ describe("hilite", () => {
 
   runHiliteTest({
     testName: "50k functional 3D elements",
-    iModelName: "50k nested functional 3D elements",
+    iModelName: "50k functional 3D elements",
     selection: createSelection({ fullClassName: "Functional:FunctionalElement", start: 16, count: 100_000 }),
     expectedCounts: { elements: 50000 },
   });
 
   runHiliteTest({
     testName: "10k functional 2D elements",
-    iModelName: "10k nested functional 2D elements",
+    iModelName: "10k functional 2D elements",
     selection: createSelection({ fullClassName: "Functional:FunctionalElement", start: 17, count: 20_000 }),
     expectedCounts: { elements: 10_000 + additionalFunctionalElement2dCount },
   });

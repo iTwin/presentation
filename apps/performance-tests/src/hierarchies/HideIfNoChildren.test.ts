@@ -16,7 +16,7 @@ import { StatelessHierarchyProvider } from "../util/StatelessHierarchyProvider";
 import { run } from "../util/TestUtilities";
 
 describe("hide if no children", () => {
-  const setup = () => SnapshotDb.openFile(Datasets.getIModelPath("50k elements"));
+  const setup = () => SnapshotDb.openFile(Datasets.getIModelPath("50k flat elements"));
   const cleanup = (iModel: IModelDb) => iModel.close();
 
   run({

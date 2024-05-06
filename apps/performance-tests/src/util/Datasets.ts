@@ -23,13 +23,13 @@ import { createIModel } from "./IModelUtilities";
 
 export const IMODEL_NAMES = [
   "baytown",
+  "50k flat elements",
   "50k elements",
-  "50k nested elements",
   "50k group member elements",
-  "1k nested subjects",
+  "1k subjects",
   "50k subcategories",
-  "50k nested functional 3D elements",
-  "10k nested functional 2D elements",
+  "50k functional 3D elements",
+  "10k functional 2D elements",
 ] as const;
 export type IModelName = (typeof IMODEL_NAMES)[number];
 export type IModelPathsMap = { [_ in IModelName]?: string };
@@ -91,24 +91,22 @@ export class Datasets {
     return path.resolve(localPath);
   }
 
-  private static getIModelFactory(key: IModelName, elementCount: number) {
+  private static getIModelFactory(key: Exclude<IModelName, "baytown">, elementCount: number) {
     switch (key) {
-      case "50k elements":
+      case "50k flat elements":
         return async (name: string, localPath: string) => this.createFlatIModel(name, localPath, elementCount);
-      case "50k nested elements":
-        return async (name: string, localPath: string) => this.createNestedElementModel(name, localPath, elementCount);
+      case "50k elements":
+        return async (name: string, localPath: string) => this.createElementIModel(name, localPath, elementCount);
       case "50k group member elements":
-        return async (name: string, localPath: string) => this.createNestedGroupModel(name, localPath, elementCount);
-      case "1k nested subjects":
-        return async (name: string, localPath: string) => this.createNestedSubjectModel(name, localPath, elementCount);
+        return async (name: string, localPath: string) => this.createGroupIModel(name, localPath, elementCount);
+      case "1k subjects":
+        return async (name: string, localPath: string) => this.createSubjectIModel(name, localPath, elementCount);
       case "50k subcategories":
-        return async (name: string, localPath: string) => this.createNestedCategoriesModel(name, localPath, elementCount);
-      case "50k nested functional 3D elements":
-        return async (name: string, localPath: string) => this.createFunctionalElements3dModel(name, localPath, elementCount);
-      case "10k nested functional 2D elements":
-        return async (name: string, localPath: string) => this.createNestedFunctionalElements2dModel(name, localPath, elementCount);
-      default:
-        return async () => {};
+        return async (name: string, localPath: string) => this.createCategoryIModel(name, localPath, elementCount);
+      case "50k functional 3D elements":
+        return async (name: string, localPath: string) => this.createFunctional3dElementIModel(name, localPath, elementCount);
+      case "10k functional 2D elements":
+        return async (name: string, localPath: string) => this.createFunctional2dElementIModel(name, localPath, elementCount);
     }
   }
 
@@ -122,6 +120,11 @@ export class Datasets {
     await response.body!.pipeTo(fs.WriteStream.toWeb(fs.createWriteStream(localPath)));
   }
 
+  /**
+   * Create an iModel with `numElements` physical elements. The elements are set up in a flat manner all belonging to the same
+   * spatial category and physical model. The elements are grouped in batches of 100 elements forming `numElements` / 100 groups.
+   * Elements belonging to the same group have the same custom class name but differ in user labels.
+   */
   private static async createFlatIModel(name: string, localPath: string, numElements: number) {
     console.log(`${numElements} elements: Creating...`);
 
@@ -165,7 +168,12 @@ export class Datasets {
     console.log(`${numElements} elements: Done.`);
   }
 
-  private static async createNestedElementModel(name: string, localPath: string, numElements: number) {
+  /**
+   * Create an iModel with `numElements` elements, half of them 2D and the other half - 3D, all belonging to the same 2D
+   * and 3D model and category. The elements are set up in a hierarchical manner, with 1000 top level elements each having 1
+   * child element, which has 1 child element, and so on until the depth of (`numElements` / 2000) elements is reached.
+   */
+  private static async createElementIModel(name: string, localPath: string, numElements: number) {
     console.log(`${numElements} elements: Creating...`);
 
     await createIModel(name, localPath, async (builder) => {
@@ -201,7 +209,11 @@ export class Datasets {
     console.log(`${numElements} elements: Done.`);
   }
 
-  private static async createNestedSubjectModel(name: string, localPath: string, numElements: number) {
+  /**
+   * Create an iModel with `numElements` subjects that are set up are set up in a hierarchical manner, with 20 top level subjects
+   * each having 1 child subject, which has 1 child subject, and so on until the depth of (`numElements` / 20) elements is reached.
+   */
+  private static async createSubjectIModel(name: string, localPath: string, numElements: number) {
     console.log(`${numElements} elements: Creating...`);
 
     await createIModel(name, localPath, async (builder) => {
@@ -226,7 +238,10 @@ export class Datasets {
     console.log(`${numElements} elements: Done.`);
   }
 
-  private static async createNestedCategoriesModel(name: string, localPath: string, numElements: number) {
+  /**
+   * Create an iModel with `numElements` subcategories all belonging to the same parent spatial category.
+   */
+  private static async createCategoryIModel(name: string, localPath: string, numElements: number) {
     console.log(`${numElements} elements: Creating...`);
     await createIModel(name, localPath, async (builder) => {
       const { id: categoryId } = insertSpatialCategory({ builder, fullClassNameSeparator: ":", codeValue: "My Category" });
@@ -243,7 +258,12 @@ export class Datasets {
     console.log(`${numElements} elements: Done.`);
   }
 
-  private static async createNestedGroupModel(name: string, localPath: string, numElements: number) {
+  /**
+   * Create an iModel with `numElements` group elements all belonging to the same spatial category and physical model.
+   * The elements belong to 10 groups, each containing 100 members, each having 1 child element, which has 1 child element,
+   * and so on until the depth of (`numElements` / 1000) elements is reached.
+   */
+  private static async createGroupIModel(name: string, localPath: string, numElements: number) {
     console.log(`${numElements} elements: Creating...`);
 
     const numGroups = 10;
@@ -274,7 +294,12 @@ export class Datasets {
     console.log(`${numElements} elements: Done.`);
   }
 
-  private static async createFunctionalElements3dModel(name: string, localPath: string, numElements: number) {
+  /**
+   * Create an iModel with `numElements` functional 3D elements all belonging to the same spatial category, physical model and functional model.
+   * The elements are set up in a hierarchical manner, with 1000 top level 3D elements, each having 1 child element, which has 1 child element,
+   * and so on until the depth of (`numElements` / 1000) elements is reached. Each 3D element has a related functional element.
+   */
+  private static async createFunctional3dElementIModel(name: string, localPath: string, numElements: number) {
     console.log(`${numElements} elements: Creating...`);
     const schema = await this.getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
 
@@ -312,7 +337,15 @@ export class Datasets {
     console.log(`${numElements} elements: Done.`);
   }
 
-  private static async createNestedFunctionalElements2dModel(name: string, localPath: string, numElements: number) {
+  /**
+   * Create an iModel with `numElements` functional 2D elements all belonging to the same drawing category, drawing model and functional model.
+   * The elements are set up in a hierarchical manner, with 1000 top level functional elements, each having 1 child functional element,
+   * which has 1 child functional element, and so on until the depth of (`numElements` / 1000) elements is reached.
+   * The last functional element in each chain is related to a 2D element, that has a child 2D element, that has a child 2D element,
+   * and so on until until the depth of (`numElements` / 1000) elements is reached. Every functional element that is not the last in each chain
+   * is related to an additional 2D element, resulting to a total of `numElements` + 1 2D elements.
+   */
+  private static async createFunctional2dElementIModel(name: string, localPath: string, numElements: number) {
     console.log(`${numElements} elements: Creating...`);
     const schema = await this.getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
 
