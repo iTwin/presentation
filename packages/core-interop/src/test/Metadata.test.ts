@@ -65,6 +65,16 @@ describe("createECSchemaProvider", () => {
       expect(schemaContext.getSchema).to.be.calledThrice;
     });
 
+    it(`returns undefined on "schema not found" error`, async () => {
+      const schemaContext = {
+        getSchema: sinon.stub<[SchemaKey], CoreSchema>(),
+      };
+      schemaContext.getSchema.rejects(new Error("schema not found"));
+
+      const provider = createECSchemaProvider(schemaContext as unknown as SchemaContext);
+      expect(await provider.getSchema("x")).to.be.undefined;
+    });
+
     it("re-throws SchemaContext errors", async () => {
       const schemaContext = {
         getSchema: sinon.stub<[SchemaKey], CoreSchema>(),
