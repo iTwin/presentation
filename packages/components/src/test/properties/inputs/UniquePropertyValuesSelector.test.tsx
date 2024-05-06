@@ -1053,6 +1053,86 @@ describe("UniquePropertyValuesSelector", () => {
       ]);
     });
 
+    it("calls 'getDistinctValuesIterator' with ruleset containing `SelectedNodeInstances` specification when input instance keys are provided", async () => {
+      const testProperty = {
+        name: "#testField",
+        displayLabel: "testField",
+        typename: "number",
+      };
+
+      const testClassInfos = [createTestECClassInfo({ name: "testSchema1:testClass1" })];
+      const testField = createTestPropertiesContentField({
+        name: "testField",
+        properties: testClassInfos.map((c) => ({ property: createTestPropertyInfo({ classInfo: c }) })),
+      });
+
+      const testDescriptor = createTestContentDescriptor({
+        fields: [testField],
+      });
+
+      const keys = [{ id: "0x1", className: "testSchema1:testClass1" }];
+      const { queryByText, user } = render(
+        <UniquePropertyValuesSelector property={testProperty} onChange={() => {}} imodel={testImodel} descriptor={testDescriptor} descriptorInputKeys={keys} />,
+      );
+
+      // trigger loadTargets function
+      const selector = await waitFor(() => queryByText("unique-values-property-editor.select-values"));
+      await user.click(selector!);
+
+      expect(getDistinctValuesIteratorStub.firstCall.args[0].rulesetOrId).to.containSubset({
+        rules: [
+          {
+            ruleType: "Content",
+            specifications: [
+              {
+                specType: "SelectedNodeInstances",
+              },
+            ],
+          },
+        ],
+      });
+    });
+
+    it("calls 'getDistinctValuesIterator' with ruleset containing `SelectedNodeInstances` specification when input `KeySet` is provided", async () => {
+      const testProperty = {
+        name: "#testField",
+        displayLabel: "testField",
+        typename: "number",
+      };
+
+      const testClassInfos = [createTestECClassInfo({ name: "testSchema1:testClass1" })];
+      const testField = createTestPropertiesContentField({
+        name: "testField",
+        properties: testClassInfos.map((c) => ({ property: createTestPropertyInfo({ classInfo: c }) })),
+      });
+
+      const testDescriptor = createTestContentDescriptor({
+        fields: [testField],
+      });
+
+      const keys = new KeySet([{ id: "0x1", className: "testSchema1:testClass1" }]);
+      const { queryByText, user } = render(
+        <UniquePropertyValuesSelector property={testProperty} onChange={() => {}} imodel={testImodel} descriptor={testDescriptor} descriptorInputKeys={keys} />,
+      );
+
+      // trigger loadTargets function
+      const selector = await waitFor(() => queryByText("unique-values-property-editor.select-values"));
+      await user.click(selector!);
+
+      expect(getDistinctValuesIteratorStub.firstCall.args[0].rulesetOrId).to.containSubset({
+        rules: [
+          {
+            ruleType: "Content",
+            specifications: [
+              {
+                specType: "SelectedNodeInstances",
+              },
+            ],
+          },
+        ],
+      });
+    });
+
     it("does not create ruleset when field is a 'NestedContentField' with no parent, thus 'getDistinctValuesIterator' is not called", async () => {
       const testProperty = {
         name: "#testField",
