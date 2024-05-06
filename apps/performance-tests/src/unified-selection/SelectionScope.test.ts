@@ -9,22 +9,14 @@ import { createECSqlQueryExecutor } from "@itwin/presentation-core-interop";
 import { computeSelection } from "@itwin/unified-selection";
 import { ComputeSelectionProps } from "@itwin/unified-selection/lib/cjs/unified-selection/SelectionScope";
 import { Datasets, IModelName } from "../util/Datasets";
-import { run, RunOptions } from "../util/TestUtilities";
+import { queryInstanceIds, run, RunOptions } from "../util/TestUtilities";
 
 describe("compute", () => {
-  function createElementIds({ start, count, step }: { start: number; count: number; step?: number }) {
-    const elementIds: string[] = [];
-    const increment = step ?? 1;
-    for (let i = start; i <= start + count * increment; i += increment) {
-      elementIds.push(`0x${i.toString(16)}`);
-    }
-    return elementIds;
-  }
-
   runSelectionScopeTest({
     testName: "selection for 50k elements",
     iModelName: "50k elements",
-    elementIds: createElementIds({ start: 23, count: 50_000 }),
+    fullClassName: "BisCore:Element",
+    userLabel: "test_element",
     scope: "element",
     expectedCounts: [
       { className: "Generic.PhysicalObject", count: 25_000 },
@@ -35,7 +27,8 @@ describe("compute", () => {
   runSelectionScopeTest({
     testName: "parent selection for 50k elements",
     iModelName: "50k elements",
-    elementIds: createElementIds({ start: 23, count: 50_000 }),
+    fullClassName: "BisCore:Element",
+    userLabel: "test_element",
     scope: { id: "element", ancestorLevel: 1 },
     expectedCounts: [
       { className: "Generic.PhysicalObject", count: 24_000 },
@@ -46,7 +39,8 @@ describe("compute", () => {
   runSelectionScopeTest({
     testName: "top ancestor selection for 50k elements",
     iModelName: "50k elements",
-    elementIds: createElementIds({ start: 23, count: 50_000 }),
+    fullClassName: "BisCore:Element",
+    userLabel: "test_element",
     scope: { id: "element", ancestorLevel: -1 },
     expectedCounts: [
       { className: "Generic.PhysicalObject", count: 1_000 },
@@ -57,7 +51,8 @@ describe("compute", () => {
   runSelectionScopeTest({
     testName: "category selection for 50k elements",
     iModelName: "50k elements",
-    elementIds: createElementIds({ start: 23, count: 50_000 }),
+    fullClassName: "BisCore:Element",
+    userLabel: "test_element",
     scope: "category",
     expectedCounts: [
       { className: "BisCore.DrawingCategory", count: 1 },
@@ -68,7 +63,8 @@ describe("compute", () => {
   runSelectionScopeTest({
     testName: "model selection for 50k elements",
     iModelName: "50k elements",
-    elementIds: createElementIds({ start: 23, count: 50_000 }),
+    fullClassName: "BisCore:Element",
+    userLabel: "test_element",
     scope: "model",
     expectedCounts: [
       { className: "BisCore.PhysicalModel", count: 1 },
@@ -79,7 +75,8 @@ describe("compute", () => {
   runSelectionScopeTest({
     testName: "functional selection for 50k 3D elements",
     iModelName: "50k functional 3D elements",
-    elementIds: createElementIds({ start: 21, count: 50_000, step: 2 }),
+    fullClassName: "Generic:PhysicalObject",
+    userLabel: "test_element",
     scope: "functional",
     expectedCounts: [{ className: "Functional.FunctionalComposite", count: 50_000 }],
   });
@@ -87,7 +84,8 @@ describe("compute", () => {
   runSelectionScopeTest({
     testName: "parent functional selection for 50k 3D elements",
     iModelName: "50k functional 3D elements",
-    elementIds: createElementIds({ start: 21, count: 50_000, step: 2 }),
+    fullClassName: "Generic:PhysicalObject",
+    userLabel: "test_element",
     scope: { id: "functional", ancestorLevel: 1 },
     expectedCounts: [{ className: "Functional.FunctionalComposite", count: 49_000 }],
   });
@@ -95,7 +93,8 @@ describe("compute", () => {
   runSelectionScopeTest({
     testName: "top ancestor functional selection for 50k 3D elements",
     iModelName: "50k functional 3D elements",
-    elementIds: createElementIds({ start: 21, count: 50_000, step: 2 }),
+    fullClassName: "Generic:PhysicalObject",
+    userLabel: "test_element",
     scope: { id: "functional", ancestorLevel: -1 },
     expectedCounts: [{ className: "Functional.FunctionalComposite", count: 1_000 }],
   });
@@ -103,7 +102,8 @@ describe("compute", () => {
   runSelectionScopeTest({
     testName: "functional selection for 50k 2D elements",
     iModelName: "50k functional 2D elements",
-    elementIds: createElementIds({ start: 22, count: 50_000, step: 2 }),
+    fullClassName: "BisCore:DrawingGraphic",
+    userLabel: "test_element",
     scope: "functional",
     expectedCounts: [{ className: "Functional.FunctionalComposite", count: 1_000 }],
   });
@@ -111,7 +111,8 @@ describe("compute", () => {
   runSelectionScopeTest({
     testName: "parent functional selection for 50k 2D elements",
     iModelName: "50k functional 2D elements",
-    elementIds: createElementIds({ start: 22, count: 50_000, step: 2 }),
+    fullClassName: "BisCore:DrawingGraphic",
+    userLabel: "test_element",
     scope: { id: "functional", ancestorLevel: 1 },
     expectedCounts: [{ className: "Functional.FunctionalComposite", count: 1_000 }],
   });
@@ -119,7 +120,8 @@ describe("compute", () => {
   runSelectionScopeTest({
     testName: "top ancestor functional selection for 50k 2D elements",
     iModelName: "50k functional 2D elements",
-    elementIds: createElementIds({ start: 22, count: 50_000, step: 2 }),
+    fullClassName: "BisCore:DrawingGraphic",
+    userLabel: "test_element",
     scope: { id: "functional", ancestorLevel: -1 },
     expectedCounts: [{ className: "Functional.FunctionalComposite", count: 1_000 }],
   });
@@ -128,7 +130,8 @@ describe("compute", () => {
 function runSelectionScopeTest(
   testProps: {
     iModelName: IModelName;
-    elementIds: string[];
+    fullClassName: string;
+    userLabel: string;
     scope: ComputeSelectionProps["scope"];
     expectedCounts?: { className: string; count: number }[];
   } & Omit<RunOptions<never>, "setup" | "test" | "cleanup">,
@@ -136,17 +139,19 @@ function runSelectionScopeTest(
   const { iModelName } = testProps;
   run({
     ...testProps,
-    setup: () => {
+    setup: async () => {
       const iModel = SnapshotDb.openFile(Datasets.getIModelPath(iModelName));
       const queryExecutor = createECSqlQueryExecutor(iModel);
+      const elementIds = await queryInstanceIds({ queryExecutor, fullClassName: testProps.fullClassName, userLabel: testProps.userLabel });
 
       return {
         iModel,
+        elementIds,
         queryExecutor,
       };
     },
     test: async (props) => {
-      const iterator = computeSelection({ elementIds: testProps.elementIds, scope: testProps.scope, queryExecutor: props.queryExecutor });
+      const iterator = computeSelection({ elementIds: props.elementIds, scope: testProps.scope, queryExecutor: props.queryExecutor });
       const counts = new Map<string, { count: number }>();
 
       for await (const instanceKey of iterator) {

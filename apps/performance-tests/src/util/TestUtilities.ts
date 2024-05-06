@@ -6,6 +6,7 @@
 import { expect } from "chai";
 import { PhysicalElement, SnapshotDb } from "@itwin/core-backend";
 import { NodeSelectClauseProps, NodeSelectQueryFactory } from "@itwin/presentation-hierarchies";
+import { ECSqlQueryExecutor } from "@itwin/presentation-shared";
 import { Datasets, IModelName } from "./Datasets";
 import { ProviderOptions, StatelessHierarchyProvider } from "./StatelessHierarchyProvider";
 
@@ -116,4 +117,16 @@ export function runHierarchyTest(
     },
     cleanup: ({ iModel }) => iModel.close(),
   });
+}
+
+/**
+ * Fetches instance ids of a provided class with a given user label.
+ */
+export async function queryInstanceIds(props: { queryExecutor: ECSqlQueryExecutor; fullClassName: string; userLabel: string }): Promise<string[]> {
+  const ecsql = `SELECT * FROM ${props.fullClassName} WHERE UserLabel = '${props.userLabel}'`;
+  const ids: string[] = [];
+  for await (const row of props.queryExecutor.createQueryReader({ ecsql })) {
+    ids.push(row.ECInstanceId);
+  }
+  return ids;
 }

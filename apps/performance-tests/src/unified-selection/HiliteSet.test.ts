@@ -7,59 +7,56 @@ import { expect } from "chai";
 import { SnapshotDb } from "@itwin/core-backend";
 import { SchemaContext, SchemaJsonLocater } from "@itwin/ecschema-metadata";
 import { createECSchemaProvider, createECSqlQueryExecutor } from "@itwin/presentation-core-interop";
-import { createHiliteSetProvider, Selectable, Selectables } from "@itwin/unified-selection";
+import { createHiliteSetProvider, Selectables } from "@itwin/unified-selection";
 import { Datasets, IModelName } from "../util/Datasets";
-import { run, RunOptions } from "../util/TestUtilities";
+import { queryInstanceIds, run, RunOptions } from "../util/TestUtilities";
 
 describe("hilite", () => {
-  function createSelection({ fullClassName, start, count, step }: { fullClassName: string; start: number; count: number; step?: number }) {
-    const selectables: Selectable[] = [];
-    const increment = step ?? 1;
-    for (let i = start; i < start + count * increment; i += increment) {
-      selectables.push({ className: fullClassName, id: `0x${i.toString(16)}` });
-    }
-    return Selectables.create(selectables);
-  }
-
   runHiliteTest({
     testName: "50k elements",
     iModelName: "50k elements",
-    selection: createSelection({ fullClassName: "BisCore:Element", start: 20, count: 50_000 }),
+    fullClassName: "BisCore:Element",
+    userLabel: "test_element",
     expectedCounts: { elements: 50_000 },
   });
 
   runHiliteTest({
     testName: "50k group elements",
     iModelName: "50k group member elements",
-    selection: createSelection({ fullClassName: "Generic:Group", start: 21, count: 50_000 }),
+    fullClassName: "BisCore:GroupInformationElement",
+    userLabel: "test_group",
     expectedCounts: { elements: 50_000 },
   });
 
   runHiliteTest({
     testName: "1k subjects",
     iModelName: "1k subjects",
-    selection: createSelection({ fullClassName: "BisCore:Subject", start: 17, count: 1_000, step: 2 }),
+    fullClassName: "BisCore:Subject",
+    userLabel: "test_subject",
     expectedCounts: { models: 20 },
   });
 
   runHiliteTest({
     testName: "50k subcategories",
     iModelName: "50k subcategories",
-    selection: createSelection({ fullClassName: "BisCore:SpatialCategory", start: 17, count: 1 }),
+    fullClassName: "BisCore:SpatialCategory",
+    userLabel: "test_category",
     expectedCounts: { subCategories: 50_000 },
   });
 
   runHiliteTest({
     testName: "50k functional 3D elements",
     iModelName: "50k functional 3D elements",
-    selection: createSelection({ fullClassName: "Functional:FunctionalElement", start: 22, count: 50_000, step: 2 }),
+    fullClassName: "Functional:FunctionalElement",
+    userLabel: "test_functional_element",
     expectedCounts: { elements: 50_000 },
   });
 
   runHiliteTest({
     testName: "50k functional 2D elements",
     iModelName: "50k functional 2D elements",
-    selection: createSelection({ fullClassName: "Functional:FunctionalElement", start: 23, count: 50_000, step: 2 }),
+    fullClassName: "Functional:FunctionalElement",
+    userLabel: "test_functional_element",
     // iModel contains one additional 2D element
     expectedCounts: { elements: 50_001 },
   });
@@ -67,7 +64,8 @@ describe("hilite", () => {
 
 function runHiliteTest(
   testProps: {
-    selection: Selectables;
+    fullClassName: string;
+    userLabel: string;
     iModelName: IModelName;
     expectedCounts?: { elements?: number; subCategories?: number; models?: number };
   } & Omit<RunOptions<never>, "setup" | "test" | "cleanup">,
@@ -75,24 +73,27 @@ function runHiliteTest(
   const { iModelName } = testProps;
   run({
     ...testProps,
-    setup: () => {
+    setup: async () => {
       const iModel = SnapshotDb.openFile(Datasets.getIModelPath(iModelName));
       const schemas = new SchemaContext();
       const locater = new SchemaJsonLocater((schemaName) => iModel.getSchemaProps(schemaName));
       schemas.addLocater(locater);
 
+      const imodelAccess = {
+        ...createECSchemaProvider(schemas),
+        ...createECSqlQueryExecutor(iModel),
+      };
+      const ids = await queryInstanceIds({ queryExecutor: imodelAccess, fullClassName: testProps.fullClassName, userLabel: testProps.userLabel });
+      const selection = Selectables.create(ids.map((id) => ({ className: testProps.fullClassName, id })));
+
       return {
         iModel,
-        provider: createHiliteSetProvider({
-          imodelAccess: {
-            ...createECSchemaProvider(schemas),
-            ...createECSqlQueryExecutor(iModel),
-          },
-        }),
+        selection,
+        provider: createHiliteSetProvider({ imodelAccess }),
       };
     },
     test: async (props) => {
-      const iterator = props.provider.getHiliteSet({ selectables: testProps.selection });
+      const iterator = props.provider.getHiliteSet({ selectables: props.selection });
       const counts = {
         elements: 0,
         subCategories: 0,

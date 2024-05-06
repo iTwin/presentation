@@ -195,12 +195,14 @@ export class Datasets {
             parentId: physicalParentId,
             modelId: physicalModelId,
             categoryId: spatialCategoryId,
+            userLabel: `test_element`,
           }).id;
           drawingParentId = insertDrawingGraphic({
             builder,
             parentId: drawingParentId,
             modelId: drawingModelId,
             categoryId: drawingCategoryId,
+            userLabel: `test_element`,
           }).id;
         }
       }
@@ -217,7 +219,7 @@ export class Datasets {
     console.log(`${numElements} elements: Creating...`);
 
     await createIModel(name, localPath, async (builder) => {
-      const numberOfGroups = 20;
+      const numberOfGroups = 1000;
       const elementsPerGroup = numElements / numberOfGroups;
 
       for (let i = 0; i < numberOfGroups; ++i) {
@@ -228,6 +230,7 @@ export class Datasets {
             parentId,
             builder,
             codeValue: `subject_${i}_${j}`,
+            userLabel: "test_subject",
           }).id;
         }
 
@@ -244,7 +247,7 @@ export class Datasets {
   private static async createCategoryIModel(name: string, localPath: string, numElements: number) {
     console.log(`${numElements} elements: Creating...`);
     await createIModel(name, localPath, async (builder) => {
-      const { id: categoryId } = insertSpatialCategory({ builder, fullClassNameSeparator: ":", codeValue: "My Category" });
+      const { id: categoryId } = insertSpatialCategory({ builder, fullClassNameSeparator: ":", codeValue: "My Category", userLabel: "test_category" });
 
       // Insert `numElements` - 1 subcategories as `insertSpatialCategory` provides one additional subcategory
       for (let i = 0; i < numElements - 1; ++i) {
@@ -277,7 +280,7 @@ export class Datasets {
       const { id: categoryId } = insertSpatialCategory({ builder, fullClassNameSeparator: ":", codeValue: "My Category" });
 
       for (let groupIdx = 0; groupIdx < numGroups; ++groupIdx) {
-        const { id: groupId } = insertGroupInformationElement({ builder, modelId: groupModelId });
+        const { id: groupId } = insertGroupInformationElement({ builder, modelId: groupModelId, userLabel: "test_group" });
 
         for (let i = 0; i < membersPerGroup; ++i) {
           let parentId: string | undefined;
@@ -323,6 +326,7 @@ export class Datasets {
             parentId: physicalElementParentId,
             modelId: physicalModelId,
             categoryId,
+            userLabel: "test_element",
           }).id;
           functionalElementParentId = insertFunctionalElement({
             builder,
@@ -330,6 +334,7 @@ export class Datasets {
             modelId: functionalModelId,
             representedElementId: physicalElementParentId,
             relationshipName: "PhysicalElementFulfillsFunction",
+            userLabel: "test_functional_element",
           }).id;
         }
       }
@@ -372,6 +377,7 @@ export class Datasets {
             builder,
             categoryId,
             modelId: drawingModelId,
+            userLabel: "test_element",
           }).id;
 
           if (j === 0) {
@@ -385,6 +391,7 @@ export class Datasets {
             // Last functional element in the chain represents the first graphics element, others represent an element outside the chain.
             representedElementId: j === elementsPerGroup - 1 ? firstGraphicsElementId! : graphicsElementId,
             relationshipName: "DrawingGraphicRepresentsFunctionalElement",
+            userLabel: "test_functional_element",
           }).id;
         }
       }
