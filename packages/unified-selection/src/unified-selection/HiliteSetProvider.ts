@@ -146,9 +146,18 @@ class HiliteSetProviderImpl implements HiliteSetProvider {
   }
 
   private async checkType(keyClassName: string, checkClassName: string, type: InstanceIdType) {
-    const res = this._imodelAccess.classDerivesFrom(keyClassName, checkClassName);
-    const isOfType = typeof res === "boolean" ? res : await res;
-    return isOfType ? type : undefined;
+    try {
+      const res = this._imodelAccess.classDerivesFrom(keyClassName, checkClassName);
+      const isOfType = typeof res === "boolean" ? res : await res;
+      return isOfType ? type : undefined;
+    } catch (e) {
+      // we may be checking against a non-existing schema (e.g. Functional), in which case we should
+      // return undefined instead of throwing an error
+      if (e instanceof Error && e.message.match(/Schema "[\w\d_]+" not found/)) {
+        return undefined;
+      }
+      throw e;
+    }
   }
 
   private getInstancesByType(selectables: Selectables): InstancesByType {

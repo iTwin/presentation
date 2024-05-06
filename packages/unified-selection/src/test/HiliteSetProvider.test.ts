@@ -237,12 +237,22 @@ describe("HiliteSetProvider", () => {
     describe("Other", () => {
       it("ignores unknown type", async () => {
         const elementKey = createSelectableInstanceKey(1);
-        const modelKey = createECInstanceId(2);
         imodelAccess.classDerivesFrom.returns(false);
-        mockQuery([modelKey], [modelKey], [modelKey]);
+        mockQuery([createECInstanceId(2)], [createECInstanceId(3)], [createECInstanceId(4)]);
 
         const selection = Selectables.create([elementKey]);
         const result = await loadHiliteSet(selection);
+        expect(result.elements).to.be.empty;
+        expect(result.subCategories).to.be.empty;
+        expect(result.models).to.be.empty;
+      });
+
+      it("ignores key whose class hierarchy check throws with 'Schema not found' error", async () => {
+        const elementKey = createSelectableInstanceKey(1);
+        imodelAccess.classDerivesFrom.throws(new Error(`Schema "Test" not found`));
+        mockQuery([createECInstanceId(2)], [createECInstanceId(3)], [createECInstanceId(4)]);
+
+        const result = await loadHiliteSet(Selectables.create([elementKey]));
         expect(result.elements).to.be.empty;
         expect(result.subCategories).to.be.empty;
         expect(result.models).to.be.empty;
@@ -318,6 +328,13 @@ describe("HiliteSetProvider", () => {
           },
         });
         expect((await iter.next()).done).to.be.true;
+      });
+
+      it("rethrows ECClassHierarchyInspector errors", async () => {
+        imodelAccess.classDerivesFrom.withArgs("TestSchema:TestElement", "BisCore.Element").throws(new Error("dummy error"));
+        mockQuery([], [], []);
+        const selectables = Selectables.create([createSelectableInstanceKey(1, "TestSchema:TestElement")]);
+        await expect(loadHiliteSet(selectables)).to.eventually.be.rejected;
       });
 
       it("rethrows errors thrown by query observables", async () => {
