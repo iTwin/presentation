@@ -1,5 +1,12 @@
 # Change Log - @itwin/presentation-components
 
+## 5.2.3
+
+### Patch Changes
+
+- [#561](https://github.com/iTwin/presentation/pull/561): Fix instance filter builder component's unique values selector not filtering values by provided instance keys.
+- [#560](https://github.com/iTwin/presentation/pull/560): Fixed `usePresentationTreeState` callback prop `onNodeLoaded` not being called under certain race conditions.
+
 ## 5.2.2
 
 ### Patch Changes
