@@ -7,6 +7,7 @@ import { expect } from "chai";
 import { SnapshotDb } from "@itwin/core-backend";
 import { SchemaContext, SchemaJsonLocater } from "@itwin/ecschema-metadata";
 import { createECSchemaProvider, createECSqlQueryExecutor } from "@itwin/presentation-core-interop";
+import { createCachingECClassHierarchyInspector } from "@itwin/presentation-shared";
 import { createHiliteSetProvider, Selectable, Selectables } from "@itwin/unified-selection";
 import { Datasets, IModelName } from "../util/Datasets";
 import { run, RunOptions } from "../util/TestUtilities";
@@ -81,8 +82,11 @@ function runHiliteTest(
 
       const selectables: Selectable[] = [];
       const imodelAccess = {
-        ...createECSchemaProvider(schemas),
         ...createECSqlQueryExecutor(iModel),
+        ...createCachingECClassHierarchyInspector({
+          schemaProvider: createECSchemaProvider(schemas),
+          cacheSize: 100,
+        }),
       };
 
       for await (const row of imodelAccess.createQueryReader({ ecsql: testProps.inputQuery })) {
