@@ -5,7 +5,7 @@
 
 import { expect } from "chai";
 import sinon from "sinon";
-import { ECSchemaProvider, ECSqlQueryExecutor } from "@itwin/presentation-shared";
+import { ECClassHierarchyInspector, ECSqlQueryExecutor } from "@itwin/presentation-shared";
 import { CachingHiliteSetProvider, createCachingHiliteSetProvider } from "../unified-selection/CachingHiliteSetProvider";
 import * as hiliteSetProvider from "../unified-selection/HiliteSetProvider";
 import { SelectableInstanceKey } from "../unified-selection/Selectable";
@@ -23,7 +23,7 @@ describe("CachingHiliteSetProvider", () => {
   const provider = {
     getHiliteSet: sinon.stub<[{ imodelKey: string }], AsyncIterableIterator<hiliteSetProvider.HiliteSet>>(),
   };
-  const imodelProvider = sinon.stub<[string], ECSchemaProvider & ECSqlQueryExecutor>();
+  const imodelProvider = sinon.stub<[string], ECClassHierarchyInspector & ECSqlQueryExecutor>();
   const imodelKey = "iModelKey";
 
   async function loadHiliteSet() {
@@ -46,10 +46,10 @@ describe("CachingHiliteSetProvider", () => {
     };
   }
 
-  function stubIModelAccess(): sinon.SinonStubbedInstance<ECSchemaProvider & ECSqlQueryExecutor> {
+  function stubIModelAccess(): sinon.SinonStubbedInstance<ECClassHierarchyInspector & ECSqlQueryExecutor> {
     return {
       createQueryReader: sinon.stub(),
-      getSchema: sinon.stub(),
+      classDerivesFrom: sinon.stub(),
     };
   }
 
