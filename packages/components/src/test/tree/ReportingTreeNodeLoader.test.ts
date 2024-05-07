@@ -6,7 +6,15 @@
 import { expect } from "chai";
 import { Subject } from "rxjs";
 import sinon from "sinon";
-import { ITreeNodeLoader, PagedTreeNodeLoader, TreeDataProvider, TreeModelNode, TreeNodeItem, TreeNodeLoadResult } from "@itwin/components-react";
+import {
+  ITreeNodeLoader,
+  PagedTreeNodeLoader,
+  TreeDataProvider,
+  TreeModelNode,
+  TreeModelRootNode,
+  TreeNodeItem,
+  TreeNodeLoadResult,
+} from "@itwin/components-react";
 import { ReportingTreeNodeLoader } from "../../presentation-components/tree/ReportingTreeNodeLoader";
 import { waitFor } from "../TestUtils";
 
@@ -107,6 +115,21 @@ describe("ReportingTreeNodeLoader", () => {
       await waitFor(() => {
         expect(loadedNodes).to.have.lengthOf(0);
         expect(reportStub).to.not.be.called;
+      });
+    });
+
+    it("reports root nodes load event if observable if unsubscribed", async () => {
+      let loadedNodes: TreeNodeItem[] = [];
+      const observable = reportingNodeLoader.loadNode({ id: undefined } as TreeModelRootNode, 0);
+      const subscription = observable.subscribe({ next: (result) => (loadedNodes = [...loadedNodes, ...result.loadedNodes]) });
+
+      subscription.unsubscribe();
+      loadNodeSubject.next({ loadedNodes: [{ id: "node 1" }] } as TreeNodeLoadResult);
+      loadNodeSubject.complete();
+
+      await waitFor(() => {
+        expect(loadedNodes).to.have.lengthOf(0);
+        expect(reportStub).to.be.calledOnce;
       });
     });
   });
