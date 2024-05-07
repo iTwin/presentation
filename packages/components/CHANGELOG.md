@@ -1,5 +1,11 @@
 # Change Log - @itwin/presentation-components
 
+## 5.2.4
+
+### Patch Changes
+
+- [#564](https://github.com/iTwin/presentation/pull/564): Fixed initial tree load duration not always being reported.
+
 ## 5.2.3
 
 ### Patch Changes
