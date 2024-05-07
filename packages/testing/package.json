@@ -1,6 +1,6 @@
 {
   "name": "@itwin/presentation-testing",
-  "version": "5.0.6",
+  "version": "5.0.7",
   "description": "Testing utilities for iTwin.js Presentation library",
   "license": "MIT",
   "repository": {

@@ -1,5 +1,55 @@
 # @itwin/unified-selection
 
+## 0.4.0
+
+### Minor Changes
+
+- [#558](https://github.com/iTwin/presentation/pull/558): Switched from `ECSchemaProvider` to `ECClassHierarchyInspector`, where appropriate.
+
+  Some of the APIs were accepting `ECSchemaProvider` as a parameter and used it to only inspect class hierarchy. This change switches them to accept `ECClassHierarchyInspector` instead - this reduces the surface area of the API and makes it more clear that only class hierarchy is being inspected, while also possibly improving performance.
+
+  This is a breaking change for the following APIs:
+
+  - `createHiliteSetProvider` prop `imodelAccess`.
+  - `createCachingHiliteSetProvider` prop `imodelProvider`.
+  - `enableUnifiedSelectionSyncWithIModel` prop `imodelAccess`.
+
+  Migration example:
+
+  ```ts
+  import {
+    createECSqlQueryExecutor,
+    createECSchemaProvider,
+  } from "@itwin/presentation-core-interop";
+  import { createCachingECClassHierarchyInspector } from "@itwin/presentation-shared";
+  import { createHiliteSetProvider } from "@itwin/unified-selection";
+
+  // before:
+  const hiliteProvider = createHiliteSetProvider({
+    imodelAccess: {
+      ...createECSqlQueryExecutor(imodel),
+      ...createECSchemaProvider(MyAppFrontend.getSchemaContext(imodel)),
+    },
+  });
+
+  // after:
+  const hiliteProvider = createHiliteSetProvider({
+    imodelAccess: {
+      ...createECSqlQueryExecutor(imodel),
+      ...createCachingECClassHierarchyInspector({
+        schemaProvider: createECSchemaProvider(
+          MyAppFrontend.getSchemaContext(imodel),
+        ),
+        cacheSize: 100,
+      }),
+    },
+  });
+  ```
+
+### Patch Changes
+
+- [#557](https://github.com/iTwin/presentation/pull/557): Fixed `computeSelection` returning duplicate selectables when using `Functional` selection scope and non-3D elements.
+
 ## 0.3.0
 
 ### Minor Changes
