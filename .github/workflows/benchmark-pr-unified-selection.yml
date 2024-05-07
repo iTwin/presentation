@@ -17,7 +17,7 @@ on:
 jobs:
   benchmark:
     name: 'Unified selection: Benchmark performance'
-    #if: '!github.event.pull_request.draft'
+    if: '!github.event.pull_request.draft'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -62,7 +62,7 @@ jobs:
       - name: Post benchmark summary
         uses: jalextowle/github-action-benchmark@35e54a2ea34188ca73481c2a0ce5919907978f4f
         with:
-          #name: unified-selection benchmark
+          name: unified-selection benchmark
           tool: 'customSmallerIsBetter'
           output-file-path: ./apps/performance-tests/unified-selection-benchmark.json
           github-token: ${{ secrets.GITHUB_TOKEN }}

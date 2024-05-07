@@ -56,6 +56,7 @@ export class Datasets {
   public static async initialize(datasetsDirPath: string) {
     fs.mkdirSync(datasetsDirPath, { recursive: true });
 
+    // Download baytown iModel first to avoid timeouts in pipeline
     this._iModels.baytown = await this.createIModel("baytown", datasetsDirPath, async (name: string, localPath: string) =>
       this.downloadDataset(name, BAYTOWN_DOWNLOAD_URL, localPath),
     );
@@ -64,7 +65,6 @@ export class Datasets {
       if (key === "baytown") {
         return;
       }
-
       const elementCount = 1000 * Number.parseInt(/(\d+)k/.exec(key)![1], 10);
       this._iModels[key] = await this.createIModel(key, datasetsDirPath, this.getIModelFactory(key, elementCount), !!process.env.RECREATE);
     });
