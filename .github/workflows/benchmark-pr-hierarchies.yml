@@ -1,4 +1,4 @@
-name: PR performance benchmark
+name: PR hierarchies performance benchmark
 
 on:
   pull_request:
@@ -6,17 +6,19 @@ on:
       - master
       - stable
     paths:
-      - apps/performance-tests/**
+      - apps/performance-tests/hierarchies/**
+      - apps/performance-tests/util/**
       - packages/core-interop/**
       - packages/hierarchies/**
       - packages/models-tree/**
+      - packages/shared/**
       - pnpm-lock.yaml
-      - .github/workflows/benchmark-pr.yml
+      - .github/workflows/benchmark-pr-hierarchies.yml
     types: [opened, synchronize, reopened, ready_for_review]
 
 jobs:
   benchmark:
-    name: Benchmark performance
+    name: 'Hierarchies: Benchmark performance'
     if: '!github.event.pull_request.draft'
     runs-on: ubuntu-latest
     steps:
@@ -47,23 +49,24 @@ jobs:
           cache-name: cache-dataset
         with:
           path: "./apps/performance-tests/datasets/*.bim"
-          key: performance-test-dataset-${{ hashFiles('./apps/performance-tests/src/Datasets.ts') }}
+          key: performance-test-dataset-${{ hashFiles('./apps/performance-tests/src/util/Datasets.ts') }}
 
       - name: Run benchmark tests
-        run: pnpm benchmark
+        run: pnpm benchmark:hierarchies
 
       - name: Save generated datasets
         uses: actions/cache/save@v4
         if: steps.cache-restore.outputs.cache-hit != 'true'
         with:
           path: "./apps/performance-tests/datasets/*.bim"
-          key: performance-test-dataset-${{ hashFiles('./apps/performance-tests/src/Datasets.ts') }}
+          key: performance-test-dataset-${{ hashFiles('./apps/performance-tests/src/util/Datasets.ts') }}
 
       - name: Post benchmark summary
         uses: jalextowle/github-action-benchmark@35e54a2ea34188ca73481c2a0ce5919907978f4f
         with:
+          name: Hierarchies benchmark
           tool: 'customSmallerIsBetter'
-          output-file-path: ./apps/performance-tests/benchmark.json
+          output-file-path: ./apps/performance-tests/hierarchies-benchmark.json
           github-token: ${{ secrets.GITHUB_TOKEN }}
           save-data-file: false
           comment-on-pull-request: true

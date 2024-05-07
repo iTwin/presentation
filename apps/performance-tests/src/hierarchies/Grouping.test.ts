@@ -3,8 +3,8 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { Datasets } from "./util/Datasets";
-import { runHierarchyTest } from "./util/TestUtilities";
+import { Datasets } from "../util/Datasets";
+import { runHierarchyTest } from "../util/TestUtilities";
 
 describe("grouping", () => {
   const { schemaName, baseClassName, customPropName, itemsPerGroup, defaultClassName } = Datasets.CUSTOM_SCHEMA;
@@ -13,21 +13,21 @@ describe("grouping", () => {
 
   runHierarchyTest({
     testName: "by label",
-    iModelName: "50k elements",
+    iModelName: "50k flat elements",
     expectedNodeCount,
     nodeSelectProps: { grouping: { byLabel: true } },
   });
 
   runHierarchyTest({
     testName: "by class",
-    iModelName: "50k elements",
+    iModelName: "50k flat elements",
     expectedNodeCount,
     nodeSelectProps: { grouping: { byClass: true } },
   });
 
   runHierarchyTest({
     testName: "by property",
-    iModelName: "50k elements",
+    iModelName: "50k flat elements",
     fullClassName: baseFullClassName,
     expectedNodeCount,
     nodeSelectProps: {
@@ -49,7 +49,7 @@ describe("grouping", () => {
   ];
   runHierarchyTest({
     testName: `by base class (${baseClassQueryLimit} classes)`,
-    iModelName: "50k elements",
+    iModelName: "50k flat elements",
     fullClassName: baseFullClassName,
     expectedNodeCount: 50_000 + fullClassNames.length,
     nodeSelectProps: {
@@ -61,7 +61,7 @@ describe("grouping", () => {
 
   runHierarchyTest({
     testName: "by multiple attributes",
-    iModelName: "50k elements",
+    iModelName: "50k flat elements",
     fullClassName: baseFullClassName,
     nodeSelectProps: {
       grouping: {

@@ -1,27 +1,24 @@
-name: Performance benchmark
+name: PR unified-selection performance benchmark
 
 on:
-  workflow_dispatch:
-  push:
+  pull_request:
     branches:
       - master
+      - stable
     paths:
-      - apps/performance-tests/**
+      - apps/performance-tests/unified-selection/**
+      - apps/performance-tests/util/**
       - packages/unified-selection/**
-      - packages/core-interop/**
-      - packages/hierarchies/**
-      - packages/models-tree/**
       - packages/shared/**
+      - pnpm-lock.yaml
+      - .github/workflows/benchmark-pr-unified-selection.yml
+    types: [opened, synchronize, reopened, ready_for_review]
 
 jobs:
   benchmark:
-    name: Benchmark performance
+    name: 'Unified selection: Benchmark performance'
+    if: '!github.event.pull_request.draft'
     runs-on: ubuntu-latest
-    permissions:
-      # deployments permission to deploy GitHub pages website
-      deployments: write
-      # contents permission to update benchmark contents in gh-pages branch
-      contents: write
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -53,7 +50,7 @@ jobs:
           key: performance-test-dataset-${{ hashFiles('./apps/performance-tests/src/util/Datasets.ts') }}
 
       - name: Run benchmark tests
-        run: pnpm benchmark
+        run: pnpm benchmark:unified-selection
 
       - name: Save generated datasets
         uses: actions/cache/save@v4
@@ -62,13 +59,12 @@ jobs:
           path: "./apps/performance-tests/datasets/*.bim"
           key: performance-test-dataset-${{ hashFiles('./apps/performance-tests/src/util/Datasets.ts') }}
 
-      - name: Store benchmark result
-        uses: benchmark-action/github-action-benchmark@v1
-        if: ${{ github.ref == 'refs/heads/master' }}
+      - name: Post benchmark summary
+        uses: jalextowle/github-action-benchmark@35e54a2ea34188ca73481c2a0ce5919907978f4f
         with:
+          name: Unified selection benchmark
           tool: 'customSmallerIsBetter'
-          output-file-path: ./apps/performance-tests/benchmark.json
-          # Access token to deploy GitHub Pages branch
-          github-token: ${{ secrets.IMJS_ADMIN_GH_TOKEN }}
-          # Push and deploy GitHub pages branch automatically
-          auto-push: true
+          output-file-path: ./apps/performance-tests/unified-selection-benchmark.json
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          save-data-file: false
+          comment-on-pull-request: true
