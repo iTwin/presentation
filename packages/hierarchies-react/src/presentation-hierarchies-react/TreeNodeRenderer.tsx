@@ -20,6 +20,7 @@ interface TreeNodeRendererOwnProps {
   getIcon?: (node: PresentationHierarchyNode) => ReactElement | undefined;
   onNodeClick: (nodeId: string, isSelected: boolean, event: React.MouseEvent<HTMLElement, MouseEvent>) => void;
   onNodeKeyDown: (nodeId: string, isSelected: boolean, event: React.KeyboardEvent<HTMLElement>) => void;
+  actionButtonsClassName?: string;
 }
 
 type TreeNodeRendererProps = Pick<ReturnType<typeof useTree>, "expandNode" | "setHierarchyLevelFilter" | "setHierarchyLevelLimit"> &
@@ -38,6 +39,7 @@ export function TreeNodeRenderer({
   setHierarchyLevelLimit,
   isSelected,
   isDisabled,
+  actionButtonsClassName,
   ...nodeProps
 }: TreeNodeRendererProps) {
   if (isPresentationHierarchyNode(node)) {
@@ -63,7 +65,7 @@ export function TreeNodeRenderer({
           }}
           icon={getIcon ? getIcon(node) : undefined}
         >
-          <ButtonGroup className="action-buttons">
+          <ButtonGroup className={cx("action-buttons", actionButtonsClassName)}>
             {node.isFiltered ? (
               <IconButton
                 className="filtering-action-button"
