@@ -210,10 +210,10 @@
     },
     {
       "name": "Tests: Full-stack",
-      "cwd": "${workspaceFolder}/packages/full-stack-tests",
+      "cwd": "${workspaceFolder}/apps/full-stack-tests",
       "type": "node",
       "request": "launch",
-      "program": "${workspaceFolder}/packages/full-stack-tests/node_modules/mocha/bin/_mocha",
+      "program": "${workspaceFolder}/apps/full-stack-tests/node_modules/mocha/bin/_mocha",
       "args": [
         "--config",
         "./.mocharc.json",
@@ -225,7 +225,9 @@
         "${workspaceFolder}/packages/hierarchies/lib/**/*.js",
         "${workspaceFolder}/packages/models-tree/lib/**/*.js",
         "${workspaceFolder}/packages/testing/lib/**/*.js",
-        "${workspaceFolder}/packages/full-stack-tests/lib/**/*.js"
+        "${workspaceFolder}/packages/shared/lib/**/*.js",
+        "${workspaceFolder}/packages/unified-selection/lib/**/*.js",
+        "${workspaceFolder}/apps/full-stack-tests/lib/**/*.js"
       ],
       "env": {
         "NODE_ENV": "development",

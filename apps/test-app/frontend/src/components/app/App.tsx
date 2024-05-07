@@ -18,6 +18,7 @@ import { SchemaMetadataContextProvider, UnifiedSelectionContextProvider } from "
 import { createECSchemaProvider, createECSqlQueryExecutor } from "@itwin/presentation-core-interop";
 import { HiliteSet, Presentation, SelectionChangeEventArgs } from "@itwin/presentation-frontend";
 import { UnifiedSelectionProvider } from "@itwin/presentation-hierarchies-react";
+import { createCachingECClassHierarchyInspector } from "@itwin/presentation-shared";
 import { enableUnifiedSelectionSyncWithIModel } from "@itwin/unified-selection";
 import { MyAppFrontend, MyAppSettings } from "../../api/MyAppFrontend";
 import { IModelSelector } from "../imodel-selector/IModelSelector";
@@ -195,7 +196,7 @@ function IModelComponents(props: IModelComponentsProps) {
       enableUnifiedSelectionSyncWithIModel({
         imodelAccess: {
           ...createECSqlQueryExecutor(imodel),
-          ...createECSchemaProvider(MyAppFrontend.getSchemaContext(imodel)),
+          ...createCachingECClassHierarchyInspector({ schemaProvider: createECSchemaProvider(MyAppFrontend.getSchemaContext(imodel)) }),
           key: imodel.key,
           hiliteSet: imodel.hilited,
           selectionSet: imodel.selectionSet,

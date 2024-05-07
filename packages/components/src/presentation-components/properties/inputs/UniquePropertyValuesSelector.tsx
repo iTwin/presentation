@@ -10,7 +10,6 @@ import { PropertyDescription, PropertyValue, PropertyValueFormat } from "@itwin/
 import { IModelConnection } from "@itwin/core-frontend";
 import {
   ClassInfo,
-  ContentSpecificationTypes,
   Descriptor,
   DisplayValue,
   DisplayValueGroup,
@@ -19,7 +18,6 @@ import {
   KeySet,
   MultiSchemaClassesSpecification,
   Ruleset,
-  RuleTypes,
 } from "@itwin/presentation-common";
 import { Presentation } from "@itwin/presentation-frontend";
 import { deserializeUniqueValues, findField, serializeUniqueValues, translate, UniqueValue } from "../../common/Utils";
@@ -96,7 +94,7 @@ export function UniquePropertyValuesSelector(props: UniquePropertyValuesSelector
   };
 
   const isOptionSelected = (option: UniqueValue): boolean => selectedValues.map((selectedValue) => selectedValue.displayValue).includes(option.displayValue);
-  const ruleset = useUniquePropertyValuesRuleset(descriptor.ruleset, field);
+  const ruleset = useUniquePropertyValuesRuleset(descriptor.ruleset, field, descriptorInputKeys);
   const loadValues = useUniquePropertyValuesLoader({ imodel, property, descriptor, ruleset, field, descriptorInputKeys });
 
   return (
@@ -143,11 +141,28 @@ function getUniqueValueFromProperty(propertyValue: PropertyValue | undefined): U
   return [];
 }
 
-function useUniquePropertyValuesRuleset(descriptorRuleset?: Ruleset, field?: Field) {
+function useUniquePropertyValuesRuleset(descriptorRuleset?: Ruleset, field?: Field, descriptorInputKeys?: Keys) {
   const [ruleset, setRuleset] = useState<Ruleset>();
   useEffect(() => {
     if (descriptorRuleset) {
       setRuleset(descriptorRuleset);
+      return;
+    }
+
+    if (descriptorInputKeys && hasKeys(descriptorInputKeys)) {
+      setRuleset({
+        id: "unique-instances-property-values",
+        rules: [
+          {
+            ruleType: "Content",
+            specifications: [
+              {
+                specType: "SelectedNodeInstances",
+              },
+            ],
+          },
+        ],
+      });
       return;
     }
 
@@ -158,20 +173,20 @@ function useUniquePropertyValuesRuleset(descriptorRuleset?: Ruleset, field?: Fie
     }
 
     setRuleset({
-      id: "unique-property-values",
+      id: "unique-class-property-values",
       rules: [
         {
-          ruleType: RuleTypes.Content,
+          ruleType: "Content",
           specifications: [
             {
-              specType: ContentSpecificationTypes.ContentInstancesOfSpecificClasses,
+              specType: "ContentInstancesOfSpecificClasses",
               classes: createSchemaClasses(classInfos),
             },
           ],
         },
       ],
     });
-  }, [field, descriptorRuleset]);
+  }, [field, descriptorRuleset, descriptorInputKeys]);
 
   return ruleset;
 }
@@ -282,4 +297,8 @@ function useUniquePropertyValuesLoader({ imodel, property, descriptor, ruleset, 
       hasMore: items.length === UNIQUE_PROPERTY_VALUES_BATCH_SIZE,
     };
   };
+}
+
+function hasKeys(descriptorInputKeys?: Keys) {
+  return Array.isArray(descriptorInputKeys) ? descriptorInputKeys.length > 0 : !(descriptorInputKeys as KeySet).isEmpty;
 }
