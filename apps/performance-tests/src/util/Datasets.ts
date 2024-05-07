@@ -171,7 +171,7 @@ export class Datasets {
   /**
    * Create an iModel with `numElements` elements, half of them 2D and the other half - 3D, all belonging to the same 2D
    * and 3D model and category. The elements are set up in a hierarchical manner, with 1000 top level elements each having 1
-   * child element, which has 1 child element, and so on until the depth of (`numElements` / 2000) elements is reached.
+   * child element, which has 1 child element, and so on until the depth of `numElements` / 2000 elements is reached.
    */
   private static async createElementIModel(name: string, localPath: string, numElements: number) {
     console.log(`${numElements} elements: Creating...`);
@@ -213,7 +213,7 @@ export class Datasets {
 
   /**
    * Create an iModel with `numElements` subjects that are set up are set up in a hierarchical manner, with 20 top level subjects
-   * each having 1 child subject, which has 1 child subject, and so on until the depth of (`numElements` / 20) elements is reached.
+   * each having 1 child subject, which has 1 child subject, and so on until the depth of `numElements` / 20 elements is reached.
    */
   private static async createSubjectIModel(name: string, localPath: string, numElements: number) {
     console.log(`${numElements} elements: Creating...`);
@@ -263,15 +263,15 @@ export class Datasets {
   }
 
   /**
-   * Create an iModel with `numElements` group elements all belonging to the same spatial category and physical model.
-   * The elements belong to 10 groups, each containing 100 members, each having 1 child element, which has 1 child element,
-   * and so on until the depth of (`numElements` / 1000) elements is reached.
+   * Create an iModel with `numElements` group information elements, each containing 1000 member elements,
+   * each having 1 child element, which has 1 child element and so on until the depth of `numElements` / 10000 is reached.
+   * All member elements and their child elements belong to the same spatial category and physical model.
    */
   private static async createGroupIModel(name: string, localPath: string, numElements: number) {
     console.log(`${numElements} elements: Creating...`);
 
     const numGroups = 10;
-    const membersPerGroup = 100;
+    const membersPerGroup = 1000;
     const elementsPerMember = numElements / (numGroups * membersPerGroup);
 
     await createIModel(name, localPath, async (builder) => {
@@ -301,7 +301,7 @@ export class Datasets {
   /**
    * Create an iModel with `numElements` functional 3D elements all belonging to the same spatial category, physical model and functional model.
    * The elements are set up in a hierarchical manner, with 1000 top level 3D elements, each having 1 child element, which has 1 child element,
-   * and so on until the depth of (`numElements` / 1000) elements is reached. Each 3D element has a related functional element.
+   * and so on until the depth of `numElements` / 1000 elements is reached. Each 3D element has a related functional element.
    */
   private static async createFunctional3dElementIModel(name: string, localPath: string, numElements: number) {
     console.log(`${numElements} elements: Creating...`);
@@ -346,9 +346,9 @@ export class Datasets {
   /**
    * Create an iModel with `numElements` functional 2D elements all belonging to the same drawing category, drawing model and functional model.
    * The elements are set up in a hierarchical manner, with 1000 top level functional elements, each having 1 child functional element,
-   * which has 1 child functional element, and so on until the depth of (`numElements` / 1000) elements is reached.
+   * which has 1 child functional element, and so on until the depth of `numElements` / 1000 elements is reached.
    * The last functional element in each chain is related to a 2D element, that has a child 2D element, that has a child 2D element,
-   * and so on until until the depth of (`numElements` / 1000) elements is reached. Every functional element that is not the last in each chain
+   * and so on until until the depth of `numElements` / 1000 elements is reached. Every functional element that is not the last in each chain
    * is related to an additional 2D element, resulting to a total of `numElements` + 1 2D elements.
    */
   private static async createFunctional2dElementIModel(name: string, localPath: string, numElements: number) {

@@ -9,14 +9,13 @@ import { createECSqlQueryExecutor } from "@itwin/presentation-core-interop";
 import { computeSelection } from "@itwin/unified-selection";
 import { ComputeSelectionProps } from "@itwin/unified-selection/lib/cjs/unified-selection/SelectionScope";
 import { Datasets, IModelName } from "../util/Datasets";
-import { queryInstanceIds, run, RunOptions } from "../util/TestUtilities";
+import { run, RunOptions } from "../util/TestUtilities";
 
 describe("compute", () => {
   runSelectionScopeTest({
     testName: "selection for 50k elements",
     iModelName: "50k elements",
-    fullClassName: "BisCore:Element",
-    userLabel: "test_element",
+    inputQuery: "SELECT ECInstanceId FROM BisCore:Element",
     scope: "element",
     expectedCounts: [
       { className: "Generic.PhysicalObject", count: 25_000 },
@@ -27,8 +26,7 @@ describe("compute", () => {
   runSelectionScopeTest({
     testName: "parent selection for 50k elements",
     iModelName: "50k elements",
-    fullClassName: "BisCore:Element",
-    userLabel: "test_element",
+    inputQuery: "SELECT ECInstanceId FROM BisCore:Element",
     scope: { id: "element", ancestorLevel: 1 },
     expectedCounts: [
       { className: "Generic.PhysicalObject", count: 24_000 },
@@ -39,8 +37,7 @@ describe("compute", () => {
   runSelectionScopeTest({
     testName: "top ancestor selection for 50k elements",
     iModelName: "50k elements",
-    fullClassName: "BisCore:Element",
-    userLabel: "test_element",
+    inputQuery: "SELECT ECInstanceId FROM BisCore:Element",
     scope: { id: "element", ancestorLevel: -1 },
     expectedCounts: [
       { className: "Generic.PhysicalObject", count: 1_000 },
@@ -51,8 +48,7 @@ describe("compute", () => {
   runSelectionScopeTest({
     testName: "category selection for 50k elements",
     iModelName: "50k elements",
-    fullClassName: "BisCore:Element",
-    userLabel: "test_element",
+    inputQuery: "SELECT ECInstanceId FROM BisCore:Element",
     scope: "category",
     expectedCounts: [
       { className: "BisCore.DrawingCategory", count: 1 },
@@ -63,8 +59,7 @@ describe("compute", () => {
   runSelectionScopeTest({
     testName: "model selection for 50k elements",
     iModelName: "50k elements",
-    fullClassName: "BisCore:Element",
-    userLabel: "test_element",
+    inputQuery: "SELECT ECInstanceId FROM BisCore:Element",
     scope: "model",
     expectedCounts: [
       { className: "BisCore.PhysicalModel", count: 1 },
@@ -75,8 +70,7 @@ describe("compute", () => {
   runSelectionScopeTest({
     testName: "functional selection for 50k 3D elements",
     iModelName: "50k functional 3D elements",
-    fullClassName: "Generic:PhysicalObject",
-    userLabel: "test_element",
+    inputQuery: "SELECT ECInstanceId FROM Generic:PhysicalObject",
     scope: "functional",
     expectedCounts: [{ className: "Functional.FunctionalComposite", count: 50_000 }],
   });
@@ -84,8 +78,7 @@ describe("compute", () => {
   runSelectionScopeTest({
     testName: "parent functional selection for 50k 3D elements",
     iModelName: "50k functional 3D elements",
-    fullClassName: "Generic:PhysicalObject",
-    userLabel: "test_element",
+    inputQuery: "SELECT ECInstanceId FROM Generic:PhysicalObject",
     scope: { id: "functional", ancestorLevel: 1 },
     expectedCounts: [{ className: "Functional.FunctionalComposite", count: 49_000 }],
   });
@@ -93,8 +86,7 @@ describe("compute", () => {
   runSelectionScopeTest({
     testName: "top ancestor functional selection for 50k 3D elements",
     iModelName: "50k functional 3D elements",
-    fullClassName: "Generic:PhysicalObject",
-    userLabel: "test_element",
+    inputQuery: "SELECT ECInstanceId FROM Generic:PhysicalObject",
     scope: { id: "functional", ancestorLevel: -1 },
     expectedCounts: [{ className: "Functional.FunctionalComposite", count: 1_000 }],
   });
@@ -102,8 +94,7 @@ describe("compute", () => {
   runSelectionScopeTest({
     testName: "functional selection for 50k 2D elements",
     iModelName: "50k functional 2D elements",
-    fullClassName: "BisCore:DrawingGraphic",
-    userLabel: "test_element",
+    inputQuery: "SELECT ECInstanceId FROM BisCore:DrawingGraphic WHERE UserLabel = 'test_element'",
     scope: "functional",
     expectedCounts: [{ className: "Functional.FunctionalComposite", count: 1_000 }],
   });
@@ -111,8 +102,7 @@ describe("compute", () => {
   runSelectionScopeTest({
     testName: "parent functional selection for 50k 2D elements",
     iModelName: "50k functional 2D elements",
-    fullClassName: "BisCore:DrawingGraphic",
-    userLabel: "test_element",
+    inputQuery: "SELECT ECInstanceId FROM BisCore:DrawingGraphic WHERE UserLabel = 'test_element'",
     scope: { id: "functional", ancestorLevel: 1 },
     expectedCounts: [{ className: "Functional.FunctionalComposite", count: 1_000 }],
   });
@@ -120,8 +110,7 @@ describe("compute", () => {
   runSelectionScopeTest({
     testName: "top ancestor functional selection for 50k 2D elements",
     iModelName: "50k functional 2D elements",
-    fullClassName: "BisCore:DrawingGraphic",
-    userLabel: "test_element",
+    inputQuery: "SELECT ECInstanceId FROM BisCore:DrawingGraphic WHERE UserLabel = 'test_element'",
     scope: { id: "functional", ancestorLevel: -1 },
     expectedCounts: [{ className: "Functional.FunctionalComposite", count: 1_000 }],
   });
@@ -130,8 +119,7 @@ describe("compute", () => {
 function runSelectionScopeTest(
   testProps: {
     iModelName: IModelName;
-    fullClassName: string;
-    userLabel: string;
+    inputQuery: string;
     scope: ComputeSelectionProps["scope"];
     expectedCounts?: { className: string; count: number }[];
   } & Omit<RunOptions<never>, "setup" | "test" | "cleanup">,
@@ -142,7 +130,11 @@ function runSelectionScopeTest(
     setup: async () => {
       const iModel = SnapshotDb.openFile(Datasets.getIModelPath(iModelName));
       const queryExecutor = createECSqlQueryExecutor(iModel);
-      const elementIds = await queryInstanceIds({ queryExecutor, fullClassName: testProps.fullClassName, userLabel: testProps.userLabel });
+      const elementIds: string[] = [];
+
+      for await (const row of queryExecutor.createQueryReader({ ecsql: testProps.inputQuery })) {
+        elementIds.push(row.ECInstanceId);
+      }
 
       return {
         iModel,

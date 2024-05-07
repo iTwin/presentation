@@ -7,16 +7,16 @@ import { expect } from "chai";
 import { SnapshotDb } from "@itwin/core-backend";
 import { SchemaContext, SchemaJsonLocater } from "@itwin/ecschema-metadata";
 import { createECSchemaProvider, createECSqlQueryExecutor } from "@itwin/presentation-core-interop";
-import { createHiliteSetProvider, Selectables } from "@itwin/unified-selection";
+import { createHiliteSetProvider, Selectable, Selectables } from "@itwin/unified-selection";
 import { Datasets, IModelName } from "../util/Datasets";
-import { queryInstanceIds, run, RunOptions } from "../util/TestUtilities";
+import { run, RunOptions } from "../util/TestUtilities";
 
 describe("hilite", () => {
   runHiliteTest({
     testName: "50k elements",
     iModelName: "50k elements",
     fullClassName: "BisCore:Element",
-    userLabel: "test_element",
+    inputQuery: "SELECT ECInstanceId FROM BisCore:Element",
     expectedCounts: { elements: 50_000 },
   });
 
@@ -24,7 +24,7 @@ describe("hilite", () => {
     testName: "50k group elements",
     iModelName: "50k group member elements",
     fullClassName: "BisCore:GroupInformationElement",
-    userLabel: "test_group",
+    inputQuery: "SELECT ECInstanceId FROM BisCore:GroupInformationElement",
     expectedCounts: { elements: 50_000 },
   });
 
@@ -32,7 +32,7 @@ describe("hilite", () => {
     testName: "1k subjects",
     iModelName: "1k subjects",
     fullClassName: "BisCore:Subject",
-    userLabel: "test_subject",
+    inputQuery: "SELECT ECInstanceId FROM BisCore:Subject WHERE UserLabel = 'test_subject'",
     expectedCounts: { models: 20 },
   });
 
@@ -40,7 +40,7 @@ describe("hilite", () => {
     testName: "50k subcategories",
     iModelName: "50k subcategories",
     fullClassName: "BisCore:SpatialCategory",
-    userLabel: "test_category",
+    inputQuery: "SELECT ECInstanceId FROM BisCore:SpatialCategory",
     expectedCounts: { subCategories: 50_000 },
   });
 
@@ -48,7 +48,7 @@ describe("hilite", () => {
     testName: "50k functional 3D elements",
     iModelName: "50k functional 3D elements",
     fullClassName: "Functional:FunctionalElement",
-    userLabel: "test_functional_element",
+    inputQuery: "SELECT ECInstanceId FROM Functional:FunctionalElement",
     expectedCounts: { elements: 50_000 },
   });
 
@@ -56,7 +56,7 @@ describe("hilite", () => {
     testName: "50k functional 2D elements",
     iModelName: "50k functional 2D elements",
     fullClassName: "Functional:FunctionalElement",
-    userLabel: "test_functional_element",
+    inputQuery: "SELECT ECInstanceId FROM Functional:FunctionalElement",
     // iModel contains one additional 2D element
     expectedCounts: { elements: 50_001 },
   });
@@ -64,8 +64,8 @@ describe("hilite", () => {
 
 function runHiliteTest(
   testProps: {
+    inputQuery: string;
     fullClassName: string;
-    userLabel: string;
     iModelName: IModelName;
     expectedCounts?: { elements?: number; subCategories?: number; models?: number };
   } & Omit<RunOptions<never>, "setup" | "test" | "cleanup">,
@@ -79,16 +79,19 @@ function runHiliteTest(
       const locater = new SchemaJsonLocater((schemaName) => iModel.getSchemaProps(schemaName));
       schemas.addLocater(locater);
 
+      const selectables: Selectable[] = [];
       const imodelAccess = {
         ...createECSchemaProvider(schemas),
         ...createECSqlQueryExecutor(iModel),
       };
-      const ids = await queryInstanceIds({ queryExecutor: imodelAccess, fullClassName: testProps.fullClassName, userLabel: testProps.userLabel });
-      const selection = Selectables.create(ids.map((id) => ({ className: testProps.fullClassName, id })));
+
+      for await (const row of imodelAccess.createQueryReader({ ecsql: testProps.inputQuery })) {
+        selectables.push({ className: testProps.fullClassName, id: row.ECInstanceId });
+      }
 
       return {
         iModel,
-        selection,
+        selection: Selectables.create(selectables),
         provider: createHiliteSetProvider({ imodelAccess }),
       };
     },
