@@ -20,6 +20,9 @@ jobs:
     #if: '!github.event.pull_request.draft'
     runs-on: ubuntu-latest
     steps:
+      - name: Force IPv4
+        uses: ./.github/actions/force-ipv4
+
       - name: Checkout
         uses: actions/checkout@v4
 

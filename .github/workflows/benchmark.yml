@@ -23,6 +23,9 @@ jobs:
       # contents permission to update benchmark contents in gh-pages branch
       contents: write
     steps:
+      - name: Force IPv4
+        uses: ./.github/actions/force-ipv4
+
       - name: Checkout
         uses: actions/checkout@v4
 
