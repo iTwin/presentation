@@ -55,11 +55,13 @@ export class Datasets {
 
   public static async initialize(datasetsDirPath: string) {
     fs.mkdirSync(datasetsDirPath, { recursive: true });
+
+    this._iModels.baytown = await this.createIModel("baytown", datasetsDirPath, async (name: string, localPath: string) =>
+      this.downloadDataset(name, BAYTOWN_DOWNLOAD_URL, localPath),
+    );
+
     const promises = IMODEL_NAMES.map(async (key) => {
       if (key === "baytown") {
-        this._iModels[key] = await this.createIModel(key, datasetsDirPath, async (name: string, localPath: string) =>
-          this.downloadDataset(name, BAYTOWN_DOWNLOAD_URL, localPath),
-        );
         return;
       }
 
