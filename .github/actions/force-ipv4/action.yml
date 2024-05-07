@@ -8,5 +8,5 @@ runs:
     -
       name: Run prefer IPv4 script
       shell: bash
-      run: ./.github/actions/force-ipv4.sh
+      run: ./.github/actions/force-ipv4/force-ipv4.sh
       working-directory: ${{ inputs.project-root }}
