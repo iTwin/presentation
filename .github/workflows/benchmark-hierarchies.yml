@@ -7,6 +7,7 @@ on:
       - master
     paths:
       - apps/performance-tests/**
+      - apps/performance-tests/util/**
       - packages/core-interop/**
       - packages/hierarchies/**
       - packages/models-tree/**

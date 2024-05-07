@@ -7,12 +7,14 @@ on:
       - master
     paths:
       - apps/performance-tests/**
+      - apps/performance-tests/util/**
+      - apps/performance-tests/unified-selection/**
       - packages/unified-selection/**
       - packages/shared/**
 
 jobs:
   benchmark:
-    name: Benchmark performance
+    name: 'Unified selection: Benchmark performance'
     runs-on: ubuntu-latest
     permissions:
       # deployments permission to deploy GitHub pages website
