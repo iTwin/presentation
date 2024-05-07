@@ -351,14 +351,22 @@ export function insertFunctionalElement(
     modelId: Id64String;
     representedElementId: Id64String;
     relationshipName: "DrawingGraphicRepresentsFunctionalElement" | "PhysicalElementFulfillsFunction";
+    parentId?: string;
   } & Partial<Omit<FunctionalElementProps, "id" | "parent" | "code" | "model">>,
 ) {
-  const { builder, modelId, representedElementId, relationshipName } = props;
+  const { builder, modelId, representedElementId, relationshipName, parentId, ...elementProps } = props;
   const className = `Functional${props.fullClassNameSeparator ?? "."}FunctionalComposite`;
   const id = builder.insertElement({
     classFullName: className,
     model: modelId,
     code: Code.createEmpty(),
+    parent: parentId
+      ? {
+          id: parentId,
+          relClassName: `BisCore${props.fullClassNameSeparator ?? "."}ElementOwnsChildElements`,
+        }
+      : undefined,
+    ...elementProps,
   } as FunctionalElementProps);
   builder.insertRelationship({
     sourceId: representedElementId,
@@ -412,12 +420,13 @@ export function insertGroupInformationElement(
     modelId: Id64String;
   } & Partial<Omit<FunctionalElementProps, "id" | "parent" | "code" | "model">>,
 ) {
-  const { builder, modelId } = props;
+  const { builder, modelId, ...elementProps } = props;
   const className = `Generic${props.fullClassNameSeparator ?? "."}Group`;
   const id = builder.insertElement({
     classFullName: className,
     model: modelId,
     code: Code.createEmpty(),
+    ...elementProps,
   });
   return { className, id };
 }

@@ -6,7 +6,7 @@
 import { expect } from "chai";
 import { ResolvablePromise } from "presentation-test-utilities";
 import sinon from "sinon";
-import { EC, ECSqlQueryDef, ECSqlQueryExecutor, ECSqlQueryReaderOptions, ECSqlQueryRow } from "@itwin/presentation-shared";
+import { ECSqlQueryDef, ECSqlQueryExecutor, ECSqlQueryReaderOptions, ECSqlQueryRow } from "@itwin/presentation-shared";
 import { createHiliteSetProvider, HiliteSetProvider } from "../unified-selection/HiliteSetProvider";
 import { SelectableInstanceKey, Selectables } from "../unified-selection/Selectable";
 import { createCustomSelectable, createECInstanceId, createSelectableInstanceKey } from "./_helpers/SelectablesCreator";
@@ -16,7 +16,7 @@ describe("HiliteSetProvider", () => {
     it("creates a new HiliteSetProvider instance", () => {
       const imodelAccess = {
         createQueryReader: sinon.stub<[ECSqlQueryDef, ECSqlQueryReaderOptions | undefined], ReturnType<ECSqlQueryExecutor["createQueryReader"]>>(),
-        getSchema: sinon.stub<[string], Promise<EC.Schema | undefined>>(),
+        classDerivesFrom: sinon.stub<[string, string], Promise<boolean> | boolean>(),
       };
       const result = createHiliteSetProvider({ imodelAccess });
       expect(result).to.not.be.undefined;
@@ -26,12 +26,9 @@ describe("HiliteSetProvider", () => {
   describe("getHiliteSet", () => {
     const imodelAccess = {
       createQueryReader: sinon.stub<[ECSqlQueryDef, ECSqlQueryReaderOptions | undefined], ReturnType<ECSqlQueryExecutor["createQueryReader"]>>(),
-      getSchema: sinon.stub<[string], Promise<EC.Schema | undefined>>(),
+      classDerivesFrom: sinon.stub<[string, string], Promise<boolean> | boolean>(),
     };
     let provider: HiliteSetProvider;
-    const schemaMock = {
-      getClass: sinon.stub<[string], Promise<EC.Class | undefined>>(),
-    };
 
     async function* createFakeQueryReader<TRow extends {} = ECSqlQueryRow>(
       rows: (TRow | Promise<TRow>)[],
@@ -39,16 +36,6 @@ describe("HiliteSetProvider", () => {
       for await (const row of rows) {
         yield row;
       }
-    }
-
-    function mockClass(className: string, baseClassSchema: string, baseClassName: string) {
-      const classMock = {
-        is: (baseClass: string, baseSchema: string) => {
-          return baseClass === baseClassName && baseSchema === baseClassSchema;
-        },
-      };
-
-      schemaMock.getClass.withArgs(className).returns(Promise.resolve(classMock as unknown as EC.Class));
     }
 
     function mockQuery(modelKeys: (string | Promise<string>)[], subCategoryKeys: (string | Promise<string>)[], elementKeys: (string | Promise<string>)[]) {
@@ -93,11 +80,8 @@ describe("HiliteSetProvider", () => {
 
     beforeEach(() => {
       imodelAccess.createQueryReader.reset();
-      imodelAccess.getSchema.reset();
-      schemaMock.getClass.reset();
-
-      imodelAccess.getSchema.returns(Promise.resolve(schemaMock as unknown as EC.Schema));
-      imodelAccess.getSchema.withArgs("Functional").returns(Promise.resolve(undefined));
+      imodelAccess.classDerivesFrom.reset();
+      imodelAccess.classDerivesFrom.returns(false);
       provider = createHiliteSetProvider({ imodelAccess });
     });
 
@@ -109,7 +93,7 @@ describe("HiliteSetProvider", () => {
       it("creates result for `Element` keys", async () => {
         const elementKey = createSelectableInstanceKey(1);
         const resultKey = createECInstanceId(2);
-        mockClass("TestClass", "BisCore", "Element");
+        imodelAccess.classDerivesFrom.withArgs(elementKey.className, "BisCore.Element").resolves(true);
         mockQuery([], [], [resultKey]);
 
         const selection = Selectables.create([elementKey]);
@@ -120,10 +104,9 @@ describe("HiliteSetProvider", () => {
       });
 
       it("creates result for `GroupInformationElement` element keys", async () => {
-        imodelAccess.getSchema.withArgs("Functional").returns(Promise.resolve({} as unknown as EC.Schema));
         const elementKey = createSelectableInstanceKey(1);
         const resultKey = createECInstanceId(2);
-        mockClass("TestClass", "BisCore", "GroupInformationElement");
+        imodelAccess.classDerivesFrom.withArgs(elementKey.className, "BisCore.GroupInformationElement").returns(true);
         mockQuery([], [], [resultKey]);
 
         const selection = Selectables.create([elementKey]);
@@ -136,7 +119,7 @@ describe("HiliteSetProvider", () => {
       it("creates result for `GeometricElement` element child keys", async () => {
         const elementKey = createSelectableInstanceKey(1);
         const resultKey = createECInstanceId(2);
-        mockClass("TestClass", "BisCore", "GeometricElement");
+        imodelAccess.classDerivesFrom.withArgs(elementKey.className, "BisCore.GeometricElement").returns(true);
         mockQuery([], [], [resultKey]);
 
         const selection = Selectables.create([elementKey]);
@@ -151,13 +134,10 @@ describe("HiliteSetProvider", () => {
       it("creates result for `FunctionalElement` keys when `Functional` schema exists", async () => {
         const elementKey = createSelectableInstanceKey(1);
         const resultKey = createECInstanceId(2);
-
-        imodelAccess.getSchema.withArgs("Functional").returns(Promise.resolve({} as unknown as EC.Schema));
         imodelAccess.createQueryReader
           .withArgs(sinon.match((query: ECSqlQueryDef) => query.ecsql.includes("FunctionalElement")))
           .returns(createFakeQueryReader<ECSqlQueryRow>([{ ["ECInstanceId"]: resultKey }]));
-
-        mockClass("TestClass", "Functional", "FunctionalElement");
+        imodelAccess.classDerivesFrom.withArgs(elementKey.className, "Functional.FunctionalElement").returns(true);
         mockQuery([], [], [resultKey]);
 
         const selection = Selectables.create([elementKey]);
@@ -172,7 +152,7 @@ describe("HiliteSetProvider", () => {
       it("creates result for `Model` keys", async () => {
         const elementKey = createSelectableInstanceKey(1);
         const modelKey = createECInstanceId(2);
-        mockClass("TestClass", "BisCore", "Model");
+        imodelAccess.classDerivesFrom.withArgs(elementKey.className, "BisCore.Model").returns(true);
         mockQuery([modelKey], [], []);
 
         const selection = Selectables.create([elementKey]);
@@ -185,7 +165,7 @@ describe("HiliteSetProvider", () => {
       it("creates result for `Subject` model keys", async () => {
         const elementKey = createSelectableInstanceKey(1);
         const modelKey = createECInstanceId(2);
-        mockClass("TestClass", "BisCore", "Subject");
+        imodelAccess.classDerivesFrom.withArgs(elementKey.className, "BisCore.Subject").returns(true);
         mockQuery([modelKey], [], []);
 
         const selection = Selectables.create([elementKey]);
@@ -200,7 +180,7 @@ describe("HiliteSetProvider", () => {
       it("creates result for `SubCategory` keys", async () => {
         const elementKey = createSelectableInstanceKey(1);
         const subCategoryKey = createECInstanceId(2);
-        mockClass("TestClass", "BisCore", "SubCategory");
+        imodelAccess.classDerivesFrom.withArgs(elementKey.className, "BisCore.SubCategory").returns(true);
         mockQuery([], [subCategoryKey], []);
 
         const selection = Selectables.create([elementKey]);
@@ -213,7 +193,7 @@ describe("HiliteSetProvider", () => {
       it("creates result for `Category` subcategory keys", async () => {
         const elementKey = createSelectableInstanceKey(1);
         const subCategoryKey = createECInstanceId(2);
-        mockClass("TestClass", "BisCore", "Category");
+        imodelAccess.classDerivesFrom.withArgs(elementKey.className, "BisCore.Category").returns(true);
         mockQuery([], [subCategoryKey], []);
 
         const selection = Selectables.create([elementKey]);
@@ -241,9 +221,9 @@ describe("HiliteSetProvider", () => {
         const categoryResultKey = createECInstanceId(2);
         const elementResultKey = createECInstanceId(2);
 
-        mockClass("TestModel", "BisCore", "Model");
-        mockClass("TestCategory", "BisCore", "Category");
-        mockClass("TestElement", "BisCore", "Element");
+        imodelAccess.classDerivesFrom.withArgs(modelKey.className, "BisCore.Model").returns(true);
+        imodelAccess.classDerivesFrom.withArgs(categoryKey.className, "BisCore.Category").returns(true);
+        imodelAccess.classDerivesFrom.withArgs(elementKey.className, "BisCore.Element").returns(true);
         mockQuery([modelResultKey], [categoryResultKey], [elementResultKey]);
 
         const selection = Selectables.create([customSelectable]);
@@ -257,9 +237,8 @@ describe("HiliteSetProvider", () => {
     describe("Other", () => {
       it("ignores unknown type", async () => {
         const elementKey = createSelectableInstanceKey(1);
-        const modelKey = createECInstanceId(2);
-        mockClass("TestClass", "BisCore", "Unknown");
-        mockQuery([modelKey], [modelKey], [modelKey]);
+        imodelAccess.classDerivesFrom.returns(false);
+        mockQuery([createECInstanceId(2)], [createECInstanceId(3)], [createECInstanceId(4)]);
 
         const selection = Selectables.create([elementKey]);
         const result = await loadHiliteSet(selection);
@@ -268,53 +247,30 @@ describe("HiliteSetProvider", () => {
         expect(result.models).to.be.empty;
       });
 
-      it("ignores unknown schema", async () => {
-        imodelAccess.getSchema.returns(Promise.resolve(undefined));
+      it("ignores key whose class hierarchy check throws with 'Schema not found' error", async () => {
         const elementKey = createSelectableInstanceKey(1);
-        const resultKey = createECInstanceId(2);
-        mockClass("TestClass", "BisCore", "Element");
-        mockQuery([resultKey], [resultKey], [resultKey]);
+        imodelAccess.classDerivesFrom.throws(new Error(`Schema "Test" not found`));
+        mockQuery([createECInstanceId(2)], [createECInstanceId(3)], [createECInstanceId(4)]);
 
-        const selection = Selectables.create([elementKey]);
-        const result = await loadHiliteSet(selection);
-        expect(result.elements).to.be.empty;
-        expect(result.subCategories).to.be.empty;
-        expect(result.models).to.be.empty;
-      });
-
-      it("ignores unknown class", async () => {
-        schemaMock.getClass.returns(Promise.resolve(undefined));
-        const elementKey = createSelectableInstanceKey(1);
-        const resultKey = createECInstanceId(2);
-        mockQuery([resultKey], [resultKey], [resultKey]);
-
-        const selection = Selectables.create([elementKey]);
-        const result = await loadHiliteSet(selection);
+        const result = await loadHiliteSet(Selectables.create([elementKey]));
         expect(result.elements).to.be.empty;
         expect(result.subCategories).to.be.empty;
         expect(result.models).to.be.empty;
       });
 
       it("caches class type", async () => {
-        const classMock = {
-          is: (baseClass: string, baseSchema: string) => {
-            return baseClass === "Element" && baseSchema === "BisCore";
-          },
-        };
-
-        schemaMock.getClass.onCall(0).returns(Promise.resolve(classMock as unknown as EC.Class));
-
         const elementKey1 = createSelectableInstanceKey(1);
         const elementKey2 = createSelectableInstanceKey(2);
         const resultKey = createECInstanceId(2);
-        mockQuery([], [], [resultKey]);
+        imodelAccess.classDerivesFrom.withArgs(elementKey1.className, "BisCore.Subject").returns(true);
+        mockQuery([resultKey], [], []);
 
         const selection = Selectables.create([elementKey1, elementKey2]);
         const result = await loadHiliteSet(selection);
-        expect(schemaMock.getClass).to.be.calledOnce;
-        expect(result.models).to.be.empty;
+        expect(imodelAccess.classDerivesFrom).to.be.calledOnce;
+        expect(result.models).to.deep.eq([resultKey]);
         expect(result.subCategories).to.be.empty;
-        expect(result.elements).to.deep.eq([resultKey]);
+        expect(result.elements).to.be.empty;
       });
 
       it("uses InVirtualSet when 1000 or more ids passed", async () => {
@@ -323,7 +279,7 @@ describe("HiliteSetProvider", () => {
         for (let i = 1; i <= 1001; i++) {
           elementKeys.push(createSelectableInstanceKey(i));
         }
-        mockClass("TestClass", "BisCore", "Element");
+        imodelAccess.classDerivesFrom.withArgs(elementKeys[0].className, "BisCore.Element").returns(true);
         mockQuery([], [], [resultKey]);
 
         const selection = Selectables.create(elementKeys);
@@ -338,7 +294,7 @@ describe("HiliteSetProvider", () => {
         const elementKey1 = createSelectableInstanceKey(1, "TestSchema:TestClass");
         const customElement1 = createCustomSelectable(1, [{ className: "TestSchema:TestClass", id: "0x1" }]);
 
-        mockClass("TestClass", "BisCore", "Element");
+        imodelAccess.classDerivesFrom.withArgs("TestSchema:TestClass", "BisCore.Element").returns(true);
         mockQuery([], [], ["0x1"]);
 
         const selection = Selectables.create([elementKey1, customElement1]);
@@ -351,7 +307,7 @@ describe("HiliteSetProvider", () => {
         const elementPromises = [new ResolvablePromise<string>(), new ResolvablePromise<string>()];
         const elementKeys = [1, 2].map((i) => createSelectableInstanceKey(i, "TestSchema:TestElement"));
 
-        mockClass("TestElement", "BisCore", "Element");
+        imodelAccess.classDerivesFrom.withArgs("TestSchema:TestElement", "BisCore.Element").returns(true);
         mockQuery([], [], elementPromises);
 
         const selectables = Selectables.create(elementKeys);
@@ -374,8 +330,15 @@ describe("HiliteSetProvider", () => {
         expect((await iter.next()).done).to.be.true;
       });
 
+      it("rethrows ECClassHierarchyInspector errors", async () => {
+        imodelAccess.classDerivesFrom.withArgs("TestSchema:TestElement", "BisCore.Element").throws(new Error("dummy error"));
+        mockQuery([], [], []);
+        const selectables = Selectables.create([createSelectableInstanceKey(1, "TestSchema:TestElement")]);
+        await expect(loadHiliteSet(selectables)).to.eventually.be.rejected;
+      });
+
       it("rethrows errors thrown by query observables", async () => {
-        mockClass("TestElement", "BisCore", "Element");
+        imodelAccess.classDerivesFrom.withArgs("TestSchema:TestElement", "BisCore.Element").returns(true);
         mockQuery([], [], [Promise.reject("dummy error")]);
 
         const selectables = Selectables.create([createSelectableInstanceKey(1, "TestSchema:TestElement")]);

@@ -4,7 +4,7 @@
 
 ```ts
 
-import { ECSchemaProvider } from '@itwin/presentation-shared';
+import { ECClassHierarchyInspector } from '@itwin/presentation-shared';
 import { ECSqlQueryExecutor } from '@itwin/presentation-shared';
 import { Event as Event_2 } from '@itwin/presentation-shared';
 import { Id64Arg } from '@itwin/core-bentley';

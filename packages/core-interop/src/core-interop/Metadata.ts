@@ -41,9 +41,15 @@ export function createECSchemaProvider(schemaContext: CoreSchemaContext): ECSche
     try {
       return await getSchemaUnprotected(schemaName);
     } catch (e) {
-      if (e instanceof Error && e.message.includes("already exists within this cache") && !handledExistingSchemaErrors.has(schemaName)) {
-        handledExistingSchemaErrors.add(schemaName);
-        return getSchemaProtected(schemaName, handledExistingSchemaErrors);
+      // istanbul ignore else
+      if (e instanceof Error) {
+        if (e.message.includes("already exists within this cache") && !handledExistingSchemaErrors.has(schemaName)) {
+          handledExistingSchemaErrors.add(schemaName);
+          return getSchemaProtected(schemaName, handledExistingSchemaErrors);
+        }
+        if (e.message.includes("schema not found")) {
+          return undefined;
+        }
       }
       throw e;
     }
