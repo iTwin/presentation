@@ -69,10 +69,11 @@ export class ReportingTreeNodeLoader<IPresentationTreeDataProvider extends TreeD
     // workaround ControlledTree unsubscribing from the observable after nodes are loaded into a tree model
     // but not emitted from observable yet.
     const subject = new Subject<TreeNodeLoadResult>();
+    const source = tracked; // reference docs generation fails if `tracked` is used directly.
     return subject.pipe(
       tap({
         subscribe: () => {
-          tracked.subscribe(subject);
+          source.subscribe(subject);
         },
       }),
     );
