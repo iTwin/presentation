@@ -1,4 +1,4 @@
-name: Performance benchmark
+name: Unified-selection performance benchmark
 
 on:
   workflow_dispatch:
@@ -8,9 +8,6 @@ on:
     paths:
       - apps/performance-tests/**
       - packages/unified-selection/**
-      - packages/core-interop/**
-      - packages/hierarchies/**
-      - packages/models-tree/**
       - packages/shared/**
 
 jobs:
@@ -53,7 +50,7 @@ jobs:
           key: performance-test-dataset-${{ hashFiles('./apps/performance-tests/src/util/Datasets.ts') }}
 
       - name: Run benchmark tests
-        run: pnpm benchmark
+        run: pnpm benchmark:unified-selection
 
       - name: Save generated datasets
         uses: actions/cache/save@v4
@@ -66,8 +63,9 @@ jobs:
         uses: benchmark-action/github-action-benchmark@v1
         if: ${{ github.ref == 'refs/heads/master' }}
         with:
+          name: Unified selection benchmark
           tool: 'customSmallerIsBetter'
-          output-file-path: ./apps/performance-tests/benchmark.json
+          output-file-path: ./apps/performance-tests/unified-selection-benchmark.json
           # Access token to deploy GitHub Pages branch
           github-token: ${{ secrets.IMJS_ADMIN_GH_TOKEN }}
           # Push and deploy GitHub pages branch automatically

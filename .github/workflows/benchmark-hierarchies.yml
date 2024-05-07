@@ -1,0 +1,74 @@
+name: Hierarchies performance benchmark
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - master
+    paths:
+      - apps/performance-tests/**
+      - packages/core-interop/**
+      - packages/hierarchies/**
+      - packages/models-tree/**
+      - packages/shared/**
+
+jobs:
+  benchmark:
+    name: 'Hierarchies: Benchmark performance'
+    runs-on: ubuntu-latest
+    permissions:
+      # deployments permission to deploy GitHub pages website
+      deployments: write
+      # contents permission to update benchmark contents in gh-pages branch
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 8.15.1
+
+      - name: Use Node.js 18
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Build benchmark tests
+        run: pnpm lage build --to presentation-performance-tests
+
+      - name: Restore dataset from cache
+        uses: actions/cache/restore@v4
+        id: cache-restore
+        env:
+          cache-name: cache-dataset
+        with:
+          path: "./apps/performance-tests/datasets/*.bim"
+          key: performance-test-dataset-${{ hashFiles('./apps/performance-tests/src/util/Datasets.ts') }}
+
+      - name: Run benchmark tests
+        run: pnpm benchmark:hierarchies
+
+      - name: Save generated datasets
+        uses: actions/cache/save@v4
+        if: steps.cache-restore.outputs.cache-hit != 'true'
+        with:
+          path: "./apps/performance-tests/datasets/*.bim"
+          key: performance-test-dataset-${{ hashFiles('./apps/performance-tests/src/util/Datasets.ts') }}
+
+      - name: Store benchmark result
+        uses: benchmark-action/github-action-benchmark@v1
+        if: ${{ github.ref == 'refs/heads/master' }}
+        with:
+          name: Hierarchies benchmark
+          tool: 'customSmallerIsBetter'
+          output-file-path: ./apps/performance-tests/hierarchies-benchmark.json
+          # Access token to deploy GitHub Pages branch
+          github-token: ${{ secrets.IMJS_ADMIN_GH_TOKEN }}
+          # Push and deploy GitHub pages branch automatically
+          auto-push: true
