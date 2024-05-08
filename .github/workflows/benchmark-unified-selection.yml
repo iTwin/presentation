@@ -6,9 +6,8 @@ on:
     branches:
       - master
     paths:
-      - apps/performance-tests/**
-      - apps/performance-tests/util/**
       - apps/performance-tests/unified-selection/**
+      - apps/performance-tests/util/**
       - packages/unified-selection/**
       - packages/shared/**
 
