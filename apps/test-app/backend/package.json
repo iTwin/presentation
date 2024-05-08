@@ -12,7 +12,7 @@
   },
   "dependencies": {
     "@itwin/appui-abstract": "^4.5.2",
-    "@itwin/build-tools": "^4.5.2",
+    "@itwin/build-tools": "4.6.0-dev.27",
     "@itwin/core-backend": "^4.5.2",
     "@itwin/core-bentley": "^4.5.2",
     "@itwin/core-common": "^4.5.2",
