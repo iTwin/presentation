@@ -25,7 +25,6 @@
     "change:empty": "changeset add --empty",
     "check": "changeset status",
     "release": "npm run build:all && changeset publish",
-    "benchmark": "pnpm run -C ./apps/performance-tests benchmark",
     "benchmark:hierarchies": "pnpm run -C ./apps/performance-tests benchmark:hierarchies",
     "benchmark:unified-selection": "pnpm run -C ./apps/performance-tests benchmark:unified-selection"
   },
