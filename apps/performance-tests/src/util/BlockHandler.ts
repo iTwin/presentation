@@ -4,18 +4,16 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { setInterval } from "timers/promises";
-import { Logger, LogLevel, SortedArray } from "@itwin/core-bentley";
+import { SortedArray } from "@itwin/core-bentley";
+import { LOGGER } from "./Logging";
 
 const ENABLE_PINGS = false;
 const LOG_CATEGORY = "Presentation.PerformanceTests.BlockHandler";
 
 function log(messageOrCallback: string | (() => string)) {
-  if (!Logger.isEnabled(LOG_CATEGORY, LogLevel.Trace)) {
-    return;
+  if (LOGGER.isEnabled(LOG_CATEGORY, "trace")) {
+    LOGGER.logTrace(LOG_CATEGORY, typeof messageOrCallback === "string" ? messageOrCallback : messageOrCallback());
   }
-
-  const message = typeof messageOrCallback === "string" ? messageOrCallback : messageOrCallback();
-  Logger.logTrace(LOG_CATEGORY, message);
 }
 
 export interface Summary {
@@ -37,15 +35,11 @@ export class BlockHandler {
 
   public getSummary(): Summary {
     const arr = this._samples.extractArray();
-    const count = arr.length;
-    const max = count ? arr[count - 1] : undefined;
-    const p95 = getP95(arr);
-    const median = getMedian(arr);
     return {
-      count,
-      max,
-      p95,
-      median,
+      count: arr.length,
+      max: arr.length ? arr[arr.length - 1] : undefined,
+      p95: getP95(arr),
+      median: getMedian(arr),
     };
   }
 
