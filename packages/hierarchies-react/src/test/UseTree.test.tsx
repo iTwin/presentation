@@ -12,7 +12,7 @@ import { GenericInstanceFilter, HierarchyNodeKey, HierarchyProvider, InstancesNo
 import { createStorage, Selectables, StorageSelectionChangeEventArgs, StorageSelectionChangesListener } from "@itwin/unified-selection";
 import { PresentationHierarchyNode, PresentationInfoNode, UnifiedSelectionProvider } from "../presentation-hierarchies-react";
 import { createNodeId } from "../presentation-hierarchies-react/internal/Utils";
-import { useTree, useUnifiedSelectionTree } from "../presentation-hierarchies-react/UseTree";
+import { SelectionMode, useTree, useUnifiedSelectionTree } from "../presentation-hierarchies-react/UseTree";
 import { cleanup, createStub, createTestGroupingNode, createTestHierarchyNode, renderHook, waitFor } from "./TestUtils";
 
 describe("useTree", () => {
@@ -402,6 +402,22 @@ describe("useUnifiedSelectionTree", () => {
     return <UnifiedSelectionProvider storage={storage}>{props.children}</UnifiedSelectionProvider>;
   }
 
+  function createNodeKey(id: string) {
+    const instanceKey = { id, className: "Schema:Class" };
+    const instancesNodeKey: InstancesNodeKey = {
+      type: "instances",
+      instanceKeys: [instanceKey],
+    };
+    return { instanceKey, instancesNodeKey };
+  }
+
+  function createHierarchyNodeWithKey(id: string, name: string, children = false) {
+    const { instanceKey, instancesNodeKey } = createNodeKey(id);
+    const node = createTestHierarchyNode({ id: name, key: instancesNodeKey, autoExpand: true, children });
+    const nodeId = createNodeId(node);
+    return { nodeId, instanceKey, instancesNodeKey, node };
+  }
+
   beforeEach(() => {
     hierarchyProvider.getNodes.reset();
     changeListener.reset();
@@ -415,18 +431,12 @@ describe("useUnifiedSelectionTree", () => {
   });
 
   it("adds nodes to unified selection", async () => {
-    const instanceKey = { id: "0x1", className: "Schema:Class" };
-    const instancesNodeKey: InstancesNodeKey = {
-      type: "instances",
-      instanceKeys: [instanceKey],
-    };
-    const nodes = [createTestHierarchyNode({ id: "root-1", key: instancesNodeKey })];
+    const { nodeId: nodeId, instanceKey: instanceKey, node: node } = createHierarchyNodeWithKey("0x1", "root-1");
     hierarchyProvider.getNodes.callsFake((props) => {
-      return createAsyncIterator(props.parentNode === undefined ? nodes : []);
+      return createAsyncIterator(props.parentNode === undefined ? [node] : []);
     });
 
     const { result } = renderHook(useUnifiedSelectionTree, { initialProps, wrapper: Wrapper });
-    const nodeId = createNodeId(nodes[0]);
 
     await waitFor(() => {
       expect(result.current.rootNodes).to.have.lengthOf(1);
@@ -441,7 +451,7 @@ describe("useUnifiedSelectionTree", () => {
       expect(changeListener).to.be.calledOnceWith(
         sinon.match((args: StorageSelectionChangeEventArgs) => {
           return (
-            args.changeType === "add" &&
+            args.changeType === "replace" &&
             args.imodelKey === imodelKey &&
             args.source === sourceName &&
             Selectables.size(args.selectables) === 1 &&
@@ -454,19 +464,394 @@ describe("useUnifiedSelectionTree", () => {
     });
   });
 
+  describe("add node range", () => {
+    const selectionProps = { ...initialProps, selectionMode: SelectionMode.Extended };
+
+    it("adds node range to unified selection", async () => {
+      const { nodeId: nodeId1, instanceKey: instanceKey1, node: node1 } = createHierarchyNodeWithKey("0x1", "root-1");
+      const { nodeId: nodeId2, instanceKey: instanceKey2, node: node2 } = createHierarchyNodeWithKey("0x2", "root-2");
+      const { nodeId: nodeId3, instanceKey: instanceKey3, node: node3 } = createHierarchyNodeWithKey("0x3", "root-3");
+
+      hierarchyProvider.getNodes.callsFake((props) => {
+        return createAsyncIterator(props.parentNode === undefined ? [node1, node2, node3] : []);
+      });
+
+      const { result } = renderHook(useUnifiedSelectionTree, { initialProps: selectionProps, wrapper: Wrapper });
+
+      await waitFor(() => {
+        expect(result.current.rootNodes).to.have.lengthOf(3);
+        expect(result.current.isNodeSelected(nodeId1)).to.be.false;
+        expect(result.current.isNodeSelected(nodeId2)).to.be.false;
+        expect(result.current.isNodeSelected(nodeId3)).to.be.false;
+      });
+
+      act(() => {
+        result.current.selectNode(nodeId1, true);
+      });
+
+      await waitFor(() => {
+        expect(changeListener).to.be.calledOnceWith(
+          sinon.match((args: StorageSelectionChangeEventArgs) => {
+            return (
+              args.changeType === "replace" &&
+              args.imodelKey === imodelKey &&
+              args.source === sourceName &&
+              Selectables.size(args.selectables) === 1 &&
+              Selectables.has(args.selectables, instanceKey1)
+            );
+          }),
+        );
+
+        expect(result.current.isNodeSelected(nodeId1)).to.be.true;
+      });
+
+      changeListener.resetHistory();
+
+      act(() => {
+        result.current.selectNode(nodeId3, true, { shiftKey: true } as unknown as React.MouseEvent<HTMLDivElement, MouseEvent>);
+      });
+
+      await waitFor(() => {
+        expect(changeListener).to.be.calledOnceWith(
+          sinon.match((args: StorageSelectionChangeEventArgs) => {
+            return (
+              args.changeType === "replace" &&
+              args.imodelKey === imodelKey &&
+              args.source === sourceName &&
+              Selectables.size(args.selectables) === 3 &&
+              Selectables.hasAll(args.selectables, [instanceKey1, instanceKey2, instanceKey3])
+            );
+          }),
+        );
+
+        expect(result.current.isNodeSelected(nodeId1)).to.be.true;
+        expect(result.current.isNodeSelected(nodeId2)).to.be.true;
+        expect(result.current.isNodeSelected(nodeId3)).to.be.true;
+      });
+    });
+
+    it("adds node range to unified selection when second node index is lower", async () => {
+      const { nodeId: nodeId1, instanceKey: instanceKey1, node: node1 } = createHierarchyNodeWithKey("0x1", "root-1");
+      const { nodeId: nodeId2, instanceKey: instanceKey2, node: node2 } = createHierarchyNodeWithKey("0x2", "root-2");
+      const { nodeId: nodeId3, instanceKey: instanceKey3, node: node3 } = createHierarchyNodeWithKey("0x3", "root-3");
+
+      hierarchyProvider.getNodes.callsFake((props) => {
+        return createAsyncIterator(props.parentNode === undefined ? [node1, node2, node3] : []);
+      });
+
+      const { result } = renderHook(useUnifiedSelectionTree, { initialProps: selectionProps, wrapper: Wrapper });
+
+      await waitFor(() => {
+        expect(result.current.rootNodes).to.have.lengthOf(3);
+        expect(result.current.isNodeSelected(nodeId1)).to.be.false;
+        expect(result.current.isNodeSelected(nodeId2)).to.be.false;
+        expect(result.current.isNodeSelected(nodeId3)).to.be.false;
+      });
+
+      act(() => {
+        result.current.selectNode(nodeId3, true);
+      });
+
+      await waitFor(() => {
+        expect(changeListener).to.be.calledOnceWith(
+          sinon.match((args: StorageSelectionChangeEventArgs) => {
+            return (
+              args.changeType === "replace" &&
+              args.imodelKey === imodelKey &&
+              args.source === sourceName &&
+              Selectables.size(args.selectables) === 1 &&
+              Selectables.has(args.selectables, instanceKey3)
+            );
+          }),
+        );
+
+        expect(result.current.isNodeSelected(nodeId3)).to.be.true;
+      });
+
+      changeListener.resetHistory();
+
+      act(() => {
+        result.current.selectNode(nodeId1, true, { shiftKey: true } as unknown as React.MouseEvent<HTMLDivElement, MouseEvent>);
+      });
+
+      await waitFor(() => {
+        expect(changeListener).to.be.calledOnceWith(
+          sinon.match((args: StorageSelectionChangeEventArgs) => {
+            return (
+              args.changeType === "replace" &&
+              args.imodelKey === imodelKey &&
+              args.source === sourceName &&
+              Selectables.size(args.selectables) === 3 &&
+              Selectables.hasAll(args.selectables, [instanceKey1, instanceKey2, instanceKey3])
+            );
+          }),
+        );
+
+        expect(result.current.isNodeSelected(nodeId1)).to.be.true;
+        expect(result.current.isNodeSelected(nodeId2)).to.be.true;
+        expect(result.current.isNodeSelected(nodeId3)).to.be.true;
+      });
+    });
+
+    it("adds node range to unified selection starting from first node when previous selection does not exist", async () => {
+      const { nodeId: nodeId1, instanceKey: instanceKey1, node: node1 } = createHierarchyNodeWithKey("0x1", "root-1");
+      const { nodeId: nodeId2, instanceKey: instanceKey2, node: node2 } = createHierarchyNodeWithKey("0x2", "root-2");
+
+      hierarchyProvider.getNodes.callsFake((props) => {
+        return createAsyncIterator(props.parentNode === undefined ? [node1, node2] : []);
+      });
+
+      const { result } = renderHook(useUnifiedSelectionTree, { initialProps: selectionProps, wrapper: Wrapper });
+
+      await waitFor(() => {
+        expect(result.current.rootNodes).to.have.lengthOf(2);
+        expect(result.current.isNodeSelected(nodeId1)).to.be.false;
+        expect(result.current.isNodeSelected(nodeId2)).to.be.false;
+      });
+
+      act(() => {
+        result.current.selectNode(nodeId2, true, { shiftKey: true } as unknown as React.MouseEvent<HTMLDivElement, MouseEvent>);
+      });
+
+      await waitFor(() => {
+        expect(changeListener).to.be.calledOnceWith(
+          sinon.match((args: StorageSelectionChangeEventArgs) => {
+            return (
+              args.changeType === "replace" &&
+              args.imodelKey === imodelKey &&
+              args.source === sourceName &&
+              Selectables.size(args.selectables) === 2 &&
+              Selectables.hasAll(args.selectables, [instanceKey1, instanceKey2])
+            );
+          }),
+        );
+
+        expect(result.current.isNodeSelected(nodeId1)).to.be.true;
+        expect(result.current.isNodeSelected(nodeId2)).to.be.true;
+      });
+    });
+
+    it("skips info nodes when selecting node range", async () => {
+      const { nodeId: nodeId1, instanceKey: instanceKey1, node: node1 } = createHierarchyNodeWithKey("0x1", "root-1", true);
+      const { nodeId: nodeId2, instanceKey: instanceKey2, node: node2 } = createHierarchyNodeWithKey("0x2", "root-2");
+
+      hierarchyProvider.getNodes.callsFake((props) => {
+        if (props.parentNode === undefined) {
+          return createAsyncIterator([node1, node2]);
+        }
+        if (props.parentNode !== undefined) {
+          return throwingAsyncIterator(new RowsLimitExceededError(0));
+        }
+        return createAsyncIterator([]);
+      });
+
+      const { result } = renderHook(useUnifiedSelectionTree, { initialProps: selectionProps, wrapper: Wrapper });
+
+      await waitFor(() => {
+        expect(result.current.rootNodes).to.have.lengthOf(2);
+        expect(result.current.isNodeSelected(nodeId1)).to.be.false;
+        expect(result.current.isNodeSelected(nodeId2)).to.be.false;
+      });
+
+      act(() => {
+        result.current.selectNode(nodeId1, true);
+      });
+
+      await waitFor(() => {
+        expect(changeListener).to.be.calledOnceWith(
+          sinon.match((args: StorageSelectionChangeEventArgs) => {
+            return (
+              args.changeType === "replace" &&
+              args.imodelKey === imodelKey &&
+              args.source === sourceName &&
+              Selectables.size(args.selectables) === 1 &&
+              Selectables.has(args.selectables, instanceKey1)
+            );
+          }),
+        );
+
+        expect(result.current.isNodeSelected(nodeId1)).to.be.true;
+      });
+
+      changeListener.resetHistory();
+
+      act(() => {
+        result.current.selectNode(nodeId2, true, { shiftKey: true } as unknown as React.MouseEvent<HTMLDivElement, MouseEvent>);
+      });
+
+      await waitFor(() => {
+        expect(changeListener).to.be.calledOnceWith(
+          sinon.match((args: StorageSelectionChangeEventArgs) => {
+            return (
+              args.changeType === "replace" &&
+              args.imodelKey === imodelKey &&
+              args.source === sourceName &&
+              Selectables.size(args.selectables) === 2 &&
+              Selectables.hasAll(args.selectables, [instanceKey1, instanceKey2])
+            );
+          }),
+        );
+
+        expect(result.current.isNodeSelected(nodeId1)).to.be.true;
+        expect(result.current.isNodeSelected(nodeId2)).to.be.true;
+      });
+    });
+
+    it("adds visible children nodes when selecting node range to unified selection", async () => {
+      const { nodeId: nodeId1, instanceKey: instanceKey1, node: node1 } = createHierarchyNodeWithKey("0x1", "root-1");
+      const { nodeId: nodeId2, instanceKey: instanceKey2, node: node2 } = createHierarchyNodeWithKey("0x2", "root-2");
+      const { nodeId: nodeId3, instanceKey: instanceKey3, node: node3 } = createHierarchyNodeWithKey("0x3", "child");
+
+      hierarchyProvider.getNodes.callsFake((props) => {
+        if (props.parentNode === undefined) {
+          return createAsyncIterator([node1, node2]);
+        }
+        if (props.parentNode === node1) {
+          return createAsyncIterator([node3]);
+        }
+        return createAsyncIterator([]);
+      });
+
+      const { result } = renderHook(useUnifiedSelectionTree, { initialProps: selectionProps, wrapper: Wrapper });
+
+      await waitFor(() => {
+        expect(result.current.rootNodes).to.have.lengthOf(2);
+        expect(result.current.isNodeSelected(nodeId1)).to.be.false;
+        expect(result.current.isNodeSelected(nodeId2)).to.be.false;
+        expect(result.current.isNodeSelected(nodeId3)).to.be.false;
+      });
+
+      act(() => {
+        result.current.selectNode(nodeId1, true);
+      });
+
+      await waitFor(() => {
+        expect(changeListener).to.be.calledOnceWith(
+          sinon.match((args: StorageSelectionChangeEventArgs) => {
+            return (
+              args.changeType === "replace" &&
+              args.imodelKey === imodelKey &&
+              args.source === sourceName &&
+              Selectables.size(args.selectables) === 1 &&
+              Selectables.has(args.selectables, instanceKey1)
+            );
+          }),
+        );
+
+        expect(result.current.isNodeSelected(nodeId1)).to.be.true;
+      });
+
+      changeListener.resetHistory();
+
+      act(() => {
+        result.current.selectNode(nodeId2, true, { shiftKey: true } as unknown as React.MouseEvent<HTMLDivElement, MouseEvent>);
+      });
+
+      await waitFor(() => {
+        expect(changeListener).to.be.calledOnceWith(
+          sinon.match((args: StorageSelectionChangeEventArgs) => {
+            return (
+              args.changeType === "replace" &&
+              args.imodelKey === imodelKey &&
+              args.source === sourceName &&
+              Selectables.size(args.selectables) === 3 &&
+              Selectables.hasAll(args.selectables, [instanceKey1, instanceKey2, instanceKey3])
+            );
+          }),
+        );
+
+        expect(result.current.isNodeSelected(nodeId1)).to.be.true;
+        expect(result.current.isNodeSelected(nodeId2)).to.be.true;
+        expect(result.current.isNodeSelected(nodeId3)).to.be.true;
+      });
+    });
+
+    it("does not add non-visible children nodes when selecting node range to unified selection", async () => {
+      const { nodeId: nodeId1, instanceKey: instanceKey1, node: node1 } = createHierarchyNodeWithKey("0x1", "root-1", true);
+      const { nodeId: nodeId2, instanceKey: instanceKey2, node: node2 } = createHierarchyNodeWithKey("0x2", "root-2");
+      const { nodeId: nodeId3, node: node3 } = createHierarchyNodeWithKey("0x3", "child");
+
+      hierarchyProvider.getNodes.callsFake((props) => {
+        if (props.parentNode === undefined) {
+          return createAsyncIterator([node1, node2]);
+        }
+        if (props.parentNode === node1) {
+          return createAsyncIterator([node3]);
+        }
+        return createAsyncIterator([]);
+      });
+
+      const { result } = renderHook(useUnifiedSelectionTree, { initialProps: selectionProps, wrapper: Wrapper });
+
+      await waitFor(() => {
+        expect(result.current.rootNodes).to.have.lengthOf(2);
+        expect(result.current.isNodeSelected(nodeId1)).to.be.false;
+        expect(result.current.isNodeSelected(nodeId2)).to.be.false;
+        expect(result.current.isNodeSelected(nodeId3)).to.be.false;
+      });
+
+      // Collapse node to hide loaded children
+      act(() => {
+        result.current.expandNode(nodeId1, false);
+      });
+
+      await waitFor(() => {
+        expect((result.current.rootNodes![0] as PresentationHierarchyNode).isExpanded).to.be.false;
+      });
+
+      act(() => {
+        result.current.selectNode(nodeId1, true);
+      });
+
+      await waitFor(() => {
+        expect(changeListener).to.be.calledOnceWith(
+          sinon.match((args: StorageSelectionChangeEventArgs) => {
+            return (
+              args.changeType === "replace" &&
+              args.imodelKey === imodelKey &&
+              args.source === sourceName &&
+              Selectables.size(args.selectables) === 1 &&
+              Selectables.has(args.selectables, instanceKey1)
+            );
+          }),
+        );
+
+        expect(result.current.isNodeSelected(nodeId1)).to.be.true;
+      });
+
+      changeListener.resetHistory();
+
+      act(() => {
+        result.current.selectNode(nodeId2, true, { shiftKey: true } as unknown as React.MouseEvent<HTMLDivElement, MouseEvent>);
+      });
+
+      await waitFor(() => {
+        expect(changeListener).to.be.calledOnceWith(
+          sinon.match((args: StorageSelectionChangeEventArgs) => {
+            return (
+              args.changeType === "replace" &&
+              args.imodelKey === imodelKey &&
+              args.source === sourceName &&
+              Selectables.size(args.selectables) === 2 &&
+              Selectables.hasAll(args.selectables, [instanceKey1, instanceKey2])
+            );
+          }),
+        );
+
+        expect(result.current.isNodeSelected(nodeId1)).to.be.true;
+        expect(result.current.isNodeSelected(nodeId2)).to.be.true;
+        expect(result.current.isNodeSelected(nodeId3)).to.be.false;
+      });
+    });
+  });
+
   it("reacts to unified selection changes", async () => {
-    const instanceKey = { id: "0x1", className: "Schema:Class" };
-    const instancesNodeKey: InstancesNodeKey = {
-      type: "instances",
-      instanceKeys: [instanceKey],
-    };
-    const nodes = [createTestHierarchyNode({ id: "root-1", key: instancesNodeKey })];
+    const { nodeId: nodeId, instanceKey: instanceKey, node: node } = createHierarchyNodeWithKey("0x1", "root-1");
     hierarchyProvider.getNodes.callsFake((props) => {
-      return createAsyncIterator(props.parentNode === undefined ? nodes : []);
+      return createAsyncIterator(props.parentNode === undefined ? [node] : []);
     });
 
     const { result } = renderHook(useUnifiedSelectionTree, { initialProps, wrapper: Wrapper });
-    const nodeId = createNodeId(nodes[0]);
 
     await waitFor(() => {
       expect(result.current.rootNodes).to.have.lengthOf(1);

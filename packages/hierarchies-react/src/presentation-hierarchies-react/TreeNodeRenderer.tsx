@@ -5,9 +5,9 @@
 
 import "./TreeNodeRenderer.css";
 import cx from "classnames";
+import { ComponentPropsWithoutRef, ReactElement } from "react";
 import { SvgFilter, SvgFilterHollow, SvgRemove } from "@itwin/itwinui-icons-react";
 import { Button, IconButton, ProgressRadial, TreeNode } from "@itwin/itwinui-react";
-import { ComponentPropsWithoutRef, ReactElement } from "react";
 import { isPresentationHierarchyNode, PresentationHierarchyNode, PresentationTreeNode } from "./Types";
 import { useTree } from "./UseTree";
 
@@ -30,51 +30,55 @@ export function TreeNodeRenderer({
   setHierarchyLevelFilter,
   onFilterClick,
   setHierarchyLevelLimit,
+  isSelected,
+  isDisabled,
   ...nodeProps
 }: TreeNodeRendererProps) {
   if (isPresentationHierarchyNode(node)) {
     return (
-      <TreeNode
-        {...nodeProps}
-        className={cx("stateless-tree-node", { filtered: node.isFiltered })}
-        label={node.label}
-        onExpanded={(_, isExpanded) => {
-          expandNode(node.id, isExpanded);
-        }}
-        onSelected={(_, isSelected) => {
-          selectNode(node.id, isSelected);
-        }}
-        icon={getIcon ? getIcon(node) : undefined}
-      >
-        {node.isFiltered ? (
-          <IconButton
-            className="filtering-action-button"
-            styleType="borderless"
-            size="small"
-            title="Clear active filter"
-            onClick={(e) => {
-              setHierarchyLevelFilter(node.id, undefined);
-              e.stopPropagation();
-            }}
-          >
-            <SvgRemove />
-          </IconButton>
-        ) : null}
-        {node.isFilterable ? (
-          <IconButton
-            className="filtering-action-button"
-            styleType="borderless"
-            size="small"
-            title="Apply filter"
-            onClick={(e) => {
-              onFilterClick(node.id);
-              e.stopPropagation();
-            }}
-          >
-            {node.isFiltered ? <SvgFilter /> : <SvgFilterHollow />}
-          </IconButton>
-        ) : null}
-      </TreeNode>
+      // eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions
+      <div onClick={(event) => !isDisabled && selectNode(node.id, !isSelected, event)}>
+        <TreeNode
+          {...nodeProps}
+          isSelected={isSelected}
+          isDisabled={isDisabled}
+          className={cx("stateless-tree-node", { filtered: node.isFiltered })}
+          label={node.label}
+          onExpanded={(_, isExpanded) => {
+            expandNode(node.id, isExpanded);
+          }}
+          icon={getIcon ? getIcon(node) : undefined}
+        >
+          {node.isFiltered ? (
+            <IconButton
+              className="filtering-action-button"
+              styleType="borderless"
+              size="small"
+              title="Clear active filter"
+              onClick={(e) => {
+                setHierarchyLevelFilter(node.id, undefined);
+                e.stopPropagation();
+              }}
+            >
+              <SvgRemove />
+            </IconButton>
+          ) : null}
+          {node.isFilterable ? (
+            <IconButton
+              className="filtering-action-button"
+              styleType="borderless"
+              size="small"
+              title="Apply filter"
+              onClick={(e) => {
+                onFilterClick(node.id);
+                e.stopPropagation();
+              }}
+            >
+              {node.isFiltered ? <SvgFilter /> : <SvgFilterHollow />}
+            </IconButton>
+          ) : null}
+        </TreeNode>
+      </div>
     );
   }
 

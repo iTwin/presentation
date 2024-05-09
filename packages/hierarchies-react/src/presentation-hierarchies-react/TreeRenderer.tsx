@@ -5,9 +5,9 @@
 
 import { ComponentPropsWithoutRef, useCallback } from "react";
 import { Tree } from "@itwin/itwinui-react";
+import { TreeNodeRenderer } from "./TreeNodeRenderer";
 import { isPresentationHierarchyNode, PresentationTreeNode } from "./Types";
 import { useTree } from "./UseTree";
-import { TreeNodeRenderer } from "./TreeNodeRenderer";
 
 type TreeProps<T> = ComponentPropsWithoutRef<typeof Tree<T>>;
 type TreeNodeRendererProps = ComponentPropsWithoutRef<typeof TreeNodeRenderer>;

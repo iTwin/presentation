@@ -11,7 +11,8 @@ import { act } from "react-dom/test-utils";
 import sinon from "sinon";
 import { InstancesNodeKey } from "@itwin/presentation-hierarchies";
 import { createStorage, Selectables, StorageSelectionChangeEventArgs, StorageSelectionChangesListener } from "@itwin/unified-selection";
-import { TreeModelNode } from "../../presentation-hierarchies-react/internal/TreeModel";
+import { SelectionMode } from "../../presentation-hierarchies-react";
+import { TreeModelHierarchyNode, TreeModelNode } from "../../presentation-hierarchies-react/internal/TreeModel";
 import { useUnifiedTreeSelection } from "../../presentation-hierarchies-react/internal/UseUnifiedSelection";
 import { UnifiedSelectionProvider } from "../../presentation-hierarchies-react/UnifiedSelectionContext";
 import { createStub, createTestGroupingNode, createTestHierarchyNode, createTreeModelNode, renderHook } from "../TestUtils";
@@ -21,11 +22,14 @@ describe("useUnifiesSelection", () => {
   const imodelKey = "test-key";
   const source = "test-source";
   const getNode = sinon.stub<[string], TreeModelNode | undefined>();
+  const getNodeRange = sinon.stub<[string?, string?], TreeModelHierarchyNode[]>();
 
   const initialProps = {
     imodelKey,
     sourceName: source,
     getNode,
+    getNodeRange,
+    selectionMode: SelectionMode.Multiple,
   };
 
   function Wrapper(props: PropsWithChildren<{}>) {
@@ -35,6 +39,7 @@ describe("useUnifiesSelection", () => {
   beforeEach(() => {
     storage.clearStorage({ imodelKey });
     getNode.reset();
+    getNodeRange.reset();
   });
 
   describe("isNodeSelected", () => {
@@ -316,6 +321,355 @@ describe("useUnifiesSelection", () => {
       const keys = await collect(selectable!.loadInstanceKeys());
       expect(keys).to.be.empty;
       expect(selectable?.data).to.be.eq(hierarchyNode);
+    });
+
+    describe("`None` selection mode", () => {
+      const props = { ...initialProps, selectionMode: SelectionMode.None };
+
+      it("does nothing when node is selected", () => {
+        const instanceKey = { id: "0x1", className: "Schema:Name" };
+        const instancesNodesKey: InstancesNodeKey = {
+          type: "instances",
+          instanceKeys: [instanceKey],
+        };
+        const nodes = [createTreeModelNode({ id: "node-1", nodeData: createTestHierarchyNode({ id: "node-1", key: instancesNodesKey }) })];
+
+        getNode.callsFake((id) => nodes.find((node) => node.id === id));
+
+        const { result } = renderHook(useUnifiedTreeSelection, { initialProps: props, wrapper: Wrapper });
+
+        act(() => {
+          result.current.selectNode("node-1", true);
+        });
+        expect(changeListener).to.not.be.called;
+      });
+    });
+
+    describe("`Single` selection mode", () => {
+      const props = { ...initialProps, selectionMode: SelectionMode.Single };
+
+      it("replaces selection with node", () => {
+        const instanceKey = { id: "0x1", className: "Schema:Name" };
+        const instancesNodesKey: InstancesNodeKey = {
+          type: "instances",
+          instanceKeys: [instanceKey],
+        };
+        const nodes = [createTreeModelNode({ id: "node-1", nodeData: createTestHierarchyNode({ id: "node-1", key: instancesNodesKey }) })];
+
+        getNode.callsFake((id) => nodes.find((node) => node.id === id));
+
+        const { result } = renderHook(useUnifiedTreeSelection, { initialProps: props, wrapper: Wrapper });
+
+        act(() => {
+          result.current.selectNode("node-1", true);
+        });
+        expect(changeListener).to.be.calledOnce;
+        expect(changeListener).be.calledWith(
+          sinon.match((args: StorageSelectionChangeEventArgs) => {
+            return (
+              args.changeType === "replace" &&
+              args.source === source &&
+              args.imodelKey === imodelKey &&
+              Selectables.size(args.selectables) === 1 &&
+              Selectables.has(args.selectables, instanceKey)
+            );
+          }),
+        );
+      });
+
+      it("does not remove node from selection", () => {
+        const instanceKey = { id: "0x1", className: "Schema:Name" };
+        const instancesNodesKey: InstancesNodeKey = {
+          type: "instances",
+          instanceKeys: [instanceKey],
+        };
+        const nodes = [createTreeModelNode({ id: "node-1", nodeData: createTestHierarchyNode({ id: "node-1", key: instancesNodesKey }) })];
+        getNode.callsFake((id) => nodes.find((node) => node.id === id));
+
+        storage.addToSelection({ imodelKey, source, selectables: [instanceKey] });
+        changeListener.reset();
+
+        const { result } = renderHook(useUnifiedTreeSelection, { initialProps: props, wrapper: Wrapper });
+
+        act(() => {
+          result.current.selectNode("node-1", false);
+        });
+        expect(changeListener).to.not.be.called;
+      });
+    });
+
+    describe("`SingleAllowDeselect` selection mode", () => {
+      const props = { ...initialProps, selectionMode: SelectionMode.SingleAllowDeselect };
+
+      it("replaces selection with node", () => {
+        const instanceKey = { id: "0x1", className: "Schema:Name" };
+        const instancesNodesKey: InstancesNodeKey = {
+          type: "instances",
+          instanceKeys: [instanceKey],
+        };
+        const nodes = [createTreeModelNode({ id: "node-1", nodeData: createTestHierarchyNode({ id: "node-1", key: instancesNodesKey }) })];
+
+        getNode.callsFake((id) => nodes.find((node) => node.id === id));
+
+        const { result } = renderHook(useUnifiedTreeSelection, { initialProps: props, wrapper: Wrapper });
+
+        act(() => {
+          result.current.selectNode("node-1", true);
+        });
+        expect(changeListener).to.be.calledOnce;
+        expect(changeListener).be.calledWith(
+          sinon.match((args: StorageSelectionChangeEventArgs) => {
+            return (
+              args.changeType === "replace" &&
+              args.source === source &&
+              args.imodelKey === imodelKey &&
+              Selectables.size(args.selectables) === 1 &&
+              Selectables.has(args.selectables, instanceKey)
+            );
+          }),
+        );
+      });
+
+      it("removes node from selection", () => {
+        const instanceKey = { id: "0x1", className: "Schema:Name" };
+        const instancesNodesKey: InstancesNodeKey = {
+          type: "instances",
+          instanceKeys: [instanceKey],
+        };
+        const nodes = [createTreeModelNode({ id: "node-1", nodeData: createTestHierarchyNode({ id: "node-1", key: instancesNodesKey }) })];
+        getNode.callsFake((id) => nodes.find((node) => node.id === id));
+
+        storage.addToSelection({ imodelKey, source, selectables: [instanceKey] });
+        changeListener.reset();
+
+        const { result } = renderHook(useUnifiedTreeSelection, { initialProps: props, wrapper: Wrapper });
+
+        act(() => {
+          result.current.selectNode("node-1", false);
+        });
+        expect(changeListener).to.be.calledOnce;
+        expect(changeListener).be.calledWith(
+          sinon.match((args: StorageSelectionChangeEventArgs) => {
+            return (
+              args.changeType === "remove" &&
+              args.source === source &&
+              args.imodelKey === imodelKey &&
+              Selectables.size(args.selectables) === 1 &&
+              Selectables.has(args.selectables, instanceKey)
+            );
+          }),
+        );
+      });
+    });
+
+    describe("`Multiple` selection mode", () => {
+      const props = { ...initialProps, selectionMode: SelectionMode.Multiple };
+
+      it("adds node to selection", () => {
+        const instanceKey = { id: "0x1", className: "Schema:Name" };
+        const instancesNodesKey: InstancesNodeKey = {
+          type: "instances",
+          instanceKeys: [instanceKey],
+        };
+        const nodes = [createTreeModelNode({ id: "node-1", nodeData: createTestHierarchyNode({ id: "node-1", key: instancesNodesKey }) })];
+
+        getNode.callsFake((id) => nodes.find((node) => node.id === id));
+
+        const { result } = renderHook(useUnifiedTreeSelection, { initialProps: props, wrapper: Wrapper });
+
+        act(() => {
+          result.current.selectNode("node-1", true);
+        });
+        expect(changeListener).to.be.calledOnce;
+        expect(changeListener).be.calledWith(
+          sinon.match((args: StorageSelectionChangeEventArgs) => {
+            return (
+              args.changeType === "add" &&
+              args.source === source &&
+              args.imodelKey === imodelKey &&
+              Selectables.size(args.selectables) === 1 &&
+              Selectables.has(args.selectables, instanceKey)
+            );
+          }),
+        );
+      });
+
+      it("removes node from selection", () => {
+        const instanceKey = { id: "0x1", className: "Schema:Name" };
+        const instancesNodesKey: InstancesNodeKey = {
+          type: "instances",
+          instanceKeys: [instanceKey],
+        };
+        const nodes = [createTreeModelNode({ id: "node-1", nodeData: createTestHierarchyNode({ id: "node-1", key: instancesNodesKey }) })];
+        getNode.callsFake((id) => nodes.find((node) => node.id === id));
+
+        storage.addToSelection({ imodelKey, source, selectables: [instanceKey] });
+        changeListener.reset();
+
+        const { result } = renderHook(useUnifiedTreeSelection, { initialProps: props, wrapper: Wrapper });
+
+        act(() => {
+          result.current.selectNode("node-1", false);
+        });
+        expect(changeListener).to.be.calledOnce;
+        expect(changeListener).be.calledWith(
+          sinon.match((args: StorageSelectionChangeEventArgs) => {
+            return (
+              args.changeType === "remove" &&
+              args.source === source &&
+              args.imodelKey === imodelKey &&
+              Selectables.size(args.selectables) === 1 &&
+              Selectables.has(args.selectables, instanceKey)
+            );
+          }),
+        );
+      });
+    });
+
+    describe("`Extended` selection mode", () => {
+      const props = { ...initialProps, selectionMode: SelectionMode.Extended };
+      const ctrlEvent = { ctrlKey: true } as unknown as React.MouseEvent<HTMLDivElement, MouseEvent>;
+      const shiftEvent = { shiftKey: true } as unknown as React.MouseEvent<HTMLDivElement, MouseEvent>;
+
+      const createNodes = (count: number) => {
+        const nodes: TreeModelHierarchyNode[] = [];
+        for (let i = 1; i <= count; ++i) {
+          const instanceKey = { id: `0x${i.toString(16)}`, className: "Schema:Name" };
+          const instancesNodesKey: InstancesNodeKey = {
+            type: "instances",
+            instanceKeys: [instanceKey],
+          };
+          nodes.push(createTreeModelNode({ id: `node-${i}`, nodeData: createTestHierarchyNode({ id: `node-${i}`, key: instancesNodesKey }) }));
+        }
+        return nodes;
+      };
+
+      it("replaces selection with node when ctrl not pressed", () => {
+        const instanceKey = { id: "0x1", className: "Schema:Name" };
+        const instancesNodesKey: InstancesNodeKey = {
+          type: "instances",
+          instanceKeys: [instanceKey],
+        };
+        const nodes = [createTreeModelNode({ id: "node-1", nodeData: createTestHierarchyNode({ id: "node-1", key: instancesNodesKey }) })];
+
+        getNode.callsFake((id) => nodes.find((node) => node.id === id));
+
+        const { result } = renderHook(useUnifiedTreeSelection, { initialProps: props, wrapper: Wrapper });
+
+        act(() => {
+          result.current.selectNode("node-1", true);
+        });
+        expect(changeListener).to.be.calledOnce;
+        expect(changeListener).be.calledWith(
+          sinon.match((args: StorageSelectionChangeEventArgs) => {
+            return (
+              args.changeType === "replace" &&
+              args.source === source &&
+              args.imodelKey === imodelKey &&
+              Selectables.size(args.selectables) === 1 &&
+              Selectables.has(args.selectables, instanceKey)
+            );
+          }),
+        );
+      });
+
+      it("adds node to selection when ctrl pressed", () => {
+        const instanceKey = { id: "0x1", className: "Schema:Name" };
+        const instancesNodesKey: InstancesNodeKey = {
+          type: "instances",
+          instanceKeys: [instanceKey],
+        };
+        const nodes = [createTreeModelNode({ id: "node-1", nodeData: createTestHierarchyNode({ id: "node-1", key: instancesNodesKey }) })];
+
+        getNode.callsFake((id) => nodes.find((node) => node.id === id));
+
+        const { result } = renderHook(useUnifiedTreeSelection, { initialProps: props, wrapper: Wrapper });
+
+        act(() => {
+          result.current.selectNode("node-1", true, ctrlEvent);
+        });
+        expect(changeListener).to.be.calledOnce;
+        expect(changeListener).be.calledWith(
+          sinon.match((args: StorageSelectionChangeEventArgs) => {
+            return (
+              args.changeType === "add" &&
+              args.source === source &&
+              args.imodelKey === imodelKey &&
+              Selectables.size(args.selectables) === 1 &&
+              Selectables.has(args.selectables, instanceKey)
+            );
+          }),
+        );
+      });
+
+      it("selects node range when node is shift+clicked", () => {
+        const nodes = createNodes(5);
+        getNode.callsFake((id) => nodes.find((node) => node.id === id));
+        getNodeRange.callsFake(() => nodes);
+
+        const { result } = renderHook(useUnifiedTreeSelection, { initialProps: props, wrapper: Wrapper });
+
+        act(() => {
+          result.current.selectNode("node-1", true);
+        });
+
+        expect(changeListener).to.be.calledOnce;
+        expect(changeListener).be.calledWith(
+          sinon.match((args: StorageSelectionChangeEventArgs) => {
+            return args.changeType === "replace" && args.source === source && args.imodelKey === imodelKey && Selectables.size(args.selectables) === 1;
+          }),
+        );
+
+        changeListener.resetHistory();
+        act(() => {
+          result.current.selectNode("node-5", true, shiftEvent);
+        });
+        expect(changeListener).to.be.calledOnce;
+        expect(changeListener).be.calledWith(
+          sinon.match((args: StorageSelectionChangeEventArgs) => {
+            return (
+              args.changeType === "replace" &&
+              args.source === source &&
+              args.imodelKey === imodelKey &&
+              Selectables.size(args.selectables) === 5 &&
+              Selectables.hasAll(
+                args.selectables,
+                nodes.map((node) => (node.nodeData.key as InstancesNodeKey).instanceKeys[0]),
+              )
+            );
+          }),
+        );
+      });
+
+      it("does not update previous selection when node is shift+clicked", () => {
+        const nodes = createNodes(5);
+        getNode.callsFake((id) => nodes.find((node) => node.id === id));
+        getNodeRange.callsFake(() => nodes);
+
+        const { result } = renderHook(useUnifiedTreeSelection, { initialProps: props, wrapper: Wrapper });
+
+        act(() => {
+          result.current.selectNode("node-1", true);
+          result.current.selectNode("node-4", true, shiftEvent);
+          result.current.selectNode("node-5", true, shiftEvent);
+        });
+
+        expect(getNodeRange).to.be.calledTwice;
+        expect(getNodeRange).to.be.calledWith("node-1", "node-4");
+        expect(getNodeRange).to.be.calledWith("node-1", "node-5");
+
+        getNodeRange.resetHistory();
+
+        act(() => {
+          result.current.selectNode("node-2", true, ctrlEvent);
+          result.current.selectNode("node-5", true, shiftEvent);
+          result.current.selectNode("node-4", true, shiftEvent);
+        });
+
+        expect(getNodeRange).to.be.calledTwice;
+        expect(getNodeRange).to.be.calledWith("node-2", "node-5");
+        expect(getNodeRange).to.be.calledWith("node-2", "node-4");
+      });
     });
   });
 
