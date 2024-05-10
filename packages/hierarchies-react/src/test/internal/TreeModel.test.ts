@@ -656,7 +656,7 @@ describe("TreeModel", () => {
     });
   });
 
-  describe("selectNode", () => {
+  describe("selectNodes", () => {
     it("selects node", () => {
       const model = createTreeModel([
         {
@@ -673,7 +673,7 @@ describe("TreeModel", () => {
         },
       ]);
 
-      TreeModel.selectNode(model, ["root-1"], "add");
+      TreeModel.selectNodes(model, ["root-1"], "add");
       expect(getHierarchyNode(model, "root-1")?.isSelected).to.be.true;
       expect(getHierarchyNode(model, "root-2")?.isSelected).to.be.false;
     });
@@ -694,7 +694,7 @@ describe("TreeModel", () => {
         },
       ]);
 
-      TreeModel.selectNode(model, ["root-1"], "remove");
+      TreeModel.selectNodes(model, ["root-1"], "remove");
       expect(getHierarchyNode(model, "root-1")?.isSelected).to.be.false;
       expect(getHierarchyNode(model, "root-2")?.isSelected).to.be.true;
     });
@@ -723,7 +723,7 @@ describe("TreeModel", () => {
         },
       ]);
 
-      TreeModel.selectNode(model, ["root-2", "root-3"], "replace");
+      TreeModel.selectNodes(model, ["root-2", "root-3"], "replace");
       expect(getHierarchyNode(model, "root-1")?.isSelected).to.be.false;
       expect(getHierarchyNode(model, "root-2")?.isSelected).to.be.true;
       expect(getHierarchyNode(model, "root-3")?.isSelected).to.be.true;
@@ -741,7 +741,7 @@ describe("TreeModel", () => {
         },
       ]);
 
-      TreeModel.selectNode(model, ["invalid"], "remove");
+      TreeModel.selectNodes(model, ["invalid"], "remove");
       expect(getHierarchyNode(model, "root-1")?.isSelected).to.be.true;
     });
   });

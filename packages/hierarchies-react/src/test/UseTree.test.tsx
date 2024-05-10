@@ -83,7 +83,7 @@ describe("useTree", () => {
     });
 
     act(() => {
-      result.current.selectNode(["root-1"], "add");
+      result.current.selectNodes(["root-1"], "add");
     });
 
     await waitFor(() => {
@@ -444,7 +444,7 @@ describe("useUnifiedSelectionTree", () => {
     });
 
     act(() => {
-      result.current.selectNode([nodeId], "add");
+      result.current.selectNodes([nodeId], "add");
     });
 
     await waitFor(() => {

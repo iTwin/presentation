@@ -18,13 +18,7 @@ import {
 import { createECSchemaProvider, createECSqlQueryExecutor } from "@itwin/presentation-core-interop";
 import { Presentation } from "@itwin/presentation-frontend";
 import { createLimitingECSqlQueryExecutor, GenericInstanceFilter, HierarchyProvider, LimitingECSqlQueryExecutor } from "@itwin/presentation-hierarchies";
-import {
-  HierarchyLevelConfiguration,
-  PresentationHierarchyNode,
-  SelectionMode,
-  TreeRenderer,
-  useUnifiedSelectionTree,
-} from "@itwin/presentation-hierarchies-react";
+import { HierarchyLevelConfiguration, PresentationHierarchyNode, TreeRenderer, useUnifiedSelectionTree } from "@itwin/presentation-hierarchies-react";
 import { ModelsTreeDefinition } from "@itwin/presentation-models-tree";
 import { createCachingECClassHierarchyInspector, ECClassHierarchyInspector, ECSchemaProvider } from "@itwin/presentation-shared";
 import { MyAppFrontend } from "../../../api/MyAppFrontend";
@@ -184,7 +178,7 @@ function Tree({ imodel, height, width }: { imodel: IModelConnection; height: num
 
     return (
       <Flex.Item alignSelf="flex-start" style={{ width: "100%", overflow: "auto" }}>
-        <TreeRenderer rootNodes={rootNodes} {...treeProps} onFilterClick={onFilterClick} getIcon={getIcon} selectionMode={SelectionMode.Extended} />
+        <TreeRenderer rootNodes={rootNodes} {...treeProps} onFilterClick={onFilterClick} getIcon={getIcon} selectionMode={"extended"} />
       </Flex.Item>
     );
   };

@@ -114,9 +114,9 @@ export class TreeActions {
     return TreeModel.getNode(this._currentModel, nodeId);
   }
 
-  public selectNode(nodeIds: Array<string>, changeType: SelectionChangeType) {
+  public selectNodes(nodeIds: Array<string>, changeType: SelectionChangeType) {
     this.updateTreeModel((model) => {
-      TreeModel.selectNode(model, nodeIds, changeType);
+      TreeModel.selectNodes(model, nodeIds, changeType);
     });
   }
 

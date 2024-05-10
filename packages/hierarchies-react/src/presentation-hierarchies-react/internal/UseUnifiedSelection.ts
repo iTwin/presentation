@@ -13,7 +13,7 @@ import { isTreeModelHierarchyNode, TreeModelNode, TreeModelRootNode } from "./Tr
 /** @internal */
 export interface TreeSelectionOptions {
   isNodeSelected: (nodeId: string) => boolean;
-  selectNode: (nodeIds: Array<string>, changeType: SelectionChangeType) => void;
+  selectNodes: (nodeIds: Array<string>, changeType: SelectionChangeType) => void;
 }
 
 /** @internal */
@@ -27,7 +27,7 @@ export interface UseUnifiedTreeSelectionProps {
 export function useUnifiedTreeSelection({ imodelKey, sourceName, getNode }: UseUnifiedTreeSelectionProps): TreeSelectionOptions {
   const [options, setOptions] = useState<TreeSelectionOptions>(() => ({
     isNodeSelected: /* istanbul ignore next */ () => false,
-    selectNode: /* istanbul ignore next */ () => {},
+    selectNodes: /* istanbul ignore next */ () => {},
   }));
 
   const selectionStorage = useUnifiedSelectionContext();
@@ -35,7 +35,7 @@ export function useUnifiedTreeSelection({ imodelKey, sourceName, getNode }: UseU
     if (!selectionStorage) {
       setOptions({
         isNodeSelected: () => false,
-        selectNode: () => {},
+        selectNodes: () => {},
       });
       return;
     }
@@ -76,7 +76,7 @@ function createOptions(
       return Selectables.has(selectables, { identifier: node.id });
     },
 
-    selectNode: (nodeIds: Array<string>, changeType: SelectionChangeType) => {
+    selectNodes: (nodeIds: Array<string>, changeType: SelectionChangeType) => {
       let selectables: Selectable[] = [];
 
       for (const nodeId of nodeIds) {

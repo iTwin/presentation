@@ -130,7 +130,7 @@ export namespace TreeModel {
     });
   }
 
-  export function selectNode(model: TreeModel, nodeIds: Array<string>, changeType: SelectionChangeType) {
+  export function selectNodes(model: TreeModel, nodeIds: Array<string>, changeType: SelectionChangeType) {
     if (changeType === "replace") {
       for (const [nodeId, node] of model.idToNode) {
         if (!isTreeModelHierarchyNode(node)) {

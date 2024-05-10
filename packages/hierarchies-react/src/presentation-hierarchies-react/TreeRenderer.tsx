@@ -20,7 +20,7 @@ interface TreeRendererOwnProps {
 
 type TreeRendererProps = Pick<
   ReturnType<typeof useTree>,
-  "rootNodes" | "expandNode" | "selectNode" | "isNodeSelected" | "setHierarchyLevelLimit" | "setHierarchyLevelFilter"
+  "rootNodes" | "expandNode" | "selectNodes" | "isNodeSelected" | "setHierarchyLevelLimit" | "setHierarchyLevelFilter"
 > &
   Pick<TreeNodeRendererProps, "onFilterClick" | "getIcon"> &
   TreeRendererOwnProps &
@@ -30,7 +30,7 @@ type TreeRendererProps = Pick<
 export function TreeRenderer({
   rootNodes,
   expandNode,
-  selectNode,
+  selectNodes,
   isNodeSelected,
   setHierarchyLevelLimit,
   setHierarchyLevelFilter,
@@ -39,7 +39,7 @@ export function TreeRenderer({
   selectionMode,
   ...treeProps
 }: TreeRendererProps) {
-  const { onNodeClick, onNodeKeyDown } = useSelectionHandler({ rootNodes, selectNode, selectionMode: selectionMode ?? SelectionMode.Single });
+  const { onNodeClick, onNodeKeyDown } = useSelectionHandler({ rootNodes, selectNodes, selectionMode: selectionMode ?? "single" });
   const nodeRenderer = useCallback<TreeProps<PresentationTreeNode>["nodeRenderer"]>(
     (nodeProps) => {
       return (

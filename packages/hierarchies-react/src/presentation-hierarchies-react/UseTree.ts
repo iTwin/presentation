@@ -46,7 +46,7 @@ interface UseTreeResult {
   isLoading: boolean;
   reloadTree: (options?: { discardState?: boolean }) => void;
   expandNode: (nodeId: string, isExpanded: boolean) => void;
-  selectNode: (nodeIds: Array<string>, changeType: SelectionChangeType) => void;
+  selectNodes: (nodeIds: Array<string>, changeType: SelectionChangeType) => void;
   setHierarchyLevelLimit: (nodeId: string | undefined, limit: undefined | number | "unbounded") => void;
   setHierarchyLevelFilter: (nodeId: string | undefined, filter: GenericInstanceFilter | undefined) => void;
   isNodeSelected: (nodeId: string) => boolean;
@@ -94,8 +94,8 @@ function useTreeInternal({ hierarchyProvider }: UseTreeProps): UseTreeResult & {
     actions.reloadTree(options);
   }).current;
 
-  const selectNode = useRef((nodeIds: Array<string>, changeType: SelectionChangeType) => {
-    actions.selectNode(nodeIds, changeType);
+  const selectNodes = useRef((nodeIds: Array<string>, changeType: SelectionChangeType) => {
+    actions.selectNodes(nodeIds, changeType);
   }).current;
 
   const setHierarchyLevelLimit = useRef((nodeId: string | undefined, limit: undefined | number | "unbounded") => {
@@ -134,7 +134,7 @@ function useTreeInternal({ hierarchyProvider }: UseTreeProps): UseTreeResult & {
     isLoading: !!state.model.rootNode.isLoading,
     expandNode,
     reloadTree,
-    selectNode,
+    selectNodes,
     isNodeSelected,
     setHierarchyLevelLimit,
     getHierarchyLevelConfiguration,

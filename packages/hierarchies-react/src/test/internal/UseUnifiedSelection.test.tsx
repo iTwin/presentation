@@ -11,8 +11,7 @@ import { act } from "react-dom/test-utils";
 import sinon from "sinon";
 import { InstancesNodeKey } from "@itwin/presentation-hierarchies";
 import { createStorage, Selectables, StorageSelectionChangeEventArgs, StorageSelectionChangesListener } from "@itwin/unified-selection";
-import { SelectionMode } from "../../presentation-hierarchies-react";
-import { TreeModelHierarchyNode, TreeModelNode } from "../../presentation-hierarchies-react/internal/TreeModel";
+import { TreeModelNode } from "../../presentation-hierarchies-react/internal/TreeModel";
 import { useUnifiedTreeSelection } from "../../presentation-hierarchies-react/internal/UseUnifiedSelection";
 import { UnifiedSelectionProvider } from "../../presentation-hierarchies-react/UnifiedSelectionContext";
 import { createStub, createTestGroupingNode, createTestHierarchyNode, createTreeModelNode, renderHook } from "../TestUtils";
@@ -22,14 +21,11 @@ describe("useUnifiesSelection", () => {
   const imodelKey = "test-key";
   const source = "test-source";
   const getNode = sinon.stub<[string], TreeModelNode | undefined>();
-  const getNodeRange = sinon.stub<[string?, string?], TreeModelHierarchyNode[]>();
 
   const initialProps = {
     imodelKey,
     sourceName: source,
     getNode,
-    getNodeRange,
-    selectionMode: SelectionMode.Multiple,
   };
 
   function Wrapper(props: PropsWithChildren<{}>) {
@@ -39,7 +35,6 @@ describe("useUnifiesSelection", () => {
   beforeEach(() => {
     storage.clearStorage({ imodelKey });
     getNode.reset();
-    getNodeRange.reset();
   });
 
   describe("isNodeSelected", () => {
@@ -122,7 +117,7 @@ describe("useUnifiesSelection", () => {
     });
   });
 
-  describe("selectNode", () => {
+  describe("selectNodes", () => {
     const changeListener = createStub<StorageSelectionChangesListener>();
 
     beforeEach(() => {
@@ -137,7 +132,7 @@ describe("useUnifiesSelection", () => {
     it("does nothing if selection storage context is not provided", () => {
       const { result } = renderHook(useUnifiedTreeSelection, { initialProps });
       act(() => {
-        result.current.selectNode(["node-1"], "add");
+        result.current.selectNodes(["node-1"], "add");
       });
 
       expect(getNode).to.not.be.called;
@@ -156,7 +151,7 @@ describe("useUnifiesSelection", () => {
       const { result } = renderHook(useUnifiedTreeSelection, { initialProps, wrapper: Wrapper });
 
       act(() => {
-        result.current.selectNode(["node-1"], "add");
+        result.current.selectNodes(["node-1"], "add");
       });
       expect(changeListener).to.be.calledOnce;
       expect(changeListener).be.calledWith(
@@ -172,7 +167,7 @@ describe("useUnifiesSelection", () => {
       );
 
       act(() => {
-        result.current.selectNode(["invalid"], "add");
+        result.current.selectNodes(["invalid"], "add");
       });
       expect(changeListener).be.calledOnce;
     });
@@ -187,7 +182,7 @@ describe("useUnifiesSelection", () => {
       const { result } = renderHook(useUnifiedTreeSelection, { initialProps, wrapper: Wrapper });
 
       act(() => {
-        result.current.selectNode(["grouping-node"], "add");
+        result.current.selectNodes(["grouping-node"], "add");
       });
       expect(changeListener).to.be.calledOnce;
       expect(changeListener).be.calledWith(
@@ -201,7 +196,7 @@ describe("useUnifiesSelection", () => {
       expect(selectable?.data).to.be.eq(groupingNode);
 
       act(() => {
-        result.current.selectNode(["invalid"], "add");
+        result.current.selectNodes(["invalid"], "add");
       });
       expect(changeListener).be.calledOnce;
     });
@@ -214,7 +209,7 @@ describe("useUnifiesSelection", () => {
       const { result } = renderHook(useUnifiedTreeSelection, { initialProps, wrapper: Wrapper });
 
       act(() => {
-        result.current.selectNode(["custom-node"], "add");
+        result.current.selectNodes(["custom-node"], "add");
       });
       expect(changeListener).to.be.calledOnce;
       expect(changeListener).be.calledWith(
@@ -243,7 +238,7 @@ describe("useUnifiesSelection", () => {
       const { result } = renderHook(useUnifiedTreeSelection, { initialProps, wrapper: Wrapper });
 
       act(() => {
-        result.current.selectNode(["node-1"], "remove");
+        result.current.selectNodes(["node-1"], "remove");
       });
       expect(changeListener).to.be.calledOnce;
       expect(changeListener).be.calledWith(
@@ -259,7 +254,7 @@ describe("useUnifiesSelection", () => {
       );
 
       act(() => {
-        result.current.selectNode(["invalid"], "remove");
+        result.current.selectNodes(["invalid"], "remove");
       });
       expect(changeListener).be.calledOnce;
     });
@@ -280,7 +275,7 @@ describe("useUnifiesSelection", () => {
       const { result } = renderHook(useUnifiedTreeSelection, { initialProps, wrapper: Wrapper });
 
       act(() => {
-        result.current.selectNode(["grouping-node"], "remove");
+        result.current.selectNodes(["grouping-node"], "remove");
       });
       expect(changeListener).to.be.calledOnce;
       expect(changeListener).be.calledWith(
@@ -309,7 +304,7 @@ describe("useUnifiesSelection", () => {
       const { result } = renderHook(useUnifiedTreeSelection, { initialProps, wrapper: Wrapper });
 
       act(() => {
-        result.current.selectNode(["custom-node"], "remove");
+        result.current.selectNodes(["custom-node"], "remove");
       });
       expect(changeListener).to.be.calledOnce;
       expect(changeListener).be.calledWith(
@@ -336,7 +331,7 @@ describe("useUnifiesSelection", () => {
       const { result } = renderHook(useUnifiedTreeSelection, { initialProps, wrapper: Wrapper });
 
       act(() => {
-        result.current.selectNode(["node-1"], "replace");
+        result.current.selectNodes(["node-1"], "replace");
       });
       expect(changeListener).to.be.calledOnce;
       expect(changeListener).be.calledWith(
@@ -357,40 +352,40 @@ describe("useUnifiesSelection", () => {
     it("updates function references when selection changes", () => {
       const { result } = renderHook(useUnifiedTreeSelection, { initialProps, wrapper: Wrapper });
       const isSelected = result.current.isNodeSelected;
-      const selectNode = result.current.selectNode;
+      const selectNodes = result.current.selectNodes;
 
       act(() => {
         storage.addToSelection({ imodelKey, source: "some-source", selectables: [{ id: "0x1", className: "Schema:Class" }] });
       });
 
       expect(isSelected).to.not.be.eq(result.current.isNodeSelected);
-      expect(selectNode).to.not.be.eq(result.current.selectNode);
+      expect(selectNodes).to.not.be.eq(result.current.selectNodes);
     });
 
     it("ignores changes on different iModels", () => {
       const { result } = renderHook(useUnifiedTreeSelection, { initialProps, wrapper: Wrapper });
       const isSelected = result.current.isNodeSelected;
-      const selectNode = result.current.selectNode;
+      const selectNodes = result.current.selectNodes;
 
       act(() => {
         storage.addToSelection({ imodelKey: "other-imodel", source: "some-source", selectables: [{ id: "0x1", className: "Schema:Class" }] });
       });
 
       expect(isSelected).to.be.eq(result.current.isNodeSelected);
-      expect(selectNode).to.be.eq(result.current.selectNode);
+      expect(selectNodes).to.be.eq(result.current.selectNodes);
     });
 
     it("ignores changes on lower levels", () => {
       const { result } = renderHook(useUnifiedTreeSelection, { initialProps, wrapper: Wrapper });
       const isSelected = result.current.isNodeSelected;
-      const selectNode = result.current.selectNode;
+      const selectNodes = result.current.selectNodes;
 
       act(() => {
         storage.addToSelection({ imodelKey, source: "some-source", selectables: [{ id: "0x1", className: "Schema:Class" }], level: 1 });
       });
 
       expect(isSelected).to.be.eq(result.current.isNodeSelected);
-      expect(selectNode).to.be.eq(result.current.selectNode);
+      expect(selectNodes).to.be.eq(result.current.selectNodes);
     });
   });
 });

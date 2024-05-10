@@ -80,29 +80,19 @@ export interface PresentationInfoNode {
 // @beta (undocumented)
 export type PresentationTreeNode = PresentationHierarchyNode | PresentationInfoNode;
 
-// @beta (undocumented)
-enum SelectionMode_2 {
-    Extended = 6,
-    Multiple = 2,
-    None = 8,
-    Single = 1,
-    SingleAllowDeselect = 3
-}
-export { SelectionMode_2 as SelectionMode }
-
 export { SelectionStorage }
 
 // @beta (undocumented)
 export function TreeNodeRenderer({ node, expandNode, getIcon, setHierarchyLevelFilter, onFilterClick, onNodeClick, onNodeKeyDown, setHierarchyLevelLimit, isSelected, isDisabled, ...nodeProps }: TreeNodeRendererProps_2): JSX_2.Element;
 
 // @beta (undocumented)
-export function TreeRenderer({ rootNodes, expandNode, selectNode, isNodeSelected, setHierarchyLevelLimit, setHierarchyLevelFilter, onFilterClick, getIcon, selectionMode, ...treeProps }: TreeRendererProps): JSX_2.Element;
+export function TreeRenderer({ rootNodes, expandNode, selectNodes, isNodeSelected, setHierarchyLevelLimit, setHierarchyLevelFilter, onFilterClick, getIcon, selectionMode, ...treeProps }: TreeRendererProps): JSX_2.Element;
 
 // @beta (undocumented)
 export function UnifiedSelectionProvider({ storage, children }: PropsWithChildren<Props>): JSX_2.Element;
 
 // @beta (undocumented)
-export function useSelectionHandler(props: UseSelectionHandlerProps): useSelectionHandlerResult;
+export function useSelectionHandler(props: UseSelectionHandlerProps): UseSelectionHandlerResult;
 
 // @beta (undocumented)
 export function useTree(props: UseTreeProps): UseTreeResult;

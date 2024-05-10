@@ -7,13 +7,13 @@ import { expect } from "chai";
 import { GenericInstanceFilter } from "@itwin/presentation-hierarchies";
 import { TreeRenderer } from "../presentation-hierarchies-react/TreeRenderer";
 import { PresentationHierarchyNode, PresentationInfoNode, PresentationTreeNode } from "../presentation-hierarchies-react/Types";
-import { SelectionChangeType, SelectionMode } from "../presentation-hierarchies-react/UseSelectionHandler";
+import { SelectionChangeType } from "../presentation-hierarchies-react/UseSelectionHandler";
 import { createStub, createTestHierarchyNode, render, within } from "./TestUtils";
 
 describe("Tree", () => {
   const onFilterClick = createStub<(nodeId: string) => void>();
   const expandNode = createStub<(nodeId: string, isExpanded: boolean) => void>();
-  const selectNode = createStub<(nodeIds: Array<string>, changeType: SelectionChangeType) => void>();
+  const selectNodes = createStub<(nodeIds: Array<string>, changeType: SelectionChangeType) => void>();
   const isNodeSelected = createStub<(nodeId: string) => boolean>();
   const setHierarchyLevelLimit = createStub<(nodeId: string | undefined, limit: undefined | number | "unbounded") => void>();
   const setHierarchyLevelFilter = createStub<(nodeId: string | undefined, filter: GenericInstanceFilter | undefined) => void>();
@@ -21,7 +21,7 @@ describe("Tree", () => {
   const initialProps = {
     onFilterClick,
     expandNode,
-    selectNode,
+    selectNodes,
     isNodeSelected,
     setHierarchyLevelLimit,
     setHierarchyLevelFilter,
@@ -30,7 +30,7 @@ describe("Tree", () => {
   beforeEach(() => {
     onFilterClick.reset();
     expandNode.reset();
-    selectNode.reset();
+    selectNodes.reset();
     isNodeSelected.reset();
     setHierarchyLevelLimit.reset();
     setHierarchyLevelFilter.reset();
@@ -104,17 +104,17 @@ describe("Tree", () => {
 
     isNodeSelected.callsFake((nodeId) => nodeId === "root-1");
 
-    const { user, getByText, queryByText } = render(<TreeRenderer rootNodes={rootNodes} {...initialProps} selectionMode={SelectionMode.SingleAllowDeselect} />);
+    const { user, getByText, queryByText } = render(<TreeRenderer rootNodes={rootNodes} {...initialProps} selectionMode={"single"} />);
 
     expect(queryByText("root-1")).to.not.be.null;
     expect(queryByText("root-2")).to.not.be.null;
 
     await user.click(getByText("root-1"));
-    expect(selectNode).to.be.calledOnceWith(["root-1"], "remove");
-    selectNode.reset();
+    expect(selectNodes).to.be.calledOnceWith(["root-1"], "remove");
+    selectNodes.reset();
 
     await user.click(getByText("root-2"));
-    expect(selectNode).to.be.calledOnceWith(["root-2"], "replace");
+    expect(selectNodes).to.be.calledOnceWith(["root-2"], "replace");
   });
 
   it("selects/deselects using keyboard", async () => {
@@ -129,9 +129,7 @@ describe("Tree", () => {
 
     isNodeSelected.callsFake((nodeId) => nodeId === "root-1");
 
-    const { user, getAllByRole, queryByText } = render(
-      <TreeRenderer rootNodes={rootNodes} {...initialProps} selectionMode={SelectionMode.SingleAllowDeselect} />,
-    );
+    const { user, getAllByRole, queryByText } = render(<TreeRenderer rootNodes={rootNodes} {...initialProps} selectionMode={"single"} />);
 
     expect(queryByText("root-1")).to.not.be.null;
     expect(queryByText("root-2")).to.not.be.null;
@@ -139,13 +137,13 @@ describe("Tree", () => {
     const node1 = getAllByRole("treeitem")[0];
     node1.focus();
     await user.keyboard("{Enter}");
-    expect(selectNode).to.be.calledOnceWith(["root-1"], "remove");
-    selectNode.reset();
+    expect(selectNodes).to.be.calledOnceWith(["root-1"], "remove");
+    selectNodes.reset();
 
     const node2 = getAllByRole("treeitem")[1];
     node2.focus();
     await user.keyboard("{Enter}");
-    expect(selectNode).to.be.calledOnceWith(["root-2"], "replace");
+    expect(selectNodes).to.be.calledOnceWith(["root-2"], "replace");
   });
 
   it("does not select node when expander clicked using keyboard", async () => {
@@ -171,7 +169,7 @@ describe("Tree", () => {
     expandButton.focus();
     await user.keyboard("{Enter}");
     expect(expandNode).to.be.calledOnceWith("root-1", true);
-    expect(selectNode).to.not.be.called;
+    expect(selectNodes).to.not.be.called;
   });
 
   it("renders icon", async () => {
