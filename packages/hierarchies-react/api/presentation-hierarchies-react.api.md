@@ -4,6 +4,8 @@
 
 ```ts
 
+/// <reference types="react" />
+
 import { ComponentPropsWithoutRef } from 'react';
 import { GenericInstanceFilter } from '@itwin/presentation-hierarchies';
 import { HierarchyNode } from '@itwin/presentation-hierarchies';
@@ -78,16 +80,29 @@ export interface PresentationInfoNode {
 // @beta (undocumented)
 export type PresentationTreeNode = PresentationHierarchyNode | PresentationInfoNode;
 
+// @beta (undocumented)
+enum SelectionMode_2 {
+    Extended = 6,
+    Multiple = 2,
+    None = 8,
+    Single = 1,
+    SingleAllowDeselect = 3
+}
+export { SelectionMode_2 as SelectionMode }
+
 export { SelectionStorage }
 
 // @beta (undocumented)
-export function TreeNodeRenderer({ node, expandNode, selectNode, getIcon, setHierarchyLevelFilter, onFilterClick, setHierarchyLevelLimit, ...nodeProps }: TreeNodeRendererProps_2): JSX_2.Element;
+export function TreeNodeRenderer({ node, expandNode, getIcon, setHierarchyLevelFilter, onFilterClick, onNodeClick, onNodeKeyDown, setHierarchyLevelLimit, isSelected, isDisabled, ...nodeProps }: TreeNodeRendererProps_2): JSX_2.Element;
 
 // @beta (undocumented)
-export function TreeRenderer({ rootNodes, expandNode, selectNode, isNodeSelected, setHierarchyLevelLimit, setHierarchyLevelFilter, onFilterClick, getIcon, ...treeProps }: TreeRendererProps): JSX_2.Element;
+export function TreeRenderer({ rootNodes, expandNode, selectNode, isNodeSelected, setHierarchyLevelLimit, setHierarchyLevelFilter, onFilterClick, getIcon, selectionMode, ...treeProps }: TreeRendererProps): JSX_2.Element;
 
 // @beta (undocumented)
 export function UnifiedSelectionProvider({ storage, children }: PropsWithChildren<Props>): JSX_2.Element;
+
+// @beta (undocumented)
+export function useSelectionHandler(props: UseSelectionHandlerProps): useSelectionHandlerResult;
 
 // @beta (undocumented)
 export function useTree(props: UseTreeProps): UseTreeResult;
