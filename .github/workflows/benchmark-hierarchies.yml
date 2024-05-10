@@ -1,4 +1,4 @@
-name: Performance benchmark
+name: Hierarchies performance benchmark
 
 on:
   workflow_dispatch:
@@ -6,8 +6,8 @@ on:
     branches:
       - master
     paths:
-      - apps/performance-tests/**
-      - packages/unified-selection/**
+      - apps/performance-tests/hierarchies/**
+      - apps/performance-tests/util/**
       - packages/core-interop/**
       - packages/hierarchies/**
       - packages/models-tree/**
@@ -15,7 +15,7 @@ on:
 
 jobs:
   benchmark:
-    name: Benchmark performance
+    name: 'Hierarchies: Benchmark performance'
     runs-on: ubuntu-latest
     permissions:
       # deployments permission to deploy GitHub pages website
@@ -53,7 +53,7 @@ jobs:
           key: performance-test-dataset-${{ hashFiles('./apps/performance-tests/src/util/Datasets.ts') }}
 
       - name: Run benchmark tests
-        run: pnpm benchmark
+        run: pnpm benchmark:hierarchies
 
       - name: Save generated datasets
         uses: actions/cache/save@v4
@@ -66,8 +66,9 @@ jobs:
         uses: benchmark-action/github-action-benchmark@v1
         if: ${{ github.ref == 'refs/heads/master' }}
         with:
+          name: Hierarchies benchmark
           tool: 'customSmallerIsBetter'
-          output-file-path: ./apps/performance-tests/benchmark.json
+          output-file-path: ./apps/performance-tests/hierarchies-benchmark.json
           # Access token to deploy GitHub Pages branch
           github-token: ${{ secrets.IMJS_ADMIN_GH_TOKEN }}
           # Push and deploy GitHub pages branch automatically

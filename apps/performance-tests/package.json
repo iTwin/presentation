@@ -7,7 +7,6 @@
     "test:hierarchies": "mocha --enable-source-maps --config ./.mocharc.json ./lib/hierarchies/*test.js",
     "test:unified-selection": "mocha --enable-source-maps --config ./.mocharc.json ./lib/unified-selection/*test.js",
     "test:recreate": "cross-env RECREATE=true npm run test",
-    "benchmark": "npm run test -- -O BENCHMARK_OUTPUT_PATH=./benchmark.json",
     "benchmark:hierarchies": "npm run test:hierarchies -- -O BENCHMARK_OUTPUT_PATH=./hierarchies-benchmark.json",
     "benchmark:unified-selection": "npm run test:unified-selection -- -O BENCHMARK_OUTPUT_PATH=./unified-selection-benchmark.json",
     "build": "tsc",
