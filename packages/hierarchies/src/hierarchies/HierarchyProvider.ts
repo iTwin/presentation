@@ -63,7 +63,7 @@ import { reduceToMergeMapList } from "./internal/operators/ReduceToMergeMap";
 import { shareReplayWithErrors } from "./internal/operators/ShareReplayWithErrors";
 import { sortNodesByLabelOperator } from "./internal/operators/Sorting";
 import { SubscriptionScheduler } from "./internal/SubscriptionScheduler";
-import { TreeQueryResultsReader } from "./internal/TreeNodesReader";
+import { readNodes } from "./internal/TreeNodesReader";
 import { LimitingECSqlQueryExecutor } from "./LimitingECSqlQueryExecutor";
 import { NodeSelectClauseColumnNames } from "./NodeSelectQueryFactory";
 
@@ -164,7 +164,6 @@ export interface GetHierarchyNodesProps {
  */
 export class HierarchyProvider {
   private _imodelAccess: ECSchemaProvider & LimitingECSqlQueryExecutor & ECClassHierarchyInspector;
-  private _queryReader: TreeQueryResultsReader;
   private _valuesFormatter: IPrimitiveValueFormatter;
   private _localizedStrings: HierarchyProviderLocalizedStrings;
   private _queryScheduler: SubscriptionScheduler;
@@ -198,7 +197,6 @@ export class HierarchyProvider {
       });
       this.hierarchyDefinition = filteringDefinition;
     }
-    this._queryReader = new TreeQueryResultsReader({ parser: this.hierarchyDefinition.parseNode });
     this._valuesFormatter = props?.formatter ?? createDefaultValueFormatter();
     this._localizedStrings = props?.localizedStrings ?? { other: "Other", unspecified: "Not specified" };
     this._queryScheduler = new SubscriptionScheduler(props.queryConcurrency ?? DEFAULT_QUERY_CONCURRENCY);
@@ -263,7 +261,9 @@ export class HierarchyProvider {
               message: /* istanbul ignore next */ (query) =>
                 `Query direct nodes for parent ${createNodeIdentifierForLogging(props.parentNode)}: ${createQueryLogMessage(query)}`,
             }),
-            mergeMap((query) => from(this._queryReader.read(this.queryExecutor, query, props.hierarchyLevelSizeLimit))),
+            mergeMap((query) =>
+              readNodes({ queryExecutor: this.queryExecutor, query, limit: props.hierarchyLevelSizeLimit, parser: this.hierarchyDefinition.parseNode }),
+            ),
           ),
         );
       }),
