@@ -1117,6 +1117,7 @@ describe("HierarchyProvider", () => {
             return [];
           },
         },
+        queryCacheSize: 10,
       });
       await collect(provider.getNodes({ parentNode: undefined }));
       await collect(provider.getNodes({ parentNode: undefined }));
@@ -1143,12 +1144,37 @@ describe("HierarchyProvider", () => {
             return [];
           },
         },
+        queryCacheSize: 10,
       });
       const rootNodes = await collect(provider.getNodes({ parentNode: undefined }));
       expect(rootNodes.length).to.eq(1);
       await collect(provider.getNodes({ parentNode: rootNodes[0] }));
       await collect(provider.getNodes({ parentNode: rootNodes[0] }));
       expect(imodelAccess.createQueryReader).to.be.calledOnce;
+    });
+
+    it("queries the same nodes more than once when `queryCacheSize` is set to `0`", async () => {
+      imodelAccess.createQueryReader.returns(createAsyncIterator([]));
+      const provider = new HierarchyProvider({
+        imodelAccess,
+        hierarchyDefinition: {
+          async defineHierarchyLevel({ parentNode }) {
+            if (!parentNode) {
+              return [
+                {
+                  fullClassName: "x.y",
+                  query: { ecsql: "QUERY" },
+                },
+              ];
+            }
+            return [];
+          },
+        },
+        queryCacheSize: 0,
+      });
+      await collect(provider.getNodes({ parentNode: undefined }));
+      await collect(provider.getNodes({ parentNode: undefined }));
+      expect(imodelAccess.createQueryReader).to.be.calledTwice;
     });
 
     it("queries the same root nodes more than once when `ignoreCache` is set to true", async () => {
@@ -1168,6 +1194,7 @@ describe("HierarchyProvider", () => {
             return [];
           },
         },
+        queryCacheSize: 10,
       });
       await collect(provider.getNodes({ parentNode: undefined }));
       await collect(provider.getNodes({ parentNode: undefined, ignoreCache: true }));
@@ -1191,6 +1218,7 @@ describe("HierarchyProvider", () => {
             return [];
           },
         },
+        queryCacheSize: 10,
       });
       await collect(provider.getNodes({ parentNode: undefined }));
       await collect(provider.getNodes({ parentNode: undefined, instanceFilter: {} as GenericInstanceFilter })); // variation of previous, so should cause a query

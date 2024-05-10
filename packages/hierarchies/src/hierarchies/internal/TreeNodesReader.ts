@@ -3,6 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
+import { from, map, Observable } from "rxjs";
 import { Id64String } from "@itwin/core-bentley";
 import { ECSqlQueryDef, parseInstanceLabel } from "@itwin/presentation-shared";
 import { INodeParser } from "../HierarchyDefinition";
@@ -10,27 +11,22 @@ import { InstanceHierarchyNodeProcessingParams, ParsedHierarchyNode, ParsedInsta
 import { LimitingECSqlQueryExecutor } from "../LimitingECSqlQueryExecutor";
 import { NodeSelectClauseColumnNames } from "../NodeSelectQueryFactory";
 
-/** @internal */
-export interface TreeQueryResultsReaderProps {
+interface ReadNodesProps {
+  queryExecutor: LimitingECSqlQueryExecutor;
+  query: ECSqlQueryDef;
+  limit?: number | "unbounded";
   parser?: INodeParser;
 }
 
 /** @internal */
-export class TreeQueryResultsReader {
-  private _props: Required<TreeQueryResultsReaderProps>;
-
-  public constructor(props?: TreeQueryResultsReaderProps) {
-    // istanbul ignore next
-    this._props = {
-      parser: props?.parser ?? defaultNodesParser,
-    };
-  }
-
-  public async *read(queryExecutor: LimitingECSqlQueryExecutor, query: ECSqlQueryDef, limit?: number | "unbounded"): AsyncGenerator<ParsedHierarchyNode> {
-    for await (const row of queryExecutor.createQueryReader(query, { rowFormat: "ECSqlPropertyNames", ...(limit !== undefined ? { limit } : undefined) })) {
-      yield this._props.parser(row);
-    }
-  }
+export function readNodes(props: ReadNodesProps): Observable<ParsedHierarchyNode> {
+  const { queryExecutor, query, limit } = props;
+  const parser = props?.parser ?? defaultNodesParser;
+  const config: Parameters<LimitingECSqlQueryExecutor["createQueryReader"]>[1] = {
+    rowFormat: "ECSqlPropertyNames",
+    ...(limit !== undefined ? { limit } : undefined),
+  };
+  return from(queryExecutor.createQueryReader(query, config)).pipe(map(parser));
 }
 
 /**

@@ -63,14 +63,14 @@ import { reduceToMergeMapList } from "./internal/operators/ReduceToMergeMap";
 import { shareReplayWithErrors } from "./internal/operators/ShareReplayWithErrors";
 import { sortNodesByLabelOperator } from "./internal/operators/Sorting";
 import { SubscriptionScheduler } from "./internal/SubscriptionScheduler";
-import { TreeQueryResultsReader } from "./internal/TreeNodesReader";
+import { readNodes } from "./internal/TreeNodesReader";
 import { LimitingECSqlQueryExecutor } from "./LimitingECSqlQueryExecutor";
 import { NodeSelectClauseColumnNames } from "./NodeSelectQueryFactory";
 
 const LOGGING_NAMESPACE = `${CommonLoggingNamespace}.HierarchyProvider`;
 const PERF_LOGGING_NAMESPACE = `${LOGGING_NAMESPACE}.Performance`;
 const DEFAULT_QUERY_CONCURRENCY = 10;
-const DEFAULT_QUERY_CACHE_SIZE = 50;
+const DEFAULT_QUERY_CACHE_SIZE = 1;
 
 /**
  * Defines the strings used by hierarchy provider.
@@ -112,7 +112,10 @@ export interface HierarchyProviderProps {
 
   /** Maximum number of queries that the provider attempts to execute in parallel. Defaults to `10`. */
   queryConcurrency?: number;
-  /** The amount of queries whose results are stored in-memory for quick retrieval. Defaults to `50`. */
+  /**
+   * The amount of queries whose results are stored in-memory for quick retrieval. Defaults to `1`,
+   * which means only results of the last run query are cached.
+   */
   queryCacheSize?: number;
 
   /**
@@ -161,11 +164,10 @@ export interface GetHierarchyNodesProps {
  */
 export class HierarchyProvider {
   private _imodelAccess: ECSchemaProvider & LimitingECSqlQueryExecutor & ECClassHierarchyInspector;
-  private _queryReader: TreeQueryResultsReader;
   private _valuesFormatter: IPrimitiveValueFormatter;
   private _localizedStrings: HierarchyProviderLocalizedStrings;
   private _queryScheduler: SubscriptionScheduler;
-  private _nodesCache: ChildNodeObservablesCache;
+  private _nodesCache?: ChildNodeObservablesCache;
 
   /**
    * Hierarchy level definitions factory used by this provider.
@@ -195,15 +197,18 @@ export class HierarchyProvider {
       });
       this.hierarchyDefinition = filteringDefinition;
     }
-    this._queryReader = new TreeQueryResultsReader({ parser: this.hierarchyDefinition.parseNode });
     this._valuesFormatter = props?.formatter ?? createDefaultValueFormatter();
     this._localizedStrings = props?.localizedStrings ?? { other: "Other", unspecified: "Not specified" };
     this._queryScheduler = new SubscriptionScheduler(props.queryConcurrency ?? DEFAULT_QUERY_CONCURRENCY);
-    this._nodesCache = new ChildNodeObservablesCache({
-      // we divide the size by 2, because each variation also counts as a query that we cache
-      size: Math.round((props.queryCacheSize ?? DEFAULT_QUERY_CACHE_SIZE) / 2),
-      variationsCount: 1,
-    });
+
+    const queryCacheSize = props.queryCacheSize ?? DEFAULT_QUERY_CACHE_SIZE;
+    if (queryCacheSize !== 0) {
+      this._nodesCache = new ChildNodeObservablesCache({
+        // we divide the size by 2, because each variation also counts as a query that we cache
+        size: Math.ceil(queryCacheSize / 2),
+        variationsCount: 1,
+      });
+    }
   }
 
   /**
@@ -222,7 +227,7 @@ export class HierarchyProvider {
   }
 
   private onGroupingNodeCreated(groupingNode: ProcessedGroupingHierarchyNode, props: GetHierarchyNodesProps) {
-    this._nodesCache.set({ ...props, parentNode: groupingNode }, { observable: from(groupingNode.children), processingStatus: "pre-processed" });
+    this._nodesCache?.set({ ...props, parentNode: groupingNode }, { observable: from(groupingNode.children), processingStatus: "pre-processed" });
   }
 
   private createParsedQueryNodesObservable(
@@ -256,7 +261,9 @@ export class HierarchyProvider {
               message: /* istanbul ignore next */ (query) =>
                 `Query direct nodes for parent ${createNodeIdentifierForLogging(props.parentNode)}: ${createQueryLogMessage(query)}`,
             }),
-            mergeMap((query) => from(this._queryReader.read(this.queryExecutor, query, props.hierarchyLevelSizeLimit))),
+            mergeMap((query) =>
+              readNodes({ queryExecutor: this.queryExecutor, query, limit: props.hierarchyLevelSizeLimit, parser: this.hierarchyDefinition.parseNode }),
+            ),
           ),
         );
       }),
@@ -375,7 +382,7 @@ export class HierarchyProvider {
   private getCachedObservableEntry(props: GetHierarchyNodesProps): CachedNodesObservableEntry {
     const loggingCategory = `${LOGGING_NAMESPACE}.GetCachedObservableEntry`;
     const { parentNode, ...restProps } = props;
-    const cached = props.ignoreCache ? undefined : this._nodesCache.get(props);
+    const cached = props.ignoreCache || !this._nodesCache ? undefined : this._nodesCache.get(props);
     if (cached) {
       // istanbul ignore next
       doLog({
@@ -406,7 +413,7 @@ export class HierarchyProvider {
       ...(filteredInstanceKeys ? { filteredInstanceKeys } : undefined),
     };
     const value = { observable: this.createParsedQueryNodesObservable(nonGroupingNodeChildrenRequestProps), processingStatus: "none" as const };
-    this._nodesCache.set(nonGroupingNodeChildrenRequestProps, value);
+    this._nodesCache?.set(nonGroupingNodeChildrenRequestProps, value);
     doLog({
       category: loggingCategory,
       message: /* istanbul ignore next */ () => `Saved query nodes observable for ${createNodeIdentifierForLogging(parentNode)}`,
@@ -573,7 +580,7 @@ export class HierarchyProvider {
    * Calling the function invalidates internal caches to make sure fresh data is retrieved on new requests.
    */
   public notifyDataSourceChanged() {
-    this._nodesCache.clear();
+    this._nodesCache?.clear();
   }
 }
 
