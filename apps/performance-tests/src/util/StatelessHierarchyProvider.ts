@@ -37,7 +37,7 @@ export class StatelessHierarchyProvider {
             filter((node) => node.children && (!depth || getNodeDepth(node) < depth)),
             observeOn(asyncScheduler),
           );
-        }, 100),
+        }, 1),
       );
       nodesObservable.subscribe({
         complete: () => resolve(nodeCount),
@@ -65,6 +65,7 @@ export class StatelessHierarchyProvider {
     return new HierarchyProvider({
       imodelAccess,
       hierarchyDefinition: this._props.getHierarchyFactory(imodelAccess),
+      queryCacheSize: 0,
     });
   }
 }
