@@ -65,6 +65,7 @@ export class StatelessHierarchyProvider {
     return new HierarchyProvider({
       imodelAccess,
       hierarchyDefinition: this._props.getHierarchyFactory(imodelAccess),
+      queryCacheSize: 0,
     });
   }
 }
