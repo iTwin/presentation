@@ -60,7 +60,7 @@ export function useSelectionHandler(props: UseSelectionHandlerProps): UseSelecti
   };
 
   const onNodeSelect = (nodeId: string, isSelected: boolean, shiftDown: boolean, ctrlDown: boolean) => {
-    const selection = getSelection(selectionMode, isSelected, shiftDown, ctrlDown);
+    const selection = getSelectionAction(selectionMode, isSelected, shiftDown, ctrlDown);
     if (selection.type === "disabled") {
       return;
     }
@@ -83,34 +83,35 @@ export function useSelectionHandler(props: UseSelectionHandlerProps): UseSelecti
   return { onNodeClick, onNodeKeyDown };
 }
 
-function getSelection(
-  selectionMode: SelectionMode,
-  isSelected: boolean,
-  shiftDown: boolean,
-  ctrlDown: boolean,
-): { select: "node" | "range"; type: SelectionChangeType | "disabled" } {
-  if (selectionMode === "none") {
-    return { select: "node", type: "disabled" };
-  }
+interface SelectionAction {
+  select: "node" | "range";
+  type: SelectionChangeType | "disabled";
+}
 
-  if (!isSelected && !(selectionMode === "extended" && shiftDown)) {
+function getSelectionAction(selectionMode: SelectionMode, isSelected: boolean, shiftDown: boolean, ctrlDown: boolean): SelectionAction {
+  switch (selectionMode) {
+    case "none":
+      return { select: "node", type: "disabled" };
+    case "single":
+      return { select: "node", type: isSelected ? "replace" : "remove" };
+    case "multiple":
+      return { select: "node", type: isSelected ? "add" : "remove" };
+    case "extended":
+      return getExtendedSelectionAction(isSelected, shiftDown, ctrlDown);
+  }
+}
+
+function getExtendedSelectionAction(isSelected: boolean, shiftDown: boolean, ctrlDown: boolean): SelectionAction {
+  if (shiftDown) {
+    return { select: "range", type: "replace" };
+  }
+  if (!isSelected) {
     return { select: "node", type: "remove" };
   }
-
-  switch (selectionMode) {
-    case "single":
-      return { select: "node", type: "replace" };
-    case "multiple":
-      return { select: "node", type: "add" };
-    case "extended":
-      if (shiftDown) {
-        return { select: "range", type: "replace" };
-      }
-      if (ctrlDown) {
-        return { select: "node", type: "add" };
-      }
-      return { select: "node", type: "replace" };
+  if (ctrlDown) {
+    return { select: "node", type: "add" };
   }
+  return { select: "node", type: "replace" };
 }
 
 function computeFlatNodeList(rootNodes: Array<PresentationTreeNode>): FlatTreeState {
