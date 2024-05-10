@@ -88,11 +88,10 @@ function Tree({ imodel, height, width }: { imodel: IModelConnection; height: num
     );
   }, [imodelAccess, filteredPaths]);
 
-  const { rootNodes, isLoading, getHierarchyLevelConfiguration, ...treeProps } = useUnifiedSelectionTree({
+  const { rootNodes, isLoading, getHierarchyLevelConfiguration, reloadTree, ...treeProps } = useUnifiedSelectionTree({
     imodelKey: imodel.key,
     sourceName: "StatelessTreeV2",
     hierarchyProvider,
-    selectionMode: SelectionMode.Extended,
   });
 
   const [shouldUseCustomFormatter, setShouldUseCustomFormatter] = useState<boolean>(false);
@@ -103,7 +102,7 @@ function Tree({ imodel, height, width }: { imodel: IModelConnection; height: num
     const newValue = !shouldUseCustomFormatter;
     hierarchyProvider.setFormatter(newValue ? customFormatter : undefined);
     setShouldUseCustomFormatter(newValue);
-    treeProps.reloadTree();
+    reloadTree();
   };
 
   const [filteringOptions, setFilteringOptions] = useState<{ nodeId: string; options: HierarchyLevelConfiguration }>();
@@ -185,7 +184,7 @@ function Tree({ imodel, height, width }: { imodel: IModelConnection; height: num
 
     return (
       <Flex.Item alignSelf="flex-start" style={{ width: "100%", overflow: "auto" }}>
-        <TreeRenderer rootNodes={rootNodes} {...treeProps} onFilterClick={onFilterClick} getIcon={getIcon} />
+        <TreeRenderer rootNodes={rootNodes} {...treeProps} onFilterClick={onFilterClick} getIcon={getIcon} selectionMode={SelectionMode.Extended} />
       </Flex.Item>
     );
   };

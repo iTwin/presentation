@@ -667,10 +667,15 @@ describe("TreeModel", () => {
           id: "root-1",
           isSelected: false,
         },
+        {
+          id: "root-2",
+          isSelected: false,
+        },
       ]);
 
-      TreeModel.selectNode(model, "root-1", true);
+      TreeModel.selectNode(model, ["root-1"], "add");
       expect(getHierarchyNode(model, "root-1")?.isSelected).to.be.true;
+      expect(getHierarchyNode(model, "root-2")?.isSelected).to.be.false;
     });
 
     it("deselects node", () => {
@@ -683,10 +688,45 @@ describe("TreeModel", () => {
           id: "root-1",
           isSelected: true,
         },
+        {
+          id: "root-2",
+          isSelected: true,
+        },
       ]);
 
-      TreeModel.selectNode(model, "root-1", false);
+      TreeModel.selectNode(model, ["root-1"], "remove");
       expect(getHierarchyNode(model, "root-1")?.isSelected).to.be.false;
+      expect(getHierarchyNode(model, "root-2")?.isSelected).to.be.true;
+    });
+
+    it("replaces selected nodes", () => {
+      const model = createTreeModel([
+        {
+          id: undefined,
+          children: ["root-1"],
+        },
+        {
+          id: "root-1",
+          isSelected: true,
+        },
+        {
+          id: "root-2",
+          isSelected: true,
+        },
+        {
+          id: "root-3",
+          isSelected: false,
+        },
+        {
+          id: "root-4",
+          message: "info",
+        },
+      ]);
+
+      TreeModel.selectNode(model, ["root-2", "root-3"], "replace");
+      expect(getHierarchyNode(model, "root-1")?.isSelected).to.be.false;
+      expect(getHierarchyNode(model, "root-2")?.isSelected).to.be.true;
+      expect(getHierarchyNode(model, "root-3")?.isSelected).to.be.true;
     });
 
     it("does nothing if node does not exist", () => {
@@ -701,7 +741,7 @@ describe("TreeModel", () => {
         },
       ]);
 
-      TreeModel.selectNode(model, "invalid", false);
+      TreeModel.selectNode(model, ["invalid"], "remove");
       expect(getHierarchyNode(model, "root-1")?.isSelected).to.be.true;
     });
   });

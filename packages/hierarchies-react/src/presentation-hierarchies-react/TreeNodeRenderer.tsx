@@ -15,9 +15,11 @@ interface TreeNodeRendererOwnProps {
   node: PresentationTreeNode;
   onFilterClick: (nodeId: string) => void;
   getIcon?: (node: PresentationHierarchyNode) => ReactElement | undefined;
+  onNodeClick: (nodeId: string, isSelected: boolean, event: React.MouseEvent<HTMLElement, MouseEvent>) => void;
+  onNodeKeyDown: (nodeId: string, isSelected: boolean, event: React.KeyboardEvent<HTMLElement>) => void;
 }
 
-type TreeNodeRendererProps = Pick<ReturnType<typeof useTree>, "expandNode" | "selectNode" | "setHierarchyLevelFilter" | "setHierarchyLevelLimit"> &
+type TreeNodeRendererProps = Pick<ReturnType<typeof useTree>, "expandNode" | "setHierarchyLevelFilter" | "setHierarchyLevelLimit"> &
   Omit<TreeNodeProps, "label" | "onExpanded" | "onSelected" | "icon"> &
   TreeNodeRendererOwnProps;
 
@@ -25,10 +27,11 @@ type TreeNodeRendererProps = Pick<ReturnType<typeof useTree>, "expandNode" | "se
 export function TreeNodeRenderer({
   node,
   expandNode,
-  selectNode,
   getIcon,
   setHierarchyLevelFilter,
   onFilterClick,
+  onNodeClick,
+  onNodeKeyDown,
   setHierarchyLevelLimit,
   isSelected,
   isDisabled,
@@ -37,7 +40,15 @@ export function TreeNodeRenderer({
   if (isPresentationHierarchyNode(node)) {
     return (
       // eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions
-      <div onClick={(event) => !isDisabled && selectNode(node.id, !isSelected, event)}>
+      <div
+        onClick={(event) => !isDisabled && onNodeClick(node.id, !isSelected, event)}
+        onKeyDown={(event) => {
+          // Ignore if it is called on the element inside, e.g. checkbox or expander
+          if (!isDisabled && event.target instanceof HTMLElement && event.target.classList.contains("stateless-tree-node")) {
+            onNodeKeyDown(node.id, !isSelected, event);
+          }
+        }}
+      >
         <TreeNode
           {...nodeProps}
           isSelected={isSelected}

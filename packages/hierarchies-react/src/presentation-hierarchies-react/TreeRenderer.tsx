@@ -7,6 +7,7 @@ import { ComponentPropsWithoutRef, useCallback } from "react";
 import { Tree } from "@itwin/itwinui-react";
 import { TreeNodeRenderer } from "./TreeNodeRenderer";
 import { isPresentationHierarchyNode, PresentationTreeNode } from "./Types";
+import { SelectionMode, useSelectionHandler } from "./UseSelectionHandler";
 import { useTree } from "./UseTree";
 
 type TreeProps<T> = ComponentPropsWithoutRef<typeof Tree<T>>;
@@ -14,6 +15,7 @@ type TreeNodeRendererProps = ComponentPropsWithoutRef<typeof TreeNodeRenderer>;
 
 interface TreeRendererOwnProps {
   rootNodes: PresentationTreeNode[];
+  selectionMode?: SelectionMode;
 }
 
 type TreeRendererProps = Pick<
@@ -34,23 +36,26 @@ export function TreeRenderer({
   setHierarchyLevelFilter,
   onFilterClick,
   getIcon,
+  selectionMode,
   ...treeProps
 }: TreeRendererProps) {
+  const { onNodeClick, onNodeKeyDown } = useSelectionHandler({ rootNodes, selectNode, selectionMode: selectionMode ?? SelectionMode.Single });
   const nodeRenderer = useCallback<TreeProps<PresentationTreeNode>["nodeRenderer"]>(
     (nodeProps) => {
       return (
         <TreeNodeRenderer
           {...nodeProps}
           expandNode={expandNode}
-          selectNode={selectNode}
           setHierarchyLevelFilter={setHierarchyLevelFilter}
           onFilterClick={onFilterClick}
+          onNodeClick={onNodeClick}
+          onNodeKeyDown={onNodeKeyDown}
           getIcon={getIcon}
           setHierarchyLevelLimit={setHierarchyLevelLimit}
         />
       );
     },
-    [expandNode, selectNode, setHierarchyLevelLimit, setHierarchyLevelFilter, onFilterClick, getIcon],
+    [expandNode, setHierarchyLevelLimit, setHierarchyLevelFilter, onFilterClick, onNodeClick, onNodeKeyDown, getIcon],
   );
 
   const getNode = useCallback<TreeProps<PresentationTreeNode>["getNode"]>((node) => createTreeNode(node, isNodeSelected), [isNodeSelected]);

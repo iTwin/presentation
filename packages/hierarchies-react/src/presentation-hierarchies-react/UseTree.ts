@@ -9,34 +9,13 @@ import { TreeActions } from "./internal/TreeActions";
 import { isTreeModelHierarchyNode, TreeModel, TreeModelHierarchyNode, TreeModelNode, TreeModelRootNode } from "./internal/TreeModel";
 import { useUnifiedTreeSelection, UseUnifiedTreeSelectionProps } from "./internal/UseUnifiedSelection";
 import { PresentationHierarchyNode, PresentationTreeNode } from "./Types";
+import { SelectionChangeType } from "./UseSelectionHandler";
 
 /** @beta */
 export interface HierarchyLevelConfiguration {
   hierarchyNode: HierarchyNode;
   hierarchyLevelSizeLimit?: number | "unbounded";
   currentFilter?: GenericInstanceFilter;
-}
-
-/** @internal */
-export enum SelectionModeFlags {
-  Single = 1 << 0,
-  DeselectEnabled = 1 << 1,
-  KeysEnabled = 1 << 2,
-  None = 1 << 3,
-}
-
-/** @beta */
-export enum SelectionMode {
-  /** Only one item selected at a time. */
-  Single = SelectionModeFlags.Single,
-  /** Only one item selected at a time; allows deselecting. */
-  SingleAllowDeselect = SelectionModeFlags.Single | SelectionModeFlags.DeselectEnabled,
-  /** Toggles items. */
-  Multiple = SelectionModeFlags.DeselectEnabled,
-  /** Toggles items; allows the use of Ctrl & Shift Keys. */
-  Extended = SelectionModeFlags.KeysEnabled | SelectionModeFlags.DeselectEnabled,
-  /** Disables selection */
-  None = SelectionModeFlags.None,
 }
 
 /** @beta */
@@ -46,14 +25,9 @@ export function useTree(props: UseTreeProps): UseTreeResult {
 }
 
 /** @beta */
-export function useUnifiedSelectionTree({
-  imodelKey,
-  sourceName,
-  selectionMode,
-  ...props
-}: UseTreeProps & Omit<UseUnifiedTreeSelectionProps, "getNode" | "getNodeRange">): Omit<UseTreeResult, "model"> {
-  const { getNode, getNodeRange, ...rest } = useTreeInternal(props);
-  return { ...rest, ...useUnifiedTreeSelection({ imodelKey, sourceName, getNode, getNodeRange, selectionMode }) };
+export function useUnifiedSelectionTree({ imodelKey, sourceName, ...props }: UseTreeProps & Omit<UseUnifiedTreeSelectionProps, "getNode">): UseTreeResult {
+  const { getNode, ...rest } = useTreeInternal(props);
+  return { ...rest, ...useUnifiedTreeSelection({ imodelKey, sourceName, getNode }) };
 }
 
 interface UseTreeProps {
@@ -72,7 +46,7 @@ interface UseTreeResult {
   isLoading: boolean;
   reloadTree: (options?: { discardState?: boolean }) => void;
   expandNode: (nodeId: string, isExpanded: boolean) => void;
-  selectNode: (nodeId: string, isSelected: boolean, event?: React.MouseEvent<HTMLDivElement, MouseEvent>) => void;
+  selectNode: (nodeIds: Array<string>, changeType: SelectionChangeType) => void;
   setHierarchyLevelLimit: (nodeId: string | undefined, limit: undefined | number | "unbounded") => void;
   setHierarchyLevelFilter: (nodeId: string | undefined, filter: GenericInstanceFilter | undefined) => void;
   isNodeSelected: (nodeId: string) => boolean;
@@ -82,35 +56,23 @@ interface UseTreeResult {
 interface TreeState {
   model: TreeModel;
   rootNodes: Array<PresentationTreeNode> | undefined;
-  flatNodeList: Array<string>;
-  nodeIdToIndexMap: Map<string, number>;
 }
 
-interface UseTreeInternalResult extends UseTreeResult {
-  getNode: (nodeId: string) => TreeModelRootNode | TreeModelNode | undefined;
-  getNodeRange: (firstId?: string, secondId?: string) => TreeModelHierarchyNode[];
-}
-
-function useTreeInternal({ hierarchyProvider }: UseTreeProps): UseTreeInternalResult {
+function useTreeInternal({ hierarchyProvider }: UseTreeProps): UseTreeResult & { getNode: (nodeId: string) => TreeModelRootNode | TreeModelNode | undefined } {
   const [state, setState] = useState<TreeState>({
     model: { idToNode: new Map(), parentChildMap: new Map(), rootNode: { id: undefined, nodeData: undefined } },
     rootNodes: undefined,
-    flatNodeList: [],
-    nodeIdToIndexMap: new Map(),
   });
   const [actions] = useState<TreeActions>(
     () =>
       new TreeActions((model) => {
-        const newModel = { ...model };
-        const { rootNodes, flatNodeList, nodeIdToIndexMap } = generateTreeStructure(undefined, newModel);
-        setState({ model, rootNodes, flatNodeList, nodeIdToIndexMap });
+        const rootNodes = model.parentChildMap.get(undefined) !== undefined ? generateTreeStructure(undefined, model) : undefined;
+        setState({
+          model,
+          rootNodes,
+        });
       }),
   );
-
-  const stateRef = useRef(state);
-  useEffect(() => {
-    stateRef.current = state;
-  }, [state]);
 
   useEffect(() => {
     actions.setHierarchyProvider(hierarchyProvider);
@@ -124,29 +86,6 @@ function useTreeInternal({ hierarchyProvider }: UseTreeProps): UseTreeInternalRe
     return actions.getNode(nodeId);
   }).current;
 
-  const getNodeRange = useRef((firstId?: string, secondId?: string) => {
-    const getIndex = (nodeId?: string) => {
-      return nodeId ? stateRef.current.nodeIdToIndexMap.get(nodeId) : 0;
-    };
-    const firstIndex = getIndex(firstId);
-    const secondIndex = getIndex(secondId);
-    // istanbul ignore if
-    if (firstIndex === undefined || secondIndex === undefined) {
-      return [];
-    }
-
-    const startingIndex = Math.min(firstIndex, secondIndex);
-    const endIndex = Math.max(firstIndex, secondIndex);
-    const selectedIds = stateRef.current.flatNodeList.slice(startingIndex, endIndex + 1);
-    const nodes: TreeModelHierarchyNode[] = [];
-
-    for (const nodeId of selectedIds) {
-      const node = getNode(nodeId) as TreeModelHierarchyNode;
-      node && nodes.push(node);
-    }
-    return nodes;
-  }).current;
-
   const expandNode = useRef((nodeId: string, isExpanded: boolean) => {
     actions.expandNode(nodeId, isExpanded);
   }).current;
@@ -155,8 +94,8 @@ function useTreeInternal({ hierarchyProvider }: UseTreeProps): UseTreeInternalRe
     actions.reloadTree(options);
   }).current;
 
-  const selectNode = useRef((nodeId: string, isSelected: boolean) => {
-    actions.selectNode(nodeId, isSelected);
+  const selectNode = useRef((nodeIds: Array<string>, changeType: SelectionChangeType) => {
+    actions.selectNode(nodeIds, changeType);
   }).current;
 
   const setHierarchyLevelLimit = useRef((nodeId: string | undefined, limit: undefined | number | "unbounded") => {
@@ -200,55 +139,35 @@ function useTreeInternal({ hierarchyProvider }: UseTreeProps): UseTreeInternalRe
     setHierarchyLevelLimit,
     getHierarchyLevelConfiguration,
     getNode,
-    getNodeRange,
     setHierarchyLevelFilter,
   };
 }
 
-function generateTreeStructure(
-  parentNodeId: string | undefined,
-  model: TreeModel,
-): { rootNodes: Array<PresentationTreeNode> | undefined; flatNodeList: Array<string>; nodeIdToIndexMap: Map<string, number> } {
-  const flatNodeList: Array<string> = [];
-  const nodeIdToIndexMap: Map<string, number> = new Map();
+function generateTreeStructure(parentNodeId: string | undefined, model: TreeModel): Array<PresentationTreeNode> | undefined {
+  const currentChildren = model.parentChildMap.get(parentNodeId);
+  if (!currentChildren) {
+    return undefined;
+  }
 
-  const recurseTreeStructure = (parent: string | undefined, isParentExpanded = true): Array<PresentationTreeNode> | undefined => {
-    const currentChildren = model.parentChildMap.get(parent);
-    if (!currentChildren) {
-      return undefined;
-    }
-
-    return currentChildren
-      .map((childId) => model.idToNode.get(childId))
-      .filter((node): node is TreeModelNode => !!node)
-      .map<PresentationTreeNode>((node) => {
-        if (!isTreeModelHierarchyNode(node)) {
-          return {
-            id: node.id,
-            parentNodeId: parent,
-            type: node.type,
-            message: node.message,
-          };
-        }
-
-        if (isParentExpanded) {
-          nodeIdToIndexMap.set(node.id, flatNodeList.length);
-          flatNodeList.push(node.id);
-        }
-
-        const children = recurseTreeStructure(node.id, isParentExpanded && node.isExpanded);
+  return currentChildren
+    .map((childId) => model.idToNode.get(childId))
+    .filter((node): node is TreeModelNode => !!node)
+    .map<PresentationTreeNode>((node) => {
+      if (!isTreeModelHierarchyNode(node)) {
         return {
-          ...toPresentationHierarchyNodeBase(node),
-          children: children ? children : node.children === true ? true : [],
+          id: node.id,
+          parentNodeId,
+          type: node.type,
+          message: node.message,
         };
-      });
-  };
+      }
 
-  return {
-    rootNodes: recurseTreeStructure(parentNodeId),
-    flatNodeList,
-    nodeIdToIndexMap,
-  };
+      const children = generateTreeStructure(node.id, model);
+      return {
+        ...toPresentationHierarchyNodeBase(node),
+        children: children ? children : node.children === true ? true : [],
+      };
+    });
 }
 
 function toPresentationHierarchyNodeBase(node: TreeModelHierarchyNode): Omit<PresentationHierarchyNode, "children"> {

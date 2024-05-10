@@ -5,6 +5,7 @@
 
 import { GenericInstanceFilter, HierarchyNode } from "@itwin/presentation-hierarchies";
 import { InfoNodeTypes } from "../Types";
+import { SelectionChangeType } from "../UseSelectionHandler";
 
 export interface TreeModelRootNode {
   id: undefined;
@@ -129,12 +130,23 @@ export namespace TreeModel {
     });
   }
 
-  export function selectNode(model: TreeModel, nodeId: string, isSelected: boolean) {
-    const modelNode = model.idToNode.get(nodeId);
-    if (!modelNode || !isTreeModelHierarchyNode(modelNode)) {
+  export function selectNode(model: TreeModel, nodeIds: Array<string>, changeType: SelectionChangeType) {
+    if (changeType === "replace") {
+      for (const [nodeId, node] of model.idToNode) {
+        if (!isTreeModelHierarchyNode(node)) {
+          continue;
+        }
+        node.isSelected = !!nodeIds.find((id) => id === nodeId);
+      }
       return;
     }
-    modelNode.isSelected = isSelected;
+    for (const nodeId of nodeIds) {
+      const modelNode = model.idToNode.get(nodeId);
+      if (!modelNode || !isTreeModelHierarchyNode(modelNode)) {
+        return;
+      }
+      modelNode.isSelected = changeType === "add";
+    }
   }
 
   export function isNodeSelected(model: TreeModel, nodeId: string): boolean {
