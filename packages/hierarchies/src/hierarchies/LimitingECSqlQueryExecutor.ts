@@ -4,11 +4,10 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { StopWatch } from "@itwin/core-bentley";
-import { ECSqlQueryDef, ECSqlQueryExecutor, ECSqlQueryReaderOptions, ECSqlQueryRow } from "@itwin/presentation-shared";
+import { ECSqlQueryDef, ECSqlQueryExecutor, ECSqlQueryReaderOptions, ECSqlQueryRow, MainThreadBlockHandler } from "@itwin/presentation-shared";
 import { RowsLimitExceededError } from "./HierarchyErrors";
 import { LOGGING_NAMESPACE as CommonLoggingNamespace } from "./internal/Common";
 import { doLog } from "./internal/LoggingUtils";
-import { MainThreadBlockHandler } from "./internal/MainThreadBlockHandler";
 
 /**
  * An interface for something that knows how to create a limiting ECSQL query reader.
@@ -36,7 +35,9 @@ export function createLimitingECSqlQueryExecutor(baseExecutor: ECSqlQueryExecuto
       const { limit: configLimit, ...restConfig } = config ?? {};
       const limit = configLimit ?? defaultLimit;
       const perfLogger = createQueryPerformanceLogger();
-      const blockHandler = new MainThreadBlockHandler();
+      const blockHandler = new MainThreadBlockHandler({
+        onRelease: () => doLog({ category: CommonLoggingNamespace, message: () => "Releasing main thread" }),
+      });
 
       // handle "unbounded" case without a buffer
       const reader = baseExecutor.createQueryReader({ ...query, ecsql: addLimit(query.ecsql, limit) }, restConfig);

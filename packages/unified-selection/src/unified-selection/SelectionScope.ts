@@ -4,9 +4,9 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { Id64 } from "@itwin/core-bentley";
-import { ECSqlBinding, ECSqlQueryDef, ECSqlQueryExecutor } from "@itwin/presentation-shared";
+import { ECSqlBinding, ECSqlQueryExecutor, ECSqlQueryRow, MainThreadBlockHandler } from "@itwin/presentation-shared";
 import { SelectableInstanceKey } from "./Selectable";
-import { formIdBindings } from "./Utils";
+import { executeQuery, formIdBindings } from "./Utils";
 
 /**
  * Available selection scopes.
@@ -58,19 +58,20 @@ export async function* computeSelection(props: ComputeSelectionProps): AsyncIter
   }
 
   const nonTransientKeys = elementIds.filter((key) => !Id64.isTransient(key));
+  const blockHandler = new MainThreadBlockHandler({});
 
   switch (scope.id) {
     case "element":
-      yield* computeElementSelection(queryExecutor, nonTransientKeys, (scope as ElementSelectionScopeProps).ancestorLevel ?? 0);
+      yield* computeElementSelection(queryExecutor, nonTransientKeys, (scope as ElementSelectionScopeProps).ancestorLevel ?? 0, blockHandler);
       return;
     case "category":
-      yield* computeCategorySelection(queryExecutor, nonTransientKeys);
+      yield* computeCategorySelection(queryExecutor, nonTransientKeys, blockHandler);
       return;
     case "model":
-      yield* computeModelSelection(queryExecutor, nonTransientKeys);
+      yield* computeModelSelection(queryExecutor, nonTransientKeys, blockHandler);
       return;
     case "functional":
-      yield* computeFunctionalElementSelection(queryExecutor, nonTransientKeys, (scope as ElementSelectionScopeProps).ancestorLevel ?? 0);
+      yield* computeFunctionalElementSelection(queryExecutor, nonTransientKeys, (scope as ElementSelectionScopeProps).ancestorLevel ?? 0, blockHandler);
       return;
   }
 }
@@ -79,6 +80,7 @@ async function* computeElementSelection(
   queryExecutor: ECSqlQueryExecutor,
   elementIds: string[],
   ancestorLevel: number,
+  blockHandler: MainThreadBlockHandler,
 ): AsyncIterableIterator<SelectableInstanceKey> {
   const bindings: ECSqlBinding[] = [];
   const recurseUntilRoot = ancestorLevel < 0;
@@ -101,10 +103,17 @@ async function* computeElementSelection(
     FROM AncestorElements
     WHERE ${recurseUntilRoot ? "" : "Depth = 0 OR"} ParentId IS NULL
   `;
-  yield* executeQuery(queryExecutor, { ctes, ecsql, bindings });
+  yield* executeQuery<SelectableInstanceKey>(queryExecutor, { ctes, ecsql, bindings }, blockHandler, (row: ECSqlQueryRow) => ({
+    className: row.ClassName,
+    id: row.ECInstanceId,
+  }));
 }
 
-async function* computeCategorySelection(queryExecutor: ECSqlQueryExecutor, ids: string[]): AsyncIterableIterator<SelectableInstanceKey> {
+async function* computeCategorySelection(
+  queryExecutor: ECSqlQueryExecutor,
+  ids: string[],
+  blockHandler: MainThreadBlockHandler,
+): AsyncIterableIterator<SelectableInstanceKey> {
   const bindings: ECSqlBinding[] = [];
   const ecsql = [
     `
@@ -120,10 +129,17 @@ async function* computeCategorySelection(queryExecutor: ECSqlQueryExecutor, ids:
       WHERE ${formIdBindings("ge.ECInstanceId", ids, bindings)}
     `,
   ].join(" UNION ALL ");
-  yield* executeQuery(queryExecutor, { ecsql, bindings });
+  yield* executeQuery<SelectableInstanceKey>(queryExecutor, { ecsql, bindings }, blockHandler, (row: ECSqlQueryRow) => ({
+    className: row.ClassName,
+    id: row.ECInstanceId,
+  }));
 }
 
-async function* computeModelSelection(queryExecutor: ECSqlQueryExecutor, ids: string[]): AsyncIterableIterator<SelectableInstanceKey> {
+async function* computeModelSelection(
+  queryExecutor: ECSqlQueryExecutor,
+  ids: string[],
+  blockHandler: MainThreadBlockHandler,
+): AsyncIterableIterator<SelectableInstanceKey> {
   const bindings: ECSqlBinding[] = [];
   const ecsql = `
     SELECT DISTINCT m.ECInstanceId, ec_classname(m.ECClassId, 's.c') AS ClassName
@@ -131,13 +147,17 @@ async function* computeModelSelection(queryExecutor: ECSqlQueryExecutor, ids: st
     JOIN BisCore.Element e ON e.Model.Id = m.ECInstanceId
     WHERE ${formIdBindings("e.ECInstanceId", ids, bindings)}
   `;
-  yield* executeQuery(queryExecutor, { ecsql, bindings });
+  yield* executeQuery<SelectableInstanceKey>(queryExecutor, { ecsql, bindings }, blockHandler, (row: ECSqlQueryRow) => ({
+    className: row.ClassName,
+    id: row.ECInstanceId,
+  }));
 }
 
 async function* computeFunctionalElementSelection(
   queryExecutor: ECSqlQueryExecutor,
   ids: string[],
   ancestorLevel: number,
+  blockHandler: MainThreadBlockHandler,
 ): AsyncIterableIterator<SelectableInstanceKey> {
   const bindings: ECSqlBinding[] = [];
   const recurseUntilRoot = ancestorLevel < 0;
@@ -227,17 +247,13 @@ async function* computeFunctionalElementSelection(
       SELECT DISTINCT ECInstanceId, ClassName FROM Element3dAncestorRelatedFunctionalElement
     `,
   ].join(" UNION ");
-  yield* executeQuery(queryExecutor, { ctes, ecsql, bindings });
+  yield* executeQuery<SelectableInstanceKey>(queryExecutor, { ctes, ecsql, bindings }, blockHandler, (row: ECSqlQueryRow) => ({
+    className: row.ClassName,
+    id: row.ECInstanceId,
+  }));
 }
 
 function formAncestorLevelBinding(ancestorLevel: number, bindings: ECSqlBinding[]) {
   bindings.push({ type: "int", value: ancestorLevel });
   return "?";
-}
-
-async function* executeQuery(queryExecutor: ECSqlQueryExecutor, query: ECSqlQueryDef): AsyncIterableIterator<SelectableInstanceKey> {
-  const reader = queryExecutor.createQueryReader(query);
-  for await (const row of reader) {
-    yield { className: row.ClassName, id: row.ECInstanceId };
-  }
 }

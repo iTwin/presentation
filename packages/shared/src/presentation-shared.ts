@@ -24,3 +24,4 @@ export { createCachingECClassHierarchyInspector, EC, getClass, ECClassHierarchyI
 export { normalizeFullClassName, parseFullClassName, trimWhitespace } from "./shared/Utils";
 export { InstanceKey, PrimitiveValue, TypedPrimitiveValue } from "./shared/Values";
 export { Event } from "./shared/Event";
+export { releaseMainThreadOnItemsCount, MainThreadBlockHandler } from "./shared/MainThreadBlockHandler";

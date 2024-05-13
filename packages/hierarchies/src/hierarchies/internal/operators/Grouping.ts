@@ -5,7 +5,7 @@
 
 import { concat, concatAll, delay, EMPTY, expand, finalize, from, last, map, merge, mergeMap, Observable, of, reduce, tap, toArray } from "rxjs";
 import { assert, StopWatch } from "@itwin/core-bentley";
-import { ECClassHierarchyInspector, ECSchemaProvider, IPrimitiveValueFormatter } from "@itwin/presentation-shared";
+import { ECClassHierarchyInspector, ECSchemaProvider, IPrimitiveValueFormatter, releaseMainThreadOnItemsCount } from "@itwin/presentation-shared";
 import {
   HierarchyNode,
   ParentHierarchyNode,
@@ -21,7 +21,6 @@ import { createClassGroups } from "./grouping/ClassGrouping";
 import { applyGroupHidingParams } from "./grouping/GroupHiding";
 import { createLabelGroups } from "./grouping/LabelGrouping";
 import { createPropertiesGroupingHandlers, PropertiesGroupingLocalizedStrings } from "./grouping/PropertiesGrouping";
-import { releaseMainThreadOnItemsCount } from "./ReleaseMainThread";
 import { tapOnce } from "./TapOnce";
 
 const OPERATOR_NAME = "Grouping";
@@ -85,7 +84,7 @@ export function createGroupingOperator(
           from(restNodes),
         );
       }),
-      releaseMainThreadOnItemsCount(100),
+      releaseMainThreadOnItemsCount(100, () => doLog({ category: LOGGING_NAMESPACE, message: () => "Releasing main thread" })),
       log({ category: LOGGING_NAMESPACE, message: /* istanbul ignore next */ (n) => `out: ${createNodeIdentifierForLogging(n)}` }),
     );
   };

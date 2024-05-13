@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { ECSqlBinding } from "@itwin/presentation-shared";
+import { ECSqlBinding, ECSqlQueryDef, ECSqlQueryExecutor, ECSqlQueryRow, MainThreadBlockHandler } from "@itwin/presentation-shared";
 
 /**
  * Forms ECSql bindings from given ID's.
@@ -21,4 +21,21 @@ export function formIdBindings(property: string, ids: string[], bindings: ECSqlB
 
   ids.forEach((id) => bindings.push({ type: "id", value: id }));
   return `${property} IN (${ids.map(() => "?").join(",")})`;
+}
+
+/**
+ * Executes given ECSql query and extracts data from rows. Additionally handles main thread releasing.
+ * @internal
+ */
+export async function* executeQuery<T>(
+  queryExecutor: ECSqlQueryExecutor,
+  query: ECSqlQueryDef,
+  blockHandler: MainThreadBlockHandler,
+  extractData: (row: ECSqlQueryRow) => T,
+): AsyncIterableIterator<T> {
+  const reader = queryExecutor.createQueryReader(query);
+  for await (const row of reader) {
+    yield extractData(row);
+    await blockHandler.releaseMainThreadIfTimeElapsed();
+  }
 }
