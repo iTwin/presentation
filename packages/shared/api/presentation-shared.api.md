@@ -350,6 +350,13 @@ export type LogFunction = (category: string, message: string) => void;
 export type LogLevel = "error" | "warning" | "info" | "trace";
 
 // @beta
+export class MainThreadBlockHandler {
+    constructor(props: MainThreadBlockHandlerProps);
+    static releaseMainThread(onRelease?: () => void): Promise<void>;
+    releaseMainThreadIfTimeElapsed(): Promise<void> | undefined;
+}
+
+// @beta
 export const NOOP_LOGGER: ILogger;
 
 // @beta

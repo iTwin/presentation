@@ -3,8 +3,6 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { bufferCount, concatAll, concatMap, Observable } from "rxjs";
-
 /** @internal */
 export const DEFAULT_MAIN_THREAD_RELEASE_THRESHOLD = 20;
 
@@ -47,21 +45,4 @@ export class MainThreadBlockHandler {
     this._lastReleaseTime = currentTime;
     return MainThreadBlockHandler.releaseMainThread(this._onRelease);
   }
-}
-
-/**
- * RxJS operator that emits a certain amount of values, then releases the main thread for other timers to use.
- * @beta
- */
-export function releaseMainThreadOnItemsCount<T>(elementCount: number, onRelease?: () => void) {
-  return (obs: Observable<T>): Observable<T> => {
-    return obs.pipe(
-      bufferCount(elementCount),
-      concatMap(async (x) => {
-        await MainThreadBlockHandler.releaseMainThread(onRelease);
-        return x;
-      }),
-      concatAll(),
-    );
-  };
 }

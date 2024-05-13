@@ -27,6 +27,7 @@ beta;InstanceKey
 beta;IPrimitiveValueFormatter = (value: TypedPrimitiveValue) => Promise
 beta;LogFunction = (category: string, message: string) => void
 beta;LogLevel = "error" | "warning" | "info" | "trace"
+beta;MainThreadBlockHandler
 beta;NOOP_LOGGER: ILogger
 beta;normalizeFullClassName(fullClassName: string): string
 beta;OmitOverUnion

@@ -4,9 +4,8 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { expect } from "chai";
-import { Subject } from "rxjs";
 import sinon from "sinon";
-import { DEFAULT_MAIN_THREAD_RELEASE_THRESHOLD, MainThreadBlockHandler, releaseMainThreadOnItemsCount } from "../shared/MainThreadBlockHandler";
+import { DEFAULT_MAIN_THREAD_RELEASE_THRESHOLD, MainThreadBlockHandler } from "../shared/MainThreadBlockHandler";
 
 describe("MainThreadBlockHandler", () => {
   it("releases the main thread", async () => {
@@ -29,7 +28,7 @@ describe("MainThreadBlockHandler", () => {
     }
   });
 
-  it("logs when releasing the main thread and logger passed", async () => {
+  it("calls `onReleaseSpy` when releasing the main thread", async () => {
     const onReleaseSpy = sinon.spy();
     const blockHandler = new MainThreadBlockHandler({ onRelease: onReleaseSpy });
     let lastIntervalInvokeTime = performance.now();
@@ -65,26 +64,5 @@ describe("MainThreadBlockHandler", () => {
     const x = blockHandler.releaseMainThreadIfTimeElapsed();
     expect(x).to.be.instanceOf(Promise);
     await x;
-  });
-});
-
-describe("releaseMainThreadOnItemsCount", () => {
-  it("only releases main thread when element count reached", () => {
-    const onReleaseSpy = sinon.spy();
-    const subject = new Subject<number>();
-
-    const observable = subject.pipe(releaseMainThreadOnItemsCount(2, onReleaseSpy));
-    observable.subscribe();
-
-    subject.next(1);
-    expect(onReleaseSpy).to.not.be.called;
-
-    subject.next(2);
-    expect(onReleaseSpy).to.be.calledOnce;
-    onReleaseSpy.resetHistory();
-
-    subject.next(3);
-    subject.complete();
-    expect(onReleaseSpy).to.not.be.called;
   });
 });

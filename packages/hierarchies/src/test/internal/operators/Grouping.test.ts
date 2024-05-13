@@ -8,7 +8,8 @@ import { collect } from "presentation-test-utilities";
 import { from } from "rxjs";
 import sinon from "sinon";
 import { LogLevel } from "@itwin/core-bentley";
-import { createDefaultValueFormatter, IPrimitiveValueFormatter } from "@itwin/presentation-shared";
+import { createDefaultValueFormatter, ILogger, IPrimitiveValueFormatter } from "@itwin/presentation-shared";
+import { ProcessedHierarchyNode } from "../../../hierarchies/HierarchyNode";
 import { createGroupingHandlers, createGroupingOperator, GroupingHandlerResult, LOGGING_NAMESPACE } from "../../../hierarchies/internal/operators/Grouping";
 import * as autoExpand from "../../../hierarchies/internal/operators/grouping/AutoExpand";
 import * as baseClassGrouping from "../../../hierarchies/internal/operators/grouping/BaseClassGrouping";
@@ -16,6 +17,7 @@ import * as classGrouping from "../../../hierarchies/internal/operators/grouping
 import * as groupHiding from "../../../hierarchies/internal/operators/grouping/GroupHiding";
 import * as labelGrouping from "../../../hierarchies/internal/operators/grouping/LabelGrouping";
 import * as propertiesGrouping from "../../../hierarchies/internal/operators/grouping/PropertiesGrouping";
+import { setLogger } from "../../../hierarchies/Logging";
 import {
   createIModelAccessStub,
   createTestProcessedCustomNode,
@@ -340,6 +342,28 @@ describe("Grouping", () => {
       expect(onGroupingNodeCreated.secondCall).to.be.calledWith(labelGroupingNode);
 
       expect(result).to.deep.eq([classGroupingNode, labelGroupingNode]);
+    });
+
+    it("logs when main thread released", async () => {
+      const logger = {
+        logTrace: sinon.spy(),
+        isEnabled: () => true,
+      } as unknown as ILogger;
+      setLogger(logger);
+
+      const nodes: ProcessedHierarchyNode[] = [];
+      for (let i = 1; i <= 100; i++) {
+        nodes.push(
+          createTestProcessedInstanceNode({
+            key: { type: "instances", instanceKeys: [{ className: "TestSchema.A", id: `0x${i.toString(16)}` }] },
+            label: `${i}`,
+          }),
+        );
+      }
+
+      await collect(from(nodes).pipe(createGroupingOperator(imodelAccess, undefined, formatter, testLocalizedStrings, undefined, [])));
+
+      expect(logger.logTrace).to.be.calledWith("Presentation.Hierarchies", "Releasing main thread");
     });
   });
 

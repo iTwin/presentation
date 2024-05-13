@@ -5,16 +5,9 @@
 
 import { EMPTY, filter, forkJoin, from, map, merge, mergeMap, Observable, scan, shareReplay, Subject, toArray } from "rxjs";
 import { eachValueFrom } from "rxjs-for-await";
-import {
-  ECClassHierarchyInspector,
-  ECSqlBinding,
-  ECSqlQueryExecutor,
-  ECSqlQueryRow,
-  MainThreadBlockHandler,
-  releaseMainThreadOnItemsCount,
-} from "@itwin/presentation-shared";
+import { ECClassHierarchyInspector, ECSqlBinding, ECSqlQueryExecutor, ECSqlQueryRow, MainThreadBlockHandler } from "@itwin/presentation-shared";
 import { SelectableInstanceKey, Selectables } from "./Selectable";
-import { executeQuery, formIdBindings } from "./Utils";
+import { executeQuery, formIdBindings, releaseMainThreadOnItemsCount } from "./Utils";
 
 const HILITE_SET_EMIT_FREQUENCY = 20;
 

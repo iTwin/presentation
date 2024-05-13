@@ -3,6 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
+import { bufferCount, concatAll, concatMap, Observable } from "rxjs";
 import { ECSqlBinding, ECSqlQueryDef, ECSqlQueryExecutor, ECSqlQueryRow, MainThreadBlockHandler } from "@itwin/presentation-shared";
 
 /**
@@ -38,4 +39,21 @@ export async function* executeQuery<T>(
     yield extractData(row);
     await blockHandler.releaseMainThreadIfTimeElapsed();
   }
+}
+
+/**
+ * Emits a certain amount of values, then releases the main thread for other timers to use.
+ * @internal
+ */
+export function releaseMainThreadOnItemsCount<T>(elementCount: number) {
+  return (obs: Observable<T>): Observable<T> => {
+    return obs.pipe(
+      bufferCount(elementCount),
+      concatMap(async (x) => {
+        await MainThreadBlockHandler.releaseMainThread();
+        return x;
+      }),
+      concatAll(),
+    );
+  };
 }
