@@ -4,12 +4,20 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { GenericInstanceFilter, HierarchyNode, HierarchyProvider } from "@itwin/presentation-hierarchies";
+import {
+  GenericInstanceFilter,
+  HierarchyLevelDefinitionsFactory,
+  HierarchyNode,
+  HierarchyNodeIdentifiersPath,
+  HierarchyProvider,
+  LimitingECSqlQueryExecutor,
+} from "@itwin/presentation-hierarchies";
 import { TreeActions } from "./internal/TreeActions";
 import { isTreeModelHierarchyNode, isTreeModelInfoNode, TreeModel, TreeModelHierarchyNode, TreeModelNode, TreeModelRootNode } from "./internal/TreeModel";
 import { useUnifiedTreeSelection, UseUnifiedTreeSelectionProps } from "./internal/UseUnifiedSelection";
 import { PresentationHierarchyNode, PresentationTreeNode } from "./Types";
 import { SelectionChangeType } from "./UseSelectionHandler";
+import { ECClassHierarchyInspector, ECSchemaProvider } from "@itwin/presentation-shared";
 
 /** @beta */
 export interface HierarchyLevelConfiguration {
@@ -30,8 +38,16 @@ export function useUnifiedSelectionTree({ imodelKey, sourceName, ...props }: Use
   return { ...rest, ...useUnifiedTreeSelection({ imodelKey, sourceName, getNode }) };
 }
 
+type IModelAccess = ECSchemaProvider & LimitingECSqlQueryExecutor & ECClassHierarchyInspector;
+
+interface GetFilteredPathsProps {
+  imodelAccess: IModelAccess;
+}
+
 interface UseTreeProps {
-  hierarchyProvider?: HierarchyProvider;
+  imodelAccess: ECSchemaProvider & LimitingECSqlQueryExecutor & ECClassHierarchyInspector;
+  getHierarchyDefinitionsProvider: (props: { imodelAccess: IModelAccess }) => HierarchyLevelDefinitionsFactory;
+  getFilteredPaths?: (props: GetFilteredPathsProps) => Promise<HierarchyNodeIdentifiersPath[] | undefined>;
 }
 
 interface UseTreeResult {
@@ -44,6 +60,10 @@ interface UseTreeResult {
    * or tree is reloading.
    */
   isLoading: boolean;
+  /**
+   * Provider used to load tree nodes.
+   */
+  hierarchyProvider?: HierarchyProvider;
   reloadTree: (options?: { discardState?: boolean }) => void;
   expandNode: (nodeId: string, isExpanded: boolean) => void;
   selectNodes: (nodeIds: Array<string>, changeType: SelectionChangeType) => void;
@@ -58,11 +78,16 @@ interface TreeState {
   rootNodes: Array<PresentationTreeNode> | undefined;
 }
 
-function useTreeInternal({ hierarchyProvider }: UseTreeProps): UseTreeResult & { getNode: (nodeId: string) => TreeModelRootNode | TreeModelNode | undefined } {
+function useTreeInternal({
+  imodelAccess,
+  getHierarchyDefinitionsProvider,
+  getFilteredPaths,
+}: UseTreeProps): UseTreeResult & { getNode: (nodeId: string) => TreeModelRootNode | TreeModelNode | undefined } {
   const [state, setState] = useState<TreeState>({
     model: { idToNode: new Map(), parentChildMap: new Map(), rootNode: { id: undefined, nodeData: undefined } },
     rootNodes: undefined,
   });
+  const [hierarchySource, setHierarchySource] = useState<{ HierarchyProvider?: HierarchyProvider; isFiltering: boolean }>({ isFiltering: false });
   const [actions] = useState<TreeActions>(
     () =>
       new TreeActions((model) => {
@@ -75,12 +100,48 @@ function useTreeInternal({ hierarchyProvider }: UseTreeProps): UseTreeResult & {
   );
 
   useEffect(() => {
-    actions.setHierarchyProvider(hierarchyProvider);
-    actions.reloadTree(undefined);
+    const updateHierarchyProvider = (provider: HierarchyProvider) => {
+      actions.setHierarchyProvider(provider);
+      actions.reloadTree(undefined);
+      setHierarchySource({ HierarchyProvider: provider, isFiltering: false });
+    };
+
+    const createHierarchyProvider = async () => {
+      if (!getFilteredPaths) {
+        return new HierarchyProvider({
+          imodelAccess,
+          hierarchyDefinition: getHierarchyDefinitionsProvider({ imodelAccess }),
+        });
+      }
+
+      setHierarchySource((prev) => ({ ...prev, isFiltering: true }));
+      const filteredPaths = await getFilteredPaths({ imodelAccess });
+      return new HierarchyProvider({
+        imodelAccess,
+        hierarchyDefinition: getHierarchyDefinitionsProvider({ imodelAccess }),
+        filtering:
+          filteredPaths !== undefined
+            ? {
+                paths: filteredPaths,
+              }
+            : undefined,
+      });
+    };
+
+    let disposed = false;
+    void (async () => {
+      const provider = await createHierarchyProvider();
+      if (disposed) {
+        return;
+      }
+      updateHierarchyProvider(provider);
+    })();
+
     return () => {
+      disposed = true;
       actions.dispose();
     };
-  }, [actions, hierarchyProvider]);
+  }, [actions, imodelAccess, getHierarchyDefinitionsProvider, getFilteredPaths]);
 
   const getNode = useRef((nodeId: string) => {
     return actions.getNode(nodeId);
@@ -131,7 +192,8 @@ function useTreeInternal({ hierarchyProvider }: UseTreeProps): UseTreeResult & {
 
   return {
     rootNodes: state.rootNodes,
-    isLoading: !!state.model.rootNode.isLoading,
+    hierarchyProvider: hierarchySource.HierarchyProvider,
+    isLoading: !!state.model.rootNode.isLoading || hierarchySource.isFiltering,
     expandNode,
     reloadTree,
     selectNodes,

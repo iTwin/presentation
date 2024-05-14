@@ -3,8 +3,8 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { ReactElement, useCallback, useEffect, useMemo, useState } from "react";
-import { useDebouncedAsyncValue } from "@itwin/components-react";
+import { ComponentPropsWithoutRef, ReactElement, useCallback, useEffect, useMemo, useState } from "react";
+import { debounceTime, Subject } from "rxjs";
 import { IModelConnection } from "@itwin/core-frontend";
 import { SvgFolder, SvgImodelHollow, SvgItem, SvgLayers, SvgModel } from "@itwin/itwinui-icons-react";
 import { Flex, ProgressRadial, SearchBox, Text, ToggleSwitch } from "@itwin/itwinui-react";
@@ -17,30 +17,17 @@ import {
 } from "@itwin/presentation-components";
 import { createECSchemaProvider, createECSqlQueryExecutor } from "@itwin/presentation-core-interop";
 import { Presentation } from "@itwin/presentation-frontend";
-import {
-  createHierarchyProvider,
-  createLimitingECSqlQueryExecutor,
-  GenericInstanceFilter,
-  HierarchyProvider,
-  LimitingECSqlQueryExecutor,
-} from "@itwin/presentation-hierarchies";
+import { createLimitingECSqlQueryExecutor, GenericInstanceFilter, LimitingECSqlQueryExecutor } from "@itwin/presentation-hierarchies";
 import { HierarchyLevelConfiguration, PresentationHierarchyNode, TreeRenderer, useUnifiedSelectionTree } from "@itwin/presentation-hierarchies-react";
 import { ModelsTreeDefinition } from "@itwin/presentation-models-tree";
 import { createCachingECClassHierarchyInspector, ECClassHierarchyInspector, ECSchemaProvider, IPrimitiveValueFormatter } from "@itwin/presentation-shared";
 import { MyAppFrontend } from "../../../api/MyAppFrontend";
 
 type IModelAccess = LimitingECSqlQueryExecutor & ECSchemaProvider & ECClassHierarchyInspector;
+type UseTreeProps = Parameters<typeof useUnifiedSelectionTree>[0];
 
-export function StatelessTreeV2(props: { imodel: IModelConnection; height: number; width: number }) {
-  return <Tree {...props} />;
-}
-
-function Tree({ imodel, height, width }: { imodel: IModelConnection; height: number; width: number }) {
+export function StatelessTreeV2({ imodel, ...props }: { imodel: IModelConnection; height: number; width: number }) {
   const [imodelAccess, setIModelAccess] = useState<IModelAccess>();
-  const [hierarchyProvider, setHierarchyProvider] = useState<HierarchyProvider>();
-  const [filter, setFilter] = useState("");
-  const [isFiltering, setIsFiltering] = useState(false);
-
   useEffect(() => {
     const schemas = MyAppFrontend.getSchemaContext(imodel);
     const schemaProvider = createECSchemaProvider(schemas);
@@ -51,47 +38,34 @@ function Tree({ imodel, height, width }: { imodel: IModelConnection; height: num
     });
   }, [imodel]);
 
-  const { value: filteredPaths } = useDebouncedAsyncValue(
-    useCallback(async () => {
-      setIsFiltering(false);
-      if (!imodelAccess) {
+  if (!imodelAccess) {
+    return null;
+  }
+
+  return <Tree {...props} imodel={imodel} imodelAccess={imodelAccess} />;
+}
+
+function Tree({ imodel, imodelAccess, height, width }: { imodel: IModelConnection; imodelAccess: IModelAccess; height: number; width: number }) {
+  const [filter, setFilter] = useState("");
+
+  const getFilteredPaths = useMemo<UseTreeProps["getFilteredPaths"]>(() => {
+    return async ({ imodelAccess: filterImodelAccess }) => {
+      if (!filter) {
         return undefined;
       }
-      if (filter !== "") {
-        setIsFiltering(true);
-        const paths = await ModelsTreeDefinition.createInstanceKeyPaths({
-          imodelAccess,
-          label: filter,
-        });
-        return paths;
-      }
-      return undefined;
-    }, [imodelAccess, filter]),
-  );
+      return ModelsTreeDefinition.createInstanceKeyPaths({
+        imodelAccess: filterImodelAccess,
+        label: filter,
+      });
+    };
+  }, [filter]);
 
-  useEffect(() => {
-    setIsFiltering(false);
-    if (!imodelAccess) {
-      return;
-    }
-
-    setHierarchyProvider(
-      createHierarchyProvider({
-        imodelAccess,
-        hierarchyDefinition: new ModelsTreeDefinition({ imodelAccess }),
-        filtering: filteredPaths
-          ? {
-              paths: filteredPaths,
-            }
-          : undefined,
-      }),
-    );
-  }, [imodelAccess, filteredPaths]);
-
-  const { rootNodes, isLoading, getHierarchyLevelConfiguration, reloadTree, ...treeProps } = useUnifiedSelectionTree({
+  const { rootNodes, hierarchyProvider, isLoading, getHierarchyLevelConfiguration, reloadTree, ...treeProps } = useUnifiedSelectionTree({
     imodelKey: imodel.key,
     sourceName: "StatelessTreeV2",
-    hierarchyProvider,
+    imodelAccess,
+    getFilteredPaths,
+    getHierarchyDefinitionsProvider,
   });
 
   const [shouldUseCustomFormatter, setShouldUseCustomFormatter] = useState<boolean>(false);
@@ -166,7 +140,7 @@ function Tree({ imodel, height, width }: { imodel: IModelConnection; height: num
   }, [filteringOptions]);
 
   const renderContent = () => {
-    if (rootNodes === undefined || isLoading || isFiltering) {
+    if (rootNodes === undefined || isLoading) {
       return (
         <Flex alignItems="center" justifyContent="center" flexDirection="column" style={{ height: "100%" }}>
           <ProgressRadial size="large" />
@@ -192,7 +166,7 @@ function Tree({ imodel, height, width }: { imodel: IModelConnection; height: num
   return (
     <Flex flexDirection="column" style={{ width, height }}>
       <Flex style={{ width: "100%", padding: "0.5rem" }}>
-        <SearchBox inputProps={{ value: filter, onChange: (e) => setFilter(e.currentTarget.value) }} />
+        <DebouncedSearchBox onChange={setFilter} />
         <ToggleSwitch onChange={toggleFormatter} checked={shouldUseCustomFormatter} />
       </Flex>
       {renderContent()}
@@ -214,6 +188,33 @@ function Tree({ imodel, height, width }: { imodel: IModelConnection; height: num
       />
     </Flex>
   );
+}
+
+type SearchBoxProps = ComponentPropsWithoutRef<typeof SearchBox>;
+
+function DebouncedSearchBox({ onChange, ...props }: Omit<SearchBoxProps, "onChange"> & { onChange: (text: string) => void }) {
+  const handleChange = useMemo(() => {
+    return debounced(onChange, 500);
+  }, [onChange]);
+
+  return <SearchBox {...props} inputProps={{ ...props.inputProps, value: undefined, onChange: (e) => handleChange(e.currentTarget.value) }} />;
+}
+
+function debounced<TArgs>(callback: (args: TArgs) => void, delay: number) {
+  const subject = new Subject<() => void>();
+  subject.pipe(debounceTime(delay)).subscribe({
+    next: (invoke) => invoke(),
+  });
+
+  return (args: TArgs) => {
+    subject.next(() => {
+      callback(args);
+    });
+  };
+}
+
+function getHierarchyDefinitionsProvider(props: Parameters<UseTreeProps["getHierarchyDefinitionsProvider"]>[0]) {
+  return new ModelsTreeDefinition(props);
 }
 
 const customFormatter: IPrimitiveValueFormatter = async (val) => {

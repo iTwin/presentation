@@ -769,7 +769,7 @@ async function createInstanceKeyPathsFromInstanceKeys(props: ModelsTreeInstanceK
       ecsql: queries.join(" UNION ALL "),
       bindings,
     },
-    { rowFormat: "Indexes" },
+    { rowFormat: "Indexes", restartToken: "ModelsTreeFilterByKey" },
   );
   const paths = new Array<HierarchyNodeIdentifiersPath>();
   for await (const row of reader) {
@@ -828,7 +828,7 @@ async function createInstanceKeyPathsFromInstanceLabel(
       `,
       bindings: [{ type: "string", value: props.label }],
     },
-    { rowFormat: "Indexes" },
+    { rowFormat: "Indexes", restartToken: "ModelsTreeFilterByLabel" },
   );
   const paths = new Array<HierarchyNodeIdentifiersPath>();
   for await (const row of reader) {
