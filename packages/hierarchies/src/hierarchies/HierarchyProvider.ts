@@ -237,7 +237,7 @@ export class HierarchyProvider {
       category: PERF_LOGGING_NAMESPACE,
       message: /* istanbul ignore next */ () => `Requesting hierarchy level definitions for ${createNodeIdentifierForLogging(props.parentNode)}`,
     });
-    // stream hierarchy level definitions in order
+    // stream hierarchy level definitions
     const definitions = from(this.hierarchyDefinition.defineHierarchyLevel(props)).pipe(
       mergeAll(),
       finalize(() =>

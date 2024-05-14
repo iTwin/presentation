@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { bufferCount, concatAll, concatMap, Observable } from "rxjs";
-import { MainThreadBlockHandler } from "../MainThreadBlockHandler";
+import { releaseMainThread } from "../ReleaseMainThread";
 
 /**
  * Emits a certain amount of values, then releases the main thread for other timers to use.
@@ -15,7 +15,7 @@ export function releaseMainThreadOnItemsCount<T>(elementCount: number) {
     return obs.pipe(
       bufferCount(elementCount),
       concatMap(async (x) => {
-        await MainThreadBlockHandler.releaseMainThread();
+        await releaseMainThread();
         return x;
       }),
       concatAll(),

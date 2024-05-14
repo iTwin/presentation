@@ -8,7 +8,7 @@ import { ECSqlQueryDef, ECSqlQueryExecutor, ECSqlQueryReaderOptions, ECSqlQueryR
 import { RowsLimitExceededError } from "./HierarchyErrors";
 import { LOGGING_NAMESPACE as CommonLoggingNamespace } from "./internal/Common";
 import { doLog } from "./internal/LoggingUtils";
-import { MainThreadBlockHandler } from "./internal/MainThreadBlockHandler";
+import { createMainThreadReleaseOnTimePassedHandler } from "./internal/ReleaseMainThread";
 
 /**
  * An interface for something that knows how to create a limiting ECSQL query reader.
@@ -36,16 +36,16 @@ export function createLimitingECSqlQueryExecutor(baseExecutor: ECSqlQueryExecuto
       const { limit: configLimit, ...restConfig } = config ?? {};
       const limit = configLimit ?? defaultLimit;
       const perfLogger = createQueryPerformanceLogger();
-      const blockHandler = new MainThreadBlockHandler();
+      const releaseMainThread = createMainThreadReleaseOnTimePassedHandler();
 
       // handle "unbounded" case without a buffer
       const reader = baseExecutor.createQueryReader({ ...query, ecsql: addLimit(query.ecsql, limit) }, restConfig);
       if (limit === "unbounded") {
         try {
           for await (const row of reader) {
+            await releaseMainThread();
             perfLogger.onStep();
             yield row;
-            await blockHandler.releaseMainThreadIfTimeElapsed();
           }
         } finally {
           perfLogger.onComplete();
@@ -57,20 +57,20 @@ export function createLimitingECSqlQueryExecutor(baseExecutor: ECSqlQueryExecuto
       const buffer: ECSqlQueryRow[] = [];
       try {
         for await (const row of reader) {
+          await releaseMainThread();
           perfLogger.onStep();
           buffer.push(row);
           if (buffer.length > limit) {
             throw new RowsLimitExceededError(limit);
           }
-          await blockHandler.releaseMainThreadIfTimeElapsed();
         }
       } finally {
         perfLogger.onComplete();
       }
 
       for (const row of buffer) {
+        await releaseMainThread();
         yield row;
-        await blockHandler.releaseMainThreadIfTimeElapsed();
       }
     },
   };
