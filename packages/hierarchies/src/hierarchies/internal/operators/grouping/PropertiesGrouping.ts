@@ -23,6 +23,7 @@ import {
   ProcessedInstanceHierarchyNode,
   PropertyGroupingNodeKey,
 } from "../../../HierarchyNode";
+import { createMainThreadReleaseOnTimePassedHandler } from "../../ReleaseMainThread";
 import { GroupingHandler, GroupingHandlerResult, ProcessedInstancesGroupingHierarchyNode } from "../Grouping";
 
 interface DisplayablePropertyGroupingInfo {
@@ -84,8 +85,11 @@ export async function createPropertyGroups(
     return otherValuesGrouping.node;
   };
 
+  const releaseMainThread = createMainThreadReleaseOnTimePassedHandler();
   const groupings: PropertyGroupingInformation = { ungrouped: [], grouped: new Map() };
   for (const node of nodesToGroup) {
+    await releaseMainThread();
+
     const byProperties = node.processingParams?.grouping?.byProperties;
     if (!byProperties) {
       groupings.ungrouped.push(node);
@@ -291,9 +295,12 @@ export async function getUniquePropertiesGroupInfo(
   parentNode: ParentHierarchyNode | undefined,
   nodes: ProcessedInstanceHierarchyNode[],
 ): Promise<Array<PropertyGroupInfo>> {
+  const releaseMainThread = createMainThreadReleaseOnTimePassedHandler();
   const parentPropertyGroupPath = parentNode ? createNodePropertyGroupPathMatchers(parentNode) : [];
   const uniqueProperties = new Map<string, PropertyGroupInfo>();
   for (const node of nodes) {
+    await releaseMainThread();
+
     const byProperties = node.processingParams?.grouping?.byProperties;
     if (!byProperties) {
       continue;
