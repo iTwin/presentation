@@ -5,7 +5,8 @@
 
 import { asyncScheduler, expand, filter, from, observeOn, of, tap } from "rxjs";
 import { IModelDb } from "@itwin/core-backend";
-import { SchemaContext, SchemaJsonLocater } from "@itwin/ecschema-metadata";
+import { BeDuration } from "@itwin/core-bentley";
+import { Schema, SchemaContext, SchemaJsonLocater, SchemaKey, SchemaMatchType, SchemaPropsGetter } from "@itwin/ecschema-metadata";
 import { createECSchemaProvider, createECSqlQueryExecutor } from "@itwin/presentation-core-interop";
 import { createLimitingECSqlQueryExecutor, HierarchyNode, HierarchyProvider, IHierarchyLevelDefinitionsFactory } from "@itwin/presentation-hierarchies";
 import { createCachingECClassHierarchyInspector, ECClassHierarchyInspector, ECSchemaProvider } from "@itwin/presentation-shared";
@@ -49,7 +50,7 @@ export class StatelessHierarchyProvider {
   private createECSchemaProvider() {
     const iModel = this._props.iModel;
     const schemas = new SchemaContext();
-    const locater = new SchemaJsonLocater((schemaName) => iModel.getSchemaProps(schemaName));
+    const locater = new AsyncSchemaJsonLocater((schemaName) => iModel.getSchemaProps(schemaName));
     schemas.addLocater(locater);
     return createECSchemaProvider(schemas);
   }
@@ -72,4 +73,26 @@ export class StatelessHierarchyProvider {
 
 function getNodeDepth(node: HierarchyNode): number {
   return node.parentKeys.length + 1;
+}
+
+class AsyncSchemaJsonLocater extends SchemaJsonLocater {
+  #_getSchema: SchemaPropsGetter;
+  public constructor(getSchema: SchemaPropsGetter) {
+    super(getSchema);
+    this.#_getSchema = getSchema;
+  }
+  public override async getSchema<T extends Schema>(
+    schemaKey: Readonly<SchemaKey>,
+    _matchType: SchemaMatchType,
+    context: SchemaContext,
+  ): Promise<T | undefined> {
+    const schemaProps = this.#_getSchema(schemaKey.name);
+    if (!schemaProps) {
+      return undefined;
+    }
+
+    await BeDuration.wait(0);
+    const schema = await Schema.fromJson(schemaProps, context);
+    return schema as T;
+  }
 }
