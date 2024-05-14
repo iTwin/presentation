@@ -44,7 +44,7 @@ export function createGroupingOperator(
       tapOnce(() => {
         doLog({
           category: PERF_LOGGING_NAMESPACE,
-          message: /* istanbul ignore next */ () => `Starting grouping`,
+          message: /* istanbul ignore next */ () => `Starting grouping (parent: ${createNodeIdentifierForLogging(parentNode)})`,
         });
       }),
       reduce<ProcessedHierarchyNode, { instanceNodes: ProcessedInstanceHierarchyNode[]; restNodes: ProcessedHierarchyNode[] }>(
@@ -58,10 +58,10 @@ export function createGroupingOperator(
         },
         { instanceNodes: [], restNodes: [] },
       ),
-      tap(() => {
+      tap(({ instanceNodes, restNodes }) => {
         doLog({
           category: PERF_LOGGING_NAMESPACE,
-          message: /* istanbul ignore next */ () => `Nodes partitioned`,
+          message: /* istanbul ignore next */ () => `Nodes partitioned. Got ${instanceNodes.length} instance nodes and ${restNodes.length} rest nodes.`,
         });
       }),
       mergeMap(({ instanceNodes, restNodes }): Observable<ProcessedHierarchyNode> => {
@@ -85,7 +85,7 @@ export function createGroupingOperator(
           from(restNodes),
         );
       }),
-      releaseMainThreadOnItemsCount(100),
+      releaseMainThreadOnItemsCount(500),
       log({ category: LOGGING_NAMESPACE, message: /* istanbul ignore next */ (n) => `out: ${createNodeIdentifierForLogging(n)}` }),
     );
   };
@@ -134,14 +134,21 @@ function groupInstanceNodes(
           category: PERF_LOGGING_NAMESPACE,
           message: /* istanbul ignore next */ () => `Grouping handler ${handlerIndex} exclusively took ${timer.elapsedSeconds.toFixed(3)} s.`,
         }),
-        map((result) => applyGroupHidingParams(result, extraSiblings)),
-        map((result) => assignAutoExpand(result)),
-        map((result) => ({ handlerIndex: handlerIndex + 1, result: { ...result, grouped: mergeInPlace(curr?.grouped, result.grouped) } })),
+        mergeMap((result) => {
+          if (result.grouped.length === 0) {
+            return of({ handlerIndex: handlerIndex + 1, result: { ...result, grouped: curr?.grouped ?? [] } });
+          }
+          return of(result).pipe(
+            map((r) => applyGroupHidingParams(r, extraSiblings)),
+            map((r) => assignAutoExpand(r)),
+            map((r) => ({ handlerIndex: handlerIndex + 1, result: { ...r, grouped: mergeInPlace(curr?.grouped, r.grouped) } })),
+            delay(0),
+          );
+        }),
         log({
           category: PERF_LOGGING_NAMESPACE,
           message: /* istanbul ignore next */ () => `Total time for grouping handler ${handlerIndex}: ${timer.elapsedSeconds.toFixed(3)} s.`,
         }),
-        delay(0),
       );
     }),
     last(),
@@ -182,11 +189,7 @@ export function createGroupingHandlers(
   valueFormatter: IPrimitiveValueFormatter,
   localizedStrings: PropertiesGroupingLocalizedStrings,
 ): Observable<GroupingHandler> {
-  doLog({
-    category: PERF_LOGGING_NAMESPACE,
-    message: /* istanbul ignore next */ () => `Start creating grouping handlers`,
-  });
-  const timer = new StopWatch(undefined, true);
+  const timer = new StopWatch();
   const groupingLevel = getNodeGroupingLevel(parentNode);
   return concat(
     groupingLevel <= GroupingLevel.Class
@@ -200,6 +203,15 @@ export function createGroupingHandlers(
       : EMPTY,
     groupingLevel < GroupingLevel.Label ? of<GroupingHandler>(async (allNodes) => createLabelGroups(allNodes)) : EMPTY,
   ).pipe(
+    tap({
+      subscribe: () => {
+        doLog({
+          category: PERF_LOGGING_NAMESPACE,
+          message: /* istanbul ignore next */ () => `Start creating grouping handlers`,
+        });
+        timer.start();
+      },
+    }),
     finalize(() => {
       doLog({
         category: PERF_LOGGING_NAMESPACE,

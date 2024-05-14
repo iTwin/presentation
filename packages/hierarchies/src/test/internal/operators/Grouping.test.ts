@@ -10,7 +10,6 @@ import sinon from "sinon";
 import { LogLevel } from "@itwin/core-bentley";
 import { createDefaultValueFormatter, IPrimitiveValueFormatter } from "@itwin/presentation-shared";
 import { createGroupingHandlers, createGroupingOperator, GroupingHandlerResult, LOGGING_NAMESPACE } from "../../../hierarchies/internal/operators/Grouping";
-import * as autoExpand from "../../../hierarchies/internal/operators/grouping/AutoExpand";
 import * as baseClassGrouping from "../../../hierarchies/internal/operators/grouping/BaseClassGrouping";
 import * as classGrouping from "../../../hierarchies/internal/operators/grouping/ClassGrouping";
 import * as groupHiding from "../../../hierarchies/internal/operators/grouping/GroupHiding";
@@ -39,11 +38,9 @@ describe("Grouping", () => {
   });
 
   describe("createGroupingOperator", () => {
-    let assignAutoExpandStub: sinon.SinonStub;
     let applyGroupingHidingParamsStub: sinon.SinonStub<[GroupingHandlerResult, number], GroupingHandlerResult>;
     beforeEach(() => {
       applyGroupingHidingParamsStub = sinon.stub(groupHiding, "applyGroupHidingParams").callsFake((props) => props);
-      assignAutoExpandStub = sinon.stub(autoExpand, "assignAutoExpand").callsFake((props) => props);
     });
 
     it("doesn't change input nodes when grouping handlers list is empty", async () => {
@@ -59,35 +56,6 @@ describe("Grouping", () => {
       ];
 
       const result = await collect(from(nodes).pipe(createGroupingOperator(imodelAccess, undefined, formatter, testLocalizedStrings, undefined, [])));
-      expect(result).to.deep.eq(nodes);
-    });
-
-    it("doesn't change input nodes when grouping handlers don't group", async () => {
-      const nodes = [
-        createTestProcessedInstanceNode({
-          key: { type: "instances", instanceKeys: [{ className: "TestSchema.A", id: "0x1" }] },
-          label: "1",
-        }),
-        createTestProcessedInstanceNode({
-          key: { type: "instances", instanceKeys: [{ className: "TestSchema.A", id: "0x2" }] },
-          label: "1",
-        }),
-      ];
-
-      const result = await collect(
-        from(nodes).pipe(
-          createGroupingOperator(imodelAccess, undefined, formatter, testLocalizedStrings, undefined, [
-            async (allNodes) => ({ grouped: [], ungrouped: allNodes, groupingType: "label" }),
-            async (allNodes) => ({ grouped: [], ungrouped: allNodes, groupingType: "class" }),
-          ]),
-        ),
-      );
-      expect(applyGroupingHidingParamsStub.callCount).to.eq(2);
-      expect(applyGroupingHidingParamsStub.firstCall).to.be.calledWith({ grouped: [], ungrouped: nodes, groupingType: "label" });
-      expect(applyGroupingHidingParamsStub.secondCall).to.be.calledWith({ grouped: [], ungrouped: nodes, groupingType: "class" });
-      expect(assignAutoExpandStub.callCount).to.eq(2);
-      expect(assignAutoExpandStub.firstCall).to.be.calledWith({ grouped: [], ungrouped: nodes, groupingType: "label" });
-      expect(assignAutoExpandStub.secondCall).to.be.calledWith({ grouped: [], ungrouped: nodes, groupingType: "class" });
       expect(result).to.deep.eq(nodes);
     });
 
