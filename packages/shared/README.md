@@ -432,3 +432,15 @@ The package also delivers a number of utility types and functions:
   - spaces before closing parentheses and comma,
   - spaces after opening parentheses,
   - spaces at the beginning and end of the string.
+
+- `releaseMainThread` - returns a promise that immediately resolves. Awaiting on the returned promise releases the main thread and allows other tasks to run.
+
+- `createMainThreadReleaseOnTimePassedHandler` - returns a `releaseMainThread` promise if the given amount of time has passed since the handler was created or the main thread was last released using this handler. Otherwise, returns `undefined`.
+
+  ```ts
+  const releaseMainThread = createMainThreadReleaseOnTimePassedHandler();
+  for (const value of someVeryLargeArray) {
+    await releaseMainThread();
+    // do something with value
+  }
+  ```
