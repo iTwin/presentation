@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1715777230504,
+  "lastUpdate": 1715781002378,
   "repoUrl": "https://github.com/iTwin/presentation",
   "entries": {
     "Benchmark": [
@@ -7494,6 +7494,217 @@ window.BENCHMARK_DATA = {
           {
             "name": "compute top ancestor functional selection for 50k 2D elements",
             "value": 3115.28,
+            "unit": "ms"
+          },
+          {
+            "name": "compute top ancestor functional selection for 50k 2D elements (P95 of main thread blocks)",
+            "value": 0,
+            "unit": "ms",
+            "extra": "count: 0\nmax: N/A\np95: N/A\nmedian: N/A"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "38288322+imodeljs-admin@users.noreply.github.com",
+            "name": "iTwin.js admin",
+            "username": "imodeljs-admin"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "a650387f2a19d545d32bc8ff0930c1ce9315dab3",
+          "message": "Release packages [publish docs] (#574)\n\nCo-authored-by: imodeljs-admin <imodeljs-admin@users.noreply.github.com>",
+          "timestamp": "2024-05-15T16:46:57+03:00",
+          "tree_id": "8c2b7f635ff9583a2f87c837ee8ef40d1bee2be8",
+          "url": "https://github.com/iTwin/presentation/commit/a650387f2a19d545d32bc8ff0930c1ce9315dab3"
+        },
+        "date": 1715781001522,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "hilite 50k elements",
+            "value": 2928.47,
+            "unit": "ms"
+          },
+          {
+            "name": "hilite 50k elements (P95 of main thread blocks)",
+            "value": 1999,
+            "unit": "ms",
+            "extra": "count: 2\nmax: 1999\np95: 1999\nmedian: 1051"
+          },
+          {
+            "name": "hilite 50k group elements",
+            "value": 210.8,
+            "unit": "ms"
+          },
+          {
+            "name": "hilite 50k group elements (P95 of main thread blocks)",
+            "value": 77,
+            "unit": "ms",
+            "extra": "count: 1\nmax: 77\np95: 77\nmedian: 77"
+          },
+          {
+            "name": "hilite 1k subjects",
+            "value": 46113.46,
+            "unit": "ms"
+          },
+          {
+            "name": "hilite 1k subjects (P95 of main thread blocks)",
+            "value": 31,
+            "unit": "ms",
+            "extra": "count: 1\nmax: 31\np95: 31\nmedian: 31"
+          },
+          {
+            "name": "hilite 50k subcategories",
+            "value": 251.7,
+            "unit": "ms"
+          },
+          {
+            "name": "hilite 50k subcategories (P95 of main thread blocks)",
+            "value": 124,
+            "unit": "ms",
+            "extra": "count: 1\nmax: 124\np95: 124\nmedian: 124"
+          },
+          {
+            "name": "hilite 50k functional 3D elements",
+            "value": 27918.78,
+            "unit": "ms"
+          },
+          {
+            "name": "hilite 50k functional 3D elements (P95 of main thread blocks)",
+            "value": 2011,
+            "unit": "ms",
+            "extra": "count: 2\nmax: 2011\np95: 2011\nmedian: 1061.5"
+          },
+          {
+            "name": "hilite 50k functional 2D elements",
+            "value": 8043.5,
+            "unit": "ms"
+          },
+          {
+            "name": "hilite 50k functional 2D elements (P95 of main thread blocks)",
+            "value": 2100,
+            "unit": "ms",
+            "extra": "count: 2\nmax: 2100\np95: 2100\nmedian: 1094.5"
+          },
+          {
+            "name": "compute selection for 50k elements",
+            "value": 332.75,
+            "unit": "ms"
+          },
+          {
+            "name": "compute selection for 50k elements (P95 of main thread blocks)",
+            "value": 150,
+            "unit": "ms",
+            "extra": "count: 1\nmax: 150\np95: 150\nmedian: 150"
+          },
+          {
+            "name": "compute parent selection for 50k elements",
+            "value": 343.54,
+            "unit": "ms"
+          },
+          {
+            "name": "compute parent selection for 50k elements (P95 of main thread blocks)",
+            "value": 117,
+            "unit": "ms",
+            "extra": "count: 1\nmax: 117\np95: 117\nmedian: 117"
+          },
+          {
+            "name": "compute top ancestor selection for 50k elements",
+            "value": 574.11,
+            "unit": "ms"
+          },
+          {
+            "name": "compute top ancestor selection for 50k elements (P95 of main thread blocks)",
+            "value": 0,
+            "unit": "ms",
+            "extra": "count: 0\nmax: N/A\np95: N/A\nmedian: N/A"
+          },
+          {
+            "name": "compute category selection for 50k elements",
+            "value": 99.63,
+            "unit": "ms"
+          },
+          {
+            "name": "compute category selection for 50k elements (P95 of main thread blocks)",
+            "value": 0,
+            "unit": "ms",
+            "extra": "count: 0\nmax: N/A\np95: N/A\nmedian: N/A"
+          },
+          {
+            "name": "compute model selection for 50k elements",
+            "value": 79.51,
+            "unit": "ms"
+          },
+          {
+            "name": "compute model selection for 50k elements (P95 of main thread blocks)",
+            "value": 0,
+            "unit": "ms",
+            "extra": "count: 0\nmax: N/A\np95: N/A\nmedian: N/A"
+          },
+          {
+            "name": "compute functional selection for 50k 3D elements",
+            "value": 412.26,
+            "unit": "ms"
+          },
+          {
+            "name": "compute functional selection for 50k 3D elements (P95 of main thread blocks)",
+            "value": 137,
+            "unit": "ms",
+            "extra": "count: 1\nmax: 137\np95: 137\nmedian: 137"
+          },
+          {
+            "name": "compute parent functional selection for 50k 3D elements",
+            "value": 440.27,
+            "unit": "ms"
+          },
+          {
+            "name": "compute parent functional selection for 50k 3D elements (P95 of main thread blocks)",
+            "value": 125,
+            "unit": "ms",
+            "extra": "count: 1\nmax: 125\np95: 125\nmedian: 125"
+          },
+          {
+            "name": "compute top ancestor functional selection for 50k 3D elements",
+            "value": 1309.36,
+            "unit": "ms"
+          },
+          {
+            "name": "compute top ancestor functional selection for 50k 3D elements (P95 of main thread blocks)",
+            "value": 0,
+            "unit": "ms",
+            "extra": "count: 0\nmax: N/A\np95: N/A\nmedian: N/A"
+          },
+          {
+            "name": "compute functional selection for 50k 2D elements",
+            "value": 3143.31,
+            "unit": "ms"
+          },
+          {
+            "name": "compute functional selection for 50k 2D elements (P95 of main thread blocks)",
+            "value": 0,
+            "unit": "ms",
+            "extra": "count: 0\nmax: N/A\np95: N/A\nmedian: N/A"
+          },
+          {
+            "name": "compute parent functional selection for 50k 2D elements",
+            "value": 3113.67,
+            "unit": "ms"
+          },
+          {
+            "name": "compute parent functional selection for 50k 2D elements (P95 of main thread blocks)",
+            "value": 0,
+            "unit": "ms",
+            "extra": "count: 0\nmax: N/A\np95: N/A\nmedian: N/A"
+          },
+          {
+            "name": "compute top ancestor functional selection for 50k 2D elements",
+            "value": 3181.64,
             "unit": "ms"
           },
           {
