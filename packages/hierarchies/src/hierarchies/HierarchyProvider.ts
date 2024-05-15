@@ -61,7 +61,6 @@ import { createHideIfNoChildrenOperator } from "./internal/operators/HideIfNoChi
 import { createHideNodesInHierarchyOperator } from "./internal/operators/HideNodesInHierarchy";
 import { partition } from "./internal/operators/Partition";
 import { reduceToMergeMapList } from "./internal/operators/ReduceToMergeMap";
-import { releaseMainThreadOnItemsCount } from "./internal/operators/ReleaseMainThread";
 import { shareReplayWithErrors } from "./internal/operators/ShareReplayWithErrors";
 import { sortNodesByLabelOperator } from "./internal/operators/Sorting";
 import { SubscriptionScheduler } from "./internal/SubscriptionScheduler";
@@ -366,13 +365,7 @@ export class HierarchyProvider {
     possiblyKnownChildrenObservable?: ParsedQueryNodesObservable,
   ): Observable<boolean> {
     const loggingCategory = `${LOGGING_NAMESPACE}.HasNodes`;
-    return concat(
-      (possiblyKnownChildrenObservable ?? EMPTY).pipe(
-        releaseMainThreadOnItemsCount(500),
-        filter((n) => hasChildren(n)),
-      ),
-      preprocessedNodesObservable,
-    ).pipe(
+    return concat((possiblyKnownChildrenObservable ?? EMPTY).pipe(filter((n) => hasChildren(n))), preprocessedNodesObservable).pipe(
       log({ category: loggingCategory, message: /* istanbul ignore next */ (n) => `Node before mapping to 'true': ${createNodeIdentifierForLogging(n)}` }),
       take(1),
       map(() => true),
