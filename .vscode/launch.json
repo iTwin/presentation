@@ -141,7 +141,7 @@
         "--config",
         "./.mocharc.json",
         "--no-timeouts",
-        "./lib/*test.js"
+        "./lib/**/*.test.js"
       ],
       "env": {
         "NODE_ENV": "development",

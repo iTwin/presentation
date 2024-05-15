@@ -4,7 +4,13 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { StopWatch } from "@itwin/core-bentley";
-import { ECSqlQueryDef, ECSqlQueryExecutor, ECSqlQueryReaderOptions, ECSqlQueryRow, MainThreadBlockHandler } from "@itwin/presentation-shared";
+import {
+  createMainThreadReleaseOnTimePassedHandler,
+  ECSqlQueryDef,
+  ECSqlQueryExecutor,
+  ECSqlQueryReaderOptions,
+  ECSqlQueryRow,
+} from "@itwin/presentation-shared";
 import { RowsLimitExceededError } from "./HierarchyErrors";
 import { LOGGING_NAMESPACE as CommonLoggingNamespace } from "./internal/Common";
 import { doLog } from "./internal/LoggingUtils";
@@ -35,18 +41,16 @@ export function createLimitingECSqlQueryExecutor(baseExecutor: ECSqlQueryExecuto
       const { limit: configLimit, ...restConfig } = config ?? {};
       const limit = configLimit ?? defaultLimit;
       const perfLogger = createQueryPerformanceLogger();
-      const blockHandler = new MainThreadBlockHandler({
-        onRelease: () => doLog({ category: CommonLoggingNamespace, message: () => "Releasing main thread" }),
-      });
+      const releaseMainThread = createMainThreadReleaseOnTimePassedHandler();
 
       // handle "unbounded" case without a buffer
       const reader = baseExecutor.createQueryReader({ ...query, ecsql: addLimit(query.ecsql, limit) }, restConfig);
       if (limit === "unbounded") {
         try {
           for await (const row of reader) {
+            await releaseMainThread();
             perfLogger.onStep();
             yield row;
-            await blockHandler.releaseMainThreadIfTimeElapsed();
           }
         } finally {
           perfLogger.onComplete();
@@ -58,20 +62,20 @@ export function createLimitingECSqlQueryExecutor(baseExecutor: ECSqlQueryExecuto
       const buffer: ECSqlQueryRow[] = [];
       try {
         for await (const row of reader) {
+          await releaseMainThread();
           perfLogger.onStep();
           buffer.push(row);
           if (buffer.length > limit) {
             throw new RowsLimitExceededError(limit);
           }
-          await blockHandler.releaseMainThreadIfTimeElapsed();
         }
       } finally {
         perfLogger.onComplete();
       }
 
       for (const row of buffer) {
+        await releaseMainThread();
         yield row;
-        await blockHandler.releaseMainThreadIfTimeElapsed();
       }
     },
   };

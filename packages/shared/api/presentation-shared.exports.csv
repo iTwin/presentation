@@ -10,6 +10,7 @@ beta;createCachingECClassHierarchyInspector(props:
 beta;createClassBasedInstanceLabelSelectClauseFactory(props: ClassBasedInstanceLabelSelectClauseFactoryProps): IInstanceLabelSelectClauseFactory
 beta;createDefaultInstanceLabelSelectClauseFactory(): IInstanceLabelSelectClauseFactory
 beta;createDefaultValueFormatter(): IPrimitiveValueFormatter
+beta;createMainThreadReleaseOnTimePassedHandler(releaseOnTimePassed?: number): () => Promise
 beta;EC
 beta;ECClassHierarchyInspector
 beta;ECSchemaProvider
@@ -35,6 +36,7 @@ beta;parseFullClassName(fullClassName: string):
 beta;parseInstanceLabel(value: string | undefined): ConcatenatedValue | string
 beta;PrimitiveValue = Id64String | string | number | boolean | Date | Point2d | Point3d
 beta;PrimitiveValue
+beta;releaseMainThread(): Promise
 beta;trimWhitespace(str: string): string
 beta;trimWhitespace(str: string | undefined): string | undefined
 beta;TypedPrimitiveValue

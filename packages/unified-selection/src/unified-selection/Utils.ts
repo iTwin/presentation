@@ -3,8 +3,8 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { bufferCount, concatAll, concatMap, Observable } from "rxjs";
-import { ECSqlBinding, ECSqlQueryDef, ECSqlQueryExecutor, ECSqlQueryRow, MainThreadBlockHandler } from "@itwin/presentation-shared";
+import { bufferCount, concatAll, concatMap, delay, Observable, of } from "rxjs";
+import { createMainThreadReleaseOnTimePassedHandler, ECSqlBinding, ECSqlQueryDef, ECSqlQueryExecutor, ECSqlQueryRow } from "@itwin/presentation-shared";
 
 /**
  * Forms ECSql bindings from given ID's.
@@ -31,13 +31,13 @@ export function formIdBindings(property: string, ids: string[], bindings: ECSqlB
 export async function* executeQuery<T>(
   queryExecutor: ECSqlQueryExecutor,
   query: ECSqlQueryDef,
-  blockHandler: MainThreadBlockHandler,
   extractData: (row: ECSqlQueryRow) => T,
 ): AsyncIterableIterator<T> {
+  const releaseMainThread = createMainThreadReleaseOnTimePassedHandler();
   const reader = queryExecutor.createQueryReader(query);
   for await (const row of reader) {
     yield extractData(row);
-    await blockHandler.releaseMainThreadIfTimeElapsed();
+    await releaseMainThread();
   }
 }
 
@@ -49,9 +49,12 @@ export function releaseMainThreadOnItemsCount<T>(elementCount: number) {
   return (obs: Observable<T>): Observable<T> => {
     return obs.pipe(
       bufferCount(elementCount),
-      concatMap(async (x) => {
-        await MainThreadBlockHandler.releaseMainThread();
-        return x;
+      concatMap((buff, i) => {
+        const out = of(buff);
+        if (i === 0 && buff.length < elementCount) {
+          return out;
+        }
+        return out.pipe(delay(0));
       }),
       concatAll(),
     );

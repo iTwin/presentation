@@ -21,7 +21,6 @@ export {
 export { ILogger, NOOP_LOGGER, LogFunction, LogLevel } from "./shared/Logging";
 export { ArrayElement, OmitOverUnion } from "./shared/MappedTypes";
 export { createCachingECClassHierarchyInspector, EC, getClass, ECClassHierarchyInspector, ECSchemaProvider } from "./shared/Metadata";
-export { normalizeFullClassName, parseFullClassName, trimWhitespace } from "./shared/Utils";
+export { normalizeFullClassName, parseFullClassName, trimWhitespace, releaseMainThread, createMainThreadReleaseOnTimePassedHandler } from "./shared/Utils";
 export { InstanceKey, PrimitiveValue, TypedPrimitiveValue } from "./shared/Values";
 export { Event } from "./shared/Event";
-export { MainThreadBlockHandler } from "./shared/MainThreadBlockHandler";
