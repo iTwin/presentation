@@ -7,7 +7,6 @@ import { expect } from "chai";
 import { SnapshotDb } from "@itwin/core-backend";
 import { createECSqlQueryExecutor } from "@itwin/presentation-core-interop";
 import { computeSelection } from "@itwin/unified-selection";
-import { ComputeSelectionProps } from "@itwin/unified-selection/lib/cjs/unified-selection/SelectionScope";
 import { Datasets, IModelName } from "../util/Datasets";
 import { run, RunOptions } from "../util/TestUtilities";
 
@@ -120,7 +119,7 @@ function runSelectionScopeTest(
   testProps: {
     iModelName: IModelName;
     inputQuery: string;
-    scope: ComputeSelectionProps["scope"];
+    scope: Parameters<typeof computeSelection>[0]["scope"];
     expectedCounts?: { className: string; count: number }[];
   } & Omit<RunOptions<never>, "setup" | "test" | "cleanup">,
 ) {
