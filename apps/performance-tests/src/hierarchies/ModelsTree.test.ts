@@ -8,8 +8,8 @@ import { IModelDb, SnapshotDb } from "@itwin/core-backend";
 import { ModelsTreeDefinition } from "@itwin/presentation-models-tree";
 import { ECClassHierarchyInspector, ECSchemaProvider } from "@itwin/presentation-shared";
 import { Datasets } from "../util/Datasets";
-import { StatelessHierarchyProvider } from "../util/StatelessHierarchyProvider";
 import { run } from "../util/TestUtilities";
+import { StatelessHierarchyProvider } from "./StatelessHierarchyProvider";
 
 describe("models tree", () => {
   const getHierarchyFactory = (imodelAccess: ECSchemaProvider & ECClassHierarchyInspector) => new ModelsTreeDefinition({ imodelAccess });

@@ -3,8 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { bufferCount, concatAll, concatMap, Observable } from "rxjs";
-import { MainThreadBlockHandler } from "../MainThreadBlockHandler";
+import { bufferCount, concatAll, concatMap, delay, Observable, of } from "rxjs";
 
 /**
  * Emits a certain amount of values, then releases the main thread for other timers to use.
@@ -14,9 +13,12 @@ export function releaseMainThreadOnItemsCount<T>(elementCount: number) {
   return (obs: Observable<T>): Observable<T> => {
     return obs.pipe(
       bufferCount(elementCount),
-      concatMap(async (x) => {
-        await MainThreadBlockHandler.releaseMainThread();
-        return x;
+      concatMap((buff, i) => {
+        const out = of(buff);
+        if (i === 0 && buff.length < elementCount) {
+          return out;
+        }
+        return out.pipe(delay(0));
       }),
       concatAll(),
     );

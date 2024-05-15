@@ -6,7 +6,7 @@
 import asTable from "as-table";
 import fs from "fs";
 import Mocha from "mocha";
-import { BlockHandler, Summary } from "./BlockHandler";
+import { MainThreadBlocksDetector, Summary } from "./MainThreadBlocksDetector";
 
 interface TestInfo {
   test: Mocha.Runnable;
@@ -28,7 +28,7 @@ const tableFormatter = asTable.configure({
 export class TestReporter extends Base {
   private readonly _testStartTimes = new Map<string, number>();
   private readonly _testInfo = new Map<string, TestInfo>();
-  private readonly _blockHandler = new BlockHandler();
+  private readonly _blockHandler = new MainThreadBlocksDetector();
   private readonly _outputPath?: string;
   private _indentLevel = 0;
 

@@ -8,7 +8,7 @@ import { SortedArray } from "@itwin/core-bentley";
 import { LOGGER } from "./Logging";
 
 const ENABLE_PINGS = false;
-const LOG_CATEGORY = "Presentation.PerformanceTests.BlockHandler";
+const LOG_CATEGORY = "Presentation.PerformanceTests.MainThreadBlocksDetector";
 
 function log(messageOrCallback: string | (() => string)) {
   if (LOGGER.isEnabled(LOG_CATEGORY, "trace")) {
@@ -29,7 +29,7 @@ export interface Summary {
  * This class measures the durations of time when main thread is blocked.
  * This is measured by running a timer which detects cases when it is fired later than expected.
  */
-export class BlockHandler {
+export class MainThreadBlocksDetector {
   private readonly _samples = new SortedArray<number>((a, b) => a - b);
   private _promise?: Promise<void>;
 
@@ -71,7 +71,7 @@ export class BlockHandler {
     };
 
     if (this._promise) {
-      throw new Error("Block handler already running.");
+      throw new Error("MainThreadBlocksDetector already running.");
     }
     this._promise = runTimer();
   }
