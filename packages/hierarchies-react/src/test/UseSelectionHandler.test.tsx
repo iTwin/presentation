@@ -5,7 +5,6 @@
 
 import { expect } from "chai";
 import sinon from "sinon";
-import { HierarchyNode } from "@itwin/presentation-hierarchies";
 import { UserEvent } from "@testing-library/user-event";
 import { PresentationHierarchyNode, PresentationInfoNode, PresentationTreeNode } from "../presentation-hierarchies-react/Types";
 import { SelectionChangeType, SelectionMode, useSelectionHandler } from "../presentation-hierarchies-react/UseSelectionHandler";
@@ -45,20 +44,11 @@ describe("useSelectionHandler", () => {
   const selectNodesStub = sinon.stub<[Array<string>, SelectionChangeType], void>();
 
   const createHierarchyNode = (id: string, children: Array<PresentationTreeNode> = [], isExpanded: boolean = true) => {
-    return {
-      id,
-      isExpanded,
-      children,
-      label: "label",
-      isLoading: false,
-      isFilterable: false,
-      isFiltered: false,
-      nodeData: {} as unknown as HierarchyNode,
-    } satisfies PresentationHierarchyNode;
+    return { id, isExpanded, children } as PresentationHierarchyNode;
   };
 
   const createInfoNode = (id: string) => {
-    return { id, message: "message", parentNodeId: undefined, type: "Unknown" } satisfies PresentationInfoNode;
+    return { id, message: "message" } as PresentationInfoNode;
   };
 
   const createProps = (rootNodes: Array<PresentationTreeNode> | undefined, selectionMode: SelectionMode, isSelected: boolean) => {
