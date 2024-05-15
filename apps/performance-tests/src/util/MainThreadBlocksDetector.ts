@@ -4,18 +4,16 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { setInterval } from "timers/promises";
-import { Logger, LogLevel, SortedArray } from "@itwin/core-bentley";
+import { SortedArray } from "@itwin/core-bentley";
+import { LOGGER } from "./Logging";
 
 const ENABLE_PINGS = false;
-const LOG_CATEGORY = "Presentation.PerformanceTests.BlockHandler";
+const LOG_CATEGORY = "Presentation.PerformanceTests.MainThreadBlocksDetector";
 
 function log(messageOrCallback: string | (() => string)) {
-  if (!Logger.isEnabled(LOG_CATEGORY, LogLevel.Trace)) {
-    return;
+  if (LOGGER.isEnabled(LOG_CATEGORY, "trace")) {
+    LOGGER.logTrace(LOG_CATEGORY, typeof messageOrCallback === "string" ? messageOrCallback : messageOrCallback());
   }
-
-  const message = typeof messageOrCallback === "string" ? messageOrCallback : messageOrCallback();
-  Logger.logTrace(LOG_CATEGORY, message);
 }
 
 export interface Summary {
@@ -31,21 +29,17 @@ export interface Summary {
  * This class measures the durations of time when main thread is blocked.
  * This is measured by running a timer which detects cases when it is fired later than expected.
  */
-export class BlockHandler {
+export class MainThreadBlocksDetector {
   private readonly _samples = new SortedArray<number>((a, b) => a - b);
   private _promise?: Promise<void>;
 
   public getSummary(): Summary {
     const arr = this._samples.extractArray();
-    const count = arr.length;
-    const max = count ? arr[count - 1] : undefined;
-    const p95 = getP95(arr);
-    const median = getMedian(arr);
     return {
-      count,
-      max,
-      p95,
-      median,
+      count: arr.length,
+      max: arr.length ? arr[arr.length - 1] : undefined,
+      p95: getP95(arr),
+      median: getMedian(arr),
     };
   }
 
@@ -77,7 +71,7 @@ export class BlockHandler {
     };
 
     if (this._promise) {
-      throw new Error("Block handler already running.");
+      throw new Error("MainThreadBlocksDetector already running.");
     }
     this._promise = runTimer();
   }

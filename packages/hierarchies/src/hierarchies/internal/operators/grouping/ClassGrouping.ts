@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { ECSchemaProvider, getClass } from "@itwin/presentation-shared";
+import { createMainThreadReleaseOnTimePassedHandler, ECSchemaProvider, getClass } from "@itwin/presentation-shared";
 import { ClassGroupingNodeKey, HierarchyNode, ParentHierarchyNode, ProcessedInstanceHierarchyNode } from "../../../HierarchyNode";
 import { GroupingHandlerResult, ProcessedInstancesGroupingHierarchyNode } from "../Grouping";
 
@@ -26,7 +26,9 @@ export async function createClassGroups(
 ): Promise<GroupingHandlerResult> {
   const parentNodeClass = parentNode && HierarchyNode.isClassGroupingNode(parentNode) ? parentNode.key.className : undefined;
   const groupings: ClassGroupingInformation = { ungrouped: [], grouped: new Map() };
+  const releaseMainThread = createMainThreadReleaseOnTimePassedHandler();
   for (const node of nodes) {
+    await releaseMainThread();
     const nodeClassName = node.key.instanceKeys[0].className;
     if (node.processingParams?.grouping?.byClass && nodeClassName !== parentNodeClass) {
       let groupingInfo = groupings.grouped.get(nodeClassName);
@@ -46,9 +48,11 @@ export async function createClassGroups(
   return createGroupingNodes(groupings);
 }
 
-function createGroupingNodes(groupings: ClassGroupingInformation): GroupingHandlerResult {
+async function createGroupingNodes(groupings: ClassGroupingInformation): Promise<GroupingHandlerResult> {
   const groupedNodes = new Array<ProcessedInstancesGroupingHierarchyNode>();
-  groupings.grouped.forEach((entry) => {
+  const releaseMainThread = createMainThreadReleaseOnTimePassedHandler();
+  for (const [, entry] of groupings.grouped) {
+    await releaseMainThread();
     const groupingNodeKey: ClassGroupingNodeKey = {
       type: "class-grouping",
       className: entry.class.fullName,
@@ -61,6 +65,6 @@ function createGroupingNodes(groupings: ClassGroupingInformation): GroupingHandl
       groupedInstanceKeys: entry.groupedNodes.flatMap((groupedInstanceNode) => groupedInstanceNode.key.instanceKeys),
       children: entry.groupedNodes.map((gn) => Object.assign(gn, { parentKeys: [...groupedNodeParentKeys, groupingNodeKey] })),
     });
-  });
+  }
   return { grouped: groupedNodes, ungrouped: groupings.ungrouped, groupingType: "class" };
 }
