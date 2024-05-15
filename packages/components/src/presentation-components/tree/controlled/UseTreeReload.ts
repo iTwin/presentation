@@ -53,6 +53,7 @@ function useModelSourceUpdateOnIModelHierarchyUpdate(params: TreeReloadParams & 
         return;
       }
 
+      subscription?.unsubscribe();
       subscription = startTreeReload({ dataProviderProps, ruleset, pageSize, modelSource, renderedItems, onReload });
     });
 
@@ -78,6 +79,7 @@ function useModelSourceUpdateOnRulesetModification(params: TreeReloadParams & { 
       }
 
       // use ruleset id as only registered rulesets can be modified.
+      subscription?.unsubscribe();
       subscription = startTreeReload({ dataProviderProps, ruleset: modifiedRuleset.id, pageSize, modelSource, renderedItems, onReload });
     });
 
@@ -99,6 +101,7 @@ function useModelSourceUpdateOnRulesetVariablesChange(params: TreeReloadParams &
     let subscription: Subscription | undefined;
     const removeListener = Presentation.presentation.vars(getRulesetId(ruleset)).onVariableChanged.addListener(() => {
       // note: we should probably debounce these events while accumulating changed variables in case multiple vars are changed
+      subscription?.unsubscribe();
       subscription = startTreeReload({ dataProviderProps, ruleset, pageSize, modelSource, renderedItems, onReload });
     });
 
@@ -119,6 +122,7 @@ function useModelSourceUpdateOnUnitSystemChange(params: TreeReloadParams): void 
 
     let subscription: Subscription | undefined;
     const removeListener = IModelApp.quantityFormatter.onActiveFormattingUnitSystemChanged.addListener(() => {
+      subscription?.unsubscribe();
       subscription = startTreeReload({ dataProviderProps, ruleset, pageSize, modelSource, renderedItems, onReload });
     });
 
