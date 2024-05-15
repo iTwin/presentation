@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1715777192893,
+  "lastUpdate": 1715777230504,
   "repoUrl": "https://github.com/iTwin/presentation",
   "entries": {
     "Benchmark": [
@@ -7769,6 +7769,140 @@ window.BENCHMARK_DATA = {
             "value": 160,
             "unit": "ms",
             "extra": "count: 1\nmax: 160\np95: 160\nmedian: 160"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "35135765+grigasp@users.noreply.github.com",
+            "name": "Grigas",
+            "username": "grigasp"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "cd91f00795d2fe8d35859a0af3507a44bc213620",
+          "message": "hierarchies: Release main thread (#571)\n\n* Use schema locater that loads schemas asynchronously\r\n\r\n* Fix performance tests' launch config\r\n\r\n* Remove `MainThreadBlockHandler` in favor of `createMainThreadReleaseOnTimePassedHandler` function\r\n\r\n* Release main thread when grouping\r\n\r\n* Add a 0 delay after each grouping handler that actually does group something\r\n\r\n* Release main thread when iterating over `possiblyKnownChildrenObservable`\r\n\r\n* cleanup\r\n\r\n* fixup createMainThreadReleaseOnTimePassedHandler\r\n\r\n* Move utilities for releasing main thread to the shared package\r\n\r\n* Clean up performance tests\r\n\r\n* Attempt to reduce blocking for flat ant label grouping situations\r\n\r\n* coverage",
+          "timestamp": "2024-05-15T15:43:43+03:00",
+          "tree_id": "99eecc4049cb0316b955c33e63f663060f0fb6f2",
+          "url": "https://github.com/iTwin/presentation/commit/cd91f00795d2fe8d35859a0af3507a44bc213620"
+        },
+        "date": 1715777229797,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "flat 50k elements list",
+            "value": 4467,
+            "unit": "ms"
+          },
+          {
+            "name": "flat 50k elements list (P95 of main thread blocks)",
+            "value": 79,
+            "unit": "ms",
+            "extra": "count: 10\nmax: 79\np95: 79\nmedian: 33"
+          },
+          {
+            "name": "grouping by label",
+            "value": 10529.51,
+            "unit": "ms"
+          },
+          {
+            "name": "grouping by label (P95 of main thread blocks)",
+            "value": 62,
+            "unit": "ms",
+            "extra": "count: 4\nmax: 62\np95: 62\nmedian: 37.5"
+          },
+          {
+            "name": "grouping by class",
+            "value": 10506.38,
+            "unit": "ms"
+          },
+          {
+            "name": "grouping by class (P95 of main thread blocks)",
+            "value": 47,
+            "unit": "ms",
+            "extra": "count: 5\nmax: 47\np95: 47\nmedian: 31"
+          },
+          {
+            "name": "grouping by property",
+            "value": 10988.69,
+            "unit": "ms"
+          },
+          {
+            "name": "grouping by property (P95 of main thread blocks)",
+            "value": 45,
+            "unit": "ms",
+            "extra": "count: 8\nmax: 45\np95: 45\nmedian: 32.5"
+          },
+          {
+            "name": "grouping by base class (10 classes)",
+            "value": 8060.22,
+            "unit": "ms"
+          },
+          {
+            "name": "grouping by base class (10 classes) (P95 of main thread blocks)",
+            "value": 90,
+            "unit": "ms",
+            "extra": "count: 18\nmax: 90\np95: 90\nmedian: 33.5"
+          },
+          {
+            "name": "grouping by multiple attributes",
+            "value": 28195.1,
+            "unit": "ms"
+          },
+          {
+            "name": "grouping by multiple attributes (P95 of main thread blocks)",
+            "value": 70,
+            "unit": "ms",
+            "extra": "count: 13\nmax: 70\np95: 70\nmedian: 34"
+          },
+          {
+            "name": "hide if no children required to finalize root, w/o children",
+            "value": 50866.74,
+            "unit": "ms"
+          },
+          {
+            "name": "hide if no children required to finalize root, w/o children (P95 of main thread blocks)",
+            "value": 39,
+            "unit": "ms",
+            "extra": "count: 13\nmax: 39\np95: 39\nmedian: 28"
+          },
+          {
+            "name": "hide if no children required to finalize root, w/ children",
+            "value": 168.88,
+            "unit": "ms"
+          },
+          {
+            "name": "hide if no children required to finalize root, w/ children (P95 of main thread blocks)",
+            "value": 0,
+            "unit": "ms",
+            "extra": "count: 0\nmax: N/A\np95: N/A\nmedian: N/A"
+          },
+          {
+            "name": "models tree initial (Baytown)",
+            "value": 64.04,
+            "unit": "ms"
+          },
+          {
+            "name": "models tree initial (Baytown) (P95 of main thread blocks)",
+            "value": 0,
+            "unit": "ms",
+            "extra": "count: 0\nmax: N/A\np95: N/A\nmedian: N/A"
+          },
+          {
+            "name": "models tree full (Baytown)",
+            "value": 7695.03,
+            "unit": "ms"
+          },
+          {
+            "name": "models tree full (Baytown) (P95 of main thread blocks)",
+            "value": 88,
+            "unit": "ms",
+            "extra": "count: 2\nmax: 88\np95: 88\nmedian: 72"
           }
         ]
       }
