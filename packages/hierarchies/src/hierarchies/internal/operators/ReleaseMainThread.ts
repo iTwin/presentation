@@ -13,9 +13,9 @@ export function releaseMainThreadOnItemsCount<T>(elementCount: number) {
   return (obs: Observable<T>): Observable<T> => {
     return obs.pipe(
       bufferCount(elementCount),
-      concatMap((buff) => {
+      concatMap((buff, i) => {
         const out = of(buff);
-        if (buff.length < elementCount) {
+        if (i === 0 && buff.length < elementCount) {
           return out;
         }
         return out.pipe(delay(0));

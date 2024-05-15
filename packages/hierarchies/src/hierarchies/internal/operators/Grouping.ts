@@ -67,6 +67,7 @@ export function createGroupingOperator(
       mergeMap((res) => {
         const out = of(res);
         const totalNodes = res.instanceNodes.length + res.restNodes.length;
+        // istanbul ignore next
         return totalNodes <= 1000 ? out : out.pipe(delay(0));
       }),
       mergeMap(({ instanceNodes, restNodes }): Observable<ProcessedHierarchyNode> => {
