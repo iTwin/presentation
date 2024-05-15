@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { Datasets } from "../util/Datasets";
-import { runHierarchyTest } from "../util/TestUtilities";
+import { runHierarchyTest } from "./RunHierarchyTest";
 
 describe("grouping", () => {
   const { schemaName, baseClassName, customPropName, itemsPerGroup, defaultClassName } = Datasets.CUSTOM_SCHEMA;
