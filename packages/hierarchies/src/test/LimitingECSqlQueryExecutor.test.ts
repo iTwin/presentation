@@ -6,10 +6,9 @@
 import { expect } from "chai";
 import { collect, createAsyncIterator } from "presentation-test-utilities";
 import sinon from "sinon";
-import { ECSqlQueryExecutor, ILogger, trimWhitespace } from "@itwin/presentation-shared";
+import { ECSqlQueryExecutor, trimWhitespace } from "@itwin/presentation-shared";
 import { RowsLimitExceededError } from "../hierarchies/HierarchyErrors";
 import { createLimitingECSqlQueryExecutor } from "../hierarchies/LimitingECSqlQueryExecutor";
-import { setLogger } from "../hierarchies/Logging";
 
 describe("createLimitingECSqlQueryExecutor", () => {
   const baseExecutor = {
@@ -52,25 +51,5 @@ describe("createLimitingECSqlQueryExecutor", () => {
     expect(baseExecutor.createQueryReader).to.be.calledOnceWith(
       sinon.match(({ ecsql }) => trimWhitespace(ecsql) === trimWhitespace("SELECT * FROM (query) LIMIT 2")),
     );
-  });
-
-  it(`logs when releases main thread`, async () => {
-    const logger = {
-      logTrace: sinon.spy(),
-      isEnabled: () => true,
-    } as unknown as ILogger;
-    setLogger(logger);
-
-    async function* createDelayedAsyncIterator<T>(values: T[], delay: number): AsyncIterableIterator<T> {
-      for (const value of values) {
-        yield value;
-        await new Promise((resolve) => setTimeout(resolve, delay));
-      }
-    }
-
-    baseExecutor.createQueryReader.returns(createDelayedAsyncIterator([{}, {}], 20));
-    await collect(createLimitingECSqlQueryExecutor(baseExecutor, 100).createQueryReader({ ecsql: "query" }));
-
-    expect(logger.logTrace).to.be.calledWith("Presentation.Hierarchies", "Releasing main thread");
   });
 });

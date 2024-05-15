@@ -5,9 +5,9 @@
 
 import { EMPTY, filter, forkJoin, from, map, merge, mergeMap, Observable, scan, shareReplay, Subject, toArray } from "rxjs";
 import { eachValueFrom } from "rxjs-for-await";
-import { ECClassHierarchyInspector, ECSqlBinding, ECSqlQueryExecutor, ECSqlQueryRow } from "@itwin/presentation-shared";
+import { ECClassHierarchyInspector, ECSqlBinding, ECSqlQueryDef, ECSqlQueryExecutor, ECSqlQueryRow } from "@itwin/presentation-shared";
 import { SelectableInstanceKey, Selectables } from "./Selectable";
-import { executeQuery, formIdBindings, releaseMainThreadOnItemsCount } from "./Utils";
+import { formIdBindings, genericExecuteQuery, releaseMainThreadOnItemsCount } from "./Utils";
 
 const HILITE_SET_EMIT_FREQUENCY = 20;
 
@@ -225,7 +225,7 @@ class HiliteSetProviderImpl implements HiliteSetProvider {
             SELECT ECInstanceId FROM Models
           `,
         ].join(" UNION ");
-        return from(executeQuery<string>(this._imodelAccess, { ctes, ecsql, bindings }, (row: ECSqlQueryRow) => row.ECInstanceId));
+        return from(executeQuery(this._imodelAccess, { ctes, ecsql, bindings }));
       }),
     );
   }
@@ -259,7 +259,7 @@ class HiliteSetProviderImpl implements HiliteSetProvider {
           `,
         ];
         const ecsql = [`SELECT ECInstanceId FROM CategorySubCategories`, `SELECT ECInstanceId FROM SubCategories`].join(" UNION ");
-        return from(executeQuery<string>(this._imodelAccess, { ctes, ecsql, bindings }, (row: ECSqlQueryRow) => row.ECInstanceId));
+        return from(executeQuery(this._imodelAccess, { ctes, ecsql, bindings }));
       }),
     );
   }
@@ -325,7 +325,7 @@ class HiliteSetProviderImpl implements HiliteSetProvider {
           "SELECT ECInstanceId FROM GroupGeometricElements WHERE ECClassId IS (BisCore.GeometricElement)",
           "SELECT ECInstanceId FROM ElementGeometricElements WHERE ECClassId IS (BisCore.GeometricElement)",
         ].join(" UNION ");
-        return from(executeQuery<string>(this._imodelAccess, { ctes, ecsql, bindings }, (row: ECSqlQueryRow) => row.ECInstanceId));
+        return from(executeQuery(this._imodelAccess, { ctes, ecsql, bindings }));
       }),
     );
   }
@@ -424,4 +424,8 @@ function unique<T>() {
       filter((x): x is T => !!x),
     );
   };
+}
+
+async function* executeQuery(queryExecutor: ECSqlQueryExecutor, query: ECSqlQueryDef): AsyncIterableIterator<string> {
+  yield* genericExecuteQuery(queryExecutor, query, (row: ECSqlQueryRow) => row.ECInstanceId);
 }

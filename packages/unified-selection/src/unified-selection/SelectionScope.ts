@@ -4,9 +4,9 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { Id64 } from "@itwin/core-bentley";
-import { ECSqlBinding, ECSqlQueryExecutor, ECSqlQueryRow } from "@itwin/presentation-shared";
+import { ECSqlBinding, ECSqlQueryDef, ECSqlQueryExecutor, ECSqlQueryRow } from "@itwin/presentation-shared";
 import { SelectableInstanceKey } from "./Selectable";
-import { executeQuery, formIdBindings } from "./Utils";
+import { formIdBindings, genericExecuteQuery } from "./Utils";
 
 /**
  * Available selection scopes.
@@ -101,10 +101,7 @@ async function* computeElementSelection(
     FROM AncestorElements
     WHERE ${recurseUntilRoot ? "" : "Depth = 0 OR"} ParentId IS NULL
   `;
-  yield* executeQuery<SelectableInstanceKey>(queryExecutor, { ctes, ecsql, bindings }, (row: ECSqlQueryRow) => ({
-    className: row.ClassName,
-    id: row.ECInstanceId,
-  }));
+  yield* executeQuery(queryExecutor, { ctes, ecsql, bindings });
 }
 
 async function* computeCategorySelection(queryExecutor: ECSqlQueryExecutor, ids: string[]): AsyncIterableIterator<SelectableInstanceKey> {
@@ -123,10 +120,7 @@ async function* computeCategorySelection(queryExecutor: ECSqlQueryExecutor, ids:
       WHERE ${formIdBindings("ge.ECInstanceId", ids, bindings)}
     `,
   ].join(" UNION ALL ");
-  yield* executeQuery<SelectableInstanceKey>(queryExecutor, { ecsql, bindings }, (row: ECSqlQueryRow) => ({
-    className: row.ClassName,
-    id: row.ECInstanceId,
-  }));
+  yield* executeQuery(queryExecutor, { ecsql, bindings });
 }
 
 async function* computeModelSelection(queryExecutor: ECSqlQueryExecutor, ids: string[]): AsyncIterableIterator<SelectableInstanceKey> {
@@ -137,10 +131,7 @@ async function* computeModelSelection(queryExecutor: ECSqlQueryExecutor, ids: st
     JOIN BisCore.Element e ON e.Model.Id = m.ECInstanceId
     WHERE ${formIdBindings("e.ECInstanceId", ids, bindings)}
   `;
-  yield* executeQuery<SelectableInstanceKey>(queryExecutor, { ecsql, bindings }, (row: ECSqlQueryRow) => ({
-    className: row.ClassName,
-    id: row.ECInstanceId,
-  }));
+  yield* executeQuery(queryExecutor, { ecsql, bindings });
 }
 
 async function* computeFunctionalElementSelection(
@@ -236,13 +227,17 @@ async function* computeFunctionalElementSelection(
       SELECT DISTINCT ECInstanceId, ClassName FROM Element3dAncestorRelatedFunctionalElement
     `,
   ].join(" UNION ");
-  yield* executeQuery<SelectableInstanceKey>(queryExecutor, { ctes, ecsql, bindings }, (row: ECSqlQueryRow) => ({
-    className: row.ClassName,
-    id: row.ECInstanceId,
-  }));
+  yield* executeQuery(queryExecutor, { ctes, ecsql, bindings });
 }
 
 function formAncestorLevelBinding(ancestorLevel: number, bindings: ECSqlBinding[]) {
   bindings.push({ type: "int", value: ancestorLevel });
   return "?";
+}
+
+async function* executeQuery(queryExecutor: ECSqlQueryExecutor, query: ECSqlQueryDef): AsyncIterableIterator<SelectableInstanceKey> {
+  yield* genericExecuteQuery(queryExecutor, query, (row: ECSqlQueryRow) => ({
+    className: row.ClassName,
+    id: row.ECInstanceId,
+  }));
 }

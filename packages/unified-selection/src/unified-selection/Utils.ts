@@ -28,15 +28,15 @@ export function formIdBindings(property: string, ids: string[], bindings: ECSqlB
  * Executes given ECSql query and extracts data from rows. Additionally handles main thread releasing.
  * @internal
  */
-export async function* executeQuery<T>(
+export async function* genericExecuteQuery<T>(
   queryExecutor: ECSqlQueryExecutor,
   query: ECSqlQueryDef,
-  extractData: (row: ECSqlQueryRow) => T,
+  parseQueryRow: (row: ECSqlQueryRow) => T,
 ): AsyncIterableIterator<T> {
   const releaseMainThread = createMainThreadReleaseOnTimePassedHandler();
   const reader = queryExecutor.createQueryReader(query);
   for await (const row of reader) {
-    yield extractData(row);
+    yield parseQueryRow(row);
     await releaseMainThread();
   }
 }
