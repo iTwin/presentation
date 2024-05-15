@@ -43,7 +43,6 @@
   "dependencies": {
     "@itwin/itwinui-icons-react": "^2.8.0",
     "@itwin/itwinui-illustrations-react": "^2.1.0",
-    "@itwin/itwinui-react": "^3.9.1",
     "@itwin/presentation-hierarchies": "workspace:^",
     "@itwin/unified-selection": "workspace:^",
     "classnames": "^2.5.1",
@@ -52,11 +51,13 @@
     "rxjs": "^7.8.1"
   },
   "peerDependencies": {
+    "@itwin/itwinui-react": "^3.0.0",
     "react": "^17.0.0 || ^18.0.0",
     "react-dom": "^17.0.0 || ^18.0.0"
   },
   "devDependencies": {
     "@itwin/build-tools": "^4.5.2",
+    "@itwin/itwinui-react": "^3.0.0",
     "@testing-library/dom": "^9.3.4",
     "@testing-library/react": "^14.3.1",
     "@testing-library/user-event": "^14.5.2",
