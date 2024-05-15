@@ -64,6 +64,11 @@ export function createGroupingOperator(
           message: /* istanbul ignore next */ () => `Nodes partitioned. Got ${instanceNodes.length} instance nodes and ${restNodes.length} rest nodes.`,
         });
       }),
+      mergeMap((res) => {
+        const out = of(res);
+        const totalNodes = res.instanceNodes.length + res.restNodes.length;
+        return totalNodes <= 1000 ? out : out.pipe(delay(0));
+      }),
       mergeMap(({ instanceNodes, restNodes }): Observable<ProcessedHierarchyNode> => {
         const timer = new StopWatch(undefined, true);
         const groupingHandlersObs: Observable<GroupingHandler> = groupingHandlers
@@ -138,10 +143,16 @@ function groupInstanceNodes(
           if (result.grouped.length === 0) {
             return of({ handlerIndex: handlerIndex + 1, result: { ...result, grouped: curr?.grouped ?? [] } });
           }
+          const groupingPostProcessingTimer = new StopWatch(undefined, true);
           return of(result).pipe(
             map((r) => applyGroupHidingParams(r, extraSiblings)),
             map((r) => assignAutoExpand(r)),
             map((r) => ({ handlerIndex: handlerIndex + 1, result: { ...r, grouped: mergeInPlace(curr?.grouped, r.grouped) } })),
+            log({
+              category: PERF_LOGGING_NAMESPACE,
+              message: /* istanbul ignore next */ () =>
+                `Post-processing grouping handler ${handlerIndex} exclusively took ${groupingPostProcessingTimer.elapsedSeconds.toFixed(3)} s.`,
+            }),
             delay(0),
           );
         }),

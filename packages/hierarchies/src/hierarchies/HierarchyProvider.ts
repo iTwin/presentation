@@ -7,6 +7,7 @@ import {
   catchError,
   concat,
   defaultIfEmpty,
+  defer,
   EMPTY,
   filter,
   finalize,
@@ -239,7 +240,7 @@ export class HierarchyProvider {
       message: /* istanbul ignore next */ () => `Requesting hierarchy level definitions for ${createNodeIdentifierForLogging(props.parentNode)}`,
     });
     // stream hierarchy level definitions
-    const definitions = from(this.hierarchyDefinition.defineHierarchyLevel(props)).pipe(
+    const definitions = from(defer(async () => this.hierarchyDefinition.defineHierarchyLevel(props))).pipe(
       mergeAll(),
       finalize(() =>
         doLog({
@@ -294,6 +295,7 @@ export class HierarchyProvider {
           message: /* istanbul ignore next */ () => `Finished initializing child nodes for ${createNodeIdentifierForLogging(parentNode)}`,
         }),
       ),
+      shareReplayWithErrors(),
     );
   }
 

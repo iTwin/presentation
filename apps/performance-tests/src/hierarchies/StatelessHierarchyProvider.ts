@@ -3,18 +3,27 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { asyncScheduler, expand, filter, from, observeOn, of, tap } from "rxjs";
+import { asyncScheduler, expand, filter, finalize, from, observeOn, of, tap } from "rxjs";
 import { IModelDb } from "@itwin/core-backend";
 import { BeDuration } from "@itwin/core-bentley";
 import { Schema, SchemaContext, SchemaJsonLocater, SchemaKey, SchemaMatchType, SchemaPropsGetter } from "@itwin/ecschema-metadata";
 import { createECSchemaProvider, createECSqlQueryExecutor } from "@itwin/presentation-core-interop";
 import { createLimitingECSqlQueryExecutor, HierarchyNode, HierarchyProvider, IHierarchyLevelDefinitionsFactory } from "@itwin/presentation-hierarchies";
 import { createCachingECClassHierarchyInspector, ECClassHierarchyInspector, ECSchemaProvider } from "@itwin/presentation-shared";
+import { LOGGER } from "../util/Logging";
 
 export interface ProviderOptions {
   iModel: IModelDb;
   rowLimit?: number | "unbounded";
   getHierarchyFactory(imodelAccess: ECSchemaProvider & ECClassHierarchyInspector): IHierarchyLevelDefinitionsFactory;
+}
+
+const LOG_CATEGORY = "Presentation.PerformanceTests.StatelessHierarchyProvider";
+
+function log(messageOrCallback: string | (() => string)) {
+  if (LOGGER.isEnabled(LOG_CATEGORY, "trace")) {
+    LOGGER.logTrace(LOG_CATEGORY, typeof messageOrCallback === "string" ? messageOrCallback : messageOrCallback());
+  }
 }
 
 const DEFAULT_ROW_LIMIT = 1000;
@@ -33,7 +42,12 @@ export class StatelessHierarchyProvider {
     return new Promise<number>((resolve, reject) => {
       const nodesObservable = of<HierarchyNode | undefined>(undefined).pipe(
         expand((parentNode) => {
+          const parentNodeLabel = parentNode ? parentNode.label : "<root>";
+          log(`Requesting children for ${parentNodeLabel}`);
           return from(this._provider.getNodes({ parentNode })).pipe(
+            finalize(() => {
+              log(`Got children for ${parentNodeLabel}`);
+            }),
             tap(() => ++nodeCount),
             filter((node) => node.children && (!depth || getNodeDepth(node) < depth)),
             observeOn(asyncScheduler),
