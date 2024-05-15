@@ -5,6 +5,7 @@
 
 import { expect } from "chai";
 import sinon from "sinon";
+import { HierarchyNode } from "@itwin/presentation-hierarchies";
 import { UserEvent } from "@testing-library/user-event";
 import { PresentationHierarchyNode, PresentationInfoNode, PresentationTreeNode } from "../presentation-hierarchies-react/Types";
 import { SelectionChangeType, SelectionMode, useSelectionHandler } from "../presentation-hierarchies-react/UseSelectionHandler";
@@ -44,11 +45,20 @@ describe("useSelectionHandler", () => {
   const selectNodesStub = sinon.stub<[Array<string>, SelectionChangeType], void>();
 
   const createHierarchyNode = (id: string, children: Array<PresentationTreeNode> = [], isExpanded: boolean = true) => {
-    return { id, isExpanded, children } as PresentationHierarchyNode;
+    return {
+      id,
+      isExpanded,
+      children,
+      label: "label",
+      isLoading: false,
+      isFilterable: false,
+      isFiltered: false,
+      nodeData: {} as unknown as HierarchyNode,
+    } satisfies PresentationHierarchyNode;
   };
 
   const createInfoNode = (id: string) => {
-    return { id, message: "message" } as PresentationInfoNode;
+    return { id, message: "message", parentNodeId: undefined, type: "Unknown" } satisfies PresentationInfoNode;
   };
 
   const createProps = (rootNodes: Array<PresentationTreeNode> | undefined, selectionMode: SelectionMode, isSelected: boolean) => {
@@ -60,16 +70,6 @@ describe("useSelectionHandler", () => {
   });
 
   const selectionTests = (clickNode: (user: UserEvent, node: HTMLElement) => Promise<void>) => {
-    it("does nothing when no root nodes passed", async () => {
-      const { user, getByText } = render(<TestComponent {...createProps(undefined, "none", true)} />);
-
-      const node = getByText("invalid");
-      node.focus();
-      await clickNode(user, node);
-
-      expect(selectNodesStub).to.not.be.called;
-    });
-
     describe("`none` selection mode", () => {
       it("does nothing when node is clicked", async () => {
         const rootNode = createHierarchyNode("node");
@@ -78,9 +78,7 @@ describe("useSelectionHandler", () => {
         const node = getByText("node");
         node.focus();
 
-        await user.keyboard(`{Control>}`);
         await clickNode(user, node);
-        await user.keyboard(`{/Control}`);
 
         expect(selectNodesStub).to.not.be.called;
       });
@@ -96,6 +94,25 @@ describe("useSelectionHandler", () => {
         const node = getByText("node");
         node.focus();
 
+        await clickNode(user, node);
+
+        expect(selectNodesStub).to.be.calledOnceWith(["node"], "replace");
+      });
+
+      it("replaces selection when clicking using `ctrl` and `shift`", async () => {
+        const rootNode = createHierarchyNode("node");
+        const { user, getByText } = render(<TestComponent {...createProps([rootNode], selectionMode, true)} />);
+
+        const node = getByText("node");
+        node.focus();
+
+        await user.keyboard(`{Ctrl>}`);
+        await clickNode(user, node);
+        await user.keyboard(`{/Ctrl}`);
+
+        expect(selectNodesStub).to.be.calledOnceWith(["node"], "replace");
+        selectNodesStub.resetHistory();
+
         await user.keyboard(`{Shift>}`);
         await clickNode(user, node);
         await user.keyboard(`{/Shift}`);
@@ -110,9 +127,7 @@ describe("useSelectionHandler", () => {
         const node = getByText("node");
         node.focus();
 
-        await user.keyboard(`{Control>}`);
         await clickNode(user, node);
-        await user.keyboard(`{/Control}`);
 
         expect(selectNodesStub).to.be.calledOnceWith(["node"], "remove");
       });
@@ -128,9 +143,28 @@ describe("useSelectionHandler", () => {
         const node = getByText("node");
         node.focus();
 
-        await user.keyboard(`{Control>}`);
         await clickNode(user, node);
-        await user.keyboard(`{/Control}`);
+
+        expect(selectNodesStub).to.be.calledOnceWith(["node"], "add");
+      });
+
+      it("adds to selection when clicking using `ctrl` and `shift`", async () => {
+        const rootNode = createHierarchyNode("node");
+        const { user, getByText } = render(<TestComponent {...createProps([rootNode], selectionMode, true)} />);
+
+        const node = getByText("node");
+        node.focus();
+
+        await user.keyboard(`{Ctrl>}`);
+        await clickNode(user, node);
+        await user.keyboard(`{/Ctrl}`);
+
+        expect(selectNodesStub).to.be.calledOnceWith(["node"], "add");
+        selectNodesStub.resetHistory();
+
+        await user.keyboard(`{Shift>}`);
+        await clickNode(user, node);
+        await user.keyboard(`{/Shift}`);
 
         expect(selectNodesStub).to.be.calledOnceWith(["node"], "add");
       });
@@ -142,9 +176,7 @@ describe("useSelectionHandler", () => {
         const node = getByText("node");
         node.focus();
 
-        await user.keyboard(`{Shift>}`);
         await clickNode(user, node);
-        await user.keyboard(`{/Shift}`);
 
         expect(selectNodesStub).to.be.calledOnceWith(["node"], "remove");
       });
@@ -316,7 +348,7 @@ describe("useSelectionHandler", () => {
         expect(selectNodesStub).to.be.calledOnceWith(["node-1", "node-2"], "replace");
       });
 
-      it("does not update previous selection when using `shift`", async () => {
+      it("subsequent range selections use the same starting point", async () => {
         const nodes = [createHierarchyNode("node-1"), createHierarchyNode("node-2"), createHierarchyNode("node-3"), createHierarchyNode("node-4")];
         const { user, getByText } = render(<TestComponent {...createProps(nodes, selectionMode, true)} />);
 
@@ -367,9 +399,8 @@ describe("useSelectionHandler", () => {
         expect(selectNodesStub).to.be.calledOnceWith(["node-3", "node-4"], "replace");
       });
 
-      it("clears selection when invalid node passed", async () => {
-        const nodes = [createHierarchyNode("node-1"), createHierarchyNode("node-2"), createHierarchyNode("node-3")];
-        const { user, getByText } = render(<TestComponent {...createProps(nodes, selectionMode, true)} />);
+      it("does nothing when invalid node clicked and `shift` used", async () => {
+        const { user, getByText } = render(<TestComponent {...createProps(undefined, selectionMode, true)} />);
 
         const node = getByText("invalid");
         node.focus();
@@ -378,7 +409,7 @@ describe("useSelectionHandler", () => {
         await clickNode(user, node);
         await user.keyboard(`{/Shift}`);
 
-        expect(selectNodesStub).to.be.calledOnceWith([], "replace");
+        expect(selectNodesStub).to.not.be.called;
       });
     });
   };

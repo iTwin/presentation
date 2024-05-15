@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import { isPresentationHierarchyNode, PresentationTreeNode } from "./Types";
 
 /** @internal */
@@ -32,7 +32,7 @@ interface FlatTreeState {
 export function useSelectionHandler(props: UseSelectionHandlerProps): UseSelectionHandlerResult {
   const { rootNodes, selectionMode, selectNodes } = props;
   const previousSelectionRef = useRef<string | undefined>(undefined);
-  const [state, setState] = useState<FlatTreeState>({
+  const state = useRef<FlatTreeState>({
     flatNodeList: [],
     nodeIdToIndexMap: new Map(),
   });
@@ -41,12 +41,12 @@ export function useSelectionHandler(props: UseSelectionHandlerProps): UseSelecti
     if (!rootNodes) {
       return;
     }
-    setState(computeFlatNodeList(rootNodes));
+    state.current = computeFlatNodeList(rootNodes);
   }, [rootNodes]);
 
   const getNodeRange = (firstId?: string, secondId?: string) => {
     const getIndex = (nodeId?: string) => {
-      return nodeId ? state.nodeIdToIndexMap.get(nodeId) : 0;
+      return nodeId ? state.current.nodeIdToIndexMap.get(nodeId) : 0;
     };
     const firstIndex = getIndex(firstId);
     const secondIndex = getIndex(secondId);
@@ -56,7 +56,7 @@ export function useSelectionHandler(props: UseSelectionHandlerProps): UseSelecti
 
     const startingIndex = Math.min(firstIndex, secondIndex);
     const endIndex = Math.max(firstIndex, secondIndex);
-    return state.flatNodeList.slice(startingIndex, endIndex + 1);
+    return state.current.flatNodeList.slice(startingIndex, endIndex + 1);
   };
 
   const onNodeSelect = (nodeId: string, isSelected: boolean, shiftDown: boolean, ctrlDown: boolean) => {
@@ -66,6 +66,10 @@ export function useSelectionHandler(props: UseSelectionHandlerProps): UseSelecti
     }
 
     const nodes = selection.select === "range" ? getNodeRange(previousSelectionRef.current, nodeId) : [nodeId];
+    if (!nodes.length) {
+      return;
+    }
+
     selection.select !== "range" && (previousSelectionRef.current = nodeId);
     selectNodes(nodes, selection.type);
   };
