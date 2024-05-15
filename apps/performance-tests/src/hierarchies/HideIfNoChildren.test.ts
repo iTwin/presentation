@@ -12,8 +12,8 @@ import {
   NodeSelectQueryFactory,
 } from "@itwin/presentation-hierarchies";
 import { Datasets } from "../util/Datasets";
-import { StatelessHierarchyProvider } from "../util/StatelessHierarchyProvider";
 import { run } from "../util/TestUtilities";
+import { StatelessHierarchyProvider } from "./StatelessHierarchyProvider";
 
 describe("hide if no children", () => {
   const setup = () => SnapshotDb.openFile(Datasets.getIModelPath("50k flat elements"));

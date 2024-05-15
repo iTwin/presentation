@@ -59,6 +59,9 @@ export function createDefaultInstanceLabelSelectClauseFactory(): IInstanceLabelS
 export function createDefaultValueFormatter(): IPrimitiveValueFormatter;
 
 // @beta
+export function createMainThreadReleaseOnTimePassedHandler(releaseOnTimePassed?: number): () => Promise<void> | undefined;
+
+// @beta
 function createNullableSelector(props: {
     checkSelector: string;
     valueSelector: string;
@@ -375,6 +378,9 @@ export namespace PrimitiveValue {
     export function isPoint2d(value: PrimitiveValue): value is Point2d;
     export function isPoint3d(value: PrimitiveValue): value is Point3d;
 }
+
+// @beta
+export function releaseMainThread(): Promise<void>;
 
 // @beta
 export function trimWhitespace(str: string): string;

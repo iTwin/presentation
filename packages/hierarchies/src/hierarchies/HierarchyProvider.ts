@@ -7,6 +7,7 @@ import {
   catchError,
   concat,
   defaultIfEmpty,
+  defer,
   EMPTY,
   filter,
   finalize,
@@ -237,8 +238,8 @@ export class HierarchyProvider {
       category: PERF_LOGGING_NAMESPACE,
       message: /* istanbul ignore next */ () => `Requesting hierarchy level definitions for ${createNodeIdentifierForLogging(props.parentNode)}`,
     });
-    // stream hierarchy level definitions in order
-    const definitions = from(this.hierarchyDefinition.defineHierarchyLevel(props)).pipe(
+    // stream hierarchy level definitions
+    const definitions = from(defer(async () => this.hierarchyDefinition.defineHierarchyLevel(props))).pipe(
       mergeAll(),
       finalize(() =>
         doLog({
@@ -293,6 +294,7 @@ export class HierarchyProvider {
           message: /* istanbul ignore next */ () => `Finished initializing child nodes for ${createNodeIdentifierForLogging(parentNode)}`,
         }),
       ),
+      shareReplayWithErrors(),
     );
   }
 
@@ -365,8 +367,8 @@ export class HierarchyProvider {
     const loggingCategory = `${LOGGING_NAMESPACE}.HasNodes`;
     return concat((possiblyKnownChildrenObservable ?? EMPTY).pipe(filter((n) => hasChildren(n))), preprocessedNodesObservable).pipe(
       log({ category: loggingCategory, message: /* istanbul ignore next */ (n) => `Node before mapping to 'true': ${createNodeIdentifierForLogging(n)}` }),
-      map(() => true),
       take(1),
+      map(() => true),
       defaultIfEmpty(false),
       catchError((e: Error) => {
         doLog({ category: loggingCategory, message: /* istanbul ignore next */ () => `Error while determining children: ${e.message}` });
