@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { bufferCount, concatAll, concatMap, Observable } from "rxjs";
-import { releaseMainThread } from "../ReleaseMainThread";
+import { releaseMainThread } from "@itwin/presentation-shared";
 
 /**
  * Emits a certain amount of values, then releases the main thread for other timers to use.

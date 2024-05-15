@@ -6,6 +6,7 @@
 import { assert } from "@itwin/core-bentley";
 import {
   ArrayElement,
+  createMainThreadReleaseOnTimePassedHandler,
   EC,
   ECClassHierarchyInspector,
   ECSchemaProvider,
@@ -23,7 +24,6 @@ import {
   ProcessedInstanceHierarchyNode,
   PropertyGroupingNodeKey,
 } from "../../../HierarchyNode";
-import { createMainThreadReleaseOnTimePassedHandler } from "../../ReleaseMainThread";
 import { GroupingHandler, GroupingHandlerResult, ProcessedInstancesGroupingHierarchyNode } from "../Grouping";
 
 interface DisplayablePropertyGroupingInfo {

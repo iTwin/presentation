@@ -55,3 +55,42 @@ export function trimWhitespace(str: string | undefined): string | undefined {
     .replaceAll(/\s+,/g, ",") // remove spaces before comma
     .trim(); // remove spaces from beginning and end of the string
 }
+
+/**
+ * An utility that returns a promise that immediately resolves. Awaiting on the returned
+ * promise releases the main thread and allows other tasks to run.
+ *
+ * @beta
+ */
+export async function releaseMainThread() {
+  return new Promise<void>((resolve) => setTimeout(resolve, 0));
+}
+
+/**
+ * An utility that returns a `releaseMainThread` promise if the given amount of time has passed since the handler
+ * was created or the main thread was last released using this handler. Otherwise, returns `undefined`.
+ *
+ * Example:
+ * ```ts
+ * const releaseMainThread = createMainThreadReleaseOnTimePassedHandler();
+ * for (const value of someVeryLargeArray) {
+ *   await releaseMainThread();
+ *   // do something with value
+ * }
+ * ```
+ *
+ * @param releaseOnTimePassed The amount of time in milliseconds after which the main thread should be released. Defaults to `40` ms.
+ * @beta
+ */
+export function createMainThreadReleaseOnTimePassedHandler(releaseOnTimePassed = 40) {
+  let start = Date.now();
+  return (): Promise<void> | undefined => {
+    const elapsed = Date.now() - start;
+    if (elapsed < releaseOnTimePassed) {
+      return undefined;
+    }
+    return releaseMainThread().then(() => {
+      start = Date.now();
+    });
+  };
+}

@@ -3,9 +3,8 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { EC, ECClassHierarchyInspector, ECSchemaProvider, getClass } from "@itwin/presentation-shared";
+import { createMainThreadReleaseOnTimePassedHandler, EC, ECClassHierarchyInspector, ECSchemaProvider, getClass } from "@itwin/presentation-shared";
 import { ClassGroupingNodeKey, HierarchyNode, ParentHierarchyNode, ProcessedInstanceHierarchyNode } from "../../../HierarchyNode";
-import { createMainThreadReleaseOnTimePassedHandler } from "../../ReleaseMainThread";
 import { GroupingHandler, GroupingHandlerResult } from "../Grouping";
 
 /** @internal */

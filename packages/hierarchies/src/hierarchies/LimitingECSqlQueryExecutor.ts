@@ -4,11 +4,16 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { StopWatch } from "@itwin/core-bentley";
-import { ECSqlQueryDef, ECSqlQueryExecutor, ECSqlQueryReaderOptions, ECSqlQueryRow } from "@itwin/presentation-shared";
+import {
+  createMainThreadReleaseOnTimePassedHandler,
+  ECSqlQueryDef,
+  ECSqlQueryExecutor,
+  ECSqlQueryReaderOptions,
+  ECSqlQueryRow,
+} from "@itwin/presentation-shared";
 import { RowsLimitExceededError } from "./HierarchyErrors";
 import { LOGGING_NAMESPACE as CommonLoggingNamespace } from "./internal/Common";
 import { doLog } from "./internal/LoggingUtils";
-import { createMainThreadReleaseOnTimePassedHandler } from "./internal/ReleaseMainThread";
 
 /**
  * An interface for something that knows how to create a limiting ECSQL query reader.
