@@ -11,7 +11,8 @@ import { GenericInstanceFilter } from "@itwin/core-common";
 import { ECSqlQueryDef, ECSqlQueryReaderOptions, InstanceKey, trimWhitespace, TypedPrimitiveValue } from "@itwin/presentation-shared";
 import { DefineHierarchyLevelProps, IHierarchyLevelDefinitionsFactory } from "../hierarchies/HierarchyDefinition";
 import { RowsLimitExceededError } from "../hierarchies/HierarchyErrors";
-import { GroupingHierarchyNode, GroupingNodeKey, HierarchyNode } from "../hierarchies/HierarchyNode";
+import { GroupingHierarchyNode, HierarchyNode } from "../hierarchies/HierarchyNode";
+import { GroupingNodeKey } from "../hierarchies/HierarchyNodeKey";
 import { HierarchyProvider } from "../hierarchies/HierarchyProvider";
 import {
   ECSQL_COLUMN_NAME_FilteredChildrenPaths,

@@ -13,7 +13,8 @@ import {
   IHierarchyLevelDefinitionsFactory,
   InstanceNodesQueryDefinition,
 } from "../../hierarchies/HierarchyDefinition";
-import { HierarchyNode, HierarchyNodeIdentifiersPath, ParsedCustomHierarchyNode, ParsedHierarchyNode } from "../../hierarchies/HierarchyNode";
+import { HierarchyNode, ParsedCustomHierarchyNode, ParsedHierarchyNode } from "../../hierarchies/HierarchyNode";
+import { HierarchyNodeIdentifiersPath } from "../../hierarchies/HierarchyNodeIdentifier";
 import {
   applyECInstanceIdsFilter,
   ECSQL_COLUMN_NAME_FilteredChildrenPaths,

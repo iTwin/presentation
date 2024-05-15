@@ -8,14 +8,13 @@ import { GenericInstanceFilter } from "@itwin/core-common";
 import { ECClassHierarchyInspector, ECSqlQueryDef, InstanceKey } from "@itwin/presentation-shared";
 import {
   HierarchyNode,
-  HierarchyNodeKey,
-  InstancesNodeKey,
   ParsedCustomHierarchyNode,
   ParsedInstanceHierarchyNode,
   ProcessedCustomHierarchyNode,
   ProcessedHierarchyNode,
   ProcessedInstanceHierarchyNode,
 } from "./HierarchyNode";
+import { HierarchyNodeKey, InstancesNodeKey } from "./HierarchyNodeKey";
 
 /**
  * A nodes definition that returns a single custom defined node.

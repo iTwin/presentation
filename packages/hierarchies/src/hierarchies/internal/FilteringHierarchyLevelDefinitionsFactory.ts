@@ -15,14 +15,8 @@ import {
   INodePreProcessor,
   InstanceNodesQueryDefinition,
 } from "../HierarchyDefinition";
-import {
-  HierarchyNode,
-  HierarchyNodeIdentifier,
-  HierarchyNodeIdentifiersPath,
-  ParsedHierarchyNode,
-  ParsedInstanceHierarchyNode,
-  ProcessedHierarchyNode,
-} from "../HierarchyNode";
+import { HierarchyNode, ParsedHierarchyNode, ParsedInstanceHierarchyNode, ProcessedHierarchyNode } from "../HierarchyNode";
+import { HierarchyNodeIdentifier, HierarchyNodeIdentifiersPath } from "../HierarchyNodeIdentifier";
 import { defaultNodesParser } from "./TreeNodesReader";
 
 /** @internal */

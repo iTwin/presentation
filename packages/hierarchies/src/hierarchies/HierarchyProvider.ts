@@ -40,8 +40,6 @@ import { DefineHierarchyLevelProps, HierarchyNodesDefinition, IHierarchyLevelDef
 import { RowsLimitExceededError } from "./HierarchyErrors";
 import {
   HierarchyNode,
-  HierarchyNodeIdentifiersPath,
-  InstancesNodeKey,
   NonGroupingHierarchyNode,
   ParentHierarchyNode,
   ParsedHierarchyNode,
@@ -50,6 +48,8 @@ import {
   ProcessedHierarchyNode,
   ProcessedInstanceHierarchyNode,
 } from "./HierarchyNode";
+import { HierarchyNodeIdentifiersPath } from "./HierarchyNodeIdentifier";
+import { InstancesNodeKey } from "./HierarchyNodeKey";
 import { CachedNodesObservableEntry, ChildNodeObservablesCache, ParsedQueryNodesObservable } from "./internal/ChildNodeObservablesCache";
 import { LOGGING_NAMESPACE as CommonLoggingNamespace, createNodeIdentifierForLogging, hasChildren } from "./internal/Common";
 import { eachValueFrom } from "./internal/EachValueFrom";
