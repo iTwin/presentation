@@ -32,12 +32,7 @@ beta;NodePreProcessor =
 beta;NodeSelectClauseColumnNames
 beta;NodesQueryClauseFactory
 beta;NonGroupingHierarchyNode 
-beta;ParsedCustomHierarchyNode = Omit
-beta;ParsedHierarchyNode = ParsedCustomHierarchyNode | ParsedInstanceHierarchyNode
-beta;ParsedInstanceHierarchyNode = Omit
-beta;ProcessedCustomHierarchyNode = Omit
-beta;ProcessedGroupingHierarchyNode = Omit
+beta;ParsedHierarchyNode
 beta;ProcessedHierarchyNode = ProcessedCustomHierarchyNode | ProcessedInstanceHierarchyNode | ProcessedGroupingHierarchyNode
-beta;ProcessedInstanceHierarchyNode = Omit
 beta;RowsLimitExceededError 
 beta;setLogger(logger: ILogger | undefined): void

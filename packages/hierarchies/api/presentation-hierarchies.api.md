@@ -268,39 +268,12 @@ export interface NonGroupingHierarchyNode extends BaseHierarchyNode {
 }
 
 // @beta
-export type ParsedCustomHierarchyNode = Omit<ProcessedCustomHierarchyNode, "label" | "parentKeys"> & {
+export type ParsedHierarchyNode<TBase = ParsedCustomHierarchyNode | ParsedInstanceHierarchyNode> = OmitOverUnion<TBase, "label" | "parentKeys"> & {
     label: string | ConcatenatedValue;
-};
-
-// @beta
-export type ParsedHierarchyNode = ParsedCustomHierarchyNode | ParsedInstanceHierarchyNode;
-
-// @beta
-export type ParsedInstanceHierarchyNode = Omit<ProcessedInstanceHierarchyNode, "label" | "parentKeys"> & {
-    label: string | ConcatenatedValue;
-};
-
-// @beta
-export type ProcessedCustomHierarchyNode = Omit<NonGroupingHierarchyNode, "key" | "children"> & {
-    key: string;
-    children?: boolean;
-    processingParams?: HierarchyNodeProcessingParamsBase;
-};
-
-// @beta
-export type ProcessedGroupingHierarchyNode = Omit<GroupingHierarchyNode, "children"> & {
-    children: Array<ProcessedGroupingHierarchyNode | ProcessedInstanceHierarchyNode>;
 };
 
 // @beta
 export type ProcessedHierarchyNode = ProcessedCustomHierarchyNode | ProcessedInstanceHierarchyNode | ProcessedGroupingHierarchyNode;
-
-// @beta
-export type ProcessedInstanceHierarchyNode = Omit<NonGroupingHierarchyNode, "key" | "children"> & {
-    key: InstancesNodeKey;
-    children?: boolean;
-    processingParams?: InstanceHierarchyNodeProcessingParams;
-};
 
 // @beta
 export class RowsLimitExceededError extends Error {

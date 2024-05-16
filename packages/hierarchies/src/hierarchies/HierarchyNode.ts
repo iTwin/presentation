@@ -325,7 +325,7 @@ export interface InstanceHierarchyNodeProcessingParams extends HierarchyNodeProc
 
 /**
  * A custom (not based on data in an iModel) node that has processing parameters.
- * @beta
+ * @internal
  */
 export type ProcessedCustomHierarchyNode = Omit<NonGroupingHierarchyNode, "key" | "children"> & {
   key: string;
@@ -334,7 +334,7 @@ export type ProcessedCustomHierarchyNode = Omit<NonGroupingHierarchyNode, "key" 
 };
 /**
  * An instances' (based on data in an iModel) node that has processing parameters.
- * @beta
+ * @internal
  */
 export type ProcessedInstanceHierarchyNode = Omit<NonGroupingHierarchyNode, "key" | "children"> & {
   key: InstancesNodeKey;
@@ -343,7 +343,7 @@ export type ProcessedInstanceHierarchyNode = Omit<NonGroupingHierarchyNode, "key
 };
 /**
  * A grouping node that groups either instance nodes or other grouping nodes.
- * @beta
+ * @internal
  */
 export type ProcessedGroupingHierarchyNode = Omit<GroupingHierarchyNode, "children"> & {
   children: Array<ProcessedGroupingHierarchyNode | ProcessedInstanceHierarchyNode>;
@@ -364,18 +364,16 @@ export type ProcessedHierarchyNode = ProcessedCustomHierarchyNode | ProcessedIns
  * returned when the node is just parsed from query results.
  * @beta
  */
-export type ParsedHierarchyNode = ParsedCustomHierarchyNode | ParsedInstanceHierarchyNode;
+export type ParsedHierarchyNode<TBase = ParsedCustomHierarchyNode | ParsedInstanceHierarchyNode> = OmitOverUnion<TBase, "label" | "parentKeys"> & {
+  label: string | ConcatenatedValue;
+};
 /**
  * A kind of `ProcessedCustomHierarchyNode` that has unformatted label and doesn't know about its ancestors.
- * @beta
+ * @internal
  */
-export type ParsedCustomHierarchyNode = Omit<ProcessedCustomHierarchyNode, "label" | "parentKeys"> & {
-  label: string | ConcatenatedValue;
-};
+export type ParsedCustomHierarchyNode = ParsedHierarchyNode<ProcessedCustomHierarchyNode>;
 /**
  * A kind of `ProcessedInstanceHierarchyNode` that has unformatted label and doesn't know about its ancestors.
- * @beta
+ * @internal
  */
-export type ParsedInstanceHierarchyNode = Omit<ProcessedInstanceHierarchyNode, "label" | "parentKeys"> & {
-  label: string | ConcatenatedValue;
-};
+export type ParsedInstanceHierarchyNode = ParsedHierarchyNode<ProcessedInstanceHierarchyNode>;
