@@ -33,7 +33,7 @@ export {
 } from "./hierarchies/HierarchyNode";
 export { HierarchyNodeIdentifier, HierarchyNodeIdentifiersPath } from "./hierarchies/HierarchyNodeIdentifier";
 export { InstancesNodeKey, GroupingNodeKey, HierarchyNodeKey } from "./hierarchies/HierarchyNodeKey";
-export * from "./hierarchies/HierarchyProvider";
+export { GetHierarchyNodesProps, HierarchyProvider, createHierarchyProvider } from "./hierarchies/HierarchyProvider";
 export { createLimitingECSqlQueryExecutor, LimitingECSqlQueryExecutor } from "./hierarchies/LimitingECSqlQueryExecutor";
-export * from "./hierarchies/Logging";
+export { setLogger, getLogger } from "./hierarchies/Logging";
 export * from "./hierarchies/NodeSelectQueryFactory";

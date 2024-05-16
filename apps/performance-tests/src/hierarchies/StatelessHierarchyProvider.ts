@@ -8,7 +8,13 @@ import { IModelDb } from "@itwin/core-backend";
 import { BeDuration } from "@itwin/core-bentley";
 import { Schema, SchemaContext, SchemaJsonLocater, SchemaKey, SchemaMatchType, SchemaPropsGetter } from "@itwin/ecschema-metadata";
 import { createECSchemaProvider, createECSqlQueryExecutor } from "@itwin/presentation-core-interop";
-import { createLimitingECSqlQueryExecutor, HierarchyNode, HierarchyProvider, IHierarchyLevelDefinitionsFactory } from "@itwin/presentation-hierarchies";
+import {
+  createHierarchyProvider,
+  createLimitingECSqlQueryExecutor,
+  HierarchyNode,
+  HierarchyProvider,
+  IHierarchyLevelDefinitionsFactory,
+} from "@itwin/presentation-hierarchies";
 import { createCachingECClassHierarchyInspector, ECClassHierarchyInspector, ECSchemaProvider } from "@itwin/presentation-shared";
 import { LOGGER } from "../util/Logging";
 
@@ -77,7 +83,7 @@ export class StatelessHierarchyProvider {
       ...createCachingECClassHierarchyInspector({ schemaProvider, cacheSize: 1000 }),
       ...createLimitingECSqlQueryExecutor(createECSqlQueryExecutor(this._props.iModel), rowLimit),
     };
-    return new HierarchyProvider({
+    return createHierarchyProvider({
       imodelAccess,
       hierarchyDefinition: this._props.getHierarchyFactory(imodelAccess),
       queryCacheSize: 0,

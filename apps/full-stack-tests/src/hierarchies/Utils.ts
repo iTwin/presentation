@@ -9,10 +9,9 @@ import { Schema, SchemaContext, SchemaInfo, SchemaKey, SchemaMatchType } from "@
 import { ECSchemaRpcLocater } from "@itwin/ecschema-rpcinterface-common";
 import { createECSchemaProvider as createECSchemaProviderInterop, createECSqlQueryExecutor } from "@itwin/presentation-core-interop";
 import {
+  createHierarchyProvider,
   createLimitingECSqlQueryExecutor,
   HierarchyNodeIdentifiersPath,
-  HierarchyProvider,
-  HierarchyProviderLocalizedStrings,
   IHierarchyLevelDefinitionsFactory,
 } from "@itwin/presentation-hierarchies";
 import { createCachingECClassHierarchyInspector, IPrimitiveValueFormatter, parseFullClassName } from "@itwin/presentation-shared";
@@ -60,12 +59,12 @@ export function createProvider(props: {
   imodel: IModelConnection | IModelDb | ECDb;
   hierarchy: IHierarchyLevelDefinitionsFactory;
   formatterFactory?: (schemas: SchemaContext) => IPrimitiveValueFormatter;
-  localizedStrings?: HierarchyProviderLocalizedStrings;
+  localizedStrings?: Parameters<typeof createHierarchyProvider>[0]["localizedStrings"];
   filteredNodePaths?: HierarchyNodeIdentifiersPath[];
   queryCacheSize?: number;
 }) {
   const { imodel, hierarchy, formatterFactory, localizedStrings, filteredNodePaths, queryCacheSize } = props;
-  return new HierarchyProvider({
+  return createHierarchyProvider({
     imodelAccess: createIModelAccess(imodel),
     hierarchyDefinition: hierarchy,
     formatter: formatterFactory ? formatterFactory(createSchemaContext(imodel)) : undefined,

@@ -22,6 +22,9 @@ import { PrimitiveValue } from '@itwin/presentation-shared';
 export function createClassBasedHierarchyLevelDefinitionsFactory(props: ClassBasedHierarchyDefinitionsFactoryProps): IHierarchyLevelDefinitionsFactory;
 
 // @beta
+export function createHierarchyProvider(props: HierarchyProviderProps): HierarchyProvider;
+
+// @beta
 export function createLimitingECSqlQueryExecutor(baseExecutor: ECSqlQueryExecutor, defaultLimit: number | "unbounded"): LimitingECSqlQueryExecutor;
 
 // @beta
@@ -261,37 +264,11 @@ export namespace HierarchyNodesDefinition {
 }
 
 // @beta
-export class HierarchyProvider {
-    constructor(props: HierarchyProviderProps);
+export interface HierarchyProvider {
     getNodeInstanceKeys(props: Omit<GetHierarchyNodesProps, "ignoreCache">): AsyncIterableIterator<InstanceKey>;
     getNodes(props: GetHierarchyNodesProps): AsyncIterableIterator<HierarchyNode>;
-    readonly hierarchyDefinition: IHierarchyLevelDefinitionsFactory;
     notifyDataSourceChanged(): void;
-    get queryExecutor(): LimitingECSqlQueryExecutor;
-    // @internal (undocumented)
-    get queryScheduler(): {
-        schedule: LimitingECSqlQueryExecutor["createQueryReader"];
-    };
     setFormatter(formatter: IPrimitiveValueFormatter | undefined): void;
-}
-
-// @beta
-export interface HierarchyProviderLocalizedStrings {
-    other: string;
-    unspecified: string;
-}
-
-// @beta
-export interface HierarchyProviderProps {
-    filtering?: {
-        paths: HierarchyNodeIdentifiersPath[];
-    };
-    formatter?: IPrimitiveValueFormatter;
-    hierarchyDefinition: IHierarchyLevelDefinitionsFactory;
-    imodelAccess: ECSchemaProvider & LimitingECSqlQueryExecutor & ECClassHierarchyInspector;
-    localizedStrings?: HierarchyProviderLocalizedStrings;
-    queryCacheSize?: number;
-    queryConcurrency?: number;
 }
 
 // @beta

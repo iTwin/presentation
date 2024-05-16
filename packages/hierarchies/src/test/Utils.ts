@@ -13,7 +13,6 @@ import {
   ProcessedGroupingHierarchyNode,
   ProcessedInstanceHierarchyNode,
 } from "../hierarchies/HierarchyNode";
-import { HierarchyProviderLocalizedStrings } from "../hierarchies/HierarchyProvider";
 
 export function setupLogging(levels: Array<{ namespace: string; level: LogLevel }>) {
   Logger.initializeToConsole();
@@ -207,7 +206,7 @@ export function createIModelAccessStub() {
   };
 }
 
-export const testLocalizedStrings: HierarchyProviderLocalizedStrings = {
+export const testLocalizedStrings = {
   other: "_Other_",
   unspecified: "_Unspecified_",
 };
