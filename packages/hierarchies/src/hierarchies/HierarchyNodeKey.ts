@@ -23,7 +23,7 @@ export interface InstancesNodeKey {
 
 /**
  * A key for a class-grouping node.
- * @beta
+ * @internal
  */
 export interface ClassGroupingNodeKey {
   /** Type of the node */
@@ -35,7 +35,7 @@ export interface ClassGroupingNodeKey {
 
 /**
  * A key for a label-grouping node.
- * @beta
+ * @internal
  */
 export interface LabelGroupingNodeKey {
   /** Type of the node */
@@ -55,7 +55,7 @@ export interface LabelGroupingNodeKey {
  * A key property grouping node that groups nodes whose values don't fall into any other
  * property group in the hierarchy level.
  *
- * @beta
+ * @internal
  */
 export interface PropertyOtherValuesGroupingNodeKey {
   /** Type of the node */
@@ -69,7 +69,7 @@ export interface PropertyOtherValuesGroupingNodeKey {
 
 /**
  * A key for a property grouping node that groups nodes by formatted property value.
- * @beta
+ * @internal
  */
 export interface PropertyValueGroupingNodeKey {
   /** Type of the node */
@@ -87,7 +87,7 @@ export interface PropertyValueGroupingNodeKey {
 
 /**
  * A key for a property grouping node that groups nodes by a range of property values.
- * @beta
+ * @internal
  */
 export interface PropertyValueRangeGroupingNodeKey {
   /** Type of the node */
@@ -108,7 +108,7 @@ export interface PropertyValueRangeGroupingNodeKey {
 
 /**
  * A key for a property grouping node.
- * @beta
+ * @internal
  */
 export type PropertyGroupingNodeKey = PropertyValueRangeGroupingNodeKey | PropertyValueGroupingNodeKey | PropertyOtherValuesGroupingNodeKey;
 
@@ -120,7 +120,7 @@ export type GroupingNodeKey = ClassGroupingNodeKey | LabelGroupingNodeKey | Prop
 
 /**
  * A key for either an instance node or one of the instance grouping nodes.
- * @beta
+ * @internal
  */
 export type StandardHierarchyNodeKey = InstancesNodeKey | GroupingNodeKey;
 

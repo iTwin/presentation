@@ -19,12 +19,6 @@ import { OmitOverUnion } from '@itwin/presentation-shared';
 import { PrimitiveValue } from '@itwin/presentation-shared';
 
 // @beta
-export interface ClassGroupingNodeKey {
-    className: string;
-    type: "class-grouping";
-}
-
-// @beta
 export function createClassBasedHierarchyLevelDefinitionsFactory(props: ClassBasedHierarchyDefinitionsFactoryProps): IHierarchyLevelDefinitionsFactory;
 
 // @beta
@@ -315,13 +309,6 @@ export interface InstancesNodeKey {
 }
 
 // @beta
-export interface LabelGroupingNodeKey {
-    groupId?: string;
-    label: string;
-    type: "label-grouping";
-}
-
-// @beta
 export interface LimitingECSqlQueryExecutor {
     createQueryReader(query: ECSqlQueryDef, config?: ECSqlQueryReaderOptions & {
         limit?: number | "unbounded";
@@ -437,35 +424,6 @@ export type ProcessedInstanceHierarchyNode = Omit<NonGroupingHierarchyNode, "key
 };
 
 // @beta
-export type PropertyGroupingNodeKey = PropertyValueRangeGroupingNodeKey | PropertyValueGroupingNodeKey | PropertyOtherValuesGroupingNodeKey;
-
-// @beta
-export interface PropertyOtherValuesGroupingNodeKey {
-    properties: Array<{
-        className: string;
-        propertyName: string;
-    }>;
-    type: "property-grouping:other";
-}
-
-// @beta
-export interface PropertyValueGroupingNodeKey {
-    formattedPropertyValue: string;
-    propertyClassName: string;
-    propertyName: string;
-    type: "property-grouping:value";
-}
-
-// @beta
-export interface PropertyValueRangeGroupingNodeKey {
-    fromValue: number;
-    propertyClassName: string;
-    propertyName: string;
-    toValue: number;
-    type: "property-grouping:range";
-}
-
-// @beta
 export class RowsLimitExceededError extends Error {
     constructor(limit: number);
     // (undocumented)
@@ -474,9 +432,6 @@ export class RowsLimitExceededError extends Error {
 
 // @beta
 export function setLogger(logger: ILogger | undefined): void;
-
-// @beta
-export type StandardHierarchyNodeKey = InstancesNodeKey | GroupingNodeKey;
 
 // (No @packageDocumentation comment for this package)
 

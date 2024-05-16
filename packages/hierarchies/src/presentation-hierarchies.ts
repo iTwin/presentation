@@ -31,8 +31,8 @@ export {
   ProcessedGroupingHierarchyNode,
   ProcessedHierarchyNode,
 } from "./hierarchies/HierarchyNode";
-export * from "./hierarchies/HierarchyNodeIdentifier";
-export * from "./hierarchies/HierarchyNodeKey";
+export { HierarchyNodeIdentifier, HierarchyNodeIdentifiersPath } from "./hierarchies/HierarchyNodeIdentifier";
+export { InstancesNodeKey, GroupingNodeKey, HierarchyNodeKey } from "./hierarchies/HierarchyNodeKey";
 export * from "./hierarchies/HierarchyProvider";
 export { createLimitingECSqlQueryExecutor, LimitingECSqlQueryExecutor } from "./hierarchies/LimitingECSqlQueryExecutor";
 export * from "./hierarchies/Logging";

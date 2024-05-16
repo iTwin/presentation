@@ -1,6 +1,5 @@
 sep=;
 Release Tag;API Item
-beta;ClassGroupingNodeKey
 beta;createClassBasedHierarchyLevelDefinitionsFactory(props: ClassBasedHierarchyDefinitionsFactoryProps): IHierarchyLevelDefinitionsFactory
 beta;createLimitingECSqlQueryExecutor(baseExecutor: ECSqlQueryExecutor, defaultLimit: number | "unbounded"): LimitingECSqlQueryExecutor
 beta;DefineCustomNodeChildHierarchyLevelProps = Omit
@@ -37,7 +36,6 @@ beta;HierarchyProviderLocalizedStrings
 beta;HierarchyProviderProps
 beta;IHierarchyLevelDefinitionsFactory
 beta;InstancesNodeKey
-beta;LabelGroupingNodeKey
 beta;LimitingECSqlQueryExecutor
 beta;NodeParser = (row:
 beta;NodePostProcessor = (node: ProcessedHierarchyNode) => Promise
@@ -53,10 +51,5 @@ beta;ProcessedCustomHierarchyNode = Omit
 beta;ProcessedGroupingHierarchyNode = Omit
 beta;ProcessedHierarchyNode = ProcessedCustomHierarchyNode | ProcessedInstanceHierarchyNode | ProcessedGroupingHierarchyNode
 beta;ProcessedInstanceHierarchyNode = Omit
-beta;PropertyGroupingNodeKey = PropertyValueRangeGroupingNodeKey | PropertyValueGroupingNodeKey | PropertyOtherValuesGroupingNodeKey
-beta;PropertyOtherValuesGroupingNodeKey
-beta;PropertyValueGroupingNodeKey
-beta;PropertyValueRangeGroupingNodeKey
 beta;RowsLimitExceededError 
 beta;setLogger(logger: ILogger | undefined): void
-beta;StandardHierarchyNodeKey = InstancesNodeKey | GroupingNodeKey
