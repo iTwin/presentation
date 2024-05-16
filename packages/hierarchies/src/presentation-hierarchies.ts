@@ -18,7 +18,7 @@ export {
   DefineInstanceNodeChildHierarchyLevelProps,
   createClassBasedHierarchyLevelDefinitionsFactory,
 } from "./hierarchies/HierarchyDefinition";
-export * from "./hierarchies/HierarchyErrors";
+export { RowsLimitExceededError } from "./hierarchies/HierarchyErrors";
 export * from "./hierarchies/HierarchyNode";
 export * from "./hierarchies/HierarchyNodeIdentifier";
 export * from "./hierarchies/HierarchyNodeKey";
