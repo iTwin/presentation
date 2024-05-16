@@ -90,7 +90,7 @@ export type NodePreProcessor = <TNode extends ProcessedCustomHierarchyNode | Pro
 export type NodePostProcessor = (node: ProcessedHierarchyNode) => Promise<ProcessedHierarchyNode>;
 
 /**
- * A type of node that can be passed to `IHierarchyLevelDefinitionsFactory.defineHierarchyLevel`. This basically means
+ * A type of node that can be passed to `HierarchyLevelDefinitionsFactory.defineHierarchyLevel`. This basically means
  * a `HierarchyNode` that:
  * - knows nothing about its children,
  * - is either an instances node (key is of `InstancesNodeKey` type) or a custom node (key is of `string` type).
@@ -98,7 +98,7 @@ export type NodePostProcessor = (node: ProcessedHierarchyNode) => Promise<Proces
 type HierarchyDefinitionParentNode = Omit<NonGroupingHierarchyNode, "children">;
 
 /**
- * Props for `IHierarchyLevelDefinitionsFactory.defineHierarchyLevel`.
+ * Props for `HierarchyLevelDefinitionsFactory.defineHierarchyLevel`.
  * @beta
  */
 export interface DefineHierarchyLevelProps {
@@ -117,7 +117,7 @@ export interface HierarchyLevelDefinitionsFactory {
   /**
    * An optional function for parsing ECInstance node from ECSQL row.
    *
-   * Should be used in situations when the `IHierarchyLevelDefinitionsFactory` implementation
+   * Should be used in situations when the `HierarchyLevelDefinitionsFactory` implementation
    * introduces additional ECSQL columns into the select clause and wants to assign additional
    * data to the nodes it produces.
    *
@@ -130,7 +130,7 @@ export interface HierarchyLevelDefinitionsFactory {
    * An optional function for pre-processing nodes.
    *
    * Pre-processing happens immediately after the nodes are loaded based on `HierarchyLevelDefinition`
-   * returned by this `IHierarchyLevelDefinitionsFactory`. The step allows assigning nodes additional data
+   * returned by this `HierarchyLevelDefinitionsFactory`. The step allows assigning nodes additional data
    * or excluding them from the hierarchy based on some attributes.
    */
   preProcessNode?: NodePreProcessor;
@@ -139,7 +139,7 @@ export interface HierarchyLevelDefinitionsFactory {
    * An optional function for post-processing nodes.
    *
    * Post-processing happens after the loaded nodes go through all the merging, hiding, sorting and grouping
-   * steps. This step allows `IHierarchyLevelDefinitionsFactory` implementations to assign additional data
+   * steps. This step allows `HierarchyLevelDefinitionsFactory` implementations to assign additional data
    * to nodes after they're processed. This is especially true for grouping nodes as they're only created during
    * processing.
    */
@@ -261,7 +261,7 @@ interface ClassBasedHierarchyDefinitionsFactoryProps {
 }
 
 /**
- * Creates an instance of `IHierarchyLevelDefinitionsFactory` that uses a somewhat declarative approach to define the
+ * Creates an instance of `HierarchyLevelDefinitionsFactory` that uses a somewhat declarative approach to define the
  * hierarchy - each hierarchy level is assigned either an instance node's class or custom node's
  * key and they're used to assign hierarchy level definitions based on parent node.
  *
