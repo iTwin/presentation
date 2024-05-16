@@ -5,7 +5,7 @@
 
 import { Id64String } from "@itwin/core-bentley";
 import {
-  ClassBasedHierarchyLevelDefinitionsFactory,
+  createClassBasedHierarchyLevelDefinitionsFactory,
   DefineHierarchyLevelProps,
   DefineInstanceNodeChildHierarchyLevelProps,
   DefineRootHierarchyLevelProps,
@@ -52,12 +52,12 @@ export namespace ModelsTreeInstanceKeyPathsProps {
 }
 
 export class ModelsTreeDefinition implements IHierarchyLevelDefinitionsFactory {
-  private _impl: ClassBasedHierarchyLevelDefinitionsFactory;
+  private _impl: IHierarchyLevelDefinitionsFactory;
   private _selectQueryFactory: NodeSelectQueryFactory;
   private _nodeLabelSelectClauseFactory: IInstanceLabelSelectClauseFactory;
 
   public constructor(props: ModelsTreeDefinitionProps) {
-    this._impl = new ClassBasedHierarchyLevelDefinitionsFactory({
+    this._impl = createClassBasedHierarchyLevelDefinitionsFactory({
       classHierarchyInspector: props.imodelAccess,
       hierarchy: {
         rootNodes: async (requestProps) => this.createRootHierarchyLevelDefinition(requestProps),

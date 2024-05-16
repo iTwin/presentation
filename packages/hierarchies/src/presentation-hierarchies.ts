@@ -2,6 +2,7 @@
  * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
+
 export {
   GenericInstanceFilter,
   GenericInstanceFilterRule,
@@ -13,7 +14,19 @@ export {
   GenericInstanceFilterRelationshipStep,
 } from "@itwin/core-common";
 
-export * from "./hierarchies/HierarchyDefinition";
+export {
+  HierarchyNodesDefinition,
+  HierarchyLevelDefinition,
+  NodeParser,
+  NodePreProcessor,
+  NodePostProcessor,
+  DefineHierarchyLevelProps,
+  IHierarchyLevelDefinitionsFactory,
+  DefineRootHierarchyLevelProps,
+  DefineCustomNodeChildHierarchyLevelProps,
+  DefineInstanceNodeChildHierarchyLevelProps,
+  createClassBasedHierarchyLevelDefinitionsFactory,
+} from "./hierarchies/HierarchyDefinition";
 export * from "./hierarchies/HierarchyErrors";
 export * from "./hierarchies/HierarchyNode";
 export * from "./hierarchies/HierarchyNodeIdentifier";

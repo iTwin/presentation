@@ -37,45 +37,23 @@ export interface BaseHierarchyNode {
 }
 
 // @beta
-export interface ClassBasedHierarchyDefinition {
-    childNodes: Array<ClassBasedHierarchyLevelDefinition>;
-    rootNodes: (props: DefineRootHierarchyLevelProps) => Promise<HierarchyLevelDefinition>;
-}
-
-// @beta
-export interface ClassBasedHierarchyDefinitionsFactoryProps {
-    classHierarchyInspector: ECClassHierarchyInspector;
-    hierarchy: ClassBasedHierarchyDefinition;
-}
-
-// @beta
-export type ClassBasedHierarchyLevelDefinition = InstancesNodeChildHierarchyLevelDefinition | CustomNodeChildHierarchyLevelDefinition;
-
-// @beta
-export class ClassBasedHierarchyLevelDefinitionsFactory implements IHierarchyLevelDefinitionsFactory {
-    constructor(props: ClassBasedHierarchyDefinitionsFactoryProps);
-    defineHierarchyLevel(props: DefineHierarchyLevelProps): Promise<HierarchyLevelDefinition>;
-}
-
-// @beta
 export interface ClassGroupingNodeKey {
     className: string;
     type: "class-grouping";
 }
 
 // @beta
+export function createClassBasedHierarchyLevelDefinitionsFactory(props: ClassBasedHierarchyDefinitionsFactoryProps): IHierarchyLevelDefinitionsFactory;
+
+// @beta
 export function createLimitingECSqlQueryExecutor(baseExecutor: ECSqlQueryExecutor, defaultLimit: number | "unbounded"): LimitingECSqlQueryExecutor;
 
 // @beta
-export interface CustomHierarchyNodeDefinition {
-    node: ParsedCustomHierarchyNode;
-}
-
-// @beta
-export interface CustomNodeChildHierarchyLevelDefinition {
-    customParentNodeKey: string;
-    definitions: (requestProps: DefineHierarchyLevelProps) => Promise<HierarchyLevelDefinition>;
-}
+export type DefineCustomNodeChildHierarchyLevelProps = Omit<DefineHierarchyLevelProps, "parentNode"> & {
+    parentNode: Omit<HierarchyDefinitionParentNode, "key"> & {
+        key: string;
+    };
+};
 
 // @beta
 export interface DefineHierarchyLevelProps {
@@ -84,9 +62,12 @@ export interface DefineHierarchyLevelProps {
 }
 
 // @beta
-export type DefineInstanceNodeChildHierarchyLevelProps = DefineHierarchyLevelProps & {
+export type DefineInstanceNodeChildHierarchyLevelProps = Omit<DefineHierarchyLevelProps, "parentNode"> & {
+    parentNode: Omit<HierarchyDefinitionParentNode, "key"> & {
+        key: InstancesNodeKey;
+    };
+    parentNodeClassName: string;
     parentNodeInstanceIds: Id64String[];
-    parentNode: HierarchyDefinitionParentNode;
 };
 
 // @beta
@@ -205,11 +186,6 @@ export interface GroupingHierarchyNode extends BaseHierarchyNode {
 
 // @beta
 export type GroupingNodeKey = ClassGroupingNodeKey | LabelGroupingNodeKey | PropertyGroupingNodeKey;
-
-// @beta
-export type HierarchyDefinitionParentNode = Omit<HierarchyNode, "children" | "key"> & {
-    key: InstancesNodeKey | string;
-};
 
 // @beta
 export type HierarchyLevelDefinition = HierarchyNodesDefinition[];
@@ -435,38 +411,15 @@ export interface HierarchyProviderProps {
 // @beta
 export interface IHierarchyLevelDefinitionsFactory {
     defineHierarchyLevel(props: DefineHierarchyLevelProps): Promise<HierarchyLevelDefinition>;
-    parseNode?: INodeParser;
-    postProcessNode?: INodePostProcessor;
-    preProcessNode?: INodePreProcessor;
+    parseNode?: NodeParser;
+    postProcessNode?: NodePostProcessor;
+    preProcessNode?: NodePreProcessor;
 }
-
-// @beta
-export type INodeParser = (row: {
-    [columnName: string]: any;
-}) => ParsedInstanceHierarchyNode;
-
-// @beta
-export type INodePostProcessor = (node: ProcessedHierarchyNode) => Promise<ProcessedHierarchyNode>;
-
-// @beta
-export type INodePreProcessor = <TNode extends ProcessedCustomHierarchyNode | ProcessedInstanceHierarchyNode>(node: TNode) => Promise<TNode | undefined>;
 
 // @beta
 export interface InstanceHierarchyNodeProcessingParams extends HierarchyNodeProcessingParamsBase {
     // (undocumented)
     grouping?: HierarchyNodeGroupingParams;
-}
-
-// @beta
-export interface InstanceNodesQueryDefinition {
-    fullClassName: string;
-    query: ECSqlQueryDef;
-}
-
-// @beta
-export interface InstancesNodeChildHierarchyLevelDefinition {
-    definitions: (requestProps: DefineInstanceNodeChildHierarchyLevelProps) => Promise<HierarchyLevelDefinition>;
-    parentNodeClassName: string;
 }
 
 // @beta
@@ -488,6 +441,17 @@ export interface LimitingECSqlQueryExecutor {
         limit?: number | "unbounded";
     }): ReturnType<ECSqlQueryExecutor["createQueryReader"]>;
 }
+
+// @beta
+export type NodeParser = (row: {
+    [columnName: string]: any;
+}) => ParsedInstanceHierarchyNode;
+
+// @beta
+export type NodePostProcessor = (node: ProcessedHierarchyNode) => Promise<ProcessedHierarchyNode>;
+
+// @beta
+export type NodePreProcessor = <TNode extends ProcessedCustomHierarchyNode | ProcessedInstanceHierarchyNode>(node: TNode) => Promise<TNode | undefined>;
 
 // @beta
 export enum NodeSelectClauseColumnNames {

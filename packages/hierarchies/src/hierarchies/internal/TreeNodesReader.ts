@@ -6,7 +6,7 @@
 import { from, map, Observable } from "rxjs";
 import { Id64String } from "@itwin/core-bentley";
 import { ECSqlQueryDef, parseInstanceLabel } from "@itwin/presentation-shared";
-import { INodeParser } from "../HierarchyDefinition";
+import { NodeParser } from "../HierarchyDefinition";
 import { InstanceHierarchyNodeProcessingParams, ParsedHierarchyNode, ParsedInstanceHierarchyNode } from "../HierarchyNode";
 import { LimitingECSqlQueryExecutor } from "../LimitingECSqlQueryExecutor";
 import { NodeSelectClauseColumnNames } from "../NodeSelectQueryFactory";
@@ -15,7 +15,7 @@ interface ReadNodesProps {
   queryExecutor: LimitingECSqlQueryExecutor;
   query: ECSqlQueryDef;
   limit?: number | "unbounded";
-  parser?: INodeParser;
+  parser?: NodeParser;
 }
 
 /** @internal */

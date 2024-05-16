@@ -6,7 +6,7 @@
 import { expect } from "chai";
 import { IModelDb, SnapshotDb } from "@itwin/core-backend";
 import {
-  ClassBasedHierarchyLevelDefinitionsFactory,
+  createClassBasedHierarchyLevelDefinitionsFactory,
   DefineInstanceNodeChildHierarchyLevelProps,
   HierarchyLevelDefinition,
   NodeSelectQueryFactory,
@@ -28,7 +28,7 @@ describe("hide if no children", () => {
         iModel,
         getHierarchyFactory: (imodelAccess) => {
           const queryFactory = new NodeSelectQueryFactory({ imodelAccess });
-          return new ClassBasedHierarchyLevelDefinitionsFactory({
+          return createClassBasedHierarchyLevelDefinitionsFactory({
             classHierarchyInspector: imodelAccess,
             hierarchy: {
               rootNodes: async () => createPhysicalElementsHierarchyLevelDefinition({ queryFactory, limit: 5 }),
@@ -65,7 +65,7 @@ describe("hide if no children", () => {
         iModel,
         getHierarchyFactory: (imodelAccess) => {
           const queryFactory = new NodeSelectQueryFactory({ imodelAccess });
-          return new ClassBasedHierarchyLevelDefinitionsFactory({
+          return createClassBasedHierarchyLevelDefinitionsFactory({
             classHierarchyInspector: imodelAccess,
             hierarchy: {
               rootNodes: async () => createPhysicalElementsHierarchyLevelDefinition({ queryFactory, limit: 5 }),

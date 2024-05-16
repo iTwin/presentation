@@ -10,10 +10,10 @@ import {
   HierarchyLevelDefinition,
   HierarchyNodesDefinition,
   IHierarchyLevelDefinitionsFactory,
-  INodeParser,
-  INodePostProcessor,
-  INodePreProcessor,
   InstanceNodesQueryDefinition,
+  NodeParser,
+  NodePostProcessor,
+  NodePreProcessor,
 } from "../HierarchyDefinition";
 import { HierarchyNode, ParsedHierarchyNode, ParsedInstanceHierarchyNode, ProcessedHierarchyNode } from "../HierarchyNode";
 import { HierarchyNodeIdentifier, HierarchyNodeIdentifiersPath } from "../HierarchyNodeIdentifier";
@@ -44,7 +44,7 @@ export class FilteringHierarchyLevelDefinitionsFactory implements IHierarchyLeve
     this._nodeIdentifierPaths = props.nodeIdentifierPaths;
   }
 
-  public get preProcessNode(): INodePreProcessor {
+  public get preProcessNode(): NodePreProcessor {
     return async (node) => {
       const processedNode = this._source.preProcessNode ? await this._source.preProcessNode(node) : node;
       if (processedNode?.processingParams?.hideInHierarchy && (node as FilteredHierarchyNode).isFilterTarget) {
@@ -55,7 +55,7 @@ export class FilteringHierarchyLevelDefinitionsFactory implements IHierarchyLeve
     };
   }
 
-  public get postProcessNode(): INodePostProcessor {
+  public get postProcessNode(): NodePostProcessor {
     return async (node: ProcessedHierarchyNode) => {
       const processedNode = this._source.postProcessNode ? await this._source.postProcessNode(node) : node;
       if (
@@ -69,7 +69,7 @@ export class FilteringHierarchyLevelDefinitionsFactory implements IHierarchyLeve
     };
   }
 
-  public get parseNode(): INodeParser {
+  public get parseNode(): NodeParser {
     return (row: { [columnName: string]: any }): FilteredHierarchyNode<ParsedInstanceHierarchyNode> => {
       const isFilterTarget: boolean = !!row[ECSQL_COLUMN_NAME_IsFilterTarget];
       const parsedFilteredChildrenIdentifierPaths: HierarchyNodeIdentifiersPath[] | undefined = row[ECSQL_COLUMN_NAME_FilteredChildrenPaths]
@@ -80,9 +80,11 @@ export class FilteringHierarchyLevelDefinitionsFactory implements IHierarchyLeve
     };
   }
 
-  public async defineHierarchyLevel(props: DefineHierarchyLevelProps): Promise<HierarchyLevelDefinition> {
+  public async defineHierarchyLevel(
+    props: DefineHierarchyLevelProps & { parentNode: FilteredHierarchyNode<DefineHierarchyLevelProps["parentNode"]> | undefined },
+  ): Promise<HierarchyLevelDefinition> {
     const sourceDefinitions = await this._source.defineHierarchyLevel(props);
-    const { filteredNodePaths, isParentFilterTarget } = this.getFilteringProps(props.parentNode as FilteredHierarchyNode | undefined);
+    const { filteredNodePaths, isParentFilterTarget } = this.getFilteringProps(props.parentNode);
     if (!filteredNodePaths) {
       return sourceDefinitions;
     }
@@ -133,7 +135,7 @@ export class FilteringHierarchyLevelDefinitionsFactory implements IHierarchyLeve
     return filteredDefinitions;
   }
 
-  private getFilteringProps(parentNode: FilteredHierarchyNode | undefined) {
+  private getFilteringProps(parentNode: FilteredHierarchyNode<unknown> | undefined) {
     if (!parentNode) {
       return { filteredNodePaths: this._nodeIdentifierPaths, isParentFilterTarget: false };
     }

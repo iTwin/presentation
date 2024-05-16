@@ -1,16 +1,12 @@
 sep=;
 Release Tag;API Item
 beta;BaseHierarchyNode
-beta;ClassBasedHierarchyDefinition
-beta;ClassBasedHierarchyDefinitionsFactoryProps
-beta;ClassBasedHierarchyLevelDefinition = InstancesNodeChildHierarchyLevelDefinition | CustomNodeChildHierarchyLevelDefinition
-beta;ClassBasedHierarchyLevelDefinitionsFactory 
 beta;ClassGroupingNodeKey
+beta;createClassBasedHierarchyLevelDefinitionsFactory(props: ClassBasedHierarchyDefinitionsFactoryProps): IHierarchyLevelDefinitionsFactory
 beta;createLimitingECSqlQueryExecutor(baseExecutor: ECSqlQueryExecutor, defaultLimit: number | "unbounded"): LimitingECSqlQueryExecutor
-beta;CustomHierarchyNodeDefinition
-beta;CustomNodeChildHierarchyLevelDefinition
+beta;DefineCustomNodeChildHierarchyLevelProps = Omit
 beta;DefineHierarchyLevelProps
-beta;DefineInstanceNodeChildHierarchyLevelProps = DefineHierarchyLevelProps &
+beta;DefineInstanceNodeChildHierarchyLevelProps = Omit
 beta;DefineRootHierarchyLevelProps = Omit
 beta;ECSqlSelectClauseBaseClassGroupingParams 
 beta;ECSqlSelectClauseGroupingParams
@@ -27,7 +23,6 @@ beta;GetHierarchyNodesProps
 beta;getLogger(): ILogger
 beta;GroupingHierarchyNode 
 beta;GroupingNodeKey = ClassGroupingNodeKey | LabelGroupingNodeKey | PropertyGroupingNodeKey
-beta;HierarchyDefinitionParentNode = Omit
 beta;HierarchyLevelDefinition = HierarchyNodesDefinition[]
 beta;HierarchyNode = NonGroupingHierarchyNode | GroupingHierarchyNode
 beta;HierarchyNode
@@ -54,15 +49,13 @@ beta;HierarchyProvider
 beta;HierarchyProviderLocalizedStrings
 beta;HierarchyProviderProps
 beta;IHierarchyLevelDefinitionsFactory
-beta;INodeParser = (row:
-beta;INodePostProcessor = (node: ProcessedHierarchyNode) => Promise
-beta;INodePreProcessor = 
 beta;InstanceHierarchyNodeProcessingParams 
-beta;InstanceNodesQueryDefinition
-beta;InstancesNodeChildHierarchyLevelDefinition
 beta;InstancesNodeKey
 beta;LabelGroupingNodeKey
 beta;LimitingECSqlQueryExecutor
+beta;NodeParser = (row:
+beta;NodePostProcessor = (node: ProcessedHierarchyNode) => Promise
+beta;NodePreProcessor = 
 beta;NodeSelectClauseColumnNames
 beta;NodeSelectClauseProps
 beta;NodeSelectQueryFactory
