@@ -19,17 +19,6 @@ import { OmitOverUnion } from '@itwin/presentation-shared';
 import { PrimitiveValue } from '@itwin/presentation-shared';
 
 // @beta
-export interface BaseHierarchyNode {
-    autoExpand?: boolean;
-    children: boolean;
-    extendedData?: {
-        [key: string]: any;
-    };
-    label: string;
-    parentKeys: HierarchyNodeKey[];
-}
-
-// @beta
 export interface ClassGroupingNodeKey {
     className: string;
     type: "class-grouping";
@@ -231,33 +220,6 @@ export namespace HierarchyNode {
 }
 
 // @beta
-export type HierarchyNodeAutoExpandProp = "single-child" | "always";
-
-// @beta
-export interface HierarchyNodeBaseClassGroupingParams extends HierarchyNodeGroupingParamsBase {
-    fullClassNames: string[];
-}
-
-// @beta
-export interface HierarchyNodeGroupingParams {
-    // (undocumented)
-    byBaseClasses?: HierarchyNodeBaseClassGroupingParams;
-    // (undocumented)
-    byClass?: boolean | HierarchyNodeGroupingParamsBase;
-    // (undocumented)
-    byLabel?: HierarchyNodeLabelGroupingParams;
-    // (undocumented)
-    byProperties?: HierarchyNodePropertiesGroupingParams;
-}
-
-// @beta
-export interface HierarchyNodeGroupingParamsBase {
-    autoExpand?: HierarchyNodeAutoExpandProp;
-    hideIfNoSiblings?: boolean;
-    hideIfOneGroupedNode?: boolean;
-}
-
-// @beta
 export type HierarchyNodeIdentifier = InstanceKey | {
     key: string;
 };
@@ -291,55 +253,6 @@ export namespace HierarchyNodeKey {
     export function isPropertyValueGrouping(key: HierarchyNodeKey): key is PropertyValueGroupingNodeKey;
     export function isPropertyValueRangeGrouping(key: HierarchyNodeKey): key is PropertyValueRangeGroupingNodeKey;
     export function isStandard(key: HierarchyNodeKey): key is StandardHierarchyNodeKey;
-}
-
-// @beta
-export interface HierarchyNodeLabelGroupingBaseParams {
-    action?: "group" | "merge";
-    groupId?: string;
-}
-
-// @beta
-export interface HierarchyNodeLabelGroupingGroupParams extends HierarchyNodeLabelGroupingBaseParams, HierarchyNodeGroupingParamsBase {
-    // (undocumented)
-    action?: "group";
-}
-
-// @beta
-export interface HierarchyNodeLabelGroupingMergeParams extends HierarchyNodeLabelGroupingBaseParams {
-    // (undocumented)
-    action: "merge";
-}
-
-// @beta
-export type HierarchyNodeLabelGroupingParams = boolean | HierarchyNodeLabelGroupingMergeParams | HierarchyNodeLabelGroupingGroupParams;
-
-// @beta
-export interface HierarchyNodeProcessingParamsBase {
-    hideIfNoChildren?: boolean;
-    hideInHierarchy?: boolean;
-}
-
-// @beta
-export interface HierarchyNodePropertiesGroupingParams extends HierarchyNodeGroupingParamsBase {
-    createGroupForOutOfRangeValues?: boolean;
-    createGroupForUnspecifiedValues?: boolean;
-    propertiesClassName: string;
-    propertyGroups: Array<HierarchyNodePropertyGroup>;
-}
-
-// @beta
-export interface HierarchyNodePropertyGroup {
-    propertyName: string;
-    propertyValue?: PrimitiveValue;
-    ranges?: Array<HierarchyNodePropertyValueRange>;
-}
-
-// @beta
-export interface HierarchyNodePropertyValueRange {
-    fromValue: number;
-    rangeLabel?: string;
-    toValue: number;
 }
 
 // @beta
@@ -393,12 +306,6 @@ export interface IHierarchyLevelDefinitionsFactory {
     parseNode?: NodeParser;
     postProcessNode?: NodePostProcessor;
     preProcessNode?: NodePreProcessor;
-}
-
-// @beta
-export interface InstanceHierarchyNodeProcessingParams extends HierarchyNodeProcessingParamsBase {
-    // (undocumented)
-    grouping?: HierarchyNodeGroupingParams;
 }
 
 // @beta
@@ -493,9 +400,6 @@ export interface NonGroupingHierarchyNode extends BaseHierarchyNode {
     key: string | InstancesNodeKey;
     supportsFiltering?: boolean;
 }
-
-// @beta
-export type ParentHierarchyNode<TBase = HierarchyNode> = OmitOverUnion<TBase, "children">;
 
 // @beta
 export type ParsedCustomHierarchyNode = Omit<ProcessedCustomHierarchyNode, "label" | "parentKeys"> & {

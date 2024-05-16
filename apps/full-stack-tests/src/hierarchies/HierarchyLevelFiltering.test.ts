@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { collect } from "presentation-test-utilities";
-import { GroupingHierarchyNode, IHierarchyLevelDefinitionsFactory, NodeSelectQueryFactory, ParentHierarchyNode } from "@itwin/presentation-hierarchies";
+import { IHierarchyLevelDefinitionsFactory, NodeSelectQueryFactory } from "@itwin/presentation-hierarchies";
 import { importSchema, withECDb } from "../IModelUtils";
 import { initialize, terminate } from "../IntegrationTests";
 import { NodeValidators, validateHierarchyLevel } from "./HierarchyValidation";
@@ -223,11 +223,11 @@ describe("Hierarchies", () => {
             },
           };
           const provider = createProvider({ imodel, hierarchy });
-          const groupingNode: ParentHierarchyNode<GroupingHierarchyNode> = {
-            key: { type: "class-grouping", className: schema.items.Y.fullName },
-            parentKeys: [{ type: "instances", instanceKeys: [x] }],
+          const groupingNode = {
+            key: { type: "class-grouping" as const, className: schema.items.Y.fullName },
+            parentKeys: [{ type: "instances" as const, instanceKeys: [x] }],
             nonGroupingAncestor: {
-              key: { type: "instances", instanceKeys: [x] },
+              key: { type: "instances" as const, instanceKeys: [x] },
               parentKeys: [],
               label: "X",
             },

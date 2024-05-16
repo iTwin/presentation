@@ -1,6 +1,5 @@
 sep=;
 Release Tag;API Item
-beta;BaseHierarchyNode
 beta;ClassGroupingNodeKey
 beta;createClassBasedHierarchyLevelDefinitionsFactory(props: ClassBasedHierarchyDefinitionsFactoryProps): IHierarchyLevelDefinitionsFactory
 beta;createLimitingECSqlQueryExecutor(baseExecutor: ECSqlQueryExecutor, defaultLimit: number | "unbounded"): LimitingECSqlQueryExecutor
@@ -26,30 +25,17 @@ beta;GroupingNodeKey = ClassGroupingNodeKey | LabelGroupingNodeKey | PropertyGro
 beta;HierarchyLevelDefinition = HierarchyNodesDefinition[]
 beta;HierarchyNode = NonGroupingHierarchyNode | GroupingHierarchyNode
 beta;HierarchyNode
-beta;HierarchyNodeAutoExpandProp = "single-child" | "always"
-beta;HierarchyNodeBaseClassGroupingParams 
-beta;HierarchyNodeGroupingParams
-beta;HierarchyNodeGroupingParamsBase
 beta;HierarchyNodeIdentifier = InstanceKey |
 beta;HierarchyNodeIdentifier
 beta;HierarchyNodeIdentifiersPath = HierarchyNodeIdentifier[]
 beta;HierarchyNodeKey = StandardHierarchyNodeKey | string
 beta;HierarchyNodeKey
-beta;HierarchyNodeLabelGroupingBaseParams
-beta;HierarchyNodeLabelGroupingGroupParams 
-beta;HierarchyNodeLabelGroupingMergeParams 
-beta;HierarchyNodeLabelGroupingParams = boolean | HierarchyNodeLabelGroupingMergeParams | HierarchyNodeLabelGroupingGroupParams
-beta;HierarchyNodeProcessingParamsBase
-beta;HierarchyNodePropertiesGroupingParams 
-beta;HierarchyNodePropertyGroup
-beta;HierarchyNodePropertyValueRange
 beta;HierarchyNodesDefinition = CustomHierarchyNodeDefinition | InstanceNodesQueryDefinition
 beta;HierarchyNodesDefinition
 beta;HierarchyProvider
 beta;HierarchyProviderLocalizedStrings
 beta;HierarchyProviderProps
 beta;IHierarchyLevelDefinitionsFactory
-beta;InstanceHierarchyNodeProcessingParams 
 beta;InstancesNodeKey
 beta;LabelGroupingNodeKey
 beta;LimitingECSqlQueryExecutor
@@ -60,7 +46,6 @@ beta;NodeSelectClauseColumnNames
 beta;NodeSelectClauseProps
 beta;NodeSelectQueryFactory
 beta;NonGroupingHierarchyNode 
-beta;ParentHierarchyNode
 beta;ParsedCustomHierarchyNode = Omit
 beta;ParsedHierarchyNode = ParsedCustomHierarchyNode | ParsedInstanceHierarchyNode
 beta;ParsedInstanceHierarchyNode = Omit

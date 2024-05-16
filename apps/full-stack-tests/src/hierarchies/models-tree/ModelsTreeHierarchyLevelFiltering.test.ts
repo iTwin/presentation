@@ -19,7 +19,7 @@ import { GenericInstanceFilter, GenericInstanceFilterRule } from "@itwin/core-co
 import { IModelConnection } from "@itwin/core-frontend";
 import { DefaultContentDisplayTypes, Descriptor, KeySet, NestedContentField, PropertiesField, PropertyValueFormat } from "@itwin/presentation-common";
 import { Presentation } from "@itwin/presentation-frontend";
-import { HierarchyProvider, NonGroupingHierarchyNode, ParentHierarchyNode } from "@itwin/presentation-hierarchies";
+import { DefineHierarchyLevelProps, HierarchyProvider } from "@itwin/presentation-hierarchies";
 import { buildTestIModel } from "@itwin/presentation-testing";
 import { buildIModel } from "../../IModelUtils";
 import { initialize, terminate } from "../../IntegrationTests";
@@ -662,7 +662,7 @@ type RecursivelyPartial<T> = {
 async function validateHierarchyLevelDescriptor(props: {
   imodel: IModelConnection;
   provider: HierarchyProvider;
-  parentNode: ParentHierarchyNode<NonGroupingHierarchyNode> | undefined;
+  parentNode: DefineHierarchyLevelProps["parentNode"] | undefined;
   expected: RecursivelyPartial<Descriptor>;
 }) {
   const { imodel, provider, parentNode, expected } = props;
