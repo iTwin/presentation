@@ -11,13 +11,6 @@ import { ECSqlQueryDef } from '@itwin/presentation-shared';
 import { ECSqlQueryExecutor } from '@itwin/presentation-shared';
 import { ECSqlQueryReaderOptions } from '@itwin/presentation-shared';
 import { GenericInstanceFilter } from '@itwin/core-common';
-import { GenericInstanceFilterRelatedInstanceDescription } from '@itwin/core-common';
-import { GenericInstanceFilterRelationshipStep } from '@itwin/core-common';
-import { GenericInstanceFilterRule } from '@itwin/core-common';
-import { GenericInstanceFilterRuleGroup } from '@itwin/core-common';
-import { GenericInstanceFilterRuleGroupOperator } from '@itwin/core-common';
-import { GenericInstanceFilterRuleOperator } from '@itwin/core-common';
-import { GenericInstanceFilterRuleValue } from '@itwin/core-common';
 import { Id64String } from '@itwin/core-bentley';
 import { ILogger } from '@itwin/presentation-shared';
 import { InstanceKey } from '@itwin/presentation-shared';
@@ -151,20 +144,6 @@ export interface ECSqlValueSelector {
 }
 
 export { GenericInstanceFilter }
-
-export { GenericInstanceFilterRelatedInstanceDescription }
-
-export { GenericInstanceFilterRelationshipStep }
-
-export { GenericInstanceFilterRule }
-
-export { GenericInstanceFilterRuleGroup }
-
-export { GenericInstanceFilterRuleGroupOperator }
-
-export { GenericInstanceFilterRuleOperator }
-
-export { GenericInstanceFilterRuleValue }
 
 // @beta
 export interface GetHierarchyNodesProps {

@@ -3,16 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-export {
-  GenericInstanceFilter,
-  GenericInstanceFilterRule,
-  GenericInstanceFilterRuleGroup,
-  GenericInstanceFilterRuleValue,
-  GenericInstanceFilterRuleOperator,
-  GenericInstanceFilterRuleGroupOperator,
-  GenericInstanceFilterRelatedInstanceDescription,
-  GenericInstanceFilterRelationshipStep,
-} from "@itwin/core-common";
+export { GenericInstanceFilter } from "@itwin/core-common";
 
 export {
   HierarchyNodesDefinition,
