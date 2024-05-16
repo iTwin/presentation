@@ -6,6 +6,7 @@
 import { Draft, enableMapSet, produce } from "immer";
 import { EMPTY, Observable, reduce, Subject, takeUntil } from "rxjs";
 import { GenericInstanceFilter, HierarchyNode, HierarchyProvider } from "@itwin/presentation-hierarchies";
+import { SelectionChangeType } from "../UseSelectionHandler";
 import { ITreeLoader, LoadedTreePart, TreeLoader } from "./TreeLoader";
 import { isTreeModelHierarchyNode, isTreeModelInfoNode, TreeModel, TreeModelHierarchyNode, TreeModelNode, TreeModelRootNode } from "./TreeModel";
 import { createNodeId } from "./Utils";
@@ -113,9 +114,9 @@ export class TreeActions {
     return TreeModel.getNode(this._currentModel, nodeId);
   }
 
-  public selectNode(nodeId: string, isSelected: boolean) {
+  public selectNodes(nodeIds: Array<string>, changeType: SelectionChangeType) {
     this.updateTreeModel((model) => {
-      TreeModel.selectNode(model, nodeId, isSelected);
+      TreeModel.selectNodes(model, nodeIds, changeType);
     });
   }
 

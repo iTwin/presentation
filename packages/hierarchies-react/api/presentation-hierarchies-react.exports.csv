@@ -7,8 +7,9 @@ beta;isPresentationHierarchyNode(node: PresentationTreeNode): node is Presentati
 beta;PresentationHierarchyNode
 beta;PresentationInfoNode
 beta;PresentationTreeNode = PresentationHierarchyNode | PresentationInfoNode
-beta;TreeNodeRenderer({ node, expandNode, selectNode, getIcon, setHierarchyLevelFilter, onFilterClick, setHierarchyLevelLimit, ...nodeProps }: TreeNodeRendererProps_2): JSX_2.Element
-beta;TreeRenderer({ rootNodes, expandNode, selectNode, isNodeSelected, setHierarchyLevelLimit, setHierarchyLevelFilter, onFilterClick, getIcon, ...treeProps }: TreeRendererProps): JSX_2.Element
+beta;TreeNodeRenderer({ node, expandNode, getIcon, setHierarchyLevelFilter, onFilterClick, onNodeClick, onNodeKeyDown, setHierarchyLevelLimit, isSelected, isDisabled, ...nodeProps }: TreeNodeRendererProps_2): JSX_2.Element
+beta;TreeRenderer({ rootNodes, expandNode, selectNodes, isNodeSelected, setHierarchyLevelLimit, setHierarchyLevelFilter, onFilterClick, getIcon, selectionMode, ...treeProps }: TreeRendererProps): JSX_2.Element
 beta;UnifiedSelectionProvider({ storage, children }: PropsWithChildren
+beta;useSelectionHandler(props: UseSelectionHandlerProps): UseSelectionHandlerResult
 beta;useTree(props: UseTreeProps): UseTreeResult
 beta;useUnifiedSelectionTree({ imodelKey, sourceName, ...props }: UseTreeProps & Omit

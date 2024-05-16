@@ -7,6 +7,7 @@ export { TreeRenderer, createTreeNode } from "./presentation-hierarchies-react/T
 export { TreeNodeRenderer } from "./presentation-hierarchies-react/TreeNodeRenderer";
 export * from "./presentation-hierarchies-react/Types";
 export * from "./presentation-hierarchies-react/UseTree";
+export { useSelectionHandler } from "./presentation-hierarchies-react/UseSelectionHandler";
 export { UnifiedSelectionProvider } from "./presentation-hierarchies-react/UnifiedSelectionContext";
 
 export { SelectionStorage } from "@itwin/unified-selection";
