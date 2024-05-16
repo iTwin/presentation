@@ -7,7 +7,7 @@ import { insertSubject } from "presentation-test-utilities";
 import { Subject } from "@itwin/core-backend";
 import { IModel } from "@itwin/core-common";
 import { IModelConnection } from "@itwin/core-frontend";
-import { ECSqlSelectClausePropertiesGroupingParams, HierarchyLevelDefinitionsFactory, NodeSelectQueryFactory } from "@itwin/presentation-hierarchies";
+import { createNodesQueryClauseFactory, HierarchyLevelDefinitionsFactory, NodesQueryClauseFactory } from "@itwin/presentation-hierarchies";
 import { buildIModel, importSchema, withECDb } from "../../IModelUtils";
 import { initialize, terminate } from "../../IntegrationTests";
 import { NodeValidators, validateHierarchy } from "../HierarchyValidation";
@@ -15,6 +15,9 @@ import { createIModelAccess, createProvider } from "../Utils";
 
 describe("Hierarchies", () => {
   describe("Properties grouping", () => {
+    type ECSqlSelectClausePropertiesGroupingParams = NonNullable<
+      NonNullable<Parameters<NodesQueryClauseFactory["createSelectClause"]>[0]["grouping"]>["byProperties"]
+    >;
     let subjectClassName: string;
 
     before(async function () {
@@ -30,7 +33,7 @@ describe("Hierarchies", () => {
       imodel: IModelConnection,
       specifiedGrouping: ECSqlSelectClausePropertiesGroupingParams,
     ): HierarchyLevelDefinitionsFactory {
-      const selectQueryFactory = new NodeSelectQueryFactory({ imodelAccess: createIModelAccess(imodel) });
+      const selectQueryFactory = createNodesQueryClauseFactory({ imodelAccess: createIModelAccess(imodel) });
       return {
         async defineHierarchyLevel({ parentNode }) {
           if (!parentNode) {
@@ -179,7 +182,7 @@ describe("Hierarchies", () => {
           return { childSubject1, childSubject2 };
         });
 
-        const selectQueryFactory = new NodeSelectQueryFactory({ imodelAccess: createIModelAccess(imodel) });
+        const selectQueryFactory = createNodesQueryClauseFactory({ imodelAccess: createIModelAccess(imodel) });
         const customHierarchy: HierarchyLevelDefinitionsFactory = {
           async defineHierarchyLevel({ parentNode }) {
             if (!parentNode) {
@@ -308,7 +311,7 @@ describe("Hierarchies", () => {
             return { schema, x1, x2 };
           },
           async (imodel, { schema, x1, x2 }) => {
-            const selectQueryFactory = new NodeSelectQueryFactory({ imodelAccess: createIModelAccess(imodel) });
+            const selectQueryFactory = createNodesQueryClauseFactory({ imodelAccess: createIModelAccess(imodel) });
             const hierarchy: HierarchyLevelDefinitionsFactory = {
               async defineHierarchyLevel({ parentNode }) {
                 if (!parentNode) {
@@ -373,7 +376,7 @@ describe("Hierarchies", () => {
             return { schema, x1 };
           },
           async (imodel, { schema, x1 }) => {
-            const selectQueryFactory = new NodeSelectQueryFactory({ imodelAccess: createIModelAccess(imodel) });
+            const selectQueryFactory = createNodesQueryClauseFactory({ imodelAccess: createIModelAccess(imodel) });
             const hierarchy: HierarchyLevelDefinitionsFactory = {
               async defineHierarchyLevel({ parentNode }) {
                 if (!parentNode) {
@@ -441,7 +444,7 @@ describe("Hierarchies", () => {
             return { schema, x1, x2 };
           },
           async (imodel, { schema, x1, x2 }) => {
-            const selectQueryFactory = new NodeSelectQueryFactory({ imodelAccess: createIModelAccess(imodel) });
+            const selectQueryFactory = createNodesQueryClauseFactory({ imodelAccess: createIModelAccess(imodel) });
             const hierarchy: HierarchyLevelDefinitionsFactory = {
               async defineHierarchyLevel({ parentNode }) {
                 if (!parentNode) {
@@ -524,7 +527,7 @@ describe("Hierarchies", () => {
             return { schema, x1 };
           },
           async (imodel, { schema, x1 }) => {
-            const selectQueryFactory = new NodeSelectQueryFactory({ imodelAccess: createIModelAccess(imodel) });
+            const selectQueryFactory = createNodesQueryClauseFactory({ imodelAccess: createIModelAccess(imodel) });
             const hierarchy: HierarchyLevelDefinitionsFactory = {
               async defineHierarchyLevel({ parentNode }) {
                 if (!parentNode) {
@@ -583,7 +586,7 @@ describe("Hierarchies", () => {
             return { schema, x1, x2 };
           },
           async (imodel, { schema, x1, x2 }) => {
-            const selectQueryFactory = new NodeSelectQueryFactory({ imodelAccess: createIModelAccess(imodel) });
+            const selectQueryFactory = createNodesQueryClauseFactory({ imodelAccess: createIModelAccess(imodel) });
             const hierarchy: HierarchyLevelDefinitionsFactory = {
               async defineHierarchyLevel({ parentNode }) {
                 if (!parentNode) {
@@ -652,7 +655,7 @@ describe("Hierarchies", () => {
             return { schema, x, y };
           },
           async (imodel, { schema, x, y }) => {
-            const selectQueryFactory = new NodeSelectQueryFactory({ imodelAccess: createIModelAccess(imodel) });
+            const selectQueryFactory = createNodesQueryClauseFactory({ imodelAccess: createIModelAccess(imodel) });
             const hierarchy: HierarchyLevelDefinitionsFactory = {
               async defineHierarchyLevel({ parentNode }) {
                 if (!parentNode) {

@@ -38,7 +38,7 @@ import { BriefcaseConnection, IpcApp, NullRenderSystem } from "@itwin/core-front
 import { ECSchemaRpcInterface } from "@itwin/ecschema-rpcinterface-common";
 import { ECSchemaRpcImpl } from "@itwin/ecschema-rpcinterface-impl";
 import { registerTxnListeners } from "@itwin/presentation-core-interop";
-import { HierarchyLevelDefinitionsFactory, NodeSelectQueryFactory } from "@itwin/presentation-hierarchies";
+import { createNodesQueryClauseFactory, HierarchyLevelDefinitionsFactory } from "@itwin/presentation-hierarchies";
 import { ECSql } from "@itwin/presentation-shared";
 import { createFileNameFromString } from "@itwin/presentation-testing/lib/cjs/presentation-testing/InternalUtils";
 import { setupOutputFileLocation } from "../IModelUtils";
@@ -509,7 +509,7 @@ describe("Hierarchies", () => {
         });
 
         function createRootSubjectChildrenProvider(props: { label: "codeValue" | "aspectIdentifier" } = { label: "codeValue" }) {
-          const selectQueryFactory = new NodeSelectQueryFactory({ imodelAccess: createIModelAccess(imodel) });
+          const selectQueryFactory = createNodesQueryClauseFactory({ imodelAccess: createIModelAccess(imodel) });
           const hierarchy: HierarchyLevelDefinitionsFactory = {
             async defineHierarchyLevel() {
               return [
@@ -537,7 +537,7 @@ describe("Hierarchies", () => {
         }
 
         function createRootSubjectReferredElementsProvider() {
-          const selectQueryFactory = new NodeSelectQueryFactory({ imodelAccess: createIModelAccess(imodel) });
+          const selectQueryFactory = createNodesQueryClauseFactory({ imodelAccess: createIModelAccess(imodel) });
           const hierarchy: HierarchyLevelDefinitionsFactory = {
             async defineHierarchyLevel() {
               return [
@@ -565,7 +565,7 @@ describe("Hierarchies", () => {
         }
 
         function createPhysicalModelsProvider() {
-          const selectQueryFactory = new NodeSelectQueryFactory({ imodelAccess: createIModelAccess(imodel) });
+          const selectQueryFactory = createNodesQueryClauseFactory({ imodelAccess: createIModelAccess(imodel) });
           const hierarchy: HierarchyLevelDefinitionsFactory = {
             async defineHierarchyLevel() {
               return [

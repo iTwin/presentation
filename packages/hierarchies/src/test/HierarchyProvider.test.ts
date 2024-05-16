@@ -21,7 +21,7 @@ import {
 } from "../hierarchies/internal/FilteringHierarchyLevelDefinitionsFactory";
 import { RowDef } from "../hierarchies/internal/TreeNodesReader";
 import { LimitingECSqlQueryExecutor } from "../hierarchies/LimitingECSqlQueryExecutor";
-import { ECSqlSelectClauseGroupingParams, NodeSelectClauseColumnNames } from "../hierarchies/NodeSelectQueryFactory";
+import { NodeSelectClauseColumnNames, NodesQueryClauseFactory } from "../hierarchies/NodeSelectQueryFactory";
 import { createIModelAccessStub } from "./Utils";
 
 describe("createHierarchyProvider", () => {
@@ -280,7 +280,7 @@ describe("createHierarchyProvider", () => {
             [NodeSelectClauseColumnNames.DisplayLabel]: "test label",
             [NodeSelectClauseColumnNames.Grouping]: JSON.stringify({
               byLabel: true,
-            } as ECSqlSelectClauseGroupingParams),
+            } satisfies Parameters<NodesQueryClauseFactory["createSelectClause"]>[0]["grouping"]),
           },
         ]),
       );
@@ -1192,7 +1192,7 @@ describe("createHierarchyProvider", () => {
               [NodeSelectClauseColumnNames.HasChildren]: true,
               [NodeSelectClauseColumnNames.Grouping]: JSON.stringify({
                 byClass: true,
-              } as ECSqlSelectClauseGroupingParams),
+              } satisfies Parameters<NodesQueryClauseFactory["createSelectClause"]>[0]["grouping"]),
             },
           ]);
         } else if (query.ecsql.includes("CHILD")) {

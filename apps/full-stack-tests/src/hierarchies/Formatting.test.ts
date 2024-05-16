@@ -20,7 +20,7 @@ import { Guid, Id64 } from "@itwin/core-bentley";
 import { IModel, Rank } from "@itwin/core-common";
 import { IModelConnection } from "@itwin/core-frontend";
 import { createValueFormatter } from "@itwin/presentation-core-interop";
-import { HierarchyLevelDefinitionsFactory, NodeSelectQueryFactory } from "@itwin/presentation-hierarchies";
+import { createNodesQueryClauseFactory, HierarchyLevelDefinitionsFactory } from "@itwin/presentation-hierarchies";
 import { ECSql } from "@itwin/presentation-shared";
 import { julianToDateTime } from "@itwin/presentation-shared/lib/cjs/shared/InternalUtils";
 import { buildIModel, importSchema } from "../IModelUtils";
@@ -108,7 +108,7 @@ describe("Hierarchies", () => {
           return { schema, model, category, element };
         });
 
-        const selectQueryFactory = new NodeSelectQueryFactory({ imodelAccess: createIModelAccess(imodel) });
+        const selectQueryFactory = createNodesQueryClauseFactory({ imodelAccess: createIModelAccess(imodel) });
         const hierarchy: HierarchyLevelDefinitionsFactory = {
           async defineHierarchyLevel({ parentNode }) {
             if (!parentNode) {
@@ -228,7 +228,7 @@ describe("Hierarchies", () => {
 
     describe("DateTime", () => {
       it("formats instance node labels", async function () {
-        const selectQueryFactory = new NodeSelectQueryFactory({ imodelAccess: createIModelAccess(emptyIModel) });
+        const selectQueryFactory = createNodesQueryClauseFactory({ imodelAccess: createIModelAccess(emptyIModel) });
         const hierarchy: HierarchyLevelDefinitionsFactory = {
           async defineHierarchyLevel({ parentNode }) {
             if (!parentNode) {
@@ -358,7 +358,7 @@ describe("Hierarchies", () => {
           return { modelClassName: m2.className };
         });
 
-        const selectQueryFactory = new NodeSelectQueryFactory({ imodelAccess: createIModelAccess(imodel) });
+        const selectQueryFactory = createNodesQueryClauseFactory({ imodelAccess: createIModelAccess(imodel) });
         const hierarchy: HierarchyLevelDefinitionsFactory = {
           async defineHierarchyLevel({ parentNode }) {
             if (!parentNode) {
@@ -438,7 +438,7 @@ describe("Hierarchies", () => {
           return { category: insertSpatialCategory({ builder, codeValue: "category", rank: Rank.Application }) };
         });
 
-        const selectQueryFactory = new NodeSelectQueryFactory({ imodelAccess: createIModelAccess(imodel) });
+        const selectQueryFactory = createNodesQueryClauseFactory({ imodelAccess: createIModelAccess(imodel) });
         const hierarchy: HierarchyLevelDefinitionsFactory = {
           async defineHierarchyLevel({ parentNode }) {
             if (!parentNode) {
@@ -527,7 +527,7 @@ describe("Hierarchies", () => {
           });
           return { model, category, element };
         });
-        const selectQueryFactory = new NodeSelectQueryFactory({ imodelAccess: createIModelAccess(imodel) });
+        const selectQueryFactory = createNodesQueryClauseFactory({ imodelAccess: createIModelAccess(imodel) });
         const hierarchy: HierarchyLevelDefinitionsFactory = {
           async defineHierarchyLevel({ parentNode }) {
             if (!parentNode) {
@@ -615,7 +615,7 @@ describe("Hierarchies", () => {
           });
           return { model, category, element };
         });
-        const selectQueryFactory = new NodeSelectQueryFactory({ imodelAccess: createIModelAccess(imodel) });
+        const selectQueryFactory = createNodesQueryClauseFactory({ imodelAccess: createIModelAccess(imodel) });
         const hierarchy: HierarchyLevelDefinitionsFactory = {
           async defineHierarchyLevel({ parentNode }) {
             if (!parentNode) {
@@ -703,7 +703,7 @@ describe("Hierarchies", () => {
           });
           return { model, category, element };
         });
-        const selectQueryFactory = new NodeSelectQueryFactory({ imodelAccess: createIModelAccess(imodel) });
+        const selectQueryFactory = createNodesQueryClauseFactory({ imodelAccess: createIModelAccess(imodel) });
         const hierarchy: HierarchyLevelDefinitionsFactory = {
           async defineHierarchyLevel({ parentNode }) {
             if (!parentNode) {
@@ -789,7 +789,7 @@ describe("Hierarchies", () => {
           });
           return { model, category, element };
         });
-        const selectQueryFactory = new NodeSelectQueryFactory({ imodelAccess: createIModelAccess(imodel) });
+        const selectQueryFactory = createNodesQueryClauseFactory({ imodelAccess: createIModelAccess(imodel) });
         const hierarchy: HierarchyLevelDefinitionsFactory = {
           async defineHierarchyLevel({ parentNode }) {
             if (!parentNode) {
@@ -836,7 +836,7 @@ describe("Hierarchies", () => {
     });
 
     it("reacts to changed formatter without running queries", async function () {
-      const selectQueryFactory = new NodeSelectQueryFactory({ imodelAccess: createIModelAccess(emptyIModel) });
+      const selectQueryFactory = createNodesQueryClauseFactory({ imodelAccess: createIModelAccess(emptyIModel) });
       const hierarchy: HierarchyLevelDefinitionsFactory = {
         async defineHierarchyLevel({ parentNode }) {
           if (!parentNode) {

@@ -28,6 +28,11 @@ export function createHierarchyProvider(props: HierarchyProviderProps): Hierarch
 export function createLimitingECSqlQueryExecutor(baseExecutor: ECSqlQueryExecutor, defaultLimit: number | "unbounded"): LimitingECSqlQueryExecutor;
 
 // @beta
+export function createNodesQueryClauseFactory(props: {
+    imodelAccess: ECSchemaProvider & ECClassHierarchyInspector;
+}): NodesQueryClauseFactory;
+
+// @beta
 export type DefineCustomNodeChildHierarchyLevelProps = Omit<DefineHierarchyLevelProps, "parentNode"> & {
     parentNode: Omit<HierarchyDefinitionParentNode, "key"> & {
         key: string;
@@ -51,83 +56,6 @@ export type DefineInstanceNodeChildHierarchyLevelProps = Omit<DefineHierarchyLev
 
 // @beta
 export type DefineRootHierarchyLevelProps = Omit<DefineHierarchyLevelProps, "parentNode">;
-
-// @beta
-export interface ECSqlSelectClauseBaseClassGroupingParams extends ECSqlSelectClauseGroupingParamsBase {
-    // (undocumented)
-    fullClassNames: string[] | ECSqlValueSelector[];
-}
-
-// @beta
-export interface ECSqlSelectClauseGroupingParams {
-    // (undocumented)
-    byBaseClasses?: ECSqlSelectClauseBaseClassGroupingParams;
-    // (undocumented)
-    byClass?: boolean | ECSqlSelectClauseGroupingParamsBase | ECSqlValueSelector;
-    // (undocumented)
-    byLabel?: ECSqlSelectClauseLabelGroupingParams;
-    // (undocumented)
-    byProperties?: ECSqlSelectClausePropertiesGroupingParams;
-}
-
-// @beta
-export interface ECSqlSelectClauseGroupingParamsBase {
-    // (undocumented)
-    autoExpand?: string | ECSqlValueSelector;
-    // (undocumented)
-    hideIfNoSiblings?: boolean | ECSqlValueSelector;
-    // (undocumented)
-    hideIfOneGroupedNode?: boolean | ECSqlValueSelector;
-}
-
-// @beta
-export interface ECSqlSelectClauseLabelGroupingBaseParams {
-    action?: "group" | "merge";
-    groupId?: string | ECSqlValueSelector;
-}
-
-// @beta
-export interface ECSqlSelectClauseLabelGroupingGroupParams extends ECSqlSelectClauseLabelGroupingBaseParams, ECSqlSelectClauseGroupingParamsBase {
-    // (undocumented)
-    action?: "group";
-}
-
-// @beta
-export interface ECSqlSelectClauseLabelGroupingMergeParams extends ECSqlSelectClauseLabelGroupingBaseParams {
-    // (undocumented)
-    action: "merge";
-}
-
-// @beta
-export type ECSqlSelectClauseLabelGroupingParams = boolean | ECSqlValueSelector | ECSqlSelectClauseLabelGroupingMergeParams | ECSqlSelectClauseLabelGroupingGroupParams;
-
-// @beta
-export interface ECSqlSelectClausePropertiesGroupingParams extends ECSqlSelectClauseGroupingParamsBase {
-    createGroupForOutOfRangeValues?: boolean | ECSqlValueSelector;
-    createGroupForUnspecifiedValues?: boolean | ECSqlValueSelector;
-    propertiesClassName: string;
-    propertyGroups: Array<ECSqlSelectClausePropertyGroup>;
-}
-
-// @beta
-export interface ECSqlSelectClausePropertyGroup {
-    propertyClassAlias: string;
-    propertyName: string;
-    ranges?: Array<ECSqlSelectClausePropertyValueRange>;
-}
-
-// @beta
-export interface ECSqlSelectClausePropertyValueRange {
-    fromValue: number | ECSqlValueSelector;
-    rangeLabel?: string | ECSqlValueSelector;
-    toValue: number | ECSqlValueSelector;
-}
-
-// @beta
-export interface ECSqlValueSelector {
-    // (undocumented)
-    selector: string;
-}
 
 export { GenericInstanceFilter }
 
@@ -318,39 +246,13 @@ export enum NodeSelectClauseColumnNames {
 }
 
 // @beta
-export interface NodeSelectClauseProps {
-    // (undocumented)
-    autoExpand?: boolean | ECSqlValueSelector;
-    // (undocumented)
-    ecClassId: Id64String | ECSqlValueSelector;
-    // (undocumented)
-    ecInstanceId: Id64String | ECSqlValueSelector;
-    // (undocumented)
-    extendedData?: {
-        [key: string]: Id64String | string | number | boolean | ECSqlValueSelector;
-    };
-    // (undocumented)
-    grouping?: ECSqlSelectClauseGroupingParams;
-    // (undocumented)
-    hasChildren?: boolean | ECSqlValueSelector;
-    // (undocumented)
-    hideIfNoChildren?: boolean | ECSqlValueSelector;
-    // (undocumented)
-    hideNodeInHierarchy?: boolean | ECSqlValueSelector;
-    // (undocumented)
-    nodeLabel: string | ECSqlValueSelector;
-    // (undocumented)
-    supportsFiltering?: boolean | ECSqlValueSelector;
-}
-
-// @beta
-export class NodeSelectQueryFactory {
-    constructor(props: {
-        imodelAccess: ECSchemaProvider & ECClassHierarchyInspector;
-    });
-    createFilterClauses(def: GenericInstanceFilter | undefined, contentClass: {
-        fullName: string;
-        alias: string;
+export interface NodesQueryClauseFactory {
+    createFilterClauses(props: {
+        contentClass: {
+            fullName: string;
+            alias: string;
+        };
+        filter: GenericInstanceFilter | undefined;
     }): Promise<{
         from: string;
         where: string;

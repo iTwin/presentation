@@ -7,9 +7,10 @@ import { expect } from "chai";
 import { IModelDb, SnapshotDb } from "@itwin/core-backend";
 import {
   createClassBasedHierarchyLevelDefinitionsFactory,
+  createNodesQueryClauseFactory,
   DefineInstanceNodeChildHierarchyLevelProps,
   HierarchyLevelDefinition,
-  NodeSelectQueryFactory,
+  NodesQueryClauseFactory,
 } from "@itwin/presentation-hierarchies";
 import { Datasets } from "../util/Datasets";
 import { run } from "../util/TestUtilities";
@@ -27,7 +28,7 @@ describe("hide if no children", () => {
       const provider = new StatelessHierarchyProvider({
         iModel,
         getHierarchyFactory: (imodelAccess) => {
-          const queryFactory = new NodeSelectQueryFactory({ imodelAccess });
+          const queryFactory = createNodesQueryClauseFactory({ imodelAccess });
           return createClassBasedHierarchyLevelDefinitionsFactory({
             classHierarchyInspector: imodelAccess,
             hierarchy: {
@@ -64,7 +65,7 @@ describe("hide if no children", () => {
       const provider = new StatelessHierarchyProvider({
         iModel,
         getHierarchyFactory: (imodelAccess) => {
-          const queryFactory = new NodeSelectQueryFactory({ imodelAccess });
+          const queryFactory = createNodesQueryClauseFactory({ imodelAccess });
           return createClassBasedHierarchyLevelDefinitionsFactory({
             classHierarchyInspector: imodelAccess,
             hierarchy: {
@@ -95,7 +96,7 @@ describe("hide if no children", () => {
 });
 
 async function createPhysicalElementsHierarchyLevelDefinition(props: {
-  queryFactory: NodeSelectQueryFactory;
+  queryFactory: NodesQueryClauseFactory;
   limit: number;
   hasChildren?: boolean;
   hideIfNoChildren?: boolean;

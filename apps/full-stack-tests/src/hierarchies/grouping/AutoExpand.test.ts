@@ -7,7 +7,7 @@ import { insertSubject } from "presentation-test-utilities";
 import { Subject } from "@itwin/core-backend";
 import { IModel } from "@itwin/core-common";
 import { IModelConnection } from "@itwin/core-frontend";
-import { ECSqlSelectClauseGroupingParams, HierarchyLevelDefinitionsFactory, NodeSelectQueryFactory } from "@itwin/presentation-hierarchies";
+import { createNodesQueryClauseFactory, HierarchyLevelDefinitionsFactory, NodesQueryClauseFactory } from "@itwin/presentation-hierarchies";
 import { buildIModel } from "../../IModelUtils";
 import { initialize, terminate } from "../../IntegrationTests";
 import { NodeValidators, validateHierarchy } from "../HierarchyValidation";
@@ -15,6 +15,7 @@ import { createIModelAccess, createProvider } from "../Utils";
 
 describe("Hierarchies", () => {
   describe("Grouping nodes' autoExpand setting", () => {
+    type ECSqlSelectClauseGroupingParams = NonNullable<Parameters<NodesQueryClauseFactory["createSelectClause"]>[0]["grouping"]>;
     let subjectClassName: string;
     let emptyIModel: IModelConnection;
 
@@ -33,7 +34,7 @@ describe("Hierarchies", () => {
       specifiedGrouping: ECSqlSelectClauseGroupingParams,
       labelProperty?: string,
     ): HierarchyLevelDefinitionsFactory {
-      const selectQueryFactory = new NodeSelectQueryFactory({ imodelAccess: createIModelAccess(imodel) });
+      const selectQueryFactory = createNodesQueryClauseFactory({ imodelAccess: createIModelAccess(imodel) });
       return {
         async defineHierarchyLevel({ parentNode }) {
           if (!parentNode) {

@@ -6,34 +6,34 @@
 export { GenericInstanceFilter } from "@itwin/core-common";
 
 export {
-  HierarchyNodesDefinition,
-  HierarchyLevelDefinition,
-  NodeParser,
-  NodePreProcessor,
-  NodePostProcessor,
-  DefineHierarchyLevelProps,
-  HierarchyLevelDefinitionsFactory,
-  DefineRootHierarchyLevelProps,
   DefineCustomNodeChildHierarchyLevelProps,
+  DefineHierarchyLevelProps,
   DefineInstanceNodeChildHierarchyLevelProps,
+  DefineRootHierarchyLevelProps,
+  HierarchyLevelDefinition,
+  HierarchyLevelDefinitionsFactory,
+  HierarchyNodesDefinition,
+  NodeParser,
+  NodePostProcessor,
+  NodePreProcessor,
   createClassBasedHierarchyLevelDefinitionsFactory,
 } from "./hierarchies/HierarchyDefinition";
 export { RowsLimitExceededError } from "./hierarchies/HierarchyErrors";
 export {
-  NonGroupingHierarchyNode,
   GroupingHierarchyNode,
   HierarchyNode,
+  NonGroupingHierarchyNode,
   ParsedCustomHierarchyNode,
-  ParsedInstanceHierarchyNode,
   ParsedHierarchyNode,
+  ParsedInstanceHierarchyNode,
   ProcessedCustomHierarchyNode,
-  ProcessedInstanceHierarchyNode,
   ProcessedGroupingHierarchyNode,
   ProcessedHierarchyNode,
+  ProcessedInstanceHierarchyNode,
 } from "./hierarchies/HierarchyNode";
 export { HierarchyNodeIdentifier, HierarchyNodeIdentifiersPath } from "./hierarchies/HierarchyNodeIdentifier";
-export { InstancesNodeKey, GroupingNodeKey, HierarchyNodeKey } from "./hierarchies/HierarchyNodeKey";
+export { GroupingNodeKey, HierarchyNodeKey, InstancesNodeKey } from "./hierarchies/HierarchyNodeKey";
 export { GetHierarchyNodesProps, HierarchyProvider, createHierarchyProvider } from "./hierarchies/HierarchyProvider";
-export { createLimitingECSqlQueryExecutor, LimitingECSqlQueryExecutor } from "./hierarchies/LimitingECSqlQueryExecutor";
-export { setLogger, getLogger } from "./hierarchies/Logging";
-export * from "./hierarchies/NodeSelectQueryFactory";
+export { LimitingECSqlQueryExecutor, createLimitingECSqlQueryExecutor } from "./hierarchies/LimitingECSqlQueryExecutor";
+export { getLogger, setLogger } from "./hierarchies/Logging";
+export { NodeSelectClauseColumnNames, NodesQueryClauseFactory, createNodesQueryClauseFactory } from "./hierarchies/NodeSelectQueryFactory";

@@ -3,21 +3,11 @@ Release Tag;API Item
 beta;createClassBasedHierarchyLevelDefinitionsFactory(props: ClassBasedHierarchyDefinitionsFactoryProps): HierarchyLevelDefinitionsFactory
 beta;createHierarchyProvider(props: HierarchyProviderProps): HierarchyProvider
 beta;createLimitingECSqlQueryExecutor(baseExecutor: ECSqlQueryExecutor, defaultLimit: number | "unbounded"): LimitingECSqlQueryExecutor
+beta;createNodesQueryClauseFactory(props:
 beta;DefineCustomNodeChildHierarchyLevelProps = Omit
 beta;DefineHierarchyLevelProps
 beta;DefineInstanceNodeChildHierarchyLevelProps = Omit
 beta;DefineRootHierarchyLevelProps = Omit
-beta;ECSqlSelectClauseBaseClassGroupingParams 
-beta;ECSqlSelectClauseGroupingParams
-beta;ECSqlSelectClauseGroupingParamsBase
-beta;ECSqlSelectClauseLabelGroupingBaseParams
-beta;ECSqlSelectClauseLabelGroupingGroupParams 
-beta;ECSqlSelectClauseLabelGroupingMergeParams 
-beta;ECSqlSelectClauseLabelGroupingParams = boolean | ECSqlValueSelector | ECSqlSelectClauseLabelGroupingMergeParams | ECSqlSelectClauseLabelGroupingGroupParams
-beta;ECSqlSelectClausePropertiesGroupingParams 
-beta;ECSqlSelectClausePropertyGroup
-beta;ECSqlSelectClausePropertyValueRange
-beta;ECSqlValueSelector
 beta;GetHierarchyNodesProps
 beta;getLogger(): ILogger
 beta;GroupingHierarchyNode 
@@ -40,8 +30,7 @@ beta;NodeParser = (row:
 beta;NodePostProcessor = (node: ProcessedHierarchyNode) => Promise
 beta;NodePreProcessor = 
 beta;NodeSelectClauseColumnNames
-beta;NodeSelectClauseProps
-beta;NodeSelectQueryFactory
+beta;NodesQueryClauseFactory
 beta;NonGroupingHierarchyNode 
 beta;ParsedCustomHierarchyNode = Omit
 beta;ParsedHierarchyNode = ParsedCustomHierarchyNode | ParsedInstanceHierarchyNode

@@ -7,7 +7,7 @@ import { expect } from "chai";
 import { collect } from "presentation-test-utilities";
 import { DictionaryModel, InformationPartitionElement, LinkModel, Model, Subject } from "@itwin/core-backend";
 import { IModelConnection } from "@itwin/core-frontend";
-import { HierarchyLevelDefinitionsFactory, HierarchyNode, NodeSelectQueryFactory } from "@itwin/presentation-hierarchies";
+import { createNodesQueryClauseFactory, HierarchyLevelDefinitionsFactory, HierarchyNode } from "@itwin/presentation-hierarchies";
 import { InstanceKey } from "@itwin/presentation-shared";
 import { buildTestIModel } from "@itwin/presentation-testing";
 import { initialize, terminate } from "../IntegrationTests";
@@ -29,7 +29,7 @@ describe("Hierarchies", () => {
     });
 
     it("gets instance keys for root hierarchy level", async function () {
-      const selectQueryFactory = new NodeSelectQueryFactory({ imodelAccess: createIModelAccess(imodel) });
+      const selectQueryFactory = createNodesQueryClauseFactory({ imodelAccess: createIModelAccess(imodel) });
       const hierarchy: HierarchyLevelDefinitionsFactory = {
         async defineHierarchyLevel() {
           return [
@@ -62,7 +62,7 @@ describe("Hierarchies", () => {
 
     it("gets instance keys for instance node's child hierarchy level", async function () {
       const rootSubjectKey: InstanceKey = { className: Subject.classFullName.replace(":", "."), id: "0x1" };
-      const selectQueryFactory = new NodeSelectQueryFactory({ imodelAccess: createIModelAccess(imodel) });
+      const selectQueryFactory = createNodesQueryClauseFactory({ imodelAccess: createIModelAccess(imodel) });
       const hierarchy: HierarchyLevelDefinitionsFactory = {
         async defineHierarchyLevel({ parentNode }) {
           if (parentNode && HierarchyNode.isInstancesNode(parentNode) && parentNode.key.instanceKeys.some((ik) => InstanceKey.equals(ik, rootSubjectKey))) {
@@ -112,7 +112,7 @@ describe("Hierarchies", () => {
     });
 
     it("gets instance keys for custom node's child hierarchy level", async function () {
-      const selectQueryFactory = new NodeSelectQueryFactory({ imodelAccess: createIModelAccess(imodel) });
+      const selectQueryFactory = createNodesQueryClauseFactory({ imodelAccess: createIModelAccess(imodel) });
       const hierarchy: HierarchyLevelDefinitionsFactory = {
         async defineHierarchyLevel({ parentNode }) {
           if (parentNode && HierarchyNode.isCustom(parentNode) && parentNode.key === "test") {
@@ -154,7 +154,7 @@ describe("Hierarchies", () => {
 
     it("gets instance keys for hidden instance node's child hierarchy level", async function () {
       const rootSubjectKey: InstanceKey = { className: Subject.classFullName.replace(":", "."), id: "0x1" };
-      const selectQueryFactory = new NodeSelectQueryFactory({ imodelAccess: createIModelAccess(imodel) });
+      const selectQueryFactory = createNodesQueryClauseFactory({ imodelAccess: createIModelAccess(imodel) });
       const hierarchy: HierarchyLevelDefinitionsFactory = {
         async defineHierarchyLevel({ parentNode }) {
           if (!parentNode) {
@@ -213,7 +213,7 @@ describe("Hierarchies", () => {
     });
 
     it("gets instance keys for hidden custom node's child hierarchy level", async function () {
-      const selectQueryFactory = new NodeSelectQueryFactory({ imodelAccess: createIModelAccess(imodel) });
+      const selectQueryFactory = createNodesQueryClauseFactory({ imodelAccess: createIModelAccess(imodel) });
       const hierarchy: HierarchyLevelDefinitionsFactory = {
         async defineHierarchyLevel({ parentNode }) {
           if (!parentNode) {

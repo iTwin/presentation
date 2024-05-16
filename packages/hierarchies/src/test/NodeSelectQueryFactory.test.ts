@@ -13,15 +13,15 @@ import {
   GenericInstanceFilterRuleOperator,
 } from "@itwin/core-common";
 import { EC, trimWhitespace } from "@itwin/presentation-shared";
-import { NodeSelectClauseColumnNames, NodeSelectQueryFactory } from "../hierarchies/NodeSelectQueryFactory";
+import { createNodesQueryClauseFactory, NodeSelectClauseColumnNames, NodesQueryClauseFactory } from "../hierarchies/NodeSelectQueryFactory";
 import { createIModelAccessStub } from "./Utils";
 
-describe("NodeSelectQueryFactory", () => {
+describe("createNodesQueryClauseFactory", () => {
   let imodelAccess: ReturnType<typeof createIModelAccessStub>;
-  let factory: NodeSelectQueryFactory;
+  let factory: NodesQueryClauseFactory;
   beforeEach(() => {
     imodelAccess = createIModelAccessStub();
-    factory = new NodeSelectQueryFactory({ imodelAccess });
+    factory = createNodesQueryClauseFactory({ imodelAccess });
   });
   afterEach(() => {
     sinon.restore();
@@ -248,7 +248,7 @@ describe("NodeSelectQueryFactory", () => {
   describe("createFilterClauses", () => {
     it("creates valid result when filter is undefined", async () => {
       imodelAccess.stubEntityClass({ schemaName: "x", className: "y" });
-      expect(await factory.createFilterClauses(undefined, { fullName: "x.y", alias: "content-class" })).to.deep.eq({
+      expect(await factory.createFilterClauses({ filter: undefined, contentClass: { fullName: "x.y", alias: "content-class" } })).to.deep.eq({
         from: "x.y",
         joins: "",
         where: "",
@@ -266,7 +266,7 @@ describe("NodeSelectQueryFactory", () => {
           rules: [],
         },
       };
-      expect(await factory.createFilterClauses(filter, { fullName: "x.b", alias: "content-class" })).to.deep.eq({
+      expect(await factory.createFilterClauses({ filter, contentClass: { fullName: "x.b", alias: "content-class" } })).to.deep.eq({
         from: "x.b",
         joins: "",
         where: "FALSE",
@@ -285,7 +285,7 @@ describe("NodeSelectQueryFactory", () => {
             rules: [],
           },
         };
-        expect(await factory.createFilterClauses(filter, { fullName: "x.a", alias: "content-class" })).to.deep.eq({
+        expect(await factory.createFilterClauses({ filter, contentClass: { fullName: "x.a", alias: "content-class" } })).to.deep.eq({
           from: "x.b",
           joins: "",
           where: "",
@@ -303,7 +303,7 @@ describe("NodeSelectQueryFactory", () => {
             rules: [],
           },
         };
-        expect(await factory.createFilterClauses(filter, { fullName: "x.a", alias: "content-class" })).to.deep.eq({
+        expect(await factory.createFilterClauses({ filter, contentClass: { fullName: "x.a", alias: "content-class" } })).to.deep.eq({
           from: "x.a",
           joins: "",
           where: "",
@@ -320,7 +320,7 @@ describe("NodeSelectQueryFactory", () => {
             rules: [],
           },
         };
-        expect(await factory.createFilterClauses(filter, { fullName: "x.a", alias: "content-class" })).to.deep.eq({
+        expect(await factory.createFilterClauses({ filter, contentClass: { fullName: "x.a", alias: "content-class" } })).to.deep.eq({
           from: "x.a",
           joins: "",
           where: "",
@@ -340,7 +340,7 @@ describe("NodeSelectQueryFactory", () => {
             rules: [],
           },
         };
-        expect(await factory.createFilterClauses(filter, { fullName: "x.a", alias: "content-class" })).to.deep.eq({
+        expect(await factory.createFilterClauses({ filter, contentClass: { fullName: "x.a", alias: "content-class" } })).to.deep.eq({
           from: "x.d",
           joins: "",
           where: "",
@@ -361,7 +361,7 @@ describe("NodeSelectQueryFactory", () => {
               rules: [],
             },
           };
-          const clauses = await factory.createFilterClauses(filter, { fullName: "x.y", alias: "content-class" });
+          const clauses = await factory.createFilterClauses({ filter, contentClass: { fullName: "x.y", alias: "content-class" } });
           expect({ ...clauses, where: trimWhitespace(clauses.where) }).to.deep.eq({
             from: "x.y",
             joins: "",
@@ -388,7 +388,7 @@ describe("NodeSelectQueryFactory", () => {
             relatedInstances: relatedInstances ?? [],
             rules: rule,
           };
-          const res = await factory.createFilterClauses(filter, { fullName: "s.c", alias: classAlias });
+          const res = await factory.createFilterClauses({ filter, contentClass: { fullName: "s.c", alias: classAlias } });
           expect(trimWhitespace(res.where ?? "")).to.eq(trimWhitespace(expectedECSql));
         }
 
@@ -875,8 +875,8 @@ describe("NodeSelectQueryFactory", () => {
             target: { polymorphic: false, abstractConstraint: Promise.resolve(propertyClass) },
           });
           await expect(
-            factory.createFilterClauses(
-              {
+            factory.createFilterClauses({
+              filter: {
                 propertyClassNames: [contentClass.fullName],
                 relatedInstances: [
                   {
@@ -899,22 +899,22 @@ describe("NodeSelectQueryFactory", () => {
                   value: { rawValue: 123, displayValue: "123" },
                 },
               },
-              { fullName: contentClass.fullName, alias: "x" },
-            ),
+              contentClass: { fullName: contentClass.fullName, alias: "x" },
+            }),
           ).to.eventually.be.rejected;
         });
 
         it(`throws when property class doesn't have the property`, async () => {
           const contentClass = imodelAccess.stubEntityClass(testClassProps);
           await expect(
-            factory.createFilterClauses(
-              {
+            factory.createFilterClauses({
+              filter: {
                 propertyClassNames: [contentClass.fullName],
                 relatedInstances: [],
                 rules: { sourceAlias: "x", propertyName: "p", operator: "is-equal", propertyTypeName: "int", value: { rawValue: 123, displayValue: "123" } },
               },
-              { fullName: contentClass.fullName, alias: "x" },
-            ),
+              contentClass: { fullName: contentClass.fullName, alias: "x" },
+            }),
           ).to.eventually.be.rejected;
         });
 
@@ -1043,7 +1043,7 @@ describe("NodeSelectQueryFactory", () => {
             rules: [],
           },
         };
-        const res = await factory.createFilterClauses(filter, { fullName: "x.y", alias: "content-class" });
+        const res = await factory.createFilterClauses({ filter, contentClass: { fullName: "x.y", alias: "content-class" } });
         expect(trimWhitespace(res.joins)).to.deep.eq(
           trimWhitespace(`
             INNER JOIN [x].[r] [rel_0_x_r_0] ON [rel_0_x_r_0].[SourceECInstanceId] = [content-class].[ECInstanceId]
@@ -1108,7 +1108,7 @@ describe("NodeSelectQueryFactory", () => {
             rules: [],
           },
         };
-        const res = await factory.createFilterClauses(filter, { fullName: "x.y", alias: "content-class" });
+        const res = await factory.createFilterClauses({ filter, contentClass: { fullName: "x.y", alias: "content-class" } });
         expect(trimWhitespace(res.joins)).to.deep.eq(
           trimWhitespace(`
             INNER JOIN [x].[r1] [rel_0_x_r1_0] ON [rel_0_x_r1_0].[SourceECInstanceId] = [content-class].[ECInstanceId]
@@ -1180,7 +1180,7 @@ describe("NodeSelectQueryFactory", () => {
             rules: [],
           },
         };
-        const res = await factory.createFilterClauses(filter, { fullName: "x.y", alias: "content-class" });
+        const res = await factory.createFilterClauses({ filter, contentClass: { fullName: "x.y", alias: "content-class" } });
         expect(trimWhitespace(res.joins)).to.deep.eq(
           trimWhitespace(`
             INNER JOIN [x].[r1] [rel_0_x_r1_0] ON [rel_0_x_r1_0].[SourceECInstanceId] = [content-class].[ECInstanceId]
