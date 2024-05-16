@@ -4,7 +4,8 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { expect } from "chai";
-import { GroupingNodeKey, HierarchyNode, HierarchyNodeAutoExpandProp, InstanceHierarchyNodeProcessingParams } from "../../../../hierarchies/HierarchyNode";
+import { HierarchyNode, HierarchyNodeAutoExpandProp, InstanceHierarchyNodeProcessingParams } from "../../../../hierarchies/HierarchyNode";
+import { GroupingNodeKey } from "../../../../hierarchies/HierarchyNodeKey";
 import { GroupingType, ProcessedInstancesGroupingHierarchyNode } from "../../../../hierarchies/internal/operators/Grouping";
 import { assignAutoExpand } from "../../../../hierarchies/internal/operators/grouping/AutoExpand";
 import { createTestProcessedGroupingNode, createTestProcessedInstanceNode } from "../../../Utils";

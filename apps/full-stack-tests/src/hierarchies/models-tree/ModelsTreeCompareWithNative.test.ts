@@ -12,7 +12,7 @@ import { IModelConnection, SnapshotConnection } from "@itwin/core-frontend";
 import { InstanceKey, NodeKey, Ruleset } from "@itwin/presentation-common";
 import { isPresentationTreeNodeItem, PresentationTreeDataProvider, PresentationTreeNodeItem } from "@itwin/presentation-components";
 import { createLogger } from "@itwin/presentation-core-interop";
-import { ClassGroupingNodeKey, HierarchyNode, InstancesNodeKey, setLogger } from "@itwin/presentation-hierarchies";
+import { HierarchyNode, HierarchyNodeKey, InstancesNodeKey, setLogger } from "@itwin/presentation-hierarchies";
 import { initialize, terminate } from "../../IntegrationTests";
 import { createModelsTreeProvider } from "./ModelsTreeTestUtils";
 
@@ -54,8 +54,9 @@ describe("Hierarchies", () => {
       expect((nativeNode.label.value as PrimitiveValue).displayValue).to.eq(statelessNode.label, createFailureMsg("Labels"));
       expect(!!nativeNode.hasChildren).to.eq(!!statelessNode.children, createFailureMsg("Children flag"));
       if (NodeKey.isClassGroupingNodeKey(nativeNode.key)) {
+        assert(HierarchyNodeKey.isClassGrouping(statelessNode.key));
         expect(HierarchyNode.isClassGroupingNode(statelessNode), createFailureMsg("Key types"));
-        expect(nativeNode.key.className.replace(":", ".")).to.eq((statelessNode.key as ClassGroupingNodeKey).className, createFailureMsg("Key class names"));
+        expect(nativeNode.key.className.replace(":", ".")).to.eq(statelessNode.key.className, createFailureMsg("Key class names"));
       } else if (NodeKey.isInstancesNodeKey(nativeNode.key)) {
         expect(HierarchyNode.isInstancesNode(statelessNode), createFailureMsg("Key types"));
         expect([...nativeNode.key.instanceKeys].map((ik) => ({ ...ik, className: ik.className.replace(":", ".") })).sort(compareInstanceKeys)).to.deep.eq(

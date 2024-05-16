@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { expect } from "chai";
-import { GroupingNodeKey } from "../../../../hierarchies/HierarchyNode";
+import { GroupingNodeKey } from "../../../../hierarchies/HierarchyNodeKey";
 import { GroupingHandlerResult } from "../../../../hierarchies/internal/operators/Grouping";
 import { createLabelGroups } from "../../../../hierarchies/internal/operators/grouping/LabelGrouping";
 import { createTestInstanceKey, createTestProcessedGroupingNode, createTestProcessedInstanceNode } from "../../../Utils";

@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { HierarchyNode, IHierarchyLevelDefinitionsFactory, NodeSelectQueryFactory } from "@itwin/presentation-hierarchies";
+import { createNodesQueryClauseFactory, HierarchyLevelDefinitionsFactory, HierarchyNode } from "@itwin/presentation-hierarchies";
 import { importSchema, withECDb } from "../../IModelUtils";
 import { initialize, terminate } from "../../IntegrationTests";
 import { NodeValidators, validateHierarchy } from "../HierarchyValidation";
@@ -43,8 +43,8 @@ describe("Hierarchies", () => {
           return { schema, x1, x2, y1, y2 };
         },
         async (db, { schema, y1, y2 }) => {
-          const selectQueryFactory = new NodeSelectQueryFactory({ imodelAccess: createIModelAccess(db) });
-          const hierarchy: IHierarchyLevelDefinitionsFactory = {
+          const selectQueryFactory = createNodesQueryClauseFactory({ imodelAccess: createIModelAccess(db) });
+          const hierarchy: HierarchyLevelDefinitionsFactory = {
             async defineHierarchyLevel({ parentNode }) {
               if (!parentNode) {
                 return [

@@ -4,7 +4,8 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { concat, defer, EMPTY, filter, finalize, map, merge, mergeAll, mergeMap, Observable, take } from "rxjs";
-import { HierarchyNode, InstancesNodeKey, ProcessedCustomHierarchyNode, ProcessedHierarchyNode, ProcessedInstanceHierarchyNode } from "../../HierarchyNode";
+import { HierarchyNode, ProcessedCustomHierarchyNode, ProcessedHierarchyNode, ProcessedInstanceHierarchyNode } from "../../HierarchyNode";
+import { InstancesNodeKey } from "../../HierarchyNodeKey";
 import { createNodeIdentifierForLogging, createOperatorLoggingNamespace, hasChildren, mergeNodes } from "../Common";
 import { doLog, log } from "../LoggingUtils";
 import { partition } from "./Partition";

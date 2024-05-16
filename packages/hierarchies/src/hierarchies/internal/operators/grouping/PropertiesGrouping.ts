@@ -16,14 +16,13 @@ import {
 } from "@itwin/presentation-shared";
 import {
   HierarchyNode,
-  HierarchyNodeKey,
   HierarchyNodePropertiesGroupingParams,
   HierarchyNodePropertyGroup,
   HierarchyNodePropertyValueRange,
   ParentHierarchyNode,
   ProcessedInstanceHierarchyNode,
-  PropertyGroupingNodeKey,
 } from "../../../HierarchyNode";
+import { HierarchyNodeKey, PropertyGroupingNodeKey } from "../../../HierarchyNodeKey";
 import { GroupingHandler, GroupingHandlerResult, ProcessedInstancesGroupingHierarchyNode } from "../Grouping";
 
 interface DisplayablePropertyGroupingInfo {

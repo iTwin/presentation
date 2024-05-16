@@ -11,13 +11,6 @@ import { ECSqlQueryDef } from '@itwin/presentation-shared';
 import { ECSqlQueryExecutor } from '@itwin/presentation-shared';
 import { ECSqlQueryReaderOptions } from '@itwin/presentation-shared';
 import { GenericInstanceFilter } from '@itwin/core-common';
-import { GenericInstanceFilterRelatedInstanceDescription } from '@itwin/core-common';
-import { GenericInstanceFilterRelationshipStep } from '@itwin/core-common';
-import { GenericInstanceFilterRule } from '@itwin/core-common';
-import { GenericInstanceFilterRuleGroup } from '@itwin/core-common';
-import { GenericInstanceFilterRuleGroupOperator } from '@itwin/core-common';
-import { GenericInstanceFilterRuleOperator } from '@itwin/core-common';
-import { GenericInstanceFilterRuleValue } from '@itwin/core-common';
 import { Id64String } from '@itwin/core-bentley';
 import { ILogger } from '@itwin/presentation-shared';
 import { InstanceKey } from '@itwin/presentation-shared';
@@ -26,56 +19,25 @@ import { OmitOverUnion } from '@itwin/presentation-shared';
 import { PrimitiveValue } from '@itwin/presentation-shared';
 
 // @beta
-export interface BaseHierarchyNode {
-    autoExpand?: boolean;
-    children: boolean;
-    extendedData?: {
-        [key: string]: any;
-    };
-    label: string;
-    parentKeys: HierarchyNodeKey[];
-}
+export function createClassBasedHierarchyLevelDefinitionsFactory(props: ClassBasedHierarchyDefinitionsFactoryProps): HierarchyLevelDefinitionsFactory;
 
 // @beta
-export interface ClassBasedHierarchyDefinition {
-    childNodes: Array<ClassBasedHierarchyLevelDefinition>;
-    rootNodes: (props: DefineRootHierarchyLevelProps) => Promise<HierarchyLevelDefinition>;
-}
-
-// @beta
-export interface ClassBasedHierarchyDefinitionsFactoryProps {
-    classHierarchyInspector: ECClassHierarchyInspector;
-    hierarchy: ClassBasedHierarchyDefinition;
-}
-
-// @beta
-export type ClassBasedHierarchyLevelDefinition = InstancesNodeChildHierarchyLevelDefinition | CustomNodeChildHierarchyLevelDefinition;
-
-// @beta
-export class ClassBasedHierarchyLevelDefinitionsFactory implements IHierarchyLevelDefinitionsFactory {
-    constructor(props: ClassBasedHierarchyDefinitionsFactoryProps);
-    defineHierarchyLevel(props: DefineHierarchyLevelProps): Promise<HierarchyLevelDefinition>;
-}
-
-// @beta
-export interface ClassGroupingNodeKey {
-    className: string;
-    type: "class-grouping";
-}
+export function createHierarchyProvider(props: HierarchyProviderProps): HierarchyProvider;
 
 // @beta
 export function createLimitingECSqlQueryExecutor(baseExecutor: ECSqlQueryExecutor, defaultLimit: number | "unbounded"): LimitingECSqlQueryExecutor;
 
 // @beta
-export interface CustomHierarchyNodeDefinition {
-    node: ParsedCustomHierarchyNode;
-}
+export function createNodesQueryClauseFactory(props: {
+    imodelAccess: ECSchemaProvider & ECClassHierarchyInspector;
+}): NodesQueryClauseFactory;
 
 // @beta
-export interface CustomNodeChildHierarchyLevelDefinition {
-    customParentNodeKey: string;
-    definitions: (requestProps: DefineHierarchyLevelProps) => Promise<HierarchyLevelDefinition>;
-}
+export type DefineCustomNodeChildHierarchyLevelProps = Omit<DefineHierarchyLevelProps, "parentNode"> & {
+    parentNode: Omit<HierarchyDefinitionParentNode, "key"> & {
+        key: string;
+    };
+};
 
 // @beta
 export interface DefineHierarchyLevelProps {
@@ -84,106 +46,18 @@ export interface DefineHierarchyLevelProps {
 }
 
 // @beta
-export type DefineInstanceNodeChildHierarchyLevelProps = DefineHierarchyLevelProps & {
+export type DefineInstanceNodeChildHierarchyLevelProps = Omit<DefineHierarchyLevelProps, "parentNode"> & {
+    parentNode: Omit<HierarchyDefinitionParentNode, "key"> & {
+        key: InstancesNodeKey;
+    };
+    parentNodeClassName: string;
     parentNodeInstanceIds: Id64String[];
-    parentNode: HierarchyDefinitionParentNode;
 };
 
 // @beta
 export type DefineRootHierarchyLevelProps = Omit<DefineHierarchyLevelProps, "parentNode">;
 
-// @beta
-export interface ECSqlSelectClauseBaseClassGroupingParams extends ECSqlSelectClauseGroupingParamsBase {
-    // (undocumented)
-    fullClassNames: string[] | ECSqlValueSelector[];
-}
-
-// @beta
-export interface ECSqlSelectClauseGroupingParams {
-    // (undocumented)
-    byBaseClasses?: ECSqlSelectClauseBaseClassGroupingParams;
-    // (undocumented)
-    byClass?: boolean | ECSqlSelectClauseGroupingParamsBase | ECSqlValueSelector;
-    // (undocumented)
-    byLabel?: ECSqlSelectClauseLabelGroupingParams;
-    // (undocumented)
-    byProperties?: ECSqlSelectClausePropertiesGroupingParams;
-}
-
-// @beta
-export interface ECSqlSelectClauseGroupingParamsBase {
-    // (undocumented)
-    autoExpand?: string | ECSqlValueSelector;
-    // (undocumented)
-    hideIfNoSiblings?: boolean | ECSqlValueSelector;
-    // (undocumented)
-    hideIfOneGroupedNode?: boolean | ECSqlValueSelector;
-}
-
-// @beta
-export interface ECSqlSelectClauseLabelGroupingBaseParams {
-    action?: "group" | "merge";
-    groupId?: string | ECSqlValueSelector;
-}
-
-// @beta
-export interface ECSqlSelectClauseLabelGroupingGroupParams extends ECSqlSelectClauseLabelGroupingBaseParams, ECSqlSelectClauseGroupingParamsBase {
-    // (undocumented)
-    action?: "group";
-}
-
-// @beta
-export interface ECSqlSelectClauseLabelGroupingMergeParams extends ECSqlSelectClauseLabelGroupingBaseParams {
-    // (undocumented)
-    action: "merge";
-}
-
-// @beta
-export type ECSqlSelectClauseLabelGroupingParams = boolean | ECSqlValueSelector | ECSqlSelectClauseLabelGroupingMergeParams | ECSqlSelectClauseLabelGroupingGroupParams;
-
-// @beta
-export interface ECSqlSelectClausePropertiesGroupingParams extends ECSqlSelectClauseGroupingParamsBase {
-    createGroupForOutOfRangeValues?: boolean | ECSqlValueSelector;
-    createGroupForUnspecifiedValues?: boolean | ECSqlValueSelector;
-    propertiesClassName: string;
-    propertyGroups: Array<ECSqlSelectClausePropertyGroup>;
-}
-
-// @beta
-export interface ECSqlSelectClausePropertyGroup {
-    propertyClassAlias: string;
-    propertyName: string;
-    ranges?: Array<ECSqlSelectClausePropertyValueRange>;
-}
-
-// @beta
-export interface ECSqlSelectClausePropertyValueRange {
-    fromValue: number | ECSqlValueSelector;
-    rangeLabel?: string | ECSqlValueSelector;
-    toValue: number | ECSqlValueSelector;
-}
-
-// @beta
-export interface ECSqlValueSelector {
-    // (undocumented)
-    selector: string;
-}
-
 export { GenericInstanceFilter }
-
-export { GenericInstanceFilterRelatedInstanceDescription }
-
-export { GenericInstanceFilterRelationshipStep }
-
-export { GenericInstanceFilterRule }
-
-export { GenericInstanceFilterRuleGroup }
-
-export { GenericInstanceFilterRuleGroupOperator }
-
-export { GenericInstanceFilterRuleOperator }
-
-export { GenericInstanceFilterRuleValue }
 
 // @beta
 export interface GetHierarchyNodesProps {
@@ -207,12 +81,15 @@ export interface GroupingHierarchyNode extends BaseHierarchyNode {
 export type GroupingNodeKey = ClassGroupingNodeKey | LabelGroupingNodeKey | PropertyGroupingNodeKey;
 
 // @beta
-export type HierarchyDefinitionParentNode = Omit<HierarchyNode, "children" | "key"> & {
-    key: InstancesNodeKey | string;
-};
+export type HierarchyLevelDefinition = HierarchyNodesDefinition[];
 
 // @beta
-export type HierarchyLevelDefinition = HierarchyNodesDefinition[];
+export interface HierarchyLevelDefinitionsFactory {
+    defineHierarchyLevel(props: DefineHierarchyLevelProps): Promise<HierarchyLevelDefinition>;
+    parseNode?: NodeParser;
+    postProcessNode?: NodePostProcessor;
+    preProcessNode?: NodePreProcessor;
+}
 
 // @beta
 export type HierarchyNode = NonGroupingHierarchyNode | GroupingHierarchyNode;
@@ -276,33 +153,6 @@ export namespace HierarchyNode {
 }
 
 // @beta
-export type HierarchyNodeAutoExpandProp = "single-child" | "always";
-
-// @beta
-export interface HierarchyNodeBaseClassGroupingParams extends HierarchyNodeGroupingParamsBase {
-    fullClassNames: string[];
-}
-
-// @beta
-export interface HierarchyNodeGroupingParams {
-    // (undocumented)
-    byBaseClasses?: HierarchyNodeBaseClassGroupingParams;
-    // (undocumented)
-    byClass?: boolean | HierarchyNodeGroupingParamsBase;
-    // (undocumented)
-    byLabel?: HierarchyNodeLabelGroupingParams;
-    // (undocumented)
-    byProperties?: HierarchyNodePropertiesGroupingParams;
-}
-
-// @beta
-export interface HierarchyNodeGroupingParamsBase {
-    autoExpand?: HierarchyNodeAutoExpandProp;
-    hideIfNoSiblings?: boolean;
-    hideIfOneGroupedNode?: boolean;
-}
-
-// @beta
 export type HierarchyNodeIdentifier = InstanceKey | {
     key: string;
 };
@@ -339,55 +189,6 @@ export namespace HierarchyNodeKey {
 }
 
 // @beta
-export interface HierarchyNodeLabelGroupingBaseParams {
-    action?: "group" | "merge";
-    groupId?: string;
-}
-
-// @beta
-export interface HierarchyNodeLabelGroupingGroupParams extends HierarchyNodeLabelGroupingBaseParams, HierarchyNodeGroupingParamsBase {
-    // (undocumented)
-    action?: "group";
-}
-
-// @beta
-export interface HierarchyNodeLabelGroupingMergeParams extends HierarchyNodeLabelGroupingBaseParams {
-    // (undocumented)
-    action: "merge";
-}
-
-// @beta
-export type HierarchyNodeLabelGroupingParams = boolean | HierarchyNodeLabelGroupingMergeParams | HierarchyNodeLabelGroupingGroupParams;
-
-// @beta
-export interface HierarchyNodeProcessingParamsBase {
-    hideIfNoChildren?: boolean;
-    hideInHierarchy?: boolean;
-}
-
-// @beta
-export interface HierarchyNodePropertiesGroupingParams extends HierarchyNodeGroupingParamsBase {
-    createGroupForOutOfRangeValues?: boolean;
-    createGroupForUnspecifiedValues?: boolean;
-    propertiesClassName: string;
-    propertyGroups: Array<HierarchyNodePropertyGroup>;
-}
-
-// @beta
-export interface HierarchyNodePropertyGroup {
-    propertyName: string;
-    propertyValue?: PrimitiveValue;
-    ranges?: Array<HierarchyNodePropertyValueRange>;
-}
-
-// @beta
-export interface HierarchyNodePropertyValueRange {
-    fromValue: number;
-    rangeLabel?: string;
-    toValue: number;
-}
-
-// @beta
 export type HierarchyNodesDefinition = CustomHierarchyNodeDefinition | InstanceNodesQueryDefinition;
 
 // @beta (undocumented)
@@ -399,74 +200,11 @@ export namespace HierarchyNodesDefinition {
 }
 
 // @beta
-export class HierarchyProvider {
-    constructor(props: HierarchyProviderProps);
+export interface HierarchyProvider {
     getNodeInstanceKeys(props: Omit<GetHierarchyNodesProps, "ignoreCache">): AsyncIterableIterator<InstanceKey>;
     getNodes(props: GetHierarchyNodesProps): AsyncIterableIterator<HierarchyNode>;
-    readonly hierarchyDefinition: IHierarchyLevelDefinitionsFactory;
     notifyDataSourceChanged(): void;
-    get queryExecutor(): LimitingECSqlQueryExecutor;
-    // @internal (undocumented)
-    get queryScheduler(): {
-        schedule: LimitingECSqlQueryExecutor["createQueryReader"];
-    };
     setFormatter(formatter: IPrimitiveValueFormatter | undefined): void;
-}
-
-// @beta
-export interface HierarchyProviderLocalizedStrings {
-    other: string;
-    unspecified: string;
-}
-
-// @beta
-export interface HierarchyProviderProps {
-    filtering?: {
-        paths: HierarchyNodeIdentifiersPath[];
-    };
-    formatter?: IPrimitiveValueFormatter;
-    hierarchyDefinition: IHierarchyLevelDefinitionsFactory;
-    imodelAccess: ECSchemaProvider & LimitingECSqlQueryExecutor & ECClassHierarchyInspector;
-    localizedStrings?: HierarchyProviderLocalizedStrings;
-    queryCacheSize?: number;
-    queryConcurrency?: number;
-}
-
-// @beta
-export interface IHierarchyLevelDefinitionsFactory {
-    defineHierarchyLevel(props: DefineHierarchyLevelProps): Promise<HierarchyLevelDefinition>;
-    parseNode?: INodeParser;
-    postProcessNode?: INodePostProcessor;
-    preProcessNode?: INodePreProcessor;
-}
-
-// @beta
-export type INodeParser = (row: {
-    [columnName: string]: any;
-}) => ParsedInstanceHierarchyNode;
-
-// @beta
-export type INodePostProcessor = (node: ProcessedHierarchyNode) => Promise<ProcessedHierarchyNode>;
-
-// @beta
-export type INodePreProcessor = <TNode extends ProcessedCustomHierarchyNode | ProcessedInstanceHierarchyNode>(node: TNode) => Promise<TNode | undefined>;
-
-// @beta
-export interface InstanceHierarchyNodeProcessingParams extends HierarchyNodeProcessingParamsBase {
-    // (undocumented)
-    grouping?: HierarchyNodeGroupingParams;
-}
-
-// @beta
-export interface InstanceNodesQueryDefinition {
-    fullClassName: string;
-    query: ECSqlQueryDef;
-}
-
-// @beta
-export interface InstancesNodeChildHierarchyLevelDefinition {
-    definitions: (requestProps: DefineInstanceNodeChildHierarchyLevelProps) => Promise<HierarchyLevelDefinition>;
-    parentNodeClassName: string;
 }
 
 // @beta
@@ -476,18 +214,22 @@ export interface InstancesNodeKey {
 }
 
 // @beta
-export interface LabelGroupingNodeKey {
-    groupId?: string;
-    label: string;
-    type: "label-grouping";
-}
-
-// @beta
 export interface LimitingECSqlQueryExecutor {
     createQueryReader(query: ECSqlQueryDef, config?: ECSqlQueryReaderOptions & {
         limit?: number | "unbounded";
     }): ReturnType<ECSqlQueryExecutor["createQueryReader"]>;
 }
+
+// @beta
+export type NodeParser = (row: {
+    [columnName: string]: any;
+}) => ParsedInstanceHierarchyNode;
+
+// @beta
+export type NodePostProcessor = (node: ProcessedHierarchyNode) => Promise<ProcessedHierarchyNode>;
+
+// @beta
+export type NodePreProcessor = <TNode extends ProcessedCustomHierarchyNode | ProcessedInstanceHierarchyNode>(node: TNode) => Promise<TNode | undefined>;
 
 // @beta
 export enum NodeSelectClauseColumnNames {
@@ -504,39 +246,13 @@ export enum NodeSelectClauseColumnNames {
 }
 
 // @beta
-export interface NodeSelectClauseProps {
-    // (undocumented)
-    autoExpand?: boolean | ECSqlValueSelector;
-    // (undocumented)
-    ecClassId: Id64String | ECSqlValueSelector;
-    // (undocumented)
-    ecInstanceId: Id64String | ECSqlValueSelector;
-    // (undocumented)
-    extendedData?: {
-        [key: string]: Id64String | string | number | boolean | ECSqlValueSelector;
-    };
-    // (undocumented)
-    grouping?: ECSqlSelectClauseGroupingParams;
-    // (undocumented)
-    hasChildren?: boolean | ECSqlValueSelector;
-    // (undocumented)
-    hideIfNoChildren?: boolean | ECSqlValueSelector;
-    // (undocumented)
-    hideNodeInHierarchy?: boolean | ECSqlValueSelector;
-    // (undocumented)
-    nodeLabel: string | ECSqlValueSelector;
-    // (undocumented)
-    supportsFiltering?: boolean | ECSqlValueSelector;
-}
-
-// @beta
-export class NodeSelectQueryFactory {
-    constructor(props: {
-        imodelAccess: ECSchemaProvider & ECClassHierarchyInspector;
-    });
-    createFilterClauses(def: GenericInstanceFilter | undefined, contentClass: {
-        fullName: string;
-        alias: string;
+export interface NodesQueryClauseFactory {
+    createFilterClauses(props: {
+        contentClass: {
+            fullName: string;
+            alias: string;
+        };
+        filter: GenericInstanceFilter | undefined;
     }): Promise<{
         from: string;
         where: string;
@@ -550,9 +266,6 @@ export interface NonGroupingHierarchyNode extends BaseHierarchyNode {
     key: string | InstancesNodeKey;
     supportsFiltering?: boolean;
 }
-
-// @beta
-export type ParentHierarchyNode<TBase = HierarchyNode> = OmitOverUnion<TBase, "children">;
 
 // @beta
 export type ParsedCustomHierarchyNode = Omit<ProcessedCustomHierarchyNode, "label" | "parentKeys"> & {
@@ -590,35 +303,6 @@ export type ProcessedInstanceHierarchyNode = Omit<NonGroupingHierarchyNode, "key
 };
 
 // @beta
-export type PropertyGroupingNodeKey = PropertyValueRangeGroupingNodeKey | PropertyValueGroupingNodeKey | PropertyOtherValuesGroupingNodeKey;
-
-// @beta
-export interface PropertyOtherValuesGroupingNodeKey {
-    properties: Array<{
-        className: string;
-        propertyName: string;
-    }>;
-    type: "property-grouping:other";
-}
-
-// @beta
-export interface PropertyValueGroupingNodeKey {
-    formattedPropertyValue: string;
-    propertyClassName: string;
-    propertyName: string;
-    type: "property-grouping:value";
-}
-
-// @beta
-export interface PropertyValueRangeGroupingNodeKey {
-    fromValue: number;
-    propertyClassName: string;
-    propertyName: string;
-    toValue: number;
-    type: "property-grouping:range";
-}
-
-// @beta
 export class RowsLimitExceededError extends Error {
     constructor(limit: number);
     // (undocumented)
@@ -627,9 +311,6 @@ export class RowsLimitExceededError extends Error {
 
 // @beta
 export function setLogger(logger: ILogger | undefined): void;
-
-// @beta
-export type StandardHierarchyNodeKey = InstancesNodeKey | GroupingNodeKey;
 
 // (No @packageDocumentation comment for this package)
 

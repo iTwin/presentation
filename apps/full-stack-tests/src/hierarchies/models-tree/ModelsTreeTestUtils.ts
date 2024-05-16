@@ -7,7 +7,7 @@ import { IModelConnection } from "@itwin/core-frontend";
 import { SchemaContext } from "@itwin/ecschema-metadata";
 import { ECSchemaRpcLocater } from "@itwin/ecschema-rpcinterface-common";
 import { createECSchemaProvider, createECSqlQueryExecutor } from "@itwin/presentation-core-interop";
-import { createLimitingECSqlQueryExecutor, HierarchyNodeIdentifiersPath, HierarchyProvider } from "@itwin/presentation-hierarchies";
+import { createHierarchyProvider, createLimitingECSqlQueryExecutor, HierarchyNodeIdentifiersPath } from "@itwin/presentation-hierarchies";
 import { ModelsTreeDefinition } from "@itwin/presentation-models-tree";
 import { createCachingECClassHierarchyInspector } from "@itwin/presentation-shared";
 import { TestIModelBuilder } from "@itwin/presentation-testing";
@@ -22,7 +22,7 @@ export function createModelsTreeProvider(imodel: IModelConnection, filteredNodeP
     ...createCachingECClassHierarchyInspector({ schemaProvider }),
     ...createLimitingECSqlQueryExecutor(createECSqlQueryExecutor(imodel), 1000),
   };
-  return new HierarchyProvider({
+  return createHierarchyProvider({
     imodelAccess,
     hierarchyDefinition: new ModelsTreeDefinition({ imodelAccess }),
     ...(filteredNodePaths ? { filtering: { paths: filteredNodePaths } } : undefined),

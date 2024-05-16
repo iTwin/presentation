@@ -3,7 +3,8 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { LabelGroupingNodeKey, ProcessedInstanceHierarchyNode } from "../../../HierarchyNode";
+import { ProcessedInstanceHierarchyNode } from "../../../HierarchyNode";
+import { LabelGroupingNodeKey } from "../../../HierarchyNodeKey";
 import { mergeNodes } from "../../Common";
 import { GroupingHandlerResult, ProcessedInstancesGroupingHierarchyNode } from "../Grouping";
 

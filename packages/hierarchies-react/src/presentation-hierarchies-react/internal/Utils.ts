@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { HierarchyNode, HierarchyNodeKey, ParentHierarchyNode } from "@itwin/presentation-hierarchies";
+import { HierarchyNode, HierarchyNodeKey } from "@itwin/presentation-hierarchies";
 
 export function createNodeId(node: Pick<HierarchyNode, "key" | "parentKeys">) {
   return [...node.parentKeys.map(serializeNodeKey), serializeNodeKey(node.key)].join(";");
@@ -24,7 +24,7 @@ function convertObjectValuesToString(obj: object): string {
     .join(",");
 }
 
-export function sameNodes(lhs: ParentHierarchyNode, rhs: ParentHierarchyNode): boolean {
+export function sameNodes(lhs: HierarchyNode, rhs: HierarchyNode): boolean {
   if (HierarchyNodeKey.compare(lhs.key, rhs.key) !== 0) {
     return false;
   }

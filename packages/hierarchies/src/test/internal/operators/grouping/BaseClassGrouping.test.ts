@@ -6,7 +6,7 @@
 import { expect } from "chai";
 import sinon from "sinon";
 import { EC } from "@itwin/presentation-shared";
-import { GroupingNodeKey } from "../../../../hierarchies/HierarchyNode";
+import { GroupingNodeKey } from "../../../../hierarchies/HierarchyNodeKey";
 import * as baseClassGrouping from "../../../../hierarchies/internal/operators/grouping/BaseClassGrouping";
 import { createIModelAccessStub, createTestProcessedGroupingNode, createTestProcessedInstanceNode } from "../../../Utils";
 

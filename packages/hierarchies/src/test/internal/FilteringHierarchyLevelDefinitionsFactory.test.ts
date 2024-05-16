@@ -8,12 +8,12 @@ import sinon from "sinon";
 import { ECClassHierarchyInspector, trimWhitespace } from "@itwin/presentation-shared";
 import {
   CustomHierarchyNodeDefinition,
-  HierarchyDefinitionParentNode,
   HierarchyLevelDefinition,
-  IHierarchyLevelDefinitionsFactory,
+  HierarchyLevelDefinitionsFactory,
   InstanceNodesQueryDefinition,
 } from "../../hierarchies/HierarchyDefinition";
-import { HierarchyNode, HierarchyNodeIdentifiersPath, ParsedCustomHierarchyNode, ParsedHierarchyNode } from "../../hierarchies/HierarchyNode";
+import { HierarchyNode, ParsedCustomHierarchyNode, ParsedHierarchyNode } from "../../hierarchies/HierarchyNode";
+import { HierarchyNodeIdentifiersPath } from "../../hierarchies/HierarchyNodeIdentifier";
 import {
   applyECInstanceIdsFilter,
   ECSQL_COLUMN_NAME_FilteredChildrenPaths,
@@ -51,7 +51,7 @@ describe("FilteringHierarchyLevelDefinitionsFactory", () => {
     it("uses source's node parser when it has one", () => {
       const sourceFactory = {
         parseNode: sinon.stub().returns({} as unknown as HierarchyNode),
-      } as unknown as IHierarchyLevelDefinitionsFactory;
+      } as unknown as HierarchyLevelDefinitionsFactory;
       const filteringFactory = createFilteringHierarchyLevelsFactory({
         sourceFactory,
       });
@@ -65,7 +65,7 @@ describe("FilteringHierarchyLevelDefinitionsFactory", () => {
     });
 
     it("sets filtered children paths", () => {
-      const sourceFactory = {} as unknown as IHierarchyLevelDefinitionsFactory;
+      const sourceFactory = {} as unknown as HierarchyLevelDefinitionsFactory;
       const filteringFactory = createFilteringHierarchyLevelsFactory({
         sourceFactory,
       });
@@ -126,7 +126,7 @@ describe("FilteringHierarchyLevelDefinitionsFactory", () => {
       const sourceFactoryNode = createTestProcessedCustomNode();
       const sourceFactory = {
         preProcessNode: sinon.stub().returns(sourceFactoryNode),
-      } as unknown as IHierarchyLevelDefinitionsFactory;
+      } as unknown as HierarchyLevelDefinitionsFactory;
       const filteringFactory = createFilteringHierarchyLevelsFactory({
         sourceFactory,
       });
@@ -163,7 +163,7 @@ describe("FilteringHierarchyLevelDefinitionsFactory", () => {
       const sourceFactoryNode = createTestProcessedCustomNode();
       const sourceFactory = {
         postProcessNode: sinon.stub().resolves(sourceFactoryNode),
-      } as unknown as IHierarchyLevelDefinitionsFactory;
+      } as unknown as HierarchyLevelDefinitionsFactory;
       const filteringFactory = createFilteringHierarchyLevelsFactory({
         sourceFactory,
       });
@@ -176,7 +176,7 @@ describe("FilteringHierarchyLevelDefinitionsFactory", () => {
       const inputNode = createTestProcessedCustomNode();
       const sourceFactory = {
         postProcessNode: sinon.stub().resolves(undefined),
-      } as unknown as IHierarchyLevelDefinitionsFactory;
+      } as unknown as HierarchyLevelDefinitionsFactory;
       const filteringFactory = createFilteringHierarchyLevelsFactory({
         sourceFactory,
       });
@@ -231,7 +231,7 @@ describe("FilteringHierarchyLevelDefinitionsFactory", () => {
           node: {} as unknown as ParsedCustomHierarchyNode,
         },
       ];
-      const sourceFactory: IHierarchyLevelDefinitionsFactory = {
+      const sourceFactory: HierarchyLevelDefinitionsFactory = {
         defineHierarchyLevel: async () => sourceDefinitions,
       };
       const filteringFactory = createFilteringHierarchyLevelsFactory({
@@ -239,13 +239,13 @@ describe("FilteringHierarchyLevelDefinitionsFactory", () => {
         sourceFactory,
       });
       const result = await filteringFactory.defineHierarchyLevel({
-        parentNode: { filteredChildrenIdentifierPaths: undefined } as unknown as HierarchyDefinitionParentNode,
+        parentNode: { ...createTestProcessedInstanceNode(), filteredChildrenIdentifierPaths: undefined },
       });
       expect(result).to.eq(sourceDefinitions);
     });
 
     it("returns no definitions when filtered instance paths list is empty", async () => {
-      const sourceFactory: IHierarchyLevelDefinitionsFactory = {
+      const sourceFactory: HierarchyLevelDefinitionsFactory = {
         defineHierarchyLevel: async () => [
           {
             node: {} as unknown as ParsedCustomHierarchyNode,
@@ -272,7 +272,7 @@ describe("FilteringHierarchyLevelDefinitionsFactory", () => {
         };
         const sourceFactory = {
           defineHierarchyLevel: async () => [sourceDefinition],
-        } as unknown as IHierarchyLevelDefinitionsFactory;
+        } as unknown as HierarchyLevelDefinitionsFactory;
         const filteringFactory = createFilteringHierarchyLevelsFactory({
           classHierarchy: classHierarchyInspector,
           sourceFactory,
@@ -292,7 +292,7 @@ describe("FilteringHierarchyLevelDefinitionsFactory", () => {
         };
         const sourceFactory = {
           defineHierarchyLevel: async () => [sourceDefinition],
-        } as unknown as IHierarchyLevelDefinitionsFactory;
+        } as unknown as HierarchyLevelDefinitionsFactory;
         const filteringFactory = createFilteringHierarchyLevelsFactory({
           classHierarchy: classHierarchyInspector,
           sourceFactory,
@@ -312,7 +312,7 @@ describe("FilteringHierarchyLevelDefinitionsFactory", () => {
         };
         const sourceFactory = {
           defineHierarchyLevel: async () => [sourceDefinition],
-        } as unknown as IHierarchyLevelDefinitionsFactory;
+        } as unknown as HierarchyLevelDefinitionsFactory;
         const filteringFactory = createFilteringHierarchyLevelsFactory({
           classHierarchy: classHierarchyInspector,
           sourceFactory,
@@ -335,7 +335,7 @@ describe("FilteringHierarchyLevelDefinitionsFactory", () => {
             label: "custom label 2",
           },
         };
-        const sourceFactory: IHierarchyLevelDefinitionsFactory = {
+        const sourceFactory: HierarchyLevelDefinitionsFactory = {
           defineHierarchyLevel: async () => [sourceDefinition1, sourceDefinition2],
         };
         const filteringFactory = createFilteringHierarchyLevelsFactory({
@@ -364,7 +364,7 @@ describe("FilteringHierarchyLevelDefinitionsFactory", () => {
         };
         const sourceFactory = {
           defineHierarchyLevel: async () => [sourceDefinition],
-        } as unknown as IHierarchyLevelDefinitionsFactory;
+        } as unknown as HierarchyLevelDefinitionsFactory;
         const filteringFactory = createFilteringHierarchyLevelsFactory({
           classHierarchy: classHierarchyInspector,
           sourceFactory,
@@ -397,7 +397,7 @@ describe("FilteringHierarchyLevelDefinitionsFactory", () => {
         };
         const sourceFactory = {
           defineHierarchyLevel: async () => [sourceDefinition],
-        } as unknown as IHierarchyLevelDefinitionsFactory;
+        } as unknown as HierarchyLevelDefinitionsFactory;
         const filteringFactory = createFilteringHierarchyLevelsFactory({
           classHierarchy: classHierarchyInspector,
           sourceFactory,
@@ -418,7 +418,7 @@ describe("FilteringHierarchyLevelDefinitionsFactory", () => {
         };
         const sourceFactory = {
           defineHierarchyLevel: async () => [sourceDefinition],
-        } as unknown as IHierarchyLevelDefinitionsFactory;
+        } as unknown as HierarchyLevelDefinitionsFactory;
         const filteringFactory = createFilteringHierarchyLevelsFactory({
           classHierarchy: classHierarchyInspector,
           sourceFactory,
@@ -438,7 +438,7 @@ describe("FilteringHierarchyLevelDefinitionsFactory", () => {
         };
         const sourceFactory = {
           defineHierarchyLevel: async () => [sourceDefinition],
-        } as unknown as IHierarchyLevelDefinitionsFactory;
+        } as unknown as HierarchyLevelDefinitionsFactory;
         const filteringFactory = createFilteringHierarchyLevelsFactory({
           classHierarchy: classHierarchyInspector,
           sourceFactory,
@@ -458,7 +458,7 @@ describe("FilteringHierarchyLevelDefinitionsFactory", () => {
         };
         const sourceFactory = {
           defineHierarchyLevel: async () => [sourceDefinition],
-        } as unknown as IHierarchyLevelDefinitionsFactory;
+        } as unknown as HierarchyLevelDefinitionsFactory;
         const filteringFactory = createFilteringHierarchyLevelsFactory({
           classHierarchy: classHierarchyInspector,
           sourceFactory,
@@ -466,9 +466,10 @@ describe("FilteringHierarchyLevelDefinitionsFactory", () => {
         });
         const result = await filteringFactory.defineHierarchyLevel({
           parentNode: {
+            ...createTestProcessedInstanceNode(),
             isFilterTarget: true,
             filteredChildrenIdentifierPaths: new Array<HierarchyNodeIdentifiersPath>(),
-          } as FilteredHierarchyNode<HierarchyDefinitionParentNode>,
+          },
         });
         expect(result).to.deep.eq([sourceDefinition]);
       });
@@ -489,7 +490,7 @@ describe("FilteringHierarchyLevelDefinitionsFactory", () => {
         };
         const sourceFactory = {
           defineHierarchyLevel: async () => [sourceDefinition],
-        } as unknown as IHierarchyLevelDefinitionsFactory;
+        } as unknown as HierarchyLevelDefinitionsFactory;
         const filteringFactory = createFilteringHierarchyLevelsFactory({
           classHierarchy: classHierarchyInspector,
           sourceFactory,
@@ -531,7 +532,7 @@ describe("FilteringHierarchyLevelDefinitionsFactory", () => {
         };
         const sourceFactory = {
           defineHierarchyLevel: async () => [sourceDefinition],
-        } as unknown as IHierarchyLevelDefinitionsFactory;
+        } as unknown as HierarchyLevelDefinitionsFactory;
         const filteringFactory = createFilteringHierarchyLevelsFactory({
           classHierarchy: classHierarchyInspector,
           sourceFactory,
@@ -568,7 +569,7 @@ describe("FilteringHierarchyLevelDefinitionsFactory", () => {
         };
         const sourceFactory = {
           defineHierarchyLevel: async () => [sourceDefinition],
-        } as unknown as IHierarchyLevelDefinitionsFactory;
+        } as unknown as HierarchyLevelDefinitionsFactory;
         const filteringFactory = createFilteringHierarchyLevelsFactory({
           classHierarchy: classHierarchyInspector,
           sourceFactory,
@@ -613,7 +614,7 @@ describe("FilteringHierarchyLevelDefinitionsFactory", () => {
           ecsql: "SOURCE_QUERY",
         },
       };
-      const sourceFactory: IHierarchyLevelDefinitionsFactory = {
+      const sourceFactory: HierarchyLevelDefinitionsFactory = {
         defineHierarchyLevel: async () => [sourceDefinition],
       };
       const filteringFactory = createFilteringHierarchyLevelsFactory({
@@ -623,10 +624,12 @@ describe("FilteringHierarchyLevelDefinitionsFactory", () => {
       });
       const result = await filteringFactory.defineHierarchyLevel({
         parentNode: {
-          key: "custom",
-          label: "custom node",
+          ...createTestProcessedCustomNode({
+            key: "custom",
+            label: "custom node",
+          }),
           filteredChildrenIdentifierPaths: [[{ className: childFilterClass.fullName, id: "0x456" }]],
-        } as FilteredHierarchyNode<HierarchyDefinitionParentNode>,
+        },
       });
       expect(result).to.deep.eq([
         applyECInstanceIdsFilter(sourceDefinition, [{ id: { className: childFilterClass.fullName, id: "0x456" }, childrenIdentifierPaths: [] }], true, false),
@@ -640,7 +643,7 @@ describe("FilteringHierarchyLevelDefinitionsFactory", () => {
       const nonMatchingSourceDefinition: CustomHierarchyNodeDefinition = {
         node: createTestParsedCustomNode({ key: "doesn't match" }),
       };
-      const sourceFactory: IHierarchyLevelDefinitionsFactory = {
+      const sourceFactory: HierarchyLevelDefinitionsFactory = {
         defineHierarchyLevel: async () => [matchingSourceDefinition, nonMatchingSourceDefinition],
       };
       const filteringFactory = createFilteringHierarchyLevelsFactory({
@@ -650,11 +653,13 @@ describe("FilteringHierarchyLevelDefinitionsFactory", () => {
       });
       const result = await filteringFactory.defineHierarchyLevel({
         parentNode: {
-          key: "parent",
-          label: "parent",
+          ...createTestProcessedCustomNode({
+            key: "parent",
+            label: "parent",
+          }),
           isFilterTarget: true,
           filteredChildrenIdentifierPaths: [[{ key: "matches" }]],
-        } as FilteredHierarchyNode<HierarchyDefinitionParentNode>,
+        },
       });
       expect(result).to.deep.eq([
         // this definition is added with modifications to account for parent's `filteredChildrenIdentifierPaths`
@@ -736,13 +741,13 @@ describe("FilteringHierarchyLevelDefinitionsFactory", () => {
 
 function createFilteringHierarchyLevelsFactory(props?: {
   classHierarchy?: ECClassHierarchyInspector;
-  sourceFactory?: IHierarchyLevelDefinitionsFactory;
+  sourceFactory?: HierarchyLevelDefinitionsFactory;
   nodeIdentifierPaths?: HierarchyNodeIdentifiersPath[];
 }) {
   const { classHierarchy, sourceFactory, nodeIdentifierPaths } = props ?? {};
   return new FilteringHierarchyLevelDefinitionsFactory({
     classHierarchy: classHierarchy ?? { classDerivesFrom: async () => false },
-    source: sourceFactory ?? ({} as unknown as IHierarchyLevelDefinitionsFactory),
+    source: sourceFactory ?? ({} as unknown as HierarchyLevelDefinitionsFactory),
     nodeIdentifierPaths: nodeIdentifierPaths ?? [],
   });
 }

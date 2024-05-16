@@ -7,15 +7,14 @@ import naturalCompare from "natural-compare-lite";
 import { assert } from "@itwin/core-bentley";
 import {
   HierarchyNode,
-  HierarchyNodeKey,
   HierarchyNodeLabelGroupingParams,
   InstanceHierarchyNodeProcessingParams,
-  InstancesNodeKey,
   ParentHierarchyNode,
   ParsedHierarchyNode,
   ProcessedCustomHierarchyNode,
   ProcessedInstanceHierarchyNode,
 } from "../HierarchyNode";
+import { HierarchyNodeKey, InstancesNodeKey } from "../HierarchyNodeKey";
 
 /** @internal */
 export const LOGGING_NAMESPACE = "Presentation.Hierarchies";

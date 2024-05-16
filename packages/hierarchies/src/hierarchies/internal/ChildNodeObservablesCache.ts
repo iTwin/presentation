@@ -5,7 +5,8 @@
 
 import { Observable } from "rxjs";
 import { LRUCache, LRUDictionary, LRUMap } from "@itwin/core-bentley";
-import { HierarchyNodeKey, ParsedHierarchyNode, ProcessedHierarchyNode } from "../HierarchyNode";
+import { ParsedHierarchyNode, ProcessedHierarchyNode } from "../HierarchyNode";
+import { HierarchyNodeKey } from "../HierarchyNodeKey";
 import { GetHierarchyNodesProps } from "../HierarchyProvider";
 
 /** @internal */

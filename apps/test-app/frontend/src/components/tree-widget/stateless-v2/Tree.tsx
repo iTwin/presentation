@@ -17,10 +17,16 @@ import {
 } from "@itwin/presentation-components";
 import { createECSchemaProvider, createECSqlQueryExecutor } from "@itwin/presentation-core-interop";
 import { Presentation } from "@itwin/presentation-frontend";
-import { createLimitingECSqlQueryExecutor, GenericInstanceFilter, HierarchyProvider, LimitingECSqlQueryExecutor } from "@itwin/presentation-hierarchies";
+import {
+  createHierarchyProvider,
+  createLimitingECSqlQueryExecutor,
+  GenericInstanceFilter,
+  HierarchyProvider,
+  LimitingECSqlQueryExecutor,
+} from "@itwin/presentation-hierarchies";
 import { HierarchyLevelConfiguration, PresentationHierarchyNode, TreeRenderer, useUnifiedSelectionTree } from "@itwin/presentation-hierarchies-react";
 import { ModelsTreeDefinition } from "@itwin/presentation-models-tree";
-import { createCachingECClassHierarchyInspector, ECClassHierarchyInspector, ECSchemaProvider } from "@itwin/presentation-shared";
+import { createCachingECClassHierarchyInspector, ECClassHierarchyInspector, ECSchemaProvider, IPrimitiveValueFormatter } from "@itwin/presentation-shared";
 import { MyAppFrontend } from "../../../api/MyAppFrontend";
 
 type IModelAccess = LimitingECSqlQueryExecutor & ECSchemaProvider & ECClassHierarchyInspector;
@@ -70,7 +76,7 @@ function Tree({ imodel, height, width }: { imodel: IModelConnection; height: num
     }
 
     setHierarchyProvider(
-      new HierarchyProvider({
+      createHierarchyProvider({
         imodelAccess,
         hierarchyDefinition: new ModelsTreeDefinition({ imodelAccess }),
         filtering: filteredPaths
@@ -210,7 +216,6 @@ function Tree({ imodel, height, width }: { imodel: IModelConnection; height: num
   );
 }
 
-type IPrimitiveValueFormatter = Parameters<typeof HierarchyProvider.prototype.setFormatter>[0];
 const customFormatter: IPrimitiveValueFormatter = async (val) => {
   return `THIS_IS_FORMATTED_${val ? JSON.stringify(val.value) : ""}_THIS_IS_FORMATTED`;
 };
