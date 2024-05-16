@@ -78,7 +78,7 @@ describe("TreeActions", () => {
     });
   });
 
-  describe("selectNode", () => {
+  describe("selectNodes", () => {
     it("calls `onModelChanged` after node is selected", () => {
       const model = createTreeModel([
         {
@@ -94,7 +94,7 @@ describe("TreeActions", () => {
 
       const actions = createActions(model);
 
-      actions.selectNode("root-1", true);
+      actions.selectNodes(["root-1"], "add");
 
       expect(onModelChangedStub).to.be.calledOnce;
       const newModel = onModelChangedStub.firstCall.args[0];
@@ -116,7 +116,7 @@ describe("TreeActions", () => {
 
       const actions = createActions(model);
 
-      actions.selectNode("root-1", false);
+      actions.selectNodes(["root-1"], "remove");
 
       expect(onModelChangedStub).to.be.calledOnce;
       const newModel = onModelChangedStub.firstCall.args[0];
@@ -138,7 +138,7 @@ describe("TreeActions", () => {
 
       const actions = createActions(model);
 
-      actions.selectNode("root-1", true);
+      actions.selectNodes(["root-1"], "add");
 
       expect(onModelChangedStub).to.not.be.called;
     });

@@ -83,7 +83,7 @@ describe("useTree", () => {
     });
 
     act(() => {
-      result.current.selectNode("root-1", true);
+      result.current.selectNodes(["root-1"], "add");
     });
 
     await waitFor(() => {
@@ -402,6 +402,22 @@ describe("useUnifiedSelectionTree", () => {
     return <UnifiedSelectionProvider storage={storage}>{props.children}</UnifiedSelectionProvider>;
   }
 
+  function createNodeKey(id: string) {
+    const instanceKey = { id, className: "Schema:Class" };
+    const instancesNodeKey: InstancesNodeKey = {
+      type: "instances",
+      instanceKeys: [instanceKey],
+    };
+    return { instanceKey, instancesNodeKey };
+  }
+
+  function createHierarchyNodeWithKey(id: string, name: string, children = false) {
+    const { instanceKey, instancesNodeKey } = createNodeKey(id);
+    const node = createTestHierarchyNode({ id: name, key: instancesNodeKey, autoExpand: true, children });
+    const nodeId = createNodeId(node);
+    return { nodeId, instanceKey, instancesNodeKey, node };
+  }
+
   beforeEach(() => {
     hierarchyProvider.getNodes.reset();
     changeListener.reset();
@@ -415,18 +431,12 @@ describe("useUnifiedSelectionTree", () => {
   });
 
   it("adds nodes to unified selection", async () => {
-    const instanceKey = { id: "0x1", className: "Schema:Class" };
-    const instancesNodeKey: InstancesNodeKey = {
-      type: "instances",
-      instanceKeys: [instanceKey],
-    };
-    const nodes = [createTestHierarchyNode({ id: "root-1", key: instancesNodeKey })];
+    const { nodeId: nodeId, instanceKey: instanceKey, node: node } = createHierarchyNodeWithKey("0x1", "root-1");
     hierarchyProvider.getNodes.callsFake((props) => {
-      return createAsyncIterator(props.parentNode === undefined ? nodes : []);
+      return createAsyncIterator(props.parentNode === undefined ? [node] : []);
     });
 
     const { result } = renderHook(useUnifiedSelectionTree, { initialProps, wrapper: Wrapper });
-    const nodeId = createNodeId(nodes[0]);
 
     await waitFor(() => {
       expect(result.current.rootNodes).to.have.lengthOf(1);
@@ -434,7 +444,7 @@ describe("useUnifiedSelectionTree", () => {
     });
 
     act(() => {
-      result.current.selectNode(nodeId, true);
+      result.current.selectNodes([nodeId], "add");
     });
 
     await waitFor(() => {
@@ -455,18 +465,12 @@ describe("useUnifiedSelectionTree", () => {
   });
 
   it("reacts to unified selection changes", async () => {
-    const instanceKey = { id: "0x1", className: "Schema:Class" };
-    const instancesNodeKey: InstancesNodeKey = {
-      type: "instances",
-      instanceKeys: [instanceKey],
-    };
-    const nodes = [createTestHierarchyNode({ id: "root-1", key: instancesNodeKey })];
+    const { nodeId: nodeId, instanceKey: instanceKey, node: node } = createHierarchyNodeWithKey("0x1", "root-1");
     hierarchyProvider.getNodes.callsFake((props) => {
-      return createAsyncIterator(props.parentNode === undefined ? nodes : []);
+      return createAsyncIterator(props.parentNode === undefined ? [node] : []);
     });
 
     const { result } = renderHook(useUnifiedSelectionTree, { initialProps, wrapper: Wrapper });
-    const nodeId = createNodeId(nodes[0]);
 
     await waitFor(() => {
       expect(result.current.rootNodes).to.have.lengthOf(1);

@@ -1,5 +1,15 @@
 # Change Log - @itwin/presentation-components
 
+## 5.3.0
+
+### Minor Changes
+
+- [#572](https://github.com/iTwin/presentation/pull/572): Moved `@itwin/itwinui-react` from direct dependencies to peer. Technically this is a breaking change but `@itwin/presentation-components` had requirement to be used with `@itwin/itwinui-react` >3.0.0 since 5.0.0 so all consumers of >5.0.0 should already have dependency on `@itwin/itwinui-react` >3.0.0.
+
+### Patch Changes
+
+- [#573](https://github.com/iTwin/presentation/pull/573): Cancel ongoing tree reload when new one is started.
+
 ## 5.2.4
 
 ### Patch Changes

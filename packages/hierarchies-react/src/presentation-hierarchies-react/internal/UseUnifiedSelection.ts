@@ -7,12 +7,13 @@ import { useEffect, useState } from "react";
 import { HierarchyNode } from "@itwin/presentation-hierarchies";
 import { Selectable, Selectables, SelectionStorage } from "@itwin/unified-selection";
 import { useUnifiedSelectionContext } from "../UnifiedSelectionContext";
+import { SelectionChangeType } from "../UseSelectionHandler";
 import { isTreeModelHierarchyNode, TreeModelNode, TreeModelRootNode } from "./TreeModel";
 
 /** @internal */
 export interface TreeSelectionOptions {
   isNodeSelected: (nodeId: string) => boolean;
-  selectNode: (nodeId: string, isSelected: boolean) => void;
+  selectNodes: (nodeIds: Array<string>, changeType: SelectionChangeType) => void;
 }
 
 /** @internal */
@@ -26,7 +27,7 @@ export interface UseUnifiedTreeSelectionProps {
 export function useUnifiedTreeSelection({ imodelKey, sourceName, getNode }: UseUnifiedTreeSelectionProps): TreeSelectionOptions {
   const [options, setOptions] = useState<TreeSelectionOptions>(() => ({
     isNodeSelected: /* istanbul ignore next */ () => false,
-    selectNode: /* istanbul ignore next */ () => {},
+    selectNodes: /* istanbul ignore next */ () => {},
   }));
 
   const selectionStorage = useUnifiedSelectionContext();
@@ -34,7 +35,7 @@ export function useUnifiedTreeSelection({ imodelKey, sourceName, getNode }: UseU
     if (!selectionStorage) {
       setOptions({
         isNodeSelected: () => false,
-        selectNode: () => {},
+        selectNodes: () => {},
       });
       return;
     }
@@ -75,14 +76,30 @@ function createOptions(
       return Selectables.has(selectables, { identifier: node.id });
     },
 
-    selectNode: (nodeId: string, isSelected: boolean) => {
-      const node = getNode(nodeId);
-      if (!node || !isTreeModelHierarchyNode(node)) {
-        return;
+    selectNodes: (nodeIds: Array<string>, changeType: SelectionChangeType) => {
+      let selectables: Selectable[] = [];
+
+      for (const nodeId of nodeIds) {
+        const node = getNode(nodeId);
+        if (!node || !isTreeModelHierarchyNode(node)) {
+          return;
+        }
+        selectables = [...selectables, ...createSelectables(node.id, node.nodeData)];
       }
 
-      const action = isSelected ? storage.addToSelection.bind(storage) : storage.removeFromSelection.bind(storage);
-      action({ imodelKey: key, source, selectables: createSelectables(node.id, node.nodeData), level: 0 });
+      const actionProps = { imodelKey: key, source, selectables, level: 0 };
+
+      switch (changeType) {
+        case "add":
+          storage.addToSelection(actionProps);
+          return;
+        case "remove":
+          storage.removeFromSelection(actionProps);
+          return;
+        case "replace":
+          storage.replaceSelection(actionProps);
+          return;
+      }
     },
   };
 }

@@ -1,6 +1,6 @@
 {
   "name": "@itwin/presentation-core-interop",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "The package acts as a layer between iTwin.js Core and Presentation packages.",
   "license": "MIT",
   "repository": {
@@ -45,7 +45,7 @@
     "@itwin/ecschema-metadata": "^4.1.0"
   },
   "devDependencies": {
-    "@itwin/build-tools": "^4.5.2",
+    "@itwin/build-tools": "^4.6.0",
     "@itwin/core-bentley": "^4.5.2",
     "@itwin/core-common": "^4.5.2",
     "@itwin/core-geometry": "^4.5.2",
