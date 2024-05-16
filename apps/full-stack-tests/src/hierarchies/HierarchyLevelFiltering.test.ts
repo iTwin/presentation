@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { collect } from "presentation-test-utilities";
-import { IHierarchyLevelDefinitionsFactory, NodeSelectQueryFactory } from "@itwin/presentation-hierarchies";
+import { HierarchyLevelDefinitionsFactory, NodeSelectQueryFactory } from "@itwin/presentation-hierarchies";
 import { importSchema, withECDb } from "../IModelUtils";
 import { initialize, terminate } from "../IntegrationTests";
 import { NodeValidators, validateHierarchyLevel } from "./HierarchyValidation";
@@ -39,7 +39,7 @@ describe("Hierarchies", () => {
         },
         async (imodel, { schema, x1, x2 }) => {
           const selectQueryFactory = new NodeSelectQueryFactory({ imodelAccess: createIModelAccess(imodel) });
-          const hierarchy: IHierarchyLevelDefinitionsFactory = {
+          const hierarchy: HierarchyLevelDefinitionsFactory = {
             async defineHierarchyLevel({ instanceFilter }) {
               const filterClauses = await selectQueryFactory.createFilterClauses(instanceFilter, { fullName: schema.items.X.fullName, alias: "this" });
               return [
@@ -114,7 +114,7 @@ describe("Hierarchies", () => {
         },
         async (imodel, { schema, x, y1, y2 }) => {
           const selectQueryFactory = new NodeSelectQueryFactory({ imodelAccess: createIModelAccess(imodel) });
-          const hierarchy: IHierarchyLevelDefinitionsFactory = {
+          const hierarchy: HierarchyLevelDefinitionsFactory = {
             async defineHierarchyLevel({ instanceFilter }) {
               const filterClauses = await selectQueryFactory.createFilterClauses(instanceFilter, { fullName: schema.items.Y.fullName, alias: "this" });
               return [
@@ -197,7 +197,7 @@ describe("Hierarchies", () => {
         },
         async (imodel, { schema, x, y1, y2 }) => {
           const selectQueryFactory = new NodeSelectQueryFactory({ imodelAccess: createIModelAccess(imodel) });
-          const hierarchy: IHierarchyLevelDefinitionsFactory = {
+          const hierarchy: HierarchyLevelDefinitionsFactory = {
             async defineHierarchyLevel({ instanceFilter }) {
               const filterClauses = await selectQueryFactory.createFilterClauses(instanceFilter, { fullName: schema.items.Y.fullName, alias: "this" });
               return [
@@ -285,7 +285,7 @@ describe("Hierarchies", () => {
         },
         async (imodel, { schema, x, y }) => {
           const selectQueryFactory = new NodeSelectQueryFactory({ imodelAccess: createIModelAccess(imodel) });
-          const hierarchy: IHierarchyLevelDefinitionsFactory = {
+          const hierarchy: HierarchyLevelDefinitionsFactory = {
             async defineHierarchyLevel({ instanceFilter }) {
               const subjectFilterClauses = await selectQueryFactory.createFilterClauses(instanceFilter, { fullName: schema.items.X.fullName, alias: "this" });
               return [
@@ -356,7 +356,7 @@ describe("Hierarchies", () => {
         },
         async (imodel, { schema, x, y }) => {
           const selectQueryFactory = new NodeSelectQueryFactory({ imodelAccess: createIModelAccess(imodel) });
-          const hierarchy: IHierarchyLevelDefinitionsFactory = {
+          const hierarchy: HierarchyLevelDefinitionsFactory = {
             async defineHierarchyLevel({ instanceFilter }) {
               const subjectFilterClauses = await selectQueryFactory.createFilterClauses(instanceFilter, { fullName: schema.items.X.fullName, alias: "this" });
               return [
@@ -427,7 +427,7 @@ describe("Hierarchies", () => {
         },
         async (imodel, { schema, x1, x2 }) => {
           const selectQueryFactory = new NodeSelectQueryFactory({ imodelAccess: createIModelAccess(imodel) });
-          const hierarchy: IHierarchyLevelDefinitionsFactory = {
+          const hierarchy: HierarchyLevelDefinitionsFactory = {
             async defineHierarchyLevel({ instanceFilter }) {
               const subjectFilterClauses = await selectQueryFactory.createFilterClauses(instanceFilter, { fullName: schema.items.X.fullName, alias: "this" });
               return [
@@ -513,7 +513,7 @@ describe("Hierarchies", () => {
         },
         async (imodel, { schema, x1, x2 }) => {
           const selectQueryFactory = new NodeSelectQueryFactory({ imodelAccess: createIModelAccess(imodel) });
-          const hierarchy: IHierarchyLevelDefinitionsFactory = {
+          const hierarchy: HierarchyLevelDefinitionsFactory = {
             async defineHierarchyLevel({ instanceFilter }) {
               const subjectFilterClauses = await selectQueryFactory.createFilterClauses(instanceFilter, { fullName: schema.items.X.fullName, alias: "this" });
               return [

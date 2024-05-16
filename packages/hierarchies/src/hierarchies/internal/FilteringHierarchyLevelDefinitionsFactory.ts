@@ -8,8 +8,8 @@ import {
   CustomHierarchyNodeDefinition,
   DefineHierarchyLevelProps,
   HierarchyLevelDefinition,
+  HierarchyLevelDefinitionsFactory,
   HierarchyNodesDefinition,
-  IHierarchyLevelDefinitionsFactory,
   InstanceNodesQueryDefinition,
   NodeParser,
   NodePostProcessor,
@@ -22,7 +22,7 @@ import { defaultNodesParser } from "./TreeNodesReader";
 /** @internal */
 export interface FilteringQueryBuilderProps {
   classHierarchy: ECClassHierarchyInspector;
-  source: IHierarchyLevelDefinitionsFactory;
+  source: HierarchyLevelDefinitionsFactory;
   nodeIdentifierPaths: HierarchyNodeIdentifiersPath[];
 }
 
@@ -33,9 +33,9 @@ export type FilteredHierarchyNode<TNode = ProcessedHierarchyNode> = TNode & {
 };
 
 /** @internal */
-export class FilteringHierarchyLevelDefinitionsFactory implements IHierarchyLevelDefinitionsFactory {
+export class FilteringHierarchyLevelDefinitionsFactory implements HierarchyLevelDefinitionsFactory {
   private _classHierarchy: ECClassHierarchyInspector;
-  private _source: IHierarchyLevelDefinitionsFactory;
+  private _source: HierarchyLevelDefinitionsFactory;
   private _nodeIdentifierPaths: HierarchyNodeIdentifiersPath[];
 
   public constructor(props: FilteringQueryBuilderProps) {

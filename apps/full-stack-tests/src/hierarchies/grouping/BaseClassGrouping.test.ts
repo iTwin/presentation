@@ -7,7 +7,7 @@ import { insertPhysicalPartition, insertSubject } from "presentation-test-utilit
 import { PhysicalPartition, Subject } from "@itwin/core-backend";
 import { IModel } from "@itwin/core-common";
 import { IModelConnection } from "@itwin/core-frontend";
-import { IHierarchyLevelDefinitionsFactory, NodeSelectQueryFactory } from "@itwin/presentation-hierarchies";
+import { HierarchyLevelDefinitionsFactory, NodeSelectQueryFactory } from "@itwin/presentation-hierarchies";
 import { buildIModel } from "../../IModelUtils";
 import { initialize, terminate } from "../../IntegrationTests";
 import { NodeValidators, validateHierarchy } from "../HierarchyValidation";
@@ -31,7 +31,7 @@ describe("Hierarchies", () => {
     });
     it("doesn't create grouping nodes if provided classes aren't base for node class", async function () {
       const selectQueryFactory = new NodeSelectQueryFactory({ imodelAccess: createIModelAccess(emptyIModel) });
-      const customHierarchy: IHierarchyLevelDefinitionsFactory = {
+      const customHierarchy: HierarchyLevelDefinitionsFactory = {
         async defineHierarchyLevel({ parentNode }) {
           if (!parentNode) {
             return [
@@ -75,7 +75,7 @@ describe("Hierarchies", () => {
 
     it("doesn't create grouping nodes if provided classes aren't of entity or relationship type", async function () {
       const selectQueryFactory = new NodeSelectQueryFactory({ imodelAccess: createIModelAccess(emptyIModel) });
-      const customHierarchy: IHierarchyLevelDefinitionsFactory = {
+      const customHierarchy: HierarchyLevelDefinitionsFactory = {
         async defineHierarchyLevel({ parentNode }) {
           if (!parentNode) {
             return [
@@ -120,7 +120,7 @@ describe("Hierarchies", () => {
     it("creates grouping nodes if provided class is base for node class", async function () {
       const baseClassName = "BisCore.InformationContentElement";
       const selectQueryFactory = new NodeSelectQueryFactory({ imodelAccess: createIModelAccess(emptyIModel) });
-      const customHierarchy: IHierarchyLevelDefinitionsFactory = {
+      const customHierarchy: HierarchyLevelDefinitionsFactory = {
         async defineHierarchyLevel({ parentNode }) {
           if (!parentNode) {
             return [
@@ -179,7 +179,7 @@ describe("Hierarchies", () => {
       });
 
       const selectQueryFactory = new NodeSelectQueryFactory({ imodelAccess: createIModelAccess(imodel) });
-      const customHierarchy: IHierarchyLevelDefinitionsFactory = {
+      const customHierarchy: HierarchyLevelDefinitionsFactory = {
         async defineHierarchyLevel({ parentNode }) {
           if (!parentNode) {
             return [
@@ -256,7 +256,7 @@ describe("Hierarchies", () => {
       });
 
       const selectQueryFactory = new NodeSelectQueryFactory({ imodelAccess: createIModelAccess(imodel) });
-      const customHierarchy: IHierarchyLevelDefinitionsFactory = {
+      const customHierarchy: HierarchyLevelDefinitionsFactory = {
         async defineHierarchyLevel({ parentNode }) {
           if (!parentNode) {
             return [
@@ -366,7 +366,7 @@ describe("Hierarchies", () => {
       });
 
       const selectQueryFactory = new NodeSelectQueryFactory({ imodelAccess: createIModelAccess(imodel) });
-      const customHierarchy: IHierarchyLevelDefinitionsFactory = {
+      const customHierarchy: HierarchyLevelDefinitionsFactory = {
         async defineHierarchyLevel({ parentNode }) {
           if (!parentNode) {
             return [

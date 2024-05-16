@@ -11,8 +11,8 @@ import { createECSchemaProvider as createECSchemaProviderInterop, createECSqlQue
 import {
   createHierarchyProvider,
   createLimitingECSqlQueryExecutor,
+  HierarchyLevelDefinitionsFactory,
   HierarchyNodeIdentifiersPath,
-  IHierarchyLevelDefinitionsFactory,
 } from "@itwin/presentation-hierarchies";
 import { createCachingECClassHierarchyInspector, IPrimitiveValueFormatter, parseFullClassName } from "@itwin/presentation-shared";
 
@@ -57,7 +57,7 @@ export function createIModelAccess(imodel: IModelConnection | IModelDb | ECDb) {
 
 export function createProvider(props: {
   imodel: IModelConnection | IModelDb | ECDb;
-  hierarchy: IHierarchyLevelDefinitionsFactory;
+  hierarchy: HierarchyLevelDefinitionsFactory;
   formatterFactory?: (schemas: SchemaContext) => IPrimitiveValueFormatter;
   localizedStrings?: Parameters<typeof createHierarchyProvider>[0]["localizedStrings"];
   filteredNodePaths?: HierarchyNodeIdentifiersPath[];

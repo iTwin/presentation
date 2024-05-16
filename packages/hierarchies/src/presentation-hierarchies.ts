@@ -12,7 +12,7 @@ export {
   NodePreProcessor,
   NodePostProcessor,
   DefineHierarchyLevelProps,
-  IHierarchyLevelDefinitionsFactory,
+  HierarchyLevelDefinitionsFactory,
   DefineRootHierarchyLevelProps,
   DefineCustomNodeChildHierarchyLevelProps,
   DefineInstanceNodeChildHierarchyLevelProps,

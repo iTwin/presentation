@@ -11,9 +11,9 @@ import { createECSchemaProvider, createECSqlQueryExecutor } from "@itwin/present
 import {
   createHierarchyProvider,
   createLimitingECSqlQueryExecutor,
+  HierarchyLevelDefinitionsFactory,
   HierarchyNode,
   HierarchyProvider,
-  IHierarchyLevelDefinitionsFactory,
 } from "@itwin/presentation-hierarchies";
 import { createCachingECClassHierarchyInspector, ECClassHierarchyInspector, ECSchemaProvider } from "@itwin/presentation-shared";
 import { LOGGER } from "../util/Logging";
@@ -21,7 +21,7 @@ import { LOGGER } from "../util/Logging";
 export interface ProviderOptions {
   iModel: IModelDb;
   rowLimit?: number | "unbounded";
-  getHierarchyFactory(imodelAccess: ECSchemaProvider & ECClassHierarchyInspector): IHierarchyLevelDefinitionsFactory;
+  getHierarchyFactory(imodelAccess: ECSchemaProvider & ECClassHierarchyInspector): HierarchyLevelDefinitionsFactory;
 }
 
 const LOG_CATEGORY = "Presentation.PerformanceTests.StatelessHierarchyProvider";

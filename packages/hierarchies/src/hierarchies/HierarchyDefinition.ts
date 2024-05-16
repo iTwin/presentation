@@ -113,7 +113,7 @@ export interface DefineHierarchyLevelProps {
  * An interface for a factory that knows how define a hierarchy based on a given parent node.
  * @beta
  */
-export interface IHierarchyLevelDefinitionsFactory {
+export interface HierarchyLevelDefinitionsFactory {
   /**
    * An optional function for parsing ECInstance node from ECSQL row.
    *
@@ -267,11 +267,11 @@ interface ClassBasedHierarchyDefinitionsFactoryProps {
  *
  * @beta
  */
-export function createClassBasedHierarchyLevelDefinitionsFactory(props: ClassBasedHierarchyDefinitionsFactoryProps): IHierarchyLevelDefinitionsFactory {
+export function createClassBasedHierarchyLevelDefinitionsFactory(props: ClassBasedHierarchyDefinitionsFactoryProps): HierarchyLevelDefinitionsFactory {
   return new ClassBasedHierarchyLevelDefinitionsFactory(props);
 }
 
-class ClassBasedHierarchyLevelDefinitionsFactory implements IHierarchyLevelDefinitionsFactory {
+class ClassBasedHierarchyLevelDefinitionsFactory implements HierarchyLevelDefinitionsFactory {
   private _classHierarchyInspector: ECClassHierarchyInspector;
   private _definition: ClassBasedHierarchyDefinition;
 

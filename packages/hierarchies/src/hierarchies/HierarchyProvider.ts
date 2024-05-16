@@ -36,7 +36,7 @@ import {
   IPrimitiveValueFormatter,
   normalizeFullClassName,
 } from "@itwin/presentation-shared";
-import { DefineHierarchyLevelProps, HierarchyNodesDefinition, IHierarchyLevelDefinitionsFactory } from "./HierarchyDefinition";
+import { DefineHierarchyLevelProps, HierarchyLevelDefinitionsFactory, HierarchyNodesDefinition } from "./HierarchyDefinition";
 import { RowsLimitExceededError } from "./HierarchyErrors";
 import {
   HierarchyNode,
@@ -51,7 +51,7 @@ import {
 import { HierarchyNodeIdentifiersPath } from "./HierarchyNodeIdentifier";
 import { InstancesNodeKey } from "./HierarchyNodeKey";
 import { CachedNodesObservableEntry, ChildNodeObservablesCache, ParsedQueryNodesObservable } from "./internal/ChildNodeObservablesCache";
-import { createNodeIdentifierForLogging, hasChildren, LOGGING_NAMESPACE as CommonLoggingNamespace } from "./internal/Common";
+import { LOGGING_NAMESPACE as CommonLoggingNamespace, createNodeIdentifierForLogging, hasChildren } from "./internal/Common";
 import { eachValueFrom } from "./internal/EachValueFrom";
 import { FilteringHierarchyLevelDefinitionsFactory } from "./internal/FilteringHierarchyLevelDefinitionsFactory";
 import { createQueryLogMessage, doLog, log } from "./internal/LoggingUtils";
@@ -152,7 +152,7 @@ interface HierarchyProviderProps {
    * A function that returns a hierarchy definition, describing how the hierarchy that the provider should be create. The
    * function is called once during the provider's construction.
    */
-  hierarchyDefinition: IHierarchyLevelDefinitionsFactory;
+  hierarchyDefinition: HierarchyLevelDefinitionsFactory;
 
   /** Maximum number of queries that the provider attempts to execute in parallel. Defaults to `10`. */
   queryConcurrency?: number;
@@ -202,7 +202,7 @@ class HierarchyProviderImpl implements HierarchyProvider {
    * the provider. For example, it may be a factory that decorates given `hierarchyDefinition` with filtering
    * features.
    */
-  public readonly hierarchyDefinition: IHierarchyLevelDefinitionsFactory;
+  public readonly hierarchyDefinition: HierarchyLevelDefinitionsFactory;
 
   /**
    * A limiting ECSQL query executor used by this provider.
@@ -604,13 +604,13 @@ class HierarchyProviderImpl implements HierarchyProvider {
   }
 }
 
-function preProcessNodes(hierarchyFactory: IHierarchyLevelDefinitionsFactory) {
+function preProcessNodes(hierarchyFactory: HierarchyLevelDefinitionsFactory) {
   return hierarchyFactory.preProcessNode
     ? processNodes(hierarchyFactory.preProcessNode)
     : (o: Observable<ProcessedCustomHierarchyNode | ProcessedInstanceHierarchyNode>) => o;
 }
 
-function postProcessNodes(hierarchyFactory: IHierarchyLevelDefinitionsFactory) {
+function postProcessNodes(hierarchyFactory: HierarchyLevelDefinitionsFactory) {
   return hierarchyFactory.postProcessNode ? processNodes(hierarchyFactory.postProcessNode) : (o: Observable<ProcessedHierarchyNode>) => o;
 }
 

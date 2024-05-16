@@ -1,6 +1,6 @@
 sep=;
 Release Tag;API Item
-beta;createClassBasedHierarchyLevelDefinitionsFactory(props: ClassBasedHierarchyDefinitionsFactoryProps): IHierarchyLevelDefinitionsFactory
+beta;createClassBasedHierarchyLevelDefinitionsFactory(props: ClassBasedHierarchyDefinitionsFactoryProps): HierarchyLevelDefinitionsFactory
 beta;createHierarchyProvider(props: HierarchyProviderProps): HierarchyProvider
 beta;createLimitingECSqlQueryExecutor(baseExecutor: ECSqlQueryExecutor, defaultLimit: number | "unbounded"): LimitingECSqlQueryExecutor
 beta;DefineCustomNodeChildHierarchyLevelProps = Omit
@@ -23,6 +23,7 @@ beta;getLogger(): ILogger
 beta;GroupingHierarchyNode 
 beta;GroupingNodeKey = ClassGroupingNodeKey | LabelGroupingNodeKey | PropertyGroupingNodeKey
 beta;HierarchyLevelDefinition = HierarchyNodesDefinition[]
+beta;HierarchyLevelDefinitionsFactory
 beta;HierarchyNode = NonGroupingHierarchyNode | GroupingHierarchyNode
 beta;HierarchyNode
 beta;HierarchyNodeIdentifier = InstanceKey |
@@ -33,7 +34,6 @@ beta;HierarchyNodeKey
 beta;HierarchyNodesDefinition = CustomHierarchyNodeDefinition | InstanceNodesQueryDefinition
 beta;HierarchyNodesDefinition
 beta;HierarchyProvider
-beta;IHierarchyLevelDefinitionsFactory
 beta;InstancesNodeKey
 beta;LimitingECSqlQueryExecutor
 beta;NodeParser = (row:

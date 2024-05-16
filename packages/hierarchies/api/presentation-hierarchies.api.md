@@ -19,7 +19,7 @@ import { OmitOverUnion } from '@itwin/presentation-shared';
 import { PrimitiveValue } from '@itwin/presentation-shared';
 
 // @beta
-export function createClassBasedHierarchyLevelDefinitionsFactory(props: ClassBasedHierarchyDefinitionsFactoryProps): IHierarchyLevelDefinitionsFactory;
+export function createClassBasedHierarchyLevelDefinitionsFactory(props: ClassBasedHierarchyDefinitionsFactoryProps): HierarchyLevelDefinitionsFactory;
 
 // @beta
 export function createHierarchyProvider(props: HierarchyProviderProps): HierarchyProvider;
@@ -156,6 +156,14 @@ export type GroupingNodeKey = ClassGroupingNodeKey | LabelGroupingNodeKey | Prop
 export type HierarchyLevelDefinition = HierarchyNodesDefinition[];
 
 // @beta
+export interface HierarchyLevelDefinitionsFactory {
+    defineHierarchyLevel(props: DefineHierarchyLevelProps): Promise<HierarchyLevelDefinition>;
+    parseNode?: NodeParser;
+    postProcessNode?: NodePostProcessor;
+    preProcessNode?: NodePreProcessor;
+}
+
+// @beta
 export type HierarchyNode = NonGroupingHierarchyNode | GroupingHierarchyNode;
 
 // @beta (undocumented)
@@ -269,14 +277,6 @@ export interface HierarchyProvider {
     getNodes(props: GetHierarchyNodesProps): AsyncIterableIterator<HierarchyNode>;
     notifyDataSourceChanged(): void;
     setFormatter(formatter: IPrimitiveValueFormatter | undefined): void;
-}
-
-// @beta
-export interface IHierarchyLevelDefinitionsFactory {
-    defineHierarchyLevel(props: DefineHierarchyLevelProps): Promise<HierarchyLevelDefinition>;
-    parseNode?: NodeParser;
-    postProcessNode?: NodePostProcessor;
-    preProcessNode?: NodePreProcessor;
 }
 
 // @beta

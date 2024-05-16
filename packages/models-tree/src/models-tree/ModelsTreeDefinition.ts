@@ -10,9 +10,9 @@ import {
   DefineInstanceNodeChildHierarchyLevelProps,
   DefineRootHierarchyLevelProps,
   HierarchyLevelDefinition,
+  HierarchyLevelDefinitionsFactory,
   HierarchyNode,
   HierarchyNodeIdentifiersPath,
-  IHierarchyLevelDefinitionsFactory,
   LimitingECSqlQueryExecutor,
   NodeSelectClauseColumnNames,
   NodeSelectQueryFactory,
@@ -51,8 +51,8 @@ export namespace ModelsTreeInstanceKeyPathsProps {
   }
 }
 
-export class ModelsTreeDefinition implements IHierarchyLevelDefinitionsFactory {
-  private _impl: IHierarchyLevelDefinitionsFactory;
+export class ModelsTreeDefinition implements HierarchyLevelDefinitionsFactory {
+  private _impl: HierarchyLevelDefinitionsFactory;
   private _selectQueryFactory: NodeSelectQueryFactory;
   private _nodeLabelSelectClauseFactory: IInstanceLabelSelectClauseFactory;
 
