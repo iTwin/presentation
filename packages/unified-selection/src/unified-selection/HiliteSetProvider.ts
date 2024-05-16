@@ -5,9 +5,9 @@
 
 import { EMPTY, filter, forkJoin, from, map, merge, mergeMap, Observable, scan, shareReplay, Subject, toArray } from "rxjs";
 import { eachValueFrom } from "rxjs-for-await";
-import { ECClassHierarchyInspector, ECSqlBinding, ECSqlQueryExecutor } from "@itwin/presentation-shared";
+import { ECClassHierarchyInspector, ECSqlBinding, ECSqlQueryDef, ECSqlQueryExecutor, ECSqlQueryRow } from "@itwin/presentation-shared";
 import { SelectableInstanceKey, Selectables } from "./Selectable";
-import { formIdBindings } from "./Utils";
+import { formIdBindings, genericExecuteQuery, releaseMainThreadOnItemsCount } from "./Utils";
 
 const HILITE_SET_EMIT_FREQUENCY = 20;
 
@@ -165,6 +165,7 @@ class HiliteSetProviderImpl implements HiliteSetProvider {
       from(selectables.custom.values()).pipe(mergeMap((selectable) => selectable.loadInstanceKeys())),
       from(selectables.instanceKeys).pipe(mergeMap(([className, idSet]) => from(idSet).pipe(map((id) => ({ className, id }))))),
     ).pipe(
+      releaseMainThreadOnItemsCount(500),
       // Get types for each instance key
       mergeMap((instanceKey) => from(this.getType(instanceKey)).pipe(map((instanceIdType) => ({ instanceId: instanceKey.id, instanceIdType })))),
       // Cache the results
@@ -224,9 +225,8 @@ class HiliteSetProviderImpl implements HiliteSetProvider {
             SELECT ECInstanceId FROM Models
           `,
         ].join(" UNION ");
-        return from(this._imodelAccess.createQueryReader({ ctes, ecsql, bindings }));
+        return from(executeQuery(this._imodelAccess, { ctes, ecsql, bindings }));
       }),
-      map((row) => row.ECInstanceId),
     );
   }
 
@@ -259,9 +259,8 @@ class HiliteSetProviderImpl implements HiliteSetProvider {
           `,
         ];
         const ecsql = [`SELECT ECInstanceId FROM CategorySubCategories`, `SELECT ECInstanceId FROM SubCategories`].join(" UNION ");
-        return from(this._imodelAccess.createQueryReader({ ctes, ecsql, bindings }));
+        return from(executeQuery(this._imodelAccess, { ctes, ecsql, bindings }));
       }),
-      map((row) => row.ECInstanceId),
     );
   }
 
@@ -326,9 +325,8 @@ class HiliteSetProviderImpl implements HiliteSetProvider {
           "SELECT ECInstanceId FROM GroupGeometricElements WHERE ECClassId IS (BisCore.GeometricElement)",
           "SELECT ECInstanceId FROM ElementGeometricElements WHERE ECClassId IS (BisCore.GeometricElement)",
         ].join(" UNION ");
-        return from(this._imodelAccess.createQueryReader({ ctes, ecsql, bindings }));
+        return from(executeQuery(this._imodelAccess, { ctes, ecsql, bindings }));
       }),
-      map((row) => row.ECInstanceId as string),
     );
   }
 
@@ -426,4 +424,8 @@ function unique<T>() {
       filter((x): x is T => !!x),
     );
   };
+}
+
+async function* executeQuery(queryExecutor: ECSqlQueryExecutor, query: ECSqlQueryDef): AsyncIterableIterator<string> {
+  yield* genericExecuteQuery(queryExecutor, query, (row: ECSqlQueryRow) => row.ECInstanceId);
 }

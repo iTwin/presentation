@@ -4,9 +4,9 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { Id64 } from "@itwin/core-bentley";
-import { ECSqlBinding, ECSqlQueryDef, ECSqlQueryExecutor } from "@itwin/presentation-shared";
+import { ECSqlBinding, ECSqlQueryDef, ECSqlQueryExecutor, ECSqlQueryRow } from "@itwin/presentation-shared";
 import { SelectableInstanceKey } from "./Selectable";
-import { formIdBindings } from "./Utils";
+import { formIdBindings, genericExecuteQuery } from "./Utils";
 
 /**
  * Available selection scopes.
@@ -236,8 +236,8 @@ function formAncestorLevelBinding(ancestorLevel: number, bindings: ECSqlBinding[
 }
 
 async function* executeQuery(queryExecutor: ECSqlQueryExecutor, query: ECSqlQueryDef): AsyncIterableIterator<SelectableInstanceKey> {
-  const reader = queryExecutor.createQueryReader(query);
-  for await (const row of reader) {
-    yield { className: row.ClassName, id: row.ECInstanceId };
-  }
+  yield* genericExecuteQuery(queryExecutor, query, (row: ECSqlQueryRow) => ({
+    className: row.ClassName,
+    id: row.ECInstanceId,
+  }));
 }
