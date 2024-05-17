@@ -682,7 +682,7 @@ describe("TreeModel", () => {
       const model = createTreeModel([
         {
           id: undefined,
-          children: ["root-1"],
+          children: ["root-1", "root-2"],
         },
         {
           id: "root-1",
@@ -703,7 +703,7 @@ describe("TreeModel", () => {
       const model = createTreeModel([
         {
           id: undefined,
-          children: ["root-1"],
+          children: ["root-1", "root-2", "root-3", "root-4"],
         },
         {
           id: "root-1",
@@ -719,6 +719,7 @@ describe("TreeModel", () => {
         },
         {
           id: "root-4",
+          type: "Unknown",
           message: "info",
         },
       ]);
