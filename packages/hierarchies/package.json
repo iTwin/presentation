@@ -3,7 +3,10 @@
   "version": "0.0.0",
   "description": "A package for creating hierarchies based on data in iTwin.js iModels.",
   "license": "MIT",
-  "private": true,
+  "author": {
+    "name": "Bentley Systems, Inc.",
+    "url": "http://www.bentley.com"
+  },
   "repository": {
     "type": "git",
     "url": "https://github.com/iTwin/presentation.git",
@@ -11,16 +14,13 @@
   },
   "keywords": [
     "Bentley",
-    "iTwin.js",
-    "iModels",
-    "Presentation",
+    "ECSQL",
+    "Hierarchies",
     "Hierarchy",
-    "ECSQL"
+    "iModel",
+    "iTwin.js",
+    "Presentation"
   ],
-  "author": {
-    "name": "Bentley Systems, Inc.",
-    "url": "http://www.bentley.com"
-  },
   "main": "lib/cjs/presentation-hierarchies.js",
   "module": "lib/esm/presentation-hierarchies.js",
   "types": "lib/cjs/presentation-hierarchies.d.ts",

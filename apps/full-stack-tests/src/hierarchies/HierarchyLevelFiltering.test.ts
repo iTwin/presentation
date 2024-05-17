@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { collect } from "presentation-test-utilities";
-import { createNodesQueryClauseFactory, HierarchyLevelDefinitionsFactory } from "@itwin/presentation-hierarchies";
+import { createNodesQueryClauseFactory, HierarchyDefinition } from "@itwin/presentation-hierarchies";
 import { importSchema, withECDb } from "../IModelUtils";
 import { initialize, terminate } from "../IntegrationTests";
 import { NodeValidators, validateHierarchyLevel } from "./HierarchyValidation";
@@ -39,7 +39,7 @@ describe("Hierarchies", () => {
         },
         async (imodel, { schema, x1, x2 }) => {
           const selectQueryFactory = createNodesQueryClauseFactory({ imodelAccess: createIModelAccess(imodel) });
-          const hierarchy: HierarchyLevelDefinitionsFactory = {
+          const hierarchy: HierarchyDefinition = {
             async defineHierarchyLevel({ instanceFilter }) {
               const filterClauses = await selectQueryFactory.createFilterClauses({
                 filter: instanceFilter,
@@ -117,7 +117,7 @@ describe("Hierarchies", () => {
         },
         async (imodel, { schema, x, y1, y2 }) => {
           const selectQueryFactory = createNodesQueryClauseFactory({ imodelAccess: createIModelAccess(imodel) });
-          const hierarchy: HierarchyLevelDefinitionsFactory = {
+          const hierarchy: HierarchyDefinition = {
             async defineHierarchyLevel({ instanceFilter }) {
               const filterClauses = await selectQueryFactory.createFilterClauses({
                 filter: instanceFilter,
@@ -203,7 +203,7 @@ describe("Hierarchies", () => {
         },
         async (imodel, { schema, x, y1, y2 }) => {
           const selectQueryFactory = createNodesQueryClauseFactory({ imodelAccess: createIModelAccess(imodel) });
-          const hierarchy: HierarchyLevelDefinitionsFactory = {
+          const hierarchy: HierarchyDefinition = {
             async defineHierarchyLevel({ instanceFilter }) {
               const filterClauses = await selectQueryFactory.createFilterClauses({
                 filter: instanceFilter,
@@ -294,7 +294,7 @@ describe("Hierarchies", () => {
         },
         async (imodel, { schema, x, y }) => {
           const selectQueryFactory = createNodesQueryClauseFactory({ imodelAccess: createIModelAccess(imodel) });
-          const hierarchy: HierarchyLevelDefinitionsFactory = {
+          const hierarchy: HierarchyDefinition = {
             async defineHierarchyLevel({ instanceFilter }) {
               const subjectFilterClauses = await selectQueryFactory.createFilterClauses({
                 filter: instanceFilter,
@@ -368,7 +368,7 @@ describe("Hierarchies", () => {
         },
         async (imodel, { schema, x, y }) => {
           const selectQueryFactory = createNodesQueryClauseFactory({ imodelAccess: createIModelAccess(imodel) });
-          const hierarchy: HierarchyLevelDefinitionsFactory = {
+          const hierarchy: HierarchyDefinition = {
             async defineHierarchyLevel({ instanceFilter }) {
               const subjectFilterClauses = await selectQueryFactory.createFilterClauses({
                 filter: instanceFilter,
@@ -442,7 +442,7 @@ describe("Hierarchies", () => {
         },
         async (imodel, { schema, x1, x2 }) => {
           const selectQueryFactory = createNodesQueryClauseFactory({ imodelAccess: createIModelAccess(imodel) });
-          const hierarchy: HierarchyLevelDefinitionsFactory = {
+          const hierarchy: HierarchyDefinition = {
             async defineHierarchyLevel({ instanceFilter }) {
               const subjectFilterClauses = await selectQueryFactory.createFilterClauses({
                 filter: instanceFilter,
@@ -531,7 +531,7 @@ describe("Hierarchies", () => {
         },
         async (imodel, { schema, x1, x2 }) => {
           const selectQueryFactory = createNodesQueryClauseFactory({ imodelAccess: createIModelAccess(imodel) });
-          const hierarchy: HierarchyLevelDefinitionsFactory = {
+          const hierarchy: HierarchyDefinition = {
             async defineHierarchyLevel({ instanceFilter }) {
               const subjectFilterClauses = await selectQueryFactory.createFilterClauses({
                 filter: instanceFilter,
