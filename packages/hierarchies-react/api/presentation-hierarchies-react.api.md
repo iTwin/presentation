@@ -10,7 +10,7 @@ import { ComponentPropsWithoutRef } from 'react';
 import { ECClassHierarchyInspector } from '@itwin/presentation-shared';
 import { ECSchemaProvider } from '@itwin/presentation-shared';
 import { GenericInstanceFilter } from '@itwin/presentation-hierarchies';
-import { HierarchyLevelDefinitionsFactory } from '@itwin/presentation-hierarchies';
+import { HierarchyDefinition } from '@itwin/presentation-hierarchies';
 import { HierarchyNode } from '@itwin/presentation-hierarchies';
 import { HierarchyNodeIdentifiersPath } from '@itwin/presentation-hierarchies';
 import { HierarchyProvider } from '@itwin/presentation-hierarchies';

@@ -7,18 +7,18 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import {
   createHierarchyProvider,
   GenericInstanceFilter,
-  HierarchyLevelDefinitionsFactory,
+  HierarchyDefinition,
   HierarchyNode,
   HierarchyNodeIdentifiersPath,
   HierarchyProvider,
   LimitingECSqlQueryExecutor,
 } from "@itwin/presentation-hierarchies";
+import { ECClassHierarchyInspector, ECSchemaProvider } from "@itwin/presentation-shared";
 import { TreeActions } from "./internal/TreeActions";
 import { isTreeModelHierarchyNode, isTreeModelInfoNode, TreeModel, TreeModelHierarchyNode, TreeModelNode, TreeModelRootNode } from "./internal/TreeModel";
 import { useUnifiedTreeSelection, UseUnifiedTreeSelectionProps } from "./internal/UseUnifiedSelection";
 import { PresentationHierarchyNode, PresentationTreeNode } from "./Types";
 import { SelectionChangeType } from "./UseSelectionHandler";
-import { ECClassHierarchyInspector, ECSchemaProvider } from "@itwin/presentation-shared";
 
 /** @beta */
 export interface HierarchyLevelConfiguration {
@@ -47,7 +47,7 @@ interface GetFilteredPathsProps {
 
 interface UseTreeProps {
   imodelAccess: ECSchemaProvider & LimitingECSqlQueryExecutor & ECClassHierarchyInspector;
-  getHierarchyDefinitionsProvider: (props: { imodelAccess: IModelAccess }) => HierarchyLevelDefinitionsFactory;
+  getHierarchyDefinition: (props: { imodelAccess: IModelAccess }) => HierarchyDefinition;
   getFilteredPaths?: (props: GetFilteredPathsProps) => Promise<HierarchyNodeIdentifiersPath[] | undefined>;
 }
 
@@ -81,7 +81,7 @@ interface TreeState {
 
 function useTreeInternal({
   imodelAccess,
-  getHierarchyDefinitionsProvider,
+  getHierarchyDefinition,
   getFilteredPaths,
 }: UseTreeProps): UseTreeResult & { getNode: (nodeId: string) => TreeModelRootNode | TreeModelNode | undefined } {
   const [state, setState] = useState<TreeState>({
@@ -111,7 +111,7 @@ function useTreeInternal({
       if (!getFilteredPaths) {
         return createHierarchyProvider({
           imodelAccess,
-          hierarchyDefinition: getHierarchyDefinitionsProvider({ imodelAccess }),
+          hierarchyDefinition: getHierarchyDefinition({ imodelAccess }),
         });
       }
 
@@ -119,7 +119,7 @@ function useTreeInternal({
       const filteredPaths = await getFilteredPaths({ imodelAccess });
       return createHierarchyProvider({
         imodelAccess,
-        hierarchyDefinition: getHierarchyDefinitionsProvider({ imodelAccess }),
+        hierarchyDefinition: getHierarchyDefinition({ imodelAccess }),
         filtering:
           filteredPaths !== undefined
             ? {
@@ -142,7 +142,7 @@ function useTreeInternal({
       disposed = true;
       actions.dispose();
     };
-  }, [actions, imodelAccess, getHierarchyDefinitionsProvider, getFilteredPaths]);
+  }, [actions, imodelAccess, getHierarchyDefinition, getFilteredPaths]);
 
   const getNode = useRef((nodeId: string) => {
     return actions.getNode(nodeId);

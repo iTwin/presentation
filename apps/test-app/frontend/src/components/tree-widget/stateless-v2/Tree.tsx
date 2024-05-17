@@ -65,7 +65,7 @@ function Tree({ imodel, imodelAccess, height, width }: { imodel: IModelConnectio
     sourceName: "StatelessTreeV2",
     imodelAccess,
     getFilteredPaths,
-    getHierarchyDefinitionsProvider,
+    getHierarchyDefinition,
   });
 
   const [shouldUseCustomFormatter, setShouldUseCustomFormatter] = useState<boolean>(false);
@@ -213,7 +213,7 @@ function debounced<TArgs>(callback: (args: TArgs) => void, delay: number) {
   };
 }
 
-function getHierarchyDefinitionsProvider(props: Parameters<UseTreeProps["getHierarchyDefinitionsProvider"]>[0]) {
+function getHierarchyDefinition(props: Parameters<UseTreeProps["getHierarchyDefinition"]>[0]) {
   return new ModelsTreeDefinition(props);
 }
 

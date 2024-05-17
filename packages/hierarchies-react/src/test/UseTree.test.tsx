@@ -28,7 +28,7 @@ describe("useTree", () => {
   type UseTreeProps = Parameters<typeof useTree>[0];
   const initialProps: UseTreeProps = {
     imodelAccess: {} as UseTreeProps["imodelAccess"],
-    getHierarchyDefinitionsProvider: () => ({}) as hierarchiesModule.HierarchyLevelDefinitionsFactory,
+    getHierarchyDefinition: () => ({}) as hierarchiesModule.HierarchyDefinition,
   };
 
   before(() => {
@@ -525,7 +525,7 @@ describe("useTree", () => {
     createHierarchyProviderStub.reset();
     createHierarchyProviderStub.returns(newProvider as unknown as hierarchiesModule.HierarchyProvider);
 
-    rerender({ ...initialProps, getHierarchyDefinitionsProvider: () => ({}) as hierarchiesModule.HierarchyLevelDefinitionsFactory });
+    rerender({ ...initialProps, getHierarchyDefinition: () => ({}) as hierarchiesModule.HierarchyDefinition });
 
     await waitFor(() => {
       expect(result.current.rootNodes).to.have.lengthOf(1);
@@ -551,7 +551,7 @@ describe("useUnifiedSelectionTree", () => {
   type UseUnifiedSelectionTree = Parameters<typeof useUnifiedSelectionTree>[0];
   const initialProps: UseUnifiedSelectionTree = {
     imodelAccess: {} as UseUnifiedSelectionTree["imodelAccess"],
-    getHierarchyDefinitionsProvider: () => ({}) as hierarchiesModule.HierarchyLevelDefinitionsFactory,
+    getHierarchyDefinition: () => ({}) as hierarchiesModule.HierarchyDefinition,
     imodelKey,
     sourceName,
   };
