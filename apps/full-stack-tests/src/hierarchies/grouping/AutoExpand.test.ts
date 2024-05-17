@@ -7,7 +7,7 @@ import { insertSubject } from "presentation-test-utilities";
 import { Subject } from "@itwin/core-backend";
 import { IModel } from "@itwin/core-common";
 import { IModelConnection } from "@itwin/core-frontend";
-import { createNodesQueryClauseFactory, HierarchyLevelDefinitionsFactory, NodesQueryClauseFactory } from "@itwin/presentation-hierarchies";
+import { createNodesQueryClauseFactory, HierarchyDefinition, NodesQueryClauseFactory } from "@itwin/presentation-hierarchies";
 import { buildIModel } from "../../IModelUtils";
 import { initialize, terminate } from "../../IntegrationTests";
 import { NodeValidators, validateHierarchy } from "../HierarchyValidation";
@@ -33,7 +33,7 @@ describe("Hierarchies", () => {
       imodel: IModelConnection,
       specifiedGrouping: ECSqlSelectClauseGroupingParams,
       labelProperty?: string,
-    ): HierarchyLevelDefinitionsFactory {
+    ): HierarchyDefinition {
       const selectQueryFactory = createNodesQueryClauseFactory({ imodelAccess: createIModelAccess(imodel) });
       return {
         async defineHierarchyLevel({ parentNode }) {

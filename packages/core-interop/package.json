@@ -3,6 +3,10 @@
   "version": "0.1.2",
   "description": "The package acts as a layer between iTwin.js Core and Presentation packages.",
   "license": "MIT",
+  "author": {
+    "name": "Bentley Systems, Inc.",
+    "url": "http://www.bentley.com"
+  },
   "repository": {
     "type": "git",
     "url": "https://github.com/iTwin/presentation.git",
@@ -14,10 +18,6 @@
     "iTwin.js",
     "Presentation"
   ],
-  "author": {
-    "name": "Bentley Systems, Inc.",
-    "url": "http://www.bentley.com"
-  },
   "main": "lib/cjs/presentation-core-interop.js",
   "module": "lib/esm/presentation-core-interop.js",
   "types": "lib/cjs/presentation-core-interop.d.ts",

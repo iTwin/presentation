@@ -18,7 +18,7 @@ import {
   ECSQL_COLUMN_NAME_FilteredChildrenPaths,
   ECSQL_COLUMN_NAME_IsFilterTarget,
   FilteredHierarchyNode,
-} from "../hierarchies/internal/FilteringHierarchyLevelDefinitionsFactory";
+} from "../hierarchies/internal/FilteringHierarchyDefinition";
 import { RowDef } from "../hierarchies/internal/TreeNodesReader";
 import { LimitingECSqlQueryExecutor } from "../hierarchies/LimitingECSqlQueryExecutor";
 import { NodeSelectClauseColumnNames, NodesQueryClauseFactory } from "../hierarchies/NodeSelectQueryFactory";
