@@ -61,8 +61,21 @@ Here's a simple example of how to create a hierarchy provider and build a hierar
 import { IModelConnection } from "@itwin/core-frontend";
 import { SchemaContext } from "@itwin/ecschema-metadata";
 import { ECSchemaRpcLocater } from "@itwin/ecschema-rpcinterface-common";
-import { createECSchemaProvider, createCachingECClassHierarchyInspector, createECSqlQueryExecutor, createBisInstanceLabelSelectClauseFactory, ECSqlBinding } from "@itwin/presentation-shared";
-import { createLimitingECSqlQueryExecutor, createHierarchyProvider, createClassBasedHierarchyDefinition, createNodesQueryClauseFactory, HierarchyProvider, HierarchyNode } from "@itwin/presentation-hierarchies";
+import {
+  createECSchemaProvider,
+  createCachingECClassHierarchyInspector,
+  createECSqlQueryExecutor,
+  createBisInstanceLabelSelectClauseFactory,
+  ECSqlBinding,
+} from "@itwin/presentation-shared";
+import {
+  createLimitingECSqlQueryExecutor,
+  createHierarchyProvider,
+  createClassBasedHierarchyDefinition,
+  createNodesQueryClauseFactory,
+  HierarchyProvider,
+  HierarchyNode,
+} from "@itwin/presentation-hierarchies";
 
 // Not really part of the package, but we need SchemaContext to create a hierarchy provider. It's
 // recommended to cache the schema context and reuse it across different application's components to
@@ -101,28 +114,9 @@ function createProvider(imodel: IModelConnection): HierarchyProvider {
     classHierarchyInspector: imodelAccess,
     hierarchy: {
       // for root nodes, select all root level bis.Model instances
-      rootNodes: async () => [{
-        fullClassName: "BisCore.Model",
-        query: {
-          ecsql: `
-            SELECT
-              ${await nodesQueryFactory.createSelectClause({
-                ecClassId: { selector: "this.ECClassId" },
-                ecInstanceId: { selector: "this.ECInstanceId" },
-                nodeLabel: {
-                  selector: await labelsQueryFactory.createSelectClause({ classAlias: "this", className: "BisCore.Model" }),
-                },
-              })}
-            FROM BisCore.Model this
-            WHERE this.ParentModel IS NULL
-          `,
-        },
-      }],
-      childNodes: [{
-        // for bis.Model parent nodes, select all bis.Element instances contained in corresponding model
-        parentNodeClassName: "BisCore.Model",
-        definitions: async ({ parentNodeInstanceIds }) => [{
-          fullClassName: "BisCore.Element",
+      rootNodes: async () => [
+        {
+          fullClassName: "BisCore.Model",
           query: {
             ecsql: `
               SELECT
@@ -130,19 +124,44 @@ function createProvider(imodel: IModelConnection): HierarchyProvider {
                   ecClassId: { selector: "this.ECClassId" },
                   ecInstanceId: { selector: "this.ECInstanceId" },
                   nodeLabel: {
-                    selector: await labelsQueryFactory.createSelectClause({ classAlias: "this", className: "BisCore.Element" }),
-                  },
-                  grouping: {
-                    byClass: true,
+                    selector: await labelsQueryFactory.createSelectClause({ classAlias: "this", className: "BisCore.Model" }),
                   },
                 })}
-              FROM BisCore.Element this
-              WHERE this.Model.Id IN (${parentNodeInstanceIds.map(() => "?").join(",")})
+              FROM BisCore.Model this
+              WHERE this.ParentModel IS NULL
             `,
-            bindings: [...parentNodeInstanceIds.map((id): ECSqlBinding => ({ type: "id", value: id }))],
           },
-        }],
-      }],
+        },
+      ],
+      childNodes: [
+        {
+          // for bis.Model parent nodes, select all bis.Element instances contained in corresponding model
+          parentNodeClassName: "BisCore.Model",
+          definitions: async ({ parentNodeInstanceIds }) => [
+            {
+              fullClassName: "BisCore.Element",
+              query: {
+                ecsql: `
+                  SELECT
+                    ${await nodesQueryFactory.createSelectClause({
+                      ecClassId: { selector: "this.ECClassId" },
+                      ecInstanceId: { selector: "this.ECInstanceId" },
+                      nodeLabel: {
+                        selector: await labelsQueryFactory.createSelectClause({ classAlias: "this", className: "BisCore.Element" }),
+                      },
+                      grouping: {
+                        byClass: true,
+                      },
+                    })}
+                  FROM BisCore.Element this
+                  WHERE this.Model.Id IN (${parentNodeInstanceIds.map(() => "?").join(",")})
+                `,
+                bindings: [...parentNodeInstanceIds.map((id): ECSqlBinding => ({ type: "id", value: id }))],
+              },
+            },
+          ],
+        },
+      ],
     },
   });
 
