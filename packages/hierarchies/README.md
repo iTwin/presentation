@@ -61,21 +61,17 @@ Here's a simple example of how to create a hierarchy provider and build a hierar
 import { IModelConnection } from "@itwin/core-frontend";
 import { SchemaContext } from "@itwin/ecschema-metadata";
 import { ECSchemaRpcLocater } from "@itwin/ecschema-rpcinterface-common";
+import { createECSchemaProvider, createECSqlQueryExecutor } from "@itwin/presentation-core-interop";
 import {
-  createECSchemaProvider,
-  createCachingECClassHierarchyInspector,
-  createECSqlQueryExecutor,
-  createBisInstanceLabelSelectClauseFactory,
-  ECSqlBinding,
-} from "@itwin/presentation-shared";
-import {
-  createLimitingECSqlQueryExecutor,
-  createHierarchyProvider,
   createClassBasedHierarchyDefinition,
+  createHierarchyProvider,
+  createLimitingECSqlQueryExecutor,
   createNodesQueryClauseFactory,
-  HierarchyProvider,
+  DefineInstanceNodeChildHierarchyLevelProps,
   HierarchyNode,
+  HierarchyProvider,
 } from "@itwin/presentation-hierarchies";
+import { createBisInstanceLabelSelectClauseFactory, createCachingECClassHierarchyInspector, ECSqlBinding } from "@itwin/presentation-shared";
 
 // Not really part of the package, but we need SchemaContext to create a hierarchy provider. It's
 // recommended to cache the schema context and reuse it across different application's components to
@@ -86,7 +82,7 @@ function getIModelSchemaContext(imodel: IModelConnection) {
   if (!context) {
     context = new SchemaContext();
     context.addLocater(new ECSchemaRpcLocater(imodel.getRpcProps()));
-    imodelSchemaContextsCache.set(imodel.key, newContext);
+    imodelSchemaContextsCache.set(imodel.key, context);
     imodel.onClose.addListener(() => imodelSchemaContextsCache.delete(imodel.key));
   }
   return context;
@@ -137,7 +133,7 @@ function createProvider(imodel: IModelConnection): HierarchyProvider {
         {
           // for bis.Model parent nodes, select all bis.Element instances contained in corresponding model
           parentNodeClassName: "BisCore.Model",
-          definitions: async ({ parentNodeInstanceIds }) => [
+          definitions: async ({ parentNodeInstanceIds }: DefineInstanceNodeChildHierarchyLevelProps) => [
             {
               fullClassName: "BisCore.Element",
               query: {
