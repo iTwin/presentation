@@ -19,7 +19,7 @@ import { OmitOverUnion } from '@itwin/presentation-shared';
 import { PrimitiveValue } from '@itwin/presentation-shared';
 
 // @beta
-export function createClassBasedHierarchyLevelDefinitionsFactory(props: ClassBasedHierarchyDefinitionsFactoryProps): HierarchyLevelDefinitionsFactory;
+export function createClassBasedHierarchyDefinition(props: ClassBasedHierarchyDefinitionProps): HierarchyDefinition;
 
 // @beta
 export function createHierarchyProvider(props: HierarchyProviderProps): HierarchyProvider;
@@ -81,15 +81,15 @@ export interface GroupingHierarchyNode extends BaseHierarchyNode {
 export type GroupingNodeKey = ClassGroupingNodeKey | LabelGroupingNodeKey | PropertyGroupingNodeKey;
 
 // @beta
-export type HierarchyLevelDefinition = HierarchyNodesDefinition[];
-
-// @beta
-export interface HierarchyLevelDefinitionsFactory {
+export interface HierarchyDefinition {
     defineHierarchyLevel(props: DefineHierarchyLevelProps): Promise<HierarchyLevelDefinition>;
     parseNode?: NodeParser;
     postProcessNode?: NodePostProcessor;
     preProcessNode?: NodePreProcessor;
 }
+
+// @beta
+export type HierarchyLevelDefinition = HierarchyNodesDefinition[];
 
 // @beta
 export type HierarchyNode = NonGroupingHierarchyNode | GroupingHierarchyNode;

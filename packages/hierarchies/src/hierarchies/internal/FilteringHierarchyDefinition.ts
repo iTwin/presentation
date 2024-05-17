@@ -7,8 +7,8 @@ import { ECClassHierarchyInspector, InstanceKey } from "@itwin/presentation-shar
 import {
   CustomHierarchyNodeDefinition,
   DefineHierarchyLevelProps,
+  HierarchyDefinition,
   HierarchyLevelDefinition,
-  HierarchyLevelDefinitionsFactory,
   HierarchyNodesDefinition,
   InstanceNodesQueryDefinition,
   NodeParser,
@@ -22,7 +22,7 @@ import { defaultNodesParser } from "./TreeNodesReader";
 /** @internal */
 export interface FilteringQueryBuilderProps {
   classHierarchy: ECClassHierarchyInspector;
-  source: HierarchyLevelDefinitionsFactory;
+  source: HierarchyDefinition;
   nodeIdentifierPaths: HierarchyNodeIdentifiersPath[];
 }
 
@@ -33,9 +33,9 @@ export type FilteredHierarchyNode<TNode = ProcessedHierarchyNode> = TNode & {
 };
 
 /** @internal */
-export class FilteringHierarchyLevelDefinitionsFactory implements HierarchyLevelDefinitionsFactory {
+export class FilteringHierarchyDefinition implements HierarchyDefinition {
   private _classHierarchy: ECClassHierarchyInspector;
-  private _source: HierarchyLevelDefinitionsFactory;
+  private _source: HierarchyDefinition;
   private _nodeIdentifierPaths: HierarchyNodeIdentifiersPath[];
 
   public constructor(props: FilteringQueryBuilderProps) {

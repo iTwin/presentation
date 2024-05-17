@@ -11,12 +11,12 @@ export {
   DefineInstanceNodeChildHierarchyLevelProps,
   DefineRootHierarchyLevelProps,
   HierarchyLevelDefinition,
-  HierarchyLevelDefinitionsFactory,
+  HierarchyDefinition,
   HierarchyNodesDefinition,
   NodeParser,
   NodePostProcessor,
   NodePreProcessor,
-  createClassBasedHierarchyLevelDefinitionsFactory,
+  createClassBasedHierarchyDefinition,
 } from "./hierarchies/HierarchyDefinition";
 export { RowsLimitExceededError } from "./hierarchies/HierarchyErrors";
 export { GroupingHierarchyNode, HierarchyNode, NonGroupingHierarchyNode, ParsedHierarchyNode, ProcessedHierarchyNode } from "./hierarchies/HierarchyNode";
