@@ -27,7 +27,7 @@ import {
 import { HierarchyLevelConfiguration, PresentationHierarchyNode, TreeRenderer, useUnifiedSelectionTree } from "@itwin/presentation-hierarchies-react";
 import { ModelsTreeDefinition } from "@itwin/presentation-models-tree";
 import { createCachingECClassHierarchyInspector, ECClassHierarchyInspector, ECSchemaProvider, IPrimitiveValueFormatter } from "@itwin/presentation-shared";
-import { MyAppFrontend } from "../../../api/MyAppFrontend";
+import { MyAppFrontend } from "../../api/MyAppFrontend";
 
 type IModelAccess = LimitingECSqlQueryExecutor & ECSchemaProvider & ECClassHierarchyInspector;
 

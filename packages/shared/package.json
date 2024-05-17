@@ -36,7 +36,7 @@
     "check-internal": "node ../../scripts/checkInternal.js --apiSummary ./api/presentation-shared.api.md"
   },
   "dependencies": {
-    "@itwin/core-bentley": "^4.5.2"
+    "@itwin/core-bentley": "^4.6.0"
   },
   "devDependencies": {
     "@itwin/build-tools": "^4.6.0",

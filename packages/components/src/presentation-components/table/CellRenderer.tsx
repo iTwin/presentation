@@ -9,8 +9,8 @@
 import { useState } from "react";
 import { ArrayValue, PropertyRecord, PropertyValueFormat } from "@itwin/appui-abstract";
 import { NonPrimitivePropertyRenderer, PropertyValueRendererManager } from "@itwin/components-react";
-import { Orientation, UnderlinedButton } from "@itwin/core-react";
-import { Modal } from "@itwin/itwinui-react";
+import { Orientation } from "@itwin/core-react";
+import { Anchor, Modal } from "@itwin/itwinui-react";
 
 /**
  * Props for [[TableCellRenderer]] component.
@@ -76,13 +76,13 @@ function NonPrimitiveCellRenderer(props: NonPrimitiveCellRendererProps) {
 
   return (
     <>
-      <UnderlinedButton
+      <Anchor
         onClick={() => {
           setIsOpen(true);
         }}
       >
         {buttonLabel}
-      </UnderlinedButton>
+      </Anchor>
       <Modal
         isOpen={isOpen}
         title={dialogLabel}
