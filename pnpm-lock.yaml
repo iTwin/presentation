@@ -59,62 +59,62 @@ importers:
         specifier: ^1.0.4
         version: 1.0.4
       '@itwin/appui-abstract':
-        specifier: ^4.5.2
-        version: 4.5.2(@itwin/core-bentley@4.5.2)
+        specifier: ^4.6.0
+        version: 4.6.0(@itwin/core-bentley@4.6.0)
       '@itwin/build-tools':
         specifier: ^4.6.0
         version: 4.6.0(@types/node@18.19.31)
       '@itwin/components-react':
         specifier: ^4.12.0
-        version: 4.12.0(@itwin/appui-abstract@4.5.2)(@itwin/core-bentley@4.5.2)(@itwin/core-react@4.12.0)(react-dom@18.2.0)(react@18.2.0)
+        version: 4.12.0(@itwin/appui-abstract@4.6.0)(@itwin/core-bentley@4.6.0)(@itwin/core-react@4.12.0)(react-dom@18.2.0)(react@18.2.0)
       '@itwin/core-backend':
-        specifier: ^4.5.2
-        version: 4.5.2(@itwin/core-bentley@4.5.2)(@itwin/core-common@4.5.2)(@itwin/core-geometry@4.5.2)(@opentelemetry/api@1.8.0)
+        specifier: ^4.6.0
+        version: 4.6.0(@itwin/core-bentley@4.6.0)(@itwin/core-common@4.6.0)(@itwin/core-geometry@4.6.0)(@opentelemetry/api@1.8.0)
       '@itwin/core-bentley':
-        specifier: ^4.5.2
-        version: 4.5.2
+        specifier: ^4.6.0
+        version: 4.6.0
       '@itwin/core-common':
-        specifier: ^4.5.2
-        version: 4.5.2(@itwin/core-bentley@4.5.2)(@itwin/core-geometry@4.5.2)
+        specifier: ^4.6.0
+        version: 4.6.0(@itwin/core-bentley@4.6.0)(@itwin/core-geometry@4.6.0)
       '@itwin/core-frontend':
-        specifier: ^4.5.2
-        version: 4.5.2(@itwin/appui-abstract@4.5.2)(@itwin/core-bentley@4.5.2)(@itwin/core-common@4.5.2)(@itwin/core-geometry@4.5.2)(@itwin/core-orbitgt@4.5.2)(@itwin/core-quantity@4.5.2)(inversify@6.0.2)(reflect-metadata@0.1.14)
+        specifier: ^4.6.0
+        version: 4.6.0(@itwin/appui-abstract@4.6.0)(@itwin/core-bentley@4.6.0)(@itwin/core-common@4.6.0)(@itwin/core-geometry@4.6.0)(@itwin/core-orbitgt@4.6.0)(@itwin/core-quantity@4.6.0)(inversify@6.0.2)(reflect-metadata@0.1.14)
       '@itwin/core-geometry':
-        specifier: ^4.5.2
-        version: 4.5.2
+        specifier: ^4.6.0
+        version: 4.6.0
       '@itwin/core-i18n':
-        specifier: ^4.5.2
-        version: 4.5.2(@itwin/core-bentley@4.5.2)
+        specifier: ^4.6.0
+        version: 4.6.0(@itwin/core-bentley@4.6.0)
       '@itwin/core-orbitgt':
-        specifier: ^4.5.2
-        version: 4.5.2
+        specifier: ^4.6.0
+        version: 4.6.0
       '@itwin/core-quantity':
-        specifier: ^4.5.2
-        version: 4.5.2(@itwin/core-bentley@4.5.2)
+        specifier: ^4.6.0
+        version: 4.6.0(@itwin/core-bentley@4.6.0)
       '@itwin/core-react':
         specifier: ^4.12.0
-        version: 4.12.0(@itwin/appui-abstract@4.5.2)(@itwin/core-bentley@4.5.2)(react-dom@18.2.0)(react@18.2.0)
+        version: 4.12.0(@itwin/appui-abstract@4.6.0)(@itwin/core-bentley@4.6.0)(react-dom@18.2.0)(react@18.2.0)
       '@itwin/ecschema-metadata':
-        specifier: ^4.5.2
-        version: 4.5.2(@itwin/core-bentley@4.5.2)(@itwin/core-quantity@4.5.2)
+        specifier: ^4.6.0
+        version: 4.6.0(@itwin/core-bentley@4.6.0)(@itwin/core-quantity@4.6.0)
       '@itwin/ecschema-rpcinterface-common':
-        specifier: ^4.5.2
-        version: 4.5.2(@itwin/core-bentley@4.5.2)(@itwin/core-common@4.5.2)(@itwin/core-geometry@4.5.2)(@itwin/ecschema-metadata@4.5.2)
+        specifier: ^4.6.0
+        version: 4.6.0(@itwin/core-bentley@4.6.0)(@itwin/core-common@4.6.0)(@itwin/core-geometry@4.6.0)(@itwin/ecschema-metadata@4.6.0)
       '@itwin/ecschema-rpcinterface-impl':
-        specifier: ^4.5.2
-        version: 4.5.2(@itwin/core-backend@4.5.2)(@itwin/core-bentley@4.5.2)(@itwin/core-common@4.5.2)(@itwin/core-geometry@4.5.2)(@itwin/ecschema-metadata@4.5.2)(@itwin/ecschema-rpcinterface-common@4.5.2)
+        specifier: ^4.6.0
+        version: 4.6.0(@itwin/core-backend@4.6.0)(@itwin/core-bentley@4.6.0)(@itwin/core-common@4.6.0)(@itwin/core-geometry@4.6.0)(@itwin/ecschema-metadata@4.6.0)(@itwin/ecschema-rpcinterface-common@4.6.0)
       '@itwin/eslint-plugin':
         specifier: ^4.0.0
         version: 4.0.0(eslint@8.57.0)(typescript@5.4.5)
       '@itwin/imodel-components-react':
         specifier: ^4.12.0
-        version: 4.12.0(@itwin/appui-abstract@4.5.2)(@itwin/components-react@4.12.0)(@itwin/core-bentley@4.5.2)(@itwin/core-common@4.5.2)(@itwin/core-frontend@4.5.2)(@itwin/core-geometry@4.5.2)(@itwin/core-quantity@4.5.2)(@itwin/core-react@4.12.0)(react-dom@18.2.0)(react@18.2.0)
+        version: 4.12.0(@itwin/appui-abstract@4.6.0)(@itwin/components-react@4.12.0)(@itwin/core-bentley@4.6.0)(@itwin/core-common@4.6.0)(@itwin/core-frontend@4.6.0)(@itwin/core-geometry@4.6.0)(@itwin/core-quantity@4.6.0)(@itwin/core-react@4.12.0)(react-dom@18.2.0)(react@18.2.0)
       '@itwin/presentation-backend':
-        specifier: ^4.5.2
-        version: 4.5.2(@itwin/core-backend@4.5.2)(@itwin/core-bentley@4.5.2)(@itwin/core-common@4.5.2)(@itwin/core-quantity@4.5.2)(@itwin/ecschema-metadata@4.5.2)(@itwin/presentation-common@4.5.2)
+        specifier: ^4.6.0
+        version: 4.6.0(@itwin/core-backend@4.6.0)(@itwin/core-bentley@4.6.0)(@itwin/core-common@4.6.0)(@itwin/core-quantity@4.6.0)(@itwin/ecschema-metadata@4.6.0)(@itwin/presentation-common@4.6.0)
       '@itwin/presentation-common':
-        specifier: ^4.5.2
-        version: 4.5.2(@itwin/core-bentley@4.5.2)(@itwin/core-common@4.5.2)(@itwin/core-quantity@4.5.2)(@itwin/ecschema-metadata@4.5.2)
+        specifier: ^4.6.0
+        version: 4.6.0(@itwin/core-bentley@4.6.0)(@itwin/core-common@4.6.0)(@itwin/core-quantity@4.6.0)(@itwin/ecschema-metadata@4.6.0)
       '@itwin/presentation-components':
         specifier: workspace:^
         version: link:../../packages/components
@@ -122,8 +122,8 @@ importers:
         specifier: workspace:^
         version: link:../../packages/core-interop
       '@itwin/presentation-frontend':
-        specifier: ^4.5.2
-        version: 4.5.2(@itwin/core-bentley@4.5.2)(@itwin/core-common@4.5.2)(@itwin/core-frontend@4.5.2)(@itwin/core-quantity@4.5.2)(@itwin/ecschema-metadata@4.5.2)(@itwin/presentation-common@4.5.2)
+        specifier: ^4.6.0
+        version: 4.6.0(@itwin/core-bentley@4.6.0)(@itwin/core-common@4.6.0)(@itwin/core-frontend@4.6.0)(@itwin/core-quantity@4.6.0)(@itwin/ecschema-metadata@4.6.0)(@itwin/presentation-common@4.6.0)
       '@itwin/presentation-hierarchies':
         specifier: workspace:^
         version: link:../../packages/hierarchies
@@ -140,8 +140,8 @@ importers:
         specifier: workspace:^
         version: link:../../packages/unified-selection
       '@itwin/webgl-compatibility':
-        specifier: ^4.5.2
-        version: 4.5.2
+        specifier: ^4.6.0
+        version: 4.6.0
       '@opentelemetry/api':
         specifier: ^1.8.0
         version: 1.8.0
@@ -260,56 +260,56 @@ importers:
   apps/load-tests/backend:
     dependencies:
       '@itwin/appui-abstract':
-        specifier: ^4.5.2
-        version: 4.5.2(@itwin/core-bentley@4.5.2)
+        specifier: ^4.6.0
+        version: 4.6.0(@itwin/core-bentley@4.6.0)
       '@itwin/build-tools':
         specifier: ^4.6.0
         version: 4.6.0(@types/node@18.19.31)
       '@itwin/core-backend':
-        specifier: ^4.5.2
-        version: 4.5.2(@itwin/core-bentley@4.5.2)(@itwin/core-common@4.5.2)(@itwin/core-geometry@4.5.2)(@opentelemetry/api@1.8.0)
+        specifier: ^4.6.0
+        version: 4.6.0(@itwin/core-bentley@4.6.0)(@itwin/core-common@4.6.0)(@itwin/core-geometry@4.6.0)(@opentelemetry/api@1.8.0)
       '@itwin/core-bentley':
-        specifier: ^4.5.2
-        version: 4.5.2
+        specifier: ^4.6.0
+        version: 4.6.0
       '@itwin/core-common':
-        specifier: ^4.5.2
-        version: 4.5.2(@itwin/core-bentley@4.5.2)(@itwin/core-geometry@4.5.2)
+        specifier: ^4.6.0
+        version: 4.6.0(@itwin/core-bentley@4.6.0)(@itwin/core-geometry@4.6.0)
       '@itwin/core-frontend':
-        specifier: ^4.5.2
-        version: 4.5.2(@itwin/appui-abstract@4.5.2)(@itwin/core-bentley@4.5.2)(@itwin/core-common@4.5.2)(@itwin/core-geometry@4.5.2)(@itwin/core-orbitgt@4.5.2)(@itwin/core-quantity@4.5.2)(inversify@6.0.2)(reflect-metadata@0.1.14)
+        specifier: ^4.6.0
+        version: 4.6.0(@itwin/appui-abstract@4.6.0)(@itwin/core-bentley@4.6.0)(@itwin/core-common@4.6.0)(@itwin/core-geometry@4.6.0)(@itwin/core-orbitgt@4.6.0)(@itwin/core-quantity@4.6.0)(inversify@6.0.2)(reflect-metadata@0.1.14)
       '@itwin/core-geometry':
-        specifier: ^4.5.2
-        version: 4.5.2
+        specifier: ^4.6.0
+        version: 4.6.0
       '@itwin/core-orbitgt':
-        specifier: ^4.5.2
-        version: 4.5.2
+        specifier: ^4.6.0
+        version: 4.6.0
       '@itwin/core-quantity':
-        specifier: ^4.5.2
-        version: 4.5.2(@itwin/core-bentley@4.5.2)
+        specifier: ^4.6.0
+        version: 4.6.0(@itwin/core-bentley@4.6.0)
       '@itwin/ecschema-metadata':
-        specifier: ^4.5.2
-        version: 4.5.2(@itwin/core-bentley@4.5.2)(@itwin/core-quantity@4.5.2)
+        specifier: ^4.6.0
+        version: 4.6.0(@itwin/core-bentley@4.6.0)(@itwin/core-quantity@4.6.0)
       '@itwin/ecschema-rpcinterface-common':
-        specifier: ^4.5.2
-        version: 4.5.2(@itwin/core-bentley@4.5.2)(@itwin/core-common@4.5.2)(@itwin/core-geometry@4.5.2)(@itwin/ecschema-metadata@4.5.2)
+        specifier: ^4.6.0
+        version: 4.6.0(@itwin/core-bentley@4.6.0)(@itwin/core-common@4.6.0)(@itwin/core-geometry@4.6.0)(@itwin/ecschema-metadata@4.6.0)
       '@itwin/ecschema-rpcinterface-impl':
-        specifier: ^4.5.2
-        version: 4.5.2(@itwin/core-backend@4.5.2)(@itwin/core-bentley@4.5.2)(@itwin/core-common@4.5.2)(@itwin/core-geometry@4.5.2)(@itwin/ecschema-metadata@4.5.2)(@itwin/ecschema-rpcinterface-common@4.5.2)
+        specifier: ^4.6.0
+        version: 4.6.0(@itwin/core-backend@4.6.0)(@itwin/core-bentley@4.6.0)(@itwin/core-common@4.6.0)(@itwin/core-geometry@4.6.0)(@itwin/ecschema-metadata@4.6.0)(@itwin/ecschema-rpcinterface-common@4.6.0)
       '@itwin/eslint-plugin':
         specifier: ^4.0.0
         version: 4.0.0(eslint@8.57.0)(typescript@5.4.5)
       '@itwin/express-server':
-        specifier: ^4.5.2
-        version: 4.5.2(@itwin/core-backend@4.5.2)
+        specifier: ^4.6.0
+        version: 4.6.0(@itwin/core-backend@4.6.0)(@itwin/core-common@4.6.0)
       '@itwin/presentation-backend':
-        specifier: ^4.5.2
-        version: 4.5.2(@itwin/core-backend@4.5.2)(@itwin/core-bentley@4.5.2)(@itwin/core-common@4.5.2)(@itwin/core-quantity@4.5.2)(@itwin/ecschema-metadata@4.5.2)(@itwin/presentation-common@4.5.2)
+        specifier: ^4.6.0
+        version: 4.6.0(@itwin/core-backend@4.6.0)(@itwin/core-bentley@4.6.0)(@itwin/core-common@4.6.0)(@itwin/core-quantity@4.6.0)(@itwin/ecschema-metadata@4.6.0)(@itwin/presentation-common@4.6.0)
       '@itwin/presentation-common':
-        specifier: ^4.5.2
-        version: 4.5.2(@itwin/core-bentley@4.5.2)(@itwin/core-common@4.5.2)(@itwin/core-quantity@4.5.2)(@itwin/ecschema-metadata@4.5.2)
+        specifier: ^4.6.0
+        version: 4.6.0(@itwin/core-bentley@4.6.0)(@itwin/core-common@4.6.0)(@itwin/core-quantity@4.6.0)(@itwin/ecschema-metadata@4.6.0)
       '@itwin/webgl-compatibility':
-        specifier: ^4.5.2
-        version: 4.5.2
+        specifier: ^4.6.0
+        version: 4.6.0
       '@opentelemetry/api':
         specifier: ^1.8.0
         version: 1.8.0
@@ -338,29 +338,29 @@ importers:
         specifier: ^4.6.0
         version: 4.6.0(@types/node@18.19.31)
       '@itwin/core-bentley':
-        specifier: ^4.5.2
-        version: 4.5.2
+        specifier: ^4.6.0
+        version: 4.6.0
       '@itwin/core-common':
-        specifier: ^4.5.2
-        version: 4.5.2(@itwin/core-bentley@4.5.2)(@itwin/core-geometry@4.5.2)
+        specifier: ^4.6.0
+        version: 4.6.0(@itwin/core-bentley@4.6.0)(@itwin/core-geometry@4.6.0)
       '@itwin/core-geometry':
-        specifier: ^4.5.2
-        version: 4.5.2
+        specifier: ^4.6.0
+        version: 4.6.0
       '@itwin/core-quantity':
-        specifier: ^4.5.2
-        version: 4.5.2(@itwin/core-bentley@4.5.2)
+        specifier: ^4.6.0
+        version: 4.6.0(@itwin/core-bentley@4.6.0)
       '@itwin/ecschema-metadata':
-        specifier: ^4.5.2
-        version: 4.5.2(@itwin/core-bentley@4.5.2)(@itwin/core-quantity@4.5.2)
+        specifier: ^4.6.0
+        version: 4.6.0(@itwin/core-bentley@4.6.0)(@itwin/core-quantity@4.6.0)
       '@itwin/ecschema-rpcinterface-common':
-        specifier: ^4.5.2
-        version: 4.5.2(@itwin/core-bentley@4.5.2)(@itwin/core-common@4.5.2)(@itwin/core-geometry@4.5.2)(@itwin/ecschema-metadata@4.5.2)
+        specifier: ^4.6.0
+        version: 4.6.0(@itwin/core-bentley@4.6.0)(@itwin/core-common@4.6.0)(@itwin/core-geometry@4.6.0)(@itwin/ecschema-metadata@4.6.0)
       '@itwin/eslint-plugin':
         specifier: ^4.0.0
         version: 4.0.0(eslint@8.57.0)(typescript@5.4.5)
       '@itwin/presentation-common':
-        specifier: ^4.5.2
-        version: 4.5.2(@itwin/core-bentley@4.5.2)(@itwin/core-common@4.5.2)(@itwin/core-quantity@4.5.2)(@itwin/ecschema-metadata@4.5.2)
+        specifier: ^4.6.0
+        version: 4.6.0(@itwin/core-bentley@4.6.0)(@itwin/core-common@4.6.0)(@itwin/core-quantity@4.6.0)(@itwin/ecschema-metadata@4.6.0)
       '@itwin/presentation-core-interop':
         specifier: workspace:*
         version: link:../../../packages/core-interop
@@ -401,23 +401,23 @@ importers:
         specifier: ^1.0.4
         version: 1.0.4
       '@itwin/core-backend':
-        specifier: ^4.5.2
-        version: 4.5.2(@itwin/core-bentley@4.5.2)(@itwin/core-common@4.5.2)(@itwin/core-geometry@4.5.2)(@opentelemetry/api@1.8.0)
+        specifier: ^4.6.0
+        version: 4.6.0(@itwin/core-bentley@4.6.0)(@itwin/core-common@4.6.0)(@itwin/core-geometry@4.6.0)(@opentelemetry/api@1.8.0)
       '@itwin/core-bentley':
-        specifier: ^4.5.2
-        version: 4.5.2
+        specifier: ^4.6.0
+        version: 4.6.0
       '@itwin/core-common':
-        specifier: ^4.5.2
-        version: 4.5.2(@itwin/core-bentley@4.5.2)(@itwin/core-geometry@4.5.2)
+        specifier: ^4.6.0
+        version: 4.6.0(@itwin/core-bentley@4.6.0)(@itwin/core-geometry@4.6.0)
       '@itwin/core-geometry':
-        specifier: ^4.5.2
-        version: 4.5.2
+        specifier: ^4.6.0
+        version: 4.6.0
       '@itwin/core-quantity':
-        specifier: ^4.5.2
-        version: 4.5.2(@itwin/core-bentley@4.5.2)
+        specifier: ^4.6.0
+        version: 4.6.0(@itwin/core-bentley@4.6.0)
       '@itwin/ecschema-metadata':
-        specifier: ^4.5.2
-        version: 4.5.2(@itwin/core-bentley@4.5.2)(@itwin/core-quantity@4.5.2)
+        specifier: ^4.6.0
+        version: 4.6.0(@itwin/core-bentley@4.6.0)(@itwin/core-quantity@4.6.0)
       '@itwin/presentation-core-interop':
         specifier: workspace:*
         version: link:../../packages/core-interop
@@ -477,62 +477,62 @@ importers:
   apps/test-app/backend:
     dependencies:
       '@itwin/appui-abstract':
-        specifier: ^4.5.2
-        version: 4.5.2(@itwin/core-bentley@4.5.2)
+        specifier: ^4.6.0
+        version: 4.6.0(@itwin/core-bentley@4.6.0)
       '@itwin/build-tools':
         specifier: ^4.6.0
         version: 4.6.0(@types/node@18.19.31)
       '@itwin/core-backend':
-        specifier: ^4.5.2
-        version: 4.5.2(@itwin/core-bentley@4.5.2)(@itwin/core-common@4.5.2)(@itwin/core-geometry@4.5.2)(@opentelemetry/api@1.8.0)
+        specifier: ^4.6.0
+        version: 4.6.0(@itwin/core-bentley@4.6.0)(@itwin/core-common@4.6.0)(@itwin/core-geometry@4.6.0)(@opentelemetry/api@1.8.0)
       '@itwin/core-bentley':
-        specifier: ^4.5.2
-        version: 4.5.2
+        specifier: ^4.6.0
+        version: 4.6.0
       '@itwin/core-common':
-        specifier: ^4.5.2
-        version: 4.5.2(@itwin/core-bentley@4.5.2)(@itwin/core-geometry@4.5.2)
+        specifier: ^4.6.0
+        version: 4.6.0(@itwin/core-bentley@4.6.0)(@itwin/core-geometry@4.6.0)
       '@itwin/core-electron':
-        specifier: ^4.5.2
-        version: 4.5.2(@itwin/core-backend@4.5.2)(@itwin/core-bentley@4.5.2)(@itwin/core-common@4.5.2)(@itwin/core-frontend@4.5.2)(electron@28.3.1)
+        specifier: ^4.6.0
+        version: 4.6.0(@itwin/core-backend@4.6.0)(@itwin/core-bentley@4.6.0)(@itwin/core-common@4.6.0)(@itwin/core-frontend@4.6.0)(electron@28.3.1)
       '@itwin/core-frontend':
-        specifier: ^4.5.2
-        version: 4.5.2(@itwin/appui-abstract@4.5.2)(@itwin/core-bentley@4.5.2)(@itwin/core-common@4.5.2)(@itwin/core-geometry@4.5.2)(@itwin/core-orbitgt@4.5.2)(@itwin/core-quantity@4.5.2)(inversify@6.0.2)(reflect-metadata@0.1.14)
+        specifier: ^4.6.0
+        version: 4.6.0(@itwin/appui-abstract@4.6.0)(@itwin/core-bentley@4.6.0)(@itwin/core-common@4.6.0)(@itwin/core-geometry@4.6.0)(@itwin/core-orbitgt@4.6.0)(@itwin/core-quantity@4.6.0)(inversify@6.0.2)(reflect-metadata@0.1.14)
       '@itwin/core-geometry':
-        specifier: ^4.5.2
-        version: 4.5.2
+        specifier: ^4.6.0
+        version: 4.6.0
       '@itwin/core-orbitgt':
-        specifier: ^4.5.2
-        version: 4.5.2
+        specifier: ^4.6.0
+        version: 4.6.0
       '@itwin/core-quantity':
-        specifier: ^4.5.2
-        version: 4.5.2(@itwin/core-bentley@4.5.2)
+        specifier: ^4.6.0
+        version: 4.6.0(@itwin/core-bentley@4.6.0)
       '@itwin/ecschema-metadata':
-        specifier: ^4.5.2
-        version: 4.5.2(@itwin/core-bentley@4.5.2)(@itwin/core-quantity@4.5.2)
+        specifier: ^4.6.0
+        version: 4.6.0(@itwin/core-bentley@4.6.0)(@itwin/core-quantity@4.6.0)
       '@itwin/ecschema-rpcinterface-common':
-        specifier: ^4.5.2
-        version: 4.5.2(@itwin/core-bentley@4.5.2)(@itwin/core-common@4.5.2)(@itwin/core-geometry@4.5.2)(@itwin/ecschema-metadata@4.5.2)
+        specifier: ^4.6.0
+        version: 4.6.0(@itwin/core-bentley@4.6.0)(@itwin/core-common@4.6.0)(@itwin/core-geometry@4.6.0)(@itwin/ecschema-metadata@4.6.0)
       '@itwin/ecschema-rpcinterface-impl':
-        specifier: ^4.5.2
-        version: 4.5.2(@itwin/core-backend@4.5.2)(@itwin/core-bentley@4.5.2)(@itwin/core-common@4.5.2)(@itwin/core-geometry@4.5.2)(@itwin/ecschema-metadata@4.5.2)(@itwin/ecschema-rpcinterface-common@4.5.2)
+        specifier: ^4.6.0
+        version: 4.6.0(@itwin/core-backend@4.6.0)(@itwin/core-bentley@4.6.0)(@itwin/core-common@4.6.0)(@itwin/core-geometry@4.6.0)(@itwin/ecschema-metadata@4.6.0)(@itwin/ecschema-rpcinterface-common@4.6.0)
       '@itwin/eslint-plugin':
         specifier: ^4.0.0
         version: 4.0.0(eslint@8.57.0)(typescript@5.4.5)
       '@itwin/express-server':
-        specifier: ^4.5.2
-        version: 4.5.2(@itwin/core-backend@4.5.2)
+        specifier: ^4.6.0
+        version: 4.6.0(@itwin/core-backend@4.6.0)(@itwin/core-common@4.6.0)
       '@itwin/presentation-backend':
-        specifier: ^4.5.2
-        version: 4.5.2(@itwin/core-backend@4.5.2)(@itwin/core-bentley@4.5.2)(@itwin/core-common@4.5.2)(@itwin/core-quantity@4.5.2)(@itwin/ecschema-metadata@4.5.2)(@itwin/presentation-common@4.5.2)
+        specifier: ^4.6.0
+        version: 4.6.0(@itwin/core-backend@4.6.0)(@itwin/core-bentley@4.6.0)(@itwin/core-common@4.6.0)(@itwin/core-quantity@4.6.0)(@itwin/ecschema-metadata@4.6.0)(@itwin/presentation-common@4.6.0)
       '@itwin/presentation-common':
-        specifier: ^4.5.2
-        version: 4.5.2(@itwin/core-bentley@4.5.2)(@itwin/core-common@4.5.2)(@itwin/core-quantity@4.5.2)(@itwin/ecschema-metadata@4.5.2)
+        specifier: ^4.6.0
+        version: 4.6.0(@itwin/core-bentley@4.6.0)(@itwin/core-common@4.6.0)(@itwin/core-quantity@4.6.0)(@itwin/ecschema-metadata@4.6.0)
       '@itwin/presentation-opentelemetry':
         specifier: workspace:*
         version: link:../../../packages/opentelemetry
       '@itwin/webgl-compatibility':
-        specifier: ^4.5.2
-        version: 4.5.2
+        specifier: ^4.6.0
+        version: 4.6.0
       '@opentelemetry/api':
         specifier: ^1.8.0
         version: 1.8.0
@@ -579,29 +579,29 @@ importers:
         specifier: ^4.6.0
         version: 4.6.0(@types/node@18.19.31)
       '@itwin/core-bentley':
-        specifier: ^4.5.2
-        version: 4.5.2
+        specifier: ^4.6.0
+        version: 4.6.0
       '@itwin/core-common':
-        specifier: ^4.5.2
-        version: 4.5.2(@itwin/core-bentley@4.5.2)(@itwin/core-geometry@4.5.2)
+        specifier: ^4.6.0
+        version: 4.6.0(@itwin/core-bentley@4.6.0)(@itwin/core-geometry@4.6.0)
       '@itwin/core-geometry':
-        specifier: ^4.5.2
-        version: 4.5.2
+        specifier: ^4.6.0
+        version: 4.6.0
       '@itwin/core-quantity':
-        specifier: ^4.5.2
-        version: 4.5.2(@itwin/core-bentley@4.5.2)
+        specifier: ^4.6.0
+        version: 4.6.0(@itwin/core-bentley@4.6.0)
       '@itwin/ecschema-metadata':
-        specifier: ^4.5.2
-        version: 4.5.2(@itwin/core-bentley@4.5.2)(@itwin/core-quantity@4.5.2)
+        specifier: ^4.6.0
+        version: 4.6.0(@itwin/core-bentley@4.6.0)(@itwin/core-quantity@4.6.0)
       '@itwin/ecschema-rpcinterface-common':
-        specifier: ^4.5.2
-        version: 4.5.2(@itwin/core-bentley@4.5.2)(@itwin/core-common@4.5.2)(@itwin/core-geometry@4.5.2)(@itwin/ecschema-metadata@4.5.2)
+        specifier: ^4.6.0
+        version: 4.6.0(@itwin/core-bentley@4.6.0)(@itwin/core-common@4.6.0)(@itwin/core-geometry@4.6.0)(@itwin/ecschema-metadata@4.6.0)
       '@itwin/eslint-plugin':
         specifier: ^4.0.0
         version: 4.0.0(eslint@8.57.0)(typescript@5.4.5)
       '@itwin/presentation-common':
-        specifier: ^4.5.2
-        version: 4.5.2(@itwin/core-bentley@4.5.2)(@itwin/core-common@4.5.2)(@itwin/core-quantity@4.5.2)(@itwin/ecschema-metadata@4.5.2)
+        specifier: ^4.6.0
+        version: 4.6.0(@itwin/core-bentley@4.6.0)(@itwin/core-common@4.6.0)(@itwin/core-quantity@4.6.0)(@itwin/ecschema-metadata@4.6.0)
       eslint:
         specifier: ^8.57.0
         version: 8.57.0
@@ -618,56 +618,56 @@ importers:
         specifier: ^1.0.34
         version: 1.0.34
       '@itwin/appui-abstract':
-        specifier: ^4.5.2
-        version: 4.5.2(@itwin/core-bentley@4.5.2)
+        specifier: ^4.6.0
+        version: 4.6.0(@itwin/core-bentley@4.6.0)
       '@itwin/build-tools':
         specifier: ^4.6.0
         version: 4.6.0(@types/node@18.19.31)
       '@itwin/components-react':
         specifier: ^4.12.0
-        version: 4.12.0(@itwin/appui-abstract@4.5.2)(@itwin/core-bentley@4.5.2)(@itwin/core-react@4.12.0)(react-dom@18.2.0)(react@18.2.0)
+        version: 4.12.0(@itwin/appui-abstract@4.6.0)(@itwin/core-bentley@4.6.0)(@itwin/core-react@4.12.0)(react-dom@18.2.0)(react@18.2.0)
       '@itwin/core-backend':
-        specifier: ^4.5.2
-        version: 4.5.2(@itwin/core-bentley@4.5.2)(@itwin/core-common@4.5.2)(@itwin/core-geometry@4.5.2)(@opentelemetry/api@1.8.0)
+        specifier: ^4.6.0
+        version: 4.6.0(@itwin/core-bentley@4.6.0)(@itwin/core-common@4.6.0)(@itwin/core-geometry@4.6.0)(@opentelemetry/api@1.8.0)
       '@itwin/core-bentley':
-        specifier: ^4.5.2
-        version: 4.5.2
+        specifier: ^4.6.0
+        version: 4.6.0
       '@itwin/core-common':
-        specifier: ^4.5.2
-        version: 4.5.2(@itwin/core-bentley@4.5.2)(@itwin/core-geometry@4.5.2)
+        specifier: ^4.6.0
+        version: 4.6.0(@itwin/core-bentley@4.6.0)(@itwin/core-geometry@4.6.0)
       '@itwin/core-electron':
-        specifier: ^4.5.2
-        version: 4.5.2(@itwin/core-backend@4.5.2)(@itwin/core-bentley@4.5.2)(@itwin/core-common@4.5.2)(@itwin/core-frontend@4.5.2)(electron@28.3.1)
+        specifier: ^4.6.0
+        version: 4.6.0(@itwin/core-backend@4.6.0)(@itwin/core-bentley@4.6.0)(@itwin/core-common@4.6.0)(@itwin/core-frontend@4.6.0)(electron@28.3.1)
       '@itwin/core-frontend':
-        specifier: ^4.5.2
-        version: 4.5.2(@itwin/appui-abstract@4.5.2)(@itwin/core-bentley@4.5.2)(@itwin/core-common@4.5.2)(@itwin/core-geometry@4.5.2)(@itwin/core-orbitgt@4.5.2)(@itwin/core-quantity@4.5.2)(inversify@6.0.2)(reflect-metadata@0.1.14)
+        specifier: ^4.6.0
+        version: 4.6.0(@itwin/appui-abstract@4.6.0)(@itwin/core-bentley@4.6.0)(@itwin/core-common@4.6.0)(@itwin/core-geometry@4.6.0)(@itwin/core-orbitgt@4.6.0)(@itwin/core-quantity@4.6.0)(inversify@6.0.2)(reflect-metadata@0.1.14)
       '@itwin/core-geometry':
-        specifier: ^4.5.2
-        version: 4.5.2
+        specifier: ^4.6.0
+        version: 4.6.0
       '@itwin/core-i18n':
-        specifier: ^4.5.2
-        version: 4.5.2(@itwin/core-bentley@4.5.2)
+        specifier: ^4.6.0
+        version: 4.6.0(@itwin/core-bentley@4.6.0)
       '@itwin/core-orbitgt':
-        specifier: ^4.5.2
-        version: 4.5.2
+        specifier: ^4.6.0
+        version: 4.6.0
       '@itwin/core-quantity':
-        specifier: ^4.5.2
-        version: 4.5.2(@itwin/core-bentley@4.5.2)
+        specifier: ^4.6.0
+        version: 4.6.0(@itwin/core-bentley@4.6.0)
       '@itwin/core-react':
         specifier: ^4.12.0
-        version: 4.12.0(@itwin/appui-abstract@4.5.2)(@itwin/core-bentley@4.5.2)(react-dom@18.2.0)(react@18.2.0)
+        version: 4.12.0(@itwin/appui-abstract@4.6.0)(@itwin/core-bentley@4.6.0)(react-dom@18.2.0)(react@18.2.0)
       '@itwin/ecschema-metadata':
-        specifier: ^4.5.2
-        version: 4.5.2(@itwin/core-bentley@4.5.2)(@itwin/core-quantity@4.5.2)
+        specifier: ^4.6.0
+        version: 4.6.0(@itwin/core-bentley@4.6.0)(@itwin/core-quantity@4.6.0)
       '@itwin/ecschema-rpcinterface-common':
-        specifier: ^4.5.2
-        version: 4.5.2(@itwin/core-bentley@4.5.2)(@itwin/core-common@4.5.2)(@itwin/core-geometry@4.5.2)(@itwin/ecschema-metadata@4.5.2)
+        specifier: ^4.6.0
+        version: 4.6.0(@itwin/core-bentley@4.6.0)(@itwin/core-common@4.6.0)(@itwin/core-geometry@4.6.0)(@itwin/ecschema-metadata@4.6.0)
       '@itwin/eslint-plugin':
         specifier: ^4.0.0
         version: 4.0.0(eslint@8.57.0)(typescript@5.4.5)
       '@itwin/imodel-components-react':
         specifier: ^4.12.0
-        version: 4.12.0(@itwin/appui-abstract@4.5.2)(@itwin/components-react@4.12.0)(@itwin/core-bentley@4.5.2)(@itwin/core-common@4.5.2)(@itwin/core-frontend@4.5.2)(@itwin/core-geometry@4.5.2)(@itwin/core-quantity@4.5.2)(@itwin/core-react@4.12.0)(react-dom@18.2.0)(react@18.2.0)
+        version: 4.12.0(@itwin/appui-abstract@4.6.0)(@itwin/components-react@4.12.0)(@itwin/core-bentley@4.6.0)(@itwin/core-common@4.6.0)(@itwin/core-frontend@4.6.0)(@itwin/core-geometry@4.6.0)(@itwin/core-quantity@4.6.0)(@itwin/core-react@4.12.0)(react-dom@18.2.0)(react@18.2.0)
       '@itwin/itwinui-icons-react':
         specifier: ^2.8.0
         version: 2.8.0(react-dom@18.2.0)(react@18.2.0)
@@ -675,8 +675,8 @@ importers:
         specifier: ^3.9.1
         version: 3.9.1(react-dom@18.2.0)(react@18.2.0)
       '@itwin/presentation-common':
-        specifier: ^4.5.2
-        version: 4.5.2(@itwin/core-bentley@4.5.2)(@itwin/core-common@4.5.2)(@itwin/core-quantity@4.5.2)(@itwin/ecschema-metadata@4.5.2)
+        specifier: ^4.6.0
+        version: 4.6.0(@itwin/core-bentley@4.6.0)(@itwin/core-common@4.6.0)(@itwin/core-quantity@4.6.0)(@itwin/ecschema-metadata@4.6.0)
       '@itwin/presentation-components':
         specifier: workspace:*
         version: link:../../../packages/components
@@ -684,8 +684,8 @@ importers:
         specifier: workspace:*
         version: link:../../../packages/core-interop
       '@itwin/presentation-frontend':
-        specifier: ^4.5.2
-        version: 4.5.2(@itwin/core-bentley@4.5.2)(@itwin/core-common@4.5.2)(@itwin/core-frontend@4.5.2)(@itwin/core-quantity@4.5.2)(@itwin/ecschema-metadata@4.5.2)(@itwin/presentation-common@4.5.2)
+        specifier: ^4.6.0
+        version: 4.6.0(@itwin/core-bentley@4.6.0)(@itwin/core-common@4.6.0)(@itwin/core-frontend@4.6.0)(@itwin/core-quantity@4.6.0)(@itwin/ecschema-metadata@4.6.0)(@itwin/presentation-common@4.6.0)
       '@itwin/presentation-hierarchies':
         specifier: workspace:*
         version: link:../../../packages/hierarchies
@@ -702,8 +702,8 @@ importers:
         specifier: workspace:*
         version: link:../../../packages/unified-selection
       '@itwin/webgl-compatibility':
-        specifier: ^4.5.2
-        version: 4.5.2
+        specifier: ^4.6.0
+        version: 4.6.0
       '@opentelemetry/api':
         specifier: ^1.8.0
         version: 1.8.0
@@ -805,59 +805,59 @@ importers:
         version: 7.8.1
     devDependencies:
       '@itwin/appui-abstract':
-        specifier: ^4.5.2
-        version: 4.5.2(@itwin/core-bentley@4.5.2)
+        specifier: ^4.6.0
+        version: 4.6.0(@itwin/core-bentley@4.6.0)
       '@itwin/build-tools':
         specifier: ^4.6.0
         version: 4.6.0(@types/node@18.19.31)
       '@itwin/components-react':
         specifier: ^4.12.0
-        version: 4.12.0(@itwin/appui-abstract@4.5.2)(@itwin/core-bentley@4.5.2)(@itwin/core-react@4.12.0)(react-dom@18.2.0)(react@18.2.0)
+        version: 4.12.0(@itwin/appui-abstract@4.6.0)(@itwin/core-bentley@4.6.0)(@itwin/core-react@4.12.0)(react-dom@18.2.0)(react@18.2.0)
       '@itwin/core-bentley':
-        specifier: ^4.5.2
-        version: 4.5.2
+        specifier: ^4.6.0
+        version: 4.6.0
       '@itwin/core-common':
-        specifier: ^4.5.2
-        version: 4.5.2(@itwin/core-bentley@4.5.2)(@itwin/core-geometry@4.5.2)
+        specifier: ^4.6.0
+        version: 4.6.0(@itwin/core-bentley@4.6.0)(@itwin/core-geometry@4.6.0)
       '@itwin/core-frontend':
-        specifier: ^4.5.2
-        version: 4.5.2(@itwin/appui-abstract@4.5.2)(@itwin/core-bentley@4.5.2)(@itwin/core-common@4.5.2)(@itwin/core-geometry@4.5.2)(@itwin/core-orbitgt@4.5.2)(@itwin/core-quantity@4.5.2)(inversify@6.0.2)(reflect-metadata@0.1.14)
+        specifier: ^4.6.0
+        version: 4.6.0(@itwin/appui-abstract@4.6.0)(@itwin/core-bentley@4.6.0)(@itwin/core-common@4.6.0)(@itwin/core-geometry@4.6.0)(@itwin/core-orbitgt@4.6.0)(@itwin/core-quantity@4.6.0)(inversify@6.0.2)(reflect-metadata@0.1.14)
       '@itwin/core-geometry':
-        specifier: ^4.5.2
-        version: 4.5.2
+        specifier: ^4.6.0
+        version: 4.6.0
       '@itwin/core-i18n':
-        specifier: ^4.5.2
-        version: 4.5.2(@itwin/core-bentley@4.5.2)
+        specifier: ^4.6.0
+        version: 4.6.0(@itwin/core-bentley@4.6.0)
       '@itwin/core-orbitgt':
-        specifier: ^4.5.2
-        version: 4.5.2
+        specifier: ^4.6.0
+        version: 4.6.0
       '@itwin/core-quantity':
-        specifier: ^4.5.2
-        version: 4.5.2(@itwin/core-bentley@4.5.2)
+        specifier: ^4.6.0
+        version: 4.6.0(@itwin/core-bentley@4.6.0)
       '@itwin/core-react':
         specifier: ^4.12.0
-        version: 4.12.0(@itwin/appui-abstract@4.5.2)(@itwin/core-bentley@4.5.2)(react-dom@18.2.0)(react@18.2.0)
+        version: 4.12.0(@itwin/appui-abstract@4.6.0)(@itwin/core-bentley@4.6.0)(react-dom@18.2.0)(react@18.2.0)
       '@itwin/ecschema-metadata':
-        specifier: ^4.5.2
-        version: 4.5.2(@itwin/core-bentley@4.5.2)(@itwin/core-quantity@4.5.2)
+        specifier: ^4.6.0
+        version: 4.6.0(@itwin/core-bentley@4.6.0)(@itwin/core-quantity@4.6.0)
       '@itwin/eslint-plugin':
         specifier: ^4.0.0
         version: 4.0.0(eslint@8.57.0)(typescript@5.4.5)
       '@itwin/imodel-components-react':
         specifier: ^4.12.0
-        version: 4.12.0(@itwin/appui-abstract@4.5.2)(@itwin/components-react@4.12.0)(@itwin/core-bentley@4.5.2)(@itwin/core-common@4.5.2)(@itwin/core-frontend@4.5.2)(@itwin/core-geometry@4.5.2)(@itwin/core-quantity@4.5.2)(@itwin/core-react@4.12.0)(react-dom@18.2.0)(react@18.2.0)
+        version: 4.12.0(@itwin/appui-abstract@4.6.0)(@itwin/components-react@4.12.0)(@itwin/core-bentley@4.6.0)(@itwin/core-common@4.6.0)(@itwin/core-frontend@4.6.0)(@itwin/core-geometry@4.6.0)(@itwin/core-quantity@4.6.0)(@itwin/core-react@4.12.0)(react-dom@18.2.0)(react@18.2.0)
       '@itwin/itwinui-react':
         specifier: ^3.0.0
         version: 3.9.1(react-dom@18.2.0)(react@18.2.0)
       '@itwin/presentation-common':
-        specifier: ^4.5.2
-        version: 4.5.2(@itwin/core-bentley@4.5.2)(@itwin/core-common@4.5.2)(@itwin/core-quantity@4.5.2)(@itwin/ecschema-metadata@4.5.2)
+        specifier: ^4.6.0
+        version: 4.6.0(@itwin/core-bentley@4.6.0)(@itwin/core-common@4.6.0)(@itwin/core-quantity@4.6.0)(@itwin/ecschema-metadata@4.6.0)
       '@itwin/presentation-frontend':
-        specifier: ^4.5.2
-        version: 4.5.2(@itwin/core-bentley@4.5.2)(@itwin/core-common@4.5.2)(@itwin/core-frontend@4.5.2)(@itwin/core-quantity@4.5.2)(@itwin/ecschema-metadata@4.5.2)(@itwin/presentation-common@4.5.2)
+        specifier: ^4.6.0
+        version: 4.6.0(@itwin/core-bentley@4.6.0)(@itwin/core-common@4.6.0)(@itwin/core-frontend@4.6.0)(@itwin/core-quantity@4.6.0)(@itwin/ecschema-metadata@4.6.0)(@itwin/presentation-common@4.6.0)
       '@itwin/webgl-compatibility':
-        specifier: ^4.5.2
-        version: 4.5.2
+        specifier: ^4.6.0
+        version: 4.6.0
       '@testing-library/dom':
         specifier: ^9.3.4
         version: 9.3.4
@@ -977,20 +977,20 @@ importers:
         specifier: ^4.6.0
         version: 4.6.0(@types/node@18.19.31)
       '@itwin/core-bentley':
-        specifier: ^4.5.2
-        version: 4.5.2
+        specifier: ^4.6.0
+        version: 4.6.0
       '@itwin/core-common':
-        specifier: ^4.5.2
-        version: 4.5.2(@itwin/core-bentley@4.5.2)(@itwin/core-geometry@4.5.2)
+        specifier: ^4.6.0
+        version: 4.6.0(@itwin/core-bentley@4.6.0)(@itwin/core-geometry@4.6.0)
       '@itwin/core-geometry':
-        specifier: ^4.5.2
-        version: 4.5.2
+        specifier: ^4.6.0
+        version: 4.6.0
       '@itwin/core-quantity':
-        specifier: ^4.5.2
-        version: 4.5.2(@itwin/core-bentley@4.5.2)
+        specifier: ^4.6.0
+        version: 4.6.0(@itwin/core-bentley@4.6.0)
       '@itwin/ecschema-metadata':
-        specifier: ^4.5.2
-        version: 4.5.2(@itwin/core-bentley@4.5.2)(@itwin/core-quantity@4.5.2)
+        specifier: ^4.6.0
+        version: 4.6.0(@itwin/core-bentley@4.6.0)(@itwin/core-quantity@4.6.0)
       '@itwin/eslint-plugin':
         specifier: ^4.0.0
         version: 4.0.0(eslint@8.57.0)(typescript@5.4.5)
@@ -1046,14 +1046,14 @@ importers:
   packages/hierarchies:
     dependencies:
       '@itwin/core-bentley':
-        specifier: ^4.5.2
-        version: 4.5.2
+        specifier: ^4.6.0
+        version: 4.6.0
       '@itwin/core-common':
-        specifier: ^4.5.2
-        version: 4.5.2(@itwin/core-bentley@4.5.2)(@itwin/core-geometry@4.5.2)
+        specifier: ^4.6.0
+        version: 4.6.0(@itwin/core-bentley@4.6.0)(@itwin/core-geometry@4.6.0)
       '@itwin/core-geometry':
-        specifier: ^4.5.2
-        version: 4.5.2
+        specifier: ^4.6.0
+        version: 4.6.0
       '@itwin/presentation-shared':
         specifier: workspace:^
         version: link:../shared
@@ -1258,8 +1258,8 @@ importers:
   packages/models-tree:
     dependencies:
       '@itwin/core-bentley':
-        specifier: ^4.5.2
-        version: 4.5.2
+        specifier: ^4.6.0
+        version: 4.6.0
       '@itwin/presentation-shared':
         specifier: workspace:^
         version: link:../shared
@@ -1292,26 +1292,26 @@ importers:
         specifier: ^4.6.0
         version: 4.6.0(@types/node@18.19.31)
       '@itwin/core-bentley':
-        specifier: ^4.5.2
-        version: 4.5.2
+        specifier: ^4.6.0
+        version: 4.6.0
       '@itwin/core-common':
-        specifier: ^4.5.2
-        version: 4.5.2(@itwin/core-bentley@4.5.2)(@itwin/core-geometry@4.5.2)
+        specifier: ^4.6.0
+        version: 4.6.0(@itwin/core-bentley@4.6.0)(@itwin/core-geometry@4.6.0)
       '@itwin/core-geometry':
-        specifier: ^4.5.2
-        version: 4.5.2
+        specifier: ^4.6.0
+        version: 4.6.0
       '@itwin/core-quantity':
-        specifier: ^4.5.2
-        version: 4.5.2(@itwin/core-bentley@4.5.2)
+        specifier: ^4.6.0
+        version: 4.6.0(@itwin/core-bentley@4.6.0)
       '@itwin/ecschema-metadata':
-        specifier: ^4.5.2
-        version: 4.5.2(@itwin/core-bentley@4.5.2)(@itwin/core-quantity@4.5.2)
+        specifier: ^4.6.0
+        version: 4.6.0(@itwin/core-bentley@4.6.0)(@itwin/core-quantity@4.6.0)
       '@itwin/eslint-plugin':
         specifier: ^4.0.0
         version: 4.0.0(eslint@8.57.0)(typescript@5.4.5)
       '@itwin/presentation-common':
-        specifier: ^4.5.2
-        version: 4.5.2(@itwin/core-bentley@4.5.2)(@itwin/core-common@4.5.2)(@itwin/core-quantity@4.5.2)(@itwin/ecschema-metadata@4.5.2)
+        specifier: ^4.6.0
+        version: 4.6.0(@itwin/core-bentley@4.6.0)(@itwin/core-common@4.6.0)(@itwin/core-quantity@4.6.0)(@itwin/ecschema-metadata@4.6.0)
       '@opentelemetry/api':
         specifier: ^1.8.0
         version: 1.8.0
@@ -1361,8 +1361,8 @@ importers:
   packages/shared:
     dependencies:
       '@itwin/core-bentley':
-        specifier: ^4.5.2
-        version: 4.5.2
+        specifier: ^4.6.0
+        version: 4.6.0
     devDependencies:
       '@itwin/build-tools':
         specifier: ^4.6.0
@@ -1428,14 +1428,14 @@ importers:
   packages/test-utilities:
     dependencies:
       '@itwin/core-bentley':
-        specifier: ^4.5.2
-        version: 4.5.2
+        specifier: ^4.6.0
+        version: 4.6.0
       '@itwin/core-common':
-        specifier: ^4.5.2
-        version: 4.5.2(@itwin/core-bentley@4.5.2)(@itwin/core-geometry@4.5.2)
+        specifier: ^4.6.0
+        version: 4.6.0(@itwin/core-bentley@4.6.0)(@itwin/core-geometry@4.6.0)
       '@itwin/core-geometry':
-        specifier: ^4.5.2
-        version: 4.5.2
+        specifier: ^4.6.0
+        version: 4.6.0
       rxjs:
         specifier: ^7.8.1
         version: 7.8.1
@@ -1469,56 +1469,56 @@ importers:
         version: 1.6.3
     devDependencies:
       '@itwin/appui-abstract':
-        specifier: ^4.5.2
-        version: 4.5.2(@itwin/core-bentley@4.5.2)
+        specifier: ^4.6.0
+        version: 4.6.0(@itwin/core-bentley@4.6.0)
       '@itwin/build-tools':
         specifier: ^4.6.0
         version: 4.6.0(@types/node@18.19.31)
       '@itwin/components-react':
         specifier: ^4.12.0
-        version: 4.12.0(@itwin/appui-abstract@4.5.2)(@itwin/core-bentley@4.5.2)(@itwin/core-react@4.12.0)(react-dom@18.2.0)(react@18.2.0)
+        version: 4.12.0(@itwin/appui-abstract@4.6.0)(@itwin/core-bentley@4.6.0)(@itwin/core-react@4.12.0)(react-dom@18.2.0)(react@18.2.0)
       '@itwin/core-backend':
-        specifier: ^4.5.2
-        version: 4.5.2(@itwin/core-bentley@4.5.2)(@itwin/core-common@4.5.2)(@itwin/core-geometry@4.5.2)(@opentelemetry/api@1.8.0)
+        specifier: ^4.6.0
+        version: 4.6.0(@itwin/core-bentley@4.6.0)(@itwin/core-common@4.6.0)(@itwin/core-geometry@4.6.0)(@opentelemetry/api@1.8.0)
       '@itwin/core-bentley':
-        specifier: ^4.5.2
-        version: 4.5.2
+        specifier: ^4.6.0
+        version: 4.6.0
       '@itwin/core-common':
-        specifier: ^4.5.2
-        version: 4.5.2(@itwin/core-bentley@4.5.2)(@itwin/core-geometry@4.5.2)
+        specifier: ^4.6.0
+        version: 4.6.0(@itwin/core-bentley@4.6.0)(@itwin/core-geometry@4.6.0)
       '@itwin/core-frontend':
-        specifier: ^4.5.2
-        version: 4.5.2(@itwin/appui-abstract@4.5.2)(@itwin/core-bentley@4.5.2)(@itwin/core-common@4.5.2)(@itwin/core-geometry@4.5.2)(@itwin/core-orbitgt@4.5.2)(@itwin/core-quantity@4.5.2)(inversify@6.0.2)(reflect-metadata@0.1.14)
+        specifier: ^4.6.0
+        version: 4.6.0(@itwin/appui-abstract@4.6.0)(@itwin/core-bentley@4.6.0)(@itwin/core-common@4.6.0)(@itwin/core-geometry@4.6.0)(@itwin/core-orbitgt@4.6.0)(@itwin/core-quantity@4.6.0)(inversify@6.0.2)(reflect-metadata@0.1.14)
       '@itwin/core-geometry':
-        specifier: ^4.5.2
-        version: 4.5.2
+        specifier: ^4.6.0
+        version: 4.6.0
       '@itwin/core-orbitgt':
-        specifier: ^4.5.2
-        version: 4.5.2
+        specifier: ^4.6.0
+        version: 4.6.0
       '@itwin/core-quantity':
-        specifier: ^4.5.2
-        version: 4.5.2(@itwin/core-bentley@4.5.2)
+        specifier: ^4.6.0
+        version: 4.6.0(@itwin/core-bentley@4.6.0)
       '@itwin/core-react':
         specifier: ^4.12.0
-        version: 4.12.0(@itwin/appui-abstract@4.5.2)(@itwin/core-bentley@4.5.2)(react-dom@18.2.0)(react@18.2.0)
+        version: 4.12.0(@itwin/appui-abstract@4.6.0)(@itwin/core-bentley@4.6.0)(react-dom@18.2.0)(react@18.2.0)
       '@itwin/ecschema-metadata':
-        specifier: ^4.5.2
-        version: 4.5.2(@itwin/core-bentley@4.5.2)(@itwin/core-quantity@4.5.2)
+        specifier: ^4.6.0
+        version: 4.6.0(@itwin/core-bentley@4.6.0)(@itwin/core-quantity@4.6.0)
       '@itwin/eslint-plugin':
         specifier: ^4.0.0
         version: 4.0.0(eslint@8.57.0)(typescript@5.4.5)
       '@itwin/presentation-backend':
-        specifier: ^4.5.2
-        version: 4.5.2(@itwin/core-backend@4.5.2)(@itwin/core-bentley@4.5.2)(@itwin/core-common@4.5.2)(@itwin/core-quantity@4.5.2)(@itwin/ecschema-metadata@4.5.2)(@itwin/presentation-common@4.5.2)
+        specifier: ^4.6.0
+        version: 4.6.0(@itwin/core-backend@4.6.0)(@itwin/core-bentley@4.6.0)(@itwin/core-common@4.6.0)(@itwin/core-quantity@4.6.0)(@itwin/ecschema-metadata@4.6.0)(@itwin/presentation-common@4.6.0)
       '@itwin/presentation-common':
-        specifier: ^4.5.2
-        version: 4.5.2(@itwin/core-bentley@4.5.2)(@itwin/core-common@4.5.2)(@itwin/core-quantity@4.5.2)(@itwin/ecschema-metadata@4.5.2)
+        specifier: ^4.6.0
+        version: 4.6.0(@itwin/core-bentley@4.6.0)(@itwin/core-common@4.6.0)(@itwin/core-quantity@4.6.0)(@itwin/ecschema-metadata@4.6.0)
       '@itwin/presentation-frontend':
-        specifier: ^4.5.2
-        version: 4.5.2(@itwin/core-bentley@4.5.2)(@itwin/core-common@4.5.2)(@itwin/core-frontend@4.5.2)(@itwin/core-quantity@4.5.2)(@itwin/ecschema-metadata@4.5.2)(@itwin/presentation-common@4.5.2)
+        specifier: ^4.6.0
+        version: 4.6.0(@itwin/core-bentley@4.6.0)(@itwin/core-common@4.6.0)(@itwin/core-frontend@4.6.0)(@itwin/core-quantity@4.6.0)(@itwin/ecschema-metadata@4.6.0)(@itwin/presentation-common@4.6.0)
       '@itwin/webgl-compatibility':
-        specifier: ^4.5.2
-        version: 4.5.2
+        specifier: ^4.6.0
+        version: 4.6.0
       '@opentelemetry/api':
         specifier: ^1.8.0
         version: 1.8.0
@@ -1601,8 +1601,8 @@ importers:
   packages/unified-selection:
     dependencies:
       '@itwin/core-bentley':
-        specifier: ^4.5.2
-        version: 4.5.2
+        specifier: ^4.6.0
+        version: 4.6.0
       '@itwin/presentation-shared':
         specifier: workspace:^
         version: link:../shared
@@ -2608,8 +2608,8 @@ packages:
   /@bentley/icons-generic@1.0.34:
     resolution: {integrity: sha512-IIs1wDcY2oZ8tJ3EZRw0U51M+0ZL3MvwoDYYmhUXaa9/UZqpFoOyLBGaxjirQteWXqTIMm3mFvmC+Nbn1ok4Iw==}
 
-  /@bentley/imodeljs-native@4.5.38:
-    resolution: {integrity: sha512-ND017QAzz/hInk+cSL7Gr8fNYBhi6c7Vhdu7g4CMN/rUrR1o7siZpltKrbtw97X5kDavNXPcOFUuvTsGQMQzsg==}
+  /@bentley/imodeljs-native@4.6.31:
+    resolution: {integrity: sha512-4a90NkABprmae6irSv+a3lWFYTeYy0zS/9iEmQ4bmOZ9StbyLSbrvpDa7xgqvqHJkpZAW7YLpO+5nC1x4Ly2xQ==}
     requiresBuild: true
 
   /@changesets/apply-release-plan@7.0.0:
@@ -3280,12 +3280,12 @@ packages:
     engines: {node: '>=8'}
     dev: true
 
-  /@itwin/appui-abstract@4.5.2(@itwin/core-bentley@4.5.2):
-    resolution: {integrity: sha512-d4V58N2Y5FDCLTQX9LV2nrbQOA5qeZlH7Z5qDOjtAj2eQFlvTFCs579B+rksbw5N3eD1qUEez+fe2fXbMA3EQA==}
+  /@itwin/appui-abstract@4.6.0(@itwin/core-bentley@4.6.0):
+    resolution: {integrity: sha512-QCv2LeQTrSZA7kImVkddGpSg+BfwyUg8xoiFWvf4blWY8X/UvPal43P4c8g+CDioyaJ/Ojw2GCQTUt/9al06hQ==}
     peerDependencies:
-      '@itwin/core-bentley': ^4.5.2
+      '@itwin/core-bentley': ^4.6.0
     dependencies:
-      '@itwin/core-bentley': 4.5.2
+      '@itwin/core-bentley': 4.6.0
 
   /@itwin/build-tools@4.6.0(@types/node@18.19.31):
     resolution: {integrity: sha512-I73MIEoMzCf1KxZSQ3tq7RP13xqE6dTofki67x7jKkuKw3r/Xl7O0ni8nwzvvKGNb7lsshOM9PCpLbsYr8c/1g==}
@@ -3319,7 +3319,7 @@ packages:
       inversify: 6.0.2
       reflect-metadata: 0.1.14
 
-  /@itwin/components-react@4.12.0(@itwin/appui-abstract@4.5.2)(@itwin/core-bentley@4.5.2)(@itwin/core-react@4.12.0)(react-dom@18.2.0)(react@18.2.0):
+  /@itwin/components-react@4.12.0(@itwin/appui-abstract@4.6.0)(@itwin/core-bentley@4.6.0)(@itwin/core-react@4.12.0)(react-dom@18.2.0)(react@18.2.0):
     resolution: {integrity: sha512-TJUkvJ3zl+bw2v6tnYMCIDspglkdErwoeVWmk0CIIwQppqWMkAhlIbWtS6ffXRdoIeFyir+et1L7xnbqlmmwjg==}
     peerDependencies:
       '@itwin/appui-abstract': ^3.7.0 || ^4.0.0
@@ -3329,9 +3329,9 @@ packages:
       react-dom: ^17.0.0 || ^18.0.0
     dependencies:
       '@bentley/icons-generic': 1.0.34
-      '@itwin/appui-abstract': 4.5.2(@itwin/core-bentley@4.5.2)
-      '@itwin/core-bentley': 4.5.2
-      '@itwin/core-react': 4.12.0(@itwin/appui-abstract@4.5.2)(@itwin/core-bentley@4.5.2)(react-dom@18.2.0)(react@18.2.0)
+      '@itwin/appui-abstract': 4.6.0(@itwin/core-bentley@4.6.0)
+      '@itwin/core-bentley': 4.6.0
+      '@itwin/core-react': 4.12.0(@itwin/appui-abstract@4.6.0)(@itwin/core-bentley@4.6.0)(react-dom@18.2.0)(react@18.2.0)
       '@itwin/itwinui-icons-react': 2.8.0(react-dom@18.2.0)(react@18.2.0)
       '@itwin/itwinui-react': 3.9.1(react-dom@18.2.0)(react@18.2.0)
       '@itwin/itwinui-variables': 3.1.0
@@ -3348,24 +3348,24 @@ packages:
       shortid: 2.2.16
       ts-key-enum: 2.0.12
 
-  /@itwin/core-backend@4.5.2(@itwin/core-bentley@4.5.2)(@itwin/core-common@4.5.2)(@itwin/core-geometry@4.5.2)(@opentelemetry/api@1.8.0):
-    resolution: {integrity: sha512-C0wRgL3YkG+maNq3+qFGM5ztX1ooNFltwPiKC7klOTiqmvI3Y3Xr0tZij10KdTrvXCp910J6boMOuoTj7Ys0iA==}
+  /@itwin/core-backend@4.6.0(@itwin/core-bentley@4.6.0)(@itwin/core-common@4.6.0)(@itwin/core-geometry@4.6.0)(@opentelemetry/api@1.8.0):
+    resolution: {integrity: sha512-UjUlFKlKK9qIvnrsereeCvJWfNaabudKnP73l9pFp4JU9J8dDjGrOQSalL1hX4MdAHJTtLmCaAbTQnbqf+f5wg==}
     engines: {node: ^18.0.0 || ^20.0.0}
     peerDependencies:
-      '@itwin/core-bentley': ^4.5.2
-      '@itwin/core-common': ^4.5.2
-      '@itwin/core-geometry': ^4.5.2
+      '@itwin/core-bentley': ^4.6.0
+      '@itwin/core-common': ^4.6.0
+      '@itwin/core-geometry': ^4.6.0
       '@opentelemetry/api': ^1.0.4
     peerDependenciesMeta:
       '@opentelemetry/api':
         optional: true
     dependencies:
-      '@bentley/imodeljs-native': 4.5.38
+      '@bentley/imodeljs-native': 4.6.31
       '@itwin/cloud-agnostic-core': 2.2.3(inversify@6.0.2)(reflect-metadata@0.1.14)
-      '@itwin/core-bentley': 4.5.2
-      '@itwin/core-common': 4.5.2(@itwin/core-bentley@4.5.2)(@itwin/core-geometry@4.5.2)
-      '@itwin/core-geometry': 4.5.2
-      '@itwin/core-telemetry': 4.5.2(@itwin/core-geometry@4.5.2)
+      '@itwin/core-bentley': 4.6.0
+      '@itwin/core-common': 4.6.0(@itwin/core-bentley@4.6.0)(@itwin/core-geometry@4.6.0)
+      '@itwin/core-geometry': 4.6.0
+      '@itwin/core-telemetry': 4.6.0(@itwin/core-geometry@4.6.0)
       '@itwin/object-storage-azure': 2.2.3(inversify@6.0.2)(reflect-metadata@0.1.14)
       '@itwin/object-storage-core': 2.2.3(inversify@6.0.2)(reflect-metadata@0.1.14)
       '@opentelemetry/api': 1.8.0
@@ -3384,34 +3384,34 @@ packages:
       - encoding
       - utf-8-validate
 
-  /@itwin/core-bentley@4.5.2:
-    resolution: {integrity: sha512-4WbSkv1mdX2IpfZr3Chlx4yA/VxdRncn960lqAldO0qzWO1gHR6gKAGyiPYEsmLLnzatHWkthJQr2rC1R/y/zw==}
+  /@itwin/core-bentley@4.6.0:
+    resolution: {integrity: sha512-GXr9L6ThFdEGQKFSn+jEC5g2IbHDdg14EUHyb1HgVqYY6y1E9UPy7RARs4bC38xFOKXzEg/2dURas0qUWhDGDA==}
 
-  /@itwin/core-common@4.5.2(@itwin/core-bentley@4.5.2)(@itwin/core-geometry@4.5.2):
-    resolution: {integrity: sha512-Qg7NDOaHID3y4xJw6yfW+ZyPg3A3aW546rF0yG1hjgCtN+GABKexTR6YQi1pid/gd96j+05UK1RwQLDwLaw6zQ==}
+  /@itwin/core-common@4.6.0(@itwin/core-bentley@4.6.0)(@itwin/core-geometry@4.6.0):
+    resolution: {integrity: sha512-QH9JMtZIj5bbx6gts8xBnXtNoM22r4AWUQrP6xd9Az1//HjfIGQKbTY7TDWalP2bGelI4l2D7qWeid9VZVlVHg==}
     peerDependencies:
-      '@itwin/core-bentley': ^4.5.2
-      '@itwin/core-geometry': ^4.5.2
+      '@itwin/core-bentley': ^4.6.0
+      '@itwin/core-geometry': ^4.6.0
     dependencies:
-      '@itwin/core-bentley': 4.5.2
-      '@itwin/core-geometry': 4.5.2
+      '@itwin/core-bentley': 4.6.0
+      '@itwin/core-geometry': 4.6.0
       flatbuffers: 1.12.0
       js-base64: 3.7.7
 
-  /@itwin/core-electron@4.5.2(@itwin/core-backend@4.5.2)(@itwin/core-bentley@4.5.2)(@itwin/core-common@4.5.2)(@itwin/core-frontend@4.5.2)(electron@28.3.1):
-    resolution: {integrity: sha512-htwyBLwS9Lp6ekZnT7B6ha870IGSelJ/nuAkOQmbiFCiLqlgbnbb3ED5s9Z3wrkjJHM61E0sEg8ROtEY92F45g==}
+  /@itwin/core-electron@4.6.0(@itwin/core-backend@4.6.0)(@itwin/core-bentley@4.6.0)(@itwin/core-common@4.6.0)(@itwin/core-frontend@4.6.0)(electron@28.3.1):
+    resolution: {integrity: sha512-xdwKtBsvPxbrRe45oJ6cG8VyrPLdDalnEEQeRL4fy0YIW5Bb7/YEhDZ8XToG2pCk4XtWj0t/JzRA4b/431vKnw==}
     engines: {node: ^18.0.0 || ^20.0.0}
     peerDependencies:
-      '@itwin/core-backend': ^4.5.2
-      '@itwin/core-bentley': ^4.5.2
-      '@itwin/core-common': ^4.5.2
-      '@itwin/core-frontend': ^4.5.2
-      electron: '>=23.0.0 <30.0.0'
+      '@itwin/core-backend': ^4.6.0
+      '@itwin/core-bentley': ^4.6.0
+      '@itwin/core-common': ^4.6.0
+      '@itwin/core-frontend': ^4.6.0
+      electron: '>=23.0.0 <31.0.0'
     dependencies:
-      '@itwin/core-backend': 4.5.2(@itwin/core-bentley@4.5.2)(@itwin/core-common@4.5.2)(@itwin/core-geometry@4.5.2)(@opentelemetry/api@1.8.0)
-      '@itwin/core-bentley': 4.5.2
-      '@itwin/core-common': 4.5.2(@itwin/core-bentley@4.5.2)(@itwin/core-geometry@4.5.2)
-      '@itwin/core-frontend': 4.5.2(@itwin/appui-abstract@4.5.2)(@itwin/core-bentley@4.5.2)(@itwin/core-common@4.5.2)(@itwin/core-geometry@4.5.2)(@itwin/core-orbitgt@4.5.2)(@itwin/core-quantity@4.5.2)(inversify@6.0.2)(reflect-metadata@0.1.14)
+      '@itwin/core-backend': 4.6.0(@itwin/core-bentley@4.6.0)(@itwin/core-common@4.6.0)(@itwin/core-geometry@4.6.0)(@opentelemetry/api@1.8.0)
+      '@itwin/core-bentley': 4.6.0
+      '@itwin/core-common': 4.6.0(@itwin/core-bentley@4.6.0)(@itwin/core-geometry@4.6.0)
+      '@itwin/core-frontend': 4.6.0(@itwin/appui-abstract@4.6.0)(@itwin/core-bentley@4.6.0)(@itwin/core-common@4.6.0)(@itwin/core-geometry@4.6.0)(@itwin/core-orbitgt@4.6.0)(@itwin/core-quantity@4.6.0)(inversify@6.0.2)(reflect-metadata@0.1.14)
       '@openid/appauth': 1.3.2
       electron: 28.3.1
       open: 7.4.2
@@ -3420,30 +3420,31 @@ packages:
       - debug
     dev: false
 
-  /@itwin/core-frontend@4.5.2(@itwin/appui-abstract@4.5.2)(@itwin/core-bentley@4.5.2)(@itwin/core-common@4.5.2)(@itwin/core-geometry@4.5.2)(@itwin/core-orbitgt@4.5.2)(@itwin/core-quantity@4.5.2)(inversify@6.0.2)(reflect-metadata@0.1.14):
-    resolution: {integrity: sha512-cc1nXh2XAkFHkrAIqoXe2W5ApBsERip/0HoKrCSAdBwPPuTSMtsl+0zWPeC1WMxnHYKhqeND5CWMIpO9+e8SRQ==}
+  /@itwin/core-frontend@4.6.0(@itwin/appui-abstract@4.6.0)(@itwin/core-bentley@4.6.0)(@itwin/core-common@4.6.0)(@itwin/core-geometry@4.6.0)(@itwin/core-orbitgt@4.6.0)(@itwin/core-quantity@4.6.0)(inversify@6.0.2)(reflect-metadata@0.1.14):
+    resolution: {integrity: sha512-duig/OI/yt/irM8AvkMyT4tz0nY4Noy0Jm9Np8fporXtJnUwBvp9ebErKfLfvOHOf4vm4Ss+M4NCMEcUBgq6Dw==}
     peerDependencies:
-      '@itwin/appui-abstract': ^4.5.2
-      '@itwin/core-bentley': ^4.5.2
-      '@itwin/core-common': ^4.5.2
-      '@itwin/core-geometry': ^4.5.2
-      '@itwin/core-orbitgt': ^4.5.2
-      '@itwin/core-quantity': ^4.5.2
+      '@itwin/appui-abstract': ^4.6.0
+      '@itwin/core-bentley': ^4.6.0
+      '@itwin/core-common': ^4.6.0
+      '@itwin/core-geometry': ^4.6.0
+      '@itwin/core-orbitgt': ^4.6.0
+      '@itwin/core-quantity': ^4.6.0
     dependencies:
-      '@itwin/appui-abstract': 4.5.2(@itwin/core-bentley@4.5.2)
+      '@itwin/appui-abstract': 4.6.0(@itwin/core-bentley@4.6.0)
       '@itwin/cloud-agnostic-core': 2.2.3(inversify@6.0.2)(reflect-metadata@0.1.14)
-      '@itwin/core-bentley': 4.5.2
-      '@itwin/core-common': 4.5.2(@itwin/core-bentley@4.5.2)(@itwin/core-geometry@4.5.2)
-      '@itwin/core-geometry': 4.5.2
-      '@itwin/core-i18n': 4.5.2(@itwin/core-bentley@4.5.2)
-      '@itwin/core-orbitgt': 4.5.2
-      '@itwin/core-quantity': 4.5.2(@itwin/core-bentley@4.5.2)
-      '@itwin/core-telemetry': 4.5.2(@itwin/core-geometry@4.5.2)
+      '@itwin/core-bentley': 4.6.0
+      '@itwin/core-common': 4.6.0(@itwin/core-bentley@4.6.0)(@itwin/core-geometry@4.6.0)
+      '@itwin/core-geometry': 4.6.0
+      '@itwin/core-i18n': 4.6.0(@itwin/core-bentley@4.6.0)
+      '@itwin/core-orbitgt': 4.6.0
+      '@itwin/core-quantity': 4.6.0(@itwin/core-bentley@4.6.0)
+      '@itwin/core-telemetry': 4.6.0(@itwin/core-geometry@4.6.0)
       '@itwin/object-storage-core': 2.2.3(inversify@6.0.2)(reflect-metadata@0.1.14)
-      '@itwin/webgl-compatibility': 4.5.2
+      '@itwin/webgl-compatibility': 4.6.0
       '@loaders.gl/core': 3.4.15
       '@loaders.gl/draco': 3.4.15
       fuse.js: 3.6.1
+      meshoptimizer: 0.20.0
       wms-capabilities: 0.4.0
     transitivePeerDependencies:
       - debug
@@ -3451,35 +3452,35 @@ packages:
       - inversify
       - reflect-metadata
 
-  /@itwin/core-geometry@4.5.2:
-    resolution: {integrity: sha512-wAi6rSOmoflMumT7ffiHx7vb2WzLesdJEA7HhZDz6T9RRlPmHce1/n72EUpyQ2FiHeBe0MEJU1CZzb0tXsN1zw==}
+  /@itwin/core-geometry@4.6.0:
+    resolution: {integrity: sha512-dwlXp8fx8aUe+ipKDgRdyqPIQ62sldahyRkQCN4KsH9mF8Urn3IoYp92CgQh6LWI+pg5pY3tMrEHuP8aImtd5g==}
     dependencies:
-      '@itwin/core-bentley': 4.5.2
+      '@itwin/core-bentley': 4.6.0
       flatbuffers: 1.12.0
 
-  /@itwin/core-i18n@4.5.2(@itwin/core-bentley@4.5.2):
-    resolution: {integrity: sha512-QItezKie477GzplDBYyWGLScU9jHKMlZwSdoF0nULZe4AGJGwaB5PB6ico3Zkpf76B7U3ive0UEDE1lJO9QHug==}
+  /@itwin/core-i18n@4.6.0(@itwin/core-bentley@4.6.0):
+    resolution: {integrity: sha512-tS5jME+92JfO9JDR9LHVcF0CoqLc5t/R2zu6SF8j2CRkl5KxSHNfessjYNRFNWK/4XPmxlGYQTaEx0mQlisNrw==}
     peerDependencies:
-      '@itwin/core-bentley': ^4.5.2
+      '@itwin/core-bentley': ^4.6.0
     dependencies:
-      '@itwin/core-bentley': 4.5.2
+      '@itwin/core-bentley': 4.6.0
       i18next: 21.10.0
       i18next-browser-languagedetector: 6.1.8
       i18next-http-backend: 1.4.5
     transitivePeerDependencies:
       - encoding
 
-  /@itwin/core-orbitgt@4.5.2:
-    resolution: {integrity: sha512-jR/YVGNpSyZcj84W6OHbCqPvTD4ZqJlfkBmH0wW8tS4KB3vjY3HFZwISl+ZzYsnxzLh11tRWabXGQvmxTDt56A==}
+  /@itwin/core-orbitgt@4.6.0:
+    resolution: {integrity: sha512-P5Tu8UVmrKFW2YxFAj38dKGw4LfKAlk7HPKVGbTd8oTKwD+Qa2lub0FtO4QdHyovR8nwsu3UQxRIGzha8ZX9Fw==}
 
-  /@itwin/core-quantity@4.5.2(@itwin/core-bentley@4.5.2):
-    resolution: {integrity: sha512-Jf12/MrhosAeD7+64k8otrQAsMtwuDf9H5kS6kMRlmb0BxIwCr5Zd2nmkuJX9+60EEtQQKEIHZUed6RXeBwpKw==}
+  /@itwin/core-quantity@4.6.0(@itwin/core-bentley@4.6.0):
+    resolution: {integrity: sha512-R7MRL38p/JqJw6YhjVoz0WcC06Jq1U+BUKwtG30RzGt3TyM6mvWQpSZo/1UQWcNodjLaiIP5c3N7cYXderUqIA==}
     peerDependencies:
-      '@itwin/core-bentley': ^4.5.2
+      '@itwin/core-bentley': ^4.6.0
     dependencies:
-      '@itwin/core-bentley': 4.5.2
+      '@itwin/core-bentley': 4.6.0
 
-  /@itwin/core-react@4.12.0(@itwin/appui-abstract@4.5.2)(@itwin/core-bentley@4.5.2)(react-dom@18.2.0)(react@18.2.0):
+  /@itwin/core-react@4.12.0(@itwin/appui-abstract@4.6.0)(@itwin/core-bentley@4.6.0)(react-dom@18.2.0)(react@18.2.0):
     resolution: {integrity: sha512-POY6XR/LYEh8wHD99X1Y+PQSWwN/uxF3xp846nzpmKPkr1YbPaPvVsiOxHHeYB9/CHP/3MyVlLyE5MKbsDAbgw==}
     peerDependencies:
       '@itwin/appui-abstract': ^3.7.0 || ^4.0.0
@@ -3488,8 +3489,8 @@ packages:
       react-dom: ^17.0.0 || ^18.0.0
     dependencies:
       '@bentley/icons-generic': 1.0.34
-      '@itwin/appui-abstract': 4.5.2(@itwin/core-bentley@4.5.2)
-      '@itwin/core-bentley': 4.5.2
+      '@itwin/appui-abstract': 4.6.0(@itwin/core-bentley@4.6.0)
+      '@itwin/core-bentley': 4.6.0
       '@itwin/itwinui-icons-react': 2.8.0(react-dom@18.2.0)(react@18.2.0)
       '@itwin/itwinui-react': 3.9.1(react-dom@18.2.0)(react@18.2.0)
       '@itwin/itwinui-variables': 3.1.0
@@ -3502,54 +3503,54 @@ packages:
       resize-observer-polyfill: 1.5.1
       ts-key-enum: 2.0.12
 
-  /@itwin/core-telemetry@4.5.2(@itwin/core-geometry@4.5.2):
-    resolution: {integrity: sha512-mj2/f4erDCSOpqVwgCcQzAiH+Hl3T+RN2xJP4lteOcHcIP1y16Qr6/Yfb6d5OZlnMjfWdbQLnmlp7CeCjwBbAQ==}
+  /@itwin/core-telemetry@4.6.0(@itwin/core-geometry@4.6.0):
+    resolution: {integrity: sha512-YG84Rz0b2+WcKUOh4yXViuBLJeK5VNkp7266iKP3pBF3IGWxPOP0rRzAqF2ZB1CFByUKMpuZ+LoYEbUEfYQILw==}
     dependencies:
-      '@itwin/core-bentley': 4.5.2
-      '@itwin/core-common': 4.5.2(@itwin/core-bentley@4.5.2)(@itwin/core-geometry@4.5.2)
+      '@itwin/core-bentley': 4.6.0
+      '@itwin/core-common': 4.6.0(@itwin/core-bentley@4.6.0)(@itwin/core-geometry@4.6.0)
     transitivePeerDependencies:
       - '@itwin/core-geometry'
 
-  /@itwin/ecschema-metadata@4.5.2(@itwin/core-bentley@4.5.2)(@itwin/core-quantity@4.5.2):
-    resolution: {integrity: sha512-Ncx+gtbR9FFvx1Df46dZBTtgbohQIfpSeChL8F+OkqOhzUjN+ZGSqwKHOhOeLKK2ohGSm8uoR/CqwO8lqYSD0w==}
+  /@itwin/ecschema-metadata@4.6.0(@itwin/core-bentley@4.6.0)(@itwin/core-quantity@4.6.0):
+    resolution: {integrity: sha512-Si3nUnanvGYnPH4paqFbqz589wKKJP1Hs6gneGDdnADWqvc2730QAKUfRWPJK+ul0IoTVfXXCbrzmfo2u7/OWQ==}
     peerDependencies:
-      '@itwin/core-bentley': ^4.5.2
-      '@itwin/core-quantity': ^4.5.2
+      '@itwin/core-bentley': ^4.6.0
+      '@itwin/core-quantity': ^4.6.0
     dependencies:
-      '@itwin/core-bentley': 4.5.2
-      '@itwin/core-quantity': 4.5.2(@itwin/core-bentley@4.5.2)
+      '@itwin/core-bentley': 4.6.0
+      '@itwin/core-quantity': 4.6.0(@itwin/core-bentley@4.6.0)
       almost-equal: 1.1.0
 
-  /@itwin/ecschema-rpcinterface-common@4.5.2(@itwin/core-bentley@4.5.2)(@itwin/core-common@4.5.2)(@itwin/core-geometry@4.5.2)(@itwin/ecschema-metadata@4.5.2):
-    resolution: {integrity: sha512-jRprYytdAxrxLJvDVGSY6XT1/CjXiKEprNdb/5VlQGGU5HForVPd8wtciWAqypNlH+AugFCvD1/AW9AMWCkp3w==}
+  /@itwin/ecschema-rpcinterface-common@4.6.0(@itwin/core-bentley@4.6.0)(@itwin/core-common@4.6.0)(@itwin/core-geometry@4.6.0)(@itwin/ecschema-metadata@4.6.0):
+    resolution: {integrity: sha512-IFa1bg4j8wjvx+NpM8rA6ecpZM65dFIu5t1ciFA3ymi/myBszvGizJooFYwKO2HuOGTYxE5VN/DQFDyO8I9irQ==}
     peerDependencies:
-      '@itwin/core-bentley': 4.5.2
-      '@itwin/core-common': 4.5.2
-      '@itwin/core-geometry': 4.5.2
-      '@itwin/ecschema-metadata': 4.5.2
+      '@itwin/core-bentley': 4.6.0
+      '@itwin/core-common': 4.6.0
+      '@itwin/core-geometry': 4.6.0
+      '@itwin/ecschema-metadata': 4.6.0
     dependencies:
-      '@itwin/core-bentley': 4.5.2
-      '@itwin/core-common': 4.5.2(@itwin/core-bentley@4.5.2)(@itwin/core-geometry@4.5.2)
-      '@itwin/core-geometry': 4.5.2
-      '@itwin/ecschema-metadata': 4.5.2(@itwin/core-bentley@4.5.2)(@itwin/core-quantity@4.5.2)
+      '@itwin/core-bentley': 4.6.0
+      '@itwin/core-common': 4.6.0(@itwin/core-bentley@4.6.0)(@itwin/core-geometry@4.6.0)
+      '@itwin/core-geometry': 4.6.0
+      '@itwin/ecschema-metadata': 4.6.0(@itwin/core-bentley@4.6.0)(@itwin/core-quantity@4.6.0)
     dev: false
 
-  /@itwin/ecschema-rpcinterface-impl@4.5.2(@itwin/core-backend@4.5.2)(@itwin/core-bentley@4.5.2)(@itwin/core-common@4.5.2)(@itwin/core-geometry@4.5.2)(@itwin/ecschema-metadata@4.5.2)(@itwin/ecschema-rpcinterface-common@4.5.2):
-    resolution: {integrity: sha512-kecFmeW3VX5BYs6JZECdT+KJBsIctoo4pG1N4UJ4whUWScfNRLSXfpCfwGyw7hHDeAtgO40blFSIQm0GBYbWNA==}
+  /@itwin/ecschema-rpcinterface-impl@4.6.0(@itwin/core-backend@4.6.0)(@itwin/core-bentley@4.6.0)(@itwin/core-common@4.6.0)(@itwin/core-geometry@4.6.0)(@itwin/ecschema-metadata@4.6.0)(@itwin/ecschema-rpcinterface-common@4.6.0):
+    resolution: {integrity: sha512-QZNNVfXpSD2suxuCLe/zkNIwKSETmusGleB3QgEkW/mgY8LvqFJ54iOsHqEvYXotif4N3WDCl0+Z1rm8vvFh7A==}
     peerDependencies:
-      '@itwin/core-backend': 4.5.2
-      '@itwin/core-bentley': 4.5.2
-      '@itwin/core-common': 4.5.2
-      '@itwin/core-geometry': 4.5.2
-      '@itwin/ecschema-metadata': 4.5.2
-      '@itwin/ecschema-rpcinterface-common': 4.5.2
+      '@itwin/core-backend': 4.6.0
+      '@itwin/core-bentley': 4.6.0
+      '@itwin/core-common': 4.6.0
+      '@itwin/core-geometry': 4.6.0
+      '@itwin/ecschema-metadata': 4.6.0
+      '@itwin/ecschema-rpcinterface-common': 4.6.0
     dependencies:
-      '@itwin/core-backend': 4.5.2(@itwin/core-bentley@4.5.2)(@itwin/core-common@4.5.2)(@itwin/core-geometry@4.5.2)(@opentelemetry/api@1.8.0)
-      '@itwin/core-bentley': 4.5.2
-      '@itwin/core-common': 4.5.2(@itwin/core-bentley@4.5.2)(@itwin/core-geometry@4.5.2)
-      '@itwin/core-geometry': 4.5.2
-      '@itwin/ecschema-metadata': 4.5.2(@itwin/core-bentley@4.5.2)(@itwin/core-quantity@4.5.2)
-      '@itwin/ecschema-rpcinterface-common': 4.5.2(@itwin/core-bentley@4.5.2)(@itwin/core-common@4.5.2)(@itwin/core-geometry@4.5.2)(@itwin/ecschema-metadata@4.5.2)
+      '@itwin/core-backend': 4.6.0(@itwin/core-bentley@4.6.0)(@itwin/core-common@4.6.0)(@itwin/core-geometry@4.6.0)(@opentelemetry/api@1.8.0)
+      '@itwin/core-bentley': 4.6.0
+      '@itwin/core-common': 4.6.0(@itwin/core-bentley@4.6.0)(@itwin/core-geometry@4.6.0)
+      '@itwin/core-geometry': 4.6.0
+      '@itwin/ecschema-metadata': 4.6.0(@itwin/core-bentley@4.6.0)(@itwin/core-quantity@4.6.0)
+      '@itwin/ecschema-rpcinterface-common': 4.6.0(@itwin/core-bentley@4.6.0)(@itwin/core-common@4.6.0)(@itwin/core-geometry@4.6.0)(@itwin/ecschema-metadata@4.6.0)
     dev: false
 
   /@itwin/eslint-plugin@4.0.0(eslint@8.57.0)(typescript@5.4.5):
@@ -3578,13 +3579,15 @@ packages:
       - eslint-import-resolver-webpack
       - supports-color
 
-  /@itwin/express-server@4.5.2(@itwin/core-backend@4.5.2):
-    resolution: {integrity: sha512-jK4fiaA+nR9ejFTLyniaS/38NqoPZjGgsNteQ+zUCqvIf6evMJxN9QEmqg+7LNdvS93c1opGI1fxVpbyS6Cw4Q==}
+  /@itwin/express-server@4.6.0(@itwin/core-backend@4.6.0)(@itwin/core-common@4.6.0):
+    resolution: {integrity: sha512-TbRvm7jSbeSQ9x7kV7aIiwGd/Z3YqmSvcNL3FrozUVmYrOrTYWZqzjTVsDB8G5yYTCKmJ+pjCt8/FM2P0BooxA==}
     engines: {node: ^18.0.0 || ^20.0.0}
     peerDependencies:
-      '@itwin/core-backend': 4.5.2
+      '@itwin/core-backend': 4.6.0
+      '@itwin/core-common': 4.6.0
     dependencies:
-      '@itwin/core-backend': 4.5.2(@itwin/core-bentley@4.5.2)(@itwin/core-common@4.5.2)(@itwin/core-geometry@4.5.2)(@opentelemetry/api@1.8.0)
+      '@itwin/core-backend': 4.6.0(@itwin/core-bentley@4.6.0)(@itwin/core-common@4.6.0)(@itwin/core-geometry@4.6.0)(@opentelemetry/api@1.8.0)
+      '@itwin/core-common': 4.6.0(@itwin/core-bentley@4.6.0)(@itwin/core-geometry@4.6.0)
       express: 4.19.2
       express-ws: 5.0.2(express@4.19.2)
     transitivePeerDependencies:
@@ -3593,7 +3596,7 @@ packages:
       - utf-8-validate
     dev: false
 
-  /@itwin/imodel-components-react@4.12.0(@itwin/appui-abstract@4.5.2)(@itwin/components-react@4.12.0)(@itwin/core-bentley@4.5.2)(@itwin/core-common@4.5.2)(@itwin/core-frontend@4.5.2)(@itwin/core-geometry@4.5.2)(@itwin/core-quantity@4.5.2)(@itwin/core-react@4.12.0)(react-dom@18.2.0)(react@18.2.0):
+  /@itwin/imodel-components-react@4.12.0(@itwin/appui-abstract@4.6.0)(@itwin/components-react@4.12.0)(@itwin/core-bentley@4.6.0)(@itwin/core-common@4.6.0)(@itwin/core-frontend@4.6.0)(@itwin/core-geometry@4.6.0)(@itwin/core-quantity@4.6.0)(@itwin/core-react@4.12.0)(react-dom@18.2.0)(react@18.2.0):
     resolution: {integrity: sha512-1DYxGeCDNTD0pIqdn9qe1d15mTbeVB+D1GqHSBZp8SgqJZyTlbPsN6yUau8C0yfazl56NCRNRMuxDOZGdh1PJQ==}
     peerDependencies:
       '@itwin/appui-abstract': ^3.7.0 || ^4.0.0
@@ -3608,14 +3611,14 @@ packages:
       react-dom: ^17.0.0 || ^18.0.0
     dependencies:
       '@bentley/icons-generic': 1.0.34
-      '@itwin/appui-abstract': 4.5.2(@itwin/core-bentley@4.5.2)
-      '@itwin/components-react': 4.12.0(@itwin/appui-abstract@4.5.2)(@itwin/core-bentley@4.5.2)(@itwin/core-react@4.12.0)(react-dom@18.2.0)(react@18.2.0)
-      '@itwin/core-bentley': 4.5.2
-      '@itwin/core-common': 4.5.2(@itwin/core-bentley@4.5.2)(@itwin/core-geometry@4.5.2)
-      '@itwin/core-frontend': 4.5.2(@itwin/appui-abstract@4.5.2)(@itwin/core-bentley@4.5.2)(@itwin/core-common@4.5.2)(@itwin/core-geometry@4.5.2)(@itwin/core-orbitgt@4.5.2)(@itwin/core-quantity@4.5.2)(inversify@6.0.2)(reflect-metadata@0.1.14)
-      '@itwin/core-geometry': 4.5.2
-      '@itwin/core-quantity': 4.5.2(@itwin/core-bentley@4.5.2)
-      '@itwin/core-react': 4.12.0(@itwin/appui-abstract@4.5.2)(@itwin/core-bentley@4.5.2)(react-dom@18.2.0)(react@18.2.0)
+      '@itwin/appui-abstract': 4.6.0(@itwin/core-bentley@4.6.0)
+      '@itwin/components-react': 4.12.0(@itwin/appui-abstract@4.6.0)(@itwin/core-bentley@4.6.0)(@itwin/core-react@4.12.0)(react-dom@18.2.0)(react@18.2.0)
+      '@itwin/core-bentley': 4.6.0
+      '@itwin/core-common': 4.6.0(@itwin/core-bentley@4.6.0)(@itwin/core-geometry@4.6.0)
+      '@itwin/core-frontend': 4.6.0(@itwin/appui-abstract@4.6.0)(@itwin/core-bentley@4.6.0)(@itwin/core-common@4.6.0)(@itwin/core-geometry@4.6.0)(@itwin/core-orbitgt@4.6.0)(@itwin/core-quantity@4.6.0)(inversify@6.0.2)(reflect-metadata@0.1.14)
+      '@itwin/core-geometry': 4.6.0
+      '@itwin/core-quantity': 4.6.0(@itwin/core-bentley@4.6.0)
+      '@itwin/core-react': 4.12.0(@itwin/appui-abstract@4.6.0)(@itwin/core-bentley@4.6.0)(react-dom@18.2.0)(react@18.2.0)
       '@itwin/itwinui-icons-react': 2.8.0(react-dom@18.2.0)(react@18.2.0)
       '@itwin/itwinui-react': 3.9.1(react-dom@18.2.0)(react@18.2.0)
       '@itwin/itwinui-variables': 3.1.0
@@ -3689,56 +3692,56 @@ packages:
     transitivePeerDependencies:
       - debug
 
-  /@itwin/presentation-backend@4.5.2(@itwin/core-backend@4.5.2)(@itwin/core-bentley@4.5.2)(@itwin/core-common@4.5.2)(@itwin/core-quantity@4.5.2)(@itwin/ecschema-metadata@4.5.2)(@itwin/presentation-common@4.5.2):
-    resolution: {integrity: sha512-loaeBVXfBZHlhE6UgkatqA9rS+2Kc4v8JqE9EgCKKJDu3ZnI12C1i+1eEYfQMrcJrt+AX93CqTquPqOM3oj7Ow==}
+  /@itwin/presentation-backend@4.6.0(@itwin/core-backend@4.6.0)(@itwin/core-bentley@4.6.0)(@itwin/core-common@4.6.0)(@itwin/core-quantity@4.6.0)(@itwin/ecschema-metadata@4.6.0)(@itwin/presentation-common@4.6.0):
+    resolution: {integrity: sha512-TSuAnC/7Vc3mC6wL9701AqZpQ4+Od0HxIwADWfPHppjt5Ju+BLjzHhc9yIaiVro/JvRyLwriUab/6+Oa5EDk3A==}
     peerDependencies:
-      '@itwin/core-backend': ^4.5.2
-      '@itwin/core-bentley': ^4.5.2
-      '@itwin/core-common': ^4.5.2
-      '@itwin/core-quantity': ^4.5.2
-      '@itwin/ecschema-metadata': ^4.5.2
-      '@itwin/presentation-common': ^4.5.2
+      '@itwin/core-backend': ^4.6.0
+      '@itwin/core-bentley': ^4.6.0
+      '@itwin/core-common': ^4.6.0
+      '@itwin/core-quantity': ^4.6.0
+      '@itwin/ecschema-metadata': ^4.6.0
+      '@itwin/presentation-common': ^4.6.0
     dependencies:
-      '@itwin/core-backend': 4.5.2(@itwin/core-bentley@4.5.2)(@itwin/core-common@4.5.2)(@itwin/core-geometry@4.5.2)(@opentelemetry/api@1.8.0)
-      '@itwin/core-bentley': 4.5.2
-      '@itwin/core-common': 4.5.2(@itwin/core-bentley@4.5.2)(@itwin/core-geometry@4.5.2)
-      '@itwin/core-quantity': 4.5.2(@itwin/core-bentley@4.5.2)
-      '@itwin/ecschema-metadata': 4.5.2(@itwin/core-bentley@4.5.2)(@itwin/core-quantity@4.5.2)
-      '@itwin/presentation-common': 4.5.2(@itwin/core-bentley@4.5.2)(@itwin/core-common@4.5.2)(@itwin/core-quantity@4.5.2)(@itwin/ecschema-metadata@4.5.2)
+      '@itwin/core-backend': 4.6.0(@itwin/core-bentley@4.6.0)(@itwin/core-common@4.6.0)(@itwin/core-geometry@4.6.0)(@opentelemetry/api@1.8.0)
+      '@itwin/core-bentley': 4.6.0
+      '@itwin/core-common': 4.6.0(@itwin/core-bentley@4.6.0)(@itwin/core-geometry@4.6.0)
+      '@itwin/core-quantity': 4.6.0(@itwin/core-bentley@4.6.0)
+      '@itwin/ecschema-metadata': 4.6.0(@itwin/core-bentley@4.6.0)(@itwin/core-quantity@4.6.0)
+      '@itwin/presentation-common': 4.6.0(@itwin/core-bentley@4.6.0)(@itwin/core-common@4.6.0)(@itwin/core-quantity@4.6.0)(@itwin/ecschema-metadata@4.6.0)
       object-hash: 1.3.1
       rxjs: 7.8.1
       rxjs-for-await: 1.0.0(rxjs@7.8.1)
       semver: 7.6.0
 
-  /@itwin/presentation-common@4.5.2(@itwin/core-bentley@4.5.2)(@itwin/core-common@4.5.2)(@itwin/core-quantity@4.5.2)(@itwin/ecschema-metadata@4.5.2):
-    resolution: {integrity: sha512-19Or1PVexyeX8XyEaUM+ALtG6sF0vukgEAydp0qltg16FH5u53bNH1ncaHF5GpKQ2rAqtCblc7xGFa/hLbLlow==}
+  /@itwin/presentation-common@4.6.0(@itwin/core-bentley@4.6.0)(@itwin/core-common@4.6.0)(@itwin/core-quantity@4.6.0)(@itwin/ecschema-metadata@4.6.0):
+    resolution: {integrity: sha512-pwln6KVpSLvECb1tisK+XOeUoIFXztD/Q+MeaWLQRo8l2phbw4ieE1ZimQFcBcqdSBlhy1d1qQyNjPep3QK5jw==}
     peerDependencies:
-      '@itwin/core-bentley': ^4.5.2
-      '@itwin/core-common': ^4.5.2
-      '@itwin/core-quantity': ^4.5.2
-      '@itwin/ecschema-metadata': ^4.5.2
+      '@itwin/core-bentley': ^4.6.0
+      '@itwin/core-common': ^4.6.0
+      '@itwin/core-quantity': ^4.6.0
+      '@itwin/ecschema-metadata': ^4.6.0
     dependencies:
-      '@itwin/core-bentley': 4.5.2
-      '@itwin/core-common': 4.5.2(@itwin/core-bentley@4.5.2)(@itwin/core-geometry@4.5.2)
-      '@itwin/core-quantity': 4.5.2(@itwin/core-bentley@4.5.2)
-      '@itwin/ecschema-metadata': 4.5.2(@itwin/core-bentley@4.5.2)(@itwin/core-quantity@4.5.2)
+      '@itwin/core-bentley': 4.6.0
+      '@itwin/core-common': 4.6.0(@itwin/core-bentley@4.6.0)(@itwin/core-geometry@4.6.0)
+      '@itwin/core-quantity': 4.6.0(@itwin/core-bentley@4.6.0)
+      '@itwin/ecschema-metadata': 4.6.0(@itwin/core-bentley@4.6.0)(@itwin/core-quantity@4.6.0)
 
-  /@itwin/presentation-frontend@4.5.2(@itwin/core-bentley@4.5.2)(@itwin/core-common@4.5.2)(@itwin/core-frontend@4.5.2)(@itwin/core-quantity@4.5.2)(@itwin/ecschema-metadata@4.5.2)(@itwin/presentation-common@4.5.2):
-    resolution: {integrity: sha512-mvBHrOC3YHfY8buSrxKTyLeeuPrl5g+Qi2SP8gd8CEsm2u5J0XWKDmIQ6NZ03FVinxOTpTu2h2haZtqtZcWrOQ==}
+  /@itwin/presentation-frontend@4.6.0(@itwin/core-bentley@4.6.0)(@itwin/core-common@4.6.0)(@itwin/core-frontend@4.6.0)(@itwin/core-quantity@4.6.0)(@itwin/ecschema-metadata@4.6.0)(@itwin/presentation-common@4.6.0):
+    resolution: {integrity: sha512-j9oM2rvUyF0Ixd7RUnK4w98AsrqjumnG/LCESnJuxp9pN8QYzuoDlZpwMvdWPb1JEnTMBGLzoKY8vgAs32z3vg==}
     peerDependencies:
-      '@itwin/core-bentley': ^4.5.2
-      '@itwin/core-common': ^4.5.2
-      '@itwin/core-frontend': ^4.5.2
-      '@itwin/core-quantity': ^4.5.2
-      '@itwin/ecschema-metadata': ^4.5.2
-      '@itwin/presentation-common': ^4.5.2
+      '@itwin/core-bentley': ^4.6.0
+      '@itwin/core-common': ^4.6.0
+      '@itwin/core-frontend': ^4.6.0
+      '@itwin/core-quantity': ^4.6.0
+      '@itwin/ecschema-metadata': ^4.6.0
+      '@itwin/presentation-common': ^4.6.0
     dependencies:
-      '@itwin/core-bentley': 4.5.2
-      '@itwin/core-common': 4.5.2(@itwin/core-bentley@4.5.2)(@itwin/core-geometry@4.5.2)
-      '@itwin/core-frontend': 4.5.2(@itwin/appui-abstract@4.5.2)(@itwin/core-bentley@4.5.2)(@itwin/core-common@4.5.2)(@itwin/core-geometry@4.5.2)(@itwin/core-orbitgt@4.5.2)(@itwin/core-quantity@4.5.2)(inversify@6.0.2)(reflect-metadata@0.1.14)
-      '@itwin/core-quantity': 4.5.2(@itwin/core-bentley@4.5.2)
-      '@itwin/ecschema-metadata': 4.5.2(@itwin/core-bentley@4.5.2)(@itwin/core-quantity@4.5.2)
-      '@itwin/presentation-common': 4.5.2(@itwin/core-bentley@4.5.2)(@itwin/core-common@4.5.2)(@itwin/core-quantity@4.5.2)(@itwin/ecschema-metadata@4.5.2)
+      '@itwin/core-bentley': 4.6.0
+      '@itwin/core-common': 4.6.0(@itwin/core-bentley@4.6.0)(@itwin/core-geometry@4.6.0)
+      '@itwin/core-frontend': 4.6.0(@itwin/appui-abstract@4.6.0)(@itwin/core-bentley@4.6.0)(@itwin/core-common@4.6.0)(@itwin/core-geometry@4.6.0)(@itwin/core-orbitgt@4.6.0)(@itwin/core-quantity@4.6.0)(inversify@6.0.2)(reflect-metadata@0.1.14)
+      '@itwin/core-quantity': 4.6.0(@itwin/core-bentley@4.6.0)
+      '@itwin/ecschema-metadata': 4.6.0(@itwin/core-bentley@4.6.0)(@itwin/core-quantity@4.6.0)
+      '@itwin/presentation-common': 4.6.0(@itwin/core-bentley@4.6.0)(@itwin/core-common@4.6.0)(@itwin/core-quantity@4.6.0)(@itwin/ecschema-metadata@4.6.0)
       '@itwin/unified-selection': 0.1.0
       rxjs: 7.8.1
       rxjs-for-await: 1.0.0(rxjs@7.8.1)
@@ -3746,10 +3749,10 @@ packages:
   /@itwin/unified-selection@0.1.0:
     resolution: {integrity: sha512-1Pe2i3sw5dK4h394uC5wTRWvnXxeBZGv+t9LcG7tQr2L+l0Hv+Ryo5+yTN34kABEhMe2UwSHnBRU8jOGsiorIQ==}
 
-  /@itwin/webgl-compatibility@4.5.2:
-    resolution: {integrity: sha512-zVYCCiQocfv15tU3XtRLlDarHoNhE96+/osNp7XJPZ8uxPlvBRxFl88qoTPpkq5vUrAsyC3DdSTTHX/GrceX4g==}
+  /@itwin/webgl-compatibility@4.6.0:
+    resolution: {integrity: sha512-Y0oo7evKGfeGZnqfJ6CoD4oWo3A7OGT9YxdWMeaRVQScnRO3eF3RY+K+9nd46JkFNMF1mgih5dau1YJQayUSqg==}
     dependencies:
-      '@itwin/core-bentley': 4.5.2
+      '@itwin/core-bentley': 4.6.0
 
   /@jridgewell/gen-mapping@0.3.5:
     resolution: {integrity: sha512-IzL8ZoEDIBRWEzlCcRhOaCupYyN5gdIK+Q6fbFdPDg6HqX6jpkItn7DFIpW9LQzXG6Df9sA7+OKnq0qlz/GaQg==}
@@ -10182,6 +10185,9 @@ packages:
   /merge2@1.4.1:
     resolution: {integrity: sha512-8q7VEgMJW4J8tcfVPy8g09NcQwZdbwFEqhe/WZkoIzjn/3TGDwtOCYtXGxA3O8tPzpczCCDgv+P2P5y00ZJOOg==}
     engines: {node: '>= 8'}
+
+  /meshoptimizer@0.20.0:
+    resolution: {integrity: sha512-olcJ1q+YVnjroRJpCL1Dj5aZxr2JMr2hRutMUwhuHZvpAL7SIZgOT6eMlFF4TbBGSR89tawE/gqB79J/LrW/Nw==}
 
   /methods@1.1.2:
     resolution: {integrity: sha512-iclAHeNqNm68zFtnZ0e+1L2yUIdvzNoauKU4WBA3VvH/vPFieF7qfRlwUZU+DA9P9bPXIS90ulxoUoCH23sV2w==}

@@ -37,9 +37,9 @@
     "check-internal": "node ../../scripts/checkInternal.js --apiSummary ./api/presentation-hierarchies.api.md"
   },
   "dependencies": {
-    "@itwin/core-bentley": "^4.5.2",
-    "@itwin/core-common": "^4.5.2",
-    "@itwin/core-geometry": "^4.5.2",
+    "@itwin/core-bentley": "^4.6.0",
+    "@itwin/core-common": "^4.6.0",
+    "@itwin/core-geometry": "^4.6.0",
     "@itwin/presentation-shared": "workspace:^",
     "natural-compare-lite": "^1.4.0",
     "rxjs": "^7.8.1"

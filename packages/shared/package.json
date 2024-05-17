@@ -32,7 +32,7 @@
   "module": "lib/esm/presentation-shared.js",
   "types": "lib/cjs/presentation-shared.d.ts",
   "dependencies": {
-    "@itwin/core-bentley": "^4.5.2"
+    "@itwin/core-bentley": "^4.6.0"
   },
   "devDependencies": {
     "@itwin/build-tools": "^4.6.0",
