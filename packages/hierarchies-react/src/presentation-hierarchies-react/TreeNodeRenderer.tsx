@@ -8,6 +8,7 @@ import cx from "classnames";
 import { ComponentPropsWithoutRef, ReactElement } from "react";
 import { SvgFilter, SvgFilterHollow, SvgRemove } from "@itwin/itwinui-icons-react";
 import { Button, IconButton, ProgressRadial, TreeNode } from "@itwin/itwinui-react";
+import { useLocalizationContext } from "./LocalizationContext";
 import { isPresentationHierarchyNode, PresentationHierarchyNode, PresentationTreeNode } from "./Types";
 import { useTree } from "./UseTree";
 
@@ -37,6 +38,7 @@ export function TreeNodeRenderer({
   isDisabled,
   ...nodeProps
 }: TreeNodeRendererProps) {
+  const { localization } = useLocalizationContext();
   if (isPresentationHierarchyNode(node)) {
     return (
       // eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions
@@ -65,7 +67,7 @@ export function TreeNodeRenderer({
               className="filtering-action-button"
               styleType="borderless"
               size="small"
-              title="Clear active filter"
+              title={localization.clearHierarchyLevelFilter}
               onClick={(e) => {
                 setHierarchyLevelFilter(node.id, undefined);
                 e.stopPropagation();
@@ -79,7 +81,7 @@ export function TreeNodeRenderer({
               className="filtering-action-button"
               styleType="borderless"
               size="small"
-              title="Apply filter"
+              title={localization.filterHierarchyLevel}
               onClick={(e) => {
                 onFilterClick(node.id);
                 e.stopPropagation();
@@ -94,22 +96,40 @@ export function TreeNodeRenderer({
   }
 
   if (node.type === "ChildrenPlaceholder") {
-    return <PlaceholderNode {...nodeProps} label={node.message} />;
+    return <PlaceholderNode {...nodeProps} />;
   }
 
   if (node.type === "ResultSetTooLarge") {
-    return <ResultSetTooLargeNode {...nodeProps} label={node.message} onRemoveLimit={() => setHierarchyLevelLimit(node.parentNodeId, "unbounded")} />;
+    return <ResultSetTooLargeNode {...nodeProps} message={node.message} onRemoveLimit={() => setHierarchyLevelLimit(node.parentNodeId, "unbounded")} />;
+  }
+
+  if (node.type === "NoFilterMatchingNodes") {
+    return <NoFilterMatchingNode {...nodeProps} />;
   }
   return <TreeNode {...nodeProps} label={node.message} isDisabled={true} onExpanded={/* istanbul ignore next */ () => {}} />;
 }
 
-function PlaceholderNode(props: Omit<TreeNodeProps, "onExpanded">) {
-  return <TreeNode {...props} icon={<ProgressRadial size="x-small" indeterminate />} onExpanded={/* istanbul ignore next */ () => {}}></TreeNode>;
+function PlaceholderNode(props: Omit<TreeNodeProps, "onExpanded" | "label">) {
+  const { localization } = useLocalizationContext();
+  return (
+    <TreeNode
+      {...props}
+      label={localization.loading}
+      icon={<ProgressRadial size="x-small" indeterminate />}
+      onExpanded={/* istanbul ignore next */ () => {}}
+    ></TreeNode>
+  );
 }
 
-function ResultSetTooLargeNode({ onRemoveLimit, ...props }: Omit<TreeNodeProps, "onExpanded"> & { onRemoveLimit: () => void }) {
+function ResultSetTooLargeNode({
+  onRemoveLimit,
+  message,
+  ...props
+}: Omit<TreeNodeProps, "onExpanded" | "label"> & { message: string; onRemoveLimit: () => void }) {
+  const { localization } = useLocalizationContext();
+  const hierarchyLimit = message.match(/\d+/)?.[0];
   return (
-    <TreeNode {...props} onExpanded={/* istanbul ignore next */ () => {}}>
+    <TreeNode {...props} label={`${localization.resultLimitExceeded} ${hierarchyLimit!}`} onExpanded={/* istanbul ignore next */ () => {}}>
       <Button
         styleType="borderless"
         size="small"
@@ -118,10 +138,15 @@ function ResultSetTooLargeNode({ onRemoveLimit, ...props }: Omit<TreeNodeProps, 
           e.stopPropagation();
         }}
       >
-        Remove Limit
+        {localization.removeHierarchyLimit}
       </Button>
     </TreeNode>
   );
+}
+
+function NoFilterMatchingNode(props: Omit<TreeNodeProps, "onExpanded" | "label">) {
+  const { localization } = useLocalizationContext();
+  return <TreeNode {...props} label={localization.noFilteredChildren} isDisabled={true} onExpanded={/* istanbul ignore next */ () => {}} />;
 }
 
 type TreeNodeProps = ComponentPropsWithoutRef<typeof TreeNode>;

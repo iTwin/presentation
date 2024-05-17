@@ -8,7 +8,7 @@ import { GenericInstanceFilter } from "@itwin/presentation-hierarchies";
 import { TreeRenderer } from "../presentation-hierarchies-react/TreeRenderer";
 import { PresentationHierarchyNode, PresentationInfoNode, PresentationTreeNode } from "../presentation-hierarchies-react/Types";
 import { SelectionChangeType } from "../presentation-hierarchies-react/UseSelectionHandler";
-import { createStub, createTestHierarchyNode, render, within } from "./TestUtils";
+import { createStub, createTestHierarchyNode, render, waitFor, within } from "./TestUtils";
 
 describe("Tree", () => {
   const onFilterClick = createStub<(nodeId: string) => void>();
@@ -222,15 +222,30 @@ describe("Tree", () => {
         id: "info-node",
         parentNodeId: "parent-id",
         type: "ResultSetTooLarge",
-        message: "Result set too large",
+        message: "Result set exceeds limit of 1000",
       },
     ]);
 
     const { user, getByRole, queryByText } = render(<TreeRenderer rootNodes={rootNodes} {...initialProps} />);
 
-    expect(queryByText("Result set too large")).to.not.be.null;
+    expect(queryByText("There are more items than allowed limit of 1000")).to.not.be.null;
     await user.click(getByRole("button"));
     expect(setHierarchyLevelLimit).to.be.calledOnceWith("parent-id", "unbounded");
+  });
+
+  it("renders `NoFilterMatchingNodes` node", async () => {
+    const rootNodes = createNodes([
+      {
+        id: "info-node",
+        parentNodeId: "parent-id",
+        type: "NoFilterMatchingNodes",
+        message: "No child nodes that match filter",
+      },
+    ]);
+
+    const { queryByText } = render(<TreeRenderer rootNodes={rootNodes} {...initialProps} />);
+
+    expect(queryByText("There are no child nodes matching current filter")).to.not.be.null;
   });
 
   it("renders placeholder node if children is loading", () => {
@@ -262,6 +277,71 @@ describe("Tree", () => {
     const { queryByText } = render(<TreeRenderer rootNodes={rootNodes} {...initialProps} />);
 
     expect(queryByText("Some Error")).to.not.be.null;
+  });
+
+  it("uses localization", async () => {
+    const rootNodes = createNodes([
+      {
+        id: "filtered-node",
+        isFiltered: true,
+        isFilterable: true,
+      },
+      {
+        id: "info-node-1",
+        parentNodeId: "parent-id",
+        type: "ChildrenPlaceholder",
+        message: "Loading",
+      },
+      {
+        id: "info-node-2",
+        parentNodeId: "parent-id",
+        type: "NoFilterMatchingNodes",
+        message: "No matches",
+      },
+      {
+        id: "info-node-3",
+        parentNodeId: "parent-id",
+        type: "ResultSetTooLarge",
+        message: "Result set exceeds limit of 1000",
+      },
+      {
+        id: "info-node-4",
+        parentNodeId: undefined,
+        type: "Unknown",
+        message: "Some Error",
+      },
+    ]);
+
+    const localization = {
+      loading: "Custom loading...",
+      filterHierarchyLevel: "Custom apply filter",
+      clearHierarchyLevelFilter: "Custom clear active filter",
+      noFilteredChildren: "Custom there are no child nodes matching current filter",
+      resultLimitExceeded: "Custom there are more items than allowed limit of",
+      removeHierarchyLimit: "Custom remove limit",
+    };
+
+    const { queryByText, queryByTitle, rerender } = render(<TreeRenderer rootNodes={rootNodes} {...initialProps} />);
+
+    await waitFor(() => {
+      expect(queryByText("Loading...")).to.not.be.null;
+      expect(queryByTitle("Apply filter")).to.not.be.null;
+      expect(queryByTitle("Clear active filter")).to.not.be.null;
+      expect(queryByText("There are no child nodes matching current filter")).to.not.be.null;
+      expect(queryByText("There are more items than allowed limit of 1000")).to.not.be.null;
+      expect(queryByText("Remove limit")).to.not.be.null;
+    });
+
+    rerender(<TreeRenderer rootNodes={rootNodes} {...initialProps} localization={localization} />);
+
+    await waitFor(() => {
+      expect(queryByText("Custom loading...")).to.not.be.null;
+      expect(queryByTitle("Custom apply filter")).to.not.be.null;
+      expect(queryByTitle("Custom clear active filter")).to.not.be.null;
+      expect(queryByText("Custom there are no child nodes matching current filter")).to.not.be.null;
+      expect(queryByText("Custom there are more items than allowed limit of 1000")).to.not.be.null;
+      expect(queryByText("Custom remove limit")).to.not.be.null;
+    });
   });
 });
 

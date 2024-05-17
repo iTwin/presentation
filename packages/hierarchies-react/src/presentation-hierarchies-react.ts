@@ -9,6 +9,7 @@ export * from "./presentation-hierarchies-react/Types";
 export * from "./presentation-hierarchies-react/UseTree";
 export { useSelectionHandler } from "./presentation-hierarchies-react/UseSelectionHandler";
 export { UnifiedSelectionProvider } from "./presentation-hierarchies-react/UnifiedSelectionContext";
+export { LocalizationContextProvider, useLocalizationContext } from "./presentation-hierarchies-react/LocalizationContext";
 
 export { SelectionStorage } from "@itwin/unified-selection";
 export { GenericInstanceFilter, HierarchyNode, HierarchyProvider } from "@itwin/presentation-hierarchies";

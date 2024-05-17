@@ -5,6 +5,7 @@
 
 import { ComponentPropsWithoutRef, useCallback } from "react";
 import { Tree } from "@itwin/itwinui-react";
+import { Localization, LocalizationContextProvider } from "./LocalizationContext";
 import { TreeNodeRenderer } from "./TreeNodeRenderer";
 import { isPresentationHierarchyNode, PresentationTreeNode } from "./Types";
 import { SelectionMode, useSelectionHandler } from "./UseSelectionHandler";
@@ -16,6 +17,7 @@ type TreeNodeRendererProps = ComponentPropsWithoutRef<typeof TreeNodeRenderer>;
 interface TreeRendererOwnProps {
   rootNodes: PresentationTreeNode[];
   selectionMode?: SelectionMode;
+  localization?: Localization;
 }
 
 type TreeRendererProps = Pick<
@@ -37,25 +39,28 @@ export function TreeRenderer({
   onFilterClick,
   getIcon,
   selectionMode,
+  localization,
   ...treeProps
 }: TreeRendererProps) {
   const { onNodeClick, onNodeKeyDown } = useSelectionHandler({ rootNodes, selectNodes, selectionMode: selectionMode ?? "single" });
   const nodeRenderer = useCallback<TreeProps<PresentationTreeNode>["nodeRenderer"]>(
     (nodeProps) => {
       return (
-        <TreeNodeRenderer
-          {...nodeProps}
-          expandNode={expandNode}
-          setHierarchyLevelFilter={setHierarchyLevelFilter}
-          onFilterClick={onFilterClick}
-          onNodeClick={onNodeClick}
-          onNodeKeyDown={onNodeKeyDown}
-          getIcon={getIcon}
-          setHierarchyLevelLimit={setHierarchyLevelLimit}
-        />
+        <LocalizationContextProvider localization={localization}>
+          <TreeNodeRenderer
+            {...nodeProps}
+            expandNode={expandNode}
+            setHierarchyLevelFilter={setHierarchyLevelFilter}
+            onFilterClick={onFilterClick}
+            onNodeClick={onNodeClick}
+            onNodeKeyDown={onNodeKeyDown}
+            getIcon={getIcon}
+            setHierarchyLevelLimit={setHierarchyLevelLimit}
+          />
+        </LocalizationContextProvider>
       );
     },
-    [expandNode, setHierarchyLevelLimit, setHierarchyLevelFilter, onFilterClick, onNodeClick, onNodeKeyDown, getIcon],
+    [expandNode, setHierarchyLevelLimit, setHierarchyLevelFilter, onFilterClick, onNodeClick, onNodeKeyDown, getIcon, localization],
   );
 
   const getNode = useCallback<TreeProps<PresentationTreeNode>["getNode"]>((node) => createTreeNode(node, isNodeSelected), [isNodeSelected]);
