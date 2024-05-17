@@ -3,6 +3,10 @@
 * See LICENSE.md in the project root for license terms and full copyright notice.
 *--------------------------------------------------------------------------------------------*/
 
+.stateless-tree-node {
+  user-select: none;
+}
+
 .stateless-tree-node .filtering-action-button {
   visibility: hidden;
 }
