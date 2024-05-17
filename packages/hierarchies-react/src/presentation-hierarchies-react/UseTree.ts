@@ -5,6 +5,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
+  createHierarchyProvider,
   GenericInstanceFilter,
   HierarchyLevelDefinitionsFactory,
   HierarchyNode,
@@ -106,9 +107,9 @@ function useTreeInternal({
       setHierarchySource({ HierarchyProvider: provider, isFiltering: false });
     };
 
-    const createHierarchyProvider = async () => {
+    const createProvider = async () => {
       if (!getFilteredPaths) {
-        return new HierarchyProvider({
+        return createHierarchyProvider({
           imodelAccess,
           hierarchyDefinition: getHierarchyDefinitionsProvider({ imodelAccess }),
         });
@@ -116,7 +117,7 @@ function useTreeInternal({
 
       setHierarchySource((prev) => ({ ...prev, isFiltering: true }));
       const filteredPaths = await getFilteredPaths({ imodelAccess });
-      return new HierarchyProvider({
+      return createHierarchyProvider({
         imodelAccess,
         hierarchyDefinition: getHierarchyDefinitionsProvider({ imodelAccess }),
         filtering:
@@ -130,7 +131,7 @@ function useTreeInternal({
 
     let disposed = false;
     void (async () => {
-      const provider = await createHierarchyProvider();
+      const provider = await createProvider();
       if (disposed) {
         return;
       }
