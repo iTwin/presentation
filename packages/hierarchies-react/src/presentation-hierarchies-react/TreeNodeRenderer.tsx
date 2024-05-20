@@ -164,7 +164,7 @@ function ResultSetTooLargeNodeLabel({ onFilterClick, onOverrideLimit, limit }: R
         >
           additional filtering
         </Anchor>
-        <Text>- there are more items than allowed limit of {`${limit}`}.</Text>
+        <Text>- there are more items than allowed limit of {limit}.</Text>
       </Flex>
       {limit < MAX_LIMIT_OVERRIDE ? (
         <Flex flexDirection="row" gap="3xs">
@@ -175,7 +175,7 @@ function ResultSetTooLargeNodeLabel({ onFilterClick, onOverrideLimit, limit }: R
               onOverrideLimit(getLimitOverride(limit));
             }}
           >
-            Increase hierarchy level limit
+            Increase hierarchy level size limit
           </Anchor>
         </Flex>
       ) : null}

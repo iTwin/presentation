@@ -490,7 +490,7 @@ describe("useTree", () => {
     });
   });
 
-  it("reloads tree when `getHierarchyDefinitionsProvider` changes", async () => {
+  it("reloads tree when `getHierarchyDefinition` changes", async () => {
     const rootNodes = [createTestHierarchyNode({ id: "root-1", children: true, autoExpand: true })];
     const childNodes = [createTestHierarchyNode({ id: "child-1" }), createTestHierarchyNode({ id: "child-2" })];
 

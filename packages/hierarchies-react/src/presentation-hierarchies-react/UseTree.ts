@@ -88,7 +88,7 @@ function useTreeInternal({
     model: { idToNode: new Map(), parentChildMap: new Map(), rootNode: { id: undefined, nodeData: undefined } },
     rootNodes: undefined,
   });
-  const [hierarchySource, setHierarchySource] = useState<{ HierarchyProvider?: HierarchyProvider; isFiltering: boolean }>({ isFiltering: false });
+  const [hierarchySource, setHierarchySource] = useState<{ hierarchyProvider?: HierarchyProvider; isFiltering: boolean }>({ isFiltering: false });
   const [actions] = useState<TreeActions>(
     () =>
       new TreeActions((model) => {
