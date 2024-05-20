@@ -8,9 +8,9 @@ import cx from "classnames";
 import { ComponentPropsWithoutRef, ReactElement } from "react";
 import { SvgFilter, SvgFilterHollow, SvgRemove } from "@itwin/itwinui-icons-react";
 import { Anchor, ButtonGroup, Flex, IconButton, ProgressRadial, Text, TreeNode } from "@itwin/itwinui-react";
+import { MAX_LIMIT_OVERRIDE } from "./internal/Utils";
 import { isPresentationHierarchyNode, PresentationHierarchyNode, PresentationTreeNode } from "./Types";
 import { useTree } from "./UseTree";
-import { MAX_LIMIT_OVERRIDE } from "./internal/Utils";
 
 type TreeNodeProps = ComponentPropsWithoutRef<typeof TreeNode>;
 
@@ -172,20 +172,13 @@ function ResultSetTooLargeNodeLabel({ onFilterClick, onOverrideLimit, limit }: R
             underline
             onClick={(e) => {
               e.stopPropagation();
-              onOverrideLimit(getLimitOverride(limit));
+              onOverrideLimit(MAX_LIMIT_OVERRIDE);
             }}
           >
-            Increase hierarchy level size limit
+            Increase hierarchy level size limit to {MAX_LIMIT_OVERRIDE}
           </Anchor>
         </Flex>
       ) : null}
     </Flex>
   );
-}
-
-function getLimitOverride(current: number) {
-  if (current < MAX_LIMIT_OVERRIDE / 2) {
-    return MAX_LIMIT_OVERRIDE / 2;
-  }
-  return MAX_LIMIT_OVERRIDE;
 }
