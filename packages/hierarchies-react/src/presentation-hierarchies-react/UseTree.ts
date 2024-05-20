@@ -104,7 +104,7 @@ function useTreeInternal({
     const updateHierarchyProvider = (provider: HierarchyProvider) => {
       actions.setHierarchyProvider(provider);
       actions.reloadTree(undefined);
-      setHierarchySource({ HierarchyProvider: provider, isFiltering: false });
+      setHierarchySource({ hierarchyProvider: provider, isFiltering: false });
     };
 
     const createProvider = async () => {
@@ -193,7 +193,7 @@ function useTreeInternal({
 
   return {
     rootNodes: state.rootNodes,
-    hierarchyProvider: hierarchySource.HierarchyProvider,
+    hierarchyProvider: hierarchySource.hierarchyProvider,
     isLoading: !!state.model.rootNode.isLoading || hierarchySource.isFiltering,
     expandNode,
     reloadTree,
