@@ -44,6 +44,20 @@ describe("createECSqlQueryExecutor", () => {
       expect(imodel.createQueryReader).to.be.calledOnceWith("WITH RECURSIVE cte1, cte2 ecsql");
     });
 
+    it("calls IModel's `createQueryReader` with whitespace removed from ECSQL and CTEs", async () => {
+      const imodel = {
+        createQueryReader: sinon.stub().returns(createCoreECSqlReaderStub([])),
+      };
+
+      const executor = createECSqlQueryExecutor(imodel);
+      const reader = executor.createQueryReader({ ctes: [" cte  with   whitespace "], ecsql: " ( ecsql , with   whitespace) " });
+      for await (const _ of reader) {
+      }
+
+      // eslint-disable-next-line @typescript-eslint/unbound-method
+      expect(imodel.createQueryReader).to.be.calledOnceWith("WITH RECURSIVE cte with whitespace (ecsql, with whitespace)");
+    });
+
     it("calls IModel's `createQueryReader` with `ECSqlPropertyNames` row format", async () => {
       const imodel = {
         createQueryReader: sinon.stub().returns(createCoreECSqlReaderStub([])),
