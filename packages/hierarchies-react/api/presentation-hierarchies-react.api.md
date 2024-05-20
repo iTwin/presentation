@@ -14,6 +14,8 @@ import { HierarchyDefinition } from '@itwin/presentation-hierarchies';
 import { HierarchyNode } from '@itwin/presentation-hierarchies';
 import { HierarchyNodeIdentifiersPath } from '@itwin/presentation-hierarchies';
 import { HierarchyProvider } from '@itwin/presentation-hierarchies';
+import { InstanceKey } from '@itwin/presentation-shared';
+import { IPrimitiveValueFormatter } from '@itwin/presentation-shared';
 import { JSX as JSX_2 } from 'react/jsx-runtime';
 import { LimitingECSqlQueryExecutor } from '@itwin/presentation-hierarchies';
 import { PropsWithChildren } from 'react';
@@ -31,6 +33,8 @@ export { GenericInstanceFilter }
 export interface HierarchyLevelConfiguration {
     // (undocumented)
     currentFilter?: GenericInstanceFilter;
+    // (undocumented)
+    getInstanceKeysIterator: () => AsyncIterableIterator<InstanceKey>;
     // (undocumented)
     hierarchyLevelSizeLimit?: number | "unbounded";
     // (undocumented)

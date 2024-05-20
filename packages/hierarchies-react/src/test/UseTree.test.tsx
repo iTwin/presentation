@@ -4,11 +4,12 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { expect } from "chai";
-import { createAsyncIterator, ResolvablePromise, throwingAsyncIterator } from "presentation-test-utilities";
+import { collect, createAsyncIterator, ResolvablePromise, throwingAsyncIterator } from "presentation-test-utilities";
 import { PropsWithChildren } from "react";
 import { act } from "react-dom/test-utils";
 import sinon from "sinon";
 import * as hierarchiesModule from "@itwin/presentation-hierarchies";
+import { IPrimitiveValueFormatter } from "@itwin/presentation-shared";
 import { createStorage, Selectables, StorageSelectionChangeEventArgs, StorageSelectionChangesListener } from "@itwin/unified-selection";
 import { createNodeId } from "../presentation-hierarchies-react/internal/Utils";
 import { PresentationGenericInfoNode, PresentationHierarchyNode, PresentationInfoNode } from "../presentation-hierarchies-react/Types";
@@ -19,6 +20,8 @@ import { cleanup, createStub, createTestGroupingNode, createTestHierarchyNode, r
 describe("useTree", () => {
   const hierarchyProvider = {
     getNodes: createStub<hierarchiesModule.HierarchyProvider["getNodes"]>(),
+    getNodeInstanceKeys: createStub<hierarchiesModule.HierarchyProvider["getNodeInstanceKeys"]>(),
+    setFormatter: createStub<hierarchiesModule.HierarchyProvider["setFormatter"]>(),
   };
   let createHierarchyProviderStub: sinon.SinonStub<
     Parameters<typeof hierarchiesModule.createHierarchyProvider>,
@@ -421,9 +424,13 @@ describe("useTree", () => {
   it("`getHierarchyLevelConfiguration` returns options for hierarchy node", async () => {
     const rootNodes = [createTestHierarchyNode({ id: "root-1" })];
 
-    hierarchyProvider.getNodes.callsFake((props) => {
-      return createAsyncIterator(props.parentNode === undefined ? rootNodes : []);
-    });
+    hierarchyProvider.getNodes.callsFake((props) => createAsyncIterator(props.parentNode === undefined ? rootNodes : []));
+    hierarchyProvider.getNodeInstanceKeys.callsFake(() =>
+      createAsyncIterator([
+        { id: "0x1", className: "Schema:Class" },
+        { id: "0x2", className: "Schema:Class" },
+      ]),
+    );
     const { result } = renderHook(useTree, { initialProps });
     const nodeId = createNodeId(rootNodes[0]);
 
@@ -434,6 +441,8 @@ describe("useTree", () => {
     const filterOptions = result.current.getHierarchyLevelConfiguration(nodeId);
     expect(filterOptions).to.not.be.undefined;
     expect(filterOptions?.hierarchyNode).to.be.eq(rootNodes[0]);
+    const keys = await collect(filterOptions?.getInstanceKeysIterator() ?? []);
+    expect(keys).to.have.lengthOf(2);
   });
 
   it("reloads tree when `reloadTree` is called", async () => {
@@ -487,6 +496,34 @@ describe("useTree", () => {
       expect(result.current.rootNodes).to.have.lengthOf(1);
       const node = result.current.rootNodes![0] as PresentationGenericInfoNode;
       expect(node.type).to.be.eq("Unknown");
+    });
+  });
+
+  it("sets formatter and recreates hierarchy provider with same formatter", async () => {
+    hierarchyProvider.getNodes.callsFake(() => createAsyncIterator([createTestHierarchyNode({ id: "root-1" })]));
+    const { result, rerender } = renderHook(useTree, { initialProps });
+
+    await waitFor(() => {
+      expect(result.current.rootNodes).to.have.lengthOf(1);
+    });
+
+    const formatter = {} as IPrimitiveValueFormatter;
+    act(() => {
+      result.current.setFormatter(formatter);
+    });
+
+    await waitFor(() => {
+      expect(hierarchyProvider.setFormatter).to.be.calledOnceWith(formatter);
+    });
+    createHierarchyProviderStub.resetHistory();
+
+    // cause hierarchy provider to be recreated
+    rerender({ ...initialProps, getHierarchyDefinition: () => ({}) as hierarchiesModule.HierarchyDefinition });
+
+    await waitFor(() => {
+      expect(createHierarchyProviderStub).to.be.calledOnceWith(
+        sinon.match((props: Parameters<typeof hierarchiesModule.createHierarchyProvider>[0]) => props.formatter === formatter),
+      );
     });
   });
 

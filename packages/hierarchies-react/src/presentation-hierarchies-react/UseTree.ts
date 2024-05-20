@@ -13,7 +13,7 @@ import {
   HierarchyProvider,
   LimitingECSqlQueryExecutor,
 } from "@itwin/presentation-hierarchies";
-import { ECClassHierarchyInspector, ECSchemaProvider } from "@itwin/presentation-shared";
+import { ECClassHierarchyInspector, ECSchemaProvider, InstanceKey, IPrimitiveValueFormatter } from "@itwin/presentation-shared";
 import { TreeActions } from "./internal/TreeActions";
 import { isTreeModelHierarchyNode, isTreeModelInfoNode, TreeModel, TreeModelHierarchyNode, TreeModelNode, TreeModelRootNode } from "./internal/TreeModel";
 import { useUnifiedTreeSelection, UseUnifiedTreeSelectionProps } from "./internal/UseUnifiedSelection";
@@ -23,6 +23,7 @@ import { SelectionChangeType } from "./UseSelectionHandler";
 /** @beta */
 export interface HierarchyLevelConfiguration {
   hierarchyNode: HierarchyNode | undefined;
+  getInstanceKeysIterator: () => AsyncIterableIterator<InstanceKey>;
   hierarchyLevelSizeLimit?: number | "unbounded";
   currentFilter?: GenericInstanceFilter;
 }
@@ -61,10 +62,6 @@ interface UseTreeResult {
    * or tree is reloading.
    */
   isLoading: boolean;
-  /**
-   * Provider used to load tree nodes.
-   */
-  hierarchyProvider?: HierarchyProvider;
   reloadTree: (options?: { discardState?: boolean }) => void;
   expandNode: (nodeId: string, isExpanded: boolean) => void;
   selectNodes: (nodeIds: Array<string>, changeType: SelectionChangeType) => void;
@@ -72,6 +69,7 @@ interface UseTreeResult {
   setHierarchyLevelFilter: (nodeId: string | undefined, filter: GenericInstanceFilter | undefined) => void;
   isNodeSelected: (nodeId: string) => boolean;
   getHierarchyLevelConfiguration: (nodeId: string | undefined) => HierarchyLevelConfiguration | undefined;
+  setFormatter: (formatter: IPrimitiveValueFormatter | undefined) => void;
 }
 
 interface TreeState {
@@ -99,6 +97,7 @@ function useTreeInternal({
         });
       }),
   );
+  const currentFormatter = useRef<IPrimitiveValueFormatter>();
 
   useEffect(() => {
     const updateHierarchyProvider = (provider: HierarchyProvider) => {
@@ -107,31 +106,33 @@ function useTreeInternal({
       setHierarchySource({ hierarchyProvider: provider, isFiltering: false });
     };
 
-    const createProvider = async () => {
-      if (!getFilteredPaths) {
-        return createHierarchyProvider({
-          imodelAccess,
-          hierarchyDefinition: getHierarchyDefinition({ imodelAccess }),
-        });
-      }
-
-      setHierarchySource((prev) => ({ ...prev, isFiltering: true }));
-      const filteredPaths = await getFilteredPaths({ imodelAccess });
+    const createProvider = (paths: HierarchyNodeIdentifiersPath[] | undefined) => {
       return createHierarchyProvider({
         imodelAccess,
         hierarchyDefinition: getHierarchyDefinition({ imodelAccess }),
+        formatter: currentFormatter.current,
         filtering:
-          filteredPaths !== undefined
+          paths !== undefined
             ? {
-                paths: filteredPaths,
+                paths,
               }
             : undefined,
       });
     };
 
+    const loadHierarchyProvider = async () => {
+      if (!getFilteredPaths) {
+        return createProvider(undefined);
+      }
+
+      setHierarchySource((prev) => ({ ...prev, isFiltering: true }));
+      const filteredPaths = await getFilteredPaths({ imodelAccess });
+      return createProvider(filteredPaths);
+    };
+
     let disposed = false;
     void (async () => {
-      const provider = await createProvider();
+      const provider = await loadHierarchyProvider();
       if (disposed) {
         return;
       }
@@ -170,10 +171,25 @@ function useTreeInternal({
 
   const isNodeSelected = useCallback((nodeId: string) => TreeModel.isNodeSelected(state.model, nodeId), [state]);
 
+  const setFormatter = useCallback(
+    (formatter: IPrimitiveValueFormatter | undefined) => {
+      currentFormatter.current = formatter;
+      // istanbul ignore if
+      if (!hierarchySource.hierarchyProvider) {
+        return;
+      }
+
+      hierarchySource.hierarchyProvider.setFormatter(formatter);
+      actions.reloadTree();
+    },
+    [hierarchySource.hierarchyProvider, actions],
+  );
+
   const getHierarchyLevelConfiguration = useCallback(
     (nodeId: string | undefined): HierarchyLevelConfiguration | undefined => {
       const node = actions.getNode(nodeId);
-      if (!node || isTreeModelInfoNode(node)) {
+      const hierarchyProvider = hierarchySource.hierarchyProvider;
+      if (!hierarchyProvider || !node || isTreeModelInfoNode(node)) {
         return undefined;
       }
       const hierarchyNode = node.nodeData;
@@ -184,16 +200,16 @@ function useTreeInternal({
       const currentFilter = node.instanceFilter;
       return {
         hierarchyNode,
+        getInstanceKeysIterator: () => hierarchyProvider.getNodeInstanceKeys({ parentNode: hierarchyNode }),
         currentFilter,
         hierarchyLevelSizeLimit: node.hierarchyLimit,
       };
     },
-    [actions],
+    [actions, hierarchySource.hierarchyProvider],
   );
 
   return {
     rootNodes: state.rootNodes,
-    hierarchyProvider: hierarchySource.hierarchyProvider,
     isLoading: !!state.model.rootNode.isLoading || hierarchySource.isFiltering,
     expandNode,
     reloadTree,
@@ -203,6 +219,7 @@ function useTreeInternal({
     getHierarchyLevelConfiguration,
     getNode,
     setHierarchyLevelFilter,
+    setFormatter,
   };
 }
 

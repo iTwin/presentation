@@ -60,7 +60,14 @@ function Tree({ imodel, imodelAccess, height, width }: { imodel: IModelConnectio
     };
   }, [filter]);
 
-  const { rootNodes, hierarchyProvider, isLoading, getHierarchyLevelConfiguration, reloadTree, ...treeProps } = useUnifiedSelectionTree({
+  const {
+    rootNodes,
+    isLoading,
+    getHierarchyLevelConfiguration,
+    reloadTree: _,
+    setFormatter,
+    ...treeProps
+  } = useUnifiedSelectionTree({
     imodelKey: imodel.key,
     sourceName: "StatelessTreeV2",
     imodelAccess,
@@ -70,13 +77,9 @@ function Tree({ imodel, imodelAccess, height, width }: { imodel: IModelConnectio
 
   const [shouldUseCustomFormatter, setShouldUseCustomFormatter] = useState<boolean>(false);
   const toggleFormatter = () => {
-    if (!hierarchyProvider) {
-      return;
-    }
     const newValue = !shouldUseCustomFormatter;
-    hierarchyProvider.setFormatter(newValue ? customFormatter : undefined);
     setShouldUseCustomFormatter(newValue);
-    reloadTree();
+    setFormatter(newValue ? customFormatter : undefined);
   };
 
   const [filteringOptions, setFilteringOptions] = useState<{ nodeId: string | undefined; options: HierarchyLevelConfiguration }>();
@@ -88,14 +91,12 @@ function Tree({ imodel, imodelAccess, height, width }: { imodel: IModelConnectio
     [getHierarchyLevelConfiguration],
   );
   const propertiesSource = useMemo<(() => Promise<PresentationInstanceFilterPropertiesSource>) | undefined>(() => {
-    if (!hierarchyProvider || !filteringOptions) {
+    if (!filteringOptions) {
       return undefined;
     }
 
     return async () => {
-      const inputKeysIterator = hierarchyProvider.getNodeInstanceKeys({
-        parentNode: filteringOptions.options.hierarchyNode,
-      });
+      const inputKeysIterator = filteringOptions.options.getInstanceKeysIterator();
       const inputKeys = [];
       for await (const inputKey of inputKeysIterator) {
         inputKeys.push(inputKey);
@@ -128,7 +129,7 @@ function Tree({ imodel, imodelAccess, height, width }: { imodel: IModelConnectio
 
       return { descriptor, inputKeys };
     };
-  }, [filteringOptions, imodel, hierarchyProvider]);
+  }, [filteringOptions, imodel]);
 
   const getInitialFilter = useMemo(() => {
     const currentFilter = filteringOptions?.options.currentFilter;
