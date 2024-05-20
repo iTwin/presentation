@@ -23,7 +23,10 @@ import { SelectionChangeType } from "./UseSelectionHandler";
 /** @beta */
 export interface HierarchyLevelConfiguration {
   hierarchyNode: HierarchyNode | undefined;
-  getInstanceKeysIterator: () => AsyncIterableIterator<InstanceKey>;
+  getInstanceKeysIterator: (props?: {
+    instanceFilter?: GenericInstanceFilter;
+    hierarchyLevelSizeLimit?: number | "unbounded";
+  }) => AsyncIterableIterator<InstanceKey>;
   hierarchyLevelSizeLimit?: number | "unbounded";
   currentFilter?: GenericInstanceFilter;
 }
@@ -200,7 +203,12 @@ function useTreeInternal({
       const currentFilter = node.instanceFilter;
       return {
         hierarchyNode,
-        getInstanceKeysIterator: () => hierarchyProvider.getNodeInstanceKeys({ parentNode: hierarchyNode }),
+        getInstanceKeysIterator: (props) =>
+          hierarchyProvider.getNodeInstanceKeys({
+            parentNode: hierarchyNode,
+            instanceFilter: props?.instanceFilter,
+            hierarchyLevelSizeLimit: props?.hierarchyLevelSizeLimit,
+          }),
         currentFilter,
         hierarchyLevelSizeLimit: node.hierarchyLimit,
       };

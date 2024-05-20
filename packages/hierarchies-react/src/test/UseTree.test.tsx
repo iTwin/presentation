@@ -441,8 +441,14 @@ describe("useTree", () => {
     const filterOptions = result.current.getHierarchyLevelConfiguration(nodeId);
     expect(filterOptions).to.not.be.undefined;
     expect(filterOptions?.hierarchyNode).to.be.eq(rootNodes[0]);
-    const keys = await collect(filterOptions?.getInstanceKeysIterator() ?? []);
+    const filter = { rules: { rules: [], operator: "and" }, propertyClassNames: [], relatedInstances: [] } satisfies hierarchiesModule.GenericInstanceFilter;
+    const keys = await collect(filterOptions?.getInstanceKeysIterator({ instanceFilter: filter, hierarchyLevelSizeLimit: 100 }) ?? []);
     expect(keys).to.have.lengthOf(2);
+    expect(hierarchyProvider.getNodeInstanceKeys).to.be.calledWith(
+      sinon.match(
+        (props: Parameters<typeof hierarchyProvider.getNodeInstanceKeys>[0]) => props.instanceFilter === filter && props.hierarchyLevelSizeLimit === 100,
+      ),
+    );
   });
 
   it("reloads tree when `reloadTree` is called", async () => {
