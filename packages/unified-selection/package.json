@@ -41,7 +41,7 @@
     "check-internal": "node ../../scripts/checkInternal.js --apiSummary ./api/unified-selection.api.md"
   },
   "dependencies": {
-    "@itwin/core-bentley": "^4.5.2",
+    "@itwin/core-bentley": "^4.6.0",
     "@itwin/presentation-shared": "workspace:^",
     "rxjs": "^7.8.1",
     "rxjs-for-await": "^1.0.0"

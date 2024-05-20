@@ -6,13 +6,27 @@
 import "./App.css";
 import "@bentley/icons-generic-webfont/dist/bentley-icons-generic-webfont.css";
 import "@itwin/itwinui-react/styles.css";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
+import { Provider } from "react-redux";
+import { useResizeDetector } from "react-resize-detector";
 import { from, reduce, Subject, takeUntil } from "rxjs";
+import { StandardContentLayouts } from "@itwin/appui-abstract";
+import {
+  ConfigurableCreateInfo,
+  ConfigurableUiContent,
+  ContentControl,
+  ContentGroup,
+  StagePanelState,
+  StageUsage,
+  StateManager,
+  ThemeManager,
+  UiFramework,
+  UiStateStorageHandler,
+  WidgetState,
+} from "@itwin/appui-react";
 import { Id64String } from "@itwin/core-bentley";
 import { IModelApp, IModelConnection } from "@itwin/core-frontend";
-import { Geometry } from "@itwin/core-geometry";
 import { UnitSystemKey } from "@itwin/core-quantity";
-import { ElementSeparator, Orientation } from "@itwin/core-react";
 import { ThemeProvider, ToggleSwitch } from "@itwin/itwinui-react";
 import { SchemaMetadataContextProvider, UnifiedSelectionContextProvider } from "@itwin/presentation-components";
 import { createECSchemaProvider, createECSqlQueryExecutor } from "@itwin/presentation-core-interop";
@@ -25,7 +39,8 @@ import { IModelSelector } from "../imodel-selector/IModelSelector";
 import { PropertiesWidget } from "../properties-widget/PropertiesWidget";
 import { RulesetSelector } from "../ruleset-selector/RulesetSelector";
 import { TableWidget } from "../table-widget/TableWidget";
-import { TreeWidget } from "../tree-widget/TreeWidget";
+import { RulesDrivenTreeWidget } from "../tree-widget/RulesDrivenTree";
+import { StatelessTreeV2 } from "../tree-widget/StatelessTree";
 import { UnitSystemSelector } from "../unit-system-selector/UnitSystemSelector";
 import ViewportContentControl from "../viewport/ViewportContentControl";
 
@@ -191,6 +206,80 @@ interface IModelComponentsProps {
 function IModelComponents(props: IModelComponentsProps) {
   const { imodel, rulesetId } = props;
 
+  useEffect(() => {
+    UiFramework.frontstages.addFrontstageProvider({
+      id: "presentation-test-app-frontstage-provider",
+      frontstageConfig: () => ({
+        id: "presentation-test-app-frontstage",
+        usage: StageUsage.General,
+        version: 1,
+        contentGroup: new ContentGroup({
+          id: "presentation-test-app-stage-content",
+          layout: StandardContentLayouts.singleView,
+          contents: [
+            {
+              id: "primaryContent",
+              classId: ViewportContent,
+              applicationData: { imodel },
+            },
+          ],
+        }),
+        rightPanel: {
+          defaultState: StagePanelState.Open,
+          maxSizeSpec: { percentage: 90 },
+          minSizeSpec: 400,
+          sizeSpec: { percentage: 40 },
+          sections: {
+            start: [
+              {
+                id: "rules-driven-tree",
+                label: "Rules-driven tree",
+                content: <RulesDrivenTreePanel imodel={imodel} rulesetId={rulesetId} />,
+                defaultState: WidgetState.Open,
+                canPopout: true,
+              },
+              {
+                id: "stateless-tree",
+                label: "Stateless tree",
+                content: <StatelessTreePanel imodel={imodel} />,
+                defaultState: WidgetState.Open,
+                canPopout: true,
+              },
+            ],
+            end: [
+              {
+                id: "properties",
+                label: "Properties widget",
+                content: <PropertiesWidget imodel={imodel} rulesetId={rulesetId} />,
+                defaultState: WidgetState.Open,
+                canPopout: true,
+              },
+            ],
+          },
+        },
+        bottomPanel: {
+          defaultState: StagePanelState.Minimized,
+          sections: {
+            start: [
+              {
+                id: "table",
+                label: "Table widget",
+                content: <TableWidget imodel={imodel} rulesetId={rulesetId} />,
+                defaultState: WidgetState.Closed,
+                canFloat: true,
+                canPopout: true,
+              },
+            ],
+          },
+        },
+      }),
+    });
+    void UiFramework.frontstages.setActiveFrontstage("presentation-test-app-frontstage-provider");
+    return () => {
+      UiFramework.frontstages.clearFrontstageProviders();
+    };
+  }, [imodel, rulesetId]);
+
   useEffect(
     () =>
       enableUnifiedSelectionSyncWithIModel({
@@ -207,91 +296,46 @@ function IModelComponents(props: IModelComponentsProps) {
     [imodel],
   );
 
-  const {
-    ref: contentRef,
-    ratio: contentRatio,
-    onResize: onContentResize,
-    width: contentWidth,
-  } = useResizableElement<HTMLDivElement>({ min: 0.2, max: 0.9, initial: 0.7 }); // content
-  const {
-    ref: panelRef,
-    ratio: panelRatio,
-    onResize: onPanelResize,
-    height: panelHeight,
-  } = useResizableElement<HTMLDivElement>({ min: 0.3, max: 0.7, initial: 0.5 }); // rightPanel
-
   return (
-    <div
-      className="app-content"
-      ref={contentRef}
-      style={{
-        gridTemplateColumns: `${contentRatio * 100}% 1px calc(${(1 - contentRatio) * 100}% - 1px)`,
-      }}
-    >
-      <SchemaMetadataContextProvider imodel={imodel} schemaContextProvider={MyAppFrontend.getSchemaContext.bind(MyAppFrontend)}>
-        <UnifiedSelectionContextProvider imodel={imodel} selectionLevel={0}>
-          <UnifiedSelectionProvider storage={MyAppFrontend.selectionStorage}>
-            <div className="app-content-left">
-              <div className="app-content-left-top">
-                <ViewportContentControl imodel={imodel} />
-              </div>
-              <div className="app-content-left-bottom">
-                <TableWidget imodel={imodel} rulesetId={rulesetId} />
-              </div>
-            </div>
-            <ElementSeparator
-              orientation={Orientation.Horizontal}
-              ratio={contentRatio}
-              movableArea={contentWidth}
-              separatorSize={10}
-              onRatioChanged={onContentResize}
-            />
-            <div
-              ref={panelRef}
-              className="app-content-right"
-              style={{
-                gridTemplateRows: `${panelRatio * 100}% 30px calc(${(1 - panelRatio) * 100}% - 30px)`,
-              }}
-            >
-              <TreeWidget imodel={imodel} rulesetId={rulesetId} />
-              <div className="app-content-right-separator">
-                <hr />
-                <ElementSeparator orientation={Orientation.Vertical} ratio={panelRatio} movableArea={panelHeight} onRatioChanged={onPanelResize} />
-              </div>
-              <PropertiesWidget imodel={imodel} rulesetId={rulesetId} />
-            </div>
-          </UnifiedSelectionProvider>
-        </UnifiedSelectionContextProvider>
-      </SchemaMetadataContextProvider>
+    <SchemaMetadataContextProvider imodel={imodel} schemaContextProvider={MyAppFrontend.getSchemaContext.bind(MyAppFrontend)}>
+      <UnifiedSelectionContextProvider imodel={imodel} selectionLevel={0}>
+        <UnifiedSelectionProvider storage={MyAppFrontend.selectionStorage}>
+          <Provider store={StateManager.store}>
+            <ThemeManager>
+              <UiStateStorageHandler>
+                <ConfigurableUiContent />
+              </UiStateStorageHandler>
+            </ThemeManager>
+          </Provider>
+        </UnifiedSelectionProvider>
+      </UnifiedSelectionContextProvider>
+    </SchemaMetadataContextProvider>
+  );
+}
+
+class ViewportContent extends ContentControl {
+  constructor(info: ConfigurableCreateInfo, options: any) {
+    super(info, options);
+    if (options.imodel) {
+      this.reactNode = <ViewportContentControl imodel={options.imodel} />;
+    }
+  }
+}
+
+function RulesDrivenTreePanel(props: { imodel: IModelConnection; rulesetId?: string }) {
+  const { width, height, ref } = useResizeDetector<HTMLDivElement>();
+  return (
+    <div className="tree-widget-tabs-content" ref={ref} style={{ width: "100%", height: "100%", overflow: "hidden" }}>
+      <RulesDrivenTreeWidget imodel={props.imodel} rulesetId={props.rulesetId} width={width} height={height} />
     </div>
   );
 }
 
-function useResizableElement<T extends Element>({ min, max, initial }: { min: number; max: number; initial: number }) {
-  const ref = useRef<T>(null);
-  const [ratio, setRatio] = useState(initial);
-  const [height, setHeight] = useState(0);
-  const [width, setWidth] = useState(0);
-
-  useEffect(() => {
-    if (!ref.current) {
-      return;
-    }
-
-    const rect = ref.current.getBoundingClientRect();
-    setHeight(rect.height);
-    setWidth(rect.width);
-  }, []);
-
-  const onResize = (newRatio: number) => {
-    setRatio(Geometry.clamp(newRatio, min, max));
-  };
-
-  return {
-    ref,
-    ratio,
-    height,
-    width,
-    onResize,
-  };
+function StatelessTreePanel(props: { imodel: IModelConnection }) {
+  const { width, height, ref } = useResizeDetector<HTMLDivElement>();
+  return (
+    <div className="tree-widget-tabs-content" ref={ref} style={{ width: "100%", height: "100%", overflow: "hidden" }}>
+      <StatelessTreeV2 imodel={props.imodel} width={width ?? 0} height={height ?? 0} />
+    </div>
+  );
 }

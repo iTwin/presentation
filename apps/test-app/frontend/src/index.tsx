@@ -6,7 +6,7 @@
 import "./index.css";
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
-import { UiComponents } from "@itwin/components-react";
+import { UiFramework } from "@itwin/appui-react";
 import { Logger, LogLevel, ProcessDetector } from "@itwin/core-bentley";
 import { BentleyCloudRpcManager } from "@itwin/core-common";
 import { ElectronApp } from "@itwin/core-electron/lib/cjs/ElectronFrontend";
@@ -54,7 +54,7 @@ async function initializeApp() {
   }
 
   readyPromises.push(initializePresentation());
-  readyPromises.push(UiComponents.initialize(IModelApp.localization));
+  readyPromises.push(UiFramework.initialize(undefined, undefined));
   readyPromises.push(IModelApp.quantityFormatter.setActiveUnitSystem("metric"));
   await Promise.all(readyPromises);
 }

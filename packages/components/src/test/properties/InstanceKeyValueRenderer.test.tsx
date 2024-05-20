@@ -82,20 +82,20 @@ describe("InstanceKeyValueRenderer", () => {
 
       it("renders empty when there is no display value", () => {
         const record = createNavigationPropertyRecord(createPrimitiveValue(instanceKey));
-        const { getByRole } = render(<UnifiedSelectionContextProvider imodel={testIModel}>{renderer.render(record)}</UnifiedSelectionContextProvider>);
-        expect(getByRole("link").textContent).to.be.empty;
+        const { getByTitle } = render(<UnifiedSelectionContextProvider imodel={testIModel}>{renderer.render(record)}</UnifiedSelectionContextProvider>);
+        expect(getByTitle("instance-key-value-renderer.select-instance").textContent).to.be.empty;
       });
 
       it("changes current selection when clicked", async () => {
         const record = createNavigationPropertyRecord(createPrimitiveValue(instanceKey));
-        const { getByRole } = render(
+        const { getByTitle } = render(
           <UnifiedSelectionContextProvider imodel={testIModel} selectionLevel={10}>
             {renderer.render(record)}
           </UnifiedSelectionContextProvider>,
         );
 
         act(() => {
-          getByRole("link").click();
+          getByTitle("instance-key-value-renderer.select-instance").click();
         });
 
         await waitFor(() => expect(Presentation.selection.getSelection(testIModel, 10).has(instanceKey)).to.be.true);
@@ -103,9 +103,9 @@ describe("InstanceKeyValueRenderer", () => {
 
       it("renders non-clickable display value when UnifiedSelectionContext is not present", () => {
         const record = createNavigationPropertyRecord(createPrimitiveValue(instanceKey, "test_display_value"));
-        const { getByText, queryByRole } = render(renderer.render(record));
+        const { getByText, queryByTitle } = render(renderer.render(record));
         expect(getByText("test_display_value")).not.to.be.null;
-        expect(queryByRole("link")).to.be.null;
+        expect(queryByTitle("instance-key-value-renderer.select-instance")).to.be.null;
       });
 
       describe("with custom type converter", () => {
@@ -148,8 +148,8 @@ describe("InstanceKeyValueRenderer", () => {
         it("renders empty if converted value is undefined and there is no default", () => {
           const record = createNavigationPropertyRecord(createPrimitiveValue(instanceKey));
           applyCustomTypeConverter(record, undefined);
-          const { getByRole } = render(<UnifiedSelectionContextProvider imodel={testIModel}>{renderer.render(record)}</UnifiedSelectionContextProvider>);
-          expect(getByRole("link").textContent).to.be.empty;
+          const { getByTitle } = render(<UnifiedSelectionContextProvider imodel={testIModel}>{renderer.render(record)}</UnifiedSelectionContextProvider>);
+          expect(getByTitle("instance-key-value-renderer.select-instance").textContent).to.be.empty;
         });
       });
     });
