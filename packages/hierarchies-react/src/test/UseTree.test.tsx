@@ -380,7 +380,7 @@ describe("useTree", () => {
     });
   });
 
-  it("`getHierarchyLevelConfiguration` returns undefined for invalid node", async () => {
+  it("`getHierarchyLevelDetails` returns undefined for invalid node", async () => {
     const rootNodes = [createTestHierarchyNode({ id: "root-1" })];
 
     hierarchyProvider.getNodes.callsFake((props) => {
@@ -392,11 +392,11 @@ describe("useTree", () => {
       expect(result.current.rootNodes).to.have.lengthOf(1);
     });
 
-    const filterOptions = result.current.getHierarchyLevelConfiguration("invalid");
-    expect(filterOptions).to.be.undefined;
+    const details = result.current.getHierarchyLevelDetails("invalid");
+    expect(details).to.be.undefined;
   });
 
-  it("`getHierarchyLevelConfiguration` returns undefined for grouping node", async () => {
+  it("`getHierarchyLevelDetails` returns undefined for grouping node", async () => {
     const rootNodes = [createTestGroupingNode({ id: "grouping-node", children: true, autoExpand: true })];
     const childNodes = [createTestHierarchyNode({ id: "grouped-node-1" }), createTestHierarchyNode({ id: "grouped-node-1" })];
 
@@ -417,11 +417,11 @@ describe("useTree", () => {
       expect((result.current.rootNodes![0] as PresentationHierarchyNode).children).to.have.lengthOf(2);
     });
 
-    const filterOptions = result.current.getHierarchyLevelConfiguration(nodeId);
-    expect(filterOptions).to.be.undefined;
+    const details = result.current.getHierarchyLevelDetails(nodeId);
+    expect(details).to.be.undefined;
   });
 
-  it("`getHierarchyLevelConfiguration` returns options for hierarchy node", async () => {
+  it("`getHierarchyLevelDetails` returns options for hierarchy node", async () => {
     const rootNodes = [createTestHierarchyNode({ id: "root-1" })];
 
     hierarchyProvider.getNodes.callsFake((props) => createAsyncIterator(props.parentNode === undefined ? rootNodes : []));
@@ -438,11 +438,11 @@ describe("useTree", () => {
       expect(result.current.rootNodes).to.have.lengthOf(1);
     });
 
-    const filterOptions = result.current.getHierarchyLevelConfiguration(nodeId);
-    expect(filterOptions).to.not.be.undefined;
-    expect(filterOptions?.hierarchyNode).to.be.eq(rootNodes[0]);
+    const details = result.current.getHierarchyLevelDetails(nodeId);
+    expect(details).to.not.be.undefined;
+    expect(details?.hierarchyNode).to.be.eq(rootNodes[0]);
     const filter = { rules: { rules: [], operator: "and" }, propertyClassNames: [], relatedInstances: [] } satisfies hierarchiesModule.GenericInstanceFilter;
-    const keys = await collect(filterOptions?.getInstanceKeysIterator({ instanceFilter: filter, hierarchyLevelSizeLimit: 100 }) ?? []);
+    const keys = await collect(details?.getInstanceKeysIterator({ instanceFilter: filter, hierarchyLevelSizeLimit: 100 }) ?? []);
     expect(keys).to.have.lengthOf(2);
     expect(hierarchyProvider.getNodeInstanceKeys).to.be.calledWith(
       sinon.match(

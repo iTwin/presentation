@@ -18,7 +18,7 @@ import {
 import { createECSchemaProvider, createECSqlQueryExecutor } from "@itwin/presentation-core-interop";
 import { Presentation } from "@itwin/presentation-frontend";
 import { createLimitingECSqlQueryExecutor, GenericInstanceFilter, LimitingECSqlQueryExecutor } from "@itwin/presentation-hierarchies";
-import { HierarchyLevelConfiguration, PresentationHierarchyNode, TreeRenderer, useUnifiedSelectionTree } from "@itwin/presentation-hierarchies-react";
+import { HierarchyLevelDetails, PresentationHierarchyNode, TreeRenderer, useUnifiedSelectionTree } from "@itwin/presentation-hierarchies-react";
 import { ModelsTreeDefinition } from "@itwin/presentation-models-tree";
 import { createCachingECClassHierarchyInspector, ECClassHierarchyInspector, ECSchemaProvider, IPrimitiveValueFormatter } from "@itwin/presentation-shared";
 import { MyAppFrontend } from "../../api/MyAppFrontend";
@@ -63,7 +63,7 @@ function Tree({ imodel, imodelAccess, height, width }: { imodel: IModelConnectio
   const {
     rootNodes,
     isLoading,
-    getHierarchyLevelConfiguration,
+    getHierarchyLevelDetails,
     reloadTree: _,
     setFormatter,
     ...treeProps
@@ -82,13 +82,13 @@ function Tree({ imodel, imodelAccess, height, width }: { imodel: IModelConnectio
     setFormatter(newValue ? customFormatter : undefined);
   };
 
-  const [filteringOptions, setFilteringOptions] = useState<{ nodeId: string | undefined; options: HierarchyLevelConfiguration }>();
+  const [filteringOptions, setFilteringOptions] = useState<{ nodeId: string | undefined; hierarchyLevelDetails: HierarchyLevelDetails }>();
   const onFilterClick = useCallback(
     (nodeId: string | undefined) => {
-      const options = getHierarchyLevelConfiguration(nodeId);
-      setFilteringOptions(options ? { nodeId, options } : undefined);
+      const hierarchyLevelDetails = getHierarchyLevelDetails(nodeId);
+      setFilteringOptions(hierarchyLevelDetails ? { nodeId, hierarchyLevelDetails } : undefined);
     },
-    [getHierarchyLevelConfiguration],
+    [getHierarchyLevelDetails],
   );
   const propertiesSource = useMemo<(() => Promise<PresentationInstanceFilterPropertiesSource>) | undefined>(() => {
     if (!filteringOptions) {
@@ -96,7 +96,7 @@ function Tree({ imodel, imodelAccess, height, width }: { imodel: IModelConnectio
     }
 
     return async () => {
-      const inputKeysIterator = filteringOptions.options.getInstanceKeysIterator();
+      const inputKeysIterator = filteringOptions.hierarchyLevelDetails.getInstanceKeysIterator();
       const inputKeys = [];
       for await (const inputKey of inputKeysIterator) {
         inputKeys.push(inputKey);
@@ -132,7 +132,7 @@ function Tree({ imodel, imodelAccess, height, width }: { imodel: IModelConnectio
   }, [filteringOptions, imodel]);
 
   const getInitialFilter = useMemo(() => {
-    const currentFilter = filteringOptions?.options.currentFilter;
+    const currentFilter = filteringOptions?.hierarchyLevelDetails.currentFilter;
     if (!currentFilter) {
       return undefined;
     }

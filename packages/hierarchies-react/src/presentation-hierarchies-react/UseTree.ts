@@ -21,7 +21,7 @@ import { PresentationHierarchyNode, PresentationTreeNode } from "./Types";
 import { SelectionChangeType } from "./UseSelectionHandler";
 
 /** @beta */
-export interface HierarchyLevelConfiguration {
+export interface HierarchyLevelDetails {
   hierarchyNode: HierarchyNode | undefined;
   getInstanceKeysIterator: (props?: {
     instanceFilter?: GenericInstanceFilter;
@@ -71,7 +71,7 @@ interface UseTreeResult {
   setHierarchyLevelLimit: (nodeId: string | undefined, limit: undefined | number | "unbounded") => void;
   setHierarchyLevelFilter: (nodeId: string | undefined, filter: GenericInstanceFilter | undefined) => void;
   isNodeSelected: (nodeId: string) => boolean;
-  getHierarchyLevelConfiguration: (nodeId: string | undefined) => HierarchyLevelConfiguration | undefined;
+  getHierarchyLevelDetails: (nodeId: string | undefined) => HierarchyLevelDetails | undefined;
   setFormatter: (formatter: IPrimitiveValueFormatter | undefined) => void;
 }
 
@@ -188,8 +188,8 @@ function useTreeInternal({
     [hierarchySource.hierarchyProvider, actions],
   );
 
-  const getHierarchyLevelConfiguration = useCallback(
-    (nodeId: string | undefined): HierarchyLevelConfiguration | undefined => {
+  const getHierarchyLevelDetails = useCallback<UseTreeResult["getHierarchyLevelDetails"]>(
+    (nodeId) => {
       const node = actions.getNode(nodeId);
       const hierarchyProvider = hierarchySource.hierarchyProvider;
       if (!hierarchyProvider || !node || isTreeModelInfoNode(node)) {
@@ -224,7 +224,7 @@ function useTreeInternal({
     selectNodes,
     isNodeSelected,
     setHierarchyLevelLimit,
-    getHierarchyLevelConfiguration,
+    getHierarchyLevelDetails,
     getNode,
     setHierarchyLevelFilter,
     setFormatter,

@@ -1,7 +1,7 @@
 sep=;
 Release Tag;API Item
 beta;createTreeNode(node: PresentationTreeNode, isNodeSelected: (nodeId: string) => boolean): ReturnType
-beta;HierarchyLevelConfiguration
+beta;HierarchyLevelDetails
 beta;isPresentationHierarchyNode(node: PresentationTreeNode): node is PresentationHierarchyNode
 beta;PresentationGenericInfoNode
 beta;PresentationHierarchyNode

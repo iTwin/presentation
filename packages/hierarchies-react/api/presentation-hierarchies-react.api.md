@@ -30,7 +30,7 @@ export function createTreeNode(node: PresentationTreeNode, isNodeSelected: (node
 export { GenericInstanceFilter }
 
 // @beta (undocumented)
-export interface HierarchyLevelConfiguration {
+export interface HierarchyLevelDetails {
     // (undocumented)
     currentFilter?: GenericInstanceFilter;
     // (undocumented)
