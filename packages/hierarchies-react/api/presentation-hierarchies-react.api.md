@@ -34,7 +34,10 @@ export interface HierarchyLevelConfiguration {
     // (undocumented)
     currentFilter?: GenericInstanceFilter;
     // (undocumented)
-    getInstanceKeysIterator: () => AsyncIterableIterator<InstanceKey>;
+    getInstanceKeysIterator: (props?: {
+        instanceFilter?: GenericInstanceFilter;
+        hierarchyLevelSizeLimit?: number | "unbounded";
+    }) => AsyncIterableIterator<InstanceKey>;
     // (undocumented)
     hierarchyLevelSizeLimit?: number | "unbounded";
     // (undocumented)
