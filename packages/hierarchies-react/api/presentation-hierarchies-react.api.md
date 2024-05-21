@@ -30,18 +30,14 @@ export function createRenderedTreeNodeData(node: RenderedTreeNode, isNodeSelecte
 
 export { GenericInstanceFilter }
 
-// @beta (undocumented)
+// @beta
 export interface HierarchyLevelDetails {
-    // (undocumented)
     currentFilter?: GenericInstanceFilter;
-    // (undocumented)
     getInstanceKeysIterator: (props?: {
         instanceFilter?: GenericInstanceFilter;
         hierarchyLevelSizeLimit?: number | "unbounded";
     }) => AsyncIterableIterator<InstanceKey>;
-    // (undocumented)
     hierarchyLevelSizeLimit?: number | "unbounded";
-    // (undocumented)
     hierarchyNode: HierarchyNode | undefined;
 }
 
@@ -119,16 +115,16 @@ export function TreeNodeRenderer({ node, expandNode, getIcon, setHierarchyLevelF
 // @beta
 export function TreeRenderer({ rootNodes, expandNode, selectNodes, isNodeSelected, setHierarchyLevelLimit, setHierarchyLevelFilter, onFilterClick, getIcon, selectionMode, ...treeProps }: TreeRendererProps): JSX_2.Element;
 
-// @beta (undocumented)
+// @beta
 export function UnifiedSelectionProvider({ storage, children }: PropsWithChildren<Props>): JSX_2.Element;
 
-// @beta (undocumented)
+// @beta
 export function useSelectionHandler(props: UseSelectionHandlerProps): UseSelectionHandlerResult;
 
-// @beta (undocumented)
+// @beta
 export function useTree(props: UseTreeProps): UseTreeResult;
 
-// @beta (undocumented)
+// @beta
 export function useUnifiedSelectionTree({ imodelKey, sourceName, ...props }: UseTreeProps & Omit<UseUnifiedTreeSelectionProps, "getNode">): UseTreeResult;
 
 // (No @packageDocumentation comment for this package)

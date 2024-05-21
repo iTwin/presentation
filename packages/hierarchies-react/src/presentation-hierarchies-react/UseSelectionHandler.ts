@@ -5,21 +5,33 @@
 
 import { useEffect, useRef } from "react";
 import { isPresentationHierarchyNode, PresentationTreeNode } from "./TreeNode";
+import { useTree } from "./UseTree";
 
-/** @internal */
+/**
+ * A union of different supported selection modes in a tree component:
+ * - `none`: No selection is allowed.
+ * - `single`: Only one node can be selected at a time.
+ * - `extended`: Multiple nodes can be selected using shift and ctrl keys.
+ * - `multiple`: Multiple nodes can be selected without using shift or ctrl keys.
+ *
+ * @internal
+ */
 export type SelectionMode = "none" | "single" | "extended" | "multiple";
 
 /** @internal */
 export type SelectionChangeType = "add" | "replace" | "remove";
 
-interface UseSelectionHandlerProps {
-  rootNodes: Array<PresentationTreeNode> | undefined;
-  selectNodes: (nodeIds: Array<string>, changeType: SelectionChangeType) => void;
+/** Props for `useSelectionHandler` hook. */
+type UseSelectionHandlerProps = Pick<ReturnType<typeof useTree>, "rootNodes" | "selectNodes"> & {
+  /** Selection mode that the component is working in. */
   selectionMode: SelectionMode;
-}
+};
 
+/** Result of `useSelectionHandler` hook. */
 interface UseSelectionHandlerResult {
+  /** Should be called by node renderer when a node component is clicked. */
   onNodeClick: (nodeId: string, isSelected: boolean, event: React.MouseEvent<HTMLElement, MouseEvent>) => void;
+  /** Should be called by node renderer when a keyboard event happens on a node. */
   onNodeKeyDown: (nodeId: string, isSelected: boolean, event: React.KeyboardEvent<HTMLElement>) => void;
 }
 
@@ -28,7 +40,10 @@ interface FlatTreeState {
   nodeIdToIndexMap: Map<string, number>;
 }
 
-/** @beta */
+/**
+ * A react hook that helps implement different selection modes in a tree component created using `useTree` hook.
+ * @beta
+ */
 export function useSelectionHandler(props: UseSelectionHandlerProps): UseSelectionHandlerResult {
   const { rootNodes, selectionMode, selectNodes } = props;
   const previousSelectionRef = useRef<string | undefined>(undefined);

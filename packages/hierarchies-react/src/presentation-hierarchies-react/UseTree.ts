@@ -20,24 +20,56 @@ import { useUnifiedTreeSelection, UseUnifiedTreeSelectionProps } from "./interna
 import { PresentationHierarchyNode, PresentationTreeNode } from "./TreeNode";
 import { SelectionChangeType } from "./UseSelectionHandler";
 
-/** @beta */
+/**
+ * A data structure that contains information about a single hierarchy level.
+ * @beta
+ */
 export interface HierarchyLevelDetails {
+  /** The parent node whose hierarchy level's information is contained in this data structure */
   hierarchyNode: HierarchyNode | undefined;
+
+  /** A function to get instance keys of the hierarchy level. */
   getInstanceKeysIterator: (props?: {
     instanceFilter?: GenericInstanceFilter;
     hierarchyLevelSizeLimit?: number | "unbounded";
   }) => AsyncIterableIterator<InstanceKey>;
+
+  /** The limit of how many nodes can be loaded in this hierarchy level. */
   hierarchyLevelSizeLimit?: number | "unbounded";
+
+  /** The active instance filter applied to this hierarchy level. */
   currentFilter?: GenericInstanceFilter;
 }
 
-/** @beta */
+/**
+ * A React hook that creates state for a tree component.
+ *
+ * The hook uses `@itwin/presentation-hierarchies` package to load the hierarchy data and returns a
+ * component-agnostic result which may be used to render the hierarchy using any UI framework.
+ *
+ * See `README.md` for an example
+ *
+ * @see `useUnifiedSelectionTree`
+ * @beta
+ */
 export function useTree(props: UseTreeProps): UseTreeResult {
   const { getNode: _, ...rest } = useTreeInternal(props);
   return rest;
 }
 
-/** @beta */
+/**
+ * A React hook that creates state for a tree component, that is integrated with unified selection
+ * through context provided by `UnifiedSelectionProvider`.
+ *
+ * The hook uses `@itwin/presentation-hierarchies` package to load the hierarchy data and returns a
+ * component-agnostic result which may be used to render the hierarchy using any UI framework.
+ *
+ * See `README.md` for an example
+ *
+ * @see `useTree`
+ * @see `UnifiedSelectionProvider`
+ * @beta
+ */
 export function useUnifiedSelectionTree({ imodelKey, sourceName, ...props }: UseTreeProps & Omit<UseUnifiedTreeSelectionProps, "getNode">): UseTreeResult {
   const { getNode, ...rest } = useTreeInternal(props);
   return { ...rest, ...useUnifiedTreeSelection({ imodelKey, sourceName, getNode }) };
