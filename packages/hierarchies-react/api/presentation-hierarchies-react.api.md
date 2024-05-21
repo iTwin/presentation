@@ -25,7 +25,7 @@ import { SelectionStorage } from '@itwin/unified-selection';
 import { Tree } from '@itwin/itwinui-react';
 import { TreeNode } from '@itwin/itwinui-react';
 
-// @beta (undocumented)
+// @beta
 export function createRenderedTreeNodeData(node: RenderedTreeNode, isNodeSelected: (nodeId: string) => boolean): NodeData<RenderedTreeNode>;
 
 export { GenericInstanceFilter }
@@ -104,7 +104,7 @@ export interface PresentationResultSetTooLargeInfoNode {
 // @beta
 export type PresentationTreeNode = PresentationHierarchyNode | PresentationInfoNode;
 
-// @beta (undocumented)
+// @beta
 export type RenderedTreeNode = PresentationTreeNode | {
     id: string;
     parentNodeId: string | undefined;
@@ -113,10 +113,10 @@ export type RenderedTreeNode = PresentationTreeNode | {
 
 export { SelectionStorage }
 
-// @beta (undocumented)
+// @beta
 export function TreeNodeRenderer({ node, expandNode, getIcon, setHierarchyLevelFilter, onFilterClick, onNodeClick, onNodeKeyDown, setHierarchyLevelLimit, isSelected, isDisabled, actionButtonsClassName, ...nodeProps }: TreeNodeRendererProps): JSX_2.Element;
 
-// @beta (undocumented)
+// @beta
 export function TreeRenderer({ rootNodes, expandNode, selectNodes, isNodeSelected, setHierarchyLevelLimit, setHierarchyLevelFilter, onFilterClick, getIcon, selectionMode, ...treeProps }: TreeRendererProps): JSX_2.Element;
 
 // @beta (undocumented)

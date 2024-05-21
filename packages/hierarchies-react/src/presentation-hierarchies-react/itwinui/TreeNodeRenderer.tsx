@@ -28,7 +28,11 @@ type TreeNodeRendererProps = Pick<ReturnType<typeof useTree>, "expandNode" | "se
   Omit<TreeNodeProps, "label" | "onExpanded" | "onSelected" | "icon"> &
   TreeNodeRendererOwnProps;
 
-/** @beta */
+/**
+ * A component that renders `RenderedTreeNode` using the `TreeNode` component from `@itwin/itwinui-react`.
+ * @see `TreeRenderer`
+ * @beta
+ */
 export function TreeNodeRenderer({
   node,
   expandNode,

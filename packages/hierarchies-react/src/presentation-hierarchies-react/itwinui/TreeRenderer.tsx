@@ -26,7 +26,12 @@ type TreeRendererProps = Pick<
   TreeRendererOwnProps &
   Omit<TreeProps, "data" | "nodeRenderer" | "getNode" | "enableVirtualization">;
 
-/** @beta */
+/**
+ * A component that renders a tree using the `Tree` component from `@itwin/itwinui-react`. The tree nodes
+ * are rendered using `TreeNodeRenderer` component from this package.
+ * 
+ * @beta
+ */
 export function TreeRenderer({
   rootNodes,
   expandNode,
@@ -63,18 +68,39 @@ export function TreeRenderer({
   return <Tree<RenderedTreeNode> {...treeProps} data={rootNodes} nodeRenderer={nodeRenderer} getNode={getNode} enableVirtualization={true} />;
 }
 
-/** @beta */
-export type RenderedTreeNode = PresentationTreeNode | {
-  id: string;
-  parentNodeId: string | undefined;
-  type: "ChildrenPlaceholder";
-};
+/**
+ * A data structure for a tree node that is rendered using the `TreeRenderer` component. 
+ * 
+ * In addition to the `PresentationTreeNode` union, this type may have one additional variation - an informational
+ * type of node with `ChildrenPlaceholder` type. This type of node is returned as the single child node of a parent
+ * while its children are being loaded. This allows the node renderer to show a placeholder under the parent during
+ * the process.
+ * 
+ * @beta
+ */
+export type RenderedTreeNode =
+  | PresentationTreeNode
+  | {
+      id: string;
+      parentNodeId: string | undefined;
+      type: "ChildrenPlaceholder";
+    };
 
-/** @beta */
-export function createRenderedTreeNodeData(
-  node: RenderedTreeNode,
-  isNodeSelected: (nodeId: string) => boolean,
-): NodeData<RenderedTreeNode> {
+/**
+ * An utility function that creates an `@itwin/itwinui-react` `NodeData` object for the `Tree` component from a
+ * `RenderedTreeNode` object.
+ *
+ * Usage example:
+ * ```tsx
+ * function MyComponent({ rootNodes, nodeRenderer }: MyComponentProps) {
+ *   const getNode = useCallback<TreeProps["getNode"]>((node) => createRenderedTreeNodeData(node, () => false), []);
+ *   return <Tree<RenderedTreeNode> data={rootNodes} getNode={getNode} nodeRenderer={nodeRenderer} />;
+ * }
+ * ```
+ *
+ * @beta
+ */
+export function createRenderedTreeNodeData(node: RenderedTreeNode, isNodeSelected: (nodeId: string) => boolean): NodeData<RenderedTreeNode> {
   if ("type" in node) {
     return {
       nodeId: node.id,
