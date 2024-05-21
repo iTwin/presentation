@@ -12,8 +12,10 @@ import {
   isTreeModelHierarchyNode,
   isTreeModelInfoNode,
   TreeModel,
+  TreeModelGenericInfoNode,
   TreeModelHierarchyNode,
   TreeModelInfoNode,
+  TreeModelResultSetTooLargeInfoNode,
 } from "../presentation-hierarchies-react/internal/TreeModel";
 
 configure({ reactStrictMode: true });
@@ -95,12 +97,26 @@ export function createTreeModelNode(props: Partial<TreeModelHierarchyNode> & { i
   };
 }
 
-export function createTestModelInfoNode({ id, ...props }: Partial<TreeModelInfoNode> & { id: string }): TreeModelInfoNode {
+export function createTestModelGenericInfoNode({ id, ...props }: Partial<TreeModelGenericInfoNode> & { id: string }): TreeModelGenericInfoNode {
   return {
     ...props,
     id,
+    parentId: props.parentId ?? undefined,
     message: props.message ?? "test-message",
     type: props.type ?? "Unknown",
+  };
+}
+
+export function createTestModelResultSetTooLargeInfoNode({
+  id,
+  ...props
+}: Partial<TreeModelResultSetTooLargeInfoNode> & { id: string }): TreeModelResultSetTooLargeInfoNode {
+  return {
+    ...props,
+    id,
+    parentId: props.parentId ?? undefined,
+    type: "ResultSetTooLarge",
+    resultSetSizeLimit: props.resultSetSizeLimit ?? 10,
   };
 }
 

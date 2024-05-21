@@ -7,11 +7,11 @@
   user-select: none;
 }
 
-.stateless-tree-node .filtering-action-button {
+.stateless-tree-node .action-buttons {
   visibility: hidden;
 }
 
-.stateless-tree-node:hover .filtering-action-button,
-.stateless-tree-node.filtered .filtering-action-button {
+.stateless-tree-node:hover .action-buttons,
+.stateless-tree-node.filtered .action-buttons {
   visibility: visible;
 }

@@ -6,7 +6,7 @@
 import { insertSubject } from "presentation-test-utilities";
 import { Subject } from "@itwin/core-backend";
 import { IModel } from "@itwin/core-common";
-import { createNodesQueryClauseFactory, HierarchyLevelDefinitionsFactory, HierarchyNode } from "@itwin/presentation-hierarchies";
+import { createNodesQueryClauseFactory, HierarchyDefinition, HierarchyNode } from "@itwin/presentation-hierarchies";
 import { buildIModel } from "../../IModelUtils";
 import { initialize, terminate } from "../../IntegrationTests";
 import { NodeValidators, validateHierarchy } from "../HierarchyValidation";
@@ -37,7 +37,7 @@ describe("Hierarchies", () => {
       });
 
       const selectQueryFactory = createNodesQueryClauseFactory({ imodelAccess: createIModelAccess(imodel) });
-      const hierarchy: HierarchyLevelDefinitionsFactory = {
+      const hierarchy: HierarchyDefinition = {
         async defineHierarchyLevel(props) {
           if (!props.parentNode) {
             return [
@@ -109,7 +109,7 @@ describe("Hierarchies", () => {
       });
 
       const selectQueryFactory = createNodesQueryClauseFactory({ imodelAccess: createIModelAccess(imodel) });
-      const hierarchy: HierarchyLevelDefinitionsFactory = {
+      const hierarchy: HierarchyDefinition = {
         async defineHierarchyLevel(props) {
           if (!props.parentNode) {
             return [
@@ -183,7 +183,7 @@ describe("Hierarchies", () => {
       });
 
       const selectQueryFactory = createNodesQueryClauseFactory({ imodelAccess: createIModelAccess(imodel) });
-      const hierarchy: HierarchyLevelDefinitionsFactory = {
+      const hierarchy: HierarchyDefinition = {
         async defineHierarchyLevel(props) {
           if (!props.parentNode) {
             return [
@@ -236,7 +236,7 @@ describe("Hierarchies", () => {
       });
 
       const selectQueryFactory = createNodesQueryClauseFactory({ imodelAccess: createIModelAccess(imodel) });
-      const hierarchy: HierarchyLevelDefinitionsFactory = {
+      const hierarchy: HierarchyDefinition = {
         async defineHierarchyLevel(props) {
           if (!props.parentNode) {
             return [
@@ -283,7 +283,7 @@ describe("Hierarchies", () => {
       });
 
       const selectQueryFactory = createNodesQueryClauseFactory({ imodelAccess: createIModelAccess(imodel) });
-      const hierarchy: HierarchyLevelDefinitionsFactory = {
+      const hierarchy: HierarchyDefinition = {
         async defineHierarchyLevel(props) {
           if (!props.parentNode) {
             return [

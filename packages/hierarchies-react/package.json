@@ -44,6 +44,7 @@
     "@itwin/itwinui-icons-react": "^2.8.0",
     "@itwin/itwinui-illustrations-react": "^2.1.0",
     "@itwin/presentation-hierarchies": "workspace:^",
+    "@itwin/presentation-shared": "workspace:^",
     "@itwin/unified-selection": "workspace:^",
     "classnames": "^2.5.1",
     "immer": "^10.0.4",

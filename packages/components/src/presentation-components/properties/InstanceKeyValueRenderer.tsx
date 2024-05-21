@@ -9,7 +9,7 @@
 
 import { Primitives, PrimitiveValue, PropertyRecord, PropertyValueFormat } from "@itwin/appui-abstract";
 import { IPropertyValueRenderer, PropertyValueRendererContext, TypeConverterManager, useAsyncValue } from "@itwin/components-react";
-import { UnderlinedButton } from "@itwin/core-react";
+import { Anchor } from "@itwin/itwinui-react";
 import { translate } from "../common/Utils";
 import { useUnifiedSelectionContext } from "../unified-selection/UnifiedSelectionContext";
 
@@ -52,9 +52,9 @@ const InstanceKeyValueRendererImpl: React.FC<InstanceKeyValueRendererImplProps> 
   const title = translate("instance-key-value-renderer.select-instance");
   const handleClick = () => selectionContext.replaceSelection([instanceKey]);
   return (
-    <UnderlinedButton title={title} onClick={handleClick}>
+    <Anchor title={title} onClick={handleClick}>
       {valueElement}
-    </UnderlinedButton>
+    </Anchor>
   );
 };
 

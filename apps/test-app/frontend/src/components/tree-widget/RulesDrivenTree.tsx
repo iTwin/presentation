@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import "../TreeWidget.css";
+import "./TreeWidget.css";
 import { useCallback, useEffect, useState } from "react";
 import { FilteringInputStatus, SelectionMode } from "@itwin/components-react";
 import { IModelConnection } from "@itwin/core-frontend";
@@ -15,7 +15,7 @@ import {
   UnifiedSelectionTreeEventHandler,
   usePresentationTreeState,
 } from "@itwin/presentation-components";
-import { TreeWidgetHeader, useTreeHeight } from "../TreeHeader";
+import { TreeWidgetHeader, useTreeHeight } from "./TreeHeader";
 
 const PAGING_SIZE = 10;
 

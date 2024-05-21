@@ -5,13 +5,13 @@
 
 import { Id64String } from "@itwin/core-bentley";
 import {
-  createClassBasedHierarchyLevelDefinitionsFactory,
+  createClassBasedHierarchyDefinition,
   createNodesQueryClauseFactory,
   DefineHierarchyLevelProps,
   DefineInstanceNodeChildHierarchyLevelProps,
   DefineRootHierarchyLevelProps,
+  HierarchyDefinition,
   HierarchyLevelDefinition,
-  HierarchyLevelDefinitionsFactory,
   HierarchyNode,
   HierarchyNodeIdentifiersPath,
   LimitingECSqlQueryExecutor,
@@ -52,13 +52,13 @@ export namespace ModelsTreeInstanceKeyPathsProps {
   }
 }
 
-export class ModelsTreeDefinition implements HierarchyLevelDefinitionsFactory {
-  private _impl: HierarchyLevelDefinitionsFactory;
+export class ModelsTreeDefinition implements HierarchyDefinition {
+  private _impl: HierarchyDefinition;
   private _selectQueryFactory: NodesQueryClauseFactory;
   private _nodeLabelSelectClauseFactory: IInstanceLabelSelectClauseFactory;
 
   public constructor(props: ModelsTreeDefinitionProps) {
-    this._impl = createClassBasedHierarchyLevelDefinitionsFactory({
+    this._impl = createClassBasedHierarchyDefinition({
       classHierarchyInspector: props.imodelAccess,
       hierarchy: {
         rootNodes: async (requestProps) => this.createRootHierarchyLevelDefinition(requestProps),
@@ -769,7 +769,7 @@ async function createInstanceKeyPathsFromInstanceKeys(props: ModelsTreeInstanceK
       ecsql: queries.join(" UNION ALL "),
       bindings,
     },
-    { rowFormat: "Indexes" },
+    { rowFormat: "Indexes", restartToken: "ModelsTreeFilterByKey" },
   );
   const paths = new Array<HierarchyNodeIdentifiersPath>();
   for await (const row of reader) {
@@ -828,7 +828,7 @@ async function createInstanceKeyPathsFromInstanceLabel(
       `,
       bindings: [{ type: "string", value: props.label }],
     },
-    { rowFormat: "Indexes" },
+    { rowFormat: "Indexes", restartToken: "ModelsTreeFilterByLabel" },
   );
   const paths = new Array<HierarchyNodeIdentifiersPath>();
   for await (const row of reader) {

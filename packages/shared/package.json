@@ -3,6 +3,10 @@
   "version": "0.1.1",
   "description": "The package contains types and utilities used across different iTwin.js Presentation packages.",
   "license": "MIT",
+  "author": {
+    "name": "Bentley Systems, Inc.",
+    "url": "http://www.bentley.com"
+  },
   "repository": {
     "type": "git",
     "url": "https://github.com/iTwin/presentation.git",
@@ -16,6 +20,9 @@
     "iTwin.js",
     "Presentation"
   ],
+  "main": "lib/cjs/presentation-shared.js",
+  "module": "lib/esm/presentation-shared.js",
+  "types": "lib/cjs/presentation-shared.d.ts",
   "scripts": {
     "build": "npm run -s build:cjs && npm run -s build:esm",
     "build:cjs": "tsc -p tsconfig.cjs.json",
@@ -28,11 +35,8 @@
     "extract-api": "betools extract-api --entry=presentation-shared --apiReportFolder=./api --apiReportTempFolder=./api/temp --apiSummaryFolder=./api",
     "check-internal": "node ../../scripts/checkInternal.js --apiSummary ./api/presentation-shared.api.md"
   },
-  "main": "lib/cjs/presentation-shared.js",
-  "module": "lib/esm/presentation-shared.js",
-  "types": "lib/cjs/presentation-shared.d.ts",
   "dependencies": {
-    "@itwin/core-bentley": "^4.5.2"
+    "@itwin/core-bentley": "^4.6.0"
   },
   "devDependencies": {
     "@itwin/build-tools": "^4.6.0",

@@ -9,9 +9,9 @@
 import "./PresentationTreeNodeRenderer.scss";
 import classnames from "classnames";
 import { TreeNodeRenderer, TreeNodeRendererProps } from "@itwin/components-react";
-import { TreeNode, UnderlinedButton } from "@itwin/core-react";
+import { TreeNode } from "@itwin/core-react";
 import { SvgCloseSmall, SvgFilter, SvgFilterHollow } from "@itwin/itwinui-icons-react";
-import { ButtonGroup, IconButton, Text } from "@itwin/itwinui-react";
+import { Anchor, ButtonGroup, IconButton, Text } from "@itwin/itwinui-react";
 import { translate } from "../../common/Utils";
 import { InfoTreeNodeItemType, isPresentationInfoTreeNodeItem, isPresentationTreeNodeItem } from "../PresentationTreeNodeItem";
 
@@ -44,7 +44,7 @@ export function PresentationTreeNodeRenderer(props: PresentationTreeNodeRenderer
               {nodeItem.type === InfoTreeNodeItemType.ResultSetTooLarge && (
                 <span>
                   <span>{`${translate("tree.please-provide")} `}</span>
-                  <UnderlinedButton
+                  <Anchor
                     onClick={() => {
                       if (nodeItem.parentId !== undefined) {
                         onFilterClick(nodeItem.parentId);
@@ -52,7 +52,7 @@ export function PresentationTreeNodeRenderer(props: PresentationTreeNodeRenderer
                     }}
                   >
                     {`${translate("tree.additional-filtering")}`}
-                  </UnderlinedButton>
+                  </Anchor>
                   <span> - </span>
                 </span>
               )}

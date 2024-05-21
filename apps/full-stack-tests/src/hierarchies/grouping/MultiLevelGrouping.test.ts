@@ -6,7 +6,7 @@
 import { insertPhysicalPartition, insertSubject } from "presentation-test-utilities";
 import { PhysicalPartition, Subject } from "@itwin/core-backend";
 import { IModel } from "@itwin/core-common";
-import { createNodesQueryClauseFactory, HierarchyLevelDefinitionsFactory } from "@itwin/presentation-hierarchies";
+import { createNodesQueryClauseFactory, HierarchyDefinition } from "@itwin/presentation-hierarchies";
 import { buildIModel } from "../../IModelUtils";
 import { initialize, terminate } from "../../IntegrationTests";
 import { NodeValidators, validateHierarchy } from "../HierarchyValidation";
@@ -68,7 +68,7 @@ describe("Hierarchies", () => {
       });
 
       const selectQueryFactory = createNodesQueryClauseFactory({ imodelAccess: createIModelAccess(imodel) });
-      const customHierarchy: HierarchyLevelDefinitionsFactory = {
+      const customHierarchy: HierarchyDefinition = {
         async defineHierarchyLevel({ parentNode }) {
           if (!parentNode) {
             return [

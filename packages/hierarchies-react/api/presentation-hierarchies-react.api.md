@@ -7,10 +7,17 @@
 /// <reference types="react" />
 
 import { ComponentPropsWithoutRef } from 'react';
+import { ECClassHierarchyInspector } from '@itwin/presentation-shared';
+import { ECSchemaProvider } from '@itwin/presentation-shared';
 import { GenericInstanceFilter } from '@itwin/presentation-hierarchies';
+import { HierarchyDefinition } from '@itwin/presentation-hierarchies';
 import { HierarchyNode } from '@itwin/presentation-hierarchies';
+import { HierarchyNodeIdentifiersPath } from '@itwin/presentation-hierarchies';
 import { HierarchyProvider } from '@itwin/presentation-hierarchies';
+import { InstanceKey } from '@itwin/presentation-shared';
+import { IPrimitiveValueFormatter } from '@itwin/presentation-shared';
 import { JSX as JSX_2 } from 'react/jsx-runtime';
+import { LimitingECSqlQueryExecutor } from '@itwin/presentation-hierarchies';
 import { PropsWithChildren } from 'react';
 import { ReactElement } from 'react';
 import { SelectionStorage } from '@itwin/unified-selection';
@@ -23,13 +30,18 @@ export function createTreeNode(node: PresentationTreeNode, isNodeSelected: (node
 export { GenericInstanceFilter }
 
 // @beta (undocumented)
-export interface HierarchyLevelConfiguration {
+export interface HierarchyLevelDetails {
     // (undocumented)
     currentFilter?: GenericInstanceFilter;
     // (undocumented)
+    getInstanceKeysIterator: (props?: {
+        instanceFilter?: GenericInstanceFilter;
+        hierarchyLevelSizeLimit?: number | "unbounded";
+    }) => AsyncIterableIterator<InstanceKey>;
+    // (undocumented)
     hierarchyLevelSizeLimit?: number | "unbounded";
     // (undocumented)
-    hierarchyNode: HierarchyNode;
+    hierarchyNode: HierarchyNode | undefined;
 }
 
 export { HierarchyNode }
@@ -37,10 +49,19 @@ export { HierarchyNode }
 export { HierarchyProvider }
 
 // @beta (undocumented)
-export type InfoNodeTypes = "ResultSetTooLarge" | "ChildrenPlaceholder" | "NoFilterMatchingNodes" | "Unknown";
+export function isPresentationHierarchyNode(node: PresentationTreeNode): node is PresentationHierarchyNode;
 
 // @beta (undocumented)
-export function isPresentationHierarchyNode(node: PresentationTreeNode): node is PresentationHierarchyNode;
+export interface PresentationGenericInfoNode {
+    // (undocumented)
+    id: string;
+    // (undocumented)
+    message: string;
+    // (undocumented)
+    parentNodeId: string | undefined;
+    // (undocumented)
+    type: "ChildrenPlaceholder" | "NoFilterMatchingNodes" | "Unknown";
+}
 
 // @beta
 export function LocalizationContextProvider({ localization, children }: PropsWithChildren<LocalizationContextProviderProps>): JSX_2.Element;
@@ -69,15 +90,18 @@ export interface PresentationHierarchyNode {
 }
 
 // @beta (undocumented)
-export interface PresentationInfoNode {
+export type PresentationInfoNode = PresentationGenericInfoNode | PresentationResultSetTooLargeInfoNode;
+
+// @beta (undocumented)
+export interface PresentationResultSetTooLargeInfoNode {
     // (undocumented)
     id: string;
     // (undocumented)
-    message: string;
-    // (undocumented)
     parentNodeId: string | undefined;
     // (undocumented)
-    type: InfoNodeTypes;
+    resultSetSizeLimit: number;
+    // (undocumented)
+    type: "ResultSetTooLarge";
 }
 
 // @beta (undocumented)
@@ -86,7 +110,7 @@ export type PresentationTreeNode = PresentationHierarchyNode | PresentationInfoN
 export { SelectionStorage }
 
 // @beta (undocumented)
-export function TreeNodeRenderer({ node, expandNode, getIcon, setHierarchyLevelFilter, onFilterClick, onNodeClick, onNodeKeyDown, setHierarchyLevelLimit, isSelected, isDisabled, ...nodeProps }: TreeNodeRendererProps_2): JSX_2.Element;
+export function TreeNodeRenderer({ node, expandNode, getIcon, setHierarchyLevelFilter, onFilterClick, onNodeClick, onNodeKeyDown, setHierarchyLevelLimit, isSelected, isDisabled, actionButtonsClassName, ...nodeProps }: TreeNodeRendererProps_2): JSX_2.Element;
 
 // @beta (undocumented)
 export function TreeRenderer({ rootNodes, expandNode, selectNodes, isNodeSelected, setHierarchyLevelLimit, setHierarchyLevelFilter, onFilterClick, getIcon, selectionMode, localization, ...treeProps }: TreeRendererProps): JSX_2.Element;
