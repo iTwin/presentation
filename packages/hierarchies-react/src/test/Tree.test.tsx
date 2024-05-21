@@ -351,7 +351,7 @@ describe("Tree", () => {
         id: "info-node-3",
         parentNodeId: "parent-id",
         type: "ResultSetTooLarge",
-        message: "Result set exceeds limit of 1000",
+        resultSetSizeLimit: 100,
       },
       {
         id: "info-node-4",
@@ -363,11 +363,14 @@ describe("Tree", () => {
 
     const localization = {
       loading: "Custom loading...",
+      pleaseProvide: "Custom please provide",
+      additionalFiltering: "Custom additional filtering",
       filterHierarchyLevel: "Custom apply filter",
       clearHierarchyLevelFilter: "Custom clear active filter",
       noFilteredChildren: "Custom there are no child nodes matching current filter",
       resultLimitExceeded: "Custom there are more items than allowed limit of",
-      removeHierarchyLimit: "Custom remove limit",
+      increaseHierarchyLimit: "Custom increase hierarchy level size limit",
+      increaseHierarchyLimitTo: "Custom increase hierarchy level size limit to",
     };
 
     const { queryByText, queryByTitle, rerender } = render(<TreeRenderer rootNodes={rootNodes} {...initialProps} />);
@@ -377,8 +380,12 @@ describe("Tree", () => {
       expect(queryByTitle("Apply filter")).to.not.be.null;
       expect(queryByTitle("Clear active filter")).to.not.be.null;
       expect(queryByText("There are no child nodes matching current filter")).to.not.be.null;
-      expect(queryByText("There are more items than allowed limit of 1000")).to.not.be.null;
-      expect(queryByText("Remove limit")).to.not.be.null;
+      expect(queryByText("Please provide")).to.not.be.null;
+      expect(queryByText("additional filtering")).to.not.be.null;
+      expect(queryByText("- there are more items than allowed limit of 100.")).to.not.be.null;
+      expect(queryByText("Increase hierarchy level size limit to 10000")).to.not.be.null;
+      expect(queryByTitle("Please provide additional filtering - there are more items than allowed limit of 100. Increase hierarchy level size limit")).to.not
+        .be.null;
     });
 
     rerender(<TreeRenderer rootNodes={rootNodes} {...initialProps} localization={localization} />);
@@ -388,8 +395,15 @@ describe("Tree", () => {
       expect(queryByTitle("Custom apply filter")).to.not.be.null;
       expect(queryByTitle("Custom clear active filter")).to.not.be.null;
       expect(queryByText("Custom there are no child nodes matching current filter")).to.not.be.null;
-      expect(queryByText("Custom there are more items than allowed limit of 1000")).to.not.be.null;
-      expect(queryByText("Custom remove limit")).to.not.be.null;
+      expect(queryByText("Custom please provide")).to.not.be.null;
+      expect(queryByText("Custom additional filtering")).to.not.be.null;
+      expect(queryByText("- Custom there are more items than allowed limit of 100.")).to.not.be.null;
+      expect(queryByText("Custom increase hierarchy level size limit to 10000")).to.not.be.null;
+      expect(
+        queryByTitle(
+          "Custom please provide Custom additional filtering - Custom there are more items than allowed limit of 100. Custom increase hierarchy level size limit",
+        ),
+      ).to.not.be.null;
     });
   });
 });

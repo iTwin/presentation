@@ -51,6 +51,9 @@ export { HierarchyProvider }
 // @beta (undocumented)
 export function isPresentationHierarchyNode(node: PresentationTreeNode): node is PresentationHierarchyNode;
 
+// @beta
+export function LocalizationContextProvider({ localization, children }: PropsWithChildren<LocalizationContextProviderProps>): JSX_2.Element;
+
 // @beta (undocumented)
 export interface PresentationGenericInfoNode {
     // (undocumented)
@@ -62,9 +65,6 @@ export interface PresentationGenericInfoNode {
     // (undocumented)
     type: "ChildrenPlaceholder" | "NoFilterMatchingNodes" | "Unknown";
 }
-
-// @beta
-export function LocalizationContextProvider({ localization, children }: PropsWithChildren<LocalizationContextProviderProps>): JSX_2.Element;
 
 // @beta (undocumented)
 export interface PresentationHierarchyNode {

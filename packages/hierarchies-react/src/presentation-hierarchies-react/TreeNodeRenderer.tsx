@@ -73,7 +73,7 @@ export function TreeNodeRenderer({
                 className="filtering-action-button"
                 styleType="borderless"
                 size="small"
-                title="Clear active filter"
+                title={localization.clearHierarchyLevelFilter}
                 onClick={(e) => {
                   e.stopPropagation();
                   setHierarchyLevelFilter(node.id, undefined);
@@ -87,7 +87,7 @@ export function TreeNodeRenderer({
                 className="filtering-action-button"
                 styleType="borderless"
                 size="small"
-                title="Apply filter"
+                title={localization.filterHierarchyLevel}
                 onClick={(e) => {
                   e.stopPropagation();
                   onFilterClick(node.id);
@@ -107,9 +107,16 @@ export function TreeNodeRenderer({
   }
 
   if (node.type === "ResultSetTooLarge") {
-    return <ResultSetTooLargeNode {...nodeProps} limit={node.resultSetSizeLimit} message={node.message} onRemoveLimit={(limit) => setHierarchyLevelLimit(node.parentNodeId, limit) onFilterClick={() => {
-      onFilterClick(node.parentNodeId);
-    }}} />;
+    return (
+      <ResultSetTooLargeNode
+        {...nodeProps}
+        limit={node.resultSetSizeLimit}
+        onOverrideLimit={(limit) => setHierarchyLevelLimit(node.parentNodeId, limit)}
+        onFilterClick={() => {
+          onFilterClick(node.parentNodeId);
+        }}
+      />
+    );
   }
 
   if (node.type === "NoFilterMatchingNodes") {
@@ -153,15 +160,16 @@ interface ResultSetTooLargeNodeLabelProps {
 }
 
 function ResultSetTooLargeNodeLabel({ onFilterClick, onOverrideLimit, limit }: ResultSetTooLargeNodeLabelProps) {
+  const { localization } = useLocalizationContext();
   return (
     <Flex
       flexDirection="column"
       gap="3xs"
-      title={`Please provide additional filtering - there are more items than allowed limit of ${limit}. Increase hierarchy level limit`}
+      title={`${localization.pleaseProvide} ${localization.additionalFiltering} - ${localization.resultLimitExceeded} ${limit}. ${localization.increaseHierarchyLimit}`}
       alignItems="start"
     >
       <Flex flexDirection="row" gap="3xs">
-        <Text>Please provide</Text>
+        <Text>{localization.pleaseProvide}</Text>
         <Anchor
           underline
           onClick={(e) => {
@@ -169,9 +177,9 @@ function ResultSetTooLargeNodeLabel({ onFilterClick, onOverrideLimit, limit }: R
             onFilterClick();
           }}
         >
-          additional filtering
+          {localization.additionalFiltering}
         </Anchor>
-        <Text>- there are more items than allowed limit of {limit}.</Text>
+        <Text>{`- ${localization.resultLimitExceeded} ${limit}.`}</Text>
       </Flex>
       {limit < MAX_LIMIT_OVERRIDE ? (
         <Flex flexDirection="row" gap="3xs">
@@ -182,7 +190,7 @@ function ResultSetTooLargeNodeLabel({ onFilterClick, onOverrideLimit, limit }: R
               onOverrideLimit(MAX_LIMIT_OVERRIDE);
             }}
           >
-            Increase hierarchy level size limit to {MAX_LIMIT_OVERRIDE}
+            {`${localization.increaseHierarchyLimitTo} ${MAX_LIMIT_OVERRIDE}`}
           </Anchor>
         </Flex>
       ) : null}
@@ -194,5 +202,3 @@ function NoFilterMatchingNode(props: Omit<TreeNodeProps, "onExpanded" | "label">
   const { localization } = useLocalizationContext();
   return <TreeNode {...props} label={localization.noFilteredChildren} isDisabled={true} onExpanded={/* istanbul ignore next */ () => {}} />;
 }
-
-type TreeNodeProps = ComponentPropsWithoutRef<typeof TreeNode>;
