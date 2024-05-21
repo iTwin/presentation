@@ -9,7 +9,7 @@ import { ComponentPropsWithoutRef, ReactElement } from "react";
 import { SvgFilter, SvgFilterHollow, SvgRemove } from "@itwin/itwinui-icons-react";
 import { Anchor, ButtonGroup, Flex, IconButton, ProgressRadial, Text, TreeNode } from "@itwin/itwinui-react";
 import { MAX_LIMIT_OVERRIDE } from "./internal/Utils";
-import { isPresentationHierarchyNode, PresentationHierarchyNode, PresentationTreeNode } from "./Types";
+import { isPresentationHierarchyNode, PresentationHierarchyNode, PresentationTreeNode } from "./TreeNode";
 import { useTree } from "./UseTree";
 
 type TreeNodeProps = ComponentPropsWithoutRef<typeof TreeNode>;

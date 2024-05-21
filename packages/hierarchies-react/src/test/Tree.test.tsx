@@ -6,8 +6,8 @@
 import { expect } from "chai";
 import { GenericInstanceFilter } from "@itwin/presentation-hierarchies";
 import { MAX_LIMIT_OVERRIDE } from "../presentation-hierarchies-react/internal/Utils";
+import { PresentationHierarchyNode, PresentationInfoNode, PresentationTreeNode } from "../presentation-hierarchies-react/TreeNode";
 import { TreeRenderer } from "../presentation-hierarchies-react/TreeRenderer";
-import { PresentationHierarchyNode, PresentationInfoNode, PresentationTreeNode } from "../presentation-hierarchies-react/Types";
 import { SelectionChangeType } from "../presentation-hierarchies-react/UseSelectionHandler";
 import { createStub, createTestHierarchyNode, render, within } from "./TestUtils";
 

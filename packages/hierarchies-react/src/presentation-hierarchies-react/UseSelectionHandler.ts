@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { useEffect, useRef } from "react";
-import { isPresentationHierarchyNode, PresentationTreeNode } from "./Types";
+import { isPresentationHierarchyNode, PresentationTreeNode } from "./TreeNode";
 
 /** @internal */
 export type SelectionMode = "none" | "single" | "extended" | "multiple";

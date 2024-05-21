@@ -6,7 +6,7 @@
 import { expect } from "chai";
 import sinon from "sinon";
 import { UserEvent } from "@testing-library/user-event";
-import { PresentationHierarchyNode, PresentationInfoNode, PresentationTreeNode } from "../presentation-hierarchies-react/Types";
+import { PresentationHierarchyNode, PresentationInfoNode, PresentationTreeNode } from "../presentation-hierarchies-react/TreeNode";
 import { SelectionChangeType, SelectionMode, useSelectionHandler } from "../presentation-hierarchies-react/UseSelectionHandler";
 import { render } from "./TestUtils";
 

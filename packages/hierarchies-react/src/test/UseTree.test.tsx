@@ -12,7 +12,7 @@ import * as hierarchiesModule from "@itwin/presentation-hierarchies";
 import { IPrimitiveValueFormatter } from "@itwin/presentation-shared";
 import { createStorage, Selectables, StorageSelectionChangeEventArgs, StorageSelectionChangesListener } from "@itwin/unified-selection";
 import { createNodeId } from "../presentation-hierarchies-react/internal/Utils";
-import { PresentationGenericInfoNode, PresentationHierarchyNode, PresentationInfoNode } from "../presentation-hierarchies-react/Types";
+import { PresentationGenericInfoNode, PresentationHierarchyNode, PresentationInfoNode } from "../presentation-hierarchies-react/TreeNode";
 import { UnifiedSelectionProvider } from "../presentation-hierarchies-react/UnifiedSelectionContext";
 import { useTree, useUnifiedSelectionTree } from "../presentation-hierarchies-react/UseTree";
 import { cleanup, createStub, createTestGroupingNode, createTestHierarchyNode, renderHook, waitFor } from "./TestUtils";

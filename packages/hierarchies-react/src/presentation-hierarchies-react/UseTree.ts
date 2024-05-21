@@ -17,7 +17,7 @@ import { ECClassHierarchyInspector, ECSchemaProvider, InstanceKey, IPrimitiveVal
 import { TreeActions } from "./internal/TreeActions";
 import { isTreeModelHierarchyNode, isTreeModelInfoNode, TreeModel, TreeModelHierarchyNode, TreeModelNode, TreeModelRootNode } from "./internal/TreeModel";
 import { useUnifiedTreeSelection, UseUnifiedTreeSelectionProps } from "./internal/UseUnifiedSelection";
-import { PresentationHierarchyNode, PresentationTreeNode } from "./Types";
+import { PresentationHierarchyNode, PresentationTreeNode } from "./TreeNode";
 import { SelectionChangeType } from "./UseSelectionHandler";
 
 /** @beta */

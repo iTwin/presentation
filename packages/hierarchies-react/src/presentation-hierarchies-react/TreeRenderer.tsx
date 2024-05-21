@@ -5,8 +5,8 @@
 
 import { ComponentPropsWithoutRef, useCallback } from "react";
 import { Tree } from "@itwin/itwinui-react";
+import { isPresentationHierarchyNode, PresentationTreeNode } from "./TreeNode";
 import { TreeNodeRenderer } from "./TreeNodeRenderer";
-import { isPresentationHierarchyNode, PresentationTreeNode } from "./Types";
 import { SelectionMode, useSelectionHandler } from "./UseSelectionHandler";
 import { useTree } from "./UseTree";
 

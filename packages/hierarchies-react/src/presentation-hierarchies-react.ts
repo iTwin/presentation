@@ -5,7 +5,14 @@
 
 export { TreeRenderer, createTreeNode } from "./presentation-hierarchies-react/TreeRenderer";
 export { TreeNodeRenderer } from "./presentation-hierarchies-react/TreeNodeRenderer";
-export * from "./presentation-hierarchies-react/Types";
+export {
+  PresentationHierarchyNode,
+  PresentationGenericInfoNode,
+  PresentationResultSetTooLargeInfoNode,
+  PresentationInfoNode,
+  PresentationTreeNode,
+  isPresentationHierarchyNode,
+} from "./presentation-hierarchies-react/TreeNode";
 export * from "./presentation-hierarchies-react/UseTree";
 export { useSelectionHandler } from "./presentation-hierarchies-react/UseSelectionHandler";
 export { UnifiedSelectionProvider } from "./presentation-hierarchies-react/UnifiedSelectionContext";
