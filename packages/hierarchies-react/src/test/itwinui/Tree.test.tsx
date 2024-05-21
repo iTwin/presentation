@@ -5,11 +5,11 @@
 
 import { expect } from "chai";
 import { GenericInstanceFilter } from "@itwin/presentation-hierarchies";
-import { MAX_LIMIT_OVERRIDE } from "../presentation-hierarchies-react/internal/Utils";
-import { PresentationHierarchyNode, PresentationInfoNode, PresentationTreeNode } from "../presentation-hierarchies-react/TreeNode";
-import { TreeRenderer } from "../presentation-hierarchies-react/TreeRenderer";
-import { SelectionChangeType } from "../presentation-hierarchies-react/UseSelectionHandler";
-import { createStub, createTestHierarchyNode, render, within } from "./TestUtils";
+import { MAX_LIMIT_OVERRIDE } from "../../presentation-hierarchies-react/internal/Utils";
+import { TreeRenderer } from "../../presentation-hierarchies-react/itwinui/TreeRenderer";
+import { PresentationHierarchyNode, PresentationInfoNode, PresentationTreeNode } from "../../presentation-hierarchies-react/TreeNode";
+import { SelectionChangeType } from "../../presentation-hierarchies-react/UseSelectionHandler";
+import { createStub, createTestHierarchyNode, render, within } from "../TestUtils";
 
 describe("Tree", () => {
   const onFilterClick = createStub<(nodeId: string | undefined) => void>();
@@ -292,10 +292,24 @@ describe("Tree", () => {
       },
     ]);
 
-    const { queryByText } = render(<TreeRenderer rootNodes={rootNodes} {...initialProps} />);
+    const { queryByText, queryByTitle } = render(<TreeRenderer rootNodes={rootNodes} {...initialProps} />);
 
     expect(queryByText("root-1")).to.not.be.null;
-    expect(queryByText("Loading...")).to.not.be.null;
+    expect(queryByTitle("Loading...")).to.not.be.null;
+  });
+
+  it("renders NoFilterMatches info node", () => {
+    const rootNodes = createNodes([
+      {
+        id: "info-node",
+        parentNodeId: undefined,
+        type: "NoFilterMatches",
+      },
+    ]);
+
+    const { queryByText } = render(<TreeRenderer rootNodes={rootNodes} {...initialProps} />);
+
+    expect(queryByText("No child nodes match current filter")).to.not.be.null;
   });
 
   it("renders unknown info node", () => {

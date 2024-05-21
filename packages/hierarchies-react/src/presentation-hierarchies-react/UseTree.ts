@@ -258,6 +258,14 @@ function generateTreeStructure(parentNodeId: string | undefined, model: TreeMode
         };
       }
 
+      if (node.type === "NoFilterMatches") {
+        return {
+          id: node.id,
+          parentNodeId,
+          type: node.type,
+        };
+      }
+
       return {
         id: node.id,
         parentNodeId,

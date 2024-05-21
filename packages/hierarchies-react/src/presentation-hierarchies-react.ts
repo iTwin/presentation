@@ -3,19 +3,19 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-export { TreeRenderer, createTreeNode } from "./presentation-hierarchies-react/TreeRenderer";
-export { TreeNodeRenderer } from "./presentation-hierarchies-react/TreeNodeRenderer";
 export {
-  PresentationHierarchyNode,
   PresentationGenericInfoNode,
-  PresentationResultSetTooLargeInfoNode,
+  PresentationHierarchyNode,
   PresentationInfoNode,
+  PresentationResultSetTooLargeInfoNode,
   PresentationTreeNode,
   isPresentationHierarchyNode,
 } from "./presentation-hierarchies-react/TreeNode";
-export * from "./presentation-hierarchies-react/UseTree";
-export { useSelectionHandler } from "./presentation-hierarchies-react/UseSelectionHandler";
 export { UnifiedSelectionProvider } from "./presentation-hierarchies-react/UnifiedSelectionContext";
+export { useSelectionHandler } from "./presentation-hierarchies-react/UseSelectionHandler";
+export * from "./presentation-hierarchies-react/UseTree";
+export { TreeNodeRenderer } from "./presentation-hierarchies-react/itwinui/TreeNodeRenderer";
+export { RenderedTreeNode, TreeRenderer, createRenderedTreeNodeData } from "./presentation-hierarchies-react/itwinui/TreeRenderer";
 
-export { SelectionStorage } from "@itwin/unified-selection";
 export { GenericInstanceFilter, HierarchyNode, HierarchyProvider } from "@itwin/presentation-hierarchies";
+export { SelectionStorage } from "@itwin/unified-selection";

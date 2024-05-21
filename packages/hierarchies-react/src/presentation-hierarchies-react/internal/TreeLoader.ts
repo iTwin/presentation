@@ -20,6 +20,7 @@ export interface HierarchyLevelOptions {
   hierarchyLevelSizeLimit?: number | "unbounded";
 }
 
+/** @internal */
 export interface LoadNodesOptions {
   parent: TreeModelHierarchyNode | TreeModelRootNode;
   getHierarchyLevelOptions: (node: TreeModelRootNode | TreeModelHierarchyNode) => HierarchyLevelOptions;
@@ -69,8 +70,7 @@ export class TreeLoader implements ITreeLoader {
                   {
                     id: `${infoNodeIdBase}-no-filter-matches`,
                     parentId: parent.id,
-                    type: "NoFilterMatchingNodes" as const,
-                    message: "No child nodes match current filter",
+                    type: "NoFilterMatches" as const,
                   },
                 ]
               : childNodes.map(treeModelNodesFactory),

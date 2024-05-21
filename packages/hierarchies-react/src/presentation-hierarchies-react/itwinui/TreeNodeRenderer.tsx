@@ -8,14 +8,15 @@ import cx from "classnames";
 import { ComponentPropsWithoutRef, ReactElement } from "react";
 import { SvgFilter, SvgFilterHollow, SvgRemove } from "@itwin/itwinui-icons-react";
 import { Anchor, ButtonGroup, Flex, IconButton, ProgressRadial, Text, TreeNode } from "@itwin/itwinui-react";
-import { MAX_LIMIT_OVERRIDE } from "./internal/Utils";
-import { isPresentationHierarchyNode, PresentationHierarchyNode, PresentationTreeNode } from "./TreeNode";
-import { useTree } from "./UseTree";
+import { MAX_LIMIT_OVERRIDE } from "../internal/Utils";
+import { isPresentationHierarchyNode, PresentationHierarchyNode } from "../TreeNode";
+import { useTree } from "../UseTree";
+import { RenderedTreeNode } from "./TreeRenderer";
 
 type TreeNodeProps = ComponentPropsWithoutRef<typeof TreeNode>;
 
 interface TreeNodeRendererOwnProps {
-  node: PresentationTreeNode;
+  node: RenderedTreeNode;
   onFilterClick: (nodeId: string | undefined) => void;
   getIcon?: (node: PresentationHierarchyNode) => ReactElement | undefined;
   onNodeClick: (nodeId: string, isSelected: boolean, event: React.MouseEvent<HTMLElement, MouseEvent>) => void;
@@ -42,6 +43,10 @@ export function TreeNodeRenderer({
   actionButtonsClassName,
   ...nodeProps
 }: TreeNodeRendererProps) {
+  if ("type" in node && node.type === "ChildrenPlaceholder") {
+    return <PlaceholderNode {...nodeProps} label={null} />;
+  }
+
   if (isPresentationHierarchyNode(node)) {
     return (
       // eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions
@@ -100,10 +105,6 @@ export function TreeNodeRenderer({
     );
   }
 
-  if (node.type === "ChildrenPlaceholder") {
-    return <PlaceholderNode {...nodeProps} label={node.message} />;
-  }
-
   if (node.type === "ResultSetTooLarge") {
     return (
       <ResultSetTooLargeNode
@@ -116,11 +117,18 @@ export function TreeNodeRenderer({
       />
     );
   }
+
+  if (node.type === "NoFilterMatches") {
+    return <TreeNode {...nodeProps} label="No child nodes match current filter" isDisabled={true} onExpanded={/* istanbul ignore next */ () => {}} />;
+  }
+
   return <TreeNode {...nodeProps} label={node.message} isDisabled={true} onExpanded={/* istanbul ignore next */ () => {}} />;
 }
 
 function PlaceholderNode(props: Omit<TreeNodeProps, "onExpanded">) {
-  return <TreeNode {...props} icon={<ProgressRadial size="x-small" indeterminate />} onExpanded={/* istanbul ignore next */ () => {}}></TreeNode>;
+  return (
+    <TreeNode {...props} icon={<ProgressRadial size="x-small" indeterminate title="Loading..." />} onExpanded={/* istanbul ignore next */ () => {}}></TreeNode>
+  );
 }
 
 function ResultSetTooLargeNode({

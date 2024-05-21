@@ -222,7 +222,7 @@ describe("TreeLoader", () => {
 
       const children = nodes.get("root-1");
       expect(children).to.have.lengthOf(1);
-      expect((children![0] as TreeModelInfoNode).type).to.be.eq("NoFilterMatchingNodes");
+      expect((children![0] as TreeModelInfoNode).type).to.be.eq("NoFilterMatches");
       expect(hierarchyProvider.getNodes).to.be.calledWith(
         sinon.match((props: GetHierarchyNodesProps) => {
           return props.instanceFilter === filter;

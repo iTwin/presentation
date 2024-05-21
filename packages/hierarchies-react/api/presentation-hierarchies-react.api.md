@@ -18,6 +18,7 @@ import { InstanceKey } from '@itwin/presentation-shared';
 import { IPrimitiveValueFormatter } from '@itwin/presentation-shared';
 import { JSX as JSX_2 } from 'react/jsx-runtime';
 import { LimitingECSqlQueryExecutor } from '@itwin/presentation-hierarchies';
+import { NodeData } from '@itwin/itwinui-react';
 import { PropsWithChildren } from 'react';
 import { ReactElement } from 'react';
 import { SelectionStorage } from '@itwin/unified-selection';
@@ -25,7 +26,7 @@ import { Tree } from '@itwin/itwinui-react';
 import { TreeNode } from '@itwin/itwinui-react';
 
 // @beta (undocumented)
-export function createTreeNode(node: PresentationTreeNode, isNodeSelected: (nodeId: string) => boolean): ReturnType<TreeProps<PresentationTreeNode>["getNode"]>;
+export function createRenderedTreeNodeData(node: RenderedTreeNode, isNodeSelected: (nodeId: string) => boolean): NodeData<RenderedTreeNode>;
 
 export { GenericInstanceFilter }
 
@@ -48,10 +49,10 @@ export { HierarchyNode }
 
 export { HierarchyProvider }
 
-// @beta (undocumented)
+// @beta
 export function isPresentationHierarchyNode(node: PresentationTreeNode): node is PresentationHierarchyNode;
 
-// @beta (undocumented)
+// @beta
 export interface PresentationGenericInfoNode {
     // (undocumented)
     id: string;
@@ -60,10 +61,10 @@ export interface PresentationGenericInfoNode {
     // (undocumented)
     parentNodeId: string | undefined;
     // (undocumented)
-    type: "ChildrenPlaceholder" | "NoFilterMatchingNodes" | "Unknown";
+    type: "Unknown";
 }
 
-// @beta (undocumented)
+// @beta
 export interface PresentationHierarchyNode {
     // (undocumented)
     children: true | Array<PresentationTreeNode>;
@@ -82,14 +83,13 @@ export interface PresentationHierarchyNode {
     isLoading: boolean;
     // (undocumented)
     label: string;
-    // (undocumented)
     nodeData: HierarchyNode;
 }
 
-// @beta (undocumented)
-export type PresentationInfoNode = PresentationGenericInfoNode | PresentationResultSetTooLargeInfoNode;
+// @beta
+export type PresentationInfoNode = PresentationGenericInfoNode | PresentationResultSetTooLargeInfoNode | PresentationNoFilterMatchesInfoNode;
 
-// @beta (undocumented)
+// @beta
 export interface PresentationResultSetTooLargeInfoNode {
     // (undocumented)
     id: string;
@@ -101,13 +101,20 @@ export interface PresentationResultSetTooLargeInfoNode {
     type: "ResultSetTooLarge";
 }
 
-// @beta (undocumented)
+// @beta
 export type PresentationTreeNode = PresentationHierarchyNode | PresentationInfoNode;
+
+// @beta (undocumented)
+export type RenderedTreeNode = PresentationTreeNode | {
+    id: string;
+    parentNodeId: string | undefined;
+    type: "ChildrenPlaceholder";
+};
 
 export { SelectionStorage }
 
 // @beta (undocumented)
-export function TreeNodeRenderer({ node, expandNode, getIcon, setHierarchyLevelFilter, onFilterClick, onNodeClick, onNodeKeyDown, setHierarchyLevelLimit, isSelected, isDisabled, actionButtonsClassName, ...nodeProps }: TreeNodeRendererProps_2): JSX_2.Element;
+export function TreeNodeRenderer({ node, expandNode, getIcon, setHierarchyLevelFilter, onFilterClick, onNodeClick, onNodeKeyDown, setHierarchyLevelLimit, isSelected, isDisabled, actionButtonsClassName, ...nodeProps }: TreeNodeRendererProps): JSX_2.Element;
 
 // @beta (undocumented)
 export function TreeRenderer({ rootNodes, expandNode, selectNodes, isNodeSelected, setHierarchyLevelLimit, setHierarchyLevelFilter, onFilterClick, getIcon, selectionMode, ...treeProps }: TreeRendererProps): JSX_2.Element;
