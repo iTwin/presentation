@@ -5,6 +5,7 @@
 
 import { HierarchyNode, HierarchyNodeKey } from "@itwin/presentation-hierarchies";
 
+/** @internal */
 export function createNodeId(node: Pick<HierarchyNode, "key" | "parentKeys">) {
   return [...node.parentKeys.map(serializeNodeKey), serializeNodeKey(node.key)].join(";");
 }
@@ -24,6 +25,7 @@ function convertObjectValuesToString(obj: object): string {
     .join(",");
 }
 
+/** @internal */
 export function sameNodes(lhs: HierarchyNode, rhs: HierarchyNode): boolean {
   if (HierarchyNodeKey.compare(lhs.key, rhs.key) !== 0) {
     return false;
@@ -40,3 +42,6 @@ export function sameNodes(lhs: HierarchyNode, rhs: HierarchyNode): boolean {
   }
   return true;
 }
+
+/** @internal */
+export const MAX_LIMIT_OVERRIDE = 10000;

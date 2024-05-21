@@ -94,6 +94,24 @@ describe("createECSqlQueryExecutor", () => {
       );
     });
 
+    it("calls IModel's `createQueryReader` with `restartToken`", async () => {
+      const imodel = {
+        createQueryReader: sinon.stub().returns(createCoreECSqlReaderStub([])),
+      };
+
+      const executor = createECSqlQueryExecutor(imodel);
+      const reader = executor.createQueryReader({ ecsql: "ecsql" }, { restartToken: "TestToken" });
+      for await (const _ of reader) {
+      }
+
+      // eslint-disable-next-line @typescript-eslint/unbound-method
+      expect(imodel.createQueryReader).to.be.calledOnceWithExactly(
+        "ecsql",
+        sinon.match((binder: QueryBinder) => Object.keys(binder.serialize()).length === 0),
+        sinon.match((options: QueryOptions) => options.restartToken === "TestToken"),
+      );
+    });
+
     it("calls IModel's `createQueryReader` with different bindings", async () => {
       const imodel = {
         createQueryReader: sinon.stub().returns(createCoreECSqlReaderStub([])),

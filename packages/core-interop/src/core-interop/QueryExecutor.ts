@@ -48,6 +48,9 @@ export function createECSqlQueryExecutor(imodel: CoreECSqlReaderFactory): ECSqlQ
           opts.setRowFormat(QueryRowFormat.UseECSqlPropertyIndexes);
           break;
       }
+      if (config?.restartToken) {
+        opts.setRestartToken(config?.restartToken);
+      }
       return new ECSqlQueryReaderImpl(
         imodel.createQueryReader(trimWhitespace(addCTEs(ecsql, ctes)), bind(bindings ?? []), opts.getOptions()),
         config?.rowFormat === "Indexes" ? "array" : "object",

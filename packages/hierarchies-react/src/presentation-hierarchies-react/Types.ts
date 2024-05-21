@@ -6,9 +6,6 @@
 import { HierarchyNode } from "@itwin/presentation-hierarchies";
 
 /** @beta */
-export type InfoNodeTypes = "ResultSetTooLarge" | "ChildrenPlaceholder" | "NoFilterMatchingNodes" | "Unknown";
-
-/** @beta */
 export interface PresentationHierarchyNode {
   id: string;
   label: string;
@@ -23,12 +20,23 @@ export interface PresentationHierarchyNode {
 }
 
 /** @beta */
-export interface PresentationInfoNode {
+export interface PresentationGenericInfoNode {
   id: string;
   parentNodeId: string | undefined;
-  type: InfoNodeTypes;
+  type: "ChildrenPlaceholder" | "NoFilterMatchingNodes" | "Unknown";
   message: string;
 }
+
+/** @beta */
+export interface PresentationResultSetTooLargeInfoNode {
+  id: string;
+  parentNodeId: string | undefined;
+  type: "ResultSetTooLarge";
+  resultSetSizeLimit: number;
+}
+
+/** @beta */
+export type PresentationInfoNode = PresentationGenericInfoNode | PresentationResultSetTooLargeInfoNode;
 
 /** @beta */
 export type PresentationTreeNode = PresentationHierarchyNode | PresentationInfoNode;

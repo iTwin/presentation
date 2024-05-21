@@ -7,16 +7,20 @@ import "./TreeNodeRenderer.css";
 import cx from "classnames";
 import { ComponentPropsWithoutRef, ReactElement } from "react";
 import { SvgFilter, SvgFilterHollow, SvgRemove } from "@itwin/itwinui-icons-react";
-import { Button, IconButton, ProgressRadial, TreeNode } from "@itwin/itwinui-react";
+import { Anchor, ButtonGroup, Flex, IconButton, ProgressRadial, Text, TreeNode } from "@itwin/itwinui-react";
+import { MAX_LIMIT_OVERRIDE } from "./internal/Utils";
 import { isPresentationHierarchyNode, PresentationHierarchyNode, PresentationTreeNode } from "./Types";
 import { useTree } from "./UseTree";
 
+type TreeNodeProps = ComponentPropsWithoutRef<typeof TreeNode>;
+
 interface TreeNodeRendererOwnProps {
   node: PresentationTreeNode;
-  onFilterClick: (nodeId: string) => void;
+  onFilterClick: (nodeId: string | undefined) => void;
   getIcon?: (node: PresentationHierarchyNode) => ReactElement | undefined;
   onNodeClick: (nodeId: string, isSelected: boolean, event: React.MouseEvent<HTMLElement, MouseEvent>) => void;
   onNodeKeyDown: (nodeId: string, isSelected: boolean, event: React.KeyboardEvent<HTMLElement>) => void;
+  actionButtonsClassName?: string;
 }
 
 type TreeNodeRendererProps = Pick<ReturnType<typeof useTree>, "expandNode" | "setHierarchyLevelFilter" | "setHierarchyLevelLimit"> &
@@ -35,6 +39,7 @@ export function TreeNodeRenderer({
   setHierarchyLevelLimit,
   isSelected,
   isDisabled,
+  actionButtonsClassName,
   ...nodeProps
 }: TreeNodeRendererProps) {
   if (isPresentationHierarchyNode(node)) {
@@ -53,41 +58,43 @@ export function TreeNodeRenderer({
           {...nodeProps}
           isSelected={isSelected}
           isDisabled={isDisabled}
-          className={cx("stateless-tree-node", { filtered: node.isFiltered })}
+          className={cx(nodeProps.className, "stateless-tree-node", { filtered: node.isFiltered })}
           label={node.label}
           onExpanded={(_, isExpanded) => {
             expandNode(node.id, isExpanded);
           }}
           icon={getIcon ? getIcon(node) : undefined}
         >
-          {node.isFiltered ? (
-            <IconButton
-              className="filtering-action-button"
-              styleType="borderless"
-              size="small"
-              title="Clear active filter"
-              onClick={(e) => {
-                setHierarchyLevelFilter(node.id, undefined);
-                e.stopPropagation();
-              }}
-            >
-              <SvgRemove />
-            </IconButton>
-          ) : null}
-          {node.isFilterable ? (
-            <IconButton
-              className="filtering-action-button"
-              styleType="borderless"
-              size="small"
-              title="Apply filter"
-              onClick={(e) => {
-                onFilterClick(node.id);
-                e.stopPropagation();
-              }}
-            >
-              {node.isFiltered ? <SvgFilter /> : <SvgFilterHollow />}
-            </IconButton>
-          ) : null}
+          <ButtonGroup className={cx("action-buttons", actionButtonsClassName)}>
+            {node.isFiltered ? (
+              <IconButton
+                className="filtering-action-button"
+                styleType="borderless"
+                size="small"
+                title="Clear active filter"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setHierarchyLevelFilter(node.id, undefined);
+                }}
+              >
+                <SvgRemove />
+              </IconButton>
+            ) : null}
+            {node.isFilterable ? (
+              <IconButton
+                className="filtering-action-button"
+                styleType="borderless"
+                size="small"
+                title="Apply filter"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onFilterClick(node.id);
+                }}
+              >
+                {node.isFiltered ? <SvgFilter /> : <SvgFilterHollow />}
+              </IconButton>
+            ) : null}
+          </ButtonGroup>
         </TreeNode>
       </div>
     );
@@ -98,7 +105,16 @@ export function TreeNodeRenderer({
   }
 
   if (node.type === "ResultSetTooLarge") {
-    return <ResultSetTooLargeNode {...nodeProps} label={node.message} onRemoveLimit={() => setHierarchyLevelLimit(node.parentNodeId, "unbounded")} />;
+    return (
+      <ResultSetTooLargeNode
+        {...nodeProps}
+        limit={node.resultSetSizeLimit}
+        onOverrideLimit={(limit) => setHierarchyLevelLimit(node.parentNodeId, limit)}
+        onFilterClick={() => {
+          onFilterClick(node.parentNodeId);
+        }}
+      />
+    );
   }
   return <TreeNode {...nodeProps} label={node.message} isDisabled={true} onExpanded={/* istanbul ignore next */ () => {}} />;
 }
@@ -107,21 +123,62 @@ function PlaceholderNode(props: Omit<TreeNodeProps, "onExpanded">) {
   return <TreeNode {...props} icon={<ProgressRadial size="x-small" indeterminate />} onExpanded={/* istanbul ignore next */ () => {}}></TreeNode>;
 }
 
-function ResultSetTooLargeNode({ onRemoveLimit, ...props }: Omit<TreeNodeProps, "onExpanded"> & { onRemoveLimit: () => void }) {
+function ResultSetTooLargeNode({
+  onFilterClick,
+  onOverrideLimit,
+  limit,
+  ...props
+}: Omit<TreeNodeProps, "onExpanded" | "label"> & ResultSetTooLargeNodeLabelProps) {
   return (
-    <TreeNode {...props} onExpanded={/* istanbul ignore next */ () => {}}>
-      <Button
-        styleType="borderless"
-        size="small"
-        onClick={(e) => {
-          onRemoveLimit();
-          e.stopPropagation();
-        }}
-      >
-        Remove Limit
-      </Button>
-    </TreeNode>
+    <TreeNode
+      {...props}
+      className="stateless-tree-node"
+      label={<ResultSetTooLargeNodeLabel limit={limit} onFilterClick={onFilterClick} onOverrideLimit={onOverrideLimit} />}
+      onExpanded={/* istanbul ignore next */ () => {}}
+    />
   );
 }
 
-type TreeNodeProps = ComponentPropsWithoutRef<typeof TreeNode>;
+interface ResultSetTooLargeNodeLabelProps {
+  limit: number;
+  onFilterClick: () => void;
+  onOverrideLimit: (limit: number) => void;
+}
+
+function ResultSetTooLargeNodeLabel({ onFilterClick, onOverrideLimit, limit }: ResultSetTooLargeNodeLabelProps) {
+  return (
+    <Flex
+      flexDirection="column"
+      gap="3xs"
+      title={`Please provide additional filtering - there are more items than allowed limit of ${limit}. Increase hierarchy level limit`}
+      alignItems="start"
+    >
+      <Flex flexDirection="row" gap="3xs">
+        <Text>Please provide</Text>
+        <Anchor
+          underline
+          onClick={(e) => {
+            e.stopPropagation();
+            onFilterClick();
+          }}
+        >
+          additional filtering
+        </Anchor>
+        <Text>- there are more items than allowed limit of {limit}.</Text>
+      </Flex>
+      {limit < MAX_LIMIT_OVERRIDE ? (
+        <Flex flexDirection="row" gap="3xs">
+          <Anchor
+            underline
+            onClick={(e) => {
+              e.stopPropagation();
+              onOverrideLimit(MAX_LIMIT_OVERRIDE);
+            }}
+          >
+            Increase hierarchy level size limit to {MAX_LIMIT_OVERRIDE}
+          </Anchor>
+        </Flex>
+      ) : null}
+    </Flex>
+  );
+}
