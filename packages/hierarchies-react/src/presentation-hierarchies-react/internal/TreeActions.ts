@@ -47,6 +47,12 @@ export class TreeActions {
     });
   }
 
+  private onLoadingComplete(parentId: string | undefined) {
+    this.updateTreeModel((model) => {
+      TreeModel.setIsLoading(model, parentId, false);
+    });
+  }
+
   private loadNodes(parentId: string, ignoreCache?: boolean) {
     const parentNode = this._currentModel.idToNode.get(parentId);
     // istanbul ignore if
@@ -65,6 +71,9 @@ export class TreeActions {
       .subscribe({
         next: (loadedHierarchy) => {
           this.handleLoadedHierarchy(parentId, loadedHierarchy);
+        },
+        complete: () => {
+          this.onLoadingComplete(parentId);
         },
       });
   }
@@ -108,6 +117,9 @@ export class TreeActions {
       .subscribe({
         next: (newModel) => {
           this.handleLoadedHierarchy(parentId, newModel);
+        },
+        complete: () => {
+          this.onLoadingComplete(parentId);
         },
       });
   }
@@ -184,7 +196,6 @@ export class TreeActions {
 function collectTreePartsUntil(untilNotifier: Observable<void>, rootNode?: TreeModelRootNode) {
   return (source: Observable<LoadedTreePart>) =>
     source.pipe(
-      takeUntil(untilNotifier),
       reduce<LoadedTreePart, TreeModel>(
         (treeModel, loadedPart) => {
           addNodesToModel(treeModel, loadedPart);
@@ -196,6 +207,7 @@ function collectTreePartsUntil(untilNotifier: Observable<void>, rootNode?: TreeM
           rootNode: rootNode ?? { id: undefined, nodeData: undefined },
         },
       ),
+      takeUntil(untilNotifier),
     );
 }
 
