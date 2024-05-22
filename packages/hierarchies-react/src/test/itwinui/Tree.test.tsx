@@ -4,28 +4,26 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { expect } from "chai";
-import { GenericInstanceFilter } from "@itwin/presentation-hierarchies";
-import { MAX_LIMIT_OVERRIDE } from "../presentation-hierarchies-react/internal/Utils";
-import { TreeRenderer } from "../presentation-hierarchies-react/TreeRenderer";
-import { PresentationHierarchyNode, PresentationInfoNode, PresentationTreeNode } from "../presentation-hierarchies-react/Types";
-import { SelectionChangeType } from "../presentation-hierarchies-react/UseSelectionHandler";
-import { createStub, createTestHierarchyNode, render, waitFor, within } from "./TestUtils";
+import { MAX_LIMIT_OVERRIDE } from "../../presentation-hierarchies-react/internal/Utils";
+import { TreeRenderer } from "../../presentation-hierarchies-react/itwinui/TreeRenderer";
+import { PresentationHierarchyNode, PresentationInfoNode, PresentationTreeNode } from "../../presentation-hierarchies-react/TreeNode";
+import { SelectionChangeType } from "../../presentation-hierarchies-react/UseSelectionHandler";
+import { HierarchyLevelDetails } from "../../presentation-hierarchies-react/UseTree";
+import { createStub, createTestHierarchyNode, render, within } from "../TestUtils";
 
 describe("Tree", () => {
   const onFilterClick = createStub<(nodeId: string | undefined) => void>();
   const expandNode = createStub<(nodeId: string, isExpanded: boolean) => void>();
   const selectNodes = createStub<(nodeIds: Array<string>, changeType: SelectionChangeType) => void>();
   const isNodeSelected = createStub<(nodeId: string) => boolean>();
-  const setHierarchyLevelLimit = createStub<(nodeId: string | undefined, limit: undefined | number | "unbounded") => void>();
-  const setHierarchyLevelFilter = createStub<(nodeId: string | undefined, filter: GenericInstanceFilter | undefined) => void>();
+  const getHierarchyLevelDetails = createStub<(nodeId: string | undefined) => HierarchyLevelDetails>();
 
   const initialProps = {
     onFilterClick,
     expandNode,
     selectNodes,
     isNodeSelected,
-    setHierarchyLevelLimit,
-    setHierarchyLevelFilter,
+    getHierarchyLevelDetails,
   };
 
   beforeEach(() => {
@@ -33,8 +31,7 @@ describe("Tree", () => {
     expandNode.reset();
     selectNodes.reset();
     isNodeSelected.reset();
-    setHierarchyLevelLimit.reset();
-    setHierarchyLevelFilter.reset();
+    getHierarchyLevelDetails.reset();
   });
 
   it("renders nodes", () => {
@@ -91,6 +88,23 @@ describe("Tree", () => {
 
     await user.click(expandButton);
     expect(expandNode).to.be.calledOnceWith("root-2", true);
+  });
+
+  it("renders unselectable nodes when selection callbacks are not provided", async () => {
+    const rootNodes = createNodes([
+      {
+        id: "test node",
+      },
+    ]);
+
+    const { user, getByRole } = render(<TreeRenderer rootNodes={rootNodes} expandNode={initialProps.expandNode} selectionMode={"single"} />);
+
+    const node = getByRole("treeitem");
+    expect(within(node).queryByText("test node")).to.not.be.null;
+    expect(node.ariaSelected).to.eq("false");
+
+    await user.click(node);
+    expect(node.ariaSelected).to.eq("false");
   });
 
   it("selects/unselects nodes", async () => {
@@ -186,7 +200,7 @@ describe("Tree", () => {
     expect(queryByText("Icon")).to.not.be.null;
   });
 
-  it("calls `removeHierarchyLevelFilter` if node is filtered", async () => {
+  it("clears active filter", async () => {
     const rootNodes = createNodes([
       {
         id: "root-1",
@@ -195,11 +209,17 @@ describe("Tree", () => {
       },
     ]);
 
+    const setInstanceFilter = createStub();
+    getHierarchyLevelDetails.returns({
+      setInstanceFilter,
+    } as unknown as HierarchyLevelDetails);
+
     const { user, queryByText, getByRole } = render(<TreeRenderer rootNodes={rootNodes} {...initialProps} />);
 
     expect(queryByText("root-1")).to.not.be.null;
     await user.click(getByRole("button", { name: "Clear active filter" }));
-    expect(setHierarchyLevelFilter).to.be.calledOnceWith("root-1", undefined);
+    expect(getHierarchyLevelDetails).to.be.calledOnceWith("root-1");
+    expect(setInstanceFilter).to.be.calledOnceWith(undefined);
   });
 
   it("calls `onFilterClick` if node is filterable", async () => {
@@ -217,84 +237,126 @@ describe("Tree", () => {
     expect(onFilterClick).to.be.calledOnceWith("root-1");
   });
 
-  it("renders `ResultSetTooLarge` node", async () => {
-    const rootNodes = createNodes([
-      {
-        id: "info-node",
-        parentNodeId: "parent-id",
-        type: "ResultSetTooLarge",
-        resultSetSizeLimit: 100,
-      },
-    ]);
+  describe("`ResultSetTooLarge` node", () => {
+    it("renders `ResultSetTooLarge` node with filtering and override support", async () => {
+      const rootNodes = createNodes([
+        {
+          id: "info-node",
+          parentNodeId: "parent-id",
+          type: "ResultSetTooLarge",
+          resultSetSizeLimit: 100,
+        },
+      ]);
+      const { queryByText } = render(<TreeRenderer rootNodes={rootNodes} {...initialProps} />);
+      expect(queryByText(/Please provide/)).to.not.be.null;
+      expect(queryByText(/additional filtering/)).to.not.be.null;
+      expect(queryByText(/there are more items than allowed limit of 100/)).to.not.be.null;
+      expect(queryByText(/increase hierarchy level size limit to /)).to.not.be.null;
+    });
 
-    const { queryByText } = render(<TreeRenderer rootNodes={rootNodes} {...initialProps} />);
+    it("renders `ResultSetTooLarge` node with only filtering support", async () => {
+      const rootNodes = createNodes([
+        {
+          id: "info-node",
+          parentNodeId: "parent-id",
+          type: "ResultSetTooLarge",
+          resultSetSizeLimit: 100,
+        },
+      ]);
+      const { queryByText } = render(<TreeRenderer rootNodes={rootNodes} {...initialProps} getHierarchyLevelDetails={undefined} />);
+      expect(queryByText(/Please provide/)).to.not.be.null;
+      expect(queryByText(/additional filtering/)).to.not.be.null;
+      expect(queryByText(/there are more items than allowed limit of 100/)).to.not.be.null;
+      expect(queryByText(/increase hierarchy level size limit to /)).to.be.null;
+    });
 
-    expect(queryByText(/there are more items than allowed limit of 100/i)).to.not.be.null;
-  });
+    it("renders `ResultSetTooLarge` node with only override support", async () => {
+      const rootNodes = createNodes([
+        {
+          id: "info-node",
+          parentNodeId: "parent-id",
+          type: "ResultSetTooLarge",
+          resultSetSizeLimit: 100,
+        },
+      ]);
+      const { queryByText } = render(<TreeRenderer rootNodes={rootNodes} {...initialProps} onFilterClick={undefined} />);
+      expect(queryByText(/Please provide/)).to.be.null;
+      expect(queryByText(/additional filtering/)).to.be.null;
+      expect(queryByText(/There are more items than allowed limit of 100/)).to.not.be.null;
+      expect(queryByText(/Increase hierarchy level size limit to /)).to.not.be.null;
+    });
 
-  it("calls `onFilterClick` if node is `ResultSetTooLarge` info node", async () => {
-    const rootNodes = createNodes([
-      {
-        id: "info-node",
-        parentNodeId: "parent-id",
-        type: "ResultSetTooLarge",
-        resultSetSizeLimit: 100,
-      },
-    ]);
+    it("renders `ResultSetTooLarge` node without filtering or override support", async () => {
+      const rootNodes = createNodes([
+        {
+          id: "info-node",
+          parentNodeId: "parent-id",
+          type: "ResultSetTooLarge",
+          resultSetSizeLimit: 100,
+        },
+      ]);
+      const { queryByText } = render(<TreeRenderer rootNodes={rootNodes} expandNode={initialProps.expandNode} />);
+      expect(queryByText(/Please provide/)).to.be.null;
+      expect(queryByText(/additional filtering/)).to.be.null;
+      expect(queryByText(/There are more items than allowed limit of 100/)).to.not.be.null;
+      expect(queryByText(/Increase hierarchy level size limit to /i)).to.be.null;
+    });
 
-    const { user, getByText, queryByText } = render(<TreeRenderer rootNodes={rootNodes} {...initialProps} />);
+    it("calls `onFilterClick` if node is `ResultSetTooLarge` info node", async () => {
+      const rootNodes = createNodes([
+        {
+          id: "info-node",
+          parentNodeId: "parent-id",
+          type: "ResultSetTooLarge",
+          resultSetSizeLimit: 100,
+        },
+      ]);
 
-    expect(queryByText(/there are more items than allowed limit of 100/i)).to.not.be.null;
-    await user.click(getByText("additional filtering"));
-    expect(onFilterClick).to.be.calledOnceWith("parent-id");
-  });
+      const { user, getByText, queryByText } = render(<TreeRenderer rootNodes={rootNodes} {...initialProps} />);
 
-  it("calls 'setHierarchyLevelLimit' to override hierarchy size limit", async () => {
-    const rootNodes = createNodes([
-      {
-        id: "info-node",
-        parentNodeId: "parent-id",
-        type: "ResultSetTooLarge",
-        resultSetSizeLimit: MAX_LIMIT_OVERRIDE / 2 + 500,
-      },
-    ]);
+      expect(queryByText(/there are more items than allowed limit of 100/i)).to.not.be.null;
+      await user.click(getByText("additional filtering"));
+      expect(onFilterClick).to.be.calledOnceWith("parent-id");
+    });
 
-    const { user, getByText, queryByText } = render(<TreeRenderer rootNodes={rootNodes} {...initialProps} />);
+    it("overrides hierarchy level size limit", async () => {
+      const rootNodes = createNodes([
+        {
+          id: "info-node",
+          parentNodeId: "parent-id",
+          type: "ResultSetTooLarge",
+          resultSetSizeLimit: MAX_LIMIT_OVERRIDE / 2 + 500,
+        },
+      ]);
 
-    expect(queryByText(/there are more items than allowed limit of/i)).to.not.be.null;
-    await user.click(getByText(/Increase hierarchy level size limit/i));
-    expect(setHierarchyLevelLimit).to.be.calledOnceWith("parent-id", MAX_LIMIT_OVERRIDE);
-  });
+      const setSizeLimit = createStub();
+      getHierarchyLevelDetails.returns({
+        setSizeLimit,
+      } as unknown as HierarchyLevelDetails);
 
-  it("does not allow to increase hierarchy limit past max limit override", async () => {
-    const rootNodes = createNodes([
-      {
-        id: "info-node",
-        parentNodeId: "parent-id",
-        type: "ResultSetTooLarge",
-        resultSetSizeLimit: MAX_LIMIT_OVERRIDE,
-      },
-    ]);
+      const { user, getByText, queryByText } = render(<TreeRenderer rootNodes={rootNodes} {...initialProps} />);
 
-    const { queryByText } = render(<TreeRenderer rootNodes={rootNodes} {...initialProps} />);
+      expect(queryByText(/there are more items than allowed limit of/i)).to.not.be.null;
+      await user.click(getByText(/Increase hierarchy level size limit/i));
+      expect(getHierarchyLevelDetails).to.be.calledOnceWith("parent-id");
+      expect(setSizeLimit).to.be.calledOnceWith(MAX_LIMIT_OVERRIDE);
+    });
 
-    expect(queryByText(/there are more items than allowed limit of/i)).to.not.be.null;
-    expect(queryByText(/Increase hierarchy level size limit/i)).to.be.null;
-  });
+    it("does not allow to increase hierarchy limit past max limit override", async () => {
+      const rootNodes = createNodes([
+        {
+          id: "info-node",
+          parentNodeId: "parent-id",
+          type: "ResultSetTooLarge",
+          resultSetSizeLimit: MAX_LIMIT_OVERRIDE,
+        },
+      ]);
 
-  it("renders `NoFilterMatchingNodes` node", async () => {
-    const rootNodes = createNodes([
-      {
-        id: "info-node",
-        parentNodeId: "parent-id",
-        type: "NoFilterMatchingNodes",
-        message: "No child nodes that match filter",
-      },
-    ]);
+      const { queryByText } = render(<TreeRenderer rootNodes={rootNodes} {...initialProps} />);
 
-    const { queryByText } = render(<TreeRenderer rootNodes={rootNodes} {...initialProps} />);
-
-    expect(queryByText("There are no child nodes matching current filter")).to.not.be.null;
+      expect(queryByText(/there are more items than allowed limit of/i)).to.not.be.null;
+      expect(queryByText(/Increase hierarchy level size limit/i)).to.be.null;
+    });
   });
 
   it("renders placeholder node if children is loading", () => {
@@ -307,10 +369,24 @@ describe("Tree", () => {
       },
     ]);
 
-    const { queryByText } = render(<TreeRenderer rootNodes={rootNodes} {...initialProps} />);
+    const { queryByText, queryByTitle } = render(<TreeRenderer rootNodes={rootNodes} {...initialProps} />);
 
     expect(queryByText("root-1")).to.not.be.null;
-    expect(queryByText("Loading...")).to.not.be.null;
+    expect(queryByTitle("Loading...")).to.not.be.null;
+  });
+
+  it("renders NoFilterMatches info node", () => {
+    const rootNodes = createNodes([
+      {
+        id: "info-node",
+        parentNodeId: undefined,
+        type: "NoFilterMatches",
+      },
+    ]);
+
+    const { queryByText } = render(<TreeRenderer rootNodes={rootNodes} {...initialProps} />);
+
+    expect(queryByText("No child nodes match current filter")).to.not.be.null;
   });
 
   it("renders unknown info node", () => {
@@ -326,85 +402,6 @@ describe("Tree", () => {
     const { queryByText } = render(<TreeRenderer rootNodes={rootNodes} {...initialProps} />);
 
     expect(queryByText("Some Error")).to.not.be.null;
-  });
-
-  it("uses localization", async () => {
-    const rootNodes = createNodes([
-      {
-        id: "filtered-node",
-        isFiltered: true,
-        isFilterable: true,
-      },
-      {
-        id: "info-node-1",
-        parentNodeId: "parent-id",
-        type: "ChildrenPlaceholder",
-        message: "Loading",
-      },
-      {
-        id: "info-node-2",
-        parentNodeId: "parent-id",
-        type: "NoFilterMatchingNodes",
-        message: "No matches",
-      },
-      {
-        id: "info-node-3",
-        parentNodeId: "parent-id",
-        type: "ResultSetTooLarge",
-        resultSetSizeLimit: 100,
-      },
-      {
-        id: "info-node-4",
-        parentNodeId: undefined,
-        type: "Unknown",
-        message: "Some Error",
-      },
-    ]);
-
-    const localization = {
-      loading: "Custom loading...",
-      pleaseProvide: "Custom please provide",
-      additionalFiltering: "Custom additional filtering",
-      filterHierarchyLevel: "Custom apply filter",
-      clearHierarchyLevelFilter: "Custom clear active filter",
-      noFilteredChildren: "Custom there are no child nodes matching current filter",
-      resultLimitExceeded: "Custom there are more items than allowed limit of",
-      increaseHierarchyLimit: "Custom increase hierarchy level size limit",
-      increaseHierarchyLimitTo: "Custom increase hierarchy level size limit to",
-    };
-
-    const { queryByText, queryByTitle, rerender } = render(<TreeRenderer rootNodes={rootNodes} {...initialProps} />);
-
-    await waitFor(() => {
-      expect(queryByText("Loading...")).to.not.be.null;
-      expect(queryByTitle("Apply filter")).to.not.be.null;
-      expect(queryByTitle("Clear active filter")).to.not.be.null;
-      expect(queryByText("There are no child nodes matching current filter")).to.not.be.null;
-      expect(queryByText("Please provide")).to.not.be.null;
-      expect(queryByText("additional filtering")).to.not.be.null;
-      expect(queryByText("- there are more items than allowed limit of 100.")).to.not.be.null;
-      expect(queryByText("Increase hierarchy level size limit to 10000")).to.not.be.null;
-      expect(queryByTitle("Please provide additional filtering - there are more items than allowed limit of 100. Increase hierarchy level size limit")).to.not
-        .be.null;
-    });
-
-    rerender(<TreeRenderer rootNodes={rootNodes} {...initialProps} localization={localization} />);
-
-    await waitFor(() => {
-      expect(queryByText("Custom loading...")).to.not.be.null;
-      expect(queryByTitle("Custom apply filter")).to.not.be.null;
-      expect(queryByTitle("Custom clear active filter")).to.not.be.null;
-      expect(queryByText("Custom there are no child nodes matching current filter")).to.not.be.null;
-      expect(queryByText("Custom please provide")).to.not.be.null;
-      expect(queryByText("Custom additional filtering")).to.not.be.null;
-      expect(queryByText("- Custom there are more items than allowed limit of 100.")).to.not.be.null;
-      expect(queryByText("Custom increase hierarchy level size limit to 10000")).to.not.be.null;
-      expect(
-        queryByTitle(
-          "Custom please provide Custom additional filtering - Custom there are more items than allowed limit of 100. Custom increase hierarchy level size limit",
-        ),
-      ).to.not.be.null;
-    });
   });
 });
 

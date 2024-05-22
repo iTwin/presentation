@@ -6,7 +6,13 @@
 import { expect } from "chai";
 import { GenericInstanceFilter } from "@itwin/presentation-hierarchies";
 import { isTreeModelHierarchyNode, isTreeModelInfoNode, TreeModel } from "../../presentation-hierarchies-react/internal/TreeModel";
-import { createTestHierarchyNode, createTestModelGenericInfoNode, createTreeModel, getHierarchyNode } from "../TestUtils";
+import {
+  createTestHierarchyNode,
+  createTestModelGenericInfoNode,
+  createTestModelNoFilterMatchesInfoNode,
+  createTreeModel,
+  getHierarchyNode,
+} from "../TestUtils";
 
 describe("TreeModel", () => {
   describe("expandNode", () => {
@@ -142,7 +148,7 @@ describe("TreeModel", () => {
           children: ["info-1"],
         },
         {
-          ...createTestModelGenericInfoNode({ id: "info-1", type: "NoFilterMatchingNodes", message: "Message" }),
+          ...createTestModelNoFilterMatchesInfoNode({ id: "info-1" }),
         },
       ]);
 
