@@ -51,6 +51,9 @@ export { HierarchyProvider }
 export function isPresentationHierarchyNode(node: PresentationTreeNode): node is PresentationHierarchyNode;
 
 // @beta
+export function LocalizationContextProvider({ localization, children }: PropsWithChildren<LocalizationContextProviderProps>): JSX_2.Element;
+
+// @beta
 export interface PresentationGenericInfoNode {
     // (undocumented)
     id: string;
@@ -115,10 +118,13 @@ export { SelectionStorage }
 export function TreeNodeRenderer({ node, expandNode, getIcon, onFilterClick, onNodeClick, onNodeKeyDown, isSelected, isDisabled, actionButtonsClassName, getHierarchyLevelDetails, ...nodeProps }: TreeNodeRendererProps): JSX_2.Element;
 
 // @beta
-export function TreeRenderer({ rootNodes, expandNode, selectNodes, isNodeSelected, onFilterClick, getIcon, getHierarchyLevelDetails, selectionMode, ...treeProps }: TreeRendererProps): JSX_2.Element;
+export function TreeRenderer({ rootNodes, expandNode, selectNodes, isNodeSelected, onFilterClick, getIcon, getHierarchyLevelDetails, selectionMode, localization, ...treeProps }: TreeRendererProps): JSX_2.Element;
 
 // @beta
 export function UnifiedSelectionProvider({ storage, children }: PropsWithChildren<Props>): JSX_2.Element;
+
+// @beta (undocumented)
+export function useLocalizationContext(): LocalizationContext;
 
 // @beta
 export function useSelectionHandler(props: UseSelectionHandlerProps): UseSelectionHandlerResult;

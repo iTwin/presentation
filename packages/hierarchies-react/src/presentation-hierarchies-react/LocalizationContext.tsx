@@ -8,14 +8,13 @@ import { createContext, PropsWithChildren, useContext, useEffect, useState } fro
 /** @internal */
 export interface Localization {
   loading: string;
-  pleaseProvide: string;
-  additionalFiltering: string;
   filterHierarchyLevel: string;
   clearHierarchyLevelFilter: string;
   noFilteredChildren: string;
   resultLimitExceeded: string;
+  resultLimitExceededWithFiltering: string;
   increaseHierarchyLimit: string;
-  increaseHierarchyLimitTo: string;
+  increaseHierarchyLimitWithFiltering: string;
 }
 
 /** @internal */
@@ -25,14 +24,13 @@ export interface LocalizationContext {
 
 const defaultLocalization: Localization = {
   loading: "Loading...",
-  pleaseProvide: "Please provide",
-  additionalFiltering: "additional filtering",
   filterHierarchyLevel: "Apply filter",
   clearHierarchyLevelFilter: "Clear active filter",
-  noFilteredChildren: "There are no child nodes matching current filter",
-  resultLimitExceeded: "there are more items than allowed limit of",
-  increaseHierarchyLimit: "Increase hierarchy level size limit",
-  increaseHierarchyLimitTo: "Increase hierarchy level size limit to",
+  noFilteredChildren: "No child nodes match current filter",
+  resultLimitExceeded: "There are more items than allowed limit of {{limit}}.",
+  resultLimitExceededWithFiltering: "Please provide <link>additional filtering</link> - there are more items than allowed limit of {{limit}}.",
+  increaseHierarchyLimit: "<link>Increase the hierarchy level size limit to {{limit}}.</link>",
+  increaseHierarchyLimitWithFiltering: "Or, <link>increase the hierarchy level size limit to {{limit}}.</link>",
 };
 
 const localizationContext = createContext<LocalizationContext>({ localization: defaultLocalization });

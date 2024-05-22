@@ -9,6 +9,7 @@ import { ComponentPropsWithoutRef, ReactElement } from "react";
 import { SvgFilter, SvgFilterHollow, SvgRemove } from "@itwin/itwinui-icons-react";
 import { Anchor, ButtonGroup, Flex, IconButton, ProgressRadial, Text, TreeNode } from "@itwin/itwinui-react";
 import { MAX_LIMIT_OVERRIDE } from "../internal/Utils";
+import { useLocalizationContext } from "../LocalizationContext";
 import { isPresentationHierarchyNode, PresentationHierarchyNode } from "../TreeNode";
 import { useTree } from "../UseTree";
 import { RenderedTreeNode } from "./TreeRenderer";
@@ -49,6 +50,7 @@ export function TreeNodeRenderer({
   getHierarchyLevelDetails,
   ...nodeProps
 }: TreeNodeRendererProps) {
+  const { localization } = useLocalizationContext();
   if ("type" in node && node.type === "ChildrenPlaceholder") {
     return <PlaceholderNode {...nodeProps} label={null} />;
   }
@@ -82,7 +84,7 @@ export function TreeNodeRenderer({
                 className="filtering-action-button"
                 styleType="borderless"
                 size="small"
-                title="Clear active filter"
+                title={localization.clearHierarchyLevelFilter}
                 onClick={(e) => {
                   e.stopPropagation();
                   getHierarchyLevelDetails(node.id)?.setInstanceFilter(undefined);
@@ -96,7 +98,7 @@ export function TreeNodeRenderer({
                 className="filtering-action-button"
                 styleType="borderless"
                 size="small"
-                title="Apply filter"
+                title={localization.filterHierarchyLevel}
                 onClick={(e) => {
                   e.stopPropagation();
                   onFilterClick(node.id);
@@ -129,15 +131,20 @@ export function TreeNodeRenderer({
   }
 
   if (node.type === "NoFilterMatches") {
-    return <TreeNode {...nodeProps} label="No child nodes match current filter" isDisabled={true} onExpanded={/* istanbul ignore next */ () => {}} />;
+    return <TreeNode {...nodeProps} label={localization.noFilteredChildren} isDisabled={true} onExpanded={/* istanbul ignore next */ () => {}} />;
   }
 
   return <TreeNode {...nodeProps} label={node.message} isDisabled={true} onExpanded={/* istanbul ignore next */ () => {}} />;
 }
 
 function PlaceholderNode(props: Omit<TreeNodeProps, "onExpanded">) {
+  const { localization } = useLocalizationContext();
   return (
-    <TreeNode {...props} icon={<ProgressRadial size="x-small" indeterminate title="Loading..." />} onExpanded={/* istanbul ignore next */ () => {}}></TreeNode>
+    <TreeNode
+      {...props}
+      icon={<ProgressRadial size="x-small" indeterminate title={localization.loading} />}
+      onExpanded={/* istanbul ignore next */ () => {}}
+    ></TreeNode>
   );
 }
 
@@ -164,46 +171,69 @@ interface ResultSetTooLargeNodeLabelProps {
 }
 
 function ResultSetTooLargeNodeLabel({ onFilterClick, onOverrideLimit, limit }: ResultSetTooLargeNodeLabelProps) {
-  const supportsLimitOverride = !!onOverrideLimit && limit < MAX_LIMIT_OVERRIDE;
+  const { localization } = useLocalizationContext();
   const supportsFiltering = !!onFilterClick;
-  const currLimitStr = limit.toLocaleString(undefined, { useGrouping: true });
-  const maxLimitOverrideStr = MAX_LIMIT_OVERRIDE.toLocaleString(undefined, { useGrouping: true });
-  const title = `${supportsFiltering ? `Please provide additional filtering - there` : `There`} are more items than allowed limit of ${currLimitStr}.${
-    supportsLimitOverride ? ` ${supportsFiltering ? "Or, increase" : "Increase"} the hierarchy level size limit to ${maxLimitOverrideStr}.` : ""
-  }`;
+  const supportsLimitOverride = !!onOverrideLimit && limit < MAX_LIMIT_OVERRIDE;
+
+  const limitExceededMessage = createLocalizedMessage(
+    supportsFiltering ? localization.resultLimitExceededWithFiltering : localization.resultLimitExceeded,
+    limit,
+    onFilterClick,
+  );
+  const increaseLimitMessage = supportsLimitOverride
+    ? createLocalizedMessage(
+        supportsFiltering ? localization.increaseHierarchyLimitWithFiltering : localization.increaseHierarchyLimit,
+        MAX_LIMIT_OVERRIDE,
+        () => onOverrideLimit(MAX_LIMIT_OVERRIDE),
+      )
+    : { title: "", element: null };
+
+  const title = `${limitExceededMessage.title} ${increaseLimitMessage.title}`;
+
   return (
     <Flex flexDirection="column" gap="3xs" title={title} alignItems="start">
-      {supportsFiltering ? (
-        <Flex flexDirection="row" gap="3xs">
-          <Text>Please provide</Text>
-          <Anchor
-            underline
-            onClick={(e) => {
-              e.stopPropagation();
-              onFilterClick();
-            }}
-          >
-            additional filtering
-          </Anchor>
-          <Text>- there are more items than allowed limit of {currLimitStr}.</Text>
-        </Flex>
-      ) : (
-        <Text>There are more items than allowed limit of {currLimitStr}.</Text>
-      )}
-      {supportsLimitOverride ? (
-        <Flex flexDirection="row" gap="3xs">
-          {supportsFiltering ? <Text>Or,</Text> : null}
-          <Anchor
-            underline
-            onClick={(e) => {
-              e.stopPropagation();
-              onOverrideLimit(MAX_LIMIT_OVERRIDE);
-            }}
-          >
-            {supportsFiltering ? "increase" : "Increase"} hierarchy level size limit to {maxLimitOverrideStr}.
-          </Anchor>
-        </Flex>
-      ) : null}
+      {limitExceededMessage.element}
+      {increaseLimitMessage.element}
     </Flex>
   );
+}
+
+function createLocalizedMessage(message: string, limit: number, onClick?: () => void) {
+  const limitStr = limit.toLocaleString(undefined, { useGrouping: true });
+  const messageWithLimit = message.replace("{{limit}}", limitStr);
+  const exp = new RegExp("<link>(.*)</link>");
+  const match = messageWithLimit.match(exp);
+
+  if (!match) {
+    return {
+      title: messageWithLimit,
+      element: (
+        <Flex flexDirection="row" gap="3xs">
+          <Text>{messageWithLimit}</Text>
+        </Flex>
+      ),
+    };
+  }
+
+  const [fullText, innerText] = match;
+  const [textBefore, textAfter] = messageWithLimit.split(fullText);
+
+  return {
+    title: messageWithLimit.replace(fullText, innerText),
+    element: (
+      <Flex flexDirection="row" gap="3xs">
+        {textBefore ? <Text>{textBefore}</Text> : null}
+        <Anchor
+          underline
+          onClick={(e) => {
+            e.stopPropagation();
+            onClick?.();
+          }}
+        >
+          {innerText}
+        </Anchor>
+        {textAfter ? <Text>{textAfter}</Text> : null}
+      </Flex>
+    ),
+  };
 }
