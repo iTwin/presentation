@@ -121,6 +121,7 @@ describe("TreeActions", () => {
         expect(onModelChangedStub).to.be.calledOnce;
         const newModel = onModelChangedStub.firstCall.args[0];
         expect(getHierarchyNode(newModel, "root-1")).to.not.be.undefined;
+        expect(getHierarchyNode(newModel, "updated-root-1")).to.be.undefined;
       });
     });
   });
