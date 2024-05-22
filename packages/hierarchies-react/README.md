@@ -74,7 +74,7 @@ It takes 3 required properties:
 
 The returned object contains 2 functions, that should be called by the node renderer: `onNodeClick` and `onNodeKeyDown`.
 
-Out [tree renderer implementation](#treerenderer) calls this hook and passes the callbacks to the [node renderer](#treenoderenderer), so there's no need to use it unless implementing a custom tree renderer.
+Our [tree renderer implementation](#treerenderer) calls this hook and passes the callbacks to the [node renderer](#treenoderenderer), so there's no need to use it unless implementing a custom tree renderer.
 
 ### `useUnifiedSelectionTree` & `UnifiedSelectionProvider`
 
