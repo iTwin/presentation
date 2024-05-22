@@ -61,6 +61,11 @@
     "react": "^17.0.0 || ^18.0.0",
     "react-dom": "^17.0.0 || ^18.0.0"
   },
+  "peerDependenciesMeta": {
+    "@itwin/itwinui-react": {
+      "optional": true
+    }
+  },
   "devDependencies": {
     "@itwin/build-tools": "^4.6.0",
     "@itwin/itwinui-react": "^3.0.0",

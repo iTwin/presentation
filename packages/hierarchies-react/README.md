@@ -113,7 +113,7 @@ function MyTreeComponent(props: MyTreeComponentProps) {
 
 ## iTwinUI components
 
-While the package provides a headless UI, it also delivers a set of [iTwinUI](https://itwinui.bentley.com/)-based components for rendering the tree, which should cover majority of use cases.
+While the package provides a headless UI, it also delivers a set of [iTwinUI](https://itwinui.bentley.com/)-based components for rendering the tree, which should cover majority of use cases. Consumers using the below components are required to provide a compatible `@itwin/itwinui-react` package, which is an optional peer dependency to this package.
 
 ### `TreeRenderer`
 
