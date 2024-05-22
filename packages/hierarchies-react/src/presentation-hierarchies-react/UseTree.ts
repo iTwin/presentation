@@ -17,27 +17,63 @@ import { ECClassHierarchyInspector, ECSchemaProvider, InstanceKey, IPrimitiveVal
 import { TreeActions } from "./internal/TreeActions";
 import { isTreeModelHierarchyNode, isTreeModelInfoNode, TreeModel, TreeModelHierarchyNode, TreeModelNode, TreeModelRootNode } from "./internal/TreeModel";
 import { useUnifiedTreeSelection, UseUnifiedTreeSelectionProps } from "./internal/UseUnifiedSelection";
-import { PresentationHierarchyNode, PresentationTreeNode } from "./Types";
+import { PresentationHierarchyNode, PresentationTreeNode } from "./TreeNode";
 import { SelectionChangeType } from "./UseSelectionHandler";
 
-/** @beta */
+/**
+ * A data structure that contains information about a single hierarchy level.
+ * @beta
+ */
 export interface HierarchyLevelDetails {
+  /** The parent node whose hierarchy level's information is contained in this data structure */
   hierarchyNode: HierarchyNode | undefined;
+
+  /** A function to get instance keys of the hierarchy level. */
   getInstanceKeysIterator: (props?: {
     instanceFilter?: GenericInstanceFilter;
     hierarchyLevelSizeLimit?: number | "unbounded";
   }) => AsyncIterableIterator<InstanceKey>;
-  hierarchyLevelSizeLimit?: number | "unbounded";
-  currentFilter?: GenericInstanceFilter;
+
+  /** Get the limit of how many nodes can be loaded in this hierarchy level. */
+  sizeLimit?: number | "unbounded";
+  /** Set the limit of how many nodes can be loaded in this hierarchy level. */
+  setSizeLimit: (value: undefined | number | "unbounded") => void;
+
+  /** Get the active instance filter applied to this hierarchy level. */
+  instanceFilter?: GenericInstanceFilter;
+  /** Set the instance filter to apply to this hierarchy level */
+  setInstanceFilter: (filter: GenericInstanceFilter | undefined) => void;
 }
 
-/** @beta */
+/**
+ * A React hook that creates state for a tree component.
+ *
+ * The hook uses `@itwin/presentation-hierarchies` package to load the hierarchy data and returns a
+ * component-agnostic result which may be used to render the hierarchy using any UI framework.
+ *
+ * See `README.md` for an example
+ *
+ * @see `useUnifiedSelectionTree`
+ * @beta
+ */
 export function useTree(props: UseTreeProps): UseTreeResult {
   const { getNode: _, ...rest } = useTreeInternal(props);
   return rest;
 }
 
-/** @beta */
+/**
+ * A React hook that creates state for a tree component, that is integrated with unified selection
+ * through context provided by `UnifiedSelectionProvider`.
+ *
+ * The hook uses `@itwin/presentation-hierarchies` package to load the hierarchy data and returns a
+ * component-agnostic result which may be used to render the hierarchy using any UI framework.
+ *
+ * See `README.md` for an example
+ *
+ * @see `useTree`
+ * @see `UnifiedSelectionProvider`
+ * @beta
+ */
 export function useUnifiedSelectionTree({ imodelKey, sourceName, ...props }: UseTreeProps & Omit<UseUnifiedTreeSelectionProps, "getNode">): UseTreeResult {
   const { getNode, ...rest } = useTreeInternal(props);
   return { ...rest, ...useUnifiedTreeSelection({ imodelKey, sourceName, getNode }) };
@@ -68,8 +104,6 @@ interface UseTreeResult {
   reloadTree: (options?: { discardState?: boolean }) => void;
   expandNode: (nodeId: string, isExpanded: boolean) => void;
   selectNodes: (nodeIds: Array<string>, changeType: SelectionChangeType) => void;
-  setHierarchyLevelLimit: (nodeId: string | undefined, limit: undefined | number | "unbounded") => void;
-  setHierarchyLevelFilter: (nodeId: string | undefined, filter: GenericInstanceFilter | undefined) => void;
   isNodeSelected: (nodeId: string) => boolean;
   getHierarchyLevelDetails: (nodeId: string | undefined) => HierarchyLevelDetails | undefined;
   setFormatter: (formatter: IPrimitiveValueFormatter | undefined) => void;
@@ -164,14 +198,6 @@ function useTreeInternal({
     actions.selectNodes(nodeIds, changeType);
   }).current;
 
-  const setHierarchyLevelLimit = useRef((nodeId: string | undefined, limit: undefined | number | "unbounded") => {
-    actions.setHierarchyLimit(nodeId, limit);
-  }).current;
-
-  const setHierarchyLevelFilter = useRef((nodeId: string | undefined, filter: GenericInstanceFilter | undefined) => {
-    actions.setInstanceFilter(nodeId, filter);
-  }).current;
-
   const isNodeSelected = useCallback((nodeId: string) => TreeModel.isNodeSelected(state.model, nodeId), [state]);
 
   const setFormatter = useCallback(
@@ -200,7 +226,6 @@ function useTreeInternal({
         return undefined;
       }
 
-      const currentFilter = node.instanceFilter;
       return {
         hierarchyNode,
         getInstanceKeysIterator: (props) =>
@@ -209,8 +234,10 @@ function useTreeInternal({
             instanceFilter: props?.instanceFilter,
             hierarchyLevelSizeLimit: props?.hierarchyLevelSizeLimit,
           }),
-        currentFilter,
-        hierarchyLevelSizeLimit: node.hierarchyLimit,
+        instanceFilter: node.instanceFilter,
+        setInstanceFilter: (filter) => actions.setInstanceFilter(nodeId, filter),
+        sizeLimit: node.hierarchyLimit,
+        setSizeLimit: (value) => actions.setHierarchyLimit(nodeId, value),
       };
     },
     [actions, hierarchySource.hierarchyProvider],
@@ -223,10 +250,8 @@ function useTreeInternal({
     reloadTree,
     selectNodes,
     isNodeSelected,
-    setHierarchyLevelLimit,
-    getHierarchyLevelDetails,
     getNode,
-    setHierarchyLevelFilter,
+    getHierarchyLevelDetails,
     setFormatter,
   };
 }
@@ -255,6 +280,14 @@ function generateTreeStructure(parentNodeId: string | undefined, model: TreeMode
           parentNodeId,
           type: node.type,
           resultSetSizeLimit: node.resultSetSizeLimit,
+        };
+      }
+
+      if (node.type === "NoFilterMatches") {
+        return {
+          id: node.id,
+          parentNodeId,
+          type: node.type,
         };
       }
 

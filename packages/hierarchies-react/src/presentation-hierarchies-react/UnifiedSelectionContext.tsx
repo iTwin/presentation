@@ -12,7 +12,14 @@ interface Props {
   storage: SelectionStorage;
 }
 
-/** @beta */
+/**
+ * A React context provider that makes given selection storage available to all child components. This
+ * is a requirement for `useUnifiedSelectionTree` to work with unified selection.
+ *
+ * See `README.md` for a usage example.
+ *
+ * @beta
+ */
 export function UnifiedSelectionProvider({ storage, children }: PropsWithChildren<Props>) {
   return <unifiedSelectionContext.Provider value={storage}>{children}</unifiedSelectionContext.Provider>;
 }

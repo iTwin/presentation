@@ -15,6 +15,7 @@ import {
   TreeModelGenericInfoNode,
   TreeModelHierarchyNode,
   TreeModelInfoNode,
+  TreeModelNoFilterMatchesInfoNode,
   TreeModelResultSetTooLargeInfoNode,
 } from "../presentation-hierarchies-react/internal/TreeModel";
 
@@ -104,6 +105,18 @@ export function createTestModelGenericInfoNode({ id, ...props }: Partial<TreeMod
     parentId: props.parentId ?? undefined,
     message: props.message ?? "test-message",
     type: props.type ?? "Unknown",
+  };
+}
+
+export function createTestModelNoFilterMatchesInfoNode({
+  id,
+  ...props
+}: Partial<TreeModelNoFilterMatchesInfoNode> & { id: string }): TreeModelNoFilterMatchesInfoNode {
+  return {
+    ...props,
+    id,
+    parentId: props.parentId ?? undefined,
+    type: "NoFilterMatches",
   };
 }
 

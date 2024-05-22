@@ -12,7 +12,12 @@ import * as hierarchiesModule from "@itwin/presentation-hierarchies";
 import { IPrimitiveValueFormatter } from "@itwin/presentation-shared";
 import { createStorage, Selectables, StorageSelectionChangeEventArgs, StorageSelectionChangesListener } from "@itwin/unified-selection";
 import { createNodeId } from "../presentation-hierarchies-react/internal/Utils";
-import { PresentationGenericInfoNode, PresentationHierarchyNode, PresentationInfoNode } from "../presentation-hierarchies-react/Types";
+import {
+  PresentationGenericInfoNode,
+  PresentationHierarchyNode,
+  PresentationInfoNode,
+  PresentationNoFilterMatchesInfoNode,
+} from "../presentation-hierarchies-react/TreeNode";
 import { UnifiedSelectionProvider } from "../presentation-hierarchies-react/UnifiedSelectionContext";
 import { useTree, useUnifiedSelectionTree } from "../presentation-hierarchies-react/UseTree";
 import { cleanup, createStub, createTestGroupingNode, createTestHierarchyNode, renderHook, waitFor } from "./TestUtils";
@@ -252,7 +257,7 @@ describe("useTree", () => {
     });
 
     act(() => {
-      result.current.setHierarchyLevelLimit(undefined, 50);
+      result.current.getHierarchyLevelDetails(undefined)?.setSizeLimit(50);
     });
 
     await waitFor(() => {
@@ -278,7 +283,7 @@ describe("useTree", () => {
     const filter: hierarchiesModule.GenericInstanceFilter = { propertyClassNames: [], relatedInstances: [], rules: { operator: "and", rules: [] } };
 
     act(() => {
-      result.current.setHierarchyLevelFilter(undefined, filter);
+      result.current.getHierarchyLevelDetails(undefined)?.setInstanceFilter(filter);
     });
 
     await waitFor(() => {
@@ -286,7 +291,7 @@ describe("useTree", () => {
     });
 
     act(() => {
-      result.current.setHierarchyLevelFilter(undefined, undefined);
+      result.current.getHierarchyLevelDetails(undefined)?.setInstanceFilter(undefined);
     });
 
     await waitFor(() => {
@@ -317,7 +322,7 @@ describe("useTree", () => {
     const filter: hierarchiesModule.GenericInstanceFilter = { propertyClassNames: [], relatedInstances: [], rules: { operator: "and", rules: [] } };
 
     act(() => {
-      result.current.setHierarchyLevelFilter("root-1", filter);
+      result.current.getHierarchyLevelDetails("root-1")?.setInstanceFilter(filter);
     });
 
     await waitFor(() => {
@@ -326,7 +331,7 @@ describe("useTree", () => {
     });
 
     act(() => {
-      result.current.setHierarchyLevelFilter("root-1", undefined);
+      result.current.getHierarchyLevelDetails("root-1")?.setInstanceFilter(undefined);
     });
 
     await waitFor(() => {
@@ -369,7 +374,7 @@ describe("useTree", () => {
     const filter: hierarchiesModule.GenericInstanceFilter = { propertyClassNames: [], relatedInstances: [], rules: { operator: "and", rules: [] } };
 
     act(() => {
-      result.current.setHierarchyLevelFilter("root-1", filter);
+      result.current.getHierarchyLevelDetails("root-1")?.setInstanceFilter(filter);
     });
 
     await waitFor(() => {
@@ -377,6 +382,31 @@ describe("useTree", () => {
       expect((result.current.rootNodes![0] as PresentationHierarchyNode).children).to.have.lengthOf(1);
       const groupingTreeNode = (result.current.rootNodes![0] as any).children[0] as PresentationHierarchyNode;
       expect(groupingTreeNode.children).to.have.lengthOf(1);
+    });
+  });
+
+  it("handles empty nodes list after applying instance filter", async () => {
+    hierarchyProvider.getNodes.callsFake((props) => {
+      if (props.parentNode === undefined) {
+        return createAsyncIterator(props.instanceFilter === undefined ? [createTestHierarchyNode({ id: "root-1" })] : []);
+      }
+      return createAsyncIterator([]);
+    });
+    const { result } = renderHook(useTree, { initialProps });
+
+    await waitFor(() => {
+      expect(result.current.rootNodes).to.have.lengthOf(1);
+      expect(result.current.rootNodes![0].id).to.eq("root-1");
+    });
+
+    const filter: hierarchiesModule.GenericInstanceFilter = { propertyClassNames: [], relatedInstances: [], rules: { operator: "and", rules: [] } };
+    act(() => {
+      result.current.getHierarchyLevelDetails(undefined)?.setInstanceFilter(filter);
+    });
+
+    await waitFor(() => {
+      expect(result.current.rootNodes).to.have.lengthOf(1);
+      expect((result.current.rootNodes![0] as PresentationNoFilterMatchesInfoNode).type).to.eq("NoFilterMatches");
     });
   });
 
