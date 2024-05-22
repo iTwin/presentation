@@ -184,6 +184,23 @@ describe("useTree", () => {
     });
   });
 
+  it("ignores error during filtered paths loading", async () => {
+    hierarchyProvider.getNodes.callsFake(() => {
+      return createAsyncIterator([createTestHierarchyNode({ id: "root-1" })]);
+    });
+    const getFilteredPaths = async () => {
+      throw new Error("test error");
+    };
+    const { result } = renderHook(useTree, { initialProps: { ...initialProps, getFilteredPaths } });
+
+    await waitFor(() => {
+      expect(result.current.rootNodes).to.have.lengthOf(1);
+      expect(createHierarchyProviderStub).to.be.calledWith(
+        sinon.match((props: Parameters<typeof hierarchiesModule.createHierarchyProvider>[0]) => props.filtering === undefined),
+      );
+    });
+  });
+
   it("expands node", async () => {
     const rootNodes = [createTestHierarchyNode({ id: "root-1", children: true })];
     const childNodes = [createTestHierarchyNode({ id: "child-1" })];
