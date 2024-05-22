@@ -12,7 +12,6 @@
     "presentation-performance-tests",
     "@load-tests/frontend",
     "@test-app/frontend",
-    "@itwin/presentation-models-tree",
-    "@itwin/presentation-hierarchies-react"
+    "@itwin/presentation-models-tree"
   ]
 }

@@ -6,6 +6,7 @@
 import { GenericInstanceFilter, HierarchyNode } from "@itwin/presentation-hierarchies";
 import { SelectionChangeType } from "../UseSelectionHandler";
 
+/** @internal */
 export interface TreeModelRootNode {
   id: undefined;
   nodeData: undefined;
@@ -14,6 +15,7 @@ export interface TreeModelRootNode {
   isLoading?: boolean;
 }
 
+/** @internal */
 export interface TreeModelHierarchyNode {
   id: string;
   nodeData: HierarchyNode;
@@ -26,13 +28,22 @@ export interface TreeModelHierarchyNode {
   instanceFilter?: GenericInstanceFilter;
 }
 
+/** @internal */
 export interface TreeModelGenericInfoNode {
   id: string;
   parentId: string | undefined;
-  type: "ChildrenPlaceholder" | "NoFilterMatchingNodes" | "Unknown";
+  type: "Unknown";
   message: string;
 }
 
+/** @internal */
+export interface TreeModelNoFilterMatchesInfoNode {
+  id: string;
+  parentId: string | undefined;
+  type: "NoFilterMatches";
+}
+
+/** @internal */
 export interface TreeModelResultSetTooLargeInfoNode {
   id: string;
   parentId: string | undefined;
@@ -40,24 +51,30 @@ export interface TreeModelResultSetTooLargeInfoNode {
   resultSetSizeLimit: number;
 }
 
-export type TreeModelInfoNode = TreeModelGenericInfoNode | TreeModelResultSetTooLargeInfoNode;
+/** @internal */
+export type TreeModelInfoNode = TreeModelGenericInfoNode | TreeModelResultSetTooLargeInfoNode | TreeModelNoFilterMatchesInfoNode;
 
+/** @internal */
 export type TreeModelNode = TreeModelHierarchyNode | TreeModelInfoNode;
 
+/** @internal */
 export function isTreeModelHierarchyNode(node: TreeModelHierarchyNode | TreeModelInfoNode | TreeModelRootNode): node is TreeModelHierarchyNode {
   return "nodeData" in node && node.nodeData !== undefined;
 }
 
+/** @internal */
 export function isTreeModelInfoNode(node: TreeModelHierarchyNode | TreeModelInfoNode | TreeModelRootNode): node is TreeModelInfoNode {
   return "type" in node && node.type !== undefined;
 }
 
+/** @internal */
 export interface TreeModel {
   parentChildMap: Map<string | undefined, string[]>;
   idToNode: Map<string, TreeModelNode>;
   rootNode: TreeModelRootNode;
 }
 
+/** @internal */
 export namespace TreeModel {
   export function expandNode(model: TreeModel, nodeId: string, isExpanded: boolean): "none" | "loadChildren" | "reloadChildren" {
     const node = model.idToNode.get(nodeId);
