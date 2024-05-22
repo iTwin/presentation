@@ -163,8 +163,12 @@ function useTreeInternal({
       }
 
       setHierarchySource((prev) => ({ ...prev, isFiltering: true }));
-      const filteredPaths = await getFilteredPaths({ imodelAccess });
-      return createProvider(filteredPaths);
+      try {
+        const filteredPaths = await getFilteredPaths({ imodelAccess });
+        return createProvider(filteredPaths);
+      } catch {
+        return createProvider(undefined);
+      }
     };
 
     let disposed = false;
