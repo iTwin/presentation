@@ -34,11 +34,15 @@ export interface HierarchyLevelDetails {
     hierarchyLevelSizeLimit?: number | "unbounded";
   }) => AsyncIterableIterator<InstanceKey>;
 
-  /** The limit of how many nodes can be loaded in this hierarchy level. */
-  hierarchyLevelSizeLimit?: number | "unbounded";
+  /** Get the limit of how many nodes can be loaded in this hierarchy level. */
+  sizeLimit?: number | "unbounded";
+  /** Set the limit of how many nodes can be loaded in this hierarchy level. */
+  setSizeLimit: (value: undefined | number | "unbounded") => void;
 
-  /** The active instance filter applied to this hierarchy level. */
-  currentFilter?: GenericInstanceFilter;
+  /** Get the active instance filter applied to this hierarchy level. */
+  instanceFilter?: GenericInstanceFilter;
+  /** Set the instance filter to apply to this hierarchy level */
+  setInstanceFilter: (filter: GenericInstanceFilter | undefined) => void;
 }
 
 /**
@@ -100,8 +104,6 @@ interface UseTreeResult {
   reloadTree: (options?: { discardState?: boolean }) => void;
   expandNode: (nodeId: string, isExpanded: boolean) => void;
   selectNodes: (nodeIds: Array<string>, changeType: SelectionChangeType) => void;
-  setHierarchyLevelLimit: (nodeId: string | undefined, limit: undefined | number | "unbounded") => void;
-  setHierarchyLevelFilter: (nodeId: string | undefined, filter: GenericInstanceFilter | undefined) => void;
   isNodeSelected: (nodeId: string) => boolean;
   getHierarchyLevelDetails: (nodeId: string | undefined) => HierarchyLevelDetails | undefined;
   setFormatter: (formatter: IPrimitiveValueFormatter | undefined) => void;
@@ -196,14 +198,6 @@ function useTreeInternal({
     actions.selectNodes(nodeIds, changeType);
   }).current;
 
-  const setHierarchyLevelLimit = useRef((nodeId: string | undefined, limit: undefined | number | "unbounded") => {
-    actions.setHierarchyLimit(nodeId, limit);
-  }).current;
-
-  const setHierarchyLevelFilter = useRef((nodeId: string | undefined, filter: GenericInstanceFilter | undefined) => {
-    actions.setInstanceFilter(nodeId, filter);
-  }).current;
-
   const isNodeSelected = useCallback((nodeId: string) => TreeModel.isNodeSelected(state.model, nodeId), [state]);
 
   const setFormatter = useCallback(
@@ -232,7 +226,6 @@ function useTreeInternal({
         return undefined;
       }
 
-      const currentFilter = node.instanceFilter;
       return {
         hierarchyNode,
         getInstanceKeysIterator: (props) =>
@@ -241,8 +234,10 @@ function useTreeInternal({
             instanceFilter: props?.instanceFilter,
             hierarchyLevelSizeLimit: props?.hierarchyLevelSizeLimit,
           }),
-        currentFilter,
-        hierarchyLevelSizeLimit: node.hierarchyLimit,
+        instanceFilter: node.instanceFilter,
+        setInstanceFilter: (filter) => actions.setInstanceFilter(nodeId, filter),
+        sizeLimit: node.hierarchyLimit,
+        setSizeLimit: (value) => actions.setHierarchyLimit(nodeId, value),
       };
     },
     [actions, hierarchySource.hierarchyProvider],
@@ -255,10 +250,8 @@ function useTreeInternal({
     reloadTree,
     selectNodes,
     isNodeSelected,
-    setHierarchyLevelLimit,
-    getHierarchyLevelDetails,
     getNode,
-    setHierarchyLevelFilter,
+    getHierarchyLevelDetails,
     setFormatter,
   };
 }

@@ -32,13 +32,15 @@ export { GenericInstanceFilter }
 
 // @beta
 export interface HierarchyLevelDetails {
-    currentFilter?: GenericInstanceFilter;
     getInstanceKeysIterator: (props?: {
         instanceFilter?: GenericInstanceFilter;
         hierarchyLevelSizeLimit?: number | "unbounded";
     }) => AsyncIterableIterator<InstanceKey>;
-    hierarchyLevelSizeLimit?: number | "unbounded";
     hierarchyNode: HierarchyNode | undefined;
+    instanceFilter?: GenericInstanceFilter;
+    setInstanceFilter: (filter: GenericInstanceFilter | undefined) => void;
+    setSizeLimit: (value: undefined | number | "unbounded") => void;
+    sizeLimit?: number | "unbounded";
 }
 
 export { HierarchyNode }
@@ -110,10 +112,10 @@ export type RenderedTreeNode = PresentationTreeNode | {
 export { SelectionStorage }
 
 // @beta
-export function TreeNodeRenderer({ node, expandNode, getIcon, setHierarchyLevelFilter, onFilterClick, onNodeClick, onNodeKeyDown, setHierarchyLevelLimit, isSelected, isDisabled, actionButtonsClassName, ...nodeProps }: TreeNodeRendererProps): JSX_2.Element;
+export function TreeNodeRenderer({ node, expandNode, getIcon, onFilterClick, onNodeClick, onNodeKeyDown, isSelected, isDisabled, actionButtonsClassName, getHierarchyLevelDetails, ...nodeProps }: TreeNodeRendererProps): JSX_2.Element;
 
 // @beta
-export function TreeRenderer({ rootNodes, expandNode, selectNodes, isNodeSelected, setHierarchyLevelLimit, setHierarchyLevelFilter, onFilterClick, getIcon, selectionMode, ...treeProps }: TreeRendererProps): JSX_2.Element;
+export function TreeRenderer({ rootNodes, expandNode, selectNodes, isNodeSelected, onFilterClick, getIcon, getHierarchyLevelDetails, selectionMode, ...treeProps }: TreeRendererProps): JSX_2.Element;
 
 // @beta
 export function UnifiedSelectionProvider({ storage, children }: PropsWithChildren<Props>): JSX_2.Element;

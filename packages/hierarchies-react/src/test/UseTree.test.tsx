@@ -257,7 +257,7 @@ describe("useTree", () => {
     });
 
     act(() => {
-      result.current.setHierarchyLevelLimit(undefined, 50);
+      result.current.getHierarchyLevelDetails(undefined)?.setSizeLimit(50);
     });
 
     await waitFor(() => {
@@ -283,7 +283,7 @@ describe("useTree", () => {
     const filter: hierarchiesModule.GenericInstanceFilter = { propertyClassNames: [], relatedInstances: [], rules: { operator: "and", rules: [] } };
 
     act(() => {
-      result.current.setHierarchyLevelFilter(undefined, filter);
+      result.current.getHierarchyLevelDetails(undefined)?.setInstanceFilter(filter);
     });
 
     await waitFor(() => {
@@ -291,7 +291,7 @@ describe("useTree", () => {
     });
 
     act(() => {
-      result.current.setHierarchyLevelFilter(undefined, undefined);
+      result.current.getHierarchyLevelDetails(undefined)?.setInstanceFilter(undefined);
     });
 
     await waitFor(() => {
@@ -322,7 +322,7 @@ describe("useTree", () => {
     const filter: hierarchiesModule.GenericInstanceFilter = { propertyClassNames: [], relatedInstances: [], rules: { operator: "and", rules: [] } };
 
     act(() => {
-      result.current.setHierarchyLevelFilter("root-1", filter);
+      result.current.getHierarchyLevelDetails("root-1")?.setInstanceFilter(filter);
     });
 
     await waitFor(() => {
@@ -331,7 +331,7 @@ describe("useTree", () => {
     });
 
     act(() => {
-      result.current.setHierarchyLevelFilter("root-1", undefined);
+      result.current.getHierarchyLevelDetails("root-1")?.setInstanceFilter(undefined);
     });
 
     await waitFor(() => {
@@ -374,7 +374,7 @@ describe("useTree", () => {
     const filter: hierarchiesModule.GenericInstanceFilter = { propertyClassNames: [], relatedInstances: [], rules: { operator: "and", rules: [] } };
 
     act(() => {
-      result.current.setHierarchyLevelFilter("root-1", filter);
+      result.current.getHierarchyLevelDetails("root-1")?.setInstanceFilter(filter);
     });
 
     await waitFor(() => {
@@ -401,7 +401,7 @@ describe("useTree", () => {
 
     const filter: hierarchiesModule.GenericInstanceFilter = { propertyClassNames: [], relatedInstances: [], rules: { operator: "and", rules: [] } };
     act(() => {
-      result.current.setHierarchyLevelFilter(undefined, filter);
+      result.current.getHierarchyLevelDetails(undefined)?.setInstanceFilter(filter);
     });
 
     await waitFor(() => {

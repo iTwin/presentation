@@ -4,11 +4,11 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { expect } from "chai";
-import { GenericInstanceFilter } from "@itwin/presentation-hierarchies";
 import { MAX_LIMIT_OVERRIDE } from "../../presentation-hierarchies-react/internal/Utils";
 import { TreeRenderer } from "../../presentation-hierarchies-react/itwinui/TreeRenderer";
 import { PresentationHierarchyNode, PresentationInfoNode, PresentationTreeNode } from "../../presentation-hierarchies-react/TreeNode";
 import { SelectionChangeType } from "../../presentation-hierarchies-react/UseSelectionHandler";
+import { HierarchyLevelDetails } from "../../presentation-hierarchies-react/UseTree";
 import { createStub, createTestHierarchyNode, render, within } from "../TestUtils";
 
 describe("Tree", () => {
@@ -16,16 +16,14 @@ describe("Tree", () => {
   const expandNode = createStub<(nodeId: string, isExpanded: boolean) => void>();
   const selectNodes = createStub<(nodeIds: Array<string>, changeType: SelectionChangeType) => void>();
   const isNodeSelected = createStub<(nodeId: string) => boolean>();
-  const setHierarchyLevelLimit = createStub<(nodeId: string | undefined, limit: undefined | number | "unbounded") => void>();
-  const setHierarchyLevelFilter = createStub<(nodeId: string | undefined, filter: GenericInstanceFilter | undefined) => void>();
+  const getHierarchyLevelDetails = createStub<(nodeId: string | undefined) => HierarchyLevelDetails>();
 
   const initialProps = {
     onFilterClick,
     expandNode,
     selectNodes,
     isNodeSelected,
-    setHierarchyLevelLimit,
-    setHierarchyLevelFilter,
+    getHierarchyLevelDetails,
   };
 
   beforeEach(() => {
@@ -33,8 +31,7 @@ describe("Tree", () => {
     expandNode.reset();
     selectNodes.reset();
     isNodeSelected.reset();
-    setHierarchyLevelLimit.reset();
-    setHierarchyLevelFilter.reset();
+    getHierarchyLevelDetails.reset();
   });
 
   it("renders nodes", () => {
@@ -186,7 +183,7 @@ describe("Tree", () => {
     expect(queryByText("Icon")).to.not.be.null;
   });
 
-  it("calls `removeHierarchyLevelFilter` if node is filtered", async () => {
+  it("clears active filter", async () => {
     const rootNodes = createNodes([
       {
         id: "root-1",
@@ -195,11 +192,17 @@ describe("Tree", () => {
       },
     ]);
 
+    const setInstanceFilter = createStub();
+    getHierarchyLevelDetails.returns({
+      setInstanceFilter,
+    } as unknown as HierarchyLevelDetails);
+
     const { user, queryByText, getByRole } = render(<TreeRenderer rootNodes={rootNodes} {...initialProps} />);
 
     expect(queryByText("root-1")).to.not.be.null;
     await user.click(getByRole("button", { name: "Clear active filter" }));
-    expect(setHierarchyLevelFilter).to.be.calledOnceWith("root-1", undefined);
+    expect(getHierarchyLevelDetails).to.be.calledOnceWith("root-1");
+    expect(setInstanceFilter).to.be.calledOnceWith(undefined);
   });
 
   it("calls `onFilterClick` if node is filterable", async () => {
@@ -249,7 +252,7 @@ describe("Tree", () => {
     expect(onFilterClick).to.be.calledOnceWith("parent-id");
   });
 
-  it("calls 'setHierarchyLevelLimit' to override hierarchy size limit", async () => {
+  it("overrides hierarchy level size limit", async () => {
     const rootNodes = createNodes([
       {
         id: "info-node",
@@ -259,11 +262,17 @@ describe("Tree", () => {
       },
     ]);
 
+    const setSizeLimit = createStub();
+    getHierarchyLevelDetails.returns({
+      setSizeLimit,
+    } as unknown as HierarchyLevelDetails);
+
     const { user, getByText, queryByText } = render(<TreeRenderer rootNodes={rootNodes} {...initialProps} />);
 
     expect(queryByText(/there are more items than allowed limit of/i)).to.not.be.null;
     await user.click(getByText(/Increase hierarchy level size limit/i));
-    expect(setHierarchyLevelLimit).to.be.calledOnceWith("parent-id", MAX_LIMIT_OVERRIDE);
+    expect(getHierarchyLevelDetails).to.be.calledOnceWith("parent-id");
+    expect(setSizeLimit).to.be.calledOnceWith(MAX_LIMIT_OVERRIDE);
   });
 
   it("does not allow to increase hierarchy limit past max limit override", async () => {

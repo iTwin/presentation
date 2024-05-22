@@ -24,7 +24,7 @@ interface TreeNodeRendererOwnProps {
   actionButtonsClassName?: string;
 }
 
-type TreeNodeRendererProps = Pick<ReturnType<typeof useTree>, "expandNode" | "setHierarchyLevelFilter" | "setHierarchyLevelLimit"> &
+type TreeNodeRendererProps = Pick<ReturnType<typeof useTree>, "expandNode" | "getHierarchyLevelDetails"> &
   Omit<TreeNodeProps, "label" | "onExpanded" | "onSelected" | "icon"> &
   TreeNodeRendererOwnProps;
 
@@ -37,14 +37,13 @@ export function TreeNodeRenderer({
   node,
   expandNode,
   getIcon,
-  setHierarchyLevelFilter,
   onFilterClick,
   onNodeClick,
   onNodeKeyDown,
-  setHierarchyLevelLimit,
   isSelected,
   isDisabled,
   actionButtonsClassName,
+  getHierarchyLevelDetails,
   ...nodeProps
 }: TreeNodeRendererProps) {
   if ("type" in node && node.type === "ChildrenPlaceholder") {
@@ -83,7 +82,7 @@ export function TreeNodeRenderer({
                 title="Clear active filter"
                 onClick={(e) => {
                   e.stopPropagation();
-                  setHierarchyLevelFilter(node.id, undefined);
+                  getHierarchyLevelDetails(node.id)?.setInstanceFilter(undefined);
                 }}
               >
                 <SvgRemove />
@@ -114,7 +113,7 @@ export function TreeNodeRenderer({
       <ResultSetTooLargeNode
         {...nodeProps}
         limit={node.resultSetSizeLimit}
-        onOverrideLimit={(limit) => setHierarchyLevelLimit(node.parentNodeId, limit)}
+        onOverrideLimit={(limit) => getHierarchyLevelDetails(node.parentNodeId)?.setSizeLimit(limit)}
         onFilterClick={() => {
           onFilterClick(node.parentNodeId);
         }}

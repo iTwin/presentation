@@ -20,7 +20,7 @@ interface TreeRendererOwnProps {
 
 type TreeRendererProps = Pick<
   ReturnType<typeof useTree>,
-  "rootNodes" | "expandNode" | "selectNodes" | "isNodeSelected" | "setHierarchyLevelLimit" | "setHierarchyLevelFilter"
+  "rootNodes" | "expandNode" | "selectNodes" | "isNodeSelected" | "getHierarchyLevelDetails"
 > &
   Pick<TreeNodeRendererProps, "onFilterClick" | "getIcon"> &
   TreeRendererOwnProps &
@@ -37,10 +37,9 @@ export function TreeRenderer({
   expandNode,
   selectNodes,
   isNodeSelected,
-  setHierarchyLevelLimit,
-  setHierarchyLevelFilter,
   onFilterClick,
   getIcon,
+  getHierarchyLevelDetails,
   selectionMode,
   ...treeProps
 }: TreeRendererProps) {
@@ -51,16 +50,15 @@ export function TreeRenderer({
         <TreeNodeRenderer
           {...nodeProps}
           expandNode={expandNode}
-          setHierarchyLevelFilter={setHierarchyLevelFilter}
+          getHierarchyLevelDetails={getHierarchyLevelDetails}
           onFilterClick={onFilterClick}
           onNodeClick={onNodeClick}
           onNodeKeyDown={onNodeKeyDown}
           getIcon={getIcon}
-          setHierarchyLevelLimit={setHierarchyLevelLimit}
         />
       );
     },
-    [expandNode, setHierarchyLevelLimit, setHierarchyLevelFilter, onFilterClick, onNodeClick, onNodeKeyDown, getIcon],
+    [expandNode, getHierarchyLevelDetails, onFilterClick, onNodeClick, onNodeKeyDown, getIcon],
   );
 
   const getNode = useCallback<TreeProps["getNode"]>((node) => createRenderedTreeNodeData(node, isNodeSelected), [isNodeSelected]);

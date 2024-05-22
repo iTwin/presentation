@@ -49,12 +49,12 @@ function Tree({ imodel, imodelAccess, height, width }: { imodel: IModelConnectio
   const [filter, setFilter] = useState("");
 
   const getFilteredPaths = useMemo<UseTreeProps["getFilteredPaths"]>(() => {
-    return async ({ imodelAccess: filterImodelAccess }) => {
+    return async ({ imodelAccess: filterIModelAccess }) => {
       if (!filter) {
         return undefined;
       }
       return ModelsTreeDefinition.createInstanceKeyPaths({
-        imodelAccess: filterImodelAccess,
+        imodelAccess: filterIModelAccess,
         label: filter,
       });
     };
@@ -63,7 +63,6 @@ function Tree({ imodel, imodelAccess, height, width }: { imodel: IModelConnectio
   const {
     rootNodes,
     isLoading,
-    getHierarchyLevelDetails,
     reloadTree: _,
     setFormatter,
     ...treeProps
@@ -82,6 +81,7 @@ function Tree({ imodel, imodelAccess, height, width }: { imodel: IModelConnectio
     setFormatter(newValue ? customFormatter : undefined);
   };
 
+  const { getHierarchyLevelDetails } = treeProps;
   const [filteringOptions, setFilteringOptions] = useState<{ nodeId: string | undefined; hierarchyLevelDetails: HierarchyLevelDetails }>();
   const onFilterClick = useCallback(
     (nodeId: string | undefined) => {
@@ -132,7 +132,7 @@ function Tree({ imodel, imodelAccess, height, width }: { imodel: IModelConnectio
   }, [filteringOptions, imodel]);
 
   const getInitialFilter = useMemo(() => {
-    const currentFilter = filteringOptions?.hierarchyLevelDetails.currentFilter;
+    const currentFilter = filteringOptions?.hierarchyLevelDetails.instanceFilter;
     if (!currentFilter) {
       return undefined;
     }
@@ -178,7 +178,7 @@ function Tree({ imodel, imodelAccess, height, width }: { imodel: IModelConnectio
           if (!filteringOptions) {
             return;
           }
-          treeProps.setHierarchyLevelFilter(filteringOptions.nodeId, toGenericFilter(info));
+          treeProps.getHierarchyLevelDetails(filteringOptions.nodeId)?.setInstanceFilter(toGenericFilter(info));
           setFilteringOptions(undefined);
         }}
         onClose={() => {
