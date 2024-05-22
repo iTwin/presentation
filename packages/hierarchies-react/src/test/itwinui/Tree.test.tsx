@@ -9,7 +9,7 @@ import { TreeRenderer } from "../../presentation-hierarchies-react/itwinui/TreeR
 import { PresentationHierarchyNode, PresentationInfoNode, PresentationTreeNode } from "../../presentation-hierarchies-react/TreeNode";
 import { SelectionChangeType } from "../../presentation-hierarchies-react/UseSelectionHandler";
 import { HierarchyLevelDetails } from "../../presentation-hierarchies-react/UseTree";
-import { createStub, createTestHierarchyNode, render, within } from "../TestUtils";
+import { act, createStub, createTestHierarchyNode, render, waitFor, within } from "../TestUtils";
 
 describe("Tree", () => {
   const onFilterClick = createStub<(nodeId: string | undefined) => void>();
@@ -150,13 +150,17 @@ describe("Tree", () => {
     expect(queryByText("root-2")).to.not.be.null;
 
     const node1 = getAllByRole("treeitem")[0];
-    node1.focus();
+    act(() => {
+      node1.focus();
+    });
     await user.keyboard("{Enter}");
     expect(selectNodes).to.be.calledOnceWith(["root-1"], "remove");
     selectNodes.reset();
 
     const node2 = getAllByRole("treeitem")[1];
-    node2.focus();
+    act(() => {
+      node2.focus();
+    });
     await user.keyboard("{Enter}");
     expect(selectNodes).to.be.calledOnceWith(["root-2"], "replace");
   });
@@ -181,7 +185,9 @@ describe("Tree", () => {
 
     const expandButton = within(getByRole("treeitem", { expanded: false })).getByRole("button", { name: "Expand" });
 
-    expandButton.focus();
+    act(() => {
+      expandButton.focus();
+    });
     await user.keyboard("{Enter}");
     expect(expandNode).to.be.calledOnceWith("root-1", true);
     expect(selectNodes).to.not.be.called;
@@ -359,7 +365,7 @@ describe("Tree", () => {
     });
   });
 
-  it("renders placeholder node if children is loading", () => {
+  it("renders placeholder node if children is loading", async () => {
     const rootNodes = createNodes([
       {
         id: "root-1",
@@ -371,11 +377,13 @@ describe("Tree", () => {
 
     const { queryByText, queryByTitle } = render(<TreeRenderer rootNodes={rootNodes} {...initialProps} />);
 
-    expect(queryByText("root-1")).to.not.be.null;
-    expect(queryByTitle("Loading...")).to.not.be.null;
+    await waitFor(() => {
+      expect(queryByText("root-1")).to.not.be.null;
+      expect(queryByTitle("Loading...")).to.not.be.null;
+    });
   });
 
-  it("renders NoFilterMatches info node", () => {
+  it("renders NoFilterMatches info node", async () => {
     const rootNodes = createNodes([
       {
         id: "info-node",
@@ -386,10 +394,12 @@ describe("Tree", () => {
 
     const { queryByText } = render(<TreeRenderer rootNodes={rootNodes} {...initialProps} />);
 
-    expect(queryByText("No child nodes match current filter")).to.not.be.null;
+    await waitFor(() => {
+      expect(queryByText("No child nodes match current filter")).to.not.be.null;
+    });
   });
 
-  it("renders unknown info node", () => {
+  it("renders unknown info node", async () => {
     const rootNodes = createNodes([
       {
         id: "info-node",
@@ -401,7 +411,9 @@ describe("Tree", () => {
 
     const { queryByText } = render(<TreeRenderer rootNodes={rootNodes} {...initialProps} />);
 
-    expect(queryByText("Some Error")).to.not.be.null;
+    await waitFor(() => {
+      expect(queryByText("Some Error")).to.not.be.null;
+    });
   });
 });
 
