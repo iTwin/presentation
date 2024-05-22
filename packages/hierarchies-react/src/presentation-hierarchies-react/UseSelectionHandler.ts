@@ -9,10 +9,10 @@ import { useTree } from "./UseTree";
 
 /**
  * A union of different supported selection modes in a tree component:
- * - `none`: No selection is allowed.
- * - `single`: Only one node can be selected at a time.
- * - `extended`: Multiple nodes can be selected using shift and ctrl keys.
- * - `multiple`: Multiple nodes can be selected without using shift or ctrl keys.
+ * - `none` - no selection is allowed,
+ * - `single` - only one node can be selected at a time,
+ * - `extended` - multiple nodes can be selected using shift and ctrl keys,
+ * - `multiple` - multiple nodes can be selected without using shift or ctrl keys.
  *
  * @internal
  */

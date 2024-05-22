@@ -18,10 +18,8 @@ interface TreeRendererOwnProps {
   selectionMode?: SelectionMode;
 }
 
-type TreeRendererProps = Pick<
-  ReturnType<typeof useTree>,
-  "rootNodes" | "expandNode" | "selectNodes" | "isNodeSelected" | "getHierarchyLevelDetails"
-> &
+type TreeRendererProps = Pick<ReturnType<typeof useTree>, "rootNodes" | "expandNode"> &
+  Partial<Pick<ReturnType<typeof useTree>, "selectNodes" | "isNodeSelected" | "getHierarchyLevelDetails">> &
   Pick<TreeNodeRendererProps, "onFilterClick" | "getIcon"> &
   TreeRendererOwnProps &
   Omit<TreeProps, "data" | "nodeRenderer" | "getNode" | "enableVirtualization">;
@@ -29,7 +27,8 @@ type TreeRendererProps = Pick<
 /**
  * A component that renders a tree using the `Tree` component from `@itwin/itwinui-react`. The tree nodes
  * are rendered using `TreeNodeRenderer` component from this package.
- * 
+ *
+ * @see https://itwinui.bentley.com/docs/tree
  * @beta
  */
 export function TreeRenderer({
@@ -43,7 +42,11 @@ export function TreeRenderer({
   selectionMode,
   ...treeProps
 }: TreeRendererProps) {
-  const { onNodeClick, onNodeKeyDown } = useSelectionHandler({ rootNodes, selectNodes, selectionMode: selectionMode ?? "single" });
+  const { onNodeClick, onNodeKeyDown } = useSelectionHandler({
+    rootNodes,
+    selectNodes: selectNodes ?? noopSelectNodes,
+    selectionMode: selectionMode ?? "single",
+  });
   const nodeRenderer = useCallback<TreeProps["nodeRenderer"]>(
     (nodeProps) => {
       return (
@@ -61,19 +64,24 @@ export function TreeRenderer({
     [expandNode, getHierarchyLevelDetails, onFilterClick, onNodeClick, onNodeKeyDown, getIcon],
   );
 
-  const getNode = useCallback<TreeProps["getNode"]>((node) => createRenderedTreeNodeData(node, isNodeSelected), [isNodeSelected]);
+  const getNode = useCallback<TreeProps["getNode"]>((node) => createRenderedTreeNodeData(node, isNodeSelected ?? noopIsNodeSelected), [isNodeSelected]);
 
   return <Tree<RenderedTreeNode> {...treeProps} data={rootNodes} nodeRenderer={nodeRenderer} getNode={getNode} enableVirtualization={true} />;
 }
 
+function noopSelectNodes() {}
+function noopIsNodeSelected() {
+  return false;
+}
+
 /**
- * A data structure for a tree node that is rendered using the `TreeRenderer` component. 
- * 
+ * A data structure for a tree node that is rendered using the `TreeRenderer` component.
+ *
  * In addition to the `PresentationTreeNode` union, this type may have one additional variation - an informational
  * type of node with `ChildrenPlaceholder` type. This type of node is returned as the single child node of a parent
  * while its children are being loaded. This allows the node renderer to show a placeholder under the parent during
  * the process.
- * 
+ *
  * @beta
  */
 export type RenderedTreeNode =

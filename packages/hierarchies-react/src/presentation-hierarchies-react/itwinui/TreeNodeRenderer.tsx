@@ -17,20 +17,23 @@ type TreeNodeProps = ComponentPropsWithoutRef<typeof TreeNode>;
 
 interface TreeNodeRendererOwnProps {
   node: RenderedTreeNode;
-  onFilterClick: (nodeId: string | undefined) => void;
+  onFilterClick?: (nodeId: string | undefined) => void;
   getIcon?: (node: PresentationHierarchyNode) => ReactElement | undefined;
-  onNodeClick: (nodeId: string, isSelected: boolean, event: React.MouseEvent<HTMLElement, MouseEvent>) => void;
-  onNodeKeyDown: (nodeId: string, isSelected: boolean, event: React.KeyboardEvent<HTMLElement>) => void;
+  onNodeClick?: (nodeId: string, isSelected: boolean, event: React.MouseEvent<HTMLElement, MouseEvent>) => void;
+  onNodeKeyDown?: (nodeId: string, isSelected: boolean, event: React.KeyboardEvent<HTMLElement>) => void;
   actionButtonsClassName?: string;
 }
 
-type TreeNodeRendererProps = Pick<ReturnType<typeof useTree>, "expandNode" | "getHierarchyLevelDetails"> &
+type TreeNodeRendererProps = Pick<ReturnType<typeof useTree>, "expandNode"> &
+  Partial<Pick<ReturnType<typeof useTree>, "getHierarchyLevelDetails">> &
   Omit<TreeNodeProps, "label" | "onExpanded" | "onSelected" | "icon"> &
   TreeNodeRendererOwnProps;
 
 /**
  * A component that renders `RenderedTreeNode` using the `TreeNode` component from `@itwin/itwinui-react`.
+ *
  * @see `TreeRenderer`
+ * @see https://itwinui.bentley.com/docs/tree
  * @beta
  */
 export function TreeNodeRenderer({
@@ -54,11 +57,11 @@ export function TreeNodeRenderer({
     return (
       // eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions
       <div
-        onClick={(event) => !isDisabled && onNodeClick(node.id, !isSelected, event)}
+        onClick={(event) => !isDisabled && onNodeClick?.(node.id, !isSelected, event)}
         onKeyDown={(event) => {
           // Ignore if it is called on the element inside, e.g. checkbox or expander
           if (!isDisabled && event.target instanceof HTMLElement && event.target.classList.contains("stateless-tree-node")) {
-            onNodeKeyDown(node.id, !isSelected, event);
+            onNodeKeyDown?.(node.id, !isSelected, event);
           }
         }}
       >
@@ -74,7 +77,7 @@ export function TreeNodeRenderer({
           icon={getIcon ? getIcon(node) : undefined}
         >
           <ButtonGroup className={cx("action-buttons", actionButtonsClassName)}>
-            {node.isFiltered ? (
+            {getHierarchyLevelDetails && node.isFiltered ? (
               <IconButton
                 className="filtering-action-button"
                 styleType="borderless"
@@ -88,7 +91,7 @@ export function TreeNodeRenderer({
                 <SvgRemove />
               </IconButton>
             ) : null}
-            {node.isFilterable ? (
+            {onFilterClick && node.isFilterable ? (
               <IconButton
                 className="filtering-action-button"
                 styleType="borderless"
@@ -113,10 +116,14 @@ export function TreeNodeRenderer({
       <ResultSetTooLargeNode
         {...nodeProps}
         limit={node.resultSetSizeLimit}
-        onOverrideLimit={(limit) => getHierarchyLevelDetails(node.parentNodeId)?.setSizeLimit(limit)}
-        onFilterClick={() => {
-          onFilterClick(node.parentNodeId);
-        }}
+        onOverrideLimit={getHierarchyLevelDetails ? (limit) => getHierarchyLevelDetails(node.parentNodeId)?.setSizeLimit(limit) : undefined}
+        onFilterClick={
+          onFilterClick
+            ? () => {
+                onFilterClick(node.parentNodeId);
+              }
+            : undefined
+        }
       />
     );
   }
@@ -152,33 +159,40 @@ function ResultSetTooLargeNode({
 
 interface ResultSetTooLargeNodeLabelProps {
   limit: number;
-  onFilterClick: () => void;
-  onOverrideLimit: (limit: number) => void;
+  onFilterClick?: () => void;
+  onOverrideLimit?: (limit: number) => void;
 }
 
 function ResultSetTooLargeNodeLabel({ onFilterClick, onOverrideLimit, limit }: ResultSetTooLargeNodeLabelProps) {
+  const supportsLimitOverride = !!onOverrideLimit && limit < MAX_LIMIT_OVERRIDE;
+  const supportsFiltering = !!onFilterClick;
+  const currLimitStr = limit.toLocaleString(undefined, { useGrouping: true });
+  const maxLimitOverrideStr = MAX_LIMIT_OVERRIDE.toLocaleString(undefined, { useGrouping: true });
+  const title = `${supportsFiltering ? `Please provide additional filtering - there` : `There`} are more items than allowed limit of ${currLimitStr}.${
+    supportsLimitOverride ? ` ${supportsFiltering ? "Or, increase" : "Increase"} the hierarchy level size limit to ${maxLimitOverrideStr}.` : ""
+  }`;
   return (
-    <Flex
-      flexDirection="column"
-      gap="3xs"
-      title={`Please provide additional filtering - there are more items than allowed limit of ${limit}. Increase hierarchy level limit`}
-      alignItems="start"
-    >
-      <Flex flexDirection="row" gap="3xs">
-        <Text>Please provide</Text>
-        <Anchor
-          underline
-          onClick={(e) => {
-            e.stopPropagation();
-            onFilterClick();
-          }}
-        >
-          additional filtering
-        </Anchor>
-        <Text>- there are more items than allowed limit of {limit}.</Text>
-      </Flex>
-      {limit < MAX_LIMIT_OVERRIDE ? (
+    <Flex flexDirection="column" gap="3xs" title={title} alignItems="start">
+      {supportsFiltering ? (
         <Flex flexDirection="row" gap="3xs">
+          <Text>Please provide</Text>
+          <Anchor
+            underline
+            onClick={(e) => {
+              e.stopPropagation();
+              onFilterClick();
+            }}
+          >
+            additional filtering
+          </Anchor>
+          <Text>- there are more items than allowed limit of {currLimitStr}.</Text>
+        </Flex>
+      ) : (
+        <Text>There are more items than allowed limit of {currLimitStr}.</Text>
+      )}
+      {supportsLimitOverride ? (
+        <Flex flexDirection="row" gap="3xs">
+          {supportsFiltering ? <Text>Or,</Text> : null}
           <Anchor
             underline
             onClick={(e) => {
@@ -186,7 +200,7 @@ function ResultSetTooLargeNodeLabel({ onFilterClick, onOverrideLimit, limit }: R
               onOverrideLimit(MAX_LIMIT_OVERRIDE);
             }}
           >
-            Increase hierarchy level size limit to {MAX_LIMIT_OVERRIDE}
+            {supportsFiltering ? "increase" : "Increase"} hierarchy level size limit to {maxLimitOverrideStr}.
           </Anchor>
         </Flex>
       ) : null}
