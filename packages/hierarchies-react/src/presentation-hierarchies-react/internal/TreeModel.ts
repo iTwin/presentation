@@ -185,6 +185,19 @@ export namespace TreeModel {
     }
     return model.idToNode.get(nodeId);
   }
+
+  export function setIsLoading(model: TreeModel, nodeId: string | undefined, isLoading: boolean) {
+    if (nodeId === undefined) {
+      model.rootNode.isLoading = isLoading;
+      return;
+    }
+    const modelNode = model.idToNode.get(nodeId);
+    // istanbul ignore if
+    if (!modelNode || !isTreeModelHierarchyNode(modelNode)) {
+      return;
+    }
+    modelNode.isLoading = isLoading;
+  }
 }
 
 function updateForReload(model: TreeModel, nodeId: string | undefined, update: (node: TreeModelHierarchyNode | TreeModelRootNode) => void) {
