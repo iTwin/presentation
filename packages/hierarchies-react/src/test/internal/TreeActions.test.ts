@@ -76,6 +76,53 @@ describe("TreeActions", () => {
         expect(onModelChangedStub).to.not.be.called;
       });
     });
+
+    it("does not clear tree model after reload is canceled", async () => {
+      const model = createTreeModel([
+        {
+          id: undefined,
+          children: ["root-1"],
+        },
+        {
+          id: "root-1",
+          isExpanded: false,
+          children: undefined,
+        },
+      ]);
+
+      const nodes = new Subject<HierarchyNode>();
+      provider.getNodes.callsFake(async function* () {
+        yield await firstValueFrom(nodes);
+      });
+
+      const actions = createActions(model);
+      actions.reloadTree();
+
+      await waitFor(() => {
+        expect(onModelChangedStub).to.be.calledOnce;
+        const newModel = onModelChangedStub.firstCall.args[0];
+        expect(newModel.rootNode.isLoading).to.be.true;
+        expect(getHierarchyNode(newModel, "root-1")).to.not.be.undefined;
+      });
+
+      onModelChangedStub.resetHistory();
+      actions.dispose();
+
+      await waitFor(() => {
+        expect(onModelChangedStub).to.be.calledOnce;
+        const newModel = onModelChangedStub.firstCall.args[0];
+        expect(newModel.rootNode.isLoading).to.be.false;
+        expect(getHierarchyNode(newModel, "root-1")).to.not.be.undefined;
+      });
+
+      nodes.next(createTestHierarchyNode({ id: "updated-root-1" }));
+      nodes.complete();
+      await waitFor(() => {
+        expect(onModelChangedStub).to.be.calledOnce;
+        const newModel = onModelChangedStub.firstCall.args[0];
+        expect(getHierarchyNode(newModel, "root-1")).to.not.be.undefined;
+      });
+    });
   });
 
   describe("selectNodes", () => {
