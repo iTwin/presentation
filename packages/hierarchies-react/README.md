@@ -40,6 +40,7 @@ The resulting state object contains the following properties:
 - `isLoading` is a boolean indicating whether the root tree nodes are being loaded. Set to `true` on initial load and on reload (e.g. when iModel data changes).
 
 - `rootNodes` is an array of root tree nodes and is what the component should render. There are several types of nodes:
+
   - A `PresentationHierarchyNode` is the primary type of node, created based on the hierarchy definition. The `isPresentationHierarchyNode` type guard utility may be used to check if a node is of this type.
   - A `PresentationInfoNode` is a non-expandable, non-selectable informational type of node, generally created when for some reason we don't have any real nodes to show. There may be different reasons like filtered-out nodes, too large result set, a network error, etc. The `type` attribute of the node indicates that.
 
@@ -48,6 +49,7 @@ The resulting state object contains the following properties:
 - `isNodeSelected` and `selectNodes` function to inspect and change tree selection.
 
 - `getHierarchyLevelDetails` function to access details of a specific hierarchy level. The returned object provides access to:
+
   - hierarchy level size limit,
   - hierarchy level instance filter,
   - instance keys of the nodes in the hierarchy level.
@@ -137,7 +139,13 @@ import { SchemaContext } from "@itwin/ecschema-metadata";
 import { ECSchemaRpcLocater } from "@itwin/ecschema-rpcinterface-common";
 import { createECSchemaProvider, createECSqlQueryExecutor } from "@itwin/presentation-core-interop";
 import { createLimitingECSqlQueryExecutor, createNodesQueryClauseFactory } from "@itwin/presentation-hierarchies";
-import { isPresentationHierarchyNode, PresentationTreeNode, UnifiedSelectionProvider, useUnifiedSelectionTree, TreeRenderer } from "@itwin/presentation-hierarchies-react";
+import {
+  isPresentationHierarchyNode,
+  PresentationTreeNode,
+  UnifiedSelectionProvider,
+  useUnifiedSelectionTree,
+  TreeRenderer,
+} from "@itwin/presentation-hierarchies-react";
 import { createBisInstanceLabelSelectClauseFactory, createCachingECClassHierarchyInspector } from "@itwin/presentation-shared";
 import { createStorage } from "@itwin/unified-selection";
 
