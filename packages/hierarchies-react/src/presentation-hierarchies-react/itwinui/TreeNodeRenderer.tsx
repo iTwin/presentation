@@ -9,9 +9,9 @@ import { ComponentPropsWithoutRef, ReactElement } from "react";
 import { SvgFilter, SvgFilterHollow, SvgRemove } from "@itwin/itwinui-icons-react";
 import { Anchor, ButtonGroup, Flex, IconButton, ProgressRadial, Text, TreeNode } from "@itwin/itwinui-react";
 import { MAX_LIMIT_OVERRIDE } from "../internal/Utils";
-import { useLocalizationContext } from "../LocalizationContext";
 import { isPresentationHierarchyNode, PresentationHierarchyNode } from "../TreeNode";
 import { useTree } from "../UseTree";
+import { useLocalizationContext } from "./LocalizationContext";
 import { RenderedTreeNode } from "./TreeRenderer";
 
 type TreeNodeProps = ComponentPropsWithoutRef<typeof TreeNode>;
@@ -50,9 +50,9 @@ export function TreeNodeRenderer({
   getHierarchyLevelDetails,
   ...nodeProps
 }: TreeNodeRendererProps) {
-  const { localization } = useLocalizationContext();
+  const { localizedStrings } = useLocalizationContext();
   if ("type" in node && node.type === "ChildrenPlaceholder") {
-    return <PlaceholderNode {...nodeProps} label={null} />;
+    return <PlaceholderNode {...nodeProps} />;
   }
 
   if (isPresentationHierarchyNode(node)) {
@@ -84,7 +84,7 @@ export function TreeNodeRenderer({
                 className="filtering-action-button"
                 styleType="borderless"
                 size="small"
-                title={localization.clearHierarchyLevelFilter}
+                title={localizedStrings.clearHierarchyLevelFilter}
                 onClick={(e) => {
                   e.stopPropagation();
                   getHierarchyLevelDetails(node.id)?.setInstanceFilter(undefined);
@@ -98,7 +98,7 @@ export function TreeNodeRenderer({
                 className="filtering-action-button"
                 styleType="borderless"
                 size="small"
-                title={localization.filterHierarchyLevel}
+                title={localizedStrings.filterHierarchyLevel}
                 onClick={(e) => {
                   e.stopPropagation();
                   onFilterClick(node.id);
@@ -131,18 +131,19 @@ export function TreeNodeRenderer({
   }
 
   if (node.type === "NoFilterMatches") {
-    return <TreeNode {...nodeProps} label={localization.noFilteredChildren} isDisabled={true} onExpanded={/* istanbul ignore next */ () => {}} />;
+    return <TreeNode {...nodeProps} label={localizedStrings.noFilteredChildren} isDisabled={true} onExpanded={/* istanbul ignore next */ () => {}} />;
   }
 
   return <TreeNode {...nodeProps} label={node.message} isDisabled={true} onExpanded={/* istanbul ignore next */ () => {}} />;
 }
 
-function PlaceholderNode(props: Omit<TreeNodeProps, "onExpanded">) {
-  const { localization } = useLocalizationContext();
+function PlaceholderNode(props: Omit<TreeNodeProps, "onExpanded" | "label">) {
+  const { localizedStrings } = useLocalizationContext();
   return (
     <TreeNode
       {...props}
-      icon={<ProgressRadial size="x-small" indeterminate title={localization.loading} />}
+      label={localizedStrings.loading}
+      icon={<ProgressRadial size="x-small" indeterminate title={localizedStrings.loading} />}
       onExpanded={/* istanbul ignore next */ () => {}}
     ></TreeNode>
   );
@@ -171,18 +172,18 @@ interface ResultSetTooLargeNodeLabelProps {
 }
 
 function ResultSetTooLargeNodeLabel({ onFilterClick, onOverrideLimit, limit }: ResultSetTooLargeNodeLabelProps) {
-  const { localization } = useLocalizationContext();
+  const { localizedStrings } = useLocalizationContext();
   const supportsFiltering = !!onFilterClick;
   const supportsLimitOverride = !!onOverrideLimit && limit < MAX_LIMIT_OVERRIDE;
 
   const limitExceededMessage = createLocalizedMessage(
-    supportsFiltering ? localization.resultLimitExceededWithFiltering : localization.resultLimitExceeded,
+    supportsFiltering ? localizedStrings.resultLimitExceededWithFiltering : localizedStrings.resultLimitExceeded,
     limit,
     onFilterClick,
   );
   const increaseLimitMessage = supportsLimitOverride
     ? createLocalizedMessage(
-        supportsFiltering ? localization.increaseHierarchyLimitWithFiltering : localization.increaseHierarchyLimit,
+        supportsFiltering ? localizedStrings.increaseHierarchyLimitWithFiltering : localizedStrings.increaseHierarchyLimit,
         MAX_LIMIT_OVERRIDE,
         () => onOverrideLimit(MAX_LIMIT_OVERRIDE),
       )

@@ -16,7 +16,7 @@ export { useSelectionHandler } from "./presentation-hierarchies-react/UseSelecti
 export { HierarchyLevelDetails, useTree, useUnifiedSelectionTree } from "./presentation-hierarchies-react/UseTree";
 export { TreeNodeRenderer } from "./presentation-hierarchies-react/itwinui/TreeNodeRenderer";
 export { RenderedTreeNode, TreeRenderer, createRenderedTreeNodeData } from "./presentation-hierarchies-react/itwinui/TreeRenderer";
-export { LocalizationContextProvider, useLocalizationContext } from "./presentation-hierarchies-react/LocalizationContext";
+export { LocalizationContextProvider } from "./presentation-hierarchies-react/itwinui/LocalizationContext";
 
 export { GenericInstanceFilter, HierarchyNode, HierarchyProvider } from "@itwin/presentation-hierarchies";
 export { SelectionStorage } from "@itwin/unified-selection";

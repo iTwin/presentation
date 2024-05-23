@@ -242,3 +242,70 @@ function MyTreeComponentInternal({ imodelAccess, imodelKey }: { imodelAccess: IM
   return <TreeRenderer rootNodes={rootNodes} {...state} />;
 }
 ```
+
+## Localization
+
+Localization can be enabled for `TreeRenderer` component and `useTree` and `useUnifiedSelectionTree` hooks by providing an object with localized strings that will be used instead of the default english ones.
+
+Example:
+
+```tsx
+const localizedStrings = {
+  loading: "Loading...",
+  filterHierarchyLevel: "Apply filter",
+  clearHierarchyLevelFilter: "Clear active filter",
+  noFilteredChildren: "No child nodes match current filter",
+  resultLimitExceeded: "There are more items than allowed limit of {{limit}}.",
+  resultLimitExceededWithFiltering: "Please provide <link>additional filtering</link> - there are more items than allowed limit of {{limit}}.",
+  increaseHierarchyLimit: "<link>Increase the hierarchy level size limit to {{limit}}.</link>",
+  increaseHierarchyLimitWithFiltering: "Or, <link>increase the hierarchy level size limit to {{limit}}.</link>",
+  unspecified: "Unspecified",
+  other: "Other",
+};
+
+function MyTreeComponent({ imodelAccess, imodelKey }: { imodelAccess: IModelAccess; imodelKey: string }) {
+  const { rootNodes, ...state } = useUnifiedSelectionTree({
+    sourceName: "MyTreeComponent",
+    imodelKey,
+    imodelAccess,
+    localizedStrings,
+    getHierarchyDefinition: () => ({
+      defineHierarchyLevel: async () => [],
+    }),
+  });
+  if (!rootNodes) {
+    return "Loading...";
+  }
+  return <TreeRenderer rootNodes={rootNodes} localizedStrings={localizedStrings} {...state} />;
+}
+```
+
+To enable localization for the `TreeNodeRenderer` component, the localized strings should be supplied through `LocalizationContextProvider`:
+
+```tsx
+const localizedStrings = {
+  loading: "Loading...",
+  filterHierarchyLevel: "Apply filter",
+  clearHierarchyLevelFilter: "Clear active filter",
+  noFilteredChildren: "No child nodes match current filter",
+  resultLimitExceeded: "There are more items than allowed limit of {{limit}}.",
+  resultLimitExceededWithFiltering: "Please provide <link>additional filtering</link> - there are more items than allowed limit of {{limit}}.",
+  increaseHierarchyLimit: "<link>Increase the hierarchy level size limit to {{limit}}.</link>",
+  increaseHierarchyLimitWithFiltering: "Or, <link>increase the hierarchy level size limit to {{limit}}.</link>",
+};
+
+export function TreeRenderer({ ...props }: TreeRendererProps) {
+  const nodeRenderer = useCallback(
+    (nodeProps) => {
+      return <TreeNodeRenderer {...nodeProps} {...props} />;
+    },
+    [props],
+  );
+
+  return (
+    <LocalizationContextProvider localizedStrings={localizedStrings}>
+      <Tree<RenderedTreeNode> {...props} />
+    </LocalizationContextProvider>
+  );
+}
+```

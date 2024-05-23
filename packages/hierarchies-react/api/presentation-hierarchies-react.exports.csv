@@ -3,7 +3,7 @@ Release Tag;API Item
 beta;createRenderedTreeNodeData(node: RenderedTreeNode, isNodeSelected: (nodeId: string) => boolean): NodeData
 beta;HierarchyLevelDetails
 beta;isPresentationHierarchyNode(node: PresentationTreeNode): node is PresentationHierarchyNode
-beta;LocalizationContextProvider({ localization, children }: PropsWithChildren
+beta;LocalizationContextProvider({ localizedStrings, children }: PropsWithChildren
 beta;PresentationGenericInfoNode
 beta;PresentationHierarchyNode
 beta;PresentationInfoNode = PresentationGenericInfoNode | PresentationResultSetTooLargeInfoNode | PresentationNoFilterMatchesInfoNode
@@ -11,9 +11,8 @@ beta;PresentationResultSetTooLargeInfoNode
 beta;PresentationTreeNode = PresentationHierarchyNode | PresentationInfoNode
 beta;RenderedTreeNode = PresentationTreeNode |
 beta;TreeNodeRenderer({ node, expandNode, getIcon, onFilterClick, onNodeClick, onNodeKeyDown, isSelected, isDisabled, actionButtonsClassName, getHierarchyLevelDetails, ...nodeProps }: TreeNodeRendererProps): JSX_2.Element
-beta;TreeRenderer({ rootNodes, expandNode, selectNodes, isNodeSelected, onFilterClick, getIcon, getHierarchyLevelDetails, selectionMode, localization, ...treeProps }: TreeRendererProps): JSX_2.Element
+beta;TreeRenderer({ rootNodes, expandNode, selectNodes, isNodeSelected, onFilterClick, getIcon, getHierarchyLevelDetails, selectionMode, localizedStrings, ...treeProps }: TreeRendererProps): JSX_2.Element
 beta;UnifiedSelectionProvider({ storage, children }: PropsWithChildren
-beta;useLocalizationContext(): LocalizationContext
 beta;useSelectionHandler(props: UseSelectionHandlerProps): UseSelectionHandlerResult
 beta;useTree(props: UseTreeProps): UseTreeResult
 beta;useUnifiedSelectionTree({ imodelKey, sourceName, ...props }: UseTreeProps & Omit

@@ -5,10 +5,10 @@
 
 import { ComponentPropsWithoutRef, useCallback } from "react";
 import { NodeData, Tree } from "@itwin/itwinui-react";
-import { Localization, LocalizationContextProvider } from "../LocalizationContext";
 import { PresentationTreeNode } from "../TreeNode";
 import { SelectionMode, useSelectionHandler } from "../UseSelectionHandler";
 import { useTree } from "../UseTree";
+import { LocalizationContextProvider, LocalizedStrings } from "./LocalizationContext";
 import { TreeNodeRenderer } from "./TreeNodeRenderer";
 
 type TreeProps = ComponentPropsWithoutRef<typeof Tree<RenderedTreeNode>>;
@@ -17,7 +17,7 @@ type TreeNodeRendererProps = ComponentPropsWithoutRef<typeof TreeNodeRenderer>;
 interface TreeRendererOwnProps {
   rootNodes: PresentationTreeNode[];
   selectionMode?: SelectionMode;
-  localization?: Localization;
+  localizedStrings?: LocalizedStrings;
 }
 
 type TreeRendererProps = Pick<ReturnType<typeof useTree>, "rootNodes" | "expandNode"> &
@@ -42,7 +42,7 @@ export function TreeRenderer({
   getIcon,
   getHierarchyLevelDetails,
   selectionMode,
-  localization,
+  localizedStrings,
   ...treeProps
 }: TreeRendererProps) {
   const { onNodeClick, onNodeKeyDown } = useSelectionHandler({
@@ -53,25 +53,27 @@ export function TreeRenderer({
   const nodeRenderer = useCallback<TreeProps["nodeRenderer"]>(
     (nodeProps) => {
       return (
-        <LocalizationContextProvider localization={localization}>
-          <TreeNodeRenderer
-            {...nodeProps}
-            expandNode={expandNode}
-            getHierarchyLevelDetails={getHierarchyLevelDetails}
-            onFilterClick={onFilterClick}
-            onNodeClick={onNodeClick}
-            onNodeKeyDown={onNodeKeyDown}
-            getIcon={getIcon}
-          />
-        </LocalizationContextProvider>
+        <TreeNodeRenderer
+          {...nodeProps}
+          expandNode={expandNode}
+          getHierarchyLevelDetails={getHierarchyLevelDetails}
+          onFilterClick={onFilterClick}
+          onNodeClick={onNodeClick}
+          onNodeKeyDown={onNodeKeyDown}
+          getIcon={getIcon}
+        />
       );
     },
-    [expandNode, getHierarchyLevelDetails, onFilterClick, onNodeClick, onNodeKeyDown, getIcon, localization],
+    [expandNode, getHierarchyLevelDetails, onFilterClick, onNodeClick, onNodeKeyDown, getIcon],
   );
 
   const getNode = useCallback<TreeProps["getNode"]>((node) => createRenderedTreeNodeData(node, isNodeSelected ?? noopIsNodeSelected), [isNodeSelected]);
 
-  return <Tree<RenderedTreeNode> {...treeProps} data={rootNodes} nodeRenderer={nodeRenderer} getNode={getNode} enableVirtualization={true} />;
+  return (
+    <LocalizationContextProvider localizedStrings={localizedStrings}>
+      <Tree<RenderedTreeNode> {...treeProps} data={rootNodes} nodeRenderer={nodeRenderer} getNode={getNode} enableVirtualization={true} />
+    </LocalizationContextProvider>
+  );
 }
 
 function noopSelectNodes() {}
