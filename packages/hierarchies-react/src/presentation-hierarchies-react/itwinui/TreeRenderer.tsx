@@ -6,9 +6,10 @@
 import { ComponentPropsWithoutRef, useCallback } from "react";
 import { NodeData, Tree } from "@itwin/itwinui-react";
 import { PresentationTreeNode } from "../TreeNode";
-import { TreeNodeRenderer } from "./TreeNodeRenderer";
 import { SelectionMode, useSelectionHandler } from "../UseSelectionHandler";
 import { useTree } from "../UseTree";
+import { LocalizationContextProvider, LocalizedStrings } from "./LocalizationContext";
+import { TreeNodeRenderer } from "./TreeNodeRenderer";
 
 type TreeProps = ComponentPropsWithoutRef<typeof Tree<RenderedTreeNode>>;
 type TreeNodeRendererProps = ComponentPropsWithoutRef<typeof TreeNodeRenderer>;
@@ -16,6 +17,7 @@ type TreeNodeRendererProps = ComponentPropsWithoutRef<typeof TreeNodeRenderer>;
 interface TreeRendererOwnProps {
   rootNodes: PresentationTreeNode[];
   selectionMode?: SelectionMode;
+  localizedStrings?: LocalizedStrings;
 }
 
 type TreeRendererProps = Pick<ReturnType<typeof useTree>, "rootNodes" | "expandNode"> &
@@ -40,6 +42,7 @@ export function TreeRenderer({
   getIcon,
   getHierarchyLevelDetails,
   selectionMode,
+  localizedStrings,
   ...treeProps
 }: TreeRendererProps) {
   const { onNodeClick, onNodeKeyDown } = useSelectionHandler({
@@ -66,7 +69,11 @@ export function TreeRenderer({
 
   const getNode = useCallback<TreeProps["getNode"]>((node) => createRenderedTreeNodeData(node, isNodeSelected ?? noopIsNodeSelected), [isNodeSelected]);
 
-  return <Tree<RenderedTreeNode> {...treeProps} data={rootNodes} nodeRenderer={nodeRenderer} getNode={getNode} enableVirtualization={true} />;
+  return (
+    <LocalizationContextProvider localizedStrings={localizedStrings}>
+      <Tree<RenderedTreeNode> {...treeProps} data={rootNodes} nodeRenderer={nodeRenderer} getNode={getNode} enableVirtualization={true} />
+    </LocalizationContextProvider>
+  );
 }
 
 function noopSelectNodes() {}
