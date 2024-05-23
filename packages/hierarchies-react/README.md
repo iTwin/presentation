@@ -245,7 +245,7 @@ function MyTreeComponentInternal({ imodelAccess, imodelKey }: { imodelAccess: IM
 
 ## Localization
 
-Localization can be enabled for `TreeRenderer` component and `useTree` and `useUnifiedSelectionTree` hooks by providing an object with localized strings that will be used instead of the default english ones.
+Localization can be enabled for `TreeRenderer` component and `useTree` and `useUnifiedSelectionTree` hooks by providing an object with localized strings that will be used instead of the default English ones.
 
 Example:
 
@@ -277,7 +277,7 @@ function MyTreeComponent({ imodelAccess, imodelKey }: { imodelAccess: IModelAcce
     }),
   });
   if (!rootNodes) {
-    return "Loading...";
+    return localizedStrings.loading;
   }
   return <TreeRenderer rootNodes={rootNodes} localizedStrings={treeRendererLocalizedStrings} {...state} />;
 }
@@ -286,18 +286,7 @@ function MyTreeComponent({ imodelAccess, imodelKey }: { imodelAccess: IModelAcce
 To enable localization for a custom `TreeNodeRenderer` component, the localized strings should be supplied through `LocalizationContextProvider`:
 
 ```tsx
-const localizedStrings = {
-  loading: "Loading...",
-  filterHierarchyLevel: "Apply filter",
-  clearHierarchyLevelFilter: "Clear active filter",
-  noFilteredChildren: "No child nodes match current filter",
-  resultLimitExceeded: "There are more items than allowed limit of {{limit}}.",
-  resultLimitExceededWithFiltering: "Please provide <link>additional filtering</link> - there are more items than allowed limit of {{limit}}.",
-  increaseHierarchyLimit: "<link>Increase the hierarchy level size limit to {{limit}}.</link>",
-  increaseHierarchyLimitWithFiltering: "Or, <link>increase the hierarchy level size limit to {{limit}}.</link>",
-};
-
-export function TreeRenderer({ ...props }: TreeRendererProps) {
+export function MyTreeRenderer(props: MyTreeRendererProps) {
   const nodeRenderer = useCallback(
     (nodeProps) => {
       return <TreeNodeRenderer {...nodeProps} {...props} />;
