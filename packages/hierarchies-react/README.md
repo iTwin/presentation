@@ -250,7 +250,7 @@ Localization can be enabled for `TreeRenderer` component and `useTree` and `useU
 Example:
 
 ```tsx
-const localizedStrings = {
+const treeRendererLocalizedStrings = {
   loading: "Loading...",
   filterHierarchyLevel: "Apply filter",
   clearHierarchyLevelFilter: "Clear active filter",
@@ -259,6 +259,9 @@ const localizedStrings = {
   resultLimitExceededWithFiltering: "Please provide <link>additional filtering</link> - there are more items than allowed limit of {{limit}}.",
   increaseHierarchyLimit: "<link>Increase the hierarchy level size limit to {{limit}}.</link>",
   increaseHierarchyLimitWithFiltering: "Or, <link>increase the hierarchy level size limit to {{limit}}.</link>",
+};
+
+const hierarchyProviderLocalizedStrings = {
   unspecified: "Unspecified",
   other: "Other",
 };
@@ -268,7 +271,7 @@ function MyTreeComponent({ imodelAccess, imodelKey }: { imodelAccess: IModelAcce
     sourceName: "MyTreeComponent",
     imodelKey,
     imodelAccess,
-    localizedStrings,
+    localizedStrings: hierarchyProviderLocalizedStrings,
     getHierarchyDefinition: () => ({
       defineHierarchyLevel: async () => [],
     }),
@@ -276,11 +279,11 @@ function MyTreeComponent({ imodelAccess, imodelKey }: { imodelAccess: IModelAcce
   if (!rootNodes) {
     return "Loading...";
   }
-  return <TreeRenderer rootNodes={rootNodes} localizedStrings={localizedStrings} {...state} />;
+  return <TreeRenderer rootNodes={rootNodes} localizedStrings={treeRendererLocalizedStrings} {...state} />;
 }
 ```
 
-To enable localization for the `TreeNodeRenderer` component, the localized strings should be supplied through `LocalizationContextProvider`:
+To enable localization for a custom `TreeNodeRenderer` component, the localized strings should be supplied through `LocalizationContextProvider`:
 
 ```tsx
 const localizedStrings = {
