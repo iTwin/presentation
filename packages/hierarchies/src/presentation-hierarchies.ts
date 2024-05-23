@@ -2,21 +2,27 @@
  * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
-export {
-  GenericInstanceFilter,
-  GenericInstanceFilterRule,
-  GenericInstanceFilterRuleGroup,
-  GenericInstanceFilterRuleValue,
-  GenericInstanceFilterRuleOperator,
-  GenericInstanceFilterRuleGroupOperator,
-  GenericInstanceFilterRelatedInstanceDescription,
-  GenericInstanceFilterRelationshipStep,
-} from "@itwin/core-common";
 
-export * from "./hierarchies/HierarchyDefinition";
-export * from "./hierarchies/HierarchyErrors";
-export * from "./hierarchies/HierarchyNode";
-export * from "./hierarchies/HierarchyProvider";
-export { createLimitingECSqlQueryExecutor, LimitingECSqlQueryExecutor } from "./hierarchies/LimitingECSqlQueryExecutor";
-export * from "./hierarchies/Logging";
-export * from "./hierarchies/NodeSelectQueryFactory";
+export { GenericInstanceFilter } from "@itwin/core-common";
+
+export {
+  DefineCustomNodeChildHierarchyLevelProps,
+  DefineHierarchyLevelProps,
+  DefineInstanceNodeChildHierarchyLevelProps,
+  DefineRootHierarchyLevelProps,
+  HierarchyLevelDefinition,
+  HierarchyDefinition,
+  HierarchyNodesDefinition,
+  NodeParser,
+  NodePostProcessor,
+  NodePreProcessor,
+  createClassBasedHierarchyDefinition,
+} from "./hierarchies/HierarchyDefinition";
+export { RowsLimitExceededError } from "./hierarchies/HierarchyErrors";
+export { GroupingHierarchyNode, HierarchyNode, NonGroupingHierarchyNode, ParsedHierarchyNode, ProcessedHierarchyNode } from "./hierarchies/HierarchyNode";
+export { HierarchyNodeIdentifier, HierarchyNodeIdentifiersPath } from "./hierarchies/HierarchyNodeIdentifier";
+export { GroupingNodeKey, HierarchyNodeKey, InstancesNodeKey } from "./hierarchies/HierarchyNodeKey";
+export { GetHierarchyNodesProps, HierarchyProvider, createHierarchyProvider } from "./hierarchies/HierarchyProvider";
+export { LimitingECSqlQueryExecutor, createLimitingECSqlQueryExecutor } from "./hierarchies/LimitingECSqlQueryExecutor";
+export { getLogger, setLogger } from "./hierarchies/Logging";
+export { NodeSelectClauseColumnNames, NodesQueryClauseFactory, createNodesQueryClauseFactory } from "./hierarchies/NodeSelectQueryFactory";

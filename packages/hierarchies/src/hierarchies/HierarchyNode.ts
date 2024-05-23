@@ -3,282 +3,24 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { assert, compareStrings, compareStringsOrUndefined } from "@itwin/core-bentley";
 import { ConcatenatedValue, InstanceKey, OmitOverUnion, PrimitiveValue } from "@itwin/presentation-shared";
-
-/**
- * A key for a node that represents one or more ECInstances.
- * @beta
- */
-export interface InstancesNodeKey {
-  /** Type of the node */
-  type: "instances";
-
-  /**
-   * Keys of ECInstances that are represented by the node. Generally, one node represents a single
-   * ECInstance, but in some cases (e.g. node merging) there could be more.
-   */
-  instanceKeys: InstanceKey[];
-}
-
-/**
- * A key for a class-grouping node.
- * @beta
- */
-export interface ClassGroupingNodeKey {
-  /** Type of the node */
-  type: "class-grouping";
-
-  /** Full name of the ECClass that this grouping node is grouping by. */
-  className: string;
-}
-
-/**
- * A key for a label-grouping node.
- * @beta
- */
-export interface LabelGroupingNodeKey {
-  /** Type of the node */
-  type: "label-grouping";
-
-  /** Node label that this grouping node is grouping by. */
-  label: string;
-
-  /**
-   * Optional group identifier that is assigned to the node key when multiple nodes
-   * with the same label shouldn't be grouped together.
-   */
-  groupId?: string;
-}
-
-/**
- * A key property grouping node that groups nodes whose values don't fall into any other
- * property group in the hierarchy level.
- *
- * @beta
- */
-export interface PropertyOtherValuesGroupingNodeKey {
-  /** Type of the node */
-  type: "property-grouping:other";
-  /** Identifiers of properties whose values are grouped under this node. */
-  properties: Array<{
-    className: string;
-    propertyName: string;
-  }>;
-}
-
-/**
- * A key for a property grouping node that groups nodes by formatted property value.
- * @beta
- */
-export interface PropertyValueGroupingNodeKey {
-  /** Type of the node */
-  type: "property-grouping:value";
-
-  /** Name of the property that is used for grouping nodes. */
-  propertyName: string;
-
-  /** Full name of the ECClass containing the property. */
-  propertyClassName: string;
-
-  /** Formatted property value that this node is grouping by. */
-  formattedPropertyValue: string;
-}
-
-/**
- * A key for a property grouping node that groups nodes by a range of property values.
- * @beta
- */
-export interface PropertyValueRangeGroupingNodeKey {
-  /** Type of the node */
-  type: "property-grouping:range";
-
-  /** Name of the property that is used for grouping nodes. */
-  propertyName: string;
-
-  /** Full name of the ECClass containing the property. */
-  propertyClassName: string;
-
-  /** Defines the start of the values' range that this node is grouping by. */
-  fromValue: number;
-
-  /** Defines the end of the values' range that this node is grouping by. */
-  toValue: number;
-}
-
-/**
- * A key for a property grouping node.
- * @beta
- */
-export type PropertyGroupingNodeKey = PropertyValueRangeGroupingNodeKey | PropertyValueGroupingNodeKey | PropertyOtherValuesGroupingNodeKey;
-
-/**
- * A key for one of the instance grouping nodes.
- * @beta
- */
-export type GroupingNodeKey = ClassGroupingNodeKey | LabelGroupingNodeKey | PropertyGroupingNodeKey;
-
-/**
- * A key for either an instance node or one of the instance grouping nodes.
- * @beta
- */
-export type StandardHierarchyNodeKey = InstancesNodeKey | GroupingNodeKey;
-
-/**
- * A key that uniquely identifies a node in a hierarchy level.
- * @beta
- */
-export type HierarchyNodeKey = StandardHierarchyNodeKey | string;
-
-/** @beta */
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export namespace HierarchyNodeKey {
-  /** Checks whether the given node key is a custom node key. */
-  export function isCustom(key: HierarchyNodeKey): key is string {
-    return typeof key === "string";
-  }
-  /** Checks whether the given node key is a `StandardHierarchyNodeKey`. */
-  export function isStandard(key: HierarchyNodeKey): key is StandardHierarchyNodeKey {
-    return !!(key as StandardHierarchyNodeKey).type;
-  }
-  /** Checks whether the given node key is an `InstancesNodeKey`. */
-  export function isInstances(key: HierarchyNodeKey): key is InstancesNodeKey {
-    return isStandard(key) && key.type === "instances";
-  }
-  /** Checks whether the given node key is a `GroupingNodeKey`. */
-  export function isGrouping(key: HierarchyNodeKey): key is GroupingNodeKey {
-    return isStandard(key) && !isInstances(key);
-  }
-  /** Checks whether the given node key is a `ClassGroupingNodeKey`. */
-  export function isClassGrouping(key: HierarchyNodeKey): key is ClassGroupingNodeKey {
-    return isStandard(key) && key.type === "class-grouping";
-  }
-  /** Checks whether the given node key is a `LabelGroupingNodeKey`. */
-  export function isLabelGrouping(key: HierarchyNodeKey): key is LabelGroupingNodeKey {
-    return isStandard(key) && key.type === "label-grouping";
-  }
-  /** Checks whether the given node key is a `PropertyOtherValuesGroupingNodeKey`. */
-  export function isPropertyOtherValuesGrouping(key: HierarchyNodeKey): key is PropertyOtherValuesGroupingNodeKey {
-    return isStandard(key) && key.type === "property-grouping:other";
-  }
-  /** Checks whether the given node key is a `PropertyValueRangeGroupingNodeKey`. */
-  export function isPropertyValueRangeGrouping(key: HierarchyNodeKey): key is PropertyValueRangeGroupingNodeKey {
-    return isStandard(key) && key.type === "property-grouping:range";
-  }
-  /** Checks whether the given node key is a `PropertyValueGroupingNodeKey`. */
-  export function isPropertyValueGrouping(key: HierarchyNodeKey): key is PropertyValueGroupingNodeKey {
-    return isStandard(key) && key.type === "property-grouping:value";
-  }
-  /** Checks whether the given node key is a `PropertyGroupingNodeKey`. */
-  export function isPropertyGrouping(key: HierarchyNodeKey): key is PropertyGroupingNodeKey {
-    return isPropertyOtherValuesGrouping(key) || isPropertyValueRangeGrouping(key) || isPropertyValueGrouping(key);
-  }
-  /**
-   * Compares two given keys.
-   * @returns
-   *- `0` if they are equal
-   *- `negative value` if lhs key is less than rhs key
-   *- `positive value` if lhs key is more than rhs key
-   */
-  export function compare(lhs: HierarchyNodeKey, rhs: HierarchyNodeKey): number {
-    if (typeof lhs === "string") {
-      if (typeof rhs !== "string") {
-        return 1;
-      }
-      return compareStrings(lhs, rhs);
-    }
-    if (typeof rhs === "string") {
-      return -1;
-    }
-
-    const typeCompareResult = compareStrings(lhs.type, rhs.type);
-    if (typeCompareResult !== 0) {
-      return typeCompareResult;
-    }
-
-    switch (lhs.type) {
-      case "instances": {
-        assert(rhs.type === "instances");
-        if (lhs.instanceKeys.length !== rhs.instanceKeys.length) {
-          return lhs.instanceKeys.length > rhs.instanceKeys.length ? 1 : -1;
-        }
-        for (let i = 0; i < lhs.instanceKeys.length; ++i) {
-          const instanceKeyCompareResult = InstanceKey.compare(lhs.instanceKeys[i], rhs.instanceKeys[i]);
-          if (instanceKeyCompareResult !== 0) {
-            return instanceKeyCompareResult;
-          }
-        }
-        return 0;
-      }
-      case "class-grouping": {
-        assert(rhs.type === "class-grouping");
-        return compareStrings(lhs.className, rhs.className);
-      }
-      case "label-grouping": {
-        assert(rhs.type === "label-grouping");
-        const labelCompareResult = compareStrings(lhs.label, rhs.label);
-        if (labelCompareResult !== 0) {
-          return labelCompareResult;
-        }
-        return compareStringsOrUndefined(lhs.groupId, rhs.groupId);
-      }
-      case "property-grouping:other": {
-        assert(rhs.type === "property-grouping:other");
-        if (lhs.properties.length !== rhs.properties.length) {
-          return lhs.properties.length - rhs.properties.length;
-        }
-        for (let i = 0; i < lhs.properties.length; ++i) {
-          const classCompareResult = compareStrings(lhs.properties[i].className, rhs.properties[i].className);
-          if (classCompareResult !== 0) {
-            return classCompareResult;
-          }
-          const nameCompareResult = compareStrings(lhs.properties[i].propertyName, rhs.properties[i].propertyName);
-          if (nameCompareResult !== 0) {
-            return nameCompareResult;
-          }
-        }
-        return 0;
-      }
-      case "property-grouping:value": {
-        assert(rhs.type === "property-grouping:value");
-        const propertyClassNameCompareResult = compareStrings(lhs.propertyClassName, rhs.propertyClassName);
-        if (propertyClassNameCompareResult !== 0) {
-          return propertyClassNameCompareResult;
-        }
-        const propertyNameCompareResult = compareStrings(lhs.propertyName, rhs.propertyName);
-        if (propertyNameCompareResult !== 0) {
-          return propertyNameCompareResult;
-        }
-        return compareStrings(lhs.formattedPropertyValue, rhs.formattedPropertyValue);
-      }
-      case "property-grouping:range": {
-        assert(rhs.type === "property-grouping:range");
-        const propertyClassNameCompareResult = compareStrings(lhs.propertyClassName, rhs.propertyClassName);
-        if (propertyClassNameCompareResult !== 0) {
-          return propertyClassNameCompareResult;
-        }
-        const propertyNameCompareResult = compareStrings(lhs.propertyName, rhs.propertyName);
-        if (propertyNameCompareResult !== 0) {
-          return propertyNameCompareResult;
-        }
-        if (lhs.fromValue !== rhs.fromValue) {
-          return lhs.fromValue > rhs.fromValue ? 1 : -1;
-        }
-        return lhs.toValue > rhs.toValue ? 1 : lhs.toValue < rhs.toValue ? -1 : 0;
-      }
-    }
-  }
-  /** Checks whether the two given keys are equal. */
-  export function equals(lhs: HierarchyNodeKey, rhs: HierarchyNodeKey): boolean {
-    return compare(lhs, rhs) === 0;
-  }
-}
+import {
+  ClassGroupingNodeKey,
+  GroupingNodeKey,
+  HierarchyNodeKey,
+  InstancesNodeKey,
+  LabelGroupingNodeKey,
+  PropertyGroupingNodeKey,
+  PropertyOtherValuesGroupingNodeKey,
+  PropertyValueGroupingNodeKey,
+  PropertyValueRangeGroupingNodeKey,
+  StandardHierarchyNodeKey,
+} from "./HierarchyNodeKey";
 
 /**
  * A data structure that represents a single non-grouping hierarchy node.
- * @beta
  */
-export interface BaseHierarchyNode {
+interface BaseHierarchyNode {
   /** Identifiers of all node ancestors. Can be used to identify a node in the hierarchy. */
   parentKeys: HierarchyNodeKey[];
   /** Node's display label. */
@@ -319,7 +61,7 @@ export interface GroupingHierarchyNode extends BaseHierarchyNode {
    */
   groupedInstanceKeys: InstanceKey[];
 
-  /** The closest ancestor node that is not a grouping node. May be `undefined` it the grouping node grouped root level nodes. */
+  /** The closest ancestor node that is not a grouping node. May be `undefined` if the grouping node grouped root level nodes. */
   nonGroupingAncestor?: ParentHierarchyNode<NonGroupingHierarchyNode>;
 }
 
@@ -328,14 +70,6 @@ export interface GroupingHierarchyNode extends BaseHierarchyNode {
  * @beta
  */
 export type HierarchyNode = NonGroupingHierarchyNode | GroupingHierarchyNode;
-
-/**
- * A type of `HierarchyNode` that doesn't know about its children and is an input when requesting
- * them using `HierarchyProvider.getNodes`.
- *
- * @beta
- */
-export type ParentHierarchyNode<TBase = HierarchyNode> = OmitOverUnion<TBase, "children">;
 
 /** @beta */
 // eslint-disable-next-line @typescript-eslint/no-redeclare
@@ -413,20 +147,27 @@ export namespace HierarchyNode {
 }
 
 /**
- * Base processing parameters that apply to every node.
- * @beta
+ * A type of `HierarchyNode` that doesn't know about its children and is an input when requesting
+ * them using `HierarchyProvider.getNodes`.
+ *
+ * @internal
  */
-export interface HierarchyNodeProcessingParamsBase {
+export type ParentHierarchyNode<TBase = HierarchyNode> = OmitOverUnion<TBase, "children">;
+
+/**
+ * Base processing parameters that apply to every node.
+ */
+interface HierarchyNodeProcessingParamsBase {
   /** Indicates if this node should be hidden if it has no child nodes. */
   hideIfNoChildren?: boolean;
   /** Indicates that this node should always be hidden and its children should be loaded in its place. */
   hideInHierarchy?: boolean;
 }
+
 /**
  * A data structure for defining nodes' grouping requirements.
- * @beta
  */
-export interface HierarchyNodeGroupingParams {
+interface HierarchyNodeGroupingParams {
   byLabel?: HierarchyNodeLabelGroupingParams;
   byClass?: boolean | HierarchyNodeGroupingParamsBase;
   byBaseClasses?: HierarchyNodeBaseClassGroupingParams;
@@ -435,9 +176,8 @@ export interface HierarchyNodeGroupingParams {
 
 /**
  * A data structure for defining params specifically used for label grouping.
- * @beta
  */
-export interface HierarchyNodeLabelGroupingBaseParams {
+interface HierarchyNodeLabelGroupingBaseParams {
   /** Label grouping option that determines whether to group nodes or to merge them. Defaults to "group".*/
   action?: "group" | "merge";
   /** Value that needs to match in order for nodes to be grouped or merged.*/
@@ -446,29 +186,27 @@ export interface HierarchyNodeLabelGroupingBaseParams {
 
 /**
  * A data structure for defining label merging.
- * @beta
  */
-export interface HierarchyNodeLabelGroupingMergeParams extends HierarchyNodeLabelGroupingBaseParams {
+interface HierarchyNodeLabelGroupingMergeParams extends HierarchyNodeLabelGroupingBaseParams {
   action: "merge";
 }
 
 /**
  * A data structure for defining label grouping with additional parameters.
- * @beta
  */
-export interface HierarchyNodeLabelGroupingGroupParams extends HierarchyNodeLabelGroupingBaseParams, HierarchyNodeGroupingParamsBase {
+interface HierarchyNodeLabelGroupingGroupParams extends HierarchyNodeLabelGroupingBaseParams, HierarchyNodeGroupingParamsBase {
   action?: "group";
 }
 
 /**
  * A data structure for defining possible label grouping types.
- * @beta
+ * @internal
  */
 export type HierarchyNodeLabelGroupingParams = boolean | HierarchyNodeLabelGroupingMergeParams | HierarchyNodeLabelGroupingGroupParams;
 
 /**
  * Grouping parameters that are shared across all types of groupings.
- * @beta
+ * @internal
  */
 export interface HierarchyNodeGroupingParamsBase {
   /** Hiding option that determines whether to hide group nodes which have no siblings at the same hierarchy level. */
@@ -478,19 +216,20 @@ export interface HierarchyNodeGroupingParamsBase {
   /** Option which auto expands grouping nodes' children when it has single child or always. */
   autoExpand?: HierarchyNodeAutoExpandProp;
 }
+
 /**
  * Defines possible values for `BaseGroupingParams.autoExpand` attribute:
  * - `single-child` - set the grouping node to auto-expand if it groups a single node.
  * - `always` - always set the grouping node to auto-expand.
- * @beta
+ *
+ * @internal
  */
 export type HierarchyNodeAutoExpandProp = "single-child" | "always";
 
 /**
  * A data structure that represents base class grouping.
- * @beta
  */
-export interface HierarchyNodeBaseClassGroupingParams extends HierarchyNodeGroupingParamsBase {
+interface HierarchyNodeBaseClassGroupingParams extends HierarchyNodeGroupingParamsBase {
   /**
    * Full names of classes, which should be used to group the node. Only has effect if the node
    * represents an instance of that class.
@@ -502,7 +241,7 @@ export interface HierarchyNodeBaseClassGroupingParams extends HierarchyNodeGroup
 
 /**
  * A data structure that represents properties grouping.
- * @beta
+ * @internal
  */
 export interface HierarchyNodePropertiesGroupingParams extends HierarchyNodeGroupingParamsBase {
   /**
@@ -526,7 +265,8 @@ export interface HierarchyNodePropertiesGroupingParams extends HierarchyNodeGrou
    */
   createGroupForOutOfRangeValues?: boolean;
   /**
-   * Properties of the specified class, by which the nodes should be grouped.
+   * Properties of the specified class, by which the nodes should be grouped. Each provided group definition results in a
+   * grouping hierarchy level.
    *
    * Example usage:
    * ```ts
@@ -546,12 +286,12 @@ export interface HierarchyNodePropertiesGroupingParams extends HierarchyNodeGrou
    * ]
    * ```
    */
-  propertyGroups: Array<HierarchyNodePropertyGroup>;
+  propertyGroups: HierarchyNodePropertyGroup[];
 }
 
 /**
  * A data structure that represents specific properties' grouping params.
- * @beta
+ * @internal
  */
 export interface HierarchyNodePropertyGroup {
   /** A string indicating the name of the property to group by. */
@@ -559,12 +299,12 @@ export interface HierarchyNodePropertyGroup {
   /**  Value of the property, which will be used to group the node. */
   propertyValue?: PrimitiveValue;
   /** Ranges are used to group nodes by numeric properties which are within specified bounds. */
-  ranges?: Array<HierarchyNodePropertyValueRange>;
+  ranges?: HierarchyNodePropertyValueRange[];
 }
 
 /**
  * A data structure that represents boundaries for a value.
- * @beta
+ * @internal
  */
 export interface HierarchyNodePropertyValueRange {
   /** Defines the lower bound of the range. */
@@ -577,7 +317,7 @@ export interface HierarchyNodePropertyValueRange {
 
 /**
  * Processing parameters that apply to instance nodes.
- * @beta
+ * @internal
  */
 export interface InstanceHierarchyNodeProcessingParams extends HierarchyNodeProcessingParamsBase {
   grouping?: HierarchyNodeGroupingParams;
@@ -585,7 +325,7 @@ export interface InstanceHierarchyNodeProcessingParams extends HierarchyNodeProc
 
 /**
  * A custom (not based on data in an iModel) node that has processing parameters.
- * @beta
+ * @internal
  */
 export type ProcessedCustomHierarchyNode = Omit<NonGroupingHierarchyNode, "key" | "children"> & {
   key: string;
@@ -594,7 +334,7 @@ export type ProcessedCustomHierarchyNode = Omit<NonGroupingHierarchyNode, "key" 
 };
 /**
  * An instances' (based on data in an iModel) node that has processing parameters.
- * @beta
+ * @internal
  */
 export type ProcessedInstanceHierarchyNode = Omit<NonGroupingHierarchyNode, "key" | "children"> & {
   key: InstancesNodeKey;
@@ -603,7 +343,7 @@ export type ProcessedInstanceHierarchyNode = Omit<NonGroupingHierarchyNode, "key
 };
 /**
  * A grouping node that groups either instance nodes or other grouping nodes.
- * @beta
+ * @internal
  */
 export type ProcessedGroupingHierarchyNode = Omit<GroupingHierarchyNode, "children"> & {
   children: Array<ProcessedGroupingHierarchyNode | ProcessedInstanceHierarchyNode>;
@@ -611,6 +351,10 @@ export type ProcessedGroupingHierarchyNode = Omit<GroupingHierarchyNode, "childr
 /**
  * A `HierarchyNode` that may have processing parameters defining whether it should be hidden under some conditions,
  * how it should be grouped, sorted, etc.
+ *
+ * Type guards under `HierarchyNode` namespace can be used to differentiate between different sub-types of
+ * `ProcessedHierarchyNode`.
+ *
  * @beta
  */
 export type ProcessedHierarchyNode = ProcessedCustomHierarchyNode | ProcessedInstanceHierarchyNode | ProcessedGroupingHierarchyNode;
@@ -620,61 +364,16 @@ export type ProcessedHierarchyNode = ProcessedCustomHierarchyNode | ProcessedIns
  * returned when the node is just parsed from query results.
  * @beta
  */
-export type ParsedHierarchyNode = ParsedCustomHierarchyNode | ParsedInstanceHierarchyNode;
+export type ParsedHierarchyNode<TBase = ParsedCustomHierarchyNode | ParsedInstanceHierarchyNode> = OmitOverUnion<TBase, "label" | "parentKeys"> & {
+  label: string | ConcatenatedValue;
+};
 /**
  * A kind of `ProcessedCustomHierarchyNode` that has unformatted label and doesn't know about its ancestors.
- * @beta
+ * @internal
  */
-export type ParsedCustomHierarchyNode = Omit<ProcessedCustomHierarchyNode, "label" | "parentKeys"> & {
-  label: string | ConcatenatedValue;
-};
+export type ParsedCustomHierarchyNode = ParsedHierarchyNode<ProcessedCustomHierarchyNode>;
 /**
  * A kind of `ProcessedInstanceHierarchyNode` that has unformatted label and doesn't know about its ancestors.
- * @beta
+ * @internal
  */
-export type ParsedInstanceHierarchyNode = Omit<ProcessedInstanceHierarchyNode, "label" | "parentKeys"> & {
-  label: string | ConcatenatedValue;
-};
-
-/**
- * An identifier that can be used to identify either an ECInstance or a custom node.
- *
- * This is different from `HierarchyNodeKey` - the key can represent more types of nodes and,
- * in case of `InstancesNodeKey`, contains information about all instances the node represents.
- * `HierarchyNodeIdentifier`, on the other hand, is used for matching a node, so it only needs
- * to contain information about a single instance or custom node key.
- *
- * @beta
- */
-export type HierarchyNodeIdentifier = InstanceKey | { key: string };
-
-/** @beta */
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export namespace HierarchyNodeIdentifier {
-  /** Checks whether the given identifier is an instance node identifier */
-  export function isInstanceNodeIdentifier(id: HierarchyNodeIdentifier): id is InstanceKey {
-    return !!(id as InstanceKey).id;
-  }
-  /** Checks whether the given identifier is a custom node identifier */
-  export function isCustomNodeIdentifier(id: HierarchyNodeIdentifier): id is { key: string } {
-    return !!(id as { key: string }).key;
-  }
-  /** Checks two identifiers for equality */
-  export function equal(lhs: HierarchyNodeIdentifier, rhs: HierarchyNodeIdentifier) {
-    if (isInstanceNodeIdentifier(lhs) && isInstanceNodeIdentifier(rhs)) {
-      return lhs.className === rhs.className && lhs.id === rhs.id;
-    }
-    if (isCustomNodeIdentifier(lhs) && isCustomNodeIdentifier(rhs)) {
-      return lhs.key === rhs.key;
-    }
-    return false;
-  }
-}
-
-/**
- * A path of hierarchy node identifiers, typically used to describe a path from root down
- * to specific node deep in the hierarchy.
- *
- * @beta
- */
-export type HierarchyNodeIdentifiersPath = HierarchyNodeIdentifier[];
+export type ParsedInstanceHierarchyNode = ParsedHierarchyNode<ProcessedInstanceHierarchyNode>;

@@ -51,18 +51,15 @@ export enum NodeSelectClauseColumnNames {
 
 /**
  * A data structure for defining an ECSQL value selector.
- * @beta
  */
-export interface ECSqlValueSelector {
+interface ECSqlValueSelector {
   selector: string;
 }
 
 /**
  * Props for `NodeSelectClauseFactory.createSelectClause`.
- * @beta
  */
-export interface NodeSelectClauseProps {
-  // TODO: `ecClassId` and `ecInstanceId` will nearly always be equal to `this.ECClassId` and `this.ECInstanceId` - should make them optional here
+interface NodeSelectClauseProps {
   ecClassId: Id64String | ECSqlValueSelector;
   ecInstanceId: Id64String | ECSqlValueSelector;
   nodeLabel: string | ECSqlValueSelector;
@@ -79,9 +76,8 @@ export interface NodeSelectClauseProps {
 
 /**
  * A data structure for defining nodes' grouping requirements.
- * @beta
  */
-export interface ECSqlSelectClauseGroupingParams {
+interface ECSqlSelectClauseGroupingParams {
   byLabel?: ECSqlSelectClauseLabelGroupingParams;
   byClass?: boolean | ECSqlSelectClauseGroupingParamsBase | ECSqlValueSelector;
   byBaseClasses?: ECSqlSelectClauseBaseClassGroupingParams;
@@ -90,9 +86,8 @@ export interface ECSqlSelectClauseGroupingParams {
 
 /**
  * A data structure for defining label grouping params.
- * @beta
  */
-export interface ECSqlSelectClauseLabelGroupingBaseParams {
+interface ECSqlSelectClauseLabelGroupingBaseParams {
   /** Label grouping option that determines whether to group nodes or to merge them. Defaults to "group".*/
   action?: "group" | "merge";
   /** Id that needs to match for nodes to be grouped or merged.*/
@@ -101,25 +96,22 @@ export interface ECSqlSelectClauseLabelGroupingBaseParams {
 
 /**
  * A data structure for defining label merging.
- * @beta
  */
-export interface ECSqlSelectClauseLabelGroupingMergeParams extends ECSqlSelectClauseLabelGroupingBaseParams {
+interface ECSqlSelectClauseLabelGroupingMergeParams extends ECSqlSelectClauseLabelGroupingBaseParams {
   action: "merge";
 }
 
 /**
  * A data structure for defining label grouping.
- * @beta
  */
-export interface ECSqlSelectClauseLabelGroupingGroupParams extends ECSqlSelectClauseLabelGroupingBaseParams, ECSqlSelectClauseGroupingParamsBase {
+interface ECSqlSelectClauseLabelGroupingGroupParams extends ECSqlSelectClauseLabelGroupingBaseParams, ECSqlSelectClauseGroupingParamsBase {
   action?: "group";
 }
 
 /**
  * A data structure for defining possible label grouping types.
- * @beta
  */
-export type ECSqlSelectClauseLabelGroupingParams =
+type ECSqlSelectClauseLabelGroupingParams =
   | boolean
   | ECSqlValueSelector
   | ECSqlSelectClauseLabelGroupingMergeParams
@@ -127,9 +119,8 @@ export type ECSqlSelectClauseLabelGroupingParams =
 
 /**
  * A data structure for defining base grouping parameters shared across all types of grouping.
- * @beta
  */
-export interface ECSqlSelectClauseGroupingParamsBase {
+interface ECSqlSelectClauseGroupingParamsBase {
   hideIfNoSiblings?: boolean | ECSqlValueSelector;
   hideIfOneGroupedNode?: boolean | ECSqlValueSelector;
   autoExpand?: string | ECSqlValueSelector;
@@ -137,9 +128,8 @@ export interface ECSqlSelectClauseGroupingParamsBase {
 
 /**
  * A data structure for defining properties grouping.
- * @beta
  */
-export interface ECSqlSelectClausePropertiesGroupingParams extends ECSqlSelectClauseGroupingParamsBase {
+interface ECSqlSelectClausePropertiesGroupingParams extends ECSqlSelectClauseGroupingParamsBase {
   /**
    * Full name of a class whose properties are used to group the node. Only has effect if the node
    * represents an instance of that class.
@@ -181,27 +171,25 @@ export interface ECSqlSelectClausePropertiesGroupingParams extends ECSqlSelectCl
    * ]
    * ```
    */
-  propertyGroups: Array<ECSqlSelectClausePropertyGroup>;
+  propertyGroups: ECSqlSelectClausePropertyGroup[];
 }
 
 /**
  * A data structure for defining specific properties' grouping params.
- * @beta
  */
-export interface ECSqlSelectClausePropertyGroup {
+interface ECSqlSelectClausePropertyGroup {
   /** A string indicating the name of the property to group by. */
   propertyName: string;
   /** Alias to of the class containing the property. Used to select the property value. */
   propertyClassAlias: string;
   /** Ranges are used to group nodes by numeric properties which are within specified bounds. */
-  ranges?: Array<ECSqlSelectClausePropertyValueRange>;
+  ranges?: ECSqlSelectClausePropertyValueRange[];
 }
 
 /**
  * A data structure for defining boundaries for a value.
- * @beta
  */
-export interface ECSqlSelectClausePropertyValueRange {
+interface ECSqlSelectClausePropertyValueRange {
   /** Defines the lower bound of the range. */
   fromValue: number | ECSqlValueSelector;
   /** Defines the upper bound of the range. */
@@ -212,17 +200,36 @@ export interface ECSqlSelectClausePropertyValueRange {
 
 /**
  * A data structure for defining base class grouping.
- * @beta
  */
-export interface ECSqlSelectClauseBaseClassGroupingParams extends ECSqlSelectClauseGroupingParamsBase {
+interface ECSqlSelectClauseBaseClassGroupingParams extends ECSqlSelectClauseGroupingParamsBase {
   fullClassNames: string[] | ECSqlValueSelector[];
 }
 
 /**
- * A factory for creating a nodes' select ECSQL query.
+ * An interface of a factory that knows how to create nodes' select ECSQL query.
  * @beta
  */
-export class NodeSelectQueryFactory {
+export interface NodesQueryClauseFactory {
+  /** Create a SELECT clause in a format understood by nodes query parser used by `HierarchyProvider`. */
+  createSelectClause(props: NodeSelectClauseProps): Promise<string>;
+
+  /** Create FROM, JOIN and WHERE clauses whose combination results in an ECSQL filter defined by given `GenericInstanceFilter`. */
+  createFilterClauses(props: {
+    contentClass: { fullName: string; alias: string };
+    filter: GenericInstanceFilter | undefined;
+  }): Promise<{ from: string; where: string; joins: string }>;
+}
+
+/**
+ * Creates an instance of `NodeSelectQueryFactory` that .
+ * @beta
+ */
+export function createNodesQueryClauseFactory(props: { imodelAccess: ECSchemaProvider & ECClassHierarchyInspector }): NodesQueryClauseFactory {
+  return new NodeSelectQueryFactory(props);
+}
+
+/** A factory for creating a nodes' select ECSQL query. */
+class NodeSelectQueryFactory {
   private _imodelAccess: ECSchemaProvider & ECClassHierarchyInspector;
 
   public constructor(props: { imodelAccess: ECSchemaProvider & ECClassHierarchyInspector }) {
@@ -264,11 +271,12 @@ export class NodeSelectQueryFactory {
    * - If the provided content class doesn't intersect with the property class in provided filter, a special result
    * is returned to make sure the resulting query is valid and doesn't return anything.
    */
-  public async createFilterClauses(
-    def: GenericInstanceFilter | undefined,
-    contentClass: { fullName: string; alias: string },
-  ): Promise<{ from: string; where: string; joins: string }> {
-    if (!def) {
+  public async createFilterClauses(props: {
+    contentClass: { fullName: string; alias: string };
+    filter: GenericInstanceFilter | undefined;
+  }): Promise<{ from: string; where: string; joins: string }> {
+    const { contentClass, filter } = props;
+    if (!filter) {
       // undefined filter means we don't want any filtering to be applied
       return { from: contentClass.fullName, joins: "", where: "" };
     }
@@ -276,7 +284,7 @@ export class NodeSelectQueryFactory {
     const from = await specializeContentClass({
       classHierarchyInspector: this._imodelAccess,
       contentClassName: contentClass.fullName,
-      filterClassNames: def.propertyClassNames,
+      filterClassNames: filter.propertyClassNames,
     });
     if (!from) {
       // filter class doesn't intersect with content class - make sure the query returns nothing by returning a `FALSE` WHERE clause
@@ -297,7 +305,7 @@ export class NodeSelectQueryFactory {
      *         D
      */
     const joins = await Promise.all(
-      def.relatedInstances.map(async (rel, i) =>
+      filter.relatedInstances.map(async (rel, i) =>
         ECSql.createRelationshipPathJoinClause({
           schemaProvider: this._imodelAccess,
           path: assignRelationshipPathAliases(rel.path, i, contentClass.alias, rel.alias),
@@ -306,10 +314,10 @@ export class NodeSelectQueryFactory {
     );
 
     const whereConditions = new Array<string>();
-    if (def.filteredClassNames && def.filteredClassNames.length > 0) {
+    if (filter.filteredClassNames && filter.filteredClassNames.length > 0) {
       whereConditions.push(
         `${ECSql.createRawPropertyValueSelector(contentClass.alias, "ECClassId")} IS (
-          ${def.filteredClassNames
+          ${filter.filteredClassNames
             .map(parseFullClassName)
             .map(({ schemaName, className }) => `[${schemaName}].[${className}]`)
             .join(", ")}
@@ -317,14 +325,14 @@ export class NodeSelectQueryFactory {
       );
     }
     const classAliasMap = new Map<string, string>([[contentClass.alias, from]]);
-    def.relatedInstances.forEach(({ path, alias }) => path.length > 0 && classAliasMap.set(alias, path[path.length - 1].targetClassName));
+    filter.relatedInstances.forEach(({ path, alias }) => path.length > 0 && classAliasMap.set(alias, path[path.length - 1].targetClassName));
     const propertiesFilter = await createWhereClause(
       contentClass.alias,
       async (alias) => {
         const aliasClassName = classAliasMap.get(alias);
         return aliasClassName ? getClass(this._imodelAccess, aliasClassName) : undefined;
       },
-      def.rules,
+      filter.rules,
     );
     if (propertiesFilter) {
       whereConditions.push(propertiesFilter);

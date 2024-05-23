@@ -7,9 +7,9 @@ import { Draft, enableMapSet, produce } from "immer";
 import { EMPTY, Observable, reduce, Subject, takeUntil } from "rxjs";
 import { GenericInstanceFilter, HierarchyNode, HierarchyProvider } from "@itwin/presentation-hierarchies";
 import { SelectionChangeType } from "../UseSelectionHandler";
-import { ITreeLoader, LoadedTreePart, TreeLoader } from "./TreeLoader";
+import { HierarchyLevelOptions, ITreeLoader, LoadedTreePart, TreeLoader } from "./TreeLoader";
 import { isTreeModelHierarchyNode, isTreeModelInfoNode, TreeModel, TreeModelHierarchyNode, TreeModelNode, TreeModelRootNode } from "./TreeModel";
-import { createNodeId } from "./Utils";
+import { createNodeId, sameNodes } from "./Utils";
 
 enableMapSet();
 
@@ -47,6 +47,12 @@ export class TreeActions {
     });
   }
 
+  private onLoadingComplete(parentId: string | undefined) {
+    this.updateTreeModel((model) => {
+      TreeModel.setIsLoading(model, parentId, false);
+    });
+  }
+
   private loadNodes(parentId: string, ignoreCache?: boolean) {
     const parentNode = this._currentModel.idToNode.get(parentId);
     // istanbul ignore if
@@ -55,16 +61,19 @@ export class TreeActions {
     }
 
     this._loader
-      .getNodes(
-        parentNode,
-        (node) => getNodeInstanceFilter(this._currentModel, getFilteredNodeId(node)),
-        (node) => !!node.nodeData.autoExpand,
+      .loadNodes({
+        parent: parentNode,
+        getHierarchyLevelOptions: (node) => createHierarchyLevelOptions(this._currentModel, getNonGroupedParentId(node)),
+        shouldLoadChildren: (node) => !!node.nodeData.autoExpand,
         ignoreCache,
-      )
+      })
       .pipe(collectTreePartsUntil(this._disposed))
       .subscribe({
         next: (loadedHierarchy) => {
           this.handleLoadedHierarchy(parentId, loadedHierarchy);
+        },
+        complete: () => {
+          this.onLoadingComplete(parentId);
         },
       });
   }
@@ -73,12 +82,22 @@ export class TreeActions {
     const currModel = this._currentModel;
     const expandedNodes = !!options?.discardState ? [] : collectNodes(parentId, oldModel, (node) => node.isExpanded === true);
     const collapsedNodes = !!options?.discardState ? [] : collectNodes(parentId, oldModel, (node) => node.isExpanded === false);
-    const getInstanceFilter = !!options?.discardState
-      ? () => undefined
-      : (node: TreeModelRootNode | TreeModelHierarchyNode) => {
-          const filteredNodeId = getFilteredNodeId(node);
-          return getNodeInstanceFilter(filteredNodeId === parentId ? currModel : oldModel, filteredNodeId);
-        };
+    const getHierarchyLevelOptions = (node: TreeModelRootNode | TreeModelHierarchyNode) => {
+      if (!!options?.discardState) {
+        return { instanceFilter: undefined, hierarchyLevelSizeLimit: undefined };
+      }
+      const filteredNodeId = getNonGroupedParentId(node);
+      return createHierarchyLevelOptions(filteredNodeId === parentId ? currModel : oldModel, filteredNodeId);
+    };
+    const shouldLoadChildren = (node: TreeModelHierarchyNode) => {
+      if (expandedNodes.findIndex((expandedNode) => sameNodes(expandedNode.nodeData, node.nodeData)) !== -1) {
+        return true;
+      }
+      if (collapsedNodes.findIndex((collapsedNode) => sameNodes(collapsedNode.nodeData, node.nodeData)) !== -1) {
+        return false;
+      }
+      return !!node.nodeData.autoExpand;
+    };
     const buildNode = (node: TreeModelHierarchyNode) => (!!options?.discardState || node.id === parentId ? node : addAttributes(node, oldModel));
 
     const rootNode = parentId !== undefined ? this.getNode(parentId) : currModel.rootNode;
@@ -93,11 +112,14 @@ export class TreeActions {
     }
 
     this._loader
-      .reloadNodes(rootNode, { expandedNodes, collapsedNodes, getInstanceFilter, buildNode })
+      .loadNodes({ parent: rootNode, getHierarchyLevelOptions, shouldLoadChildren, buildNode })
       .pipe(collectTreePartsUntil(this._disposed, !!options?.discardState ? undefined : { ...currModel.rootNode }))
       .subscribe({
         next: (newModel) => {
           this.handleLoadedHierarchy(parentId, newModel);
+        },
+        complete: () => {
+          this.onLoadingComplete(parentId);
         },
       });
   }
@@ -174,7 +196,6 @@ export class TreeActions {
 function collectTreePartsUntil(untilNotifier: Observable<void>, rootNode?: TreeModelRootNode) {
   return (source: Observable<LoadedTreePart>) =>
     source.pipe(
-      takeUntil(untilNotifier),
       reduce<LoadedTreePart, TreeModel>(
         (treeModel, loadedPart) => {
           addNodesToModel(treeModel, loadedPart);
@@ -186,6 +207,7 @@ function collectTreePartsUntil(untilNotifier: Observable<void>, rootNode?: TreeM
           rootNode: rootNode ?? { id: undefined, nodeData: undefined },
         },
       ),
+      takeUntil(untilNotifier),
     );
 }
 
@@ -231,7 +253,7 @@ function collectNodes(parentId: string | undefined, model: TreeModel, pred: (nod
   return [currNode, ...currentChildren.flatMap((child) => collectNodes(child, model, pred))];
 }
 
-function getFilteredNodeId(node: TreeModelHierarchyNode | TreeModelRootNode) {
+function getNonGroupedParentId(node: TreeModelHierarchyNode | TreeModelRootNode) {
   if (!node.nodeData || !HierarchyNode.isGroupingNode(node.nodeData)) {
     return node.id;
   }
@@ -243,25 +265,21 @@ function getFilteredNodeId(node: TreeModelHierarchyNode | TreeModelRootNode) {
   return createNodeId(node.nodeData.nonGroupingAncestor);
 }
 
-function getNodeInstanceFilter(model: TreeModel, nodeId: string | undefined) {
+function createHierarchyLevelOptions(model: TreeModel, nodeId: string | undefined): HierarchyLevelOptions {
   if (nodeId === undefined) {
-    return model.rootNode.instanceFilter;
+    return { instanceFilter: model.rootNode.instanceFilter, hierarchyLevelSizeLimit: model.rootNode.hierarchyLimit };
   }
 
   const modelNode = model.idToNode.get(nodeId);
   if (!modelNode || isTreeModelInfoNode(modelNode)) {
-    return undefined;
+    return { instanceFilter: undefined, hierarchyLevelSizeLimit: undefined };
   }
-  return modelNode.instanceFilter;
+  return { instanceFilter: modelNode.instanceFilter, hierarchyLevelSizeLimit: modelNode.hierarchyLimit };
 }
 
 // istanbul ignore next
 class NoopTreeLoader implements ITreeLoader {
-  public getNodes(): Observable<LoadedTreePart> {
-    return EMPTY;
-  }
-
-  public reloadNodes(): Observable<LoadedTreePart> {
+  public loadNodes(): Observable<LoadedTreePart> {
     return EMPTY;
   }
 }

@@ -5,7 +5,7 @@
 
 import { expect } from "chai";
 import { PhysicalElement, SnapshotDb } from "@itwin/core-backend";
-import { NodeSelectClauseProps, NodeSelectQueryFactory } from "@itwin/presentation-hierarchies";
+import { createNodesQueryClauseFactory, NodesQueryClauseFactory } from "@itwin/presentation-hierarchies";
 import { Datasets, IModelName } from "../util/Datasets";
 import { run, RunOptions } from "../util/TestUtilities";
 import { ProviderOptions, StatelessHierarchyProvider } from "./StatelessHierarchyProvider";
@@ -19,7 +19,7 @@ export function runHierarchyTest(
   testProps: {
     iModelName: IModelName;
     fullClassName?: string;
-    nodeSelectProps?: Partial<NodeSelectClauseProps>;
+    nodeSelectProps?: Partial<Parameters<NodesQueryClauseFactory["createSelectClause"]>[0]>;
     expectedNodeCount?: number;
   } & Omit<RunOptions<never>, "setup" | "test" | "cleanup">,
 ) {
@@ -38,7 +38,7 @@ export function runHierarchyTest(
               return [];
             }
 
-            const query = new NodeSelectQueryFactory({ imodelAccess });
+            const query = createNodesQueryClauseFactory({ imodelAccess });
             return [
               {
                 fullClassName,

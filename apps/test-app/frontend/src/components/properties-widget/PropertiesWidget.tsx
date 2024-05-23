@@ -25,8 +25,8 @@ import {
   VirtualizedPropertyGridWithDataProvider,
 } from "@itwin/components-react";
 import { IModelApp, IModelConnection } from "@itwin/core-frontend";
-import { ContextMenuItem, ContextMenuItemProps, FillCentered, GlobalContextMenu, Orientation } from "@itwin/core-react";
-import { ToggleSwitch } from "@itwin/itwinui-react";
+import { ContextMenuItem, ContextMenuItemProps, GlobalContextMenu, Orientation } from "@itwin/core-react";
+import { Flex, ToggleSwitch } from "@itwin/itwinui-react";
 import { Field } from "@itwin/presentation-common";
 import {
   DiagnosticsProps,
@@ -227,11 +227,19 @@ function FilterablePropertyGrid({
   }
 
   if (numSelectedElements === 0) {
-    return <FillCentered>{IModelApp.localization.getLocalizedString("Sample:property-grid.no-elements-selected")}</FillCentered>;
+    return (
+      <Flex justifyContent="center" style={{ height: "100%" }}>
+        {IModelApp.localization.getLocalizedString("Sample:property-grid.no-elements-selected")}
+      </Flex>
+    );
   }
 
   if (isOverLimit) {
-    return <FillCentered>{IModelApp.localization.getLocalizedString("Sample:property-grid.too-many-elements-selected")}</FillCentered>;
+    return (
+      <Flex justifyContent="center" style={{ height: "100%" }}>
+        {IModelApp.localization.getLocalizedString("Sample:property-grid.too-many-elements-selected")}
+      </Flex>
+    );
   }
 
   return (

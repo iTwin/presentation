@@ -75,6 +75,7 @@ type ECSqlQueryRowFormat = "ECSqlPropertyNames" | "Indexes";
  */
 export interface ECSqlQueryReaderOptions {
   rowFormat?: ECSqlQueryRowFormat;
+  restartToken?: string;
 }
 
 /**

@@ -4,9 +4,9 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { GenericInstanceFilter, HierarchyNode } from "@itwin/presentation-hierarchies";
-import { InfoNodeTypes } from "../Types";
 import { SelectionChangeType } from "../UseSelectionHandler";
 
+/** @internal */
 export interface TreeModelRootNode {
   id: undefined;
   nodeData: undefined;
@@ -15,6 +15,7 @@ export interface TreeModelRootNode {
   isLoading?: boolean;
 }
 
+/** @internal */
 export interface TreeModelHierarchyNode {
   id: string;
   nodeData: HierarchyNode;
@@ -27,29 +28,53 @@ export interface TreeModelHierarchyNode {
   instanceFilter?: GenericInstanceFilter;
 }
 
-export interface TreeModelInfoNode {
+/** @internal */
+export interface TreeModelGenericInfoNode {
   id: string;
-  parentId?: string;
-  type: InfoNodeTypes;
+  parentId: string | undefined;
+  type: "Unknown";
   message: string;
 }
 
+/** @internal */
+export interface TreeModelNoFilterMatchesInfoNode {
+  id: string;
+  parentId: string | undefined;
+  type: "NoFilterMatches";
+}
+
+/** @internal */
+export interface TreeModelResultSetTooLargeInfoNode {
+  id: string;
+  parentId: string | undefined;
+  type: "ResultSetTooLarge";
+  resultSetSizeLimit: number;
+}
+
+/** @internal */
+export type TreeModelInfoNode = TreeModelGenericInfoNode | TreeModelResultSetTooLargeInfoNode | TreeModelNoFilterMatchesInfoNode;
+
+/** @internal */
 export type TreeModelNode = TreeModelHierarchyNode | TreeModelInfoNode;
 
+/** @internal */
 export function isTreeModelHierarchyNode(node: TreeModelHierarchyNode | TreeModelInfoNode | TreeModelRootNode): node is TreeModelHierarchyNode {
   return "nodeData" in node && node.nodeData !== undefined;
 }
 
+/** @internal */
 export function isTreeModelInfoNode(node: TreeModelHierarchyNode | TreeModelInfoNode | TreeModelRootNode): node is TreeModelInfoNode {
-  return "message" in node && node.message !== undefined;
+  return "type" in node && node.type !== undefined;
 }
 
+/** @internal */
 export interface TreeModel {
   parentChildMap: Map<string | undefined, string[]>;
   idToNode: Map<string, TreeModelNode>;
   rootNode: TreeModelRootNode;
 }
 
+/** @internal */
 export namespace TreeModel {
   export function expandNode(model: TreeModel, nodeId: string, isExpanded: boolean): "none" | "loadChildren" | "reloadChildren" {
     const node = model.idToNode.get(nodeId);
@@ -159,6 +184,19 @@ export namespace TreeModel {
       return model.rootNode;
     }
     return model.idToNode.get(nodeId);
+  }
+
+  export function setIsLoading(model: TreeModel, nodeId: string | undefined, isLoading: boolean) {
+    if (nodeId === undefined) {
+      model.rootNode.isLoading = isLoading;
+      return;
+    }
+    const modelNode = model.idToNode.get(nodeId);
+    // istanbul ignore if
+    if (!modelNode || !isTreeModelHierarchyNode(modelNode)) {
+      return;
+    }
+    modelNode.isLoading = isLoading;
   }
 }
 

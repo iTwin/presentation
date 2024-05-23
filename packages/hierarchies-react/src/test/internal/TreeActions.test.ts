@@ -76,6 +76,54 @@ describe("TreeActions", () => {
         expect(onModelChangedStub).to.not.be.called;
       });
     });
+
+    it("does not clear tree model after reload is canceled", async () => {
+      const model = createTreeModel([
+        {
+          id: undefined,
+          children: ["root-1"],
+        },
+        {
+          id: "root-1",
+          isExpanded: false,
+          children: undefined,
+        },
+      ]);
+
+      const nodes = new Subject<HierarchyNode>();
+      provider.getNodes.callsFake(async function* () {
+        yield await firstValueFrom(nodes);
+      });
+
+      const actions = createActions(model);
+      actions.reloadTree();
+
+      await waitFor(() => {
+        expect(onModelChangedStub).to.be.calledOnce;
+        const newModel = onModelChangedStub.firstCall.args[0];
+        expect(newModel.rootNode.isLoading).to.be.true;
+        expect(getHierarchyNode(newModel, "root-1")).to.not.be.undefined;
+      });
+
+      onModelChangedStub.resetHistory();
+      actions.dispose();
+
+      await waitFor(() => {
+        expect(onModelChangedStub).to.be.calledOnce;
+        const newModel = onModelChangedStub.firstCall.args[0];
+        expect(newModel.rootNode.isLoading).to.be.false;
+        expect(getHierarchyNode(newModel, "root-1")).to.not.be.undefined;
+      });
+
+      nodes.next(createTestHierarchyNode({ id: "updated-root-1" }));
+      nodes.complete();
+      await waitFor(() => {
+        expect(onModelChangedStub).to.be.calledOnce;
+        const newModel = onModelChangedStub.firstCall.args[0];
+        expect(getHierarchyNode(newModel, "root-1")).to.not.be.undefined;
+        expect(getHierarchyNode(newModel, "updated-root-1")).to.be.undefined;
+      });
+    });
   });
 
   describe("selectNodes", () => {
@@ -687,6 +735,7 @@ describe("TreeActions", () => {
       actions.reloadTree(undefined);
 
       await waitFor(() => {
+        expect(provider.getNodes).to.be.calledTwice;
         expect(provider.getNodes).to.be.calledWith(createGetNodesProps({ parentNode: model.rootNode.nodeData }));
         expect(provider.getNodes).to.be.calledWith(createGetNodesProps({ parentNode: getHierarchyNode(model, "root-1")?.nodeData }));
         // one call is made before reloading to set `rootNode.isLoading`
@@ -734,6 +783,7 @@ describe("TreeActions", () => {
       actions.reloadTree({ discardState: true });
 
       await waitFor(() => {
+        expect(provider.getNodes).to.be.calledOnce;
         expect(provider.getNodes).to.be.calledWith(createGetNodesProps({ parentNode: model.rootNode.nodeData }));
         expect(onModelChangedStub).to.be.calledOnce;
       });
@@ -744,6 +794,142 @@ describe("TreeActions", () => {
       expect(getHierarchyNode(newModel, "child-1-2")).to.be.undefined;
       expect(getHierarchyNode(newModel, "child-1")).to.be.undefined;
       expect(getHierarchyNode(newModel, "child-2")).to.be.undefined;
+    });
+
+    it("reloads auto expanded nodes", async () => {
+      const model = createTreeModel([
+        {
+          id: undefined,
+          children: ["root-1", "root-2"],
+        },
+        {
+          id: "root-1",
+          children: ["child-1"],
+          nodeData: createTestHierarchyNode({ id: "root-1", autoExpand: true }),
+        },
+        {
+          id: "root-2",
+          children: ["child-2"],
+        },
+      ]);
+
+      provider.getNodes.reset();
+      provider.getNodes.callsFake((props) => {
+        if (props.parentNode === undefined) {
+          return createAsyncIterator([createTestHierarchyNode({ id: "root-1", autoExpand: true }), createTestHierarchyNode({ id: "root-2" })]);
+        }
+        if (props.parentNode.key === "root-1") {
+          return createAsyncIterator([createTestHierarchyNode({ id: "child-1" })]);
+        }
+        return createAsyncIterator([]);
+      });
+
+      const actions = createActions(model);
+
+      actions.reloadTree(undefined);
+
+      await waitFor(() => {
+        expect(provider.getNodes).to.be.calledTwice;
+        expect(provider.getNodes).to.be.calledWith(createGetNodesProps({ parentNode: model.rootNode.nodeData }));
+        expect(provider.getNodes).to.be.calledWith(createGetNodesProps({ parentNode: getHierarchyNode(model, "root-1")?.nodeData }));
+        // one call is made before reloading to set `rootNode.isLoading`
+        expect(onModelChangedStub).to.be.calledTwice;
+      });
+
+      const newModel = onModelChangedStub.secondCall.args[0];
+      expect(getHierarchyNode(newModel, "root-1")).to.not.be.undefined;
+      expect(getHierarchyNode(newModel, "root-2")).to.not.be.undefined;
+      expect(getHierarchyNode(newModel, "child-1")).to.not.be.undefined;
+      expect(getHierarchyNode(newModel, "child-2")).to.be.undefined;
+    });
+
+    it("does not reload auto expanded collapsed nodes", async () => {
+      const model = createTreeModel([
+        {
+          id: undefined,
+          children: ["root-1", "root-2"],
+        },
+        {
+          id: "root-1",
+          isExpanded: false,
+          children: ["child-1"],
+        },
+        {
+          id: "root-2",
+          children: ["child-2"],
+        },
+      ]);
+
+      provider.getNodes.reset();
+      provider.getNodes.callsFake((props) => {
+        if (props.parentNode === undefined) {
+          return createAsyncIterator([createTestHierarchyNode({ id: "root-1", autoExpand: true }), createTestHierarchyNode({ id: "root-2" })]);
+        }
+        if (props.parentNode.key === "root-1") {
+          return createAsyncIterator([createTestHierarchyNode({ id: "child-1" })]);
+        }
+        return createAsyncIterator([]);
+      });
+
+      const actions = createActions(model);
+
+      actions.reloadTree(undefined);
+
+      await waitFor(() => {
+        expect(provider.getNodes).to.be.calledOnce;
+        expect(provider.getNodes).to.be.calledWith(createGetNodesProps({ parentNode: model.rootNode.nodeData }));
+        // one call is made before reloading to set `rootNode.isLoading`
+        expect(onModelChangedStub).to.be.calledTwice;
+      });
+
+      const newModel = onModelChangedStub.secondCall.args[0];
+      expect(getHierarchyNode(newModel, "root-1")).to.not.be.undefined;
+      expect(getHierarchyNode(newModel, "root-2")).to.not.be.undefined;
+      expect(getHierarchyNode(newModel, "child-1")).to.be.undefined;
+      expect(getHierarchyNode(newModel, "child-2")).to.be.undefined;
+    });
+
+    it("reloads nodes with additional attributes", async () => {
+      const instanceFilter: GenericInstanceFilter = { propertyClassNames: [], relatedInstances: [], rules: { operator: "and", rules: [] } };
+      const model = createTreeModel([
+        {
+          id: undefined,
+          children: ["root-1", "root-2"],
+        },
+        {
+          id: "root-1",
+          hierarchyLimit: 100,
+        },
+        {
+          id: "root-2",
+          instanceFilter,
+        },
+      ]);
+
+      provider.getNodes.reset();
+      provider.getNodes.callsFake((props) => {
+        if (props.parentNode === undefined) {
+          return createAsyncIterator([createTestHierarchyNode({ id: "root-1" }), createTestHierarchyNode({ id: "root-2" })]);
+        }
+        return createAsyncIterator([]);
+      });
+
+      const actions = createActions(model);
+
+      actions.reloadTree(undefined);
+
+      await waitFor(() => {
+        expect(provider.getNodes).to.be.calledOnce;
+        expect(provider.getNodes).to.be.calledWith(createGetNodesProps({ parentNode: model.rootNode.nodeData }));
+        // one call is made before reloading to set `rootNode.isLoading`
+        expect(onModelChangedStub).to.be.calledTwice;
+      });
+
+      const newModel = onModelChangedStub.secondCall.args[0];
+      expect(getHierarchyNode(newModel, "root-1")).to.not.be.undefined;
+      expect(getHierarchyNode(newModel, "root-1")?.hierarchyLimit).to.be.eq(100);
+      expect(getHierarchyNode(newModel, "root-2")).to.not.be.undefined;
+      expect(getHierarchyNode(newModel, "root-2")?.instanceFilter).to.be.eq(instanceFilter);
     });
   });
 });

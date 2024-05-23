@@ -10,7 +10,7 @@ import { Guid, StopWatch } from "@itwin/core-bentley";
 import { DbQueryRequest, DbQueryResponse, DbRequestExecutor, ECSqlReader } from "@itwin/core-common";
 import { ISchemaLocater, Schema, SchemaContext, SchemaInfo, SchemaKey, SchemaMatchType, SchemaProps } from "@itwin/ecschema-metadata";
 import { createECSchemaProvider, createECSqlQueryExecutor } from "@itwin/presentation-core-interop";
-import { createLimitingECSqlQueryExecutor, HierarchyNode, HierarchyProvider, RowsLimitExceededError } from "@itwin/presentation-hierarchies";
+import { createHierarchyProvider, createLimitingECSqlQueryExecutor, HierarchyNode, RowsLimitExceededError } from "@itwin/presentation-hierarchies";
 import { ModelsTreeDefinition } from "@itwin/presentation-models-tree";
 import { createCachingECClassHierarchyInspector } from "@itwin/presentation-shared";
 import { doRequest, getCurrentIModelName, getCurrentIModelPath, loadNodes } from "./common";
@@ -133,7 +133,7 @@ function createModelsTreeProvider(context: ScenarioContext, events: EventEmitter
       1000,
     ),
   };
-  const provider = new HierarchyProvider({
+  const provider = createHierarchyProvider({
     imodelAccess,
     hierarchyDefinition: new ModelsTreeDefinition({ imodelAccess }),
   });

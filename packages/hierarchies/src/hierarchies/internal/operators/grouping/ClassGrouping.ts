@@ -4,7 +4,8 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { createMainThreadReleaseOnTimePassedHandler, ECSchemaProvider, getClass } from "@itwin/presentation-shared";
-import { ClassGroupingNodeKey, HierarchyNode, ParentHierarchyNode, ProcessedInstanceHierarchyNode } from "../../../HierarchyNode";
+import { HierarchyNode, ParentHierarchyNode, ProcessedInstanceHierarchyNode } from "../../../HierarchyNode";
+import { ClassGroupingNodeKey } from "../../../HierarchyNodeKey";
 import { GroupingHandlerResult, ProcessedInstancesGroupingHierarchyNode } from "../Grouping";
 
 interface ClassInfo {

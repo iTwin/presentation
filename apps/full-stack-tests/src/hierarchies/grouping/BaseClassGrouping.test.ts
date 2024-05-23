@@ -7,7 +7,7 @@ import { insertPhysicalPartition, insertSubject } from "presentation-test-utilit
 import { PhysicalPartition, Subject } from "@itwin/core-backend";
 import { IModel } from "@itwin/core-common";
 import { IModelConnection } from "@itwin/core-frontend";
-import { IHierarchyLevelDefinitionsFactory, NodeSelectQueryFactory } from "@itwin/presentation-hierarchies";
+import { createNodesQueryClauseFactory, HierarchyDefinition } from "@itwin/presentation-hierarchies";
 import { buildIModel } from "../../IModelUtils";
 import { initialize, terminate } from "../../IntegrationTests";
 import { NodeValidators, validateHierarchy } from "../HierarchyValidation";
@@ -30,8 +30,8 @@ describe("Hierarchies", () => {
       await terminate();
     });
     it("doesn't create grouping nodes if provided classes aren't base for node class", async function () {
-      const selectQueryFactory = new NodeSelectQueryFactory({ imodelAccess: createIModelAccess(emptyIModel) });
-      const customHierarchy: IHierarchyLevelDefinitionsFactory = {
+      const selectQueryFactory = createNodesQueryClauseFactory({ imodelAccess: createIModelAccess(emptyIModel) });
+      const customHierarchy: HierarchyDefinition = {
         async defineHierarchyLevel({ parentNode }) {
           if (!parentNode) {
             return [
@@ -74,8 +74,8 @@ describe("Hierarchies", () => {
     });
 
     it("doesn't create grouping nodes if provided classes aren't of entity or relationship type", async function () {
-      const selectQueryFactory = new NodeSelectQueryFactory({ imodelAccess: createIModelAccess(emptyIModel) });
-      const customHierarchy: IHierarchyLevelDefinitionsFactory = {
+      const selectQueryFactory = createNodesQueryClauseFactory({ imodelAccess: createIModelAccess(emptyIModel) });
+      const customHierarchy: HierarchyDefinition = {
         async defineHierarchyLevel({ parentNode }) {
           if (!parentNode) {
             return [
@@ -119,8 +119,8 @@ describe("Hierarchies", () => {
 
     it("creates grouping nodes if provided class is base for node class", async function () {
       const baseClassName = "BisCore.InformationContentElement";
-      const selectQueryFactory = new NodeSelectQueryFactory({ imodelAccess: createIModelAccess(emptyIModel) });
-      const customHierarchy: IHierarchyLevelDefinitionsFactory = {
+      const selectQueryFactory = createNodesQueryClauseFactory({ imodelAccess: createIModelAccess(emptyIModel) });
+      const customHierarchy: HierarchyDefinition = {
         async defineHierarchyLevel({ parentNode }) {
           if (!parentNode) {
             return [
@@ -178,8 +178,8 @@ describe("Hierarchies", () => {
         return { childPartition1 };
       });
 
-      const selectQueryFactory = new NodeSelectQueryFactory({ imodelAccess: createIModelAccess(imodel) });
-      const customHierarchy: IHierarchyLevelDefinitionsFactory = {
+      const selectQueryFactory = createNodesQueryClauseFactory({ imodelAccess: createIModelAccess(imodel) });
+      const customHierarchy: HierarchyDefinition = {
         async defineHierarchyLevel({ parentNode }) {
           if (!parentNode) {
             return [
@@ -255,8 +255,8 @@ describe("Hierarchies", () => {
         return { childPartition1, childPartition2 };
       });
 
-      const selectQueryFactory = new NodeSelectQueryFactory({ imodelAccess: createIModelAccess(imodel) });
-      const customHierarchy: IHierarchyLevelDefinitionsFactory = {
+      const selectQueryFactory = createNodesQueryClauseFactory({ imodelAccess: createIModelAccess(imodel) });
+      const customHierarchy: HierarchyDefinition = {
         async defineHierarchyLevel({ parentNode }) {
           if (!parentNode) {
             return [
@@ -365,8 +365,8 @@ describe("Hierarchies", () => {
         return { childSubject1, childPartition2 };
       });
 
-      const selectQueryFactory = new NodeSelectQueryFactory({ imodelAccess: createIModelAccess(imodel) });
-      const customHierarchy: IHierarchyLevelDefinitionsFactory = {
+      const selectQueryFactory = createNodesQueryClauseFactory({ imodelAccess: createIModelAccess(imodel) });
+      const customHierarchy: HierarchyDefinition = {
         async defineHierarchyLevel({ parentNode }) {
           if (!parentNode) {
             return [

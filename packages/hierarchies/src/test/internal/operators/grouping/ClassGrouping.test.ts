@@ -5,7 +5,7 @@
 
 import { expect } from "chai";
 import sinon from "sinon";
-import { GroupingNodeKey } from "../../../../hierarchies/HierarchyNode";
+import { GroupingNodeKey } from "../../../../hierarchies/HierarchyNodeKey";
 import { GroupingHandlerResult } from "../../../../hierarchies/internal/operators/Grouping";
 import { createClassGroups } from "../../../../hierarchies/internal/operators/grouping/ClassGrouping";
 import { createECSchemaProviderStub, createTestProcessedGroupingNode, createTestProcessedInstanceNode } from "../../../Utils";

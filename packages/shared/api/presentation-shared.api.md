@@ -282,6 +282,8 @@ export interface ECSqlQueryExecutor {
 // @beta
 export interface ECSqlQueryReaderOptions {
     // (undocumented)
+    restartToken?: string;
+    // (undocumented)
     rowFormat?: ECSqlQueryRowFormat;
 }
 

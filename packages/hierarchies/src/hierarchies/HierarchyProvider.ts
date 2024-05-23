@@ -36,12 +36,10 @@ import {
   IPrimitiveValueFormatter,
   normalizeFullClassName,
 } from "@itwin/presentation-shared";
-import { DefineHierarchyLevelProps, HierarchyNodesDefinition, IHierarchyLevelDefinitionsFactory } from "./HierarchyDefinition";
+import { DefineHierarchyLevelProps, HierarchyDefinition, HierarchyNodesDefinition } from "./HierarchyDefinition";
 import { RowsLimitExceededError } from "./HierarchyErrors";
 import {
   HierarchyNode,
-  HierarchyNodeIdentifiersPath,
-  InstancesNodeKey,
   NonGroupingHierarchyNode,
   ParentHierarchyNode,
   ParsedHierarchyNode,
@@ -50,10 +48,12 @@ import {
   ProcessedHierarchyNode,
   ProcessedInstanceHierarchyNode,
 } from "./HierarchyNode";
+import { HierarchyNodeIdentifiersPath } from "./HierarchyNodeIdentifier";
+import { InstancesNodeKey } from "./HierarchyNodeKey";
 import { CachedNodesObservableEntry, ChildNodeObservablesCache, ParsedQueryNodesObservable } from "./internal/ChildNodeObservablesCache";
 import { LOGGING_NAMESPACE as CommonLoggingNamespace, createNodeIdentifierForLogging, hasChildren } from "./internal/Common";
 import { eachValueFrom } from "./internal/EachValueFrom";
-import { FilteringHierarchyLevelDefinitionsFactory } from "./internal/FilteringHierarchyLevelDefinitionsFactory";
+import { FilteringHierarchyDefinition } from "./internal/FilteringHierarchyDefinition";
 import { createQueryLogMessage, doLog, log } from "./internal/LoggingUtils";
 import { createDetermineChildrenOperator } from "./internal/operators/DetermineChildren";
 import { createGroupingOperator } from "./internal/operators/Grouping";
@@ -74,10 +74,54 @@ const DEFAULT_QUERY_CONCURRENCY = 10;
 const DEFAULT_QUERY_CACHE_SIZE = 1;
 
 /**
- * Defines the strings used by hierarchy provider.
+ * Props for the `HierarchyProvider.getNodes` call.
  * @beta
  */
-export interface HierarchyProviderLocalizedStrings {
+export interface GetHierarchyNodesProps {
+  /** Parent node to get children for. Pass `undefined` to get root nodes. */
+  parentNode: ParentHierarchyNode | undefined;
+
+  /** Optional hierarchy level filter. Has no effect if `parentNode` is a `GroupingNode`. */
+  instanceFilter?: GenericInstanceFilter;
+
+  /**
+   * Optional hierarchy level size limit override. This value is passed to `LimitingECSqlQueryExecutor` used
+   * by this provider to override query rows limit per hierarchy level. If not provided, defaults to whatever
+   * is used by the limiting query executor.
+   *
+   * Has no effect if `parentNode` is a `GroupingNode`.
+   */
+  hierarchyLevelSizeLimit?: number | "unbounded";
+
+  /** When set to true ignores the cache and fetches the nodes again. */
+  ignoreCache?: boolean;
+}
+
+/**
+ * An interface for a hierarchy provider knows how to create child nodes for a given parent node.
+ * @beta
+ */
+export interface HierarchyProvider {
+  /** Gets nodes for the specified parent node. */
+  getNodes(props: GetHierarchyNodesProps): AsyncIterableIterator<HierarchyNode>;
+
+  /** Gets instance keys for the specified parent node. */
+  getNodeInstanceKeys(props: Omit<GetHierarchyNodesProps, "ignoreCache">): AsyncIterableIterator<InstanceKey>;
+
+  /** Notifies the provider that the underlying data source has changed and caches should be invalidated. */
+  notifyDataSourceChanged(): void;
+
+  /**
+   * Overrides the property value formatter used by the hierarchy provider. Setting to `undefined`
+   * resets the formatter to the result of `createDefaultValueFormatter` called with default parameters.
+   */
+  setFormatter(formatter: IPrimitiveValueFormatter | undefined): void;
+}
+
+/**
+ * Defines the strings used by hierarchy provider.
+ */
+interface HierarchyProviderLocalizedStrings {
   /**
    * A string for "Unspecified". Used for labels of property grouping nodes
    * that group by an empty value.
@@ -92,10 +136,9 @@ export interface HierarchyProviderLocalizedStrings {
 }
 
 /**
- * Props for `HierarchyProvider`.
- * @beta
+ * Props for `createHierarchyProvider`.
  */
-export interface HierarchyProviderProps {
+interface HierarchyProviderProps {
   /**
    * An object that provides access to iModel's data and metadata.
    *
@@ -109,7 +152,7 @@ export interface HierarchyProviderProps {
    * A function that returns a hierarchy definition, describing how the hierarchy that the provider should be create. The
    * function is called once during the provider's construction.
    */
-  hierarchyDefinition: IHierarchyLevelDefinitionsFactory;
+  hierarchyDefinition: HierarchyDefinition;
 
   /** Maximum number of queries that the provider attempts to execute in parallel. Defaults to `10`. */
   queryConcurrency?: number;
@@ -136,34 +179,16 @@ export interface HierarchyProviderProps {
 }
 
 /**
- * Props for `HierarchyProvider.getNodes` call.
+ * Creates an instance of `HierarchyProvider` that creates a hierarchy based on given iModel and
+ * a hierarchy definition, which defines each hierarchy level through ECSQL queries.
+ *
  * @beta
  */
-export interface GetHierarchyNodesProps {
-  /** Parent node to get children for. Pass `undefined` to get root nodes. */
-  parentNode: ParentHierarchyNode | undefined;
-
-  /** Optional hierarchy level filter. Has no effect if `parentNode` is a `GroupingNode`. */
-  instanceFilter?: GenericInstanceFilter;
-
-  /**
-   * Optional hierarchy level size limit override. This value is passed to `LimitingECSqlQueryExecutor` used
-   * by this provider to override query rows limit per hierarchy level. If not provided, defaults to whatever
-   * is used by the limiting query executor.
-   *
-   * Has no effect if `parentNode` is a `GroupingNode`.
-   */
-  hierarchyLevelSizeLimit?: number | "unbounded";
-
-  /** When set to true ignores the cache and fetches the nodes again. */
-  ignoreCache?: boolean;
+export function createHierarchyProvider(props: HierarchyProviderProps): HierarchyProvider {
+  return new HierarchyProviderImpl(props);
 }
 
-/**
- * A hierarchy provider that builds a hierarchy according to given hierarchy definition.
- * @beta
- */
-export class HierarchyProvider {
+class HierarchyProviderImpl implements HierarchyProvider {
   private _imodelAccess: ECSchemaProvider & LimitingECSqlQueryExecutor & ECClassHierarchyInspector;
   private _valuesFormatter: IPrimitiveValueFormatter;
   private _localizedStrings: HierarchyProviderLocalizedStrings;
@@ -174,10 +199,10 @@ export class HierarchyProvider {
    * Hierarchy level definitions factory used by this provider.
    *
    * @note This does not necessarily match the `hierarchyDefinition` passed through props when constructing
-   * the provider. For example, it may a factory that decorates given `hierarchyDefinition` with filtering
+   * the provider. For example, it may be a factory that decorates given `hierarchyDefinition` with filtering
    * features.
    */
-  public readonly hierarchyDefinition: IHierarchyLevelDefinitionsFactory;
+  public readonly hierarchyDefinition: HierarchyDefinition;
 
   /**
    * A limiting ECSQL query executor used by this provider.
@@ -191,7 +216,7 @@ export class HierarchyProvider {
     this._imodelAccess = props.imodelAccess;
     this.hierarchyDefinition = props.hierarchyDefinition;
     if (props.filtering) {
-      const filteringDefinition = new FilteringHierarchyLevelDefinitionsFactory({
+      const filteringDefinition = new FilteringHierarchyDefinition({
         classHierarchy: this._imodelAccess,
         source: this.hierarchyDefinition,
         nodeIdentifierPaths: props.filtering.paths,
@@ -218,13 +243,6 @@ export class HierarchyProvider {
    */
   public setFormatter(formatter: IPrimitiveValueFormatter | undefined) {
     this._valuesFormatter = formatter ?? createDefaultValueFormatter();
-  }
-
-  /** @internal */
-  public get queryScheduler(): { schedule: LimitingECSqlQueryExecutor["createQueryReader"] } {
-    return {
-      schedule: (query, config) => eachValueFrom(this._queryScheduler.scheduleSubscription(from(this.queryExecutor.createQueryReader(query, config)))),
-    };
   }
 
   private onGroupingNodeCreated(groupingNode: ProcessedGroupingHierarchyNode, props: GetHierarchyNodesProps) {
@@ -586,13 +604,13 @@ export class HierarchyProvider {
   }
 }
 
-function preProcessNodes(hierarchyFactory: IHierarchyLevelDefinitionsFactory) {
+function preProcessNodes(hierarchyFactory: HierarchyDefinition) {
   return hierarchyFactory.preProcessNode
     ? processNodes(hierarchyFactory.preProcessNode)
     : (o: Observable<ProcessedCustomHierarchyNode | ProcessedInstanceHierarchyNode>) => o;
 }
 
-function postProcessNodes(hierarchyFactory: IHierarchyLevelDefinitionsFactory) {
+function postProcessNodes(hierarchyFactory: HierarchyDefinition) {
   return hierarchyFactory.postProcessNode ? processNodes(hierarchyFactory.postProcessNode) : (o: Observable<ProcessedHierarchyNode>) => o;
 }
 

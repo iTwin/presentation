@@ -1,9 +1,12 @@
 {
   "name": "@itwin/presentation-hierarchies-react",
   "version": "0.0.0",
-  "private": true,
   "description": "React components based on `@itwin/presentation-hierarchies`",
   "license": "MIT",
+  "author": {
+    "name": "Bentley Systems, Inc.",
+    "url": "http://www.bentley.com"
+  },
   "repository": {
     "type": "git",
     "url": "https://github.com/iTwin/presentation.git",
@@ -11,17 +14,19 @@
   },
   "keywords": [
     "Bentley",
+    "Component",
+    "Components",
     "EC",
-    "Presentation",
+    "ECSQL",
+    "Hierarchies",
+    "Hierarchy",
+    "iModel",
     "iTwin",
     "iTwin.js",
+    "Presentation",
     "React",
-    "Component"
+    "Tree"
   ],
-  "author": {
-    "name": "Bentley Systems, Inc.",
-    "url": "http://www.bentley.com"
-  },
   "main": "lib/cjs/presentation-hierarchies-react.js",
   "module": "lib/esm/presentation-hierarchies-react.js",
   "types": "lib/cjs/presentation-hierarchies-react.d.ts",
@@ -44,6 +49,7 @@
     "@itwin/itwinui-icons-react": "^2.8.0",
     "@itwin/itwinui-illustrations-react": "^2.1.0",
     "@itwin/presentation-hierarchies": "workspace:^",
+    "@itwin/presentation-shared": "workspace:^",
     "@itwin/unified-selection": "workspace:^",
     "classnames": "^2.5.1",
     "immer": "^10.0.4",
@@ -54,6 +60,11 @@
     "@itwin/itwinui-react": "^3.0.0",
     "react": "^17.0.0 || ^18.0.0",
     "react-dom": "^17.0.0 || ^18.0.0"
+  },
+  "peerDependenciesMeta": {
+    "@itwin/itwinui-react": {
+      "optional": true
+    }
   },
   "devDependencies": {
     "@itwin/build-tools": "^4.6.0",

@@ -6,7 +6,8 @@
 import { expect } from "chai";
 import sinon from "sinon";
 import { createDefaultValueFormatter, EC, IPrimitiveValueFormatter } from "@itwin/presentation-shared";
-import { GroupingNodeKey, HierarchyNodePropertyGroup, PropertyOtherValuesGroupingNodeKey } from "../../../../hierarchies/HierarchyNode";
+import { HierarchyNodePropertyGroup } from "../../../../hierarchies/HierarchyNode";
+import { GroupingNodeKey, PropertyOtherValuesGroupingNodeKey } from "../../../../hierarchies/HierarchyNodeKey";
 import * as propertiesGrouping from "../../../../hierarchies/internal/operators/grouping/PropertiesGrouping";
 import { createIModelAccessStub, createTestProcessedGroupingNode, createTestProcessedInstanceNode, testLocalizedStrings } from "../../../Utils";
 
