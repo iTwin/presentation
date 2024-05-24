@@ -1,5 +1,14 @@
 # @itwin/unified-selection
 
+## 0.4.2
+
+### Patch Changes
+
+- [#581](https://github.com/iTwin/presentation/pull/581): Bump `itwinjs-core` dependencies to `^4.6.0`
+- [#570](https://github.com/iTwin/presentation/pull/570): Reduced main thread blocking when computing hilite sets and selection based on selection scope.
+- Updated dependencies:
+  - @itwin/presentation-shared@0.2.0
+
 ## 0.4.1
 
 ### Patch Changes
@@ -24,10 +33,7 @@
   Migration example:
 
   ```ts
-  import {
-    createECSqlQueryExecutor,
-    createECSchemaProvider,
-  } from "@itwin/presentation-core-interop";
+  import { createECSqlQueryExecutor, createECSchemaProvider } from "@itwin/presentation-core-interop";
   import { createCachingECClassHierarchyInspector } from "@itwin/presentation-shared";
   import { createHiliteSetProvider } from "@itwin/unified-selection";
 
@@ -44,9 +50,7 @@
     imodelAccess: {
       ...createECSqlQueryExecutor(imodel),
       ...createCachingECClassHierarchyInspector({
-        schemaProvider: createECSchemaProvider(
-          MyAppFrontend.getSchemaContext(imodel),
-        ),
+        schemaProvider: createECSchemaProvider(MyAppFrontend.getSchemaContext(imodel)),
         cacheSize: 100,
       }),
     },

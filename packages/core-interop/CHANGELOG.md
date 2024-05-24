@@ -1,5 +1,18 @@
 # @itwin/presentation-core-interop
 
+## 0.2.0
+
+### Minor Changes
+
+- [#582](https://github.com/iTwin/presentation/pull/582): Updated `ECSqlQueryExecutor` to pass `restartToken` options to the underlying ECSql reader.
+
+### Patch Changes
+
+- [#585](https://github.com/iTwin/presentation/pull/585): `createQueryReader`: Remove extra whitespace from executed queries
+- [#592](https://github.com/iTwin/presentation/pull/592): Do not publish source files to the npm
+- Updated dependencies:
+  - @itwin/presentation-shared@0.2.0
+
 ## 0.1.2
 
 ### Patch Changes
