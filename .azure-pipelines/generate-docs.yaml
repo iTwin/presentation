@@ -5,7 +5,7 @@ trigger:
       - stable
 
 pr:
-  drafts: true
+  drafts: false
   branches:
     include:
       - master
