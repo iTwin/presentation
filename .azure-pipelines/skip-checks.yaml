@@ -1,0 +1,18 @@
+name: Skip checks
+on:
+  pull_request:
+    branches:
+      - master
+      - stable
+jobs:
+  DocsGenerate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Exit with success
+        run: exit 0
+
+  DocsBuild:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Exit with success
+        run: exit 0

@@ -30,7 +30,7 @@ resources:
 stages:
   - stage: Generate_Docs
     jobs:
-      - job:
+      - job: DocsGenerate
         displayName: Generate Docs
         workspace:
           clean: all
