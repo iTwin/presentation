@@ -12,7 +12,7 @@ import { IModelApp, IModelConnection } from "@itwin/core-frontend";
 import { Ruleset } from "@itwin/presentation-common";
 import { PresentationTree, PresentationTreeRenderer, usePresentationTreeState } from "@itwin/presentation-components";
 import { buildTestIModel } from "@itwin/presentation-testing";
-import { fireEvent, getByPlaceholderText, getByRole, getByTitle, render, waitFor } from "@testing-library/react";
+import { getByPlaceholderText, getByRole, getByTitle, render, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { initialize, terminate } from "../../IntegrationTests";
 import { getNodeByLabel, toggleExpandNode } from "../TreeUtils";
@@ -87,21 +87,21 @@ describe("Learning snippets", () => {
 
       // open the filtering dialog
       const filteringButton = modelNode.querySelector(".presentation-components-node-action-buttons button")!;
-      fireEvent.click(filteringButton);
+      await user.click(filteringButton);
       const filteringDialog = await waitFor(() => getByRole(baseElement, "dialog"));
 
       // open property selector and select the "User Label" property
       const propertySelector = await waitFor(() => getByPlaceholderText<HTMLInputElement>(baseElement, "Çhóôsë pröpértý"));
-      fireEvent.focus(propertySelector);
-      fireEvent.click(getByTitle(baseElement, "User Label"));
+      await user.click(propertySelector);
+      await user.click(getByTitle(baseElement, "User Label"));
       await waitFor(() => expect(propertySelector.value).to.eq("User Label"));
 
       // focus value input box
       const propertyValueBox = filteringDialog.querySelector<HTMLInputElement>(".fb-property-value input")!;
       expect(propertyValueBox).to.not.be.null;
-      fireEvent.focus(propertyValueBox);
+      await user.click(propertyValueBox);
       await user.type(propertyValueBox, "My Element 2");
-      fireEvent.blur(propertyValueBox);
+      await user.keyboard("{Enter}");
       await waitFor(() => {
         // wait for the "apply" button to become enabled
         const disabledButton = filteringDialog.querySelector(".presentation-instance-filter-dialog-apply-button[disabled]");
@@ -113,7 +113,7 @@ describe("Learning snippets", () => {
       // do filter
       const applyFilterButton = filteringDialog.querySelector(".presentation-instance-filter-dialog-apply-button")!;
       expect(applyFilterButton).to.not.be.null;
-      fireEvent.click(applyFilterButton);
+      await user.click(applyFilterButton);
 
       // expect 1 element node
       await waitFor(() => getNodeByLabel(container, "My Element 2"));

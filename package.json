@@ -4,6 +4,7 @@
   "repository": {
     "url": "https://github.com/iTwin/presentation.git"
   },
+  "packageManager": "pnpm@9.1.2",
   "scripts": {
     "start:web": "run-p --silent start:frontend start:web-backend",
     "start:electron": "run-p --silent start:frontend start:electron-backend",
@@ -49,11 +50,6 @@
     "./scripts/*.js": [
       "pnpm lint:copyright --fix"
     ]
-  },
-  "engines": {
-    "pnpm": ">=8",
-    "npm": "<0",
-    "node": ">=18"
   },
   "pnpm": {
     "overrides": {
