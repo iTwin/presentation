@@ -1,5 +1,11 @@
 # Change Log - @itwin/presentation-components
 
+## 5.3.1
+
+### Patch Changes
+
+- [#581](https://github.com/iTwin/presentation/pull/581): Switch from using deprecated `UnderlinedButton` (`@itwin/components-react`) to `Anchor` (`@itwin/itwinui-react`).
+
 ## 5.3.0
 
 ### Minor Changes
@@ -167,9 +173,7 @@
 
   ```tsx
   const [inputKeys] = useState<Keys>();
-  <PresentationInstanceFilterDialog
-    descriptor={async () => loadDescriptor(inputKeys)}
-  />;
+  <PresentationInstanceFilterDialog descriptor={async () => loadDescriptor(inputKeys)} />;
   ```
 
   _after_
@@ -226,26 +230,13 @@
     _before_
 
     ```tsx
-    <PresentationTree
-      {...props}
-      state={state}
-      treeRenderer={(treeProps) => (
-        <PresentationTreeRenderer
-          {...treeProps}
-          nodeLoader={state.nodeLoader}
-        />
-      )}
-    />
+    <PresentationTree {...props} state={state} treeRenderer={(treeProps) => <PresentationTreeRenderer {...treeProps} nodeLoader={state.nodeLoader} />} />
     ```
 
     _after_
 
     ```tsx
-    <PresentationTree
-      {...props}
-      state={state}
-      treeRenderer={(treeProps) => <PresentationTreeRenderer {...treeProps} />}
-    />
+    <PresentationTree {...props} state={state} treeRenderer={(treeProps) => <PresentationTreeRenderer {...treeProps} />} />
     ```
 
   - Removed `nodeRenderer` prop from `PresentationTreeRendererProps`. The prop is not used by `PresentationTreeRenderer` as it always uses its own `PresentationTreeNodeRenderer` to render nodes.
@@ -263,10 +254,7 @@
   }
 
   // in the component render function
-  <SchemaMetadataContextProvider
-    imodel={imodel}
-    schemaContextProvider={getIModelSchemaContext}
-  >
+  <SchemaMetadataContextProvider imodel={imodel} schemaContextProvider={getIModelSchemaContext}>
     <VirtualizedPropertyGridWithDataProvider {...props} />
   </SchemaMetadataContextProvider>;
   ```
@@ -349,31 +337,14 @@
 
     ```tsx
     return (
-      <PresentationTree
-        {...props}
-        state={state}
-        treeRenderer={(treeProps) => (
-          <PresentationTreeRenderer
-            {...treeProps}
-            nodeLoader={state.nodeLoader}
-          />
-        )}
-      />
+      <PresentationTree {...props} state={state} treeRenderer={(treeProps) => <PresentationTreeRenderer {...treeProps} nodeLoader={state.nodeLoader} />} />
     );
     ```
 
     After:
 
     ```tsx
-    return (
-      <PresentationTree
-        {...props}
-        state={state}
-        treeRenderer={(treeProps) => (
-          <PresentationTreeRenderer {...treeProps} />
-        )}
-      />
-    );
+    return <PresentationTree {...props} state={state} treeRenderer={(treeProps) => <PresentationTreeRenderer {...treeProps} />} />;
     ```
 
   - Removed `nodeRenderer` prop from `PresentationTreeRendererProps`. The prop is not used by `PresentationTreeRenderer` as it always uses its own `PresentationTreeNodeRenderer` to render nodes.
@@ -449,14 +420,7 @@ This release brings official React 18 support. Components and hooks provided by 
     const treeModel = useTreeModel(nodeLoader.modelSource);
 
     return (
-      <ControlledTree
-        width={200}
-        height={400}
-        model={treeModel}
-        nodeLoader={nodeLoader}
-        eventsHandler={eventHandler}
-        selectionMode={SelectionMode.Single}
-      />
+      <ControlledTree width={200} height={400} model={treeModel} nodeLoader={nodeLoader} eventsHandler={eventHandler} selectionMode={SelectionMode.Single} />
     );
   }
   ```
@@ -481,14 +445,7 @@ This release brings official React 18 support. Components and hooks provided by 
       return null;
     }
 
-    return (
-      <PresentationTree
-        width={200}
-        height={400}
-        state={state}
-        selectionMode={SelectionMode.Single}
-      />
-    );
+    return <PresentationTree width={200} height={400} state={state} selectionMode={SelectionMode.Single} />;
   }
   ```
 
