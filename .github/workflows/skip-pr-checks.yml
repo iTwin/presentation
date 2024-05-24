@@ -1,17 +1,11 @@
-name: Skip checks
+name: Azure Pipelines
 on:
   pull_request:
     branches:
       - master
       - stable
 jobs:
-  Generate_Docs:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Exit with success
-        run: exit 0
-
-  Validate_Docs:
+  iTwin Presentation Docs:
     runs-on: ubuntu-latest
     steps:
       - name: Exit with success
