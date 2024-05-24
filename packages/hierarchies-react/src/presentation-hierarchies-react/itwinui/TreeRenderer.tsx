@@ -17,7 +17,7 @@ type TreeNodeRendererProps = ComponentPropsWithoutRef<typeof TreeNodeRenderer>;
 interface TreeRendererOwnProps {
   rootNodes: PresentationTreeNode[];
   selectionMode?: SelectionMode;
-  localizedStrings?: LocalizedStrings;
+  localizedStrings?: Partial<LocalizedStrings>;
 }
 
 type TreeRendererProps = Pick<ReturnType<typeof useTree>, "rootNodes" | "expandNode"> &

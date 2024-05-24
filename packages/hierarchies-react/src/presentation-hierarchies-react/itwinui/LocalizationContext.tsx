@@ -68,15 +68,15 @@ const defaultLocalizedStrings: LocalizedStrings = {
 const localizationContext = createContext<LocalizationContext>({ localizedStrings: defaultLocalizedStrings });
 
 interface LocalizationContextProviderProps {
-  localizedStrings?: LocalizedStrings;
+  localizedStrings?: Partial<LocalizedStrings>;
 }
 
 /** @beta */
 export function LocalizationContextProvider({ localizedStrings, children }: PropsWithChildren<LocalizationContextProviderProps>) {
-  const [state, setState] = useState({ localizedStrings: localizedStrings ?? defaultLocalizedStrings });
+  const [state, setState] = useState({ localizedStrings: { ...defaultLocalizedStrings, ...localizedStrings } });
 
   useEffect(() => {
-    setState({ localizedStrings: localizedStrings ?? defaultLocalizedStrings });
+    setState({ localizedStrings: { ...defaultLocalizedStrings, ...localizedStrings } });
   }, [localizedStrings]);
 
   return <localizationContext.Provider value={state}>{children}</localizationContext.Provider>;
