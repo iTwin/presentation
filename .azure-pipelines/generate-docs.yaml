@@ -3,9 +3,17 @@ trigger:
     include:
       - master
       - stable
+  paths:
+    include:
+      - packages/components
+      - packages/testing
+      - packages/opentelemetry
+      - apps/test-app
+      - apps/full-stack-tests/src/components
+      - apps/full-stack-tests/src/testing
 
 pr:
-  drafts: false
+  drafts: true
   branches:
     include:
       - master
