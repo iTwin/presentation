@@ -20,6 +20,7 @@ interface TreeNodeRendererOwnProps {
   node: RenderedTreeNode;
   onFilterClick?: (nodeId: string | undefined) => void;
   getIcon?: (node: PresentationHierarchyNode) => ReactElement | undefined;
+  getSublabel?: (node: PresentationHierarchyNode) => ReactElement | undefined;
   onNodeClick?: (nodeId: string, isSelected: boolean, event: React.MouseEvent<HTMLElement, MouseEvent>) => void;
   onNodeKeyDown?: (nodeId: string, isSelected: boolean, event: React.KeyboardEvent<HTMLElement>) => void;
   actionButtonsClassName?: string;
@@ -41,6 +42,7 @@ export function TreeNodeRenderer({
   node,
   expandNode,
   getIcon,
+  getSublabel,
   onFilterClick,
   onNodeClick,
   onNodeKeyDown,
@@ -77,6 +79,7 @@ export function TreeNodeRenderer({
             expandNode(node.id, isExpanded);
           }}
           icon={getIcon ? getIcon(node) : undefined}
+          sublabel={getSublabel ? getSublabel(node) : undefined}
         >
           <ButtonGroup className={cx("action-buttons", actionButtonsClassName)}>
             {getHierarchyLevelDetails && node.isFiltered ? (
