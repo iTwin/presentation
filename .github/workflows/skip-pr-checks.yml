@@ -5,13 +5,13 @@ on:
       - master
       - stable
 jobs:
-  DocsGenerate:
+  Generate_Docs:
     runs-on: ubuntu-latest
     steps:
       - name: Exit with success
         run: exit 0
 
-  DocsBuild:
+  Validate_Docs:
     runs-on: ubuntu-latest
     steps:
       - name: Exit with success

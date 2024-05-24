@@ -5,7 +5,7 @@ trigger:
       - stable
 
 pr:
-  drafts: false
+  drafts: true
   branches:
     include:
       - master
@@ -30,7 +30,7 @@ resources:
 stages:
   - stage: Generate_Docs
     jobs:
-      - job: DocsGenerate
+      - job:
         displayName: Generate Docs
         workspace:
           clean: all
