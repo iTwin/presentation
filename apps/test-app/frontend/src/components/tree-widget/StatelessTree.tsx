@@ -141,15 +141,7 @@ function Tree({ imodel, imodelAccess, height, width }: { imodel: IModelConnectio
   }, [filteringOptions]);
 
   const renderContent = () => {
-    if (rootNodes === undefined || isLoading) {
-      return (
-        <Flex alignItems="center" justifyContent="center" flexDirection="column" style={{ height: "100%" }}>
-          <ProgressRadial size="large" />
-        </Flex>
-      );
-    }
-
-    if (rootNodes.length === 0 && filter) {
+    if (rootNodes && rootNodes.length === 0 && filter) {
       return (
         <Flex alignItems="center" justifyContent="center" flexDirection="column" style={{ height: "100%" }}>
           <Text isMuted>There are no nodes matching filter text {filter}</Text>
@@ -159,8 +151,40 @@ function Tree({ imodel, imodelAccess, height, width }: { imodel: IModelConnectio
 
     return (
       <Flex.Item alignSelf="flex-start" style={{ width: "100%", overflow: "auto" }}>
-        <TreeRenderer rootNodes={rootNodes} {...treeProps} onFilterClick={onFilterClick} getIcon={getIcon} selectionMode={"extended"} />
+        <TreeRenderer rootNodes={rootNodes ?? []} {...treeProps} onFilterClick={onFilterClick} getIcon={getIcon} selectionMode={"extended"} />
       </Flex.Item>
+    );
+  };
+
+  const renderLoadingOverlay = () => {
+    if (rootNodes !== undefined && !isLoading) {
+      return <></>;
+    }
+    return (
+      <div
+        style={{
+          position: "absolute",
+          zIndex: 1000,
+          height: "inherit",
+          width: "100%",
+          overflow: "hidden",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
+        <div
+          style={{
+            position: "absolute",
+            opacity: 0.5,
+            pointerEvents: "none",
+            width: "100%",
+            height: "100%",
+            backgroundColor: "var(--iui-color-background-backdrop)",
+          }}
+        />
+        <ProgressRadial size="large" indeterminate />
+      </div>
     );
   };
 
@@ -171,6 +195,7 @@ function Tree({ imodel, imodelAccess, height, width }: { imodel: IModelConnectio
         <ToggleSwitch onChange={toggleFormatter} checked={shouldUseCustomFormatter} />
       </Flex>
       {renderContent()}
+      {renderLoadingOverlay()}
       <PresentationInstanceFilterDialog
         imodel={imodel}
         isOpen={!!filteringOptions}
