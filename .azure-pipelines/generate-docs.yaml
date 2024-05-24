@@ -3,6 +3,13 @@ trigger:
     include:
       - master
       - stable
+
+pr:
+  drafts: true
+  branches:
+    include:
+      - master
+      - stable
   paths:
     include:
       - packages/components
@@ -11,13 +18,6 @@ trigger:
       - apps/test-app
       - apps/full-stack-tests/src/components
       - apps/full-stack-tests/src/testing
-
-pr:
-  drafts: true
-  branches:
-    include:
-      - master
-      - stable
 
 resources:
   repositories:
