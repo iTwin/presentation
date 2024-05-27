@@ -12,12 +12,12 @@ pr:
       - stable
   paths:
     include:
-      - packages/components
-      - packages/testing
-      - packages/opentelemetry
-      - apps/test-app
-      - apps/full-stack-tests/src/components
-      - apps/full-stack-tests/src/testing
+      - packages/components/**
+      - packages/testing/**
+      - packages/opentelemetry/**
+      - apps/test-app/**
+      - apps/full-stack-tests/src/components/**
+      - apps/full-stack-tests/src/testing/**
 
 resources:
   repositories:
@@ -30,7 +30,7 @@ resources:
 stages:
   - stage: Generate_Docs
     jobs:
-      - job:
+      - job: DocsGenerate
         displayName: Generate Docs
         workspace:
           clean: all

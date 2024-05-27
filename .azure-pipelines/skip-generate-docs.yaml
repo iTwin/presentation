@@ -1,0 +1,30 @@
+pr:
+  drafts: true
+  branches:
+    include:
+      - master
+      - stable
+  paths:
+    exclude:
+      - packages/components/**
+      - packages/testing/**
+      - packages/opentelemetry/**
+      - apps/test-app/**
+      - apps/full-stack-tests/src/components/**
+      - apps/full-stack-tests/src/testing/**
+
+stages:
+  - stage: Generate_Docs
+    jobs:
+      - job: DocsGenerate
+        displayName: Generate Docs
+        steps:
+          - bash: echo "Skipping"
+
+  - stage: Validate_Docs
+    dependsOn: Generate_Docs
+    condition: and(succeeded(), in(variables['Build.Reason'], 'IndividualCI', 'PullRequest', 'Manual'))
+    jobs:
+      - job: DocsBuild
+        steps:
+          - bash: echo "Skipping"
