@@ -169,7 +169,7 @@ interface HierarchyProviderProps {
   formatter?: IPrimitiveValueFormatter;
 
   /** A set of localized strings to use. Defaults to English strings. */
-  localizedStrings?: HierarchyProviderLocalizedStrings;
+  localizedStrings?: Partial<HierarchyProviderLocalizedStrings>;
 
   /** Props for filtering the hierarchy. */
   filtering?: {
@@ -224,7 +224,7 @@ class HierarchyProviderImpl implements HierarchyProvider {
       this.hierarchyDefinition = filteringDefinition;
     }
     this._valuesFormatter = props?.formatter ?? createDefaultValueFormatter();
-    this._localizedStrings = props?.localizedStrings ?? { other: "Other", unspecified: "Not specified" };
+    this._localizedStrings = { other: "Other", unspecified: "Not specified", ...props?.localizedStrings };
     this._queryScheduler = new SubscriptionScheduler(props.queryConcurrency ?? DEFAULT_QUERY_CONCURRENCY);
 
     const queryCacheSize = props.queryCacheSize ?? DEFAULT_QUERY_CACHE_SIZE;
