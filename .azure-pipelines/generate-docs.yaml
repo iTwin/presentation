@@ -24,7 +24,8 @@ stages:
     jobs:
     - job: docs_modified
       steps:
-      - checkout: none
+      - checkout: self
+        clean: true
 
       - powershell: |
           $paths = "packages/components/*", "packages/testing/*", "packages/opentelemetry/*", "apps/test-app/*", "apps/full-stack-tests/src/components/*", "apps/full-stack-tests/src/testing/*"
