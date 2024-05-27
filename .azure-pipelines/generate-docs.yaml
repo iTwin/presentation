@@ -5,7 +5,7 @@ trigger:
       - stable
 
 pr:
-  drafts: false
+  drafts: true
   branches:
     include:
       - master
@@ -41,24 +41,29 @@ stages:
             $sourceBranch = "origin/$(System.PullRequest.SourceBranch)"
             $targetBranch = "origin/$(System.PullRequest.targetBranchName)"
 
-            $diff=$(git diff --name-only $(git merge-base $targetBranch $sourceBranch))
+            Write-Host "Comparing changes between $sourceBranch and $targetBranch branches"
+            # Run git diff command to ensure it does not fail
+            git diff --name-only $(git merge-base $targetBranch $sourceBranch) | out-null
             if (-not $?) {
               exit 1
             }
 
+            $diff=$(git diff --name-only $(git merge-base $targetBranch $sourceBranch))
             $files=$diff -split ' '
+            Write-Host "Changed files:"
+            Write-Host $files
 
             foreach ($file in $files) {
               foreach ($path in $paths) {
                 if ($file -like $path) {
-                  Write-Host "Docs modified"
+                  Write-Host "Changed files affect documentation site, running check"
                   Write-Host "##vso[task.setvariable variable=docsModified;isOutput=true]True"
                   exit 0
                 }
               }
             }
 
-            Write-Host "Docs not modified"
+            Write-Host "Changed files do not affect documentation site, skipping check"
           } catch {
             Write-Error $_.Exception.Message
             exit 1
