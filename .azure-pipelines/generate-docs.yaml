@@ -10,14 +10,6 @@ pr:
     include:
       - master
       - stable
-  paths:
-    include:
-      - packages/components/**
-      - packages/testing/**
-      - packages/opentelemetry/**
-      - apps/test-app/**
-      - apps/full-stack-tests/src/components/**
-      - apps/full-stack-tests/src/testing/**
 
 resources:
   repositories:
@@ -28,7 +20,38 @@ resources:
       ref: refs/heads/master
 
 stages:
+  - stage: Check_Changes
+    jobs:
+    - job: docs_modified
+      steps:
+      - powershell: |
+          $paths = "packages/components/*", "packages/testing/*", "packages/opentelemetry/*", "apps/test-app/*", "apps/full-stack-tests/src/components/*", "apps/full-stack-tests/src/testing/*"
+
+          $files=$(git diff HEAD HEAD~ --name-only)
+          $temp=$files -split ' '
+          foreach ($file in $files) {
+            foreach ($path in $paths) {
+              if ($file -like $path) {
+                Write-Host "Docs modified"
+                Write-Host "##vso[task.setvariable variable=docsModified;isOutput=true]True"
+                Return
+              }
+            }
+          }
+
+          Write-Host "Docs not modified"
+        name: filter_paths
+
   - stage: Generate_Docs
+    dependsOn: Check_Changes
+    condition: |
+      and(
+        succeeded(),
+        or(
+          ne(variables['Build.Reason'], 'PullRequest'),
+          eq(dependencies.Check_Changes.outputs['docs_modified.filter_paths.docsModified'], 'true')
+        )
+      )
     jobs:
       - job: DocsGenerate
         displayName: Generate Docs
