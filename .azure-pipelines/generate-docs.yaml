@@ -25,7 +25,7 @@ stages:
     - job: docs_modified
       steps:
       - checkout: self
-        fetch-depth: 0
+        fetchDepth: 0
         clean: true
 
       - powershell: |
