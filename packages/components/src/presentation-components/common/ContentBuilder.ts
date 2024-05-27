@@ -51,6 +51,7 @@ export interface FieldInfo {
   koqName?: string;
 }
 
+// Test
 function createFieldInfo(field: Field, parentFieldName?: string) {
   return {
     type: field.isNestedContentField() ? field.type : { ...field.type, typeName: field.type.typeName.toLowerCase() },
