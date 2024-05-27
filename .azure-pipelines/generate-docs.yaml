@@ -29,21 +29,29 @@ stages:
         clean: true
 
       - powershell: |
-          $paths = "packages/components/*", "packages/testing/*", "packages/opentelemetry/*", "apps/test-app/*", "apps/full-stack-tests/src/components/*", "apps/full-stack-tests/src/testing/*"
-          $sourceBranch = "$(System.PullRequest.SourceBranch)"
-          $targetBranch = "$(System.PullRequest.targetBranchName)"
-          $diff=$(git diff --name-only $(git merge-base $targetBranch $sourceBranch))
-          $files=$diff -split ' '
-          foreach ($file in $files) {
-            foreach ($path in $paths) {
-              if ($file -like $path) {
-                Write-Host "Docs modified"
-                Write-Host "##vso[task.setvariable variable=docsModified;isOutput=true]True"
-                Return
+          try {
+            $paths = "packages/components/*", "packages/testing/*", "packages/opentelemetry/*", "apps/test-app/*", "apps/full-stack-tests/src/components/*", "apps/full-stack-tests/src/testing/*"
+            $sourceBranch = "$(System.PullRequest.SourceBranch)"
+            $targetBranch = "origin/$(System.PullRequest.targetBranchName)"
+
+            $diff=$(git diff --name-only $(git merge-base $targetBranch $sourceBranch))
+            $files=$diff -split ' '
+
+            foreach ($file in $files) {
+              foreach ($path in $paths) {
+                if ($file -like $path) {
+                  Write-Host "Docs modified"
+                  Write-Host "##vso[task.setvariable variable=docsModified;isOutput=true]True"
+                  exit 0
+                }
               }
             }
+
+            Write-Host "Docs not modified"
+          } catch {
+            Write-Error $_.Exception.Message
+            exit 1
           }
-          Write-Host "Docs not modified"
         name: filter_paths
 
   - stage: Generate_Docs
