@@ -5,7 +5,7 @@ trigger:
       - stable
 
 pr:
-  drafts: true
+  drafts: false
   branches:
     include:
       - master
@@ -25,6 +25,7 @@ stages:
     - job: docs_modified
       steps:
       - checkout: self
+        fetchDepth: 0
         clean: true
 
       - powershell: |
