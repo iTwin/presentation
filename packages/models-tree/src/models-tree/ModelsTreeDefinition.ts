@@ -543,7 +543,7 @@ class SubjectModelIdsCache {
 
   private async initCache() {
     if (!this._init) {
-      this._init = this.initSubjectModels().then(() => {});
+      this._init = this.initSubjectModels();
     }
     return this._init;
   }
