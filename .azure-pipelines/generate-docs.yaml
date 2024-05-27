@@ -25,12 +25,18 @@ stages:
     - job: docs_modified
       steps:
       - checkout: self
-        fetchDepth: 0
         clean: true
 
       - powershell: |
           try {
-            $paths = "packages/components/*", "packages/testing/*", "packages/opentelemetry/*", "apps/test-app/*", "apps/full-stack-tests/src/components/*", "apps/full-stack-tests/src/testing/*"
+            $paths = @(
+              "packages/components/*",
+              "packages/testing/*",
+              "packages/opentelemetry/*",
+              "apps/test-app/*",
+              "apps/full-stack-tests/src/components/*",
+              "apps/full-stack-tests/src/testing/*"
+            )
             $sourceBranch = "origin/$(System.PullRequest.SourceBranch)"
             $targetBranch = "origin/$(System.PullRequest.targetBranchName)"
 
@@ -69,7 +75,7 @@ stages:
         )
       )
     jobs:
-      - job: DocsGenerate
+      - job:
         displayName: Generate Docs
         workspace:
           clean: all
