@@ -31,7 +31,7 @@ stages:
       - powershell: |
           try {
             $paths = "packages/components/*", "packages/testing/*", "packages/opentelemetry/*", "apps/test-app/*", "apps/full-stack-tests/src/components/*", "apps/full-stack-tests/src/testing/*"
-            $sourceBranch = "$(System.PullRequest.SourceBranch)"
+            $sourceBranch = "$(git branch --show-current)"
             $targetBranch = "origin/$(System.PullRequest.targetBranchName)"
 
             $diff=$(git diff --name-only $(git merge-base $targetBranch $sourceBranch))
