@@ -24,11 +24,12 @@ stages:
     jobs:
     - job: docs_modified
       steps:
+      - checkout: none
+
       - powershell: |
           $paths = "packages/components/*", "packages/testing/*", "packages/opentelemetry/*", "apps/test-app/*", "apps/full-stack-tests/src/components/*", "apps/full-stack-tests/src/testing/*"
-
-          $files=$(git diff HEAD HEAD~ --name-only)
-          $temp=$files -split ' '
+          $diff=$(git diff HEAD HEAD~ --name-only)
+          $files=$diff -split ' '
           foreach ($file in $files) {
             foreach ($path in $paths) {
               if ($file -like $path) {
@@ -38,7 +39,6 @@ stages:
               }
             }
           }
-
           Write-Host "Docs not modified"
         name: filter_paths
 
