@@ -5,7 +5,7 @@ trigger:
       - stable
 
 pr:
-  drafts: true
+  drafts: false
   branches:
     include:
       - master
@@ -51,7 +51,9 @@ stages:
             $diff=$(git diff --name-only $(git merge-base $targetBranch $sourceBranch))
             $files=$diff -split ' '
             Write-Host "Changed files:"
-            Write-Host $files
+            foreach ($file in $files) {
+              Write-Host $file
+            }
 
             foreach ($file in $files) {
               foreach ($path in $paths) {
