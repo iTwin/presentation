@@ -7,7 +7,7 @@ import { Draft, enableMapSet, produce } from "immer";
 import { EMPTY, Observable, reduce, Subject, takeUntil } from "rxjs";
 import { GenericInstanceFilter, HierarchyNode, HierarchyProvider } from "@itwin/presentation-hierarchies";
 import { SelectionChangeType } from "../UseSelectionHandler";
-import { HierarchyLevelOptions, ITreeLoader, LoadedTreePart, TreeLoader } from "./TreeLoader";
+import { HierarchyLevelOptions, ITreeLoader, LoadedTreePart, LoadNodesOptions, TreeLoader } from "./TreeLoader";
 import { isTreeModelHierarchyNode, isTreeModelInfoNode, TreeModel, TreeModelHierarchyNode, TreeModelNode, TreeModelRootNode } from "./TreeModel";
 import { createNodeId, sameNodes } from "./Utils";
 
@@ -21,6 +21,7 @@ export class TreeActions {
 
   constructor(
     private _onModelChanged: (model: TreeModel) => void,
+    private _onLoad: (actionType: "initial-load" | "hierarchy-level-load" | "reload", duration: number) => void,
     seed?: TreeModel,
   ) {
     this._loader = new NoopTreeLoader();
@@ -53,6 +54,26 @@ export class TreeActions {
     });
   }
 
+  private loadSubTree(options: LoadNodesOptions, initialRootNode?: TreeModelRootNode) {
+    const loadAction = this._currentModel.idToNode.size === 0 ? "initial-load" : options.parent.id === undefined ? "reload" : "hierarchy-level-load";
+    const timeTracker = new TimeTracker((time) => this._onLoad(loadAction, time));
+
+    const parentId = options.parent.id;
+    this._loader
+      .loadNodes(options)
+      .pipe(collectTreePartsUntil(this._disposed, initialRootNode))
+      .subscribe({
+        next: (newModel) => {
+          this.handleLoadedHierarchy(parentId, newModel);
+          timeTracker.finish();
+        },
+        complete: () => {
+          this.onLoadingComplete(parentId);
+          timeTracker.dispose();
+        },
+      });
+  }
+
   private loadNodes(parentId: string, ignoreCache?: boolean) {
     const parentNode = this._currentModel.idToNode.get(parentId);
     // istanbul ignore if
@@ -60,22 +81,12 @@ export class TreeActions {
       return;
     }
 
-    this._loader
-      .loadNodes({
-        parent: parentNode,
-        getHierarchyLevelOptions: (node) => createHierarchyLevelOptions(this._currentModel, getNonGroupedParentId(node)),
-        shouldLoadChildren: (node) => !!node.nodeData.autoExpand,
-        ignoreCache,
-      })
-      .pipe(collectTreePartsUntil(this._disposed))
-      .subscribe({
-        next: (loadedHierarchy) => {
-          this.handleLoadedHierarchy(parentId, loadedHierarchy);
-        },
-        complete: () => {
-          this.onLoadingComplete(parentId);
-        },
-      });
+    this.loadSubTree({
+      parent: parentNode,
+      getHierarchyLevelOptions: (node) => createHierarchyLevelOptions(this._currentModel, getNonGroupedParentId(node)),
+      shouldLoadChildren: (node) => !!node.nodeData.autoExpand,
+      ignoreCache,
+    });
   }
 
   private reloadSubTree(parentId: string | undefined, oldModel: TreeModel, options?: { discardState?: boolean }) {
@@ -111,17 +122,10 @@ export class TreeActions {
       this._disposed.next();
     }
 
-    this._loader
-      .loadNodes({ parent: rootNode, getHierarchyLevelOptions, shouldLoadChildren, buildNode })
-      .pipe(collectTreePartsUntil(this._disposed, !!options?.discardState ? undefined : { ...currModel.rootNode }))
-      .subscribe({
-        next: (newModel) => {
-          this.handleLoadedHierarchy(parentId, newModel);
-        },
-        complete: () => {
-          this.onLoadingComplete(parentId);
-        },
-      });
+    this.loadSubTree(
+      { parent: rootNode, getHierarchyLevelOptions, shouldLoadChildren, buildNode },
+      !!options?.discardState ? undefined : { ...currModel.rootNode },
+    );
   }
 
   public dispose() {
@@ -281,5 +285,29 @@ function createHierarchyLevelOptions(model: TreeModel, nodeId: string | undefine
 class NoopTreeLoader implements ITreeLoader {
   public loadNodes(): Observable<LoadedTreePart> {
     return EMPTY;
+  }
+}
+
+class TimeTracker {
+  private _start: number;
+  private _stopped: boolean = false;
+
+  constructor(private _onFinish: (time: number) => void) {
+    this._start = performance.now();
+  }
+
+  public dispose() {
+    this._stopped = true;
+  }
+
+  public finish() {
+    // istanbul ignore if
+    if (this._stopped) {
+      return;
+    }
+
+    this._stopped = true;
+    const elapsedTime = performance.now() - this._start;
+    this._onFinish(elapsedTime);
   }
 }

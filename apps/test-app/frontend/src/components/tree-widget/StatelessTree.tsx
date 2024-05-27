@@ -72,6 +72,9 @@ function Tree({ imodel, imodelAccess, height, width }: { imodel: IModelConnectio
     imodelAccess,
     getFilteredPaths,
     getHierarchyDefinition,
+    onPerformanceMeasured: (action, duration) => {
+      console.log(`Stateless-tree-${action}, Duration: ${duration}ms`);
+    },
   });
 
   const [shouldUseCustomFormatter, setShouldUseCustomFormatter] = useState<boolean>(false);

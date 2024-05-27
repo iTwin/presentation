@@ -16,9 +16,10 @@ describe("TreeActions", () => {
     getNodes: createStub<HierarchyProvider["getNodes"]>(),
   };
   const onModelChangedStub = createStub<(model: TreeModel) => void>();
+  const onLoadStub = createStub<(type: "initial-load" | "hierarchy-level-load" | "reload", duration: number) => void>();
 
   function createActions(seed: TreeModel) {
-    const actions = new TreeActions(onModelChangedStub, seed);
+    const actions = new TreeActions(onModelChangedStub, onLoadStub, seed);
     actions.setHierarchyProvider(provider as unknown as HierarchyProvider);
     return actions;
   }
@@ -26,6 +27,7 @@ describe("TreeActions", () => {
   beforeEach(() => {
     provider.getNodes.reset();
     onModelChangedStub.reset();
+    onLoadStub.reset();
 
     provider.getNodes.resolves([]);
   });
@@ -930,6 +932,77 @@ describe("TreeActions", () => {
       expect(getHierarchyNode(newModel, "root-1")?.hierarchyLimit).to.be.eq(100);
       expect(getHierarchyNode(newModel, "root-2")).to.not.be.undefined;
       expect(getHierarchyNode(newModel, "root-2")?.instanceFilter).to.be.eq(instanceFilter);
+    });
+  });
+
+  describe("performance reporting", () => {
+    it("reports initial load", async () => {
+      const actions = createActions(createTreeModel([]));
+
+      provider.getNodes.reset();
+      provider.getNodes.callsFake(() => {
+        return createAsyncIterator([createTestHierarchyNode({ id: "root-1" })]);
+      });
+
+      actions.reloadTree();
+
+      await waitFor(() => {
+        expect(onModelChangedStub).to.be.called;
+        expect(onLoadStub).to.be.calledWith("initial-load");
+      });
+    });
+
+    it("reports hierarchy level load", async () => {
+      const model = createTreeModel([
+        {
+          id: undefined,
+          children: ["root-1"],
+        },
+        {
+          id: "root-1",
+          children: undefined,
+        },
+      ]);
+      const actions = createActions(model);
+
+      provider.getNodes.reset();
+      provider.getNodes.callsFake((props) => {
+        return createAsyncIterator(props.parentNode !== undefined ? [createTestHierarchyNode({ id: "child-1" })] : []);
+      });
+
+      actions.expandNode("root-1", true);
+
+      await waitFor(() => {
+        expect(onModelChangedStub).to.be.called;
+        expect(onLoadStub).to.be.calledWith("hierarchy-level-load");
+      });
+    });
+
+    it("reports tree reload", async () => {
+      const actions = createActions(
+        createTreeModel([
+          {
+            id: undefined,
+            children: ["root-1"],
+          },
+          {
+            id: "root-1",
+            children: [],
+          },
+        ]),
+      );
+
+      provider.getNodes.reset();
+      provider.getNodes.callsFake((props) => {
+        return createAsyncIterator(props.parentNode === undefined ? [createTestHierarchyNode({ id: "root-2" })] : []);
+      });
+
+      actions.reloadTree();
+
+      await waitFor(() => {
+        expect(onModelChangedStub).to.be.called;
+        expect(onLoadStub).to.be.calledWith("reload");
+      });
     });
   });
 });
