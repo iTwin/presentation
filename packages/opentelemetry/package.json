@@ -3,9 +3,6 @@
   "version": "4.0.2",
   "description": "Utilities to enable OpenTelemetry tracing of Presentation requests",
   "license": "MIT",
-  "engines": {
-    "node": "^18.0.0"
-  },
   "repository": {
     "type": "git",
     "url": "https://github.com/iTwin/presentation.git",
@@ -56,7 +53,7 @@
     "@opentelemetry/api": "^1.8.0",
     "@types/chai": "^4.3.14",
     "@types/mocha": "^10.0.6",
-    "@types/node": "^18.19.31",
+    "@types/node": "^20.12.12",
     "@types/sinon": "^17.0.3",
     "@types/sinon-chai": "^3.2.12",
     "chai": "^4.4.1",

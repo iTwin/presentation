@@ -7,6 +7,7 @@
 /// <reference types="react" />
 
 import { ComponentPropsWithoutRef } from 'react';
+import { createHierarchyProvider } from '@itwin/presentation-hierarchies';
 import { ECClassHierarchyInspector } from '@itwin/presentation-shared';
 import { ECSchemaProvider } from '@itwin/presentation-shared';
 import { GenericInstanceFilter } from '@itwin/presentation-hierarchies';
@@ -49,6 +50,9 @@ export { HierarchyProvider }
 
 // @beta
 export function isPresentationHierarchyNode(node: PresentationTreeNode): node is PresentationHierarchyNode;
+
+// @beta (undocumented)
+export function LocalizationContextProvider({ localizedStrings, children }: PropsWithChildren<LocalizationContextProviderProps>): JSX_2.Element;
 
 // @beta
 export interface PresentationGenericInfoNode {
@@ -112,10 +116,10 @@ export type RenderedTreeNode = PresentationTreeNode | {
 export { SelectionStorage }
 
 // @beta
-export function TreeNodeRenderer({ node, expandNode, getIcon, onFilterClick, onNodeClick, onNodeKeyDown, isSelected, isDisabled, actionButtonsClassName, getHierarchyLevelDetails, ...nodeProps }: TreeNodeRendererProps): JSX_2.Element;
+export function TreeNodeRenderer({ node, expandNode, getIcon, getSublabel, onFilterClick, onNodeClick, onNodeKeyDown, isSelected, isDisabled, actionButtonsClassName, getHierarchyLevelDetails, ...nodeProps }: TreeNodeRendererProps): JSX_2.Element;
 
 // @beta
-export function TreeRenderer({ rootNodes, expandNode, selectNodes, isNodeSelected, onFilterClick, getIcon, getHierarchyLevelDetails, selectionMode, ...treeProps }: TreeRendererProps): JSX_2.Element;
+export function TreeRenderer({ rootNodes, expandNode, selectNodes, isNodeSelected, onFilterClick, getIcon, getSublabel, getHierarchyLevelDetails, selectionMode, localizedStrings, ...treeProps }: TreeRendererProps): JSX_2.Element;
 
 // @beta
 export function UnifiedSelectionProvider({ storage, children }: PropsWithChildren<Props>): JSX_2.Element;

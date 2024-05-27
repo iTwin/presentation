@@ -89,6 +89,7 @@ interface UseTreeProps {
   imodelAccess: ECSchemaProvider & LimitingECSqlQueryExecutor & ECClassHierarchyInspector;
   getHierarchyDefinition: (props: { imodelAccess: IModelAccess }) => HierarchyDefinition;
   getFilteredPaths?: (props: GetFilteredPathsProps) => Promise<HierarchyNodeIdentifiersPath[] | undefined>;
+  localizedStrings?: Parameters<typeof createHierarchyProvider>[0]["localizedStrings"];
 }
 
 interface UseTreeResult {
@@ -118,6 +119,7 @@ function useTreeInternal({
   imodelAccess,
   getHierarchyDefinition,
   getFilteredPaths,
+  localizedStrings,
 }: UseTreeProps): UseTreeResult & { getNode: (nodeId: string) => TreeModelRootNode | TreeModelNode | undefined } {
   const [state, setState] = useState<TreeState>({
     model: { idToNode: new Map(), parentChildMap: new Map(), rootNode: { id: undefined, nodeData: undefined } },
@@ -147,6 +149,7 @@ function useTreeInternal({
       return createHierarchyProvider({
         imodelAccess,
         hierarchyDefinition: getHierarchyDefinition({ imodelAccess }),
+        localizedStrings,
         formatter: currentFormatter.current,
         filtering:
           paths !== undefined
@@ -184,7 +187,7 @@ function useTreeInternal({
       disposed = true;
       actions.dispose();
     };
-  }, [actions, imodelAccess, getHierarchyDefinition, getFilteredPaths]);
+  }, [actions, imodelAccess, localizedStrings, getHierarchyDefinition, getFilteredPaths]);
 
   const getNode = useRef((nodeId: string) => {
     return actions.getNode(nodeId);

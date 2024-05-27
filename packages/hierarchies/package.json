@@ -1,6 +1,6 @@
 {
   "name": "@itwin/presentation-hierarchies",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "A package for creating hierarchies based on data in iTwin.js iModels.",
   "license": "MIT",
   "author": {
@@ -52,7 +52,7 @@
     "@types/chai-subset": "^1.3.5",
     "@types/mocha": "^10.0.6",
     "@types/natural-compare-lite": "^1.4.2",
-    "@types/node": "^18.19.31",
+    "@types/node": "^20.12.12",
     "@types/sinon": "^17.0.3",
     "@types/sinon-chai": "^3.2.12",
     "chai": "^4.4.1",

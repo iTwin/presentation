@@ -242,3 +242,62 @@ function MyTreeComponentInternal({ imodelAccess, imodelKey }: { imodelAccess: IM
   return <TreeRenderer rootNodes={rootNodes} {...state} />;
 }
 ```
+
+## Localization
+
+Localization can be enabled for `TreeRenderer` component and `useTree` and `useUnifiedSelectionTree` hooks by providing an object with localized strings that will be used instead of the default English ones.
+
+Example:
+
+```tsx
+const localizedStrings = {
+  // strings for the `useUnifiedSelectionTree` hook
+  unspecified: "Unspecified",
+  other: "Other",
+
+  // strings for `TreeRenderer` and `TreeNodeRenderer`
+  loading: "Loading...",
+  filterHierarchyLevel: "Apply filter",
+  clearHierarchyLevelFilter: "Clear active filter",
+  noFilteredChildren: "No child nodes match current filter",
+  resultLimitExceeded: "There are more items than allowed limit of {{limit}}.",
+  resultLimitExceededWithFiltering: "Please provide <link>additional filtering</link> - there are more items than allowed limit of {{limit}}.",
+  increaseHierarchyLimit: "<link>Increase the hierarchy level size limit to {{limit}}.</link>",
+  increaseHierarchyLimitWithFiltering: "Or, <link>increase the hierarchy level size limit to {{limit}}.</link>",
+};
+
+function MyTreeComponent({ imodelAccess, imodelKey }: { imodelAccess: IModelAccess; imodelKey: string }) {
+  const { rootNodes, ...state } = useUnifiedSelectionTree({
+    sourceName: "MyTreeComponent",
+    imodelKey,
+    imodelAccess,
+    localizedStrings,
+    getHierarchyDefinition: () => ({
+      defineHierarchyLevel: async () => [],
+    }),
+  });
+  if (!rootNodes) {
+    return localizedStrings.loading;
+  }
+  return <TreeRenderer rootNodes={rootNodes} localizedStrings={localizedStrings} {...state} />;
+}
+```
+
+In case the `TreeNodeRenderer` component is used within a custom tree renderer, the tree component should supply localized strings through `LocalizationContextProvider`:
+
+```tsx
+export function MyTreeRenderer(props: MyTreeRendererProps) {
+  const nodeRenderer = useCallback(
+    (nodeProps) => {
+      return <TreeNodeRenderer {...nodeProps} {...props} />;
+    },
+    [props],
+  );
+
+  return (
+    <LocalizationContextProvider localizedStrings={localizedStrings}>
+      <Tree<RenderedTreeNode> {...props} />
+    </LocalizationContextProvider>
+  );
+}
+```
