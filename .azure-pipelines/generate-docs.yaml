@@ -30,8 +30,8 @@ stages:
 
       - powershell: |
           $paths = "packages/components/*", "packages/testing/*", "packages/opentelemetry/*", "apps/test-app/*", "apps/full-stack-tests/src/components/*", "apps/full-stack-tests/src/testing/*"
-          $sourceBranch = $(Build.SourceBranchName)
-          $targetBranch = $(System.PullRequest.targetBranchName)
+          $sourceBranch = "$(System.PullRequest.SourceBranch)"
+          $targetBranch = "$(System.PullRequest.targetBranchName)"
           $diff=$(git diff --name-only $(git merge-base $targetBranch $sourceBranch))
           $files=$diff -split ' '
           foreach ($file in $files) {
