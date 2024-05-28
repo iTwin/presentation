@@ -7,19 +7,30 @@ import { expect } from "chai";
 import sinon from "sinon";
 import { ECClassHierarchyInspector, trimWhitespace } from "@itwin/presentation-shared";
 import {
-  CustomHierarchyNodeDefinition, HierarchyDefinition, HierarchyLevelDefinition, InstanceNodesQueryDefinition,
+  CustomHierarchyNodeDefinition,
+  HierarchyDefinition,
+  HierarchyLevelDefinition,
+  InstanceNodesQueryDefinition,
 } from "../../hierarchies/HierarchyDefinition";
 import { HierarchyNode, ParsedCustomHierarchyNode, ParsedHierarchyNode } from "../../hierarchies/HierarchyNode";
 import { HierarchyNodeIdentifiersPath } from "../../hierarchies/HierarchyNodeIdentifier";
 import {
-  applyECInstanceIdsFilter, ECSQL_COLUMN_NAME_FilteredChildrenPaths, ECSQL_COLUMN_NAME_HasFilterTargetAncestor, ECSQL_COLUMN_NAME_IsFilterTarget,
-  FilteredHierarchyNode, FilteringHierarchyDefinition,
+  applyECInstanceIdsFilter,
+  ECSQL_COLUMN_NAME_FilteredChildrenPaths,
+  ECSQL_COLUMN_NAME_HasFilterTargetAncestor,
+  ECSQL_COLUMN_NAME_IsFilterTarget,
+  FilteredHierarchyNode,
+  FilteringHierarchyDefinition,
 } from "../../hierarchies/internal/FilteringHierarchyDefinition";
 import * as reader from "../../hierarchies/internal/TreeNodesReader";
 import { NodeSelectClauseColumnNames } from "../../hierarchies/NodeSelectQueryFactory";
 import {
-  createClassHierarchyInspectorStub, createTestInstanceKey, createTestParsedCustomNode, createTestProcessedCustomNode,
-  createTestProcessedGroupingNode, createTestProcessedInstanceNode,
+  createClassHierarchyInspectorStub,
+  createTestInstanceKey,
+  createTestParsedCustomNode,
+  createTestProcessedCustomNode,
+  createTestProcessedGroupingNode,
+  createTestProcessedInstanceNode,
 } from "../Utils";
 
 describe("FilteringHierarchyDefinition", () => {
