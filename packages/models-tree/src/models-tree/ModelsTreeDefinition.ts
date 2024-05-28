@@ -565,29 +565,27 @@ class SubjectModelIdsCache {
   }
 
   public async getParentSubjectIds(): Promise<Id64String[]> {
-    await this.initCache();
-    if (!this._parentSubjectIds) {
-      this._parentSubjectIds = (async () => {
-        const hasChildModels = (subjectId: Id64String) => {
-          if ((this._subjectModels!.get(subjectId)?.size ?? 0) > 0) {
-            return true;
-          }
-          const childSubjectIds = this._subjectsHierarchy!.get(subjectId);
-          return childSubjectIds && [...childSubjectIds].some(hasChildModels);
-        };
-        const parentSubjectIds = new Set<Id64String>();
-        const addIfHasChildren = (subjectId: Id64String) => {
-          if (hasChildModels(subjectId)) {
-            parentSubjectIds.add(subjectId);
-          }
-        };
-        this._subjectsHierarchy!.forEach((childSubjectIds, parentSubjectId) => {
-          addIfHasChildren(parentSubjectId);
-          childSubjectIds.forEach(addIfHasChildren);
-        });
-        return [...parentSubjectIds];
-      })();
-    }
+    this._parentSubjectIds ??= (async () => {
+      await this.initCache();
+      const hasChildModels = (subjectId: Id64String) => {
+        if ((this._subjectModels!.get(subjectId)?.size ?? 0) > 0) {
+          return true;
+        }
+        const childSubjectIds = this._subjectsHierarchy!.get(subjectId);
+        return childSubjectIds && [...childSubjectIds].some(hasChildModels);
+      };
+      const parentSubjectIds = new Set<Id64String>();
+      const addIfHasChildren = (subjectId: Id64String) => {
+        if (hasChildModels(subjectId)) {
+          parentSubjectIds.add(subjectId);
+        }
+      };
+      this._subjectsHierarchy!.forEach((childSubjectIds, parentSubjectId) => {
+        addIfHasChildren(parentSubjectId);
+        childSubjectIds.forEach(addIfHasChildren);
+      });
+      return [...parentSubjectIds];
+    })();
     return this._parentSubjectIds;
   }
 
