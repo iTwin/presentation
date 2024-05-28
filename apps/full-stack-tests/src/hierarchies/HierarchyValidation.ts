@@ -289,7 +289,13 @@ export async function validateHierarchy(props: { provider: HierarchyProvider; pa
   Logger.logInfo(loggingNamespace, `Received ${nodes.length} child nodes for ${parentIdentifier}`);
 
   if (nodes.length !== props.expect.length) {
-    throw new Error(`[${parentIdentifier}] Expected ${props.expect.length} ${props.parentNode ? "child" : "root"} nodes, got ${nodes.length}`);
+    const truncatedNodeLabels = `${nodes
+      .slice(0, 3)
+      .map((n) => n.label)
+      .join(", ")}${nodes.length > 3 ? ", ..." : ""}`;
+    throw new Error(
+      `[${parentIdentifier}] Expected ${props.expect.length} ${props.parentNode ? "child" : "root"} nodes, got ${nodes.length}: [${truncatedNodeLabels}]`,
+    );
   }
 
   const resultHierarchy = new Array<HierarchyDef<HierarchyNode>>();

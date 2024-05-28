@@ -351,6 +351,72 @@ describe("Hierarchies", () => {
         ],
       ),
       TreeFilteringTestCaseDefinition.create(
+        "Subject with hidden child Model node",
+        async (builder) => {
+          const rootSubject: InstanceKey = { className: "BisCore.Subject", id: IModel.rootSubjectId };
+          const childSubject = insertSubject({ builder, codeValue: "matching child subject", parentId: rootSubject.id });
+          const category = insertSpatialCategory({ builder, codeValue: "category" });
+          const partition = insertPhysicalPartition({
+            builder,
+            codeValue: `matching model 1`,
+            parentId: childSubject.id,
+            // eslint-disable-next-line @typescript-eslint/naming-convention
+            jsonProperties: { PhysicalPartition: { Model: { Content: true } } },
+          });
+          const model1 = insertPhysicalSubModel({ builder, modeledElementId: partition.id });
+          const model2 = insertPhysicalModelWithPartition({ builder, codeValue: `model 2`, partitionParentId: childSubject.id });
+          insertPhysicalElement({ builder, userLabel: `element-1`, modelId: model1.id, categoryId: category.id });
+          insertPhysicalElement({ builder, userLabel: `element-2`, modelId: model2.id, categoryId: category.id });
+          return { rootSubject, childSubject, model1, model2, category };
+        },
+        (x) => [
+          [x.rootSubject, x.childSubject],
+          [x.rootSubject, x.childSubject, x.model1],
+        ],
+        (x) => [x.childSubject, x.model1],
+        (_x) => "matching",
+        (x) => [
+          NodeValidators.createForInstanceNode({
+            instanceKeys: [x.rootSubject],
+            autoExpand: true,
+            children: [
+              NodeValidators.createForInstanceNode({
+                instanceKeys: [x.childSubject],
+                label: "matching child subject",
+                autoExpand: true,
+                children: [
+                  NodeValidators.createForInstanceNode({
+                    label: "category",
+                    autoExpand: false,
+                    children: [
+                      NodeValidators.createForClassGroupingNode({
+                        label: "Physical Object",
+                        children: [NodeValidators.createForInstanceNode({ label: /^element-1/, children: false })],
+                      }),
+                    ],
+                  }),
+                  NodeValidators.createForInstanceNode({
+                    label: "model 2",
+                    autoExpand: false,
+                    children: [
+                      NodeValidators.createForInstanceNode({
+                        label: "category",
+                        children: [
+                          NodeValidators.createForClassGroupingNode({
+                            label: "Physical Object",
+                            children: [NodeValidators.createForInstanceNode({ label: /^element-2/, children: false })],
+                          }),
+                        ],
+                      }),
+                    ],
+                  }),
+                ],
+              }),
+            ],
+          }),
+        ],
+      ),
+      TreeFilteringTestCaseDefinition.create(
         "Category nodes",
         async (builder) => {
           const rootSubject: InstanceKey = { className: "BisCore.Subject", id: IModel.rootSubjectId };
