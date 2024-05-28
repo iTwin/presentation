@@ -293,7 +293,7 @@ class TimeTracker {
   private _stopped: boolean = false;
 
   constructor(private _onFinish: (time: number) => void) {
-    this._start = performance.now();
+    this._start = Date.now();
   }
 
   public dispose() {
@@ -307,7 +307,7 @@ class TimeTracker {
     }
 
     this._stopped = true;
-    const elapsedTime = performance.now() - this._start;
+    const elapsedTime = Date.now() - this._start;
     this._onFinish(elapsedTime);
   }
 }
