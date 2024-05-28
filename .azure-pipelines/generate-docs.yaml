@@ -31,6 +31,7 @@ stages:
       - powershell: |
           try {
             $paths = @(
+              ".azure-pipelines/generate-docs.yaml",
               "packages/components/*",
               "packages/testing/*",
               "packages/opentelemetry/*",
