@@ -22,7 +22,8 @@ resources:
 stages:
   - stage: Check_Changes
     jobs:
-    - job: docs_modified
+    - job: detect_docs_change
+      displayName: Check docs changes
       steps:
       - checkout: self
         fetchDepth: 0
@@ -71,7 +72,8 @@ stages:
             Write-Error $_.Exception.Message
             exit 1
           }
-        name: filter_paths
+        name: changed_files
+        displayName: Check changed files
 
   - stage: Generate_Docs
     dependsOn: Check_Changes
