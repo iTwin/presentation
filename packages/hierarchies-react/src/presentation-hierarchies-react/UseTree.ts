@@ -90,6 +90,7 @@ interface UseTreeProps {
   getHierarchyDefinition: (props: { imodelAccess: IModelAccess }) => HierarchyDefinition;
   getFilteredPaths?: (props: GetFilteredPathsProps) => Promise<HierarchyNodeIdentifiersPath[] | undefined>;
   localizedStrings?: Parameters<typeof createHierarchyProvider>[0]["localizedStrings"];
+  onPerformanceMeasured?: (action: "initial-load" | "hierarchy-level-load" | "reload", duration: number) => void;
 }
 
 interface UseTreeResult {
@@ -120,21 +121,30 @@ function useTreeInternal({
   getHierarchyDefinition,
   getFilteredPaths,
   localizedStrings,
+  onPerformanceMeasured,
 }: UseTreeProps): UseTreeResult & { getNode: (nodeId: string) => TreeModelRootNode | TreeModelNode | undefined } {
   const [state, setState] = useState<TreeState>({
     model: { idToNode: new Map(), parentChildMap: new Map(), rootNode: { id: undefined, nodeData: undefined } },
     rootNodes: undefined,
   });
   const [hierarchySource, setHierarchySource] = useState<{ hierarchyProvider?: HierarchyProvider; isFiltering: boolean }>({ isFiltering: false });
+  const onPerformanceMeasuredRef = useRef(onPerformanceMeasured);
+  useEffect(() => {
+    onPerformanceMeasuredRef.current = onPerformanceMeasured;
+  }, [onPerformanceMeasured]);
+
   const [actions] = useState<TreeActions>(
     () =>
-      new TreeActions((model) => {
-        const rootNodes = model.parentChildMap.get(undefined) !== undefined ? generateTreeStructure(undefined, model) : undefined;
-        setState({
-          model,
-          rootNodes,
-        });
-      }),
+      new TreeActions(
+        (model) => {
+          const rootNodes = model.parentChildMap.get(undefined) !== undefined ? generateTreeStructure(undefined, model) : undefined;
+          setState({
+            model,
+            rootNodes,
+          });
+        },
+        (actionType, duration) => onPerformanceMeasuredRef.current?.(actionType, duration),
+      ),
   );
   const currentFormatter = useRef<IPrimitiveValueFormatter>();
 

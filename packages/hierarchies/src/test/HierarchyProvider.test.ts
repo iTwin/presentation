@@ -16,6 +16,7 @@ import { GroupingNodeKey } from "../hierarchies/HierarchyNodeKey";
 import { createHierarchyProvider } from "../hierarchies/HierarchyProvider";
 import {
   ECSQL_COLUMN_NAME_FilteredChildrenPaths,
+  ECSQL_COLUMN_NAME_HasFilterTargetAncestor,
   ECSQL_COLUMN_NAME_IsFilterTarget,
   FilteredHierarchyNode,
 } from "../hierarchies/internal/FilteringHierarchyDefinition";
@@ -550,6 +551,7 @@ describe("createHierarchyProvider", () => {
                 SELECT
                     [q].*,
                     0 AS [${ECSQL_COLUMN_NAME_IsFilterTarget}],
+                    0 AS [${ECSQL_COLUMN_NAME_HasFilterTargetAncestor}],
                     [f].[FilteredChildrenPaths] AS [${ECSQL_COLUMN_NAME_FilteredChildrenPaths}]
                   FROM (QUERY) [q]
                   JOIN FilteringInfo [f] ON [f].[ECInstanceId] = [q].[ECInstanceId]
