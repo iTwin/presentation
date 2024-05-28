@@ -179,6 +179,7 @@ export class ModelsTreeDefinition implements HierarchyDefinition {
                   }),
                 },
                 hideIfNoChildren: true,
+                hasChildren: { selector: `InVirtualSet(?, this.ECInstanceId)` },
                 grouping: { byLabel: { action: "merge", groupId: "subject" } },
                 extendedData: {
                   imageId: "icon-folder",
@@ -191,7 +192,10 @@ export class ModelsTreeDefinition implements HierarchyDefinition {
               this.ECInstanceId IN (${childSubjectIds.map(() => "?").join(",")})
               ${subjectFilterClauses.where ? `AND ${subjectFilterClauses.where}` : ""}
           `,
-          bindings: [...childSubjectIds.map((id): ECSqlBinding => ({ type: "id", value: id }))],
+          bindings: [
+            { type: "idset", value: await this._subjectModelIdsCache.getParentSubjectIds() },
+            ...childSubjectIds.map((id): ECSqlBinding => ({ type: "id", value: id })),
+          ],
         },
       });
     childModelIds.length &&
@@ -475,6 +479,7 @@ class SubjectModelIdsCache {
   private _subjectsHierarchy: Map<Id64String, Set<Id64String>> | undefined;
   private _subjectModels: Map<Id64String, Set<Id64String>> | undefined;
   private _subjectInfos: Map<Id64String, { hideInHierarchy: boolean }> | undefined;
+  private _parentSubjectIds: Promise<Id64String[]> | undefined; // the list should contain a subject id if its node should be shown as having children
   private _init: Promise<void> | undefined;
 
   constructor(private _queryExecutor: ECSqlQueryExecutor) {}
@@ -557,6 +562,31 @@ class SubjectModelIdsCache {
         }
         this.forEachChildSubject(childSubjectId, cb);
       });
+  }
+
+  public async getParentSubjectIds(): Promise<Id64String[]> {
+    this._parentSubjectIds ??= (async () => {
+      await this.initCache();
+      const hasChildModels = (subjectId: Id64String) => {
+        if ((this._subjectModels!.get(subjectId)?.size ?? 0) > 0) {
+          return true;
+        }
+        const childSubjectIds = this._subjectsHierarchy!.get(subjectId);
+        return childSubjectIds && [...childSubjectIds].some(hasChildModels);
+      };
+      const parentSubjectIds = new Set<Id64String>();
+      const addIfHasChildren = (subjectId: Id64String) => {
+        if (hasChildModels(subjectId)) {
+          parentSubjectIds.add(subjectId);
+        }
+      };
+      this._subjectsHierarchy!.forEach((childSubjectIds, parentSubjectId) => {
+        addIfHasChildren(parentSubjectId);
+        childSubjectIds.forEach(addIfHasChildren);
+      });
+      return [...parentSubjectIds];
+    })();
+    return this._parentSubjectIds;
   }
 
   public async getChildSubjectIds(parentSubjectIds: Id64String[]): Promise<Id64String[]> {
