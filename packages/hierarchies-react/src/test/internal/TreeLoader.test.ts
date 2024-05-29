@@ -13,16 +13,18 @@ import { TreeModelHierarchyNode, TreeModelInfoNode, TreeModelNode } from "../../
 import { createTestHierarchyNode, createTreeModelNode } from "../TestUtils";
 
 describe("TreeLoader", () => {
+  const onHierarchyLimitExceededStub = sinon.stub();
   const hierarchyProvider = {
     getNodes: sinon.stub<Parameters<HierarchyProvider["getNodes"]>, ReturnType<HierarchyProvider["getNodes"]>>(),
   };
 
-  function createLoader(onHierarchyLimitExceeded = () => {}) {
-    return new TreeLoader(hierarchyProvider as unknown as HierarchyProvider, onHierarchyLimitExceeded);
+  function createLoader() {
+    return new TreeLoader(hierarchyProvider as unknown as HierarchyProvider, onHierarchyLimitExceededStub);
   }
 
   beforeEach(() => {
     hierarchyProvider.getNodes.reset();
+    onHierarchyLimitExceededStub.reset();
   });
 
   describe("loadNodes", () => {
@@ -231,8 +233,7 @@ describe("TreeLoader", () => {
     });
 
     it("reports when `RowsLimitExceededError` is thrown", async () => {
-      const onHierarchyLimitExceededStub = sinon.spy();
-      const loader = createLoader(onHierarchyLimitExceededStub);
+      const loader = createLoader();
       hierarchyProvider.getNodes.callsFake(() => {
         return throwingAsyncIterator(new RowsLimitExceededError(10));
       });
