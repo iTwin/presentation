@@ -104,7 +104,7 @@ interface UseTreeResult {
    * or tree is reloading.
    */
   isLoading: boolean;
-  reloadTree: (options?: { discardState?: boolean }) => void;
+  reloadTree: (options?: { discardState?: boolean; dataMightHaveChanged?: boolean }) => void;
   expandNode: (nodeId: string, isExpanded: boolean) => void;
   selectNodes: (nodeIds: Array<string>, changeType: SelectionChangeType) => void;
   isNodeSelected: (nodeId: string) => boolean;
@@ -200,21 +200,36 @@ function useTreeInternal({
     };
   }, [actions, imodelAccess, localizedStrings, getHierarchyDefinition, getFilteredPaths]);
 
-  const getNode = useRef((nodeId: string) => {
-    return actions.getNode(nodeId);
-  }).current;
+  const getNode = useCallback(
+    (nodeId: string) => {
+      return actions.getNode(nodeId);
+    },
+    [actions],
+  );
 
-  const expandNode = useRef((nodeId: string, isExpanded: boolean) => {
-    actions.expandNode(nodeId, isExpanded);
-  }).current;
+  const expandNode = useCallback(
+    (nodeId: string, isExpanded: boolean) => {
+      actions.expandNode(nodeId, isExpanded);
+    },
+    [actions],
+  );
 
-  const reloadTree = useRef((options?: { discardState?: boolean }) => {
-    actions.reloadTree(options);
-  }).current;
+  const reloadTree = useCallback(
+    (options?: { discardState?: boolean; dataMightHaveChanged?: boolean }) => {
+      if (options?.dataMightHaveChanged) {
+        hierarchySource.hierarchyProvider?.notifyDataSourceChanged();
+      }
+      actions.reloadTree(options);
+    },
+    [actions, hierarchySource],
+  );
 
-  const selectNodes = useRef((nodeIds: Array<string>, changeType: SelectionChangeType) => {
-    actions.selectNodes(nodeIds, changeType);
-  }).current;
+  const selectNodes = useCallback(
+    (nodeIds: Array<string>, changeType: SelectionChangeType) => {
+      actions.selectNodes(nodeIds, changeType);
+    },
+    [actions],
+  );
 
   const isNodeSelected = useCallback((nodeId: string) => TreeModel.isNodeSelected(state.model, nodeId), [state]);
 
