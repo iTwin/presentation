@@ -238,15 +238,17 @@ describe("TreeLoader", () => {
         return throwingAsyncIterator(new RowsLimitExceededError(10));
       });
 
+      const filter = {} as GenericInstanceFilter;
+
       await collectNodes(
         loader.loadNodes({
           parent: { id: undefined, nodeData: undefined },
-          getHierarchyLevelOptions: () => ({ instanceFilter: undefined, hierarchyLevelSizeLimit: undefined }),
+          getHierarchyLevelOptions: () => ({ instanceFilter: filter, hierarchyLevelSizeLimit: 10 }),
           shouldLoadChildren: () => false,
         }),
       );
 
-      expect(onHierarchyLimitExceededStub).to.be.calledOnce;
+      expect(onHierarchyLimitExceededStub).to.be.calledOnceWith(undefined, filter, 10);
     });
   });
 });

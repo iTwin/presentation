@@ -10,8 +10,8 @@ import { TreeRenderer, useTree } from "@itwin/presentation-hierarchies-react";
 function MyTree(props: MyTreeProps) {
   const state = useTree({
     ...props,
-    onHierarchyLimitExceeded: () => {
-      console.log(`Hierarchy limit exceeded`);
+    onHierarchyLimitExceeded: (nodeId, filter, limit) => {
+      console.log(`Hierarchy limit of ${limit} exceeded for node ${nodeId}.`);
     }
   });
   return <TreeRenderer {...state} />;

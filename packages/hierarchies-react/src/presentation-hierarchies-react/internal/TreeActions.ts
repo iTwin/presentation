@@ -22,7 +22,7 @@ export class TreeActions {
   constructor(
     private _onModelChanged: (model: TreeModel) => void,
     private _onLoad: (actionType: "initial-load" | "hierarchy-level-load" | "reload", duration: number) => void,
-    private _onHierarchyLimitExceeded: () => void,
+    private _onHierarchyLimitExceeded: (parentId?: string, filter?: GenericInstanceFilter, limit?: number | "unbounded") => void,
     seed?: TreeModel,
   ) {
     this._loader = new NoopTreeLoader();
