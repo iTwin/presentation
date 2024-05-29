@@ -22,6 +22,7 @@ export class TreeActions {
   constructor(
     private _onModelChanged: (model: TreeModel) => void,
     private _onLoad: (actionType: "initial-load" | "hierarchy-level-load" | "reload", duration: number) => void,
+    private _onHierarchyLimitExceeded: (props: { parentId?: string; filter?: GenericInstanceFilter; limit?: number | "unbounded" }) => void,
     seed?: TreeModel,
   ) {
     this._loader = new NoopTreeLoader();
@@ -133,7 +134,7 @@ export class TreeActions {
   }
 
   public setHierarchyProvider(provider?: HierarchyProvider) {
-    this._loader = provider ? new TreeLoader(provider) : /* istanbul ignore next */ new NoopTreeLoader();
+    this._loader = provider ? new TreeLoader(provider, this._onHierarchyLimitExceeded) : /* istanbul ignore next */ new NoopTreeLoader();
   }
 
   public getNode(nodeId: string | undefined): TreeModelNode | TreeModelRootNode | undefined {

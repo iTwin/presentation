@@ -36,7 +36,10 @@ export interface ITreeLoader {
 
 /** @internal */
 export class TreeLoader implements ITreeLoader {
-  constructor(private _hierarchyProvider: HierarchyProvider) {}
+  constructor(
+    private _hierarchyProvider: HierarchyProvider,
+    private _onHierarchyLimitExceeded: (props: { parentId?: string; filter?: GenericInstanceFilter; limit?: number | "unbounded" }) => void,
+  ) {}
 
   private loadChildren({ parent, getHierarchyLevelOptions, buildNode, ignoreCache }: Omit<LoadNodesOptions, "shouldLoadChildren">) {
     const { instanceFilter, hierarchyLevelSizeLimit } = getHierarchyLevelOptions(parent);
@@ -57,6 +60,7 @@ export class TreeLoader implements ITreeLoader {
           parentId: parent.id,
         };
         if (err instanceof RowsLimitExceededError) {
+          this._onHierarchyLimitExceeded({ parentId: parent.id, filter: instanceFilter, limit: hierarchyLevelSizeLimit });
           return of([{ ...nodeProps, type: "ResultSetTooLarge" as const, resultSetSizeLimit: err.limit }]);
         }
         return of([{ ...nodeProps, type: "Unknown" as const, message: "Failed to create hierarchy level" }]);

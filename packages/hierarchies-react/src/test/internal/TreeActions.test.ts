@@ -19,7 +19,7 @@ describe("TreeActions", () => {
   const onLoadStub = createStub<(type: "initial-load" | "hierarchy-level-load" | "reload", duration: number) => void>();
 
   function createActions(seed: TreeModel) {
-    const actions = new TreeActions(onModelChangedStub, onLoadStub, seed);
+    const actions = new TreeActions(onModelChangedStub, onLoadStub, () => {}, seed);
     actions.setHierarchyProvider(provider as unknown as HierarchyProvider);
     return actions;
   }

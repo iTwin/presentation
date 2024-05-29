@@ -13,16 +13,18 @@ import { TreeModelHierarchyNode, TreeModelInfoNode, TreeModelNode } from "../../
 import { createTestHierarchyNode, createTreeModelNode } from "../TestUtils";
 
 describe("TreeLoader", () => {
+  const onHierarchyLimitExceededStub = sinon.stub();
   const hierarchyProvider = {
     getNodes: sinon.stub<Parameters<HierarchyProvider["getNodes"]>, ReturnType<HierarchyProvider["getNodes"]>>(),
   };
 
   function createLoader() {
-    return new TreeLoader(hierarchyProvider as unknown as HierarchyProvider);
+    return new TreeLoader(hierarchyProvider as unknown as HierarchyProvider, onHierarchyLimitExceededStub);
   }
 
   beforeEach(() => {
     hierarchyProvider.getNodes.reset();
+    onHierarchyLimitExceededStub.reset();
   });
 
   describe("loadNodes", () => {
@@ -228,6 +230,25 @@ describe("TreeLoader", () => {
           return props.instanceFilter === filter;
         }),
       );
+    });
+
+    it("reports when `RowsLimitExceededError` is thrown", async () => {
+      const loader = createLoader();
+      hierarchyProvider.getNodes.callsFake(() => {
+        return throwingAsyncIterator(new RowsLimitExceededError(10));
+      });
+
+      const filter = {} as GenericInstanceFilter;
+
+      await collectNodes(
+        loader.loadNodes({
+          parent: { id: undefined, nodeData: undefined },
+          getHierarchyLevelOptions: () => ({ instanceFilter: filter, hierarchyLevelSizeLimit: 10 }),
+          shouldLoadChildren: () => false,
+        }),
+      );
+
+      expect(onHierarchyLimitExceededStub).to.be.calledOnceWith({ parentId: undefined, filter, limit: 10 });
     });
   });
 });
