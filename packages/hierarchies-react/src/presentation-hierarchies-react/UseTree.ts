@@ -91,6 +91,7 @@ interface UseTreeProps {
   getFilteredPaths?: (props: GetFilteredPathsProps) => Promise<HierarchyNodeIdentifiersPath[] | undefined>;
   localizedStrings?: Parameters<typeof createHierarchyProvider>[0]["localizedStrings"];
   onPerformanceMeasured?: (action: "initial-load" | "hierarchy-level-load" | "reload", duration: number) => void;
+  onHierarchyLimitExceeded?: () => void;
 }
 
 interface UseTreeResult {
@@ -122,16 +123,15 @@ function useTreeInternal({
   getFilteredPaths,
   localizedStrings,
   onPerformanceMeasured,
+  onHierarchyLimitExceeded,
 }: UseTreeProps): UseTreeResult & { getNode: (nodeId: string) => TreeModelRootNode | TreeModelNode | undefined } {
   const [state, setState] = useState<TreeState>({
     model: { idToNode: new Map(), parentChildMap: new Map(), rootNode: { id: undefined, nodeData: undefined } },
     rootNodes: undefined,
   });
   const [hierarchySource, setHierarchySource] = useState<{ hierarchyProvider?: HierarchyProvider; isFiltering: boolean }>({ isFiltering: false });
-  const onPerformanceMeasuredRef = useRef(onPerformanceMeasured);
-  useEffect(() => {
-    onPerformanceMeasuredRef.current = onPerformanceMeasured;
-  }, [onPerformanceMeasured]);
+  const onPerformanceMeasuredRef = useLatest(onPerformanceMeasured);
+  const onHierarchyLimitExceededRef = useLatest(onHierarchyLimitExceeded);
 
   const [actions] = useState<TreeActions>(
     () =>
@@ -144,6 +144,7 @@ function useTreeInternal({
           });
         },
         (actionType, duration) => onPerformanceMeasuredRef.current?.(actionType, duration),
+        () => onHierarchyLimitExceededRef.current?.(),
       ),
   );
   const currentFormatter = useRef<IPrimitiveValueFormatter>();
@@ -328,4 +329,13 @@ function toPresentationHierarchyNodeBase(node: TreeModelHierarchyNode): Omit<Pre
     isFiltered: !!node.instanceFilter,
     extendedData: node.nodeData.extendedData,
   };
+}
+
+function useLatest<T>(value: T) {
+  const ref = useRef(value);
+  useEffect(() => {
+    ref.current = value;
+  }, [value]);
+
+  return ref;
 }
