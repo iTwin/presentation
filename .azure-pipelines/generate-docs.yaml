@@ -20,7 +20,71 @@ resources:
       ref: refs/heads/master
 
 stages:
+  - stage: Check_Changes
+    jobs:
+    - job: detect_docs_change
+      displayName: Check docs changes
+      steps:
+      - checkout: self
+        fetchDepth: 0
+        clean: true
+
+      - powershell: |
+          try {
+            $paths = @(
+              ".azure-pipelines/generate-docs.yaml",
+              "packages/components/*",
+              "packages/testing/*",
+              "packages/opentelemetry/*",
+              "apps/test-app/*",
+              "apps/full-stack-tests/src/components/*",
+              "apps/full-stack-tests/src/testing/*"
+            )
+            $sourceBranch = "origin/$(System.PullRequest.SourceBranch)"
+            $targetBranch = "origin/$(System.PullRequest.targetBranchName)"
+
+            Write-Host "Comparing changes between $sourceBranch and $targetBranch branches"
+            # Run git diff command to ensure it does not fail
+            git diff --name-only $(git merge-base $targetBranch $sourceBranch) | out-null
+            if (-not $?) {
+              exit 1
+            }
+
+            $diff=$(git diff --name-only $(git merge-base $targetBranch $sourceBranch))
+            $files=$diff -split ' '
+            Write-Host "Changed files:"
+            foreach ($file in $files) {
+              Write-Host $file
+            }
+
+            foreach ($file in $files) {
+              foreach ($path in $paths) {
+                if ($file -like $path) {
+                  Write-Host "Changed files affect documentation site, running check"
+                  Write-Host "##vso[task.setvariable variable=docsModified;isOutput=true]True"
+                  exit 0
+                }
+              }
+            }
+
+            Write-Host "Changed files do not affect documentation site, skipping check"
+          } catch {
+            Write-Error $_.Exception.Message
+            exit 1
+          }
+        name: changed_files
+        displayName: Check changed files
+
   - stage: Generate_Docs
+    dependsOn: Check_Changes
+    condition: |
+      and(
+        succeeded(),
+        or(
+          ne(variables['Build.Reason'], 'PullRequest'),
+          eq(dependencies.Check_Changes.outputs['detect_docs_change.changed_files.docsModified'], 'true')
+        )
+      )
     jobs:
       - job:
         displayName: Generate Docs
