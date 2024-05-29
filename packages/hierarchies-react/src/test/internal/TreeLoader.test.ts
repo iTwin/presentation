@@ -248,7 +248,7 @@ describe("TreeLoader", () => {
         }),
       );
 
-      expect(onHierarchyLimitExceededStub).to.be.calledOnceWith(undefined, filter, 10);
+      expect(onHierarchyLimitExceededStub).to.be.calledOnceWith({ parentId: undefined, filter, limit: 10 });
     });
   });
 });

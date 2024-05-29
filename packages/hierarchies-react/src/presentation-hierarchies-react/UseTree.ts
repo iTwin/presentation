@@ -91,7 +91,7 @@ interface UseTreeProps {
   getFilteredPaths?: (props: GetFilteredPathsProps) => Promise<HierarchyNodeIdentifiersPath[] | undefined>;
   localizedStrings?: Parameters<typeof createHierarchyProvider>[0]["localizedStrings"];
   onPerformanceMeasured?: (action: "initial-load" | "hierarchy-level-load" | "reload", duration: number) => void;
-  onHierarchyLimitExceeded?: (parentId?: string, filter?: GenericInstanceFilter, limit?: number | "unbounded") => void;
+  onHierarchyLimitExceeded?: (props: { parentId?: string; filter?: GenericInstanceFilter; limit?: number | "unbounded" }) => void;
 }
 
 interface UseTreeResult {
@@ -144,7 +144,7 @@ function useTreeInternal({
           });
         },
         (actionType, duration) => onPerformanceMeasuredRef.current?.(actionType, duration),
-        (parentId, filter, limit) => onHierarchyLimitExceededRef.current?.(parentId, filter, limit),
+        (props) => onHierarchyLimitExceededRef.current?.(props),
       ),
   );
   const currentFormatter = useRef<IPrimitiveValueFormatter>();
