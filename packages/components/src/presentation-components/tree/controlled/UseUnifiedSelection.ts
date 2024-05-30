@@ -105,6 +105,7 @@ export class UnifiedSelectionTreeEventHandler extends TreeEventHandler implement
   }
 
   public override onSelectionReplaced({ replacements }: TreeSelectionReplacementEventArgs) {
+    this.#cancelled.next();
     let firstEmission = true;
     const withUnifiedSelection = toRxjsObservable(replacements).pipe(
       takeUntil(this.#cancelled),
@@ -216,7 +217,7 @@ export class UnifiedSelectionTreeEventHandler extends TreeEventHandler implement
       return;
     }
 
-    if (evt.changeType === SelectionChangeType.Clear || evt.changeType === SelectionChangeType.Replace) {
+    if (evt.source !== this.#selectionSourceName && (evt.changeType === SelectionChangeType.Clear || evt.changeType === SelectionChangeType.Replace)) {
       this.#cancelled.next();
     }
 
