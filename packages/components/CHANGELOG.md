@@ -1,5 +1,11 @@
 # Change Log - @itwin/presentation-components
 
+## 5.3.2
+
+### Patch Changes
+
+- [#609](https://github.com/iTwin/presentation/pull/609): Fixed shift select not selecting nodes that are not yet loaded in `UnifiedSelectionTreeEventHandler`.
+
 ## 5.3.1
 
 ### Patch Changes
