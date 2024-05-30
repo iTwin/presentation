@@ -130,7 +130,7 @@ stages:
 
   - stage: Validate_Docs
     dependsOn: Generate_Docs
-    condition: and(succeeded(), in(variables['Build.Reason'], 'IndividualCI', 'PullRequest', 'Manual'))
+    condition: and(succeeded('Generate_Docs'), in(variables['Build.Reason'], 'IndividualCI', 'PullRequest', 'Manual'))
     jobs:
       - template: common/config/azure-pipelines/jobs/docs-build.yaml@itwinjs-core
         parameters:
@@ -140,7 +140,7 @@ stages:
 
   - stage: Tag_Docs
     dependsOn: Validate_Docs
-    condition: and(succeeded(), in(variables['Build.Reason'], 'IndividualCI', 'Manual'))
+    condition: and(succeeded('Validate_Docs'), in(variables['Build.Reason'], 'IndividualCI', 'Manual'))
     jobs:
       - job:
         displayName: Tag Docs
