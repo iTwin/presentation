@@ -7,15 +7,15 @@ import { ComponentPropsWithoutRef, ReactElement, useCallback, useEffect, useMemo
 import { debounceTime, Subject } from "rxjs";
 import { IModelConnection } from "@itwin/core-frontend";
 import { SvgFolder, SvgImodelHollow, SvgItem, SvgLayers, SvgModel } from "@itwin/itwinui-icons-react";
-import { Flex, ProgressRadial, SearchBox, Text, ToggleSwitch } from "@itwin/itwinui-react";
-import { ClassInfo, DefaultContentDisplayTypes, Descriptor, KeySet } from "@itwin/presentation-common";
+import { Button, Flex, ProgressRadial, SearchBox, Text, ToggleSwitch } from "@itwin/itwinui-react";
+import { ClassInfo, DefaultContentDisplayTypes, Descriptor, InstanceKey, KeySet } from "@itwin/presentation-common";
 import {
   PresentationInstanceFilter,
   PresentationInstanceFilterDialog,
   PresentationInstanceFilterInfo,
   PresentationInstanceFilterPropertiesSource,
 } from "@itwin/presentation-components";
-import { createECSchemaProvider, createECSqlQueryExecutor } from "@itwin/presentation-core-interop";
+import { createECSchemaProvider, createECSqlQueryExecutor, registerTxnListeners } from "@itwin/presentation-core-interop";
 import { Presentation } from "@itwin/presentation-frontend";
 import { createLimitingECSqlQueryExecutor, GenericInstanceFilter, LimitingECSqlQueryExecutor } from "@itwin/presentation-hierarchies";
 import { HierarchyLevelDetails, PresentationHierarchyNode, TreeRenderer, useUnifiedSelectionTree } from "@itwin/presentation-hierarchies-react";
@@ -60,13 +60,7 @@ function Tree({ imodel, imodelAccess, height, width }: { imodel: IModelConnectio
     };
   }, [filter]);
 
-  const {
-    rootNodes,
-    isLoading,
-    reloadTree: _,
-    setFormatter,
-    ...treeProps
-  } = useUnifiedSelectionTree({
+  const { rootNodes, isLoading, reloadTree, setFormatter, ...treeProps } = useUnifiedSelectionTree({
     imodelKey: imodel.key,
     sourceName: "StatelessTreeV2",
     imodelAccess,
@@ -77,6 +71,16 @@ function Tree({ imodel, imodelAccess, height, width }: { imodel: IModelConnectio
       console.log(`Stateless-tree-${action}, Duration: ${duration}ms`);
     },
   });
+
+  useEffect(() => {
+    if (!imodel.isBriefcaseConnection()) {
+      return;
+    }
+
+    return registerTxnListeners(imodel.txns, () => {
+      reloadTree({ dataSourceChanged: true });
+    });
+  }, [imodel, reloadTree]);
 
   const [shouldUseCustomFormatter, setShouldUseCustomFormatter] = useState<boolean>(false);
   const toggleFormatter = () => {
@@ -197,6 +201,7 @@ function Tree({ imodel, imodelAccess, height, width }: { imodel: IModelConnectio
       <Flex style={{ width: "100%", padding: "0.5rem" }}>
         <DebouncedSearchBox onChange={setFilter} />
         <ToggleSwitch onChange={toggleFormatter} checked={shouldUseCustomFormatter} />
+        {imodel.isBriefcaseConnection() ? <Button onClick={() => void removeSelectedElements(imodel)}>Delete</Button> : null}
       </Flex>
       {renderContent()}
       {renderLoadingOverlay()}
@@ -304,4 +309,24 @@ function getIcon(node: PresentationHierarchyNode): ReactElement | undefined {
   }
 
   return undefined;
+}
+
+async function removeSelectedElements(imodel: IModelConnection) {
+  const keys = getSelectedElementIds(imodel);
+  if (keys.length === 0) {
+    return;
+  }
+
+  await MyAppFrontend.deleteElements(imodel, keys);
+}
+
+function getSelectedElementIds(imodel: IModelConnection) {
+  const selection = Presentation.selection.getSelection(imodel);
+  const keys: InstanceKey[] = [];
+  selection.forEach((elementKey) => {
+    if ("id" in elementKey) {
+      keys.push(elementKey);
+    }
+  });
+  return keys.map((key) => key.id);
 }
