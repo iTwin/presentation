@@ -2,7 +2,7 @@
 "@itwin/presentation-hierarchies-react": minor
 ---
 
-Added `dataMightHaveChanged` option to `reloadTree` function retuned by `useTree` and `useUnifiedSelectionTree`. It allows to specify that data used to build tree might have changed and need to be repulled and tree reloaded.
+Added `dataMightHaveChanged` option to `reloadTree` function retuned by `useTree` and `useUnifiedSelectionTree`. It allows to specify that data used to build the tree might have changed and need to be repulled when reloading the hierarchy.
 
 ```ts
 import { registerTxnListeners } from "@itwin/presentation-core-interop";
