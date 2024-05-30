@@ -27,6 +27,7 @@ describe("useTree", () => {
     getNodes: createStub<hierarchiesModule.HierarchyProvider["getNodes"]>(),
     getNodeInstanceKeys: createStub<hierarchiesModule.HierarchyProvider["getNodeInstanceKeys"]>(),
     setFormatter: createStub<hierarchiesModule.HierarchyProvider["setFormatter"]>(),
+    notifyDataSourceChanged: createStub<hierarchiesModule.HierarchyProvider["notifyDataSourceChanged"]>(),
   };
   let createHierarchyProviderStub: sinon.SinonStub<
     Parameters<typeof hierarchiesModule.createHierarchyProvider>,
@@ -49,6 +50,9 @@ describe("useTree", () => {
 
   beforeEach(() => {
     hierarchyProvider.getNodes.reset();
+    hierarchyProvider.getNodeInstanceKeys.reset();
+    hierarchyProvider.setFormatter.reset();
+    hierarchyProvider.notifyDataSourceChanged.reset();
     createHierarchyProviderStub.reset();
     createHierarchyProviderStub.returns(hierarchyProvider as unknown as hierarchiesModule.HierarchyProvider);
   });
@@ -536,6 +540,39 @@ describe("useTree", () => {
     await waitFor(() => {
       expect(result.current.rootNodes).to.have.lengthOf(1);
       expect((result.current.rootNodes![0] as PresentationHierarchyNode).children).to.have.lengthOf(2);
+    });
+  });
+
+  it("notifies hierarchy provider about changed data source when `reloadTree` is called with `dataSourceChanged`", async () => {
+    const rootNodes = [createTestHierarchyNode({ id: "root-1", children: false })];
+
+    hierarchyProvider.getNodes.callsFake((props) => {
+      if (props.parentNode === undefined) {
+        return createAsyncIterator(rootNodes);
+      }
+      return createAsyncIterator([]);
+    });
+    const { result } = renderHook(useTree, { initialProps });
+
+    await waitFor(() => {
+      expect(result.current.rootNodes).to.have.lengthOf(1);
+    });
+
+    hierarchyProvider.getNodes.reset();
+    hierarchyProvider.getNodes.callsFake((props) => {
+      if (props.parentNode === undefined) {
+        return createAsyncIterator([...rootNodes, createTestHierarchyNode({ id: "root-2", children: false })]);
+      }
+      return createAsyncIterator([]);
+    });
+
+    act(() => {
+      result.current.reloadTree({ dataSourceChanged: true });
+    });
+
+    await waitFor(() => {
+      expect(result.current.rootNodes).to.have.lengthOf(2);
+      expect(hierarchyProvider.notifyDataSourceChanged).to.be.calledOnce;
     });
   });
 
