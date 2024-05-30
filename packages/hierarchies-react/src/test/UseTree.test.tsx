@@ -543,7 +543,7 @@ describe("useTree", () => {
     });
   });
 
-  it("notifies hierarchy provider about changed date when `reloadTree` is called with `dataMightHaveChanged`", async () => {
+  it("notifies hierarchy provider about changed data source when `reloadTree` is called with `dataSourceChanged`", async () => {
     const rootNodes = [createTestHierarchyNode({ id: "root-1", children: false })];
 
     hierarchyProvider.getNodes.callsFake((props) => {
@@ -567,7 +567,7 @@ describe("useTree", () => {
     });
 
     act(() => {
-      result.current.reloadTree({ dataMightHaveChanged: true });
+      result.current.reloadTree({ dataSourceChanged: true });
     });
 
     await waitFor(() => {

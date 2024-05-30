@@ -78,7 +78,7 @@ function Tree({ imodel, imodelAccess, height, width }: { imodel: IModelConnectio
     }
 
     return registerTxnListeners(imodel.txns, () => {
-      reloadTree({ dataMightHaveChanged: true });
+      reloadTree({ dataSourceChanged: true });
     });
   }, [imodel, reloadTree]);
 
@@ -312,7 +312,7 @@ function getIcon(node: PresentationHierarchyNode): ReactElement | undefined {
 }
 
 async function removeSelectedElements(imodel: IModelConnection) {
-  const keys = getElementIds(imodel);
+  const keys = getSelectedElementIds(imodel);
   if (keys.length === 0) {
     return;
   }
@@ -320,7 +320,7 @@ async function removeSelectedElements(imodel: IModelConnection) {
   await MyAppFrontend.deleteElements(imodel, keys);
 }
 
-function getElementIds(imodel: IModelConnection) {
+function getSelectedElementIds(imodel: IModelConnection) {
   const selection = Presentation.selection.getSelection(imodel);
   const keys: InstanceKey[] = [];
   selection.forEach((elementKey) => {
