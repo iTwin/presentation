@@ -9,8 +9,15 @@
 import { useCallback } from "react";
 import { Subject, takeUntil, tap } from "rxjs";
 import {
-  AbstractTreeNodeLoaderWithProvider, MutableTreeModel, MutableTreeModelNode, TreeEditingParams, TreeEventHandler, TreeModelChanges, TreeNodeItem,
-  TreeSelectionModificationEventArgs, TreeSelectionReplacementEventArgs,
+  AbstractTreeNodeLoaderWithProvider,
+  MutableTreeModel,
+  MutableTreeModelNode,
+  TreeEditingParams,
+  TreeEventHandler,
+  TreeModelChanges,
+  TreeNodeItem,
+  TreeSelectionModificationEventArgs,
+  TreeSelectionReplacementEventArgs,
 } from "@itwin/components-react";
 import { Guid, IDisposable } from "@itwin/core-bentley";
 import { useDisposable } from "@itwin/core-react";
