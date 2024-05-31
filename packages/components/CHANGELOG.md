@@ -1,5 +1,13 @@
 # Change Log - @itwin/presentation-components
 
+## 4.4.1
+
+### Patch Changes
+
+- [#611](https://github.com/iTwin/presentation/pull/611): Use private fields in `UnifiedSelectionTreeEventHandler` to avoid clashing private property names when extending it.
+- [#611](https://github.com/iTwin/presentation/pull/611): Fixed shift select not selecting nodes that are not yet loaded in `UnifiedSelectionTreeEventHandler`.
+- [#611](https://github.com/iTwin/presentation/pull/611): Updated `UnifiedSelectionTreeEventHandler` to correctly handle unified selection change when it is not updated immediatly after `add`|`replace`|`remove`|`clear` action.
+
 ## 4.4.0
 
 This release brings official React 18 support. Components and hooks provided by this package were updated to work with [`StrictMode` in React 18](https://react.dev/blog/2022/03/08/react-18-upgrade-guide#updates-to-strict-mode).
