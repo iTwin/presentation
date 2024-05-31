@@ -7,9 +7,7 @@
  */
 
 import { useCallback } from "react";
-import { takeUntil } from "rxjs/internal/operators/takeUntil";
-import { tap } from "rxjs/internal/operators/tap";
-import { Subject } from "rxjs/internal/Subject";
+import { Subject, takeUntil, tap } from "rxjs";
 import {
   AbstractTreeNodeLoaderWithProvider,
   MutableTreeModel,
@@ -17,7 +15,6 @@ import {
   TreeEditingParams,
   TreeEventHandler,
   TreeModelChanges,
-  TreeModelSource,
   TreeNodeItem,
   TreeSelectionModificationEventArgs,
   TreeSelectionReplacementEventArgs,
@@ -66,59 +63,40 @@ export interface UnifiedSelectionTreeEventHandlerParams {
  * @public
  */
 export class UnifiedSelectionTreeEventHandler extends TreeEventHandler implements IDisposable {
-  private _selectionHandler: SelectionHandler;
-  private _dataProvider: IPresentationTreeDataProvider;
-  private _modelSource: TreeModelSource;
-  private _unregisterModelChangedListener: () => void;
-
-  private _cancelled = new Subject<void>();
+  #dataProvider: IPresentationTreeDataProvider;
+  #selectionSourceName: string;
+  #listeners: Array<() => void> = [];
+  #cancelled = new Subject<void>();
 
   constructor(params: UnifiedSelectionTreeEventHandlerParams) {
     super({
       ...params,
       modelSource: params.nodeLoader.modelSource,
     });
-    this._dataProvider = params.nodeLoader.dataProvider;
-    this._modelSource = params.nodeLoader.modelSource;
-    const name = params.name ?? `Tree_${this._dataProvider.rulesetId}_${Guid.createValue()}`;
-    this._selectionHandler = params.selectionHandler
-      ? params.selectionHandler
-      : /* istanbul ignore next */ new SelectionHandler({
-          manager: Presentation.selection,
-          name,
-          imodel: this._dataProvider.imodel,
-          rulesetId: this._dataProvider.rulesetId,
-        });
-    this._selectionHandler.onSelect = this.onSelect.bind(this);
-    this._unregisterModelChangedListener = this._modelSource.onModelChanged.addListener((args) => this.selectNodes(args[1]));
+    this.#dataProvider = params.nodeLoader.dataProvider;
+    this.#selectionSourceName = params.name ?? `Tree_${this.#dataProvider.rulesetId}_${Guid.createValue()}`;
+    this.#listeners.push(Presentation.selection.selectionChange.addListener((args) => this.onSelectionChanged(args)));
+    this.#listeners.push(this.modelSource.onModelChanged.addListener((args) => this.selectNodes(args[1])));
     this.selectNodes();
-  }
-
-  public override get modelSource() {
-    return this._modelSource;
   }
 
   public override dispose() {
     super.dispose();
-    this._cancelled.next();
-    this._selectionHandler.dispose();
-    this._unregisterModelChangedListener();
+    this.#cancelled.next();
+    this.#listeners.forEach((dispose) => dispose());
   }
 
   public override onSelectionModified({ modifications }: TreeSelectionModificationEventArgs) {
     const withUnifiedSelection = toRxjsObservable(modifications).pipe(
-      takeUntil(this._cancelled),
+      takeUntil(this.#cancelled),
       tap({
         next: ({ selectedNodeItems, deselectedNodeItems }) => {
           if (selectedNodeItems.length !== 0) {
-            this._selectionHandler.addToSelection(this.createKeysForSelection(selectedNodeItems, SelectionChangeType.Add));
+            this.addToSelection(selectedNodeItems);
           }
           if (deselectedNodeItems.length !== 0) {
-            this._selectionHandler.removeFromSelection(this.createKeysForSelection(deselectedNodeItems, SelectionChangeType.Remove));
+            this.removeFromSelection(deselectedNodeItems);
           }
-        },
-        complete: () => {
-          this.selectNodes();
         },
       }),
     );
@@ -127,9 +105,10 @@ export class UnifiedSelectionTreeEventHandler extends TreeEventHandler implement
   }
 
   public override onSelectionReplaced({ replacements }: TreeSelectionReplacementEventArgs) {
+    this.#cancelled.next();
     let firstEmission = true;
     const withUnifiedSelection = toRxjsObservable(replacements).pipe(
-      takeUntil(this._cancelled),
+      takeUntil(this.#cancelled),
       tap({
         next: ({ selectedNodeItems }) => {
           if (selectedNodeItems.length === 0) {
@@ -137,13 +116,10 @@ export class UnifiedSelectionTreeEventHandler extends TreeEventHandler implement
           }
           if (firstEmission) {
             firstEmission = false;
-            this._selectionHandler.replaceSelection(this.createKeysForSelection(selectedNodeItems, SelectionChangeType.Replace));
+            this.replaceSelection(selectedNodeItems);
             return;
           }
-          this._selectionHandler.addToSelection(this.createKeysForSelection(selectedNodeItems, SelectionChangeType.Add));
-        },
-        complete: () => {
-          this.selectNodes();
+          this.addToSelection(selectedNodeItems);
         },
       }),
     );
@@ -152,13 +128,11 @@ export class UnifiedSelectionTreeEventHandler extends TreeEventHandler implement
   }
 
   public selectNodes(modelChange?: TreeModelChanges) {
-    const selection = this._selectionHandler.getSelection();
-
     // when handling model change event only need to update newly added nodes
     if (modelChange) {
-      this.updateAffectedNodes(selection, modelChange);
+      this.updateAffectedNodes(modelChange);
     } else {
-      this.updateAllNodes(selection);
+      this.updateAllNodes();
     }
   }
 
@@ -166,7 +140,7 @@ export class UnifiedSelectionTreeEventHandler extends TreeEventHandler implement
   // istanbul ignore next
   protected getNodeKey(node: TreeNodeItem): NodeKey {
     // eslint-disable-next-line deprecation/deprecation
-    return this._dataProvider.getNodeKey(node);
+    return this.#dataProvider.getNodeKey(node);
   }
 
   /**
@@ -175,18 +149,18 @@ export class UnifiedSelectionTreeEventHandler extends TreeEventHandler implement
    * or node is ECInstance node and instance key is in selection.
    */
   protected shouldSelectNode(node: TreeNodeItem, selection: Readonly<KeySet>) {
-    const nodeKey = isPresentationTreeNodeItem(node) ? node.key : undefined;
-    if (nodeKey === undefined) {
+    // istanbul ignore if
+    if (!isPresentationTreeNodeItem(node)) {
       return false;
     }
 
     // consider node selected if it's key is in selection
-    if (selection.has(nodeKey)) {
+    if (selection.has(node.key)) {
       return true;
     }
 
     // ... or if it's an ECInstances node and any of instance keys is in selection
-    if (NodeKey.isInstancesNodeKey(nodeKey) && nodeKey.instanceKeys.some((instanceKey) => selection.has(instanceKey))) {
+    if (NodeKey.isInstancesNodeKey(node.key) && node.key.instanceKeys.some((instanceKey) => selection.has(instanceKey))) {
       return true;
     }
 
@@ -208,33 +182,65 @@ export class UnifiedSelectionTreeEventHandler extends TreeEventHandler implement
     return SelectionHelper.getKeysForSelection(nodeKeys);
   }
 
-  private onSelect(evt: SelectionChangeEventArgs) {
-    if (evt.source === this._selectionHandler.name) {
+  private addToSelection(nodes: TreeNodeItem[]) {
+    Presentation.selection.addToSelection(
+      this.#selectionSourceName,
+      this.#dataProvider.imodel,
+      this.createKeysForSelection(nodes, SelectionChangeType.Add),
+      0,
+      this.#dataProvider.rulesetId,
+    );
+  }
+
+  private removeFromSelection(nodes: TreeNodeItem[]) {
+    Presentation.selection.removeFromSelection(
+      this.#selectionSourceName,
+      this.#dataProvider.imodel,
+      this.createKeysForSelection(nodes, SelectionChangeType.Remove),
+      0,
+      this.#dataProvider.rulesetId,
+    );
+  }
+
+  private replaceSelection(nodes: TreeNodeItem[]) {
+    Presentation.selection.replaceSelection(
+      this.#selectionSourceName,
+      this.#dataProvider.imodel,
+      this.createKeysForSelection(nodes, SelectionChangeType.Replace),
+      0,
+      this.#dataProvider.rulesetId,
+    );
+  }
+
+  private onSelectionChanged(evt: SelectionChangeEventArgs) {
+    if (evt.imodel !== this.#dataProvider.imodel) {
       return;
     }
 
-    if (evt.changeType === SelectionChangeType.Clear || evt.changeType === SelectionChangeType.Replace) {
-      this._cancelled.next();
+    if (evt.source !== this.#selectionSourceName && (evt.changeType === SelectionChangeType.Clear || evt.changeType === SelectionChangeType.Replace)) {
+      this.#cancelled.next();
     }
 
     this.selectNodes();
   }
 
-  private updateAllNodes(selection: Readonly<KeySet>) {
-    this._modelSource.modifyModel((model: MutableTreeModel) => {
+  private updateAllNodes() {
+    const selection = Presentation.selection.getSelection(this.#dataProvider.imodel);
+    this.modelSource.modifyModel((model: MutableTreeModel) => {
       for (const node of model.iterateTreeModelNodes()) {
         this.updateNodeSelectionState(node, selection);
       }
     });
   }
 
-  private updateAffectedNodes(selection: Readonly<KeySet>, modelChange: TreeModelChanges) {
+  private updateAffectedNodes(modelChange: TreeModelChanges) {
     const affectedNodeIds = [...modelChange.addedNodeIds, ...modelChange.modifiedNodeIds];
     if (affectedNodeIds.length === 0) {
       return;
     }
 
-    this._modelSource.modifyModel((model: MutableTreeModel) => {
+    const selection = Presentation.selection.getSelection(this.#dataProvider.imodel);
+    this.modelSource.modifyModel((model: MutableTreeModel) => {
       for (const nodeId of affectedNodeIds) {
         const node = model.getNode(nodeId);
         // istanbul ignore if
@@ -264,6 +270,7 @@ export class UnifiedSelectionTreeEventHandler extends TreeEventHandler implement
  * [[UsePresentationTreeProps.eventHandlerFactory]] instead or manually create and dispose [[UnifiedSelectionTreeEventHandler]].
  */
 export function useUnifiedSelectionTreeEventHandler(props: UnifiedSelectionTreeEventHandlerParams) {
+  // eslint-disable-next-line deprecation/deprecation
   return useDisposable(
     useCallback(
       () => new UnifiedSelectionTreeEventHandler(props),
