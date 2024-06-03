@@ -21,8 +21,8 @@ interface TreeNodeRendererOwnProps {
   onFilterClick?: (nodeId: string | undefined) => void;
   getIcon?: (node: PresentationHierarchyNode) => ReactElement | undefined;
   getSublabel?: (node: PresentationHierarchyNode) => ReactElement | undefined;
-  onNodeClick?: (nodeId: string, isSelected: boolean, event: React.MouseEvent<HTMLElement, MouseEvent>) => void;
-  onNodeKeyDown?: (nodeId: string, isSelected: boolean, event: React.KeyboardEvent<HTMLElement>) => void;
+  onNodeClick?: (node: PresentationHierarchyNode, isSelected: boolean, event: React.MouseEvent<HTMLElement, MouseEvent>) => void;
+  onNodeKeyDown?: (node: PresentationHierarchyNode, isSelected: boolean, event: React.KeyboardEvent<HTMLElement>) => void;
   actionButtonsClassName?: string;
 }
 
@@ -61,11 +61,11 @@ export function TreeNodeRenderer({
     return (
       // eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions
       <div
-        onClick={(event) => !isDisabled && onNodeClick?.(node.id, !isSelected, event)}
+        onClick={(event) => !isDisabled && onNodeClick?.(node, !isSelected, event)}
         onKeyDown={(event) => {
           // Ignore if it is called on the element inside, e.g. checkbox or expander
           if (!isDisabled && event.target instanceof HTMLElement && event.target.classList.contains("stateless-tree-node")) {
-            onNodeKeyDown?.(node.id, !isSelected, event);
+            onNodeKeyDown?.(node, !isSelected, event);
           }
         }}
       >
