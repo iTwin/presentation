@@ -44,19 +44,29 @@ export function createFileNameFromString(str: string) {
   return sanitize(str.replace(/[ ]+/g, "-").replaceAll("`", "").replaceAll("'", "")).toLocaleLowerCase();
 }
 
+/**
+ * `itwinjs-core` creates some accompanying files for each iModels and their names are formed by appending
+ * a suffix to iModel file name. This constant should account for the maximum suffix length.
+ * @internal
+ */
+export const FILE_PATH_RESERVED_CHARACTERS = 12;
+
 /** @internal */
 export function limitFilePathLength(filePath: string) {
   const { dir, name, ext } = path.parse(filePath);
+  const THREE_DOTS_LENGTH = 3;
 
-  const allowedFileNameLength = 260 - 12 - 1 - (dir.length + 1) - ext.length;
-  if (allowedFileNameLength <= 0) {
-    throw new Error(`File path "${filePath}" is too long.`);
-  }
-  if (name.length < allowedFileNameLength) {
+  let allowedFileNameLength = 260 - FILE_PATH_RESERVED_CHARACTERS - (dir.length + 1) - ext.length;
+  if (name.length <= allowedFileNameLength) {
     return filePath;
   }
 
-  const pieceLength = (allowedFileNameLength - 3) / 2;
-  const shortenedName = `${name.slice(0, pieceLength)}...${name.slice(name.length - pieceLength)}`;
+  allowedFileNameLength -= THREE_DOTS_LENGTH;
+  if (allowedFileNameLength <= 0) {
+    throw new Error(`File path "${filePath}" is too long.`);
+  }
+
+  const pieceLength = allowedFileNameLength / 2;
+  const shortenedName = `${name.slice(0, Math.ceil(pieceLength))}...${name.slice(Math.ceil(name.length - pieceLength))}`;
   return path.join(dir, `${shortenedName}${ext}`);
 }
