@@ -1,5 +1,11 @@
 # Change Log - @itwin/presentation-testing
 
+## 5.0.11
+
+### Patch Changes
+
+- [#613](https://github.com/iTwin/presentation/pull/613): When creating a test iModel, limit its file name length to fit into file system limits.
+
 ## 5.0.10
 
 ### Patch Changes
