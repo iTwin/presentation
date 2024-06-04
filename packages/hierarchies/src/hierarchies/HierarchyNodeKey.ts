@@ -21,10 +21,7 @@ export interface InstancesNodeKey {
   instanceKeys: InstanceKey[];
 }
 
-/**
- * A key for a class-grouping node.
- * @internal
- */
+/** A key for a class-grouping node. */
 export interface ClassGroupingNodeKey {
   /** Type of the node */
   type: "class-grouping";
@@ -33,10 +30,7 @@ export interface ClassGroupingNodeKey {
   className: string;
 }
 
-/**
- * A key for a label-grouping node.
- * @internal
- */
+/** A key for a label-grouping node. */
 export interface LabelGroupingNodeKey {
   /** Type of the node */
   type: "label-grouping";
@@ -54,8 +48,6 @@ export interface LabelGroupingNodeKey {
 /**
  * A key property grouping node that groups nodes whose values don't fall into any other
  * property group in the hierarchy level.
- *
- * @internal
  */
 export interface PropertyOtherValuesGroupingNodeKey {
   /** Type of the node */
@@ -67,10 +59,7 @@ export interface PropertyOtherValuesGroupingNodeKey {
   }>;
 }
 
-/**
- * A key for a property grouping node that groups nodes by formatted property value.
- * @internal
- */
+/** A key for a property grouping node that groups nodes by formatted property value. */
 export interface PropertyValueGroupingNodeKey {
   /** Type of the node */
   type: "property-grouping:value";
@@ -85,10 +74,7 @@ export interface PropertyValueGroupingNodeKey {
   formattedPropertyValue: string;
 }
 
-/**
- * A key for a property grouping node that groups nodes by a range of property values.
- * @internal
- */
+/** A key for a property grouping node that groups nodes by a range of property values. */
 export interface PropertyValueRangeGroupingNodeKey {
   /** Type of the node */
   type: "property-grouping:range";
@@ -106,10 +92,7 @@ export interface PropertyValueRangeGroupingNodeKey {
   toValue: number;
 }
 
-/**
- * A key for a property grouping node.
- * @internal
- */
+/** A key for a property grouping node. */
 export type PropertyGroupingNodeKey = PropertyValueRangeGroupingNodeKey | PropertyValueGroupingNodeKey | PropertyOtherValuesGroupingNodeKey;
 
 /**
@@ -118,10 +101,7 @@ export type PropertyGroupingNodeKey = PropertyValueRangeGroupingNodeKey | Proper
  */
 export type GroupingNodeKey = ClassGroupingNodeKey | LabelGroupingNodeKey | PropertyGroupingNodeKey;
 
-/**
- * A key for either an instance node or one of the instance grouping nodes.
- * @internal
- */
+/** A key for either an instance node or one of the instance grouping nodes. */
 export type StandardHierarchyNodeKey = InstancesNodeKey | GroupingNodeKey;
 
 /**
