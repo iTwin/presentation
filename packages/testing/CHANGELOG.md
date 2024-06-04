@@ -1,5 +1,11 @@
 # Change Log - @itwin/presentation-testing
 
+## 5.0.12
+
+### Patch Changes
+
+- [#616](https://github.com/iTwin/presentation/pull/616): Reserve more characters for iModel file name suffixes
+
 ## 5.0.11
 
 ### Patch Changes
