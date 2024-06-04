@@ -32,7 +32,7 @@ describe("limitFilePathLength", () => {
     expect(result).to.eq(
       path.format({
         dir: path.join("x", "y"),
-        name: `${new Array(119).fill("a").join("")}...${new Array(118).fill("a").join("")}`,
+        name: `${new Array(118).fill("a").join("")}...${new Array(118).fill("a").join("")}`,
         ext: ".ext",
       }),
     );
@@ -52,7 +52,7 @@ describe("limitFilePathLength", () => {
     expect(result).to.eq(
       path.format({
         dir: path.join("x", "y"),
-        name: `${new Array(119).fill("a").join("")}...${new Array(118).fill("a").join("")}`,
+        name: `${new Array(118).fill("a").join("")}...${new Array(118).fill("a").join("")}`,
         ext: ".ext",
       }),
     );

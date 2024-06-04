@@ -49,7 +49,7 @@ export function createFileNameFromString(str: string) {
  * a suffix to iModel file name. This constant should account for the maximum suffix length.
  * @internal
  */
-export const FILE_PATH_RESERVED_CHARACTERS = 12;
+export const FILE_PATH_RESERVED_CHARACTERS = 13;
 
 /** @internal */
 export function limitFilePathLength(filePath: string) {
