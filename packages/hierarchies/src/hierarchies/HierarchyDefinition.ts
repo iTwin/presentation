@@ -17,19 +17,13 @@ import {
 } from "./HierarchyNode";
 import { InstancesNodeKey } from "./HierarchyNodeKey";
 
-/**
- * A nodes definition that returns a single custom defined node.
- * @internal
- */
+/** A nodes definition that returns a single custom defined node. */
 export interface CustomHierarchyNodeDefinition {
   /** The node to be created in the hierarchy level */
   node: ParsedCustomHierarchyNode;
 }
 
-/**
- * A nodes definition that returns an ECSQL query for selecting nodes from an iModel.
- * @internal
- */
+/** A nodes definition that returns an ECSQL query for selecting nodes from an iModel. */
 export interface InstanceNodesQueryDefinition {
   /**
    * Full name of the class whose instances are going to be returned. It's okay if the attribute
