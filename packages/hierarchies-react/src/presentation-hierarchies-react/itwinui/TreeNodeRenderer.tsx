@@ -10,7 +10,7 @@ import { SvgFilter, SvgFilterHollow, SvgRemove } from "@itwin/itwinui-icons-reac
 import { Anchor, ButtonGroup, Flex, IconButton, ProgressRadial, Text, TreeNode } from "@itwin/itwinui-react";
 import { MAX_LIMIT_OVERRIDE } from "../internal/Utils";
 import { isPresentationHierarchyNode, PresentationHierarchyNode } from "../TreeNode";
-import { useTree } from "../UseTree";
+import { HierarchyLevelDetails, useTree } from "../UseTree";
 import { useLocalizationContext } from "./LocalizationContext";
 import { RenderedTreeNode } from "./TreeRenderer";
 
@@ -18,7 +18,7 @@ type TreeNodeProps = ComponentPropsWithoutRef<typeof TreeNode>;
 
 interface TreeNodeRendererOwnProps {
   node: RenderedTreeNode;
-  onFilterClick?: (nodeId: string | undefined) => void;
+  onFilterClick?: (hierarchyLevelDetails: HierarchyLevelDetails) => void;
   getIcon?: (node: PresentationHierarchyNode) => ReactElement | undefined;
   getSublabel?: (node: PresentationHierarchyNode) => ReactElement | undefined;
   onNodeClick?: (node: PresentationHierarchyNode, isSelected: boolean, event: React.MouseEvent<HTMLElement, MouseEvent>) => void;
@@ -104,7 +104,8 @@ export function TreeNodeRenderer({
                 title={localizedStrings.filterHierarchyLevel}
                 onClick={(e) => {
                   e.stopPropagation();
-                  onFilterClick(node.id);
+                  const hierarchyLevelDetails = getHierarchyLevelDetails?.(node.id);
+                  hierarchyLevelDetails && onFilterClick(hierarchyLevelDetails);
                 }}
               >
                 {node.isFiltered ? <SvgFilter /> : <SvgFilterHollow />}
@@ -125,7 +126,8 @@ export function TreeNodeRenderer({
         onFilterClick={
           onFilterClick
             ? () => {
-                onFilterClick(node.parentNodeId);
+                const hierarchyLevelDetails = getHierarchyLevelDetails?.(node.parentNodeId);
+                hierarchyLevelDetails && onFilterClick(hierarchyLevelDetails);
               }
             : undefined
         }

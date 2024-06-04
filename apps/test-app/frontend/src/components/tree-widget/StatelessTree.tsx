@@ -89,22 +89,17 @@ function Tree({ imodel, imodelAccess, height, width }: { imodel: IModelConnectio
     setFormatter(newValue ? customFormatter : undefined);
   };
 
-  const { getHierarchyLevelDetails } = treeProps;
-  const [filteringOptions, setFilteringOptions] = useState<{ nodeId: string | undefined; hierarchyLevelDetails: HierarchyLevelDetails }>();
-  const onFilterClick = useCallback(
-    (nodeId: string | undefined) => {
-      const hierarchyLevelDetails = getHierarchyLevelDetails(nodeId);
-      setFilteringOptions(hierarchyLevelDetails ? { nodeId, hierarchyLevelDetails } : undefined);
-    },
-    [getHierarchyLevelDetails],
-  );
+  const [filteringOptions, setFilteringOptions] = useState<HierarchyLevelDetails>();
+  const onFilterClick = useCallback((hierarchyLevelDetails: HierarchyLevelDetails) => {
+    setFilteringOptions(hierarchyLevelDetails);
+  }, []);
   const propertiesSource = useMemo<(() => Promise<PresentationInstanceFilterPropertiesSource>) | undefined>(() => {
     if (!filteringOptions) {
       return undefined;
     }
 
     return async () => {
-      const inputKeysIterator = filteringOptions.hierarchyLevelDetails.getInstanceKeysIterator();
+      const inputKeysIterator = filteringOptions.getInstanceKeysIterator();
       const inputKeys = [];
       for await (const inputKey of inputKeysIterator) {
         inputKeys.push(inputKey);
@@ -140,7 +135,7 @@ function Tree({ imodel, imodelAccess, height, width }: { imodel: IModelConnectio
   }, [filteringOptions, imodel]);
 
   const getInitialFilter = useMemo(() => {
-    const currentFilter = filteringOptions?.hierarchyLevelDetails.instanceFilter;
+    const currentFilter = filteringOptions?.instanceFilter;
     if (!currentFilter) {
       return undefined;
     }
@@ -212,7 +207,7 @@ function Tree({ imodel, imodelAccess, height, width }: { imodel: IModelConnectio
           if (!filteringOptions) {
             return;
           }
-          treeProps.getHierarchyLevelDetails(filteringOptions.nodeId)?.setInstanceFilter(toGenericFilter(info));
+          filteringOptions?.setInstanceFilter(toGenericFilter(info));
           setFilteringOptions(undefined);
         }}
         onClose={() => {
