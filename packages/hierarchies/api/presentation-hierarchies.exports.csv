@@ -8,6 +8,7 @@ beta;DefineCustomNodeChildHierarchyLevelProps = Omit
 beta;DefineHierarchyLevelProps
 beta;DefineInstanceNodeChildHierarchyLevelProps = Omit
 beta;DefineRootHierarchyLevelProps = Omit
+beta;FinalizedNode = HierarchyNode & FilteredNodeProps
 beta;GetHierarchyNodesProps
 beta;getLogger(): ILogger
 beta;GroupingHierarchyNode 

@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { HierarchyNode } from "@itwin/presentation-hierarchies";
+import { FinalizedNode } from "@itwin/presentation-hierarchies";
 
 /**
  * A type that defines an actual expandable node in a UI tree component, built with `useTree` hook.
@@ -18,7 +18,7 @@ export interface PresentationHierarchyNode {
   isFilterable: boolean;
   isFiltered: boolean;
   /** UI-agnostic source of this node object. */
-  nodeData: HierarchyNode;
+  nodeData: FinalizedNode;
   /** Additional data that may be assigned to this node. */
   extendedData?: { [key: string]: any };
 }

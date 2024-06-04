@@ -16,6 +16,7 @@ import {
   NodePreProcessor,
 } from "../HierarchyDefinition";
 import {
+  FilteredNodeProps,
   HierarchyNode,
   ParsedHierarchyNode,
   ParsedInstanceHierarchyNode,
@@ -34,11 +35,7 @@ export interface FilteringQueryBuilderProps {
 }
 
 /** @internal */
-export type FilteredHierarchyNode<TNode = ProcessedHierarchyNode> = TNode & {
-  isFilterTarget?: boolean;
-  hasFilterTargetAncestor?: boolean;
-  filteredChildrenIdentifierPaths?: HierarchyNodeIdentifiersPath[];
-};
+export type FilteredHierarchyNode<TNode = ProcessedHierarchyNode> = TNode & FilteredNodeProps;
 
 /** @internal */
 export class FilteringHierarchyDefinition implements HierarchyDefinition {

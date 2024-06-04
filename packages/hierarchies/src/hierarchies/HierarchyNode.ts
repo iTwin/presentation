@@ -4,6 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { ConcatenatedValue, InstanceKey, OmitOverUnion, PrimitiveValue } from "@itwin/presentation-shared";
+import { HierarchyNodeIdentifiersPath } from "./HierarchyNodeIdentifier";
 import {
   ClassGroupingNodeKey,
   GroupingNodeKey,
@@ -317,6 +318,7 @@ export type ProcessedInstanceHierarchyNode = Omit<NonGroupingHierarchyNode, "key
 export type ProcessedGroupingHierarchyNode = Omit<GroupingHierarchyNode, "children"> & {
   children: Array<ProcessedGroupingHierarchyNode | ProcessedInstanceHierarchyNode>;
 };
+
 /**
  * A `HierarchyNode` that may have processing parameters defining whether it should be hidden under some conditions,
  * how it should be grouped, sorted, etc.
@@ -340,3 +342,19 @@ export type ParsedHierarchyNode<TBase = ParsedCustomHierarchyNode | ParsedInstan
 export type ParsedCustomHierarchyNode = ParsedHierarchyNode<ProcessedCustomHierarchyNode>;
 /** A kind of `ProcessedInstanceHierarchyNode` that has unformatted label and doesn't know about its ancestors. */
 export type ParsedInstanceHierarchyNode = ParsedHierarchyNode<ProcessedInstanceHierarchyNode>;
+
+/**
+ * Properties that are assigned to a processed node if filtering is enabled.
+ * @internal
+ */
+export interface FilteredNodeProps {
+  isFilterTarget?: boolean;
+  hasFilterTargetAncestor?: boolean;
+  filteredChildrenIdentifierPaths?: HierarchyNodeIdentifiersPath[];
+}
+
+/**
+ * A `HierarchyNode` that has been fully processed and only has information, needed for rendering.
+ * @beta
+ */
+export type FinalizedNode = HierarchyNode & FilteredNodeProps;
