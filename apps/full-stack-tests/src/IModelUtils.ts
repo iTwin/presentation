@@ -6,16 +6,13 @@
 import { XMLParser } from "fast-xml-parser";
 import * as fs from "fs";
 import hash from "object-hash";
-import { tmpdir } from "os";
-import path from "path";
 import { getFullSchemaXml } from "presentation-test-utilities";
-import { ECDb, ECSqlStatement, IModelJsFs } from "@itwin/core-backend";
+import { ECDb, ECSqlStatement } from "@itwin/core-backend";
 import { BentleyError, DbResult, Id64, Id64String, OrderedId64Iterable } from "@itwin/core-bentley";
-import { LocalFileName } from "@itwin/core-common";
 import { IModelConnection } from "@itwin/core-frontend";
 import { ECSqlBinding, parseFullClassName, PrimitiveValue } from "@itwin/presentation-shared";
 import { buildTestIModel, TestIModelBuilder } from "@itwin/presentation-testing";
-import { createFileNameFromString } from "@itwin/presentation-testing/lib/cjs/presentation-testing/InternalUtils";
+import { createFileNameFromString, limitFilePathLength, setupOutputFileLocation } from "@itwin/presentation-testing/lib/cjs/presentation-testing/InternalUtils";
 
 function isBinding(value: ECSqlBinding | PrimitiveValue): value is ECSqlBinding {
   return typeof value === "object" && (value as ECSqlBinding).type !== undefined && (value as ECSqlBinding).value !== undefined;
@@ -228,30 +225,4 @@ export function importSchema(mochaContext: Mocha.Context, imodel: { importSchema
       };
     }, {}),
   };
-}
-
-function limitFilePathLength(filePath: string) {
-  const { dir, name, ext } = path.parse(filePath);
-
-  const allowedFileNameLength = 260 - 12 - 1 - (dir.length + 1) - ext.length;
-  if (allowedFileNameLength <= 0) {
-    throw new Error(`File path "${filePath}" is too long.`);
-  }
-  if (name.length < allowedFileNameLength) {
-    return filePath;
-  }
-
-  const pieceLength = (allowedFileNameLength - 3) / 2;
-  const shortenedName = `${name.slice(0, pieceLength)}...${name.slice(name.length - pieceLength)}`;
-  return path.join(dir, `${shortenedName}${ext}`);
-}
-
-const defaultTestOutputDir = tmpdir();
-export function setupOutputFileLocation(fileName: string): LocalFileName {
-  const testOutputDir = path.join(defaultTestOutputDir, ".imodels");
-  !IModelJsFs.existsSync(testOutputDir) && IModelJsFs.mkdirSync(testOutputDir);
-
-  const outputFilePath = limitFilePathLength(path.join(testOutputDir, `${fileName}.bim`));
-  IModelJsFs.existsSync(outputFilePath) && IModelJsFs.unlinkSync(outputFilePath);
-  return outputFilePath;
 }
