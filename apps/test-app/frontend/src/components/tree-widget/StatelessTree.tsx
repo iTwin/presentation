@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { ComponentPropsWithoutRef, ReactElement, useCallback, useEffect, useMemo, useState } from "react";
+import { ComponentPropsWithoutRef, ReactElement, useEffect, useMemo, useState } from "react";
 import { debounceTime, Subject } from "rxjs";
 import { IModelConnection } from "@itwin/core-frontend";
 import { SvgFolder, SvgImodelHollow, SvgItem, SvgLayers, SvgModel } from "@itwin/itwinui-icons-react";
@@ -90,9 +90,6 @@ function Tree({ imodel, imodelAccess, height, width }: { imodel: IModelConnectio
   };
 
   const [filteringOptions, setFilteringOptions] = useState<HierarchyLevelDetails>();
-  const onFilterClick = useCallback((hierarchyLevelDetails: HierarchyLevelDetails) => {
-    setFilteringOptions(hierarchyLevelDetails);
-  }, []);
   const propertiesSource = useMemo<(() => Promise<PresentationInstanceFilterPropertiesSource>) | undefined>(() => {
     if (!filteringOptions) {
       return undefined;
@@ -154,7 +151,7 @@ function Tree({ imodel, imodelAccess, height, width }: { imodel: IModelConnectio
 
     return (
       <Flex.Item alignSelf="flex-start" style={{ width: "100%", overflow: "auto" }}>
-        <TreeRenderer rootNodes={rootNodes ?? []} {...treeProps} onFilterClick={onFilterClick} getIcon={getIcon} selectionMode={"extended"} />
+        <TreeRenderer rootNodes={rootNodes ?? []} {...treeProps} onFilterClick={setFilteringOptions} getIcon={getIcon} selectionMode={"extended"} />
       </Flex.Item>
     );
   };
