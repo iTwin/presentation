@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { ComponentPropsWithoutRef, ReactElement, useCallback, useEffect, useMemo, useState } from "react";
+import { ComponentPropsWithoutRef, ReactElement, useEffect, useMemo, useState } from "react";
 import { debounceTime, Subject } from "rxjs";
 import { IModelConnection } from "@itwin/core-frontend";
 import { SvgFolder, SvgImodelHollow, SvgItem, SvgLayers, SvgModel } from "@itwin/itwinui-icons-react";
@@ -89,22 +89,14 @@ function Tree({ imodel, imodelAccess, height, width }: { imodel: IModelConnectio
     setFormatter(newValue ? customFormatter : undefined);
   };
 
-  const { getHierarchyLevelDetails } = treeProps;
-  const [filteringOptions, setFilteringOptions] = useState<{ nodeId: string | undefined; hierarchyLevelDetails: HierarchyLevelDetails }>();
-  const onFilterClick = useCallback(
-    (nodeId: string | undefined) => {
-      const hierarchyLevelDetails = getHierarchyLevelDetails(nodeId);
-      setFilteringOptions(hierarchyLevelDetails ? { nodeId, hierarchyLevelDetails } : undefined);
-    },
-    [getHierarchyLevelDetails],
-  );
+  const [filteringOptions, setFilteringOptions] = useState<HierarchyLevelDetails>();
   const propertiesSource = useMemo<(() => Promise<PresentationInstanceFilterPropertiesSource>) | undefined>(() => {
     if (!filteringOptions) {
       return undefined;
     }
 
     return async () => {
-      const inputKeysIterator = filteringOptions.hierarchyLevelDetails.getInstanceKeysIterator();
+      const inputKeysIterator = filteringOptions.getInstanceKeysIterator();
       const inputKeys = [];
       for await (const inputKey of inputKeysIterator) {
         inputKeys.push(inputKey);
@@ -140,7 +132,7 @@ function Tree({ imodel, imodelAccess, height, width }: { imodel: IModelConnectio
   }, [filteringOptions, imodel]);
 
   const getInitialFilter = useMemo(() => {
-    const currentFilter = filteringOptions?.hierarchyLevelDetails.instanceFilter;
+    const currentFilter = filteringOptions?.instanceFilter;
     if (!currentFilter) {
       return undefined;
     }
@@ -159,7 +151,7 @@ function Tree({ imodel, imodelAccess, height, width }: { imodel: IModelConnectio
 
     return (
       <Flex.Item alignSelf="flex-start" style={{ width: "100%", overflow: "auto" }}>
-        <TreeRenderer rootNodes={rootNodes ?? []} {...treeProps} onFilterClick={onFilterClick} getIcon={getIcon} selectionMode={"extended"} />
+        <TreeRenderer rootNodes={rootNodes ?? []} {...treeProps} onFilterClick={setFilteringOptions} getIcon={getIcon} selectionMode={"extended"} />
       </Flex.Item>
     );
   };
@@ -212,7 +204,7 @@ function Tree({ imodel, imodelAccess, height, width }: { imodel: IModelConnectio
           if (!filteringOptions) {
             return;
           }
-          treeProps.getHierarchyLevelDetails(filteringOptions.nodeId)?.setInstanceFilter(toGenericFilter(info));
+          filteringOptions?.setInstanceFilter(toGenericFilter(info));
           setFilteringOptions(undefined);
         }}
         onClose={() => {

@@ -6,7 +6,7 @@
 import { expect } from "chai";
 import sinon from "sinon";
 import { UserEvent } from "@testing-library/user-event";
-import { PresentationHierarchyNode, PresentationInfoNode, PresentationTreeNode } from "../presentation-hierarchies-react/TreeNode";
+import { isPresentationHierarchyNode, PresentationHierarchyNode, PresentationInfoNode, PresentationTreeNode } from "../presentation-hierarchies-react/TreeNode";
 import { SelectionChangeType, SelectionMode, useSelectionHandler } from "../presentation-hierarchies-react/UseSelectionHandler";
 import { render } from "./TestUtils";
 
@@ -19,18 +19,19 @@ interface TestComponentProps {
 
 function TestComponent({ rootNodes, selectNodes, selectionMode, isSelected }: TestComponentProps) {
   const { onNodeKeyDown, onNodeClick } = useSelectionHandler({ rootNodes, selectNodes, selectionMode });
-  const invalidNode = { id: "invalid" } as PresentationHierarchyNode;
+  const invalidNode = { id: "invalid", children: [] } as unknown as PresentationHierarchyNode;
   const nodes = rootNodes ? [...rootNodes, invalidNode] : [invalidNode];
   return (
     <>
       {nodes?.map((node) => {
+        const isHierarchyNode = isPresentationHierarchyNode(node);
         return (
           <div
             role="button"
             key={node.id}
             tabIndex={0}
-            onClick={(e) => onNodeClick(node.id, isSelected, e)}
-            onKeyDown={(e) => onNodeKeyDown(node.id, isSelected, e)}
+            onClick={(e) => isHierarchyNode && onNodeClick(node, isSelected, e)}
+            onKeyDown={(e) => isHierarchyNode && onNodeKeyDown(node, isSelected, e)}
           >
             {node.id}
           </div>

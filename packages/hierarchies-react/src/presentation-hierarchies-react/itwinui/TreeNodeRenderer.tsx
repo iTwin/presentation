@@ -5,12 +5,12 @@
 
 import "./TreeNodeRenderer.css";
 import cx from "classnames";
-import { ComponentPropsWithoutRef, ReactElement } from "react";
+import { ComponentPropsWithoutRef, ReactElement, useRef } from "react";
 import { SvgFilter, SvgFilterHollow, SvgRemove } from "@itwin/itwinui-icons-react";
 import { Anchor, ButtonGroup, Flex, IconButton, ProgressRadial, Text, TreeNode } from "@itwin/itwinui-react";
 import { MAX_LIMIT_OVERRIDE } from "../internal/Utils";
 import { isPresentationHierarchyNode, PresentationHierarchyNode } from "../TreeNode";
-import { useTree } from "../UseTree";
+import { HierarchyLevelDetails, useTree } from "../UseTree";
 import { useLocalizationContext } from "./LocalizationContext";
 import { RenderedTreeNode } from "./TreeRenderer";
 
@@ -18,11 +18,11 @@ type TreeNodeProps = ComponentPropsWithoutRef<typeof TreeNode>;
 
 interface TreeNodeRendererOwnProps {
   node: RenderedTreeNode;
-  onFilterClick?: (nodeId: string | undefined) => void;
+  onFilterClick?: (hierarchyLevelDetails: HierarchyLevelDetails) => void;
   getIcon?: (node: PresentationHierarchyNode) => ReactElement | undefined;
   getSublabel?: (node: PresentationHierarchyNode) => ReactElement | undefined;
-  onNodeClick?: (nodeId: string, isSelected: boolean, event: React.MouseEvent<HTMLElement, MouseEvent>) => void;
-  onNodeKeyDown?: (nodeId: string, isSelected: boolean, event: React.KeyboardEvent<HTMLElement>) => void;
+  onNodeClick?: (node: PresentationHierarchyNode, isSelected: boolean, event: React.MouseEvent<HTMLElement, MouseEvent>) => void;
+  onNodeKeyDown?: (node: PresentationHierarchyNode, isSelected: boolean, event: React.KeyboardEvent<HTMLElement>) => void;
   actionButtonsClassName?: string;
 }
 
@@ -50,82 +50,88 @@ export function TreeNodeRenderer({
   isDisabled,
   actionButtonsClassName,
   getHierarchyLevelDetails,
-  ...nodeProps
+  nodeProps,
+  ...treeNodeProps
 }: TreeNodeRendererProps) {
   const { localizedStrings } = useLocalizationContext();
+  const nodeRef = useRef<HTMLDivElement>(null);
+
   if ("type" in node && node.type === "ChildrenPlaceholder") {
-    return <PlaceholderNode {...nodeProps} />;
+    return <PlaceholderNode {...treeNodeProps} />;
   }
 
   if (isPresentationHierarchyNode(node)) {
     return (
-      // eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions
-      <div
-        onClick={(event) => !isDisabled && onNodeClick?.(node.id, !isSelected, event)}
-        onKeyDown={(event) => {
-          // Ignore if it is called on the element inside, e.g. checkbox or expander
-          if (!isDisabled && event.target instanceof HTMLElement && event.target.classList.contains("stateless-tree-node")) {
-            onNodeKeyDown?.(node.id, !isSelected, event);
-          }
+      <TreeNode
+        {...treeNodeProps}
+        nodeProps={{
+          ...nodeProps,
+          ref: nodeRef,
+          tabIndex: nodeProps?.tabIndex ?? 0,
+          onClick: (event) => !isDisabled && onNodeClick?.(node, !isSelected, event),
+          onKeyDown: (event) => {
+            // Ignore if it is called on the element inside, e.g. checkbox or expander
+            if (!isDisabled && event.target === nodeRef.current) {
+              onNodeKeyDown?.(node, !isSelected, event);
+            }
+          },
         }}
+        isSelected={isSelected}
+        isDisabled={isDisabled}
+        className={cx(treeNodeProps.className, "stateless-tree-node", { filtered: node.isFiltered })}
+        label={node.label}
+        onExpanded={(_, isExpanded) => {
+          expandNode(node.id, isExpanded);
+        }}
+        icon={getIcon ? getIcon(node) : undefined}
+        sublabel={getSublabel ? getSublabel(node) : undefined}
       >
-        <TreeNode
-          {...nodeProps}
-          isSelected={isSelected}
-          isDisabled={isDisabled}
-          className={cx(nodeProps.className, "stateless-tree-node", { filtered: node.isFiltered })}
-          label={node.label}
-          onExpanded={(_, isExpanded) => {
-            expandNode(node.id, isExpanded);
-          }}
-          icon={getIcon ? getIcon(node) : undefined}
-          sublabel={getSublabel ? getSublabel(node) : undefined}
-        >
-          <ButtonGroup className={cx("action-buttons", actionButtonsClassName)}>
-            {getHierarchyLevelDetails && node.isFiltered ? (
-              <IconButton
-                className="filtering-action-button"
-                styleType="borderless"
-                size="small"
-                title={localizedStrings.clearHierarchyLevelFilter}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  getHierarchyLevelDetails(node.id)?.setInstanceFilter(undefined);
-                }}
-              >
-                <SvgRemove />
-              </IconButton>
-            ) : null}
-            {onFilterClick && node.isFilterable ? (
-              <IconButton
-                className="filtering-action-button"
-                styleType="borderless"
-                size="small"
-                title={localizedStrings.filterHierarchyLevel}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onFilterClick(node.id);
-                }}
-              >
-                {node.isFiltered ? <SvgFilter /> : <SvgFilterHollow />}
-              </IconButton>
-            ) : null}
-          </ButtonGroup>
-        </TreeNode>
-      </div>
+        <ButtonGroup className={cx("action-buttons", actionButtonsClassName)}>
+          {getHierarchyLevelDetails && node.isFiltered ? (
+            <IconButton
+              className="filtering-action-button"
+              styleType="borderless"
+              size="small"
+              title={localizedStrings.clearHierarchyLevelFilter}
+              onClick={(e) => {
+                e.stopPropagation();
+                getHierarchyLevelDetails(node.id)?.setInstanceFilter(undefined);
+              }}
+            >
+              <SvgRemove />
+            </IconButton>
+          ) : null}
+          {onFilterClick && node.isFilterable ? (
+            <IconButton
+              className="filtering-action-button"
+              styleType="borderless"
+              size="small"
+              title={localizedStrings.filterHierarchyLevel}
+              onClick={(e) => {
+                e.stopPropagation();
+                const hierarchyLevelDetails = getHierarchyLevelDetails?.(node.id);
+                hierarchyLevelDetails && onFilterClick(hierarchyLevelDetails);
+              }}
+            >
+              {node.isFiltered ? <SvgFilter /> : <SvgFilterHollow />}
+            </IconButton>
+          ) : null}
+        </ButtonGroup>
+      </TreeNode>
     );
   }
 
   if (node.type === "ResultSetTooLarge") {
     return (
       <ResultSetTooLargeNode
-        {...nodeProps}
+        {...treeNodeProps}
         limit={node.resultSetSizeLimit}
         onOverrideLimit={getHierarchyLevelDetails ? (limit) => getHierarchyLevelDetails(node.parentNodeId)?.setSizeLimit(limit) : undefined}
         onFilterClick={
           onFilterClick
             ? () => {
-                onFilterClick(node.parentNodeId);
+                const hierarchyLevelDetails = getHierarchyLevelDetails?.(node.parentNodeId);
+                hierarchyLevelDetails && onFilterClick(hierarchyLevelDetails);
               }
             : undefined
         }
@@ -134,10 +140,10 @@ export function TreeNodeRenderer({
   }
 
   if (node.type === "NoFilterMatches") {
-    return <TreeNode {...nodeProps} label={localizedStrings.noFilteredChildren} isDisabled={true} onExpanded={/* istanbul ignore next */ () => {}} />;
+    return <TreeNode {...treeNodeProps} label={localizedStrings.noFilteredChildren} isDisabled={true} onExpanded={/* istanbul ignore next */ () => {}} />;
   }
 
-  return <TreeNode {...nodeProps} label={node.message} isDisabled={true} onExpanded={/* istanbul ignore next */ () => {}} />;
+  return <TreeNode {...treeNodeProps} label={node.message} isDisabled={true} onExpanded={/* istanbul ignore next */ () => {}} />;
 }
 
 function PlaceholderNode(props: Omit<TreeNodeProps, "onExpanded" | "label">) {
