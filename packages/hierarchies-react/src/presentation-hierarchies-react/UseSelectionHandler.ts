@@ -3,8 +3,8 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { useEffect, useRef } from "react";
-import { isPresentationHierarchyNode, PresentationTreeNode } from "./TreeNode";
+import { useCallback, useEffect, useRef } from "react";
+import { isPresentationHierarchyNode, PresentationHierarchyNode, PresentationTreeNode } from "./TreeNode";
 import { useTree } from "./UseTree";
 
 /**
@@ -30,9 +30,9 @@ type UseSelectionHandlerProps = Pick<ReturnType<typeof useTree>, "rootNodes" | "
 /** Result of `useSelectionHandler` hook. */
 interface UseSelectionHandlerResult {
   /** Should be called by node renderer when a node component is clicked. */
-  onNodeClick: (nodeId: string, isSelected: boolean, event: React.MouseEvent<HTMLElement, MouseEvent>) => void;
+  onNodeClick: (node: PresentationHierarchyNode, isSelected: boolean, event: React.MouseEvent<HTMLElement, MouseEvent>) => void;
   /** Should be called by node renderer when a keyboard event happens on a node. */
-  onNodeKeyDown: (nodeId: string, isSelected: boolean, event: React.KeyboardEvent<HTMLElement>) => void;
+  onNodeKeyDown: (node: PresentationHierarchyNode, isSelected: boolean, event: React.KeyboardEvent<HTMLElement>) => void;
 }
 
 interface FlatTreeState {
@@ -74,30 +74,39 @@ export function useSelectionHandler(props: UseSelectionHandlerProps): UseSelecti
     return state.current.flatNodeList.slice(startingIndex, endIndex + 1);
   };
 
-  const onNodeSelect = (nodeId: string, isSelected: boolean, shiftDown: boolean, ctrlDown: boolean) => {
-    const selection = getSelectionAction(selectionMode, isSelected, shiftDown, ctrlDown);
-    if (selection.type === "disabled") {
-      return;
-    }
+  const onNodeSelect = useCallback(
+    (nodeId: string, isSelected: boolean, shiftDown: boolean, ctrlDown: boolean) => {
+      const selection = getSelectionAction(selectionMode, isSelected, shiftDown, ctrlDown);
+      if (selection.type === "disabled") {
+        return;
+      }
 
-    const nodes = selection.select === "range" ? getNodeRange(previousSelectionRef.current, nodeId) : [nodeId];
-    if (!nodes.length) {
-      return;
-    }
+      const nodes = selection.select === "range" ? getNodeRange(previousSelectionRef.current, nodeId) : [nodeId];
+      if (!nodes.length) {
+        return;
+      }
 
-    selection.select !== "range" && (previousSelectionRef.current = nodeId);
-    selectNodes(nodes, selection.type);
-  };
+      selection.select !== "range" && (previousSelectionRef.current = nodeId);
+      selectNodes(nodes, selection.type);
+    },
+    [selectionMode, selectNodes],
+  );
 
-  const onNodeClick = (nodeId: string, isSelected: boolean, event: React.MouseEvent<HTMLElement, MouseEvent>) => {
-    return onNodeSelect(nodeId, isSelected, event.shiftKey, event.ctrlKey);
-  };
+  const onNodeClick = useCallback(
+    (node: PresentationHierarchyNode, isSelected: boolean, event: React.MouseEvent<HTMLElement, MouseEvent>) => {
+      return onNodeSelect(node.id, isSelected, event.shiftKey, event.ctrlKey);
+    },
+    [onNodeSelect],
+  );
 
-  const onNodeKeyDown = (nodeId: string, isSelected: boolean, event: React.KeyboardEvent<HTMLElement>) => {
-    if (event.key === " " || event.key === "Spacebar" || event.key === "Enter") {
-      return onNodeSelect(nodeId, isSelected, event.shiftKey, event.ctrlKey);
-    }
-  };
+  const onNodeKeyDown = useCallback(
+    (node: PresentationHierarchyNode, isSelected: boolean, event: React.KeyboardEvent<HTMLElement>) => {
+      if (event.key === " " || event.key === "Spacebar" || event.key === "Enter") {
+        return onNodeSelect(node.id, isSelected, event.shiftKey, event.ctrlKey);
+      }
+    },
+    [onNodeSelect],
+  );
 
   return { onNodeClick, onNodeKeyDown };
 }

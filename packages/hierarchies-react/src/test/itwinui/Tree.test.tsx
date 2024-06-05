@@ -12,7 +12,7 @@ import { HierarchyLevelDetails } from "../../presentation-hierarchies-react/UseT
 import { act, createStub, createTestHierarchyNode, render, waitFor, within } from "../TestUtils";
 
 describe("Tree", () => {
-  const onFilterClick = createStub<(nodeId: string | undefined) => void>();
+  const onFilterClick = createStub<(hierarchyLevelDetails: HierarchyLevelDetails) => void>();
   const expandNode = createStub<(nodeId: string, isExpanded: boolean) => void>();
   const selectNodes = createStub<(nodeIds: Array<string>, changeType: SelectionChangeType) => void>();
   const isNodeSelected = createStub<(nodeId: string) => boolean>();
@@ -99,12 +99,13 @@ describe("Tree", () => {
 
     const { user, getByRole } = render(<TreeRenderer rootNodes={rootNodes} expandNode={initialProps.expandNode} selectionMode={"single"} />);
 
-    const node = getByRole("treeitem");
-    expect(within(node).queryByText("test node")).to.not.be.null;
-    expect(node.ariaSelected).to.eq("false");
+    const nodeWrapper = getByRole("treeitem");
+    const node = within(nodeWrapper).getByText("test node");
+    expect(node).to.not.be.null;
+    expect(nodeWrapper.ariaSelected).to.eq("false");
 
     await user.click(node);
-    expect(node.ariaSelected).to.eq("false");
+    expect(nodeWrapper.ariaSelected).to.eq("false");
   });
 
   it("selects/unselects nodes", async () => {
@@ -153,6 +154,7 @@ describe("Tree", () => {
     act(() => {
       node1.focus();
     });
+    await user.tab();
     await user.keyboard("{Enter}");
     expect(selectNodes).to.be.calledOnceWith(["root-1"], "remove");
     selectNodes.reset();
@@ -161,6 +163,7 @@ describe("Tree", () => {
     act(() => {
       node2.focus();
     });
+    await user.tab();
     await user.keyboard("{Enter}");
     expect(selectNodes).to.be.calledOnceWith(["root-2"], "replace");
   });
@@ -249,11 +252,14 @@ describe("Tree", () => {
       },
     ]);
 
+    const hierarchyLevelDetails = {} as unknown as HierarchyLevelDetails;
+    getHierarchyLevelDetails.returns(hierarchyLevelDetails);
+
     const { user, queryByText, getByRole } = render(<TreeRenderer rootNodes={rootNodes} {...initialProps} />);
 
     expect(queryByText("root-1")).to.not.be.null;
     await user.click(getByRole("button", { name: "Apply filter" }));
-    expect(onFilterClick).to.be.calledOnceWith("root-1");
+    expect(onFilterClick).to.be.calledOnceWith(hierarchyLevelDetails);
   });
 
   describe("`ResultSetTooLarge` node", () => {
@@ -331,11 +337,13 @@ describe("Tree", () => {
         },
       ]);
 
+      const hierarchyLevelDetails = {} as unknown as HierarchyLevelDetails;
+      getHierarchyLevelDetails.returns(hierarchyLevelDetails);
       const { user, getByText, queryByText } = render(<TreeRenderer rootNodes={rootNodes} {...initialProps} />);
 
       expect(queryByText(/there are more items than allowed limit of 100/i)).to.not.be.null;
       await user.click(getByText("additional filtering"));
-      expect(onFilterClick).to.be.calledOnceWith("parent-id");
+      expect(onFilterClick).to.be.calledOnceWith(hierarchyLevelDetails);
     });
 
     it("overrides hierarchy level size limit", async () => {
