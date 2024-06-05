@@ -99,12 +99,13 @@ describe("Tree", () => {
 
     const { user, getByRole } = render(<TreeRenderer rootNodes={rootNodes} expandNode={initialProps.expandNode} selectionMode={"single"} />);
 
-    const node = getByRole("treeitem");
-    expect(within(node).queryByText("test node")).to.not.be.null;
-    expect(node.ariaSelected).to.eq("false");
+    const nodeWrapper = getByRole("treeitem");
+    const node = within(nodeWrapper).getByText("test node");
+    expect(node).to.not.be.null;
+    expect(nodeWrapper.ariaSelected).to.eq("false");
 
     await user.click(node);
-    expect(node.ariaSelected).to.eq("false");
+    expect(nodeWrapper.ariaSelected).to.eq("false");
   });
 
   it("selects/unselects nodes", async () => {

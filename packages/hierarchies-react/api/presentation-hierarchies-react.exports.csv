@@ -10,7 +10,7 @@ beta;PresentationInfoNode = PresentationGenericInfoNode | PresentationResultSetT
 beta;PresentationResultSetTooLargeInfoNode
 beta;PresentationTreeNode = PresentationHierarchyNode | PresentationInfoNode
 beta;RenderedTreeNode = PresentationTreeNode |
-beta;TreeNodeRenderer({ node, expandNode, getIcon, getSublabel, onFilterClick, onNodeClick, onNodeKeyDown, isSelected, isDisabled, actionButtonsClassName, getHierarchyLevelDetails, ...nodeProps }: TreeNodeRendererProps): JSX_2.Element
+beta;TreeNodeRenderer({ node, expandNode, getIcon, getSublabel, onFilterClick, onNodeClick, onNodeKeyDown, isSelected, isDisabled, actionButtonsClassName, getHierarchyLevelDetails, nodeProps, ...treeNodeProps }: TreeNodeRendererProps): JSX_2.Element
 beta;TreeRenderer({ rootNodes, expandNode, selectNodes, isNodeSelected, onFilterClick, getIcon, getSublabel, getHierarchyLevelDetails, selectionMode, localizedStrings, ...treeProps }: TreeRendererProps): JSX_2.Element
 beta;UnifiedSelectionProvider({ storage, children }: PropsWithChildren
 beta;useSelectionHandler(props: UseSelectionHandlerProps): UseSelectionHandlerResult
