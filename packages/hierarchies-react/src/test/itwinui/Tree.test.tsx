@@ -153,6 +153,7 @@ describe("Tree", () => {
     act(() => {
       node1.focus();
     });
+    await user.tab();
     await user.keyboard("{Enter}");
     expect(selectNodes).to.be.calledOnceWith(["root-1"], "remove");
     selectNodes.reset();
@@ -161,6 +162,7 @@ describe("Tree", () => {
     act(() => {
       node2.focus();
     });
+    await user.tab();
     await user.keyboard("{Enter}");
     expect(selectNodes).to.be.calledOnceWith(["root-2"], "replace");
   });
