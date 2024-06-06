@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { Schema as CoreSchema, SchemaKey as CoreSchemaKey } from "@itwin/ecschema-metadata";
-import { ECSchemaProvider } from "@itwin/presentation-shared";
+import { EC, ECSchemaProvider } from "@itwin/presentation-shared";
 import { createECSchema } from "./MetadataInternal";
 
 /**
@@ -32,6 +32,7 @@ interface CoreSchemaContext {
  * @beta
  */
 export function createECSchemaProvider(schemaContext: CoreSchemaContext): ECSchemaProvider {
+  const schemaRequestsCache = new Map<string, Promise<EC.Schema | undefined>>();
   async function getSchemaUnprotected(schemaName: string) {
     const coreSchema = await schemaContext.getSchema(new CoreSchemaKey(schemaName));
     return coreSchema ? createECSchema(coreSchema) : undefined;
@@ -56,7 +57,12 @@ export function createECSchemaProvider(schemaContext: CoreSchemaContext): ECSche
   }
   return {
     async getSchema(name) {
-      return getSchemaProtected(name, new Set());
+      let promise = schemaRequestsCache.get(name);
+      if (!promise) {
+        promise = getSchemaProtected(name, new Set());
+        schemaRequestsCache.set(name, promise);
+      }
+      return promise;
     },
   };
 }
