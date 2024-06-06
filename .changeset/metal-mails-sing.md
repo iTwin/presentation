@@ -1,5 +1,4 @@
 ---
-"@itwin/presentation-hierarchies-react": patch
 "@itwin/presentation-hierarchies": patch
 ---
 
