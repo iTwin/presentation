@@ -172,7 +172,7 @@ describe("createHierarchyProvider", () => {
     });
   });
 
-  describe.only("Custom processing", () => {
+  describe("Custom processing", () => {
     class TestHierarchyDefinition implements HierarchyDefinition {
       public node = { key: "custom", label: "custom", children: false };
       public preProcessStub = sinon.stub().resolves({ ...this.node, isPreprocessed: true });
