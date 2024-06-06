@@ -1,5 +1,11 @@
 # @itwin/presentation-hierarchies
 
+## 0.1.3
+
+### Patch Changes
+
+- [#620](https://github.com/iTwin/presentation/pull/620): Expose filtering information to the type of a fully processed node.
+
 ## 0.1.2
 
 ### Patch Changes

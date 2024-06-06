@@ -1,5 +1,11 @@
 # @itwin/presentation-core-interop
 
+## 0.2.1
+
+### Patch Changes
+
+- [#623](https://github.com/iTwin/presentation/pull/623): Avoid repeated schema requests from `SchemaContext` - otherwise we're downloading the same schema from the backend multiple times.
+
 ## 0.2.0
 
 ### Minor Changes
