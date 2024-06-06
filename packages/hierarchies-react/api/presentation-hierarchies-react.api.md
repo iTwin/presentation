@@ -10,7 +10,6 @@ import { ComponentPropsWithoutRef } from 'react';
 import { createHierarchyProvider } from '@itwin/presentation-hierarchies';
 import { ECClassHierarchyInspector } from '@itwin/presentation-shared';
 import { ECSchemaProvider } from '@itwin/presentation-shared';
-import { FinalizedNode } from '@itwin/presentation-hierarchies';
 import { GenericInstanceFilter } from '@itwin/presentation-hierarchies';
 import { HierarchyDefinition } from '@itwin/presentation-hierarchies';
 import { HierarchyNode } from '@itwin/presentation-hierarchies';
@@ -86,7 +85,7 @@ export interface PresentationHierarchyNode {
     isLoading: boolean;
     // (undocumented)
     label: string;
-    nodeData: FinalizedNode;
+    nodeData: HierarchyNode;
 }
 
 // @beta

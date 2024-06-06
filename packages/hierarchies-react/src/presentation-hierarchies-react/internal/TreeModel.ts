@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { FinalizedNode, GenericInstanceFilter } from "@itwin/presentation-hierarchies";
+import { GenericInstanceFilter, HierarchyNode } from "@itwin/presentation-hierarchies";
 import { SelectionChangeType } from "../UseSelectionHandler";
 
 /** @internal */
@@ -18,7 +18,7 @@ export interface TreeModelRootNode {
 /** @internal */
 export interface TreeModelHierarchyNode {
   id: string;
-  nodeData: FinalizedNode;
+  nodeData: HierarchyNode;
   label: string;
   children: boolean;
   isLoading?: boolean;

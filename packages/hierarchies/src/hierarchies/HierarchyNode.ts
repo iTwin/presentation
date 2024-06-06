@@ -32,6 +32,12 @@ interface BaseHierarchyNode {
   autoExpand?: boolean;
   /** Additional data that may be assigned to this node. */
   extendedData?: { [key: string]: any };
+  /** Data that may be assigned to the node if filtering is enabled */
+  filtering?: {
+    isFilterTarget?: boolean;
+    hasFilterTargetAncestor?: boolean;
+    filteredChildrenIdentifierPaths?: HierarchyNodeIdentifiersPath[];
+  };
 }
 
 /**
@@ -342,19 +348,3 @@ export type ParsedHierarchyNode<TBase = ParsedCustomHierarchyNode | ParsedInstan
 export type ParsedCustomHierarchyNode = ParsedHierarchyNode<ProcessedCustomHierarchyNode>;
 /** A kind of `ProcessedInstanceHierarchyNode` that has unformatted label and doesn't know about its ancestors. */
 export type ParsedInstanceHierarchyNode = ParsedHierarchyNode<ProcessedInstanceHierarchyNode>;
-
-/**
- * Properties that are assigned to a processed node if filtering is enabled.
- * @internal
- */
-export interface FilteredNodeProps {
-  isFilterTarget?: boolean;
-  hasFilterTargetAncestor?: boolean;
-  filteredChildrenIdentifierPaths?: HierarchyNodeIdentifiersPath[];
-}
-
-/**
- * A `HierarchyNode` that has been fully processed and only has information, needed for rendering.
- * @beta
- */
-export type FinalizedNode = HierarchyNode & FilteredNodeProps;

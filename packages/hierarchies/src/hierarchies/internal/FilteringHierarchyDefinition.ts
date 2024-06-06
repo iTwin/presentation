@@ -15,15 +15,7 @@ import {
   NodePostProcessor,
   NodePreProcessor,
 } from "../HierarchyDefinition";
-import {
-  FilteredNodeProps,
-  HierarchyNode,
-  ParsedHierarchyNode,
-  ParsedInstanceHierarchyNode,
-  ProcessedCustomHierarchyNode,
-  ProcessedHierarchyNode,
-  ProcessedInstanceHierarchyNode,
-} from "../HierarchyNode";
+import { HierarchyNode, ParsedHierarchyNode, ParsedInstanceHierarchyNode, ProcessedHierarchyNode } from "../HierarchyNode";
 import { HierarchyNodeIdentifier, HierarchyNodeIdentifiersPath } from "../HierarchyNodeIdentifier";
 import { defaultNodesParser } from "./TreeNodesReader";
 
@@ -33,9 +25,6 @@ export interface FilteringQueryBuilderProps {
   source: HierarchyDefinition;
   nodeIdentifierPaths: HierarchyNodeIdentifiersPath[];
 }
-
-/** @internal */
-export type FilteredHierarchyNode<TNode = ProcessedHierarchyNode> = TNode & FilteredNodeProps;
 
 /** @internal */
 export class FilteringHierarchyDefinition implements HierarchyDefinition {
@@ -52,8 +41,7 @@ export class FilteringHierarchyDefinition implements HierarchyDefinition {
   public get preProcessNode(): NodePreProcessor {
     return async (node) => {
       const processedNode = this._source.preProcessNode ? await this._source.preProcessNode(node) : node;
-      const filteredNode = processedNode as FilteredHierarchyNode<ProcessedCustomHierarchyNode | ProcessedInstanceHierarchyNode> | undefined;
-      if (filteredNode?.processingParams?.hideInHierarchy && filteredNode.isFilterTarget && !filteredNode.hasFilterTargetAncestor) {
+      if (processedNode?.processingParams?.hideInHierarchy && processedNode.filtering?.isFilterTarget && !processedNode.filtering.hasFilterTargetAncestor) {
         // we want to hide target nodes if they have `hideInHierarchy` param, but only if they're not under another filter target
         return undefined;
       }
@@ -67,7 +55,9 @@ export class FilteringHierarchyDefinition implements HierarchyDefinition {
       if (
         // instance nodes get the auto-expand flag in `parseNode`, but grouping ones need to be handled during post-processing
         HierarchyNode.isClassGroupingNode(node) &&
-        node.children.some((child: FilteredHierarchyNode) => child.isFilterTarget || child.filteredChildrenIdentifierPaths)
+        node.children.some(
+          (child: ProcessedHierarchyNode) => child.filtering && (child.filtering.isFilterTarget || child.filtering.filteredChildrenIdentifierPaths),
+        )
       ) {
         return Object.assign(processedNode, { autoExpand: true });
       }
@@ -76,7 +66,7 @@ export class FilteringHierarchyDefinition implements HierarchyDefinition {
   }
 
   public get parseNode(): NodeParser {
-    return (row: { [columnName: string]: any }): FilteredHierarchyNode<ParsedInstanceHierarchyNode> => {
+    return (row: { [columnName: string]: any }): ParsedInstanceHierarchyNode => {
       const isFilterTarget: boolean = !!row[ECSQL_COLUMN_NAME_IsFilterTarget];
       const hasFilterTargetAncestor: boolean = !!row[ECSQL_COLUMN_NAME_HasFilterTargetAncestor];
       const parsedFilteredChildrenIdentifierPaths: HierarchyNodeIdentifiersPath[] | undefined = row[ECSQL_COLUMN_NAME_FilteredChildrenPaths]
@@ -88,7 +78,7 @@ export class FilteringHierarchyDefinition implements HierarchyDefinition {
   }
 
   public async defineHierarchyLevel(
-    props: DefineHierarchyLevelProps & { parentNode: FilteredHierarchyNode<DefineHierarchyLevelProps["parentNode"]> | undefined },
+    props: DefineHierarchyLevelProps & { parentNode: DefineHierarchyLevelProps["parentNode"] | undefined },
   ): Promise<HierarchyLevelDefinition> {
     const sourceDefinitions = await this._source.defineHierarchyLevel(props);
     const { filteredNodePaths, isDirectParentFilterTarget, hasFilterTargetAncestor } = this.getFilteringProps(props.parentNode);
@@ -143,14 +133,14 @@ export class FilteringHierarchyDefinition implements HierarchyDefinition {
     return filteredDefinitions;
   }
 
-  private getFilteringProps(parentNode: FilteredHierarchyNode<unknown> | undefined) {
+  private getFilteringProps(parentNode: Pick<HierarchyNode, "filtering"> | undefined) {
     if (!parentNode) {
       return { filteredNodePaths: this._nodeIdentifierPaths, isDirectParentFilterTarget: false, hasFilterTargetAncestor: false };
     }
     return {
-      filteredNodePaths: parentNode.filteredChildrenIdentifierPaths,
-      isDirectParentFilterTarget: parentNode.isFilterTarget,
-      hasFilterTargetAncestor: !!parentNode.hasFilterTargetAncestor,
+      filteredNodePaths: parentNode.filtering?.filteredChildrenIdentifierPaths,
+      isDirectParentFilterTarget: parentNode.filtering?.isFilterTarget,
+      hasFilterTargetAncestor: !!parentNode.filtering?.hasFilterTargetAncestor,
     };
   }
 }
@@ -208,13 +198,18 @@ function applyFilterAttributes<TNode extends ParsedHierarchyNode>(
   hasFilterTargetAncestor: boolean,
 ): TNode {
   const shouldAutoExpand = !!filteredChildrenIdentifierPaths?.some((path) => !!path.length);
-  return {
-    ...node,
-    ...(isFilterTarget ? { isFilterTarget } : undefined),
-    ...(hasFilterTargetAncestor ? { hasFilterTargetAncestor } : undefined),
-    ...(shouldAutoExpand ? { autoExpand: true } : undefined),
-    ...(!!filteredChildrenIdentifierPaths?.length ? { filteredChildrenIdentifierPaths } : undefined),
-  };
+  const result = { ...node };
+  if (shouldAutoExpand) {
+    result.autoExpand = true;
+  }
+  if (isFilterTarget || hasFilterTargetAncestor || filteredChildrenIdentifierPaths?.length) {
+    result.filtering = {
+      ...(isFilterTarget ? { isFilterTarget } : undefined),
+      ...(hasFilterTargetAncestor ? { hasFilterTargetAncestor } : undefined),
+      ...(!!filteredChildrenIdentifierPaths?.length ? { filteredChildrenIdentifierPaths } : undefined),
+    };
+  }
+  return result;
 }
 
 /** @internal */

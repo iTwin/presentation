@@ -39,7 +39,6 @@ import {
 import { DefineHierarchyLevelProps, HierarchyDefinition, HierarchyNodesDefinition } from "./HierarchyDefinition";
 import { RowsLimitExceededError } from "./HierarchyErrors";
 import {
-  FinalizedNode,
   HierarchyNode,
   NonGroupingHierarchyNode,
   ParentHierarchyNode,
@@ -104,7 +103,7 @@ export interface GetHierarchyNodesProps {
  */
 export interface HierarchyProvider {
   /** Gets nodes for the specified parent node. */
-  getNodes(props: GetHierarchyNodesProps): AsyncIterableIterator<FinalizedNode>;
+  getNodes(props: GetHierarchyNodesProps): AsyncIterableIterator<HierarchyNode>;
 
   /** Gets instance keys for the specified parent node. */
   getNodeInstanceKeys(props: Omit<GetHierarchyNodesProps, "ignoreCache">): AsyncIterableIterator<InstanceKey>;
@@ -357,7 +356,7 @@ class HierarchyProviderImpl implements HierarchyProvider {
   private createFinalizedNodesObservable(
     processedNodesObservable: Observable<ProcessedHierarchyNode>,
     props: GetHierarchyNodesProps,
-  ): Observable<FinalizedNode> {
+  ): Observable<HierarchyNode> {
     return processedNodesObservable.pipe(
       createDetermineChildrenOperator((n) => this.getChildNodesObservables({ parentNode: n }).hasNodes),
       postProcessNodes(this.hierarchyDefinition),
@@ -468,7 +467,7 @@ class HierarchyProviderImpl implements HierarchyProvider {
   /**
    * Creates and runs a query based on provided props, then processes retrieved nodes and returns them.
    */
-  public getNodes(props: GetHierarchyNodesProps): AsyncIterableIterator<FinalizedNode> {
+  public getNodes(props: GetHierarchyNodesProps): AsyncIterableIterator<HierarchyNode> {
     const loggingCategory = `${LOGGING_NAMESPACE}.GetNodes`;
     const timer = new StopWatch(undefined, true);
     let error: any;

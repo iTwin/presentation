@@ -19,14 +19,7 @@ export {
   createClassBasedHierarchyDefinition,
 } from "./hierarchies/HierarchyDefinition";
 export { RowsLimitExceededError } from "./hierarchies/HierarchyErrors";
-export {
-  GroupingHierarchyNode,
-  HierarchyNode,
-  NonGroupingHierarchyNode,
-  ParsedHierarchyNode,
-  ProcessedHierarchyNode,
-  FinalizedNode,
-} from "./hierarchies/HierarchyNode";
+export { GroupingHierarchyNode, HierarchyNode, NonGroupingHierarchyNode, ParsedHierarchyNode, ProcessedHierarchyNode } from "./hierarchies/HierarchyNode";
 export { HierarchyNodeIdentifier, HierarchyNodeIdentifiersPath } from "./hierarchies/HierarchyNodeIdentifier";
 export { GroupingNodeKey, HierarchyNodeKey, InstancesNodeKey } from "./hierarchies/HierarchyNodeKey";
 export { GetHierarchyNodesProps, HierarchyProvider, createHierarchyProvider } from "./hierarchies/HierarchyProvider";

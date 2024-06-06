@@ -57,9 +57,6 @@ export type DefineInstanceNodeChildHierarchyLevelProps = Omit<DefineHierarchyLev
 // @beta
 export type DefineRootHierarchyLevelProps = Omit<DefineHierarchyLevelProps, "parentNode">;
 
-// @beta
-export type FinalizedNode = HierarchyNode & FilteredNodeProps;
-
 export { GenericInstanceFilter }
 
 // @beta
@@ -205,7 +202,7 @@ export namespace HierarchyNodesDefinition {
 // @beta
 export interface HierarchyProvider {
     getNodeInstanceKeys(props: Omit<GetHierarchyNodesProps, "ignoreCache">): AsyncIterableIterator<InstanceKey>;
-    getNodes(props: GetHierarchyNodesProps): AsyncIterableIterator<FinalizedNode>;
+    getNodes(props: GetHierarchyNodesProps): AsyncIterableIterator<HierarchyNode>;
     notifyDataSourceChanged(): void;
     setFormatter(formatter: IPrimitiveValueFormatter | undefined): void;
 }
