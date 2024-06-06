@@ -4,6 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { ConcatenatedValue, InstanceKey, OmitOverUnion, PrimitiveValue } from "@itwin/presentation-shared";
+import { HierarchyNodeIdentifiersPath } from "./HierarchyNodeIdentifier";
 import {
   ClassGroupingNodeKey,
   GroupingNodeKey,
@@ -31,6 +32,12 @@ interface BaseHierarchyNode {
   autoExpand?: boolean;
   /** Additional data that may be assigned to this node. */
   extendedData?: { [key: string]: any };
+  /** Data that may be assigned to the node if filtering is enabled */
+  filtering?: {
+    isFilterTarget?: boolean;
+    hasFilterTargetAncestor?: boolean;
+    filteredChildrenIdentifierPaths?: HierarchyNodeIdentifiersPath[];
+  };
 }
 
 /**
@@ -317,6 +324,7 @@ export type ProcessedInstanceHierarchyNode = Omit<NonGroupingHierarchyNode, "key
 export type ProcessedGroupingHierarchyNode = Omit<GroupingHierarchyNode, "children"> & {
   children: Array<ProcessedGroupingHierarchyNode | ProcessedInstanceHierarchyNode>;
 };
+
 /**
  * A `HierarchyNode` that may have processing parameters defining whether it should be hidden under some conditions,
  * how it should be grouped, sorted, etc.

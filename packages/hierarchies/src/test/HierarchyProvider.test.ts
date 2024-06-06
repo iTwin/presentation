@@ -18,7 +18,6 @@ import {
   ECSQL_COLUMN_NAME_FilteredChildrenPaths,
   ECSQL_COLUMN_NAME_HasFilterTargetAncestor,
   ECSQL_COLUMN_NAME_IsFilterTarget,
-  FilteredHierarchyNode,
 } from "../hierarchies/internal/FilteringHierarchyDefinition";
 import { RowDef } from "../hierarchies/internal/TreeNodesReader";
 import { LimitingECSqlQueryExecutor } from "../hierarchies/LimitingECSqlQueryExecutor";
@@ -569,9 +568,11 @@ describe("createHierarchyProvider", () => {
           parentKeys: [],
           label: "test label",
           children: false,
-          filteredChildrenIdentifierPaths: [[{ className: "c.d", id: "0x456" }]],
+          filtering: {
+            filteredChildrenIdentifierPaths: [[{ className: "c.d", id: "0x456" }]],
+          },
           autoExpand: true,
-        } as FilteredHierarchyNode,
+        },
       ]);
     });
   });
