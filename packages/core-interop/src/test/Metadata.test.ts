@@ -50,21 +50,6 @@ describe("createECSchemaProvider", () => {
       expect(typeof schema.getClass === "function").to.be.true;
     });
 
-    // a test for our workaround for https://github.com/iTwin/itwinjs-core/issues/6542
-    it("handles duplicate schema in cache error", async () => {
-      const schemaContext = {
-        getSchema: sinon.stub<[SchemaKey], CoreSchema>(),
-      };
-      schemaContext.getSchema.onFirstCall().resolves({ name: "x" });
-      schemaContext.getSchema.onSecondCall().rejects(new Error("The schema, x.01.02.03, already exists within this cache"));
-      schemaContext.getSchema.onThirdCall().resolves({ name: "x" });
-
-      const provider = createECSchemaProvider(schemaContext as unknown as SchemaContext);
-      await Promise.all([provider.getSchema("x"), provider.getSchema("x")]);
-
-      expect(schemaContext.getSchema).to.be.calledThrice;
-    });
-
     it(`returns undefined on "schema not found" error`, async () => {
       const schemaContext = {
         getSchema: sinon.stub<[SchemaKey], CoreSchema>(),
@@ -98,6 +83,30 @@ describe("createECSchemaProvider", () => {
       // eslint-disable-next-line @typescript-eslint/unbound-method
       expect(schemaContext.getSchema).to.be.calledOnceWith(matchSchemaName);
       expect(schema).to.be.undefined;
+    });
+
+    it("doesn't repeat requests for the same schema", async () => {
+      const schemaContext = {
+        getSchema: sinon.stub<[SchemaKey], CoreSchema>().resolves({ name: "x" }),
+      };
+
+      const provider = createECSchemaProvider(schemaContext as unknown as SchemaContext);
+      await Promise.all([provider.getSchema("x"), provider.getSchema("x")]);
+
+      expect(schemaContext.getSchema).to.be.calledOnce;
+    });
+
+    it("handles duplicate schema in cache error", async () => {
+      const schemaContext = {
+        getSchema: sinon.stub<[SchemaKey], CoreSchema>(),
+      };
+      schemaContext.getSchema.onFirstCall().rejects(new Error("The schema, x.01.02.03, already exists within this cache"));
+      schemaContext.getSchema.onSecondCall().resolves({ name: "x" });
+
+      const provider = createECSchemaProvider(schemaContext as unknown as SchemaContext);
+      await provider.getSchema("x");
+
+      expect(schemaContext.getSchema).to.be.calledTwice;
     });
   });
 });
