@@ -606,12 +606,14 @@ class HierarchyProviderImpl implements HierarchyProvider {
 
 function preProcessNodes(hierarchyFactory: HierarchyDefinition) {
   return hierarchyFactory.preProcessNode
-    ? processNodes(hierarchyFactory.preProcessNode)
+    ? processNodes(hierarchyFactory.preProcessNode.bind(hierarchyFactory))
     : (o: Observable<ProcessedCustomHierarchyNode | ProcessedInstanceHierarchyNode>) => o;
 }
 
 function postProcessNodes(hierarchyFactory: HierarchyDefinition) {
-  return hierarchyFactory.postProcessNode ? processNodes(hierarchyFactory.postProcessNode) : (o: Observable<ProcessedHierarchyNode>) => o;
+  return hierarchyFactory.postProcessNode
+    ? processNodes(hierarchyFactory.postProcessNode.bind(hierarchyFactory))
+    : (o: Observable<ProcessedHierarchyNode>) => o;
 }
 
 function processNodes<TNode>(processor: (node: TNode) => Promise<TNode | undefined>) {

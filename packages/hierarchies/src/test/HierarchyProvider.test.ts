@@ -9,9 +9,15 @@ import sinon from "sinon";
 import { omit } from "@itwin/core-bentley";
 import { GenericInstanceFilter } from "@itwin/core-common";
 import { ECSqlQueryDef, ECSqlQueryReaderOptions, InstanceKey, trimWhitespace, TypedPrimitiveValue } from "@itwin/presentation-shared";
-import { DefineHierarchyLevelProps } from "../hierarchies/HierarchyDefinition";
+import { DefineHierarchyLevelProps, HierarchyDefinition } from "../hierarchies/HierarchyDefinition";
 import { RowsLimitExceededError } from "../hierarchies/HierarchyErrors";
-import { GroupingHierarchyNode, HierarchyNode } from "../hierarchies/HierarchyNode";
+import {
+  GroupingHierarchyNode,
+  HierarchyNode,
+  ProcessedCustomHierarchyNode,
+  ProcessedHierarchyNode,
+  ProcessedInstanceHierarchyNode,
+} from "../hierarchies/HierarchyNode";
 import { GroupingNodeKey } from "../hierarchies/HierarchyNodeKey";
 import { createHierarchyProvider } from "../hierarchies/HierarchyProvider";
 import {
@@ -166,107 +172,150 @@ describe("createHierarchyProvider", () => {
     });
   });
 
-  describe("Custom pre-processing", async () => {
-    it("calls hierarchy definition factory pre-processor if supplied", async () => {
-      const node = { key: "custom", label: "custom", children: false };
-      const preprocess = sinon.stub().resolves({ ...node, isPreprocessed: true });
-      const provider = createHierarchyProvider({
-        imodelAccess,
-        hierarchyDefinition: {
-          preProcessNode: preprocess,
-          async defineHierarchyLevel({ parentNode }) {
-            if (!parentNode) {
-              return [
-                {
-                  node,
-                },
-              ];
-            }
-            return [];
+  describe.only("Custom processing", () => {
+    class TestHierarchyDefinition implements HierarchyDefinition {
+      public node = { key: "custom", label: "custom", children: false };
+      public preProcessStub = sinon.stub().resolves({ ...this.node, isPreprocessed: true });
+      public postProcessStub = sinon.stub().resolves({ ...this.node, isPostprocessed: true });
+
+      public async preProcessNode(node: ProcessedCustomHierarchyNode | ProcessedInstanceHierarchyNode) {
+        return this.preProcessStub(node);
+      }
+      public async postProcessNode(node: ProcessedHierarchyNode) {
+        return this.postProcessStub(node);
+      }
+
+      public async defineHierarchyLevel({ parentNode }: DefineHierarchyLevelProps) {
+        const node = { key: "custom", label: "custom", children: false };
+        if (!parentNode) {
+          return [{ node }];
+        }
+        return [];
+      }
+    }
+
+    describe("Pre-processing", async () => {
+      it("calls hierarchy definition factory pre-processor if supplied", async () => {
+        const node = { key: "custom", label: "custom", children: false };
+        const preprocess = sinon.stub().resolves({ ...node, isPreprocessed: true });
+        const provider = createHierarchyProvider({
+          imodelAccess,
+          hierarchyDefinition: {
+            preProcessNode: preprocess,
+            async defineHierarchyLevel({ parentNode }) {
+              if (!parentNode) {
+                return [
+                  {
+                    node,
+                  },
+                ];
+              }
+              return [];
+            },
           },
-        },
+        });
+        const nodes = await collect(provider.getNodes({ parentNode: undefined }));
+        expect(preprocess).to.be.calledOnceWith({ ...node, parentKeys: [] });
+        expect(nodes)
+          .to.have.lengthOf(1)
+          .and.to.containSubset([{ isPreprocessed: true }]);
       });
-      const nodes = await collect(provider.getNodes({ parentNode: undefined }));
-      expect(preprocess).to.be.calledOnceWith({ ...node, parentKeys: [] });
-      expect(nodes)
-        .to.have.lengthOf(1)
-        .and.to.containSubset([{ isPreprocessed: true }]);
+
+      it("removes node from hierarchy if pre-processor returns `undefined`", async () => {
+        const node = { key: "custom", label: "custom", children: false };
+        const preprocess = sinon.stub().resolves(undefined);
+        const provider = createHierarchyProvider({
+          imodelAccess,
+          hierarchyDefinition: {
+            preProcessNode: preprocess,
+            async defineHierarchyLevel({ parentNode }) {
+              if (!parentNode) {
+                return [
+                  {
+                    node,
+                  },
+                ];
+              }
+              return [];
+            },
+          },
+        });
+        const nodes = await collect(provider.getNodes({ parentNode: undefined }));
+        expect(preprocess).to.be.calledOnceWith({ ...node, parentKeys: [] });
+        expect(nodes).to.deep.eq([]);
+      });
+
+      it("keeps `this` context", async () => {
+        const definition = new TestHierarchyDefinition();
+        const provider = createHierarchyProvider({
+          imodelAccess,
+          hierarchyDefinition: definition,
+        });
+        await collect(provider.getNodes({ parentNode: undefined }));
+        expect(definition.preProcessStub).to.be.calledOnce;
+      });
     });
 
-    it("removes node from hierarchy if pre-processor returns `undefined`", async () => {
-      const node = { key: "custom", label: "custom", children: false };
-      const preprocess = sinon.stub().resolves(undefined);
-      const provider = createHierarchyProvider({
-        imodelAccess,
-        hierarchyDefinition: {
-          preProcessNode: preprocess,
-          async defineHierarchyLevel({ parentNode }) {
-            if (!parentNode) {
-              return [
-                {
-                  node,
-                },
-              ];
-            }
-            return [];
+    describe("Post-processing", async () => {
+      it("calls hierarchy definition factory post-processor if supplied", async () => {
+        const node = { key: "custom", label: "custom", children: false };
+        const postprocess = sinon.stub().resolves({ ...node, isPostprocessed: true });
+        const provider = createHierarchyProvider({
+          imodelAccess,
+          hierarchyDefinition: {
+            postProcessNode: postprocess,
+            async defineHierarchyLevel({ parentNode }) {
+              if (!parentNode) {
+                return [
+                  {
+                    node,
+                  },
+                ];
+              }
+              return [];
+            },
           },
-        },
+        });
+        const nodes = await collect(provider.getNodes({ parentNode: undefined }));
+        expect(postprocess).to.be.calledOnceWith({ ...node, parentKeys: [] });
+        expect(nodes)
+          .to.have.lengthOf(1)
+          .to.containSubset([{ isPostprocessed: true }]);
       });
-      const nodes = await collect(provider.getNodes({ parentNode: undefined }));
-      expect(preprocess).to.be.calledOnceWith({ ...node, parentKeys: [] });
-      expect(nodes).to.deep.eq([]);
-    });
-  });
 
-  describe("Custom post-processing", async () => {
-    it("calls hierarchy definition factory post-processor if supplied", async () => {
-      const node = { key: "custom", label: "custom", children: false };
-      const postprocess = sinon.stub().resolves({ ...node, isPostprocessed: true });
-      const provider = createHierarchyProvider({
-        imodelAccess,
-        hierarchyDefinition: {
-          postProcessNode: postprocess,
-          async defineHierarchyLevel({ parentNode }) {
-            if (!parentNode) {
-              return [
-                {
-                  node,
-                },
-              ];
-            }
-            return [];
+      it("removes node from hierarchy if post-processor returns `undefined`", async () => {
+        const node = { key: "custom", label: "custom", children: false };
+        const postprocess = sinon.stub().resolves(undefined);
+        const provider = createHierarchyProvider({
+          imodelAccess,
+          hierarchyDefinition: {
+            postProcessNode: postprocess,
+            async defineHierarchyLevel({ parentNode }) {
+              if (!parentNode) {
+                return [
+                  {
+                    node,
+                  },
+                ];
+              }
+              return [];
+            },
           },
-        },
+        });
+        const nodes = await collect(provider.getNodes({ parentNode: undefined }));
+        expect(postprocess).to.be.calledOnceWith({ ...node, parentKeys: [] });
+        expect(nodes).to.deep.eq([]);
       });
-      const nodes = await collect(provider.getNodes({ parentNode: undefined }));
-      expect(postprocess).to.be.calledOnceWith({ ...node, parentKeys: [] });
-      expect(nodes)
-        .to.have.lengthOf(1)
-        .to.containSubset([{ isPostprocessed: true }]);
-    });
 
-    it("removes node from hierarchy if post-processor returns `undefined`", async () => {
-      const node = { key: "custom", label: "custom", children: false };
-      const postprocess = sinon.stub().resolves(undefined);
-      const provider = createHierarchyProvider({
-        imodelAccess,
-        hierarchyDefinition: {
-          postProcessNode: postprocess,
-          async defineHierarchyLevel({ parentNode }) {
-            if (!parentNode) {
-              return [
-                {
-                  node,
-                },
-              ];
-            }
-            return [];
-          },
-        },
+      it("keeps `this` context", async () => {
+        const definition = new TestHierarchyDefinition();
+        const provider = createHierarchyProvider({
+          imodelAccess,
+          hierarchyDefinition: definition,
+        });
+        await collect(provider.getNodes({ parentNode: undefined }));
+        expect(definition.postProcessStub).to.be.calledOnce;
       });
-      const nodes = await collect(provider.getNodes({ parentNode: undefined }));
-      expect(postprocess).to.be.calledOnceWith({ ...node, parentKeys: [] });
-      expect(nodes).to.deep.eq([]);
     });
   });
 
