@@ -77,9 +77,7 @@ export class FilteringHierarchyDefinition implements HierarchyDefinition {
     };
   }
 
-  public async defineHierarchyLevel(
-    props: DefineHierarchyLevelProps,
-  ): Promise<HierarchyLevelDefinition> {
+  public async defineHierarchyLevel(props: DefineHierarchyLevelProps): Promise<HierarchyLevelDefinition> {
     const sourceDefinitions = await this._source.defineHierarchyLevel(props);
     const { filteredNodePaths, isDirectParentFilterTarget, hasFilterTargetAncestor } = this.getFilteringProps(props.parentNode);
     if (!filteredNodePaths) {
