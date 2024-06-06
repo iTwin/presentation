@@ -188,6 +188,45 @@ describe("useTree", () => {
     });
   });
 
+  it("does not persist tree state when hierarchy is filtered", async () => {
+    hierarchyProvider.getNodes.callsFake((props) => {
+      if (props.parentNode === undefined) {
+        return createAsyncIterator([createTestHierarchyNode({ id: "root-1", autoExpand: true, children: true })]);
+      }
+      return createAsyncIterator([createTestHierarchyNode({ id: "child-1" }), createTestHierarchyNode({ id: "child-2" })]);
+    });
+
+    const { result, rerender } = renderHook(useTree, { initialProps: { ...initialProps } });
+
+    await waitFor(() => {
+      expect(result.current.isLoading).to.be.false;
+      expect(result.current.rootNodes).to.have.lengthOf(1);
+      const rootNode = result.current.rootNodes![0] as PresentationHierarchyNode;
+      expect(rootNode.id).to.be.eq("root-1");
+      expect(rootNode.isExpanded).to.be.true;
+      expect(rootNode.children).to.have.lengthOf(2);
+    });
+
+    hierarchyProvider.getNodes.reset();
+    hierarchyProvider.getNodes.callsFake((props) => {
+      if (props.parentNode === undefined) {
+        return createAsyncIterator([createTestHierarchyNode({ id: "root-1", autoExpand: false, children: true })]);
+      }
+      return createAsyncIterator([createTestHierarchyNode({ id: "child-1" }), createTestHierarchyNode({ id: "child-2" })]);
+    });
+
+    rerender({ ...initialProps, getFilteredPaths: async () => [] });
+
+    await waitFor(() => {
+      expect(result.current.isLoading).to.be.false;
+      expect(result.current.rootNodes).to.have.lengthOf(1);
+      const rootNode = result.current.rootNodes![0] as PresentationHierarchyNode;
+      expect(rootNode.id).to.be.eq("root-1");
+      expect(rootNode.isExpanded).to.be.false;
+      expect(rootNode.children).to.be.true;
+    });
+  });
+
   it("ignores error during filtered paths loading", async () => {
     hierarchyProvider.getNodes.callsFake(() => {
       return createAsyncIterator([createTestHierarchyNode({ id: "root-1" })]);

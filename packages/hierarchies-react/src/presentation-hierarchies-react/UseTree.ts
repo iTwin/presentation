@@ -150,9 +150,9 @@ function useTreeInternal({
   const currentFormatter = useRef<IPrimitiveValueFormatter>();
 
   useEffect(() => {
-    const updateHierarchyProvider = (provider: HierarchyProvider) => {
+    const updateHierarchyProvider = (provider: HierarchyProvider, filtered: boolean) => {
       actions.setHierarchyProvider(provider);
-      actions.reloadTree(undefined);
+      actions.reloadTree({ discardState: filtered });
       setHierarchySource({ hierarchyProvider: provider, isFiltering: false });
     };
 
@@ -173,25 +173,25 @@ function useTreeInternal({
 
     const loadHierarchyProvider = async () => {
       if (!getFilteredPaths) {
-        return createProvider(undefined);
+        return { provider: createProvider(undefined), filtered: false };
       }
 
       setHierarchySource((prev) => ({ ...prev, isFiltering: true }));
       try {
         const filteredPaths = await getFilteredPaths({ imodelAccess });
-        return createProvider(filteredPaths);
+        return { provider: createProvider(filteredPaths), filtered: filteredPaths !== undefined };
       } catch {
-        return createProvider(undefined);
+        return { provider: createProvider(undefined), filtered: false };
       }
     };
 
     let disposed = false;
     void (async () => {
-      const provider = await loadHierarchyProvider();
+      const { provider, filtered } = await loadHierarchyProvider();
       if (disposed) {
         return;
       }
-      updateHierarchyProvider(provider);
+      updateHierarchyProvider(provider, filtered);
     })();
 
     return () => {
