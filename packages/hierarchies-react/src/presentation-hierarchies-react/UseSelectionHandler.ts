@@ -133,11 +133,10 @@ function getExtendedSelectionAction(isSelected: boolean, shiftDown: boolean, ctr
   if (shiftDown) {
     return { select: "range", type: "replace" };
   }
-  if (!isSelected) {
-    return { select: "node", type: "remove" };
+  if (ctrlDown) {
+    return { select: "node", type: isSelected ? "add" : "remove" };
   }
-
-  return { select: "node", type: ctrlDown ? "add" : "replace" };
+  return { select: "node", type: isSelected ? "replace" : "disabled" };
 }
 
 function computeFlatNodeList(rootNodes: Array<PresentationTreeNode>): FlatTreeState {

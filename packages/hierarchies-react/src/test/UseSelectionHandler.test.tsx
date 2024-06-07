@@ -188,6 +188,18 @@ describe("useSelectionHandler", () => {
         expect(selectNodesStub).to.be.calledOnceWith(["node"], "replace");
       });
 
+      it("does not deselect node when clicked", async () => {
+        const rootNode = createHierarchyNode("node");
+        const { user, getByText } = render(<TestComponent {...createProps([rootNode], selectionMode, false)} />);
+
+        const node = getByText("node");
+        node.focus();
+
+        await clickNode(user, node);
+
+        expect(selectNodesStub).to.not.be.called;
+      });
+
       it("adds to selection when node is clicked and `ctrl` used", async () => {
         const rootNode = createHierarchyNode("node");
         const { user, getByText } = render(<TestComponent {...createProps([rootNode], selectionMode, true)} />);
