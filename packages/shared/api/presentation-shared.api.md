@@ -16,16 +16,18 @@ export type ConcatenatedValue = ConcatenatedValuePart[];
 export namespace ConcatenatedValue {
     export function serialize(props: {
         parts: ConcatenatedValue;
-        partFormatter: (part: ConcatenatedValuePart) => Promise<string>;
+        partFormatter: (part: Exclude<ConcatenatedValuePart, ConcatenatedValue>) => Promise<string>;
         separator?: string;
     }): Promise<string>;
 }
 
 // @beta
-export type ConcatenatedValuePart = PrimitivePropertyValue | TypedPrimitiveValue | string;
+export type ConcatenatedValuePart = ConcatenatedValue | PrimitivePropertyValue | TypedPrimitiveValue | string;
 
 // @beta (undocumented)
 export namespace ConcatenatedValuePart {
+    // (undocumented)
+    export function isConcatenatedValue(part: ConcatenatedValuePart): part is ConcatenatedValue;
     // (undocumented)
     export function isPrimitive(part: ConcatenatedValuePart): part is TypedPrimitiveValue;
     // (undocumented)

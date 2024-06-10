@@ -7,6 +7,7 @@ import { PrimitivePropertyValue, TypedPrimitiveValue } from "./Values";
 
 /**
  * A part of a `ConcatenatedValue`, describing one piece of the value. Possible types:
+ * - `ConcatenatedValue` describes a nested concatenated value.
  * - `PrimitivePropertyValue` describes an ECProperty value. Generally the value is formatted according to
  *   property metadata before concatenating with other parts.
  * - `TypedPrimitiveValue` describes a value with its type. Generally the value is formatted
@@ -16,7 +17,7 @@ import { PrimitivePropertyValue, TypedPrimitiveValue } from "./Values";
  * @see `ConcatenatedValue`
  * @beta
  */
-export type ConcatenatedValuePart = PrimitivePropertyValue | TypedPrimitiveValue | string;
+export type ConcatenatedValuePart = ConcatenatedValue | PrimitivePropertyValue | TypedPrimitiveValue | string;
 
 /** @beta */
 // eslint-disable-next-line @typescript-eslint/no-redeclare
@@ -35,6 +36,11 @@ export namespace ConcatenatedValuePart {
   export function isProperty(part: ConcatenatedValuePart): part is PrimitivePropertyValue {
     const candidate = part as PrimitivePropertyValue;
     return !!candidate.className && !!candidate.propertyName;
+  }
+
+  /** @beta */
+  export function isConcatenatedValue(part: ConcatenatedValuePart): part is ConcatenatedValue {
+    return Array.isArray(part);
   }
 }
 
@@ -59,11 +65,20 @@ export namespace ConcatenatedValue {
     /** The parts to join. */
     parts: ConcatenatedValue;
     /** Parts formatter to convert each part to string */
-    partFormatter: (part: ConcatenatedValuePart) => Promise<string>;
+    partFormatter: (part: Exclude<ConcatenatedValuePart, ConcatenatedValue>) => Promise<string>;
     /** Optional separator for joining the parts. Defaults to an empty string. */
     separator?: string;
   }): Promise<string> {
-    const { parts, partFormatter } = props;
-    return (await Promise.all(parts.map(partFormatter))).join(props.separator ?? "");
+    const { parts, partFormatter, separator } = props;
+    return (
+      await Promise.all(
+        parts.map(async (part) => {
+          if (ConcatenatedValuePart.isConcatenatedValue(part)) {
+            return serialize({ parts: part, partFormatter, separator });
+          }
+          return partFormatter(part);
+        }),
+      )
+    ).join(separator ?? "");
   }
 }
