@@ -1,5 +1,13 @@
 # @itwin/presentation-hierarchies
 
+## 0.1.4
+
+### Patch Changes
+
+- [#625](https://github.com/iTwin/presentation/pull/625): Fixed `preProcessNode` and `postProcessNode` losing `this` context in `HierarchyProvider`.
+- Updated dependencies:
+  - @itwin/presentation-shared@0.3.0
+
 ## 0.1.3
 
 ### Patch Changes

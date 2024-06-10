@@ -1,5 +1,15 @@
 # @itwin/presentation-hierarchies-react
 
+## 0.4.1
+
+### Patch Changes
+
+- [#627](https://github.com/iTwin/presentation/pull/627): Changed `extended` selection mode to not deselect nodes when `ctrl` is not used.
+- Updated dependencies:
+  - @itwin/presentation-shared@0.3.0
+  - @itwin/presentation-hierarchies@0.1.4
+  - @itwin/unified-selection@0.4.3
+
 ## 0.4.0
 
 ### Minor Changes
