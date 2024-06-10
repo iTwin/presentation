@@ -55,6 +55,10 @@ describe("Hierarchies", () => {
                     { type: "DateTime", value: date },
                     { type: "String", value: "|" },
                     { type: "Double", value: 0.123 },
+                    [
+                      { type: "String", value: "-" },
+                      { type: "Integer", value: 1.8 },
+                    ],
                   ],
                   children: false,
                 },
@@ -69,7 +73,7 @@ describe("Hierarchies", () => {
         expect: [
           {
             node: (node) => {
-              const expectedLabel = `${date.toLocaleString()}|0.12`;
+              const expectedLabel = `${date.toLocaleString()}|0.12-2`;
               const actualLabel = node.label;
               expect(actualLabel).to.eq(expectedLabel);
             },

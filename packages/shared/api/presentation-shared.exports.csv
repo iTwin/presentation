@@ -3,7 +3,7 @@ Release Tag;API Item
 beta;ArrayElement
 beta;ConcatenatedValue = ConcatenatedValuePart[]
 beta;ConcatenatedValue
-beta;ConcatenatedValuePart = PrimitivePropertyValue | TypedPrimitiveValue | string
+beta;ConcatenatedValuePart = ConcatenatedValue | PrimitivePropertyValue | TypedPrimitiveValue | string
 beta;ConcatenatedValuePart
 beta;createBisInstanceLabelSelectClauseFactory(props: BisInstanceLabelSelectClauseFactoryProps): IInstanceLabelSelectClauseFactory
 beta;createCachingECClassHierarchyInspector(props:
