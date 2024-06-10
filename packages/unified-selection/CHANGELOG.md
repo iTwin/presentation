@@ -1,5 +1,12 @@
 # @itwin/unified-selection
 
+## 0.4.3
+
+### Patch Changes
+
+- Updated dependencies:
+  - @itwin/presentation-shared@0.3.0
+
 ## 0.4.2
 
 ### Patch Changes
