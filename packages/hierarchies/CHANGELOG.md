@@ -1,5 +1,13 @@
 # @itwin/presentation-hierarchies
 
+## 0.1.5
+
+### Patch Changes
+
+- [#632](https://github.com/iTwin/presentation/pull/632): Fixed hierarchy filtering when multiple paths uses same instance with diffrent class name.
+- Updated dependencies:
+  - @itwin/presentation-shared@0.3.1
+
 ## 0.1.4
 
 ### Patch Changes
