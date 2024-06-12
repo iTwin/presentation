@@ -98,6 +98,7 @@ export class FilteringHierarchyDefinition implements HierarchyDefinition {
               }
               return id.key === definition.node.key;
             },
+            this._classHierarchy,
             (def, matchingFilters, isFilterTarget) => {
               const filteredChildrenIdentifierPaths = matchingFilters.reduce(
                 (r, c) => [...r, ...c.childrenIdentifierPaths],
@@ -119,6 +120,7 @@ export class FilteringHierarchyDefinition implements HierarchyDefinition {
               }
               return this._classHierarchy.classDerivesFrom(id.className, definition.fullClassName);
             },
+            this._classHierarchy,
             (def, matchingFilters, isFilterTarget) =>
               applyECInstanceIdsFilter(def, matchingFilters, isFilterTarget, !!isDirectParentFilterTarget, !!hasFilterTargetAncestor),
           );
@@ -150,6 +152,7 @@ async function matchFilters<
   definition: TDefinition,
   filteringProps: { filteredNodePaths: HierarchyNodeIdentifiersPath[]; isDirectParentFilterTarget?: boolean },
   predicate: (id: HierarchyNodeIdentifier) => Promise<boolean>,
+  classHierarchy: ECClassHierarchyInspector,
   matchedDefinitionProcessor: (
     def: TDefinition,
     matchingFilters: Array<{ id: TIdentifier; childrenIdentifierPaths: HierarchyNodeIdentifiersPath[] }>,
@@ -165,7 +168,7 @@ async function matchFilters<
     }
     const nodeId = path[0];
     if (await predicate(nodeId)) {
-      let childrenIdentifierPaths = matchingFilters.find(({ id }) => HierarchyNodeIdentifier.equal(id, nodeId))?.childrenIdentifierPaths;
+      let childrenIdentifierPaths = await findChildrenIdentifierPaths(matchingFilters, nodeId, classHierarchy);
       if (!childrenIdentifierPaths) {
         childrenIdentifierPaths = [];
         matchingFilters.push({
@@ -187,6 +190,31 @@ async function matchFilters<
     return matchedDefinitionProcessor(definition, matchingFilters, isFilterTarget);
   }
   return undefined;
+}
+
+async function findChildrenIdentifierPaths<TIdentifier extends HierarchyNodeIdentifier>(
+  filters: Array<{ id: TIdentifier; childrenIdentifierPaths: HierarchyNodeIdentifiersPath[] }>,
+  nodeId: TIdentifier,
+  classHierarchy: ECClassHierarchyInspector,
+) {
+  for (const filter of filters) {
+    if (await identifiersEqual(filter.id, nodeId, classHierarchy)) {
+      return filter.childrenIdentifierPaths;
+    }
+  }
+  return undefined;
+}
+
+async function identifiersEqual<TIdentifier extends HierarchyNodeIdentifier>(lhs: TIdentifier, rhs: TIdentifier, classHierarchy: ECClassHierarchyInspector) {
+  if (HierarchyNodeIdentifier.isInstanceNodeIdentifier(lhs) && HierarchyNodeIdentifier.isInstanceNodeIdentifier(rhs)) {
+    return (
+      lhs.id === rhs.id &&
+      (lhs.className === rhs.className ||
+        (await classHierarchy.classDerivesFrom(lhs.className, rhs.className)) ||
+        (await classHierarchy.classDerivesFrom(rhs.className, lhs.className)))
+    );
+  }
+  return HierarchyNodeIdentifier.equal(lhs, rhs);
 }
 
 function applyFilterAttributes<TNode extends ParsedHierarchyNode>(
