@@ -1,5 +1,11 @@
 # @itwin/presentation-shared
 
+## 0.3.1
+
+### Patch Changes
+
+- [#631](https://github.com/iTwin/presentation/pull/631): Fix `ECSql.createRelationshipPathJoinClause` creating an invalid JOIN clause in case of reversed relationship step that uses a navigation property.
+
 ## 0.3.0
 
 ### Minor Changes

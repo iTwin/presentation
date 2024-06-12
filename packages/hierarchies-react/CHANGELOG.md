@@ -1,5 +1,15 @@
 # @itwin/presentation-hierarchies-react
 
+## 0.4.2
+
+### Patch Changes
+
+- [#630](https://github.com/iTwin/presentation/pull/630): Added `getLabel` function to `TreeRenderer` and `TreeNodeRenderer` to allow customizing node labels.
+- Updated dependencies:
+  - @itwin/presentation-hierarchies@0.1.5
+  - @itwin/presentation-shared@0.3.1
+  - @itwin/unified-selection@0.4.4
+
 ## 0.4.1
 
 ### Patch Changes
