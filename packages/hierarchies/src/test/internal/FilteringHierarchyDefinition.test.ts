@@ -635,6 +635,104 @@ describe("FilteringHierarchyDefinition", () => {
           ),
         ]);
       });
+
+      it("returns source instance node query definition filtered with matching path beginning with derived class", async () => {
+        const queryClass = classHierarchyInspector.stubEntityClass({
+          schemaName: "BisCore",
+          className: "SourceQueryClassName",
+          is: async (other) => other === queryClass.fullName,
+        });
+        const filterPathClass0 = classHierarchyInspector.stubEntityClass({
+          schemaName: "BisCore",
+          className: "FilterPathClassName0",
+          is: async (other) => other === queryClass.fullName,
+        });
+        const filterPathClass1 = classHierarchyInspector.stubEntityClass({ schemaName: "BisCore", className: "FilterPathClassName1", is: async () => false });
+        const sourceDefinition: InstanceNodesQueryDefinition = {
+          fullClassName: queryClass.fullName,
+          query: {
+            ecsql: "SOURCE_QUERY",
+          },
+        };
+        const sourceFactory = {
+          defineHierarchyLevel: async () => [sourceDefinition],
+        } as unknown as HierarchyDefinition;
+        const filteringFactory = createFilteringHierarchyLevelsFactory({
+          classHierarchy: classHierarchyInspector,
+          sourceFactory,
+          nodeIdentifierPaths: [
+            [{ className: queryClass.fullName, id: "0x123" }],
+            [
+              { className: filterPathClass0.fullName, id: "0x123" },
+              { className: filterPathClass1.fullName, id: "0x456" },
+            ],
+          ],
+        });
+        const result = await filteringFactory.defineHierarchyLevel({ parentNode: undefined });
+        expect(result).to.deep.eq([
+          applyECInstanceIdsFilter(
+            sourceDefinition,
+            [
+              {
+                id: { className: filterPathClass0.fullName, id: "0x123" },
+                childrenIdentifierPaths: [[{ className: filterPathClass1.fullName, id: "0x456" }]],
+              },
+            ],
+            true,
+            false,
+            false,
+          ),
+        ]);
+      });
+
+      it("returns source instance node query definition filtered with matching path beginning with base class", async () => {
+        const queryClass = classHierarchyInspector.stubEntityClass({
+          schemaName: "BisCore",
+          className: "SourceQueryClassName",
+          is: async (other) => other === queryClass.fullName,
+        });
+        const filterPathClass0 = classHierarchyInspector.stubEntityClass({
+          schemaName: "BisCore",
+          className: "FilterPathClassName0",
+          is: async (other) => other === queryClass.fullName,
+        });
+        const filterPathClass1 = classHierarchyInspector.stubEntityClass({ schemaName: "BisCore", className: "FilterPathClassName1", is: async () => false });
+        const sourceDefinition: InstanceNodesQueryDefinition = {
+          fullClassName: queryClass.fullName,
+          query: {
+            ecsql: "SOURCE_QUERY",
+          },
+        };
+        const sourceFactory = {
+          defineHierarchyLevel: async () => [sourceDefinition],
+        } as unknown as HierarchyDefinition;
+        const filteringFactory = createFilteringHierarchyLevelsFactory({
+          classHierarchy: classHierarchyInspector,
+          sourceFactory,
+          nodeIdentifierPaths: [
+            [{ className: filterPathClass0.fullName, id: "0x123" }],
+            [
+              { className: queryClass.fullName, id: "0x123" },
+              { className: filterPathClass1.fullName, id: "0x456" },
+            ],
+          ],
+        });
+        const result = await filteringFactory.defineHierarchyLevel({ parentNode: undefined });
+        expect(result).to.deep.eq([
+          applyECInstanceIdsFilter(
+            sourceDefinition,
+            [
+              {
+                id: { className: filterPathClass0.fullName, id: "0x123" },
+                childrenIdentifierPaths: [[{ className: filterPathClass1.fullName, id: "0x456" }]],
+              },
+            ],
+            true,
+            false,
+            false,
+          ),
+        ]);
+      });
     });
 
     it("uses filtering paths from parent node", async () => {
@@ -708,6 +806,8 @@ describe("FilteringHierarchyDefinition", () => {
         },
       });
       expect(result).to.deep.eq([
+        // this definition doesn't match parent's `filteredChildrenIdentifierPaths`, but is added because parent is a filter target
+        nonMatchingSourceDefinition,
         // this definition is added with modifications to account for parent's `filteredChildrenIdentifierPaths`
         {
           node: {
@@ -715,8 +815,6 @@ describe("FilteringHierarchyDefinition", () => {
             filtering: { isFilterTarget: true },
           },
         },
-        // this definition doesn't match parent's `filteredChildrenIdentifierPaths`, but is added because parent is a filter target
-        nonMatchingSourceDefinition,
       ]);
     });
   });
