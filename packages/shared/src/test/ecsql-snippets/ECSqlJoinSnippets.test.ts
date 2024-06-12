@@ -28,9 +28,16 @@ describe("createRelationshipPathJoinClause", () => {
   });
 
   describe("using navigation properties", () => {
-    it("creates a forward join on navigation property with direction matching its relationship", async () => {
-      const { sourceClass, targetClass, relationship, navigationProperty } = await setupNavigationPropertyRelationshipClasses({
+    it("creates a forward join on forward navigation property with forward relationship", async () => {
+      const { sourceClass, targetClass, relationship } = await setupNavigationPropertyRelationshipClasses({
         navigationPropertyDirection: "Forward",
+        navigationPropertyName: "PhysicalMaterial",
+        source: "PhysicalElement",
+        target: "PhysicalMaterial",
+        relationship: {
+          name: "PhysicalElementIsOfPhysicalMaterial",
+          direction: "Forward",
+        },
       });
       expect(
         trimWhitespace(
@@ -48,12 +55,49 @@ describe("createRelationshipPathJoinClause", () => {
             ],
           }),
         ),
-      ).to.eq(trimWhitespace(`INNER JOIN [${schemaName}].[${targetClass.name}] [t] ON [t].[ECInstanceId] = [s].[${navigationProperty.name}].[Id]`));
+      ).to.eq(trimWhitespace(`INNER JOIN [${schemaName}].[PhysicalMaterial] [t] ON [t].[ECInstanceId] = [s].[PhysicalMaterial].[Id]`));
     });
 
-    it("creates a forward join on navigation property with direction opposite to its relationship", async () => {
-      const { sourceClass, targetClass, relationship, navigationProperty } = await setupNavigationPropertyRelationshipClasses({
+    it("creates a forward join on forward navigation property with backward relationship", async () => {
+      const { sourceClass, targetClass, relationship } = await setupNavigationPropertyRelationshipClasses({
+        navigationPropertyDirection: "Forward",
+        navigationPropertyName: "ModeledElement",
+        source: "Model",
+        target: "Element",
+        relationship: {
+          name: "ModelModelsElement",
+          direction: "Backward",
+        },
+      });
+      expect(
+        trimWhitespace(
+          await createRelationshipPathJoinClause({
+            schemaProvider,
+            path: [
+              {
+                sourceClassName: sourceClass.fullName,
+                sourceAlias: "s",
+                relationshipName: relationship.fullName,
+                relationshipAlias: "r",
+                targetClassName: targetClass.fullName,
+                targetAlias: "t",
+              },
+            ],
+          }),
+        ),
+      ).to.eq(trimWhitespace(`INNER JOIN [${schemaName}].[Element] [t] ON [t].[ECInstanceId] = [s].[ModeledElement].[Id]`));
+    });
+
+    it("creates a forward join on backward navigation property with forward relationship", async () => {
+      const { sourceClass, targetClass, relationship } = await setupNavigationPropertyRelationshipClasses({
         navigationPropertyDirection: "Backward",
+        navigationPropertyName: "Model",
+        source: "Model",
+        target: "Element",
+        relationship: {
+          name: "ModelContainsElements",
+          direction: "Forward",
+        },
       });
       expect(
         trimWhitespace(
@@ -71,12 +115,49 @@ describe("createRelationshipPathJoinClause", () => {
             ],
           }),
         ),
-      ).to.eq(trimWhitespace(`INNER JOIN [${schemaName}].[${targetClass.name}] [t] ON [t].[${navigationProperty.name}].[Id] = [s].[ECInstanceId]`));
+      ).to.eq(trimWhitespace(`INNER JOIN [${schemaName}].[Element] [t] ON [t].[Model].[Id] = [s].[ECInstanceId]`));
     });
 
-    it("creates a reversed join on navigation property with direction matching its relationship", async () => {
-      const { sourceClass, targetClass, relationship, navigationProperty } = await setupNavigationPropertyRelationshipClasses({
+    it("creates a forward join on backward navigation property with backward relationship", async () => {
+      const { sourceClass, targetClass, relationship } = await setupNavigationPropertyRelationshipClasses({
+        navigationPropertyDirection: "Backward",
+        navigationPropertyName: "Scope",
+        source: "Element",
+        target: "ExternalSourceAspect",
+        relationship: {
+          name: "ElementScopesExternalSourceIdentifier",
+          direction: "Backward",
+        },
+      });
+      expect(
+        trimWhitespace(
+          await createRelationshipPathJoinClause({
+            schemaProvider,
+            path: [
+              {
+                sourceClassName: sourceClass.fullName,
+                sourceAlias: "s",
+                relationshipName: relationship.fullName,
+                relationshipAlias: "r",
+                targetClassName: targetClass.fullName,
+                targetAlias: "t",
+              },
+            ],
+          }),
+        ),
+      ).to.eq(trimWhitespace(`INNER JOIN [${schemaName}].[ExternalSourceAspect] [t] ON [t].[Scope].[Id] = [s].[ECInstanceId]`));
+    });
+
+    it("creates a reversed join on forward navigation property with forward relationship", async () => {
+      const { sourceClass, targetClass, relationship } = await setupNavigationPropertyRelationshipClasses({
         navigationPropertyDirection: "Forward",
+        navigationPropertyName: "PhysicalMaterial",
+        source: "PhysicalElement",
+        target: "PhysicalMaterial",
+        relationship: {
+          name: "PhysicalElementIsOfPhysicalMaterial",
+          direction: "Forward",
+        },
       });
       expect(
         trimWhitespace(
@@ -95,12 +176,19 @@ describe("createRelationshipPathJoinClause", () => {
             ],
           }),
         ),
-      ).to.eq(trimWhitespace(`INNER JOIN [${schemaName}].[${sourceClass.name}] [t] ON [t].[ECInstanceId] = [s].[${navigationProperty.name}].[Id]`));
+      ).to.eq(trimWhitespace(`INNER JOIN [${schemaName}].[PhysicalElement] [t] ON [t].[PhysicalMaterial].[Id] = [s].[ECInstanceId]`));
     });
 
-    it("creates a reversed join on navigation property with direction opposite to its relationship", async () => {
-      const { sourceClass, targetClass, relationship, navigationProperty } = await setupNavigationPropertyRelationshipClasses({
-        navigationPropertyDirection: "Backward",
+    it("creates a reversed join on forward navigation property with backward relationship", async () => {
+      const { sourceClass, targetClass, relationship } = await setupNavigationPropertyRelationshipClasses({
+        navigationPropertyDirection: "Forward",
+        navigationPropertyName: "ModeledElement",
+        source: "Model",
+        target: "Element",
+        relationship: {
+          name: "ModelModelsElement",
+          direction: "Backward",
+        },
       });
       expect(
         trimWhitespace(
@@ -119,7 +207,69 @@ describe("createRelationshipPathJoinClause", () => {
             ],
           }),
         ),
-      ).to.eq(trimWhitespace(`INNER JOIN [${schemaName}].[${sourceClass.name}] [t] ON [t].[${navigationProperty.name}].[Id] = [s].[ECInstanceId]`));
+      ).to.eq(trimWhitespace(`INNER JOIN [${schemaName}].[Model] [t] ON [t].[ModeledElement].[Id] = [s].[ECInstanceId]`));
+    });
+
+    it("creates a reversed join on backward navigation property with forward relationship", async () => {
+      const { sourceClass, targetClass, relationship } = await setupNavigationPropertyRelationshipClasses({
+        navigationPropertyDirection: "Backward",
+        navigationPropertyName: "Model",
+        source: "Model",
+        target: "Element",
+        relationship: {
+          name: "ModelContainsElements",
+          direction: "Forward",
+        },
+      });
+      expect(
+        trimWhitespace(
+          await createRelationshipPathJoinClause({
+            schemaProvider,
+            path: [
+              {
+                sourceClassName: targetClass.fullName,
+                sourceAlias: "s",
+                relationshipName: relationship.fullName,
+                relationshipAlias: "r",
+                relationshipReverse: true,
+                targetClassName: sourceClass.fullName,
+                targetAlias: "t",
+              },
+            ],
+          }),
+        ),
+      ).to.eq(trimWhitespace(`INNER JOIN [${schemaName}].[Model] [t] ON [t].[ECInstanceId] = [s].[Model].[Id]`));
+    });
+
+    it("creates a reversed join on backward navigation property with backward relationship", async () => {
+      const { sourceClass, targetClass, relationship } = await setupNavigationPropertyRelationshipClasses({
+        navigationPropertyDirection: "Backward",
+        navigationPropertyName: "Scope",
+        source: "Element",
+        target: "ExternalSourceAspect",
+        relationship: {
+          name: "ElementScopesExternalSourceIdentifier",
+          direction: "Backward",
+        },
+      });
+      expect(
+        trimWhitespace(
+          await createRelationshipPathJoinClause({
+            schemaProvider,
+            path: [
+              {
+                sourceClassName: targetClass.fullName,
+                sourceAlias: "s",
+                relationshipName: relationship.fullName,
+                relationshipAlias: "r",
+                relationshipReverse: true,
+                targetClassName: sourceClass.fullName,
+                targetAlias: "t",
+              },
+            ],
+          }),
+        ),
+      ).to.eq(trimWhitespace(`INNER JOIN [${schemaName}].[Element] [t] ON [t].[ECInstanceId] = [s].[Scope].[Id]`));
     });
   });
 
@@ -398,9 +548,9 @@ describe("createRelationshipPathJoinClause", () => {
   async function setupNavigationPropertyRelationshipClasses(props: {
     navigationPropertyDirection: "Forward" | "Backward";
     navigationPropertyName?: string;
-    source?: EC.Class | string;
-    relationship?: EC.RelationshipClass | string;
-    target?: EC.Class | string;
+    source?: Partial<Omit<EC.Class, "is">> | string;
+    relationship?: Partial<Omit<EC.RelationshipClass, "is">> | string;
+    target?: Partial<Omit<EC.Class, "is">> | string;
   }) {
     const navigationRelationshipRes = new ResolvablePromise<EC.RelationshipClass>();
     const navigationProperty = {
@@ -409,38 +559,32 @@ describe("createRelationshipPathJoinClause", () => {
       direction: props.navigationPropertyDirection,
       relationshipClass: navigationRelationshipRes,
     } as unknown as EC.NavigationProperty;
-    const sourceClass =
-      typeof props.source === "object"
-        ? props.source
-        : schemaProvider.stubEntityClass({
-            schemaName,
-            className: props.source ?? "source",
-            properties: props.navigationPropertyDirection === "Forward" ? [navigationProperty] : [],
-          });
-    const targetClass =
-      typeof props.target === "object"
-        ? props.target
-        : schemaProvider.stubEntityClass({
-            schemaName,
-            className: props.target ?? "target",
-            properties: props.navigationPropertyDirection === "Backward" ? [navigationProperty] : [],
-          });
-    const relationship =
-      typeof props.relationship === "object"
-        ? props.relationship
-        : schemaProvider.stubRelationshipClass({
-            schemaName,
-            className: props.relationship ?? "relationship",
-            direction: "Forward",
-            source: {
-              polymorphic: false,
-              abstractConstraint: Promise.resolve(sourceClass),
-            },
-            target: {
-              polymorphic: false,
-              abstractConstraint: Promise.resolve(targetClass),
-            },
-          });
+    const sourceClass = schemaProvider.stubEntityClass({
+      schemaName,
+      className: typeof props.source === "string" ? props.source : "source",
+      properties: props.navigationPropertyDirection === "Forward" ? [navigationProperty] : [],
+      ...(typeof props.source === "object" ? props.source : undefined),
+    });
+    const targetClass = schemaProvider.stubEntityClass({
+      schemaName,
+      className: typeof props.target === "string" ? props.target : "target",
+      properties: props.navigationPropertyDirection === "Backward" ? [navigationProperty] : [],
+      ...(typeof props.target === "object" ? props.target : undefined),
+    });
+    const relationship = schemaProvider.stubRelationshipClass({
+      schemaName,
+      className: typeof props.relationship === "string" ? props.relationship : "relationship",
+      direction: "Forward",
+      source: {
+        polymorphic: false,
+        abstractConstraint: Promise.resolve(sourceClass),
+      },
+      target: {
+        polymorphic: false,
+        abstractConstraint: Promise.resolve(targetClass),
+      },
+      ...(typeof props.relationship === "object" ? props.relationship : undefined),
+    });
     await navigationRelationshipRes.resolve(relationship);
     return { sourceClass, targetClass, relationship, navigationProperty };
   }
