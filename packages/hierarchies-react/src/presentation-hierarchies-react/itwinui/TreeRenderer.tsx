@@ -22,7 +22,7 @@ interface TreeRendererOwnProps {
 
 type TreeRendererProps = Pick<ReturnType<typeof useTree>, "rootNodes" | "expandNode"> &
   Partial<Pick<ReturnType<typeof useTree>, "selectNodes" | "isNodeSelected" | "getHierarchyLevelDetails">> &
-  Pick<TreeNodeRendererProps, "onFilterClick" | "getIcon" | "getSublabel"> &
+  Pick<TreeNodeRendererProps, "onFilterClick" | "getIcon" | "getLabel" | "getSublabel"> &
   TreeRendererOwnProps &
   Omit<TreeProps, "data" | "nodeRenderer" | "getNode" | "enableVirtualization">;
 
@@ -40,6 +40,7 @@ export function TreeRenderer({
   isNodeSelected,
   onFilterClick,
   getIcon,
+  getLabel,
   getSublabel,
   getHierarchyLevelDetails,
   selectionMode,
@@ -62,11 +63,12 @@ export function TreeRenderer({
           onNodeClick={onNodeClick}
           onNodeKeyDown={onNodeKeyDown}
           getIcon={getIcon}
+          getLabel={getLabel}
           getSublabel={getSublabel}
         />
       );
     },
-    [expandNode, getHierarchyLevelDetails, onFilterClick, onNodeClick, onNodeKeyDown, getIcon, getSublabel],
+    [expandNode, getHierarchyLevelDetails, onFilterClick, onNodeClick, onNodeKeyDown, getIcon, getLabel, getSublabel],
   );
 
   const getNode = useCallback<TreeProps["getNode"]>((node) => createRenderedTreeNodeData(node, isNodeSelected ?? noopIsNodeSelected), [isNodeSelected]);
