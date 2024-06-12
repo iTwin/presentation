@@ -67,19 +67,20 @@ export async function createRelationshipPathJoinClause(props: CreateRelationship
     const step = await getRelationshipPathStepClasses(props.schemaProvider, stepDef);
     const navigationProperty = await getNavigationProperty(step);
     if (navigationProperty) {
-      const propertyDirectionMatchesRelationshipDirection = navigationProperty.direction === step.relationship.direction;
+      const isNavigationPropertyForward = navigationProperty.direction === "Forward";
+      const relationshipJoinPropertyNames =
+        isNavigationPropertyForward === !step.relationshipReverse
+          ? {
+              this: createRawPropertyValueSelector(step.targetAlias, "ECInstanceId"),
+              next: createRawPropertyValueSelector(prev.alias, navigationProperty.name, "Id"),
+            }
+          : {
+              this: createRawPropertyValueSelector(step.targetAlias, navigationProperty.name, "Id"),
+              next: createRawPropertyValueSelector(prev.alias, prev.joinPropertyName),
+            };
       clause += `
         ${getJoinClause(step.joinType)} ${getClassSelectClause(step.target, step.targetAlias)}
-        ON ${
-          propertyDirectionMatchesRelationshipDirection
-            ? createRawPropertyValueSelector(step.targetAlias, "ECInstanceId")
-            : createRawPropertyValueSelector(step.targetAlias, navigationProperty.name, "Id")
-        }
-          = ${
-            propertyDirectionMatchesRelationshipDirection
-              ? createRawPropertyValueSelector(prev.alias, navigationProperty.name, "Id")
-              : createRawPropertyValueSelector(prev.alias, prev.joinPropertyName)
-          }
+          ON ${relationshipJoinPropertyNames.this} = ${relationshipJoinPropertyNames.next}
       `;
       prev = {
         alias: step.targetAlias,
