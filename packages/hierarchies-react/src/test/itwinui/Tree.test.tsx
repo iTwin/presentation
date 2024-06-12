@@ -209,6 +209,19 @@ describe("Tree", () => {
     expect(queryByText("Icon")).to.not.be.null;
   });
 
+  it("renders custom label", async () => {
+    const rootNodes = createNodes([
+      {
+        id: "root-1",
+      },
+    ]);
+
+    const { queryByText } = render(<TreeRenderer rootNodes={rootNodes} {...initialProps} getLabel={() => <div>Label</div>} />);
+
+    expect(queryByText("root-1")).to.be.null;
+    expect(queryByText("Label")).to.not.be.null;
+  });
+
   it("renders sublabel", async () => {
     const rootNodes = createNodes([
       {
