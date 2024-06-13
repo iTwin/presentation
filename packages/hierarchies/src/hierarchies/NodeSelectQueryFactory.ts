@@ -557,7 +557,8 @@ async function createWhereClause(
   const value = rule.value.rawValue;
 
   if (rule.operator === "like" && typeof value === "string") {
-    return `${propertyValueSelector} ${ecsqlOperator} '${value}' ESCAPE '\\'`;
+    const escapedValue = value.replace(/[%_\\]/g, "\\$&");
+    return `${propertyValueSelector} ${ecsqlOperator} '%${escapedValue}%' ESCAPE '\\'`;
   }
   const propertyClass = await classLoader(sourceAlias);
   if (!propertyClass) {
