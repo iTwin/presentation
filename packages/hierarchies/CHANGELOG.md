@@ -1,5 +1,11 @@
 # @itwin/presentation-hierarchies
 
+## 0.1.6
+
+### Patch Changes
+
+- [#634](https://github.com/iTwin/presentation/pull/634): `NodeSelectQueryFactory.createWhereClause`: Fixed `like` operator not matching substrings.
+
 ## 0.1.5
 
 ### Patch Changes
