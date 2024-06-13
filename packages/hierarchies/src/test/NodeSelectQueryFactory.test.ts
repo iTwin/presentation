@@ -712,7 +712,10 @@ describe("createNodesQueryClauseFactory", () => {
           });
           await testPropertyFilter(createProps("is-equal", "test", `[x].[p] = 'test'`));
           await testPropertyFilter(createProps("is-not-equal", "test", `[x].[p] <> 'test'`));
-          await testPropertyFilter(createProps("like", "test%", `[x].[p] LIKE 'test%' ESCAPE '\\'`));
+          await testPropertyFilter(createProps("like", "test", `[x].[p] LIKE '%test%' ESCAPE '\\'`));
+          await testPropertyFilter(createProps("like", "t%e%st", `[x].[p] LIKE '%t\\%e\\%st%' ESCAPE '\\'`));
+          await testPropertyFilter(createProps("like", "t_e_st", `[x].[p] LIKE '%t\\_e\\_st%' ESCAPE '\\'`));
+          await testPropertyFilter(createProps("like", "t\\e\\st", `[x].[p] LIKE '%t\\\\e\\\\st%' ESCAPE '\\'`));
         });
 
         it(`creates boolean property filters`, async () => {
