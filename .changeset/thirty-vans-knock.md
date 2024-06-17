@@ -2,4 +2,4 @@
 "@itwin/presentation-hierarchies-react": minor
 ---
 
-Updated tree nodes to auto-expand when a filter is applied to them.
+Updated `TreeModel` to auto-expand nodes when a filter is applied to them.
