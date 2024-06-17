@@ -151,6 +151,9 @@ export namespace TreeModel {
 
   export function setInstanceFilter(model: TreeModel, nodeId: string | undefined, filter?: GenericInstanceFilter): boolean {
     return updateForReload(model, nodeId, (node) => {
+      if (isTreeModelHierarchyNode(node)) {
+        node.isExpanded = true;
+      }
       node.instanceFilter = filter;
     });
   }

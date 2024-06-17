@@ -594,6 +594,26 @@ describe("TreeModel", () => {
       expect(getHierarchyNode(model, "root-1")?.instanceFilter).to.be.undefined;
     });
 
+    it("sets `isExpanded` = `true` when filter is set", () => {
+      const model = createTreeModel([
+        {
+          id: undefined,
+          children: ["root-1"],
+        },
+        {
+          id: "root-1",
+          isExpanded: false,
+        },
+      ]);
+
+      expect(getHierarchyNode(model, "root-1")?.instanceFilter).to.be.undefined;
+      expect(getHierarchyNode(model, "root-1")?.isExpanded).to.be.false;
+
+      TreeModel.setInstanceFilter(model, "root-1", filter);
+      expect(getHierarchyNode(model, "root-1")?.instanceFilter).to.not.be.undefined;
+      expect(getHierarchyNode(model, "root-1")?.isExpanded).to.be.true;
+    });
+
     it("sets `isLoading` = `true` when new filter is set on expanded node", () => {
       const model = createTreeModel([
         {
