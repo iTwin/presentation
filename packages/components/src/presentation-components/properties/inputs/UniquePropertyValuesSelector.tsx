@@ -277,7 +277,7 @@ function useUniquePropertyValuesLoader({
     // if the first page is requested and we already have the options loaded, return previous values.
     if (loadedOptionsCount === 0 && loadedOptions.totalCount > 0) {
       const searchedOptions = loadedOptions.options.filter(matchesSearchInput);
-      if (searchedOptions.length !== 0) {
+      if (!loadedOptions.hasMore || searchedOptions.length !== 0) {
         return { options: searchedOptions, hasMore: loadedOptions.hasMore };
       }
     }

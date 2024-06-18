@@ -718,9 +718,15 @@ describe("UniquePropertyValuesSelector", () => {
         </TestComponentWithPortalTarget>,
       );
 
+      // simulate scroll height to avoid loading more pages
+      sinon.stub(Element.prototype, "scrollHeight").get(() => 100);
+
       // open menu
       const menuSelector = await waitFor(() => getByText("unique-values-property-editor.select-values"));
       await user.click(menuSelector);
+
+      /// reset scroll height to enable loading of pages
+      sinon.stub(Element.prototype, "scrollHeight").get(() => 0);
 
       // type in search
       const searchSelector = await waitFor(() => container.querySelector(".presentation-async-select-values-container"));
@@ -777,16 +783,16 @@ describe("UniquePropertyValuesSelector", () => {
       }
       // single page of values loaded before search filter is applied
       getDistinctValuesIteratorStub.withArgs(matchPageStart(0)).resolves({
-        total: 1,
-        items: createAsyncIterator([{ displayValue: "SkippedValue", groupedRawValues: ["SkippedValue"] }]),
+        total: UNIQUE_PROPERTY_VALUES_BATCH_SIZE,
+        items: createAsyncIterator(pageItems),
       });
       // next page with search filter applied
-      getDistinctValuesIteratorStub.withArgs(matchPageStart(1)).resolves({
+      getDistinctValuesIteratorStub.withArgs(matchPageStart(UNIQUE_PROPERTY_VALUES_BATCH_SIZE)).resolves({
         total: UNIQUE_PROPERTY_VALUES_BATCH_SIZE,
         items: createAsyncIterator(pageItems),
       });
       // last page with search filter applied
-      getDistinctValuesIteratorStub.withArgs(matchPageStart(UNIQUE_PROPERTY_VALUES_BATCH_SIZE + 1)).resolves({
+      getDistinctValuesIteratorStub.withArgs(matchPageStart(2 * UNIQUE_PROPERTY_VALUES_BATCH_SIZE)).resolves({
         total: 2,
         items: createAsyncIterator([
           { displayValue: "SkippedValue", groupedRawValues: ["SkippedValue"] },
@@ -800,9 +806,15 @@ describe("UniquePropertyValuesSelector", () => {
         </TestComponentWithPortalTarget>,
       );
 
+      // simulate scroll height to avoid loading more pages
+      sinon.stub(Element.prototype, "scrollHeight").get(() => 100);
+
       // open menu
       const menuSelector = await waitFor(() => getByText("unique-values-property-editor.select-values"));
       await user.click(menuSelector);
+
+      // reset scroll height to enable loading of pages
+      sinon.stub(Element.prototype, "scrollHeight").get(() => 0);
 
       // type in search
       const searchSelector = await waitFor(() => container.querySelector(".presentation-async-select-values-container"));
@@ -816,6 +828,40 @@ describe("UniquePropertyValuesSelector", () => {
       expect(getDistinctValuesIteratorStub).to.be.calledThrice;
     });
 
+    it("does not load second page when first page is empty and `hasMore` is false", async () => {
+      // single page of values loaded before search filter is applied
+      getDistinctValuesIteratorStub.withArgs(matchPageStart(0)).resolves({
+        total: 1,
+        items: createAsyncIterator([{ displayValue: "SkippedValue", groupedRawValues: ["SkippedValue"] }]),
+      });
+
+      const { queryAllByText, getByText, user, container } = render(
+        <TestComponentWithPortalTarget>
+          <UniquePropertyValuesSelector property={propertyDescription} onChange={() => {}} imodel={testImodel} descriptor={descriptor} />,
+        </TestComponentWithPortalTarget>,
+      );
+
+      // simulate scroll height to avoid loading more pages
+      sinon.stub(Element.prototype, "scrollHeight").get(() => 100);
+
+      // open menu
+      const menuSelector = await waitFor(() => getByText("unique-values-property-editor.select-values"));
+      await user.click(menuSelector);
+
+      // reset scroll height to enable loading of pages
+      sinon.stub(Element.prototype, "scrollHeight").get(() => 0);
+
+      // type in search
+      const searchSelector = await waitFor(() => container.querySelector(".presentation-async-select-values-container"));
+      await user.type(searchSelector!, "Searched");
+
+      // ensure no values are shown
+      await waitFor(() => {
+        expect(queryAllByText(/SkippedValue/)).to.be.empty;
+      });
+      expect(getDistinctValuesIteratorStub).to.be.calledOnce;
+    });
+
     it("correctly determines `hasMore` value when fetched display value is undefined", async () => {
       const pageItems = [];
       for (let i = 0; i < UNIQUE_PROPERTY_VALUES_BATCH_SIZE - 2; i++) {
@@ -824,29 +870,43 @@ describe("UniquePropertyValuesSelector", () => {
       }
       // single page of values loaded before search filter is applied
       getDistinctValuesIteratorStub.withArgs(matchPageStart(0)).resolves({
-        total: 1,
-        items: createAsyncIterator([{ displayValue: "SkippedValue", groupedRawValues: ["SkippedValue"] }]),
-      });
-      // next page with search filter applied and an undefined value
-      getDistinctValuesIteratorStub.withArgs(matchPageStart(1)).resolves({
         total: UNIQUE_PROPERTY_VALUES_BATCH_SIZE,
         items: createAsyncIterator([
           ...pageItems,
           { displayValue: "SearchedValue1", groupedRawValues: ["SearchedValue1"] },
+          { displayValue: "SkippedValue", groupedRawValues: ["SkippedValue"] },
+        ]),
+      });
+      // next page with search filter applied and an undefined value
+      getDistinctValuesIteratorStub.withArgs(matchPageStart(UNIQUE_PROPERTY_VALUES_BATCH_SIZE)).resolves({
+        total: UNIQUE_PROPERTY_VALUES_BATCH_SIZE,
+        items: createAsyncIterator([
+          ...pageItems,
+          { displayValue: "SearchedValue2", groupedRawValues: ["SearchedValue2"] },
           { displayValue: undefined, groupedRawValues: [] },
         ]),
       });
       // last page with search filter applied
-      getDistinctValuesIteratorStub.withArgs(matchPageStart(UNIQUE_PROPERTY_VALUES_BATCH_SIZE + 1)).resolves({
+      getDistinctValuesIteratorStub.withArgs(matchPageStart(2 * UNIQUE_PROPERTY_VALUES_BATCH_SIZE)).resolves({
         total: 1,
-        items: createAsyncIterator([{ displayValue: "SearchedValue2", groupedRawValues: ["SearchedValue2"] }]),
+        items: createAsyncIterator([{ displayValue: "SearchedValue3", groupedRawValues: ["SearchedValue3"] }]),
       });
 
-      const { queryByText, queryAllByText, user, container } = render(
+      const { getByText, queryByText, queryAllByText, user, container } = render(
         <TestComponentWithPortalTarget>
           <UniquePropertyValuesSelector property={propertyDescription} onChange={() => {}} imodel={testImodel} descriptor={descriptor} />,
         </TestComponentWithPortalTarget>,
       );
+
+      // simulate scroll height to avoid loading more pages
+      sinon.stub(Element.prototype, "scrollHeight").get(() => 100);
+
+      // open menu
+      const menuSelector = await waitFor(() => getByText("unique-values-property-editor.select-values"));
+      await user.click(menuSelector);
+
+      // reset scroll height to enable loading of pages
+      sinon.stub(Element.prototype, "scrollHeight").get(() => 0);
 
       // type in search
       const searchSelector = await waitFor(() => container.querySelector(".presentation-async-select-values-container"));
@@ -856,6 +916,7 @@ describe("UniquePropertyValuesSelector", () => {
       await waitFor(() => {
         expect(queryByText("SearchedValue1")).to.not.be.null;
         expect(queryByText("SearchedValue2")).to.not.be.null;
+        expect(queryByText("SearchedValue3")).to.not.be.null;
         expect(queryAllByText(/SkippedValue/)).to.be.empty;
       });
       expect(getDistinctValuesIteratorStub).to.be.calledThrice;
