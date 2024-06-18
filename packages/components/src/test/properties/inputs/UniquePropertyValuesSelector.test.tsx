@@ -501,7 +501,7 @@ describe("UniquePropertyValuesSelector", () => {
     expect(getDistinctValuesIteratorStub).to.be.calledOnce;
   });
 
-  describe.only("search", () => {
+  describe("search", () => {
     function matchPageStart(start: number) {
       return sinon.match((options: { paging: { start: number } }) => options.paging.start === start);
     }
