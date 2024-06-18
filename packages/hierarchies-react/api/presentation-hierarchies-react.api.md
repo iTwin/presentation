@@ -116,10 +116,10 @@ export type RenderedTreeNode = PresentationTreeNode | {
 export { SelectionStorage }
 
 // @beta
-export function TreeNodeRenderer({ node, expandNode, getIcon, getLabel, getSublabel, onFilterClick, onNodeClick, onNodeKeyDown, isSelected, isDisabled, actionButtonsClassName, getHierarchyLevelDetails, nodeProps, ...treeNodeProps }: TreeNodeRendererProps): JSX_2.Element;
+export function TreeNodeRenderer({ node, expandNode, getIcon, getLabel, getSublabel, onFilterClick, onNodeClick, onNodeKeyDown, isSelected, isDisabled, actionButtonsClassName, getHierarchyLevelDetails, reloadTree, nodeProps, ...treeNodeProps }: TreeNodeRendererProps): JSX_2.Element;
 
 // @beta
-export function TreeRenderer({ rootNodes, expandNode, selectNodes, isNodeSelected, onFilterClick, getIcon, getLabel, getSublabel, getHierarchyLevelDetails, selectionMode, localizedStrings, ...treeProps }: TreeRendererProps): JSX_2.Element;
+export function TreeRenderer({ rootNodes, expandNode, selectNodes, isNodeSelected, onFilterClick, getIcon, getLabel, getSublabel, getHierarchyLevelDetails, reloadTree, selectionMode, localizedStrings, ...treeProps }: TreeRendererProps): JSX_2.Element;
 
 // @beta
 export function UnifiedSelectionProvider({ storage, children }: PropsWithChildren<Props>): JSX_2.Element;
