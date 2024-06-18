@@ -725,7 +725,12 @@ describe("UniquePropertyValuesSelector", () => {
       const menuSelector = await waitFor(() => getByText("unique-values-property-editor.select-values"));
       await user.click(menuSelector);
 
-      /// reset scroll height to enable loading of pages
+      // wait for first page to be loaded
+      await waitFor(() => {
+        expect(getDistinctValuesIteratorStub).to.be.calledOnce;
+      });
+
+      // reset scroll height to enable loading of pages
       sinon.stub(Element.prototype, "scrollHeight").get(() => 0);
 
       // type in search
@@ -813,6 +818,11 @@ describe("UniquePropertyValuesSelector", () => {
       const menuSelector = await waitFor(() => getByText("unique-values-property-editor.select-values"));
       await user.click(menuSelector);
 
+      // wait for first page to be loaded
+      await waitFor(() => {
+        expect(getDistinctValuesIteratorStub).to.be.calledOnce;
+      });
+
       // reset scroll height to enable loading of pages
       sinon.stub(Element.prototype, "scrollHeight").get(() => 0);
 
@@ -847,6 +857,11 @@ describe("UniquePropertyValuesSelector", () => {
       // open menu
       const menuSelector = await waitFor(() => getByText("unique-values-property-editor.select-values"));
       await user.click(menuSelector);
+
+      // wait for first page to be loaded
+      await waitFor(() => {
+        expect(getDistinctValuesIteratorStub).to.be.calledOnce;
+      });
 
       // reset scroll height to enable loading of pages
       sinon.stub(Element.prototype, "scrollHeight").get(() => 0);
@@ -904,6 +919,11 @@ describe("UniquePropertyValuesSelector", () => {
       // open menu
       const menuSelector = await waitFor(() => getByText("unique-values-property-editor.select-values"));
       await user.click(menuSelector);
+
+      // wait for first page to be loaded
+      await waitFor(() => {
+        expect(getDistinctValuesIteratorStub).to.be.calledOnce;
+      });
 
       // reset scroll height to enable loading of pages
       sinon.stub(Element.prototype, "scrollHeight").get(() => 0);
