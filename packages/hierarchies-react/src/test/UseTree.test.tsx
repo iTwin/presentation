@@ -17,6 +17,7 @@ import {
   PresentationHierarchyNode,
   PresentationInfoNode,
   PresentationNoFilterMatchesInfoNode,
+  PresentationTreeNode,
 } from "../presentation-hierarchies-react/TreeNode";
 import { UnifiedSelectionProvider } from "../presentation-hierarchies-react/UnifiedSelectionContext";
 import { useTree, useUnifiedSelectionTree } from "../presentation-hierarchies-react/UseTree";
@@ -696,6 +697,45 @@ describe("useTree", () => {
     await waitFor(() => {
       expect(result.current.rootNodes).to.have.lengthOf(1);
       expect((result.current.rootNodes![0] as PresentationHierarchyNode).children).to.have.lengthOf(1);
+    });
+  });
+
+  it("reloads sub tree when `reloadTree` is called with parent id", async () => {
+    const rootNodes = [createTestHierarchyNode({ id: "root-1", children: true, autoExpand: true })];
+    const childNodes = [createTestHierarchyNode({ id: "child-1" }), createTestHierarchyNode({ id: "child-2" })];
+
+    hierarchyProvider.getNodes.callsFake((props) => {
+      if (props.parentNode === undefined) {
+        return createAsyncIterator(rootNodes);
+      }
+      return throwingAsyncIterator(new Error("test error"));
+    });
+    const { result } = renderHook(useTree, { initialProps });
+
+    await waitFor(() => {
+      expect(result.current.rootNodes).to.have.lengthOf(1);
+      expect((result.current.rootNodes![0] as PresentationHierarchyNode).children).to.have.lengthOf(1);
+      const childNode = ((result.current.rootNodes![0] as PresentationHierarchyNode).children as PresentationTreeNode[])[0] as PresentationGenericInfoNode;
+      expect(childNode.type).to.be.eq("Unknown");
+    });
+
+    hierarchyProvider.getNodes.reset();
+    hierarchyProvider.getNodes.callsFake((props) => {
+      if (props.parentNode === undefined) {
+        return createAsyncIterator(rootNodes);
+      }
+      return createAsyncIterator(childNodes);
+    });
+
+    act(() => {
+      result.current.reloadTree({ parentNodeId: "root-1" });
+    });
+
+    await waitFor(() => {
+      expect(result.current.rootNodes).to.have.lengthOf(1);
+      expect((result.current.rootNodes![0] as PresentationHierarchyNode).children).to.have.lengthOf(2);
+      const children = (result.current.rootNodes![0] as PresentationHierarchyNode).children as PresentationTreeNode[];
+      expect(children).to.containSubset([{ id: "child-1" }, { id: "child-2" }]);
     });
   });
 });

@@ -24,6 +24,7 @@ interface TreeNodeRendererOwnProps {
   getSublabel?: (node: PresentationHierarchyNode) => ReactElement | undefined;
   onNodeClick?: (node: PresentationHierarchyNode, isSelected: boolean, event: React.MouseEvent<HTMLElement, MouseEvent>) => void;
   onNodeKeyDown?: (node: PresentationHierarchyNode, isSelected: boolean, event: React.KeyboardEvent<HTMLElement>) => void;
+  reloadTree?: (options: { parentNodeId: string | undefined; force: true }) => void;
   actionButtonsClassName?: string;
 }
 
@@ -52,6 +53,7 @@ export function TreeNodeRenderer({
   isDisabled,
   actionButtonsClassName,
   getHierarchyLevelDetails,
+  reloadTree,
   nodeProps,
   ...treeNodeProps
 }: TreeNodeRendererProps) {
@@ -145,7 +147,25 @@ export function TreeNodeRenderer({
     return <TreeNode {...treeNodeProps} label={localizedStrings.noFilteredChildren} isDisabled={true} onExpanded={/* istanbul ignore next */ () => {}} />;
   }
 
-  return <TreeNode {...treeNodeProps} label={node.message} isDisabled={true} onExpanded={/* istanbul ignore next */ () => {}} />;
+  const onRetry = reloadTree ? () => reloadTree({ parentNodeId: node.parentNodeId, force: true }) : undefined;
+  return (
+    <TreeNode
+      {...treeNodeProps}
+      label={<ErrorNodeLabel message={node.message} onRetry={onRetry} />}
+      isDisabled={true}
+      onExpanded={/* istanbul ignore next */ () => {}}
+    />
+  );
+}
+
+function ErrorNodeLabel({ message, onRetry }: { message: string; onRetry?: () => void }) {
+  const { localizedStrings } = useLocalizationContext();
+  return (
+    <Flex flexDirection="row" gap="xs" title={message} alignItems="start">
+      <Text>{message}</Text>
+      {onRetry ? <Anchor onClick={onRetry}>{localizedStrings?.retry}</Anchor> : null}
+    </Flex>
+  );
 }
 
 function PlaceholderNode(props: Omit<TreeNodeProps, "onExpanded" | "label">) {

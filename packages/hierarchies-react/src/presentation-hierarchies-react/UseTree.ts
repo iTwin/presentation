@@ -94,6 +94,17 @@ interface UseTreeProps {
   onHierarchyLimitExceeded?: (props: { parentId?: string; filter?: GenericInstanceFilter; limit?: number | "unbounded" }) => void;
 }
 
+interface ReloadTreeOptions {
+  /** Specifies whether tree state should be discarded when reloading tree or kept. */
+  discardState?: boolean;
+  /** Specifies that data source changed and caches should be cleared before reloading tree. */
+  dataSourceChanged?: boolean;
+  /** Specifies whether existing nodes should be removed prior reloading or should be kept until reload is completed. */
+  force?: boolean;
+  /** Specifies parent node under which sub tree should be reloaded instead of reloading whole tree. */
+  parentNodeId?: string;
+}
+
 interface UseTreeResult {
   /**
    * Array containing root tree nodes. It is `undefined` on initial render until any nodes are loaded.
@@ -104,7 +115,7 @@ interface UseTreeResult {
    * or tree is reloading.
    */
   isLoading: boolean;
-  reloadTree: (options?: { discardState?: boolean; dataSourceChanged?: boolean }) => void;
+  reloadTree: (options?: ReloadTreeOptions) => void;
   expandNode: (nodeId: string, isExpanded: boolean) => void;
   selectNodes: (nodeIds: Array<string>, changeType: SelectionChangeType) => void;
   isNodeSelected: (nodeId: string) => boolean;
@@ -215,7 +226,7 @@ function useTreeInternal({
   );
 
   const reloadTree = useCallback<UseTreeResult["reloadTree"]>(
-    (options?: { discardState?: boolean; dataSourceChanged?: boolean }) => {
+    (options) => {
       if (options?.dataSourceChanged) {
         hierarchySource.hierarchyProvider?.notifyDataSourceChanged();
       }

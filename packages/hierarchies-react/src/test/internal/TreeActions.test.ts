@@ -934,6 +934,52 @@ describe("TreeActions", () => {
       expect(getHierarchyNode(newModel, "root-2")).to.not.be.undefined;
       expect(getHierarchyNode(newModel, "root-2")?.instanceFilter).to.be.eq(instanceFilter);
     });
+
+    it("removes subtree before reload if `force` option is passed", async () => {
+      const model = createTreeModel([
+        {
+          id: undefined,
+          children: ["root-1"],
+        },
+        {
+          id: "root-1",
+          children: ["info-node"],
+        },
+        {
+          id: "info-node",
+          type: "Unknown",
+          message: "Info node",
+        },
+      ]);
+
+      provider.getNodes.reset();
+      provider.getNodes.callsFake((props) => {
+        if (props.parentNode !== undefined) {
+          return createAsyncIterator([createTestHierarchyNode({ id: "child-1" }), createTestHierarchyNode({ id: "child-2" })]);
+        }
+        return createAsyncIterator([]);
+      });
+
+      const actions = createActions(model);
+
+      actions.reloadTree({ parentNodeId: "root-1", force: true });
+
+      await waitFor(() => {
+        expect(provider.getNodes).to.be.calledOnce;
+        expect(provider.getNodes).to.be.calledWith(createGetNodesProps({ parentNode: getHierarchyNode(model, "root-1")?.nodeData, ignoreCache: true }));
+        // one call is made before reloading to set `rootNode.isLoading` and remove sub tree
+        expect(onModelChangedStub).to.be.calledTwice;
+      });
+
+      const modelBeforeReload = onModelChangedStub.firstCall.args[0];
+      expect(getHierarchyNode(modelBeforeReload, "root-1")).to.not.be.undefined;
+      expect(modelBeforeReload.idToNode.get("info-node")).to.be.undefined;
+
+      const newModel = onModelChangedStub.secondCall.args[0];
+      expect(getHierarchyNode(newModel, "root-1")).to.not.be.undefined;
+      expect(getHierarchyNode(newModel, "child-1")).to.not.be.undefined;
+      expect(getHierarchyNode(newModel, "child-2")).to.not.be.undefined;
+    });
   });
 
   describe("performance reporting", () => {
