@@ -95,7 +95,7 @@ export function UniquePropertyValuesSelector(props: UniquePropertyValuesSelector
 
   const isOptionSelected = (option: UniqueValue): boolean => selectedValues.map((selectedValue) => selectedValue.displayValue).includes(option.displayValue);
   const ruleset = useUniquePropertyValuesRuleset(descriptor.ruleset, field, descriptorInputKeys);
-  const loadValues = useUniquePropertyValuesLoader({ imodel, property, descriptor, ruleset, field, descriptorInputKeys });
+  const { loadValues, hasMore, optionCount } = useUniquePropertyValuesLoader({ imodel, property, descriptor, ruleset, field, descriptorInputKeys });
 
   return (
     <AsyncSelect
@@ -115,6 +115,8 @@ export function UniquePropertyValuesSelector(props: UniquePropertyValuesSelector
       getOptionLabel={(option) => formatOptionLabel(option.displayValue, property.typename)}
       getOptionValue={(option) => option.displayValue}
       onInputChange={onInputChange}
+      // do not show no data message if no options are shown but more can be loaded
+      isLoading={optionCount === 0 && hasMore ? true : undefined}
     />
   );
 }
@@ -230,14 +232,39 @@ interface UseUniquePropertyValuesLoaderProps {
   descriptorInputKeys?: Keys;
 }
 
-function useUniquePropertyValuesLoader({ imodel, property, descriptor, ruleset, field, descriptorInputKeys }: UseUniquePropertyValuesLoaderProps) {
-  const [loadedOptions, setLoadedOptions] = useState<{ count: number; options: UniqueValue[]; hasMore: boolean }>({ count: 0, options: [], hasMore: false });
+interface UseUniquePropertyValuesLoaderResult {
+  loadValues: (searchInput: string, loadedOptionsCount: number) => Promise<{ options: UniqueValue[]; hasMore: boolean }>;
+  optionCount: number;
+  hasMore: boolean;
+}
+
+interface UniquePropertyValuesLoaderState {
+  totalCount: number;
+  filteredCount: number;
+  options: UniqueValue[];
+  hasMore: boolean;
+}
+
+function useUniquePropertyValuesLoader({
+  imodel,
+  property,
+  descriptor,
+  ruleset,
+  field,
+  descriptorInputKeys,
+}: UseUniquePropertyValuesLoaderProps): UseUniquePropertyValuesLoaderResult {
+  const [loadedOptions, setLoadedOptions] = useState<UniquePropertyValuesLoaderState>({
+    totalCount: 0,
+    filteredCount: 0,
+    options: [],
+    hasMore: false,
+  });
 
   useEffect(() => {
-    setLoadedOptions({ count: 0, options: [], hasMore: false });
+    setLoadedOptions({ totalCount: 0, filteredCount: 0, options: [], hasMore: false });
   }, [property, descriptor]);
 
-  return async (searchInput: string, loadedOptionsCount: number) => {
+  const loadValues = async (searchInput: string, loadedOptionsCount: number) => {
     searchInput = searchInput.toLowerCase();
     const matchesSearchInput = (option: UniqueValue) => {
       return !searchInput || option.displayValue.toLowerCase().includes(searchInput);
@@ -248,8 +275,11 @@ function useUniquePropertyValuesLoader({ imodel, property, descriptor, ruleset, 
     }
 
     // if the first page is requested and we already have the options loaded, return previous values.
-    if (loadedOptionsCount === 0 && loadedOptions.count > 0) {
-      return { options: loadedOptions.options.filter(matchesSearchInput), hasMore: loadedOptions.hasMore };
+    if (loadedOptionsCount === 0 && loadedOptions.totalCount > 0) {
+      const searchedOptions = loadedOptions.options.filter(matchesSearchInput);
+      if (!loadedOptions.hasMore || searchedOptions.length !== 0) {
+        return { options: searchedOptions, hasMore: loadedOptions.hasMore };
+      }
     }
 
     const requestProps = {
@@ -257,7 +287,7 @@ function useUniquePropertyValuesLoader({ imodel, property, descriptor, ruleset, 
       descriptor: {},
       fieldDescriptor: field.getFieldDescriptor(),
       rulesetOrId: ruleset,
-      paging: { start: loadedOptions.count, size: UNIQUE_PROPERTY_VALUES_BATCH_SIZE },
+      paging: { start: loadedOptions.totalCount, size: UNIQUE_PROPERTY_VALUES_BATCH_SIZE },
       keys: new KeySet(descriptorInputKeys),
     };
     const items = await new Promise<DisplayValueGroup[]>((resolve) => {
@@ -286,17 +316,24 @@ function useUniquePropertyValuesLoader({ imodel, property, descriptor, ruleset, 
       }
     }
 
+    const hasMoreOptions = items.length === UNIQUE_PROPERTY_VALUES_BATCH_SIZE;
+    const filteredOptions = options.filter(matchesSearchInput);
+
     setLoadedOptions((prev) => ({
-      count: prev.count + items.length,
+      totalCount: prev.totalCount + items.length,
+      // when first page is requested reset filtered option count
+      filteredCount: loadedOptionsCount === 0 ? filteredOptions.length : prev.filteredCount + filteredOptions.length,
       options: [...prev.options, ...options],
-      hasMore: options.length === UNIQUE_PROPERTY_VALUES_BATCH_SIZE,
+      hasMore: hasMoreOptions,
     }));
 
     return {
-      options: options.filter(matchesSearchInput),
-      hasMore: items.length === UNIQUE_PROPERTY_VALUES_BATCH_SIZE,
+      options: filteredOptions,
+      hasMore: hasMoreOptions,
     };
   };
+
+  return { loadValues, optionCount: loadedOptions.filteredCount, hasMore: loadedOptions.hasMore };
 }
 
 function hasKeys(descriptorInputKeys?: Keys) {
