@@ -100,6 +100,8 @@ interface ReloadTreeCommonOptions {
    * - `keep` - try to keep current tree state (expanded/collapsed nodes, instance filters, etc.).
    * - `discard` - do not try to keep current tree state. Tree model will be update after nodes are reloaded.
    * - `reset` - remove subtree from the model before reloading and reload nodes ignoring cache.
+   * 
+   * Defaults to `"keep"`.
    */
   state?: "keep" | "discard" | "reset";
 }
