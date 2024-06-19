@@ -106,15 +106,15 @@ interface ReloadTreeCommonOptions {
 
 type FullTreeReloadOptions = {
   /** Specifies that data source changed and caches should be cleared before reloading tree. */
-  dataSourceChanged: true;
+  dataSourceChanged?: true;
 } & ReloadTreeCommonOptions;
 
 type SubtreeReloadOptions = {
   /** Specifies parent node under which sub tree should be reloaded. */
-  parentNodeId: string | undefined;
+  parentNodeId: string;
 } & ReloadTreeCommonOptions;
 
-type ReloadTreeOptions = ReloadTreeCommonOptions | FullTreeReloadOptions | SubtreeReloadOptions;
+type ReloadTreeOptions = FullTreeReloadOptions | SubtreeReloadOptions;
 
 interface UseTreeResult {
   /**
