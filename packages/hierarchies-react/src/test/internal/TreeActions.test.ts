@@ -739,8 +739,8 @@ describe("TreeActions", () => {
 
       await waitFor(() => {
         expect(provider.getNodes).to.be.calledTwice;
-        expect(provider.getNodes).to.be.calledWith(createGetNodesProps({ parentNode: model.rootNode.nodeData }));
-        expect(provider.getNodes).to.be.calledWith(createGetNodesProps({ parentNode: getHierarchyNode(model, "root-1")?.nodeData }));
+        expect(provider.getNodes).to.be.calledWith(createGetNodesProps({ parentNode: model.rootNode.nodeData, ignoreCache: false }));
+        expect(provider.getNodes).to.be.calledWith(createGetNodesProps({ parentNode: getHierarchyNode(model, "root-1")?.nodeData, ignoreCache: false }));
         // one call is made before reloading to set `rootNode.isLoading`
         expect(onModelChangedStub).to.be.calledTwice;
       });
@@ -753,7 +753,7 @@ describe("TreeActions", () => {
       expect(getHierarchyNode(newModel, "child-2")).to.be.undefined;
     });
 
-    it("does not reload expanded nodes if `discardState` = `true`", async () => {
+    it("does not reload expanded nodes if `state` = `keep`", async () => {
       const model = createTreeModel([
         {
           id: undefined,
@@ -783,11 +783,11 @@ describe("TreeActions", () => {
 
       const actions = createActions(model);
 
-      actions.reloadTree({ discardState: true });
+      actions.reloadTree({ state: "keep" });
 
       await waitFor(() => {
         expect(provider.getNodes).to.be.calledOnce;
-        expect(provider.getNodes).to.be.calledWith(createGetNodesProps({ parentNode: model.rootNode.nodeData }));
+        expect(provider.getNodes).to.be.calledWith(createGetNodesProps({ parentNode: model.rootNode.nodeData, ignoreCache: false }));
         expect(onModelChangedStub).to.be.calledOnce;
       });
 
@@ -833,8 +833,8 @@ describe("TreeActions", () => {
 
       await waitFor(() => {
         expect(provider.getNodes).to.be.calledTwice;
-        expect(provider.getNodes).to.be.calledWith(createGetNodesProps({ parentNode: model.rootNode.nodeData }));
-        expect(provider.getNodes).to.be.calledWith(createGetNodesProps({ parentNode: getHierarchyNode(model, "root-1")?.nodeData }));
+        expect(provider.getNodes).to.be.calledWith(createGetNodesProps({ parentNode: model.rootNode.nodeData, ignoreCache: false }));
+        expect(provider.getNodes).to.be.calledWith(createGetNodesProps({ parentNode: getHierarchyNode(model, "root-1")?.nodeData, ignoreCache: false }));
         // one call is made before reloading to set `rootNode.isLoading`
         expect(onModelChangedStub).to.be.calledTwice;
       });
@@ -880,7 +880,7 @@ describe("TreeActions", () => {
 
       await waitFor(() => {
         expect(provider.getNodes).to.be.calledOnce;
-        expect(provider.getNodes).to.be.calledWith(createGetNodesProps({ parentNode: model.rootNode.nodeData }));
+        expect(provider.getNodes).to.be.calledWith(createGetNodesProps({ parentNode: model.rootNode.nodeData, ignoreCache: false }));
         // one call is made before reloading to set `rootNode.isLoading`
         expect(onModelChangedStub).to.be.calledTwice;
       });
@@ -923,7 +923,7 @@ describe("TreeActions", () => {
 
       await waitFor(() => {
         expect(provider.getNodes).to.be.calledOnce;
-        expect(provider.getNodes).to.be.calledWith(createGetNodesProps({ parentNode: model.rootNode.nodeData }));
+        expect(provider.getNodes).to.be.calledWith(createGetNodesProps({ parentNode: model.rootNode.nodeData, ignoreCache: false }));
         // one call is made before reloading to set `rootNode.isLoading`
         expect(onModelChangedStub).to.be.calledTwice;
       });
@@ -935,7 +935,7 @@ describe("TreeActions", () => {
       expect(getHierarchyNode(newModel, "root-2")?.instanceFilter).to.be.eq(instanceFilter);
     });
 
-    it("removes subtree before reload if `force` option is passed", async () => {
+    it("removes subtree before reload if `state` = `reset`", async () => {
       const model = createTreeModel([
         {
           id: undefined,
@@ -962,7 +962,7 @@ describe("TreeActions", () => {
 
       const actions = createActions(model);
 
-      actions.reloadTree({ parentNodeId: "root-1", force: true });
+      actions.reloadTree({ parentNodeId: "root-1", state: "reset" });
 
       await waitFor(() => {
         expect(provider.getNodes).to.be.calledOnce;

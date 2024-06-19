@@ -24,7 +24,7 @@ interface TreeNodeRendererOwnProps {
   getSublabel?: (node: PresentationHierarchyNode) => ReactElement | undefined;
   onNodeClick?: (node: PresentationHierarchyNode, isSelected: boolean, event: React.MouseEvent<HTMLElement, MouseEvent>) => void;
   onNodeKeyDown?: (node: PresentationHierarchyNode, isSelected: boolean, event: React.KeyboardEvent<HTMLElement>) => void;
-  reloadTree?: (options: { parentNodeId: string | undefined; force: true }) => void;
+  reloadTree?: (options: { parentNodeId: string | undefined; state: "reset" }) => void;
   actionButtonsClassName?: string;
 }
 
@@ -147,7 +147,7 @@ export function TreeNodeRenderer({
     return <TreeNode {...treeNodeProps} label={localizedStrings.noFilteredChildren} isDisabled={true} onExpanded={/* istanbul ignore next */ () => {}} />;
   }
 
-  const onRetry = reloadTree ? () => reloadTree({ parentNodeId: node.parentNodeId, force: true }) : undefined;
+  const onRetry = reloadTree ? () => reloadTree({ parentNodeId: node.parentNodeId, state: "reset" }) : undefined;
   return (
     <TreeNode
       {...treeNodeProps}

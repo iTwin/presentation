@@ -473,7 +473,7 @@ describe("Tree", () => {
     await user.click(getByText("Retry"));
 
     await waitFor(() => {
-      expect(reloadTree).to.be.calledOnceWith({ parentNodeId: "parent-id", force: true });
+      expect(reloadTree).to.be.calledOnceWith({ parentNodeId: "parent-id", state: "reset" });
     });
   });
 

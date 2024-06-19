@@ -188,16 +188,18 @@ export class TreeActions {
     this.reloadSubTree(nodeId, oldModel);
   }
 
-  public reloadTree(options?: { parentNodeId?: string; discardState?: boolean; force?: boolean }) {
+  public reloadTree(options?: { parentNodeId?: string; state?: "keep" | "discard" | "reset" }) {
     const oldModel = this._currentModel;
     this.updateTreeModel((model) => {
       TreeModel.setIsLoading(model, options?.parentNodeId, true);
-      if (options?.force) {
+      if (options?.state === "reset") {
         TreeModel.removeSubTree(model, options?.parentNodeId);
       }
     });
 
-    this.reloadSubTree(options?.parentNodeId, oldModel, { discardState: options?.discardState, ignoreCache: options?.force });
+    const discardState = options?.state === "discard" || options?.state === "reset";
+    const ignoreCache = options?.state === "reset";
+    this.reloadSubTree(options?.parentNodeId, oldModel, { discardState, ignoreCache });
   }
 }
 

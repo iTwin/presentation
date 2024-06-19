@@ -94,16 +94,27 @@ interface UseTreeProps {
   onHierarchyLimitExceeded?: (props: { parentId?: string; filter?: GenericInstanceFilter; limit?: number | "unbounded" }) => void;
 }
 
-interface ReloadTreeOptions {
-  /** Specifies whether tree state should be discarded when reloading tree or kept. */
-  discardState?: boolean;
-  /** Specifies that data source changed and caches should be cleared before reloading tree. */
-  dataSourceChanged?: boolean;
-  /** Specifies whether existing nodes should be removed prior reloading or should be kept until reload is completed. */
-  force?: boolean;
-  /** Specifies parent node under which sub tree should be reloaded instead of reloading whole tree. */
-  parentNodeId?: string;
+interface ReloadTreeCommonOptions {
+  /**
+   * Specifies how current tree state should be handled:
+   * - `keep` - try to keep current tree state (expanded/collapsed nodes, instance filters, etc.).
+   * - `discard` - do not try to keep current tree state. Tree model will be update after nodes are reloaded.
+   * - `reset` - remove subtree from the model before reloading and reload nodes ignoring cache.
+   */
+  state?: "keep" | "discard" | "reset";
 }
+
+type FullTreeReloadOptions = {
+  /** Specifies that data source changed and caches should be cleared before reloading tree. */
+  dataSourceChanged: true;
+} & ReloadTreeCommonOptions;
+
+type SubtreeReloadOptions = {
+  /** Specifies parent node under which sub tree should be reloaded. */
+  parentNodeId: string | undefined;
+} & ReloadTreeCommonOptions;
+
+type ReloadTreeOptions = ReloadTreeCommonOptions | FullTreeReloadOptions | SubtreeReloadOptions;
 
 interface UseTreeResult {
   /**
@@ -163,7 +174,7 @@ function useTreeInternal({
   useEffect(() => {
     const updateHierarchyProvider = (provider: HierarchyProvider, filtered: boolean) => {
       actions.setHierarchyProvider(provider);
-      actions.reloadTree({ discardState: filtered });
+      actions.reloadTree({ state: filtered ? "discard" : "keep" });
       setHierarchySource({ hierarchyProvider: provider, isFiltering: false });
     };
 
@@ -227,7 +238,7 @@ function useTreeInternal({
 
   const reloadTree = useCallback<UseTreeResult["reloadTree"]>(
     (options) => {
-      if (options?.dataSourceChanged) {
+      if (options && "dataSourceChanged" in options) {
         hierarchySource.hierarchyProvider?.notifyDataSourceChanged();
       }
       actions.reloadTree(options);
