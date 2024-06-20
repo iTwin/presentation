@@ -16,6 +16,7 @@ import {
   ProcessedInstanceHierarchyNode,
 } from "./HierarchyNode";
 import { InstancesNodeKey } from "./HierarchyNodeKey";
+import { concatMap, filter, firstValueFrom, from, mergeAll, mergeMap, toArray } from "rxjs";
 
 /** A nodes definition that returns a single custom defined node. */
 export interface CustomHierarchyNodeDefinition {
@@ -173,10 +174,31 @@ export type DefineInstanceNodeChildHierarchyLevelProps = Omit<DefineHierarchyLev
   parentNodeInstanceIds: Id64String[];
 };
 
+interface ClassBasedHierarchyLevelDefinitionCommonProps {
+  /**
+   * If set to true, and node matches at least one of the previous definitions, this definition will not be applied.
+   *
+   * For example:
+   * ```ts
+   * {
+   *   parentNodeClassName: "BisCore.GeometricElement3d",
+   *   definitions: () => ...,
+   * },
+   * // This will apply to all elements, that are not BisCore.GeometricElement3d
+   * {
+   *   parentNodeClassName: "BisCore.Element",
+   *   onlyIfNotHandled: true,
+   *   definitions: () => ...,
+   * }
+   * ```
+   */
+  onlyIfNotHandled?: boolean;
+}
+
 /**
  * A definition of a hierarchy level that should be used for specific class of parent instance nodes.
  */
-interface InstancesNodeChildHierarchyLevelDefinition {
+interface InstancesNodeChildHierarchyLevelDefinition extends ClassBasedHierarchyLevelDefinitionCommonProps {
   /**
    * Full name of the parent instance node's class to match against when checking if this hierarchy
    * level should be used for specific parent instance node.
@@ -205,7 +227,7 @@ export type DefineCustomNodeChildHierarchyLevelProps = Omit<DefineHierarchyLevel
 /**
  * A definition of a hierarchy level for that should be used for specific custom parent nodes.
  */
-interface CustomNodeChildHierarchyLevelDefinition {
+interface CustomNodeChildHierarchyLevelDefinition extends ClassBasedHierarchyLevelDefinitionCommonProps {
   /**
    * `HierarchyNode.key` of the custom node that this child hierarchy level definition should be used for.
    */
@@ -277,7 +299,8 @@ class ClassBasedHierarchyDefinition implements HierarchyDefinition {
     if (HierarchyNode.isCustom(parentNode)) {
       const defs = this._props.hierarchy.childNodes
         .filter(isCustomNodeChildHierarchyLevelDefinition)
-        .filter((def) => def.customParentNodeKey === parentNode.key);
+        .filter((def) => def.customParentNodeKey === parentNode.key)
+        .filter((def, idx) => !def.onlyIfNotHandled || idx === 0);
       return (await Promise.all(defs.map(async (def) => def.definitions({ ...props, parentNode })))).flat();
     }
 
@@ -309,16 +332,21 @@ async function createHierarchyLevelDefinitions(
   defs: InstancesNodeChildHierarchyLevelDefinition[],
   requestProps: DefineInstanceNodeChildHierarchyLevelProps,
 ) {
-  return (
-    await Promise.all(
-      defs.map(async (def) => {
-        if (await classHierarchy.classDerivesFrom(requestProps.parentNodeClassName, def.parentNodeClassName)) {
-          return def.definitions(requestProps);
-        }
-        return [];
-      }),
-    )
-  ).flat();
+  const obs = from(defs).pipe(
+    mergeMap(async (def, idx) => {
+      if (await classHierarchy.classDerivesFrom(requestProps.parentNodeClassName, def.parentNodeClassName)) {
+        return { def, idx };
+      }
+      return undefined;
+    }),
+    filter((x): x is Exclude<typeof x, undefined> => !!x),
+    toArray(),
+    concatMap((x) => x.sort((a, b) => a.idx - b.idx).map(({ def }) => def)),
+    filter((def, idx) => !def.onlyIfNotHandled || idx === 0),
+    mergeMap(async (def) => def.definitions(requestProps)),
+    mergeAll(),
+  );
+  return firstValueFrom(obs.pipe(toArray()));
 }
 
 function groupInstanceIdsByClass(instanceKeys: InstanceKey[]) {
