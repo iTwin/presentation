@@ -39,7 +39,7 @@
     "@itwin/core-bentley": "^4.6.0"
   },
   "devDependencies": {
-    "@itwin/build-tools": "^4.6.0",
+    "@itwin/build-tools": "^4.7.1",
     "@itwin/eslint-plugin": "^4.0.0",
     "@types/chai": "^4.3.14",
     "@types/chai-as-promised": "^7.1.8",
