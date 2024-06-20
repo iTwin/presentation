@@ -190,120 +190,67 @@ describe("createClassBasedHierarchyDefinition", () => {
     expect(result).to.deep.eq([]);
   });
 
-  describe("`onlyIfNotHandled` flag", () => {
-    it("handles this flag for custom nodes", async () => {
-      const customNodeKey = "CustomNode";
-      const rootNode = createParentNode({
-        key: customNodeKey,
-      });
-
-      const spy1 = sinon.stub().resolves([]);
-      const spy2 = sinon.stub().resolves([]);
-      let factory = createClassBasedHierarchyDefinition({
-        classHierarchyInspector,
-        hierarchy: {
-          rootNodes: async () => [],
-          childNodes: [
-            {
-              customParentNodeKey: customNodeKey,
-              definitions: spy1,
-            },
-            {
-              customParentNodeKey: customNodeKey,
-              definitions: spy2,
-              onlyIfNotHandled: true,
-            },
-          ],
-        },
-      });
-
-      await factory.defineHierarchyLevel({ parentNode: rootNode });
-      expect(spy1).to.be.calledOnceWithExactly({ parentNode: rootNode });
-      expect(spy2).not.to.be.called;
-
-      factory = createClassBasedHierarchyDefinition({
-        classHierarchyInspector,
-        hierarchy: {
-          rootNodes: async () => [],
-          childNodes: [
-            {
-              customParentNodeKey: "",
-              definitions: async () => [],
-            },
-            {
-              customParentNodeKey: customNodeKey,
-              definitions: spy2,
-              onlyIfNotHandled: true,
-            },
-          ],
-        },
-      });
-      await factory.defineHierarchyLevel({ parentNode: rootNode });
-      expect(spy2).to.be.calledOnceWithExactly({ parentNode: rootNode });
+  it("doesn't apply instance node level definitions marked with `onlyIfNotHandled` flag if any of the previous ones have been applied", async () => {
+    const rootNode = createParentNode({
+      key: {
+        type: "instances",
+        instanceKeys: [{ className: "TestSchema.ClassX", id: "0x1" }],
+      },
     });
 
-    it("handles this flag for instance nodes", async () => {
-      const rootNode = createParentNode({
-        key: {
-          type: "instances",
-          instanceKeys: [{ className: "TestSchema.ClassX", id: "0x1" }],
-        },
-      });
+    const baseClassName = "TestSchema.BaseClass";
+    const derivedClassName = "TestSchema.ChildClass";
 
-      const baseClassName = "TestSchema.BaseClass";
-      const derivedClassName = "TestSchema.ChildClass";
-
-      classHierarchyInspector.stubEntityClass({
-        schemaName: "TestSchema",
-        className: "ClassX",
-        is: async (other) => [baseClassName, derivedClassName].includes(other),
-      });
-
-      const derivedClassDefs = sinon.stub().resolves([]);
-      const baseClassDefs = sinon.stub().resolves([]);
-      let factory = createClassBasedHierarchyDefinition({
-        classHierarchyInspector,
-        hierarchy: {
-          rootNodes: async () => [],
-          childNodes: [
-            {
-              parentNodeClassName: derivedClassName,
-              definitions: derivedClassDefs,
-            },
-            {
-              parentNodeClassName: baseClassName,
-              definitions: baseClassDefs,
-              onlyIfNotHandled: true,
-            },
-          ],
-        },
-      });
-
-      await factory.defineHierarchyLevel({ parentNode: rootNode });
-      expect(derivedClassDefs).to.be.calledOnceWithExactly({ parentNodeClassName: "TestSchema.ClassX", parentNodeInstanceIds: ["0x1"], parentNode: rootNode });
-      expect(baseClassDefs).not.to.be.called;
-
-      factory = createClassBasedHierarchyDefinition({
-        classHierarchyInspector,
-        hierarchy: {
-          rootNodes: async () => [],
-          childNodes: [
-            {
-              parentNodeClassName: "",
-              definitions: async () => [],
-            },
-            {
-              parentNodeClassName: baseClassName,
-              definitions: baseClassDefs,
-              onlyIfNotHandled: true,
-            },
-          ],
-        },
-      });
-
-      await factory.defineHierarchyLevel({ parentNode: rootNode });
-      expect(baseClassDefs).to.be.calledOnceWithExactly({ parentNodeClassName: "TestSchema.ClassX", parentNodeInstanceIds: ["0x1"], parentNode: rootNode });
+    classHierarchyInspector.stubEntityClass({
+      schemaName: "TestSchema",
+      className: "ClassX",
+      is: async (other) => [baseClassName, derivedClassName].includes(other),
     });
+
+    const derivedClassDefs = sinon.stub().resolves([]);
+    const baseClassDefs = sinon.stub().resolves([]);
+    let factory = createClassBasedHierarchyDefinition({
+      classHierarchyInspector,
+      hierarchy: {
+        rootNodes: async () => [],
+        childNodes: [
+          {
+            parentNodeClassName: derivedClassName,
+            definitions: derivedClassDefs,
+          },
+          {
+            parentNodeClassName: baseClassName,
+            definitions: baseClassDefs,
+            onlyIfNotHandled: true,
+          },
+        ],
+      },
+    });
+
+    await factory.defineHierarchyLevel({ parentNode: rootNode });
+    expect(derivedClassDefs).to.be.calledOnceWithExactly({ parentNodeClassName: "TestSchema.ClassX", parentNodeInstanceIds: ["0x1"], parentNode: rootNode });
+    expect(baseClassDefs).not.to.be.called;
+
+    factory = createClassBasedHierarchyDefinition({
+      classHierarchyInspector,
+      hierarchy: {
+        rootNodes: async () => [],
+        childNodes: [
+          {
+            parentNodeClassName: "",
+            definitions: async () => [],
+          },
+          {
+            parentNodeClassName: baseClassName,
+            definitions: baseClassDefs,
+            onlyIfNotHandled: true,
+          },
+        ],
+      },
+    });
+
+    await factory.defineHierarchyLevel({ parentNode: rootNode });
+    expect(baseClassDefs).to.be.calledOnceWithExactly({ parentNodeClassName: "TestSchema.ClassX", parentNodeInstanceIds: ["0x1"], parentNode: rootNode });
   });
 });
 

@@ -174,7 +174,24 @@ export type DefineInstanceNodeChildHierarchyLevelProps = Omit<DefineHierarchyLev
   parentNodeInstanceIds: Id64String[];
 };
 
-interface ClassBasedHierarchyLevelDefinitionCommonProps {
+/**
+ * A definition of a hierarchy level that should be used for specific class of parent instance nodes.
+ */
+interface InstancesNodeChildHierarchyLevelDefinition {
+  /**
+   * Full name of the parent instance node's class to match against when checking if this hierarchy
+   * level should be used for specific parent instance node.
+   *
+   * The check is polymorphic, so `BisCore.Element` class would match `BisCore.GeometricElement`, `BisCore.Category` and
+   * all other element classes.
+   */
+  parentNodeClassName: string;
+
+  /**
+   * Called to create a hierarchy level definition when the class check passes (see `parentNodeClassName`).
+   */
+  definitions: (requestProps: DefineInstanceNodeChildHierarchyLevelProps) => Promise<HierarchyLevelDefinition>;
+
   /**
    * If set to true, and node matches at least one of the previous definitions, this definition will not be applied.
    *
@@ -196,25 +213,6 @@ interface ClassBasedHierarchyLevelDefinitionCommonProps {
 }
 
 /**
- * A definition of a hierarchy level that should be used for specific class of parent instance nodes.
- */
-interface InstancesNodeChildHierarchyLevelDefinition extends ClassBasedHierarchyLevelDefinitionCommonProps {
-  /**
-   * Full name of the parent instance node's class to match against when checking if this hierarchy
-   * level should be used for specific parent instance node.
-   *
-   * The check is polymorphic, so `BisCore.Element` class would match `BisCore.GeometricElement`, `BisCore.Category` and
-   * all other element classes.
-   */
-  parentNodeClassName: string;
-
-  /**
-   * Called to create a hierarchy level definition when the class check passes (see `parentNodeClassName`).
-   */
-  definitions: (requestProps: DefineInstanceNodeChildHierarchyLevelProps) => Promise<HierarchyLevelDefinition>;
-}
-
-/**
  * Props for defining child hierarchy level for specific parent custom node.
  * @see `createClassBasedHierarchyDefinition`
  * @beta
@@ -227,7 +225,7 @@ export type DefineCustomNodeChildHierarchyLevelProps = Omit<DefineHierarchyLevel
 /**
  * A definition of a hierarchy level for that should be used for specific custom parent nodes.
  */
-interface CustomNodeChildHierarchyLevelDefinition extends ClassBasedHierarchyLevelDefinitionCommonProps {
+interface CustomNodeChildHierarchyLevelDefinition {
   /**
    * `HierarchyNode.key` of the custom node that this child hierarchy level definition should be used for.
    */
@@ -299,8 +297,7 @@ class ClassBasedHierarchyDefinition implements HierarchyDefinition {
     if (HierarchyNode.isCustom(parentNode)) {
       const defs = this._props.hierarchy.childNodes
         .filter(isCustomNodeChildHierarchyLevelDefinition)
-        .filter((def) => def.customParentNodeKey === parentNode.key)
-        .filter((def, idx) => !def.onlyIfNotHandled || idx === 0);
+        .filter((def) => def.customParentNodeKey === parentNode.key);
       return (await Promise.all(defs.map(async (def) => def.definitions({ ...props, parentNode })))).flat();
     }
 
