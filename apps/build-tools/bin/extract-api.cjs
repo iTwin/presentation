@@ -14,8 +14,8 @@ if (argv.entry === undefined) {
 
 const isCI = process.env.TF_BUILD;
 const entryPointFileName = argv.entry;
-const missingTagsLevel = argv.missingTags ?? "warning";
-const incompatibleTagsLevel = argv.ignoreIncompatibleTags ?? "warning";
+const missingTagsLevel = argv.missingTags ?? "error";
+const incompatibleTagsLevel = argv.ignoreIncompatibleTags ?? "error";
 
 const apiReportFolder = argv.apiReportFolder ?? "./api";
 const apiReportTempFolder = argv.apiReportTempFolder ?? "./api/temp";
@@ -98,6 +98,22 @@ spawn(require.resolve(".bin/api-extractor"), args).then((code) => {
   if (fs.existsSync(configFileName)) {
     fs.unlinkSync(configFileName);
   }
-  process.exit(code);
+
+  if (code || isCI) {
+    process.exit(code);
+  }
+
+  const extractSummaryArgs = [
+    require.resolve("@itwin/build-tools/scripts/extract-api-summary"),
+    "--apiSignature",
+    path.resolve(path.join(apiReportFolder, `${entryPointFileName}.api.md`)),
+    "--outDir",
+    path.resolve(apiReportFolder),
+  ];
+
+  spawn("node", extractSummaryArgs).then((code) => {
+    process.exit(code);
+  });
 });
+
 handleInterrupts();
