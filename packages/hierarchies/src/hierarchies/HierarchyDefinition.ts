@@ -16,6 +16,7 @@ import {
   ProcessedInstanceHierarchyNode,
 } from "./HierarchyNode";
 import { InstancesNodeKey } from "./HierarchyNodeKey";
+import { concatMap, filter, firstValueFrom, from, mergeAll, mergeMap, toArray } from "rxjs";
 
 /** A nodes definition that returns a single custom defined node. */
 export interface CustomHierarchyNodeDefinition {
@@ -190,6 +191,25 @@ interface InstancesNodeChildHierarchyLevelDefinition {
    * Called to create a hierarchy level definition when the class check passes (see `parentNodeClassName`).
    */
   definitions: (requestProps: DefineInstanceNodeChildHierarchyLevelProps) => Promise<HierarchyLevelDefinition>;
+
+  /**
+   * If set to true, and node matches at least one of the previous definitions, this definition will not be applied.
+   *
+   * For example:
+   * ```ts
+   * {
+   *   parentNodeClassName: "BisCore.GeometricElement3d",
+   *   definitions: () => ...,
+   * },
+   * // This will apply to all elements, that are not BisCore.GeometricElement3d
+   * {
+   *   parentNodeClassName: "BisCore.Element",
+   *   onlyIfNotHandled: true,
+   *   definitions: () => ...,
+   * }
+   * ```
+   */
+  onlyIfNotHandled?: boolean;
 }
 
 /**
@@ -309,16 +329,21 @@ async function createHierarchyLevelDefinitions(
   defs: InstancesNodeChildHierarchyLevelDefinition[],
   requestProps: DefineInstanceNodeChildHierarchyLevelProps,
 ) {
-  return (
-    await Promise.all(
-      defs.map(async (def) => {
-        if (await classHierarchy.classDerivesFrom(requestProps.parentNodeClassName, def.parentNodeClassName)) {
-          return def.definitions(requestProps);
-        }
-        return [];
-      }),
-    )
-  ).flat();
+  const obs = from(defs).pipe(
+    mergeMap(async (def, idx) => {
+      if (await classHierarchy.classDerivesFrom(requestProps.parentNodeClassName, def.parentNodeClassName)) {
+        return { def, idx };
+      }
+      return undefined;
+    }),
+    filter((x): x is Exclude<typeof x, undefined> => !!x),
+    toArray(),
+    concatMap((x) => x.sort((a, b) => a.idx - b.idx).map(({ def }) => def)),
+    filter((def, idx) => !def.onlyIfNotHandled || idx === 0),
+    mergeMap(async (def) => def.definitions(requestProps)),
+    mergeAll(),
+  );
+  return firstValueFrom(obs.pipe(toArray()));
 }
 
 function groupInstanceIdsByClass(instanceKeys: InstanceKey[]) {
