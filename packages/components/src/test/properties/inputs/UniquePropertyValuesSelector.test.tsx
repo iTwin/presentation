@@ -515,17 +515,13 @@ describe("UniquePropertyValuesSelector", () => {
         ]),
       });
 
-      const { getByText, queryByText, user, container } = render(
+      const { queryByText, user, container } = render(
         <TestComponentWithPortalTarget>
           <UniquePropertyValuesSelector property={propertyDescription} onChange={() => {}} imodel={testImodel} descriptor={descriptor} />,
         </TestComponentWithPortalTarget>,
       );
 
-      // open menu
-      const menuSelector = await waitFor(() => getByText("unique-values-property-editor.select-values"));
-      await user.click(menuSelector);
-
-      // type in
+      // type in search
       const searchSelector = await waitFor(() => container.querySelector(".presentation-async-select-values-container"));
       await user.type(searchSelector!, "test");
 
@@ -722,9 +718,20 @@ describe("UniquePropertyValuesSelector", () => {
         </TestComponentWithPortalTarget>,
       );
 
+      // simulate scroll height to avoid loading more pages
+      sinon.stub(Element.prototype, "scrollHeight").get(() => 100);
+
       // open menu
       const menuSelector = await waitFor(() => getByText("unique-values-property-editor.select-values"));
       await user.click(menuSelector);
+
+      // wait for first page to be loaded
+      await waitFor(() => {
+        expect(getDistinctValuesIteratorStub).to.be.calledOnce;
+      });
+
+      // reset scroll height to enable loading of pages
+      sinon.stub(Element.prototype, "scrollHeight").get(() => 0);
 
       // type in search
       const searchSelector = await waitFor(() => container.querySelector(".presentation-async-select-values-container"));
@@ -741,37 +748,198 @@ describe("UniquePropertyValuesSelector", () => {
     });
 
     it("hides clear button when search input is not empty", async () => {
-      getDistinctValuesIteratorStub.resolves({
-        total: 2,
-        items: createAsyncIterator([
-          { displayValue: "TestValue1", groupedRawValues: ["TestValue1"] },
-          { displayValue: "TestValue2", groupedRawValues: ["TestValue2"] },
-        ]),
+      getDistinctValuesIteratorStub.withArgs(matchPageStart(0)).resolves({
+        total: 0,
+        items: createAsyncIterator([{ displayValue: "TestValue", groupedRawValues: ["TestValue"] }]),
       });
 
       const initialValue = convertToPropertyValue([
         {
-          displayValue: "TestValue2",
-          groupedRawValues: ["TestValue2"],
+          displayValue: "TestValue",
+          groupedRawValues: ["TestValue"],
         },
       ]);
 
       const { container, queryByText, user } = render(
-        <UniquePropertyValuesSelector property={propertyDescription} onChange={() => {}} imodel={testImodel} descriptor={descriptor} value={initialValue} />,
+        <TestComponentWithPortalTarget>
+          <UniquePropertyValuesSelector property={propertyDescription} onChange={() => {}} imodel={testImodel} descriptor={descriptor} value={initialValue} />
+        </TestComponentWithPortalTarget>,
       );
 
       // make sure value is selected
-      await waitFor(() => expect(queryByText("TestValue2")).to.not.be.null);
+      await waitFor(() => expect(queryByText("TestValue")).to.not.be.null);
 
       // expect "clear" button to be shown
       await waitFor(() => expect(container.querySelector(".clear-indicator")).to.not.be.null);
 
       // type in search
       const searchSelector = await waitFor(() => container.querySelector(".presentation-async-select-values-container"));
-      await user.type(searchSelector!, "Searched");
+      await user.type(searchSelector!, "Test");
 
       // expect "clear" button to not be shown
       await waitFor(() => expect(container.querySelector(".clear-indicator")).to.be.null);
+    });
+
+    it("loads second page when first page is already loaded and contains no matches", async () => {
+      const pageItems = [];
+      for (let i = 0; i < UNIQUE_PROPERTY_VALUES_BATCH_SIZE; i++) {
+        const name = `SkippedValue${i}`;
+        pageItems.push({ displayValue: name, groupedRawValues: [name] });
+      }
+      // single page of values loaded before search filter is applied
+      getDistinctValuesIteratorStub.withArgs(matchPageStart(0)).resolves({
+        total: UNIQUE_PROPERTY_VALUES_BATCH_SIZE,
+        items: createAsyncIterator(pageItems),
+      });
+      // next page with search filter applied
+      getDistinctValuesIteratorStub.withArgs(matchPageStart(UNIQUE_PROPERTY_VALUES_BATCH_SIZE)).resolves({
+        total: UNIQUE_PROPERTY_VALUES_BATCH_SIZE,
+        items: createAsyncIterator(pageItems),
+      });
+      // last page with search filter applied
+      getDistinctValuesIteratorStub.withArgs(matchPageStart(2 * UNIQUE_PROPERTY_VALUES_BATCH_SIZE)).resolves({
+        total: 2,
+        items: createAsyncIterator([
+          { displayValue: "SkippedValue", groupedRawValues: ["SkippedValue"] },
+          { displayValue: "SearchedValue", groupedRawValues: ["SearchedValue"] },
+        ]),
+      });
+
+      const { queryByText, queryAllByText, getByText, user, container } = render(
+        <TestComponentWithPortalTarget>
+          <UniquePropertyValuesSelector property={propertyDescription} onChange={() => {}} imodel={testImodel} descriptor={descriptor} />,
+        </TestComponentWithPortalTarget>,
+      );
+
+      // simulate scroll height to avoid loading more pages
+      sinon.stub(Element.prototype, "scrollHeight").get(() => 100);
+
+      // open menu
+      const menuSelector = await waitFor(() => getByText("unique-values-property-editor.select-values"));
+      await user.click(menuSelector);
+
+      // wait for first page to be loaded
+      await waitFor(() => {
+        expect(getDistinctValuesIteratorStub).to.be.calledOnce;
+      });
+
+      // reset scroll height to enable loading of pages
+      sinon.stub(Element.prototype, "scrollHeight").get(() => 0);
+
+      // type in search
+      const searchSelector = await waitFor(() => container.querySelector(".presentation-async-select-values-container"));
+      await user.type(searchSelector!, "Searched");
+
+      // ensure all searched for values are shown
+      await waitFor(() => {
+        expect(queryByText("SearchedValue")).to.not.be.null;
+        expect(queryAllByText(/SkippedValue/)).to.be.empty;
+      });
+      expect(getDistinctValuesIteratorStub).to.be.calledThrice;
+    });
+
+    it("does not load second page when first page is empty and `hasMore` is false", async () => {
+      // single page of values loaded before search filter is applied
+      getDistinctValuesIteratorStub.withArgs(matchPageStart(0)).resolves({
+        total: 1,
+        items: createAsyncIterator([{ displayValue: "SkippedValue", groupedRawValues: ["SkippedValue"] }]),
+      });
+
+      const { queryAllByText, getByText, user, container } = render(
+        <TestComponentWithPortalTarget>
+          <UniquePropertyValuesSelector property={propertyDescription} onChange={() => {}} imodel={testImodel} descriptor={descriptor} />,
+        </TestComponentWithPortalTarget>,
+      );
+
+      // simulate scroll height to avoid loading more pages
+      sinon.stub(Element.prototype, "scrollHeight").get(() => 100);
+
+      // open menu
+      const menuSelector = await waitFor(() => getByText("unique-values-property-editor.select-values"));
+      await user.click(menuSelector);
+
+      // wait for first page to be loaded
+      await waitFor(() => {
+        expect(getDistinctValuesIteratorStub).to.be.calledOnce;
+      });
+
+      // reset scroll height to enable loading of pages
+      sinon.stub(Element.prototype, "scrollHeight").get(() => 0);
+
+      // type in search
+      const searchSelector = await waitFor(() => container.querySelector(".presentation-async-select-values-container"));
+      await user.type(searchSelector!, "Searched");
+
+      // ensure no values are shown
+      await waitFor(() => {
+        expect(queryAllByText(/SkippedValue/)).to.be.empty;
+      });
+      expect(getDistinctValuesIteratorStub).to.be.calledOnce;
+    });
+
+    it("correctly determines `hasMore` value when fetched display value is undefined", async () => {
+      const pageItems = [];
+      for (let i = 0; i < UNIQUE_PROPERTY_VALUES_BATCH_SIZE - 2; i++) {
+        const name = `SkippedValue${i}`;
+        pageItems.push({ displayValue: name, groupedRawValues: [name] });
+      }
+      // single page of values loaded before search filter is applied
+      getDistinctValuesIteratorStub.withArgs(matchPageStart(0)).resolves({
+        total: UNIQUE_PROPERTY_VALUES_BATCH_SIZE,
+        items: createAsyncIterator([
+          ...pageItems,
+          { displayValue: "SearchedValue1", groupedRawValues: ["SearchedValue1"] },
+          { displayValue: "SkippedValue", groupedRawValues: ["SkippedValue"] },
+        ]),
+      });
+      // next page with search filter applied and an undefined value
+      getDistinctValuesIteratorStub.withArgs(matchPageStart(UNIQUE_PROPERTY_VALUES_BATCH_SIZE)).resolves({
+        total: UNIQUE_PROPERTY_VALUES_BATCH_SIZE,
+        items: createAsyncIterator([
+          ...pageItems,
+          { displayValue: "SearchedValue2", groupedRawValues: ["SearchedValue2"] },
+          { displayValue: undefined, groupedRawValues: [] },
+        ]),
+      });
+      // last page with search filter applied
+      getDistinctValuesIteratorStub.withArgs(matchPageStart(2 * UNIQUE_PROPERTY_VALUES_BATCH_SIZE)).resolves({
+        total: 1,
+        items: createAsyncIterator([{ displayValue: "SearchedValue3", groupedRawValues: ["SearchedValue3"] }]),
+      });
+
+      const { getByText, queryByText, queryAllByText, user, container } = render(
+        <TestComponentWithPortalTarget>
+          <UniquePropertyValuesSelector property={propertyDescription} onChange={() => {}} imodel={testImodel} descriptor={descriptor} />,
+        </TestComponentWithPortalTarget>,
+      );
+
+      // simulate scroll height to avoid loading more pages
+      sinon.stub(Element.prototype, "scrollHeight").get(() => 100);
+
+      // open menu
+      const menuSelector = await waitFor(() => getByText("unique-values-property-editor.select-values"));
+      await user.click(menuSelector);
+
+      // wait for first page to be loaded
+      await waitFor(() => {
+        expect(getDistinctValuesIteratorStub).to.be.calledOnce;
+      });
+
+      // reset scroll height to enable loading of pages
+      sinon.stub(Element.prototype, "scrollHeight").get(() => 0);
+
+      // type in search
+      const searchSelector = await waitFor(() => container.querySelector(".presentation-async-select-values-container"));
+      await user.type(searchSelector!, "Searched");
+
+      // ensure all searched for values are shown
+      await waitFor(() => {
+        expect(queryByText("SearchedValue1")).to.not.be.null;
+        expect(queryByText("SearchedValue2")).to.not.be.null;
+        expect(queryByText("SearchedValue3")).to.not.be.null;
+        expect(queryAllByText(/SkippedValue/)).to.be.empty;
+      });
+      expect(getDistinctValuesIteratorStub).to.be.calledThrice;
     });
   });
 
