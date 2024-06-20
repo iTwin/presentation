@@ -163,7 +163,7 @@ describe("PresentationInstanceFilterDialog", () => {
   });
 
   it("clears all filtering options on class list changing ", async () => {
-    const { container, getByTitle, user, queryByDisplayValue, getByPlaceholderText } = render(
+    const { container, getByRole, getByTitle, user, queryByDisplayValue, getByPlaceholderText } = render(
       <PresentationInstanceFilterDialog imodel={imodel} propertiesSource={propertiesSource} onApply={() => {}} isOpen={true} />,
       {
         addThemeProvider: true,
@@ -186,8 +186,7 @@ describe("PresentationInstanceFilterDialog", () => {
     await user.click(classListContainer);
 
     // deselect class item from dropdown
-    const classItem = container.querySelector('div[label="Class Label"]');
-    await user.click(classItem!);
+    await user.click(within(getByRole("listbox")).getByText("Class Label"));
 
     // assert that filtering rule was cleared
     await waitFor(() => expect(queryByDisplayValue("test value")).to.be.null);
