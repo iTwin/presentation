@@ -16,6 +16,7 @@
     "clean:all": "lage clean",
     "docs:all": "lage docs",
     "cover:all": "lage cover --continue",
+    "extract-api:all": "lage extract-api --continue",
     "lint:all": "lage lint --continue",
     "lint:copyright": "node scripts/copyrightLinter.js",
     "gather-docs": "node ./scripts/gatherDocs.js",
