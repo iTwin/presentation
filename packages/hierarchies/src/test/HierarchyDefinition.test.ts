@@ -189,6 +189,69 @@ describe("createClassBasedHierarchyDefinition", () => {
     expect(spy).to.be.calledOnceWithExactly({ parentNodeClassName: "TestSchema.ClassX", parentNodeInstanceIds: ["0x1", "0x2"], parentNode: rootNode });
     expect(result).to.deep.eq([]);
   });
+
+  it("doesn't apply instance node level definitions marked with `onlyIfNotHandled` flag if any of the previous ones have been applied", async () => {
+    const rootNode = createParentNode({
+      key: {
+        type: "instances",
+        instanceKeys: [{ className: "TestSchema.ClassX", id: "0x1" }],
+      },
+    });
+
+    const baseClassName = "TestSchema.BaseClass";
+    const derivedClassName = "TestSchema.ChildClass";
+
+    classHierarchyInspector.stubEntityClass({
+      schemaName: "TestSchema",
+      className: "ClassX",
+      is: async (other) => [baseClassName, derivedClassName].includes(other),
+    });
+
+    const derivedClassDefs = sinon.stub().resolves([]);
+    const baseClassDefs = sinon.stub().resolves([]);
+    let factory = createClassBasedHierarchyDefinition({
+      classHierarchyInspector,
+      hierarchy: {
+        rootNodes: async () => [],
+        childNodes: [
+          {
+            parentNodeClassName: derivedClassName,
+            definitions: derivedClassDefs,
+          },
+          {
+            parentNodeClassName: baseClassName,
+            definitions: baseClassDefs,
+            onlyIfNotHandled: true,
+          },
+        ],
+      },
+    });
+
+    await factory.defineHierarchyLevel({ parentNode: rootNode });
+    expect(derivedClassDefs).to.be.calledOnceWithExactly({ parentNodeClassName: "TestSchema.ClassX", parentNodeInstanceIds: ["0x1"], parentNode: rootNode });
+    expect(baseClassDefs).not.to.be.called;
+
+    factory = createClassBasedHierarchyDefinition({
+      classHierarchyInspector,
+      hierarchy: {
+        rootNodes: async () => [],
+        childNodes: [
+          {
+            parentNodeClassName: "",
+            definitions: async () => [],
+          },
+          {
+            parentNodeClassName: baseClassName,
+            definitions: baseClassDefs,
+            onlyIfNotHandled: true,
+          },
+        ],
+      },
+    });
+
+    await factory.defineHierarchyLevel({ parentNode: rootNode });
+    expect(baseClassDefs).to.be.calledOnceWithExactly({ parentNodeClassName: "TestSchema.ClassX", parentNodeInstanceIds: ["0x1"], parentNode: rootNode });
+  });
 });
 
 function createParentNode(src: Partial<NonNullable<DefineHierarchyLevelProps["parentNode"]>>) {
