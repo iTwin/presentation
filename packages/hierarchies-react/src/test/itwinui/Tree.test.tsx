@@ -99,13 +99,12 @@ describe("Tree", () => {
 
     const { user, getByRole } = render(<TreeRenderer rootNodes={rootNodes} expandNode={initialProps.expandNode} selectionMode={"single"} />);
 
-    const nodeWrapper = getByRole("treeitem");
-    const node = within(nodeWrapper).getByText("test node");
-    expect(node).to.not.be.null;
-    expect(nodeWrapper.ariaSelected).to.eq("false");
+    const node = getByRole("treeitem");
+    expect(within(node).queryByText("test node")).to.not.be.null;
+    expect(node.ariaSelected).to.eq("false");
 
     await user.click(node);
-    expect(nodeWrapper.ariaSelected).to.eq("false");
+    expect(node.ariaSelected).to.eq("false");
   });
 
   it("selects/unselects nodes", async () => {
@@ -154,7 +153,6 @@ describe("Tree", () => {
     act(() => {
       node1.focus();
     });
-    await user.tab();
     await user.keyboard("{Enter}");
     expect(selectNodes).to.be.calledOnceWith(["root-1"], "remove");
     selectNodes.reset();
@@ -163,7 +161,6 @@ describe("Tree", () => {
     act(() => {
       node2.focus();
     });
-    await user.tab();
     await user.keyboard("{Enter}");
     expect(selectNodes).to.be.calledOnceWith(["root-2"], "replace");
   });
