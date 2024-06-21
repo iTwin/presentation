@@ -11,7 +11,7 @@
   visibility: hidden;
 }
 
-.stateless-tree-node:hover .action-buttons,
+.stateless-tree-node:focus-within .action-buttons,
 .stateless-tree-node.filtered .action-buttons {
   visibility: visible;
 }

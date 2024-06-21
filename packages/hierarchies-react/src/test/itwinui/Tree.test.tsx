@@ -197,6 +197,76 @@ describe("Tree", () => {
     expect(selectNodes).to.not.be.called;
   });
 
+  it("focuses node buttons with keyboard", async () => {
+    const rootNodes = createNodes([
+      {
+        id: "root-1",
+        isExpanded: false,
+        isFilterable: true,
+        children: [
+          {
+            id: "child-1",
+          },
+        ],
+      },
+    ]);
+
+    const { user, getByRole, queryByText } = render(<TreeRenderer rootNodes={rootNodes} {...initialProps} />);
+
+    expect(queryByText("root-1")).to.not.be.null;
+    expect(queryByText("child-1")).to.be.null;
+
+    await user.tab();
+
+    const rootNode = getByRole("treeitem", { expanded: false });
+
+    await user.tab();
+
+    const expandButton = within(rootNode).getByRole("button", { name: "Expand" });
+    expect(expandButton.matches(":focus")).to.be.true;
+
+    await user.tab();
+    const applyFilterButton = within(rootNode).getByRole("button", { name: "Apply filter" });
+    expect(applyFilterButton.matches(":focus")).to.be.true;
+  });
+
+  it("focuses filtered node buttons with keyboard", async () => {
+    const rootNodes = createNodes([
+      {
+        id: "root-1",
+        isExpanded: false,
+        isFilterable: true,
+        isFiltered: true,
+        children: [
+          {
+            id: "child-1",
+          },
+        ],
+      },
+    ]);
+
+    const { user, getByRole, queryByText } = render(<TreeRenderer rootNodes={rootNodes} {...initialProps} />);
+
+    expect(queryByText("root-1")).to.not.be.null;
+    expect(queryByText("child-1")).to.be.null;
+
+    await user.tab();
+
+    const rootNode = getByRole("treeitem", { expanded: false });
+
+    await user.tab();
+    const expandButton = within(rootNode).getByRole("button", { name: "Expand" });
+    expect(expandButton.matches(":focus")).to.be.true;
+
+    await user.tab();
+    const clearFilterButton = within(rootNode).getByRole("button", { name: "Clear active filter" });
+    expect(clearFilterButton.matches(":focus")).to.be.true;
+
+    await user.tab();
+    const applyFilterButton = within(rootNode).getByRole("button", { name: "Apply filter" });
+    expect(applyFilterButton.matches(":focus")).to.be.true;
+  });
+
   it("renders icon", async () => {
     const rootNodes = createNodes([
       {
