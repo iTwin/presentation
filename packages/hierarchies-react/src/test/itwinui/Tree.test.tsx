@@ -222,7 +222,7 @@ describe("Tree", () => {
     expect(expandButton.matches(":focus")).to.be.true;
 
     await user.tab();
-    const applyFilterButton = within(rootNode).getByRole("button", { name: "Apply filter", hidden: true });
+    const applyFilterButton = within(rootNode).getByRole("button", { name: "Apply filter" });
     expect(applyFilterButton.matches(":focus")).to.be.true;
   });
 
