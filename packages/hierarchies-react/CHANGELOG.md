@@ -1,5 +1,24 @@
 # @itwin/presentation-hierarchies-react
 
+## 0.5.1
+
+### Patch Changes
+
+- [#645](https://github.com/iTwin/presentation/pull/645): Fixed node filtering buttons not showing when node is hovered.
+
+## 0.5.0
+
+### Minor Changes
+
+- [#639](https://github.com/iTwin/presentation/pull/639): Added ability to retry loading hierarchy level that failed to load.
+
+### Patch Changes
+
+- [#640](https://github.com/iTwin/presentation/pull/640): Fix keyboard hierarchy navigation and visual issues when nodes are focused.
+- [#636](https://github.com/iTwin/presentation/pull/636): Updated `TreeModel` to auto-expand nodes when a filter is applied to them.
+- Updated dependencies:
+  - @itwin/presentation-hierarchies@0.2.0
+
 ## 0.4.3
 
 ### Patch Changes

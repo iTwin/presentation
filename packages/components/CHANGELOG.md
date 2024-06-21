@@ -1,5 +1,11 @@
 # Change Log - @itwin/presentation-components
 
+## 5.3.3
+
+### Patch Changes
+
+- [#638](https://github.com/iTwin/presentation/pull/638): Fixed `UniquePropertyValuesSelector` not always showing values that are not yet loaded when search filter is applied.
+
 ## 5.3.2
 
 ### Patch Changes
