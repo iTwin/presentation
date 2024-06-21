@@ -1,21 +1,22 @@
 sep=;
-Release Tag;API Item
-beta;CachingHiliteSetProvider
-beta;computeSelection(props: ComputeSelectionProps): AsyncIterableIterator
-beta;createCachingHiliteSetProvider(props: CachingHiliteSetProviderProps): CachingHiliteSetProvider
-beta;createHiliteSetProvider(props: HiliteSetProviderProps): HiliteSetProvider
-beta;createStorage(): SelectionStorage
-beta;CustomSelectable
-beta;enableUnifiedSelectionSyncWithIModel(props: EnableUnifiedSelectionSyncWithIModelProps): () => void
-beta;HiliteSet
-beta;HiliteSetProvider
-beta;Selectable = SelectableInstanceKey | CustomSelectable
-beta;Selectable
-beta;SelectableIdentifier = SelectableInstanceKey | Pick
-beta;SelectableInstanceKey
-beta;Selectables
-beta;Selectables
-beta;SelectionChangeEvent
-beta;SelectionStorage
-beta;StorageSelectionChangeEventArgs
-beta;StorageSelectionChangesListener = (args: StorageSelectionChangeEventArgs, storage: SelectionStorage) => void
+Release Tag;API Item Type;API Item Name
+beta;interface;CachingHiliteSetProvider
+beta;function;computeSelection
+beta;function;createCachingHiliteSetProvider
+beta;function;createHiliteSetProvider
+beta;function;createStorage
+beta;interface;CustomSelectable
+beta;function;enableUnifiedSelectionSyncWithIModel
+beta;interface;HiliteSet
+beta;interface;HiliteSetProvider
+beta;type;Selectable
+beta;namespace;Selectable
+beta;type;SelectableIdentifier
+beta;interface;SelectableInstanceKey
+beta;interface;Selectables
+beta;namespace;Selectables
+beta;interface;SelectionChangeEvent
+beta;interface;SelectionStorage
+beta;interface;StorageSelectionChangeEventArgs
+beta;type;StorageSelectionChangesListener
+beta;type;StorageSelectionChangeType

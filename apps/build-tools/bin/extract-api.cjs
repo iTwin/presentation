@@ -104,9 +104,9 @@ spawn(require.resolve(".bin/api-extractor"), args).then((code) => {
   }
 
   const extractSummaryArgs = [
-    require.resolve("@itwin/build-tools/scripts/extract-api-summary"),
+    path.resolve(__dirname, "./extract-api-summary"),
     "--apiSignature",
-    path.resolve(path.join(apiReportFolder, `${entryPointFileName}.api.md`)),
+    path.resolve(apiReportFolder, `${entryPointFileName}.api.md`),
     "--outDir",
     path.resolve(apiReportFolder),
   ];
