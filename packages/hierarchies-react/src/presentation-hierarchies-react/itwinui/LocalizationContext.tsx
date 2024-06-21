@@ -47,6 +47,11 @@ export interface LocalizedStrings {
    * Default value: `Or, <link>increase the hierarchy level size limit to {{limit}}.</link>`.
    */
   increaseHierarchyLimitWithFiltering: string;
+  /**
+   * Label for retry action.
+   * Default value: `Retry`.
+   */
+  retry: string;
 }
 
 /** @internal */
@@ -63,6 +68,7 @@ const defaultLocalizedStrings: LocalizedStrings = {
   resultLimitExceededWithFiltering: "Please provide <link>additional filtering</link> - there are more items than allowed limit of {{limit}}.",
   increaseHierarchyLimit: "<link>Increase the hierarchy level size limit to {{limit}}.</link>",
   increaseHierarchyLimitWithFiltering: "Or, <link>increase the hierarchy level size limit to {{limit}}.</link>",
+  retry: "Retry",
 };
 
 const localizationContext = createContext<LocalizationContext>({ localizedStrings: defaultLocalizedStrings });

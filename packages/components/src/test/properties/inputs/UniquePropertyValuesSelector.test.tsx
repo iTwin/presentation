@@ -933,13 +933,16 @@ describe("UniquePropertyValuesSelector", () => {
       await user.type(searchSelector!, "Searched");
 
       // ensure all searched for values are shown
-      await waitFor(() => {
-        expect(queryByText("SearchedValue1")).to.not.be.null;
-        expect(queryByText("SearchedValue2")).to.not.be.null;
-        expect(queryByText("SearchedValue3")).to.not.be.null;
-        expect(queryAllByText(/SkippedValue/)).to.be.empty;
-      });
-      expect(getDistinctValuesIteratorStub).to.be.calledThrice;
+      await waitFor(
+        () => {
+          expect(getDistinctValuesIteratorStub).to.be.calledThrice;
+          expect(queryByText("SearchedValue1")).to.not.be.null;
+          expect(queryByText("SearchedValue2")).to.not.be.null;
+          expect(queryByText("SearchedValue3")).to.not.be.null;
+          expect(queryAllByText(/SkippedValue/)).to.be.empty;
+        },
+        { timeout: 2000 },
+      );
     });
   });
 

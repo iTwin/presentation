@@ -29,6 +29,11 @@ import { TreeNode } from '@itwin/itwinui-react';
 // @beta
 export function createRenderedTreeNodeData(node: RenderedTreeNode, isNodeSelected: (nodeId: string) => boolean): NodeData<RenderedTreeNode>;
 
+// @beta (undocumented)
+type FullTreeReloadOptions = {
+    dataSourceChanged?: true;
+} & ReloadTreeCommonOptions;
+
 export { GenericInstanceFilter }
 
 // @beta (undocumented)
@@ -79,6 +84,7 @@ interface LocalizedStrings {
     noFilteredChildren: string;
     resultLimitExceeded: string;
     resultLimitExceededWithFiltering: string;
+    retry: string;
 }
 
 // @beta
@@ -143,6 +149,14 @@ export interface PresentationResultSetTooLargeInfoNode {
 // @beta
 export type PresentationTreeNode = PresentationHierarchyNode | PresentationInfoNode;
 
+// @beta (undocumented)
+interface ReloadTreeCommonOptions {
+    state?: "keep" | "discard" | "reset";
+}
+
+// @beta (undocumented)
+type ReloadTreeOptions = FullTreeReloadOptions | SubtreeReloadOptions;
+
 // @beta
 export type RenderedTreeNode = PresentationTreeNode | {
     id: string;
@@ -157,6 +171,11 @@ type SelectionChangeType = "add" | "replace" | "remove";
 type SelectionMode_2 = "none" | "single" | "extended" | "multiple";
 
 export { SelectionStorage }
+
+// @beta (undocumented)
+type SubtreeReloadOptions = {
+    parentNodeId: string;
+} & ReloadTreeCommonOptions;
 
 // @internal (undocumented)
 interface TreeModelGenericInfoNode {
@@ -238,7 +257,7 @@ interface TreeModelRootNode {
 type TreeNodeProps = ComponentPropsWithoutRef<typeof TreeNode>;
 
 // @beta
-export function TreeNodeRenderer({ node, expandNode, getIcon, getLabel, getSublabel, onFilterClick, onNodeClick, onNodeKeyDown, isSelected, isDisabled, actionButtonsClassName, getHierarchyLevelDetails, nodeProps, ...treeNodeProps }: TreeNodeRendererProps): JSX_2.Element;
+export function TreeNodeRenderer({ node, expandNode, getIcon, getLabel, getSublabel, onFilterClick, onNodeClick, onNodeKeyDown, isSelected, isDisabled, actionButtonsClassName, getHierarchyLevelDetails, reloadTree, ...treeNodeProps }: TreeNodeRendererProps): JSX_2.Element;
 
 // @beta (undocumented)
 interface TreeNodeRendererOwnProps {
@@ -258,6 +277,11 @@ interface TreeNodeRendererOwnProps {
     onNodeClick?: (node: PresentationHierarchyNode, isSelected: boolean, event: React.MouseEvent<HTMLElement, MouseEvent>) => void;
     // (undocumented)
     onNodeKeyDown?: (node: PresentationHierarchyNode, isSelected: boolean, event: React.KeyboardEvent<HTMLElement>) => void;
+    // (undocumented)
+    reloadTree?: (options: {
+        parentNodeId: string | undefined;
+        state: "reset";
+    }) => void;
 }
 
 // @beta (undocumented)
@@ -270,7 +294,7 @@ type TreeNodeRendererProps_2 = ComponentPropsWithoutRef<typeof TreeNodeRenderer>
 type TreeProps = ComponentPropsWithoutRef<typeof Tree<RenderedTreeNode>>;
 
 // @beta
-export function TreeRenderer({ rootNodes, expandNode, selectNodes, isNodeSelected, onFilterClick, getIcon, getLabel, getSublabel, getHierarchyLevelDetails, selectionMode, localizedStrings, ...treeProps }: TreeRendererProps): JSX_2.Element;
+export function TreeRenderer({ rootNodes, expandNode, selectNodes, isNodeSelected, onFilterClick, getIcon, getLabel, getSublabel, getHierarchyLevelDetails, reloadTree, selectionMode, localizedStrings, ...treeProps }: TreeRendererProps): JSX_2.Element;
 
 // @beta (undocumented)
 interface TreeRendererOwnProps {
@@ -283,7 +307,7 @@ interface TreeRendererOwnProps {
 }
 
 // @beta (undocumented)
-type TreeRendererProps = Pick<ReturnType<typeof useTree>, "rootNodes" | "expandNode"> & Partial<Pick<ReturnType<typeof useTree>, "selectNodes" | "isNodeSelected" | "getHierarchyLevelDetails">> & Pick<TreeNodeRendererProps_2, "onFilterClick" | "getIcon" | "getLabel" | "getSublabel"> & TreeRendererOwnProps & Omit<TreeProps, "data" | "nodeRenderer" | "getNode" | "enableVirtualization">;
+type TreeRendererProps = Pick<ReturnType<typeof useTree>, "rootNodes" | "expandNode"> & Partial<Pick<ReturnType<typeof useTree>, "selectNodes" | "isNodeSelected" | "getHierarchyLevelDetails" | "reloadTree">> & Pick<TreeNodeRendererProps_2, "onFilterClick" | "getIcon" | "getLabel" | "getSublabel"> & TreeRendererOwnProps & Omit<TreeProps, "data" | "nodeRenderer" | "getNode" | "enableVirtualization">;
 
 // @beta
 export function UnifiedSelectionProvider({ storage, children }: PropsWithChildren<{
@@ -339,10 +363,7 @@ interface UseTreeResult {
     // (undocumented)
     isNodeSelected: (nodeId: string) => boolean;
     // (undocumented)
-    reloadTree: (options?: {
-        discardState?: boolean;
-        dataSourceChanged?: boolean;
-    }) => void;
+    reloadTree: (options?: ReloadTreeOptions) => void;
     rootNodes: PresentationTreeNode[] | undefined;
     // (undocumented)
     selectNodes: (nodeIds: Array<string>, changeType: SelectionChangeType) => void;

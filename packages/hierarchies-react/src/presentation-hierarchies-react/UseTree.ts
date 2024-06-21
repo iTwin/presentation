@@ -98,6 +98,34 @@ interface UseTreeProps {
 }
 
 /** @beta */
+interface ReloadTreeCommonOptions {
+  /**
+   * Specifies how current tree state should be handled:
+   * - `keep` - try to keep current tree state (expanded/collapsed nodes, instance filters, etc.).
+   * - `discard` - do not try to keep current tree state. Tree model will be update after nodes are reloaded.
+   * - `reset` - remove subtree from the model before reloading and reload nodes ignoring cache.
+   *
+   * Defaults to `"keep"`.
+   */
+  state?: "keep" | "discard" | "reset";
+}
+
+/** @beta */
+type FullTreeReloadOptions = {
+  /** Specifies that data source changed and caches should be cleared before reloading tree. */
+  dataSourceChanged?: true;
+} & ReloadTreeCommonOptions;
+
+/** @beta */
+type SubtreeReloadOptions = {
+  /** Specifies parent node under which sub tree should be reloaded. */
+  parentNodeId: string;
+} & ReloadTreeCommonOptions;
+
+/** @beta */
+type ReloadTreeOptions = FullTreeReloadOptions | SubtreeReloadOptions;
+
+/** @beta */
 interface UseTreeResult {
   /**
    * Array containing root tree nodes. It is `undefined` on initial render until any nodes are loaded.
@@ -108,7 +136,7 @@ interface UseTreeResult {
    * or tree is reloading.
    */
   isLoading: boolean;
-  reloadTree: (options?: { discardState?: boolean; dataSourceChanged?: boolean }) => void;
+  reloadTree: (options?: ReloadTreeOptions) => void;
   expandNode: (nodeId: string, isExpanded: boolean) => void;
   selectNodes: (nodeIds: Array<string>, changeType: SelectionChangeType) => void;
   isNodeSelected: (nodeId: string) => boolean;
@@ -156,7 +184,7 @@ function useTreeInternal({
   useEffect(() => {
     const updateHierarchyProvider = (provider: HierarchyProvider, filtered: boolean) => {
       actions.setHierarchyProvider(provider);
-      actions.reloadTree({ discardState: filtered });
+      actions.reloadTree({ state: filtered ? "discard" : "keep" });
       setHierarchySource({ hierarchyProvider: provider, isFiltering: false });
     };
 
@@ -219,8 +247,8 @@ function useTreeInternal({
   );
 
   const reloadTree = useCallback<UseTreeResult["reloadTree"]>(
-    (options?: { discardState?: boolean; dataSourceChanged?: boolean }) => {
-      if (options?.dataSourceChanged) {
+    (options) => {
+      if (options && "dataSourceChanged" in options) {
         hierarchySource.hierarchyProvider?.notifyDataSourceChanged();
       }
       actions.reloadTree(options);
