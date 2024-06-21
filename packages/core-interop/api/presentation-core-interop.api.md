@@ -18,13 +18,13 @@ import { SchemaContext } from '@itwin/ecschema-metadata';
 import { SchemaKey } from '@itwin/ecschema-metadata';
 import { UnitSystemKey } from '@itwin/core-quantity';
 
-// @public
+// @beta
 interface CoreECSqlReaderFactory {
     // (undocumented)
     createQueryReader(ecsql: string, binder?: QueryBinder, options?: QueryOptions): ECSqlReader;
 }
 
-// @public
+// @beta
 interface CoreSchemaContext {
     // (undocumented)
     getSchema(key: SchemaKey): Promise<Schema | undefined>;
@@ -42,14 +42,14 @@ export function createLogger(coreLogger: ICoreLogger): ILogger;
 // @beta
 export function createValueFormatter(props: CreateValueFormatterProps): IPrimitiveValueFormatter;
 
-// @public
+// @beta
 interface CreateValueFormatterProps {
     baseFormatter?: IPrimitiveValueFormatter;
     schemaContext: SchemaContext;
     unitSystem?: UnitSystemKey;
 }
 
-// @public
+// @beta
 interface ICoreLogger {
     // (undocumented)
     isEnabled(category: string, level: LogLevel): boolean;
@@ -63,7 +63,7 @@ interface ICoreLogger {
     logWarning(category: string, message: string): void;
 }
 
-// @public
+// @beta
 interface ICoreTxnManager {
     onChangesApplied: Event;
     onCommit: Event;

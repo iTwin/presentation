@@ -9,20 +9,20 @@ import { Id64String } from '@itwin/core-bentley';
 // @beta
 export type ArrayElement<ArrayType extends readonly unknown[]> = ArrayType extends readonly (infer ElementType)[] ? ElementType : never;
 
-// @public
+// @beta
 interface BisInstanceLabelSelectClauseFactoryProps {
     // (undocumented)
     classHierarchyInspector: ECClassHierarchyInspector;
 }
 
-// @public
+// @beta
 interface ClassBasedInstanceLabelSelectClauseFactoryProps {
     classHierarchyInspector: ECClassHierarchyInspector;
     clauses: ClassBasedLabelSelectClause[];
     defaultClauseFactory?: IInstanceLabelSelectClauseFactory;
 }
 
-// @public
+// @beta
 interface ClassBasedLabelSelectClause {
     className: string;
     clause: (props: CreateInstanceLabelSelectClauseProps) => Promise<string>;
@@ -79,7 +79,7 @@ export function createDefaultInstanceLabelSelectClauseFactory(): IInstanceLabelS
 // @beta
 export function createDefaultValueFormatter(): IPrimitiveValueFormatter;
 
-// @public
+// @beta
 interface CreateInstanceLabelSelectClauseProps {
     classAlias: string;
     className?: string;
@@ -104,7 +104,7 @@ function createRawPropertyValueSelector(classAlias: string, propertyName: string
 // @beta
 function createRelationshipPathJoinClause(props: CreateRelationshipPathJoinClauseProps): Promise<string>;
 
-// @public
+// @beta
 interface CreateRelationshipPathJoinClauseProps {
     // (undocumented)
     path: JoinRelationshipPath;
@@ -315,7 +315,7 @@ export interface ECSqlQueryExecutor {
     createQueryReader(query: ECSqlQueryDef, config?: ECSqlQueryReaderOptions): ECSqlQueryReader;
 }
 
-// @public
+// @beta
 type ECSqlQueryReader = AsyncIterableIterator<ECSqlQueryRow>;
 
 // @beta
@@ -334,7 +334,7 @@ export interface ECSqlQueryRow {
     [propertyIndex: number]: any;
 }
 
-// @public
+// @beta
 type ECSqlQueryRowFormat = "ECSqlPropertyNames" | "Indexes";
 
 // @beta
@@ -390,10 +390,10 @@ export namespace InstanceKey {
 // @beta
 export type IPrimitiveValueFormatter = (value: TypedPrimitiveValue) => Promise<string>;
 
-// @public
+// @beta
 type JoinRelationshipPath = RelationshipPath<JoinRelationshipPathStep>;
 
-// @public
+// @beta
 interface JoinRelationshipPathStep extends RelationshipPathStep {
     // (undocumented)
     joinType?: "inner" | "outer";
@@ -463,7 +463,7 @@ export namespace PrimitiveValue {
     export function isPoint3d(value: PrimitiveValue): value is Point3d;
 }
 
-// @public
+// @internal
 interface PrimitiveValueSelectorProps {
     selector: string;
     type?: PrimitiveValueType;
@@ -472,7 +472,7 @@ interface PrimitiveValueSelectorProps {
 // @internal
 type PrimitiveValueType = "Id" | Exclude<EC.PrimitiveType, "Binary" | "IGeometry">;
 
-// @public
+// @internal
 interface PropertyValueSelectClauseProps {
     propertyClassAlias: string;
     propertyClassName: string;
@@ -494,7 +494,7 @@ interface RelationshipPathStep {
 // @beta
 export function releaseMainThread(): Promise<void>;
 
-// @public
+// @internal
 type SpecialPropertyType = "Navigation" | "Guid" | "Point2d" | "Point3d";
 
 // @beta

@@ -51,6 +51,7 @@ export enum NodeSelectClauseColumnNames {
 
 /**
  * A data structure for defining an ECSQL value selector.
+ * @beta
  */
 interface ECSqlValueSelector {
   selector: string;
@@ -58,6 +59,7 @@ interface ECSqlValueSelector {
 
 /**
  * Props for `NodeSelectClauseFactory.createSelectClause`.
+ * @beta
  */
 interface NodeSelectClauseProps {
   ecClassId: Id64String | ECSqlValueSelector;
@@ -76,6 +78,7 @@ interface NodeSelectClauseProps {
 
 /**
  * A data structure for defining nodes' grouping requirements.
+ * @beta
  */
 interface ECSqlSelectClauseGroupingParams {
   byLabel?: ECSqlSelectClauseLabelGroupingParams;
@@ -86,6 +89,7 @@ interface ECSqlSelectClauseGroupingParams {
 
 /**
  * A data structure for defining label grouping params.
+ * @beta
  */
 interface ECSqlSelectClauseLabelGroupingBaseParams {
   /** Label grouping option that determines whether to group nodes or to merge them. Defaults to "group".*/
@@ -96,6 +100,7 @@ interface ECSqlSelectClauseLabelGroupingBaseParams {
 
 /**
  * A data structure for defining label merging.
+ * @beta
  */
 interface ECSqlSelectClauseLabelGroupingMergeParams extends ECSqlSelectClauseLabelGroupingBaseParams {
   action: "merge";
@@ -103,6 +108,7 @@ interface ECSqlSelectClauseLabelGroupingMergeParams extends ECSqlSelectClauseLab
 
 /**
  * A data structure for defining label grouping.
+ * @beta
  */
 interface ECSqlSelectClauseLabelGroupingGroupParams extends ECSqlSelectClauseLabelGroupingBaseParams, ECSqlSelectClauseGroupingParamsBase {
   action?: "group";
@@ -110,6 +116,7 @@ interface ECSqlSelectClauseLabelGroupingGroupParams extends ECSqlSelectClauseLab
 
 /**
  * A data structure for defining possible label grouping types.
+ * @beta
  */
 type ECSqlSelectClauseLabelGroupingParams =
   | boolean
@@ -119,6 +126,7 @@ type ECSqlSelectClauseLabelGroupingParams =
 
 /**
  * A data structure for defining base grouping parameters shared across all types of grouping.
+ * @beta
  */
 interface ECSqlSelectClauseGroupingParamsBase {
   hideIfNoSiblings?: boolean | ECSqlValueSelector;
@@ -128,6 +136,7 @@ interface ECSqlSelectClauseGroupingParamsBase {
 
 /**
  * A data structure for defining properties grouping.
+ * @beta
  */
 interface ECSqlSelectClausePropertiesGroupingParams extends ECSqlSelectClauseGroupingParamsBase {
   /**
@@ -176,6 +185,7 @@ interface ECSqlSelectClausePropertiesGroupingParams extends ECSqlSelectClauseGro
 
 /**
  * A data structure for defining specific properties' grouping params.
+ * @beta
  */
 interface ECSqlSelectClausePropertyGroup {
   /** A string indicating the name of the property to group by. */
@@ -188,6 +198,7 @@ interface ECSqlSelectClausePropertyGroup {
 
 /**
  * A data structure for defining boundaries for a value.
+ * @beta
  */
 interface ECSqlSelectClausePropertyValueRange {
   /** Defines the lower bound of the range. */
@@ -200,6 +211,7 @@ interface ECSqlSelectClausePropertyValueRange {
 
 /**
  * A data structure for defining base class grouping.
+ * @beta
  */
 interface ECSqlSelectClauseBaseClassGroupingParams extends ECSqlSelectClauseGroupingParamsBase {
   fullClassNames: string[] | ECSqlValueSelector[];

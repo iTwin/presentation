@@ -65,6 +65,7 @@ export interface ECSqlQueryDef {
 /**
  * Defines requested ECSQL result row format.
  * @see [QueryRowFormat](https://www.itwinjs.org/reference/core-common/imodels/queryrowformat/)
+ * @beta
  */
 type ECSqlQueryRowFormat = "ECSqlPropertyNames" | "Indexes";
 
@@ -91,6 +92,7 @@ export interface ECSqlQueryRow {
 /**
  * Represents ECSQL query results reader.
  * @see [ECSqlReader](https://www.itwinjs.org/reference/core-common/imodels/ecsqlreader/)
+ * @beta
  */
 type ECSqlQueryReader = AsyncIterableIterator<ECSqlQueryRow>;
 

@@ -6,6 +6,7 @@
 import { Selectable, Selectables } from "./Selectable";
 import { SelectionChangeEvent, SelectionChangeEventImpl, StorageSelectionChangeEventArgs, StorageSelectionChangeType } from "./SelectionChangeEvent";
 
+/** @beta */
 type IModelKeyProp =
   | {
       /** Key of the iModel to get selection levels for. */

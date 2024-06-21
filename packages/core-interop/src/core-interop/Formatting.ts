@@ -19,6 +19,7 @@ import { createDefaultValueFormatter, IPrimitiveValueFormatter, parseFullClassNa
 
 /**
  * Props for `createValueFormatter` function.
+ * @beta
  */
 interface CreateValueFormatterProps {
   /**

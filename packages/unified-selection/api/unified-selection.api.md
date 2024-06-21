@@ -126,7 +126,7 @@ interface HiliteSetProviderProps {
     imodelAccess: ECClassHierarchyInspector & ECSqlQueryExecutor;
 }
 
-// @public (undocumented)
+// @beta (undocumented)
 type IModelKeyProp = {
     imodelKey: string;
 } | {
@@ -236,7 +236,7 @@ export type StorageSelectionChangeType =
 /** Selection was cleared. */
 | "clear";
 
-// @public
+// @internal
 interface Uint32Set {
     addIds(ids: Id64Arg): void;
     deleteIds(ids: Id64Arg): void;

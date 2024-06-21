@@ -31,7 +31,7 @@ export function createRenderedTreeNodeData(node: RenderedTreeNode, isNodeSelecte
 
 export { GenericInstanceFilter }
 
-// @public (undocumented)
+// @beta (undocumented)
 interface GetFilteredPathsProps {
     // (undocumented)
     imodelAccess: IModelAccess;
@@ -54,7 +54,7 @@ export { HierarchyNode }
 
 export { HierarchyProvider }
 
-// @public (undocumented)
+// @beta (undocumented)
 type IModelAccess = ECSchemaProvider & LimitingECSqlQueryExecutor & ECClassHierarchyInspector;
 
 // @beta
@@ -63,7 +63,7 @@ export function isPresentationHierarchyNode(node: PresentationTreeNode): node is
 // @beta (undocumented)
 export function LocalizationContextProvider({ localizedStrings, children }: PropsWithChildren<LocalizationContextProviderProps>): JSX_2.Element;
 
-// @public (undocumented)
+// @beta (undocumented)
 interface LocalizationContextProviderProps {
     // (undocumented)
     localizedStrings?: Partial<LocalizedStrings>;
@@ -143,12 +143,6 @@ export interface PresentationResultSetTooLargeInfoNode {
 // @beta
 export type PresentationTreeNode = PresentationHierarchyNode | PresentationInfoNode;
 
-// @public (undocumented)
-interface Props {
-    // (undocumented)
-    storage: SelectionStorage;
-}
-
 // @beta
 export type RenderedTreeNode = PresentationTreeNode | {
     id: string;
@@ -159,7 +153,7 @@ export type RenderedTreeNode = PresentationTreeNode | {
 // @internal (undocumented)
 type SelectionChangeType = "add" | "replace" | "remove";
 
-// @internal
+// @beta
 type SelectionMode_2 = "none" | "single" | "extended" | "multiple";
 
 export { SelectionStorage }
@@ -240,13 +234,13 @@ interface TreeModelRootNode {
     nodeData: undefined;
 }
 
-// @public (undocumented)
+// @beta (undocumented)
 type TreeNodeProps = ComponentPropsWithoutRef<typeof TreeNode>;
 
 // @beta
 export function TreeNodeRenderer({ node, expandNode, getIcon, getLabel, getSublabel, onFilterClick, onNodeClick, onNodeKeyDown, isSelected, isDisabled, actionButtonsClassName, getHierarchyLevelDetails, nodeProps, ...treeNodeProps }: TreeNodeRendererProps): JSX_2.Element;
 
-// @public (undocumented)
+// @beta (undocumented)
 interface TreeNodeRendererOwnProps {
     // (undocumented)
     actionButtonsClassName?: string;
@@ -266,19 +260,19 @@ interface TreeNodeRendererOwnProps {
     onNodeKeyDown?: (node: PresentationHierarchyNode, isSelected: boolean, event: React.KeyboardEvent<HTMLElement>) => void;
 }
 
-// @public (undocumented)
+// @beta (undocumented)
 type TreeNodeRendererProps = Pick<ReturnType<typeof useTree>, "expandNode"> & Partial<Pick<ReturnType<typeof useTree>, "getHierarchyLevelDetails">> & Omit<TreeNodeProps, "label" | "onExpanded" | "onSelected" | "icon"> & TreeNodeRendererOwnProps;
 
-// @public (undocumented)
+// @beta (undocumented)
 type TreeNodeRendererProps_2 = ComponentPropsWithoutRef<typeof TreeNodeRenderer>;
 
-// @public (undocumented)
+// @beta (undocumented)
 type TreeProps = ComponentPropsWithoutRef<typeof Tree<RenderedTreeNode>>;
 
 // @beta
 export function TreeRenderer({ rootNodes, expandNode, selectNodes, isNodeSelected, onFilterClick, getIcon, getLabel, getSublabel, getHierarchyLevelDetails, selectionMode, localizedStrings, ...treeProps }: TreeRendererProps): JSX_2.Element;
 
-// @public (undocumented)
+// @beta (undocumented)
 interface TreeRendererOwnProps {
     // (undocumented)
     localizedStrings?: Partial<LocalizedStrings>;
@@ -288,21 +282,23 @@ interface TreeRendererOwnProps {
     selectionMode?: SelectionMode_2;
 }
 
-// @public (undocumented)
+// @beta (undocumented)
 type TreeRendererProps = Pick<ReturnType<typeof useTree>, "rootNodes" | "expandNode"> & Partial<Pick<ReturnType<typeof useTree>, "selectNodes" | "isNodeSelected" | "getHierarchyLevelDetails">> & Pick<TreeNodeRendererProps_2, "onFilterClick" | "getIcon" | "getLabel" | "getSublabel"> & TreeRendererOwnProps & Omit<TreeProps, "data" | "nodeRenderer" | "getNode" | "enableVirtualization">;
 
 // @beta
-export function UnifiedSelectionProvider({ storage, children }: PropsWithChildren<Props>): JSX_2.Element;
+export function UnifiedSelectionProvider({ storage, children }: PropsWithChildren<{
+    storage: SelectionStorage;
+}>): JSX_2.Element;
 
 // @beta
 export function useSelectionHandler(props: UseSelectionHandlerProps): UseSelectionHandlerResult;
 
-// @public
+// @beta
 type UseSelectionHandlerProps = Pick<ReturnType<typeof useTree>, "rootNodes" | "selectNodes"> & {
     selectionMode: SelectionMode_2;
 };
 
-// @public
+// @beta
 interface UseSelectionHandlerResult {
     onNodeClick: (node: PresentationHierarchyNode, isSelected: boolean, event: React.MouseEvent<HTMLElement, MouseEvent>) => void;
     onNodeKeyDown: (node: PresentationHierarchyNode, isSelected: boolean, event: React.KeyboardEvent<HTMLElement>) => void;
@@ -311,7 +307,7 @@ interface UseSelectionHandlerResult {
 // @beta
 export function useTree(props: UseTreeProps): UseTreeResult;
 
-// @public (undocumented)
+// @beta (undocumented)
 interface UseTreeProps {
     // (undocumented)
     getFilteredPaths?: (props: GetFilteredPathsProps) => Promise<HierarchyNodeIdentifiersPath[] | undefined>;
@@ -333,7 +329,7 @@ interface UseTreeProps {
     onPerformanceMeasured?: (action: "initial-load" | "hierarchy-level-load" | "reload", duration: number) => void;
 }
 
-// @public (undocumented)
+// @beta (undocumented)
 interface UseTreeResult {
     // (undocumented)
     expandNode: (nodeId: string, isExpanded: boolean) => void;

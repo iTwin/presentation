@@ -11,6 +11,7 @@ import { PrimitiveValue, TypedPrimitiveValue } from "../Values";
  * A union of property types that need special handling when creating a property value selector.
  * For example, Guid values are stored as binary and need to be selected with `GuidToStr` function to
  * get a meaningful value.
+ * @internal
  */
 type SpecialPropertyType = "Navigation" | "Guid" | "Point2d" | "Point3d";
 
@@ -19,6 +20,7 @@ type SpecialPropertyType = "Navigation" | "Guid" | "Point2d" | "Point3d";
  *
  * It's recommended to only select properties with metadata only when they need additional formatting and
  * otherwise use `createPropertyValueSelector` to select their value.
+ * @internal
  */
 interface PropertyValueSelectClauseProps {
   /** Full class name of the property. Format: `SchemaName.ClassName`. */
@@ -33,6 +35,7 @@ interface PropertyValueSelectClauseProps {
 
 /**
  * Props for selecting a primitive value using given ECSQL selector.
+ * @internal
  */
 interface PrimitiveValueSelectorProps {
   /** ECSQL selector to query the value */

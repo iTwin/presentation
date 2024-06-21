@@ -67,6 +67,7 @@ const defaultLocalizedStrings: LocalizedStrings = {
 
 const localizationContext = createContext<LocalizationContext>({ localizedStrings: defaultLocalizedStrings });
 
+/** @beta */
 interface LocalizationContextProviderProps {
   localizedStrings?: Partial<LocalizedStrings>;
 }

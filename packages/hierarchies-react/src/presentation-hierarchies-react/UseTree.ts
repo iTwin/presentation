@@ -79,12 +79,15 @@ export function useUnifiedSelectionTree({ imodelKey, sourceName, ...props }: Use
   return { ...rest, ...useUnifiedTreeSelection({ imodelKey, sourceName, getNode }) };
 }
 
+/** @beta */
 type IModelAccess = ECSchemaProvider & LimitingECSqlQueryExecutor & ECClassHierarchyInspector;
 
+/** @beta */
 interface GetFilteredPathsProps {
   imodelAccess: IModelAccess;
 }
 
+/** @beta */
 interface UseTreeProps {
   imodelAccess: ECSchemaProvider & LimitingECSqlQueryExecutor & ECClassHierarchyInspector;
   getHierarchyDefinition: (props: { imodelAccess: IModelAccess }) => HierarchyDefinition;
@@ -94,6 +97,7 @@ interface UseTreeProps {
   onHierarchyLimitExceeded?: (props: { parentId?: string; filter?: GenericInstanceFilter; limit?: number | "unbounded" }) => void;
 }
 
+/** @beta */
 interface UseTreeResult {
   /**
    * Array containing root tree nodes. It is `undefined` on initial render until any nodes are loaded.

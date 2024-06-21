@@ -14,8 +14,10 @@ import { HierarchyLevelDetails, useTree } from "../UseTree";
 import { useLocalizationContext } from "./LocalizationContext";
 import { RenderedTreeNode } from "./TreeRenderer";
 
+/** @beta */
 type TreeNodeProps = ComponentPropsWithoutRef<typeof TreeNode>;
 
+/** @beta */
 interface TreeNodeRendererOwnProps {
   node: RenderedTreeNode;
   onFilterClick?: (hierarchyLevelDetails: HierarchyLevelDetails) => void;
@@ -27,6 +29,7 @@ interface TreeNodeRendererOwnProps {
   actionButtonsClassName?: string;
 }
 
+/** @beta */
 type TreeNodeRendererProps = Pick<ReturnType<typeof useTree>, "expandNode"> &
   Partial<Pick<ReturnType<typeof useTree>, "getHierarchyLevelDetails">> &
   Omit<TreeNodeProps, "label" | "onExpanded" | "onSelected" | "icon"> &
