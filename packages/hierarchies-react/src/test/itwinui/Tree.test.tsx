@@ -4,19 +4,22 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { expect } from "chai";
+import { ComponentPropsWithoutRef } from "react";
 import { MAX_LIMIT_OVERRIDE } from "../../presentation-hierarchies-react/internal/Utils";
 import { TreeRenderer } from "../../presentation-hierarchies-react/itwinui/TreeRenderer";
 import { PresentationHierarchyNode, PresentationInfoNode, PresentationTreeNode } from "../../presentation-hierarchies-react/TreeNode";
-import { SelectionChangeType } from "../../presentation-hierarchies-react/UseSelectionHandler";
 import { HierarchyLevelDetails } from "../../presentation-hierarchies-react/UseTree";
 import { act, createStub, createTestHierarchyNode, render, waitFor, within } from "../TestUtils";
 
+type RequiredTreeProps = Required<ComponentPropsWithoutRef<typeof TreeRenderer>>;
+
 describe("Tree", () => {
-  const onFilterClick = createStub<(hierarchyLevelDetails: HierarchyLevelDetails) => void>();
-  const expandNode = createStub<(nodeId: string, isExpanded: boolean) => void>();
-  const selectNodes = createStub<(nodeIds: Array<string>, changeType: SelectionChangeType) => void>();
-  const isNodeSelected = createStub<(nodeId: string) => boolean>();
-  const getHierarchyLevelDetails = createStub<(nodeId: string | undefined) => HierarchyLevelDetails>();
+  const onFilterClick = createStub<RequiredTreeProps["onFilterClick"]>();
+  const expandNode = createStub<RequiredTreeProps["expandNode"]>();
+  const selectNodes = createStub<RequiredTreeProps["selectNodes"]>();
+  const isNodeSelected = createStub<RequiredTreeProps["isNodeSelected"]>();
+  const getHierarchyLevelDetails = createStub<RequiredTreeProps["getHierarchyLevelDetails"]>();
+  const reloadTree = createStub<RequiredTreeProps["reloadTree"]>();
 
   const initialProps = {
     onFilterClick,
@@ -24,6 +27,7 @@ describe("Tree", () => {
     selectNodes,
     isNodeSelected,
     getHierarchyLevelDetails,
+    reloadTree,
   };
 
   beforeEach(() => {
@@ -514,6 +518,47 @@ describe("Tree", () => {
 
     await waitFor(() => {
       expect(queryByText("Some Error")).to.not.be.null;
+    });
+  });
+
+  it("allows to reload subtree with error", async () => {
+    const rootNodes = createNodes([
+      {
+        id: "info-node",
+        parentNodeId: "parent-id",
+        type: "Unknown",
+        message: "Some Error",
+      },
+    ]);
+
+    const { queryByText, getByText, user } = render(<TreeRenderer rootNodes={rootNodes} {...initialProps} />);
+
+    await waitFor(() => {
+      expect(queryByText("Some Error")).to.not.be.null;
+    });
+
+    await user.click(getByText("Retry"));
+
+    await waitFor(() => {
+      expect(reloadTree).to.be.calledOnceWith({ parentNodeId: "parent-id", state: "reset" });
+    });
+  });
+
+  it("does not render `Retry` button if `reloadTree` callback is not provided", async () => {
+    const rootNodes = createNodes([
+      {
+        id: "info-node",
+        parentNodeId: "parent-id",
+        type: "Unknown",
+        message: "Some Error",
+      },
+    ]);
+
+    const { queryByText } = render(<TreeRenderer rootNodes={rootNodes} {...initialProps} reloadTree={undefined} />);
+
+    await waitFor(() => {
+      expect(queryByText("Some Error")).to.not.be.null;
+      expect(queryByText("Retry")).to.be.null;
     });
   });
 

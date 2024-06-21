@@ -151,7 +151,14 @@ function Tree({ imodel, imodelAccess, height, width }: { imodel: IModelConnectio
 
     return (
       <Flex.Item alignSelf="flex-start" style={{ width: "100%", overflow: "auto" }}>
-        <TreeRenderer rootNodes={rootNodes ?? []} {...treeProps} onFilterClick={setFilteringOptions} getIcon={getIcon} selectionMode={"extended"} />
+        <TreeRenderer
+          rootNodes={rootNodes ?? []}
+          {...treeProps}
+          reloadTree={reloadTree}
+          onFilterClick={setFilteringOptions}
+          getIcon={getIcon}
+          selectionMode={"extended"}
+        />
       </Flex.Item>
     );
   };

@@ -90,7 +90,7 @@ export class TreeActions {
     });
   }
 
-  private reloadSubTree(parentId: string | undefined, oldModel: TreeModel, options?: { discardState?: boolean }) {
+  private reloadSubTree(parentId: string | undefined, oldModel: TreeModel, options?: { discardState?: boolean; ignoreCache?: boolean }) {
     const currModel = this._currentModel;
     const expandedNodes = !!options?.discardState ? [] : collectNodes(parentId, oldModel, (node) => node.isExpanded === true);
     const collapsedNodes = !!options?.discardState ? [] : collectNodes(parentId, oldModel, (node) => node.isExpanded === false);
@@ -124,7 +124,7 @@ export class TreeActions {
     }
 
     this.loadSubTree(
-      { parent: rootNode, getHierarchyLevelOptions, shouldLoadChildren, buildNode },
+      { parent: rootNode, getHierarchyLevelOptions, shouldLoadChildren, buildNode, ignoreCache: options?.ignoreCache },
       !!options?.discardState ? undefined : { ...currModel.rootNode },
     );
   }
@@ -188,13 +188,18 @@ export class TreeActions {
     this.reloadSubTree(nodeId, oldModel);
   }
 
-  public reloadTree(options?: { discardState?: boolean }) {
+  public reloadTree(options?: { parentNodeId?: string; state?: "keep" | "discard" | "reset" }) {
     const oldModel = this._currentModel;
     this.updateTreeModel((model) => {
-      model.rootNode.isLoading = true;
+      TreeModel.setIsLoading(model, options?.parentNodeId, true);
+      if (options?.state === "reset") {
+        TreeModel.removeSubTree(model, options?.parentNodeId);
+      }
     });
 
-    this.reloadSubTree(undefined, oldModel, { ...options });
+    const discardState = options?.state === "discard" || options?.state === "reset";
+    const ignoreCache = options?.state === "reset";
+    this.reloadSubTree(options?.parentNodeId, oldModel, { discardState, ignoreCache });
   }
 }
 
