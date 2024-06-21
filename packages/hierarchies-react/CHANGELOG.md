@@ -1,5 +1,11 @@
 # @itwin/presentation-hierarchies-react
 
+## 0.5.1
+
+### Patch Changes
+
+- [#645](https://github.com/iTwin/presentation/pull/645): Fixed node filtering buttons not showing when node is hovered.
+
 ## 0.5.0
 
 ### Minor Changes
