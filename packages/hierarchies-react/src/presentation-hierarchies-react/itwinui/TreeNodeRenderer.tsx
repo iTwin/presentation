@@ -5,7 +5,7 @@
 
 import "./TreeNodeRenderer.css";
 import cx from "classnames";
-import { ComponentPropsWithoutRef, ReactElement } from "react";
+import { ComponentPropsWithoutRef, ReactElement, useState } from "react";
 import { SvgFilter, SvgFilterHollow, SvgRemove } from "@itwin/itwinui-icons-react";
 import { Anchor, ButtonGroup, Flex, IconButton, ProgressRadial, Text, TreeNode } from "@itwin/itwinui-react";
 import { MAX_LIMIT_OVERRIDE } from "../internal/Utils";
@@ -57,6 +57,7 @@ export function TreeNodeRenderer({
   ...treeNodeProps
 }: TreeNodeRendererProps) {
   const { localizedStrings } = useLocalizationContext();
+  const [applyFilterButtonRef, setApplyFilterButtonRef] = useState<HTMLElement | null>(null);
 
   if ("type" in node && node.type === "ChildrenPlaceholder") {
     return <PlaceholderNode {...treeNodeProps} />;
@@ -96,6 +97,7 @@ export function TreeNodeRenderer({
                 onClick={(e) => {
                   e.stopPropagation();
                   getHierarchyLevelDetails(node.id)?.setInstanceFilter(undefined);
+                  applyFilterButtonRef?.focus();
                 }}
               >
                 <SvgRemove />
@@ -103,6 +105,7 @@ export function TreeNodeRenderer({
             ) : null}
             {onFilterClick && node.isFilterable ? (
               <IconButton
+                ref={setApplyFilterButtonRef}
                 className="filtering-action-button"
                 styleType="borderless"
                 size="small"
