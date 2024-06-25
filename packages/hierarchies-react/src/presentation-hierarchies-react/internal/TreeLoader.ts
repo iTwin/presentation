@@ -59,7 +59,7 @@ export class TreeLoader implements ITreeLoader {
           id: `${infoNodeIdBase}-${err.message}`,
           parentId: parent.id,
         };
-        if (err instanceof RowsLimitExceededError) {
+        if (isRowsLimitError(err)) {
           this._onHierarchyLimitExceeded({ parentId: parent.id, filter: instanceFilter, limit: hierarchyLevelSizeLimit });
           return of([{ ...nodeProps, type: "ResultSetTooLarge" as const, resultSetSizeLimit: err.limit }]);
         }
@@ -114,4 +114,9 @@ function createTreeModelNodesFactory(
 
 function isHierarchyNode(node: TreeModelInfoNode | HierarchyNode): node is HierarchyNode {
   return "key" in node && node.key !== undefined;
+}
+
+function isRowsLimitError(error: Error): error is RowsLimitExceededError {
+  const asRowsError = error as RowsLimitExceededError;
+  return asRowsError.limit !== undefined && asRowsError.message.includes("Query rows limit of");
 }
