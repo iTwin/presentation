@@ -89,16 +89,16 @@ Typical test running scenario:
 
    3.3. (optional) If running against a remote backend, set the following environment variables to point to a valid iModel on QA:
 
-     ```env
-     USE_GPB=1
-     IMJS_AUTH_TOKEN=
-     IMJS_ITWIN_ID=
-     IMJS_IMODEL_ID=
-     IMJS_CHANGESET_ID=
-     IMJS_CHANGESET_INDEX=
-     ```
+   ```env
+   USE_GPB=1
+   IMJS_AUTH_TOKEN=
+   IMJS_ITWIN_ID=
+   IMJS_IMODEL_ID=
+   IMJS_CHANGESET_ID=
+   IMJS_CHANGESET_INDEX=
+   ```
 
-     Note: when running against a remote backend, the tests are run against a single iModel pointed to by the environment variables. The `datasets.csv` file is ignored.
+   Note: when running against a remote backend, the tests are run against a single iModel pointed to by the environment variables. The `datasets.csv` file is ignored.
 
    3.4. Run one of the scenario scripts, e.g. `npm run start:initial-models-tree-stateless`.
 
