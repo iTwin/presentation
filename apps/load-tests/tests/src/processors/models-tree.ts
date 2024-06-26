@@ -16,11 +16,13 @@ import {
   PresentationStatus,
 } from "@itwin/presentation-common";
 import RULESET_ModelsTree from "../rulesets/ModelsTree-GroupedByClass.PresentationRuleSet.json";
-import { doRequest, getCurrentIModelName, getCurrentIModelPath, loadNodes } from "./common";
+import { doRequest, getCurrentIModelName, loadNodes, openIModelConnectionIfNeeded } from "./common";
 
 export function initScenario(context: ScenarioContext, _events: EventEmitter, next: Next) {
   context.vars.tooLargeHierarchyLevelsCount = 0;
-  next();
+  void openIModelConnectionIfNeeded().then(() => {
+    next();
+  });
 }
 
 export function terminateScenario(context: ScenarioContext, _ee: EventEmitter, next: Next) {
@@ -34,7 +36,18 @@ export function loadInitialHierarchy(context: ScenarioContext, events: EventEmit
   const timer = new StopWatch(undefined, true);
   void loadNodes(context, events, createProvider(context, events), (node) => !!node.hasChildren && !!node.isExpanded)
     .then(() => {
-      events.emit("histogram", `Initial Models Tree Load: ${getCurrentIModelName(context)}`, timer.current.milliseconds);
+      events.emit("histogram", `Models Tree initial load: ${getCurrentIModelName(context)}`, timer.current.milliseconds);
+    })
+    .then(() => {
+      next();
+    });
+}
+
+export function loadFirstBranch(context: ScenarioContext, events: EventEmitter, next: Next) {
+  const timer = new StopWatch(undefined, true);
+  void loadNodes(context, events, createProvider(context, events), (node, index) => !!node.hasChildren && index === 0)
+    .then(() => {
+      events.emit("histogram", `Models Tree first branch load:${getCurrentIModelName(context)}`, timer.current.milliseconds);
     })
     .then(() => {
       next();
@@ -45,7 +58,7 @@ export function loadFullHierarchy(context: ScenarioContext, events: EventEmitter
   const timer = new StopWatch(undefined, true);
   void loadNodes(context, events, createProvider(context, events), (node) => !!node.hasChildren)
     .then(() => {
-      events.emit("histogram", `Full Models Tree Load:${getCurrentIModelName(context)}`, timer.current.milliseconds);
+      events.emit("histogram", `Models Tree full load:${getCurrentIModelName(context)}`, timer.current.milliseconds);
     })
     .then(() => {
       next();
@@ -56,12 +69,7 @@ function createProvider(context: ScenarioContext, events: EventEmitter) {
   const clientId = Guid.createValue();
   return async function (parent: Node | undefined): Promise<Node[]> {
     const requestBody = JSON.stringify([
-      {
-        iTwinId: Guid.empty,
-        iModelId: Guid.empty,
-        key: getCurrentIModelPath(context),
-        changeset: { index: 0, id: "" },
-      },
+      (context.vars.imodelRpcProps as (context: ScenarioContext) => any)(context),
       {
         clientId,
         rulesetOrId: RULESET_ModelsTree,
@@ -70,7 +78,7 @@ function createProvider(context: ScenarioContext, events: EventEmitter) {
       } as HierarchyRpcRequestOptions,
     ]);
     async function requestRepeatedly(): Promise<Node[]> {
-      return doRequest("PresentationRpcInterface-4.0.0-getPagedNodes", requestBody, events, "nodes").then(async (response) => {
+      return doRequest("PresentationRpcInterface-4.1.0-getPagedNodes", requestBody, events, "nodes").then(async (response) => {
         // eslint-disable-next-line deprecation/deprecation
         const responseBody = response as PresentationRpcResponseData<PagedResponse<NodeJSON>>;
         switch (responseBody.statusCode) {

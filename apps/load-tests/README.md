@@ -53,6 +53,18 @@ The scenario simulates 1 user loading 2 first levels of Models Tree hierarchy us
 
 Script to run the scenario: `npm run start:initial-models-tree-stateless`.
 
+#### First branch Models tree load - native implementation
+
+The scenario simulates 1 user recursively loading children for the first node in the current hierarchy level of the Models Tree hierarchy using the `PresentationRpcInterface-getNodes` RPC calls to our native presentation manager.
+
+Script to run the scenario: `npm run start:first-branch-models-tree`.
+
+#### First branch Models tree load - stateless implementation
+
+The scenario simulates 1 user recursively loading children for the first node in the current hierarchy level of the Models Tree hierarchy using the `@itwin/presentation-hierarchies` package that makes `IModelReadRpcInterface-queryRows` RPC calls to execute ECSQL queries.
+
+Script to run the scenario: `npm run start:first-branch-models-tree-stateless`.
+
 ## Usage
 
 Typical test running scenario:
@@ -67,7 +79,7 @@ Typical test running scenario:
 
    2.3. Set [configuration variables](#configuration).
 
-   2.4 `npm start`.
+   2.4. `npm start`.
 
 3. Run the tests:
 
@@ -75,7 +87,20 @@ Typical test running scenario:
 
    3.2. `cd` to `{load-tests}/tests`.
 
-   3.3 Run one of the scenario scripts, e.g. `npm run start:initial-models-tree-stateless`.
+   3.3. (optional) If running against a remote backend, set the following environment variables to point to a valid iModel on QA:
+
+   ```env
+   USE_GPB=1
+   IMJS_AUTH_TOKEN=
+   IMJS_ITWIN_ID=
+   IMJS_IMODEL_ID=
+   IMJS_CHANGESET_ID=
+   IMJS_CHANGESET_INDEX=
+   ```
+
+   Note: when running against a remote backend, the tests are run against a single iModel pointed to by the environment variables. The `datasets.csv` file is ignored.
+
+   3.4. Run one of the scenario scripts, e.g. `npm run start:initial-models-tree-stateless`.
 
 ## Output
 
