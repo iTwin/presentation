@@ -1,38 +1,38 @@
 sep=;
-Release Tag;API Item
-beta;createClassBasedHierarchyDefinition(props: ClassBasedHierarchyDefinitionProps): HierarchyDefinition
-beta;createHierarchyProvider(props: HierarchyProviderProps): HierarchyProvider
-beta;createLimitingECSqlQueryExecutor(baseExecutor: ECSqlQueryExecutor, defaultLimit: number | "unbounded"): LimitingECSqlQueryExecutor
-beta;createNodesQueryClauseFactory(props:
-beta;DefineCustomNodeChildHierarchyLevelProps = Omit
-beta;DefineHierarchyLevelProps
-beta;DefineInstanceNodeChildHierarchyLevelProps = Omit
-beta;DefineRootHierarchyLevelProps = Omit
-beta;GetHierarchyNodesProps
-beta;getLogger(): ILogger
-beta;GroupingHierarchyNode 
-beta;GroupingNodeKey = ClassGroupingNodeKey | LabelGroupingNodeKey | PropertyGroupingNodeKey
-beta;HierarchyDefinition
-beta;HierarchyLevelDefinition = HierarchyNodesDefinition[]
-beta;HierarchyNode = NonGroupingHierarchyNode | GroupingHierarchyNode
-beta;HierarchyNode
-beta;HierarchyNodeIdentifier = InstanceKey |
-beta;HierarchyNodeIdentifier
-beta;HierarchyNodeIdentifiersPath = HierarchyNodeIdentifier[]
-beta;HierarchyNodeKey = StandardHierarchyNodeKey | string
-beta;HierarchyNodeKey
-beta;HierarchyNodesDefinition = CustomHierarchyNodeDefinition | InstanceNodesQueryDefinition
-beta;HierarchyNodesDefinition
-beta;HierarchyProvider
-beta;InstancesNodeKey
-beta;LimitingECSqlQueryExecutor
-beta;NodeParser = (row:
-beta;NodePostProcessor = (node: ProcessedHierarchyNode) => Promise
-beta;NodePreProcessor = 
-beta;NodeSelectClauseColumnNames
-beta;NodesQueryClauseFactory
-beta;NonGroupingHierarchyNode 
-beta;ParsedHierarchyNode
-beta;ProcessedHierarchyNode = ProcessedCustomHierarchyNode | ProcessedInstanceHierarchyNode | ProcessedGroupingHierarchyNode
-beta;RowsLimitExceededError 
-beta;setLogger(logger: ILogger | undefined): void
+Release Tag;API Item Type;API Item Name
+beta;function;createClassBasedHierarchyDefinition
+beta;function;createHierarchyProvider
+beta;function;createLimitingECSqlQueryExecutor
+beta;function;createNodesQueryClauseFactory
+beta;type;DefineCustomNodeChildHierarchyLevelProps
+beta;interface;DefineHierarchyLevelProps
+beta;type;DefineInstanceNodeChildHierarchyLevelProps
+beta;type;DefineRootHierarchyLevelProps
+beta;interface;GetHierarchyNodesProps
+beta;function;getLogger
+beta;interface;GroupingHierarchyNode
+beta;type;GroupingNodeKey
+beta;interface;HierarchyDefinition
+beta;type;HierarchyLevelDefinition
+beta;type;HierarchyNode
+beta;namespace;HierarchyNode
+beta;type;HierarchyNodeIdentifier
+beta;namespace;HierarchyNodeIdentifier
+beta;type;HierarchyNodeIdentifiersPath
+beta;type;HierarchyNodeKey
+beta;namespace;HierarchyNodeKey
+beta;type;HierarchyNodesDefinition
+beta;namespace;HierarchyNodesDefinition
+beta;interface;HierarchyProvider
+beta;interface;InstancesNodeKey
+beta;interface;LimitingECSqlQueryExecutor
+beta;type;NodeParser
+beta;type;NodePostProcessor
+beta;type;NodePreProcessor
+beta;enum;NodeSelectClauseColumnNames
+beta;interface;NodesQueryClauseFactory
+beta;interface;NonGroupingHierarchyNode
+beta;type;ParsedHierarchyNode
+beta;type;ProcessedHierarchyNode
+beta;class;RowsLimitExceededError
+beta;function;setLogger

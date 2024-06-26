@@ -9,6 +9,7 @@ import { ECClassHierarchyInspector } from "./Metadata";
 
 /**
  * Props for `IInstanceLabelSelectClauseFactory.createSelectClause`.
+ * @beta
  */
 interface CreateInstanceLabelSelectClauseProps {
   /**
@@ -125,6 +126,7 @@ export function createDefaultInstanceLabelSelectClauseFactory(): IInstanceLabelS
 
 /**
  * An association of a class and an instance label select clause factory method.
+ * @beta
  */
 interface ClassBasedLabelSelectClause {
   /** Full class name */
@@ -135,6 +137,7 @@ interface ClassBasedLabelSelectClause {
 
 /**
  * Props for `createClassBasedInstanceLabelSelectClauseFactory`.
+ * @beta
  */
 interface ClassBasedInstanceLabelSelectClauseFactoryProps {
   /** Access to ECClass hierarchy in the iModel. */
@@ -222,6 +225,7 @@ export function createClassBasedInstanceLabelSelectClauseFactory(props: ClassBas
 
 /**
  * Props for `createBisInstanceLabelSelectClauseFactory`.
+ * @beta
  */
 interface BisInstanceLabelSelectClauseFactoryProps {
   classHierarchyInspector: ECClassHierarchyInspector;

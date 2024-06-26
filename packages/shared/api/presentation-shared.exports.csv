@@ -1,41 +1,42 @@
 sep=;
-Release Tag;API Item
-beta;ArrayElement
-beta;ConcatenatedValue = ConcatenatedValuePart[]
-beta;ConcatenatedValue
-beta;ConcatenatedValuePart = ConcatenatedValue | PrimitivePropertyValue | TypedPrimitiveValue | string
-beta;ConcatenatedValuePart
-beta;createBisInstanceLabelSelectClauseFactory(props: BisInstanceLabelSelectClauseFactoryProps): IInstanceLabelSelectClauseFactory
-beta;createCachingECClassHierarchyInspector(props:
-beta;createClassBasedInstanceLabelSelectClauseFactory(props: ClassBasedInstanceLabelSelectClauseFactoryProps): IInstanceLabelSelectClauseFactory
-beta;createDefaultInstanceLabelSelectClauseFactory(): IInstanceLabelSelectClauseFactory
-beta;createDefaultValueFormatter(): IPrimitiveValueFormatter
-beta;createMainThreadReleaseOnTimePassedHandler(releaseOnTimePassed?: number): () => Promise
-beta;EC
-beta;ECClassHierarchyInspector
-beta;ECSchemaProvider
-beta;ECSqlBinding =
-beta;ECSqlQueryDef
-beta;ECSqlQueryExecutor
-beta;ECSqlQueryReaderOptions
-beta;ECSqlQueryRow
-beta;formatConcatenatedValue(props:
-beta;getClass(schemaProvider: ECSchemaProvider, fullClassName: string): Promise
-beta;IInstanceLabelSelectClauseFactory
-beta;ILogger
-beta;InstanceKey
-beta;InstanceKey
-beta;IPrimitiveValueFormatter = (value: TypedPrimitiveValue) => Promise
-beta;LogFunction = (category: string, message: string) => void
-beta;LogLevel = "error" | "warning" | "info" | "trace"
-beta;NOOP_LOGGER: ILogger
-beta;normalizeFullClassName(fullClassName: string): string
-beta;OmitOverUnion
-beta;parseFullClassName(fullClassName: string):
-beta;parseInstanceLabel(value: string | undefined): ConcatenatedValue | string
-beta;PrimitiveValue = Id64String | string | number | boolean | Date | Point2d | Point3d
-beta;PrimitiveValue
-beta;releaseMainThread(): Promise
-beta;trimWhitespace(str: string): string
-beta;trimWhitespace(str: string | undefined): string | undefined
-beta;TypedPrimitiveValue
+Release Tag;API Item Type;API Item Name
+beta;type;ArrayElement
+beta;type;ConcatenatedValue
+beta;namespace;ConcatenatedValue
+beta;type;ConcatenatedValuePart
+beta;namespace;ConcatenatedValuePart
+beta;function;createBisInstanceLabelSelectClauseFactory
+beta;function;createCachingECClassHierarchyInspector
+beta;function;createClassBasedInstanceLabelSelectClauseFactory
+beta;function;createDefaultInstanceLabelSelectClauseFactory
+beta;function;createDefaultValueFormatter
+beta;function;createMainThreadReleaseOnTimePassedHandler
+beta;namespace;EC
+beta;interface;ECClassHierarchyInspector
+beta;interface;ECSchemaProvider
+beta;type;ECSqlBinding
+beta;interface;ECSqlQueryDef
+beta;interface;ECSqlQueryExecutor
+beta;interface;ECSqlQueryReaderOptions
+beta;interface;ECSqlQueryRow
+beta;function;formatConcatenatedValue
+beta;function;getClass
+beta;interface;IInstanceLabelSelectClauseFactory
+beta;interface;ILogger
+beta;interface;InstanceKey
+beta;namespace;InstanceKey
+beta;type;IPrimitiveValueFormatter
+beta;type;LogFunction
+beta;type;LogLevel
+beta;const;NOOP_LOGGER
+beta;function;normalizeFullClassName
+beta;type;OmitOverUnion
+beta;function;parseFullClassName
+beta;function;parseInstanceLabel
+beta;type;PrimitiveValue
+beta;namespace;PrimitiveValue
+beta;function;releaseMainThread
+beta;function;trimWhitespace
+beta;function;trimWhitespace
+beta;type;TypedPrimitiveValue
+beta;namespace;TypedPrimitiveValue

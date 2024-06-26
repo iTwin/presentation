@@ -14,20 +14,26 @@ import { useTree } from "./UseTree";
  * - `extended` - multiple nodes can be selected using shift and ctrl keys,
  * - `multiple` - multiple nodes can be selected without using shift or ctrl keys.
  *
- * @internal
+ * @beta
  */
 export type SelectionMode = "none" | "single" | "extended" | "multiple";
 
 /** @internal */
 export type SelectionChangeType = "add" | "replace" | "remove";
 
-/** Props for `useSelectionHandler` hook. */
+/**
+ * Props for `useSelectionHandler` hook.
+ * @beta
+ */
 type UseSelectionHandlerProps = Pick<ReturnType<typeof useTree>, "rootNodes" | "selectNodes"> & {
   /** Selection mode that the component is working in. */
   selectionMode: SelectionMode;
 };
 
-/** Result of `useSelectionHandler` hook. */
+/**
+ * Result of `useSelectionHandler` hook.
+ * @beta
+ */
 interface UseSelectionHandlerResult {
   /** Should be called by node renderer when a node component is clicked. */
   onNodeClick: (node: PresentationHierarchyNode, isSelected: boolean, event: React.MouseEvent<HTMLElement, MouseEvent>) => void;

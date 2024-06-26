@@ -20,6 +20,7 @@ import {
 
 /**
  * A data structure that represents a single non-grouping hierarchy node.
+ * @beta
  */
 interface BaseHierarchyNode {
   /** Identifiers of all node ancestors. Can be used to identify a node in the hierarchy. */
@@ -156,11 +157,13 @@ export namespace HierarchyNode {
 /**
  * A type of `HierarchyNode` that doesn't know about its children and is an input when requesting
  * them using `HierarchyProvider.getNodes`.
+ * @beta
  */
 export type ParentHierarchyNode<TBase = HierarchyNode> = OmitOverUnion<TBase, "children">;
 
 /**
  * Base processing parameters that apply to every node.
+ * @beta
  */
 interface HierarchyNodeProcessingParamsBase {
   /** Indicates if this node should be hidden if it has no child nodes. */
@@ -171,6 +174,7 @@ interface HierarchyNodeProcessingParamsBase {
 
 /**
  * A data structure for defining nodes' grouping requirements.
+ * @beta
  */
 interface HierarchyNodeGroupingParams {
   byLabel?: HierarchyNodeLabelGroupingParams;
@@ -181,6 +185,7 @@ interface HierarchyNodeGroupingParams {
 
 /**
  * A data structure for defining params specifically used for label grouping.
+ * @beta
  */
 interface HierarchyNodeLabelGroupingBaseParams {
   /** Label grouping option that determines whether to group nodes or to merge them. Defaults to "group".*/
@@ -191,6 +196,7 @@ interface HierarchyNodeLabelGroupingBaseParams {
 
 /**
  * A data structure for defining label merging.
+ * @beta
  */
 interface HierarchyNodeLabelGroupingMergeParams extends HierarchyNodeLabelGroupingBaseParams {
   action: "merge";
@@ -198,15 +204,22 @@ interface HierarchyNodeLabelGroupingMergeParams extends HierarchyNodeLabelGroupi
 
 /**
  * A data structure for defining label grouping with additional parameters.
+ * @beta
  */
 interface HierarchyNodeLabelGroupingGroupParams extends HierarchyNodeLabelGroupingBaseParams, HierarchyNodeGroupingParamsBase {
   action?: "group";
 }
 
-/** A data structure for defining possible label grouping types. */
+/**
+ * A data structure for defining possible label grouping types.
+ * @beta
+ */
 export type HierarchyNodeLabelGroupingParams = boolean | HierarchyNodeLabelGroupingMergeParams | HierarchyNodeLabelGroupingGroupParams;
 
-/** Grouping parameters that are shared across all types of groupings. */
+/**
+ * Grouping parameters that are shared across all types of groupings.
+ * @beta
+ */
 export interface HierarchyNodeGroupingParamsBase {
   /** Hiding option that determines whether to hide group nodes which have no siblings at the same hierarchy level. */
   hideIfNoSiblings?: boolean;
@@ -220,11 +233,13 @@ export interface HierarchyNodeGroupingParamsBase {
  * Defines possible values for `BaseGroupingParams.autoExpand` attribute:
  * - `single-child` - set the grouping node to auto-expand if it groups a single node.
  * - `always` - always set the grouping node to auto-expand.
+ * @beta
  */
 export type HierarchyNodeAutoExpandProp = "single-child" | "always";
 
 /**
  * A data structure that represents base class grouping.
+ * @beta
  */
 interface HierarchyNodeBaseClassGroupingParams extends HierarchyNodeGroupingParamsBase {
   /**
@@ -236,7 +251,10 @@ interface HierarchyNodeBaseClassGroupingParams extends HierarchyNodeGroupingPara
   fullClassNames: string[];
 }
 
-/** A data structure that represents properties grouping. */
+/**
+ * A data structure that represents properties grouping.
+ * @beta
+ */
 export interface HierarchyNodePropertiesGroupingParams extends HierarchyNodeGroupingParamsBase {
   /**
    * Full name of a class whose properties are used to group the node. Only has effect if the node
@@ -283,7 +301,10 @@ export interface HierarchyNodePropertiesGroupingParams extends HierarchyNodeGrou
   propertyGroups: HierarchyNodePropertyGroup[];
 }
 
-/** A data structure that represents specific properties' grouping params. */
+/**
+ * A data structure that represents specific properties' grouping params.
+ * @beta
+ */
 export interface HierarchyNodePropertyGroup {
   /** A string indicating the name of the property to group by. */
   propertyName: string;
@@ -293,7 +314,10 @@ export interface HierarchyNodePropertyGroup {
   ranges?: HierarchyNodePropertyValueRange[];
 }
 
-/** A data structure that represents boundaries for a value. */
+/**
+ * A data structure that represents boundaries for a value.
+ * @beta
+ */
 export interface HierarchyNodePropertyValueRange {
   /** Defines the lower bound of the range. */
   fromValue: number;
@@ -303,24 +327,38 @@ export interface HierarchyNodePropertyValueRange {
   rangeLabel?: string;
 }
 
-/** Processing parameters that apply to instance nodes. */
+/**
+ * Processing parameters that apply to instance nodes.
+ * @beta
+ */
 export interface InstanceHierarchyNodeProcessingParams extends HierarchyNodeProcessingParamsBase {
   grouping?: HierarchyNodeGroupingParams;
 }
 
-/** A custom (not based on data in an iModel) node that has processing parameters. */
+/**
+ * A custom (not based on data in an iModel) node that has processing parameters.
+ * @beta
+ */
 export type ProcessedCustomHierarchyNode = Omit<NonGroupingHierarchyNode, "key" | "children"> & {
   key: string;
   children?: boolean;
   processingParams?: HierarchyNodeProcessingParamsBase;
 };
-/** An instances' (based on data in an iModel) node that has processing parameters. */
+
+/**
+ * An instances' (based on data in an iModel) node that has processing parameters.
+ * @beta
+ */
 export type ProcessedInstanceHierarchyNode = Omit<NonGroupingHierarchyNode, "key" | "children"> & {
   key: InstancesNodeKey;
   children?: boolean;
   processingParams?: InstanceHierarchyNodeProcessingParams;
 };
-/** A grouping node that groups either instance nodes or other grouping nodes. */
+
+/**
+ * A grouping node that groups either instance nodes or other grouping nodes.
+ * @beta
+ */
 export type ProcessedGroupingHierarchyNode = Omit<GroupingHierarchyNode, "children"> & {
   children: Array<ProcessedGroupingHierarchyNode | ProcessedInstanceHierarchyNode>;
 };
@@ -344,7 +382,15 @@ export type ProcessedHierarchyNode = ProcessedCustomHierarchyNode | ProcessedIns
 export type ParsedHierarchyNode<TBase = ParsedCustomHierarchyNode | ParsedInstanceHierarchyNode> = OmitOverUnion<TBase, "label" | "parentKeys"> & {
   label: string | ConcatenatedValue;
 };
-/** A kind of `ProcessedCustomHierarchyNode` that has unformatted label and doesn't know about its ancestors. */
+
+/**
+ * A kind of `ProcessedCustomHierarchyNode` that has unformatted label and doesn't know about its ancestors.
+ * @beta
+ */
 export type ParsedCustomHierarchyNode = ParsedHierarchyNode<ProcessedCustomHierarchyNode>;
-/** A kind of `ProcessedInstanceHierarchyNode` that has unformatted label and doesn't know about its ancestors. */
+
+/**
+ * A kind of `ProcessedInstanceHierarchyNode` that has unformatted label and doesn't know about its ancestors.
+ * @beta
+ */
 export type ParsedInstanceHierarchyNode = ParsedHierarchyNode<ProcessedInstanceHierarchyNode>;

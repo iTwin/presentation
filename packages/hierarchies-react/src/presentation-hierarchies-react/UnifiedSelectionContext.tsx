@@ -8,10 +8,6 @@ import { SelectionStorage } from "@itwin/unified-selection";
 
 const unifiedSelectionContext = createContext<SelectionStorage | undefined>(undefined);
 
-interface Props {
-  storage: SelectionStorage;
-}
-
 /**
  * A React context provider that makes given selection storage available to all child components. This
  * is a requirement for `useUnifiedSelectionTree` to work with unified selection.
@@ -20,7 +16,7 @@ interface Props {
  *
  * @beta
  */
-export function UnifiedSelectionProvider({ storage, children }: PropsWithChildren<Props>) {
+export function UnifiedSelectionProvider({ storage, children }: PropsWithChildren<{ storage: SelectionStorage }>) {
   return <unifiedSelectionContext.Provider value={storage}>{children}</unifiedSelectionContext.Provider>;
 }
 

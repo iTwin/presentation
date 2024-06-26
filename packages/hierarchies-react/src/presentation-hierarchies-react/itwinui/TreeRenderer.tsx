@@ -11,15 +11,20 @@ import { useTree } from "../UseTree";
 import { LocalizationContextProvider, LocalizedStrings } from "./LocalizationContext";
 import { TreeNodeRenderer } from "./TreeNodeRenderer";
 
+/** @beta */
 type TreeProps = ComponentPropsWithoutRef<typeof Tree<RenderedTreeNode>>;
+
+/** @beta */
 type TreeNodeRendererProps = ComponentPropsWithoutRef<typeof TreeNodeRenderer>;
 
+/** @beta */
 interface TreeRendererOwnProps {
   rootNodes: PresentationTreeNode[];
   selectionMode?: SelectionMode;
   localizedStrings?: Partial<LocalizedStrings>;
 }
 
+/** @beta */
 type TreeRendererProps = Pick<ReturnType<typeof useTree>, "rootNodes" | "expandNode"> &
   Partial<Pick<ReturnType<typeof useTree>, "selectNodes" | "isNodeSelected" | "getHierarchyLevelDetails" | "reloadTree">> &
   Pick<TreeNodeRendererProps, "onFilterClick" | "getIcon" | "getLabel" | "getSublabel"> &

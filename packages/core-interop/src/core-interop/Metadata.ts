@@ -10,6 +10,7 @@ import { createECSchema } from "./MetadataInternal";
 /**
  * Defines input for `createECSchemaProvider`. Generally, this is an instance of [SchemaContext](https://www.itwinjs.org/reference/ecschema-metadata/context/schemacontext/)
  * class from `@itwin/ecschema-metadata` package.
+ * @beta
  */
 interface CoreSchemaContext {
   getSchema(key: CoreSchemaKey): Promise<CoreSchema | undefined>;

@@ -1,0 +1,14 @@
+{
+  "name": "presentation-build-tools",
+  "version": "0.0.0",
+  "description": "Presentation build tools",
+  "private": true,
+  "bin": {
+    "extract-api": "bin/extract-api.cjs"
+  },
+  "dependencies": {
+    "@itwin/build-tools": "^4.7.1",
+    "@microsoft/api-extractor": "~7.47",
+    "yargs": "^17.7.2"
+  }
+}
