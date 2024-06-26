@@ -6,15 +6,94 @@
 
 import { EventEmitter, ScenarioContext } from "artillery";
 import * as http from "node:http";
+import * as https from "node:https";
 import * as path from "path";
 import { expand, filter, from, mergeAll, mergeMap, of, tap } from "rxjs";
 import { Guid, StopWatch } from "@itwin/core-bentley";
 
 const ENABLE_NODES_LOGGING = false;
 const BACKEND_PORT = process.env.BACKEND_DEFAULT_PORT ? Number.parseInt(process.env.BACKEND_DEFAULT_PORT, 10) : 5001;
+const EMPTY_GUID = Guid.empty;
 
-const agent = new http.Agent({ keepAlive: true, maxSockets: 10 });
+const BACKEND_PROPS = process.env.USE_GPB
+  ? {
+      httpApi: https,
+      agent: new https.Agent({ keepAlive: true, maxSockets: 10 }),
+      hostname: "qa-api.bentley.com",
+      port: 443,
+      authToken: process.env.IMJS_AUTH_TOKEN ?? "<missing auth token>",
+      createPath: (operation: string) =>
+        `/imodel/rpc/v4/mode/1/context/${process.env.IMJS_ITWIN_ID ?? EMPTY_GUID}/imodel/${process.env.IMJS_IMODEL_ID ?? EMPTY_GUID}/changeset/${process.env.IMJS_CHANGESET_ID ?? ""}/${operation}`,
+      imodelRpcProps: () => ({
+        iTwinId: process.env.IMJS_ITWIN_ID,
+        iModelId: process.env.IMJS_IMODEL_ID,
+        key: `${process.env.IMJS_IMODEL_ID ?? EMPTY_GUID}:${process.env.IMJS_CHANGESET_ID ?? ""}`,
+        changeset: { index: process.env.IMJS_CHANGESET_INDEX, id: process.env.IMJS_CHANGESET_ID },
+      }),
+    }
+  : {
+      httpApi: http,
+      agent: new http.Agent({ keepAlive: true, maxSockets: 10 }),
+      hostname: "127.0.0.1",
+      port: BACKEND_PORT,
+      authToken: "",
+      createPath: (operation: string) => `/presentation-test-app/v1.0/mode/1/context/${EMPTY_GUID}/imodel/${EMPTY_GUID}/changeset/0/${operation}`,
+      imodelRpcProps: (context: ScenarioContext) => ({
+        iTwinId: EMPTY_GUID,
+        iModelId: EMPTY_GUID,
+        key: getCurrentIModelPath(context),
+        changeset: { index: 0, id: "" },
+      }),
+    };
 
+const sessionId = Guid.createValue();
+console.log(`session id: ${sessionId}`);
+
+let connection: boolean = false;
+export async function openIModelConnectionIfNeeded() {
+  if (!process.env.USE_GPB || connection) {
+    return;
+  }
+
+  while (!connection) {
+    try {
+      await new Promise((resolve, reject) => {
+        const activityId = Guid.createValue();
+        let responseBody = "";
+        const req = BACKEND_PROPS.httpApi.request(
+          {
+            agent: BACKEND_PROPS.agent,
+            hostname: BACKEND_PROPS.hostname,
+            port: BACKEND_PROPS.port,
+            path: `${BACKEND_PROPS.createPath("IModelReadRpcInterface-3.6.0-getConnectionProps")}?parameters=W3siaVR3aW5JZCI6Ijg5MmFhMmM5LTViZTgtNDg2NS05ZjM3LTdkNGM3ZTc1ZWJiZiIsImlNb2RlbElkIjoiZWQwYzQwOGItYWRkMi00OTZlLWFjNTgtNWE3ZTg1M2NiYzBiIiwiY2hhbmdlc2V0Ijp7ImluZGV4Ijo2OSwiaWQiOiIyN2JlMTZkOTU5NjQ1OTg1ZmNhODBjZmY1MDJiZDIzN2I4MmYwZjg0In19XQ==`,
+            method: "get",
+            headers: {
+              ["X-Session-Id"]: sessionId,
+              ["X-Correlation-Id"]: activityId,
+              ["Content-Type"]: "text/plain",
+              ["Authorization"]: `Bearer ${BACKEND_PROPS.authToken}`,
+            },
+          },
+          (response) => {
+            response.setEncoding("utf8");
+            response.on("data", (chunk) => {
+              responseBody += chunk;
+            });
+            response.on("end", () => {
+              resolve(JSON.parse(responseBody));
+            });
+            response.once("error", reject);
+          },
+        );
+        req.once("error", reject);
+        req.end();
+      });
+      connection = true;
+    } catch (e: any) {
+      console.error(`Failed to open iModel connection: ${e.toString()}`);
+    }
+  }
+}
 export async function doRequest(operation: string, body: string, events: EventEmitter, reqName: string) {
   return new Promise((resolve, reject) => {
     events.emit("rate", "http.request_rate");
@@ -23,16 +102,18 @@ export async function doRequest(operation: string, body: string, events: EventEm
     const activityId = Guid.createValue();
     const timer = new StopWatch(undefined, true);
     let responseBody = "";
-    const req = http.request(
+    const req = BACKEND_PROPS.httpApi.request(
       {
-        agent,
-        hostname: "127.0.0.1",
-        port: BACKEND_PORT,
-        path: createPath(operation),
+        agent: BACKEND_PROPS.agent,
+        hostname: BACKEND_PROPS.hostname,
+        port: BACKEND_PROPS.port,
+        path: BACKEND_PROPS.createPath(operation),
         method: "post",
         headers: {
-          ["x-correlation-id"]: activityId,
-          ["content-type"]: "text/plain",
+          ["X-Session-Id"]: sessionId,
+          ["X-Correlation-Id"]: activityId,
+          ["Content-Type"]: "text/plain",
+          ["Authorization"]: `Bearer ${BACKEND_PROPS.authToken}`,
         },
       },
       (response) => {
@@ -43,7 +124,11 @@ export async function doRequest(operation: string, body: string, events: EventEm
         response.on("end", () => {
           events.emit("histogram", "http.response_time", timer.current.milliseconds);
           events.emit("histogram", `itwin.${reqName}.response_time`, timer.current.milliseconds);
-          resolve(JSON.parse(responseBody));
+          if (response.statusCode && response.statusCode.toString().startsWith("2")) {
+            resolve(JSON.parse(responseBody));
+          } else {
+            reject(responseBody);
+          }
         });
         response.once("error", reject);
       },
@@ -63,10 +148,6 @@ export async function doRequest(operation: string, body: string, events: EventEm
   });
 }
 
-function createPath(operation: string) {
-  return `/presentation-test-app/v1.0/mode/1/context/00000000-0000-0000-0000-000000000000/imodel/00000000-0000-0000-0000-000000000000/changeset/0/${operation}`;
-}
-
 export function getCurrentIModelPath(context: ScenarioContext) {
   return (context.vars.$loopElement as any)[0] as string;
 }
@@ -76,28 +157,34 @@ export function getCurrentIModelName(context: ScenarioContext) {
 }
 
 export async function loadNodes<TNode>(
-  _context: ScenarioContext,
+  context: ScenarioContext,
   events: EventEmitter,
   provider: (parent: TNode | undefined) => Promise<TNode[]>,
-  nodeHasChildren: (node: TNode) => boolean,
+  shouldExpand: (node: TNode, index: number) => boolean,
 ) {
+  context.vars.imodelRpcProps = BACKEND_PROPS.imodelRpcProps;
+
   let nodesCreated = 0;
   await new Promise<void>((resolve, reject) => {
+    const hierarchyTimer = new StopWatch(undefined, true);
     const parentNodes = of<TNode | undefined>(undefined);
     parentNodes
       .pipe(
         expand((parentNode) =>
           of(new StopWatch(undefined, true)).pipe(
-            mergeMap((timer) =>
-              from(provider(parentNode)).pipe(
+            mergeMap((timer) => {
+              return from(provider(parentNode)).pipe(
                 tap((childNodes) => {
-                  ENABLE_NODES_LOGGING && console.log(`Got ${childNodes.length} nodes for parent ${parentNode ? JSON.stringify(parentNode) : "<root>"}`);
+                  ENABLE_NODES_LOGGING &&
+                    console.log(
+                      `Got ${childNodes.length} nodes for parent ${parentNode ? JSON.stringify(parentNode) : "<root>"} in ${timer.current.milliseconds} ms`,
+                    );
                   events.emit("histogram", "itwin.nodes_request", timer.current.milliseconds);
                 }),
-              ),
-            ),
+              );
+            }),
             mergeAll(),
-            filter((node) => nodeHasChildren(node)),
+            filter((node, index) => shouldExpand(node, index)),
           ),
         ),
       )
@@ -106,7 +193,7 @@ export async function loadNodes<TNode>(
           ++nodesCreated;
         },
         complete() {
-          ENABLE_NODES_LOGGING && console.log(`Done loading hierarchy`);
+          ENABLE_NODES_LOGGING && console.log(`Done loading hierarchy in ${hierarchyTimer.current.milliseconds} ms`);
           resolve();
         },
         error(e) {
