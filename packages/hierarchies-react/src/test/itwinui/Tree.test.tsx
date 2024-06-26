@@ -259,11 +259,16 @@ describe("Tree", () => {
     expect(expandButton.matches(":focus")).to.be.true;
 
     await user.tab();
+    await user.tab();
+    const applyFilterButton = within(rootNode).getByRole("button", { name: "Apply filter" });
+    expect(applyFilterButton.matches(":focus")).to.be.true;
+
+    await user.tab({ shift: true });
     const clearFilterButton = within(rootNode).getByRole("button", { name: "Clear active filter" });
     expect(clearFilterButton.matches(":focus")).to.be.true;
 
-    await user.tab();
-    const applyFilterButton = within(rootNode).getByRole("button", { name: "Apply filter" });
+    await user.keyboard("{Enter}");
+    expect(clearFilterButton.matches(":focus")).to.be.false;
     expect(applyFilterButton.matches(":focus")).to.be.true;
   });
 
