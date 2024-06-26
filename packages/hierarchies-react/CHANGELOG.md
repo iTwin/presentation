@@ -1,5 +1,11 @@
 # @itwin/presentation-hierarchies-react
 
+## 0.5.2
+
+### Patch Changes
+
+- [#647](https://github.com/iTwin/presentation/pull/647): Correctly detect when `RowsLimitExceededError` is thrown.
+
 ## 0.5.1
 
 ### Patch Changes
