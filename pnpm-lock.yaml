@@ -1289,6 +1289,9 @@ importers:
       '@itwin/presentation-shared':
         specifier: workspace:^
         version: link:../shared
+      rxjs:
+        specifier: ^7.8.1
+        version: 7.8.1
     devDependencies:
       '@itwin/build-tools':
         specifier: ^4.7.1

@@ -33,7 +33,8 @@
   },
   "dependencies": {
     "@itwin/core-bentley": "^4.6.0",
-    "@itwin/presentation-shared": "workspace:^"
+    "@itwin/presentation-shared": "workspace:^",
+    "rxjs": "^7.8.1"
   },
   "peerDependencies": {
     "@itwin/presentation-hierarchies": "workspace:^"
