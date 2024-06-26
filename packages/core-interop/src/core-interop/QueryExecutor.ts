@@ -11,6 +11,7 @@ import { ECSqlBinding, ECSqlQueryDef, ECSqlQueryExecutor, ECSqlQueryReaderOption
 /**
  * Defines input for `createECSqlQueryExecutor`. Generally, this is an instance of either [IModelDb](https://www.itwinjs.org/reference/core-backend/imodels/imodeldb/)
  * or [IModelConnection](https://www.itwinjs.org/reference/core-frontend/imodelconnection/imodelconnection/).
+ * @beta
  */
 interface CoreECSqlReaderFactory {
   createQueryReader(ecsql: string, binder?: QueryBinder, options?: QueryOptions): ECSqlReader;

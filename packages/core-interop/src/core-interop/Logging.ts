@@ -9,6 +9,7 @@ import { ILogger, LogLevel } from "@itwin/presentation-shared";
 /**
  * Defines input for `createLogger`. Generally, this is the [Logger](https://www.itwinjs.org/reference/core-bentley/logging/logger/)
  * class from `@itwin/core-bentley` package.
+ * @beta
  */
 interface ICoreLogger {
   isEnabled(category: string, level: CoreLogLevel): boolean;

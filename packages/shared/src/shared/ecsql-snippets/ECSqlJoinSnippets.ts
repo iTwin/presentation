@@ -8,6 +8,7 @@ import { createRawPropertyValueSelector } from "./ECSqlValueSelectorSnippets";
 
 /**
  * Describes a single JOIN step from source to target through a relationship.
+ * @beta
  */
 interface JoinRelationshipPathStep extends RelationshipPathStep {
   sourceAlias: string;
@@ -18,11 +19,13 @@ interface JoinRelationshipPathStep extends RelationshipPathStep {
 
 /**
  * Describes a path of JOINs from source to target.
+ * @beta
  */
 type JoinRelationshipPath = RelationshipPath<JoinRelationshipPathStep>;
 
 /**
  * Props for `createRelationshipPathJoinClause`.
+ * @beta
  */
 interface CreateRelationshipPathJoinClauseProps {
   schemaProvider: ECSchemaProvider;

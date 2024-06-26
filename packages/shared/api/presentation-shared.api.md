@@ -10,6 +10,25 @@ import { Id64String } from '@itwin/core-bentley';
 export type ArrayElement<ArrayType extends readonly unknown[]> = ArrayType extends readonly (infer ElementType)[] ? ElementType : never;
 
 // @beta
+interface BisInstanceLabelSelectClauseFactoryProps {
+    // (undocumented)
+    classHierarchyInspector: ECClassHierarchyInspector;
+}
+
+// @beta
+interface ClassBasedInstanceLabelSelectClauseFactoryProps {
+    classHierarchyInspector: ECClassHierarchyInspector;
+    clauses: ClassBasedLabelSelectClause[];
+    defaultClauseFactory?: IInstanceLabelSelectClauseFactory;
+}
+
+// @beta
+interface ClassBasedLabelSelectClause {
+    className: string;
+    clause: (props: CreateInstanceLabelSelectClauseProps) => Promise<string>;
+}
+
+// @beta
 export type ConcatenatedValue = ConcatenatedValuePart[];
 
 // @beta (undocumented)
@@ -61,6 +80,13 @@ export function createDefaultInstanceLabelSelectClauseFactory(): IInstanceLabelS
 export function createDefaultValueFormatter(): IPrimitiveValueFormatter;
 
 // @beta
+interface CreateInstanceLabelSelectClauseProps {
+    classAlias: string;
+    className?: string;
+    selectorsConcatenator?: (selectors: TypedValueSelectClauseProps[], checkSelector?: string) => string;
+}
+
+// @beta
 export function createMainThreadReleaseOnTimePassedHandler(releaseOnTimePassed?: number): () => Promise<void> | undefined;
 
 // @beta
@@ -77,6 +103,14 @@ function createRawPropertyValueSelector(classAlias: string, propertyName: string
 
 // @beta
 function createRelationshipPathJoinClause(props: CreateRelationshipPathJoinClauseProps): Promise<string>;
+
+// @beta
+interface CreateRelationshipPathJoinClauseProps {
+    // (undocumented)
+    path: JoinRelationshipPath;
+    // (undocumented)
+    schemaProvider: ECSchemaProvider;
+}
 
 // @beta
 export namespace EC {
@@ -282,6 +316,9 @@ export interface ECSqlQueryExecutor {
 }
 
 // @beta
+type ECSqlQueryReader = AsyncIterableIterator<ECSqlQueryRow>;
+
+// @beta
 export interface ECSqlQueryReaderOptions {
     // (undocumented)
     restartToken?: string;
@@ -296,6 +333,9 @@ export interface ECSqlQueryRow {
     // (undocumented)
     [propertyIndex: number]: any;
 }
+
+// @beta
+type ECSqlQueryRowFormat = "ECSqlPropertyNames" | "Indexes";
 
 // @beta
 interface Event_2<TListener extends (...args: any[]) => void = () => void> {
@@ -351,6 +391,21 @@ export namespace InstanceKey {
 export type IPrimitiveValueFormatter = (value: TypedPrimitiveValue) => Promise<string>;
 
 // @beta
+type JoinRelationshipPath = RelationshipPath<JoinRelationshipPathStep>;
+
+// @beta
+interface JoinRelationshipPathStep extends RelationshipPathStep {
+    // (undocumented)
+    joinType?: "inner" | "outer";
+    // (undocumented)
+    relationshipAlias: string;
+    // (undocumented)
+    sourceAlias: string;
+    // (undocumented)
+    targetAlias: string;
+}
+
+// @beta
 export type LogFunction = (category: string, message: string) => void;
 
 // @beta
@@ -374,6 +429,31 @@ export function parseFullClassName(fullClassName: string): {
 // @beta
 export function parseInstanceLabel(value: string | undefined): ConcatenatedValue | string;
 
+// @internal
+interface Point2d {
+    // (undocumented)
+    x: number;
+    // (undocumented)
+    y: number;
+}
+
+// @internal
+interface Point3d {
+    // (undocumented)
+    x: number;
+    // (undocumented)
+    y: number;
+    // (undocumented)
+    z: number;
+}
+
+// @internal
+interface PrimitivePropertyValue {
+    className: string;
+    propertyName: string;
+    value: PrimitiveValue;
+}
+
 // @beta
 export type PrimitiveValue = Id64String | string | number | boolean | Date | Point2d | Point3d;
 
@@ -383,8 +463,39 @@ export namespace PrimitiveValue {
     export function isPoint3d(value: PrimitiveValue): value is Point3d;
 }
 
+// @internal
+interface PrimitiveValueSelectorProps {
+    selector: string;
+    type?: PrimitiveValueType;
+}
+
+// @internal
+type PrimitiveValueType = "Id" | Exclude<EC.PrimitiveType, "Binary" | "IGeometry">;
+
+// @internal
+interface PropertyValueSelectClauseProps {
+    propertyClassAlias: string;
+    propertyClassName: string;
+    propertyName: string;
+    specialType?: SpecialPropertyType;
+}
+
+// @internal
+type RelationshipPath<TStep extends RelationshipPathStep = RelationshipPathStep> = TStep[];
+
+// @internal
+interface RelationshipPathStep {
+    relationshipName: string;
+    relationshipReverse?: boolean;
+    sourceClassName: string;
+    targetClassName: string;
+}
+
 // @beta
 export function releaseMainThread(): Promise<void>;
+
+// @internal
+type SpecialPropertyType = "Navigation" | "Guid" | "Point2d" | "Point3d";
 
 // @beta
 export function trimWhitespace(str: string): string;
@@ -425,6 +536,19 @@ export type TypedPrimitiveValue = ({
 // @beta (undocumented)
 export namespace TypedPrimitiveValue {
     export function create(value: PrimitiveValue, type: PrimitiveValueType, koqName?: string, extendedType?: string): TypedPrimitiveValue;
+}
+
+// @internal
+type TypedValueSelectClauseProps = PropertyValueSelectClauseProps | TypedPrimitiveValue | PrimitiveValueSelectorProps;
+
+// @internal (undocumented)
+namespace TypedValueSelectClauseProps {
+    // (undocumented)
+    function isPrimitiveValue(props: TypedValueSelectClauseProps): props is TypedPrimitiveValue;
+    // (undocumented)
+    function isPrimitiveValueSelector(props: TypedValueSelectClauseProps): props is PrimitiveValueSelectorProps;
+    // (undocumented)
+    function isPropertySelector(props: TypedValueSelectClauseProps): props is PropertyValueSelectClauseProps;
 }
 
 // (No @packageDocumentation comment for this package)

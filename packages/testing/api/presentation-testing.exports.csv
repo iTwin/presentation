@@ -1,22 +1,22 @@
 sep=;
-Release Tag;API Item
-beta;buildTestIModel(name: string, cb: (builder: TestIModelBuilder) => void): Promise
-deprecated;buildTestIModel(name: string, cb: (builder: TestIModelBuilder) => void): Promise
-beta;buildTestIModel(name: string, cb: (builder: TestIModelBuilder) => Promise
-beta;buildTestIModel(mochaContext: Mocha.Context, cb: (builder: TestIModelBuilder) => void): Promise
-deprecated;buildTestIModel(mochaContext: Mocha.Context, cb: (builder: TestIModelBuilder) => void): Promise
-beta;buildTestIModel(mochaContext: Mocha.Context, cb: (builder: TestIModelBuilder) => Promise
-public;ContentBuilder
-public;ContentBuilderProps
-public;ContentBuilderResult
-public;defaultNodeMappingFunc: NodeMappingFunc
-public;HierarchyBuilder
-public;HierarchyBuilderProps
-public;HierarchyNode 
-public;IContentBuilderDataProvider
-public;initialize: (props?: PresentationTestingInitProps) => Promise
-public;MappedNode
-public;NodeMappingFunc = (node: TreeNodeItem) => MappedNode
-public;PresentationTestingInitProps
-public;terminate: (frontendApp?: typeof IModelApp) => Promise
-beta;TestIModelBuilder
+Release Tag;API Item Type;API Item Name
+beta;function;buildTestIModel
+deprecated;function;buildTestIModel
+beta;function;buildTestIModel
+beta;function;buildTestIModel
+deprecated;function;buildTestIModel
+beta;function;buildTestIModel
+public;class;ContentBuilder
+public;interface;ContentBuilderProps
+public;interface;ContentBuilderResult
+public;const;defaultNodeMappingFunc
+public;class;HierarchyBuilder
+public;interface;HierarchyBuilderProps
+public;interface;HierarchyNode
+public;interface;IContentBuilderDataProvider
+public;const;initialize
+public;interface;MappedNode
+public;type;NodeMappingFunc
+public;interface;PresentationTestingInitProps
+public;const;terminate
+beta;interface;TestIModelBuilder

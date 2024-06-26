@@ -18,13 +18,19 @@ import {
 import { InstancesNodeKey } from "./HierarchyNodeKey";
 import { concatMap, filter, firstValueFrom, from, mergeAll, mergeMap, toArray } from "rxjs";
 
-/** A nodes definition that returns a single custom defined node. */
+/**
+ * A nodes definition that returns a single custom defined node.
+ * @beta
+ */
 export interface CustomHierarchyNodeDefinition {
   /** The node to be created in the hierarchy level */
   node: ParsedCustomHierarchyNode;
 }
 
-/** A nodes definition that returns an ECSQL query for selecting nodes from an iModel. */
+/**
+ * A nodes definition that returns an ECSQL query for selecting nodes from an iModel.
+ * @beta
+ */
 export interface InstanceNodesQueryDefinition {
   /**
    * Full name of the class whose instances are going to be returned. It's okay if the attribute
@@ -89,6 +95,7 @@ export type NodePostProcessor = (node: ProcessedHierarchyNode) => Promise<Proces
  * a `HierarchyNode` that:
  * - knows nothing about its children,
  * - is either an instances node (key is of `InstancesNodeKey` type) or a custom node (key is of `string` type).
+ * @beta
  */
 type HierarchyDefinitionParentNode = Omit<NonGroupingHierarchyNode, "children">;
 
@@ -176,6 +183,7 @@ export type DefineInstanceNodeChildHierarchyLevelProps = Omit<DefineHierarchyLev
 
 /**
  * A definition of a hierarchy level that should be used for specific class of parent instance nodes.
+ * @beta
  */
 interface InstancesNodeChildHierarchyLevelDefinition {
   /**
@@ -224,6 +232,7 @@ export type DefineCustomNodeChildHierarchyLevelProps = Omit<DefineHierarchyLevel
 
 /**
  * A definition of a hierarchy level for that should be used for specific custom parent nodes.
+ * @beta
  */
 interface CustomNodeChildHierarchyLevelDefinition {
   /**
@@ -240,6 +249,7 @@ interface CustomNodeChildHierarchyLevelDefinition {
 /**
  * A hierarchy level definition associated with either parent instance node's class or custom
  * node's key.
+ * @beta
  */
 type ClassBasedHierarchyLevelDefinition = InstancesNodeChildHierarchyLevelDefinition | CustomNodeChildHierarchyLevelDefinition;
 
@@ -252,6 +262,7 @@ export type DefineRootHierarchyLevelProps = Omit<DefineHierarchyLevelProps, "par
 
 /**
  * Props for `createClassBasedHierarchyDefinition`.
+ * @beta
  */
 interface ClassBasedHierarchyDefinitionProps {
   /** Access to ECClass hierarchy in the iModel */

@@ -65,6 +65,7 @@ export interface CoreIModelSelectionSet {
 /**
  * A set if ID's optimized for performance-critical code which represents large sets of ID's as pairs of 32-bit integers.
  * @see https://www.itwinjs.org/reference/core-bentley/ids/id64/id64.uint32set/
+ * @internal
  */
 interface Uint32Set {
   /** Add any number of Ids to the set. */

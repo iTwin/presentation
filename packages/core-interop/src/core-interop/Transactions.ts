@@ -13,6 +13,7 @@ import { Event } from "@itwin/presentation-shared";
  * through [BriefcaseDb.txns](https://www.itwinjs.org/reference/core-backend/imodels/briefcasedb/#txns), or
  * [BriefcaseTxns](https://www.itwinjs.org/reference/core-frontend/imodelconnection/briefcasetxns/), accessed
  * through [BriefcaseConnection.txns](https://www.itwinjs.org/reference/core-frontend/imodelconnection/briefcaseconnection/#txns).
+ * @beta
  */
 interface ICoreTxnManager {
   /**

@@ -344,6 +344,16 @@ export interface IUnifiedSelectionComponent {
 // @beta @deprecated
 export const NavigationPropertyEditor: typeof NavigationPropertyEditor_2;
 
+// @internal
+class NavigationPropertyEditor_2 extends PropertyEditorBase {
+    // (undocumented)
+    get containerHandlesEnter(): boolean;
+    // (undocumented)
+    get containerStopsKeydownPropagation(): boolean;
+    // (undocumented)
+    get reactNode(): React.ReactNode;
+}
+
 // @beta
 export const navigationPropertyEditorContext: Context<NavigationPropertyEditorContextProps | undefined>;
 
@@ -355,6 +365,18 @@ export interface NavigationPropertyEditorContextProps {
 
 // @beta @deprecated
 export const NavigationPropertyTargetEditor: typeof NavigationPropertyTargetEditor_2;
+
+// @internal
+class NavigationPropertyTargetEditor_2 extends PureComponent<PropertyEditorProps> implements TypeEditor {
+    // (undocumented)
+    getPropertyValue(): Promise<PropertyValue | undefined>;
+    // (undocumented)
+    get hasFocus(): boolean;
+    // (undocumented)
+    get htmlElement(): HTMLElement | null;
+    // (undocumented)
+    render(): JSX_2.Element;
+}
 
 // @beta
 export function PortalTargetContextProvider({ portalTarget, children }: PropsWithChildren<PortalTargetContextProviderProps>): JSX_2.Element;
@@ -931,6 +953,24 @@ export function useUnifiedSelectionContext(): UnifiedSelectionContext | undefine
 
 // @public @deprecated
 export function useUnifiedSelectionTreeEventHandler(props: UnifiedSelectionTreeEventHandlerParams): UnifiedSelectionTreeEventHandler;
+
+// @internal
+class ViewportSelectionHandler implements IDisposable {
+    constructor(props: ViewportSelectionHandlerProps);
+    // (undocumented)
+    applyCurrentSelection(): void;
+    // (undocumented)
+    dispose(): void;
+    // (undocumented)
+    get imodel(): IModelConnection;
+    set imodel(value: IModelConnection);
+}
+
+// @internal (undocumented)
+interface ViewportSelectionHandlerProps {
+    // (undocumented)
+    imodel: IModelConnection;
+}
 
 // @public
 export function viewWithUnifiedSelection<P extends ViewportProps>(ViewportComponent: React.ComponentType<P>): React.ComponentType<P & ViewWithUnifiedSelectionProps>;

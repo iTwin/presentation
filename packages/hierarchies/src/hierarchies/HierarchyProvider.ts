@@ -120,6 +120,7 @@ export interface HierarchyProvider {
 
 /**
  * Defines the strings used by hierarchy provider.
+ * @beta
  */
 interface HierarchyProviderLocalizedStrings {
   /**
@@ -137,6 +138,7 @@ interface HierarchyProviderLocalizedStrings {
 
 /**
  * Props for `createHierarchyProvider`.
+ * @beta
  */
 interface HierarchyProviderProps {
   /**

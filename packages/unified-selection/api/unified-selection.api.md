@@ -17,8 +17,54 @@ export interface CachingHiliteSetProvider {
     }): AsyncIterableIterator<HiliteSet>;
 }
 
+// @internal
+interface CachingHiliteSetProviderProps {
+    // (undocumented)
+    imodelProvider: (imodelKey: string) => ECClassHierarchyInspector & ECSqlQueryExecutor;
+    // (undocumented)
+    selectionStorage: SelectionStorage;
+}
+
 // @beta
 export function computeSelection(props: ComputeSelectionProps): AsyncIterableIterator<SelectableInstanceKey>;
+
+// @internal
+interface ComputeSelectionProps {
+    // (undocumented)
+    elementIds: string[];
+    // (undocumented)
+    queryExecutor: ECSqlQueryExecutor;
+    // (undocumented)
+    scope: ElementSelectionScopeProps | {
+        id: SelectionScope;
+    } | SelectionScope;
+}
+
+// @internal
+interface CoreIModelHiliteSet {
+    clear(): void;
+    readonly elements: Uint32Set;
+    readonly models: Uint32Set;
+    readonly subcategories: Uint32Set;
+    wantSyncWithSelectionSet: boolean;
+}
+
+// @internal
+interface CoreIModelSelectionSet {
+    add(elem: Id64Arg): boolean;
+    readonly elements: Set<string>;
+    emptyAll(): void;
+    onChanged: Event_2<(ev: CoreSelectionSetEventUnsafe) => void>;
+    remove(elem: Id64Arg): boolean;
+}
+
+// @internal
+interface CoreSelectionSetEventUnsafe {
+    added?: Id64Arg;
+    removed?: Id64Arg;
+    set: CoreIModelSelectionSet;
+    type: number;
+}
 
 // @beta
 export function createCachingHiliteSetProvider(props: CachingHiliteSetProviderProps): CachingHiliteSetProvider;
@@ -36,8 +82,26 @@ export interface CustomSelectable {
     loadInstanceKeys: () => AsyncIterableIterator<SelectableInstanceKey>;
 }
 
+// @internal
+interface ElementSelectionScopeProps {
+    ancestorLevel?: number;
+    id: "element" | "functional";
+}
+
 // @beta
 export function enableUnifiedSelectionSyncWithIModel(props: EnableUnifiedSelectionSyncWithIModelProps): () => void;
+
+// @internal
+interface EnableUnifiedSelectionSyncWithIModelProps {
+    activeScopeProvider: () => ComputeSelectionProps["scope"];
+    cachingHiliteSetProvider?: CachingHiliteSetProvider;
+    imodelAccess: ECSqlQueryExecutor & ECClassHierarchyInspector & {
+        readonly key: string;
+        readonly hiliteSet: CoreIModelHiliteSet;
+        readonly selectionSet: CoreIModelSelectionSet;
+    };
+    selectionStorage: SelectionStorage;
+}
 
 // @beta
 export interface HiliteSet {
@@ -55,6 +119,19 @@ export interface HiliteSetProvider {
         selectables: Selectables;
     }): AsyncIterableIterator<HiliteSet>;
 }
+
+// @internal
+interface HiliteSetProviderProps {
+    // (undocumented)
+    imodelAccess: ECClassHierarchyInspector & ECSqlQueryExecutor;
+}
+
+// @beta (undocumented)
+type IModelKeyProp = {
+    imodelKey: string;
+} | {
+    iModelKey: string;
+};
 
 // @beta
 export type Selectable = SelectableInstanceKey | CustomSelectable;
@@ -100,6 +177,9 @@ export interface SelectionChangeEvent {
     addListener(listener: StorageSelectionChangesListener): () => void;
     removeListener(listener: StorageSelectionChangesListener): void;
 }
+
+// @internal
+type SelectionScope = "element" | "model" | "category" | "functional";
 
 // @beta
 export interface SelectionStorage {
@@ -155,6 +235,12 @@ export type StorageSelectionChangeType =
 | "replace"
 /** Selection was cleared. */
 | "clear";
+
+// @internal
+interface Uint32Set {
+    addIds(ids: Id64Arg): void;
+    deleteIds(ids: Id64Arg): void;
+}
 
 // (No @packageDocumentation comment for this package)
 
