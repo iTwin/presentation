@@ -1,5 +1,11 @@
 # @itwin/presentation-hierarchies-react
 
+## 0.5.3
+
+### Patch Changes
+
+- [#649](https://github.com/iTwin/presentation/pull/649): Changed "Clear active filter" button to switch focus to "Apply filter" button when clicked.
+
 ## 0.5.2
 
 ### Patch Changes
