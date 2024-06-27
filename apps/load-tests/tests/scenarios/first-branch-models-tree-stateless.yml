@@ -14,7 +14,7 @@ config:
   processor: "../lib/processors/models-tree-stateless.js"
 
 scenarios:
-  - name: Full Models Tree (stateless)
+  - name: First branch Models Tree (stateless)
     beforeScenario: "initScenario"
     afterScenario: "terminateScenario"
     flow:

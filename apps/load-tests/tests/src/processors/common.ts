@@ -5,6 +5,7 @@
 /* eslint-disable no-console */
 
 import { EventEmitter, ScenarioContext } from "artillery";
+import { decompress as brotliDecompress } from "brotli";
 import * as http from "node:http";
 import * as https from "node:https";
 import * as path from "path";
@@ -58,8 +59,6 @@ export async function openIModelConnectionIfNeeded() {
   while (!connection) {
     try {
       await new Promise((resolve, reject) => {
-        const activityId = Guid.createValue();
-        let responseBody = "";
         const req = BACKEND_PROPS.httpApi.request(
           {
             agent: BACKEND_PROPS.agent,
@@ -67,23 +66,9 @@ export async function openIModelConnectionIfNeeded() {
             port: BACKEND_PROPS.port,
             path: `${BACKEND_PROPS.createPath("IModelReadRpcInterface-3.6.0-getConnectionProps")}?parameters=W3siaVR3aW5JZCI6Ijg5MmFhMmM5LTViZTgtNDg2NS05ZjM3LTdkNGM3ZTc1ZWJiZiIsImlNb2RlbElkIjoiZWQwYzQwOGItYWRkMi00OTZlLWFjNTgtNWE3ZTg1M2NiYzBiIiwiY2hhbmdlc2V0Ijp7ImluZGV4Ijo2OSwiaWQiOiIyN2JlMTZkOTU5NjQ1OTg1ZmNhODBjZmY1MDJiZDIzN2I4MmYwZjg0In19XQ==`,
             method: "get",
-            headers: {
-              ["X-Session-Id"]: sessionId,
-              ["X-Correlation-Id"]: activityId,
-              ["Content-Type"]: "text/plain",
-              ["Authorization"]: `Bearer ${BACKEND_PROPS.authToken}`,
-            },
+            headers: createRequestHeaders(),
           },
-          (response) => {
-            response.setEncoding("utf8");
-            response.on("data", (chunk) => {
-              responseBody += chunk;
-            });
-            response.on("end", () => {
-              resolve(JSON.parse(responseBody));
-            });
-            response.once("error", reject);
-          },
+          (response) => handleResponse(response, resolve, reject),
         );
         req.once("error", reject);
         req.end();
@@ -99,9 +84,7 @@ export async function doRequest(operation: string, body: string, events: EventEm
     events.emit("rate", "http.request_rate");
     events.emit("counter", "http.requests", 1);
     events.emit("counter", `itwin.${reqName}.requests`, 1);
-    const activityId = Guid.createValue();
     const timer = new StopWatch(undefined, true);
-    let responseBody = "";
     const req = BACKEND_PROPS.httpApi.request(
       {
         agent: BACKEND_PROPS.agent,
@@ -109,29 +92,18 @@ export async function doRequest(operation: string, body: string, events: EventEm
         port: BACKEND_PROPS.port,
         path: BACKEND_PROPS.createPath(operation),
         method: "post",
-        headers: {
-          ["X-Session-Id"]: sessionId,
-          ["X-Correlation-Id"]: activityId,
-          ["Content-Type"]: "text/plain",
-          ["Authorization"]: `Bearer ${BACKEND_PROPS.authToken}`,
-        },
+        headers: createRequestHeaders(),
       },
-      (response) => {
-        response.setEncoding("utf8");
-        response.on("data", (chunk) => {
-          responseBody += chunk;
-        });
-        response.on("end", () => {
-          events.emit("histogram", "http.response_time", timer.current.milliseconds);
-          events.emit("histogram", `itwin.${reqName}.response_time`, timer.current.milliseconds);
-          if (response.statusCode && response.statusCode.toString().startsWith("2")) {
-            resolve(JSON.parse(responseBody));
-          } else {
-            reject(responseBody);
-          }
-        });
-        response.once("error", reject);
-      },
+      (response) =>
+        handleResponse(
+          response,
+          (value) => {
+            events.emit("histogram", "http.response_time", timer.current.milliseconds);
+            events.emit("histogram", `itwin.${reqName}.response_time`, timer.current.milliseconds);
+            resolve(value);
+          },
+          reject,
+        ),
     );
     req.on("socket", (socket) => {
       if (socket.listenerCount("connect") > 0) {
@@ -146,6 +118,37 @@ export async function doRequest(operation: string, body: string, events: EventEm
     req.write(body);
     req.end();
   });
+}
+function createRequestHeaders() {
+  return {
+    ["X-Session-Id"]: sessionId,
+    ["X-Correlation-Id"]: Guid.createValue(),
+    ["Accept-Encoding"]: "br",
+    ["Content-Type"]: "text/plain",
+    ["Authorization"]: `Bearer ${BACKEND_PROPS.authToken}`,
+  };
+}
+function handleResponse(response: http.IncomingMessage, resolve: (value: any) => void, reject: (reason: any) => void) {
+  const chunks: Uint8Array[] = [];
+  response.on("data", (chunk) => {
+    chunks.push(chunk);
+  });
+  response.on("end", () => {
+    const buffer = Buffer.concat(chunks);
+    chunks.length = 0;
+    const responseBody = (function () {
+      if (response.headers["content-encoding"] === "br") {
+        return Buffer.from(brotliDecompress(buffer)).toString("utf8");
+      }
+      return buffer.toString();
+    })();
+    if (!response.statusCode || !response.statusCode.toString().startsWith("2")) {
+      reject(responseBody);
+      return;
+    }
+    resolve(JSON.parse(responseBody));
+  });
+  response.once("error", reject);
 }
 
 export function getCurrentIModelPath(context: ScenarioContext) {
