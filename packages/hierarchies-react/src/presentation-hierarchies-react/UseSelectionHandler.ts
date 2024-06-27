@@ -18,7 +18,7 @@ import { useTree } from "./UseTree";
  */
 export type SelectionMode = "none" | "single" | "extended" | "multiple";
 
-/** @internal */
+/** @beta Not exported through barrel, but used in public API as an argument. */
 export type SelectionChangeType = "add" | "replace" | "remove";
 
 /**

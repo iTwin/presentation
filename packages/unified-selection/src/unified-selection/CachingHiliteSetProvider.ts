@@ -12,7 +12,7 @@ import { IMODEL_CLOSE_SELECTION_CLEAR_SOURCE, SelectionStorage } from "./Selecti
 
 /**
  * Props for creating a `CachingHiliteSetProvider` instance.
- * @internal Not exported through barrel, but used in public API as an argument. May be supplemented with optional attributes any time.
+ * @beta Not exported through barrel, but used in public API as an argument. May be supplemented with optional attributes any time.
  */
 export interface CachingHiliteSetProviderProps {
   selectionStorage: SelectionStorage;

@@ -10,13 +10,13 @@ import { formIdBindings, genericExecuteQuery } from "./Utils";
 
 /**
  * Available selection scopes.
- * @internal Not exported through barrel, but used in public API as an argument. May be supplemented with additional items in the union at any time.
+ * @beta Not exported through barrel, but used in public API as an argument. May be supplemented with additional items in the union at any time.
  */
 export type SelectionScope = "element" | "model" | "category" | "functional";
 
 /**
  * Props for computing element selection.
- * @internal Not exported through barrel, but used in public API as an argument. May be supplemented with optional attributes any time.
+ * @beta Not exported through barrel, but used in public API as an argument. May be supplemented with optional attributes any time.
  */
 export interface ElementSelectionScopeProps {
   /** Identifies this as either "element" or "functional" selection scope */
@@ -34,7 +34,7 @@ export interface ElementSelectionScopeProps {
 
 /**
  * Props for `computeSelection`.
- * @internal Not exported through barrel, but used in public API as an argument. May be supplemented with optional attributes any time.
+ * @beta Not exported through barrel, but used in public API as an argument. May be supplemented with optional attributes any time.
  */
 export interface ComputeSelectionProps {
   queryExecutor: ECSqlQueryExecutor;

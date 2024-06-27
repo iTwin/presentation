@@ -40,11 +40,9 @@ for (let lineIdx = 0; lineIdx < lines.length; ++lineIdx) {
     continue;
   }
 
-  if (lines[++lineIdx].startsWith("export")) {
-    console.error(`Fail! Detected exposed @internal APIs on line ${lineIdx}.`);
-    console.error("Please make sure they're not exported through barrel file and re-generate API summary.");
-    process.exit(1);
-  }
+  console.error(`Fail! Detected exposed @internal APIs on line ${lineIdx}.`);
+  console.error("Please make sure they're not exported through barrel file and re-generate API summary.");
+  process.exit(1);
 }
 
 console.log(`OK! API summary "${path.basename(apiSummaryPath)}" does not contain root level @internal APIs.`);

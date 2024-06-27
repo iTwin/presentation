@@ -17,7 +17,7 @@ export interface CachingHiliteSetProvider {
     }): AsyncIterableIterator<HiliteSet>;
 }
 
-// @internal
+// @beta
 interface CachingHiliteSetProviderProps {
     // (undocumented)
     imodelProvider: (imodelKey: string) => ECClassHierarchyInspector & ECSqlQueryExecutor;
@@ -28,7 +28,7 @@ interface CachingHiliteSetProviderProps {
 // @beta
 export function computeSelection(props: ComputeSelectionProps): AsyncIterableIterator<SelectableInstanceKey>;
 
-// @internal
+// @beta
 interface ComputeSelectionProps {
     // (undocumented)
     elementIds: string[];
@@ -40,7 +40,7 @@ interface ComputeSelectionProps {
     } | SelectionScope;
 }
 
-// @internal
+// @beta
 interface CoreIModelHiliteSet {
     clear(): void;
     readonly elements: Uint32Set;
@@ -49,7 +49,7 @@ interface CoreIModelHiliteSet {
     wantSyncWithSelectionSet: boolean;
 }
 
-// @internal
+// @beta
 interface CoreIModelSelectionSet {
     add(elem: Id64Arg): boolean;
     readonly elements: Set<string>;
@@ -58,7 +58,7 @@ interface CoreIModelSelectionSet {
     remove(elem: Id64Arg): boolean;
 }
 
-// @internal
+// @beta
 interface CoreSelectionSetEventUnsafe {
     added?: Id64Arg;
     removed?: Id64Arg;
@@ -82,7 +82,7 @@ export interface CustomSelectable {
     loadInstanceKeys: () => AsyncIterableIterator<SelectableInstanceKey>;
 }
 
-// @internal
+// @beta
 interface ElementSelectionScopeProps {
     ancestorLevel?: number;
     id: "element" | "functional";
@@ -91,7 +91,7 @@ interface ElementSelectionScopeProps {
 // @beta
 export function enableUnifiedSelectionSyncWithIModel(props: EnableUnifiedSelectionSyncWithIModelProps): () => void;
 
-// @internal
+// @beta
 interface EnableUnifiedSelectionSyncWithIModelProps {
     activeScopeProvider: () => ComputeSelectionProps["scope"];
     cachingHiliteSetProvider?: CachingHiliteSetProvider;
@@ -120,7 +120,7 @@ export interface HiliteSetProvider {
     }): AsyncIterableIterator<HiliteSet>;
 }
 
-// @internal
+// @beta
 interface HiliteSetProviderProps {
     // (undocumented)
     imodelAccess: ECClassHierarchyInspector & ECSqlQueryExecutor;
@@ -178,7 +178,7 @@ export interface SelectionChangeEvent {
     removeListener(listener: StorageSelectionChangesListener): void;
 }
 
-// @internal
+// @beta
 type SelectionScope = "element" | "model" | "category" | "functional";
 
 // @beta
@@ -236,7 +236,7 @@ export type StorageSelectionChangeType =
 /** Selection was cleared. */
 | "clear";
 
-// @internal
+// @beta
 interface Uint32Set {
     addIds(ids: Id64Arg): void;
     deleteIds(ids: Id64Arg): void;

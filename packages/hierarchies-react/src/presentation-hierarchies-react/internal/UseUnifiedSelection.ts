@@ -16,7 +16,7 @@ export interface TreeSelectionOptions {
   selectNodes: (nodeIds: Array<string>, changeType: SelectionChangeType) => void;
 }
 
-/** @internal */
+/** @beta */
 export interface UseUnifiedTreeSelectionProps {
   imodelKey: string;
   sourceName: string;

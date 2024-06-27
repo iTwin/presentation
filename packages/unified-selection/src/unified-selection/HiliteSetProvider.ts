@@ -24,7 +24,7 @@ export interface HiliteSet {
 
 /**
  * Props for creating a `HiliteSetProvider` instance.
- * @internal Not exported through barrel, but used in public API as an argument. May be supplemented with optional attributes any time.
+ * @beta Not exported through barrel, but used in public API as an argument. May be supplemented with optional attributes any time.
  */
 export interface HiliteSetProviderProps {
   imodelAccess: ECClassHierarchyInspector & ECSqlQueryExecutor;

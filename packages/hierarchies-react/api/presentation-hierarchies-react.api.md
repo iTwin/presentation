@@ -74,7 +74,7 @@ interface LocalizationContextProviderProps {
     localizedStrings?: Partial<LocalizedStrings>;
 }
 
-// @internal (undocumented)
+// @beta
 interface LocalizedStrings {
     clearHierarchyLevelFilter: string;
     filterHierarchyLevel: string;
@@ -164,7 +164,7 @@ export type RenderedTreeNode = PresentationTreeNode | {
     type: "ChildrenPlaceholder";
 };
 
-// @internal (undocumented)
+// @beta
 type SelectionChangeType = "add" | "replace" | "remove";
 
 // @beta
@@ -177,7 +177,7 @@ type SubtreeReloadOptions = {
     parentNodeId: string;
 } & ReloadTreeCommonOptions;
 
-// @internal (undocumented)
+// @beta
 interface TreeModelGenericInfoNode {
     // (undocumented)
     id: string;
@@ -189,7 +189,7 @@ interface TreeModelGenericInfoNode {
     type: "Unknown";
 }
 
-// @internal (undocumented)
+// @beta
 interface TreeModelHierarchyNode {
     // (undocumented)
     children: boolean;
@@ -211,13 +211,13 @@ interface TreeModelHierarchyNode {
     nodeData: HierarchyNode;
 }
 
-// @internal (undocumented)
+// @beta
 type TreeModelInfoNode = TreeModelGenericInfoNode | TreeModelResultSetTooLargeInfoNode | TreeModelNoFilterMatchesInfoNode;
 
-// @internal (undocumented)
+// @beta
 type TreeModelNode = TreeModelHierarchyNode | TreeModelInfoNode;
 
-// @internal (undocumented)
+// @beta
 interface TreeModelNoFilterMatchesInfoNode {
     // (undocumented)
     id: string;
@@ -227,7 +227,7 @@ interface TreeModelNoFilterMatchesInfoNode {
     type: "NoFilterMatches";
 }
 
-// @internal (undocumented)
+// @beta
 interface TreeModelResultSetTooLargeInfoNode {
     // (undocumented)
     id: string;
@@ -239,7 +239,7 @@ interface TreeModelResultSetTooLargeInfoNode {
     type: "ResultSetTooLarge";
 }
 
-// @internal (undocumented)
+// @beta
 interface TreeModelRootNode {
     // (undocumented)
     hierarchyLimit?: number | "unbounded";
@@ -374,7 +374,7 @@ interface UseTreeResult {
 // @beta
 export function useUnifiedSelectionTree({ imodelKey, sourceName, ...props }: UseTreeProps & Omit<UseUnifiedTreeSelectionProps, "getNode">): UseTreeResult;
 
-// @internal (undocumented)
+// @beta (undocumented)
 interface UseUnifiedTreeSelectionProps {
     // (undocumented)
     getNode: (nodeId: string) => TreeModelNode | TreeModelRootNode | undefined;

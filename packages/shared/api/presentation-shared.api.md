@@ -429,7 +429,7 @@ export function parseFullClassName(fullClassName: string): {
 // @beta
 export function parseInstanceLabel(value: string | undefined): ConcatenatedValue | string;
 
-// @internal
+// @beta
 interface Point2d {
     // (undocumented)
     x: number;
@@ -437,7 +437,7 @@ interface Point2d {
     y: number;
 }
 
-// @internal
+// @beta
 interface Point3d {
     // (undocumented)
     x: number;
@@ -447,7 +447,7 @@ interface Point3d {
     z: number;
 }
 
-// @internal
+// @beta
 interface PrimitivePropertyValue {
     className: string;
     propertyName: string;
@@ -463,16 +463,16 @@ export namespace PrimitiveValue {
     export function isPoint3d(value: PrimitiveValue): value is Point3d;
 }
 
-// @internal
+// @beta
 interface PrimitiveValueSelectorProps {
     selector: string;
     type?: PrimitiveValueType;
 }
 
-// @internal
+// @beta
 type PrimitiveValueType = "Id" | Exclude<EC.PrimitiveType, "Binary" | "IGeometry">;
 
-// @internal
+// @beta
 interface PropertyValueSelectClauseProps {
     propertyClassAlias: string;
     propertyClassName: string;
@@ -480,10 +480,10 @@ interface PropertyValueSelectClauseProps {
     specialType?: SpecialPropertyType;
 }
 
-// @internal
+// @beta
 type RelationshipPath<TStep extends RelationshipPathStep = RelationshipPathStep> = TStep[];
 
-// @internal
+// @beta
 interface RelationshipPathStep {
     relationshipName: string;
     relationshipReverse?: boolean;
@@ -494,7 +494,7 @@ interface RelationshipPathStep {
 // @beta
 export function releaseMainThread(): Promise<void>;
 
-// @internal
+// @beta
 type SpecialPropertyType = "Navigation" | "Guid" | "Point2d" | "Point3d";
 
 // @beta
@@ -538,10 +538,10 @@ export namespace TypedPrimitiveValue {
     export function create(value: PrimitiveValue, type: PrimitiveValueType, koqName?: string, extendedType?: string): TypedPrimitiveValue;
 }
 
-// @internal
+// @beta
 type TypedValueSelectClauseProps = PropertyValueSelectClauseProps | TypedPrimitiveValue | PrimitiveValueSelectorProps;
 
-// @internal (undocumented)
+// @beta
 namespace TypedValueSelectClauseProps {
     // (undocumented)
     function isPrimitiveValue(props: TypedValueSelectClauseProps): props is TypedPrimitiveValue;

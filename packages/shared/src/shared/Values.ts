@@ -44,7 +44,7 @@ export namespace InstanceKey {
 
 /**
  * A data structure for a 2d point.
- * @internal This is an internal type used in public API.
+ * @beta This is an internal type used in public API.
  */
 export interface Point2d {
   x: number;
@@ -53,7 +53,7 @@ export interface Point2d {
 
 /**
  * A data structure for a 3d point.
- * @internal This is an internal type used in public API.
+ * @beta This is an internal type used in public API.
  */
 export interface Point3d {
   x: number;
@@ -230,7 +230,7 @@ export namespace TypedPrimitiveValue {
 
 /**
  * A type for a primitive property value and its metadata - property name and its class full name.
- * @internal This is an internal type used in public API.
+ * @beta This is an internal type used in public API.
  */
 export interface PrimitivePropertyValue {
   /** Full name of the class containing the property with `propertyName` name. */

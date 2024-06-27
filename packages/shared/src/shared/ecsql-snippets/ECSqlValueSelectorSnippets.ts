@@ -11,7 +11,7 @@ import { PrimitiveValue, TypedPrimitiveValue } from "../Values";
  * A union of property types that need special handling when creating a property value selector.
  * For example, Guid values are stored as binary and need to be selected with `GuidToStr` function to
  * get a meaningful value.
- * @internal
+ * @beta
  */
 type SpecialPropertyType = "Navigation" | "Guid" | "Point2d" | "Point3d";
 
@@ -20,7 +20,7 @@ type SpecialPropertyType = "Navigation" | "Guid" | "Point2d" | "Point3d";
  *
  * It's recommended to only select properties with metadata only when they need additional formatting and
  * otherwise use `createPropertyValueSelector` to select their value.
- * @internal
+ * @beta
  */
 interface PropertyValueSelectClauseProps {
   /** Full class name of the property. Format: `SchemaName.ClassName`. */
@@ -35,7 +35,7 @@ interface PropertyValueSelectClauseProps {
 
 /**
  * Props for selecting a primitive value using given ECSQL selector.
- * @internal
+ * @beta
  */
 interface PrimitiveValueSelectorProps {
   /** ECSQL selector to query the value */
@@ -46,22 +46,19 @@ interface PrimitiveValueSelectorProps {
 
 /**
  * A union of prop types for selecting a value and its metadata in ECSQL query.
- * @internal This is an internal type used in public API.
+ * @beta This is an internal type used in public API.
  */
 export type TypedValueSelectClauseProps = PropertyValueSelectClauseProps | TypedPrimitiveValue | PrimitiveValueSelectorProps;
 
-/** @internal */
+/** @beta This is an internal namespace which can be used in public API. */
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export namespace TypedValueSelectClauseProps {
-  /** @internal */
   export function isPropertySelector(props: TypedValueSelectClauseProps): props is PropertyValueSelectClauseProps {
     return !!(props as PropertyValueSelectClauseProps).propertyName;
   }
-  /** @internal */
   export function isPrimitiveValue(props: TypedValueSelectClauseProps): props is TypedPrimitiveValue {
     return !!(props as TypedPrimitiveValue).value;
   }
-  /** @internal */
   export function isPrimitiveValueSelector(props: TypedValueSelectClauseProps): props is PrimitiveValueSelectorProps {
     return !!(props as PrimitiveValueSelectorProps).selector;
   }

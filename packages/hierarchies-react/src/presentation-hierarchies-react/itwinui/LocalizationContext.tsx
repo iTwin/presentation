@@ -5,7 +5,7 @@
 
 import { createContext, PropsWithChildren, useContext, useEffect, useState } from "react";
 
-/** @internal */
+/** @beta Not exported through barrel, but used in public API as an argument. */
 export interface LocalizedStrings {
   /**
    * Message displayed when nodes are loading.
