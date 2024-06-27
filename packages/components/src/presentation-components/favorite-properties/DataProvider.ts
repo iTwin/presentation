@@ -33,9 +33,6 @@ export interface FavoritePropertiesDataProviderProps {
    * set, default presentation rules are used which return content for the selected elements.
    */
   ruleset?: Ruleset | string;
-
-  /** @internal */
-  propertyDataProviderFactory?: (imodel: IModelConnection, ruleset?: Ruleset | string) => PresentationPropertyDataProvider;
 }
 
 /**
@@ -44,7 +41,13 @@ export interface FavoritePropertiesDataProviderProps {
  */
 export class FavoritePropertiesDataProvider implements IFavoritePropertiesDataProvider {
   private _customRuleset?: Ruleset | string;
-  private _propertyDataProviderFactory: (imodel: IModelConnection, ruleset?: Ruleset | string) => PresentationPropertyDataProvider;
+  // Stubbed in tests
+  /* istanbul ignore next */
+  private _propertyDataProviderFactory = (imodel: IModelConnection, ruleset?: Ruleset | string) => {
+    const provider = new PresentationPropertyDataProvider({ imodel, ruleset });
+    provider.isNestedPropertyCategoryGroupingEnabled = false;
+    return provider;
+  };
 
   /**
    * Should fields with no values be included in the property list. No value means:
@@ -67,14 +70,6 @@ export class FavoritePropertiesDataProvider implements IFavoritePropertiesDataPr
     this.includeFieldsWithNoValues = true;
     this.includeFieldsWithCompositeValues = true;
     this._customRuleset = /* istanbul ignore next */ props?.ruleset;
-    this._propertyDataProviderFactory =
-      props && props.propertyDataProviderFactory
-        ? props.propertyDataProviderFactory
-        : /* istanbul ignore next */ (imodel: IModelConnection, ruleset?: Ruleset | string) => {
-            const provider = new PresentationPropertyDataProvider({ imodel, ruleset });
-            provider.isNestedPropertyCategoryGroupingEnabled = false;
-            return provider;
-          };
   }
 
   /**

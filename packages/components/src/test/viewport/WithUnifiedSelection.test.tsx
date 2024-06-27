@@ -20,6 +20,7 @@ import {
   SelectionChangeType,
   SelectionManager,
 } from "@itwin/presentation-frontend";
+import { ViewportSelectionHandlerContextProvider } from "../../presentation-components/common/ViewportSelectionHandlerContext";
 import { ViewportSelectionHandler } from "../../presentation-components/viewport/ViewportSelectionHandler";
 import { viewWithUnifiedSelection } from "../../presentation-components/viewport/WithUnifiedSelection";
 import { createTestECInstanceKey } from "../_helpers/Common";
@@ -60,7 +61,11 @@ describe("Viewport withUnifiedSelection", () => {
   });
 
   it("renders", () => {
-    render(<PresentationViewport imodel={imodel} viewDefinitionId={viewDefinitionId} selectionHandler={selectionHandler} />);
+    render(
+      <ViewportSelectionHandlerContextProvider selectionHandler={selectionHandler}>
+        <PresentationViewport imodel={imodel} viewDefinitionId={viewDefinitionId} />
+      </ViewportSelectionHandlerContextProvider>,
+    );
   });
 
   it("creates and disposes default ViewportSelectionHandler implementation when not provided through props", () => {
@@ -86,11 +91,19 @@ describe("Viewport withUnifiedSelection", () => {
   });
 
   it("sets ViewportSelectionHandler.imodel property when rendered with new imodel", () => {
-    const { rerender } = render(<PresentationViewport imodel={imodel} viewDefinitionId={viewDefinitionId} selectionHandler={selectionHandler} />);
+    const { rerender } = render(
+      <ViewportSelectionHandlerContextProvider selectionHandler={selectionHandler}>
+        <PresentationViewport imodel={imodel} viewDefinitionId={viewDefinitionId} />
+      </ViewportSelectionHandlerContextProvider>,
+    );
     expect(selectionHandler.imodel).to.be.eq(imodel);
 
     const newImodel = {} as IModelConnection;
-    rerender(<PresentationViewport imodel={newImodel} viewDefinitionId={viewDefinitionId} selectionHandler={selectionHandler} />);
+    rerender(
+      <ViewportSelectionHandlerContextProvider selectionHandler={selectionHandler}>
+        <PresentationViewport imodel={newImodel} viewDefinitionId={viewDefinitionId} />
+      </ViewportSelectionHandlerContextProvider>,
+    );
     expect(selectionHandler.imodel).to.be.eq(newImodel);
   });
 });

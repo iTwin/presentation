@@ -9,16 +9,16 @@
 import { memo, useEffect, useState } from "react";
 import { ViewportProps } from "@itwin/imodel-components-react";
 import { getDisplayName } from "../common/Utils";
+import { useViewportSelectionHandlerContext } from "../common/ViewportSelectionHandlerContext";
 import { ViewportSelectionHandler } from "./ViewportSelectionHandler";
 
 /**
  * Props that are injected to the ViewWithUnifiedSelection HOC component.
  * @public
+ * @deprecated in 5.4. This interface is empty.
  */
-export interface ViewWithUnifiedSelectionProps {
-  /** @internal */
-  selectionHandler?: ViewportSelectionHandler;
-}
+// eslint-disable-next-line @typescript-eslint/no-empty-interface
+export interface ViewWithUnifiedSelectionProps {}
 
 /**
  * A HOC component that adds unified selection functionality to the supplied
@@ -26,15 +26,11 @@ export interface ViewWithUnifiedSelectionProps {
  *
  * @public
  */
-export function viewWithUnifiedSelection<P extends ViewportProps>(
-  ViewportComponent: React.ComponentType<P>,
-): React.ComponentType<P & ViewWithUnifiedSelectionProps> {
-  type CombinedProps = P & ViewWithUnifiedSelectionProps;
-
-  const WithUnifiedSelection = memo<CombinedProps>((props) => {
-    const { selectionHandler, ...restProps } = props;
-    const imodel = restProps.imodel;
+export function viewWithUnifiedSelection<P extends ViewportProps>(ViewportComponent: React.ComponentType<P>): React.ComponentType<P> {
+  const WithUnifiedSelection = memo<P>((props) => {
+    const { imodel } = props;
     const [viewportSelectionHandler, setViewportSelectionHandler] = useState<ViewportSelectionHandler>();
+    const selectionHandler = useViewportSelectionHandlerContext();
 
     // apply currentSelection when 'viewportSelectionHandler' is initialized (set to handler from props or new is created)
     useEffect(() => {
@@ -60,7 +56,7 @@ export function viewWithUnifiedSelection<P extends ViewportProps>(
       viewportSelectionHandler.imodel = imodel;
     }, [viewportSelectionHandler, imodel]);
 
-    return <ViewportComponent {...(restProps as P)} />;
+    return <ViewportComponent {...props} />;
   });
 
   WithUnifiedSelection.displayName = `WithUnifiedSelection(${getDisplayName(ViewportComponent)})`;

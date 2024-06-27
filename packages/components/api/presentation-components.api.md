@@ -173,7 +173,7 @@ export const DEFAULT_PROPERTY_GRID_RULESET: Ruleset;
 
 // @public
 export interface DiagnosticsProps {
-    // @internal
+    // @alpha
     devDiagnostics?: {
         severity?: DiagnosticsLoggerSeverity;
         perf?: boolean | {
@@ -218,8 +218,6 @@ export class FavoritePropertiesDataProvider implements IFavoritePropertiesDataPr
 
 // @public
 export interface FavoritePropertiesDataProviderProps {
-    // @internal (undocumented)
-    propertyDataProviderFactory?: (imodel: IModelConnection, ruleset?: Ruleset | string) => PresentationPropertyDataProvider;
     ruleset?: Ruleset | string;
 }
 
@@ -344,7 +342,7 @@ export interface IUnifiedSelectionComponent {
 // @beta @deprecated
 export const NavigationPropertyEditor: typeof NavigationPropertyEditor_2;
 
-// @internal
+// @beta
 class NavigationPropertyEditor_2 extends PropertyEditorBase {
     // (undocumented)
     get containerHandlesEnter(): boolean;
@@ -366,7 +364,7 @@ export interface NavigationPropertyEditorContextProps {
 // @beta @deprecated
 export const NavigationPropertyTargetEditor: typeof NavigationPropertyTargetEditor_2;
 
-// @internal
+// @beta
 class NavigationPropertyTargetEditor_2 extends PureComponent<PropertyEditorProps> implements TypeEditor {
     // (undocumented)
     getPropertyValue(): Promise<PropertyValue | undefined>;
@@ -562,8 +560,6 @@ export class PresentationTreeDataProvider implements IPresentationTreeDataProvid
         unitSystem?: UnitSystemKey | undefined;
         transport?: "unparsed-json" | undefined;
     };
-    // @internal
-    createTreeNodeItem(node: Node_2, parentId?: string): PresentationTreeNodeItem;
     dispose(): void;
     getFilteredNodePaths(filter: string): Promise<NodePathElement[]>;
     // @deprecated
@@ -575,6 +571,8 @@ export class PresentationTreeDataProvider implements IPresentationTreeDataProvid
     get imodel(): IModelConnection;
     get pagingSize(): number | undefined;
     set pagingSize(value: number | undefined);
+    // (undocumented)
+    props: PresentationTreeDataProviderProps;
     get rulesetId(): string;
 }
 
@@ -682,8 +680,6 @@ export interface PresentationTreeRendererProps extends Omit<TreeRendererProps, "
 export interface PropertyDataProviderWithUnifiedSelectionProps {
     dataProvider: IPresentationPropertyDataProvider;
     requestedContentInstancesLimit?: number;
-    // @internal (undocumented)
-    selectionHandler?: SelectionHandler;
 }
 
 // @public
@@ -811,8 +807,6 @@ export interface UnifiedSelectionTreeEventHandlerParams {
     editingParams?: TreeEditingParams;
     name?: string;
     nodeLoader: AbstractTreeNodeLoaderWithProvider<IPresentationTreeDataProvider>;
-    // @internal
-    selectionHandler?: SelectionHandler;
 }
 
 // @public
@@ -954,31 +948,11 @@ export function useUnifiedSelectionContext(): UnifiedSelectionContext | undefine
 // @public @deprecated
 export function useUnifiedSelectionTreeEventHandler(props: UnifiedSelectionTreeEventHandlerParams): UnifiedSelectionTreeEventHandler;
 
-// @internal
-class ViewportSelectionHandler implements IDisposable {
-    constructor(props: ViewportSelectionHandlerProps);
-    // (undocumented)
-    applyCurrentSelection(): void;
-    // (undocumented)
-    dispose(): void;
-    // (undocumented)
-    get imodel(): IModelConnection;
-    set imodel(value: IModelConnection);
-}
-
-// @internal (undocumented)
-interface ViewportSelectionHandlerProps {
-    // (undocumented)
-    imodel: IModelConnection;
-}
-
 // @public
-export function viewWithUnifiedSelection<P extends ViewportProps>(ViewportComponent: React.ComponentType<P>): React.ComponentType<P & ViewWithUnifiedSelectionProps>;
+export function viewWithUnifiedSelection<P extends ViewportProps>(ViewportComponent: React.ComponentType<P>): React.ComponentType<P>;
 
-// @public
+// @public @deprecated
 export interface ViewWithUnifiedSelectionProps {
-    // @internal (undocumented)
-    selectionHandler?: ViewportSelectionHandler;
 }
 
 // (No @packageDocumentation comment for this package)

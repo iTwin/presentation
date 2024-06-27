@@ -27,13 +27,13 @@ import {
 } from "@itwin/presentation-common";
 import { Presentation } from "@itwin/presentation-frontend";
 import { createDiagnosticsOptions, DiagnosticsProps } from "../common/Diagnostics";
-import { getRulesetId, RulesetOrId, translate } from "../common/Utils";
+import { getRulesetId, translate } from "../common/Utils";
 import { PresentationComponentsLoggerCategory } from "../ComponentsLoggerCategory";
 import { createInstanceFilterDefinition, PresentationInstanceFilterInfo } from "../instance-filter-builder/PresentationFilterBuilder";
 import { PresentationInstanceFilter } from "../instance-filter-builder/PresentationInstanceFilter";
 import { IPresentationTreeDataProvider } from "./IPresentationTreeDataProvider";
 import { InfoTreeNodeItemType, isPresentationTreeNodeItem, PresentationTreeNodeItem } from "./PresentationTreeNodeItem";
-import { createInfoNode, createTreeNodeItem, CreateTreeNodeItemProps, pageOptionsUiToPresentation } from "./Utils";
+import { createInfoNode, createTreeNodeItem, pageOptionsUiToPresentation } from "./Utils";
 
 /**
  * Properties for creating a `PresentationTreeDataProvider` instance.
@@ -127,25 +127,17 @@ export interface PresentationTreeDataProviderDataSourceEntryPoints {
  * @public
  */
 export class PresentationTreeDataProvider implements IPresentationTreeDataProvider, IDisposable {
-  private _imodel: IModelConnection;
-  private _ruleset: RulesetOrId;
   private _pagingSize?: number;
   private _disposeVariablesChangeListener?: () => void;
   private _dataSource: PresentationTreeDataProviderDataSourceEntryPoints;
   private _diagnosticsOptions?: ClientDiagnosticsOptions;
-  private _nodesCreateProps: CreateTreeNodeItemProps;
   private _onHierarchyLimitExceeded?: () => void;
   public hierarchyLevelSizeLimit?: number;
+  public props: PresentationTreeDataProviderProps;
 
   /** Constructor. */
   public constructor(props: PresentationTreeDataProviderProps) {
-    this._ruleset = props.ruleset;
-    this._imodel = props.imodel;
-    this._pagingSize = props.pagingSize;
-    this._nodesCreateProps = {
-      appendChildrenCountForGroupingNodes: props.appendChildrenCountForGroupingNodes,
-      customizeTreeNodeItem: props.customizeTreeNodeItem,
-    };
+    this.props = props;
 
     this._dataSource = {
       getNodesIterator: async (requestOptions) => {
@@ -183,12 +175,12 @@ export class PresentationTreeDataProvider implements IPresentationTreeDataProvid
 
   /** Id of the ruleset used by this data provider */
   public get rulesetId(): string {
-    return getRulesetId(this._ruleset);
+    return getRulesetId(this.props.ruleset);
   }
 
   /** [IModelConnection]($core-frontend) used by this data provider */
   public get imodel(): IModelConnection {
-    return this._imodel;
+    return this.props.imodel;
   }
 
   /**
@@ -205,8 +197,8 @@ export class PresentationTreeDataProvider implements IPresentationTreeDataProvid
   /** Called to get base options for requests */
   private createBaseRequestOptions(): RequestOptionsWithRuleset<IModelConnection> {
     return {
-      imodel: this._imodel,
-      rulesetOrId: this._ruleset,
+      imodel: this.props.imodel,
+      rulesetOrId: this.props.ruleset,
       ...(this._diagnosticsOptions ? { diagnostics: this._diagnosticsOptions } : undefined),
     };
   }
@@ -279,7 +271,7 @@ export class PresentationTreeDataProvider implements IPresentationTreeDataProvid
       return createNodesAndCountResult(
         async () => this._dataSource.getNodesIterator(requestOptions),
         this.createBaseRequestOptions(),
-        (node, parentId) => this.createTreeNodeItem(node, parentId),
+        (node, parentId) => createTreeNodeItem(node, parentId, this.props),
         parentNode,
         this.hierarchyLevelSizeLimit,
         this._onHierarchyLimitExceeded,
@@ -299,19 +291,11 @@ export class PresentationTreeDataProvider implements IPresentationTreeDataProvid
     });
   }
 
-  /**
-   * Creates tree node item from supplied [[Node]].
-   * @internal
-   */
-  public createTreeNodeItem(node: Node, parentId?: string) {
-    return createTreeNodeItem(node, parentId, this._nodesCreateProps);
-  }
-
   private setupRulesetVariablesListener() {
     if (this._disposeVariablesChangeListener) {
       return;
     }
-    this._disposeVariablesChangeListener = Presentation.presentation.vars(getRulesetId(this._ruleset)).onVariableChanged.addListener(() => {
+    this._disposeVariablesChangeListener = Presentation.presentation.vars(getRulesetId(this.props.ruleset)).onVariableChanged.addListener(() => {
       this._getNodesAndCount.cache.values.length = 0;
       this._getNodesAndCount.cache.keys.length = 0;
     });

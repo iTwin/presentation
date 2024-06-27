@@ -37,12 +37,13 @@ export class FilteredPresentationTreeDataProvider implements IFilteredPresentati
   private _filteredResultMatches: Array<{ id: string; matchesCount: number }> = [];
 
   public constructor(props: FilteredPresentationTreeDataProviderProps) {
-    this._parentDataProvider = props.parentDataProvider;
-    this._filter = props.filter;
+    const { filter, parentDataProvider } = props;
+    this._parentDataProvider = parentDataProvider;
+    this._filter = filter;
 
     const treeNodeItemFactory: (node: Node, parentId?: string) => PresentationTreeNodeItem =
-      this._parentDataProvider instanceof PresentationTreeDataProvider
-        ? this._parentDataProvider.createTreeNodeItem.bind(this._parentDataProvider)
+      parentDataProvider instanceof PresentationTreeDataProvider
+        ? (node, parentId) => createTreeNodeItem(node, parentId, parentDataProvider.props)
         : createTreeNodeItem;
 
     const hierarchy: SimpleTreeDataProviderHierarchy = new Map<string | undefined, TreeNodeItem[]>();

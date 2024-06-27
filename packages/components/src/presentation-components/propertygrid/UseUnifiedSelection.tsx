@@ -9,6 +9,7 @@
 import { useEffect, useState } from "react";
 import { KeySet } from "@itwin/presentation-common";
 import { Presentation, SelectionChangeEventArgs, SelectionHandler } from "@itwin/presentation-frontend";
+import { useSelectionHandlerContext } from "../common/SelectionHandlerContext";
 import { IPresentationPropertyDataProvider } from "./DataProvider";
 
 const DEFAULT_REQUESTED_CONTENT_INSTANCES_LIMIT = 100;
@@ -30,9 +31,6 @@ export interface PropertyDataProviderWithUnifiedSelectionProps {
    * Defaults to `100`.
    */
   requestedContentInstancesLimit?: number;
-
-  /** @internal */
-  selectionHandler?: SelectionHandler;
 }
 
 /**
@@ -53,7 +51,8 @@ export interface UsePropertyDataProviderWithUnifiedSelectionResult {
 export function usePropertyDataProviderWithUnifiedSelection(
   props: PropertyDataProviderWithUnifiedSelectionProps,
 ): UsePropertyDataProviderWithUnifiedSelectionResult {
-  const { dataProvider, selectionHandler: suppliedSelectionHandler } = props;
+  const suppliedSelectionHandler = useSelectionHandlerContext();
+  const { dataProvider } = props;
   const { imodel, rulesetId } = dataProvider;
   const requestedContentInstancesLimit = props.requestedContentInstancesLimit ?? DEFAULT_REQUESTED_CONTENT_INSTANCES_LIMIT;
 

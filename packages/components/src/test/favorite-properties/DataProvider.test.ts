@@ -36,7 +36,8 @@ describe("FavoritePropertiesDataProvider", () => {
     sinon.stub(Presentation, "selection").get(() => selectionManager);
     sinon.stub(Presentation, "localization").get(() => localization);
 
-    provider = new FavoritePropertiesDataProvider({ propertyDataProviderFactory: () => presentationPropertyDataProvider });
+    provider = new FavoritePropertiesDataProvider();
+    (provider as any)._propertyDataProviderFactory = () => presentationPropertyDataProvider;
   });
 
   afterEach(() => {
@@ -73,7 +74,8 @@ describe("FavoritePropertiesDataProvider", () => {
         .returns(presentationPropertyDataProvider);
 
       const customRulesetId = "custom_ruleset_id";
-      provider = new FavoritePropertiesDataProvider({ propertyDataProviderFactory: factorySpy, ruleset: customRulesetId });
+      provider = new FavoritePropertiesDataProvider({ ruleset: customRulesetId });
+      (provider as any)._propertyDataProviderFactory = factorySpy;
 
       await provider.getData(imodel, elementId);
       expect(factorySpy).to.be.calledWith(imodel, customRulesetId);
