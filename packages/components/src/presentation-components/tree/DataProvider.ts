@@ -33,13 +33,13 @@ import { createInstanceFilterDefinition, PresentationInstanceFilterInfo } from "
 import { PresentationInstanceFilter } from "../instance-filter-builder/PresentationInstanceFilter";
 import { IPresentationTreeDataProvider } from "./IPresentationTreeDataProvider";
 import { InfoTreeNodeItemType, isPresentationTreeNodeItem, PresentationTreeNodeItem } from "./PresentationTreeNodeItem";
-import { createInfoNode, createTreeNodeItem, pageOptionsUiToPresentation } from "./Utils";
+import { createInfoNode, createTreeNodeItem, CreateTreeNodeItemProps, pageOptionsUiToPresentation } from "./Utils";
 
 /**
  * Properties for creating a `PresentationTreeDataProvider` instance.
  * @public
  */
-export interface PresentationTreeDataProviderProps extends DiagnosticsProps {
+export interface PresentationTreeDataProviderProps extends DiagnosticsProps, CreateTreeNodeItemProps {
   /** IModel to pull data from. */
   imodel: IModelConnection;
 
@@ -84,14 +84,6 @@ export interface PresentationTreeDataProviderProps extends DiagnosticsProps {
    * @beta
    */
   hierarchyLevelSizeLimit?: number;
-
-  /** Should grouping nodes have a suffix with grouped nodes count. Defaults to `false`. */
-  appendChildrenCountForGroupingNodes?: boolean;
-
-  /**
-   * Callback which provides a way to customize how data is mapped between [Node]($presentation-common) and [TreeNodeItem]($components-react).
-   */
-  customizeTreeNodeItem?: (item: Partial<DelayLoadedTreeNodeItem>, node: Partial<Node>) => void;
 
   /**
    * By default the provider uses [PresentationManager]($presentation-frontend) accessed through `Presentation.presentation` to request

@@ -15,9 +15,14 @@ import { StyleHelper } from "../common/StyleHelper";
 import { createLabelRecord } from "../common/Utils";
 import { InfoTreeNodeItemType, PresentationInfoTreeNodeItem, PresentationTreeNodeItem } from "./PresentationTreeNodeItem";
 
-/** @internal */
+/** @public */
 export interface CreateTreeNodeItemProps {
+  /** Should grouping nodes have a suffix with grouped nodes count. Defaults to `false`. */
   appendChildrenCountForGroupingNodes?: boolean;
+
+  /**
+   * Callback which provides a way to customize how data is mapped between [Node]($presentation-common) and [TreeNodeItem]($components-react).
+   */
   customizeTreeNodeItem?: (item: Partial<DelayLoadedTreeNodeItem>, node: Partial<Node>) => void;
 }
 
