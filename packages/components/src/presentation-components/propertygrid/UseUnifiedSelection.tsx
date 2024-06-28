@@ -6,7 +6,7 @@
  * @module PropertyGrid
  */
 
-import { useEffect, useState } from "react";
+import { createContext, PropsWithChildren, useContext, useEffect, useState } from "react";
 import { KeySet } from "@itwin/presentation-common";
 import { Presentation, SelectionChangeEventArgs, SelectionHandler } from "@itwin/presentation-frontend";
 import { IPresentationPropertyDataProvider } from "./DataProvider";
@@ -30,9 +30,6 @@ export interface PropertyDataProviderWithUnifiedSelectionProps {
    * Defaults to `100`.
    */
   requestedContentInstancesLimit?: number;
-
-  /** @internal */
-  selectionHandler?: SelectionHandler;
 }
 
 /**
@@ -46,6 +43,18 @@ export interface UsePropertyDataProviderWithUnifiedSelectionResult {
   numSelectedElements: number;
 }
 
+const SelectionHandlerContext = createContext<SelectionHandler | undefined>(undefined);
+
+/** @internal */
+export function SelectionHandlerContextProvider({ selectionHandler, children }: PropsWithChildren<{ selectionHandler: SelectionHandler }>) {
+  return <SelectionHandlerContext.Provider value={selectionHandler}>{children}</SelectionHandlerContext.Provider>;
+}
+
+/** @internal */
+export function useSelectionHandlerContext() {
+  return useContext(SelectionHandlerContext);
+}
+
 /**
  * A React hook that adds unified selection functionality to the provided data provider.
  * @public
@@ -53,7 +62,8 @@ export interface UsePropertyDataProviderWithUnifiedSelectionResult {
 export function usePropertyDataProviderWithUnifiedSelection(
   props: PropertyDataProviderWithUnifiedSelectionProps,
 ): UsePropertyDataProviderWithUnifiedSelectionResult {
-  const { dataProvider, selectionHandler: suppliedSelectionHandler } = props;
+  const suppliedSelectionHandler = useSelectionHandlerContext();
+  const { dataProvider } = props;
   const { imodel, rulesetId } = dataProvider;
   const requestedContentInstancesLimit = props.requestedContentInstancesLimit ?? DEFAULT_REQUESTED_CONTENT_INSTANCES_LIMIT;
 

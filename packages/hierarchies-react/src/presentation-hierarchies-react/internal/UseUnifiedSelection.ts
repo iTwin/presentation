@@ -16,15 +16,22 @@ export interface TreeSelectionOptions {
   selectNodes: (nodeIds: Array<string>, changeType: SelectionChangeType) => void;
 }
 
-/** @internal */
+/** @beta */
 export interface UseUnifiedTreeSelectionProps {
+  /** Key of the iModel. */
   imodelKey: string;
+  /**
+   * Identifier to distinguish this source of changes to the unified selection from another ones in the application.
+   */
   sourceName: string;
-  getNode: (nodeId: string) => TreeModelNode | TreeModelRootNode | undefined;
 }
 
 /** @internal */
-export function useUnifiedTreeSelection({ imodelKey, sourceName, getNode }: UseUnifiedTreeSelectionProps): TreeSelectionOptions {
+export function useUnifiedTreeSelection({
+  imodelKey,
+  sourceName,
+  getNode,
+}: UseUnifiedTreeSelectionProps & { getNode: (nodeId: string) => TreeModelNode | TreeModelRootNode | undefined }): TreeSelectionOptions {
   const [options, setOptions] = useState<TreeSelectionOptions>(() => ({
     isNodeSelected: /* istanbul ignore next */ () => false,
     selectNodes: /* istanbul ignore next */ () => {},
