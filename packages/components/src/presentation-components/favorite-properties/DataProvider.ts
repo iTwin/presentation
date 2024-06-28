@@ -71,7 +71,7 @@ export class FavoritePropertiesDataProvider implements IFavoritePropertiesDataPr
    */
   public async getData(imodel: IModelConnection, elementIds: Id64Arg | KeySet): Promise<PropertyData> {
     if (elementIds instanceof KeySet) {
-      return using(this.propertyDataProviderFactory(imodel, this._customRuleset), async (propertyDataProvider) => {
+      return using(this.createPropertyDataProvider(imodel, this._customRuleset), async (propertyDataProvider) => {
         propertyDataProvider.keys = elementIds;
         // eslint-disable-next-line deprecation/deprecation
         propertyDataProvider.includeFieldsWithNoValues = this.includeFieldsWithNoValues;
@@ -94,7 +94,7 @@ export class FavoritePropertiesDataProvider implements IFavoritePropertiesDataPr
   }
 
   // istanbul ignore next
-  private propertyDataProviderFactory(imodel: IModelConnection, ruleset?: Ruleset | string) {
+  private createPropertyDataProvider(imodel: IModelConnection, ruleset?: Ruleset | string) {
     const provider = new PresentationPropertyDataProvider({ imodel, ruleset });
     provider.isNestedPropertyCategoryGroupingEnabled = false;
     return provider;

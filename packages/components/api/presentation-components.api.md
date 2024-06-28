@@ -549,7 +549,7 @@ export class PresentationTreeDataProvider implements IPresentationTreeDataProvid
     get pagingSize(): number | undefined;
     set pagingSize(value: number | undefined);
     // (undocumented)
-    props: PresentationTreeDataProviderProps;
+    get props(): Readonly<PresentationTreeDataProviderProps>;
     get rulesetId(): string;
 }
 

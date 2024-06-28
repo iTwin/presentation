@@ -127,18 +127,16 @@ export interface PresentationTreeDataProviderDataSourceEntryPoints {
  * @public
  */
 export class PresentationTreeDataProvider implements IPresentationTreeDataProvider, IDisposable {
-  private _pagingSize?: number;
   private _disposeVariablesChangeListener?: () => void;
   private _dataSource: PresentationTreeDataProviderDataSourceEntryPoints;
   private _diagnosticsOptions?: ClientDiagnosticsOptions;
   private _onHierarchyLimitExceeded?: () => void;
+  private _props: PresentationTreeDataProviderProps;
   public hierarchyLevelSizeLimit?: number;
-  public props: PresentationTreeDataProviderProps;
 
   /** Constructor. */
   public constructor(props: PresentationTreeDataProviderProps) {
-    this.props = props;
-    this._pagingSize = props.pagingSize;
+    this._props = { ...props };
     this._dataSource = {
       getNodesIterator: async (requestOptions) => {
         // we can't just drop support for the `getNodesAndCount` override, so if it's set - need to take data from it
@@ -173,6 +171,10 @@ export class PresentationTreeDataProvider implements IPresentationTreeDataProvid
     }
   }
 
+  public get props(): Readonly<PresentationTreeDataProviderProps> {
+    return this._props;
+  }
+
   /** Id of the ruleset used by this data provider */
   public get rulesetId(): string {
     return getRulesetId(this.props.ruleset);
@@ -188,10 +190,10 @@ export class PresentationTreeDataProvider implements IPresentationTreeDataProvid
    * @see `PresentationTreeDataProviderProps.pagingSize`
    */
   public get pagingSize(): number | undefined {
-    return this._pagingSize;
+    return this.props.pagingSize;
   }
   public set pagingSize(value: number | undefined) {
-    this._pagingSize = value;
+    this._props.pagingSize = value;
   }
 
   /** Called to get base options for requests */
