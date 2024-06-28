@@ -34,13 +34,8 @@ if (!fs.existsSync(apiSummaryPath)) {
 // only look for non-indented tags which target root level APIs - we still want to allow things
 // like @internal class functions and interface attributes
 const content = fs.readFileSync(apiSummaryPath, { encoding: "utf8" });
-const lines = content.split("\n");
-for (let lineIdx = 0; lineIdx < lines.length; ++lineIdx) {
-  if (!lines[lineIdx].match(/^\/\/ @internal/)) {
-    continue;
-  }
-
-  console.error(`Fail! Detected exposed @internal APIs on line ${lineIdx}.`);
+if (content.includes("@internal")) {
+  console.error("Fail! Detected exposed @internal APIs.");
   console.error("Please make sure they're not exported through barrel file and re-generate API summary.");
   process.exit(1);
 }
