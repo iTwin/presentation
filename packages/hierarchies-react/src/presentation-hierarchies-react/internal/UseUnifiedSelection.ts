@@ -18,7 +18,11 @@ export interface TreeSelectionOptions {
 
 /** @beta */
 export interface UseUnifiedTreeSelectionProps {
+  /** Key of the iModel. */
   imodelKey: string;
+  /**
+   * Identifier to distinguish this source of changes to the unified selection from another ones in the application.
+   */
   sourceName: string;
 }
 

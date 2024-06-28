@@ -9,7 +9,7 @@ import { Event } from "@itwin/presentation-shared";
 /**
  * Identifies the type of changes made to the `CoreIModelSelectionSet` to produce a `CoreSelectionSetEvent`.
  * @see https://www.itwinjs.org/reference/core-frontend/selectionset/selectionseteventtype/
- * @internal This is an internal type used in public API.
+ * @internal
  */
 export enum CoreSelectionSetEventType {
   /** Elements have been added to the set. */
@@ -25,7 +25,7 @@ export enum CoreSelectionSetEventType {
 /**
  * Payload sent to `CoreIModelSelectionSet.onChanged` event listeners to describe how the contents of the set have changed.
  * @see https://www.itwinjs.org/reference/core-frontend/selectionset/selectionsetevent/
- * @beta This is an internal type used in public API.
+ * @beta
  */
 export interface CoreSelectionSetEventUnsafe {
   /**
@@ -47,7 +47,7 @@ export interface CoreSelectionSetEventUnsafe {
 /**
  * A set of *currently selected* elements in an iModel.
  * @see https://www.itwinjs.org/reference/core-frontend/selectionset/
- * @beta This is an internal type used in public API.
+ * @beta
  */
 export interface CoreIModelSelectionSet {
   /** Event called whenever elements are added or removed from this SelectionSet. */
@@ -65,7 +65,7 @@ export interface CoreIModelSelectionSet {
 /**
  * A set if ID's optimized for performance-critical code which represents large sets of ID's as pairs of 32-bit integers.
  * @see https://www.itwinjs.org/reference/core-bentley/ids/id64/id64.uint32set/
- * @beta This is an internal type used in public API.
+ * @beta
  */
 interface Uint32Set {
   /** Add any number of Ids to the set. */
@@ -77,7 +77,7 @@ interface Uint32Set {
 /**
  * A set of *hilited* elements in an iModel, by element id.
  * @see https://www.itwinjs.org/reference/core-frontend/selectionset/hiliteset/
- * @beta This is an internal type used in public API.
+ * @beta
  */
 export interface CoreIModelHiliteSet {
   /** Control whether the hilited elements should be synchronized with the contents of `CoreIModelSelectionSet`.*/

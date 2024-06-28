@@ -46,11 +46,11 @@ interface PrimitiveValueSelectorProps {
 
 /**
  * A union of prop types for selecting a value and its metadata in ECSQL query.
- * @beta This is an internal type used in public API.
+ * @beta
  */
 export type TypedValueSelectClauseProps = PropertyValueSelectClauseProps | TypedPrimitiveValue | PrimitiveValueSelectorProps;
 
-/** @beta This is an internal namespace which can be used in public API. */
+/** @beta */
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export namespace TypedValueSelectClauseProps {
   export function isPropertySelector(props: TypedValueSelectClauseProps): props is PropertyValueSelectClauseProps {

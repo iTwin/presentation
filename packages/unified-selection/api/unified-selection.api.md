@@ -19,9 +19,7 @@ export interface CachingHiliteSetProvider {
 
 // @beta
 interface CachingHiliteSetProviderProps {
-    // (undocumented)
     imodelProvider: (imodelKey: string) => ECClassHierarchyInspector & ECSqlQueryExecutor;
-    // (undocumented)
     selectionStorage: SelectionStorage;
 }
 
@@ -30,11 +28,8 @@ export function computeSelection(props: ComputeSelectionProps): AsyncIterableIte
 
 // @beta
 interface ComputeSelectionProps {
-    // (undocumented)
     elementIds: string[];
-    // (undocumented)
     queryExecutor: ECSqlQueryExecutor;
-    // (undocumented)
     scope: ElementSelectionScopeProps | {
         id: SelectionScope;
     } | SelectionScope;
@@ -122,7 +117,6 @@ export interface HiliteSetProvider {
 
 // @beta
 interface HiliteSetProviderProps {
-    // (undocumented)
     imodelAccess: ECClassHierarchyInspector & ECSqlQueryExecutor;
 }
 

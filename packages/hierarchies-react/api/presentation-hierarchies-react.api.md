@@ -29,7 +29,7 @@ import { TreeNode } from '@itwin/itwinui-react';
 // @beta
 export function createRenderedTreeNodeData(node: RenderedTreeNode, isNodeSelected: (nodeId: string) => boolean): NodeData<RenderedTreeNode>;
 
-// @beta (undocumented)
+// @beta
 type FullTreeReloadOptions = {
     dataSourceChanged?: true;
 } & ReloadTreeCommonOptions;
@@ -38,7 +38,6 @@ export { GenericInstanceFilter }
 
 // @beta (undocumented)
 interface GetFilteredPathsProps {
-    // (undocumented)
     imodelAccess: IModelAccess;
 }
 
@@ -65,12 +64,11 @@ type IModelAccess = ECSchemaProvider & LimitingECSqlQueryExecutor & ECClassHiera
 // @beta
 export function isPresentationHierarchyNode(node: PresentationTreeNode): node is PresentationHierarchyNode;
 
-// @beta (undocumented)
+// @beta
 export function LocalizationContextProvider({ localizedStrings, children }: PropsWithChildren<LocalizationContextProviderProps>): JSX_2.Element;
 
-// @beta (undocumented)
+// @beta
 interface LocalizationContextProviderProps {
-    // (undocumented)
     localizedStrings?: Partial<LocalizedStrings>;
 }
 
@@ -154,7 +152,7 @@ interface ReloadTreeCommonOptions {
     state?: "keep" | "discard" | "reset";
 }
 
-// @beta (undocumented)
+// @beta
 type ReloadTreeOptions = FullTreeReloadOptions | SubtreeReloadOptions;
 
 // @beta
@@ -172,7 +170,7 @@ type SelectionMode_2 = "none" | "single" | "extended" | "multiple";
 
 export { SelectionStorage }
 
-// @beta (undocumented)
+// @beta
 type SubtreeReloadOptions = {
     parentNodeId: string;
 } & ReloadTreeCommonOptions;
@@ -185,23 +183,14 @@ export function TreeNodeRenderer({ node, expandNode, getIcon, getLabel, getSubla
 
 // @beta (undocumented)
 interface TreeNodeRendererOwnProps {
-    // (undocumented)
     actionButtonsClassName?: string;
-    // (undocumented)
     getIcon?: (node: PresentationHierarchyNode) => ReactElement | undefined;
-    // (undocumented)
     getLabel?: (node: PresentationHierarchyNode) => ReactElement | undefined;
-    // (undocumented)
     getSublabel?: (node: PresentationHierarchyNode) => ReactElement | undefined;
-    // (undocumented)
     node: RenderedTreeNode;
-    // (undocumented)
     onFilterClick?: (hierarchyLevelDetails: HierarchyLevelDetails) => void;
-    // (undocumented)
     onNodeClick?: (node: PresentationHierarchyNode, isSelected: boolean, event: React.MouseEvent<HTMLElement, MouseEvent>) => void;
-    // (undocumented)
     onNodeKeyDown?: (node: PresentationHierarchyNode, isSelected: boolean, event: React.KeyboardEvent<HTMLElement>) => void;
-    // (undocumented)
     reloadTree?: (options: {
         parentNodeId: string | undefined;
         state: "reset";
@@ -222,16 +211,12 @@ export function TreeRenderer({ rootNodes, expandNode, selectNodes, isNodeSelecte
 
 // @beta (undocumented)
 interface TreeRendererOwnProps {
-    // (undocumented)
-    localizedStrings?: Partial<LocalizedStrings>;
-    // (undocumented)
     rootNodes: PresentationTreeNode[];
-    // (undocumented)
     selectionMode?: SelectionMode_2;
 }
 
 // @beta (undocumented)
-type TreeRendererProps = Pick<ReturnType<typeof useTree>, "rootNodes" | "expandNode"> & Partial<Pick<ReturnType<typeof useTree>, "selectNodes" | "isNodeSelected" | "getHierarchyLevelDetails" | "reloadTree">> & Pick<TreeNodeRendererProps_2, "onFilterClick" | "getIcon" | "getLabel" | "getSublabel"> & TreeRendererOwnProps & Omit<TreeProps, "data" | "nodeRenderer" | "getNode" | "enableVirtualization">;
+type TreeRendererProps = Pick<ReturnType<typeof useTree>, "rootNodes" | "expandNode"> & Partial<Pick<ReturnType<typeof useTree>, "selectNodes" | "isNodeSelected" | "getHierarchyLevelDetails" | "reloadTree">> & Pick<TreeNodeRendererProps_2, "onFilterClick" | "getIcon" | "getLabel" | "getSublabel"> & TreeRendererOwnProps & Omit<TreeProps, "data" | "nodeRenderer" | "getNode" | "enableVirtualization"> & ComponentPropsWithoutRef<typeof LocalizationContextProvider>;
 
 // @beta
 export function UnifiedSelectionProvider({ storage, children }: PropsWithChildren<{
@@ -256,42 +241,29 @@ interface UseSelectionHandlerResult {
 export function useTree(props: UseTreeProps): UseTreeResult;
 
 // @beta (undocumented)
-interface UseTreeProps {
-    // (undocumented)
+interface UseTreeProps extends Pick<Parameters<typeof createHierarchyProvider>[0], "localizedStrings"> {
     getFilteredPaths?: (props: GetFilteredPathsProps) => Promise<HierarchyNodeIdentifiersPath[] | undefined>;
-    // (undocumented)
     getHierarchyDefinition: (props: {
         imodelAccess: IModelAccess;
     }) => HierarchyDefinition;
-    // (undocumented)
     imodelAccess: ECSchemaProvider & LimitingECSqlQueryExecutor & ECClassHierarchyInspector;
-    // (undocumented)
-    localizedStrings?: Parameters<typeof createHierarchyProvider>[0]["localizedStrings"];
-    // (undocumented)
     onHierarchyLimitExceeded?: (props: {
         parentId?: string;
         filter?: GenericInstanceFilter;
         limit?: number | "unbounded";
     }) => void;
-    // (undocumented)
     onPerformanceMeasured?: (action: "initial-load" | "hierarchy-level-load" | "reload", duration: number) => void;
 }
 
 // @beta (undocumented)
 interface UseTreeResult {
-    // (undocumented)
     expandNode: (nodeId: string, isExpanded: boolean) => void;
-    // (undocumented)
     getHierarchyLevelDetails: (nodeId: string | undefined) => HierarchyLevelDetails | undefined;
     isLoading: boolean;
-    // (undocumented)
     isNodeSelected: (nodeId: string) => boolean;
-    // (undocumented)
     reloadTree: (options?: ReloadTreeOptions) => void;
     rootNodes: PresentationTreeNode[] | undefined;
-    // (undocumented)
     selectNodes: (nodeIds: Array<string>, changeType: SelectionChangeType) => void;
-    // (undocumented)
     setFormatter: (formatter: IPrimitiveValueFormatter | undefined) => void;
 }
 
@@ -300,9 +272,7 @@ export function useUnifiedSelectionTree({ imodelKey, sourceName, ...props }: Use
 
 // @beta (undocumented)
 interface UseUnifiedTreeSelectionProps {
-    // (undocumented)
     imodelKey: string;
-    // (undocumented)
     sourceName: string;
 }
 

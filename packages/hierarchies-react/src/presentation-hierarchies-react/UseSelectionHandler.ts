@@ -18,7 +18,12 @@ import { useTree } from "./UseTree";
  */
 export type SelectionMode = "none" | "single" | "extended" | "multiple";
 
-/** @beta Not exported through barrel, but used in public API as an argument. */
+/** Type of selection change.
+ * - `add` - a node was added to the selection.
+ * - `replace` - a selected node was replaced with a different one.
+ * - `remove` - a node was removed from the selection.
+ * @beta
+ */
 export type SelectionChangeType = "add" | "replace" | "remove";
 
 /**

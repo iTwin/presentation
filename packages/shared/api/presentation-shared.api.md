@@ -541,7 +541,7 @@ export namespace TypedPrimitiveValue {
 // @beta
 type TypedValueSelectClauseProps = PropertyValueSelectClauseProps | TypedPrimitiveValue | PrimitiveValueSelectorProps;
 
-// @beta
+// @beta (undocumented)
 namespace TypedValueSelectClauseProps {
     // (undocumented)
     function isPrimitiveValue(props: TypedValueSelectClauseProps): props is TypedPrimitiveValue;

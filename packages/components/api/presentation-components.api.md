@@ -167,12 +167,6 @@ export function createDiagnosticsOptions(props: DiagnosticsProps): ClientDiagnos
 // @beta
 export function createInstanceFilterDefinition(info: PresentationInstanceFilterInfo, imodel: IModelConnection): Promise<InstanceFilterDefinition>;
 
-// @public (undocumented)
-interface CreateTreeNodeItemProps {
-    appendChildrenCountForGroupingNodes?: boolean;
-    customizeTreeNodeItem?: (item: Partial<DelayLoadedTreeNodeItem>, node: Partial<Node_2>) => void;
-}
-
 // @public
 export const DEFAULT_PROPERTY_GRID_RULESET: Ruleset;
 
@@ -581,7 +575,9 @@ export interface PresentationTreeDataProviderDataSourceEntryPoints {
 }
 
 // @public
-export interface PresentationTreeDataProviderProps extends DiagnosticsProps, CreateTreeNodeItemProps {
+export interface PresentationTreeDataProviderProps extends DiagnosticsProps {
+    appendChildrenCountForGroupingNodes?: boolean;
+    customizeTreeNodeItem?: (item: Partial<DelayLoadedTreeNodeItem>, node: Partial<Node_2>) => void;
     // @beta
     dataSourceOverrides?: Partial<PresentationTreeDataProviderDataSourceEntryPoints>;
     // @beta

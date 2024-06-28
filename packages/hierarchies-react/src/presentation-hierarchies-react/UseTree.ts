@@ -84,16 +84,24 @@ type IModelAccess = ECSchemaProvider & LimitingECSqlQueryExecutor & ECClassHiera
 
 /** @beta */
 interface GetFilteredPathsProps {
+  /** Object that provides access to the iModel schema and can run queries against the iModel. */
   imodelAccess: IModelAccess;
 }
 
 /** @beta */
-interface UseTreeProps {
+interface UseTreeProps extends Pick<Parameters<typeof createHierarchyProvider>[0], "localizedStrings"> {
+  /** Object that provides access to the iModel schema and can run queries against the iModel. */
   imodelAccess: ECSchemaProvider & LimitingECSqlQueryExecutor & ECClassHierarchyInspector;
+  /** Provides the hierarchy definition for the tree. */
   getHierarchyDefinition: (props: { imodelAccess: IModelAccess }) => HierarchyDefinition;
+  /** Provides paths to filtered nodes. */
   getFilteredPaths?: (props: GetFilteredPathsProps) => Promise<HierarchyNodeIdentifiersPath[] | undefined>;
-  localizedStrings?: Parameters<typeof createHierarchyProvider>[0]["localizedStrings"];
+  /**
+   * Callback that is called just after a certain action is finished.
+   * Can be used for performance tracking.
+   */
   onPerformanceMeasured?: (action: "initial-load" | "hierarchy-level-load" | "reload", duration: number) => void;
+  /** Action to perform when hierarchy level contains more items that the specified limit. */
   onHierarchyLimitExceeded?: (props: { parentId?: string; filter?: GenericInstanceFilter; limit?: number | "unbounded" }) => void;
 }
 
@@ -110,19 +118,28 @@ interface ReloadTreeCommonOptions {
   state?: "keep" | "discard" | "reset";
 }
 
-/** @beta */
+/**
+ * Options for the full tree reload.
+ * @beta
+ */
 type FullTreeReloadOptions = {
   /** Specifies that data source changed and caches should be cleared before reloading tree. */
   dataSourceChanged?: true;
 } & ReloadTreeCommonOptions;
 
-/** @beta */
+/**
+ * Options for the subtree reload.
+ * @beta
+ */
 type SubtreeReloadOptions = {
   /** Specifies parent node under which sub tree should be reloaded. */
   parentNodeId: string;
 } & ReloadTreeCommonOptions;
 
-/** @beta */
+/**
+ * Options for reloading a tree or a subtree.
+ * @beta
+ */
 type ReloadTreeOptions = FullTreeReloadOptions | SubtreeReloadOptions;
 
 /** @beta */
@@ -136,11 +153,25 @@ interface UseTreeResult {
    * or tree is reloading.
    */
   isLoading: boolean;
+  /**
+   * Action to perform when tree has to be reloaded.
+   */
   reloadTree: (options?: ReloadTreeOptions) => void;
+  /**
+   * Action to perform when a node is expanded or collapsed.
+   */
   expandNode: (nodeId: string, isExpanded: boolean) => void;
+  /**
+   * Action to perform when nodes are selected.
+   * @param nodeIds Ids of the nodes that are selected.
+   * @param changeType Type of change that occurred for the selection.
+   */
   selectNodes: (nodeIds: Array<string>, changeType: SelectionChangeType) => void;
+  /** Determines whether a given node is selected. */
   isNodeSelected: (nodeId: string) => boolean;
+  /** Returns hierarchy level details for a given node ID. */
   getHierarchyLevelDetails: (nodeId: string | undefined) => HierarchyLevelDetails | undefined;
+  /** Sets a formatter for the primitive values that are displayed in the hierarchy. */
   setFormatter: (formatter: IPrimitiveValueFormatter | undefined) => void;
 }
 

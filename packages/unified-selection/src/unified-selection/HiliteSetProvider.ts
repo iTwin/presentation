@@ -24,9 +24,10 @@ export interface HiliteSet {
 
 /**
  * Props for creating a `HiliteSetProvider` instance.
- * @beta Not exported through barrel, but used in public API as an argument. May be supplemented with optional attributes any time.
+ * @beta
  */
 export interface HiliteSetProviderProps {
+  /** Interface for retrieving metadata about the hilited instances from an iModel. */
   imodelAccess: ECClassHierarchyInspector & ECSqlQueryExecutor;
 }
 

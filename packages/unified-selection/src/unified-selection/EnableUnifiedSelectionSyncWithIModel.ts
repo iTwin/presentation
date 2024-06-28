@@ -16,7 +16,7 @@ import { CoreIModelHiliteSet, CoreIModelSelectionSet, CoreSelectionSetEventType,
 
 /**
  * Props for `enableUnifiedSelectionSyncWithIModel`.
- * @beta Not exported through barrel, but used in public API as an argument. May be supplemented with optional attributes any time.
+ * @beta
  */
 export interface EnableUnifiedSelectionSyncWithIModelProps {
   /**

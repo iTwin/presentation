@@ -5,7 +5,10 @@
 
 import { createContext, PropsWithChildren, useContext, useEffect, useState } from "react";
 
-/** @beta Not exported through barrel, but used in public API as an argument. */
+/**
+ * Localized strings used in the components.
+ * @beta
+ */
 export interface LocalizedStrings {
   /**
    * Message displayed when nodes are loading.
@@ -73,12 +76,19 @@ const defaultLocalizedStrings: LocalizedStrings = {
 
 const localizationContext = createContext<LocalizationContext>({ localizedStrings: defaultLocalizedStrings });
 
-/** @beta */
+/**
+ * Properties for `LocalizationContextProvider`.
+ * @beta
+ */
 interface LocalizationContextProviderProps {
+  /** Localized strings used in the components. */
   localizedStrings?: Partial<LocalizedStrings>;
 }
 
-/** @beta */
+/**
+ * Context provider for localized strings used in the components.
+ * @beta
+ */
 export function LocalizationContextProvider({ localizedStrings, children }: PropsWithChildren<LocalizationContextProviderProps>) {
   const [state, setState] = useState({ localizedStrings: { ...defaultLocalizedStrings, ...localizedStrings } });
 
