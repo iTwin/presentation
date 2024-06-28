@@ -13,7 +13,7 @@ import { navigationPropertyEditorContext } from "./NavigationPropertyEditorConte
  * Editor for navigation properties.
  *
  * **Note:** Should be used inside [[navigationPropertyEditorContext]].
- * @beta Reexported elsewhere as deprecated beta.
+ * @internal
  */
 export class NavigationPropertyEditor extends PropertyEditorBase {
   // istanbul ignore next
@@ -34,7 +34,7 @@ export class NavigationPropertyEditor extends PropertyEditorBase {
  * Component that renders navigation property target selector for navigation property value editing.
  *
  * **Note:** Should be used inside [[navigationPropertyEditorContext]].
- * @beta Reexported elsewhere as deprecated beta.
+ * @internal
  */
 export class NavigationPropertyTargetEditor extends PureComponent<PropertyEditorProps> implements TypeEditor {
   private _ref = createRef<PropertyEditorAttributes>();

@@ -66,7 +66,6 @@ import { PropertyFilterBuilderRuleValueRendererProps } from '@itwin/components-r
 import { PropertyFilterRuleGroupOperator } from '@itwin/components-react';
 import { PropertyFilterRuleOperator } from '@itwin/components-react';
 import { PropertyRecord } from '@itwin/appui-abstract';
-import { PropertyValue } from '@itwin/appui-abstract';
 import { PropertyValueRendererContext } from '@itwin/components-react';
 import { PropsWithChildren } from 'react';
 import { PureComponent } from 'react';
@@ -346,17 +345,7 @@ export interface IUnifiedSelectionComponent {
 }
 
 // @beta @deprecated
-export const NavigationPropertyEditor: typeof NavigationPropertyEditor_2;
-
-// @beta
-class NavigationPropertyEditor_2 extends PropertyEditorBase {
-    // (undocumented)
-    get containerHandlesEnter(): boolean;
-    // (undocumented)
-    get containerStopsKeydownPropagation(): boolean;
-    // (undocumented)
-    get reactNode(): React.ReactNode;
-}
+export const NavigationPropertyEditor: new () => PropertyEditorBase;
 
 // @beta
 export const navigationPropertyEditorContext: Context<NavigationPropertyEditorContextProps | undefined>;
@@ -368,19 +357,7 @@ export interface NavigationPropertyEditorContextProps {
 }
 
 // @beta @deprecated
-export const NavigationPropertyTargetEditor: typeof NavigationPropertyTargetEditor_2;
-
-// @beta
-class NavigationPropertyTargetEditor_2 extends PureComponent<PropertyEditorProps> implements TypeEditor {
-    // (undocumented)
-    getPropertyValue(): Promise<PropertyValue | undefined>;
-    // (undocumented)
-    get hasFocus(): boolean;
-    // (undocumented)
-    get htmlElement(): HTMLElement | null;
-    // (undocumented)
-    render(): JSX_2.Element;
-}
+export const NavigationPropertyTargetEditor: new (props: PropertyEditorProps) => TypeEditor & PureComponent<PropertyEditorProps>;
 
 // @beta
 export function PortalTargetContextProvider({ portalTarget, children }: PropsWithChildren<PortalTargetContextProviderProps>): JSX_2.Element;
