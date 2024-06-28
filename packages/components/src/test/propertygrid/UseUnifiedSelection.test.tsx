@@ -10,10 +10,10 @@ import { IModelConnection } from "@itwin/core-frontend";
 import { KeySet } from "@itwin/presentation-common";
 import { ISelectionProvider, SelectionChangeEventArgs, SelectionChangeType, SelectionHandler } from "@itwin/presentation-frontend";
 import { render } from "@testing-library/react";
-import { SelectionHandlerContextProvider } from "../../presentation-components/common/SelectionHandlerContext";
 import { IPresentationPropertyDataProvider } from "../../presentation-components/propertygrid/DataProvider";
 import {
   PropertyDataProviderWithUnifiedSelectionProps,
+  SelectionHandlerContextProvider,
   usePropertyDataProviderWithUnifiedSelection,
 } from "../../presentation-components/propertygrid/UseUnifiedSelection";
 import { createTestECInstanceKey } from "../_helpers/Common";

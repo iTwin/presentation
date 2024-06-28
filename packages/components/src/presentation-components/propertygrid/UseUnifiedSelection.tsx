@@ -6,10 +6,9 @@
  * @module PropertyGrid
  */
 
-import { useEffect, useState } from "react";
+import { createContext, PropsWithChildren, useContext, useEffect, useState } from "react";
 import { KeySet } from "@itwin/presentation-common";
 import { Presentation, SelectionChangeEventArgs, SelectionHandler } from "@itwin/presentation-frontend";
-import { useSelectionHandlerContext } from "../common/SelectionHandlerContext";
 import { IPresentationPropertyDataProvider } from "./DataProvider";
 
 const DEFAULT_REQUESTED_CONTENT_INSTANCES_LIMIT = 100;
@@ -42,6 +41,18 @@ export interface UsePropertyDataProviderWithUnifiedSelectionResult {
   isOverLimit: boolean;
   /** Selected element count. */
   numSelectedElements: number;
+}
+
+const SelectionHandlerContext = createContext<SelectionHandler | undefined>(undefined);
+
+/** @internal */
+export function SelectionHandlerContextProvider({ selectionHandler, children }: PropsWithChildren<{ selectionHandler: SelectionHandler }>) {
+  return <SelectionHandlerContext.Provider value={selectionHandler}>{children}</SelectionHandlerContext.Provider>;
+}
+
+/** @internal */
+export function useSelectionHandlerContext() {
+  return useContext(SelectionHandlerContext);
 }
 
 /**

@@ -20,9 +20,8 @@ import {
   SelectionChangeType,
   SelectionManager,
 } from "@itwin/presentation-frontend";
-import { ViewportSelectionHandlerContextProvider } from "../../presentation-components/common/ViewportSelectionHandlerContext";
 import { ViewportSelectionHandler } from "../../presentation-components/viewport/ViewportSelectionHandler";
-import { viewWithUnifiedSelection } from "../../presentation-components/viewport/WithUnifiedSelection";
+import { ViewportSelectionHandlerContextProvider, viewWithUnifiedSelection } from "../../presentation-components/viewport/WithUnifiedSelection";
 import { createTestECInstanceKey } from "../_helpers/Common";
 import { render, waitFor } from "../TestUtils";
 

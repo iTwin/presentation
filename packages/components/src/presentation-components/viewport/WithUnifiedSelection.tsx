@@ -6,10 +6,9 @@
  * @module Viewport
  */
 
-import { memo, useEffect, useState } from "react";
+import { createContext, memo, PropsWithChildren, useContext, useEffect, useState } from "react";
 import { ViewportProps } from "@itwin/imodel-components-react";
 import { getDisplayName } from "../common/Utils";
-import { useViewportSelectionHandlerContext } from "../common/ViewportSelectionHandlerContext";
 import { ViewportSelectionHandler } from "./ViewportSelectionHandler";
 
 /**
@@ -19,6 +18,18 @@ import { ViewportSelectionHandler } from "./ViewportSelectionHandler";
  */
 // eslint-disable-next-line @typescript-eslint/no-empty-interface
 export interface ViewWithUnifiedSelectionProps {}
+
+const ViewportSelectionHandlerContext = createContext<ViewportSelectionHandler | undefined>(undefined);
+
+/** @internal */
+export function ViewportSelectionHandlerContextProvider({ selectionHandler, children }: PropsWithChildren<{ selectionHandler: ViewportSelectionHandler }>) {
+  return <ViewportSelectionHandlerContext.Provider value={selectionHandler}>{children}</ViewportSelectionHandlerContext.Provider>;
+}
+
+/** @internal */
+export function useViewportSelectionHandlerContext() {
+  return useContext(ViewportSelectionHandlerContext);
+}
 
 /**
  * A HOC component that adds unified selection functionality to the supplied
