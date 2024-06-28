@@ -196,6 +196,7 @@ describe("IModelSelectionHandler", () => {
     const selectionStorageStub = {
       addToSelection: sinon.spy(),
       removeFromSelection: sinon.spy(),
+      replaceSelection: sinon.spy(),
       clearSelection: sinon.spy(),
       selectionChangeEvent: { addListener: () => () => {} },
     };
@@ -223,6 +224,7 @@ describe("IModelSelectionHandler", () => {
     afterEach(() => {
       selectionStorageStub.addToSelection.resetHistory();
       selectionStorageStub.clearSelection.resetHistory();
+      selectionStorageStub.replaceSelection.resetHistory();
       selectionStorageStub.removeFromSelection.resetHistory();
     });
 
@@ -284,10 +286,7 @@ describe("IModelSelectionHandler", () => {
       triggerSelectionChange({ type: CoreSelectionSetEventType.Remove, removed: removedKeys.map((k) => k.id), set: selectionSet });
 
       await waitFor(() => {
-        expect(selectionStorageStub.removeFromSelection.getCall(0).calledWith({ imodelKey: imodelAccess.key, source: "Tool", selectables: [removedKeys[0]] }))
-          .to.be.true;
-        expect(selectionStorageStub.removeFromSelection.getCall(1).calledWith({ imodelKey: imodelAccess.key, source: "Tool", selectables: [removedKeys[1]] }))
-          .to.be.true;
+        expect(selectionStorageStub.removeFromSelection.calledWith({ imodelKey: imodelAccess.key, source: "Tool", selectables: removedKeys })).to.be.true;
       });
     });
 
@@ -303,11 +302,7 @@ describe("IModelSelectionHandler", () => {
       });
 
       await waitFor(() => {
-        expect(selectionStorageStub.clearSelection).to.be.calledOnceWith({ imodelKey: imodelAccess.key, source: "Tool" });
-        expect(selectionStorageStub.addToSelection.getCall(0).calledWith({ imodelKey: imodelAccess.key, source: "Tool", selectables: [addedKeys[0]] })).to.be
-          .true;
-        expect(selectionStorageStub.addToSelection.getCall(1).calledWith({ imodelKey: imodelAccess.key, source: "Tool", selectables: [addedKeys[1]] })).to.be
-          .true;
+        expect(selectionStorageStub.replaceSelection.calledWith({ imodelKey: imodelAccess.key, source: "Tool", selectables: addedKeys })).to.be.true;
       });
     });
 
