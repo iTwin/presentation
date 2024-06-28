@@ -79,6 +79,10 @@ export function usePropertyDataProviderWithUnifiedSelection(
     };
 
     // istanbul ignore next
+    if (!suppliedSelectionHandler) {
+      throw Error();
+    }
+
     const handler =
       suppliedSelectionHandler ??
       new SelectionHandler({
