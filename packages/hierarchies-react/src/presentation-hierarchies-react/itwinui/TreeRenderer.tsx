@@ -21,7 +21,7 @@ type TreeNodeRendererProps = ComponentPropsWithoutRef<typeof TreeNodeRenderer>;
 interface TreeRendererOwnProps {
   /** Root nodes of the tree. */
   rootNodes: PresentationTreeNode[];
-  /** Type of selection that is currently present. */
+  /** Active selection mode used by the tree. Defaults to `"single"`. */
   selectionMode?: SelectionMode;
 }
 

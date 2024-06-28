@@ -33,7 +33,7 @@ interface TreeNodeRendererOwnProps {
   onNodeClick?: (node: PresentationHierarchyNode, isSelected: boolean, event: React.MouseEvent<HTMLElement, MouseEvent>) => void;
   /** Action to perform when a key is pressed when the node is hovered on. */
   onNodeKeyDown?: (node: PresentationHierarchyNode, isSelected: boolean, event: React.KeyboardEvent<HTMLElement>) => void;
-  /** Reloads the tree when an error occurs and `retry` button is clicked. */
+  /** A callback to reload a hierarchy level when an error occurs and `retry` button is clicked. */
   reloadTree?: (options: { parentNodeId: string | undefined; state: "reset" }) => void;
   /** CSS class name for the action buttons. */
   actionButtonsClassName?: string;

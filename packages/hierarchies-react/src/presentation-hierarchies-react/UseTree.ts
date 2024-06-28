@@ -119,7 +119,7 @@ interface ReloadTreeCommonOptions {
 }
 
 /**
- * Options for the full tree reload.
+ * Options for full tree reload.
  * @beta
  */
 type FullTreeReloadOptions = {
@@ -128,7 +128,7 @@ type FullTreeReloadOptions = {
 } & ReloadTreeCommonOptions;
 
 /**
- * Options for the subtree reload.
+ * Options for subtree reload.
  * @beta
  */
 type SubtreeReloadOptions = {
@@ -137,7 +137,7 @@ type SubtreeReloadOptions = {
 } & ReloadTreeCommonOptions;
 
 /**
- * Options for reloading a tree or a subtree.
+ * Options for doing either full or a sub tree reload.
  * @beta
  */
 type ReloadTreeOptions = FullTreeReloadOptions | SubtreeReloadOptions;
@@ -154,15 +154,15 @@ interface UseTreeResult {
    */
   isLoading: boolean;
   /**
-   * Action to perform when tree has to be reloaded.
+   * A function that should be called to reload the tree.
    */
   reloadTree: (options?: ReloadTreeOptions) => void;
   /**
-   * Action to perform when a node is expanded or collapsed.
+   * A function that should be called to either expand or collapse the given node.
    */
   expandNode: (nodeId: string, isExpanded: boolean) => void;
   /**
-   * Action to perform when nodes are selected.
+   * A function that should be called to select nodes in the tree.
    * @param nodeIds Ids of the nodes that are selected.
    * @param changeType Type of change that occurred for the selection.
    */

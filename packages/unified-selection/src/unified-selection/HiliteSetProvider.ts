@@ -27,7 +27,7 @@ export interface HiliteSet {
  * @beta
  */
 export interface HiliteSetProviderProps {
-  /** Interface for retrieving metadata about the hilited instances from an iModel. */
+  /** An object that provides access to iModel's metadata and allows running ECSQL queries on it. */
   imodelAccess: ECClassHierarchyInspector & ECSqlQueryExecutor;
 }
 
