@@ -138,7 +138,7 @@ export class PresentationTreeDataProvider implements IPresentationTreeDataProvid
   /** Constructor. */
   public constructor(props: PresentationTreeDataProviderProps) {
     this.props = props;
-
+    this._pagingSize = props.pagingSize;
     this._dataSource = {
       getNodesIterator: async (requestOptions) => {
         // we can't just drop support for the `getNodesAndCount` override, so if it's set - need to take data from it
