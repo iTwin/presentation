@@ -6,7 +6,7 @@
 import { GenericInstanceFilter, HierarchyNode } from "@itwin/presentation-hierarchies";
 import { SelectionChangeType } from "../UseSelectionHandler";
 
-/** @beta Not exported through barrel, but used in public API as an argument. */
+/** @internal */
 export interface TreeModelRootNode {
   id: undefined;
   nodeData: undefined;
@@ -15,7 +15,7 @@ export interface TreeModelRootNode {
   isLoading?: boolean;
 }
 
-/** @beta Not exported through barrel, but used in public API as an argument. */
+/** @internal */
 export interface TreeModelHierarchyNode {
   id: string;
   nodeData: HierarchyNode;
@@ -28,7 +28,7 @@ export interface TreeModelHierarchyNode {
   instanceFilter?: GenericInstanceFilter;
 }
 
-/** @beta Not exported through barrel, but used in public API as an argument. */
+/** @internal */
 export interface TreeModelGenericInfoNode {
   id: string;
   parentId: string | undefined;
@@ -36,14 +36,14 @@ export interface TreeModelGenericInfoNode {
   message: string;
 }
 
-/** @beta Not exported through barrel, but used in public API as an argument. */
+/** @internal */
 export interface TreeModelNoFilterMatchesInfoNode {
   id: string;
   parentId: string | undefined;
   type: "NoFilterMatches";
 }
 
-/** @beta Not exported through barrel, but used in public API as an argument. */
+/** @internal */
 export interface TreeModelResultSetTooLargeInfoNode {
   id: string;
   parentId: string | undefined;
@@ -51,10 +51,10 @@ export interface TreeModelResultSetTooLargeInfoNode {
   resultSetSizeLimit: number;
 }
 
-/** @beta Not exported through barrel, but used in public API as an argument. */
+/** @internal */
 export type TreeModelInfoNode = TreeModelGenericInfoNode | TreeModelResultSetTooLargeInfoNode | TreeModelNoFilterMatchesInfoNode;
 
-/** @beta Not exported through barrel, but used in public API as an argument. */
+/** @internal */
 export type TreeModelNode = TreeModelHierarchyNode | TreeModelInfoNode;
 
 /** @internal */
