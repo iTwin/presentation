@@ -177,82 +177,6 @@ type SubtreeReloadOptions = {
     parentNodeId: string;
 } & ReloadTreeCommonOptions;
 
-// @beta
-interface TreeModelGenericInfoNode {
-    // (undocumented)
-    id: string;
-    // (undocumented)
-    message: string;
-    // (undocumented)
-    parentId: string | undefined;
-    // (undocumented)
-    type: "Unknown";
-}
-
-// @beta
-interface TreeModelHierarchyNode {
-    // (undocumented)
-    children: boolean;
-    // (undocumented)
-    hierarchyLimit?: number | "unbounded";
-    // (undocumented)
-    id: string;
-    // (undocumented)
-    instanceFilter?: GenericInstanceFilter;
-    // (undocumented)
-    isExpanded?: boolean;
-    // (undocumented)
-    isLoading?: boolean;
-    // (undocumented)
-    isSelected?: boolean;
-    // (undocumented)
-    label: string;
-    // (undocumented)
-    nodeData: HierarchyNode;
-}
-
-// @beta
-type TreeModelInfoNode = TreeModelGenericInfoNode | TreeModelResultSetTooLargeInfoNode | TreeModelNoFilterMatchesInfoNode;
-
-// @beta
-type TreeModelNode = TreeModelHierarchyNode | TreeModelInfoNode;
-
-// @beta
-interface TreeModelNoFilterMatchesInfoNode {
-    // (undocumented)
-    id: string;
-    // (undocumented)
-    parentId: string | undefined;
-    // (undocumented)
-    type: "NoFilterMatches";
-}
-
-// @beta
-interface TreeModelResultSetTooLargeInfoNode {
-    // (undocumented)
-    id: string;
-    // (undocumented)
-    parentId: string | undefined;
-    // (undocumented)
-    resultSetSizeLimit: number;
-    // (undocumented)
-    type: "ResultSetTooLarge";
-}
-
-// @beta
-interface TreeModelRootNode {
-    // (undocumented)
-    hierarchyLimit?: number | "unbounded";
-    // (undocumented)
-    id: undefined;
-    // (undocumented)
-    instanceFilter?: GenericInstanceFilter;
-    // (undocumented)
-    isLoading?: boolean;
-    // (undocumented)
-    nodeData: undefined;
-}
-
 // @beta (undocumented)
 type TreeNodeProps = ComponentPropsWithoutRef<typeof TreeNode>;
 
@@ -372,12 +296,10 @@ interface UseTreeResult {
 }
 
 // @beta
-export function useUnifiedSelectionTree({ imodelKey, sourceName, ...props }: UseTreeProps & Omit<UseUnifiedTreeSelectionProps, "getNode">): UseTreeResult;
+export function useUnifiedSelectionTree({ imodelKey, sourceName, ...props }: UseTreeProps & UseUnifiedTreeSelectionProps): UseTreeResult;
 
 // @beta (undocumented)
 interface UseUnifiedTreeSelectionProps {
-    // (undocumented)
-    getNode: (nodeId: string) => TreeModelNode | TreeModelRootNode | undefined;
     // (undocumented)
     imodelKey: string;
     // (undocumented)

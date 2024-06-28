@@ -20,11 +20,14 @@ export interface TreeSelectionOptions {
 export interface UseUnifiedTreeSelectionProps {
   imodelKey: string;
   sourceName: string;
-  getNode: (nodeId: string) => TreeModelNode | TreeModelRootNode | undefined;
 }
 
 /** @internal */
-export function useUnifiedTreeSelection({ imodelKey, sourceName, getNode }: UseUnifiedTreeSelectionProps): TreeSelectionOptions {
+export function useUnifiedTreeSelection({
+  imodelKey,
+  sourceName,
+  getNode,
+}: UseUnifiedTreeSelectionProps & { getNode: (nodeId: string) => TreeModelNode | TreeModelRootNode | undefined }): TreeSelectionOptions {
   const [options, setOptions] = useState<TreeSelectionOptions>(() => ({
     isNodeSelected: /* istanbul ignore next */ () => false,
     selectNodes: /* istanbul ignore next */ () => {},

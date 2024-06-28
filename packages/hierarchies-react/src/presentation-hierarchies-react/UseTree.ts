@@ -74,7 +74,7 @@ export function useTree(props: UseTreeProps): UseTreeResult {
  * @see `UnifiedSelectionProvider`
  * @beta
  */
-export function useUnifiedSelectionTree({ imodelKey, sourceName, ...props }: UseTreeProps & Omit<UseUnifiedTreeSelectionProps, "getNode">): UseTreeResult {
+export function useUnifiedSelectionTree({ imodelKey, sourceName, ...props }: UseTreeProps & UseUnifiedTreeSelectionProps): UseTreeResult {
   const { getNode, ...rest } = useTreeInternal(props);
   return { ...rest, ...useUnifiedTreeSelection({ imodelKey, sourceName, getNode }) };
 }
