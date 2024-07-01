@@ -7,8 +7,9 @@
  * @module Properties
  */
 
+import { PureComponent } from "react";
 import { StandardTypeNames } from "@itwin/appui-abstract";
-import { PropertyEditorManager } from "@itwin/components-react";
+import { PropertyEditorBase, PropertyEditorManager, PropertyEditorProps, TypeEditor } from "@itwin/components-react";
 import {
   NavigationPropertyEditor as NavigationPropertyEditorInternal,
   NavigationPropertyTargetEditor as NavigationPropertyTargetEditorInternal,
@@ -25,7 +26,7 @@ export * from "./NavigationPropertyEditorContext";
  * [[PropertyEditorManager]] system where it's automatically registered as a default editor for all
  * [[StandardTypeNames.Navigation]] properties.
  */
-const NavigationPropertyEditor = NavigationPropertyEditorInternal;
+const NavigationPropertyEditor: new () => PropertyEditorBase = NavigationPropertyEditorInternal;
 /**
  * Component that renders navigation property target selector for navigation property value editing.
  * @beta
@@ -33,7 +34,9 @@ const NavigationPropertyEditor = NavigationPropertyEditorInternal;
  * [[PropertyEditorManager]] system where it's automatically registered as a default editor for all
  * [[StandardTypeNames.Navigation]] properties.
  */
-const NavigationPropertyTargetEditor = NavigationPropertyTargetEditorInternal;
+const NavigationPropertyTargetEditor: new (props: PropertyEditorProps) => TypeEditor & PureComponent<PropertyEditorProps> =
+  NavigationPropertyTargetEditorInternal;
+
 // eslint-disable-next-line deprecation/deprecation
 export { NavigationPropertyEditor, NavigationPropertyTargetEditor };
 

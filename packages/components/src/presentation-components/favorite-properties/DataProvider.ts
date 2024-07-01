@@ -33,9 +33,6 @@ export interface FavoritePropertiesDataProviderProps {
    * set, default presentation rules are used which return content for the selected elements.
    */
   ruleset?: Ruleset | string;
-
-  /** @internal */
-  propertyDataProviderFactory?: (imodel: IModelConnection, ruleset?: Ruleset | string) => PresentationPropertyDataProvider;
 }
 
 /**
@@ -44,7 +41,6 @@ export interface FavoritePropertiesDataProviderProps {
  */
 export class FavoritePropertiesDataProvider implements IFavoritePropertiesDataProvider {
   private _customRuleset?: Ruleset | string;
-  private _propertyDataProviderFactory: (imodel: IModelConnection, ruleset?: Ruleset | string) => PresentationPropertyDataProvider;
 
   /**
    * Should fields with no values be included in the property list. No value means:
@@ -67,14 +63,6 @@ export class FavoritePropertiesDataProvider implements IFavoritePropertiesDataPr
     this.includeFieldsWithNoValues = true;
     this.includeFieldsWithCompositeValues = true;
     this._customRuleset = /* istanbul ignore next */ props?.ruleset;
-    this._propertyDataProviderFactory =
-      props && props.propertyDataProviderFactory
-        ? props.propertyDataProviderFactory
-        : /* istanbul ignore next */ (imodel: IModelConnection, ruleset?: Ruleset | string) => {
-            const provider = new PresentationPropertyDataProvider({ imodel, ruleset });
-            provider.isNestedPropertyCategoryGroupingEnabled = false;
-            return provider;
-          };
   }
 
   /**
@@ -83,7 +71,7 @@ export class FavoritePropertiesDataProvider implements IFavoritePropertiesDataPr
    */
   public async getData(imodel: IModelConnection, elementIds: Id64Arg | KeySet): Promise<PropertyData> {
     if (elementIds instanceof KeySet) {
-      return using(this._propertyDataProviderFactory(imodel, this._customRuleset), async (propertyDataProvider) => {
+      return using(this.createPropertyDataProvider(imodel, this._customRuleset), async (propertyDataProvider) => {
         propertyDataProvider.keys = elementIds;
         // eslint-disable-next-line deprecation/deprecation
         propertyDataProvider.includeFieldsWithNoValues = this.includeFieldsWithNoValues;
@@ -103,5 +91,12 @@ export class FavoritePropertiesDataProvider implements IFavoritePropertiesDataPr
 
     const keys = await Presentation.selection.scopes.computeSelection(imodel, elementIds, createSelectionScopeProps(Presentation.selection.scopes.activeScope));
     return this.getData(imodel, keys);
+  }
+
+  // istanbul ignore next
+  private createPropertyDataProvider(imodel: IModelConnection, ruleset?: Ruleset | string) {
+    const provider = new PresentationPropertyDataProvider({ imodel, ruleset });
+    provider.isNestedPropertyCategoryGroupingEnabled = false;
+    return provider;
   }
 }
