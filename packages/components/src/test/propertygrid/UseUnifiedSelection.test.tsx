@@ -4,12 +4,13 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { expect } from "chai";
+import { PropsWithChildren } from "react";
 import sinon from "sinon";
 import { IModelConnection } from "@itwin/core-frontend";
 import { KeySet } from "@itwin/presentation-common";
 import { ISelectionProvider, SelectionChangeEventArgs, SelectionChangeType, SelectionHandler } from "@itwin/presentation-frontend";
 import { IPresentationPropertyDataProvider } from "../../presentation-components/propertygrid/DataProvider";
-import { usePropertyDataProviderWithUnifiedSelection } from "../../presentation-components/propertygrid/UseUnifiedSelection";
+import { SelectionHandlerContextProvider, usePropertyDataProviderWithUnifiedSelection } from "../../presentation-components/propertygrid/UseUnifiedSelection";
 import { createTestECInstanceKey } from "../_helpers/Common";
 import { act, renderHook } from "../TestUtils";
 
@@ -28,6 +29,10 @@ describe("usePropertyDataProviderWithUnifiedSelection", () => {
     return dataProvider as unknown as IPresentationPropertyDataProvider;
   }
 
+  function Wrapper({ children }: PropsWithChildren<{}>) {
+    return <SelectionHandlerContextProvider selectionHandler={selectionHandler}>{children}</SelectionHandlerContextProvider>;
+  }
+
   beforeEach(() => {
     selectionHandler = sinon.createStubInstance(SelectionHandler);
     setKeysSpy.reset();
@@ -37,7 +42,8 @@ describe("usePropertyDataProviderWithUnifiedSelection", () => {
     selectionHandler.getSelectionLevels.returns([]);
 
     const { result } = renderHook(usePropertyDataProviderWithUnifiedSelection, {
-      initialProps: { selectionHandler, dataProvider: getProvider() },
+      initialProps: { dataProvider: getProvider() },
+      wrapper: Wrapper,
     });
     expect(result.current).to.not.be.undefined;
     expect(result.current.isOverLimit).to.be.false;
@@ -51,7 +57,8 @@ describe("usePropertyDataProviderWithUnifiedSelection", () => {
     selectionHandler.getSelection.returns(new KeySet());
 
     const { result } = renderHook(usePropertyDataProviderWithUnifiedSelection, {
-      initialProps: { selectionHandler, dataProvider: getProvider() },
+      initialProps: { dataProvider: getProvider() },
+      wrapper: Wrapper,
     });
     expect(result.current).to.not.be.undefined;
     expect(result.current.isOverLimit).to.be.false;
@@ -67,7 +74,8 @@ describe("usePropertyDataProviderWithUnifiedSelection", () => {
     selectionHandler.getSelection.returns(setKeys);
 
     const { result } = renderHook(usePropertyDataProviderWithUnifiedSelection, {
-      initialProps: { selectionHandler, dataProvider: getProvider() },
+      initialProps: { dataProvider: getProvider() },
+      wrapper: Wrapper,
     });
     expect(result.current).to.not.be.undefined;
     expect(result.current.isOverLimit).to.be.false;
@@ -85,6 +93,7 @@ describe("usePropertyDataProviderWithUnifiedSelection", () => {
 
     const { result } = renderHook(usePropertyDataProviderWithUnifiedSelection, {
       initialProps: { selectionHandler, requestedContentInstancesLimit: instancesLimit, dataProvider: getProvider() },
+      wrapper: Wrapper,
     });
 
     expect(result.current).to.not.be.undefined;
@@ -120,7 +129,8 @@ describe("usePropertyDataProviderWithUnifiedSelection", () => {
     });
 
     const { result } = renderHook(usePropertyDataProviderWithUnifiedSelection, {
-      initialProps: { selectionHandler, dataProvider: getProvider() },
+      initialProps: { dataProvider: getProvider() },
+      wrapper: Wrapper,
     });
 
     expect(setKeysSpy).to.be.calledWith(sinon.match((keys: KeySet) => equalKeySets(keys0, keys)));
@@ -143,7 +153,8 @@ describe("usePropertyDataProviderWithUnifiedSelection", () => {
     selectionHandler.getSelection.returns(setKeys);
 
     const { unmount } = renderHook(usePropertyDataProviderWithUnifiedSelection, {
-      initialProps: { selectionHandler, dataProvider: getProvider() },
+      initialProps: { dataProvider: getProvider() },
+      wrapper: Wrapper,
     });
 
     unmount();

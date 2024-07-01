@@ -8,7 +8,7 @@ import { NodeData, Tree } from "@itwin/itwinui-react";
 import { PresentationTreeNode } from "../TreeNode";
 import { SelectionMode, useSelectionHandler } from "../UseSelectionHandler";
 import { useTree } from "../UseTree";
-import { LocalizationContextProvider, LocalizedStrings } from "./LocalizationContext";
+import { LocalizationContextProvider } from "./LocalizationContext";
 import { TreeNodeRenderer } from "./TreeNodeRenderer";
 
 /** @beta */
@@ -19,9 +19,10 @@ type TreeNodeRendererProps = ComponentPropsWithoutRef<typeof TreeNodeRenderer>;
 
 /** @beta */
 interface TreeRendererOwnProps {
+  /** Root nodes of the tree. */
   rootNodes: PresentationTreeNode[];
+  /** Active selection mode used by the tree. Defaults to `"single"`. */
   selectionMode?: SelectionMode;
-  localizedStrings?: Partial<LocalizedStrings>;
 }
 
 /** @beta */
@@ -29,7 +30,8 @@ type TreeRendererProps = Pick<ReturnType<typeof useTree>, "rootNodes" | "expandN
   Partial<Pick<ReturnType<typeof useTree>, "selectNodes" | "isNodeSelected" | "getHierarchyLevelDetails" | "reloadTree">> &
   Pick<TreeNodeRendererProps, "onFilterClick" | "getIcon" | "getLabel" | "getSublabel"> &
   TreeRendererOwnProps &
-  Omit<TreeProps, "data" | "nodeRenderer" | "getNode" | "enableVirtualization">;
+  Omit<TreeProps, "data" | "nodeRenderer" | "getNode" | "enableVirtualization"> &
+  ComponentPropsWithoutRef<typeof LocalizationContextProvider>;
 
 /**
  * A component that renders a tree using the `Tree` component from `@itwin/itwinui-react`. The tree nodes

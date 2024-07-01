@@ -6,7 +6,7 @@
  * @module Viewport
  */
 
-import { memo, useEffect, useState } from "react";
+import { createContext, memo, PropsWithChildren, useContext, useEffect, useState } from "react";
 import { ViewportProps } from "@itwin/imodel-components-react";
 import { getDisplayName } from "../common/Utils";
 import { ViewportSelectionHandler } from "./ViewportSelectionHandler";
@@ -14,10 +14,21 @@ import { ViewportSelectionHandler } from "./ViewportSelectionHandler";
 /**
  * Props that are injected to the ViewWithUnifiedSelection HOC component.
  * @public
+ * @deprecated in 5.3.x This interface is empty.
  */
-export interface ViewWithUnifiedSelectionProps {
-  /** @internal */
-  selectionHandler?: ViewportSelectionHandler;
+// eslint-disable-next-line @typescript-eslint/no-empty-interface
+export interface ViewWithUnifiedSelectionProps {}
+
+const ViewportSelectionHandlerContext = createContext<ViewportSelectionHandler | undefined>(undefined);
+
+/** @internal */
+export function ViewportSelectionHandlerContextProvider({ selectionHandler, children }: PropsWithChildren<{ selectionHandler: ViewportSelectionHandler }>) {
+  return <ViewportSelectionHandlerContext.Provider value={selectionHandler}>{children}</ViewportSelectionHandlerContext.Provider>;
+}
+
+/** @internal */
+export function useViewportSelectionHandlerContext() {
+  return useContext(ViewportSelectionHandlerContext);
 }
 
 /**
@@ -26,15 +37,11 @@ export interface ViewWithUnifiedSelectionProps {
  *
  * @public
  */
-export function viewWithUnifiedSelection<P extends ViewportProps>(
-  ViewportComponent: React.ComponentType<P>,
-): React.ComponentType<P & ViewWithUnifiedSelectionProps> {
-  type CombinedProps = P & ViewWithUnifiedSelectionProps;
-
-  const WithUnifiedSelection = memo<CombinedProps>((props) => {
-    const { selectionHandler, ...restProps } = props;
-    const imodel = restProps.imodel;
+export function viewWithUnifiedSelection<P extends ViewportProps>(ViewportComponent: React.ComponentType<P>): React.ComponentType<P> {
+  const WithUnifiedSelection = memo<P>((props) => {
+    const { imodel } = props;
     const [viewportSelectionHandler, setViewportSelectionHandler] = useState<ViewportSelectionHandler>();
+    const selectionHandler = useViewportSelectionHandlerContext();
 
     // apply currentSelection when 'viewportSelectionHandler' is initialized (set to handler from props or new is created)
     useEffect(() => {
@@ -60,7 +67,7 @@ export function viewWithUnifiedSelection<P extends ViewportProps>(
       viewportSelectionHandler.imodel = imodel;
     }, [viewportSelectionHandler, imodel]);
 
-    return <ViewportComponent {...(restProps as P)} />;
+    return <ViewportComponent {...props} />;
   });
 
   WithUnifiedSelection.displayName = `WithUnifiedSelection(${getDisplayName(ViewportComponent)})`;

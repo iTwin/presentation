@@ -45,7 +45,11 @@ export * from "./presentation-components/properties/editors";
  */
 export * from "./presentation-components/propertygrid/DataProvider";
 export * from "./presentation-components/propertygrid/FavoritePropertiesDataFilterer";
-export * from "./presentation-components/propertygrid/UseUnifiedSelection";
+export {
+  PropertyDataProviderWithUnifiedSelectionProps,
+  UsePropertyDataProviderWithUnifiedSelectionResult,
+  usePropertyDataProviderWithUnifiedSelection,
+} from "./presentation-components/propertygrid/UseUnifiedSelection";
 
 /**
  * @module FavoriteProperties
@@ -88,7 +92,8 @@ export * from "./presentation-components/table/CellRenderer";
  * @docs-group-description Viewport
  * Presentation features for [ViewportComponent]($imodel-components-react).
  */
-export * from "./presentation-components/viewport/WithUnifiedSelection";
+// eslint-disable-next-line deprecation/deprecation
+export { viewWithUnifiedSelection, ViewWithUnifiedSelectionProps } from "./presentation-components/viewport/WithUnifiedSelection";
 
 /**
  * @module DisplayLabels

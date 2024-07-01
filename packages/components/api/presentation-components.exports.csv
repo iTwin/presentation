@@ -121,3 +121,4 @@ public;function;useUnifiedSelectionTreeEventHandler
 deprecated;function;useUnifiedSelectionTreeEventHandler
 public;function;viewWithUnifiedSelection
 public;interface;ViewWithUnifiedSelectionProps
+deprecated;interface;ViewWithUnifiedSelectionProps

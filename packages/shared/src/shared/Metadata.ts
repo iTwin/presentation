@@ -287,13 +287,13 @@ export namespace EC {
 
 /**
  * An identifiers' union of all supported primitive value types.
- * @internal This is an internal type used in public API.
+ * @beta
  */
 export type PrimitiveValueType = "Id" | Exclude<EC.PrimitiveType, "Binary" | "IGeometry">;
 
 /**
  * Describes a single step through an ECRelationship from source ECClass to target ECClass.
- * @internal This is an internal type used in public API.
+ * @beta
  */
 export interface RelationshipPathStep {
   /** Full name of the source ECClass */
@@ -312,7 +312,7 @@ export interface RelationshipPathStep {
 
 /**
  * Describes a path from source ECClass to target ECClass through multiple ECRelationships.
- * @internal This is an internal type used in public API.
+ * @beta
  */
 export type RelationshipPath<TStep extends RelationshipPathStep = RelationshipPathStep> = TStep[];
 
