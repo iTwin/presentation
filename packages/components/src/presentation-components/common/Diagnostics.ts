@@ -27,7 +27,7 @@ export interface DiagnosticsProps {
 
   /**
    * Settings for capturing rules engine diagnostics.
-   * @internal
+   * @alpha
    */
   devDiagnostics?: {
     /** Severity of log messages to capture. Defaults to "error" when not set. */

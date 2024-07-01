@@ -22,7 +22,7 @@ import {
 import { Guid, IDisposable } from "@itwin/core-bentley";
 import { useDisposable } from "@itwin/core-react";
 import { Keys, KeySet, NodeKey } from "@itwin/presentation-common";
-import { Presentation, SelectionChangeEventArgs, SelectionChangeType, SelectionHandler, SelectionHelper } from "@itwin/presentation-frontend";
+import { Presentation, SelectionChangeEventArgs, SelectionChangeType, SelectionHelper } from "@itwin/presentation-frontend";
 import { IPresentationTreeDataProvider } from "../IPresentationTreeDataProvider";
 import { isPresentationTreeNodeItem } from "../PresentationTreeNodeItem";
 import { toRxjsObservable } from "../Utils";
@@ -46,9 +46,6 @@ export interface UnifiedSelectionTreeEventHandlerParams {
 
   /** Parameters used for node editing. */
   editingParams?: TreeEditingParams;
-
-  /** @internal used for testing */
-  selectionHandler?: SelectionHandler;
 }
 
 /**

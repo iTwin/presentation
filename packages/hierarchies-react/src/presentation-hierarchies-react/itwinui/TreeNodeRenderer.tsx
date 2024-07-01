@@ -19,14 +19,23 @@ type TreeNodeProps = ComponentPropsWithoutRef<typeof TreeNode>;
 
 /** @beta */
 interface TreeNodeRendererOwnProps {
+  /** Node that is rendered. */
   node: RenderedTreeNode;
+  /** Action to perform when the filter button is clicked for this node. */
   onFilterClick?: (hierarchyLevelDetails: HierarchyLevelDetails) => void;
+  /** Returns an icon for a given node. */
   getIcon?: (node: PresentationHierarchyNode) => ReactElement | undefined;
+  /** Returns a label for a given node. */
   getLabel?: (node: PresentationHierarchyNode) => ReactElement | undefined;
+  /** Returns sublabel for a given node. */
   getSublabel?: (node: PresentationHierarchyNode) => ReactElement | undefined;
+  /** Action to perform when the node is clicked. */
   onNodeClick?: (node: PresentationHierarchyNode, isSelected: boolean, event: React.MouseEvent<HTMLElement, MouseEvent>) => void;
+  /** Action to perform when a key is pressed when the node is hovered on. */
   onNodeKeyDown?: (node: PresentationHierarchyNode, isSelected: boolean, event: React.KeyboardEvent<HTMLElement>) => void;
+  /** A callback to reload a hierarchy level when an error occurs and `retry` button is clicked. */
   reloadTree?: (options: { parentNodeId: string | undefined; state: "reset" }) => void;
+  /** CSS class name for the action buttons. */
   actionButtonsClassName?: string;
 }
 

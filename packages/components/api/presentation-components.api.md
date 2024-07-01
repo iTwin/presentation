@@ -66,7 +66,6 @@ import { PropertyFilterBuilderRuleValueRendererProps } from '@itwin/components-r
 import { PropertyFilterRuleGroupOperator } from '@itwin/components-react';
 import { PropertyFilterRuleOperator } from '@itwin/components-react';
 import { PropertyRecord } from '@itwin/appui-abstract';
-import { PropertyValue } from '@itwin/appui-abstract';
 import { PropertyValueRendererContext } from '@itwin/components-react';
 import { PropsWithChildren } from 'react';
 import { PureComponent } from 'react';
@@ -173,7 +172,7 @@ export const DEFAULT_PROPERTY_GRID_RULESET: Ruleset;
 
 // @public
 export interface DiagnosticsProps {
-    // @internal
+    // @alpha
     devDiagnostics?: {
         severity?: DiagnosticsLoggerSeverity;
         perf?: boolean | {
@@ -218,8 +217,6 @@ export class FavoritePropertiesDataProvider implements IFavoritePropertiesDataPr
 
 // @public
 export interface FavoritePropertiesDataProviderProps {
-    // @internal (undocumented)
-    propertyDataProviderFactory?: (imodel: IModelConnection, ruleset?: Ruleset | string) => PresentationPropertyDataProvider;
     ruleset?: Ruleset | string;
 }
 
@@ -342,17 +339,7 @@ export interface IUnifiedSelectionComponent {
 }
 
 // @beta @deprecated
-export const NavigationPropertyEditor: typeof NavigationPropertyEditor_2;
-
-// @internal
-class NavigationPropertyEditor_2 extends PropertyEditorBase {
-    // (undocumented)
-    get containerHandlesEnter(): boolean;
-    // (undocumented)
-    get containerStopsKeydownPropagation(): boolean;
-    // (undocumented)
-    get reactNode(): React.ReactNode;
-}
+export const NavigationPropertyEditor: new () => PropertyEditorBase;
 
 // @beta
 export const navigationPropertyEditorContext: Context<NavigationPropertyEditorContextProps | undefined>;
@@ -364,19 +351,7 @@ export interface NavigationPropertyEditorContextProps {
 }
 
 // @beta @deprecated
-export const NavigationPropertyTargetEditor: typeof NavigationPropertyTargetEditor_2;
-
-// @internal
-class NavigationPropertyTargetEditor_2 extends PureComponent<PropertyEditorProps> implements TypeEditor {
-    // (undocumented)
-    getPropertyValue(): Promise<PropertyValue | undefined>;
-    // (undocumented)
-    get hasFocus(): boolean;
-    // (undocumented)
-    get htmlElement(): HTMLElement | null;
-    // (undocumented)
-    render(): JSX_2.Element;
-}
+export const NavigationPropertyTargetEditor: new (props: PropertyEditorProps) => TypeEditor & PureComponent<PropertyEditorProps>;
 
 // @beta
 export function PortalTargetContextProvider({ portalTarget, children }: PropsWithChildren<PortalTargetContextProviderProps>): JSX_2.Element;
@@ -562,8 +537,6 @@ export class PresentationTreeDataProvider implements IPresentationTreeDataProvid
         unitSystem?: UnitSystemKey | undefined;
         transport?: "unparsed-json" | undefined;
     };
-    // @internal
-    createTreeNodeItem(node: Node_2, parentId?: string): PresentationTreeNodeItem;
     dispose(): void;
     getFilteredNodePaths(filter: string): Promise<NodePathElement[]>;
     // @deprecated
@@ -575,6 +548,8 @@ export class PresentationTreeDataProvider implements IPresentationTreeDataProvid
     get imodel(): IModelConnection;
     get pagingSize(): number | undefined;
     set pagingSize(value: number | undefined);
+    // (undocumented)
+    get props(): Readonly<PresentationTreeDataProviderProps>;
     get rulesetId(): string;
 }
 
@@ -682,8 +657,6 @@ export interface PresentationTreeRendererProps extends Omit<TreeRendererProps, "
 export interface PropertyDataProviderWithUnifiedSelectionProps {
     dataProvider: IPresentationPropertyDataProvider;
     requestedContentInstancesLimit?: number;
-    // @internal (undocumented)
-    selectionHandler?: SelectionHandler;
 }
 
 // @public
@@ -811,8 +784,6 @@ export interface UnifiedSelectionTreeEventHandlerParams {
     editingParams?: TreeEditingParams;
     name?: string;
     nodeLoader: AbstractTreeNodeLoaderWithProvider<IPresentationTreeDataProvider>;
-    // @internal
-    selectionHandler?: SelectionHandler;
 }
 
 // @public
@@ -954,31 +925,11 @@ export function useUnifiedSelectionContext(): UnifiedSelectionContext | undefine
 // @public @deprecated
 export function useUnifiedSelectionTreeEventHandler(props: UnifiedSelectionTreeEventHandlerParams): UnifiedSelectionTreeEventHandler;
 
-// @internal
-class ViewportSelectionHandler implements IDisposable {
-    constructor(props: ViewportSelectionHandlerProps);
-    // (undocumented)
-    applyCurrentSelection(): void;
-    // (undocumented)
-    dispose(): void;
-    // (undocumented)
-    get imodel(): IModelConnection;
-    set imodel(value: IModelConnection);
-}
-
-// @internal (undocumented)
-interface ViewportSelectionHandlerProps {
-    // (undocumented)
-    imodel: IModelConnection;
-}
-
 // @public
-export function viewWithUnifiedSelection<P extends ViewportProps>(ViewportComponent: React.ComponentType<P>): React.ComponentType<P & ViewWithUnifiedSelectionProps>;
+export function viewWithUnifiedSelection<P extends ViewportProps>(ViewportComponent: React.ComponentType<P>): React.ComponentType<P>;
 
-// @public
+// @public @deprecated
 export interface ViewWithUnifiedSelectionProps {
-    // @internal (undocumented)
-    selectionHandler?: ViewportSelectionHandler;
 }
 
 // (No @packageDocumentation comment for this package)

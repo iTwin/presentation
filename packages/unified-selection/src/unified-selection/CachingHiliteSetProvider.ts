@@ -12,18 +12,19 @@ import { IMODEL_CLOSE_SELECTION_CLEAR_SOURCE, SelectionStorage } from "./Selecti
 
 /**
  * Props for creating a `CachingHiliteSetProvider` instance.
- * @internal Not exported through barrel, but used in public API as an argument. May be supplemented with optional attributes any time.
+ * @beta
  */
 export interface CachingHiliteSetProviderProps {
+  /** Selection storage to use for retrieving the hilite set. */
   selectionStorage: SelectionStorage;
+  /** A callback that should return iModel access by iModel key. */
   imodelProvider: (imodelKey: string) => ECClassHierarchyInspector & ECSqlQueryExecutor;
 }
 
 /**
  * Defines return value of `createCachingHiliteSetProvider`.
  *
- * @beta Used in public API as a return value. Not expected to be created / extended by package
- * consumers, may be supplemented with required attributes any time.
+ * @beta
  */
 export interface CachingHiliteSetProvider {
   /** Get the current hilite set iterator for the specified imodel */

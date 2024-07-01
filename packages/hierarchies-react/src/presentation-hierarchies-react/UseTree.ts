@@ -74,7 +74,7 @@ export function useTree(props: UseTreeProps): UseTreeResult {
  * @see `UnifiedSelectionProvider`
  * @beta
  */
-export function useUnifiedSelectionTree({ imodelKey, sourceName, ...props }: UseTreeProps & Omit<UseUnifiedTreeSelectionProps, "getNode">): UseTreeResult {
+export function useUnifiedSelectionTree({ imodelKey, sourceName, ...props }: UseTreeProps & UseUnifiedTreeSelectionProps): UseTreeResult {
   const { getNode, ...rest } = useTreeInternal(props);
   return { ...rest, ...useUnifiedTreeSelection({ imodelKey, sourceName, getNode }) };
 }
@@ -84,16 +84,24 @@ type IModelAccess = ECSchemaProvider & LimitingECSqlQueryExecutor & ECClassHiera
 
 /** @beta */
 interface GetFilteredPathsProps {
+  /** Object that provides access to the iModel schema and can run queries against the iModel. */
   imodelAccess: IModelAccess;
 }
 
 /** @beta */
-interface UseTreeProps {
+interface UseTreeProps extends Pick<Parameters<typeof createHierarchyProvider>[0], "localizedStrings"> {
+  /** Object that provides access to the iModel schema and can run queries against the iModel. */
   imodelAccess: ECSchemaProvider & LimitingECSqlQueryExecutor & ECClassHierarchyInspector;
+  /** Provides the hierarchy definition for the tree. */
   getHierarchyDefinition: (props: { imodelAccess: IModelAccess }) => HierarchyDefinition;
+  /** Provides paths to filtered nodes. */
   getFilteredPaths?: (props: GetFilteredPathsProps) => Promise<HierarchyNodeIdentifiersPath[] | undefined>;
-  localizedStrings?: Parameters<typeof createHierarchyProvider>[0]["localizedStrings"];
+  /**
+   * Callback that is called just after a certain action is finished.
+   * Can be used for performance tracking.
+   */
   onPerformanceMeasured?: (action: "initial-load" | "hierarchy-level-load" | "reload", duration: number) => void;
+  /** Action to perform when hierarchy level contains more items that the specified limit. */
   onHierarchyLimitExceeded?: (props: { parentId?: string; filter?: GenericInstanceFilter; limit?: number | "unbounded" }) => void;
 }
 
@@ -110,19 +118,28 @@ interface ReloadTreeCommonOptions {
   state?: "keep" | "discard" | "reset";
 }
 
-/** @beta */
+/**
+ * Options for full tree reload.
+ * @beta
+ */
 type FullTreeReloadOptions = {
   /** Specifies that data source changed and caches should be cleared before reloading tree. */
   dataSourceChanged?: true;
 } & ReloadTreeCommonOptions;
 
-/** @beta */
+/**
+ * Options for subtree reload.
+ * @beta
+ */
 type SubtreeReloadOptions = {
   /** Specifies parent node under which sub tree should be reloaded. */
   parentNodeId: string;
 } & ReloadTreeCommonOptions;
 
-/** @beta */
+/**
+ * Options for doing either full or a sub tree reload.
+ * @beta
+ */
 type ReloadTreeOptions = FullTreeReloadOptions | SubtreeReloadOptions;
 
 /** @beta */
@@ -136,11 +153,25 @@ interface UseTreeResult {
    * or tree is reloading.
    */
   isLoading: boolean;
+  /**
+   * A function that should be called to reload the tree.
+   */
   reloadTree: (options?: ReloadTreeOptions) => void;
+  /**
+   * A function that should be called to either expand or collapse the given node.
+   */
   expandNode: (nodeId: string, isExpanded: boolean) => void;
+  /**
+   * A function that should be called to select nodes in the tree.
+   * @param nodeIds Ids of the nodes that are selected.
+   * @param changeType Type of change that occurred for the selection.
+   */
   selectNodes: (nodeIds: Array<string>, changeType: SelectionChangeType) => void;
+  /** Determines whether a given node is selected. */
   isNodeSelected: (nodeId: string) => boolean;
+  /** Returns hierarchy level details for a given node ID. */
   getHierarchyLevelDetails: (nodeId: string | undefined) => HierarchyLevelDetails | undefined;
+  /** Sets a formatter for the primitive values that are displayed in the hierarchy. */
   setFormatter: (formatter: IPrimitiveValueFormatter | undefined) => void;
 }
 
