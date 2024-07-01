@@ -17,6 +17,8 @@ jobs:
     name: Release
     permissions:
       id-token: write
+      contents: write
+      pull-requests: write
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
