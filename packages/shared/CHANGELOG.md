@@ -1,5 +1,11 @@
 # @itwin/presentation-shared
 
+## 0.3.2
+
+### Patch Changes
+
+- [#655](https://github.com/iTwin/presentation/pull/655): Remove exposed internal APIs.
+
 ## 0.3.1
 
 ### Patch Changes
