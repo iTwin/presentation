@@ -1,5 +1,12 @@
 # @itwin/presentation-hierarchies
 
+## 0.2.1
+
+### Patch Changes
+
+- Updated dependencies:
+  - @itwin/presentation-shared@0.3.2
+
 ## 0.2.0
 
 ### Minor Changes

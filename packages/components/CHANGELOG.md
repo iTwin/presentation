@@ -1,5 +1,11 @@
 # Change Log - @itwin/presentation-components
 
+## 5.3.4
+
+### Patch Changes
+
+- [#655](https://github.com/iTwin/presentation/pull/655): Remove exposed internal APIs.
+
 ## 5.3.3
 
 ### Patch Changes

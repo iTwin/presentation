@@ -1,5 +1,15 @@
 # @itwin/presentation-hierarchies-react
 
+## 0.5.4
+
+### Patch Changes
+
+- [#655](https://github.com/iTwin/presentation/pull/655): Remove exposed internal APIs.
+- Updated dependencies:
+  - @itwin/unified-selection@0.4.5
+  - @itwin/presentation-shared@0.3.2
+  - @itwin/presentation-hierarchies@0.2.1
+
 ## 0.5.3
 
 ### Patch Changes
