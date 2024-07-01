@@ -242,19 +242,22 @@ export class IModelSelectionHandler {
   };
 
   private async handleIModelSelectionChange(type: CoreSelectionSetEventType, iterator: AsyncIterableIterator<SelectableInstanceKey>) {
-    if (type === CoreSelectionSetEventType.Remove) {
-      for await (const selectable of iterator) {
-        this._selectionStorage.removeFromSelection({ imodelKey: this._imodelAccess.key, source: this._selectionSourceName, selectables: [selectable] });
-      }
-      return;
-    }
-
-    if (type === CoreSelectionSetEventType.Replace) {
-      this._selectionStorage.clearSelection({ imodelKey: this._imodelAccess.key, source: this._selectionSourceName });
-    }
-
+    const selectables: SelectableInstanceKey[] = [];
     for await (const selectable of iterator) {
-      this._selectionStorage.addToSelection({ imodelKey: this._imodelAccess.key, source: this._selectionSourceName, selectables: [selectable] });
+      selectables.push(selectable);
+    }
+    const props = {
+      imodelKey: this._imodelAccess.key,
+      source: this._selectionSourceName,
+      selectables,
+    };
+    switch (type) {
+      case CoreSelectionSetEventType.Add:
+        return this._selectionStorage.addToSelection(props);
+      case CoreSelectionSetEventType.Remove:
+        return this._selectionStorage.removeFromSelection(props);
+      case CoreSelectionSetEventType.Replace:
+        return this._selectionStorage.replaceSelection(props);
     }
   }
 
