@@ -50,7 +50,6 @@ describe("Tree update", () => {
       defaultProps = {
         imodel,
         pagingSize: 100,
-        enableHierarchyAutoUpdate: true,
       };
     });
 
