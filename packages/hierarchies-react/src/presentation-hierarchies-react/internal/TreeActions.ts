@@ -23,6 +23,7 @@ export class TreeActions {
     private _onModelChanged: (model: TreeModel) => void,
     private _onLoad: (actionType: "initial-load" | "hierarchy-level-load" | "reload", duration: number) => void,
     private _onHierarchyLimitExceeded: (props: { parentId?: string; filter?: GenericInstanceFilter; limit?: number | "unbounded" }) => void,
+    private _onHierarchyLoadError: (props: { parentId?: string; type: "timeout" | "unknown" }) => void,
     seed?: TreeModel,
   ) {
     this._loader = new NoopTreeLoader();
@@ -55,8 +56,12 @@ export class TreeActions {
     });
   }
 
+  private getLoadAction(parentId: string | undefined) {
+    return this._currentModel.idToNode.size === 0 ? "initial-load" : parentId === undefined ? "reload" : "hierarchy-level-load";
+  }
+
   private loadSubTree(options: LoadNodesOptions, initialRootNode?: TreeModelRootNode) {
-    const loadAction = this._currentModel.idToNode.size === 0 ? "initial-load" : options.parent.id === undefined ? "reload" : "hierarchy-level-load";
+    const loadAction = this.getLoadAction(options.parent.id);
     const timeTracker = new TimeTracker((time) => this._onLoad(loadAction, time));
 
     const parentId = options.parent.id;
@@ -65,8 +70,13 @@ export class TreeActions {
       .pipe(collectTreePartsUntil(this._disposed, initialRootNode))
       .subscribe({
         next: (newModel) => {
+          const childNodes = newModel.parentChildMap.get(parentId);
+          const firstChildNode = childNodes?.length ? newModel.idToNode.get(childNodes[0]) : undefined;
           this.handleLoadedHierarchy(parentId, newModel);
-          timeTracker.finish();
+          // only report load duration if no error occurs
+          if (!(firstChildNode && isTreeModelInfoNode(firstChildNode))) {
+            timeTracker.finish();
+          }
         },
         complete: () => {
           this.onLoadingComplete(parentId);
@@ -134,7 +144,15 @@ export class TreeActions {
   }
 
   public setHierarchyProvider(provider?: HierarchyProvider) {
-    this._loader = provider ? new TreeLoader(provider, this._onHierarchyLimitExceeded) : /* istanbul ignore next */ new NoopTreeLoader();
+    this._loader = provider
+      ? new TreeLoader(provider, this._onHierarchyLimitExceeded, ({ parentId, type }) => {
+          if (type === "timeout") {
+            const loadAction = this.getLoadAction(parentId);
+            this._onLoad(loadAction, Number.MAX_SAFE_INTEGER);
+          }
+          this._onHierarchyLoadError({ parentId, type });
+        })
+      : /* istanbul ignore next */ new NoopTreeLoader();
   }
 
   public getNode(nodeId: string | undefined): TreeModelNode | TreeModelRootNode | undefined {

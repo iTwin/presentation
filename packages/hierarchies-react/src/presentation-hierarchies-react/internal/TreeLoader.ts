@@ -39,6 +39,7 @@ export class TreeLoader implements ITreeLoader {
   constructor(
     private _hierarchyProvider: HierarchyProvider,
     private _onHierarchyLimitExceeded: (props: { parentId?: string; filter?: GenericInstanceFilter; limit?: number | "unbounded" }) => void,
+    private _onHierarchyLoadError: (props: { parentId?: string; type: "timeout" | "unknown" }) => void,
   ) {}
 
   private loadChildren({ parent, getHierarchyLevelOptions, buildNode, ignoreCache }: Omit<LoadNodesOptions, "shouldLoadChildren">) {
@@ -63,6 +64,7 @@ export class TreeLoader implements ITreeLoader {
           this._onHierarchyLimitExceeded({ parentId: parent.id, filter: instanceFilter, limit: hierarchyLevelSizeLimit });
           return of([{ ...nodeProps, type: "ResultSetTooLarge" as const, resultSetSizeLimit: err.limit }]);
         }
+        this._onHierarchyLoadError({ parentId: parent.id, type: isTimeoutError(err) ? "timeout" : "unknown" });
         return of([{ ...nodeProps, type: "Unknown" as const, message: "Failed to create hierarchy level" }]);
       }),
       map(
@@ -119,4 +121,8 @@ function isHierarchyNode(node: TreeModelInfoNode | HierarchyNode): node is Hiera
 function isRowsLimitError(error: Error): error is RowsLimitExceededError {
   const asRowsError = error as RowsLimitExceededError;
   return asRowsError.limit !== undefined && asRowsError.message.includes("Query rows limit of");
+}
+
+function isTimeoutError(error: Error) {
+  return error.message.includes("query too long to execute or server is too busy");
 }
