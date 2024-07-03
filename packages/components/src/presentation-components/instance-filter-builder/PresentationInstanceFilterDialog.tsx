@@ -23,7 +23,7 @@ import { filterRuleValidator, isFilterNonEmpty } from "./Utils";
 
 /**
  * Data structure that describes source to gather properties from.
- * @beta
+ * @public
  */
 export interface PresentationInstanceFilterPropertiesSource {
   /**
@@ -39,7 +39,7 @@ export interface PresentationInstanceFilterPropertiesSource {
 
 /**
  * Props for [[PresentationInstanceFilterDialog]] component.
- * @beta
+ * @public
  */
 export interface PresentationInstanceFilterDialogProps {
   /** iModel connection to pull data from. */
@@ -75,7 +75,7 @@ export interface PresentationInstanceFilterDialogProps {
 
 /**
  * Set of action handlers that are passed to [[PresentationInstanceFilterDialogProps.toolbarButtonsRenderer]] for rendering custom buttons.
- * @beta
+ * @public
  */
 export interface FilteringDialogToolbarHandlers {
   handleApply: () => void;
@@ -85,7 +85,7 @@ export interface FilteringDialogToolbarHandlers {
 
 /**
  * Dialog component that renders [[InstanceFilterBuilder]] inside.
- * @beta
+ * @public
  */
 export function PresentationInstanceFilterDialog(props: PresentationInstanceFilterDialogProps) {
   const { isOpen, title, ...restProps } = props;

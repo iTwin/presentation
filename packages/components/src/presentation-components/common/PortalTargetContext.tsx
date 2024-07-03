@@ -10,7 +10,7 @@ import { createContext, PropsWithChildren, useContext } from "react";
 
 /**
  * Props for [[PortalTargetContextProvider]]
- * @beta
+ * @public
  */
 export interface PortalTargetContextProviderProps {
   portalTarget: HTMLElement | null;
@@ -18,7 +18,7 @@ export interface PortalTargetContextProviderProps {
 
 /**
  * Provides a portal target for components.
- * @beta
+ * @public
  */
 export function PortalTargetContextProvider({ portalTarget, children }: PropsWithChildren<PortalTargetContextProviderProps>) {
   return <portalTargetContext.Provider value={{ portalTarget }}>{children}</portalTargetContext.Provider>;

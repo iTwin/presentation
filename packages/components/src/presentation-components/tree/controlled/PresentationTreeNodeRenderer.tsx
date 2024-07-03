@@ -17,7 +17,7 @@ import { InfoTreeNodeItemType, isPresentationInfoTreeNodeItem, isPresentationTre
 
 /**
  * Props for [[PresentationTreeNodeRenderer]] component.
- * @beta
+ * @public
  */
 export interface PresentationTreeNodeRendererProps extends TreeNodeRendererProps {
   onFilterClick: (nodeId: string) => void;
@@ -28,7 +28,7 @@ export interface PresentationTreeNodeRendererProps extends TreeNodeRendererProps
  * Component for rendering tree nodes produced by [[PresentationTreeDataProvider]]. Additionally to the default
  * tree node renderer, it renders action buttons for filterable hierarchy levels and also correctly renders
  * nodes that carry info messages.
- * @beta
+ * @public
  */
 export function PresentationTreeNodeRenderer(props: PresentationTreeNodeRendererProps) {
   const { onFilterClick, onClearFilterClick, ...restProps } = props;

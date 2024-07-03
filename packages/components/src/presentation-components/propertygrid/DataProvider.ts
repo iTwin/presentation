@@ -92,7 +92,6 @@ export interface PresentationPropertyDataProviderProps extends DiagnosticsProps 
   enableContentAutoUpdate?: boolean;
   /**
    * If true, additional 'favorites' category is not created.
-   * @beta
    */
   disableFavoritesCategory?: boolean;
 }

@@ -14,7 +14,7 @@ import { Anchor, Modal } from "@itwin/itwinui-react";
 
 /**
  * Props for [[TableCellRenderer]] component.
- * @beta
+ * @public
  */
 export interface TableCellRendererProps {
   /** Record containing cell value and property description. */
@@ -23,7 +23,7 @@ export interface TableCellRendererProps {
 
 /**
  * Renderer for single table cell.
- * @beta
+ * @public
  */
 export function TableCellRenderer(props: TableCellRendererProps) {
   const { record } = props;
