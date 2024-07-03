@@ -14,7 +14,6 @@ import { ClassInfo } from '@itwin/presentation-common';
 import { ClientDiagnosticsHandler } from '@itwin/presentation-common';
 import { ClientDiagnosticsOptions } from '@itwin/presentation-common';
 import { Content } from '@itwin/presentation-common';
-import { Context } from 'react';
 import { ControlledTreeProps } from '@itwin/components-react';
 import { DelayLoadedTreeNodeItem } from '@itwin/components-react';
 import { Descriptor } from '@itwin/presentation-common';
@@ -337,11 +336,17 @@ export interface IUnifiedSelectionComponent {
 // @beta @deprecated
 export const NavigationPropertyEditor: new () => PropertyEditorBase;
 
-// @beta
-export const navigationPropertyEditorContext: Context<NavigationPropertyEditorContextProps | undefined>;
+// @public
+export interface NavigationPropertyEditorContext {
+    getNavigationPropertyInfo: (property: PropertyDescription) => Promise<NavigationPropertyInfo | undefined>;
+    imodel: IModelConnection;
+}
 
-// @beta
-export interface NavigationPropertyEditorContextProps {
+// @public
+export function NavigationPropertyEditorContextProvider({ children, ...props }: PropsWithChildren<NavigationPropertyEditorContextProviderProps>): JSX_2.Element;
+
+// @public
+export interface NavigationPropertyEditorContextProviderProps {
     getNavigationPropertyInfo: (property: PropertyDescription) => Promise<NavigationPropertyInfo | undefined>;
     imodel: IModelConnection;
 }
@@ -818,8 +823,11 @@ export interface UseInstanceFilterPropertyInfosProps {
     descriptor: Descriptor;
 }
 
-// @beta
-export function useNavigationPropertyEditingContext(imodel: IModelConnection, dataProvider: IContentDataProvider): NavigationPropertyEditorContextProps;
+// @public
+export function useNavigationPropertyEditorContext(): NavigationPropertyEditorContext | undefined;
+
+// @public
+export function useNavigationPropertyEditorContextProviderProps(imodel: IModelConnection, dataProvider: IContentDataProvider): NavigationPropertyEditorContextProviderProps;
 
 // @public
 export function usePresentationTable<TColumn, TRow>(props: UsePresentationTableProps<TColumn, TRow>): UsePresentationTableResult<TColumn, TRow>;

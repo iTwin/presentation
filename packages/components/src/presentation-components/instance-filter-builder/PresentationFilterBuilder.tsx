@@ -12,13 +12,13 @@ import { PropertyFilterBuilderRuleValue, PropertyFilterBuilderRuleValueRendererP
 import { assert } from "@itwin/core-bentley";
 import { IModelConnection } from "@itwin/core-frontend";
 import { ClassId, ClassInfo, Descriptor, InstanceFilterDefinition, Keys, PropertiesField } from "@itwin/presentation-common";
-import { navigationPropertyEditorContext } from "../properties/editors/NavigationPropertyEditorContext";
+import { NavigationPropertyEditorContextProvider } from "../properties/editors/NavigationPropertyEditorContext";
 import { UniquePropertyValuesSelector } from "../properties/inputs/UniquePropertyValuesSelector";
 import { InstanceFilterBuilder, usePresentationInstanceFilteringProps } from "./InstanceFilterBuilder";
 import { createFilterClassExpression, createInstanceFilterDefinitionBase } from "./InstanceFilterConverter";
 import { PresentationInstanceFilter, PresentationInstanceFilterConditionGroup } from "./PresentationInstanceFilter";
 import { PresentationInstanceFilterProperty } from "./PresentationInstanceFilterProperty";
-import { createInstanceFilterPropertyInfos, useFilterBuilderNavigationPropertyEditorContext } from "./Utils";
+import { createInstanceFilterPropertyInfos, useFilterBuilderNavigationPropertyEditorContextProviderProps } from "./Utils";
 
 /**
  * Function that checks if supplied [[PresentationInstanceFilter]] is [[PresentationInstanceFilterConditionGroup]].
@@ -128,15 +128,15 @@ export interface PresentationFilterBuilderValueRendererProps extends PropertyFil
  * @public
  */
 export function PresentationFilterBuilderValueRenderer({ imodel, descriptor, descriptorInputKeys, ...props }: PresentationFilterBuilderValueRendererProps) {
-  const navigationPropertyEditorContextValue = useFilterBuilderNavigationPropertyEditorContext(imodel, descriptor);
+  const navigationPropertyContextProviderProps = useFilterBuilderNavigationPropertyEditorContextProviderProps(imodel, descriptor);
   if (props.operator === "is-equal" || props.operator === "is-not-equal") {
     return <UniquePropertyValuesSelector {...props} imodel={imodel} descriptor={descriptor} descriptorInputKeys={descriptorInputKeys} />;
   }
 
   return (
-    <navigationPropertyEditorContext.Provider value={navigationPropertyEditorContextValue}>
+    <NavigationPropertyEditorContextProvider {...navigationPropertyContextProviderProps}>
       <PropertyFilterBuilderRuleValue {...props} />
-    </navigationPropertyEditorContext.Provider>
+    </NavigationPropertyEditorContextProvider>
   );
 }
 

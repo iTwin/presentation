@@ -20,7 +20,7 @@ import { IModelConnection } from "@itwin/core-frontend";
 import { CategoryDescription, ClassInfo, combineFieldNames, Descriptor, Field, NestedContentField, PropertiesField } from "@itwin/presentation-common";
 import { createPropertyDescriptionFromFieldInfo } from "../common/ContentBuilder";
 import { translate } from "../common/Utils";
-import { NavigationPropertyEditorContextProps } from "../properties/editors/NavigationPropertyEditorContext";
+import { NavigationPropertyEditorContextProviderProps } from "../properties/editors/NavigationPropertyEditorContext";
 import { PresentationInstanceFilterPropertyInfo } from "./PresentationFilterBuilder";
 
 /** @internal */
@@ -134,8 +134,8 @@ function getCategorizedFieldName(fieldName: string, categoryName?: string) {
 }
 
 /** @internal */
-export function useFilterBuilderNavigationPropertyEditorContext(imodel: IModelConnection, descriptor: Descriptor) {
-  return useMemo<NavigationPropertyEditorContextProps>(
+export function useFilterBuilderNavigationPropertyEditorContextProviderProps(imodel: IModelConnection, descriptor: Descriptor) {
+  return useMemo<NavigationPropertyEditorContextProviderProps>(
     () => ({
       imodel,
       getNavigationPropertyInfo: async (property) => {

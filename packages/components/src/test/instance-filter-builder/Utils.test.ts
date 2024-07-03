@@ -6,6 +6,7 @@
 import { expect } from "chai";
 import sinon from "sinon";
 import { PropertyDescription, PropertyValueFormat, StandardTypeNames } from "@itwin/appui-abstract";
+import { PropertyFilterBuilderRuleRangeValue } from "@itwin/components-react";
 import { EmptyLocalization } from "@itwin/core-common";
 import { IModelConnection } from "@itwin/core-frontend";
 import { Descriptor, NavigationPropertyInfo } from "@itwin/presentation-common";
@@ -15,7 +16,7 @@ import {
   DEFAULT_ROOT_CATEGORY_NAME,
   filterRuleValidator,
   INSTANCE_FILTER_FIELD_SEPARATOR,
-  useFilterBuilderNavigationPropertyEditorContext,
+  useFilterBuilderNavigationPropertyEditorContextProviderProps,
 } from "../../presentation-components/instance-filter-builder/Utils";
 import { createTestECClassInfo } from "../_helpers/Common";
 import {
@@ -26,7 +27,6 @@ import {
   createTestSimpleContentField,
 } from "../_helpers/Content";
 import { renderHook } from "../TestUtils";
-import { PropertyFilterBuilderRuleRangeValue } from "@itwin/components-react";
 
 describe("createInstanceFilterPropertyInfos", () => {
   it("creates property infos when fields are in root category", () => {
@@ -305,7 +305,7 @@ describe("filterRuleValidator", () => {
   });
 });
 
-describe("useFilterBuilderNavigationPropertyEditorContext", () => {
+describe("useFilterBuilderNavigationPropertyEditorContextProviderProps", () => {
   interface Props {
     imodel: IModelConnection;
     descriptor: Descriptor;
@@ -343,7 +343,7 @@ describe("useFilterBuilderNavigationPropertyEditorContext", () => {
       typename: "navigation",
     };
 
-    const { result } = renderHook(({ imodel, descriptor }: Props) => useFilterBuilderNavigationPropertyEditorContext(imodel, descriptor), {
+    const { result } = renderHook(({ imodel, descriptor }: Props) => useFilterBuilderNavigationPropertyEditorContextProviderProps(imodel, descriptor), {
       initialProps: { imodel: testImodel, descriptor: testDescriptor },
     });
 
@@ -362,7 +362,7 @@ describe("useFilterBuilderNavigationPropertyEditorContext", () => {
       typename: "navigation",
     };
 
-    const { result } = renderHook(({ imodel, descriptor }: Props) => useFilterBuilderNavigationPropertyEditorContext(imodel, descriptor), {
+    const { result } = renderHook(({ imodel, descriptor }: Props) => useFilterBuilderNavigationPropertyEditorContextProviderProps(imodel, descriptor), {
       initialProps: { imodel: testImodel, descriptor: testDescriptor },
     });
 

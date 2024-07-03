@@ -3,11 +3,11 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { createRef, forwardRef, PureComponent, useContext } from "react";
+import { createRef, forwardRef, PureComponent } from "react";
 import { PropertyEditorBase, PropertyEditorProps, TypeEditor } from "@itwin/components-react";
 import { NavigationPropertyTargetSelector, ReadonlyNavigationPropertyTarget } from "../inputs/NavigationPropertyTargetSelector";
 import { PropertyEditorAttributes } from "./Common";
-import { navigationPropertyEditorContext } from "./NavigationPropertyEditorContext";
+import { useNavigationPropertyEditorContext } from "./NavigationPropertyEditorContext";
 
 /**
  * Editor for navigation properties.
@@ -63,7 +63,7 @@ export class NavigationPropertyTargetEditor extends PureComponent<PropertyEditor
 }
 
 const NavigationPropertyTargetEditorInner = forwardRef<PropertyEditorAttributes, PropertyEditorProps>((props, ref) => {
-  const context = useContext(navigationPropertyEditorContext);
+  const context = useNavigationPropertyEditorContext();
   if (!props.propertyRecord) {
     return null;
   }
