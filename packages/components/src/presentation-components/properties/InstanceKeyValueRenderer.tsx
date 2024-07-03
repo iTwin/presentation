@@ -17,7 +17,7 @@ import { useUnifiedSelectionContext } from "../unified-selection/UnifiedSelectio
  * Property value renderer for instance keys. If application provides a [[UnifiedSelectionContext]] and this value is
  * clicked, the current selection is replaced with the instance pointed by the key. The selection changes at the default
  * selection level as provided by the context.
- * @beta
+ * @public
  */
 export class InstanceKeyValueRenderer implements IPropertyValueRenderer {
   public canRender(record: PropertyRecord) {

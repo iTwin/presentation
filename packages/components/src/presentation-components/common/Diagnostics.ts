@@ -16,7 +16,6 @@ import { createCombinedDiagnosticsHandler } from "@itwin/presentation-frontend";
 export interface DiagnosticsProps {
   /**
    * Settings for capturing rule diagnostics.
-   * @alpha
    */
   ruleDiagnostics?: {
     /** Severity of log messages to capture. Defaults to "error" when not set. */
@@ -27,7 +26,6 @@ export interface DiagnosticsProps {
 
   /**
    * Settings for capturing rules engine diagnostics.
-   * @alpha
    */
   devDiagnostics?: {
     /** Severity of log messages to capture. Defaults to "error" when not set. */
@@ -45,7 +43,7 @@ export interface DiagnosticsProps {
  * Creates diagnostics options that can be passed to presentation requests based on given
  * diagnostics props.
  *
- * @alpha
+ * @public
  */
 export function createDiagnosticsOptions(props: DiagnosticsProps): ClientDiagnosticsOptions | undefined {
   if (!props.ruleDiagnostics && !props.devDiagnostics) {

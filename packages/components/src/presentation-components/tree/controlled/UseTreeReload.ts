@@ -32,18 +32,18 @@ export interface TreeReloadParams {
 }
 
 /** @internal */
-export function useTreeReload(params: TreeReloadParams & { enable: boolean }) {
+export function useTreeReload(params: TreeReloadParams) {
   useModelSourceUpdateOnIModelHierarchyUpdate(params);
   useModelSourceUpdateOnRulesetModification(params);
   useModelSourceUpdateOnRulesetVariablesChange(params);
   useModelSourceUpdateOnUnitSystemChange(params);
 }
 
-function useModelSourceUpdateOnIModelHierarchyUpdate(params: TreeReloadParams & { enable: boolean }): void {
-  const { enable, dataProviderProps, ruleset, pageSize, modelSource, onReload, renderedItems } = params;
+function useModelSourceUpdateOnIModelHierarchyUpdate(params: TreeReloadParams): void {
+  const { dataProviderProps, ruleset, pageSize, modelSource, onReload, renderedItems } = params;
 
   useEffect(() => {
-    if (!enable || !modelSource) {
+    if (!modelSource) {
       return;
     }
 
@@ -61,14 +61,14 @@ function useModelSourceUpdateOnIModelHierarchyUpdate(params: TreeReloadParams & 
       removeListener();
       subscription?.unsubscribe();
     };
-  }, [modelSource, enable, pageSize, dataProviderProps, ruleset, onReload, renderedItems]);
+  }, [modelSource, pageSize, dataProviderProps, ruleset, onReload, renderedItems]);
 }
 
-function useModelSourceUpdateOnRulesetModification(params: TreeReloadParams & { enable: boolean }): void {
-  const { enable, dataProviderProps, ruleset, pageSize, modelSource, onReload, renderedItems } = params;
+function useModelSourceUpdateOnRulesetModification(params: TreeReloadParams): void {
+  const { dataProviderProps, ruleset, pageSize, modelSource, onReload, renderedItems } = params;
 
   useEffect(() => {
-    if (!enable || !modelSource) {
+    if (!modelSource) {
       return;
     }
 
@@ -87,14 +87,14 @@ function useModelSourceUpdateOnRulesetModification(params: TreeReloadParams & { 
       removeListener();
       subscription?.unsubscribe();
     };
-  }, [dataProviderProps, ruleset, enable, modelSource, pageSize, onReload, renderedItems]);
+  }, [dataProviderProps, ruleset, modelSource, pageSize, onReload, renderedItems]);
 }
 
-function useModelSourceUpdateOnRulesetVariablesChange(params: TreeReloadParams & { enable: boolean }): void {
-  const { enable, dataProviderProps, pageSize, ruleset, modelSource, onReload, renderedItems } = params;
+function useModelSourceUpdateOnRulesetVariablesChange(params: TreeReloadParams): void {
+  const { dataProviderProps, pageSize, ruleset, modelSource, onReload, renderedItems } = params;
 
   useEffect(() => {
-    if (!enable || !modelSource) {
+    if (!modelSource) {
       return;
     }
 
@@ -109,7 +109,7 @@ function useModelSourceUpdateOnRulesetVariablesChange(params: TreeReloadParams &
       removeListener();
       subscription?.unsubscribe();
     };
-  }, [dataProviderProps, enable, modelSource, pageSize, ruleset, onReload, renderedItems]);
+  }, [dataProviderProps, modelSource, pageSize, ruleset, onReload, renderedItems]);
 }
 
 function useModelSourceUpdateOnUnitSystemChange(params: TreeReloadParams): void {

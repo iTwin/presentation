@@ -17,7 +17,7 @@ import { useTableOptions } from "./UseTableOptions";
 
 /**
  * Props for [[usePresentationTable]] hook.
- * @beta
+ * @public
  */
 export interface UsePresentationTableProps<TColumn, TRow> {
   /** iModel connection to pull data from. */
@@ -36,7 +36,7 @@ export interface UsePresentationTableProps<TColumn, TRow> {
 
 /**
  * Return type of [[usePresentationTable]] hook.
- * @beta
+ * @public
  */
 export interface UsePresentationTableResult<TColumns, TRow> {
   /** List of table columns. If columns are not loaded yet it is set to `undefined` */
@@ -55,7 +55,7 @@ export interface UsePresentationTableResult<TColumns, TRow> {
 
 /**
  * Return type of [[usePresentationTableWithUnifiedSelection]] hook.
- * @beta
+ * @public
  */
 export interface UsePresentationTableWithUnifiedSelectionResult<TColumns, TRow> extends UsePresentationTableResult<TColumns, TRow> {
   /** Specifies rows that have been selected (toggled) by other components on the appropriate selection level. */
@@ -70,7 +70,7 @@ export interface UsePresentationTableWithUnifiedSelectionResult<TColumns, TRow> 
 /**
  * Custom hook that loads data for generic table component.
  * @throws on failure to get table data. The error is thrown in the React's render loop, so it can be caught using an error boundary.
- * @beta
+ * @public
  */
 export function usePresentationTable<TColumn, TRow>(props: UsePresentationTableProps<TColumn, TRow>): UsePresentationTableResult<TColumn, TRow> {
   const { imodel, ruleset, keys, pageSize, columnMapper, rowMapper } = props;
@@ -92,7 +92,7 @@ export function usePresentationTable<TColumn, TRow>(props: UsePresentationTableP
  * Custom hook that load data for generic table component. It uses [Unified Selection]($docs/presentation/unified-selection/index.md) to get keys defining what to load rows for.
  *
  * @throws on failure to get table data. The error is thrown in the React's render loop, so it can be caught using an error boundary.
- * @beta
+ * @public
  */
 export function usePresentationTableWithUnifiedSelection<TColumn, TRow>(
   props: Omit<UsePresentationTableProps<TColumn, TRow>, "keys">,

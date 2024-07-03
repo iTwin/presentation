@@ -31,7 +31,7 @@ import { useHierarchyLevelFiltering } from "./UseHierarchyLevelFiltering";
 
 /**
  * Props for [[PresentationTreeRenderer]] component.
- * @beta
+ * @public
  */
 export interface PresentationTreeRendererProps extends Omit<TreeRendererProps, "nodeRenderer"> {
   nodeLoader: AbstractTreeNodeLoaderWithProvider<IPresentationTreeDataProvider>;
@@ -40,7 +40,7 @@ export interface PresentationTreeRendererProps extends Omit<TreeRendererProps, "
 
 /**
  * Return type of [[useFilterablePresentationTree]] hook.
- * @beta
+ * @public
  */
 export interface FilterableTreeProps {
   onFilterClick: (nodeId: string) => void;
@@ -50,7 +50,7 @@ export interface FilterableTreeProps {
 
 /**
  * Props for [[useFilterablePresentationTree]] hook.
- * @beta
+ * @public
  */
 export interface useFilterablePresentationTreeProps {
   nodeLoader: AbstractTreeNodeLoaderWithProvider<IPresentationTreeDataProvider>;
@@ -59,7 +59,7 @@ export interface useFilterablePresentationTreeProps {
 
 /**
  * Hook that enables hierarchy level filtering with action handlers for setting and clearing filters.
- * @beta
+ * @public
  */
 export function useFilterablePresentationTree({ nodeLoader, onFilterApplied }: useFilterablePresentationTreeProps): FilterableTreeProps {
   const { applyFilter, clearFilter } = useHierarchyLevelFiltering({ nodeLoader, modelSource: nodeLoader.modelSource });
@@ -101,7 +101,7 @@ export function useFilterablePresentationTree({ nodeLoader, onFilterApplied }: u
  * Tree renderer component that enables hierarchy level filtering in trees using [[PresentationTreeDataProvider]].
  * It renders tree nodes with action buttons for setting and clearing filters. [[PresentationInstanceFilterDialog]] is opened
  * for creating filters for hierarchy levels.
- * @beta
+ * @public
  */
 export function PresentationTreeRenderer(props: PresentationTreeRendererProps) {
   const { onClearFilterClick, onFilterClick, filterDialog } = useFilterablePresentationTree({

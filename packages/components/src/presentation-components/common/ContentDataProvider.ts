@@ -146,12 +146,6 @@ export interface ContentDataProviderProps extends DiagnosticsProps {
    * ```
    */
   pagingSize?: number;
-
-  /**
-   * Auto-update content when ruleset, ruleset variables or data in the iModel changes.
-   * @alpha
-   */
-  enableContentAutoUpdate?: boolean;
 }
 
 /**
@@ -168,7 +162,6 @@ export class ContentDataProvider implements IContentDataProvider {
   private _pagingSize?: number;
   private _diagnosticsOptions?: ClientDiagnosticsOptions;
   private _listeners: Array<() => void> = [];
-  private _autoUpdateEnabled?: boolean;
 
   /** Constructor. */
   constructor(props: ContentDataProviderProps) {
@@ -179,7 +172,6 @@ export class ContentDataProvider implements IContentDataProvider {
     this._previousKeysGuid = this._keys.guid;
     this._pagingSize = props.pagingSize;
     this._diagnosticsOptions = createDiagnosticsOptions(props);
-    this._autoUpdateEnabled = props.enableContentAutoUpdate;
   }
 
   /** Destructor. Must be called to clean up.  */
@@ -290,11 +282,9 @@ export class ContentDataProvider implements IContentDataProvider {
       return;
     }
 
-    if (this._autoUpdateEnabled) {
-      this._listeners.push(Presentation.presentation.onIModelContentChanged.addListener(this.onIModelContentChanged));
-      this._listeners.push(Presentation.presentation.rulesets().onRulesetModified.addListener(this.onRulesetModified));
-      this._listeners.push(Presentation.presentation.vars(getRulesetId(this._ruleset)).onVariableChanged.addListener(this.onRulesetVariableChanged));
-    }
+    this._listeners.push(Presentation.presentation.onIModelContentChanged.addListener(this.onIModelContentChanged));
+    this._listeners.push(Presentation.presentation.rulesets().onRulesetModified.addListener(this.onRulesetModified));
+    this._listeners.push(Presentation.presentation.vars(getRulesetId(this._ruleset)).onVariableChanged.addListener(this.onRulesetVariableChanged));
     this._listeners.push(IModelApp.quantityFormatter.onActiveFormattingUnitSystemChanged.addListener(this.onUnitSystemChanged));
   }
 

@@ -17,7 +17,11 @@ import {
 import { NumericEditorName, NumericPropertyEditorBase } from "./NumericPropertyEditor";
 import { QuantityEditorName, QuantityPropertyEditorBase } from "./QuantityPropertyEditor";
 
-export * from "./NavigationPropertyEditorContext";
+export {
+  NavigationPropertyEditorContextProvider,
+  NavigationPropertyEditorContextProviderProps,
+  useNavigationPropertyEditorContextProviderProps,
+} from "./NavigationPropertyEditorContext";
 
 /**
  * Editor for navigation properties.

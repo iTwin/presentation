@@ -39,13 +39,6 @@ export interface UsePresentationTreeStateProps<TEventHandler extends TreeEventHa
   pagingSize: number;
 
   /**
-   * Auto-update the hierarchy when ruleset, ruleset variables or data in the iModel changes. Cannot be used together
-   * with `seedTreeModel`.
-   * @alpha
-   */
-  enableHierarchyAutoUpdate?: boolean;
-
-  /**
    * Initialize tree data with the provided tree model.
    */
   seedTreeModel?: TreeModel;
@@ -94,8 +87,7 @@ export interface UsePresentationTreeStateResult<TEventHandler extends TreeEventH
   eventHandler: TEventHandler;
   /**
    * Callback for when rendered tree node item range changes. This property should be passed to
-   * [ControlledTree]($components-react) when property `enableHierarchyAutoUpdate` is `true`.
-   * @alpha
+   * [ControlledTree]($components-react).
    */
   onItemsRendered: (items: RenderedItemsRange) => void;
   /**
@@ -149,7 +141,6 @@ export function usePresentationTreeState<TEventHandler extends TreeEventHandler 
   onNodeLoaded,
   eventHandlerFactory,
   seedTreeModel,
-  enableHierarchyAutoUpdate,
   filteringParams,
   ...dataProviderProps
 }: UsePresentationTreeStateProps<TEventHandler>): UsePresentationTreeStateResult<TEventHandler> | undefined {
@@ -170,7 +161,6 @@ export function usePresentationTreeState<TEventHandler extends TreeEventHandler 
   }, []);
 
   useTreeReload({
-    enable: !!enableHierarchyAutoUpdate,
     pageSize: dataProviderProps.pagingSize,
     modelSource: state?.nodeLoader.modelSource,
     dataProviderProps: treeStateProps,

@@ -154,10 +154,6 @@ describe("usePresentationTreeState", () => {
   });
 
   describe("auto-updating model source", () => {
-    beforeEach(() => {
-      initialProps.enableHierarchyAutoUpdate = true;
-    });
-
     it("doesn't create a new nodeLoader when `PresentationManager` raises `onIModelHierarchyChanged` event with unrelated ruleset", async () => {
       const { result } = renderHook((props: UsePresentationTreeStateProps) => usePresentationTreeState(props), {
         initialProps: { ...initialProps, onNodeLoaded: () => {} },

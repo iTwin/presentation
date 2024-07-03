@@ -11,7 +11,7 @@ import { Field } from "@itwin/presentation-common";
 
 /**
  * Data structure that defines table column.
- * @beta
+ * @public
  */
 export interface TableColumnDefinition {
   /** Unique column name. */
@@ -24,7 +24,7 @@ export interface TableColumnDefinition {
 
 /**
  * Data structure that defined table row.
- * @beta
+ * @public
  */
 export interface TableRowDefinition {
   /** Unique row key. */
@@ -35,7 +35,7 @@ export interface TableRowDefinition {
 
 /**
  * Data structure that defined table cell.
- * @beta
+ * @public
  */
 export interface TableCellDefinition {
   /** Unique key that matches [[TableColumnDefinition]] name. */
