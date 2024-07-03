@@ -36,7 +36,6 @@ public;function;isPresentationTreeNodeItem
 public;interface;IUnifiedSelectionComponent
 beta;const;NavigationPropertyEditor
 deprecated;const;NavigationPropertyEditor
-public;interface;NavigationPropertyEditorContext
 public;function;NavigationPropertyEditorContextProvider
 public;interface;NavigationPropertyEditorContextProviderProps
 beta;const;NavigationPropertyTargetEditor
@@ -101,7 +100,6 @@ public;function;useHierarchyLevelFiltering
 public;interface;UseHierarchyLevelFilteringProps
 public;function;useInstanceFilterPropertyInfos
 public;interface;UseInstanceFilterPropertyInfosProps
-public;function;useNavigationPropertyEditorContext
 public;function;useNavigationPropertyEditorContextProviderProps
 public;function;usePresentationTable
 public;interface;UsePresentationTableProps

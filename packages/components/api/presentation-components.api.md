@@ -337,12 +337,6 @@ export interface IUnifiedSelectionComponent {
 export const NavigationPropertyEditor: new () => PropertyEditorBase;
 
 // @public
-export interface NavigationPropertyEditorContext {
-    getNavigationPropertyInfo: (property: PropertyDescription) => Promise<NavigationPropertyInfo | undefined>;
-    imodel: IModelConnection;
-}
-
-// @public
 export function NavigationPropertyEditorContextProvider({ children, ...props }: PropsWithChildren<NavigationPropertyEditorContextProviderProps>): JSX_2.Element;
 
 // @public
@@ -822,9 +816,6 @@ export function useInstanceFilterPropertyInfos({ descriptor }: UseInstanceFilter
 export interface UseInstanceFilterPropertyInfosProps {
     descriptor: Descriptor;
 }
-
-// @public
-export function useNavigationPropertyEditorContext(): NavigationPropertyEditorContext | undefined;
 
 // @public
 export function useNavigationPropertyEditorContextProviderProps(imodel: IModelConnection, dataProvider: IContentDataProvider): NavigationPropertyEditorContextProviderProps;

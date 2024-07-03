@@ -15,7 +15,7 @@ import { IContentDataProvider } from "../../common/ContentDataProvider";
 
 /**
  * A context providing necessary information for [[NavigationPropertyEditor]].
- * @public
+ * @internal
  */
 export interface NavigationPropertyEditorContext {
   /** iModel connection to pull data from. */
@@ -48,7 +48,8 @@ export function NavigationPropertyEditorContextProvider({ children, ...props }: 
 /**
  * Returns context provided by [[NavigationPropertyEditorContextProvider]]. The context is required for rendering [[NavigationPropertyEditor]] with editable
  * navigation property values.
- * @public
+ *
+ * @internal
  */
 export function useNavigationPropertyEditorContext() {
   return useContext(navigationPropertyEditorContext);
