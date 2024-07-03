@@ -252,6 +252,10 @@ interface UseTreeProps extends Pick<Parameters<typeof createHierarchyProvider>[0
         filter?: GenericInstanceFilter;
         limit?: number | "unbounded";
     }) => void;
+    onHierarchyLoadError?: (props: {
+        parentId?: string;
+        type: "timeout" | "unknown";
+    }) => void;
     onPerformanceMeasured?: (action: "initial-load" | "hierarchy-level-load" | "reload", duration: number) => void;
 }
 
