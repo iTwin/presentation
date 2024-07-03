@@ -26,11 +26,6 @@ function getPaths(json: string) {
 // The following makes stubbing workspace package exports possible
 const originalCompile = (m as any).prototype._compile;
 (m as any).prototype._compile = function (content: any, filename: any) {
-  // skip itwinui-react meta.js file as it causes module to be re-declared
-  if (filename.includes("itwinui-react\\cjs\\utils\\meta.js")) {
-    return;
-  }
-
   // Obtain exports from the loaded script
   originalCompile.call(this, content, filename);
 
