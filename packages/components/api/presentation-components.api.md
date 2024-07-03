@@ -141,8 +141,6 @@ export class ContentDataProvider implements IContentDataProvider {
 // @public
 export interface ContentDataProviderProps extends DiagnosticsProps {
     displayType: string;
-    // @alpha
-    enableContentAutoUpdate?: boolean;
     imodel: IModelConnection;
     pagingSize?: number;
     ruleset: string | Ruleset;
@@ -511,8 +509,6 @@ export class PresentationPropertyDataProvider extends ContentDataProvider implem
 // @public
 export interface PresentationPropertyDataProviderProps extends DiagnosticsProps {
     disableFavoritesCategory?: boolean;
-    // @alpha
-    enableContentAutoUpdate?: boolean;
     imodel: IModelConnection;
     ruleset?: string | Ruleset;
 }
@@ -604,8 +600,6 @@ export interface PresentationTreeNodeItemFilteringInfo {
 
 // @public @deprecated
 export interface PresentationTreeNodeLoaderProps extends PresentationTreeDataProviderProps {
-    // @alpha
-    enableHierarchyAutoUpdate?: boolean;
     pagingSize: number;
     seedTreeModel?: TreeModel;
 }
@@ -613,7 +607,6 @@ export interface PresentationTreeNodeLoaderProps extends PresentationTreeDataPro
 // @public @deprecated
 export interface PresentationTreeNodeLoaderResult {
     nodeLoader: PagedTreeNodeLoader<IPresentationTreeDataProvider>;
-    // @alpha
     onItemsRendered: (items: RenderedItemsRange) => void;
 }
 
@@ -864,12 +857,10 @@ export interface UsePresentationTableWithUnifiedSelectionResult<TColumns, TRow> 
 export function usePresentationTreeNodeLoader(props: PresentationTreeNodeLoaderProps): PresentationTreeNodeLoaderResult;
 
 // @public
-export function usePresentationTreeState<TEventHandler extends TreeEventHandler = TreeEventHandler>({ onHierarchyLimitExceeded, onNodeLoaded, eventHandlerFactory, seedTreeModel, enableHierarchyAutoUpdate, filteringParams, ...dataProviderProps }: UsePresentationTreeStateProps<TEventHandler>): UsePresentationTreeStateResult<TEventHandler> | undefined;
+export function usePresentationTreeState<TEventHandler extends TreeEventHandler = TreeEventHandler>({ onHierarchyLimitExceeded, onNodeLoaded, eventHandlerFactory, seedTreeModel, filteringParams, ...dataProviderProps }: UsePresentationTreeStateProps<TEventHandler>): UsePresentationTreeStateResult<TEventHandler> | undefined;
 
 // @public
 export interface UsePresentationTreeStateProps<TEventHandler extends TreeEventHandler = TreeEventHandler> extends PresentationTreeDataProviderProps {
-    // @alpha
-    enableHierarchyAutoUpdate?: boolean;
     eventHandlerFactory?: (props: PresentationTreeEventHandlerProps) => TEventHandler | undefined;
     filteringParams?: {
         filter: string;
@@ -894,7 +885,6 @@ export interface UsePresentationTreeStateResult<TEventHandler extends TreeEventH
         matchesCount?: number;
     };
     nodeLoader: AbstractTreeNodeLoaderWithProvider<IPresentationTreeDataProvider>;
-    // @alpha
     onItemsRendered: (items: RenderedItemsRange) => void;
 }
 

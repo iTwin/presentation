@@ -85,11 +85,7 @@ export interface PresentationPropertyDataProviderProps extends DiagnosticsProps 
    * set, default presentation rules are used which return content for the selected elements.
    */
   ruleset?: string | Ruleset;
-  /**
-   * Auto-update property data when ruleset, ruleset variables or data in the iModel changes.
-   * @alpha
-   */
-  enableContentAutoUpdate?: boolean;
+
   /**
    * If true, additional 'favorites' category is not created.
    */
@@ -116,7 +112,6 @@ export class PresentationPropertyDataProvider extends ContentDataProvider implem
       imodel: props.imodel,
       ruleset: props.ruleset ? props.ruleset : DEFAULT_PROPERTY_GRID_RULESET,
       displayType: DefaultContentDisplayTypes.PropertyPane,
-      enableContentAutoUpdate: props.enableContentAutoUpdate,
       ruleDiagnostics: props.ruleDiagnostics,
       devDiagnostics: props.devDiagnostics,
     });

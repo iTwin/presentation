@@ -94,7 +94,7 @@ describe("ContentDataProvider", () => {
       onActiveFormattingUnitSystemChanged,
     }));
 
-    provider = new Provider({ imodel, ruleset: rulesetId, displayType, enableContentAutoUpdate: true });
+    provider = new Provider({ imodel, ruleset: rulesetId, displayType });
     invalidateCacheSpy = sinon.spy(provider, "invalidateCache");
   });
 
