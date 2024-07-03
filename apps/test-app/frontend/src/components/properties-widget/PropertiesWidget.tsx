@@ -31,10 +31,10 @@ import { Field } from "@itwin/presentation-common";
 import {
   DiagnosticsProps,
   FavoritePropertiesDataFilterer,
-  navigationPropertyEditorContext,
+  NavigationPropertyEditorContextProvider,
   PortalTargetContextProvider,
   PresentationPropertyDataProvider,
-  useNavigationPropertyEditingContext,
+  useNavigationPropertyEditorContextProviderProps,
   usePropertyDataProviderWithUnifiedSelection,
 } from "@itwin/presentation-components";
 import { FavoritePropertiesScope, Presentation } from "@itwin/presentation-frontend";
@@ -220,7 +220,7 @@ function FilterablePropertyGrid({
   const onCloseContextMenu = useCallback(() => {
     setContextMenuArgs(undefined);
   }, []);
-  const contextValue = useNavigationPropertyEditingContext(imodel, dataProvider);
+  const navigationPropertyEditorContextProviderProps = useNavigationPropertyEditorContextProviderProps(imodel, dataProvider);
 
   if (!filteringDataProvider) {
     return null;
@@ -244,7 +244,7 @@ function FilterablePropertyGrid({
 
   return (
     <>
-      <navigationPropertyEditorContext.Provider value={contextValue}>
+      <NavigationPropertyEditorContextProvider {...navigationPropertyEditorContextProviderProps}>
         <VirtualizedPropertyGridWithDataProvider
           width={width}
           height={height}
@@ -263,7 +263,7 @@ function FilterablePropertyGrid({
             return true;
           }}
         />
-      </navigationPropertyEditorContext.Provider>
+      </NavigationPropertyEditorContextProvider>
       {contextMenuArgs && <PropertiesWidgetContextMenu args={contextMenuArgs} dataProvider={dataProvider} onCloseContextMenu={onCloseContextMenu} />}
     </>
   );
