@@ -6,7 +6,7 @@
 
 const fs = require("fs");
 const path = require("path");
-const { execSync } = require("child_process");
+const { execFileSync } = require("child_process");
 const yargs = require("yargs");
 const argv = yargs(process.argv).argv;
 
@@ -22,7 +22,7 @@ if (!targets) {
 
 // gather extractions from different packages into the workspace root
 console.log(`Gathering extractions from different packages...`);
-execSync(`node ${path.join(__dirname, "gatherDocs.js")}`, { stdio: "inherit", cwd: path.join(__dirname, "..") });
+execFileSync("node", [path.join(__dirname, "gatherDocs.js")], { stdio: "inherit", cwd: path.join(__dirname, "..") });
 
 // set up constants
 const extractionsDir = path.join(__dirname, "..", "build/docs/extract");
@@ -49,7 +49,7 @@ targets.split(",").forEach((target) => {
   }
 
   if (isCheck) {
-    const gitStatus = execSync(`git status --porcelain=v1 ${target}`, { encoding: "utf-8" });
+    const gitStatus = execFileSync("git", ["status", "--porcelain=v1", target], { encoding: "utf-8" });
     if (gitStatus) {
       changedFiles.push(gitStatus);
     }
