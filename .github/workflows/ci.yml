@@ -35,4 +35,4 @@ jobs:
       - name: Build, Lint, Test
         env:
           NODE_ENV: "development"
-        run: pnpm lage build lint cover
+        run: pnpm lage build lint cover check-extractions

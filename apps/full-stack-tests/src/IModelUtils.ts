@@ -173,30 +173,31 @@ export async function withECDb<TResult extends {} | undefined>(
   }
 }
 
-export async function buildIModel(
-  mochaContext: Mocha.Context,
-  setup?: (builder: TestIModelBuilder, mochaContext: Mocha.Context) => Promise<void>,
+export async function buildIModel<TFirstArg extends Mocha.Context | string>(
+  mochaContextOrTestName: TFirstArg,
+  setup?: (builder: TestIModelBuilder, mochaContextOrTestName: TFirstArg) => Promise<void>,
 ): Promise<{ imodel: IModelConnection }>;
-export async function buildIModel<TResult extends {}>(
-  mochaContext: Mocha.Context,
-  setup: (builder: TestIModelBuilder, mochaContext: Mocha.Context) => Promise<TResult>,
+export async function buildIModel<TFirstArg extends Mocha.Context | string, TResult extends {}>(
+  mochaContextOrTestName: TFirstArg,
+  setup: (builder: TestIModelBuilder, mochaContextOrTestName: TFirstArg) => Promise<TResult>,
 ): Promise<{ imodel: IModelConnection } & TResult>;
-export async function buildIModel<TResult extends {} | undefined>(
-  mochaContext: Mocha.Context,
-  setup?: (builder: TestIModelBuilder, mochaContext: Mocha.Context) => Promise<TResult>,
+export async function buildIModel<TFirstArg extends Mocha.Context | string, TResult extends {} | undefined>(
+  mochaContextOrTestName: TFirstArg,
+  setup?: (builder: TestIModelBuilder, mochaContextOrTestName: TFirstArg) => Promise<TResult>,
 ) {
   let res!: TResult;
   // eslint-disable-next-line deprecation/deprecation
-  const imodel = await buildTestIModel(mochaContext, async (builder) => {
+  const imodel = await buildTestIModel(mochaContextOrTestName as any, async (builder) => {
     if (setup) {
-      res = await setup(builder, mochaContext);
+      res = await setup(builder, mochaContextOrTestName);
     }
   });
   return { ...res, imodel };
 }
 
-export function importSchema(mochaContext: Mocha.Context, imodel: { importSchema: (xml: string) => void }, schemaContentXml: string) {
-  const schemaName = `SCHEMA_${mochaContext.test!.fullTitle()}`.replace(/[^\w\d_]/gi, "_").replace(/_+/g, "_");
+export function importSchema(mochaContextOrTestName: Mocha.Context | string, imodel: { importSchema: (xml: string) => void }, schemaContentXml: string) {
+  const testName = typeof mochaContextOrTestName === "string" ? mochaContextOrTestName : mochaContextOrTestName.test!.fullTitle();
+  const schemaName = `SCHEMA_${testName}`.replace(/[^\w\d_]/gi, "_").replace(/_+/g, "_");
   const schemaAlias = `test`;
   const schemaXml = getFullSchemaXml({ schemaName, schemaAlias, schemaContentXml });
   imodel.importSchema(schemaXml);

@@ -57,6 +57,8 @@ In iTwin.js, the most common way to create hierarchies is based on EC data (sche
 
 Here's a simple example of how to create a hierarchy provider and build a hierarchy of Models and their Elements, with the latter grouped by class:
 
+<!-- [[include: Presentation.Hierarchies.Readme.BasicExample, ts]] -->
+<!-- BEGIN EXTRACTION -->
 ```ts
 import { IModelConnection } from "@itwin/core-frontend";
 import { SchemaContext } from "@itwin/ecschema-metadata";
@@ -109,10 +111,10 @@ function createProvider(imodel: IModelConnection): HierarchyProvider {
   const hierarchyDefinition = createClassBasedHierarchyDefinition({
     classHierarchyInspector: imodelAccess,
     hierarchy: {
-      // for root nodes, select all root level bis.Model instances
+      // for root nodes, select all BisCore.GeometricModel3d instances
       rootNodes: async () => [
         {
-          fullClassName: "BisCore.Model",
+          fullClassName: "BisCore.GeometricModel3d",
           query: {
             ecsql: `
               SELECT
@@ -120,18 +122,17 @@ function createProvider(imodel: IModelConnection): HierarchyProvider {
                   ecClassId: { selector: "this.ECClassId" },
                   ecInstanceId: { selector: "this.ECInstanceId" },
                   nodeLabel: {
-                    selector: await labelsQueryFactory.createSelectClause({ classAlias: "this", className: "BisCore.Model" }),
+                    selector: await labelsQueryFactory.createSelectClause({ classAlias: "this", className: "BisCore.GeometricModel3d" }),
                   },
                 })}
-              FROM BisCore.Model this
-              WHERE this.ParentModel IS NULL
+              FROM BisCore.GeometricModel3d this
             `,
           },
         },
       ],
       childNodes: [
         {
-          // for bis.Model parent nodes, select all bis.Element instances contained in corresponding model
+          // for BisCore.Model parent nodes, select all BisCore.Element instances contained in corresponding model
           parentNodeClassName: "BisCore.Model",
           definitions: async ({ parentNodeInstanceIds }: DefineInstanceNodeChildHierarchyLevelProps) => [
             {
@@ -166,13 +167,14 @@ function createProvider(imodel: IModelConnection): HierarchyProvider {
 }
 
 async function main() {
-  const provider = createProvider(/* pass your IModelConnection here */);
+  const provider = createProvider(await getIModelConnection());
   async function loadBranch(parentNode: HierarchyNode | undefined, indent: number = 0) {
     for await (const node of provider.getNodes({ parentNode })) {
-      console.log(`${new Array(indent + 1).join(" ")} ${node.label}`);
-      await loadBranch(node);
+      console.log(`${new Array(indent * 2 + 1).join(" ")}${node.label}`);
+      await loadBranch(node, indent + 1);
     }
   }
   await loadBranch(undefined);
 }
 ```
+<!-- END EXTRACTION -->
