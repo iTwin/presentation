@@ -29,9 +29,10 @@ const extractionsDir = path.join(__dirname, "..", "build/docs/extract");
 const extractionStart = "<!-- BEGIN EXTRACTION -->";
 const extractionEnd = "<!-- END EXTRACTION -->";
 const targetFileExtensions = [".ts", ".tsx", ".md"];
-const re = /\[\[include:\s*([\w\d\._-]+)(,[\s]*([\w\d_]+))?\]\]/;
-const reExtractionNameIndex = 1;
-const reExtractionTypeIndex = 3;
+const re = /^(\s*)(<!--|\/\/|\/\*)\s*\[\[include:\s*([\w\d\._-]+)(,[\s]*([\w\d_]+))?\]\]/;
+const reIndentIndex = 1;
+const reExtractionNameIndex = 3;
+const reExtractionTypeIndex = 5;
 
 const changedFiles = [];
 targets.split(",").forEach((target) => {
@@ -77,6 +78,7 @@ function handleTargetFile(targetFilePath) {
   lines.forEach((line, index) => {
     const match = line.match(re);
     if (match) {
+      const indent = match[reIndentIndex];
       const extractionName = match[reExtractionNameIndex];
       const extractionType = match[reExtractionTypeIndex];
       insertions.push({
@@ -84,6 +86,7 @@ function handleTargetFile(targetFilePath) {
         extraction: {
           name: extractionName,
           type: extractionType,
+          indent: indent.length,
         },
       });
     }
@@ -109,16 +112,23 @@ function handleTargetFile(targetFilePath) {
     if (insertion.extraction.type) {
       extractionContent = `\`\`\`${insertion.extraction.type}\n${extractionContent}\n\`\`\``;
     }
+    let insertionContent = `${extractionStart}\n${extractionContent}\n${extractionEnd}`;
+    if (insertion.extraction.indent > 0) {
+      insertionContent = insertionContent
+        .split("\n")
+        .map((line) => `${" ".repeat(insertion.extraction.indent)}${line}`)
+        .join("\n");
+    }
 
     const nextLine = lines[insertion.line + 1];
-    if (!nextLine.startsWith(extractionStart)) {
-      lines.splice(insertion.line + 1, 0, extractionStart, extractionContent, extractionEnd);
+    if (!nextLine.trimStart().startsWith(extractionStart)) {
+      lines.splice(insertion.line + 1, 0, insertionContent);
       console.log(`Inserted extraction "${insertion.extraction.name}" at line ${insertion.line + 1} in file "${targetFilePath}".`);
     } else {
       let existingExtractionLinesCount = 0;
       let didFindExtractionEnd = false;
       for (let i = insertion.line + 2; i < lines.length; ++i) {
-        if (lines[i].startsWith(extractionEnd)) {
+        if (lines[i].trimStart().startsWith(extractionEnd)) {
           didFindExtractionEnd = true;
           break;
         }
@@ -128,7 +138,7 @@ function handleTargetFile(targetFilePath) {
         console.error(`Fail! Extraction end for "${insertion.extraction.name}" not found in file "${targetFilePath}".`);
         process.exit(1);
       }
-      lines.splice(insertion.line + 2, existingExtractionLinesCount, extractionContent);
+      lines.splice(insertion.line + 1, existingExtractionLinesCount + 2, insertionContent);
       console.log(`Updated extraction "${insertion.extraction.name}" at line ${insertion.line + 1} in file "${targetFilePath}".`);
     }
   });
