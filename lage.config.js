@@ -26,14 +26,14 @@ module.exports = {
       inputs: ["src/**"],
     },
     "update-extractions": {
-      dependsOn: ["^docs"],
+      cache: false,
+      dependsOn: [],
       outputs: ["learning/**"],
-      inputs: ["build/docs/extract/**"],
     },
     "check-extractions": {
-      dependsOn: ["^docs"],
+      cache: false,
+      dependsOn: [],
       outputs: [],
-      inputs: ["build/docs/extract/**"],
     },
     "extract-api": {
       dependsOn: ["build"],

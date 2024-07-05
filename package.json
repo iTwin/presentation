@@ -19,6 +19,8 @@
     "lint:all": "lage lint --continue",
     "lint:copyright": "node scripts/copyrightLinter.js",
     "gather-docs": "node ./scripts/gatherDocs.js",
+    "update-extractions": "npm run docs:all && lage update-extractions",
+    "check-extractions": "npm run docs:all && lage check-extractions",
     "prettier": "prettier --check .",
     "prettier:fix": "prettier --write .",
     "prepare": "husky",
