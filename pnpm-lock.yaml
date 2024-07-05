@@ -953,6 +953,9 @@ importers:
       cpx2:
         specifier: ^7.0.1
         version: 7.0.1
+      cross-env:
+        specifier: ^7.0.3
+        version: 7.0.3
       eslint:
         specifier: ^8.57.0
         version: 8.57.0
@@ -1395,6 +1398,9 @@ importers:
       cpx2:
         specifier: ^7.0.1
         version: 7.0.1
+      cross-env:
+        specifier: ^7.0.3
+        version: 7.0.3
       eslint:
         specifier: ^8.57.0
         version: 8.57.0
@@ -1620,6 +1626,9 @@ importers:
       cpx2:
         specifier: ^7.0.1
         version: 7.0.1
+      cross-env:
+        specifier: ^7.0.3
+        version: 7.0.3
       eslint:
         specifier: ^8.57.0
         version: 8.57.0
