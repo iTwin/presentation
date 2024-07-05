@@ -103,6 +103,8 @@ interface UseTreeProps extends Pick<Parameters<typeof createHierarchyProvider>[0
   onPerformanceMeasured?: (action: "initial-load" | "hierarchy-level-load" | "reload", duration: number) => void;
   /** Action to perform when hierarchy level contains more items that the specified limit. */
   onHierarchyLimitExceeded?: (props: { parentId?: string; filter?: GenericInstanceFilter; limit?: number | "unbounded" }) => void;
+  /** Action to perform when an error occurs while loading hierarchy. */
+  onHierarchyLoadError?: (props: { parentId?: string; type: "timeout" | "unknown" }) => void;
 }
 
 /** @beta */
@@ -187,6 +189,7 @@ function useTreeInternal({
   localizedStrings,
   onPerformanceMeasured,
   onHierarchyLimitExceeded,
+  onHierarchyLoadError,
 }: UseTreeProps): UseTreeResult & { getNode: (nodeId: string) => TreeModelRootNode | TreeModelNode | undefined } {
   const [state, setState] = useState<TreeState>({
     model: { idToNode: new Map(), parentChildMap: new Map(), rootNode: { id: undefined, nodeData: undefined } },
@@ -195,6 +198,7 @@ function useTreeInternal({
   const [hierarchySource, setHierarchySource] = useState<{ hierarchyProvider?: HierarchyProvider; isFiltering: boolean }>({ isFiltering: false });
   const onPerformanceMeasuredRef = useLatest(onPerformanceMeasured);
   const onHierarchyLimitExceededRef = useLatest(onHierarchyLimitExceeded);
+  const onHierarchyLoadErrorRef = useLatest(onHierarchyLoadError);
 
   const [actions] = useState<TreeActions>(
     () =>
@@ -208,6 +212,7 @@ function useTreeInternal({
         },
         (actionType, duration) => onPerformanceMeasuredRef.current?.(actionType, duration),
         (props) => onHierarchyLimitExceededRef.current?.(props),
+        (props) => onHierarchyLoadErrorRef.current?.(props),
       ),
   );
   const currentFormatter = useRef<IPrimitiveValueFormatter>();

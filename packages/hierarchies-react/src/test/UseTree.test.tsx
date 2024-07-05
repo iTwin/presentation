@@ -34,11 +34,13 @@ describe("useTree", () => {
     Parameters<typeof hierarchiesModule.createHierarchyProvider>,
     ReturnType<typeof hierarchiesModule.createHierarchyProvider>
   >;
+  const onHierarchyLoadErrorStub = sinon.stub();
 
   type UseTreeProps = Parameters<typeof useTree>[0];
   const initialProps: UseTreeProps = {
     imodelAccess: {} as UseTreeProps["imodelAccess"],
     getHierarchyDefinition: () => ({}) as hierarchiesModule.HierarchyDefinition,
+    onHierarchyLoadError: onHierarchyLoadErrorStub,
   };
 
   before(() => {
@@ -54,6 +56,7 @@ describe("useTree", () => {
     hierarchyProvider.getNodeInstanceKeys.reset();
     hierarchyProvider.setFormatter.reset();
     hierarchyProvider.notifyDataSourceChanged.reset();
+    onHierarchyLoadErrorStub.reset();
     createHierarchyProviderStub.reset();
     createHierarchyProviderStub.returns(hierarchyProvider as unknown as hierarchiesModule.HierarchyProvider);
   });
@@ -626,6 +629,21 @@ describe("useTree", () => {
       expect(result.current.rootNodes).to.have.lengthOf(1);
       const node = result.current.rootNodes![0] as PresentationGenericInfoNode;
       expect(node.type).to.be.eq("Unknown");
+      expect(onHierarchyLoadErrorStub).to.be.calledWith({ parentId: undefined, type: "unknown" });
+    });
+  });
+
+  it("handles timeouts during nodes load", async () => {
+    hierarchyProvider.getNodes.callsFake(() => {
+      return throwingAsyncIterator(new Error("query too long to execute or server is too busy"));
+    });
+    const { result } = renderHook(useTree, { initialProps });
+
+    await waitFor(() => {
+      expect(result.current.rootNodes).to.have.lengthOf(1);
+      const node = result.current.rootNodes![0] as PresentationGenericInfoNode;
+      expect(node.type).to.be.eq("Unknown");
+      expect(onHierarchyLoadErrorStub).to.be.calledWith({ parentId: undefined, type: "timeout" });
     });
   });
 
