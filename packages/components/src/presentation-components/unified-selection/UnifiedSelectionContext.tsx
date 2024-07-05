@@ -16,7 +16,7 @@ import { Presentation } from "@itwin/presentation-frontend";
 
 /**
  * Interface for accessing and modifying Unified Selection within React components.
- * @beta
+ * @public
  */
 export interface UnifiedSelectionContext {
   /** iModel associated with the selection. */
@@ -48,13 +48,13 @@ export interface UnifiedSelectionContext {
 /**
  * Describes how to access the current Unified Selection state. The returned `KeySet` object exposes global data and is
  * mutable.
- * @beta
+ * @public
  */
 export type UnifiedSelectionState = (selectionLevel?: number) => Readonly<KeySet>;
 
 /**
  * Props for Unified Selection context provider.
- * @beta
+ * @public
  */
 export interface UnifiedSelectionContextProviderProps {
   /** iModel associated with the selection. */
@@ -74,7 +74,7 @@ export interface UnifiedSelectionContextProviderProps {
  * Unified Selection context provider. It adapts framework-agnostic
  * [Unified Selection]($docs/presentation/unified-selection/index.md) API to be better suited for React
  * applications. The provided context is accessible via [[useUnifiedSelectionContext]] hook.
- * @beta
+ * @public
  */
 export function UnifiedSelectionContextProvider(props: UnifiedSelectionContextProviderProps): React.ReactElement {
   const selectionLevel = props.selectionLevel ?? 0;
@@ -125,7 +125,7 @@ const unifiedSelectionContext = createContext<UnifiedSelectionContext | undefine
 
 /**
  * Returns Unified Selection context provided by [[UnifiedSelectionContextProvider]].
- * @beta
+ * @public
  */
 export function useUnifiedSelectionContext(): UnifiedSelectionContext | undefined {
   return useContext(unifiedSelectionContext);

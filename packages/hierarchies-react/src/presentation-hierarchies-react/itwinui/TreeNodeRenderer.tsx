@@ -70,6 +70,7 @@ export function TreeNodeRenderer({
 }: TreeNodeRendererProps) {
   const { localizedStrings } = useLocalizationContext();
   const applyFilterButtonRef = useRef<HTMLButtonElement>(null);
+  const nodeRef = useRef<HTMLLIElement>(null);
 
   if ("type" in node && node.type === "ChildrenPlaceholder") {
     return <PlaceholderNode {...treeNodeProps} />;
@@ -77,63 +78,60 @@ export function TreeNodeRenderer({
 
   if (isPresentationHierarchyNode(node)) {
     return (
-      // eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions
-      <div
+      <TreeNode
+        {...treeNodeProps}
+        ref={nodeRef}
+        isSelected={isSelected}
+        isDisabled={isDisabled}
+        className={cx(treeNodeProps.className, "stateless-tree-node", { filtered: node.isFiltered })}
         onClick={(event) => !isDisabled && onNodeClick?.(node, !isSelected, event)}
         onKeyDown={(event) => {
           // Ignore if it is called on the element inside, e.g. checkbox or expander
-          if (!isDisabled && event.target instanceof HTMLElement && event.target.classList.contains("stateless-tree-node")) {
+          if (!isDisabled && event.target === nodeRef.current) {
             onNodeKeyDown?.(node, !isSelected, event);
           }
         }}
+        onExpanded={(_, isExpanded) => {
+          expandNode(node.id, isExpanded);
+        }}
+        icon={getIcon ? getIcon(node) : undefined}
+        label={getLabel ? getLabel(node) : node.label}
+        sublabel={getSublabel ? getSublabel(node) : undefined}
       >
-        <TreeNode
-          {...treeNodeProps}
-          isSelected={isSelected}
-          isDisabled={isDisabled}
-          className={cx(treeNodeProps.className, "stateless-tree-node", { filtered: node.isFiltered })}
-          onExpanded={(_, isExpanded) => {
-            expandNode(node.id, isExpanded);
-          }}
-          icon={getIcon ? getIcon(node) : undefined}
-          label={getLabel ? getLabel(node) : node.label}
-          sublabel={getSublabel ? getSublabel(node) : undefined}
-        >
-          <ButtonGroup className={cx("action-buttons", actionButtonsClassName)}>
-            {getHierarchyLevelDetails && node.isFiltered ? (
-              <IconButton
-                className="filtering-action-button"
-                styleType="borderless"
-                size="small"
-                title={localizedStrings.clearHierarchyLevelFilter}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  getHierarchyLevelDetails(node.id)?.setInstanceFilter(undefined);
-                  applyFilterButtonRef.current?.focus();
-                }}
-              >
-                <SvgRemove />
-              </IconButton>
-            ) : null}
-            {onFilterClick && node.isFilterable ? (
-              <IconButton
-                ref={applyFilterButtonRef}
-                className="filtering-action-button"
-                styleType="borderless"
-                size="small"
-                title={localizedStrings.filterHierarchyLevel}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  const hierarchyLevelDetails = getHierarchyLevelDetails?.(node.id);
-                  hierarchyLevelDetails && onFilterClick(hierarchyLevelDetails);
-                }}
-              >
-                {node.isFiltered ? <SvgFilter /> : <SvgFilterHollow />}
-              </IconButton>
-            ) : null}
-          </ButtonGroup>
-        </TreeNode>
-      </div>
+        <ButtonGroup className={cx("action-buttons", actionButtonsClassName)}>
+          {getHierarchyLevelDetails && node.isFiltered ? (
+            <IconButton
+              className="filtering-action-button"
+              styleType="borderless"
+              size="small"
+              title={localizedStrings.clearHierarchyLevelFilter}
+              onClick={(e) => {
+                e.stopPropagation();
+                getHierarchyLevelDetails(node.id)?.setInstanceFilter(undefined);
+                applyFilterButtonRef.current?.focus();
+              }}
+            >
+              <SvgRemove />
+            </IconButton>
+          ) : null}
+          {onFilterClick && node.isFilterable ? (
+            <IconButton
+              ref={applyFilterButtonRef}
+              className="filtering-action-button"
+              styleType="borderless"
+              size="small"
+              title={localizedStrings.filterHierarchyLevel}
+              onClick={(e) => {
+                e.stopPropagation();
+                const hierarchyLevelDetails = getHierarchyLevelDetails?.(node.id);
+                hierarchyLevelDetails && onFilterClick(hierarchyLevelDetails);
+              }}
+            >
+              {node.isFiltered ? <SvgFilter /> : <SvgFilterHollow />}
+            </IconButton>
+          ) : null}
+        </ButtonGroup>
+      </TreeNode>
     );
   }
 

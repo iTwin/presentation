@@ -12,13 +12,13 @@ import { PropertyFilterBuilderRuleValue, PropertyFilterBuilderRuleValueRendererP
 import { assert } from "@itwin/core-bentley";
 import { IModelConnection } from "@itwin/core-frontend";
 import { ClassId, ClassInfo, Descriptor, InstanceFilterDefinition, Keys, PropertiesField } from "@itwin/presentation-common";
-import { navigationPropertyEditorContext } from "../properties/editors/NavigationPropertyEditorContext";
+import { NavigationPropertyEditorContextProvider } from "../properties/editors/NavigationPropertyEditorContext";
 import { UniquePropertyValuesSelector } from "../properties/inputs/UniquePropertyValuesSelector";
 import { InstanceFilterBuilder, usePresentationInstanceFilteringProps } from "./InstanceFilterBuilder";
+import { createFilterClassExpression, createInstanceFilterDefinitionBase } from "./InstanceFilterConverter";
 import { PresentationInstanceFilter, PresentationInstanceFilterConditionGroup } from "./PresentationInstanceFilter";
 import { PresentationInstanceFilterProperty } from "./PresentationInstanceFilterProperty";
-import { createInstanceFilterPropertyInfos, useFilterBuilderNavigationPropertyEditorContext } from "./Utils";
-import { createFilterClassExpression, createInstanceFilterDefinitionBase } from "./InstanceFilterConverter";
+import { createInstanceFilterPropertyInfos, useFilterBuilderNavigationPropertyEditorContextProviderProps } from "./Utils";
 
 /**
  * Function that checks if supplied [[PresentationInstanceFilter]] is [[PresentationInstanceFilterConditionGroup]].
@@ -43,7 +43,7 @@ export async function convertToInstanceFilterDefinition(filter: PresentationInst
 
 /**
  * Data structure that stores information about filter built by [[PresentationInstanceFilterDialog]].
- * @beta
+ * @public
  */
 export interface PresentationInstanceFilterInfo {
   /** Instance filter. */
@@ -54,7 +54,7 @@ export interface PresentationInstanceFilterInfo {
 
 /**
  * Data structure that contains information about property used for building filter.
- * @beta
+ * @public
  */
 export interface PresentationInstanceFilterPropertyInfo {
   /** Content descriptor field that represents this property. */
@@ -71,7 +71,7 @@ export interface PresentationInstanceFilterPropertyInfo {
 
 /**
  * Props for [[useInstanceFilterPropertyInfos]] hook.
- * @beta
+ * @public
  */
 export interface UseInstanceFilterPropertyInfosProps {
   /** Descriptor to pull properties from. */
@@ -80,7 +80,7 @@ export interface UseInstanceFilterPropertyInfosProps {
 
 /**
  * Custom hook that collects properties from descriptor for filter building.
- * @beta
+ * @public
  */
 export function useInstanceFilterPropertyInfos({ descriptor }: UseInstanceFilterPropertyInfosProps) {
   const propertyInfos = useMemo(() => createInstanceFilterPropertyInfos(descriptor), [descriptor]);
@@ -108,7 +108,7 @@ export function useInstanceFilterPropertyInfos({ descriptor }: UseInstanceFilter
 
 /**
  * Props for [[PresentationFilterBuilderValueRenderer]].
- * @beta
+ * @public
  */
 export interface PresentationFilterBuilderValueRendererProps extends PropertyFilterBuilderRuleValueRendererProps {
   /** iModel used to pull data from. */
@@ -125,24 +125,24 @@ export interface PresentationFilterBuilderValueRendererProps extends PropertyFil
  * the instances described by the descriptor ([[PresentationFilterBuilderValueRendererProps.descriptor]] and [[PresentationFilterBuilderValueRendererProps.descriptorInputKeys]]).
  * - For kind of quantity properties it renders input with units support.
  *
- * @beta
+ * @public
  */
 export function PresentationFilterBuilderValueRenderer({ imodel, descriptor, descriptorInputKeys, ...props }: PresentationFilterBuilderValueRendererProps) {
-  const navigationPropertyEditorContextValue = useFilterBuilderNavigationPropertyEditorContext(imodel, descriptor);
+  const navigationPropertyContextProviderProps = useFilterBuilderNavigationPropertyEditorContextProviderProps(imodel, descriptor);
   if (props.operator === "is-equal" || props.operator === "is-not-equal") {
     return <UniquePropertyValuesSelector {...props} imodel={imodel} descriptor={descriptor} descriptorInputKeys={descriptorInputKeys} />;
   }
 
   return (
-    <navigationPropertyEditorContext.Provider value={navigationPropertyEditorContextValue}>
+    <NavigationPropertyEditorContextProvider {...navigationPropertyContextProviderProps}>
       <PropertyFilterBuilderRuleValue {...props} />
-    </navigationPropertyEditorContext.Provider>
+    </NavigationPropertyEditorContextProvider>
   );
 }
 
 /**
  * Props for [[PresentationInstanceFilterBuilder]] component.
- * @beta
+ * @public
  */
 export interface PresentationInstanceFilterBuilderProps {
   /** iModel connection to pull data from. */
@@ -164,7 +164,7 @@ export interface PresentationInstanceFilterBuilderProps {
  * Component for building complex instance filters for filtering content and nodes produced
  * by [PresentationManager]($presentation-frontend).
  *
- * @beta
+ * @public
  */
 export function PresentationInstanceFilterBuilder(props: PresentationInstanceFilterBuilderProps) {
   const { imodel, descriptor, onInstanceFilterChanged, initialFilter } = props;
@@ -197,7 +197,7 @@ export function PresentationInstanceFilterBuilder(props: PresentationInstanceFil
 /**
  * Creates [InstanceFilterDefinition]($presentation-common) from [[PresentationInstanceFilterInfo]]. Created definition
  * can be passed to [PresentationManager]($presentation-frontend) through request options in order to filter results.
- * @beta
+ * @public
  */
 export async function createInstanceFilterDefinition(info: PresentationInstanceFilterInfo, imodel: IModelConnection): Promise<InstanceFilterDefinition> {
   if (!info.filter) {

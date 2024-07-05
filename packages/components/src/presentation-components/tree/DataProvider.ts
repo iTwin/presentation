@@ -81,7 +81,6 @@ export interface PresentationTreeDataProviderProps extends DiagnosticsProps {
    *
    * @see [Hierarchies' filtering and limiting]($docs/presentation/hierarchies/FilteringLimiting.md)
    * @note Requires `@itwin/presentation-frontend` peer dependency to be at least `4.0`, otherwise has no effect.
-   * @beta
    */
   hierarchyLevelSizeLimit?: number;
 
@@ -97,22 +96,21 @@ export interface PresentationTreeDataProviderProps extends DiagnosticsProps {
    * By default the provider uses [PresentationManager]($presentation-frontend) accessed through `Presentation.presentation` to request
    * node counts, nodes and filter them. The overrides allow swapping some or all of the data source entry points thus
    * making the provider request data from custom sources.
-   * @beta
    */
   dataSourceOverrides?: Partial<PresentationTreeDataProviderDataSourceEntryPoints>;
+
   /**
    * Callback for when the hierarchy limit is exceeded while loading nodes.
-   * @beta
    */
   onHierarchyLimitExceeded?: () => void;
 }
 
 /**
  * Definitions of methods used by [[PresentationTreeDataProvider]] to get nodes' data.
- * @beta
+ * @public
  */
 export interface PresentationTreeDataProviderDataSourceEntryPoints {
-  /** @deprecated in 4.0 The entry point is not used anymore, it's usage has been replaced by [[getNodesAndCount]]. */
+  /** @deprecated in 4.0 The entry point is not used anymore, it's usage has been replaced by [[getNodesIterator]]. */
   getNodesCount?: (requestOptions: HierarchyRequestOptions<IModelConnection, NodeKey>) => Promise<number>;
   /** @deprecated in 5.2 The entry point is not used anymore, it's usage has been replaced by [[getNodesIterator]]. */
   getNodesAndCount?: (requestOptions: Paged<HierarchyRequestOptions<IModelConnection, NodeKey>>) => Promise<{ nodes: Node[]; count: number }>;

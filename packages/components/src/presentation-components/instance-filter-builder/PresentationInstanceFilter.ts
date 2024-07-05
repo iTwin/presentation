@@ -41,13 +41,13 @@ import { createPropertyInfoFromPropertiesField, getInstanceFilterFieldName } fro
 /**
  * Type that describes instance filter based on [Descriptor]($presentation-common) fields. It can be
  * one filter condition or group of filter conditions joined by logical operator.
- * @beta
+ * @public
  */
 export type PresentationInstanceFilter = PresentationInstanceFilterConditionGroup | PresentationInstanceFilterCondition;
 
 /**
  * Data structure that describes group of filter condition joined by logical operator.
- * @beta
+ * @public
  */
 export interface PresentationInstanceFilterConditionGroup {
   /** Operator that should be used to join conditions. */
@@ -58,7 +58,7 @@ export interface PresentationInstanceFilterConditionGroup {
 
 /**
  * Data structure that describes single filter condition.
- * @beta
+ * @public
  */
 export interface PresentationInstanceFilterCondition {
   /** [PropertiesField]($presentation-common) that contains property used in this condition. */
@@ -69,14 +69,12 @@ export interface PresentationInstanceFilterCondition {
   value?: PrimitiveValue;
 }
 
-/** @beta */
+/** @public */
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export namespace PresentationInstanceFilter {
   /**
    * Converts filter built by [usePropertyFilterBuilder]($components-react) into presentation specific format.
    * @throws if presentation data cannot be found for properties used in `filter`.
-   *
-   * @beta
    */
   export function fromComponentsPropertyFilter(descriptor: Descriptor, filter: PropertyFilter): PresentationInstanceFilter {
     if (isPropertyFilterRuleGroup(filter)) {
@@ -88,8 +86,6 @@ export namespace PresentationInstanceFilter {
   /**
    * Converts [[PresentationInstanceFilter]] into format used by [usePropertyFilterBuilder]($components-react).
    * @throws if fields used in filter cannot be found in `descriptor`.
-   *
-   * @beta
    */
   export function toComponentsPropertyFilter(descriptor: Descriptor, filter: PresentationInstanceFilter): PropertyFilter {
     if (PresentationInstanceFilter.isConditionGroup(filter)) {
@@ -100,7 +96,6 @@ export namespace PresentationInstanceFilter {
 
   /**
    * Extracts information from [[PresentationInstanceFilter]] and creates a [GenericInstanceFilter]($common) for building queries.
-   * @beta
    */
   export function toGenericInstanceFilter(filter: PresentationInstanceFilter, filteredClasses?: ClassInfo[]): GenericInstanceFilter {
     const context: ConvertContext = { relatedInstances: [], propertyClasses: [], usedRelatedAliases: new Map<string, number>() };
@@ -117,7 +112,6 @@ export namespace PresentationInstanceFilter {
   /**
    * Creates [[PresentationInstanceFilter]] from given [GenericInstanceFilter]($common).
    * @throws if fields used in `filter` cannot be found in `descriptor`.
-   * @beta
    */
   export function fromGenericInstanceFilter(descriptor: Descriptor, filter: GenericInstanceFilter): PresentationInstanceFilter {
     return parseGenericFilter(filter, descriptor);
@@ -125,7 +119,6 @@ export namespace PresentationInstanceFilter {
 
   /**
    * Function that checks if supplied [[PresentationInstanceFilter]] is [[PresentationInstanceFilterConditionGroup]].
-   * @beta
    */
   export function isConditionGroup(filter: PresentationInstanceFilter): filter is PresentationInstanceFilterConditionGroup {
     return (filter as any).conditions !== undefined;
@@ -135,7 +128,6 @@ export namespace PresentationInstanceFilter {
    * Function that creates equality condition based on supplied [[PropertiesField]] and [[PrimitiveValue]] that is compatible
    * with `UniquePropertyValuesSelector`.
    * If [[PrimitiveValue.value]] is `undefined` created condition uses `is-null` or `is-not-null` operator.
-   * @beta
    */
   export function createPrimitiveValueEqualityCondition(
     field: PropertiesField,
@@ -148,7 +140,6 @@ export namespace PresentationInstanceFilter {
         operator: operator === "is-equal" ? "is-null" : "is-not-null",
       };
     }
-
     return {
       field,
       operator,

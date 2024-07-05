@@ -12,7 +12,7 @@ import { SchemaContext } from "@itwin/ecschema-metadata";
 
 /**
  * Context that stores metadata related to schemas.
- * @beta
+ * @public
  */
 export interface SchemaMetadataContext {
   /** Schema context for schemas lookup. */
@@ -23,7 +23,7 @@ const schemaMetadataContext = createContext<SchemaMetadataContext | undefined>(u
 
 /**
  * Props for [[SchemaMetadataContextProvider]]
- * @beta
+ * @public
  */
 export interface SchemaMetadataContextProviderProps {
   /** iModel to pull schemas from. */
@@ -34,7 +34,7 @@ export interface SchemaMetadataContextProviderProps {
 
 /**
  * Provides schema metadata to components that work with schemas.
- * @beta
+ * @public
  */
 export function SchemaMetadataContextProvider({ schemaContextProvider, imodel, children }: PropsWithChildren<SchemaMetadataContextProviderProps>) {
   const [state, setState] = useState<SchemaMetadataContext>(() => ({
@@ -52,7 +52,7 @@ export function SchemaMetadataContextProvider({ schemaContextProvider, imodel, c
 
 /**
  * Returns context provided by [[SchemaMetadataContextProvider]].
- * @beta
+ * @public
  */
 export function useSchemaMetadataContext() {
   return useContext(schemaMetadataContext);
