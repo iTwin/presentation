@@ -20,12 +20,15 @@ if (!targets) {
   process.exit(1);
 }
 
+// get workspace root path
+const [{ path: workspaceRootPath }] = JSON.parse(execFileSync("pnpm", ["list", "-w", "--only-projects", "--json"], { shell: true, encoding: "utf-8" }));
+
 // gather extractions from different packages into the workspace root
 console.log(`Gathering extractions from different packages...`);
-execFileSync("node", [path.join(__dirname, "gatherDocs.js")], { stdio: "inherit", cwd: path.join(__dirname, "..") });
+execFileSync("node", [path.join(workspaceRootPath, "scripts", "gatherDocs.js")], { stdio: "inherit", cwd: workspaceRootPath });
 
 // set up constants
-const extractionsDir = path.join(__dirname, "..", "build/docs/extract");
+const extractionsDir = path.join(workspaceRootPath, "build/docs/extract");
 const extractionStart = "<!-- BEGIN EXTRACTION -->";
 const extractionEnd = "<!-- END EXTRACTION -->";
 const targetFileExtensions = [".ts", ".tsx", ".md"];
@@ -48,6 +51,8 @@ targets.split(",").forEach((target) => {
     console.error(`Fail! Target "${target}" is not a valid directory or file.`);
     process.exit(1);
   }
+
+  execFileSync("prettier", ["--write", target], { shell: true, encoding: "utf-8" });
 
   if (isCheck) {
     const gitStatus = execFileSync("git", ["status", "--porcelain=v1", target], { encoding: "utf-8" });

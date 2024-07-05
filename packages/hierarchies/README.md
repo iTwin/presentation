@@ -59,6 +59,7 @@ Here's a simple example of how to create a hierarchy provider and build a hierar
 
 <!-- [[include: Presentation.Hierarchies.Readme.BasicExample, ts]] -->
 <!-- BEGIN EXTRACTION -->
+
 ```ts
 import { IModelConnection } from "@itwin/core-frontend";
 import { SchemaContext } from "@itwin/ecschema-metadata";
@@ -177,4 +178,5 @@ async function main() {
   await loadBranch(undefined);
 }
 ```
+
 <!-- END EXTRACTION -->
