@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { expect } from "chai";
-import { createAsyncIterator } from "presentation-test-utilities";
+import { createAsyncIterator, throwingAsyncIterator } from "presentation-test-utilities";
 import { firstValueFrom, Subject } from "rxjs";
 import { GenericInstanceFilter, GetHierarchyNodesProps, HierarchyNode, HierarchyProvider } from "@itwin/presentation-hierarchies";
 import { TreeActions } from "../../presentation-hierarchies-react/internal/TreeActions";
@@ -17,9 +17,10 @@ describe("TreeActions", () => {
   };
   const onModelChangedStub = createStub<(model: TreeModel) => void>();
   const onLoadStub = createStub<(type: "initial-load" | "hierarchy-level-load" | "reload", duration: number) => void>();
+  const onHierarchyLoadErrorStub = createStub<(props: { parentId?: string; type: "timeout" | "unknown" }) => void>();
 
   function createActions(seed: TreeModel) {
-    const actions = new TreeActions(onModelChangedStub, onLoadStub, () => {}, seed);
+    const actions = new TreeActions(onModelChangedStub, onLoadStub, () => {}, onHierarchyLoadErrorStub, seed);
     actions.setHierarchyProvider(provider as unknown as HierarchyProvider);
     return actions;
   }
@@ -28,6 +29,7 @@ describe("TreeActions", () => {
     provider.getNodes.reset();
     onModelChangedStub.reset();
     onLoadStub.reset();
+    onHierarchyLoadErrorStub.reset();
 
     provider.getNodes.resolves([]);
   });
@@ -999,6 +1001,23 @@ describe("TreeActions", () => {
       });
     });
 
+    it("reports timeout on initial load", async () => {
+      const actions = createActions(createTreeModel([]));
+
+      provider.getNodes.reset();
+      provider.getNodes.callsFake(() => {
+        return throwingAsyncIterator(new Error("query too long to execute or server is too busy"));
+      });
+
+      actions.reloadTree();
+
+      await waitFor(() => {
+        expect(onModelChangedStub).to.be.called;
+        expect(onLoadStub).to.be.calledWith("initial-load", Number.MAX_SAFE_INTEGER);
+        expect(onHierarchyLoadErrorStub).to.be.calledWith({ parentId: undefined, type: "timeout" });
+      });
+    });
+
     it("reports hierarchy level load", async () => {
       const model = createTreeModel([
         {
@@ -1022,6 +1041,33 @@ describe("TreeActions", () => {
       await waitFor(() => {
         expect(onModelChangedStub).to.be.called;
         expect(onLoadStub).to.be.calledWith("hierarchy-level-load");
+      });
+    });
+
+    it("reports timeout on hierarchy level load", async () => {
+      const model = createTreeModel([
+        {
+          id: undefined,
+          children: ["root-1"],
+        },
+        {
+          id: "root-1",
+          children: undefined,
+        },
+      ]);
+      const actions = createActions(model);
+
+      provider.getNodes.reset();
+      provider.getNodes.callsFake(() => {
+        return throwingAsyncIterator(new Error("query too long to execute or server is too busy"));
+      });
+
+      actions.expandNode("root-1", true);
+
+      await waitFor(() => {
+        expect(onModelChangedStub).to.be.called;
+        expect(onLoadStub).to.be.calledWith("hierarchy-level-load", Number.MAX_SAFE_INTEGER);
+        expect(onHierarchyLoadErrorStub).to.be.calledWith({ parentId: "root-1", type: "timeout" });
       });
     });
 
@@ -1049,6 +1095,78 @@ describe("TreeActions", () => {
       await waitFor(() => {
         expect(onModelChangedStub).to.be.called;
         expect(onLoadStub).to.be.calledWith("reload");
+      });
+    });
+
+    it("reports timeout on tree reload", async () => {
+      const actions = createActions(
+        createTreeModel([
+          {
+            id: undefined,
+            children: ["root-1"],
+          },
+          {
+            id: "root-1",
+            children: [],
+          },
+        ]),
+      );
+
+      provider.getNodes.reset();
+      provider.getNodes.callsFake(() => {
+        return throwingAsyncIterator(new Error("query too long to execute or server is too busy"));
+      });
+
+      actions.reloadTree();
+
+      await waitFor(() => {
+        expect(onModelChangedStub).to.be.called;
+        expect(onLoadStub).to.be.calledWith("reload", Number.MAX_SAFE_INTEGER);
+        expect(onHierarchyLoadErrorStub).to.be.calledWith({ parentId: undefined, type: "timeout" });
+      });
+    });
+
+    it("does not report timeout when no children nodes are loaded", async () => {
+      const model = createTreeModel([
+        {
+          id: undefined,
+          children: ["root-1"],
+        },
+        {
+          id: "root-1",
+          children: undefined,
+        },
+      ]);
+      const actions = createActions(model);
+
+      provider.getNodes.reset();
+      provider.getNodes.callsFake(() => {
+        return createAsyncIterator([]);
+      });
+
+      actions.expandNode("root-1", true);
+
+      await waitFor(() => {
+        expect(onModelChangedStub).to.be.called;
+        expect(onLoadStub).to.be.calledWith("hierarchy-level-load");
+        expect(onHierarchyLoadErrorStub).to.not.be.called;
+      });
+    });
+
+    it("does not report performance when unknown error occurs", async () => {
+      const actions = createActions(createTreeModel([]));
+
+      provider.getNodes.reset();
+      provider.getNodes.callsFake(() => {
+        return throwingAsyncIterator(new Error("Test error"));
+      });
+
+      actions.reloadTree();
+
+      await waitFor(() => {
+        expect(onModelChangedStub).to.be.called;
+        expect(onLoadStub).to.not.be.called;
+        expect(onHierarchyLoadErrorStub).to.be.calledWith({ parentId: undefined, type: "unknown" });
       });
     });
   });

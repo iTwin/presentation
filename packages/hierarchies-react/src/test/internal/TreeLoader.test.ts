@@ -14,17 +14,19 @@ import { createTestHierarchyNode, createTreeModelNode } from "../TestUtils";
 
 describe("TreeLoader", () => {
   const onHierarchyLimitExceededStub = sinon.stub();
+  const onHierarchyLoadErrorStub = sinon.stub();
   const hierarchyProvider = {
     getNodes: sinon.stub<Parameters<HierarchyProvider["getNodes"]>, ReturnType<HierarchyProvider["getNodes"]>>(),
   };
 
   function createLoader() {
-    return new TreeLoader(hierarchyProvider as unknown as HierarchyProvider, onHierarchyLimitExceededStub);
+    return new TreeLoader(hierarchyProvider as unknown as HierarchyProvider, onHierarchyLimitExceededStub, onHierarchyLoadErrorStub);
   }
 
   beforeEach(() => {
     hierarchyProvider.getNodes.reset();
     onHierarchyLimitExceededStub.reset();
+    onHierarchyLoadErrorStub.reset();
   });
 
   describe("loadNodes", () => {
@@ -249,6 +251,44 @@ describe("TreeLoader", () => {
       );
 
       expect(onHierarchyLimitExceededStub).to.be.calledOnceWith({ parentId: undefined, filter, limit: 10 });
+    });
+
+    it("reports when hierarchy load timeouts", async () => {
+      const loader = createLoader();
+      hierarchyProvider.getNodes.callsFake(() => {
+        return throwingAsyncIterator(new Error("query too long to execute or server is too busy"));
+      });
+
+      const filter = {} as GenericInstanceFilter;
+
+      await collectNodes(
+        loader.loadNodes({
+          parent: { id: undefined, nodeData: undefined },
+          getHierarchyLevelOptions: () => ({ instanceFilter: filter, hierarchyLevelSizeLimit: 10 }),
+          shouldLoadChildren: () => false,
+        }),
+      );
+
+      expect(onHierarchyLoadErrorStub).to.be.calledOnceWith({ parentId: undefined, type: "timeout" });
+    });
+
+    it("reports unknown hierarchy load error", async () => {
+      const loader = createLoader();
+      hierarchyProvider.getNodes.callsFake(() => {
+        return throwingAsyncIterator(new Error("Test error"));
+      });
+
+      const filter = {} as GenericInstanceFilter;
+
+      await collectNodes(
+        loader.loadNodes({
+          parent: { id: undefined, nodeData: undefined },
+          getHierarchyLevelOptions: () => ({ instanceFilter: filter, hierarchyLevelSizeLimit: 10 }),
+          shouldLoadChildren: () => false,
+        }),
+      );
+
+      expect(onHierarchyLoadErrorStub).to.be.calledOnceWith({ parentId: undefined, type: "unknown" });
     });
   });
 });
