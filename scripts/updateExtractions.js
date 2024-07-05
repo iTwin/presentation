@@ -15,7 +15,7 @@ const isCheck = "check" in argv;
 const targets = argv.targets;
 if (!targets) {
   console.error(
-    `Fail! Please specify the "target" argument as a comma-separated list of paths to the target directories and files where extraction insertions need to be made.`,
+    `Fail! Please specify the "targets" argument as a comma-separated list of paths to the target directories and files where extraction insertions need to be made.`,
   );
   process.exit(1);
 }
@@ -32,10 +32,10 @@ const extractionsDir = path.join(workspaceRootPath, "build/docs/extract");
 const extractionStart = "<!-- BEGIN EXTRACTION -->";
 const extractionEnd = "<!-- END EXTRACTION -->";
 const targetFileExtensions = [".ts", ".tsx", ".md"];
-const re = /^(\s*)(<!--|\/\/|\/\*)\s*\[\[include:\s*([\w\d\._-]+)(,[\s]*([\w\d_]+))?\]\]/;
+const re = /^(\s*)(?:<!--|\/\/|\/\*)\s*\[\[include:\s*([\w\d\._-]+)(?:,[\s]*([\w\d_]+))?\]\]/;
 const reIndentIndex = 1;
-const reExtractionNameIndex = 3;
-const reExtractionTypeIndex = 5;
+const reExtractionNameIndex = 2;
+const reExtractionTypeIndex = 3;
 
 const changedFiles = [];
 targets.split(",").forEach((target) => {
