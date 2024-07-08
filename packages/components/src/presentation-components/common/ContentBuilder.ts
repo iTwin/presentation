@@ -136,6 +136,7 @@ class StructMembersAppender implements INestedPropertiesAppender {
     private _parentAppender: IPropertiesAppender,
     private _fieldHierarchy: FieldHierarchy,
     private _fieldInfo: FieldInfo,
+    private _description?: string,
   ) {}
   public append(record: FieldHierarchyRecord): void {
     this._members[record.fieldHierarchy.field.name] = record.record;
@@ -151,7 +152,7 @@ class StructMembersAppender implements INestedPropertiesAppender {
     applyPropertyRecordAttributes(
       record,
       this._fieldHierarchy.field,
-      undefined,
+      this._description,
       IPropertiesAppender.isRoot(this._parentAppender) ? this._parentAppender.item.extendedData : undefined,
     );
     this._parentAppender.append({ record, fieldHierarchy: this._fieldHierarchy });
@@ -225,12 +226,11 @@ export class InternalPropertyRecordsBuilder implements IContentVisitor {
   public finishField(): void {}
 
   public startStruct(props: StartStructProps): boolean {
-    this._appendersStack.push(
-      new StructMembersAppender(this.currentPropertiesAppender, props.hierarchy, {
-        ...createFieldInfo(props.hierarchy.field, props.parentFieldName),
-        type: props.valueType,
-      }),
-    );
+    const fieldInfo = {
+      ...createFieldInfo(props.hierarchy.field, props.parentFieldName),
+      type: props.valueType,
+    };
+    this._appendersStack.push(new StructMembersAppender(this.currentPropertiesAppender, props.hierarchy, fieldInfo, props.description));
     return true;
   }
   public finishStruct(): void {
