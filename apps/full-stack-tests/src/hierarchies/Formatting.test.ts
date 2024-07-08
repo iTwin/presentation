@@ -86,7 +86,7 @@ describe("Hierarchies", () => {
       it("formats instance node labels", async function () {
         const { imodel, schema } = await buildIModel(this, async (builder, mochaContext) => {
           // eslint-disable-next-line @typescript-eslint/no-shadow
-          const schema = importSchema(
+          const schema = await importSchema(
             mochaContext,
             builder,
             `

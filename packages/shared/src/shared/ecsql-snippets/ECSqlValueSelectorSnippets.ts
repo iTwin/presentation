@@ -19,7 +19,8 @@ type SpecialPropertyType = "Navigation" | "Guid" | "Point2d" | "Point3d";
  * Props for selecting property value along with its metadata.
  *
  * It's recommended to only select properties with metadata only when they need additional formatting and
- * otherwise use `createPropertyValueSelector` to select their value.
+ * otherwise use `createRawPropertyValueSelector` to select their value.
+ *
  * @beta
  */
 interface PropertyValueSelectClauseProps {

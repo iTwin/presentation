@@ -78,17 +78,25 @@ async function getProperty({ className, propertyName }: { className: string; pro
 
 /**
  * A values' formatter that knows how to format the following types:
+ *
  * - `Boolean` values are formatted to either "true" or "false".
+ *
  * - `Integer` and `Long` values are rounded to the closest integer.
+ *
  * - `Double` values are rounded to 2 decimal places.
+ *
  * - `DateTime` values accept 2 formats in addition to `Date`:
  *   - if the value is numeric, assume it's a julian day format,
  *   - if the value is string, assume it's an ISO 8601 format.
+ *
  *   If extended type is set to `ShortDate`, the date is formatted as locale date string. Otherwise, it's
  *   formatted as locale date + time string.
+ *
  * - `Point2d` values are formatted in `(x, y)` format.
+ *
  * - `Point3d` values are formatted in `(x, y, z)` format.
- * - `String` and `Id` values are turned as-is.
+ *
+ * - `String` and `Id` values are returned as-is.
  *
  * @beta
  */

@@ -62,8 +62,8 @@ interface ECSqlValueSelector {
  * @beta
  */
 interface NodeSelectClauseProps {
-  ecClassId: Id64String | ECSqlValueSelector;
-  ecInstanceId: Id64String | ECSqlValueSelector;
+  ecClassId: ECSqlValueSelector;
+  ecInstanceId: ECSqlValueSelector;
   nodeLabel: string | ECSqlValueSelector;
   extendedData?: {
     [key: string]: Id64String | string | number | boolean | ECSqlValueSelector;
@@ -252,8 +252,8 @@ class NodeSelectQueryFactory {
   public async createSelectClause(props: NodeSelectClauseProps) {
     // note: the columns order must match the order in `NodeSelectClauseColumnNames`
     return `
-      ec_ClassName(${createECSqlValueSelector(props.ecClassId)}) AS ${NodeSelectClauseColumnNames.FullClassName},
-      ${createECSqlValueSelector(props.ecInstanceId)} AS ${NodeSelectClauseColumnNames.ECInstanceId},
+      ec_ClassName(${props.ecClassId.selector}) AS ${NodeSelectClauseColumnNames.FullClassName},
+      ${props.ecInstanceId.selector} AS ${NodeSelectClauseColumnNames.ECInstanceId},
       ${createECSqlValueSelector(props.nodeLabel)} AS ${NodeSelectClauseColumnNames.DisplayLabel},
       CAST(${createECSqlValueSelector(props.hasChildren)} AS BOOLEAN) AS ${NodeSelectClauseColumnNames.HasChildren},
       CAST(${createECSqlValueSelector(props.hideIfNoChildren)} AS BOOLEAN) AS ${NodeSelectClauseColumnNames.HideIfNoChildren},
