@@ -32,7 +32,7 @@ const extractionsDir = path.join(workspaceRootPath, "build/docs/extract");
 const extractionStart = "<!-- BEGIN EXTRACTION -->";
 const extractionEnd = "<!-- END EXTRACTION -->";
 const targetFileExtensions = [".ts", ".tsx", ".md"];
-const re = /^(\s*)(?:<!--|\/\/|\/\*)\s*\[\[include:\s*([\w\d\._-]+)(?:,[\s]*([\w\d_]+))?\]\]/;
+const re = /^(\s*)(?:<!--|\/\/|\/\*)\s*\[\[include:\s*([\w\d\._-]+|\[(?:\s*,?\s*[\w\d\._-]+)+\])(?:,[\s]*([\w\d_]+))?\]\]/;
 const reIndentIndex = 1;
 const reExtractionNameIndex = 2;
 const reExtractionTypeIndex = 3;
@@ -105,15 +105,25 @@ function handleTargetFile(targetFilePath) {
 
   // handle each insertion
   insertions.forEach((insertion) => {
-    const extractionPath = path.join(extractionsDir, insertion.extraction.name);
-    if (!fs.existsSync(extractionPath)) {
-      console.error(
-        `Fail! Extraction file "${extractionPath}" does not exist (referenced from ${targetFilePath}). Did you run the "docs" script at where the extraction is defined?`,
-      );
-      process.exit(1);
-    }
-
-    let extractionContent = fs.readFileSync(extractionPath, { encoding: "utf8" }).trim();
+    const extractionNames =
+      insertion.extraction.name.startsWith("[") && insertion.extraction.name.endsWith("]")
+        ? insertion.extraction.name
+            .slice(1, -1)
+            .split(",")
+            .map((name) => name.trim())
+        : [insertion.extraction.name];
+    let extractionContent = extractionNames
+      .reduce((acc, extractionName) => {
+        const extractionPath = path.join(extractionsDir, extractionName);
+        if (!fs.existsSync(extractionPath)) {
+          console.error(
+            `Fail! Extraction file "${extractionPath}" does not exist (referenced from ${targetFilePath}). Did you run the "docs" script at where the extraction is defined?`,
+          );
+          process.exit(1);
+        }
+        return [...acc, fs.readFileSync(extractionPath, { encoding: "utf8" }).trim()];
+      }, [])
+      .join("\n\n");
     if (insertion.extraction.type) {
       extractionContent = `\`\`\`${insertion.extraction.type}\n${extractionContent}\n\`\`\``;
     }

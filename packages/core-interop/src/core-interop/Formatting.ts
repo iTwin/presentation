@@ -37,7 +37,7 @@ interface CreateValueFormatterProps {
 
   /**
    * Base primitive value formatter for cases when a property doesn't have any units' information. Defaults to the result of `createDefaultValueFormatter`
-   * from `@itwin/presentation-hierarchies` package.
+   * from `@itwin/presentation-shared` package.
    */
   baseFormatter?: IPrimitiveValueFormatter;
 }

@@ -11,7 +11,7 @@ import { createECSchemaProvider as createECSchemaProviderInterop, createECSqlQue
 import { createHierarchyProvider, createLimitingECSqlQueryExecutor, HierarchyDefinition, HierarchyNodeIdentifiersPath } from "@itwin/presentation-hierarchies";
 import { createCachingECClassHierarchyInspector, IPrimitiveValueFormatter, parseFullClassName } from "@itwin/presentation-shared";
 
-function createSchemaContext(imodel: IModelConnection | IModelDb | ECDb) {
+export function createSchemaContext(imodel: IModelConnection | IModelDb | ECDb) {
   const schemas = new SchemaContext();
   if (imodel instanceof IModelConnection) {
     schemas.addLocater(new ECSchemaRpcLocater(imodel.getRpcProps()));
