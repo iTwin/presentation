@@ -117,7 +117,7 @@ function handleTargetFile(targetFilePath) {
         const extractionPath = path.join(extractionsDir, extractionName);
         if (!fs.existsSync(extractionPath)) {
           console.error(
-            `Fail! Extraction file "${extractionPath}" does not exist (referenced from ${targetFilePath}). Did you run the "docs" script at where the extraction is defined?`,
+            `Fail! Extraction file "${extractionPath}" does not exist (referenced from ${targetFilePath}). Did you run the "docs" script where the extraction is defined?`,
           );
           process.exit(1);
         }

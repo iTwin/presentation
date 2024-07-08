@@ -1,6 +1,6 @@
 # Formatting
 
-Each node in a hierarchy must have label that's displayed to a user. The label is generally based on a string and needs to extra formatting, but in certain situations there may be a need for labels to include data that does need formatting. Examples:
+Each node in a hierarchy must have a label that's displayed to the user. The label is generally based on a string and does not need extra formatting, but in certain situations, there may be a need for labels to include data that does need formatting. Examples:
 
 - A date/time value needs to be formatted according to user's locale.
 - A point3d or point2d value is a JSON object and needs to be formatted to string.
@@ -33,7 +33,7 @@ const formattedNo = await myFormatter({ type: "Boolean", value: false });
 
 <!-- END EXTRACTION -->
 
-In the above example, the formatter customizes boolean values' formatting and relies on default formatter for other types. The default formatter is delivered through `@itwin/presentation-shared` package and knows how to format basic primitive types. To support units' formatting, a formatter needs access to ECSchemas and know user's preferred unit system - `@itwin/presentation-core-interop` delivers one such formatter through the `createValueFormatter` factory function:
+In the above example, the formatter customizes boolean values' formatting and relies on the default formatter for other types. The default formatter is delivered through `@itwin/presentation-shared` package and knows how to format basic primitive types. To support units' formatting, a formatter needs access to ECSchemas and know the user's preferred unit system. `@itwin/presentation-core-interop` delivers one such formatter through the `createValueFormatter` factory function:
 
 <!-- [[include: [Presentation.Hierarchies.Formatting.CoreInteropFormatterExample.Imports, Presentation.Hierarchies.Formatting.CoreInteropFormatterExample], ts]] -->
 <!-- BEGIN EXTRACTION -->
@@ -173,9 +173,9 @@ const nodes = hierarchyProvider.getNodes({ parentNode: undefined });
 
 Finally, in case 3, the grouping node's label is formatted automatically based on the type of grouping:
 
-- In case of class grouping, the labels is the class' display label and needs to extra formatting.
+- In case of class grouping, the label is the class' display label and needs no extra formatting.
 - In case of label grouping, the label is taken from grouped nodes whose labels are already formatted.
-- In case of property grouping, the label is built using formatted property values. The formatter is applied to each property value separately using formatter used by `HierarchyProvider`.
+- In case of property grouping, the label is built using formatted property values. The formatter used by `HierarchyProvider` is applied to each property value separately`.
 
   <!-- [[include: [Presentation.Hierarchies.Formatting.NodeLabelFormattingExamples.Imports, Presentation.Hierarchies.Formatting.PropertyGroupsFormattingExample], ts]] -->
   <!-- BEGIN EXTRACTION -->
