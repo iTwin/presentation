@@ -496,9 +496,9 @@ interface NodeSelectClauseProps {
     // (undocumented)
     autoExpand?: boolean | ECSqlValueSelector;
     // (undocumented)
-    ecClassId: Id64String | ECSqlValueSelector;
+    ecClassId: ECSqlValueSelector;
     // (undocumented)
-    ecInstanceId: Id64String | ECSqlValueSelector;
+    ecInstanceId: ECSqlValueSelector;
     // (undocumented)
     extendedData?: {
         [key: string]: Id64String | string | number | boolean | ECSqlValueSelector;
