@@ -32,7 +32,7 @@ import {
 
 // __PUBLISH_EXTRACT_END__
 
-describe.only("Hierarchies-react", () => {
+describe("Hierarchies-react", () => {
   describe("Learning snippets", () => {
     describe("Localization", () => {
       // __PUBLISH_EXTRACT_START__ Presentation.HierarchiesReact.Readme.Localization.Strings

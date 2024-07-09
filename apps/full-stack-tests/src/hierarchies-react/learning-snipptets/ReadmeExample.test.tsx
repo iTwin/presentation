@@ -1,8 +1,9 @@
 /*---------------------------------------------------------------------------------------------
- * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
- * See LICENSE.md in the project root for license terms and full copyright notice.
- *--------------------------------------------------------------------------------------------*/
+* Copyright (c) Bentley Systems, Incorporated. All rights reserved.
+* See LICENSE.md in the project root for license terms and full copyright notice.
+*--------------------------------------------------------------------------------------------*/
 
+/* eslint-disable @typescript-eslint/naming-convention */
 import { expect } from "chai";
 import { insertPhysicalModelWithPartition } from "presentation-test-utilities";
 import { RpcConfiguration, RpcManager } from "@itwin/core-common";
@@ -127,7 +128,7 @@ function MyTreeComponentInternal({ imodelAccess, imodelKey }: { imodelAccess: IM
 }
 // __PUBLISH_EXTRACT_END__
 
-describe.only("Hierarchies-react", () => {
+describe("Hierarchies-react", () => {
   describe("Learning snippets", () => {
     describe("Readme example", () => {
       beforeEach(async () => {
