@@ -276,11 +276,11 @@ function createNodePropertyGroupPathMatchers(node: ParentHierarchyNode): Array<(
       return (x) => key.properties.some((p) => p.className === x.propertiesClassName && p.propertyName === x.propertyName && !!x.isRange);
     }
     if (HierarchyNodeKey.isPropertyValueRangeGrouping(key)) {
-      return (x) => key.propertyClassName === x.propertiesClassName && key.propertyName === x.propertyName && !!x.isRange;
+      return (x) => key.propertyClassName === x.propertiesClassName && key.propertyName === x.propertyName;
     }
     // istanbul ignore else
     if (HierarchyNodeKey.isPropertyValueGrouping(key)) {
-      return (x) => key.propertyClassName === x.propertiesClassName && key.propertyName === x.propertyName && !x.isRange;
+      return (x) => key.propertyClassName === x.propertiesClassName && key.propertyName === x.propertyName;
     }
     // https://github.com/microsoft/TypeScript/issues/21985
     // istanbul ignore next
