@@ -1,5 +1,20 @@
 # @itwin/presentation-hierarchies-react
 
+## 0.6.0
+
+### Minor Changes
+
+- [#661](https://github.com/iTwin/presentation/pull/661): Added `onHierarchyLoadError` callback to `useTree` and `useUnifiedSelectionTree` that is called when an error occurs while loading hierarchy.
+
+### Patch Changes
+
+- [#660](https://github.com/iTwin/presentation/pull/660): Switch to `onClick` and `onNodeKeyDown` callbacks provided by `TreeNode` in `TreeNodeRenderer`.
+- [#655](https://github.com/iTwin/presentation/pull/655): Remove exposed internal APIs.
+- Updated dependencies:
+  - @itwin/presentation-hierarchies@0.3.0
+  - @itwin/unified-selection@0.4.5
+  - @itwin/presentation-shared@0.3.2
+
 ## 0.5.3
 
 ### Patch Changes
