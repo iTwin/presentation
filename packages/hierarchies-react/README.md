@@ -270,8 +270,7 @@ function MyTreeComponentInternal({ imodelAccess, imodelKey }: { imodelAccess: IM
     imodelKey,
     // iModel access is used to build the hierarchy
     imodelAccess,
-    // the hierarchy definition describes the hierarchy using ECSQL queries; here it just returns all bis.Model instances
-    // grouped by class
+    // the hierarchy definition describes the hierarchy using ECSQL queries; here it just returns all bis.PhysicalModel instances
     getHierarchyDefinition: () => ({
       defineHierarchyLevel: async () => [
         {
