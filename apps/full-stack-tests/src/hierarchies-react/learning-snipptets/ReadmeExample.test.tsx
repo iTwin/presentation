@@ -1,7 +1,7 @@
 /*---------------------------------------------------------------------------------------------
-* Copyright (c) Bentley Systems, Incorporated. All rights reserved.
-* See LICENSE.md in the project root for license terms and full copyright notice.
-*--------------------------------------------------------------------------------------------*/
+ * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
+ * See LICENSE.md in the project root for license terms and full copyright notice.
+ *--------------------------------------------------------------------------------------------*/
 
 /* eslint-disable @typescript-eslint/naming-convention */
 import { expect } from "chai";
@@ -26,46 +26,48 @@ import { createBisInstanceLabelSelectClauseFactory, createCachingECClassHierarch
 // __PUBLISH_EXTRACT_END__
 
 // __PUBLISH_EXTRACT_START__ Presentation.HierarchiesReact.iModelAccess
-  // Not really part of the package, but we need SchemaContext to create the tree state. It's
-  // recommended to cache the schema context and reuse it across different application's components to
-  // avoid loading and storing same schemas multiple times.
-  const imodelSchemaContextsCache = new Map<string, SchemaContext>();
+// Not really part of the package, but we need SchemaContext to create the tree state. It's
+// recommended to cache the schema context and reuse it across different application's components to
+// avoid loading and storing same schemas multiple times.
+const imodelSchemaContextsCache = new Map<string, SchemaContext>();
 
-  function getIModelSchemaContext(imodel: IModelConnection) {
-    let context = imodelSchemaContextsCache.get(imodel.key);
-    if (!context) {
-      context = new SchemaContext();
-      context.addLocater(new ECSchemaRpcLocater(imodel.getRpcProps()));
-      imodelSchemaContextsCache.set(imodel.key, context);
-      imodel.onClose.addListener(() => imodelSchemaContextsCache.delete(imodel.key));
-    }
-    return context;
+function getIModelSchemaContext(imodel: IModelConnection) {
+  let context = imodelSchemaContextsCache.get(imodel.key);
+  if (!context) {
+    context = new SchemaContext();
+    context.addLocater(new ECSchemaRpcLocater(imodel.getRpcProps()));
+    imodelSchemaContextsCache.set(imodel.key, context);
+    imodel.onClose.addListener(() => imodelSchemaContextsCache.delete(imodel.key));
   }
+  return context;
+}
 
-  function createIModelAccess(imodel: IModelConnection) {
-    const schemaProvider = createECSchemaProvider(getIModelSchemaContext(imodel));
-    return {
-      ...schemaProvider,
-      // while caching for hierarchy inspector is not mandatory, it's recommended to use it to improve performance
-      ...createCachingECClassHierarchyInspector({ schemaProvider, cacheSize: 100 }),
-      // the second argument is the maximum number of rows the executor will return - this allows us to
-      // avoid creating hierarchy levels of insane size (expensive to us and useless to users)
-      ...createLimitingECSqlQueryExecutor(createECSqlQueryExecutor(imodel), 1000),
-    };
-  }
-  // __PUBLISH_EXTRACT_END__
+function createIModelAccess(imodel: IModelConnection) {
+  const schemaProvider = createECSchemaProvider(getIModelSchemaContext(imodel));
+  return {
+    ...schemaProvider,
+    // while caching for hierarchy inspector is not mandatory, it's recommended to use it to improve performance
+    ...createCachingECClassHierarchyInspector({ schemaProvider, cacheSize: 100 }),
+    // the second argument is the maximum number of rows the executor will return - this allows us to
+    // avoid creating hierarchy levels of insane size (expensive to us and useless to users)
+    ...createLimitingECSqlQueryExecutor(createECSqlQueryExecutor(imodel), 1000),
+  };
+}
+// __PUBLISH_EXTRACT_END__
 
-describe.only("Hierarchies-react", () => {
+describe("Hierarchies-react", () => {
   describe("Learning snippets", () => {
     describe("Readme example", () => {
       let iModel: IModelConnection;
 
-      beforeEach(async function() {
+      beforeEach(async function () {
         await initialize();
-        iModel = (await buildIModel(this, async (builder) => {
-          insertPhysicalModelWithPartition({ builder, codeValue: "My Model A" });
-          insertPhysicalModelWithPartition({ builder, codeValue: "My Model B" });
-        })).imodel;
+        iModel = (
+          await buildIModel(this, async (builder) => {
+            insertPhysicalModelWithPartition({ builder, codeValue: "My Model A" });
+            insertPhysicalModelWithPartition({ builder, codeValue: "My Model B" });
+          })
+        ).imodel;
       });
 
       afterEach(async () => {

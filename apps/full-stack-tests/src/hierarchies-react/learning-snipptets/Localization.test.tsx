@@ -1,7 +1,7 @@
 /*---------------------------------------------------------------------------------------------
-* Copyright (c) Bentley Systems, Incorporated. All rights reserved.
-* See LICENSE.md in the project root for license terms and full copyright notice.
-*--------------------------------------------------------------------------------------------*/
+ * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
+ * See LICENSE.md in the project root for license terms and full copyright notice.
+ *--------------------------------------------------------------------------------------------*/
 
 /* eslint-disable @typescript-eslint/naming-convention */
 /* eslint-disable no-duplicate-imports */
@@ -33,7 +33,7 @@ import {
 } from "@itwin/presentation-hierarchies-react";
 // __PUBLISH_EXTRACT_END__
 
-describe.only("Hierarchies-react", () => {
+describe("Hierarchies-react", () => {
   describe("Learning snippets", () => {
     describe("Localization", () => {
       // __PUBLISH_EXTRACT_START__ Presentation.HierarchiesReact.Localization.Strings
@@ -62,10 +62,12 @@ describe.only("Hierarchies-react", () => {
 
       beforeEach(async function () {
         await initialize();
-        imodel = (await buildIModel(this, async (builder) => {
-          insertPhysicalModelWithPartition({ builder, codeValue: "My Model A" });
-          insertPhysicalModelWithPartition({ builder, codeValue: "My Model B" });
-        })).imodel;
+        imodel = (
+          await buildIModel(this, async (builder) => {
+            insertPhysicalModelWithPartition({ builder, codeValue: "My Model A" });
+            insertPhysicalModelWithPartition({ builder, codeValue: "My Model B" });
+          })
+        ).imodel;
         const context = new SchemaContext();
         context.addLocater(new ECSchemaRpcLocater(imodel.getRpcProps()));
         const schemaProvider = createECSchemaProvider(context);
