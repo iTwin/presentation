@@ -4,11 +4,18 @@
  *--------------------------------------------------------------------------------------------*/
 const iTwinPlugin = require("@itwin/eslint-plugin");
 const eslintBaseConfig = require("../../eslint.base.config");
+const reactPlugin = require("eslint-plugin-react");
 
 module.exports = [
   {
     files: ["**/*.{ts,tsx}"],
-    ...iTwinPlugin.configs.iTwinjsRecommendedConfig,
+    ...iTwinPlugin.configs.uiConfig,
+  },
+  {
+    files: ["**/*.{ts,tsx}"],
+    rules: {
+      ...reactPlugin.configs["jsx-runtime"].rules,
+    },
   },
   ...eslintBaseConfig,
 ];
