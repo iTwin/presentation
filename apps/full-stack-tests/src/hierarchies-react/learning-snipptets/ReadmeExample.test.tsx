@@ -6,25 +6,23 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 import { expect } from "chai";
 import { insertPhysicalModelWithPartition } from "presentation-test-utilities";
-import { RpcConfiguration, RpcManager } from "@itwin/core-common";
-import { buildTestIModel, initialize, terminate } from "@itwin/presentation-testing";
+import { initialize, terminate } from "../../IntegrationTests";
+import { buildIModel } from "../../IModelUtils";
 import { render, waitFor } from "@testing-library/react";
 // __PUBLISH_EXTRACT_START__ Presentation.HierarchiesReact.iModelAccess.Imports
 import { IModelConnection } from "@itwin/core-frontend";
 import { SchemaContext } from "@itwin/ecschema-metadata";
-import { ECSchemaRpcInterface, ECSchemaRpcLocater } from "@itwin/ecschema-rpcinterface-common";
-import { ECSchemaRpcImpl } from "@itwin/ecschema-rpcinterface-impl";
+import { ECSchemaRpcLocater } from "@itwin/ecschema-rpcinterface-common";
 import { createECSchemaProvider, createECSqlQueryExecutor } from "@itwin/presentation-core-interop";
 import { createLimitingECSqlQueryExecutor, createNodesQueryClauseFactory } from "@itwin/presentation-hierarchies";
 // __PUBLISH_EXTRACT_END__
 // __PUBLISH_EXTRACT_START__ Presentation.HierarchiesReact.SelectionStorage.Imports
 import { TreeRenderer, UnifiedSelectionProvider, useUnifiedSelectionTree } from "@itwin/presentation-hierarchies-react";
+import { createStorage } from "@itwin/unified-selection";
 import { useEffect, useState } from "react";
 // __PUBLISH_EXTRACT_END__
 // __PUBLISH_EXTRACT_START__ Presentation.HierarchiesReact.CustomTreeExample.Imports
 import { createBisInstanceLabelSelectClauseFactory, createCachingECClassHierarchyInspector } from "@itwin/presentation-shared";
-import { createStorage } from "@itwin/unified-selection";
-
 // __PUBLISH_EXTRACT_END__
 
 // __PUBLISH_EXTRACT_START__ Presentation.HierarchiesReact.iModelAccess
@@ -89,7 +87,7 @@ function MyTreeComponentInternal({ imodelAccess, imodelKey }: { imodelAccess: IM
   // Create a factory for building labels SELECT query clauses according to BIS conventions
   const [labelsQueryFactory] = useState(createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }));
 
-  const { rootNodes, isLoading, ...state } = useUnifiedSelectionTree({
+  const { rootNodes, ...state } = useUnifiedSelectionTree({
     // the source name is used to distinguish selection changes being made by different components
     sourceName: "MyTreeComponent",
     // the iModel key is required for unified selection system to distinguish selection changes between different iModels
@@ -112,7 +110,6 @@ function MyTreeComponentInternal({ imodelAccess, imodelKey }: { imodelAccess: IM
                     selector: await labelsQueryFactory.createSelectClause({ classAlias: "this", className: "BisCore.PhysicalModel" }),
                   },
                   hasChildren: false,
-                  hideIfNoChildren: false,
                 })}
               FROM BisCore.PhysicalModel this
             `,
@@ -121,21 +118,18 @@ function MyTreeComponentInternal({ imodelAccess, imodelKey }: { imodelAccess: IM
       ],
     }),
   });
-  if (isLoading) {
+  if (!rootNodes) {
     return "Loading...";
   }
-  return <TreeRenderer {...state} rootNodes={rootNodes ?? []} />;
+  return <TreeRenderer {...state} rootNodes={rootNodes} />;
 }
 // __PUBLISH_EXTRACT_END__
 
-describe("Hierarchies-react", () => {
+describe.only("Hierarchies-react", () => {
   describe("Learning snippets", () => {
     describe("Readme example", () => {
       beforeEach(async () => {
         await initialize();
-        RpcManager.registerImpl(ECSchemaRpcInterface, ECSchemaRpcImpl);
-        RpcConfiguration.developmentMode = true;
-        RpcManager.initializeInterface(ECSchemaRpcInterface);
       });
 
       afterEach(async () => {
@@ -145,14 +139,15 @@ describe("Hierarchies-react", () => {
       it("Tree", async function () {
         // set up imodel for the test
         // eslint-disable-next-line deprecation/deprecation
-        const imodel = await buildTestIModel(this, (builder) => {
+        const { imodel } = await buildIModel(this, async (builder) => {
           insertPhysicalModelWithPartition({ builder, codeValue: "My Model A" });
           insertPhysicalModelWithPartition({ builder, codeValue: "My Model B" });
         });
 
-        const { getByText } = render(<MyTreeComponent imodel={imodel} />);
-        await waitFor(() => getByText("My Model A"));
+        const { getByRole, getByText } = render(<MyTreeComponent imodel={imodel} />);
+        await waitFor(() => getByRole("tree"), { timeout: 2000 });
 
+        expect(getByText("My Model A")).to.not.be.null;
         expect(getByText("My Model B")).to.not.be.null;
       });
     });

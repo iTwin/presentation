@@ -1,21 +1,20 @@
 /*---------------------------------------------------------------------------------------------
-* Copyright (c) Bentley Systems, Incorporated. All rights reserved.
-* See LICENSE.md in the project root for license terms and full copyright notice.
-*--------------------------------------------------------------------------------------------*/
+ * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
+ * See LICENSE.md in the project root for license terms and full copyright notice.
+ *--------------------------------------------------------------------------------------------*/
 
 /* eslint-disable @typescript-eslint/naming-convention */
 import { expect } from "chai";
-import { insertPhysicalModelWithPartition } from "presentation-test-utilities";
-import { RpcConfiguration, RpcManager } from "@itwin/core-common";
-import { ECSchemaRpcImpl } from "@itwin/ecschema-rpcinterface-impl";
-import { render, waitFor } from "@testing-library/react";
-import { buildTestIModel, initialize, terminate } from "@itwin/presentation-testing";
-import { createBisInstanceLabelSelectClauseFactory, createCachingECClassHierarchyInspector } from "@itwin/presentation-shared";
-import { IModelConnection } from "@itwin/core-frontend";
+import { buildIModel } from "../../IModelUtils";
 import { SchemaContext } from "@itwin/ecschema-metadata";
-import { ECSchemaRpcInterface, ECSchemaRpcLocater } from "@itwin/ecschema-rpcinterface-common";
+import { IModelConnection } from "@itwin/core-frontend";
+import { render, waitFor } from "@testing-library/react";
+import { initialize, terminate } from "../../IntegrationTests";
+import { ECSchemaRpcLocater } from "@itwin/ecschema-rpcinterface-common";
+import { insertPhysicalModelWithPartition } from "presentation-test-utilities";
 import { createECSchemaProvider, createECSqlQueryExecutor } from "@itwin/presentation-core-interop";
 import { createLimitingECSqlQueryExecutor, createNodesQueryClauseFactory } from "@itwin/presentation-hierarchies";
+import { createBisInstanceLabelSelectClauseFactory, createCachingECClassHierarchyInspector } from "@itwin/presentation-shared";
 // __PUBLISH_EXTRACT_START__ Presentation.HierarchiesReact.Readme.Localization.TreeRenderer.Imports
 import { ComponentPropsWithoutRef, useCallback } from "react";
 import { Tree } from "@itwin/itwinui-react";
@@ -29,10 +28,9 @@ import {
   TreeRenderer,
   useUnifiedSelectionTree,
 } from "@itwin/presentation-hierarchies-react";
-
 // __PUBLISH_EXTRACT_END__
 
-describe("Hierarchies-react", () => {
+describe.only("Hierarchies-react", () => {
   describe("Learning snippets", () => {
     describe("Localization", () => {
       // __PUBLISH_EXTRACT_START__ Presentation.HierarchiesReact.Readme.Localization.Strings
@@ -58,18 +56,15 @@ describe("Hierarchies-react", () => {
       let imodel: IModelConnection;
       let access: IModelAccess;
       let getHierarchyDefinition: Parameters<typeof useUnifiedSelectionTree>[0]["getHierarchyDefinition"];
-    
+
       beforeEach(async function () {
         await initialize();
-        RpcManager.registerImpl(ECSchemaRpcInterface, ECSchemaRpcImpl);
-        RpcConfiguration.developmentMode = true;
-        RpcManager.initializeInterface(ECSchemaRpcInterface);
 
         // eslint-disable-next-line deprecation/deprecation
-        imodel = await buildTestIModel(this, (builder) => {
+        imodel = (await buildIModel(this, async (builder) => {
           insertPhysicalModelWithPartition({ builder, codeValue: "My Model A" });
           insertPhysicalModelWithPartition({ builder, codeValue: "My Model B" });
-        });
+        })).imodel;
         const context = new SchemaContext();
         context.addLocater(new ECSchemaRpcLocater(imodel.getRpcProps()));
         const schemaProvider = createECSchemaProvider(context);
@@ -102,7 +97,7 @@ describe("Hierarchies-react", () => {
               },
             },
           ],
-        })
+        });
       });
 
       afterEach(async () => {
