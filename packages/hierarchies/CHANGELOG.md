@@ -1,5 +1,16 @@
 # @itwin/presentation-hierarchies
 
+## 0.3.0
+
+### Minor Changes
+
+- [#665](https://github.com/iTwin/presentation/pull/665): Remove the option to specify `ecClassId` and `ecInstanceId` in `NodesQueryClauseFactory.createSelectClause` as `Id64String`. Now they can only be specified as a selector object, e.g. `{ selector: "this.ECClassId" }`. In case a static string is needed, the selector can return one.
+
+### Patch Changes
+
+- Updated dependencies:
+  - @itwin/presentation-shared@0.3.2
+
 ## 0.2.0
 
 ### Minor Changes
