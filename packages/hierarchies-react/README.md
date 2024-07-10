@@ -14,47 +14,46 @@ It takes 2 required properties:
 
 - `imodelAccess` provides access to iModel's data and metadata, required to build the hierarchy. Generally, `@itwin/presentation-core-interop` and `@itwin/presentation-shared` packages are used to create this object:
 
-<!-- [[include: [Presentation.HierarchiesReact.iModelAccess.Imports, Presentation.HierarchiesReact.iModelAccess], tsx]] -->
-<!-- BEGIN EXTRACTION -->
+  <!-- [[include: [Presentation.HierarchiesReact.iModelAccess.Imports, Presentation.HierarchiesReact.iModelAccess], tsx]] -->
+  <!-- BEGIN EXTRACTION -->
 
-```tsx
-import { IModelConnection } from "@itwin/core-frontend";
-import { SchemaContext } from "@itwin/ecschema-metadata";
-import { ECSchemaRpcInterface, ECSchemaRpcLocater } from "@itwin/ecschema-rpcinterface-common";
-import { ECSchemaRpcImpl } from "@itwin/ecschema-rpcinterface-impl";
-import { createECSchemaProvider, createECSqlQueryExecutor } from "@itwin/presentation-core-interop";
-import { createLimitingECSqlQueryExecutor, createNodesQueryClauseFactory } from "@itwin/presentation-hierarchies";
+  ```tsx
+  import { IModelConnection } from "@itwin/core-frontend";
+  import { SchemaContext } from "@itwin/ecschema-metadata";
+  import { ECSchemaRpcLocater } from "@itwin/ecschema-rpcinterface-common";
+  import { createECSchemaProvider, createECSqlQueryExecutor } from "@itwin/presentation-core-interop";
+  import { createLimitingECSqlQueryExecutor, createNodesQueryClauseFactory } from "@itwin/presentation-hierarchies";
 
-// Not really part of the package, but we need SchemaContext to create the tree state. It's
-// recommended to cache the schema context and reuse it across different application's components to
-// avoid loading and storing same schemas multiple times.
-const imodelSchemaContextsCache = new Map<string, SchemaContext>();
+  // Not really part of the package, but we need SchemaContext to create the tree state. It's
+  // recommended to cache the schema context and reuse it across different application's components to
+  // avoid loading and storing same schemas multiple times.
+  const imodelSchemaContextsCache = new Map<string, SchemaContext>();
 
-function getIModelSchemaContext(imodel: IModelConnection) {
-  let context = imodelSchemaContextsCache.get(imodel.key);
-  if (!context) {
-    context = new SchemaContext();
-    context.addLocater(new ECSchemaRpcLocater(imodel.getRpcProps()));
-    imodelSchemaContextsCache.set(imodel.key, context);
-    imodel.onClose.addListener(() => imodelSchemaContextsCache.delete(imodel.key));
+  function getIModelSchemaContext(imodel: IModelConnection) {
+    let context = imodelSchemaContextsCache.get(imodel.key);
+    if (!context) {
+      context = new SchemaContext();
+      context.addLocater(new ECSchemaRpcLocater(imodel.getRpcProps()));
+      imodelSchemaContextsCache.set(imodel.key, context);
+      imodel.onClose.addListener(() => imodelSchemaContextsCache.delete(imodel.key));
+    }
+    return context;
   }
-  return context;
-}
 
-function createIModelAccess(imodel: IModelConnection) {
-  const schemaProvider = createECSchemaProvider(getIModelSchemaContext(imodel));
-  return {
-    ...schemaProvider,
-    // while caching for hierarchy inspector is not mandatory, it's recommended to use it to improve performance
-    ...createCachingECClassHierarchyInspector({ schemaProvider, cacheSize: 100 }),
-    // the second argument is the maximum number of rows the executor will return - this allows us to
-    // avoid creating hierarchy levels of insane size (expensive to us and useless to users)
-    ...createLimitingECSqlQueryExecutor(createECSqlQueryExecutor(imodel), 1000),
-  };
-}
-```
+  function createIModelAccess(imodel: IModelConnection) {
+    const schemaProvider = createECSchemaProvider(getIModelSchemaContext(imodel));
+    return {
+      ...schemaProvider,
+      // while caching for hierarchy inspector is not mandatory, it's recommended to use it to improve performance
+      ...createCachingECClassHierarchyInspector({ schemaProvider, cacheSize: 100 }),
+      // the second argument is the maximum number of rows the executor will return - this allows us to
+      // avoid creating hierarchy levels of insane size (expensive to us and useless to users)
+      ...createLimitingECSqlQueryExecutor(createECSqlQueryExecutor(imodel), 1000),
+    };
+  }
+  ```
 
-<!-- END EXTRACTION -->
+  <!-- END EXTRACTION -->
 
 - `getHierarchyDefinition` is a factory function that creates a hierarchy definition, describing the hierarchy the tree component will render. The `@itwin/presentation-hierarchies` package describes the concept of hierarchy definitions [in more detail](https://github.com/iTwin/presentation/blob/master/packages/hierarchies/README.md#hierarchy-definition).
 
@@ -116,6 +115,7 @@ The hook also relies on unified selection storage being provided to it through a
 
 ```tsx
 import { TreeRenderer, UnifiedSelectionProvider, useUnifiedSelectionTree } from "@itwin/presentation-hierarchies-react";
+import { createStorage } from "@itwin/unified-selection";
 import { useEffect, useState } from "react";
 
 // Not part of the package - this should be created once and reused across different components of the application.
@@ -144,17 +144,26 @@ function MyTreeComponent({ imodel }: { imodel: IModelConnection }) {
 
 After providing the unified selection storage through the context, the `useUnifiedSelectionTree` hook can be used inside the component as follows:
 
-<!-- [[include: Presentation.HierarchiesReact.Readme.UseUnifiedSelectionTree, tsx]] -->
+<!-- [[include: Presentation.HierarchiesReact.UseUnifiedSelectionTree, tsx]] -->
 <!-- BEGIN EXTRACTION -->
 
 ```tsx
-const { rootNodes, ...state } = useUnifiedSelectionTree({
-  sourceName: "MyTreeComponent",
-  imodelKey,
-  imodelAccess,
-  localizedStrings,
-  getHierarchyDefinition,
-});
+function MyTreeComponentInternal({ imodelAccess, imodelKey }: { imodelAccess: IModelAccess; imodelKey: string }) {
+  const { rootNodes, ...state } = useUnifiedSelectionTree({
+    // the source name is used to distinguish selection changes being made by different components
+    sourceName: "MyTreeComponent",
+    // the iModel key is required for unified selection system to distinguish selection changes between different iModels
+    imodelKey,
+    // iModel access is used to build the hierarchy
+    imodelAccess,
+    // the hierarchy definition describes the hierarchy using ECSQL queries
+    getHierarchyDefinition,
+  });
+  if (!rootNodes || !rootNodes.length) {
+    return "No data to display";
+  }
+  return <TreeRenderer {...state} rootNodes={rootNodes} />;
+}
 ```
 
 <!-- END EXTRACTION -->
@@ -186,16 +195,15 @@ The component is based on `TreeNode` component from iTwinUI library and supports
 ```tsx
 import { IModelConnection } from "@itwin/core-frontend";
 import { SchemaContext } from "@itwin/ecschema-metadata";
-import { ECSchemaRpcInterface, ECSchemaRpcLocater } from "@itwin/ecschema-rpcinterface-common";
-import { ECSchemaRpcImpl } from "@itwin/ecschema-rpcinterface-impl";
+import { ECSchemaRpcLocater } from "@itwin/ecschema-rpcinterface-common";
 import { createECSchemaProvider, createECSqlQueryExecutor } from "@itwin/presentation-core-interop";
 import { createLimitingECSqlQueryExecutor, createNodesQueryClauseFactory } from "@itwin/presentation-hierarchies";
 
 import { TreeRenderer, UnifiedSelectionProvider, useUnifiedSelectionTree } from "@itwin/presentation-hierarchies-react";
+import { createStorage } from "@itwin/unified-selection";
 import { useEffect, useState } from "react";
 
 import { createBisInstanceLabelSelectClauseFactory, createCachingECClassHierarchyInspector } from "@itwin/presentation-shared";
-import { createStorage } from "@itwin/unified-selection";
 
 // Not really part of the package, but we need SchemaContext to create the tree state. It's
 // recommended to cache the schema context and reuse it across different application's components to
@@ -255,7 +263,7 @@ function MyTreeComponentInternal({ imodelAccess, imodelKey }: { imodelAccess: IM
   // Create a factory for building labels SELECT query clauses according to BIS conventions
   const [labelsQueryFactory] = useState(createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }));
 
-  const { rootNodes, isLoading, ...state } = useUnifiedSelectionTree({
+  const { rootNodes, ...state } = useUnifiedSelectionTree({
     // the source name is used to distinguish selection changes being made by different components
     sourceName: "MyTreeComponent",
     // the iModel key is required for unified selection system to distinguish selection changes between different iModels
@@ -278,7 +286,6 @@ function MyTreeComponentInternal({ imodelAccess, imodelKey }: { imodelAccess: IM
                     selector: await labelsQueryFactory.createSelectClause({ classAlias: "this", className: "BisCore.PhysicalModel" }),
                   },
                   hasChildren: false,
-                  hideIfNoChildren: false,
                 })}
               FROM BisCore.PhysicalModel this
             `,
@@ -287,10 +294,10 @@ function MyTreeComponentInternal({ imodelAccess, imodelKey }: { imodelAccess: IM
       ],
     }),
   });
-  if (isLoading) {
+  if (!rootNodes) {
     return "Loading...";
   }
-  return <TreeRenderer {...state} rootNodes={rootNodes ?? []} />;
+  return <TreeRenderer {...state} rootNodes={rootNodes} />;
 }
 ```
 
@@ -302,18 +309,11 @@ Localization can be enabled for `TreeRenderer` component and `useTree` and `useU
 
 Example:
 
-<!-- [[include: [Presentation.HierarchiesReact.Readme.Localization.Imports, Presentation.HierarchiesReact.Readme.Localization.Strings, Presentation.HierarchiesReact.Readme.Localization.Tree], tsx]] -->
+<!-- [[include: [Presentation.HierarchiesReact.Localization.Tree.Imports, Presentation.HierarchiesReact.Localization.Strings, Presentation.HierarchiesReact.Localization.Tree], tsx]] -->
 <!-- BEGIN EXTRACTION -->
 
 ```tsx
-import {
-  createRenderedTreeNodeData,
-  LocalizationContextProvider,
-  RenderedTreeNode,
-  TreeNodeRenderer,
-  TreeRenderer,
-  useUnifiedSelectionTree,
-} from "@itwin/presentation-hierarchies-react";
+import { useUnifiedSelectionTree } from "@itwin/presentation-hierarchies-react";
 
 type IModelAccess = Parameters<typeof useUnifiedSelectionTree>[0]["imodelAccess"];
 
@@ -352,7 +352,7 @@ function MyTreeComponent({ imodelAccess, imodelKey }: { imodelAccess: IModelAcce
 
 In case the `TreeNodeRenderer` component is used within a custom tree renderer, the tree component should supply localized strings through `LocalizationContextProvider`:
 
-<!-- [[include: [Presentation.HierarchiesReact.Readme.Localization.Imports, Presentation.HierarchiesReact.Readme.Localization.TreeRenderer.Imports, Presentation.HierarchiesReact.Readme.Localization.TreeRenderer], tsx]] -->
+<!-- [[include: [Presentation.HierarchiesReact.Localization.TreeRenderer.Imports, Presentation.HierarchiesReact.Localization.TreeRenderer], tsx]] -->
 <!-- BEGIN EXTRACTION -->
 
 ```tsx
@@ -362,11 +362,7 @@ import {
   RenderedTreeNode,
   TreeNodeRenderer,
   TreeRenderer,
-  useUnifiedSelectionTree,
 } from "@itwin/presentation-hierarchies-react";
-
-import { ComponentPropsWithoutRef, useCallback } from "react";
-import { Tree } from "@itwin/itwinui-react";
 
 type TreeProps = ComponentPropsWithoutRef<typeof Tree<RenderedTreeNode>>;
 type TreeRendererProps = Parameters<typeof TreeRenderer>[0];

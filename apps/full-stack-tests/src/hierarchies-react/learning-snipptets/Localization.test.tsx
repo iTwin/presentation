@@ -1,9 +1,10 @@
 /*---------------------------------------------------------------------------------------------
- * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
- * See LICENSE.md in the project root for license terms and full copyright notice.
- *--------------------------------------------------------------------------------------------*/
+* Copyright (c) Bentley Systems, Incorporated. All rights reserved.
+* See LICENSE.md in the project root for license terms and full copyright notice.
+*--------------------------------------------------------------------------------------------*/
 
 /* eslint-disable @typescript-eslint/naming-convention */
+/* eslint-disable no-duplicate-imports */
 import { expect } from "chai";
 import { buildIModel } from "../../IModelUtils";
 import { SchemaContext } from "@itwin/ecschema-metadata";
@@ -15,25 +16,27 @@ import { insertPhysicalModelWithPartition } from "presentation-test-utilities";
 import { createECSchemaProvider, createECSqlQueryExecutor } from "@itwin/presentation-core-interop";
 import { createLimitingECSqlQueryExecutor, createNodesQueryClauseFactory } from "@itwin/presentation-hierarchies";
 import { createBisInstanceLabelSelectClauseFactory, createCachingECClassHierarchyInspector } from "@itwin/presentation-shared";
-// __PUBLISH_EXTRACT_START__ Presentation.HierarchiesReact.Readme.Localization.TreeRenderer.Imports
+// __PUBLISH_EXTRACT_START__ Presentation.HierarchiesReact.Localization.TreeRenderer.Imports
 import { ComponentPropsWithoutRef, useCallback } from "react";
 import { Tree } from "@itwin/itwinui-react";
 // __PUBLISH_EXTRACT_END__
-// __PUBLISH_EXTRACT_START__ Presentation.HierarchiesReact.Readme.Localization.Imports
+// __PUBLISH_EXTRACT_START__ Presentation.HierarchiesReact.Localization.Tree.Imports
+import { useUnifiedSelectionTree } from "@itwin/presentation-hierarchies-react";
+// __PUBLISH_EXTRACT_END__
+// __PUBLISH_EXTRACT_START__ Presentation.HierarchiesReact.Localization.TreeRenderer.Imports
 import {
   createRenderedTreeNodeData,
   LocalizationContextProvider,
   RenderedTreeNode,
   TreeNodeRenderer,
   TreeRenderer,
-  useUnifiedSelectionTree,
 } from "@itwin/presentation-hierarchies-react";
 // __PUBLISH_EXTRACT_END__
 
 describe.only("Hierarchies-react", () => {
   describe("Learning snippets", () => {
     describe("Localization", () => {
-      // __PUBLISH_EXTRACT_START__ Presentation.HierarchiesReact.Readme.Localization.Strings
+      // __PUBLISH_EXTRACT_START__ Presentation.HierarchiesReact.Localization.Strings
       type IModelAccess = Parameters<typeof useUnifiedSelectionTree>[0]["imodelAccess"];
 
       const localizedStrings = {
@@ -59,8 +62,6 @@ describe.only("Hierarchies-react", () => {
 
       beforeEach(async function () {
         await initialize();
-
-        // eslint-disable-next-line deprecation/deprecation
         imodel = (await buildIModel(this, async (builder) => {
           insertPhysicalModelWithPartition({ builder, codeValue: "My Model A" });
           insertPhysicalModelWithPartition({ builder, codeValue: "My Model B" });
@@ -105,7 +106,7 @@ describe.only("Hierarchies-react", () => {
       });
 
       it("Tree localization", async function () {
-        // __PUBLISH_EXTRACT_START__ Presentation.HierarchiesReact.Readme.Localization.Tree
+        // __PUBLISH_EXTRACT_START__ Presentation.HierarchiesReact.Localization.Tree
         function MyTreeComponent({ imodelAccess, imodelKey }: { imodelAccess: IModelAccess; imodelKey: string }) {
           const { rootNodes, ...state } = useUnifiedSelectionTree({
             sourceName: "MyTreeComponent",
@@ -128,7 +129,7 @@ describe.only("Hierarchies-react", () => {
       });
 
       it("Tree renderer localization", async function () {
-        // __PUBLISH_EXTRACT_START__ Presentation.HierarchiesReact.Readme.Localization.TreeRenderer
+        // __PUBLISH_EXTRACT_START__ Presentation.HierarchiesReact.Localization.TreeRenderer
         type TreeProps = ComponentPropsWithoutRef<typeof Tree<RenderedTreeNode>>;
         type TreeRendererProps = Parameters<typeof TreeRenderer>[0];
 
@@ -151,7 +152,6 @@ describe.only("Hierarchies-react", () => {
         // __PUBLISH_EXTRACT_END__
 
         function MyTreeComponent({ imodelAccess, imodelKey }: { imodelAccess: IModelAccess; imodelKey: string }) {
-          // __PUBLISH_EXTRACT_START__ Presentation.HierarchiesReact.Readme.UseUnifiedSelectionTree
           const { rootNodes, ...state } = useUnifiedSelectionTree({
             sourceName: "MyTreeComponent",
             imodelKey,
@@ -159,7 +159,6 @@ describe.only("Hierarchies-react", () => {
             localizedStrings,
             getHierarchyDefinition,
           });
-          // __PUBLISH_EXTRACT_END__
           if (!rootNodes) {
             return localizedStrings.loading;
           }
