@@ -32,7 +32,7 @@ import {
 } from "@itwin/presentation-hierarchies-react";
 // __PUBLISH_EXTRACT_END__
 
-describe("Hierarchies-react", () => {
+describe("Hierarchies React", () => {
   describe("Learning snippets", () => {
     describe("Localization", () => {
       // __PUBLISH_EXTRACT_START__ Presentation.HierarchiesReact.Localization.Strings

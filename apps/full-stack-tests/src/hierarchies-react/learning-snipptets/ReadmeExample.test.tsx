@@ -54,7 +54,7 @@ function createIModelAccess(imodel: IModelConnection) {
 }
 // __PUBLISH_EXTRACT_END__
 
-describe("Hierarchies-react", () => {
+describe("Hierarchies React", () => {
   describe("Learning snippets", () => {
     describe("Readme example", () => {
       let iModel: IModelConnection;
