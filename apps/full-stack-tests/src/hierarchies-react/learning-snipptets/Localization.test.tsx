@@ -3,7 +3,6 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-/* eslint-disable @typescript-eslint/naming-convention */
 /* eslint-disable no-duplicate-imports */
 import { expect } from "chai";
 import { buildIModel } from "../../IModelUtils";
@@ -136,12 +135,9 @@ describe("Hierarchies-react", () => {
         type TreeRendererProps = Parameters<typeof TreeRenderer>[0];
 
         function MyTreeRenderer(props: TreeRendererProps) {
-          const nodeRenderer = useCallback<TreeProps["nodeRenderer"]>(
-            (nodeProps) => {
-              return <TreeNodeRenderer {...nodeProps} onFilterClick={() => {}} expandNode={() => {}} />;
-            },
-            [props],
-          );
+          const nodeRenderer = useCallback<TreeProps["nodeRenderer"]>((nodeProps) => {
+            return <TreeNodeRenderer {...nodeProps} onFilterClick={() => {}} expandNode={() => {}} />;
+          }, []);
 
           const getNode = useCallback<TreeProps["getNode"]>((node) => createRenderedTreeNodeData(node, () => false), []);
 

@@ -3,7 +3,6 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-/* eslint-disable @typescript-eslint/naming-convention */
 import { expect } from "chai";
 import { insertPhysicalModelWithPartition } from "presentation-test-utilities";
 import { initialize, terminate } from "../../IntegrationTests";

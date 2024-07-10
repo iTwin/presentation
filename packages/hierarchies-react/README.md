@@ -368,12 +368,9 @@ type TreeProps = ComponentPropsWithoutRef<typeof Tree<RenderedTreeNode>>;
 type TreeRendererProps = Parameters<typeof TreeRenderer>[0];
 
 function MyTreeRenderer(props: TreeRendererProps) {
-  const nodeRenderer = useCallback<TreeProps["nodeRenderer"]>(
-    (nodeProps) => {
-      return <TreeNodeRenderer {...nodeProps} onFilterClick={() => {}} expandNode={() => {}} />;
-    },
-    [props],
-  );
+  const nodeRenderer = useCallback<TreeProps["nodeRenderer"]>((nodeProps) => {
+    return <TreeNodeRenderer {...nodeProps} onFilterClick={() => {}} expandNode={() => {}} />;
+  }, []);
 
   const getNode = useCallback<TreeProps["getNode"]>((node) => createRenderedTreeNodeData(node, () => false), []);
 
