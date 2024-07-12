@@ -117,6 +117,42 @@ describe("FilteringHierarchyDefinition", () => {
       const node = filteringFactory.parseNode(row);
       expect(node.autoExpand).to.be.true;
     });
+
+    it("doesn't set auto-expand when all filtered children paths contain `expandToTarget` = false", () => {
+      const filteringFactory = createFilteringHierarchyLevelsFactory();
+      const paths = [{ path: [createTestInstanceKey({ id: "0x1" })], options: { autoExpand: false } }];
+      const row = {
+        [NodeSelectClauseColumnNames.FullClassName]: "",
+        [ECSQL_COLUMN_NAME_FilteredChildrenPaths]: JSON.stringify(paths),
+      };
+      const node = filteringFactory.parseNode(row);
+      expect(node.autoExpand).to.be.undefined;
+    });
+
+    it("sets auto-expand when one of filtered children paths contains `expandToTarget` = true", () => {
+      const filteringFactory = createFilteringHierarchyLevelsFactory();
+      const paths = [
+        { path: [createTestInstanceKey({ id: "0x1" })], options: { autoExpand: false } },
+        { path: [createTestInstanceKey({ id: "0x2" })], options: { autoExpand: true } },
+      ];
+      const row = {
+        [NodeSelectClauseColumnNames.FullClassName]: "",
+        [ECSQL_COLUMN_NAME_FilteredChildrenPaths]: JSON.stringify(paths),
+      };
+      const node = filteringFactory.parseNode(row);
+      expect(node.autoExpand).to.be.true;
+    });
+
+    it("sets auto-expand when one of filtered children paths does not contain `expandToTarget`", () => {
+      const filteringFactory = createFilteringHierarchyLevelsFactory();
+      const paths = [{ path: createTestInstanceKey({ id: "0x1" }), options: { autoExpand: false } }, [createTestInstanceKey({ id: "0x2" })]];
+      const row = {
+        [NodeSelectClauseColumnNames.FullClassName]: "",
+        [ECSQL_COLUMN_NAME_FilteredChildrenPaths]: JSON.stringify(paths),
+      };
+      const node = filteringFactory.parseNode(row);
+      expect(node.autoExpand).to.be.true;
+    });
   });
 
   describe("preProcessNode", () => {
@@ -224,7 +260,42 @@ describe("FilteringHierarchyDefinition", () => {
         children: [
           {
             ...createTestProcessedInstanceNode(),
-            filtering: { filteredChildrenIdentifierPaths: [] },
+            filtering: { filteredChildrenIdentifierPaths: [[createTestInstanceKey({ id: "0x1" })]] },
+          },
+        ],
+      };
+      const filteringFactory = createFilteringHierarchyLevelsFactory();
+      const result = await filteringFactory.postProcessNode(inputNode);
+      expect(result.autoExpand).to.be.true;
+    });
+
+    it("doesn't set auto-expand on class grouping nodes when all filtered children paths contain `expandToTarget` = false", async () => {
+      const inputNode = {
+        ...createClassGroupingNode(),
+        children: [
+          {
+            ...createTestProcessedInstanceNode(),
+            filtering: { filteredChildrenIdentifierPaths: [{ path: [createTestInstanceKey({ id: "0x1" })], options: { autoExpand: false } }] },
+          },
+        ],
+      };
+      const filteringFactory = createFilteringHierarchyLevelsFactory();
+      const result = await filteringFactory.postProcessNode(inputNode);
+      expect(result.autoExpand).to.be.undefined;
+    });
+
+    it("sets auto-expand when one of filtered children paths contains `expandToTarget` = true", async () => {
+      const inputNode = {
+        ...createClassGroupingNode(),
+        children: [
+          {
+            ...createTestProcessedInstanceNode(),
+            filtering: {
+              filteredChildrenIdentifierPaths: [
+                { path: [createTestInstanceKey({ id: "0x1" })], options: { autoExpand: false } },
+                { path: [createTestInstanceKey({ id: "0x2" })], options: { autoExpand: true } },
+              ],
+            },
           },
         ],
       };

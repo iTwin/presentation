@@ -9,6 +9,7 @@ import { PropsWithChildren } from "react";
 import { act } from "react-dom/test-utils";
 import sinon from "sinon";
 import * as hierarchiesModule from "@itwin/presentation-hierarchies";
+import { FilteringPath } from "@itwin/presentation-hierarchies/lib/cjs/hierarchies/HierarchyProvider";
 import { IPrimitiveValueFormatter } from "@itwin/presentation-shared";
 import { createStorage, Selectables, StorageSelectionChangeEventArgs, StorageSelectionChangesListener } from "@itwin/unified-selection";
 import { createNodeId } from "../presentation-hierarchies-react/internal/Utils";
@@ -105,7 +106,7 @@ describe("useTree", () => {
       return createAsyncIterator(props.parentNode === undefined ? [createTestHierarchyNode({ id: "root-1" })] : []);
     });
 
-    const promise = new ResolvablePromise<hierarchiesModule.HierarchyNodeIdentifiersPath[] | undefined>();
+    const promise = new ResolvablePromise<FilteringPath[] | undefined>();
     const getFilteredPaths = async () => promise;
 
     const { result } = renderHook(useTree, { initialProps: { ...initialProps, getFilteredPaths } });

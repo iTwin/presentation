@@ -4,7 +4,6 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { ConcatenatedValue, InstanceKey, OmitOverUnion, PrimitiveValue } from "@itwin/presentation-shared";
-import { HierarchyNodeIdentifiersPath } from "./HierarchyNodeIdentifier";
 import {
   ClassGroupingNodeKey,
   GroupingNodeKey,
@@ -17,9 +16,10 @@ import {
   PropertyValueRangeGroupingNodeKey,
   StandardHierarchyNodeKey,
 } from "./HierarchyNodeKey";
+import { FilteringPath } from "./HierarchyProvider";
 
 /**
- * A data structure that represents a single non-grouping hierarchy node.
+ * A data structure that defines attributes that are common to all types of hierarchy nodes.
  * @beta
  */
 interface BaseHierarchyNode {
@@ -37,7 +37,7 @@ interface BaseHierarchyNode {
   filtering?: {
     isFilterTarget?: boolean;
     hasFilterTargetAncestor?: boolean;
-    filteredChildrenIdentifierPaths?: HierarchyNodeIdentifiersPath[];
+    filteredChildrenIdentifierPaths?: FilteringPath[];
   };
 }
 
