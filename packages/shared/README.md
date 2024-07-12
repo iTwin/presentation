@@ -139,6 +139,16 @@ The ECSql utilities group contains a number of functions to help create complex 
   // result = "'STRING VALUE'"
   ```
 
+- `createInstanceKeySelector` - creates an ECSQL selector for a serialized `InstanceKey` JSON object.
+
+  Example usage:
+
+  ```ts
+  import { ECSql } from "@itwin/presentation-shared";
+  const result = ECSql.createInstanceKeySelector({ alias: "x" });
+  // result = "json_object('className', ec_classname([x].[ECClassId], 's.c'), 'id', IdToHex([x].[ECInstanceId]))"
+  ```
+
 - `createConcatenatedValueJsonSelector` - creates an ECSQL selector for a `ConcatenatedValue`. This allows handling results of each value selector individually when parsing query result.
 
   Example usage:
