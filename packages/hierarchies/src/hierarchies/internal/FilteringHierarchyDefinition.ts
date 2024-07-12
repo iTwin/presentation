@@ -150,10 +150,7 @@ async function matchFilters<
   TDefinition = TIdentifier extends InstanceKey ? InstanceNodesQueryDefinition : CustomHierarchyNodeDefinition,
 >(
   definition: TDefinition,
-  filteringProps: {
-    filteredNodePaths: FilteringPath[];
-    isDirectParentFilterTarget?: boolean;
-  },
+  filteringProps: { filteredNodePaths: FilteringPath[]; isDirectParentFilterTarget?: boolean },
   predicate: (id: HierarchyNodeIdentifier) => Promise<boolean>,
   classHierarchy: ECClassHierarchyInspector,
   matchedDefinitionProcessor: (
