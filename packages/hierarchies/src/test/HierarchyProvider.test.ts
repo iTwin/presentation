@@ -588,8 +588,8 @@ describe("createHierarchyProvider", () => {
             trimWhitespace(query.ctes[0]) ===
               trimWhitespace(
                 `
-                FilteringInfo(ECInstanceId, FilteredChildrenPaths) AS (
-                  VALUES (0x123, '[[{"className":"c.d","id":"0x456"}]]')
+                FilteringInfo(ECInstanceId, IsFilterTarget, FilteredChildrenPaths) AS (
+                  VALUES (0x123, CAST(0 AS BOOLEAN), '[[{"className":"c.d","id":"0x456"}]]')
                 )
                 `,
               ) &&
@@ -598,7 +598,7 @@ describe("createHierarchyProvider", () => {
                 `
                 SELECT
                     [q].*,
-                    0 AS [${ECSQL_COLUMN_NAME_IsFilterTarget}],
+                    [f].[IsFilterTarget] AS [${ECSQL_COLUMN_NAME_IsFilterTarget}],
                     0 AS [${ECSQL_COLUMN_NAME_HasFilterTargetAncestor}],
                     [f].[FilteredChildrenPaths] AS [${ECSQL_COLUMN_NAME_FilteredChildrenPaths}]
                   FROM (QUERY) [q]

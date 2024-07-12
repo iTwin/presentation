@@ -28,6 +28,7 @@ export namespace NodeValidators {
       label?: string | RegExp;
       autoExpand?: boolean;
       supportsFiltering?: boolean;
+      isFilterTarget?: boolean;
       children?: ExpectedHierarchyDef[] | boolean;
     },
   ) {
@@ -61,13 +62,24 @@ export namespace NodeValidators {
         )}, got ${optionalBooleanToString(node.supportsFiltering)}`,
       );
     }
+    if (expectations.isFilterTarget !== undefined && !!node.filtering?.isFilterTarget !== !!expectations.isFilterTarget) {
+      throw new Error(
+        `[${node.label}] Expected node's \`filtering.isFilterTarget\` flag to be ${optionalBooleanToString(
+          expectations.isFilterTarget,
+        )}, got ${optionalBooleanToString(node.filtering?.isFilterTarget)}`,
+      );
+    }
     if (expectations.children !== undefined && hasChildren(expectations) !== hasChildren(node)) {
       throw new Error(`[${node.label}] Expected node to ${hasChildren(expectations) ? "" : "not "}have children but it does ${hasChildren(node) ? "" : "not"}`);
     }
   }
 
   export function createForCustomNode<TChildren extends ExpectedHierarchyDef[] | boolean>(
-    expectedNode: Partial<Omit<NonGroupingHierarchyNode, "label" | "children">> & { label?: string; children?: TChildren },
+    expectedNode: Partial<Omit<NonGroupingHierarchyNode, "label" | "children" | "filtering">> & {
+      label?: string;
+      isFilterTarget?: boolean;
+      children?: TChildren;
+    },
   ) {
     return {
       node: (node: HierarchyNode) => {
@@ -81,6 +93,7 @@ export namespace NodeValidators {
           label: expectedNode.label,
           autoExpand: expectedNode.autoExpand,
           supportsFiltering: expectedNode.supportsFiltering,
+          isFilterTarget: expectedNode.isFilterTarget,
           children: expectedNode.children,
         });
       },
@@ -93,6 +106,7 @@ export namespace NodeValidators {
     label?: string | RegExp;
     autoExpand?: boolean;
     supportsFiltering?: boolean;
+    isFilterTarget?: boolean;
     children?: TChildren;
   }) {
     return {
@@ -116,6 +130,7 @@ export namespace NodeValidators {
           label: props.label,
           autoExpand: props.autoExpand,
           supportsFiltering: props.supportsFiltering,
+          isFilterTarget: props.isFilterTarget,
           children: props.children,
         });
       },
