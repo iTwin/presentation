@@ -1353,6 +1353,14 @@ describe("createHierarchyProvider", () => {
         sinon.match((query: ECSqlQueryDef) => query.ecsql.includes("FROM (ROOT)") && query?.bindings?.length === 1 && query?.bindings?.at(0)?.value === "0x1"),
       );
       expect(rootInstanceNodes2).to.deep.eq(rootInstanceNodes);
+      imodelAccess.createQueryReader.resetHistory();
+
+      // requesting root nodes again should re-execute the root query, NOT filtered by grouped instance ECInstanceIds
+      const groupingNodes2 = await collect(provider.getNodes({ parentNode: undefined }));
+      expect(imodelAccess.createQueryReader).to.be.calledOnceWith(
+        sinon.match((query: ECSqlQueryDef) => query.ecsql === "ROOT" && query?.bindings === undefined),
+      );
+      expect(groupingNodes2).to.deep.eq(groupingNodes);
     });
   });
 

@@ -372,6 +372,85 @@ describe("PropertiesGrouping", () => {
       });
     });
 
+    it("omits property groups up to parent property not-specified value grouping node when grouping by values", async () => {
+      const className = "TestSchema.Class";
+      imodelAccess.stubEntityClass({ schemaName: "TestSchema", className: "Class" });
+
+      const parentNode = createTestProcessedGroupingNode({
+        key: { type: "property-grouping:value", formattedPropertyValue: "", propertyClassName: className, propertyName: "PropertyName1" },
+      });
+      const nodes = [
+        createTestProcessedInstanceNode({
+          key: { type: "instances", instanceKeys: [{ className: "TestSchema.TestClass", id: "0x1" }] },
+          processingParams: {
+            grouping: {
+              byProperties: {
+                propertiesClassName: className,
+                propertyGroups: [
+                  {
+                    propertyName: "PropertyName1",
+                    propertyValue: 123,
+                  },
+                  {
+                    propertyName: "PropertyName2",
+                    propertyValue: 258,
+                  },
+                ],
+                createGroupForOutOfRangeValues: true,
+              },
+            },
+          },
+        }),
+      ];
+
+      const result = await propertiesGrouping.getUniquePropertiesGroupInfo(imodelAccess, parentNode, nodes);
+      expect(result.length).to.eq(1);
+      checkPropertyGroupInfo(result[0], className, [{ propertiesClassName: className, propertyName: "PropertyName1", isRange: false }], {
+        propertyName: "PropertyName2",
+      });
+    });
+
+    it("omits property groups up to parent property not-specified value grouping node when grouping by ranges", async () => {
+      const className = "TestSchema.Class";
+      imodelAccess.stubEntityClass({ schemaName: "TestSchema", className: "Class" });
+
+      const parentNode = createTestProcessedGroupingNode({
+        key: { type: "property-grouping:value", formattedPropertyValue: "", propertyClassName: className, propertyName: "PropertyName1" },
+      });
+      const nodes = [
+        createTestProcessedInstanceNode({
+          key: { type: "instances", instanceKeys: [{ className: "TestSchema.TestClass", id: "0x1" }] },
+          processingParams: {
+            grouping: {
+              byProperties: {
+                propertiesClassName: className,
+                propertyGroups: [
+                  {
+                    propertyName: "PropertyName1",
+                    propertyValue: 123,
+                    ranges: [{ fromValue: 1, toValue: 9 }],
+                  },
+                  {
+                    propertyName: "PropertyName2",
+                    propertyValue: 258,
+                    ranges: [{ fromValue: 2, toValue: 8 }],
+                  },
+                ],
+                createGroupForOutOfRangeValues: true,
+              },
+            },
+          },
+        }),
+      ];
+
+      const result = await propertiesGrouping.getUniquePropertiesGroupInfo(imodelAccess, parentNode, nodes);
+      expect(result.length).to.eq(1);
+      checkPropertyGroupInfo(result[0], className, [{ propertiesClassName: className, propertyName: "PropertyName1", isRange: true }], {
+        propertyName: "PropertyName2",
+        ranges: [{ fromValue: 2, toValue: 8 }],
+      });
+    });
+
     it("doesn't omit property groups when parent is not a property grouping node", async () => {
       const className = "TestSchema.Class";
       imodelAccess.stubEntityClass({ schemaName: "TestSchema", className: "Class" });

@@ -15,37 +15,42 @@ import { createHierarchyProvider, createNodesQueryClauseFactory } from "@itwin/p
 const hierarchyProvider = createHierarchyProvider({
   imodelAccess,
   hierarchyDefinition: {
-    defineHierarchyLevel: async () => [
-      // the hierarchy definition returns nodes for `myPhysicalObjectClassName` element type, grouped by `IntProperty` property value,
-      // with options to create groups for out-of-range and unspecified values - labels of those grouping nodes get localized
-      {
-        fullClassName: myPhysicalObjectClassName,
-        query: {
-          ecsql: `
-            SELECT ${await createNodesQueryClauseFactory({ imodelAccess }).createSelectClause({
-              ecClassId: { selector: "this.ECClassId" },
-              ecInstanceId: { selector: "this.ECInstanceId" },
-              nodeLabel: { selector: "this.UserLabel" },
-              grouping: {
-                byProperties: {
-                  propertiesClassName: myPhysicalObjectClassName,
-                  propertyGroups: [
-                    {
-                      propertyClassAlias: "this",
-                      propertyName: "IntProperty",
-                      ranges: [{ fromValue: 1, toValue: 5 }],
+    defineHierarchyLevel: async ({ parentNode }) => {
+      if (!parentNode) {
+        // The hierarchy definition returns nodes for `myPhysicalObjectClassName` element type, grouped by `IntProperty` property value,
+        // with options to create groups for out-of-range and unspecified values - labels of those grouping nodes get localized
+        return [
+          {
+            fullClassName: myPhysicalObjectClassName,
+            query: {
+              ecsql: `
+                SELECT ${await createNodesQueryClauseFactory({ imodelAccess }).createSelectClause({
+                  ecClassId: { selector: "this.ECClassId" },
+                  ecInstanceId: { selector: "this.ECInstanceId" },
+                  nodeLabel: { selector: "this.UserLabel" },
+                  grouping: {
+                    byProperties: {
+                      propertiesClassName: myPhysicalObjectClassName,
+                      propertyGroups: [
+                        {
+                          propertyClassAlias: "this",
+                          propertyName: "IntProperty",
+                          ranges: [{ fromValue: 1, toValue: 5 }],
+                        },
+                      ],
+                      createGroupForOutOfRangeValues: true,
+                      createGroupForUnspecifiedValues: true,
                     },
-                  ],
-                  createGroupForOutOfRangeValues: true,
-                  createGroupForUnspecifiedValues: true,
-                },
-              },
-            })}
-            FROM ${myPhysicalObjectClassName} this
-          `,
-        },
-      },
-    ],
+                  },
+                })}
+                FROM ${myPhysicalObjectClassName} this
+              `,
+            },
+          },
+        ];
+      }
+      return [];
+    },
   },
   localizedStrings: {
     other: "Kita",
@@ -55,16 +60,20 @@ const hierarchyProvider = createHierarchyProvider({
 
 // The iModel has four elements of `myPhysicalObjectClassName` type:
 //
-// | No. of element | Value of `IntProperty` | Grouping node | Localized grouping node |
-// | -------------- | ---------------------- | ------------- | ----------------------- |
-// | 1              | 2                      | 1 - 5         | 1 - 5                   |
-// | 2              | 4                      | 1 - 5         | 1 - 5                   |
-// | 3              | 6                      | Other         | Kita                    |
-// | 4              | undefined              | Unspecified   | Nenurodyta              |
+// | Element's label | Value of `IntProperty` | Grouping node | Localized grouping node |
+// | --------------- | ---------------------- | ------------- | ----------------------- |
+// | Element 1       | 2                      | 1 - 5         | 1 - 5                   |
+// | Element 2       | 4                      | 1 - 5         | 1 - 5                   |
+// | Element 3       | 6                      | Other         | Kita                    |
+// | Element 4       | undefined              | Unspecified   | Nenurodyta              |
 //
 // As shown in the above table, we expect to get 3 grouping nodes: "1 - 5", "Other", and "Unspecified". The
 // latter two strings are localized using the `localizedStrings` object, provided to `createHierarchyProvider`.
-const nodes = hierarchyProvider.getNodes({ parentNode: undefined });
+expect(await collectHierarchy(hierarchyProvider)).to.deep.eq([
+  { label: "1 - 5", children: [{ label: "Element 1" }, { label: "Element 2" }] },
+  { label: "Kita", children: [{ label: "Element 3" }] },
+  { label: "Nenurodyta", children: [{ label: "Element 4" }] },
+]);
 ```
 
 <!-- END EXTRACTION -->
