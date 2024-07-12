@@ -360,9 +360,16 @@ describe("Hierarchies", () => {
             },
           });
 
-          // The iModel has three elements of `BisCore.RepositoryLink` class - two with `iModel` and one with `DGN`
-          // `Format` property value. As requested by hierarchy definition, the provider returns them grouped
-          // the property value:
+          // The iModel has four elements of `BisCore.RepositoryLink` class:
+          //
+          // | Element's label             | `Format` property value |
+          // | --------------------------- | ----------------------- |
+          // | Example iModel link 1       | iModel                  |
+          // | Example iModel link 2       | iModel                  |
+          // | Example DGN link            | DGN                     |
+          // | Example link with no format |                         |
+          //
+          // As requested by hierarchy definition, the provider returns them grouped by `Format` property value:
           expect(await collectHierarchy(hierarchyProvider)).to.deep.eq([
             {
               // the `Format="DGN"` property grouping node
