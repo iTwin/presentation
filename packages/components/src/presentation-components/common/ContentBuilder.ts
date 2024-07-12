@@ -23,6 +23,7 @@ import {
   FieldHierarchy,
   IContentVisitor,
   Item,
+  LabelDefinition,
   PropertyValueFormat as PresentationPropertyValueFormat,
   ProcessFieldHierarchiesProps,
   ProcessMergedValueProps,
@@ -136,7 +137,7 @@ class StructMembersAppender implements INestedPropertiesAppender {
     private _parentAppender: IPropertiesAppender,
     private _fieldHierarchy: FieldHierarchy,
     private _fieldInfo: FieldInfo,
-    private _description?: string,
+    private _label?: LabelDefinition,
   ) {}
   public append(record: FieldHierarchyRecord): void {
     this._members[record.fieldHierarchy.field.name] = record.record;
@@ -149,10 +150,11 @@ class StructMembersAppender implements INestedPropertiesAppender {
       members: Object.fromEntries(properties),
     };
     const record = new PropertyRecord(value, createPropertyDescriptionFromFieldInfo(this._fieldInfo));
+    const displayLabel = this._label?.displayValue;
     applyPropertyRecordAttributes(
       record,
       this._fieldHierarchy.field,
-      this._description,
+      displayLabel === "@Presentation:label.notSpecified@" ? undefined : displayLabel,
       IPropertiesAppender.isRoot(this._parentAppender) ? this._parentAppender.item.extendedData : undefined,
     );
     this._parentAppender.append({ record, fieldHierarchy: this._fieldHierarchy });
@@ -230,7 +232,7 @@ export class InternalPropertyRecordsBuilder implements IContentVisitor {
       ...createFieldInfo(props.hierarchy.field, props.parentFieldName),
       type: props.valueType,
     };
-    this._appendersStack.push(new StructMembersAppender(this.currentPropertiesAppender, props.hierarchy, fieldInfo, props.description));
+    this._appendersStack.push(new StructMembersAppender(this.currentPropertiesAppender, props.hierarchy, fieldInfo, props.label));
     return true;
   }
   public finishStruct(): void {
