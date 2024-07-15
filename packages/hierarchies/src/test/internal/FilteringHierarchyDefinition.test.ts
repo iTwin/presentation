@@ -108,7 +108,7 @@ describe("FilteringHierarchyDefinition", () => {
       expect(node.autoExpand).to.be.undefined;
     });
 
-    it("does not set auto-expand when filtered children paths list is not empty", () => {
+    it("does not set auto-expand when filtered children paths list is provided without `autoExpand` option", () => {
       const filteringFactory = createFilteringHierarchyLevelsFactory();
       const paths: HierarchyNodeIdentifiersPath[] = [[createTestInstanceKey({ id: "0x1" })]];
       const row = {
@@ -244,7 +244,7 @@ describe("FilteringHierarchyDefinition", () => {
       expect(result.autoExpand).to.be.undefined;
     });
 
-    it("does not set auto-expand on class grouping nodes if any child has filtered children paths", async () => {
+    it("does not set auto-expand on class grouping nodes if children have filtered children paths list set without `autoExpand` option", async () => {
       const inputNode = {
         ...createClassGroupingNode(),
         children: [

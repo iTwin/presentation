@@ -88,10 +88,7 @@ interface GetFilteredPathsProps {
 }
 
 /** @beta */
-type HierarchyNodeFiltering = Required<HierarchyNode>["filtering"];
-
-/** @beta */
-type FilteredPaths = Required<HierarchyNodeFiltering>["filteredChildrenIdentifierPaths"];
+type HierarchyFilteringPaths = NonNullable<NonNullable<HierarchyProviderProps["filtering"]>["paths"]>;
 
 /** @beta */
 interface UseTreeProps extends Pick<Parameters<typeof createHierarchyProvider>[0], "localizedStrings"> {
