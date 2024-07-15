@@ -28,9 +28,6 @@ import { TreeNode } from '@itwin/itwinui-react';
 // @beta
 export function createRenderedTreeNodeData(node: RenderedTreeNode, isNodeSelected: (nodeId: string) => boolean): NodeData<RenderedTreeNode>;
 
-// @beta (undocumented)
-type FilteredPaths = Required<HierarchyNodeFiltering>["filteredChildrenIdentifierPaths"];
-
 // @beta
 type FullTreeReloadOptions = {
     dataSourceChanged?: true;
@@ -42,6 +39,9 @@ export { GenericInstanceFilter }
 interface GetFilteredPathsProps {
     imodelAccess: IModelAccess;
 }
+
+// @beta (undocumented)
+type HierarchyFilteringPaths = NonNullable<NonNullable<HierarchyProviderProps["filtering"]>["paths"]>;
 
 // @beta
 export interface HierarchyLevelDetails {
@@ -58,10 +58,10 @@ export interface HierarchyLevelDetails {
 
 export { HierarchyNode }
 
-// @beta (undocumented)
-type HierarchyNodeFiltering = Required<HierarchyNode>["filtering"];
-
 export { HierarchyProvider }
+
+// @beta (undocumented)
+type HierarchyProviderProps = Parameters<typeof createHierarchyProvider>[0];
 
 // @beta (undocumented)
 type IModelAccess = ECSchemaProvider & LimitingECSqlQueryExecutor & ECClassHierarchyInspector;
@@ -246,8 +246,8 @@ interface UseSelectionHandlerResult {
 export function useTree(props: UseTreeProps): UseTreeResult;
 
 // @beta (undocumented)
-interface UseTreeProps extends Pick<Parameters<typeof createHierarchyProvider>[0], "localizedStrings"> {
-    getFilteredPaths?: (props: GetFilteredPathsProps) => Promise<FilteredPaths | undefined>;
+interface UseTreeProps extends Pick<HierarchyProviderProps, "localizedStrings"> {
+    getFilteredPaths?: (props: GetFilteredPathsProps) => Promise<HierarchyFilteringPaths | undefined>;
     getHierarchyDefinition: (props: {
         imodelAccess: IModelAccess;
     }) => HierarchyDefinition;

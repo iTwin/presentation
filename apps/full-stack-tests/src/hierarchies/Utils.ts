@@ -8,11 +8,11 @@ import { IModelConnection } from "@itwin/core-frontend";
 import { Schema, SchemaContext, SchemaInfo, SchemaKey, SchemaMatchType } from "@itwin/ecschema-metadata";
 import { ECSchemaRpcLocater } from "@itwin/ecschema-rpcinterface-common";
 import { createECSchemaProvider as createECSchemaProviderInterop, createECSqlQueryExecutor } from "@itwin/presentation-core-interop";
-import { createHierarchyProvider, createLimitingECSqlQueryExecutor, HierarchyDefinition, HierarchyNode } from "@itwin/presentation-hierarchies";
+import { createHierarchyProvider, createLimitingECSqlQueryExecutor, HierarchyDefinition } from "@itwin/presentation-hierarchies";
 import { createCachingECClassHierarchyInspector, IPrimitiveValueFormatter, parseFullClassName } from "@itwin/presentation-shared";
 
-type HierarchyNodeFiltering = Required<HierarchyNode>["filtering"];
-type HierarchyFilteringPaths = Required<HierarchyNodeFiltering>["filteredChildrenIdentifierPaths"];
+type HierarchyProviderProps = Parameters<typeof createHierarchyProvider>[0];
+type HierarchyFilteringPaths = NonNullable<NonNullable<HierarchyProviderProps["filtering"]>["paths"]>;
 
 export function createSchemaContext(imodel: IModelConnection | IModelDb | ECDb) {
   const schemas = new SchemaContext();
