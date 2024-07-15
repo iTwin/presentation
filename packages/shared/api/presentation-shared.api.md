@@ -80,6 +80,11 @@ export function createDefaultInstanceLabelSelectClauseFactory(): IInstanceLabelS
 export function createDefaultValueFormatter(): IPrimitiveValueFormatter;
 
 // @beta
+function createInstanceKeySelector(props: {
+    alias: string;
+}): string;
+
+// @beta
 interface CreateInstanceLabelSelectClauseProps {
     classAlias: string;
     className?: string;
@@ -266,6 +271,7 @@ declare namespace ECSql {
         createNullableSelector,
         createConcatenatedValueJsonSelector,
         createConcatenatedValueStringSelector,
+        createInstanceKeySelector,
         createRelationshipPathJoinClause
     }
 }

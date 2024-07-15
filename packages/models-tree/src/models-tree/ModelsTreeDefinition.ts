@@ -636,9 +636,9 @@ function createGeometricElementInstanceKeyPaths(
           e.Parent.Id,
           e.Model.Id,
           json_array(
-            ${createECInstanceKeySelectClause({ alias: "e" })},
-            IIF(e.Parent.Id IS NULL, ${createECInstanceKeySelectClause({ alias: "c" })}, NULL),
-            IIF(e.Parent.Id IS NULL, ${createECInstanceKeySelectClause({ alias: "m" })}, NULL)
+            ${ECSql.createInstanceKeySelector({ alias: "e" })},
+            IIF(e.Parent.Id IS NULL, ${ECSql.createInstanceKeySelector({ alias: "c" })}, NULL),
+            IIF(e.Parent.Id IS NULL, ${ECSql.createInstanceKeySelector({ alias: "m" })}, NULL)
           )
         FROM ${hierarchyConfig.elementClassSpecification} e
         JOIN bis.GeometricModel3d m ON m.ECInstanceId = e.Model.Id
@@ -653,9 +653,9 @@ function createGeometricElementInstanceKeyPaths(
           pe.Model.Id,
           json_insert(
             ce.Path,
-            '$[#]', ${createECInstanceKeySelectClause({ alias: "pe" })},
-            '$[#]', IIF(pe.Parent.Id IS NULL, ${createECInstanceKeySelectClause({ alias: "c" })}, NULL),
-            '$[#]', IIF(pe.Parent.Id IS NULL, ${createECInstanceKeySelectClause({ alias: "m" })}, NULL)
+            '$[#]', ${ECSql.createInstanceKeySelector({ alias: "pe" })},
+            '$[#]', IIF(pe.Parent.Id IS NULL, ${ECSql.createInstanceKeySelector({ alias: "c" })}, NULL),
+            '$[#]', IIF(pe.Parent.Id IS NULL, ${ECSql.createInstanceKeySelector({ alias: "m" })}, NULL)
           )
         FROM ModelsCategoriesElementsHierarchy ce
         JOIN ${hierarchyConfig.elementClassSpecification} pe ON (pe.ECInstanceId = ce.ParentId OR pe.ECInstanceId = ce.ModelId AND ce.ParentId IS NULL)
@@ -788,12 +788,6 @@ async function createInstanceKeyPathsFromInstanceLabel(
   }
 
   return createInstanceKeyPathsFromInstanceKeys({ ...props, keys: targetKeys });
-}
-
-function createECInstanceKeySelectClause(props: { alias: string }) {
-  const classIdSelector = `[${props.alias}].[ECClassId]`;
-  const instanceHexIdSelector = `IdToHex([${props.alias}].[ECInstanceId])`;
-  return `json_object('className', ec_classname(${classIdSelector}, 's.c'), 'id', ${instanceHexIdSelector})`;
 }
 
 type ArrayOrValue<T> = T | Array<ArrayOrValue<T>>;

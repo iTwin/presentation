@@ -103,13 +103,16 @@ describe("Hierarchies", () => {
             NodeValidators.createForInstanceNode({
               instanceKeys: [keys.rootSubject],
               autoExpand: true,
+              isFilterTarget: false,
               children: [
                 NodeValidators.createForCustomNode({
                   key: "custom",
                   autoExpand: true,
+                  isFilterTarget: false,
                   children: [
                     NodeValidators.createForInstanceNode({
                       instanceKeys: [keys.childSubject2],
+                      isFilterTarget: true,
                       children: false,
                     }),
                   ],
@@ -121,11 +124,9 @@ describe("Hierarchies", () => {
       });
 
       it("filters custom nodes", async function () {
-        const { imodel, ...keys } = await buildIModel(this, async (builder) => {
+        const { imodel, ...keys } = await buildIModel(this, async () => {
           const rootSubject = { className: subjectClassName, id: IModel.rootSubjectId };
-          const childSubject1 = insertSubject({ builder, codeValue: "test subject 1", parentId: rootSubject.id });
-          const childSubject2 = insertSubject({ builder, codeValue: "test subject 2", parentId: rootSubject.id });
-          return { rootSubject, childSubject1, childSubject2 };
+          return { rootSubject };
         });
 
         const selectQueryFactory = createNodesQueryClauseFactory({ imodelAccess: createIModelAccess(imodel) });
@@ -176,10 +177,12 @@ describe("Hierarchies", () => {
             NodeValidators.createForInstanceNode({
               instanceKeys: [keys.rootSubject],
               autoExpand: true,
+              isFilterTarget: false,
               children: [
                 NodeValidators.createForCustomNode({
                   key: "custom2",
                   autoExpand: false,
+                  isFilterTarget: true,
                 }),
               ],
             }),
@@ -267,9 +270,11 @@ describe("Hierarchies", () => {
             NodeValidators.createForInstanceNode({
               instanceKeys: [keys.rootSubject],
               autoExpand: true,
+              isFilterTarget: false,
               children: [
                 NodeValidators.createForInstanceNode({
                   instanceKeys: [keys.childSubject2],
+                  isFilterTarget: true,
                   children: false,
                 }),
               ],
@@ -353,6 +358,7 @@ describe("Hierarchies", () => {
           expect: [
             NodeValidators.createForInstanceNode({
               instanceKeys: [keys.rootSubject],
+              isFilterTarget: false,
               children: false,
             }),
           ],
@@ -436,6 +442,7 @@ describe("Hierarchies", () => {
           expect: [
             NodeValidators.createForInstanceNode({
               instanceKeys: [keys.rootSubject],
+              isFilterTarget: false,
               children: false,
             }),
           ],
@@ -529,10 +536,12 @@ describe("Hierarchies", () => {
                 NodeValidators.createForInstanceNode({
                   instanceKeys: [x],
                   autoExpand: true,
+                  isFilterTarget: true,
                   children: [
                     NodeValidators.createForInstanceNode({
                       instanceKeys: [z],
                       autoExpand: false,
+                      isFilterTarget: false,
                       children: false,
                     }),
                   ],
@@ -618,10 +627,12 @@ describe("Hierarchies", () => {
                 NodeValidators.createForInstanceNode({
                   instanceKeys: [x],
                   autoExpand: true,
+                  isFilterTarget: true,
                   children: [
                     NodeValidators.createForInstanceNode({
                       instanceKeys: [y2],
                       autoExpand: false,
+                      isFilterTarget: false,
                       children: false,
                     }),
                   ],

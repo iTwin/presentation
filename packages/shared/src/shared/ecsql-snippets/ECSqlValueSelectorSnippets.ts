@@ -112,6 +112,16 @@ export function createRawPrimitiveValueSelector(value: PrimitiveValue | undefine
 }
 
 /**
+ * Creates an ECSQL selector that results in a stringified `InstanceKey` object.
+ * @beta
+ */
+export function createInstanceKeySelector(props: { alias: string }) {
+  const classIdSelector = `[${props.alias}].[ECClassId]`;
+  const instanceHexIdSelector = `IdToHex([${props.alias}].[ECInstanceId])`;
+  return `json_object('className', ec_classname(${classIdSelector}, 's.c'), 'id', ${instanceHexIdSelector})`;
+}
+
+/**
  * Creates a clause for returning `NULL` when `checkSelector` returns a falsy value, or result of `valueSelector`
  * otherwise. Example result: `IIF(CHECK_SELECTOR, VALUE_SELECTOR, NULL)`.
  *

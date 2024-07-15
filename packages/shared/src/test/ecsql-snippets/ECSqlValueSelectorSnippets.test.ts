@@ -7,6 +7,7 @@ import { expect } from "chai";
 import {
   createConcatenatedValueJsonSelector,
   createConcatenatedValueStringSelector,
+  createInstanceKeySelector,
   createNullableSelector,
   createRawPrimitiveValueSelector,
   createRawPropertyValueSelector,
@@ -95,6 +96,16 @@ describe("createNullableSelector", () => {
         valueSelector: "VALUE",
       }),
     ).to.deep.eq("IIF(CHECK, VALUE, NULL)");
+  });
+});
+
+describe("createInstanceKeySelector", () => {
+  it("creates valid selector", () => {
+    expect(
+      createInstanceKeySelector({
+        alias: "test",
+      }),
+    ).to.eq("json_object('className', ec_classname([test].[ECClassId], 's.c'), 'id', IdToHex([test].[ECInstanceId]))");
   });
 });
 

@@ -205,7 +205,7 @@ export function insertSubCategory(
 
 export function insertPhysicalElement<TAdditionalProps extends {}>(
   props: BaseInstanceInsertProps & { modelId: Id64String; categoryId: Id64String; parentId?: Id64String } & Partial<
-      Omit<PhysicalElementProps, "id" | "model" | "category" | "parent">
+      Omit<PhysicalElementProps, "id" | "model" | "category" | "parent" | "code">
     > &
     TAdditionalProps,
 ) {

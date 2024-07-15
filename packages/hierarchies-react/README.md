@@ -22,7 +22,7 @@ It takes 2 required properties:
   import { SchemaContext } from "@itwin/ecschema-metadata";
   import { ECSchemaRpcLocater } from "@itwin/ecschema-rpcinterface-common";
   import { createECSchemaProvider, createECSqlQueryExecutor } from "@itwin/presentation-core-interop";
-  import { createLimitingECSqlQueryExecutor, createNodesQueryClauseFactory } from "@itwin/presentation-hierarchies";
+  import { createLimitingECSqlQueryExecutor, createNodesQueryClauseFactory, HierarchyDefinition } from "@itwin/presentation-hierarchies";
 
   // Not really part of the package, but we need SchemaContext to create the tree state. It's
   // recommended to cache the schema context and reuse it across different application's components to
@@ -197,7 +197,7 @@ import { IModelConnection } from "@itwin/core-frontend";
 import { SchemaContext } from "@itwin/ecschema-metadata";
 import { ECSchemaRpcLocater } from "@itwin/ecschema-rpcinterface-common";
 import { createECSchemaProvider, createECSqlQueryExecutor } from "@itwin/presentation-core-interop";
-import { createLimitingECSqlQueryExecutor, createNodesQueryClauseFactory } from "@itwin/presentation-hierarchies";
+import { createLimitingECSqlQueryExecutor, createNodesQueryClauseFactory, HierarchyDefinition } from "@itwin/presentation-hierarchies";
 
 import { TreeRenderer, UnifiedSelectionProvider, useUnifiedSelectionTree } from "@itwin/presentation-hierarchies-react";
 import { createStorage } from "@itwin/unified-selection";
@@ -256,42 +256,46 @@ function MyTreeComponent({ imodel }: { imodel: IModelConnection }) {
 
 type IModelAccess = Parameters<typeof useUnifiedSelectionTree>[0]["imodelAccess"];
 
-/** Internal component that defines the hierarchy and creates tree state. */
-function MyTreeComponentInternal({ imodelAccess, imodelKey }: { imodelAccess: IModelAccess; imodelKey: string }) {
+// The hierarchy definition describes the hierarchy using ECSQL queries; here it just returns all `BisCore.PhysicalModel` instances
+function getHierarchyDefinition({ imodelAccess }: { imodelAccess: IModelAccess }): HierarchyDefinition {
   // Create a factory for building nodes SELECT query clauses in a format understood by the provider
-  const [nodesQueryFactory] = useState(createNodesQueryClauseFactory({ imodelAccess }));
+  const nodesQueryFactory = createNodesQueryClauseFactory({ imodelAccess });
   // Create a factory for building labels SELECT query clauses according to BIS conventions
-  const [labelsQueryFactory] = useState(createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }));
+  const labelsQueryFactory = createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess });
+  return {
+    defineHierarchyLevel: async () => [
+      {
+        fullClassName: "BisCore.PhysicalModel",
+        query: {
+          ecsql: `
+            SELECT
+              ${await nodesQueryFactory.createSelectClause({
+                ecClassId: { selector: "this.ECClassId" },
+                ecInstanceId: { selector: "this.ECInstanceId" },
+                nodeLabel: {
+                  selector: await labelsQueryFactory.createSelectClause({ classAlias: "this", className: "BisCore.PhysicalModel" }),
+                },
+                hasChildren: false,
+              })}
+            FROM BisCore.PhysicalModel this
+          `,
+        },
+      },
+    ],
+  };
+}
 
-  const { rootNodes, ...state } = useUnifiedSelectionTree({
+/** Internal component that creates and renders tree state. */
+function MyTreeComponentInternal({ imodelAccess, imodelKey }: { imodelAccess: IModelAccess; imodelKey: string }) {
+  const { rootNodes, setFormatter, isLoading, ...state } = useUnifiedSelectionTree({
     // the source name is used to distinguish selection changes being made by different components
     sourceName: "MyTreeComponent",
     // the iModel key is required for unified selection system to distinguish selection changes between different iModels
     imodelKey,
     // iModel access is used to build the hierarchy
     imodelAccess,
-    // the hierarchy definition describes the hierarchy using ECSQL queries; here it just returns all bis.PhysicalModel instances
-    getHierarchyDefinition: () => ({
-      defineHierarchyLevel: async () => [
-        {
-          fullClassName: "BisCore.PhysicalModel",
-          query: {
-            ecsql: `
-              SELECT
-                ${await nodesQueryFactory.createSelectClause({
-                  ecClassId: { selector: "this.ECClassId" },
-                  ecInstanceId: { selector: "this.ECInstanceId" },
-                  nodeLabel: {
-                    selector: await labelsQueryFactory.createSelectClause({ classAlias: "this", className: "BisCore.PhysicalModel" }),
-                  },
-                  hasChildren: false,
-                })}
-              FROM BisCore.PhysicalModel this
-            `,
-          },
-        },
-      ],
-    }),
+    // supply the hierarchy definition
+    getHierarchyDefinition,
   });
   if (!rootNodes) {
     return "Loading...";

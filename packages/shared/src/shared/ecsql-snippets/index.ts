@@ -9,5 +9,6 @@ export {
   createNullableSelector,
   createConcatenatedValueJsonSelector,
   createConcatenatedValueStringSelector,
+  createInstanceKeySelector,
 } from "./ECSqlValueSelectorSnippets";
 export { createRelationshipPathJoinClause } from "./ECSqlJoinSnippets";

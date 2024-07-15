@@ -102,14 +102,19 @@ export class FilteringHierarchyDefinition implements HierarchyDefinition {
               return id.key === definition.node.key;
             },
             this._classHierarchy,
-            (def, matchingFilters, isFilterTarget) => {
+            (def, matchingFilters) => {
               const filteredChildrenIdentifierPaths = matchingFilters.reduce(
                 (r, c) => [...r, ...c.childrenIdentifierPaths],
                 new Array<HierarchyFilteringPath>(),
               );
               return {
                 ...def,
-                node: applyFilterAttributes(def.node, filteredChildrenIdentifierPaths, isFilterTarget, !!hasFilterTargetAncestor),
+                node: applyFilterAttributes(
+                  def.node,
+                  filteredChildrenIdentifierPaths,
+                  matchingFilters.some((mc) => mc.isFilterTarget),
+                  !!hasFilterTargetAncestor,
+                ),
               };
             },
           );
@@ -124,8 +129,7 @@ export class FilteringHierarchyDefinition implements HierarchyDefinition {
               return this._classHierarchy.classDerivesFrom(id.className, definition.fullClassName);
             },
             this._classHierarchy,
-            (def, matchingFilters, isFilterTarget) =>
-              applyECInstanceIdsFilter(def, matchingFilters, isFilterTarget, !!isDirectParentFilterTarget, !!hasFilterTargetAncestor),
+            (def, matchingFilters) => applyECInstanceIdsFilter(def, matchingFilters, !!isDirectParentFilterTarget, !!hasFilterTargetAncestor),
           );
         }
         if (matchedDefinition) {
@@ -158,53 +162,53 @@ async function matchFilters<
   classHierarchy: ECClassHierarchyInspector,
   matchedDefinitionProcessor: (
     def: TDefinition,
-    matchingFilters: Array<{ id: TIdentifier; childrenIdentifierPaths: HierarchyFilteringPath[] }>,
-    isFilterTarget: boolean,
+    matchingFilters: Array<{ id: TIdentifier; isFilterTarget: boolean; childrenIdentifierPaths: HierarchyFilteringPath[] }>,
   ) => TDefinition,
 ): Promise<TDefinition | undefined> {
   const { filteredNodePaths, isDirectParentFilterTarget } = filteringProps;
-  let isFilterTarget = false;
-  const matchingFilters: Array<{ id: TIdentifier; childrenIdentifierPaths: HierarchyFilteringPath[] }> = [];
+  const matchingFilters: Array<{ id: TIdentifier; isFilterTarget: boolean; childrenIdentifierPaths: HierarchyFilteringPath[] }> = [];
   for (const filteredNodePath of filteredNodePaths) {
     const { path, options } = "path" in filteredNodePath ? filteredNodePath : { path: filteredNodePath, options: undefined };
+
     if (path.length === 0) {
       continue;
     }
     const nodeId = path[0];
     if (await predicate(nodeId)) {
-      let childrenIdentifierPaths = await findChildrenIdentifierPaths(matchingFilters, nodeId, classHierarchy);
-      if (!childrenIdentifierPaths) {
-        childrenIdentifierPaths = [];
-        matchingFilters.push({
+      let entry = await findMatchingFilterEntry(matchingFilters, nodeId, classHierarchy);
+      if (!entry) {
+        entry = {
           // ideally, `predicate` would act as a type guard to guarantee that `id` is `TIdentifier`, but at the moment
           // async type guards aren't supported
           id: nodeId as TIdentifier,
-          childrenIdentifierPaths,
-        });
+          childrenIdentifierPaths: [],
+          isFilterTarget: false,
+        };
+        matchingFilters.push(entry);
       }
       const remainingPath = path.slice(1);
       if (remainingPath.length > 0) {
         const remainingPathWithOptions = options ? { path: remainingPath, options } : remainingPath;
-        childrenIdentifierPaths.push(remainingPathWithOptions);
+        entry.childrenIdentifierPaths.push(remainingPathWithOptions);
       } else {
-        isFilterTarget = true;
+        entry.isFilterTarget = true;
       }
     }
   }
   if (isDirectParentFilterTarget || matchingFilters.length > 0) {
-    return matchedDefinitionProcessor(definition, matchingFilters, isFilterTarget);
+    return matchedDefinitionProcessor(definition, matchingFilters);
   }
   return undefined;
 }
 
-async function findChildrenIdentifierPaths<TIdentifier extends HierarchyNodeIdentifier>(
-  filters: Array<{ id: TIdentifier; childrenIdentifierPaths: HierarchyFilteringPath[] }>,
+async function findMatchingFilterEntry<TEntry extends { id: TIdentifier }, TIdentifier extends HierarchyNodeIdentifier>(
+  filters: TEntry[],
   nodeId: TIdentifier,
   classHierarchy: ECClassHierarchyInspector,
-) {
+): Promise<TEntry | undefined> {
   for (const filter of filters) {
     if (await identifiersEqual(filter.id, nodeId, classHierarchy)) {
-      return filter.childrenIdentifierPaths;
+      return filter;
     }
   }
   return undefined;
@@ -260,8 +264,7 @@ export const ECSQL_COLUMN_NAME_HasFilterTargetAncestor = "HasFilterTargetAncesto
 /** @internal */
 export function applyECInstanceIdsFilter(
   def: InstanceNodesQueryDefinition,
-  matchingFilters: Array<{ id: InstanceKey; childrenIdentifierPaths: HierarchyFilteringPath[] }>,
-  isFilterTarget: boolean,
+  matchingFilters: Array<{ id: InstanceKey; isFilterTarget: boolean; childrenIdentifierPaths: HierarchyFilteringPath[] }>,
   isParentFilterTarget: boolean,
   hasFilterTargetAncestor: boolean,
 ): InstanceNodesQueryDefinition {
@@ -276,16 +279,19 @@ export function applyECInstanceIdsFilter(
         ...(def.query.ctes ?? []),
         // note: generally we'd use `VALUES (1,1),(2,2)`, but that doesn't work in ECSQL (https://github.com/iTwin/itwinjs-backlog/issues/865),
         // so using UNION as a workaround
-        `FilteringInfo(ECInstanceId, FilteredChildrenPaths) AS (
+        `FilteringInfo(ECInstanceId, IsFilterTarget, FilteredChildrenPaths) AS (
           ${matchingFilters
-            .map(({ id: key, childrenIdentifierPaths }) => `VALUES (${key.id}, '${JSON.stringify(childrenIdentifierPaths)}')`)
+            .map(
+              ({ id: key, isFilterTarget, childrenIdentifierPaths }) =>
+                `VALUES (${key.id}, CAST(${isFilterTarget ? "1" : "0"} AS BOOLEAN), '${JSON.stringify(childrenIdentifierPaths)}')`,
+            )
             .join(" UNION ALL ")}
         )`,
       ],
       ecsql: `
         SELECT
           [q].*,
-          ${isFilterTarget ? "1" : "0"} AS [${ECSQL_COLUMN_NAME_IsFilterTarget}],
+          [f].[IsFilterTarget] AS [${ECSQL_COLUMN_NAME_IsFilterTarget}],
           ${hasFilterTargetAncestor || isParentFilterTarget ? "1" : "0"} AS [${ECSQL_COLUMN_NAME_HasFilterTargetAncestor}],
           [f].[FilteredChildrenPaths] AS [${ECSQL_COLUMN_NAME_FilteredChildrenPaths}]
         FROM (
