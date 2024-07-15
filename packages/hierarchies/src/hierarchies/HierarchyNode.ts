@@ -16,7 +16,7 @@ import {
   PropertyValueRangeGroupingNodeKey,
   StandardHierarchyNodeKey,
 } from "./HierarchyNodeKey";
-import { FilteringPath } from "./HierarchyProvider";
+import { HierarchyFilteringPath } from "./HierarchyProvider";
 
 /**
  * A data structure that defines attributes that are common to all types of hierarchy nodes.
@@ -37,7 +37,7 @@ interface BaseHierarchyNode {
   filtering?: {
     isFilterTarget?: boolean;
     hasFilterTargetAncestor?: boolean;
-    filteredChildrenIdentifierPaths?: FilteringPath[];
+    filteredChildrenIdentifierPaths?: HierarchyFilteringPath[];
   };
 }
 

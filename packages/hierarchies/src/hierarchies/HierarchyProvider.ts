@@ -140,7 +140,7 @@ interface HierarchyProviderLocalizedStrings {
  * A path of hierarchy node identifiers for filtering the hierarchy with additional options.
  * @beta
  */
-export type FilteringPath = HierarchyNodeIdentifiersPath | { path: HierarchyNodeIdentifiersPath; options?: { autoExpand?: boolean } };
+export type HierarchyFilteringPath = HierarchyNodeIdentifiersPath | { path: HierarchyNodeIdentifiersPath; options?: { autoExpand?: boolean } };
 
 /**
  * Props for `createHierarchyProvider`.
@@ -182,7 +182,7 @@ interface HierarchyProviderProps {
   /** Props for filtering the hierarchy. */
   filtering?: {
     /** A list of node identifiers from root to target node. */
-    paths: FilteringPath[];
+    paths: HierarchyFilteringPath[];
   };
 }
 

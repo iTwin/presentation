@@ -14,6 +14,7 @@ import {
 } from "../../hierarchies/HierarchyDefinition";
 import { HierarchyNode, ParsedCustomHierarchyNode, ProcessedCustomHierarchyNode } from "../../hierarchies/HierarchyNode";
 import { HierarchyNodeIdentifiersPath } from "../../hierarchies/HierarchyNodeIdentifier";
+import { HierarchyFilteringPath } from "../../hierarchies/HierarchyProvider";
 import {
   applyECInstanceIdsFilter,
   ECSQL_COLUMN_NAME_FilteredChildrenPaths,
@@ -959,7 +960,7 @@ describe("FilteringHierarchyDefinition", () => {
 function createFilteringHierarchyLevelsFactory(props?: {
   classHierarchy?: ECClassHierarchyInspector;
   sourceFactory?: HierarchyDefinition;
-  nodeIdentifierPaths?: HierarchyNodeIdentifiersPath[];
+  nodeIdentifierPaths?: HierarchyFilteringPath[];
 }) {
   const { classHierarchy, sourceFactory, nodeIdentifierPaths } = props ?? {};
   return new FilteringHierarchyDefinition({
