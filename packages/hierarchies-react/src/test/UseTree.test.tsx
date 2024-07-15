@@ -37,6 +37,7 @@ describe("useTree", () => {
   const onHierarchyLoadErrorStub = sinon.stub();
 
   type UseTreeProps = Parameters<typeof useTree>[0];
+  type FilteredPaths = ReturnType<Required<UseTreeProps>["getFilteredPaths"]>;
   const initialProps: UseTreeProps = {
     imodelAccess: {} as UseTreeProps["imodelAccess"],
     getHierarchyDefinition: () => ({}) as hierarchiesModule.HierarchyDefinition,
@@ -105,7 +106,7 @@ describe("useTree", () => {
       return createAsyncIterator(props.parentNode === undefined ? [createTestHierarchyNode({ id: "root-1" })] : []);
     });
 
-    const promise = new ResolvablePromise<hierarchiesModule.HierarchyNodeIdentifiersPath[] | undefined>();
+    const promise = new ResolvablePromise<FilteredPaths | undefined>();
     const getFilteredPaths = async () => promise;
 
     const { result } = renderHook(useTree, { initialProps: { ...initialProps, getFilteredPaths } });
