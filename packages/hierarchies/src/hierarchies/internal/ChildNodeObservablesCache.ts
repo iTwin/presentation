@@ -5,6 +5,7 @@
 
 import { Observable } from "rxjs";
 import { LRUCache, LRUDictionary, LRUMap } from "@itwin/core-bentley";
+import { InstanceKey } from "@itwin/presentation-shared";
 import { ParsedHierarchyNode, ProcessedHierarchyNode } from "../HierarchyNode";
 import { HierarchyNodeKey } from "../HierarchyNodeKey";
 import { GetHierarchyNodesProps } from "../HierarchyProvider";
@@ -45,14 +46,17 @@ export class ChildNodeObservablesCache {
   }
 
   private createCacheKeys(
-    props: Omit<GetHierarchyNodesProps, "parentNode"> & { parentNode: { key: HierarchyNodeKey; parentKeys: HierarchyNodeKey[] } | undefined },
+    props: Omit<GetHierarchyNodesProps, "parentNode"> & {
+      parentNode: { key: HierarchyNodeKey; parentKeys: HierarchyNodeKey[] } | undefined;
+      filteredInstanceKeys?: InstanceKey[];
+    },
   ) {
     function createVariationKey() {
-      const { instanceFilter, hierarchyLevelSizeLimit } = props;
-      if (instanceFilter === undefined && hierarchyLevelSizeLimit === undefined) {
+      const { instanceFilter, hierarchyLevelSizeLimit, filteredInstanceKeys } = props;
+      if (instanceFilter === undefined && hierarchyLevelSizeLimit === undefined && filteredInstanceKeys === undefined) {
         return undefined;
       }
-      return JSON.stringify({ instanceFilter, hierarchyLevelSizeLimit });
+      return JSON.stringify({ instanceFilter, hierarchyLevelSizeLimit, filteredInstanceKeys });
     }
 
     if (!props.parentNode) {

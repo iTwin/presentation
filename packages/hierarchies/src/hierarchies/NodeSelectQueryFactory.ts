@@ -14,6 +14,7 @@ import {
   GenericInstanceFilterRuleValue,
 } from "@itwin/core-common";
 import { EC, ECClassHierarchyInspector, ECSchemaProvider, ECSql, getClass, parseFullClassName, PrimitiveValue } from "@itwin/presentation-shared";
+import { HierarchyNodeAutoExpandProp } from "./HierarchyNode";
 
 /**
  * Column names of the SELECT clause created by `NodeSelectClauseFactory`. Order of the names matches the order of columns
@@ -131,7 +132,7 @@ type ECSqlSelectClauseLabelGroupingParams =
 interface ECSqlSelectClauseGroupingParamsBase {
   hideIfNoSiblings?: boolean | ECSqlValueSelector;
   hideIfOneGroupedNode?: boolean | ECSqlValueSelector;
-  autoExpand?: string | ECSqlValueSelector;
+  autoExpand?: HierarchyNodeAutoExpandProp | ECSqlValueSelector;
 }
 
 /**

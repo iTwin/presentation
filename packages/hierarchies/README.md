@@ -96,9 +96,9 @@ function createProvider(imodel: IModelConnection): HierarchyProvider {
   const schemaProvider = createECSchemaProvider(getIModelSchemaContext(imodel));
   const imodelAccess = {
     ...schemaProvider,
-    // while caching for hierarchy inspector is not mandatory, it's recommended to use it to improve performance
+    // While caching for hierarchy inspector is not mandatory, it's recommended to use it to improve performance
     ...createCachingECClassHierarchyInspector({ schemaProvider, cacheSize: 100 }),
-    // the second argument is the maximum number of rows the executor will return - this allows us to
+    // The second argument is the maximum number of rows the executor will return - this allows us to
     // avoid creating hierarchy levels of insane size (expensive to us and useless to users)
     ...createLimitingECSqlQueryExecutor(createECSqlQueryExecutor(imodel), 1000),
   };
@@ -112,7 +112,7 @@ function createProvider(imodel: IModelConnection): HierarchyProvider {
   const hierarchyDefinition = createClassBasedHierarchyDefinition({
     classHierarchyInspector: imodelAccess,
     hierarchy: {
-      // for root nodes, select all BisCore.GeometricModel3d instances
+      // For root nodes, select all BisCore.GeometricModel3d instances
       rootNodes: async () => [
         {
           fullClassName: "BisCore.GeometricModel3d",
@@ -133,7 +133,7 @@ function createProvider(imodel: IModelConnection): HierarchyProvider {
       ],
       childNodes: [
         {
-          // for BisCore.Model parent nodes, select all BisCore.Element instances contained in corresponding model
+          // For BisCore.Model parent nodes, select all BisCore.Element instances contained in corresponding model
           parentNodeClassName: "BisCore.Model",
           definitions: async ({ parentNodeInstanceIds }: DefineInstanceNodeChildHierarchyLevelProps) => [
             {

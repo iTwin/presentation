@@ -123,7 +123,7 @@ interface ECSqlSelectClauseGroupingParams {
 // @beta
 interface ECSqlSelectClauseGroupingParamsBase {
     // (undocumented)
-    autoExpand?: string | ECSqlValueSelector;
+    autoExpand?: HierarchyNodeAutoExpandProp | ECSqlValueSelector;
     // (undocumented)
     hideIfNoSiblings?: boolean | ECSqlValueSelector;
     // (undocumented)

@@ -21,14 +21,12 @@ import { createDefaultValueFormatter, IPrimitiveValueFormatter } from "@itwin/pr
 const defaultFormatter = createDefaultValueFormatter();
 const myFormatter: IPrimitiveValueFormatter = async (value) => {
   if (value.type === "Boolean") {
-    return value.value ? "yes" : "no";
+    return value.value ? "yes!" : "no!";
   }
   return defaultFormatter(value);
 };
-// returns "yes"
-const formattedYes = await myFormatter({ type: "Boolean", value: true });
-// returns "no"
-const formattedNo = await myFormatter({ type: "Boolean", value: false });
+expect(await myFormatter({ type: "Boolean", value: true })).to.eq("yes!");
+expect(await myFormatter({ type: "Boolean", value: false })).to.eq("no!");
 ```
 
 <!-- END EXTRACTION -->
@@ -44,10 +42,10 @@ import { createValueFormatter } from "@itwin/presentation-core-interop";
 const metricFormatter = createValueFormatter({ schemaContext, unitSystem: "metric" });
 const imperialFormatter = createValueFormatter({ schemaContext, unitSystem: "imperial" });
 
-// define the raw value to be formatted
+// Define the raw value to be formatted
 const value = 1.234;
 
-// define the KindOfQuantity to use for formatting:
+// Define the KindOfQuantity to use for formatting:
 // <KindOfQuantity
 //   typeName="FlowRate"
 //   displayLabel="Flow Rate"
@@ -57,14 +55,14 @@ const value = 1.234;
 // />
 const koqName = `${mySchemaName}.FlowRate`;
 
-// not passing `koqName` formats the value without units using the default formatter - returns `1.23`
-const formattedWithoutUnits = await metricFormatter({ type: "Double", value });
+// Not passing `koqName` formats the value without units using the default formatter:
+expect(await metricFormatter({ type: "Double", value })).to.eq("1.23");
 
-// metric formatter formats the value in liters per minute - returns `74040.0 L/min`
-const formattedInMetric = await metricFormatter({ type: "Double", value, koqName });
+// Metric formatter formats the value in liters per minute:
+expect(await metricFormatter({ type: "Double", value, koqName })).to.eq("74040.0 L/min");
 
-// imperial formatter formats the value in gallons per minute - returns `19559.2988 gal/min`
-const formattedInImperial = await imperialFormatter({ type: "Double", value, koqName });
+// Imperial formatter formats the value in gallons per minute:
+expect(await imperialFormatter({ type: "Double", value, koqName })).to.eq("19559.2988 gal/min");
 ```
 
 <!-- END EXTRACTION -->
@@ -84,39 +82,44 @@ In case 1, the node's `label` property type is `string | ConcatenatedValue`. The
 
 ```ts
 import { createHierarchyProvider, createNodesQueryClauseFactory } from "@itwin/presentation-hierarchies";
-import { createDefaultInstanceLabelSelectClauseFactory, ECSql } from "@itwin/presentation-shared";
+import { ECSql } from "@itwin/presentation-shared";
 
 const hierarchyProvider = createHierarchyProvider({
   imodelAccess,
   hierarchyDefinition: {
-    defineHierarchyLevel: async () => [
-      // the hierarchy definition returns a single node with a ConcatenatedValue-based label
-      {
-        node: {
-          key: "custom node",
-          label: [
-            "Example | ",
-            {
-              type: "Integer",
-              value: 123,
+    defineHierarchyLevel: async ({ parentNode }) => {
+      if (!parentNode) {
+        return [
+          // The hierarchy definition returns a single node with a ConcatenatedValue-based label
+          {
+            node: {
+              key: "custom node",
+              label: [
+                "Example | ",
+                {
+                  type: "Integer",
+                  value: 123,
+                },
+                {
+                  type: "String",
+                  value: " | ",
+                },
+                {
+                  type: "Point2d",
+                  value: { x: 1, y: 2 },
+                },
+              ],
             },
-            {
-              type: "String",
-              value: " | ",
-            },
-            {
-              type: "Point2d",
-              value: { x: 1, y: 2 },
-            },
-          ],
-        },
-      },
-    ],
+          },
+        ];
+      }
+      return [];
+    },
   },
 });
 
-// returns a single node with label "Example | 123 | (1.00, 2.00)"
-const nodes = hierarchyProvider.getNodes({ parentNode: undefined });
+// Returns the node with formatted and concatenated label:
+expect(await collectHierarchy(hierarchyProvider)).to.deep.eq([{ label: "Example | 123 | (1.00, 2.00)" }]);
 ```
 
 <!-- END EXTRACTION -->
@@ -128,45 +131,50 @@ In case 2, the node's label is described through an ECSQL query, where node's la
 
 ```ts
 import { createHierarchyProvider, createNodesQueryClauseFactory } from "@itwin/presentation-hierarchies";
-import { createDefaultInstanceLabelSelectClauseFactory, ECSql } from "@itwin/presentation-shared";
+import { ECSql } from "@itwin/presentation-shared";
 
 const hierarchyProvider = createHierarchyProvider({
   imodelAccess,
   hierarchyDefinition: {
-    defineHierarchyLevel: async () => [
-      // the hierarchy definition returns BisCore.SpatialCategory nodes
-      {
-        fullClassName: "BisCore.SpatialCategory",
-        query: {
-          ecsql: `
-            SELECT ${await createNodesQueryClauseFactory({ imodelAccess }).createSelectClause({
-              ecClassId: { selector: "this.ECClassId" },
-              ecInstanceId: { selector: "this.ECInstanceId" },
-              // generally, one of the `IInstanceLabelSelectClauseFactory` implementations, delivered with `@itwin/presentation-shared` package, should be used,
-              // but for demonstration purposes, a custom implementation is used here
-              nodeLabel: {
-                selector: ECSql.createConcatenatedValueJsonSelector([
-                  // create a selector for `CodeValue` property value
-                  { propertyClassName: "BisCore.SpatialCategory", propertyClassAlias: "this", propertyName: "CodeValue" },
-                  // include a static string value
-                  { type: "String", value: " [" },
-                  // create a selector for `ECInstanceId` property value in hex format
-                  { selector: `printf('0x%x', ${ECSql.createRawPropertyValueSelector("this", "ECInstanceId")})` },
-                  // include a static string value
-                  { type: "String", value: "]" },
-                ]),
-              },
-            })}
-            FROM BisCore.SpatialCategory this
-          `,
-        },
-      },
-    ],
+    defineHierarchyLevel: async ({ parentNode }) => {
+      if (!parentNode) {
+        return [
+          // The hierarchy definition returns `BisCore.SpatialCategory` nodes
+          {
+            fullClassName: "BisCore.SpatialCategory",
+            query: {
+              ecsql: `
+                SELECT ${await createNodesQueryClauseFactory({ imodelAccess }).createSelectClause({
+                  ecClassId: { selector: "this.ECClassId" },
+                  ecInstanceId: { selector: "this.ECInstanceId" },
+                  // Generally, one of the `IInstanceLabelSelectClauseFactory` implementations, delivered with `@itwin/presentation-shared` package, should be used,
+                  // but for demonstration purposes, a custom implementation is used here
+                  nodeLabel: {
+                    selector: ECSql.createConcatenatedValueJsonSelector([
+                      // Create a selector for `CodeValue` property value
+                      { propertyClassName: "BisCore.SpatialCategory", propertyClassAlias: "this", propertyName: "CodeValue" },
+                      // Include a static string value
+                      { type: "String", value: " [" },
+                      // Create a selector for `ECInstanceId` property value in hex format
+                      { selector: `printf('0x%x', this.ECInstanceId)` },
+                      // Include a static string value
+                      { type: "String", value: "]" },
+                    ]),
+                  },
+                })}
+                FROM BisCore.SpatialCategory this
+              `,
+            },
+          },
+        ];
+      }
+      return [];
+    },
   },
 });
 
-// all returned nodes have their labels set in format "{CodeValue} [{ECInstanceId}]"
-const nodes = hierarchyProvider.getNodes({ parentNode: undefined });
+// All returned nodes have their labels set in format "{CodeValue} [{ECInstanceId}]":
+expect(await collectHierarchy(hierarchyProvider)).to.deep.eq([{ label: "Example category [0x11]" }]);
 ```
 
 <!-- END EXTRACTION -->
@@ -182,40 +190,50 @@ Finally, in case 3, the grouping node's label is formatted automatically based o
 
   ```ts
   import { createHierarchyProvider, createNodesQueryClauseFactory } from "@itwin/presentation-hierarchies";
-  import { createDefaultInstanceLabelSelectClauseFactory, ECSql } from "@itwin/presentation-shared";
+  import { ECSql } from "@itwin/presentation-shared";
 
   const hierarchyProvider = createHierarchyProvider({
     imodelAccess,
     hierarchyDefinition: {
-      defineHierarchyLevel: async () => [
-        // the hierarchy definition returns nodes for `myPhysicalObjectClassName` element type, grouped by `DoubleProperty` property value
-        {
-          fullClassName: myPhysicalObjectClassName,
-          query: {
-            ecsql: `
-              SELECT ${await createNodesQueryClauseFactory({ imodelAccess }).createSelectClause({
-                ecClassId: { selector: "this.ECClassId" },
-                ecInstanceId: { selector: "this.ECInstanceId" },
-                nodeLabel: { selector: await createDefaultInstanceLabelSelectClauseFactory().createSelectClause({ classAlias: "this" }) },
-                grouping: {
-                  byProperties: {
-                    propertiesClassName: myPhysicalObjectClassName,
-                    propertyGroups: [{ propertyClassAlias: "this", propertyName: "DoubleProperty" }],
-                  },
-                },
-              })}
-              FROM ${myPhysicalObjectClassName} this
-            `,
-          },
-        },
-      ],
+      defineHierarchyLevel: async ({ parentNode }) => {
+        if (!parentNode) {
+          return [
+            // The hierarchy definition returns nodes for `myPhysicalObjectClassName` element type, grouped by `DoubleProperty` property value
+            {
+              fullClassName: myPhysicalObjectClassName,
+              query: {
+                ecsql: `
+                  SELECT ${await createNodesQueryClauseFactory({ imodelAccess }).createSelectClause({
+                    ecClassId: { selector: "this.ECClassId" },
+                    ecInstanceId: { selector: "this.ECInstanceId" },
+                    nodeLabel: { selector: "this.UserLabel" },
+                    grouping: {
+                      byProperties: {
+                        propertiesClassName: myPhysicalObjectClassName,
+                        propertyGroups: [{ propertyClassAlias: "this", propertyName: "DoubleProperty" }],
+                      },
+                    },
+                  })}
+                  FROM ${myPhysicalObjectClassName} this
+                `,
+              },
+            },
+          ];
+        }
+        return [];
+      },
     },
   });
 
   // The iModel has two elements of `myPhysicalObjectClassName` type, whose `DoubleProperty` values
   // are `123.450` and `123.454`. After passing through formatter, they both become equal to `123.45`,
-  // so we get one property grouping node for the two nodes.
-  const nodes = hierarchyProvider.getNodes({ parentNode: undefined });
+  // so we get one property grouping node for the two nodes:
+  expect(await collectHierarchy(hierarchyProvider)).to.deep.eq([
+    {
+      label: "123.45",
+      children: [{ label: "Example element 1" }, { label: "Example element 2" }],
+    },
+  ]);
   ```
 
   <!-- END EXTRACTION -->
