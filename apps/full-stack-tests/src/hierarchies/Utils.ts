@@ -8,8 +8,11 @@ import { IModelConnection } from "@itwin/core-frontend";
 import { Schema, SchemaContext, SchemaInfo, SchemaKey, SchemaMatchType } from "@itwin/ecschema-metadata";
 import { ECSchemaRpcLocater } from "@itwin/ecschema-rpcinterface-common";
 import { createECSchemaProvider as createECSchemaProviderInterop, createECSqlQueryExecutor } from "@itwin/presentation-core-interop";
-import { createHierarchyProvider, createLimitingECSqlQueryExecutor, HierarchyDefinition, HierarchyNodeIdentifiersPath } from "@itwin/presentation-hierarchies";
+import { createHierarchyProvider, createLimitingECSqlQueryExecutor, HierarchyDefinition, HierarchyNode } from "@itwin/presentation-hierarchies";
 import { createCachingECClassHierarchyInspector, IPrimitiveValueFormatter, parseFullClassName } from "@itwin/presentation-shared";
+
+type HierarchyNodeFiltering = Required<HierarchyNode>["filtering"];
+type HierarchyFilteringPaths = Required<HierarchyNodeFiltering>["filteredChildrenIdentifierPaths"];
 
 export function createSchemaContext(imodel: IModelConnection | IModelDb | ECDb) {
   const schemas = new SchemaContext();
@@ -55,7 +58,7 @@ export function createProvider(props: {
   hierarchy: HierarchyDefinition;
   formatterFactory?: (schemas: SchemaContext) => IPrimitiveValueFormatter;
   localizedStrings?: Parameters<typeof createHierarchyProvider>[0]["localizedStrings"];
-  filteredNodePaths?: HierarchyNodeIdentifiersPath[];
+  filteredNodePaths?: HierarchyFilteringPaths;
   queryCacheSize?: number;
 }) {
   const { imodel, hierarchy, formatterFactory, localizedStrings, filteredNodePaths, queryCacheSize } = props;

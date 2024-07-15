@@ -482,7 +482,6 @@ describe("FilteringHierarchyDefinition", () => {
             key: "custom",
             label: "custom",
             children: false,
-            autoExpand: true,
           },
         };
         const sourceFactory = {
@@ -498,6 +497,7 @@ describe("FilteringHierarchyDefinition", () => {
           {
             node: {
               ...sourceDefinition.node,
+              autoExpand: true,
               filtering: {
                 filteredChildrenIdentifierPaths: [{ path: [{ key: "123" }], options: { autoExpand: true } }, [{ key: "456" }]],
               },
