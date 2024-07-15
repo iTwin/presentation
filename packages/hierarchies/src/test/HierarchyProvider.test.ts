@@ -620,7 +620,6 @@ describe("createHierarchyProvider", () => {
           filtering: {
             filteredChildrenIdentifierPaths: [[{ className: "c.d", id: "0x456" }]],
           },
-          autoExpand: true,
         },
       ]);
     });

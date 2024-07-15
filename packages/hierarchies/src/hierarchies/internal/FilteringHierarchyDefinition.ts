@@ -59,7 +59,7 @@ export class FilteringHierarchyDefinition implements HierarchyDefinition {
         node.children.some(
           (child: ProcessedHierarchyNode) =>
             child.filtering &&
-            (child.filtering.isFilterTarget || child.filtering.filteredChildrenIdentifierPaths?.some((path) => !("path" in path) || path.options?.autoExpand)),
+            (child.filtering.isFilterTarget || child.filtering.filteredChildrenIdentifierPaths?.some((path) => "path" in path && path.options?.autoExpand)),
         )
       ) {
         return Object.assign(processedNode, { autoExpand: true });
@@ -229,7 +229,7 @@ function applyFilterAttributes<TNode extends ParsedHierarchyNode>(
   hasFilterTargetAncestor: boolean,
 ): TNode {
   const shouldAutoExpand = !!filteredChildrenIdentifierPaths?.some((childPath) => {
-    return "path" in childPath ? childPath.path.length && childPath.options?.autoExpand !== false : !!childPath.length;
+    return "path" in childPath && childPath.path.length && childPath.options?.autoExpand;
   });
   const result = { ...node };
   if (shouldAutoExpand) {
