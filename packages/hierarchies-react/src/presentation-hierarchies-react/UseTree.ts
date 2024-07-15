@@ -9,7 +9,6 @@ import {
   GenericInstanceFilter,
   HierarchyDefinition,
   HierarchyNode,
-  HierarchyNodeIdentifiersPath,
   HierarchyProvider,
   LimitingECSqlQueryExecutor,
 } from "@itwin/presentation-hierarchies";
@@ -89,13 +88,19 @@ interface GetFilteredPathsProps {
 }
 
 /** @beta */
-interface UseTreeProps extends Pick<Parameters<typeof createHierarchyProvider>[0], "localizedStrings"> {
+type HierarchyProviderProps = Parameters<typeof createHierarchyProvider>[0];
+
+/** @beta */
+type HierarchyFilteringPaths = NonNullable<NonNullable<HierarchyProviderProps["filtering"]>["paths"]>;
+
+/** @beta */
+interface UseTreeProps extends Pick<HierarchyProviderProps, "localizedStrings"> {
   /** Object that provides access to the iModel schema and can run queries against the iModel. */
   imodelAccess: ECSchemaProvider & LimitingECSqlQueryExecutor & ECClassHierarchyInspector;
   /** Provides the hierarchy definition for the tree. */
   getHierarchyDefinition: (props: { imodelAccess: IModelAccess }) => HierarchyDefinition;
   /** Provides paths to filtered nodes. */
-  getFilteredPaths?: (props: GetFilteredPathsProps) => Promise<HierarchyNodeIdentifiersPath[] | undefined>;
+  getFilteredPaths?: (props: GetFilteredPathsProps) => Promise<HierarchyFilteringPaths | undefined>;
   /**
    * Callback that is called just after a certain action is finished.
    * Can be used for performance tracking.
@@ -224,7 +229,7 @@ function useTreeInternal({
       setHierarchySource({ hierarchyProvider: provider, isFiltering: false });
     };
 
-    const createProvider = (paths: HierarchyNodeIdentifiersPath[] | undefined) => {
+    const createProvider = (paths: HierarchyFilteringPaths | undefined) => {
       return createHierarchyProvider({
         imodelAccess,
         hierarchyDefinition: getHierarchyDefinition({ imodelAccess }),

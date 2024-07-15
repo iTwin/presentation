@@ -28,7 +28,7 @@ interface BaseHierarchyNode {
     filtering?: {
         isFilterTarget?: boolean;
         hasFilterTargetAncestor?: boolean;
-        filteredChildrenIdentifierPaths?: HierarchyNodeIdentifiersPath[];
+        filteredChildrenIdentifierPaths?: HierarchyFilteringPath[];
     };
     label: string;
     parentKeys: HierarchyNodeKey[];
@@ -212,6 +212,14 @@ export interface HierarchyDefinition {
 
 // @beta
 type HierarchyDefinitionParentNode = Omit<NonGroupingHierarchyNode, "children">;
+
+// @beta
+type HierarchyFilteringPath = HierarchyNodeIdentifiersPath | {
+    path: HierarchyNodeIdentifiersPath;
+    options?: {
+        autoExpand?: boolean;
+    };
+};
 
 // @beta
 export type HierarchyLevelDefinition = HierarchyNodesDefinition[];
@@ -417,7 +425,7 @@ interface HierarchyProviderLocalizedStrings {
 // @beta
 interface HierarchyProviderProps {
     filtering?: {
-        paths: HierarchyNodeIdentifiersPath[];
+        paths: HierarchyFilteringPath[];
     };
     formatter?: IPrimitiveValueFormatter;
     hierarchyDefinition: HierarchyDefinition;

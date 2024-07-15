@@ -94,7 +94,11 @@ describe("Hierarchies", () => {
         };
 
         await validateHierarchy({
-          provider: createProvider({ imodel, hierarchy, filteredNodePaths: [[keys.rootSubject, { key: "custom" }, keys.childSubject2]] }),
+          provider: createProvider({
+            imodel,
+            hierarchy,
+            filteredNodePaths: [{ path: [keys.rootSubject, { key: "custom" }, keys.childSubject2], options: { autoExpand: true } }],
+          }),
           expect: [
             NodeValidators.createForInstanceNode({
               instanceKeys: [keys.rootSubject],
@@ -168,7 +172,7 @@ describe("Hierarchies", () => {
         };
 
         await validateHierarchy({
-          provider: createProvider({ imodel, hierarchy, filteredNodePaths: [[keys.rootSubject, { key: "custom2" }]] }),
+          provider: createProvider({ imodel, hierarchy, filteredNodePaths: [{ path: [keys.rootSubject, { key: "custom2" }], options: { autoExpand: true } }] }),
           expect: [
             NodeValidators.createForInstanceNode({
               instanceKeys: [keys.rootSubject],
@@ -257,7 +261,11 @@ describe("Hierarchies", () => {
         };
 
         await validateHierarchy({
-          provider: createProvider({ imodel, hierarchy, filteredNodePaths: [[keys.rootSubject, { key: "custom" }, keys.childSubject2]] }),
+          provider: createProvider({
+            imodel,
+            hierarchy,
+            filteredNodePaths: [{ path: [keys.rootSubject, { key: "custom" }, keys.childSubject2], options: { autoExpand: true } }],
+          }),
           expect: [
             NodeValidators.createForInstanceNode({
               instanceKeys: [keys.rootSubject],
@@ -516,7 +524,14 @@ describe("Hierarchies", () => {
             };
 
             await validateHierarchy({
-              provider: createProvider({ imodel, hierarchy, filteredNodePaths: [[x], [x, y]] }),
+              provider: createProvider({
+                imodel,
+                hierarchy,
+                filteredNodePaths: [
+                  { path: [x], options: { autoExpand: true } },
+                  { path: [x, y], options: { autoExpand: true } },
+                ],
+              }),
               expect: [
                 NodeValidators.createForInstanceNode({
                   instanceKeys: [x],
@@ -600,7 +615,14 @@ describe("Hierarchies", () => {
             };
 
             await validateHierarchy({
-              provider: createProvider({ imodel, hierarchy, filteredNodePaths: [[x], [x, y1]] }),
+              provider: createProvider({
+                imodel,
+                hierarchy,
+                filteredNodePaths: [
+                  { path: [x], options: { autoExpand: true } },
+                  { path: [x, y1], options: { autoExpand: true } },
+                ],
+              }),
               expect: [
                 NodeValidators.createForInstanceNode({
                   instanceKeys: [x],
