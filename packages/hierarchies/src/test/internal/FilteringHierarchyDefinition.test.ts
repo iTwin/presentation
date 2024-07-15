@@ -118,7 +118,7 @@ describe("FilteringHierarchyDefinition", () => {
       expect(node.autoExpand).to.be.true;
     });
 
-    it("doesn't set auto-expand when all filtered children paths contain `expandToTarget` = false", () => {
+    it("doesn't set auto-expand when all filtered children paths contain `autoExpand = false`", () => {
       const filteringFactory = createFilteringHierarchyLevelsFactory();
       const paths = [{ path: [createTestInstanceKey({ id: "0x1" })], options: { autoExpand: false } }];
       const row = {
@@ -129,7 +129,7 @@ describe("FilteringHierarchyDefinition", () => {
       expect(node.autoExpand).to.be.undefined;
     });
 
-    it("sets auto-expand when one of filtered children paths contains `expandToTarget` = true", () => {
+    it("sets auto-expand when one of filtered children paths contains `autoExpand = true`", () => {
       const filteringFactory = createFilteringHierarchyLevelsFactory();
       const paths = [
         { path: [createTestInstanceKey({ id: "0x1" })], options: { autoExpand: false } },
@@ -143,7 +143,7 @@ describe("FilteringHierarchyDefinition", () => {
       expect(node.autoExpand).to.be.true;
     });
 
-    it("sets auto-expand when one of filtered children paths does not contain `expandToTarget`", () => {
+    it("sets auto-expand when one of filtered children paths does not contain `autoExpand` option", () => {
       const filteringFactory = createFilteringHierarchyLevelsFactory();
       const paths = [{ path: createTestInstanceKey({ id: "0x1" }), options: { autoExpand: false } }, [createTestInstanceKey({ id: "0x2" })]];
       const row = {
@@ -269,7 +269,7 @@ describe("FilteringHierarchyDefinition", () => {
       expect(result.autoExpand).to.be.true;
     });
 
-    it("doesn't set auto-expand on class grouping nodes when all filtered children paths contain `expandToTarget` = false", async () => {
+    it("doesn't set auto-expand on class grouping nodes when all filtered children paths contain `autoExpand = false`", async () => {
       const inputNode = {
         ...createClassGroupingNode(),
         children: [
@@ -284,7 +284,7 @@ describe("FilteringHierarchyDefinition", () => {
       expect(result.autoExpand).to.be.undefined;
     });
 
-    it("sets auto-expand when one of filtered children paths contains `expandToTarget` = true", async () => {
+    it("sets auto-expand when one of filtered children paths contains `autoExpand = true`", async () => {
       const inputNode = {
         ...createClassGroupingNode(),
         children: [
