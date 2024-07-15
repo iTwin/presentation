@@ -28,7 +28,7 @@ interface BaseHierarchyNode {
     filtering?: {
         isFilterTarget?: boolean;
         hasFilterTargetAncestor?: boolean;
-        filteredChildrenIdentifierPaths?: FilteringPath[];
+        filteredChildrenIdentifierPaths?: HierarchyFilteringPath[];
     };
     label: string;
     parentKeys: HierarchyNodeKey[];
@@ -179,14 +179,6 @@ interface ECSqlValueSelector {
     selector: string;
 }
 
-// @beta
-type FilteringPath = HierarchyNodeIdentifiersPath | {
-    path: HierarchyNodeIdentifiersPath;
-    options?: {
-        autoExpand?: boolean;
-    };
-};
-
 export { GenericInstanceFilter }
 
 // @beta
@@ -220,6 +212,14 @@ export interface HierarchyDefinition {
 
 // @beta
 type HierarchyDefinitionParentNode = Omit<NonGroupingHierarchyNode, "children">;
+
+// @beta
+type HierarchyFilteringPath = HierarchyNodeIdentifiersPath | {
+    path: HierarchyNodeIdentifiersPath;
+    options?: {
+        autoExpand?: boolean;
+    };
+};
 
 // @beta
 export type HierarchyLevelDefinition = HierarchyNodesDefinition[];
@@ -425,7 +425,7 @@ interface HierarchyProviderLocalizedStrings {
 // @beta
 interface HierarchyProviderProps {
     filtering?: {
-        paths: FilteringPath[];
+        paths: HierarchyFilteringPath[];
     };
     formatter?: IPrimitiveValueFormatter;
     hierarchyDefinition: HierarchyDefinition;

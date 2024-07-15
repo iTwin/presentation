@@ -13,7 +13,6 @@ import { ECSchemaProvider } from '@itwin/presentation-shared';
 import { GenericInstanceFilter } from '@itwin/presentation-hierarchies';
 import { HierarchyDefinition } from '@itwin/presentation-hierarchies';
 import { HierarchyNode } from '@itwin/presentation-hierarchies';
-import { HierarchyNodeIdentifiersPath } from '@itwin/presentation-hierarchies';
 import { HierarchyProvider } from '@itwin/presentation-hierarchies';
 import { InstanceKey } from '@itwin/presentation-shared';
 import { IPrimitiveValueFormatter } from '@itwin/presentation-shared';
@@ -28,6 +27,9 @@ import { TreeNode } from '@itwin/itwinui-react';
 
 // @beta
 export function createRenderedTreeNodeData(node: RenderedTreeNode, isNodeSelected: (nodeId: string) => boolean): NodeData<RenderedTreeNode>;
+
+// @beta (undocumented)
+type FilteredPaths = Required<HierarchyNodeFiltering>["filteredChildrenIdentifierPaths"];
 
 // @beta
 type FullTreeReloadOptions = {
@@ -55,6 +57,9 @@ export interface HierarchyLevelDetails {
 }
 
 export { HierarchyNode }
+
+// @beta (undocumented)
+type HierarchyNodeFiltering = Required<HierarchyNode>["filtering"];
 
 export { HierarchyProvider }
 
@@ -242,7 +247,7 @@ export function useTree(props: UseTreeProps): UseTreeResult;
 
 // @beta (undocumented)
 interface UseTreeProps extends Pick<Parameters<typeof createHierarchyProvider>[0], "localizedStrings"> {
-    getFilteredPaths?: (props: GetFilteredPathsProps) => Promise<HierarchyNodeIdentifiersPath[] | undefined>;
+    getFilteredPaths?: (props: GetFilteredPathsProps) => Promise<FilteredPaths | undefined>;
     getHierarchyDefinition: (props: {
         imodelAccess: IModelAccess;
     }) => HierarchyDefinition;

@@ -87,7 +87,10 @@ interface GetFilteredPathsProps {
   imodelAccess: IModelAccess;
 }
 
+/** @beta */
 type HierarchyNodeFiltering = Required<HierarchyNode>["filtering"];
+
+/** @beta */
 type FilteredPaths = Required<HierarchyNodeFiltering>["filteredChildrenIdentifierPaths"];
 
 /** @beta */
