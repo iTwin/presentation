@@ -8,7 +8,7 @@ The library creates hierarchies as described by hierarchy definitions and they d
 
 ### Enable filtering for specific parent nodes
 
-Because hierarchy definitions may not support hierarchy level filtering on all hierarchy levels (and by default they don't support it any of them), the hierarchy definition has to explicitly tell if node supports it or not.
+Because hierarchy definitions may not support hierarchy level filtering on all hierarchy levels (and by default they don't support it on any of them), the hierarchy definition has to explicitly tell if node supports it or not.
 
 To make a custom node filterable, the hierarchy definition should set `supportsFiltering` attribute to `true` when returning `CustomHierarchyNodeDefinition`:
 
@@ -75,7 +75,7 @@ const hierarchyDefinition: HierarchyDefinition = {
 
 <!-- END EXTRACTION -->
 
-The final result is that produced nodes will have `supportsFiltering` attribute set to `true`.
+The final result is that the produced nodes will have `supportsFiltering` attribute set to `true`.
 
 It's up to the UI component that renders the hierarchy to make such nodes filterable. The sister `@itwin/presentation-hierarchies-react` package delivers a `TreeNodeRenderer` component that renders nodes a filterable, if the consumer supplies an `onFilterClick` callback prop. The rendered UI looks as follows:
 
