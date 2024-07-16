@@ -7,9 +7,7 @@
 import { insertPhysicalElement, insertPhysicalModelWithPartition, insertSpatialCategory } from "presentation-test-utilities";
 import { IModelConnection } from "@itwin/core-frontend";
 // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.HierarchyDefinitions.Imports
-import {
-  createClassBasedHierarchyDefinition, createNodesQueryClauseFactory, HierarchyDefinition, HierarchyNode,
-} from "@itwin/presentation-hierarchies";
+import { createClassBasedHierarchyDefinition, createNodesQueryClauseFactory, HierarchyDefinition, HierarchyNode } from "@itwin/presentation-hierarchies";
 // __PUBLISH_EXTRACT_END__
 import { createHierarchyProvider } from "@itwin/presentation-hierarchies";
 import { buildIModel } from "../../IModelUtils";
