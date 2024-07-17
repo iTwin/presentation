@@ -165,7 +165,7 @@ const hierarchyDefinition: HierarchyDefinition = {
 
 ## Custom post-processing
 
-The post-processing step happens after nodes' hiding, grouping and children determination steps, but before sorting. The step allows modifying the nodes and is especially useful when grouping nodes need to be modified in some way.
+The post-processing step allows to modify the nodes in their final form - fully customized, grouped and with children determined. Also, since the step happens after grouping, it gives a chance to apply modifications to grouping nodes.
 
 For example, the following code snippet shows how to use the `postProcessNode` callback to assign an icon property to a grouping node:
 
