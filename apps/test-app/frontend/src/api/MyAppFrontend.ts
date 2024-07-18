@@ -2,13 +2,17 @@
  * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
+/* eslint-disable no-duplicate-imports */
 
 import { Guid, Id64Arg, Logger, OpenMode } from "@itwin/core-bentley";
 import { ElementProps, IModelError, ViewQueryParams } from "@itwin/core-common";
-import { BriefcaseConnection, IModelConnection, IpcApp, SnapshotConnection } from "@itwin/core-frontend";
+import { BriefcaseConnection, IpcApp, SnapshotConnection } from "@itwin/core-frontend";
 import { UnitSystemKey } from "@itwin/core-quantity";
+// __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.PerformanceTuning.Imports
+import { IModelConnection } from "@itwin/core-frontend";
 import { SchemaContext } from "@itwin/ecschema-metadata";
 import { ECSchemaRpcLocater } from "@itwin/ecschema-rpcinterface-common";
+// __PUBLISH_EXTRACT_END__
 import { createStorage } from "@itwin/unified-selection";
 import { PRESENTATION_TEST_APP_IPC_CHANNEL_NAME, SampleIpcInterface, SampleRpcInterface } from "@test-app/common";
 
@@ -23,7 +27,6 @@ export interface MyAppSettings {
 
 export class MyAppFrontend {
   private static _ipcProxy = IpcApp.makeIpcProxy<SampleIpcInterface>(PRESENTATION_TEST_APP_IPC_CHANNEL_NAME);
-  private static _schemaContextsCache = new Map<string, SchemaContext>();
   private static _selectionStorage = createStorage();
 
   public static async getSampleImodels(): Promise<string[]> {
@@ -109,20 +112,27 @@ export class MyAppFrontend {
   }
 
   public static getSchemaContext(imodel: IModelConnection) {
-    const context = MyAppFrontend._schemaContextsCache.get(imodel.key);
-    if (context) {
-      return context;
-    }
-
-    const newContext = new SchemaContext();
-    newContext.addLocater(new ECSchemaRpcLocater(imodel.getRpcProps()));
-    MyAppFrontend._schemaContextsCache.set(imodel.key, newContext);
-
-    imodel.onClose.addListener(() => MyAppFrontend._schemaContextsCache.delete(imodel.key));
-
-    return newContext;
+    return getSchemaContext(imodel);
   }
 }
+
+// __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.PerformanceTuning.CachingSchemaContexts
+const schemaContextsCache = new Map<string, SchemaContext>();
+function getSchemaContext(imodel: IModelConnection) {
+  const context = schemaContextsCache.get(imodel.key);
+  if (context) {
+    return context;
+  }
+
+  const newContext = new SchemaContext();
+  newContext.addLocater(new ECSchemaRpcLocater(imodel.getRpcProps()));
+  schemaContextsCache.set(imodel.key, newContext);
+
+  imodel.onClose.addListener(() => schemaContextsCache.delete(imodel.key));
+
+  return newContext;
+}
+// __PUBLISH_EXTRACT_END__
 
 async function tryOpenStandalone(path: string) {
   let iModel: IModelConnection | undefined;
