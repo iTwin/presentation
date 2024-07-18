@@ -1,11 +1,13 @@
 /*---------------------------------------------------------------------------------------------
- * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
- * See LICENSE.md in the project root for license terms and full copyright notice.
- *--------------------------------------------------------------------------------------------*/
+* Copyright (c) Bentley Systems, Incorporated. All rights reserved.
+* See LICENSE.md in the project root for license terms and full copyright notice.
+*--------------------------------------------------------------------------------------------*/
+/* eslint-disable no-console */
 
 import "./PropertiesWidget.css";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useResizeDetector } from "react-resize-detector";
+import { PropertyRecord, PropertyValueFormat } from "@itwin/appui-abstract";
 import {
   ActionButtonRendererProps,
   CompositeFilterType,
@@ -39,6 +41,7 @@ import {
 } from "@itwin/presentation-components";
 import { FavoritePropertiesScope, Presentation } from "@itwin/presentation-frontend";
 import { DiagnosticsSelector } from "../diagnostics-selector/DiagnosticsSelector";
+import { assert } from "@itwin/core-bentley";
 
 const FAVORITES_SCOPE = FavoritePropertiesScope.IModel;
 
@@ -258,8 +261,20 @@ function FilterablePropertyGrid({
             filterText && filterText.length !== 0 ? { highlightedText: filterText, activeHighlight, filteredTypes: filteringResult?.filteredTypes } : undefined
           }
           isPropertyEditingEnabled={true}
-          onPropertyUpdated={async ({ newValue }) => {
-            console.log(`Updated new value`, newValue); // eslint-disable-line no-console
+          onPropertyUpdated={async ({ newValue, propertyRecord }) => {
+            console.log(`Updated new value for "${propertyRecord.property.displayLabel}": ${JSON.stringify(newValue)}`); // eslint-disable-line no-console
+            const aspectClassName = propertyRecord.extendedData?.[PROPERTY_RECORD_EXTENDED_DATA_BaseAspectClassName];
+            if (aspectClassName) {
+              assert(newValue.valueFormat === PropertyValueFormat.Primitive);
+              const elementIds = (await getDataProviderElementIds(dataProvider)).join(",");
+              if (propertyRecord.property.typename === "boolean") {
+                newValue.value
+                  ? console.log(`TODO: for elements [${elementIds}], insert an instance of "${aspectClassName}"`)
+                  : console.log(`TODO: for elements [${elementIds}], remove associated instance of "${aspectClassName}"`);
+              } else if (propertyRecord.property.typename === "enum") {
+                console.log(`TODO: for elements [${elementIds}], remove all associated instances of "${aspectClassName}"${newValue.value !== "" ? `and insert "${newValue.value as string}"` : ``}`);
+              }
+            }
             return true;
           }}
         />
@@ -267,6 +282,11 @@ function FilterablePropertyGrid({
       {contextMenuArgs && <PropertiesWidgetContextMenu args={contextMenuArgs} dataProvider={dataProvider} onCloseContextMenu={onCloseContextMenu} />}
     </>
   );
+}
+
+async function getDataProviderElementIds(dataProvider: PresentationPropertyDataProvider) {
+  const content = await dataProvider.getContent();
+  return content ? content.contentSet.flatMap((contentItem) => contentItem.primaryKeys.map((key) => key.id)) : [];
 }
 
 type ContextMenuItemInfo = ContextMenuItemProps & { id: string; label: string };
@@ -394,6 +414,12 @@ class AutoExpandingPropertyDataProvider extends PresentationPropertyDataProvider
   public override async getData(): Promise<PropertyData> {
     const result = await super.getData();
     this.expandCategories(result.categories);
+
+    if (result.categories.length > 0) {
+      this.pushFakePropertyRecords(result);
+      await this.enableAspectsEditingOnFakeProperties(Object.values(result.records).flat());
+    }
+
     return result;
   }
 
@@ -405,4 +431,108 @@ class AutoExpandingPropertyDataProvider extends PresentationPropertyDataProvider
       }
     });
   }
+
+  /**
+   * These records would already be there, coming from the backend, specified through presentation rules.
+   * For PoC purposes we just add them here.
+   */
+  private pushFakePropertyRecords(data: PropertyData) {
+    const recordBooleanFalse = new PropertyRecord(
+      {
+        valueFormat: PropertyValueFormat.Primitive,
+        displayValue: "False",
+        value: false,
+      },
+      {
+        displayLabel: "Fake false boolean property",
+        name: "FakeFalseBooleanProperty",
+        typename: "boolean",
+      },
+    );
+    const recordBooleanTrue = new PropertyRecord(
+      {
+        valueFormat: PropertyValueFormat.Primitive,
+        displayValue: "True",
+        value: true,
+      },
+      {
+        displayLabel: "Fake true boolean property",
+        name: "FakeTrueBooleanProperty",
+        typename: "boolean",
+      },
+    );
+    const recordEnumNoValue = new PropertyRecord(
+      {
+        valueFormat: PropertyValueFormat.Primitive,
+        displayValue: "",
+        value: "",
+      },
+      {
+        displayLabel: "Fake enum property with no value",
+        name: "FakeEnumPropertyNoValue",
+        typename: "string",
+      },
+    );
+    const recordEnumWithValue = new PropertyRecord(
+      {
+        valueFormat: PropertyValueFormat.Primitive,
+        displayValue: "External Source Aspect",
+        value: "BisCore.ExternalSourceAspect",
+      },
+      {
+        displayLabel: "Fake enum property with value",
+        name: "FakeEnumPropertyWithValue",
+        typename: "string",
+      },
+    );
+    [recordBooleanFalse, recordBooleanTrue, recordEnumNoValue, recordEnumWithValue].forEach((record) => {
+      record.extendedData = {
+        // this value would be coming from calculated property specification in presentation rules
+        [PROPERTY_RECORD_EXTENDED_DATA_BaseAspectClassName]: "BisCore.ElementMultiAspect",
+      };
+      data.records[data.categories[0].name].push(record);
+    });
+  }
+
+  private async enableAspectsEditingOnFakeProperties(records: PropertyRecord[]) {
+    await Promise.all(records.map(async (record) => this.enableAspectsEditingOnFakeProperty(record)));
+  }
+
+  private async enableAspectsEditingOnFakeProperty(record: PropertyRecord) {
+    const baseAspectClassName = record.extendedData?.[PROPERTY_RECORD_EXTENDED_DATA_BaseAspectClassName];
+    if (
+      // not a fake property associated with a base aspect class
+      !baseAspectClassName ||
+      // not a string means it's probably a "checkbox" rather than an "enum" - no need to query the enum values
+      record.property.typename !== "string"
+    ) {
+      return;
+    }
+
+    // Ideally, we should use the schema context to find derived classes - the schemas get cached, so it would be less traveling to the backend.
+    // However, I don't see an option to get derived classes - only the base ones... @Colin
+    // const baseAspectClass = await MyAppFrontend.getSchemaContext(this.imodel).getSchemaItem<ECClass>(new SchemaItemKey(className, new SchemaKey(schemaName)));
+
+    // So for the PoC purposes we just load that information using a meta query
+    const enumValues: { value: string; label: string }[] = [];
+    enumValues.push({ value: "", label: "" }); // make the combo box nullable
+    for await (const row of this.imodel.createQueryReader(
+      `
+        SELECT ec_classname(ECInstanceId, 's.c'), DisplayLabel
+        FROM meta.ECClassDef
+        WHERE ECInstanceId IS (${baseAspectClassName}) AND Modifier <> 1
+      `,
+    )) {
+      const className = row[0];
+      const classLabel = row[1];
+      enumValues.push({ value: className, label: classLabel });
+    }
+    record.property.typename = "enum";
+    record.property.enum = {
+      isStrict: true,
+      choices: enumValues,
+    };
+  }
 }
+
+const PROPERTY_RECORD_EXTENDED_DATA_BaseAspectClassName = "BaseAspectClassName";
