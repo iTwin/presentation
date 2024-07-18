@@ -37,6 +37,28 @@ export function useTreeReload(params: TreeReloadParams) {
   useModelSourceUpdateOnRulesetModification(params);
   useModelSourceUpdateOnRulesetVariablesChange(params);
   useModelSourceUpdateOnUnitSystemChange(params);
+  useModelSourceUpdateOnBriefcaseUpdate(params);
+}
+
+function useModelSourceUpdateOnBriefcaseUpdate(params: TreeReloadParams): void {
+  const { dataProviderProps, ruleset, pageSize, modelSource, onReload, renderedItems } = params;
+
+  useEffect(() => {
+    if (!modelSource || !dataProviderProps.imodel.isBriefcaseConnection()) {
+      return;
+    }
+
+    let subscription: Subscription | undefined;
+    const removeListener = dataProviderProps.imodel.txns.onChangesApplied.addListener(() => {
+      subscription?.unsubscribe();
+      subscription = startTreeReload({ dataProviderProps, ruleset, pageSize, modelSource, renderedItems, onReload });
+    });
+
+    return () => {
+      removeListener();
+      subscription?.unsubscribe();
+    };
+  }, [modelSource, pageSize, dataProviderProps, ruleset, onReload, renderedItems]);
 }
 
 function useModelSourceUpdateOnIModelHierarchyUpdate(params: TreeReloadParams): void {
