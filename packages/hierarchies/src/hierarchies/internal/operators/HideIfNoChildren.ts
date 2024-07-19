@@ -5,13 +5,13 @@
 
 import { defer, filter, map, merge, mergeMap, Observable } from "rxjs";
 import { HierarchyNode, ProcessedCustomHierarchyNode, ProcessedHierarchyNode, ProcessedInstanceHierarchyNode } from "../../HierarchyNode";
-import { createNodeIdentifierForLogging, createOperatorLoggingNamespace, hasChildren } from "../Common";
+import { createNodeIdentifierForLogging, createOperatorLoggingNamespace, hasChildren, LOGGING_NAMESPACE_INTERNAL } from "../Common";
 import { doLog, log } from "../LoggingUtils";
 import { partition } from "./Partition";
 
 const OPERATOR_NAME = "HideIfNoChildren";
 /** @internal */
-export const LOGGING_NAMESPACE = createOperatorLoggingNamespace(OPERATOR_NAME);
+export const LOGGING_NAMESPACE = createOperatorLoggingNamespace(OPERATOR_NAME, LOGGING_NAMESPACE_INTERNAL);
 
 /**
  * Creates an operator that hides nodes with no children if they have a `hideIfNoChildren` handling param.

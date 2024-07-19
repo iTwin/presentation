@@ -5,13 +5,13 @@
 
 import { concatMap, map, Observable, of } from "rxjs";
 import { ProcessedHierarchyNode } from "../../HierarchyNode";
-import { createNodeIdentifierForLogging, createOperatorLoggingNamespace } from "../Common";
+import { createNodeIdentifierForLogging, createOperatorLoggingNamespace, LOGGING_NAMESPACE_INTERNAL } from "../Common";
 import { log } from "../LoggingUtils";
 import { releaseMainThreadOnItemsCount } from "./ReleaseMainThread";
 
 const OPERATOR_NAME = "DetermineChildren";
 /** @internal */
-export const LOGGING_NAMESPACE = createOperatorLoggingNamespace(OPERATOR_NAME);
+export const LOGGING_NAMESPACE = createOperatorLoggingNamespace(OPERATOR_NAME, LOGGING_NAMESPACE_INTERNAL);
 
 /**
  * Ensures all input nodes have their children determined.
