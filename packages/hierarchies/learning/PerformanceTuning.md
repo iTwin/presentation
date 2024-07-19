@@ -1,6 +1,6 @@
 # Performance tuning
 
-While the ECSQL queries returned by [hierarchy definition](./HierarchyDefinitions.md) has the biggest impact on performance of creating a hierarchy, there are a few customization options that allow to fine tune it based on consumers' requirements. This page lists those options.
+While the ECSQL queries returned by [hierarchy definition](./HierarchyDefinitions.md) have the biggest impact on performance of creating a hierarchy, there are a few customization options that allow to fine-tune it based on consumers' requirements. This page lists those options.
 
 ## Hierarchy provider's query concurrency
 
