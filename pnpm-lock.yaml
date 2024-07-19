@@ -124,8 +124,8 @@ importers:
         specifier: ^4.7.1
         version: 4.7.1(@itwin/core-backend@4.7.1(@itwin/core-bentley@4.7.1)(@itwin/core-common@4.7.1(@itwin/core-bentley@4.7.1)(@itwin/core-geometry@4.7.1))(@itwin/core-geometry@4.7.1)(@opentelemetry/api@1.8.0)(encoding@0.1.13))(@itwin/core-bentley@4.7.1)(@itwin/core-common@4.7.1(@itwin/core-bentley@4.7.1)(@itwin/core-geometry@4.7.1))(@itwin/core-geometry@4.7.1)(@itwin/ecschema-metadata@4.7.1(@itwin/core-bentley@4.7.1)(@itwin/core-quantity@4.7.1(@itwin/core-bentley@4.7.1)))(@itwin/ecschema-rpcinterface-common@4.7.1(@itwin/core-bentley@4.7.1)(@itwin/core-common@4.7.1(@itwin/core-bentley@4.7.1)(@itwin/core-geometry@4.7.1))(@itwin/core-geometry@4.7.1)(@itwin/ecschema-metadata@4.7.1(@itwin/core-bentley@4.7.1)(@itwin/core-quantity@4.7.1(@itwin/core-bentley@4.7.1))))
       '@itwin/eslint-plugin':
-        specifier: ^4.0.0
-        version: 4.0.0(eslint@8.57.0)(typescript@5.4.5)
+        specifier: ^4.1.1
+        version: 4.1.1(eslint@8.57.0)(typescript@5.4.5)
       '@itwin/imodel-components-react':
         specifier: ^4.14.1
         version: 4.14.1(@itwin/appui-abstract@4.7.1(@itwin/core-bentley@4.7.1))(@itwin/components-react@4.14.1(@itwin/appui-abstract@4.7.1(@itwin/core-bentley@4.7.1))(@itwin/core-bentley@4.7.1)(@itwin/core-react@4.14.1(@itwin/appui-abstract@4.7.1(@itwin/core-bentley@4.7.1))(@itwin/core-bentley@4.7.1)(@types/react@18.2.79)(react-dom@18.2.0(react@18.2.0))(react@18.2.0))(@types/react@18.2.79)(react-dom@18.2.0(react@18.2.0))(react@18.2.0))(@itwin/core-bentley@4.7.1)(@itwin/core-common@4.7.1(@itwin/core-bentley@4.7.1)(@itwin/core-geometry@4.7.1))(@itwin/core-frontend@4.7.1(@itwin/appui-abstract@4.7.1(@itwin/core-bentley@4.7.1))(@itwin/core-bentley@4.7.1)(@itwin/core-common@4.7.1(@itwin/core-bentley@4.7.1)(@itwin/core-geometry@4.7.1))(@itwin/core-geometry@4.7.1)(@itwin/core-orbitgt@4.7.1)(@itwin/core-quantity@4.7.1(@itwin/core-bentley@4.7.1))(encoding@0.1.13)(inversify@6.0.2)(reflect-metadata@0.1.14))(@itwin/core-geometry@4.7.1)(@itwin/core-quantity@4.7.1(@itwin/core-bentley@4.7.1))(@itwin/core-react@4.14.1(@itwin/appui-abstract@4.7.1(@itwin/core-bentley@4.7.1))(@itwin/core-bentley@4.7.1)(@types/react@18.2.79)(react-dom@18.2.0(react@18.2.0))(react@18.2.0))(@types/react@18.2.79)(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
@@ -322,8 +322,8 @@ importers:
         specifier: ^4.7.1
         version: 4.7.1(@itwin/core-backend@4.7.1(@itwin/core-bentley@4.7.1)(@itwin/core-common@4.7.1(@itwin/core-bentley@4.7.1)(@itwin/core-geometry@4.7.1))(@itwin/core-geometry@4.7.1)(@opentelemetry/api@1.8.0)(encoding@0.1.13))(@itwin/core-bentley@4.7.1)(@itwin/core-common@4.7.1(@itwin/core-bentley@4.7.1)(@itwin/core-geometry@4.7.1))(@itwin/core-geometry@4.7.1)(@itwin/ecschema-metadata@4.7.1(@itwin/core-bentley@4.7.1)(@itwin/core-quantity@4.7.1(@itwin/core-bentley@4.7.1)))(@itwin/ecschema-rpcinterface-common@4.7.1(@itwin/core-bentley@4.7.1)(@itwin/core-common@4.7.1(@itwin/core-bentley@4.7.1)(@itwin/core-geometry@4.7.1))(@itwin/core-geometry@4.7.1)(@itwin/ecschema-metadata@4.7.1(@itwin/core-bentley@4.7.1)(@itwin/core-quantity@4.7.1(@itwin/core-bentley@4.7.1))))
       '@itwin/eslint-plugin':
-        specifier: ^4.0.0
-        version: 4.0.0(eslint@8.57.0)(typescript@5.4.5)
+        specifier: ^4.1.1
+        version: 4.1.1(eslint@8.57.0)(typescript@5.4.5)
       '@itwin/express-server':
         specifier: ^4.7.1
         version: 4.7.1(@itwin/core-backend@4.7.1(@itwin/core-bentley@4.7.1)(@itwin/core-common@4.7.1(@itwin/core-bentley@4.7.1)(@itwin/core-geometry@4.7.1))(@itwin/core-geometry@4.7.1)(@opentelemetry/api@1.8.0)(encoding@0.1.13))(@itwin/core-common@4.7.1(@itwin/core-bentley@4.7.1)(@itwin/core-geometry@4.7.1))
@@ -382,8 +382,8 @@ importers:
         specifier: ^4.7.1
         version: 4.7.1(@itwin/core-bentley@4.7.1)(@itwin/core-common@4.7.1(@itwin/core-bentley@4.7.1)(@itwin/core-geometry@4.7.1))(@itwin/core-geometry@4.7.1)(@itwin/ecschema-metadata@4.7.1(@itwin/core-bentley@4.7.1)(@itwin/core-quantity@4.7.1(@itwin/core-bentley@4.7.1)))
       '@itwin/eslint-plugin':
-        specifier: ^4.0.0
-        version: 4.0.0(eslint@8.57.0)(typescript@5.4.5)
+        specifier: ^4.1.1
+        version: 4.1.1(eslint@8.57.0)(typescript@5.4.5)
       '@itwin/presentation-common':
         specifier: ^4.7.1
         version: 4.7.1(@itwin/core-bentley@4.7.1)(@itwin/core-common@4.7.1(@itwin/core-bentley@4.7.1)(@itwin/core-geometry@4.7.1))(@itwin/core-quantity@4.7.1(@itwin/core-bentley@4.7.1))(@itwin/ecschema-metadata@4.7.1(@itwin/core-bentley@4.7.1)(@itwin/core-quantity@4.7.1(@itwin/core-bentley@4.7.1)))
@@ -485,8 +485,8 @@ importers:
         specifier: ^4.7.1
         version: 4.7.1(@types/node@20.12.12)
       '@itwin/eslint-plugin':
-        specifier: ^4.0.0
-        version: 4.0.0(eslint@8.57.0)(typescript@5.4.5)
+        specifier: ^4.1.1
+        version: 4.1.1(eslint@8.57.0)(typescript@5.4.5)
       '@types/chai':
         specifier: ^4.3.14
         version: 4.3.14
@@ -551,8 +551,8 @@ importers:
         specifier: ^4.7.1
         version: 4.7.1(@itwin/core-backend@4.7.1(@itwin/core-bentley@4.7.1)(@itwin/core-common@4.7.1(@itwin/core-bentley@4.7.1)(@itwin/core-geometry@4.7.1))(@itwin/core-geometry@4.7.1)(@opentelemetry/api@1.8.0)(encoding@0.1.13))(@itwin/core-bentley@4.7.1)(@itwin/core-common@4.7.1(@itwin/core-bentley@4.7.1)(@itwin/core-geometry@4.7.1))(@itwin/core-geometry@4.7.1)(@itwin/ecschema-metadata@4.7.1(@itwin/core-bentley@4.7.1)(@itwin/core-quantity@4.7.1(@itwin/core-bentley@4.7.1)))(@itwin/ecschema-rpcinterface-common@4.7.1(@itwin/core-bentley@4.7.1)(@itwin/core-common@4.7.1(@itwin/core-bentley@4.7.1)(@itwin/core-geometry@4.7.1))(@itwin/core-geometry@4.7.1)(@itwin/ecschema-metadata@4.7.1(@itwin/core-bentley@4.7.1)(@itwin/core-quantity@4.7.1(@itwin/core-bentley@4.7.1))))
       '@itwin/eslint-plugin':
-        specifier: ^4.0.0
-        version: 4.0.0(eslint@8.57.0)(typescript@5.4.5)
+        specifier: ^4.1.1
+        version: 4.1.1(eslint@8.57.0)(typescript@5.4.5)
       '@itwin/express-server':
         specifier: ^4.7.1
         version: 4.7.1(@itwin/core-backend@4.7.1(@itwin/core-bentley@4.7.1)(@itwin/core-common@4.7.1(@itwin/core-bentley@4.7.1)(@itwin/core-geometry@4.7.1))(@itwin/core-geometry@4.7.1)(@opentelemetry/api@1.8.0)(encoding@0.1.13))(@itwin/core-common@4.7.1(@itwin/core-bentley@4.7.1)(@itwin/core-geometry@4.7.1))
@@ -632,8 +632,8 @@ importers:
         specifier: ^4.7.1
         version: 4.7.1(@itwin/core-bentley@4.7.1)(@itwin/core-common@4.7.1(@itwin/core-bentley@4.7.1)(@itwin/core-geometry@4.7.1))(@itwin/core-geometry@4.7.1)(@itwin/ecschema-metadata@4.7.1(@itwin/core-bentley@4.7.1)(@itwin/core-quantity@4.7.1(@itwin/core-bentley@4.7.1)))
       '@itwin/eslint-plugin':
-        specifier: ^4.0.0
-        version: 4.0.0(eslint@8.57.0)(typescript@5.4.5)
+        specifier: ^4.1.1
+        version: 4.1.1(eslint@8.57.0)(typescript@5.4.5)
       '@itwin/presentation-common':
         specifier: ^4.7.1
         version: 4.7.1(@itwin/core-bentley@4.7.1)(@itwin/core-common@4.7.1(@itwin/core-bentley@4.7.1)(@itwin/core-geometry@4.7.1))(@itwin/core-quantity@4.7.1(@itwin/core-bentley@4.7.1))(@itwin/ecschema-metadata@4.7.1(@itwin/core-bentley@4.7.1)(@itwin/core-quantity@4.7.1(@itwin/core-bentley@4.7.1)))
@@ -704,8 +704,8 @@ importers:
         specifier: ^4.7.1
         version: 4.7.1(@itwin/core-bentley@4.7.1)(@itwin/core-common@4.7.1(@itwin/core-bentley@4.7.1)(@itwin/core-geometry@4.7.1))(@itwin/core-geometry@4.7.1)(@itwin/ecschema-metadata@4.7.1(@itwin/core-bentley@4.7.1)(@itwin/core-quantity@4.7.1(@itwin/core-bentley@4.7.1)))
       '@itwin/eslint-plugin':
-        specifier: ^4.0.0
-        version: 4.0.0(eslint@8.57.0)(typescript@5.4.5)
+        specifier: ^4.1.1
+        version: 4.1.1(eslint@8.57.0)(typescript@5.4.5)
       '@itwin/imodel-components-react':
         specifier: ^4.14.1
         version: 4.14.1(@itwin/appui-abstract@4.7.1(@itwin/core-bentley@4.7.1))(@itwin/components-react@4.14.1(@itwin/appui-abstract@4.7.1(@itwin/core-bentley@4.7.1))(@itwin/core-bentley@4.7.1)(@itwin/core-react@4.14.1(@itwin/appui-abstract@4.7.1(@itwin/core-bentley@4.7.1))(@itwin/core-bentley@4.7.1)(@types/react@18.2.79)(react-dom@18.2.0(react@18.2.0))(react@18.2.0))(@types/react@18.2.79)(react-dom@18.2.0(react@18.2.0))(react@18.2.0))(@itwin/core-bentley@4.7.1)(@itwin/core-common@4.7.1(@itwin/core-bentley@4.7.1)(@itwin/core-geometry@4.7.1))(@itwin/core-frontend@4.7.1(@itwin/appui-abstract@4.7.1(@itwin/core-bentley@4.7.1))(@itwin/core-bentley@4.7.1)(@itwin/core-common@4.7.1(@itwin/core-bentley@4.7.1)(@itwin/core-geometry@4.7.1))(@itwin/core-geometry@4.7.1)(@itwin/core-orbitgt@4.7.1)(@itwin/core-quantity@4.7.1(@itwin/core-bentley@4.7.1))(encoding@0.1.13)(inversify@6.0.2)(reflect-metadata@0.1.14))(@itwin/core-geometry@4.7.1)(@itwin/core-quantity@4.7.1(@itwin/core-bentley@4.7.1))(@itwin/core-react@4.14.1(@itwin/appui-abstract@4.7.1(@itwin/core-bentley@4.7.1))(@itwin/core-bentley@4.7.1)(@types/react@18.2.79)(react-dom@18.2.0(react@18.2.0))(react@18.2.0))(@types/react@18.2.79)(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
@@ -891,8 +891,8 @@ importers:
         specifier: ^4.7.1
         version: 4.7.1(@itwin/core-bentley@4.7.1)(@itwin/core-quantity@4.7.1(@itwin/core-bentley@4.7.1))
       '@itwin/eslint-plugin':
-        specifier: ^4.0.0
-        version: 4.0.0(eslint@8.57.0)(typescript@5.4.5)
+        specifier: ^4.1.1
+        version: 4.1.1(eslint@8.57.0)(typescript@5.4.5)
       '@itwin/imodel-components-react':
         specifier: ^4.14.1
         version: 4.14.1(@itwin/appui-abstract@4.7.1(@itwin/core-bentley@4.7.1))(@itwin/components-react@4.14.1(@itwin/appui-abstract@4.7.1(@itwin/core-bentley@4.7.1))(@itwin/core-bentley@4.7.1)(@itwin/core-react@4.14.1(@itwin/appui-abstract@4.7.1(@itwin/core-bentley@4.7.1))(@itwin/core-bentley@4.7.1)(@types/react@18.2.79)(react-dom@18.2.0(react@18.2.0))(react@18.2.0))(@types/react@18.2.79)(react-dom@18.2.0(react@18.2.0))(react@18.2.0))(@itwin/core-bentley@4.7.1)(@itwin/core-common@4.7.1(@itwin/core-bentley@4.7.1)(@itwin/core-geometry@4.7.1))(@itwin/core-frontend@4.7.1(@itwin/appui-abstract@4.7.1(@itwin/core-bentley@4.7.1))(@itwin/core-bentley@4.7.1)(@itwin/core-common@4.7.1(@itwin/core-bentley@4.7.1)(@itwin/core-geometry@4.7.1))(@itwin/core-geometry@4.7.1)(@itwin/core-orbitgt@4.7.1)(@itwin/core-quantity@4.7.1(@itwin/core-bentley@4.7.1))(encoding@0.1.13)(inversify@6.0.2)(reflect-metadata@0.1.14))(@itwin/core-geometry@4.7.1)(@itwin/core-quantity@4.7.1(@itwin/core-bentley@4.7.1))(@itwin/core-react@4.14.1(@itwin/appui-abstract@4.7.1(@itwin/core-bentley@4.7.1))(@itwin/core-bentley@4.7.1)(@types/react@18.2.79)(react-dom@18.2.0(react@18.2.0))(react@18.2.0))(@types/react@18.2.79)(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
@@ -1048,8 +1048,8 @@ importers:
         specifier: ^4.7.1
         version: 4.7.1(@itwin/core-bentley@4.7.1)(@itwin/core-quantity@4.7.1(@itwin/core-bentley@4.7.1))
       '@itwin/eslint-plugin':
-        specifier: ^4.0.0
-        version: 4.0.0(eslint@8.57.0)(typescript@5.4.5)
+        specifier: ^4.1.1
+        version: 4.1.1(eslint@8.57.0)(typescript@5.4.5)
       '@types/chai':
         specifier: ^4.3.14
         version: 4.3.14
@@ -1127,8 +1127,8 @@ importers:
         specifier: ^4.7.1
         version: 4.7.1(@types/node@20.14.6)
       '@itwin/eslint-plugin':
-        specifier: ^4.0.0
-        version: 4.0.0(eslint@8.57.0)(typescript@5.4.5)
+        specifier: ^4.1.1
+        version: 4.1.1(eslint@8.57.0)(typescript@5.4.5)
       '@types/chai':
         specifier: ^4.3.14
         version: 4.3.14
@@ -1339,8 +1339,8 @@ importers:
         specifier: ^4.7.1
         version: 4.7.1(@types/node@20.14.6)
       '@itwin/eslint-plugin':
-        specifier: ^4.0.0
-        version: 4.0.0(eslint@8.57.0)(typescript@5.4.5)
+        specifier: ^4.1.1
+        version: 4.1.1(eslint@8.57.0)(typescript@5.4.5)
       '@itwin/presentation-hierarchies':
         specifier: workspace:^
         version: link:../hierarchies
@@ -1378,8 +1378,8 @@ importers:
         specifier: ^4.7.1
         version: 4.7.1(@itwin/core-bentley@4.7.1)(@itwin/core-quantity@4.7.1(@itwin/core-bentley@4.7.1))
       '@itwin/eslint-plugin':
-        specifier: ^4.0.0
-        version: 4.0.0(eslint@8.57.0)(typescript@5.4.5)
+        specifier: ^4.1.1
+        version: 4.1.1(eslint@8.57.0)(typescript@5.4.5)
       '@itwin/presentation-common':
         specifier: ^4.7.1
         version: 4.7.1(@itwin/core-bentley@4.7.1)(@itwin/core-common@4.7.1(@itwin/core-bentley@4.7.1)(@itwin/core-geometry@4.7.1))(@itwin/core-quantity@4.7.1(@itwin/core-bentley@4.7.1))(@itwin/ecschema-metadata@4.7.1(@itwin/core-bentley@4.7.1)(@itwin/core-quantity@4.7.1(@itwin/core-bentley@4.7.1)))
@@ -1445,8 +1445,8 @@ importers:
         specifier: ^4.7.1
         version: 4.7.1(@types/node@20.12.12)
       '@itwin/eslint-plugin':
-        specifier: ^4.0.0
-        version: 4.0.0(eslint@8.57.0)(typescript@5.4.5)
+        specifier: ^4.1.1
+        version: 4.1.1(eslint@8.57.0)(typescript@5.4.5)
       '@types/chai':
         specifier: ^4.3.14
         version: 4.3.14
@@ -1521,8 +1521,8 @@ importers:
         version: 7.8.1
     devDependencies:
       '@itwin/eslint-plugin':
-        specifier: ^4.0.0
-        version: 4.0.0(eslint@8.57.0)(typescript@5.4.5)
+        specifier: ^4.1.1
+        version: 4.1.1(eslint@8.57.0)(typescript@5.4.5)
       '@types/node':
         specifier: ^20.12.12
         version: 20.12.12
@@ -1585,8 +1585,8 @@ importers:
         specifier: ^4.7.1
         version: 4.7.1(@itwin/core-bentley@4.7.1)(@itwin/core-quantity@4.7.1(@itwin/core-bentley@4.7.1))
       '@itwin/eslint-plugin':
-        specifier: ^4.0.0
-        version: 4.0.0(eslint@8.57.0)(typescript@5.4.5)
+        specifier: ^4.1.1
+        version: 4.1.1(eslint@8.57.0)(typescript@5.4.5)
       '@itwin/presentation-backend':
         specifier: ^4.7.1
         version: 4.7.1(@itwin/core-backend@4.7.1(@itwin/core-bentley@4.7.1)(@itwin/core-common@4.7.1(@itwin/core-bentley@4.7.1)(@itwin/core-geometry@4.7.1))(@itwin/core-geometry@4.7.1)(@opentelemetry/api@1.8.0)(encoding@0.1.13))(@itwin/core-bentley@4.7.1)(@itwin/core-common@4.7.1(@itwin/core-bentley@4.7.1)(@itwin/core-geometry@4.7.1))(@itwin/core-quantity@4.7.1(@itwin/core-bentley@4.7.1))(@itwin/ecschema-metadata@4.7.1(@itwin/core-bentley@4.7.1)(@itwin/core-quantity@4.7.1(@itwin/core-bentley@4.7.1)))(@itwin/presentation-common@4.7.1(@itwin/core-bentley@4.7.1)(@itwin/core-common@4.7.1(@itwin/core-bentley@4.7.1)(@itwin/core-geometry@4.7.1))(@itwin/core-quantity@4.7.1(@itwin/core-bentley@4.7.1))(@itwin/ecschema-metadata@4.7.1(@itwin/core-bentley@4.7.1)(@itwin/core-quantity@4.7.1(@itwin/core-bentley@4.7.1))))
@@ -1703,8 +1703,8 @@ importers:
         specifier: ^4.7.1
         version: 4.7.1(@types/node@20.12.12)
       '@itwin/eslint-plugin':
-        specifier: ^4.0.0
-        version: 4.0.0(eslint@8.57.0)(typescript@5.4.5)
+        specifier: ^4.1.1
+        version: 4.1.1(eslint@8.57.0)(typescript@5.4.5)
       '@types/chai':
         specifier: ^4.3.14
         version: 4.3.14
@@ -2552,8 +2552,8 @@ packages:
       '@itwin/ecschema-metadata': 4.7.1
       '@itwin/ecschema-rpcinterface-common': 4.7.1
 
-  '@itwin/eslint-plugin@4.0.0':
-    resolution: {integrity: sha512-6s/2lNgYCLq5aeiYyABe5h0w6Xxklj/3yaQEMx/O0nlZ5P9CDVV98hUG7heDTEqZrNyigTdvX17GxakuHzI8rg==}
+  '@itwin/eslint-plugin@4.1.1':
+    resolution: {integrity: sha512-AGE6TIpMeJAVBBRJxDuSWzD/+K7yu1PbVB7yxDQurvg2j1pafb808B7lM2KOzyUvT4+C2HKmAtiQaxeFjwWNjg==}
     engines: {node: ^18.18.0 || >=20.0.0}
     hasBin: true
     peerDependencies:
@@ -10211,7 +10211,7 @@ snapshots:
       '@itwin/ecschema-metadata': 4.7.1(@itwin/core-bentley@4.7.1)(@itwin/core-quantity@4.7.1(@itwin/core-bentley@4.7.1))
       '@itwin/ecschema-rpcinterface-common': 4.7.1(@itwin/core-bentley@4.7.1)(@itwin/core-common@4.7.1(@itwin/core-bentley@4.7.1)(@itwin/core-geometry@4.7.1))(@itwin/core-geometry@4.7.1)(@itwin/ecschema-metadata@4.7.1(@itwin/core-bentley@4.7.1)(@itwin/core-quantity@4.7.1(@itwin/core-bentley@4.7.1)))
 
-  '@itwin/eslint-plugin@4.0.0(eslint@8.57.0)(typescript@5.4.5)':
+  '@itwin/eslint-plugin@4.1.1(eslint@8.57.0)(typescript@5.4.5)':
     dependencies:
       '@typescript-eslint/eslint-plugin': 7.0.2(@typescript-eslint/parser@7.0.2(eslint@8.57.0)(typescript@5.4.5))(eslint@8.57.0)(typescript@5.4.5)
       '@typescript-eslint/parser': 7.0.2(eslint@8.57.0)(typescript@5.4.5)

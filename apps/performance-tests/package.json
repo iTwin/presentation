@@ -35,7 +35,7 @@
   },
   "devDependencies": {
     "@itwin/build-tools": "^4.7.1",
-    "@itwin/eslint-plugin": "^4.0.0",
+    "@itwin/eslint-plugin": "^4.1.1",
     "@types/chai": "^4.3.14",
     "@types/mocha": "^10.0.6",
     "@types/node": "^20.12.12",

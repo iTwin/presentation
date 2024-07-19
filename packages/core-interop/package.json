@@ -51,7 +51,7 @@
     "@itwin/core-geometry": "^4.7.1",
     "@itwin/core-quantity": "^4.7.1",
     "@itwin/ecschema-metadata": "^4.7.1",
-    "@itwin/eslint-plugin": "^4.0.0",
+    "@itwin/eslint-plugin": "^4.1.1",
     "@types/chai": "^4.3.14",
     "@types/chai-as-promised": "^7.1.8",
     "@types/mocha": "^10.0.6",

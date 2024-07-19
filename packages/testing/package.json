@@ -65,7 +65,7 @@
     "@itwin/core-quantity": "^4.7.1",
     "@itwin/core-react": "^4.14.1",
     "@itwin/ecschema-metadata": "^4.7.1",
-    "@itwin/eslint-plugin": "^4.0.0",
+    "@itwin/eslint-plugin": "^4.1.1",
     "@itwin/presentation-backend": "^4.7.1",
     "@itwin/presentation-common": "^4.7.1",
     "@itwin/presentation-frontend": "^4.7.1",

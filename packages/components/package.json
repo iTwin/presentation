@@ -86,7 +86,7 @@
     "@itwin/core-quantity": "^4.7.1",
     "@itwin/core-react": "^4.14.1",
     "@itwin/ecschema-metadata": "^4.7.1",
-    "@itwin/eslint-plugin": "^4.0.0",
+    "@itwin/eslint-plugin": "^4.1.1",
     "@itwin/imodel-components-react": "^4.14.1",
     "@itwin/itwinui-react": "^3.11.3",
     "@itwin/presentation-common": "^4.7.1",
