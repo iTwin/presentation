@@ -4,8 +4,6 @@
 
 ```ts
 
-/// <reference types="react" />
-
 import { ComponentPropsWithoutRef } from 'react';
 import { createHierarchyProvider } from '@itwin/presentation-hierarchies';
 import { ECClassHierarchyInspector } from '@itwin/presentation-shared';
