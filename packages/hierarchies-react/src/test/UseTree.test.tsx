@@ -5,7 +5,7 @@
 
 import { expect } from "chai";
 import { collect, createAsyncIterator, ResolvablePromise, throwingAsyncIterator } from "presentation-test-utilities";
-import { act, PropsWithChildren } from "react";
+import { PropsWithChildren } from "react";
 import sinon from "sinon";
 import * as hierarchiesModule from "@itwin/presentation-hierarchies";
 import { IPrimitiveValueFormatter } from "@itwin/presentation-shared";
@@ -20,7 +20,7 @@ import {
 } from "../presentation-hierarchies-react/TreeNode";
 import { UnifiedSelectionProvider } from "../presentation-hierarchies-react/UnifiedSelectionContext";
 import { useTree, useUnifiedSelectionTree } from "../presentation-hierarchies-react/UseTree";
-import { cleanup, createStub, createTestGroupingNode, createTestHierarchyNode, renderHook, waitFor } from "./TestUtils";
+import { act, cleanup, createStub, createTestGroupingNode, createTestHierarchyNode, renderHook, waitFor } from "./TestUtils";
 
 describe("useTree", () => {
   const hierarchyProvider = {
