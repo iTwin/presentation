@@ -5,8 +5,7 @@
 
 import { expect } from "chai";
 import { collect, createAsyncIterator, ResolvablePromise, throwingAsyncIterator } from "presentation-test-utilities";
-import { PropsWithChildren } from "react";
-import { act } from "react-dom/test-utils";
+import { act, PropsWithChildren } from "react";
 import sinon from "sinon";
 import * as hierarchiesModule from "@itwin/presentation-hierarchies";
 import { IPrimitiveValueFormatter } from "@itwin/presentation-shared";

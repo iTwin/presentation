@@ -51,8 +51,8 @@
     "@itwin/eslint-plugin": "^4.1.1",
     "@itwin/presentation-common": "^4.7.1",
     "@opentelemetry/api": "^1.8.0",
-    "@types/chai": "^4.3.14",
-    "@types/mocha": "^10.0.6",
+    "@types/chai": "^4.3.16",
+    "@types/mocha": "^10.0.7",
     "@types/node": "^20.12.12",
     "@types/sinon": "^17.0.3",
     "@types/sinon-chai": "^3.2.12",
@@ -60,12 +60,12 @@
     "cpx2": "^7.0.1",
     "cross-env": "^7.0.3",
     "eslint": "^8.57.0",
-    "mocha": "^10.4.0",
-    "nyc": "^15.1.0",
+    "mocha": "^10.6.0",
+    "nyc": "^17.0.0",
     "presentation-build-tools": "workspace:^",
-    "rimraf": "^5.0.5",
-    "sinon": "^17.0.1",
+    "rimraf": "^6.0.1",
+    "sinon": "^18.0.0",
     "sinon-chai": "^3.7.0",
-    "typescript": "~5.4.5"
+    "typescript": "~5.5.3"
   }
 }
