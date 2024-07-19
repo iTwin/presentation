@@ -27,11 +27,6 @@ export class NumericPropertyEditorBase extends PropertyEditorBase {
   }
 
   // istanbul ignore next
-  public override get containerStopsKeydownPropagation(): boolean {
-    return false;
-  }
-
-  // istanbul ignore next
   public override get containerHandlesTab(): boolean {
     return false;
   }
