@@ -85,7 +85,7 @@ export const NavigationPropertyTargetSelector = forwardRef<PropertyEditorAttribu
         styles={{
           control: () => ({}),
           container: () => ({}),
-          menuPortal: (base) => ({ ...base, zIndex: 9999, width }),
+          menuPortal: (base) => ({ ...base, zIndex: 9999, width, pointerEvents: "auto" }),
           menu: (base) => ({ ...base, margin: 0 }),
           dropdownIndicator: () => ({}),
         }}
