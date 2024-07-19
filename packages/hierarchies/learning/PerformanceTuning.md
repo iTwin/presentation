@@ -18,7 +18,7 @@ The query cache size is controlled through an optional `queryCacheSize` property
 
 The library relies on the idea that it makes little sense to show users very large flat hierarchy levels, because they don't provide value to end users and are expensive to create. Instead, our suggestion is to have a limit on hierarchy level size, and if the hierarchy level is larger than that, show a message to the user, asking to provide a filter.
 
-The limiting functionality is achieved through the use of `LimitingECSqlQueryExecutor`, which is an input to `createHierarchyProvider` as part of the `imodelAccess` prop. The executor's factory function `createLimitingECSqlQueryExecutor` takes a required `defaultLimit` argument, which sets the limit, and the recommended value would be around `1k` and up to `10k` - we don't recommend using a high one.
+The limiting functionality is achieved through the use of `LimitingECSqlQueryExecutor`, which is an input to `createHierarchyProvider` as part of the `imodelAccess` prop. The executor's factory function `createLimitingECSqlQueryExecutor` takes a required `defaultLimit` argument, which sets the limit, and the recommended value would be around `1k` and up to `10k` - we don't recommend using a higher one.
 
 Then creating a query reader through a limiting query executor, it's possible to specify an override to the default limit. This feature is used by the hierarchy provider - its `getNodes` function takes a `hierarchyLevelSizeLimit` optional prop, which sets the override. This provides ability for components, using the hierarchy provider, to increase the limit per hierarchy level upon a user's request.
 
@@ -34,7 +34,7 @@ For that reason, the `@itwin/presentation-shared` delivers the [`createCachingEC
 
 To create a hierarchy provider, the `createHierarchyProvider` function requires an `imodelAccess` prop, part of which is the `ECSchemaProvider` interface. In majority of cases, the [`createECSchemaProvider`](https://github.com/iTwin/presentation/blob/master/packages/core-interop/README.md#createECSchemaProvider) function will be used to create it from a given `SchemaContext`. The context is responsible for storing (aka caching) all the previously requested schemas, so it's important that only one schema context is used for a single iModel across the whole application, or otherwise the memory consumption will grow and the performance will degrade (pulling schema information from the backend may be expensive).
 
-Sadly, iTwin.js framework doesn't provide a convenient way to retrieve a `SchemaContext` for an `IModelConnextion` or `IModelDb`, so it's up to the application to manage it. Our suggested approach looks like this:
+Sadly, iTwin.js framework doesn't provide a convenient way to retrieve a `SchemaContext` for an `IModelConnection` or `IModelDb`, so it's up to the application to manage it. Our suggested approach looks like this:
 
 <!-- [[include: [Presentation.Hierarchies.PerformanceTuning.Imports, Presentation.Hierarchies.PerformanceTuning.CachingSchemaContexts], ts]] -->
 <!-- BEGIN EXTRACTION -->
