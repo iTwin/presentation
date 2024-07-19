@@ -1025,10 +1025,11 @@ describe("createHierarchyProvider", () => {
         },
       });
       await expect(provider.getNodes({ parentNode: undefined }).next()).to.eventually.be.rejectedWith("test error");
+      await expect(provider.getNodeInstanceKeys({ parentNode: undefined }).next()).to.eventually.be.rejectedWith("test error");
     });
 
     it("rethrows query executor errors", async () => {
-      imodelAccess.createQueryReader.returns(
+      imodelAccess.createQueryReader.callsFake(() =>
         (async function* () {
           throw new Error("test error");
         })(),
@@ -1047,10 +1048,11 @@ describe("createHierarchyProvider", () => {
         },
       });
       await expect(provider.getNodes({ parentNode: undefined }).next()).to.eventually.be.rejectedWith("test error");
+      await expect(provider.getNodeInstanceKeys({ parentNode: undefined }).next()).to.eventually.be.rejectedWith("test error");
     });
 
     it("rethrows query executor errors thrown while determining children", async () => {
-      imodelAccess.createQueryReader.returns(
+      imodelAccess.createQueryReader.callsFake(() =>
         (async function* () {
           throw new Error("test error");
         })(),
@@ -1075,7 +1077,7 @@ describe("createHierarchyProvider", () => {
     });
 
     it("sets children flag on parent node to `true` when determining children throws with `rows limit exceeded` error", async () => {
-      imodelAccess.createQueryReader.returns(
+      imodelAccess.createQueryReader.callsFake(() =>
         (async function* () {
           throw new RowsLimitExceededError(123);
         })(),

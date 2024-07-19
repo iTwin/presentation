@@ -51,10 +51,16 @@ import {
 import { HierarchyNodeIdentifiersPath } from "./HierarchyNodeIdentifier";
 import { InstancesNodeKey } from "./HierarchyNodeKey";
 import { CachedNodesObservableEntry, ChildNodeObservablesCache, ParsedQueryNodesObservable } from "./internal/ChildNodeObservablesCache";
-import { LOGGING_NAMESPACE as CommonLoggingNamespace, createNodeIdentifierForLogging, hasChildren } from "./internal/Common";
+import {
+  LOGGING_NAMESPACE as BASE_LOGGING_NAMESPACE,
+  LOGGING_NAMESPACE_INTERNAL as BASE_LOGGING_NAMESPACE_INTERNAL,
+  LOGGING_NAMESPACE_PERFORMANCE as BASE_LOGGING_NAMESPACE_PERFORMANCE,
+  createNodeIdentifierForLogging,
+  hasChildren,
+} from "./internal/Common";
 import { eachValueFrom } from "./internal/EachValueFrom";
 import { FilteringHierarchyDefinition } from "./internal/FilteringHierarchyDefinition";
-import { createQueryLogMessage, doLog, log } from "./internal/LoggingUtils";
+import { doLog, log } from "./internal/LoggingUtils";
 import { createDetermineChildrenOperator } from "./internal/operators/DetermineChildren";
 import { createGroupingOperator } from "./internal/operators/Grouping";
 import { createHideIfNoChildrenOperator } from "./internal/operators/HideIfNoChildren";
@@ -68,8 +74,10 @@ import { readNodes } from "./internal/TreeNodesReader";
 import { LimitingECSqlQueryExecutor } from "./LimitingECSqlQueryExecutor";
 import { NodeSelectClauseColumnNames } from "./NodeSelectQueryFactory";
 
-const LOGGING_NAMESPACE = `${CommonLoggingNamespace}.HierarchyProvider`;
-const PERF_LOGGING_NAMESPACE = `${LOGGING_NAMESPACE}.Performance`;
+const LOGGING_NAMESPACE = `${BASE_LOGGING_NAMESPACE}.Provider`;
+const LOGGING_NAMESPACE_INTERNAL = `${BASE_LOGGING_NAMESPACE_INTERNAL}.Provider`;
+const LOGGING_NAMESPACE_PERFORMANCE = `${BASE_LOGGING_NAMESPACE_PERFORMANCE}.Provider`;
+
 const DEFAULT_QUERY_CONCURRENCY = 10;
 const DEFAULT_QUERY_CACHE_SIZE = 1;
 
@@ -261,7 +269,7 @@ class HierarchyProviderImpl implements HierarchyProvider {
     props: DefineHierarchyLevelProps & { hierarchyLevelSizeLimit?: number | "unbounded"; filteredInstanceKeys?: InstanceKey[] },
   ): ParsedQueryNodesObservable {
     doLog({
-      category: PERF_LOGGING_NAMESPACE,
+      category: LOGGING_NAMESPACE_PERFORMANCE,
       message: /* istanbul ignore next */ () => `Requesting hierarchy level definitions for ${createNodeIdentifierForLogging(props.parentNode)}`,
     });
     // stream hierarchy level definitions
@@ -269,7 +277,7 @@ class HierarchyProviderImpl implements HierarchyProvider {
       mergeAll(),
       finalize(() =>
         doLog({
-          category: PERF_LOGGING_NAMESPACE,
+          category: LOGGING_NAMESPACE_PERFORMANCE,
           message: /* istanbul ignore next */ () => `Received all hierarchy level definitions for ${createNodeIdentifierForLogging(props.parentNode)}`,
         }),
       ),
@@ -283,11 +291,6 @@ class HierarchyProviderImpl implements HierarchyProvider {
         return this._queryScheduler.scheduleSubscription(
           of(def.query).pipe(
             map((query) => filterQueryByInstanceKeys(query, props.filteredInstanceKeys)),
-            log({
-              category: `${LOGGING_NAMESPACE}.Queries`,
-              message: /* istanbul ignore next */ (query) =>
-                `Query direct nodes for parent ${createNodeIdentifierForLogging(props.parentNode)}: ${createQueryLogMessage(query)}`,
-            }),
             mergeMap((query) =>
               readNodes({ queryExecutor: this.queryExecutor, query, limit: props.hierarchyLevelSizeLimit, parser: this.hierarchyDefinition.parseNode }),
             ),
@@ -296,7 +299,7 @@ class HierarchyProviderImpl implements HierarchyProvider {
       }),
       finalize(() =>
         doLog({
-          category: PERF_LOGGING_NAMESPACE,
+          category: LOGGING_NAMESPACE_PERFORMANCE,
           message: /* istanbul ignore next */ () => `Read all child nodes ${createNodeIdentifierForLogging(props.parentNode)}`,
         }),
       ),
@@ -316,7 +319,7 @@ class HierarchyProviderImpl implements HierarchyProvider {
       preProcessNodes(this.hierarchyDefinition),
       finalize(() =>
         doLog({
-          category: PERF_LOGGING_NAMESPACE,
+          category: LOGGING_NAMESPACE_PERFORMANCE,
           message: /* istanbul ignore next */ () => `Finished initializing child nodes for ${createNodeIdentifierForLogging(parentNode)}`,
         }),
       ),
@@ -337,7 +340,7 @@ class HierarchyProviderImpl implements HierarchyProvider {
       ),
       finalize(() =>
         doLog({
-          category: PERF_LOGGING_NAMESPACE,
+          category: LOGGING_NAMESPACE_PERFORMANCE,
           message: /* istanbul ignore next */ () => `Finished pre-processing child nodes for ${createNodeIdentifierForLogging(props.parentNode)}`,
         }),
       ),
@@ -354,8 +357,8 @@ class HierarchyProviderImpl implements HierarchyProvider {
       ),
       finalize(() =>
         doLog({
-          category: PERF_LOGGING_NAMESPACE,
-          message: /* istanbul ignore next */ () => `Finished processing child nodes for ${createNodeIdentifierForLogging(props.parentNode)}`,
+          category: LOGGING_NAMESPACE_PERFORMANCE,
+          message: /* istanbul ignore next */ () => `Finished grouping child nodes for ${createNodeIdentifierForLogging(props.parentNode)}`,
         }),
       ),
     );
@@ -379,7 +382,7 @@ class HierarchyProviderImpl implements HierarchyProvider {
       }),
       finalize(() =>
         doLog({
-          category: PERF_LOGGING_NAMESPACE,
+          category: LOGGING_NAMESPACE_PERFORMANCE,
           message: /* istanbul ignore next */ () => `Finished finalizing child nodes for ${createNodeIdentifierForLogging(props.parentNode)}`,
         }),
       ),
@@ -390,7 +393,7 @@ class HierarchyProviderImpl implements HierarchyProvider {
     preprocessedNodesObservable: Observable<ProcessedHierarchyNode>,
     possiblyKnownChildrenObservable?: ParsedQueryNodesObservable,
   ): Observable<boolean> {
-    const loggingCategory = `${LOGGING_NAMESPACE}.HasNodes`;
+    const loggingCategory = `${LOGGING_NAMESPACE_INTERNAL}.HasNodes`;
     return concat((possiblyKnownChildrenObservable ?? EMPTY).pipe(filter((n) => hasChildren(n))), preprocessedNodesObservable).pipe(
       log({ category: loggingCategory, message: /* istanbul ignore next */ (n) => `Node before mapping to 'true': ${createNodeIdentifierForLogging(n)}` }),
       take(1),
@@ -408,7 +411,7 @@ class HierarchyProviderImpl implements HierarchyProvider {
   }
 
   private getCachedObservableEntry(props: GetHierarchyNodesProps): CachedNodesObservableEntry {
-    const loggingCategory = `${LOGGING_NAMESPACE}.GetCachedObservableEntry`;
+    const loggingCategory = `${LOGGING_NAMESPACE}.QueryResultsCache`;
     const { parentNode, ...restProps } = props;
     const cached = props.ignoreCache || !this._nodesCache ? undefined : this._nodesCache.get(props);
     if (cached) {
@@ -594,11 +597,31 @@ class HierarchyProviderImpl implements HierarchyProvider {
    */
   public getNodeInstanceKeys(props: Omit<GetHierarchyNodesProps, "ignoreCache">): AsyncIterableIterator<InstanceKey> {
     const loggingCategory = `${LOGGING_NAMESPACE}.GetNodeInstanceKeys`;
+    const timer = new StopWatch(undefined, true);
     doLog({
       category: loggingCategory,
       message: /* istanbul ignore next */ () => `Requesting keys for ${createNodeIdentifierForLogging(props.parentNode)}`,
     });
-    return eachValueFrom(this.getNodeInstanceKeysObs(props));
+    let error: any;
+    let keysCount = 0;
+    return eachValueFrom(
+      this.getNodeInstanceKeysObs(props).pipe(
+        tap(() => ++keysCount),
+        catchError((e) => {
+          error = e;
+          throw e;
+        }),
+        finalize(() => {
+          doLog({
+            category: loggingCategory,
+            message: /* istanbul ignore next */ () =>
+              error
+                ? `Error creating node instance keys for ${createNodeIdentifierForLogging(props.parentNode)}: ${error instanceof Error ? error.message : error.toString()}`
+                : `Returned ${keysCount} instance keys for ${createNodeIdentifierForLogging(props.parentNode)} in ${timer.currentSeconds.toFixed(2)} s.`,
+          });
+        }),
+      ),
+    );
   }
 
   /**
@@ -608,6 +631,10 @@ class HierarchyProviderImpl implements HierarchyProvider {
    * Calling the function invalidates internal caches to make sure fresh data is retrieved on new requests.
    */
   public notifyDataSourceChanged() {
+    doLog({
+      category: `${LOGGING_NAMESPACE}.Events`,
+      message: /* istanbul ignore next */ () => `Data source changed: clear query results cache`,
+    });
     this._nodesCache?.clear();
   }
 }
