@@ -7,14 +7,13 @@ import { expect } from "chai";
 import { describe } from "mocha";
 import { collect, createAsyncIterator } from "presentation-test-utilities";
 import { PropsWithChildren } from "react";
-import { act } from "react-dom/test-utils";
 import sinon from "sinon";
 import { InstancesNodeKey } from "@itwin/presentation-hierarchies";
 import { createStorage, Selectables, StorageSelectionChangeEventArgs, StorageSelectionChangesListener } from "@itwin/unified-selection";
 import { TreeModelNode } from "../../presentation-hierarchies-react/internal/TreeModel";
 import { useUnifiedTreeSelection } from "../../presentation-hierarchies-react/internal/UseUnifiedSelection";
 import { UnifiedSelectionProvider } from "../../presentation-hierarchies-react/UnifiedSelectionContext";
-import { createStub, createTestGroupingNode, createTestHierarchyNode, createTreeModelNode, renderHook } from "../TestUtils";
+import { act, createStub, createTestGroupingNode, createTestHierarchyNode, createTreeModelNode, renderHook } from "../TestUtils";
 
 describe("useUnifiesSelection", () => {
   const storage = createStorage();
