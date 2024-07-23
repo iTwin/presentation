@@ -26,7 +26,7 @@ export const NumericPropertyInput = forwardRef<PropertyEditorAttributes, Numeric
     () => ({
       getValue: () => ({
         valueFormat: PropertyValueFormat.Primitive,
-        value: isNaN(Number(inputValue)) ? undefined : Number(inputValue),
+        value: !inputValue || isNaN(Number(inputValue)) ? undefined : Number(inputValue),
         displayValue: inputValue,
       }),
       htmlElement: divRef.current,
@@ -42,7 +42,11 @@ export const NumericPropertyInput = forwardRef<PropertyEditorAttributes, Numeric
     onCommit &&
       onCommit({
         propertyRecord,
-        newValue: { valueFormat: PropertyValueFormat.Primitive, value: isNaN(Number(inputValue)) ? undefined : Number(inputValue), displayValue: inputValue },
+        newValue: {
+          valueFormat: PropertyValueFormat.Primitive,
+          value: !inputValue || isNaN(Number(inputValue)) ? undefined : Number(inputValue),
+          displayValue: inputValue,
+        },
       });
   };
   return (
@@ -58,9 +62,6 @@ function getInputTargetFromPropertyRecord(propertyRecord: PropertyRecord) {
   // istanbul ignore if
   if (value.valueFormat !== PropertyValueFormat.Primitive) {
     return undefined;
-  }
-  if (value.displayValue !== undefined) {
-    return value.displayValue;
   }
   return value.value?.toString();
 }
