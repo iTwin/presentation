@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { tap } from "rxjs";
-import { ECSqlQueryDef, ILogger, LogLevel, trimWhitespace } from "@itwin/presentation-shared";
+import { ILogger, LogLevel } from "@itwin/presentation-shared";
 import { getLogger } from "../Logging";
 
 /** @internal */
@@ -41,21 +41,4 @@ function getLogFunc(logger: ILogger, severity: LogLevel) {
 /** @internal */
 export function log<TMessageArg>(props: LogMessageProps<TMessageArg>) {
   return tap<TMessageArg>((n) => doLog({ ...props, message: () => props.message(n) }));
-}
-
-/** @internal */
-// istanbul ignore next
-export function createQueryLogMessage(query: ECSqlQueryDef): string {
-  const ctes = query.ctes?.map((cte) => `    ${trimWhitespace(cte)}`).join(", \n");
-  const bindings = query.bindings?.map((b) => JSON.stringify(b.value)).join(", ");
-  let output = "{\n";
-  if (ctes) {
-    output += `  ctes: [ \n${ctes} \n], \n`;
-  }
-  output += `  ecsql: ${trimWhitespace(query.ecsql)}, \n`;
-  if (bindings) {
-    output += `  bindings: [${bindings}], \n`;
-  }
-  output += "}";
-  return output;
 }

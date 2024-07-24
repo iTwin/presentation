@@ -21,10 +21,10 @@
     "@itwin/core-quantity": "^4.7.1",
     "@itwin/ecschema-metadata": "^4.7.1",
     "@itwin/ecschema-rpcinterface-common": "^4.7.1",
-    "@itwin/eslint-plugin": "^4.0.0",
+    "@itwin/eslint-plugin": "^4.1.1",
     "@itwin/presentation-common": "^4.7.1",
     "eslint": "^8.57.0",
-    "rimraf": "^5.0.5",
-    "typescript": "~5.4.5"
+    "rimraf": "^6.0.1",
+    "typescript": "~5.5.3"
   }
 }

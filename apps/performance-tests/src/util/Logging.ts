@@ -3,6 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
+// __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.Logging.CreatingCustomLogger
 import { ILogger, LogLevel } from "@itwin/presentation-shared";
 
 export const LOGGER: ILogger = {
@@ -25,3 +26,4 @@ function createLogMessage(severity: LogLevel, category: string, message: string)
   });
   return `[${timeStr}] ${severity.toUpperCase().padEnd(7)} | ${category} | ${message}`;
 }
+// __PUBLISH_EXTRACT_END__

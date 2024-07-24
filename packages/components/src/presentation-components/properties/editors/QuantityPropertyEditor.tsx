@@ -20,11 +20,6 @@ export const QuantityEditorName = "presentation-quantity-editor";
  */
 export class QuantityPropertyEditorBase extends PropertyEditorBase {
   // istanbul ignore next
-  public override get containerStopsKeydownPropagation(): boolean {
-    return false;
-  }
-
-  // istanbul ignore next
   public get reactNode(): React.ReactNode {
     return <QuantityPropertyEditor />;
   }

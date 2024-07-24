@@ -3,16 +3,17 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { StopWatch } from "@itwin/core-bentley";
+import { Guid, StopWatch } from "@itwin/core-bentley";
 import {
   createMainThreadReleaseOnTimePassedHandler,
   ECSqlQueryDef,
   ECSqlQueryExecutor,
   ECSqlQueryReaderOptions,
   ECSqlQueryRow,
+  trimWhitespace,
 } from "@itwin/presentation-shared";
 import { RowsLimitExceededError } from "./HierarchyErrors";
-import { LOGGING_NAMESPACE as CommonLoggingNamespace } from "./internal/Common";
+import { LOGGING_NAMESPACE as BASE_LOGGING_NAMESPACE, LOGGING_NAMESPACE_PERFORMANCE as BASE_LOGGING_NAMESPACE_PERFORMANCE } from "./internal/Common";
 import { doLog } from "./internal/LoggingUtils";
 
 /**
@@ -40,7 +41,7 @@ export function createLimitingECSqlQueryExecutor(baseExecutor: ECSqlQueryExecuto
     async *createQueryReader(query: ECSqlQueryDef, config?: ECSqlQueryReaderOptions & { limit?: number | "unbounded" }) {
       const { limit: configLimit, ...restConfig } = config ?? {};
       const limit = configLimit ?? defaultLimit;
-      const perfLogger = createQueryPerformanceLogger();
+      const queryLogger = createQueryLogger(query);
       const releaseMainThread = createMainThreadReleaseOnTimePassedHandler();
 
       // handle "unbounded" case without a buffer
@@ -49,11 +50,11 @@ export function createLimitingECSqlQueryExecutor(baseExecutor: ECSqlQueryExecuto
         try {
           for await (const row of reader) {
             await releaseMainThread();
-            perfLogger.onStep();
+            queryLogger.onStep();
             yield row;
           }
         } finally {
-          perfLogger.onComplete();
+          queryLogger.onComplete();
         }
         return;
       }
@@ -63,14 +64,14 @@ export function createLimitingECSqlQueryExecutor(baseExecutor: ECSqlQueryExecuto
       try {
         for await (const row of reader) {
           await releaseMainThread();
-          perfLogger.onStep();
+          queryLogger.onStep();
           buffer.push(row);
           if (buffer.length > limit) {
             throw new RowsLimitExceededError(limit);
           }
         }
       } finally {
-        perfLogger.onComplete();
+        queryLogger.onComplete();
       }
 
       for (const row of buffer) {
@@ -92,8 +93,15 @@ function addLimit(ecsql: string, limit: number | "unbounded") {
   `;
 }
 
-const LOGGING_NAMESPACE = `${CommonLoggingNamespace}.QueryPerformance`;
-function createQueryPerformanceLogger(firstStepWarningThreshold = 3000, allRowsWarningThreshold = 5000) {
+const LOGGING_NAMESPACE = `${BASE_LOGGING_NAMESPACE}.Queries`;
+const LOGGING_NAMESPACE_PERFORMANCE = `${BASE_LOGGING_NAMESPACE_PERFORMANCE}.Queries`;
+function createQueryLogger(query: ECSqlQueryDef, firstStepWarningThreshold = 3000, allRowsWarningThreshold = 5000) {
+  const queryId = Guid.createValue();
+  doLog({
+    category: LOGGING_NAMESPACE,
+    message: /* istanbul ignore next */ () => `Executing query [${queryId}]: ${createQueryLogMessage(query)}`,
+  });
+
   let firstStep = true;
   let rowsCount = 0;
   const timer = new StopWatch(undefined, true);
@@ -102,9 +110,9 @@ function createQueryPerformanceLogger(firstStepWarningThreshold = 3000, allRowsW
       if (firstStep) {
         // istanbul ignore next
         doLog({
-          category: LOGGING_NAMESPACE,
+          category: LOGGING_NAMESPACE_PERFORMANCE,
           severity: timer.current.milliseconds >= firstStepWarningThreshold ? "warning" : "trace",
-          message: () => `First step took ${timer.currentSeconds} s.`,
+          message: () => `[${queryId}] First step took ${timer.currentSeconds} s.`,
         });
         firstStep = false;
       }
@@ -113,10 +121,26 @@ function createQueryPerformanceLogger(firstStepWarningThreshold = 3000, allRowsW
     onComplete() {
       // istanbul ignore next
       doLog({
-        category: LOGGING_NAMESPACE,
+        category: LOGGING_NAMESPACE_PERFORMANCE,
         severity: timer.current.milliseconds >= allRowsWarningThreshold ? "warning" : "trace",
-        message: () => `Query took ${timer.currentSeconds} s. for ${rowsCount} rows.`,
+        message: () => `[${queryId}] Query took ${timer.currentSeconds} s. for ${rowsCount} rows.`,
       });
     },
   };
+}
+
+// istanbul ignore next
+function createQueryLogMessage(query: ECSqlQueryDef): string {
+  const ctes = query.ctes?.map((cte) => `    ${trimWhitespace(cte)}`).join(", \n");
+  const bindings = query.bindings?.map((b) => JSON.stringify(b.value)).join(", ");
+  let output = "{\n";
+  if (ctes) {
+    output += `  ctes: [ \n${ctes} \n], \n`;
+  }
+  output += `  ecsql: ${trimWhitespace(query.ecsql)}, \n`;
+  if (bindings) {
+    output += `  bindings: [${bindings}], \n`;
+  }
+  output += "}";
+  return output;
 }
