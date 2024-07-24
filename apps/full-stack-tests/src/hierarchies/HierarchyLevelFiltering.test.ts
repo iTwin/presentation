@@ -24,7 +24,7 @@ describe("Hierarchies", () => {
       await withECDb(
         this,
         async (db) => {
-          const schema = importSchema(
+          const schema = await importSchema(
             this,
             db,
             `
@@ -100,7 +100,7 @@ describe("Hierarchies", () => {
       await withECDb(
         this,
         async (db) => {
-          const schema = importSchema(
+          const schema = await importSchema(
             this,
             db,
             `
@@ -186,7 +186,7 @@ describe("Hierarchies", () => {
       await withECDb(
         this,
         async (db) => {
-          const schema = importSchema(
+          const schema = await importSchema(
             this,
             db,
             `
@@ -278,7 +278,7 @@ describe("Hierarchies", () => {
       await withECDb(
         this,
         async (db) => {
-          const schema = importSchema(
+          const schema = await importSchema(
             this,
             db,
             `
@@ -352,7 +352,7 @@ describe("Hierarchies", () => {
       await withECDb(
         this,
         async (db) => {
-          const schema = importSchema(
+          const schema = await importSchema(
             this,
             db,
             `
@@ -427,7 +427,7 @@ describe("Hierarchies", () => {
       await withECDb(
         this,
         async (db) => {
-          const schema = importSchema(
+          const schema = await importSchema(
             this,
             db,
             `
@@ -503,7 +503,7 @@ describe("Hierarchies", () => {
       await withECDb(
         this,
         async (db) => {
-          const schema = importSchema(
+          const schema = await importSchema(
             this,
             db,
             `

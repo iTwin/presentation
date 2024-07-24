@@ -9,6 +9,7 @@ import {
   CategoryProps,
   Code,
   CodeScopeProps,
+  DefinitionElementProps,
   ElementAspectProps,
   ElementProps,
   ExternalSourceAspectProps,
@@ -203,19 +204,19 @@ export function insertSubCategory(
 }
 
 export function insertPhysicalElement<TAdditionalProps extends {}>(
-  props: BaseInstanceInsertProps & { modelId: Id64String; categoryId: Id64String; parentId?: Id64String } & Partial<
-      Omit<PhysicalElementProps, "id" | "model" | "category" | "parent">
+  props: BaseInstanceInsertProps & { modelId: Id64String; categoryId: Id64String; codeValue?: string; parentId?: Id64String } & Partial<
+      Omit<PhysicalElementProps, "id" | "model" | "category" | "parent" | "code">
     > &
     TAdditionalProps,
 ) {
-  const { builder, classFullName, modelId, categoryId, parentId, ...elementProps } = props;
+  const { builder, classFullName, modelId, categoryId, parentId, codeValue, ...elementProps } = props;
   const defaultClassName = `Generic${props.fullClassNameSeparator ?? "."}PhysicalObject`;
   const className = classFullName ?? defaultClassName;
   const id = builder.insertElement({
     classFullName: className,
     model: modelId,
     category: categoryId,
-    code: Code.createEmpty(),
+    code: codeValue ? builder.createCode(parentId ?? modelId, BisCodeSpec.nullCodeSpec, codeValue) : Code.createEmpty(),
     ...(parentId
       ? {
           parent: {
@@ -226,6 +227,21 @@ export function insertPhysicalElement<TAdditionalProps extends {}>(
       : undefined),
     ...elementProps,
   } as PhysicalElementProps);
+  return { className, id };
+}
+
+export function insertPhysicalMaterial<TAdditionalProps extends {}>(
+  props: BaseInstanceInsertProps & { modelId?: Id64String } & Partial<Omit<DefinitionElementProps, "id" | "model">> & TAdditionalProps,
+) {
+  const { builder, classFullName, modelId, ...elementProps } = props;
+  const defaultClassName = `Generic${props.fullClassNameSeparator ?? "."}PhysicalMaterial`;
+  const className = classFullName ?? defaultClassName;
+  const id = builder.insertElement({
+    classFullName: className,
+    model: modelId ?? IModel.dictionaryId,
+    code: Code.createEmpty(),
+    ...elementProps,
+  } as DefinitionElementProps);
   return { className, id };
 }
 
@@ -257,7 +273,7 @@ export function insertDrawingGraphic<TAdditionalProps extends {}>(
 }
 
 export function insertRepositoryLink(
-  props: BaseInstanceInsertProps & { repositoryUrl: string; repositoryLabel: string } & Partial<
+  props: BaseInstanceInsertProps & { repositoryUrl?: string; repositoryLabel?: string } & Partial<
       Omit<RepositoryLinkProps, "id" | "model" | "url" | "userLabel">
     >,
 ) {

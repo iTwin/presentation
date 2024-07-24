@@ -6,7 +6,6 @@
 import { expect } from "chai";
 import { collect, createAsyncIterator, ResolvablePromise, throwingAsyncIterator } from "presentation-test-utilities";
 import { PropsWithChildren } from "react";
-import { act } from "react-dom/test-utils";
 import sinon from "sinon";
 import * as hierarchiesModule from "@itwin/presentation-hierarchies";
 import { IPrimitiveValueFormatter } from "@itwin/presentation-shared";
@@ -21,7 +20,7 @@ import {
 } from "../presentation-hierarchies-react/TreeNode";
 import { UnifiedSelectionProvider } from "../presentation-hierarchies-react/UnifiedSelectionContext";
 import { useTree, useUnifiedSelectionTree } from "../presentation-hierarchies-react/UseTree";
-import { cleanup, createStub, createTestGroupingNode, createTestHierarchyNode, renderHook, waitFor } from "./TestUtils";
+import { act, cleanup, createStub, createTestGroupingNode, createTestHierarchyNode, renderHook, waitFor } from "./TestUtils";
 
 describe("useTree", () => {
   const hierarchyProvider = {
@@ -37,6 +36,7 @@ describe("useTree", () => {
   const onHierarchyLoadErrorStub = sinon.stub();
 
   type UseTreeProps = Parameters<typeof useTree>[0];
+  type FilteredPaths = ReturnType<Required<UseTreeProps>["getFilteredPaths"]>;
   const initialProps: UseTreeProps = {
     imodelAccess: {} as UseTreeProps["imodelAccess"],
     getHierarchyDefinition: () => ({}) as hierarchiesModule.HierarchyDefinition,
@@ -105,7 +105,7 @@ describe("useTree", () => {
       return createAsyncIterator(props.parentNode === undefined ? [createTestHierarchyNode({ id: "root-1" })] : []);
     });
 
-    const promise = new ResolvablePromise<hierarchiesModule.HierarchyNodeIdentifiersPath[] | undefined>();
+    const promise = new ResolvablePromise<FilteredPaths | undefined>();
     const getFilteredPaths = async () => promise;
 
     const { result } = renderHook(useTree, { initialProps: { ...initialProps, getFilteredPaths } });

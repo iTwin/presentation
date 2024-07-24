@@ -588,8 +588,8 @@ describe("createHierarchyProvider", () => {
             trimWhitespace(query.ctes[0]) ===
               trimWhitespace(
                 `
-                FilteringInfo(ECInstanceId, FilteredChildrenPaths) AS (
-                  VALUES (0x123, '[[{"className":"c.d","id":"0x456"}]]')
+                FilteringInfo(ECInstanceId, IsFilterTarget, FilteredChildrenPaths) AS (
+                  VALUES (0x123, CAST(0 AS BOOLEAN), '[[{"className":"c.d","id":"0x456"}]]')
                 )
                 `,
               ) &&
@@ -598,7 +598,7 @@ describe("createHierarchyProvider", () => {
                 `
                 SELECT
                     [q].*,
-                    0 AS [${ECSQL_COLUMN_NAME_IsFilterTarget}],
+                    [f].[IsFilterTarget] AS [${ECSQL_COLUMN_NAME_IsFilterTarget}],
                     0 AS [${ECSQL_COLUMN_NAME_HasFilterTargetAncestor}],
                     [f].[FilteredChildrenPaths] AS [${ECSQL_COLUMN_NAME_FilteredChildrenPaths}]
                   FROM (QUERY) [q]
@@ -620,7 +620,6 @@ describe("createHierarchyProvider", () => {
           filtering: {
             filteredChildrenIdentifierPaths: [[{ className: "c.d", id: "0x456" }]],
           },
-          autoExpand: true,
         },
       ]);
     });
@@ -1026,10 +1025,11 @@ describe("createHierarchyProvider", () => {
         },
       });
       await expect(provider.getNodes({ parentNode: undefined }).next()).to.eventually.be.rejectedWith("test error");
+      await expect(provider.getNodeInstanceKeys({ parentNode: undefined }).next()).to.eventually.be.rejectedWith("test error");
     });
 
     it("rethrows query executor errors", async () => {
-      imodelAccess.createQueryReader.returns(
+      imodelAccess.createQueryReader.callsFake(() =>
         (async function* () {
           throw new Error("test error");
         })(),
@@ -1048,10 +1048,11 @@ describe("createHierarchyProvider", () => {
         },
       });
       await expect(provider.getNodes({ parentNode: undefined }).next()).to.eventually.be.rejectedWith("test error");
+      await expect(provider.getNodeInstanceKeys({ parentNode: undefined }).next()).to.eventually.be.rejectedWith("test error");
     });
 
     it("rethrows query executor errors thrown while determining children", async () => {
-      imodelAccess.createQueryReader.returns(
+      imodelAccess.createQueryReader.callsFake(() =>
         (async function* () {
           throw new Error("test error");
         })(),
@@ -1076,7 +1077,7 @@ describe("createHierarchyProvider", () => {
     });
 
     it("sets children flag on parent node to `true` when determining children throws with `rows limit exceeded` error", async () => {
-      imodelAccess.createQueryReader.returns(
+      imodelAccess.createQueryReader.callsFake(() =>
         (async function* () {
           throw new RowsLimitExceededError(123);
         })(),
@@ -1353,6 +1354,14 @@ describe("createHierarchyProvider", () => {
         sinon.match((query: ECSqlQueryDef) => query.ecsql.includes("FROM (ROOT)") && query?.bindings?.length === 1 && query?.bindings?.at(0)?.value === "0x1"),
       );
       expect(rootInstanceNodes2).to.deep.eq(rootInstanceNodes);
+      imodelAccess.createQueryReader.resetHistory();
+
+      // requesting root nodes again should re-execute the root query, NOT filtered by grouped instance ECInstanceIds
+      const groupingNodes2 = await collect(provider.getNodes({ parentNode: undefined }));
+      expect(imodelAccess.createQueryReader).to.be.calledOnceWith(
+        sinon.match((query: ECSqlQueryDef) => query.ecsql === "ROOT" && query?.bindings === undefined),
+      );
+      expect(groupingNodes2).to.deep.eq(groupingNodes);
     });
   });
 

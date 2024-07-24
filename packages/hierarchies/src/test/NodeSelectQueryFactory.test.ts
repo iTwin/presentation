@@ -30,8 +30,8 @@ describe("createNodesQueryClauseFactory", () => {
   describe("createSelectClause", () => {
     it("creates valid clause with value props", async () => {
       const result = await factory.createSelectClause({
-        ecClassId: "0x1",
-        ecInstanceId: "0x2",
+        ecClassId: { selector: "class_id" },
+        ecInstanceId: { selector: "instance_id" },
         nodeLabel: "label",
         autoExpand: false,
         supportsFiltering: false,
@@ -75,8 +75,8 @@ describe("createNodesQueryClauseFactory", () => {
       });
       expect(trimWhitespace(result)).to.eq(
         trimWhitespace(`
-        ec_ClassName(0x1) AS ${NodeSelectClauseColumnNames.FullClassName},
-        0x2 AS ${NodeSelectClauseColumnNames.ECInstanceId},
+        ec_ClassName(class_id) AS ${NodeSelectClauseColumnNames.FullClassName},
+        instance_id AS ${NodeSelectClauseColumnNames.ECInstanceId},
         'label' AS ${NodeSelectClauseColumnNames.DisplayLabel},
         CAST(TRUE AS BOOLEAN) AS ${NodeSelectClauseColumnNames.HasChildren},
         CAST(TRUE AS BOOLEAN) AS ${NodeSelectClauseColumnNames.HideIfNoChildren},
@@ -165,14 +165,14 @@ describe("createNodesQueryClauseFactory", () => {
 
     it("creates valid clause with null props", async () => {
       const result = await factory.createSelectClause({
-        ecClassId: "0x1",
-        ecInstanceId: "0x2",
+        ecClassId: { selector: "class_id" },
+        ecInstanceId: { selector: "instance_id" },
         nodeLabel: "label",
       });
       expect(trimWhitespace(result)).to.eq(
         trimWhitespace(`
-        ec_ClassName(0x1) AS ${NodeSelectClauseColumnNames.FullClassName},
-        0x2 AS ${NodeSelectClauseColumnNames.ECInstanceId},
+        ec_ClassName(class_id) AS ${NodeSelectClauseColumnNames.FullClassName},
+        instance_id AS ${NodeSelectClauseColumnNames.ECInstanceId},
         'label' AS ${NodeSelectClauseColumnNames.DisplayLabel},
         CAST(NULL AS BOOLEAN) AS ${NodeSelectClauseColumnNames.HasChildren},
         CAST(NULL AS BOOLEAN) AS ${NodeSelectClauseColumnNames.HideIfNoChildren},
@@ -187,8 +187,8 @@ describe("createNodesQueryClauseFactory", () => {
 
     it("creates valid clause with complex grouping params", async () => {
       const result = await factory.createSelectClause({
-        ecClassId: "0x1",
-        ecInstanceId: "0x2",
+        ecClassId: { selector: "class_id" },
+        ecInstanceId: { selector: "instance_id" },
         nodeLabel: "label",
         grouping: {
           byLabel: { action: "merge" },
@@ -209,8 +209,8 @@ describe("createNodesQueryClauseFactory", () => {
       });
       expect(trimWhitespace(result)).to.eq(
         trimWhitespace(`
-        ec_ClassName(0x1) AS ${NodeSelectClauseColumnNames.FullClassName},
-        0x2 AS ${NodeSelectClauseColumnNames.ECInstanceId},
+        ec_ClassName(class_id) AS ${NodeSelectClauseColumnNames.FullClassName},
+        instance_id AS ${NodeSelectClauseColumnNames.ECInstanceId},
         'label' AS ${NodeSelectClauseColumnNames.DisplayLabel},
         CAST(NULL AS BOOLEAN) AS ${NodeSelectClauseColumnNames.HasChildren},
         CAST(NULL AS BOOLEAN) AS ${NodeSelectClauseColumnNames.HideIfNoChildren},
@@ -231,8 +231,8 @@ describe("createNodesQueryClauseFactory", () => {
     it("returns columns in valid order", async () => {
       const expectedOrder = Object.keys(NodeSelectClauseColumnNames);
       const clause = await factory.createSelectClause({
-        ecClassId: "0x1",
-        ecInstanceId: "0x2",
+        ecClassId: { selector: "'0x1'" },
+        ecInstanceId: { selector: "'0x2'" },
         nodeLabel: "test",
       });
       const actualOrder = new Array<string>();

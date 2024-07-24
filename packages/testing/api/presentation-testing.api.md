@@ -4,8 +4,6 @@
 
 ```ts
 
-/// <reference types="mocha" />
-
 import { BisCodeSpec } from '@itwin/core-common';
 import { Code } from '@itwin/core-common';
 import { CodeScopeProps } from '@itwin/core-common';

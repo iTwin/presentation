@@ -1,5 +1,21 @@
 # Change Log - @itwin/presentation-components
 
+## 5.4.0
+
+### Minor Changes
+
+- [#662](https://github.com/iTwin/presentation/pull/662): Refactored `@beta` `NavigationPropertyEditorContext` API and made it `@public`. The changes:
+
+  - `NavigationPropertyEditorContextProps` has been renamed to `NavigationPropertyEditorContextProviderProps`.
+  - Previously `@beta` `navigationPropertyEditorContext` is now not exported anymore. Instead, the context should be set up using newly introduced `NavigationPropertyEditorContextProvider`.
+
+- [#662](https://github.com/iTwin/presentation/pull/662): Remove `@alpha` attributes related to content and hierarchy auto-update. Now these features are always enabled by default.
+
+### Patch Changes
+
+- [#662](https://github.com/iTwin/presentation/pull/662): API promotions
+- [#655](https://github.com/iTwin/presentation/pull/655): Remove exposed internal APIs.
+
 ## 5.3.3
 
 ### Patch Changes

@@ -13,7 +13,12 @@ import {
   ProcessedHierarchyNode,
   ProcessedInstanceHierarchyNode,
 } from "../../HierarchyNode";
-import { createNodeIdentifierForLogging, createOperatorLoggingNamespace } from "../Common";
+import {
+  LOGGING_NAMESPACE_PERFORMANCE as BASE_LOGGING_NAMESPACE_PERFORMANCE,
+  LOGGING_NAMESPACE_PERFORMANCE_INTERNAL as BASE_LOGGING_NAMESPACE_PERFORMANCE_INTERNAL,
+  createNodeIdentifierForLogging,
+  createOperatorLoggingNamespace,
+} from "../Common";
 import { doLog, log } from "../LoggingUtils";
 import { assignAutoExpand } from "./grouping/AutoExpand";
 import { createBaseClassGroupingHandlers } from "./grouping/BaseClassGrouping";
@@ -27,7 +32,8 @@ import { tapOnce } from "./TapOnce";
 const OPERATOR_NAME = "Grouping";
 /** @internal */
 export const LOGGING_NAMESPACE = createOperatorLoggingNamespace(OPERATOR_NAME);
-const PERF_LOGGING_NAMESPACE = `${LOGGING_NAMESPACE}.Performance`;
+const LOGGING_NAMESPACE_PERFORMANCE = createOperatorLoggingNamespace(OPERATOR_NAME, BASE_LOGGING_NAMESPACE_PERFORMANCE);
+const LOGGING_NAMESPACE_PERFORMANCE_INTERNAL = createOperatorLoggingNamespace(OPERATOR_NAME, BASE_LOGGING_NAMESPACE_PERFORMANCE_INTERNAL);
 
 /** @internal */
 export function createGroupingOperator(
@@ -43,7 +49,7 @@ export function createGroupingOperator(
       log({ category: LOGGING_NAMESPACE, message: /* istanbul ignore next */ (n) => `in: ${createNodeIdentifierForLogging(n)}` }),
       tapOnce(() => {
         doLog({
-          category: PERF_LOGGING_NAMESPACE,
+          category: LOGGING_NAMESPACE_PERFORMANCE,
           message: /* istanbul ignore next */ () => `Starting grouping (parent: ${createNodeIdentifierForLogging(parentNode)})`,
         });
       }),
@@ -60,7 +66,7 @@ export function createGroupingOperator(
       ),
       tap(({ instanceNodes, restNodes }) => {
         doLog({
-          category: PERF_LOGGING_NAMESPACE,
+          category: LOGGING_NAMESPACE_PERFORMANCE_INTERNAL,
           message: /* istanbul ignore next */ () => `Nodes partitioned. Got ${instanceNodes.length} instance nodes and ${restNodes.length} rest nodes.`,
         });
       }),
@@ -83,7 +89,7 @@ export function createGroupingOperator(
             ),
             finalize(() => {
               doLog({
-                category: PERF_LOGGING_NAMESPACE,
+                category: LOGGING_NAMESPACE_PERFORMANCE,
                 message: /* istanbul ignore next */ () => `Grouping ${instanceNodes.length} nodes took ${timer.elapsedSeconds.toFixed(3)} s`,
               });
             }),
@@ -137,7 +143,7 @@ function groupInstanceNodes(
       const currentHandler = groupingHandlers[handlerIndex];
       return from(currentHandler(curr?.ungrouped ?? nodes, curr?.grouped ?? [])).pipe(
         log({
-          category: PERF_LOGGING_NAMESPACE,
+          category: LOGGING_NAMESPACE_PERFORMANCE_INTERNAL,
           message: /* istanbul ignore next */ () => `Grouping handler ${handlerIndex} exclusively took ${timer.elapsedSeconds.toFixed(3)} s.`,
         }),
         mergeMap((result) => {
@@ -150,7 +156,7 @@ function groupInstanceNodes(
             map((r) => assignAutoExpand(r)),
             map((r) => ({ handlerIndex: handlerIndex + 1, result: { ...r, grouped: mergeInPlace(curr?.grouped, r.grouped) } })),
             log({
-              category: PERF_LOGGING_NAMESPACE,
+              category: LOGGING_NAMESPACE_PERFORMANCE_INTERNAL,
               message: /* istanbul ignore next */ () =>
                 `Post-processing grouping handler ${handlerIndex} exclusively took ${groupingPostProcessingTimer.elapsedSeconds.toFixed(3)} s.`,
             }),
@@ -158,7 +164,7 @@ function groupInstanceNodes(
           );
         }),
         log({
-          category: PERF_LOGGING_NAMESPACE,
+          category: LOGGING_NAMESPACE_PERFORMANCE_INTERNAL,
           message: /* istanbul ignore next */ () => `Total time for grouping handler ${handlerIndex}: ${timer.elapsedSeconds.toFixed(3)} s.`,
         }),
       );
@@ -218,7 +224,7 @@ export function createGroupingHandlers(
     tap({
       subscribe: () => {
         doLog({
-          category: PERF_LOGGING_NAMESPACE,
+          category: LOGGING_NAMESPACE_PERFORMANCE_INTERNAL,
           message: /* istanbul ignore next */ () => `Start creating grouping handlers`,
         });
         timer.start();
@@ -226,7 +232,7 @@ export function createGroupingHandlers(
     }),
     finalize(() => {
       doLog({
-        category: PERF_LOGGING_NAMESPACE,
+        category: LOGGING_NAMESPACE_PERFORMANCE_INTERNAL,
         message: /* istanbul ignore next */ () => `Creating grouping handlers took ${timer.elapsedSeconds.toFixed(3)} s`,
       });
     }),

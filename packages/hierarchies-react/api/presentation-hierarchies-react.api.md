@@ -4,8 +4,6 @@
 
 ```ts
 
-/// <reference types="react" />
-
 import { ComponentPropsWithoutRef } from 'react';
 import { createHierarchyProvider } from '@itwin/presentation-hierarchies';
 import { ECClassHierarchyInspector } from '@itwin/presentation-shared';
@@ -13,7 +11,6 @@ import { ECSchemaProvider } from '@itwin/presentation-shared';
 import { GenericInstanceFilter } from '@itwin/presentation-hierarchies';
 import { HierarchyDefinition } from '@itwin/presentation-hierarchies';
 import { HierarchyNode } from '@itwin/presentation-hierarchies';
-import { HierarchyNodeIdentifiersPath } from '@itwin/presentation-hierarchies';
 import { HierarchyProvider } from '@itwin/presentation-hierarchies';
 import { InstanceKey } from '@itwin/presentation-shared';
 import { IPrimitiveValueFormatter } from '@itwin/presentation-shared';
@@ -41,6 +38,9 @@ interface GetFilteredPathsProps {
     imodelAccess: IModelAccess;
 }
 
+// @beta (undocumented)
+type HierarchyFilteringPaths = NonNullable<NonNullable<HierarchyProviderProps["filtering"]>["paths"]>;
+
 // @beta
 export interface HierarchyLevelDetails {
     getInstanceKeysIterator: (props?: {
@@ -57,6 +57,9 @@ export interface HierarchyLevelDetails {
 export { HierarchyNode }
 
 export { HierarchyProvider }
+
+// @beta (undocumented)
+type HierarchyProviderProps = Parameters<typeof createHierarchyProvider>[0];
 
 // @beta (undocumented)
 type IModelAccess = ECSchemaProvider & LimitingECSqlQueryExecutor & ECClassHierarchyInspector;
@@ -241,8 +244,8 @@ interface UseSelectionHandlerResult {
 export function useTree(props: UseTreeProps): UseTreeResult;
 
 // @beta (undocumented)
-interface UseTreeProps extends Pick<Parameters<typeof createHierarchyProvider>[0], "localizedStrings"> {
-    getFilteredPaths?: (props: GetFilteredPathsProps) => Promise<HierarchyNodeIdentifiersPath[] | undefined>;
+interface UseTreeProps extends Pick<HierarchyProviderProps, "localizedStrings"> {
+    getFilteredPaths?: (props: GetFilteredPathsProps) => Promise<HierarchyFilteringPaths | undefined>;
     getHierarchyDefinition: (props: {
         imodelAccess: IModelAccess;
     }) => HierarchyDefinition;

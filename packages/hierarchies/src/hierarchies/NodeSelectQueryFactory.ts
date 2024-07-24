@@ -14,6 +14,7 @@ import {
   GenericInstanceFilterRuleValue,
 } from "@itwin/core-common";
 import { EC, ECClassHierarchyInspector, ECSchemaProvider, ECSql, getClass, parseFullClassName, PrimitiveValue } from "@itwin/presentation-shared";
+import { HierarchyNodeAutoExpandProp } from "./HierarchyNode";
 
 /**
  * Column names of the SELECT clause created by `NodeSelectClauseFactory`. Order of the names matches the order of columns
@@ -62,8 +63,8 @@ interface ECSqlValueSelector {
  * @beta
  */
 interface NodeSelectClauseProps {
-  ecClassId: Id64String | ECSqlValueSelector;
-  ecInstanceId: Id64String | ECSqlValueSelector;
+  ecClassId: ECSqlValueSelector;
+  ecInstanceId: ECSqlValueSelector;
   nodeLabel: string | ECSqlValueSelector;
   extendedData?: {
     [key: string]: Id64String | string | number | boolean | ECSqlValueSelector;
@@ -131,7 +132,7 @@ type ECSqlSelectClauseLabelGroupingParams =
 interface ECSqlSelectClauseGroupingParamsBase {
   hideIfNoSiblings?: boolean | ECSqlValueSelector;
   hideIfOneGroupedNode?: boolean | ECSqlValueSelector;
-  autoExpand?: string | ECSqlValueSelector;
+  autoExpand?: HierarchyNodeAutoExpandProp | ECSqlValueSelector;
 }
 
 /**
@@ -225,7 +226,18 @@ export interface NodesQueryClauseFactory {
   /** Create a SELECT clause in a format understood by nodes query parser used by `HierarchyProvider`. */
   createSelectClause(props: NodeSelectClauseProps): Promise<string>;
 
-  /** Create FROM, JOIN and WHERE clauses whose combination results in an ECSQL filter defined by given `GenericInstanceFilter`. */
+  /**
+   * Creates the necessary ECSQL snippets to create an instance filter described by the given `GenericInstanceFilter` argument.
+   * - `from` is set to either the `contentClass.fullName` or one of `filter.propertyClassNames`, depending on which is more specific.
+   * - `joins` is set to a number of `JOIN` clauses required to join all relationships described by `filter.relatedInstances`.
+   * - `where` is set to a `WHERE` clause (without the `WHERE` keyword) that filters instances by classes on
+   * `filter.filterClassNames` and by properties as described by `filter.rules`.
+   *
+   * Special cases:
+   * - If `filter` is `undefined`, `joins` and `where` are set to empty strings and `from` is set to `contentClass.fullName`.
+   * - If the provided content class doesn't intersect with the property class in provided filter, a special result
+   * is returned to make sure the resulting query is valid and doesn't return anything.
+   */
   createFilterClauses(props: {
     contentClass: { fullName: string; alias: string };
     filter: GenericInstanceFilter | undefined;
@@ -252,8 +264,8 @@ class NodeSelectQueryFactory {
   public async createSelectClause(props: NodeSelectClauseProps) {
     // note: the columns order must match the order in `NodeSelectClauseColumnNames`
     return `
-      ec_ClassName(${createECSqlValueSelector(props.ecClassId)}) AS ${NodeSelectClauseColumnNames.FullClassName},
-      ${createECSqlValueSelector(props.ecInstanceId)} AS ${NodeSelectClauseColumnNames.ECInstanceId},
+      ec_ClassName(${props.ecClassId.selector}) AS ${NodeSelectClauseColumnNames.FullClassName},
+      ${props.ecInstanceId.selector} AS ${NodeSelectClauseColumnNames.ECInstanceId},
       ${createECSqlValueSelector(props.nodeLabel)} AS ${NodeSelectClauseColumnNames.DisplayLabel},
       CAST(${createECSqlValueSelector(props.hasChildren)} AS BOOLEAN) AS ${NodeSelectClauseColumnNames.HasChildren},
       CAST(${createECSqlValueSelector(props.hideIfNoChildren)} AS BOOLEAN) AS ${NodeSelectClauseColumnNames.HideIfNoChildren},
@@ -272,14 +284,14 @@ class NodeSelectQueryFactory {
   }
 
   /**
-   * Creates the necessary ECSQL snippets to create an instance filter described by the `def` argument.
-   * - `from` is set to either the `contentClass.fullName` or `def.propertyClassName`, depending on which is more specific.
-   * - `joins` is set to a number of `JOIN` clauses required to join all relationships described by `def.relatedInstances`.
+   * Creates the necessary ECSQL snippets to create an instance filter described by the `filter` argument.
+   * - `from` is set to either the `contentClass.fullName` or one of `filter.propertyClassNames`, depending on which is more specific.
+   * - `joins` is set to a number of `JOIN` clauses required to join all relationships described by `filter.relatedInstances`.
    * - `where` is set to a `WHERE` clause (without the `WHERE` keyword) that filters instances by classes on
-   * `def.filterClassNames` and by properties as described by `def.rules`.
+   * `filter.filterClassNames` and by properties as described by `filter.rules`.
    *
    * Special cases:
-   * - If `def` is `undefined`, `joins` and `where` are set to empty strings and `from` is set to `contentClass.fullName`.
+   * - If `filter` is `undefined`, `joins` and `where` are set to empty strings and `from` is set to `contentClass.fullName`.
    * - If the provided content class doesn't intersect with the property class in provided filter, a special result
    * is returned to make sure the resulting query is valid and doesn't return anything.
    */

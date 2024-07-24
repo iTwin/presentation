@@ -16,8 +16,54 @@ import {
 } from "../HierarchyNode";
 import { HierarchyNodeKey, InstancesNodeKey } from "../HierarchyNodeKey";
 
-/** @internal */
+/**
+ * This is a logging namespace for public log messages that may be interesting to consumers.
+ * @internal
+ */
 export const LOGGING_NAMESPACE = "Presentation.Hierarchies";
+
+/**
+ * This is a logging namespace for public performance-related log messages that may be interesting to consumers.
+ * @internal
+ */
+export const LOGGING_NAMESPACE_PERFORMANCE = `${LOGGING_NAMESPACE}.Performance`;
+
+/**
+ * This is a logging namespace for internal log messages that are only interesting to package contributors,
+ * but not the consumers.
+ * @internal
+ */
+export const LOGGING_NAMESPACE_INTERNAL = "Presentation.HierarchiesInternal";
+
+/**
+ * This is a logging namespace for internal performance-related log messages that are only interesting
+ * to package contributors, but not the consumers.
+ * @internal
+ */
+export const LOGGING_NAMESPACE_PERFORMANCE_INTERNAL = `${LOGGING_NAMESPACE_INTERNAL}.Performance`;
+
+/** @internal */
+export function createOperatorLoggingNamespace(
+  operatorName: string,
+  baseCategory:
+    | typeof LOGGING_NAMESPACE
+    | typeof LOGGING_NAMESPACE_PERFORMANCE
+    | typeof LOGGING_NAMESPACE_INTERNAL
+    | typeof LOGGING_NAMESPACE_PERFORMANCE_INTERNAL = LOGGING_NAMESPACE,
+) {
+  return `${baseCategory}.Operators.${operatorName}`;
+}
+
+/** @internal */
+// istanbul ignore next
+export function createNodeIdentifierForLogging(node: ParentHierarchyNode | HierarchyNode | ParsedHierarchyNode | undefined) {
+  if (!node) {
+    return "<root>";
+  }
+  const { label, key } = node;
+  const parentKeys = "parentKeys" in node ? node.parentKeys : "<unknown>";
+  return JSON.stringify({ label, key, parentKeys });
+}
 
 function mergeNodeHandlingParams(
   lhs: InstanceHierarchyNodeProcessingParams | undefined,
@@ -99,22 +145,6 @@ export function hasChildren<TNode extends { children?: boolean | Array<unknown> 
 }
 
 /** @internal */
-export function createOperatorLoggingNamespace(operatorName: string) {
-  return `${LOGGING_NAMESPACE}.Operators.${operatorName}`;
-}
-
-/** @internal */
 export function compareNodesByLabel<TLhsNode extends { label: string }, TRhsNode extends { label: string }>(lhs: TLhsNode, rhs: TRhsNode): number {
   return naturalCompare(lhs.label.toLocaleLowerCase(), rhs.label.toLocaleLowerCase());
-}
-
-/** @internal */
-// istanbul ignore next
-export function createNodeIdentifierForLogging(node: ParentHierarchyNode | HierarchyNode | ParsedHierarchyNode | undefined) {
-  if (!node) {
-    return "<root>";
-  }
-  const { label, key } = node;
-  const parentKeys = "parentKeys" in node ? node.parentKeys : "<unknown>";
-  return JSON.stringify({ label, key, parentKeys });
 }

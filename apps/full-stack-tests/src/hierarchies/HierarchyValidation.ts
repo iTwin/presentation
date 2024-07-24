@@ -4,6 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { collect } from "presentation-test-utilities";
+import { isDeepStrictEqual } from "util";
 import { Logger } from "@itwin/core-bentley";
 import { HierarchyNode, HierarchyProvider, NonGroupingHierarchyNode } from "@itwin/presentation-hierarchies";
 import { hasChildren } from "@itwin/presentation-hierarchies/lib/cjs/hierarchies/internal/Common";
@@ -28,6 +29,8 @@ export namespace NodeValidators {
       label?: string | RegExp;
       autoExpand?: boolean;
       supportsFiltering?: boolean;
+      isFilterTarget?: boolean;
+      extendedData?: { [key: string]: any };
       children?: ExpectedHierarchyDef[] | boolean;
     },
   ) {
@@ -61,13 +64,30 @@ export namespace NodeValidators {
         )}, got ${optionalBooleanToString(node.supportsFiltering)}`,
       );
     }
+    if (expectations.isFilterTarget !== undefined && !!node.filtering?.isFilterTarget !== !!expectations.isFilterTarget) {
+      throw new Error(
+        `[${node.label}] Expected node's \`filtering.isFilterTarget\` flag to be ${optionalBooleanToString(
+          expectations.isFilterTarget,
+        )}, got ${optionalBooleanToString(node.filtering?.isFilterTarget)}`,
+      );
+    }
+    if (expectations.extendedData !== undefined && !isDeepStrictEqual(node.extendedData, expectations.extendedData)) {
+      throw new Error(
+        `[${node.label}] Expected node's \`extendedData\` to be ${JSON.stringify(expectations.extendedData)}, got ${JSON.stringify(node.extendedData)}`,
+      );
+    }
     if (expectations.children !== undefined && hasChildren(expectations) !== hasChildren(node)) {
       throw new Error(`[${node.label}] Expected node to ${hasChildren(expectations) ? "" : "not "}have children but it does ${hasChildren(node) ? "" : "not"}`);
     }
   }
 
   export function createForCustomNode<TChildren extends ExpectedHierarchyDef[] | boolean>(
-    expectedNode: Partial<Omit<NonGroupingHierarchyNode, "label" | "children">> & { label?: string; children?: TChildren },
+    expectedNode: Partial<Omit<NonGroupingHierarchyNode, "label" | "children" | "filtering">> & {
+      label?: string;
+      isFilterTarget?: boolean;
+      extendedData?: { [key: string]: any };
+      children?: TChildren;
+    },
   ) {
     return {
       node: (node: HierarchyNode) => {
@@ -77,12 +97,7 @@ export namespace NodeValidators {
         if (expectedNode.key !== undefined && node.key !== expectedNode.key) {
           throw new Error(`[${node.label}] Expected a custom node, got "${JSON.stringify(node.key)}" one`);
         }
-        validateBaseNodeAttributes(node, {
-          label: expectedNode.label,
-          autoExpand: expectedNode.autoExpand,
-          supportsFiltering: expectedNode.supportsFiltering,
-          children: expectedNode.children,
-        });
+        validateBaseNodeAttributes(node, expectedNode);
       },
       children: expectedNode.children,
     };
@@ -93,6 +108,8 @@ export namespace NodeValidators {
     label?: string | RegExp;
     autoExpand?: boolean;
     supportsFiltering?: boolean;
+    isFilterTarget?: boolean;
+    extendedData?: { [key: string]: any };
     children?: TChildren;
   }) {
     return {
@@ -112,12 +129,7 @@ export namespace NodeValidators {
             `[${node.label}] Expected node to represent instance keys ${JSON.stringify(props.instanceKeys)}, got ${JSON.stringify(node.key.instanceKeys)}`,
           );
         }
-        validateBaseNodeAttributes(node, {
-          label: props.label,
-          autoExpand: props.autoExpand,
-          supportsFiltering: props.supportsFiltering,
-          children: props.children,
-        });
+        validateBaseNodeAttributes(node, props);
       },
       children: props.children,
     };
@@ -127,6 +139,7 @@ export namespace NodeValidators {
     className?: string;
     label?: string;
     autoExpand?: boolean;
+    extendedData?: { [key: string]: any };
     children?: TChildren;
   }) {
     return {
@@ -140,11 +153,7 @@ export namespace NodeValidators {
         if (props.className && node.key.className !== props.className) {
           throw new Error(`[${node.label}] Expected node to represent class "${props.className}", got "${node.key.className}"`);
         }
-        validateBaseNodeAttributes(node, {
-          label: props.label,
-          autoExpand: props.autoExpand,
-          children: props.children,
-        });
+        validateBaseNodeAttributes(node, props);
       },
       children: props.children,
     };
@@ -154,6 +163,7 @@ export namespace NodeValidators {
     label?: string;
     groupId?: string;
     autoExpand?: boolean;
+    extendedData?: { [key: string]: any };
     children?: TChildren;
   }) {
     return {
@@ -170,11 +180,7 @@ export namespace NodeValidators {
         if (props.groupId && node.key.groupId !== props.groupId) {
           throw new Error(`[${node.label}] Expected node to have groupId = ${JSON.stringify(props.groupId)}, got ${JSON.stringify(node.key.groupId)}`);
         }
-        validateBaseNodeAttributes(node, {
-          label: props.label,
-          autoExpand: props.autoExpand,
-          children: props.children,
-        });
+        validateBaseNodeAttributes(node, props);
       },
       children: props.children,
     };
@@ -183,6 +189,7 @@ export namespace NodeValidators {
   export function createForPropertyOtherValuesGroupingNode<TChildren extends ExpectedHierarchyDef[] | boolean>(props: {
     label?: string;
     autoExpand?: boolean;
+    extendedData?: { [key: string]: any };
     children?: TChildren;
   }) {
     return {
@@ -193,12 +200,7 @@ export namespace NodeValidators {
         if (node.key.type !== "property-grouping:other") {
           throw new Error(`[${node.label}] Expected a property other values grouping node, got "${node.key.type}"`);
         }
-
-        validateBaseNodeAttributes(node, {
-          label: props.label,
-          autoExpand: props.autoExpand,
-          children: props.children,
-        });
+        validateBaseNodeAttributes(node, props);
       },
       children: props.children,
     };
@@ -211,6 +213,7 @@ export namespace NodeValidators {
     fromValue?: number;
     toValue?: number;
     autoExpand?: boolean;
+    extendedData?: { [key: string]: any };
     children?: TChildren;
   }) {
     return {
@@ -233,12 +236,7 @@ export namespace NodeValidators {
         if (props.toValue && node.key.toValue !== props.toValue) {
           throw new Error(`[${node.label}] Expected node to have toValue "${props.toValue}", got "${node.key.toValue}"`);
         }
-
-        validateBaseNodeAttributes(node, {
-          label: props.label,
-          autoExpand: props.autoExpand,
-          children: props.children,
-        });
+        validateBaseNodeAttributes(node, props);
       },
       children: props.children,
     };
@@ -250,6 +248,7 @@ export namespace NodeValidators {
     propertyClassName?: string;
     formattedPropertyValue?: string;
     autoExpand?: boolean;
+    extendedData?: { [key: string]: any };
     children?: TChildren;
   }) {
     return {
@@ -271,12 +270,7 @@ export namespace NodeValidators {
             `[${node.label}] Expected node to have formattedPropertyValue "${props.formattedPropertyValue}", got "${node.key.formattedPropertyValue}"`,
           );
         }
-
-        validateBaseNodeAttributes(node, {
-          label: props.label,
-          autoExpand: props.autoExpand,
-          children: props.children,
-        });
+        validateBaseNodeAttributes(node, props);
       },
       children: props.children,
     };

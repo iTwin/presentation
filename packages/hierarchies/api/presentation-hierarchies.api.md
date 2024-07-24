@@ -28,7 +28,7 @@ interface BaseHierarchyNode {
     filtering?: {
         isFilterTarget?: boolean;
         hasFilterTargetAncestor?: boolean;
-        filteredChildrenIdentifierPaths?: HierarchyNodeIdentifiersPath[];
+        filteredChildrenIdentifierPaths?: HierarchyFilteringPath[];
     };
     label: string;
     parentKeys: HierarchyNodeKey[];
@@ -123,7 +123,7 @@ interface ECSqlSelectClauseGroupingParams {
 // @beta
 interface ECSqlSelectClauseGroupingParamsBase {
     // (undocumented)
-    autoExpand?: string | ECSqlValueSelector;
+    autoExpand?: HierarchyNodeAutoExpandProp | ECSqlValueSelector;
     // (undocumented)
     hideIfNoSiblings?: boolean | ECSqlValueSelector;
     // (undocumented)
@@ -212,6 +212,14 @@ export interface HierarchyDefinition {
 
 // @beta
 type HierarchyDefinitionParentNode = Omit<NonGroupingHierarchyNode, "children">;
+
+// @beta
+type HierarchyFilteringPath = HierarchyNodeIdentifiersPath | {
+    path: HierarchyNodeIdentifiersPath;
+    options?: {
+        autoExpand?: boolean;
+    };
+};
 
 // @beta
 export type HierarchyLevelDefinition = HierarchyNodesDefinition[];
@@ -417,7 +425,7 @@ interface HierarchyProviderLocalizedStrings {
 // @beta
 interface HierarchyProviderProps {
     filtering?: {
-        paths: HierarchyNodeIdentifiersPath[];
+        paths: HierarchyFilteringPath[];
     };
     formatter?: IPrimitiveValueFormatter;
     hierarchyDefinition: HierarchyDefinition;
@@ -496,9 +504,9 @@ interface NodeSelectClauseProps {
     // (undocumented)
     autoExpand?: boolean | ECSqlValueSelector;
     // (undocumented)
-    ecClassId: Id64String | ECSqlValueSelector;
+    ecClassId: ECSqlValueSelector;
     // (undocumented)
-    ecInstanceId: Id64String | ECSqlValueSelector;
+    ecInstanceId: ECSqlValueSelector;
     // (undocumented)
     extendedData?: {
         [key: string]: Id64String | string | number | boolean | ECSqlValueSelector;

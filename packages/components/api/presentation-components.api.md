@@ -4,8 +4,6 @@
 
 ```ts
 
-/// <reference types="react" />
-
 import { AbstractTreeNodeLoaderWithProvider } from '@itwin/components-react';
 import { ActiveMatchInfo } from '@itwin/components-react';
 import { CategoryDescription } from '@itwin/presentation-common';
@@ -522,12 +520,12 @@ export class PresentationTreeDataProvider implements IPresentationTreeDataProvid
         instanceFilter?: InstanceFilterDefinition | undefined;
         sizeLimit?: number | undefined;
         parentKey?: NodeKey | undefined;
-        rulesetOrId: string | Ruleset;
+        rulesetOrId: Ruleset | string;
         rulesetVariables?: RulesetVariable[] | undefined;
         imodel: IModelConnection;
-        locale?: string | undefined;
-        unitSystem?: UnitSystemKey | undefined;
-        transport?: "unparsed-json" | undefined;
+        locale?: string;
+        unitSystem?: UnitSystemKey;
+        transport?: "unparsed-json";
     };
     dispose(): void;
     getFilteredNodePaths(filter: string): Promise<NodePathElement[]>;

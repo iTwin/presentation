@@ -6,14 +6,14 @@
 import { concat, defer, EMPTY, filter, finalize, map, merge, mergeAll, mergeMap, Observable, take } from "rxjs";
 import { HierarchyNode, ProcessedCustomHierarchyNode, ProcessedHierarchyNode, ProcessedInstanceHierarchyNode } from "../../HierarchyNode";
 import { InstancesNodeKey } from "../../HierarchyNodeKey";
-import { createNodeIdentifierForLogging, createOperatorLoggingNamespace, hasChildren, mergeNodes } from "../Common";
+import { createNodeIdentifierForLogging, createOperatorLoggingNamespace, hasChildren, LOGGING_NAMESPACE_INTERNAL, mergeNodes } from "../Common";
 import { doLog, log } from "../LoggingUtils";
 import { partition } from "./Partition";
 import { reduceToMergeMapItem } from "./ReduceToMergeMap";
 
 const OPERATOR_NAME = "HideNodesInHierarchy";
 /** @internal */
-export const LOGGING_NAMESPACE = createOperatorLoggingNamespace(OPERATOR_NAME);
+export const LOGGING_NAMESPACE = createOperatorLoggingNamespace(OPERATOR_NAME, LOGGING_NAMESPACE_INTERNAL);
 
 /**
  * Creates an operator that hides nodes and instead returns their children if the nodes have a `hideInHierarchy` handling param.

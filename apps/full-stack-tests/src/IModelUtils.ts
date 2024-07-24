@@ -8,7 +8,7 @@ import * as fs from "fs";
 import hash from "object-hash";
 import { getFullSchemaXml } from "presentation-test-utilities";
 import { ECDb, ECSqlStatement } from "@itwin/core-backend";
-import { BentleyError, DbResult, Id64, Id64String, OrderedId64Iterable } from "@itwin/core-bentley";
+import { BentleyError, DbResult, Guid, Id64, Id64String, OrderedId64Iterable } from "@itwin/core-bentley";
 import { IModelConnection } from "@itwin/core-frontend";
 import { ECSqlBinding, parseFullClassName, PrimitiveValue } from "@itwin/presentation-shared";
 import { buildTestIModel, TestIModelBuilder } from "@itwin/presentation-testing";
@@ -195,12 +195,16 @@ export async function buildIModel<TFirstArg extends Mocha.Context | string, TRes
   return { ...res, imodel };
 }
 
-export function importSchema(mochaContextOrTestName: Mocha.Context | string, imodel: { importSchema: (xml: string) => void }, schemaContentXml: string) {
+export async function importSchema(
+  mochaContextOrTestName: Mocha.Context | string,
+  imodel: { importSchema: (xml: string) => Promise<void> | void },
+  schemaContentXml: string,
+) {
   const testName = typeof mochaContextOrTestName === "string" ? mochaContextOrTestName : mochaContextOrTestName.test!.fullTitle();
   const schemaName = `SCHEMA_${testName}`.replace(/[^\w\d_]/gi, "_").replace(/_+/g, "_");
-  const schemaAlias = `test`;
+  const schemaAlias = `a_${Guid.createValue().replaceAll("-", "")}`;
   const schemaXml = getFullSchemaXml({ schemaName, schemaAlias, schemaContentXml });
-  imodel.importSchema(schemaXml);
+  await imodel.importSchema(schemaXml);
 
   const parsedSchema = new XMLParser({
     ignoreAttributes: false,
