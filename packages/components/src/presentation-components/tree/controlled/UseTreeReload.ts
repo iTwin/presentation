@@ -49,13 +49,18 @@ function useModelSourceUpdateOnBriefcaseUpdate(params: TreeReloadParams): void {
     }
 
     let subscription: Subscription | undefined;
-    const removeListener = dataProviderProps.imodel.txns.onChangesApplied.addListener(() => {
+
+    const reload = () => {
       subscription?.unsubscribe();
       subscription = startTreeReload({ dataProviderProps, ruleset, pageSize, modelSource, renderedItems, onReload });
-    });
+    };
+
+    const removePullListener = dataProviderProps.imodel.txns.onChangesPulled.addListener(reload);
+    const removePushListener = dataProviderProps.imodel.txns.onChangesPushed.addListener(reload);
 
     return () => {
-      removeListener();
+      removePullListener();
+      removePushListener();
       subscription?.unsubscribe();
     };
   }, [modelSource, pageSize, dataProviderProps, ruleset, onReload, renderedItems]);

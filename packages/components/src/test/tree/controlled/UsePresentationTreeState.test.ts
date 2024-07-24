@@ -50,15 +50,15 @@ describe("usePresentationTreeState", () => {
   const onActiveFormattingUnitSystemChanged: QuantityFormatter["onActiveFormattingUnitSystemChanged"] = new BeUiEvent<FormattingUnitSystemChangedArgs>();
   let presentationManager: sinon.SinonStubbedInstance<PresentationManager>;
   const isBriefcaseConnectionStub = sinon.stub<[], boolean>();
-  const addListenerStub = sinon.stub<[() => void], () => void>();
+  const onChangesPulledEvent = new BeEvent();
+  const onChangesPushedEvent = new BeEvent();
 
   const imodel = {
     key: "test-imodel-key",
     isBriefcaseConnection: isBriefcaseConnectionStub,
     txns: {
-      onChangesApplied: {
-        addListener: addListenerStub,
-      },
+      onChangesPulled: onChangesPulledEvent,
+      onChangesPushed: onChangesPushedEvent,
     },
   } as unknown as IModelConnection;
   const rulesetId = "test-ruleset-id";
@@ -89,7 +89,6 @@ describe("usePresentationTreeState", () => {
     }));
 
     isBriefcaseConnectionStub.returns(false);
-    addListenerStub.returns(() => {});
 
     await UiComponents.initialize(new EmptyLocalization());
   });
@@ -280,15 +279,22 @@ describe("usePresentationTreeState", () => {
       });
     });
 
-    it("creates a new nodeLoader when briefcase `onChangesApplied` event is raised", async () => {
+    it("creates a new nodeLoader when briefcase `onChangesPulled` event is raised", async () => {
       isBriefcaseConnectionStub.returns(true);
       const { result } = renderHook((props: UsePresentationTreeStateProps) => usePresentationTreeState(props), { initialProps });
       const oldNodeLoader = await waitForState(result);
 
-      expect(addListenerStub).to.be.calledOnce;
-      const listener = addListenerStub.getCall(0).args[0];
+      onChangesPulledEvent.raiseEvent();
 
-      listener();
+      await waitFor(() => expect(result.current?.nodeLoader).to.not.eq(oldNodeLoader));
+    });
+
+    it("creates a new nodeLoader when briefcase `onChangesPushed` event is raised", async () => {
+      isBriefcaseConnectionStub.returns(true);
+      const { result } = renderHook((props: UsePresentationTreeStateProps) => usePresentationTreeState(props), { initialProps });
+      const oldNodeLoader = await waitForState(result);
+
+      onChangesPushedEvent.raiseEvent();
 
       await waitFor(() => expect(result.current?.nodeLoader).to.not.eq(oldNodeLoader));
     });
