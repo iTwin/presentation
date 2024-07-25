@@ -1,5 +1,13 @@
 # Change Log - @itwin/presentation-components
 
+## 5.4.1
+
+### Patch Changes
+
+- [#683](https://github.com/iTwin/presentation/pull/683): Added tree reloading when changes to the briefcase are applied in `useTreeReload`.
+- [#684](https://github.com/iTwin/presentation/pull/684): Disabled property editors from propagating key down events.
+- [#687](https://github.com/iTwin/presentation/pull/687): Updated `NumericPropertyEditor` to use raw values instead of display values.
+
 ## 5.4.0
 
 ### Minor Changes
