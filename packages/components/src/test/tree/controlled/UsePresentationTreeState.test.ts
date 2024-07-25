@@ -49,10 +49,18 @@ describe("usePresentationTreeState", () => {
   >();
   const onActiveFormattingUnitSystemChanged: QuantityFormatter["onActiveFormattingUnitSystemChanged"] = new BeUiEvent<FormattingUnitSystemChangedArgs>();
   let presentationManager: sinon.SinonStubbedInstance<PresentationManager>;
+  const isBriefcaseConnectionStub = sinon.stub<[], boolean>();
+  const onChangesPulledEvent = new BeEvent();
+  const onChangesPushedEvent = new BeEvent();
 
   const imodel = {
     key: "test-imodel-key",
-  } as IModelConnection;
+    isBriefcaseConnection: isBriefcaseConnectionStub,
+    txns: {
+      onChangesPulled: onChangesPulledEvent,
+      onChangesPushed: onChangesPushedEvent,
+    },
+  } as unknown as IModelConnection;
   const rulesetId = "test-ruleset-id";
   const initialProps: UsePresentationTreeStateProps = {
     imodel,
@@ -79,6 +87,9 @@ describe("usePresentationTreeState", () => {
     sinon.stub(IModelApp, "quantityFormatter").get(() => ({
       onActiveFormattingUnitSystemChanged,
     }));
+
+    isBriefcaseConnectionStub.returns(false);
+
     await UiComponents.initialize(new EmptyLocalization());
   });
 
@@ -97,7 +108,7 @@ describe("usePresentationTreeState", () => {
     const { result, rerender } = renderHook((props: UsePresentationTreeStateProps) => usePresentationTreeState(props), { initialProps });
     const oldNodeLoader = await waitForState(result);
 
-    const newImodel = { key: "new-imodel-key" } as IModelConnection;
+    const newImodel = { key: "new-imodel-key", isBriefcaseConnection: () => false } as IModelConnection;
     rerender({ ...initialProps, imodel: newImodel });
 
     await waitFor(() => expect(result.current?.nodeLoader).to.not.eq(oldNodeLoader));
@@ -266,6 +277,26 @@ describe("usePresentationTreeState", () => {
         expect(result.current).to.not.be.undefined;
         expectTree(result.current!.nodeLoader.modelSource.getModel(), []);
       });
+    });
+
+    it("creates a new nodeLoader when briefcase `onChangesPulled` event is raised", async () => {
+      isBriefcaseConnectionStub.returns(true);
+      const { result } = renderHook((props: UsePresentationTreeStateProps) => usePresentationTreeState(props), { initialProps });
+      const oldNodeLoader = await waitForState(result);
+
+      onChangesPulledEvent.raiseEvent();
+
+      await waitFor(() => expect(result.current?.nodeLoader).to.not.eq(oldNodeLoader));
+    });
+
+    it("creates a new nodeLoader when briefcase `onChangesPushed` event is raised", async () => {
+      isBriefcaseConnectionStub.returns(true);
+      const { result } = renderHook((props: UsePresentationTreeStateProps) => usePresentationTreeState(props), { initialProps });
+      const oldNodeLoader = await waitForState(result);
+
+      onChangesPushedEvent.raiseEvent();
+
+      await waitFor(() => expect(result.current?.nodeLoader).to.not.eq(oldNodeLoader));
     });
   });
 
