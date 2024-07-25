@@ -69,6 +69,18 @@ describe("<NumericPropertyInput />", () => {
     expect((ref.current?.getValue() as PrimitiveValue).value).to.be.eq(-101);
   });
 
+  it("returns undefined value when input is empty", async () => {
+    const record = createRecord(-10);
+    const ref = createRef<PropertyEditorAttributes>();
+    const { getByRole, queryByDisplayValue, user } = render(<NumericPropertyInput propertyRecord={record} ref={ref} />);
+
+    const inputContainer = await waitFor(() => getByRole("textbox"));
+
+    await user.clear(inputContainer);
+    expect(queryByDisplayValue("")).to.not.be.null;
+    expect((ref.current?.getValue() as PrimitiveValue).value).to.be.undefined;
+  });
+
   it("allows typing `-1`", async () => {
     const record = createRecord();
     const ref = createRef<PropertyEditorAttributes>();
