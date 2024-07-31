@@ -22,11 +22,6 @@ export const NumericEditorName = "presentation-numeric-editor";
  */
 export class NumericPropertyEditorBase extends PropertyEditorBase {
   // istanbul ignore next
-  public override get containerHandlesEnter(): boolean {
-    return false;
-  }
-
-  // istanbul ignore next
   public override get containerHandlesTab(): boolean {
     return false;
   }
