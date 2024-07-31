@@ -68,9 +68,12 @@ export class FilteringHierarchyDefinition implements HierarchyDefinition {
       if (!child.filtering) {
         continue;
       }
+      // Expand grouping node if it contains filter targets or if a grouping node below it is a filter target.
       if (
         child.filtering.filterTarget === true ||
-        (typeof child.filtering.filterTarget === "object" && !HierarchyNodeKey.equals(node.key, child.filtering.filterTarget.key))
+        (typeof child.filtering.filterTarget === "object" &&
+          !HierarchyNodeKey.equals(node.key, child.filtering.filterTarget.key) &&
+          (node.hierarchyDepth ?? 1) < (child.filtering.filterTarget.hierarchyDepth ?? 1))
       ) {
         return true;
       }
@@ -234,6 +237,7 @@ async function matchFilters<
         entry.childrenIdentifierPaths.push(remainingPathWithOptions);
       } else if (entry.filterTarget !== true) {
         if (typeof options?.autoExpand === "object") {
+          // overwrite target if it is deeper in the hierarchy
           if (typeof entry.filterTarget === "object") {
             const previousDepth = entry.filterTarget.hierarchyDepth ?? 1;
             const newDepth = options.autoExpand.hierarchyDepth ?? 1;
