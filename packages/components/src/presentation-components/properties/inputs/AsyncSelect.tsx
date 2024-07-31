@@ -5,7 +5,7 @@
 
 import "./AsyncSelect.scss";
 import classnames from "classnames";
-import { Children, Ref, useRef, useState } from "react";
+import { Children, PropsWithChildren, Ref, useRef, useState } from "react";
 import {
   ClearIndicatorProps,
   components,
@@ -18,6 +18,7 @@ import {
   MultiValueProps,
   NoticeProps,
   OptionProps,
+  NonceProvider as ReactSelectNonceProvider,
   ValueContainerProps,
 } from "react-select";
 import { AsyncPaginate, AsyncPaginateProps, wrapMenuList } from "react-select-async-paginate";
@@ -208,4 +209,16 @@ export function useSelectMenuPlacement(): {
     menuPlacement: dropdownUp ? "top" : "bottom",
     menuPosition: "fixed",
   };
+}
+
+/**
+ * Allows passing [nonce](https://developer.mozilla.org/en-US/docs/Web/HTML/Global_attributes/nonce) to the components using css-in-js. This is required in environment where strict Content Security Policy (CSP) is setup.
+ * @public
+ */
+export function NonceProvider({ nonce, children }: PropsWithChildren<{ nonce: string }>) {
+  return (
+    <ReactSelectNonceProvider nonce={nonce} cacheKey="presentation-react-select">
+      {children}
+    </ReactSelectNonceProvider>
+  );
 }

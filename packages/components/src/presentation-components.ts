@@ -19,6 +19,7 @@ export * from "./presentation-components/common/PropertyRecordsBuilder";
 export * from "./presentation-components/common/SchemaMetadataContext";
 export { PortalTargetContextProvider, type PortalTargetContextProviderProps } from "./presentation-components/common/PortalTargetContext";
 export * from "./presentation-components/hooks/UseRulesetRegistration";
+export { NonceProvider } from "./presentation-components/properties/inputs/AsyncSelect";
 
 /**
  * @module Logging
