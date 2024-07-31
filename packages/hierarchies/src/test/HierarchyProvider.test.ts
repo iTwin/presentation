@@ -22,8 +22,8 @@ import { GroupingNodeKey } from "../hierarchies/HierarchyNodeKey";
 import { createHierarchyProvider } from "../hierarchies/HierarchyProvider";
 import {
   ECSQL_COLUMN_NAME_FilteredChildrenPaths,
+  ECSQL_COLUMN_NAME_FilterTarget,
   ECSQL_COLUMN_NAME_HasFilterTargetAncestor,
-  ECSQL_COLUMN_NAME_IsFilterTarget,
 } from "../hierarchies/internal/FilteringHierarchyDefinition";
 import { RowDef } from "../hierarchies/internal/TreeNodesReader";
 import { LimitingECSqlQueryExecutor } from "../hierarchies/LimitingECSqlQueryExecutor";
@@ -363,6 +363,7 @@ describe("createHierarchyProvider", () => {
           groupedInstanceKeys: [{ className: "a.b", id: "0x123" }],
           label: "test label",
           children: true,
+          hierarchyDepth: 1,
         } as GroupingHierarchyNode,
       ]);
 
@@ -588,8 +589,8 @@ describe("createHierarchyProvider", () => {
             trimWhitespace(query.ctes[0]) ===
               trimWhitespace(
                 `
-                FilteringInfo(ECInstanceId, IsFilterTarget, FilteredChildrenPaths) AS (
-                  VALUES (0x123, CAST(0 AS BOOLEAN), '[[{"className":"c.d","id":"0x456"}]]')
+                FilteringInfo(ECInstanceId, FilterTarget, FilteredChildrenPaths) AS (
+                  VALUES (0x123, 'false', '[[{"className":"c.d","id":"0x456"}]]')
                 )
                 `,
               ) &&
@@ -598,7 +599,7 @@ describe("createHierarchyProvider", () => {
                 `
                 SELECT
                     [q].*,
-                    [f].[IsFilterTarget] AS [${ECSQL_COLUMN_NAME_IsFilterTarget}],
+                    [f].[FilterTarget] AS [${ECSQL_COLUMN_NAME_FilterTarget}],
                     0 AS [${ECSQL_COLUMN_NAME_HasFilterTargetAncestor}],
                     [f].[FilteredChildrenPaths] AS [${ECSQL_COLUMN_NAME_FilteredChildrenPaths}]
                   FROM (QUERY) [q]
@@ -1299,6 +1300,7 @@ describe("createHierarchyProvider", () => {
           parentKeys: [],
           label: "Class Y",
           children: true,
+          hierarchyDepth: 1,
         } as GroupingHierarchyNode,
       ]);
 

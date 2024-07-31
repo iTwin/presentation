@@ -39,6 +39,7 @@ import {
 import { DefineHierarchyLevelProps, HierarchyDefinition, HierarchyNodesDefinition } from "./HierarchyDefinition";
 import { RowsLimitExceededError } from "./HierarchyErrors";
 import {
+  GroupingHierarchyNode,
   HierarchyNode,
   NonGroupingHierarchyNode,
   ParentHierarchyNode,
@@ -144,11 +145,15 @@ interface HierarchyProviderLocalizedStrings {
   other: string;
 }
 
+interface HierarchyFilteringPathOptions {
+  autoExpand?: boolean | GroupingHierarchyNode;
+}
+
 /**
  * A path of hierarchy node identifiers for filtering the hierarchy with additional options.
  * @beta
  */
-export type HierarchyFilteringPath = HierarchyNodeIdentifiersPath | { path: HierarchyNodeIdentifiersPath; options?: { autoExpand?: boolean } };
+export type HierarchyFilteringPath = HierarchyNodeIdentifiersPath | { path: HierarchyNodeIdentifiersPath; options?: HierarchyFilteringPathOptions };
 
 /**
  * Props for `createHierarchyProvider`.

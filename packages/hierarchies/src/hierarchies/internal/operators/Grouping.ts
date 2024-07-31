@@ -28,6 +28,7 @@ import { createLabelGroups } from "./grouping/LabelGrouping";
 import { createPropertiesGroupingHandlers, PropertiesGroupingLocalizedStrings } from "./grouping/PropertiesGrouping";
 import { releaseMainThreadOnItemsCount } from "./ReleaseMainThread";
 import { tapOnce } from "./TapOnce";
+import { assignHierarchyDepth } from "./grouping/HierarchyDepth";
 
 const OPERATOR_NAME = "Grouping";
 /** @internal */
@@ -154,6 +155,7 @@ function groupInstanceNodes(
           return of(result).pipe(
             map((r) => applyGroupHidingParams(r, extraSiblings)),
             map((r) => assignAutoExpand(r)),
+            map((r) => assignHierarchyDepth(r, parentNode)),
             map((r) => ({ handlerIndex: handlerIndex + 1, result: { ...r, grouped: mergeInPlace(curr?.grouped, r.grouped) } })),
             log({
               category: LOGGING_NAMESPACE_PERFORMANCE_INTERNAL,

@@ -120,6 +120,7 @@ describe("Grouping", () => {
           },
           groupedInstanceKeys: instanceNode1.key.instanceKeys,
           children: [instanceNode1],
+          hierarchyDepth: 1,
         }),
         createTestProcessedGroupingNode({
           label: "1",
@@ -129,6 +130,7 @@ describe("Grouping", () => {
           },
           groupedInstanceKeys: instanceNode2.key.instanceKeys,
           children: [instanceNode2],
+          hierarchyDepth: 1,
         }),
       ]);
     });
@@ -170,6 +172,7 @@ describe("Grouping", () => {
           nonGroupingAncestor: parentNode,
           groupedInstanceKeys: groupedNode.key.instanceKeys,
           children: [groupedNode],
+          hierarchyDepth: 1,
         }),
       ]);
     });
@@ -211,6 +214,7 @@ describe("Grouping", () => {
           nonGroupingAncestor: parentNode,
           groupedInstanceKeys: groupedNode.key.instanceKeys,
           children: [groupedNode],
+          hierarchyDepth: 1,
         }),
       ]);
     });
@@ -253,6 +257,7 @@ describe("Grouping", () => {
           nonGroupingAncestor,
           groupedInstanceKeys: groupedNode.key.instanceKeys,
           children: [groupedNode],
+          hierarchyDepth: 1,
         }),
       ]);
     });

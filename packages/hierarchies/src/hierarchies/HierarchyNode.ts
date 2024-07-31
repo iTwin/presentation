@@ -35,7 +35,7 @@ interface BaseHierarchyNode {
   extendedData?: { [key: string]: any };
   /** Data that may be assigned to the node if filtering is enabled */
   filtering?: {
-    isFilterTarget?: boolean;
+    filterTarget?: boolean | GroupingHierarchyNode;
     hasFilterTargetAncestor?: boolean;
     filteredChildrenIdentifierPaths?: HierarchyFilteringPath[];
   };
@@ -71,6 +71,9 @@ export interface GroupingHierarchyNode extends BaseHierarchyNode {
 
   /** The closest ancestor node that is not a grouping node. May be `undefined` if the grouping node grouped root level nodes. */
   nonGroupingAncestor?: ParentHierarchyNode<NonGroupingHierarchyNode>;
+
+  /** Depth of the grouping node, starts at 1 and increases with every nested grouping node. */
+  hierarchyDepth?: number;
 }
 
 /**
