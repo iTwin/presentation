@@ -26,7 +26,7 @@ interface BaseHierarchyNode {
         [key: string]: any;
     };
     filtering?: {
-        isFilterTarget?: boolean;
+        filterTarget?: boolean | GroupingHierarchyNode;
         hasFilterTargetAncestor?: boolean;
         filteredChildrenIdentifierPaths?: HierarchyFilteringPath[];
     };
@@ -195,6 +195,7 @@ export function getLogger(): ILogger;
 // @beta
 export interface GroupingHierarchyNode extends BaseHierarchyNode {
     groupedInstanceKeys: InstanceKey[];
+    hierarchyDepth?: number;
     key: GroupingNodeKey;
     nonGroupingAncestor?: ParentHierarchyNode<NonGroupingHierarchyNode>;
 }
@@ -216,10 +217,14 @@ type HierarchyDefinitionParentNode = Omit<NonGroupingHierarchyNode, "children">;
 // @beta
 type HierarchyFilteringPath = HierarchyNodeIdentifiersPath | {
     path: HierarchyNodeIdentifiersPath;
-    options?: {
-        autoExpand?: boolean;
-    };
+    options?: HierarchyFilteringPathOptions;
 };
+
+// @beta (undocumented)
+interface HierarchyFilteringPathOptions {
+    // (undocumented)
+    autoExpand?: boolean | GroupingHierarchyNode;
+}
 
 // @beta
 export type HierarchyLevelDefinition = HierarchyNodesDefinition[];

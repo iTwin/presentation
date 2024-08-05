@@ -145,6 +145,7 @@ interface HierarchyProviderLocalizedStrings {
   other: string;
 }
 
+/** @beta */
 interface HierarchyFilteringPathOptions {
   autoExpand?: boolean | GroupingHierarchyNode;
 }
