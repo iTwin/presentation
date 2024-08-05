@@ -1,5 +1,43 @@
 # @itwin/presentation-hierarchies
 
+## 0.4.0
+
+### Minor Changes
+
+- [#676](https://github.com/iTwin/presentation/pull/676): `createHierarchyProvider`: Added ability to specify whether hierarchy should be expanded to filtering path target, when specifying the `filtering.paths` prop.
+
+  With this change, hierarchy is no longer expanded to filter targets by default. To achieve the same behavior, paths with `autoExpand` option should be provided:
+
+  _Before:_
+
+  ```tsx
+  const hierarchyProvider = createHierarchyProvider({
+    imodelAccess,
+    hierarchyDefinition: createHierarchyDefinition(imodelAccess),
+    filtering: { paths: filterPaths },
+  });
+  ```
+
+  _Now:_
+
+  ```tsx
+  const hierarchyProvider = createHierarchyProvider({
+    imodelAccess,
+    hierarchyDefinition: createHierarchyDefinition(imodelAccess),
+    filtering: { paths: filterPaths.map((path) => ({ path, options: { autoExpand: true } })) },
+  });
+  ```
+
+- [#672](https://github.com/iTwin/presentation/pull/672): Fix `autoExpand` prop of grouping specification for `NodesQueryClauseFactory.createSelectClause` being wrongly defined as `string`. Define it as a string union of `"always" | "single-child"`.
+
+### Patch Changes
+
+- [#675](https://github.com/iTwin/presentation/pull/675): Fix nodes being erroneously set as filter targets when they had filter target siblings.
+- [#672](https://github.com/iTwin/presentation/pull/672): Fix grouped nodes not being returned for "Not specified" property grouping node when grouping by value ranges.
+- [#672](https://github.com/iTwin/presentation/pull/672): Fix hierarchy provider not returning all nodes in situations when internal cache is full and a prior request of grouped children was made.
+- Updated dependencies:
+  - @itwin/presentation-shared@0.4.0
+
 ## 0.3.0
 
 ### Minor Changes
