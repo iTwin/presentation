@@ -289,7 +289,7 @@ function applyFilterAttributes<TNode extends ParsedHierarchyNode>(
   hasFilterTargetAncestor: boolean,
 ): TNode {
   const shouldAutoExpand = !!filteredChildrenIdentifierPaths?.some((childPath) => {
-    return "path" in childPath && childPath.path.length && childPath.options?.autoExpand === true;
+    return "path" in childPath && childPath.path.length && childPath.options?.autoExpand;
   });
   const result = { ...node };
   if (shouldAutoExpand) {
