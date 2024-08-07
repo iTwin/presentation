@@ -4,6 +4,7 @@
     "sourceMap": true,
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
+    "noUnusedLocals": false,
     "jsx": "react-jsx",
     "outDir": "lib"
   },

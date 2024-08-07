@@ -4,6 +4,8 @@ Copyright © Bentley Systems, Incorporated. All rights reserved. See LICENSE.md 
 
 The `@itwin/presentation-hierarchies` package provides APIs for creating hierarchical data structures based on data in an [iTwin.js iModel](https://www.itwinjs.org/learning/imodels/#imodel-overview).
 
+The package doesn't depend on any backend, frontend or UI specific packages. As such, it can be used in both backend and frontend applications, and in case of the latter, it can be used with any UI framework. For React-based frontend applications, please see the `@itwin/presentation-hierarchies-react` package.
+
 ## Basic concepts
 
 A hierarchy is an arrangement of items, called hierarchy nodes, which are represented as being "above", "below", or "at the same level as" one another:
