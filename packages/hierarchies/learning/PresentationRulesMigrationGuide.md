@@ -701,7 +701,7 @@ const definition: HierarchyNodesDefinition = {
 
 ### Migrating same label grouping
 
-Same label grouping is different from other types of groupings, because it doesn't result in a grouping node being created. Instead, nodes with the same label get merged into a single instance node, which represents a merged set of instances. In the Presentation Rules system there are two options to choose from - grouping at query stage or at post-processing stage. The first one is more performance while the second one is more flexible.
+Same label grouping is different from other types of groupings, because it doesn't result in a grouping node being created. Instead, nodes with the same label get merged into a single instance node, which represents a merged set of instances. In the Presentation Rules system there are two options to choose from - grouping at query stage or at post-processing stage. The first one is more performant while the second one is more flexible.
 
 In this library, same label grouping is much simpler to apply and doesn't require making hard decisions about when to apply it.
 
