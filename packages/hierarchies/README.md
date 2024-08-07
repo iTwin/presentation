@@ -182,3 +182,22 @@ async function main() {
 ```
 
 <!-- END EXTRACTION -->
+
+## Advanced usage
+
+Are you migrating from Presentation Rules? Check out our [Migrating from Presentation Rules system](./learning/PresentationRulesMigrationGuide.md) learning page!
+
+Below is a list of learning material related to building hierarchies:
+
+- [Hierarchy processing](./learning/HierarchyProcessing.md)
+- [Hierarchy definitions](./learning/HierarchyDefinitions.md)
+- [Hierarchy filtering](./learning/HierarchyFiltering.md)
+- [Hierarchy level filtering](./learning/HierarchyLevelFiltering.md)
+- [Hierarchy node labels](./learning/NodeLabels.md)
+- [Grouping](./learning/Grouping.md)
+- [Formatting](./learning/Formatting.md)
+- [Localization](./learning/Localization.md)
+- [Logging](./learning/Logging.md)
+- [Performance tuning](./learning/PerformanceTuning.md)
+
+Do you think something is missing in the above list? Let us know by [creating an issue](https://github.com/iTwin/presentation/issues/new?assignees=&labels=documentation%2C+presentation&projects=&template=learning-material-request.md&title=).
