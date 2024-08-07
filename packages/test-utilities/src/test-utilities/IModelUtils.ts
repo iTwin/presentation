@@ -204,12 +204,16 @@ export function insertSubCategory(
 }
 
 export function insertPhysicalElement<TAdditionalProps extends {}>(
-  props: BaseInstanceInsertProps & { modelId: Id64String; categoryId: Id64String; codeValue?: string; parentId?: Id64String } & Partial<
-      Omit<PhysicalElementProps, "id" | "model" | "category" | "parent" | "code">
-    > &
+  props: BaseInstanceInsertProps & {
+    modelId: Id64String;
+    categoryId: Id64String;
+    codeValue?: string;
+    parentId?: Id64String;
+    typeDefinitionId?: Id64String;
+  } & Partial<Omit<PhysicalElementProps, "id" | "model" | "category" | "parent" | "typeDefinition" | "code">> &
     TAdditionalProps,
 ) {
-  const { builder, classFullName, modelId, categoryId, parentId, codeValue, ...elementProps } = props;
+  const { builder, classFullName, modelId, categoryId, parentId, typeDefinitionId, codeValue, ...elementProps } = props;
   const defaultClassName = `Generic${props.fullClassNameSeparator ?? "."}PhysicalObject`;
   const className = classFullName ?? defaultClassName;
   const id = builder.insertElement({
@@ -225,8 +229,31 @@ export function insertPhysicalElement<TAdditionalProps extends {}>(
           },
         }
       : undefined),
+    ...(typeDefinitionId
+      ? {
+          typeDefinition: {
+            id: typeDefinitionId,
+            relClassName: `BisCore${props.fullClassNameSeparator ?? "."}PhysicalElementIsOfType`,
+          },
+        }
+      : undefined),
     ...elementProps,
   } as PhysicalElementProps);
+  return { className, id };
+}
+
+export function insertPhysicalType<TAdditionalProps extends {}>(
+  props: BaseInstanceInsertProps & { modelId?: Id64String } & Partial<Omit<DefinitionElementProps, "id" | "model">> & TAdditionalProps,
+) {
+  const { builder, classFullName, modelId, ...elementProps } = props;
+  const defaultClassName = `Generic${props.fullClassNameSeparator ?? "."}PhysicalType`;
+  const className = classFullName ?? defaultClassName;
+  const id = builder.insertElement({
+    classFullName: className,
+    model: modelId ?? IModel.dictionaryId,
+    code: Code.createEmpty(),
+    ...elementProps,
+  } as DefinitionElementProps);
   return { className, id };
 }
 
