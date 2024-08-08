@@ -213,7 +213,9 @@ export interface StorageSelectionChangeEventArgs {
 }
 
 // @beta
-export type StorageSelectionChangesListener = (args: StorageSelectionChangeEventArgs) => void;
+export type StorageSelectionChangesListener = (
+args: StorageSelectionChangeEventArgs,
+_?: any) => void;
 
 // @beta
 export type StorageSelectionChangeType =

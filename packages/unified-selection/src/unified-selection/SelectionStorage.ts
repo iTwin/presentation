@@ -206,7 +206,7 @@ class SelectionStorageImpl implements SelectionStorage {
       timestamp: new Date(),
       storage: this,
     };
-    this.selectionChangeEvent.raiseEvent(event);
+    this.selectionChangeEvent.raiseEvent(event, this);
   }
 }
 

@@ -47,7 +47,7 @@ export interface StorageSelectionChangeEventArgs {
   iModelKey: string;
   /** The timestamp of when the selection change happened. */
   timestamp: Date;
-  /** The selection storage where the even happened. */
+  /** The selection storage where the event happened. */
   storage: SelectionStorage;
 }
 
@@ -55,4 +55,9 @@ export interface StorageSelectionChangeEventArgs {
  * An interface for selection change listeners.
  * @beta
  */
-export type StorageSelectionChangesListener = (args: StorageSelectionChangeEventArgs) => void;
+export type StorageSelectionChangesListener = (
+  /** Arguments for the selection change event */
+  args: StorageSelectionChangeEventArgs,
+  /** Unused. Temporarily left to avoid a breaking change. */
+  _?: any,
+) => void;
