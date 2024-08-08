@@ -3,8 +3,10 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
+import { BeEvent } from "@itwin/core-bentley";
+import { Event } from "@itwin/presentation-shared";
 import { Selectable, Selectables } from "./Selectable";
-import { SelectionChangeEvent, SelectionChangeEventImpl, StorageSelectionChangeEventArgs, StorageSelectionChangeType } from "./SelectionChangeEvent";
+import { StorageSelectionChangeEventArgs, StorageSelectionChangesListener, StorageSelectionChangeType } from "./SelectionChangeEvent";
 
 /** @beta */
 type IModelKeyProp =
@@ -31,7 +33,7 @@ type IModelKeyProp =
  */
 export interface SelectionStorage {
   /** An event that is raised when selection changes. */
-  selectionChangeEvent: SelectionChangeEvent;
+  selectionChangeEvent: Event<StorageSelectionChangesListener>;
 
   /** Get the selection levels currently stored for the specified iModel. */
   getSelectionLevels(props: IModelKeyProp): number[];
@@ -117,10 +119,10 @@ export const IMODEL_CLOSE_SELECTION_CLEAR_SOURCE = "Unified selection storage: c
 
 class SelectionStorageImpl implements SelectionStorage {
   private _storage = new Map<string, MultiLevelSelectablesContainer>();
-  public selectionChangeEvent: SelectionChangeEventImpl;
+  public selectionChangeEvent: BeEvent<StorageSelectionChangesListener>;
 
   constructor() {
-    this.selectionChangeEvent = new SelectionChangeEventImpl();
+    this.selectionChangeEvent = new BeEvent();
   }
 
   public getSelectionLevels(props: IModelKeyProp): number[] {
@@ -202,8 +204,9 @@ class SelectionStorageImpl implements SelectionStorage {
       changeType,
       selectables: selected,
       timestamp: new Date(),
+      storage: this,
     };
-    this.selectionChangeEvent.raiseEvent(event, this);
+    this.selectionChangeEvent.raiseEvent(event);
   }
 }
 

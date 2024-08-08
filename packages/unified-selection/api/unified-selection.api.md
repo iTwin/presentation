@@ -168,12 +168,6 @@ export namespace Selectables {
 }
 
 // @beta
-interface SelectionChangeEvent {
-    addListener(listener: StorageSelectionChangesListener): () => void;
-    removeListener(listener: StorageSelectionChangesListener): void;
-}
-
-// @beta
 type SelectionScope = "element" | "model" | "category" | "functional";
 
 // @beta
@@ -202,7 +196,7 @@ export interface SelectionStorage {
         selectables: Selectable[];
         level?: number;
     }): void;
-    selectionChangeEvent: SelectionChangeEvent;
+    selectionChangeEvent: Event_2<StorageSelectionChangesListener>;
 }
 
 // @beta
@@ -214,11 +208,12 @@ export interface StorageSelectionChangeEventArgs {
     level: number;
     selectables: Selectables;
     source: string;
+    storage: SelectionStorage;
     timestamp: Date;
 }
 
 // @beta
-export type StorageSelectionChangesListener = (args: StorageSelectionChangeEventArgs, storage: SelectionStorage) => void;
+export type StorageSelectionChangesListener = (args: StorageSelectionChangeEventArgs) => void;
 
 // @beta
 export type StorageSelectionChangeType =
