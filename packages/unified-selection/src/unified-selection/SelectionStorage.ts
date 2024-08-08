@@ -23,8 +23,11 @@ type IModelKeyProp =
 /**
  * Defines return value of `createStorage`.
  *
- * @beta Used in public API as a return value. Not expected to be created / extended by package
+ * **Warning:** Used in public API as a return value. Not expected to be created / extended by package
  * consumers, may be supplemented with required attributes any time.
+ *
+ * @see `createStorage`
+ * @beta
  */
 export interface SelectionStorage {
   /** An event that is raised when selection changes. */
@@ -95,6 +98,7 @@ export interface SelectionStorage {
  * Creates a selection storage which stores and allows managing application-level selection.
  *
  * **Note:** `clearSelection` should be called upon iModel close to free-up memory:
+ *
  * ```ts
  * import { IModelConnection } from "@itwin/core-frontend";
  * IModelConnection.onClose.addListener((imodel) => {

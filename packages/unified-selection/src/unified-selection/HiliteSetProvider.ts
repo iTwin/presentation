@@ -5,6 +5,7 @@
 
 import { EMPTY, filter, forkJoin, from, map, merge, mergeMap, Observable, scan, shareReplay, Subject, toArray } from "rxjs";
 import { eachValueFrom } from "rxjs-for-await";
+import { Id64String } from "@itwin/core-bentley";
 import { ECClassHierarchyInspector, ECSqlBinding, ECSqlQueryDef, ECSqlQueryExecutor, ECSqlQueryRow } from "@itwin/presentation-shared";
 import { SelectableInstanceKey, Selectables } from "./Selectable";
 import { formIdBindings, genericExecuteQuery, releaseMainThreadOnItemsCount } from "./Utils";
@@ -13,13 +14,19 @@ const HILITE_SET_EMIT_FREQUENCY = 20;
 
 /**
  * A set of model, subcategory and element ids that can be used for specifying hilite.
+ *
+ * **Warning:** Used in public API as a return value. Not expected to be created / extended by package
+ * consumers, may be supplemented with required attributes any time.
+ *
  * @see https://www.itwinjs.org/reference/core-frontend/selectionset/hiliteset/
+ * @see `HiliteSetProvider`
+ * @see `createHiliteSetProvider`
  * @beta
  */
 export interface HiliteSet {
-  models: string[];
-  subCategories: string[];
-  elements: string[];
+  models: Id64String[];
+  subCategories: Id64String[];
+  elements: Id64String[];
 }
 
 /**
@@ -34,8 +41,11 @@ export interface HiliteSetProviderProps {
 /**
  * Defines return value of `createHiliteSetProvider`.
  *
- * @beta Used in public API as a return value. Not expected to be created / extended by package
+ * **Warning:** Used in public API as a return value. Not expected to be created / extended by package
  * consumers, may be supplemented with required attributes any time.
+ *
+ * @see `createHiliteSetProvider`
+ * @beta
  */
 export interface HiliteSetProvider {
   /** Get the current hilite set iterator for the specified imodel */
