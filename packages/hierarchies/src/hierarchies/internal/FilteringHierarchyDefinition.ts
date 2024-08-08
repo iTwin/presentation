@@ -16,6 +16,7 @@ import {
   NodePreProcessor,
 } from "../HierarchyDefinition";
 import {
+  FilterTarget,
   GroupingHierarchyNode,
   HierarchyNode,
   ParsedHierarchyNode,
@@ -81,7 +82,7 @@ export class FilteringHierarchyDefinition implements HierarchyDefinition {
         continue;
       }
       for (const path of child.filtering.filteredChildrenIdentifierPaths) {
-        if ("path" in path && path.options && path.options.autoExpand) {
+        if ("path" in path && path.options?.autoExpand) {
           return true;
         }
       }
@@ -139,7 +140,7 @@ export class FilteringHierarchyDefinition implements HierarchyDefinition {
                 (r, c) => [...r, ...c.childrenIdentifierPaths],
                 new Array<HierarchyFilteringPath>(),
               );
-              let filterTarget: boolean | GroupingHierarchyNode = false;
+              let filterTarget: FilterTarget = false;
               for (const matchingFilter of matchingFilters) {
                 if (matchingFilter.filterTarget === true) {
                   filterTarget = true;
@@ -201,7 +202,7 @@ async function matchFilters<
     def: TDefinition,
     matchingFilters: Array<{
       id: TIdentifier;
-      filterTarget: boolean | GroupingHierarchyNode;
+      filterTarget: FilterTarget;
       childrenIdentifierPaths: HierarchyFilteringPath[];
     }>,
   ) => TDefinition,
@@ -209,7 +210,7 @@ async function matchFilters<
   const { filteredNodePaths, isDirectParentFilterTarget } = filteringProps;
   const matchingFilters: Array<{
     id: TIdentifier;
-    filterTarget: boolean | GroupingHierarchyNode;
+    filterTarget: FilterTarget;
     childrenIdentifierPaths: HierarchyFilteringPath[];
   }> = [];
   for (const filteredNodePath of filteredNodePaths) {
@@ -285,7 +286,7 @@ async function identifiersEqual<TIdentifier extends HierarchyNodeIdentifier>(lhs
 function applyFilterAttributes<TNode extends ParsedHierarchyNode>(
   node: TNode,
   filteredChildrenIdentifierPaths: HierarchyFilteringPath[] | undefined,
-  filterTarget: boolean | GroupingHierarchyNode,
+  filterTarget: FilterTarget,
   hasFilterTargetAncestor: boolean,
 ): TNode {
   const shouldAutoExpand = !!filteredChildrenIdentifierPaths?.some((childPath) => {
@@ -322,7 +323,7 @@ export function applyECInstanceIdsFilter(
   def: InstanceNodesQueryDefinition,
   matchingFilters: Array<{
     id: InstanceKey;
-    filterTarget: boolean | GroupingHierarchyNode;
+    filterTarget: FilterTarget;
     childrenIdentifierPaths: HierarchyFilteringPath[];
   }>,
   isParentFilterTarget: boolean,
