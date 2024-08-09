@@ -17,7 +17,6 @@ import {
 } from "../HierarchyDefinition";
 import {
   FilterTarget,
-  GroupingHierarchyNode,
   HierarchyNode,
   ParsedHierarchyNode,
   ParsedInstanceHierarchyNode,
@@ -27,7 +26,6 @@ import {
 import { HierarchyNodeIdentifier, HierarchyNodeIdentifiersPath } from "../HierarchyNodeIdentifier";
 import { HierarchyFilteringPath } from "../HierarchyProvider";
 import { defaultNodesParser } from "./TreeNodesReader";
-import { HierarchyNodeKey } from "../HierarchyNodeKey";
 
 /** @internal */
 export interface FilteringQueryBuilderProps {
@@ -69,18 +67,26 @@ export class FilteringHierarchyDefinition implements HierarchyDefinition {
       if (!child.filtering) {
         continue;
       }
-      // Expand grouping node if it contains filter targets or if a grouping node below it is a filter target.
-      if (
-        child.filtering.filterTarget === true ||
-        (typeof child.filtering.filterTarget === "object" &&
-          !HierarchyNodeKey.equals(node.key, child.filtering.filterTarget.key) &&
-          (node.hierarchyDepth ?? 1) < (child.filtering.filterTarget.hierarchyDepth ?? 1))
-      ) {
+
+      // Expand grouping node if it contains filter targets.
+      if (child.filtering.filterTarget === true) {
         return true;
       }
+
+      // Expand grouping node if a grouping node below it is a filter target.
+      if (typeof child.filtering.filterTarget === "object") {
+        const nodeDepth = node.parentKeys.length;
+        const filterTargetDepth = child.filtering.filterTarget.parentKeysCount;
+        if (nodeDepth < filterTargetDepth) {
+          return true;
+        }
+      }
+
       if (!child.filtering.filteredChildrenIdentifierPaths?.length) {
+        // istanbul ignore next
         continue;
       }
+
       for (const path of child.filtering.filteredChildrenIdentifierPaths) {
         if ("path" in path && path.options?.autoExpand) {
           return true;
@@ -104,7 +110,7 @@ export class FilteringHierarchyDefinition implements HierarchyDefinition {
   public get parseNode(): NodeParser {
     return (row: { [columnName: string]: any }): ParsedInstanceHierarchyNode => {
       const hasFilterTargetAncestor: boolean = !!row[ECSQL_COLUMN_NAME_HasFilterTargetAncestor];
-      const filterTarget: boolean | GroupingHierarchyNode = row[ECSQL_COLUMN_NAME_FilterTarget] ? JSON.parse(row[ECSQL_COLUMN_NAME_FilterTarget]) : undefined;
+      const filterTarget: FilterTarget = row[ECSQL_COLUMN_NAME_FilterTarget] ? JSON.parse(row[ECSQL_COLUMN_NAME_FilterTarget]) : undefined;
       const parsedFilteredChildrenIdentifierPaths: HierarchyNodeIdentifiersPath[] | undefined = row[ECSQL_COLUMN_NAME_FilteredChildrenPaths]
         ? JSON.parse(row[ECSQL_COLUMN_NAME_FilteredChildrenPaths])
         : undefined;
@@ -240,8 +246,8 @@ async function matchFilters<
         if (typeof options?.autoExpand === "object") {
           // overwrite target if it is deeper in the hierarchy
           if (typeof entry.filterTarget === "object") {
-            const previousDepth = entry.filterTarget.hierarchyDepth ?? 1;
-            const newDepth = options.autoExpand.hierarchyDepth ?? 1;
+            const previousDepth = entry.filterTarget.parentKeysCount;
+            const newDepth = options.autoExpand.parentKeysCount;
             newDepth > previousDepth && (entry.filterTarget = options.autoExpand);
           } else {
             entry.filterTarget = options.autoExpand;

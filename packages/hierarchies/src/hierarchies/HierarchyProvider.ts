@@ -39,8 +39,8 @@ import {
 import { DefineHierarchyLevelProps, HierarchyDefinition, HierarchyNodesDefinition } from "./HierarchyDefinition";
 import { RowsLimitExceededError } from "./HierarchyErrors";
 import {
+  FilterTargetGroupingNodeInfo,
   HierarchyNode,
-  MinimalGroupingNodeInfo,
   NonGroupingHierarchyNode,
   ParentHierarchyNode,
   ParsedHierarchyNode,
@@ -147,7 +147,7 @@ interface HierarchyProviderLocalizedStrings {
 
 /** @beta */
 interface HierarchyFilteringPathOptions {
-  autoExpand?: boolean | MinimalGroupingNodeInfo;
+  autoExpand?: boolean | FilterTargetGroupingNodeInfo;
 }
 
 /**

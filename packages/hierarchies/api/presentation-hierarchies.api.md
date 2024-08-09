@@ -26,7 +26,7 @@ interface BaseHierarchyNode {
         [key: string]: any;
     };
     filtering?: {
-        filterTarget?: boolean | GroupingHierarchyNode;
+        filterTarget?: FilterTarget;
         hasFilterTargetAncestor?: boolean;
         filteredChildrenIdentifierPaths?: HierarchyFilteringPath[];
     };
@@ -179,6 +179,15 @@ interface ECSqlValueSelector {
     selector: string;
 }
 
+// @beta (undocumented)
+type FilterTarget = boolean | FilterTargetGroupingNodeInfo;
+
+// @beta (undocumented)
+interface FilterTargetGroupingNodeInfo {
+    key: GroupingNodeKey;
+    parentKeysCount: number;
+}
+
 export { GenericInstanceFilter }
 
 // @beta
@@ -195,7 +204,6 @@ export function getLogger(): ILogger;
 // @beta
 export interface GroupingHierarchyNode extends BaseHierarchyNode {
     groupedInstanceKeys: InstanceKey[];
-    hierarchyDepth?: number;
     key: GroupingNodeKey;
     nonGroupingAncestor?: ParentHierarchyNode<NonGroupingHierarchyNode>;
 }
@@ -217,13 +225,13 @@ type HierarchyDefinitionParentNode = Omit<NonGroupingHierarchyNode, "children">;
 // @beta
 type HierarchyFilteringPath = HierarchyNodeIdentifiersPath | {
     path: HierarchyNodeIdentifiersPath;
-    options?: HierarchyFilteringPathOptions;
+    options: HierarchyFilteringPathOptions;
 };
 
 // @beta (undocumented)
 interface HierarchyFilteringPathOptions {
     // (undocumented)
-    autoExpand?: boolean | GroupingHierarchyNode;
+    autoExpand?: boolean | FilterTargetGroupingNodeInfo;
 }
 
 // @beta

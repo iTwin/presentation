@@ -19,10 +19,16 @@ import {
 import { HierarchyFilteringPath } from "./HierarchyProvider";
 
 /** @beta */
-export type MinimalGroupingNodeInfo = Pick<GroupingHierarchyNode, "key" | "hierarchyDepth">;
+export interface FilterTargetGroupingNodeInfo {
+  /** Key of the grouping node. */
+  key: GroupingNodeKey;
+
+  /** Count of node's parent keys. */
+  parentKeysCount: number;
+}
 
 /** @beta */
-export type FilterTarget = boolean | MinimalGroupingNodeInfo;
+export type FilterTarget = boolean | FilterTargetGroupingNodeInfo;
 
 /**
  * A data structure that defines attributes that are common to all types of hierarchy nodes.
@@ -77,9 +83,6 @@ export interface GroupingHierarchyNode extends BaseHierarchyNode {
 
   /** The closest ancestor node that is not a grouping node. May be `undefined` if the grouping node grouped root level nodes. */
   nonGroupingAncestor?: ParentHierarchyNode<NonGroupingHierarchyNode>;
-
-  /** Depth of the grouping node, starts at 1 and increases with every nested grouping node. */
-  hierarchyDepth?: number;
 }
 
 /**

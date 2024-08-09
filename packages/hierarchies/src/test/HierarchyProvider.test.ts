@@ -363,8 +363,7 @@ describe("createHierarchyProvider", () => {
           groupedInstanceKeys: [{ className: "a.b", id: "0x123" }],
           label: "test label",
           children: true,
-          hierarchyDepth: 1,
-        } as GroupingHierarchyNode,
+        } satisfies GroupingHierarchyNode,
       ]);
 
       const childNodes = await collect(provider.getNodes({ parentNode: rootNodes[0] }));
@@ -1300,8 +1299,7 @@ describe("createHierarchyProvider", () => {
           parentKeys: [],
           label: "Class Y",
           children: true,
-          hierarchyDepth: 1,
-        } as GroupingHierarchyNode,
+        } satisfies GroupingHierarchyNode,
       ]);
 
       // requesting children for the class grouping node shouldn't execute a query and should return the instance node
