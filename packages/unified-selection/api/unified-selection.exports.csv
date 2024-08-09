@@ -15,7 +15,6 @@ beta;type;SelectableIdentifier
 beta;interface;SelectableInstanceKey
 beta;interface;Selectables
 beta;namespace;Selectables
-beta;interface;SelectionChangeEvent
 beta;interface;SelectionStorage
 beta;interface;StorageSelectionChangeEventArgs
 beta;type;StorageSelectionChangesListener
