@@ -18,6 +18,18 @@ import {
 } from "./HierarchyNodeKey";
 import { HierarchyFilteringPath } from "./HierarchyProvider";
 
+/** @beta */
+export interface FilterTargetGroupingNodeInfo {
+  /** Key of the grouping node. */
+  key: GroupingNodeKey;
+
+  /** Count of node's parent keys. */
+  parentKeysCount: number;
+}
+
+/** @beta */
+export type FilterTarget = boolean | FilterTargetGroupingNodeInfo;
+
 /**
  * A data structure that defines attributes that are common to all types of hierarchy nodes.
  * @beta
@@ -35,7 +47,7 @@ interface BaseHierarchyNode {
   extendedData?: { [key: string]: any };
   /** Data that may be assigned to the node if filtering is enabled */
   filtering?: {
-    isFilterTarget?: boolean;
+    filterTarget?: FilterTarget;
     hasFilterTargetAncestor?: boolean;
     filteredChildrenIdentifierPaths?: HierarchyFilteringPath[];
   };
