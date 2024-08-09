@@ -71,7 +71,8 @@ async function initializePresentation() {
       storage: createFavoritePropertiesStorage(DefaultFavoritePropertiesStorageTypes.UserPreferencesStorage),
     },
     selection: {
-      // tell @itwin/presentation-frontend to use our selection storage - this enables interop with @itwin/unified-selection
+      // tell @itwin/presentation-frontend to use our selection storage - this enables interop with
+      // unified selection storage used in this app
       selectionStorage: MyAppFrontend.selectionStorage,
     },
   });

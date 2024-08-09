@@ -3,6 +3,8 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
+import { Id64String } from "@itwin/core-bentley";
+
 /**
  * ECInstance selectable
  * @beta
@@ -15,7 +17,14 @@ export interface SelectableInstanceKey {
 }
 
 /**
- * A custom selectable
+ * A custom selectable, which has an identifier, knows how to loads its associated selectable instance keys
+ * and has custom data associated with it.
+ *
+ * An example of such selectable could be an instance grouping node:
+ * - `identifier` could be a GUID, associated with the node,
+ * - `loadInstanceKeys` would know how to load grouped instance keys from the node,
+ * - `data` could be set to the node itself.
+ *
  * @beta
  */
 export interface CustomSelectable {
@@ -28,13 +37,13 @@ export interface CustomSelectable {
 }
 
 /**
- * A single selectable that identifies something in an iTwin.js application
+ * A single selectable that identifies something that can be selected in an iTwin.js application.
  * @beta
  */
 export type Selectable = SelectableInstanceKey | CustomSelectable;
 
 /**
- * Type of identifier that can be used to identify selectable in storage.
+ * A type of identifier that can be used to identify a selectable in selection storage.
  * @beta
  */
 export type SelectableIdentifier = SelectableInstanceKey | Pick<CustomSelectable, "identifier">;
@@ -60,11 +69,11 @@ export namespace Selectable {
  */
 export interface Selectables {
   /**
-   * Map between `SelectableInstanceKey.className` and a set of selected element IDs.
+   * A map between `SelectableInstanceKey.className` and a set of selected instance IDs.
    */
-  instanceKeys: Map<string, Set<string>>;
+  instanceKeys: Map<string, Set<Id64String>>;
   /**
-   * Map between unique identifier of `CustomSelectable` and the selectable itself.
+   * A map between `CustomSelectable.identifier` and the selectable itself.
    */
   custom: Map<string, CustomSelectable>;
 }

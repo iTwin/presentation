@@ -24,6 +24,10 @@ export interface CachingHiliteSetProviderProps {
 /**
  * Defines return value of `createCachingHiliteSetProvider`.
  *
+ * **Warning:** Used in public API as a return value. Not expected to be created / extended by package
+ * consumers, may be supplemented with required attributes any time.
+ *
+ * @see `createCachingHiliteSetProvider`
  * @beta
  */
 export interface CachingHiliteSetProvider {

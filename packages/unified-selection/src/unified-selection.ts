@@ -9,9 +9,4 @@ export { createHiliteSetProvider, HiliteSet, HiliteSetProvider } from "./unified
 export { createCachingHiliteSetProvider, CachingHiliteSetProvider } from "./unified-selection/CachingHiliteSetProvider";
 export { computeSelection } from "./unified-selection/SelectionScope";
 export { enableUnifiedSelectionSyncWithIModel } from "./unified-selection/EnableUnifiedSelectionSyncWithIModel";
-export {
-  StorageSelectionChangeType,
-  StorageSelectionChangeEventArgs,
-  StorageSelectionChangesListener,
-  SelectionChangeEvent,
-} from "./unified-selection/SelectionChangeEvent";
+export { StorageSelectionChangeType, StorageSelectionChangeEventArgs, StorageSelectionChangesListener } from "./unified-selection/SelectionChangeEvent";
