@@ -2,4 +2,4 @@
 "@itwin/presentation-hierarchies": minor
 ---
 
-Add hierarchy depth information for grouping nodes.
+Add ability to prevent auto-expanding of a grouping node in filtered hierarchies which target grouping nodes.
