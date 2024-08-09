@@ -20,9 +20,10 @@ export interface SelectableInstanceKey {
  * A custom selectable, which has an identifier, knows how to loads its associated selectable instance keys
  * and has custom data associated with it.
  *
- * An example of such selectable could be made from a grouping node, which groups some instances together. The selectable's
- * identifier could be some GUID associated with the node, and it would know how to load grouped instance keys from the grouping node.
- * In addition, the node itself could be set as `data` on the selectable.
+ * An example of such selectable could be an instance grouping node:
+ * - `identifier` could be a GUID, associated with the node,
+ * - `loadInstanceKeys` would know how to load grouped instance keys from the node,
+ * - `data` could be set to the node itself.
  *
  * @beta
  */
