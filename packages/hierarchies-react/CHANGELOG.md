@@ -1,5 +1,12 @@
 # @itwin/presentation-hierarchies-react
 
+## 0.7.1
+
+### Patch Changes
+
+- Updated dependencies:
+  - @itwin/unified-selection@0.5.0
+
 ## 0.7.0
 
 ### Minor Changes
