@@ -8,6 +8,7 @@ import { ECClassHierarchyInspector } from '@itwin/presentation-shared';
 import { ECSqlQueryExecutor } from '@itwin/presentation-shared';
 import { Event as Event_2 } from '@itwin/presentation-shared';
 import { Id64Arg } from '@itwin/core-bentley';
+import { Id64String } from '@itwin/core-bentley';
 
 // @beta
 export interface CachingHiliteSetProvider {
@@ -101,11 +102,11 @@ interface EnableUnifiedSelectionSyncWithIModelProps {
 // @beta
 export interface HiliteSet {
     // (undocumented)
-    elements: string[];
+    elements: Id64String[];
     // (undocumented)
-    models: string[];
+    models: Id64String[];
     // (undocumented)
-    subCategories: string[];
+    subCategories: Id64String[];
 }
 
 // @beta
@@ -148,7 +149,7 @@ export interface SelectableInstanceKey {
 // @beta
 export interface Selectables {
     custom: Map<string, CustomSelectable>;
-    instanceKeys: Map<string, Set<string>>;
+    instanceKeys: Map<string, Set<Id64String>>;
 }
 
 // @beta (undocumented)
@@ -164,12 +165,6 @@ export namespace Selectables {
     export function remove(selectables: Selectables, values: Selectable[]): boolean;
     export function size(selectables: Selectables): number;
     export function some(selectables: Selectables, callback: (selectable: Selectable) => boolean): boolean;
-}
-
-// @beta
-export interface SelectionChangeEvent {
-    addListener(listener: StorageSelectionChangesListener): () => void;
-    removeListener(listener: StorageSelectionChangesListener): void;
 }
 
 // @beta
@@ -201,7 +196,7 @@ export interface SelectionStorage {
         selectables: Selectable[];
         level?: number;
     }): void;
-    selectionChangeEvent: SelectionChangeEvent;
+    selectionChangeEvent: Event_2<StorageSelectionChangesListener>;
 }
 
 // @beta
@@ -213,11 +208,14 @@ export interface StorageSelectionChangeEventArgs {
     level: number;
     selectables: Selectables;
     source: string;
+    storage: SelectionStorage;
     timestamp: Date;
 }
 
 // @beta
-export type StorageSelectionChangesListener = (args: StorageSelectionChangeEventArgs, storage: SelectionStorage) => void;
+export type StorageSelectionChangesListener = (
+args: StorageSelectionChangeEventArgs,
+_?: any) => void;
 
 // @beta
 export type StorageSelectionChangeType =

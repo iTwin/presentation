@@ -4,7 +4,9 @@ Copyright © Bentley Systems, Incorporated. All rights reserved. See LICENSE.md 
 
 The `@itwin/presentation-hierarchies` package provides APIs for creating hierarchical data structures based on data in an [iTwin.js iModel](https://www.itwinjs.org/learning/imodels/#imodel-overview).
 
-## Basic concepts
+The package doesn't depend on any backend, frontend or UI specific packages. As such, it can be used in both backend and frontend applications, and in case of the latter, it can be used with any UI framework. For React-based frontend applications, please see the `@itwin/presentation-hierarchies-react` package.
+
+## Concepts
 
 A hierarchy is an arrangement of items, called hierarchy nodes, which are represented as being "above", "below", or "at the same level as" one another:
 
@@ -53,7 +55,26 @@ In iTwin.js, the most common way to create hierarchies is based on EC data (sche
 
 `HierarchyProvider` the core concept of the library - it's responsibility is to glue everything together, including evaluating hierarchy definition, running the queries, processing nodes and, finally, returning them to consumers. The package delivers the `createHierarchyProvider` function to create an instance of `HierarchyProvider`.
 
-## Basic usage
+## Learning
+
+Are you migrating from Presentation Rules? Check out our [Migrating from Presentation Rules system](./learning/PresentationRulesMigrationGuide.md) learning page!
+
+Below is a list of learning material related to building hierarchies:
+
+- [Hierarchy processing](./learning/HierarchyProcessing.md)
+- [Hierarchy definitions](./learning/HierarchyDefinitions.md)
+- [Hierarchy filtering](./learning/HierarchyFiltering.md)
+- [Hierarchy level filtering](./learning/HierarchyLevelFiltering.md)
+- [Hierarchy node labels](./learning/NodeLabels.md)
+- [Grouping](./learning/Grouping.md)
+- [Formatting](./learning/Formatting.md)
+- [Localization](./learning/Localization.md)
+- [Logging](./learning/Logging.md)
+- [Performance tuning](./learning/PerformanceTuning.md)
+
+Do you think something is missing in the above list? Let us know by [creating an issue](https://github.com/iTwin/presentation/issues/new?assignees=&labels=documentation%2C+presentation&projects=&template=learning-material-request.md&title=).
+
+## Basic example
 
 Here's a simple example of how to create a hierarchy provider and build a hierarchy of Models and their Elements, with the latter grouped by class:
 

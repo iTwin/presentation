@@ -23,8 +23,11 @@ export type StorageSelectionChangeType =
 /**
  * The event object that is sent when the selection changes.
  *
- * @beta Used in public API as an argument for `StorageSelectionChangesListener`. Not expected to be created / extended by package
- * consumers, may be supplemented with required attributes any time.
+ * **Warning:** Used in public API as an input to consumer-supplied callback. Not expected to be created / extended
+ * by package consumers, may be supplemented with required attributes any time.
+ *
+ * @see `StorageSelectionChangesListener`
+ * @beta
  */
 export interface StorageSelectionChangeEventArgs {
   /** The name of the selection source which caused the selection change. */
@@ -42,71 +45,19 @@ export interface StorageSelectionChangeEventArgs {
    * @deprecated in 0.2. Use `imodelKey` instead.
    */
   iModelKey: string;
-  /** The timestamp of when the selection change happened */
+  /** The timestamp of when the selection change happened. */
   timestamp: Date;
+  /** The selection storage where the event happened. */
+  storage: SelectionStorage;
 }
 
 /**
  * An interface for selection change listeners.
  * @beta
  */
-export declare type StorageSelectionChangesListener = (args: StorageSelectionChangeEventArgs, storage: SelectionStorage) => void;
-
-/**
- * An interface that allows subscribing and unsubscribing listeners that
- * are called when a selection has changed.
- * @beta
- */
-export interface SelectionChangeEvent {
-  /**
-   * Registers a Listener to be executed whenever this event is raised
-   * @param listener The function to be executed when the event is raised
-   * @returns A function that will remove this event listener
-   * @beta
-   */
-  addListener(listener: StorageSelectionChangesListener): () => void;
-  /**
-   * Un-register a previously registered listener
-   * @param listener The listener to be unregistered
-   * @beta
-   */
-  removeListener(listener: StorageSelectionChangesListener): void;
-}
-
-/**
- * An event broadcasted on selection changes.
- * @internal
- */
-export class SelectionChangeEventImpl implements SelectionChangeEvent {
-  private _listeners: StorageSelectionChangesListener[] = [];
-
-  /**
-   * Registers a Listener to be executed whenever this event is raised
-   * @param listener The function to be executed when the event is raised
-   * @returns A function that will remove this event listener
-   * @beta
-   */
-  public addListener(listener: StorageSelectionChangesListener): () => void {
-    this._listeners.push(listener);
-    return () => this.removeListener(listener);
-  }
-
-  /**
-   * Un-register a previously registered listener
-   * @param listener The listener to be unregistered
-   * @beta
-   */
-  public removeListener(listener: StorageSelectionChangesListener): void {
-    this._listeners = this._listeners.filter((x) => x !== listener);
-  }
-
-  /**
-   * Raises the event by calling each registered listener with the supplied arguments
-   * @param args Event arguments
-   * @param storage Storage that the selection changed in
-   * @beta
-   */
-  public raiseEvent(args: StorageSelectionChangeEventArgs, storage: SelectionStorage) {
-    this._listeners.forEach((listener) => listener(args, storage));
-  }
-}
+export type StorageSelectionChangesListener = (
+  /** Arguments for the selection change event */
+  args: StorageSelectionChangeEventArgs,
+  /** Unused. Temporarily left to avoid a breaking change. */
+  _?: any,
+) => void;
