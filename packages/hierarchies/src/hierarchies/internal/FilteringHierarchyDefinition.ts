@@ -82,7 +82,7 @@ export class FilteringHierarchyDefinition implements HierarchyDefinition {
         }
       }
 
-      if (!child.filtering.filteredChildrenIdentifierPaths?.length) {
+      if (!child.filtering.filteredChildrenIdentifierPaths) {
         // istanbul ignore next
         continue;
       }
