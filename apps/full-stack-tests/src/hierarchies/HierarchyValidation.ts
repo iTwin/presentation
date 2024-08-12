@@ -19,17 +19,38 @@ export interface HierarchyDef<TNode> {
 
 export type ExpectedHierarchyDef = HierarchyDef<(node: HierarchyNode) => void>;
 
-export namespace NodeValidators {
-  function optionalBooleanToString(value: boolean | undefined) {
-    return value === undefined ? "undefined" : value ? "TRUE" : "FALSE";
+function optionalBooleanToString(value: boolean | undefined) {
+  return value === undefined ? "undefined" : value ? "TRUE" : "FALSE";
+}
+
+type FilterTarget = Exclude<HierarchyNode["filtering"], undefined>["filterTarget"];
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+namespace FilterTarget {
+  export function toString(filterTarget: FilterTarget): string {
+    if (filterTarget === undefined || typeof filterTarget === "boolean") {
+      return optionalBooleanToString(filterTarget);
+    }
+
+    return JSON.stringify(filterTarget, undefined, 2);
   }
+
+  export function areEqual(expected: Exclude<FilterTarget, undefined>, actual: FilterTarget): boolean {
+    if (typeof expected === "object") {
+      return typeof actual === "object" && JSON.stringify(expected) === JSON.stringify(actual);
+    }
+    return expected === !!actual;
+  }
+}
+
+export namespace NodeValidators {
   function validateBaseNodeAttributes(
     node: HierarchyNode,
     expectations: {
       label?: string | RegExp;
       autoExpand?: boolean;
       supportsFiltering?: boolean;
-      isFilterTarget?: boolean;
+      filterTarget?: FilterTarget;
       extendedData?: { [key: string]: any };
       children?: ExpectedHierarchyDef[] | boolean;
     },
@@ -64,11 +85,11 @@ export namespace NodeValidators {
         )}, got ${optionalBooleanToString(node.supportsFiltering)}`,
       );
     }
-    if (expectations.isFilterTarget !== undefined && !!node.filtering?.isFilterTarget !== !!expectations.isFilterTarget) {
+    if (expectations.filterTarget !== undefined && !FilterTarget.areEqual(expectations.filterTarget, node.filtering?.filterTarget)) {
       throw new Error(
-        `[${node.label}] Expected node's \`filtering.isFilterTarget\` flag to be ${optionalBooleanToString(
-          expectations.isFilterTarget,
-        )}, got ${optionalBooleanToString(node.filtering?.isFilterTarget)}`,
+        `[${node.label}] Expected node's \`filtering.filterTarget\` to be ${FilterTarget.toString(
+          expectations.filterTarget,
+        )}, got ${FilterTarget.toString(node.filtering?.filterTarget)}`,
       );
     }
     if (expectations.extendedData !== undefined && !isDeepStrictEqual(node.extendedData, expectations.extendedData)) {
@@ -108,7 +129,7 @@ export namespace NodeValidators {
     label?: string | RegExp;
     autoExpand?: boolean;
     supportsFiltering?: boolean;
-    isFilterTarget?: boolean;
+    filterTarget?: FilterTarget;
     extendedData?: { [key: string]: any };
     children?: TChildren;
   }) {
