@@ -36,10 +36,10 @@
     "check-internal": "node ../../scripts/checkInternal.js --apiSummary ./api/presentation-shared.api.md"
   },
   "dependencies": {
-    "@itwin/core-bentley": "^4.6.0"
+    "@itwin/core-bentley": "^4.8.0"
   },
   "devDependencies": {
-    "@itwin/build-tools": "^4.7.1",
+    "@itwin/build-tools": "^4.8.0",
     "@itwin/eslint-plugin": "^4.1.1",
     "@types/chai": "^4.3.16",
     "@types/chai-as-promised": "^7.1.8",

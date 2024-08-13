@@ -93,6 +93,8 @@ function NonPrimitiveCellRenderer(props: NonPrimitiveCellRendererProps) {
         }
         className="presentation-components-non-primitive-value"
       >
+        {/* Can't change our import to `components-react`, because it was added there in a version later than our peer dependency */}
+        {/* eslint-disable-next-line deprecation/deprecation */}
         <NonPrimitivePropertyRenderer uniqueKey={uniqueKey} propertyRecord={record} orientation={Orientation.Horizontal} />
       </Modal>
     </>

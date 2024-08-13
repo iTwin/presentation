@@ -108,7 +108,7 @@ export function customizeTreeNodeItem(item: Partial<DelayLoadedTreeNodeItem>, no
     item.isCheckboxVisible = true;
     // eslint-disable-next-line deprecation/deprecation
     if (node.isChecked) {
-      // eslint-disable-line deprecation/deprecation
+      // eslint-disable-next-line deprecation/deprecation
       item.checkBoxState = CheckBoxState.On;
     }
 

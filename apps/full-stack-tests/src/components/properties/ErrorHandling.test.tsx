@@ -9,13 +9,13 @@ import sinon from "sinon";
 import { UiComponents, VirtualizedPropertyGridWithDataProvider } from "@itwin/components-react";
 import { assert } from "@itwin/core-bentley";
 import { IModelApp, IModelConnection } from "@itwin/core-frontend";
-import { useOptionalDisposable } from "@itwin/core-react";
 import { InstanceKey, KeySet, PresentationRpcInterface } from "@itwin/presentation-common";
 import { PresentationPropertyDataProvider } from "@itwin/presentation-components";
 import { Presentation } from "@itwin/presentation-frontend";
 import { buildTestIModel } from "@itwin/presentation-testing";
 import { render } from "@testing-library/react";
 import { initialize, terminate } from "../../IntegrationTests";
+import { useOptionalDisposable } from "../../UseOptionalDisposable";
 import { ensureHasError, ErrorBoundary } from "../ErrorBoundary";
 import { ensurePropertyGridHasPropertyRecord } from "../PropertyGridUtils";
 
