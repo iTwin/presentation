@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1723553929005,
+  "lastUpdate": 1723553953339,
   "repoUrl": "https://github.com/iTwin/presentation",
   "entries": {
     "Benchmark": [
@@ -18766,6 +18766,140 @@ window.BENCHMARK_DATA = {
             "value": 92,
             "unit": "ms",
             "extra": "count: 2\nmax: 92\np95: 92\nmedian: 82"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "35135765+grigasp@users.noreply.github.com",
+            "name": "Grigas",
+            "username": "grigasp"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "3c33614fe8e0f6214589236bbe71848186f1cc5f",
+          "message": "Bump dependencies (#695)\n\n* bump itwinjs-core dependencies to 4.8.0\r\n\r\n* bump appui to 4.16\r\n\r\n* change\r\n\r\n* prettier\r\n\r\n* resolve more deprecations\r\n\r\n* Cant import `Orientation` and `CheckBoxState` state from `components-react` - our peer dep version is too old\r\n\r\n* prettier...",
+          "timestamp": "2024-08-13T15:55:59+03:00",
+          "tree_id": "30aa347b9e3bc2e0a511c247d894382c22c1413f",
+          "url": "https://github.com/iTwin/presentation/commit/3c33614fe8e0f6214589236bbe71848186f1cc5f"
+        },
+        "date": 1723553952775,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "flat 50k elements list",
+            "value": 4259.99,
+            "unit": "ms"
+          },
+          {
+            "name": "flat 50k elements list (P95 of main thread blocks)",
+            "value": 76,
+            "unit": "ms",
+            "extra": "count: 13\nmax: 76\np95: 76\nmedian: 33"
+          },
+          {
+            "name": "grouping by label",
+            "value": 10119.9,
+            "unit": "ms"
+          },
+          {
+            "name": "grouping by label (P95 of main thread blocks)",
+            "value": 67,
+            "unit": "ms",
+            "extra": "count: 4\nmax: 67\np95: 67\nmedian: 34"
+          },
+          {
+            "name": "grouping by class",
+            "value": 10280.38,
+            "unit": "ms"
+          },
+          {
+            "name": "grouping by class (P95 of main thread blocks)",
+            "value": 47,
+            "unit": "ms",
+            "extra": "count: 6\nmax: 47\np95: 47\nmedian: 28.5"
+          },
+          {
+            "name": "grouping by property",
+            "value": 10732.59,
+            "unit": "ms"
+          },
+          {
+            "name": "grouping by property (P95 of main thread blocks)",
+            "value": 48,
+            "unit": "ms",
+            "extra": "count: 9\nmax: 48\np95: 48\nmedian: 33"
+          },
+          {
+            "name": "grouping by base class (10 classes)",
+            "value": 7644.19,
+            "unit": "ms"
+          },
+          {
+            "name": "grouping by base class (10 classes) (P95 of main thread blocks)",
+            "value": 87,
+            "unit": "ms",
+            "extra": "count: 20\nmax: 87\np95: 87\nmedian: 33.5"
+          },
+          {
+            "name": "grouping by multiple attributes",
+            "value": 27629.9,
+            "unit": "ms"
+          },
+          {
+            "name": "grouping by multiple attributes (P95 of main thread blocks)",
+            "value": 53,
+            "unit": "ms",
+            "extra": "count: 15\nmax: 53\np95: 53\nmedian: 32"
+          },
+          {
+            "name": "hide if no children required to finalize root, w/o children",
+            "value": 48861.53,
+            "unit": "ms"
+          },
+          {
+            "name": "hide if no children required to finalize root, w/o children (P95 of main thread blocks)",
+            "value": 39,
+            "unit": "ms",
+            "extra": "count: 14\nmax: 39\np95: 39\nmedian: 31.5"
+          },
+          {
+            "name": "hide if no children required to finalize root, w/ children",
+            "value": 168.12,
+            "unit": "ms"
+          },
+          {
+            "name": "hide if no children required to finalize root, w/ children (P95 of main thread blocks)",
+            "value": 0,
+            "unit": "ms",
+            "extra": "count: 0\nmax: N/A\np95: N/A\nmedian: N/A"
+          },
+          {
+            "name": "models tree initial (Baytown)",
+            "value": 40.79,
+            "unit": "ms"
+          },
+          {
+            "name": "models tree initial (Baytown) (P95 of main thread blocks)",
+            "value": 0,
+            "unit": "ms",
+            "extra": "count: 0\nmax: N/A\np95: N/A\nmedian: N/A"
+          },
+          {
+            "name": "models tree full (Baytown)",
+            "value": 7696.46,
+            "unit": "ms"
+          },
+          {
+            "name": "models tree full (Baytown) (P95 of main thread blocks)",
+            "value": 89,
+            "unit": "ms",
+            "extra": "count: 2\nmax: 89\np95: 89\nmedian: 83"
           }
         ]
       }
