@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import "./PropertiesWidget.css";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { ComponentPropsWithoutRef, useCallback, useEffect, useMemo, useState } from "react";
 import { useResizeDetector } from "react-resize-detector";
 import {
   ActionButtonRendererProps,
@@ -17,6 +17,7 @@ import {
   FilteringPropertyDataProvider,
   HighlightInfo,
   LabelPropertyDataFilterer,
+  Orientation,
   PropertyCategory,
   PropertyCategoryLabelFilterer,
   PropertyData,
@@ -25,8 +26,8 @@ import {
   VirtualizedPropertyGridWithDataProvider,
 } from "@itwin/components-react";
 import { IModelApp, IModelConnection } from "@itwin/core-frontend";
-import { ContextMenuItem, ContextMenuItemProps, GlobalContextMenu, Orientation } from "@itwin/core-react";
-import { Flex, ToggleSwitch } from "@itwin/itwinui-react";
+import { GlobalContextMenu } from "@itwin/core-react";
+import { Flex, MenuItem, ToggleSwitch } from "@itwin/itwinui-react";
 import { Field } from "@itwin/presentation-common";
 import {
   DiagnosticsProps,
@@ -269,7 +270,6 @@ function FilterablePropertyGrid({
   );
 }
 
-type ContextMenuItemInfo = ContextMenuItemProps & { id: string; label: string };
 interface PropertiesWidgetContextMenuProps {
   dataProvider: PresentationPropertyDataProvider;
   args: PropertyGridContextMenuArgs;
@@ -302,21 +302,21 @@ function PropertiesWidgetContextMenu(props: PropertiesWidgetContextMenuProps) {
   const asyncItems = useDebouncedAsyncValue(
     useCallback(async () => {
       const field = await dataProvider.getFieldByPropertyDescription(record.property);
-      const items: ContextMenuItemInfo[] = [];
+      const items: ComponentPropsWithoutRef<typeof MenuItem>[] = [];
       if (field !== undefined) {
         if (await Presentation.favoriteProperties.hasAsync(field, imodel, FAVORITES_SCOPE)) {
           items.push({
             id: "remove-favorite",
-            onSelect: async () => removeFavorite(field),
+            onClick: async () => removeFavorite(field),
             title: IModelApp.localization.getLocalizedString("Sample:controls.properties.context-menu.remove-favorite.description"),
-            label: IModelApp.localization.getLocalizedString("Sample:controls.properties.context-menu.remove-favorite.label"),
+            children: IModelApp.localization.getLocalizedString("Sample:controls.properties.context-menu.remove-favorite.label"),
           });
         } else {
           items.push({
             id: "add-favorite",
-            onSelect: async () => addFavorite(field),
+            onClick: async () => addFavorite(field),
             title: IModelApp.localization.getLocalizedString("Sample:controls.properties.context-menu.add-favorite.description"),
-            label: IModelApp.localization.getLocalizedString("Sample:controls.properties.context-menu.add-favorite.label"),
+            children: IModelApp.localization.getLocalizedString("Sample:controls.properties.context-menu.add-favorite.label"),
           });
         }
       }
@@ -329,6 +329,7 @@ function PropertiesWidgetContextMenu(props: PropertiesWidgetContextMenuProps) {
   }
 
   return (
+    // eslint-disable-next-line deprecation/deprecation
     <GlobalContextMenu
       opened={true}
       onOutsideClick={onCloseContextMenu}
@@ -337,10 +338,8 @@ function PropertiesWidgetContextMenu(props: PropertiesWidgetContextMenuProps) {
       x={props.args.event.clientX}
       y={props.args.event.clientY}
     >
-      {asyncItems.value.map((item) => (
-        <ContextMenuItem key={item.id} onSelect={item.onSelect} title={item.title}>
-          {item.label}
-        </ContextMenuItem>
+      {asyncItems.value.map((itemProps) => (
+        <MenuItem key={itemProps.id} {...itemProps} />
       ))}
     </GlobalContextMenu>
   );

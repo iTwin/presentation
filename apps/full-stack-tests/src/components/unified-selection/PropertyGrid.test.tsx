@@ -7,13 +7,13 @@ import { insertPhysicalElement, insertPhysicalModelWithPartition, insertSpatialC
 import { useCallback, useState } from "react";
 import { UiComponents, VirtualizedPropertyGridWithDataProvider } from "@itwin/components-react";
 import { IModelApp, IModelConnection } from "@itwin/core-frontend";
-import { useOptionalDisposable } from "@itwin/core-react";
 import { InstanceKey, KeySet } from "@itwin/presentation-common";
 import { PresentationPropertyDataProvider, usePropertyDataProviderWithUnifiedSelection } from "@itwin/presentation-components";
 import { Presentation } from "@itwin/presentation-frontend";
 import { buildTestIModel } from "@itwin/presentation-testing";
 import { act, getByText, render, waitFor } from "@testing-library/react";
 import { initialize, terminate } from "../../IntegrationTests";
+import { useOptionalDisposable } from "../../UseOptionalDisposable";
 import { ensurePropertyGridHasPropertyRecord } from "../PropertyGridUtils";
 
 /* eslint-disable @typescript-eslint/naming-convention */
