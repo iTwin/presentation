@@ -12,7 +12,9 @@ import { BentleyError, DbResult, Guid, Id64, Id64String, OrderedId64Iterable } f
 import { IModelConnection } from "@itwin/core-frontend";
 import { ECSqlBinding, parseFullClassName, PrimitiveValue } from "@itwin/presentation-shared";
 import { buildTestIModel, TestIModelBuilder } from "@itwin/presentation-testing";
-import { createFileNameFromString, limitFilePathLength, setupOutputFileLocation } from "@itwin/presentation-testing/lib/cjs/presentation-testing/InternalUtils";
+import {
+  createFileNameFromString, limitFilePathLength, setupOutputFileLocation,
+} from "@itwin/presentation-testing/lib/cjs/presentation-testing/InternalUtils";
 
 function isBinding(value: ECSqlBinding | PrimitiveValue): value is ECSqlBinding {
   return typeof value === "object" && (value as ECSqlBinding).type !== undefined && (value as ECSqlBinding).value !== undefined;
@@ -23,7 +25,7 @@ export class ECDbBuilder {
 
   public importSchema(schemaXml: string) {
     // sadly, there's no API to import schema from string, so we have to save the XML into a file first...
-    // eslint-disable-next-line @itwin/no-internal
+    // eslint-disable-next-line @itwin/no-internal, deprecation/deprecation
     const schemaFilePath = limitFilePathLength(`${this._ecdb.nativeDb.getFilePath()}-${hash(schemaXml)}`);
     fs.writeFileSync(schemaFilePath, schemaXml);
     this._ecdb.importSchema(schemaFilePath);
