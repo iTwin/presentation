@@ -11,7 +11,14 @@ import { useResizeDetector } from "react-resize-detector";
 import { from, reduce, Subject, takeUntil } from "rxjs";
 import { StandardContentLayouts } from "@itwin/appui-abstract";
 import {
-  ConfigurableUiContent, ContentGroup, StagePanelState, StageUsage, ThemeManager, UiFramework, UiStateStorageHandler, WidgetState,
+  ConfigurableUiContent,
+  ContentGroup,
+  StagePanelState,
+  StageUsage,
+  ThemeManager,
+  UiFramework,
+  UiStateStorageHandler,
+  WidgetState,
 } from "@itwin/appui-react";
 import { Id64String } from "@itwin/core-bentley";
 import { IModelApp, IModelConnection } from "@itwin/core-frontend";
