@@ -36,6 +36,8 @@ export function PresentationTreeNodeRenderer(props: PresentationTreeNodeRenderer
 
   if (isPresentationInfoTreeNodeItem(nodeItem)) {
     return (
+      // `PresentationTreeNodeRenderer` is about to be deprecated itself, so no point in resolving the TreeNode deprecation
+      // eslint-disable-next-line deprecation/deprecation
       <TreeNode
         isLeaf={true}
         label={

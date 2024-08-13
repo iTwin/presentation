@@ -7,11 +7,10 @@ import { expect } from "chai";
 import { createAsyncIterator, ResolvablePromise } from "presentation-test-utilities";
 import * as sinon from "sinon";
 import { PropertyRecord } from "@itwin/appui-abstract";
-import { PageOptions } from "@itwin/components-react";
+import { CheckBoxState, PageOptions } from "@itwin/components-react";
 import { assert, BeEvent, Logger } from "@itwin/core-bentley";
 import { EmptyLocalization } from "@itwin/core-common";
 import { IModelConnection } from "@itwin/core-frontend";
-import { CheckBoxState } from "@itwin/core-react";
 import {
   ClassInfo,
   ClientDiagnosticsAttribute,
