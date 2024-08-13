@@ -9,7 +9,6 @@
 import { Observable as RxjsObservable } from "rxjs/internal/Observable";
 import { PropertyRecord } from "@itwin/appui-abstract";
 import {
-  CheckBoxState,
   DelayLoadedTreeNodeItem,
   ItemColorOverrides,
   ItemStyle,
@@ -17,6 +16,7 @@ import {
   TreeNodeItem,
   PageOptions as UiPageOptions,
 } from "@itwin/components-react";
+import { CheckBoxState } from "@itwin/core-react";
 import { LabelDefinition, Node, NodeKey, PartialNode, PageOptions as PresentationPageOptions } from "@itwin/presentation-common";
 import { StyleHelper } from "../common/StyleHelper";
 import { createLabelRecord } from "../common/Utils";
@@ -115,7 +115,7 @@ export function customizeTreeNodeItem(item: Partial<DelayLoadedTreeNodeItem>, no
     item.isCheckboxVisible = true;
     // eslint-disable-next-line deprecation/deprecation
     if (node.isChecked) {
-      // eslint-disable-line deprecation/deprecation
+      // eslint-disable-next-line deprecation/deprecation
       item.checkBoxState = CheckBoxState.On;
     }
 

@@ -8,7 +8,8 @@
 
 import { useState } from "react";
 import { ArrayValue, PropertyRecord, PropertyValueFormat } from "@itwin/appui-abstract";
-import { NonPrimitivePropertyRenderer, Orientation, PropertyValueRendererManager } from "@itwin/components-react";
+import { NonPrimitivePropertyRenderer, PropertyValueRendererManager } from "@itwin/components-react";
+import { Orientation } from "@itwin/core-react";
 import { Anchor, Modal } from "@itwin/itwinui-react";
 
 /**
@@ -92,6 +93,8 @@ function NonPrimitiveCellRenderer(props: NonPrimitiveCellRendererProps) {
         }
         className="presentation-components-non-primitive-value"
       >
+        { /* Can't change our import to `components-react`, because it was added there in a version later than our peer dependency */ }
+        { /* eslint-disable-next-line deprecation/deprecation */ }
         <NonPrimitivePropertyRenderer uniqueKey={uniqueKey} propertyRecord={record} orientation={Orientation.Horizontal} />
       </Modal>
     </>
