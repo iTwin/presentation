@@ -16,7 +16,7 @@ import {
   NodePreProcessor,
 } from "../HierarchyDefinition";
 import {
-  FilterTarget,
+  FilterTargetGroupingNodeInfo,
   HierarchyNode,
   ParsedHierarchyNode,
   ParsedInstanceHierarchyNode,
@@ -34,6 +34,8 @@ export interface FilteringQueryBuilderProps {
   nodeIdentifierPaths: HierarchyFilteringPath[];
 }
 
+type FilterTarget = boolean | FilterTargetGroupingNodeInfo;
+
 /** @internal */
 export class FilteringHierarchyDefinition implements HierarchyDefinition {
   private _classHierarchy: ECClassHierarchyInspector;
@@ -49,11 +51,7 @@ export class FilteringHierarchyDefinition implements HierarchyDefinition {
   public get preProcessNode(): NodePreProcessor {
     return async (node) => {
       const processedNode = this._source.preProcessNode ? await this._source.preProcessNode(node) : node;
-      if (
-        processedNode?.processingParams?.hideInHierarchy &&
-        processedNode.filtering?.filterTarget === true &&
-        !processedNode.filtering.hasFilterTargetAncestor
-      ) {
+      if (processedNode?.processingParams?.hideInHierarchy && processedNode.filtering?.isFilterTarget && !processedNode.filtering.hasFilterTargetAncestor) {
         // we want to hide target nodes if they have `hideInHierarchy` param, but only if they're not under another filter target
         return undefined;
       }
@@ -69,14 +67,14 @@ export class FilteringHierarchyDefinition implements HierarchyDefinition {
       }
 
       // Expand grouping node if it contains filter targets.
-      if (child.filtering.filterTarget === true) {
-        return true;
-      }
+      if (child.filtering.isFilterTarget) {
+        if (!child.filtering.autoExpandUntil) {
+          return true;
+        }
 
-      // Expand grouping node if a grouping node below it is a filter target.
-      if (typeof child.filtering.filterTarget === "object") {
+        // Expand grouping node if a grouping node below it is a filter target.
         const nodeDepth = node.parentKeys.length;
-        const filterTargetDepth = child.filtering.filterTarget.parentKeysCount;
+        const filterTargetDepth = child.filtering.autoExpandUntil.parentKeysCount;
         if (nodeDepth < filterTargetDepth) {
           return true;
         }
@@ -110,12 +108,18 @@ export class FilteringHierarchyDefinition implements HierarchyDefinition {
   public get parseNode(): NodeParser {
     return (row: { [columnName: string]: any }): ParsedInstanceHierarchyNode => {
       const hasFilterTargetAncestor: boolean = !!row[ECSQL_COLUMN_NAME_HasFilterTargetAncestor];
-      const filterTarget: FilterTarget = row[ECSQL_COLUMN_NAME_FilterTarget] ? JSON.parse(row[ECSQL_COLUMN_NAME_FilterTarget]) : undefined;
-      const parsedFilteredChildrenIdentifierPaths: HierarchyNodeIdentifiersPath[] | undefined = row[ECSQL_COLUMN_NAME_FilteredChildrenPaths]
+      const filterTarget = row[ECSQL_COLUMN_NAME_FilterTarget] ? JSON.parse(row[ECSQL_COLUMN_NAME_FilterTarget]) : undefined;
+      const filteredChildrenIdentifierPaths: HierarchyNodeIdentifiersPath[] | undefined = row[ECSQL_COLUMN_NAME_FilteredChildrenPaths]
         ? JSON.parse(row[ECSQL_COLUMN_NAME_FilteredChildrenPaths])
         : undefined;
       const defaultNode = (this._source.parseNode ?? defaultNodesParser)(row);
-      return applyFilterAttributes(defaultNode, parsedFilteredChildrenIdentifierPaths, filterTarget, hasFilterTargetAncestor);
+      return applyFilterAttributes({
+        node: defaultNode,
+        filteredChildrenIdentifierPaths,
+        isFilterTarget: !!filterTarget,
+        autoExpandUntil: typeof filterTarget === "object" ? filterTarget : undefined,
+        hasFilterTargetAncestor,
+      });
     };
   }
 
@@ -158,7 +162,13 @@ export class FilteringHierarchyDefinition implements HierarchyDefinition {
               }
               return {
                 ...def,
-                node: applyFilterAttributes(def.node, filteredChildrenIdentifierPaths, filterTarget, !!hasFilterTargetAncestor),
+                node: applyFilterAttributes({
+                  node: def.node,
+                  filteredChildrenIdentifierPaths,
+                  isFilterTarget: !!filterTarget,
+                  autoExpandUntil: typeof filterTarget === "object" ? filterTarget : undefined,
+                  hasFilterTargetAncestor,
+                }),
               };
             },
           );
@@ -190,7 +200,7 @@ export class FilteringHierarchyDefinition implements HierarchyDefinition {
     }
     return {
       filteredNodePaths: parentNode.filtering?.filteredChildrenIdentifierPaths,
-      isDirectParentFilterTarget: parentNode.filtering?.filterTarget === true,
+      isDirectParentFilterTarget: parentNode.filtering?.isFilterTarget && !parentNode.filtering.autoExpandUntil,
       hasFilterTargetAncestor: !!parentNode.filtering?.hasFilterTargetAncestor,
     };
   }
@@ -289,12 +299,19 @@ async function identifiersEqual<TIdentifier extends HierarchyNodeIdentifier>(lhs
   return HierarchyNodeIdentifier.equal(lhs, rhs);
 }
 
-function applyFilterAttributes<TNode extends ParsedHierarchyNode>(
-  node: TNode,
-  filteredChildrenIdentifierPaths: HierarchyFilteringPath[] | undefined,
-  filterTarget: FilterTarget,
-  hasFilterTargetAncestor: boolean,
-): TNode {
+function applyFilterAttributes<TNode extends ParsedHierarchyNode>({
+  node,
+  filteredChildrenIdentifierPaths,
+  isFilterTarget,
+  autoExpandUntil,
+  hasFilterTargetAncestor,
+}: {
+  node: TNode;
+  filteredChildrenIdentifierPaths: HierarchyFilteringPath[] | undefined;
+  isFilterTarget?: boolean;
+  autoExpandUntil?: FilterTargetGroupingNodeInfo;
+  hasFilterTargetAncestor: boolean;
+}): TNode {
   const shouldAutoExpand = !!filteredChildrenIdentifierPaths?.some((childPath) => {
     return "path" in childPath && childPath.path.length && childPath.options?.autoExpand;
   });
@@ -302,9 +319,9 @@ function applyFilterAttributes<TNode extends ParsedHierarchyNode>(
   if (shouldAutoExpand) {
     result.autoExpand = true;
   }
-  if (filterTarget || hasFilterTargetAncestor || filteredChildrenIdentifierPaths?.length) {
+  if (isFilterTarget || hasFilterTargetAncestor || filteredChildrenIdentifierPaths?.length) {
     result.filtering = {
-      ...(filterTarget ? { filterTarget } : undefined),
+      ...(isFilterTarget ? (autoExpandUntil ? { isFilterTarget, autoExpandUntil } : { isFilterTarget }) : undefined),
       ...(hasFilterTargetAncestor ? { hasFilterTargetAncestor } : undefined),
       ...(!!filteredChildrenIdentifierPaths?.length ? { filteredChildrenIdentifierPaths } : undefined),
     };

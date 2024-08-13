@@ -12,7 +12,13 @@ import {
   HierarchyLevelDefinition,
   InstanceNodesQueryDefinition,
 } from "../../hierarchies/HierarchyDefinition";
-import { FilterTargetGroupingNodeInfo, HierarchyNode, ParsedCustomHierarchyNode, ProcessedCustomHierarchyNode } from "../../hierarchies/HierarchyNode";
+import {
+  FilterTargetGroupingNodeInfo,
+  HierarchyNode,
+  ParsedCustomHierarchyNode,
+  ProcessedCustomHierarchyNode,
+  ProcessedGroupingHierarchyNode,
+} from "../../hierarchies/HierarchyNode";
 import { HierarchyNodeIdentifiersPath } from "../../hierarchies/HierarchyNodeIdentifier";
 import { HierarchyFilteringPath } from "../../hierarchies/HierarchyProvider";
 import {
@@ -27,6 +33,7 @@ import { NodeSelectClauseColumnNames } from "../../hierarchies/NodeSelectQueryFa
 import {
   createClassHierarchyInspectorStub,
   createTestInstanceKey,
+  createTestNodeKey,
   createTestParsedCustomNode,
   createTestProcessedCustomNode,
   createTestProcessedGroupingNode,
@@ -84,7 +91,7 @@ describe("FilteringHierarchyDefinition", () => {
       const node = filteringFactory.parseNode(row);
       expect(node.filtering).to.deep.eq({
         filteredChildrenIdentifierPaths: paths,
-        filterTarget: true,
+        isFilterTarget: true,
         hasFilterTargetAncestor: true,
       });
     });
@@ -175,7 +182,7 @@ describe("FilteringHierarchyDefinition", () => {
           },
         }),
         filtering: {
-          filterTarget: true,
+          isFilterTarget: true,
           hasFilterTargetAncestor: true,
         },
       };
@@ -192,7 +199,7 @@ describe("FilteringHierarchyDefinition", () => {
           },
         }),
         filtering: {
-          filterTarget: true,
+          isFilterTarget: true,
           hasFilterTargetAncestor: false,
         },
       };
@@ -237,7 +244,7 @@ describe("FilteringHierarchyDefinition", () => {
       expect(result).to.eq(undefined);
     });
 
-    const commonGroupingNodeExpansionTestCases = (createGroupingNode: () => any) => {
+    const commonGroupingNodeExpansionTestCases = (createGroupingNode: () => ProcessedGroupingHierarchyNode) => {
       it("doesn't set auto-expand on grouping nodes if none of the children have filtered children paths", async () => {
         const inputNode = createGroupingNode();
         const filteringFactory = createFilteringHierarchyLevelsFactory();
@@ -301,7 +308,7 @@ describe("FilteringHierarchyDefinition", () => {
           children: [
             {
               ...createTestProcessedInstanceNode(),
-              filtering: { filterTarget: true },
+              filtering: { isFilterTarget: true },
             },
           ],
         };
@@ -312,20 +319,22 @@ describe("FilteringHierarchyDefinition", () => {
 
       it("doesn't set auto-expand when all child nodes target grouping node", async () => {
         const groupingNode = createGroupingNode();
-        const inputNode = {
+        const inputNode: ProcessedGroupingHierarchyNode = {
           ...groupingNode,
           children: [
             {
               ...createTestProcessedInstanceNode(),
               filtering: {
-                filterTarget: { key: groupingNode.key },
+                isFilterTarget: true,
+                autoExpandUntil: { key: groupingNode.key, parentKeysCount: 0 },
                 filteredChildrenIdentifierPaths: [],
               },
             },
             {
               ...createTestProcessedInstanceNode(),
               filtering: {
-                filterTarget: { key: groupingNode.key },
+                isFilterTarget: true,
+                autoExpandUntil: { key: groupingNode.key, parentKeysCount: 0 },
                 filteredChildrenIdentifierPaths: [],
               },
             },
@@ -339,20 +348,22 @@ describe("FilteringHierarchyDefinition", () => {
       it("sets auto-expand when at least one child node targets another grouping node", async () => {
         const groupingNode = createGroupingNode();
         const otherGroupingNode = createGroupingNode();
-        const inputNode = {
+        const inputNode: ProcessedGroupingHierarchyNode = {
           ...groupingNode,
           children: [
             {
               ...createTestProcessedInstanceNode(),
               filtering: {
-                filterTarget: { key: groupingNode.key },
+                isFilterTarget: true,
+                autoExpandUntil: { key: groupingNode.key, parentKeysCount: 0 },
                 filteredChildrenIdentifierPaths: [],
               },
             },
             {
               ...createTestProcessedInstanceNode(),
               filtering: {
-                filterTarget: { key: otherGroupingNode.key },
+                isFilterTarget: true,
+                autoExpandUntil: { key: otherGroupingNode.key, parentKeysCount: 0 },
                 filteredChildrenIdentifierPaths: [],
               },
             },
@@ -364,15 +375,17 @@ describe("FilteringHierarchyDefinition", () => {
       });
 
       it("sets auto-expand when node has hierarchy depth smaller than the filter target and same key", async () => {
-        const inputNode = {
-          ...createGroupingNode(),
-          parentKeys: [{}],
+        const groupingNode = createGroupingNode();
+        const inputNode: ProcessedGroupingHierarchyNode = {
+          ...groupingNode,
+          parentKeys: [createTestNodeKey()],
           children: [
             {
               ...createTestProcessedInstanceNode(),
               filtering: {
-                filterTarget: {
-                  ...createGroupingNode(),
+                isFilterTarget: true,
+                autoExpandUntil: {
+                  key: groupingNode.key,
                   parentKeysCount: 2,
                 },
               },
@@ -385,14 +398,15 @@ describe("FilteringHierarchyDefinition", () => {
       });
 
       it("sets auto-expand when node has hierarchy depth smaller than the filter target and different key", async function () {
-        const inputNode = {
+        const inputNode: ProcessedGroupingHierarchyNode = {
           ...createGroupingNode(),
-          parentKeys: [{}],
+          parentKeys: [createTestNodeKey()],
           children: [
             {
               ...createTestProcessedInstanceNode(),
               filtering: {
-                filterTarget: {
+                isFilterTarget: true,
+                autoExpandUntil: {
                   key: { type: "class-grouping", className: this.test!.title },
                   parentKeysCount: 2,
                 },
@@ -406,14 +420,15 @@ describe("FilteringHierarchyDefinition", () => {
       });
 
       it("doesn't set auto-expand when node has same hierarchy depth and same keys as the filter target", async () => {
-        const inputNode = {
+        const inputNode: ProcessedGroupingHierarchyNode = {
           ...createGroupingNode(),
-          parentKeys: [{}],
+          parentKeys: [createTestNodeKey()],
           children: [
             {
               ...createTestProcessedInstanceNode(),
               filtering: {
-                filterTarget: {
+                isFilterTarget: true,
+                autoExpandUntil: {
                   key: createGroupingNode().key,
                   parentKeysCount: 1,
                 },
@@ -427,14 +442,15 @@ describe("FilteringHierarchyDefinition", () => {
       });
 
       it("doesn't set auto-expand when node has greater hierarchy depth than the filter target", async () => {
-        const inputNode = {
+        const inputNode: ProcessedGroupingHierarchyNode = {
           ...createGroupingNode(),
-          parentKeys: [{}, {}],
+          parentKeys: [createTestNodeKey(), createTestNodeKey()],
           children: [
             {
               ...createTestProcessedInstanceNode(),
               filtering: {
-                filterTarget: {
+                isFilterTarget: true,
+                autoExpandUntil: {
                   ...createTestProcessedGroupingNode(),
                   key: {
                     type: "class-grouping",
@@ -668,7 +684,7 @@ describe("FilteringHierarchyDefinition", () => {
           {
             node: {
               ...sourceDefinition2.node,
-              filtering: { filterTarget: true },
+              filtering: { isFilterTarget: true },
             },
           },
         ]);
@@ -776,7 +792,7 @@ describe("FilteringHierarchyDefinition", () => {
             node: {
               ...sourceDefinition.node,
               filtering: {
-                filterTarget: true,
+                isFilterTarget: true,
               },
             },
           },
@@ -812,7 +828,8 @@ describe("FilteringHierarchyDefinition", () => {
             node: {
               ...sourceDefinition.node,
               filtering: {
-                filterTarget: groupingNode2,
+                isFilterTarget: true,
+                autoExpandUntil: groupingNode2,
               },
             },
           },
@@ -902,7 +919,7 @@ describe("FilteringHierarchyDefinition", () => {
           parentNode: {
             ...createTestProcessedInstanceNode(),
             filtering: {
-              filterTarget: true,
+              isFilterTarget: true,
               filteredChildrenIdentifierPaths: new Array<HierarchyNodeIdentifiersPath>(),
             },
           },
@@ -1379,7 +1396,7 @@ describe("FilteringHierarchyDefinition", () => {
             label: "parent",
           }),
           filtering: {
-            filterTarget: true,
+            isFilterTarget: true,
             filteredChildrenIdentifierPaths: [[{ key: "matches" }]],
           },
         },
@@ -1391,7 +1408,7 @@ describe("FilteringHierarchyDefinition", () => {
         {
           node: {
             ...matchingSourceDefinition.node,
-            filtering: { filterTarget: true },
+            filtering: { isFilterTarget: true },
           },
         },
       ]);
