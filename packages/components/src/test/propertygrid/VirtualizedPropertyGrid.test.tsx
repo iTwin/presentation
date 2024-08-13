@@ -10,6 +10,7 @@ import {
   CategorizedPropertyItem,
   FlatGridItemType,
   IPropertyDataProvider,
+  Orientation,
   PrimitivePropertyRenderer,
   PrimitivePropertyValueRenderer,
   PropertyCategory,
@@ -21,7 +22,6 @@ import {
   PropertyValueRendererManager,
   VirtualizedPropertyGridWithDataProvider,
 } from "@itwin/components-react";
-import { Orientation } from "@itwin/core-react";
 import { InstanceKey } from "@itwin/presentation-common";
 import { PresentationPropertyDataProvider } from "../../presentation-components/propertygrid/DataProvider";
 import { createTestCategoryDescription } from "../_helpers/Content";

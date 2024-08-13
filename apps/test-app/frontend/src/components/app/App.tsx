@@ -7,18 +7,14 @@ import "./App.css";
 import "@bentley/icons-generic-webfont/dist/bentley-icons-generic-webfont.css";
 import "@itwin/itwinui-react/styles.css";
 import { useEffect, useState } from "react";
-import { Provider } from "react-redux";
 import { useResizeDetector } from "react-resize-detector";
 import { from, reduce, Subject, takeUntil } from "rxjs";
 import { StandardContentLayouts } from "@itwin/appui-abstract";
 import {
-  ConfigurableCreateInfo,
   ConfigurableUiContent,
-  ContentControl,
   ContentGroup,
   StagePanelState,
   StageUsage,
-  StateManager,
   ThemeManager,
   UiFramework,
   UiStateStorageHandler,
@@ -207,74 +203,71 @@ function IModelComponents(props: IModelComponentsProps) {
   const { imodel, rulesetId } = props;
 
   useEffect(() => {
-    UiFramework.frontstages.addFrontstageProvider({
-      id: "presentation-test-app-frontstage-provider",
-      frontstageConfig: () => ({
-        id: "presentation-test-app-frontstage",
-        usage: StageUsage.General,
-        version: 1,
-        contentGroup: new ContentGroup({
-          id: "presentation-test-app-stage-content",
-          layout: StandardContentLayouts.singleView,
-          contents: [
+    UiFramework.frontstages.addFrontstage({
+      id: "presentation-test-app-frontstage",
+      version: 1,
+      usage: StageUsage.General,
+      contentGroup: new ContentGroup({
+        id: "presentation-test-app-stage-content",
+        layout: StandardContentLayouts.singleView,
+        contents: [
+          {
+            id: "primaryContent",
+            classId: "",
+            content: <ViewportContentControl imodel={imodel} />,
+          },
+        ],
+      }),
+      rightPanel: {
+        defaultState: StagePanelState.Open,
+        maxSizeSpec: { percentage: 90 },
+        minSizeSpec: 400,
+        sizeSpec: { percentage: 40 },
+        sections: {
+          start: [
             {
-              id: "primaryContent",
-              classId: ViewportContent,
-              applicationData: { imodel },
+              id: "rules-driven-tree",
+              label: "Rules-driven tree",
+              content: <RulesDrivenTreePanel imodel={imodel} rulesetId={rulesetId} />,
+              defaultState: WidgetState.Open,
+              canPopout: true,
+            },
+            {
+              id: "stateless-tree",
+              label: "Stateless tree",
+              content: <StatelessTreePanel imodel={imodel} />,
+              defaultState: WidgetState.Open,
+              canPopout: true,
             },
           ],
-        }),
-        rightPanel: {
-          defaultState: StagePanelState.Open,
-          maxSizeSpec: { percentage: 90 },
-          minSizeSpec: 400,
-          sizeSpec: { percentage: 40 },
-          sections: {
-            start: [
-              {
-                id: "rules-driven-tree",
-                label: "Rules-driven tree",
-                content: <RulesDrivenTreePanel imodel={imodel} rulesetId={rulesetId} />,
-                defaultState: WidgetState.Open,
-                canPopout: true,
-              },
-              {
-                id: "stateless-tree",
-                label: "Stateless tree",
-                content: <StatelessTreePanel imodel={imodel} />,
-                defaultState: WidgetState.Open,
-                canPopout: true,
-              },
-            ],
-            end: [
-              {
-                id: "properties",
-                label: "Properties widget",
-                content: <PropertiesWidget imodel={imodel} rulesetId={rulesetId} />,
-                defaultState: WidgetState.Open,
-                canPopout: true,
-              },
-            ],
-          },
+          end: [
+            {
+              id: "properties",
+              label: "Properties widget",
+              content: <PropertiesWidget imodel={imodel} rulesetId={rulesetId} />,
+              defaultState: WidgetState.Open,
+              canPopout: true,
+            },
+          ],
         },
-        bottomPanel: {
-          defaultState: StagePanelState.Minimized,
-          sections: {
-            start: [
-              {
-                id: "table",
-                label: "Table widget",
-                content: <TableWidget imodel={imodel} rulesetId={rulesetId} />,
-                defaultState: WidgetState.Closed,
-                canFloat: true,
-                canPopout: true,
-              },
-            ],
-          },
+      },
+      bottomPanel: {
+        defaultState: StagePanelState.Minimized,
+        sections: {
+          start: [
+            {
+              id: "table",
+              label: "Table widget",
+              content: <TableWidget imodel={imodel} rulesetId={rulesetId} />,
+              defaultState: WidgetState.Closed,
+              canFloat: true,
+              canPopout: true,
+            },
+          ],
         },
-      }),
+      },
     });
-    void UiFramework.frontstages.setActiveFrontstage("presentation-test-app-frontstage-provider");
+    void UiFramework.frontstages.setActiveFrontstage("presentation-test-app-frontstage");
     return () => {
       UiFramework.frontstages.clearFrontstageProviders();
     };
@@ -300,26 +293,15 @@ function IModelComponents(props: IModelComponentsProps) {
     <SchemaMetadataContextProvider imodel={imodel} schemaContextProvider={MyAppFrontend.getSchemaContext.bind(MyAppFrontend)}>
       <UnifiedSelectionContextProvider imodel={imodel} selectionLevel={0}>
         <UnifiedSelectionProvider storage={MyAppFrontend.selectionStorage}>
-          <Provider store={StateManager.store}>
-            <ThemeManager>
-              <UiStateStorageHandler>
-                <ConfigurableUiContent />
-              </UiStateStorageHandler>
-            </ThemeManager>
-          </Provider>
+          <ThemeManager>
+            <UiStateStorageHandler>
+              <ConfigurableUiContent />
+            </UiStateStorageHandler>
+          </ThemeManager>
         </UnifiedSelectionProvider>
       </UnifiedSelectionContextProvider>
     </SchemaMetadataContextProvider>
   );
-}
-
-class ViewportContent extends ContentControl {
-  constructor(info: ConfigurableCreateInfo, options: any) {
-    super(info, options);
-    if (options.imodel) {
-      this.reactNode = <ViewportContentControl imodel={options.imodel} />;
-    }
-  }
 }
 
 function RulesDrivenTreePanel(props: { imodel: IModelConnection; rulesetId?: string }) {

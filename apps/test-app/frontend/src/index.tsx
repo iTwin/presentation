@@ -54,7 +54,7 @@ async function initializeApp() {
   }
 
   readyPromises.push(initializePresentation());
-  readyPromises.push(UiFramework.initialize(undefined, undefined));
+  readyPromises.push(UiFramework.initialize());
   readyPromises.push(IModelApp.quantityFormatter.setActiveUnitSystem("metric"));
   await Promise.all(readyPromises);
 }
