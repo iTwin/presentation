@@ -104,7 +104,7 @@ describe("Hierarchies", () => {
             NodeValidators.createForInstanceNode({
               instanceKeys: [keys.rootSubject],
               autoExpand: true,
-              filterTarget: false,
+              isFilterTarget: false,
               children: [
                 NodeValidators.createForCustomNode({
                   key: "custom",
@@ -113,7 +113,7 @@ describe("Hierarchies", () => {
                   children: [
                     NodeValidators.createForInstanceNode({
                       instanceKeys: [keys.childSubject2],
-                      filterTarget: true,
+                      isFilterTarget: true,
                       children: false,
                     }),
                   ],
@@ -178,7 +178,7 @@ describe("Hierarchies", () => {
             NodeValidators.createForInstanceNode({
               instanceKeys: [keys.rootSubject],
               autoExpand: true,
-              filterTarget: false,
+              isFilterTarget: false,
               children: [
                 NodeValidators.createForCustomNode({
                   key: "custom2",
@@ -271,11 +271,11 @@ describe("Hierarchies", () => {
             NodeValidators.createForInstanceNode({
               instanceKeys: [keys.rootSubject],
               autoExpand: true,
-              filterTarget: false,
+              isFilterTarget: false,
               children: [
                 NodeValidators.createForInstanceNode({
                   instanceKeys: [keys.childSubject2],
-                  filterTarget: true,
+                  isFilterTarget: true,
                   children: false,
                 }),
               ],
@@ -359,7 +359,7 @@ describe("Hierarchies", () => {
           expect: [
             NodeValidators.createForInstanceNode({
               instanceKeys: [keys.rootSubject],
-              filterTarget: false,
+              isFilterTarget: false,
               children: false,
             }),
           ],
@@ -443,7 +443,7 @@ describe("Hierarchies", () => {
           expect: [
             NodeValidators.createForInstanceNode({
               instanceKeys: [keys.rootSubject],
-              filterTarget: false,
+              isFilterTarget: false,
               children: false,
             }),
           ],
@@ -537,12 +537,12 @@ describe("Hierarchies", () => {
                 NodeValidators.createForInstanceNode({
                   instanceKeys: [x],
                   autoExpand: true,
-                  filterTarget: true,
+                  isFilterTarget: true,
                   children: [
                     NodeValidators.createForInstanceNode({
                       instanceKeys: [z],
                       autoExpand: false,
-                      filterTarget: false,
+                      isFilterTarget: false,
                       children: false,
                     }),
                   ],
@@ -628,12 +628,12 @@ describe("Hierarchies", () => {
                 NodeValidators.createForInstanceNode({
                   instanceKeys: [x],
                   autoExpand: true,
-                  filterTarget: true,
+                  isFilterTarget: true,
                   children: [
                     NodeValidators.createForInstanceNode({
                       instanceKeys: [y2],
                       autoExpand: false,
-                      filterTarget: false,
+                      isFilterTarget: false,
                       children: false,
                     }),
                   ],
@@ -879,7 +879,7 @@ describe("Hierarchies", () => {
                   children: [
                     NodeValidators.createForInstanceNode({
                       instanceKeys: [keys.elements[0]],
-                      filterTarget: true,
+                      isFilterTarget: true,
                     }),
                     NodeValidators.createForInstanceNode({
                       instanceKeys: [keys.elements[1]],
@@ -999,7 +999,8 @@ describe("Hierarchies", () => {
                             children: [
                               NodeValidators.createForInstanceNode({
                                 instanceKeys: [elementKey],
-                                filterTarget: autoExpandOptions,
+                                isFilterTarget: !!autoExpandOptions,
+                                autoExpandUntil: autoExpandOptions,
                               }),
                             ],
                           }),
@@ -1048,7 +1049,8 @@ describe("Hierarchies", () => {
                             children: [
                               NodeValidators.createForInstanceNode({
                                 instanceKeys: [elementKey],
-                                filterTarget: autoExpandOptions,
+                                isFilterTarget: true,
+                                autoExpandUntil: autoExpandOptions,
                               }),
                             ],
                           }),
@@ -1097,7 +1099,8 @@ describe("Hierarchies", () => {
                             children: [
                               NodeValidators.createForInstanceNode({
                                 instanceKeys: [elementKey],
-                                filterTarget: autoExpandOptions,
+                                isFilterTarget: true,
+                                autoExpandUntil: autoExpandOptions,
                               }),
                             ],
                           }),
@@ -1142,7 +1145,7 @@ describe("Hierarchies", () => {
                             children: [
                               NodeValidators.createForInstanceNode({
                                 instanceKeys: [elementKey],
-                                filterTarget: true,
+                                isFilterTarget: true,
                               }),
                             ],
                           }),

@@ -15,7 +15,6 @@
   "dependencies": {
     "@bentley/functional-schema": "^1.0.4",
     "@itwin/appui-abstract": "^4.7.1",
-    "@itwin/itwinui-react": "^3.12.1",
     "@itwin/build-tools": "^4.7.1",
     "@itwin/components-react": "^4.14.1",
     "@itwin/core-backend": "^4.7.1",
@@ -32,6 +31,7 @@
     "@itwin/ecschema-rpcinterface-impl": "^4.7.1",
     "@itwin/eslint-plugin": "^4.1.1",
     "@itwin/imodel-components-react": "^4.14.1",
+    "@itwin/itwinui-react": "^3.12.1",
     "@itwin/presentation-backend": "^4.7.1",
     "@itwin/presentation-common": "^4.7.1",
     "@itwin/presentation-components": "workspace:^",
@@ -79,6 +79,7 @@
     "reflect-metadata": "^0.1.14",
     "resize-observer-polyfill": "1.5.1",
     "rimraf": "^6.0.1",
+    "rxjs": "^7.8.1",
     "sinon": "^18.0.0",
     "sinon-chai": "^3.7.0",
     "typescript": "~5.5.3"

@@ -6,9 +6,10 @@
 import { collect } from "presentation-test-utilities";
 import { isDeepStrictEqual } from "util";
 import { Logger } from "@itwin/core-bentley";
-import { HierarchyNode, HierarchyProvider, NonGroupingHierarchyNode } from "@itwin/presentation-hierarchies";
+import { GroupingNodeKey, HierarchyNode, HierarchyProvider, NonGroupingHierarchyNode } from "@itwin/presentation-hierarchies";
 import { hasChildren } from "@itwin/presentation-hierarchies/lib/cjs/hierarchies/internal/Common";
 import { InstanceKey } from "@itwin/presentation-shared";
+import { assert, expect } from "chai";
 
 const loggingNamespace = `Presentation.HierarchyBuilder.HierarchyValidation`;
 
@@ -23,38 +24,18 @@ function optionalBooleanToString(value: boolean | undefined) {
   return value === undefined ? "undefined" : value ? "TRUE" : "FALSE";
 }
 
-type FilterTarget = Exclude<HierarchyNode["filtering"], undefined>["filterTarget"];
-
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-namespace FilterTarget {
-  export function toString(filterTarget: FilterTarget): string {
-    if (filterTarget === undefined || typeof filterTarget === "boolean") {
-      return optionalBooleanToString(filterTarget);
-    }
-
-    return JSON.stringify(filterTarget, undefined, 2);
-  }
-
-  export function areEqual(expected: Exclude<FilterTarget, undefined>, actual: FilterTarget): boolean {
-    if (typeof expected === "object") {
-      return typeof actual === "object" && JSON.stringify(expected) === JSON.stringify(actual);
-    }
-    return expected === !!actual;
-  }
+interface BaseNodeExpectations {
+  label?: string | RegExp;
+  autoExpand?: boolean;
+  supportsFiltering?: boolean;
+  isFilterTarget?: boolean;
+  autoExpandUntil?: { key: GroupingNodeKey; parentKeysCount: number };
+  extendedData?: { [key: string]: any };
+  children?: ExpectedHierarchyDef[] | boolean;
 }
 
 export namespace NodeValidators {
-  function validateBaseNodeAttributes(
-    node: HierarchyNode,
-    expectations: {
-      label?: string | RegExp;
-      autoExpand?: boolean;
-      supportsFiltering?: boolean;
-      filterTarget?: FilterTarget;
-      extendedData?: { [key: string]: any };
-      children?: ExpectedHierarchyDef[] | boolean;
-    },
-  ) {
+  function validateBaseNodeAttributes(node: HierarchyNode, expectations: BaseNodeExpectations) {
     if (expectations.label) {
       const nodeLabel = node.label;
       if (typeof expectations.label === "string") {
@@ -85,11 +66,18 @@ export namespace NodeValidators {
         )}, got ${optionalBooleanToString(node.supportsFiltering)}`,
       );
     }
-    if (expectations.filterTarget !== undefined && !FilterTarget.areEqual(expectations.filterTarget, node.filtering?.filterTarget)) {
+    if (expectations.isFilterTarget !== undefined && expectations.isFilterTarget !== !!node.filtering?.isFilterTarget) {
       throw new Error(
-        `[${node.label}] Expected node's \`filtering.filterTarget\` to be ${FilterTarget.toString(
-          expectations.filterTarget,
-        )}, got ${FilterTarget.toString(node.filtering?.filterTarget)}`,
+        `[${node.label}] Expected node's \`filtering.isFilterTarget\` to be ${optionalBooleanToString(
+          expectations.isFilterTarget,
+        )}, got ${optionalBooleanToString(node.filtering?.isFilterTarget)}`,
+      );
+    }
+    if (expectations.autoExpandUntil !== undefined) {
+      assert(node.filtering?.isFilterTarget, `[${node.label}] Expected node to be a filter target`);
+      expect(node.filtering.autoExpandUntil).to.deep.eq(
+        expectations.autoExpandUntil,
+        `[${node.label}] Nodes's 'filtering.autoExpandUntil' flag property doesn't match the expectation.`,
       );
     }
     if (expectations.extendedData !== undefined && !isDeepStrictEqual(node.extendedData, expectations.extendedData)) {
@@ -103,12 +91,11 @@ export namespace NodeValidators {
   }
 
   export function createForCustomNode<TChildren extends ExpectedHierarchyDef[] | boolean>(
-    expectedNode: Partial<Omit<NonGroupingHierarchyNode, "label" | "children" | "filtering">> & {
-      label?: string;
-      isFilterTarget?: boolean;
-      extendedData?: { [key: string]: any };
-      children?: TChildren;
-    },
+    expectedNode: Partial<Omit<NonGroupingHierarchyNode, "label" | "children" | "filtering">> &
+      BaseNodeExpectations & {
+        label?: string;
+        children?: TChildren;
+      },
   ) {
     return {
       node: (node: HierarchyNode) => {
@@ -124,15 +111,12 @@ export namespace NodeValidators {
     };
   }
 
-  export function createForInstanceNode<TChildren extends ExpectedHierarchyDef[] | boolean>(props: {
-    instanceKeys?: InstanceKey[];
-    label?: string | RegExp;
-    autoExpand?: boolean;
-    supportsFiltering?: boolean;
-    filterTarget?: FilterTarget;
-    extendedData?: { [key: string]: any };
-    children?: TChildren;
-  }) {
+  export function createForInstanceNode<TChildren extends ExpectedHierarchyDef[] | boolean>(
+    props: BaseNodeExpectations & {
+      instanceKeys?: InstanceKey[];
+      children?: TChildren;
+    },
+  ) {
     return {
       node: (node: HierarchyNode) => {
         if (!HierarchyNode.isStandard(node)) {
@@ -156,13 +140,12 @@ export namespace NodeValidators {
     };
   }
 
-  export function createForClassGroupingNode<TChildren extends ExpectedHierarchyDef[] | boolean>(props: {
-    className?: string;
-    label?: string;
-    autoExpand?: boolean;
-    extendedData?: { [key: string]: any };
-    children?: TChildren;
-  }) {
+  export function createForClassGroupingNode<TChildren extends ExpectedHierarchyDef[] | boolean>(
+    props: BaseNodeExpectations & {
+      className?: string;
+      children?: TChildren;
+    },
+  ) {
     return {
       node: (node: HierarchyNode) => {
         if (!HierarchyNode.isStandard(node)) {
@@ -180,13 +163,13 @@ export namespace NodeValidators {
     };
   }
 
-  export function createForLabelGroupingNode<TChildren extends ExpectedHierarchyDef[] | boolean>(props: {
-    label?: string;
-    groupId?: string;
-    autoExpand?: boolean;
-    extendedData?: { [key: string]: any };
-    children?: TChildren;
-  }) {
+  export function createForLabelGroupingNode<TChildren extends ExpectedHierarchyDef[] | boolean>(
+    props: BaseNodeExpectations & {
+      label?: string;
+      groupId?: string;
+      children?: TChildren;
+    },
+  ) {
     return {
       node: (node: HierarchyNode) => {
         if (!HierarchyNode.isStandard(node)) {
@@ -207,12 +190,7 @@ export namespace NodeValidators {
     };
   }
 
-  export function createForPropertyOtherValuesGroupingNode<TChildren extends ExpectedHierarchyDef[] | boolean>(props: {
-    label?: string;
-    autoExpand?: boolean;
-    extendedData?: { [key: string]: any };
-    children?: TChildren;
-  }) {
+  export function createForPropertyOtherValuesGroupingNode(props: BaseNodeExpectations) {
     return {
       node: (node: HierarchyNode) => {
         if (!HierarchyNode.isStandard(node)) {
@@ -227,16 +205,15 @@ export namespace NodeValidators {
     };
   }
 
-  export function createForPropertyValueRangeGroupingNode<TChildren extends ExpectedHierarchyDef[] | boolean>(props: {
-    label?: string;
-    propertyName?: string;
-    propertyClassName?: string;
-    fromValue?: number;
-    toValue?: number;
-    autoExpand?: boolean;
-    extendedData?: { [key: string]: any };
-    children?: TChildren;
-  }) {
+  export function createForPropertyValueRangeGroupingNode<TChildren extends ExpectedHierarchyDef[] | boolean>(
+    props: BaseNodeExpectations & {
+      propertyName?: string;
+      propertyClassName?: string;
+      fromValue?: number;
+      toValue?: number;
+      children?: TChildren;
+    },
+  ) {
     return {
       node: (node: HierarchyNode) => {
         if (!HierarchyNode.isStandard(node)) {
@@ -263,15 +240,14 @@ export namespace NodeValidators {
     };
   }
 
-  export function createForPropertyValueGroupingNode<TChildren extends ExpectedHierarchyDef[] | boolean>(props: {
-    label?: string;
-    propertyName?: string;
-    propertyClassName?: string;
-    formattedPropertyValue?: string;
-    autoExpand?: boolean;
-    extendedData?: { [key: string]: any };
-    children?: TChildren;
-  }) {
+  export function createForPropertyValueGroupingNode<TChildren extends ExpectedHierarchyDef[] | boolean>(
+    props: BaseNodeExpectations & {
+      propertyName?: string;
+      propertyClassName?: string;
+      formattedPropertyValue?: string;
+      children?: TChildren;
+    },
+  ) {
     return {
       node: (node: HierarchyNode) => {
         if (!HierarchyNode.isStandard(node)) {

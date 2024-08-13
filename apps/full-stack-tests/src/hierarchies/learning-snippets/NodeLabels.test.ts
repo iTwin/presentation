@@ -82,7 +82,7 @@ describe("Hierarchies", () => {
         // | 0x15       | B          | <NULL>     |
         // | 0x16       | <NULL>     | <NULL>     |
         //
-        expect(await collectHierarchy(createHierarchyProvider({ imodelAccess, hierarchyDefinition }))).to.deep.eq([
+        expect(await collectHierarchy(createHierarchyProvider({ imodelAccess, hierarchyDefinition }))).to.containSubset([
           {
             label: "A",
           },

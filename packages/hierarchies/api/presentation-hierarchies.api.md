@@ -25,11 +25,7 @@ interface BaseHierarchyNode {
     extendedData?: {
         [key: string]: any;
     };
-    filtering?: {
-        filterTarget?: FilterTarget;
-        hasFilterTargetAncestor?: boolean;
-        filteredChildrenIdentifierPaths?: HierarchyFilteringPath[];
-    };
+    filtering?: HierarchyNodeFilteringProps;
     label: string;
     parentKeys: HierarchyNodeKey[];
 }
@@ -180,9 +176,6 @@ interface ECSqlValueSelector {
 }
 
 // @beta (undocumented)
-type FilterTarget = boolean | FilterTargetGroupingNodeInfo;
-
-// @beta (undocumented)
 interface FilterTargetGroupingNodeInfo {
     key: GroupingNodeKey;
     parentKeysCount: number;
@@ -305,6 +298,17 @@ type HierarchyNodeAutoExpandProp = "single-child" | "always";
 interface HierarchyNodeBaseClassGroupingParams extends HierarchyNodeGroupingParamsBase {
     fullClassNames: string[];
 }
+
+// @beta (undocumented)
+type HierarchyNodeFilteringProps = {
+    hasFilterTargetAncestor?: boolean;
+    filteredChildrenIdentifierPaths?: HierarchyFilteringPath[];
+} & ({
+    isFilterTarget?: false;
+} | {
+    isFilterTarget: true;
+    autoExpandUntil?: FilterTargetGroupingNodeInfo;
+});
 
 // @beta
 interface HierarchyNodeGroupingParams {
