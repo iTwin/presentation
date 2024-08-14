@@ -50,11 +50,6 @@ describe("Hierarchies", () => {
         imodel = res.imodel;
         elementKeys = elements;
         elementIds = Object.entries(elements).reduce((acc, [name, instanceKey]) => ({ ...acc, [name]: instanceKey.id }), {} as { [name: string]: Id64String });
-
-        // Logger.initializeToConsole();
-        // Logger.setLevelDefault(LogLevel.Info);
-        // Logger.setLevel("Presentation.Hierarchies", LogLevel.Trace);
-        // setLogger(createLogger(Logger));
       });
 
       after(async () => {
