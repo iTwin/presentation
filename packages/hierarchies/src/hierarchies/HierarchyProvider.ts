@@ -146,7 +146,7 @@ interface HierarchyProviderLocalizedStrings {
 }
 
 /** @beta */
-interface HierarchyFilteringPathOptions {
+export interface HierarchyFilteringPathOptions {
   /**
    * This option specifies the way `autoExpand` flag should be assigned to nodes in the filtered hierarchy.
    * - If it's `false` or `undefined`, nodes have no 'autoExpand' flag.

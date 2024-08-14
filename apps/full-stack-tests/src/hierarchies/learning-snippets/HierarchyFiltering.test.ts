@@ -6,6 +6,7 @@
 
 import { expect } from "chai";
 import { insertPhysicalElement, insertPhysicalModelWithPartition, insertSpatialCategory } from "presentation-test-utilities";
+import { expand, filter, first, firstValueFrom, from } from "rxjs";
 import { assert, Id64String } from "@itwin/core-bentley";
 import { IModelConnection } from "@itwin/core-frontend";
 import { InstanceKey } from "@itwin/presentation-shared";
@@ -21,7 +22,6 @@ import { buildIModel } from "../../IModelUtils";
 import { initialize, terminate } from "../../IntegrationTests";
 import { createIModelAccess } from "../Utils";
 import { collectHierarchy } from "./Utils";
-import { expand, filter, first, firstValueFrom, from } from "rxjs";
 
 describe("Hierarchies", () => {
   describe("Learning snippets", () => {

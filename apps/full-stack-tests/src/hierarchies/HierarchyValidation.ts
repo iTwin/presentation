@@ -3,13 +3,13 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
+import { assert, expect } from "chai";
 import { collect } from "presentation-test-utilities";
 import { isDeepStrictEqual } from "util";
 import { Logger } from "@itwin/core-bentley";
 import { GroupingNodeKey, HierarchyNode, HierarchyProvider, NonGroupingHierarchyNode } from "@itwin/presentation-hierarchies";
 import { hasChildren } from "@itwin/presentation-hierarchies/lib/cjs/hierarchies/internal/Common";
 import { InstanceKey } from "@itwin/presentation-shared";
-import { assert, expect } from "chai";
 
 const loggingNamespace = `Presentation.HierarchyBuilder.HierarchyValidation`;
 
@@ -29,7 +29,9 @@ interface BaseNodeExpectations {
   autoExpand?: boolean;
   supportsFiltering?: boolean;
   isFilterTarget?: boolean;
-  autoExpandUntil?: { key: GroupingNodeKey; depth: number };
+  filterTargetOptions?: {
+    autoExpand?: { key: GroupingNodeKey; depth: number };
+  };
   extendedData?: { [key: string]: any };
   children?: ExpectedHierarchyDef[] | boolean;
 }
@@ -73,11 +75,11 @@ export namespace NodeValidators {
         )}, got ${optionalBooleanToString(node.filtering?.isFilterTarget)}`,
       );
     }
-    if (expectations.autoExpandUntil !== undefined) {
+    if (expectations.filterTargetOptions !== undefined) {
       assert(node.filtering?.isFilterTarget, `[${node.label}] Expected node to be a filter target`);
-      expect(node.filtering.autoExpandUntil).to.deep.eq(
-        expectations.autoExpandUntil,
-        `[${node.label}] Nodes's 'filtering.autoExpandUntil' flag property doesn't match the expectation.`,
+      expect(node.filtering.filterTargetOptions).to.deep.eq(
+        expectations.filterTargetOptions,
+        `[${node.label}] Nodes's 'filtering.filterTargetOptions' flag property doesn't match the expectation.`,
       );
     }
     if (expectations.extendedData !== undefined && !isDeepStrictEqual(node.extendedData, expectations.extendedData)) {

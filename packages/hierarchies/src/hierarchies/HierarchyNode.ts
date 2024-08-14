@@ -16,7 +16,7 @@ import {
   PropertyValueRangeGroupingNodeKey,
   StandardHierarchyNodeKey,
 } from "./HierarchyNodeKey";
-import { HierarchyFilteringPath } from "./HierarchyProvider";
+import { HierarchyFilteringPath, HierarchyFilteringPathOptions } from "./HierarchyProvider";
 
 /** @beta */
 export interface FilterTargetGroupingNodeInfo {
@@ -41,12 +41,8 @@ export type HierarchyNodeFilteringProps = {
   | {
       /** Whether or not this node is a filter target. */
       isFilterTarget: true;
-      /**
-       * Generally, when a hierarchy is filtered, it's auto-expanded up to filter targets or not
-       * expanded at all. This attribute may optionally be set to an instance node's grouping node
-       * identifier to limit auto-expansion only up to that grouping node.
-       */
-      autoExpandUntil?: FilterTargetGroupingNodeInfo;
+      /** Options that were used to filter the node. */
+      filterTargetOptions?: HierarchyFilteringPathOptions;
     }
 );
 

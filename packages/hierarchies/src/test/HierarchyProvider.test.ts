@@ -22,8 +22,9 @@ import { GroupingNodeKey } from "../hierarchies/HierarchyNodeKey";
 import { createHierarchyProvider } from "../hierarchies/HierarchyProvider";
 import {
   ECSQL_COLUMN_NAME_FilteredChildrenPaths,
-  ECSQL_COLUMN_NAME_FilterTarget,
+  ECSQL_COLUMN_NAME_FilterTargetOptions,
   ECSQL_COLUMN_NAME_HasFilterTargetAncestor,
+  ECSQL_COLUMN_NAME_IsFilterTarget,
 } from "../hierarchies/internal/FilteringHierarchyDefinition";
 import { RowDef } from "../hierarchies/internal/TreeNodesReader";
 import { LimitingECSqlQueryExecutor } from "../hierarchies/LimitingECSqlQueryExecutor";
@@ -588,8 +589,8 @@ describe("createHierarchyProvider", () => {
             trimWhitespace(query.ctes[0]) ===
               trimWhitespace(
                 `
-                FilteringInfo(ECInstanceId, FilterTarget, FilteredChildrenPaths) AS (
-                  VALUES (0x123, 'false', '[[{"className":"c.d","id":"0x456"}]]')
+                FilteringInfo(ECInstanceId, IsFilterTarget, FilterTargetOptions, FilteredChildrenPaths) AS (
+                  VALUES (0x123, 0, CAST(NULL AS TEXT), '[[{"className":"c.d","id":"0x456"}]]')
                 )
                 `,
               ) &&
@@ -598,7 +599,8 @@ describe("createHierarchyProvider", () => {
                 `
                 SELECT
                     [q].*,
-                    [f].[FilterTarget] AS [${ECSQL_COLUMN_NAME_FilterTarget}],
+                    [f].[IsFilterTarget] AS [${ECSQL_COLUMN_NAME_IsFilterTarget}],
+                    [f].[FilterTargetOptions] AS [${ECSQL_COLUMN_NAME_FilterTargetOptions}],
                     0 AS [${ECSQL_COLUMN_NAME_HasFilterTargetAncestor}],
                     [f].[FilteredChildrenPaths] AS [${ECSQL_COLUMN_NAME_FilteredChildrenPaths}]
                   FROM (QUERY) [q]

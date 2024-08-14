@@ -7,13 +7,13 @@ import { insertPhysicalElement, insertPhysicalModelWithPartition, insertSpatialC
 import { Subject } from "@itwin/core-backend";
 import { Id64String } from "@itwin/core-bentley";
 import { IModel } from "@itwin/core-common";
+import { IModelConnection } from "@itwin/core-frontend";
 import { createNodesQueryClauseFactory, HierarchyDefinition, HierarchyNode } from "@itwin/presentation-hierarchies";
 import { ECSqlBinding, InstanceKey } from "@itwin/presentation-shared";
 import { buildIModel, importSchema, withECDb } from "../IModelUtils";
 import { initialize, terminate } from "../IntegrationTests";
 import { NodeValidators, validateHierarchy } from "./HierarchyValidation";
 import { createIModelAccess, createProvider } from "./Utils";
-import { IModelConnection } from "@itwin/core-frontend";
 
 describe("Hierarchies", () => {
   describe("Hierarchy filtering", () => {
@@ -856,7 +856,7 @@ describe("Hierarchies", () => {
             imodel,
             hierarchy,
             filteredNodePaths: [
-              [{ key: rootNodeKey }, keys.elements[0]],
+              { path: [{ key: rootNodeKey }, keys.elements[0]], options: { autoExpand: true } },
               ...keys.elements.map((elementKey) => ({
                 path: [{ key: rootNodeKey }, elementKey],
                 options: {
@@ -882,6 +882,7 @@ describe("Hierarchies", () => {
                       isFilterTarget: true,
                     }),
                     NodeValidators.createForInstanceNode({
+                      isFilterTarget: true,
                       instanceKeys: [keys.elements[1]],
                     }),
                   ],
@@ -1000,7 +1001,7 @@ describe("Hierarchies", () => {
                               NodeValidators.createForInstanceNode({
                                 instanceKeys: [elementKey],
                                 isFilterTarget: !!autoExpandOptions,
-                                autoExpandUntil: autoExpandOptions,
+                                filterTargetOptions: { autoExpand: autoExpandOptions },
                               }),
                             ],
                           }),
@@ -1050,7 +1051,7 @@ describe("Hierarchies", () => {
                               NodeValidators.createForInstanceNode({
                                 instanceKeys: [elementKey],
                                 isFilterTarget: true,
-                                autoExpandUntil: autoExpandOptions,
+                                filterTargetOptions: { autoExpand: autoExpandOptions },
                               }),
                             ],
                           }),
@@ -1100,7 +1101,7 @@ describe("Hierarchies", () => {
                               NodeValidators.createForInstanceNode({
                                 instanceKeys: [elementKey],
                                 isFilterTarget: true,
-                                autoExpandUntil: autoExpandOptions,
+                                filterTargetOptions: { autoExpand: autoExpandOptions },
                               }),
                             ],
                           }),
