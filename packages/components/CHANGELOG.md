@@ -1,5 +1,11 @@
 # Change Log - @itwin/presentation-components
 
+## 5.4.2
+
+### Patch Changes
+
+- [#664](https://github.com/iTwin/presentation/pull/664): Pass nested content value label to property records.
+
 ## 5.4.1
 
 ### Patch Changes
