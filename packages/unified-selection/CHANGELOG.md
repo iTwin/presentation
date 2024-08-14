@@ -1,5 +1,25 @@
 # @itwin/unified-selection
 
+## 0.5.0
+
+### Minor Changes
+
+- [#693](https://github.com/iTwin/presentation/pull/693): Selection events API cleanup:
+
+  - Remove the second `StorageSelectionChangesListener` argument, which represented the `SelectionStorage` where the selection change happened. As a replacement, added it as a property to `StorageSelectionChangeEventArgs`, which is the first and now the only argument of the listener.
+  - Remove `SelectionChangeEvent` interface in favor of `Event<StorageSelectionChangesListener>`.
+
+### Patch Changes
+
+- [#693](https://github.com/iTwin/presentation/pull/693): API documentation improvements:
+
+  - Add warnings to interfaces which are not supposed to be extended or implemented by consumers. Objects of such interfaces are only supposed to be created by functions in this package. As such, adding required members to these interfaces is not considered a breaking change.
+  - Changed `string` to `Id64String` where appropriate, to make it clear that the string is expected to be a valid Id64 string. Note that this is not a breaking change, as `Id64String` is just a type alias for `string`.
+
+- [#695](https://github.com/iTwin/presentation/pull/695): Bump `iTwin.js` core package dependency versions to `4.8.0`
+- Updated dependencies:
+  - @itwin/presentation-shared@0.4.1
+
 ## 0.4.6
 
 ### Patch Changes

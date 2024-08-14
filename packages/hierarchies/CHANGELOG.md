@@ -1,5 +1,36 @@
 # @itwin/presentation-hierarchies
 
+## 0.5.0
+
+### Minor Changes
+
+- [#688](https://github.com/iTwin/presentation/pull/688): Add ability to prevent auto-expanding of a grouping node when filtering hierarchies:
+
+  ```ts
+  const hierarchyProvider = createHierarchyProvider({
+    imodelAccess,
+    hierarchyDefinition,
+    filtering: {
+      paths: [
+        {
+          // Path to the element "C"
+          path: [elementKeys.a, elementKeys.b, elementKeys.c],
+          // Supply grouping node attributes with the path to the "C" element.
+          options: { autoExpand: { key: groupingNode.key, depth: groupingNode.parentKeys.length } },
+        },
+      ],
+    },
+  });
+  ```
+
+- [#688](https://github.com/iTwin/presentation/pull/688): Add hierarchy node key types to the barrel exports.
+
+### Patch Changes
+
+- [#695](https://github.com/iTwin/presentation/pull/695): Bump `iTwin.js` core package dependency versions to `4.8.0`
+- Updated dependencies:
+  - @itwin/presentation-shared@0.4.1
+
 ## 0.4.0
 
 ### Minor Changes
