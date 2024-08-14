@@ -18,6 +18,7 @@ import {
   createTestPropertiesContentField,
   createTestSimpleContentField,
 } from "../_helpers/Content";
+import { createTestLabelDefinition } from "../_helpers/LabelDefinition";
 
 class TestPropertyRecordsBuilder extends PropertyRecordsBuilder {
   public entries: Array<PropertyRecord> = [];
@@ -317,5 +318,78 @@ describe("PropertyRecordsBuilder", () => {
     traverseContentItem(builder, descriptor, item);
     expect(builder.entries.length).to.eq(1);
     expect(Object.keys((builder.entries[0].value as StructValue).members)).to.eql(["member1", "member2", "member3"]);
+  });
+
+  it("passes nested content value labels to property records", () => {
+    const labelDefinition = createTestLabelDefinition();
+    const category = createTestCategoryDescription();
+    const descriptor = createTestContentDescriptor({
+      fields: [
+        createTestNestedContentField({
+          name: "parent",
+          category,
+          autoExpand: true,
+          nestedFields: [createTestSimpleContentField({ name: "child", category })],
+        }),
+      ],
+    });
+    const item = createTestContentItem({
+      values: {
+        parent: [
+          {
+            primaryKeys: [createTestECInstanceKey()],
+            values: {
+              child: "value",
+            },
+            displayValues: {
+              child: "display value",
+            },
+            mergedFieldNames: [],
+            labelDefinition,
+          },
+        ],
+      },
+      displayValues: {},
+    });
+    traverseContentItem(builder, descriptor, item);
+    expect(builder.entries.length).to.eq(1);
+    expect((builder.entries[0].value as ArrayValue).items[0].description).to.eq(labelDefinition.displayValue);
+  });
+
+  it("replaces unspecified nested content value label with `undefined`", () => {
+    const LABEL_NOT_SPECIFIED = "@Presentation:label.notSpecified@";
+    const labelDefinition = createTestLabelDefinition({ displayValue: LABEL_NOT_SPECIFIED });
+    const category = createTestCategoryDescription();
+    const descriptor = createTestContentDescriptor({
+      fields: [
+        createTestNestedContentField({
+          name: "parent",
+          category,
+          autoExpand: true,
+          nestedFields: [createTestSimpleContentField({ name: "child", category })],
+        }),
+      ],
+    });
+    const item = createTestContentItem({
+      values: {
+        parent: [
+          {
+            primaryKeys: [createTestECInstanceKey()],
+            values: {
+              child: "value",
+            },
+            displayValues: {
+              child: "display value",
+            },
+            mergedFieldNames: [],
+            labelDefinition,
+          },
+        ],
+      },
+      displayValues: {},
+    });
+    traverseContentItem(builder, descriptor, item);
+    expect(builder.entries.length).to.eq(1);
+    expect((builder.entries[0].value as ArrayValue).items[0].description).to.be.undefined;
   });
 });
