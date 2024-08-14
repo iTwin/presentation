@@ -29,7 +29,7 @@ interface BaseNodeExpectations {
   autoExpand?: boolean;
   supportsFiltering?: boolean;
   isFilterTarget?: boolean;
-  autoExpandUntil?: { key: GroupingNodeKey; parentKeysCount: number };
+  autoExpandUntil?: { key: GroupingNodeKey; depth: number };
   extendedData?: { [key: string]: any };
   children?: ExpectedHierarchyDef[] | boolean;
 }

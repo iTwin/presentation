@@ -66,15 +66,16 @@ export class FilteringHierarchyDefinition implements HierarchyDefinition {
         continue;
       }
 
-      // Expand grouping node if it contains filter targets.
       if (child.filtering.isFilterTarget) {
+        // If child is a filter target and is has no `autoExpandUntil` flag, then it's always to be expanded.
         if (!child.filtering.autoExpandUntil) {
           return true;
         }
 
-        // Expand grouping node if a grouping node below it is a filter target.
+        // If grouping node's child has `autoExpandUntil` flag,
+        // auto-expand the grouping node only if it's depth is lower than that of the grouping node in associated with the target.
         const nodeDepth = node.parentKeys.length;
-        const filterTargetDepth = child.filtering.autoExpandUntil.parentKeysCount;
+        const filterTargetDepth = child.filtering.autoExpandUntil.depth;
         if (nodeDepth < filterTargetDepth) {
           return true;
         }
@@ -256,8 +257,8 @@ async function matchFilters<
         if (typeof options?.autoExpand === "object") {
           // overwrite target if it is deeper in the hierarchy
           if (typeof entry.filterTarget === "object") {
-            const previousDepth = entry.filterTarget.parentKeysCount;
-            const newDepth = options.autoExpand.parentKeysCount;
+            const previousDepth = entry.filterTarget.depth;
+            const newDepth = options.autoExpand.depth;
             newDepth > previousDepth && (entry.filterTarget = options.autoExpand);
           } else {
             entry.filterTarget = options.autoExpand;

@@ -694,7 +694,7 @@ describe("Hierarchies", () => {
               options: {
                 autoExpand: {
                   key: { type: "class-grouping", className: keys.elements[0].className },
-                  parentKeysCount: 1,
+                  depth: 1,
                 },
               },
             })),
@@ -765,7 +765,7 @@ describe("Hierarchies", () => {
                 options: {
                   autoExpand: {
                     key: { type: "class-grouping", className: keys.childElement.className },
-                    parentKeysCount: 5, // root node + (grouping node and instance node for root and middle elements),
+                    depth: 5, // root node + (grouping node and instance node for root and middle elements),
                   },
                 },
               },
@@ -862,7 +862,7 @@ describe("Hierarchies", () => {
                 options: {
                   autoExpand: {
                     key: { type: "class-grouping" as const, className: elementKey.className },
-                    parentKeysCount: 1,
+                    depth: 1,
                   },
                 },
               })),
@@ -967,7 +967,7 @@ describe("Hierarchies", () => {
         it("sets auto-expand flag until class grouping node", async () => {
           const autoExpandOptions = {
             key: { type: "class-grouping", className: circleClassName },
-            parentKeysCount: 1,
+            depth: 1,
           } as const;
           await validateHierarchy({
             provider: createProvider({
@@ -1017,7 +1017,7 @@ describe("Hierarchies", () => {
         it("sets auto-expand flag until property grouping node", async () => {
           const autoExpandOptions = {
             key: { type: "property-grouping:value", propertyClassName: circleClassName, propertyName: "Color", formattedPropertyValue: "Red" },
-            parentKeysCount: 2,
+            depth: 2,
           } as const;
           await validateHierarchy({
             provider: createProvider({
@@ -1067,7 +1067,7 @@ describe("Hierarchies", () => {
         it("sets auto-expand flag until label grouping node", async () => {
           const autoExpandOptions = {
             key: { type: "label-grouping", label: "Circle" },
-            parentKeysCount: 3,
+            depth: 3,
           } as const;
           await validateHierarchy({
             provider: createProvider({

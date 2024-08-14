@@ -381,7 +381,7 @@ const hierarchyProvider = createHierarchyProvider({
         // Path to the element "C"
         path: [elementKeys.a, elementKeys.b, elementKeys.c],
         // Supply grouping node attributes with the path to the "C" element.
-        options: { autoExpand: { key: groupingNode.key, parentKeysCount: groupingNode.parentKeys.length } },
+        options: { autoExpand: { key: groupingNode.key, depth: groupingNode.parentKeys.length } },
       },
     ],
   },

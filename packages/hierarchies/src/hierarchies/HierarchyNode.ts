@@ -23,8 +23,11 @@ export interface FilterTargetGroupingNodeInfo {
   /** Key of the grouping node. */
   key: GroupingNodeKey;
 
-  /** Count of node's parent keys. */
-  parentKeysCount: number;
+  /**
+   * Depth of the grouping node in the hierarchy.
+   * Generally, it can be retrieved from `parentKeys.length`.
+   */
+  depth: number;
 }
 
 /** @beta */
@@ -39,7 +42,7 @@ export type HierarchyNodeFilteringProps = {
       /** Whether or not this node is a filter target. */
       isFilterTarget: true;
       /**
-       * Generally, when a hierarchy is filtered, it's auto-expanded up to filter targets or not 
+       * Generally, when a hierarchy is filtered, it's auto-expanded up to filter targets or not
        * expanded at all. This attribute may optionally be set to an instance node's grouping node
        * identifier to limit auto-expansion only up to that grouping node.
        */

@@ -326,7 +326,7 @@ describe("FilteringHierarchyDefinition", () => {
               ...createTestProcessedInstanceNode(),
               filtering: {
                 isFilterTarget: true,
-                autoExpandUntil: { key: groupingNode.key, parentKeysCount: 0 },
+                autoExpandUntil: { key: groupingNode.key, depth: 0 },
                 filteredChildrenIdentifierPaths: [],
               },
             },
@@ -334,7 +334,7 @@ describe("FilteringHierarchyDefinition", () => {
               ...createTestProcessedInstanceNode(),
               filtering: {
                 isFilterTarget: true,
-                autoExpandUntil: { key: groupingNode.key, parentKeysCount: 0 },
+                autoExpandUntil: { key: groupingNode.key, depth: 0 },
                 filteredChildrenIdentifierPaths: [],
               },
             },
@@ -355,7 +355,7 @@ describe("FilteringHierarchyDefinition", () => {
               ...createTestProcessedInstanceNode(),
               filtering: {
                 isFilterTarget: true,
-                autoExpandUntil: { key: groupingNode.key, parentKeysCount: 0 },
+                autoExpandUntil: { key: groupingNode.key, depth: 0 },
                 filteredChildrenIdentifierPaths: [],
               },
             },
@@ -363,7 +363,7 @@ describe("FilteringHierarchyDefinition", () => {
               ...createTestProcessedInstanceNode(),
               filtering: {
                 isFilterTarget: true,
-                autoExpandUntil: { key: otherGroupingNode.key, parentKeysCount: 0 },
+                autoExpandUntil: { key: otherGroupingNode.key, depth: 0 },
                 filteredChildrenIdentifierPaths: [],
               },
             },
@@ -386,7 +386,7 @@ describe("FilteringHierarchyDefinition", () => {
                 isFilterTarget: true,
                 autoExpandUntil: {
                   key: groupingNode.key,
-                  parentKeysCount: 2,
+                  depth: 2,
                 },
               },
             },
@@ -408,7 +408,7 @@ describe("FilteringHierarchyDefinition", () => {
                 isFilterTarget: true,
                 autoExpandUntil: {
                   key: { type: "class-grouping", className: this.test!.title },
-                  parentKeysCount: 2,
+                  depth: 2,
                 },
               },
             },
@@ -430,7 +430,7 @@ describe("FilteringHierarchyDefinition", () => {
                 isFilterTarget: true,
                 autoExpandUntil: {
                   key: createGroupingNode().key,
-                  parentKeysCount: 1,
+                  depth: 1,
                 },
               },
             },
@@ -456,7 +456,7 @@ describe("FilteringHierarchyDefinition", () => {
                     type: "class-grouping",
                     className: "foo",
                   },
-                  parentKeysCount: 1,
+                  depth: 1,
                 },
               },
             },
@@ -733,7 +733,7 @@ describe("FilteringHierarchyDefinition", () => {
         const sourceFactory = {
           defineHierarchyLevel: async () => [sourceDefinition],
         } as unknown as HierarchyDefinition;
-        const groupingNode: FilterTargetGroupingNodeInfo = { key: { type: "class-grouping", className: "class" }, parentKeysCount: 0 };
+        const groupingNode: FilterTargetGroupingNodeInfo = { key: { type: "class-grouping", className: "class" }, depth: 0 };
         const filteringFactory = createFilteringHierarchyLevelsFactory({
           classHierarchy: classHierarchyInspector,
           sourceFactory,
@@ -775,8 +775,8 @@ describe("FilteringHierarchyDefinition", () => {
         const sourceFactory = {
           defineHierarchyLevel: async () => [sourceDefinition],
         } as unknown as HierarchyDefinition;
-        const groupingNode1: FilterTargetGroupingNodeInfo = { key: { type: "class-grouping", className: "class1" }, parentKeysCount: 0 };
-        const groupingNode2: FilterTargetGroupingNodeInfo = { key: { type: "class-grouping", className: "class2" }, parentKeysCount: 0 };
+        const groupingNode1: FilterTargetGroupingNodeInfo = { key: { type: "class-grouping", className: "class1" }, depth: 0 };
+        const groupingNode2: FilterTargetGroupingNodeInfo = { key: { type: "class-grouping", className: "class2" }, depth: 0 };
         const filteringFactory = createFilteringHierarchyLevelsFactory({
           classHierarchy: classHierarchyInspector,
           sourceFactory,
@@ -810,9 +810,9 @@ describe("FilteringHierarchyDefinition", () => {
         const sourceFactory = {
           defineHierarchyLevel: async () => [sourceDefinition],
         } as unknown as HierarchyDefinition;
-        const groupingNode1: FilterTargetGroupingNodeInfo = { key: { type: "class-grouping", className: "class1" }, parentKeysCount: 0 };
-        const groupingNode2: FilterTargetGroupingNodeInfo = { key: { type: "class-grouping", className: "class2" }, parentKeysCount: 3 };
-        const groupingNode3: FilterTargetGroupingNodeInfo = { key: { type: "class-grouping", className: "class3" }, parentKeysCount: 2 };
+        const groupingNode1: FilterTargetGroupingNodeInfo = { key: { type: "class-grouping", className: "class1" }, depth: 0 };
+        const groupingNode2: FilterTargetGroupingNodeInfo = { key: { type: "class-grouping", className: "class2" }, depth: 3 };
+        const groupingNode3: FilterTargetGroupingNodeInfo = { key: { type: "class-grouping", className: "class3" }, depth: 2 };
         const filteringFactory = createFilteringHierarchyLevelsFactory({
           classHierarchy: classHierarchyInspector,
           sourceFactory,
@@ -1178,7 +1178,7 @@ describe("FilteringHierarchyDefinition", () => {
         const sourceFactory = {
           defineHierarchyLevel: async () => [sourceDefinition],
         } as unknown as HierarchyDefinition;
-        const groupingNode: FilterTargetGroupingNodeInfo = { key: { type: "class-grouping", className: "class" }, parentKeysCount: 0 };
+        const groupingNode: FilterTargetGroupingNodeInfo = { key: { type: "class-grouping", className: "class" }, depth: 0 };
         const filteringFactory = createFilteringHierarchyLevelsFactory({
           classHierarchy: classHierarchyInspector,
           sourceFactory,
@@ -1231,8 +1231,8 @@ describe("FilteringHierarchyDefinition", () => {
           className: "FilterPathClassName0",
           is: async (other) => other === queryClass.fullName,
         });
-        const groupingNode1: FilterTargetGroupingNodeInfo = { key: { type: "class-grouping", className: "class1" }, parentKeysCount: 0 };
-        const groupingNode2: FilterTargetGroupingNodeInfo = { key: { type: "class-grouping", className: "class2" }, parentKeysCount: 0 };
+        const groupingNode1: FilterTargetGroupingNodeInfo = { key: { type: "class-grouping", className: "class1" }, depth: 0 };
+        const groupingNode2: FilterTargetGroupingNodeInfo = { key: { type: "class-grouping", className: "class2" }, depth: 0 };
         const sourceDefinition: InstanceNodesQueryDefinition = {
           fullClassName: queryClass.fullName,
           query: {
@@ -1284,9 +1284,9 @@ describe("FilteringHierarchyDefinition", () => {
           className: "FilterPathClassName0",
           is: async (other) => other === queryClass.fullName,
         });
-        const groupingNode1: FilterTargetGroupingNodeInfo = { key: { type: "class-grouping", className: "class1" }, parentKeysCount: 1 };
-        const groupingNode2: FilterTargetGroupingNodeInfo = { key: { type: "class-grouping", className: "class2" }, parentKeysCount: 3 };
-        const groupingNode3: FilterTargetGroupingNodeInfo = { key: { type: "class-grouping", className: "class2" }, parentKeysCount: 0 };
+        const groupingNode1: FilterTargetGroupingNodeInfo = { key: { type: "class-grouping", className: "class1" }, depth: 1 };
+        const groupingNode2: FilterTargetGroupingNodeInfo = { key: { type: "class-grouping", className: "class2" }, depth: 3 };
+        const groupingNode3: FilterTargetGroupingNodeInfo = { key: { type: "class-grouping", className: "class2" }, depth: 0 };
         const sourceDefinition: InstanceNodesQueryDefinition = {
           fullClassName: queryClass.fullName,
           query: {
