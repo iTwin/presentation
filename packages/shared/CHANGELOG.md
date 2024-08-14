@@ -1,5 +1,11 @@
 # @itwin/presentation-shared
 
+## 0.4.1
+
+### Patch Changes
+
+- [#695](https://github.com/iTwin/presentation/pull/695): Bump `iTwin.js` core package dependency versions to `4.8.0`
+
 ## 0.4.0
 
 ### Minor Changes
