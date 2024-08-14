@@ -297,7 +297,7 @@ describe("Hierarchies", () => {
         // __PUBLISH_EXTRACT_END__
       });
 
-      it("sets auto-expand flag to parent nodes of the filter target until a given groupingNode", async function () {
+      it("sets auto-expand flag to parent nodes of the filter target until a given grouping node", async function () {
         const imodelAccess = createIModelAccess(imodel);
         const queryClauseFactory = createNodesQueryClauseFactory({ imodelAccess });
         // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.HierarchyFiltering.AutoExpandUntilGroupingNode.HierarchyDef
