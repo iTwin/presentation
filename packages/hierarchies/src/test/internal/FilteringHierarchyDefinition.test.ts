@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { expect } from "chai";
+import { assert, expect } from "chai";
 import sinon from "sinon";
 import { ECClassHierarchyInspector, trimWhitespace } from "@itwin/presentation-shared";
 import {
@@ -149,6 +149,28 @@ describe("FilteringHierarchyDefinition", () => {
       };
       const node = filteringFactory.parseNode(row);
       expect(node.autoExpand).to.be.true;
+    });
+
+    it("sets `filtering.isFilterTarget` attribute from FilterTarget row", () => {
+      const filteringFactory = createFilteringHierarchyLevelsFactory();
+      const row = {
+        [NodeSelectClauseColumnNames.FullClassName]: "",
+        [ECSQL_COLUMN_NAME_FilterTarget]: "true",
+      };
+      const node = filteringFactory.parseNode(row);
+      expect(node.filtering?.isFilterTarget).to.be.true;
+    });
+
+    it("sets `filtering.autoExpandUntil` attribute from FilterTarget row", () => {
+      const filteringFactory = createFilteringHierarchyLevelsFactory();
+      const groupingNodeInfo: FilterTargetGroupingNodeInfo = { key: { type: "class-grouping", className: "" }, depth: 0 };
+      const row = {
+        [NodeSelectClauseColumnNames.FullClassName]: "",
+        [ECSQL_COLUMN_NAME_FilterTarget]: JSON.stringify(groupingNodeInfo),
+      };
+      const node = filteringFactory.parseNode(row);
+      assert(node.filtering?.isFilterTarget);
+      expect(node.filtering.autoExpandUntil).to.deep.eq(groupingNodeInfo);
     });
   });
 
