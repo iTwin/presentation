@@ -311,12 +311,12 @@ export async function validateHierarchy(props: { provider: HierarchyProvider; pa
 }
 
 export function validateHierarchyLevel(props: { nodes: HierarchyNode[]; expect: Array<Omit<ExpectedHierarchyDef, "children"> & { children?: boolean }> }) {
-  const { nodes, expect } = props;
-  if (nodes.length !== expect.length) {
-    throw new Error(`Expected ${expect.length} nodes, got ${nodes.length}`);
+  const { nodes, expect: expectations } = props;
+  if (props.nodes.length !== props.expect.length) {
+    throw new Error(`Expected ${expectations.length} nodes, got ${nodes.length}`);
   }
   for (let i = 0; i < nodes.length; ++i) {
-    const expectation = expect[i];
+    const expectation = expectations[i];
     expectation.node(nodes[i]);
   }
 }
