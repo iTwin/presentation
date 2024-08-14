@@ -119,7 +119,7 @@ const hierarchyProvider = createHierarchyProvider({
 });
 
 // Returns the node with formatted and concatenated label:
-expect(await collectHierarchy(hierarchyProvider)).to.deep.eq([{ label: "Example | 123 | (1.00, 2.00)" }]);
+expect(await collectHierarchy(hierarchyProvider)).to.containSubset([{ label: "Example | 123 | (1.00, 2.00)" }]);
 ```
 
 <!-- END EXTRACTION -->
@@ -174,7 +174,7 @@ const hierarchyProvider = createHierarchyProvider({
 });
 
 // All returned nodes have their labels set in format "{CodeValue} [{ECInstanceId}]":
-expect(await collectHierarchy(hierarchyProvider)).to.deep.eq([{ label: "Example category [0x11]" }]);
+expect(await collectHierarchy(hierarchyProvider)).to.containSubset([{ label: "Example category [0x11]" }]);
 ```
 
 <!-- END EXTRACTION -->
@@ -228,7 +228,7 @@ Finally, in case 3, the grouping node's label is formatted automatically based o
   // The iModel has two elements of `myPhysicalObjectClassName` type, whose `DoubleProperty` values
   // are `123.450` and `123.454`. After passing through formatter, they both become equal to `123.45`,
   // so we get one property grouping node for the two nodes:
-  expect(await collectHierarchy(hierarchyProvider)).to.deep.eq([
+  expect(await collectHierarchy(hierarchyProvider)).to.containSubset([
     {
       label: "123.45",
       children: [{ label: "Example element 1" }, { label: "Example element 2" }],

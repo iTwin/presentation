@@ -24,10 +24,10 @@ A -> E
 The end result would be:
 
 ```txt
-+ A             (auto-expanded)
-+--+ B          (auto-expanded)
++ A
++--+ B
 |  +--+ C
-+--+ E          (collapsed)
++--+ E
 |  +--+ F
 ```
 
@@ -43,7 +43,7 @@ For example, let's say we have an iModel described at the top of this page, wher
 <!-- BEGIN EXTRACTION -->
 
 ```ts
-import { createNodesQueryClauseFactory, HierarchyDefinition, HierarchyNode } from "@itwin/presentation-hierarchies";
+import { createNodesQueryClauseFactory, GroupingHierarchyNode, HierarchyDefinition, HierarchyNode } from "@itwin/presentation-hierarchies";
 import { ECSqlBinding } from "@itwin/presentation-shared";
 
 function createHierarchyDefinition(imodelAccess: IModelAccess): HierarchyDefinition {
@@ -143,7 +143,7 @@ The second step would be to create the node identifier paths. Let's consider two
     filtering: { paths: filterPaths },
   });
   // Collect the hierarchy & confirm we get what we expect - a hierarchy from root element "A" to target element "F"
-  expect(await collectHierarchy(hierarchyProvider)).to.deep.eq([
+  expect(await collectHierarchy(hierarchyProvider)).to.containSubset([
     {
       label: "A",
       children: [
@@ -216,7 +216,7 @@ The second step would be to create the node identifier paths. Let's consider two
   // Collect the hierarchy & confirm we get what we expect - a hierarchy from root element "A" to target elements "C" and "E".
   // Note that "E" has a child "F", even though it's not a filter target. This is because subtrees under filter target nodes
   // (in this case - "E") are returned fully.
-  expect(await collectHierarchy(hierarchyProvider)).to.deep.eq([
+  expect(await collectHierarchy(hierarchyProvider)).to.containSubset([
     {
       label: "A",
       children: [
@@ -236,3 +236,197 @@ The second step would be to create the node identifier paths. Let's consider two
   <!-- END EXTRACTION -->
 
 The above examples use a recursive CTE to create paths from target element to the root of the hierarchy, but that may not be the most efficient way to do it. In some situations, hierarchy definitions may have some cache that lets it quickly find the path from a node to the root without running a query at all.
+
+## Handling automatic expansion of nodes
+
+Imagine a case where we have this hierarchy:
+
+```txt
++ A
++--+ B
+|  +--+ C
+|     +--+ (...100 nodes)
++--+ ...
+```
+
+Let's say, we want the hierarchy to contain only the nodes with "C" label.
+In this case it may be useful to display to the user, where exactly "C" node is located without showing all of its 100 children.
+
+This is possible to do by providing an additional `autoExpand` option to the filter paths.
+All nodes in the filtered hierarchy up to "C" will have `autoExpand` flag on, so when rendering the hierarchy, it's clear when to stop loading the child nodes:
+
+```txt
++ A              (auto-expanded)
++--+ B           (auto-expanded)
+|  +--+ C        (collapsed)
+```
+
+The following code snippet shows, how to use `autoExpand` flag:
+
+<!-- [[include: [Presentation.Hierarchies.HierarchyFiltering.FilteringImports, Presentation.Hierarchies.HierarchyFiltering.AutoExpand], ts]] -->
+<!-- BEGIN EXTRACTION -->
+
+```ts
+import { createHierarchyProvider, HierarchyNodeIdentifiersPath } from "@itwin/presentation-hierarchies";
+import { ECSql, ECSqlQueryDef } from "@itwin/presentation-shared";
+
+// Construct a hierarchy provider for the filtered hierarchy
+const hierarchyProvider = createHierarchyProvider({
+  imodelAccess,
+  hierarchyDefinition: createHierarchyDefinition(imodelAccess),
+  filtering: {
+    paths: [
+      {
+        // Path to the element "C"
+        path: [elementKeys.a, elementKeys.b, elementKeys.c],
+        // Supply `autoExpand` flag with the path to the "C" element.
+        options: { autoExpand: true },
+      },
+    ],
+  },
+});
+
+// Collect the hierarchy & confirm we get what we expect - a hierarchy from root element "A" to target element "C"
+// Note that all nodes except C have `autoExpand` flag.
+expect(await collectHierarchy(hierarchyProvider)).to.containSubset([
+  {
+    label: "A",
+    autoExpand: true,
+    children: [
+      {
+        label: "B",
+        autoExpand: true,
+        children: [{ label: "C" }],
+      },
+    ],
+  },
+]);
+```
+
+<!-- END EXTRACTION -->
+
+Additionally, hierarchies may contain grouping nodes.
+Grouping nodes can be displayed to the user as any other nodes, however they do not represent actual instances, so filtering cannot be applied to them.
+Nevertheless, it's possible to "target" grouping node in the hierarchy by filtering the hierarchy by node's grouped instance keys.
+However in some cases it may be useful to leave this grouping node collapsed in the resulting hierarchy.
+
+For this purpose, there's an option to limit auto-expansion of nodes to a given grouping node that is expected to be in the resulting hierarchy.
+In order to do that, there has to be provided a minimal set of information about the grouping node: node's key and depth in the hierarchy, which can be determined from the `parentKeys` attribute.
+
+The following code snippet shows how to limit hierarchy auto-expansion to a given grouping node:
+
+<!-- [[include: [Presentation.Hierarchies.HierarchyFiltering.FilteringImports, Presentation.Hierarchies.HierarchyFiltering.AutoExpandUntilGroupingNode.HierarchyDef, Presentation.Hierarchies.HierarchyFiltering.AutoExpandUntilGroupingNode.Validation], ts]] -->
+<!-- BEGIN EXTRACTION -->
+
+```ts
+import { createHierarchyProvider, HierarchyNodeIdentifiersPath } from "@itwin/presentation-hierarchies";
+import { ECSql, ECSqlQueryDef } from "@itwin/presentation-shared";
+
+// Define a hierarchy such that all elements except root are grouped by label.
+const hierarchyDefinition: HierarchyDefinition = {
+  defineHierarchyLevel: async ({ parentNode }) => {
+    if (!parentNode) {
+      return [
+        {
+          fullClassName: "BisCore.PhysicalElement",
+          query: {
+            ecsql: `
+              SELECT ${await queryClauseFactory.createSelectClause({
+                ecClassId: { selector: "this.ECClassId" },
+                ecInstanceId: { selector: "this.ECInstanceId" },
+                nodeLabel: { selector: "this.UserLabel" },
+              })}
+              FROM BisCore.PhysicalElement this
+              WHERE this.Parent IS NULL
+            `,
+          },
+        },
+      ];
+    }
+
+    assert(HierarchyNode.isInstancesNode(parentNode));
+    return [
+      {
+        fullClassName: "BisCore.PhysicalElement",
+        query: {
+          ecsql: `
+            SELECT ${await queryClauseFactory.createSelectClause({
+              ecClassId: { selector: "this.ECClassId" },
+              ecInstanceId: { selector: "this.ECInstanceId" },
+              nodeLabel: { selector: "this.UserLabel" },
+              grouping: { byLabel: true },
+            })}
+            FROM BisCore.PhysicalElement this
+            WHERE this.Parent.Id = ?
+          `,
+          bindings: [{ type: "id", value: parentNode.key.instanceKeys[0].id }],
+        },
+      },
+    ];
+  },
+};
+
+// Retrieve the grouping node for "C" from the preexisting hierarchy
+const groupingNode = await getSelectedGroupingNode();
+expect(HierarchyNode.isLabelGroupingNode(groupingNode)).to.be.true;
+expect(groupingNode.groupedInstanceKeys).to.deep.eq([elementKeys.c]);
+
+// Construct a hierarchy provider for the filtered hierarchy
+const hierarchyProvider = createHierarchyProvider({
+  imodelAccess,
+  hierarchyDefinition,
+  filtering: {
+    paths: [
+      {
+        // Path to the element "C"
+        path: [elementKeys.a, elementKeys.b, elementKeys.c],
+        // Supply grouping node attributes with the path to the "C" element.
+        options: { autoExpand: { key: groupingNode.key, depth: groupingNode.parentKeys.length } },
+      },
+    ],
+  },
+});
+
+// Collect the hierarchy & confirm we get what we expect - a hierarchy from root element "A" to target element "C"
+// Note that all nodes before grouping node for label "C" have `autoExpand` flag.
+expect(await collectHierarchy(hierarchyProvider)).to.deep.eq([
+  {
+    // Root node. Has auto-expand flag.
+    nodeType: "instances",
+    label: "A",
+    autoExpand: true,
+    children: [
+      {
+        // B grouping node. Has auto-expand flag.
+        nodeType: "label-grouping",
+        label: "B",
+        autoExpand: true,
+        children: [
+          {
+            // B instance node. Has auto-expand flag.
+            nodeType: "instances",
+            label: "B",
+            autoExpand: true,
+            children: [
+              {
+                // C grouping node. Doesn't have auto-expand flag.
+                nodeType: "label-grouping",
+                label: "C",
+                // Child is the filter target
+                children: [
+                  {
+                    nodeType: "instances",
+                    label: "C",
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+      },
+    ],
+  },
+]);
+```
+
+<!-- END EXTRACTION -->

@@ -6,11 +6,12 @@
 
 import { expect } from "chai";
 import { insertPhysicalElement, insertPhysicalModelWithPartition, insertSpatialCategory } from "presentation-test-utilities";
+import { expand, filter, first, firstValueFrom, from } from "rxjs";
 import { assert, Id64String } from "@itwin/core-bentley";
 import { IModelConnection } from "@itwin/core-frontend";
 import { InstanceKey } from "@itwin/presentation-shared";
 // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.HierarchyFiltering.HierarchyDefinitionImports
-import { createNodesQueryClauseFactory, HierarchyDefinition, HierarchyNode } from "@itwin/presentation-hierarchies";
+import { createNodesQueryClauseFactory, GroupingHierarchyNode, HierarchyDefinition, HierarchyNode } from "@itwin/presentation-hierarchies";
 import { ECSqlBinding } from "@itwin/presentation-shared";
 // __PUBLISH_EXTRACT_END__
 // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.HierarchyFiltering.FilteringImports
@@ -101,7 +102,7 @@ describe("Hierarchies", () => {
           hierarchyDefinition: createHierarchyDefinition(imodelAccess),
           filtering: undefined,
         });
-        expect(await collectHierarchy(hierarchyProvider)).to.deep.eq([
+        expect(await collectHierarchy(hierarchyProvider)).to.containSubset([
           {
             label: "A",
             children: [
@@ -170,7 +171,7 @@ describe("Hierarchies", () => {
           filtering: { paths: filterPaths },
         });
         // Collect the hierarchy & confirm we get what we expect - a hierarchy from root element "A" to target element "F"
-        expect(await collectHierarchy(hierarchyProvider)).to.deep.eq([
+        expect(await collectHierarchy(hierarchyProvider)).to.containSubset([
           {
             label: "A",
             children: [
@@ -236,7 +237,7 @@ describe("Hierarchies", () => {
         // Collect the hierarchy & confirm we get what we expect - a hierarchy from root element "A" to target elements "C" and "E".
         // Note that "E" has a child "F", even though it's not a filter target. This is because subtrees under filter target nodes
         // (in this case - "E") are returned fully.
-        expect(await collectHierarchy(hierarchyProvider)).to.deep.eq([
+        expect(await collectHierarchy(hierarchyProvider)).to.containSubset([
           {
             label: "A",
             children: [
@@ -247,6 +248,169 @@ describe("Hierarchies", () => {
               {
                 label: "E",
                 children: [{ label: "F" }],
+              },
+            ],
+          },
+        ]);
+        // __PUBLISH_EXTRACT_END__
+      });
+
+      it("sets auto-expand flag to parent nodes of the filter target", async function () {
+        const imodelAccess = createIModelAccess(imodel);
+        // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.HierarchyFiltering.AutoExpand
+        // Construct a hierarchy provider for the filtered hierarchy
+        const hierarchyProvider = createHierarchyProvider({
+          imodelAccess,
+          hierarchyDefinition: createHierarchyDefinition(imodelAccess),
+          filtering: {
+            paths: [
+              {
+                // Path to the element "C"
+                path: [elementKeys.a, elementKeys.b, elementKeys.c],
+                // Supply `autoExpand` flag with the path to the "C" element.
+                options: { autoExpand: true },
+              },
+            ],
+          },
+        });
+
+        // Collect the hierarchy & confirm we get what we expect - a hierarchy from root element "A" to target element "C"
+        // Note that all nodes except C have `autoExpand` flag.
+        expect(await collectHierarchy(hierarchyProvider)).to.containSubset([
+          {
+            label: "A",
+            autoExpand: true,
+            children: [
+              {
+                label: "B",
+                autoExpand: true,
+                children: [{ label: "C" }],
+              },
+            ],
+          },
+        ]);
+        // __PUBLISH_EXTRACT_END__
+      });
+
+      it("sets auto-expand flag to parent nodes of the filter target until a given grouping node", async function () {
+        const imodelAccess = createIModelAccess(imodel);
+        const queryClauseFactory = createNodesQueryClauseFactory({ imodelAccess });
+        // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.HierarchyFiltering.AutoExpandUntilGroupingNode.HierarchyDef
+        // Define a hierarchy such that all elements except root are grouped by label.
+        const hierarchyDefinition: HierarchyDefinition = {
+          defineHierarchyLevel: async ({ parentNode }) => {
+            if (!parentNode) {
+              return [
+                {
+                  fullClassName: "BisCore.PhysicalElement",
+                  query: {
+                    ecsql: `
+                      SELECT ${await queryClauseFactory.createSelectClause({
+                        ecClassId: { selector: "this.ECClassId" },
+                        ecInstanceId: { selector: "this.ECInstanceId" },
+                        nodeLabel: { selector: "this.UserLabel" },
+                      })}
+                      FROM BisCore.PhysicalElement this
+                      WHERE this.Parent IS NULL
+                    `,
+                  },
+                },
+              ];
+            }
+
+            assert(HierarchyNode.isInstancesNode(parentNode));
+            return [
+              {
+                fullClassName: "BisCore.PhysicalElement",
+                query: {
+                  ecsql: `
+                    SELECT ${await queryClauseFactory.createSelectClause({
+                      ecClassId: { selector: "this.ECClassId" },
+                      ecInstanceId: { selector: "this.ECInstanceId" },
+                      nodeLabel: { selector: "this.UserLabel" },
+                      grouping: { byLabel: true },
+                    })}
+                    FROM BisCore.PhysicalElement this
+                    WHERE this.Parent.Id = ?
+                  `,
+                  bindings: [{ type: "id", value: parentNode.key.instanceKeys[0].id }],
+                },
+              },
+            ];
+          },
+        };
+        // __PUBLISH_EXTRACT_END__
+
+        async function getSelectedGroupingNode(): Promise<GroupingHierarchyNode> {
+          const provider = createHierarchyProvider({ imodelAccess, hierarchyDefinition });
+          return firstValueFrom(
+            from(provider.getNodes({ parentNode: undefined })).pipe(
+              expand((parentNode) => provider.getNodes({ parentNode })),
+              filter((node) => HierarchyNode.isGroupingNode(node)),
+              first((node) => InstanceKey.equals(node.groupedInstanceKeys[0], elementKeys.c)),
+            ),
+          );
+        }
+
+        // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.HierarchyFiltering.AutoExpandUntilGroupingNode.Validation
+
+        // Retrieve the grouping node for "C" from the preexisting hierarchy
+        const groupingNode = await getSelectedGroupingNode();
+        expect(HierarchyNode.isLabelGroupingNode(groupingNode)).to.be.true;
+        expect(groupingNode.groupedInstanceKeys).to.deep.eq([elementKeys.c]);
+
+        // Construct a hierarchy provider for the filtered hierarchy
+        const hierarchyProvider = createHierarchyProvider({
+          imodelAccess,
+          hierarchyDefinition,
+          filtering: {
+            paths: [
+              {
+                // Path to the element "C"
+                path: [elementKeys.a, elementKeys.b, elementKeys.c],
+                // Supply grouping node attributes with the path to the "C" element.
+                options: { autoExpand: { key: groupingNode.key, depth: groupingNode.parentKeys.length } },
+              },
+            ],
+          },
+        });
+
+        // Collect the hierarchy & confirm we get what we expect - a hierarchy from root element "A" to target element "C"
+        // Note that all nodes before grouping node for label "C" have `autoExpand` flag.
+        expect(await collectHierarchy(hierarchyProvider)).to.deep.eq([
+          {
+            // Root node. Has auto-expand flag.
+            nodeType: "instances",
+            label: "A",
+            autoExpand: true,
+            children: [
+              {
+                // B grouping node. Has auto-expand flag.
+                nodeType: "label-grouping",
+                label: "B",
+                autoExpand: true,
+                children: [
+                  {
+                    // B instance node. Has auto-expand flag.
+                    nodeType: "instances",
+                    label: "B",
+                    autoExpand: true,
+                    children: [
+                      {
+                        // C grouping node. Doesn't have auto-expand flag.
+                        nodeType: "label-grouping",
+                        label: "C",
+                        // Child is the filter target
+                        children: [
+                          {
+                            nodeType: "instances",
+                            label: "C",
+                          },
+                        ],
+                      },
+                    ],
+                  },
+                ],
               },
             ],
           },

@@ -16,7 +16,23 @@ import {
   PropertyValueRangeGroupingNodeKey,
   StandardHierarchyNodeKey,
 } from "./HierarchyNodeKey";
-import { HierarchyFilteringPath } from "./HierarchyProvider";
+import { HierarchyFilteringPath, HierarchyFilteringPathOptions } from "./HierarchyProvider";
+
+/** @beta */
+export type HierarchyNodeFilteringProps = {
+  /** If set to true, then one of the ancestor nodes in the hierarchy is the filter target. */
+  hasFilterTargetAncestor?: boolean;
+  /** Paths to node's children that are filter targets. */
+  filteredChildrenIdentifierPaths?: HierarchyFilteringPath[];
+} & (
+  | { isFilterTarget?: false }
+  | {
+      /** Whether or not this node is a filter target. */
+      isFilterTarget: true;
+      /** Options that were used to filter the node. */
+      filterTargetOptions?: HierarchyFilteringPathOptions;
+    }
+);
 
 /**
  * A data structure that defines attributes that are common to all types of hierarchy nodes.
@@ -34,11 +50,7 @@ interface BaseHierarchyNode {
   /** Additional data that may be assigned to this node. */
   extendedData?: { [key: string]: any };
   /** Data that may be assigned to the node if filtering is enabled */
-  filtering?: {
-    isFilterTarget?: boolean;
-    hasFilterTargetAncestor?: boolean;
-    filteredChildrenIdentifierPaths?: HierarchyFilteringPath[];
-  };
+  filtering?: HierarchyNodeFilteringProps;
 }
 
 /**

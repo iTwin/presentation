@@ -3,12 +3,13 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { insertSubject } from "presentation-test-utilities";
+import { insertPhysicalElement, insertPhysicalModelWithPartition, insertSpatialCategory, insertSubject } from "presentation-test-utilities";
 import { Subject } from "@itwin/core-backend";
 import { Id64String } from "@itwin/core-bentley";
 import { IModel } from "@itwin/core-common";
+import { IModelConnection } from "@itwin/core-frontend";
 import { createNodesQueryClauseFactory, HierarchyDefinition, HierarchyNode } from "@itwin/presentation-hierarchies";
-import { ECSqlBinding } from "@itwin/presentation-shared";
+import { ECSqlBinding, InstanceKey } from "@itwin/presentation-shared";
 import { buildIModel, importSchema, withECDb } from "../IModelUtils";
 import { initialize, terminate } from "../IntegrationTests";
 import { NodeValidators, validateHierarchy } from "./HierarchyValidation";
@@ -641,6 +642,523 @@ describe("Hierarchies", () => {
             });
           },
         );
+      });
+    });
+
+    describe("when targeting grouped instance nodes", () => {
+      it("sets auto-expand flag for parent nodes before the target grouping node", async function () {
+        const { imodel, ...keys } = await buildIModel(this, async (builder) => {
+          const rootSubject = { className: subjectClassName, id: IModel.rootSubjectId };
+          const category = insertSpatialCategory({ builder, codeValue: "category" });
+          const model = insertPhysicalModelWithPartition({ builder, codeValue: "model" });
+          const elements = [
+            insertPhysicalElement({ builder, modelId: model.id, categoryId: category.id }),
+            insertPhysicalElement({ builder, modelId: model.id, categoryId: category.id }),
+          ];
+          return { rootSubject, model, category, elements };
+        });
+
+        const selectQueryFactory = createNodesQueryClauseFactory({ imodelAccess: createIModelAccess(imodel) });
+        const rootNodeKey = "root-node";
+        const hierarchy: HierarchyDefinition = {
+          defineHierarchyLevel: async (props) => {
+            if (!props.parentNode) {
+              return [{ node: { key: rootNodeKey, label: "Root" } }];
+            }
+
+            return [
+              {
+                fullClassName: "BisCore.PhysicalElement",
+                query: {
+                  ecsql: `
+                    SELECT ${await selectQueryFactory.createSelectClause({
+                      ecInstanceId: { selector: "this.ECInstanceId" },
+                      ecClassId: { selector: "this.ECClassId" },
+                      nodeLabel: { selector: "idToHex(this.ECInstanceId)" },
+                      grouping: { byClass: true },
+                    })}
+                    FROM BisCore.PhysicalElement this
+                  `,
+                },
+              },
+            ];
+          },
+        };
+
+        await validateHierarchy({
+          provider: createProvider({
+            imodel,
+            hierarchy,
+            filteredNodePaths: keys.elements.map((elementKey) => ({
+              path: [{ key: rootNodeKey }, elementKey],
+              options: {
+                autoExpand: {
+                  key: { type: "class-grouping", className: keys.elements[0].className },
+                  depth: 1,
+                },
+              },
+            })),
+          }),
+          expect: [
+            NodeValidators.createForCustomNode({
+              key: rootNodeKey,
+              autoExpand: true,
+              children: [
+                NodeValidators.createForClassGroupingNode({
+                  className: keys.elements[0].className,
+                  autoExpand: false,
+                  children: keys.elements.map((key) => NodeValidators.createForInstanceNode({ instanceKeys: [key] })),
+                }),
+              ],
+            }),
+          ],
+        });
+      });
+
+      it("sets auto-expand flag for all deeply-nested grouping nodes before the target grouping node", async function () {
+        const { imodel, ...keys } = await buildIModel(this, async (builder) => {
+          const rootSubject = { className: subjectClassName, id: IModel.rootSubjectId };
+          const category = insertSpatialCategory({ builder, codeValue: "category" });
+          const model = insertPhysicalModelWithPartition({ builder, codeValue: "model" });
+          const rootElement = insertPhysicalElement({ builder, modelId: model.id, categoryId: category.id });
+          const middleElement = insertPhysicalElement({ builder, modelId: model.id, categoryId: category.id, parentId: rootElement.id });
+          const childElement = insertPhysicalElement({ builder, modelId: model.id, categoryId: category.id, parentId: middleElement.id });
+          return { rootSubject, model, category, rootElement, middleElement, childElement };
+        });
+
+        const selectQueryFactory = createNodesQueryClauseFactory({ imodelAccess: createIModelAccess(imodel) });
+        const rootNodeKey = "root-node";
+        const hierarchy: HierarchyDefinition = {
+          defineHierarchyLevel: async ({ parentNode }) => {
+            if (!parentNode) {
+              return [{ node: { key: rootNodeKey, label: "Root" } }];
+            }
+
+            return [
+              {
+                fullClassName: "BisCore.PhysicalElement",
+                query: {
+                  ecsql: `
+                    SELECT ${await selectQueryFactory.createSelectClause({
+                      ecInstanceId: { selector: "this.ECInstanceId" },
+                      ecClassId: { selector: "this.ECClassId" },
+                      nodeLabel: { selector: "idToHex(this.ECInstanceId)" },
+                      grouping: { byClass: true },
+                    })}
+                    FROM BisCore.PhysicalElement this
+                    WHERE this.Parent.Id ${typeof parentNode.key === "string" ? "IS NULL" : "= ?"}
+                  `,
+                  bindings: typeof parentNode.key === "string" ? undefined : [{ type: "id", value: parentNode.key.instanceKeys[0].id }],
+                },
+              },
+            ];
+          },
+        };
+
+        await validateHierarchy({
+          provider: createProvider({
+            imodel,
+            hierarchy,
+            filteredNodePaths: [
+              {
+                path: [{ key: rootNodeKey }, keys.rootElement, keys.middleElement, keys.childElement],
+                options: {
+                  autoExpand: {
+                    key: { type: "class-grouping", className: keys.childElement.className },
+                    depth: 5, // root node + (grouping node and instance node for root and middle elements),
+                  },
+                },
+              },
+            ],
+          }),
+          expect: [
+            NodeValidators.createForCustomNode({
+              key: rootNodeKey,
+              autoExpand: true,
+              children: [
+                NodeValidators.createForClassGroupingNode({
+                  autoExpand: true,
+                  children: [
+                    NodeValidators.createForInstanceNode({
+                      instanceKeys: [keys.rootElement],
+                      autoExpand: true,
+                      children: [
+                        NodeValidators.createForClassGroupingNode({
+                          autoExpand: true,
+                          children: [
+                            NodeValidators.createForInstanceNode({
+                              instanceKeys: [keys.middleElement],
+                              autoExpand: true,
+                              children: [
+                                NodeValidators.createForClassGroupingNode({
+                                  autoExpand: false,
+                                  children: [
+                                    NodeValidators.createForInstanceNode({
+                                      instanceKeys: [keys.childElement],
+                                    }),
+                                  ],
+                                }),
+                              ],
+                            }),
+                          ],
+                        }),
+                      ],
+                    }),
+                  ],
+                }),
+              ],
+            }),
+          ],
+        });
+      });
+
+      it("sets auto-expand flag for target grouping node if another target is a child element", async function () {
+        const { imodel, ...keys } = await buildIModel(this, async (builder) => {
+          const rootSubject = { className: subjectClassName, id: IModel.rootSubjectId };
+          const category = insertSpatialCategory({ builder, codeValue: "category" });
+          const model = insertPhysicalModelWithPartition({ builder, codeValue: "model" });
+          const elements = [
+            insertPhysicalElement({ builder, modelId: model.id, categoryId: category.id }),
+            insertPhysicalElement({ builder, modelId: model.id, categoryId: category.id }),
+          ];
+          return { rootSubject, model, category, elements };
+        });
+
+        const selectQueryFactory = createNodesQueryClauseFactory({ imodelAccess: createIModelAccess(imodel) });
+        const rootNodeKey = "root-node";
+        const hierarchy: HierarchyDefinition = {
+          defineHierarchyLevel: async (props) => {
+            if (!props.parentNode) {
+              return [{ node: { key: rootNodeKey, label: "Root" } }];
+            }
+
+            return [
+              {
+                fullClassName: "BisCore.PhysicalElement",
+                query: {
+                  ecsql: `
+                    SELECT ${await selectQueryFactory.createSelectClause({
+                      ecInstanceId: { selector: "this.ECInstanceId" },
+                      ecClassId: { selector: "this.ECClassId" },
+                      nodeLabel: { selector: "idToHex(this.ECInstanceId)" },
+                      grouping: { byClass: true },
+                    })}
+                    FROM BisCore.PhysicalElement this
+                  `,
+                },
+              },
+            ];
+          },
+        };
+
+        await validateHierarchy({
+          provider: createProvider({
+            imodel,
+            hierarchy,
+            filteredNodePaths: [
+              { path: [{ key: rootNodeKey }, keys.elements[0]], options: { autoExpand: true } },
+              ...keys.elements.map((elementKey) => ({
+                path: [{ key: rootNodeKey }, elementKey],
+                options: {
+                  autoExpand: {
+                    key: { type: "class-grouping" as const, className: elementKey.className },
+                    depth: 1,
+                  },
+                },
+              })),
+            ],
+          }),
+          expect: [
+            NodeValidators.createForCustomNode({
+              key: rootNodeKey,
+              autoExpand: true,
+              children: [
+                NodeValidators.createForClassGroupingNode({
+                  className: keys.elements[0].className,
+                  autoExpand: true,
+                  children: [
+                    NodeValidators.createForInstanceNode({
+                      instanceKeys: [keys.elements[0]],
+                      isFilterTarget: true,
+                    }),
+                    NodeValidators.createForInstanceNode({
+                      isFilterTarget: true,
+                      instanceKeys: [keys.elements[1]],
+                    }),
+                  ],
+                }),
+              ],
+            }),
+          ],
+        });
+      });
+
+      describe("nested grouping nodes of different types", async function () {
+        const rootNodeKey = "root-node";
+        let hierarchy: HierarchyDefinition;
+        let imodel: IModelConnection;
+        let elementKey: InstanceKey;
+        let circleClassName: string;
+
+        before(async function () {
+          const result = await buildIModel(this, async (builder) => {
+            const schema = await importSchema(
+              this,
+              builder,
+              `
+                <ECSchemaReference name="BisCore" version="01.00.16" alias="bis" />
+                <ECEntityClass typeName="Circle">
+                  <BaseClass>bis:PhysicalElement</BaseClass>
+                  <ECProperty propertyName="Color" typeName="string" />
+                </ECEntityClass>
+              `,
+            );
+            const category = insertSpatialCategory({ builder, codeValue: "category" });
+            const model = insertPhysicalModelWithPartition({ builder, codeValue: "model" });
+            circleClassName = schema.items.Circle.fullName;
+            elementKey = insertPhysicalElement({
+              builder,
+              modelId: model.id,
+              categoryId: category.id,
+              classFullName: circleClassName,
+              ["Color"]: "Red",
+            });
+          });
+          imodel = result.imodel;
+
+          const selectQueryFactory = createNodesQueryClauseFactory({ imodelAccess: createIModelAccess(imodel) });
+          hierarchy = {
+            defineHierarchyLevel: async (props) => {
+              if (!props.parentNode) {
+                return [{ node: { key: rootNodeKey, label: "Root" } }];
+              }
+
+              return [
+                {
+                  fullClassName: circleClassName,
+                  query: {
+                    ecsql: `
+                      SELECT ${await selectQueryFactory.createSelectClause({
+                        ecInstanceId: { selector: "this.ECInstanceId" },
+                        ecClassId: { selector: "this.ECClassId" },
+                        nodeLabel: "Circle",
+                        grouping: {
+                          byClass: true,
+                          byProperties: {
+                            propertiesClassName: circleClassName,
+                            propertyGroups: [
+                              {
+                                propertyName: "Color",
+                                propertyClassAlias: "this",
+                              },
+                            ],
+                          },
+                          byLabel: true,
+                        },
+                      })}
+                      FROM ${circleClassName} this
+                    `,
+                  },
+                },
+              ];
+            },
+          };
+        });
+
+        it("sets auto-expand flag until class grouping node", async () => {
+          const autoExpandOptions = {
+            key: { type: "class-grouping", className: circleClassName },
+            depth: 1,
+          } as const;
+          await validateHierarchy({
+            provider: createProvider({
+              imodel,
+              hierarchy,
+              filteredNodePaths: [
+                {
+                  path: [{ key: rootNodeKey }, elementKey],
+                  options: { autoExpand: autoExpandOptions },
+                },
+              ],
+            }),
+            expect: [
+              NodeValidators.createForCustomNode({
+                key: rootNodeKey,
+                autoExpand: true,
+                children: [
+                  NodeValidators.createForClassGroupingNode({
+                    className: circleClassName,
+                    autoExpand: false,
+                    children: [
+                      NodeValidators.createForPropertyValueGroupingNode({
+                        label: "Red",
+                        autoExpand: false,
+                        children: [
+                          NodeValidators.createForLabelGroupingNode({
+                            label: "Circle",
+                            autoExpand: false,
+                            children: [
+                              NodeValidators.createForInstanceNode({
+                                instanceKeys: [elementKey],
+                                isFilterTarget: !!autoExpandOptions,
+                                filterTargetOptions: { autoExpand: autoExpandOptions },
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                    ],
+                  }),
+                ],
+              }),
+            ],
+          });
+        });
+
+        it("sets auto-expand flag until property grouping node", async () => {
+          const autoExpandOptions = {
+            key: { type: "property-grouping:value", propertyClassName: circleClassName, propertyName: "Color", formattedPropertyValue: "Red" },
+            depth: 2,
+          } as const;
+          await validateHierarchy({
+            provider: createProvider({
+              imodel,
+              hierarchy,
+              filteredNodePaths: [
+                {
+                  path: [{ key: rootNodeKey }, elementKey],
+                  options: { autoExpand: autoExpandOptions },
+                },
+              ],
+            }),
+            expect: [
+              NodeValidators.createForCustomNode({
+                key: rootNodeKey,
+                autoExpand: true,
+                children: [
+                  NodeValidators.createForClassGroupingNode({
+                    className: circleClassName,
+                    autoExpand: true,
+                    children: [
+                      NodeValidators.createForPropertyValueGroupingNode({
+                        label: "Red",
+                        autoExpand: false,
+                        children: [
+                          NodeValidators.createForLabelGroupingNode({
+                            label: "Circle",
+                            autoExpand: false,
+                            children: [
+                              NodeValidators.createForInstanceNode({
+                                instanceKeys: [elementKey],
+                                isFilterTarget: true,
+                                filterTargetOptions: { autoExpand: autoExpandOptions },
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                    ],
+                  }),
+                ],
+              }),
+            ],
+          });
+        });
+
+        it("sets auto-expand flag until label grouping node", async () => {
+          const autoExpandOptions = {
+            key: { type: "label-grouping", label: "Circle" },
+            depth: 3,
+          } as const;
+          await validateHierarchy({
+            provider: createProvider({
+              imodel,
+              hierarchy,
+              filteredNodePaths: [
+                {
+                  path: [{ key: rootNodeKey }, elementKey],
+                  options: { autoExpand: autoExpandOptions },
+                },
+              ],
+            }),
+            expect: [
+              NodeValidators.createForCustomNode({
+                key: rootNodeKey,
+                autoExpand: true,
+                children: [
+                  NodeValidators.createForClassGroupingNode({
+                    className: circleClassName,
+                    autoExpand: true,
+                    children: [
+                      NodeValidators.createForPropertyValueGroupingNode({
+                        label: "Red",
+                        autoExpand: true,
+                        children: [
+                          NodeValidators.createForLabelGroupingNode({
+                            label: "Circle",
+                            autoExpand: false,
+                            children: [
+                              NodeValidators.createForInstanceNode({
+                                instanceKeys: [elementKey],
+                                isFilterTarget: true,
+                                filterTargetOptions: { autoExpand: autoExpandOptions },
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                    ],
+                  }),
+                ],
+              }),
+            ],
+          });
+        });
+
+        it("sets auto-expand flag until element instance node", async () => {
+          await validateHierarchy({
+            provider: createProvider({
+              imodel,
+              hierarchy,
+              filteredNodePaths: [
+                {
+                  path: [{ key: rootNodeKey }, elementKey],
+                  options: { autoExpand: true },
+                },
+              ],
+            }),
+            expect: [
+              NodeValidators.createForCustomNode({
+                key: rootNodeKey,
+                autoExpand: true,
+                children: [
+                  NodeValidators.createForClassGroupingNode({
+                    className: circleClassName,
+                    autoExpand: true,
+                    children: [
+                      NodeValidators.createForPropertyValueGroupingNode({
+                        label: "Red",
+                        autoExpand: true,
+                        children: [
+                          NodeValidators.createForLabelGroupingNode({
+                            label: "Circle",
+                            autoExpand: true,
+                            children: [
+                              NodeValidators.createForInstanceNode({
+                                instanceKeys: [elementKey],
+                                isFilterTarget: true,
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                    ],
+                  }),
+                ],
+              }),
+            ],
+          });
+        });
       });
     });
   });

@@ -13,6 +13,7 @@ import {
   ProcessedGroupingHierarchyNode,
   ProcessedInstanceHierarchyNode,
 } from "../hierarchies/HierarchyNode";
+import { HierarchyNodeKey } from "../hierarchies/HierarchyNodeKey";
 
 export function setupLogging(levels: Array<{ namespace: string; level: LogLevel }>) {
   Logger.initializeToConsole();
@@ -81,6 +82,13 @@ export function createTestInstanceKey(src?: Partial<InstanceKey>): InstanceKey {
     className: "TestSchema.TestClass",
     id: "0x1",
     ...src,
+  };
+}
+
+export function createTestNodeKey(): HierarchyNodeKey {
+  return {
+    type: "instances",
+    instanceKeys: [],
   };
 }
 

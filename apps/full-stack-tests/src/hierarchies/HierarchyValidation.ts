@@ -3,10 +3,11 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
+import { assert, expect } from "chai";
 import { collect } from "presentation-test-utilities";
 import { isDeepStrictEqual } from "util";
 import { Logger } from "@itwin/core-bentley";
-import { HierarchyNode, HierarchyProvider, NonGroupingHierarchyNode } from "@itwin/presentation-hierarchies";
+import { GroupingNodeKey, HierarchyNode, HierarchyProvider, NonGroupingHierarchyNode } from "@itwin/presentation-hierarchies";
 import { hasChildren } from "@itwin/presentation-hierarchies/lib/cjs/hierarchies/internal/Common";
 import { InstanceKey } from "@itwin/presentation-shared";
 
@@ -19,21 +20,24 @@ export interface HierarchyDef<TNode> {
 
 export type ExpectedHierarchyDef = HierarchyDef<(node: HierarchyNode) => void>;
 
+function optionalBooleanToString(value: boolean | undefined) {
+  return value === undefined ? "undefined" : value ? "TRUE" : "FALSE";
+}
+
+interface BaseNodeExpectations {
+  label?: string | RegExp;
+  autoExpand?: boolean;
+  supportsFiltering?: boolean;
+  isFilterTarget?: boolean;
+  filterTargetOptions?: {
+    autoExpand?: { key: GroupingNodeKey; depth: number };
+  };
+  extendedData?: { [key: string]: any };
+  children?: ExpectedHierarchyDef[] | boolean;
+}
+
 export namespace NodeValidators {
-  function optionalBooleanToString(value: boolean | undefined) {
-    return value === undefined ? "undefined" : value ? "TRUE" : "FALSE";
-  }
-  function validateBaseNodeAttributes(
-    node: HierarchyNode,
-    expectations: {
-      label?: string | RegExp;
-      autoExpand?: boolean;
-      supportsFiltering?: boolean;
-      isFilterTarget?: boolean;
-      extendedData?: { [key: string]: any };
-      children?: ExpectedHierarchyDef[] | boolean;
-    },
-  ) {
+  function validateBaseNodeAttributes(node: HierarchyNode, expectations: BaseNodeExpectations) {
     if (expectations.label) {
       const nodeLabel = node.label;
       if (typeof expectations.label === "string") {
@@ -64,11 +68,18 @@ export namespace NodeValidators {
         )}, got ${optionalBooleanToString(node.supportsFiltering)}`,
       );
     }
-    if (expectations.isFilterTarget !== undefined && !!node.filtering?.isFilterTarget !== !!expectations.isFilterTarget) {
+    if (expectations.isFilterTarget !== undefined && expectations.isFilterTarget !== !!node.filtering?.isFilterTarget) {
       throw new Error(
-        `[${node.label}] Expected node's \`filtering.isFilterTarget\` flag to be ${optionalBooleanToString(
+        `[${node.label}] Expected node's \`filtering.isFilterTarget\` to be ${optionalBooleanToString(
           expectations.isFilterTarget,
         )}, got ${optionalBooleanToString(node.filtering?.isFilterTarget)}`,
+      );
+    }
+    if (expectations.filterTargetOptions !== undefined) {
+      assert(node.filtering?.isFilterTarget, `[${node.label}] Expected node to be a filter target`);
+      expect(node.filtering.filterTargetOptions).to.deep.eq(
+        expectations.filterTargetOptions,
+        `[${node.label}] Nodes's 'filtering.filterTargetOptions' flag property doesn't match the expectation.`,
       );
     }
     if (expectations.extendedData !== undefined && !isDeepStrictEqual(node.extendedData, expectations.extendedData)) {
@@ -82,12 +93,11 @@ export namespace NodeValidators {
   }
 
   export function createForCustomNode<TChildren extends ExpectedHierarchyDef[] | boolean>(
-    expectedNode: Partial<Omit<NonGroupingHierarchyNode, "label" | "children" | "filtering">> & {
-      label?: string;
-      isFilterTarget?: boolean;
-      extendedData?: { [key: string]: any };
-      children?: TChildren;
-    },
+    expectedNode: Partial<Omit<NonGroupingHierarchyNode, "label" | "children" | "filtering">> &
+      BaseNodeExpectations & {
+        label?: string;
+        children?: TChildren;
+      },
   ) {
     return {
       node: (node: HierarchyNode) => {
@@ -103,15 +113,12 @@ export namespace NodeValidators {
     };
   }
 
-  export function createForInstanceNode<TChildren extends ExpectedHierarchyDef[] | boolean>(props: {
-    instanceKeys?: InstanceKey[];
-    label?: string | RegExp;
-    autoExpand?: boolean;
-    supportsFiltering?: boolean;
-    isFilterTarget?: boolean;
-    extendedData?: { [key: string]: any };
-    children?: TChildren;
-  }) {
+  export function createForInstanceNode<TChildren extends ExpectedHierarchyDef[] | boolean>(
+    props: BaseNodeExpectations & {
+      instanceKeys?: InstanceKey[];
+      children?: TChildren;
+    },
+  ) {
     return {
       node: (node: HierarchyNode) => {
         if (!HierarchyNode.isStandard(node)) {
@@ -135,13 +142,12 @@ export namespace NodeValidators {
     };
   }
 
-  export function createForClassGroupingNode<TChildren extends ExpectedHierarchyDef[] | boolean>(props: {
-    className?: string;
-    label?: string;
-    autoExpand?: boolean;
-    extendedData?: { [key: string]: any };
-    children?: TChildren;
-  }) {
+  export function createForClassGroupingNode<TChildren extends ExpectedHierarchyDef[] | boolean>(
+    props: BaseNodeExpectations & {
+      className?: string;
+      children?: TChildren;
+    },
+  ) {
     return {
       node: (node: HierarchyNode) => {
         if (!HierarchyNode.isStandard(node)) {
@@ -159,13 +165,13 @@ export namespace NodeValidators {
     };
   }
 
-  export function createForLabelGroupingNode<TChildren extends ExpectedHierarchyDef[] | boolean>(props: {
-    label?: string;
-    groupId?: string;
-    autoExpand?: boolean;
-    extendedData?: { [key: string]: any };
-    children?: TChildren;
-  }) {
+  export function createForLabelGroupingNode<TChildren extends ExpectedHierarchyDef[] | boolean>(
+    props: BaseNodeExpectations & {
+      label?: string;
+      groupId?: string;
+      children?: TChildren;
+    },
+  ) {
     return {
       node: (node: HierarchyNode) => {
         if (!HierarchyNode.isStandard(node)) {
@@ -186,12 +192,7 @@ export namespace NodeValidators {
     };
   }
 
-  export function createForPropertyOtherValuesGroupingNode<TChildren extends ExpectedHierarchyDef[] | boolean>(props: {
-    label?: string;
-    autoExpand?: boolean;
-    extendedData?: { [key: string]: any };
-    children?: TChildren;
-  }) {
+  export function createForPropertyOtherValuesGroupingNode(props: BaseNodeExpectations) {
     return {
       node: (node: HierarchyNode) => {
         if (!HierarchyNode.isStandard(node)) {
@@ -206,16 +207,15 @@ export namespace NodeValidators {
     };
   }
 
-  export function createForPropertyValueRangeGroupingNode<TChildren extends ExpectedHierarchyDef[] | boolean>(props: {
-    label?: string;
-    propertyName?: string;
-    propertyClassName?: string;
-    fromValue?: number;
-    toValue?: number;
-    autoExpand?: boolean;
-    extendedData?: { [key: string]: any };
-    children?: TChildren;
-  }) {
+  export function createForPropertyValueRangeGroupingNode<TChildren extends ExpectedHierarchyDef[] | boolean>(
+    props: BaseNodeExpectations & {
+      propertyName?: string;
+      propertyClassName?: string;
+      fromValue?: number;
+      toValue?: number;
+      children?: TChildren;
+    },
+  ) {
     return {
       node: (node: HierarchyNode) => {
         if (!HierarchyNode.isStandard(node)) {
@@ -242,15 +242,14 @@ export namespace NodeValidators {
     };
   }
 
-  export function createForPropertyValueGroupingNode<TChildren extends ExpectedHierarchyDef[] | boolean>(props: {
-    label?: string;
-    propertyName?: string;
-    propertyClassName?: string;
-    formattedPropertyValue?: string;
-    autoExpand?: boolean;
-    extendedData?: { [key: string]: any };
-    children?: TChildren;
-  }) {
+  export function createForPropertyValueGroupingNode<TChildren extends ExpectedHierarchyDef[] | boolean>(
+    props: BaseNodeExpectations & {
+      propertyName?: string;
+      propertyClassName?: string;
+      formattedPropertyValue?: string;
+      children?: TChildren;
+    },
+  ) {
     return {
       node: (node: HierarchyNode) => {
         if (!HierarchyNode.isStandard(node)) {
@@ -314,12 +313,12 @@ export async function validateHierarchy(props: { provider: HierarchyProvider; pa
 }
 
 export function validateHierarchyLevel(props: { nodes: HierarchyNode[]; expect: Array<Omit<ExpectedHierarchyDef, "children"> & { children?: boolean }> }) {
-  const { nodes, expect } = props;
-  if (nodes.length !== expect.length) {
-    throw new Error(`Expected ${expect.length} nodes, got ${nodes.length}`);
+  const { nodes, expect: expectations } = props;
+  if (props.nodes.length !== props.expect.length) {
+    throw new Error(`Expected ${expectations.length} nodes, got ${nodes.length}`);
   }
   for (let i = 0; i < nodes.length; ++i) {
-    const expectation = expect[i];
+    const expectation = expectations[i];
     expectation.node(nodes[i]);
   }
 }
