@@ -311,7 +311,7 @@ Nevertheless, it's possible to "target" grouping node in the hierarchy by filter
 However in some cases it may be useful to leave this grouping node collapsed in the resulting hierarchy.
 
 For this purpose, there's an option to limit auto-expansion of nodes to a given grouping node that is expected to be in the resulting hierarchy.
-In order to do that, there has to be provided a minimal set of information about the grouping node: node's key and depth in the hierarchy, which can be determined from `parentKeys` attribute.
+In order to do that, there has to be provided a minimal set of information about the grouping node: node's key and depth in the hierarchy, which can be determined from the `parentKeys` attribute.
 
 The following code snippet shows how to limit hierarchy auto-expansion to a given grouping node:
 

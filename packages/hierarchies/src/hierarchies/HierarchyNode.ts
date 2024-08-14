@@ -36,9 +36,13 @@ export type HierarchyNodeFilteringProps = {
 } & (
   | { isFilterTarget?: false }
   | {
-      /** Whether or not this node is a filter target.. */
+      /** Whether or not this node is a filter target. */
       isFilterTarget: true;
-      /** Info about a grouping node that auto-expansion should be limited to.  */
+      /**
+       * Generally, when a hierarchy is filtered, it's auto-expanded up to filter targets or not 
+       * expanded at all. This attribute may optionally be set to an instance node's grouping node
+       * identifier to limit auto-expansion only up to that grouping node.
+       */
       autoExpandUntil?: FilterTargetGroupingNodeInfo;
     }
 );
