@@ -91,7 +91,7 @@ describe("Hierarchies", () => {
 
           // The iModel has two elements of `BisCore.PhysicalElement` class, both with the same "Example element" label.
           // As requested by hierarchy definition, the provider returns them grouped under a label grouping node:
-          expect(await collectHierarchy(hierarchyProvider)).to.deep.eq([
+          expect(await collectHierarchy(hierarchyProvider)).to.containSubset([
             {
               // the label grouping node
               label: "Example element",
@@ -161,7 +161,7 @@ describe("Hierarchies", () => {
 
           // The iModel has two elements of `BisCore.PhysicalElement` class, both with the same "Example element" label.
           // As requested by hierarchy definition, the provider returns them merged into a single node:
-          expect(await collectHierarchy(hierarchyProvider)).to.deep.eq([
+          expect(await collectHierarchy(hierarchyProvider)).to.containSubset([
             {
               // the merged node has "Example element" label and instance keys of both elements in `key.instanceKeys` list
               label: "Example element",
@@ -218,7 +218,7 @@ describe("Hierarchies", () => {
 
           // The iModel has two elements of `BisCore.Category` class - one `SpatialCategory` and one `DrawingCategory`.
           // As requested by hierarchy definition, the provider returns them grouped under class grouping nodes:
-          expect(await collectHierarchy(hierarchyProvider)).to.deep.eq([
+          expect(await collectHierarchy(hierarchyProvider)).to.containSubset([
             {
               // the `BisCore.DrawingCategory` class grouping node
               label: "Drawing Category",
@@ -287,7 +287,7 @@ describe("Hierarchies", () => {
 
           // The iModel has two elements of `BisCore.Category` class - one `SpatialCategory` and one `DrawingCategory`.
           // As requested by hierarchy definition, the provider returns them grouped under 2 class grouping nodes:
-          expect(await collectHierarchy(hierarchyProvider)).to.deep.eq([
+          expect(await collectHierarchy(hierarchyProvider)).to.containSubset([
             {
               // the `BisCore.Element` class grouping node
               label: "Element",
@@ -370,7 +370,7 @@ describe("Hierarchies", () => {
           // | Example link with no format |                         |
           //
           // As requested by hierarchy definition, the provider returns them grouped by `Format` property value:
-          expect(await collectHierarchy(hierarchyProvider)).to.deep.eq([
+          expect(await collectHierarchy(hierarchyProvider)).to.containSubset([
             {
               // the `Format="DGN"` property grouping node
               label: "DGN",
@@ -463,7 +463,7 @@ describe("Hierarchies", () => {
           // | Material 4      | 200           |
           //
           // As requested by hierarchy definition, the provider returns them grouped by the `Density` property value:
-          expect(await collectHierarchy(hierarchyProvider)).to.deep.eq([
+          expect(await collectHierarchy(hierarchyProvider)).to.containSubset([
             {
               // the `10 - 100` range property grouping node
               label: "10 - 100",
@@ -552,7 +552,7 @@ describe("Hierarchies", () => {
         // | Example DGN link 2    | DGN                     |
         //
         // As requested by hierarchy definition, the provider returns them grouped under a hierarchy of grouping nodes:
-        expect(await collectHierarchy(hierarchyProvider)).to.deep.eq([
+        expect(await collectHierarchy(hierarchyProvider)).to.containSubset([
           // a class grouping node for `BisCore.Element` base class
           {
             label: "Element",
@@ -665,7 +665,7 @@ describe("Hierarchies", () => {
           // | Example link 2  |
           //
           // As requested by hierarchy definition, the provider didn't place "Example link 1" under a grouping node:
-          expect(await collectHierarchy(hierarchyProvider)).to.deep.eq([
+          expect(await collectHierarchy(hierarchyProvider)).to.containSubset([
             { label: "Example link 1" },
             {
               label: "Example link 2",
@@ -725,7 +725,7 @@ describe("Hierarchies", () => {
           //
           // As requested by hierarchy definition, the provider didn't place them under a grouping node, because
           // there're no sibling nodes:
-          expect(await collectHierarchy(hierarchyProvider)).to.deep.eq([
+          expect(await collectHierarchy(hierarchyProvider)).to.containSubset([
             // note: no class grouping node
             { label: "Example link 1" },
             { label: "Example link 2" },

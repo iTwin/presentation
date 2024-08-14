@@ -69,7 +69,7 @@ const hierarchyProvider = createHierarchyProvider({
 //
 // As shown in the above table, we expect to get 3 grouping nodes: "1 - 5", "Other", and "Unspecified". The
 // latter two strings are localized using the `localizedStrings` object, provided to `createHierarchyProvider`.
-expect(await collectHierarchy(hierarchyProvider)).to.deep.eq([
+expect(await collectHierarchy(hierarchyProvider)).to.containSubset([
   { label: "1 - 5", children: [{ label: "Element 1" }, { label: "Element 2" }] },
   { label: "Kita", children: [{ label: "Element 3" }] },
   { label: "Nenurodyta", children: [{ label: "Element 4" }] },

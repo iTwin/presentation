@@ -25,11 +25,7 @@ interface BaseHierarchyNode {
     extendedData?: {
         [key: string]: any;
     };
-    filtering?: {
-        isFilterTarget?: boolean;
-        hasFilterTargetAncestor?: boolean;
-        filteredChildrenIdentifierPaths?: HierarchyFilteringPath[];
-    };
+    filtering?: HierarchyNodeFilteringProps;
     label: string;
     parentKeys: HierarchyNodeKey[];
 }
@@ -47,7 +43,7 @@ interface ClassBasedHierarchyDefinitionProps {
 type ClassBasedHierarchyLevelDefinition = InstancesNodeChildHierarchyLevelDefinition | CustomNodeChildHierarchyLevelDefinition;
 
 // @beta
-interface ClassGroupingNodeKey {
+export interface ClassGroupingNodeKey {
     className: string;
     type: "class-grouping";
 }
@@ -179,6 +175,12 @@ interface ECSqlValueSelector {
     selector: string;
 }
 
+// @beta (undocumented)
+interface FilterTargetGroupingNodeInfo {
+    depth: number;
+    key: GroupingNodeKey;
+}
+
 export { GenericInstanceFilter }
 
 // @beta
@@ -216,10 +218,13 @@ type HierarchyDefinitionParentNode = Omit<NonGroupingHierarchyNode, "children">;
 // @beta
 type HierarchyFilteringPath = HierarchyNodeIdentifiersPath | {
     path: HierarchyNodeIdentifiersPath;
-    options?: {
-        autoExpand?: boolean;
-    };
+    options: HierarchyFilteringPathOptions;
 };
+
+// @beta (undocumented)
+interface HierarchyFilteringPathOptions {
+    autoExpand?: boolean | FilterTargetGroupingNodeInfo;
+}
 
 // @beta
 export type HierarchyLevelDefinition = HierarchyNodesDefinition[];
@@ -292,6 +297,17 @@ type HierarchyNodeAutoExpandProp = "single-child" | "always";
 interface HierarchyNodeBaseClassGroupingParams extends HierarchyNodeGroupingParamsBase {
     fullClassNames: string[];
 }
+
+// @beta (undocumented)
+type HierarchyNodeFilteringProps = {
+    hasFilterTargetAncestor?: boolean;
+    filteredChildrenIdentifierPaths?: HierarchyFilteringPath[];
+} & ({
+    isFilterTarget?: false;
+} | {
+    isFilterTarget: true;
+    filterTargetOptions?: HierarchyFilteringPathOptions;
+});
 
 // @beta
 interface HierarchyNodeGroupingParams {
@@ -461,7 +477,7 @@ export interface InstancesNodeKey {
 }
 
 // @beta
-interface LabelGroupingNodeKey {
+export interface LabelGroupingNodeKey {
     groupId?: string;
     label: string;
     type: "label-grouping";
@@ -584,10 +600,10 @@ type ProcessedInstanceHierarchyNode = Omit<NonGroupingHierarchyNode, "key" | "ch
 };
 
 // @beta
-type PropertyGroupingNodeKey = PropertyValueRangeGroupingNodeKey | PropertyValueGroupingNodeKey | PropertyOtherValuesGroupingNodeKey;
+export type PropertyGroupingNodeKey = PropertyValueRangeGroupingNodeKey | PropertyValueGroupingNodeKey | PropertyOtherValuesGroupingNodeKey;
 
 // @beta
-interface PropertyOtherValuesGroupingNodeKey {
+export interface PropertyOtherValuesGroupingNodeKey {
     properties: Array<{
         className: string;
         propertyName: string;
@@ -596,7 +612,7 @@ interface PropertyOtherValuesGroupingNodeKey {
 }
 
 // @beta
-interface PropertyValueGroupingNodeKey {
+export interface PropertyValueGroupingNodeKey {
     formattedPropertyValue: string;
     propertyClassName: string;
     propertyName: string;
@@ -604,7 +620,7 @@ interface PropertyValueGroupingNodeKey {
 }
 
 // @beta
-interface PropertyValueRangeGroupingNodeKey {
+export interface PropertyValueRangeGroupingNodeKey {
     fromValue: number;
     propertyClassName: string;
     propertyName: string;
@@ -623,7 +639,7 @@ export class RowsLimitExceededError extends Error {
 export function setLogger(logger: ILogger | undefined): void;
 
 // @beta
-type StandardHierarchyNodeKey = InstancesNodeKey | GroupingNodeKey;
+export type StandardHierarchyNodeKey = InstancesNodeKey | GroupingNodeKey;
 
 // (No @packageDocumentation comment for this package)
 
