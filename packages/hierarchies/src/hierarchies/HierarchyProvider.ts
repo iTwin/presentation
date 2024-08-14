@@ -147,6 +147,13 @@ interface HierarchyProviderLocalizedStrings {
 
 /** @beta */
 interface HierarchyFilteringPathOptions {
+  /**
+   * This option specifies the way `autoExpand` flag should be assigned to nodes in the filtered hierarchy.
+   * - If it's `false` or `undefined`, nodes have no 'autoExpand' flag.
+   * - If it's `true`, then all nodes up to the filter target will have `autoExpand` flag.
+   * - If it's an instance of `FilterTargetGroupingNodeInfo`, then all nodes up to the grouping node that matches this property,
+   * will have `autoExpand` flag.
+   */
   autoExpand?: boolean | FilterTargetGroupingNodeInfo;
 }
 
