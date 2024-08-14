@@ -19,18 +19,6 @@ import {
 import { HierarchyFilteringPath, HierarchyFilteringPathOptions } from "./HierarchyProvider";
 
 /** @beta */
-export interface FilterTargetGroupingNodeInfo {
-  /** Key of the grouping node. */
-  key: GroupingNodeKey;
-
-  /**
-   * Depth of the grouping node in the hierarchy.
-   * Generally, it can be retrieved from `parentKeys.length`.
-   */
-  depth: number;
-}
-
-/** @beta */
 export type HierarchyNodeFilteringProps = {
   /** If set to true, then one of the ancestor nodes in the hierarchy is the filter target. */
   hasFilterTargetAncestor?: boolean;

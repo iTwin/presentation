@@ -39,7 +39,6 @@ import {
 import { DefineHierarchyLevelProps, HierarchyDefinition, HierarchyNodesDefinition } from "./HierarchyDefinition";
 import { RowsLimitExceededError } from "./HierarchyErrors";
 import {
-  FilterTargetGroupingNodeInfo,
   HierarchyNode,
   NonGroupingHierarchyNode,
   ParentHierarchyNode,
@@ -50,7 +49,7 @@ import {
   ProcessedInstanceHierarchyNode,
 } from "./HierarchyNode";
 import { HierarchyNodeIdentifiersPath } from "./HierarchyNodeIdentifier";
-import { InstancesNodeKey } from "./HierarchyNodeKey";
+import { GroupingNodeKey, InstancesNodeKey } from "./HierarchyNodeKey";
 import { CachedNodesObservableEntry, ChildNodeObservablesCache, ParsedQueryNodesObservable } from "./internal/ChildNodeObservablesCache";
 import {
   LOGGING_NAMESPACE as BASE_LOGGING_NAMESPACE,
@@ -143,6 +142,18 @@ interface HierarchyProviderLocalizedStrings {
    * groups values which don't fit into any other range.
    */
   other: string;
+}
+
+/** @beta */
+export interface FilterTargetGroupingNodeInfo {
+  /** Key of the grouping node. */
+  key: GroupingNodeKey;
+
+  /**
+   * Depth of the grouping node in the hierarchy.
+   * Generally, it can be retrieved from `parentKeys.length`.
+   */
+  depth: number;
 }
 
 /** @beta */

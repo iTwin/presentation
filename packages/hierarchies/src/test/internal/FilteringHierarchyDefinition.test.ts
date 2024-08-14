@@ -12,15 +12,9 @@ import {
   HierarchyLevelDefinition,
   InstanceNodesQueryDefinition,
 } from "../../hierarchies/HierarchyDefinition";
-import {
-  FilterTargetGroupingNodeInfo,
-  HierarchyNode,
-  ParsedCustomHierarchyNode,
-  ProcessedCustomHierarchyNode,
-  ProcessedGroupingHierarchyNode,
-} from "../../hierarchies/HierarchyNode";
+import { HierarchyNode, ParsedCustomHierarchyNode, ProcessedCustomHierarchyNode, ProcessedGroupingHierarchyNode } from "../../hierarchies/HierarchyNode";
 import { HierarchyNodeIdentifiersPath } from "../../hierarchies/HierarchyNodeIdentifier";
-import { HierarchyFilteringPath, HierarchyFilteringPathOptions } from "../../hierarchies/HierarchyProvider";
+import { FilterTargetGroupingNodeInfo, HierarchyFilteringPath, HierarchyFilteringPathOptions } from "../../hierarchies/HierarchyProvider";
 import {
   applyECInstanceIdsFilter,
   ECSQL_COLUMN_NAME_FilteredChildrenPaths,

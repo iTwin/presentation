@@ -306,7 +306,7 @@ type HierarchyNodeFilteringProps = {
     isFilterTarget?: false;
 } | {
     isFilterTarget: true;
-    autoExpandUntil?: FilterTargetGroupingNodeInfo;
+    filterTargetOptions?: HierarchyFilteringPathOptions;
 });
 
 // @beta
