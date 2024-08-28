@@ -67,6 +67,9 @@
       "semver@>=6.0.0 <6.3.1": "^6.3.1",
       "semver@>=5.0.0 <5.7.2": "^5.7.2",
       "posthog-node@^2": "^3.1.3"
+    },
+    "patchedDependencies": {
+      "@itwin/ecschema-metadata@4.8.0": "patches/@itwin__ecschema-metadata@4.8.0.patch"
     }
   }
 }

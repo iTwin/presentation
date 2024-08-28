@@ -1,0 +1,13 @@
+diff --git a/lib/esm/UnitConversion/UnitConversion.js b/lib/esm/UnitConversion/UnitConversion.js
+index 185bf9be21b516bc010d86a6ae470e8079df50c3..0b341c4930af529edadb781db5d503f515107ef0 100644
+--- a/lib/esm/UnitConversion/UnitConversion.js
++++ b/lib/esm/UnitConversion/UnitConversion.js
+@@ -2,7 +2,7 @@
+ * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
+ * See LICENSE.md in the project root for license terms and full copyright notice.
+ *--------------------------------------------------------------------------------------------*/
+-import * as almostEqual from "almost-equal";
++import almostEqual from "almost-equal";
+ import { SchemaItemType } from "../ECObjects";
+ /**
+  * Class used for storing calculated conversion between two Units [[UnitConverter.calculateConversion]] and converting values from one Unit to another [[UnitConverter.evaluate]]
