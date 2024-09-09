@@ -52,7 +52,7 @@ type TreeNodeRendererProps = Pick<UseTreeResult, "expandNode"> &
  * @see https://itwinui.bentley.com/docs/tree
  * @beta
  */
-export const TreeNodeRenderer = forwardRef<HTMLDivElement, TreeNodeRendererProps>(
+export const TreeNodeRenderer: React.ForwardRefExoticComponent<TreeNodeRendererProps> = forwardRef(
   (
     {
       node,

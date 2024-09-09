@@ -182,7 +182,7 @@ type SubtreeReloadOptions = {
 type TreeNodeProps = ComponentPropsWithoutRef<typeof TreeNode>;
 
 // @beta
-export function TreeNodeRenderer({ node, expandNode, getIcon, getLabel, getSublabel, onFilterClick, onNodeClick, onNodeKeyDown, isSelected, isDisabled, actionButtonsClassName, getHierarchyLevelDetails, reloadTree, ...treeNodeProps }: TreeNodeRendererProps): JSX_2.Element;
+export const TreeNodeRenderer: React.ForwardRefExoticComponent<TreeNodeRendererProps>;
 
 // @beta (undocumented)
 interface TreeNodeRendererOwnProps {
@@ -201,7 +201,7 @@ interface TreeNodeRendererOwnProps {
 }
 
 // @beta (undocumented)
-type TreeNodeRendererProps = Pick<ReturnType<typeof useTree>, "expandNode"> & Partial<Pick<ReturnType<typeof useTree>, "getHierarchyLevelDetails">> & Omit<TreeNodeProps, "label" | "onExpanded" | "onSelected" | "icon"> & TreeNodeRendererOwnProps;
+type TreeNodeRendererProps = Pick<UseTreeResult, "expandNode"> & Partial<Pick<UseTreeResult, "getHierarchyLevelDetails">> & Omit<TreeNodeProps, "label" | "onExpanded" | "onSelected" | "icon"> & TreeNodeRendererOwnProps;
 
 // @beta (undocumented)
 type TreeNodeRendererProps_2 = ComponentPropsWithoutRef<typeof TreeNodeRenderer>;

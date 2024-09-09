@@ -10,7 +10,7 @@ beta;type;PresentationInfoNode
 beta;interface;PresentationResultSetTooLargeInfoNode
 beta;type;PresentationTreeNode
 beta;type;RenderedTreeNode
-beta;function;TreeNodeRenderer
+beta;const;TreeNodeRenderer
 beta;function;TreeRenderer
 beta;function;UnifiedSelectionProvider
 beta;function;useSelectionHandler
