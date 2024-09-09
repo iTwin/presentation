@@ -150,7 +150,7 @@ type SubtreeReloadOptions = {
 type ReloadTreeOptions = FullTreeReloadOptions | SubtreeReloadOptions;
 
 /** @beta */
-interface UseTreeResult {
+export interface UseTreeResult {
   /**
    * Array containing root tree nodes. It is `undefined` on initial render until any nodes are loaded.
    */
