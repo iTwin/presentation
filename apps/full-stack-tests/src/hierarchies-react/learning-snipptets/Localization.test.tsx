@@ -6,6 +6,7 @@
 /* eslint-disable no-duplicate-imports */
 import { expect } from "chai";
 import { buildIModel } from "../../IModelUtils";
+import { stubGetBoundingClientRect } from "../../Utils";
 import { SchemaContext } from "@itwin/ecschema-metadata";
 import { IModelConnection } from "@itwin/core-frontend";
 import { render, waitFor } from "@testing-library/react";
@@ -35,6 +36,7 @@ import {
 describe("Hierarchies React", () => {
   describe("Learning snippets", () => {
     describe("Localization", () => {
+      stubGetBoundingClientRect();
       // __PUBLISH_EXTRACT_START__ Presentation.HierarchiesReact.Localization.Strings
       type IModelAccess = Parameters<typeof useUnifiedSelectionTree>[0]["imodelAccess"];
 
@@ -123,10 +125,10 @@ describe("Hierarchies React", () => {
         }
         // __PUBLISH_EXTRACT_END__
 
-        const { getByRole, getAllByTitle } = render(<MyTreeComponent imodelAccess={access} imodelKey={imodel.key} />);
+        const { getByRole, getAllByRole } = render(<MyTreeComponent imodelAccess={access} imodelKey={imodel.key} />);
         await waitFor(() => getByRole("tree"));
 
-        expect(getAllByTitle("Apply hierarchy filter")).to.not.be.empty;
+        expect(getAllByRole("button", { name: "Apply hierarchy filter" })).to.not.be.empty;
       });
 
       it("Tree renderer localization", async function () {
@@ -163,10 +165,10 @@ describe("Hierarchies React", () => {
           return <MyTreeRenderer {...state} rootNodes={rootNodes} localizedStrings={localizedStrings} />;
         }
 
-        const { getByRole, getAllByTitle } = render(<MyTreeComponent imodelAccess={access} imodelKey={imodel.key} />);
+        const { getByRole, getAllByRole } = render(<MyTreeComponent imodelAccess={access} imodelKey={imodel.key} />);
         await waitFor(() => getByRole("tree"));
 
-        expect(getAllByTitle("Apply hierarchy filter")).to.not.be.empty;
+        expect(getAllByRole("button", { name: "Apply hierarchy filter" })).to.not.be.empty;
       });
     });
   });

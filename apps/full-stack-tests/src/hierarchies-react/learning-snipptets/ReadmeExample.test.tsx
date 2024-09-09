@@ -8,6 +8,7 @@ import { expect } from "chai";
 import { insertPhysicalModelWithPartition } from "presentation-test-utilities";
 import { initialize, terminate } from "../../IntegrationTests";
 import { buildIModel } from "../../IModelUtils";
+import { stubGetBoundingClientRect } from "../../Utils";
 import { render, waitFor } from "@testing-library/react";
 // __PUBLISH_EXTRACT_START__ Presentation.HierarchiesReact.iModelAccess.Imports
 import { IModelConnection } from "@itwin/core-frontend";
@@ -58,6 +59,7 @@ function createIModelAccess(imodel: IModelConnection) {
 describe("Hierarchies React", () => {
   describe("Learning snippets", () => {
     describe("Readme example", () => {
+      stubGetBoundingClientRect();
       let iModel: IModelConnection;
 
       beforeEach(async function () {

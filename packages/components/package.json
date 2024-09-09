@@ -88,7 +88,7 @@
     "@itwin/ecschema-metadata": "^4.8.0",
     "@itwin/eslint-plugin": "^4.1.1",
     "@itwin/imodel-components-react": "^4.16.0",
-    "@itwin/itwinui-react": "^3.11.3",
+    "@itwin/itwinui-react": "^3.14.1",
     "@itwin/presentation-common": "^4.8.0",
     "@itwin/presentation-frontend": "^4.8.0",
     "@itwin/webgl-compatibility": "^4.8.0",

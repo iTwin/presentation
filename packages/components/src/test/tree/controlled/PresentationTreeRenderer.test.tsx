@@ -28,7 +28,7 @@ import { PresentationTreeRenderer } from "../../../presentation-components/tree/
 import { PresentationTreeDataProvider } from "../../../presentation-components/tree/DataProvider";
 import { IPresentationTreeDataProvider } from "../../../presentation-components/tree/IPresentationTreeDataProvider";
 import { PresentationTreeNodeItem } from "../../../presentation-components/tree/PresentationTreeNodeItem";
-import { createTestPropertyInfo, stubDOMMatrix, stubRaf } from "../../_helpers/Common";
+import { createTestPropertyInfo, stubDOMMatrix, stubGetBoundingClientRect, stubRaf } from "../../_helpers/Common";
 import { createTestContentDescriptor, createTestPropertiesContentField } from "../../_helpers/Content";
 import { act, render, waitFor } from "../../TestUtils";
 import { createTreeModelNodeInput } from "./Helpers";
@@ -36,6 +36,7 @@ import { createTreeModelNodeInput } from "./Helpers";
 describe("PresentationTreeRenderer", () => {
   stubRaf();
   stubDOMMatrix();
+  stubGetBoundingClientRect();
 
   const baseTreeProps = {
     imodel: {} as IModelConnection,
@@ -334,14 +335,14 @@ describe("PresentationTreeRenderer", () => {
       <PresentationTreeRenderer {...baseTreeProps} visibleNodes={visibleNodes} nodeLoader={nodeLoader} onFilterApplied={onFilterAppliedSpy} />,
     );
 
-    const { queryByText, user, getByTitle } = result;
+    const { queryByText, user, getByRole } = result;
     await waitFor(() => expect(queryByText("A")).to.not.be.null);
 
     // ensure that initially the filter is enabled
     let nodeItem = modelSource.getModel().getNode("A")?.item as PresentationTreeNodeItem;
     expect(nodeItem.filtering?.active).to.not.be.undefined;
 
-    const clearFilterButton = await waitFor(() => getByTitle("tree.clear-hierarchy-level-filter"));
+    const clearFilterButton = await waitFor(() => getByRole("button", { name: "tree.clear-hierarchy-level-filter" }));
     await user.click(clearFilterButton);
 
     await waitFor(() => {

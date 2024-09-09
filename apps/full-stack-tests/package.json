@@ -15,7 +15,7 @@
   "dependencies": {
     "@bentley/functional-schema": "^1.0.4",
     "@itwin/appui-abstract": "^4.8.0",
-    "@itwin/itwinui-react": "^3.12.1",
+    "@itwin/itwinui-react": "^3.14.1",
     "@itwin/build-tools": "^4.8.0",
     "@itwin/components-react": "^4.16.0",
     "@itwin/core-backend": "^4.8.0",

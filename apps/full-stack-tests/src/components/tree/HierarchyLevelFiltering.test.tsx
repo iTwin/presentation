@@ -15,6 +15,7 @@ import { buildTestIModel } from "@itwin/presentation-testing";
 import { getByPlaceholderText, getByRole, getByTitle, render, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { initialize, terminate } from "../../IntegrationTests";
+import { stubGetBoundingClientRect } from "../../Utils";
 import { getNodeByLabel, toggleExpandNode } from "../TreeUtils";
 
 /* eslint-disable @typescript-eslint/naming-convention */
@@ -22,6 +23,7 @@ import { getNodeByLabel, toggleExpandNode } from "../TreeUtils";
 describe("Learning snippets", () => {
   describe("Tree", () => {
     stubGlobals();
+    stubGetBoundingClientRect();
 
     before(async () => {
       await initialize();
