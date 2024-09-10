@@ -9,7 +9,7 @@ import { MAX_LIMIT_OVERRIDE } from "../../presentation-hierarchies-react/interna
 import { TreeRenderer } from "../../presentation-hierarchies-react/itwinui/TreeRenderer";
 import { PresentationHierarchyNode, PresentationInfoNode, PresentationTreeNode } from "../../presentation-hierarchies-react/TreeNode";
 import { HierarchyLevelDetails } from "../../presentation-hierarchies-react/UseTree";
-import { act, createStub, createTestHierarchyNode, render, waitFor, within } from "../TestUtils";
+import { act, createStub, createTestHierarchyNode, render, stubGetBoundingClientRect, waitFor, within } from "../TestUtils";
 
 type RequiredTreeProps = Required<ComponentPropsWithoutRef<typeof TreeRenderer>>;
 
@@ -37,6 +37,8 @@ describe("Tree", () => {
     isNodeSelected.reset();
     getHierarchyLevelDetails.reset();
   });
+
+  stubGetBoundingClientRect();
 
   it("renders nodes", () => {
     const rootNodes = createNodes([
@@ -611,13 +613,13 @@ describe("Tree", () => {
       increaseHierarchyLimitWithFiltering: "Custom or, <link>Custom increase the hierarchy level size limit to {{limit}}.</link>",
     };
 
-    const { queryByText, queryByTitle, rerender } = render(<TreeRenderer rootNodes={rootNodes} {...initialProps} />);
+    const { queryByText, queryByRole, queryByTitle, rerender } = render(<TreeRenderer rootNodes={rootNodes} {...initialProps} />);
 
     await waitFor(() => {
       expect(queryByText(/Some Error/)).to.not.be.null;
       expect(queryByText(/Loading.../)).to.not.be.null;
-      expect(queryByTitle(/Apply filter/)).to.not.be.null;
-      expect(queryByTitle(/Clear active filter/)).to.not.be.null;
+      expect(queryByRole("button", { name: "Apply filter" })).to.not.be.null;
+      expect(queryByRole("button", { name: "Clear active filter" })).to.not.be.null;
       expect(queryByText(/No child nodes match current filter/)).to.not.be.null;
       expect(queryByText(/Please provide/)).to.not.be.null;
       expect(queryByText(/additional filtering/)).to.not.be.null;
@@ -634,8 +636,8 @@ describe("Tree", () => {
     await waitFor(() => {
       expect(queryByText(/Some Error/)).to.not.be.null;
       expect(queryByText(/Custom loading.../)).to.not.be.null;
-      expect(queryByTitle(/Custom apply filter/)).to.not.be.null;
-      expect(queryByTitle(/Custom clear active filter/)).to.not.be.null;
+      expect(queryByRole("button", { name: "Custom apply filter" })).to.not.be.null;
+      expect(queryByRole("button", { name: "Custom clear active filter" })).to.not.be.null;
       expect(queryByText(/Custom no child nodes match current filter/)).to.not.be.null;
       expect(queryByText(/Custom please provide/)).to.not.be.null;
       expect(queryByText(/Custom additional filtering/)).to.not.be.null;

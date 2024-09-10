@@ -1,7 +1,7 @@
 {
   "require": ["ignore-styles"],
   "checkLeaks": true,
-  "global": ["IS_REACT_ACT_ENVIRONMENT"],
+  "global": ["IS_REACT_ACT_ENVIRONMENT", "__iui"],
   "timeout": 60000,
   "file": ["./lib/cjs/test/index.js"],
   "exclude": ["./lib/test/coverage/**/*"],

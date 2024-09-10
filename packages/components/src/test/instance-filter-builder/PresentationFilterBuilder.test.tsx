@@ -14,13 +14,14 @@ import {
   PresentationInstanceFilterBuilder,
   PresentationInstanceFilterInfo,
 } from "../../presentation-components/instance-filter-builder/PresentationFilterBuilder";
-import { createTestECClassInfo, stubDOMMatrix, stubRaf } from "../_helpers/Common";
+import { createTestECClassInfo, stubDOMMatrix, stubGetBoundingClientRect, stubRaf } from "../_helpers/Common";
 import { createTestCategoryDescription, createTestContentDescriptor, createTestPropertiesContentField } from "../_helpers/Content";
 import { render, waitFor, waitForElement } from "../TestUtils";
 
 describe("PresentationInstanceFilter", () => {
   stubRaf();
   stubDOMMatrix();
+  stubGetBoundingClientRect();
 
   const category = createTestCategoryDescription({ name: "root", label: "Root" });
   const classInfo = createTestECClassInfo({ id: "0x123", name: "class1", label: "Class 1" });
