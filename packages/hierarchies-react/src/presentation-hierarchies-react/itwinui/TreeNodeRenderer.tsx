@@ -186,7 +186,7 @@ const PlaceholderNode = forwardRef<HTMLDivElement, Omit<TreeNodeProps, "onExpand
       label={localizedStrings.loading}
       icon={<ProgressRadial size="x-small" indeterminate title={localizedStrings.loading} />}
       onExpanded={/* istanbul ignore next */ () => {}}
-    ></TreeNode>
+    />
   );
 });
 PlaceholderNode.displayName = "PlaceholderNode";
