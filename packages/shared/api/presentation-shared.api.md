@@ -41,7 +41,7 @@ export namespace ConcatenatedValue {
 }
 
 // @beta
-export type ConcatenatedValuePart = ConcatenatedValue | PrimitivePropertyValue | TypedPrimitiveValue | string;
+export type ConcatenatedValuePart = ConcatenatedValue | TypedPrimitiveValue | string;
 
 // @beta (undocumented)
 export namespace ConcatenatedValuePart {
@@ -49,8 +49,6 @@ export namespace ConcatenatedValuePart {
     export function isConcatenatedValue(part: ConcatenatedValuePart): part is ConcatenatedValue;
     // (undocumented)
     export function isPrimitive(part: ConcatenatedValuePart): part is TypedPrimitiveValue;
-    // (undocumented)
-    export function isProperty(part: ConcatenatedValuePart): part is PrimitivePropertyValue;
     // (undocumented)
     export function isString(part: ConcatenatedValuePart): part is string;
 }
@@ -99,6 +97,14 @@ function createNullableSelector(props: {
     checkSelector: string;
     valueSelector: string;
 }): string;
+
+// @beta
+function createPrimitivePropertyValueSelectorProps({ schemaProvider, propertyClassAlias, propertyClassName, propertyName, }: {
+    schemaProvider: ECSchemaProvider;
+    propertyClassName: string;
+    propertyClassAlias: string;
+    propertyName: string;
+}): Promise<TypedPrimitiveValueSelectorProps>;
 
 // @beta
 function createRawPrimitiveValueSelector(value: PrimitiveValue | undefined): string;
@@ -272,6 +278,7 @@ declare namespace ECSql {
         createConcatenatedValueJsonSelector,
         createConcatenatedValueStringSelector,
         createInstanceKeySelector,
+        createPrimitivePropertyValueSelectorProps,
         createRelationshipPathJoinClause
     }
 }
@@ -355,7 +362,6 @@ export { Event_2 as Event }
 // @beta
 export function formatConcatenatedValue(props: {
     value: ConcatenatedValue | string;
-    schemaProvider: ECSchemaProvider;
     valueFormatter: IPrimitiveValueFormatter;
 }): Promise<string>;
 
@@ -454,13 +460,6 @@ interface Point3d {
 }
 
 // @beta
-interface PrimitivePropertyValue {
-    className: string;
-    propertyName: string;
-    value: PrimitiveValue;
-}
-
-// @beta
 export type PrimitiveValue = Id64String | string | number | boolean | Date | Point2d | Point3d;
 
 // @beta (undocumented)
@@ -470,21 +469,7 @@ export namespace PrimitiveValue {
 }
 
 // @beta
-interface PrimitiveValueSelectorProps {
-    selector: string;
-    type?: PrimitiveValueType;
-}
-
-// @beta
 type PrimitiveValueType = "Id" | Exclude<EC.PrimitiveType, "Binary" | "IGeometry">;
-
-// @beta
-interface PropertyValueSelectClauseProps {
-    propertyClassAlias: string;
-    propertyClassName: string;
-    propertyName: string;
-    specialType?: SpecialPropertyType;
-}
 
 // @beta
 type RelationshipPath<TStep extends RelationshipPathStep = RelationshipPathStep> = TStep[];
@@ -499,9 +484,6 @@ interface RelationshipPathStep {
 
 // @beta
 export function releaseMainThread(): Promise<void>;
-
-// @beta
-type SpecialPropertyType = "Navigation" | "Guid" | "Point2d" | "Point3d";
 
 // @beta
 export function trimWhitespace(str: string): string;
@@ -545,16 +527,28 @@ export namespace TypedPrimitiveValue {
 }
 
 // @beta
-type TypedValueSelectClauseProps = PropertyValueSelectClauseProps | TypedPrimitiveValue | PrimitiveValueSelectorProps;
+type TypedPrimitiveValueSelectorProps = {
+    selector: string;
+} & ({
+    type?: undefined;
+} | {
+    type: Exclude<PrimitiveValueType, "Double">;
+    extendedType?: string;
+} | {
+    type: Extract<PrimitiveValueType, "Double">;
+    extendedType?: string;
+    koqName?: string;
+});
+
+// @beta
+type TypedValueSelectClauseProps = TypedPrimitiveValue | TypedPrimitiveValueSelectorProps;
 
 // @beta (undocumented)
 namespace TypedValueSelectClauseProps {
     // (undocumented)
     function isPrimitiveValue(props: TypedValueSelectClauseProps): props is TypedPrimitiveValue;
     // (undocumented)
-    function isPrimitiveValueSelector(props: TypedValueSelectClauseProps): props is PrimitiveValueSelectorProps;
-    // (undocumented)
-    function isPropertySelector(props: TypedValueSelectClauseProps): props is PropertyValueSelectClauseProps;
+    function isPrimitiveValueSelector(props: TypedValueSelectClauseProps): props is TypedPrimitiveValueSelectorProps;
 }
 
 // (No @packageDocumentation comment for this package)

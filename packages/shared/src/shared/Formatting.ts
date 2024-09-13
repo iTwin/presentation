@@ -6,7 +6,6 @@
 import { assert } from "@itwin/core-bentley";
 import { ConcatenatedValue, ConcatenatedValuePart } from "./ConcatenatedValue";
 import { julianToDateTime } from "./InternalUtils";
-import { ECSchemaProvider, getClass } from "./Metadata";
 import { TypedPrimitiveValue } from "./Values";
 
 /**
@@ -20,15 +19,10 @@ export type IPrimitiveValueFormatter = (value: TypedPrimitiveValue) => Promise<s
  * Formats a concatenated value into a string, taking into account different types of `ConcatenatedValuePart` that
  * the value consists of.
  *
- * @throws Error if a `ConcatenatedValuePart` in given `ConcatenatedValue` references a non-primitive, `IGeometry` or `Binary` property.
  * @beta
  */
-export async function formatConcatenatedValue(props: {
-  value: ConcatenatedValue | string;
-  schemaProvider: ECSchemaProvider;
-  valueFormatter: IPrimitiveValueFormatter;
-}): Promise<string> {
-  const { value, schemaProvider, valueFormatter } = props;
+export async function formatConcatenatedValue(props: { value: ConcatenatedValue | string; valueFormatter: IPrimitiveValueFormatter }): Promise<string> {
+  const { value, valueFormatter } = props;
   if (typeof value === "string") {
     return valueFormatter({ value, type: "String" });
   }
@@ -42,38 +36,10 @@ export async function formatConcatenatedValue(props: {
           type: "String",
         };
       }
-      // for property parts - find property metadata and create `TypedPrimitiveValue` for them.
-      if (ConcatenatedValuePart.isProperty(part)) {
-        const property = await getProperty(part, schemaProvider);
-        if (!property?.isPrimitive()) {
-          throw new Error(`Concatenated values formatter expects a primitive property, but it's not.`);
-        }
-        if (property.primitiveType === "IGeometry") {
-          throw new Error(
-            `Concatenated values formatter does not support "IGeometry" values, but the provided ${part.className}.${part.propertyName} property is.`,
-          );
-        }
-        if (property.primitiveType === "Binary") {
-          throw new Error(
-            `Concatenated values formatter does not support "Binary" values, but the provided ${part.className}.${part.propertyName} property is.`,
-          );
-        }
-        part = {
-          type: property.primitiveType,
-          extendedType: property.extendedTypeName,
-          koqName: (await property.kindOfQuantity)?.fullName,
-          value: part.value,
-        } as TypedPrimitiveValue;
-      }
       // finally, use provided value formatter to create a string from `TypedPrimitiveValue`
       return valueFormatter(part);
     },
   });
-}
-
-async function getProperty({ className, propertyName }: { className: string; propertyName: string }, schemaProvider: ECSchemaProvider) {
-  const propertyClass = await getClass(schemaProvider, className);
-  return propertyClass.getProperty(propertyName);
 }
 
 /**

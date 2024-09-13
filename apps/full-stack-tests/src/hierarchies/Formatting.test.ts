@@ -111,8 +111,9 @@ describe("Hierarchies", () => {
           });
           return { schema, model, category, element };
         });
+        const imodelAccess = createIModelAccess(imodel);
 
-        const selectQueryFactory = createNodesQueryClauseFactory({ imodelAccess: createIModelAccess(imodel) });
+        const selectQueryFactory = createNodesQueryClauseFactory({ imodelAccess });
         const hierarchy: HierarchyDefinition = {
           async defineHierarchyLevel({ parentNode }) {
             if (!parentNode) {
@@ -127,7 +128,12 @@ describe("Hierarchies", () => {
                       nodeLabel: {
                         selector: ECSql.createConcatenatedValueJsonSelector([
                           { type: "String", value: "[" },
-                          { propertyClassName: schema.items.ClassX.fullName, propertyClassAlias: "this", propertyName: "PropX" },
+                          await ECSql.createPrimitivePropertyValueSelectorProps({
+                            schemaProvider: imodelAccess,
+                            propertyClassName: schema.items.ClassX.fullName,
+                            propertyClassAlias: "this",
+                            propertyName: "PropX",
+                          }),
                           { type: "String", value: "]" },
                         ]),
                       },
@@ -232,7 +238,8 @@ describe("Hierarchies", () => {
 
     describe("DateTime", () => {
       it("formats instance node labels", async function () {
-        const selectQueryFactory = createNodesQueryClauseFactory({ imodelAccess: createIModelAccess(emptyIModel) });
+        const imodelAccess = createIModelAccess(emptyIModel);
+        const selectQueryFactory = createNodesQueryClauseFactory({ imodelAccess });
         const hierarchy: HierarchyDefinition = {
           async defineHierarchyLevel({ parentNode }) {
             if (!parentNode) {
@@ -247,7 +254,12 @@ describe("Hierarchies", () => {
                       nodeLabel: {
                         selector: ECSql.createConcatenatedValueJsonSelector([
                           { type: "String", value: "[" },
-                          { propertyClassName: "BisCore.Subject", propertyClassAlias: "this", propertyName: "LastMod" },
+                          await ECSql.createPrimitivePropertyValueSelectorProps({
+                            schemaProvider: imodelAccess,
+                            propertyClassName: "BisCore.Subject",
+                            propertyClassAlias: "this",
+                            propertyName: "LastMod",
+                          }),
                           { type: "String", value: "]" },
                         ]),
                       },
@@ -361,8 +373,9 @@ describe("Hierarchies", () => {
           const m2 = insertPhysicalSubModel({ builder, modeledElementId: p2.id, isPrivate: true });
           return { modelClassName: m2.className };
         });
+        const imodelAccess = createIModelAccess(imodel);
 
-        const selectQueryFactory = createNodesQueryClauseFactory({ imodelAccess: createIModelAccess(imodel) });
+        const selectQueryFactory = createNodesQueryClauseFactory({ imodelAccess });
         const hierarchy: HierarchyDefinition = {
           async defineHierarchyLevel({ parentNode }) {
             if (!parentNode) {
@@ -377,7 +390,12 @@ describe("Hierarchies", () => {
                       nodeLabel: {
                         selector: ECSql.createConcatenatedValueJsonSelector([
                           { type: "String", value: "[" },
-                          { propertyClassName: modelClassName, propertyClassAlias: "this", propertyName: "IsPrivate" },
+                          await ECSql.createPrimitivePropertyValueSelectorProps({
+                            schemaProvider: imodelAccess,
+                            propertyClassName: modelClassName,
+                            propertyClassAlias: "this",
+                            propertyName: "IsPrivate",
+                          }),
                           { type: "String", value: "]" },
                         ]),
                       },
@@ -441,8 +459,9 @@ describe("Hierarchies", () => {
         const { imodel, category } = await buildIModel(this, async (builder) => {
           return { category: insertSpatialCategory({ builder, codeValue: "category", rank: Rank.Application }) };
         });
+        const imodelAccess = createIModelAccess(imodel);
 
-        const selectQueryFactory = createNodesQueryClauseFactory({ imodelAccess: createIModelAccess(imodel) });
+        const selectQueryFactory = createNodesQueryClauseFactory({ imodelAccess });
         const hierarchy: HierarchyDefinition = {
           async defineHierarchyLevel({ parentNode }) {
             if (!parentNode) {
@@ -457,7 +476,12 @@ describe("Hierarchies", () => {
                       nodeLabel: {
                         selector: ECSql.createConcatenatedValueJsonSelector([
                           { type: "String", value: "[" },
-                          { propertyClassName: category.className, propertyClassAlias: "this", propertyName: "Rank" },
+                          await ECSql.createPrimitivePropertyValueSelectorProps({
+                            schemaProvider: imodelAccess,
+                            propertyClassName: category.className,
+                            propertyClassAlias: "this",
+                            propertyName: "Rank",
+                          }),
                           { type: "String", value: "]" },
                         ]),
                       },
@@ -531,7 +555,9 @@ describe("Hierarchies", () => {
           });
           return { model, category, element };
         });
-        const selectQueryFactory = createNodesQueryClauseFactory({ imodelAccess: createIModelAccess(imodel) });
+        const imodelAccess = createIModelAccess(imodel);
+
+        const selectQueryFactory = createNodesQueryClauseFactory({ imodelAccess });
         const hierarchy: HierarchyDefinition = {
           async defineHierarchyLevel({ parentNode }) {
             if (!parentNode) {
@@ -546,7 +572,12 @@ describe("Hierarchies", () => {
                       nodeLabel: {
                         selector: ECSql.createConcatenatedValueJsonSelector([
                           { type: "String", value: "[" },
-                          { propertyClassName: element.className, propertyClassAlias: "this", propertyName: "Yaw" },
+                          await ECSql.createPrimitivePropertyValueSelectorProps({
+                            schemaProvider: imodelAccess,
+                            propertyClassName: element.className,
+                            propertyClassAlias: "this",
+                            propertyName: "Yaw",
+                          }),
                           { type: "String", value: "]" },
                         ]),
                       },
@@ -619,7 +650,9 @@ describe("Hierarchies", () => {
           });
           return { model, category, element };
         });
-        const selectQueryFactory = createNodesQueryClauseFactory({ imodelAccess: createIModelAccess(imodel) });
+        const imodelAccess = createIModelAccess(imodel);
+
+        const selectQueryFactory = createNodesQueryClauseFactory({ imodelAccess });
         const hierarchy: HierarchyDefinition = {
           async defineHierarchyLevel({ parentNode }) {
             if (!parentNode) {
@@ -634,7 +667,12 @@ describe("Hierarchies", () => {
                       nodeLabel: {
                         selector: ECSql.createConcatenatedValueJsonSelector([
                           { type: "String", value: "[" },
-                          { propertyClassName: element.className, propertyClassAlias: "this", propertyName: "Origin", specialType: "Point2d" },
+                          await ECSql.createPrimitivePropertyValueSelectorProps({
+                            schemaProvider: imodelAccess,
+                            propertyClassName: element.className,
+                            propertyClassAlias: "this",
+                            propertyName: "Origin",
+                          }),
                           { type: "String", value: "]" },
                         ]),
                       },
@@ -707,7 +745,9 @@ describe("Hierarchies", () => {
           });
           return { model, category, element };
         });
-        const selectQueryFactory = createNodesQueryClauseFactory({ imodelAccess: createIModelAccess(imodel) });
+        const imodelAccess = createIModelAccess(imodel);
+
+        const selectQueryFactory = createNodesQueryClauseFactory({ imodelAccess });
         const hierarchy: HierarchyDefinition = {
           async defineHierarchyLevel({ parentNode }) {
             if (!parentNode) {
@@ -722,7 +762,12 @@ describe("Hierarchies", () => {
                       nodeLabel: {
                         selector: ECSql.createConcatenatedValueJsonSelector([
                           { type: "String", value: "[" },
-                          { propertyClassName: element.className, propertyClassAlias: "this", propertyName: "Origin", specialType: "Point3d" },
+                          await ECSql.createPrimitivePropertyValueSelectorProps({
+                            schemaProvider: imodelAccess,
+                            propertyClassName: element.className,
+                            propertyClassAlias: "this",
+                            propertyName: "Origin",
+                          }),
                           { type: "String", value: "]" },
                         ]),
                       },
@@ -793,7 +838,9 @@ describe("Hierarchies", () => {
           });
           return { model, category, element };
         });
-        const selectQueryFactory = createNodesQueryClauseFactory({ imodelAccess: createIModelAccess(imodel) });
+        const imodelAccess = createIModelAccess(imodel);
+
+        const selectQueryFactory = createNodesQueryClauseFactory({ imodelAccess });
         const hierarchy: HierarchyDefinition = {
           async defineHierarchyLevel({ parentNode }) {
             if (!parentNode) {
@@ -808,7 +855,12 @@ describe("Hierarchies", () => {
                       nodeLabel: {
                         selector: ECSql.createConcatenatedValueJsonSelector([
                           { type: "String", value: "[" },
-                          { propertyClassName: element.className, propertyClassAlias: "this", propertyName: "FederationGuid", specialType: "Guid" },
+                          await ECSql.createPrimitivePropertyValueSelectorProps({
+                            schemaProvider: imodelAccess,
+                            propertyClassName: element.className,
+                            propertyClassAlias: "this",
+                            propertyName: "FederationGuid",
+                          }),
                           { type: "String", value: "]" },
                         ]),
                       },
@@ -840,7 +892,8 @@ describe("Hierarchies", () => {
     });
 
     it("reacts to changed formatter without running queries", async function () {
-      const selectQueryFactory = createNodesQueryClauseFactory({ imodelAccess: createIModelAccess(emptyIModel) });
+      const imodelAccess = createIModelAccess(emptyIModel);
+      const selectQueryFactory = createNodesQueryClauseFactory({ imodelAccess });
       const hierarchy: HierarchyDefinition = {
         async defineHierarchyLevel({ parentNode }) {
           if (!parentNode) {

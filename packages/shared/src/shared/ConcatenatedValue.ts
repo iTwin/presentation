@@ -3,13 +3,11 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { PrimitivePropertyValue, TypedPrimitiveValue } from "./Values";
+import { TypedPrimitiveValue } from "./Values";
 
 /**
  * A part of a `ConcatenatedValue`, describing one piece of the value. Possible types:
  * - `ConcatenatedValue` describes a nested concatenated value.
- * - `PrimitivePropertyValue` describes an ECProperty value. Generally the value is formatted according to
- *   property metadata before concatenating with other parts.
  * - `TypedPrimitiveValue` describes a value with its type. Generally the value is formatted
  *   according to its type information before concatenating with other parts.
  * - `string` is just concatenated to other parts as-is.
@@ -17,7 +15,7 @@ import { PrimitivePropertyValue, TypedPrimitiveValue } from "./Values";
  * @see `ConcatenatedValue`
  * @beta
  */
-export type ConcatenatedValuePart = ConcatenatedValue | PrimitivePropertyValue | TypedPrimitiveValue | string;
+export type ConcatenatedValuePart = ConcatenatedValue | TypedPrimitiveValue | string;
 
 /** @beta */
 // eslint-disable-next-line @typescript-eslint/no-redeclare
@@ -30,12 +28,6 @@ export namespace ConcatenatedValuePart {
   /** @beta */
   export function isPrimitive(part: ConcatenatedValuePart): part is TypedPrimitiveValue {
     return !!(part as TypedPrimitiveValue).type;
-  }
-
-  /** @beta */
-  export function isProperty(part: ConcatenatedValuePart): part is PrimitivePropertyValue {
-    const candidate = part as PrimitivePropertyValue;
-    return !!candidate.className && !!candidate.propertyName;
   }
 
   /** @beta */

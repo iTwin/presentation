@@ -338,7 +338,7 @@ class HierarchyProviderImpl implements HierarchyProvider {
       // set parent node keys on the parsed node
       map((node) => Object.assign(node, { parentKeys: createParentNodeKeysList(parentNode) })),
       // format `ConcatenatedValue` labels into string labels
-      mergeMap(async (node) => applyLabelsFormatting(node, this._imodelAccess, this._valuesFormatter)),
+      mergeMap(async (node) => applyLabelsFormatting(node, this._valuesFormatter)),
       // we have `ProcessedHierarchyNode` from here
       preProcessNodes(this.hierarchyDefinition),
       finalize(() =>
@@ -685,14 +685,12 @@ function processNodes<TNode>(processor: (node: TNode) => Promise<TNode | undefin
 
 async function applyLabelsFormatting<TNode extends { label: string | ConcatenatedValue }>(
   node: TNode,
-  schemaProvider: ECSchemaProvider,
   valueFormatter: IPrimitiveValueFormatter,
 ): Promise<TNode & { label: string }> {
   return {
     ...node,
     label: await formatConcatenatedValue({
       value: node.label,
-      schemaProvider,
       valueFormatter,
     }),
   };
