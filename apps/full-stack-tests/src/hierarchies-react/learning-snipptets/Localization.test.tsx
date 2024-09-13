@@ -121,14 +121,7 @@ describe("Hierarchies React", () => {
           if (!rootNodes) {
             return localizedStrings.loading;
           }
-          return (
-            <TreeRenderer 
-              rootNodes={rootNodes} 
-              expandNode={expandNode} 
-              localizedStrings={localizedStrings} 
-              onFilterClick={() => {}}
-            />
-          );
+          return <TreeRenderer rootNodes={rootNodes} expandNode={expandNode} localizedStrings={localizedStrings} onFilterClick={() => {}} />;
         }
         // __PUBLISH_EXTRACT_END__
 
