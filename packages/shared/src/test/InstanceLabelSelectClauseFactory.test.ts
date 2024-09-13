@@ -42,9 +42,9 @@ describe("parseInstanceLabel", () => {
         value: 123,
       },
       {
-        className: "x.y",
-        propertyName: "p",
-        value: "test",
+        type: "String",
+        value: "http://bentley.com",
+        extendedType: "Url",
       },
     ];
     expect(parseInstanceLabel(JSON.stringify(labelParts))).to.deep.eq(labelParts);

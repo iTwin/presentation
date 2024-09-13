@@ -139,6 +139,28 @@ The ECSql utilities group contains a number of functions to help create complex 
   // result = "'STRING VALUE'"
   ```
 
+- `createPrimitivePropertyValueSelectorProps` - creates `TypedValueSelectClauseProps` for selecting a primitive property value, while also
+  accounting for the property type. The created props may be used when creating `ConcatenatedValue` selectors (see `createConcatenatedValueJsonSelector`
+  and `createConcatenatedValueStringSelector`).
+
+  Example usage:
+
+  ```ts
+  import { ECSql } from "@itwin/presentation-shared";
+
+  const categoryRankSelectorProps = ECSql.createPrimitivePropertyValueSelectorProps({
+    schemaProvider,
+    propertyClassAlias: "x",
+    propertyClassName: "BisCore.Category",
+    propertyName: "Rank",
+  });
+  // categoryRankSelectorProps = { selector: "[x].[Rank]", type: "Integer" }
+
+  // Now we can use the result to create a `ConcatenatedValue` selector:
+  const selector = ECSql.createConcatenatedValueJsonSelector(["Rank: ", categoryRankSelectorProps]);
+  // selector = `json_array('Rank: ', json_object('selector', '[x].[Rank]', 'type', 'Integer'))`
+  ```
+
 - `createInstanceKeySelector` - creates an ECSQL selector for a serialized `InstanceKey` JSON object.
 
   Example usage:
@@ -158,12 +180,7 @@ The ECSql utilities group contains a number of functions to help create complex 
 
   const selector = ECSql.createConcatenatedValueJsonSelector([
     {
-      propertyClassName: "MySchema.MyClass",
-      propertyClassAlias: "my_class",
-      propertyName: "MyProperty",
-    },
-    {
-      selector: "my_class.MyOtherProperty",
+      selector: "my_class.MyProperty",
     },
     {
       value: 123.456,
@@ -171,12 +188,7 @@ The ECSql utilities group contains a number of functions to help create complex 
     },
   ]);
   // selector = `json_array(
-  //     json_object(
-  //         'className', 'MySchema.MyClass',
-  //         'propertyName', 'MyProperty',
-  //         'value', [my_class].[MyProperty]
-  //     ),
-  //     my_class.MyOtherProperty,
+  //     my_class.MyProperty,
   //     json_object(
   //         'value', 123.456,
   //         'type', 'Double'
@@ -205,19 +217,14 @@ The ECSql utilities group contains a number of functions to help create complex 
 
   const selector = ECSql.createConcatenatedValueStringSelector([
     {
-      propertyClassName: "MySchema.MyClass",
-      propertyClassAlias: "my_class",
-      propertyName: "MyProperty",
-    },
-    {
-      selector: "my_class.MyOtherProperty",
+      selector: "my_class.MyProperty",
     },
     {
       value: 123.456,
       type: "Double",
     },
   ]);
-  // selector = `[my_class].[MyProperty] || my_class.MyOtherProperty || 123.456`
+  // selector = `my_class.MyProperty || 123.456`
 
   const queryReader = queryExecutor.createQueryReader(
     {
@@ -274,11 +281,10 @@ The APIs in Values group contain various value types and utilities to work with 
 
   - `create` - given a `PrimitiveValue`, its type and, optionally, extra information, validates the input and creates a `TypedPrimitiveValue`.
 
-- `ConcatenatedValuePart` - a union of different types that may be used to create a single, combined value: primitive ECInstance property value, hardcoded primitive value or just plain string. Also, a namespace, containing the following utilities:
+- `ConcatenatedValuePart` - a union of different types that may be used to create a single, combined value: nested `ConcatenatedValue`, `TypedPrimitiveValue` or just plain string. Also, a namespace, containing the following utilities:
 
   - `isString` - type guard to check if the given `ConcatenatedValuePart` is a `string`.
   - `isPrimitive` - type guard to check if the given `ConcatenatedValuePart` is a `TypedPrimitiveValue`.
-  - `isProperty` - type guard to check if the given `ConcatenatedValuePart` describes a primitive property value.
 
 - `ConcatenatedValue` - an array of `ConcatenatedValuePart`. Also, a namespace containing the following utilities:
 

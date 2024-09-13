@@ -564,7 +564,8 @@ describe("Hierarchies", () => {
         }
 
         function createPhysicalModelsProvider() {
-          const selectQueryFactory = createNodesQueryClauseFactory({ imodelAccess: createIModelAccess(imodel) });
+          const imodelAccess = createIModelAccess(imodel);
+          const selectQueryFactory = createNodesQueryClauseFactory({ imodelAccess });
           const hierarchy: HierarchyDefinition = {
             async defineHierarchyLevel() {
               return [
@@ -577,9 +578,19 @@ describe("Hierarchies", () => {
                         ecInstanceId: { selector: `this.ECInstanceId` },
                         nodeLabel: {
                           selector: ECSql.createConcatenatedValueJsonSelector([
-                            { propertyClassName: Element.classFullName, propertyClassAlias: "modeledElement", propertyName: "CodeValue" },
+                            await ECSql.createPrimitivePropertyValueSelectorProps({
+                              schemaProvider: imodelAccess,
+                              propertyClassName: Element.classFullName,
+                              propertyClassAlias: "modeledElement",
+                              propertyName: "CodeValue",
+                            }),
                             { type: "String", value: ". IsPrivate: " },
-                            { propertyClassName: PhysicalModel.classFullName, propertyClassAlias: "this", propertyName: "IsPrivate" },
+                            await ECSql.createPrimitivePropertyValueSelectorProps({
+                              schemaProvider: imodelAccess,
+                              propertyClassName: PhysicalModel.classFullName,
+                              propertyClassAlias: "this",
+                              propertyName: "IsPrivate",
+                            }),
                           ]),
                         },
                       })}

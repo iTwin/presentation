@@ -10,5 +10,6 @@ export {
   createConcatenatedValueJsonSelector,
   createConcatenatedValueStringSelector,
   createInstanceKeySelector,
+  createPrimitivePropertyValueSelectorProps,
 } from "./ECSqlValueSelectorSnippets";
 export { createRelationshipPathJoinClause } from "./ECSqlJoinSnippets";

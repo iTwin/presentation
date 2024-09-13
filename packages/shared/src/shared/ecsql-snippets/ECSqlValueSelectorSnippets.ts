@@ -4,65 +4,122 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { Id64 } from "@itwin/core-bentley";
-import { PrimitiveValueType } from "../Metadata";
+import { ECSchemaProvider, getClass, PrimitiveValueType } from "../Metadata";
 import { PrimitiveValue, TypedPrimitiveValue } from "../Values";
 
 /**
- * A union of property types that need special handling when creating a property value selector.
- * For example, Guid values are stored as binary and need to be selected with `GuidToStr` function to
- * get a meaningful value.
+ * Props for selecting a `TypedPrimitiveValue` using given ECSQL selector.
  * @beta
  */
-type SpecialPropertyType = "Navigation" | "Guid" | "Point2d" | "Point3d";
-
-/**
- * Props for selecting property value along with its metadata.
- *
- * It's recommended to only select properties with metadata only when they need additional formatting and
- * otherwise use `createRawPropertyValueSelector` to select their value.
- *
- * @beta
- */
-interface PropertyValueSelectClauseProps {
-  /** Full class name of the property. Format: `SchemaName.ClassName`. */
-  propertyClassName: string;
-  /** Query alias of the class that contains the property. */
-  propertyClassAlias: string;
-  /** Name of the property. */
-  propertyName: string;
-  /** Special type of the property if it matches any. */
-  specialType?: SpecialPropertyType;
-}
-
-/**
- * Props for selecting a primitive value using given ECSQL selector.
- * @beta
- */
-interface PrimitiveValueSelectorProps {
+type TypedPrimitiveValueSelectorProps = {
   /** ECSQL selector to query the value */
   selector: string;
-  /** Type of the value. Defaults to `String`. */
-  type?: PrimitiveValueType;
-}
+} & (
+  | {
+      /** Type of the value. Defaults to `String`. */
+      type?: undefined;
+    }
+  | {
+      type: Exclude<PrimitiveValueType, "Double">;
+      extendedType?: string;
+    }
+  | {
+      type: Extract<PrimitiveValueType, "Double">;
+      extendedType?: string;
+      koqName?: string;
+    }
+);
 
 /**
  * A union of prop types for selecting a value and its metadata in ECSQL query.
  * @beta
  */
-export type TypedValueSelectClauseProps = PropertyValueSelectClauseProps | TypedPrimitiveValue | PrimitiveValueSelectorProps;
+export type TypedValueSelectClauseProps = TypedPrimitiveValue | TypedPrimitiveValueSelectorProps;
 
 /** @beta */
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export namespace TypedValueSelectClauseProps {
-  export function isPropertySelector(props: TypedValueSelectClauseProps): props is PropertyValueSelectClauseProps {
-    return !!(props as PropertyValueSelectClauseProps).propertyName;
-  }
   export function isPrimitiveValue(props: TypedValueSelectClauseProps): props is TypedPrimitiveValue {
-    return !!(props as TypedPrimitiveValue).value;
+    return "value" in props;
   }
-  export function isPrimitiveValueSelector(props: TypedValueSelectClauseProps): props is PrimitiveValueSelectorProps {
-    return !!(props as PrimitiveValueSelectorProps).selector;
+  export function isPrimitiveValueSelector(props: TypedValueSelectClauseProps): props is TypedPrimitiveValueSelectorProps {
+    return "selector" in props;
   }
+}
+
+/**
+ * A function for a creating a `TypedPrimitiveValueSelectorProps` object from given primitive ECProperty information.
+ * @throws Error if the property is not found, is not primitive or has unsupported primitive type (Binary, IGeometry).
+ * @beta
+ */
+export async function createPrimitivePropertyValueSelectorProps({
+  schemaProvider,
+  propertyClassAlias,
+  propertyClassName,
+  propertyName,
+}: {
+  /** Access to schema information. */
+  schemaProvider: ECSchemaProvider;
+  /** Full class name of the property. Format: `SchemaName.ClassName`. */
+  propertyClassName: string;
+  /** Query alias of the class that contains the property. */
+  propertyClassAlias: string;
+  /** Name of the property to create `TypedPrimitiveValue` for. */
+  propertyName: string;
+}): Promise<TypedPrimitiveValueSelectorProps> {
+  const ecClass = await getClass(schemaProvider, propertyClassName);
+  const property = await ecClass.getProperty(propertyName);
+  if (!property) {
+    throw new Error(`The property "${propertyName}" not found in class "${propertyClassName}".`);
+  }
+
+  const propertySelector = createRawPropertyValueSelector(propertyClassAlias, propertyName);
+
+  if (property.isNavigation()) {
+    return { selector: `${propertySelector}.[Id]`, type: "Id" };
+  }
+
+  if (!property.isPrimitive()) {
+    throw new Error(`The property "${propertyName}" should be of either navigation or primitive type.`);
+  }
+
+  const propertyValueType = property.primitiveType;
+  const extendedType = property.extendedTypeName;
+
+  switch (propertyValueType) {
+    case "IGeometry":
+      throw new Error(`The property "${propertyName}" of type "IGeometry" is not supported.`);
+    case "Binary":
+      if (extendedType === "BeGuid") {
+        return { selector: `GuidToStr(${propertySelector})`, type: "String" };
+      }
+      throw new Error(`The property "${propertyName}" of type "Binary" is not supported.`);
+    case "Point2d":
+      return {
+        selector: `json_object('x', ${propertySelector}.[x], 'y', ${propertySelector}.[y])`,
+        type: "Point2d",
+        ...(extendedType ? { extendedType } : /* istanbul ignore next */ {}),
+      };
+    case "Point3d":
+      return {
+        selector: `json_object('x', ${propertySelector}.[x], 'y', ${propertySelector}.[y], 'z', ${propertySelector}.[z])`,
+        type: "Point3d",
+        ...(extendedType ? { extendedType } : /* istanbul ignore next */ {}),
+      };
+    case "Double":
+      const koqName = (await property.kindOfQuantity)?.fullName;
+      return {
+        selector: propertySelector,
+        type: "Double",
+        ...(extendedType ? { extendedType } : /* istanbul ignore next */ {}),
+        ...(koqName ? { koqName } : /* istanbul ignore next */ {}),
+      };
+  }
+  return {
+    selector: propertySelector,
+    type: propertyValueType,
+    ...(extendedType ? { extendedType } : /* istanbul ignore next */ {}),
+  };
 }
 
 /**
@@ -159,50 +216,26 @@ export function createConcatenatedValueJsonSelector(selectors: TypedValueSelectC
   return combinedSelectors;
 }
 function createTypedValueJsonSelector(props: TypedValueSelectClauseProps): string {
-  if (TypedValueSelectClauseProps.isPropertySelector(props)) {
-    if (props.specialType) {
-      // eslint-disable-next-line @typescript-eslint/no-shadow
-      const [valueSelector, typeOverride] = createSpecialPropertyValueJsonSelector(props.propertyClassAlias, props.propertyName, props.specialType);
-      return createTypedValueJsonSelector({ selector: valueSelector, type: typeOverride });
-    }
-    return `
-      json_object(
-        'className', '${props.propertyClassName}',
-        'propertyName', '${props.propertyName}',
-        'value', ${createRawPropertyValueSelector(props.propertyClassAlias, props.propertyName)}
-      )
-    `;
-  }
-  if (TypedValueSelectClauseProps.isPrimitiveValueSelector(props)) {
-    if (props.type) {
-      return `
-        json_object(
-          'value', ${props.selector},
-          'type', '${props.type}'
-        )
-      `;
-    }
+  let valueSelector: string;
+  if (TypedValueSelectClauseProps.isPrimitiveValue(props)) {
+    valueSelector = createPrimitiveValueJsonSelector(props.value);
+  } else if (props.type) {
+    valueSelector = props.selector;
+  } else {
     return props.selector;
   }
+
+  const args = {
+    value: valueSelector,
+    type: `'${props.type}'`,
+    ...(props.extendedType ? { extendedType: `'${props.extendedType}'` } : {}),
+    ...(props.type === "Double" && props.koqName ? { koqName: `'${props.koqName}'` } : {}),
+  };
   return `
-    json_object(
-      'value', ${createPrimitiveValueJsonSelector(props.value)},
-      'type', '${props.type}'
-    )
+    json_object(${Object.entries(args)
+      .map(([key, value]) => `'${key}', ${value}`)
+      .join(", ")})
   `;
-}
-function createSpecialPropertyValueJsonSelector(classAlias: string, propertyName: string, specialType: SpecialPropertyType): [string, PrimitiveValueType] {
-  const propertySelector = `[${classAlias}].[${propertyName}]`;
-  switch (specialType) {
-    case "Navigation":
-      return [`${propertySelector}.[Id]`, "Id"];
-    case "Guid":
-      return [`GuidToStr(${propertySelector})`, "String"];
-    case "Point2d":
-      return [`json_object('x', ${propertySelector}.[x], 'y', ${propertySelector}.[y])`, "Point2d"];
-    case "Point3d":
-      return [`json_object('x', ${propertySelector}.[x], 'y', ${propertySelector}.[y], 'z', ${propertySelector}.[z])`, "Point3d"];
-  }
 }
 function createPrimitiveValueJsonSelector(value: PrimitiveValue): string {
   if (value instanceof Date) {
@@ -250,31 +283,10 @@ export function createConcatenatedValueStringSelector(selectors: TypedValueSelec
   return combinedSelectors;
 }
 function createTypedValueStringSelector(props: TypedValueSelectClauseProps): string {
-  if (TypedValueSelectClauseProps.isPropertySelector(props)) {
-    if (props.specialType) {
-      // eslint-disable-next-line @typescript-eslint/no-shadow
-      const [valueSelector, typeOverride] = createSpecialPropertyValueStringSelector(props.propertyClassAlias, props.propertyName, props.specialType);
-      return createTypedValueStringSelector({ selector: valueSelector, type: typeOverride });
-    }
-    return createRawPropertyValueSelector(props.propertyClassAlias, props.propertyName);
-  }
   if (TypedValueSelectClauseProps.isPrimitiveValueSelector(props)) {
     return props.selector;
   }
   return createPrimitiveValueStringSelector(props.value);
-}
-function createSpecialPropertyValueStringSelector(classAlias: string, propertyName: string, specialType: SpecialPropertyType): [string, PrimitiveValueType] {
-  const propertySelector = createRawPropertyValueSelector(classAlias, propertyName);
-  switch (specialType) {
-    case "Navigation":
-      return [`CAST(${propertySelector}.[Id] AS TEXT)`, "Id"];
-    case "Guid":
-      return [`GuidToStr(${propertySelector})`, "String"];
-    case "Point2d":
-      return [`'(' || ${propertySelector}.[x] || ', ' || ${propertySelector}.[y] || ')'`, "Point2d"];
-    case "Point3d":
-      return [`'(' || ${propertySelector}.[x] || ', ' || ${propertySelector}.[y] || ', ' || ${propertySelector}.[z] || ')'`, "Point3d"];
-  }
 }
 function createPrimitiveValueStringSelector(value: PrimitiveValue) {
   if (value instanceof Date) {

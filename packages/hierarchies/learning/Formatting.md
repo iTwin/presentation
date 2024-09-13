@@ -152,7 +152,12 @@ const hierarchyProvider = createHierarchyProvider({
                   nodeLabel: {
                     selector: ECSql.createConcatenatedValueJsonSelector([
                       // Create a selector for `CodeValue` property value
-                      { propertyClassName: "BisCore.SpatialCategory", propertyClassAlias: "this", propertyName: "CodeValue" },
+                      await ECSql.createPrimitivePropertyValueSelectorProps({
+                        schemaProvider: imodelAccess,
+                        propertyClassName: "BisCore.SpatialCategory",
+                        propertyClassAlias: "this",
+                        propertyName: "CodeValue",
+                      }),
                       // Include a static string value
                       { type: "String", value: " [" },
                       // Create a selector for `ECInstanceId` property value in hex format

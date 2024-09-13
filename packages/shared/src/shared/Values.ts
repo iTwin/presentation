@@ -227,16 +227,3 @@ export namespace TypedPrimitiveValue {
     throw new Error(`PrimitiveValueType ${type} isn't compatible with value ${JSON.stringify(value)}`);
   }
 }
-
-/**
- * A type for a primitive property value and its metadata - property name and its class full name.
- * @beta
- */
-export interface PrimitivePropertyValue {
-  /** Full name of the class containing the property with `propertyName` name. */
-  className: string;
-  /** Name of the primitive property whose value this data structure holds. */
-  propertyName: string;
-  /** Raw value of the primitive property. */
-  value: PrimitiveValue;
-}

@@ -132,11 +132,14 @@ describe("defaultNodesParser", () => {
         type: "Integer",
         value: 123,
       },
-      {
-        className: "x.y",
-        propertyName: "p",
-        value: "test",
-      },
+      "test",
+      [
+        {
+          type: "Boolean",
+          value: true,
+        },
+        "xxx",
+      ],
     ];
     const row: RowDef = {
       [NodeSelectClauseColumnNames.FullClassName]: "schema.class",
