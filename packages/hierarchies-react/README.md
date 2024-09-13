@@ -337,7 +337,7 @@ const localizedStrings = {
 };
 
 function MyTreeComponent({ imodelAccess, imodelKey }: { imodelAccess: IModelAccess; imodelKey: string }) {
-  const { rootNodes, ...state } = useUnifiedSelectionTree({
+  const { rootNodes, expandNode } = useUnifiedSelectionTree({
     sourceName: "MyTreeComponent",
     imodelKey,
     imodelAccess,
@@ -347,7 +347,7 @@ function MyTreeComponent({ imodelAccess, imodelKey }: { imodelAccess: IModelAcce
   if (!rootNodes) {
     return localizedStrings.loading;
   }
-  return <TreeRenderer {...state} rootNodes={rootNodes} localizedStrings={localizedStrings} onFilterClick={() => {}} />;
+  return <TreeRenderer rootNodes={rootNodes} expandNode={expandNode} localizedStrings={localizedStrings} onFilterClick={() => {}} />;
 }
 ```
 
