@@ -111,7 +111,7 @@ describe("Hierarchies React", () => {
       it("Tree localization", async function () {
         // __PUBLISH_EXTRACT_START__ Presentation.HierarchiesReact.Localization.Tree
         function MyTreeComponent({ imodelAccess, imodelKey }: { imodelAccess: IModelAccess; imodelKey: string }) {
-          const { rootNodes, ...state } = useUnifiedSelectionTree({
+          const { rootNodes, expandNode } = useUnifiedSelectionTree({
             sourceName: "MyTreeComponent",
             imodelKey,
             imodelAccess,
@@ -121,12 +121,19 @@ describe("Hierarchies React", () => {
           if (!rootNodes) {
             return localizedStrings.loading;
           }
-          return <TreeRenderer {...state} rootNodes={rootNodes} localizedStrings={localizedStrings} onFilterClick={() => {}} />;
+          return (
+            <TreeRenderer 
+              rootNodes={rootNodes} 
+              expandNode={expandNode} 
+              localizedStrings={localizedStrings} 
+              onFilterClick={() => {}}
+            />
+          );
         }
         // __PUBLISH_EXTRACT_END__
 
-        const { getByRole, getAllByRole } = render(<MyTreeComponent imodelAccess={access} imodelKey={imodel.key} />);
-        await waitFor(() => getByRole("tree"));
+        const { getAllByRole } = render(<MyTreeComponent imodelAccess={access} imodelKey={imodel.key} />);
+        await waitFor(() => getAllByRole("treeitem"));
 
         expect(getAllByRole("button", { name: "Apply hierarchy filter" })).to.not.be.empty;
       });
