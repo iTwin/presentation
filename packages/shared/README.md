@@ -224,7 +224,7 @@ The ECSql utilities group contains a number of functions to help create complex 
       type: "Double",
     },
   ]);
-  // selector = `my_class.MyProperty || 123.456`
+  // selector = `CAST(my_class.MyProperty AS TEXT) || '123.456'`
 
   const queryReader = queryExecutor.createQueryReader(
     {

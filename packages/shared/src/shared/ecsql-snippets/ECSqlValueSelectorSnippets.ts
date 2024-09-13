@@ -284,7 +284,7 @@ export function createConcatenatedValueStringSelector(selectors: TypedValueSelec
 }
 function createTypedValueStringSelector(props: TypedValueSelectClauseProps): string {
   if (TypedValueSelectClauseProps.isPrimitiveValueSelector(props)) {
-    return props.selector;
+    return `CAST(${props.selector} AS TEXT)`;
   }
   return createPrimitiveValueStringSelector(props.value);
 }

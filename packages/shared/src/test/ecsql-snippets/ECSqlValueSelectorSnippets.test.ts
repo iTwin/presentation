@@ -333,11 +333,11 @@ const CONCATENATED_VALUE_TEST_CASES = [
   {
     name: "concatenates selectors",
     input: {
-      selectors: [{ selector: "a" }, { selector: "b" }],
+      selectors: [{ selector: "a" }, { value: "b", type: "String" as const }],
     },
     expectations: {
-      json: `json_array(a, b)`,
-      str: `a || b`,
+      json: `json_array(a, json_object('value', 'b', 'type', 'String'))`,
+      str: `CAST(a AS TEXT) || 'b'`,
     },
   },
   {
@@ -351,7 +351,7 @@ const CONCATENATED_VALUE_TEST_CASES = [
     },
     expectations: {
       json: `json_array(xxx)`,
-      str: `xxx`,
+      str: `CAST(xxx AS TEXT)`,
     },
   },
   {
@@ -366,7 +366,7 @@ const CONCATENATED_VALUE_TEST_CASES = [
     },
     expectations: {
       json: `json_array(json_object('value', xxx, 'type', 'Integer'))`,
-      str: `xxx`,
+      str: `CAST(xxx AS TEXT)`,
     },
   },
   {
@@ -382,7 +382,7 @@ const CONCATENATED_VALUE_TEST_CASES = [
     },
     expectations: {
       json: `json_array(json_object('value', xxx, 'type', 'Integer', 'extendedType', 'TestExtendedType'))`,
-      str: `xxx`,
+      str: `CAST(xxx AS TEXT)`,
     },
   },
   {
