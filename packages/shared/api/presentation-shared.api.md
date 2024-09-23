@@ -391,6 +391,7 @@ export interface ILogger {
 export interface InstanceKey {
     className: string;
     id: Id64String;
+    imodelKey?: string;
 }
 
 // @beta (undocumented)
