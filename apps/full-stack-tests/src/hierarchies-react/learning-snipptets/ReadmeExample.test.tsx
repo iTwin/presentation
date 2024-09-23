@@ -46,6 +46,7 @@ function getIModelSchemaContext(imodel: IModelConnection) {
 function createIModelAccess(imodel: IModelConnection) {
   const schemaProvider = createECSchemaProvider(getIModelSchemaContext(imodel));
   return {
+    imodelKey: imodel.key,
     ...schemaProvider,
     // while caching for hierarchy inspector is not mandatory, it's recommended to use it to improve performance
     ...createCachingECClassHierarchyInspector({ schemaProvider, cacheSize: 100 }),

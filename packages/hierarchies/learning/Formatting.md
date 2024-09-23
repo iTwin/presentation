@@ -81,10 +81,10 @@ In case 1, the node's `label` property type is `string | ConcatenatedValue`. The
 <!-- BEGIN EXTRACTION -->
 
 ```ts
-import { createHierarchyProvider, createNodesQueryClauseFactory } from "@itwin/presentation-hierarchies";
+import { createIModelHierarchyProvider, createNodesQueryClauseFactory } from "@itwin/presentation-hierarchies";
 import { ECSql } from "@itwin/presentation-shared";
 
-const hierarchyProvider = createHierarchyProvider({
+const hierarchyProvider = createIModelHierarchyProvider({
   imodelAccess,
   hierarchyDefinition: {
     defineHierarchyLevel: async ({ parentNode }) => {
@@ -130,10 +130,10 @@ In case 2, the node's label is described through an ECSQL query, where node's la
 <!-- BEGIN EXTRACTION -->
 
 ```ts
-import { createHierarchyProvider, createNodesQueryClauseFactory } from "@itwin/presentation-hierarchies";
+import { createIModelHierarchyProvider, createNodesQueryClauseFactory } from "@itwin/presentation-hierarchies";
 import { ECSql } from "@itwin/presentation-shared";
 
-const hierarchyProvider = createHierarchyProvider({
+const hierarchyProvider = createIModelHierarchyProvider({
   imodelAccess,
   hierarchyDefinition: {
     defineHierarchyLevel: async ({ parentNode }) => {
@@ -197,10 +197,10 @@ Finally, in case 3, the grouping node's label is formatted automatically based o
   <!-- BEGIN EXTRACTION -->
 
   ```ts
-  import { createHierarchyProvider, createNodesQueryClauseFactory } from "@itwin/presentation-hierarchies";
+  import { createIModelHierarchyProvider, createNodesQueryClauseFactory } from "@itwin/presentation-hierarchies";
   import { ECSql } from "@itwin/presentation-shared";
 
-  const hierarchyProvider = createHierarchyProvider({
+  const hierarchyProvider = createIModelHierarchyProvider({
     imodelAccess,
     hierarchyDefinition: {
       defineHierarchyLevel: async ({ parentNode }) => {

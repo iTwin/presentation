@@ -17,14 +17,14 @@ import {
 } from "@itwin/presentation-components";
 import { createECSchemaProvider, createECSqlQueryExecutor, registerTxnListeners } from "@itwin/presentation-core-interop";
 import { Presentation } from "@itwin/presentation-frontend";
-import { createLimitingECSqlQueryExecutor, GenericInstanceFilter, LimitingECSqlQueryExecutor } from "@itwin/presentation-hierarchies";
+import { createLimitingECSqlQueryExecutor, GenericInstanceFilter } from "@itwin/presentation-hierarchies";
 import { HierarchyLevelDetails, PresentationHierarchyNode, TreeRenderer, useUnifiedSelectionTree } from "@itwin/presentation-hierarchies-react";
 import { ModelsTreeDefinition } from "@itwin/presentation-models-tree";
-import { createCachingECClassHierarchyInspector, ECClassHierarchyInspector, ECSchemaProvider, IPrimitiveValueFormatter } from "@itwin/presentation-shared";
+import { createCachingECClassHierarchyInspector, IPrimitiveValueFormatter } from "@itwin/presentation-shared";
 import { MyAppFrontend } from "../../api/MyAppFrontend";
 
-type IModelAccess = LimitingECSqlQueryExecutor & ECSchemaProvider & ECClassHierarchyInspector;
 type UseTreeProps = Parameters<typeof useUnifiedSelectionTree>[0];
+type IModelAccess = UseTreeProps["imodelAccess"];
 
 export function StatelessTreeV2({ imodel, ...props }: { imodel: IModelConnection; height: number; width: number }) {
   const [imodelAccess, setIModelAccess] = useState<IModelAccess>();
@@ -32,6 +32,7 @@ export function StatelessTreeV2({ imodel, ...props }: { imodel: IModelConnection
     const schemas = MyAppFrontend.getSchemaContext(imodel);
     const schemaProvider = createECSchemaProvider(schemas);
     setIModelAccess({
+      imodelKey: imodel.key,
       ...schemaProvider,
       ...createCachingECClassHierarchyInspector({ schemaProvider }),
       ...createLimitingECSqlQueryExecutor(createECSqlQueryExecutor(imodel), 1000),

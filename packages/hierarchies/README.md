@@ -88,7 +88,7 @@ import { ECSchemaRpcLocater } from "@itwin/ecschema-rpcinterface-common";
 import { createECSchemaProvider, createECSqlQueryExecutor } from "@itwin/presentation-core-interop";
 import {
   createClassBasedHierarchyDefinition,
-  createHierarchyProvider,
+  createIModelHierarchyProvider,
   createLimitingECSqlQueryExecutor,
   createNodesQueryClauseFactory,
   DefineInstanceNodeChildHierarchyLevelProps,
@@ -116,6 +116,9 @@ function createProvider(imodel: IModelConnection): HierarchyProvider {
   // First, set up access to the iModel
   const schemaProvider = createECSchemaProvider(getIModelSchemaContext(imodel));
   const imodelAccess = {
+    // The key of the iModel we're accessing
+    imodelKey: imodel.key,
+    // Schema provider provides access to EC information (metadata)
     ...schemaProvider,
     // While caching for hierarchy inspector is not mandatory, it's recommended to use it to improve performance
     ...createCachingECClassHierarchyInspector({ schemaProvider, cacheSize: 100 }),
@@ -185,7 +188,7 @@ function createProvider(imodel: IModelConnection): HierarchyProvider {
   });
 
   // Finally, create the provider
-  return createHierarchyProvider({ imodelAccess, hierarchyDefinition });
+  return createIModelHierarchyProvider({ imodelAccess, hierarchyDefinition });
 }
 
 async function main() {

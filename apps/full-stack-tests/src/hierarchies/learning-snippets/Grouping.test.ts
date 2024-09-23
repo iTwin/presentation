@@ -13,7 +13,7 @@ import {
   insertSpatialCategory,
 } from "presentation-test-utilities";
 // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.Grouping.Imports
-import { createHierarchyProvider, createNodesQueryClauseFactory } from "@itwin/presentation-hierarchies";
+import { createIModelHierarchyProvider, createNodesQueryClauseFactory } from "@itwin/presentation-hierarchies";
 // __PUBLISH_EXTRACT_END__
 import { buildIModel } from "../../IModelUtils";
 import { initialize, terminate } from "../../IntegrationTests";
@@ -54,7 +54,7 @@ describe("Hierarchies", () => {
           const imodelAccess = createIModelAccess(imodel);
 
           // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.Grouping.LabelGroupingExample
-          const hierarchyProvider = createHierarchyProvider({
+          const hierarchyProvider = createIModelHierarchyProvider({
             imodelAccess,
             hierarchyDefinition: {
               defineHierarchyLevel: async ({ parentNode }) => {
@@ -130,7 +130,7 @@ describe("Hierarchies", () => {
           const imodelAccess = createIModelAccess(imodel);
 
           // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.Grouping.LabelMergingExample
-          const hierarchyProvider = createHierarchyProvider({
+          const hierarchyProvider = createIModelHierarchyProvider({
             imodelAccess,
             hierarchyDefinition: {
               defineHierarchyLevel: async ({ parentNode }) => {
@@ -188,7 +188,7 @@ describe("Hierarchies", () => {
           const imodelAccess = createIModelAccess(imodel);
 
           // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.Grouping.ClassGroupingExample
-          const hierarchyProvider = createHierarchyProvider({
+          const hierarchyProvider = createIModelHierarchyProvider({
             imodelAccess,
             hierarchyDefinition: {
               defineHierarchyLevel: async ({ parentNode }) => {
@@ -258,7 +258,7 @@ describe("Hierarchies", () => {
           const imodelAccess = createIModelAccess(imodel);
 
           // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.Grouping.BaseClassGroupingExample
-          const hierarchyProvider = createHierarchyProvider({
+          const hierarchyProvider = createIModelHierarchyProvider({
             imodelAccess,
             hierarchyDefinition: {
               defineHierarchyLevel: async ({ parentNode }) => {
@@ -332,7 +332,7 @@ describe("Hierarchies", () => {
           const imodelAccess = createIModelAccess(imodel);
 
           // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.Grouping.PropertyValueGroupingExample
-          const hierarchyProvider = createHierarchyProvider({
+          const hierarchyProvider = createIModelHierarchyProvider({
             imodelAccess,
             hierarchyDefinition: {
               defineHierarchyLevel: async ({ parentNode }) => {
@@ -423,7 +423,7 @@ describe("Hierarchies", () => {
           const imodelAccess = createIModelAccess(imodel);
 
           // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.Grouping.PropertyValueRangesGroupingExample
-          const hierarchyProvider = createHierarchyProvider({
+          const hierarchyProvider = createIModelHierarchyProvider({
             imodelAccess,
             hierarchyDefinition: {
               defineHierarchyLevel: async ({ parentNode }) => {
@@ -513,7 +513,7 @@ describe("Hierarchies", () => {
         const imodelAccess = createIModelAccess(imodel);
 
         // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.Grouping.MultiLevelGroupingExample
-        const hierarchyProvider = createHierarchyProvider({
+        const hierarchyProvider = createIModelHierarchyProvider({
           imodelAccess,
           hierarchyDefinition: {
             defineHierarchyLevel: async ({ parentNode }) => {
@@ -644,7 +644,7 @@ describe("Hierarchies", () => {
           const imodelAccess = createIModelAccess(imodel);
 
           // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.Grouping.HideIfOneGroupedNodeExample
-          const hierarchyProvider = createHierarchyProvider({
+          const hierarchyProvider = createIModelHierarchyProvider({
             imodelAccess,
             hierarchyDefinition: {
               defineHierarchyLevel: async ({ parentNode }) => {
@@ -708,7 +708,7 @@ describe("Hierarchies", () => {
           const imodelAccess = createIModelAccess(imodel);
 
           // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.Grouping.HideIfNoSiblingsExample
-          const hierarchyProvider = createHierarchyProvider({
+          const hierarchyProvider = createIModelHierarchyProvider({
             imodelAccess,
             hierarchyDefinition: {
               defineHierarchyLevel: async ({ parentNode }) => {
@@ -768,7 +768,7 @@ describe("Hierarchies", () => {
           });
           const imodelAccess = createIModelAccess(imodel);
 
-          const hierarchyProvider = createHierarchyProvider({
+          const hierarchyProvider = createIModelHierarchyProvider({
             imodelAccess,
             hierarchyDefinition: {
               defineHierarchyLevel: async ({ parentNode }) => {

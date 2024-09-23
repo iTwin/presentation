@@ -130,7 +130,9 @@ export namespace NodeValidators {
         if (
           props.instanceKeys &&
           (node.key.instanceKeys.length !== props.instanceKeys.length ||
-            !node.key.instanceKeys.every((nk) => props.instanceKeys!.some((ek) => InstanceKey.equals(nk, ek))))
+            !node.key.instanceKeys.every((nk) =>
+              props.instanceKeys!.some((ek) => (ek.imodelKey ? InstanceKey.equals(nk, ek) : InstanceKey.equals({ className: nk.className, id: nk.id }, ek))),
+            ))
         ) {
           throw new Error(
             `[${node.label}] Expected node to represent instance keys ${JSON.stringify(props.instanceKeys)}, got ${JSON.stringify(node.key.instanceKeys)}`,

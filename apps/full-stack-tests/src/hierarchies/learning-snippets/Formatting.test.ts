@@ -13,7 +13,7 @@ import { createBisInstanceLabelSelectClauseFactory, createDefaultValueFormatter,
 import { createValueFormatter } from "@itwin/presentation-core-interop";
 // __PUBLISH_EXTRACT_END__
 // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.Formatting.NodeLabelFormattingExamples.Imports
-import { createHierarchyProvider, createNodesQueryClauseFactory } from "@itwin/presentation-hierarchies";
+import { createIModelHierarchyProvider, createNodesQueryClauseFactory } from "@itwin/presentation-hierarchies";
 import { ECSql } from "@itwin/presentation-shared";
 // __PUBLISH_EXTRACT_END__
 import { buildIModel, importSchema } from "../../IModelUtils";
@@ -96,7 +96,7 @@ describe("Hierarchies", () => {
         const imodelAccess = createIModelAccess(imodel);
 
         // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.Formatting.CustomHierarchyNodeDefinitionLabelFormattingExample
-        const hierarchyProvider = createHierarchyProvider({
+        const hierarchyProvider = createIModelHierarchyProvider({
           imodelAccess,
           hierarchyDefinition: {
             defineHierarchyLevel: async ({ parentNode }) => {
@@ -143,7 +143,7 @@ describe("Hierarchies", () => {
         const imodelAccess = createIModelAccess(imodel);
 
         // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.Formatting.InstanceNodesQueryDefinitionLabelFormattingExample
-        const hierarchyProvider = createHierarchyProvider({
+        const hierarchyProvider = createIModelHierarchyProvider({
           imodelAccess,
           hierarchyDefinition: {
             defineHierarchyLevel: async ({ parentNode }) => {
@@ -232,7 +232,7 @@ describe("Hierarchies", () => {
         const imodelAccess = createIModelAccess(imodel);
 
         // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.Formatting.PropertyGroupsFormattingExample
-        const hierarchyProvider = createHierarchyProvider({
+        const hierarchyProvider = createIModelHierarchyProvider({
           imodelAccess,
           hierarchyDefinition: {
             defineHierarchyLevel: async ({ parentNode }) => {

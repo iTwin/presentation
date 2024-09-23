@@ -2,7 +2,7 @@ sep=;
 Release Tag;API Item Type;API Item Name
 beta;interface;ClassGroupingNodeKey
 beta;function;createClassBasedHierarchyDefinition
-beta;function;createHierarchyProvider
+beta;function;createIModelHierarchyProvider
 beta;function;createLimitingECSqlQueryExecutor
 beta;function;createNodesQueryClauseFactory
 beta;type;DefineCustomNodeChildHierarchyLevelProps
@@ -28,6 +28,7 @@ beta;interface;HierarchyProvider
 beta;interface;InstancesNodeKey
 beta;interface;LabelGroupingNodeKey
 beta;interface;LimitingECSqlQueryExecutor
+beta;function;mergeProviders
 beta;type;NodeParser
 beta;type;NodePostProcessor
 beta;type;NodePreProcessor
@@ -36,6 +37,7 @@ beta;interface;NodesQueryClauseFactory
 beta;interface;NonGroupingHierarchyNode
 beta;type;ParsedHierarchyNode
 beta;type;ProcessedHierarchyNode
+beta;namespace;ProcessedHierarchyNode
 beta;type;PropertyGroupingNodeKey
 beta;interface;PropertyOtherValuesGroupingNodeKey
 beta;interface;PropertyValueGroupingNodeKey

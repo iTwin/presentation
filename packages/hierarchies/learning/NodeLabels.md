@@ -24,7 +24,7 @@ The `NodesQueryClauseFactory.createSelectClause` function has a required `nodeLa
   <!-- BEGIN EXTRACTION -->
 
   ```ts
-  import { createHierarchyProvider, createNodesQueryClauseFactory, HierarchyDefinition } from "@itwin/presentation-hierarchies";
+  import { createIModelHierarchyProvider, createNodesQueryClauseFactory, HierarchyDefinition } from "@itwin/presentation-hierarchies";
   import { createBisInstanceLabelSelectClauseFactory } from "@itwin/presentation-shared";
 
   const hierarchyDefinition: HierarchyDefinition = {
@@ -70,7 +70,7 @@ The `NodesQueryClauseFactory.createSelectClause` function has a required `nodeLa
   // | 0x15       | B          | <NULL>     |
   // | 0x16       | <NULL>     | <NULL>     |
   //
-  expect(await collectHierarchy(createHierarchyProvider({ imodelAccess, hierarchyDefinition }))).to.containSubset([
+  expect(await collectHierarchy(createIModelHierarchyProvider({ imodelAccess, hierarchyDefinition }))).to.containSubset([
     {
       label: "A",
     },

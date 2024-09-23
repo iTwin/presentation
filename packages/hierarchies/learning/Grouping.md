@@ -14,9 +14,9 @@ When using the `grouping` action, the library will create a new grouping node fo
 <!-- BEGIN EXTRACTION -->
 
 ```ts
-import { createHierarchyProvider, createNodesQueryClauseFactory } from "@itwin/presentation-hierarchies";
+import { createIModelHierarchyProvider, createNodesQueryClauseFactory } from "@itwin/presentation-hierarchies";
 
-const hierarchyProvider = createHierarchyProvider({
+const hierarchyProvider = createIModelHierarchyProvider({
   imodelAccess,
   hierarchyDefinition: {
     defineHierarchyLevel: async ({ parentNode }) => {
@@ -80,9 +80,9 @@ When using the `merging` action, the library merges all nodes with the same labe
 <!-- BEGIN EXTRACTION -->
 
 ```ts
-import { createHierarchyProvider, createNodesQueryClauseFactory } from "@itwin/presentation-hierarchies";
+import { createIModelHierarchyProvider, createNodesQueryClauseFactory } from "@itwin/presentation-hierarchies";
 
-const hierarchyProvider = createHierarchyProvider({
+const hierarchyProvider = createIModelHierarchyProvider({
   imodelAccess,
   hierarchyDefinition: {
     defineHierarchyLevel: async ({ parentNode }) => {
@@ -144,9 +144,9 @@ Example:
 <!-- BEGIN EXTRACTION -->
 
 ```ts
-import { createHierarchyProvider, createNodesQueryClauseFactory } from "@itwin/presentation-hierarchies";
+import { createIModelHierarchyProvider, createNodesQueryClauseFactory } from "@itwin/presentation-hierarchies";
 
-const hierarchyProvider = createHierarchyProvider({
+const hierarchyProvider = createIModelHierarchyProvider({
   imodelAccess,
   hierarchyDefinition: {
     defineHierarchyLevel: async ({ parentNode }) => {
@@ -218,9 +218,9 @@ Example:
 <!-- BEGIN EXTRACTION -->
 
 ```ts
-import { createHierarchyProvider, createNodesQueryClauseFactory } from "@itwin/presentation-hierarchies";
+import { createIModelHierarchyProvider, createNodesQueryClauseFactory } from "@itwin/presentation-hierarchies";
 
-const hierarchyProvider = createHierarchyProvider({
+const hierarchyProvider = createIModelHierarchyProvider({
   imodelAccess,
   hierarchyDefinition: {
     defineHierarchyLevel: async ({ parentNode }) => {
@@ -299,9 +299,9 @@ Example:
 <!-- BEGIN EXTRACTION -->
 
 ```ts
-import { createHierarchyProvider, createNodesQueryClauseFactory } from "@itwin/presentation-hierarchies";
+import { createIModelHierarchyProvider, createNodesQueryClauseFactory } from "@itwin/presentation-hierarchies";
 
-const hierarchyProvider = createHierarchyProvider({
+const hierarchyProvider = createIModelHierarchyProvider({
   imodelAccess,
   hierarchyDefinition: {
     defineHierarchyLevel: async ({ parentNode }) => {
@@ -397,9 +397,9 @@ Example:
 <!-- BEGIN EXTRACTION -->
 
 ```ts
-import { createHierarchyProvider, createNodesQueryClauseFactory } from "@itwin/presentation-hierarchies";
+import { createIModelHierarchyProvider, createNodesQueryClauseFactory } from "@itwin/presentation-hierarchies";
 
-const hierarchyProvider = createHierarchyProvider({
+const hierarchyProvider = createIModelHierarchyProvider({
   imodelAccess,
   hierarchyDefinition: {
     defineHierarchyLevel: async ({ parentNode }) => {
@@ -487,9 +487,9 @@ Using a combination of the grouping types described above is also possible. The 
 <!-- BEGIN EXTRACTION -->
 
 ```ts
-import { createHierarchyProvider, createNodesQueryClauseFactory } from "@itwin/presentation-hierarchies";
+import { createIModelHierarchyProvider, createNodesQueryClauseFactory } from "@itwin/presentation-hierarchies";
 
-const hierarchyProvider = createHierarchyProvider({
+const hierarchyProvider = createIModelHierarchyProvider({
   imodelAccess,
   hierarchyDefinition: {
     defineHierarchyLevel: async ({ parentNode }) => {
@@ -627,9 +627,9 @@ In certain scenarios the purpose of grouping nodes is make hierarchy levels smal
 <!-- BEGIN EXTRACTION -->
 
 ```ts
-import { createHierarchyProvider, createNodesQueryClauseFactory } from "@itwin/presentation-hierarchies";
+import { createIModelHierarchyProvider, createNodesQueryClauseFactory } from "@itwin/presentation-hierarchies";
 
-const hierarchyProvider = createHierarchyProvider({
+const hierarchyProvider = createIModelHierarchyProvider({
   imodelAccess,
   hierarchyDefinition: {
     defineHierarchyLevel: async ({ parentNode }) => {
@@ -694,9 +694,9 @@ Similar to above, if the purpose of grouping to is to make hierarchy level small
 <!-- BEGIN EXTRACTION -->
 
 ```ts
-import { createHierarchyProvider, createNodesQueryClauseFactory } from "@itwin/presentation-hierarchies";
+import { createIModelHierarchyProvider, createNodesQueryClauseFactory } from "@itwin/presentation-hierarchies";
 
-const hierarchyProvider = createHierarchyProvider({
+const hierarchyProvider = createIModelHierarchyProvider({
   imodelAccess,
   hierarchyDefinition: {
     defineHierarchyLevel: async ({ parentNode }) => {

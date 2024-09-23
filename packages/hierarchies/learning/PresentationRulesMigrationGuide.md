@@ -31,9 +31,9 @@ Finally, the APIs used to create hierarchies are also slightly different:
   <!-- BEGIN EXTRACTION -->
 
   ```ts
-  import { createHierarchyProvider } from "@itwin/presentation-hierarchies";
+  import { createIModelHierarchyProvider } from "@itwin/presentation-hierarchies";
 
-  const provider = createHierarchyProvider({ imodelAccess, hierarchyDefinition });
+  const provider = createIModelHierarchyProvider({ imodelAccess, hierarchyDefinition });
   for await (const node of provider.getNodes({ parentNode: undefined })) {
     // do something with the node
   }

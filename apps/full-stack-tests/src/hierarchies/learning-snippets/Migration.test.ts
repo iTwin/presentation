@@ -19,7 +19,7 @@ import {
 import { IModel } from "@itwin/core-common";
 import { IModelConnection } from "@itwin/core-frontend";
 // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.Migration.HierarchyProviderImports
-import { createHierarchyProvider } from "@itwin/presentation-hierarchies";
+import { createIModelHierarchyProvider } from "@itwin/presentation-hierarchies";
 // __PUBLISH_EXTRACT_END__
 // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.Migration.HierarchyNodeImport
 import { HierarchyNode } from "@itwin/presentation-hierarchies";
@@ -65,7 +65,7 @@ describe("Hierarchies", () => {
             },
           });
           // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.Migration.HierarchyProviderUsage
-          const provider = createHierarchyProvider({ imodelAccess, hierarchyDefinition });
+          const provider = createIModelHierarchyProvider({ imodelAccess, hierarchyDefinition });
           for await (const node of provider.getNodes({ parentNode: undefined })) {
             // do something with the node
           }
@@ -150,7 +150,7 @@ describe("Hierarchies", () => {
             },
           };
           // __PUBLISH_EXTRACT_END__
-          const provider = createHierarchyProvider({
+          const provider = createIModelHierarchyProvider({
             imodelAccess: createIModelAccess(emptyIModel),
             hierarchyDefinition: {
               defineHierarchyLevel: async ({ parentNode }) => (parentNode ? [] : [definition]),
@@ -212,7 +212,7 @@ describe("Hierarchies", () => {
             },
           };
           // __PUBLISH_EXTRACT_END__
-          const provider = createHierarchyProvider({
+          const provider = createIModelHierarchyProvider({
             imodelAccess,
             hierarchyDefinition: {
               defineHierarchyLevel: async ({ parentNode }) => (parentNode ? [] : [definition]),
@@ -280,7 +280,7 @@ describe("Hierarchies", () => {
               `,
             },
           };
-          const provider = createHierarchyProvider({
+          const provider = createIModelHierarchyProvider({
             imodelAccess,
             hierarchyDefinition: {
               defineHierarchyLevel: async ({ parentNode }) =>
@@ -399,7 +399,7 @@ describe("Hierarchies", () => {
               },
             },
           ];
-          const provider = createHierarchyProvider({
+          const provider = createIModelHierarchyProvider({
             imodelAccess,
             hierarchyDefinition: {
               defineHierarchyLevel: async ({ parentNode }) =>
@@ -455,7 +455,7 @@ describe("Hierarchies", () => {
             },
           };
           // __PUBLISH_EXTRACT_END__
-          const provider = createHierarchyProvider({
+          const provider = createIModelHierarchyProvider({
             imodelAccess,
             hierarchyDefinition: {
               defineHierarchyLevel: async ({ parentNode }) => (parentNode ? [] : [definition]),
@@ -506,7 +506,7 @@ describe("Hierarchies", () => {
             },
           };
           // __PUBLISH_EXTRACT_END__
-          const provider = createHierarchyProvider({
+          const provider = createIModelHierarchyProvider({
             imodelAccess,
             hierarchyDefinition: {
               defineHierarchyLevel: async ({ parentNode }) => (parentNode ? [] : [definition]),
@@ -597,7 +597,7 @@ describe("Hierarchies", () => {
             },
           };
           // __PUBLISH_EXTRACT_END__
-          const provider = createHierarchyProvider({
+          const provider = createIModelHierarchyProvider({
             imodelAccess,
             hierarchyDefinition: {
               defineHierarchyLevel: async ({ parentNode }) => (parentNode ? [] : [definition]),
@@ -650,7 +650,7 @@ describe("Hierarchies", () => {
             },
           };
           // __PUBLISH_EXTRACT_END__
-          const provider = createHierarchyProvider({
+          const provider = createIModelHierarchyProvider({
             imodelAccess,
             hierarchyDefinition: {
               defineHierarchyLevel: async ({ parentNode }) => (parentNode ? [] : [definition]),
@@ -717,7 +717,7 @@ describe("Hierarchies", () => {
             },
           };
           // __PUBLISH_EXTRACT_END__
-          const provider = createHierarchyProvider({
+          const provider = createIModelHierarchyProvider({
             imodelAccess,
             hierarchyDefinition: {
               defineHierarchyLevel: async ({ parentNode }) => (parentNode ? [] : [definition]),

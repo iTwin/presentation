@@ -48,6 +48,7 @@
     "check-extractions": "node ../../scripts/updateExtractions.js --targets=./README.md --check"
   },
   "dependencies": {
+    "@itwin/core-bentley": "4.9.0",
     "@itwin/itwinui-icons-react": "^2.8.0",
     "@itwin/itwinui-illustrations-react": "^2.1.0",
     "@itwin/presentation-hierarchies": "workspace:^",

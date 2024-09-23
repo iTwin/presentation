@@ -13,7 +13,6 @@ import {
   DefineRootHierarchyLevelProps,
   HierarchyDefinition,
   HierarchyLevelDefinition,
-  HierarchyNode,
   HierarchyNodeIdentifiersPath,
   HierarchyNodesDefinition,
   LimitingECSqlQueryExecutor,
@@ -142,7 +141,7 @@ export class ModelsTreeDefinition implements HierarchyDefinition {
   }
 
   public async postProcessNode(node: ProcessedHierarchyNode): Promise<ProcessedHierarchyNode> {
-    if (HierarchyNode.isClassGroupingNode(node)) {
+    if (ProcessedHierarchyNode.isGroupingNode(node)) {
       return {
         ...node,
         label: this._hierarchyConfig.elementClassGrouping === "enableWithCounts" ? `${node.label} (${node.children.length})` : node.label,

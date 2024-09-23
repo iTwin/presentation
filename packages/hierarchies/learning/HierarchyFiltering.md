@@ -97,7 +97,7 @@ The second step would be to create the node identifier paths. Let's consider two
   <!-- BEGIN EXTRACTION -->
 
   ```ts
-  import { createHierarchyProvider, HierarchyNodeIdentifiersPath } from "@itwin/presentation-hierarchies";
+  import { createIModelHierarchyProvider, HierarchyNodeIdentifiersPath } from "@itwin/presentation-hierarchies";
   import { ECSql, ECSqlQueryDef } from "@itwin/presentation-shared";
 
   // Define a function that returns `HierarchyNodeIdentifiersPath[]` based on given search string. In this case, we run
@@ -128,7 +128,7 @@ The second step would be to create the node identifier paths. Let's consider two
     };
     const result: HierarchyNodeIdentifiersPath[] = [];
     for await (const row of imodelAccess.createQueryReader(query, { rowFormat: "ECSqlPropertyNames" })) {
-      result.push((JSON.parse(row.Path) as InstanceKey[]).reverse());
+      result.push((JSON.parse(row.Path) as InstanceKey[]).reverse().map((key) => ({ ...key, imodelKey: imodel.key })));
     }
     return result;
   }
@@ -140,7 +140,7 @@ The second step would be to create the node identifier paths. Let's consider two
   ]);
 
   // Construct a hierarchy provider for the filtered hierarchy
-  const hierarchyProvider = createHierarchyProvider({
+  const hierarchyProvider = createIModelHierarchyProvider({
     imodelAccess,
     hierarchyDefinition: createHierarchyDefinition(imodelAccess),
     filtering: { paths: filterPaths },
@@ -167,7 +167,7 @@ The second step would be to create the node identifier paths. Let's consider two
   <!-- BEGIN EXTRACTION -->
 
   ```ts
-  import { createHierarchyProvider, HierarchyNodeIdentifiersPath } from "@itwin/presentation-hierarchies";
+  import { createIModelHierarchyProvider, HierarchyNodeIdentifiersPath } from "@itwin/presentation-hierarchies";
   import { ECSql, ECSqlQueryDef } from "@itwin/presentation-shared";
 
   // Define a function that returns `HierarchyNodeIdentifiersPath[]` based on given target element IDs. In this case, we run
@@ -198,7 +198,7 @@ The second step would be to create the node identifier paths. Let's consider two
     };
     const result: HierarchyNodeIdentifiersPath[] = [];
     for await (const row of imodelAccess.createQueryReader(query, { rowFormat: "ECSqlPropertyNames" })) {
-      result.push((JSON.parse(row.Path) as InstanceKey[]).reverse());
+      result.push((JSON.parse(row.Path) as InstanceKey[]).reverse().map((key) => ({ ...key, imodelKey: imodel.key })));
     }
     return result;
   }
@@ -211,7 +211,7 @@ The second step would be to create the node identifier paths. Let's consider two
   ]);
 
   // Construct a hierarchy provider for the filtered hierarchy
-  const hierarchyProvider = createHierarchyProvider({
+  const hierarchyProvider = createIModelHierarchyProvider({
     imodelAccess,
     hierarchyDefinition: createHierarchyDefinition(imodelAccess),
     filtering: { paths: filterPaths },
@@ -270,11 +270,11 @@ The following code snippet shows, how to use `autoExpand` flag:
 <!-- BEGIN EXTRACTION -->
 
 ```ts
-import { createHierarchyProvider, HierarchyNodeIdentifiersPath } from "@itwin/presentation-hierarchies";
+import { createIModelHierarchyProvider, HierarchyNodeIdentifiersPath } from "@itwin/presentation-hierarchies";
 import { ECSql, ECSqlQueryDef } from "@itwin/presentation-shared";
 
 // Construct a hierarchy provider for the filtered hierarchy
-const hierarchyProvider = createHierarchyProvider({
+const hierarchyProvider = createIModelHierarchyProvider({
   imodelAccess,
   hierarchyDefinition: createHierarchyDefinition(imodelAccess),
   filtering: {
@@ -322,7 +322,7 @@ The following code snippet shows how to limit hierarchy auto-expansion to a give
 <!-- BEGIN EXTRACTION -->
 
 ```ts
-import { createHierarchyProvider, HierarchyNodeIdentifiersPath } from "@itwin/presentation-hierarchies";
+import { createIModelHierarchyProvider, HierarchyNodeIdentifiersPath } from "@itwin/presentation-hierarchies";
 import { ECSql, ECSqlQueryDef } from "@itwin/presentation-shared";
 
 // Define a hierarchy such that all elements except root are grouped by label.
@@ -375,7 +375,7 @@ expect(HierarchyNode.isLabelGroupingNode(groupingNode)).to.be.true;
 expect(groupingNode.groupedInstanceKeys).to.deep.eq([elementKeys.c]);
 
 // Construct a hierarchy provider for the filtered hierarchy
-const hierarchyProvider = createHierarchyProvider({
+const hierarchyProvider = createIModelHierarchyProvider({
   imodelAccess,
   hierarchyDefinition,
   filtering: {

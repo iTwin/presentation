@@ -15,7 +15,7 @@ import { createNodesQueryClauseFactory, GroupingHierarchyNode, HierarchyDefiniti
 import { ECSqlBinding } from "@itwin/presentation-shared";
 // __PUBLISH_EXTRACT_END__
 // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.HierarchyFiltering.FilteringImports
-import { createHierarchyProvider, HierarchyNodeIdentifiersPath } from "@itwin/presentation-hierarchies";
+import { createIModelHierarchyProvider, HierarchyNodeIdentifiersPath } from "@itwin/presentation-hierarchies";
 import { ECSql, ECSqlQueryDef } from "@itwin/presentation-shared";
 // __PUBLISH_EXTRACT_END__
 import { buildIModel } from "../../IModelUtils";
@@ -48,7 +48,10 @@ describe("Hierarchies", () => {
         });
         const { imodel: _, ...elements } = res;
         imodel = res.imodel;
-        elementKeys = elements;
+        elementKeys = Object.entries(elements).reduce(
+          (acc, [name, instanceKey]) => ({ ...acc, [name]: { ...instanceKey, imodelKey: imodel.key } }),
+          {} as { [name: string]: InstanceKey },
+        );
         elementIds = Object.entries(elements).reduce((acc, [name, instanceKey]) => ({ ...acc, [name]: instanceKey.id }), {} as { [name: string]: Id64String });
       });
 
@@ -100,7 +103,7 @@ describe("Hierarchies", () => {
 
       it("creates expected unfiltered hierarchy", async function () {
         const imodelAccess = createIModelAccess(imodel);
-        const hierarchyProvider = createHierarchyProvider({
+        const hierarchyProvider = createIModelHierarchyProvider({
           imodelAccess,
           hierarchyDefinition: createHierarchyDefinition(imodelAccess),
           filtering: undefined,
@@ -156,7 +159,7 @@ describe("Hierarchies", () => {
           };
           const result: HierarchyNodeIdentifiersPath[] = [];
           for await (const row of imodelAccess.createQueryReader(query, { rowFormat: "ECSqlPropertyNames" })) {
-            result.push((JSON.parse(row.Path) as InstanceKey[]).reverse());
+            result.push((JSON.parse(row.Path) as InstanceKey[]).reverse().map((key) => ({ ...key, imodelKey: imodel.key })));
           }
           return result;
         }
@@ -168,7 +171,7 @@ describe("Hierarchies", () => {
         ]);
 
         // Construct a hierarchy provider for the filtered hierarchy
-        const hierarchyProvider = createHierarchyProvider({
+        const hierarchyProvider = createIModelHierarchyProvider({
           imodelAccess,
           hierarchyDefinition: createHierarchyDefinition(imodelAccess),
           filtering: { paths: filterPaths },
@@ -219,7 +222,7 @@ describe("Hierarchies", () => {
           };
           const result: HierarchyNodeIdentifiersPath[] = [];
           for await (const row of imodelAccess.createQueryReader(query, { rowFormat: "ECSqlPropertyNames" })) {
-            result.push((JSON.parse(row.Path) as InstanceKey[]).reverse());
+            result.push((JSON.parse(row.Path) as InstanceKey[]).reverse().map((key) => ({ ...key, imodelKey: imodel.key })));
           }
           return result;
         }
@@ -232,7 +235,7 @@ describe("Hierarchies", () => {
         ]);
 
         // Construct a hierarchy provider for the filtered hierarchy
-        const hierarchyProvider = createHierarchyProvider({
+        const hierarchyProvider = createIModelHierarchyProvider({
           imodelAccess,
           hierarchyDefinition: createHierarchyDefinition(imodelAccess),
           filtering: { paths: filterPaths },
@@ -262,7 +265,7 @@ describe("Hierarchies", () => {
         const imodelAccess = createIModelAccess(imodel);
         // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.HierarchyFiltering.AutoExpand
         // Construct a hierarchy provider for the filtered hierarchy
-        const hierarchyProvider = createHierarchyProvider({
+        const hierarchyProvider = createIModelHierarchyProvider({
           imodelAccess,
           hierarchyDefinition: createHierarchyDefinition(imodelAccess),
           filtering: {
@@ -348,7 +351,7 @@ describe("Hierarchies", () => {
         // __PUBLISH_EXTRACT_END__
 
         async function getSelectedGroupingNode(): Promise<GroupingHierarchyNode> {
-          const provider = createHierarchyProvider({ imodelAccess, hierarchyDefinition });
+          const provider = createIModelHierarchyProvider({ imodelAccess, hierarchyDefinition });
           return firstValueFrom(
             from(provider.getNodes({ parentNode: undefined })).pipe(
               expand((parentNode) => provider.getNodes({ parentNode })),
@@ -366,7 +369,7 @@ describe("Hierarchies", () => {
         expect(groupingNode.groupedInstanceKeys).to.deep.eq([elementKeys.c]);
 
         // Construct a hierarchy provider for the filtered hierarchy
-        const hierarchyProvider = createHierarchyProvider({
+        const hierarchyProvider = createIModelHierarchyProvider({
           imodelAccess,
           hierarchyDefinition,
           filtering: {

@@ -8,7 +8,7 @@ import { expect } from "chai";
 import { insertPhysicalElement, insertPhysicalModelWithPartition, insertSpatialCategory } from "presentation-test-utilities";
 import { IModelConnection } from "@itwin/core-frontend";
 // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.NodeLabels.Imports
-import { createHierarchyProvider, createNodesQueryClauseFactory, HierarchyDefinition } from "@itwin/presentation-hierarchies";
+import { createIModelHierarchyProvider, createNodesQueryClauseFactory, HierarchyDefinition } from "@itwin/presentation-hierarchies";
 import { createBisInstanceLabelSelectClauseFactory } from "@itwin/presentation-shared";
 // __PUBLISH_EXTRACT_END__
 import { buildIModel } from "../../IModelUtils";
@@ -85,7 +85,7 @@ describe("Hierarchies", () => {
         // | 0x15       | B          | <NULL>     |
         // | 0x16       | <NULL>     | <NULL>     |
         //
-        expect(await collectHierarchy(createHierarchyProvider({ imodelAccess, hierarchyDefinition }))).to.containSubset([
+        expect(await collectHierarchy(createIModelHierarchyProvider({ imodelAccess, hierarchyDefinition }))).to.containSubset([
           {
             label: "A",
           },

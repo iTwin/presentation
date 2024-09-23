@@ -17,9 +17,14 @@ export {
   NodePostProcessor,
   NodePreProcessor,
   createClassBasedHierarchyDefinition,
-} from "./hierarchies/HierarchyDefinition";
+} from "./hierarchies/imodel/IModelHierarchyDefinition";
+export { LimitingECSqlQueryExecutor, createLimitingECSqlQueryExecutor } from "./hierarchies/imodel/LimitingECSqlQueryExecutor";
+export { NodeSelectClauseColumnNames, NodesQueryClauseFactory, createNodesQueryClauseFactory } from "./hierarchies/imodel/NodeSelectQueryFactory";
+export { createIModelHierarchyProvider } from "./hierarchies/imodel/IModelHierarchyProvider";
+export { ParsedHierarchyNode, ProcessedHierarchyNode } from "./hierarchies/imodel/IModelHierarchyNode";
+
 export { RowsLimitExceededError } from "./hierarchies/HierarchyErrors";
-export { GroupingHierarchyNode, HierarchyNode, NonGroupingHierarchyNode, ParsedHierarchyNode, ProcessedHierarchyNode } from "./hierarchies/HierarchyNode";
+export { GroupingHierarchyNode, HierarchyNode, NonGroupingHierarchyNode } from "./hierarchies/HierarchyNode";
 export { HierarchyNodeIdentifier, HierarchyNodeIdentifiersPath } from "./hierarchies/HierarchyNodeIdentifier";
 export {
   GroupingNodeKey,
@@ -33,7 +38,5 @@ export {
   PropertyValueRangeGroupingNodeKey,
   StandardHierarchyNodeKey,
 } from "./hierarchies/HierarchyNodeKey";
-export { GetHierarchyNodesProps, HierarchyProvider, createHierarchyProvider } from "./hierarchies/HierarchyProvider";
-export { LimitingECSqlQueryExecutor, createLimitingECSqlQueryExecutor } from "./hierarchies/LimitingECSqlQueryExecutor";
+export { GetHierarchyNodesProps, HierarchyProvider, mergeProviders } from "./hierarchies/HierarchyProvider";
 export { getLogger, setLogger } from "./hierarchies/Logging";
-export { NodeSelectClauseColumnNames, NodesQueryClauseFactory, createNodesQueryClauseFactory } from "./hierarchies/NodeSelectQueryFactory";

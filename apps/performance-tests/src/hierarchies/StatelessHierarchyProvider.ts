@@ -9,7 +9,7 @@ import { BeDuration } from "@itwin/core-bentley";
 import { Schema, SchemaContext, SchemaJsonLocater, SchemaKey, SchemaMatchType, SchemaPropsGetter } from "@itwin/ecschema-metadata";
 import { createECSchemaProvider, createECSqlQueryExecutor } from "@itwin/presentation-core-interop";
 import {
-  createHierarchyProvider,
+  createIModelHierarchyProvider,
   createLimitingECSqlQueryExecutor,
   HierarchyDefinition,
   HierarchyNode,
@@ -79,11 +79,12 @@ export class StatelessHierarchyProvider {
     const schemaProvider = this.createECSchemaProvider();
     const rowLimit = this._props.rowLimit ?? DEFAULT_ROW_LIMIT;
     const imodelAccess = {
+      imodelKey: this._props.iModel.key,
       ...schemaProvider,
       ...createCachingECClassHierarchyInspector({ schemaProvider, cacheSize: 1000 }),
       ...createLimitingECSqlQueryExecutor(createECSqlQueryExecutor(this._props.iModel), rowLimit),
     };
-    return createHierarchyProvider({
+    return createIModelHierarchyProvider({
       imodelAccess,
       hierarchyDefinition: this._props.getHierarchyFactory(imodelAccess),
       queryCacheSize: 0,

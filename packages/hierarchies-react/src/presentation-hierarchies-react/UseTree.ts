@@ -4,15 +4,9 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import {
-  createHierarchyProvider,
-  GenericInstanceFilter,
-  HierarchyDefinition,
-  HierarchyNode,
-  HierarchyProvider,
-  LimitingECSqlQueryExecutor,
-} from "@itwin/presentation-hierarchies";
-import { ECClassHierarchyInspector, ECSchemaProvider, InstanceKey, IPrimitiveValueFormatter } from "@itwin/presentation-shared";
+import { BeEvent } from "@itwin/core-bentley";
+import { createIModelHierarchyProvider, GenericInstanceFilter, HierarchyDefinition, HierarchyNode, HierarchyProvider } from "@itwin/presentation-hierarchies";
+import { InstanceKey, IPrimitiveValueFormatter } from "@itwin/presentation-shared";
 import { TreeActions } from "./internal/TreeActions";
 import { isTreeModelHierarchyNode, isTreeModelInfoNode, TreeModel, TreeModelHierarchyNode, TreeModelNode, TreeModelRootNode } from "./internal/TreeModel";
 import { useUnifiedTreeSelection, UseUnifiedTreeSelectionProps } from "./internal/UseUnifiedSelection";
@@ -79,7 +73,7 @@ export function useUnifiedSelectionTree({ imodelKey, sourceName, ...props }: Use
 }
 
 /** @beta */
-type IModelAccess = ECSchemaProvider & LimitingECSqlQueryExecutor & ECClassHierarchyInspector;
+type IModelAccess = HierarchyProviderProps["imodelAccess"];
 
 /** @beta */
 interface GetFilteredPathsProps {
@@ -88,7 +82,7 @@ interface GetFilteredPathsProps {
 }
 
 /** @beta */
-type HierarchyProviderProps = Parameters<typeof createHierarchyProvider>[0];
+type HierarchyProviderProps = Parameters<typeof createIModelHierarchyProvider>[0];
 
 /** @beta */
 type HierarchyFilteringPaths = NonNullable<NonNullable<HierarchyProviderProps["filtering"]>["paths"]>;
@@ -96,7 +90,7 @@ type HierarchyFilteringPaths = NonNullable<NonNullable<HierarchyProviderProps["f
 /** @beta */
 interface UseTreeProps extends Pick<HierarchyProviderProps, "localizedStrings"> {
   /** Object that provides access to the iModel schema and can run queries against the iModel. */
-  imodelAccess: ECSchemaProvider & LimitingECSqlQueryExecutor & ECClassHierarchyInspector;
+  imodelAccess: IModelAccess;
   /** Provides the hierarchy definition for the tree. */
   getHierarchyDefinition: (props: { imodelAccess: IModelAccess }) => HierarchyDefinition;
   /** Provides paths to filtered nodes. */
@@ -200,7 +194,6 @@ function useTreeInternal({
     model: { idToNode: new Map(), parentChildMap: new Map(), rootNode: { id: undefined, nodeData: undefined } },
     rootNodes: undefined,
   });
-  const [hierarchySource, setHierarchySource] = useState<{ hierarchyProvider?: HierarchyProvider; isFiltering: boolean }>({ isFiltering: false });
   const onPerformanceMeasuredRef = useLatest(onPerformanceMeasured);
   const onHierarchyLimitExceededRef = useLatest(onHierarchyLimitExceeded);
   const onHierarchyLoadErrorRef = useLatest(onHierarchyLoadError);
@@ -221,57 +214,55 @@ function useTreeInternal({
       ),
   );
   const currentFormatter = useRef<IPrimitiveValueFormatter>();
+  const dataSourceChanged = useRef(new BeEvent());
 
+  const [hierarchyProvider, setHierarchyProvider] = useState<HierarchyProvider | undefined>();
   useEffect(() => {
-    const updateHierarchyProvider = (provider: HierarchyProvider, filtered: boolean) => {
-      actions.setHierarchyProvider(provider);
-      actions.reloadTree({ state: filtered ? "discard" : "keep" });
-      setHierarchySource({ hierarchyProvider: provider, isFiltering: false });
+    const provider = createIModelHierarchyProvider({
+      imodelAccess,
+      imodelChanged: dataSourceChanged.current,
+      hierarchyDefinition: getHierarchyDefinition({ imodelAccess }),
+      localizedStrings,
+      formatter: currentFormatter.current,
+    });
+    actions.setHierarchyProvider(provider);
+    actions.reloadTree({ state: "keep" });
+    setHierarchyProvider(provider);
+    return () => {
+      actions.dispose();
+      provider.dispose();
+      setHierarchyProvider(undefined);
     };
+  }, [actions, imodelAccess, localizedStrings, getHierarchyDefinition]);
 
-    const createProvider = (paths: HierarchyFilteringPaths | undefined) => {
-      return createHierarchyProvider({
-        imodelAccess,
-        hierarchyDefinition: getHierarchyDefinition({ imodelAccess }),
-        localizedStrings,
-        formatter: currentFormatter.current,
-        filtering:
-          paths !== undefined
-            ? {
-                paths,
-              }
-            : undefined,
-      });
-    };
-
-    const loadHierarchyProvider = async () => {
-      if (!getFilteredPaths) {
-        return { provider: createProvider(undefined), filtered: false };
-      }
-
-      setHierarchySource((prev) => ({ ...prev, isFiltering: true }));
-      try {
-        const filteredPaths = await getFilteredPaths({ imodelAccess });
-        return { provider: createProvider(filteredPaths), filtered: filteredPaths !== undefined };
-      } catch {
-        return { provider: createProvider(undefined), filtered: false };
-      }
-    };
-
+  const [isFiltering, setIsFiltering] = useState(false);
+  useEffect(() => {
     let disposed = false;
     void (async () => {
-      const { provider, filtered } = await loadHierarchyProvider();
-      if (disposed) {
+      if (!getFilteredPaths || !hierarchyProvider) {
+        hierarchyProvider?.setHierarchyFilter(undefined);
+        actions.reloadTree({ state: "keep" });
+        setIsFiltering(false);
         return;
       }
-      updateHierarchyProvider(provider, filtered);
-    })();
 
+      setIsFiltering(true);
+      let paths: HierarchyFilteringPaths | undefined;
+      try {
+        paths = await getFilteredPaths({ imodelAccess });
+      } catch {
+      } finally {
+        if (!disposed) {
+          hierarchyProvider.setHierarchyFilter(paths ? { paths } : undefined);
+          actions.reloadTree({ state: paths ? "discard" : "keep" });
+        }
+        setIsFiltering(false);
+      }
+    })();
     return () => {
       disposed = true;
-      actions.dispose();
     };
-  }, [actions, imodelAccess, localizedStrings, getHierarchyDefinition, getFilteredPaths]);
+  }, [actions, hierarchyProvider, imodelAccess, getFilteredPaths]);
 
   const getNode = useCallback<(nodeId: string) => TreeModelRootNode | TreeModelNode | undefined>(
     (nodeId: string) => {
@@ -290,11 +281,11 @@ function useTreeInternal({
   const reloadTree = useCallback<UseTreeResult["reloadTree"]>(
     (options) => {
       if (options && "dataSourceChanged" in options) {
-        hierarchySource.hierarchyProvider?.notifyDataSourceChanged();
+        dataSourceChanged.current.raiseEvent();
       }
       actions.reloadTree(options);
     },
-    [actions, hierarchySource],
+    [actions],
   );
 
   const selectNodes = useCallback<UseTreeResult["selectNodes"]>(
@@ -310,20 +301,19 @@ function useTreeInternal({
     (formatter: IPrimitiveValueFormatter | undefined) => {
       currentFormatter.current = formatter;
       // istanbul ignore if
-      if (!hierarchySource.hierarchyProvider) {
+      if (!hierarchyProvider) {
         return;
       }
 
-      hierarchySource.hierarchyProvider.setFormatter(formatter);
+      hierarchyProvider.setFormatter(formatter);
       actions.reloadTree();
     },
-    [hierarchySource.hierarchyProvider, actions],
+    [hierarchyProvider, actions],
   );
 
   const getHierarchyLevelDetails = useCallback<UseTreeResult["getHierarchyLevelDetails"]>(
     (nodeId) => {
       const node = actions.getNode(nodeId);
-      const hierarchyProvider = hierarchySource.hierarchyProvider;
       if (!hierarchyProvider || !node || isTreeModelInfoNode(node)) {
         return undefined;
       }
@@ -346,12 +336,12 @@ function useTreeInternal({
         setSizeLimit: (value) => actions.setHierarchyLimit(nodeId, value),
       };
     },
-    [actions, hierarchySource.hierarchyProvider],
+    [actions, hierarchyProvider],
   );
 
   return {
     rootNodes: state.rootNodes,
-    isLoading: !!state.model.rootNode.isLoading || hierarchySource.isFiltering,
+    isLoading: !!state.model.rootNode.isLoading || isFiltering,
     expandNode,
     reloadTree,
     selectNodes,

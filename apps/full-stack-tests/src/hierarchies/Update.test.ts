@@ -19,7 +19,7 @@ import {
   SubjectOwnsPartitionElements,
   SubjectOwnsSubjects,
 } from "@itwin/core-backend";
-import { Guid, Id64String, OpenMode } from "@itwin/core-bentley";
+import { BeEvent, Guid, Id64String, OpenMode } from "@itwin/core-bentley";
 import {
   BisCodeSpec,
   EmptyLocalization,
@@ -534,8 +534,9 @@ describe("Hierarchies", () => {
               ];
             },
           };
-          const provider = createProvider({ imodel, hierarchy });
-          registerTxnListeners(imodel.txns, () => provider.notifyDataSourceChanged());
+          const imodelChanged = new BeEvent();
+          const provider = createProvider({ imodel, imodelChanged, hierarchy });
+          registerTxnListeners(imodel.txns, () => imodelChanged.raiseEvent());
           return provider;
         }
 
@@ -566,8 +567,9 @@ describe("Hierarchies", () => {
               ];
             },
           };
-          const provider = createProvider({ imodel, hierarchy });
-          registerTxnListeners(imodel.txns, () => provider.notifyDataSourceChanged());
+          const imodelChanged = new BeEvent();
+          const provider = createProvider({ imodel, imodelChanged, hierarchy });
+          registerTxnListeners(imodel.txns, () => imodelChanged.raiseEvent());
           return provider;
         }
 
@@ -613,8 +615,9 @@ describe("Hierarchies", () => {
               ];
             },
           };
-          const provider = createProvider({ imodel, hierarchy });
-          registerTxnListeners(imodel.txns, () => provider.notifyDataSourceChanged());
+          const imodelChanged = new BeEvent();
+          const provider = createProvider({ imodel, imodelChanged, hierarchy });
+          registerTxnListeners(imodel.txns, () => imodelChanged.raiseEvent());
           return provider;
         }
 

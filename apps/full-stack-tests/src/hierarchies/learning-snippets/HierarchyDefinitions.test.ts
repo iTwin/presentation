@@ -9,7 +9,7 @@ import { IModelConnection } from "@itwin/core-frontend";
 // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.HierarchyDefinitions.Imports
 import { createClassBasedHierarchyDefinition, createNodesQueryClauseFactory, HierarchyDefinition, HierarchyNode } from "@itwin/presentation-hierarchies";
 // __PUBLISH_EXTRACT_END__
-import { createHierarchyProvider } from "@itwin/presentation-hierarchies";
+import { createIModelHierarchyProvider } from "@itwin/presentation-hierarchies";
 import { buildIModel } from "../../IModelUtils";
 import { initialize, terminate } from "../../IntegrationTests";
 import { NodeValidators, validateHierarchy } from "../HierarchyValidation";
@@ -82,7 +82,7 @@ describe("Hierarchies", () => {
         };
         // __PUBLISH_EXTRACT_END__
         await validateHierarchy({
-          provider: createHierarchyProvider({ imodelAccess, hierarchyDefinition }),
+          provider: createIModelHierarchyProvider({ imodelAccess, hierarchyDefinition }),
           expect: [
             NodeValidators.createForCustomNode({
               key: "physical-elements",
@@ -134,7 +134,7 @@ describe("Hierarchies", () => {
         };
         // __PUBLISH_EXTRACT_END__
         await validateHierarchy({
-          provider: createHierarchyProvider({ imodelAccess, hierarchyDefinition }),
+          provider: createIModelHierarchyProvider({ imodelAccess, hierarchyDefinition }),
           expect: [NodeValidators.createForInstanceNode({ label: "A" }), NodeValidators.createForInstanceNode({ label: "B" })],
         });
       });
@@ -190,7 +190,7 @@ describe("Hierarchies", () => {
         };
         // __PUBLISH_EXTRACT_END__
         await validateHierarchy({
-          provider: createHierarchyProvider({ imodelAccess, hierarchyDefinition }),
+          provider: createIModelHierarchyProvider({ imodelAccess, hierarchyDefinition }),
           expect: [
             NodeValidators.createForInstanceNode({
               label: "A",
@@ -247,7 +247,7 @@ describe("Hierarchies", () => {
         };
         // __PUBLISH_EXTRACT_END__
         await validateHierarchy({
-          provider: createHierarchyProvider({ imodelAccess, hierarchyDefinition }),
+          provider: createIModelHierarchyProvider({ imodelAccess, hierarchyDefinition }),
           expect: [
             NodeValidators.createForClassGroupingNode({
               label: "Physical Object",
@@ -305,7 +305,7 @@ describe("Hierarchies", () => {
         });
         // __PUBLISH_EXTRACT_END__
         await validateHierarchy({
-          provider: createHierarchyProvider({ imodelAccess, hierarchyDefinition }),
+          provider: createIModelHierarchyProvider({ imodelAccess, hierarchyDefinition }),
           expect: [
             NodeValidators.createForCustomNode({
               key: "physical-elements",

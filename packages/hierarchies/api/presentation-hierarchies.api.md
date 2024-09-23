@@ -10,6 +10,7 @@ import { ECSchemaProvider } from '@itwin/presentation-shared';
 import { ECSqlQueryDef } from '@itwin/presentation-shared';
 import { ECSqlQueryExecutor } from '@itwin/presentation-shared';
 import { ECSqlQueryReaderOptions } from '@itwin/presentation-shared';
+import { Event as Event_2 } from '@itwin/presentation-shared';
 import { GenericInstanceFilter } from '@itwin/core-common';
 import { Id64String } from '@itwin/core-bentley';
 import { IInstanceLabelSelectClauseFactory } from '@itwin/presentation-shared';
@@ -53,7 +54,9 @@ export interface ClassGroupingNodeKey {
 export function createClassBasedHierarchyDefinition(props: ClassBasedHierarchyDefinitionProps): HierarchyDefinition;
 
 // @beta
-export function createHierarchyProvider(props: HierarchyProviderProps): HierarchyProvider;
+export function createIModelHierarchyProvider(props: IModelHierarchyProviderProps): HierarchyProvider & {
+    dispose: () => void;
+};
 
 // @beta
 export function createLimitingECSqlQueryExecutor(baseExecutor: ECSqlQueryExecutor, defaultLimit: number | "unbounded"): LimitingECSqlQueryExecutor;
@@ -241,18 +244,18 @@ export namespace HierarchyNode {
     }>(node: TNode): node is TNode & {
         key: ClassGroupingNodeKey;
         supportsFiltering?: undefined;
-    } & (TNode extends ProcessedHierarchyNode ? ProcessedGroupingHierarchyNode : GroupingHierarchyNode);
+    } & GroupingHierarchyNode;
     export function isCustom<TNode extends {
         key: HierarchyNodeKey;
-    }>(node: TNode): node is TNode & (TNode extends ProcessedHierarchyNode ? ProcessedCustomHierarchyNode : NonGroupingHierarchyNode) & {
+    }>(node: TNode): node is TNode & NonGroupingHierarchyNode & {
         key: string;
     };
     export function isGroupingNode<TNode extends {
         key: HierarchyNodeKey;
-    }>(node: TNode): node is TNode & (TNode extends ProcessedHierarchyNode ? ProcessedGroupingHierarchyNode : GroupingHierarchyNode);
+    }>(node: TNode): node is TNode & GroupingHierarchyNode;
     export function isInstancesNode<TNode extends {
         key: HierarchyNodeKey;
-    }>(node: TNode): node is TNode & (TNode extends ProcessedHierarchyNode ? ProcessedInstanceHierarchyNode : NonGroupingHierarchyNode) & {
+    }>(node: TNode): node is TNode & NonGroupingHierarchyNode & {
         key: InstancesNodeKey;
     };
     export function isLabelGroupingNode<TNode extends {
@@ -260,31 +263,31 @@ export namespace HierarchyNode {
     }>(node: TNode): node is TNode & {
         key: LabelGroupingNodeKey;
         supportsFiltering?: undefined;
-    } & (TNode extends ProcessedHierarchyNode ? ProcessedGroupingHierarchyNode : GroupingHierarchyNode);
+    } & GroupingHierarchyNode;
     export function isPropertyGroupingNode<TNode extends {
         key: HierarchyNodeKey;
     }>(node: TNode): node is TNode & {
         key: PropertyGroupingNodeKey;
         supportsFiltering?: undefined;
-    } & (TNode extends ProcessedHierarchyNode ? ProcessedGroupingHierarchyNode : GroupingHierarchyNode);
+    } & GroupingHierarchyNode;
     export function isPropertyOtherValuesGroupingNode<TNode extends {
         key: HierarchyNodeKey;
     }>(node: TNode): node is TNode & {
         key: PropertyOtherValuesGroupingNodeKey;
         supportsFiltering?: undefined;
-    } & (TNode extends ProcessedHierarchyNode ? ProcessedGroupingHierarchyNode : GroupingHierarchyNode);
+    } & GroupingHierarchyNode;
     export function isPropertyValueGroupingNode<TNode extends {
         key: HierarchyNodeKey;
     }>(node: TNode): node is TNode & {
         key: PropertyValueGroupingNodeKey;
         supportsFiltering?: undefined;
-    } & (TNode extends ProcessedHierarchyNode ? ProcessedGroupingHierarchyNode : GroupingHierarchyNode);
+    } & GroupingHierarchyNode;
     export function isPropertyValueRangeGroupingNode<TNode extends {
         key: HierarchyNodeKey;
     }>(node: TNode): node is TNode & {
         key: PropertyValueRangeGroupingNodeKey;
         supportsFiltering?: undefined;
-    } & (TNode extends ProcessedHierarchyNode ? ProcessedGroupingHierarchyNode : GroupingHierarchyNode);
+    } & GroupingHierarchyNode;
     export function isStandard<TNode extends {
         key: HierarchyNodeKey;
     }>(node: TNode): node is TNode & {
@@ -430,25 +433,33 @@ export namespace HierarchyNodesDefinition {
 export interface HierarchyProvider {
     getNodeInstanceKeys(props: Omit<GetHierarchyNodesProps, "ignoreCache">): AsyncIterableIterator<InstanceKey>;
     getNodes(props: GetHierarchyNodesProps): AsyncIterableIterator<HierarchyNode>;
-    notifyDataSourceChanged(): void;
     setFormatter(formatter: IPrimitiveValueFormatter | undefined): void;
+    setHierarchyFilter(props: {
+        paths: HierarchyFilteringPath[];
+    } | undefined): void;
 }
 
+// @beta (undocumented)
+type IModelAccess = ECSchemaProvider & LimitingECSqlQueryExecutor & ECClassHierarchyInspector & {
+    imodelKey: string;
+};
+
 // @beta
-interface HierarchyProviderLocalizedStrings {
+interface IModelHierarchyProviderLocalizedStrings {
     other: string;
     unspecified: string;
 }
 
 // @beta
-interface HierarchyProviderProps {
+interface IModelHierarchyProviderProps {
     filtering?: {
         paths: HierarchyFilteringPath[];
     };
     formatter?: IPrimitiveValueFormatter;
     hierarchyDefinition: HierarchyDefinition;
-    imodelAccess: ECSchemaProvider & LimitingECSqlQueryExecutor & ECClassHierarchyInspector;
-    localizedStrings?: Partial<HierarchyProviderLocalizedStrings>;
+    imodelAccess: IModelAccess;
+    imodelChanged?: Event_2<() => void>;
+    localizedStrings?: Partial<IModelHierarchyProviderLocalizedStrings>;
     queryCacheSize?: number;
     queryConcurrency?: number;
 }
@@ -491,6 +502,17 @@ export interface LimitingECSqlQueryExecutor {
         limit?: number | "unbounded";
     }): ReturnType<ECSqlQueryExecutor["createQueryReader"]>;
 }
+
+// @beta (undocumented)
+interface MergeHierarchyProvidersProps {
+    // (undocumented)
+    providers: HierarchyProvider[];
+}
+
+// @beta (undocumented)
+export function mergeProviders({ providers }: MergeHierarchyProvidersProps): HierarchyProvider & {
+    dispose: () => void;
+};
 
 // @beta
 export type NodeParser = (row: {
@@ -593,6 +615,13 @@ type ProcessedGroupingHierarchyNode = Omit<GroupingHierarchyNode, "children"> & 
 
 // @beta
 export type ProcessedHierarchyNode = ProcessedCustomHierarchyNode | ProcessedInstanceHierarchyNode | ProcessedGroupingHierarchyNode;
+
+// @beta (undocumented)
+export namespace ProcessedHierarchyNode {
+    export function isCustom(node: ProcessedHierarchyNode): node is ProcessedCustomHierarchyNode;
+    export function isGroupingNode(node: ProcessedHierarchyNode): node is ProcessedGroupingHierarchyNode;
+    export function isInstancesNode(node: ProcessedHierarchyNode): node is ProcessedInstanceHierarchyNode;
+}
 
 // @beta
 type ProcessedInstanceHierarchyNode = Omit<NonGroupingHierarchyNode, "key" | "children"> & {

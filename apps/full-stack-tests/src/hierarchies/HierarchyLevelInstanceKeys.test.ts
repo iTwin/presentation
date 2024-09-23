@@ -191,7 +191,7 @@ describe("Hierarchies", () => {
               },
             ];
           }
-          if (HierarchyNode.isInstancesNode(parentNode) && parentNode.key.instanceKeys.some((ik) => InstanceKey.equals(ik, rootSubjectKey))) {
+          if (HierarchyNode.isInstancesNode(parentNode) && parentNode.key.instanceKeys.some((ik) => ik.id === rootSubjectKey.id)) {
             return [
               {
                 fullClassName: Subject.classFullName,

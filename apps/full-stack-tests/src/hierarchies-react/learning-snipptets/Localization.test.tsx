@@ -73,6 +73,7 @@ describe("Hierarchies React", () => {
         context.addLocater(new ECSchemaRpcLocater(imodel.getRpcProps()));
         const schemaProvider = createECSchemaProvider(context);
         access = {
+          imodelKey: imodel.key,
           ...schemaProvider,
           ...createCachingECClassHierarchyInspector({ schemaProvider, cacheSize: 100 }),
           ...createLimitingECSqlQueryExecutor(createECSqlQueryExecutor(imodel), 1000),
