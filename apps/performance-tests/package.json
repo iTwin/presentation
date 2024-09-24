@@ -16,12 +16,12 @@
   },
   "dependencies": {
     "@bentley/functional-schema": "^1.0.4",
-    "@itwin/core-backend": "^4.8.0",
-    "@itwin/core-bentley": "^4.8.0",
-    "@itwin/core-common": "^4.8.0",
-    "@itwin/core-geometry": "^4.8.0",
-    "@itwin/core-quantity": "^4.8.0",
-    "@itwin/ecschema-metadata": "^4.8.0",
+    "@itwin/core-backend": "^4.9.0",
+    "@itwin/core-bentley": "^4.9.0",
+    "@itwin/core-common": "^4.9.0",
+    "@itwin/core-geometry": "^4.9.0",
+    "@itwin/core-quantity": "^4.9.0",
+    "@itwin/ecschema-metadata": "^4.9.0",
     "@itwin/presentation-core-interop": "workspace:*",
     "@itwin/presentation-hierarchies": "workspace:*",
     "@itwin/presentation-models-tree": "workspace:*",
@@ -34,7 +34,7 @@
     "rxjs": "^7.8.1"
   },
   "devDependencies": {
-    "@itwin/build-tools": "^4.8.0",
+    "@itwin/build-tools": "^4.9.0",
     "@itwin/eslint-plugin": "^4.1.1",
     "@types/chai": "^4.3.16",
     "@types/mocha": "^10.0.7",

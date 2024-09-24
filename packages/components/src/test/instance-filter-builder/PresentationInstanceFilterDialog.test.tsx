@@ -342,7 +342,7 @@ describe("PresentationInstanceFilterDialog", () => {
     const operatorSelector = await getRuleOperatorSelector(baseElement);
     await user.click(operatorSelector);
     // select operator
-    await user.click(getByText(baseElement, /filterBuilder.operators.isNotNull/));
+    await user.click(getByText(baseElement, "Is not null"));
 
     // wait until operator is selected
     const applyButton = await getApplyButton(baseElement);

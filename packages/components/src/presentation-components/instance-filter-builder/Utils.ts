@@ -173,6 +173,8 @@ export function filterRuleValidator(item: PropertyFilterBuilderRule) {
     return error;
   }
 
+  // TODO: refactor to `useDefaultPropertyFilterBuilderRuleValidator` after AppUI peer dep bumped to 5.0
+  // eslint-disable-next-line deprecation/deprecation
   return defaultPropertyFilterBuilderRuleValidator(item);
 }
 

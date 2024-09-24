@@ -9,12 +9,12 @@ import "@itwin/itwinui-react/styles.css";
 import { useEffect, useState } from "react";
 import { useResizeDetector } from "react-resize-detector";
 import { from, reduce, Subject, takeUntil } from "rxjs";
-import { StandardContentLayouts } from "@itwin/appui-abstract";
 import {
   ConfigurableUiContent,
   ContentGroup,
   StagePanelState,
   StageUsage,
+  StandardContentLayouts,
   ThemeManager,
   UiFramework,
   UiStateStorageHandler,

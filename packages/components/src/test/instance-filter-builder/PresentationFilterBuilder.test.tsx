@@ -101,10 +101,10 @@ describe("PresentationInstanceFilter", () => {
     await user.click(operatorSelector);
 
     // select operator
-    await user.click(getByText(/filterBuilder.operators.isNotNull/i));
+    await user.click(getByText("Is not null"));
 
     // wait until operator is selected
-    await waitFor(() => getByText(/filterBuilder.operators.isNotNull/i));
+    await waitFor(() => getByText("Is not null"));
 
     await waitFor(() =>
       expect(spy).to.be.calledWith({
