@@ -269,7 +269,7 @@ function IModelComponents(props: IModelComponentsProps) {
     });
     void UiFramework.frontstages.setActiveFrontstage("presentation-test-app-frontstage");
     return () => {
-      UiFramework.frontstages.clearFrontstageProviders();
+      UiFramework.frontstages.clearFrontstages();
     };
   }, [imodel, rulesetId]);
 
