@@ -117,6 +117,8 @@ export interface PresentationFilterBuilderValueRendererProps extends PropertyFil
   descriptor: Descriptor;
   /** Keys used to create the descriptor. */
   descriptorInputKeys?: Keys;
+  /** Currently selected classes. */
+  selectedClasses?: ClassInfo[];
 }
 
 /**
@@ -127,10 +129,24 @@ export interface PresentationFilterBuilderValueRendererProps extends PropertyFil
  *
  * @public
  */
-export function PresentationFilterBuilderValueRenderer({ imodel, descriptor, descriptorInputKeys, ...props }: PresentationFilterBuilderValueRendererProps) {
+export function PresentationFilterBuilderValueRenderer({
+  imodel,
+  descriptor,
+  descriptorInputKeys,
+  selectedClasses,
+  ...props
+}: PresentationFilterBuilderValueRendererProps) {
   const navigationPropertyContextProviderProps = useFilterBuilderNavigationPropertyEditorContextProviderProps(imodel, descriptor);
   if (props.operator === "is-equal" || props.operator === "is-not-equal") {
-    return <UniquePropertyValuesSelector {...props} imodel={imodel} descriptor={descriptor} descriptorInputKeys={descriptorInputKeys} />;
+    return (
+      <UniquePropertyValuesSelector
+        {...props}
+        imodel={imodel}
+        descriptor={descriptor}
+        descriptorInputKeys={descriptorInputKeys}
+        selectedClasses={selectedClasses}
+      />
+    );
   }
 
   return (
