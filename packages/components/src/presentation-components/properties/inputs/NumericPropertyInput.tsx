@@ -4,10 +4,11 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { forwardRef, useImperativeHandle, useRef, useState } from "react";
-import { PropertyRecord, PropertyValueFormat } from "@itwin/appui-abstract";
+import { PrimitiveValue, PropertyRecord, PropertyValueFormat } from "@itwin/appui-abstract";
 import { PropertyEditorProps } from "@itwin/components-react";
 import { Input } from "@itwin/itwinui-react";
 import { PropertyEditorAttributes } from "../editors/Common";
+import { getDecimalRoundingError } from "./Utils";
 
 /** @internal */
 export interface NumericPropertyInputProps extends PropertyEditorProps {
@@ -24,11 +25,7 @@ export const NumericPropertyInput = forwardRef<PropertyEditorAttributes, Numeric
   useImperativeHandle(
     ref,
     () => ({
-      getValue: () => ({
-        valueFormat: PropertyValueFormat.Primitive,
-        value: !inputValue || isNaN(Number(inputValue)) ? undefined : Number(inputValue),
-        displayValue: inputValue,
-      }),
+      getValue: () => getPrimitiveValue(inputValue),
       htmlElement: divRef.current,
     }),
     [inputValue],
@@ -42,11 +39,7 @@ export const NumericPropertyInput = forwardRef<PropertyEditorAttributes, Numeric
     onCommit &&
       onCommit({
         propertyRecord,
-        newValue: {
-          valueFormat: PropertyValueFormat.Primitive,
-          value: !inputValue || isNaN(Number(inputValue)) ? undefined : Number(inputValue),
-          displayValue: inputValue,
-        },
+        newValue: getPrimitiveValue(inputValue),
       });
   };
   return (
@@ -56,6 +49,16 @@ export const NumericPropertyInput = forwardRef<PropertyEditorAttributes, Numeric
   );
 });
 NumericPropertyInput.displayName = "NumericPropertyInput";
+
+function getPrimitiveValue(value: string): PrimitiveValue {
+  const isValid = value && !isNaN(Number(value));
+  return {
+    valueFormat: PropertyValueFormat.Primitive,
+    value: isValid ? Number(value) : undefined,
+    displayValue: value,
+    roundingError: isValid ? getDecimalRoundingError(value) : undefined,
+  };
+}
 
 function getInputTargetFromPropertyRecord(propertyRecord: PropertyRecord) {
   const value = propertyRecord.value;
