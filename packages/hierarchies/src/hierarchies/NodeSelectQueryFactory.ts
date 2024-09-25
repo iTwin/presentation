@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { assert, Id64String } from "@itwin/core-bentley";
+import { assert, Id64String, Logger } from "@itwin/core-bentley";
 import {
   GenericInstanceFilter,
   GenericInstanceFilterRelationshipStep,
@@ -490,44 +490,50 @@ async function createPropertyGroupSelectors(propertyGroup: ECSqlSelectClauseProp
     },
   );
 
-  if (propertyGroup.ranges) {
-    selectors.push(createRangeParamSelectors(propertyGroup.ranges));
-  }
+  try {
+    const propertyClass = await classLoader(fullClassName);
+    if (!propertyClass) {
+      throw new Error(`Class with alias "${fullClassName}" not found.`);
+    }
 
-  const propertyClass = await classLoader(fullClassName);
-  if (!propertyClass) {
+    const property = await propertyClass.getProperty(propertyGroup.propertyName);
+    if (property && property.isNavigation()) {
+      const customAlias = "cAlias";
+      selectors.push(
+        {
+          key: "propertyValue",
+          selector: `(
+            SELECT ${await instanceLabelSelectClauseFactory.createSelectClause({ className: fullClassName, classAlias: customAlias })}
+            FROM ${fullClassName} AS ${customAlias}
+            WHERE [${customAlias}].[ECInstanceId] = [${propertyGroup.propertyClassAlias}].[${propertyGroup.propertyName}].[Id]
+          )`,
+        },
+      );
+    } else {
+      selectors.push(
+        {
+          key: "propertyValue",
+          selector: `[${propertyGroup.propertyClassAlias}].[${propertyGroup.propertyName}]`,
+        },
+      );
+    }
+  }
+  catch (err: unknown) {
+    if (err instanceof Error) {
+      Logger.logError("presentation", err.message)
+    }
+
     selectors.push(
       {
         key: "propertyValue",
         selector: `[${propertyGroup.propertyClassAlias}].[${propertyGroup.propertyName}]`,
       },
     );
-
-    return selectors;
   }
 
-  const property = await propertyClass.getProperty(propertyGroup.propertyName);
-  if (property && property.isNavigation()) {
-    const customAlias = "cAlias";
-    selectors.push(
-      {
-        key: "propertyValue",
-        selector: `(
-          SELECT ${await instanceLabelSelectClauseFactory.createSelectClause({ className: fullClassName, classAlias: customAlias })}
-          FROM ${fullClassName} AS ${customAlias}
-          WHERE [${customAlias}].[ECInstanceId] = [${propertyGroup.propertyClassAlias}].[${propertyGroup.propertyName}].[Id]
-        )`,
-      },
-    );
-    return selectors;
+  if (propertyGroup.ranges) {
+    selectors.push(createRangeParamSelectors(propertyGroup.ranges));
   }
-
-  selectors.push(
-    {
-      key: "propertyValue",
-      selector: `[${propertyGroup.propertyClassAlias}].[${propertyGroup.propertyName}]`,
-    },
-  );
 
   return selectors;
 }
