@@ -24,7 +24,7 @@ const hierarchyDefinition: HierarchyDefinition = {
       return [
         {
           node: {
-            key: "custom node",
+            key: { type: "generic", id: "custom node" },
             label: "Custom Node",
             supportsFiltering: true,
           },

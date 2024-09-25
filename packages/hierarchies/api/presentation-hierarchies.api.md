@@ -33,25 +33,10 @@ interface BaseHierarchyNode {
 }
 
 // @beta
-interface ClassBasedHierarchyDefinitionProps {
-    classHierarchyInspector: ECClassHierarchyInspector;
-    hierarchy: {
-        rootNodes: (props: DefineRootHierarchyLevelProps) => Promise<HierarchyLevelDefinition>;
-        childNodes: ClassBasedHierarchyLevelDefinition[];
-    };
-}
-
-// @beta
-type ClassBasedHierarchyLevelDefinition = InstancesNodeChildHierarchyLevelDefinition | GenericNodeChildHierarchyLevelDefinition;
-
-// @beta
 export interface ClassGroupingNodeKey {
     className: string;
     type: "class-grouping";
 }
-
-// @beta
-export function createClassBasedHierarchyDefinition(props: ClassBasedHierarchyDefinitionProps): HierarchyDefinition;
 
 // @beta
 export function createIModelHierarchyProvider(props: IModelHierarchyProviderProps): HierarchyProvider & {
@@ -66,6 +51,9 @@ export function createNodesQueryClauseFactory(props: {
     imodelAccess: ECSchemaProvider & ECClassHierarchyInspector;
     instanceLabelSelectClauseFactory: IInstanceLabelSelectClauseFactory;
 }): NodesQueryClauseFactory;
+
+// @beta
+export function createPredicateBasedHierarchyDefinition(props: PredicateBasedHierarchyDefinitionProps): HierarchyDefinition;
 
 // @beta
 export type DefineGenericNodeChildHierarchyLevelProps = Omit<DefineHierarchyLevelProps, "parentNode"> & {
@@ -595,6 +583,18 @@ export interface NonGroupingHierarchyNode extends BaseHierarchyNode {
 
 // @beta
 type ParentHierarchyNode<TBase = HierarchyNode> = OmitOverUnion<TBase, "children">;
+
+// @beta
+interface PredicateBasedHierarchyDefinitionProps {
+    classHierarchyInspector: ECClassHierarchyInspector;
+    hierarchy: {
+        rootNodes: (props: DefineRootHierarchyLevelProps) => Promise<HierarchyLevelDefinition>;
+        childNodes: PredicateBasedHierarchyLevelDefinition[];
+    };
+}
+
+// @beta
+type PredicateBasedHierarchyLevelDefinition = InstancesNodeChildHierarchyLevelDefinition | GenericNodeChildHierarchyLevelDefinition;
 
 // @beta
 type ProcessedGenericHierarchyNode = Omit<NonGroupingHierarchyNode, "key" | "children"> & {

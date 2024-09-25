@@ -17,10 +17,10 @@ import { SchemaContext } from "@itwin/ecschema-metadata";
 import { ECSchemaRpcLocater } from "@itwin/ecschema-rpcinterface-common";
 import { createECSchemaProvider, createECSqlQueryExecutor } from "@itwin/presentation-core-interop";
 import {
-  createClassBasedHierarchyDefinition,
   createIModelHierarchyProvider,
   createLimitingECSqlQueryExecutor,
   createNodesQueryClauseFactory,
+  createPredicateBasedHierarchyDefinition,
   DefineInstanceNodeChildHierarchyLevelProps,
   HierarchyNode,
   HierarchyProvider,
@@ -63,7 +63,7 @@ function createProvider(imodel: IModelConnection): HierarchyProvider {
   const nodesQueryFactory = createNodesQueryClauseFactory({ imodelAccess, instanceLabelSelectClauseFactory: labelsQueryFactory });
 
   // Then, define the hierarchy
-  const hierarchyDefinition = createClassBasedHierarchyDefinition({
+  const hierarchyDefinition = createPredicateBasedHierarchyDefinition({
     classHierarchyInspector: imodelAccess,
     hierarchy: {
       // For root nodes, select all BisCore.GeometricModel3d instances

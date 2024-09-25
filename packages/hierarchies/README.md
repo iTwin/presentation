@@ -49,7 +49,7 @@ In case of ECSQL queries for creating the hierarchy level, the definition may wa
 
 Finally, the library also allows hierarchy definitions to step into nodes processing chain through the optional `preProcessNode` and `postProcessNode` methods. These methods are called before and after the node is processed by a [hierarchy provider](#hierarchy-provider) respectively and allow hiding and customizing nodes.
 
-In iTwin.js, the most common way to create hierarchies is based on EC data (schemas, classes, relationships) in iModels. To make consumers' life easier, the package provides an utility called `createClassBasedHierarchyDefinition`, which lets consumers define hierarchy levels based on parent nodes' class.
+In iTwin.js, the most common way to create hierarchies is based on EC data (schemas, classes, relationships) in iModels. To make consumers' life easier, the package provides an utility called `createPredicateBasedHierarchyDefinition`, which lets consumers define hierarchy levels based on parent node key's predicate.
 
 ### Hierarchy provider
 
@@ -87,10 +87,10 @@ import { SchemaContext } from "@itwin/ecschema-metadata";
 import { ECSchemaRpcLocater } from "@itwin/ecschema-rpcinterface-common";
 import { createECSchemaProvider, createECSqlQueryExecutor } from "@itwin/presentation-core-interop";
 import {
-  createClassBasedHierarchyDefinition,
   createIModelHierarchyProvider,
   createLimitingECSqlQueryExecutor,
   createNodesQueryClauseFactory,
+  createPredicateBasedHierarchyDefinition,
   DefineInstanceNodeChildHierarchyLevelProps,
   HierarchyNode,
   HierarchyProvider,
@@ -133,7 +133,7 @@ function createProvider(imodel: IModelConnection): HierarchyProvider {
   const nodesQueryFactory = createNodesQueryClauseFactory({ imodelAccess, instanceLabelSelectClauseFactory: labelsQueryFactory });
 
   // Then, define the hierarchy
-  const hierarchyDefinition = createClassBasedHierarchyDefinition({
+  const hierarchyDefinition = createPredicateBasedHierarchyDefinition({
     classHierarchyInspector: imodelAccess,
     hierarchy: {
       // For root nodes, select all BisCore.GeometricModel3d instances
@@ -158,7 +158,7 @@ function createProvider(imodel: IModelConnection): HierarchyProvider {
       childNodes: [
         {
           // For BisCore.Model parent nodes, select all BisCore.Element instances contained in corresponding model
-          parentNodeClassName: "BisCore.Model",
+          parentInstancesNodePredicate: "BisCore.Model",
           definitions: async ({ parentNodeInstanceIds }: DefineInstanceNodeChildHierarchyLevelProps) => [
             {
               fullClassName: "BisCore.Element",

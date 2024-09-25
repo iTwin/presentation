@@ -30,20 +30,54 @@
   - `ParsedHierarchyNode` was renamed to `SourceHierarchyNode`.
   - Type guards in `HierarchyNode` namespace no longer narrow the type of the input node to `ProcessedHierarchyNode` subtypes. Instead, a `ProcessedHierarchyNode` namespace was added with a number of type guards to do that.
 
-- `createClassBasedHierarchyDefinition` props changes:
+- Renamed `createClassBasedHierarchyDefinition` to `createPredicateBasedHierarchyDefinition` to signify its props changes:
   - When specifying `childNodes` definition for instances parent node, the `parentNodeClassName` attribute was changed to `parentInstancesNodePredicate`. In addition to accepting a full class name, identifying the class of parent instances to return children for, it now also accepts an async function predicate.
-  - When specifying `childNodes` definition for generic parent node, the `customParentNodeKey` attribute was changed to `parentGenericNodePredicate`. The type changed from `string`, identifying the key of the parent node, to an async function predicate. Migration:
+  - When specifying `childNodes` definition for generic parent node, the `customParentNodeKey` attribute was changed to `parentGenericNodePredicate`. The type changed from `string`, identifying the key of the parent node, to an async function predicate.
+
+  Migration:
 
     ```ts
     // before
-    {
-      customParentNodeKey: "my-custom-node",
-      definitions: async () => [...],
-    }
+    const definition = createClassBasedHierarchyDefinition({
+      classHierarchyInspector,
+      hierarchy: {
+        rootNodes: async () => [...],
+        childNodes: [
+          {
+            parentNodeClassName: "MySchema.MyClass",
+            definitions: async () => [...],
+          },
+          {
+            customParentNodeKey: "my-custom-node",
+            definitions: async () => [...],
+          },
+        ],
+      },
+    });
 
     // after
-    {
-      parentGenericNodePredicate: async (parentNode) => parentNode.key.id === "my-custom-node",
-      definitions: async () => [...],
-    }
+    const definition = createPredicateBasedHierarchyDefinition({
+      classHierarchyInspector,
+      hierarchy: {
+        rootNodes: async () => [...],
+        childNodes: [
+          {
+            parentInstancesNodePredicate: "MySchema.MyClass",
+            /* alternative:
+            parentInstancesNodePredicate: async (parentKey) =>
+              Promise.all(
+                parentKey.instanceKeys.map(async (instanceKey) =>
+                  classHierarchyInspector.classDerivesFrom(instanceKey.className, "MySchema.MyClass"),
+                ),
+              ),
+            */
+            definitions: async () => [...],
+          },
+          {
+            parentGenericNodePredicate: async (parentKey) => parentKey.id === "my-custom-node",
+            definitions: async () => [...],
+          },
+        ],
+      },
+    });
     ```

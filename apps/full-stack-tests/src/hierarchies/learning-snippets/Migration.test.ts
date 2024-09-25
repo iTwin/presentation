@@ -24,8 +24,8 @@ import { createIModelHierarchyProvider } from "@itwin/presentation-hierarchies";
 // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.Migration.HierarchyNodeImport
 import { HierarchyNode } from "@itwin/presentation-hierarchies";
 // __PUBLISH_EXTRACT_END__
-// __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.Migration.ClassBasedHierarchyDefinitionImports
-import { createClassBasedHierarchyDefinition } from "@itwin/presentation-hierarchies";
+// __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.Migration.PredicateBasedHierarchyDefinitionImports
+import { createPredicateBasedHierarchyDefinition } from "@itwin/presentation-hierarchies";
 // __PUBLISH_EXTRACT_END__
 // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.Migration.ManualHierarchyDefinitionImports
 import { HierarchyDefinition } from "@itwin/presentation-hierarchies";
@@ -57,7 +57,7 @@ describe("Hierarchies", () => {
         it("creates a hierarchy provider", async function () {
           const imodel = emptyIModel;
           const imodelAccess = createIModelAccess(imodel);
-          const hierarchyDefinition = createClassBasedHierarchyDefinition({
+          const hierarchyDefinition = createPredicateBasedHierarchyDefinition({
             classHierarchyInspector: imodelAccess,
             hierarchy: {
               rootNodes: async () => [{ node: { key: { type: "generic", id: "test" }, label: "Root node" } }],
@@ -78,10 +78,10 @@ describe("Hierarchies", () => {
       });
 
       describe("Migrating hierarchy rules", () => {
-        it("creates class based hierarchy definition", async function () {
+        it("creates predicate based hierarchy definition", async function () {
           const imodelAccess = createIModelAccess(emptyIModel);
-          // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.Migration.ClassBasedHierarchyDefinitionUsage
-          const hierarchyDefinition = createClassBasedHierarchyDefinition({
+          // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.Migration.PredicateBasedHierarchyDefinitionUsage
+          const hierarchyDefinition = createPredicateBasedHierarchyDefinition({
             classHierarchyInspector: imodelAccess,
             hierarchy: {
               rootNodes: async () => [

@@ -48,7 +48,7 @@ The Presentation Rules system has 2 types of rules for defining hierarchy:
 - [RootNodeRule](https://www.itwinjs.org/presentation/hierarchies/rootnoderule/) is used for creating root level nodes.
 - [ChildNodeRule](https://www.itwinjs.org/presentation/hierarchies/childnoderule/) is used for creating child level nodes. It generally uses the `ParentNode` ECExpression symbol available in `condition` attribute to select which parent node to create children for.
 
-Most commonly, child node rules are only checking parent instance node's class or custom node's type in their condition - if that's the case across the whole Presentation Ruleset, the recommended approach to define root and child nodes using this library is using the `createClassBasedHierarchyDefinition` function:
+Most commonly, child node rules are only checking parent instance node's class or custom node's type in their condition - if that's the case across the whole Presentation Ruleset, the recommended approach to define root and child nodes using this library is using the `createPredicateBasedHierarchyDefinition` function:
 
 Example ruleset:
 
@@ -80,15 +80,15 @@ Example ruleset:
 }
 ```
 
-Matching hierarchy definition, created using `createClassBasedHierarchyDefinition`:
+Matching hierarchy definition, created using `createPredicateBasedHierarchyDefinition`:
 
-<!-- [[include: [Presentation.Hierarchies.Migration.ClassBasedHierarchyDefinitionImports, Presentation.Hierarchies.Migration.ClassBasedHierarchyDefinitionUsage], ts]] -->
+<!-- [[include: [Presentation.Hierarchies.Migration.PredicateBasedHierarchyDefinitionImports, Presentation.Hierarchies.Migration.PredicateBasedHierarchyDefinitionUsage], ts]] -->
 <!-- BEGIN EXTRACTION -->
 
 ```ts
-import { createClassBasedHierarchyDefinition } from "@itwin/presentation-hierarchies";
+import { createPredicateBasedHierarchyDefinition } from "@itwin/presentation-hierarchies";
 
-const hierarchyDefinition = createClassBasedHierarchyDefinition({
+const hierarchyDefinition = createPredicateBasedHierarchyDefinition({
   classHierarchyInspector: imodelAccess,
   hierarchy: {
     rootNodes: async () => [
@@ -96,13 +96,19 @@ const hierarchyDefinition = createClassBasedHierarchyDefinition({
     ],
     childNodes: [
       {
-        customParentNodeKey: "MyCustomParentNodeKey",
+        parentGenericNodePredicate: async (parentKey) => parentKey.id === "MyCustomParentNodeKey",
         definitions: async () => [
           /* definitions for "MyCustomParentNode" parent node's children go here */
         ],
       },
       {
-        parentNodeClassName: "BisCore.Model",
+        parentInstancesNodePredicate: async () => true,
+        definitions: async () => [
+          /* definitions for all instances' parent nodes children go here */
+        ],
+      },
+      {
+        parentInstancesNodePredicate: "BisCore.Model",
         definitions: async () => [
           /* definitions for `BisCore.Model` parent node's children go here */
         ],
@@ -131,7 +137,7 @@ const hierarchyDefinition: HierarchyDefinition = {
         /* define root node specifications here */
       ];
     }
-    if (parentNode.key === "MyCustomParentNodeKey") {
+    if (HierarchyNode.isGeneric(parentNode) && parentNode.key.id === "MyCustomParentNodeKey") {
       return [
         /* definitions for "MyCustomParentNode" parent node's children go here */
       ];
@@ -186,7 +192,7 @@ import { createBisInstanceLabelSelectClauseFactory } from "@itwin/presentation-s
 
 const definition: HierarchyNodesDefinition = {
   node: {
-    key: "MyCustomNode",
+    key: { type: "generic", id: "MyCustomNode" },
     label: "My custom node",
     extendedData: {
       description: "This is a custom node",

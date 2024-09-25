@@ -6,18 +6,20 @@
 export { GenericInstanceFilter } from "@itwin/core-common";
 
 export {
-  DefineGenericNodeChildHierarchyLevelProps,
   DefineHierarchyLevelProps,
-  DefineInstanceNodeChildHierarchyLevelProps,
-  DefineRootHierarchyLevelProps,
   HierarchyLevelDefinition,
   HierarchyDefinition,
   HierarchyNodesDefinition,
   NodeParser,
   NodePostProcessor,
   NodePreProcessor,
-  createClassBasedHierarchyDefinition,
 } from "./hierarchies/imodel/IModelHierarchyDefinition";
+export {
+  DefineGenericNodeChildHierarchyLevelProps,
+  DefineInstanceNodeChildHierarchyLevelProps,
+  DefineRootHierarchyLevelProps,
+  createPredicateBasedHierarchyDefinition,
+} from "./hierarchies/imodel/PredicateBasedHierarchyDefinition";
 export { LimitingECSqlQueryExecutor, createLimitingECSqlQueryExecutor } from "./hierarchies/imodel/LimitingECSqlQueryExecutor";
 export { NodeSelectClauseColumnNames, NodesQueryClauseFactory, createNodesQueryClauseFactory } from "./hierarchies/imodel/NodeSelectQueryFactory";
 export { createIModelHierarchyProvider } from "./hierarchies/imodel/IModelHierarchyProvider";

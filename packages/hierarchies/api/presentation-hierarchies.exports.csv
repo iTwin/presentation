@@ -1,10 +1,10 @@
 sep=;
 Release Tag;API Item Type;API Item Name
 beta;interface;ClassGroupingNodeKey
-beta;function;createClassBasedHierarchyDefinition
 beta;function;createIModelHierarchyProvider
 beta;function;createLimitingECSqlQueryExecutor
 beta;function;createNodesQueryClauseFactory
+beta;function;createPredicateBasedHierarchyDefinition
 beta;type;DefineGenericNodeChildHierarchyLevelProps
 beta;interface;DefineHierarchyLevelProps
 beta;type;DefineInstanceNodeChildHierarchyLevelProps

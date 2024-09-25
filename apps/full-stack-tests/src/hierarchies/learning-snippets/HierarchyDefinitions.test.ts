@@ -7,7 +7,7 @@
 import { insertPhysicalElement, insertPhysicalModelWithPartition, insertSpatialCategory } from "presentation-test-utilities";
 import { IModelConnection } from "@itwin/core-frontend";
 // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.HierarchyDefinitions.Imports
-import { createClassBasedHierarchyDefinition, createNodesQueryClauseFactory, HierarchyDefinition, HierarchyNode } from "@itwin/presentation-hierarchies";
+import { createNodesQueryClauseFactory, createPredicateBasedHierarchyDefinition, HierarchyDefinition, HierarchyNode } from "@itwin/presentation-hierarchies";
 // __PUBLISH_EXTRACT_END__
 import { createIModelHierarchyProvider } from "@itwin/presentation-hierarchies";
 import { buildIModel } from "../../IModelUtils";
@@ -261,14 +261,14 @@ describe("Hierarchies", () => {
         });
       });
 
-      it("creates hierarchy using class based hierarchy definition", async function () {
+      it("creates hierarchy using predicate based hierarchy definition", async function () {
         const imodelAccess = createIModelAccess(imodel);
-        // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.HierarchyDefinitions.ClassBasedHierarchyDefinition
+        // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.HierarchyDefinitions.PredicateBasedHierarchyDefinition
         const queryClauseFactory = createNodesQueryClauseFactory({
           imodelAccess,
           instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
         });
-        const hierarchyDefinition = createClassBasedHierarchyDefinition({
+        const hierarchyDefinition = createPredicateBasedHierarchyDefinition({
           classHierarchyInspector: imodelAccess,
           hierarchy: {
             // For root nodes, simply return one generic node

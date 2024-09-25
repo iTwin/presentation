@@ -6,8 +6,8 @@
 import { defer, EMPTY, from, map, merge, mergeAll, mergeMap, Observable, ObservableInput } from "rxjs";
 import { Id64String } from "@itwin/core-bentley";
 import {
-  createClassBasedHierarchyDefinition,
   createNodesQueryClauseFactory,
+  createPredicateBasedHierarchyDefinition,
   DefineHierarchyLevelProps,
   DefineInstanceNodeChildHierarchyLevelProps,
   DefineRootHierarchyLevelProps,
@@ -102,7 +102,7 @@ export class ModelsTreeDefinition implements HierarchyDefinition {
   private _isSupported?: Promise<boolean>;
 
   public constructor(props: ModelsTreeDefinitionProps) {
-    this._impl = createClassBasedHierarchyDefinition({
+    this._impl = createPredicateBasedHierarchyDefinition({
       classHierarchyInspector: props.imodelAccess,
       hierarchy: {
         rootNodes: async (requestProps) => this.createRootHierarchyLevelDefinition(requestProps),
