@@ -24,6 +24,7 @@ import {
   PrimitiveValue,
 } from "@itwin/presentation-shared";
 import { HierarchyNodeAutoExpandProp } from "./HierarchyNode";
+import { createConcatenatedValueStringSelector } from "@itwin/presentation-shared/lib/cjs/shared/ecsql-snippets";
 
 /**
  * Column names of the SELECT clause created by `NodeSelectClauseFactory`. Order of the names matches the order of columns
@@ -454,8 +455,7 @@ async function createGroupingSelector(
                 serializeJsonObject(
                   await createPropertyGroupSelectors(
                     propertyGroup,
-                    grouping.byProperties!.propertiesClassName,
-                    async (fullName: string) => getClass(imodelAccess, fullName),
+                    await getClass(imodelAccess, grouping.byProperties!.propertiesClassName),
                     instanceLabelSelectClauseFactory,
                   ),
                 ),
@@ -509,8 +509,7 @@ function createLabelGroupingBaseParamsSelectors(byLabel: ECSqlSelectClauseLabelG
 
 async function createPropertyGroupSelectors(
   propertyGroup: ECSqlSelectClausePropertyGroup,
-  fullClassName: string,
-  classLoader: (fullName: string) => Promise<EC.Class>,
+  propertyClass: EC.Class,
   instanceLabelSelectClauseFactory: IInstanceLabelSelectClauseFactory,
 ) {
   const selectors = new Array<{ key: string; selector: string }>();
@@ -519,21 +518,27 @@ async function createPropertyGroupSelectors(
     selector: `${createECSqlValueSelector(propertyGroup.propertyName)}`,
   });
 
-  const propertyClass = await classLoader(fullClassName);
-
   const property = await propertyClass.getProperty(propertyGroup.propertyName);
   if (!property) {
     throw new Error(`Property "${propertyGroup.propertyName}" not found in ECClass "${propertyClass.fullName}".`);
   }
 
   if (property.isNavigation()) {
-    const customAlias = "cAlias";
+    const relationshipClass = await property.relationshipClass;
+    const abstractConstraint =
+      property.direction === "Forward" ? await relationshipClass.target.abstractConstraint : await relationshipClass.source.abstractConstraint;
+    if (!abstractConstraint) {
+      throw new Error(`Could not determine class name for navigation property with direction "${property.direction}".`);
+    }
+
+    const fullName = abstractConstraint.fullName;
+    const targetAlias = "target";
     selectors.push({
       key: "propertyValue",
       selector: `(
-          SELECT ${await instanceLabelSelectClauseFactory.createSelectClause({ className: fullClassName, classAlias: customAlias })}
-          FROM ${fullClassName} AS ${customAlias}
-          WHERE [${customAlias}].[ECInstanceId] = [${propertyGroup.propertyClassAlias}].[${propertyGroup.propertyName}].[Id]
+          SELECT ${await instanceLabelSelectClauseFactory.createSelectClause({ className: fullName, classAlias: targetAlias, selectorsConcatenator: createConcatenatedValueStringSelector })}
+          FROM ${fullName} AS ${targetAlias}
+          WHERE [${targetAlias}].[ECInstanceId] = [${propertyGroup.propertyClassAlias}].[${propertyGroup.propertyName}].[Id]
         )`,
     });
   } else {
