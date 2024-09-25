@@ -16,7 +16,7 @@ A formatter is a simple async function that takes a value along with its type an
 <!-- BEGIN EXTRACTION -->
 
 ```ts
-import { createDefaultValueFormatter, IPrimitiveValueFormatter } from "@itwin/presentation-shared";
+import { createBisInstanceLabelSelectClauseFactory, createDefaultValueFormatter, IPrimitiveValueFormatter } from "@itwin/presentation-shared";
 
 const defaultFormatter = createDefaultValueFormatter();
 const myFormatter: IPrimitiveValueFormatter = async (value) => {
@@ -144,7 +144,10 @@ const hierarchyProvider = createHierarchyProvider({
             fullClassName: "BisCore.SpatialCategory",
             query: {
               ecsql: `
-                SELECT ${await createNodesQueryClauseFactory({ imodelAccess }).createSelectClause({
+                SELECT ${await createNodesQueryClauseFactory({
+                  imodelAccess,
+                  instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
+                }).createSelectClause({
                   ecClassId: { selector: "this.ECClassId" },
                   ecInstanceId: { selector: "this.ECInstanceId" },
                   // Generally, one of the `IInstanceLabelSelectClauseFactory` implementations, delivered with `@itwin/presentation-shared` package, should be used,
@@ -208,7 +211,10 @@ Finally, in case 3, the grouping node's label is formatted automatically based o
               fullClassName: myPhysicalObjectClassName,
               query: {
                 ecsql: `
-                  SELECT ${await createNodesQueryClauseFactory({ imodelAccess }).createSelectClause({
+                  SELECT ${await createNodesQueryClauseFactory({
+                    imodelAccess,
+                    instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
+                  }).createSelectClause({
                     ecClassId: { selector: "this.ECClassId" },
                     ecInstanceId: { selector: "this.ECInstanceId" },
                     nodeLabel: { selector: "this.UserLabel" },

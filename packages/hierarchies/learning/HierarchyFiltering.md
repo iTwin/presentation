@@ -47,7 +47,10 @@ import { createNodesQueryClauseFactory, GroupingHierarchyNode, HierarchyDefiniti
 import { ECSqlBinding } from "@itwin/presentation-shared";
 
 function createHierarchyDefinition(imodelAccess: IModelAccess): HierarchyDefinition {
-  const queryClauseFactory = createNodesQueryClauseFactory({ imodelAccess });
+  const queryClauseFactory = createNodesQueryClauseFactory({
+    imodelAccess,
+    instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
+  });
   const createHierarchyLevelDefinition = async ({ whereClause, bindings }: { whereClause?: string; bindings?: ECSqlBinding[] }) => [
     {
       fullClassName: "BisCore.PhysicalElement",

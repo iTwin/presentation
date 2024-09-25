@@ -46,7 +46,10 @@ To make an instance node filterable, the hierarchy definition should set `suppor
 ```ts
 import { createNodesQueryClauseFactory, HierarchyDefinition } from "@itwin/presentation-hierarchies";
 
-const queryClauseFactory = createNodesQueryClauseFactory({ imodelAccess });
+const queryClauseFactory = createNodesQueryClauseFactory({
+  imodelAccess,
+  instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
+});
 const hierarchyDefinition: HierarchyDefinition = {
   async defineHierarchyLevel({ parentNode }) {
     if (!parentNode) {
@@ -98,7 +101,10 @@ While the library can't do that automatically, it does provide a helper function
 ```ts
 import { createNodesQueryClauseFactory, HierarchyDefinition } from "@itwin/presentation-hierarchies";
 
-const queryClauseFactory = createNodesQueryClauseFactory({ imodelAccess });
+const queryClauseFactory = createNodesQueryClauseFactory({
+  imodelAccess,
+  instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
+});
 const hierarchyDefinition: HierarchyDefinition = {
   async defineHierarchyLevel(props) {
     // `createFilterClauses` function returns `from`, `joins`, and `where` clauses which need to be used in the
