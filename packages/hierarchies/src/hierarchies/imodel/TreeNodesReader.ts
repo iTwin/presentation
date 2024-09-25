@@ -57,7 +57,7 @@ export function defaultNodesParser(row: { [columnName: string]: any }): ParsedIn
     ...(typedRow.Grouping ? { grouping: JSON.parse(typedRow.Grouping) } : undefined),
   };
   return {
-    // don't format the label here - we're going to do that at node pre-processing step to handle both - instance and custom nodes
+    // don't format the label here - we're going to do that at node pre-processing step to handle both - instance and generic nodes
     label: parseInstanceLabel(typedRow.DisplayLabel),
     key: {
       type: "instances",

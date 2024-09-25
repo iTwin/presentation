@@ -43,19 +43,19 @@ describe("Hierarchies", () => {
         // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.HierarchyDefinitions.Simple
         const hierarchyDefinition: HierarchyDefinition = {
           async defineHierarchyLevel({ parentNode }) {
-            // For root nodes, simply return one custom node
+            // For root nodes, simply return one generic node
             if (!parentNode) {
               return [
                 {
                   node: {
-                    key: "physical-elements",
+                    key: { type: "generic", id: "physical-elements" },
                     label: "Physical elements",
                   },
                 },
               ];
             }
-            // For the custom node, return a query that selects all physical elements
-            if (parentNode.key === "physical-elements") {
+            // For the root node, return a query that selects all physical elements
+            if (HierarchyNode.isGeneric(parentNode) && parentNode.key.id === "physical-elements") {
               const queryClauseFactory = createNodesQueryClauseFactory({
                 imodelAccess,
                 instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
@@ -84,7 +84,7 @@ describe("Hierarchies", () => {
         await validateHierarchy({
           provider: createIModelHierarchyProvider({ imodelAccess, hierarchyDefinition }),
           expect: [
-            NodeValidators.createForCustomNode({
+            NodeValidators.createForGenericNode({
               key: "physical-elements",
               label: "Physical elements",
               children: [NodeValidators.createForInstanceNode({ label: "A" }), NodeValidators.createForInstanceNode({ label: "B" })],
@@ -271,19 +271,19 @@ describe("Hierarchies", () => {
         const hierarchyDefinition = createClassBasedHierarchyDefinition({
           classHierarchyInspector: imodelAccess,
           hierarchy: {
-            // For root nodes, simply return one custom node
+            // For root nodes, simply return one generic node
             rootNodes: async () => [
               {
                 node: {
-                  key: "physical-elements",
+                  key: { type: "generic", id: "physical-elements" },
                   label: "Physical elements",
                 },
               },
             ],
             childNodes: [
               {
-                // For the custom node, return a query that selects all physical elements
-                customParentNodeKey: "physical-elements",
+                // For the root node, return a query that selects all physical elements
+                parentGenericNodePredicate: async (parentKey) => parentKey.id === "physical-elements",
                 definitions: async () => [
                   {
                     fullClassName: "BisCore.PhysicalElement",
@@ -307,7 +307,7 @@ describe("Hierarchies", () => {
         await validateHierarchy({
           provider: createIModelHierarchyProvider({ imodelAccess, hierarchyDefinition }),
           expect: [
-            NodeValidators.createForCustomNode({
+            NodeValidators.createForGenericNode({
               key: "physical-elements",
               label: "Physical elements",
               children: [NodeValidators.createForInstanceNode({ label: "A" }), NodeValidators.createForInstanceNode({ label: "B" })],

@@ -7,15 +7,16 @@ import { InstanceKey, OmitOverUnion } from "@itwin/presentation-shared";
 import { HierarchyFilteringPath, HierarchyFilteringPathOptions } from "./HierarchyFiltering";
 import {
   ClassGroupingNodeKey,
+  GenericNodeKey,
   GroupingNodeKey,
   HierarchyNodeKey,
+  IModelHierarchyNodeKey,
   InstancesNodeKey,
   LabelGroupingNodeKey,
   PropertyGroupingNodeKey,
   PropertyOtherValuesGroupingNodeKey,
   PropertyValueGroupingNodeKey,
   PropertyValueRangeGroupingNodeKey,
-  StandardHierarchyNodeKey,
 } from "./HierarchyNodeKey";
 
 /** @beta */
@@ -59,7 +60,7 @@ interface BaseHierarchyNode {
  */
 export interface NonGroupingHierarchyNode extends BaseHierarchyNode {
   /** An identifier to identify the node in its hierarchy level. */
-  key: string | InstancesNodeKey;
+  key: GenericNodeKey | InstancesNodeKey;
   /**
    * Identifies whether the hierarchy level below this node supports filtering. If not, supplying an instance
    * filter when requesting child hierarchy level will have no effect.
@@ -94,13 +95,13 @@ export type HierarchyNode = NonGroupingHierarchyNode | GroupingHierarchyNode;
 /** @beta */
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export namespace HierarchyNode {
-  /** Checks whether the given node is a custom node */
-  export function isCustom<TNode extends { key: HierarchyNodeKey }>(node: TNode): node is TNode & NonGroupingHierarchyNode & { key: string } {
-    return HierarchyNodeKey.isCustom(node.key);
+  /** Checks whether the given node is a generic node */
+  export function isGeneric<TNode extends { key: HierarchyNodeKey }>(node: TNode): node is TNode & NonGroupingHierarchyNode & { key: GenericNodeKey } {
+    return HierarchyNodeKey.isGeneric(node.key);
   }
   /** Checks whether the given node is a standard (iModel content based) node */
-  export function isStandard<TNode extends { key: HierarchyNodeKey }>(node: TNode): node is TNode & { key: StandardHierarchyNodeKey } {
-    return HierarchyNodeKey.isStandard(node.key);
+  export function isIModelNode<TNode extends { key: HierarchyNodeKey }>(node: TNode): node is TNode & { key: IModelHierarchyNodeKey } {
+    return HierarchyNodeKey.isIModelNodeKey(node.key);
   }
   /** Checks whether the given node is an ECInstances-based node */
   export function isInstancesNode<TNode extends { key: HierarchyNodeKey }>(node: TNode): node is TNode & NonGroupingHierarchyNode & { key: InstancesNodeKey } {

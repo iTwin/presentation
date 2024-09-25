@@ -7,14 +7,14 @@ import { expect } from "chai";
 import { GroupingNodeKey } from "../../../../hierarchies/HierarchyNodeKey";
 import { GroupingHandlerResult } from "../../../../hierarchies/imodel/operators/Grouping";
 import { createLabelGroups } from "../../../../hierarchies/imodel/operators/grouping/LabelGrouping";
-import { createTestInstanceKey, createTestProcessedGroupingNode, createTestProcessedInstanceNode } from "../../../Utils";
+import { createTestGenericNodeKey, createTestInstanceKey, createTestProcessedGroupingNode, createTestProcessedInstanceNode } from "../../../Utils";
 
 describe("LabelGrouping", () => {
   it("groups one node", async () => {
     const nodes = [
       createTestProcessedInstanceNode({
         key: { type: "instances", instanceKeys: [{ className: "TestSchema:A", id: "0x1" }] },
-        parentKeys: ["x"],
+        parentKeys: [createTestGenericNodeKey({ id: "x" })],
         label: "1",
         processingParams: { grouping: { byLabel: true } },
       }),
@@ -30,9 +30,9 @@ describe("LabelGrouping", () => {
         createTestProcessedGroupingNode({
           label: "1",
           key: expectedGroupingNodeKey,
-          parentKeys: ["x"],
+          parentKeys: [createTestGenericNodeKey({ id: "x" })],
           groupedInstanceKeys: nodes.flatMap((n) => n.key.instanceKeys),
-          children: nodes.map((n) => ({ ...n, parentKeys: ["x", expectedGroupingNodeKey] })),
+          children: nodes.map((n) => ({ ...n, parentKeys: [createTestGenericNodeKey({ id: "x" }), expectedGroupingNodeKey] })),
         }),
       ],
       ungrouped: [],
@@ -43,7 +43,7 @@ describe("LabelGrouping", () => {
     const nodes = [
       createTestProcessedInstanceNode({
         key: { type: "instances", instanceKeys: [{ className: "TestSchema:A", id: "0x1" }] },
-        parentKeys: ["x"],
+        parentKeys: [createTestGenericNodeKey({ id: "x" })],
         label: "1",
         processingParams: { grouping: { byLabel: { action: "group" } } },
       }),
@@ -59,9 +59,9 @@ describe("LabelGrouping", () => {
         createTestProcessedGroupingNode({
           label: "1",
           key: expectedGroupingNodeKey,
-          parentKeys: ["x"],
+          parentKeys: [createTestGenericNodeKey({ id: "x" })],
           groupedInstanceKeys: nodes.flatMap((n) => n.key.instanceKeys),
-          children: nodes.map((n) => ({ ...n, parentKeys: ["x", expectedGroupingNodeKey] })),
+          children: nodes.map((n) => ({ ...n, parentKeys: [createTestGenericNodeKey({ id: "x" }), expectedGroupingNodeKey] })),
         }),
       ],
       ungrouped: [],
@@ -72,7 +72,7 @@ describe("LabelGrouping", () => {
     const nodes = [
       createTestProcessedInstanceNode({
         key: { type: "instances", instanceKeys: [{ className: "TestSchema:A", id: "0x1" }] },
-        parentKeys: ["x"],
+        parentKeys: [createTestGenericNodeKey({ id: "x" })],
         label: "1",
         processingParams: { grouping: { byLabel: {} } },
       }),
@@ -88,9 +88,9 @@ describe("LabelGrouping", () => {
         createTestProcessedGroupingNode({
           label: "1",
           key: expectedGroupingNodeKey,
-          parentKeys: ["x"],
+          parentKeys: [createTestGenericNodeKey({ id: "x" })],
           groupedInstanceKeys: nodes.flatMap((n) => n.key.instanceKeys),
-          children: nodes.map((n) => ({ ...n, parentKeys: ["x", expectedGroupingNodeKey] })),
+          children: nodes.map((n) => ({ ...n, parentKeys: [createTestGenericNodeKey({ id: "x" }), expectedGroupingNodeKey] })),
         }),
       ],
       ungrouped: [],
@@ -101,13 +101,13 @@ describe("LabelGrouping", () => {
     const nodes = [
       createTestProcessedInstanceNode({
         key: { type: "instances", instanceKeys: [{ className: "TestSchema:A", id: "0x1" }] },
-        parentKeys: ["x"],
+        parentKeys: [createTestGenericNodeKey({ id: "x" })],
         label: "1",
         processingParams: { grouping: { byLabel: { groupId: "groupId1" } } },
       }),
       createTestProcessedInstanceNode({
         key: { type: "instances", instanceKeys: [{ className: "TestSchema:A", id: "0x2" }] },
-        parentKeys: ["x"],
+        parentKeys: [createTestGenericNodeKey({ id: "x" })],
         label: "1",
         processingParams: { grouping: { byLabel: { groupId: "groupId2" } } },
       }),
@@ -128,16 +128,16 @@ describe("LabelGrouping", () => {
         createTestProcessedGroupingNode({
           label: "1",
           key: expectedGroupingNodeKey1,
-          parentKeys: ["x"],
+          parentKeys: [createTestGenericNodeKey({ id: "x" })],
           groupedInstanceKeys: nodes[0].key.instanceKeys,
-          children: [{ ...nodes[0], parentKeys: ["x", expectedGroupingNodeKey1] }],
+          children: [{ ...nodes[0], parentKeys: [createTestGenericNodeKey({ id: "x" }), expectedGroupingNodeKey1] }],
         }),
         createTestProcessedGroupingNode({
           label: "1",
           key: expectedGroupingNodeKey2,
-          parentKeys: ["x"],
+          parentKeys: [createTestGenericNodeKey({ id: "x" })],
           groupedInstanceKeys: nodes[1].key.instanceKeys,
-          children: [{ ...nodes[1], parentKeys: ["x", expectedGroupingNodeKey2] }],
+          children: [{ ...nodes[1], parentKeys: [createTestGenericNodeKey({ id: "x" }), expectedGroupingNodeKey2] }],
         }),
       ],
       ungrouped: [],
@@ -148,13 +148,13 @@ describe("LabelGrouping", () => {
     const nodes = [
       createTestProcessedInstanceNode({
         key: { type: "instances", instanceKeys: [{ className: "TestSchema:A", id: "0x1" }] },
-        parentKeys: ["x"],
+        parentKeys: [createTestGenericNodeKey({ id: "x" })],
         label: "1",
         processingParams: { grouping: { byLabel: { groupId: "groupId1" } } },
       }),
       createTestProcessedInstanceNode({
         key: { type: "instances", instanceKeys: [{ className: "TestSchema:A", id: "0x2" }] },
-        parentKeys: ["x"],
+        parentKeys: [createTestGenericNodeKey({ id: "x" })],
         label: "1",
         processingParams: { grouping: { byLabel: { groupId: "groupId1" } } },
       }),
@@ -170,9 +170,9 @@ describe("LabelGrouping", () => {
         createTestProcessedGroupingNode({
           label: "1",
           key: expectedGroupingNodeKey,
-          parentKeys: ["x"],
+          parentKeys: [createTestGenericNodeKey({ id: "x" })],
           groupedInstanceKeys: nodes.flatMap((n) => n.key.instanceKeys),
-          children: nodes.map((n) => ({ ...n, parentKeys: ["x", expectedGroupingNodeKey] })),
+          children: nodes.map((n) => ({ ...n, parentKeys: [createTestGenericNodeKey({ id: "x" }), expectedGroupingNodeKey] })),
         }),
       ],
       ungrouped: [],
@@ -183,13 +183,13 @@ describe("LabelGrouping", () => {
     const nodes = [
       createTestProcessedInstanceNode({
         key: { type: "instances", instanceKeys: [{ className: "TestSchema:A", id: "0x1" }] },
-        parentKeys: ["x"],
+        parentKeys: [createTestGenericNodeKey({ id: "x" })],
         label: "1",
         processingParams: { grouping: { byLabel: true } },
       }),
       createTestProcessedInstanceNode({
         key: { type: "instances", instanceKeys: [{ className: "TestSchema:A", id: "0x2" }] },
-        parentKeys: ["x"],
+        parentKeys: [createTestGenericNodeKey({ id: "x" })],
         label: "1",
         processingParams: { grouping: { byLabel: true } },
       }),
@@ -205,9 +205,9 @@ describe("LabelGrouping", () => {
         createTestProcessedGroupingNode({
           label: "1",
           key: expectedGroupingNodeKey,
-          parentKeys: ["x"],
+          parentKeys: [createTestGenericNodeKey({ id: "x" })],
           groupedInstanceKeys: nodes.flatMap((n) => n.key.instanceKeys),
-          children: nodes.map((n) => ({ ...n, parentKeys: ["x", expectedGroupingNodeKey] })),
+          children: nodes.map((n) => ({ ...n, parentKeys: [createTestGenericNodeKey({ id: "x" }), expectedGroupingNodeKey] })),
         }),
       ],
       ungrouped: [],
@@ -218,13 +218,13 @@ describe("LabelGrouping", () => {
     const nodes = [
       createTestProcessedInstanceNode({
         key: { type: "instances", instanceKeys: [{ className: "TestSchema:A", id: "0x1" }] },
-        parentKeys: ["x"],
+        parentKeys: [createTestGenericNodeKey({ id: "x" })],
         label: "1",
         processingParams: { grouping: { byLabel: true } },
       }),
       createTestProcessedInstanceNode({
         key: { type: "instances", instanceKeys: [{ className: "TestSchema:A", id: "0x2" }] },
-        parentKeys: ["x"],
+        parentKeys: [createTestGenericNodeKey({ id: "x" })],
         label: "2",
         processingParams: { grouping: { byLabel: true } },
       }),
@@ -245,16 +245,16 @@ describe("LabelGrouping", () => {
         createTestProcessedGroupingNode({
           label: "1",
           key: expectedGroupingNodeKey1,
-          parentKeys: ["x"],
+          parentKeys: [createTestGenericNodeKey({ id: "x" })],
           groupedInstanceKeys: nodes[0].key.instanceKeys,
-          children: [nodes[0]].map((n) => ({ ...n, parentKeys: ["x", expectedGroupingNodeKey1] })),
+          children: [nodes[0]].map((n) => ({ ...n, parentKeys: [createTestGenericNodeKey({ id: "x" }), expectedGroupingNodeKey1] })),
         }),
         createTestProcessedGroupingNode({
           label: "2",
           key: expectedGroupingNodeKey2,
-          parentKeys: ["x"],
+          parentKeys: [createTestGenericNodeKey({ id: "x" })],
           groupedInstanceKeys: nodes[1].key.instanceKeys,
-          children: [nodes[1]].map((n) => ({ ...n, parentKeys: ["x", expectedGroupingNodeKey2] })),
+          children: [nodes[1]].map((n) => ({ ...n, parentKeys: [createTestGenericNodeKey({ id: "x" }), expectedGroupingNodeKey2] })),
         }),
       ],
       ungrouped: [],

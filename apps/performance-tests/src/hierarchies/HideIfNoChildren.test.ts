@@ -39,7 +39,7 @@ describe("hide if no children", () => {
               rootNodes: async () => createPhysicalElementsHierarchyLevelDefinition({ queryFactory, limit: 5 }),
               childNodes: [
                 {
-                  parentNodeClassName: `BisCore.PhysicalElement`,
+                  parentInstancesNodePredicate: `BisCore.PhysicalElement`,
                   definitions: async ({ parentNode }: DefineInstanceNodeChildHierarchyLevelProps) => {
                     const depth = parentNode.parentKeys.length + 1;
                     return createPhysicalElementsHierarchyLevelDefinition({
@@ -79,7 +79,7 @@ describe("hide if no children", () => {
               rootNodes: async () => createPhysicalElementsHierarchyLevelDefinition({ queryFactory, limit: 5 }),
               childNodes: [
                 {
-                  parentNodeClassName: `BisCore.PhysicalElement`,
+                  parentInstancesNodePredicate: `BisCore.PhysicalElement`,
                   definitions: async ({ parentNode }: DefineInstanceNodeChildHierarchyLevelProps) => {
                     const depth = parentNode.parentKeys.length + 1;
                     return createPhysicalElementsHierarchyLevelDefinition({

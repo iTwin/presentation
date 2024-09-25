@@ -60,7 +60,7 @@ import { HierarchyCache } from "./HierarchyCache";
 import { DefineHierarchyLevelProps, HierarchyDefinition, HierarchyNodesDefinition } from "./IModelHierarchyDefinition";
 import {
   ParsedHierarchyNode,
-  ProcessedCustomHierarchyNode,
+  ProcessedGenericHierarchyNode,
   ProcessedGroupingHierarchyNode,
   ProcessedHierarchyNode,
   ProcessedInstanceHierarchyNode,
@@ -247,7 +247,7 @@ class IModelHierarchyProviderImpl implements HierarchyProvider {
     // pipe definitions to nodes and put "share replay" on it
     return definitions.pipe(
       mergeMap((def): ObservableInput<ParsedHierarchyNode> => {
-        if (HierarchyNodesDefinition.isCustomNode(def)) {
+        if (HierarchyNodesDefinition.isGenericNode(def)) {
           return of(def.node);
         }
         return this._queryScheduler.scheduleSubscription(
@@ -399,7 +399,7 @@ class IModelHierarchyProviderImpl implements HierarchyProvider {
         filteredInstanceKeys = parentNode.groupedInstanceKeys;
       } else {
         // not sure why type checker doesn't pick this up
-        assert(HierarchyNode.isCustom(parentNode) || HierarchyNode.isInstancesNode(parentNode));
+        assert(HierarchyNode.isGeneric(parentNode) || HierarchyNode.isInstancesNode(parentNode));
         parentNonGroupingNode = parentNode;
       }
     }
@@ -478,12 +478,12 @@ class IModelHierarchyProviderImpl implements HierarchyProvider {
     if (parentNode && HierarchyNode.isGroupingNode(parentNode)) {
       return from(parentNode.groupedInstanceKeys);
     }
-    assert(!parentNode || HierarchyNode.isCustom(parentNode) || HierarchyNode.isInstancesNode(parentNode));
+    assert(!parentNode || HierarchyNode.isGeneric(parentNode) || HierarchyNode.isInstancesNode(parentNode));
 
-    // split the definitions based on whether they're for custom nodes or for instance nodes
-    const [customDefs, instanceDefs] = partition(
+    // split the definitions based on whether they're for generic nodes or for instance nodes
+    const [genericDefs, instanceDefs] = partition(
       from(this._activeHierarchyDefinition.defineHierarchyLevel({ parentNode, instanceFilter })).pipe(mergeAll()),
-      HierarchyNodesDefinition.isCustomNode,
+      HierarchyNodesDefinition.isGenericNode,
     );
 
     // query instance keys and a flag whether they should be hidden
@@ -521,10 +521,10 @@ class IModelHierarchyProviderImpl implements HierarchyProvider {
     const [visibleNodeInstanceKeys, hiddenNodeInstanceKeys] = partition(instanceKeys, ({ hide }) => !hide);
 
     // hidden items' handling:
-    // - if a custom node is hidden, we'll want to retrieve instance keys of its children, otherwise we don't care about it,
+    // - if a generic node is hidden, we'll want to retrieve instance keys of its children, otherwise we don't care about it,
     // - if an instance key is hidden, we want to create a merged node similar to what we do in `createHideNodesInHierarchyOperator`
     const hiddenParentNodes = merge(
-      customDefs.pipe(mergeMap((def) => (def.node.processingParams?.hideInHierarchy ? of(def.node.key) : EMPTY))),
+      genericDefs.pipe(mergeMap((def) => (def.node.processingParams?.hideInHierarchy ? of(def.node.key) : EMPTY))),
       hiddenNodeInstanceKeys.pipe(
         // first merge all keys by class
         reduceToMergeMapList(
@@ -597,7 +597,7 @@ type HierarchyCacheEntry =
 function preProcessNodes(hierarchyFactory: HierarchyDefinition) {
   return hierarchyFactory.preProcessNode
     ? processNodes(hierarchyFactory.preProcessNode.bind(hierarchyFactory))
-    : (o: Observable<ProcessedCustomHierarchyNode | ProcessedInstanceHierarchyNode>) => o;
+    : (o: Observable<ProcessedGenericHierarchyNode | ProcessedInstanceHierarchyNode>) => o;
 }
 
 function postProcessNodes<ProcessedHierarchyNode>(hierarchyFactory: HierarchyDefinition) {

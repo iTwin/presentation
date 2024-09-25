@@ -127,7 +127,7 @@ describe("Hierarchies", () => {
       });
       const hierarchy: HierarchyDefinition = {
         async defineHierarchyLevel({ parentNode }) {
-          if (parentNode && HierarchyNode.isCustom(parentNode) && parentNode.key === "test") {
+          if (parentNode && HierarchyNode.isGeneric(parentNode) && parentNode.key.id === "test") {
             return [
               {
                 fullClassName: Subject.classFullName,
@@ -147,8 +147,8 @@ describe("Hierarchies", () => {
           return [];
         },
       };
-      const testCustomNode = {
-        key: "test",
+      const testCustomNode: HierarchyNode = {
+        key: { type: "generic", id: "test" },
         parentKeys: [],
         label: "custom parent node",
         children: true,
@@ -240,7 +240,7 @@ describe("Hierarchies", () => {
             return [
               {
                 node: {
-                  key: "test",
+                  key: { type: "generic", id: "test" },
                   label: "hidden custom node",
                   processingParams: {
                     hideInHierarchy: true,
@@ -249,7 +249,7 @@ describe("Hierarchies", () => {
               },
             ];
           }
-          if (HierarchyNode.isCustom(parentNode) && parentNode.key === "test") {
+          if (HierarchyNode.isGeneric(parentNode) && parentNode.key.id === "test") {
             return [
               {
                 fullClassName: Subject.classFullName,

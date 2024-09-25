@@ -60,7 +60,7 @@ describe("Hierarchies", () => {
           const hierarchyDefinition = createClassBasedHierarchyDefinition({
             classHierarchyInspector: imodelAccess,
             hierarchy: {
-              rootNodes: async () => [{ node: { key: "test", label: "Root node" } }],
+              rootNodes: async () => [{ node: { key: { type: "generic", id: "test" }, label: "Root node" } }],
               childNodes: [],
             },
           });
@@ -72,7 +72,7 @@ describe("Hierarchies", () => {
           // __PUBLISH_EXTRACT_END__
           await validateHierarchy({
             provider,
-            expect: [NodeValidators.createForCustomNode({ key: "test", label: "Root node" })],
+            expect: [NodeValidators.createForGenericNode({ key: "test", label: "Root node" })],
           });
         });
       });
@@ -89,13 +89,19 @@ describe("Hierarchies", () => {
               ],
               childNodes: [
                 {
-                  customParentNodeKey: "MyCustomParentNodeKey",
+                  parentGenericNodePredicate: async (parentKey) => parentKey.id === "MyCustomParentNodeKey",
                   definitions: async () => [
                     /* definitions for "MyCustomParentNode" parent node's children go here */
                   ],
                 },
                 {
-                  parentNodeClassName: "BisCore.Model",
+                  parentInstancesNodePredicate: async () => true,
+                  definitions: async () => [
+                    /* definitions for all instances' parent nodes children go here */
+                  ],
+                },
+                {
+                  parentInstancesNodePredicate: "BisCore.Model",
                   definitions: async () => [
                     /* definitions for `BisCore.Model` parent node's children go here */
                   ],
@@ -116,7 +122,7 @@ describe("Hierarchies", () => {
                   /* define root node specifications here */
                 ];
               }
-              if (parentNode.key === "MyCustomParentNodeKey") {
+              if (HierarchyNode.isGeneric(parentNode) && parentNode.key.id === "MyCustomParentNodeKey") {
                 return [
                   /* definitions for "MyCustomParentNode" parent node's children go here */
                 ];
@@ -142,7 +148,7 @@ describe("Hierarchies", () => {
           // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.Migration.CustomNodeDefinition
           const definition: HierarchyNodesDefinition = {
             node: {
-              key: "MyCustomNode",
+              key: { type: "generic", id: "MyCustomNode" },
               label: "My custom node",
               extendedData: {
                 description: "This is a custom node",
@@ -159,7 +165,7 @@ describe("Hierarchies", () => {
           validateHierarchyLevel({
             nodes: await collect(provider.getNodes({ parentNode: undefined })),
             expect: [
-              NodeValidators.createForCustomNode({
+              NodeValidators.createForGenericNode({
                 key: "MyCustomNode",
                 label: "My custom node",
                 extendedData: {

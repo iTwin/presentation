@@ -50,7 +50,7 @@ describe("Hierarchies", () => {
             return [
               {
                 node: {
-                  key: "custom",
+                  key: { type: "generic", id: "custom" },
                   label: [
                     { type: "DateTime", value: date },
                     { type: "String", value: "|" },
@@ -210,7 +210,7 @@ describe("Hierarchies", () => {
               return [
                 {
                   node: {
-                    key: "custom",
+                    key: { type: "generic", id: "custom" },
                     label: [
                       { type: "String", value: "[" },
                       { type: "Id", value: id },
@@ -305,7 +305,7 @@ describe("Hierarchies", () => {
               return [
                 {
                   node: {
-                    key: "custom",
+                    key: { type: "generic", id: "custom" },
                     label: [
                       { type: "String", value: "[" },
                       { type: "DateTime", value: date },
@@ -341,7 +341,7 @@ describe("Hierarchies", () => {
               return [
                 {
                   node: {
-                    key: "custom",
+                    key: { type: "generic", id: "custom" },
                     label: [
                       { type: "String", value: "[" },
                       { type: "DateTime", extendedType: "ShortDate", value: date },
@@ -438,7 +438,7 @@ describe("Hierarchies", () => {
               return [
                 {
                   node: {
-                    key: "custom",
+                    key: { type: "generic", id: "custom" },
                     label: [
                       { type: "Boolean", value: true },
                       { type: "String", value: "-" },
@@ -523,7 +523,7 @@ describe("Hierarchies", () => {
               return [
                 {
                   node: {
-                    key: "custom",
+                    key: { type: "generic", id: "custom" },
                     label: [
                       { type: "String", value: "[" },
                       { type: "Integer", value: 123.789 },
@@ -623,7 +623,7 @@ describe("Hierarchies", () => {
               return [
                 {
                   node: {
-                    key: "custom",
+                    key: { type: "generic", id: "custom" },
                     label: [
                       { type: "String", value: "[" },
                       { type: "Double", value: 123.789 },
@@ -721,7 +721,7 @@ describe("Hierarchies", () => {
               return [
                 {
                   node: {
-                    key: "custom",
+                    key: { type: "generic", id: "custom" },
                     label: [
                       { type: "String", value: "[" },
                       { type: "Point2d", value: { x: 1.477, y: 2.588 } },
@@ -819,7 +819,7 @@ describe("Hierarchies", () => {
               return [
                 {
                   node: {
-                    key: "custom",
+                    key: { type: "generic", id: "custom" },
                     label: [
                       { type: "String", value: "[" },
                       { type: "Point3d", value: { x: 1.477, y: 2.588, z: 3.699 } },

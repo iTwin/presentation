@@ -88,7 +88,7 @@ function createProvider(imodel: IModelConnection): HierarchyProvider {
       childNodes: [
         {
           // For BisCore.Model parent nodes, select all BisCore.Element instances contained in corresponding model
-          parentNodeClassName: "BisCore.Model",
+          parentInstancesNodePredicate: "BisCore.Model",
           definitions: async ({ parentNodeInstanceIds }: DefineInstanceNodeChildHierarchyLevelProps) => [
             {
               fullClassName: "BisCore.Element",

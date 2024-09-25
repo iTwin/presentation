@@ -105,7 +105,7 @@ describe("Hierarchies", () => {
                   // The hierarchy definition returns a single node with a ConcatenatedValue-based label
                   {
                     node: {
-                      key: "custom node",
+                      key: { type: "generic", id: "root" },
                       label: [
                         "Example | ",
                         {

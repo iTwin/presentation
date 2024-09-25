@@ -108,23 +108,23 @@ export class ModelsTreeDefinition implements HierarchyDefinition {
         rootNodes: async (requestProps) => this.createRootHierarchyLevelDefinition(requestProps),
         childNodes: [
           {
-            parentNodeClassName: "BisCore.Subject",
+            parentInstancesNodePredicate: "BisCore.Subject",
             definitions: async (requestProps: DefineInstanceNodeChildHierarchyLevelProps) => this.createSubjectChildrenQuery(requestProps),
           },
           {
-            parentNodeClassName: "BisCore.ISubModeledElement",
+            parentInstancesNodePredicate: "BisCore.ISubModeledElement",
             definitions: async (requestProps: DefineInstanceNodeChildHierarchyLevelProps) => this.createISubModeledElementChildrenQuery(requestProps),
           },
           {
-            parentNodeClassName: "BisCore.GeometricModel3d",
+            parentInstancesNodePredicate: "BisCore.GeometricModel3d",
             definitions: async (requestProps: DefineInstanceNodeChildHierarchyLevelProps) => this.createGeometricModel3dChildrenQuery(requestProps),
           },
           {
-            parentNodeClassName: "BisCore.SpatialCategory",
+            parentInstancesNodePredicate: "BisCore.SpatialCategory",
             definitions: async (requestProps: DefineInstanceNodeChildHierarchyLevelProps) => this.createSpatialCategoryChildrenQuery(requestProps),
           },
           {
-            parentNodeClassName: "BisCore.GeometricElement3d",
+            parentInstancesNodePredicate: "BisCore.GeometricElement3d",
             definitions: async (requestProps: DefineInstanceNodeChildHierarchyLevelProps) => this.createGeometricElement3dChildrenQuery(requestProps),
           },
         ],

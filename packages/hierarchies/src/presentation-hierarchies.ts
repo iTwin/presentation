@@ -6,7 +6,7 @@
 export { GenericInstanceFilter } from "@itwin/core-common";
 
 export {
-  DefineCustomNodeChildHierarchyLevelProps,
+  DefineGenericNodeChildHierarchyLevelProps,
   DefineHierarchyLevelProps,
   DefineInstanceNodeChildHierarchyLevelProps,
   DefineRootHierarchyLevelProps,
@@ -27,6 +27,7 @@ export { RowsLimitExceededError } from "./hierarchies/HierarchyErrors";
 export { GroupingHierarchyNode, HierarchyNode, NonGroupingHierarchyNode } from "./hierarchies/HierarchyNode";
 export { HierarchyNodeIdentifier, HierarchyNodeIdentifiersPath } from "./hierarchies/HierarchyNodeIdentifier";
 export {
+  GenericNodeKey,
   GroupingNodeKey,
   HierarchyNodeKey,
   InstancesNodeKey,
@@ -36,7 +37,7 @@ export {
   PropertyOtherValuesGroupingNodeKey,
   PropertyValueGroupingNodeKey,
   PropertyValueRangeGroupingNodeKey,
-  StandardHierarchyNodeKey,
+  IModelHierarchyNodeKey,
 } from "./hierarchies/HierarchyNodeKey";
 export { GetHierarchyNodesProps, HierarchyProvider, mergeProviders } from "./hierarchies/HierarchyProvider";
 export { getLogger, setLogger } from "./hierarchies/Logging";

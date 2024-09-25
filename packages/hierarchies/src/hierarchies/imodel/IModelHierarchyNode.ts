@@ -5,7 +5,7 @@
 
 import { ConcatenatedValue, OmitOverUnion, PrimitiveValue } from "@itwin/presentation-shared";
 import { GroupingHierarchyNode, NonGroupingHierarchyNode } from "../HierarchyNode";
-import { HierarchyNodeKey, InstancesNodeKey } from "../HierarchyNodeKey";
+import { GenericNodeKey, HierarchyNodeKey, InstancesNodeKey } from "../HierarchyNodeKey";
 
 /**
  * Base processing parameters that apply to every node.
@@ -182,11 +182,11 @@ export interface InstanceHierarchyNodeProcessingParams extends HierarchyNodeProc
 }
 
 /**
- * A custom (not based on data in an iModel) node that has processing parameters.
+ * A generic (not based on data in an iModel) node that has processing parameters.
  * @beta
  */
-export type ProcessedCustomHierarchyNode = Omit<NonGroupingHierarchyNode, "key" | "children"> & {
-  key: string;
+export type ProcessedGenericHierarchyNode = Omit<NonGroupingHierarchyNode, "key" | "children"> & {
+  key: GenericNodeKey;
   children?: boolean;
   processingParams?: HierarchyNodeProcessingParamsBase;
 };
@@ -218,14 +218,14 @@ export type ProcessedGroupingHierarchyNode = Omit<GroupingHierarchyNode, "childr
  *
  * @beta
  */
-export type ProcessedHierarchyNode = ProcessedCustomHierarchyNode | ProcessedInstanceHierarchyNode | ProcessedGroupingHierarchyNode;
+export type ProcessedHierarchyNode = ProcessedGenericHierarchyNode | ProcessedInstanceHierarchyNode | ProcessedGroupingHierarchyNode;
 
 /** @beta */
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export namespace ProcessedHierarchyNode {
-  /** Checks whether the given node is a custom node */
-  export function isCustom(node: ProcessedHierarchyNode): node is ProcessedCustomHierarchyNode {
-    return HierarchyNodeKey.isCustom(node.key);
+  /** Checks whether the given node is a generic node */
+  export function isGeneric(node: ProcessedHierarchyNode): node is ProcessedGenericHierarchyNode {
+    return HierarchyNodeKey.isGeneric(node.key);
   }
   /** Checks whether the given node is an ECInstances-based node */
   export function isInstancesNode(node: ProcessedHierarchyNode): node is ProcessedInstanceHierarchyNode {
@@ -242,15 +242,15 @@ export namespace ProcessedHierarchyNode {
  * returned when the node is just parsed from query results.
  * @beta
  */
-export type ParsedHierarchyNode<TBase = ParsedCustomHierarchyNode | ParsedInstanceHierarchyNode> = OmitOverUnion<TBase, "label" | "parentKeys"> & {
+export type ParsedHierarchyNode<TBase = ParsedGenericHierarchyNode | ParsedInstanceHierarchyNode> = OmitOverUnion<TBase, "label" | "parentKeys"> & {
   label: string | ConcatenatedValue;
 };
 
 /**
- * A kind of `ProcessedCustomHierarchyNode` that has unformatted label and doesn't know about its ancestors.
+ * A kind of `ProcessedGenericHierarchyNode` that has unformatted label and doesn't know about its ancestors.
  * @beta
  */
-export type ParsedCustomHierarchyNode = ParsedHierarchyNode<ProcessedCustomHierarchyNode>;
+export type ParsedGenericHierarchyNode = ParsedHierarchyNode<ProcessedGenericHierarchyNode>;
 
 /**
  * A kind of `ProcessedInstanceHierarchyNode` that has unformatted label and doesn't know about its ancestors.

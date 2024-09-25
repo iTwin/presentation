@@ -42,7 +42,7 @@ interface ClassBasedHierarchyDefinitionProps {
 }
 
 // @beta
-type ClassBasedHierarchyLevelDefinition = InstancesNodeChildHierarchyLevelDefinition | CustomNodeChildHierarchyLevelDefinition;
+type ClassBasedHierarchyLevelDefinition = InstancesNodeChildHierarchyLevelDefinition | GenericNodeChildHierarchyLevelDefinition;
 
 // @beta
 export interface ClassGroupingNodeKey {
@@ -68,20 +68,9 @@ export function createNodesQueryClauseFactory(props: {
 }): NodesQueryClauseFactory;
 
 // @beta
-interface CustomHierarchyNodeDefinition {
-    node: ParsedCustomHierarchyNode;
-}
-
-// @beta
-interface CustomNodeChildHierarchyLevelDefinition {
-    customParentNodeKey: string;
-    definitions: (requestProps: DefineCustomNodeChildHierarchyLevelProps) => Promise<HierarchyLevelDefinition>;
-}
-
-// @beta
-export type DefineCustomNodeChildHierarchyLevelProps = Omit<DefineHierarchyLevelProps, "parentNode"> & {
+export type DefineGenericNodeChildHierarchyLevelProps = Omit<DefineHierarchyLevelProps, "parentNode"> & {
     parentNode: Omit<HierarchyDefinitionParentNode, "key"> & {
-        key: string;
+        key: GenericNodeKey;
     };
 };
 
@@ -186,7 +175,25 @@ interface FilterTargetGroupingNodeInfo {
     key: GroupingNodeKey;
 }
 
+// @beta
+interface GenericHierarchyNodeDefinition {
+    node: ParsedGenericHierarchyNode;
+}
+
 export { GenericInstanceFilter }
+
+// @beta
+interface GenericNodeChildHierarchyLevelDefinition {
+    definitions: (requestProps: DefineGenericNodeChildHierarchyLevelProps) => Promise<HierarchyLevelDefinition>;
+    parentGenericNodePredicate: (parentNodeKey: GenericNodeKey) => Promise<boolean>;
+}
+
+// @beta
+export interface GenericNodeKey {
+    id: string;
+    source?: string;
+    type: "generic";
+}
 
 // @beta
 export interface GetHierarchyNodesProps {
@@ -245,14 +252,19 @@ export namespace HierarchyNode {
         key: ClassGroupingNodeKey;
         supportsFiltering?: undefined;
     } & GroupingHierarchyNode;
-    export function isCustom<TNode extends {
+    export function isGeneric<TNode extends {
         key: HierarchyNodeKey;
     }>(node: TNode): node is TNode & NonGroupingHierarchyNode & {
-        key: string;
+        key: GenericNodeKey;
     };
     export function isGroupingNode<TNode extends {
         key: HierarchyNodeKey;
     }>(node: TNode): node is TNode & GroupingHierarchyNode;
+    export function isIModelNode<TNode extends {
+        key: HierarchyNodeKey;
+    }>(node: TNode): node is TNode & {
+        key: IModelHierarchyNodeKey;
+    };
     export function isInstancesNode<TNode extends {
         key: HierarchyNodeKey;
     }>(node: TNode): node is TNode & NonGroupingHierarchyNode & {
@@ -288,11 +300,6 @@ export namespace HierarchyNode {
         key: PropertyValueRangeGroupingNodeKey;
         supportsFiltering?: undefined;
     } & GroupingHierarchyNode;
-    export function isStandard<TNode extends {
-        key: HierarchyNodeKey;
-    }>(node: TNode): node is TNode & {
-        key: StandardHierarchyNodeKey;
-    };
 }
 
 // @beta
@@ -334,16 +341,12 @@ interface HierarchyNodeGroupingParamsBase {
 }
 
 // @beta
-export type HierarchyNodeIdentifier = InstanceKey | {
-    key: string;
-};
+export type HierarchyNodeIdentifier = InstanceKey | GenericNodeKey;
 
 // @beta (undocumented)
 export namespace HierarchyNodeIdentifier {
     export function equal(lhs: HierarchyNodeIdentifier, rhs: HierarchyNodeIdentifier): boolean;
-    export function isCustomNodeIdentifier(id: HierarchyNodeIdentifier): id is {
-        key: string;
-    };
+    export function isGenericNodeIdentifier(id: HierarchyNodeIdentifier): id is GenericNodeKey;
     export function isInstanceNodeIdentifier(id: HierarchyNodeIdentifier): id is InstanceKey;
 }
 
@@ -351,22 +354,22 @@ export namespace HierarchyNodeIdentifier {
 export type HierarchyNodeIdentifiersPath = HierarchyNodeIdentifier[];
 
 // @beta
-export type HierarchyNodeKey = StandardHierarchyNodeKey | string;
+export type HierarchyNodeKey = IModelHierarchyNodeKey | GenericNodeKey;
 
 // @beta (undocumented)
 export namespace HierarchyNodeKey {
     export function compare(lhs: HierarchyNodeKey, rhs: HierarchyNodeKey): number;
     export function equals(lhs: HierarchyNodeKey, rhs: HierarchyNodeKey): boolean;
     export function isClassGrouping(key: HierarchyNodeKey): key is ClassGroupingNodeKey;
-    export function isCustom(key: HierarchyNodeKey): key is string;
+    export function isGeneric(key: HierarchyNodeKey): key is GenericNodeKey;
     export function isGrouping(key: HierarchyNodeKey): key is GroupingNodeKey;
+    export function isIModelNodeKey(key: HierarchyNodeKey): key is IModelHierarchyNodeKey;
     export function isInstances(key: HierarchyNodeKey): key is InstancesNodeKey;
     export function isLabelGrouping(key: HierarchyNodeKey): key is LabelGroupingNodeKey;
     export function isPropertyGrouping(key: HierarchyNodeKey): key is PropertyGroupingNodeKey;
     export function isPropertyOtherValuesGrouping(key: HierarchyNodeKey): key is PropertyOtherValuesGroupingNodeKey;
     export function isPropertyValueGrouping(key: HierarchyNodeKey): key is PropertyValueGroupingNodeKey;
     export function isPropertyValueRangeGrouping(key: HierarchyNodeKey): key is PropertyValueRangeGroupingNodeKey;
-    export function isStandard(key: HierarchyNodeKey): key is StandardHierarchyNodeKey;
 }
 
 // @beta
@@ -419,12 +422,12 @@ interface HierarchyNodePropertyValueRange {
 }
 
 // @beta
-export type HierarchyNodesDefinition = CustomHierarchyNodeDefinition | InstanceNodesQueryDefinition;
+export type HierarchyNodesDefinition = GenericHierarchyNodeDefinition | InstanceNodesQueryDefinition;
 
 // @beta (undocumented)
 export namespace HierarchyNodesDefinition {
     // (undocumented)
-    export function isCustomNode(def: HierarchyNodesDefinition): def is CustomHierarchyNodeDefinition;
+    export function isGenericNode(def: HierarchyNodesDefinition): def is GenericHierarchyNodeDefinition;
     // (undocumented)
     export function isInstanceNodesQuery(def: HierarchyNodesDefinition): def is InstanceNodesQueryDefinition;
 }
@@ -443,6 +446,9 @@ export interface HierarchyProvider {
 type IModelAccess = ECSchemaProvider & LimitingECSqlQueryExecutor & ECClassHierarchyInspector & {
     imodelKey: string;
 };
+
+// @beta
+export type IModelHierarchyNodeKey = InstancesNodeKey | GroupingNodeKey;
 
 // @beta
 interface IModelHierarchyProviderLocalizedStrings {
@@ -480,7 +486,7 @@ interface InstanceNodesQueryDefinition {
 interface InstancesNodeChildHierarchyLevelDefinition {
     definitions: (requestProps: DefineInstanceNodeChildHierarchyLevelProps) => Promise<HierarchyLevelDefinition>;
     onlyIfNotHandled?: boolean;
-    parentNodeClassName: string;
+    parentInstancesNodePredicate: string | ((parentNodeKey: InstancesNodeKey) => Promise<boolean>);
 }
 
 // @beta
@@ -523,7 +529,7 @@ export type NodeParser = (row: {
 export type NodePostProcessor = (node: ProcessedHierarchyNode) => Promise<ProcessedHierarchyNode>;
 
 // @beta
-export type NodePreProcessor = <TNode extends ProcessedCustomHierarchyNode | ProcessedInstanceHierarchyNode>(node: TNode) => Promise<TNode | undefined>;
+export type NodePreProcessor = <TNode extends ProcessedGenericHierarchyNode | ProcessedInstanceHierarchyNode>(node: TNode) => Promise<TNode | undefined>;
 
 // @beta
 export enum NodeSelectClauseColumnNames {
@@ -583,7 +589,7 @@ export interface NodesQueryClauseFactory {
 
 // @beta
 export interface NonGroupingHierarchyNode extends BaseHierarchyNode {
-    key: string | InstancesNodeKey;
+    key: GenericNodeKey | InstancesNodeKey;
     supportsFiltering?: boolean;
 }
 
@@ -591,10 +597,10 @@ export interface NonGroupingHierarchyNode extends BaseHierarchyNode {
 type ParentHierarchyNode<TBase = HierarchyNode> = OmitOverUnion<TBase, "children">;
 
 // @beta
-type ParsedCustomHierarchyNode = ParsedHierarchyNode<ProcessedCustomHierarchyNode>;
+type ParsedGenericHierarchyNode = ParsedHierarchyNode<ProcessedGenericHierarchyNode>;
 
 // @beta
-export type ParsedHierarchyNode<TBase = ParsedCustomHierarchyNode | ParsedInstanceHierarchyNode> = OmitOverUnion<TBase, "label" | "parentKeys"> & {
+export type ParsedHierarchyNode<TBase = ParsedGenericHierarchyNode | ParsedInstanceHierarchyNode> = OmitOverUnion<TBase, "label" | "parentKeys"> & {
     label: string | ConcatenatedValue;
 };
 
@@ -602,8 +608,8 @@ export type ParsedHierarchyNode<TBase = ParsedCustomHierarchyNode | ParsedInstan
 type ParsedInstanceHierarchyNode = ParsedHierarchyNode<ProcessedInstanceHierarchyNode>;
 
 // @beta
-type ProcessedCustomHierarchyNode = Omit<NonGroupingHierarchyNode, "key" | "children"> & {
-    key: string;
+type ProcessedGenericHierarchyNode = Omit<NonGroupingHierarchyNode, "key" | "children"> & {
+    key: GenericNodeKey;
     children?: boolean;
     processingParams?: HierarchyNodeProcessingParamsBase;
 };
@@ -614,11 +620,11 @@ type ProcessedGroupingHierarchyNode = Omit<GroupingHierarchyNode, "children"> & 
 };
 
 // @beta
-export type ProcessedHierarchyNode = ProcessedCustomHierarchyNode | ProcessedInstanceHierarchyNode | ProcessedGroupingHierarchyNode;
+export type ProcessedHierarchyNode = ProcessedGenericHierarchyNode | ProcessedInstanceHierarchyNode | ProcessedGroupingHierarchyNode;
 
 // @beta (undocumented)
 export namespace ProcessedHierarchyNode {
-    export function isCustom(node: ProcessedHierarchyNode): node is ProcessedCustomHierarchyNode;
+    export function isGeneric(node: ProcessedHierarchyNode): node is ProcessedGenericHierarchyNode;
     export function isGroupingNode(node: ProcessedHierarchyNode): node is ProcessedGroupingHierarchyNode;
     export function isInstancesNode(node: ProcessedHierarchyNode): node is ProcessedInstanceHierarchyNode;
 }
@@ -668,9 +674,6 @@ export class RowsLimitExceededError extends Error {
 
 // @beta
 export function setLogger(logger: ILogger | undefined): void;
-
-// @beta
-export type StandardHierarchyNodeKey = InstancesNodeKey | GroupingNodeKey;
 
 // (No @packageDocumentation comment for this package)
 

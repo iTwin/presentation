@@ -7,11 +7,11 @@ import sinon from "sinon";
 import { Logger, LogLevel } from "@itwin/core-bentley";
 import { EC, InstanceKey, parseFullClassName } from "@itwin/presentation-shared";
 import { NonGroupingHierarchyNode } from "../hierarchies/HierarchyNode";
-import { HierarchyNodeKey } from "../hierarchies/HierarchyNodeKey";
+import { GenericNodeKey, HierarchyNodeKey } from "../hierarchies/HierarchyNodeKey";
 import {
-  ParsedCustomHierarchyNode,
+  ParsedGenericHierarchyNode,
   ParsedInstanceHierarchyNode,
-  ProcessedCustomHierarchyNode,
+  ProcessedGenericHierarchyNode,
   ProcessedGroupingHierarchyNode,
   ProcessedInstanceHierarchyNode,
 } from "../hierarchies/imodel/IModelHierarchyNode";
@@ -22,20 +22,28 @@ export function setupLogging(levels: Array<{ namespace: string; level: LogLevel 
   levels.forEach(({ namespace, level }) => Logger.setLevel(namespace, level));
 }
 
-export function createTestCustomNode(src?: Partial<NonGroupingHierarchyNode>): NonGroupingHierarchyNode {
+export function createTestGenericNodeKey(src?: Partial<GenericNodeKey>): GenericNodeKey {
+  return {
+    type: "generic",
+    id: "test",
+    ...src,
+  };
+}
+
+export function createTestGenericNode(src?: Partial<NonGroupingHierarchyNode>): NonGroupingHierarchyNode {
   return {
     label: "test",
-    key: "test" as const,
+    key: createTestGenericNodeKey(),
     children: false,
     parentKeys: [],
     ...src,
   };
 }
 
-export function createTestParsedCustomNode(src?: Partial<ParsedCustomHierarchyNode>): ParsedCustomHierarchyNode {
+export function createTestParsedGenericNode(src?: Partial<ParsedGenericHierarchyNode>): ParsedGenericHierarchyNode {
   return {
     label: "test",
-    key: "test",
+    key: createTestGenericNodeKey(),
     ...src,
   };
 }
@@ -51,10 +59,10 @@ export function createTestParsedInstanceNode(src?: Partial<ParsedInstanceHierarc
   };
 }
 
-export function createTestProcessedCustomNode(src?: Partial<ProcessedCustomHierarchyNode>): ProcessedCustomHierarchyNode {
+export function createTestProcessedGenericNode(src?: Partial<ProcessedGenericHierarchyNode>): ProcessedGenericHierarchyNode {
   return {
     label: "test",
-    key: "test",
+    key: createTestGenericNodeKey(),
     parentKeys: [],
     ...src,
   };

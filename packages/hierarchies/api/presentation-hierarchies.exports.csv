@@ -5,10 +5,11 @@ beta;function;createClassBasedHierarchyDefinition
 beta;function;createIModelHierarchyProvider
 beta;function;createLimitingECSqlQueryExecutor
 beta;function;createNodesQueryClauseFactory
-beta;type;DefineCustomNodeChildHierarchyLevelProps
+beta;type;DefineGenericNodeChildHierarchyLevelProps
 beta;interface;DefineHierarchyLevelProps
 beta;type;DefineInstanceNodeChildHierarchyLevelProps
 beta;type;DefineRootHierarchyLevelProps
+beta;interface;GenericNodeKey
 beta;interface;GetHierarchyNodesProps
 beta;function;getLogger
 beta;interface;GroupingHierarchyNode
@@ -25,6 +26,7 @@ beta;namespace;HierarchyNodeKey
 beta;type;HierarchyNodesDefinition
 beta;namespace;HierarchyNodesDefinition
 beta;interface;HierarchyProvider
+beta;type;IModelHierarchyNodeKey
 beta;interface;InstancesNodeKey
 beta;interface;LabelGroupingNodeKey
 beta;interface;LimitingECSqlQueryExecutor
@@ -44,4 +46,3 @@ beta;interface;PropertyValueGroupingNodeKey
 beta;interface;PropertyValueRangeGroupingNodeKey
 beta;class;RowsLimitExceededError
 beta;function;setLogger
-beta;type;StandardHierarchyNodeKey

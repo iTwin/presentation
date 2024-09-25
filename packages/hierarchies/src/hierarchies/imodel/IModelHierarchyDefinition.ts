@@ -8,22 +8,22 @@ import { Id64String } from "@itwin/core-bentley";
 import { GenericInstanceFilter } from "@itwin/core-common";
 import { ECClassHierarchyInspector, ECSqlQueryDef, InstanceKey } from "@itwin/presentation-shared";
 import { HierarchyNode, NonGroupingHierarchyNode } from "../HierarchyNode";
-import { InstancesNodeKey } from "../HierarchyNodeKey";
+import { GenericNodeKey, InstancesNodeKey } from "../HierarchyNodeKey";
 import {
-  ParsedCustomHierarchyNode,
+  ParsedGenericHierarchyNode,
   ParsedInstanceHierarchyNode,
-  ProcessedCustomHierarchyNode,
+  ProcessedGenericHierarchyNode,
   ProcessedHierarchyNode,
   ProcessedInstanceHierarchyNode,
 } from "./IModelHierarchyNode";
 
 /**
- * A nodes definition that returns a single custom defined node.
+ * A nodes definition that returns a single generic node.
  * @beta
  */
-export interface CustomHierarchyNodeDefinition {
+export interface GenericHierarchyNodeDefinition {
   /** The node to be created in the hierarchy level */
-  node: ParsedCustomHierarchyNode;
+  node: ParsedGenericHierarchyNode;
 }
 
 /**
@@ -48,12 +48,12 @@ export interface InstanceNodesQueryDefinition {
  * A definition of nodes included in a hierarchy level.
  * @beta
  */
-export type HierarchyNodesDefinition = CustomHierarchyNodeDefinition | InstanceNodesQueryDefinition;
+export type HierarchyNodesDefinition = GenericHierarchyNodeDefinition | InstanceNodesQueryDefinition;
 /** @beta */
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export namespace HierarchyNodesDefinition {
-  export function isCustomNode(def: HierarchyNodesDefinition): def is CustomHierarchyNodeDefinition {
-    return !!(def as CustomHierarchyNodeDefinition).node;
+  export function isGenericNode(def: HierarchyNodesDefinition): def is GenericHierarchyNodeDefinition {
+    return !!(def as GenericHierarchyNodeDefinition).node;
   }
   export function isInstanceNodesQuery(def: HierarchyNodesDefinition): def is InstanceNodesQueryDefinition {
     return !!(def as InstanceNodesQueryDefinition).query;
@@ -79,7 +79,7 @@ export type NodeParser = (row: { [columnName: string]: any }) => ParsedInstanceH
  *
  * @beta
  */
-export type NodePreProcessor = <TNode extends ProcessedCustomHierarchyNode | ProcessedInstanceHierarchyNode>(node: TNode) => Promise<TNode | undefined>;
+export type NodePreProcessor = <TNode extends ProcessedGenericHierarchyNode | ProcessedInstanceHierarchyNode>(node: TNode) => Promise<TNode | undefined>;
 
 /**
  * A type for a function that post-processes given node. Unless the function decides not to make any modifications,
@@ -93,7 +93,7 @@ export type NodePostProcessor = (node: ProcessedHierarchyNode) => Promise<Proces
  * A type of node that can be passed to `HierarchyDefinition.defineHierarchyLevel`. This basically means
  * a `HierarchyNode` that:
  * - knows nothing about its children,
- * - is either an instances node (key is of `InstancesNodeKey` type) or a custom node (key is of `string` type).
+ * - is either an instances node (key is of `InstancesNodeKey` type) or a generic node (key is of `GenericNodeKey` type).
  * @beta
  */
 type HierarchyDefinitionParentNode = Omit<NonGroupingHierarchyNode, "children">;
@@ -181,21 +181,24 @@ export type DefineInstanceNodeChildHierarchyLevelProps = Omit<DefineHierarchyLev
 };
 
 /**
- * A definition of a hierarchy level that should be used for specific class of parent instance nodes.
+ * A definition of a hierarchy level that should be used for specific parent instance nodes.
  * @beta
  */
 interface InstancesNodeChildHierarchyLevelDefinition {
   /**
-   * Full name of the parent instance node's class to match against when checking if this hierarchy
-   * level should be used for specific parent instance node.
+   * A predicate for matching the parent instances node. This can be either a string or a predicate function:
    *
-   * The check is polymorphic, so `BisCore.Element` class would match `BisCore.GeometricElement`, `BisCore.Category` and
-   * all other element classes.
+   * - The string version should specify full name of the parent instance node's class to match against when
+   * checking if this hierarchy level should be used for specific parent instance node. The check is polymorphic,
+   * so `BisCore.Element` class would match `BisCore.GeometricElement`, `BisCore.Category` and all other element classes.
+   *
+   * - The function version should return a boolean indicating whether this hierarchy level definition should be used
+   * for the given parent node.
    */
-  parentNodeClassName: string;
+  parentInstancesNodePredicate: string | ((parentNodeKey: InstancesNodeKey) => Promise<boolean>);
 
   /**
-   * Called to create a hierarchy level definition when the class check passes (see `parentNodeClassName`).
+   * Called to create a hierarchy level definition when the `parentInstancesNodePredicate` predicate passes.
    */
   definitions: (requestProps: DefineInstanceNodeChildHierarchyLevelProps) => Promise<HierarchyLevelDefinition>;
 
@@ -205,12 +208,12 @@ interface InstancesNodeChildHierarchyLevelDefinition {
    * For example:
    * ```ts
    * {
-   *   parentNodeClassName: "BisCore.GeometricElement3d",
+   *   parentInstancesNodePredicate: "BisCore.GeometricElement3d",
    *   definitions: () => ...,
    * },
-   * // This will apply to all elements, that are not BisCore.GeometricElement3d
+   * // This will apply to all elements, that are not `BisCore.GeometricElement3d`
    * {
-   *   parentNodeClassName: "BisCore.Element",
+   *   parentInstancesNodePredicate: "BisCore.Element",
    *   onlyIfNotHandled: true,
    *   definitions: () => ...,
    * }
@@ -220,37 +223,39 @@ interface InstancesNodeChildHierarchyLevelDefinition {
 }
 
 /**
- * Props for defining child hierarchy level for specific parent custom node.
+ * Props for defining child hierarchy level for specific parent generic node.
  * @see `createClassBasedHierarchyDefinition`
  * @beta
  */
-export type DefineCustomNodeChildHierarchyLevelProps = Omit<DefineHierarchyLevelProps, "parentNode"> & {
-  /** The parent custom node. */
-  parentNode: Omit<HierarchyDefinitionParentNode, "key"> & { key: string };
+export type DefineGenericNodeChildHierarchyLevelProps = Omit<DefineHierarchyLevelProps, "parentNode"> & {
+  /** The parent generic node. */
+  parentNode: Omit<HierarchyDefinitionParentNode, "key"> & { key: GenericNodeKey };
 };
 
 /**
- * A definition of a hierarchy level for that should be used for specific custom parent nodes.
+ * A definition of a hierarchy level for that should be used for specific generic parent nodes.
  * @beta
  */
-interface CustomNodeChildHierarchyLevelDefinition {
+interface GenericNodeChildHierarchyLevelDefinition {
   /**
-   * `HierarchyNode.key` of the custom node that this child hierarchy level definition should be used for.
+   * A function that indicates whether this hierarchy level definition should be used for
+   * specific parent generic node.
    */
-  customParentNodeKey: string;
+  parentGenericNodePredicate: (parentNodeKey: GenericNodeKey) => Promise<boolean>;
 
   /**
-   * Called to create a hierarchy level definition when the node key check passes (see `customParentNodeKey`).
+   * Called to create a hierarchy level definition when the `parentInstancesNodePredicate` predicate passes.
    */
-  definitions: (requestProps: DefineCustomNodeChildHierarchyLevelProps) => Promise<HierarchyLevelDefinition>;
+  definitions: (requestProps: DefineGenericNodeChildHierarchyLevelProps) => Promise<HierarchyLevelDefinition>;
 }
 
 /**
- * A hierarchy level definition associated with either parent instance node's class or custom
+ * A hierarchy level definition associated with either parent instance node's class or generic
  * node's key.
+ *
  * @beta
  */
-type ClassBasedHierarchyLevelDefinition = InstancesNodeChildHierarchyLevelDefinition | CustomNodeChildHierarchyLevelDefinition;
+type ClassBasedHierarchyLevelDefinition = InstancesNodeChildHierarchyLevelDefinition | GenericNodeChildHierarchyLevelDefinition;
 
 /**
  * Props for defining root hierarchy level.
@@ -267,14 +272,14 @@ interface ClassBasedHierarchyDefinitionProps {
   /** Access to ECClass hierarchy in the iModel */
   classHierarchyInspector: ECClassHierarchyInspector;
 
-  /** Hierarchy level definitions based on parent instance node's class or custom node's key. */
+  /** Hierarchy level definitions */
   hierarchy: {
     /** Called to create the root hierarchy level definition. */
     rootNodes: (props: DefineRootHierarchyLevelProps) => Promise<HierarchyLevelDefinition>;
 
     /**
-     * Called to get child hierarchy level definitions based on parent instance node's class
-     * or custom node's key.
+     * A list of child hierarchy level definitions. The list is first filtered based on
+     * the parent node and then is used to create child hierarchy level definitions.
      */
     childNodes: ClassBasedHierarchyLevelDefinition[];
   };
@@ -282,8 +287,8 @@ interface ClassBasedHierarchyDefinitionProps {
 
 /**
  * Creates an instance of `HierarchyDefinition` that uses a somewhat declarative approach to define the
- * hierarchy - each hierarchy level is assigned either an instance node's class or custom node's
- * key and they're used to assign hierarchy level definitions based on parent node.
+ * hierarchy - each hierarchy level is defined by specifying a parent node predicate and child hierarchy
+ * level definitions, that are used when the predicate passes.
  *
  * @beta
  */
@@ -304,20 +309,28 @@ class ClassBasedHierarchyDefinition implements HierarchyDefinition {
       return this._props.hierarchy.rootNodes(props);
     }
 
-    if (HierarchyNode.isCustom(parentNode)) {
-      const defs = this._props.hierarchy.childNodes
-        .filter(isCustomNodeChildHierarchyLevelDefinition)
-        .filter((def) => def.customParentNodeKey === parentNode.key);
-      return (await Promise.all(defs.map(async (def) => def.definitions({ ...props, parentNode })))).flat();
+    if (HierarchyNode.isGeneric(parentNode)) {
+      return firstValueFrom(
+        from(this._props.hierarchy.childNodes).pipe(
+          filter(isGenericNodeChildHierarchyLevelDefinition),
+          mergeMap(async (def) => {
+            if (await def.parentGenericNodePredicate(parentNode.key)) {
+              return def.definitions({ ...props, parentNode });
+            }
+            return [];
+          }),
+          mergeAll(),
+          toArray(),
+        ),
+      );
     }
 
     // istanbul ignore else
     if (HierarchyNode.isInstancesNode(parentNode)) {
-      const instanceIdsByClass = groupInstanceIdsByClass(parentNode.key.instanceKeys);
       const instancesParentNodeDefs = this._props.hierarchy.childNodes.filter(isInstancesNodeChildHierarchyLevelDefinition);
-      return (
-        await Promise.all(
-          [...instanceIdsByClass.entries()].map(async ([parentNodeClassName, parentNodeInstanceIds]) =>
+      return firstValueFrom(
+        from(groupInstanceIdsByClass(parentNode.key.instanceKeys).entries()).pipe(
+          mergeMap(async ([parentNodeClassName, parentNodeInstanceIds]) =>
             createHierarchyLevelDefinitions(this._props.classHierarchyInspector, instancesParentNodeDefs, {
               ...props,
               parentNodeClassName,
@@ -325,8 +338,10 @@ class ClassBasedHierarchyDefinition implements HierarchyDefinition {
               parentNode,
             }),
           ),
-        )
-      ).flat();
+          mergeAll(),
+          toArray(),
+        ),
+      );
     }
 
     // istanbul ignore next
@@ -339,9 +354,15 @@ async function createHierarchyLevelDefinitions(
   defs: InstancesNodeChildHierarchyLevelDefinition[],
   requestProps: DefineInstanceNodeChildHierarchyLevelProps,
 ) {
-  const obs = from(defs).pipe(
+  return from(defs).pipe(
     mergeMap(async (def, idx) => {
-      if (await classHierarchy.classDerivesFrom(requestProps.parentNodeClassName, def.parentNodeClassName)) {
+      if (
+        typeof def.parentInstancesNodePredicate === "string" &&
+        (await classHierarchy.classDerivesFrom(requestProps.parentNodeClassName, def.parentInstancesNodePredicate))
+      ) {
+        return { def, idx };
+      }
+      if (typeof def.parentInstancesNodePredicate === "function" && (await def.parentInstancesNodePredicate(requestProps.parentNode.key))) {
         return { def, idx };
       }
       return undefined;
@@ -353,7 +374,6 @@ async function createHierarchyLevelDefinitions(
     mergeMap(async (def) => def.definitions(requestProps)),
     mergeAll(),
   );
-  return firstValueFrom(obs.pipe(toArray()));
 }
 
 function groupInstanceIdsByClass(instanceKeys: InstanceKey[]) {
@@ -369,10 +389,10 @@ function groupInstanceIdsByClass(instanceKeys: InstanceKey[]) {
   return instanceIdsByClass;
 }
 
-function isCustomNodeChildHierarchyLevelDefinition(def: ClassBasedHierarchyLevelDefinition): def is CustomNodeChildHierarchyLevelDefinition {
-  return !!(def as CustomNodeChildHierarchyLevelDefinition).customParentNodeKey;
+function isGenericNodeChildHierarchyLevelDefinition(def: ClassBasedHierarchyLevelDefinition): def is GenericNodeChildHierarchyLevelDefinition {
+  return !!(def as GenericNodeChildHierarchyLevelDefinition).parentGenericNodePredicate;
 }
 
 function isInstancesNodeChildHierarchyLevelDefinition(def: ClassBasedHierarchyLevelDefinition): def is InstancesNodeChildHierarchyLevelDefinition {
-  return !!(def as InstancesNodeChildHierarchyLevelDefinition).parentNodeClassName;
+  return !!(def as InstancesNodeChildHierarchyLevelDefinition).parentInstancesNodePredicate;
 }

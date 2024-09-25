@@ -18,20 +18,21 @@ import {
   FilteringHierarchyDefinition,
 } from "../../hierarchies/imodel/FilteringHierarchyDefinition";
 import {
-  CustomHierarchyNodeDefinition,
+  GenericHierarchyNodeDefinition,
   HierarchyDefinition,
   HierarchyLevelDefinition,
   InstanceNodesQueryDefinition,
 } from "../../hierarchies/imodel/IModelHierarchyDefinition";
-import { ParsedCustomHierarchyNode, ProcessedCustomHierarchyNode, ProcessedGroupingHierarchyNode } from "../../hierarchies/imodel/IModelHierarchyNode";
+import { ParsedGenericHierarchyNode, ProcessedGenericHierarchyNode, ProcessedGroupingHierarchyNode } from "../../hierarchies/imodel/IModelHierarchyNode";
 import { NodeSelectClauseColumnNames } from "../../hierarchies/imodel/NodeSelectQueryFactory";
 import * as reader from "../../hierarchies/imodel/TreeNodesReader";
 import {
   createClassHierarchyInspectorStub,
+  createTestGenericNodeKey,
   createTestInstanceKey,
   createTestNodeKey,
-  createTestParsedCustomNode,
-  createTestProcessedCustomNode,
+  createTestParsedGenericNode,
+  createTestProcessedGenericNode,
   createTestProcessedGroupingNode,
   createTestProcessedInstanceNode,
 } from "../Utils";
@@ -74,9 +75,9 @@ describe("FilteringHierarchyDefinition", () => {
         sourceFactory,
       });
       const paths: HierarchyNodeIdentifiersPath[] = [
-        [createTestInstanceKey({ id: "0x1" }), createTestInstanceKey({ id: "0x2" })],
-        [createTestInstanceKey({ id: "0x3" })],
-        [createTestInstanceKey({ id: "0x4" })],
+        [createTestInstanceKey(createTestGenericNodeKey({ id: "0x1" })), createTestInstanceKey(createTestGenericNodeKey({ id: "0x2" }))],
+        [createTestInstanceKey(createTestGenericNodeKey({ id: "0x3" }))],
+        [createTestInstanceKey(createTestGenericNodeKey({ id: "0x4" }))],
       ];
       const row = {
         [NodeSelectClauseColumnNames.FullClassName]: "",
@@ -114,7 +115,7 @@ describe("FilteringHierarchyDefinition", () => {
 
     it("does not set auto-expand when filtered children paths list is provided without `autoExpand` option", () => {
       const filteringFactory = createFilteringHierarchyLevelsFactory();
-      const paths: HierarchyNodeIdentifiersPath[] = [[createTestInstanceKey({ id: "0x1" })]];
+      const paths: HierarchyNodeIdentifiersPath[] = [[createTestInstanceKey(createTestGenericNodeKey({ id: "0x1" }))]];
       const row = {
         [NodeSelectClauseColumnNames.FullClassName]: "",
         [ECSQL_COLUMN_NAME_FilteredChildrenPaths]: JSON.stringify(paths),
@@ -125,7 +126,7 @@ describe("FilteringHierarchyDefinition", () => {
 
     it("doesn't set auto-expand when all filtered children paths contain `autoExpand = false`", () => {
       const filteringFactory = createFilteringHierarchyLevelsFactory();
-      const paths = [{ path: [createTestInstanceKey({ id: "0x1" })], options: { autoExpand: false } }];
+      const paths = [{ path: [createTestInstanceKey(createTestGenericNodeKey({ id: "0x1" }))], options: { autoExpand: false } }];
       const row = {
         [NodeSelectClauseColumnNames.FullClassName]: "",
         [ECSQL_COLUMN_NAME_FilteredChildrenPaths]: JSON.stringify(paths),
@@ -137,8 +138,8 @@ describe("FilteringHierarchyDefinition", () => {
     it("sets auto-expand when one of filtered children paths contains `autoExpand = true`", () => {
       const filteringFactory = createFilteringHierarchyLevelsFactory();
       const paths = [
-        { path: [createTestInstanceKey({ id: "0x1" })], options: { autoExpand: false } },
-        { path: [createTestInstanceKey({ id: "0x2" })], options: { autoExpand: true } },
+        { path: [createTestInstanceKey(createTestGenericNodeKey({ id: "0x1" }))], options: { autoExpand: false } },
+        { path: [createTestInstanceKey(createTestGenericNodeKey({ id: "0x2" }))], options: { autoExpand: true } },
       ];
       const row = {
         [NodeSelectClauseColumnNames.FullClassName]: "",
@@ -176,15 +177,15 @@ describe("FilteringHierarchyDefinition", () => {
 
   describe("preProcessNode", () => {
     it("returns given node when source factory has no pre-processor", async () => {
-      const node = createTestProcessedCustomNode();
+      const node = createTestProcessedGenericNode();
       const filteringFactory = createFilteringHierarchyLevelsFactory();
       const result = await filteringFactory.preProcessNode(node);
       expect(result).to.eq(node);
     });
 
     it("returns node pre-processed by source factory", async () => {
-      const inputNode = createTestProcessedCustomNode();
-      const sourceFactoryNode = createTestProcessedCustomNode();
+      const inputNode = createTestProcessedGenericNode();
+      const sourceFactoryNode = createTestProcessedGenericNode();
       const sourceFactory = {
         preProcessNode: sinon.stub().returns(sourceFactoryNode),
       } as unknown as HierarchyDefinition;
@@ -197,8 +198,8 @@ describe("FilteringHierarchyDefinition", () => {
     });
 
     it("returns source filter target node with `hideInHierarchy` flag if it has filter target ancestor", async () => {
-      const inputNode: ProcessedCustomHierarchyNode = {
-        ...createTestProcessedCustomNode({
+      const inputNode: ProcessedGenericHierarchyNode = {
+        ...createTestProcessedGenericNode({
           processingParams: {
             hideInHierarchy: true,
           },
@@ -214,8 +215,8 @@ describe("FilteringHierarchyDefinition", () => {
     });
 
     it("returns `undefined` when node is filter target without filter target ancestor and has `hideInHierarchy` flag", async () => {
-      const inputNode: ProcessedCustomHierarchyNode = {
-        ...createTestProcessedCustomNode({
+      const inputNode: ProcessedGenericHierarchyNode = {
+        ...createTestProcessedGenericNode({
           processingParams: {
             hideInHierarchy: true,
           },
@@ -233,15 +234,15 @@ describe("FilteringHierarchyDefinition", () => {
 
   describe("postProcessNode", () => {
     it("returns given node when source factory has no post-processor", async () => {
-      const node = createTestProcessedCustomNode();
+      const node = createTestProcessedGenericNode();
       const filteringFactory = createFilteringHierarchyLevelsFactory();
       const result = await filteringFactory.postProcessNode(node);
       expect(result).to.eq(node);
     });
 
     it("returns node post-processed by source factory", async () => {
-      const inputNode = createTestProcessedCustomNode();
-      const sourceFactoryNode = createTestProcessedCustomNode();
+      const inputNode = createTestProcessedGenericNode();
+      const sourceFactoryNode = createTestProcessedGenericNode();
       const sourceFactory = {
         postProcessNode: sinon.stub().resolves(sourceFactoryNode),
       } as unknown as HierarchyDefinition;
@@ -254,7 +255,7 @@ describe("FilteringHierarchyDefinition", () => {
     });
 
     it("returns undefined when source factory post processor returns undefined", async () => {
-      const inputNode = createTestProcessedCustomNode();
+      const inputNode = createTestProcessedGenericNode();
       const sourceFactory = {
         postProcessNode: sinon.stub().resolves(undefined),
       } as unknown as HierarchyDefinition;
@@ -280,7 +281,7 @@ describe("FilteringHierarchyDefinition", () => {
           children: [
             {
               ...createTestProcessedInstanceNode(),
-              filtering: { filteredChildrenIdentifierPaths: [[createTestInstanceKey({ id: "0x1" })]] },
+              filtering: { filteredChildrenIdentifierPaths: [[createTestInstanceKey(createTestGenericNodeKey({ id: "0x1" }))]] },
             },
           ],
         };
@@ -295,7 +296,9 @@ describe("FilteringHierarchyDefinition", () => {
           children: [
             {
               ...createTestProcessedInstanceNode(),
-              filtering: { filteredChildrenIdentifierPaths: [{ path: [createTestInstanceKey({ id: "0x1" })], options: { autoExpand: false } }] },
+              filtering: {
+                filteredChildrenIdentifierPaths: [{ path: [createTestInstanceKey(createTestGenericNodeKey({ id: "0x1" }))], options: { autoExpand: false } }],
+              },
             },
           ],
         };
@@ -312,8 +315,8 @@ describe("FilteringHierarchyDefinition", () => {
               ...createTestProcessedInstanceNode(),
               filtering: {
                 filteredChildrenIdentifierPaths: [
-                  { path: [createTestInstanceKey({ id: "0x1" })], options: { autoExpand: false } },
-                  { path: [createTestInstanceKey({ id: "0x2" })], options: { autoExpand: true } },
+                  { path: [createTestInstanceKey(createTestGenericNodeKey({ id: "0x1" }))], options: { autoExpand: false } },
+                  { path: [createTestInstanceKey(createTestGenericNodeKey({ id: "0x2" }))], options: { autoExpand: true } },
                 ],
               },
             },
@@ -606,7 +609,7 @@ describe("FilteringHierarchyDefinition", () => {
     it("returns source definitions when filtered instance paths is undefined", async () => {
       const sourceDefinitions: HierarchyLevelDefinition = [
         {
-          node: {} as unknown as ParsedCustomHierarchyNode,
+          node: {} as unknown as ParsedGenericHierarchyNode,
         },
       ];
       const sourceFactory: HierarchyDefinition = {
@@ -629,7 +632,7 @@ describe("FilteringHierarchyDefinition", () => {
       const sourceFactory: HierarchyDefinition = {
         defineHierarchyLevel: async () => [
           {
-            node: {} as unknown as ParsedCustomHierarchyNode,
+            node: {} as unknown as ParsedGenericHierarchyNode,
           },
         ],
       };
@@ -644,12 +647,11 @@ describe("FilteringHierarchyDefinition", () => {
     describe("filtering custom node definitions", () => {
       it("omits source custom node definition when using instance key filter", async () => {
         const filterClass = classHierarchyInspector.stubEntityClass({ schemaName: "BisCore", className: "FilterClassName", is: async () => false });
-        const sourceDefinition: CustomHierarchyNodeDefinition = {
-          node: {
-            key: "custom",
-            label: "custom",
+        const sourceDefinition: GenericHierarchyNodeDefinition = {
+          node: createTestParsedGenericNode({
+            key: createTestGenericNodeKey({ id: "custom" }),
             children: false,
-          },
+          }),
         };
         const sourceFactory = {
           defineHierarchyLevel: async () => [sourceDefinition],
@@ -664,12 +666,11 @@ describe("FilteringHierarchyDefinition", () => {
       });
 
       it("omits source custom node definition if filter type doesn't match node's key", async () => {
-        const sourceDefinition: CustomHierarchyNodeDefinition = {
-          node: {
-            key: "custom",
-            label: "custom",
+        const sourceDefinition: GenericHierarchyNodeDefinition = {
+          node: createTestParsedGenericNode({
+            key: createTestGenericNodeKey({ id: "custom" }),
             children: false,
-          },
+          }),
         };
         const sourceFactory = {
           defineHierarchyLevel: async () => [sourceDefinition],
@@ -677,19 +678,18 @@ describe("FilteringHierarchyDefinition", () => {
         const filteringFactory = createFilteringHierarchyLevelsFactory({
           classHierarchy: classHierarchyInspector,
           sourceFactory,
-          nodeIdentifierPaths: [[{ key: "xxx" }]],
+          nodeIdentifierPaths: [[createTestGenericNodeKey({ id: "xxx" })]],
         });
         const result = await filteringFactory.defineHierarchyLevel({ parentNode: undefined });
         expect(result).to.be.empty;
       });
 
       it("omits source custom node definition when filter filtering by empty path", async () => {
-        const sourceDefinition: CustomHierarchyNodeDefinition = {
-          node: {
-            key: "custom",
-            label: "custom",
+        const sourceDefinition: GenericHierarchyNodeDefinition = {
+          node: createTestParsedGenericNode({
+            key: createTestGenericNodeKey({ id: "custom" }),
             children: false,
-          },
+          }),
         };
         const sourceFactory = {
           defineHierarchyLevel: async () => [sourceDefinition],
@@ -704,17 +704,17 @@ describe("FilteringHierarchyDefinition", () => {
       });
 
       it("returns filtered source custom node definitions when filter type matches node's key", async () => {
-        const sourceDefinition1: CustomHierarchyNodeDefinition = {
-          node: {
-            key: "custom 1",
-            label: "custom label 1",
-          },
+        const sourceDefinition1: GenericHierarchyNodeDefinition = {
+          node: createTestParsedGenericNode({
+            key: createTestGenericNodeKey({ id: "custom 1" }),
+            children: false,
+          }),
         };
-        const sourceDefinition2: CustomHierarchyNodeDefinition = {
-          node: {
-            key: "custom 2",
-            label: "custom label 2",
-          },
+        const sourceDefinition2: GenericHierarchyNodeDefinition = {
+          node: createTestParsedGenericNode({
+            key: createTestGenericNodeKey({ id: "custom 2" }),
+            children: false,
+          }),
         };
         const sourceFactory: HierarchyDefinition = {
           defineHierarchyLevel: async () => [sourceDefinition1, sourceDefinition2],
@@ -722,7 +722,7 @@ describe("FilteringHierarchyDefinition", () => {
         const filteringFactory = createFilteringHierarchyLevelsFactory({
           classHierarchy: classHierarchyInspector,
           sourceFactory,
-          nodeIdentifierPaths: [[{ key: "custom 2" }]],
+          nodeIdentifierPaths: [[createTestGenericNodeKey({ id: "custom 2" })]],
         });
         const result = await filteringFactory.defineHierarchyLevel({ parentNode: undefined });
         expect(result).to.deep.eq([
@@ -736,12 +736,11 @@ describe("FilteringHierarchyDefinition", () => {
       });
 
       it("returns source custom node definition filtered with multiple matching paths having same beginning", async () => {
-        const sourceDefinition: CustomHierarchyNodeDefinition = {
-          node: {
-            key: "custom",
-            label: "custom",
+        const sourceDefinition: GenericHierarchyNodeDefinition = {
+          node: createTestParsedGenericNode({
+            key: createTestGenericNodeKey({ id: "custom" }),
             children: false,
-          },
+          }),
         };
         const sourceFactory = {
           defineHierarchyLevel: async () => [sourceDefinition],
@@ -750,8 +749,8 @@ describe("FilteringHierarchyDefinition", () => {
           classHierarchy: classHierarchyInspector,
           sourceFactory,
           nodeIdentifierPaths: [
-            [{ key: "custom" }, { key: "123" }],
-            [{ key: "custom" }, { key: "456" }],
+            [createTestGenericNodeKey({ id: "custom" }), createTestGenericNodeKey({ id: "123" })],
+            [createTestGenericNodeKey({ id: "custom" }), createTestGenericNodeKey({ id: "456" })],
           ],
         });
         const result = await filteringFactory.defineHierarchyLevel({ parentNode: undefined });
@@ -760,7 +759,7 @@ describe("FilteringHierarchyDefinition", () => {
             node: {
               ...sourceDefinition.node,
               filtering: {
-                filteredChildrenIdentifierPaths: [[{ key: "123" }], [{ key: "456" }]],
+                filteredChildrenIdentifierPaths: [[createTestGenericNodeKey({ id: "123" })], [createTestGenericNodeKey({ id: "456" })]],
               },
             },
           },
@@ -768,12 +767,11 @@ describe("FilteringHierarchyDefinition", () => {
       });
 
       it("applies path options to children paths", async () => {
-        const sourceDefinition: CustomHierarchyNodeDefinition = {
-          node: {
-            key: "custom",
-            label: "custom",
+        const sourceDefinition: GenericHierarchyNodeDefinition = {
+          node: createTestParsedGenericNode({
+            key: createTestGenericNodeKey({ id: "custom" }),
             children: false,
-          },
+          }),
         };
         const sourceFactory = {
           defineHierarchyLevel: async () => [sourceDefinition],
@@ -783,12 +781,12 @@ describe("FilteringHierarchyDefinition", () => {
           classHierarchy: classHierarchyInspector,
           sourceFactory,
           nodeIdentifierPaths: [
-            { path: [{ key: "custom" }, { key: "123" }], options: { autoExpand: true } },
+            { path: [createTestGenericNodeKey({ id: "custom" }), createTestGenericNodeKey({ id: "123" })], options: { autoExpand: true } },
             {
-              path: [{ key: "custom" }, { key: "456" }],
+              path: [createTestGenericNodeKey({ id: "custom" }), createTestGenericNodeKey({ id: "456" })],
               options: { autoExpand: groupingNode },
             },
-            [{ key: "custom" }, { key: "789" }],
+            [createTestGenericNodeKey({ id: "custom" }), createTestGenericNodeKey({ id: "789" })],
           ],
         });
         const result = await filteringFactory.defineHierarchyLevel({ parentNode: undefined });
@@ -799,9 +797,9 @@ describe("FilteringHierarchyDefinition", () => {
               autoExpand: true,
               filtering: {
                 filteredChildrenIdentifierPaths: [
-                  { path: [{ key: "123" }], options: { autoExpand: true } },
-                  { path: [{ key: "456" }], options: { autoExpand: groupingNode } },
-                  [{ key: "789" }],
+                  { path: [createTestGenericNodeKey({ id: "123" })], options: { autoExpand: true } },
+                  { path: [createTestGenericNodeKey({ id: "456" })], options: { autoExpand: groupingNode } },
+                  [createTestGenericNodeKey({ id: "789" })],
                 ],
               },
             },
@@ -825,7 +823,7 @@ describe("FilteringHierarchyDefinition", () => {
         const filteringFactory = createFilteringHierarchyLevelsFactory({
           classHierarchy: classHierarchyInspector,
           sourceFactory,
-          nodeIdentifierPaths: [[{ key: "xxx" }]],
+          nodeIdentifierPaths: [[createTestGenericNodeKey({ id: "xxx" })]],
         });
         const result = await filteringFactory.defineHierarchyLevel({ parentNode: undefined });
         expect(result).to.be.empty;
@@ -1330,8 +1328,8 @@ describe("FilteringHierarchyDefinition", () => {
       });
       const result = await filteringFactory.defineHierarchyLevel({
         parentNode: {
-          ...createTestProcessedCustomNode({
-            key: "custom",
+          ...createTestProcessedGenericNode({
+            key: createTestGenericNodeKey({ id: "custom" }),
             label: "custom node",
           }),
           filtering: {
@@ -1350,11 +1348,11 @@ describe("FilteringHierarchyDefinition", () => {
     });
 
     it("returns all definitions for a filter target parent node", async () => {
-      const matchingSourceDefinition: CustomHierarchyNodeDefinition = {
-        node: createTestParsedCustomNode({ key: "matches" }),
+      const matchingSourceDefinition: GenericHierarchyNodeDefinition = {
+        node: createTestParsedGenericNode({ key: createTestGenericNodeKey({ id: "matches" }) }),
       };
-      const nonMatchingSourceDefinition: CustomHierarchyNodeDefinition = {
-        node: createTestParsedCustomNode({ key: "doesn't match" }),
+      const nonMatchingSourceDefinition: GenericHierarchyNodeDefinition = {
+        node: createTestParsedGenericNode({ key: createTestGenericNodeKey({ id: "doesn't match" }) }),
       };
       const sourceFactory: HierarchyDefinition = {
         defineHierarchyLevel: async () => [matchingSourceDefinition, nonMatchingSourceDefinition],
@@ -1366,13 +1364,13 @@ describe("FilteringHierarchyDefinition", () => {
       });
       const result = await filteringFactory.defineHierarchyLevel({
         parentNode: {
-          ...createTestProcessedCustomNode({
-            key: "parent",
+          ...createTestProcessedGenericNode({
+            key: createTestGenericNodeKey({ id: "parent" }),
             label: "parent",
           }),
           filtering: {
             isFilterTarget: true,
-            filteredChildrenIdentifierPaths: [[{ key: "matches" }]],
+            filteredChildrenIdentifierPaths: [[createTestGenericNodeKey({ id: "matches" })]],
           },
         },
       });

@@ -5,16 +5,23 @@
 
 import { expect } from "chai";
 import { HierarchyNodeKey, PropertyValueGroupingNodeKey, PropertyValueRangeGroupingNodeKey } from "../hierarchies/HierarchyNodeKey";
+import { createTestGenericNodeKey } from "./Utils";
 
 describe("HierarchyNodeKey", () => {
   describe("equals", () => {
     it("returns false if key types are different", () => {
-      expect(HierarchyNodeKey.equals("x", { type: "instances", instanceKeys: [] })).to.be.false;
+      expect(HierarchyNodeKey.equals(createTestGenericNodeKey({ id: "x" }), { type: "instances", instanceKeys: [] })).to.be.false;
     });
 
-    it("returns correct results for custom node keys", () => {
-      expect(HierarchyNodeKey.equals("x", "x")).to.be.true;
-      expect(HierarchyNodeKey.equals("x", "y")).to.be.false;
+    it("returns correct results for generic node keys", () => {
+      expect(HierarchyNodeKey.equals(createTestGenericNodeKey({ id: "x" }), createTestGenericNodeKey({ id: "x" }))).to.be.true;
+      expect(HierarchyNodeKey.equals(createTestGenericNodeKey({ id: "x", source: undefined }), createTestGenericNodeKey({ id: "x", source: undefined }))).to.be
+        .true;
+      expect(HierarchyNodeKey.equals(createTestGenericNodeKey({ id: "x", source: "s" }), createTestGenericNodeKey({ id: "x", source: "s" }))).to.be.true;
+      expect(HierarchyNodeKey.equals(createTestGenericNodeKey({ id: "x" }), createTestGenericNodeKey({ id: "y" }))).to.be.false;
+      expect(HierarchyNodeKey.equals(createTestGenericNodeKey({ id: "x", source: "s1" }), createTestGenericNodeKey({ id: "x", source: "s2" }))).to.be.false;
+      expect(HierarchyNodeKey.equals(createTestGenericNodeKey({ id: "x", source: "s" }), createTestGenericNodeKey({ id: "x", source: undefined }))).to.be.false;
+      expect(HierarchyNodeKey.equals(createTestGenericNodeKey({ id: "x", source: undefined }), createTestGenericNodeKey({ id: "x", source: "s" }))).to.be.false;
     });
 
     it("returns false for standard nodes if types are different", () => {
@@ -123,7 +130,7 @@ describe("HierarchyNodeKey", () => {
   describe("compare", () => {
     describe("key types are different", () => {
       const hierarchyNodeKeyVariants: HierarchyNodeKey[] = [
-        "x",
+        createTestGenericNodeKey({ id: "x" }),
         { type: "instances", instanceKeys: [] },
         { type: "class-grouping", className: "x" },
         { type: "label-grouping", label: "a" },
@@ -162,10 +169,21 @@ describe("HierarchyNodeKey", () => {
     });
 
     describe("key types are the same", () => {
-      it("returns correct results for custom node keys", () => {
-        expect(HierarchyNodeKey.compare("a", "a")).to.be.eq(0);
-        expect(HierarchyNodeKey.compare("a", "b")).to.be.eq(-1);
-        expect(HierarchyNodeKey.compare("b", "a")).to.be.eq(1);
+      it("returns correct results for generic node keys", () => {
+        expect(HierarchyNodeKey.compare(createTestGenericNodeKey({ id: "a" }), createTestGenericNodeKey({ id: "a" }))).to.be.eq(0);
+        expect(HierarchyNodeKey.compare(createTestGenericNodeKey({ id: "a", source: "s" }), createTestGenericNodeKey({ id: "a", source: "s" }))).to.be.eq(0);
+
+        expect(HierarchyNodeKey.compare(createTestGenericNodeKey({ id: "a" }), createTestGenericNodeKey({ id: "b" }))).to.be.eq(-1);
+        expect(HierarchyNodeKey.compare(createTestGenericNodeKey({ id: "a", source: undefined }), createTestGenericNodeKey({ id: "a", source: "s" }))).to.be.eq(
+          -1,
+        );
+        expect(HierarchyNodeKey.compare(createTestGenericNodeKey({ id: "a", source: "s1" }), createTestGenericNodeKey({ id: "a", source: "s2" }))).to.be.eq(-1);
+
+        expect(HierarchyNodeKey.compare(createTestGenericNodeKey({ id: "b" }), createTestGenericNodeKey({ id: "a" }))).to.be.eq(1);
+        expect(HierarchyNodeKey.compare(createTestGenericNodeKey({ id: "a", source: "s" }), createTestGenericNodeKey({ id: "a", source: undefined }))).to.be.eq(
+          1,
+        );
+        expect(HierarchyNodeKey.compare(createTestGenericNodeKey({ id: "a", source: "s2" }), createTestGenericNodeKey({ id: "a", source: "s1" }))).to.be.eq(1);
       });
 
       it("returns correct results for instance node keys", () => {

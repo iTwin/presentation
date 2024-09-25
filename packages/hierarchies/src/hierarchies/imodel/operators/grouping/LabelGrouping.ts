@@ -5,7 +5,7 @@
 
 import { LabelGroupingNodeKey } from "../../../HierarchyNodeKey";
 import { ProcessedInstanceHierarchyNode } from "../../IModelHierarchyNode";
-import { mergeNodes } from "../../Utils";
+import { mergeInstanceNodes } from "../../Utils";
 import { GroupingHandlerResult, ProcessedInstancesGroupingHierarchyNode } from "../Grouping";
 
 /** @internal */
@@ -32,7 +32,7 @@ export async function createLabelGroups(nodes: ProcessedInstanceHierarchyNode[])
   nodesToMergeMap.forEach((entry) => {
     let finalNode = entry[0];
     for (let i = 1; i < entry.length; ++i) {
-      finalNode = mergeNodes(finalNode, entry[i]);
+      finalNode = mergeInstanceNodes(finalNode, entry[i]);
     }
     ungrouped.push(finalNode);
   });

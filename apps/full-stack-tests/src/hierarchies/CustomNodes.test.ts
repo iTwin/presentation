@@ -4,6 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { IModelConnection } from "@itwin/core-frontend";
+import { HierarchyNode } from "@itwin/presentation-hierarchies";
 import { buildTestIModel } from "@itwin/presentation-testing";
 import { initialize, terminate } from "../IntegrationTests";
 import { NodeValidators, validateHierarchy } from "./HierarchyValidation";
@@ -25,14 +26,12 @@ describe("Hierarchies", () => {
 
     it("creates custom root nodes", async () => {
       const node1 = {
-        key: "custom-1",
+        key: { type: "generic" as const, id: "custom-1" },
         label: "1",
-        children: undefined,
       };
       const node2 = {
-        key: "custom-2",
+        key: { type: "generic" as const, id: "custom-2" },
         label: "2",
-        children: undefined,
       };
       const provider = createProvider({
         imodel: emptyIModel,
@@ -48,18 +47,18 @@ describe("Hierarchies", () => {
       });
       await validateHierarchy({
         provider,
-        expect: [NodeValidators.createForCustomNode(node1), NodeValidators.createForCustomNode(node2)],
+        expect: [NodeValidators.createForGenericNode(node1), NodeValidators.createForGenericNode(node2)],
       });
     });
 
     it("creates custom child nodes", async () => {
       const root = {
-        key: "root",
+        key: { type: "generic" as const, id: "root" },
         label: "r",
         children: undefined,
       };
       const child = {
-        key: "child",
+        key: { type: "generic" as const, id: "child" },
         label: "c",
         children: undefined,
       };
@@ -67,11 +66,11 @@ describe("Hierarchies", () => {
         imodel: emptyIModel,
         hierarchy: {
           async defineHierarchyLevel({ parentNode }) {
-            switch (parentNode?.key) {
-              case undefined:
-                return [{ node: root }];
-              case "root":
-                return [{ node: child }];
+            if (!parentNode) {
+              return [{ node: root }];
+            }
+            if (HierarchyNode.isGeneric(parentNode) && parentNode.key.id === "root") {
+              return [{ node: child }];
             }
             return [];
           },
@@ -80,9 +79,9 @@ describe("Hierarchies", () => {
       await validateHierarchy({
         provider,
         expect: [
-          NodeValidators.createForCustomNode({
+          NodeValidators.createForGenericNode({
             ...root,
-            children: [NodeValidators.createForCustomNode(child)],
+            children: [NodeValidators.createForGenericNode(child)],
           }),
         ],
       });
@@ -90,12 +89,12 @@ describe("Hierarchies", () => {
 
     it("creates hidden custom nodes", async () => {
       const root = {
-        key: "root",
+        key: { type: "generic" as const, id: "root" },
         label: "r",
         children: undefined,
       };
       const hiddenChild = {
-        key: "hidden child",
+        key: { type: "generic" as const, id: "hidden child" },
         label: "hc",
         children: undefined,
         processingParams: {
@@ -103,7 +102,7 @@ describe("Hierarchies", () => {
         },
       };
       const visibleChild = {
-        key: "visible child",
+        key: { type: "generic" as const, id: "visible child" },
         label: "vc",
         children: undefined,
       };
@@ -111,13 +110,14 @@ describe("Hierarchies", () => {
         imodel: emptyIModel,
         hierarchy: {
           async defineHierarchyLevel({ parentNode }) {
-            switch (parentNode?.key) {
-              case undefined:
-                return [{ node: root }];
-              case "root":
-                return [{ node: hiddenChild }];
-              case "hidden child":
-                return [{ node: visibleChild }];
+            if (!parentNode) {
+              return [{ node: root }];
+            }
+            if (HierarchyNode.isGeneric(parentNode) && parentNode.key.id === "root") {
+              return [{ node: hiddenChild }];
+            }
+            if (HierarchyNode.isGeneric(parentNode) && parentNode.key.id === "hidden child") {
+              return [{ node: visibleChild }];
             }
             return [];
           },
@@ -126,9 +126,9 @@ describe("Hierarchies", () => {
       await validateHierarchy({
         provider,
         expect: [
-          NodeValidators.createForCustomNode({
+          NodeValidators.createForGenericNode({
             ...root,
-            children: [NodeValidators.createForCustomNode(visibleChild)],
+            children: [NodeValidators.createForGenericNode(visibleChild)],
           }),
         ],
       });
@@ -136,12 +136,12 @@ describe("Hierarchies", () => {
 
     it("hides custom nodes with no children", async () => {
       const root = {
-        key: "root",
+        key: { type: "generic" as const, id: "root" },
         label: "r",
         children: undefined,
       };
       const hiddenChild = {
-        key: "hidden child",
+        key: { type: "generic" as const, id: "hidden child" },
         label: "hc",
         children: undefined,
         processingParams: {
@@ -152,13 +152,11 @@ describe("Hierarchies", () => {
         imodel: emptyIModel,
         hierarchy: {
           async defineHierarchyLevel({ parentNode }) {
-            switch (parentNode?.key) {
-              case undefined:
-                return [{ node: root }];
-              case "root":
-                return [{ node: hiddenChild }];
-              case "hidden child":
-                return [];
+            if (!parentNode) {
+              return [{ node: root }];
+            }
+            if (HierarchyNode.isGeneric(parentNode) && parentNode.key.id === "root") {
+              return [{ node: hiddenChild }];
             }
             return [];
           },
@@ -167,7 +165,7 @@ describe("Hierarchies", () => {
       await validateHierarchy({
         provider,
         expect: [
-          NodeValidators.createForCustomNode({
+          NodeValidators.createForGenericNode({
             ...root,
             children: false,
           }),

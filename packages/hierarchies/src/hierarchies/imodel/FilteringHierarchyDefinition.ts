@@ -7,9 +7,10 @@ import { ECClassHierarchyInspector, InstanceKey } from "@itwin/presentation-shar
 import { HierarchyFilteringPath, HierarchyFilteringPathOptions } from "../HierarchyFiltering";
 import { HierarchyNode } from "../HierarchyNode";
 import { HierarchyNodeIdentifier } from "../HierarchyNodeIdentifier";
+import { GenericNodeKey } from "../HierarchyNodeKey";
 import {
-  CustomHierarchyNodeDefinition,
   DefineHierarchyLevelProps,
+  GenericHierarchyNodeDefinition,
   HierarchyDefinition,
   HierarchyLevelDefinition,
   HierarchyNodesDefinition,
@@ -136,16 +137,11 @@ export class FilteringHierarchyDefinition implements HierarchyDefinition {
     await Promise.all(
       sourceDefinitions.map(async (definition) => {
         let matchedDefinition: HierarchyNodesDefinition | undefined;
-        if (HierarchyNodesDefinition.isCustomNode(definition)) {
-          matchedDefinition = await matchFilters<{ key: string }>(
+        if (HierarchyNodesDefinition.isGenericNode(definition)) {
+          matchedDefinition = await matchFilters<GenericNodeKey>(
             definition,
             { filteredNodePaths, isDirectParentFilterTarget },
-            async (id) => {
-              if (!HierarchyNodeIdentifier.isCustomNodeIdentifier(id)) {
-                return false;
-              }
-              return id.key === definition.node.key;
-            },
+            async (id) => HierarchyNodeIdentifier.equal(id, definition.node.key),
             this._classHierarchy,
             (def, matchingFilters) => {
               const filteredChildrenIdentifierPaths = matchingFilters.reduce(
@@ -204,7 +200,7 @@ type MatchedFilter<TIdentifier extends HierarchyNodeIdentifier> = {
 
 async function matchFilters<
   TIdentifier extends HierarchyNodeIdentifier,
-  TDefinition = TIdentifier extends InstanceKey ? InstanceNodesQueryDefinition : CustomHierarchyNodeDefinition,
+  TDefinition = TIdentifier extends InstanceKey ? InstanceNodesQueryDefinition : GenericHierarchyNodeDefinition,
 >(
   definition: TDefinition,
   filteringProps: { filteredNodePaths: HierarchyFilteringPath[]; isDirectParentFilterTarget?: boolean },

@@ -18,7 +18,7 @@ export async function collectHierarchy(provider: HierarchyProvider, parentNode?:
   const nodes = await collect(provider.getNodes({ parentNode }));
   for (const node of nodes) {
     const def: NodeDefinition = {
-      nodeType: typeof node.key === "string" ? "custom" : node.key.type,
+      nodeType: node.key.type,
       label: node.label,
       ...(node.autoExpand === undefined ? undefined : { autoExpand: node.autoExpand }),
     };

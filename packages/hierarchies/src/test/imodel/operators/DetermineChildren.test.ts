@@ -9,7 +9,7 @@ import { from, of } from "rxjs";
 import sinon from "sinon";
 import { LogLevel } from "@itwin/core-bentley";
 import { createDetermineChildrenOperator, LOGGING_NAMESPACE } from "../../../hierarchies/imodel/operators/DetermineChildren";
-import { createTestProcessedCustomNode, setupLogging } from "../../Utils";
+import { createTestProcessedGenericNode, setupLogging } from "../../Utils";
 
 describe("DetermineChildren", () => {
   before(() => {
@@ -17,7 +17,7 @@ describe("DetermineChildren", () => {
   });
 
   it("doesn't check children if node has children determined", async () => {
-    const node = createTestProcessedCustomNode({
+    const node = createTestProcessedGenericNode({
       children: false,
     });
     const hasNodes = sinon.spy();
@@ -27,7 +27,7 @@ describe("DetermineChildren", () => {
   });
 
   it("determines node children", async () => {
-    const node = createTestProcessedCustomNode({
+    const node = createTestProcessedGenericNode({
       children: undefined,
     });
     const hasNodes = sinon.stub().returns(of(true));

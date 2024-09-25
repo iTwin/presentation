@@ -47,7 +47,7 @@ describe("Hierarchies", () => {
               return [
                 {
                   node: {
-                    key: "custom node",
+                    key: { type: "generic", id: "custom node" },
                     label: "Custom Node",
                     supportsFiltering: true,
                   },
@@ -61,7 +61,7 @@ describe("Hierarchies", () => {
         await validateHierarchy({
           provider: createIModelHierarchyProvider({ imodelAccess: createIModelAccess(imodel), hierarchyDefinition }),
           expect: [
-            NodeValidators.createForCustomNode({
+            NodeValidators.createForGenericNode({
               key: "custom node",
               label: "Custom Node",
               supportsFiltering: true,

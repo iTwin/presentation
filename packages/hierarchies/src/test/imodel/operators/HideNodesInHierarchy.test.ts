@@ -10,7 +10,7 @@ import sinon from "sinon";
 import { LogLevel } from "@itwin/core-bentley";
 import { ProcessedHierarchyNode } from "../../../hierarchies/imodel/IModelHierarchyNode";
 import { createHideNodesInHierarchyOperator, LOGGING_NAMESPACE } from "../../../hierarchies/imodel/operators/HideNodesInHierarchy";
-import { createTestInstanceKey, createTestProcessedCustomNode, createTestProcessedInstanceNode, setupLogging } from "../../Utils";
+import { createTestGenericNodeKey, createTestInstanceKey, createTestProcessedGenericNode, createTestProcessedInstanceNode, setupLogging } from "../../Utils";
 
 describe("HideNodesInHierarchyOperator", () => {
   before(() => {
@@ -18,23 +18,23 @@ describe("HideNodesInHierarchyOperator", () => {
   });
 
   it("returns nodes that don't need hiding", async () => {
-    const nodes = [createTestProcessedCustomNode()];
+    const nodes = [createTestProcessedGenericNode()];
     const result = await collect(from(nodes).pipe(createHideNodesInHierarchyOperator(sinon.spy(), false)));
     expect(result).to.deep.eq(nodes);
   });
 
   it("returns the first hidden node if it has children and operator is created with `stopOnFirstChild = true`", async () => {
     const nodes: ProcessedHierarchyNode[] = [
-      createTestProcessedCustomNode({
-        key: "custom1",
+      createTestProcessedGenericNode({
+        key: createTestGenericNodeKey({ id: "custom1" }),
         label: "custom1",
         children: true,
         processingParams: {
           hideInHierarchy: true,
         },
       }),
-      createTestProcessedCustomNode({
-        key: "custom2",
+      createTestProcessedGenericNode({
+        key: createTestGenericNodeKey({ id: "custom2" }),
         label: "custom2",
         children: true,
         processingParams: {
@@ -48,16 +48,16 @@ describe("HideNodesInHierarchyOperator", () => {
 
   it("returns the first hidden node if it undetermined children evaluating to `true` and operator is created with `stopOnFirstChild = true`", async () => {
     const nodes: ProcessedHierarchyNode[] = [
-      createTestProcessedCustomNode({
-        key: "custom1",
+      createTestProcessedGenericNode({
+        key: createTestGenericNodeKey({ id: "custom1" }),
         label: "custom1",
         children: undefined,
         processingParams: {
           hideInHierarchy: true,
         },
       }),
-      createTestProcessedCustomNode({
-        key: "custom2",
+      createTestProcessedGenericNode({
+        key: createTestGenericNodeKey({ id: "custom2" }),
         label: "custom2",
         children: undefined,
         processingParams: {
@@ -65,7 +65,7 @@ describe("HideNodesInHierarchyOperator", () => {
         },
       }),
     ];
-    const childNode = createTestProcessedCustomNode();
+    const childNode = createTestProcessedGenericNode();
     const getNodes = sinon.fake(() => from([childNode]));
     const result = await collect(from(nodes).pipe(createHideNodesInHierarchyOperator(getNodes, true)));
     expect(result).to.deep.eq([childNode]);
@@ -74,7 +74,7 @@ describe("HideNodesInHierarchyOperator", () => {
   describe("instance nodes", () => {
     it("hides nodes without children", async () => {
       const nodes = [
-        createTestProcessedCustomNode({
+        createTestProcessedGenericNode({
           children: false,
           processingParams: {
             hideInHierarchy: true,
@@ -173,11 +173,11 @@ describe("HideNodesInHierarchyOperator", () => {
     });
   });
 
-  describe("custom nodes", () => {
+  describe("generic nodes", () => {
     it("hides nodes", async () => {
       const hiddenNodes: ProcessedHierarchyNode[] = [
-        createTestProcessedCustomNode({
-          key: "custom",
+        createTestProcessedGenericNode({
+          key: createTestGenericNodeKey({ id: "custom" }),
           label: "hidden",
           processingParams: {
             hideInHierarchy: true,
@@ -185,8 +185,8 @@ describe("HideNodesInHierarchyOperator", () => {
         }),
       ];
       const childNodes: ProcessedHierarchyNode[] = [
-        createTestProcessedCustomNode({
-          key: "custom",
+        createTestProcessedGenericNode({
+          key: createTestGenericNodeKey({ id: "custom" }),
           label: "visible",
           children: false,
         }),
@@ -198,16 +198,23 @@ describe("HideNodesInHierarchyOperator", () => {
 
     it("merges similar hidden nodes when requesting children", async () => {
       const hiddenNodes: ProcessedHierarchyNode[] = [
-        createTestProcessedCustomNode({
-          key: "custom",
+        createTestProcessedGenericNode({
+          key: createTestGenericNodeKey({ id: "custom" }),
           label: "a",
           processingParams: {
             hideInHierarchy: true,
           },
         }),
-        createTestProcessedCustomNode({
-          key: "custom",
+        createTestProcessedGenericNode({
+          key: createTestGenericNodeKey({ id: "custom" }),
           label: "b",
+          processingParams: {
+            hideInHierarchy: true,
+          },
+        }),
+        createTestProcessedGenericNode({
+          key: createTestGenericNodeKey({ id: "custom", source: "s" }),
+          label: "c",
           processingParams: {
             hideInHierarchy: true,
           },
@@ -215,10 +222,19 @@ describe("HideNodesInHierarchyOperator", () => {
       ];
       const getNodes = sinon.fake(() => from([]));
       const result = await collect(from(hiddenNodes).pipe(createHideNodesInHierarchyOperator(getNodes, false)));
-      expect(getNodes).to.be.calledOnceWithExactly({
-        key: "custom",
+      expect(getNodes).to.be.calledTwice;
+      expect(getNodes.firstCall).to.be.calledWithExactly({
+        key: createTestGenericNodeKey({ id: "custom" }),
         parentKeys: [],
         label: "a",
+        processingParams: {
+          hideInHierarchy: true,
+        },
+      });
+      expect(getNodes.secondCall).to.be.calledWithExactly({
+        key: createTestGenericNodeKey({ id: "custom", source: "s" }),
+        parentKeys: [],
+        label: "c",
         processingParams: {
           hideInHierarchy: true,
         },

@@ -17,7 +17,7 @@ import * as labelGrouping from "../../../hierarchies/imodel/operators/grouping/L
 import * as propertiesGrouping from "../../../hierarchies/imodel/operators/grouping/PropertiesGrouping";
 import {
   createIModelAccessStub,
-  createTestProcessedCustomNode,
+  createTestProcessedGenericNode,
   createTestProcessedGroupingNode,
   createTestProcessedInstanceNode,
   setupLogging,
@@ -134,7 +134,7 @@ describe("Grouping", () => {
     });
 
     it("assigns `nonGroupingAncestor` from parent custom node", async () => {
-      const parentNode = createTestProcessedCustomNode();
+      const parentNode = createTestProcessedGenericNode();
       const groupedNode = createTestProcessedInstanceNode({
         key: { type: "instances", instanceKeys: [{ className: "TestSchema.A", id: "0x1" }] },
         label: "1",
@@ -216,7 +216,7 @@ describe("Grouping", () => {
     });
 
     it("assigns `nonGroupingAncestor` from parent grouping node", async () => {
-      const nonGroupingAncestor = createTestProcessedCustomNode();
+      const nonGroupingAncestor = createTestProcessedGenericNode();
       const parentNode = createTestProcessedGroupingNode({ nonGroupingAncestor });
       const groupedNode = createTestProcessedInstanceNode({
         key: { type: "instances", instanceKeys: [{ className: "TestSchema.A", id: "0x1" }] },

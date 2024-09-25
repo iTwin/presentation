@@ -7,7 +7,7 @@ import { defer, filter, map, merge, mergeMap, Observable } from "rxjs";
 import { createNodeIdentifierForLogging, createOperatorLoggingNamespace, hasChildren, LOGGING_NAMESPACE_INTERNAL } from "../../internal/Common";
 import { doLog, log } from "../../internal/LoggingUtils";
 import { partition } from "../../internal/operators/Partition";
-import { ProcessedCustomHierarchyNode, ProcessedHierarchyNode, ProcessedInstanceHierarchyNode } from "../IModelHierarchyNode";
+import { ProcessedGenericHierarchyNode, ProcessedHierarchyNode, ProcessedInstanceHierarchyNode } from "../IModelHierarchyNode";
 
 const OPERATOR_NAME = "HideIfNoChildren";
 /** @internal */
@@ -27,8 +27,8 @@ export function createHideIfNoChildrenOperator(hasNodes: (node: ProcessedHierarc
     // - `undeterminedChildren` - nodes with the flag and unknown children
     const [needsHide, doesntNeedHide] = partition(
       inputNodes,
-      (n): n is ProcessedCustomHierarchyNode | ProcessedInstanceHierarchyNode =>
-        (ProcessedHierarchyNode.isCustom(n) || ProcessedHierarchyNode.isInstancesNode(n)) && !!n.processingParams?.hideIfNoChildren,
+      (n): n is ProcessedGenericHierarchyNode | ProcessedInstanceHierarchyNode =>
+        (ProcessedHierarchyNode.isGeneric(n) || ProcessedHierarchyNode.isInstancesNode(n)) && !!n.processingParams?.hideIfNoChildren,
     );
     const [determinedChildren, undeterminedChildren] = partition(needsHide, (n) => n.children !== undefined);
     return merge(

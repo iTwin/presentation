@@ -16,6 +16,7 @@ enableMapSet();
 /** @internal */
 export class TreeActions {
   private _loader: ITreeLoader;
+  private _nodeIdFactory: (node: Pick<HierarchyNode, "key" | "parentKeys">) => string;
   private _currentModel: TreeModel;
   private _disposed = new Subject<void>();
 
@@ -24,9 +25,11 @@ export class TreeActions {
     private _onLoad: (actionType: "initial-load" | "hierarchy-level-load" | "reload", duration: number) => void,
     private _onHierarchyLimitExceeded: (props: { parentId?: string; filter?: GenericInstanceFilter; limit?: number | "unbounded" }) => void,
     private _onHierarchyLoadError: (props: { parentId?: string; type: "timeout" | "unknown" }) => void,
+    nodeIdFactory?: (node: Pick<HierarchyNode, "key" | "parentKeys">) => string,
     seed?: TreeModel,
   ) {
     this._loader = new NoopTreeLoader();
+    this._nodeIdFactory = nodeIdFactory ?? createNodeId;
     this._currentModel = seed ?? /* istanbul ignore next */ {
       idToNode: new Map(),
       parentChildMap: new Map(),
@@ -94,7 +97,7 @@ export class TreeActions {
 
     this.loadSubTree({
       parent: parentNode,
-      getHierarchyLevelOptions: (node) => createHierarchyLevelOptions(this._currentModel, getNonGroupedParentId(node)),
+      getHierarchyLevelOptions: (node) => createHierarchyLevelOptions(this._currentModel, getNonGroupedParentId(node, this._nodeIdFactory)),
       shouldLoadChildren: (node) => !!node.nodeData.autoExpand,
       ignoreCache,
     });
@@ -108,7 +111,7 @@ export class TreeActions {
       if (!!options?.discardState) {
         return { instanceFilter: undefined, hierarchyLevelSizeLimit: undefined };
       }
-      const filteredNodeId = getNonGroupedParentId(node);
+      const filteredNodeId = getNonGroupedParentId(node, this._nodeIdFactory);
       return createHierarchyLevelOptions(filteredNodeId === parentId ? currModel : oldModel, filteredNodeId);
     };
     const shouldLoadChildren = (node: TreeModelHierarchyNode) => {
@@ -145,13 +148,18 @@ export class TreeActions {
 
   public setHierarchyProvider(provider?: HierarchyProvider) {
     this._loader = provider
-      ? new TreeLoader(provider, this._onHierarchyLimitExceeded, ({ parentId, type }) => {
-          if (type === "timeout") {
-            const loadAction = this.getLoadAction(parentId);
-            this._onLoad(loadAction, Number.MAX_SAFE_INTEGER);
-          }
-          this._onHierarchyLoadError({ parentId, type });
-        })
+      ? new TreeLoader(
+          provider,
+          this._onHierarchyLimitExceeded,
+          ({ parentId, type }) => {
+            if (type === "timeout") {
+              const loadAction = this.getLoadAction(parentId);
+              this._onLoad(loadAction, Number.MAX_SAFE_INTEGER);
+            }
+            this._onHierarchyLoadError({ parentId, type });
+          },
+          this._nodeIdFactory,
+        )
       : /* istanbul ignore next */ new NoopTreeLoader();
   }
 
@@ -281,7 +289,7 @@ function collectNodes(parentId: string | undefined, model: TreeModel, pred: (nod
   return [currNode, ...currentChildren.flatMap((child) => collectNodes(child, model, pred))];
 }
 
-function getNonGroupedParentId(node: TreeModelHierarchyNode | TreeModelRootNode) {
+function getNonGroupedParentId(node: TreeModelHierarchyNode | TreeModelRootNode, nodeIdFactory: (node: Pick<HierarchyNode, "key" | "parentKeys">) => string) {
   if (!node.nodeData || !HierarchyNode.isGroupingNode(node.nodeData)) {
     return node.id;
   }
@@ -290,7 +298,7 @@ function getNonGroupedParentId(node: TreeModelHierarchyNode | TreeModelRootNode)
     return undefined;
   }
 
-  return createNodeId(node.nodeData.nonGroupingAncestor);
+  return nodeIdFactory(node.nodeData.nonGroupingAncestor);
 }
 
 function createHierarchyLevelOptions(model: TreeModel, nodeId: string | undefined): HierarchyLevelOptions {

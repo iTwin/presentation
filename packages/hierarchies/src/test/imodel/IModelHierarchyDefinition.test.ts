@@ -7,28 +7,28 @@ import { expect } from "chai";
 import sinon from "sinon";
 import {
   createClassBasedHierarchyDefinition,
-  CustomHierarchyNodeDefinition,
   DefineHierarchyLevelProps,
+  GenericHierarchyNodeDefinition,
   HierarchyLevelDefinition,
   HierarchyNodesDefinition,
   InstanceNodesQueryDefinition,
 } from "../../hierarchies/imodel/IModelHierarchyDefinition";
-import { createClassHierarchyInspectorStub, createTestParsedCustomNode } from "../Utils";
+import { createClassHierarchyInspectorStub, createTestGenericNodeKey, createTestParsedGenericNode } from "../Utils";
 
 describe("HierarchyNodesDefinition", () => {
-  const customNodeDefinition = createCustomNodeDefinition();
+  const genericNodeDefinition = createGenericNodeDefinition();
   const instanceNodesQueryDefinition = createInstanceNodesQueryDefinition();
 
-  describe("isCustomNode", () => {
+  describe("isGenericNode", () => {
     it("returns correct result for different types of definitions", () => {
-      expect(HierarchyNodesDefinition.isCustomNode(customNodeDefinition)).to.be.true;
-      expect(HierarchyNodesDefinition.isCustomNode(instanceNodesQueryDefinition)).to.be.false;
+      expect(HierarchyNodesDefinition.isGenericNode(genericNodeDefinition)).to.be.true;
+      expect(HierarchyNodesDefinition.isGenericNode(instanceNodesQueryDefinition)).to.be.false;
     });
   });
 
   describe("isInstanceNodesQuery", () => {
     it("returns correct result for different types of definitions", () => {
-      expect(HierarchyNodesDefinition.isInstanceNodesQuery(customNodeDefinition)).to.be.false;
+      expect(HierarchyNodesDefinition.isInstanceNodesQuery(genericNodeDefinition)).to.be.false;
       expect(HierarchyNodesDefinition.isInstanceNodesQuery(instanceNodesQueryDefinition)).to.be.true;
     });
   });
@@ -44,7 +44,7 @@ describe("createClassBasedHierarchyDefinition", () => {
   });
 
   it("returns root hierarchy level definition", async () => {
-    const rootHierarchyLevel: HierarchyLevelDefinition = [createCustomNodeDefinition(), createInstanceNodesQueryDefinition()];
+    const rootHierarchyLevel: HierarchyLevelDefinition = [createGenericNodeDefinition(), createInstanceNodesQueryDefinition()];
     const factory = createClassBasedHierarchyDefinition({
       classHierarchyInspector,
       hierarchy: {
@@ -57,12 +57,12 @@ describe("createClassBasedHierarchyDefinition", () => {
   });
 
   it("returns custom node children definition", async () => {
-    const rootNode = createParentNode({ key: "test-custom-node" });
+    const rootNode = createParentNode({ key: createTestGenericNodeKey({ id: "test-custom-node" }) });
 
-    const def1: HierarchyLevelDefinition = [createCustomNodeDefinition({ node: createTestParsedCustomNode({ label: "1" }) })];
-    const def2: HierarchyLevelDefinition = [createCustomNodeDefinition({ node: createTestParsedCustomNode({ label: "2" }) })];
-    const def3: HierarchyLevelDefinition = [createCustomNodeDefinition({ node: createTestParsedCustomNode({ label: "3" }) })];
-    const def4: HierarchyLevelDefinition = [createCustomNodeDefinition({ node: createTestParsedCustomNode({ label: "4" }) })];
+    const def1: HierarchyLevelDefinition = [createGenericNodeDefinition({ node: createTestParsedGenericNode({ label: "1" }) })];
+    const def2: HierarchyLevelDefinition = [createGenericNodeDefinition({ node: createTestParsedGenericNode({ label: "2" }) })];
+    const def3: HierarchyLevelDefinition = [createGenericNodeDefinition({ node: createTestParsedGenericNode({ label: "3" }) })];
+    const def4: HierarchyLevelDefinition = [createGenericNodeDefinition({ node: createTestParsedGenericNode({ label: "4" }) })];
 
     const factory = createClassBasedHierarchyDefinition({
       classHierarchyInspector,
@@ -71,27 +71,27 @@ describe("createClassBasedHierarchyDefinition", () => {
         childNodes: [
           // doesn't match parent node - should not be included
           {
-            customParentNodeKey: "some-other-node",
+            parentGenericNodePredicate: async (key) => key.id === "some-other-node",
             definitions: async () => def1,
           },
           // matches parent node - should be included
           {
-            customParentNodeKey: "test-custom-node",
+            parentGenericNodePredicate: async (key) => key.id === "test-custom-node",
             definitions: async () => def2,
           },
           // not event a custom node def - should not be included
           {
-            parentNodeClassName: "some.class",
+            parentInstancesNodePredicate: "some.class",
             definitions: async () => def3,
           },
           // matches parent node - should be included
           {
-            customParentNodeKey: "test-custom-node",
+            parentGenericNodePredicate: async (key) => key.id === "test-custom-node",
             definitions: async () => def4,
           },
           // matches parent node - should be included, but returns an empty list
           {
-            customParentNodeKey: "test-custom-node",
+            parentGenericNodePredicate: async (key) => key.id === "test-custom-node",
             definitions: async () => [],
           },
         ],
@@ -102,7 +102,7 @@ describe("createClassBasedHierarchyDefinition", () => {
     expect(result).to.deep.eq([...def2, ...def4]);
   });
 
-  it("returns instance node children definition when parent node is of definition class", async () => {
+  it("returns instance node children definition when parent node matches predicate", async () => {
     const rootNode = createParentNode({
       key: {
         type: "instances",
@@ -115,10 +115,11 @@ describe("createClassBasedHierarchyDefinition", () => {
     classHierarchyInspector.stubEntityClass({ schemaName: "TestSchema", className: "DerivedFromX", is: async (other) => other === "TestSchema.ClassX" });
     classHierarchyInspector.stubEntityClass({ schemaName: "TestSchema", className: "UnrelatedClass", is: async () => false });
 
-    const def1: HierarchyLevelDefinition = [createCustomNodeDefinition({ node: createTestParsedCustomNode({ label: "1" }) })];
-    const def2: HierarchyLevelDefinition = [createCustomNodeDefinition({ node: createTestParsedCustomNode({ label: "2" }) })];
-    const def3: HierarchyLevelDefinition = [createCustomNodeDefinition({ node: createTestParsedCustomNode({ label: "3" }) })];
-    const def4: HierarchyLevelDefinition = [createCustomNodeDefinition({ node: createTestParsedCustomNode({ label: "4" }) })];
+    const def1: HierarchyLevelDefinition = [createGenericNodeDefinition({ node: createTestParsedGenericNode({ label: "1" }) })];
+    const def2: HierarchyLevelDefinition = [createGenericNodeDefinition({ node: createTestParsedGenericNode({ label: "2" }) })];
+    const def3: HierarchyLevelDefinition = [createGenericNodeDefinition({ node: createTestParsedGenericNode({ label: "3" }) })];
+    const def4: HierarchyLevelDefinition = [createGenericNodeDefinition({ node: createTestParsedGenericNode({ label: "4" }) })];
+    const def5: HierarchyLevelDefinition = [createGenericNodeDefinition({ node: createTestParsedGenericNode({ label: "5" }) })];
 
     const factory = createClassBasedHierarchyDefinition({
       classHierarchyInspector,
@@ -127,35 +128,40 @@ describe("createClassBasedHierarchyDefinition", () => {
         childNodes: [
           // not an instance node def - skip
           {
-            customParentNodeKey: "custom-node",
+            parentGenericNodePredicate: async (key) => key.id === "custom-node",
             definitions: async () => def1,
           },
           // def for base class - should be included
           {
-            parentNodeClassName: "TestSchema.BaseOfX",
+            parentInstancesNodePredicate: "TestSchema.BaseOfX",
             definitions: async () => def2,
           },
           // def for derived class - should not be included
           {
-            parentNodeClassName: "TestSchema.DerivedFromX",
+            parentInstancesNodePredicate: "TestSchema.DerivedFromX",
             definitions: async () => def3,
           },
           // def for unrelated class - should not be included
           {
-            parentNodeClassName: "TestSchema.UnrelatedClass",
+            parentInstancesNodePredicate: "TestSchema.UnrelatedClass",
             definitions: async () => def4,
           },
           // def for base class - should be included, but the list is empty
           {
-            parentNodeClassName: "TestSchema.BaseOfX",
+            parentInstancesNodePredicate: "TestSchema.BaseOfX",
             definitions: async () => [],
+          },
+          // def for matching predicate - should be included
+          {
+            parentInstancesNodePredicate: async () => true,
+            definitions: async () => def5,
           },
         ],
       },
     });
 
     const result = await factory.defineHierarchyLevel({ parentNode: rootNode });
-    expect(result).to.deep.eq([...def2]);
+    expect(result).to.deep.eq([...def2, ...def5]);
   });
 
   it("uses all parent instance node's instance IDs when creating child hierarchy level", async () => {
@@ -178,7 +184,7 @@ describe("createClassBasedHierarchyDefinition", () => {
         rootNodes: async () => [],
         childNodes: [
           {
-            parentNodeClassName: "TestSchema.ClassX",
+            parentInstancesNodePredicate: "TestSchema.ClassX",
             definitions: spy,
           },
         ],
@@ -215,11 +221,11 @@ describe("createClassBasedHierarchyDefinition", () => {
         rootNodes: async () => [],
         childNodes: [
           {
-            parentNodeClassName: derivedClassName,
+            parentInstancesNodePredicate: derivedClassName,
             definitions: derivedClassDefs,
           },
           {
-            parentNodeClassName: baseClassName,
+            parentInstancesNodePredicate: baseClassName,
             definitions: baseClassDefs,
             onlyIfNotHandled: true,
           },
@@ -228,7 +234,11 @@ describe("createClassBasedHierarchyDefinition", () => {
     });
 
     await factory.defineHierarchyLevel({ parentNode: rootNode });
-    expect(derivedClassDefs).to.be.calledOnceWithExactly({ parentNodeClassName: "TestSchema.ClassX", parentNodeInstanceIds: ["0x1"], parentNode: rootNode });
+    expect(derivedClassDefs).to.be.calledOnceWithExactly({
+      parentNodeClassName: "TestSchema.ClassX",
+      parentNodeInstanceIds: ["0x1"],
+      parentNode: rootNode,
+    });
     expect(baseClassDefs).not.to.be.called;
 
     factory = createClassBasedHierarchyDefinition({
@@ -237,11 +247,11 @@ describe("createClassBasedHierarchyDefinition", () => {
         rootNodes: async () => [],
         childNodes: [
           {
-            parentNodeClassName: "",
+            parentInstancesNodePredicate: "",
             definitions: async () => [],
           },
           {
-            parentNodeClassName: baseClassName,
+            parentInstancesNodePredicate: baseClassName,
             definitions: baseClassDefs,
             onlyIfNotHandled: true,
           },
@@ -250,22 +260,26 @@ describe("createClassBasedHierarchyDefinition", () => {
     });
 
     await factory.defineHierarchyLevel({ parentNode: rootNode });
-    expect(baseClassDefs).to.be.calledOnceWithExactly({ parentNodeClassName: "TestSchema.ClassX", parentNodeInstanceIds: ["0x1"], parentNode: rootNode });
+    expect(baseClassDefs).to.be.calledOnceWithExactly({
+      parentNodeClassName: "TestSchema.ClassX",
+      parentNodeInstanceIds: ["0x1"],
+      parentNode: rootNode,
+    });
   });
 });
 
 function createParentNode(src: Partial<NonNullable<DefineHierarchyLevelProps["parentNode"]>>) {
   return {
     label: "test",
-    key: "test",
+    key: createTestGenericNodeKey(),
     parentKeys: [],
     ...src,
   };
 }
 
-function createCustomNodeDefinition(props?: Partial<CustomHierarchyNodeDefinition>): CustomHierarchyNodeDefinition {
+function createGenericNodeDefinition(props?: Partial<GenericHierarchyNodeDefinition>): GenericHierarchyNodeDefinition {
   return {
-    node: createTestParsedCustomNode(),
+    node: createTestParsedGenericNode(),
     ...props,
   };
 }

@@ -8,7 +8,7 @@ import { Subject } from "@itwin/core-backend";
 import { Id64String } from "@itwin/core-bentley";
 import { IModel } from "@itwin/core-common";
 import { IModelConnection } from "@itwin/core-frontend";
-import { createNodesQueryClauseFactory, HierarchyDefinition, HierarchyNode } from "@itwin/presentation-hierarchies";
+import { createNodesQueryClauseFactory, GenericNodeKey, HierarchyDefinition, HierarchyNode, HierarchyNodeKey } from "@itwin/presentation-hierarchies";
 import { createBisInstanceLabelSelectClauseFactory, ECSqlBinding, InstanceKey } from "@itwin/presentation-shared";
 import { buildIModel, importSchema, withECDb } from "../IModelUtils";
 import { initialize, terminate } from "../IntegrationTests";
@@ -64,7 +64,7 @@ describe("Hierarchies", () => {
               return [
                 {
                   node: {
-                    key: "custom",
+                    key: { type: "generic", id: "custom" },
                     label: "custom",
                     children: undefined,
                     extendedData: {
@@ -74,7 +74,7 @@ describe("Hierarchies", () => {
                 },
               ];
             }
-            if (HierarchyNode.isCustom(parentNode)) {
+            if (HierarchyNode.isGeneric(parentNode)) {
               return [
                 {
                   fullClassName: subjectClassName,
@@ -101,7 +101,7 @@ describe("Hierarchies", () => {
           provider: createProvider({
             imodel,
             hierarchy,
-            filteredNodePaths: [{ path: [keys.rootSubject, { key: "custom" }, keys.childSubject2], options: { autoExpand: true } }],
+            filteredNodePaths: [{ path: [keys.rootSubject, { type: "generic", id: "custom" }, keys.childSubject2], options: { autoExpand: true } }],
           }),
           expect: [
             NodeValidators.createForInstanceNode({
@@ -109,7 +109,7 @@ describe("Hierarchies", () => {
               autoExpand: true,
               isFilterTarget: false,
               children: [
-                NodeValidators.createForCustomNode({
+                NodeValidators.createForGenericNode({
                   key: "custom",
                   autoExpand: true,
                   isFilterTarget: false,
@@ -161,14 +161,14 @@ describe("Hierarchies", () => {
               return [
                 {
                   node: {
-                    key: "custom1",
+                    key: { type: "generic", id: "custom1" },
                     label: "custom1",
                     children: undefined,
                   },
                 },
                 {
                   node: {
-                    key: "custom2",
+                    key: { type: "generic", id: "custom2" },
                     label: "custom2",
                     children: undefined,
                   },
@@ -180,14 +180,18 @@ describe("Hierarchies", () => {
         };
 
         await validateHierarchy({
-          provider: createProvider({ imodel, hierarchy, filteredNodePaths: [{ path: [keys.rootSubject, { key: "custom2" }], options: { autoExpand: true } }] }),
+          provider: createProvider({
+            imodel,
+            hierarchy,
+            filteredNodePaths: [{ path: [keys.rootSubject, { type: "generic", id: "custom2" }], options: { autoExpand: true } }],
+          }),
           expect: [
             NodeValidators.createForInstanceNode({
               instanceKeys: [keys.rootSubject],
               autoExpand: true,
               isFilterTarget: false,
               children: [
-                NodeValidators.createForCustomNode({
+                NodeValidators.createForGenericNode({
                   key: "custom2",
                   autoExpand: false,
                   isFilterTarget: true,
@@ -236,7 +240,7 @@ describe("Hierarchies", () => {
               return [
                 {
                   node: {
-                    key: "custom",
+                    key: { type: "generic", id: "custom" },
                     label: "custom",
                     children: undefined,
                     processingParams: {
@@ -249,7 +253,7 @@ describe("Hierarchies", () => {
                 },
               ];
             }
-            if (HierarchyNode.isCustom(parentNode)) {
+            if (HierarchyNode.isGeneric(parentNode)) {
               return [
                 {
                   fullClassName: subjectClassName,
@@ -276,7 +280,7 @@ describe("Hierarchies", () => {
           provider: createProvider({
             imodel,
             hierarchy,
-            filteredNodePaths: [{ path: [keys.rootSubject, { key: "custom" }, keys.childSubject2], options: { autoExpand: true } }],
+            filteredNodePaths: [{ path: [keys.rootSubject, { type: "generic", id: "custom" }, keys.childSubject2], options: { autoExpand: true } }],
           }),
           expect: [
             NodeValidators.createForInstanceNode({
@@ -333,7 +337,7 @@ describe("Hierarchies", () => {
               return [
                 {
                   node: {
-                    key: "custom",
+                    key: { type: "generic", id: "custom" },
                     label: "custom",
                     children: undefined,
                     processingParams: {
@@ -346,7 +350,7 @@ describe("Hierarchies", () => {
                 },
               ];
             }
-            if (HierarchyNode.isCustom(parentNode)) {
+            if (HierarchyNode.isGeneric(parentNode)) {
               return [
                 {
                   fullClassName: subjectClassName,
@@ -370,7 +374,7 @@ describe("Hierarchies", () => {
         };
 
         await validateHierarchy({
-          provider: createProvider({ imodel, hierarchy, filteredNodePaths: [[keys.rootSubject, { key: "custom" }]] }),
+          provider: createProvider({ imodel, hierarchy, filteredNodePaths: [[keys.rootSubject, { type: "generic", id: "custom" }]] }),
           expect: [
             NodeValidators.createForInstanceNode({
               instanceKeys: [keys.rootSubject],
@@ -690,7 +694,7 @@ describe("Hierarchies", () => {
           imodelAccess,
           instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
         });
-        const rootNodeKey = "root-node";
+        const rootNodeKey: GenericNodeKey = { type: "generic", id: "root-node" };
         const hierarchy: HierarchyDefinition = {
           defineHierarchyLevel: async (props) => {
             if (!props.parentNode) {
@@ -721,7 +725,7 @@ describe("Hierarchies", () => {
             imodel,
             hierarchy,
             filteredNodePaths: keys.elements.map((elementKey) => ({
-              path: [{ key: rootNodeKey }, elementKey],
+              path: [rootNodeKey, elementKey],
               options: {
                 autoExpand: {
                   key: { type: "class-grouping", className: keys.elements[0].className },
@@ -731,7 +735,7 @@ describe("Hierarchies", () => {
             })),
           }),
           expect: [
-            NodeValidators.createForCustomNode({
+            NodeValidators.createForGenericNode({
               key: rootNodeKey,
               autoExpand: true,
               children: [
@@ -762,13 +766,12 @@ describe("Hierarchies", () => {
           imodelAccess,
           instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
         });
-        const rootNodeKey = "root-node";
+        const rootNodeKey: GenericNodeKey = { type: "generic", id: "root-node" };
         const hierarchy: HierarchyDefinition = {
           defineHierarchyLevel: async ({ parentNode }) => {
             if (!parentNode) {
               return [{ node: { key: rootNodeKey, label: "Root" } }];
             }
-
             return [
               {
                 fullClassName: "BisCore.PhysicalElement",
@@ -781,9 +784,9 @@ describe("Hierarchies", () => {
                       grouping: { byClass: true },
                     })}
                     FROM BisCore.PhysicalElement this
-                    WHERE this.Parent.Id ${typeof parentNode.key === "string" ? "IS NULL" : "= ?"}
+                    WHERE this.Parent.Id ${HierarchyNodeKey.isGeneric(parentNode.key) ? "IS NULL" : "= ?"}
                   `,
-                  bindings: typeof parentNode.key === "string" ? undefined : [{ type: "id", value: parentNode.key.instanceKeys[0].id }],
+                  bindings: HierarchyNodeKey.isGeneric(parentNode.key) ? undefined : [{ type: "id", value: parentNode.key.instanceKeys[0].id }],
                 },
               },
             ];
@@ -796,7 +799,7 @@ describe("Hierarchies", () => {
             hierarchy,
             filteredNodePaths: [
               {
-                path: [{ key: rootNodeKey }, keys.rootElement, keys.middleElement, keys.childElement],
+                path: [rootNodeKey, keys.rootElement, keys.middleElement, keys.childElement],
                 options: {
                   autoExpand: {
                     key: { type: "class-grouping", className: keys.childElement.className },
@@ -807,7 +810,7 @@ describe("Hierarchies", () => {
             ],
           }),
           expect: [
-            NodeValidators.createForCustomNode({
+            NodeValidators.createForGenericNode({
               key: rootNodeKey,
               autoExpand: true,
               children: [
@@ -864,7 +867,7 @@ describe("Hierarchies", () => {
           imodelAccess,
           instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
         });
-        const rootNodeKey = "root-node";
+        const rootNodeKey: GenericNodeKey = { type: "generic", id: "root-node" };
         const hierarchy: HierarchyDefinition = {
           defineHierarchyLevel: async (props) => {
             if (!props.parentNode) {
@@ -895,9 +898,9 @@ describe("Hierarchies", () => {
             imodel,
             hierarchy,
             filteredNodePaths: [
-              { path: [{ key: rootNodeKey }, keys.elements[0]], options: { autoExpand: true } },
+              { path: [rootNodeKey, keys.elements[0]], options: { autoExpand: true } },
               ...keys.elements.map((elementKey) => ({
-                path: [{ key: rootNodeKey }, elementKey],
+                path: [rootNodeKey, elementKey],
                 options: {
                   autoExpand: {
                     key: { type: "class-grouping" as const, className: elementKey.className },
@@ -908,7 +911,7 @@ describe("Hierarchies", () => {
             ],
           }),
           expect: [
-            NodeValidators.createForCustomNode({
+            NodeValidators.createForGenericNode({
               key: rootNodeKey,
               autoExpand: true,
               children: [
@@ -933,7 +936,7 @@ describe("Hierarchies", () => {
       });
 
       describe("nested grouping nodes of different types", async function () {
-        const rootNodeKey = "root-node";
+        const rootNodeKey: GenericNodeKey = { type: "generic", id: "root-node" };
         let hierarchy: HierarchyDefinition;
         let imodel: IModelConnection;
         let elementKey: InstanceKey;
@@ -1019,13 +1022,13 @@ describe("Hierarchies", () => {
               hierarchy,
               filteredNodePaths: [
                 {
-                  path: [{ key: rootNodeKey }, elementKey],
+                  path: [rootNodeKey, elementKey],
                   options: { autoExpand: autoExpandOptions },
                 },
               ],
             }),
             expect: [
-              NodeValidators.createForCustomNode({
+              NodeValidators.createForGenericNode({
                 key: rootNodeKey,
                 autoExpand: true,
                 children: [
@@ -1069,13 +1072,13 @@ describe("Hierarchies", () => {
               hierarchy,
               filteredNodePaths: [
                 {
-                  path: [{ key: rootNodeKey }, elementKey],
+                  path: [rootNodeKey, elementKey],
                   options: { autoExpand: autoExpandOptions },
                 },
               ],
             }),
             expect: [
-              NodeValidators.createForCustomNode({
+              NodeValidators.createForGenericNode({
                 key: rootNodeKey,
                 autoExpand: true,
                 children: [
@@ -1119,13 +1122,13 @@ describe("Hierarchies", () => {
               hierarchy,
               filteredNodePaths: [
                 {
-                  path: [{ key: rootNodeKey }, elementKey],
+                  path: [rootNodeKey, elementKey],
                   options: { autoExpand: autoExpandOptions },
                 },
               ],
             }),
             expect: [
-              NodeValidators.createForCustomNode({
+              NodeValidators.createForGenericNode({
                 key: rootNodeKey,
                 autoExpand: true,
                 children: [
@@ -1165,13 +1168,13 @@ describe("Hierarchies", () => {
               hierarchy,
               filteredNodePaths: [
                 {
-                  path: [{ key: rootNodeKey }, elementKey],
+                  path: [rootNodeKey, elementKey],
                   options: { autoExpand: true },
                 },
               ],
             }),
             expect: [
-              NodeValidators.createForCustomNode({
+              NodeValidators.createForGenericNode({
                 key: rootNodeKey,
                 autoExpand: true,
                 children: [

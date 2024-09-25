@@ -6,7 +6,7 @@
 import { expect } from "chai";
 import { GetHierarchyNodesProps } from "../../hierarchies/HierarchyProvider";
 import { HierarchyCache } from "../../hierarchies/imodel/HierarchyCache";
-import { createTestProcessedCustomNode } from "../Utils";
+import { createTestGenericNodeKey, createTestProcessedGenericNode } from "../Utils";
 
 describe("HierarchyCache", () => {
   it("returns `undefined` when cache is empty", () => {
@@ -17,7 +17,7 @@ describe("HierarchyCache", () => {
 
   it("returns `undefined` for non-existing entry", () => {
     const cache = new HierarchyCache<string>({ size: 1 });
-    cache.set({ parentNode: createTestProcessedCustomNode() }, "test");
+    cache.set({ parentNode: createTestProcessedGenericNode() }, "test");
     const result = cache.get({ parentNode: undefined });
     expect(result).to.be.undefined;
   });
@@ -42,9 +42,9 @@ describe("HierarchyCache", () => {
 
   it("clears recently used entries", () => {
     const cache = new HierarchyCache<string>({ size: 1 });
-    const props1 = { parentNode: createTestProcessedCustomNode({ key: "1" }) };
+    const props1 = { parentNode: createTestProcessedGenericNode({ key: createTestGenericNodeKey({ id: "1" }) }) };
     const value1 = "value 1";
-    const props2 = { parentNode: createTestProcessedCustomNode({ key: "2" }) };
+    const props2 = { parentNode: createTestProcessedGenericNode({ key: createTestGenericNodeKey({ id: "2" }) }) };
     const value2 = "value 2";
 
     cache.set(props1, value1);
@@ -60,7 +60,7 @@ describe("HierarchyCache", () => {
     it("returns `undefined` for non-existing variation based on instance filter", () => {
       const cache = new HierarchyCache<string>({ size: 1 });
 
-      const primaryProps = { parentNode: createTestProcessedCustomNode() };
+      const primaryProps = { parentNode: createTestProcessedGenericNode() };
       cache.set(primaryProps, "primary");
 
       const variationProps: GetHierarchyNodesProps = {
@@ -74,7 +74,7 @@ describe("HierarchyCache", () => {
     it("returns existing variation based on instance filter", () => {
       const cache = new HierarchyCache<string>({ size: 1 });
 
-      const primaryProps = { parentNode: createTestProcessedCustomNode() };
+      const primaryProps = { parentNode: createTestProcessedGenericNode() };
       cache.set(primaryProps, "primary");
 
       const variationProps = {
@@ -91,7 +91,7 @@ describe("HierarchyCache", () => {
     it("returns `undefined` for non-existing variation based on hierarchy level size limit", () => {
       const cache = new HierarchyCache<string>({ size: 1 });
 
-      const primaryProps = { parentNode: createTestProcessedCustomNode() };
+      const primaryProps = { parentNode: createTestProcessedGenericNode() };
       cache.set(primaryProps, "primary");
 
       const variationProps: GetHierarchyNodesProps = {
@@ -105,7 +105,7 @@ describe("HierarchyCache", () => {
     it("returns existing variation based on hierarchy level size limit", () => {
       const cache = new HierarchyCache<string>({ size: 1 });
 
-      const primaryProps = { parentNode: createTestProcessedCustomNode() };
+      const primaryProps = { parentNode: createTestProcessedGenericNode() };
       cache.set(primaryProps, "primary");
 
       const variationProps = {

@@ -11,7 +11,7 @@ export function createNodeId(node: Pick<HierarchyNode, "key" | "parentKeys">) {
 }
 
 function serializeNodeKey(key: HierarchyNodeKey): string {
-  return HierarchyNodeKey.isCustom(key) ? key : convertObjectValuesToString(key);
+  return convertObjectValuesToString(key);
 }
 
 function convertObjectValuesToString(obj: object): string {

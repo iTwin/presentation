@@ -8,9 +8,9 @@ import { createNodeId, sameNodes } from "../../presentation-hierarchies-react/in
 import { createTestGroupingNode, createTestHierarchyNode } from "../TestUtils";
 
 describe("createNodeId", () => {
-  it("creates id for `custom` node", () => {
-    const node = createTestHierarchyNode({ id: "custom", key: "custom" });
-    expect(createNodeId(node)).to.be.eq("custom");
+  it("creates id for `generic` node", () => {
+    const node = createTestHierarchyNode({ id: "custom", key: { type: "generic", id: "custom", source: "s" } });
+    expect(createNodeId(node)).to.be.eq("generic,custom,s");
   });
 
   it("creates id for `instances` node", () => {
@@ -82,9 +82,9 @@ describe("createNodeId", () => {
 });
 
 describe("sameNodes", () => {
-  it("compares same `custom` nodes", () => {
-    const lhs = createTestHierarchyNode({ id: "lhs", key: "custom" });
-    const rhs = createTestHierarchyNode({ id: "rhs", key: "custom" });
+  it("compares same `generic` nodes", () => {
+    const lhs = createTestHierarchyNode({ id: "lhs", key: { type: "generic", id: "custom", source: "s" } });
+    const rhs = createTestHierarchyNode({ id: "rhs", key: { type: "generic", id: "custom", source: "s" } });
     expect(sameNodes(lhs, rhs)).to.be.true;
   });
 

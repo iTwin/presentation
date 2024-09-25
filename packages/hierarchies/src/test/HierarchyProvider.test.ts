@@ -9,26 +9,30 @@ import sinon from "sinon";
 import { InstanceKey } from "@itwin/presentation-shared";
 import { NonGroupingHierarchyNode } from "../hierarchies/HierarchyNode";
 import { HierarchyProvider, mergeProviders } from "../hierarchies/HierarchyProvider";
-import { createTestCustomNode } from "./Utils";
+import { createTestGenericNode, createTestGenericNodeKey } from "./Utils";
 
 describe("mergeProviders", () => {
   it("returns nodes from all providers", async () => {
     const providers = [
       createTestProvider({
         nodes: [
-          { key: "1", label: "1" },
-          { key: "x", label: "x" },
+          createTestGenericNode({ key: createTestGenericNodeKey({ id: "1", source: "s1" }), label: "1" }),
+          createTestGenericNode({ key: createTestGenericNodeKey({ id: "x", source: "s1" }), label: "x" }),
         ],
       }),
       createTestProvider({
-        nodes: [{ key: "2", label: "2" }],
+        nodes: [
+          createTestGenericNode({ key: createTestGenericNodeKey({ id: "2", source: "s2" }), label: "2" }),
+          createTestGenericNode({ key: createTestGenericNodeKey({ id: "x", source: "s2" }), label: "x" }),
+        ],
       }),
     ];
     const mergedProvider = mergeProviders({ providers });
     expect(await collect(mergedProvider.getNodes({ parentNode: undefined }))).to.deep.eq([
-      createTestCustomNode({ key: "1", label: "1" }),
-      createTestCustomNode({ key: "2", label: "2" }),
-      createTestCustomNode({ key: "x", label: "x" }),
+      createTestGenericNode({ key: createTestGenericNodeKey({ id: "1", source: "s1" }), label: "1" }),
+      createTestGenericNode({ key: createTestGenericNodeKey({ id: "2", source: "s2" }), label: "2" }),
+      createTestGenericNode({ key: createTestGenericNodeKey({ id: "x", source: "s2" }), label: "x" }),
+      createTestGenericNode({ key: createTestGenericNodeKey({ id: "x", source: "s1" }), label: "x" }),
     ]);
     providers.forEach((provider) => expect(provider.getNodes.callCount).to.eq(1));
   });
@@ -86,7 +90,7 @@ function createTestProvider(props?: { nodes?: Partial<NonGroupingHierarchyNode>[
   return {
     getNodes: sinon
       .stub<Parameters<HierarchyProvider["getNodes"]>>()
-      .callsFake(() => createAsyncIterator(nodes.map((partial) => createTestCustomNode(partial)))),
+      .callsFake(() => createAsyncIterator(nodes.map((partial) => createTestGenericNode(partial)))),
     getNodeInstanceKeys: sinon.stub<Parameters<HierarchyProvider["getNodeInstanceKeys"]>>().callsFake(() => createAsyncIterator(instanceKeys)),
     setFormatter: sinon.stub(),
     setHierarchyFilter: sinon.stub(),

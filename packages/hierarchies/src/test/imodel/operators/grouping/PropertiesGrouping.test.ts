@@ -9,7 +9,13 @@ import { createDefaultValueFormatter, EC, IPrimitiveValueFormatter } from "@itwi
 import { GroupingNodeKey, PropertyOtherValuesGroupingNodeKey } from "../../../../hierarchies/HierarchyNodeKey";
 import { HierarchyNodePropertyGroup } from "../../../../hierarchies/imodel/IModelHierarchyNode";
 import * as propertiesGrouping from "../../../../hierarchies/imodel/operators/grouping/PropertiesGrouping";
-import { createIModelAccessStub, createTestProcessedGroupingNode, createTestProcessedInstanceNode, testLocalizedStrings } from "../../../Utils";
+import {
+  createIModelAccessStub,
+  createTestGenericNodeKey,
+  createTestProcessedGroupingNode,
+  createTestProcessedInstanceNode,
+  testLocalizedStrings,
+} from "../../../Utils";
 
 describe("PropertiesGrouping", () => {
   let imodelAccess: ReturnType<typeof createIModelAccessStub>;
@@ -954,11 +960,11 @@ describe("PropertiesGrouping", () => {
         });
       });
 
-      it("groups node into property value grouping node, when property value isn't set and createGroupForUnspecifiedValues is true", async () => {
+      it("groups node into property value grouping node, when property value isn't set and `createGroupForUnspecifiedValues` is true", async () => {
         const nodes = [
           createTestProcessedInstanceNode({
             key: { type: "instances", instanceKeys: [{ className: "TestSchema.Class", id: "0x1" }] },
-            parentKeys: ["x"],
+            parentKeys: [createTestGenericNodeKey({ id: "x" })],
             processingParams: {
               grouping: {
                 byProperties: {
@@ -999,9 +1005,9 @@ describe("PropertiesGrouping", () => {
             createTestProcessedGroupingNode({
               label: testLocalizedStrings.unspecified,
               key: expectedGroupingNodeKey,
-              parentKeys: ["x"],
+              parentKeys: [createTestGenericNodeKey({ id: "x" })],
               groupedInstanceKeys: nodes.flatMap((n) => n.key.instanceKeys),
-              children: nodes.map((n) => ({ ...n, parentKeys: ["x", expectedGroupingNodeKey] })),
+              children: nodes.map((n) => ({ ...n, parentKeys: [createTestGenericNodeKey({ id: "x" }), expectedGroupingNodeKey] })),
             }),
           ],
           ungrouped: [],

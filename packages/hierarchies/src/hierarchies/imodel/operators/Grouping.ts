@@ -176,7 +176,7 @@ function groupInstanceNodes(
           return;
         }
         // not sure why type checker doesn't pick this up
-        assert(HierarchyNode.isCustom(parentNode) || HierarchyNode.isInstancesNode(parentNode));
+        assert(HierarchyNode.isGeneric(parentNode) || HierarchyNode.isInstancesNode(parentNode));
         groupingNode.nonGroupingAncestor = parentNode;
       });
       return mergeInPlace<ProcessedGroupingHierarchyNode | ProcessedInstanceHierarchyNode>(result.grouped, result.ungrouped);
