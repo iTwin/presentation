@@ -55,7 +55,7 @@ const hierarchyDefinition: HierarchyDefinition = {
 
 However, it also has 3 optional functions that may be implemented to provide additional functionality:
 
-- `parseNode` takes a single ECSQL result row and returns a `ParsedInstanceHierarchyNode` object. The [custom parsing section](#custom-parsing) provides more details on how to use this function.
+- `parseNode` takes a single ECSQL result row and returns a `SourceInstanceHierarchyNode` object. The [custom parsing section](#custom-parsing) provides more details on how to use this function.
 - `preProcessNode` takes a single node before hiding/grouping/sorting is performed and gets a chance to modify it or return `undefined` to remove it from hierarchy altogether. The [custom pre-processing section](#custom-pre-processing) provides more details on how to use this function.
 - `postProcessNode` takes a single node after hiding/grouping/sorting is performed and gets a chance to modify it. The [custom post-processing section](#custom-post-processing) provides more details on how to use this function.
 
@@ -67,7 +67,7 @@ While consumers are free to create their own `HierarchyDefinition` implementatio
 
 By default, it's expected that the nodes' SELECT clause is created using `NodesQueryClauseFactory.createSelectClause` and then specifying `parseNode` callback in the hierarchy definition is not necessary, as the default parser knows how parse ECSQL rows.
 
-However, some hierarchy definitions may choose to write SELECT clause manually and then they need to provide a custom `parseNode` callback to parse the ECSQL result row into a `ParsedInstanceHierarchyNode` object. Example:
+However, some hierarchy definitions may choose to write SELECT clause manually and then they need to provide a custom `parseNode` callback to parse the ECSQL result row into a `SourceInstanceHierarchyNode` object. Example:
 
 <!-- [[include: [Presentation.Hierarchies.HierarchyDefinitions.Imports, Presentation.Hierarchies.HierarchyDefinitions.ParseNode], ts]] -->
 <!-- BEGIN EXTRACTION -->

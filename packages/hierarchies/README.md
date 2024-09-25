@@ -35,7 +35,7 @@ A `HierarchyNode` interface in the package represents a single node in a hierarc
 
 A `HierarchyNode` goes through several stages throughout its lifetime:
 
-1. A node starts its life as a `ParsedHierarchyNode` when it's initially parsed from ECSQL query results or returned by a [hierarchy definition](#hierarchy-definition) as a custom node. This variation has no information about its ancestors (position in the hierarchy) and may have unformatted label. Parsed nodes may only be custom or instances nodes.
+1. A node starts its life as a `SourceHierarchyNode` when it's initially parsed from ECSQL query results or returned by a [hierarchy definition](#hierarchy-definition) as a generic node. This variation has no information about its ancestors (position in the hierarchy) and may have unformatted label. Source nodes may only be generic or instances nodes.
 
 2. A node becomes a `ProcessedHierarchyNode` as soon as it starts being processed by a [hierarchy provider](#hierarchy-provider). During the processing, provider assigns a formatted label, handles node hiding, grouping, sorting and other operations. A [hierarchy definition](#hierarchy-definition) gets a chance to step into the process as well. In case of grouping, new grouping nodes may be created.
 

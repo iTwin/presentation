@@ -37,7 +37,6 @@ beta;type;NodePreProcessor
 beta;enum;NodeSelectClauseColumnNames
 beta;interface;NodesQueryClauseFactory
 beta;interface;NonGroupingHierarchyNode
-beta;type;ParsedHierarchyNode
 beta;type;ProcessedHierarchyNode
 beta;namespace;ProcessedHierarchyNode
 beta;type;PropertyGroupingNodeKey
@@ -46,3 +45,4 @@ beta;interface;PropertyValueGroupingNodeKey
 beta;interface;PropertyValueRangeGroupingNodeKey
 beta;class;RowsLimitExceededError
 beta;function;setLogger
+beta;type;SourceHierarchyNode

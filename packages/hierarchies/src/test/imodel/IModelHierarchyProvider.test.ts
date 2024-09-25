@@ -19,12 +19,12 @@ import {
   ECSQL_COLUMN_NAME_IsFilterTarget,
 } from "../../hierarchies/imodel/FilteringHierarchyDefinition";
 import { DefineHierarchyLevelProps, HierarchyDefinition, NodeParser } from "../../hierarchies/imodel/IModelHierarchyDefinition";
-import { ParsedInstanceHierarchyNode, ProcessedHierarchyNode } from "../../hierarchies/imodel/IModelHierarchyNode";
+import { ProcessedHierarchyNode, SourceInstanceHierarchyNode } from "../../hierarchies/imodel/IModelHierarchyNode";
 import { createIModelHierarchyProvider } from "../../hierarchies/imodel/IModelHierarchyProvider";
 import { LimitingECSqlQueryExecutor } from "../../hierarchies/imodel/LimitingECSqlQueryExecutor";
 import { NodeSelectClauseColumnNames, NodesQueryClauseFactory } from "../../hierarchies/imodel/NodeSelectQueryFactory";
 import { RowDef } from "../../hierarchies/imodel/TreeNodesReader";
-import { createIModelAccessStub, createTestGenericNode, createTestGenericNodeKey, createTestParsedGenericNode } from "../Utils";
+import { createIModelAccessStub, createTestGenericNode, createTestGenericNodeKey, createTestSourceGenericNode } from "../Utils";
 
 describe("createIModelHierarchyProvider", () => {
   let imodelAccess: ReturnType<typeof createIModelAccessStub> & {
@@ -48,7 +48,7 @@ describe("createIModelHierarchyProvider", () => {
   });
 
   it("loads root generic nodes", async () => {
-    const node = createTestParsedGenericNode();
+    const node = createTestSourceGenericNode();
     const provider = createIModelHierarchyProvider({
       imodelAccess,
       hierarchyDefinition: {
@@ -116,7 +116,7 @@ describe("createIModelHierarchyProvider", () => {
 
   it("loads child nodes", async () => {
     const rootNode = createTestGenericNode({ key: createTestGenericNodeKey({ id: "root" }) });
-    const childNode = createTestParsedGenericNode({ key: createTestGenericNodeKey({ id: "child" }) });
+    const childNode = createTestSourceGenericNode({ key: createTestGenericNodeKey({ id: "child" }) });
     const provider = createIModelHierarchyProvider({
       imodelAccess,
       hierarchyDefinition: {
@@ -152,7 +152,7 @@ describe("createIModelHierarchyProvider", () => {
 
   describe("Custom parsing", async () => {
     it("calls hierarchy definition factory parser if supplied", async () => {
-      const node: ParsedInstanceHierarchyNode = {
+      const node: SourceInstanceHierarchyNode = {
         key: { type: "instances", instanceKeys: [{ className: "a.b", id: "0x123" }] },
         label: "test",
         children: false,
@@ -199,7 +199,7 @@ describe("createIModelHierarchyProvider", () => {
       }
       public async defineHierarchyLevel({ parentNode }: DefineHierarchyLevelProps) {
         if (!parentNode) {
-          return [{ node: createTestParsedGenericNode() }];
+          return [{ node: createTestSourceGenericNode() }];
         }
         return [];
       }
@@ -207,7 +207,7 @@ describe("createIModelHierarchyProvider", () => {
 
     describe("Pre-processing", async () => {
       it("calls hierarchy definition factory pre-processor if supplied", async () => {
-        const node = createTestParsedGenericNode();
+        const node = createTestSourceGenericNode();
         // const preprocess = sinon.stub().resolves({ ...node, isPreprocessed: true });
         const provider = createIModelHierarchyProvider({
           imodelAccess,
@@ -232,7 +232,7 @@ describe("createIModelHierarchyProvider", () => {
       });
 
       it("removes node from hierarchy if pre-processor returns `undefined`", async () => {
-        const node = createTestParsedGenericNode();
+        const node = createTestSourceGenericNode();
         const preprocess = sinon.stub().resolves(undefined);
         const provider = createIModelHierarchyProvider({
           imodelAccess,
@@ -269,7 +269,7 @@ describe("createIModelHierarchyProvider", () => {
 
     describe("Post-processing", async () => {
       it("calls hierarchy definition factory post-processor if supplied", async () => {
-        const node = createTestParsedGenericNode();
+        const node = createTestSourceGenericNode();
         const postprocess = sinon.stub().resolves({ ...node, isPostprocessed: true });
         const provider = createIModelHierarchyProvider({
           imodelAccess,
@@ -295,7 +295,7 @@ describe("createIModelHierarchyProvider", () => {
       });
 
       it("removes node from hierarchy if post-processor returns `undefined`", async () => {
-        const node = createTestParsedGenericNode();
+        const node = createTestSourceGenericNode();
         const postprocess = sinon.stub().resolves(undefined);
         const provider = createIModelHierarchyProvider({
           imodelAccess,
@@ -395,8 +395,8 @@ describe("createIModelHierarchyProvider", () => {
 
   describe("Hiding hierarchy levels", () => {
     it("hides root hierarchy level", async () => {
-      const rootNode = createTestParsedGenericNode({ key: createTestGenericNodeKey({ id: "root" }), processingParams: { hideInHierarchy: true } });
-      const childNode = createTestParsedGenericNode({ key: createTestGenericNodeKey({ id: "visible child" }) });
+      const rootNode = createTestSourceGenericNode({ key: createTestGenericNodeKey({ id: "root" }), processingParams: { hideInHierarchy: true } });
+      const childNode = createTestSourceGenericNode({ key: createTestGenericNodeKey({ id: "visible child" }) });
       const provider = createIModelHierarchyProvider({
         imodelAccess,
         hierarchyDefinition: {
@@ -416,12 +416,12 @@ describe("createIModelHierarchyProvider", () => {
     });
 
     it("determines children when immediate child node is hidden", async () => {
-      const rootNode = createTestParsedGenericNode({ key: createTestGenericNodeKey({ id: "root" }) });
-      const hiddenChildNode = createTestParsedGenericNode({
+      const rootNode = createTestSourceGenericNode({ key: createTestGenericNodeKey({ id: "root" }) });
+      const hiddenChildNode = createTestSourceGenericNode({
         key: createTestGenericNodeKey({ id: "hidden child" }),
         processingParams: { hideInHierarchy: true },
       });
-      const visibleChildNode = createTestParsedGenericNode({ key: createTestGenericNodeKey({ id: "visible child" }) });
+      const visibleChildNode = createTestSourceGenericNode({ key: createTestGenericNodeKey({ id: "visible child" }) });
       const provider = createIModelHierarchyProvider({
         imodelAccess,
         hierarchyDefinition: {
@@ -448,13 +448,13 @@ describe("createIModelHierarchyProvider", () => {
     // note: the feature of not checking children for nodes that say they do have them is very important for performance - this test
     // should not be removed
     it("doesn't load children of hidden child node when determining parent's children if the hidden child says it always has children", async () => {
-      const rootNode = createTestParsedGenericNode({ key: createTestGenericNodeKey({ id: "root" }) });
-      const hiddenChildNode = createTestParsedGenericNode({
+      const rootNode = createTestSourceGenericNode({ key: createTestGenericNodeKey({ id: "root" }) });
+      const hiddenChildNode = createTestSourceGenericNode({
         key: createTestGenericNodeKey({ id: "hidden child" }),
         processingParams: { hideInHierarchy: true },
         children: true,
       });
-      const visibleChildNode = createTestParsedGenericNode({ key: createTestGenericNodeKey({ id: "visible child" }) });
+      const visibleChildNode = createTestSourceGenericNode({ key: createTestGenericNodeKey({ id: "visible child" }) });
       const hierarchyDefinition = {
         defineHierarchyLevel: sinon.fake(async ({ parentNode }) => {
           if (!parentNode) {
@@ -483,8 +483,8 @@ describe("createIModelHierarchyProvider", () => {
 
   describe("Hiding nodes without children", () => {
     it("hides node without children", async () => {
-      const rootNode = createTestParsedGenericNode({ key: createTestGenericNodeKey({ id: "root" }) });
-      const hiddenChildNode = createTestParsedGenericNode({
+      const rootNode = createTestSourceGenericNode({ key: createTestGenericNodeKey({ id: "root" }) });
+      const hiddenChildNode = createTestSourceGenericNode({
         key: createTestGenericNodeKey({ id: "hidden child" }),
         processingParams: { hideIfNoChildren: true },
       });
@@ -509,12 +509,12 @@ describe("createIModelHierarchyProvider", () => {
     });
 
     it("doesn't hide node with children", async () => {
-      const rootNode = createTestParsedGenericNode({ key: createTestGenericNodeKey({ id: "root" }) });
-      const hiddenChildNode = createTestParsedGenericNode({
+      const rootNode = createTestSourceGenericNode({ key: createTestGenericNodeKey({ id: "root" }) });
+      const hiddenChildNode = createTestSourceGenericNode({
         key: createTestGenericNodeKey({ id: "hidden child" }),
         processingParams: { hideIfNoChildren: true },
       });
-      const grandChildNode = createTestParsedGenericNode({ key: createTestGenericNodeKey({ id: "grand child" }), children: false });
+      const grandChildNode = createTestSourceGenericNode({ key: createTestGenericNodeKey({ id: "grand child" }), children: false });
       const provider = createIModelHierarchyProvider({
         imodelAccess,
         hierarchyDefinition: {
@@ -554,7 +554,7 @@ describe("createIModelHierarchyProvider", () => {
         imodelAccess,
         hierarchyDefinition: {
           async defineHierarchyLevel() {
-            return [{ node: createTestParsedGenericNode({ label: "test label", children: false }) }];
+            return [{ node: createTestSourceGenericNode({ label: "test label", children: false }) }];
           },
         },
         formatter,
@@ -690,8 +690,8 @@ describe("createIModelHierarchyProvider", () => {
     };
 
     it("filters hierarchy levels with nodes that are hidden if no children", async () => {
-      const rootNode = createTestParsedGenericNode({ key: createTestGenericNodeKey({ id: "root" }), processingParams: { hideIfNoChildren: true } });
-      const childNode = createTestParsedGenericNode({ key: createTestGenericNodeKey({ id: "child" }), children: true });
+      const rootNode = createTestSourceGenericNode({ key: createTestGenericNodeKey({ id: "root" }), processingParams: { hideIfNoChildren: true } });
+      const childNode = createTestSourceGenericNode({ key: createTestGenericNodeKey({ id: "child" }), children: true });
       const provider = createIModelHierarchyProvider({
         imodelAccess,
         hierarchyDefinition: {
@@ -757,7 +757,7 @@ describe("createIModelHierarchyProvider", () => {
     });
 
     it("returns empty list for parent generic node", async () => {
-      const genericNode = createTestParsedGenericNode({
+      const genericNode = createTestSourceGenericNode({
         key: createTestGenericNodeKey({ id: "custom" }),
         label: "test",
         children: false,
@@ -1107,7 +1107,7 @@ describe("createIModelHierarchyProvider", () => {
         hierarchyDefinition: {
           async defineHierarchyLevel({ parentNode }) {
             if (!parentNode) {
-              return [{ node: createTestParsedGenericNode({ key: createTestGenericNodeKey({ id: "root" }) }) }];
+              return [{ node: createTestSourceGenericNode({ key: createTestGenericNodeKey({ id: "root" }) }) }];
             }
             return [
               {
@@ -1132,7 +1132,7 @@ describe("createIModelHierarchyProvider", () => {
         hierarchyDefinition: {
           async defineHierarchyLevel({ parentNode }) {
             if (!parentNode) {
-              return [{ node: createTestParsedGenericNode({ key: createTestGenericNodeKey({ id: "root" }) }) }];
+              return [{ node: createTestSourceGenericNode({ key: createTestGenericNodeKey({ id: "root" }) }) }];
             }
             return [
               {
@@ -1183,7 +1183,7 @@ describe("createIModelHierarchyProvider", () => {
         hierarchyDefinition: {
           async defineHierarchyLevel({ parentNode }) {
             if (!parentNode) {
-              return [{ node: createTestParsedGenericNode({ key: createTestGenericNodeKey({ id: "root" }) }) }];
+              return [{ node: createTestSourceGenericNode({ key: createTestGenericNodeKey({ id: "root" }) }) }];
             }
             if (HierarchyNodeKey.equals(parentNode.key, createTestGenericNodeKey({ id: "root" }))) {
               return [
@@ -1481,7 +1481,7 @@ describe("createIModelHierarchyProvider", () => {
     });
 
     it("getNodes uses formatter that is provided to setFormatter", async () => {
-      const node = createTestParsedGenericNode({ children: false });
+      const node = createTestSourceGenericNode({ children: false });
       const provider = createIModelHierarchyProvider({
         imodelAccess,
         hierarchyDefinition: {
@@ -1505,7 +1505,7 @@ describe("createIModelHierarchyProvider", () => {
     });
 
     it("getNodes uses default formatter when setFormatter is provided an undefined value", async () => {
-      const node = createTestParsedGenericNode({ children: false });
+      const node = createTestSourceGenericNode({ children: false });
       const provider = createIModelHierarchyProvider({
         imodelAccess,
         hierarchyDefinition: {

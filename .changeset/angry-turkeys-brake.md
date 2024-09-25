@@ -27,6 +27,7 @@
     - `HierarchyNode.isCustom` renamed to `HierarchyNode.isGeneric`.
     - `HierarchyNodeIdentifier.isCustomNodeIdentifier` renamed to `HierarchyNodeIdentifier.isGenericNodeIdentifier`.
     - `HierarchyNodesDefinition.isCustomNode` renamed to `HierarchyNodesDefinition.isGenericNode`.
+  - `ParsedHierarchyNode` was renamed to `SourceHierarchyNode`.
   - Type guards in `HierarchyNode` namespace no longer narrow the type of the input node to `ProcessedHierarchyNode` subtypes. Instead, a `ProcessedHierarchyNode` namespace was added with a number of type guards to do that.
 
 - `createClassBasedHierarchyDefinition` props changes:

@@ -239,10 +239,10 @@ export namespace ProcessedHierarchyNode {
 
 /**
  * A `ProcessedHierarchyNode` that has an unformatted label in a form of `ConcatenatedValue`. Generally this is
- * returned when the node is just parsed from query results.
+ * returned by hierarchy definitions as a generic node or when the node is just parsed from query results.
  * @beta
  */
-export type ParsedHierarchyNode<TBase = ParsedGenericHierarchyNode | ParsedInstanceHierarchyNode> = OmitOverUnion<TBase, "label" | "parentKeys"> & {
+export type SourceHierarchyNode<TBase = SourceGenericHierarchyNode | SourceInstanceHierarchyNode> = OmitOverUnion<TBase, "label" | "parentKeys"> & {
   label: string | ConcatenatedValue;
 };
 
@@ -250,10 +250,10 @@ export type ParsedHierarchyNode<TBase = ParsedGenericHierarchyNode | ParsedInsta
  * A kind of `ProcessedGenericHierarchyNode` that has unformatted label and doesn't know about its ancestors.
  * @beta
  */
-export type ParsedGenericHierarchyNode = ParsedHierarchyNode<ProcessedGenericHierarchyNode>;
+export type SourceGenericHierarchyNode = SourceHierarchyNode<ProcessedGenericHierarchyNode>;
 
 /**
  * A kind of `ProcessedInstanceHierarchyNode` that has unformatted label and doesn't know about its ancestors.
  * @beta
  */
-export type ParsedInstanceHierarchyNode = ParsedHierarchyNode<ProcessedInstanceHierarchyNode>;
+export type SourceInstanceHierarchyNode = SourceHierarchyNode<ProcessedInstanceHierarchyNode>;

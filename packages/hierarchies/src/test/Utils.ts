@@ -9,11 +9,11 @@ import { EC, InstanceKey, parseFullClassName } from "@itwin/presentation-shared"
 import { NonGroupingHierarchyNode } from "../hierarchies/HierarchyNode";
 import { GenericNodeKey, HierarchyNodeKey } from "../hierarchies/HierarchyNodeKey";
 import {
-  ParsedGenericHierarchyNode,
-  ParsedInstanceHierarchyNode,
   ProcessedGenericHierarchyNode,
   ProcessedGroupingHierarchyNode,
   ProcessedInstanceHierarchyNode,
+  SourceGenericHierarchyNode,
+  SourceInstanceHierarchyNode,
 } from "../hierarchies/imodel/IModelHierarchyNode";
 
 export function setupLogging(levels: Array<{ namespace: string; level: LogLevel }>) {
@@ -40,7 +40,7 @@ export function createTestGenericNode(src?: Partial<NonGroupingHierarchyNode>): 
   };
 }
 
-export function createTestParsedGenericNode(src?: Partial<ParsedGenericHierarchyNode>): ParsedGenericHierarchyNode {
+export function createTestSourceGenericNode(src?: Partial<SourceGenericHierarchyNode>): SourceGenericHierarchyNode {
   return {
     label: "test",
     key: createTestGenericNodeKey(),
@@ -48,7 +48,7 @@ export function createTestParsedGenericNode(src?: Partial<ParsedGenericHierarchy
   };
 }
 
-export function createTestParsedInstanceNode(src?: Partial<ParsedInstanceHierarchyNode>): ParsedInstanceHierarchyNode {
+export function createTestSourceInstanceNode(src?: Partial<SourceInstanceHierarchyNode>): SourceInstanceHierarchyNode {
   return {
     label: "test",
     key: {

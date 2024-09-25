@@ -59,11 +59,11 @@ import { FilteringHierarchyDefinition } from "./FilteringHierarchyDefinition";
 import { HierarchyCache } from "./HierarchyCache";
 import { DefineHierarchyLevelProps, HierarchyDefinition, HierarchyNodesDefinition } from "./IModelHierarchyDefinition";
 import {
-  ParsedHierarchyNode,
   ProcessedGenericHierarchyNode,
   ProcessedGroupingHierarchyNode,
   ProcessedHierarchyNode,
   ProcessedInstanceHierarchyNode,
+  SourceHierarchyNode,
 } from "./IModelHierarchyNode";
 import { LimitingECSqlQueryExecutor } from "./LimitingECSqlQueryExecutor";
 import { NodeSelectClauseColumnNames } from "./NodeSelectQueryFactory";
@@ -227,9 +227,9 @@ class IModelHierarchyProviderImpl implements HierarchyProvider {
     this._nodesCache?.set({ ...props, parentNode: groupingNode }, { observable: from(groupingNode.children), processingStatus: "pre-processed" });
   }
 
-  private createParsedQueryNodesObservable(
+  private createSourceNodesObservable(
     props: DefineHierarchyLevelProps & { hierarchyLevelSizeLimit?: number | "unbounded"; filteredInstanceKeys?: InstanceKey[] },
-  ): ParsedQueryNodesObservable {
+  ): SourceNodesObservable {
     doLog({
       category: LOGGING_NAMESPACE_PERFORMANCE,
       message: /* istanbul ignore next */ () => `Requesting hierarchy level definitions for ${createNodeIdentifierForLogging(props.parentNode)}`,
@@ -246,7 +246,7 @@ class IModelHierarchyProviderImpl implements HierarchyProvider {
     );
     // pipe definitions to nodes and put "share replay" on it
     return definitions.pipe(
-      mergeMap((def): ObservableInput<ParsedHierarchyNode> => {
+      mergeMap((def): ObservableInput<SourceHierarchyNode> => {
         if (HierarchyNodesDefinition.isGenericNode(def)) {
           return of(def.node);
         }
@@ -273,11 +273,11 @@ class IModelHierarchyProviderImpl implements HierarchyProvider {
     );
   }
 
-  private createInitializedNodesObservable(nodes: Observable<ParsedHierarchyNode>, parentNode: ParentHierarchyNode | undefined) {
+  private createInitializedNodesObservable(nodes: Observable<SourceHierarchyNode>, parentNode: ParentHierarchyNode | undefined) {
     return nodes.pipe(
       // we're going to be mutating the nodes, but don't want to mutate the original one, so just clone it here once
       map((node) => ({ ...node })),
-      // set parent node keys on the parsed node
+      // set parent node keys on the source node
       map((node) => Object.assign(node, { parentKeys: createParentNodeKeysList(parentNode) })),
       // format `ConcatenatedValue` labels into string labels
       mergeMap(async (node) => applyLabelsFormatting(node, this._valuesFormatter)),
@@ -293,10 +293,7 @@ class IModelHierarchyProviderImpl implements HierarchyProvider {
     );
   }
 
-  private createPreProcessedNodesObservable(
-    queryNodesObservable: ParsedQueryNodesObservable,
-    props: GetHierarchyNodesProps,
-  ): Observable<ProcessedHierarchyNode> {
+  private createPreProcessedNodesObservable(queryNodesObservable: SourceNodesObservable, props: GetHierarchyNodesProps): Observable<ProcessedHierarchyNode> {
     return this.createInitializedNodesObservable(queryNodesObservable, props.parentNode).pipe(
       createHideIfNoChildrenOperator((n) => this.getChildNodesObservables({ parentNode: n }).hasNodes),
       createHideNodesInHierarchyOperator(
@@ -357,7 +354,7 @@ class IModelHierarchyProviderImpl implements HierarchyProvider {
 
   private createHasNodesObservable(
     preprocessedNodesObservable: Observable<ProcessedHierarchyNode>,
-    possiblyKnownChildrenObservable?: ParsedQueryNodesObservable,
+    possiblyKnownChildrenObservable?: SourceNodesObservable,
   ): Observable<boolean> {
     const loggingCategory = `${LOGGING_NAMESPACE_INTERNAL}.HasNodes`;
     return concat((possiblyKnownChildrenObservable ?? EMPTY).pipe(filter((n) => hasChildren(n))), preprocessedNodesObservable).pipe(
@@ -409,7 +406,7 @@ class IModelHierarchyProviderImpl implements HierarchyProvider {
       parentNode: parentNonGroupingNode,
       ...(filteredInstanceKeys ? { filteredInstanceKeys } : undefined),
     };
-    const value = { observable: this.createParsedQueryNodesObservable(nonGroupingNodeChildrenRequestProps), processingStatus: "none" as const };
+    const value = { observable: this.createSourceNodesObservable(nonGroupingNodeChildrenRequestProps), processingStatus: "none" as const };
     this._nodesCache?.set(nonGroupingNodeChildrenRequestProps, value);
     doLog({
       category: loggingCategory,
@@ -588,10 +585,10 @@ class IModelHierarchyProviderImpl implements HierarchyProvider {
   }
 }
 
-type ParsedQueryNodesObservable = Observable<ParsedHierarchyNode>;
+type SourceNodesObservable = Observable<SourceHierarchyNode>;
 type ProcessedNodesObservable = Observable<ProcessedHierarchyNode>;
 type HierarchyCacheEntry =
-  | { observable: ParsedQueryNodesObservable; processingStatus: "none" }
+  | { observable: SourceNodesObservable; processingStatus: "none" }
   | { observable: ProcessedNodesObservable; processingStatus: "pre-processed" };
 
 function preProcessNodes(hierarchyFactory: HierarchyDefinition) {

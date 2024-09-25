@@ -71,8 +71,8 @@ expect(await imperialFormatter({ type: "Double", value, koqName })).to.eq("19559
 
 Hierarchy nodes originate from one of the following places:
 
-1. A `HierarchyDefinition` returns `ParsedCustomHierarchyNode` through `CustomHierarchyNodeDefinition` objects.
-2. A `HierarchyDefinition` returns an `InstanceNodesQueryDefinition`, the query is run and its results are parsed into `ParsedInstanceHierarchyNode` objects.
+1. A `HierarchyDefinition` returns `SourceGenericHierarchyNode` through `GenericHierarchyNodeDefinition` objects.
+2. A `HierarchyDefinition` returns an `InstanceNodesQueryDefinition`, the query is run and its results are parsed into `SourceInstanceHierarchyNode` objects.
 3. By a request of `HierarchyDefinition`, the `HierarchyProvider` groups instance nodes by nesting them under a grouping node.
 
 In case 1, the node's `label` property type is `string | ConcatenatedValue`. The `ConcatenatedValue` type allows for a label to consist of multiple parts of different types, each of which are formatted separately:

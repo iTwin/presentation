@@ -13,7 +13,7 @@ import {
   HierarchyNodesDefinition,
   InstanceNodesQueryDefinition,
 } from "../../hierarchies/imodel/IModelHierarchyDefinition";
-import { createClassHierarchyInspectorStub, createTestGenericNodeKey, createTestParsedGenericNode } from "../Utils";
+import { createClassHierarchyInspectorStub, createTestGenericNodeKey, createTestSourceGenericNode } from "../Utils";
 
 describe("HierarchyNodesDefinition", () => {
   const genericNodeDefinition = createGenericNodeDefinition();
@@ -59,10 +59,10 @@ describe("createClassBasedHierarchyDefinition", () => {
   it("returns custom node children definition", async () => {
     const rootNode = createParentNode({ key: createTestGenericNodeKey({ id: "test-custom-node" }) });
 
-    const def1: HierarchyLevelDefinition = [createGenericNodeDefinition({ node: createTestParsedGenericNode({ label: "1" }) })];
-    const def2: HierarchyLevelDefinition = [createGenericNodeDefinition({ node: createTestParsedGenericNode({ label: "2" }) })];
-    const def3: HierarchyLevelDefinition = [createGenericNodeDefinition({ node: createTestParsedGenericNode({ label: "3" }) })];
-    const def4: HierarchyLevelDefinition = [createGenericNodeDefinition({ node: createTestParsedGenericNode({ label: "4" }) })];
+    const def1: HierarchyLevelDefinition = [createGenericNodeDefinition({ node: createTestSourceGenericNode({ label: "1" }) })];
+    const def2: HierarchyLevelDefinition = [createGenericNodeDefinition({ node: createTestSourceGenericNode({ label: "2" }) })];
+    const def3: HierarchyLevelDefinition = [createGenericNodeDefinition({ node: createTestSourceGenericNode({ label: "3" }) })];
+    const def4: HierarchyLevelDefinition = [createGenericNodeDefinition({ node: createTestSourceGenericNode({ label: "4" }) })];
 
     const factory = createClassBasedHierarchyDefinition({
       classHierarchyInspector,
@@ -115,11 +115,11 @@ describe("createClassBasedHierarchyDefinition", () => {
     classHierarchyInspector.stubEntityClass({ schemaName: "TestSchema", className: "DerivedFromX", is: async (other) => other === "TestSchema.ClassX" });
     classHierarchyInspector.stubEntityClass({ schemaName: "TestSchema", className: "UnrelatedClass", is: async () => false });
 
-    const def1: HierarchyLevelDefinition = [createGenericNodeDefinition({ node: createTestParsedGenericNode({ label: "1" }) })];
-    const def2: HierarchyLevelDefinition = [createGenericNodeDefinition({ node: createTestParsedGenericNode({ label: "2" }) })];
-    const def3: HierarchyLevelDefinition = [createGenericNodeDefinition({ node: createTestParsedGenericNode({ label: "3" }) })];
-    const def4: HierarchyLevelDefinition = [createGenericNodeDefinition({ node: createTestParsedGenericNode({ label: "4" }) })];
-    const def5: HierarchyLevelDefinition = [createGenericNodeDefinition({ node: createTestParsedGenericNode({ label: "5" }) })];
+    const def1: HierarchyLevelDefinition = [createGenericNodeDefinition({ node: createTestSourceGenericNode({ label: "1" }) })];
+    const def2: HierarchyLevelDefinition = [createGenericNodeDefinition({ node: createTestSourceGenericNode({ label: "2" }) })];
+    const def3: HierarchyLevelDefinition = [createGenericNodeDefinition({ node: createTestSourceGenericNode({ label: "3" }) })];
+    const def4: HierarchyLevelDefinition = [createGenericNodeDefinition({ node: createTestSourceGenericNode({ label: "4" }) })];
+    const def5: HierarchyLevelDefinition = [createGenericNodeDefinition({ node: createTestSourceGenericNode({ label: "5" }) })];
 
     const factory = createClassBasedHierarchyDefinition({
       classHierarchyInspector,
@@ -279,7 +279,7 @@ function createParentNode(src: Partial<NonNullable<DefineHierarchyLevelProps["pa
 
 function createGenericNodeDefinition(props?: Partial<GenericHierarchyNodeDefinition>): GenericHierarchyNodeDefinition {
   return {
-    node: createTestParsedGenericNode(),
+    node: createTestSourceGenericNode(),
     ...props,
   };
 }

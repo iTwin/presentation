@@ -7,7 +7,7 @@ import { from, map, Observable } from "rxjs";
 import { Id64String } from "@itwin/core-bentley";
 import { ECSqlQueryDef, parseInstanceLabel } from "@itwin/presentation-shared";
 import { NodeParser } from "./IModelHierarchyDefinition";
-import { InstanceHierarchyNodeProcessingParams, ParsedInstanceHierarchyNode } from "./IModelHierarchyNode";
+import { InstanceHierarchyNodeProcessingParams, SourceInstanceHierarchyNode } from "./IModelHierarchyNode";
 import { LimitingECSqlQueryExecutor } from "./LimitingECSqlQueryExecutor";
 import { NodeSelectClauseColumnNames } from "./NodeSelectQueryFactory";
 
@@ -19,7 +19,7 @@ interface ReadNodesProps {
 }
 
 /** @internal */
-export function readNodes(props: ReadNodesProps): Observable<ParsedInstanceHierarchyNode> {
+export function readNodes(props: ReadNodesProps): Observable<SourceInstanceHierarchyNode> {
   const { queryExecutor, query, limit } = props;
   const parser = props?.parser ?? defaultNodesParser;
   const config: Parameters<LimitingECSqlQueryExecutor["createQueryReader"]>[1] = {
@@ -49,7 +49,7 @@ export interface RowDef {
 /* eslint-enable @typescript-eslint/naming-convention */
 
 /** @internal */
-export function defaultNodesParser(row: { [columnName: string]: any }): ParsedInstanceHierarchyNode {
+export function defaultNodesParser(row: { [columnName: string]: any }): SourceInstanceHierarchyNode {
   const typedRow = row as RowDef;
   const processingParams: InstanceHierarchyNodeProcessingParams = {
     ...(typedRow.HideIfNoChildren ? { hideIfNoChildren: true } : undefined),

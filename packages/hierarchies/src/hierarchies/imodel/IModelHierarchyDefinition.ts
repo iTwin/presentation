@@ -10,11 +10,11 @@ import { ECClassHierarchyInspector, ECSqlQueryDef, InstanceKey } from "@itwin/pr
 import { HierarchyNode, NonGroupingHierarchyNode } from "../HierarchyNode";
 import { GenericNodeKey, InstancesNodeKey } from "../HierarchyNodeKey";
 import {
-  ParsedGenericHierarchyNode,
-  ParsedInstanceHierarchyNode,
   ProcessedGenericHierarchyNode,
   ProcessedHierarchyNode,
   ProcessedInstanceHierarchyNode,
+  SourceGenericHierarchyNode,
+  SourceInstanceHierarchyNode,
 } from "./IModelHierarchyNode";
 
 /**
@@ -23,7 +23,7 @@ import {
  */
 export interface GenericHierarchyNodeDefinition {
   /** The node to be created in the hierarchy level */
-  node: ParsedGenericHierarchyNode;
+  node: SourceGenericHierarchyNode;
 }
 
 /**
@@ -67,10 +67,10 @@ export namespace HierarchyNodesDefinition {
 export type HierarchyLevelDefinition = HierarchyNodesDefinition[];
 
 /**
- * A type for a function that parses a `ParsedInstanceHierarchyNode` from provided ECSQL `row` object.
+ * A type for a function that parses a `SourceInstanceHierarchyNode` from provided ECSQL `row` object.
  * @beta
  */
-export type NodeParser = (row: { [columnName: string]: any }) => ParsedInstanceHierarchyNode;
+export type NodeParser = (row: { [columnName: string]: any }) => SourceInstanceHierarchyNode;
 
 /**
  * A type for a function that pre-processes given node. Unless the function decides not to make any modifications,

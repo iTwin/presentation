@@ -177,7 +177,7 @@ interface FilterTargetGroupingNodeInfo {
 
 // @beta
 interface GenericHierarchyNodeDefinition {
-    node: ParsedGenericHierarchyNode;
+    node: SourceGenericHierarchyNode;
 }
 
 export { GenericInstanceFilter }
@@ -523,7 +523,7 @@ export function mergeProviders({ providers }: MergeHierarchyProvidersProps): Hie
 // @beta
 export type NodeParser = (row: {
     [columnName: string]: any;
-}) => ParsedInstanceHierarchyNode;
+}) => SourceInstanceHierarchyNode;
 
 // @beta
 export type NodePostProcessor = (node: ProcessedHierarchyNode) => Promise<ProcessedHierarchyNode>;
@@ -597,17 +597,6 @@ export interface NonGroupingHierarchyNode extends BaseHierarchyNode {
 type ParentHierarchyNode<TBase = HierarchyNode> = OmitOverUnion<TBase, "children">;
 
 // @beta
-type ParsedGenericHierarchyNode = ParsedHierarchyNode<ProcessedGenericHierarchyNode>;
-
-// @beta
-export type ParsedHierarchyNode<TBase = ParsedGenericHierarchyNode | ParsedInstanceHierarchyNode> = OmitOverUnion<TBase, "label" | "parentKeys"> & {
-    label: string | ConcatenatedValue;
-};
-
-// @beta
-type ParsedInstanceHierarchyNode = ParsedHierarchyNode<ProcessedInstanceHierarchyNode>;
-
-// @beta
 type ProcessedGenericHierarchyNode = Omit<NonGroupingHierarchyNode, "key" | "children"> & {
     key: GenericNodeKey;
     children?: boolean;
@@ -674,6 +663,17 @@ export class RowsLimitExceededError extends Error {
 
 // @beta
 export function setLogger(logger: ILogger | undefined): void;
+
+// @beta
+type SourceGenericHierarchyNode = SourceHierarchyNode<ProcessedGenericHierarchyNode>;
+
+// @beta
+export type SourceHierarchyNode<TBase = SourceGenericHierarchyNode | SourceInstanceHierarchyNode> = OmitOverUnion<TBase, "label" | "parentKeys"> & {
+    label: string | ConcatenatedValue;
+};
+
+// @beta
+type SourceInstanceHierarchyNode = SourceHierarchyNode<ProcessedInstanceHierarchyNode>;
 
 // (No @packageDocumentation comment for this package)
 

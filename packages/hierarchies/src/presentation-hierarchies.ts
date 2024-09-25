@@ -21,7 +21,7 @@ export {
 export { LimitingECSqlQueryExecutor, createLimitingECSqlQueryExecutor } from "./hierarchies/imodel/LimitingECSqlQueryExecutor";
 export { NodeSelectClauseColumnNames, NodesQueryClauseFactory, createNodesQueryClauseFactory } from "./hierarchies/imodel/NodeSelectQueryFactory";
 export { createIModelHierarchyProvider } from "./hierarchies/imodel/IModelHierarchyProvider";
-export { ParsedHierarchyNode, ProcessedHierarchyNode } from "./hierarchies/imodel/IModelHierarchyNode";
+export { SourceHierarchyNode, ProcessedHierarchyNode } from "./hierarchies/imodel/IModelHierarchyNode";
 
 export { RowsLimitExceededError } from "./hierarchies/HierarchyErrors";
 export { GroupingHierarchyNode, HierarchyNode, NonGroupingHierarchyNode } from "./hierarchies/HierarchyNode";

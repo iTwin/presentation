@@ -7,14 +7,14 @@ import { expect } from "chai";
 import { collect, createAsyncIterator } from "presentation-test-utilities";
 import sinon from "sinon";
 import { ConcatenatedValue } from "@itwin/presentation-shared";
-import { ParsedHierarchyNode, ParsedInstanceHierarchyNode } from "../../hierarchies/imodel/IModelHierarchyNode";
+import { SourceHierarchyNode, SourceInstanceHierarchyNode } from "../../hierarchies/imodel/IModelHierarchyNode";
 import { LimitingECSqlQueryExecutor } from "../../hierarchies/imodel/LimitingECSqlQueryExecutor";
 import { NodeSelectClauseColumnNames } from "../../hierarchies/imodel/NodeSelectQueryFactory";
 import { defaultNodesParser, readNodes, RowDef } from "../../hierarchies/imodel/TreeNodesReader";
-import { createTestParsedInstanceNode } from "../Utils";
+import { createTestSourceInstanceNode } from "../Utils";
 
 describe("readNodes", () => {
-  const parser = sinon.stub<[{ [columnName: string]: any }], ParsedInstanceHierarchyNode>();
+  const parser = sinon.stub<[{ [columnName: string]: any }], SourceInstanceHierarchyNode>();
   const queryExecutor = {
     createQueryReader: sinon.stub<Parameters<LimitingECSqlQueryExecutor["createQueryReader"]>, ReturnType<LimitingECSqlQueryExecutor["createQueryReader"]>>(),
   };
@@ -27,7 +27,7 @@ describe("readNodes", () => {
   it("returns all rows from queryExecutor", async () => {
     const ids = [1, 2, 3];
     const nodes = ids.map((id) =>
-      createTestParsedInstanceNode({
+      createTestSourceInstanceNode({
         label: id.toString(),
         key: { type: "instances", instanceKeys: [{ className: "x", id: id.toString() }] },
         children: false,
@@ -52,7 +52,7 @@ describe("readNodes", () => {
 });
 
 describe("defaultNodesParser", () => {
-  it("parses ecsql row into `ParsedHierarchyNode`", () => {
+  it("parses ecsql row into `SourceHierarchyNode`", () => {
     const row: RowDef = {
       [NodeSelectClauseColumnNames.FullClassName]: "schema.class",
       [NodeSelectClauseColumnNames.ECInstanceId]: "0x1",
@@ -101,7 +101,7 @@ describe("defaultNodesParser", () => {
           byLabel: true,
         },
       },
-    } as ParsedHierarchyNode);
+    } satisfies SourceHierarchyNode);
   });
 
   it("parses falsy `HasChildren`", () => {

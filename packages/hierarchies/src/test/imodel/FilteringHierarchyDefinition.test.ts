@@ -23,7 +23,7 @@ import {
   HierarchyLevelDefinition,
   InstanceNodesQueryDefinition,
 } from "../../hierarchies/imodel/IModelHierarchyDefinition";
-import { ParsedGenericHierarchyNode, ProcessedGenericHierarchyNode, ProcessedGroupingHierarchyNode } from "../../hierarchies/imodel/IModelHierarchyNode";
+import { ProcessedGenericHierarchyNode, ProcessedGroupingHierarchyNode, SourceGenericHierarchyNode } from "../../hierarchies/imodel/IModelHierarchyNode";
 import { NodeSelectClauseColumnNames } from "../../hierarchies/imodel/NodeSelectQueryFactory";
 import * as reader from "../../hierarchies/imodel/TreeNodesReader";
 import {
@@ -31,10 +31,10 @@ import {
   createTestGenericNodeKey,
   createTestInstanceKey,
   createTestNodeKey,
-  createTestParsedGenericNode,
   createTestProcessedGenericNode,
   createTestProcessedGroupingNode,
   createTestProcessedInstanceNode,
+  createTestSourceGenericNode,
 } from "../Utils";
 
 describe("FilteringHierarchyDefinition", () => {
@@ -609,7 +609,7 @@ describe("FilteringHierarchyDefinition", () => {
     it("returns source definitions when filtered instance paths is undefined", async () => {
       const sourceDefinitions: HierarchyLevelDefinition = [
         {
-          node: {} as unknown as ParsedGenericHierarchyNode,
+          node: {} as unknown as SourceGenericHierarchyNode,
         },
       ];
       const sourceFactory: HierarchyDefinition = {
@@ -632,7 +632,7 @@ describe("FilteringHierarchyDefinition", () => {
       const sourceFactory: HierarchyDefinition = {
         defineHierarchyLevel: async () => [
           {
-            node: {} as unknown as ParsedGenericHierarchyNode,
+            node: {} as unknown as SourceGenericHierarchyNode,
           },
         ],
       };
@@ -648,7 +648,7 @@ describe("FilteringHierarchyDefinition", () => {
       it("omits source custom node definition when using instance key filter", async () => {
         const filterClass = classHierarchyInspector.stubEntityClass({ schemaName: "BisCore", className: "FilterClassName", is: async () => false });
         const sourceDefinition: GenericHierarchyNodeDefinition = {
-          node: createTestParsedGenericNode({
+          node: createTestSourceGenericNode({
             key: createTestGenericNodeKey({ id: "custom" }),
             children: false,
           }),
@@ -667,7 +667,7 @@ describe("FilteringHierarchyDefinition", () => {
 
       it("omits source custom node definition if filter type doesn't match node's key", async () => {
         const sourceDefinition: GenericHierarchyNodeDefinition = {
-          node: createTestParsedGenericNode({
+          node: createTestSourceGenericNode({
             key: createTestGenericNodeKey({ id: "custom" }),
             children: false,
           }),
@@ -686,7 +686,7 @@ describe("FilteringHierarchyDefinition", () => {
 
       it("omits source custom node definition when filter filtering by empty path", async () => {
         const sourceDefinition: GenericHierarchyNodeDefinition = {
-          node: createTestParsedGenericNode({
+          node: createTestSourceGenericNode({
             key: createTestGenericNodeKey({ id: "custom" }),
             children: false,
           }),
@@ -705,13 +705,13 @@ describe("FilteringHierarchyDefinition", () => {
 
       it("returns filtered source custom node definitions when filter type matches node's key", async () => {
         const sourceDefinition1: GenericHierarchyNodeDefinition = {
-          node: createTestParsedGenericNode({
+          node: createTestSourceGenericNode({
             key: createTestGenericNodeKey({ id: "custom 1" }),
             children: false,
           }),
         };
         const sourceDefinition2: GenericHierarchyNodeDefinition = {
-          node: createTestParsedGenericNode({
+          node: createTestSourceGenericNode({
             key: createTestGenericNodeKey({ id: "custom 2" }),
             children: false,
           }),
@@ -737,7 +737,7 @@ describe("FilteringHierarchyDefinition", () => {
 
       it("returns source custom node definition filtered with multiple matching paths having same beginning", async () => {
         const sourceDefinition: GenericHierarchyNodeDefinition = {
-          node: createTestParsedGenericNode({
+          node: createTestSourceGenericNode({
             key: createTestGenericNodeKey({ id: "custom" }),
             children: false,
           }),
@@ -768,7 +768,7 @@ describe("FilteringHierarchyDefinition", () => {
 
       it("applies path options to children paths", async () => {
         const sourceDefinition: GenericHierarchyNodeDefinition = {
-          node: createTestParsedGenericNode({
+          node: createTestSourceGenericNode({
             key: createTestGenericNodeKey({ id: "custom" }),
             children: false,
           }),
@@ -1349,10 +1349,10 @@ describe("FilteringHierarchyDefinition", () => {
 
     it("returns all definitions for a filter target parent node", async () => {
       const matchingSourceDefinition: GenericHierarchyNodeDefinition = {
-        node: createTestParsedGenericNode({ key: createTestGenericNodeKey({ id: "matches" }) }),
+        node: createTestSourceGenericNode({ key: createTestGenericNodeKey({ id: "matches" }) }),
       };
       const nonMatchingSourceDefinition: GenericHierarchyNodeDefinition = {
-        node: createTestParsedGenericNode({ key: createTestGenericNodeKey({ id: "doesn't match" }) }),
+        node: createTestSourceGenericNode({ key: createTestGenericNodeKey({ id: "doesn't match" }) }),
       };
       const sourceFactory: HierarchyDefinition = {
         defineHierarchyLevel: async () => [matchingSourceDefinition, nonMatchingSourceDefinition],

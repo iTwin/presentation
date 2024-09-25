@@ -19,7 +19,7 @@ import {
   NodePostProcessor,
   NodePreProcessor,
 } from "./IModelHierarchyDefinition";
-import { ParsedHierarchyNode, ParsedInstanceHierarchyNode, ProcessedGroupingHierarchyNode, ProcessedHierarchyNode } from "./IModelHierarchyNode";
+import { ProcessedGroupingHierarchyNode, ProcessedHierarchyNode, SourceHierarchyNode, SourceInstanceHierarchyNode } from "./IModelHierarchyNode";
 import { defaultNodesParser } from "./TreeNodesReader";
 
 interface FilteringHierarchyDefinitionProps {
@@ -106,7 +106,7 @@ export class FilteringHierarchyDefinition implements HierarchyDefinition {
   }
 
   public get parseNode(): NodeParser {
-    return (row: { [columnName: string]: any }): ParsedInstanceHierarchyNode => {
+    return (row: { [columnName: string]: any }): SourceInstanceHierarchyNode => {
       const hasFilterTargetAncestor: boolean = !!row[ECSQL_COLUMN_NAME_HasFilterTargetAncestor];
       const isFilterTarget: boolean = !!row[ECSQL_COLUMN_NAME_IsFilterTarget];
       const filterTargetOptions: HierarchyFilteringPathOptions | undefined = row[ECSQL_COLUMN_NAME_FilterTargetOptions]
@@ -296,7 +296,7 @@ async function identifiersEqual<TIdentifier extends HierarchyNodeIdentifier>(lhs
   return HierarchyNodeIdentifier.equal(lhs, rhs);
 }
 
-function applyFilterAttributes<TNode extends ParsedHierarchyNode>({
+function applyFilterAttributes<TNode extends SourceHierarchyNode>({
   node,
   filteredChildrenIdentifierPaths,
   isFilterTarget,
