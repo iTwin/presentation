@@ -12,6 +12,7 @@ import { ECSqlQueryExecutor } from '@itwin/presentation-shared';
 import { ECSqlQueryReaderOptions } from '@itwin/presentation-shared';
 import { GenericInstanceFilter } from '@itwin/core-common';
 import { Id64String } from '@itwin/core-bentley';
+import { IInstanceLabelSelectClauseFactory } from '@itwin/presentation-shared';
 import { ILogger } from '@itwin/presentation-shared';
 import { InstanceKey } from '@itwin/presentation-shared';
 import { IPrimitiveValueFormatter } from '@itwin/presentation-shared';
@@ -60,6 +61,7 @@ export function createLimitingECSqlQueryExecutor(baseExecutor: ECSqlQueryExecuto
 // @beta
 export function createNodesQueryClauseFactory(props: {
     imodelAccess: ECSchemaProvider & ECClassHierarchyInspector;
+    instanceLabelSelectClauseFactory: IInstanceLabelSelectClauseFactory;
 }): NodesQueryClauseFactory;
 
 // @beta
