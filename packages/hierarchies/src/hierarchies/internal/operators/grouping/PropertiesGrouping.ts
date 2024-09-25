@@ -197,9 +197,7 @@ export async function createPropertyGroups(
       continue;
     }
 
-    const formattedValue = await valueFormatter(
-      TypedPrimitiveValue.create(currentProperty.propertyValue, primitiveType, koqName, extendedTypeName),
-    );
+    const formattedValue = await valueFormatter(TypedPrimitiveValue.create(currentProperty.propertyValue, primitiveType, koqName, extendedTypeName));
 
     addGroupingToMap(
       groupings.grouped,

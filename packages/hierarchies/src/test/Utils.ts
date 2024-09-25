@@ -217,7 +217,11 @@ export function createIModelAccessStub() {
 
 export function createInstanceLabelSelectClauseFactoryStub() {
   return {
-    async createSelectClause(props: { classAlias: string, className?: string, selectorsConcatenator?: (selectors: TypedValueSelectClauseProps[], checkSelector?: string ) => string }): Promise<string> {
+    async createSelectClause(props: {
+      classAlias: string;
+      className?: string;
+      selectorsConcatenator?: (selectors: TypedValueSelectClauseProps[], checkSelector?: string) => string;
+    }): Promise<string> {
       return `(
         SELECT
          [${props.classAlias}].[CodeValue]
