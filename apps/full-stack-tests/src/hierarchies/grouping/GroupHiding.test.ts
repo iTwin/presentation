@@ -12,6 +12,7 @@ import { buildIModel } from "../../IModelUtils";
 import { initialize, terminate } from "../../IntegrationTests";
 import { NodeValidators, validateHierarchy } from "../HierarchyValidation";
 import { createIModelAccess, createProvider } from "../Utils";
+import { createBisInstanceLabelSelectClauseFactory } from "@itwin/presentation-shared";
 
 describe("Hierarchies", () => {
   describe("Grouping nodes' hiding", () => {
@@ -35,7 +36,11 @@ describe("Hierarchies", () => {
       specifiedGrouping: ECSqlSelectClauseGroupingParams,
       labelProperty?: string,
     ): HierarchyDefinition {
-      const selectQueryFactory = createNodesQueryClauseFactory({ imodelAccess: createIModelAccess(imodel) });
+      const imodelAccess = createIModelAccess(imodel);
+      const selectQueryFactory = createNodesQueryClauseFactory({
+        imodelAccess,
+        instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
+      });
       return {
         async defineHierarchyLevel({ parentNode }) {
           if (!parentNode) {

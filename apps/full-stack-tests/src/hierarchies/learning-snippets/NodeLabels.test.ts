@@ -46,8 +46,11 @@ describe("Hierarchies", () => {
           async defineHierarchyLevel({ parentNode }) {
             // For root nodes, return a query that selects all physical elements
             if (!parentNode) {
-              const queryClauseFactory = createNodesQueryClauseFactory({ imodelAccess });
               const labelSelectorsFactory = createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess });
+              const queryClauseFactory = createNodesQueryClauseFactory({
+                imodelAccess,
+                instanceLabelSelectClauseFactory: labelSelectorsFactory,
+              });
               return [
                 {
                   fullClassName: "BisCore.PhysicalElement",

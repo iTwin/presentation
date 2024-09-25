@@ -182,7 +182,10 @@ describe("Hierarchies", () => {
           });
           const imodelAccess = createIModelAccess(imodel);
           // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.Migration.InstanceNodesOfSpecificClassesDefinition
-          const selectClauseFactory = createNodesQueryClauseFactory({ imodelAccess });
+          const selectClauseFactory = createNodesQueryClauseFactory({
+            imodelAccess,
+            instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
+          });
           const labelsFactory = createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess });
           const definition: HierarchyNodesDefinition = {
             fullClassName: "BisCore.GeometricModel",
@@ -239,7 +242,10 @@ describe("Hierarchies", () => {
           });
           const imodelAccess = createIModelAccess(imodel);
           // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.Migration.RelatedInstanceNodesDefinition
-          const selectClauseFactory = createNodesQueryClauseFactory({ imodelAccess });
+          const selectClauseFactory = createNodesQueryClauseFactory({
+            imodelAccess,
+            instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
+          });
           const labelsFactory = createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess });
           const createDefinition = async ({ parentNode }: { parentNode: HierarchyNode & { key: InstancesNodeKey } }): Promise<HierarchyNodesDefinition> => ({
             fullClassName: "BisCore.GeometricElement3d",
@@ -333,7 +339,10 @@ describe("Hierarchies", () => {
           });
           const imodelAccess = createIModelAccess(imodel);
           // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.Migration.CustomQueryInstanceNodesDefinition
-          const selectClauseFactory = createNodesQueryClauseFactory({ imodelAccess });
+          const selectClauseFactory = createNodesQueryClauseFactory({
+            imodelAccess,
+            instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
+          });
           const labelsFactory = createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess });
           const createDefinition = async ({ parentNode }: { parentNode: HierarchyNode & { key: InstancesNodeKey } }): Promise<HierarchyLevelDefinition> => {
             if (await imodelAccess.classDerivesFrom(parentNode.key.instanceKeys[0].className, `${schema.schemaName}.MyParentElement`)) {
@@ -422,7 +431,10 @@ describe("Hierarchies", () => {
           });
           const imodelAccess = createIModelAccess(imodel);
           // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.Migration.BaseClassGrouping
-          const selectClauseFactory = createNodesQueryClauseFactory({ imodelAccess });
+          const selectClauseFactory = createNodesQueryClauseFactory({
+            imodelAccess,
+            instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
+          });
           const labelsFactory = createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess });
           const definition: HierarchyNodesDefinition = {
             fullClassName: "BisCore.GeometricElement",
@@ -472,7 +484,10 @@ describe("Hierarchies", () => {
         it("groups by class", async function () {
           const imodelAccess = createIModelAccess(emptyIModel);
           // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.Migration.ClassGrouping
-          const selectClauseFactory = createNodesQueryClauseFactory({ imodelAccess });
+          const selectClauseFactory = createNodesQueryClauseFactory({
+            imodelAccess,
+            instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
+          });
           const labelsFactory = createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess });
           const definition: HierarchyNodesDefinition = {
             fullClassName: "BisCore.Element",
@@ -545,7 +560,10 @@ describe("Hierarchies", () => {
           });
           const imodelAccess = createIModelAccess(imodel);
           // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.Migration.PropertyGrouping
-          const selectClauseFactory = createNodesQueryClauseFactory({ imodelAccess });
+          const selectClauseFactory = createNodesQueryClauseFactory({
+            imodelAccess,
+            instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
+          });
           const labelsFactory = createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess });
           const definition: HierarchyNodesDefinition = {
             fullClassName: "BisCore.GeometricElement3d",
@@ -610,7 +628,10 @@ describe("Hierarchies", () => {
           });
           const imodelAccess = createIModelAccess(imodel);
           // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.Migration.LabelGrouping
-          const selectClauseFactory = createNodesQueryClauseFactory({ imodelAccess });
+          const selectClauseFactory = createNodesQueryClauseFactory({
+            imodelAccess,
+            instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
+          });
           const labelsFactory = createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess });
           const definition: HierarchyNodesDefinition = {
             fullClassName: "BisCore.Element",
@@ -674,7 +695,10 @@ describe("Hierarchies", () => {
           });
           const imodelAccess = createIModelAccess(imodel);
           // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.Migration.SameLabelGrouping
-          const selectClauseFactory = createNodesQueryClauseFactory({ imodelAccess });
+          const selectClauseFactory = createNodesQueryClauseFactory({
+            imodelAccess,
+            instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
+          });
           const labelsFactory = createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess });
           const definition: HierarchyNodesDefinition = {
             fullClassName: "BisCore.Element",

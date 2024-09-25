@@ -9,7 +9,7 @@ import { Id64String } from "@itwin/core-bentley";
 import { IModel } from "@itwin/core-common";
 import { IModelConnection } from "@itwin/core-frontend";
 import { createNodesQueryClauseFactory, HierarchyDefinition, HierarchyNode } from "@itwin/presentation-hierarchies";
-import { ECSqlBinding, InstanceKey } from "@itwin/presentation-shared";
+import { createBisInstanceLabelSelectClauseFactory, ECSqlBinding, InstanceKey } from "@itwin/presentation-shared";
 import { buildIModel, importSchema, withECDb } from "../IModelUtils";
 import { initialize, terminate } from "../IntegrationTests";
 import { NodeValidators, validateHierarchy } from "./HierarchyValidation";
@@ -36,8 +36,11 @@ describe("Hierarchies", () => {
           const childSubject2 = insertSubject({ builder, codeValue: "test subject 2", parentId: rootSubject.id });
           return { rootSubject, childSubject1, childSubject2 };
         });
-
-        const selectQueryFactory = createNodesQueryClauseFactory({ imodelAccess: createIModelAccess(imodel) });
+        const imodelAccess = createIModelAccess(imodel);
+        const selectQueryFactory = createNodesQueryClauseFactory({
+          imodelAccess,
+          instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
+        });
         const hierarchy: HierarchyDefinition = {
           async defineHierarchyLevel({ parentNode }) {
             if (!parentNode) {
@@ -130,7 +133,11 @@ describe("Hierarchies", () => {
           return { rootSubject };
         });
 
-        const selectQueryFactory = createNodesQueryClauseFactory({ imodelAccess: createIModelAccess(imodel) });
+        const imodelAccess = createIModelAccess(imodel);
+        const selectQueryFactory = createNodesQueryClauseFactory({
+          imodelAccess,
+          instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
+        });
         const hierarchy: HierarchyDefinition = {
           async defineHierarchyLevel({ parentNode }) {
             if (!parentNode) {
@@ -201,7 +208,11 @@ describe("Hierarchies", () => {
           return { rootSubject, childSubject1, childSubject2 };
         });
 
-        const selectQueryFactory = createNodesQueryClauseFactory({ imodelAccess: createIModelAccess(imodel) });
+        const imodelAccess = createIModelAccess(imodel);
+        const selectQueryFactory = createNodesQueryClauseFactory({
+          imodelAccess,
+          instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
+        });
         const hierarchy: HierarchyDefinition = {
           async defineHierarchyLevel({ parentNode }) {
             if (!parentNode) {
@@ -294,7 +305,11 @@ describe("Hierarchies", () => {
           return { rootSubject, childSubject1, childSubject2 };
         });
 
-        const selectQueryFactory = createNodesQueryClauseFactory({ imodelAccess: createIModelAccess(imodel) });
+        const imodelAccess = createIModelAccess(imodel);
+        const selectQueryFactory = createNodesQueryClauseFactory({
+          imodelAccess,
+          instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
+        });
         const hierarchy: HierarchyDefinition = {
           async defineHierarchyLevel({ parentNode }) {
             if (!parentNode) {
@@ -375,7 +390,11 @@ describe("Hierarchies", () => {
           return { rootSubject, childSubject1, childSubject2, childSubject3 };
         });
 
-        const selectQueryFactory = createNodesQueryClauseFactory({ imodelAccess: createIModelAccess(imodel) });
+        const imodelAccess = createIModelAccess(imodel);
+        const selectQueryFactory = createNodesQueryClauseFactory({
+          imodelAccess,
+          instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
+        });
         const hierarchy: HierarchyDefinition = {
           async defineHierarchyLevel({ parentNode }) {
             if (!parentNode) {
@@ -469,7 +488,11 @@ describe("Hierarchies", () => {
             return { schema, x, y, z };
           },
           async (imodel, { schema, x, y, z }) => {
-            const selectQueryFactory = createNodesQueryClauseFactory({ imodelAccess: createIModelAccess(imodel) });
+            const imodelAccess = createIModelAccess(imodel);
+            const selectQueryFactory = createNodesQueryClauseFactory({
+              imodelAccess,
+              instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
+            });
             const hierarchy: HierarchyDefinition = {
               async defineHierarchyLevel({ parentNode }) {
                 if (!parentNode) {
@@ -573,7 +596,11 @@ describe("Hierarchies", () => {
             return { schema, x, y1, y2 };
           },
           async (imodel, { schema, x, y1, y2 }) => {
-            const selectQueryFactory = createNodesQueryClauseFactory({ imodelAccess: createIModelAccess(imodel) });
+            const imodelAccess = createIModelAccess(imodel);
+            const selectQueryFactory = createNodesQueryClauseFactory({
+              imodelAccess,
+              instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
+            });
             const hierarchy: HierarchyDefinition = {
               async defineHierarchyLevel({ parentNode }) {
                 if (!parentNode) {
@@ -658,7 +685,11 @@ describe("Hierarchies", () => {
           return { rootSubject, model, category, elements };
         });
 
-        const selectQueryFactory = createNodesQueryClauseFactory({ imodelAccess: createIModelAccess(imodel) });
+        const imodelAccess = createIModelAccess(imodel);
+        const selectQueryFactory = createNodesQueryClauseFactory({
+          imodelAccess,
+          instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
+        });
         const rootNodeKey = "root-node";
         const hierarchy: HierarchyDefinition = {
           defineHierarchyLevel: async (props) => {
@@ -726,7 +757,11 @@ describe("Hierarchies", () => {
           return { rootSubject, model, category, rootElement, middleElement, childElement };
         });
 
-        const selectQueryFactory = createNodesQueryClauseFactory({ imodelAccess: createIModelAccess(imodel) });
+        const imodelAccess = createIModelAccess(imodel);
+        const selectQueryFactory = createNodesQueryClauseFactory({
+          imodelAccess,
+          instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
+        });
         const rootNodeKey = "root-node";
         const hierarchy: HierarchyDefinition = {
           defineHierarchyLevel: async ({ parentNode }) => {
@@ -824,7 +859,11 @@ describe("Hierarchies", () => {
           return { rootSubject, model, category, elements };
         });
 
-        const selectQueryFactory = createNodesQueryClauseFactory({ imodelAccess: createIModelAccess(imodel) });
+        const imodelAccess = createIModelAccess(imodel);
+        const selectQueryFactory = createNodesQueryClauseFactory({
+          imodelAccess,
+          instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
+        });
         const rootNodeKey = "root-node";
         const hierarchy: HierarchyDefinition = {
           defineHierarchyLevel: async (props) => {
@@ -926,7 +965,11 @@ describe("Hierarchies", () => {
           });
           imodel = result.imodel;
 
-          const selectQueryFactory = createNodesQueryClauseFactory({ imodelAccess: createIModelAccess(imodel) });
+          const imodelAccess = createIModelAccess(imodel);
+          const selectQueryFactory = createNodesQueryClauseFactory({
+            imodelAccess,
+            instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
+          });
           hierarchy = {
             defineHierarchyLevel: async (props) => {
               if (!props.parentNode) {

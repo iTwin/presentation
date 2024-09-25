@@ -971,7 +971,12 @@ describe("PropertiesGrouping", () => {
             },
           }),
         ];
-        const property = { name: "PropertyName", isPrimitive: () => true, isNavigation: () => false } as unknown as EC.Property;
+        const property = {
+          extendedTypeName: undefined,
+          name: "PropertyName",
+          isPrimitive: () => true,
+          isNavigation: () => false,
+        } as unknown as EC.PrimitiveProperty;
         const stubbedClass = imodelAccess.stubEntityClass({
           schemaName: "TestSchema",
           className: "Class",

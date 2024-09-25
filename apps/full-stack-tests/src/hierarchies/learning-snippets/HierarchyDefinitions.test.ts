@@ -14,6 +14,7 @@ import { buildIModel } from "../../IModelUtils";
 import { initialize, terminate } from "../../IntegrationTests";
 import { NodeValidators, validateHierarchy } from "../HierarchyValidation";
 import { createIModelAccess } from "../Utils";
+import { createBisInstanceLabelSelectClauseFactory } from "@itwin/presentation-shared";
 
 describe("Hierarchies", () => {
   describe("Learning snippets", () => {
@@ -55,7 +56,10 @@ describe("Hierarchies", () => {
             }
             // For the custom node, return a query that selects all physical elements
             if (parentNode.key === "physical-elements") {
-              const queryClauseFactory = createNodesQueryClauseFactory({ imodelAccess });
+              const queryClauseFactory = createNodesQueryClauseFactory({
+                imodelAccess,
+                instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
+              });
               return [
                 {
                   fullClassName: "BisCore.PhysicalElement",
@@ -150,7 +154,10 @@ describe("Hierarchies", () => {
           async defineHierarchyLevel({ parentNode }) {
             // For root nodes, return all physical elements
             if (!parentNode) {
-              const queryClauseFactory = createNodesQueryClauseFactory({ imodelAccess });
+              const queryClauseFactory = createNodesQueryClauseFactory({
+                imodelAccess,
+                instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
+              });
               return [
                 {
                   fullClassName: "BisCore.PhysicalElement",
@@ -200,7 +207,10 @@ describe("Hierarchies", () => {
           async defineHierarchyLevel({ parentNode }) {
             // For root nodes, return all physical elements grouped by class
             if (!parentNode) {
-              const queryClauseFactory = createNodesQueryClauseFactory({ imodelAccess });
+              const queryClauseFactory = createNodesQueryClauseFactory({
+                imodelAccess,
+                instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
+              });
               return [
                 {
                   fullClassName: "BisCore.PhysicalElement",
@@ -254,7 +264,10 @@ describe("Hierarchies", () => {
       it("creates hierarchy using class based hierarchy definition", async function () {
         const imodelAccess = createIModelAccess(imodel);
         // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.HierarchyDefinitions.ClassBasedHierarchyDefinition
-        const queryClauseFactory = createNodesQueryClauseFactory({ imodelAccess });
+        const queryClauseFactory = createNodesQueryClauseFactory({
+          imodelAccess,
+          instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
+        });
         const hierarchyDefinition = createClassBasedHierarchyDefinition({
           classHierarchyInspector: imodelAccess,
           hierarchy: {

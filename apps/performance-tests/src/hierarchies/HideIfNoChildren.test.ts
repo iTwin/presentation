@@ -15,6 +15,7 @@ import {
 import { Datasets } from "../util/Datasets";
 import { run } from "../util/TestUtilities";
 import { StatelessHierarchyProvider } from "./StatelessHierarchyProvider";
+import { createBisInstanceLabelSelectClauseFactory } from "@itwin/presentation-shared";
 
 describe("hide if no children", () => {
   const setup = () => SnapshotDb.openFile(Datasets.getIModelPath("50k flat elements"));
@@ -28,7 +29,10 @@ describe("hide if no children", () => {
       const provider = new StatelessHierarchyProvider({
         iModel,
         getHierarchyFactory: (imodelAccess) => {
-          const queryFactory = createNodesQueryClauseFactory({ imodelAccess });
+          const queryFactory = createNodesQueryClauseFactory({
+            imodelAccess,
+            instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
+          });
           return createClassBasedHierarchyDefinition({
             classHierarchyInspector: imodelAccess,
             hierarchy: {
@@ -65,7 +69,10 @@ describe("hide if no children", () => {
       const provider = new StatelessHierarchyProvider({
         iModel,
         getHierarchyFactory: (imodelAccess) => {
-          const queryFactory = createNodesQueryClauseFactory({ imodelAccess });
+          const queryFactory = createNodesQueryClauseFactory({
+            imodelAccess,
+            instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
+          });
           return createClassBasedHierarchyDefinition({
             classHierarchyInspector: imodelAccess,
             hierarchy: {
