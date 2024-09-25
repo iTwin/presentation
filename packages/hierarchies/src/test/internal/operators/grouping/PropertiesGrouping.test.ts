@@ -873,7 +873,7 @@ describe("PropertiesGrouping", () => {
         });
       });
 
-      it("groups group node, when property value is not primitive is navigation", async () => {
+      it("groups group node, when property value is navigation", async () => {
         const nodes = [
           createTestProcessedInstanceNode({
             key: { type: "instances", instanceKeys: [{ className: "TestSchema.Class", id: "0x1" }] },
