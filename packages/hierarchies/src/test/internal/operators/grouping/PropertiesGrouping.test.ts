@@ -840,7 +840,7 @@ describe("PropertiesGrouping", () => {
     });
 
     describe("value grouping", async () => {
-      it("doesn't group node, when property value is not primitive", async () => {
+      it("doesn't group node, when property value is not primitive and not navigation", async () => {
         const nodes = [
           createTestProcessedInstanceNode({
             key: { type: "instances", instanceKeys: [{ className: "TestSchema.Class", id: "0x1" }] },
@@ -854,7 +854,7 @@ describe("PropertiesGrouping", () => {
             },
           }),
         ];
-        const property = { name: "PropertyName", isPrimitive: () => false } as unknown as EC.Property;
+        const property = { name: "PropertyName", isPrimitive: () => false, isNavigation: () => false } as unknown as EC.Property;
         const stubbedClass = imodelAccess.stubEntityClass({
           schemaName: "TestSchema",
           className: "Class",
@@ -873,6 +873,55 @@ describe("PropertiesGrouping", () => {
         });
       });
 
+      it("groups group node, when property value is not primitive is navigation", async () => {
+        const nodes = [
+          createTestProcessedInstanceNode({
+            key: { type: "instances", instanceKeys: [{ className: "TestSchema.Class", id: "0x1" }] },
+            parentKeys: ["x"],
+            processingParams: {
+              grouping: {
+                byProperties: {
+                  propertiesClassName: "TestSchema.Class",
+                  createGroupForUnspecifiedValues: true,
+                  propertyGroups: [{ propertyName: "PropertyName" }],
+                },
+              },
+            },
+          }),
+        ];
+        const property = { name: "PropertyName", isPrimitive: () => false, isNavigation: () => true } as unknown as EC.Property;
+        const stubbedClass = imodelAccess.stubEntityClass({
+          schemaName: "TestSchema",
+          className: "Class",
+          is: async () => true,
+          properties: [property],
+        });
+        const propertyInfo: propertiesGrouping.PropertyGroupInfo = {
+          ecClass: stubbedClass,
+          previousPropertiesGroupingInfo: [],
+          propertyGroup: { propertyName: "PropertyName" },
+        };
+        const expectedGroupingNodeKey: GroupingNodeKey = {
+          type: "property-grouping:value",
+          propertyName: "PropertyName",
+          propertyClassName: "TestSchema.Class",
+          formattedPropertyValue: "",
+        };
+        expect(await propertiesGrouping.createPropertyGroups(nodes, [], propertyInfo, formatter, testLocalizedStrings, imodelAccess)).to.deep.eq({
+          groupingType: "property",
+          grouped: [
+            createTestProcessedGroupingNode({
+              label: testLocalizedStrings.unspecified,
+              key: expectedGroupingNodeKey,
+              parentKeys: ["x"],
+              groupedInstanceKeys: nodes.flatMap((n) => n.key.instanceKeys),
+              children: nodes.map((n) => ({ ...n, parentKeys: ["x", expectedGroupingNodeKey] })),
+            }),
+          ],
+          ungrouped: [],
+        });
+      });
+
       it("doesn't group, when property value isn't set and createGroupForUnspecifiedValues isn't set", async () => {
         const nodes = [
           createTestProcessedInstanceNode({
@@ -887,7 +936,7 @@ describe("PropertiesGrouping", () => {
             },
           }),
         ];
-        const property = { name: "PropertyName", isPrimitive: () => true } as unknown as EC.Property;
+        const property = { name: "PropertyName", isPrimitive: () => true, isNavigation: () => false } as unknown as EC.Property;
         const stubbedClass = imodelAccess.stubEntityClass({
           schemaName: "TestSchema",
           className: "Class",
@@ -922,7 +971,7 @@ describe("PropertiesGrouping", () => {
             },
           }),
         ];
-        const property = { name: "PropertyName", isPrimitive: () => true } as unknown as EC.Property;
+        const property = { name: "PropertyName", isPrimitive: () => true, isNavigation: () => false } as unknown as EC.Property;
         const stubbedClass = imodelAccess.stubEntityClass({
           schemaName: "TestSchema",
           className: "Class",
@@ -969,7 +1018,7 @@ describe("PropertiesGrouping", () => {
             },
           }),
         ];
-        const property = { name: "PropertyName", isPrimitive: () => true, primitiveType: "String" } as unknown as EC.Property;
+        const property = { name: "PropertyName", isPrimitive: () => true, isNavigation: () => false, primitiveType: "String" } as unknown as EC.Property;
         const stubbedClass = imodelAccess.stubEntityClass({
           schemaName: "TestSchema",
           className: "Class",
@@ -1026,7 +1075,7 @@ describe("PropertiesGrouping", () => {
             },
           }),
         ];
-        const property = { name: "PropertyName", isPrimitive: () => true, primitiveType: "String" } as unknown as EC.Property;
+        const property = { name: "PropertyName", isPrimitive: () => true, isNavigation: () => false, primitiveType: "String" } as unknown as EC.Property;
         const stubbedClass = imodelAccess.stubEntityClass({
           schemaName: "TestSchema",
           className: "Class",
@@ -1083,7 +1132,7 @@ describe("PropertiesGrouping", () => {
             },
           }),
         ];
-        const property = { name: "PropertyName", isPrimitive: () => true, primitiveType: "String" } as unknown as EC.Property;
+        const property = { name: "PropertyName", isPrimitive: () => true, isNavigation: () => false, primitiveType: "String" } as unknown as EC.Property;
         const stubbedClass = imodelAccess.stubEntityClass({
           schemaName: "TestSchema",
           className: "Class",
@@ -1152,7 +1201,7 @@ describe("PropertiesGrouping", () => {
             },
           }),
         ];
-        const property = { name: "PropertyName1", isPrimitive: () => true, primitiveType: "String" } as unknown as EC.Property;
+        const property = { name: "PropertyName1", isPrimitive: () => true, isNavigation: () => false, primitiveType: "String" } as unknown as EC.Property;
         const stubbedClass = imodelAccess.stubEntityClass({
           schemaName: "TestSchema",
           className: "Class",
@@ -1200,7 +1249,7 @@ describe("PropertiesGrouping", () => {
             },
           }),
         ];
-        const property = { name: "PropertyName", isPrimitive: () => true } as unknown as EC.Property;
+        const property = { name: "PropertyName", isPrimitive: () => true, isNavigation: () => false } as unknown as EC.Property;
         const stubbedClass = imodelAccess.stubEntityClass({
           schemaName: "TestSchema",
           className: "Class",
@@ -1234,7 +1283,7 @@ describe("PropertiesGrouping", () => {
             },
           }),
         ];
-        const property = { name: "PropertyName", isPrimitive: () => true } as unknown as EC.Property;
+        const property = { name: "PropertyName", isPrimitive: () => true, isNavigation: () => false } as unknown as EC.Property;
         const stubbedClass = imodelAccess.stubEntityClass({
           schemaName: "TestSchema",
           className: "Class",
@@ -1286,7 +1335,7 @@ describe("PropertiesGrouping", () => {
             },
           }),
         ];
-        const property = { name: "PropertyName", isPrimitive: () => true } as unknown as EC.Property;
+        const property = { name: "PropertyName", isPrimitive: () => true, isNavigation: () => false } as unknown as EC.Property;
         const stubbedClass = imodelAccess.stubEntityClass({
           schemaName: "TestSchema",
           className: "Class",
@@ -1332,7 +1381,7 @@ describe("PropertiesGrouping", () => {
             },
           }),
         ];
-        const property = { name: "PropertyName", isPrimitive: () => true } as unknown as EC.Property;
+        const property = { name: "PropertyName", isPrimitive: () => true, isNavigation: () => false } as unknown as EC.Property;
         const stubbedClass = imodelAccess.stubEntityClass({
           schemaName: "TestSchema",
           className: "Class",
@@ -1415,7 +1464,7 @@ describe("PropertiesGrouping", () => {
               schemaName: "TestSchema",
               className: "Class1",
               is: async () => true,
-              properties: [{ name: "PropertyName1", isPrimitive: () => true } as unknown as EC.Property],
+              properties: [{ name: "PropertyName1", isPrimitive: () => true, isNavigation: () => false } as unknown as EC.Property],
             }),
             previousPropertiesGroupingInfo: [],
             propertyGroup: { propertyName: "PropertyName1", ranges: [{ fromValue: 1, toValue: 5 }] },
@@ -1459,7 +1508,7 @@ describe("PropertiesGrouping", () => {
                 schemaName: "TestSchema",
                 className: "Class2",
                 is: async () => true,
-                properties: [{ name: "PropertyName2", isPrimitive: () => true } as unknown as EC.Property],
+                properties: [{ name: "PropertyName2", isPrimitive: () => true, isNavigation: () => false } as unknown as EC.Property],
               }),
               previousPropertiesGroupingInfo: [],
               propertyGroup: { propertyName: "PropertyName2", ranges: [{ fromValue: 7, toValue: 10 }] },
@@ -1500,7 +1549,7 @@ describe("PropertiesGrouping", () => {
             },
           }),
         ];
-        const property = { name: "PropertyName", isPrimitive: () => true } as unknown as EC.Property;
+        const property = { name: "PropertyName", isPrimitive: () => true, isNavigation: () => false } as unknown as EC.Property;
         const stubbedClass = imodelAccess.stubEntityClass({
           schemaName: "TestSchema",
           className: "Class",
@@ -1547,7 +1596,7 @@ describe("PropertiesGrouping", () => {
             },
           }),
         ];
-        const property = { name: "PropertyName", isPrimitive: () => true } as unknown as EC.Property;
+        const property = { name: "PropertyName", isPrimitive: () => true, isNavigation: () => false } as unknown as EC.Property;
         const stubbedClass = imodelAccess.stubEntityClass({
           schemaName: "TestSchema",
           className: "Class",
@@ -1605,7 +1654,7 @@ describe("PropertiesGrouping", () => {
             },
           }),
         ];
-        const property = { name: "PropertyName", isPrimitive: () => true } as unknown as EC.Property;
+        const property = { name: "PropertyName", isPrimitive: () => true, isNavigation: () => false } as unknown as EC.Property;
         const stubbedClass = imodelAccess.stubEntityClass({
           schemaName: "TestSchema",
           className: "Class",
@@ -1663,7 +1712,7 @@ describe("PropertiesGrouping", () => {
             },
           }),
         ];
-        const property = { name: "PropertyName", isPrimitive: () => true } as unknown as EC.Property;
+        const property = { name: "PropertyName", isPrimitive: () => true, isNavigation: () => false } as unknown as EC.Property;
         const stubbedClass = imodelAccess.stubEntityClass({
           schemaName: "TestSchema",
           className: "Class",
@@ -1719,7 +1768,7 @@ describe("PropertiesGrouping", () => {
             },
           }),
         ];
-        const property = { name: "PropertyName", isPrimitive: () => true } as unknown as EC.Property;
+        const property = { name: "PropertyName", isPrimitive: () => true, isNavigation: () => false } as unknown as EC.Property;
         const stubbedClass = imodelAccess.stubEntityClass({
           schemaName: "TestSchema",
           className: "Class",
@@ -1801,7 +1850,7 @@ describe("PropertiesGrouping", () => {
             },
           }),
         ];
-        const property = { name: "PropertyName", isPrimitive: () => true } as unknown as EC.Property;
+        const property = { name: "PropertyName", isPrimitive: () => true, isNavigation: () => false } as unknown as EC.Property;
         const stubbedClass = imodelAccess.stubEntityClass({
           schemaName: "TestSchema",
           className: "Class",

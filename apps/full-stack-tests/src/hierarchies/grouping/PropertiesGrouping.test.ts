@@ -7,7 +7,7 @@ import { insertSubject } from "presentation-test-utilities";
 import { Subject } from "@itwin/core-backend";
 import { IModel } from "@itwin/core-common";
 import { IModelConnection } from "@itwin/core-frontend";
-import { createNodesQueryClauseFactory, HierarchyDefinition, NodesQueryClauseFactory } from "@itwin/presentation-hierarchies";
+import { createHierarchyProvider, createNodesQueryClauseFactory, HierarchyDefinition, NodesQueryClauseFactory } from "@itwin/presentation-hierarchies";
 import { buildIModel, importSchema, withECDb } from "../../IModelUtils";
 import { initialize, terminate } from "../../IntegrationTests";
 import { NodeValidators, validateHierarchy } from "../HierarchyValidation";
@@ -19,10 +19,12 @@ describe("Hierarchies", () => {
       NonNullable<Parameters<NodesQueryClauseFactory["createSelectClause"]>[0]["grouping"]>["byProperties"]
     >;
     let subjectClassName: string;
+    let emptyIModel: IModelConnection;
 
     before(async function () {
       await initialize();
       subjectClassName = Subject.classFullName.replace(":", ".");
+      emptyIModel = (await buildIModel(this)).imodel;
     });
 
     after(async () => {
@@ -70,7 +72,6 @@ describe("Hierarchies", () => {
         propertyGroups: [{ propertyName: "Description", propertyClassAlias: "this" }],
         createGroupForUnspecifiedValues: true,
       };
-
       await validateHierarchy({
         provider: createProvider({ imodel, hierarchy: createHierarchyWithSpecifiedGrouping(imodel, groupingParams) }),
         expect: [
@@ -132,6 +133,62 @@ describe("Hierarchies", () => {
               children: [
                 NodeValidators.createForInstanceNode({
                   instanceKeys: [keys.childSubject1],
+                  children: false,
+                }),
+              ],
+            }),
+          ],
+        });
+      });
+
+      it("groups by navigation property", async function () {
+        const imodelAccess = createIModelAccess(emptyIModel);
+        const selectClauseFactory = createNodesQueryClauseFactory({ imodelAccess });
+        const provider = createHierarchyProvider({
+          imodelAccess,
+          hierarchyDefinition: {
+            defineHierarchyLevel: async ({ parentNode }) =>
+              parentNode
+                ? []
+                : [
+                    {
+                      fullClassName: "BisCore.Subject",
+                      query: {
+                        ecsql: `
+                          SELECT ${await selectClauseFactory.createSelectClause({
+                            ecClassId: { selector: "this.ECClassId" },
+                            ecInstanceId: { selector: "this.ECInstanceId" },
+                            nodeLabel: { selector: "this.CodeValue" },
+                            grouping: {
+                              byProperties: {
+                                createGroupForUnspecifiedValues: true,
+                                propertiesClassName: "BisCore.Subject",
+                                propertyGroups: [
+                                  {
+                                    propertyClassAlias: "this",
+                                    propertyName: "Parent",
+                                  },
+                                ],
+                              },
+                            },
+                          })}
+                          FROM BisCore.Subject [this]
+                        `,
+                      },
+                    },
+                  ],
+          },
+          localizedStrings: { other: "", unspecified: "NOT SPECIFIED" }
+        });
+
+        await validateHierarchy({
+          provider,
+          expect: [
+            NodeValidators.createForPropertyValueGroupingNode({
+              label: "NOT SPECIFIED",
+              propertyName: "Parent",
+              children: [
+                NodeValidators.createForInstanceNode({
                   children: false,
                 }),
               ],
@@ -284,6 +341,171 @@ describe("Hierarchies", () => {
               ],
             }),
           ],
+        });
+      });
+
+      describe("navigation property", () => {
+        it("groups by navigation property", async function () {
+          const { imodel, ...keys } = await buildIModel(this, async (builder) => {
+            const childSubject1 = insertSubject({ builder, codeValue: "A1", parentId: IModel.rootSubjectId, description: "TestDescription" });
+            return { childSubject1 };
+          });
+
+          const groupingParams: ECSqlSelectClausePropertiesGroupingParams = {
+            propertiesClassName: "BisCore.Subject",
+            propertyGroups: [{ propertyName: "Parent", propertyClassAlias: "this" }],
+          };
+
+          await validateHierarchy({
+            provider: createProvider({ imodel, hierarchy: createHierarchyWithSpecifiedGrouping(imodel, groupingParams) }),
+            expect: [
+              NodeValidators.createForPropertyValueGroupingNode({
+                propertyClassName: "BisCore.Subject",
+                propertyName: "Parent",
+                children: [
+                  NodeValidators.createForInstanceNode({
+                    instanceKeys: [keys.childSubject1],
+                    children: false
+                  }),
+                ],
+              }),
+            ],
+          });
+        });
+
+        it("creates one grouping node when navigation properties point to different nodes with same labels", async function () {
+          const { imodel, ...keys } = await buildIModel(this, async (builder) => {
+            const childSubject1 = insertSubject({ builder, codeValue: "A1", parentId: IModel.rootSubjectId, description: "TestDescription", userLabel: "sameLabel" });
+            const childSubject2 = insertSubject({ builder, codeValue: "A2", parentId: childSubject1.id, description: "TestDescription" });
+            const childSubject3 = insertSubject({ builder, codeValue: "A3", parentId: IModel.rootSubjectId, description: "TestDescription", userLabel: "sameLabel" });
+            const childSubject4 = insertSubject({ builder, codeValue: "A4", parentId: childSubject3.id, description: "TestDescription" });
+            return { childSubject1, childSubject2, childSubject3, childSubject4 };
+          });
+
+          const groupingParams: ECSqlSelectClausePropertiesGroupingParams = {
+            propertiesClassName: "BisCore.Subject",
+            propertyGroups: [{ propertyName: "Parent", propertyClassAlias: "this" }],
+          };
+          const selectClauseFactory = createNodesQueryClauseFactory({ imodelAccess: createIModelAccess(imodel) });
+          const provider = createHierarchyProvider({
+            imodelAccess: createIModelAccess(imodel),
+            hierarchyDefinition: {
+              defineHierarchyLevel: async ({ parentNode }) =>
+                parentNode
+                  ? []
+                  : [
+                      {
+                        fullClassName: "BisCore.Subject",
+                        query: {
+                          ecsql: `
+                            SELECT ${await selectClauseFactory.createSelectClause({
+                              ecClassId: { selector: "this.ECClassId" },
+                              ecInstanceId: { selector: "this.ECInstanceId" },
+                              nodeLabel: { selector: "this.CodeValue" },
+                              grouping: {
+                                byProperties: groupingParams,
+                              },
+                            })}
+                            FROM BisCore.Subject [this]
+                            WHERE [this].[Parent].[Id] = ${keys.childSubject1.id} or [this].[Parent].[Id] = ${keys.childSubject3.id}
+                          `,
+                        },
+                      },
+                    ],
+            },
+          });
+
+          await validateHierarchy({
+            provider,
+            expect: [
+              NodeValidators.createForPropertyValueGroupingNode({
+                propertyClassName: "BisCore.Subject",
+                propertyName: "Parent",
+                label: "sameLabel",
+                children: [
+                  NodeValidators.createForInstanceNode({
+                    instanceKeys: [keys.childSubject2],
+                    children: false
+                  }),
+                  NodeValidators.createForInstanceNode({
+                    instanceKeys: [keys.childSubject4],
+                    children: false
+                  }),
+                ],
+              }),
+            ],
+          });
+        });
+
+        it("creates different grouping nodes when navigation properties point to different nodes with different labels", async function () {
+          const { imodel, ...keys } = await buildIModel(this, async (builder) => {
+            const childSubject1 = insertSubject({ builder, codeValue: "A1", parentId: IModel.rootSubjectId, description: "TestDescription", userLabel: "differentLabel1" });
+            const childSubject2 = insertSubject({ builder, codeValue: "A2", parentId: childSubject1.id, description: "TestDescription" });
+            const childSubject3 = insertSubject({ builder, codeValue: "A3", parentId: IModel.rootSubjectId, description: "TestDescription", userLabel: "differentLabel2" });
+            const childSubject4 = insertSubject({ builder, codeValue: "A4", parentId: childSubject3.id, description: "TestDescription" });
+            return { childSubject1, childSubject2, childSubject3, childSubject4 };
+          });
+
+          const groupingParams: ECSqlSelectClausePropertiesGroupingParams = {
+            propertiesClassName: "BisCore.Subject",
+            propertyGroups: [{ propertyName: "Parent", propertyClassAlias: "this" }],
+          };
+          const selectClauseFactory = createNodesQueryClauseFactory({ imodelAccess: createIModelAccess(imodel) });
+          const provider = createHierarchyProvider({
+            imodelAccess: createIModelAccess(imodel),
+            hierarchyDefinition: {
+              defineHierarchyLevel: async ({ parentNode }) =>
+                parentNode
+                  ? []
+                  : [
+                      {
+                        fullClassName: "BisCore.Subject",
+                        query: {
+                          ecsql: `
+                            SELECT ${await selectClauseFactory.createSelectClause({
+                              ecClassId: { selector: "this.ECClassId" },
+                              ecInstanceId: { selector: "this.ECInstanceId" },
+                              nodeLabel: { selector: "this.CodeValue" },
+                              grouping: {
+                                byProperties: groupingParams,
+                              },
+                            })}
+                            FROM BisCore.Subject [this]
+                            WHERE [this].[Parent].[Id] = ${keys.childSubject1.id} or [this].[Parent].[Id] = ${keys.childSubject3.id}
+                          `,
+                        },
+                      },
+                    ],
+            },
+          });
+
+          await validateHierarchy({
+            provider,
+            expect: [
+              NodeValidators.createForPropertyValueGroupingNode({
+                propertyClassName: "BisCore.Subject",
+                propertyName: "Parent",
+                label: "differentLabel1",
+                children: [
+                  NodeValidators.createForInstanceNode({
+                    instanceKeys: [keys.childSubject2],
+                    children: false
+                  }),
+                ],
+              }),
+              NodeValidators.createForPropertyValueGroupingNode({
+                propertyClassName: "BisCore.Subject",
+                propertyName: "Parent",
+                label: "differentLabel2",
+                children: [
+                  NodeValidators.createForInstanceNode({
+                    instanceKeys: [keys.childSubject4],
+                    children: false
+                  }),
+                ],
+              }),
+            ],
+          });
         });
       });
     });
