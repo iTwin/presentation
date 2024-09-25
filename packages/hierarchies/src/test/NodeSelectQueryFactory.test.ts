@@ -77,6 +77,44 @@ describe("createNodesQueryClauseFactory", () => {
       ).to.eventually.be.rejected;
     });
 
+    it(`throws when abstractConstraint is undefined`, async () => {
+      imodelAccess.stubEntityClass({
+        schemaName: "testSchema",
+        className: "testName",
+        is: async () => true,
+        properties: [
+          {
+            name: "PropertyName",
+            isNavigation: () => true,
+            direction: "Forward",
+            relationshipClass: Promise.resolve({
+              target: {
+                abstractConstraint: Promise.resolve(undefined),
+              },
+            }),
+          } as EC.NavigationProperty,
+        ],
+      });
+      await expect(
+        factory.createSelectClause({
+          ecClassId: { selector: "class_id" },
+          ecInstanceId: { selector: "instance_id" },
+          nodeLabel: "label",
+          grouping: {
+            byProperties: {
+              propertiesClassName: "testSchema.testName",
+              propertyGroups: [
+                {
+                  propertyName: "PropertyName",
+                  propertyClassAlias: "this",
+                },
+              ],
+            },
+          },
+        }),
+      ).to.eventually.be.rejected;
+    });
+
     it("creates valid clause with value props", async () => {
       imodelAccess.stubEntityClass({
         schemaName: "testSchema",
@@ -159,7 +197,18 @@ describe("createNodesQueryClauseFactory", () => {
         schemaName: "testSchema",
         className: "testName",
         is: async () => true,
-        properties: [{ name: "PropertyName", isNavigation: () => true } as EC.NavigationProperty],
+        properties: [
+          {
+            name: "PropertyName",
+            isNavigation: () => true,
+            direction: "Backward",
+            relationshipClass: Promise.resolve({
+              source: {
+                abstractConstraint: Promise.resolve({ fullName: "testSchema.SourceClass" }),
+              },
+            }),
+          } as EC.NavigationProperty,
+        ],
       });
       const result = await factory.createSelectClause({
         ecClassId: { selector: "class_id" },
@@ -218,9 +267,9 @@ describe("createNodesQueryClauseFactory", () => {
           'byClass', TRUE,
           'byBaseClasses', json_object('fullClassNames', json_array('testSchema.testName'), 'hideIfNoSiblings', FALSE, 'hideIfOneGroupedNode', TRUE, 'autoExpand', 'always'),
           'byProperties', json_object('propertiesClassName', 'testSchema.testName', 'propertyGroups', json_array(json_object('propertyName', 'PropertyName', 'propertyValue', (
-            SELECT ${await instanceLabelSelectClauseFactory.createSelectClause({ classAlias: "cAlias" })}
-            FROM testSchema.testName AS cAlias
-            WHERE [cAlias].[ECInstanceId] = [this].[PropertyName].[Id]),
+            SELECT ${await instanceLabelSelectClauseFactory.createSelectClause({ classAlias: "target" })}
+            FROM testSchema.SourceClass AS target
+            WHERE [target].[ECInstanceId] = [this].[PropertyName].[Id]),
             'ranges', json_array(json_object('fromValue', 1, 'toValue', 2, 'rangeLabel', 'range label')))), 'createGroupForOutOfRangeValues', CAST(FALSE AS BOOLEAN), 'createGroupForUnspecifiedValues', CAST(TRUE AS BOOLEAN))
         ) AS ${NodeSelectClauseColumnNames.Grouping},
         json_object(
