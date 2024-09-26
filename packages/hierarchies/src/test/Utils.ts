@@ -214,6 +214,14 @@ export function createIModelAccessStub() {
   };
 }
 
+export function createInstanceLabelSelectClauseFactoryStub() {
+  return {
+    async createSelectClause(props: { classAlias: string; className?: string; selectorsConcatenator?: any }): Promise<string> {
+      return `[${props.classAlias}].[LabelProperty]`;
+    },
+  };
+}
+
 export const testLocalizedStrings = {
   other: "_Other_",
   unspecified: "_Unspecified_",

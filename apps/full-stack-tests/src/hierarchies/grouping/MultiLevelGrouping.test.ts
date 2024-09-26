@@ -11,6 +11,7 @@ import { buildIModel } from "../../IModelUtils";
 import { initialize, terminate } from "../../IntegrationTests";
 import { NodeValidators, validateHierarchy } from "../HierarchyValidation";
 import { createIModelAccess, createProvider } from "../Utils";
+import { createBisInstanceLabelSelectClauseFactory } from "@itwin/presentation-shared";
 
 describe("Hierarchies", () => {
   describe("Multi level grouping", () => {
@@ -67,7 +68,11 @@ describe("Hierarchies", () => {
         return { childSubject1, childSubject2, childPartition3, childPartition4, childPartition5 };
       });
 
-      const selectQueryFactory = createNodesQueryClauseFactory({ imodelAccess: createIModelAccess(imodel) });
+      const imodelAccess = createIModelAccess(imodel);
+      const selectQueryFactory = createNodesQueryClauseFactory({
+        imodelAccess,
+        instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
+      });
       const customHierarchy: HierarchyDefinition = {
         async defineHierarchyLevel({ parentNode }) {
           if (!parentNode) {

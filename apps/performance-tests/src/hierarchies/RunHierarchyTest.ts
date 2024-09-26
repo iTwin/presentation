@@ -9,6 +9,7 @@ import { createNodesQueryClauseFactory, NodesQueryClauseFactory } from "@itwin/p
 import { Datasets, IModelName } from "../util/Datasets";
 import { run, RunOptions } from "../util/TestUtilities";
 import { ProviderOptions, StatelessHierarchyProvider } from "./StatelessHierarchyProvider";
+import { createBisInstanceLabelSelectClauseFactory } from "@itwin/presentation-shared";
 
 /**
  * Runs a full hierarchy test against a given iModel. The hierarchy is created using the given
@@ -38,7 +39,10 @@ export function runHierarchyTest(
               return [];
             }
 
-            const query = createNodesQueryClauseFactory({ imodelAccess });
+            const query = createNodesQueryClauseFactory({
+              imodelAccess,
+              instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
+            });
             return [
               {
                 fullClassName,
