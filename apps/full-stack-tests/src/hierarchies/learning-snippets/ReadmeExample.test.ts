@@ -54,10 +54,10 @@ function createProvider(imodel: IModelConnection): HierarchyProvider {
     ...createLimitingECSqlQueryExecutor(createECSqlQueryExecutor(imodel), 1000),
   };
 
-  // Create a factory for building nodes SELECT query clauses in a format understood by the provider
-  const nodesQueryFactory = createNodesQueryClauseFactory({ imodelAccess });
   // Create a factory for building labels SELECT query clauses according to BIS conventions
   const labelsQueryFactory = createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess });
+  // Create a factory for building nodes SELECT query clauses in a format understood by the provider
+  const nodesQueryFactory = createNodesQueryClauseFactory({ imodelAccess, instanceLabelSelectClauseFactory: labelsQueryFactory });
 
   // Then, define the hierarchy
   const hierarchyDefinition = createClassBasedHierarchyDefinition({

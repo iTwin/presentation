@@ -77,7 +77,10 @@ describe("Hierarchies React", () => {
           ...createCachingECClassHierarchyInspector({ schemaProvider, cacheSize: 100 }),
           ...createLimitingECSqlQueryExecutor(createECSqlQueryExecutor(imodel), 1000),
         };
-        const nodesQueryFactory = createNodesQueryClauseFactory({ imodelAccess: access });
+        const nodesQueryFactory = createNodesQueryClauseFactory({
+          imodelAccess: access,
+          instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: access }),
+        });
         const labelsQueryFactory = createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: access });
         getHierarchyDefinition = () => ({
           defineHierarchyLevel: async () => [

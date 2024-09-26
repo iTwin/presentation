@@ -7,7 +7,7 @@
 import { expect } from "chai";
 import { insertPhysicalElement, insertPhysicalModelWithPartition, insertSpatialCategory } from "presentation-test-utilities";
 // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.Formatting.BasicFormatterExample.Imports
-import { createDefaultValueFormatter, IPrimitiveValueFormatter } from "@itwin/presentation-shared";
+import { createBisInstanceLabelSelectClauseFactory, createDefaultValueFormatter, IPrimitiveValueFormatter } from "@itwin/presentation-shared";
 // __PUBLISH_EXTRACT_END__
 // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.Formatting.CoreInteropFormatterExample.Imports
 import { createValueFormatter } from "@itwin/presentation-core-interop";
@@ -154,7 +154,10 @@ describe("Hierarchies", () => {
                     fullClassName: "BisCore.SpatialCategory",
                     query: {
                       ecsql: `
-                        SELECT ${await createNodesQueryClauseFactory({ imodelAccess }).createSelectClause({
+                        SELECT ${await createNodesQueryClauseFactory({
+                          imodelAccess,
+                          instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
+                        }).createSelectClause({
                           ecClassId: { selector: "this.ECClassId" },
                           ecInstanceId: { selector: "this.ECInstanceId" },
                           // Generally, one of the `IInstanceLabelSelectClauseFactory` implementations, delivered with `@itwin/presentation-shared` package, should be used,
@@ -240,7 +243,10 @@ describe("Hierarchies", () => {
                     fullClassName: myPhysicalObjectClassName,
                     query: {
                       ecsql: `
-                        SELECT ${await createNodesQueryClauseFactory({ imodelAccess }).createSelectClause({
+                        SELECT ${await createNodesQueryClauseFactory({
+                          imodelAccess,
+                          instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
+                        }).createSelectClause({
                           ecClassId: { selector: "this.ECClassId" },
                           ecInstanceId: { selector: "this.ECInstanceId" },
                           nodeLabel: { selector: "this.UserLabel" },

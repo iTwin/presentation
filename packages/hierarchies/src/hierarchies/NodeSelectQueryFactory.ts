@@ -13,7 +13,16 @@ import {
   GenericInstanceFilterRuleOperator,
   GenericInstanceFilterRuleValue,
 } from "@itwin/core-common";
-import { EC, ECClassHierarchyInspector, ECSchemaProvider, ECSql, getClass, parseFullClassName, PrimitiveValue } from "@itwin/presentation-shared";
+import {
+  EC,
+  ECClassHierarchyInspector,
+  ECSchemaProvider,
+  ECSql,
+  getClass,
+  IInstanceLabelSelectClauseFactory,
+  parseFullClassName,
+  PrimitiveValue,
+} from "@itwin/presentation-shared";
 import { HierarchyNodeAutoExpandProp } from "./HierarchyNode";
 
 /**
@@ -245,19 +254,27 @@ export interface NodesQueryClauseFactory {
 }
 
 /**
- * Creates an instance of `NodeSelectQueryFactory` that .
+ * Creates an instance of `NodeSelectQueryFactory`.
  * @beta
  */
-export function createNodesQueryClauseFactory(props: { imodelAccess: ECSchemaProvider & ECClassHierarchyInspector }): NodesQueryClauseFactory {
+export function createNodesQueryClauseFactory(props: {
+  imodelAccess: ECSchemaProvider & ECClassHierarchyInspector;
+  instanceLabelSelectClauseFactory: IInstanceLabelSelectClauseFactory;
+}): NodesQueryClauseFactory {
   return new NodeSelectQueryFactory(props);
 }
 
 /** A factory for creating a nodes' select ECSQL query. */
 class NodeSelectQueryFactory {
   private _imodelAccess: ECSchemaProvider & ECClassHierarchyInspector;
+  private _instanceLabelSelectClauseFactory: IInstanceLabelSelectClauseFactory;
 
-  public constructor(props: { imodelAccess: ECSchemaProvider & ECClassHierarchyInspector }) {
+  public constructor(props: {
+    imodelAccess: ECSchemaProvider & ECClassHierarchyInspector;
+    instanceLabelSelectClauseFactory: IInstanceLabelSelectClauseFactory;
+  }) {
     this._imodelAccess = props.imodelAccess;
+    this._instanceLabelSelectClauseFactory = props.instanceLabelSelectClauseFactory;
   }
 
   /** Create a SELECT clause in a format understood by results reader of the library. */
@@ -270,7 +287,7 @@ class NodeSelectQueryFactory {
       CAST(${createECSqlValueSelector(props.hasChildren)} AS BOOLEAN) AS ${NodeSelectClauseColumnNames.HasChildren},
       CAST(${createECSqlValueSelector(props.hideIfNoChildren)} AS BOOLEAN) AS ${NodeSelectClauseColumnNames.HideIfNoChildren},
       CAST(${createECSqlValueSelector(props.hideNodeInHierarchy)} AS BOOLEAN) AS ${NodeSelectClauseColumnNames.HideNodeInHierarchy},
-      ${props.grouping ? createGroupingSelector(props.grouping) : "CAST(NULL AS TEXT)"} AS ${NodeSelectClauseColumnNames.Grouping},
+      ${props.grouping ? await createGroupingSelector(props.grouping, this._imodelAccess, this._instanceLabelSelectClauseFactory) : "CAST(NULL AS TEXT)"} AS ${NodeSelectClauseColumnNames.Grouping},
       ${
         props.extendedData
           ? `json_object(${Object.entries(props.extendedData)
@@ -384,7 +401,11 @@ function isSelector(x: any): x is ECSqlValueSelector {
   return !!x.selector;
 }
 
-function createGroupingSelector(grouping: ECSqlSelectClauseGroupingParams): string {
+async function createGroupingSelector(
+  grouping: ECSqlSelectClauseGroupingParams,
+  imodelAccess: ECSchemaProvider & ECClassHierarchyInspector,
+  instanceLabelSelectClauseFactory: IInstanceLabelSelectClauseFactory,
+): Promise<string> {
   const groupingSelectors = new Array<{ key: string; selector: string }>();
 
   grouping.byLabel &&
@@ -417,7 +438,8 @@ function createGroupingSelector(grouping: ECSqlSelectClauseGroupingParams): stri
       ]),
     });
 
-  grouping.byProperties &&
+  if (grouping.byProperties) {
+    const propertyClass = await getClass(imodelAccess, grouping.byProperties.propertiesClassName);
     groupingSelectors.push({
       key: "byProperties",
       selector: serializeJsonObject([
@@ -427,9 +449,13 @@ function createGroupingSelector(grouping: ECSqlSelectClauseGroupingParams): stri
         },
         {
           key: "propertyGroups",
-          selector: `json_array(${grouping.byProperties.propertyGroups
-            .map((propertyGroup) => serializeJsonObject(createPropertyGroupSelectors(propertyGroup)))
-            .join(", ")})`,
+          selector: `json_array(${(
+            await Promise.all(
+              grouping.byProperties.propertyGroups.map(async (propertyGroup) =>
+                serializeJsonObject(await createPropertyGroupSelectors(propertyGroup, propertyClass, instanceLabelSelectClauseFactory)),
+              ),
+            )
+          ).join(", ")})`,
         },
         ...(grouping.byProperties.createGroupForOutOfRangeValues !== undefined
           ? [
@@ -450,6 +476,7 @@ function createGroupingSelector(grouping: ECSqlSelectClauseGroupingParams): stri
         ...createBaseGroupingParamSelectors(grouping.byProperties),
       ]),
     });
+  }
 
   return serializeJsonObject(groupingSelectors);
 }
@@ -475,21 +502,51 @@ function createLabelGroupingBaseParamsSelectors(byLabel: ECSqlSelectClauseLabelG
   return selectors;
 }
 
-function createPropertyGroupSelectors(propertyGroup: ECSqlSelectClausePropertyGroup) {
+async function createPropertyGroupSelectors(
+  propertyGroup: ECSqlSelectClausePropertyGroup,
+  propertyClass: EC.Class,
+  instanceLabelSelectClauseFactory: IInstanceLabelSelectClauseFactory,
+) {
   const selectors = new Array<{ key: string; selector: string }>();
-  selectors.push(
-    {
-      key: "propertyName",
-      selector: `${createECSqlValueSelector(propertyGroup.propertyName)}`,
-    },
-    {
+  selectors.push({
+    key: "propertyName",
+    selector: `${createECSqlValueSelector(propertyGroup.propertyName)}`,
+  });
+
+  const property = await propertyClass.getProperty(propertyGroup.propertyName);
+  if (!property) {
+    throw new Error(`Property "${propertyGroup.propertyName}" not found in ECClass "${propertyClass.fullName}".`);
+  }
+
+  if (property.isNavigation()) {
+    const relationshipClass = await property.relationshipClass;
+    const abstractConstraint =
+      property.direction === "Forward" ? await relationshipClass.target.abstractConstraint : await relationshipClass.source.abstractConstraint;
+    if (!abstractConstraint) {
+      throw new Error(`Could not determine class name for navigation property with direction "${property.direction}".`);
+    }
+
+    const fullName = abstractConstraint.fullName;
+    const targetAlias = "target";
+    selectors.push({
+      key: "propertyValue",
+      selector: `(
+          SELECT ${await instanceLabelSelectClauseFactory.createSelectClause({ className: fullName, classAlias: targetAlias })}
+          FROM ${fullName} AS ${targetAlias}
+          WHERE [${targetAlias}].[ECInstanceId] = [${propertyGroup.propertyClassAlias}].[${propertyGroup.propertyName}].[Id]
+        )`,
+    });
+  } else {
+    selectors.push({
       key: "propertyValue",
       selector: `[${propertyGroup.propertyClassAlias}].[${propertyGroup.propertyName}]`,
-    },
-  );
+    });
+  }
+
   if (propertyGroup.ranges) {
     selectors.push(createRangeParamSelectors(propertyGroup.ranges));
   }
+
   return selectors;
 }
 

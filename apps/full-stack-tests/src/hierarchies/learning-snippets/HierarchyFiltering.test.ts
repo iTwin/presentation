@@ -9,7 +9,7 @@ import { insertPhysicalElement, insertPhysicalModelWithPartition, insertSpatialC
 import { expand, filter, first, firstValueFrom, from } from "rxjs";
 import { assert, Id64String } from "@itwin/core-bentley";
 import { IModelConnection } from "@itwin/core-frontend";
-import { InstanceKey } from "@itwin/presentation-shared";
+import { createBisInstanceLabelSelectClauseFactory, InstanceKey } from "@itwin/presentation-shared";
 // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.HierarchyFiltering.HierarchyDefinitionImports
 import { createNodesQueryClauseFactory, GroupingHierarchyNode, HierarchyDefinition, HierarchyNode } from "@itwin/presentation-hierarchies";
 import { ECSqlBinding } from "@itwin/presentation-shared";
@@ -58,7 +58,10 @@ describe("Hierarchies", () => {
 
       // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.HierarchyFiltering.HierarchyDefinition
       function createHierarchyDefinition(imodelAccess: IModelAccess): HierarchyDefinition {
-        const queryClauseFactory = createNodesQueryClauseFactory({ imodelAccess });
+        const queryClauseFactory = createNodesQueryClauseFactory({
+          imodelAccess,
+          instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
+        });
         const createHierarchyLevelDefinition = async ({ whereClause, bindings }: { whereClause?: string; bindings?: ECSqlBinding[] }) => [
           {
             fullClassName: "BisCore.PhysicalElement",
@@ -294,7 +297,10 @@ describe("Hierarchies", () => {
 
       it("sets auto-expand flag to parent nodes of the filter target until a given grouping node", async function () {
         const imodelAccess = createIModelAccess(imodel);
-        const queryClauseFactory = createNodesQueryClauseFactory({ imodelAccess });
+        const queryClauseFactory = createNodesQueryClauseFactory({
+          imodelAccess,
+          instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
+        });
         // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.HierarchyFiltering.AutoExpandUntilGroupingNode.HierarchyDef
         // Define a hierarchy such that all elements except root are grouped by label.
         const hierarchyDefinition: HierarchyDefinition = {

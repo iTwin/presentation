@@ -14,21 +14,114 @@ import {
 } from "@itwin/core-common";
 import { EC, trimWhitespace } from "@itwin/presentation-shared";
 import { createNodesQueryClauseFactory, NodeSelectClauseColumnNames, NodesQueryClauseFactory } from "../hierarchies/NodeSelectQueryFactory";
-import { createIModelAccessStub } from "./Utils";
+import { createIModelAccessStub, createInstanceLabelSelectClauseFactoryStub } from "./Utils";
 
 describe("createNodesQueryClauseFactory", () => {
   let imodelAccess: ReturnType<typeof createIModelAccessStub>;
   let factory: NodesQueryClauseFactory;
+  let instanceLabelSelectClauseFactory: ReturnType<typeof createInstanceLabelSelectClauseFactoryStub>;
   beforeEach(() => {
     imodelAccess = createIModelAccessStub();
-    factory = createNodesQueryClauseFactory({ imodelAccess });
+    instanceLabelSelectClauseFactory = createInstanceLabelSelectClauseFactoryStub();
+    factory = createNodesQueryClauseFactory({ imodelAccess, instanceLabelSelectClauseFactory });
   });
   afterEach(() => {
     sinon.restore();
   });
 
   describe("createSelectClause", () => {
+    it(`throws when property grouping uses non-existing class name`, async () => {
+      await expect(
+        factory.createSelectClause({
+          ecClassId: { selector: "class_id" },
+          ecInstanceId: { selector: "instance_id" },
+          nodeLabel: "label",
+          grouping: {
+            byProperties: {
+              propertiesClassName: "testSchema.testName",
+              propertyGroups: [
+                {
+                  propertyName: "PropertyName",
+                  propertyClassAlias: "this",
+                },
+              ],
+            },
+          },
+        }),
+      ).to.eventually.be.rejected;
+    });
+
+    it(`throws when property class doesn't have the property`, async () => {
+      imodelAccess.stubEntityClass({
+        schemaName: "testSchema",
+        className: "testName",
+        is: async () => true,
+      });
+      await expect(
+        factory.createSelectClause({
+          ecClassId: { selector: "class_id" },
+          ecInstanceId: { selector: "instance_id" },
+          nodeLabel: "label",
+          grouping: {
+            byProperties: {
+              propertiesClassName: "testSchema.testName",
+              propertyGroups: [
+                {
+                  propertyName: "PropertyName",
+                  propertyClassAlias: "this",
+                },
+              ],
+            },
+          },
+        }),
+      ).to.eventually.be.rejected;
+    });
+
+    it(`throws when abstractConstraint is undefined`, async () => {
+      imodelAccess.stubEntityClass({
+        schemaName: "testSchema",
+        className: "testName",
+        is: async () => true,
+        properties: [
+          {
+            name: "PropertyName",
+            isNavigation: () => true,
+            direction: "Forward",
+            relationshipClass: Promise.resolve({
+              target: {
+                abstractConstraint: Promise.resolve(undefined),
+              },
+            }),
+          } as EC.NavigationProperty,
+        ],
+      });
+      await expect(
+        factory.createSelectClause({
+          ecClassId: { selector: "class_id" },
+          ecInstanceId: { selector: "instance_id" },
+          nodeLabel: "label",
+          grouping: {
+            byProperties: {
+              propertiesClassName: "testSchema.testName",
+              propertyGroups: [
+                {
+                  propertyName: "PropertyName",
+                  propertyClassAlias: "this",
+                },
+              ],
+            },
+          },
+        }),
+      ).to.eventually.be.rejected;
+    });
+
     it("creates valid clause with value props", async () => {
+      imodelAccess.stubEntityClass({
+        schemaName: "testSchema",
+        className: "testName",
+        is: async () => true,
+        properties: [{ name: "PropertyName", isNavigation: () => false } as EC.Property],
+      });
       const result = await factory.createSelectClause({
         ecClassId: { selector: "class_id" },
         ecInstanceId: { selector: "instance_id" },
@@ -99,7 +192,68 @@ describe("createNodesQueryClauseFactory", () => {
       );
     });
 
+    it("creates valid clause with value props and navigation property", async () => {
+      imodelAccess.stubEntityClass({
+        schemaName: "testSchema",
+        className: "testName",
+        is: async () => true,
+        properties: [
+          {
+            name: "PropertyName",
+            isNavigation: () => true,
+            direction: "Backward",
+            relationshipClass: Promise.resolve({
+              source: {
+                abstractConstraint: Promise.resolve({ fullName: "testSchema.SourceClass" }),
+              },
+            }),
+          } as EC.NavigationProperty,
+        ],
+      });
+      const result = await factory.createSelectClause({
+        ecClassId: { selector: "class_id" },
+        ecInstanceId: { selector: "instance_id" },
+        nodeLabel: "label",
+        grouping: {
+          byProperties: {
+            propertiesClassName: "testSchema.testName",
+            propertyGroups: [
+              {
+                propertyName: "PropertyName",
+                propertyClassAlias: "this",
+              },
+            ],
+          },
+        },
+      });
+      expect(trimWhitespace(result)).to.eq(
+        trimWhitespace(`
+        ec_ClassName(class_id) AS ${NodeSelectClauseColumnNames.FullClassName},
+        instance_id AS ${NodeSelectClauseColumnNames.ECInstanceId},
+        'label' AS ${NodeSelectClauseColumnNames.DisplayLabel},
+        CAST(NULL AS BOOLEAN) AS ${NodeSelectClauseColumnNames.HasChildren},
+        CAST(NULL AS BOOLEAN) AS ${NodeSelectClauseColumnNames.HideIfNoChildren},
+        CAST(NULL AS BOOLEAN) AS ${NodeSelectClauseColumnNames.HideNodeInHierarchy},
+        json_object(
+          'byProperties', json_object('propertiesClassName', 'testSchema.testName', 'propertyGroups', json_array(json_object('propertyName', 'PropertyName', 'propertyValue', (
+            SELECT ${await instanceLabelSelectClauseFactory.createSelectClause({ classAlias: "target" })}
+            FROM testSchema.SourceClass AS target
+            WHERE [target].[ECInstanceId] = [this].[PropertyName].[Id]))))
+        ) AS ${NodeSelectClauseColumnNames.Grouping},
+        CAST(NULL AS TEXT) AS ${NodeSelectClauseColumnNames.ExtendedData},
+        CAST(NULL AS BOOLEAN) AS ${NodeSelectClauseColumnNames.AutoExpand},
+        CAST(NULL AS BOOLEAN) AS ${NodeSelectClauseColumnNames.SupportsFiltering}
+      `),
+      );
+    });
+
     it("creates valid clause with selector props", async () => {
+      imodelAccess.stubEntityClass({
+        schemaName: "testSchema",
+        className: "testName",
+        is: async () => true,
+        properties: [{ name: "PropertyName", isNavigation: () => false } as EC.Property],
+      });
       const result = await factory.createSelectClause({
         ecClassId: { selector: "x.ECClassId" },
         ecInstanceId: { selector: "x.ECInstanceId" },
@@ -186,6 +340,12 @@ describe("createNodesQueryClauseFactory", () => {
     });
 
     it("creates valid clause with complex grouping params", async () => {
+      imodelAccess.stubEntityClass({
+        schemaName: "testSchema",
+        className: "testName",
+        is: async () => true,
+        properties: [{ name: "PropertyName", isNavigation: () => false } as EC.Property],
+      });
       const result = await factory.createSelectClause({
         ecClassId: { selector: "class_id" },
         ecInstanceId: { selector: "instance_id" },
