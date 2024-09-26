@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { insertPhysicalElement, insertPhysicalModelWithPartition, insertPhysicalType, insertSpatialCategory, insertSubject } from "presentation-test-utilities";
+import { insertPhysicalElement, insertPhysicalModelWithPartition, insertSpatialCategory, insertSubject } from "presentation-test-utilities";
 import { Subject } from "@itwin/core-backend";
 import { IModel } from "@itwin/core-common";
 import { IModelConnection } from "@itwin/core-frontend";
@@ -425,24 +425,57 @@ describe("Hierarchies", () => {
 
         it("groups by navigation property with backward direction", async function () {
           const { imodel, ...keys } = await buildIModel(this, async (builder) => {
-            const childSubject1 = insertSubject({ builder, codeValue: "A1", parentId: IModel.rootSubjectId, description: "TestDescription" });
-            return { childSubject1 };
+            const childSubject1 = insertSubject({ builder, codeValue: "A1", parentId: IModel.rootSubjectId, userLabel: "custom label" });
+            const childSubject2 = insertSubject({ builder, codeValue: "A2", parentId: childSubject1.id });
+            return { childSubject1, childSubject2 };
           });
 
-          const groupingParams: ECSqlSelectClausePropertiesGroupingParams = {
-            propertiesClassName: "BisCore.Subject",
-            propertyGroups: [{ propertyName: "Parent", propertyClassAlias: "this" }],
-          };
+          const imodelAccess = createIModelAccess(imodel);
+          const selectQueryFactory = createNodesQueryClauseFactory({
+            imodelAccess,
+            instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
+          });
+          const provider = createHierarchyProvider({
+            imodelAccess: createIModelAccess(imodel),
+            hierarchyDefinition: {
+              defineHierarchyLevel: async ({ parentNode }) =>
+                parentNode
+                  ? []
+                  : [
+                      {
+                        fullClassName: "BisCore.InformationContentElement",
+                        query: {
+                          ecsql: `
+                            SELECT ${await selectQueryFactory.createSelectClause({
+                              ecClassId: { selector: "this.ECClassId" },
+                              ecInstanceId: { selector: "this.ECInstanceId" },
+                              nodeLabel: { selector: "this.CodeValue" },
+                              grouping: {
+                                byProperties: {
+                                  propertiesClassName: "BisCore.Subject",
+                                  propertyGroups: [{ propertyName: "Parent", propertyClassAlias: "this" }],
+                                },
+                              },
+                            })}
+                            FROM ${subjectClassName} [this]
+                            WHERE [this].[Parent].[Id] = ${keys.childSubject1.id}
 
+                          `,
+                        },
+                      },
+                    ],
+            },
+          });
           await validateHierarchy({
-            provider: createProvider({ imodel, hierarchy: createHierarchyWithSpecifiedGrouping(imodel, groupingParams) }),
+            provider,
             expect: [
               NodeValidators.createForPropertyValueGroupingNode({
                 propertyClassName: "BisCore.Subject",
                 propertyName: "Parent",
+                label: "custom label",
                 children: [
                   NodeValidators.createForInstanceNode({
-                    instanceKeys: [keys.childSubject1],
+                    instanceKeys: [keys.childSubject2],
                     children: false,
                   }),
                 ],
