@@ -38,11 +38,11 @@ describe("getPersistenceUnitRoundingError", () => {
   });
 
   it("uses fractional precision if there is fractional separator", () => {
-    parserSpec.parseToQuantityValue.returns({ ok: true, value: 1 / 16 });
+    parserSpec.parseToQuantityValue.returns({ ok: true, value: 1 / 8 });
 
-    const result = getPersistenceUnitRoundingError("1/2 unit", parserSpec as unknown as ParserSpec);
-    expect(result).to.eq(1 / 16);
-    expect(parserSpec.parseToQuantityValue).to.be.calledOnceWithExactly("1/16unit");
+    const result = getPersistenceUnitRoundingError("3/4 unit", parserSpec as unknown as ParserSpec);
+    expect(result).to.eq(1 / 8);
+    expect(parserSpec.parseToQuantityValue).to.be.calledOnceWithExactly("1/8unit");
   });
 
   it("uses decimal precision if format type is 'Decimal`", () => {
@@ -55,12 +55,12 @@ describe("getPersistenceUnitRoundingError", () => {
   });
 
   it("uses fractional precision if format type is 'Fractional`", () => {
-    parserSpec.parseToQuantityValue.returns({ ok: true, value: 1 / 16 });
+    parserSpec.parseToQuantityValue.returns({ ok: true, value: 1 / 2 });
     sinon.stub(format, "type").get(() => FormatType.Fractional);
 
     const result = getPersistenceUnitRoundingError("123", parserSpec as unknown as ParserSpec);
-    expect(result).to.eq(1 / 16);
-    expect(parserSpec.parseToQuantityValue).to.be.calledOnceWithExactly("1/16");
+    expect(result).to.eq(1 / 2);
+    expect(parserSpec.parseToQuantityValue).to.be.calledOnceWithExactly("1/2");
   });
 
   it("returns undefined for other format types", () => {
@@ -68,6 +68,15 @@ describe("getPersistenceUnitRoundingError", () => {
     sinon.stub(format, "type").get(() => FormatType.Azimuth);
 
     const result = getPersistenceUnitRoundingError("123'", parserSpec as unknown as ParserSpec);
+    expect(result).to.be.undefined;
+    expect(parserSpec.parseToQuantityValue).to.not.be.called;
+  });
+
+  it("returns undefined for invalid numbers types", () => {
+    parserSpec.parseToQuantityValue.returns({ ok: true, value: 0.5 });
+    sinon.stub(format, "type").get(() => FormatType.Fractional);
+
+    const result = getPersistenceUnitRoundingError("not a number", parserSpec as unknown as ParserSpec);
     expect(result).to.be.undefined;
     expect(parserSpec.parseToQuantityValue).to.not.be.called;
   });

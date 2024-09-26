@@ -5,8 +5,6 @@
 
 import { Format, FormatType, Parser, ParserSpec } from "@itwin/core-quantity";
 
-const FRACTIONAL_PRECISION = "1/16";
-
 /**
  * Finds rounding error for entered value and converts it to persistence unit.
  * @internal
@@ -15,7 +13,6 @@ export function getPersistenceUnitRoundingError(numberStr: string, parser: Parse
   const tokens = Parser.parseQuantitySpecification(numberStr, parser.format);
   const enteredUnit = tokens.length > 0 && tokens[tokens.length - 1].isString ? (tokens[tokens.length - 1].value as string) : undefined;
 
-  // find unit of entered value that will be used when determining precision
   const precisionStr = getPrecision(numberStr, parser.format);
   if (!precisionStr) {
     return undefined;
@@ -40,7 +37,7 @@ function getPrecision(numberStr: string, format: Format) {
 
   // use fractional precision if number contains fraction separator
   if (numberStr.includes("/")) {
-    return FRACTIONAL_PRECISION;
+    return getFractionalPrecision(numberStr);
   }
 
   // if number does not have decimal or fraction separator use precision based on format type.
@@ -51,7 +48,7 @@ function getPrecision(numberStr: string, format: Format) {
   }
 
   if (format.type === FormatType.Fractional) {
-    return FRACTIONAL_PRECISION;
+    return getFractionalPrecision(numberStr);
   }
 
   return undefined;
@@ -72,26 +69,52 @@ function getLocalizedDecimalSeparator(): string {
   return localeSpecificDecimalSeparator;
 }
 
+function getFractionalPrecision(numStr: string): string | undefined {
+  const digitsAfterFraction = parseDigitsAfterSymbol(numStr, "/");
+  if (digitsAfterFraction.result !== "success") {
+    return digitsAfterFraction.result === "noSymbol" ? "1/2" : undefined;
+  }
+
+  return `1/${Number(digitsAfterFraction.value) * 2}`;
+}
+
 function getDecimalPrecision(numStr: string): string | undefined {
   const separator = getLocalizedDecimalSeparator();
-  let lastDigit = -1;
-  // find last digit of the number
+  const digitsAfterSeparator = parseDigitsAfterSymbol(numStr, separator);
+  if (digitsAfterSeparator.result !== "success") {
+    return digitsAfterSeparator.result === "noSymbol" ? "0.5" : undefined;
+  }
+
+  return `${0.5 * Math.pow(10, -digitsAfterSeparator.value.length)}`;
+}
+
+type ParseResult =
+  | {
+      result: "noNumber" | "noSymbol";
+    }
+  | {
+      result: "success";
+      value: string;
+    };
+
+function parseDigitsAfterSymbol(numStr: string, symbol: string): ParseResult {
+  let lastDigitIndex = -1;
   for (let i = numStr.length - 1; i >= 0; i--) {
     if (isDigit(numStr[i])) {
-      lastDigit = i;
+      lastDigitIndex = i;
       break;
     }
   }
 
-  if (lastDigit === -1) {
-    return undefined;
+  if (lastDigitIndex === -1) {
+    return { result: "noNumber" };
   }
 
-  let separatorIndex = -1;
-  // find separator position in the number
-  for (let i = lastDigit - 1; i >= 0; i--) {
-    if (numStr[i] === separator) {
-      separatorIndex = i;
+  let symbolIndex = -1;
+  // find symbol position in the number
+  for (let i = lastDigitIndex - 1; i >= 0; i--) {
+    if (numStr[i] === symbol) {
+      symbolIndex = i;
       break;
     }
 
@@ -100,12 +123,11 @@ function getDecimalPrecision(numStr: string): string | undefined {
     }
   }
 
-  if (separatorIndex === -1) {
-    return "0.5";
+  if (symbolIndex === -1) {
+    return { result: "noSymbol" };
   }
 
-  const digitsAfterSeparator = lastDigit - separatorIndex;
-  return `${0.5 * Math.pow(10, -digitsAfterSeparator)}`;
+  return { result: "success", value: numStr.substring(symbolIndex + 1, lastDigitIndex + 1) };
 }
 
 function isDigit(char: string) {
