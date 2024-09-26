@@ -404,7 +404,7 @@ interface HierarchyNodePropertiesGroupingParams extends HierarchyNodeGroupingPar
 // @beta
 interface HierarchyNodePropertyGroup {
     propertyName: string;
-    propertyValue?: PrimitiveValue;
+    propertyValue?: PrimitiveValue | ConcatenatedValue;
     ranges?: HierarchyNodePropertyValueRange[];
 }
 
