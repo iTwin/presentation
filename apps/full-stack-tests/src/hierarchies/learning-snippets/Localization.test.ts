@@ -12,6 +12,7 @@ import { buildIModel, importSchema } from "../../IModelUtils";
 import { initialize, terminate } from "../../IntegrationTests";
 import { createIModelAccess } from "../Utils";
 import { collectHierarchy } from "./Utils";
+import { createBisInstanceLabelSelectClauseFactory } from "@itwin/presentation-shared";
 
 describe("Hierarchies", () => {
   describe("Learning snippets", () => {
@@ -87,7 +88,10 @@ describe("Hierarchies", () => {
                     fullClassName: myPhysicalObjectClassName,
                     query: {
                       ecsql: `
-                        SELECT ${await createNodesQueryClauseFactory({ imodelAccess }).createSelectClause({
+                        SELECT ${await createNodesQueryClauseFactory({
+                          imodelAccess,
+                          instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
+                        }).createSelectClause({
                           ecClassId: { selector: "this.ECClassId" },
                           ecInstanceId: { selector: "this.ECInstanceId" },
                           nodeLabel: { selector: "this.UserLabel" },

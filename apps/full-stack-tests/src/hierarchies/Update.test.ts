@@ -39,7 +39,7 @@ import { ECSchemaRpcInterface } from "@itwin/ecschema-rpcinterface-common";
 import { ECSchemaRpcImpl } from "@itwin/ecschema-rpcinterface-impl";
 import { registerTxnListeners } from "@itwin/presentation-core-interop";
 import { createNodesQueryClauseFactory, HierarchyDefinition } from "@itwin/presentation-hierarchies";
-import { ECSql } from "@itwin/presentation-shared";
+import { createBisInstanceLabelSelectClauseFactory, ECSql } from "@itwin/presentation-shared";
 import { createFileNameFromString, setupOutputFileLocation } from "@itwin/presentation-testing/lib/cjs/presentation-testing/InternalUtils";
 import { NodeValidators, validateHierarchyLevel } from "./HierarchyValidation";
 import { createClassECSqlSelector, createIModelAccess, createProvider } from "./Utils";
@@ -508,7 +508,11 @@ describe("Hierarchies", () => {
         });
 
         function createRootSubjectChildrenProvider(props: { label: "codeValue" | "aspectIdentifier" } = { label: "codeValue" }) {
-          const selectQueryFactory = createNodesQueryClauseFactory({ imodelAccess: createIModelAccess(imodel) });
+          const imodelAccess = createIModelAccess(imodel);
+          const selectQueryFactory = createNodesQueryClauseFactory({
+            imodelAccess,
+            instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
+          });
           const hierarchy: HierarchyDefinition = {
             async defineHierarchyLevel() {
               return [
@@ -536,7 +540,11 @@ describe("Hierarchies", () => {
         }
 
         function createRootSubjectReferredElementsProvider() {
-          const selectQueryFactory = createNodesQueryClauseFactory({ imodelAccess: createIModelAccess(imodel) });
+          const imodelAccess = createIModelAccess(imodel);
+          const selectQueryFactory = createNodesQueryClauseFactory({
+            imodelAccess,
+            instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
+          });
           const hierarchy: HierarchyDefinition = {
             async defineHierarchyLevel() {
               return [
@@ -565,7 +573,10 @@ describe("Hierarchies", () => {
 
         function createPhysicalModelsProvider() {
           const imodelAccess = createIModelAccess(imodel);
-          const selectQueryFactory = createNodesQueryClauseFactory({ imodelAccess });
+          const selectQueryFactory = createNodesQueryClauseFactory({
+            imodelAccess,
+            instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
+          });
           const hierarchy: HierarchyDefinition = {
             async defineHierarchyLevel() {
               return [

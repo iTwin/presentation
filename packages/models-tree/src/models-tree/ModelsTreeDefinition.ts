@@ -134,8 +134,11 @@ export class ModelsTreeDefinition implements HierarchyDefinition {
     this._queryExecutor = props.imodelAccess;
     this._hierarchyConfig = props.hierarchyConfig ?? defaultHierarchyConfiguration;
     this._idsCache = props.idsCache ?? new ModelsTreeIdsCache(props.imodelAccess, this._hierarchyConfig);
-    this._selectQueryFactory = createNodesQueryClauseFactory({ imodelAccess: props.imodelAccess });
     this._nodeLabelSelectClauseFactory = createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: props.imodelAccess });
+    this._selectQueryFactory = createNodesQueryClauseFactory({
+      imodelAccess: props.imodelAccess,
+      instanceLabelSelectClauseFactory: this._nodeLabelSelectClauseFactory,
+    });
   }
 
   public async postProcessNode(node: ProcessedHierarchyNode): Promise<ProcessedHierarchyNode> {

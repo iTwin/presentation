@@ -237,8 +237,11 @@ Matching `HierarchyNodesDefinition`:
 import { createNodesQueryClauseFactory, HierarchyLevelDefinition, HierarchyNodesDefinition, InstancesNodeKey } from "@itwin/presentation-hierarchies";
 import { createBisInstanceLabelSelectClauseFactory } from "@itwin/presentation-shared";
 
-const selectClauseFactory = createNodesQueryClauseFactory({ imodelAccess });
 const labelsFactory = createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess });
+const selectClauseFactory = createNodesQueryClauseFactory({
+  imodelAccess,
+  instanceLabelSelectClauseFactory: labelsFactory,
+});
 const definition: HierarchyNodesDefinition = {
   fullClassName: "BisCore.GeometricModel",
   query: {
@@ -312,8 +315,11 @@ import { HierarchyNode } from "@itwin/presentation-hierarchies";
 import { createNodesQueryClauseFactory, HierarchyLevelDefinition, HierarchyNodesDefinition, InstancesNodeKey } from "@itwin/presentation-hierarchies";
 import { createBisInstanceLabelSelectClauseFactory } from "@itwin/presentation-shared";
 
-const selectClauseFactory = createNodesQueryClauseFactory({ imodelAccess });
 const labelsFactory = createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess });
+const selectClauseFactory = createNodesQueryClauseFactory({
+  imodelAccess,
+  instanceLabelSelectClauseFactory: labelsFactory,
+});
 const createDefinition = async ({ parentNode }: { parentNode: HierarchyNode & { key: InstancesNodeKey } }): Promise<HierarchyNodesDefinition> => ({
   fullClassName: "BisCore.GeometricElement3d",
   query: {
@@ -390,8 +396,11 @@ The purpose of a custom query instance nodes specification in Presentation Rules
   import { createNodesQueryClauseFactory, HierarchyLevelDefinition, HierarchyNodesDefinition, InstancesNodeKey } from "@itwin/presentation-hierarchies";
   import { createBisInstanceLabelSelectClauseFactory } from "@itwin/presentation-shared";
 
-  const selectClauseFactory = createNodesQueryClauseFactory({ imodelAccess });
   const labelsFactory = createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess });
+  const selectClauseFactory = createNodesQueryClauseFactory({
+    imodelAccess,
+    instanceLabelSelectClauseFactory: labelsFactory,
+  });
   const createDefinition = async ({ parentNode }: { parentNode: HierarchyNode & { key: InstancesNodeKey } }): Promise<HierarchyLevelDefinition> => {
     if (await imodelAccess.classDerivesFrom(parentNode.key.instanceKeys[0].className, `${schema.schemaName}.MyParentElement`)) {
       // load the query from the MyParentElement instance
@@ -494,8 +503,11 @@ Matching `HierarchyDefinition`:
 import { createNodesQueryClauseFactory, HierarchyLevelDefinition, HierarchyNodesDefinition, InstancesNodeKey } from "@itwin/presentation-hierarchies";
 import { createBisInstanceLabelSelectClauseFactory } from "@itwin/presentation-shared";
 
-const selectClauseFactory = createNodesQueryClauseFactory({ imodelAccess });
 const labelsFactory = createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess });
+const selectClauseFactory = createNodesQueryClauseFactory({
+  imodelAccess,
+  instanceLabelSelectClauseFactory: labelsFactory,
+});
 const definition: HierarchyNodesDefinition = {
   fullClassName: "BisCore.GeometricElement",
   query: {
@@ -539,8 +551,11 @@ Matching `HierarchyDefinition`:
 import { createNodesQueryClauseFactory, HierarchyLevelDefinition, HierarchyNodesDefinition, InstancesNodeKey } from "@itwin/presentation-hierarchies";
 import { createBisInstanceLabelSelectClauseFactory } from "@itwin/presentation-shared";
 
-const selectClauseFactory = createNodesQueryClauseFactory({ imodelAccess });
 const labelsFactory = createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess });
+const selectClauseFactory = createNodesQueryClauseFactory({
+  imodelAccess,
+  instanceLabelSelectClauseFactory: labelsFactory,
+});
 const definition: HierarchyNodesDefinition = {
   fullClassName: "BisCore.Element",
   query: {
@@ -619,8 +634,11 @@ Matching `HierarchyDefinition`:
 import { createNodesQueryClauseFactory, HierarchyLevelDefinition, HierarchyNodesDefinition, InstancesNodeKey } from "@itwin/presentation-hierarchies";
 import { createBisInstanceLabelSelectClauseFactory } from "@itwin/presentation-shared";
 
-const selectClauseFactory = createNodesQueryClauseFactory({ imodelAccess });
 const labelsFactory = createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess });
+const selectClauseFactory = createNodesQueryClauseFactory({
+  imodelAccess,
+  instanceLabelSelectClauseFactory: labelsFactory,
+});
 const definition: HierarchyNodesDefinition = {
   fullClassName: "BisCore.GeometricElement3d",
   query: {
@@ -677,8 +695,11 @@ Matching `HierarchyDefinition`:
 import { createNodesQueryClauseFactory, HierarchyLevelDefinition, HierarchyNodesDefinition, InstancesNodeKey } from "@itwin/presentation-hierarchies";
 import { createBisInstanceLabelSelectClauseFactory } from "@itwin/presentation-shared";
 
-const selectClauseFactory = createNodesQueryClauseFactory({ imodelAccess });
 const labelsFactory = createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess });
+const selectClauseFactory = createNodesQueryClauseFactory({
+  imodelAccess,
+  instanceLabelSelectClauseFactory: labelsFactory,
+});
 const definition: HierarchyNodesDefinition = {
   fullClassName: "BisCore.Element",
   query: {
@@ -756,8 +777,11 @@ Matching `HierarchyDefinition`:
 import { createNodesQueryClauseFactory, HierarchyLevelDefinition, HierarchyNodesDefinition, InstancesNodeKey } from "@itwin/presentation-hierarchies";
 import { createBisInstanceLabelSelectClauseFactory } from "@itwin/presentation-shared";
 
-const selectClauseFactory = createNodesQueryClauseFactory({ imodelAccess });
 const labelsFactory = createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess });
+const selectClauseFactory = createNodesQueryClauseFactory({
+  imodelAccess,
+  instanceLabelSelectClauseFactory: labelsFactory,
+});
 const definition: HierarchyNodesDefinition = {
   fullClassName: "BisCore.Element",
   query: {

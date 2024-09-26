@@ -25,7 +25,10 @@ const hierarchyDefinition: HierarchyDefinition = {
     }
     // For the custom node, return a query that selects all physical elements
     if (parentNode.key === "physical-elements") {
-      const queryClauseFactory = createNodesQueryClauseFactory({ imodelAccess });
+      const queryClauseFactory = createNodesQueryClauseFactory({
+        imodelAccess,
+        instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
+      });
       return [
         {
           fullClassName: "BisCore.PhysicalElement",
@@ -128,7 +131,10 @@ const hierarchyDefinition: HierarchyDefinition = {
   async defineHierarchyLevel({ parentNode }) {
     // For root nodes, return all physical elements
     if (!parentNode) {
-      const queryClauseFactory = createNodesQueryClauseFactory({ imodelAccess });
+      const queryClauseFactory = createNodesQueryClauseFactory({
+        imodelAccess,
+        instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
+      });
       return [
         {
           fullClassName: "BisCore.PhysicalElement",
@@ -179,7 +185,10 @@ const hierarchyDefinition: HierarchyDefinition = {
   async defineHierarchyLevel({ parentNode }) {
     // For root nodes, return all physical elements grouped by class
     if (!parentNode) {
-      const queryClauseFactory = createNodesQueryClauseFactory({ imodelAccess });
+      const queryClauseFactory = createNodesQueryClauseFactory({
+        imodelAccess,
+        instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
+      });
       return [
         {
           fullClassName: "BisCore.PhysicalElement",
@@ -230,7 +239,10 @@ For example, the following code snippet shows how to define a hierarchy, similar
 ```ts
 import { createClassBasedHierarchyDefinition, createNodesQueryClauseFactory, HierarchyDefinition, HierarchyNode } from "@itwin/presentation-hierarchies";
 
-const queryClauseFactory = createNodesQueryClauseFactory({ imodelAccess });
+const queryClauseFactory = createNodesQueryClauseFactory({
+  imodelAccess,
+  instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
+});
 const hierarchyDefinition = createClassBasedHierarchyDefinition({
   classHierarchyInspector: imodelAccess,
   hierarchy: {
