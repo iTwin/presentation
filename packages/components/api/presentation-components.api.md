@@ -364,13 +364,14 @@ export enum PresentationComponentsLoggerCategory {
 }
 
 // @public
-export function PresentationFilterBuilderValueRenderer({ imodel, descriptor, descriptorInputKeys, ...props }: PresentationFilterBuilderValueRendererProps): JSX_2.Element;
+export function PresentationFilterBuilderValueRenderer({ imodel, descriptor, descriptorInputKeys, selectedClasses, ...props }: PresentationFilterBuilderValueRendererProps): JSX_2.Element;
 
 // @public
 export interface PresentationFilterBuilderValueRendererProps extends PropertyFilterBuilderRuleValueRendererProps {
     descriptor: Descriptor;
     descriptorInputKeys?: Keys;
     imodel: IModelConnection;
+    selectedClasses?: ClassInfo[];
 }
 
 // @public
