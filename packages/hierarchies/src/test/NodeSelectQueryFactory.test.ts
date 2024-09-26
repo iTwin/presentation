@@ -120,7 +120,7 @@ describe("createNodesQueryClauseFactory", () => {
         schemaName: "testSchema",
         className: "testName",
         is: async () => true,
-        properties: [{ name: "PropertyName", isNavigation: () => false } as EC.NavigationProperty],
+        properties: [{ name: "PropertyName", isNavigation: () => false } as EC.Property],
       });
       const result = await factory.createSelectClause({
         ecClassId: { selector: "class_id" },
@@ -252,7 +252,7 @@ describe("createNodesQueryClauseFactory", () => {
         schemaName: "testSchema",
         className: "testName",
         is: async () => true,
-        properties: [{ name: "PropertyName", isNavigation: () => false } as EC.NavigationProperty],
+        properties: [{ name: "PropertyName", isNavigation: () => false } as EC.Property],
       });
       const result = await factory.createSelectClause({
         ecClassId: { selector: "x.ECClassId" },
@@ -344,7 +344,7 @@ describe("createNodesQueryClauseFactory", () => {
         schemaName: "testSchema",
         className: "testName",
         is: async () => true,
-        properties: [{ name: "PropertyName", isNavigation: () => false } as EC.NavigationProperty],
+        properties: [{ name: "PropertyName", isNavigation: () => false } as EC.Property],
       });
       const result = await factory.createSelectClause({
         ecClassId: { selector: "class_id" },
