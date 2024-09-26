@@ -30,7 +30,7 @@ describe("createNodesQueryClauseFactory", () => {
   });
 
   describe("createSelectClause", () => {
-    it(`throws when property grouping uses non-existing class alias`, async () => {
+    it(`throws when property grouping uses non-existing class name`, async () => {
       await expect(
         factory.createSelectClause({
           ecClassId: { selector: "class_id" },
@@ -214,72 +214,35 @@ describe("createNodesQueryClauseFactory", () => {
         ecClassId: { selector: "class_id" },
         ecInstanceId: { selector: "instance_id" },
         nodeLabel: "label",
-        autoExpand: false,
-        supportsFiltering: false,
-        extendedData: {
-          id: "0x3",
-          str: "test",
-          num: 1.23,
-          bool: true,
-        },
         grouping: {
-          byClass: true,
-          byLabel: { groupId: "group id", hideIfOneGroupedNode: false, autoExpand: "single-child" },
-          byBaseClasses: {
-            fullClassNames: ["testSchema.testName"],
-            hideIfNoSiblings: false,
-            hideIfOneGroupedNode: true,
-            autoExpand: "always",
-          },
           byProperties: {
             propertiesClassName: "testSchema.testName",
-            createGroupForOutOfRangeValues: false,
-            createGroupForUnspecifiedValues: true,
             propertyGroups: [
               {
                 propertyName: "PropertyName",
                 propertyClassAlias: "this",
-                ranges: [
-                  {
-                    fromValue: 1,
-                    toValue: 2,
-                    rangeLabel: "range label",
-                  },
-                ],
               },
             ],
           },
         },
-        hasChildren: true,
-        hideIfNoChildren: true,
-        hideNodeInHierarchy: true,
       });
       expect(trimWhitespace(result)).to.eq(
         trimWhitespace(`
         ec_ClassName(class_id) AS ${NodeSelectClauseColumnNames.FullClassName},
         instance_id AS ${NodeSelectClauseColumnNames.ECInstanceId},
         'label' AS ${NodeSelectClauseColumnNames.DisplayLabel},
-        CAST(TRUE AS BOOLEAN) AS ${NodeSelectClauseColumnNames.HasChildren},
-        CAST(TRUE AS BOOLEAN) AS ${NodeSelectClauseColumnNames.HideIfNoChildren},
-        CAST(TRUE AS BOOLEAN) AS ${NodeSelectClauseColumnNames.HideNodeInHierarchy},
+        CAST(NULL AS BOOLEAN) AS ${NodeSelectClauseColumnNames.HasChildren},
+        CAST(NULL AS BOOLEAN) AS ${NodeSelectClauseColumnNames.HideIfNoChildren},
+        CAST(NULL AS BOOLEAN) AS ${NodeSelectClauseColumnNames.HideNodeInHierarchy},
         json_object(
-          'byLabel', json_object('groupId', 'group id', 'hideIfOneGroupedNode', FALSE, 'autoExpand', 'single-child'),
-          'byClass', TRUE,
-          'byBaseClasses', json_object('fullClassNames', json_array('testSchema.testName'), 'hideIfNoSiblings', FALSE, 'hideIfOneGroupedNode', TRUE, 'autoExpand', 'always'),
           'byProperties', json_object('propertiesClassName', 'testSchema.testName', 'propertyGroups', json_array(json_object('propertyName', 'PropertyName', 'propertyValue', (
             SELECT ${await instanceLabelSelectClauseFactory.createSelectClause({ classAlias: "target" })}
             FROM testSchema.SourceClass AS target
-            WHERE [target].[ECInstanceId] = [this].[PropertyName].[Id]),
-            'ranges', json_array(json_object('fromValue', 1, 'toValue', 2, 'rangeLabel', 'range label')))), 'createGroupForOutOfRangeValues', CAST(FALSE AS BOOLEAN), 'createGroupForUnspecifiedValues', CAST(TRUE AS BOOLEAN))
+            WHERE [target].[ECInstanceId] = [this].[PropertyName].[Id]))))
         ) AS ${NodeSelectClauseColumnNames.Grouping},
-        json_object(
-          'id', 0x3,
-          'str', 'test',
-          'num', 1.23,
-          'bool', TRUE
-        ) AS ${NodeSelectClauseColumnNames.ExtendedData},
-        CAST(FALSE AS BOOLEAN) AS ${NodeSelectClauseColumnNames.AutoExpand},
-        CAST(FALSE AS BOOLEAN) AS ${NodeSelectClauseColumnNames.SupportsFiltering}
+        CAST(NULL AS TEXT) AS ${NodeSelectClauseColumnNames.ExtendedData},
+        CAST(NULL AS BOOLEAN) AS ${NodeSelectClauseColumnNames.AutoExpand},
+        CAST(NULL AS BOOLEAN) AS ${NodeSelectClauseColumnNames.SupportsFiltering}
       `),
       );
     });
