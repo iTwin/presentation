@@ -439,7 +439,8 @@ async function createGroupingSelector(
       ]),
     });
 
-  grouping.byProperties &&
+  if (grouping.byProperties) {
+    const propertyClass = await getClass(imodelAccess, grouping.byProperties.propertiesClassName);
     groupingSelectors.push({
       key: "byProperties",
       selector: serializeJsonObject([
@@ -452,13 +453,7 @@ async function createGroupingSelector(
           selector: `json_array(${(
             await Promise.all(
               grouping.byProperties.propertyGroups.map(async (propertyGroup) =>
-                serializeJsonObject(
-                  await createPropertyGroupSelectors(
-                    propertyGroup,
-                    await getClass(imodelAccess, grouping.byProperties!.propertiesClassName),
-                    instanceLabelSelectClauseFactory,
-                  ),
-                ),
+                serializeJsonObject(await createPropertyGroupSelectors(propertyGroup, propertyClass, instanceLabelSelectClauseFactory)),
               ),
             )
           ).join(", ")})`,
@@ -482,6 +477,7 @@ async function createGroupingSelector(
         ...createBaseGroupingParamSelectors(grouping.byProperties),
       ]),
     });
+  }
 
   return serializeJsonObject(groupingSelectors);
 }
