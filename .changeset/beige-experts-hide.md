@@ -15,5 +15,8 @@ const selectQueryFactory = createNodesQueryClauseFactory({ imodelAccess });
 *After:*
 
 ```ts
-const selectQueryFactory = createNodesQueryClauseFactory({ imodelAccess, instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }) });
+const selectQueryFactory = createNodesQueryClauseFactory({
+  imodelAccess,
+  instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
+});
 ```
