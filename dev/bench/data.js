@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1726222430629,
+  "lastUpdate": 1727338919639,
   "repoUrl": "https://github.com/iTwin/presentation",
   "entries": {
     "Benchmark": [
@@ -19724,6 +19724,140 @@ window.BENCHMARK_DATA = {
             "value": 86,
             "unit": "ms",
             "extra": "count: 2\nmax: 86\np95: 86\nmedian: 81.5"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "100586436+JonasDov@users.noreply.github.com",
+            "name": "JonasDov",
+            "username": "JonasDov"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "ed946887f70473d2c91f47851aae654def95c8d6",
+          "message": "Allow grouping by navigation property (#707)\n\n* Allow navigation property grouping\r\n\r\n* Add try catch\r\n\r\n* Update test name\r\n\r\n* Make instanceLabelSelectClauseFactory mandatory and throw if bad input.\r\n\r\n* Fix tests and createNodesQueryClauseFactory usage\r\n\r\n* Run update-extractions\r\n\r\n* Add changeset and extract api\r\n\r\n* Run prettier\r\n\r\n* Update test name\r\n\r\n* Use correct class alias when retrieving source of navigation property\r\n\r\n* Fix tests\r\n\r\n* Remove extract-api\r\n\r\n* Add extract-api\r\n\r\n* Update .changeset/beige-experts-hide.md\r\n\r\nCo-authored-by: Grigas <35135765+grigasp@users.noreply.github.com>\r\n\r\n* Move grouping params inside createSelectClause\r\n\r\n* Remove type insertion from properties test\r\n\r\n* Request propertyClass only once\r\n\r\n* Use default createConcatenatedValueJsonSelector to create propertyValue\r\n\r\n* reuse the labels factory\r\n\r\n* check the label in properties grouping by navigation property test\r\n\r\n* Fix NodeSelectQueryFactory tests\r\n\r\n* NavigationProperty -> Property\r\n\r\n* Remove import and simplify stub\r\n\r\n* Run update-extractions\r\n\r\n* Run extract-api\r\n\r\n---------\r\n\r\nCo-authored-by: Grigas <35135765+grigasp@users.noreply.github.com>",
+          "timestamp": "2024-09-26T11:18:02+03:00",
+          "tree_id": "1b407a822ff2ed21acdf9293252691310528367b",
+          "url": "https://github.com/iTwin/presentation/commit/ed946887f70473d2c91f47851aae654def95c8d6"
+        },
+        "date": 1727338918528,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "flat 50k elements list",
+            "value": 4138.33,
+            "unit": "ms"
+          },
+          {
+            "name": "flat 50k elements list (P95 of main thread blocks)",
+            "value": 70,
+            "unit": "ms",
+            "extra": "count: 16\nmax: 70\np95: 70\nmedian: 32.5"
+          },
+          {
+            "name": "grouping by label",
+            "value": 9926.39,
+            "unit": "ms"
+          },
+          {
+            "name": "grouping by label (P95 of main thread blocks)",
+            "value": 58,
+            "unit": "ms",
+            "extra": "count: 3\nmax: 58\np95: 58\nmedian: 34"
+          },
+          {
+            "name": "grouping by class",
+            "value": 9915.78,
+            "unit": "ms"
+          },
+          {
+            "name": "grouping by class (P95 of main thread blocks)",
+            "value": 44,
+            "unit": "ms",
+            "extra": "count: 7\nmax: 44\np95: 44\nmedian: 31"
+          },
+          {
+            "name": "grouping by property",
+            "value": 10525.1,
+            "unit": "ms"
+          },
+          {
+            "name": "grouping by property (P95 of main thread blocks)",
+            "value": 47,
+            "unit": "ms",
+            "extra": "count: 6\nmax: 47\np95: 47\nmedian: 32.5"
+          },
+          {
+            "name": "grouping by base class (10 classes)",
+            "value": 7328.43,
+            "unit": "ms"
+          },
+          {
+            "name": "grouping by base class (10 classes) (P95 of main thread blocks)",
+            "value": 79,
+            "unit": "ms",
+            "extra": "count: 19\nmax: 79\np95: 79\nmedian: 33"
+          },
+          {
+            "name": "grouping by multiple attributes",
+            "value": 26641.82,
+            "unit": "ms"
+          },
+          {
+            "name": "grouping by multiple attributes (P95 of main thread blocks)",
+            "value": 56,
+            "unit": "ms",
+            "extra": "count: 15\nmax: 56\np95: 56\nmedian: 31"
+          },
+          {
+            "name": "hide if no children required to finalize root, w/o children",
+            "value": 45328.84,
+            "unit": "ms"
+          },
+          {
+            "name": "hide if no children required to finalize root, w/o children (P95 of main thread blocks)",
+            "value": 39,
+            "unit": "ms",
+            "extra": "count: 10\nmax: 39\np95: 39\nmedian: 34.5"
+          },
+          {
+            "name": "hide if no children required to finalize root, w/ children",
+            "value": 154.48,
+            "unit": "ms"
+          },
+          {
+            "name": "hide if no children required to finalize root, w/ children (P95 of main thread blocks)",
+            "value": 0,
+            "unit": "ms",
+            "extra": "count: 0\nmax: N/A\np95: N/A\nmedian: N/A"
+          },
+          {
+            "name": "models tree initial (Baytown)",
+            "value": 42.32,
+            "unit": "ms"
+          },
+          {
+            "name": "models tree initial (Baytown) (P95 of main thread blocks)",
+            "value": 0,
+            "unit": "ms",
+            "extra": "count: 0\nmax: N/A\np95: N/A\nmedian: N/A"
+          },
+          {
+            "name": "models tree full (Baytown)",
+            "value": 7648.03,
+            "unit": "ms"
+          },
+          {
+            "name": "models tree full (Baytown) (P95 of main thread blocks)",
+            "value": 89,
+            "unit": "ms",
+            "extra": "count: 2\nmax: 89\np95: 89\nmedian: 84"
           }
         ]
       }
