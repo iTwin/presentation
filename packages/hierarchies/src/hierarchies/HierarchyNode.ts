@@ -321,7 +321,7 @@ export interface HierarchyNodePropertyGroup {
   /** A string indicating the name of the property to group by. */
   propertyName: string;
   /**  Value of the property, which will be used to group the node. */
-  propertyValue?: PrimitiveValue;
+  propertyValue?: PrimitiveValue | ConcatenatedValue;
   /** Ranges are used to group nodes by numeric properties which are within specified bounds. */
   ranges?: HierarchyNodePropertyValueRange[];
 }

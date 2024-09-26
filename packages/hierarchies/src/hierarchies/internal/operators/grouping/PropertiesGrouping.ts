@@ -10,6 +10,7 @@ import {
   EC,
   ECClassHierarchyInspector,
   ECSchemaProvider,
+  formatConcatenatedValue,
   getClass,
   IPrimitiveValueFormatter,
   TypedPrimitiveValue,
@@ -197,7 +198,10 @@ export async function createPropertyGroups(
       continue;
     }
 
-    const formattedValue = await valueFormatter(TypedPrimitiveValue.create(currentProperty.propertyValue, primitiveType, koqName, extendedTypeName));
+    const formattedValue =
+      currentProperty.propertyValue instanceof Array
+        ? await formatConcatenatedValue({ value: currentProperty.propertyValue, valueFormatter })
+        : await valueFormatter(TypedPrimitiveValue.create(currentProperty.propertyValue, primitiveType, koqName, extendedTypeName));
 
     addGroupingToMap(
       groupings.grouped,

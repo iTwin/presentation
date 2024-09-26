@@ -24,7 +24,6 @@ import {
   PrimitiveValue,
 } from "@itwin/presentation-shared";
 import { HierarchyNodeAutoExpandProp } from "./HierarchyNode";
-import { createConcatenatedValueStringSelector } from "@itwin/presentation-shared/lib/cjs/shared/ecsql-snippets";
 
 /**
  * Column names of the SELECT clause created by `NodeSelectClauseFactory`. Order of the names matches the order of columns
@@ -532,7 +531,7 @@ async function createPropertyGroupSelectors(
     selectors.push({
       key: "propertyValue",
       selector: `(
-          SELECT ${await instanceLabelSelectClauseFactory.createSelectClause({ className: fullName, classAlias: targetAlias, selectorsConcatenator: createConcatenatedValueStringSelector })}
+          SELECT ${await instanceLabelSelectClauseFactory.createSelectClause({ className: fullName, classAlias: targetAlias })}
           FROM ${fullName} AS ${targetAlias}
           WHERE [${targetAlias}].[ECInstanceId] = [${propertyGroup.propertyClassAlias}].[${propertyGroup.propertyName}].[Id]
         )`,

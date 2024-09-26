@@ -882,8 +882,7 @@ describe("PropertiesGrouping", () => {
               grouping: {
                 byProperties: {
                   propertiesClassName: "TestSchema.Class",
-                  createGroupForUnspecifiedValues: true,
-                  propertyGroups: [{ propertyName: "PropertyName" }],
+                  propertyGroups: [{ propertyName: "PropertyName", propertyValue: ["propertyValue"] }],
                 },
               },
             },
@@ -905,13 +904,13 @@ describe("PropertiesGrouping", () => {
           type: "property-grouping:value",
           propertyName: "PropertyName",
           propertyClassName: "TestSchema.Class",
-          formattedPropertyValue: "",
+          formattedPropertyValue: "propertyValue",
         };
         expect(await propertiesGrouping.createPropertyGroups(nodes, [], propertyInfo, formatter, testLocalizedStrings, imodelAccess)).to.deep.eq({
           groupingType: "property",
           grouped: [
             createTestProcessedGroupingNode({
-              label: testLocalizedStrings.unspecified,
+              label: "propertyValue",
               key: expectedGroupingNodeKey,
               parentKeys: ["x"],
               groupedInstanceKeys: nodes.flatMap((n) => n.key.instanceKeys),
