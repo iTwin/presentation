@@ -163,7 +163,7 @@ function useUniquePropertyValuesRuleset(descriptorRuleset?: Ruleset, field?: Fie
               {
                 specType: "SelectedNodeInstances",
                 acceptableClassNames: selectedClasses ? selectedClasses.map(({ name }) => name.split(":")[1]) : undefined,
-                acceptablePolymorphically: false,
+                acceptablePolymorphically: true,
               },
             ],
           },

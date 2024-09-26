@@ -1387,7 +1387,7 @@ describe("UniquePropertyValuesSelector", () => {
               {
                 specType: "SelectedNodeInstances",
                 acceptableClassNames: [selectedClasses[0].name.split(":")[1]],
-                acceptablePolymorphically: false,
+                acceptablePolymorphically: true,
               },
             ],
           },
