@@ -25,7 +25,7 @@ export const NumericPropertyInput = forwardRef<PropertyEditorAttributes, Numeric
   useImperativeHandle(
     ref,
     () => ({
-      getValue: () => getPrimitiveValue(inputValue),
+      getValue: () => parsePrimitiveValue(inputValue),
       htmlElement: divRef.current,
     }),
     [inputValue],
@@ -39,7 +39,7 @@ export const NumericPropertyInput = forwardRef<PropertyEditorAttributes, Numeric
     onCommit &&
       onCommit({
         propertyRecord,
-        newValue: getPrimitiveValue(inputValue),
+        newValue: parsePrimitiveValue(inputValue),
       });
   };
   return (
@@ -50,7 +50,7 @@ export const NumericPropertyInput = forwardRef<PropertyEditorAttributes, Numeric
 });
 NumericPropertyInput.displayName = "NumericPropertyInput";
 
-function getPrimitiveValue(value: string): PrimitiveValue {
+function parsePrimitiveValue(value: string): PrimitiveValue {
   const isValid = value && !isNaN(Number(value));
   return {
     valueFormat: PropertyValueFormat.Primitive,
