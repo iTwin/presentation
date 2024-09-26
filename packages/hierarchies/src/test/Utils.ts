@@ -14,7 +14,6 @@ import {
   ProcessedInstanceHierarchyNode,
 } from "../hierarchies/HierarchyNode";
 import { HierarchyNodeKey } from "../hierarchies/HierarchyNodeKey";
-import { TypedValueSelectClauseProps } from "@itwin/presentation-shared/lib/cjs/shared/ecsql-snippets/ECSqlValueSelectorSnippets";
 
 export function setupLogging(levels: Array<{ namespace: string; level: LogLevel }>) {
   Logger.initializeToConsole();
@@ -217,17 +216,8 @@ export function createIModelAccessStub() {
 
 export function createInstanceLabelSelectClauseFactoryStub() {
   return {
-    async createSelectClause(props: {
-      classAlias: string;
-      className?: string;
-      selectorsConcatenator?: (selectors: TypedValueSelectClauseProps[], checkSelector?: string) => string;
-    }): Promise<string> {
-      return `(
-        SELECT
-         [${props.classAlias}].[CodeValue]
-        FROM [meta].[ECClassDef] AS [c]
-        WHERE [c].[ECInstanceId] =[${props.classAlias}].[ECClassId]
-      )`;
+    async createSelectClause(props: { classAlias: string; className?: string; selectorsConcatenator?: any }): Promise<string> {
+      return `[${props.classAlias}].[LabelProperty]`;
     },
   };
 }
