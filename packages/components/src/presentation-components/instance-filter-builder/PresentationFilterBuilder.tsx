@@ -117,7 +117,7 @@ export interface PresentationFilterBuilderValueRendererProps extends PropertyFil
   descriptor: Descriptor;
   /** Keys used to create the descriptor. */
   descriptorInputKeys?: Keys;
-  /** Currently selected classes. */
+  /** Currently Selected classes. Improves filter property value list relevence. If not provided, the filter may include broader, less relevant options.*/
   selectedClasses?: ClassInfo[];
 }
 
