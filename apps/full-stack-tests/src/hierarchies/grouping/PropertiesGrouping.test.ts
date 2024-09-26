@@ -372,11 +372,6 @@ describe("Hierarchies", () => {
             return { physicalElement };
           });
 
-          const groupingParams: ECSqlSelectClausePropertiesGroupingParams = {
-            propertiesClassName: "BisCore.GeometricElement3d",
-            propertyGroups: [{ propertyName: "Category", propertyClassAlias: "this" }],
-          };
-
           const imodelAccess = createIModelAccess(imodel);
           const selectQueryFactory = createNodesQueryClauseFactory({
             imodelAccess,
@@ -398,7 +393,10 @@ describe("Hierarchies", () => {
                               ecInstanceId: { selector: "this.ECInstanceId" },
                               nodeLabel: { selector: "this.CodeValue" },
                               grouping: {
-                                byProperties: groupingParams,
+                                byProperties: {
+                                  propertiesClassName: "BisCore.GeometricElement3d",
+                                  propertyGroups: [{ propertyName: "Category", propertyClassAlias: "this" }],
+                                },
                               },
                             })}
                             FROM BisCore.GeometricElement3d [this]
@@ -475,11 +473,6 @@ describe("Hierarchies", () => {
             const childSubject4 = insertSubject({ builder, codeValue: "A4", parentId: childSubject3.id, description: "TestDescription" });
             return { childSubject1, childSubject2, childSubject3, childSubject4 };
           });
-
-          const groupingParams: ECSqlSelectClausePropertiesGroupingParams = {
-            propertiesClassName: "BisCore.Subject",
-            propertyGroups: [{ propertyName: "Parent", propertyClassAlias: "this" }],
-          };
           const imodelAccess = createIModelAccess(imodel);
           const selectQueryFactory = createNodesQueryClauseFactory({
             imodelAccess,
@@ -501,7 +494,10 @@ describe("Hierarchies", () => {
                               ecInstanceId: { selector: "this.ECInstanceId" },
                               nodeLabel: { selector: "this.CodeValue" },
                               grouping: {
-                                byProperties: groupingParams,
+                                byProperties: {
+                                  propertiesClassName: "BisCore.Subject",
+                                  propertyGroups: [{ propertyName: "Parent", propertyClassAlias: "this" }],
+                                },
                               },
                             })}
                             FROM BisCore.Subject [this]
@@ -556,10 +552,6 @@ describe("Hierarchies", () => {
             return { childSubject1, childSubject2, childSubject3, childSubject4 };
           });
 
-          const groupingParams: ECSqlSelectClausePropertiesGroupingParams = {
-            propertiesClassName: "BisCore.Subject",
-            propertyGroups: [{ propertyName: "Parent", propertyClassAlias: "this" }],
-          };
           const imodelAccess = createIModelAccess(imodel);
           const selectQueryFactory = createNodesQueryClauseFactory({
             imodelAccess,
@@ -581,7 +573,10 @@ describe("Hierarchies", () => {
                               ecInstanceId: { selector: "this.ECInstanceId" },
                               nodeLabel: { selector: "this.CodeValue" },
                               grouping: {
-                                byProperties: groupingParams,
+                                byProperties: {
+                                  propertiesClassName: "BisCore.Subject",
+                                  propertyGroups: [{ propertyName: "Parent", propertyClassAlias: "this" }],
+                                },
                               },
                             })}
                             FROM BisCore.Subject [this]
