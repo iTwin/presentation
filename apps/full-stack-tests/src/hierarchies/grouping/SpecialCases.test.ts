@@ -8,6 +8,7 @@ import { importSchema, withECDb } from "../../IModelUtils";
 import { initialize, terminate } from "../../IntegrationTests";
 import { NodeValidators, validateHierarchy } from "../HierarchyValidation";
 import { createIModelAccess, createProvider } from "../Utils";
+import { createBisInstanceLabelSelectClauseFactory } from "@itwin/presentation-shared";
 
 describe("Hierarchies", () => {
   describe("Grouping special cases", () => {
@@ -43,7 +44,11 @@ describe("Hierarchies", () => {
           return { schema, x1, x2, y1, y2 };
         },
         async (db, { schema, y1, y2 }) => {
-          const selectQueryFactory = createNodesQueryClauseFactory({ imodelAccess: createIModelAccess(db) });
+          const imodelAccess = createIModelAccess(db);
+          const selectQueryFactory = createNodesQueryClauseFactory({
+            imodelAccess,
+            instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
+          });
           const hierarchy: HierarchyDefinition = {
             async defineHierarchyLevel({ parentNode }) {
               if (!parentNode) {

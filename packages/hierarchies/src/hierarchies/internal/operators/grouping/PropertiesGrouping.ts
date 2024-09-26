@@ -10,6 +10,7 @@ import {
   EC,
   ECClassHierarchyInspector,
   ECSchemaProvider,
+  formatConcatenatedValue,
   getClass,
   IPrimitiveValueFormatter,
   TypedPrimitiveValue,
@@ -106,11 +107,16 @@ export async function createPropertyGroups(
 
     const propertyClass = handlerGroupingParams.ecClass;
     const property = await propertyClass.getProperty(currentProperty.propertyName);
-    if (!property?.isPrimitive() || property.primitiveType === "Binary" || property.primitiveType === "IGeometry") {
+
+    if (!property?.isNavigation() && (!property?.isPrimitive() || property.primitiveType === "Binary" || property.primitiveType === "IGeometry")) {
       groupings.ungrouped.push(node);
       continue;
     }
-    const koqName = (await property.kindOfQuantity)?.fullName;
+
+    const extendedTypeName = "extendedTypeName" in property ? property.extendedTypeName : undefined;
+    const primitiveType = "primitiveType" in property ? property.primitiveType : "String";
+    assert(primitiveType !== "Binary" && primitiveType !== "IGeometry");
+
     if (!currentProperty.propertyValue) {
       if (byProperties.createGroupForUnspecifiedValues) {
         addGroupingToMap(
@@ -132,6 +138,7 @@ export async function createPropertyGroups(
       continue;
     }
 
+    const koqName = (await property.kindOfQuantity)?.fullName;
     if (currentProperty.ranges) {
       if (typeof currentProperty.propertyValue === "number") {
         const propValue = currentProperty.propertyValue;
@@ -140,13 +147,13 @@ export async function createPropertyGroups(
         if (matchingRange) {
           const fromValueTypedPrimitive: TypedPrimitiveValue = {
             type: Number.isInteger(matchingRange.fromValue) ? "Integer" : "Double",
-            extendedType: property.extendedTypeName,
+            extendedType: extendedTypeName,
             koqName,
             value: matchingRange.fromValue,
           };
           const toValueTypedPrimitive: TypedPrimitiveValue = {
             type: Number.isInteger(matchingRange.toValue) ? "Integer" : "Double",
-            extendedType: property.extendedTypeName,
+            extendedType: extendedTypeName,
             koqName,
             value: matchingRange.toValue,
           };
@@ -191,9 +198,10 @@ export async function createPropertyGroups(
       continue;
     }
 
-    const formattedValue = await valueFormatter(
-      TypedPrimitiveValue.create(currentProperty.propertyValue, property.primitiveType, koqName, property.extendedTypeName),
-    );
+    const formattedValue =
+      currentProperty.propertyValue instanceof Array
+        ? await formatConcatenatedValue({ value: currentProperty.propertyValue, valueFormatter })
+        : await valueFormatter(TypedPrimitiveValue.create(currentProperty.propertyValue, primitiveType, koqName, extendedTypeName));
 
     addGroupingToMap(
       groupings.grouped,

@@ -20,6 +20,7 @@ import { initialize, terminate } from "../../IntegrationTests";
 import { NodeValidators, validateHierarchy } from "../HierarchyValidation";
 import { createIModelAccess } from "../Utils";
 import { collectHierarchy } from "./Utils";
+import { createBisInstanceLabelSelectClauseFactory } from "@itwin/presentation-shared";
 
 describe("Hierarchies", () => {
   describe("Learning snippets", () => {
@@ -65,7 +66,10 @@ describe("Hierarchies", () => {
                       fullClassName: "BisCore.PhysicalElement",
                       query: {
                         ecsql: `
-                          SELECT ${await createNodesQueryClauseFactory({ imodelAccess }).createSelectClause({
+                          SELECT ${await createNodesQueryClauseFactory({
+                            imodelAccess,
+                            instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
+                          }).createSelectClause({
                             ecClassId: { selector: "this.ECClassId" },
                             ecInstanceId: { selector: "this.ECInstanceId" },
                             nodeLabel: { selector: "this.UserLabel" },
@@ -138,7 +142,10 @@ describe("Hierarchies", () => {
                       fullClassName: "BisCore.PhysicalElement",
                       query: {
                         ecsql: `
-                          SELECT ${await createNodesQueryClauseFactory({ imodelAccess }).createSelectClause({
+                          SELECT ${await createNodesQueryClauseFactory({
+                            imodelAccess,
+                            instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
+                          }).createSelectClause({
                             ecClassId: { selector: "this.ECClassId" },
                             ecInstanceId: { selector: "this.ECInstanceId" },
                             nodeLabel: { selector: "this.UserLabel" },
@@ -193,7 +200,10 @@ describe("Hierarchies", () => {
                       fullClassName: "BisCore.Category",
                       query: {
                         ecsql: `
-                          SELECT ${await createNodesQueryClauseFactory({ imodelAccess }).createSelectClause({
+                          SELECT ${await createNodesQueryClauseFactory({
+                            imodelAccess,
+                            instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
+                          }).createSelectClause({
                             ecClassId: { selector: "this.ECClassId" },
                             ecInstanceId: { selector: "this.ECInstanceId" },
                             nodeLabel: { selector: "this.CodeValue" },
@@ -261,7 +271,10 @@ describe("Hierarchies", () => {
                       fullClassName: "BisCore.Category",
                       query: {
                         ecsql: `
-                          SELECT ${await createNodesQueryClauseFactory({ imodelAccess }).createSelectClause({
+                          SELECT ${await createNodesQueryClauseFactory({
+                            imodelAccess,
+                            instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
+                          }).createSelectClause({
                             ecClassId: { selector: "this.ECClassId" },
                             ecInstanceId: { selector: "this.ECInstanceId" },
                             nodeLabel: { selector: "this.CodeValue" },
@@ -331,7 +344,10 @@ describe("Hierarchies", () => {
                       fullClassName: "BisCore.RepositoryLink",
                       query: {
                         ecsql: `
-                          SELECT ${await createNodesQueryClauseFactory({ imodelAccess }).createSelectClause({
+                          SELECT ${await createNodesQueryClauseFactory({
+                            imodelAccess,
+                            instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
+                          }).createSelectClause({
                             ecClassId: { selector: "this.ECClassId" },
                             ecInstanceId: { selector: "this.ECInstanceId" },
                             nodeLabel: { selector: "this.UserLabel" },
@@ -419,7 +435,10 @@ describe("Hierarchies", () => {
                       fullClassName: "BisCore.PhysicalMaterial",
                       query: {
                         ecsql: `
-                          SELECT ${await createNodesQueryClauseFactory({ imodelAccess }).createSelectClause({
+                          SELECT ${await createNodesQueryClauseFactory({
+                            imodelAccess,
+                            instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
+                          }).createSelectClause({
                             ecClassId: { selector: "this.ECClassId" },
                             ecInstanceId: { selector: "this.ECInstanceId" },
                             nodeLabel: { selector: "this.UserLabel" },
@@ -506,7 +525,10 @@ describe("Hierarchies", () => {
                     fullClassName: "BisCore.RepositoryLink",
                     query: {
                       ecsql: `
-                        SELECT ${await createNodesQueryClauseFactory({ imodelAccess }).createSelectClause({
+                        SELECT ${await createNodesQueryClauseFactory({
+                          imodelAccess,
+                          instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
+                        }).createSelectClause({
                           ecClassId: { selector: "this.ECClassId" },
                           ecInstanceId: { selector: "this.ECInstanceId" },
                           nodeLabel: { selector: "this.UserLabel" },
@@ -634,7 +656,10 @@ describe("Hierarchies", () => {
                       fullClassName: "BisCore.RepositoryLink",
                       query: {
                         ecsql: `
-                          SELECT ${await createNodesQueryClauseFactory({ imodelAccess }).createSelectClause({
+                          SELECT ${await createNodesQueryClauseFactory({
+                            imodelAccess,
+                            instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
+                          }).createSelectClause({
                             ecClassId: { selector: "this.ECClassId" },
                             ecInstanceId: { selector: "this.ECInstanceId" },
                             nodeLabel: { selector: "this.UserLabel" },
@@ -695,7 +720,10 @@ describe("Hierarchies", () => {
                       fullClassName: "BisCore.RepositoryLink",
                       query: {
                         ecsql: `
-                          SELECT ${await createNodesQueryClauseFactory({ imodelAccess }).createSelectClause({
+                          SELECT ${await createNodesQueryClauseFactory({
+                            imodelAccess,
+                            instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
+                          }).createSelectClause({
                             ecClassId: { selector: "this.ECClassId" },
                             ecInstanceId: { selector: "this.ECInstanceId" },
                             nodeLabel: { selector: "this.UserLabel" },
@@ -752,7 +780,10 @@ describe("Hierarchies", () => {
                         ecsql:
                           // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.Grouping.AutoExpandExample
                           `
-                            SELECT ${await createNodesQueryClauseFactory({ imodelAccess }).createSelectClause({
+                            SELECT ${await createNodesQueryClauseFactory({
+                              imodelAccess,
+                              instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
+                            }).createSelectClause({
                               ecClassId: { selector: "this.ECClassId" },
                               ecInstanceId: { selector: "this.ECInstanceId" },
                               nodeLabel: { selector: "this.UserLabel" },
