@@ -5,7 +5,7 @@
 
 import { expect } from "chai";
 import sinon from "sinon";
-import { Format, ParserSpec, QuantityParseResult, UnitProps, UnitsProvider } from "@itwin/core-quantity";
+import { Format, FormatType, ParserSpec, QuantityParseResult } from "@itwin/core-quantity";
 import { getDecimalRoundingError, getPersistenceUnitRoundingError } from "../../../presentation-components/properties/inputs/Utils";
 
 describe("getDecimalRoundingError", () => {
@@ -18,71 +18,57 @@ describe("getDecimalRoundingError", () => {
 });
 
 describe("getPersistenceUnitRoundingError", () => {
-  const defaultUnit: UnitProps = {
-    isValid: true,
-    label: "unit",
-    name: "unit",
-    phenomenon: "length",
-    system: "metric",
-  };
-  const fractionalUnit: UnitProps = {
-    isValid: true,
-    label: "ft",
-    name: "ft",
-    phenomenon: "length",
-    system: "imperial",
-  };
   const format = new Format("test format");
   const parserSpec = {
     parseToQuantityValue: sinon.stub<[string], QuantityParseResult>(),
     format,
   };
-  const unitsProvider = {
-    findUnit: sinon.stub<Parameters<UnitsProvider["findUnit"]>, ReturnType<UnitsProvider["findUnit"]>>(),
-  };
 
   beforeEach(() => {
     sinon.restore();
     parserSpec.parseToQuantityValue.reset();
-    unitsProvider.findUnit.reset();
   });
 
-  it("uses decimal precision if there is no unit info found", async () => {
-    parserSpec.parseToQuantityValue.returns({ ok: true, value: 0.5 });
+  it("uses decimal precision if there is decimal separator", () => {
+    parserSpec.parseToQuantityValue.returns({ ok: true, value: 0.05 });
 
-    const result = await getPersistenceUnitRoundingError("123 unit", parserSpec as unknown as ParserSpec, unitsProvider as unknown as UnitsProvider);
+    const result = getPersistenceUnitRoundingError("123.4 unit", parserSpec as unknown as ParserSpec);
+    expect(result).to.eq(0.05);
+    expect(parserSpec.parseToQuantityValue).to.be.calledOnceWithExactly("0.05unit");
+  });
+
+  it("uses fractional precision if there is fractional separator", () => {
+    parserSpec.parseToQuantityValue.returns({ ok: true, value: 1 / 16 });
+
+    const result = getPersistenceUnitRoundingError("1/2 unit", parserSpec as unknown as ParserSpec);
+    expect(result).to.eq(1 / 16);
+    expect(parserSpec.parseToQuantityValue).to.be.calledOnceWithExactly("1/16unit");
+  });
+
+  it("uses decimal precision if format type is 'Decimal`", () => {
+    parserSpec.parseToQuantityValue.returns({ ok: true, value: 0.5 });
+    sinon.stub(format, "type").get(() => FormatType.Decimal);
+
+    const result = getPersistenceUnitRoundingError("123", parserSpec as unknown as ParserSpec);
     expect(result).to.eq(0.5);
     expect(parserSpec.parseToQuantityValue).to.be.calledOnceWithExactly("0.5");
   });
 
-  it("uses format default unit to get precision", async () => {
+  it("uses fractional precision if format type is 'Fractional`", () => {
     parserSpec.parseToQuantityValue.returns({ ok: true, value: 1 / 16 });
-    sinon.stub(format, "units").get(() => [[fractionalUnit, "ft"]]);
+    sinon.stub(format, "type").get(() => FormatType.Fractional);
 
-    const result = await getPersistenceUnitRoundingError("123 otherUnit", parserSpec as unknown as ParserSpec, unitsProvider as unknown as UnitsProvider);
+    const result = getPersistenceUnitRoundingError("123", parserSpec as unknown as ParserSpec);
     expect(result).to.eq(1 / 16);
-    expect(parserSpec.parseToQuantityValue).to.be.calledOnceWithExactly("1/16otherUnit");
+    expect(parserSpec.parseToQuantityValue).to.be.calledOnceWithExactly("1/16");
   });
 
-  it("uses matching unit from format to get precision", async () => {
-    parserSpec.parseToQuantityValue.returns({ ok: true, value: 1 / 16 });
-    sinon.stub(format, "units").get(() => [
-      [defaultUnit, "unit"],
-      [fractionalUnit, "'"],
-    ]);
+  it("returns undefined for other format types", () => {
+    parserSpec.parseToQuantityValue.returns({ ok: true, value: 0.5 });
+    sinon.stub(format, "type").get(() => FormatType.Azimuth);
 
-    const result = await getPersistenceUnitRoundingError("123'", parserSpec as unknown as ParserSpec, unitsProvider as unknown as UnitsProvider);
-    expect(result).to.eq(1 / 16);
-    expect(parserSpec.parseToQuantityValue).to.be.calledOnceWithExactly("1/16'");
-  });
-
-  it("uses matching unit from units provider to get precision", async () => {
-    parserSpec.parseToQuantityValue.returns({ ok: true, value: 1 / 16 });
-    sinon.stub(format, "units").get(() => [[defaultUnit, "unit"]]);
-    unitsProvider.findUnit.resolves(fractionalUnit);
-
-    const result = await getPersistenceUnitRoundingError("123'", parserSpec as unknown as ParserSpec, unitsProvider as unknown as UnitsProvider);
-    expect(result).to.eq(1 / 16);
-    expect(parserSpec.parseToQuantityValue).to.be.calledOnceWithExactly("1/16'");
+    const result = getPersistenceUnitRoundingError("123'", parserSpec as unknown as ParserSpec);
+    expect(result).to.be.undefined;
+    expect(parserSpec.parseToQuantityValue).to.not.be.called;
   });
 });

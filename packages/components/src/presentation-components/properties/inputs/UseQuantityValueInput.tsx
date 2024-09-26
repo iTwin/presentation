@@ -4,9 +4,10 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { ChangeEventHandler, useEffect, useState } from "react";
+import { assert } from "@itwin/core-bentley";
 import { IModelApp } from "@itwin/core-frontend";
-import { FormatterSpec, ParserSpec, UnitsProvider } from "@itwin/core-quantity";
-import { SchemaContext, SchemaUnitProvider } from "@itwin/ecschema-metadata";
+import { FormatterSpec, ParserSpec } from "@itwin/core-quantity";
+import { SchemaContext } from "@itwin/ecschema-metadata";
 import { KoqPropertyValueFormatter } from "@itwin/presentation-common";
 import { getPersistenceUnitRoundingError } from "./Utils";
 
@@ -42,78 +43,54 @@ export function useQuantityValueInput({ initialRawValue, schemaContext, koqName 
   interface State {
     quantityValue: QuantityValue;
     placeholder: string;
-    value: string;
   }
 
-  const [{ quantityValue, placeholder, value }, setState] = useState<State>(() => ({
+  const [{ quantityValue, placeholder }, setState] = useState<State>(() => ({
     quantityValue: {
       rawValue: initialRawValue,
       formattedValue: "",
       roundingError: undefined,
     },
     placeholder: "",
-    value: "",
   }));
-  const { formatter, parser, unitsProvider } = useFormatterAndParser(koqName, schemaContext);
+  const { formatter, parser } = useFormatterAndParser(koqName, schemaContext);
 
   useEffect(() => {
-    if (!formatter) {
+    if (!formatter || !parser) {
       return;
     }
 
     setState((prev): State => {
       const newPlaceholder = formatter.applyFormatting(PLACEHOLDER_RAW_VALUE);
       const newFormattedValue = prev.quantityValue.rawValue !== undefined ? formatter.applyFormatting(prev.quantityValue.rawValue) : "";
+      const roundingError = getPersistenceUnitRoundingError(newFormattedValue, parser);
 
       return {
         ...prev,
         quantityValue: {
           ...prev.quantityValue,
           formattedValue: newFormattedValue,
+          roundingError,
         },
         placeholder: newPlaceholder,
-        value: newFormattedValue,
       };
     });
-  }, [formatter]);
-
-  useEffect(() => {
-    if (!parser || !unitsProvider) {
-      return;
-    }
-
-    let disposed = false;
-    const parseValue = async () => {
-      const parseResult = parser.parseToQuantityValue(value);
-      const roundingError = await getPersistenceUnitRoundingError(value, parser, unitsProvider);
-      if (disposed) {
-        return;
-      }
-
-      setState(
-        (prev): State => ({
-          ...prev,
-          quantityValue: {
-            rawValue: parseResult.ok ? parseResult.value : undefined,
-            formattedValue: value,
-            roundingError: parseResult.ok ? roundingError : undefined,
-          },
-        }),
-      );
-    };
-
-    void parseValue();
-    return () => {
-      disposed = true;
-    };
-  }, [value, parser, unitsProvider]);
+  }, [formatter, parser]);
 
   const onChange: ChangeEventHandler<HTMLInputElement> = (e) => {
+    assert(parser !== undefined); // input should be disabled if parser is `undefined`
     const newValue = e.currentTarget.value;
+    const parseResult = parser.parseToQuantityValue(newValue);
+    const roundingError = getPersistenceUnitRoundingError(newValue, parser);
+
     setState(
       (prev): State => ({
         ...prev,
-        value: newValue,
+        quantityValue: {
+          formattedValue: newValue,
+          rawValue: parseResult.ok ? parseResult.value : undefined,
+          roundingError: parseResult.ok ? roundingError : undefined,
+        },
       }),
     );
   };
@@ -123,7 +100,7 @@ export function useQuantityValueInput({ initialRawValue, schemaContext, koqName 
     inputProps: {
       onChange,
       placeholder,
-      value,
+      value: quantityValue.formattedValue,
       disabled: !formatter || !parser,
     },
   };
@@ -133,7 +110,6 @@ function useFormatterAndParser(koqName: string, schemaContext: SchemaContext) {
   interface State {
     formatterSpec: FormatterSpec;
     parserSpec: ParserSpec;
-    unitsProvider: UnitsProvider;
   }
 
   const [state, setState] = useState<State>();
@@ -141,11 +117,10 @@ function useFormatterAndParser(koqName: string, schemaContext: SchemaContext) {
   useEffect(() => {
     const findFormatterAndParser = async () => {
       const koqFormatter = new KoqPropertyValueFormatter(schemaContext);
-      const unitsProvider = new SchemaUnitProvider(schemaContext);
       const formatterSpec = await koqFormatter.getFormatterSpec({ koqName, unitSystem: IModelApp.quantityFormatter.activeUnitSystem });
       const parserSpec = await koqFormatter.getParserSpec({ koqName, unitSystem: IModelApp.quantityFormatter.activeUnitSystem });
       if (formatterSpec && parserSpec) {
-        setState({ formatterSpec, parserSpec, unitsProvider });
+        setState({ formatterSpec, parserSpec });
         return;
       }
 
@@ -159,6 +134,5 @@ function useFormatterAndParser(koqName: string, schemaContext: SchemaContext) {
   return {
     formatter: state?.formatterSpec,
     parser: state?.parserSpec,
-    unitsProvider: state?.unitsProvider,
   };
 }

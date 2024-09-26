@@ -10,7 +10,7 @@ import { PropertyValueFormat, StandardTypeNames } from "@itwin/appui-abstract";
 import { PropertyEditorProps } from "@itwin/components-react";
 import { BeUiEvent } from "@itwin/core-bentley";
 import { FormattingUnitSystemChangedArgs, IModelApp, IModelConnection } from "@itwin/core-frontend";
-import { Format, FormatterSpec, ParseError, ParserSpec, QuantityParseResult } from "@itwin/core-quantity";
+import { Format, FormatterSpec, FormatType, ParseError, ParserSpec, QuantityParseResult } from "@itwin/core-quantity";
 import { SchemaContext } from "@itwin/ecschema-metadata";
 import { KoqPropertyValueFormatter } from "@itwin/presentation-common";
 import { SchemaMetadataContextProvider } from "../../../presentation-components/common/SchemaMetadataContext";
@@ -48,19 +48,7 @@ describe("<QuantityPropertyEditorInput />", () => {
     getFormatterSpecStub = sinon.stub(KoqPropertyValueFormatter.prototype, "getFormatterSpec");
     getParserSpecStub = sinon.stub(KoqPropertyValueFormatter.prototype, "getParserSpec");
 
-    sinon.stub(format, "units").get(() => [
-      [
-        {
-          isValid: true,
-          label: "unit",
-          name: "unit",
-          phenomenon: "length",
-          system: "metric",
-        },
-        "unit",
-      ],
-    ]);
-
+    sinon.stub(format, "type").get(() => FormatType.Decimal);
     sinon.stub(IModelApp, "quantityFormatter").get(() => ({
       onActiveFormattingUnitSystemChanged: new BeUiEvent<FormattingUnitSystemChangedArgs>(),
     }));
@@ -130,16 +118,6 @@ describe("<QuantityPropertyEditorInput />", () => {
     await waitFor(() => expect((input as HTMLInputElement).disabled).to.be.false);
 
     await user.type(input, "123.4");
-
-    await waitFor(() => {
-      expect(ref.current?.getValue()).to.deep.eq({
-        valueFormat: PropertyValueFormat.Primitive,
-        value: 123.4,
-        displayValue: "123.4",
-        roundingError: 0.05,
-      });
-    });
-
     await user.tab();
 
     await waitFor(() => {
@@ -169,15 +147,6 @@ describe("<QuantityPropertyEditorInput />", () => {
     await waitFor(() => expect((input as HTMLInputElement).disabled).to.be.false);
 
     await user.type(input, "123.4 unit");
-    await waitFor(() => {
-      expect(ref.current?.getValue()).to.deep.eq({
-        valueFormat: PropertyValueFormat.Primitive,
-        value: 123.4,
-        displayValue: "123.4 unit",
-        roundingError: 0.05,
-      });
-    });
-
     await user.tab();
 
     await waitFor(() => {
@@ -190,6 +159,13 @@ describe("<QuantityPropertyEditorInput />", () => {
           roundingError: 0.05,
         },
       });
+    });
+
+    expect(ref.current?.getValue()).to.deep.eq({
+      valueFormat: PropertyValueFormat.Primitive,
+      value: 123.4,
+      displayValue: "123.4 unit",
+      roundingError: 0.05,
     });
   });
 });

@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { Format, Parser, ParserSpec, UnitsProvider } from "@itwin/core-quantity";
+import { Format, FormatType, Parser, ParserSpec } from "@itwin/core-quantity";
 
 const FRACTIONAL_PRECISION = "1/16";
 
@@ -11,19 +11,18 @@ const FRACTIONAL_PRECISION = "1/16";
  * Finds rounding error for entered value and converts it to persistence unit.
  * @internal
  */
-export async function getPersistenceUnitRoundingError(numberStr: string, parser: ParserSpec, unitsProvider: UnitsProvider): Promise<number | undefined> {
+export function getPersistenceUnitRoundingError(numberStr: string, parser: ParserSpec): number | undefined {
   const tokens = Parser.parseQuantitySpecification(numberStr, parser.format);
   const enteredUnit = tokens.length > 0 && tokens[tokens.length - 1].isString ? (tokens[tokens.length - 1].value as string) : undefined;
 
   // find unit of entered value that will be used when determining precision
-  const unitLabel = await getUnitLabel(parser.format, enteredUnit, unitsProvider);
-  const precisionStr = getPrecision(numberStr, unitLabel);
+  const precisionStr = getPrecision(numberStr, parser.format);
   if (!precisionStr) {
     return undefined;
   }
 
   // convert precision to persistence unit
-  const parseResult = parser.parseToQuantityValue(unitLabel && enteredUnit ? `${precisionStr}${enteredUnit}` : precisionStr);
+  const parseResult = parser.parseToQuantityValue(enteredUnit ? `${precisionStr}${enteredUnit}` : precisionStr);
   return parseResult.ok ? parseResult.value : undefined;
 }
 
@@ -33,34 +32,29 @@ export function getDecimalRoundingError(numStr: string) {
   return precision ? Number(precision) : undefined;
 }
 
-async function getUnitLabel(format: Format, enteredLabel: string | undefined, unitsProvider: UnitsProvider) {
-  const defaultUnit = format.units ? format.units[0][0] : undefined;
-  if (!enteredLabel) {
-    return defaultUnit?.label;
-  }
-
-  // if entered value has unit find matching unit
-  const matchingUnit = format.units ? format.units.find(([_, label]) => label === enteredLabel)?.[0] : undefined;
-  if (matchingUnit) {
-    return matchingUnit.label;
-  }
-
-  try {
-    // if entered unit does not match any unit in format use units provider to find it
-    const foundUnit = await unitsProvider.findUnit(enteredLabel, undefined, defaultUnit?.phenomenon, undefined);
-    return foundUnit.label;
-  } catch {}
-
-  // if there was no unit matching entered label fallback to default unit
-  return defaultUnit?.label;
-}
-
-function getPrecision(numberStr: string, unitLabel?: string) {
-  if (numberStr.includes(getLocalizedDecimalSeparator()) || !unitLabel || !isFractionalUnit(unitLabel)) {
+function getPrecision(numberStr: string, format: Format) {
+  // use decimal precision if number contains decimal separator
+  if (numberStr.includes(getLocalizedDecimalSeparator())) {
     return getDecimalPrecision(numberStr);
   }
 
-  return FRACTIONAL_PRECISION;
+  // use fractional precision if number contains fraction separator
+  if (numberStr.includes("/")) {
+    return FRACTIONAL_PRECISION;
+  }
+
+  // if number does not have decimal or fraction separator use precision based on format type.
+  // TODO: this might not be correct in all cases. For example:
+  // if format is `Fractional` but entered value is `2 m` precision should be `0.5 m` but we will get ` 1/16 m`
+  if (format.type === FormatType.Decimal) {
+    return getDecimalPrecision(numberStr);
+  }
+
+  if (format.type === FormatType.Fractional) {
+    return FRACTIONAL_PRECISION;
+  }
+
+  return undefined;
 }
 
 let localeSpecificDecimalSeparator: string | undefined;
@@ -76,10 +70,6 @@ function getLocalizedDecimalSeparator(): string {
   }
 
   return localeSpecificDecimalSeparator;
-}
-
-function isFractionalUnit(unitLabel: string) {
-  return ["ft", "in", "yd"].includes(unitLabel.toLowerCase());
 }
 
 function getDecimalPrecision(numStr: string): string | undefined {
