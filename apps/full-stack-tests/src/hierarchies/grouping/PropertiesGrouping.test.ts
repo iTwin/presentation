@@ -361,12 +361,10 @@ describe("Hierarchies", () => {
           const { imodel, ...keys } = await buildIModel(this, async (builder) => {
             const model = insertPhysicalModelWithPartition({ builder, codeValue: "Physical model" });
             const category = insertSpatialCategory({ builder, codeValue: "Spatial category" });
-            const type = insertPhysicalType({ builder, codeValue: "Physical type" });
             const physicalElement = insertPhysicalElement({
               builder,
               modelId: model.id,
               categoryId: category.id,
-              typeDefinitionId: type.id,
               codeValue: "Physical element",
             });
             return { physicalElement };
