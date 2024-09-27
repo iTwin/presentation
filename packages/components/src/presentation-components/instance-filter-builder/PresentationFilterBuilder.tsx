@@ -13,7 +13,7 @@ import { assert } from "@itwin/core-bentley";
 import { IModelConnection } from "@itwin/core-frontend";
 import { ClassId, ClassInfo, Descriptor, InstanceFilterDefinition, Keys, PropertiesField } from "@itwin/presentation-common";
 import { NavigationPropertyEditorContextProvider } from "../properties/editors/NavigationPropertyEditorContext";
-import { UniquePropertyValuesSelector } from "../properties/inputs/UniquePropertyValuesSelector";
+import { UniquePropertyValuesSelector } from "../properties/inputs/UniquePropertyValuesSelectorNew";
 import { InstanceFilterBuilder, usePresentationInstanceFilteringProps } from "./InstanceFilterBuilder";
 import { createFilterClassExpression, createInstanceFilterDefinitionBase } from "./InstanceFilterConverter";
 import { PresentationInstanceFilter, PresentationInstanceFilterConditionGroup } from "./PresentationInstanceFilter";
