@@ -243,7 +243,6 @@ describe("Presentation filter builder value renderer", () => {
         onChange={() => {}}
         imodel={imodel.imodel}
         descriptor={testDescriptor}
-        descriptorInputKeys={keys}
         selectedClasses={selectedClasses}
         operator={"is-equal"}
       />,
