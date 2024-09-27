@@ -41,11 +41,13 @@ export interface UniquePropertyValuesSelectorProps {
   descriptor: Descriptor;
   /** Keys that are currently selected for filtering */
   descriptorInputKeys?: Keys;
+  /** Currently selected classes. */
+  selectedClasses?: ClassInfo[];
 }
 
 /** @internal */
 export function UniquePropertyValuesSelector(props: UniquePropertyValuesSelectorProps) {
-  const { imodel, descriptor, property, onChange, value, descriptorInputKeys } = props;
+  const { imodel, descriptor, property, onChange, value, descriptorInputKeys, selectedClasses } = props;
   const [field, setField] = useState<Field | undefined>(() => findField(descriptor, getInstanceFilterFieldName(property)));
   const [searchInput, setSearchInput] = useState<string>("");
   const selectedValues = useMemo(() => getUniqueValueFromProperty(value), [value]);
@@ -94,7 +96,7 @@ export function UniquePropertyValuesSelector(props: UniquePropertyValuesSelector
   };
 
   const isOptionSelected = (option: UniqueValue): boolean => selectedValues.map((selectedValue) => selectedValue.displayValue).includes(option.displayValue);
-  const ruleset = useUniquePropertyValuesRuleset(descriptor.ruleset, field, descriptorInputKeys);
+  const ruleset = useUniquePropertyValuesRuleset(descriptor.ruleset, field, descriptorInputKeys, selectedClasses);
   const { loadValues, hasMore, optionCount } = useUniquePropertyValuesLoader({ imodel, property, descriptor, ruleset, field, descriptorInputKeys });
 
   return (
@@ -143,7 +145,7 @@ function getUniqueValueFromProperty(propertyValue: PropertyValue | undefined): U
   return [];
 }
 
-function useUniquePropertyValuesRuleset(descriptorRuleset?: Ruleset, field?: Field, descriptorInputKeys?: Keys) {
+function useUniquePropertyValuesRuleset(descriptorRuleset?: Ruleset, field?: Field, descriptorInputKeys?: Keys, selectedClasses?: ClassInfo[]) {
   const [ruleset, setRuleset] = useState<Ruleset>();
   useEffect(() => {
     if (descriptorRuleset) {
@@ -160,6 +162,8 @@ function useUniquePropertyValuesRuleset(descriptorRuleset?: Ruleset, field?: Fie
             specifications: [
               {
                 specType: "SelectedNodeInstances",
+                acceptableClassNames: selectedClasses ? selectedClasses.map(({ name }) => name.split(/[\.:]/)[1]) : undefined,
+                acceptablePolymorphically: true,
               },
             ],
           },
@@ -168,7 +172,7 @@ function useUniquePropertyValuesRuleset(descriptorRuleset?: Ruleset, field?: Fie
       return;
     }
 
-    const classInfos = getFieldClassInfos(field);
+    const classInfos = selectedClasses ?? getFieldClassInfos(field);
     if (classInfos.length === 0) {
       setRuleset(undefined);
       return;
@@ -188,7 +192,7 @@ function useUniquePropertyValuesRuleset(descriptorRuleset?: Ruleset, field?: Fie
         },
       ],
     });
-  }, [field, descriptorRuleset, descriptorInputKeys]);
+  }, [field, descriptorRuleset, descriptorInputKeys, selectedClasses]);
 
   return ruleset;
 }
@@ -196,7 +200,7 @@ function useUniquePropertyValuesRuleset(descriptorRuleset?: Ruleset, field?: Fie
 function createSchemaClasses(infos: ClassInfo[]): MultiSchemaClassesSpecification | MultiSchemaClassesSpecification[] {
   const schemaClassMap = new Map<string, string[]>();
   infos.forEach((info) => {
-    const [schemaName, className] = info.name.split(":");
+    const [schemaName, className] = info.name.split(/[\.:]/);
     let classNames = schemaClassMap.get(schemaName);
     if (!classNames) {
       classNames = [];
