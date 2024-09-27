@@ -43,7 +43,7 @@ export function createTestGenericNode(src?: Partial<NonGroupingHierarchyNode>): 
 export function createTestSourceGenericNode(src?: Partial<SourceGenericHierarchyNode>): SourceGenericHierarchyNode {
   return {
     label: "test",
-    key: createTestGenericNodeKey(),
+    key: "test",
     ...src,
   };
 }

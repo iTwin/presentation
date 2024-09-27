@@ -109,7 +109,10 @@ export namespace NodeValidators {
           if (typeof expectedNode.key === "string" && node.key.id !== expectedNode.key) {
             throw new Error(`[${node.label}] Expected a generic node with id "${expectedNode.key}", got "${node.key.id}"`);
           }
-          if (typeof expectedNode.key === "object" && !HierarchyNodeKey.equals(node.key, expectedNode.key)) {
+          if (
+            typeof expectedNode.key === "object" &&
+            !HierarchyNodeKey.equals(node.key, expectedNode.key.source ? expectedNode.key : { ...expectedNode.key, source: node.key.source })
+          ) {
             throw new Error(`[${node.label}] Expected a generic node with attributes "${JSON.stringify(expectedNode.key)}", got "${JSON.stringify(node.key)}"`);
           }
         }

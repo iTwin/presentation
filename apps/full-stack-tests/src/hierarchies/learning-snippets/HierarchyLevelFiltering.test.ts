@@ -47,7 +47,7 @@ describe("Hierarchies", () => {
               return [
                 {
                   node: {
-                    key: { type: "generic", id: "custom node" },
+                    key: "custom node",
                     label: "Custom Node",
                     supportsFiltering: true,
                   },

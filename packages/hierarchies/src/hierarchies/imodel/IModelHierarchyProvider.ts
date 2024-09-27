@@ -39,7 +39,7 @@ import {
 import { RowsLimitExceededError } from "../HierarchyErrors";
 import { HierarchyFilteringPath } from "../HierarchyFiltering";
 import { HierarchyNode, NonGroupingHierarchyNode, ParentHierarchyNode } from "../HierarchyNode";
-import { InstancesNodeKey } from "../HierarchyNodeKey";
+import { GenericNodeKey, HierarchyNodeKey, InstancesNodeKey } from "../HierarchyNodeKey";
 import { GetHierarchyNodesProps, HierarchyProvider } from "../HierarchyProvider";
 import {
   LOGGING_NAMESPACE as BASE_LOGGING_NAMESPACE,
@@ -63,7 +63,8 @@ import {
   ProcessedGroupingHierarchyNode,
   ProcessedHierarchyNode,
   ProcessedInstanceHierarchyNode,
-  SourceHierarchyNode,
+  SourceGenericHierarchyNode,
+  SourceInstanceHierarchyNode,
 } from "./IModelHierarchyNode";
 import { LimitingECSqlQueryExecutor } from "./LimitingECSqlQueryExecutor";
 import { NodeSelectClauseColumnNames } from "./NodeSelectQueryFactory";
@@ -216,7 +217,7 @@ class IModelHierarchyProviderImpl implements HierarchyProvider {
       return;
     }
     this._activeHierarchyDefinition = new FilteringHierarchyDefinition({
-      classHierarchy: this._imodelAccess,
+      imodelAccess: this._imodelAccess,
       source: this._sourceHierarchyDefinition,
       nodeIdentifierPaths: props.paths,
     });
@@ -227,15 +228,33 @@ class IModelHierarchyProviderImpl implements HierarchyProvider {
     this._nodesCache?.set({ ...props, parentNode: groupingNode }, { observable: from(groupingNode.children), processingStatus: "pre-processed" });
   }
 
-  private createSourceNodesObservable(
-    props: DefineHierarchyLevelProps & { hierarchyLevelSizeLimit?: number | "unbounded"; filteredInstanceKeys?: InstanceKey[] },
-  ): SourceNodesObservable {
+  private createHierarchyLevelDefinitionsObservable(props: DefineHierarchyLevelProps): Observable<HierarchyNodesDefinition> {
     doLog({
       category: LOGGING_NAMESPACE_PERFORMANCE,
       message: /* istanbul ignore next */ () => `Requesting hierarchy level definitions for ${createNodeIdentifierForLogging(props.parentNode)}`,
     });
-    // stream hierarchy level definitions
-    const definitions = from(defer(async () => this._activeHierarchyDefinition.defineHierarchyLevel(props))).pipe(
+    return from(
+      defer(async () => {
+        let parentNode = props.parentNode;
+        if (parentNode && HierarchyNode.isGeneric(parentNode) && parentNode.key.source && parentNode.key.source !== this._imodelAccess.imodelKey) {
+          return [];
+        }
+        if (parentNode && HierarchyNode.isInstancesNode(parentNode)) {
+          parentNode = {
+            ...parentNode,
+            key: {
+              ...parentNode.key,
+              instanceKeys: parentNode.key.instanceKeys.filter((ik) => !ik.imodelKey || ik.imodelKey === this._imodelAccess.imodelKey),
+            },
+          };
+          assert(HierarchyNodeKey.isInstances(parentNode.key));
+          if (parentNode.key.instanceKeys.length === 0) {
+            return [];
+          }
+        }
+        return this._activeHierarchyDefinition.defineHierarchyLevel({ ...props, parentNode });
+      }),
+    ).pipe(
       mergeAll(),
       finalize(() =>
         doLog({
@@ -244,11 +263,16 @@ class IModelHierarchyProviderImpl implements HierarchyProvider {
         }),
       ),
     );
+  }
+
+  private createSourceNodesObservable(
+    props: DefineHierarchyLevelProps & { hierarchyLevelSizeLimit?: number | "unbounded"; filteredInstanceKeys?: InstanceKey[] },
+  ): SourceNodesObservable {
     // pipe definitions to nodes and put "share replay" on it
-    return definitions.pipe(
+    return this.createHierarchyLevelDefinitionsObservable(props).pipe(
       mergeMap((def): ObservableInput<SourceHierarchyNode> => {
         if (HierarchyNodesDefinition.isGenericNode(def)) {
-          return of(def.node);
+          return of({ ...def.node, key: { type: "generic", id: def.node.key, source: this._imodelAccess.imodelKey } });
         }
         return this._queryScheduler.scheduleSubscription(
           of(def.query).pipe(
@@ -477,11 +501,10 @@ class IModelHierarchyProviderImpl implements HierarchyProvider {
     }
     assert(!parentNode || HierarchyNode.isGeneric(parentNode) || HierarchyNode.isInstancesNode(parentNode));
 
+    const hierarchyLevelDefinitions = this.createHierarchyLevelDefinitionsObservable({ parentNode, instanceFilter });
+
     // split the definitions based on whether they're for generic nodes or for instance nodes
-    const [genericDefs, instanceDefs] = partition(
-      from(this._activeHierarchyDefinition.defineHierarchyLevel({ parentNode, instanceFilter })).pipe(mergeAll()),
-      HierarchyNodesDefinition.isGenericNode,
-    );
+    const [genericDefs, instanceDefs] = partition(hierarchyLevelDefinitions, HierarchyNodesDefinition.isGenericNode);
 
     // query instance keys and a flag whether they should be hidden
     const instanceKeys = instanceDefs.pipe(
@@ -504,7 +527,8 @@ class IModelHierarchyProviderImpl implements HierarchyProvider {
                   key: {
                     className: normalizeFullClassName(row[0]),
                     id: row[1],
-                  },
+                    imodelKey: this._imodelAccess.imodelKey,
+                  } satisfies InstanceKey,
                   hide: !!row[2],
                 })),
               );
@@ -521,7 +545,16 @@ class IModelHierarchyProviderImpl implements HierarchyProvider {
     // - if a generic node is hidden, we'll want to retrieve instance keys of its children, otherwise we don't care about it,
     // - if an instance key is hidden, we want to create a merged node similar to what we do in `createHideNodesInHierarchyOperator`
     const hiddenParentNodes = merge(
-      genericDefs.pipe(mergeMap((def) => (def.node.processingParams?.hideInHierarchy ? of(def.node.key) : EMPTY))),
+      genericDefs.pipe(
+        filter((def) => !!def.node.processingParams?.hideInHierarchy),
+        map(
+          (def): GenericNodeKey => ({
+            type: "generic",
+            id: def.node.key,
+            source: this._imodelAccess.imodelKey,
+          }),
+        ),
+      ),
       hiddenNodeInstanceKeys.pipe(
         // first merge all keys by class
         reduceToMergeMapList(
@@ -585,6 +618,7 @@ class IModelHierarchyProviderImpl implements HierarchyProvider {
   }
 }
 
+type SourceHierarchyNode = SourceInstanceHierarchyNode | (Omit<SourceGenericHierarchyNode, "key"> & { key: GenericNodeKey });
 type SourceNodesObservable = Observable<SourceHierarchyNode>;
 type ProcessedNodesObservable = Observable<ProcessedHierarchyNode>;
 type HierarchyCacheEntry =

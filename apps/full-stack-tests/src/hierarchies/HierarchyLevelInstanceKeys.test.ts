@@ -240,7 +240,7 @@ describe("Hierarchies", () => {
             return [
               {
                 node: {
-                  key: { type: "generic", id: "test" },
+                  key: "test",
                   label: "hidden custom node",
                   processingParams: {
                     hideInHierarchy: true,

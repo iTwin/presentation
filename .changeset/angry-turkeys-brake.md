@@ -21,7 +21,7 @@
     - `HierarchyNodeKey.isStandard` renamed to `HierarchyNodeKey.isIModelNodeKey`.
     - `HierarchyNode.isStandard` renamed to `HierarchyNode.isIModelNode`.
   - "Custom" nodes were renamed to "generic":
-    - `key` of custom nodes was a `string`. The type was changed to newly added `GenericNodeKey` object. This also affects how generic nodes are identified through `HierarchyNodeIdentifier` when specifying hierarchy filter paths (was a `string`, now `GenericNodeKey`).
+    - `key` of custom nodes was a `string`. Now, `HierarchyProvider` returns these nodes with key of type `GenericNodeKey` (`HierarchyDefinition` still returns the `key` as `string` like before). This affects how generic nodes are identified through `HierarchyNodeIdentifier` when specifying hierarchy filter paths (was a `string`, now `GenericNodeKey`).
     - `DefineCustomNodeChildHierarchyLevelProps` renamed to `DefineGenericNodeChildHierarchyLevelProps`.
     - `HierarchyNodeKey.isCustom` renamed to `HierarchyNodeKey.isGeneric`.
     - `HierarchyNode.isCustom` renamed to `HierarchyNode.isGeneric`.

@@ -17,7 +17,7 @@ const hierarchyDefinition: HierarchyDefinition = {
       return [
         {
           node: {
-            key: { type: "generic", id: "physical-elements" },
+            key: "physical-elements",
             label: "Physical elements",
           },
         },
@@ -250,7 +250,7 @@ const hierarchyDefinition = createPredicateBasedHierarchyDefinition({
     rootNodes: async () => [
       {
         node: {
-          key: { type: "generic", id: "physical-elements" },
+          key: "physical-elements",
           label: "Physical elements",
         },
       },

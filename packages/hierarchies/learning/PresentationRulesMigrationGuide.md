@@ -192,7 +192,7 @@ import { createBisInstanceLabelSelectClauseFactory } from "@itwin/presentation-s
 
 const definition: HierarchyNodesDefinition = {
   node: {
-    key: { type: "generic", id: "MyCustomNode" },
+    key: "MyCustomNode",
     label: "My custom node",
     extendedData: {
       description: "This is a custom node",

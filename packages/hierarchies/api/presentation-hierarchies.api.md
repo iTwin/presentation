@@ -497,13 +497,12 @@ export interface LimitingECSqlQueryExecutor {
     }): ReturnType<ECSqlQueryExecutor["createQueryReader"]>;
 }
 
-// @beta (undocumented)
+// @beta
 interface MergeHierarchyProvidersProps {
-    // (undocumented)
     providers: HierarchyProvider[];
 }
 
-// @beta (undocumented)
+// @beta
 export function mergeProviders({ providers }: MergeHierarchyProvidersProps): HierarchyProvider & {
     dispose: () => void;
 };
@@ -665,7 +664,9 @@ export class RowsLimitExceededError extends Error {
 export function setLogger(logger: ILogger | undefined): void;
 
 // @beta
-type SourceGenericHierarchyNode = SourceHierarchyNode<ProcessedGenericHierarchyNode>;
+type SourceGenericHierarchyNode = SourceHierarchyNode<Omit<ProcessedGenericHierarchyNode, "key"> & {
+    key: string;
+}>;
 
 // @beta
 export type SourceHierarchyNode<TBase = SourceGenericHierarchyNode | SourceInstanceHierarchyNode> = OmitOverUnion<TBase, "label" | "parentKeys"> & {

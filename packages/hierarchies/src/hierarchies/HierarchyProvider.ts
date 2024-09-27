@@ -67,12 +67,19 @@ export interface HierarchyProvider {
   ): void;
 }
 
-/** @beta */
+/**
+ * Props for `mergeProviders` function.
+ * @beta
+ */
 interface MergeHierarchyProvidersProps {
+  /** List of providers to merge. */
   providers: HierarchyProvider[];
 }
 
-/** @beta */
+/**
+ * Creates a single, merged, hierarchy provider from multiple given providers.
+ * @beta
+ */
 export function mergeProviders({ providers }: MergeHierarchyProvidersProps): HierarchyProvider & { dispose: () => void } {
   return {
     getNodes: (props) =>

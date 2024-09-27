@@ -48,7 +48,7 @@ describe("Hierarchies", () => {
               return [
                 {
                   node: {
-                    key: { type: "generic", id: "physical-elements" },
+                    key: "physical-elements",
                     label: "Physical elements",
                   },
                 },
@@ -275,7 +275,7 @@ describe("Hierarchies", () => {
             rootNodes: async () => [
               {
                 node: {
-                  key: { type: "generic", id: "physical-elements" },
+                  key: "physical-elements",
                   label: "Physical elements",
                 },
               },

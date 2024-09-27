@@ -23,19 +23,19 @@ import { ProcessedGroupingHierarchyNode, ProcessedHierarchyNode, SourceHierarchy
 import { defaultNodesParser } from "./TreeNodesReader";
 
 interface FilteringHierarchyDefinitionProps {
-  classHierarchy: ECClassHierarchyInspector;
+  imodelAccess: ECClassHierarchyInspector & { imodelKey: string };
   source: HierarchyDefinition;
   nodeIdentifierPaths: HierarchyFilteringPath[];
 }
 
 /** @internal */
 export class FilteringHierarchyDefinition implements HierarchyDefinition {
-  private _classHierarchy: ECClassHierarchyInspector;
+  private _imodelAccess: ECClassHierarchyInspector & { imodelKey: string };
   private _source: HierarchyDefinition;
   private _nodeIdentifierPaths: HierarchyFilteringPath[];
 
   public constructor(props: FilteringHierarchyDefinitionProps) {
-    this._classHierarchy = props.classHierarchy;
+    this._imodelAccess = props.imodelAccess;
     this._source = props.source;
     this._nodeIdentifierPaths = props.nodeIdentifierPaths;
   }
@@ -141,8 +141,14 @@ export class FilteringHierarchyDefinition implements HierarchyDefinition {
           matchedDefinition = await matchFilters<GenericNodeKey>(
             definition,
             { filteredNodePaths, isDirectParentFilterTarget },
-            async (id) => HierarchyNodeIdentifier.equal(id, definition.node.key),
-            this._classHierarchy,
+            async (id) => {
+              return (
+                HierarchyNodeIdentifier.isGenericNodeIdentifier(id) &&
+                (!id.source || id.source === this._imodelAccess.imodelKey) &&
+                id.id === definition.node.key
+              );
+            },
+            this._imodelAccess,
             (def, matchingFilters) => {
               const filteredChildrenIdentifierPaths = matchingFilters.reduce(
                 (r, c) => [...r, ...c.childrenIdentifierPaths],
@@ -164,12 +170,13 @@ export class FilteringHierarchyDefinition implements HierarchyDefinition {
             definition,
             { filteredNodePaths, isDirectParentFilterTarget },
             async (id) => {
-              if (!HierarchyNodeIdentifier.isInstanceNodeIdentifier(id)) {
-                return false;
-              }
-              return this._classHierarchy.classDerivesFrom(id.className, definition.fullClassName);
+              return (
+                HierarchyNodeIdentifier.isInstanceNodeIdentifier(id) &&
+                (!id.imodelKey || id.imodelKey === this._imodelAccess.imodelKey) &&
+                (await this._imodelAccess.classDerivesFrom(id.className, definition.fullClassName))
+              );
             },
-            this._classHierarchy,
+            this._imodelAccess,
             (def, matchingFilters) => applyECInstanceIdsFilter(def, matchingFilters, !!isDirectParentFilterTarget, !!hasFilterTargetAncestor),
           );
         }

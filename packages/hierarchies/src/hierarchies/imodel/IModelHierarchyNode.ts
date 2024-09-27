@@ -250,7 +250,7 @@ export type SourceHierarchyNode<TBase = SourceGenericHierarchyNode | SourceInsta
  * A kind of `ProcessedGenericHierarchyNode` that has unformatted label and doesn't know about its ancestors.
  * @beta
  */
-export type SourceGenericHierarchyNode = SourceHierarchyNode<ProcessedGenericHierarchyNode>;
+export type SourceGenericHierarchyNode = SourceHierarchyNode<Omit<ProcessedGenericHierarchyNode, "key"> & { key: string }>;
 
 /**
  * A kind of `ProcessedInstanceHierarchyNode` that has unformatted label and doesn't know about its ancestors.

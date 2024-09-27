@@ -60,7 +60,7 @@ describe("Hierarchies", () => {
           const hierarchyDefinition = createPredicateBasedHierarchyDefinition({
             classHierarchyInspector: imodelAccess,
             hierarchy: {
-              rootNodes: async () => [{ node: { key: { type: "generic", id: "test" }, label: "Root node" } }],
+              rootNodes: async () => [{ node: { key: "test", label: "Root node" } }],
               childNodes: [],
             },
           });
@@ -148,7 +148,7 @@ describe("Hierarchies", () => {
           // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.Migration.CustomNodeDefinition
           const definition: HierarchyNodesDefinition = {
             node: {
-              key: { type: "generic", id: "MyCustomNode" },
+              key: "MyCustomNode",
               label: "My custom node",
               extendedData: {
                 description: "This is a custom node",

@@ -3,13 +3,33 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { insertPhysicalElement, insertPhysicalModelWithPartition, insertSpatialCategory, insertSubject } from "presentation-test-utilities";
+import { expect } from "chai";
+import {
+  createAsyncIterator,
+  insertPhysicalElement,
+  insertPhysicalModelWithPartition,
+  insertSpatialCategory,
+  insertSubject,
+} from "presentation-test-utilities";
 import { Subject } from "@itwin/core-backend";
 import { Id64String } from "@itwin/core-bentley";
 import { IModel } from "@itwin/core-common";
 import { IModelConnection } from "@itwin/core-frontend";
-import { createNodesQueryClauseFactory, GenericNodeKey, HierarchyDefinition, HierarchyNode, HierarchyNodeKey } from "@itwin/presentation-hierarchies";
+import {
+  createNodesQueryClauseFactory,
+  createPredicateBasedHierarchyDefinition,
+  DefineInstanceNodeChildHierarchyLevelProps,
+  GenericNodeKey,
+  HierarchyDefinition,
+  HierarchyNode,
+  HierarchyNodeIdentifier,
+  HierarchyNodeKey,
+  HierarchyProvider,
+  mergeProviders,
+} from "@itwin/presentation-hierarchies";
+import { HierarchyFilteringPath } from "@itwin/presentation-hierarchies/lib/cjs/hierarchies/HierarchyFiltering";
 import { createBisInstanceLabelSelectClauseFactory, ECSqlBinding, InstanceKey } from "@itwin/presentation-shared";
+import { createFileNameFromString } from "@itwin/presentation-testing/lib/cjs/presentation-testing/InternalUtils";
 import { buildIModel, importSchema, withECDb } from "../IModelUtils";
 import { initialize, terminate } from "../IntegrationTests";
 import { NodeValidators, validateHierarchy } from "./HierarchyValidation";
@@ -64,7 +84,7 @@ describe("Hierarchies", () => {
               return [
                 {
                   node: {
-                    key: { type: "generic", id: "custom" },
+                    key: "custom",
                     label: "custom",
                     children: undefined,
                     extendedData: {
@@ -161,14 +181,14 @@ describe("Hierarchies", () => {
               return [
                 {
                   node: {
-                    key: { type: "generic", id: "custom1" },
+                    key: "custom1",
                     label: "custom1",
                     children: undefined,
                   },
                 },
                 {
                   node: {
-                    key: { type: "generic", id: "custom2" },
+                    key: "custom2",
                     label: "custom2",
                     children: undefined,
                   },
@@ -240,7 +260,7 @@ describe("Hierarchies", () => {
               return [
                 {
                   node: {
-                    key: { type: "generic", id: "custom" },
+                    key: "custom",
                     label: "custom",
                     children: undefined,
                     processingParams: {
@@ -337,7 +357,7 @@ describe("Hierarchies", () => {
               return [
                 {
                   node: {
-                    key: { type: "generic", id: "custom" },
+                    key: "custom",
                     label: "custom",
                     children: undefined,
                     processingParams: {
@@ -698,7 +718,7 @@ describe("Hierarchies", () => {
         const hierarchy: HierarchyDefinition = {
           defineHierarchyLevel: async (props) => {
             if (!props.parentNode) {
-              return [{ node: { key: rootNodeKey, label: "Root" } }];
+              return [{ node: { key: rootNodeKey.id, label: "Root" } }];
             }
 
             return [
@@ -770,7 +790,7 @@ describe("Hierarchies", () => {
         const hierarchy: HierarchyDefinition = {
           defineHierarchyLevel: async ({ parentNode }) => {
             if (!parentNode) {
-              return [{ node: { key: rootNodeKey, label: "Root" } }];
+              return [{ node: { key: rootNodeKey.id, label: "Root" } }];
             }
             return [
               {
@@ -871,7 +891,7 @@ describe("Hierarchies", () => {
         const hierarchy: HierarchyDefinition = {
           defineHierarchyLevel: async (props) => {
             if (!props.parentNode) {
-              return [{ node: { key: rootNodeKey, label: "Root" } }];
+              return [{ node: { key: rootNodeKey.id, label: "Root" } }];
             }
 
             return [
@@ -976,7 +996,7 @@ describe("Hierarchies", () => {
           hierarchy = {
             defineHierarchyLevel: async (props) => {
               if (!props.parentNode) {
-                return [{ node: { key: rootNodeKey, label: "Root" } }];
+                return [{ node: { key: rootNodeKey.id, label: "Root" } }];
               }
 
               return [
@@ -1207,5 +1227,384 @@ describe("Hierarchies", () => {
         });
       });
     });
+
+    describe("when filtering merged hierarchy provider", () => {
+      it("filters root nodes of individual provider", async function () {
+        const { imodel: imodel1, ...keys1 } = await buildIModel(createFileNameFromString(`${this.test!.fullTitle()}-1`), async (builder) => {
+          const testSubject = insertSubject({ builder, codeValue: "A subject", parentId: IModel.rootSubjectId });
+          return { testSubject };
+        });
+        const { imodel: imodel2, ...keys2 } = await buildIModel(createFileNameFromString(`${this.test!.fullTitle()}-2`), async (builder) => {
+          const testSubject = insertSubject({ builder, codeValue: "B subject", parentId: IModel.rootSubjectId });
+          return { testSubject };
+        });
+        expect(keys1.testSubject).to.deep.eq(keys2.testSubject);
+
+        const testSubjectKey1 = { ...keys1.testSubject, imodelKey: imodel1.key };
+        const testSubjectKey2 = { ...keys1.testSubject, imodelKey: imodel2.key };
+
+        const imodelAccess1 = createIModelAccess(imodel1);
+        const provider1 = createProvider({
+          imodelAccess: imodelAccess1,
+          hierarchy: {
+            async defineHierarchyLevel({ parentNode }) {
+              if (!parentNode) {
+                return [
+                  {
+                    fullClassName: subjectClassName,
+                    query: {
+                      ecsql: `
+                        SELECT ${await createNodesQueryClauseFactory({
+                          imodelAccess: imodelAccess1,
+                          instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess1 }),
+                        }).createSelectClause({
+                          ecClassId: { selector: `this.ECClassId` },
+                          ecInstanceId: { selector: `this.ECInstanceId` },
+                          nodeLabel: { selector: `this.CodeValue` },
+                        })}
+                        FROM ${subjectClassName} AS this
+                        WHERE Parent IS NOT NULL
+                      `,
+                    },
+                  },
+                ];
+              }
+              return [];
+            },
+          },
+        });
+        const imodelAccess2 = createIModelAccess(imodel2);
+        const provider2 = createProvider({
+          imodelAccess: imodelAccess2,
+          hierarchy: {
+            async defineHierarchyLevel({ parentNode }) {
+              if (!parentNode) {
+                return [
+                  {
+                    fullClassName: subjectClassName,
+                    query: {
+                      ecsql: `
+                        SELECT ${await createNodesQueryClauseFactory({
+                          imodelAccess: imodelAccess2,
+                          instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess2 }),
+                        }).createSelectClause({
+                          ecClassId: { selector: `this.ECClassId` },
+                          ecInstanceId: { selector: `this.ECInstanceId` },
+                          nodeLabel: { selector: `this.CodeValue` },
+                        })}
+                        FROM ${subjectClassName} AS this
+                        WHERE Parent IS NOT NULL
+                      `,
+                    },
+                  },
+                ];
+              }
+              return [];
+            },
+          },
+        });
+        const provider3 = createProvider({
+          imodel: imodel2,
+          hierarchy: {
+            async defineHierarchyLevel({ parentNode }) {
+              if (!parentNode) {
+                return [
+                  {
+                    node: {
+                      key: "gen",
+                      label: "Generic node 3",
+                    },
+                  },
+                ];
+              }
+              return [];
+            },
+          },
+        });
+        const provider4 = new (class implements HierarchyProvider {
+          private _filter: HierarchyFilteringPath[] | undefined;
+          public getNodes: HierarchyProvider["getNodes"] = ({ parentNode }) => {
+            if (!parentNode) {
+              const myNode = {
+                key: { type: "generic", id: "gen", source: "custom-provider" } satisfies GenericNodeKey,
+                label: "Generic node 4",
+                parentKeys: [],
+                children: false,
+              };
+              const nodeMatchesFilter =
+                !this._filter ||
+                this._filter.some((fp) => {
+                  const path = "options" in fp ? fp.path : fp;
+                  return path.some((id) => {
+                    return HierarchyNodeIdentifier.isGenericNodeIdentifier(id) && id.source === "custom-provider" && id.id === myNode.key.id;
+                  });
+                });
+              if (nodeMatchesFilter) {
+                return createAsyncIterator([myNode]);
+              }
+            }
+            return createAsyncIterator([]);
+          };
+          public getNodeInstanceKeys: HierarchyProvider["getNodeInstanceKeys"] = () => {
+            return createAsyncIterator([]);
+          };
+          public setFormatter: HierarchyProvider["setFormatter"] = () => {};
+          public setHierarchyFilter: HierarchyProvider["setHierarchyFilter"] = (props) => {
+            this._filter = props?.paths;
+          };
+        })();
+
+        // ensure we have expected non-filtered hierarchy
+        await validateHierarchy({
+          provider: mergeProviders({ providers: [provider1, provider2, provider3, provider4] }),
+          expect: [
+            NodeValidators.createForInstanceNode({ instanceKeys: [testSubjectKey1] }),
+            NodeValidators.createForInstanceNode({ instanceKeys: [testSubjectKey2] }),
+            NodeValidators.createForGenericNode({ key: { type: "generic", id: "gen", source: imodel2.key } }),
+            NodeValidators.createForGenericNode({ key: { type: "generic", id: "gen", source: "custom-provider" } }),
+          ],
+        });
+
+        // ensure we get the same result when filter paths contain all root nodes
+        await validateHierarchy({
+          provider: mergeAndFilterProviders({
+            providers: [provider1, provider2, provider3, provider4],
+            filterProps: {
+              paths: [
+                [testSubjectKey1],
+                [testSubjectKey2],
+                [{ type: "generic", id: "gen", source: imodel2.key }],
+                [{ type: "generic", id: "gen", source: "custom-provider" }],
+              ],
+            },
+          }),
+          expect: [
+            NodeValidators.createForInstanceNode({ instanceKeys: [testSubjectKey1] }),
+            NodeValidators.createForInstanceNode({ instanceKeys: [testSubjectKey2] }),
+            NodeValidators.createForGenericNode({ key: { type: "generic", id: "gen", source: imodel2.key } }),
+            NodeValidators.createForGenericNode({ key: { type: "generic", id: "gen", source: "custom-provider" } }),
+          ],
+        });
+
+        // ensure we can filter each root node individually
+        await validateHierarchy({
+          provider: mergeAndFilterProviders({
+            providers: [provider1, provider2, provider3, provider4],
+            filterProps: {
+              paths: [[testSubjectKey1]],
+            },
+          }),
+          expect: [NodeValidators.createForInstanceNode({ instanceKeys: [testSubjectKey1] })],
+        });
+        await validateHierarchy({
+          provider: mergeAndFilterProviders({
+            providers: [provider1, provider2, provider3, provider4],
+            filterProps: {
+              paths: [[testSubjectKey2]],
+            },
+          }),
+          expect: [NodeValidators.createForInstanceNode({ instanceKeys: [testSubjectKey2] })],
+        });
+        await validateHierarchy({
+          provider: mergeAndFilterProviders({
+            providers: [provider1, provider2, provider3, provider4],
+            filterProps: {
+              paths: [[{ type: "generic", id: "gen", source: imodel2.key }]],
+            },
+          }),
+          expect: [NodeValidators.createForGenericNode({ key: { type: "generic", id: "gen", source: imodel2.key } })],
+        });
+        await validateHierarchy({
+          provider: mergeAndFilterProviders({
+            providers: [provider1, provider2, provider3, provider4],
+            filterProps: {
+              paths: [[{ type: "generic", id: "gen", source: "custom-provider" }]],
+            },
+          }),
+          expect: [NodeValidators.createForGenericNode({ key: { type: "generic", id: "gen", source: "custom-provider" } })],
+        });
+      });
+
+      it.skip("filters through multiple providers", async function () {
+        const { imodel: imodel1, ...keys1 } = await buildIModel(createFileNameFromString(`${this.test!.fullTitle()}-1`), async (builder) => {
+          const subject1 = insertSubject({ builder, codeValue: "A subject 1", parentId: IModel.rootSubjectId });
+          const subject11 = insertSubject({ builder, codeValue: "A subject 1.1", parentId: subject1.id });
+          return { subject1, subject11 };
+        });
+        const { imodel: imodel2, ...keys2 } = await buildIModel(createFileNameFromString(`${this.test!.fullTitle()}-2`), async (builder) => {
+          const subject2 = insertSubject({ builder, codeValue: "B subject 2", parentId: IModel.rootSubjectId });
+          const subject21 = insertSubject({ builder, codeValue: "B subject 2.1", parentId: subject2.id });
+          return { subject2, subject21 };
+        });
+
+        const instanceKeys: (typeof keys1 & typeof keys2) & {} = {
+          ...Object.entries(keys1).reduce<Record<keyof typeof keys1, InstanceKey>>((acc, [key, value]) => {
+            (acc as any)[key as any] = { ...value, imodelKey: imodel1.key };
+            return acc;
+          }, {} as any),
+          ...Object.entries(keys2).reduce<Record<keyof typeof keys2, InstanceKey>>((acc, [key, value]) => {
+            (acc as any)[key as any] = { ...value, imodelKey: imodel2.key };
+            return acc;
+          }, {} as any),
+        };
+
+        function createSubjectsHierarchyProvider(imodelAccess: ReturnType<typeof createIModelAccess>): HierarchyProvider {
+          return createProvider({
+            imodelAccess,
+            hierarchy: createPredicateBasedHierarchyDefinition({
+              classHierarchyInspector: imodelAccess,
+              hierarchy: {
+                rootNodes: async () => [
+                  {
+                    fullClassName: subjectClassName,
+                    query: {
+                      ecsql: `
+                        SELECT ${await createNodesQueryClauseFactory({
+                          imodelAccess,
+                          instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
+                        }).createSelectClause({
+                          ecClassId: { selector: `this.ECClassId` },
+                          ecInstanceId: { selector: `this.ECInstanceId` },
+                          nodeLabel: { selector: `this.CodeValue` },
+                          hideNodeInHierarchy: true,
+                        })}
+                        FROM ${subjectClassName} AS this
+                        WHERE Parent IS NULL
+                      `,
+                    },
+                  },
+                ],
+                childNodes: [
+                  {
+                    parentInstancesNodePredicate: subjectClassName,
+                    definitions: async ({ parentNode }: DefineInstanceNodeChildHierarchyLevelProps) => [
+                      {
+                        fullClassName: subjectClassName,
+                        query: {
+                          ecsql: `
+                            SELECT ${await createNodesQueryClauseFactory({
+                              imodelAccess,
+                              instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
+                            }).createSelectClause({
+                              ecClassId: { selector: `this.ECClassId` },
+                              ecInstanceId: { selector: `this.ECInstanceId` },
+                              nodeLabel: { selector: `this.CodeValue` },
+                            })}
+                            FROM ${subjectClassName} AS this
+                            WHERE Parent.Id = ${parentNode.key.instanceKeys[0].id}
+                          `,
+                        },
+                      },
+                    ],
+                  },
+                ],
+              },
+            }),
+          });
+        }
+
+        // create subject hierarchy providers for two iModels
+        const provider1 = createSubjectsHierarchyProvider(createIModelAccess(imodel1));
+        const provider2 = createSubjectsHierarchyProvider(createIModelAccess(imodel2));
+        // create generic node provider that creates a node for every bis.Subject node of any iModel
+        const provider3 = new (class implements HierarchyProvider {
+          public getNodes: HierarchyProvider["getNodes"] = ({ parentNode }) => {
+            if (
+              parentNode &&
+              HierarchyNode.isInstancesNode(parentNode) &&
+              parentNode.key.instanceKeys.some(({ className }) => className === subjectClassName)
+            ) {
+              const myNode = {
+                key: { type: "generic", id: "gen", source: "custom-provider" } satisfies GenericNodeKey,
+                label: "Generic node",
+                parentKeys: [...parentNode.parentKeys, parentNode.key],
+                children: false,
+              };
+              const nodeMatchesFilter =
+                !parentNode.filtering ||
+                parentNode.filtering.hasFilterTargetAncestor ||
+                parentNode.filtering.isFilterTarget ||
+                parentNode.filtering.filteredChildrenIdentifierPaths?.some((fp) => {
+                  const path = "options" in fp ? fp.path : fp;
+                  return path.some((id) => {
+                    return HierarchyNodeIdentifier.isGenericNodeIdentifier(id) && id.source === "custom-provider" && id.id === myNode.key.id;
+                  });
+                });
+              if (nodeMatchesFilter) {
+                return createAsyncIterator([myNode]);
+              }
+            }
+            return createAsyncIterator([]);
+          };
+          public getNodeInstanceKeys: HierarchyProvider["getNodeInstanceKeys"] = () => createAsyncIterator([]);
+          public setFormatter: HierarchyProvider["setFormatter"] = () => {};
+          public setHierarchyFilter: HierarchyProvider["setHierarchyFilter"] = () => {
+            // don't need to save this, because this provider doesn't return any root nodes and for
+            // child nodes we take filter paths from parent node
+          };
+        })();
+
+        // ensure we have expected non-filtered hierarchy
+        await validateHierarchy({
+          provider: mergeProviders({ providers: [provider1, provider2, provider3] }),
+          expect: [
+            NodeValidators.createForInstanceNode({
+              instanceKeys: [instanceKeys.subject1],
+              children: [
+                NodeValidators.createForInstanceNode({
+                  instanceKeys: [instanceKeys.subject11],
+                  children: [NodeValidators.createForGenericNode({ key: { type: "generic", id: "gen", source: "custom-provider" } })],
+                }),
+                NodeValidators.createForGenericNode({ key: { type: "generic", id: "gen", source: "custom-provider" } }),
+              ],
+            }),
+            NodeValidators.createForInstanceNode({
+              instanceKeys: [instanceKeys.subject2],
+              children: [NodeValidators.createForGenericNode({ key: { type: "generic", id: "gen", source: "custom-provider" } })],
+            }),
+          ],
+        });
+
+        // ensure we can filter through different providers
+        await validateHierarchy({
+          provider: mergeAndFilterProviders({
+            providers: [provider1, provider2, provider3],
+            filterProps: {
+              paths: [
+                [instanceKeys.subject1, instanceKeys.subject11, { type: "generic", id: "gen", source: "custom-provider" }],
+                [instanceKeys.subject2, { type: "generic", id: "gen", source: "custom-provider" }],
+              ],
+            },
+          }),
+          expect: [
+            NodeValidators.createForInstanceNode({
+              instanceKeys: [instanceKeys.subject1],
+              children: [
+                NodeValidators.createForInstanceNode({
+                  instanceKeys: [instanceKeys.subject11],
+                  children: [NodeValidators.createForGenericNode({ key: { type: "generic", id: "gen", source: "custom-provider" } })],
+                }),
+              ],
+            }),
+            NodeValidators.createForInstanceNode({
+              instanceKeys: [instanceKeys.subject2],
+              children: [NodeValidators.createForGenericNode({ key: { type: "generic", id: "gen", source: "custom-provider" } })],
+            }),
+          ],
+        });
+      });
+    });
   });
 });
+
+function mergeAndFilterProviders({
+  providers,
+  filterProps,
+}: {
+  providers: HierarchyProvider[];
+  filterProps: Parameters<HierarchyProvider["setHierarchyFilter"]>[0];
+}) {
+  const mergedProvider = mergeProviders({ providers });
+  mergedProvider.setHierarchyFilter(filterProps);
+  return mergedProvider;
+}
