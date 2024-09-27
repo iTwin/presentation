@@ -162,7 +162,7 @@ function useUniquePropertyValuesRuleset(descriptorRuleset?: Ruleset, field?: Fie
             specifications: [
               {
                 specType: "SelectedNodeInstances",
-                acceptableClassNames: selectedClasses ? selectedClasses.map(({ name }) => name.split(":")[1]) : undefined,
+                acceptableClassNames: selectedClasses ? selectedClasses.map(({ name }) => name.split(/[\.:]/)[1]) : undefined,
                 acceptablePolymorphically: true,
               },
             ],

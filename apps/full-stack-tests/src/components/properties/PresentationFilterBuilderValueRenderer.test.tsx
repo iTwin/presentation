@@ -114,7 +114,7 @@ describe("Presentation filter builder value renderer", () => {
     const selectedClasses: ClassInfo[] = [
       {
         id: imodel.element1.id,
-        name: imodel.element1.className.replace(".", ":"),
+        name: imodel.element1.className,
         label: "Test Class",
       },
     ];
@@ -231,7 +231,7 @@ describe("Presentation filter builder value renderer", () => {
     const selectedClasses: ClassInfo[] = [
       {
         id: imodel.element1.id,
-        name: imodel.element1.className.replace(".", ":"),
+        name: imodel.element1.className,
         label: "Test Class",
       },
     ];
