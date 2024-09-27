@@ -172,12 +172,7 @@ function useUniquePropertyValuesRuleset(descriptorRuleset?: Ruleset, field?: Fie
       return;
     }
 
-    const classInfos = selectedClasses
-      ? selectedClasses?.map((classInfo) => ({
-          ...classInfo,
-          name: classInfo.name.replace(".", ":"),
-        }))
-      : getFieldClassInfos(field);
+    const classInfos = selectedClasses ?? getFieldClassInfos(field);
     if (classInfos.length === 0) {
       setRuleset(undefined);
       return;
@@ -205,7 +200,7 @@ function useUniquePropertyValuesRuleset(descriptorRuleset?: Ruleset, field?: Fie
 function createSchemaClasses(infos: ClassInfo[]): MultiSchemaClassesSpecification | MultiSchemaClassesSpecification[] {
   const schemaClassMap = new Map<string, string[]>();
   infos.forEach((info) => {
-    const [schemaName, className] = info.name.split(":");
+    const [schemaName, className] = info.name.split(/[\.:]/);
     let classNames = schemaClassMap.get(schemaName);
     if (!classNames) {
       classNames = [];
