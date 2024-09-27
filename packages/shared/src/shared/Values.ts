@@ -15,8 +15,6 @@ export interface InstanceKey {
   className: string;
   /** ECInstance ID */
   id: Id64String;
-  /** If this key is associated with an instance from specific iModel, this is the identifier of that iModel. */
-  imodelKey?: string;
 }
 
 /** @beta */
@@ -26,7 +24,7 @@ export namespace InstanceKey {
    * @beta
    */
   export function equals(lhs: InstanceKey, rhs: InstanceKey): boolean {
-    return lhs.className === rhs.className && lhs.id === rhs.id && lhs.imodelKey === rhs.imodelKey;
+    return lhs.className === rhs.className && lhs.id === rhs.id;
   }
   /**
    * Compares two given instance keys.
@@ -40,11 +38,7 @@ export namespace InstanceKey {
     if (classNameCompareResult !== 0) {
       return classNameCompareResult;
     }
-    const idCompareResult = compareStrings(lhs.id, rhs.id);
-    if (idCompareResult !== 0) {
-      return idCompareResult;
-    }
-    return compareStrings(lhs.imodelKey ?? "", rhs.imodelKey ?? "");
+    return compareStrings(lhs.id, rhs.id);
   }
 }
 
