@@ -1,5 +1,15 @@
 # @itwin/presentation-hierarchies-react
 
+## 0.7.2
+
+### Patch Changes
+
+- [#699](https://github.com/iTwin/presentation/pull/699): Fixed warnings related to passing `ref` to the component that is not wrapped in `forwardRef` function.
+- Updated dependencies:
+  - @itwin/presentation-hierarchies@0.5.1
+  - @itwin/presentation-shared@0.5.0
+  - @itwin/unified-selection@0.5.1
+
 ## 0.7.1
 
 ### Patch Changes

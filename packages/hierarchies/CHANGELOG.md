@@ -1,5 +1,31 @@
 # @itwin/presentation-hierarchies
 
+## 0.5.1
+
+### Patch Changes
+
+- [#707](https://github.com/iTwin/presentation/pull/707): **BREAKING:** Added mandatory `instanceLabelSelectClauseFactory` parameter to `createNodesQueryClauseFactory`, this enables grouping by navigation property.
+
+  Migration example:
+
+  _Before:_
+
+  ```ts
+  const selectQueryFactory = createNodesQueryClauseFactory({ imodelAccess });
+  ```
+
+  _After:_
+
+  ```ts
+  const selectQueryFactory = createNodesQueryClauseFactory({
+    imodelAccess,
+    instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
+  });
+  ```
+
+- Updated dependencies:
+  - @itwin/presentation-shared@0.5.0
+
 ## 0.5.0
 
 ### Minor Changes
