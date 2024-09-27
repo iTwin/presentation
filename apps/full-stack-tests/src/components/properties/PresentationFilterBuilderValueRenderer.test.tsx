@@ -134,9 +134,8 @@ describe("Presentation filter builder value renderer", () => {
     // trigger loadTargets function
     const user = userEvent.setup();
     const combobox = await waitFor(() => getByRole("combobox"));
-
+    await user.click(combobox);
     await waitFor(async () => {
-      await user.click(combobox);
       expect(queryByText(baseElement, "Value1")).to.not.be.null;
       expect(queryByText(baseElement, "Value2")).to.be.null;
     });
@@ -251,9 +250,8 @@ describe("Presentation filter builder value renderer", () => {
     // trigger loadTargets function
     const user = userEvent.setup();
     const combobox = await waitFor(() => getByRole("combobox"));
-
+    await user.click(combobox);
     await waitFor(async () => {
-      await user.click(combobox);
       expect(queryByText(baseElement, "Value1")).to.not.be.null;
       expect(queryByText(baseElement, "Value2")).to.be.null;
     });
