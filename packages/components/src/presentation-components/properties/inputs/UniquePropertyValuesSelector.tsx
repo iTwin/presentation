@@ -172,7 +172,12 @@ function useUniquePropertyValuesRuleset(descriptorRuleset?: Ruleset, field?: Fie
       return;
     }
 
-    const classInfos = selectedClasses ?? getFieldClassInfos(field);
+    const classInfos = selectedClasses
+      ? selectedClasses?.map((classInfo) => ({
+          ...classInfo,
+          name: classInfo.name.replace(".", ":"),
+        }))
+      : getFieldClassInfos(field);
     if (classInfos.length === 0) {
       setRuleset(undefined);
       return;
