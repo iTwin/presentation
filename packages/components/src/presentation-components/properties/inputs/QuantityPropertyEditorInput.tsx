@@ -48,7 +48,12 @@ const QuantityPropertyValueInput = forwardRef<PropertyEditorAttributes, Quantity
     useImperativeHandle(
       ref,
       () => ({
-        getValue: () => ({ valueFormat: PropertyValueFormat.Primitive, value: quantityValue.rawValue, displayValue: quantityValue.formattedValue }),
+        getValue: () => ({
+          valueFormat: PropertyValueFormat.Primitive,
+          value: quantityValue.rawValue,
+          displayValue: quantityValue.formattedValue,
+          roundingError: quantityValue.roundingError,
+        }),
         htmlElement: inputRef.current,
       }),
       [quantityValue],
@@ -58,7 +63,12 @@ const QuantityPropertyValueInput = forwardRef<PropertyEditorAttributes, Quantity
       onCommit &&
         onCommit({
           propertyRecord,
-          newValue: { valueFormat: PropertyValueFormat.Primitive, value: quantityValue.rawValue, displayValue: quantityValue.formattedValue },
+          newValue: {
+            valueFormat: PropertyValueFormat.Primitive,
+            value: quantityValue.rawValue,
+            displayValue: quantityValue.formattedValue,
+            roundingError: quantityValue.roundingError,
+          },
         });
     };
 

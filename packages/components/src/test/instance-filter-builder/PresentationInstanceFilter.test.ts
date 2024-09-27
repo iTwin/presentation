@@ -469,7 +469,7 @@ describe("PresentationInstanceFilter", () => {
           {
             operator: "is-equal",
             field: propertyField1,
-            value: { valueFormat: PropertyValueFormat.Primitive, value: 123, displayValue: "123" },
+            value: { valueFormat: PropertyValueFormat.Primitive, value: 123, displayValue: "123", roundingError: 0.5 },
           },
           {
             operator: "is-false",
@@ -487,7 +487,7 @@ describe("PresentationInstanceFilter", () => {
               propertyName: propertyField1.properties[0].property.name,
               sourceAlias: "this",
               propertyTypeName: propertyField1.type.typeName,
-              value: { displayValue: "123", rawValue: 123 },
+              value: { displayValue: "123", rawValue: 123, roundingError: 0.5 },
             },
             {
               operator: "is-false",
@@ -651,7 +651,7 @@ describe("PresentationInstanceFilter", () => {
               sourceAlias: "this",
               propertyName: propertyField1.properties[0].property.name,
               propertyTypeName: propertyField1.properties[0].property.type,
-              value: { displayValue: "1", rawValue: 1 },
+              value: { displayValue: "1", rawValue: 1, roundingError: 0.5 },
             },
             {
               operator: "is-equal",
@@ -674,7 +674,7 @@ describe("PresentationInstanceFilter", () => {
           {
             operator: "is-equal",
             field: propertyField1,
-            value: { valueFormat: PropertyValueFormat.Primitive, displayValue: "1", value: 1 },
+            value: { valueFormat: PropertyValueFormat.Primitive, displayValue: "1", value: 1, roundingError: 0.5 },
           },
           {
             operator: "is-equal",

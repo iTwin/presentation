@@ -8,7 +8,7 @@ import { useEffect } from "react";
 import sinon from "sinon";
 import { BeUiEvent } from "@itwin/core-bentley";
 import { FormattingUnitSystemChangedArgs, IModelApp } from "@itwin/core-frontend";
-import { FormatterSpec, ParseError, ParserSpec, QuantityParseResult } from "@itwin/core-quantity";
+import { Format, FormatterSpec, ParseError, ParserSpec, QuantityParseResult } from "@itwin/core-quantity";
 import { SchemaContext } from "@itwin/ecschema-metadata";
 import { KoqPropertyValueFormatter } from "@itwin/presentation-common";
 import { QuantityValue, useQuantityValueInput, UseQuantityValueInputProps } from "../../../presentation-components/properties/inputs/UseQuantityValueInput";
@@ -26,11 +26,13 @@ function TestInput({ onChange, ...restProps }: UseQuantityValueInputProps & { on
 
 describe("UseQuantityValueInput", () => {
   const schemaContext = {} as SchemaContext;
+  const format = new Format("test format");
   const formatterSpec = {
     applyFormatting: sinon.stub<[number], string>(),
   };
   const parserSpec = {
     parseToQuantityValue: sinon.stub<[string], QuantityParseResult>(),
+    format,
   };
   const quantityFormatter = {
     onActiveFormattingUnitSystemChanged: new BeUiEvent<FormattingUnitSystemChangedArgs>(),

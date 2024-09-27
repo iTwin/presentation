@@ -374,7 +374,14 @@ function parseGenericFilterRule(rule: GenericInstanceFilterRule, ctx: GenericFil
   return {
     field,
     operator: rule.operator,
-    value: rule.value ? { valueFormat: PropertyValueFormat.Primitive, displayValue: rule.value.displayValue, value: rule.value.rawValue } : undefined,
+    value: rule.value
+      ? {
+          valueFormat: PropertyValueFormat.Primitive,
+          displayValue: rule.value.displayValue,
+          value: rule.value.rawValue,
+          ...("roundingError" in rule.value ? { roundingError: rule.value.roundingError } : undefined),
+        }
+      : undefined,
   };
 }
 
@@ -520,7 +527,18 @@ function toGenericInstanceFilterRuleValue(primitiveValue?: PrimitiveValue): Gene
     return undefined;
   }
 
-  return { displayValue: primitiveValue.displayValue ?? "", rawValue: primitiveValue.value };
+  if (typeof primitiveValue.value === "number") {
+    return {
+      displayValue: primitiveValue.displayValue ?? "",
+      rawValue: primitiveValue.value,
+      ...("roundingError" in primitiveValue ? { roundingError: primitiveValue.roundingError } : undefined),
+    } satisfies GenericInstanceFilterRuleValue;
+  }
+
+  return {
+    displayValue: primitiveValue.displayValue ?? "",
+    rawValue: primitiveValue.value,
+  } satisfies GenericInstanceFilterRuleValue;
 }
 
 function isGenericPrimitiveValueLike(value: Primitives.Value): value is GenericInstanceFilterRuleValue.Values {

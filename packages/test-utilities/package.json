@@ -14,9 +14,9 @@
   "module": "lib/esm/presentation-test-utilities.js",
   "types": "lib/cjs/presentation-test-utilities.d.ts",
   "dependencies": {
-    "@itwin/core-bentley": "^4.8.0",
-    "@itwin/core-common": "^4.8.0",
-    "@itwin/core-geometry": "^4.8.0",
+    "@itwin/core-bentley": "^4.9.0",
+    "@itwin/core-common": "^4.9.0",
+    "@itwin/core-geometry": "^4.9.0",
     "rxjs": "^7.8.1"
   },
   "devDependencies": {

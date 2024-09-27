@@ -276,6 +276,6 @@ describe("<NumericInput />", () => {
     await user.click(inputContainer);
     await user.tab();
 
-    expect(spy).to.be.calledWith({ propertyRecord: record, newValue: { valueFormat: 0, value: undefined, displayValue: "NaN" } });
+    expect(spy).to.be.calledWith({ propertyRecord: record, newValue: { valueFormat: 0, value: undefined, displayValue: "NaN", roundingError: undefined } });
   });
 });
