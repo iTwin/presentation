@@ -42,4 +42,5 @@ export {
   IModelHierarchyNodeKey,
 } from "./hierarchies/HierarchyNodeKey";
 export { GetHierarchyNodesProps, HierarchyProvider, mergeProviders } from "./hierarchies/HierarchyProvider";
+export { HierarchyFilteringPath, extractFilteringProps } from "./hierarchies/HierarchyFiltering";
 export { getLogger, setLogger } from "./hierarchies/Logging";

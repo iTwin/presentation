@@ -157,6 +157,12 @@ interface ECSqlValueSelector {
     selector: string;
 }
 
+// @beta
+export function extractFilteringProps(rootLevelFilteringProps: HierarchyFilteringPath[], parentNode: Pick<NonGroupingHierarchyNode, "filtering"> | undefined): {
+    filteredNodePaths: HierarchyFilteringPath[];
+    hasFilterTargetAncestor: boolean;
+} | undefined;
+
 // @beta (undocumented)
 interface FilterTargetGroupingNodeInfo {
     depth: number;
@@ -216,10 +222,16 @@ export interface HierarchyDefinition {
 type HierarchyDefinitionParentNode = Omit<NonGroupingHierarchyNode, "children">;
 
 // @beta
-type HierarchyFilteringPath = HierarchyNodeIdentifiersPath | {
+export type HierarchyFilteringPath = HierarchyNodeIdentifiersPath | {
     path: HierarchyNodeIdentifiersPath;
-    options: HierarchyFilteringPathOptions;
+    options?: HierarchyFilteringPathOptions;
 };
+
+// @beta (undocumented)
+export namespace HierarchyFilteringPath {
+    export function mergeOptions(lhs: HierarchyFilteringPathOptions | undefined, rhs: HierarchyFilteringPathOptions | undefined): HierarchyFilteringPathOptions | undefined;
+    export function normalize(source: HierarchyFilteringPath): Exclude<HierarchyFilteringPath, HierarchyNodeIdentifiersPath>;
+}
 
 // @beta (undocumented)
 interface HierarchyFilteringPathOptions {
@@ -308,6 +320,17 @@ type HierarchyNodeFilteringProps = {
     isFilterTarget: true;
     filterTargetOptions?: HierarchyFilteringPathOptions;
 });
+
+// @beta (undocumented)
+namespace HierarchyNodeFilteringProps {
+    // (undocumented)
+    function create(props: {
+        hasFilterTargetAncestor?: boolean;
+        filteredChildrenIdentifierPaths?: HierarchyFilteringPath[];
+        isFilterTarget?: boolean;
+        filterTargetOptions?: HierarchyFilteringPathOptions;
+    }): HierarchyNodeFilteringProps | undefined;
+}
 
 // @beta
 interface HierarchyNodeGroupingParams {

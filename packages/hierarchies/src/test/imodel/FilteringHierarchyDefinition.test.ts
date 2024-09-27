@@ -977,7 +977,6 @@ describe("FilteringHierarchyDefinition", () => {
               { id: { className: filterPathClass1.fullName, id: "0x789" }, isFilterTarget: true, childrenIdentifierPaths: [] },
             ],
             false,
-            false,
           ),
         ]);
       });
@@ -1016,7 +1015,6 @@ describe("FilteringHierarchyDefinition", () => {
               { id: { className: filterPathClass1.fullName, id: "0x123" }, isFilterTarget: true, childrenIdentifierPaths: [] },
               { id: { className: filterPathClass2.fullName, id: "0x456" }, isFilterTarget: true, childrenIdentifierPaths: [] },
             ],
-            false,
             false,
           ),
         ]);
@@ -1066,7 +1064,6 @@ describe("FilteringHierarchyDefinition", () => {
               },
             ],
             false,
-            false,
           ),
         ]);
       });
@@ -1115,7 +1112,6 @@ describe("FilteringHierarchyDefinition", () => {
               },
             ],
             false,
-            false,
           ),
         ]);
       });
@@ -1163,7 +1159,6 @@ describe("FilteringHierarchyDefinition", () => {
                 childrenIdentifierPaths: [[{ className: filterPathClass1.fullName, id: "0x456" }]],
               },
             ],
-            false,
             false,
           ),
         ]);
@@ -1228,7 +1223,6 @@ describe("FilteringHierarchyDefinition", () => {
               },
             ],
             false,
-            false,
           ),
         ]);
       });
@@ -1281,7 +1275,6 @@ describe("FilteringHierarchyDefinition", () => {
                 childrenIdentifierPaths: [],
               },
             ],
-            false,
             false,
           ),
         ]);
@@ -1337,7 +1330,6 @@ describe("FilteringHierarchyDefinition", () => {
               },
             ],
             false,
-            false,
           ),
         ]);
       });
@@ -1380,7 +1372,6 @@ describe("FilteringHierarchyDefinition", () => {
           sourceDefinition,
           [{ id: { className: childFilterClass.fullName, id: "0x456" }, isFilterTarget: true, childrenIdentifierPaths: [] }],
           false,
-          false,
         ),
       ]);
     });
@@ -1414,12 +1405,17 @@ describe("FilteringHierarchyDefinition", () => {
       });
       expect(result).to.deep.eq([
         // this definition doesn't match parent's `filteredChildrenIdentifierPaths`, but is added because parent is a filter target
-        nonMatchingSourceDefinition,
+        {
+          node: {
+            ...nonMatchingSourceDefinition.node,
+            filtering: { hasFilterTargetAncestor: true },
+          },
+        },
         // this definition is added with modifications to account for parent's `filteredChildrenIdentifierPaths`
         {
           node: {
             ...matchingSourceDefinition.node,
-            filtering: { isFilterTarget: true, filterTargetOptions: undefined },
+            filtering: { hasFilterTargetAncestor: true, isFilterTarget: true, filterTargetOptions: undefined },
           },
         },
       ]);
@@ -1457,7 +1453,6 @@ describe("FilteringHierarchyDefinition", () => {
             childrenIdentifierPaths: [[{ className: "d", id: "0x6" }]],
           },
         ],
-        true,
         true,
       );
       expect(result.fullClassName).to.eq("full-class-name");

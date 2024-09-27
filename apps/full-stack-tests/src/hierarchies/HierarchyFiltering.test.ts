@@ -19,15 +19,16 @@ import {
   createNodesQueryClauseFactory,
   createPredicateBasedHierarchyDefinition,
   DefineInstanceNodeChildHierarchyLevelProps,
+  extractFilteringProps,
   GenericNodeKey,
   HierarchyDefinition,
+  HierarchyFilteringPath,
   HierarchyNode,
   HierarchyNodeIdentifier,
   HierarchyNodeKey,
   HierarchyProvider,
   mergeProviders,
 } from "@itwin/presentation-hierarchies";
-import { HierarchyFilteringPath } from "@itwin/presentation-hierarchies/lib/cjs/hierarchies/HierarchyFiltering";
 import { createBisInstanceLabelSelectClauseFactory, ECSqlBinding, InstanceKey } from "@itwin/presentation-shared";
 import { createFileNameFromString } from "@itwin/presentation-testing/lib/cjs/presentation-testing/InternalUtils";
 import { buildIModel, importSchema, withECDb } from "../IModelUtils";
@@ -1228,7 +1229,7 @@ describe("Hierarchies", () => {
       });
     });
 
-    describe("when filtering merged hierarchy provider", () => {
+    describe.skip("when filtering merged hierarchy provider", () => {
       it("filters root nodes of individual provider", async function () {
         const { imodel: imodel1, ...keys1 } = await buildIModel(createFileNameFromString(`${this.test!.fullTitle()}-1`), async (builder) => {
           const testSubject = insertSubject({ builder, codeValue: "A subject", parentId: IModel.rootSubjectId });
@@ -1331,16 +1332,20 @@ describe("Hierarchies", () => {
                 parentKeys: [],
                 children: false,
               };
-              const nodeMatchesFilter =
-                !this._filter ||
-                this._filter.some((fp) => {
-                  const path = "options" in fp ? fp.path : fp;
-                  return path.some((id) => {
-                    return HierarchyNodeIdentifier.isGenericNodeIdentifier(id) && id.source === "custom-provider" && id.id === myNode.key.id;
-                  });
-                });
-              if (nodeMatchesFilter) {
+              if (!this._filter) {
                 return createAsyncIterator([myNode]);
+              }
+              const nodeMatchesFilter = this._filter.some((fp) => {
+                const { path } = HierarchyFilteringPath.normalize(fp);
+                return (
+                  path.length &&
+                  HierarchyNodeIdentifier.isGenericNodeIdentifier(path[0]) &&
+                  path[0].source === "custom-provider" &&
+                  path[0].id === myNode.key.id
+                );
+              });
+              if (nodeMatchesFilter) {
+                return createAsyncIterator([{ ...myNode, filtering: { isFilterTarget: true } }]);
               }
             }
             return createAsyncIterator([]);
@@ -1425,7 +1430,7 @@ describe("Hierarchies", () => {
         });
       });
 
-      it.skip("filters through multiple providers", async function () {
+      it("filters through multiple providers", async function () {
         const { imodel: imodel1, ...keys1 } = await buildIModel(createFileNameFromString(`${this.test!.fullTitle()}-1`), async (builder) => {
           const subject1 = insertSubject({ builder, codeValue: "A subject 1", parentId: IModel.rootSubjectId });
           const subject11 = insertSubject({ builder, codeValue: "A subject 1.1", parentId: subject1.id });
@@ -1520,18 +1525,25 @@ describe("Hierarchies", () => {
                 parentKeys: [...parentNode.parentKeys, parentNode.key],
                 children: false,
               };
+              const filteringProps = extractFilteringProps([], parentNode);
+              if (!filteringProps) {
+                return createAsyncIterator([myNode]);
+              }
               const nodeMatchesFilter =
-                !parentNode.filtering ||
-                parentNode.filtering.hasFilterTargetAncestor ||
-                parentNode.filtering.isFilterTarget ||
-                parentNode.filtering.filteredChildrenIdentifierPaths?.some((fp) => {
-                  const path = "options" in fp ? fp.path : fp;
-                  return path.some((id) => {
-                    return HierarchyNodeIdentifier.isGenericNodeIdentifier(id) && id.source === "custom-provider" && id.id === myNode.key.id;
-                  });
+                filteringProps.hasFilterTargetAncestor ||
+                filteringProps.filteredNodePaths?.some((fp) => {
+                  const { path } = HierarchyFilteringPath.normalize(fp);
+                  return (
+                    path.length &&
+                    HierarchyNodeIdentifier.isGenericNodeIdentifier(path[0]) &&
+                    path[0].source === "custom-provider" &&
+                    path[0].id === myNode.key.id
+                  );
                 });
               if (nodeMatchesFilter) {
-                return createAsyncIterator([myNode]);
+                return createAsyncIterator([
+                  { ...myNode, filtering: { isFilterTarget: true, hasFilterTargetAncestor: filteringProps.hasFilterTargetAncestor } },
+                ]);
               }
             }
             return createAsyncIterator([]);

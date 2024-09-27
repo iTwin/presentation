@@ -27,7 +27,10 @@ export type HierarchyNodeFilteringProps = {
   /** Paths to node's children that are filter targets. */
   filteredChildrenIdentifierPaths?: HierarchyFilteringPath[];
 } & (
-  | { isFilterTarget?: false }
+  | {
+      /** Whether or not this node is a filter target. */
+      isFilterTarget?: false;
+    }
   | {
       /** Whether or not this node is a filter target. */
       isFilterTarget: true;
@@ -35,6 +38,26 @@ export type HierarchyNodeFilteringProps = {
       filterTargetOptions?: HierarchyFilteringPathOptions;
     }
 );
+/** @beta */
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export namespace HierarchyNodeFilteringProps {
+  export function create(props: {
+    hasFilterTargetAncestor?: boolean;
+    filteredChildrenIdentifierPaths?: HierarchyFilteringPath[];
+    isFilterTarget?: boolean;
+    filterTargetOptions?: HierarchyFilteringPathOptions;
+  }): HierarchyNodeFilteringProps | undefined {
+    const { hasFilterTargetAncestor, filteredChildrenIdentifierPaths, isFilterTarget, filterTargetOptions } = props;
+    if (isFilterTarget || hasFilterTargetAncestor || filteredChildrenIdentifierPaths?.length) {
+      return {
+        ...(isFilterTarget ? { isFilterTarget, filterTargetOptions } : undefined),
+        ...(hasFilterTargetAncestor ? { hasFilterTargetAncestor } : undefined),
+        ...(!!filteredChildrenIdentifierPaths?.length ? { filteredChildrenIdentifierPaths } : undefined),
+      };
+    }
+    return undefined;
+  }
+}
 
 /**
  * A data structure that defines attributes that are common to all types of hierarchy nodes.

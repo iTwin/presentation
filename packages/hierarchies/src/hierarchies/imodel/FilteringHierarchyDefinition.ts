@@ -4,8 +4,8 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { ECClassHierarchyInspector, InstanceKey } from "@itwin/presentation-shared";
-import { HierarchyFilteringPath, HierarchyFilteringPathOptions } from "../HierarchyFiltering";
-import { HierarchyNode } from "../HierarchyNode";
+import { extractFilteringProps, HierarchyFilteringPath, HierarchyFilteringPathOptions } from "../HierarchyFiltering";
+import { HierarchyNodeFilteringProps } from "../HierarchyNode";
 import { HierarchyNodeIdentifier } from "../HierarchyNodeIdentifier";
 import { GenericNodeKey } from "../HierarchyNodeKey";
 import {
@@ -128,8 +128,8 @@ export class FilteringHierarchyDefinition implements HierarchyDefinition {
 
   public async defineHierarchyLevel(props: DefineHierarchyLevelProps): Promise<HierarchyLevelDefinition> {
     const sourceDefinitions = await this._source.defineHierarchyLevel(props);
-    const { filteredNodePaths, isDirectParentFilterTarget, hasFilterTargetAncestor } = this.getFilteringProps(props.parentNode);
-    if (!filteredNodePaths) {
+    const filteringProps = extractFilteringProps(this._nodeIdentifierPaths, props.parentNode);
+    if (!filteringProps) {
       return sourceDefinitions;
     }
 
@@ -140,7 +140,7 @@ export class FilteringHierarchyDefinition implements HierarchyDefinition {
         if (HierarchyNodesDefinition.isGenericNode(definition)) {
           matchedDefinition = await matchFilters<GenericNodeKey>(
             definition,
-            { filteredNodePaths, isDirectParentFilterTarget },
+            filteringProps,
             async (id) => {
               return (
                 HierarchyNodeIdentifier.isGenericNodeIdentifier(id) &&
@@ -160,7 +160,7 @@ export class FilteringHierarchyDefinition implements HierarchyDefinition {
                   node: def.node,
                   filteredChildrenIdentifierPaths,
                   isFilterTarget: matchingFilters.some((mc) => mc.isFilterTarget),
-                  hasFilterTargetAncestor,
+                  hasFilterTargetAncestor: filteringProps.hasFilterTargetAncestor,
                 }),
               };
             },
@@ -168,7 +168,7 @@ export class FilteringHierarchyDefinition implements HierarchyDefinition {
         } else {
           matchedDefinition = await matchFilters<InstanceKey>(
             definition,
-            { filteredNodePaths, isDirectParentFilterTarget },
+            filteringProps,
             async (id) => {
               return (
                 HierarchyNodeIdentifier.isInstanceNodeIdentifier(id) &&
@@ -177,7 +177,7 @@ export class FilteringHierarchyDefinition implements HierarchyDefinition {
               );
             },
             this._imodelAccess,
-            (def, matchingFilters) => applyECInstanceIdsFilter(def, matchingFilters, !!isDirectParentFilterTarget, !!hasFilterTargetAncestor),
+            (def, matchingFilters) => applyECInstanceIdsFilter(def, matchingFilters, !!filteringProps.hasFilterTargetAncestor),
           );
         }
         if (matchedDefinition) {
@@ -186,17 +186,6 @@ export class FilteringHierarchyDefinition implements HierarchyDefinition {
       }),
     );
     return filteredDefinitions;
-  }
-
-  private getFilteringProps(parentNode: Pick<HierarchyNode, "filtering"> | undefined) {
-    if (!parentNode) {
-      return { filteredNodePaths: this._nodeIdentifierPaths, isDirectParentFilterTarget: false, hasFilterTargetAncestor: false };
-    }
-    return {
-      filteredNodePaths: parentNode.filtering?.filteredChildrenIdentifierPaths,
-      isDirectParentFilterTarget: parentNode.filtering?.isFilterTarget,
-      hasFilterTargetAncestor: !!parentNode.filtering?.hasFilterTargetAncestor,
-    };
   }
 }
 
@@ -210,15 +199,15 @@ async function matchFilters<
   TDefinition = TIdentifier extends InstanceKey ? InstanceNodesQueryDefinition : GenericHierarchyNodeDefinition,
 >(
   definition: TDefinition,
-  filteringProps: { filteredNodePaths: HierarchyFilteringPath[]; isDirectParentFilterTarget?: boolean },
+  filteringProps: { filteredNodePaths: HierarchyFilteringPath[]; hasFilterTargetAncestor?: boolean },
   predicate: (id: HierarchyNodeIdentifier) => Promise<boolean>,
   classHierarchy: ECClassHierarchyInspector,
   matchedDefinitionProcessor: (def: TDefinition, matchingFilters: Array<MatchedFilter<TIdentifier>>) => TDefinition,
 ): Promise<TDefinition | undefined> {
-  const { filteredNodePaths, isDirectParentFilterTarget } = filteringProps;
+  const { filteredNodePaths, hasFilterTargetAncestor } = filteringProps;
   const matchingFilters: Array<MatchedFilter<TIdentifier>> = [];
   for (const filteredNodePath of filteredNodePaths) {
-    const { path, options } = "path" in filteredNodePath ? filteredNodePath : { path: filteredNodePath, options: undefined };
+    const { path, options } = HierarchyFilteringPath.normalize(filteredNodePath);
     if (path.length === 0) {
       continue;
     }
@@ -237,45 +226,18 @@ async function matchFilters<
       }
       const remainingPath = path.slice(1);
       if (remainingPath.length > 0) {
-        const remainingPathWithOptions = options ? { path: remainingPath, options } : remainingPath;
-        entry.childrenIdentifierPaths.push(remainingPathWithOptions);
+        entry.childrenIdentifierPaths.push(options ? { path: remainingPath, options } : remainingPath);
       } else if (entry.isFilterTarget) {
-        entry.filterTargetOptions = mergeFilterTargetOptions(entry.filterTargetOptions, options);
+        entry.filterTargetOptions = HierarchyFilteringPath.mergeOptions(entry.filterTargetOptions, options);
       } else {
         Object.assign(entry, { isFilterTarget: true, filterTargetOptions: options });
       }
     }
   }
-  if (isDirectParentFilterTarget || matchingFilters.length > 0) {
+  if (hasFilterTargetAncestor || matchingFilters.length > 0) {
     return matchedDefinitionProcessor(definition, matchingFilters);
   }
   return undefined;
-}
-
-function mergeFilterTargetOptions(target?: HierarchyFilteringPathOptions, source?: HierarchyFilteringPathOptions): HierarchyFilteringPathOptions | undefined {
-  // istanbul ignore next
-  if (!target && !source) {
-    return undefined;
-  }
-  // istanbul ignore next
-  if (!target) {
-    return source;
-  }
-  // istanbul ignore next
-  if (!source) {
-    return target;
-  }
-  return {
-    autoExpand: ((): HierarchyFilteringPathOptions["autoExpand"] => {
-      if (source.autoExpand === true) {
-        return source.autoExpand;
-      }
-      if (typeof target.autoExpand === "object" && typeof source.autoExpand === "object" && source.autoExpand.depth > target.autoExpand.depth) {
-        return source.autoExpand;
-      }
-      return target.autoExpand;
-    })(),
-  };
 }
 
 async function findMatchingFilterEntry<TEntry extends { id: TIdentifier }, TIdentifier extends HierarchyNodeIdentifier>(
@@ -303,33 +265,28 @@ async function identifiersEqual<TIdentifier extends HierarchyNodeIdentifier>(lhs
   return HierarchyNodeIdentifier.equal(lhs, rhs);
 }
 
-function applyFilterAttributes<TNode extends SourceHierarchyNode>({
-  node,
-  filteredChildrenIdentifierPaths,
-  isFilterTarget,
-  filterTargetOptions,
-  hasFilterTargetAncestor,
-}: {
+function applyFilterAttributes<TNode extends SourceHierarchyNode>(props: {
   node: TNode;
   filteredChildrenIdentifierPaths: HierarchyFilteringPath[] | undefined;
   isFilterTarget?: boolean;
   filterTargetOptions?: HierarchyFilteringPathOptions;
   hasFilterTargetAncestor: boolean;
 }): TNode {
-  const shouldAutoExpand = !!filteredChildrenIdentifierPaths?.some((childPath) => {
-    return "path" in childPath && childPath.path.length && childPath.options?.autoExpand;
-  });
+  const { node, filteredChildrenIdentifierPaths } = props;
   const result = { ...node };
+
+  const shouldAutoExpand = !!filteredChildrenIdentifierPaths?.some((childPath) => {
+    return !!HierarchyFilteringPath.normalize(childPath).options?.autoExpand;
+  });
   if (shouldAutoExpand) {
     result.autoExpand = true;
   }
-  if (isFilterTarget || hasFilterTargetAncestor || filteredChildrenIdentifierPaths?.length) {
-    result.filtering = {
-      ...(isFilterTarget ? { isFilterTarget, filterTargetOptions } : undefined),
-      ...(hasFilterTargetAncestor ? { hasFilterTargetAncestor } : undefined),
-      ...(!!filteredChildrenIdentifierPaths?.length ? { filteredChildrenIdentifierPaths } : undefined),
-    };
+
+  const filteringProps = HierarchyNodeFilteringProps.create(props);
+  if (filteringProps) {
+    result.filtering = filteringProps;
   }
+
   return result;
 }
 
@@ -353,7 +310,6 @@ export const ECSQL_COLUMN_NAME_HasFilterTargetAncestor = "HasFilterTargetAncesto
 export function applyECInstanceIdsFilter(
   def: InstanceNodesQueryDefinition,
   matchingFilters: Array<MatchedFilter<InstanceKey>>,
-  isParentFilterTarget: boolean,
   hasFilterTargetAncestor: boolean,
 ): InstanceNodesQueryDefinition {
   if (matchingFilters.length === 0) {
@@ -382,12 +338,12 @@ export function applyECInstanceIdsFilter(
           [q].*,
           [f].[IsFilterTarget] AS [${ECSQL_COLUMN_NAME_IsFilterTarget}],
           [f].[FilterTargetOptions] AS [${ECSQL_COLUMN_NAME_FilterTargetOptions}],
-          ${hasFilterTargetAncestor || isParentFilterTarget ? "1" : "0"} AS [${ECSQL_COLUMN_NAME_HasFilterTargetAncestor}],
+          ${hasFilterTargetAncestor ? "1" : "0"} AS [${ECSQL_COLUMN_NAME_HasFilterTargetAncestor}],
           [f].[FilteredChildrenPaths] AS [${ECSQL_COLUMN_NAME_FilteredChildrenPaths}]
         FROM (
           ${def.query.ecsql}
         ) [q]
-        ${isParentFilterTarget ? "LEFT " : ""} JOIN FilteringInfo [f] ON [f].[ECInstanceId] = [q].[ECInstanceId]
+        ${hasFilterTargetAncestor ? "LEFT " : ""} JOIN FilteringInfo [f] ON [f].[ECInstanceId] = [q].[ECInstanceId]
       `,
     },
   };
