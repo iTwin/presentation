@@ -5,31 +5,32 @@
 
 /* eslint-disable no-duplicate-imports */
 import { expect } from "chai";
-import { insertPhysicalModelWithPartition } from "presentation-test-utilities";
-// __PUBLISH_EXTRACT_START__ Presentation.HierarchiesReact.Localization.TreeRenderer.Imports
-import { ComponentPropsWithoutRef, useCallback } from "react";
-import { IModelConnection } from "@itwin/core-frontend";
+import { buildIModel } from "../../IModelUtils";
+import { stubGetBoundingClientRect } from "../../Utils";
 import { SchemaContext } from "@itwin/ecschema-metadata";
+import { IModelConnection } from "@itwin/core-frontend";
+import { render, waitFor } from "@testing-library/react";
+import { initialize, terminate } from "../../IntegrationTests";
 import { ECSchemaRpcLocater } from "@itwin/ecschema-rpcinterface-common";
-import { Tree } from "@itwin/itwinui-react";
+import { insertPhysicalModelWithPartition } from "presentation-test-utilities";
 import { createECSchemaProvider, createECSqlQueryExecutor } from "@itwin/presentation-core-interop";
 import { createLimitingECSqlQueryExecutor, createNodesQueryClauseFactory } from "@itwin/presentation-hierarchies";
+import { createBisInstanceLabelSelectClauseFactory, createCachingECClassHierarchyInspector } from "@itwin/presentation-shared";
+// __PUBLISH_EXTRACT_START__ Presentation.HierarchiesReact.Localization.TreeRenderer.Imports
+import { ComponentPropsWithoutRef, useCallback } from "react";
+import { Tree } from "@itwin/itwinui-react";
 // __PUBLISH_EXTRACT_END__
 // __PUBLISH_EXTRACT_START__ Presentation.HierarchiesReact.Localization.Tree.Imports
+import { useUnifiedSelectionTree } from "@itwin/presentation-hierarchies-react";
+// __PUBLISH_EXTRACT_END__
+// __PUBLISH_EXTRACT_START__ Presentation.HierarchiesReact.Localization.TreeRenderer.Imports
 import {
   createRenderedTreeNodeData,
   LocalizationContextProvider,
   RenderedTreeNode,
   TreeNodeRenderer,
   TreeRenderer,
-  useUnifiedSelectionTree,
 } from "@itwin/presentation-hierarchies-react";
-import { createBisInstanceLabelSelectClauseFactory, createCachingECClassHierarchyInspector } from "@itwin/presentation-shared";
-import { render, waitFor } from "@testing-library/react";
-import { buildIModel } from "../../IModelUtils";
-import { initialize, terminate } from "../../IntegrationTests";
-import { stubGetBoundingClientRect } from "../../Utils";
-
 // __PUBLISH_EXTRACT_END__
 
 describe("Hierarchies React", () => {
