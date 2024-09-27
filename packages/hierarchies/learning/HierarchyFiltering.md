@@ -31,13 +31,19 @@ The end result would be:
 |  +--+ F
 ```
 
-## Creating filtered hierarchies
+## The process
 
-The library implements hierarchy filtering through the `filtering` prop in `createHierarchyProvider` function. The prop basically takes a list of node identifier paths from root to the target node and the provider automatically performs the filtering.
+The process of filtering a hierarchy has two major steps:
 
-Creating the node identifier paths is responsibility of the consumers - after all, they provide the hierarchy definition, that describes the structure of the hierarchy, so only they have the necessary information to create the paths in the most efficient way possible. In addition, this decouples the filtering logic from the type of filtering being done - the paths could be created based on a variety of ways, such as a filter string or a target instance ID, to name a few.
+1. Determine node identifier paths for the target nodes. While some hierarchy providers may be able to create these paths automatically, the implementations delivered with this library leave this responsibility to the consumers. This decouples hierarchy filtering logic from the type of filtering being done - the paths could be created based on a variety of ways, such as a filter string or a target instance ID, to name a few.
 
-For example, let's say we have an iModel described at the top of this page, where each node represents a `BisCore.PhysicalElements` and relationships are set up using `BisCore.ElementOwnsChildElements` relationship. The hierarchy definition that creates the hierarchy would look like this:
+2. Given the node identifier paths, the hierarchy provider has the responsibility to filter the hierarchy. To supply the filtering paths to provider, the `HierarchyProvider.setHierarchyFilter` method can be used. The given paths are used to filter root nodes and each returned node is assigned a `filtering` flag, containing identifier paths for its child nodes.
+
+## Creating filtered iModel hierarchies
+
+The library allows creating iModel data-based hierarchies through a hierarchy provider implementation returned by the `createIModelHierarchyProvider` function. In addition to having the required `HierarchyProvider.setHierarchyFilter` function to apply the filter, it also has a `filtering` prop that can be used to provide the filtering paths at construction time.
+
+For an example, let's say we have an iModel described at the top of this page, where each node represents a `BisCore.PhysicalElements` and relationships are set up using `BisCore.ElementOwnsChildElements` relationship. The hierarchy definition that creates the hierarchy would look like this:
 
 <!-- [[include: [Presentation.Hierarchies.HierarchyFiltering.HierarchyDefinitionImports, Presentation.Hierarchies.HierarchyFiltering.HierarchyDefinition], ts]] -->
 <!-- BEGIN EXTRACTION -->
@@ -89,7 +95,9 @@ function createHierarchyDefinition(imodelAccess: IModelAccess): HierarchyDefinit
 
 <!-- END EXTRACTION -->
 
-The second step would be to create the node identifier paths. Let's consider two cases - filtering by label and by target element ID:
+The second step would be to create the node identifier paths. As described earlier, this is the responsibility of the consumer, as only consumer knows how the hierarchy is structured and can determine the paths to the target nodes in the most efficient way possible.
+
+Let's consider two cases - filtering by label and by target element ID:
 
 - To filter by label, we have to know what property(s) the hierarchy definition uses for the label. In this case, it's the `UserLabel` property:
 
@@ -248,7 +256,7 @@ Imagine a case where we have this hierarchy:
 + A
 +--+ B
 |  +--+ C
-|     +--+ (...100 nodes)
+|     +--+ ...100 nodes
 +--+ ...
 ```
 
@@ -259,9 +267,10 @@ This is possible to do by providing an additional `autoExpand` option to the fil
 All nodes in the filtered hierarchy up to "C" will have `autoExpand` flag on, so when rendering the hierarchy, it's clear when to stop loading the child nodes:
 
 ```txt
-+ A              (auto-expanded)
-+--+ B           (auto-expanded)
-|  +--+ C        (collapsed)
++ A                       (auto-expanded)
++--+ B                    (auto-expanded)
+|  +--+ C                 (collapsed)
+|     +--+ ...100 nodes
 ```
 
 The following code snippet shows, how to use `autoExpand` flag:

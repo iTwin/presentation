@@ -22,10 +22,10 @@ In the context of `@itwin/presentation-hierarchies` package, a hierarchy is buil
 
 ### Hierarchy nodes
 
-A `HierarchyNode` interface in the package represents a single node in a hierarchy. It contains information about what the node represents in the iModel (through it's `key` property), label and other properties. There are multiple types of nodes:
+A `HierarchyNode` interface in the package represents a single node in a hierarchy. It contains information about what the node represents (through it's `key` property), label and other properties. There are multiple types of nodes:
 
-- A custom node is not based on any iModel data and is created by the application. Its `key` is a string.
-- An instances node is based on one or more ECInstance(s) in the iModel. Its `key` is an `InstancesNodeKey` and contains identifiers of those ECInstances.
+- A generic node is not based on any iModel data and is created by the application. Its `key` is is a `GenericNodeKey` and has a consumer-supplied identifier with an optional `source` attribute identifying the hierarchy provider that created the node.
+- An instances node is based on one or more ECInstance(s) in an iModel. Its `key` is an `InstancesNodeKey` and contains identifiers of those ECInstances, in addition to `imodelKey` attribute that identifies the source iModel.
 - A grouping node groups one or more instances nodes. Its `key` is a `GroupingNodeKey` and contains the grouping criteria, which depends on the type of grouping:
   - Label grouping node keys have a label.
   - Class grouping nodes have a full class name.
@@ -43,7 +43,7 @@ A `HierarchyNode` goes through several stages throughout its lifetime:
 
 ### Hierarchy definition
 
-A hierarchy definition is what describes the hierarchy by defining what child nodes to return for a given parent node. In this package that is achieved though the `HierarchyDefinition` interface, which has one required method - `defineHierarchyLevel`. The method's responsibility is to create a `HierarchyLevelDefinition` for a given parent node. A `HierarchyLevelDefinition` is actually just a set of `HierarchyNodesDefinition` objects, which either describe a single custom node, or an ECSQL query that returns a number of ECInstance nodes. When `HierarchyLevelDefinition` consists of more than 1 `HierarchyNodesDefinition`, the hierarchy level is combined from multiple sets of nodes.
+A hierarchy definition is what describes the hierarchy by defining what child nodes to return for a given parent node. In this package that is achieved though the `HierarchyDefinition` interface, which has one required method - `defineHierarchyLevel`. The method's responsibility is to create a `HierarchyLevelDefinition` for a given parent node. A `HierarchyLevelDefinition` is actually just a set of `HierarchyNodesDefinition` objects, which either describe a single generic node, or an ECSQL query that returns a number of ECInstance nodes. When `HierarchyLevelDefinition` consists of more than 1 `HierarchyNodesDefinition`, the hierarchy level is combined from multiple sets of nodes.
 
 In case of ECSQL queries for creating the hierarchy level, the definition may want to select some extra information and assign it to the nodes. For that purpose, there's an optional `HierarchyDefinition.parseNode` method, which lets the definition parse the query results handle those extra columns.
 
@@ -53,7 +53,7 @@ In iTwin.js, the most common way to create hierarchies is based on EC data (sche
 
 ### Hierarchy provider
 
-`HierarchyProvider` the core concept of the library - it's responsibility is to glue everything together, including evaluating hierarchy definition, running the queries, processing nodes and, finally, returning them to consumers. The package delivers the `createHierarchyProvider` function to create an instance of `HierarchyProvider`.
+`HierarchyProvider` the core concept of the library - it's responsibility is to glue everything together, including evaluating hierarchy definition, running the queries, processing nodes and, finally, returning them to consumers. The package delivers the `createIModelHierarchyProvider` function to create an instance of `HierarchyProvider`.
 
 ## Learning
 
@@ -61,8 +61,9 @@ Are you migrating from Presentation Rules? Check out our [Migrating from Present
 
 Below is a list of learning material related to building hierarchies:
 
-- [Hierarchy processing](./learning/HierarchyProcessing.md)
-- [Hierarchy definitions](./learning/HierarchyDefinitions.md)
+- [Hierarchy processing](./learning/IModelHierarchyProcessing.md)
+- [Hierarchy definitions](./learning/IModelHierarchyDefinitions.md)
+- [Performance tuning](./learning/IModelPerformanceTuning.md)
 - [Hierarchy filtering](./learning/HierarchyFiltering.md)
 - [Hierarchy level filtering](./learning/HierarchyLevelFiltering.md)
 - [Hierarchy node labels](./learning/NodeLabels.md)
@@ -70,7 +71,6 @@ Below is a list of learning material related to building hierarchies:
 - [Formatting](./learning/Formatting.md)
 - [Localization](./learning/Localization.md)
 - [Logging](./learning/Logging.md)
-- [Performance tuning](./learning/PerformanceTuning.md)
 
 Do you think something is missing in the above list? Let us know by [creating an issue](https://github.com/iTwin/presentation/issues/new?assignees=&labels=documentation%2C+presentation&projects=&template=learning-material-request.md&title=).
 

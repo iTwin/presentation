@@ -77,7 +77,7 @@ Hierarchy nodes originate from one of the following places:
 
 In case 1, the node's `label` property type is `string | ConcatenatedValue`. The `ConcatenatedValue` type allows for a label to consist of multiple parts of different types, each of which are formatted separately:
 
-<!-- [[include: [Presentation.Hierarchies.Formatting.NodeLabelFormattingExamples.Imports, Presentation.Hierarchies.Formatting.CustomHierarchyNodeDefinitionLabelFormattingExample], ts]] -->
+<!-- [[include: [Presentation.Hierarchies.Formatting.NodeLabelFormattingExamples.Imports, Presentation.Hierarchies.Formatting.GenericHierarchyNodeDefinitionLabelFormattingExample], ts]] -->
 <!-- BEGIN EXTRACTION -->
 
 ```ts

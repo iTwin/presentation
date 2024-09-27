@@ -7,7 +7,7 @@ import { collect } from "presentation-test-utilities";
 import { HierarchyNode, HierarchyNodeKey, HierarchyProvider } from "@itwin/presentation-hierarchies";
 
 interface NodeDefinition {
-  nodeType: "custom" | Exclude<HierarchyNodeKey, string>["type"];
+  nodeType: HierarchyNodeKey["type"];
   label: string;
   children?: NodeDefinition[];
   autoExpand?: boolean;

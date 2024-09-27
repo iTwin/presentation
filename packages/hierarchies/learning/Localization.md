@@ -2,7 +2,7 @@
 
 For the most part, the results created by the APIs in this package depend either on `HierarchyDefinition` or iModel data, both of which come from package consumers. However, for the few user-facing strings that the library does create, we provide a way to localize them.
 
-The library doesn't enforce any particular localization strategy. Instead, the `createHierarchyProvider` function accepts a `localizedStrings` object that provides the localized strings used by the library, and consumers can choose the most suitable way to localize these strings. If the `localizedStrings` is not provided or provided only partially, the library uses the default English strings.
+The library doesn't enforce any particular localization strategy. Instead, the `createIModelHierarchyProvider` function accepts a `localizedStrings` object that provides the localized strings used by the library, and consumers can choose the most suitable way to localize these strings. If the `localizedStrings` is not provided or provided only partially, the library uses the default English strings.
 
 Example:
 

@@ -1,12 +1,12 @@
-# Hierarchy processing
+# iModel hierarchy processing
 
-This page describes how and in what order a hierarchy provider (see `createHierarchyProvider`) processes nodes.
+This page describes how and in what order an iModel hierarchy provider (see `createIModelHierarchyProvider`) processes nodes.
 
 1. The hierarchy definition's `defineHierarchyLevel` function is called to get the hierarchy level definitions.
 
 2. Hierarchy level definitions are turned into nodes.
 
-   2.1. In case the hierarchy level definition is a `CustomHierarchyNodeDefinition`, it's simply mapped to the custom node.
+   2.1. In case the hierarchy level definition is a `GenericHierarchyNodeDefinition`, it's simply mapped to the generic node.
 
    2.2. In case the hierarchy level definition is an `InstanceNodesQueryDefinition`, the nodes are fetched from the iModel and parsed either by definition's `parseNode` function, or the default parser.
 

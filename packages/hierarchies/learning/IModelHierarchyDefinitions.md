@@ -1,6 +1,6 @@
-# Hierarchy definitions
+# IModel hierarchy definitions
 
-A hierarchy definition is one of the core concepts in this library and is responsible for defining the structure of a hierarchy.
+An iModel hierarchy definition is one of the core concepts in this library and is responsible for defining the structure of a hierarchy build from data in an iModel.
 
 In its most simple form, a hierarchy definition may only have one `defineHierarchyLevel` function that defines a child hierarchy level for a given parent node:
 
@@ -61,7 +61,7 @@ However, it also has 3 optional functions that may be implemented to provide add
 
 More details about the hierarchy processing steps and their order are provided in the [hierarchy processing page](./HierarchyProcessing.md).
 
-While consumers are free to create their own `HierarchyDefinition` implementations, the library delivers an implementation of a class-based hierarchy definition that allows for a more declarative approach to defining hierarchies. The [Class-based hierarchy definition section](#class-based-hierarchy-definition) provides more details on how to use this implementation.
+While consumers are free to create their own `HierarchyDefinition` implementations, the library delivers an implementation of a predicate-based hierarchy definition that allows for a more declarative approach to defining hierarchies. The [Predicate-based hierarchy definition section](#predicate-based-hierarchy-definition) provides more details on how to use this implementation.
 
 ## Custom parsing
 

@@ -119,7 +119,7 @@ describe("Hierarchies", () => {
         ]);
     });
 
-    it("gets instance keys for custom node's child hierarchy level", async function () {
+    it("gets instance keys for generic node's child hierarchy level", async function () {
       const imodelAccess = createIModelAccess(imodel);
       const selectQueryFactory = createNodesQueryClauseFactory({
         imodelAccess,
@@ -228,7 +228,7 @@ describe("Hierarchies", () => {
         ]);
     });
 
-    it("gets instance keys for hidden custom node's child hierarchy level", async function () {
+    it("gets instance keys for hidden generic node's child hierarchy level", async function () {
       const imodelAccess = createIModelAccess(imodel);
       const selectQueryFactory = createNodesQueryClauseFactory({
         imodelAccess,

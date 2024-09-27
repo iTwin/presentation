@@ -2,11 +2,11 @@
 
 A label could probably be considered the most important attribute of a hierarchy node. It's the first thing a user sees when they look at hierarchies, and it's the primary way they identify the node. Therefore, it's crucial to have a good label for each node, ideally unique within the hierarchy. The library provides full control over how the node's label is created and provides a few APIs to help in creating it.
 
-The node labels are decided by [hierarchy definition](./HierarchyDefinitions.md), which defines nodes as either `CustomHierarchyNodeDefinition` or `InstanceNodesQueryDefinition` objects. Labels are assigned differently in the two cases, and the options are described below.
+The node labels are decided by [hierarchy definition](./HierarchyDefinitions.md), which defines nodes as either `GenericHierarchyNodeDefinition` or `InstanceNodesQueryDefinition` objects. Labels are assigned differently in the two cases, and the options are described below.
 
-## Assigning custom node labels
+## Assigning generic node labels
 
-In case of custom nodes, the hierarchy definition returns the node object directly, so it has full control over what label is used for the node. Note that the label may be either a `string` or a `ConcatenatedValue` - in case of the latter, it may consist of separately formatted pieces which are concatenated together during hierarchy processing. See [formatting node labels](./Formatting.md#formatting-node-labels) section for more details and an example.
+In case of generic nodes, the hierarchy definition returns the node object directly, so it has full control over what label is used for the node. Note that the label may be either a `string` or a `ConcatenatedValue` - in case of the latter, it may consist of separately formatted pieces which are concatenated together during hierarchy processing. See [formatting node labels](./Formatting.md#formatting-node-labels) section for more details and an example.
 
 ## Assigning instance node labels
 
@@ -18,7 +18,7 @@ The `NodesQueryClauseFactory.createSelectClause` function has a required `nodeLa
 
 - The ECSQL selector object generally looks like this: `{ selector: "class_alias.PropertyName" }`. This results in an ECSQL query like `SELECT class_alias.PropertyName FROM ...`, which suggests the selector has to be a valid ECSQL clause to add to a SELECT clause.
 
-  While consumers are free to specify any ECSQL selector for their nodes, the library provides a few helper functions to make it easier to create the selector. The functions are delivered with the `@itwin/presentation-shared` package and are documented in its [README](https://github.com/iTwin/presentation/blob/master/packages/shared/README.md#instance-labels). The most commonly used one is the [BIS instance label select clause factory](https://github.com/iTwin/presentation/blob/master/packages/shared/README.md#createbisinstancelabelselectclausefactory), which knows how to create unique labels for [BIS](https://www.itwinjs.org/bis/guide/intro/overview/)-based instances. A quick example of it usage for hierarchies:
+  While consumers are free to specify any ECSQL selector for their nodes, the library provides a few helper functions to make it easier to create the selector. The functions are delivered with the `@itwin/presentation-shared` package and are documented in its [README](https://github.com/iTwin/presentation/blob/master/packages/shared/README.md#instance-labels). The most commonly used one is the [BIS instance label select clause factory](https://github.com/iTwin/presentation/blob/master/packages/shared/README.md#createbisinstancelabelselectclausefactory), which knows how to create unique labels for [BIS](https://www.itwinjs.org/bis/guide/intro/overview/)-based instances. A quick example of its usage for hierarchies:
 
   <!-- [[include: [Presentation.Hierarchies.NodeLabels.Imports, Presentation.Hierarchies.NodeLabels.BisInstanceLabelSelectClauseFactory], ts]] -->
   <!-- BEGIN EXTRACTION -->

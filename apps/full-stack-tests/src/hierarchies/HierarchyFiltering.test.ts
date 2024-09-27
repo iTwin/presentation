@@ -49,8 +49,8 @@ describe("Hierarchies", () => {
       await terminate();
     });
 
-    describe("custom nodes", () => {
-      it("filters through custom nodes", async function () {
+    describe("generic nodes", () => {
+      it("filters through generic nodes", async function () {
         const { imodel, ...keys } = await buildIModel(this, async (builder) => {
           const rootSubject = { className: subjectClassName, id: IModel.rootSubjectId };
           const childSubject1 = insertSubject({ builder, codeValue: "test subject 1", parentId: rootSubject.id });
@@ -148,7 +148,7 @@ describe("Hierarchies", () => {
         });
       });
 
-      it("filters custom nodes", async function () {
+      it("filters generic nodes", async function () {
         const { imodel, ...keys } = await buildIModel(this, async () => {
           const rootSubject = { className: subjectClassName, id: IModel.rootSubjectId };
           return { rootSubject };
@@ -225,7 +225,7 @@ describe("Hierarchies", () => {
     });
 
     describe("when filtering through hidden nodes", () => {
-      it("filters through hidden custom nodes", async function () {
+      it("filters through hidden generic nodes", async function () {
         const { imodel, ...keys } = await buildIModel(this, async (builder) => {
           const rootSubject = { className: subjectClassName, id: IModel.rootSubjectId };
           const childSubject1 = insertSubject({ builder, codeValue: "test subject 1", parentId: rootSubject.id });
@@ -322,7 +322,7 @@ describe("Hierarchies", () => {
     });
 
     describe("when targeting hidden nodes", () => {
-      it("doesn't return matching hidden custom nodes or their children", async function () {
+      it("doesn't return matching hidden generic nodes or their children", async function () {
         const { imodel, ...keys } = await buildIModel(this, async (builder) => {
           const rootSubject = { className: subjectClassName, id: IModel.rootSubjectId };
           const childSubject1 = insertSubject({ builder, codeValue: "test subject 1", parentId: rootSubject.id });

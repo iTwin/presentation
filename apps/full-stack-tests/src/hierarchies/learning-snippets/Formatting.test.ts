@@ -91,11 +91,11 @@ describe("Hierarchies", () => {
         // __PUBLISH_EXTRACT_END__
       });
 
-      it("formats custom node's concatenated value label", async function () {
+      it("formats generic node's concatenated value label", async function () {
         const { imodel } = await buildIModel(this);
         const imodelAccess = createIModelAccess(imodel);
 
-        // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.Formatting.CustomHierarchyNodeDefinitionLabelFormattingExample
+        // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.Formatting.GenericHierarchyNodeDefinitionLabelFormattingExample
         const hierarchyProvider = createIModelHierarchyProvider({
           imodelAccess,
           hierarchyDefinition: {

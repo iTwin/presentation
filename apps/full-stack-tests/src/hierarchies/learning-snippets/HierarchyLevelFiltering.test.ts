@@ -39,8 +39,8 @@ describe("Hierarchies", () => {
         await terminate();
       });
 
-      it("creates filterable custom node", async function () {
-        // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.HierarchyLevelFiltering.CustomHierarchyNodeDefinition
+      it("creates filterable generic node", async function () {
+        // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.HierarchyLevelFiltering.GenericHierarchyNodeDefinition
         const hierarchyDefinition: HierarchyDefinition = {
           async defineHierarchyLevel({ parentNode }) {
             if (!parentNode) {

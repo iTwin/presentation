@@ -4,15 +4,15 @@ Hierarchy level filtering is a concept where filtering is applied to a single hi
 
 ## Enabling hierarchy level filtering
 
-The library creates hierarchies as described by hierarchy definitions and they define hierarchy levels through ECSQL queries. Due to loose structure of the queries and the need to be flexible on how the filter is applied on them, the library does not provide a built-in mechanism for hierarchy level filtering. Instead, it provides a way to enable consumers to implement filtering through their hierarchy definitions.
+The library creates hierarchies as described by hierarchy definitions and they define hierarchy levels through ECSQL queries. Due to loose structure of the queries and the need to be flexible on how the filter is applied on them, the library does not provide a built-in mechanism for hierarchy level filtering. Instead, it enables consumers to implement filtering through their hierarchy definitions.
 
 ### Enable filtering for specific parent nodes
 
 Because hierarchy definitions may not support hierarchy level filtering on all hierarchy levels (and by default they don't support it on any of them), the hierarchy definition has to explicitly tell if node supports it or not.
 
-To make a custom node filterable, the hierarchy definition should set `supportsFiltering` attribute to `true` when returning `CustomHierarchyNodeDefinition`:
+To make a generic node filterable, the hierarchy definition should set `supportsFiltering` attribute to `true` when returning `GenericHierarchyNodeDefinition`:
 
-<!-- [[include: [Presentation.Hierarchies.HierarchyLevelFiltering.Imports, Presentation.Hierarchies.HierarchyLevelFiltering.CustomHierarchyNodeDefinition], ts]] -->
+<!-- [[include: [Presentation.Hierarchies.HierarchyLevelFiltering.Imports, Presentation.Hierarchies.HierarchyLevelFiltering.GenericHierarchyNodeDefinition], ts]] -->
 <!-- BEGIN EXTRACTION -->
 
 ```ts

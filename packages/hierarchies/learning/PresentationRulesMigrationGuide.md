@@ -25,7 +25,7 @@ Finally, the APIs used to create hierarchies are also slightly different:
   }
   ```
 
-- In this library consumers first have to create an instance of `HierarchyProvider` and then use it to create individual hierarchy levels:
+- In this library, consumers first have to create an instance of `HierarchyProvider` and then use it to create individual hierarchy levels:
 
   <!-- [[include: [Presentation.Hierarchies.Migration.HierarchyProviderImports, Presentation.Hierarchies.Migration.HierarchyProviderUsage], ts]] -->
   <!-- BEGIN EXTRACTION -->
@@ -48,7 +48,7 @@ The Presentation Rules system has 2 types of rules for defining hierarchy:
 - [RootNodeRule](https://www.itwinjs.org/presentation/hierarchies/rootnoderule/) is used for creating root level nodes.
 - [ChildNodeRule](https://www.itwinjs.org/presentation/hierarchies/childnoderule/) is used for creating child level nodes. It generally uses the `ParentNode` ECExpression symbol available in `condition` attribute to select which parent node to create children for.
 
-Most commonly, child node rules are only checking parent instance node's class or custom node's type in their condition - if that's the case across the whole Presentation Ruleset, the recommended approach to define root and child nodes using this library is using the `createPredicateBasedHierarchyDefinition` function:
+The recommended approach to define root and child nodes using this library is using the `createPredicateBasedHierarchyDefinition` function:
 
 Example ruleset:
 
@@ -158,17 +158,17 @@ const hierarchyDefinition: HierarchyDefinition = {
 
 <!-- END EXTRACTION -->
 
-See the [hierarchy definitions learning page](./HierarchyDefinitions.md) for more information on how to create hierarchy definitions.
+See the [hierarchy definitions learning page](./IModelHierarchyDefinitions.md) for more information on how to create hierarchy definitions.
 
 ## Migrating hierarchy specifications
 
-Each hierarchy rule contains a `specifications` attribute, which defines how / what nodes to create for the hierarchy level. A matching concept of that in this library is the `HierarchyLevelDefinition` type, which is simply a list of `HierarchyNodesDefinition` objects, that define either a custom node or a query for creating instance-based nodes.
+Each hierarchy rule contains a `specifications` attribute, which defines how / what nodes to create for the hierarchy level. A matching concept of that in this library is the `HierarchyLevelDefinition` type, which is simply a list of `HierarchyNodesDefinition` objects, that define either a generic node or a query for creating instance-based nodes.
 
-The Presentation Rules system has 4 types of specifications for building hierarchies: [Custom node specification](https://www.itwinjs.org/presentation/hierarchies/customnode/), [Instance nodes of specific classes specification](https://www.itwinjs.org/presentation/hierarchies/instancenodesofspecificclasses/), [Related instance nodes specification](https://www.itwinjs.org/presentation/hierarchies/relatedinstancenodes/) and [Custom query instance nodes specification](https://www.itwinjs.org/presentation/hierarchies/customqueryinstancenodes/). Below are examples of how to migrate each of them to the new library.
+The Presentation Rules system has 4 types of specifications for building hierarchies: [Custom node specification](https://www.itwinjs.org/presentation/hierarchies/customnode/), [Instance nodes of specific classes specification](https://www.itwinjs.org/presentation/hierarchies/instancenodesofspecificclasses/), [Related instance nodes specification](https://www.itwinjs.org/presentation/hierarchies/relatedinstancenodes/) and [Custom query instance nodes specification](https://www.itwinjs.org/presentation/hierarchies/customqueryinstancenodes/). Below are examples of how to migrate each of them to this library.
 
 ### Migrating custom node specification
 
-The purpose of a custom node specification in Presentation Rules is ask the library to return a node that doesn't depend on any data in the iModel. So you define various attributes in the specification and the library maps them to the custom node. The new library makes this more flexible by simply allowing you to return the node itself, without any intermediate data structure.
+The purpose of a custom node specification in Presentation Rules is ask the library to return a node that doesn't depend on any data in the iModel. So you define various attributes in the specification and the library maps them to the custom node. This library makes this more flexible by simply allowing you to return the node itself, without any intermediate data structure.
 
 Example of a custom node specification in Presentation Rules:
 
