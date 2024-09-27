@@ -1229,7 +1229,7 @@ describe("Hierarchies", () => {
       });
     });
 
-    describe.skip("when filtering merged hierarchy provider", () => {
+    describe("when filtering merged hierarchy provider", () => {
       it("filters root nodes of individual provider", async function () {
         const { imodel: imodel1, ...keys1 } = await buildIModel(createFileNameFromString(`${this.test!.fullTitle()}-1`), async (builder) => {
           const testSubject = insertSubject({ builder, codeValue: "A subject", parentId: IModel.rootSubjectId });
@@ -1431,13 +1431,14 @@ describe("Hierarchies", () => {
       });
 
       it("filters through multiple providers", async function () {
+        const rootSubjectKey = { className: subjectClassName, id: IModel.rootSubjectId };
         const { imodel: imodel1, ...keys1 } = await buildIModel(createFileNameFromString(`${this.test!.fullTitle()}-1`), async (builder) => {
-          const subject1 = insertSubject({ builder, codeValue: "A subject 1", parentId: IModel.rootSubjectId });
+          const subject1 = insertSubject({ builder, codeValue: "A subject 1", parentId: rootSubjectKey.id });
           const subject11 = insertSubject({ builder, codeValue: "A subject 1.1", parentId: subject1.id });
           return { subject1, subject11 };
         });
         const { imodel: imodel2, ...keys2 } = await buildIModel(createFileNameFromString(`${this.test!.fullTitle()}-2`), async (builder) => {
-          const subject2 = insertSubject({ builder, codeValue: "B subject 2", parentId: IModel.rootSubjectId });
+          const subject2 = insertSubject({ builder, codeValue: "B subject 2", parentId: rootSubjectKey.id });
           const subject21 = insertSubject({ builder, codeValue: "B subject 2.1", parentId: subject2.id });
           return { subject2, subject21 };
         });
@@ -1572,7 +1573,13 @@ describe("Hierarchies", () => {
             }),
             NodeValidators.createForInstanceNode({
               instanceKeys: [instanceKeys.subject2],
-              children: [NodeValidators.createForGenericNode({ key: { type: "generic", id: "gen", source: "custom-provider" } })],
+              children: [
+                NodeValidators.createForInstanceNode({
+                  instanceKeys: [instanceKeys.subject21],
+                  children: [NodeValidators.createForGenericNode({ key: { type: "generic", id: "gen", source: "custom-provider" } })],
+                }),
+                NodeValidators.createForGenericNode({ key: { type: "generic", id: "gen", source: "custom-provider" } }),
+              ],
             }),
           ],
         });
@@ -1583,8 +1590,8 @@ describe("Hierarchies", () => {
             providers: [provider1, provider2, provider3],
             filterProps: {
               paths: [
-                [instanceKeys.subject1, instanceKeys.subject11, { type: "generic", id: "gen", source: "custom-provider" }],
-                [instanceKeys.subject2, { type: "generic", id: "gen", source: "custom-provider" }],
+                [rootSubjectKey, instanceKeys.subject1, instanceKeys.subject11, { type: "generic", id: "gen", source: "custom-provider" }],
+                [rootSubjectKey, instanceKeys.subject2, { type: "generic", id: "gen", source: "custom-provider" }],
               ],
             },
           }),
@@ -1594,13 +1601,13 @@ describe("Hierarchies", () => {
               children: [
                 NodeValidators.createForInstanceNode({
                   instanceKeys: [instanceKeys.subject11],
-                  children: [NodeValidators.createForGenericNode({ key: { type: "generic", id: "gen", source: "custom-provider" } })],
+                  children: [NodeValidators.createForGenericNode({ key: "gen" })],
                 }),
               ],
             }),
             NodeValidators.createForInstanceNode({
               instanceKeys: [instanceKeys.subject2],
-              children: [NodeValidators.createForGenericNode({ key: { type: "generic", id: "gen", source: "custom-provider" } })],
+              children: [NodeValidators.createForGenericNode({ key: "gen" })],
             }),
           ],
         });

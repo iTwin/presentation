@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { from, mergeMap } from "rxjs";
+import { filter, first, from, map, mergeMap, of } from "rxjs";
 import { isIDisposable } from "@itwin/core-bentley";
 import { GenericInstanceFilter } from "@itwin/core-common";
 import { InstanceKey, IPrimitiveValueFormatter } from "@itwin/presentation-shared";
@@ -85,7 +85,24 @@ export function mergeProviders({ providers }: MergeHierarchyProvidersProps): Hie
     getNodes: (props) =>
       eachValueFrom(
         from(providers).pipe(
-          mergeMap((p) => p.getNodes(props)),
+          mergeMap((provider) =>
+            from(provider.getNodes(props)).pipe(
+              mergeMap((node) => {
+                if (node.children) {
+                  return of(node);
+                }
+                // each provider only considers its own data when determining node's children - in case it says
+                // the node has no children, we have to check against the other providers too
+                return from(providers).pipe(
+                  filter((p) => p !== provider),
+                  mergeMap((p) => p.getNodes({ parentNode: node })),
+                  map(() => true),
+                  first(undefined, false),
+                  map((hasChildren) => ({ ...node, children: hasChildren })),
+                );
+              }),
+            ),
+          ),
           sortNodesByLabelOperator,
           // TODO: consider merging similar nodes
         ),
