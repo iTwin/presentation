@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { InstanceKey } from "@itwin/presentation-shared";
-import { GenericNodeKey } from "./HierarchyNodeKey";
+import { GenericNodeKey, IModelInstanceKey } from "./HierarchyNodeKey";
 
 /**
  * An identifier that can be used to identify either an ECInstance or a generic node.
@@ -16,13 +16,13 @@ import { GenericNodeKey } from "./HierarchyNodeKey";
  *
  * @beta
  */
-export type HierarchyNodeIdentifier = InstanceKey | GenericNodeKey;
+export type HierarchyNodeIdentifier = IModelInstanceKey | GenericNodeKey;
 
 /** @beta */
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export namespace HierarchyNodeIdentifier {
   /** Checks whether the given identifier is an instance node identifier */
-  export function isInstanceNodeIdentifier(id: HierarchyNodeIdentifier): id is InstanceKey {
+  export function isInstanceNodeIdentifier(id: HierarchyNodeIdentifier): id is IModelInstanceKey {
     return "className" in id;
   }
 
@@ -34,7 +34,7 @@ export namespace HierarchyNodeIdentifier {
   /** Checks two identifiers for equality */
   export function equal(lhs: HierarchyNodeIdentifier, rhs: HierarchyNodeIdentifier) {
     if (isInstanceNodeIdentifier(lhs) && isInstanceNodeIdentifier(rhs)) {
-      return InstanceKey.equals(lhs, rhs);
+      return InstanceKey.equals(lhs, rhs) && lhs.imodelKey === rhs.imodelKey;
     }
     if (isGenericNodeIdentifier(lhs) && isGenericNodeIdentifier(rhs)) {
       return lhs.source === rhs.source && lhs.id === rhs.id;

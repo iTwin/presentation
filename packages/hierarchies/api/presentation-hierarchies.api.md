@@ -196,7 +196,7 @@ export function getLogger(): ILogger;
 
 // @beta
 export interface GroupingHierarchyNode extends BaseHierarchyNode {
-    groupedInstanceKeys: InstanceKey[];
+    groupedInstanceKeys: IModelInstanceKey[];
     key: GroupingNodeKey;
     nonGroupingAncestor?: ParentHierarchyNode<NonGroupingHierarchyNode>;
 }
@@ -329,13 +329,13 @@ interface HierarchyNodeGroupingParamsBase {
 }
 
 // @beta
-export type HierarchyNodeIdentifier = InstanceKey | GenericNodeKey;
+export type HierarchyNodeIdentifier = IModelInstanceKey | GenericNodeKey;
 
 // @beta (undocumented)
 export namespace HierarchyNodeIdentifier {
     export function equal(lhs: HierarchyNodeIdentifier, rhs: HierarchyNodeIdentifier): boolean;
     export function isGenericNodeIdentifier(id: HierarchyNodeIdentifier): id is GenericNodeKey;
-    export function isInstanceNodeIdentifier(id: HierarchyNodeIdentifier): id is InstanceKey;
+    export function isInstanceNodeIdentifier(id: HierarchyNodeIdentifier): id is IModelInstanceKey;
 }
 
 // @beta
@@ -459,6 +459,12 @@ interface IModelHierarchyProviderProps {
 }
 
 // @beta
+interface IModelInstanceKey extends InstanceKey {
+    // (undocumented)
+    imodelKey?: string;
+}
+
+// @beta
 interface InstanceHierarchyNodeProcessingParams extends HierarchyNodeProcessingParamsBase {
     // (undocumented)
     grouping?: HierarchyNodeGroupingParams;
@@ -479,7 +485,7 @@ interface InstancesNodeChildHierarchyLevelDefinition {
 
 // @beta
 export interface InstancesNodeKey {
-    instanceKeys: InstanceKey[];
+    instanceKeys: IModelInstanceKey[];
     type: "instances";
 }
 
@@ -674,7 +680,11 @@ export type SourceHierarchyNode<TBase = SourceGenericHierarchyNode | SourceInsta
 };
 
 // @beta
-type SourceInstanceHierarchyNode = SourceHierarchyNode<ProcessedInstanceHierarchyNode>;
+type SourceInstanceHierarchyNode = SourceHierarchyNode<Omit<ProcessedInstanceHierarchyNode, "key"> & {
+    key: Omit<InstancesNodeKey, "instanceKeys"> & {
+        instanceKeys: InstanceKey[];
+    };
+}>;
 
 // (No @packageDocumentation comment for this package)
 

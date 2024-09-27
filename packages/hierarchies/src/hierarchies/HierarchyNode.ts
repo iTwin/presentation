@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { InstanceKey, OmitOverUnion } from "@itwin/presentation-shared";
+import { OmitOverUnion } from "@itwin/presentation-shared";
 import { HierarchyFilteringPath, HierarchyFilteringPathOptions } from "./HierarchyFiltering";
 import {
   ClassGroupingNodeKey,
@@ -11,6 +11,7 @@ import {
   GroupingNodeKey,
   HierarchyNodeKey,
   IModelHierarchyNodeKey,
+  IModelInstanceKey,
   InstancesNodeKey,
   LabelGroupingNodeKey,
   PropertyGroupingNodeKey,
@@ -80,7 +81,7 @@ export interface GroupingHierarchyNode extends BaseHierarchyNode {
    * Keys of all instances grouped by this node, including deeply nested under
    * other grouping nodes.
    */
-  groupedInstanceKeys: InstanceKey[];
+  groupedInstanceKeys: IModelInstanceKey[];
 
   /** The closest ancestor node that is not a grouping node. May be `undefined` if the grouping node grouped root level nodes. */
   nonGroupingAncestor?: ParentHierarchyNode<NonGroupingHierarchyNode>;

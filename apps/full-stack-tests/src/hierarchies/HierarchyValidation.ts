@@ -8,6 +8,7 @@ import { collect } from "presentation-test-utilities";
 import { isDeepStrictEqual } from "util";
 import { Logger } from "@itwin/core-bentley";
 import { GenericNodeKey, GroupingNodeKey, HierarchyNode, HierarchyNodeKey, HierarchyProvider, NonGroupingHierarchyNode } from "@itwin/presentation-hierarchies";
+import { IModelInstanceKey } from "@itwin/presentation-hierarchies/lib/cjs/hierarchies/HierarchyNodeKey";
 import { hasChildren } from "@itwin/presentation-hierarchies/lib/cjs/hierarchies/internal/Common";
 import { InstanceKey } from "@itwin/presentation-shared";
 
@@ -124,7 +125,7 @@ export namespace NodeValidators {
 
   export function createForInstanceNode<TChildren extends ExpectedHierarchyDef[] | boolean>(
     props: BaseNodeExpectations & {
-      instanceKeys?: InstanceKey[];
+      instanceKeys?: IModelInstanceKey[];
       children?: TChildren;
     },
   ) {
@@ -137,7 +138,7 @@ export namespace NodeValidators {
           props.instanceKeys &&
           (node.key.instanceKeys.length !== props.instanceKeys.length ||
             !node.key.instanceKeys.every((nk) =>
-              props.instanceKeys!.some((ek) => (ek.imodelKey ? InstanceKey.equals(nk, ek) : InstanceKey.equals({ className: nk.className, id: nk.id }, ek))),
+              props.instanceKeys!.some((ek) => InstanceKey.equals(nk, ek) && (!ek.imodelKey || ek.imodelKey === nk.imodelKey)),
             ))
         ) {
           throw new Error(

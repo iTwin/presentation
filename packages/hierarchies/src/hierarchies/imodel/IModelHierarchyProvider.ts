@@ -39,7 +39,7 @@ import {
 import { RowsLimitExceededError } from "../HierarchyErrors";
 import { HierarchyFilteringPath } from "../HierarchyFiltering";
 import { HierarchyNode, NonGroupingHierarchyNode, ParentHierarchyNode } from "../HierarchyNode";
-import { GenericNodeKey, HierarchyNodeKey, InstancesNodeKey } from "../HierarchyNodeKey";
+import { GenericNodeKey, HierarchyNodeKey, IModelInstanceKey, InstancesNodeKey } from "../HierarchyNodeKey";
 import { GetHierarchyNodesProps, HierarchyProvider } from "../HierarchyProvider";
 import {
   LOGGING_NAMESPACE as BASE_LOGGING_NAMESPACE,
@@ -528,7 +528,7 @@ class IModelHierarchyProviderImpl implements HierarchyProvider {
                     className: normalizeFullClassName(row[0]),
                     id: row[1],
                     imodelKey: this._imodelAccess.imodelKey,
-                  } satisfies InstanceKey,
+                  } satisfies IModelInstanceKey,
                   hide: !!row[2],
                 })),
               );

@@ -1059,8 +1059,8 @@ describe("createIModelHierarchyProvider", () => {
           arg.parentNode &&
           HierarchyNode.isInstancesNode(arg.parentNode) &&
           arg.parentNode.key.instanceKeys.length === 2 &&
-          InstanceKey.equals(arg.parentNode.key.instanceKeys[0], { className: "a.b", id: "0x123", imodelKey: "test-imodel" }) &&
-          InstanceKey.equals(arg.parentNode.key.instanceKeys[1], { className: "a.b", id: "0x456", imodelKey: "test-imodel" }),
+          InstanceKey.equals(arg.parentNode.key.instanceKeys[0], { className: "a.b", id: "0x123" }) &&
+          InstanceKey.equals(arg.parentNode.key.instanceKeys[1], { className: "a.b", id: "0x456" }),
       );
     });
 

@@ -4,16 +4,7 @@
 
 **BREAKING:** Added support for creating hierarchies from multiple data sources.
 
-- Changes to `HierarchyProvider` interface:
-  - Removed `notifyDataSourceChanged` method. Each provider implementation should decide how it gets notified about data source changes.
-  - Added `setHierarchyFilter` method to allow setting or removing the filter without creating a new provider.
-
-- Renamed `createHierarchyProvider` to `createIModelHierarchyProvider` to signify that the created provider creates nodes based on specific iModel. In addition, the function received the following changes:
-  - The `imodelAccess` object now requires an additional `imodelKey` attribute. See README for how to create the `imodelAccess` object.
-  - Added an optional `imodelChanged` prop of `Event` type. The created provider listens to this event and updates the hierarchy when the event is raised (previously this was done by calling `notifyDataSourceChanged` method on the provider).
-  - The returned provider now has a `dispose` method to clean up resources - make sure to call it when the provider is no longer needed.
-
-- Added `mergeProviders` function, which, given a number of hierarchy providers, creates a new provider that merges the hierarchies of the input providers. The returned provider has a `dispose` method that needs to be called when the provider is no longer needed.
+- `InstancesNodeKey.instanceKeys` array items now have an optional `imodelKey` attribute to allow for the identification of the iModel that the instance belongs to. This is useful when working with sets of instance keys representing instances from different iModels. In addition, the same `imodelKey` attribute is also available on `HierarchyNodeIdentifier` to allow for filtering nodes based on the iModel they belong to.
 
 - `HierarchyNode` terminology and related changes:
   - "Standard" nodes were renamed to "IModel" nodes to signify the fact that they're based on iModel data:
@@ -29,6 +20,20 @@
     - `HierarchyNodesDefinition.isCustomNode` renamed to `HierarchyNodesDefinition.isGenericNode`.
   - `ParsedHierarchyNode` was renamed to `SourceHierarchyNode`.
   - Type guards in `HierarchyNode` namespace no longer narrow the type of the input node to `ProcessedHierarchyNode` subtypes. Instead, a `ProcessedHierarchyNode` namespace was added with a number of type guards to do that.
+
+- Changes to `HierarchyProvider` interface:
+  - Removed `notifyDataSourceChanged` method. Each provider implementation should decide how it gets notified about data source changes.
+  - Added `setHierarchyFilter` method to allow setting or removing the filter without creating a new provider.
+
+- Renamed `createHierarchyProvider` to `createIModelHierarchyProvider` to signify that the created provider creates nodes based on specific iModel. In addition, the function received the following changes:
+  - The `imodelAccess` object now requires an additional `imodelKey` attribute. See README for how to create the `imodelAccess` object.
+  - All nodes returned by the provider are now associated with the iModel this provider is using:
+    - Instances-based hierarchy nodes' instance keys have an `imodelKey` attribute.
+    - Generic nodes' keys have a `source` attribute set to imodel access' `imodelKey`.
+  - Added an optional `imodelChanged` prop of `Event` type. The created provider listens to this event and updates the hierarchy when the event is raised (previously this was done by calling `notifyDataSourceChanged` method on the provider).
+  - The returned provider now has a `dispose` method to clean up resources - make sure to call it when the provider is no longer needed.
+
+- Added `mergeProviders` function, which, given a number of hierarchy providers, creates a new provider that merges the hierarchies of the input providers. The returned provider has a `dispose` method that needs to be called when the provider is no longer needed.
 
 - Renamed `createClassBasedHierarchyDefinition` to `createPredicateBasedHierarchyDefinition` to signify its props changes:
   - When specifying `childNodes` definition for instances parent node, the `parentNodeClassName` attribute was changed to `parentInstancesNodePredicate`. In addition to accepting a full class name, identifying the class of parent instances to return children for, it now also accepts an async function predicate.

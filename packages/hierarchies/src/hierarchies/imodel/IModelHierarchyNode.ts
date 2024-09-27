@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { ConcatenatedValue, OmitOverUnion, PrimitiveValue } from "@itwin/presentation-shared";
+import { ConcatenatedValue, InstanceKey, OmitOverUnion, PrimitiveValue } from "@itwin/presentation-shared";
 import { GroupingHierarchyNode, NonGroupingHierarchyNode } from "../HierarchyNode";
 import { GenericNodeKey, HierarchyNodeKey, InstancesNodeKey } from "../HierarchyNodeKey";
 
@@ -256,4 +256,8 @@ export type SourceGenericHierarchyNode = SourceHierarchyNode<Omit<ProcessedGener
  * A kind of `ProcessedInstanceHierarchyNode` that has unformatted label and doesn't know about its ancestors.
  * @beta
  */
-export type SourceInstanceHierarchyNode = SourceHierarchyNode<ProcessedInstanceHierarchyNode>;
+export type SourceInstanceHierarchyNode = SourceHierarchyNode<
+  Omit<ProcessedInstanceHierarchyNode, "key"> & {
+    key: Omit<InstancesNodeKey, "instanceKeys"> & { instanceKeys: InstanceKey[] };
+  }
+>;

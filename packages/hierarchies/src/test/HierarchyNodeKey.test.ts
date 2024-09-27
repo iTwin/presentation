@@ -131,7 +131,7 @@ describe("HierarchyNodeKey", () => {
     describe("key types are different", () => {
       const hierarchyNodeKeyVariants: HierarchyNodeKey[] = [
         createTestGenericNodeKey({ id: "x" }),
-        { type: "instances", instanceKeys: [] },
+        { type: "instances", instanceKeys: [{ className: "a.b", id: "0x1", imodelKey: "test-imodel" }] },
         { type: "class-grouping", className: "x" },
         { type: "label-grouping", label: "a" },
         { type: "property-grouping:other", properties: [] },
@@ -222,6 +222,30 @@ describe("HierarchyNodeKey", () => {
           HierarchyNodeKey.compare(
             { type: "instances", instanceKeys: [{ className: "a", id: "1" }] },
             { type: "instances", instanceKeys: [{ className: "a", id: "0" }] },
+          ),
+        ).to.be.eq(1);
+        expect(
+          HierarchyNodeKey.compare(
+            { type: "instances", instanceKeys: [{ className: "a", id: "0" }] },
+            { type: "instances", instanceKeys: [{ className: "a", id: "0", imodelKey: "y" }] },
+          ),
+        ).to.be.eq(-1);
+        expect(
+          HierarchyNodeKey.compare(
+            { type: "instances", instanceKeys: [{ className: "a", id: "0", imodelKey: "x" }] },
+            { type: "instances", instanceKeys: [{ className: "a", id: "0", imodelKey: "y" }] },
+          ),
+        ).to.be.eq(-1);
+        expect(
+          HierarchyNodeKey.compare(
+            { type: "instances", instanceKeys: [{ className: "a", id: "1", imodelKey: "y" }] },
+            { type: "instances", instanceKeys: [{ className: "a", id: "0" }] },
+          ),
+        ).to.be.eq(1);
+        expect(
+          HierarchyNodeKey.compare(
+            { type: "instances", instanceKeys: [{ className: "a", id: "1", imodelKey: "y" }] },
+            { type: "instances", instanceKeys: [{ className: "a", id: "0", imodelKey: "x" }] },
           ),
         ).to.be.eq(1);
       });

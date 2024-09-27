@@ -7,6 +7,14 @@ import { assert, compareStrings, compareStringsOrUndefined } from "@itwin/core-b
 import { InstanceKey } from "@itwin/presentation-shared";
 
 /**
+ * An instance key that may be associated with specific iModel.
+ * @beta
+ */
+export interface IModelInstanceKey extends InstanceKey {
+  imodelKey?: string;
+}
+
+/**
  * A key for a generic node.
  * @beta
  */
@@ -39,7 +47,7 @@ export interface InstancesNodeKey {
    * Keys of ECInstances that are represented by the node. Generally, one node represents a single
    * ECInstance, but in some cases (e.g. node merging) there could be more.
    */
-  instanceKeys: InstanceKey[];
+  instanceKeys: IModelInstanceKey[];
 }
 
 /**
@@ -232,6 +240,10 @@ export namespace HierarchyNodeKey {
           const instanceKeyCompareResult = InstanceKey.compare(lhs.instanceKeys[i], rhs.instanceKeys[i]);
           if (instanceKeyCompareResult !== 0) {
             return instanceKeyCompareResult;
+          }
+          const imodelKeyCompareResult = compareStringsOrUndefined(lhs.instanceKeys[0].imodelKey, rhs.instanceKeys[0].imodelKey);
+          if (imodelKeyCompareResult !== 0) {
+            return imodelKeyCompareResult;
           }
         }
         return 0;

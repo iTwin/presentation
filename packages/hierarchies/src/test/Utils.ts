@@ -5,9 +5,9 @@
 
 import sinon from "sinon";
 import { Logger, LogLevel } from "@itwin/core-bentley";
-import { EC, InstanceKey, parseFullClassName } from "@itwin/presentation-shared";
+import { EC, parseFullClassName } from "@itwin/presentation-shared";
 import { NonGroupingHierarchyNode } from "../hierarchies/HierarchyNode";
-import { GenericNodeKey, HierarchyNodeKey } from "../hierarchies/HierarchyNodeKey";
+import { GenericNodeKey, HierarchyNodeKey, IModelInstanceKey } from "../hierarchies/HierarchyNodeKey";
 import {
   ProcessedGenericHierarchyNode,
   ProcessedGroupingHierarchyNode,
@@ -96,7 +96,7 @@ export function createTestProcessedGroupingNode<TChild = ProcessedGroupingHierar
   };
 }
 
-export function createTestInstanceKey(src?: Partial<InstanceKey>): InstanceKey {
+export function createTestInstanceKey(src?: Partial<IModelInstanceKey>): IModelInstanceKey {
   return {
     className: "TestSchema.TestClass",
     id: "0x1",
