@@ -9,12 +9,12 @@ import "@itwin/itwinui-react/styles.css";
 import { useEffect, useState } from "react";
 import { useResizeDetector } from "react-resize-detector";
 import { from, reduce, Subject, takeUntil } from "rxjs";
-import { StandardContentLayouts } from "@itwin/appui-abstract";
 import {
   ConfigurableUiContent,
   ContentGroup,
   StagePanelState,
   StageUsage,
+  StandardContentLayouts,
   ThemeManager,
   UiFramework,
   UiStateStorageHandler,
@@ -269,7 +269,7 @@ function IModelComponents(props: IModelComponentsProps) {
     });
     void UiFramework.frontstages.setActiveFrontstage("presentation-test-app-frontstage");
     return () => {
-      UiFramework.frontstages.clearFrontstageProviders();
+      UiFramework.frontstages.clearFrontstages();
     };
   }, [imodel, rulesetId]);
 

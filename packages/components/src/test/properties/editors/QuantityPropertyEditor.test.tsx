@@ -8,7 +8,7 @@ import sinon from "sinon";
 import { StandardTypeNames } from "@itwin/appui-abstract";
 import { BeUiEvent } from "@itwin/core-bentley";
 import { FormattingUnitSystemChangedArgs, IModelApp, IModelConnection } from "@itwin/core-frontend";
-import { FormatterSpec, ParserSpec } from "@itwin/core-quantity";
+import { Format, FormatterSpec, ParserSpec } from "@itwin/core-quantity";
 import { SchemaContext } from "@itwin/ecschema-metadata";
 import { KoqPropertyValueFormatter } from "@itwin/presentation-common";
 import { SchemaMetadataContextProvider } from "../../../presentation-components/common/SchemaMetadataContext";
@@ -25,11 +25,13 @@ const createRecord = ({ initialValue, quantityType }: { initialValue?: number; q
 
 describe("<QuantityPropertyEditor />", () => {
   before(() => {
+    const format = new Format("test format");
     const formatterSpec = {
       applyFormatting: (raw: number) => `${raw} unit`,
     };
     const parserSpec = {
       parseToQuantityValue: (value: string) => ({ ok: true, value: Number(value.substring(0, value.length - 4)) }),
+      format,
     };
 
     sinon.stub(KoqPropertyValueFormatter.prototype, "getFormatterSpec").resolves(formatterSpec as unknown as FormatterSpec);

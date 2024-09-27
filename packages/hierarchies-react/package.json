@@ -69,7 +69,7 @@
     }
   },
   "devDependencies": {
-    "@itwin/build-tools": "^4.8.0",
+    "@itwin/build-tools": "^4.9.0",
     "@itwin/itwinui-react": "^3.14.1",
     "@testing-library/dom": "^10.3.2",
     "@testing-library/react": "^16.0.0",

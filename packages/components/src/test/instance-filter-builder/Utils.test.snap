@@ -8,6 +8,7 @@ Array [
     "field": Object {
       "category": "nested1",
       "editor": undefined,
+      "extendedData": undefined,
       "isReadonly": false,
       "label": "Properties Field",
       "name": "PropertiesField",
@@ -44,6 +45,7 @@ Array [
     "field": Object {
       "category": "nested21",
       "editor": undefined,
+      "extendedData": undefined,
       "isReadonly": false,
       "label": "Properties Field",
       "name": "PropertiesField",
@@ -85,6 +87,7 @@ Array [
     "field": Object {
       "category": "root",
       "editor": undefined,
+      "extendedData": undefined,
       "isReadonly": false,
       "label": "Properties Field",
       "name": "PropertiesField",
@@ -121,6 +124,7 @@ Array [
     "field": Object {
       "category": "root",
       "editor": undefined,
+      "extendedData": undefined,
       "isReadonly": false,
       "label": "Properties Field",
       "name": "PropertiesField",
@@ -162,6 +166,7 @@ Array [
     "field": Object {
       "category": "root",
       "editor": undefined,
+      "extendedData": undefined,
       "isReadonly": false,
       "label": "Properties Field",
       "name": "PropertiesField",
@@ -198,6 +203,7 @@ Array [
     "field": Object {
       "category": "root",
       "editor": undefined,
+      "extendedData": undefined,
       "isReadonly": false,
       "label": "Properties Field",
       "name": "PropertiesField",
@@ -229,72 +235,4 @@ Array [
     "sourceClassId": "0x2",
   },
 ]
-`;
-
-exports[`createPresentationInstanceFilter finds properties fields for property description 1`] = `
-Object {
-  "conditions": Array [
-    Object {
-      "field": Object {
-        "category": "root",
-        "editor": undefined,
-        "isReadonly": false,
-        "label": "Properties Field",
-        "name": "propField1",
-        "priority": 0,
-        "properties": Array [
-          Object {
-            "property": Object {
-              "classInfo": Object {
-                "id": "0x1",
-                "label": "Class Label",
-                "name": "SchemaName:ClassName",
-              },
-              "name": "prop1",
-              "type": "string",
-            },
-          },
-        ],
-        "renderer": undefined,
-        "type": Object {
-          "typeName": "string",
-          "valueFormat": "Primitive",
-        },
-      },
-      "operator": 9,
-      "value": undefined,
-    },
-    Object {
-      "field": Object {
-        "category": "root",
-        "editor": undefined,
-        "isReadonly": false,
-        "label": "Properties Field",
-        "name": "propField1",
-        "priority": 0,
-        "properties": Array [
-          Object {
-            "property": Object {
-              "classInfo": Object {
-                "id": "0x1",
-                "label": "Class Label",
-                "name": "SchemaName:ClassName",
-              },
-              "name": "prop1",
-              "type": "string",
-            },
-          },
-        ],
-        "renderer": undefined,
-        "type": Object {
-          "typeName": "string",
-          "valueFormat": "Primitive",
-        },
-      },
-      "operator": 9,
-      "value": undefined,
-    },
-  ],
-  "operator": 0,
-}
 `;

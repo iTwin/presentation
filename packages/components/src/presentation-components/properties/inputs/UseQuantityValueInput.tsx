@@ -9,6 +9,7 @@ import { IModelApp } from "@itwin/core-frontend";
 import { FormatterSpec, ParserSpec } from "@itwin/core-quantity";
 import { SchemaContext } from "@itwin/ecschema-metadata";
 import { KoqPropertyValueFormatter } from "@itwin/presentation-common";
+import { getPersistenceUnitRoundingError } from "./Utils";
 
 /**
  * Value of kind of quantity property.
@@ -19,6 +20,7 @@ export interface QuantityValue {
   rawValue?: number;
   /** Formatted value with unit label based on active unit system or user input. */
   formattedValue: string;
+  roundingError?: number;
 }
 
 const PLACEHOLDER_RAW_VALUE = 12.34;
@@ -47,34 +49,39 @@ export function useQuantityValueInput({ initialRawValue, schemaContext, koqName 
     quantityValue: {
       rawValue: initialRawValue,
       formattedValue: "",
+      roundingError: undefined,
     },
     placeholder: "",
   }));
   const { formatter, parser } = useFormatterAndParser(koqName, schemaContext);
 
   useEffect(() => {
-    if (!formatter) {
+    if (!formatter || !parser) {
       return;
     }
 
     setState((prev): State => {
       const newPlaceholder = formatter.applyFormatting(PLACEHOLDER_RAW_VALUE);
       const newFormattedValue = prev.quantityValue.rawValue !== undefined ? formatter.applyFormatting(prev.quantityValue.rawValue) : "";
+      const roundingError = getPersistenceUnitRoundingError(newFormattedValue, parser);
+
       return {
         ...prev,
         quantityValue: {
-          rawValue: prev.quantityValue.rawValue,
+          ...prev.quantityValue,
           formattedValue: newFormattedValue,
+          roundingError,
         },
         placeholder: newPlaceholder,
       };
     });
-  }, [formatter]);
+  }, [formatter, parser]);
 
   const onChange: ChangeEventHandler<HTMLInputElement> = (e) => {
     assert(parser !== undefined); // input should be disabled if parser is `undefined`
     const newValue = e.currentTarget.value;
     const parseResult = parser.parseToQuantityValue(newValue);
+    const roundingError = getPersistenceUnitRoundingError(newValue, parser);
 
     setState(
       (prev): State => ({
@@ -82,6 +89,7 @@ export function useQuantityValueInput({ initialRawValue, schemaContext, koqName 
         quantityValue: {
           formattedValue: newValue,
           rawValue: parseResult.ok ? parseResult.value : undefined,
+          roundingError: parseResult.ok ? roundingError : undefined,
         },
       }),
     );
