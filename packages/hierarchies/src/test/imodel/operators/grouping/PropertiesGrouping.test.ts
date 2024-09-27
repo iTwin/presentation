@@ -883,7 +883,7 @@ describe("PropertiesGrouping", () => {
         const nodes = [
           createTestProcessedInstanceNode({
             key: { type: "instances", instanceKeys: [{ className: "TestSchema.Class", id: "0x1" }] },
-            parentKeys: ["x"],
+            parentKeys: [createTestGenericNodeKey({ id: "x" })],
             processingParams: {
               grouping: {
                 byProperties: {
@@ -918,9 +918,9 @@ describe("PropertiesGrouping", () => {
             createTestProcessedGroupingNode({
               label: "propertyValue",
               key: expectedGroupingNodeKey,
-              parentKeys: ["x"],
+              parentKeys: [createTestGenericNodeKey({ id: "x" })],
               groupedInstanceKeys: nodes.flatMap((n) => n.key.instanceKeys),
-              children: nodes.map((n) => ({ ...n, parentKeys: ["x", expectedGroupingNodeKey] })),
+              children: nodes.map((n) => ({ ...n, parentKeys: [createTestGenericNodeKey({ id: "x" }), expectedGroupingNodeKey] })),
             }),
           ],
           ungrouped: [],
