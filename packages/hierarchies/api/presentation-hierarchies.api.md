@@ -178,7 +178,7 @@ interface ECSqlValueSelector {
 }
 
 // @beta (undocumented)
-interface FilterTargetGroupingNodeInfo {
+export interface FilterTargetGroupingNodeInfo {
     depth: number;
     key: GroupingNodeKey;
 }
@@ -218,7 +218,7 @@ export interface HierarchyDefinition {
 type HierarchyDefinitionParentNode = Omit<NonGroupingHierarchyNode, "children">;
 
 // @beta
-type HierarchyFilteringPath = HierarchyNodeIdentifiersPath | {
+export type HierarchyFilteringPath = HierarchyNodeIdentifiersPath | {
     path: HierarchyNodeIdentifiersPath;
     options: HierarchyFilteringPathOptions;
 };

@@ -9,11 +9,13 @@ beta;type;DefineCustomNodeChildHierarchyLevelProps
 beta;interface;DefineHierarchyLevelProps
 beta;type;DefineInstanceNodeChildHierarchyLevelProps
 beta;type;DefineRootHierarchyLevelProps
+beta;interface;FilterTargetGroupingNodeInfo
 beta;interface;GetHierarchyNodesProps
 beta;function;getLogger
 beta;interface;GroupingHierarchyNode
 beta;type;GroupingNodeKey
 beta;interface;HierarchyDefinition
+beta;type;HierarchyFilteringPath
 beta;type;HierarchyLevelDefinition
 beta;type;HierarchyNode
 beta;namespace;HierarchyNode

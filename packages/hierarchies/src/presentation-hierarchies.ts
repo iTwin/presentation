@@ -33,7 +33,13 @@ export {
   PropertyValueRangeGroupingNodeKey,
   StandardHierarchyNodeKey,
 } from "./hierarchies/HierarchyNodeKey";
-export { GetHierarchyNodesProps, HierarchyProvider, createHierarchyProvider } from "./hierarchies/HierarchyProvider";
+export {
+  createHierarchyProvider,
+  FilterTargetGroupingNodeInfo,
+  HierarchyFilteringPath,
+  HierarchyProvider,
+  GetHierarchyNodesProps,
+} from "./hierarchies/HierarchyProvider";
 export { LimitingECSqlQueryExecutor, createLimitingECSqlQueryExecutor } from "./hierarchies/LimitingECSqlQueryExecutor";
 export { getLogger, setLogger } from "./hierarchies/Logging";
 export { NodeSelectClauseColumnNames, NodesQueryClauseFactory, createNodesQueryClauseFactory } from "./hierarchies/NodeSelectQueryFactory";

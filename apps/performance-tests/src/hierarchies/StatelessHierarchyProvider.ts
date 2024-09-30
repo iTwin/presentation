@@ -12,6 +12,7 @@ import {
   createHierarchyProvider,
   createLimitingECSqlQueryExecutor,
   HierarchyDefinition,
+  HierarchyFilteringPath,
   HierarchyNode,
   HierarchyProvider,
 } from "@itwin/presentation-hierarchies";
@@ -22,6 +23,9 @@ export interface ProviderOptions {
   iModel: IModelDb;
   rowLimit?: number | "unbounded";
   getHierarchyFactory(imodelAccess: ECSchemaProvider & ECClassHierarchyInspector): HierarchyDefinition;
+  filtering?: {
+    paths: HierarchyFilteringPath[];
+  };
 }
 
 const LOG_CATEGORY = "Presentation.PerformanceTests.StatelessHierarchyProvider";
@@ -87,10 +91,10 @@ export class StatelessHierarchyProvider {
       imodelAccess,
       hierarchyDefinition: this._props.getHierarchyFactory(imodelAccess),
       queryCacheSize: 0,
+      filtering: this._props.filtering,
     });
   }
 }
-
 function getNodeDepth(node: HierarchyNode): number {
   return node.parentKeys.length + 1;
 }
