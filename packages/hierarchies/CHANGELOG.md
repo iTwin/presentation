@@ -1,8 +1,8 @@
 # @itwin/presentation-hierarchies
 
-## 0.5.1
+## 0.6.0
 
-### Patch Changes
+### Minor Changes
 
 - [#707](https://github.com/iTwin/presentation/pull/707): **BREAKING:** Added mandatory `instanceLabelSelectClauseFactory` parameter to `createNodesQueryClauseFactory`, this enables grouping by navigation property.
 

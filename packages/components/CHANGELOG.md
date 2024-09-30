@@ -5,9 +5,6 @@
 ### Minor Changes
 
 - [#705](https://github.com/iTwin/presentation/pull/705): Updated numeric and quantity value inputs to calculate rounding error. It is calculated based on entered value precision and can be used to find all values that rounds to the entered value.
-
-### Patch Changes
-
 - [#699](https://github.com/iTwin/presentation/pull/699): Use `label` prop instead of `title` on `IconButton` to have consistent tooltips and better accessibility support.
 - [#704](https://github.com/iTwin/presentation/pull/704): `PresentationFilterBuilderValueRendererProps` now includes an optional `selectedClasses` property to enhance filter value list relevance when specified.
 
