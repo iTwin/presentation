@@ -80,7 +80,13 @@ export function InstanceFilterBuilder(props: InstanceFilterBuilderProps) {
           <PropertyFilterBuilderRenderer
             {...restProps}
             ruleValueRenderer={(rendererProps: PropertyFilterBuilderRuleValueRendererProps) => (
-              <PresentationFilterBuilderValueRenderer {...rendererProps} descriptorInputKeys={descriptorInputKeys} imodel={imodel} descriptor={descriptor} />
+              <PresentationFilterBuilderValueRenderer
+                {...rendererProps}
+                descriptorInputKeys={descriptorInputKeys}
+                imodel={imodel}
+                descriptor={descriptor}
+                selectedClasses={selectedClasses}
+              />
             )}
           />
         </div>

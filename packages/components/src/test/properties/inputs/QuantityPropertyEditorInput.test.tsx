@@ -6,11 +6,11 @@
 import { expect } from "chai";
 import { createRef } from "react";
 import sinon from "sinon";
-import { PrimitiveValue, PropertyValueFormat, StandardTypeNames } from "@itwin/appui-abstract";
+import { PropertyValueFormat, StandardTypeNames } from "@itwin/appui-abstract";
 import { PropertyEditorProps } from "@itwin/components-react";
 import { BeUiEvent } from "@itwin/core-bentley";
 import { FormattingUnitSystemChangedArgs, IModelApp, IModelConnection } from "@itwin/core-frontend";
-import { FormatterSpec, ParseError, ParserSpec, QuantityParseResult } from "@itwin/core-quantity";
+import { Format, FormatterSpec, FormatType, ParseError, ParserSpec, QuantityParseResult } from "@itwin/core-quantity";
 import { SchemaContext } from "@itwin/ecschema-metadata";
 import { KoqPropertyValueFormatter } from "@itwin/presentation-common";
 import { SchemaMetadataContextProvider } from "../../../presentation-components/common/SchemaMetadataContext";
@@ -29,11 +29,13 @@ const createRecord = ({ initialValue, quantityType }: { initialValue?: number; q
 
 describe("<QuantityPropertyEditorInput />", () => {
   const schemaContext = {} as SchemaContext;
+  const format = new Format("test format");
   const formatterSpec = {
     applyFormatting: sinon.stub<[number], string>(),
   };
   const parserSpec = {
     parseToQuantityValue: sinon.stub<[string], QuantityParseResult>(),
+    format,
   };
 
   let getFormatterSpecStub: sinon.SinonStub<
@@ -46,6 +48,7 @@ describe("<QuantityPropertyEditorInput />", () => {
     getFormatterSpecStub = sinon.stub(KoqPropertyValueFormatter.prototype, "getFormatterSpec");
     getParserSpecStub = sinon.stub(KoqPropertyValueFormatter.prototype, "getParserSpec");
 
+    sinon.stub(format, "type").get(() => FormatType.Decimal);
     sinon.stub(IModelApp, "quantityFormatter").get(() => ({
       onActiveFormattingUnitSystemChanged: new BeUiEvent<FormattingUnitSystemChangedArgs>(),
     }));
@@ -106,9 +109,10 @@ describe("<QuantityPropertyEditorInput />", () => {
   });
 
   it("allows entering number when schema context is not available", async () => {
+    const ref = createRef<PropertyEditorAttributes>();
     const spy = sinon.stub<Parameters<Required<PropertyEditorProps>["onCommit"]>, ReturnType<Required<PropertyEditorProps>["onCommit"]>>();
     const record = createRecord({ initialValue: undefined, quantityType: "TestKOQ" });
-    const { getByRole, user } = render(<QuantityPropertyEditorInput propertyRecord={record} onCommit={spy} />);
+    const { getByRole, user } = render(<QuantityPropertyEditorInput ref={ref} propertyRecord={record} onCommit={spy} />);
 
     const input = await waitFor(() => getByRole("textbox"));
     await waitFor(() => expect((input as HTMLInputElement).disabled).to.be.false);
@@ -123,17 +127,19 @@ describe("<QuantityPropertyEditorInput />", () => {
           valueFormat: PropertyValueFormat.Primitive,
           value: 123.4,
           displayValue: "123.4",
+          roundingError: 0.05,
         },
       });
     });
   });
 
   it("allows entering quantity value when schema context is available", async () => {
+    const ref = createRef<PropertyEditorAttributes>();
     const spy = sinon.stub<Parameters<Required<PropertyEditorProps>["onCommit"]>, ReturnType<Required<PropertyEditorProps>["onCommit"]>>();
     const record = createRecord({ initialValue: undefined, quantityType: "TestKOQ" });
     const { getByRole, user } = render(
       <SchemaMetadataContextProvider imodel={{} as IModelConnection} schemaContextProvider={() => schemaContext}>
-        <QuantityPropertyEditorInput propertyRecord={record} onCommit={spy} />
+        <QuantityPropertyEditorInput ref={ref} propertyRecord={record} onCommit={spy} />
       </SchemaMetadataContextProvider>,
     );
 
@@ -150,30 +156,16 @@ describe("<QuantityPropertyEditorInput />", () => {
           valueFormat: PropertyValueFormat.Primitive,
           value: 123.4,
           displayValue: "123.4 unit",
+          roundingError: 0.05,
         },
       });
     });
-  });
 
-  it("returns property value when `getValue` is called on component `ref`", async () => {
-    const ref = createRef<PropertyEditorAttributes>();
-    const record = createRecord({ initialValue: undefined, quantityType: "TestKOQ" });
-    const { getByRole, user } = render(
-      <SchemaMetadataContextProvider imodel={{} as IModelConnection} schemaContextProvider={() => schemaContext}>
-        <QuantityPropertyEditorInput ref={ref} propertyRecord={record} />
-      </SchemaMetadataContextProvider>,
-    );
-
-    const input = await waitFor(() => getByRole("textbox"));
-    await waitFor(() => expect((input as HTMLInputElement).disabled).to.be.false);
-
-    await user.type(input, "123.4 unit");
-    await user.keyboard("{Enter}");
-
-    await waitFor(() => {
-      const value = ref.current?.getValue() as PrimitiveValue;
-      expect(value.value).to.be.eq(123.4);
-      expect(value.displayValue).to.be.eq("123.4 unit");
+    expect(ref.current?.getValue()).to.deep.eq({
+      valueFormat: PropertyValueFormat.Primitive,
+      value: 123.4,
+      displayValue: "123.4 unit",
+      roundingError: 0.05,
     });
   });
 });
