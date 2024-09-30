@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 "use strict";
 
-const { spawn, spawnSync } = require("child_process");
+const { spawn } = require("child_process");
 const fg = require("fast-glob");
 
 const [_node, _script, ...targets] = process.argv;
@@ -23,7 +23,7 @@ Promise.all(
   filePaths.map(
     (filePath) =>
       new Promise((resolve) => {
-        const p = spawn("npx", ["--yes", "markdown-link-check", filePath], { shell: true });
+        const p = spawn("pnpm", ["markdown-link-check", filePath], { shell: true });
 
         let myStdout = "";
         p.stdout.on("data", (data) => (myStdout += data));
