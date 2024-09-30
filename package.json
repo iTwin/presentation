@@ -21,6 +21,7 @@
     "gather-docs": "node ./scripts/gatherDocs.js",
     "update-extractions": "npm run docs:all && lage update-extractions",
     "check-extractions": "npm run docs:all && lage check-extractions",
+    "validate-markdowns": "lage validate-markdowns --continue",
     "prettier": "prettier --check .",
     "prettier:fix": "prettier --write .",
     "prepare": "husky",

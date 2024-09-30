@@ -45,6 +45,9 @@ module.exports = {
       outputs: [],
       inputs: ["api/**"],
     },
+    "validate-markdowns": {
+      cache: false,
+    },
     clean: {
       cache: false,
     },
