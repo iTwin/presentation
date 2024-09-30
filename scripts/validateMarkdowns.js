@@ -14,45 +14,39 @@ if (!targets.length) {
 }
 
 let hasError = false;
-let combinedOutput = "";
+let combinedStdout = "";
+let combinedStderr = "";
 
 const filePaths = targets.flatMap((pattern) => fg.sync(pattern, { dot: true }));
 
-// Promise.all(
-//   filePaths.map(
-//     (filePath) =>
-//       new Promise((resolve) => {
-//         const p = spawn("npx", ["markdown-link-check", filePath], { shell: true, encoding: "utf8" });
-//
-//         let myStdout = "";
-//         p.stdout.on("data", (data) => (myStdout += data));
-//
-//         p.on("close", (code) => {
-//           combinedOutput += myStdout;
-//           hasError |= !!code;
-//           resolve();
-//         });
-//       }),
-//   ),
-// ).then(() => {
-//   process.stdout.write(combinedOutput);
-//
-//   console.log();
-//   if (hasError) {
-//     console.error(`Markdowns validation failed.`);
-//     process.exit(1);
-//   }
-//   console.log(`Markdowns validation succeeded.`);
-// });
+Promise.all(
+  filePaths.map(
+    (filePath) =>
+      new Promise((resolve) => {
+        const p = spawn("npx", ["--yes", "markdown-link-check", filePath], { shell: true });
 
-filePaths.forEach((filePath) => {
-  const res = spawnSync("npx", ["markdown-link-check", filePath], { shell: true, stdio: "inherit" });
-  hasError |= !!res.status;
+        let myStdout = "";
+        p.stdout.on("data", (data) => (myStdout += data));
+
+        let myStderr = "";
+        p.stderr.on("data", (data) => (myStderr += data));
+
+        p.on("close", (code) => {
+          combinedStdout += myStdout;
+          combinedStderr += myStderr;
+          hasError |= !!code;
+          resolve();
+        });
+      }),
+  ),
+).then(() => {
+  process.stdout.write(combinedStdout);
+  process.stderr.write(combinedStderr);
+
+  console.log();
+  if (hasError) {
+    console.error(`Markdowns validation failed.`);
+    process.exit(1);
+  }
+  console.log(`Markdowns validation succeeded.`);
 });
-
-console.log();
-if (hasError) {
-  console.error(`Markdowns validation failed.`);
-  process.exit(1);
-}
-console.log(`Markdowns validation succeeded.`);
