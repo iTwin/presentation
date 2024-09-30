@@ -35,6 +35,26 @@ jobs:
           NODE_ENV: "development"
         run: pnpm lage build lint cover
 
+  docs:
+    runs-on: ubuntu-latest
+    name: Validate docs
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 9
+
+      - name: Use Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install
+
       - name: Check code snippets
         run: pnpm check-extractions
 
