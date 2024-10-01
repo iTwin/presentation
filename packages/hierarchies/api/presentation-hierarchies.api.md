@@ -164,7 +164,7 @@ export function extractFilteringProps(rootLevelFilteringProps: HierarchyFilterin
 } | undefined;
 
 // @beta (undocumented)
-export interface FilterTargetGroupingNodeInfo {
+interface FilterTargetGroupingNodeInfo {
     depth: number;
     key: GroupingNodeKey;
 }

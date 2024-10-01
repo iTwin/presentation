@@ -96,6 +96,7 @@ export class StatelessHierarchyProvider {
     });
   }
 }
+
 function getNodeDepth(node: HierarchyNode): number {
   return node.parentKeys.length + 1;
 }
