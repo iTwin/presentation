@@ -101,7 +101,7 @@ Our [tree renderer implementation](#treerenderer) calls this hook and passes the
 
 ### `useUnifiedSelectionTree` & `UnifiedSelectionProvider`
 
-The package delivers a variation of [`useTree`](#usetree), that automatically hooks tree selection into the [Unified Selection](https://www.itwinjs.org/learning/unified-selection/) system. It takes the same properties as [`useTree`](#usetree), plus a couple of additional ones:
+The package delivers a variation of [`useTree`](#usetree), that automatically hooks tree selection into the [Unified Selection](https://www.itwinjs.org/presentation/unified-selection/) system. It takes the same properties as [`useTree`](#usetree), plus a couple of additional ones:
 
 - `imodelKey` is a string that uniquely identifies the iModel the tree is associated with. It's used to distinguish selection changes between different iModels. Generally, the value is obtained using `IModelConnection.key` getter.
 

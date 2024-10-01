@@ -7,9 +7,7 @@ on:
 
 jobs:
   build:
-    if: '!github.event.pull_request.draft'
     runs-on: ubuntu-latest
-
     name: Lint Build and run Tests
     steps:
       - name: Checkout
@@ -37,5 +35,29 @@ jobs:
           NODE_ENV: "development"
         run: pnpm lage build lint cover
 
+  docs:
+    runs-on: ubuntu-latest
+    name: Validate docs
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 9
+
+      - name: Use Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install
+
       - name: Check code snippets
         run: pnpm check-extractions
+
+      - name: Validate markdowns
+        run: pnpm validate-markdowns
