@@ -158,7 +158,7 @@ const hierarchyDefinition: HierarchyDefinition = {
 
 <!-- END EXTRACTION -->
 
-See the [hierarchy definitions learning page](./IModelHierarchyDefinitions.md) for more information on how to create hierarchy definitions.
+See the [hierarchy definitions learning page](./imodel/HierarchyDefinition.md) for more information on how to create hierarchy definitions for [iModel hierarchy providers](./imodel/HierarchyProvider.md).
 
 ## Migrating hierarchy specifications
 

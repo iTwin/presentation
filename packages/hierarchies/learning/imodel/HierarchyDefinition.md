@@ -1,8 +1,18 @@
-# IModel hierarchy definitions
+# iModel hierarchy definition
 
-An iModel hierarchy definition is one of the core concepts in this library and is responsible for defining the structure of a hierarchy build from data in an iModel.
+A hierarchy definition is one of the core concepts in this package and describes the iModel-based hierarchy by defining what child nodes to return for a given parent node.
 
-In its most simple form, a hierarchy definition may only have one `defineHierarchyLevel` function that defines a child hierarchy level for a given parent node:
+In this package that is achieved though the `HierarchyDefinition` interface, which has one required method - `defineHierarchyLevel`. The method's responsibility is to create a `HierarchyLevelDefinition` for a given parent node. A `HierarchyLevelDefinition` is actually just a set of `HierarchyNodesDefinition` objects, which either describe a single generic node, or an ECSQL query that returns a number of ECInstance nodes. When `HierarchyLevelDefinition` consists of more than 1 `HierarchyNodesDefinition`, the hierarchy level is combined from multiple sets of nodes. See [defining a hierarchy](#defining-a-hierarchy) section for more details.
+
+In case of ECSQL queries for creating the hierarchy level, the definition may want to select some extra information and assign it to the nodes. For that purpose, there's an optional `HierarchyDefinition.parseNode` method, which lets the definition parse the query results and handle those extra columns. See [custom parsing](#custom-parsing) section for more details.
+
+The library also allows hierarchy definitions to step into nodes processing chain through the optional `preProcessNode` and `postProcessNode` methods. These methods are called before and after the node is processed by a [hierarchy provider](./HierarchyProvider.md) respectively and allow hiding and customizing nodes. See [custom pre-processing](#custom-pre-processing) and [custom post-processing](#custom-post-processing) sections for more details.
+
+Finally, in iTwin.js, the most common way to create hierarchies is based on EC data (schemas, classes, relationships) in iModels. To make consumers' life easier, the package provides an utility called `createPredicateBasedHierarchyDefinition`, which lets consumers define hierarchy levels based on parent node key's predicate. See [predicate-based hierarchy definition](#predicate-based-hierarchy-definition) section for more details.
+
+## Defining a hierarchy
+
+In its most simple form, a hierarchy definition may just have one `defineHierarchyLevel` function that defines a child hierarchy level for a given parent node:
 
 <!-- [[include: [Presentation.Hierarchies.HierarchyDefinitions.Imports, Presentation.Hierarchies.HierarchyDefinitions.Simple], ts]] -->
 <!-- BEGIN EXTRACTION -->
@@ -52,16 +62,6 @@ const hierarchyDefinition: HierarchyDefinition = {
 ```
 
 <!-- END EXTRACTION -->
-
-However, it also has 3 optional functions that may be implemented to provide additional functionality:
-
-- `parseNode` takes a single ECSQL result row and returns a `SourceInstanceHierarchyNode` object. The [custom parsing section](#custom-parsing) provides more details on how to use this function.
-- `preProcessNode` takes a single node before hiding/grouping/sorting is performed and gets a chance to modify it or return `undefined` to remove it from hierarchy altogether. The [custom pre-processing section](#custom-pre-processing) provides more details on how to use this function.
-- `postProcessNode` takes a single node after hiding/grouping/sorting is performed and gets a chance to modify it. The [custom post-processing section](#custom-post-processing) provides more details on how to use this function.
-
-More details about the hierarchy processing steps and their order are provided in the [hierarchy processing page](./HierarchyProcessing.md).
-
-While consumers are free to create their own `HierarchyDefinition` implementations, the library delivers an implementation of a predicate-based hierarchy definition that allows for a more declarative approach to defining hierarchies. The [Predicate-based hierarchy definition section](#predicate-based-hierarchy-definition) provides more details on how to use this implementation.
 
 ## Custom parsing
 

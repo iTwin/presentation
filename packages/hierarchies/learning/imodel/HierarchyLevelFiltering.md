@@ -1,6 +1,6 @@
-# Hierarchy level filtering
+# iModel hierarchy level filtering
 
-Hierarchy level filtering is a concept where filtering is applied to a single hierarchy level (as opposed to [hierarchy filtering](./HierarchyFiltering.md), where filtering is applied to the whole hierarchy). This is useful when hierarchy levels contain very large numbers of nodes as it allows users to filter the list based on attributes of instances represented by the nodes.
+Hierarchy level filtering is a concept where filtering is applied to a single hierarchy level (as opposed to [hierarchy filtering](../HierarchyFiltering.md), where filtering is applied to the whole hierarchy). This is useful when hierarchy levels contain very large numbers of nodes as it allows users to filter the list based on attributes of instances represented by the nodes.
 
 ## Enabling hierarchy level filtering
 
@@ -82,10 +82,10 @@ The final result is that the produced nodes will have `supportsFiltering` attrib
 
 It's up to the UI component that renders the hierarchy to make such nodes filterable. The sister `@itwin/presentation-hierarchies-react` package delivers a `TreeNodeRenderer` component that renders nodes a filterable, if the consumer supplies an `onFilterClick` callback prop. The rendered UI looks as follows:
 
-|                 |                                                                           |
-| --------------- | ------------------------------------------------------------------------- |
-| Filterable node | ![Filterable node](./media/hierarchy-level-filtering-filterable-node.png) |
-| Filtered node   | ![Filtered node](./media/hierarchy-level-filtering-filtered-node.png)     |
+|                 |                                                                            |
+| --------------- | -------------------------------------------------------------------------- |
+| Filterable node | ![Filterable node](../media/hierarchy-level-filtering-filterable-node.png) |
+| Filtered node   | ![Filtered node](../media/hierarchy-level-filtering-filtered-node.png)     |
 
 The callback argument allows the filter to be assigned to the node. Upon that node's children request, the filter is passed to `HierarchyProvider.getNodes` call and gets forwarded to the hierarchy definition, whose job is to apply the filter on the `InstanceNodesQueryDefinition` it returns.
 

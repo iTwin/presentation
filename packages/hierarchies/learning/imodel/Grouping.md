@@ -1,4 +1,4 @@
-# Grouping
+# Grouping ECInstances-based nodes
 
 Sometimes it's important in hierarchies to group nodes based on some common criteria. The library supports grouping by label, class and property values and a combination of these groupings, resulting in a hierarchy of grouping nodes.
 
