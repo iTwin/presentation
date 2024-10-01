@@ -12,12 +12,15 @@ import { ProviderOptions, StatelessHierarchyProvider } from "./StatelessHierarch
 import { createBisInstanceLabelSelectClauseFactory } from "@itwin/presentation-shared";
 
 describe("filtering", () => {
+  const totalNumberOfFilteringPaths = 1000;
   const filtering = {
-    paths: getFilteringPaths(),
+    paths: getFilteringPaths(totalNumberOfFilteringPaths),
   };
+  let hierarchyLevelECInstanceId = 19;
+
   run({
     only: true,
-    testName: `filters with 500 paths`,
+    testName: `filters with 1000 paths`,
     setup: (): ProviderOptions => {
       const iModel = SnapshotDb.openFile(Datasets.getIModelPath("50k flat elements"));
       const fullClassName = PhysicalElement.classFullName.replace(":", ".");
@@ -26,77 +29,45 @@ describe("filtering", () => {
         rowLimit: "unbounded",
         getHierarchyFactory: (imodelAccess) => ({
           async defineHierarchyLevel(props) {
-            if (!props.parentNode) {
+            const query = createNodesQueryClauseFactory({
+              imodelAccess,
+              instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
+            });
+
+            // A hierarchy with this structure is created:
+            //
+            //                          id:23 -> all other BisCore.PhysicalElement
+            //                         /
+            //  id:20 -> id:21 -> id:22
+            //                         \
+            //                          id:24 -> all other BisCore.PhysicalElement
+            //
+            // We need to split the hierarchy in two, because we are using 1000 paths and there is a limit of 500 filtering paths for a single parent.
+
+            if (!props.parentNode || [20, 21, 22].find((val) => val === props.parentNode?.extendedData?.ecInstanceId)) {
+              ++hierarchyLevelECInstanceId;
               return [
                 {
-                  node: {
-                    key: "custom",
-                    label: "custom",
-                    children: true,
-                  },
-                },
-              ];
-            }
-            if (props.parentNode.key === "custom") {
-              return [
-                {
-                  node: {
-                    key: "custom2_1",
-                    label: "custom2_1",
-                    children: true,
-                  },
-                },
-                {
-                  node: {
-                    key: "custom2_2",
-                    label: "custom2_2",
-                    children: true,
+                  fullClassName,
+                  query: {
+                    ecsql: `
+                      SELECT ${await query.createSelectClause({
+                        ecClassId: { selector: `this.ECClassId` },
+                        ecInstanceId: { selector: `this.ECInstanceId` },
+                        nodeLabel: { selector: `this.UserLabel` },
+                        extendedData: {
+                          ecInstanceId: { selector: `this.ECInstanceId` },
+                        },
+                      })}
+                      FROM ${fullClassName} AS this
+                      WHERE this.[Parent] is NULL AND this.ECInstanceId IN (${hierarchyLevelECInstanceId === 22 ? "23, 24" : hierarchyLevelECInstanceId})
+                    `,
                   },
                 },
               ];
             }
 
-            if (props.parentNode.key === "custom2_1") {
-              return [
-                {
-                  node: {
-                    key: "custom3_1",
-                    label: "custom3_1",
-                    children: true,
-                  },
-                },
-                {
-                  node: {
-                    key: "custom3_2",
-                    label: "custom3_2",
-                    children: true,
-                  },
-                },
-              ];
-            }
-            if (props.parentNode.key === "custom2_2") {
-              return [
-                {
-                  node: {
-                    key: "custom4_1",
-                    label: "custom4_1",
-                    children: true,
-                  },
-                },
-                {
-                  node: {
-                    key: "custom4_2",
-                    label: "custom4_2",
-                    children: true,
-                  },
-                },
-              ];
-            }
-            if (typeof props.parentNode.key === "string" && (props.parentNode.key.startsWith("custom3") || props.parentNode.key.startsWith("custom4"))) {
-              const query = createNodesQueryClauseFactory({
-                imodelAccess,
-                instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
-              });
+            if (props.parentNode?.extendedData?.ecInstanceId <= 24) {
               return [
                 {
                   fullClassName,
@@ -108,12 +79,13 @@ describe("filtering", () => {
                         nodeLabel: { selector: `this.UserLabel` },
                       })}
                       FROM ${fullClassName} AS this
-                      WHERE this.[Parent] is NULL
+                      WHERE this.[Parent] is NULL AND this.ECInstanceId NOT IN (20, 21, 22, 23, 24)
                     `,
                   },
                 },
               ];
             }
+
             return [];
           },
         }),
@@ -126,27 +98,25 @@ describe("filtering", () => {
     test: async (props) => {
       const provider = new StatelessHierarchyProvider(props);
       const nodeCount = await provider.loadHierarchy();
-      expect(nodeCount).to.eq(1005);
+      expect(nodeCount).to.eq(totalNumberOfFilteringPaths);
     },
   });
 });
 
-export function getFilteringPaths(): HierarchyFilteringPath[] {
+function getFilteringPaths(totalNumberOfFilteringPaths: number): HierarchyFilteringPath[] {
   const { schemaName, itemsPerGroup, defaultClassName } = Datasets.CUSTOM_SCHEMA;
   const filteringPaths = new Array<HierarchyFilteringPath>();
-  for (let i = 0; i < 1000; ++i) {
+  for (let i = 0; i < totalNumberOfFilteringPaths; ++i) {
     const hundredsPosition = Math.floor(i / itemsPerGroup);
     const id = `0x${(i + 20).toString(16)}`;
-    const custom2Id = (i % 2) + 1;
-    const thirdCustomNr = i % 2 === 0 ? "3" : "4";
-    const custom3or4id = ((i + 1) % 2) + 1;
-    const pathToPush = [
-      { key: "custom" },
-      { key: `custom2_${custom2Id}` },
-      { key: `custom${thirdCustomNr}_${custom3or4id}` },
+    const nearestParentId = `0x${i < totalNumberOfFilteringPaths / 2 ? (23).toString(16) : (24).toString(16)}`;
+    filteringPaths.push([
+      { className: `${schemaName}.${defaultClassName}_0`, id: `0x${(20).toString(16)}` },
+      { className: `${schemaName}.${defaultClassName}_0`, id: `0x${(21).toString(16)}` },
+      { className: `${schemaName}.${defaultClassName}_0`, id: `0x${(22).toString(16)}` },
+      { className: `${schemaName}.${defaultClassName}_0`, id: nearestParentId },
       { className: `${schemaName}.${defaultClassName}_${hundredsPosition}`, id },
-    ];
-    filteringPaths.push(pathToPush);
+    ]);
   }
   return filteringPaths;
 }

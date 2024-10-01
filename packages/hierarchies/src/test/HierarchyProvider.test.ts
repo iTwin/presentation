@@ -21,7 +21,6 @@ import {
 import { GroupingNodeKey } from "../hierarchies/HierarchyNodeKey";
 import { createHierarchyProvider } from "../hierarchies/HierarchyProvider";
 import {
-  ECSQL_COLUMN_NAME_FilteredChildrenPaths,
   ECSQL_COLUMN_NAME_FilterTargetOptions,
   ECSQL_COLUMN_NAME_HasFilterTargetAncestor,
   ECSQL_COLUMN_NAME_IsFilterTarget,
@@ -549,12 +548,11 @@ describe("createHierarchyProvider", () => {
         is: async (fullClassName) => fullClassName === "a.b",
       });
       imodelAccess.createQueryReader.returns(
-        createAsyncIterator<RowDef & { [ECSQL_COLUMN_NAME_FilteredChildrenPaths]: string }>([
+        createAsyncIterator<RowDef>([
           {
             [NodeSelectClauseColumnNames.FullClassName]: "a.b",
             [NodeSelectClauseColumnNames.ECInstanceId]: "0x123",
             [NodeSelectClauseColumnNames.DisplayLabel]: "test label",
-            [ECSQL_COLUMN_NAME_FilteredChildrenPaths]: `[[{"className":"c.d","id":"0x456"}]]`,
           },
         ]),
       );
@@ -589,8 +587,8 @@ describe("createHierarchyProvider", () => {
             trimWhitespace(query.ctes[0]) ===
               trimWhitespace(
                 `
-                FilteringInfo(ECInstanceId, IsFilterTarget, FilterTargetOptions, FilteredChildrenPaths) AS (
-                  VALUES (0x123, 0, CAST(NULL AS TEXT), '[[{"className":"c.d","id":"0x456"}]]')
+                FilteringInfo(ECInstanceId, IsFilterTarget, FilterTargetOptions) AS (
+                  VALUES (0x123, 0, CAST(NULL AS TEXT))
                 )
                 `,
               ) &&
@@ -601,8 +599,7 @@ describe("createHierarchyProvider", () => {
                     [q].*,
                     [f].[IsFilterTarget] AS [${ECSQL_COLUMN_NAME_IsFilterTarget}],
                     [f].[FilterTargetOptions] AS [${ECSQL_COLUMN_NAME_FilterTargetOptions}],
-                    0 AS [${ECSQL_COLUMN_NAME_HasFilterTargetAncestor}],
-                    [f].[FilteredChildrenPaths] AS [${ECSQL_COLUMN_NAME_FilteredChildrenPaths}]
+                    0 AS [${ECSQL_COLUMN_NAME_HasFilterTargetAncestor}]
                   FROM (QUERY) [q]
                   JOIN FilteringInfo [f] ON [f].[ECInstanceId] = [q].[ECInstanceId]
                 `,
