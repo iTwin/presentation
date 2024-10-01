@@ -4,13 +4,14 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { IModelConnection } from "@itwin/core-frontend";
+import { HierarchyNode } from "@itwin/presentation-hierarchies";
 import { buildTestIModel } from "@itwin/presentation-testing";
 import { initialize, terminate } from "../IntegrationTests";
 import { NodeValidators, validateHierarchy } from "./HierarchyValidation";
 import { createProvider } from "./Utils";
 
 describe("Hierarchies", () => {
-  describe("Custom nodes", () => {
+  describe("Generic nodes", () => {
     let emptyIModel!: IModelConnection;
 
     before(async function () {
@@ -23,24 +24,13 @@ describe("Hierarchies", () => {
       await terminate();
     });
 
-    it("creates custom root nodes", async () => {
-      const node1 = {
-        key: "custom-1",
-        label: "1",
-        children: undefined,
-      };
-      const node2 = {
-        key: "custom-2",
-        label: "2",
-        children: undefined,
-      };
+    it("creates generic root nodes", async () => {
       const provider = createProvider({
         imodel: emptyIModel,
         hierarchy: {
           async defineHierarchyLevel({ parentNode }) {
-            switch (parentNode?.key) {
-              case undefined:
-                return [{ node: node1 }, { node: node2 }];
+            if (!parentNode) {
+              return [{ node: { key: "custom-1", label: "1" } }, { node: { key: "custom-2", label: "2" } }];
             }
             return [];
           },
@@ -48,30 +38,20 @@ describe("Hierarchies", () => {
       });
       await validateHierarchy({
         provider,
-        expect: [NodeValidators.createForCustomNode(node1), NodeValidators.createForCustomNode(node2)],
+        expect: [NodeValidators.createForGenericNode({ label: "1" }), NodeValidators.createForGenericNode({ label: "2" })],
       });
     });
 
-    it("creates custom child nodes", async () => {
-      const root = {
-        key: "root",
-        label: "r",
-        children: undefined,
-      };
-      const child = {
-        key: "child",
-        label: "c",
-        children: undefined,
-      };
+    it("creates generic child nodes", async () => {
       const provider = createProvider({
         imodel: emptyIModel,
         hierarchy: {
           async defineHierarchyLevel({ parentNode }) {
-            switch (parentNode?.key) {
-              case undefined:
-                return [{ node: root }];
-              case "root":
-                return [{ node: child }];
+            if (!parentNode) {
+              return [{ node: { key: "root", label: "r" } }];
+            }
+            if (HierarchyNode.isGeneric(parentNode) && parentNode.key.id === "root") {
+              return [{ node: { key: "child", label: "c" } }];
             }
             return [];
           },
@@ -80,44 +60,34 @@ describe("Hierarchies", () => {
       await validateHierarchy({
         provider,
         expect: [
-          NodeValidators.createForCustomNode({
-            ...root,
-            children: [NodeValidators.createForCustomNode(child)],
+          NodeValidators.createForGenericNode({
+            key: { type: "generic" as const, id: "root" },
+            label: "r",
+            children: [
+              NodeValidators.createForGenericNode({
+                key: { type: "generic" as const, id: "child" },
+                label: "c",
+                children: false,
+              }),
+            ],
           }),
         ],
       });
     });
 
-    it("creates hidden custom nodes", async () => {
-      const root = {
-        key: "root",
-        label: "r",
-        children: undefined,
-      };
-      const hiddenChild = {
-        key: "hidden child",
-        label: "hc",
-        children: undefined,
-        processingParams: {
-          hideInHierarchy: true,
-        },
-      };
-      const visibleChild = {
-        key: "visible child",
-        label: "vc",
-        children: undefined,
-      };
+    it("creates hidden generic nodes", async () => {
       const provider = createProvider({
         imodel: emptyIModel,
         hierarchy: {
           async defineHierarchyLevel({ parentNode }) {
-            switch (parentNode?.key) {
-              case undefined:
-                return [{ node: root }];
-              case "root":
-                return [{ node: hiddenChild }];
-              case "hidden child":
-                return [{ node: visibleChild }];
+            if (!parentNode) {
+              return [{ node: { key: "root", label: "r" } }];
+            }
+            if (HierarchyNode.isGeneric(parentNode) && parentNode.key.id === "root") {
+              return [{ node: { key: "hidden child", label: "hc", processingParams: { hideInHierarchy: true } } }];
+            }
+            if (HierarchyNode.isGeneric(parentNode) && parentNode.key.id === "hidden child") {
+              return [{ node: { key: "visible child", label: "vc" } }];
             }
             return [];
           },
@@ -126,39 +96,24 @@ describe("Hierarchies", () => {
       await validateHierarchy({
         provider,
         expect: [
-          NodeValidators.createForCustomNode({
-            ...root,
-            children: [NodeValidators.createForCustomNode(visibleChild)],
+          NodeValidators.createForGenericNode({
+            key: { type: "generic", id: "root" },
+            children: [NodeValidators.createForGenericNode({ key: "visible child", label: "vc", children: false })],
           }),
         ],
       });
     });
 
-    it("hides custom nodes with no children", async () => {
-      const root = {
-        key: "root",
-        label: "r",
-        children: undefined,
-      };
-      const hiddenChild = {
-        key: "hidden child",
-        label: "hc",
-        children: undefined,
-        processingParams: {
-          hideIfNoChildren: true,
-        },
-      };
+    it("hides generic nodes with no children", async () => {
       const provider = createProvider({
         imodel: emptyIModel,
         hierarchy: {
           async defineHierarchyLevel({ parentNode }) {
-            switch (parentNode?.key) {
-              case undefined:
-                return [{ node: root }];
-              case "root":
-                return [{ node: hiddenChild }];
-              case "hidden child":
-                return [];
+            if (!parentNode) {
+              return [{ node: { key: "root", label: "r" } }];
+            }
+            if (HierarchyNode.isGeneric(parentNode) && parentNode.key.id === "root") {
+              return [{ node: { key: "hidden child", label: "hc", processingParams: { hideIfNoChildren: true } } }];
             }
             return [];
           },
@@ -167,8 +122,8 @@ describe("Hierarchies", () => {
       await validateHierarchy({
         provider,
         expect: [
-          NodeValidators.createForCustomNode({
-            ...root,
+          NodeValidators.createForGenericNode({
+            key: { type: "generic", id: "root" },
             children: false,
           }),
         ],

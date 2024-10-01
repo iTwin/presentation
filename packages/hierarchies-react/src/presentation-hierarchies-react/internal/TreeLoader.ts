@@ -36,16 +36,21 @@ export interface ITreeLoader {
 
 /** @internal */
 export class TreeLoader implements ITreeLoader {
+  private _treeNodeIdFactory: (node: Pick<HierarchyNode, "key" | "parentKeys">) => string;
+
   constructor(
     private _hierarchyProvider: HierarchyProvider,
     private _onHierarchyLimitExceeded: (props: { parentId?: string; filter?: GenericInstanceFilter; limit?: number | "unbounded" }) => void,
     private _onHierarchyLoadError: (props: { parentId?: string; type: "timeout" | "unknown" }) => void,
-  ) {}
+    treeNodeIdFactory?: (node: Pick<HierarchyNode, "key" | "parentKeys">) => string,
+  ) {
+    this._treeNodeIdFactory = treeNodeIdFactory ?? /* istanbul ignore next */ createNodeId;
+  }
 
   private loadChildren({ parent, getHierarchyLevelOptions, buildNode, ignoreCache }: Omit<LoadNodesOptions, "shouldLoadChildren">) {
     const { instanceFilter, hierarchyLevelSizeLimit } = getHierarchyLevelOptions(parent);
     const infoNodeIdBase = `${parent.id ?? "<root>"}`;
-    const treeModelNodesFactory = createTreeModelNodesFactory(buildNode);
+    const treeModelNodesFactory = createTreeModelNodesFactory({ buildNode, treeNodeIdFactory: this._treeNodeIdFactory });
     return from(
       this._hierarchyProvider.getNodes({
         parentNode: parent.nodeData,
@@ -96,16 +101,20 @@ export class TreeLoader implements ITreeLoader {
   }
 }
 
-function createTreeModelNodesFactory(
-  buildNode?: (node: TreeModelHierarchyNode) => TreeModelHierarchyNode,
-): (node: TreeModelInfoNode | HierarchyNode) => TreeModelNode {
+function createTreeModelNodesFactory({
+  buildNode,
+  treeNodeIdFactory,
+}: {
+  buildNode?: (node: TreeModelHierarchyNode) => TreeModelHierarchyNode;
+  treeNodeIdFactory: (node: Pick<HierarchyNode, "key" | "parentKeys">) => string;
+}): (node: TreeModelInfoNode | HierarchyNode) => TreeModelNode {
   return (node: TreeModelInfoNode | HierarchyNode) => {
     if (!isHierarchyNode(node)) {
       return node;
     }
 
     const modelNode: TreeModelHierarchyNode = {
-      id: createNodeId(node),
+      id: treeNodeIdFactory(node),
       children: node.children,
       label: node.label,
       nodeData: node,

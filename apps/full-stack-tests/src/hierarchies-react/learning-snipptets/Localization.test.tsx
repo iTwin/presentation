@@ -73,6 +73,7 @@ describe("Hierarchies React", () => {
         context.addLocater(new ECSchemaRpcLocater(imodel.getRpcProps()));
         const schemaProvider = createECSchemaProvider(context);
         access = {
+          imodelKey: imodel.key,
           ...schemaProvider,
           ...createCachingECClassHierarchyInspector({ schemaProvider, cacheSize: 100 }),
           ...createLimitingECSqlQueryExecutor(createECSqlQueryExecutor(imodel), 1000),
@@ -129,9 +130,7 @@ describe("Hierarchies React", () => {
         // __PUBLISH_EXTRACT_END__
 
         const { getAllByRole } = render(<MyTreeComponent imodelAccess={access} imodelKey={imodel.key} />);
-        await waitFor(() => getAllByRole("treeitem"));
-
-        expect(getAllByRole("button", { name: "Apply hierarchy filter" })).to.not.be.empty;
+        await waitFor(() => expect(getAllByRole("button", { name: "Apply hierarchy filter" })).to.not.be.empty);
       });
 
       it("Tree renderer localization", async function () {
@@ -168,10 +167,8 @@ describe("Hierarchies React", () => {
           return <MyTreeRenderer {...state} rootNodes={rootNodes} localizedStrings={localizedStrings} />;
         }
 
-        const { getByRole, getAllByRole } = render(<MyTreeComponent imodelAccess={access} imodelKey={imodel.key} />);
-        await waitFor(() => getByRole("tree"));
-
-        expect(getAllByRole("button", { name: "Apply hierarchy filter" })).to.not.be.empty;
+        const { getAllByRole } = render(<MyTreeComponent imodelAccess={access} imodelKey={imodel.key} />);
+        await waitFor(() => expect(getAllByRole("button", { name: "Apply hierarchy filter" })).to.not.be.empty);
       });
     });
   });

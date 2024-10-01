@@ -7,7 +7,7 @@ import { collect } from "presentation-test-utilities";
 import { HierarchyNode, HierarchyNodeKey, HierarchyProvider } from "@itwin/presentation-hierarchies";
 
 interface NodeDefinition {
-  nodeType: "custom" | Exclude<HierarchyNodeKey, string>["type"];
+  nodeType: HierarchyNodeKey["type"];
   label: string;
   children?: NodeDefinition[];
   autoExpand?: boolean;
@@ -18,7 +18,7 @@ export async function collectHierarchy(provider: HierarchyProvider, parentNode?:
   const nodes = await collect(provider.getNodes({ parentNode }));
   for (const node of nodes) {
     const def: NodeDefinition = {
-      nodeType: typeof node.key === "string" ? "custom" : node.key.type,
+      nodeType: node.key.type,
       label: node.label,
       ...(node.autoExpand === undefined ? undefined : { autoExpand: node.autoExpand }),
     };

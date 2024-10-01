@@ -6,7 +6,7 @@
 import { expect } from "chai";
 import { insertPhysicalElement, insertPhysicalModelWithPartition, insertSpatialCategory } from "presentation-test-utilities";
 // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.Localization.Imports
-import { createHierarchyProvider, createNodesQueryClauseFactory } from "@itwin/presentation-hierarchies";
+import { createIModelHierarchyProvider, createNodesQueryClauseFactory } from "@itwin/presentation-hierarchies";
 // __PUBLISH_EXTRACT_END__
 import { buildIModel, importSchema } from "../../IModelUtils";
 import { initialize, terminate } from "../../IntegrationTests";
@@ -76,7 +76,7 @@ describe("Hierarchies", () => {
         const imodelAccess = createIModelAccess(imodel);
 
         // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.Localization.PropertyGroupsLocalizationExample
-        const hierarchyProvider = createHierarchyProvider({
+        const hierarchyProvider = createIModelHierarchyProvider({
           imodelAccess,
           hierarchyDefinition: {
             defineHierarchyLevel: async ({ parentNode }) => {
@@ -135,7 +135,7 @@ describe("Hierarchies", () => {
         // | Element 4       | undefined              | Unspecified   | Nenurodyta              |
         //
         // As shown in the above table, we expect to get 3 grouping nodes: "1 - 5", "Other", and "Unspecified". The
-        // latter two strings are localized using the `localizedStrings` object, provided to `createHierarchyProvider`.
+        // latter two strings are localized using the `localizedStrings` object, provided to `createIModelHierarchyProvider`.
         expect(await collectHierarchy(hierarchyProvider)).to.containSubset([
           { label: "1 - 5", children: [{ label: "Element 1" }, { label: "Element 2" }] },
           { label: "Kita", children: [{ label: "Element 3" }] },
