@@ -119,7 +119,7 @@ describe("Hierarchies", () => {
         ]);
     });
 
-    it("gets instance keys for custom node's child hierarchy level", async function () {
+    it("gets instance keys for generic node's child hierarchy level", async function () {
       const imodelAccess = createIModelAccess(imodel);
       const selectQueryFactory = createNodesQueryClauseFactory({
         imodelAccess,
@@ -127,7 +127,7 @@ describe("Hierarchies", () => {
       });
       const hierarchy: HierarchyDefinition = {
         async defineHierarchyLevel({ parentNode }) {
-          if (parentNode && HierarchyNode.isCustom(parentNode) && parentNode.key === "test") {
+          if (parentNode && HierarchyNode.isGeneric(parentNode) && parentNode.key.id === "test") {
             return [
               {
                 fullClassName: Subject.classFullName,
@@ -147,8 +147,8 @@ describe("Hierarchies", () => {
           return [];
         },
       };
-      const testCustomNode = {
-        key: "test",
+      const testCustomNode: HierarchyNode = {
+        key: { type: "generic", id: "test" },
         parentKeys: [],
         label: "custom parent node",
         children: true,
@@ -191,7 +191,7 @@ describe("Hierarchies", () => {
               },
             ];
           }
-          if (HierarchyNode.isInstancesNode(parentNode) && parentNode.key.instanceKeys.some((ik) => InstanceKey.equals(ik, rootSubjectKey))) {
+          if (HierarchyNode.isInstancesNode(parentNode) && parentNode.key.instanceKeys.some((ik) => ik.id === rootSubjectKey.id)) {
             return [
               {
                 fullClassName: Subject.classFullName,
@@ -228,7 +228,7 @@ describe("Hierarchies", () => {
         ]);
     });
 
-    it("gets instance keys for hidden custom node's child hierarchy level", async function () {
+    it("gets instance keys for hidden generic node's child hierarchy level", async function () {
       const imodelAccess = createIModelAccess(imodel);
       const selectQueryFactory = createNodesQueryClauseFactory({
         imodelAccess,
@@ -249,7 +249,7 @@ describe("Hierarchies", () => {
               },
             ];
           }
-          if (HierarchyNode.isCustom(parentNode) && parentNode.key === "test") {
+          if (HierarchyNode.isGeneric(parentNode) && parentNode.key.id === "test") {
             return [
               {
                 fullClassName: Subject.classFullName,

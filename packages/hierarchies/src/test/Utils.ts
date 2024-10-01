@@ -5,15 +5,16 @@
 
 import sinon from "sinon";
 import { Logger, LogLevel } from "@itwin/core-bentley";
-import { EC, InstanceKey, parseFullClassName } from "@itwin/presentation-shared";
+import { EC, parseFullClassName } from "@itwin/presentation-shared";
+import { NonGroupingHierarchyNode } from "../hierarchies/HierarchyNode";
+import { GenericNodeKey, HierarchyNodeKey, IModelInstanceKey } from "../hierarchies/HierarchyNodeKey";
 import {
-  ParsedCustomHierarchyNode,
-  ParsedInstanceHierarchyNode,
-  ProcessedCustomHierarchyNode,
+  ProcessedGenericHierarchyNode,
   ProcessedGroupingHierarchyNode,
   ProcessedInstanceHierarchyNode,
-} from "../hierarchies/HierarchyNode";
-import { HierarchyNodeKey } from "../hierarchies/HierarchyNodeKey";
+  SourceGenericHierarchyNode,
+  SourceInstanceHierarchyNode,
+} from "../hierarchies/imodel/IModelHierarchyNode";
 
 export function setupLogging(levels: Array<{ namespace: string; level: LogLevel }>) {
   Logger.initializeToConsole();
@@ -21,7 +22,25 @@ export function setupLogging(levels: Array<{ namespace: string; level: LogLevel 
   levels.forEach(({ namespace, level }) => Logger.setLevel(namespace, level));
 }
 
-export function createTestParsedCustomNode(src?: Partial<ParsedCustomHierarchyNode>): ParsedCustomHierarchyNode {
+export function createTestGenericNodeKey(src?: Partial<GenericNodeKey>): GenericNodeKey {
+  return {
+    type: "generic",
+    id: "test",
+    ...src,
+  };
+}
+
+export function createTestGenericNode(src?: Partial<NonGroupingHierarchyNode>): NonGroupingHierarchyNode {
+  return {
+    label: "test",
+    key: createTestGenericNodeKey(),
+    children: false,
+    parentKeys: [],
+    ...src,
+  };
+}
+
+export function createTestSourceGenericNode(src?: Partial<SourceGenericHierarchyNode>): SourceGenericHierarchyNode {
   return {
     label: "test",
     key: "test",
@@ -29,7 +48,7 @@ export function createTestParsedCustomNode(src?: Partial<ParsedCustomHierarchyNo
   };
 }
 
-export function createTestParsedInstanceNode(src?: Partial<ParsedInstanceHierarchyNode>): ParsedInstanceHierarchyNode {
+export function createTestSourceInstanceNode(src?: Partial<SourceInstanceHierarchyNode>): SourceInstanceHierarchyNode {
   return {
     label: "test",
     key: {
@@ -40,10 +59,10 @@ export function createTestParsedInstanceNode(src?: Partial<ParsedInstanceHierarc
   };
 }
 
-export function createTestProcessedCustomNode(src?: Partial<ProcessedCustomHierarchyNode>): ProcessedCustomHierarchyNode {
+export function createTestProcessedGenericNode(src?: Partial<ProcessedGenericHierarchyNode>): ProcessedGenericHierarchyNode {
   return {
     label: "test",
-    key: "test",
+    key: createTestGenericNodeKey(),
     parentKeys: [],
     ...src,
   };
@@ -77,7 +96,7 @@ export function createTestProcessedGroupingNode<TChild = ProcessedGroupingHierar
   };
 }
 
-export function createTestInstanceKey(src?: Partial<InstanceKey>): InstanceKey {
+export function createTestInstanceKey(src?: Partial<IModelInstanceKey>): IModelInstanceKey {
   return {
     className: "TestSchema.TestClass",
     id: "0x1",

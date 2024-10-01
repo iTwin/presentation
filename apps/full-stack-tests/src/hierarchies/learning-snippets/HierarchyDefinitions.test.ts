@@ -7,9 +7,9 @@
 import { insertPhysicalElement, insertPhysicalModelWithPartition, insertSpatialCategory } from "presentation-test-utilities";
 import { IModelConnection } from "@itwin/core-frontend";
 // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.HierarchyDefinitions.Imports
-import { createClassBasedHierarchyDefinition, createNodesQueryClauseFactory, HierarchyDefinition, HierarchyNode } from "@itwin/presentation-hierarchies";
+import { createNodesQueryClauseFactory, createPredicateBasedHierarchyDefinition, HierarchyDefinition, HierarchyNode } from "@itwin/presentation-hierarchies";
 // __PUBLISH_EXTRACT_END__
-import { createHierarchyProvider } from "@itwin/presentation-hierarchies";
+import { createIModelHierarchyProvider } from "@itwin/presentation-hierarchies";
 import { buildIModel } from "../../IModelUtils";
 import { initialize, terminate } from "../../IntegrationTests";
 import { NodeValidators, validateHierarchy } from "../HierarchyValidation";
@@ -43,7 +43,7 @@ describe("Hierarchies", () => {
         // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.HierarchyDefinitions.Simple
         const hierarchyDefinition: HierarchyDefinition = {
           async defineHierarchyLevel({ parentNode }) {
-            // For root nodes, simply return one custom node
+            // For root nodes, simply return one generic node
             if (!parentNode) {
               return [
                 {
@@ -54,8 +54,8 @@ describe("Hierarchies", () => {
                 },
               ];
             }
-            // For the custom node, return a query that selects all physical elements
-            if (parentNode.key === "physical-elements") {
+            // For the root node, return a query that selects all physical elements
+            if (HierarchyNode.isGeneric(parentNode) && parentNode.key.id === "physical-elements") {
               const queryClauseFactory = createNodesQueryClauseFactory({
                 imodelAccess,
                 instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
@@ -82,9 +82,9 @@ describe("Hierarchies", () => {
         };
         // __PUBLISH_EXTRACT_END__
         await validateHierarchy({
-          provider: createHierarchyProvider({ imodelAccess, hierarchyDefinition }),
+          provider: createIModelHierarchyProvider({ imodelAccess, hierarchyDefinition }),
           expect: [
-            NodeValidators.createForCustomNode({
+            NodeValidators.createForGenericNode({
               key: "physical-elements",
               label: "Physical elements",
               children: [NodeValidators.createForInstanceNode({ label: "A" }), NodeValidators.createForInstanceNode({ label: "B" })],
@@ -134,7 +134,7 @@ describe("Hierarchies", () => {
         };
         // __PUBLISH_EXTRACT_END__
         await validateHierarchy({
-          provider: createHierarchyProvider({ imodelAccess, hierarchyDefinition }),
+          provider: createIModelHierarchyProvider({ imodelAccess, hierarchyDefinition }),
           expect: [NodeValidators.createForInstanceNode({ label: "A" }), NodeValidators.createForInstanceNode({ label: "B" })],
         });
       });
@@ -190,7 +190,7 @@ describe("Hierarchies", () => {
         };
         // __PUBLISH_EXTRACT_END__
         await validateHierarchy({
-          provider: createHierarchyProvider({ imodelAccess, hierarchyDefinition }),
+          provider: createIModelHierarchyProvider({ imodelAccess, hierarchyDefinition }),
           expect: [
             NodeValidators.createForInstanceNode({
               label: "A",
@@ -247,7 +247,7 @@ describe("Hierarchies", () => {
         };
         // __PUBLISH_EXTRACT_END__
         await validateHierarchy({
-          provider: createHierarchyProvider({ imodelAccess, hierarchyDefinition }),
+          provider: createIModelHierarchyProvider({ imodelAccess, hierarchyDefinition }),
           expect: [
             NodeValidators.createForClassGroupingNode({
               label: "Physical Object",
@@ -261,17 +261,17 @@ describe("Hierarchies", () => {
         });
       });
 
-      it("creates hierarchy using class based hierarchy definition", async function () {
+      it("creates hierarchy using predicate based hierarchy definition", async function () {
         const imodelAccess = createIModelAccess(imodel);
-        // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.HierarchyDefinitions.ClassBasedHierarchyDefinition
+        // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.HierarchyDefinitions.PredicateBasedHierarchyDefinition
         const queryClauseFactory = createNodesQueryClauseFactory({
           imodelAccess,
           instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
         });
-        const hierarchyDefinition = createClassBasedHierarchyDefinition({
+        const hierarchyDefinition = createPredicateBasedHierarchyDefinition({
           classHierarchyInspector: imodelAccess,
           hierarchy: {
-            // For root nodes, simply return one custom node
+            // For root nodes, simply return one generic node
             rootNodes: async () => [
               {
                 node: {
@@ -282,8 +282,8 @@ describe("Hierarchies", () => {
             ],
             childNodes: [
               {
-                // For the custom node, return a query that selects all physical elements
-                customParentNodeKey: "physical-elements",
+                // For the root node, return a query that selects all physical elements
+                parentGenericNodePredicate: async (parentKey) => parentKey.id === "physical-elements",
                 definitions: async () => [
                   {
                     fullClassName: "BisCore.PhysicalElement",
@@ -305,9 +305,9 @@ describe("Hierarchies", () => {
         });
         // __PUBLISH_EXTRACT_END__
         await validateHierarchy({
-          provider: createHierarchyProvider({ imodelAccess, hierarchyDefinition }),
+          provider: createIModelHierarchyProvider({ imodelAccess, hierarchyDefinition }),
           expect: [
-            NodeValidators.createForCustomNode({
+            NodeValidators.createForGenericNode({
               key: "physical-elements",
               label: "Physical elements",
               children: [NodeValidators.createForInstanceNode({ label: "A" }), NodeValidators.createForInstanceNode({ label: "B" })],

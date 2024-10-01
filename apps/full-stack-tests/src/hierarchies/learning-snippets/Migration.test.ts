@@ -19,13 +19,13 @@ import {
 import { IModel } from "@itwin/core-common";
 import { IModelConnection } from "@itwin/core-frontend";
 // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.Migration.HierarchyProviderImports
-import { createHierarchyProvider } from "@itwin/presentation-hierarchies";
+import { createIModelHierarchyProvider } from "@itwin/presentation-hierarchies";
 // __PUBLISH_EXTRACT_END__
 // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.Migration.HierarchyNodeImport
 import { HierarchyNode } from "@itwin/presentation-hierarchies";
 // __PUBLISH_EXTRACT_END__
-// __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.Migration.ClassBasedHierarchyDefinitionImports
-import { createClassBasedHierarchyDefinition } from "@itwin/presentation-hierarchies";
+// __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.Migration.PredicateBasedHierarchyDefinitionImports
+import { createPredicateBasedHierarchyDefinition } from "@itwin/presentation-hierarchies";
 // __PUBLISH_EXTRACT_END__
 // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.Migration.ManualHierarchyDefinitionImports
 import { HierarchyDefinition } from "@itwin/presentation-hierarchies";
@@ -57,7 +57,7 @@ describe("Hierarchies", () => {
         it("creates a hierarchy provider", async function () {
           const imodel = emptyIModel;
           const imodelAccess = createIModelAccess(imodel);
-          const hierarchyDefinition = createClassBasedHierarchyDefinition({
+          const hierarchyDefinition = createPredicateBasedHierarchyDefinition({
             classHierarchyInspector: imodelAccess,
             hierarchy: {
               rootNodes: async () => [{ node: { key: "test", label: "Root node" } }],
@@ -65,23 +65,23 @@ describe("Hierarchies", () => {
             },
           });
           // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.Migration.HierarchyProviderUsage
-          const provider = createHierarchyProvider({ imodelAccess, hierarchyDefinition });
+          const provider = createIModelHierarchyProvider({ imodelAccess, hierarchyDefinition });
           for await (const node of provider.getNodes({ parentNode: undefined })) {
             // do something with the node
           }
           // __PUBLISH_EXTRACT_END__
           await validateHierarchy({
             provider,
-            expect: [NodeValidators.createForCustomNode({ key: "test", label: "Root node" })],
+            expect: [NodeValidators.createForGenericNode({ key: "test", label: "Root node" })],
           });
         });
       });
 
       describe("Migrating hierarchy rules", () => {
-        it("creates class based hierarchy definition", async function () {
+        it("creates predicate based hierarchy definition", async function () {
           const imodelAccess = createIModelAccess(emptyIModel);
-          // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.Migration.ClassBasedHierarchyDefinitionUsage
-          const hierarchyDefinition = createClassBasedHierarchyDefinition({
+          // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.Migration.PredicateBasedHierarchyDefinitionUsage
+          const hierarchyDefinition = createPredicateBasedHierarchyDefinition({
             classHierarchyInspector: imodelAccess,
             hierarchy: {
               rootNodes: async () => [
@@ -89,13 +89,19 @@ describe("Hierarchies", () => {
               ],
               childNodes: [
                 {
-                  customParentNodeKey: "MyCustomParentNodeKey",
+                  parentGenericNodePredicate: async (parentKey) => parentKey.id === "MyCustomParentNodeKey",
                   definitions: async () => [
                     /* definitions for "MyCustomParentNode" parent node's children go here */
                   ],
                 },
                 {
-                  parentNodeClassName: "BisCore.Model",
+                  parentInstancesNodePredicate: async () => true,
+                  definitions: async () => [
+                    /* definitions for all instances' parent nodes children go here */
+                  ],
+                },
+                {
+                  parentInstancesNodePredicate: "BisCore.Model",
                   definitions: async () => [
                     /* definitions for `BisCore.Model` parent node's children go here */
                   ],
@@ -116,7 +122,7 @@ describe("Hierarchies", () => {
                   /* define root node specifications here */
                 ];
               }
-              if (parentNode.key === "MyCustomParentNodeKey") {
+              if (HierarchyNode.isGeneric(parentNode) && parentNode.key.id === "MyCustomParentNodeKey") {
                 return [
                   /* definitions for "MyCustomParentNode" parent node's children go here */
                 ];
@@ -150,7 +156,7 @@ describe("Hierarchies", () => {
             },
           };
           // __PUBLISH_EXTRACT_END__
-          const provider = createHierarchyProvider({
+          const provider = createIModelHierarchyProvider({
             imodelAccess: createIModelAccess(emptyIModel),
             hierarchyDefinition: {
               defineHierarchyLevel: async ({ parentNode }) => (parentNode ? [] : [definition]),
@@ -159,7 +165,7 @@ describe("Hierarchies", () => {
           validateHierarchyLevel({
             nodes: await collect(provider.getNodes({ parentNode: undefined })),
             expect: [
-              NodeValidators.createForCustomNode({
+              NodeValidators.createForGenericNode({
                 key: "MyCustomNode",
                 label: "My custom node",
                 extendedData: {
@@ -212,7 +218,7 @@ describe("Hierarchies", () => {
             },
           };
           // __PUBLISH_EXTRACT_END__
-          const provider = createHierarchyProvider({
+          const provider = createIModelHierarchyProvider({
             imodelAccess,
             hierarchyDefinition: {
               defineHierarchyLevel: async ({ parentNode }) => (parentNode ? [] : [definition]),
@@ -280,7 +286,7 @@ describe("Hierarchies", () => {
               `,
             },
           };
-          const provider = createHierarchyProvider({
+          const provider = createIModelHierarchyProvider({
             imodelAccess,
             hierarchyDefinition: {
               defineHierarchyLevel: async ({ parentNode }) =>
@@ -399,7 +405,7 @@ describe("Hierarchies", () => {
               },
             },
           ];
-          const provider = createHierarchyProvider({
+          const provider = createIModelHierarchyProvider({
             imodelAccess,
             hierarchyDefinition: {
               defineHierarchyLevel: async ({ parentNode }) =>
@@ -455,7 +461,7 @@ describe("Hierarchies", () => {
             },
           };
           // __PUBLISH_EXTRACT_END__
-          const provider = createHierarchyProvider({
+          const provider = createIModelHierarchyProvider({
             imodelAccess,
             hierarchyDefinition: {
               defineHierarchyLevel: async ({ parentNode }) => (parentNode ? [] : [definition]),
@@ -506,7 +512,7 @@ describe("Hierarchies", () => {
             },
           };
           // __PUBLISH_EXTRACT_END__
-          const provider = createHierarchyProvider({
+          const provider = createIModelHierarchyProvider({
             imodelAccess,
             hierarchyDefinition: {
               defineHierarchyLevel: async ({ parentNode }) => (parentNode ? [] : [definition]),
@@ -597,7 +603,7 @@ describe("Hierarchies", () => {
             },
           };
           // __PUBLISH_EXTRACT_END__
-          const provider = createHierarchyProvider({
+          const provider = createIModelHierarchyProvider({
             imodelAccess,
             hierarchyDefinition: {
               defineHierarchyLevel: async ({ parentNode }) => (parentNode ? [] : [definition]),
@@ -650,7 +656,7 @@ describe("Hierarchies", () => {
             },
           };
           // __PUBLISH_EXTRACT_END__
-          const provider = createHierarchyProvider({
+          const provider = createIModelHierarchyProvider({
             imodelAccess,
             hierarchyDefinition: {
               defineHierarchyLevel: async ({ parentNode }) => (parentNode ? [] : [definition]),
@@ -717,7 +723,7 @@ describe("Hierarchies", () => {
             },
           };
           // __PUBLISH_EXTRACT_END__
-          const provider = createHierarchyProvider({
+          const provider = createIModelHierarchyProvider({
             imodelAccess,
             hierarchyDefinition: {
               defineHierarchyLevel: async ({ parentNode }) => (parentNode ? [] : [definition]),

@@ -202,7 +202,7 @@ describe("Hierarchies", () => {
     });
 
     describe("Id", () => {
-      it("formats custom node labels", async function () {
+      it("formats generic node labels", async function () {
         const id = Id64.fromLocalAndBriefcaseIds(1, 2);
         const hierarchy: HierarchyDefinition = {
           async defineHierarchyLevel({ parentNode }) {
@@ -297,7 +297,7 @@ describe("Hierarchies", () => {
         });
       });
 
-      it("formats custom node labels", async function () {
+      it("formats generic node labels", async function () {
         const date = new Date();
         const hierarchy: HierarchyDefinition = {
           async defineHierarchyLevel({ parentNode }) {
@@ -431,7 +431,7 @@ describe("Hierarchies", () => {
         });
       });
 
-      it("formats custom node labels", async function () {
+      it("formats generic node labels", async function () {
         const hierarchy: HierarchyDefinition = {
           async defineHierarchyLevel({ parentNode }) {
             if (!parentNode) {
@@ -516,7 +516,7 @@ describe("Hierarchies", () => {
           ],
         });
       });
-      it("formats custom node labels", async function () {
+      it("formats generic node labels", async function () {
         const hierarchy: HierarchyDefinition = {
           async defineHierarchyLevel({ parentNode }) {
             if (!parentNode) {
@@ -616,7 +616,7 @@ describe("Hierarchies", () => {
         });
       });
 
-      it("formats custom node labels", async function () {
+      it("formats generic node labels", async function () {
         const hierarchy: HierarchyDefinition = {
           async defineHierarchyLevel({ parentNode }) {
             if (!parentNode) {
@@ -714,7 +714,7 @@ describe("Hierarchies", () => {
         });
       });
 
-      it("formats custom node labels", async function () {
+      it("formats generic node labels", async function () {
         const hierarchy: HierarchyDefinition = {
           async defineHierarchyLevel({ parentNode }) {
             if (!parentNode) {
@@ -812,7 +812,7 @@ describe("Hierarchies", () => {
         });
       });
 
-      it("formats custom node labels", async function () {
+      it("formats generic node labels", async function () {
         const hierarchy: HierarchyDefinition = {
           async defineHierarchyLevel({ parentNode }) {
             if (!parentNode) {

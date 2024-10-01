@@ -3,6 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 /* eslint-disable no-console */
+/* eslint-disable no-duplicate-imports */
 
 // Test-specific imports should be kept out of extracted code
 import { expect } from "chai";
@@ -11,22 +12,28 @@ import * as sinon from "sinon";
 import { buildIModel } from "../../IModelUtils";
 import { initialize, terminate } from "../../IntegrationTests";
 
-// __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.Readme.BasicExample
+// __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.IModelAccessImports
 import { IModelConnection } from "@itwin/core-frontend";
 import { SchemaContext } from "@itwin/ecschema-metadata";
 import { ECSchemaRpcLocater } from "@itwin/ecschema-rpcinterface-common";
 import { createECSchemaProvider, createECSqlQueryExecutor } from "@itwin/presentation-core-interop";
+import { createLimitingECSqlQueryExecutor } from "@itwin/presentation-hierarchies";
+import { createCachingECClassHierarchyInspector } from "@itwin/presentation-shared";
+// __PUBLISH_EXTRACT_END__
+
+// __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.ReadmeExampleImports
 import {
-  createClassBasedHierarchyDefinition,
-  createHierarchyProvider,
-  createLimitingECSqlQueryExecutor,
+  createIModelHierarchyProvider,
   createNodesQueryClauseFactory,
+  createPredicateBasedHierarchyDefinition,
   DefineInstanceNodeChildHierarchyLevelProps,
   HierarchyNode,
   HierarchyProvider,
 } from "@itwin/presentation-hierarchies";
-import { createBisInstanceLabelSelectClauseFactory, createCachingECClassHierarchyInspector, ECSqlBinding } from "@itwin/presentation-shared";
+import { createBisInstanceLabelSelectClauseFactory, ECSqlBinding } from "@itwin/presentation-shared";
+// __PUBLISH_EXTRACT_END__
 
+// __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.IModelAccess
 // Not really part of the package, but we need SchemaContext to create a hierarchy provider. It's
 // recommended to cache the schema context and reuse it across different application's components to
 // avoid loading and storing same schemas multiple times.
@@ -42,10 +49,12 @@ function getIModelSchemaContext(imodel: IModelConnection) {
   return context;
 }
 
-function createProvider(imodel: IModelConnection): HierarchyProvider {
-  // First, set up access to the iModel
+function createIModelAccess(imodel: IModelConnection) {
   const schemaProvider = createECSchemaProvider(getIModelSchemaContext(imodel));
-  const imodelAccess = {
+  return {
+    // The key of the iModel we're accessing
+    imodelKey: imodel.key,
+    // Schema provider provides access to EC information (metadata)
     ...schemaProvider,
     // While caching for hierarchy inspector is not mandatory, it's recommended to use it to improve performance
     ...createCachingECClassHierarchyInspector({ schemaProvider, cacheSize: 100 }),
@@ -53,14 +62,19 @@ function createProvider(imodel: IModelConnection): HierarchyProvider {
     // avoid creating hierarchy levels of insane size (expensive to us and useless to users)
     ...createLimitingECSqlQueryExecutor(createECSqlQueryExecutor(imodel), 1000),
   };
+}
+// __PUBLISH_EXTRACT_END__
 
+// __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.ReadmeExample
+function createProvider(imodelAccess: Parameters<typeof createIModelHierarchyProvider>[0]["imodelAccess"]): HierarchyProvider {
   // Create a factory for building labels SELECT query clauses according to BIS conventions
   const labelsQueryFactory = createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess });
+
   // Create a factory for building nodes SELECT query clauses in a format understood by the provider
   const nodesQueryFactory = createNodesQueryClauseFactory({ imodelAccess, instanceLabelSelectClauseFactory: labelsQueryFactory });
 
   // Then, define the hierarchy
-  const hierarchyDefinition = createClassBasedHierarchyDefinition({
+  const hierarchyDefinition = createPredicateBasedHierarchyDefinition({
     classHierarchyInspector: imodelAccess,
     hierarchy: {
       // For root nodes, select all BisCore.GeometricModel3d instances
@@ -85,7 +99,7 @@ function createProvider(imodel: IModelConnection): HierarchyProvider {
       childNodes: [
         {
           // For BisCore.Model parent nodes, select all BisCore.Element instances contained in corresponding model
-          parentNodeClassName: "BisCore.Model",
+          parentInstancesNodePredicate: "BisCore.Model",
           definitions: async ({ parentNodeInstanceIds }: DefineInstanceNodeChildHierarchyLevelProps) => [
             {
               fullClassName: "BisCore.Element",
@@ -115,11 +129,11 @@ function createProvider(imodel: IModelConnection): HierarchyProvider {
   });
 
   // Finally, create the provider
-  return createHierarchyProvider({ imodelAccess, hierarchyDefinition });
+  return createIModelHierarchyProvider({ imodelAccess, hierarchyDefinition });
 }
 
 async function main() {
-  const provider = createProvider(await getIModelConnection());
+  const provider = createProvider(createIModelAccess(await getIModelConnection()));
   async function loadBranch(parentNode: HierarchyNode | undefined, indent: number = 0) {
     for await (const node of provider.getNodes({ parentNode })) {
       console.log(`${new Array(indent * 2 + 1).join(" ")}${node.label}`);

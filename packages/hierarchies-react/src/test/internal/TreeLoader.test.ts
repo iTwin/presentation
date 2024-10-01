@@ -7,9 +7,17 @@ import { expect } from "chai";
 import { createAsyncIterator, throwingAsyncIterator } from "presentation-test-utilities";
 import { Observable } from "rxjs";
 import sinon from "sinon";
-import { GenericInstanceFilter, GetHierarchyNodesProps, HierarchyProvider, RowsLimitExceededError } from "@itwin/presentation-hierarchies";
+import {
+  GenericInstanceFilter,
+  GetHierarchyNodesProps,
+  HierarchyNode,
+  HierarchyNodeKey,
+  HierarchyProvider,
+  RowsLimitExceededError,
+} from "@itwin/presentation-hierarchies";
 import { LoadedTreePart, TreeLoader } from "../../presentation-hierarchies-react/internal/TreeLoader";
 import { TreeModelHierarchyNode, TreeModelInfoNode, TreeModelNode } from "../../presentation-hierarchies-react/internal/TreeModel";
+import { createNodeId } from "../../presentation-hierarchies-react/internal/Utils";
 import { createTestHierarchyNode, createTreeModelNode } from "../TestUtils";
 
 describe("TreeLoader", () => {
@@ -20,7 +28,9 @@ describe("TreeLoader", () => {
   };
 
   function createLoader() {
-    return new TreeLoader(hierarchyProvider as unknown as HierarchyProvider, onHierarchyLimitExceededStub, onHierarchyLoadErrorStub);
+    return new TreeLoader(hierarchyProvider as unknown as HierarchyProvider, onHierarchyLimitExceededStub, onHierarchyLoadErrorStub, (n) =>
+      HierarchyNode.isGeneric(n) ? n.key.id : createNodeId(n),
+    );
   }
 
   beforeEach(() => {
@@ -46,7 +56,7 @@ describe("TreeLoader", () => {
       );
 
       const rootNodes = nodes.get(undefined);
-      expect(rootNodes?.map((node) => (node as TreeModelHierarchyNode).nodeData.key)).to.containSubset(["root-1", "root-2"]);
+      expect(rootNodes?.map((node) => (node as TreeModelHierarchyNode).nodeData.key)).to.containSubset([{ id: "root-1" }, { id: "root-2" }]);
     });
 
     it("loads root nodes and child nodes", async () => {
@@ -57,7 +67,7 @@ describe("TreeLoader", () => {
         if (props.parentNode === undefined) {
           return createAsyncIterator(rootHierarchyNodes);
         }
-        if (props.parentNode.key === "root-1") {
+        if (HierarchyNodeKey.equals(props.parentNode.key, { type: "generic", id: "root-1" })) {
           return createAsyncIterator(childHierarchyNodes);
         }
         return createAsyncIterator([]);
@@ -67,14 +77,14 @@ describe("TreeLoader", () => {
         loader.loadNodes({
           parent: { id: undefined, nodeData: undefined },
           getHierarchyLevelOptions: () => ({ instanceFilter: undefined, hierarchyLevelSizeLimit: undefined }),
-          shouldLoadChildren: (parentNode) => parentNode.nodeData.key === "root-1",
+          shouldLoadChildren: (parentNode) => HierarchyNodeKey.equals(parentNode.nodeData.key, { type: "generic", id: "root-1" }),
         }),
       );
 
       const rootNodes = nodes.get(undefined);
       const childNodes = nodes.get("root-1");
-      expect(rootNodes?.map((node) => (node as TreeModelHierarchyNode).nodeData.key)).to.containSubset(["root-1", "root-2"]);
-      expect(childNodes?.map((node) => (node as TreeModelHierarchyNode).nodeData.key)).to.containSubset(["child-1"]);
+      expect(rootNodes?.map((node) => (node as TreeModelHierarchyNode).nodeData.key)).to.containSubset([{ id: "root-1" }, { id: "root-2" }]);
+      expect(childNodes?.map((node) => (node as TreeModelHierarchyNode).nodeData.key)).to.containSubset([{ id: "child-1" }]);
       expect(nodes.get("root-2")).to.be.undefined;
       expect(hierarchyProvider.getNodes).to.be.calledTwice;
     });
@@ -84,7 +94,9 @@ describe("TreeLoader", () => {
       const rootHierarchyNode = createTestHierarchyNode({ id: "root-1" });
       const childHierarchyNodes = [createTestHierarchyNode({ id: "child-1" })];
       hierarchyProvider.getNodes.callsFake((props) => {
-        return createAsyncIterator(props.parentNode?.key === "root-1" ? childHierarchyNodes : []);
+        return createAsyncIterator(
+          props.parentNode && HierarchyNodeKey.equals(props.parentNode.key, { type: "generic", id: "root-1" }) ? childHierarchyNodes : [],
+        );
       });
 
       const nodes = await collectNodes(
@@ -96,7 +108,7 @@ describe("TreeLoader", () => {
       );
 
       const childNodes = nodes.get("root-1");
-      expect(childNodes?.map((node) => (node as TreeModelHierarchyNode).nodeData.key)).to.containSubset(["child-1"]);
+      expect(childNodes?.map((node) => (node as TreeModelHierarchyNode).nodeData.key)).to.containSubset([{ id: "child-1" }]);
     });
 
     it("loads info node when `RowsLimitExceededError` is thrown", async () => {
@@ -146,10 +158,10 @@ describe("TreeLoader", () => {
         if (props.parentNode === undefined) {
           return createAsyncIterator(rootHierarchyNodes);
         }
-        if (props.parentNode.key === "root-1") {
+        if (HierarchyNodeKey.equals(props.parentNode.key, { type: "generic", id: "root-1" })) {
           return createAsyncIterator(childHierarchyNodes);
         }
-        if (props.parentNode.key === "child-1") {
+        if (HierarchyNodeKey.equals(props.parentNode.key, { type: "generic", id: "child-1" })) {
           return createAsyncIterator(grandChildHierarchyNodes);
         }
         return createAsyncIterator([]);
@@ -166,9 +178,9 @@ describe("TreeLoader", () => {
       const rootNodes = nodes.get(undefined);
       const childNodes = nodes.get("root-1");
       const grandChildNodes = nodes.get("child-1");
-      expect(rootNodes?.map((node) => (node as TreeModelHierarchyNode).nodeData.key)).to.containSubset(["root-1"]);
-      expect(childNodes?.map((node) => (node as TreeModelHierarchyNode).nodeData.key)).to.containSubset(["child-1"]);
-      expect(grandChildNodes?.map((node) => (node as TreeModelHierarchyNode).nodeData.key)).to.containSubset(["grandchild-1"]);
+      expect(rootNodes?.map((node) => (node as TreeModelHierarchyNode).nodeData.key)).to.containSubset([{ id: "root-1" }]);
+      expect(childNodes?.map((node) => (node as TreeModelHierarchyNode).nodeData.key)).to.containSubset([{ id: "child-1" }]);
+      expect(grandChildNodes?.map((node) => (node as TreeModelHierarchyNode).nodeData.key)).to.containSubset([{ id: "grandchild-1" }]);
       expect(nodes.get("grandchild-1")).to.be.empty;
       expect(hierarchyProvider.getNodes).to.have.callCount(4);
     });
@@ -195,7 +207,7 @@ describe("TreeLoader", () => {
       );
 
       const rootNodes = nodes.get(undefined);
-      expect(rootNodes?.map((node) => (node as TreeModelHierarchyNode).nodeData.key)).to.containSubset(["root-1"]);
+      expect(rootNodes?.map((node) => (node as TreeModelHierarchyNode).nodeData.key)).to.containSubset([{ id: "root-1" }]);
       expect(hierarchyProvider.getNodes).to.be.calledWith(
         sinon.match((props: GetHierarchyNodesProps) => {
           return props.instanceFilter === filter;

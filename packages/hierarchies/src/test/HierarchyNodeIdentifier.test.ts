@@ -6,34 +6,40 @@
 import { expect } from "chai";
 import { InstanceKey } from "@itwin/presentation-shared";
 import { HierarchyNodeIdentifier } from "../hierarchies/HierarchyNodeIdentifier";
+import { GenericNodeKey } from "../hierarchies/HierarchyNodeKey";
+import { createTestGenericNodeKey } from "./Utils";
 
 describe("HierarchyNodeIdentifier", () => {
   const instanceNodeIdentifier: InstanceKey = {
     className: "a",
     id: "0x1",
   };
-  const customNodeIdentifier = {
-    key: "x",
+  const genericNodeIdentifier: GenericNodeKey = {
+    type: "generic",
+    id: "x",
+    source: "s",
   };
 
   describe("isInstanceNodeIdentifier", () => {
     it("returns correct result for different types of identifiers", () => {
       expect(HierarchyNodeIdentifier.isInstanceNodeIdentifier(instanceNodeIdentifier)).to.be.true;
-      expect(HierarchyNodeIdentifier.isInstanceNodeIdentifier(customNodeIdentifier)).to.be.false;
+      expect(HierarchyNodeIdentifier.isInstanceNodeIdentifier(genericNodeIdentifier)).to.be.false;
     });
   });
 
-  describe("isCustomNodeIdentifier", () => {
+  describe("isGenericNodeIdentifier", () => {
     it("returns correct result for different types of identifiers", () => {
-      expect(HierarchyNodeIdentifier.isCustomNodeIdentifier(instanceNodeIdentifier)).to.be.false;
-      expect(HierarchyNodeIdentifier.isCustomNodeIdentifier(customNodeIdentifier)).to.be.true;
+      expect(HierarchyNodeIdentifier.isGenericNodeIdentifier(instanceNodeIdentifier)).to.be.false;
+      expect(HierarchyNodeIdentifier.isGenericNodeIdentifier(genericNodeIdentifier)).to.be.true;
     });
   });
 
   describe("equal", () => {
-    it("compares custom node identifiers", () => {
-      expect(HierarchyNodeIdentifier.equal(customNodeIdentifier, { key: "y" })).to.be.false;
-      expect(HierarchyNodeIdentifier.equal(customNodeIdentifier, { key: "x" })).to.be.true;
+    it("compares generic node identifiers", () => {
+      expect(HierarchyNodeIdentifier.equal(genericNodeIdentifier, createTestGenericNodeKey(createTestGenericNodeKey({ id: "y", source: "s" })))).to.be.false;
+      expect(HierarchyNodeIdentifier.equal(genericNodeIdentifier, createTestGenericNodeKey(createTestGenericNodeKey({ id: "x", source: "s2" })))).to.be.false;
+      expect(HierarchyNodeIdentifier.equal(genericNodeIdentifier, createTestGenericNodeKey(createTestGenericNodeKey({ id: "x" })))).to.be.false;
+      expect(HierarchyNodeIdentifier.equal(genericNodeIdentifier, createTestGenericNodeKey(createTestGenericNodeKey({ id: "x", source: "s" })))).to.be.true;
     });
 
     it("compares instance node identifiers", () => {
@@ -42,8 +48,8 @@ describe("HierarchyNodeIdentifier", () => {
       expect(HierarchyNodeIdentifier.equal(instanceNodeIdentifier, { className: "a", id: "0x1" })).to.be.true;
     });
 
-    it("compares instance and custom node identifiers", () => {
-      expect(HierarchyNodeIdentifier.equal(instanceNodeIdentifier, customNodeIdentifier)).to.be.false;
+    it("compares instance and generic node identifiers", () => {
+      expect(HierarchyNodeIdentifier.equal(instanceNodeIdentifier, genericNodeIdentifier)).to.be.false;
     });
   });
 });

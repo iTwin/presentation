@@ -9,7 +9,7 @@ import { IModelConnection } from "@itwin/core-frontend";
 // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.HierarchyLevelFiltering.Imports
 import { createNodesQueryClauseFactory, HierarchyDefinition } from "@itwin/presentation-hierarchies";
 // __PUBLISH_EXTRACT_END__
-import { createHierarchyProvider, GenericInstanceFilter } from "@itwin/presentation-hierarchies";
+import { createIModelHierarchyProvider, GenericInstanceFilter } from "@itwin/presentation-hierarchies";
 import { buildIModel } from "../../IModelUtils";
 import { initialize, terminate } from "../../IntegrationTests";
 import { NodeValidators, validateHierarchy, validateHierarchyLevel } from "../HierarchyValidation";
@@ -39,8 +39,8 @@ describe("Hierarchies", () => {
         await terminate();
       });
 
-      it("creates filterable custom node", async function () {
-        // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.HierarchyLevelFiltering.CustomHierarchyNodeDefinition
+      it("creates filterable generic node", async function () {
+        // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.HierarchyLevelFiltering.GenericHierarchyNodeDefinition
         const hierarchyDefinition: HierarchyDefinition = {
           async defineHierarchyLevel({ parentNode }) {
             if (!parentNode) {
@@ -59,9 +59,9 @@ describe("Hierarchies", () => {
         };
         // __PUBLISH_EXTRACT_END__
         await validateHierarchy({
-          provider: createHierarchyProvider({ imodelAccess: createIModelAccess(imodel), hierarchyDefinition }),
+          provider: createIModelHierarchyProvider({ imodelAccess: createIModelAccess(imodel), hierarchyDefinition }),
           expect: [
-            NodeValidators.createForCustomNode({
+            NodeValidators.createForGenericNode({
               key: "custom node",
               label: "Custom Node",
               supportsFiltering: true,
@@ -103,7 +103,7 @@ describe("Hierarchies", () => {
         };
         // __PUBLISH_EXTRACT_END__
         await validateHierarchy({
-          provider: createHierarchyProvider({ imodelAccess: createIModelAccess(imodel), hierarchyDefinition }),
+          provider: createIModelHierarchyProvider({ imodelAccess: createIModelAccess(imodel), hierarchyDefinition }),
           expect: [
             NodeValidators.createForInstanceNode({
               label: "A",
@@ -154,7 +154,7 @@ describe("Hierarchies", () => {
           },
         };
         // __PUBLISH_EXTRACT_END__
-        const provider = createHierarchyProvider({ imodelAccess: createIModelAccess(imodel), hierarchyDefinition });
+        const provider = createIModelHierarchyProvider({ imodelAccess: createIModelAccess(imodel), hierarchyDefinition });
         const instanceFilter: GenericInstanceFilter = {
           propertyClassNames: ["BisCore.PhysicalElement"],
           relatedInstances: [],

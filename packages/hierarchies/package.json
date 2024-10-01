@@ -1,6 +1,6 @@
 {
   "name": "@itwin/presentation-hierarchies",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "description": "A package for creating hierarchies based on data in iTwin.js iModels.",
   "license": "MIT",
   "author": {
@@ -36,7 +36,8 @@
     "extract-api": "extract-api --entry=presentation-hierarchies --apiReportFolder=./api --apiReportTempFolder=./api/temp --apiSummaryFolder=./api",
     "check-internal": "node ../../scripts/checkInternal.js --apiSummary ./api/presentation-hierarchies.api.md",
     "update-extractions": "node ../../scripts/updateExtractions.js --targets=./README.md,./learning",
-    "check-extractions": "node ../../scripts/updateExtractions.js --targets=./README.md,./learning --check"
+    "check-extractions": "node ../../scripts/updateExtractions.js --targets=./README.md,./learning --check",
+    "validate-markdowns": "node ../../scripts/validateMarkdowns.js README.md ./learning/**/*.md"
   },
   "dependencies": {
     "@itwin/core-bentley": "^4.9.0",

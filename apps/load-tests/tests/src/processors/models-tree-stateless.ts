@@ -10,7 +10,7 @@ import { StopWatch } from "@itwin/core-bentley";
 import { DbQueryRequest, DbQueryResponse, DbRequestExecutor, ECSqlReader } from "@itwin/core-common";
 import { ISchemaLocater, Schema, SchemaContext, SchemaInfo, SchemaKey, SchemaMatchType, SchemaProps } from "@itwin/ecschema-metadata";
 import { createECSchemaProvider, createECSqlQueryExecutor } from "@itwin/presentation-core-interop";
-import { createHierarchyProvider, createLimitingECSqlQueryExecutor, HierarchyNode, RowsLimitExceededError } from "@itwin/presentation-hierarchies";
+import { createIModelHierarchyProvider, createLimitingECSqlQueryExecutor, HierarchyNode, RowsLimitExceededError } from "@itwin/presentation-hierarchies";
 import { defaultHierarchyConfiguration, ModelsTreeDefinition } from "@itwin/presentation-models-tree";
 import { createCachingECClassHierarchyInspector } from "@itwin/presentation-shared";
 import { doRequest, getCurrentIModelName, loadNodes, openIModelConnectionIfNeeded } from "./common";
@@ -69,12 +69,13 @@ export function loadFullHierarchy(context: ScenarioContext, events: EventEmitter
 function createModelsTreeProvider(context: ScenarioContext, events: EventEmitter) {
   const pendingSchemaLoads = new Map<string, Promise<SchemaProps | undefined>>();
   const isTestTerminated = () => context.vars.isTestTerminated;
+  const imodelRpcProps = (context.vars.imodelRpcProps as (context: ScenarioContext) => any)(context);
   async function requestSchemaJson(schemaKey: Readonly<SchemaKey>) {
     const pending = pendingSchemaLoads.get(schemaKey.name);
     if (pending) {
       return pending;
     }
-    const body = JSON.stringify([(context.vars.imodelRpcProps as (context: ScenarioContext) => any)(context), schemaKey.name]);
+    const body = JSON.stringify([imodelRpcProps, schemaKey.name]);
     const promise = doRequest("ECSchemaRpcInterface-2.0.0-getSchemaJSON", body, events, "schema_json")
       .then((schemaJson) => {
         if (isTestTerminated()) {
@@ -129,7 +130,7 @@ function createModelsTreeProvider(context: ScenarioContext, events: EventEmitter
   const schedulingQueryExecutor: DbRequestExecutor<DbQueryRequest, DbQueryResponse> = {
     async execute(request: DbQueryRequest): Promise<DbQueryResponse> {
       const timer = new StopWatch(undefined, true);
-      const body = JSON.stringify([(context.vars.imodelRpcProps as (context: ScenarioContext) => any)(context), request]);
+      const body = JSON.stringify([imodelRpcProps, request]);
       return doRequest("IModelReadRpcInterface-3.6.0-queryRows", body, events, "query_rows").then((response) => {
         ENABLE_REQUESTS_LOGGING && console.log(`Received "query rows" response for \`${request.query}\` in ${timer.current.milliseconds} ms`);
         return response as DbQueryResponse;
@@ -147,11 +148,12 @@ function createModelsTreeProvider(context: ScenarioContext, events: EventEmitter
     },
   });
   const imodelAccess = {
+    imodelKey: imodelRpcProps.key,
     ...schemaProvider,
     ...createCachingECClassHierarchyInspector({ schemaProvider, cacheSize: 1000 }),
     ...createLimitingECSqlQueryExecutor(queryExecutor, 1000),
   };
-  const provider = createHierarchyProvider({
+  const provider = createIModelHierarchyProvider({
     imodelAccess,
     hierarchyDefinition: new ModelsTreeDefinition({
       imodelAccess,

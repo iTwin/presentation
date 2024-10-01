@@ -136,7 +136,7 @@ export function createTestModelResultSetTooLargeInfoNode({
 export function createTestHierarchyNode({ id, ...props }: Partial<NonGroupingHierarchyNode> & { id: string }): NonGroupingHierarchyNode {
   return {
     ...props,
-    key: props.key ?? id,
+    key: props.key ?? { type: "generic", id },
     label: props.label ?? id,
     children: props.children ?? false,
     parentKeys: props.parentKeys ?? [],

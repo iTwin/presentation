@@ -6,9 +6,10 @@
 import { expect } from "chai";
 import { createAsyncIterator, throwingAsyncIterator } from "presentation-test-utilities";
 import { firstValueFrom, Subject } from "rxjs";
-import { GenericInstanceFilter, GetHierarchyNodesProps, HierarchyNode, HierarchyProvider } from "@itwin/presentation-hierarchies";
+import { GenericInstanceFilter, GetHierarchyNodesProps, HierarchyNode, HierarchyNodeKey, HierarchyProvider } from "@itwin/presentation-hierarchies";
 import { TreeActions } from "../../presentation-hierarchies-react/internal/TreeActions";
 import { TreeModel } from "../../presentation-hierarchies-react/internal/TreeModel";
+import { createNodeId } from "../../presentation-hierarchies-react/internal/Utils";
 import { createStub, createTestGroupingNode, createTestHierarchyNode, createTreeModel, getHierarchyNode, waitFor } from "../TestUtils";
 
 describe("TreeActions", () => {
@@ -20,7 +21,14 @@ describe("TreeActions", () => {
   const onHierarchyLoadErrorStub = createStub<(props: { parentId?: string; type: "timeout" | "unknown" }) => void>();
 
   function createActions(seed: TreeModel) {
-    const actions = new TreeActions(onModelChangedStub, onLoadStub, () => {}, onHierarchyLoadErrorStub, seed);
+    const actions = new TreeActions(
+      onModelChangedStub,
+      onLoadStub,
+      () => {},
+      onHierarchyLoadErrorStub,
+      (n) => (HierarchyNode.isGeneric(n) ? n.key.id : createNodeId(n)),
+      seed,
+    );
     actions.setHierarchyProvider(provider as unknown as HierarchyProvider);
     return actions;
   }
@@ -288,7 +296,9 @@ describe("TreeActions", () => {
       provider.getNodes.reset();
       provider.getNodes.callsFake((props) => {
         return createAsyncIterator(
-          props.parentNode?.key === "root-1" ? [createTestHierarchyNode({ id: "child-1" }), createTestHierarchyNode({ id: "child-2" })] : [],
+          props.parentNode && HierarchyNodeKey.equals(props.parentNode.key, { type: "generic", id: "root-1" })
+            ? [createTestHierarchyNode({ id: "child-1" }), createTestHierarchyNode({ id: "child-2" })]
+            : [],
         );
       });
 
@@ -542,7 +552,11 @@ describe("TreeActions", () => {
 
       provider.getNodes.reset();
       provider.getNodes.callsFake((props) => {
-        return createAsyncIterator(props.parentNode?.key === "root-1" ? [createTestHierarchyNode({ id: "child-2" })] : []);
+        return createAsyncIterator(
+          props.parentNode && HierarchyNodeKey.equals(props.parentNode.key, { type: "generic", id: "root-1" })
+            ? [createTestHierarchyNode({ id: "child-2" })]
+            : [],
+        );
       });
 
       const actions = createActions(model);
@@ -583,7 +597,11 @@ describe("TreeActions", () => {
 
       provider.getNodes.reset();
       provider.getNodes.callsFake((props) => {
-        return createAsyncIterator(props.parentNode?.key === "root-1" ? [createTestHierarchyNode({ id: "child-1" })] : []);
+        return createAsyncIterator(
+          props.parentNode && HierarchyNodeKey.equals(props.parentNode.key, { type: "generic", id: "root-1" })
+            ? [createTestHierarchyNode({ id: "child-1" })]
+            : [],
+        );
       });
 
       const actions = createActions(model);
@@ -729,7 +747,7 @@ describe("TreeActions", () => {
         if (props.parentNode === undefined) {
           return createAsyncIterator([createTestHierarchyNode({ id: "root-1" }), createTestHierarchyNode({ id: "root-2" })]);
         }
-        if (props.parentNode.key === "root-1") {
+        if (HierarchyNodeKey.equals(props.parentNode.key, { type: "generic", id: "root-1" })) {
           return createAsyncIterator([createTestHierarchyNode({ id: "child-1-2" })]);
         }
         return createAsyncIterator([]);
@@ -777,7 +795,7 @@ describe("TreeActions", () => {
         if (props.parentNode === undefined) {
           return createAsyncIterator([createTestHierarchyNode({ id: "root-1" }), createTestHierarchyNode({ id: "root-2" })]);
         }
-        if (props.parentNode.key === "root-1") {
+        if (HierarchyNodeKey.equals(props.parentNode.key, { type: "generic", id: "root-1" })) {
           return createAsyncIterator([createTestHierarchyNode({ id: "child-1-2" })]);
         }
         return createAsyncIterator([]);
@@ -823,7 +841,7 @@ describe("TreeActions", () => {
         if (props.parentNode === undefined) {
           return createAsyncIterator([createTestHierarchyNode({ id: "root-1", autoExpand: true }), createTestHierarchyNode({ id: "root-2" })]);
         }
-        if (props.parentNode.key === "root-1") {
+        if (HierarchyNodeKey.equals(props.parentNode.key, { type: "generic", id: "root-1" })) {
           return createAsyncIterator([createTestHierarchyNode({ id: "child-1" })]);
         }
         return createAsyncIterator([]);
@@ -870,7 +888,7 @@ describe("TreeActions", () => {
         if (props.parentNode === undefined) {
           return createAsyncIterator([createTestHierarchyNode({ id: "root-1", autoExpand: true }), createTestHierarchyNode({ id: "root-2" })]);
         }
-        if (props.parentNode.key === "root-1") {
+        if (HierarchyNodeKey.equals(props.parentNode.key, { type: "generic", id: "root-1" })) {
           return createAsyncIterator([createTestHierarchyNode({ id: "child-1" })]);
         }
         return createAsyncIterator([]);

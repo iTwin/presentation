@@ -12,15 +12,19 @@ import { ProviderOptions, StatelessHierarchyProvider } from "./StatelessHierarch
 import { createBisInstanceLabelSelectClauseFactory } from "@itwin/presentation-shared";
 
 describe("filtering", () => {
-  const totalNumberOfFilteringPaths = 1000;
+  const totalNumberOfFilteringPaths = 10000;
+  const startingIndex = 20;
+  const maximumNumberOfPathsForSingleParent = 500;
+  const parentIdsArr = new Array<number>();
+  for (let i = maximumNumberOfPathsForSingleParent, j = startingIndex + 1; i <= totalNumberOfFilteringPaths; i += maximumNumberOfPathsForSingleParent, ++j) {
+    parentIdsArr.push(j);
+  }
   const filtering = {
-    paths: getFilteringPaths(totalNumberOfFilteringPaths),
+    paths: getFilteringPaths(totalNumberOfFilteringPaths, parentIdsArr, startingIndex, maximumNumberOfPathsForSingleParent),
   };
-  let hierarchyLevelECInstanceId = 19;
 
   run({
-    only: true,
-    testName: `filters with 1000 paths`,
+    testName: `filters with 10000 paths`,
     setup: (): ProviderOptions => {
       const iModel = SnapshotDb.openFile(Datasets.getIModelPath("50k flat elements"));
       const fullClassName = PhysicalElement.classFullName.replace(":", ".");
@@ -29,23 +33,21 @@ describe("filtering", () => {
         rowLimit: "unbounded",
         getHierarchyFactory: (imodelAccess) => ({
           async defineHierarchyLevel(props) {
-            const query = createNodesQueryClauseFactory({
-              imodelAccess,
-              instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
-            });
-
             // A hierarchy with this structure is created:
             //
-            //                          id:23 -> all other BisCore.PhysicalElement
-            //                         /
-            //  id:20 -> id:21 -> id:22
-            //                         \
-            //                          id:24 -> all other BisCore.PhysicalElement
+            //        id:21 -> all other BisCore.PhysicalElement
+            //       /  .
+            //  id:20   .
+            //       \  .
+            //        id:40 -> all other BisCore.PhysicalElement
             //
-            // We need to split the hierarchy in two, because we are using 1000 paths and there is a limit of 500 filtering paths for a single parent.
+            // We need to split the hierarchy in 20 parts, because we are using 10000 paths and there is a limit of 500 filtering paths for a single parent.
 
-            if (!props.parentNode || [20, 21, 22].find((val) => val === props.parentNode?.extendedData?.ecInstanceId)) {
-              ++hierarchyLevelECInstanceId;
+            if (!props.parentNode) {
+              const query = createNodesQueryClauseFactory({
+                imodelAccess,
+                instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
+              });
               return [
                 {
                   fullClassName,
@@ -60,14 +62,44 @@ describe("filtering", () => {
                         },
                       })}
                       FROM ${fullClassName} AS this
-                      WHERE this.[Parent] is NULL AND this.ECInstanceId IN (${hierarchyLevelECInstanceId === 22 ? "23, 24" : hierarchyLevelECInstanceId})
+                      WHERE this.ECInstanceId = ${startingIndex}
                     `,
                   },
                 },
               ];
             }
 
-            if (props.parentNode?.extendedData?.ecInstanceId <= 24) {
+            if (props.parentNode?.extendedData?.ecInstanceId === startingIndex) {
+              const query = createNodesQueryClauseFactory({
+                imodelAccess,
+                instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
+              });
+              return [
+                {
+                  fullClassName,
+                  query: {
+                    ecsql: `
+                      SELECT ${await query.createSelectClause({
+                        ecClassId: { selector: `this.ECClassId` },
+                        ecInstanceId: { selector: `this.ECInstanceId` },
+                        nodeLabel: { selector: `this.UserLabel` },
+                        extendedData: {
+                          ecInstanceId: { selector: `this.ECInstanceId` },
+                        },
+                      })}
+                      FROM ${fullClassName} AS this
+                      WHERE this.ECInstanceId IN (${parentIdsArr.join(", ")})
+                    `,
+                  },
+                },
+              ];
+            }
+
+            if (parentIdsArr.includes(props.parentNode?.extendedData?.ecInstanceId)) {
+              const query = createNodesQueryClauseFactory({
+                imodelAccess,
+                instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
+              });
               return [
                 {
                   fullClassName,
@@ -79,7 +111,7 @@ describe("filtering", () => {
                         nodeLabel: { selector: `this.UserLabel` },
                       })}
                       FROM ${fullClassName} AS this
-                      WHERE this.[Parent] is NULL AND this.ECInstanceId NOT IN (20, 21, 22, 23, 24)
+                      WHERE this.[Parent] is NULL AND this.ECInstanceId NOT IN (${startingIndex}, ${parentIdsArr.join(", ")})
                     `,
                   },
                 },
@@ -103,17 +135,20 @@ describe("filtering", () => {
   });
 });
 
-function getFilteringPaths(totalNumberOfFilteringPaths: number): HierarchyFilteringPath[] {
+function getFilteringPaths(
+  totalNumberOfFilteringPaths: number,
+  parentIdsArr: number[],
+  startingIndex: number,
+  maximumNumberOfPathsForSingleParent: number,
+): HierarchyFilteringPath[] {
   const { schemaName, itemsPerGroup, defaultClassName } = Datasets.CUSTOM_SCHEMA;
   const filteringPaths = new Array<HierarchyFilteringPath>();
   for (let i = 0; i < totalNumberOfFilteringPaths; ++i) {
     const hundredsPosition = Math.floor(i / itemsPerGroup);
-    const id = `0x${(i + 20).toString(16)}`;
-    const nearestParentId = `0x${i < totalNumberOfFilteringPaths / 2 ? (23).toString(16) : (24).toString(16)}`;
+    const id = `0x${(i + startingIndex).toString(16)}`;
+    const nearestParentId = `0x${parentIdsArr[i % Math.ceil(totalNumberOfFilteringPaths / maximumNumberOfPathsForSingleParent)].toString(16)}`;
     filteringPaths.push([
-      { className: `${schemaName}.${defaultClassName}_0`, id: `0x${(20).toString(16)}` },
-      { className: `${schemaName}.${defaultClassName}_0`, id: `0x${(21).toString(16)}` },
-      { className: `${schemaName}.${defaultClassName}_0`, id: `0x${(22).toString(16)}` },
+      { className: `${schemaName}.${defaultClassName}_0`, id: `0x${startingIndex.toString(16)}` },
       { className: `${schemaName}.${defaultClassName}_0`, id: nearestParentId },
       { className: `${schemaName}.${defaultClassName}_${hundredsPosition}`, id },
     ]);

@@ -7,6 +7,35 @@ import { assert, compareStrings, compareStringsOrUndefined } from "@itwin/core-b
 import { InstanceKey } from "@itwin/presentation-shared";
 
 /**
+ * An instance key that may be associated with specific iModel.
+ * @beta
+ */
+export interface IModelInstanceKey extends InstanceKey {
+  imodelKey?: string;
+}
+
+/**
+ * A key for a generic node.
+ * @beta
+ */
+export interface GenericNodeKey {
+  /** Type of the node */
+  type: "generic";
+
+  /**
+   * Node key identifier, which uniquely identifies the node within the hierarchy level the node is used.
+   * The format of the identifier is not specified and is up to the data source.
+   */
+  id: string;
+
+  /**
+   * Optional data source identifier. Useful when a hierarchy is built using multiple hierarchy providers - in that
+   * case each provider can assign a unique source identifier to its nodes.
+   */
+  source?: string;
+}
+
+/**
  * A key for a node that represents one or more ECInstances.
  * @beta
  */
@@ -18,7 +47,7 @@ export interface InstancesNodeKey {
    * Keys of ECInstances that are represented by the node. Generally, one node represents a single
    * ECInstance, but in some cases (e.g. node merging) there could be more.
    */
-  instanceKeys: InstanceKey[];
+  instanceKeys: IModelInstanceKey[];
 }
 
 /**
@@ -121,60 +150,60 @@ export type GroupingNodeKey = ClassGroupingNodeKey | LabelGroupingNodeKey | Prop
  * A key for either an instance node or one of the instance grouping nodes.
  * @beta
  */
-export type StandardHierarchyNodeKey = InstancesNodeKey | GroupingNodeKey;
+export type IModelHierarchyNodeKey = InstancesNodeKey | GroupingNodeKey;
 
 /**
  * A key that uniquely identifies a node in a hierarchy level.
  * @beta
  */
-export type HierarchyNodeKey = StandardHierarchyNodeKey | string;
+export type HierarchyNodeKey = IModelHierarchyNodeKey | GenericNodeKey;
 
 /** @beta */
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export namespace HierarchyNodeKey {
-  /** Checks whether the given node key is a custom node key. */
-  export function isCustom(key: HierarchyNodeKey): key is string {
-    return typeof key === "string";
+  /** Checks whether the given node key is a generic node key. */
+  export function isGeneric(key: HierarchyNodeKey): key is GenericNodeKey {
+    return key.type === "generic";
   }
 
   /** Checks whether the given node key is a `StandardHierarchyNodeKey`. */
-  export function isStandard(key: HierarchyNodeKey): key is StandardHierarchyNodeKey {
-    return !!(key as StandardHierarchyNodeKey).type;
+  export function isIModelNodeKey(key: HierarchyNodeKey): key is IModelHierarchyNodeKey {
+    return !isGeneric(key);
   }
 
   /** Checks whether the given node key is an `InstancesNodeKey`. */
   export function isInstances(key: HierarchyNodeKey): key is InstancesNodeKey {
-    return isStandard(key) && key.type === "instances";
+    return key.type === "instances";
   }
 
   /** Checks whether the given node key is a `GroupingNodeKey`. */
   export function isGrouping(key: HierarchyNodeKey): key is GroupingNodeKey {
-    return isStandard(key) && !isInstances(key);
+    return !isGeneric(key) && !isInstances(key);
   }
 
   /** Checks whether the given node key is a `ClassGroupingNodeKey`. */
   export function isClassGrouping(key: HierarchyNodeKey): key is ClassGroupingNodeKey {
-    return isStandard(key) && key.type === "class-grouping";
+    return key.type === "class-grouping";
   }
 
   /** Checks whether the given node key is a `LabelGroupingNodeKey`. */
   export function isLabelGrouping(key: HierarchyNodeKey): key is LabelGroupingNodeKey {
-    return isStandard(key) && key.type === "label-grouping";
+    return key.type === "label-grouping";
   }
 
   /** Checks whether the given node key is a `PropertyOtherValuesGroupingNodeKey`. */
   export function isPropertyOtherValuesGrouping(key: HierarchyNodeKey): key is PropertyOtherValuesGroupingNodeKey {
-    return isStandard(key) && key.type === "property-grouping:other";
+    return key.type === "property-grouping:other";
   }
 
   /** Checks whether the given node key is a `PropertyValueRangeGroupingNodeKey`. */
   export function isPropertyValueRangeGrouping(key: HierarchyNodeKey): key is PropertyValueRangeGroupingNodeKey {
-    return isStandard(key) && key.type === "property-grouping:range";
+    return key.type === "property-grouping:range";
   }
 
   /** Checks whether the given node key is a `PropertyValueGroupingNodeKey`. */
   export function isPropertyValueGrouping(key: HierarchyNodeKey): key is PropertyValueGroupingNodeKey {
-    return isStandard(key) && key.type === "property-grouping:value";
+    return key.type === "property-grouping:value";
   }
 
   /** Checks whether the given node key is a `PropertyGroupingNodeKey`. */
@@ -189,22 +218,19 @@ export namespace HierarchyNodeKey {
    * - `positive value` if lhs key is more than rhs key.
    */
   export function compare(lhs: HierarchyNodeKey, rhs: HierarchyNodeKey): number {
-    if (typeof lhs === "string") {
-      if (typeof rhs !== "string") {
-        return 1;
-      }
-      return compareStrings(lhs, rhs);
-    }
-    if (typeof rhs === "string") {
-      return -1;
-    }
-
     const typeCompareResult = compareStrings(lhs.type, rhs.type);
     if (typeCompareResult !== 0) {
       return typeCompareResult;
     }
-
     switch (lhs.type) {
+      case "generic": {
+        assert(rhs.type === "generic");
+        const idCompareResult = compareStrings(lhs.id, rhs.id);
+        if (idCompareResult !== 0) {
+          return idCompareResult;
+        }
+        return compareStringsOrUndefined(lhs.source, rhs.source);
+      }
       case "instances": {
         assert(rhs.type === "instances");
         if (lhs.instanceKeys.length !== rhs.instanceKeys.length) {
@@ -214,6 +240,10 @@ export namespace HierarchyNodeKey {
           const instanceKeyCompareResult = InstanceKey.compare(lhs.instanceKeys[i], rhs.instanceKeys[i]);
           if (instanceKeyCompareResult !== 0) {
             return instanceKeyCompareResult;
+          }
+          const imodelKeyCompareResult = compareStringsOrUndefined(lhs.instanceKeys[0].imodelKey, rhs.instanceKeys[0].imodelKey);
+          if (imodelKeyCompareResult !== 0) {
+            return imodelKeyCompareResult;
           }
         }
         return 0;

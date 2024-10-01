@@ -5,7 +5,6 @@
 
 import { concatAll, map, Observable, reduce } from "rxjs";
 import { DuplicatePolicy, SortedArray } from "@itwin/core-bentley";
-import { ProcessedHierarchyNode } from "../../HierarchyNode";
 import { compareNodesByLabel } from "../Common";
 
 /**
@@ -16,14 +15,14 @@ import { compareNodesByLabel } from "../Common";
  * @note Nodes with same labels are returned in undefined order.
  * @internal
  */
-export function sortNodesByLabelOperator(nodes: Observable<ProcessedHierarchyNode>): Observable<ProcessedHierarchyNode> {
+export function sortNodesByLabelOperator<TNode extends { label: string }>(nodes: Observable<TNode>): Observable<TNode> {
   return nodes.pipe(
     reduce(
       (sorted, node) => {
         sorted.insert(node);
         return sorted;
       },
-      new SortedArray<ProcessedHierarchyNode>(compareNodesByLabel, DuplicatePolicy.Allow),
+      new SortedArray<TNode>(compareNodesByLabel, DuplicatePolicy.Allow),
     ),
     map((sortedArray) => sortedArray.extractArray()),
     concatAll(),

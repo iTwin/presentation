@@ -5,9 +5,7 @@
 ```ts
 
 import { ComponentPropsWithoutRef } from 'react';
-import { createHierarchyProvider } from '@itwin/presentation-hierarchies';
-import { ECClassHierarchyInspector } from '@itwin/presentation-shared';
-import { ECSchemaProvider } from '@itwin/presentation-shared';
+import { createIModelHierarchyProvider } from '@itwin/presentation-hierarchies';
 import { GenericInstanceFilter } from '@itwin/presentation-hierarchies';
 import { HierarchyDefinition } from '@itwin/presentation-hierarchies';
 import { HierarchyNode } from '@itwin/presentation-hierarchies';
@@ -15,7 +13,6 @@ import { HierarchyProvider } from '@itwin/presentation-hierarchies';
 import { InstanceKey } from '@itwin/presentation-shared';
 import { IPrimitiveValueFormatter } from '@itwin/presentation-shared';
 import { JSX as JSX_2 } from 'react/jsx-runtime';
-import { LimitingECSqlQueryExecutor } from '@itwin/presentation-hierarchies';
 import { NodeData } from '@itwin/itwinui-react';
 import { PropsWithChildren } from 'react';
 import { ReactElement } from 'react';
@@ -59,10 +56,10 @@ export { HierarchyNode }
 export { HierarchyProvider }
 
 // @beta (undocumented)
-type HierarchyProviderProps = Parameters<typeof createHierarchyProvider>[0];
+type HierarchyProviderProps = Parameters<typeof createIModelHierarchyProvider>[0];
 
 // @beta (undocumented)
-type IModelAccess = ECSchemaProvider & LimitingECSqlQueryExecutor & ECClassHierarchyInspector;
+type IModelAccess = HierarchyProviderProps["imodelAccess"];
 
 // @beta
 export function isPresentationHierarchyNode(node: PresentationTreeNode): node is PresentationHierarchyNode;
@@ -249,7 +246,7 @@ interface UseTreeProps extends Pick<HierarchyProviderProps, "localizedStrings"> 
     getHierarchyDefinition: (props: {
         imodelAccess: IModelAccess;
     }) => HierarchyDefinition;
-    imodelAccess: ECSchemaProvider & LimitingECSqlQueryExecutor & ECClassHierarchyInspector;
+    imodelAccess: IModelAccess;
     onHierarchyLimitExceeded?: (props: {
         parentId?: string;
         filter?: GenericInstanceFilter;
