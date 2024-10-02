@@ -5,6 +5,7 @@
 
 import { expect } from "chai";
 // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.MergedHierarchies.Imports
+import { BeEvent } from "@itwin/core-bentley";
 import { GetHierarchyNodesProps, HierarchyNode, HierarchyProvider, mergeProviders } from "@itwin/presentation-hierarchies";
 // __PUBLISH_EXTRACT_END__
 import { initialize, terminate } from "../../IntegrationTests";
@@ -26,6 +27,7 @@ describe("Hierarchies", () => {
         // Create a very basic hierarchy provider factory
         function createBasicHierarchyProvider(nodes: (parentNode: GetHierarchyNodesProps["parentNode"]) => HierarchyNode[]): HierarchyProvider {
           return {
+            hierarchyChanged: new BeEvent(),
             async *getNodes({ parentNode }) {
               for (const node of nodes(parentNode)) {
                 yield node;

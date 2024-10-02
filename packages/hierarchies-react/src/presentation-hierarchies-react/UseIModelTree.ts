@@ -19,10 +19,7 @@ type IModelAccess = IModelHierarchyProviderProps["imodelAccess"];
  * @beta
  */
 type UseIModelTreeProps = Omit<UseTreeProps, "getHierarchyProvider" | "getFilteredPaths"> &
-  Pick<IModelHierarchyProviderProps, "localizedStrings"> & {
-    /** Object that provides access to the iModel schema and can run queries against the iModel. */
-    imodelAccess: IModelAccess;
-
+  Pick<IModelHierarchyProviderProps, "localizedStrings" | "imodelAccess" | "imodelChanged"> & {
     /** Provides the hierarchy definition for the tree. */
     getHierarchyDefinition: (props: { imodelAccess: IModelAccess }) => HierarchyDefinition;
 
@@ -47,10 +44,10 @@ type UseIModelTreeProps = Omit<UseTreeProps, "getHierarchyProvider" | "getFilter
  * @beta
  */
 export function useIModelTree(props: UseIModelTreeProps): UseTreeResult {
-  const { imodelAccess, getHierarchyDefinition, getFilteredPaths, localizedStrings, ...rest } = props;
+  const { imodelAccess, imodelChanged, getHierarchyDefinition, getFilteredPaths, localizedStrings, ...rest } = props;
   return useTree({
     ...rest,
-    ...useIModelTreeProps({ imodelAccess, getHierarchyDefinition, getFilteredPaths, localizedStrings }),
+    ...useIModelTreeProps({ imodelAccess, imodelChanged, getHierarchyDefinition, getFilteredPaths, localizedStrings }),
   });
 }
 
@@ -69,26 +66,27 @@ export function useIModelTree(props: UseIModelTreeProps): UseTreeResult {
  * @beta
  */
 export function useIModelUnifiedSelectionTree(props: UseIModelTreeProps & UseUnifiedTreeSelectionProps): UseTreeResult {
-  const { imodelAccess, getHierarchyDefinition, getFilteredPaths, localizedStrings, ...rest } = props;
+  const { imodelAccess, imodelChanged, getHierarchyDefinition, getFilteredPaths, localizedStrings, ...rest } = props;
   return useUnifiedSelectionTree({
     ...rest,
-    ...useIModelTreeProps({ imodelAccess, getHierarchyDefinition, getFilteredPaths, localizedStrings }),
+    ...useIModelTreeProps({ imodelAccess, imodelChanged, getHierarchyDefinition, getFilteredPaths, localizedStrings }),
   });
 }
 
 function useIModelTreeProps(
-  props: Pick<UseIModelTreeProps, "imodelAccess" | "getHierarchyDefinition" | "getFilteredPaths" | "localizedStrings">,
+  props: Pick<UseIModelTreeProps, "imodelAccess" | "imodelChanged" | "getHierarchyDefinition" | "getFilteredPaths" | "localizedStrings">,
 ): Pick<UseTreeProps, "getHierarchyProvider" | "getFilteredPaths"> {
-  const { imodelAccess, getHierarchyDefinition, getFilteredPaths, localizedStrings } = props;
+  const { imodelAccess, imodelChanged, getHierarchyDefinition, getFilteredPaths, localizedStrings } = props;
   return {
     getHierarchyProvider: useCallback(
       () =>
         createIModelHierarchyProvider({
           imodelAccess,
+          imodelChanged,
           hierarchyDefinition: getHierarchyDefinition({ imodelAccess }),
           localizedStrings,
         }),
-      [imodelAccess, getHierarchyDefinition, localizedStrings],
+      [imodelAccess, imodelChanged, getHierarchyDefinition, localizedStrings],
     ),
     getFilteredPaths: useCallback(async () => getFilteredPaths?.({ imodelAccess }), [imodelAccess, getFilteredPaths]),
   };

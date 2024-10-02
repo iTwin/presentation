@@ -6,12 +6,14 @@
 import { expect } from "chai";
 import { createAsyncIterator } from "presentation-test-utilities";
 import sinon from "sinon";
+import { BeEvent } from "@itwin/core-bentley";
 import * as hierarchiesModule from "@itwin/presentation-hierarchies";
 import { useIModelTree, useIModelUnifiedSelectionTree } from "../presentation-hierarchies-react/UseIModelTree";
 import { createStub, renderHook, waitFor } from "./TestUtils";
 
 describe("useIModelTree", () => {
   const hierarchyProvider = {
+    hierarchyChanged: new BeEvent(),
     getNodes: createStub<hierarchiesModule.HierarchyProvider["getNodes"]>(),
     getNodeInstanceKeys: createStub<hierarchiesModule.HierarchyProvider["getNodeInstanceKeys"]>(),
     setFormatter: createStub<hierarchiesModule.HierarchyProvider["setFormatter"]>(),
@@ -80,6 +82,7 @@ describe("useIModelTree", () => {
 
 describe("useIModelUnifiedSelectionTree", () => {
   const hierarchyProvider = {
+    hierarchyChanged: new BeEvent(),
     getNodes: createStub<hierarchiesModule.HierarchyProvider["getNodes"]>(),
     getNodeInstanceKeys: createStub<hierarchiesModule.HierarchyProvider["getNodeInstanceKeys"]>(),
     setFormatter: createStub<hierarchiesModule.HierarchyProvider["setFormatter"]>(),

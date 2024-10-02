@@ -24,11 +24,6 @@ import { TreeNode } from '@itwin/itwinui-react';
 // @beta
 export function createRenderedTreeNodeData(node: RenderedTreeNode, isNodeSelected: (nodeId: string) => boolean): NodeData<RenderedTreeNode>;
 
-// @beta
-type FullTreeReloadOptions = {
-    dataSourceChanged?: true;
-} & ReloadTreeCommonOptions;
-
 export { GenericInstanceFilter }
 
 // @beta
@@ -140,13 +135,11 @@ export interface PresentationResultSetTooLargeInfoNode {
 // @beta
 export type PresentationTreeNode = PresentationHierarchyNode | PresentationInfoNode;
 
-// @beta (undocumented)
-interface ReloadTreeCommonOptions {
+// @beta
+interface ReloadTreeOptions {
+    parentNodeId: string | undefined;
     state?: "keep" | "discard" | "reset";
 }
-
-// @beta
-type ReloadTreeOptions = FullTreeReloadOptions | SubtreeReloadOptions;
 
 // @beta
 export type RenderedTreeNode = PresentationTreeNode | {
@@ -162,11 +155,6 @@ type SelectionChangeType = "add" | "replace" | "remove";
 type SelectionMode_2 = "none" | "single" | "extended" | "multiple";
 
 export { SelectionStorage }
-
-// @beta
-type SubtreeReloadOptions = {
-    parentNodeId: string;
-} & ReloadTreeCommonOptions;
 
 // @beta (undocumented)
 type TreeNodeProps = ComponentPropsWithoutRef<typeof TreeNode>;
@@ -220,8 +208,7 @@ export function UnifiedSelectionProvider({ storage, children }: PropsWithChildre
 export function useIModelTree(props: UseIModelTreeProps): UseTreeResult;
 
 // @beta
-type UseIModelTreeProps = Omit<UseTreeProps, "getHierarchyProvider" | "getFilteredPaths"> & Pick<IModelHierarchyProviderProps, "localizedStrings"> & {
-    imodelAccess: IModelAccess;
+type UseIModelTreeProps = Omit<UseTreeProps, "getHierarchyProvider" | "getFilteredPaths"> & Pick<IModelHierarchyProviderProps, "localizedStrings" | "imodelAccess" | "imodelChanged"> & {
     getHierarchyDefinition: (props: {
         imodelAccess: IModelAccess;
     }) => HierarchyDefinition;

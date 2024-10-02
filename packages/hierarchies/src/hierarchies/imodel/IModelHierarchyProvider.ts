@@ -22,7 +22,7 @@ import {
   take,
   tap,
 } from "rxjs";
-import { assert, StopWatch } from "@itwin/core-bentley";
+import { assert, BeEvent, StopWatch } from "@itwin/core-bentley";
 import {
   ConcatenatedValue,
   createDefaultValueFormatter,
@@ -161,6 +161,7 @@ export function createIModelHierarchyProvider(props: IModelHierarchyProviderProp
 
 class IModelHierarchyProviderImpl implements HierarchyProvider {
   private _imodelAccess: IModelAccess;
+  private _imodelChanged: Event<() => void>;
   private _valuesFormatter: IPrimitiveValueFormatter;
   private _sourceHierarchyDefinition: HierarchyDefinition;
   private _activeHierarchyDefinition: HierarchyDefinition;
@@ -171,6 +172,7 @@ class IModelHierarchyProviderImpl implements HierarchyProvider {
 
   public constructor(props: IModelHierarchyProviderProps) {
     this._imodelAccess = props.imodelAccess;
+    this._imodelChanged = props.imodelChanged ?? new BeEvent();
     this._activeHierarchyDefinition = this._sourceHierarchyDefinition = props.hierarchyDefinition;
     this._valuesFormatter = props?.formatter ?? createDefaultValueFormatter();
     this._localizedStrings = { other: "Other", unspecified: "Not specified", ...props?.localizedStrings };
@@ -190,6 +192,10 @@ class IModelHierarchyProviderImpl implements HierarchyProvider {
 
   public dispose() {
     this._unsubscribe?.();
+  }
+
+  public get hierarchyChanged() {
+    return this._imodelChanged;
   }
 
   private invalidateHierarchyCache(reason?: string) {

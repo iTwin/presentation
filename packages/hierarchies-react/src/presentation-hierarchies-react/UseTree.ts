@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { BeEvent, isIDisposable } from "@itwin/core-bentley";
+import { isIDisposable } from "@itwin/core-bentley";
 import { GenericInstanceFilter, HierarchyFilteringPath, HierarchyNode, HierarchyProvider } from "@itwin/presentation-hierarchies";
 import { InstanceKey, IPrimitiveValueFormatter } from "@itwin/presentation-shared";
 import { TreeActions } from "./internal/TreeActions";
@@ -91,8 +91,14 @@ export interface UseTreeProps {
   onHierarchyLoadError?: (props: { parentId?: string; type: "timeout" | "unknown" }) => void;
 }
 
-/** @beta */
-interface ReloadTreeCommonOptions {
+/**
+ * Options for doing either full or a sub tree reload.
+ * @beta
+ */
+interface ReloadTreeOptions {
+  /** Specifies parent node under which sub tree should be reloaded. */
+  parentNodeId: string | undefined;
+
   /**
    * Specifies how current tree state should be handled:
    * - `keep` - try to keep current tree state (expanded/collapsed nodes, instance filters, etc.).
@@ -103,30 +109,6 @@ interface ReloadTreeCommonOptions {
    */
   state?: "keep" | "discard" | "reset";
 }
-
-/**
- * Options for full tree reload.
- * @beta
- */
-type FullTreeReloadOptions = {
-  /** Specifies that data source changed and caches should be cleared before reloading tree. */
-  dataSourceChanged?: true;
-} & ReloadTreeCommonOptions;
-
-/**
- * Options for subtree reload.
- * @beta
- */
-type SubtreeReloadOptions = {
-  /** Specifies parent node under which sub tree should be reloaded. */
-  parentNodeId: string;
-} & ReloadTreeCommonOptions;
-
-/**
- * Options for doing either full or a sub tree reload.
- * @beta
- */
-type ReloadTreeOptions = FullTreeReloadOptions | SubtreeReloadOptions;
 
 /** @beta */
 export interface UseTreeResult {
@@ -197,12 +179,12 @@ function useTreeInternal({
       ),
   );
   const currentFormatter = useRef<IPrimitiveValueFormatter>();
-  const dataSourceChanged = useRef(new BeEvent());
 
   const [hierarchyProvider, setHierarchyProvider] = useState<HierarchyProvider | undefined>();
   useEffect(() => {
     const provider = getHierarchyProvider();
     provider.setFormatter(currentFormatter.current);
+    provider.hierarchyChanged.addListener(() => actions.reloadTree());
     actions.setHierarchyProvider(provider);
     actions.reloadTree({ state: "keep" });
     setHierarchyProvider(provider);
@@ -260,9 +242,6 @@ function useTreeInternal({
 
   const reloadTree = useCallback<UseTreeResult["reloadTree"]>(
     (options) => {
-      if (options && "dataSourceChanged" in options) {
-        dataSourceChanged.current.raiseEvent();
-      }
       actions.reloadTree(options);
     },
     [actions],
