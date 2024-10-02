@@ -4,8 +4,8 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { BeEvent } from "@itwin/core-bentley";
-import { createIModelHierarchyProvider, GenericInstanceFilter, HierarchyDefinition, HierarchyNode, HierarchyProvider } from "@itwin/presentation-hierarchies";
+import { BeEvent, isIDisposable } from "@itwin/core-bentley";
+import { GenericInstanceFilter, HierarchyFilteringPath, HierarchyNode, HierarchyProvider } from "@itwin/presentation-hierarchies";
 import { InstanceKey, IPrimitiveValueFormatter } from "@itwin/presentation-shared";
 import { TreeActions } from "./internal/TreeActions";
 import { isTreeModelHierarchyNode, isTreeModelInfoNode, TreeModel, TreeModelHierarchyNode, TreeModelNode, TreeModelRootNode } from "./internal/TreeModel";
@@ -47,6 +47,7 @@ export interface HierarchyLevelDetails {
  * See `README.md` for an example
  *
  * @see `useUnifiedSelectionTree`
+ * @see `useIModelTree`
  * @beta
  */
 export function useTree(props: UseTreeProps): UseTreeResult {
@@ -64,37 +65,21 @@ export function useTree(props: UseTreeProps): UseTreeResult {
  * See `README.md` for an example
  *
  * @see `useTree`
+ * @see `useIModelUnifiedSelectionTree`
  * @see `UnifiedSelectionProvider`
  * @beta
  */
-export function useUnifiedSelectionTree({ imodelKey, sourceName, ...props }: UseTreeProps & UseUnifiedTreeSelectionProps): UseTreeResult {
+export function useUnifiedSelectionTree({ sourceName, ...props }: UseTreeProps & UseUnifiedTreeSelectionProps): UseTreeResult {
   const { getNode, ...rest } = useTreeInternal(props);
-  return { ...rest, ...useUnifiedTreeSelection({ imodelKey, sourceName, getNode }) };
+  return { ...rest, ...useUnifiedTreeSelection({ sourceName, getNode }) };
 }
 
 /** @beta */
-type IModelAccess = HierarchyProviderProps["imodelAccess"];
-
-/** @beta */
-interface GetFilteredPathsProps {
-  /** Object that provides access to the iModel schema and can run queries against the iModel. */
-  imodelAccess: IModelAccess;
-}
-
-/** @beta */
-type HierarchyProviderProps = Parameters<typeof createIModelHierarchyProvider>[0];
-
-/** @beta */
-type HierarchyFilteringPaths = NonNullable<NonNullable<HierarchyProviderProps["filtering"]>["paths"]>;
-
-/** @beta */
-interface UseTreeProps extends Pick<HierarchyProviderProps, "localizedStrings"> {
-  /** Object that provides access to the iModel schema and can run queries against the iModel. */
-  imodelAccess: IModelAccess;
-  /** Provides the hierarchy definition for the tree. */
-  getHierarchyDefinition: (props: { imodelAccess: IModelAccess }) => HierarchyDefinition;
+export interface UseTreeProps {
+  /** Provides the hierarchy provider for the tree. */
+  getHierarchyProvider: () => HierarchyProvider;
   /** Provides paths to filtered nodes. */
-  getFilteredPaths?: (props: GetFilteredPathsProps) => Promise<HierarchyFilteringPaths | undefined>;
+  getFilteredPaths?: () => Promise<HierarchyFilteringPath[] | undefined>;
   /**
    * Callback that is called just after a certain action is finished.
    * Can be used for performance tracking.
@@ -182,10 +167,8 @@ interface TreeState {
 }
 
 function useTreeInternal({
-  imodelAccess,
-  getHierarchyDefinition,
+  getHierarchyProvider,
   getFilteredPaths,
-  localizedStrings,
   onPerformanceMeasured,
   onHierarchyLimitExceeded,
   onHierarchyLoadError,
@@ -218,22 +201,19 @@ function useTreeInternal({
 
   const [hierarchyProvider, setHierarchyProvider] = useState<HierarchyProvider | undefined>();
   useEffect(() => {
-    const provider = createIModelHierarchyProvider({
-      imodelAccess,
-      imodelChanged: dataSourceChanged.current,
-      hierarchyDefinition: getHierarchyDefinition({ imodelAccess }),
-      localizedStrings,
-      formatter: currentFormatter.current,
-    });
+    const provider = getHierarchyProvider();
+    provider.setFormatter(currentFormatter.current);
     actions.setHierarchyProvider(provider);
     actions.reloadTree({ state: "keep" });
     setHierarchyProvider(provider);
     return () => {
       actions.dispose();
-      provider.dispose();
+      if (isIDisposable(provider)) {
+        provider.dispose();
+      }
       setHierarchyProvider(undefined);
     };
-  }, [actions, imodelAccess, localizedStrings, getHierarchyDefinition]);
+  }, [actions, getHierarchyProvider]);
 
   const [isFiltering, setIsFiltering] = useState(false);
   useEffect(() => {
@@ -247,9 +227,9 @@ function useTreeInternal({
       }
 
       setIsFiltering(true);
-      let paths: HierarchyFilteringPaths | undefined;
+      let paths: HierarchyFilteringPath[] | undefined;
       try {
-        paths = await getFilteredPaths({ imodelAccess });
+        paths = await getFilteredPaths();
       } catch {
       } finally {
         if (!disposed) {
@@ -262,7 +242,7 @@ function useTreeInternal({
     return () => {
       disposed = true;
     };
-  }, [actions, hierarchyProvider, imodelAccess, getFilteredPaths]);
+  }, [actions, hierarchyProvider, getFilteredPaths]);
 
   const getNode = useCallback<(nodeId: string) => TreeModelRootNode | TreeModelNode | undefined>(
     (nodeId: string) => {

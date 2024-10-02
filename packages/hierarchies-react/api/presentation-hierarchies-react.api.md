@@ -8,6 +8,7 @@ import { ComponentPropsWithoutRef } from 'react';
 import { createIModelHierarchyProvider } from '@itwin/presentation-hierarchies';
 import { GenericInstanceFilter } from '@itwin/presentation-hierarchies';
 import { HierarchyDefinition } from '@itwin/presentation-hierarchies';
+import { HierarchyFilteringPath } from '@itwin/presentation-hierarchies';
 import { HierarchyNode } from '@itwin/presentation-hierarchies';
 import { HierarchyProvider } from '@itwin/presentation-hierarchies';
 import { InstanceKey } from '@itwin/presentation-shared';
@@ -30,14 +31,6 @@ type FullTreeReloadOptions = {
 
 export { GenericInstanceFilter }
 
-// @beta (undocumented)
-interface GetFilteredPathsProps {
-    imodelAccess: IModelAccess;
-}
-
-// @beta (undocumented)
-type HierarchyFilteringPaths = NonNullable<NonNullable<HierarchyProviderProps["filtering"]>["paths"]>;
-
 // @beta
 export interface HierarchyLevelDetails {
     getInstanceKeysIterator: (props?: {
@@ -56,10 +49,10 @@ export { HierarchyNode }
 export { HierarchyProvider }
 
 // @beta (undocumented)
-type HierarchyProviderProps = Parameters<typeof createIModelHierarchyProvider>[0];
+type IModelAccess = IModelHierarchyProviderProps["imodelAccess"];
 
 // @beta (undocumented)
-type IModelAccess = HierarchyProviderProps["imodelAccess"];
+type IModelHierarchyProviderProps = Parameters<typeof createIModelHierarchyProvider>[0];
 
 // @beta
 export function isPresentationHierarchyNode(node: PresentationTreeNode): node is PresentationHierarchyNode;
@@ -224,6 +217,23 @@ export function UnifiedSelectionProvider({ storage, children }: PropsWithChildre
 }>): JSX_2.Element;
 
 // @beta
+export function useIModelTree(props: UseIModelTreeProps): UseTreeResult;
+
+// @beta
+type UseIModelTreeProps = Omit<UseTreeProps, "getHierarchyProvider" | "getFilteredPaths"> & Pick<IModelHierarchyProviderProps, "localizedStrings"> & {
+    imodelAccess: IModelAccess;
+    getHierarchyDefinition: (props: {
+        imodelAccess: IModelAccess;
+    }) => HierarchyDefinition;
+    getFilteredPaths?: (props: {
+        imodelAccess: IModelAccess;
+    }) => Promise<HierarchyFilteringPath[] | undefined>;
+};
+
+// @beta
+export function useIModelUnifiedSelectionTree(props: UseIModelTreeProps & UseUnifiedTreeSelectionProps): UseTreeResult;
+
+// @beta
 export function useSelectionHandler(props: UseSelectionHandlerProps): UseSelectionHandlerResult;
 
 // @beta
@@ -241,12 +251,9 @@ interface UseSelectionHandlerResult {
 export function useTree(props: UseTreeProps): UseTreeResult;
 
 // @beta (undocumented)
-interface UseTreeProps extends Pick<HierarchyProviderProps, "localizedStrings"> {
-    getFilteredPaths?: (props: GetFilteredPathsProps) => Promise<HierarchyFilteringPaths | undefined>;
-    getHierarchyDefinition: (props: {
-        imodelAccess: IModelAccess;
-    }) => HierarchyDefinition;
-    imodelAccess: IModelAccess;
+interface UseTreeProps {
+    getFilteredPaths?: () => Promise<HierarchyFilteringPath[] | undefined>;
+    getHierarchyProvider: () => HierarchyProvider;
     onHierarchyLimitExceeded?: (props: {
         parentId?: string;
         filter?: GenericInstanceFilter;
@@ -272,11 +279,10 @@ interface UseTreeResult {
 }
 
 // @beta
-export function useUnifiedSelectionTree({ imodelKey, sourceName, ...props }: UseTreeProps & UseUnifiedTreeSelectionProps): UseTreeResult;
+export function useUnifiedSelectionTree({ sourceName, ...props }: UseTreeProps & UseUnifiedTreeSelectionProps): UseTreeResult;
 
 // @beta (undocumented)
 interface UseUnifiedTreeSelectionProps {
-    imodelKey: string;
     sourceName: string;
 }
 

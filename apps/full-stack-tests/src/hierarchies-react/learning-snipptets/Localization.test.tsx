@@ -21,7 +21,7 @@ import { ComponentPropsWithoutRef, useCallback } from "react";
 import { Tree } from "@itwin/itwinui-react";
 // __PUBLISH_EXTRACT_END__
 // __PUBLISH_EXTRACT_START__ Presentation.HierarchiesReact.Localization.Tree.Imports
-import { useUnifiedSelectionTree } from "@itwin/presentation-hierarchies-react";
+import { useIModelUnifiedSelectionTree } from "@itwin/presentation-hierarchies-react";
 // __PUBLISH_EXTRACT_END__
 // __PUBLISH_EXTRACT_START__ Presentation.HierarchiesReact.Localization.TreeRenderer.Imports
 import {
@@ -38,10 +38,10 @@ describe("Hierarchies React", () => {
     describe("Localization", () => {
       stubGetBoundingClientRect();
       // __PUBLISH_EXTRACT_START__ Presentation.HierarchiesReact.Localization.Strings
-      type IModelAccess = Parameters<typeof useUnifiedSelectionTree>[0]["imodelAccess"];
+      type IModelAccess = Parameters<typeof useIModelUnifiedSelectionTree>[0]["imodelAccess"];
 
       const localizedStrings = {
-        // strings for the `useUnifiedSelectionTree` hook
+        // strings for the `useIModelUnifiedSelectionTree` hook
         unspecified: "Unspecified",
         other: "Other",
 
@@ -59,7 +59,7 @@ describe("Hierarchies React", () => {
 
       let imodel: IModelConnection;
       let access: IModelAccess;
-      let getHierarchyDefinition: Parameters<typeof useUnifiedSelectionTree>[0]["getHierarchyDefinition"];
+      let getHierarchyDefinition: Parameters<typeof useIModelUnifiedSelectionTree>[0]["getHierarchyDefinition"];
 
       beforeEach(async function () {
         await initialize();
@@ -114,10 +114,9 @@ describe("Hierarchies React", () => {
 
       it("Tree localization", async function () {
         // __PUBLISH_EXTRACT_START__ Presentation.HierarchiesReact.Localization.Tree
-        function MyTreeComponent({ imodelAccess, imodelKey }: { imodelAccess: IModelAccess; imodelKey: string }) {
-          const { rootNodes, expandNode } = useUnifiedSelectionTree({
+        function MyTreeComponent({ imodelAccess }: { imodelAccess: IModelAccess }) {
+          const { rootNodes, expandNode } = useIModelUnifiedSelectionTree({
             sourceName: "MyTreeComponent",
-            imodelKey,
             imodelAccess,
             localizedStrings,
             getHierarchyDefinition,
@@ -129,7 +128,7 @@ describe("Hierarchies React", () => {
         }
         // __PUBLISH_EXTRACT_END__
 
-        const { getAllByRole } = render(<MyTreeComponent imodelAccess={access} imodelKey={imodel.key} />);
+        const { getAllByRole } = render(<MyTreeComponent imodelAccess={access} />);
         await waitFor(() => expect(getAllByRole("button", { name: "Apply hierarchy filter" })).to.not.be.empty);
       });
 
@@ -153,10 +152,9 @@ describe("Hierarchies React", () => {
         }
         // __PUBLISH_EXTRACT_END__
 
-        function MyTreeComponent({ imodelAccess, imodelKey }: { imodelAccess: IModelAccess; imodelKey: string }) {
-          const { rootNodes, ...state } = useUnifiedSelectionTree({
+        function MyTreeComponent({ imodelAccess }: { imodelAccess: IModelAccess }) {
+          const { rootNodes, ...state } = useIModelUnifiedSelectionTree({
             sourceName: "MyTreeComponent",
-            imodelKey,
             imodelAccess,
             localizedStrings,
             getHierarchyDefinition,
@@ -167,7 +165,7 @@ describe("Hierarchies React", () => {
           return <MyTreeRenderer {...state} rootNodes={rootNodes} localizedStrings={localizedStrings} />;
         }
 
-        const { getAllByRole } = render(<MyTreeComponent imodelAccess={access} imodelKey={imodel.key} />);
+        const { getAllByRole } = render(<MyTreeComponent imodelAccess={access} />);
         await waitFor(() => expect(getAllByRole("button", { name: "Apply hierarchy filter" })).to.not.be.empty);
       });
     });

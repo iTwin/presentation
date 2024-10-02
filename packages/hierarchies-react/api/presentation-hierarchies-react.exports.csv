@@ -13,6 +13,8 @@ beta;type;RenderedTreeNode
 beta;const;TreeNodeRenderer
 beta;function;TreeRenderer
 beta;function;UnifiedSelectionProvider
+beta;function;useIModelTree
+beta;function;useIModelUnifiedSelectionTree
 beta;function;useSelectionHandler
 beta;function;useTree
 beta;function;useUnifiedSelectionTree
