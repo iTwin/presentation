@@ -4,9 +4,9 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { filter, first, from, map, mergeMap, of } from "rxjs";
-import { isIDisposable } from "@itwin/core-bentley";
+import { BeEvent, isIDisposable } from "@itwin/core-bentley";
 import { GenericInstanceFilter } from "@itwin/core-common";
-import { InstanceKey, IPrimitiveValueFormatter } from "@itwin/presentation-shared";
+import { Event, InstanceKey, IPrimitiveValueFormatter } from "@itwin/presentation-shared";
 import { HierarchyFilteringPath } from "./HierarchyFiltering";
 import { HierarchyNode, ParentHierarchyNode } from "./HierarchyNode";
 import { eachValueFrom } from "./internal/EachValueFrom";
@@ -41,6 +41,14 @@ export interface GetHierarchyNodesProps {
  * @beta
  */
 export interface HierarchyProvider {
+  /**
+   * An event that provider raises when the internal data source changes, resulting in a
+   * hierarchy change.
+   *
+   * Consumers are expected to subscribe to this event and reload the hierarchy when it's raised.
+   */
+  readonly hierarchyChanged: Event<() => void>;
+
   /** Gets nodes for the specified parent node. */
   getNodes(props: GetHierarchyNodesProps): AsyncIterableIterator<HierarchyNode>;
 
@@ -81,7 +89,13 @@ interface MergeHierarchyProvidersProps {
  * @beta
  */
 export function mergeProviders({ providers }: MergeHierarchyProvidersProps): HierarchyProvider & { dispose: () => void } {
+  const hierarchyChanged = new BeEvent<() => void>();
+  providers.forEach((p) => {
+    p.hierarchyChanged.addListener(() => hierarchyChanged.raiseEvent());
+  });
+
   return {
+    hierarchyChanged,
     getNodes: (props) =>
       eachValueFrom(
         from(providers).pipe(
@@ -110,9 +124,11 @@ export function mergeProviders({ providers }: MergeHierarchyProvidersProps): Hie
     getNodeInstanceKeys: (props) => eachValueFrom(from(providers).pipe(mergeMap((p) => p.getNodeInstanceKeys(props)))),
     setFormatter: (formatter) => providers.forEach((p) => p.setFormatter(formatter)),
     setHierarchyFilter: (props) => providers.forEach((p) => p.setHierarchyFilter(props)),
-    dispose: () =>
+    dispose: () => {
+      hierarchyChanged.clear();
       providers.forEach((p) => {
         isIDisposable(p) && p.dispose();
-      }),
+      });
+    },
   };
 }

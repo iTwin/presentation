@@ -6,11 +6,55 @@ The `@itwin/presentation-hierarchies-react` package provides APIs for building a
 
 ## Headless UI
 
-### `useTree`
+### Tree state hooks
 
-This is a React hook that creates state for a tree component.
+The package provides different flavors of the same hook for creating and managing state of a tree component:
 
-It takes 2 required properties:
+| Feature \ Hook                                                                                       | `useTree` | `useIModelTree` | `useUnifiedSelectionTree` | `useIModelUnifiedSelectionTree` |
+| ---------------------------------------------------------------------------------------------------- | --------- | --------------- | ------------------------- | ------------------------------- |
+| Supported data source                                                                                | any       | iModel          | any                       | iModel                          |
+| Integration with [Unified Selection](https://www.itwinjs.org/presentation/unified-selection/) system | ❌        | ❌              | ✔️                        | ✔️                              |
+
+All these hooks return the same state object, which contains properties and functions to manage the tree component:
+
+- `isLoading` is a boolean indicating whether the root tree nodes are being loaded. Set to `true` on initial load and on reload (e.g. when iModel data changes).
+
+- `rootNodes` is an array of root tree nodes and is what the component should render. There are several types of nodes:
+
+  - A `PresentationHierarchyNode` is the primary type of node, created based on the hierarchy definition. The `isPresentationHierarchyNode` type guard utility may be used to check if a node is of this type.
+  - A `PresentationInfoNode` is a non-expandable, non-selectable informational type of node, generally created when for some reason we don't have any real nodes to show. There may be different reasons like filtered-out nodes, too large result set, a network error, etc. The `type` attribute of the node indicates that.
+
+- `expandNode` function to expand or collapse a node.
+
+- `isNodeSelected` and `selectNodes` function to inspect and change tree selection.
+
+- `getHierarchyLevelDetails` function to access details of a specific hierarchy level. The returned object provides access to:
+
+  - hierarchy level size limit,
+  - hierarchy level instance filter,
+  - instance keys of the nodes in the hierarchy level.
+
+- `reloadTree` function to reload part of the tree, optionally keeping its state.
+
+- `setFormatter` function to set active node label formatter.
+
+#### `useTree` props
+
+The hook takes a single required prop:
+
+- `getHierarchyProvider` is a factory function that creates a hierarchy provider, returning the hierarchy the tree component will render. The `@itwin/presentation-hierarchies` package describes the concept of hierarchy provider [in more detail](https://github.com/iTwin/presentation/blob/master/packages/hierarchies/README.md#hierarchy-providers).
+
+#### `useUnifiedSelectionTree` props
+
+In addition to [props required by `useTree`](#usetree-props), the hook additionally requires:
+
+- `sourceName` - a string that distinguishes selection changes being made by different components. The value should be unique for each component.
+
+The hook also relies on unified selection storage being provided to it through a React context. See [Providing unified selection context](#providing-unified-selection-context) example below for more details.
+
+#### `useIModelTree` props
+
+The hook takes 2 required properties:
 
 - `imodelAccess` provides access to iModel's data and metadata, required to build the hierarchy. Generally, `@itwin/presentation-core-interop` and `@itwin/presentation-shared` packages are used to create this object:
 
@@ -56,66 +100,25 @@ It takes 2 required properties:
 
   <!-- END EXTRACTION -->
 
-- `getHierarchyDefinition` is a factory function that creates a hierarchy definition, describing the hierarchy the tree component will render. The `@itwin/presentation-hierarchies` package describes the concept of hierarchy definitions [in more detail](https://github.com/iTwin/presentation/blob/master/packages/hierarchies/README.md#hierarchy-definition).
+- `getHierarchyDefinition` is a factory function that creates a hierarchy definition, describing the hierarchy the tree component will render. The `@itwin/presentation-hierarchies` package describes the concept of hierarchy definitions [in more detail](https://github.com/iTwin/presentation/blob/master/packages/hierarchies/learning/imodel/HierarchyDefinition.md).
 
-The resulting state object contains the following properties:
+#### `useIModelUnifiedSelectionTree` props
 
-- `isLoading` is a boolean indicating whether the root tree nodes are being loaded. Set to `true` on initial load and on reload (e.g. when iModel data changes).
+In addition to [props required by `useIModelTree`](#useimodeltree-props), the hook additionally requires:
 
-- `rootNodes` is an array of root tree nodes and is what the component should render. There are several types of nodes:
+- `sourceName` - a string that distinguishes selection changes being made by different components. The value should be unique for each component.
 
-  - A `PresentationHierarchyNode` is the primary type of node, created based on the hierarchy definition. The `isPresentationHierarchyNode` type guard utility may be used to check if a node is of this type.
-  - A `PresentationInfoNode` is a non-expandable, non-selectable informational type of node, generally created when for some reason we don't have any real nodes to show. There may be different reasons like filtered-out nodes, too large result set, a network error, etc. The `type` attribute of the node indicates that.
+The hook also relies on unified selection storage being provided to it through a React context. See [Providing unified selection context](#providing-unified-selection-context) example below for more details.
 
-- `expandNode` function to expand or collapse a node.
+#### Providing unified selection context
 
-- `isNodeSelected` and `selectNodes` function to inspect and change tree selection.
-
-- `getHierarchyLevelDetails` function to access details of a specific hierarchy level. The returned object provides access to:
-
-  - hierarchy level size limit,
-  - hierarchy level instance filter,
-  - instance keys of the nodes in the hierarchy level.
-
-- `reloadTree` function to reload the tree, optionally keeping its state, after an iModel data change.
-
-- `setFormatter` function to set active node label formatter.
-
-### `useSelectionHandler`
-
-This is a React hook that helps implement different selection modes in a tree, whose state is managed through the `useTree` or `useUnifiedSelectionTree` hooks.
-
-It takes 3 required properties:
-
-- `rootNodes` and `selectNodes` are the corresponding properties from the tree state object, created using `useTree` or `useUnifiedSelectionTree` hook.
-
-- `selectionMode` is a string that defines the selection mode. It can be one of the following values:
-  - `none` - no selection is allowed,
-  - `single` - only one node can be selected at a time,
-  - `extended` - multiple nodes can be selected using shift and ctrl keys,
-  - `multiple` - multiple nodes can be selected without using shift or ctrl keys.
-
-The returned object contains 2 functions, that should be called by the node renderer: `onNodeClick` and `onNodeKeyDown`.
-
-Our [tree renderer implementation](#treerenderer) calls this hook and passes the callbacks to the [node renderer](#treenoderenderer), so there's no need to use it unless implementing a custom tree renderer.
-
-### `useUnifiedSelectionTree` & `UnifiedSelectionProvider`
-
-The package delivers a variation of [`useTree`](#usetree), that automatically hooks tree selection into the [Unified Selection](https://www.itwinjs.org/presentation/unified-selection/) system. It takes the same properties as [`useTree`](#usetree), plus a couple of additional ones:
-
-- `imodelKey` is a string that uniquely identifies the iModel the tree is associated with. It's used to distinguish selection changes between different iModels. Generally, the value is obtained using `IModelConnection.key` getter.
-
-- `sourceName` is a string that distinguishes selection changes being made by different components. It's used to avoid conflicts between different components that use the same iModel and the same selection storage. The value should be unique for each component.
-
-The returned result is identical to the one from [`useTree`](#usetree).
-
-The hook also relies on unified selection storage being provided to it through a React context. For that, the package delivers the `UnifiedSelectionProvider` component, that should wrap the tree component, using the `useUnifiedSelectionTree` hook:
+The flavor of tree state hooks, that support unified selection integration, relies on unified selection storage being provided to it through a React context. For that, the package delivers the `UnifiedSelectionProvider` component, that should wrap the tree component, using the `useUnifiedSelectionTree` hook:
 
 <!-- [[include: [Presentation.HierarchiesReact.SelectionStorage.Imports, Presentation.HierarchiesReact.SelectionStorage], tsx]] -->
 <!-- BEGIN EXTRACTION -->
 
 ```tsx
-import { TreeRenderer, UnifiedSelectionProvider, useUnifiedSelectionTree } from "@itwin/presentation-hierarchies-react";
+import { TreeRenderer, UnifiedSelectionProvider, useIModelUnifiedSelectionTree } from "@itwin/presentation-hierarchies-react";
 import { createStorage } from "@itwin/unified-selection";
 import { useEffect, useState } from "react";
 
@@ -135,7 +138,7 @@ function MyTreeComponent({ imodel }: { imodel: IModelConnection }) {
 
   return (
     <UnifiedSelectionProvider storage={selectionStorage}>
-      <MyTreeComponentInternal imodelKey={imodel.key} imodelAccess={imodelAccess} />
+      <MyTreeComponentInternal imodelAccess={imodelAccess} />
     </UnifiedSelectionProvider>
   );
 }
@@ -143,18 +146,16 @@ function MyTreeComponent({ imodel }: { imodel: IModelConnection }) {
 
 <!-- END EXTRACTION -->
 
-After providing the unified selection storage through the context, the `useUnifiedSelectionTree` hook can be used inside the component as follows:
+After providing the unified selection storage through the context, the `useUnifiedSelectionTree` and `useIModelUnifiedSelectionTree` hooks can be used inside the component as follows:
 
 <!-- [[include: Presentation.HierarchiesReact.UseUnifiedSelectionTree, tsx]] -->
 <!-- BEGIN EXTRACTION -->
 
 ```tsx
-function MyTreeComponentInternal({ imodelAccess, imodelKey }: { imodelAccess: IModelAccess; imodelKey: string }) {
-  const { rootNodes, ...state } = useUnifiedSelectionTree({
+function MyTreeComponentInternal({ imodelAccess }: { imodelAccess: IModelAccess }) {
+  const { rootNodes, ...state } = useIModelUnifiedSelectionTree({
     // the source name is used to distinguish selection changes being made by different components
     sourceName: "MyTreeComponent",
-    // the iModel key is required for unified selection system to distinguish selection changes between different iModels
-    imodelKey,
     // iModel access is used to build the hierarchy
     imodelAccess,
     // the hierarchy definition describes the hierarchy using ECSQL queries
@@ -169,13 +170,31 @@ function MyTreeComponentInternal({ imodelAccess, imodelKey }: { imodelAccess: IM
 
 <!-- END EXTRACTION -->
 
+### `useSelectionHandler` hook
+
+This is a React hook that helps implement different selection modes in a tree, whose state is managed through one of the [tree state hooks](#tree-state-hooks).
+
+It takes 3 required properties:
+
+- `rootNodes` and `selectNodes` are the corresponding properties from the tree state object, created using one of the [tree state hooks](#tree-state-hooks).
+
+- `selectionMode` is a string that defines the selection mode. It can be one of the following values:
+  - `none` - no selection is allowed,
+  - `single` - only one node can be selected at a time,
+  - `extended` - multiple nodes can be selected using shift and ctrl keys,
+  - `multiple` - multiple nodes can be selected without using shift or ctrl keys.
+
+The returned object contains 2 functions, that should be called by the node renderer: `onNodeClick` and `onNodeKeyDown`.
+
+Our [tree renderer implementation](#treerenderer) calls this hook and passes the callbacks to the [node renderer](#treenoderenderer), so there's no need to use it unless implementing a custom tree renderer.
+
 ## iTwinUI components
 
 While the package provides a headless UI, it also delivers a set of [iTwinUI](https://itwinui.bentley.com/)-based components for rendering the tree, which should cover majority of use cases. Consumers using the below components are required to provide a compatible `@itwin/itwinui-react` package, which is an optional peer dependency to this package.
 
 ### `TreeRenderer`
 
-The component is based on [iTwinUI Tree component](https://itwinui.bentley.com/docs/tree) and uses our [`TreeNodeRenderer`](#treenoderenderer) to render the nodes. In addition, it makes use of the [`useSelectionHandler` hook](#useselectionhandler) to add selection modes' support.
+The component is based on [iTwinUI Tree component](https://itwinui.bentley.com/docs/tree) and uses our [`TreeNodeRenderer`](#treenoderenderer) to render the nodes. In addition, it makes use of the [`useSelectionHandler` hook](#useselectionhandler-hook) to add selection modes' support.
 
 The iTwinUI Tree component requires a `getNode` function that maps nodes to `NodeData<TNode>` objects. Our `TreeRenderer` uses `createRenderedTreeNodeData` function for this purpose, and it's available for consumers as well, in case a custom iTwinUI Tree component implementation is being written.
 
@@ -184,7 +203,7 @@ The iTwinUI Tree component requires a `getNode` function that maps nodes to `Nod
 The component is based on `TreeNode` component from iTwinUI library and supports the following features:
 
 - Rendering informational type of nodes (e.g. "No filter matches", "Too many nodes in a hierarchy level", etc.).
-- Reporting click and key down events for use with [`useSelectionHandler` hook](#useselectionhandler).
+- Reporting click and key down events for use with [`useSelectionHandler` hook](#useselectionhandler-hook).
 - Icons, selection, expand / collapse.
 - Action buttons to clear / set hierarchy level instance filter.
 
@@ -200,7 +219,7 @@ import { ECSchemaRpcLocater } from "@itwin/ecschema-rpcinterface-common";
 import { createECSchemaProvider, createECSqlQueryExecutor } from "@itwin/presentation-core-interop";
 import { createLimitingECSqlQueryExecutor, createNodesQueryClauseFactory, HierarchyDefinition } from "@itwin/presentation-hierarchies";
 
-import { TreeRenderer, UnifiedSelectionProvider, useUnifiedSelectionTree } from "@itwin/presentation-hierarchies-react";
+import { TreeRenderer, UnifiedSelectionProvider, useIModelUnifiedSelectionTree } from "@itwin/presentation-hierarchies-react";
 import { createStorage } from "@itwin/unified-selection";
 import { useEffect, useState } from "react";
 
@@ -251,12 +270,12 @@ function MyTreeComponent({ imodel }: { imodel: IModelConnection }) {
 
   return (
     <UnifiedSelectionProvider storage={selectionStorage}>
-      <MyTreeComponentInternal imodelKey={imodel.key} imodelAccess={imodelAccess} />
+      <MyTreeComponentInternal imodelAccess={imodelAccess} />
     </UnifiedSelectionProvider>
   );
 }
 
-type IModelAccess = Parameters<typeof useUnifiedSelectionTree>[0]["imodelAccess"];
+type IModelAccess = Parameters<typeof useIModelUnifiedSelectionTree>[0]["imodelAccess"];
 
 // The hierarchy definition describes the hierarchy using ECSQL queries; here it just returns all `BisCore.PhysicalModel` instances
 function getHierarchyDefinition({ imodelAccess }: { imodelAccess: IModelAccess }): HierarchyDefinition {
@@ -288,12 +307,10 @@ function getHierarchyDefinition({ imodelAccess }: { imodelAccess: IModelAccess }
 }
 
 /** Internal component that creates and renders tree state. */
-function MyTreeComponentInternal({ imodelAccess, imodelKey }: { imodelAccess: IModelAccess; imodelKey: string }) {
-  const { rootNodes, setFormatter, isLoading, ...state } = useUnifiedSelectionTree({
+function MyTreeComponentInternal({ imodelAccess }: { imodelAccess: IModelAccess }) {
+  const { rootNodes, setFormatter, isLoading, ...state } = useIModelUnifiedSelectionTree({
     // the source name is used to distinguish selection changes being made by different components
     sourceName: "MyTreeComponent",
-    // the iModel key is required for unified selection system to distinguish selection changes between different iModels
-    imodelKey,
     // iModel access is used to build the hierarchy
     imodelAccess,
     // supply the hierarchy definition
@@ -310,7 +327,7 @@ function MyTreeComponentInternal({ imodelAccess, imodelKey }: { imodelAccess: IM
 
 ## Localization
 
-Localization can be enabled for `TreeRenderer` component and `useTree` and `useUnifiedSelectionTree` hooks by providing an object with localized strings that will be used instead of the default English ones.
+Localization can be enabled for `TreeRenderer` component and [tree state hooks](#tree-state-hooks) by providing an object with localized strings that will be used instead of the default English ones.
 
 Example:
 
@@ -318,12 +335,12 @@ Example:
 <!-- BEGIN EXTRACTION -->
 
 ```tsx
-import { useUnifiedSelectionTree } from "@itwin/presentation-hierarchies-react";
+import { useIModelUnifiedSelectionTree } from "@itwin/presentation-hierarchies-react";
 
-type IModelAccess = Parameters<typeof useUnifiedSelectionTree>[0]["imodelAccess"];
+type IModelAccess = Parameters<typeof useIModelUnifiedSelectionTree>[0]["imodelAccess"];
 
 const localizedStrings = {
-  // strings for the `useUnifiedSelectionTree` hook
+  // strings for the `useIModelUnifiedSelectionTree` hook
   unspecified: "Unspecified",
   other: "Other",
 
@@ -338,10 +355,9 @@ const localizedStrings = {
   increaseHierarchyLimitWithFiltering: "Or, <link>increase the hierarchy level size limit to {{limit}}.</link>",
 };
 
-function MyTreeComponent({ imodelAccess, imodelKey }: { imodelAccess: IModelAccess; imodelKey: string }) {
-  const { rootNodes, expandNode } = useUnifiedSelectionTree({
+function MyTreeComponent({ imodelAccess }: { imodelAccess: IModelAccess }) {
+  const { rootNodes, expandNode } = useIModelUnifiedSelectionTree({
     sourceName: "MyTreeComponent",
-    imodelKey,
     imodelAccess,
     localizedStrings,
     getHierarchyDefinition,

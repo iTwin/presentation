@@ -12,7 +12,7 @@ import {
   insertSubject,
 } from "presentation-test-utilities";
 import { Subject } from "@itwin/core-backend";
-import { Id64String } from "@itwin/core-bentley";
+import { BeEvent, Id64String } from "@itwin/core-bentley";
 import { IModel } from "@itwin/core-common";
 import { IModelConnection } from "@itwin/core-frontend";
 import {
@@ -1323,6 +1323,7 @@ describe("Hierarchies", () => {
           },
         });
         const provider4 = new (class implements HierarchyProvider {
+          public hierarchyChanged = new BeEvent();
           private _filter: HierarchyFilteringPath[] | undefined;
           public getNodes: HierarchyProvider["getNodes"] = ({ parentNode }) => {
             if (!parentNode) {
@@ -1514,6 +1515,7 @@ describe("Hierarchies", () => {
         const provider2 = createSubjectsHierarchyProvider(createIModelAccess(imodel2));
         // create generic node provider that creates a node for every bis.Subject node of any iModel
         const provider3 = new (class implements HierarchyProvider {
+          public hierarchyChanged = new BeEvent();
           public getNodes: HierarchyProvider["getNodes"] = ({ parentNode }) => {
             if (
               parentNode &&

@@ -5,6 +5,7 @@
 
 import { ComponentPropsWithoutRef, ReactElement, useEffect, useMemo, useState } from "react";
 import { debounceTime, Subject } from "rxjs";
+import { BeEvent } from "@itwin/core-bentley";
 import { IModelConnection } from "@itwin/core-frontend";
 import { SvgFolder, SvgImodelHollow, SvgItem, SvgLayers, SvgModel } from "@itwin/itwinui-icons-react";
 import { Button, Flex, ProgressRadial, SearchBox, Text, ToggleSwitch } from "@itwin/itwinui-react";
@@ -18,13 +19,13 @@ import {
 import { createECSchemaProvider, createECSqlQueryExecutor, registerTxnListeners } from "@itwin/presentation-core-interop";
 import { Presentation } from "@itwin/presentation-frontend";
 import { createLimitingECSqlQueryExecutor, GenericInstanceFilter } from "@itwin/presentation-hierarchies";
-import { HierarchyLevelDetails, PresentationHierarchyNode, TreeRenderer, useUnifiedSelectionTree } from "@itwin/presentation-hierarchies-react";
+import { HierarchyLevelDetails, PresentationHierarchyNode, TreeRenderer, useIModelUnifiedSelectionTree } from "@itwin/presentation-hierarchies-react";
 import { ModelsTreeDefinition } from "@itwin/presentation-models-tree";
 import { createCachingECClassHierarchyInspector, IPrimitiveValueFormatter } from "@itwin/presentation-shared";
 import { MyAppFrontend } from "../../api/MyAppFrontend";
 
-type UseTreeProps = Parameters<typeof useUnifiedSelectionTree>[0];
-type IModelAccess = UseTreeProps["imodelAccess"];
+type UseIModelTreeProps = Parameters<typeof useIModelUnifiedSelectionTree>[0];
+type IModelAccess = UseIModelTreeProps["imodelAccess"];
 
 export function StatelessTreeV2({ imodel, ...props }: { imodel: IModelConnection; height: number; width: number }) {
   const [imodelAccess, setIModelAccess] = useState<IModelAccess>();
@@ -49,7 +50,7 @@ export function StatelessTreeV2({ imodel, ...props }: { imodel: IModelConnection
 function Tree({ imodel, imodelAccess, height, width }: { imodel: IModelConnection; imodelAccess: IModelAccess; height: number; width: number }) {
   const [filter, setFilter] = useState("");
 
-  const getFilteredPaths = useMemo<UseTreeProps["getFilteredPaths"]>(() => {
+  const getFilteredPaths = useMemo<UseIModelTreeProps["getFilteredPaths"]>(() => {
     return async ({ imodelAccess: filterIModelAccess }) => {
       if (!filter) {
         return undefined;
@@ -61,10 +62,18 @@ function Tree({ imodel, imodelAccess, height, width }: { imodel: IModelConnectio
     };
   }, [filter]);
 
-  const { rootNodes, isLoading, reloadTree, setFormatter, ...treeProps } = useUnifiedSelectionTree({
-    imodelKey: imodel.key,
+  const [imodelChanged] = useState(new BeEvent<() => void>());
+  useEffect(() => {
+    if (imodel.isBriefcaseConnection()) {
+      return registerTxnListeners(imodel.txns, () => imodelChanged.raiseEvent());
+    }
+    return undefined;
+  }, [imodel, imodelChanged]);
+
+  const { rootNodes, isLoading, reloadTree, setFormatter, ...treeProps } = useIModelUnifiedSelectionTree({
     sourceName: "StatelessTreeV2",
     imodelAccess,
+    imodelChanged,
     getFilteredPaths,
     getHierarchyDefinition,
     onPerformanceMeasured: (action, duration) => {
@@ -72,16 +81,6 @@ function Tree({ imodel, imodelAccess, height, width }: { imodel: IModelConnectio
       console.log(`Stateless-tree-${action}, Duration: ${duration}ms`);
     },
   });
-
-  useEffect(() => {
-    if (!imodel.isBriefcaseConnection()) {
-      return;
-    }
-
-    return registerTxnListeners(imodel.txns, () => {
-      reloadTree({ dataSourceChanged: true });
-    });
-  }, [imodel, reloadTree]);
 
   const [shouldUseCustomFormatter, setShouldUseCustomFormatter] = useState<boolean>(false);
   const toggleFormatter = () => {
@@ -248,7 +247,7 @@ function debounced<TArgs>(callback: (args: TArgs) => void, delay: number) {
   };
 }
 
-function getHierarchyDefinition(props: Parameters<UseTreeProps["getHierarchyDefinition"]>[0]) {
+function getHierarchyDefinition(props: Parameters<UseIModelTreeProps["getHierarchyDefinition"]>[0]) {
   return new ModelsTreeDefinition(props);
 }
 

@@ -169,20 +169,40 @@ describe("createIModelHierarchyProvider", () => {
     });
   });
 
-  it("unsubscribes from `imodelChanged` event when disposed", () => {
-    const evt = new BeEvent();
-    const provider = createIModelHierarchyProvider({
-      imodelAccess,
-      imodelChanged: evt,
-      hierarchyDefinition: {
-        async defineHierarchyLevel() {
-          return [];
+  describe("Reacting to iModel data changes", () => {
+    it("unsubscribes from `imodelChanged` event when disposed", () => {
+      const evt = new BeEvent();
+      const provider = createIModelHierarchyProvider({
+        imodelAccess,
+        imodelChanged: evt,
+        hierarchyDefinition: {
+          async defineHierarchyLevel() {
+            return [];
+          },
         },
-      },
+      });
+      expect(evt.numberOfListeners).to.eq(1);
+      provider.dispose();
+      expect(evt.numberOfListeners).to.eq(0);
     });
-    expect(evt.numberOfListeners).to.eq(1);
-    provider.dispose();
-    expect(evt.numberOfListeners).to.eq(0);
+
+    it("raises `hierarchyChanged` event on `imodelChanged` event", () => {
+      const evt = new BeEvent();
+      const provider = createIModelHierarchyProvider({
+        imodelAccess,
+        imodelChanged: evt,
+        hierarchyDefinition: {
+          async defineHierarchyLevel() {
+            return [];
+          },
+        },
+      });
+      const spy = sinon.spy();
+      provider.hierarchyChanged.addListener(spy);
+
+      evt.raiseEvent();
+      expect(spy).to.be.calledOnce;
+    });
   });
 
   describe("Custom parsing", async () => {
