@@ -61,6 +61,19 @@ describe("useTree", () => {
     });
   });
 
+  it("unsubscribes from hierarchy changes on unmount", async () => {
+    hierarchyProvider.getNodes.callsFake(() => createAsyncIterator([]));
+    const { result, unmount } = renderHook(useTree, { initialProps });
+    await waitFor(() => {
+      expect(result.current.isLoading).to.be.false;
+    });
+    expect(hierarchyProvider.hierarchyChanged.numberOfListeners).to.not.eq(0);
+    unmount();
+    await waitFor(() => {
+      expect(hierarchyProvider.hierarchyChanged.numberOfListeners).to.eq(0);
+    });
+  });
+
   it("loads root nodes", async () => {
     hierarchyProvider.getNodes.callsFake((props) => {
       return createAsyncIterator(props.parentNode === undefined ? [createTestHierarchyNode({ id: "root-1" }), createTestHierarchyNode({ id: "root-2" })] : []);

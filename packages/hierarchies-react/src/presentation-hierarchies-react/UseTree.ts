@@ -184,11 +184,12 @@ function useTreeInternal({
   useEffect(() => {
     const provider = getHierarchyProvider();
     provider.setFormatter(currentFormatter.current);
-    provider.hierarchyChanged.addListener(() => actions.reloadTree());
+    const removeHierarchyChangedListener = provider.hierarchyChanged.addListener(() => actions.reloadTree());
     actions.setHierarchyProvider(provider);
     actions.reloadTree({ state: "keep" });
     setHierarchyProvider(provider);
     return () => {
+      removeHierarchyChangedListener();
       actions.dispose();
       if (isIDisposable(provider)) {
         provider.dispose();
