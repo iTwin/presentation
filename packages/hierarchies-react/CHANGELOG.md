@@ -1,5 +1,78 @@
 # @itwin/presentation-hierarchies-react
 
+## 0.8.0
+
+### Minor Changes
+
+- [#708](https://github.com/iTwin/presentation/pull/708): **BREAKING:** A new attribute - `imodelKey` - has been added to `imodelAccess` prop of "use tree" hooks. For the most common case when a hierarchy is built from an `IModelConnection`, it's recommended to use `key` attribute of the connection as this value.
+
+  Example:
+
+  ```ts
+  function createHierarchyProvider(imodel: IModelConnection) {
+    return createIModelHierarchyProvider({
+      imodelAccess: {
+        imodelKey: imodel.key, // set the newly introduced `imodelKey` attribute
+        // ... other iModel access props
+      },
+      // ... other provider props
+    });
+  }
+  ```
+
+  See "Basic example" section in README learning page for the full example.
+
+- [#717](https://github.com/iTwin/presentation/pull/717): **BREAKING:** Add support for non-iModel-driven trees.
+
+  - `useTree` and `useUnifiedSelectionTree` hooks have been changed to support non-iModel-driven trees. The hooks take a `getHierarchyProvider` prop, which returns a `HierarchyProvider`. The provider can return data from any data source.
+  - New `useIModelTree` and `useIModelUnifiedSelectionTree` hooks have been added to cover the most common case, where a tree is created from a iModel's data. The API of these hooks is exactly the same as of the old `useTree` and `useUnifiedSelectionTree` hooks.
+
+  Reacting to this breaking change is as simple as renaming the calls to `useTree` and `useUnifiedSelectionTree` to `useIModelTree` and `useIModelUnifiedSelectionTree`, respectively.
+
+- [#717](https://github.com/iTwin/presentation/pull/717): **BREAKING:** The `reloadTree` function attribute returned by "use tree" hooks has been changed to **not** accept a `dataSourceChanged` parameter.
+
+  The parameter was used to notify the tree component that the underlying data source has changed and the tree should be reloaded. For example, something like this was necessary:
+
+  ```tsx
+  const { reloadTree } = useIModelUnifiedSelectionTree({
+    // ...
+  });
+
+  useEffect(() => {
+    if (!imodel.isBriefcaseConnection()) {
+      return;
+    }
+
+    return registerTxnListeners(imodel.txns, () => {
+      reloadTree({ dataSourceChanged: true });
+    });
+  }, [imodel, reloadTree]);
+  ```
+
+  Now, the `HierarchyProvider` notifies the hook about hierarchy changes.
+
+  Note that iModel-based hierarchy providers require an `imodelChanged` event object to be provided and raised when the underlying iModel changes:
+
+  ```tsx
+  const [imodelChanged] = useState(new BeEvent<() => void>());
+  useEffect(() => {
+    if (imodel.isBriefcaseConnection()) {
+      return registerTxnListeners(imodel.txns, () => imodelChanged.raiseEvent());
+    }
+    return undefined;
+  }, [imodel, imodelChanged]);
+
+  const { ... } = useIModelUnifiedSelectionTree({
+    imodelChanged,
+    ...,
+  });
+  ```
+
+### Patch Changes
+
+- Updated dependencies:
+  - @itwin/presentation-hierarchies@0.7.0
+
 ## 0.7.2
 
 ### Patch Changes
