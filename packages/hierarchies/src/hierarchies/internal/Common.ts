@@ -40,7 +40,7 @@ export function createOperatorLoggingNamespace(
     | typeof LOGGING_NAMESPACE
     | typeof LOGGING_NAMESPACE_PERFORMANCE
     | typeof LOGGING_NAMESPACE_INTERNAL
-    | typeof LOGGING_NAMESPACE_PERFORMANCE_INTERNAL = LOGGING_NAMESPACE,
+    | typeof LOGGING_NAMESPACE_PERFORMANCE_INTERNAL,
 ) {
   return `${baseCategory}.Operators.${operatorName}`;
 }
