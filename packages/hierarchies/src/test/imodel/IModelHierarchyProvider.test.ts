@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { expect } from "chai";
-import { collect, createAsyncIterator } from "presentation-test-utilities";
+import { collect, createAsyncIterator, ResolvablePromise, waitFor } from "presentation-test-utilities";
 import sinon from "sinon";
 import { BeEvent, omit } from "@itwin/core-bentley";
 import { GenericInstanceFilter } from "@itwin/core-common";
@@ -778,6 +778,186 @@ describe("createIModelHierarchyProvider", () => {
           children: false,
         },
       ]);
+    });
+
+    it("applies child nodes filter when hierarchy filter is set in-between requests", async () => {
+      imodelAccess.stubEntityClass({
+        schemaName: "a",
+        className: "b",
+        is: async (fullClassName) => fullClassName === "a.b",
+      });
+      imodelAccess.stubEntityClass({
+        schemaName: "c",
+        className: "d",
+        is: async (fullClassName) => fullClassName === "c.d",
+      });
+
+      const rootNodePromise = new ResolvablePromise<RowDef & { [ECSQL_COLUMN_NAME_FilteredChildrenPaths]: string }>();
+      const childNodePromise = new ResolvablePromise<RowDef & { [ECSQL_COLUMN_NAME_FilteredChildrenPaths]: string }>();
+      imodelAccess.createQueryReader.callsFake(async function* ({ ecsql, ctes }) {
+        if (ecsql.includes("ROOT QUERY")) {
+          yield await rootNodePromise;
+          return;
+        }
+        if (ecsql.includes("CHILDREN QUERY")) {
+          // ctes is empty for non-filtered case and has one item for filtered case
+          if (!ctes?.length) {
+            yield await childNodePromise;
+          }
+          return;
+        }
+      });
+      const provider = createIModelHierarchyProvider({
+        imodelAccess,
+        hierarchyDefinition: {
+          async defineHierarchyLevel({ parentNode }) {
+            if (!parentNode) {
+              return [
+                {
+                  fullClassName: "a.b",
+                  query: { ecsql: "ROOT QUERY" },
+                },
+              ];
+            }
+            return [
+              {
+                fullClassName: "a.b",
+                query: { ecsql: "CHILDREN QUERY" },
+              },
+            ];
+          },
+        },
+      });
+
+      // request non-filtered root nodes
+      const unfilteredRootNodeIter = provider.getNodes({ parentNode: undefined }).next();
+      await waitFor(() => expect(imodelAccess.createQueryReader).to.be.calledOnce);
+
+      // set the filter and request filtered nodes AFTER the root node query has been executed
+      provider.setHierarchyFilter({
+        paths: [
+          [
+            { className: "a.b", id: "0x123" },
+            { className: "c.d", id: "0x456" },
+          ],
+        ],
+      });
+      const filteredRootNodeIter = provider.getNodes({ parentNode: undefined }).next();
+
+      // all requests are made in correct order, now resolve the responses
+      await rootNodePromise.resolve({
+        [NodeSelectClauseColumnNames.FullClassName]: "a.b",
+        [NodeSelectClauseColumnNames.ECInstanceId]: "0x123",
+        [NodeSelectClauseColumnNames.DisplayLabel]: "ab",
+        [ECSQL_COLUMN_NAME_FilteredChildrenPaths]: `[[{"className":"c.d","id":"0x456"}]]`,
+      });
+      await childNodePromise.resolve({
+        [NodeSelectClauseColumnNames.FullClassName]: "c.d",
+        [NodeSelectClauseColumnNames.ECInstanceId]: "0x456",
+        [NodeSelectClauseColumnNames.DisplayLabel]: "cd",
+        [ECSQL_COLUMN_NAME_FilteredChildrenPaths]: `[]`,
+      });
+
+      // setting instance filter while a nodes request is in progress cancels the request - ensure we get undefined
+      const unfilteredRootNode = (await unfilteredRootNodeIter).value;
+      expect(unfilteredRootNode).to.be.undefined;
+
+      // ensure the filtered node resolves with `children: false` and has filtering props
+      const filteredRootNode = (await filteredRootNodeIter).value;
+      expect(filteredRootNode).to.containSubset({
+        key: {
+          type: "instances",
+          instanceKeys: [{ className: "a.b", id: "0x123" }],
+        },
+        children: false,
+        filtering: {
+          filteredChildrenIdentifierPaths: [[{ className: "c.d", id: "0x456" }]],
+        },
+      });
+
+      // ensure requesting children for the filtered node returns empty list
+      const filteredChildren = await collect(provider.getNodes({ parentNode: filteredRootNode }));
+      expect(filteredChildren).to.be.empty;
+    });
+
+    it("applies grouped nodes filter when hierarchy filter is set in-between requests", async () => {
+      imodelAccess.stubEntityClass({
+        schemaName: "a",
+        className: "b",
+        is: async (fullClassName) => fullClassName === "a.b",
+      });
+
+      const rootNodePromise = new ResolvablePromise<RowDef>();
+      imodelAccess.createQueryReader.callsFake(async function* ({ ecsql, ctes }) {
+        if (ecsql.includes("ROOT QUERY")) {
+          yield {
+            [NodeSelectClauseColumnNames.FullClassName]: "a.b",
+            [NodeSelectClauseColumnNames.ECInstanceId]: "0x456",
+            [NodeSelectClauseColumnNames.DisplayLabel]: "ab",
+            [NodeSelectClauseColumnNames.Grouping]: JSON.stringify({
+              byLabel: true,
+            } satisfies Parameters<NodesQueryClauseFactory["createSelectClause"]>[0]["grouping"]),
+          };
+
+          // ctes is empty for non-filtered case and has one item for filtered case
+          if (!ctes?.length) {
+            yield await rootNodePromise;
+          }
+          return;
+        }
+      });
+      const provider = createIModelHierarchyProvider({
+        imodelAccess,
+        hierarchyDefinition: {
+          async defineHierarchyLevel({ parentNode }) {
+            if (!parentNode) {
+              return [
+                {
+                  fullClassName: "a.b",
+                  query: { ecsql: "ROOT QUERY" },
+                },
+              ];
+            }
+            return [];
+          },
+        },
+      });
+
+      // request non-filtered root nodes
+      const unfilteredRootNodeIter = provider.getNodes({ parentNode: undefined }).next();
+      await waitFor(() => expect(imodelAccess.createQueryReader).to.be.calledOnce);
+
+      // set the filter and request filtered nodes AFTER the root node query has been executed
+      provider.setHierarchyFilter({
+        paths: [[{ className: "a.b", id: "0x456" }]],
+      });
+      const filteredRootNodeIter = provider.getNodes({ parentNode: undefined }).next();
+
+      // all requests are made in correct order, now resolve the responses
+      await rootNodePromise.resolve({
+        [NodeSelectClauseColumnNames.FullClassName]: "a.b",
+        [NodeSelectClauseColumnNames.ECInstanceId]: "0x123",
+        [NodeSelectClauseColumnNames.DisplayLabel]: "ab",
+        [NodeSelectClauseColumnNames.Grouping]: JSON.stringify({
+          byLabel: true,
+        } satisfies Parameters<NodesQueryClauseFactory["createSelectClause"]>[0]["grouping"]),
+      });
+
+      // setting instance filter while a nodes request is in progress cancels the request - ensure we get undefined
+      const unfilteredRootNode = (await unfilteredRootNodeIter).value;
+      expect(unfilteredRootNode).to.be.undefined;
+
+      // ensure we do get the filtered grouping node
+      const filteredRootNode = (await filteredRootNodeIter).value;
+      expect(filteredRootNode).to.containSubset({
+        key: {
+          type: "label-grouping",
+          label: "ab",
+        },
+      } satisfies Partial<HierarchyNode>);
+
+      // ensure requesting children for the filtered node returns one grouped node
+      expect(await collect(provider.getNodes({ parentNode: filteredRootNode }))).to.have.lengthOf(1);
     });
   });
 
