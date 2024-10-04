@@ -1,5 +1,13 @@
 # @itwin/presentation-shared
 
+## 1.0.0
+
+### Major Changes
+
+- [#727](https://github.com/iTwin/presentation/pull/727): 1.0 release.
+
+  The APIs are now considered stable and ready for production use.
+
 ## 0.5.0
 
 ### Minor Changes
