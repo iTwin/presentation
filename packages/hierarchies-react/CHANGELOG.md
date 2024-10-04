@@ -1,5 +1,11 @@
 # @itwin/presentation-hierarchies-react
 
+## 0.8.2
+
+### Patch Changes
+
+- [#724](https://github.com/iTwin/presentation/pull/724): Fixed `@itwin/core-bentley` dependency version to be `^4.9.0`.
+
 ## 0.8.1
 
 ### Patch Changes
