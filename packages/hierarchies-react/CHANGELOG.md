@@ -1,5 +1,20 @@
 # @itwin/presentation-hierarchies-react
 
+## 1.0.0
+
+### Major Changes
+
+- [#727](https://github.com/iTwin/presentation/pull/727): 1.0 release.
+
+  The APIs are now considered stable and ready for production use.
+
+### Patch Changes
+
+- Updated dependencies:
+  - @itwin/presentation-hierarchies@1.0.0
+  - @itwin/presentation-shared@1.0.0
+  - @itwin/unified-selection@1.0.0
+
 ## 0.8.2
 
 ### Patch Changes
