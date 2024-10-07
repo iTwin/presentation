@@ -115,7 +115,7 @@ describe("FilteringHierarchyDefinition", () => {
       expect(node.autoExpand).to.be.undefined;
     });
 
-    it("doesn't set auto-expand when filtered children paths list is empty", async () => {
+    it("doesn't set auto-expand when nodeIdentifierPaths list is empty", async () => {
       const filteringFactory = createFilteringHierarchyDefinition({ nodeIdentifierPaths: [] });
       const row = {
         [NodeSelectClauseColumnNames.FullClassName]: "",

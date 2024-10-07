@@ -159,7 +159,7 @@ interface ECSqlValueSelector {
 
 // @beta
 export function extractFilteringProps(rootLevelFilteringProps: HierarchyFilteringPath[], parentNode: Pick<NonGroupingHierarchyNode, "filtering"> | undefined): {
-    filterPathsIdentifierPosition?: Array<[number, number]>;
+    filterPathsIdentifierPositions?: Array<[number, number]>;
     nodeIdentifierPaths: HierarchyFilteringPath[];
     hasFilterTargetAncestor: boolean;
 } | undefined;
