@@ -5,6 +5,7 @@
 
 import { InstanceKey } from "@itwin/presentation-shared";
 import { GenericNodeKey, IModelInstanceKey } from "./HierarchyNodeKey";
+import { compareStrings, compareStringsOrUndefined } from "@itwin/core-bentley";
 
 /**
  * An identifier that can be used to identify either an ECInstance or a generic node.
@@ -40,6 +41,31 @@ export namespace HierarchyNodeIdentifier {
       return lhs.source === rhs.source && lhs.id === rhs.id;
     }
     return false;
+  }
+
+  /**
+   * Compares two given identifiers. Returns:
+   * - `0` if they are equal,
+   * - `negative value` if lhs identifiers is less than rhs identifiers,
+   * - `positive value` if lhs identifiers is more than rhs identifiers.
+   */
+  export function compare(lhs: HierarchyNodeIdentifier, rhs: HierarchyNodeIdentifier): number {
+    if (isInstanceNodeIdentifier(lhs)) {
+      if (!isInstanceNodeIdentifier(rhs)) {
+        return -1;
+      }
+
+      const imodelKeyCompareResult = compareStringsOrUndefined(lhs.imodelKey, rhs.imodelKey);
+
+      return imodelKeyCompareResult !== 0 ? imodelKeyCompareResult : InstanceKey.compare(lhs, rhs);
+    }
+    if (isInstanceNodeIdentifier(rhs)) {
+      return 1;
+    }
+
+    const sourceCompareResult = compareStringsOrUndefined(lhs.source, rhs.source);
+
+    return sourceCompareResult !== 0 ? sourceCompareResult : compareStrings(lhs.id, rhs.id);
   }
 }
 

@@ -13,6 +13,8 @@ import { RowsLimitExceededError } from "../../hierarchies/HierarchyErrors";
 import { GroupingHierarchyNode, HierarchyNode, ParentHierarchyNode } from "../../hierarchies/HierarchyNode";
 import { GroupingNodeKey } from "../../hierarchies/HierarchyNodeKey";
 import {
+  ECSQL_COLUMN_NAME_FilterClassName,
+  ECSQL_COLUMN_NAME_FilterECInstanceId,
   ECSQL_COLUMN_NAME_FilterTargetOptions,
   ECSQL_COLUMN_NAME_HasFilterTargetAncestor,
   ECSQL_COLUMN_NAME_IsFilterTarget,
@@ -661,6 +663,7 @@ describe("createIModelHierarchyProvider", () => {
         className: "b",
         is: async (fullClassName) => fullClassName === "a.b",
       });
+
       imodelAccess.createQueryReader.callsFake(() =>
         createAsyncIterator<RowDef>([
           {
@@ -701,8 +704,8 @@ describe("createIModelHierarchyProvider", () => {
             trimWhitespace(query.ctes[0]) ===
               trimWhitespace(
                 `
-                FilteringInfo(ECInstanceId, IsFilterTarget, FilterTargetOptions) AS (
-                  VALUES (0x123, 0, CAST(NULL AS TEXT))
+                FilteringInfo(ECInstanceId, IsFilterTarget, FilterTargetOptions, FilterClassName) AS (
+                  VALUES (0x123, 0, CAST(NULL AS TEXT), 'a.b')
                 )
                 `,
               ) &&
@@ -713,7 +716,9 @@ describe("createIModelHierarchyProvider", () => {
                     [q].*,
                     [f].[IsFilterTarget] AS [${ECSQL_COLUMN_NAME_IsFilterTarget}],
                     [f].[FilterTargetOptions] AS [${ECSQL_COLUMN_NAME_FilterTargetOptions}],
-                    0 AS [${ECSQL_COLUMN_NAME_HasFilterTargetAncestor}]
+                    0 AS [${ECSQL_COLUMN_NAME_HasFilterTargetAncestor}],
+                    [f].[ECInstanceId] AS [${ECSQL_COLUMN_NAME_FilterECInstanceId}],
+                    [f].[FilterClassName] AS [${ECSQL_COLUMN_NAME_FilterClassName}]
                   FROM (QUERY) [q]
                   JOIN FilteringInfo [f] ON [f].[ECInstanceId] = [q].[ECInstanceId]
                 `,
@@ -730,9 +735,6 @@ describe("createIModelHierarchyProvider", () => {
           parentKeys: [],
           label: "test label",
           children: false,
-          filtering: {
-            filteredChildrenIdentifierPaths: [[{ className: "c.d", id: "0x456" }]],
-          },
         },
       ]);
 

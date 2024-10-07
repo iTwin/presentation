@@ -159,7 +159,8 @@ interface ECSqlValueSelector {
 
 // @beta
 export function extractFilteringProps(rootLevelFilteringProps: HierarchyFilteringPath[], parentNode: Pick<NonGroupingHierarchyNode, "filtering"> | undefined): {
-    filteredNodePaths: HierarchyFilteringPath[];
+    filterPathsIdentifierPosition?: Array<[number, number]>;
+    nodeIdentifierPaths: HierarchyFilteringPath[];
     hasFilterTargetAncestor: boolean;
 } | undefined;
 
@@ -313,7 +314,7 @@ interface HierarchyNodeBaseClassGroupingParams extends HierarchyNodeGroupingPara
 // @beta (undocumented)
 type HierarchyNodeFilteringProps = {
     hasFilterTargetAncestor?: boolean;
-    filteredChildrenIdentifierPaths?: HierarchyFilteringPath[];
+    filterPathsIdentifierPositions?: Array<[number, number]>;
 } & ({
     isFilterTarget?: false;
 } | {
@@ -326,9 +327,9 @@ namespace HierarchyNodeFilteringProps {
     // (undocumented)
     function create(props: {
         hasFilterTargetAncestor?: boolean;
-        filteredChildrenIdentifierPaths?: HierarchyFilteringPath[];
         isFilterTarget?: boolean;
         filterTargetOptions?: HierarchyFilteringPathOptions;
+        filterPathsIdentifierPositions?: Array<[number, number]>;
     }): HierarchyNodeFilteringProps | undefined;
 }
 
@@ -356,6 +357,7 @@ export type HierarchyNodeIdentifier = IModelInstanceKey | GenericNodeKey;
 
 // @beta (undocumented)
 export namespace HierarchyNodeIdentifier {
+    export function compare(lhs: HierarchyNodeIdentifier, rhs: HierarchyNodeIdentifier): number;
     export function equal(lhs: HierarchyNodeIdentifier, rhs: HierarchyNodeIdentifier): boolean;
     export function isGenericNodeIdentifier(id: HierarchyNodeIdentifier): id is GenericNodeKey;
     export function isInstanceNodeIdentifier(id: HierarchyNodeIdentifier): id is IModelInstanceKey;
@@ -539,7 +541,7 @@ export function mergeProviders({ providers }: MergeHierarchyProvidersProps): Hie
 // @beta
 export type NodeParser = (row: {
     [columnName: string]: any;
-}) => SourceInstanceHierarchyNode;
+}) => SourceInstanceHierarchyNode | Promise<SourceInstanceHierarchyNode>;
 
 // @beta
 export type NodePostProcessor = (node: ProcessedHierarchyNode) => Promise<ProcessedHierarchyNode>;

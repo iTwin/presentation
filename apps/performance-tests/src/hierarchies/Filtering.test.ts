@@ -12,11 +12,11 @@ import { ProviderOptions, StatelessHierarchyProvider } from "./StatelessHierarch
 import { createBisInstanceLabelSelectClauseFactory } from "@itwin/presentation-shared";
 
 describe("filtering", () => {
-  const totalNumberOfFilteringPaths = 10000;
+  const totalNumberOfFilteringPaths = 50000;
   const startingIndex = 20;
   const maximumNumberOfPathsForSingleParent = 500;
   const parentIdsArr = new Array<number>();
-  for (let i = maximumNumberOfPathsForSingleParent, j = startingIndex + 1; i <= totalNumberOfFilteringPaths; i += maximumNumberOfPathsForSingleParent, ++j) {
+  for (let i = 0, j = startingIndex + 1; i < totalNumberOfFilteringPaths; i += maximumNumberOfPathsForSingleParent, ++j) {
     parentIdsArr.push(j);
   }
   const filtering = {
@@ -24,7 +24,8 @@ describe("filtering", () => {
   };
 
   run({
-    testName: `filters with 10000 paths`,
+    only: true,
+    testName: `filters with ${totalNumberOfFilteringPaths} paths`,
     setup: (): ProviderOptions => {
       const iModel = SnapshotDb.openFile(Datasets.getIModelPath("50k flat elements"));
       const fullClassName = PhysicalElement.classFullName.replace(":", ".");
@@ -39,9 +40,9 @@ describe("filtering", () => {
             //       /  .
             //  id:20   .
             //       \  .
-            //        id:40 -> all other BisCore.PhysicalElement
+            //        id:120 -> all other BisCore.PhysicalElement
             //
-            // We need to split the hierarchy in 20 parts, because we are using 10000 paths and there is a limit of 500 filtering paths for a single parent.
+            // We need to split the hierarchy in 100 parts, because we are using 50000 paths and there is a limit of 500 filtering paths for a single parent.
 
             if (!props.parentNode) {
               const query = createNodesQueryClauseFactory({

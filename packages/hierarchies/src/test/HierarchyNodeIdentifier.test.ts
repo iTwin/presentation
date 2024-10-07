@@ -4,15 +4,15 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { expect } from "chai";
-import { InstanceKey } from "@itwin/presentation-shared";
 import { HierarchyNodeIdentifier } from "../hierarchies/HierarchyNodeIdentifier";
-import { GenericNodeKey } from "../hierarchies/HierarchyNodeKey";
+import { GenericNodeKey, IModelInstanceKey } from "../hierarchies/HierarchyNodeKey";
 import { createTestGenericNodeKey } from "./Utils";
 
 describe("HierarchyNodeIdentifier", () => {
-  const instanceNodeIdentifier: InstanceKey = {
+  const instanceNodeIdentifier: IModelInstanceKey = {
     className: "a",
     id: "0x1",
+    imodelKey: "key",
   };
   const genericNodeIdentifier: GenericNodeKey = {
     type: "generic",
@@ -36,20 +36,52 @@ describe("HierarchyNodeIdentifier", () => {
 
   describe("equal", () => {
     it("compares generic node identifiers", () => {
-      expect(HierarchyNodeIdentifier.equal(genericNodeIdentifier, createTestGenericNodeKey(createTestGenericNodeKey({ id: "y", source: "s" })))).to.be.false;
-      expect(HierarchyNodeIdentifier.equal(genericNodeIdentifier, createTestGenericNodeKey(createTestGenericNodeKey({ id: "x", source: "s2" })))).to.be.false;
-      expect(HierarchyNodeIdentifier.equal(genericNodeIdentifier, createTestGenericNodeKey(createTestGenericNodeKey({ id: "x" })))).to.be.false;
-      expect(HierarchyNodeIdentifier.equal(genericNodeIdentifier, createTestGenericNodeKey(createTestGenericNodeKey({ id: "x", source: "s" })))).to.be.true;
+      expect(HierarchyNodeIdentifier.equal(genericNodeIdentifier, createTestGenericNodeKey({ id: "y", source: "s" }))).to.be.false;
+      expect(HierarchyNodeIdentifier.equal(genericNodeIdentifier, createTestGenericNodeKey({ id: "x", source: "s2" }))).to.be.false;
+      expect(HierarchyNodeIdentifier.equal(genericNodeIdentifier, createTestGenericNodeKey({ id: "x" }))).to.be.false;
+      expect(HierarchyNodeIdentifier.equal(genericNodeIdentifier, createTestGenericNodeKey({ id: "x", source: "s" }))).to.be.true;
     });
 
     it("compares instance node identifiers", () => {
-      expect(HierarchyNodeIdentifier.equal(instanceNodeIdentifier, { className: "b", id: "0x1" })).to.be.false;
-      expect(HierarchyNodeIdentifier.equal(instanceNodeIdentifier, { className: "a", id: "0x2" })).to.be.false;
-      expect(HierarchyNodeIdentifier.equal(instanceNodeIdentifier, { className: "a", id: "0x1" })).to.be.true;
+      expect(HierarchyNodeIdentifier.equal(instanceNodeIdentifier, { className: "b", id: "0x1", imodelKey: "key" })).to.be.false;
+      expect(HierarchyNodeIdentifier.equal(instanceNodeIdentifier, { className: "a", id: "0x2", imodelKey: "key" })).to.be.false;
+      expect(HierarchyNodeIdentifier.equal(instanceNodeIdentifier, { className: "a", id: "0x1" })).to.be.false;
+      expect(HierarchyNodeIdentifier.equal(instanceNodeIdentifier, { className: "a", id: "0x1", imodelKey: "key" })).to.be.true;
     });
 
     it("compares instance and generic node identifiers", () => {
       expect(HierarchyNodeIdentifier.equal(instanceNodeIdentifier, genericNodeIdentifier)).to.be.false;
+    });
+  });
+
+  describe("compare", () => {
+    const hierarchyNodeIdentifierVariants: HierarchyNodeIdentifier[] = [
+      createTestGenericNodeKey({ id: "1" }),
+      createTestGenericNodeKey({ id: "2" }),
+      createTestGenericNodeKey({ id: "1", source: "source1" }),
+      createTestGenericNodeKey({ id: "1", source: "source2" }),
+      { className: "1", id: "1" },
+      { className: "1", id: "1", imodelKey: "key1" },
+      { className: "1", id: "1", imodelKey: "key2" },
+      { className: "1", id: "2" },
+      { className: "2", id: "1" },
+    ];
+
+    it("returns correct results for all possible hierarchy node identifier pairs", () => {
+      hierarchyNodeIdentifierVariants.forEach((lhs, lhsIndex) => {
+        hierarchyNodeIdentifierVariants.forEach((rhs, rhsIndex) => {
+          const lhsToRhs = HierarchyNodeIdentifier.compare(lhs, rhs);
+          const rhsToLhs = HierarchyNodeIdentifier.compare(rhs, lhs);
+          if (lhsIndex === rhsIndex) {
+            expect(lhsToRhs).to.eq(0);
+            expect(rhsToLhs).to.eq(0);
+          } else {
+            expect(lhsToRhs).to.not.eq(0);
+            expect(rhsToLhs).to.not.eq(0);
+            expect(rhsToLhs).to.eq(-1 * lhsToRhs);
+          }
+        });
+      });
     });
   });
 });

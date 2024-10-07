@@ -103,17 +103,19 @@ export function extractFilteringProps(
   parentNode: Pick<NonGroupingHierarchyNode, "filtering"> | undefined,
 ):
   | {
-      filteredNodePaths: HierarchyFilteringPath[];
+      filterPathsIdentifierPositions?: Array<[number, number]>;
+      nodeIdentifierPaths: HierarchyFilteringPath[];
       hasFilterTargetAncestor: boolean;
     }
   | undefined {
   if (!parentNode) {
-    return { filteredNodePaths: rootLevelFilteringProps, hasFilterTargetAncestor: false };
+    return { hasFilterTargetAncestor: false, nodeIdentifierPaths: rootLevelFilteringProps };
   }
-  return parentNode.filtering?.filteredChildrenIdentifierPaths
+  return parentNode.filtering?.filterPathsIdentifierPositions
     ? {
-        filteredNodePaths: parentNode.filtering.filteredChildrenIdentifierPaths,
+        filterPathsIdentifierPositions: parentNode.filtering.filterPathsIdentifierPositions,
         hasFilterTargetAncestor: !!parentNode.filtering.hasFilterTargetAncestor || !!parentNode.filtering.isFilterTarget,
+        nodeIdentifierPaths: rootLevelFilteringProps,
       }
     : undefined;
 }
