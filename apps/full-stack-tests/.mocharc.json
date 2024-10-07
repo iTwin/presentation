@@ -1,11 +1,9 @@
 {
-  "require": ["ignore-styles"],
+  "require": ["ignore-styles", "./lib/setup.js"],
   "checkLeaks": true,
   "globals": ["requestAnimationFrame", "IS_REACT_ACT_ENVIRONMENT"],
   "timeout": 60000,
   "slow": 500,
-  "file": ["./lib/setup.js"],
-  "reporter": ["node_modules/@itwin/build-tools/mocha-reporter"],
-  "reporterOptions": ["mochaFile=lib/test/junit_results.xml"],
+  "parallel": true,
   "spec": ["./lib/**/*.test.js"]
 }
