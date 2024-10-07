@@ -4,11 +4,12 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { useEffect, useState } from "react";
-import { HierarchyNode } from "@itwin/presentation-hierarchies";
+import { HierarchyNode, InstancesNodeKey } from "@itwin/presentation-hierarchies";
+import { InstanceKey } from "@itwin/presentation-shared";
 import { Selectable, Selectables, SelectionStorage } from "@itwin/unified-selection";
 import { useUnifiedSelectionContext } from "../UnifiedSelectionContext";
 import { SelectionChangeType } from "../UseSelectionHandler";
-import { isTreeModelHierarchyNode, TreeModelNode, TreeModelRootNode } from "./TreeModel";
+import { isTreeModelHierarchyNode, TreeModelHierarchyNode, TreeModelNode, TreeModelRootNode } from "./TreeModel";
 
 /** @internal */
 export interface TreeSelectionOptions {
@@ -18,8 +19,6 @@ export interface TreeSelectionOptions {
 
 /** @beta */
 export interface UseUnifiedTreeSelectionProps {
-  /** Key of the iModel. */
-  imodelKey: string;
   /**
    * Identifier to distinguish this source of changes to the unified selection from another ones in the application.
    */
@@ -28,7 +27,6 @@ export interface UseUnifiedTreeSelectionProps {
 
 /** @internal */
 export function useUnifiedTreeSelection({
-  imodelKey,
   sourceName,
   getNode,
 }: UseUnifiedTreeSelectionProps & { getNode: (nodeId: string) => TreeModelNode | TreeModelRootNode | undefined }): TreeSelectionOptions {
@@ -47,21 +45,19 @@ export function useUnifiedTreeSelection({
       return;
     }
 
-    setOptions(createOptions(imodelKey, sourceName, selectionStorage, getNode));
+    setOptions(createOptions(sourceName, selectionStorage, getNode));
     return selectionStorage.selectionChangeEvent.addListener((args) => {
-      if (imodelKey !== args.imodelKey || args.level > 0) {
+      if (args.level > 0) {
         return;
       }
-
-      setOptions(createOptions(imodelKey, sourceName, selectionStorage, getNode));
+      setOptions(createOptions(sourceName, selectionStorage, getNode));
     });
-  }, [selectionStorage, getNode, imodelKey, sourceName]);
+  }, [selectionStorage, getNode, sourceName]);
 
   return options;
 }
 
 function createOptions(
-  key: string,
   source: string,
   storage: SelectionStorage,
   getNode: (nodeId: string) => TreeModelNode | TreeModelRootNode | undefined,
@@ -72,63 +68,98 @@ function createOptions(
       if (!node || !isTreeModelHierarchyNode(node)) {
         return false;
       }
-
-      const selectables = storage.getSelection({ imodelKey: key, level: 0 });
-
-      const hierarchyNode = node.nodeData;
-      if (HierarchyNode.isInstancesNode(hierarchyNode)) {
-        return Selectables.hasAny(selectables, hierarchyNode.key.instanceKeys);
-      }
-
-      return Selectables.has(selectables, { identifier: node.id });
+      return Object.entries(groupNodeSelectablesByIModelKey(node)).some(([imodelKey, nodeSelectables]) => {
+        const storageSelectables = storage.getSelection({ imodelKey, level: 0 });
+        return Selectables.hasAny(storageSelectables, nodeSelectables);
+      });
     },
 
     selectNodes: (nodeIds: Array<string>, changeType: SelectionChangeType) => {
-      let selectables: Selectable[] = [];
-
+      const imodelSelectables: { [imodelKey: string]: Selectable[] } = {};
       for (const nodeId of nodeIds) {
         const node = getNode(nodeId);
         if (!node || !isTreeModelHierarchyNode(node)) {
           return;
         }
-        selectables = [...selectables, ...createSelectables(node.id, node.nodeData)];
+        Object.entries(groupNodeSelectablesByIModelKey(node)).forEach(([imodelKey, nodeSelectables]) => {
+          let selectablesList = imodelSelectables[imodelKey];
+          if (!selectablesList) {
+            selectablesList = [];
+            imodelSelectables[imodelKey] = selectablesList;
+          }
+          nodeSelectables.forEach((selectable) => selectablesList.push(selectable));
+        });
       }
-
-      const actionProps = { imodelKey: key, source, selectables, level: 0 };
-
-      switch (changeType) {
-        case "add":
-          storage.addToSelection(actionProps);
-          return;
-        case "remove":
-          storage.removeFromSelection(actionProps);
-          return;
-        case "replace":
-          storage.replaceSelection(actionProps);
-          return;
-      }
+      Object.entries(imodelSelectables).forEach(([imodelKey, selectables]) => {
+        const actionProps = { imodelKey, source, selectables, level: 0 };
+        switch (changeType) {
+          case "add":
+            storage.addToSelection(actionProps);
+            return;
+          case "remove":
+            storage.removeFromSelection(actionProps);
+            return;
+          case "replace":
+            storage.replaceSelection(actionProps);
+            return;
+        }
+      });
     },
   };
 }
 
-function createSelectables(nodeId: string, node: HierarchyNode): Selectable[] {
-  if (HierarchyNode.isInstancesNode(node)) {
-    return node.key.instanceKeys;
+function groupNodeSelectablesByIModelKey(modelNode: TreeModelHierarchyNode): { [imodelKey: string]: Selectable[] } {
+  const hierarchyNode = modelNode.nodeData;
+  if (HierarchyNode.isGeneric(hierarchyNode)) {
+    return {
+      // note: generic nodes aren't associated with an imodel
+      [""]: [
+        {
+          identifier: modelNode.id,
+          data: hierarchyNode,
+          async *loadInstanceKeys() {},
+        },
+      ],
+    };
   }
+  if (HierarchyNode.isInstancesNode(hierarchyNode)) {
+    return groupIModelInstanceKeys(hierarchyNode.key.instanceKeys);
+  }
+  if (HierarchyNode.isGroupingNode(hierarchyNode)) {
+    return Object.entries(groupIModelInstanceKeys(hierarchyNode.groupedInstanceKeys)).reduce(
+      (imodelSelectables, [imodelKey, instanceKeys]) => ({
+        ...imodelSelectables,
+        [imodelKey]: [
+          {
+            identifier: modelNode.id,
+            data: hierarchyNode,
+            async *loadInstanceKeys() {
+              for (const key of instanceKeys) {
+                yield key;
+              }
+            },
+          },
+        ],
+      }),
+      {} as { [imodelKey: string]: Selectable[] },
+    );
+  }
+  // istanbul ignore next
+  return {};
+}
 
-  return [
-    {
-      identifier: nodeId,
-      async *loadInstanceKeys() {
-        if (!HierarchyNode.isGroupingNode(node)) {
-          return;
-        }
-
-        for (const key of node.groupedInstanceKeys) {
-          yield key;
-        }
-      },
-      data: node,
+function groupIModelInstanceKeys(instanceKeys: InstancesNodeKey["instanceKeys"]) {
+  return instanceKeys.reduce(
+    (imodelSelectables, key) => {
+      const imodelKey = key.imodelKey ?? "";
+      let selectablesList = imodelSelectables[imodelKey];
+      if (!selectablesList) {
+        selectablesList = [];
+        imodelSelectables[imodelKey] = selectablesList;
+      }
+      selectablesList.push(key);
+      return imodelSelectables;
     },
-  ];
+    {} as { [imodelKey: string]: InstanceKey[] },
+  );
 }

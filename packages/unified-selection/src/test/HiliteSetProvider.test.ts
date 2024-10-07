@@ -206,9 +206,9 @@ describe("HiliteSetProvider", () => {
 
     describe("Hilites custom selectable items", () => {
       it("creates result for custom selectable", async () => {
-        const modelKey = createSelectableInstanceKey(1, "TestSchema:TestModel");
-        const categoryKey = createSelectableInstanceKey(1, "TestSchema:TestCategory");
-        const elementKey = createSelectableInstanceKey(1, "TestSchema:TestElement");
+        const modelKey = createSelectableInstanceKey(1, "TestSchema.TestModel");
+        const categoryKey = createSelectableInstanceKey(1, "TestSchema.TestCategory");
+        const elementKey = createSelectableInstanceKey(1, "TestSchema.TestElement");
 
         const customSelectable = createCustomSelectable(1);
         customSelectable.loadInstanceKeys = async function* () {
@@ -258,14 +258,29 @@ describe("HiliteSetProvider", () => {
         expect(result.models).to.be.empty;
       });
 
-      it("caches class type", async () => {
-        const elementKey1 = createSelectableInstanceKey(1);
-        const elementKey2 = createSelectableInstanceKey(2);
+      it("caches class type with `:` separator", async () => {
+        const className = "TestSchema:TestClass";
+        const elementKeys = [createSelectableInstanceKey(1, className), createSelectableInstanceKey(2, className)];
         const resultKey = createECInstanceId(2);
-        imodelAccess.classDerivesFrom.withArgs(elementKey1.className, "BisCore.Subject").returns(true);
+        imodelAccess.classDerivesFrom.withArgs("TestSchema.TestClass", "BisCore.Subject").returns(true);
         mockQuery([resultKey], [], []);
 
-        const selection = Selectables.create([elementKey1, elementKey2]);
+        const selection = Selectables.create(elementKeys);
+        const result = await loadHiliteSet(selection);
+        expect(imodelAccess.classDerivesFrom).to.be.calledOnce;
+        expect(result.models).to.deep.eq([resultKey]);
+        expect(result.subCategories).to.be.empty;
+        expect(result.elements).to.be.empty;
+      });
+
+      it("caches class type with `.` separator", async () => {
+        const className = "TestSchema.TestClass";
+        const elementKeys = [createSelectableInstanceKey(1, className), createSelectableInstanceKey(2, className)];
+        const resultKey = createECInstanceId(2);
+        imodelAccess.classDerivesFrom.withArgs("TestSchema.TestClass", "BisCore.Subject").returns(true);
+        mockQuery([resultKey], [], []);
+
+        const selection = Selectables.create(elementKeys);
         const result = await loadHiliteSet(selection);
         expect(imodelAccess.classDerivesFrom).to.be.calledOnce;
         expect(result.models).to.deep.eq([resultKey]);
@@ -294,7 +309,7 @@ describe("HiliteSetProvider", () => {
         const elementKey1 = createSelectableInstanceKey(1, "TestSchema:TestClass");
         const customElement1 = createCustomSelectable(1, [{ className: "TestSchema:TestClass", id: "0x1" }]);
 
-        imodelAccess.classDerivesFrom.withArgs("TestSchema:TestClass", "BisCore.Element").returns(true);
+        imodelAccess.classDerivesFrom.withArgs("TestSchema.TestClass", "BisCore.Element").returns(true);
         mockQuery([], [], ["0x1"]);
 
         const selection = Selectables.create([elementKey1, customElement1]);
@@ -307,7 +322,7 @@ describe("HiliteSetProvider", () => {
         const elementPromises = [new ResolvablePromise<string>(), new ResolvablePromise<string>()];
         const elementKeys = [1, 2].map((i) => createSelectableInstanceKey(i, "TestSchema:TestElement"));
 
-        imodelAccess.classDerivesFrom.withArgs("TestSchema:TestElement", "BisCore.Element").returns(true);
+        imodelAccess.classDerivesFrom.withArgs("TestSchema.TestElement", "BisCore.Element").returns(true);
         mockQuery([], [], elementPromises);
 
         const selectables = Selectables.create(elementKeys);
@@ -331,14 +346,14 @@ describe("HiliteSetProvider", () => {
       });
 
       it("rethrows ECClassHierarchyInspector errors", async () => {
-        imodelAccess.classDerivesFrom.withArgs("TestSchema:TestElement", "BisCore.Element").throws(new Error("dummy error"));
+        imodelAccess.classDerivesFrom.withArgs("TestSchema.TestElement", "BisCore.Element").throws(new Error("dummy error"));
         mockQuery([], [], []);
         const selectables = Selectables.create([createSelectableInstanceKey(1, "TestSchema:TestElement")]);
         await expect(loadHiliteSet(selectables)).to.eventually.be.rejected;
       });
 
       it("rethrows errors thrown by query observables", async () => {
-        imodelAccess.classDerivesFrom.withArgs("TestSchema:TestElement", "BisCore.Element").returns(true);
+        imodelAccess.classDerivesFrom.withArgs("TestSchema.TestElement", "BisCore.Element").returns(true);
         mockQuery([], [], [Promise.reject("dummy error")]);
 
         const selectables = Selectables.create([createSelectableInstanceKey(1, "TestSchema:TestElement")]);

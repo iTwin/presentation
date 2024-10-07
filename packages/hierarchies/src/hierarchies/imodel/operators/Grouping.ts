@@ -12,6 +12,7 @@ import {
   LOGGING_NAMESPACE_PERFORMANCE_INTERNAL as BASE_LOGGING_NAMESPACE_PERFORMANCE_INTERNAL,
   createNodeIdentifierForLogging,
   createOperatorLoggingNamespace,
+  LOGGING_NAMESPACE_INTERNAL,
 } from "../../internal/Common";
 import { doLog, log } from "../../internal/LoggingUtils";
 import { releaseMainThreadOnItemsCount } from "../../internal/operators/ReleaseMainThread";
@@ -26,7 +27,7 @@ import { createPropertiesGroupingHandlers, PropertiesGroupingLocalizedStrings } 
 
 const OPERATOR_NAME = "Grouping";
 /** @internal */
-export const LOGGING_NAMESPACE = createOperatorLoggingNamespace(OPERATOR_NAME);
+export const LOGGING_NAMESPACE = createOperatorLoggingNamespace(OPERATOR_NAME, LOGGING_NAMESPACE_INTERNAL);
 const LOGGING_NAMESPACE_PERFORMANCE = createOperatorLoggingNamespace(OPERATOR_NAME, BASE_LOGGING_NAMESPACE_PERFORMANCE);
 const LOGGING_NAMESPACE_PERFORMANCE_INTERNAL = createOperatorLoggingNamespace(OPERATOR_NAME, BASE_LOGGING_NAMESPACE_PERFORMANCE_INTERNAL);
 

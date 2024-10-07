@@ -18,7 +18,7 @@ import { createECSchemaProvider, createECSqlQueryExecutor } from "@itwin/present
 import { createLimitingECSqlQueryExecutor, createNodesQueryClauseFactory, HierarchyDefinition } from "@itwin/presentation-hierarchies";
 // __PUBLISH_EXTRACT_END__
 // __PUBLISH_EXTRACT_START__ Presentation.HierarchiesReact.SelectionStorage.Imports
-import { TreeRenderer, UnifiedSelectionProvider, useUnifiedSelectionTree } from "@itwin/presentation-hierarchies-react";
+import { TreeRenderer, UnifiedSelectionProvider, useIModelUnifiedSelectionTree } from "@itwin/presentation-hierarchies-react";
 import { createStorage } from "@itwin/unified-selection";
 import { useEffect, useState } from "react";
 // __PUBLISH_EXTRACT_END__
@@ -95,13 +95,13 @@ describe("Hierarchies React", () => {
 
           return (
             <UnifiedSelectionProvider storage={selectionStorage}>
-              <MyTreeComponentInternal imodelKey={imodel.key} imodelAccess={imodelAccess} />
+              <MyTreeComponentInternal imodelAccess={imodelAccess} />
             </UnifiedSelectionProvider>
           );
         }
         // __PUBLISH_EXTRACT_END__
         // __PUBLISH_EXTRACT_START__ Presentation.HierarchiesReact.CustomTreeExample
-        type IModelAccess = Parameters<typeof useUnifiedSelectionTree>[0]["imodelAccess"];
+        type IModelAccess = Parameters<typeof useIModelUnifiedSelectionTree>[0]["imodelAccess"];
 
         // The hierarchy definition describes the hierarchy using ECSQL queries; here it just returns all `BisCore.PhysicalModel` instances
         function getHierarchyDefinition({ imodelAccess }: { imodelAccess: IModelAccess }): HierarchyDefinition {
@@ -133,12 +133,10 @@ describe("Hierarchies React", () => {
         }
 
         /** Internal component that creates and renders tree state. */
-        function MyTreeComponentInternal({ imodelAccess, imodelKey }: { imodelAccess: IModelAccess; imodelKey: string }) {
-          const { rootNodes, setFormatter, isLoading, ...state } = useUnifiedSelectionTree({
+        function MyTreeComponentInternal({ imodelAccess }: { imodelAccess: IModelAccess }) {
+          const { rootNodes, setFormatter, isLoading, ...state } = useIModelUnifiedSelectionTree({
             // the source name is used to distinguish selection changes being made by different components
             sourceName: "MyTreeComponent",
-            // the iModel key is required for unified selection system to distinguish selection changes between different iModels
-            imodelKey,
             // iModel access is used to build the hierarchy
             imodelAccess,
             // supply the hierarchy definition
@@ -158,19 +156,17 @@ describe("Hierarchies React", () => {
         expect(getByText("My Model B")).to.not.be.null;
       });
 
-      it("UseUnifiedSelectionTree", async function () {
-        type IModelAccess = Parameters<typeof useUnifiedSelectionTree>[0]["imodelAccess"];
+      it("useIModelUnifiedSelectionTree", async function () {
+        type IModelAccess = Parameters<typeof useIModelUnifiedSelectionTree>[0]["imodelAccess"];
         const getHierarchyDefinition = () => ({
           defineHierarchyLevel: async () => [],
         });
 
         // __PUBLISH_EXTRACT_START__ Presentation.HierarchiesReact.UseUnifiedSelectionTree
-        function MyTreeComponentInternal({ imodelAccess, imodelKey }: { imodelAccess: IModelAccess; imodelKey: string }) {
-          const { rootNodes, ...state } = useUnifiedSelectionTree({
+        function MyTreeComponentInternal({ imodelAccess }: { imodelAccess: IModelAccess }) {
+          const { rootNodes, ...state } = useIModelUnifiedSelectionTree({
             // the source name is used to distinguish selection changes being made by different components
             sourceName: "MyTreeComponent",
-            // the iModel key is required for unified selection system to distinguish selection changes between different iModels
-            imodelKey,
             // iModel access is used to build the hierarchy
             imodelAccess,
             // the hierarchy definition describes the hierarchy using ECSQL queries
@@ -183,7 +179,7 @@ describe("Hierarchies React", () => {
         }
         // __PUBLISH_EXTRACT_END__
 
-        const { getByText } = render(<MyTreeComponentInternal imodelAccess={createIModelAccess(iModel)} imodelKey={iModel.key} />);
+        const { getByText } = render(<MyTreeComponentInternal imodelAccess={createIModelAccess(iModel)} />);
 
         expect(getByText("No data to display")).to.not.be.null;
       });

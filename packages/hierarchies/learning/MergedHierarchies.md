@@ -14,11 +14,13 @@ The below example demonstrates how to create a hierarchy provider that merges th
 <!-- BEGIN EXTRACTION -->
 
 ```ts
+import { BeEvent } from "@itwin/core-bentley";
 import { GetHierarchyNodesProps, HierarchyNode, HierarchyProvider, mergeProviders } from "@itwin/presentation-hierarchies";
 
 // Create a very basic hierarchy provider factory
 function createBasicHierarchyProvider(nodes: (parentNode: GetHierarchyNodesProps["parentNode"]) => HierarchyNode[]): HierarchyProvider {
   return {
+    hierarchyChanged: new BeEvent(),
     async *getNodes({ parentNode }) {
       for (const node of nodes(parentNode)) {
         yield node;

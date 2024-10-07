@@ -6,6 +6,7 @@
 import { expect } from "chai";
 import { collect, createAsyncIterator } from "presentation-test-utilities";
 import sinon from "sinon";
+import { BeEvent } from "@itwin/core-bentley";
 import { InstanceKey } from "@itwin/presentation-shared";
 import { HierarchyNode, NonGroupingHierarchyNode } from "../hierarchies/HierarchyNode";
 import { HierarchyProvider, mergeProviders } from "../hierarchies/HierarchyProvider";
@@ -113,6 +114,19 @@ describe("mergeProviders", () => {
     providers.forEach((provider) => expect(provider.setHierarchyFilter).to.be.calledOnceWith(filter));
   });
 
+  it("raises `hierarchyChanged` event when one of the merged providers raises it", async () => {
+    const providers = [createTestProvider(), createTestProvider()];
+    const mergedProvider = mergeProviders({ providers });
+    const spy = sinon.spy();
+    mergedProvider.hierarchyChanged.addListener(spy);
+
+    providers[0].hierarchyChanged.raiseEvent();
+    expect(spy).to.be.calledOnce;
+
+    providers[1].hierarchyChanged.raiseEvent();
+    expect(spy).to.be.calledTwice;
+  });
+
   it("disposes all disposable providers", async () => {
     const providers = [createTestProvider({ disposable: true }), createTestProvider()];
     const mergedProvider = mergeProviders({ providers });
@@ -127,6 +141,7 @@ function createTestProvider(props?: {
   disposable?: boolean;
 }) {
   return {
+    hierarchyChanged: new BeEvent(),
     getNodes: sinon
       .stub<Parameters<HierarchyProvider["getNodes"]>>()
       .callsFake((getNodesProps) => createAsyncIterator(props?.nodes ? props.nodes(getNodesProps).map((partial) => createTestGenericNode(partial)) : [])),

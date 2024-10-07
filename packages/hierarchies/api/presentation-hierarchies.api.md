@@ -449,6 +449,7 @@ export namespace HierarchyNodesDefinition {
 export interface HierarchyProvider {
     getNodeInstanceKeys(props: Omit<GetHierarchyNodesProps, "ignoreCache">): AsyncIterableIterator<InstanceKey>;
     getNodes(props: GetHierarchyNodesProps): AsyncIterableIterator<HierarchyNode>;
+    readonly hierarchyChanged: Event_2<() => void>;
     setFormatter(formatter: IPrimitiveValueFormatter | undefined): void;
     setHierarchyFilter(props: {
         paths: HierarchyFilteringPath[];

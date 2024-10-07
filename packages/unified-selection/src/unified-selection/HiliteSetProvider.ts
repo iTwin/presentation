@@ -6,7 +6,7 @@
 import { EMPTY, filter, forkJoin, from, map, merge, mergeMap, Observable, scan, shareReplay, Subject, toArray } from "rxjs";
 import { eachValueFrom } from "rxjs-for-await";
 import { Id64String } from "@itwin/core-bentley";
-import { ECClassHierarchyInspector, ECSqlBinding, ECSqlQueryDef, ECSqlQueryExecutor, ECSqlQueryRow } from "@itwin/presentation-shared";
+import { ECClassHierarchyInspector, ECSqlBinding, ECSqlQueryDef, ECSqlQueryExecutor, ECSqlQueryRow, normalizeFullClassName } from "@itwin/presentation-shared";
 import { SelectableInstanceKey, Selectables } from "./Selectable";
 import { formIdBindings, genericExecuteQuery, releaseMainThreadOnItemsCount } from "./Utils";
 
@@ -126,32 +126,33 @@ class HiliteSetProviderImpl implements HiliteSetProvider {
   }
 
   private async getType(key: SelectableInstanceKey): Promise<InstanceIdType> {
-    const cachedType = this._classRelationCache.get(key.className.replace(".", ":"));
+    const normalizedClassName = normalizeFullClassName(key.className);
+    const cachedType = this._classRelationCache.get(normalizedClassName);
     if (cachedType) {
       return cachedType;
     }
 
-    const promise = this.getTypeImpl(key).then((res) => {
+    const promise = this.getTypeImpl(normalizedClassName).then((res) => {
       // Update the cache with the result of the promise.
-      this._classRelationCache.set(key.className, res);
+      this._classRelationCache.set(normalizedClassName, res);
       return res;
     });
 
     // Add the promise to cache to prevent `getTypeImpl` being called multiple times.
-    this._classRelationCache.set(key.className, promise);
+    this._classRelationCache.set(normalizedClassName, promise);
     return promise;
   }
 
-  private async getTypeImpl(key: SelectableInstanceKey): Promise<InstanceIdType> {
+  private async getTypeImpl(fullClassName: string): Promise<InstanceIdType> {
     return (
-      (await this.checkType(key.className, "BisCore.Subject", "subject")) ??
-      (await this.checkType(key.className, "BisCore.Model", "model")) ??
-      (await this.checkType(key.className, "BisCore.Category", "category")) ??
-      (await this.checkType(key.className, "BisCore.SubCategory", "subCategory")) ??
-      (await this.checkType(key.className, "Functional.FunctionalElement", "functionalElement")) ??
-      (await this.checkType(key.className, "BisCore.GroupInformationElement", "groupInformationElement")) ??
-      (await this.checkType(key.className, "BisCore.GeometricElement", "geometricElement")) ??
-      (await this.checkType(key.className, "BisCore.Element", "element")) ??
+      (await this.checkType(fullClassName, "BisCore.Subject", "subject")) ??
+      (await this.checkType(fullClassName, "BisCore.Model", "model")) ??
+      (await this.checkType(fullClassName, "BisCore.Category", "category")) ??
+      (await this.checkType(fullClassName, "BisCore.SubCategory", "subCategory")) ??
+      (await this.checkType(fullClassName, "Functional.FunctionalElement", "functionalElement")) ??
+      (await this.checkType(fullClassName, "BisCore.GroupInformationElement", "groupInformationElement")) ??
+      (await this.checkType(fullClassName, "BisCore.GeometricElement", "geometricElement")) ??
+      (await this.checkType(fullClassName, "BisCore.Element", "element")) ??
       "unknown"
     );
   }

@@ -5,8 +5,17 @@
 
 import * as chai from "chai";
 import chaiAsPromised from "chai-as-promised";
+import chaiSubset from "chai-subset";
 import sinonChai from "sinon-chai";
 
 // setup chai
 chai.use(chaiAsPromised);
+chai.use(chaiSubset);
 chai.use(sinonChai);
+
+export const mochaHooks = {
+  beforeAll() {},
+  beforeEach() {},
+  afterEach() {},
+  afterAll() {},
+};
