@@ -10,7 +10,7 @@ import { createStorage, SelectionStorage } from "../unified-selection/SelectionS
 import { createSelectableInstanceKey } from "./_helpers/SelectablesCreator";
 
 const generateSelection = (): SelectableInstanceKey[] => {
-  return [createSelectableInstanceKey(1, "baseClass1"), createSelectableInstanceKey(2, "baseClass2"), createSelectableInstanceKey(3, "baseClass3")];
+  return [createSelectableInstanceKey(1, "base.Class1"), createSelectableInstanceKey(2, "base.Class2"), createSelectableInstanceKey(3, "base.Class3")];
 };
 
 describe("SelectionStorage", () => {
@@ -42,21 +42,21 @@ describe("SelectionStorage", () => {
     });
 
     it("returns available selection levels", () => {
-      selectionStorage.addToSelection({ imodelKey, source: "", selectables: [createSelectableInstanceKey(1, "class1")] });
-      selectionStorage.addToSelection({ imodelKey, source: "", selectables: [createSelectableInstanceKey(2, "class2")], level: 3 });
+      selectionStorage.addToSelection({ imodelKey, source: "", selectables: [createSelectableInstanceKey(1, "schema.class1")] });
+      selectionStorage.addToSelection({ imodelKey, source: "", selectables: [createSelectableInstanceKey(2, "schema.class2")], level: 3 });
       expect(selectionStorage.getSelectionLevels({ imodelKey })).to.deep.eq([0, 3]);
     });
 
     it("doesn't include empty selection levels", () => {
-      selectionStorage.addToSelection({ imodelKey, source: "", selectables: [createSelectableInstanceKey(1, "class1")] });
-      selectionStorage.addToSelection({ imodelKey, source: "", selectables: [createSelectableInstanceKey(2, "class2")], level: 1 });
+      selectionStorage.addToSelection({ imodelKey, source: "", selectables: [createSelectableInstanceKey(1, "schema.class1")] });
+      selectionStorage.addToSelection({ imodelKey, source: "", selectables: [createSelectableInstanceKey(2, "schema.class2")], level: 1 });
       selectionStorage.addToSelection({ imodelKey, source: "", selectables: [], level: 2 });
       expect(selectionStorage.getSelectionLevels({ imodelKey })).to.deep.eq([0, 1]);
     });
 
     it("returns available selection levels with deprecated `iModelKey` prop", () => {
-      selectionStorage.addToSelection({ iModelKey: imodelKey, source: "", selectables: [createSelectableInstanceKey(1, "class1")] });
-      selectionStorage.addToSelection({ iModelKey: imodelKey, source: "", selectables: [createSelectableInstanceKey(2, "class2")], level: 3 });
+      selectionStorage.addToSelection({ iModelKey: imodelKey, source: "", selectables: [createSelectableInstanceKey(1, "schema.class1")] });
+      selectionStorage.addToSelection({ iModelKey: imodelKey, source: "", selectables: [createSelectableInstanceKey(2, "schema.class2")], level: 3 });
       expect(selectionStorage.getSelectionLevels({ iModelKey: imodelKey })).to.deep.eq([0, 3]);
     });
   });
@@ -112,8 +112,8 @@ describe("SelectionStorage", () => {
 
     it("clears higher level selection when adding items to lower level selection", () => {
       selectionStorage.addToSelection({ imodelKey, source, selectables: baseSelection });
-      selectionStorage.addToSelection({ imodelKey, source, selectables: [createSelectableInstanceKey(1, "class1")], level: 1 });
-      selectionStorage.addToSelection({ imodelKey, source, selectables: [createSelectableInstanceKey(2, "class2")], level: 0 });
+      selectionStorage.addToSelection({ imodelKey, source, selectables: [createSelectableInstanceKey(1, "schema.class1")], level: 1 });
+      selectionStorage.addToSelection({ imodelKey, source, selectables: [createSelectableInstanceKey(2, "schema.class2")], level: 0 });
       const selectables = selectionStorage.getSelection({ imodelKey, level: 1 });
       expect(Selectables.isEmpty(selectables)).to.be.true;
     });
@@ -177,8 +177,8 @@ describe("SelectionStorage", () => {
 
     it("clears higher level selection when replacing lower level selection", () => {
       selectionStorage.addToSelection({ imodelKey, source, selectables: baseSelection, level: 0 });
-      selectionStorage.addToSelection({ imodelKey, source, selectables: [createSelectableInstanceKey(1, "class1")], level: 1 });
-      selectionStorage.replaceSelection({ imodelKey, source, selectables: [createSelectableInstanceKey(2, "class2")], level: 0 });
+      selectionStorage.addToSelection({ imodelKey, source, selectables: [createSelectableInstanceKey(1, "schema.class1")], level: 1 });
+      selectionStorage.replaceSelection({ imodelKey, source, selectables: [createSelectableInstanceKey(2, "schema.class2")], level: 0 });
       const selectables = selectionStorage.getSelection({ imodelKey, level: 1 });
       expect(Selectables.isEmpty(selectables)).to.be.true;
     });
@@ -321,8 +321,8 @@ describe("SelectionStorage", () => {
 
     it("doesn't clear higher level selection when removing non-existing items from lower level selection", () => {
       selectionStorage.addToSelection({ imodelKey, source, selectables: baseSelection, level: 0 });
-      selectionStorage.addToSelection({ imodelKey, source, selectables: [createSelectableInstanceKey(1, "class1")], level: 1 });
-      selectionStorage.removeFromSelection({ imodelKey, source, selectables: [createSelectableInstanceKey(2, "class2")] });
+      selectionStorage.addToSelection({ imodelKey, source, selectables: [createSelectableInstanceKey(1, "schema.class1")], level: 1 });
+      selectionStorage.removeFromSelection({ imodelKey, source, selectables: [createSelectableInstanceKey(2, "schema.class2")] });
       const selectables = selectionStorage.getSelection({ imodelKey, level: 1 });
       expect(Selectables.isEmpty(selectables)).to.be.false;
     });
