@@ -298,6 +298,7 @@ async function matchFilters<
 ): Promise<TDefinition | undefined> {
   const { nodeIdentifierPaths, hasFilterTargetAncestor } = filteringProps;
   let { filterPathsIdentifierPositions } = filteringProps;
+  // In case parentNode is undefined, new positions array is created pointing to each path with identifier index = -1.
   if (filterPathsIdentifierPositions === undefined) {
     filterPathsIdentifierPositions = [];
     nodeIdentifierPaths.forEach((nodeIdentifierPath, pathIndex) => {

@@ -791,8 +791,10 @@ describe("createIModelHierarchyProvider", () => {
         is: async (fullClassName) => fullClassName === "c.d",
       });
 
-      const rootNodePromise = new ResolvablePromise<RowDef & { [ECSQL_COLUMN_NAME_FilteredChildrenPaths]: string }>();
-      const childNodePromise = new ResolvablePromise<RowDef & { [ECSQL_COLUMN_NAME_FilteredChildrenPaths]: string }>();
+      const rootNodePromise = new ResolvablePromise<RowDef & { [ECSQL_COLUMN_NAME_FilterECInstanceId]: string; [ECSQL_COLUMN_NAME_FilterClassName]: string }>();
+      const childNodePromise = new ResolvablePromise<
+        RowDef & { [ECSQL_COLUMN_NAME_FilterECInstanceId]: string; [ECSQL_COLUMN_NAME_FilterClassName]: string }
+      >();
       imodelAccess.createQueryReader.callsFake(async function* ({ ecsql, ctes }) {
         if (ecsql.includes("ROOT QUERY")) {
           yield await rootNodePromise;
@@ -848,13 +850,15 @@ describe("createIModelHierarchyProvider", () => {
         [NodeSelectClauseColumnNames.FullClassName]: "a.b",
         [NodeSelectClauseColumnNames.ECInstanceId]: "0x123",
         [NodeSelectClauseColumnNames.DisplayLabel]: "ab",
-        [ECSQL_COLUMN_NAME_FilteredChildrenPaths]: `[[{"className":"c.d","id":"0x456"}]]`,
+        [ECSQL_COLUMN_NAME_FilterECInstanceId]: "291",
+        [ECSQL_COLUMN_NAME_FilterClassName]: "a.b",
       });
       await childNodePromise.resolve({
         [NodeSelectClauseColumnNames.FullClassName]: "c.d",
         [NodeSelectClauseColumnNames.ECInstanceId]: "0x456",
         [NodeSelectClauseColumnNames.DisplayLabel]: "cd",
-        [ECSQL_COLUMN_NAME_FilteredChildrenPaths]: `[]`,
+        [ECSQL_COLUMN_NAME_FilterECInstanceId]: "1110",
+        [ECSQL_COLUMN_NAME_FilterClassName]: "c.d",
       });
 
       // setting instance filter while a nodes request is in progress cancels the request - ensure we get undefined
@@ -869,9 +873,6 @@ describe("createIModelHierarchyProvider", () => {
           instanceKeys: [{ className: "a.b", id: "0x123" }],
         },
         children: false,
-        filtering: {
-          filteredChildrenIdentifierPaths: [[{ className: "c.d", id: "0x456" }]],
-        },
       });
 
       // ensure requesting children for the filtered node returns empty list

@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { from, map, mergeMap, Observable, of } from "rxjs";
+import { from, mergeMap, Observable, of } from "rxjs";
 import { Id64String } from "@itwin/core-bentley";
 import { ECSqlQueryDef, parseInstanceLabel } from "@itwin/presentation-shared";
 import { NodeParser } from "./IModelHierarchyDefinition";
@@ -28,8 +28,10 @@ export function readNodes(props: ReadNodesProps): Observable<SourceInstanceHiera
   };
 
   return from(queryExecutor.createQueryReader(query, config)).pipe(
-    map(parser),
-    mergeMap((node) => (node instanceof Promise ? from(node) : of(node))),
+    mergeMap((row) => {
+      const node = parser(row);
+      return node instanceof Promise ? from(node) : of(node);
+    }),
   );
 }
 
