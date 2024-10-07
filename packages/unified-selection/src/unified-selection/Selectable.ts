@@ -4,6 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { Id64String } from "@itwin/core-bentley";
+import { normalizeFullClassName } from "@itwin/presentation-shared";
 
 /**
  * ECInstance selectable
@@ -123,7 +124,7 @@ export namespace Selectables {
    */
   export function has(selectables: Selectables, value: SelectableIdentifier): boolean {
     if (Selectable.isInstanceKey(value)) {
-      const normalizedClassName = normalizeClassName(value.className);
+      const normalizedClassName = normalizeFullClassName(value.className);
       const set = selectables.instanceKeys.get(normalizedClassName);
       return !!(set && set.has(value.id));
     }
@@ -173,7 +174,7 @@ export namespace Selectables {
     let hasChanged = false;
     for (const selectable of values) {
       if (Selectable.isInstanceKey(selectable)) {
-        const normalizedClassName = normalizeClassName(selectable.className);
+        const normalizedClassName = normalizeFullClassName(selectable.className);
         let set = selectables.instanceKeys.get(normalizedClassName);
         if (!set) {
           set = new Set<string>();
@@ -201,7 +202,7 @@ export namespace Selectables {
     let hasChanged = false;
     for (const selectable of values) {
       if (Selectable.isInstanceKey(selectable)) {
-        const normalizedClassName = normalizeClassName(selectable.className);
+        const normalizedClassName = normalizeFullClassName(selectable.className);
         const set = selectables.instanceKeys.get(normalizedClassName);
         if (set && set.has(selectable.id)) {
           set.delete(selectable.id);
@@ -266,9 +267,5 @@ export namespace Selectables {
     selectables.custom.forEach((data) => {
       callback(data, index++);
     });
-  }
-
-  function normalizeClassName(className: string): string {
-    return className.replace(".", ":");
   }
 }
