@@ -15,20 +15,20 @@ chai.use(chaiAsPromised);
 chai.use(chaiJestSnapshot);
 chai.use(sinonChai);
 
-before(function () {
-  chaiJestSnapshot.resetSnapshotRegistry();
-});
-after(function () {
-  delete require.cache[__filename];
-});
-beforeEach(function () {
-  const currentTest = this.currentTest!;
-
-  // set up snapshot name
-  const sourceFilePath = currentTest.file!.replace(`lib${path.sep}cjs${path.sep}test`, `src${path.sep}test`).replace(/\.(jsx?|tsx?)$/, "");
-  const snapPath = `${sourceFilePath}.snap`;
-  chaiJestSnapshot.setFilename(snapPath);
-  chaiJestSnapshot.setTestName(currentTest.fullTitle());
-
-  sinon.restore();
-});
+export const mochaHooks = {
+  beforeAll() {
+    chaiJestSnapshot.resetSnapshotRegistry();
+  },
+  beforeEach() {
+    // set up snapshot name
+    const currentTest = (this as unknown as Mocha.Context).currentTest!;
+    const sourceFilePath = currentTest.file!.replace(`lib${path.sep}cjs${path.sep}test`, `src${path.sep}test`).replace(/\.(jsx?|tsx?)$/, "");
+    const snapPath = `${sourceFilePath}.snap`;
+    chaiJestSnapshot.setFilename(snapPath);
+    chaiJestSnapshot.setTestName(currentTest.fullTitle());
+  },
+  afterEach() {
+    sinon.restore();
+  },
+  afterAll() {},
+};

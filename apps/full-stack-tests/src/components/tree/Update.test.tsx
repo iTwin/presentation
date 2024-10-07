@@ -15,8 +15,9 @@ import {
   TreeModelNode,
   TreeModelRootNode,
   TreeModelSource,
+  UiComponents,
 } from "@itwin/components-react";
-import { IModelConnection, SnapshotConnection } from "@itwin/core-frontend";
+import { IModelApp, IModelConnection, SnapshotConnection } from "@itwin/core-frontend";
 import { ChildNodeSpecificationTypes, Ruleset, RuleTypes } from "@itwin/presentation-common";
 import { IPresentationTreeDataProvider, usePresentationTreeState, UsePresentationTreeStateProps } from "@itwin/presentation-components";
 import { Presentation } from "@itwin/presentation-frontend";
@@ -45,6 +46,14 @@ describe("Tree update", () => {
 
   describe("detection", () => {
     let defaultProps: Omit<UsePresentationTreeStateProps, "ruleset">;
+
+    before(async () => {
+      await UiComponents.initialize(IModelApp.localization);
+    });
+
+    after(() => {
+      UiComponents.terminate();
+    });
 
     beforeEach(() => {
       defaultProps = {

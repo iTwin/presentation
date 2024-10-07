@@ -33,7 +33,11 @@ describe("HiliteSet", () => {
   let iModel: IModelConnection;
 
   before(async () => {
-    await initialize();
+    await initialize({
+      backendHostProps: {
+        cacheDir: path.join(__dirname, ".cache", `${process.pid}`),
+      },
+    });
     // eslint-disable-next-line @itwin/no-internal
     RpcManager.registerImpl(ECSchemaRpcInterface, ECSchemaRpcImpl);
     RpcConfiguration.developmentMode = true;

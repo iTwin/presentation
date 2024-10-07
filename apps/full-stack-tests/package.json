@@ -4,8 +4,8 @@
   "description": "Presentation integration tests",
   "private": true,
   "scripts": {
-    "build": "tsc",
-    "build:watch": "tsc -w",
+    "build": "node ./scripts/setup-tests.js && tsc",
+    "build:watch": "npm run build -- -w",
     "clean": "rimraf lib build",
     "cover": "npm run -s test",
     "lint": "eslint ./src/**/*.{ts,tsx}",

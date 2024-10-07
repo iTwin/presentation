@@ -2,57 +2,50 @@
  * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
+// WARNING: The order of imports in this file is important!
 
+// setup chai
 import * as chai from "chai";
 import chaiJestSnapshot from "chai-jest-snapshot";
 import chaiSubset from "chai-subset";
-import { execFileSync } from "child_process";
-import * as cpx from "cpx2";
-import * as fs from "fs";
-import globalJsdom from "global-jsdom";
-import * as jsdom from "jsdom";
-import * as path from "path";
-import ResizeObserver from "resize-observer-polyfill";
 import sinonChai from "sinon-chai";
-
-// eslint-disable-next-line no-console
-console.log(`Backend PID: ${process.pid}`);
-
-// get rid of various xhr errors in the console
-globalJsdom(undefined, {
-  virtualConsole: new jsdom.VirtualConsole().sendTo(console, { omitJSDOMErrors: true }),
-});
-global.ResizeObserver = ResizeObserver;
-
-// setup chai
 chai.use(chaiJestSnapshot);
 chai.use(sinonChai);
 chai.use(chaiSubset);
 
-before(function () {
-  chaiJestSnapshot.resetSnapshotRegistry();
-
-  cpx.copySync(`assets/**/*`, "lib/assets");
-  copyITwinFrontendAssets("lib/public");
-  pseudoLocalize("lib/public/locales");
-
-  getGlobalThis().IS_REACT_ACT_ENVIRONMENT = true;
+// get rid of various xhr errors in the console
+import globalJsdom from "global-jsdom";
+import * as jsdom from "jsdom";
+globalJsdom(undefined, {
+  virtualConsole: new jsdom.VirtualConsole().sendTo(console, { omitJSDOMErrors: true }),
 });
 
-beforeEach(function () {
-  const currentTest = this.currentTest!;
+// polyfill ResizeObserver
+import ResizeObserver from "resize-observer-polyfill";
+global.ResizeObserver = ResizeObserver;
 
-  // set up snapshot name
-  const sourceFilePath = currentTest.file!.replace("lib", "src").replace(/\.(jsx?|tsx?)$/, "");
-  const snapPath = `${sourceFilePath}.snap`;
-  chaiJestSnapshot.setFilename(snapPath);
-  chaiJestSnapshot.setTestName(currentTest.fullTitle());
-});
-
-after(function () {
-  delete getGlobalThis().IS_REACT_ACT_ENVIRONMENT;
-});
-
+// supply mocha hooks
+import { cleanup } from "@testing-library/react";
+export const mochaHooks = {
+  beforeAll() {
+    chaiJestSnapshot.resetSnapshotRegistry();
+    getGlobalThis().IS_REACT_ACT_ENVIRONMENT = true;
+  },
+  beforeEach() {
+    // set up snapshot name
+    const currentTest = (this as unknown as Mocha.Context).currentTest!;
+    const sourceFilePath = currentTest.file!.replace("lib", "src").replace(/\.(jsx?|tsx?)$/, "");
+    const snapPath = `${sourceFilePath}.snap`;
+    chaiJestSnapshot.setFilename(snapPath);
+    chaiJestSnapshot.setTestName(currentTest.fullTitle());
+  },
+  afterEach() {
+    cleanup();
+  },
+  afterAll() {
+    delete getGlobalThis().IS_REACT_ACT_ENVIRONMENT;
+  },
+};
 // eslint-disable-next-line @typescript-eslint/naming-convention
 function getGlobalThis(): typeof globalThis & { IS_REACT_ACT_ENVIRONMENT?: boolean } {
   /* istanbul ignore else */
@@ -73,27 +66,4 @@ function getGlobalThis(): typeof globalThis & { IS_REACT_ACT_ENVIRONMENT?: boole
   }
   /* istanbul ignore next */
   throw new Error("unable to locate global object");
-}
-
-function copyITwinFrontendAssets(outputDir: string) {
-  const iTwinPackagesPath = "node_modules/@itwin";
-  fs.readdirSync(iTwinPackagesPath)
-    .map((packageName) => {
-      const packagePath = path.resolve(iTwinPackagesPath, packageName);
-      return path.join(packagePath, "lib", "public");
-    })
-    .filter((assetsPath) => fs.existsSync(assetsPath))
-    .forEach((src) => {
-      cpx.copySync(`${src}/**/*`, outputDir);
-    });
-}
-
-function pseudoLocalize(localesDir: string) {
-  const betoolsPath = path.resolve("node_modules", "@itwin", "build-tools", "bin", "betools.js");
-  const args = [betoolsPath, "pseudolocalize", "--englishDir", `${localesDir}/en`, "--out", `${localesDir}/en-PSEUDO`];
-  try {
-    execFileSync("node", args);
-  } catch {
-    throw new Error("Failed to pseudoLocalize localization files");
-  }
 }

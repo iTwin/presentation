@@ -1,10 +1,9 @@
 {
-  "require": ["ignore-styles"],
+  "require": ["ignore-styles", "./lib/cjs/test/setup"],
   "checkLeaks": true,
   "global": ["IS_REACT_ACT_ENVIRONMENT"],
   "timeout": 60000,
-  "file": ["./lib/cjs/test/index.js"],
-  "exclude": ["./lib/test/coverage/**/*"],
-  "reporter": ["node_modules/@itwin/build-tools/mocha-reporter"],
-  "reporterOptions": ["mochaFile=lib/test/junit_results.xml"]
+  "parallel": true,
+  "spec": ["./lib/cjs/test/**/*.test.js"],
+  "exclude": ["./lib/test/coverage/**/*"]
 }

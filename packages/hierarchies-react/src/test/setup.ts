@@ -2,28 +2,33 @@
  * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
-
-import * as chai from "chai";
-import chaiSubset from "chai-subset";
-import globalJsdom from "global-jsdom";
-import * as jsdom from "jsdom";
-import m from "module";
-import { execSync } from "node:child_process";
-import sinonChai from "sinon-chai";
+// WARNING: The order of imports in this file is important!
 
 // setup chai
+import * as chai from "chai";
+import chaiAsPromised from "chai-as-promised";
+import chaiSubset from "chai-subset";
+import sinonChai from "sinon-chai";
+chai.use(chaiAsPromised);
 chai.use(sinonChai);
 chai.use(chaiSubset);
 
+// get rid of various xhr errors in the console
+import globalJsdom from "global-jsdom";
+import * as jsdom from "jsdom";
+globalJsdom(undefined, {
+  virtualConsole: new jsdom.VirtualConsole().sendTo(console, { omitJSDOMErrors: true }),
+});
+
+// make stubbing workspace package exports possible
+import m from "module";
+import { execSync } from "node:child_process";
 const workspacePackages = getPaths(execSync("pnpm -r list --depth -1 --json", { encoding: "utf-8" }));
 const root = workspacePackages.shift() as string;
 const packagePaths = workspacePackages.map((path) => path.substring(root.length + 1));
-
 function getPaths(json: string) {
   return (JSON.parse(json) as Array<{ path: string }>).map((pkg) => pkg.path);
 }
-
-// The following makes stubbing workspace package exports possible
 const originalCompile = (m as any).prototype._compile;
 (m as any).prototype._compile = function (content: any, filename: any) {
   // Obtain exports from the loaded script
@@ -54,19 +59,20 @@ const originalCompile = (m as any).prototype._compile;
   }
 };
 
-// get rid of various xhr errors in the console
-globalJsdom(undefined, {
-  virtualConsole: new jsdom.VirtualConsole().sendTo(console, { omitJSDOMErrors: true }),
-});
-
-before(function () {
-  getGlobalThis().IS_REACT_ACT_ENVIRONMENT = true;
-});
-
-after(function () {
-  delete getGlobalThis().IS_REACT_ACT_ENVIRONMENT;
-});
-
+// supply mocha hooks
+import { cleanup } from "@testing-library/react";
+export const mochaHooks = {
+  beforeAll() {
+    getGlobalThis().IS_REACT_ACT_ENVIRONMENT = true;
+  },
+  beforeEach() {},
+  afterEach() {
+    cleanup();
+  },
+  afterAll() {
+    delete getGlobalThis().IS_REACT_ACT_ENVIRONMENT;
+  },
+};
 function getGlobalThis(): typeof globalThis & { IS_REACT_ACT_ENVIRONMENT?: boolean } {
   /* istanbul ignore else */
   if (typeof globalThis !== "undefined") {

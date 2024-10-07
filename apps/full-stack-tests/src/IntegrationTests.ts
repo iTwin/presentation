@@ -66,7 +66,7 @@ export async function initialize(props?: { backendTimeout?: number }) {
   const presentationTestingInitProps: PresentationTestingInitProps = {
     rpcs: [SnapshotIModelRpcInterface, IModelReadRpcInterface, PresentationRpcInterface, ECSchemaRpcInterface],
     backendProps: backendInitProps,
-    backendHostProps: { cacheDir: path.join(__dirname, ".cache") },
+    backendHostProps: { cacheDir: path.join(__dirname, ".cache", `${process.pid}`) },
     frontendProps: frontendInitProps,
     frontendApp: IntegrationTestsApp,
     frontendAppOptions,
