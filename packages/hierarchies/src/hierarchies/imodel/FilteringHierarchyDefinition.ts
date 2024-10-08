@@ -103,16 +103,20 @@ export class FilteringHierarchyDefinition implements HierarchyDefinition {
       if (!child.filtering) {
         continue;
       }
+
       if (child.filtering.isFilterTarget) {
         const childAutoExpand = child.filtering.filterTargetOptions?.autoExpand;
+
         // If child is a filter target and is has no `autoExpand` flag, then it's always to be expanded.
         if (childAutoExpand === true) {
           return true;
         }
+
         // If it's not an object and not `true`, then it's falsy - continue looking
         if (typeof childAutoExpand !== "object") {
           continue;
         }
+
         // If grouping node's child has `autoExpandUntil` flag,
         // auto-expand the grouping node only if it's depth is lower than that of the grouping node in associated with the target.
         const nodeDepth = node.parentKeys.length;
@@ -209,13 +213,14 @@ export class FilteringHierarchyDefinition implements HierarchyDefinition {
       });
     };
   }
+
   public async defineHierarchyLevel(props: DefineHierarchyLevelProps): Promise<HierarchyLevelDefinition> {
     const sourceDefinitions = await this._source.defineHierarchyLevel(props);
-
     const filteringProps = extractFilteringProps(this._nodeIdentifierPaths, props.parentNode);
     if (!filteringProps) {
       return sourceDefinitions;
     }
+
     const filteredDefinitions: HierarchyLevelDefinition = [];
     await Promise.all(
       sourceDefinitions.map(async (definition) => {
@@ -368,10 +373,12 @@ function applyFilterAttributes<TNode extends SourceHierarchyNode>(props: {
   if (shouldAutoExpand) {
     result.autoExpand = true;
   }
+
   const filteringProps = HierarchyNodeFilteringProps.create(props);
   if (filteringProps) {
     result.filtering = filteringProps;
   }
+
   return result;
 }
 
