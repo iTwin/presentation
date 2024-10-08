@@ -214,6 +214,7 @@ describe("Hierarchies", () => {
               children: [
                 NodeValidators.createForGenericNode({
                   key: "custom2",
+                  autoExpand: false,
                   isFilterTarget: true,
                 }),
               ],
@@ -1453,10 +1454,6 @@ describe("Hierarchies", () => {
             return acc;
           }, {} as any),
         };
-        const filteringPaths: HierarchyFilteringPath[] = [
-          [rootSubjectKey, instanceKeys.subject1, instanceKeys.subject11, { type: "generic", id: "gen", source: "custom-provider" }],
-          [rootSubjectKey, instanceKeys.subject2, { type: "generic", id: "gen", source: "custom-provider" }],
-        ];
 
         function createSubjectsHierarchyProvider(imodelAccess: ReturnType<typeof createIModelAccess>): HierarchyProvider {
           return createProvider({
@@ -1531,24 +1528,19 @@ describe("Hierarchies", () => {
                 parentKeys: [...parentNode.parentKeys, parentNode.key],
                 children: false,
               };
-              const filteringProps = extractFilteringProps(filteringPaths, parentNode);
+              const filteringProps = extractFilteringProps([], parentNode);
               if (!filteringProps) {
                 return createAsyncIterator([myNode]);
               }
               const nodeMatchesFilter =
                 filteringProps.hasFilterTargetAncestor ||
-                filteringProps.filterPathsIdentifierPositions?.some(([pathIndex, identifierIndex]) => {
-                  if (filteringProps.nodeIdentifierPaths.length <= pathIndex) {
-                    return false;
-                  }
-                  const nodePath = filteringProps.nodeIdentifierPaths[pathIndex];
-                  const { path } = HierarchyFilteringPath.normalize(nodePath);
-                  const identifierIndexAdded = identifierIndex + 1;
+                filteringProps.filteredNodePaths?.some((fp) => {
+                  const { path } = HierarchyFilteringPath.normalize(fp);
                   return (
-                    path.length > identifierIndexAdded &&
-                    HierarchyNodeIdentifier.isGenericNodeIdentifier(path[identifierIndexAdded]) &&
-                    path[identifierIndexAdded].source === "custom-provider" &&
-                    path[identifierIndexAdded].id === myNode.key.id
+                    path.length &&
+                    HierarchyNodeIdentifier.isGenericNodeIdentifier(path[0]) &&
+                    path[0].source === "custom-provider" &&
+                    path[0].id === myNode.key.id
                   );
                 });
               if (nodeMatchesFilter) {
@@ -1599,7 +1591,10 @@ describe("Hierarchies", () => {
           provider: mergeAndFilterProviders({
             providers: [provider1, provider2, provider3],
             filterProps: {
-              paths: filteringPaths,
+              paths: [
+                [rootSubjectKey, instanceKeys.subject1, instanceKeys.subject11, { type: "generic", id: "gen", source: "custom-provider" }],
+                [rootSubjectKey, instanceKeys.subject2, { type: "generic", id: "gen", source: "custom-provider" }],
+              ],
             },
           }),
           expect: [

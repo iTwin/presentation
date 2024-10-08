@@ -9,26 +9,59 @@ import { createNodesQueryClauseFactory, HierarchyFilteringPath } from "@itwin/pr
 import { Datasets } from "../util/Datasets";
 import { run } from "../util/TestUtilities";
 import { ProviderOptions, StatelessHierarchyProvider } from "./StatelessHierarchyProvider";
-import { createBisInstanceLabelSelectClauseFactory } from "@itwin/presentation-shared";
+import { createBisInstanceLabelSelectClauseFactory, ECClassHierarchyInspector, ECSchemaProvider } from "@itwin/presentation-shared";
 
 describe("filtering", () => {
   const totalNumberOfFilteringPaths = 50000;
-  const startingIndex = 20;
-  const maximumNumberOfPathsForSingleParent = 500;
-  const parentIdsArr = new Array<number>();
-  for (let i = 0, j = startingIndex + 1; i < totalNumberOfFilteringPaths; i += maximumNumberOfPathsForSingleParent, ++j) {
-    parentIdsArr.push(j);
-  }
-  const filtering = {
-    paths: getFilteringPaths(totalNumberOfFilteringPaths, parentIdsArr, startingIndex, maximumNumberOfPathsForSingleParent),
-  };
+  const physicalElementsSmallestIndex = 20;
 
   run({
-    only: true,
     testName: `filters with ${totalNumberOfFilteringPaths} paths`,
     setup: (): ProviderOptions => {
+      const { schemaName, itemsPerGroup, defaultClassName } = Datasets.CUSTOM_SCHEMA;
+
+      const filtering = {
+        paths: new Array<HierarchyFilteringPath>(),
+      };
+      const parentIdsArr = new Array<number>();
+      for (let i = 1; i <= 100; ++i) {
+        parentIdsArr.push(i + physicalElementsSmallestIndex);
+        for (let j = (i - 1) * 500; j < i * 500; ++j) {
+          filtering.paths.push([
+            { className: `${schemaName}.${defaultClassName}_0`, id: `0x${physicalElementsSmallestIndex.toString(16)}` },
+            { className: `${schemaName}.${defaultClassName}_${i / itemsPerGroup}`, id: `0x${(i + physicalElementsSmallestIndex).toString(16)}` },
+            { className: `${schemaName}.${defaultClassName}_${j / itemsPerGroup}`, id: `0x${(j + physicalElementsSmallestIndex).toString(16)}` },
+          ]);
+        }
+      }
+
       const iModel = SnapshotDb.openFile(Datasets.getIModelPath("50k flat elements"));
       const fullClassName = PhysicalElement.classFullName.replace(":", ".");
+      const createHierarchyLevelDefinition = async (imodelAccess: ECSchemaProvider & ECClassHierarchyInspector, eCInstanceIdCondition: string) => {
+        const query = createNodesQueryClauseFactory({
+          imodelAccess,
+          instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
+        });
+        return [
+          {
+            fullClassName,
+            query: {
+              ecsql: `
+                SELECT ${await query.createSelectClause({
+                  ecClassId: { selector: `this.ECClassId` },
+                  ecInstanceId: { selector: `this.ECInstanceId` },
+                  nodeLabel: { selector: `this.UserLabel` },
+                  extendedData: {
+                    ecInstanceId: { selector: `this.ECInstanceId` },
+                  },
+                })}
+                FROM ${fullClassName} AS this
+                WHERE this.ECInstanceId ${eCInstanceIdCondition}
+              `,
+            },
+          },
+        ];
+      };
       return {
         iModel,
         rowLimit: "unbounded",
@@ -45,78 +78,15 @@ describe("filtering", () => {
             // We need to split the hierarchy in 100 parts, because we are using 50000 paths and there is a limit of 500 filtering paths for a single parent.
 
             if (!props.parentNode) {
-              const query = createNodesQueryClauseFactory({
-                imodelAccess,
-                instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
-              });
-              return [
-                {
-                  fullClassName,
-                  query: {
-                    ecsql: `
-                      SELECT ${await query.createSelectClause({
-                        ecClassId: { selector: `this.ECClassId` },
-                        ecInstanceId: { selector: `this.ECInstanceId` },
-                        nodeLabel: { selector: `this.UserLabel` },
-                        extendedData: {
-                          ecInstanceId: { selector: `this.ECInstanceId` },
-                        },
-                      })}
-                      FROM ${fullClassName} AS this
-                      WHERE this.ECInstanceId = ${startingIndex}
-                    `,
-                  },
-                },
-              ];
+              return createHierarchyLevelDefinition(imodelAccess, `= ${physicalElementsSmallestIndex}`);
             }
 
-            if (props.parentNode?.extendedData?.ecInstanceId === startingIndex) {
-              const query = createNodesQueryClauseFactory({
-                imodelAccess,
-                instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
-              });
-              return [
-                {
-                  fullClassName,
-                  query: {
-                    ecsql: `
-                      SELECT ${await query.createSelectClause({
-                        ecClassId: { selector: `this.ECClassId` },
-                        ecInstanceId: { selector: `this.ECInstanceId` },
-                        nodeLabel: { selector: `this.UserLabel` },
-                        extendedData: {
-                          ecInstanceId: { selector: `this.ECInstanceId` },
-                        },
-                      })}
-                      FROM ${fullClassName} AS this
-                      WHERE this.ECInstanceId IN (${parentIdsArr.join(", ")})
-                    `,
-                  },
-                },
-              ];
+            if (props.parentNode?.extendedData?.ecInstanceId === physicalElementsSmallestIndex) {
+              return createHierarchyLevelDefinition(imodelAccess, `IN (${parentIdsArr.join(", ")})`);
             }
 
             if (parentIdsArr.includes(props.parentNode?.extendedData?.ecInstanceId)) {
-              const query = createNodesQueryClauseFactory({
-                imodelAccess,
-                instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
-              });
-              return [
-                {
-                  fullClassName,
-                  query: {
-                    ecsql: `
-                      SELECT ${await query.createSelectClause({
-                        ecClassId: { selector: `this.ECClassId` },
-                        ecInstanceId: { selector: `this.ECInstanceId` },
-                        nodeLabel: { selector: `this.UserLabel` },
-                      })}
-                      FROM ${fullClassName} AS this
-                      WHERE this.[Parent] is NULL AND this.ECInstanceId NOT IN (${startingIndex}, ${parentIdsArr.join(", ")})
-                    `,
-                  },
-                },
-              ];
+              return createHierarchyLevelDefinition(imodelAccess, `NOT IN (${physicalElementsSmallestIndex}, ${parentIdsArr.join(", ")})`);
             }
 
             return [];
@@ -135,24 +105,3 @@ describe("filtering", () => {
     },
   });
 });
-
-function getFilteringPaths(
-  totalNumberOfFilteringPaths: number,
-  parentIdsArr: number[],
-  startingIndex: number,
-  maximumNumberOfPathsForSingleParent: number,
-): HierarchyFilteringPath[] {
-  const { schemaName, itemsPerGroup, defaultClassName } = Datasets.CUSTOM_SCHEMA;
-  const filteringPaths = new Array<HierarchyFilteringPath>();
-  for (let i = 0; i < totalNumberOfFilteringPaths; ++i) {
-    const hundredsPosition = Math.floor(i / itemsPerGroup);
-    const id = `0x${(i + startingIndex).toString(16)}`;
-    const nearestParentId = `0x${parentIdsArr[i % Math.ceil(totalNumberOfFilteringPaths / maximumNumberOfPathsForSingleParent)].toString(16)}`;
-    filteringPaths.push([
-      { className: `${schemaName}.${defaultClassName}_0`, id: `0x${startingIndex.toString(16)}` },
-      { className: `${schemaName}.${defaultClassName}_0`, id: nearestParentId },
-      { className: `${schemaName}.${defaultClassName}_${hundredsPosition}`, id },
-    ]);
-  }
-  return filteringPaths;
-}

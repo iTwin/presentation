@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { OmitOverUnion } from "@itwin/presentation-shared";
-import { HierarchyFilteringPathOptions } from "./HierarchyFiltering";
+import { HierarchyFilteringPath, HierarchyFilteringPathOptions } from "./HierarchyFiltering";
 import {
   ClassGroupingNodeKey,
   GenericNodeKey,
@@ -24,8 +24,8 @@ import {
 export type HierarchyNodeFilteringProps = {
   /** If set to true, then one of the ancestor nodes in the hierarchy is the filter target. */
   hasFilterTargetAncestor?: boolean;
-  /** Indexes to identifiers positions in filter paths. */
-  filterPathsIdentifierPositions?: Array<[number, number]>;
+  /** Paths to node's children that are filter targets. */
+  filteredChildrenIdentifierPaths?: HierarchyFilteringPath[];
 } & (
   | {
       /** Whether or not this node is a filter target. */
@@ -43,16 +43,16 @@ export type HierarchyNodeFilteringProps = {
 export namespace HierarchyNodeFilteringProps {
   export function create(props: {
     hasFilterTargetAncestor?: boolean;
+    filteredChildrenIdentifierPaths?: HierarchyFilteringPath[];
     isFilterTarget?: boolean;
     filterTargetOptions?: HierarchyFilteringPathOptions;
-    filterPathsIdentifierPositions?: Array<[number, number]>;
   }): HierarchyNodeFilteringProps | undefined {
-    const { hasFilterTargetAncestor, isFilterTarget, filterTargetOptions, filterPathsIdentifierPositions } = props;
-    if (isFilterTarget || hasFilterTargetAncestor || filterPathsIdentifierPositions?.length) {
+    const { hasFilterTargetAncestor, filteredChildrenIdentifierPaths, isFilterTarget, filterTargetOptions } = props;
+    if (isFilterTarget || hasFilterTargetAncestor || filteredChildrenIdentifierPaths?.length) {
       return {
         ...(isFilterTarget ? { isFilterTarget, filterTargetOptions } : undefined),
         ...(hasFilterTargetAncestor ? { hasFilterTargetAncestor } : undefined),
-        ...(!!filterPathsIdentifierPositions?.length ? { filterPathsIdentifierPositions } : undefined),
+        ...(!!filteredChildrenIdentifierPaths?.length ? { filteredChildrenIdentifierPaths } : undefined),
       };
     }
     return undefined;

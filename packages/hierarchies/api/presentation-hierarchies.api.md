@@ -159,8 +159,7 @@ interface ECSqlValueSelector {
 
 // @beta
 export function extractFilteringProps(rootLevelFilteringProps: HierarchyFilteringPath[], parentNode: Pick<NonGroupingHierarchyNode, "filtering"> | undefined): {
-    filterPathsIdentifierPositions?: Array<[number, number]>;
-    nodeIdentifierPaths: HierarchyFilteringPath[];
+    filteredNodePaths: HierarchyFilteringPath[];
     hasFilterTargetAncestor: boolean;
 } | undefined;
 
@@ -314,7 +313,7 @@ interface HierarchyNodeBaseClassGroupingParams extends HierarchyNodeGroupingPara
 // @beta (undocumented)
 type HierarchyNodeFilteringProps = {
     hasFilterTargetAncestor?: boolean;
-    filterPathsIdentifierPositions?: Array<[number, number]>;
+    filteredChildrenIdentifierPaths?: HierarchyFilteringPath[];
 } & ({
     isFilterTarget?: false;
 } | {
@@ -327,9 +326,9 @@ namespace HierarchyNodeFilteringProps {
     // (undocumented)
     function create(props: {
         hasFilterTargetAncestor?: boolean;
+        filteredChildrenIdentifierPaths?: HierarchyFilteringPath[];
         isFilterTarget?: boolean;
         filterTargetOptions?: HierarchyFilteringPathOptions;
-        filterPathsIdentifierPositions?: Array<[number, number]>;
     }): HierarchyNodeFilteringProps | undefined;
 }
 
