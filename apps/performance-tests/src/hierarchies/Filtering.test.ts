@@ -5,9 +5,9 @@
 
 import { expect } from "chai";
 import { IModelDb, PhysicalElement, SnapshotDb } from "@itwin/core-backend";
+import { Id64 } from "@itwin/core-bentley";
 import { createNodesQueryClauseFactory, HierarchyFilteringPath, HierarchyNode } from "@itwin/presentation-hierarchies";
 import { createBisInstanceLabelSelectClauseFactory, ECClassHierarchyInspector, ECSchemaProvider } from "@itwin/presentation-shared";
-import { Id64 } from "@itwin/core-bentley";
 import { Datasets } from "../util/Datasets";
 import { run } from "../util/TestUtilities";
 import { ProviderOptions, StatelessHierarchyProvider } from "./StatelessHierarchyProvider";
