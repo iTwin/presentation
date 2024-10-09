@@ -44,6 +44,10 @@ describe("FilteringHierarchyDefinition", () => {
   });
 
   describe("parseNode", () => {
+    let classHierarchyInspector: ReturnType<typeof createClassHierarchyInspectorStub>;
+    beforeEach(() => {
+      classHierarchyInspector = createClassHierarchyInspectorStub();
+    });
     it("uses `defaultNodeParser` when source definitions factory doesn't have one", async () => {
       const filteringFactory = createFilteringHierarchyDefinition();
       const defaultParserSpy = sinon.spy(reader, "defaultNodesParser");
@@ -74,6 +78,34 @@ describe("FilteringHierarchyDefinition", () => {
       const sourceFactory = {} as unknown as HierarchyDefinition;
 
       const className = "TestSchema.TestName";
+      const paths: HierarchyNodeIdentifiersPath[] = [
+        [createTestInstanceKey({ id: "0x5", className }), createTestInstanceKey({ id: "0x1" }), createTestInstanceKey({ id: "0x2" })],
+        [createTestInstanceKey({ id: "0x5", className }), createTestInstanceKey({ id: "0x3" })],
+      ];
+      const filteringFactory = createFilteringHierarchyDefinition({
+        ...sourceFactory,
+        nodeIdentifierPaths: paths,
+      });
+      const row = {
+        [NodeSelectClauseColumnNames.FullClassName]: "",
+        [ECSQL_COLUMN_NAME_IsFilterTarget]: 1,
+        [ECSQL_COLUMN_NAME_HasFilterTargetAncestor]: 1,
+        [ECSQL_COLUMN_NAME_FilterECInstanceId]: "0x5",
+        [ECSQL_COLUMN_NAME_FilterClassName]: className,
+      };
+      const node = await filteringFactory.parseNode(row);
+      expect(node.filtering).to.deep.eq({
+        filteredChildrenIdentifierPaths: [[createTestInstanceKey({ id: "0x1" }), createTestInstanceKey({ id: "0x2" })], [createTestInstanceKey({ id: "0x3" })]],
+        isFilterTarget: true,
+        filterTargetOptions: undefined,
+        hasFilterTargetAncestor: true,
+      });
+    });
+
+    it("sets correct filteredChildrenIdentifierPaths when nodes have same id's and different classNames that don't derive from one another", async () => {
+      const sourceFactory = {} as unknown as HierarchyDefinition;
+
+      const className = "TestSchema.TestName";
       const className2 = "TestSchema.TestName2";
       const paths: HierarchyNodeIdentifiersPath[] = [
         [createTestInstanceKey({ id: "0x5", className }), createTestInstanceKey({ id: "0x1" }), createTestInstanceKey({ id: "0x2" })],
@@ -94,6 +126,83 @@ describe("FilteringHierarchyDefinition", () => {
       const node = await filteringFactory.parseNode(row);
       expect(node.filtering).to.deep.eq({
         filteredChildrenIdentifierPaths: [[createTestInstanceKey({ id: "0x1" }), createTestInstanceKey({ id: "0x2" })], [createTestInstanceKey({ id: "0x3" })]],
+        isFilterTarget: true,
+        filterTargetOptions: undefined,
+        hasFilterTargetAncestor: true,
+      });
+    });
+
+    it("sets correct filteredChildrenIdentifierPaths when same identifier is in different positions of the path", async () => {
+      const sourceFactory = {} as unknown as HierarchyDefinition;
+
+      const className = "TestSchema.TestName";
+      const paths: HierarchyFilteringPath[] = [
+        {
+          path: [createTestInstanceKey({ id: "0x4", className }), createTestInstanceKey({ id: "0x1" }), createTestInstanceKey({ id: "0x2" })],
+          options: { autoExpand: true },
+        },
+        [createTestInstanceKey({ id: "0x3" }), createTestInstanceKey({ id: "0x4", className }), createTestInstanceKey({ id: "0x5" })],
+      ];
+      const filteringFactory = createFilteringHierarchyDefinition({
+        ...sourceFactory,
+        nodeIdentifierPaths: paths,
+      });
+      const row = {
+        [NodeSelectClauseColumnNames.FullClassName]: "",
+        [ECSQL_COLUMN_NAME_IsFilterTarget]: 1,
+        [ECSQL_COLUMN_NAME_HasFilterTargetAncestor]: 1,
+        [ECSQL_COLUMN_NAME_FilterECInstanceId]: "0x4",
+        [ECSQL_COLUMN_NAME_FilterClassName]: className,
+      };
+      const node = await filteringFactory.parseNode(row);
+      expect(node.filtering).to.deep.eq({
+        filteredChildrenIdentifierPaths: [
+          { path: [createTestInstanceKey({ id: "0x1" }), createTestInstanceKey({ id: "0x2" })], options: { autoExpand: true } },
+          [createTestInstanceKey({ id: "0x5" })],
+        ],
+        isFilterTarget: true,
+        filterTargetOptions: undefined,
+        hasFilterTargetAncestor: true,
+      });
+    });
+
+    it("sets correct filteredChildrenIdentifierPaths when nodes have same id's and different classNames that derive from one another", async () => {
+      const sourceFactory = {} as unknown as HierarchyDefinition;
+
+      const class1 = classHierarchyInspector.stubEntityClass({
+        schemaName: "BisCore",
+        className: "SourceQueryClassName",
+        is: async (other) => other === class1.fullName,
+      });
+      const class2 = classHierarchyInspector.stubEntityClass({
+        schemaName: "BisCore",
+        className: "FilterPathClassName0",
+        is: async (other) => other === class1.fullName,
+      });
+      const paths: HierarchyNodeIdentifiersPath[] = [
+        [createTestInstanceKey({ id: "0x5", className: class1.fullName }), createTestInstanceKey({ id: "0x1" }), createTestInstanceKey({ id: "0x2" })],
+        [createTestInstanceKey({ id: "0x5", className: class1.fullName }), createTestInstanceKey({ id: "0x3" })],
+        [createTestInstanceKey({ id: "0x5", className: class2.fullName }), createTestInstanceKey({ id: "0x4" })],
+      ];
+      const filteringFactory = createFilteringHierarchyDefinition({
+        imodelAccess: { ...classHierarchyInspector, imodelKey: "someKey" },
+        sourceFactory,
+        nodeIdentifierPaths: paths,
+      });
+      const row = {
+        [NodeSelectClauseColumnNames.FullClassName]: "",
+        [ECSQL_COLUMN_NAME_IsFilterTarget]: 1,
+        [ECSQL_COLUMN_NAME_HasFilterTargetAncestor]: 1,
+        [ECSQL_COLUMN_NAME_FilterECInstanceId]: "0x5",
+        [ECSQL_COLUMN_NAME_FilterClassName]: class1.fullName,
+      };
+      const node = await filteringFactory.parseNode(row);
+      expect(node.filtering).to.deep.eq({
+        filteredChildrenIdentifierPaths: [
+          [createTestInstanceKey({ id: "0x1" }), createTestInstanceKey({ id: "0x2" })],
+          [createTestInstanceKey({ id: "0x3" })],
+          [createTestInstanceKey({ id: "0x4" })],
+        ],
         isFilterTarget: true,
         filterTargetOptions: undefined,
         hasFilterTargetAncestor: true,
