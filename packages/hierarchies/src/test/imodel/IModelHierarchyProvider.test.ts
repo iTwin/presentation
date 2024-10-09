@@ -685,12 +685,12 @@ describe("createIModelHierarchyProvider", () => {
       });
 
       imodelAccess.createQueryReader.callsFake(() =>
-        createAsyncIterator<RowDef & { [ECSQL_COLUMN_NAME_FilterECInstanceId]: number; [ECSQL_COLUMN_NAME_FilterClassName]: string }>([
+        createAsyncIterator<RowDef & { [ECSQL_COLUMN_NAME_FilterECInstanceId]: string; [ECSQL_COLUMN_NAME_FilterClassName]: string }>([
           {
             [NodeSelectClauseColumnNames.FullClassName]: "a.b",
             [NodeSelectClauseColumnNames.ECInstanceId]: "0x123",
             [NodeSelectClauseColumnNames.DisplayLabel]: "test label",
-            [ECSQL_COLUMN_NAME_FilterECInstanceId]: parseInt("0x123", 16),
+            [ECSQL_COLUMN_NAME_FilterECInstanceId]: "0x123",
             [ECSQL_COLUMN_NAME_FilterClassName]: "a.b",
           },
         ]),
@@ -739,7 +739,7 @@ describe("createIModelHierarchyProvider", () => {
                     [f].[IsFilterTarget] AS [${ECSQL_COLUMN_NAME_IsFilterTarget}],
                     [f].[FilterTargetOptions] AS [${ECSQL_COLUMN_NAME_FilterTargetOptions}],
                     0 AS [${ECSQL_COLUMN_NAME_HasFilterTargetAncestor}],
-                    [f].[ECInstanceId] AS [${ECSQL_COLUMN_NAME_FilterECInstanceId}],
+                    printf('0x%x', [f].[ECInstanceId]) AS [${ECSQL_COLUMN_NAME_FilterECInstanceId}],
                     [f].[FilterClassName] AS [${ECSQL_COLUMN_NAME_FilterClassName}]
                   FROM (QUERY) [q]
                   JOIN FilteringInfo [f] ON [f].[ECInstanceId] = [q].[ECInstanceId]
@@ -796,9 +796,9 @@ describe("createIModelHierarchyProvider", () => {
         is: async (fullClassName) => fullClassName === "c.d",
       });
 
-      const rootNodePromise = new ResolvablePromise<RowDef & { [ECSQL_COLUMN_NAME_FilterECInstanceId]: number; [ECSQL_COLUMN_NAME_FilterClassName]: string }>();
+      const rootNodePromise = new ResolvablePromise<RowDef & { [ECSQL_COLUMN_NAME_FilterECInstanceId]: string; [ECSQL_COLUMN_NAME_FilterClassName]: string }>();
       const childNodePromise = new ResolvablePromise<
-        RowDef & { [ECSQL_COLUMN_NAME_FilterECInstanceId]: number; [ECSQL_COLUMN_NAME_FilterClassName]: string }
+        RowDef & { [ECSQL_COLUMN_NAME_FilterECInstanceId]: string; [ECSQL_COLUMN_NAME_FilterClassName]: string }
       >();
       imodelAccess.createQueryReader.callsFake(async function* ({ ecsql, ctes }) {
         if (ecsql.includes("ROOT QUERY")) {
@@ -855,14 +855,14 @@ describe("createIModelHierarchyProvider", () => {
         [NodeSelectClauseColumnNames.FullClassName]: "a.b",
         [NodeSelectClauseColumnNames.ECInstanceId]: "0x123",
         [NodeSelectClauseColumnNames.DisplayLabel]: "ab",
-        [ECSQL_COLUMN_NAME_FilterECInstanceId]: parseInt("0x123", 16),
+        [ECSQL_COLUMN_NAME_FilterECInstanceId]: "0x123",
         [ECSQL_COLUMN_NAME_FilterClassName]: "a.b",
       });
       await childNodePromise.resolve({
         [NodeSelectClauseColumnNames.FullClassName]: "c.d",
         [NodeSelectClauseColumnNames.ECInstanceId]: "0x456",
         [NodeSelectClauseColumnNames.DisplayLabel]: "cd",
-        [ECSQL_COLUMN_NAME_FilterECInstanceId]: parseInt("0x456", 16),
+        [ECSQL_COLUMN_NAME_FilterECInstanceId]: "0x456",
         [ECSQL_COLUMN_NAME_FilterClassName]: "c.d",
       });
 

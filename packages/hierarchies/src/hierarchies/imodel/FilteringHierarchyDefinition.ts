@@ -3,6 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
+import { Dictionary } from "@itwin/core-bentley";
 import { ECClassHierarchyInspector, InstanceKey } from "@itwin/presentation-shared";
 import { extractFilteringProps, HierarchyFilteringPath, HierarchyFilteringPathOptions } from "../HierarchyFiltering";
 import { HierarchyNodeFilteringProps } from "../HierarchyNode";
@@ -21,7 +22,6 @@ import {
 } from "./IModelHierarchyDefinition";
 import { ProcessedGroupingHierarchyNode, ProcessedHierarchyNode, SourceHierarchyNode, SourceInstanceHierarchyNode } from "./IModelHierarchyNode";
 import { defaultNodesParser } from "./TreeNodesReader";
-import { Dictionary } from "@itwin/core-bentley";
 
 interface FilteringHierarchyDefinitionProps {
   imodelAccess: ECClassHierarchyInspector & { imodelKey: string };
@@ -162,7 +162,7 @@ export class FilteringHierarchyDefinition implements HierarchyDefinition {
       // istanbul ignore next
       const allFilterPathsIdentifierPositions: Array<[number, number]> | undefined = row[ECSQL_COLUMN_NAME_FilterECInstanceId]
         ? (this._pathsIdentifierPositions.get({
-            id: `0x${row[ECSQL_COLUMN_NAME_FilterECInstanceId].toString(16)}`,
+            id: row[ECSQL_COLUMN_NAME_FilterECInstanceId],
             className: "",
             imodelKey: this._imodelAccess.imodelKey,
           }) ?? [])
@@ -435,7 +435,7 @@ export function applyECInstanceIdsFilter(
           [f].[IsFilterTarget] AS [${ECSQL_COLUMN_NAME_IsFilterTarget}],
           [f].[FilterTargetOptions] AS [${ECSQL_COLUMN_NAME_FilterTargetOptions}],
           ${hasFilterTargetAncestor ? "1" : "0"} AS [${ECSQL_COLUMN_NAME_HasFilterTargetAncestor}],
-          [f].[ECInstanceId] AS [${ECSQL_COLUMN_NAME_FilterECInstanceId}],
+          printf('0x%x', [f].[ECInstanceId]) AS [${ECSQL_COLUMN_NAME_FilterECInstanceId}],
           [f].[FilterClassName] AS [${ECSQL_COLUMN_NAME_FilterClassName}]
         FROM (
           ${def.query.ecsql}

@@ -3,9 +3,9 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
+import { compareStrings, compareStringsOrUndefined } from "@itwin/core-bentley";
 import { InstanceKey } from "@itwin/presentation-shared";
 import { GenericNodeKey, IModelInstanceKey } from "./HierarchyNodeKey";
-import { compareStrings, compareStringsOrUndefined } from "@itwin/core-bentley";
 
 /**
  * An identifier that can be used to identify either an ECInstance or a generic node.

@@ -88,7 +88,7 @@ describe("FilteringHierarchyDefinition", () => {
         [NodeSelectClauseColumnNames.FullClassName]: "",
         [ECSQL_COLUMN_NAME_IsFilterTarget]: 1,
         [ECSQL_COLUMN_NAME_HasFilterTargetAncestor]: 1,
-        [ECSQL_COLUMN_NAME_FilterECInstanceId]: 5,
+        [ECSQL_COLUMN_NAME_FilterECInstanceId]: "0x5",
         [ECSQL_COLUMN_NAME_FilterClassName]: className,
       };
       const node = await filteringFactory.parseNode(row);
@@ -125,7 +125,7 @@ describe("FilteringHierarchyDefinition", () => {
       const filteringFactory = createFilteringHierarchyDefinition({ nodeIdentifierPaths: paths });
       const row = {
         [NodeSelectClauseColumnNames.FullClassName]: "",
-        [ECSQL_COLUMN_NAME_FilterECInstanceId]: 1,
+        [ECSQL_COLUMN_NAME_FilterECInstanceId]: "0x1",
         [ECSQL_COLUMN_NAME_FilterClassName]: "TestSchema.TestName",
       };
       const node = await filteringFactory.parseNode(row);
@@ -145,7 +145,7 @@ describe("FilteringHierarchyDefinition", () => {
       const filteringFactory = createFilteringHierarchyDefinition({ nodeIdentifierPaths: paths });
       const row = {
         [NodeSelectClauseColumnNames.FullClassName]: "",
-        [ECSQL_COLUMN_NAME_FilterECInstanceId]: 1,
+        [ECSQL_COLUMN_NAME_FilterECInstanceId]: "0x1",
         [ECSQL_COLUMN_NAME_FilterClassName]: "TestSchema.TestName",
       };
       const node = await filteringFactory.parseNode(row);
@@ -172,7 +172,7 @@ describe("FilteringHierarchyDefinition", () => {
       const filteringFactory = createFilteringHierarchyDefinition({ nodeIdentifierPaths: paths });
       const row = {
         [NodeSelectClauseColumnNames.FullClassName]: "",
-        [ECSQL_COLUMN_NAME_FilterECInstanceId]: 1,
+        [ECSQL_COLUMN_NAME_FilterECInstanceId]: "0x1",
         [ECSQL_COLUMN_NAME_FilterClassName]: "TestSchema.TestName",
       };
       const node = await filteringFactory.parseNode(row);
@@ -1503,7 +1503,7 @@ describe("FilteringHierarchyDefinition", () => {
             [f].[IsFilterTarget] AS [${ECSQL_COLUMN_NAME_IsFilterTarget}],
             [f].[FilterTargetOptions] AS [${ECSQL_COLUMN_NAME_FilterTargetOptions}],
             1 AS [${ECSQL_COLUMN_NAME_HasFilterTargetAncestor}],
-            [f].[ECInstanceId] AS [${ECSQL_COLUMN_NAME_FilterECInstanceId}],
+            printf('0x%x', [f].[ECInstanceId]) AS [${ECSQL_COLUMN_NAME_FilterECInstanceId}],
             [f].[FilterClassName] AS [${ECSQL_COLUMN_NAME_FilterClassName}]
           FROM (
             source query
