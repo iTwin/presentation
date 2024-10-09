@@ -5,15 +5,16 @@
 
 import { expect } from "chai";
 import { IModelDb, PhysicalElement, SnapshotDb } from "@itwin/core-backend";
-import { createNodesQueryClauseFactory, HierarchyFilteringPath } from "@itwin/presentation-hierarchies";
+import { createNodesQueryClauseFactory, HierarchyFilteringPath, HierarchyNode } from "@itwin/presentation-hierarchies";
+import { createBisInstanceLabelSelectClauseFactory, ECClassHierarchyInspector, ECSchemaProvider } from "@itwin/presentation-shared";
+import { Id64 } from "@itwin/core-bentley";
 import { Datasets } from "../util/Datasets";
 import { run } from "../util/TestUtilities";
 import { ProviderOptions, StatelessHierarchyProvider } from "./StatelessHierarchyProvider";
-import { createBisInstanceLabelSelectClauseFactory, ECClassHierarchyInspector, ECSchemaProvider } from "@itwin/presentation-shared";
 
 describe("filtering", () => {
   const totalNumberOfFilteringPaths = 50000;
-  const physicalElementsSmallestIndex = 20;
+  const physicalElementsSmallestDecimalId = 20;
 
   run({
     testName: `filters with ${totalNumberOfFilteringPaths} paths`,
@@ -25,12 +26,12 @@ describe("filtering", () => {
       };
       const parentIdsArr = new Array<number>();
       for (let i = 1; i <= 100; ++i) {
-        parentIdsArr.push(i + physicalElementsSmallestIndex);
+        parentIdsArr.push(i + physicalElementsSmallestDecimalId);
         for (let j = (i - 1) * 500; j < i * 500; ++j) {
           filtering.paths.push([
-            { className: `${schemaName}.${defaultClassName}_0`, id: `0x${physicalElementsSmallestIndex.toString(16)}` },
-            { className: `${schemaName}.${defaultClassName}_${i / itemsPerGroup}`, id: `0x${(i + physicalElementsSmallestIndex).toString(16)}` },
-            { className: `${schemaName}.${defaultClassName}_${j / itemsPerGroup}`, id: `0x${(j + physicalElementsSmallestIndex).toString(16)}` },
+            { className: `${schemaName}.${defaultClassName}_0`, id: `0x${physicalElementsSmallestDecimalId.toString(16)}` },
+            { className: `${schemaName}.${defaultClassName}_${i / itemsPerGroup}`, id: `0x${(i + physicalElementsSmallestDecimalId).toString(16)}` },
+            { className: `${schemaName}.${defaultClassName}_${j / itemsPerGroup}`, id: `0x${(j + physicalElementsSmallestDecimalId).toString(16)}` },
           ]);
         }
       }
@@ -51,9 +52,6 @@ describe("filtering", () => {
                   ecClassId: { selector: `this.ECClassId` },
                   ecInstanceId: { selector: `this.ECInstanceId` },
                   nodeLabel: { selector: `this.UserLabel` },
-                  extendedData: {
-                    ecInstanceId: { selector: `this.ECInstanceId` },
-                  },
                 })}
                 FROM ${fullClassName} AS this
                 ${whereClause("this")}
@@ -78,17 +76,25 @@ describe("filtering", () => {
             // We need to split the hierarchy in 100 parts, because we are using 50000 paths and there is a limit of 500 filtering paths for a single parent.
 
             if (!props.parentNode) {
-              return createHierarchyLevelDefinition(imodelAccess, (alias) => `WHERE ${alias}.ECInstanceId = ${physicalElementsSmallestIndex}`);
+              return createHierarchyLevelDefinition(imodelAccess, (alias) => `WHERE ${alias}.ECInstanceId = ${physicalElementsSmallestDecimalId}`);
             }
 
-            if (props.parentNode?.extendedData?.ecInstanceId === physicalElementsSmallestIndex) {
+            if (
+              props.parentNode &&
+              HierarchyNode.isInstancesNode(props.parentNode) &&
+              props.parentNode.key.instanceKeys.some(({ id }) => Id64.getLocalId(id) === physicalElementsSmallestDecimalId)
+            ) {
               return createHierarchyLevelDefinition(imodelAccess, (alias) => `WHERE ${alias}.ECInstanceId IN (${parentIdsArr.join(", ")})`);
             }
 
-            if (parentIdsArr.includes(props.parentNode?.extendedData?.ecInstanceId)) {
+            if (
+              props.parentNode &&
+              HierarchyNode.isInstancesNode(props.parentNode) &&
+              props.parentNode.key.instanceKeys.some(({ id }) => parentIdsArr.includes(Id64.getLocalId(id)))
+            ) {
               return createHierarchyLevelDefinition(
                 imodelAccess,
-                (alias) => `WHERE ${alias}.ECInstanceId NOT IN (${physicalElementsSmallestIndex}, ${parentIdsArr.join(", ")})`,
+                (alias) => `WHERE ${alias}.ECInstanceId NOT IN (${physicalElementsSmallestDecimalId}, ${parentIdsArr.join(", ")})`,
               );
             }
 
