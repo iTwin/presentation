@@ -239,7 +239,7 @@ export class FilteringHierarchyDefinition implements HierarchyDefinition {
             this._imodelAccess,
             (def, matchingFilters) => {
               const filteredChildrenIdentifierPaths = matchingFilters.reduce(
-                (r, c) => [...r, ...(c.childrenIdentifierPaths ? c.childrenIdentifierPaths : [])],
+                (r, c) => [...r, ...(c.childrenIdentifierPaths ?? [])],
                 new Array<HierarchyFilteringPath>(),
               );
               return {
