@@ -37,7 +37,7 @@ describe("filtering", () => {
 
       const iModel = SnapshotDb.openFile(Datasets.getIModelPath("50k flat elements"));
       const fullClassName = PhysicalElement.classFullName.replace(":", ".");
-      const createHierarchyLevelDefinition = async (imodelAccess: ECSchemaProvider & ECClassHierarchyInspector, eCInstanceIdCondition: string) => {
+      const createHierarchyLevelDefinition = async (imodelAccess: ECSchemaProvider & ECClassHierarchyInspector, whereClause: (alias: string) => string) => {
         const query = createNodesQueryClauseFactory({
           imodelAccess,
           instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
@@ -56,7 +56,7 @@ describe("filtering", () => {
                   },
                 })}
                 FROM ${fullClassName} AS this
-                WHERE this.ECInstanceId ${eCInstanceIdCondition}
+                ${whereClause("this")}
               `,
             },
           },
@@ -78,15 +78,18 @@ describe("filtering", () => {
             // We need to split the hierarchy in 100 parts, because we are using 50000 paths and there is a limit of 500 filtering paths for a single parent.
 
             if (!props.parentNode) {
-              return createHierarchyLevelDefinition(imodelAccess, `= ${physicalElementsSmallestIndex}`);
+              return createHierarchyLevelDefinition(imodelAccess, (alias) => `WHERE ${alias}.ECInstanceId = ${physicalElementsSmallestIndex}`);
             }
 
             if (props.parentNode?.extendedData?.ecInstanceId === physicalElementsSmallestIndex) {
-              return createHierarchyLevelDefinition(imodelAccess, `IN (${parentIdsArr.join(", ")})`);
+              return createHierarchyLevelDefinition(imodelAccess, (alias) => `WHERE ${alias}.ECInstanceId IN (${parentIdsArr.join(", ")})`);
             }
 
             if (parentIdsArr.includes(props.parentNode?.extendedData?.ecInstanceId)) {
-              return createHierarchyLevelDefinition(imodelAccess, `NOT IN (${physicalElementsSmallestIndex}, ${parentIdsArr.join(", ")})`);
+              return createHierarchyLevelDefinition(
+                imodelAccess,
+                (alias) => `WHERE ${alias}.ECInstanceId NOT IN (${physicalElementsSmallestIndex}, ${parentIdsArr.join(", ")})`,
+              );
             }
 
             return [];
