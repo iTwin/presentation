@@ -1503,7 +1503,7 @@ describe("FilteringHierarchyDefinition", () => {
             [f].[IsFilterTarget] AS [${ECSQL_COLUMN_NAME_IsFilterTarget}],
             [f].[FilterTargetOptions] AS [${ECSQL_COLUMN_NAME_FilterTargetOptions}],
             1 AS [${ECSQL_COLUMN_NAME_HasFilterTargetAncestor}],
-            printf('0x%x', [f].[ECInstanceId]) AS [${ECSQL_COLUMN_NAME_FilterECInstanceId}],
+            IdToHex([f].[ECInstanceId]) AS [${ECSQL_COLUMN_NAME_FilterECInstanceId}],
             [f].[FilterClassName] AS [${ECSQL_COLUMN_NAME_FilterClassName}]
           FROM (
             source query

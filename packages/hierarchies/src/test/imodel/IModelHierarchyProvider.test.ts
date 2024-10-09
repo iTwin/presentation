@@ -739,7 +739,7 @@ describe("createIModelHierarchyProvider", () => {
                     [f].[IsFilterTarget] AS [${ECSQL_COLUMN_NAME_IsFilterTarget}],
                     [f].[FilterTargetOptions] AS [${ECSQL_COLUMN_NAME_FilterTargetOptions}],
                     0 AS [${ECSQL_COLUMN_NAME_HasFilterTargetAncestor}],
-                    printf('0x%x', [f].[ECInstanceId]) AS [${ECSQL_COLUMN_NAME_FilterECInstanceId}],
+                    IdToHex([f].[ECInstanceId]) AS [${ECSQL_COLUMN_NAME_FilterECInstanceId}],
                     [f].[FilterClassName] AS [${ECSQL_COLUMN_NAME_FilterClassName}]
                   FROM (QUERY) [q]
                   JOIN FilteringInfo [f] ON [f].[ECInstanceId] = [q].[ECInstanceId]
