@@ -4,6 +4,5 @@
   "globals": ["requestAnimationFrame", "IS_REACT_ACT_ENVIRONMENT"],
   "timeout": 60000,
   "slow": 500,
-  "parallel": true,
   "spec": ["./lib/**/*.test.js"]
 }
