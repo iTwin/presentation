@@ -176,6 +176,41 @@ describe("FilteringHierarchyDefinition", () => {
       });
     });
 
+    it("sets correct filteredChildrenIdentifierPaths when same identifier is in different positions of the same path", async () => {
+      const sourceFactory = {} as unknown as HierarchyDefinition;
+
+      const className = "TestSchema.TestName";
+      const paths: HierarchyFilteringPath[] = [
+        [
+          createTestInstanceKey({ id: "0x3", className }),
+          createTestInstanceKey({ id: "0x1" }),
+          createTestInstanceKey({ id: "0x3", className }),
+          createTestInstanceKey({ id: "0x2" }),
+        ],
+      ];
+      const filteringFactory = createFilteringHierarchyDefinition({
+        ...sourceFactory,
+        nodeIdentifierPaths: paths,
+      });
+      const row = {
+        [NodeSelectClauseColumnNames.FullClassName]: "",
+        [ECSQL_COLUMN_NAME_IsFilterTarget]: 1,
+        [ECSQL_COLUMN_NAME_HasFilterTargetAncestor]: 1,
+        [ECSQL_COLUMN_NAME_FilterECInstanceId]: "0x3",
+        [ECSQL_COLUMN_NAME_FilterClassName]: className,
+        [ECSQL_COLUMN_NAME_FilterValidPathIndex]: 0,
+        [ECSQL_COLUMN_NAME_FilterIdentifiersCountAfter]: 1,
+      };
+      const node = await filteringFactory.parseNode(row);
+      expect(node.filtering).to.deep.eq({
+        filteredChildrenIdentifierPaths: [[createTestInstanceKey({ id: "0x2" })]],
+        filteredChildrenIdentifierPathsIndex: [0],
+        isFilterTarget: true,
+        filterTargetOptions: undefined,
+        hasFilterTargetAncestor: true,
+      });
+    });
+
     it("sets correct filteredChildrenIdentifierPaths when nodes have same id's and different classNames that derive from one another", async () => {
       const sourceFactory = {} as unknown as HierarchyDefinition;
 
