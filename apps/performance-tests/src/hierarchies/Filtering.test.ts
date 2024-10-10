@@ -30,8 +30,14 @@ describe("filtering", () => {
         for (let j = (i - 1) * 500; j < i * 500; ++j) {
           filtering.paths.push([
             { className: `${schemaName}.${defaultClassName}_0`, id: `0x${physicalElementsSmallestDecimalId.toString(16)}` },
-            { className: `${schemaName}.${defaultClassName}_${i / itemsPerGroup}`, id: `0x${(i + physicalElementsSmallestDecimalId).toString(16)}` },
-            { className: `${schemaName}.${defaultClassName}_${j / itemsPerGroup}`, id: `0x${(j + physicalElementsSmallestDecimalId).toString(16)}` },
+            {
+              className: `${schemaName}.${defaultClassName}_${Math.floor(i / itemsPerGroup)}`,
+              id: `0x${(i + physicalElementsSmallestDecimalId).toString(16)}`,
+            },
+            {
+              className: `${schemaName}.${defaultClassName}_${Math.floor(j / itemsPerGroup)}`,
+              id: `0x${(j + physicalElementsSmallestDecimalId).toString(16)}`,
+            },
           ]);
         }
       }
@@ -78,7 +84,6 @@ describe("filtering", () => {
             if (!props.parentNode) {
               return createHierarchyLevelDefinition(imodelAccess, (alias) => `WHERE ${alias}.ECInstanceId = ${physicalElementsSmallestDecimalId}`);
             }
-
             if (
               props.parentNode &&
               HierarchyNode.isInstancesNode(props.parentNode) &&

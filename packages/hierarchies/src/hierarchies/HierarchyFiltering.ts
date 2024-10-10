@@ -105,6 +105,7 @@ export function extractFilteringProps(
   | {
       filteredNodePaths: HierarchyFilteringPath[];
       hasFilterTargetAncestor: boolean;
+      filteredNodePathsIndex?: number[];
     }
   | undefined {
   if (!parentNode) {
@@ -114,6 +115,7 @@ export function extractFilteringProps(
     ? {
         filteredNodePaths: parentNode.filtering.filteredChildrenIdentifierPaths,
         hasFilterTargetAncestor: !!parentNode.filtering.hasFilterTargetAncestor || !!parentNode.filtering.isFilterTarget,
+        filteredNodePathsIndex: parentNode.filtering.filteredChildrenIdentifierPathsIndex,
       }
     : undefined;
 }

@@ -26,6 +26,8 @@ export type HierarchyNodeFilteringProps = {
   hasFilterTargetAncestor?: boolean;
   /** Paths to node's children that are filter targets. */
   filteredChildrenIdentifierPaths?: HierarchyFilteringPath[];
+  /** Paths index in all filter paths */
+  filteredChildrenIdentifierPathsIndex?: number[];
 } & (
   | {
       /** Whether or not this node is a filter target. */
@@ -44,15 +46,17 @@ export namespace HierarchyNodeFilteringProps {
   export function create(props: {
     hasFilterTargetAncestor?: boolean;
     filteredChildrenIdentifierPaths?: HierarchyFilteringPath[];
+    filteredChildrenIdentifierPathsIndex?: number[];
     isFilterTarget?: boolean;
     filterTargetOptions?: HierarchyFilteringPathOptions;
   }): HierarchyNodeFilteringProps | undefined {
-    const { hasFilterTargetAncestor, filteredChildrenIdentifierPaths, isFilterTarget, filterTargetOptions } = props;
+    const { hasFilterTargetAncestor, filteredChildrenIdentifierPaths, isFilterTarget, filterTargetOptions, filteredChildrenIdentifierPathsIndex } = props;
     if (isFilterTarget || hasFilterTargetAncestor || filteredChildrenIdentifierPaths?.length) {
       return {
         ...(isFilterTarget ? { isFilterTarget, filterTargetOptions } : undefined),
         ...(hasFilterTargetAncestor ? { hasFilterTargetAncestor } : undefined),
         ...(!!filteredChildrenIdentifierPaths?.length ? { filteredChildrenIdentifierPaths } : undefined),
+        ...(!!filteredChildrenIdentifierPathsIndex?.length ? { filteredChildrenIdentifierPathsIndex } : undefined),
       };
     }
     return undefined;
