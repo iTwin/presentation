@@ -17,6 +17,7 @@ import {
   PresentationHierarchyNode,
   PresentationInfoNode,
   PresentationNoFilterMatchesInfoNode,
+  PresentationResultSetTooLargeInfoNode,
   PresentationTreeNode,
 } from "../presentation-hierarchies-react/TreeNode";
 import { UnifiedSelectionProvider } from "../presentation-hierarchies-react/UnifiedSelectionContext";
@@ -591,6 +592,32 @@ describe("useTree", () => {
     await waitFor(() => {
       expect(result.current.rootNodes).to.have.lengthOf(1);
       expect((result.current.rootNodes![0] as PresentationHierarchyNode).children).to.have.lengthOf(2);
+    });
+  });
+
+  it("reports nodes load performance", async () => {
+    hierarchyProvider.getNodes.callsFake(() => createAsyncIterator([]));
+    const onPerformanceMeasuredSpy = sinon.spy();
+    const { result } = renderHook(useTree, { initialProps: { ...initialProps, onPerformanceMeasured: onPerformanceMeasuredSpy } });
+
+    await waitFor(() => {
+      expect(result.current.rootNodes).to.deep.eq([]);
+      expect(onPerformanceMeasuredSpy).to.be.calledWith("initial-load", sinon.match.number);
+    });
+  });
+
+  it("reports when hierarchy level size exceeds limit", async () => {
+    hierarchyProvider.getNodes.callsFake(() => {
+      return throwingAsyncIterator(new hierarchiesModule.RowsLimitExceededError(555));
+    });
+    const onHierarchyLimitExceededSpy = sinon.spy();
+    const { result } = renderHook(useTree, { initialProps: { ...initialProps, onHierarchyLimitExceeded: onHierarchyLimitExceededSpy } });
+
+    await waitFor(() => {
+      expect(result.current.rootNodes).to.have.lengthOf(1);
+      const node = result.current.rootNodes![0] as PresentationResultSetTooLargeInfoNode;
+      expect(node.type).to.be.eq("ResultSetTooLarge");
+      expect(onHierarchyLimitExceededSpy).to.be.calledWith({ parentId: undefined, filter: undefined, limit: 555 });
     });
   });
 

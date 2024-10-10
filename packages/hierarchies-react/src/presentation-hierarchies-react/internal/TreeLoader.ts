@@ -66,7 +66,7 @@ export class TreeLoader implements ITreeLoader {
           parentId: parent.id,
         };
         if (isRowsLimitError(err)) {
-          this._onHierarchyLimitExceeded({ parentId: parent.id, filter: instanceFilter, limit: hierarchyLevelSizeLimit });
+          this._onHierarchyLimitExceeded({ parentId: parent.id, filter: instanceFilter, limit: err.limit });
           return of([{ ...nodeProps, type: "ResultSetTooLarge" as const, resultSetSizeLimit: err.limit }]);
         }
         this._onHierarchyLoadError({ parentId: parent.id, type: isTimeoutError(err) ? "timeout" : "unknown" });
