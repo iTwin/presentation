@@ -13,8 +13,11 @@ import { RowsLimitExceededError } from "../../hierarchies/HierarchyErrors";
 import { GroupingHierarchyNode, HierarchyNode, ParentHierarchyNode } from "../../hierarchies/HierarchyNode";
 import { GroupingNodeKey } from "../../hierarchies/HierarchyNodeKey";
 import {
-  ECSQL_COLUMN_NAME_FilteredChildrenPaths,
+  ECSQL_COLUMN_NAME_FilterClassName,
+  ECSQL_COLUMN_NAME_FilterECInstanceId,
+  ECSQL_COLUMN_NAME_FilterIdentifiersCountAfter,
   ECSQL_COLUMN_NAME_FilterTargetOptions,
+  ECSQL_COLUMN_NAME_FilterValidPathIndex,
   ECSQL_COLUMN_NAME_HasFilterTargetAncestor,
   ECSQL_COLUMN_NAME_IsFilterTarget,
 } from "../../hierarchies/imodel/FilteringHierarchyDefinition";
@@ -682,13 +685,24 @@ describe("createIModelHierarchyProvider", () => {
         className: "b",
         is: async (fullClassName) => fullClassName === "a.b",
       });
+
       imodelAccess.createQueryReader.callsFake(() =>
-        createAsyncIterator<RowDef & { [ECSQL_COLUMN_NAME_FilteredChildrenPaths]: string }>([
+        createAsyncIterator<
+          RowDef & {
+            [ECSQL_COLUMN_NAME_FilterECInstanceId]: string;
+            [ECSQL_COLUMN_NAME_FilterClassName]: string;
+            [ECSQL_COLUMN_NAME_FilterValidPathIndex]: number;
+            [ECSQL_COLUMN_NAME_FilterIdentifiersCountAfter]: number;
+          }
+        >([
           {
             [NodeSelectClauseColumnNames.FullClassName]: "a.b",
             [NodeSelectClauseColumnNames.ECInstanceId]: "0x123",
             [NodeSelectClauseColumnNames.DisplayLabel]: "test label",
-            [ECSQL_COLUMN_NAME_FilteredChildrenPaths]: `[[{"className":"c.d","id":"0x456"}]]`,
+            [ECSQL_COLUMN_NAME_FilterECInstanceId]: "0x123",
+            [ECSQL_COLUMN_NAME_FilterClassName]: "a.b",
+            [ECSQL_COLUMN_NAME_FilterValidPathIndex]: 0,
+            [ECSQL_COLUMN_NAME_FilterIdentifiersCountAfter]: 1,
           },
         ]),
       );
@@ -723,8 +737,8 @@ describe("createIModelHierarchyProvider", () => {
             trimWhitespace(query.ctes[0]) ===
               trimWhitespace(
                 `
-                FilteringInfo(ECInstanceId, IsFilterTarget, FilterTargetOptions, FilteredChildrenPaths) AS (
-                  VALUES (0x123, 0, CAST(NULL AS TEXT), '[[{"className":"c.d","id":"0x456"}]]')
+                FilteringInfo(ECInstanceId, IsFilterTarget, FilterTargetOptions, FilterClassName, FilterValidPathIndex, FilterIdentifiersCountAfter) AS (
+                  VALUES (0x123, 0, CAST(NULL AS TEXT), 'a.b', 0, 1)
                 )
                 `,
               ) &&
@@ -736,7 +750,10 @@ describe("createIModelHierarchyProvider", () => {
                     [f].[IsFilterTarget] AS [${ECSQL_COLUMN_NAME_IsFilterTarget}],
                     [f].[FilterTargetOptions] AS [${ECSQL_COLUMN_NAME_FilterTargetOptions}],
                     0 AS [${ECSQL_COLUMN_NAME_HasFilterTargetAncestor}],
-                    [f].[FilteredChildrenPaths] AS [${ECSQL_COLUMN_NAME_FilteredChildrenPaths}]
+                    IdToHex([f].[ECInstanceId]) AS [${ECSQL_COLUMN_NAME_FilterECInstanceId}],
+                    [f].[FilterClassName] AS [${ECSQL_COLUMN_NAME_FilterClassName}],
+                    [f].[FilterValidPathIndex] AS [${ECSQL_COLUMN_NAME_FilterValidPathIndex}],
+                    [f].[FilterIdentifiersCountAfter] AS [${ECSQL_COLUMN_NAME_FilterIdentifiersCountAfter}]
                   FROM (QUERY) [q]
                   JOIN FilteringInfo [f] ON [f].[ECInstanceId] = [q].[ECInstanceId]
                 `,
@@ -755,6 +772,7 @@ describe("createIModelHierarchyProvider", () => {
           children: false,
           filtering: {
             filteredChildrenIdentifierPaths: [[{ className: "c.d", id: "0x456" }]],
+            filteredChildrenIdentifierPathsIndex: [0],
           },
         },
       ]);
@@ -792,8 +810,22 @@ describe("createIModelHierarchyProvider", () => {
         is: async (fullClassName) => fullClassName === "c.d",
       });
 
-      const rootNodePromise = new ResolvablePromise<RowDef & { [ECSQL_COLUMN_NAME_FilteredChildrenPaths]: string }>();
-      const childNodePromise = new ResolvablePromise<RowDef & { [ECSQL_COLUMN_NAME_FilteredChildrenPaths]: string }>();
+      const rootNodePromise = new ResolvablePromise<
+        RowDef & {
+          [ECSQL_COLUMN_NAME_FilterECInstanceId]: string;
+          [ECSQL_COLUMN_NAME_FilterClassName]: string;
+          [ECSQL_COLUMN_NAME_FilterValidPathIndex]: number;
+          [ECSQL_COLUMN_NAME_FilterIdentifiersCountAfter]: number;
+        }
+      >();
+      const childNodePromise = new ResolvablePromise<
+        RowDef & {
+          [ECSQL_COLUMN_NAME_FilterECInstanceId]: string;
+          [ECSQL_COLUMN_NAME_FilterClassName]: string;
+          [ECSQL_COLUMN_NAME_FilterValidPathIndex]: number;
+          [ECSQL_COLUMN_NAME_FilterIdentifiersCountAfter]: number;
+        }
+      >();
       imodelAccess.createQueryReader.callsFake(async function* ({ ecsql, ctes }) {
         if (ecsql.includes("ROOT QUERY")) {
           yield await rootNodePromise;
@@ -849,13 +881,19 @@ describe("createIModelHierarchyProvider", () => {
         [NodeSelectClauseColumnNames.FullClassName]: "a.b",
         [NodeSelectClauseColumnNames.ECInstanceId]: "0x123",
         [NodeSelectClauseColumnNames.DisplayLabel]: "ab",
-        [ECSQL_COLUMN_NAME_FilteredChildrenPaths]: `[[{"className":"c.d","id":"0x456"}]]`,
+        [ECSQL_COLUMN_NAME_FilterECInstanceId]: "0x123",
+        [ECSQL_COLUMN_NAME_FilterClassName]: "a.b",
+        [ECSQL_COLUMN_NAME_FilterValidPathIndex]: 0,
+        [ECSQL_COLUMN_NAME_FilterIdentifiersCountAfter]: 1,
       });
       await childNodePromise.resolve({
         [NodeSelectClauseColumnNames.FullClassName]: "c.d",
         [NodeSelectClauseColumnNames.ECInstanceId]: "0x456",
         [NodeSelectClauseColumnNames.DisplayLabel]: "cd",
-        [ECSQL_COLUMN_NAME_FilteredChildrenPaths]: `[]`,
+        [ECSQL_COLUMN_NAME_FilterECInstanceId]: "0x456",
+        [ECSQL_COLUMN_NAME_FilterClassName]: "c.d",
+        [ECSQL_COLUMN_NAME_FilterValidPathIndex]: 0,
+        [ECSQL_COLUMN_NAME_FilterIdentifiersCountAfter]: 0,
       });
 
       // setting instance filter while a nodes request is in progress cancels the request - ensure we get undefined
@@ -872,6 +910,7 @@ describe("createIModelHierarchyProvider", () => {
         children: false,
         filtering: {
           filteredChildrenIdentifierPaths: [[{ className: "c.d", id: "0x456" }]],
+          filteredChildrenIdentifierPathsIndex: [0],
         },
       });
 

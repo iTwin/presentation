@@ -161,6 +161,7 @@ interface ECSqlValueSelector {
 export function extractFilteringProps(rootLevelFilteringProps: HierarchyFilteringPath[], parentNode: Pick<NonGroupingHierarchyNode, "filtering"> | undefined): {
     filteredNodePaths: HierarchyFilteringPath[];
     hasFilterTargetAncestor: boolean;
+    filteredNodePathsIndex?: number[];
 } | undefined;
 
 // @beta (undocumented)
@@ -314,6 +315,7 @@ interface HierarchyNodeBaseClassGroupingParams extends HierarchyNodeGroupingPara
 type HierarchyNodeFilteringProps = {
     hasFilterTargetAncestor?: boolean;
     filteredChildrenIdentifierPaths?: HierarchyFilteringPath[];
+    filteredChildrenIdentifierPathsIndex?: number[];
 } & ({
     isFilterTarget?: false;
 } | {
@@ -327,6 +329,7 @@ namespace HierarchyNodeFilteringProps {
     function create(props: {
         hasFilterTargetAncestor?: boolean;
         filteredChildrenIdentifierPaths?: HierarchyFilteringPath[];
+        filteredChildrenIdentifierPathsIndex?: number[];
         isFilterTarget?: boolean;
         filterTargetOptions?: HierarchyFilteringPathOptions;
     }): HierarchyNodeFilteringProps | undefined;
@@ -356,6 +359,7 @@ export type HierarchyNodeIdentifier = IModelInstanceKey | GenericNodeKey;
 
 // @beta (undocumented)
 export namespace HierarchyNodeIdentifier {
+    export function compare(lhs: HierarchyNodeIdentifier, rhs: HierarchyNodeIdentifier): number;
     export function equal(lhs: HierarchyNodeIdentifier, rhs: HierarchyNodeIdentifier): boolean;
     export function isGenericNodeIdentifier(id: HierarchyNodeIdentifier): id is GenericNodeKey;
     export function isInstanceNodeIdentifier(id: HierarchyNodeIdentifier): id is IModelInstanceKey;
@@ -540,7 +544,7 @@ export function mergeProviders({ providers }: MergeHierarchyProvidersProps): Hie
 // @beta
 export type NodeParser = (row: {
     [columnName: string]: any;
-}) => SourceInstanceHierarchyNode;
+}) => SourceInstanceHierarchyNode | Promise<SourceInstanceHierarchyNode>;
 
 // @beta
 export type NodePostProcessor = (node: ProcessedHierarchyNode) => Promise<ProcessedHierarchyNode>;

@@ -140,6 +140,7 @@
       "args": [
         "--config",
         "./.mocharc.json",
+        "./lib/**/*.test.js",
         "--no-timeouts",
         "--parallel=false"
       ],
