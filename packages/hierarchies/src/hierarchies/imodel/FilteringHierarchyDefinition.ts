@@ -246,7 +246,7 @@ async function matchFilters<
   TDefinition = TIdentifier extends InstanceKey ? InstanceNodesQueryDefinition : GenericHierarchyNodeDefinition,
 >(
   definition: TDefinition,
-  filteringProps: { filteredNodePaths: HierarchyFilteringPath[]; hasFilterTargetAncestor?: boolean; filteredNodePathsIndex?: number[] },
+  filteringProps: { filteredNodePaths: HierarchyFilteringPath[]; hasFilterTargetAncestor?: boolean },
   predicate: (id: HierarchyNodeIdentifier) => Promise<boolean>,
   classHierarchy: ECClassHierarchyInspector,
   matchedDefinitionProcessor: (def: TDefinition, matchingFilters: Array<MatchedFilter<TIdentifier>>) => TDefinition,
@@ -378,13 +378,14 @@ export function applyECInstanceIdsFilter(
         // note: generally we'd use `VALUES (1,1),(2,2)`, but that doesn't work in ECSQL (https://github.com/iTwin/itwinjs-backlog/issues/865),
         // so using UNION as a workaround
         `FilteringInfo(ECInstanceId, IsFilterTarget, FilterTargetOptions, FilterClassName) AS (
+        VALUES
           ${matchingFilters
             .map((mc) =>
               mc.isFilterTarget
-                ? `VALUES (${mc.id.id}, 1, ${mc.filterTargetOptions ? `'${JSON.stringify(mc.filterTargetOptions)}'` : "CAST(NULL AS TEXT)"}, '${mc.id.className}')`
-                : `VALUES (${mc.id.id}, 0, CAST(NULL AS TEXT), '${mc.id.className}')`,
+                ? `(${mc.id.id}, 1, ${mc.filterTargetOptions ? `'${JSON.stringify(mc.filterTargetOptions)}'` : "CAST(NULL AS TEXT)"}, '${mc.id.className}')`
+                : `(${mc.id.id}, 0, CAST(NULL AS TEXT), '${mc.id.className}')`,
             )
-            .join(" UNION ALL ")}
+            .join(",\n")}
         )`,
       ],
       ecsql: `
