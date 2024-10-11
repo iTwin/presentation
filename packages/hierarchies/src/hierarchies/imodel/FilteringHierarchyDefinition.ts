@@ -161,9 +161,8 @@ export class FilteringHierarchyDefinition implements HierarchyDefinition {
       // istanbul ignore next
       break;
     }
-    entry = similarityLength;
-    this._pathsSimilarityLengthCache.set({ lhsIndex, rhsIndex }, entry);
-    return entry;
+    this._pathsSimilarityLengthCache.set({ lhsIndex, rhsIndex }, similarityLength);
+    return similarityLength;
   }
 
   public get preProcessNode(): NodePreProcessor {
