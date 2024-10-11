@@ -228,9 +228,9 @@ describe("Hierarchies", () => {
         const { imodel, ...keys } = await buildIModel(this, async (builder) => {
           const rootSubject = { className: subjectClassName, id: IModel.rootSubjectId };
           const childSubject1 = insertSubject({ builder, codeValue: "test subject 1", parentId: rootSubject.id });
-          const childSubject2 = insertSubject({ builder, codeValue: "test subject 2", parentId: childSubject1.id });
-          const childSubject3 = insertSubject({ builder, codeValue: "test subject 3", parentId: childSubject2.id });
-          const childSubject4 = insertSubject({ builder, codeValue: "test subject 4", parentId: childSubject3.id });
+          const childSubject2 = insertSubject({ builder, codeValue: "test subject 2", parentId: rootSubject.id });
+          const childSubject3 = insertSubject({ builder, codeValue: "test subject 3", parentId: rootSubject.id });
+          const childSubject4 = insertSubject({ builder, codeValue: "test subject 4", parentId: rootSubject.id });
           return { rootSubject, childSubject1, childSubject2, childSubject3, childSubject4 };
         });
         const imodelAccess = createIModelAccess(imodel);
@@ -238,7 +238,7 @@ describe("Hierarchies", () => {
           imodelAccess,
           instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
         });
-        const createHierarchyLevelDefinition = async (extendedDataLevel: string, whereClause: (alias: string) => string) => {
+        const createHierarchyLevelDefinition = async (whereClause: (alias: string) => string) => {
           return [
             {
               fullClassName: subjectClassName,
@@ -248,9 +248,6 @@ describe("Hierarchies", () => {
                     ecClassId: { selector: `this.ECClassId` },
                     ecInstanceId: { selector: `this.ECInstanceId` },
                     nodeLabel: { selector: `this.CodeValue` },
-                    extendedData: {
-                      level: extendedDataLevel,
-                    },
                   })}
                   FROM ${subjectClassName} AS this
                   ${whereClause("this")}
@@ -263,22 +260,16 @@ describe("Hierarchies", () => {
         const hierarchy: HierarchyDefinition = {
           async defineHierarchyLevel({ parentNode }) {
             if (!parentNode) {
-              return createHierarchyLevelDefinition(
-                "1",
-                (alias: string) => `WHERE ${alias}.Parent.Id = ${keys.rootSubject.id} OR ${alias}.Parent.Id = ${keys.childSubject3.id}`,
-              );
+              return createHierarchyLevelDefinition((alias: string) => `WHERE ${alias}.ECInstanceId IN (${keys.childSubject1.id}, ${keys.childSubject4.id})`);
             }
-            if (HierarchyNode.isInstancesNode(parentNode) && parentNode.label === "test subject 1" && parentNode.extendedData?.level === "1") {
-              return createHierarchyLevelDefinition(
-                "2",
-                (alias: string) => `WHERE ${alias}.Parent.Id = ${keys.childSubject1.id} OR ${alias}.Parent.Id = ${keys.childSubject2.id}`,
-              );
+            if (HierarchyNode.isInstancesNode(parentNode) && parentNode.label === "test subject 1" && parentNode.parentKeys.length === 0) {
+              return createHierarchyLevelDefinition((alias: string) => `WHERE ${alias}.ECInstanceId IN (${keys.childSubject2.id}, ${keys.childSubject3.id})`);
             }
             if (HierarchyNode.isInstancesNode(parentNode) && parentNode.label === "test subject 4") {
-              return createHierarchyLevelDefinition("3", (alias: string) => `WHERE ${alias}.Parent.Id = ${keys.rootSubject.id}`);
+              return createHierarchyLevelDefinition((alias: string) => `WHERE ${alias}.ECInstanceId = ${keys.childSubject1.id}`);
             }
-            if (HierarchyNode.isInstancesNode(parentNode) && parentNode.label === "test subject 1" && parentNode.extendedData?.level === "3") {
-              return createHierarchyLevelDefinition("4", (alias: string) => `WHERE ${alias}.Parent.Id = ${keys.childSubject1.id}`);
+            if (HierarchyNode.isInstancesNode(parentNode) && parentNode.label === "test subject 1" && parentNode.parentKeys.length === 1) {
+              return createHierarchyLevelDefinition((alias: string) => `WHERE ${alias}.ECInstanceId = ${keys.childSubject2.id}`);
             }
             return [];
           },
