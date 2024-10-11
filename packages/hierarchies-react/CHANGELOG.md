@@ -1,5 +1,14 @@
 # @itwin/presentation-hierarchies-react
 
+## 1.0.1
+
+### Patch Changes
+
+- [#734](https://github.com/iTwin/presentation/pull/734): Fixed `onHierarchyLimitExceeded` callback of [tree state hooks](./README.md#tree-state-hooks) being called with incorrect `limit` value.
+- Updated dependencies:
+  - @itwin/unified-selection@1.0.1
+  - @itwin/presentation-hierarchies@1.1.0
+
 ## 1.0.0
 
 ### Major Changes
