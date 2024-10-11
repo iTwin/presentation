@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1728646171625,
+  "lastUpdate": 1728654765323,
   "repoUrl": "https://github.com/iTwin/presentation",
   "entries": {
     "Benchmark": [
@@ -22330,6 +22330,151 @@ window.BENCHMARK_DATA = {
             "value": 87,
             "unit": "ms",
             "extra": "count: 2\nmax: 87\np95: 87\nmedian: 82"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "100586436+JonasDov@users.noreply.github.com",
+            "name": "JonasDov",
+            "username": "JonasDov"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "99a76ec9a4ebdcff1e6fd7b0529ebf9010559c05",
+          "message": "Fix slow hierarchy filtering with large number of filtered paths (#711)\n\n* Add performance test\r\n\r\n* Remove FilteredChildrenPaths from query\r\n\r\n* Run extract-api and update extractions\r\n\r\n* Add changeset\r\n\r\n* Update changeset comment\r\n\r\n* Add filterPathsIdentifierPositions\r\n\r\n* Remove added test\r\n\r\n* Fix tests and cleanup\r\n\r\n* Run extract-api, update test name\r\n\r\n* Fix comments\r\n\r\n* Add back new lines\r\n\r\n* Update changeset\r\n\r\n* Change eCInstanceIdCondition\r\n\r\n* Adjust Filtering.test.ts\r\n\r\n* Adjust import order\r\n\r\n* Update packages/hierarchies/src/hierarchies/imodel/FilteringHierarchyDefinition.ts\r\n\r\nCo-authored-by: Grigas <35135765+grigasp@users.noreply.github.com>\r\n\r\n* Adjust import order & change ECSQL_COLUMN_NAME_FilterECInstanceId to return id64 string\r\n\r\n* Fix comments\r\n\r\n* Update .changeset/tall-comics-compare.md\r\n\r\nCo-authored-by: Grigas <35135765+grigasp@users.noreply.github.com>\r\n\r\n* Add watch to performance-tests, fix benchmark\r\n\r\n* Add tests\r\n\r\n* Fix filtering\r\n\r\n* Add unit test\r\n\r\n* Cleanup integration test `filters through instance nodes that are in multiple paths`\r\n\r\n* Update packages/hierarchies/src/hierarchies/imodel/FilteringHierarchyDefinition.ts\r\n\r\nCo-authored-by: Grigas <35135765+grigasp@users.noreply.github.com>\r\n\r\n* Create a separate class for handling positions\r\n\r\n* Remove unnecessarily exported class\r\n\r\n* Add parentNode to parseNode\r\n\r\n* Run extract api\r\n\r\n* Fix comments\r\n\r\n* Update changeset\r\n\r\n---------\r\n\r\nCo-authored-by: Grigas <35135765+grigasp@users.noreply.github.com>",
+          "timestamp": "2024-10-11T13:49:14Z",
+          "tree_id": "67ec6d63eb558f1d2481d73c844353c88cce9ba6",
+          "url": "https://github.com/iTwin/presentation/commit/99a76ec9a4ebdcff1e6fd7b0529ebf9010559c05"
+        },
+        "date": 1728654764797,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "flat 50k elements list",
+            "value": 4802,
+            "unit": "ms"
+          },
+          {
+            "name": "flat 50k elements list (P95 of main thread blocks)",
+            "value": 77,
+            "unit": "ms",
+            "extra": "count: 20\nmax: 77\np95: 77\nmedian: 32.5"
+          },
+          {
+            "name": "filtering filters with 50000 paths",
+            "value": 12792.79,
+            "unit": "ms"
+          },
+          {
+            "name": "filtering filters with 50000 paths (P95 of main thread blocks)",
+            "value": 275,
+            "unit": "ms",
+            "extra": "count: 16\nmax: 275\np95: 275\nmedian: 29.5"
+          },
+          {
+            "name": "grouping by label",
+            "value": 10933.23,
+            "unit": "ms"
+          },
+          {
+            "name": "grouping by label (P95 of main thread blocks)",
+            "value": 62,
+            "unit": "ms",
+            "extra": "count: 5\nmax: 62\np95: 62\nmedian: 32"
+          },
+          {
+            "name": "grouping by class",
+            "value": 10823.36,
+            "unit": "ms"
+          },
+          {
+            "name": "grouping by class (P95 of main thread blocks)",
+            "value": 35,
+            "unit": "ms",
+            "extra": "count: 6\nmax: 35\np95: 35\nmedian: 30.5"
+          },
+          {
+            "name": "grouping by property",
+            "value": 11498.15,
+            "unit": "ms"
+          },
+          {
+            "name": "grouping by property (P95 of main thread blocks)",
+            "value": 63,
+            "unit": "ms",
+            "extra": "count: 6\nmax: 63\np95: 63\nmedian: 31.5"
+          },
+          {
+            "name": "grouping by base class (10 classes)",
+            "value": 8411.65,
+            "unit": "ms"
+          },
+          {
+            "name": "grouping by base class (10 classes) (P95 of main thread blocks)",
+            "value": 75,
+            "unit": "ms",
+            "extra": "count: 21\nmax: 78\np95: 75\nmedian: 34"
+          },
+          {
+            "name": "grouping by multiple attributes",
+            "value": 28723.96,
+            "unit": "ms"
+          },
+          {
+            "name": "grouping by multiple attributes (P95 of main thread blocks)",
+            "value": 40,
+            "unit": "ms",
+            "extra": "count: 8\nmax: 40\np95: 40\nmedian: 31.5"
+          },
+          {
+            "name": "hide if no children required to finalize root, w/o children",
+            "value": 54457.36,
+            "unit": "ms"
+          },
+          {
+            "name": "hide if no children required to finalize root, w/o children (P95 of main thread blocks)",
+            "value": 35,
+            "unit": "ms",
+            "extra": "count: 7\nmax: 35\np95: 35\nmedian: 29"
+          },
+          {
+            "name": "hide if no children required to finalize root, w/ children",
+            "value": 188.28,
+            "unit": "ms"
+          },
+          {
+            "name": "hide if no children required to finalize root, w/ children (P95 of main thread blocks)",
+            "value": 0,
+            "unit": "ms",
+            "extra": "count: 0\nmax: N/A\np95: N/A\nmedian: N/A"
+          },
+          {
+            "name": "models tree initial (Baytown)",
+            "value": 41.12,
+            "unit": "ms"
+          },
+          {
+            "name": "models tree initial (Baytown) (P95 of main thread blocks)",
+            "value": 0,
+            "unit": "ms",
+            "extra": "count: 0\nmax: N/A\np95: N/A\nmedian: N/A"
+          },
+          {
+            "name": "models tree full (Baytown)",
+            "value": 7839.31,
+            "unit": "ms"
+          },
+          {
+            "name": "models tree full (Baytown) (P95 of main thread blocks)",
+            "value": 84,
+            "unit": "ms",
+            "extra": "count: 3\nmax: 84\np95: 84\nmedian: 78"
           }
         ]
       }
