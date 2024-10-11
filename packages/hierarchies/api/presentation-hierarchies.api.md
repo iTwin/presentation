@@ -540,7 +540,7 @@ export function mergeProviders({ providers }: MergeHierarchyProvidersProps): Hie
 // @beta
 export type NodeParser = (row: {
     [columnName: string]: any;
-}) => SourceInstanceHierarchyNode;
+}, parentNode?: HierarchyDefinitionParentNode) => SourceInstanceHierarchyNode | Promise<SourceInstanceHierarchyNode>;
 
 // @beta
 export type NodePostProcessor = (node: ProcessedHierarchyNode) => Promise<ProcessedHierarchyNode>;

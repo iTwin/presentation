@@ -67,7 +67,10 @@ export type HierarchyLevelDefinition = HierarchyNodesDefinition[];
  * A type for a function that parses a `SourceInstanceHierarchyNode` from provided ECSQL `row` object.
  * @beta
  */
-export type NodeParser = (row: { [columnName: string]: any }) => SourceInstanceHierarchyNode;
+export type NodeParser = (
+  row: { [columnName: string]: any },
+  parentNode?: HierarchyDefinitionParentNode,
+) => SourceInstanceHierarchyNode | Promise<SourceInstanceHierarchyNode>;
 
 /**
  * A type for a function that pre-processes given node. Unless the function decides not to make any modifications,

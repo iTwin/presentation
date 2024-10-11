@@ -12,6 +12,7 @@ import {
   DefineHierarchyLevelProps,
   GenericHierarchyNodeDefinition,
   HierarchyDefinition,
+  HierarchyDefinitionParentNode,
   HierarchyLevelDefinition,
   HierarchyNodesDefinition,
   InstanceNodesQueryDefinition,
@@ -106,16 +107,22 @@ export class FilteringHierarchyDefinition implements HierarchyDefinition {
   }
 
   public get parseNode(): NodeParser {
-    return (row: { [columnName: string]: any }): SourceInstanceHierarchyNode => {
+    return async (row: { [columnName: string]: any }, parentNode?: HierarchyDefinitionParentNode): Promise<SourceInstanceHierarchyNode> => {
       const hasFilterTargetAncestor: boolean = !!row[ECSQL_COLUMN_NAME_HasFilterTargetAncestor];
       const isFilterTarget: boolean = !!row[ECSQL_COLUMN_NAME_IsFilterTarget];
       const filterTargetOptions: HierarchyFilteringPathOptions | undefined = row[ECSQL_COLUMN_NAME_FilterTargetOptions]
         ? JSON.parse(row[ECSQL_COLUMN_NAME_FilterTargetOptions])
         : undefined;
-      const filteredChildrenIdentifierPaths: HierarchyFilteringPath[] | undefined = row[ECSQL_COLUMN_NAME_FilteredChildrenPaths]
-        ? JSON.parse(row[ECSQL_COLUMN_NAME_FilteredChildrenPaths])
-        : undefined;
-      const defaultNode = (this._source.parseNode ?? defaultNodesParser)(row);
+
+      const filteredChildrenIdentifierPaths =
+        row[ECSQL_COLUMN_NAME_FilterECInstanceId] && row[ECSQL_COLUMN_NAME_FilterClassName]
+          ? await this.getChildrenIdentifierPaths(parentNode?.filtering?.filteredChildrenIdentifierPaths ?? this._nodeIdentifierPaths, {
+              className: row[ECSQL_COLUMN_NAME_FilterClassName],
+              id: row[ECSQL_COLUMN_NAME_FilterECInstanceId],
+            })
+          : [];
+
+      const defaultNode = await (this._source.parseNode ?? defaultNodesParser)(row);
       return applyFilterAttributes({
         node: defaultNode,
         filteredChildrenIdentifierPaths,
@@ -124,6 +131,45 @@ export class FilteringHierarchyDefinition implements HierarchyDefinition {
         hasFilterTargetAncestor,
       });
     };
+  }
+
+  private async getChildrenIdentifierPaths(filteredChildrenNodeIdentifierPaths: HierarchyFilteringPath[], providedIdentifier: InstanceKey) {
+    const { id, className } = providedIdentifier;
+
+    let filteredChildrenIdentifierPaths: HierarchyFilteringPath[] | undefined;
+    for (const filteredChildrenNodeIdentifierPath of filteredChildrenNodeIdentifierPaths) {
+      const path = HierarchyFilteringPath.normalize(filteredChildrenNodeIdentifierPath);
+      // istanbul ignore if
+      if (path.path.length === 0) {
+        continue;
+      }
+
+      // We need to check if identifiers have the same id and imodelKey and are
+      // of the same class / derived class / is derived from class
+      const identifier = path.path[0];
+      if (identifier.id !== id) {
+        continue;
+      }
+      if (HierarchyNodeIdentifier.isInstanceNodeIdentifier(identifier)) {
+        if (identifier.imodelKey && identifier.imodelKey !== this._imodelAccess.imodelKey) {
+          continue;
+        }
+        if (
+          identifier.className !== className &&
+          !(await this._imodelAccess.classDerivesFrom(identifier.className, className)) &&
+          !(await this._imodelAccess.classDerivesFrom(className, identifier.className))
+        ) {
+          continue;
+        }
+      }
+      if (!filteredChildrenIdentifierPaths) {
+        filteredChildrenIdentifierPaths = [];
+      }
+      if (path.path.length > 1) {
+        filteredChildrenIdentifierPaths.push(path.options ? { path: path.path.slice(1), options: path.options } : path.path.slice(1));
+      }
+    }
+    return filteredChildrenIdentifierPaths;
   }
 
   public async defineHierarchyLevel(props: DefineHierarchyLevelProps): Promise<HierarchyLevelDefinition> {
@@ -178,6 +224,7 @@ export class FilteringHierarchyDefinition implements HierarchyDefinition {
             },
             this._imodelAccess,
             (def, matchingFilters) => applyECInstanceIdsFilter(def, matchingFilters, !!filteringProps.hasFilterTargetAncestor),
+            false,
           );
         }
         if (matchedDefinition) {
@@ -203,6 +250,7 @@ async function matchFilters<
   predicate: (id: HierarchyNodeIdentifier) => Promise<boolean>,
   classHierarchy: ECClassHierarchyInspector,
   matchedDefinitionProcessor: (def: TDefinition, matchingFilters: Array<MatchedFilter<TIdentifier>>) => TDefinition,
+  extractChildrenIdentifierPaths: boolean = true,
 ): Promise<TDefinition | undefined> {
   const { filteredNodePaths, hasFilterTargetAncestor } = filteringProps;
   const matchingFilters: Array<MatchedFilter<TIdentifier>> = [];
@@ -224,9 +272,11 @@ async function matchFilters<
         };
         matchingFilters.push(entry);
       }
-      const remainingPath = path.slice(1);
-      if (remainingPath.length > 0) {
-        entry.childrenIdentifierPaths.push(options ? { path: remainingPath, options } : remainingPath);
+
+      if (path.length > 1) {
+        if (extractChildrenIdentifierPaths) {
+          entry.childrenIdentifierPaths.push(options ? { path: path.slice(1), options } : path.slice(1));
+        }
       } else if (entry.isFilterTarget) {
         entry.filterTargetOptions = HierarchyFilteringPath.mergeOptions(entry.filterTargetOptions, options);
       } else {
@@ -292,10 +342,6 @@ function applyFilterAttributes<TNode extends SourceHierarchyNode>(props: {
 
 /** @internal */
 // eslint-disable-next-line @typescript-eslint/naming-convention
-export const ECSQL_COLUMN_NAME_FilteredChildrenPaths = "FilteredChildrenPaths";
-
-/** @internal */
-// eslint-disable-next-line @typescript-eslint/naming-convention
 export const ECSQL_COLUMN_NAME_IsFilterTarget = "IsFilterTarget";
 
 /** @internal */
@@ -305,6 +351,14 @@ export const ECSQL_COLUMN_NAME_FilterTargetOptions = "FilterTargetOptions";
 /** @internal */
 // eslint-disable-next-line @typescript-eslint/naming-convention
 export const ECSQL_COLUMN_NAME_HasFilterTargetAncestor = "HasFilterTargetAncestor";
+
+/** @internal */
+// eslint-disable-next-line @typescript-eslint/naming-convention
+export const ECSQL_COLUMN_NAME_FilterECInstanceId = "FilterECInstanceId";
+
+/** @internal */
+// eslint-disable-next-line @typescript-eslint/naming-convention
+export const ECSQL_COLUMN_NAME_FilterClassName = "FilterClassName";
 
 /** @internal */
 export function applyECInstanceIdsFilter(
@@ -323,12 +377,12 @@ export function applyECInstanceIdsFilter(
         ...(def.query.ctes ?? []),
         // note: generally we'd use `VALUES (1,1),(2,2)`, but that doesn't work in ECSQL (https://github.com/iTwin/itwinjs-backlog/issues/865),
         // so using UNION as a workaround
-        `FilteringInfo(ECInstanceId, IsFilterTarget, FilterTargetOptions, FilteredChildrenPaths) AS (
+        `FilteringInfo(ECInstanceId, IsFilterTarget, FilterTargetOptions, FilterClassName) AS (
           ${matchingFilters
             .map((mc) =>
               mc.isFilterTarget
-                ? `VALUES (${mc.id.id}, 1, ${mc.filterTargetOptions ? `'${JSON.stringify(mc.filterTargetOptions)}'` : "CAST(NULL AS TEXT)"}, '${JSON.stringify(mc.childrenIdentifierPaths)}')`
-                : `VALUES (${mc.id.id}, 0, CAST(NULL AS TEXT), '${JSON.stringify(mc.childrenIdentifierPaths)}')`,
+                ? `VALUES (${mc.id.id}, 1, ${mc.filterTargetOptions ? `'${JSON.stringify(mc.filterTargetOptions)}'` : "CAST(NULL AS TEXT)"}, '${mc.id.className}')`
+                : `VALUES (${mc.id.id}, 0, CAST(NULL AS TEXT), '${mc.id.className}')`,
             )
             .join(" UNION ALL ")}
         )`,
@@ -339,7 +393,8 @@ export function applyECInstanceIdsFilter(
           [f].[IsFilterTarget] AS [${ECSQL_COLUMN_NAME_IsFilterTarget}],
           [f].[FilterTargetOptions] AS [${ECSQL_COLUMN_NAME_FilterTargetOptions}],
           ${hasFilterTargetAncestor ? "1" : "0"} AS [${ECSQL_COLUMN_NAME_HasFilterTargetAncestor}],
-          [f].[FilteredChildrenPaths] AS [${ECSQL_COLUMN_NAME_FilteredChildrenPaths}]
+          IdToHex([f].[ECInstanceId]) AS [${ECSQL_COLUMN_NAME_FilterECInstanceId}],
+          [f].[FilterClassName] AS [${ECSQL_COLUMN_NAME_FilterClassName}]
         FROM (
           ${def.query.ecsql}
         ) [q]
