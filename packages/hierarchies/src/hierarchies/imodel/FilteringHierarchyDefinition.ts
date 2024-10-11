@@ -33,136 +33,17 @@ interface FilteringHierarchyDefinitionProps {
 export class FilteringHierarchyDefinition implements HierarchyDefinition {
   private _imodelAccess: ECClassHierarchyInspector & { imodelKey: string };
   private _source: HierarchyDefinition;
+  private _filteringHierarchyDefinitionPositions: FilteringHierarchyDefinitionPositions;
   private _nodeIdentifierPaths: HierarchyFilteringPath[];
-  private _pathsIdentifierPositions: Dictionary<HierarchyNodeIdentifier, Array<[number, number]>>;
-  /**
-   * Cache that is used for determining how many identifiers from two paths are similar.
-   * Identifiers are similar if:
-   * a) They are both of [[IModelInstanceKey]] type and:
-   *  1. They have the same id's and imodelKeys.
-   *  2. They have the same or related (derived) class.
-   * b) They are both of [[GenericNodeKey]] type and:
-   *  1. They have the same id's and sources.
-   * For example, if provided these pathIndexes:
-   * {lhsIndex: 0, rhsIndex: 1}
-   * with these _nodeIdentifierPaths:
-   * [[a, b, c, d, e], [a, b, c, e, f]]
-   * This dictionary would return: 3, since both paths start with a, b, c identifiers (which are similar)
-   */
-  private _pathsSimilarityLengthCache: Dictionary<{ lhsIndex: number; rhsIndex: number }, number>;
 
   public constructor(props: FilteringHierarchyDefinitionProps) {
     this._imodelAccess = props.imodelAccess;
     this._source = props.source;
     this._nodeIdentifierPaths = props.nodeIdentifierPaths;
-    this._pathsIdentifierPositions = this.createPathsIdentifierPositions(props.nodeIdentifierPaths);
-    this._pathsSimilarityLengthCache = this.createPathsSimilarityLengthCache();
-  }
-
-  /**
-   * Creates a dictionary of positions from nodeIdentifierPaths.
-   * For example, if provided these nodeIdentifierPaths:
-   * [[a, b, c], [d, c]], the following dictionary would be created:
-   * {a: [[0, 0]], b: [[0, 1]], c: [[0, 2], [1, 1]], d: [[1, 0]]}.
-   *
-   * NOTE: This dictionary ignores classNames. In cases where identifiers are of [[InstanceNodeIdentifier]] type, share the same imodelKey and
-   * id, resulting dictionary would have the same key for both identifiers. This is done, because it is not enough to compare className equality,
-   * we need to also check if one class derives from the other or vice versa. To perform this check `imodelAccess.classDerivesFrom` function needs
-   * to be used and since it is an async function, we can't use it in the constructor. The positions are later adjusted by [[parseNode]] function,
-   * where `imodelAccess.classDerivesFrom` can be used, since it is async.
-   */
-  private createPathsIdentifierPositions(nodeIdentifierPaths: HierarchyFilteringPath[]): Dictionary<HierarchyNodeIdentifier, Array<[number, number]>> {
-    const pathsIdentifiersPositionsDictionary = new Dictionary<HierarchyNodeIdentifier, Array<[number, number]>>(HierarchyNodeIdentifier.compare);
-
-    nodeIdentifierPaths.forEach((nodeIdentifierPath, pathIndex) => {
-      const normalizedPath = HierarchyFilteringPath.normalize(nodeIdentifierPath);
-      if (normalizedPath.path.length === 0) {
-        return;
-      }
-      normalizedPath.path.forEach((identifier, identifierIndex) => {
-        const formattedIdentifier: HierarchyNodeIdentifier = HierarchyNodeIdentifier.isGenericNodeIdentifier(identifier)
-          ? {
-              id: identifier.id,
-              type: "generic",
-              source: identifier.source ?? this._imodelAccess.imodelKey,
-            }
-          : {
-              id: identifier.id,
-              imodelKey: identifier.imodelKey ?? this._imodelAccess.imodelKey,
-              className: "",
-            };
-        const entry = pathsIdentifiersPositionsDictionary.get(formattedIdentifier);
-        if (!entry) {
-          pathsIdentifiersPositionsDictionary.set(formattedIdentifier, [[pathIndex, identifierIndex]]);
-        } else {
-          entry.push([pathIndex, identifierIndex]);
-        }
-      });
+    this._filteringHierarchyDefinitionPositions = new FilteringHierarchyDefinitionPositions({
+      imodelAccess: props.imodelAccess,
+      nodeIdentifierPaths: props.nodeIdentifierPaths,
     });
-    return pathsIdentifiersPositionsDictionary;
-  }
-
-  private createPathsSimilarityLengthCache(): Dictionary<{ lhsIndex: number; rhsIndex: number }, number> {
-    const compare = (lhs: { lhsIndex: number; rhsIndex: number }, rhs: { lhsIndex: number; rhsIndex: number }) => {
-      // istanbul ignore next
-      if (lhs.lhsIndex === rhs.lhsIndex && lhs.rhsIndex === rhs.rhsIndex) {
-        return 0;
-      }
-      // istanbul ignore next
-      if (lhs.rhsIndex === rhs.lhsIndex && lhs.lhsIndex === rhs.rhsIndex) {
-        return 0;
-      }
-      if (lhs.lhsIndex !== rhs.lhsIndex) {
-        // istanbul ignore next
-        return lhs.lhsIndex > rhs.lhsIndex ? 1 : -1;
-      }
-      // istanbul ignore next
-      return lhs.rhsIndex > rhs.rhsIndex ? 1 : -1;
-    };
-    return new Dictionary<{ lhsIndex: number; rhsIndex: number }, number>(compare);
-  }
-
-  private async getPathsSimilarityLength(lhsIndex: number, rhsIndex: number): Promise<number> {
-    let entry = this._pathsSimilarityLengthCache.get({ lhsIndex, rhsIndex });
-    // istanbul ignore if
-    if (entry !== undefined) {
-      return entry;
-    }
-    let similarityLength = 0;
-    const lhsPath = HierarchyFilteringPath.normalize(this._nodeIdentifierPaths[lhsIndex]);
-    const rhsPath = HierarchyFilteringPath.normalize(this._nodeIdentifierPaths[rhsIndex]);
-    // istanbul ignore next
-    const smallerLength = lhsPath.path.length > rhsPath.path.length ? rhsPath.path.length : lhsPath.path.length;
-    for (let i = 0; i < smallerLength; ++i) {
-      const lhsIdentifier = lhsPath.path[i];
-      const rhsIdentifier = rhsPath.path[i];
-      if (HierarchyNodeIdentifier.isInstanceNodeIdentifier(lhsIdentifier) && HierarchyNodeIdentifier.isInstanceNodeIdentifier(rhsIdentifier)) {
-        if (
-          lhsIdentifier.imodelKey !== rhsIdentifier.imodelKey ||
-          lhsIdentifier.id !== rhsIdentifier.id ||
-          (lhsIdentifier.className !== rhsIdentifier.className &&
-            !(await this._imodelAccess.classDerivesFrom(lhsIdentifier.className, rhsIdentifier.className)) &&
-            !(await this._imodelAccess.classDerivesFrom(rhsIdentifier.className, lhsIdentifier.className)))
-        ) {
-          break;
-        }
-        ++similarityLength;
-        continue;
-      }
-
-      // istanbul ignore next
-      if (HierarchyNodeIdentifier.isGenericNodeIdentifier(lhsIdentifier) && HierarchyNodeIdentifier.isGenericNodeIdentifier(rhsIdentifier)) {
-        if (lhsIdentifier.source !== rhsIdentifier.source || lhsIdentifier.id !== rhsIdentifier.id) {
-          break;
-        }
-        ++similarityLength;
-        continue;
-      }
-      // istanbul ignore next
-      break;
-    }
-    this._pathsSimilarityLengthCache.set({ lhsIndex, rhsIndex }, similarityLength);
-    return similarityLength;
   }
 
   public get preProcessNode(): NodePreProcessor {
@@ -269,7 +150,7 @@ export class FilteringHierarchyDefinition implements HierarchyDefinition {
     const { id, className } = providedIdentifier;
     // istanbul ignore next
     const allFilterPathsIdentifierPositions: Array<[number, number]> | undefined =
-      this._pathsIdentifierPositions.get({
+      this._filteringHierarchyDefinitionPositions.pathsIdentifierPositions.get({
         id,
         className: "",
         imodelKey: this._imodelAccess.imodelKey,
@@ -290,8 +171,7 @@ export class FilteringHierarchyDefinition implements HierarchyDefinition {
       }
 
       if (pathIndex !== validPathIndex) {
-        const similarityLength = await this.getPathsSimilarityLength(pathIndex, validPathIndex);
-        // istanbul ignore if
+        const similarityLength = await this._filteringHierarchyDefinitionPositions.getPathsSimilarityLength(pathIndex, validPathIndex);
         if (similarityLength < identifierIndex) {
           continue;
         }
@@ -574,4 +454,139 @@ export function applyECInstanceIdsFilter(
       `,
     },
   };
+}
+
+/** @internal */
+export class FilteringHierarchyDefinitionPositions {
+  private _imodelAccess: ECClassHierarchyInspector & { imodelKey: string };
+  private _nodeIdentifierPaths: HierarchyFilteringPath[];
+  public pathsIdentifierPositions: Dictionary<HierarchyNodeIdentifier, Array<[number, number]>>;
+  /**
+   * Cache that is used for determining how many identifiers from two paths are similar.
+   * Identifiers are similar if:
+   * a) They are both of [[IModelInstanceKey]] type and:
+   *  1. They have the same id's and imodelKeys.
+   *  2. They have the same or related (derived) class.
+   * b) They are both of [[GenericNodeKey]] type and:
+   *  1. They have the same id's and sources.
+   * For example, if provided these pathIndexes:
+   * {lhsIndex: 0, rhsIndex: 1}
+   * with these _nodeIdentifierPaths:
+   * [[a, b, c, d, e], [a, b, c, e, f]]
+   * This dictionary would return: 3, since both paths start with a, b, c identifiers (which are similar)
+   */
+  public pathsSimilarityLengthCache: Dictionary<{ lhsIndex: number; rhsIndex: number }, number>;
+
+  public constructor(props: Omit<FilteringHierarchyDefinitionProps, "source">) {
+    this._imodelAccess = props.imodelAccess;
+    this._nodeIdentifierPaths = props.nodeIdentifierPaths;
+    this.pathsIdentifierPositions = this.createPathsIdentifierPositions(props.nodeIdentifierPaths);
+    this.pathsSimilarityLengthCache = createPathsSimilarityLengthCache();
+  }
+
+  /**
+   * Creates a dictionary of positions from nodeIdentifierPaths.
+   * For example, if provided these nodeIdentifierPaths:
+   * [[a, b, c], [d, c]], the following dictionary would be created:
+   * {a: [[0, 0]], b: [[0, 1]], c: [[0, 2], [1, 1]], d: [[1, 0]]}.
+   *
+   * NOTE: This dictionary ignores classNames. In cases where identifiers are of [[InstanceNodeIdentifier]] type, share the same imodelKey and
+   * id, resulting dictionary would have the same key for both identifiers. This is done, because it is not enough to compare className equality,
+   * we need to also check if one class derives from the other or vice versa. To perform this check `imodelAccess.classDerivesFrom` function needs
+   * to be used and since it is an async function, we can't use it in the constructor. The positions are later adjusted by [[parseNode]] function,
+   * where `imodelAccess.classDerivesFrom` can be used, since it is async.
+   */
+  private createPathsIdentifierPositions(nodeIdentifierPaths: HierarchyFilteringPath[]): Dictionary<HierarchyNodeIdentifier, Array<[number, number]>> {
+    const pathsIdentifiersPositionsDictionary = new Dictionary<HierarchyNodeIdentifier, Array<[number, number]>>(HierarchyNodeIdentifier.compare);
+
+    nodeIdentifierPaths.forEach((nodeIdentifierPath, pathIndex) => {
+      const normalizedPath = HierarchyFilteringPath.normalize(nodeIdentifierPath);
+      if (normalizedPath.path.length === 0) {
+        return;
+      }
+      normalizedPath.path.forEach((identifier, identifierIndex) => {
+        const formattedIdentifier: HierarchyNodeIdentifier = HierarchyNodeIdentifier.isGenericNodeIdentifier(identifier)
+          ? {
+              id: identifier.id,
+              type: "generic",
+              source: identifier.source ?? this._imodelAccess.imodelKey,
+            }
+          : {
+              id: identifier.id,
+              imodelKey: identifier.imodelKey ?? this._imodelAccess.imodelKey,
+              className: "",
+            };
+        const entry = pathsIdentifiersPositionsDictionary.get(formattedIdentifier);
+        if (!entry) {
+          pathsIdentifiersPositionsDictionary.set(formattedIdentifier, [[pathIndex, identifierIndex]]);
+        } else {
+          entry.push([pathIndex, identifierIndex]);
+        }
+      });
+    });
+    return pathsIdentifiersPositionsDictionary;
+  }
+
+  public async getPathsSimilarityLength(lhsIndex: number, rhsIndex: number): Promise<number> {
+    const entry = this.pathsSimilarityLengthCache.get({ lhsIndex, rhsIndex });
+    if (entry !== undefined) {
+      return entry;
+    }
+
+    let similarityLength = 0;
+    const lhsPath = HierarchyFilteringPath.normalize(this._nodeIdentifierPaths[lhsIndex]);
+    const rhsPath = HierarchyFilteringPath.normalize(this._nodeIdentifierPaths[rhsIndex]);
+
+    const smallerLength = lhsPath.path.length > rhsPath.path.length ? rhsPath.path.length : lhsPath.path.length;
+    for (let i = 0; i < smallerLength; ++i) {
+      const lhsIdentifier = lhsPath.path[i];
+      const rhsIdentifier = rhsPath.path[i];
+      if (HierarchyNodeIdentifier.isInstanceNodeIdentifier(lhsIdentifier) && HierarchyNodeIdentifier.isInstanceNodeIdentifier(rhsIdentifier)) {
+        if (
+          lhsIdentifier.imodelKey !== rhsIdentifier.imodelKey ||
+          lhsIdentifier.id !== rhsIdentifier.id ||
+          (lhsIdentifier.className !== rhsIdentifier.className &&
+            !(await this._imodelAccess.classDerivesFrom(lhsIdentifier.className, rhsIdentifier.className)) &&
+            !(await this._imodelAccess.classDerivesFrom(rhsIdentifier.className, lhsIdentifier.className)))
+        ) {
+          break;
+        }
+        ++similarityLength;
+        continue;
+      }
+
+      if (HierarchyNodeIdentifier.isGenericNodeIdentifier(lhsIdentifier) && HierarchyNodeIdentifier.isGenericNodeIdentifier(rhsIdentifier)) {
+        if (lhsIdentifier.source !== rhsIdentifier.source || lhsIdentifier.id !== rhsIdentifier.id) {
+          break;
+        }
+        ++similarityLength;
+        continue;
+      }
+      break;
+    }
+    this.pathsSimilarityLengthCache.set({ lhsIndex, rhsIndex }, similarityLength);
+    return similarityLength;
+  }
+}
+
+/**  @internal */
+export function createPathsSimilarityLengthCache(): Dictionary<{ lhsIndex: number; rhsIndex: number }, number> {
+  const compare = (lhs: { lhsIndex: number; rhsIndex: number }, rhs: { lhsIndex: number; rhsIndex: number }) => {
+    if (lhs.lhsIndex === rhs.lhsIndex && lhs.rhsIndex === rhs.rhsIndex) {
+      return 0;
+    }
+
+    if (lhs.rhsIndex === rhs.lhsIndex && lhs.lhsIndex === rhs.rhsIndex) {
+      return 0;
+    }
+
+    if (lhs.lhsIndex !== rhs.lhsIndex) {
+      // istanbul ignore next
+      return lhs.lhsIndex > rhs.lhsIndex ? 1 : -1;
+    }
+
+    // istanbul ignore next
+    return lhs.rhsIndex > rhs.rhsIndex ? 1 : -1;
+  };
+  return new Dictionary<{ lhsIndex: number; rhsIndex: number }, number>(compare);
 }

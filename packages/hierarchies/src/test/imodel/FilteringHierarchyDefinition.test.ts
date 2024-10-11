@@ -19,6 +19,7 @@ import {
   ECSQL_COLUMN_NAME_HasFilterTargetAncestor,
   ECSQL_COLUMN_NAME_IsFilterTarget,
   FilteringHierarchyDefinition,
+  FilteringHierarchyDefinitionPositions,
 } from "../../hierarchies/imodel/FilteringHierarchyDefinition";
 import {
   GenericHierarchyNodeDefinition,
@@ -146,7 +147,7 @@ describe("FilteringHierarchyDefinition", () => {
       const className = "TestSchema.TestName";
       const paths: HierarchyFilteringPath[] = [
         {
-          path: [createTestInstanceKey({ id: "0x4", className }), createTestInstanceKey({ id: "0x1" }), createTestInstanceKey({ id: "0x2" })],
+          path: [createTestInstanceKey({ id: "0x1" }), createTestInstanceKey({ id: "0x4", className }), createTestInstanceKey({ id: "0x2" })],
           options: { autoExpand: true },
         },
         [createTestInstanceKey({ id: "0x3" }), createTestInstanceKey({ id: "0x4", className }), createTestInstanceKey({ id: "0x5" })],
@@ -161,15 +162,13 @@ describe("FilteringHierarchyDefinition", () => {
         [ECSQL_COLUMN_NAME_HasFilterTargetAncestor]: 1,
         [ECSQL_COLUMN_NAME_FilterECInstanceId]: "0x4",
         [ECSQL_COLUMN_NAME_FilterClassName]: className,
-        [ECSQL_COLUMN_NAME_FilterValidPathIndex]: 0,
-        [ECSQL_COLUMN_NAME_FilterIdentifiersCountAfter]: 2,
+        [ECSQL_COLUMN_NAME_FilterValidPathIndex]: 1,
+        [ECSQL_COLUMN_NAME_FilterIdentifiersCountAfter]: 1,
       };
       const node = await filteringFactory.parseNode(row);
       expect(node.filtering).to.deep.eq({
-        filteredChildrenIdentifierPaths: [
-          { path: [createTestInstanceKey({ id: "0x1" }), createTestInstanceKey({ id: "0x2" })], options: { autoExpand: true } },
-        ],
-        filteredChildrenIdentifierPathsIndex: [0],
+        filteredChildrenIdentifierPaths: [[createTestInstanceKey({ id: "0x5" })]],
+        filteredChildrenIdentifierPathsIndex: [1],
         isFilterTarget: true,
         filterTargetOptions: undefined,
         hasFilterTargetAncestor: true,
@@ -1728,6 +1727,106 @@ describe("FilteringHierarchyDefinition", () => {
   });
 });
 
+describe("FilteringHierarchyDefinitionPositions", () => {
+  afterEach(() => {
+    sinon.restore();
+  });
+
+  describe("getPathsSimilarityLength", () => {
+    let classHierarchyInspector: ReturnType<typeof createClassHierarchyInspectorStub>;
+    beforeEach(() => {
+      classHierarchyInspector = createClassHierarchyInspectorStub();
+    });
+    it("does not fill cache with duplicate values when same path indexes are provided", async () => {
+      const filteringPositions = createFilteringHierarchyDefinitionPositions({
+        nodeIdentifierPaths: [
+          [
+            { className: "TestClass.TestName", id: "0x1" },
+            { className: "TestClass.TestName", id: "0x2" },
+          ],
+          [{ className: "TestClass.TestName", id: "0x1" }],
+        ],
+        imodelAccess: { ...classHierarchyInspector, imodelKey: "someKey" },
+      });
+      expect(filteringPositions.pathsSimilarityLengthCache.size).to.be.eq(0);
+      expect(await filteringPositions.getPathsSimilarityLength(0, 1)).to.be.eq(1);
+      expect(filteringPositions.pathsSimilarityLengthCache.size).to.be.eq(1);
+      expect(await filteringPositions.getPathsSimilarityLength(0, 1)).to.be.eq(1);
+      expect(filteringPositions.pathsSimilarityLengthCache.size).to.be.eq(1);
+    });
+
+    it("does not fill cache with duplicate values when reversed path indexes are provided", async () => {
+      const filteringPositions = createFilteringHierarchyDefinitionPositions({
+        nodeIdentifierPaths: [
+          [
+            { className: "TestClass.TestName", id: "0x1" },
+            { className: "TestClass.TestName", id: "0x2" },
+          ],
+          [{ className: "TestClass.TestName", id: "0x1" }],
+        ],
+        imodelAccess: { ...classHierarchyInspector, imodelKey: "someKey" },
+      });
+      expect(filteringPositions.pathsSimilarityLengthCache.size).to.be.eq(0);
+      expect(await filteringPositions.getPathsSimilarityLength(0, 1)).to.be.eq(1);
+      expect(filteringPositions.pathsSimilarityLengthCache.size).to.be.eq(1);
+      expect(await filteringPositions.getPathsSimilarityLength(1, 0)).to.be.eq(1);
+      expect(filteringPositions.pathsSimilarityLengthCache.size).to.be.eq(1);
+    });
+
+    it("returns correct value with derived classes", async () => {
+      const class1 = classHierarchyInspector.stubEntityClass({
+        schemaName: "TestClass",
+        className: "TestName1",
+        is: async (other) => other === class1.fullName,
+      });
+      const class2 = classHierarchyInspector.stubEntityClass({
+        schemaName: "TestClass",
+        className: "TestName1",
+        is: async (other) => other === class1.fullName,
+      });
+      const filteringPositions = createFilteringHierarchyDefinitionPositions({
+        nodeIdentifierPaths: [
+          [
+            { className: class1.fullName, id: "0x1" },
+            { className: class1.fullName, id: "0x2" },
+          ],
+          [{ className: class2.fullName, id: "0x1" }],
+        ],
+        imodelAccess: { ...classHierarchyInspector, imodelKey: "someKey" },
+      });
+      expect(filteringPositions.pathsSimilarityLengthCache.size).to.be.eq(0);
+      expect(await filteringPositions.getPathsSimilarityLength(0, 1)).to.be.eq(1);
+      expect(filteringPositions.pathsSimilarityLengthCache.size).to.be.eq(1);
+    });
+
+    it("returns correct value with generic identifiers", async () => {
+      const filteringPositions = createFilteringHierarchyDefinitionPositions({
+        nodeIdentifierPaths: [
+          [createTestGenericNodeKey({ id: "x" }), createTestGenericNodeKey({ id: "y" })],
+          [createTestGenericNodeKey({ id: "x" })],
+          [createTestGenericNodeKey({ id: "y" })],
+        ],
+        imodelAccess: { ...classHierarchyInspector, imodelKey: "someKey" },
+      });
+      expect(filteringPositions.pathsSimilarityLengthCache.size).to.be.eq(0);
+      expect(await filteringPositions.getPathsSimilarityLength(0, 1)).to.be.eq(1);
+      expect(filteringPositions.pathsSimilarityLengthCache.size).to.be.eq(1);
+      expect(await filteringPositions.getPathsSimilarityLength(0, 2)).to.be.eq(0);
+      expect(filteringPositions.pathsSimilarityLengthCache.size).to.be.eq(2);
+    });
+
+    it("returns correct value with generic and instance identifiers", async () => {
+      const filteringPositions = createFilteringHierarchyDefinitionPositions({
+        nodeIdentifierPaths: [[createTestGenericNodeKey({ id: "x" }), createTestGenericNodeKey({ id: "y" })], [{ id: "x", className: "TestName.TestClass" }]],
+        imodelAccess: { ...classHierarchyInspector, imodelKey: "someKey" },
+      });
+      expect(filteringPositions.pathsSimilarityLengthCache.size).to.be.eq(0);
+      expect(await filteringPositions.getPathsSimilarityLength(0, 1)).to.be.eq(0);
+      expect(filteringPositions.pathsSimilarityLengthCache.size).to.be.eq(1);
+    });
+  });
+});
+
 function createFilteringHierarchyDefinition(props?: {
   imodelAccess?: FilteringHierarchyDefinition["_imodelAccess"];
   sourceFactory?: HierarchyDefinition;
@@ -1738,5 +1837,16 @@ function createFilteringHierarchyDefinition(props?: {
     imodelAccess: imodelAccess ?? { classDerivesFrom: async () => false, imodelKey: "" },
     source: sourceFactory ?? ({} as unknown as HierarchyDefinition),
     nodeIdentifierPaths: nodeIdentifierPaths ?? [],
+  });
+}
+
+function createFilteringHierarchyDefinitionPositions(props: {
+  imodelAccess: FilteringHierarchyDefinition["_imodelAccess"];
+  nodeIdentifierPaths: HierarchyFilteringPath[];
+}) {
+  const { imodelAccess, nodeIdentifierPaths } = props;
+  return new FilteringHierarchyDefinitionPositions({
+    imodelAccess,
+    nodeIdentifierPaths,
   });
 }
