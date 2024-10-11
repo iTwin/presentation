@@ -569,8 +569,7 @@ export class FilteringHierarchyDefinitionPositions {
   }
 }
 
-/**  @internal */
-export function createPathsSimilarityLengthCache(): Dictionary<{ lhsIndex: number; rhsIndex: number }, number> {
+function createPathsSimilarityLengthCache(): Dictionary<{ lhsIndex: number; rhsIndex: number }, number> {
   const compare = (lhs: { lhsIndex: number; rhsIndex: number }, rhs: { lhsIndex: number; rhsIndex: number }) => {
     if (lhs.lhsIndex === rhs.lhsIndex && lhs.rhsIndex === rhs.rhsIndex) {
       return 0;
