@@ -9,7 +9,8 @@
     "clean": "rimraf lib build",
     "cover": "npm run -s test",
     "lint": "eslint ./src/**/*.{ts,tsx}",
-    "test": "mocha --enable-source-maps --config ./.mocharc.json",
+    "test": "mocha --enable-source-maps --parallel --config ./.mocharc.json",
+    "test:dev": "mocha --enable-source-maps --config ./.mocharc.json",
     "docs": "betools extract --fileExt=ts,tsx --extractFrom=./src --recursive --out=./build/docs/extract"
   },
   "dependencies": {

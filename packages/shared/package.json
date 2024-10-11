@@ -32,6 +32,7 @@
     "cover": "nyc npm -s test",
     "lint": "eslint \"./src/**/*.ts\"",
     "test": "mocha --enable-source-maps --config ./.mocharc.json",
+    "test:dev": "mocha --enable-source-maps --config ./.mocharc.json",
     "extract-api": "extract-api --entry=presentation-shared --apiReportFolder=./api --apiReportTempFolder=./api/temp --apiSummaryFolder=./api",
     "check-internal": "node ../../scripts/checkInternal.js --apiSummary ./api/presentation-shared.api.md",
     "validate-markdowns": "node ../../scripts/validateMarkdowns.js README.md"
