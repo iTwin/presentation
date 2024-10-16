@@ -9,6 +9,17 @@
           "specType": "SelectedNodeInstances"
         }
       ]
+    },
+    {
+      "ruleType": "ContentModifier",
+      "class": { "schemaName": "BisCore", "className": "Element" },
+      "calculatedProperties": [
+        {
+          "label": "Test Aspect Property",
+          "type": "bool",
+          "value": "this.HasRelatedInstance(\"BisCore:ElementOwnsUniqueAspect\", \"Forward\", \"BisCore:ElementUniqueAspect\")"
+        }
+      ]
     }
   ]
 }

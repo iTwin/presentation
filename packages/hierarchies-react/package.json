@@ -50,7 +50,7 @@
     "validate-markdowns": "node ../../scripts/validateMarkdowns.js README.md"
   },
   "dependencies": {
-    "@itwin/core-bentley": "^4.9.0",
+    "@itwin/core-bentley": "4.9.1",
     "@itwin/itwinui-icons-react": "^2.8.0",
     "@itwin/itwinui-illustrations-react": "^2.1.0",
     "@itwin/presentation-hierarchies": "workspace:^",
@@ -72,7 +72,7 @@
     }
   },
   "devDependencies": {
-    "@itwin/build-tools": "^4.9.0",
+    "@itwin/build-tools": "4.9.1",
     "@itwin/itwinui-react": "^3.14.1",
     "@testing-library/dom": "^10.3.2",
     "@testing-library/react": "^16.0.0",
