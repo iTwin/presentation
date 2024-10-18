@@ -6,7 +6,7 @@
  * @module Core
  */
 
-import { createContext, PropsWithChildren, useContext } from "react";
+import { createContext, PropsWithChildren } from "react";
 
 /**
  * Props for [[PortalTargetContextProvider]]
@@ -33,11 +33,3 @@ export interface PortalTargetContext {
 }
 
 const portalTargetContext = createContext<PortalTargetContext>({ portalTarget: null });
-
-/**
- * Returns context provided by [[PortalTargetContextProvider]].
- * @internal
- */
-export function usePortalTargetContext() {
-  return useContext(portalTargetContext);
-}

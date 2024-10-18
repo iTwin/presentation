@@ -6,10 +6,10 @@
  * @module Core
  */
 
-import { LegacyRef, MutableRefObject, RefCallback, useCallback, useEffect, useRef, useState } from "react";
+import { LegacyRef, MutableRefObject, RefCallback, useCallback, useEffect, useState } from "react";
 import { Primitives, PrimitiveValue, PropertyDescription, PropertyRecord, PropertyValueFormat } from "@itwin/appui-abstract";
 import { IPropertyValueRenderer, PropertyValueRendererManager } from "@itwin/components-react";
-import { assert, Guid, GuidString, IDisposable } from "@itwin/core-bentley";
+import { Guid, GuidString, IDisposable } from "@itwin/core-bentley";
 import { TranslationOptions } from "@itwin/core-common";
 import { Descriptor, Field, LabelCompositeValue, LabelDefinition, parseCombinedFieldNames, Ruleset, Value } from "@itwin/presentation-common";
 import { Presentation } from "@itwin/presentation-frontend";
@@ -161,34 +161,7 @@ export class AsyncTasksTracker {
 }
 
 /** @internal */
-export function useResizeObserver<T extends HTMLElement>() {
-  const observer = useRef<ResizeObserver>();
-  const [{ width, height }, setSize] = useState<{ width?: number; height?: number }>({});
-
-  const ref = useCallback((element: T | null) => {
-    observer.current?.disconnect();
-    if (element) {
-      observer.current = new ResizeObserver(
-        /* istanbul ignore next */
-        (entries) => {
-          window.requestAnimationFrame(() => {
-            assert(entries.length === 1);
-            setSize(entries[0].contentRect);
-          });
-        },
-      );
-      observer.current.observe(element);
-    }
-  }, []);
-
-  return {
-    ref,
-    width,
-    height,
-  };
-}
-
-/** @internal */
+// istanbul ignore next
 export function useMergedRefs<T>(...refs: Array<MutableRefObject<T | null> | LegacyRef<T>>): RefCallback<T> {
   return useCallback(
     (instance: T | null) => {
