@@ -9,16 +9,18 @@ import sinon from "sinon";
 import { PropertyDescription } from "@itwin/appui-abstract";
 import { EmptyLocalization } from "@itwin/core-common";
 import { IModelApp, IModelConnection } from "@itwin/core-frontend";
-import { Content, LabelDefinition, NavigationPropertyInfo } from "@itwin/presentation-common";
+import { Content, Item, LabelDefinition, NavigationPropertyInfo } from "@itwin/presentation-common";
 import { Presentation, PresentationManager } from "@itwin/presentation-frontend";
+import { waitFor } from "@testing-library/react";
 import {
   NAVIGATION_PROPERTY_TARGETS_BATCH_SIZE,
-  NavigationPropertyTarget,
+  NavigationPropertyItemsLoader,
   useNavigationPropertyTargetsLoader,
   useNavigationPropertyTargetsRuleset,
 } from "../../../presentation-components/properties/inputs/UseNavigationPropertyTargetsLoader";
+import { UNIQUE_PROPERTY_VALUES_BATCH_SIZE } from "../../../presentation-components/properties/inputs/UseUniquePropertyValuesLoader";
 import { createTestContentDescriptor, createTestContentItem } from "../../_helpers/Content";
-import { renderHook, waitFor } from "../../TestUtils";
+import { renderHook } from "../../TestUtils";
 
 describe("useNavigationPropertyTargetsLoader", () => {
   let presentationManagerStub: sinon.SinonStub;
@@ -42,9 +44,9 @@ describe("useNavigationPropertyTargetsLoader", () => {
   it("returns empty targets array if ruleset is undefined", async () => {
     const { result } = renderHook(useNavigationPropertyTargetsLoader, { initialProps: { imodel: testImodel } });
 
-    const { options, hasMore } = await result.current("", 0);
-    expect(options).to.be.empty;
-    expect(hasMore).to.be.false;
+    await waitFor(() => expect(result.current.isLoading).to.eq(false));
+    expect(result.current.selectOptions).to.be.empty;
+    expect(result.current.loadedOptions).to.be.empty;
   });
 
   describe("when `getContentIterator` is available", () => {
@@ -60,9 +62,11 @@ describe("useNavigationPropertyTargetsLoader", () => {
     it("returns empty targets array if there's no content", async () => {
       getContentIteratorStub.resolves(undefined);
       const { result } = renderHook(useNavigationPropertyTargetsLoader, { initialProps: { imodel: testImodel, ruleset: { id: "testRuleset", rules: [] } } });
-      const { options, hasMore } = await result.current("", 0);
-      expect(options).to.be.empty;
-      expect(hasMore).to.be.false;
+      await waitFor(() => {
+        expect(result.current.isLoading).to.eq(false);
+      });
+      expect(result.current.selectOptions).to.be.empty;
+      expect(result.current.loadedOptions).to.be.empty;
     });
 
     it("loads targets", async () => {
@@ -72,52 +76,57 @@ describe("useNavigationPropertyTargetsLoader", () => {
         displayValues: {},
         values: {},
       });
-      getContentIteratorStub.resolves({ total: 1, descriptor: createTestContentDescriptor({ fields: [] }), items: createAsyncIterator([contentItem]) });
-
-      const { result } = renderHook(useNavigationPropertyTargetsLoader, { initialProps: { imodel: testImodel, ruleset: { id: "testRuleset", rules: [] } } });
-
-      const { options, hasMore } = await result.current("", 0);
-      expect(options).to.have.lengthOf(1);
-      expect(options[0]).to.contain({ label: contentItem.label, key: contentItem.primaryKeys[0] });
-      expect(hasMore).to.be.false;
-    });
-
-    it("loads targets with offset", async () => {
-      getContentIteratorStub.resolves({ total: 0, descriptor: createTestContentDescriptor({ fields: [], categories: [] }), items: createAsyncIterator([]) });
-      const { result } = renderHook(useNavigationPropertyTargetsLoader, { initialProps: { imodel: testImodel, ruleset: { id: "testRuleset", rules: [] } } });
-
-      const loadedTargets: NavigationPropertyTarget[] = [
-        { label: LabelDefinition.fromLabelString("test1"), key: { className: "class", id: "1" } },
-        { label: LabelDefinition.fromLabelString("test2"), key: { className: "class", id: "2" } },
-      ];
-      await result.current("", loadedTargets.length);
-      expect(getContentIteratorStub).to.be.calledOnce;
-      expect(getContentIteratorStub.getCall(0).args[0]).to.containSubset({ paging: { start: loadedTargets.length } });
-    });
-
-    it("loads full batch of targets and sets 'hasMore' flag to true", async () => {
-      const contentItems = Array.from({ length: NAVIGATION_PROPERTY_TARGETS_BATCH_SIZE }, () => createTestContentItem({ displayValues: {}, values: {} }));
-      getContentIteratorStub.resolves({
-        total: contentItems.length,
-        descriptor: createTestContentDescriptor({ fields: [], categories: [] }),
-        items: createAsyncIterator(contentItems),
+      getContentIteratorStub.callsFake(async () => {
+        return { total: 1, descriptor: createTestContentDescriptor({ fields: [] }), items: createAsyncIterator([contentItem]) };
       });
 
       const { result } = renderHook(useNavigationPropertyTargetsLoader, { initialProps: { imodel: testImodel, ruleset: { id: "testRuleset", rules: [] } } });
 
-      const { options, hasMore } = await result.current("", 0);
-      expect(options).to.have.lengthOf(NAVIGATION_PROPERTY_TARGETS_BATCH_SIZE);
-      expect(hasMore).to.be.true;
+      await waitFor(() => {
+        expect(result.current.selectOptions).to.have.lengthOf(1);
+        expect(result.current.loadedOptions).to.have.lengthOf(1);
+        expect(result.current.loadedOptions[0]).to.contain({ label: contentItem.label, key: contentItem.primaryKeys[0] });
+      });
+    });
+
+    it("loads full batch of targets and sets 'hasMore' flag to true", async () => {
+      const contentItems: Item[] = []; // Array.from({ length: NAVIGATION_PROPERTY_TARGETS_BATCH_SIZE }, () => createTestContentItem({ displayValues: {}, values: {} }));
+      for (let i = 0; i < NAVIGATION_PROPERTY_TARGETS_BATCH_SIZE; i++) {
+        contentItems.push(createTestContentItem({ label: i.toString(), displayValues: {}, values: {} }));
+      }
+      // eslint-disable-next-line no-console
+      console.log(contentItems.length);
+      getContentIteratorStub.callsFake(async () => {
+        return {
+          total: contentItems.length,
+          descriptor: createTestContentDescriptor({ fields: [], categories: [] }),
+          items: createAsyncIterator(contentItems),
+        };
+      });
+
+      const { result } = renderHook(useNavigationPropertyTargetsLoader, {
+        initialProps: { imodel: testImodel, ruleset: { id: "testRuleset", rules: [] }, filterText: "" },
+      });
+
+      await waitFor(() => {
+        // add 1 for the filter reminder option
+        expect(result.current.selectOptions).to.have.lengthOf(NAVIGATION_PROPERTY_TARGETS_BATCH_SIZE + 1);
+        expect(result.current.loadedOptions).to.have.lengthOf(NAVIGATION_PROPERTY_TARGETS_BATCH_SIZE);
+      });
     });
 
     it("loads targets using provided filter string", async () => {
-      getContentIteratorStub.resolves({ total: 0, descriptor: createTestContentDescriptor({ fields: [], categories: [] }), items: createAsyncIterator([]) });
+      getContentIteratorStub.callsFake(async () => {
+        return { total: 0, descriptor: createTestContentDescriptor({ fields: [], categories: [] }), items: createAsyncIterator([]) };
+      });
 
-      const { result } = renderHook(useNavigationPropertyTargetsLoader, { initialProps: { imodel: testImodel, ruleset: { id: "testRuleset", rules: [] } } });
+      const { result } = renderHook(useNavigationPropertyTargetsLoader, {
+        initialProps: { imodel: testImodel, ruleset: { id: "testRuleset", rules: [] }, filterText: "testFilter" },
+      });
 
-      await result.current("testFilter", 0);
-      expect(getContentIteratorStub).to.be.calledOnce;
-      const descriptor = getContentIteratorStub.getCall(0).args[0].descriptor;
+      await waitFor(() => expect(result.current.isLoading).to.eq(false));
+      await waitFor(() => expect(getContentIteratorStub).to.be.calledThrice);
+      const descriptor = getContentIteratorStub.getCall(2).args[0].descriptor;
       expect(descriptor.fieldsFilterExpression).to.contain("testFilter");
     });
   });
@@ -135,9 +144,10 @@ describe("useNavigationPropertyTargetsLoader", () => {
     it("returns empty targets array if there's no content", async () => {
       getContentStub.resolves(undefined);
       const { result } = renderHook(useNavigationPropertyTargetsLoader, { initialProps: { imodel: testImodel, ruleset: { id: "testRuleset", rules: [] } } });
-      const { options, hasMore } = await result.current("", 0);
-      expect(options).to.be.empty;
-      expect(hasMore).to.be.false;
+
+      await waitFor(() => expect(result.current.isLoading).to.eq(false));
+      expect(result.current.selectOptions).to.be.empty;
+      expect(result.current.loadedOptions).to.be.empty;
     });
 
     it("loads targets", async () => {
@@ -147,48 +157,45 @@ describe("useNavigationPropertyTargetsLoader", () => {
         displayValues: {},
         values: {},
       });
-      getContentStub.resolves(new Content(createTestContentDescriptor({ fields: [] }), [contentItem]));
+      getContentStub.callsFake(async () => {
+        return new Content(createTestContentDescriptor({ fields: [] }), [contentItem]);
+      });
 
       const { result } = renderHook(useNavigationPropertyTargetsLoader, { initialProps: { imodel: testImodel, ruleset: { id: "testRuleset", rules: [] } } });
 
-      const { options, hasMore } = await result.current("", 0);
-      expect(options).to.have.lengthOf(1);
-      expect(options[0]).to.contain({ label: contentItem.label, key: contentItem.primaryKeys[0] });
-      expect(hasMore).to.be.false;
-    });
-
-    it("loads targets with offset", async () => {
-      getContentStub.resolves(new Content(createTestContentDescriptor({ fields: [], categories: [] }), []));
-      const { result } = renderHook(useNavigationPropertyTargetsLoader, { initialProps: { imodel: testImodel, ruleset: { id: "testRuleset", rules: [] } } });
-
-      const loadedTargets: NavigationPropertyTarget[] = [
-        { label: LabelDefinition.fromLabelString("test1"), key: { className: "class", id: "1" } },
-        { label: LabelDefinition.fromLabelString("test2"), key: { className: "class", id: "2" } },
-      ];
-      await result.current("", loadedTargets.length);
-      expect(getContentStub).to.be.calledOnce;
-      expect(getContentStub.getCall(0).args[0]).to.containSubset({ paging: { start: loadedTargets.length } });
+      await waitFor(() => expect(result.current.isLoading).to.eq(false));
+      expect(result.current.selectOptions).to.have.lengthOf(1);
+      expect(result.current.loadedOptions).to.have.lengthOf(1);
+      expect(result.current.loadedOptions[0]).to.contain({ label: contentItem.label, key: contentItem.primaryKeys[0] });
     });
 
     it("loads full batch of targets and sets 'hasMore' flag to true", async () => {
       const contentItems = Array.from({ length: NAVIGATION_PROPERTY_TARGETS_BATCH_SIZE }, () => createTestContentItem({ displayValues: {}, values: {} }));
-      getContentStub.resolves(new Content(createTestContentDescriptor({ fields: [], categories: [] }), contentItems));
+      getContentStub.callsFake(async () => {
+        return new Content(createTestContentDescriptor({ fields: [], categories: [] }), contentItems);
+      });
 
       const { result } = renderHook(useNavigationPropertyTargetsLoader, { initialProps: { imodel: testImodel, ruleset: { id: "testRuleset", rules: [] } } });
 
-      const { options, hasMore } = await result.current("", 0);
-      expect(options).to.have.lengthOf(NAVIGATION_PROPERTY_TARGETS_BATCH_SIZE);
-      expect(hasMore).to.be.true;
+      await waitFor(() => {
+        // add 1 for the filter reminder option
+        expect(result.current.selectOptions).to.have.lengthOf(NAVIGATION_PROPERTY_TARGETS_BATCH_SIZE + 1);
+        expect(result.current.loadedOptions).to.have.lengthOf(NAVIGATION_PROPERTY_TARGETS_BATCH_SIZE);
+      });
     });
 
     it("loads targets using provided filter string", async () => {
-      getContentStub.resolves(new Content(createTestContentDescriptor({ fields: [], categories: [] }), []));
+      getContentStub.callsFake(async () => {
+        return new Content(createTestContentDescriptor({ fields: [], categories: [] }), []);
+      });
 
-      const { result } = renderHook(useNavigationPropertyTargetsLoader, { initialProps: { imodel: testImodel, ruleset: { id: "testRuleset", rules: [] } } });
+      const { result } = renderHook(useNavigationPropertyTargetsLoader, {
+        initialProps: { imodel: testImodel, ruleset: { id: "testRuleset", rules: [] }, filterText: "testFilter" },
+      });
 
-      await result.current("testFilter", 0);
-      expect(getContentStub).to.be.calledOnce;
-      const descriptor = getContentStub.getCall(0).args[0].descriptor;
+      await waitFor(() => expect(result.current.isLoading).to.eq(false));
+      await waitFor(() => expect(getContentStub).to.be.calledThrice);
+      const descriptor = getContentStub.getCall(2).args[0].descriptor;
       expect(descriptor.fieldsFilterExpression).to.contain("testFilter");
     });
   });
@@ -237,5 +244,68 @@ describe("useNavigationPropertyTargetsRuleset", () => {
 
     const ruleset = result.current;
     expect(ruleset).to.be.undefined;
+  });
+});
+
+describe("Navigation property items loader", () => {
+  const getItemsStub = sinon.stub();
+
+  beforeEach(() => {
+    getItemsStub.callsFake(() => {
+      return Array.from({ length: NAVIGATION_PROPERTY_TARGETS_BATCH_SIZE }, () => {
+        return { label: { displayValue: "filterText" }, key: { id: "0x01" } };
+      });
+    });
+  });
+
+  afterEach(() => {
+    sinon.restore();
+  });
+
+  it("does not load items when filter is empty", async () => {
+    const itemsLoader = new NavigationPropertyItemsLoader(
+      () => {},
+      () => {},
+      () => getItemsStub(),
+    );
+    await itemsLoader.loadItems();
+
+    expect(itemsLoader.needsLoadingItems("")).to.be.false;
+  });
+
+  it("does not load items when loaded options matches the filter", async () => {
+    const itemsLoader = new NavigationPropertyItemsLoader(
+      () => {},
+      () => {},
+      () => getItemsStub(),
+    );
+    await itemsLoader.loadItems();
+
+    expect(itemsLoader.needsLoadingItems("filterText")).to.be.false;
+  });
+
+  it("does not load items when another load process is in progress", async () => {
+    const spy = sinon.spy();
+    const itemsLoader = new NavigationPropertyItemsLoader(
+      () => {},
+      () => spy,
+      () => getItemsStub(),
+    );
+    await Promise.all([itemsLoader.loadItems("filterText"), itemsLoader.loadItems("filterText")]);
+
+    expect(spy.calledOnce);
+  });
+
+  it("does not load duplicate items", async () => {
+    const loadedItems = [];
+    const itemsLoader = new NavigationPropertyItemsLoader(
+      () => {},
+      (newItems) => loadedItems.push(...newItems),
+      () => getItemsStub(),
+    );
+    await itemsLoader.loadItems("filterText");
+    await itemsLoader.loadItems("filterText");
+
+    expect(loadedItems.length).to.be.eq(UNIQUE_PROPERTY_VALUES_BATCH_SIZE);
   });
 });
