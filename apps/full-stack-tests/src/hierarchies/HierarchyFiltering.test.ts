@@ -223,6 +223,97 @@ describe("Hierarchies", () => {
         });
       });
     });
+    describe("instance nodes", () => {
+      it("filters through instance nodes that are in multiple paths", async function () {
+        const { imodel, ...keys } = await buildIModel(this, async (builder) => {
+          const rootSubject = { className: subjectClassName, id: IModel.rootSubjectId };
+          const childSubject1 = insertSubject({ builder, codeValue: "test subject 1", parentId: rootSubject.id });
+          const childSubject2 = insertSubject({ builder, codeValue: "test subject 2", parentId: rootSubject.id });
+          const childSubject3 = insertSubject({ builder, codeValue: "test subject 3", parentId: rootSubject.id });
+          const childSubject4 = insertSubject({ builder, codeValue: "test subject 4", parentId: rootSubject.id });
+          return { rootSubject, childSubject1, childSubject2, childSubject3, childSubject4 };
+        });
+        const imodelAccess = createIModelAccess(imodel);
+        const selectQueryFactory = createNodesQueryClauseFactory({
+          imodelAccess,
+          instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
+        });
+        const createHierarchyLevelDefinition = async (whereClause: (alias: string) => string) => {
+          return [
+            {
+              fullClassName: subjectClassName,
+              query: {
+                ecsql: `
+                  SELECT ${await selectQueryFactory.createSelectClause({
+                    ecClassId: { selector: `this.ECClassId` },
+                    ecInstanceId: { selector: `this.ECInstanceId` },
+                    nodeLabel: { selector: `this.CodeValue` },
+                  })}
+                  FROM ${subjectClassName} AS this
+                  ${whereClause("this")}
+                `,
+              },
+            },
+          ];
+        };
+
+        const hierarchy: HierarchyDefinition = {
+          async defineHierarchyLevel({ parentNode }) {
+            if (!parentNode) {
+              return createHierarchyLevelDefinition((alias: string) => `WHERE ${alias}.ECInstanceId IN (${keys.childSubject1.id}, ${keys.childSubject4.id})`);
+            }
+            if (HierarchyNode.isInstancesNode(parentNode) && parentNode.label === "test subject 1" && parentNode.parentKeys.length === 0) {
+              return createHierarchyLevelDefinition((alias: string) => `WHERE ${alias}.ECInstanceId IN (${keys.childSubject2.id}, ${keys.childSubject3.id})`);
+            }
+            if (HierarchyNode.isInstancesNode(parentNode) && parentNode.label === "test subject 4") {
+              return createHierarchyLevelDefinition((alias: string) => `WHERE ${alias}.ECInstanceId = ${keys.childSubject1.id}`);
+            }
+            if (HierarchyNode.isInstancesNode(parentNode) && parentNode.label === "test subject 1" && parentNode.parentKeys.length === 1) {
+              return createHierarchyLevelDefinition((alias: string) => `WHERE ${alias}.ECInstanceId = ${keys.childSubject2.id}`);
+            }
+            return [];
+          },
+        };
+
+        await validateHierarchy({
+          provider: createProvider({
+            imodel,
+            hierarchy,
+            filteredNodePaths: [
+              { path: [keys.childSubject1, keys.childSubject3], options: { autoExpand: true } },
+              { path: [keys.childSubject4, keys.childSubject1, keys.childSubject2], options: { autoExpand: true } },
+            ],
+          }),
+          expect: [
+            NodeValidators.createForInstanceNode({
+              instanceKeys: [keys.childSubject1],
+              children: [
+                NodeValidators.createForInstanceNode({
+                  instanceKeys: [keys.childSubject3],
+                  isFilterTarget: true,
+                  children: false,
+                }),
+              ],
+            }),
+            NodeValidators.createForInstanceNode({
+              instanceKeys: [keys.childSubject4],
+              children: [
+                NodeValidators.createForInstanceNode({
+                  instanceKeys: [keys.childSubject1],
+                  children: [
+                    NodeValidators.createForInstanceNode({
+                      instanceKeys: [keys.childSubject2],
+                      isFilterTarget: true,
+                      children: false,
+                    }),
+                  ],
+                }),
+              ],
+            }),
+          ],
+        });
+      });
+    });
 
     describe("when filtering through hidden nodes", () => {
       it("filters through hidden generic nodes", async function () {

@@ -301,7 +301,14 @@ class IModelHierarchyProviderImpl implements HierarchyProvider {
           of(def.query).pipe(
             map((query) => filterQueryByInstanceKeys(query, props.filteredInstanceKeys)),
             mergeMap((query) =>
-              readNodes({ queryExecutor: this._imodelAccess, query, limit: props.hierarchyLevelSizeLimit, parser: this._activeHierarchyDefinition.parseNode }),
+              readNodes({
+                queryExecutor: this._imodelAccess,
+                query,
+                limit: props.hierarchyLevelSizeLimit,
+                parser: this._activeHierarchyDefinition.parseNode
+                  ? async (row) => this._activeHierarchyDefinition.parseNode!(row, props.parentNode)
+                  : undefined,
+              }),
             ),
             map((node) => ({
               ...node,

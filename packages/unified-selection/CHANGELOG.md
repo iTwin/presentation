@@ -1,5 +1,11 @@
 # @itwin/unified-selection
 
+## 1.0.1
+
+### Patch Changes
+
+- [#730](https://github.com/iTwin/presentation/pull/730): Fix provider returned by `createHiliteSetProvider` in some cases not caching class hierarchy check results, resulting in duplicate checks for the same classes.
+
 ## 1.0.0
 
 ### Major Changes

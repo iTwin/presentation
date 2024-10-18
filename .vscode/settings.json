@@ -27,7 +27,7 @@
     "source.fixAll": "explicit"
   },
 
-  "eslint.experimental.useFlatConfig": true,
+  "eslint.useFlatConfig": true,
   "eslint.workingDirectories": [
     {
       "mode": "auto"
