@@ -659,9 +659,6 @@ describe("UniquePropertyValuesSelector", () => {
         </TestComponentWithPortalTarget>,
       );
 
-      // simulate scroll height to avoid loading more pages
-      sinon.stub(Element.prototype, "scrollHeight").get(() => 100);
-
       // open menu
       const menuSelector = await waitFor(() => getByPlaceholderText("unique-values-property-editor.select-values"));
       await user.click(menuSelector);
@@ -670,9 +667,6 @@ describe("UniquePropertyValuesSelector", () => {
       await waitFor(() => {
         expect(getDistinctValuesIteratorStub).to.be.calledOnce;
       });
-
-      // reset scroll height to enable loading of pages
-      sinon.stub(Element.prototype, "scrollHeight").get(() => 0);
 
       // type in search
       const searchSelector = await waitFor(() => getByPlaceholderText("unique-values-property-editor.select-values"));
@@ -719,9 +713,6 @@ describe("UniquePropertyValuesSelector", () => {
         </TestComponentWithPortalTarget>,
       );
 
-      // simulate scroll height to avoid loading more pages
-      sinon.stub(Element.prototype, "scrollHeight").get(() => 100);
-
       // open menu
       const menuSelector = await waitFor(() => getByPlaceholderText("unique-values-property-editor.select-values"));
       await user.click(menuSelector);
@@ -730,9 +721,6 @@ describe("UniquePropertyValuesSelector", () => {
       await waitFor(() => {
         expect(getDistinctValuesIteratorStub).to.be.calledOnce;
       });
-
-      // reset scroll height to enable loading of pages
-      sinon.stub(Element.prototype, "scrollHeight").get(() => 0);
 
       // type in search
       const searchSelector = await waitFor(() => getByPlaceholderText("unique-values-property-editor.select-values"));
@@ -759,9 +747,6 @@ describe("UniquePropertyValuesSelector", () => {
         </TestComponentWithPortalTarget>,
       );
 
-      // simulate scroll height to avoid loading more pages
-      sinon.stub(Element.prototype, "scrollHeight").get(() => 100);
-
       // open menu
       const menuSelector = await waitFor(() => getByPlaceholderText("unique-values-property-editor.select-values"));
       await user.click(menuSelector);
@@ -770,9 +755,6 @@ describe("UniquePropertyValuesSelector", () => {
       await waitFor(() => {
         expect(getDistinctValuesIteratorStub).to.be.calledOnce;
       });
-
-      // reset scroll height to enable loading of pages
-      sinon.stub(Element.prototype, "scrollHeight").get(() => 0);
 
       // type in search
       const searchSelector = await waitFor(() => getByPlaceholderText("unique-values-property-editor.select-values"));
@@ -821,9 +803,6 @@ describe("UniquePropertyValuesSelector", () => {
         </TestComponentWithPortalTarget>,
       );
 
-      // simulate scroll height to avoid loading more pages
-      sinon.stub(Element.prototype, "scrollHeight").get(() => 100);
-
       // open menu
       const menuSelector = await waitFor(() => getByPlaceholderText("unique-values-property-editor.select-values"));
       await user.click(menuSelector);
@@ -832,9 +811,6 @@ describe("UniquePropertyValuesSelector", () => {
       await waitFor(() => {
         expect(getDistinctValuesIteratorStub).to.be.calledOnce;
       });
-
-      // reset scroll height to enable loading of pages
-      sinon.stub(Element.prototype, "scrollHeight").get(() => 0);
 
       // type in search
       const searchSelector = await waitFor(() => getByPlaceholderText("unique-values-property-editor.select-values"));
