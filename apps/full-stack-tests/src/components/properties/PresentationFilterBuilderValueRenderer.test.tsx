@@ -4,6 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 import { expect } from "chai";
 import { insertPhysicalElement, insertPhysicalModelWithPartition, insertSpatialCategory, waitFor } from "presentation-test-utilities";
+import sinon from "sinon";
 import { UiComponents } from "@itwin/components-react";
 import { EmptyLocalization } from "@itwin/core-common";
 import { ClassInfo, DefaultContentDisplayTypes, KeySet } from "@itwin/presentation-common";
@@ -18,6 +19,18 @@ describe("Presentation filter builder value renderer", () => {
   before(async () => {
     await initialize();
     await UiComponents.initialize(new EmptyLocalization());
+
+    sinon.stub(window.Element.prototype, "getBoundingClientRect").returns({
+      height: 20,
+      width: 20,
+      x: 0,
+      y: 0,
+      bottom: 0,
+      left: 0,
+      right: 0,
+      top: 0,
+      toJSON: () => {},
+    });
   });
 
   after(async () => {

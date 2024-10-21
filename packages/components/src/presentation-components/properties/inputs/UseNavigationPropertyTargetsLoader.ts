@@ -26,7 +26,7 @@ import { Presentation } from "@itwin/presentation-frontend";
 import { FILTER_WARNING_OPTION } from "./UseUniquePropertyValuesLoader";
 
 /** @internal */
-export const NAVIGATION_PROPERTY_TARGETS_BATCH_SIZE = 5;
+export const NAVIGATION_PROPERTY_TARGETS_BATCH_SIZE = 100;
 
 /** @internal */
 export interface NavigationPropertyTarget {

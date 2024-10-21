@@ -12,7 +12,7 @@ import { Presentation } from "@itwin/presentation-frontend";
 import { translate, UniqueValue } from "../../common/Utils";
 
 /** @internal */
-export const UNIQUE_PROPERTY_VALUES_BATCH_SIZE = 5;
+export const UNIQUE_PROPERTY_VALUES_BATCH_SIZE = 100;
 
 /** @internal */
 export const FILTER_WARNING_OPTION = { label: "Too many values please use filter", value: "__filter__", disabled: true };
@@ -101,7 +101,6 @@ export function useUniquePropertyValuesLoader({
         return {
           label: formatOptionLabel(option.displayValue, typeName),
           value: option.displayValue,
-          // rawValue: option,
         };
       });
 
