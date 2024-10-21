@@ -94,10 +94,6 @@ export function useNavigationPropertyTargetsLoader(props: UseNavigationPropertyT
 
   // On filter text change, check if more items need to be loaded
   useEffect(() => {
-    if (!filterText) {
-      return;
-    }
-
     const timeout = setTimeout(() => {
       if (itemsLoader?.needsLoadingItems(filterText)) {
         void itemsLoader?.loadItems(filterText);
@@ -218,7 +214,7 @@ export class NavigationPropertyItemsLoader {
   }
 
   public needsLoadingItems(filterText?: string) {
-    if (!filterText) {
+    if (filterText === undefined || (filterText === "" && this._loadedItems.length >= NAVIGATION_PROPERTY_TARGETS_BATCH_SIZE)) {
       return false;
     }
 

@@ -17,7 +17,6 @@ import {
   NavigationPropertyTargetSelectorProps,
 } from "../../../presentation-components/properties/inputs/NavigationPropertyTargetSelector";
 import { NAVIGATION_PROPERTY_TARGETS_BATCH_SIZE } from "../../../presentation-components/properties/inputs/UseNavigationPropertyTargetsLoader";
-import { FILTER_WARNING_OPTION } from "../../../presentation-components/properties/inputs/UseUniquePropertyValuesLoader";
 import { createTestContentDescriptor, createTestContentItem } from "../../_helpers/Content";
 import { render, waitFor } from "../../TestUtils";
 
@@ -214,7 +213,7 @@ describe("NavigationPropertyTargetSelector", () => {
     });
   });
 
-  it("renders filter warning option when filter returns too many options", async () => {
+  it("does not load options on filter change when there is enough options", async () => {
     const propertyDescription = createNavigationPropertyDescription();
     const value = {
       valueFormat: PropertyValueFormat.Primitive,
@@ -242,14 +241,18 @@ describe("NavigationPropertyTargetSelector", () => {
 
     getContentStub.callsFake(async () => new Content(createTestContentDescriptor({ fields: [], categories: [] }), items));
 
-    const { getByText, getByPlaceholderText, user } = render(<NavigationPropertyTargetSelector {...initialProps} />);
+    const { getByPlaceholderText, user } = render(<NavigationPropertyTargetSelector {...initialProps} />);
+    await waitFor(() => {
+      expect(getContentStub.calledOnce);
+    });
+
     const combobox = await waitFor(() => getByPlaceholderText("navigation-property-editor.select-target-instance"));
     await user.click(combobox);
     await user.clear(combobox);
     await user.type(combobox, "1");
 
     await waitFor(() => {
-      getByText(FILTER_WARNING_OPTION.label);
+      expect(getContentStub.calledOnce);
     });
   });
 

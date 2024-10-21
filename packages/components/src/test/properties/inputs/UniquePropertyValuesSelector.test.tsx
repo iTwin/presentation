@@ -354,7 +354,7 @@ describe("UniquePropertyValuesSelector", () => {
       items: createAsyncIterator(values),
     });
 
-    const { getByText, baseElement, debug } = render(
+    const { getByText } = render(
       <UniquePropertyValuesSelector
         property={propertyDescription}
         onChange={() => {}}
@@ -363,8 +363,6 @@ describe("UniquePropertyValuesSelector", () => {
         value={convertToPropertyValue(values)}
       />,
     );
-
-    debug(baseElement);
 
     await waitFor(() => {
       getByText("TestValue1");
@@ -538,7 +536,7 @@ describe("UniquePropertyValuesSelector", () => {
         ]),
       });
 
-      const { getByText, queryByText, getByPlaceholderText, user, debug } = render(
+      const { getByText, queryByText, getByPlaceholderText, user } = render(
         <TestComponentWithPortalTarget>
           <UniquePropertyValuesSelector property={propertyDescription} onChange={() => {}} imodel={testImodel} descriptor={descriptor} />,
         </TestComponentWithPortalTarget>,
@@ -556,7 +554,7 @@ describe("UniquePropertyValuesSelector", () => {
       // change search input
       await user.clear(searchSelector);
       await user.type(searchSelector, "value1");
-      debug();
+
       // ensure new filter is applied
       await waitFor(() => {
         getByText("Value1");

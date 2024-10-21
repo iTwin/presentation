@@ -81,7 +81,7 @@ export const NavigationPropertyTargetSelector = forwardRef<PropertyEditorAttribu
       }}
       filterFunction={(options: SelectOption<string>[], inputValue: string) => {
         const filteredOptions = options
-          .filter((option) => option.label.toLowerCase().includes(inputValue.toLowerCase()))
+          .filter((option) => option.label.toLowerCase().includes(inputValue.toLowerCase()) && option.value !== FILTER_WARNING_OPTION.value)
           .slice(0, NAVIGATION_PROPERTY_TARGETS_BATCH_SIZE);
 
         if (filteredOptions.length >= NAVIGATION_PROPERTY_TARGETS_BATCH_SIZE) {
