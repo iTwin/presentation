@@ -247,7 +247,7 @@ describe("useNavigationPropertyTargetsRuleset", () => {
   });
 });
 
-describe("Navigation property items loader", () => {
+describe("NavigationPropertyItemsLoader", () => {
   const getItemsStub = sinon.stub();
 
   beforeEach(() => {
