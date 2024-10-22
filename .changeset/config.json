@@ -9,7 +9,6 @@
   "updateInternalDependencies": "patch",
   "ignore": [
     "@itwin/presentation-models-tree",
-    "presentation-test-utilities",
     "presentation-full-stack-tests",
     "presentation-performance-tests",
     "@load-tests/backend",
