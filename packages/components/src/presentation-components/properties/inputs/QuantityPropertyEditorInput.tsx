@@ -72,7 +72,7 @@ const QuantityPropertyValueInput = forwardRef<PropertyEditorAttributes, Quantity
         });
     };
 
-    return <Input size="small" {...inputProps} ref={inputRef} onBlur={onBlur} />;
+    return <Input size="small" {...inputProps} ref={inputRef} onBlur={onBlur} onFocus={() => inputRef.current?.setSelectionRange(0, 9999)} />;
   },
 );
 QuantityPropertyValueInput.displayName = "QuantityPropertyValueInput";
