@@ -31,8 +31,7 @@ export interface NavigationPropertyTarget {
   key: InstanceKey;
 }
 
-/** @internal */
-export interface NavigationPropertyValuesLoaderState {
+interface NavigationPropertyValuesLoaderState {
   options: NavigationPropertyTarget[];
   isLoading: boolean;
 }
