@@ -8,10 +8,14 @@
   "baseBranch": "master",
   "updateInternalDependencies": "patch",
   "ignore": [
+    "@itwin/presentation-models-tree",
+    "presentation-test-utilities",
     "presentation-full-stack-tests",
     "presentation-performance-tests",
+    "@load-tests/backend",
     "@load-tests/frontend",
-    "@test-app/frontend",
-    "@itwin/presentation-models-tree"
+    "@test-app/backend",
+    "@test-app/common",
+    "@test-app/frontend"
   ]
 }
