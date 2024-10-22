@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import "./SampleRpcImpl"; // just to get the RPC implementation registered
+import "./SampleRpcImpl.js"; // just to get the RPC implementation registered
 import * as path from "path";
 import { Logger, LogLevel, ProcessDetector } from "@itwin/core-bentley";
 import { RpcInterfaceDefinition } from "@itwin/core-common";
@@ -36,9 +36,9 @@ void (async () => {
   // get platform-specific initialization function
   let init: (_rpcs: RpcInterfaceDefinition[]) => void;
   if (ProcessDetector.isElectronAppBackend) {
-    init = (await import("./electron/ElectronMain")).default;
+    init = (await import("./electron/ElectronMain.js")).initialize;
   } else {
-    init = (await import("./web/BackendServer")).default;
+    init = (await import("./web/BackendServer.js")).initialize;
   }
   // do initialize
   init(rpcInterfaces);

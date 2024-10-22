@@ -5,9 +5,7 @@
   "branches": 100,
   "lines": 100,
   "all": true,
-  "include": ["src/**/*", "lib/cjs/**/*"],
-  "exclude": ["src/presentation-hierarchies.ts", "src/test/**", "lib/cjs/test/**"],
-  "extension": [".ts"],
+  "include": ["src/hierarchies/**/*", "lib/cjs/hierarchies/**/*"],
   "temp-dir": "./lib/test/coverage/.nyc_output",
   "report-dir": "./lib/test/coverage",
   "reporter": ["text-summary", "lcov", "cobertura"]

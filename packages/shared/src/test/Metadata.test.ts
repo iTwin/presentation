@@ -5,7 +5,7 @@
 
 import { expect } from "chai";
 import sinon from "sinon";
-import { createCachingECClassHierarchyInspector, getClass } from "../shared/Metadata";
+import { createCachingECClassHierarchyInspector, getClass } from "../shared/Metadata.js";
 
 describe("createCachingECClassHierarchyInspector", () => {
   const schemaProvider = {

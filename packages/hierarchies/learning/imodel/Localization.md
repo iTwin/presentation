@@ -11,6 +11,7 @@ Example:
 
 ```ts
 import { createIModelHierarchyProvider, createNodesQueryClauseFactory } from "@itwin/presentation-hierarchies";
+import { createBisInstanceLabelSelectClauseFactory } from "@itwin/presentation-shared";
 
 const hierarchyProvider = createIModelHierarchyProvider({
   imodelAccess,

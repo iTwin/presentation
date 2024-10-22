@@ -5,11 +5,11 @@
 
 import { collect } from "presentation-test-utilities";
 import { createNodesQueryClauseFactory, HierarchyDefinition } from "@itwin/presentation-hierarchies";
-import { importSchema, withECDb } from "../IModelUtils";
-import { initialize, terminate } from "../IntegrationTests";
-import { NodeValidators, validateHierarchyLevel } from "./HierarchyValidation";
-import { createIModelAccess, createProvider } from "./Utils";
 import { createBisInstanceLabelSelectClauseFactory } from "@itwin/presentation-shared";
+import { importSchema, withECDb } from "../IModelUtils.js";
+import { initialize, terminate } from "../IntegrationTests.js";
+import { NodeValidators, validateHierarchyLevel } from "./HierarchyValidation.js";
+import { createIModelAccess, createProvider } from "./Utils.js";
 
 describe("Hierarchies", () => {
   describe("Hierarchy level filtering", () => {

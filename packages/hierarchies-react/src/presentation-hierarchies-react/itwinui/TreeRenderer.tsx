@@ -5,11 +5,11 @@
 
 import { ComponentPropsWithoutRef, useCallback } from "react";
 import { NodeData, Tree } from "@itwin/itwinui-react";
-import { PresentationTreeNode } from "../TreeNode";
-import { SelectionMode, useSelectionHandler } from "../UseSelectionHandler";
-import { useTree } from "../UseTree";
-import { LocalizationContextProvider } from "./LocalizationContext";
-import { TreeNodeRenderer } from "./TreeNodeRenderer";
+import { PresentationTreeNode } from "../TreeNode.js";
+import { SelectionMode, useSelectionHandler } from "../UseSelectionHandler.js";
+import { useTree } from "../UseTree.js";
+import { LocalizationContextProvider } from "./LocalizationContext.js";
+import { TreeNodeRenderer } from "./TreeNodeRenderer.js";
 
 /** @beta */
 type TreeProps = ComponentPropsWithoutRef<typeof Tree<RenderedTreeNode>>;

@@ -6,9 +6,9 @@
 import { concatMap, filter, firstValueFrom, from, mergeAll, mergeMap, toArray } from "rxjs";
 import { Id64String } from "@itwin/core-bentley";
 import { ECClassHierarchyInspector, InstanceKey } from "@itwin/presentation-shared";
-import { HierarchyNode } from "../HierarchyNode";
-import { GenericNodeKey, InstancesNodeKey } from "../HierarchyNodeKey";
-import { DefineHierarchyLevelProps, HierarchyDefinition, HierarchyDefinitionParentNode, HierarchyLevelDefinition } from "./IModelHierarchyDefinition";
+import { HierarchyNode } from "../HierarchyNode.js";
+import { GenericNodeKey, InstancesNodeKey } from "../HierarchyNodeKey.js";
+import { DefineHierarchyLevelProps, HierarchyDefinition, HierarchyDefinitionParentNode, HierarchyLevelDefinition } from "./IModelHierarchyDefinition.js";
 
 /**
  * Props for defining child hierarchy level for specific parent instance node.
@@ -166,11 +166,8 @@ class PredicateBasedHierarchyDefinition implements HierarchyDefinition {
    */
   public async defineHierarchyLevel(props: DefineHierarchyLevelProps): Promise<HierarchyLevelDefinition> {
     const { parentNode } = props;
-    if (!parentNode) {
-      return this._props.hierarchy.rootNodes(props);
-    }
 
-    if (HierarchyNode.isGeneric(parentNode)) {
+    if (parentNode && HierarchyNode.isGeneric(parentNode)) {
       return firstValueFrom(
         from(this._props.hierarchy.childNodes).pipe(
           filter(isGenericNodeChildHierarchyLevelDefinition),
@@ -186,8 +183,7 @@ class PredicateBasedHierarchyDefinition implements HierarchyDefinition {
       );
     }
 
-    // istanbul ignore else
-    if (HierarchyNode.isInstancesNode(parentNode)) {
+    if (parentNode && HierarchyNode.isInstancesNode(parentNode)) {
       const instancesParentNodeDefs = this._props.hierarchy.childNodes.filter(isInstancesNodeChildHierarchyLevelDefinition);
       return firstValueFrom(
         from(groupInstanceIdsByClass(parentNode.key.instanceKeys).entries()).pipe(
@@ -205,8 +201,7 @@ class PredicateBasedHierarchyDefinition implements HierarchyDefinition {
       );
     }
 
-    // istanbul ignore next
-    return [];
+    return this._props.hierarchy.rootNodes(props);
   }
 }
 

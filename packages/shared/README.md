@@ -449,6 +449,8 @@ The package also delivers a number of utility types and functions:
   - spaces after opening parentheses,
   - spaces at the beginning and end of the string.
 
+- `julianToDateTime` - converts a julian date to a JavaScript `Date` object.
+
 - `releaseMainThread` - returns a promise that immediately resolves. Awaiting on the returned promise releases the main thread and allows other tasks to run.
 
 - `createMainThreadReleaseOnTimePassedHandler` - returns a `releaseMainThread` promise if the given amount of time has passed since the handler was created or the main thread was last released using this handler. Otherwise, returns `undefined`.

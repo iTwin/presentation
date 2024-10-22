@@ -6,7 +6,7 @@
 import { expect } from "chai";
 import { executionAsyncId } from "node:async_hooks";
 import * as sinon from "sinon";
-import { createMainThreadReleaseOnTimePassedHandler, normalizeFullClassName, parseFullClassName, trimWhitespace } from "../shared/Utils";
+import { createMainThreadReleaseOnTimePassedHandler, normalizeFullClassName, parseFullClassName, trimWhitespace } from "../shared/Utils.js";
 
 describe("parseFullClassName", () => {
   it("parses valid full class names", () => {

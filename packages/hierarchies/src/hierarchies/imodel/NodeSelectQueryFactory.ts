@@ -23,7 +23,7 @@ import {
   parseFullClassName,
   PrimitiveValue,
 } from "@itwin/presentation-shared";
-import { HierarchyNodeAutoExpandProp } from "./IModelHierarchyNode";
+import { HierarchyNodeAutoExpandProp } from "./IModelHierarchyNode.js";
 
 /**
  * Column names of the SELECT clause created by `NodeSelectClauseFactory`. Order of the names matches the order of columns

@@ -3,8 +3,8 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-export * from "./test-utilities/AsyncIterators";
-export * from "./test-utilities/IModelUtils";
-export * from "./test-utilities/Observables";
-export * from "./test-utilities/ResolvablePromise";
-export * from "./test-utilities/WaitFor";
+export * from "./test-utilities/AsyncIterators.js";
+export * from "./test-utilities/IModelUtils.js";
+export * from "./test-utilities/Observables.js";
+export * from "./test-utilities/ResolvablePromise.js";
+export * from "./test-utilities/WaitFor.js";

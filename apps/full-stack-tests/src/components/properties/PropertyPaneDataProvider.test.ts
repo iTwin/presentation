@@ -19,7 +19,7 @@ import { InstanceKey, KeySet, RuleTypes } from "@itwin/presentation-common";
 import { DEFAULT_PROPERTY_GRID_RULESET, PresentationPropertyDataProvider, PresentationPropertyDataProviderProps } from "@itwin/presentation-components";
 import { Presentation } from "@itwin/presentation-frontend";
 import { buildTestIModel } from "@itwin/presentation-testing";
-import { initialize, terminate } from "../../IntegrationTests";
+import { initialize, terminate } from "../../IntegrationTests.js";
 
 describe("PropertyDataProvider", async () => {
   before(async () => {

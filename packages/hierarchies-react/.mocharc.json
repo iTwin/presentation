@@ -1,5 +1,5 @@
 {
-  "require": ["ignore-styles", "./lib/cjs/test/setup"],
+  "require": ["ignore-styles", "./lib/cjs/test/setup.js"],
   "checkLeaks": true,
   "global": ["IS_REACT_ACT_ENVIRONMENT"],
   "timeout": 60000,

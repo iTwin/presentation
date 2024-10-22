@@ -30,7 +30,7 @@ import {
   IInstanceLabelSelectClauseFactory,
   InstanceKey,
 } from "@itwin/presentation-shared";
-import { ModelsTreeIdsCache } from "./ModelsTreeIdsCache";
+import { ModelsTreeIdsCache } from "./ModelsTreeIdsCache.js";
 
 const MAX_FILTERING_INSTANCE_KEY_COUNT = 100;
 

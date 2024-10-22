@@ -8,13 +8,13 @@ import { collect, insertPhysicalElement, insertPhysicalModelWithPartition, inser
 import { IModelConnection } from "@itwin/core-frontend";
 // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.HierarchyLevelFiltering.Imports
 import { createNodesQueryClauseFactory, HierarchyDefinition } from "@itwin/presentation-hierarchies";
+import { createBisInstanceLabelSelectClauseFactory } from "@itwin/presentation-shared";
 // __PUBLISH_EXTRACT_END__
 import { createIModelHierarchyProvider, GenericInstanceFilter } from "@itwin/presentation-hierarchies";
-import { buildIModel } from "../../IModelUtils";
-import { initialize, terminate } from "../../IntegrationTests";
-import { NodeValidators, validateHierarchy, validateHierarchyLevel } from "../HierarchyValidation";
-import { createIModelAccess } from "../Utils";
-import { createBisInstanceLabelSelectClauseFactory } from "@itwin/presentation-shared";
+import { buildIModel } from "../../IModelUtils.js";
+import { initialize, terminate } from "../../IntegrationTests.js";
+import { NodeValidators, validateHierarchy, validateHierarchyLevel } from "../HierarchyValidation.js";
+import { createIModelAccess } from "../Utils.js";
 
 describe("Hierarchies", () => {
   describe("Learning snippets", () => {

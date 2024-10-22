@@ -14,10 +14,10 @@ import { PresentationPropertyDataProvider } from "@itwin/presentation-components
 import { Presentation } from "@itwin/presentation-frontend";
 import { buildTestIModel } from "@itwin/presentation-testing";
 import { render } from "@testing-library/react";
-import { initialize, terminate } from "../../IntegrationTests";
-import { useOptionalDisposable } from "../../UseOptionalDisposable";
-import { ensureHasError, ErrorBoundary } from "../ErrorBoundary";
-import { ensurePropertyGridHasPropertyRecord } from "../PropertyGridUtils";
+import { initialize, terminate } from "../../IntegrationTests.js";
+import { useOptionalDisposable } from "../../UseOptionalDisposable.js";
+import { ensureHasError, ErrorBoundary } from "../ErrorBoundary.js";
+import { ensurePropertyGridHasPropertyRecord } from "../PropertyGridUtils.js";
 
 /* eslint-disable @typescript-eslint/naming-convention */
 

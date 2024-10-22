@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { GenericInstanceFilter, HierarchyNode } from "@itwin/presentation-hierarchies";
-import { SelectionChangeType } from "../UseSelectionHandler";
+import { SelectionChangeType } from "../UseSelectionHandler.js";
 
 /** @internal */
 export interface TreeModelRootNode {
@@ -121,10 +121,11 @@ export namespace TreeModel {
     }
 
     const parentNode = rootId !== undefined ? model.idToNode.get(rootId) : model.rootNode;
-    // istanbul ignore else
-    if (parentNode && !isTreeModelInfoNode(parentNode)) {
-      parentNode.isLoading = false;
+    /* istanbul ignore next 3*/
+    if (!parentNode || isTreeModelInfoNode(parentNode)) {
+      return;
     }
+    parentNode.isLoading = false;
   }
 
   export function removeSubTree(model: TreeModel, parentId: string | undefined): void {
@@ -195,7 +196,7 @@ export namespace TreeModel {
       return;
     }
     const modelNode = model.idToNode.get(nodeId);
-    // istanbul ignore if
+    /* istanbul ignore next 3*/
     if (!modelNode || !isTreeModelHierarchyNode(modelNode)) {
       return;
     }

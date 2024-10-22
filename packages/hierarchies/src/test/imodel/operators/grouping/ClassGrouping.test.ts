@@ -5,10 +5,10 @@
 
 import { expect } from "chai";
 import sinon from "sinon";
-import { GroupingNodeKey } from "../../../../hierarchies/HierarchyNodeKey";
-import { GroupingHandlerResult } from "../../../../hierarchies/imodel/operators/Grouping";
-import { createClassGroups } from "../../../../hierarchies/imodel/operators/grouping/ClassGrouping";
-import { createECSchemaProviderStub, createTestGenericNodeKey, createTestProcessedGroupingNode, createTestProcessedInstanceNode } from "../../../Utils";
+import { GroupingNodeKey } from "../../../../hierarchies/HierarchyNodeKey.js";
+import { GroupingHandlerResult } from "../../../../hierarchies/imodel/operators/Grouping.js";
+import { createClassGroups } from "../../../../hierarchies/imodel/operators/grouping/ClassGrouping.js";
+import { createECSchemaProviderStub, createTestGenericNodeKey, createTestProcessedGroupingNode, createTestProcessedInstanceNode } from "../../../Utils.js";
 
 describe("ClassGrouping", () => {
   let schemaProvider: ReturnType<typeof createECSchemaProviderStub>;

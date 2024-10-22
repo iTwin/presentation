@@ -270,9 +270,6 @@ importers:
       reflect-metadata:
         specifier: ^0.1.14
         version: 0.1.14
-      resize-observer-polyfill:
-        specifier: 1.5.1
-        version: 1.5.1
       rimraf:
         specifier: ^6.0.1
         version: 6.0.1
@@ -1007,9 +1004,6 @@ importers:
       reflect-metadata:
         specifier: ^0.1.14
         version: 0.1.14
-      resize-observer-polyfill:
-        specifier: 1.5.1
-        version: 1.5.1
       rimraf:
         specifier: ^6.0.1
         version: 6.0.1
