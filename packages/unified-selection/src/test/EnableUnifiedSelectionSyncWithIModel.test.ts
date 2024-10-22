@@ -158,7 +158,7 @@ describe("IModelSelectionHandler", () => {
     resetHiliteSetStub();
   }
 
-  async function createHandler(props: Partial<EnableUnifiedSelectionSyncWithIModelProps> & { selectionStorage: SelectionStorage }) {
+  function createHandler(props: Partial<EnableUnifiedSelectionSyncWithIModelProps> & { selectionStorage: SelectionStorage }) {
     const selectionHandler = new IModelSelectionHandler({
       imodelAccess,
       activeScopeProvider: () => "element",
@@ -223,7 +223,7 @@ describe("IModelSelectionHandler", () => {
       };
       customCachingHiliteSetProviderStub.getHiliteSet.callsFake(emptyGenerator);
       using(
-        await createHandler({
+        createHandler({
           selectionStorage: selectionStorageStub as unknown as SelectionStorage,
           cachingHiliteSetProvider: customCachingHiliteSetProviderStub,
         }),
@@ -236,7 +236,7 @@ describe("IModelSelectionHandler", () => {
 
     it("creates `CachingHiliteSetProvider` when not provided", async () => {
       using(
-        await createHandler({
+        createHandler({
           selectionStorage: selectionStorageStub as unknown as SelectionStorage,
         }),
         (_) => {
@@ -252,7 +252,7 @@ describe("IModelSelectionHandler", () => {
 
     it("clears selection", async () => {
       await using(
-        await createHandler({
+        createHandler({
           selectionStorage: selectionStorageStub as unknown as SelectionStorage,
         }),
         async (_) => {
@@ -266,7 +266,7 @@ describe("IModelSelectionHandler", () => {
 
     it("adds elements to selection", async () => {
       await using(
-        await createHandler({
+        createHandler({
           selectionStorage: selectionStorageStub as unknown as SelectionStorage,
         }),
         async (_) => {
@@ -284,7 +284,7 @@ describe("IModelSelectionHandler", () => {
 
     it("removes elements from selection", async () => {
       await using(
-        await createHandler({
+        createHandler({
           selectionStorage: selectionStorageStub as unknown as SelectionStorage,
         }),
         async (_) => {
@@ -302,7 +302,7 @@ describe("IModelSelectionHandler", () => {
 
     it("replaces selection", async () => {
       await using(
-        await createHandler({
+        createHandler({
           selectionStorage: selectionStorageStub as unknown as SelectionStorage,
         }),
         async (_) => {
@@ -325,7 +325,7 @@ describe("IModelSelectionHandler", () => {
 
     it("ignores changes when suspended", async () => {
       await using(
-        await createHandler({
+        createHandler({
           selectionStorage: selectionStorageStub as unknown as SelectionStorage,
         }),
         async (handler) => {
@@ -409,7 +409,7 @@ describe("IModelSelectionHandler", () => {
         ]),
       );
 
-      await using(await createHandler({ selectionStorage }), async (_) => {
+      await using(createHandler({ selectionStorage }), async (_) => {
         await waitFor(() => {
           expect(hiliteSet.clear).to.be.calledOnce;
           expect(hiliteSet.elements.addIds).to.be.calledOnceWith([instanceKey.id]);
@@ -420,7 +420,7 @@ describe("IModelSelectionHandler", () => {
     });
 
     it("ignores selection changes to other imodels", async () => {
-      await using(await createHandler({ selectionStorage }), async (_) => {
+      await using(createHandler({ selectionStorage }), async (_) => {
         resetStubs();
         triggerUnifiedSelectionChange({ imodelKey: "otherIModel" });
         await waitFor(() => {
@@ -434,7 +434,7 @@ describe("IModelSelectionHandler", () => {
     });
 
     it("ignores selection changes to selection levels other than 0", async () => {
-      await using(await createHandler({ selectionStorage }), async (_) => {
+      await using(createHandler({ selectionStorage }), async (_) => {
         resetStubs();
         triggerUnifiedSelectionChange({ level: 1 });
         await waitFor(() => {
@@ -448,7 +448,7 @@ describe("IModelSelectionHandler", () => {
     });
 
     it("clears selection set when hilite list is empty", async () => {
-      await using(await createHandler({ selectionStorage }), async (_) => {
+      await using(createHandler({ selectionStorage }), async (_) => {
         resetStubs();
 
         cachingProvider.getHiliteSet.callsFake(() => createAsyncIterator([]));
@@ -462,7 +462,7 @@ describe("IModelSelectionHandler", () => {
     });
 
     it("sets elements hilite after replace event", async () => {
-      await using(await createHandler({ selectionStorage }), async (_) => {
+      await using(createHandler({ selectionStorage }), async (_) => {
         resetStubs();
 
         const id = "0x2";
@@ -480,7 +480,7 @@ describe("IModelSelectionHandler", () => {
     });
 
     it("sets models hilite after replace event", async () => {
-      await using(await createHandler({ selectionStorage }), async (_) => {
+      await using(createHandler({ selectionStorage }), async (_) => {
         resetStubs();
 
         const id = "0x1";
@@ -498,7 +498,7 @@ describe("IModelSelectionHandler", () => {
     });
 
     it("sets subcategories hilite after replace event", async () => {
-      await using(await createHandler({ selectionStorage }), async (_) => {
+      await using(createHandler({ selectionStorage }), async (_) => {
         resetStubs();
 
         const id = "0x1";
@@ -516,7 +516,7 @@ describe("IModelSelectionHandler", () => {
     });
 
     it("sets combined hilite after replace event", async () => {
-      await using(await createHandler({ selectionStorage }), async (_) => {
+      await using(createHandler({ selectionStorage }), async (_) => {
         resetStubs();
 
         const modelId = "0x1";
@@ -538,7 +538,7 @@ describe("IModelSelectionHandler", () => {
     });
 
     it("adds elements to hilite after add event", async () => {
-      await using(await createHandler({ selectionStorage }), async (_) => {
+      await using(createHandler({ selectionStorage }), async (_) => {
         resetStubs();
 
         const instanceKey = createSelectableInstanceKey(4);
@@ -556,7 +556,7 @@ describe("IModelSelectionHandler", () => {
     });
 
     it("adds models to hilite after add event", async () => {
-      await using(await createHandler({ selectionStorage }), async (_) => {
+      await using(createHandler({ selectionStorage }), async (_) => {
         resetStubs();
 
         const instanceKey = createSelectableInstanceKey(4);
@@ -575,7 +575,7 @@ describe("IModelSelectionHandler", () => {
     });
 
     it("adds subcategories to hilite after add event", async () => {
-      await using(await createHandler({ selectionStorage }), async (_) => {
+      await using(createHandler({ selectionStorage }), async (_) => {
         resetStubs();
 
         const instanceKey = createSelectableInstanceKey(4);
@@ -594,7 +594,7 @@ describe("IModelSelectionHandler", () => {
     });
 
     it("removes elements from hilite after remove event", async () => {
-      await using(await createHandler({ selectionStorage }), async (_) => {
+      await using(createHandler({ selectionStorage }), async (_) => {
         resetStubs();
 
         const instanceKey = createSelectableInstanceKey();
@@ -612,7 +612,7 @@ describe("IModelSelectionHandler", () => {
     });
 
     it("removes and re-adds elements to hilite after remove event", async () => {
-      await using(await createHandler({ selectionStorage }), async (_) => {
+      await using(createHandler({ selectionStorage }), async (_) => {
         resetStubs();
 
         const removedIds = ["0x1", "0x2"];
@@ -651,7 +651,7 @@ describe("IModelSelectionHandler", () => {
     });
 
     it("removes and re-adds models to hilite after remove event", async () => {
-      await using(await createHandler({ selectionStorage }), async (_) => {
+      await using(createHandler({ selectionStorage }), async (_) => {
         resetStubs();
 
         const removedIds = ["0x1", "0x2"];
@@ -690,7 +690,7 @@ describe("IModelSelectionHandler", () => {
     });
 
     it("removes and re-adds subcategories to hilite after remove event", async () => {
-      await using(await createHandler({ selectionStorage }), async (_) => {
+      await using(createHandler({ selectionStorage }), async (_) => {
         resetStubs();
 
         const removedIds = ["0x1", "0x2"];
@@ -729,7 +729,7 @@ describe("IModelSelectionHandler", () => {
     });
 
     it("handles hilite set in batches", async () => {
-      await using(await createHandler({ selectionStorage }), async (_) => {
+      await using(createHandler({ selectionStorage }), async (_) => {
         resetStubs();
 
         const firstElementId = "0x1";
@@ -775,7 +775,7 @@ describe("IModelSelectionHandler", () => {
     });
 
     it("cancels ongoing selection change handling when selection replaced", async () => {
-      await using(await createHandler({ selectionStorage }), async (_) => {
+      await using(createHandler({ selectionStorage }), async (_) => {
         resetStubs();
 
         const initialElementId = "0x1";
@@ -837,7 +837,7 @@ describe("IModelSelectionHandler", () => {
     });
 
     it("cancels ongoing selection change handling when selection cleared", async () => {
-      await using(await createHandler({ selectionStorage }), async (_) => {
+      await using(createHandler({ selectionStorage }), async (_) => {
         resetStubs();
 
         const initialElementId = "0x1";
@@ -899,7 +899,7 @@ describe("IModelSelectionHandler", () => {
     });
 
     it("does not cancel ongoing changes when added or removed from selection", async () => {
-      await using(await createHandler({ selectionStorage }), async (_) => {
+      await using(createHandler({ selectionStorage }), async (_) => {
         resetStubs();
 
         const initialElementId = "0x1";
@@ -987,7 +987,7 @@ describe("IModelSelectionHandler", () => {
     });
 
     it("does not clear selection set if unified selection change was caused by viewport", async () => {
-      await using(await createHandler({ selectionStorage }), async (_) => {
+      await using(createHandler({ selectionStorage }), async (_) => {
         resetStubs();
 
         const elementId = "0x1";
