@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { LRUMap } from "@itwin/core-bentley";
-import { parseFullClassName } from "./Utils";
+import { parseFullClassName } from "./Utils.js";
 
 /**
  * An interface for an object that knows how to get an ECSchema from an iModel.

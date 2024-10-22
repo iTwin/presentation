@@ -4,24 +4,26 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { expect } from "chai";
+import { createAsyncIterator } from "presentation-test-utilities";
 import sinon from "sinon";
 import { ECClassHierarchyInspector, ECSqlQueryExecutor } from "@itwin/presentation-shared";
-import { CachingHiliteSetProvider, createCachingHiliteSetProvider } from "../unified-selection/CachingHiliteSetProvider";
-import * as hiliteSetProvider from "../unified-selection/HiliteSetProvider";
-import { SelectableInstanceKey } from "../unified-selection/Selectable";
-import { createStorage, SelectionStorage } from "../unified-selection/SelectionStorage";
-import { createSelectableInstanceKey } from "./_helpers/SelectablesCreator";
+import { CachingHiliteSetProvider, createCachingHiliteSetProvider } from "../unified-selection/CachingHiliteSetProvider.js";
+import { HiliteSet, HiliteSetProvider, HiliteSetProviderProps } from "../unified-selection/HiliteSetProvider.js";
+import * as hiliteSetProvider from "../unified-selection/HiliteSetProvider.js";
+import { SelectableInstanceKey } from "../unified-selection/Selectable.js";
+import { createStorage, SelectionStorage } from "../unified-selection/SelectionStorage.js";
+import { createSelectableInstanceKey } from "./_helpers/SelectablesCreator.js";
 
 const generateSelection = (): SelectableInstanceKey[] => {
   return [createSelectableInstanceKey(1), createSelectableInstanceKey(2), createSelectableInstanceKey(3)];
 };
 
 describe("CachingHiliteSetProvider", () => {
-  let factory: sinon.SinonStub<[props: hiliteSetProvider.HiliteSetProviderProps], hiliteSetProvider.HiliteSetProvider>;
+  let factory: sinon.SinonStub<[props: HiliteSetProviderProps], HiliteSetProvider>;
   let selectionStorage: SelectionStorage;
   let hiliteSetCache: CachingHiliteSetProvider;
   const provider = {
-    getHiliteSet: sinon.stub<[{ imodelKey: string }], AsyncIterableIterator<hiliteSetProvider.HiliteSet>>(),
+    getHiliteSet: sinon.stub<[{ imodelKey: string }], AsyncIterableIterator<HiliteSet>>(),
   };
   const imodelProvider = sinon.stub<[string], ECClassHierarchyInspector & ECSqlQueryExecutor>();
   const imodelKey = "iModelKey";
@@ -53,7 +55,9 @@ describe("CachingHiliteSetProvider", () => {
     };
   }
 
-  beforeEach(() => {
+  beforeEach(async () => {
+    factory = sinon.stub(hiliteSetProvider, "createHiliteSetProvider").returns(provider as unknown as hiliteSetProvider.HiliteSetProvider);
+
     selectionStorage = createStorage();
 
     hiliteSetCache = createCachingHiliteSetProvider({
@@ -64,12 +68,13 @@ describe("CachingHiliteSetProvider", () => {
     selectionStorage.addToSelection({ imodelKey, source: "test", selectables: generateSelection() });
 
     provider.getHiliteSet.reset();
-    provider.getHiliteSet.callsFake(async function* () {
-      yield { models: ["0x1"], subCategories: ["0x1"], elements: ["0x1"] } as hiliteSetProvider.HiliteSet;
-      yield { models: ["0x2"], subCategories: ["0x2"], elements: ["0x2"] } as hiliteSetProvider.HiliteSet;
-      yield { models: ["0x3"], subCategories: ["0x3"], elements: ["0x3"] } as hiliteSetProvider.HiliteSet;
-    });
-    factory = sinon.stub(hiliteSetProvider, "createHiliteSetProvider").returns(provider as unknown as hiliteSetProvider.HiliteSetProvider);
+    provider.getHiliteSet.callsFake(() =>
+      createAsyncIterator([
+        { models: ["0x1"], subCategories: ["0x1"], elements: ["0x1"] },
+        { models: ["0x2"], subCategories: ["0x2"], elements: ["0x2"] },
+        { models: ["0x3"], subCategories: ["0x3"], elements: ["0x3"] },
+      ]),
+    );
   });
 
   afterEach(() => {

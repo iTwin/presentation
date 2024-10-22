@@ -9,12 +9,12 @@ import { from } from "rxjs";
 import sinon from "sinon";
 import { LogLevel } from "@itwin/core-bentley";
 import { createDefaultValueFormatter, IPrimitiveValueFormatter } from "@itwin/presentation-shared";
-import { createGroupingHandlers, createGroupingOperator, GroupingHandlerResult, LOGGING_NAMESPACE } from "../../../hierarchies/imodel/operators/Grouping";
-import * as baseClassGrouping from "../../../hierarchies/imodel/operators/grouping/BaseClassGrouping";
-import * as classGrouping from "../../../hierarchies/imodel/operators/grouping/ClassGrouping";
-import * as groupHiding from "../../../hierarchies/imodel/operators/grouping/GroupHiding";
-import * as labelGrouping from "../../../hierarchies/imodel/operators/grouping/LabelGrouping";
-import * as propertiesGrouping from "../../../hierarchies/imodel/operators/grouping/PropertiesGrouping";
+import { createGroupingHandlers, createGroupingOperator, GroupingHandlerResult, LOGGING_NAMESPACE } from "../../../hierarchies/imodel/operators/Grouping.js";
+import * as baseClassGrouping from "../../../hierarchies/imodel/operators/grouping/BaseClassGrouping.js";
+import * as classGrouping from "../../../hierarchies/imodel/operators/grouping/ClassGrouping.js";
+import * as groupHiding from "../../../hierarchies/imodel/operators/grouping/GroupHiding.js";
+import * as labelGrouping from "../../../hierarchies/imodel/operators/grouping/LabelGrouping.js";
+import * as propertiesGrouping from "../../../hierarchies/imodel/operators/grouping/PropertiesGrouping.js";
 import {
   createIModelAccessStub,
   createTestProcessedGenericNode,
@@ -22,7 +22,7 @@ import {
   createTestProcessedInstanceNode,
   setupLogging,
   testLocalizedStrings,
-} from "../../Utils";
+} from "../../Utils.js";
 
 describe("Grouping", () => {
   const imodelAccess = createIModelAccessStub();
@@ -33,14 +33,15 @@ describe("Grouping", () => {
     setupLogging([{ namespace: LOGGING_NAMESPACE, level: LogLevel.Trace }]);
   });
 
-  afterEach(() => {
-    sinon.restore();
-  });
-
   describe("createGroupingOperator", () => {
-    let applyGroupingHidingParamsStub: sinon.SinonStub<[GroupingHandlerResult, number], GroupingHandlerResult>;
-    beforeEach(() => {
+    let applyGroupingHidingParamsStub: sinon.SinonSpy<[GroupingHandlerResult, number], GroupingHandlerResult>;
+
+    beforeEach(async () => {
       applyGroupingHidingParamsStub = sinon.stub(groupHiding, "applyGroupHidingParams").callsFake((props) => props);
+    });
+
+    afterEach(() => {
+      sinon.restore();
     });
 
     it("doesn't change input nodes when grouping handlers list is empty", async () => {
@@ -312,16 +313,17 @@ describe("Grouping", () => {
   });
 
   describe("createGroupingHandlers", () => {
-    let createBaseClassGroupingHandlersStub: sinon.SinonStub;
-    let createPropertiesGroupingHandlersStub: sinon.SinonStub;
+    let createBaseClassGroupingHandlersStub: sinon.SinonSpy;
+    let createPropertiesGroupingHandlersStub: sinon.SinonSpy;
+    let createClassGroupsStub: sinon.SinonSpy;
+    let createLabelGroupsStub: sinon.SinonSpy;
     let baseClassHandlerStub: sinon.SinonStub;
     let propertyHandlerStub: sinon.SinonStub;
-    let createClassGroupsStub: sinon.SinonStub;
-    let createLabelGroupsStub: sinon.SinonStub;
 
-    beforeEach(() => {
+    beforeEach(async () => {
       baseClassHandlerStub = sinon.stub();
       propertyHandlerStub = sinon.stub();
+
       createBaseClassGroupingHandlersStub = sinon.stub(baseClassGrouping, "createBaseClassGroupingHandlers").resolves([baseClassHandlerStub]);
       createPropertiesGroupingHandlersStub = sinon.stub(propertiesGrouping, "createPropertiesGroupingHandlers").resolves([propertyHandlerStub]);
       createClassGroupsStub = sinon.stub(classGrouping, "createClassGroups");

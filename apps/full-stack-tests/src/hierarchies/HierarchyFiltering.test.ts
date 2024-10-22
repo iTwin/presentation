@@ -30,11 +30,11 @@ import {
   mergeProviders,
 } from "@itwin/presentation-hierarchies";
 import { createBisInstanceLabelSelectClauseFactory, ECSqlBinding, InstanceKey } from "@itwin/presentation-shared";
-import { createFileNameFromString } from "@itwin/presentation-testing/lib/cjs/presentation-testing/InternalUtils";
-import { buildIModel, importSchema, withECDb } from "../IModelUtils";
-import { initialize, terminate } from "../IntegrationTests";
-import { NodeValidators, validateHierarchy } from "./HierarchyValidation";
-import { createIModelAccess, createProvider } from "./Utils";
+import { createFileNameFromString } from "@itwin/presentation-testing/lib/cjs/presentation-testing/InternalUtils.js";
+import { buildIModel, importSchema, withECDb } from "../IModelUtils.js";
+import { initialize, terminate } from "../IntegrationTests.js";
+import { NodeValidators, validateHierarchy } from "./HierarchyValidation.js";
+import { createIModelAccess, createProvider } from "./Utils.js";
 
 describe("Hierarchies", () => {
   describe("Hierarchy filtering", () => {

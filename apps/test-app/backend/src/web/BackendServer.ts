@@ -10,7 +10,7 @@ import { IModelJsExpressServer } from "@itwin/express-server";
 /**
  * Initializes Web Server backend
  */
-export default async function initialize(rpcInterfaces: RpcInterfaceDefinition[]) {
+export async function initialize(rpcInterfaces: RpcInterfaceDefinition[]) {
   RpcConfiguration.developmentMode = true; // eslint-disable-line @itwin/no-internal
 
   // __PUBLISH_EXTRACT_START__ Presentation.Backend.WebApp.RpcInterface

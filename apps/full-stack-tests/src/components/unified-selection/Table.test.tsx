@@ -17,8 +17,8 @@ import {
 import { Presentation } from "@itwin/presentation-frontend";
 import { buildTestIModel } from "@itwin/presentation-testing";
 import { act, getByText, render, waitFor } from "@testing-library/react";
-import { initialize, terminate } from "../../IntegrationTests";
-import { ensureTableHasRowsWithCellValues } from "../TableUtils";
+import { initialize, terminate } from "../../IntegrationTests.js";
+import { ensureTableHasRowsWithCellValues } from "../TableUtils.js";
 
 /* eslint-disable @typescript-eslint/naming-convention */
 

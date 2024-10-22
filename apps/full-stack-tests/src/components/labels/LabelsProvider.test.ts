@@ -6,7 +6,7 @@
 import { expect } from "chai";
 import { IModelConnection, SnapshotConnection } from "@itwin/core-frontend";
 import { PresentationLabelsProvider } from "@itwin/presentation-components";
-import { initialize, terminate } from "../../IntegrationTests";
+import { initialize, terminate } from "../../IntegrationTests.js";
 
 describe("LabelsProvider", async () => {
   let imodel: IModelConnection;

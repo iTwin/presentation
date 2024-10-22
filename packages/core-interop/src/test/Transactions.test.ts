@@ -5,7 +5,7 @@
 
 import { expect } from "chai";
 import sinon from "sinon";
-import { registerTxnListeners } from "../core-interop/Transactions";
+import { registerTxnListeners } from "../core-interop/Transactions.js";
 
 describe("registerTxnListeners", () => {
   it("calls provided callback on `onAppliedChanges` event", async () => {

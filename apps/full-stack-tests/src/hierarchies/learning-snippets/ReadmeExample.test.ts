@@ -9,9 +9,6 @@
 import { expect } from "chai";
 import { insertPhysicalElement, insertPhysicalModelWithPartition, insertSpatialCategory } from "presentation-test-utilities";
 import * as sinon from "sinon";
-import { buildIModel } from "../../IModelUtils";
-import { initialize, terminate } from "../../IntegrationTests";
-
 // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.IModelAccessImports
 import { IModelConnection } from "@itwin/core-frontend";
 import { SchemaContext } from "@itwin/ecschema-metadata";
@@ -31,6 +28,11 @@ import {
   HierarchyProvider,
 } from "@itwin/presentation-hierarchies";
 import { createBisInstanceLabelSelectClauseFactory, ECSqlBinding } from "@itwin/presentation-shared";
+// __PUBLISH_EXTRACT_END__
+
+import { buildIModel } from "../../IModelUtils.js";
+import { initialize, terminate } from "../../IntegrationTests.js";
+
 // __PUBLISH_EXTRACT_END__
 
 // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.IModelAccess

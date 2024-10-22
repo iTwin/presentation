@@ -13,21 +13,21 @@ export {
   NodeParser,
   NodePostProcessor,
   NodePreProcessor,
-} from "./hierarchies/imodel/IModelHierarchyDefinition";
+} from "./hierarchies/imodel/IModelHierarchyDefinition.js";
 export {
   DefineGenericNodeChildHierarchyLevelProps,
   DefineInstanceNodeChildHierarchyLevelProps,
   DefineRootHierarchyLevelProps,
   createPredicateBasedHierarchyDefinition,
-} from "./hierarchies/imodel/PredicateBasedHierarchyDefinition";
-export { LimitingECSqlQueryExecutor, createLimitingECSqlQueryExecutor } from "./hierarchies/imodel/LimitingECSqlQueryExecutor";
-export { NodeSelectClauseColumnNames, NodesQueryClauseFactory, createNodesQueryClauseFactory } from "./hierarchies/imodel/NodeSelectQueryFactory";
-export { createIModelHierarchyProvider } from "./hierarchies/imodel/IModelHierarchyProvider";
-export { SourceHierarchyNode, ProcessedHierarchyNode } from "./hierarchies/imodel/IModelHierarchyNode";
+} from "./hierarchies/imodel/PredicateBasedHierarchyDefinition.js";
+export { LimitingECSqlQueryExecutor, createLimitingECSqlQueryExecutor } from "./hierarchies/imodel/LimitingECSqlQueryExecutor.js";
+export { NodeSelectClauseColumnNames, NodesQueryClauseFactory, createNodesQueryClauseFactory } from "./hierarchies/imodel/NodeSelectQueryFactory.js";
+export { createIModelHierarchyProvider } from "./hierarchies/imodel/IModelHierarchyProvider.js";
+export { SourceHierarchyNode, ProcessedHierarchyNode } from "./hierarchies/imodel/IModelHierarchyNode.js";
 
-export { RowsLimitExceededError } from "./hierarchies/HierarchyErrors";
-export { GroupingHierarchyNode, HierarchyNode, NonGroupingHierarchyNode } from "./hierarchies/HierarchyNode";
-export { HierarchyNodeIdentifier, HierarchyNodeIdentifiersPath } from "./hierarchies/HierarchyNodeIdentifier";
+export { RowsLimitExceededError } from "./hierarchies/HierarchyErrors.js";
+export { GroupingHierarchyNode, HierarchyNode, NonGroupingHierarchyNode } from "./hierarchies/HierarchyNode.js";
+export { HierarchyNodeIdentifier, HierarchyNodeIdentifiersPath } from "./hierarchies/HierarchyNodeIdentifier.js";
 export {
   GenericNodeKey,
   GroupingNodeKey,
@@ -40,7 +40,7 @@ export {
   PropertyValueGroupingNodeKey,
   PropertyValueRangeGroupingNodeKey,
   IModelHierarchyNodeKey,
-} from "./hierarchies/HierarchyNodeKey";
-export { GetHierarchyNodesProps, HierarchyProvider, mergeProviders } from "./hierarchies/HierarchyProvider";
-export { HierarchyFilteringPath, extractFilteringProps } from "./hierarchies/HierarchyFiltering";
-export { getLogger, setLogger } from "./hierarchies/Logging";
+} from "./hierarchies/HierarchyNodeKey.js";
+export { GetHierarchyNodesProps, HierarchyProvider, mergeProviders } from "./hierarchies/HierarchyProvider.js";
+export { HierarchyFilteringPath, extractFilteringProps } from "./hierarchies/HierarchyFiltering.js";
+export { getLogger, setLogger } from "./hierarchies/Logging.js";

@@ -23,7 +23,6 @@ import { ECSchemaRpcImpl } from "@itwin/ecschema-rpcinterface-impl";
 import { createECSqlQueryExecutor } from "@itwin/presentation-core-interop";
 import { buildTestIModel, initialize, terminate } from "@itwin/presentation-testing";
 import { computeSelection, SelectableInstanceKey } from "@itwin/unified-selection";
-import { SelectionScope } from "@itwin/unified-selection/lib/cjs/unified-selection/SelectionScope";
 
 describe("SelectionScope", () => {
   let iModel: IModelConnection;
@@ -49,7 +48,7 @@ describe("SelectionScope", () => {
     return fs.readFileSync(schemaFile, "utf8");
   }
 
-  async function getSelection(keys: string[], scope: { id: SelectionScope; ancestorLevel?: number } | SelectionScope): Promise<SelectableInstanceKey[]> {
+  async function getSelection(keys: string[], scope: Parameters<typeof computeSelection>[0]["scope"]): Promise<SelectableInstanceKey[]> {
     const selectables: SelectableInstanceKey[] = [];
     for await (const selectable of computeSelection({ queryExecutor: createECSqlQueryExecutor(iModel), elementIds: keys, scope })) {
       selectables.push(selectable);

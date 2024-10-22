@@ -4,10 +4,10 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { defer, filter, map, merge, mergeMap, Observable } from "rxjs";
-import { createNodeIdentifierForLogging, createOperatorLoggingNamespace, hasChildren, LOGGING_NAMESPACE_INTERNAL } from "../../internal/Common";
-import { doLog, log } from "../../internal/LoggingUtils";
-import { partition } from "../../internal/operators/Partition";
-import { ProcessedGenericHierarchyNode, ProcessedHierarchyNode, ProcessedInstanceHierarchyNode } from "../IModelHierarchyNode";
+import { createNodeIdentifierForLogging, createOperatorLoggingNamespace, hasChildren, LOGGING_NAMESPACE_INTERNAL } from "../../internal/Common.js";
+import { doLog, log } from "../../internal/LoggingUtils.js";
+import { partition } from "../../internal/operators/Partition.js";
+import { ProcessedGenericHierarchyNode, ProcessedHierarchyNode, ProcessedInstanceHierarchyNode } from "../IModelHierarchyNode.js";
 
 const OPERATOR_NAME = "HideIfNoChildren";
 /** @internal */

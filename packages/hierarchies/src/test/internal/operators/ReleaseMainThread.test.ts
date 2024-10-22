@@ -6,7 +6,7 @@
 import { expect } from "chai";
 import { from } from "rxjs";
 import sinon from "sinon";
-import { releaseMainThreadOnItemsCount } from "../../../hierarchies/internal/operators/ReleaseMainThread";
+import { releaseMainThreadOnItemsCount } from "../../../hierarchies/internal/operators/ReleaseMainThread.js";
 
 describe("releaseMainThreadOnItemsCount", () => {
   let timers: sinon.SinonFakeTimers;

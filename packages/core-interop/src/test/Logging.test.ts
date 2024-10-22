@@ -6,7 +6,7 @@
 import { expect } from "chai";
 import sinon from "sinon";
 import { Logger, LogLevel } from "@itwin/core-bentley";
-import { createLogger } from "../core-interop/Logging";
+import { createLogger } from "../core-interop/Logging.js";
 
 describe("createLogger", () => {
   it("checks error severity using core `Logger`", async () => {

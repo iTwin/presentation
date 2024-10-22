@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { createAsyncIterator } from "presentation-test-utilities";
-import { CustomSelectable, SelectableInstanceKey } from "../../unified-selection/Selectable";
+import { CustomSelectable, SelectableInstanceKey } from "../../unified-selection/Selectable.js";
 
 /**
  * Generates a random EC instance ID`

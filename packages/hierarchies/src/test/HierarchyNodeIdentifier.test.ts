@@ -5,9 +5,9 @@
 
 import { expect } from "chai";
 import { InstanceKey } from "@itwin/presentation-shared";
-import { HierarchyNodeIdentifier } from "../hierarchies/HierarchyNodeIdentifier";
-import { GenericNodeKey } from "../hierarchies/HierarchyNodeKey";
-import { createTestGenericNodeKey } from "./Utils";
+import { HierarchyNodeIdentifier } from "../hierarchies/HierarchyNodeIdentifier.js";
+import { GenericNodeKey } from "../hierarchies/HierarchyNodeKey.js";
+import { createTestGenericNodeKey } from "./Utils.js";
 
 describe("HierarchyNodeIdentifier", () => {
   const instanceNodeIdentifier: InstanceKey = {

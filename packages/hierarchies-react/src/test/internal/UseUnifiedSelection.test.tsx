@@ -10,10 +10,10 @@ import { PropsWithChildren } from "react";
 import sinon from "sinon";
 import { InstancesNodeKey } from "@itwin/presentation-hierarchies";
 import { createStorage, Selectables, StorageSelectionChangeEventArgs, StorageSelectionChangesListener } from "@itwin/unified-selection";
-import { TreeModelNode } from "../../presentation-hierarchies-react/internal/TreeModel";
-import { useUnifiedTreeSelection } from "../../presentation-hierarchies-react/internal/UseUnifiedSelection";
-import { UnifiedSelectionProvider } from "../../presentation-hierarchies-react/UnifiedSelectionContext";
-import { act, createStub, createTestGroupingNode, createTestHierarchyNode, createTreeModelNode, renderHook } from "../TestUtils";
+import { TreeModelNode } from "../../presentation-hierarchies-react/internal/TreeModel.js";
+import { useUnifiedTreeSelection } from "../../presentation-hierarchies-react/internal/UseUnifiedSelection.js";
+import { UnifiedSelectionProvider } from "../../presentation-hierarchies-react/UnifiedSelectionContext.js";
+import { act, createStub, createTestGroupingNode, createTestHierarchyNode, createTreeModelNode, renderHook } from "../TestUtils.js";
 
 describe("useUnifiedSelection", () => {
   const storage = createStorage();

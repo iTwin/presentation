@@ -10,8 +10,8 @@ import { IModelConnection } from "@itwin/core-frontend";
 import { createNodesQueryClauseFactory, HierarchyDefinition, HierarchyNode } from "@itwin/presentation-hierarchies";
 import { createBisInstanceLabelSelectClauseFactory, InstanceKey } from "@itwin/presentation-shared";
 import { buildTestIModel } from "@itwin/presentation-testing";
-import { initialize, terminate } from "../IntegrationTests";
-import { createClassECSqlSelector, createIModelAccess, createProvider } from "./Utils";
+import { initialize, terminate } from "../IntegrationTests.js";
+import { createClassECSqlSelector, createIModelAccess, createProvider } from "./Utils.js";
 
 describe("Hierarchies", () => {
   describe("Hierarchy level instance keys", () => {

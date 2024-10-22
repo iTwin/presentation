@@ -6,10 +6,10 @@
 import { expect } from "chai";
 import { ResolvablePromise } from "presentation-test-utilities";
 import * as sinon from "sinon";
-import { createRelationshipPathJoinClause } from "../../shared/ecsql-snippets/ECSqlJoinSnippets";
-import { EC } from "../../shared/Metadata";
-import { trimWhitespace } from "../../shared/Utils";
-import { createECSchemaProviderStub } from "../MetadataProviderStub";
+import { createRelationshipPathJoinClause } from "../../shared/ecsql-snippets/ECSqlJoinSnippets.js";
+import { EC } from "../../shared/Metadata.js";
+import { trimWhitespace } from "../../shared/Utils.js";
+import { createECSchemaProviderStub } from "../MetadataProviderStub.js";
 
 describe("createRelationshipPathJoinClause", () => {
   let schemaProvider: ReturnType<typeof createECSchemaProviderStub>;

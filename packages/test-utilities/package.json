@@ -4,15 +4,22 @@
   "private": true,
   "scripts": {
     "build": "npm run -s build:cjs && npm run -s build:esm",
-    "build:cjs": "tsc -p tsconfig.cjs.json",
+    "build:cjs": "node ../../scripts/package-cjs.mjs ./lib/cjs && tsc -p tsconfig.cjs.json",
     "build:esm": "tsc -p tsconfig.esm.json",
-    "build:watch": "npm run -s build:cjs -- -w",
     "clean": "rimraf lib temp",
     "lint": "eslint \"./src/**/*.ts\""
   },
+  "type": "module",
   "main": "lib/cjs/presentation-test-utilities.js",
+  "types": "lib/cjs/presentation-test-utilities",
   "module": "lib/esm/presentation-test-utilities.js",
-  "types": "lib/cjs/presentation-test-utilities.d.ts",
+  "exports": {
+    ".": {
+      "import": "./lib/esm/presentation-test-utilities.js",
+      "require": "./lib/cjs/presentation-test-utilities.js"
+    },
+    "./package.json": "./package.json"
+  },
   "dependencies": {
     "@itwin/core-bentley": "^4.9.0",
     "@itwin/core-common": "^4.9.0",

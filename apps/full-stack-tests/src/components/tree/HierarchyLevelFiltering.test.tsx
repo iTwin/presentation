@@ -13,10 +13,10 @@ import { Ruleset } from "@itwin/presentation-common";
 import { PresentationTree, PresentationTreeRenderer, usePresentationTreeState } from "@itwin/presentation-components";
 import { buildTestIModel } from "@itwin/presentation-testing";
 import { getByPlaceholderText, getByRole, getByTitle, render, waitFor } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
-import { initialize, terminate } from "../../IntegrationTests";
-import { stubGetBoundingClientRect } from "../../Utils";
-import { getNodeByLabel, toggleExpandNode } from "../TreeUtils";
+import { userEvent } from "@testing-library/user-event";
+import { initialize, terminate } from "../../IntegrationTests.js";
+import { stubGetBoundingClientRect } from "../../Utils.js";
+import { getNodeByLabel, toggleExpandNode } from "../TreeUtils.js";
 
 /* eslint-disable @typescript-eslint/naming-convention */
 
@@ -118,8 +118,10 @@ describe("Learning snippets", () => {
       await user.click(applyFilterButton);
 
       // expect 1 element node
-      await waitFor(() => getNodeByLabel(container, "My Element 2"));
-      expect(() => getNodeByLabel(container, "My Element 1")).to.throw();
+      await waitFor(() => {
+        expect(() => getNodeByLabel(container, "My Element 1")).to.throw();
+        expect(getNodeByLabel(container, "My Element 2")).to.not.be.undefined;
+      });
     });
   });
 });

@@ -4,9 +4,9 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { expect } from "chai";
-import { GetHierarchyNodesProps } from "../../hierarchies/HierarchyProvider";
-import { HierarchyCache } from "../../hierarchies/imodel/HierarchyCache";
-import { createTestGenericNodeKey, createTestProcessedGenericNode } from "../Utils";
+import { GetHierarchyNodesProps } from "../../hierarchies/HierarchyProvider.js";
+import { HierarchyCache } from "../../hierarchies/imodel/HierarchyCache.js";
+import { createTestGenericNodeKey, createTestProcessedGenericNode } from "../Utils.js";
 
 describe("HierarchyCache", () => {
   it("returns `undefined` when cache is empty", () => {

@@ -6,10 +6,10 @@
 import { Draft, enableMapSet, produce } from "immer";
 import { EMPTY, Observable, reduce, Subject, takeUntil } from "rxjs";
 import { GenericInstanceFilter, HierarchyNode, HierarchyProvider } from "@itwin/presentation-hierarchies";
-import { SelectionChangeType } from "../UseSelectionHandler";
-import { HierarchyLevelOptions, ITreeLoader, LoadedTreePart, LoadNodesOptions, TreeLoader } from "./TreeLoader";
-import { isTreeModelHierarchyNode, isTreeModelInfoNode, TreeModel, TreeModelHierarchyNode, TreeModelNode, TreeModelRootNode } from "./TreeModel";
-import { createNodeId, sameNodes } from "./Utils";
+import { SelectionChangeType } from "../UseSelectionHandler.js";
+import { HierarchyLevelOptions, ITreeLoader, LoadedTreePart, LoadNodesOptions, TreeLoader } from "./TreeLoader.js";
+import { isTreeModelHierarchyNode, isTreeModelInfoNode, TreeModel, TreeModelHierarchyNode, TreeModelNode, TreeModelRootNode } from "./TreeModel.js";
+import { createNodeId, sameNodes } from "./Utils.js";
 
 enableMapSet();
 
@@ -90,7 +90,7 @@ export class TreeActions {
 
   private loadNodes(parentId: string, ignoreCache?: boolean) {
     const parentNode = this._currentModel.idToNode.get(parentId);
-    // istanbul ignore if
+    /* istanbul ignore next 3 */
     if (!parentNode || !isTreeModelHierarchyNode(parentNode)) {
       return;
     }
@@ -126,7 +126,7 @@ export class TreeActions {
     const buildNode = (node: TreeModelHierarchyNode) => (!!options?.discardState || node.id === parentId ? node : addAttributes(node, oldModel));
 
     const rootNode = parentId !== undefined ? this.getNode(parentId) : currModel.rootNode;
-    // istanbul ignore if
+    /* istanbul ignore next 3 */
     if (!rootNode || isTreeModelInfoNode(rootNode)) {
       return;
     }
@@ -313,7 +313,7 @@ function createHierarchyLevelOptions(model: TreeModel, nodeId: string | undefine
   return { instanceFilter: modelNode.instanceFilter, hierarchyLevelSizeLimit: modelNode.hierarchyLimit };
 }
 
-// istanbul ignore next
+/* istanbul ignore next */
 class NoopTreeLoader implements ITreeLoader {
   public loadNodes(): Observable<LoadedTreePart> {
     return EMPTY;
@@ -333,7 +333,7 @@ class TimeTracker {
   }
 
   public finish() {
-    // istanbul ignore if
+    /* istanbul ignore next 3 */
     if (this._stopped) {
       return;
     }

@@ -26,6 +26,7 @@ beta;interface;ILogger
 beta;interface;InstanceKey
 beta;namespace;InstanceKey
 beta;type;IPrimitiveValueFormatter
+beta;function;julianToDateTime
 beta;type;LogFunction
 beta;type;LogLevel
 beta;const;NOOP_LOGGER

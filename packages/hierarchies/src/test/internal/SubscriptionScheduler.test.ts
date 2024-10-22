@@ -19,7 +19,7 @@ import {
   throwError,
 } from "rxjs";
 import sinon from "sinon";
-import { SubscriptionScheduler } from "../../hierarchies/internal/SubscriptionScheduler";
+import { SubscriptionScheduler } from "../../hierarchies/internal/SubscriptionScheduler.js";
 
 describe("SubscriptionScheduler", () => {
   const concurrentSubscriptions = 3;

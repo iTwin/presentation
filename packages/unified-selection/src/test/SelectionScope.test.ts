@@ -6,9 +6,9 @@
 import { expect } from "chai";
 import sinon from "sinon";
 import { ECSqlQueryDef, ECSqlQueryExecutor, ECSqlQueryReaderOptions, ECSqlQueryRow } from "@itwin/presentation-shared";
-import { SelectableInstanceKey } from "../unified-selection/Selectable";
-import { computeSelection, ElementSelectionScopeProps, SelectionScope } from "../unified-selection/SelectionScope";
-import { createSelectableInstanceKey } from "./_helpers/SelectablesCreator";
+import { SelectableInstanceKey } from "../unified-selection/Selectable.js";
+import { computeSelection, ElementSelectionScopeProps, SelectionScope } from "../unified-selection/SelectionScope.js";
+import { createSelectableInstanceKey } from "./_helpers/SelectablesCreator.js";
 
 describe("SelectionScope", () => {
   const queryExecutor = {
