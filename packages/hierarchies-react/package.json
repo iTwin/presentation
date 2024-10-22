@@ -1,6 +1,6 @@
 {
   "name": "@itwin/presentation-hierarchies-react",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "React components based on `@itwin/presentation-hierarchies`",
   "license": "MIT",
   "author": {
@@ -27,14 +27,21 @@
     "React",
     "Tree"
   ],
+  "type": "module",
   "main": "lib/cjs/presentation-hierarchies-react.js",
+  "types": "lib/cjs/presentation-hierarchies-react",
   "module": "lib/esm/presentation-hierarchies-react.js",
-  "types": "lib/cjs/presentation-hierarchies-react.d.ts",
+  "exports": {
+    ".": {
+      "import": "./lib/esm/presentation-hierarchies-react.js",
+      "require": "./lib/cjs/presentation-hierarchies-react.js"
+    },
+    "./package.json": "./package.json"
+  },
   "scripts": {
     "build": "npm run -s build:cjs && npm run -s build:esm",
-    "build:cjs": "npm run -s copy:cjs && tsc -p tsconfig.cjs.json",
+    "build:cjs": "node ../../scripts/package-cjs.mjs ./lib/cjs && npm run -s copy:cjs && tsc -p tsconfig.cjs.json",
     "build:esm": "npm run -s copy:esm && tsc -p tsconfig.esm.json",
-    "build:watch": "npm run -s build:esm -- -w",
     "copy:cjs": "cpx \"./src/**/*.{css,json}\" ./lib/cjs",
     "copy:esm": "cpx \"./src/**/*.{css,json}\" ./lib/esm",
     "clean": "rimraf lib build",

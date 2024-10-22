@@ -8,8 +8,8 @@ import { collect } from "presentation-test-utilities";
 import { from, of } from "rxjs";
 import sinon from "sinon";
 import { LogLevel } from "@itwin/core-bentley";
-import { createDetermineChildrenOperator, LOGGING_NAMESPACE } from "../../../hierarchies/imodel/operators/DetermineChildren";
-import { createTestProcessedGenericNode, setupLogging } from "../../Utils";
+import { createDetermineChildrenOperator, LOGGING_NAMESPACE } from "../../../hierarchies/imodel/operators/DetermineChildren.js";
+import { createTestProcessedGenericNode, setupLogging } from "../../Utils.js";
 
 describe("DetermineChildren", () => {
   before(() => {

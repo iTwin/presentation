@@ -2,11 +2,10 @@
   "extends": "../../../tsconfig.json",
   "compilerOptions": {
     "module": "ESNext",
-    "moduleResolution": "bundler",
+    "moduleResolution": "Bundler",
     "jsx": "react-jsx",
     "lib": ["ESNext", "DOM", "DOM.Iterable"],
     "outDir": "./lib",
-
     "sourceMap": true,
     "esModuleInterop": true,
     "isolatedModules": true

@@ -9,21 +9,21 @@ import sinon from "sinon";
 import { BeEvent, omit } from "@itwin/core-bentley";
 import { GenericInstanceFilter } from "@itwin/core-common";
 import { ECSqlQueryDef, ECSqlQueryReaderOptions, InstanceKey, trimWhitespace, TypedPrimitiveValue } from "@itwin/presentation-shared";
-import { RowsLimitExceededError } from "../../hierarchies/HierarchyErrors";
-import { GroupingHierarchyNode, HierarchyNode, ParentHierarchyNode } from "../../hierarchies/HierarchyNode";
-import { GroupingNodeKey } from "../../hierarchies/HierarchyNodeKey";
+import { RowsLimitExceededError } from "../../hierarchies/HierarchyErrors.js";
+import { GroupingHierarchyNode, HierarchyNode, ParentHierarchyNode } from "../../hierarchies/HierarchyNode.js";
+import { GroupingNodeKey } from "../../hierarchies/HierarchyNodeKey.js";
 import {
   ECSQL_COLUMN_NAME_FilterClassName,
   ECSQL_COLUMN_NAME_FilterECInstanceId,
   ECSQL_COLUMN_NAME_HasFilterTargetAncestor,
-} from "../../hierarchies/imodel/FilteringHierarchyDefinition";
-import { DefineHierarchyLevelProps, HierarchyDefinition, NodeParser } from "../../hierarchies/imodel/IModelHierarchyDefinition";
-import { ProcessedHierarchyNode, SourceInstanceHierarchyNode } from "../../hierarchies/imodel/IModelHierarchyNode";
-import { createIModelHierarchyProvider } from "../../hierarchies/imodel/IModelHierarchyProvider";
-import { LimitingECSqlQueryExecutor } from "../../hierarchies/imodel/LimitingECSqlQueryExecutor";
-import { NodeSelectClauseColumnNames, NodesQueryClauseFactory } from "../../hierarchies/imodel/NodeSelectQueryFactory";
-import { RowDef } from "../../hierarchies/imodel/TreeNodesReader";
-import { createIModelAccessStub, createTestGenericNode, createTestGenericNodeKey, createTestInstanceKey, createTestSourceGenericNode } from "../Utils";
+} from "../../hierarchies/imodel/FilteringHierarchyDefinition.js";
+import { DefineHierarchyLevelProps, HierarchyDefinition, NodeParser } from "../../hierarchies/imodel/IModelHierarchyDefinition.js";
+import { ProcessedHierarchyNode, SourceInstanceHierarchyNode } from "../../hierarchies/imodel/IModelHierarchyNode.js";
+import { createIModelHierarchyProvider } from "../../hierarchies/imodel/IModelHierarchyProvider.js";
+import { LimitingECSqlQueryExecutor } from "../../hierarchies/imodel/LimitingECSqlQueryExecutor.js";
+import { NodeSelectClauseColumnNames, NodesQueryClauseFactory } from "../../hierarchies/imodel/NodeSelectQueryFactory.js";
+import { RowDef } from "../../hierarchies/imodel/TreeNodesReader.js";
+import { createIModelAccessStub, createTestGenericNode, createTestGenericNodeKey, createTestInstanceKey, createTestSourceGenericNode } from "../Utils.js";
 
 describe("createIModelHierarchyProvider", () => {
   let imodelAccess: ReturnType<typeof createIModelAccessStub> & {

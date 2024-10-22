@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { expect } from "chai";
-import { InstanceKey, TypedPrimitiveValue } from "../shared/Values";
+import { InstanceKey, TypedPrimitiveValue } from "../shared/Values.js";
 
 describe("InstanceKey", () => {
   describe("equals", () => {

@@ -38,28 +38,28 @@ import {
   IPrimitiveValueFormatter,
   normalizeFullClassName,
 } from "@itwin/presentation-shared";
-import { RowsLimitExceededError } from "../HierarchyErrors";
-import { HierarchyFilteringPath } from "../HierarchyFiltering";
-import { HierarchyNode, NonGroupingHierarchyNode, ParentHierarchyNode } from "../HierarchyNode";
-import { GenericNodeKey, HierarchyNodeKey, IModelInstanceKey, InstancesNodeKey } from "../HierarchyNodeKey";
-import { GetHierarchyNodesProps, HierarchyProvider } from "../HierarchyProvider";
+import { RowsLimitExceededError } from "../HierarchyErrors.js";
+import { HierarchyFilteringPath } from "../HierarchyFiltering.js";
+import { HierarchyNode, NonGroupingHierarchyNode, ParentHierarchyNode } from "../HierarchyNode.js";
+import { GenericNodeKey, HierarchyNodeKey, IModelInstanceKey, InstancesNodeKey } from "../HierarchyNodeKey.js";
+import { GetHierarchyNodesProps, HierarchyProvider } from "../HierarchyProvider.js";
 import {
   LOGGING_NAMESPACE as BASE_LOGGING_NAMESPACE,
   LOGGING_NAMESPACE_INTERNAL as BASE_LOGGING_NAMESPACE_INTERNAL,
   LOGGING_NAMESPACE_PERFORMANCE as BASE_LOGGING_NAMESPACE_PERFORMANCE,
   createNodeIdentifierForLogging,
   hasChildren,
-} from "../internal/Common";
-import { eachValueFrom } from "../internal/EachValueFrom";
-import { doLog, log } from "../internal/LoggingUtils";
-import { partition } from "../internal/operators/Partition";
-import { reduceToMergeMapList } from "../internal/operators/ReduceToMergeMap";
-import { shareReplayWithErrors } from "../internal/operators/ShareReplayWithErrors";
-import { sortNodesByLabelOperator } from "../internal/operators/Sorting";
-import { SubscriptionScheduler } from "../internal/SubscriptionScheduler";
-import { FilteringHierarchyDefinition } from "./FilteringHierarchyDefinition";
-import { HierarchyCache } from "./HierarchyCache";
-import { DefineHierarchyLevelProps, HierarchyDefinition, HierarchyNodesDefinition } from "./IModelHierarchyDefinition";
+} from "../internal/Common.js";
+import { eachValueFrom } from "../internal/EachValueFrom.js";
+import { doLog, log } from "../internal/LoggingUtils.js";
+import { partition } from "../internal/operators/Partition.js";
+import { reduceToMergeMapList } from "../internal/operators/ReduceToMergeMap.js";
+import { shareReplayWithErrors } from "../internal/operators/ShareReplayWithErrors.js";
+import { sortNodesByLabelOperator } from "../internal/operators/Sorting.js";
+import { SubscriptionScheduler } from "../internal/SubscriptionScheduler.js";
+import { FilteringHierarchyDefinition } from "./FilteringHierarchyDefinition.js";
+import { HierarchyCache } from "./HierarchyCache.js";
+import { DefineHierarchyLevelProps, HierarchyDefinition, HierarchyNodesDefinition } from "./IModelHierarchyDefinition.js";
 import {
   ProcessedGenericHierarchyNode,
   ProcessedGroupingHierarchyNode,
@@ -67,14 +67,14 @@ import {
   ProcessedInstanceHierarchyNode,
   SourceGenericHierarchyNode,
   SourceInstanceHierarchyNode,
-} from "./IModelHierarchyNode";
-import { LimitingECSqlQueryExecutor } from "./LimitingECSqlQueryExecutor";
-import { NodeSelectClauseColumnNames } from "./NodeSelectQueryFactory";
-import { createDetermineChildrenOperator } from "./operators/DetermineChildren";
-import { createGroupingOperator } from "./operators/Grouping";
-import { createHideIfNoChildrenOperator } from "./operators/HideIfNoChildren";
-import { createHideNodesInHierarchyOperator } from "./operators/HideNodesInHierarchy";
-import { readNodes } from "./TreeNodesReader";
+} from "./IModelHierarchyNode.js";
+import { LimitingECSqlQueryExecutor } from "./LimitingECSqlQueryExecutor.js";
+import { NodeSelectClauseColumnNames } from "./NodeSelectQueryFactory.js";
+import { createDetermineChildrenOperator } from "./operators/DetermineChildren.js";
+import { createGroupingOperator } from "./operators/Grouping.js";
+import { createHideIfNoChildrenOperator } from "./operators/HideIfNoChildren.js";
+import { createHideNodesInHierarchyOperator } from "./operators/HideNodesInHierarchy.js";
+import { readNodes } from "./TreeNodesReader.js";
 
 const LOGGING_NAMESPACE = `${BASE_LOGGING_NAMESPACE}.IModelHierarchyProvider`;
 const LOGGING_NAMESPACE_INTERNAL = `${BASE_LOGGING_NAMESPACE_INTERNAL}.IModelHierarchyProvider`;
@@ -436,7 +436,6 @@ class IModelHierarchyProviderImpl implements HierarchyProvider {
     const { parentNode, ...restProps } = props;
     const cached = props.ignoreCache || !this._nodesCache ? undefined : this._nodesCache.get(props);
     if (cached) {
-      // istanbul ignore next
       doLog({
         category: loggingCategory,
         message: /* istanbul ignore next */ () =>
@@ -522,7 +521,7 @@ class IModelHierarchyProviderImpl implements HierarchyProvider {
           doLog({
             category: loggingCategory,
             message: /* istanbul ignore next */ () =>
-              error
+              /* istanbul ignore next 3 */ error
                 ? `[${requestContext.requestId}] Error creating child nodes for ${createNodeIdentifierForLogging(props.parentNode)}: ${error instanceof Error ? error.message : error.toString()}`
                 : `[${requestContext.requestId}] Returned ${nodesCount} child nodes for ${createNodeIdentifierForLogging(props.parentNode)} in ${timer.currentSeconds.toFixed(2)} s.`,
           });
@@ -646,7 +645,7 @@ class IModelHierarchyProviderImpl implements HierarchyProvider {
           doLog({
             category: loggingCategory,
             message: /* istanbul ignore next */ () =>
-              error
+              /* istanbul ignore next 3 */ error
                 ? `[${requestContext.requestId}] Error creating node instance keys for ${createNodeIdentifierForLogging(props.parentNode)}: ${error instanceof Error ? error.message : error.toString()}`
                 : `[${requestContext.requestId}] Returned ${keysCount} instance keys for ${createNodeIdentifierForLogging(props.parentNode)} in ${timer.currentSeconds.toFixed(2)} s.`,
           });
@@ -708,7 +707,6 @@ function filterQueryByInstanceKeys(query: ECSqlQueryDef, filteredInstanceKeys: I
     return query;
   }
   const MAX_ALLOWED_BINDINGS = 1000;
-  // istanbul ignore else
   if (filteredInstanceKeys.length < MAX_ALLOWED_BINDINGS) {
     return {
       ...query,
@@ -720,7 +718,7 @@ function filterQueryByInstanceKeys(query: ECSqlQueryDef, filteredInstanceKeys: I
       bindings: [...(query.bindings ?? []), ...filteredInstanceKeys.map((k): ECSqlBinding => ({ type: "id", value: k.id }))],
     };
   }
-  // istanbul ignore next
+  /* istanbul ignore next */
   return {
     ...query,
     ecsql: `

@@ -3,9 +3,9 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { NonGroupingHierarchyNode } from "./HierarchyNode";
-import { HierarchyNodeIdentifiersPath } from "./HierarchyNodeIdentifier";
-import { GroupingNodeKey } from "./HierarchyNodeKey";
+import { NonGroupingHierarchyNode } from "./HierarchyNode.js";
+import { HierarchyNodeIdentifiersPath } from "./HierarchyNodeIdentifier.js";
+import { GroupingNodeKey } from "./HierarchyNodeKey.js";
 
 /** @beta */
 export interface FilterTargetGroupingNodeInfo {

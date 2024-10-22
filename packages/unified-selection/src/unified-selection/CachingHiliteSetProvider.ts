@@ -6,9 +6,9 @@
 import { from, Observable, shareReplay } from "rxjs";
 import { eachValueFrom } from "rxjs-for-await";
 import { ECClassHierarchyInspector, ECSqlQueryExecutor } from "@itwin/presentation-shared";
-import { createHiliteSetProvider, HiliteSet, HiliteSetProvider } from "./HiliteSetProvider";
-import { StorageSelectionChangeEventArgs } from "./SelectionChangeEvent";
-import { IMODEL_CLOSE_SELECTION_CLEAR_SOURCE, SelectionStorage } from "./SelectionStorage";
+import { createHiliteSetProvider, HiliteSet, HiliteSetProvider } from "./HiliteSetProvider.js";
+import { StorageSelectionChangeEventArgs } from "./SelectionChangeEvent.js";
+import { IMODEL_CLOSE_SELECTION_CLEAR_SOURCE, SelectionStorage } from "./SelectionStorage.js";
 
 /**
  * Props for creating a `CachingHiliteSetProvider` instance.

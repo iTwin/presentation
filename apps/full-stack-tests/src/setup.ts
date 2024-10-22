@@ -21,8 +21,11 @@ globalJsdom(undefined, {
 });
 
 // polyfill ResizeObserver
-import ResizeObserver from "resize-observer-polyfill";
-global.ResizeObserver = ResizeObserver;
+global.ResizeObserver = class ResizeObserver {
+  public observe() {}
+  public unobserve() {}
+  public disconnect() {}
+};
 
 // supply mocha hooks
 import { cleanup } from "@testing-library/react";
@@ -48,22 +51,17 @@ export const mochaHooks = {
 };
 // eslint-disable-next-line @typescript-eslint/naming-convention
 function getGlobalThis(): typeof globalThis & { IS_REACT_ACT_ENVIRONMENT?: boolean } {
-  /* istanbul ignore else */
   if (typeof globalThis !== "undefined") {
     return globalThis;
   }
-  /* istanbul ignore next */
   if (typeof self !== "undefined") {
     return self;
   }
-  /* istanbul ignore next */
   if (typeof window !== "undefined") {
     return window;
   }
-  /* istanbul ignore next */
   if (typeof global !== "undefined") {
     return global;
   }
-  /* istanbul ignore next */
   throw new Error("unable to locate global object");
 }

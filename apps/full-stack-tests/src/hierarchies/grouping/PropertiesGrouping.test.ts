@@ -9,10 +9,10 @@ import { IModel } from "@itwin/core-common";
 import { IModelConnection } from "@itwin/core-frontend";
 import { createIModelHierarchyProvider, createNodesQueryClauseFactory, HierarchyDefinition, NodesQueryClauseFactory } from "@itwin/presentation-hierarchies";
 import { createBisInstanceLabelSelectClauseFactory } from "@itwin/presentation-shared";
-import { buildIModel, importSchema, withECDb } from "../../IModelUtils";
-import { initialize, terminate } from "../../IntegrationTests";
-import { NodeValidators, validateHierarchy } from "../HierarchyValidation";
-import { createIModelAccess, createProvider } from "../Utils";
+import { buildIModel, importSchema, withECDb } from "../../IModelUtils.js";
+import { initialize, terminate } from "../../IntegrationTests.js";
+import { NodeValidators, validateHierarchy } from "../HierarchyValidation.js";
+import { createIModelAccess, createProvider } from "../Utils.js";
 
 describe("Hierarchies", () => {
   describe("Properties grouping", () => {

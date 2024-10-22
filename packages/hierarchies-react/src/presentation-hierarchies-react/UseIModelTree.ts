@@ -5,8 +5,8 @@
 
 import { useCallback } from "react";
 import { createIModelHierarchyProvider, HierarchyDefinition, HierarchyFilteringPath } from "@itwin/presentation-hierarchies";
-import { UseUnifiedTreeSelectionProps } from "./internal/UseUnifiedSelection";
-import { useTree, UseTreeProps, UseTreeResult, useUnifiedSelectionTree } from "./UseTree";
+import { UseUnifiedTreeSelectionProps } from "./internal/UseUnifiedSelection.js";
+import { useTree, UseTreeProps, UseTreeResult, useUnifiedSelectionTree } from "./UseTree.js";
 
 /** @beta */
 type IModelHierarchyProviderProps = Parameters<typeof createIModelHierarchyProvider>[0];

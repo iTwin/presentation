@@ -18,8 +18,8 @@ import {
 import { Presentation } from "@itwin/presentation-frontend";
 import { buildTestIModel } from "@itwin/presentation-testing";
 import { act, fireEvent, render, waitFor } from "@testing-library/react";
-import { initialize, terminate } from "../../IntegrationTests";
-import { getNodeByLabel, isNodeSelectedInTree, toggleExpandNode } from "../TreeUtils";
+import { initialize, terminate } from "../../IntegrationTests.js";
+import { getNodeByLabel, isNodeSelectedInTree, toggleExpandNode } from "../TreeUtils.js";
 
 /* eslint-disable @typescript-eslint/naming-convention */
 

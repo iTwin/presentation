@@ -14,13 +14,13 @@ import {
 } from "presentation-test-utilities";
 // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.Grouping.Imports
 import { createIModelHierarchyProvider, createNodesQueryClauseFactory } from "@itwin/presentation-hierarchies";
-// __PUBLISH_EXTRACT_END__
-import { buildIModel } from "../../IModelUtils";
-import { initialize, terminate } from "../../IntegrationTests";
-import { NodeValidators, validateHierarchy } from "../HierarchyValidation";
-import { createIModelAccess } from "../Utils";
-import { collectHierarchy } from "./Utils";
 import { createBisInstanceLabelSelectClauseFactory } from "@itwin/presentation-shared";
+// __PUBLISH_EXTRACT_END__
+import { buildIModel } from "../../IModelUtils.js";
+import { initialize, terminate } from "../../IntegrationTests.js";
+import { NodeValidators, validateHierarchy } from "../HierarchyValidation.js";
+import { createIModelAccess } from "../Utils.js";
+import { collectHierarchy } from "./Utils.js";
 
 describe("Hierarchies", () => {
   describe("Learning snippets", () => {

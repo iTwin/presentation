@@ -5,10 +5,10 @@
 
 import { assert, expect } from "chai";
 import sinon from "sinon";
-import { InstanceKey, trimWhitespace } from "@itwin/presentation-shared";
-import { FilterTargetGroupingNodeInfo, HierarchyFilteringPath, HierarchyFilteringPathOptions } from "../../hierarchies/HierarchyFiltering";
-import { HierarchyNode } from "../../hierarchies/HierarchyNode";
-import { HierarchyNodeIdentifiersPath } from "../../hierarchies/HierarchyNodeIdentifier";
+import { ECClassHierarchyInspector, InstanceKey, trimWhitespace } from "@itwin/presentation-shared";
+import { FilterTargetGroupingNodeInfo, HierarchyFilteringPath, HierarchyFilteringPathOptions } from "../../hierarchies/HierarchyFiltering.js";
+import { HierarchyNode } from "../../hierarchies/HierarchyNode.js";
+import { HierarchyNodeIdentifiersPath } from "../../hierarchies/HierarchyNodeIdentifier.js";
 import {
   applyECInstanceIdsFilter,
   ECSQL_COLUMN_NAME_FilterClassName,
@@ -16,17 +16,17 @@ import {
   ECSQL_COLUMN_NAME_HasFilterTargetAncestor,
   FilteringHierarchyDefinition,
   MatchedFilter,
-} from "../../hierarchies/imodel/FilteringHierarchyDefinition";
+} from "../../hierarchies/imodel/FilteringHierarchyDefinition.js";
 import {
   GenericHierarchyNodeDefinition,
   HierarchyDefinition,
   HierarchyDefinitionParentNode,
   HierarchyLevelDefinition,
   InstanceNodesQueryDefinition,
-} from "../../hierarchies/imodel/IModelHierarchyDefinition";
-import { ProcessedGenericHierarchyNode, ProcessedGroupingHierarchyNode, SourceGenericHierarchyNode } from "../../hierarchies/imodel/IModelHierarchyNode";
-import { NodeSelectClauseColumnNames } from "../../hierarchies/imodel/NodeSelectQueryFactory";
-import * as reader from "../../hierarchies/imodel/TreeNodesReader";
+} from "../../hierarchies/imodel/IModelHierarchyDefinition.js";
+import { ProcessedGenericHierarchyNode, ProcessedGroupingHierarchyNode, SourceGenericHierarchyNode } from "../../hierarchies/imodel/IModelHierarchyNode.js";
+import { NodeSelectClauseColumnNames } from "../../hierarchies/imodel/NodeSelectQueryFactory.js";
+import * as reader from "../../hierarchies/imodel/TreeNodesReader.js";
 import {
   createClassHierarchyInspectorStub,
   createTestGenericNodeKey,
@@ -36,7 +36,7 @@ import {
   createTestProcessedGroupingNode,
   createTestProcessedInstanceNode,
   createTestSourceGenericNode,
-} from "../Utils";
+} from "../Utils.js";
 
 describe("FilteringHierarchyDefinition", () => {
   afterEach(() => {
@@ -48,12 +48,15 @@ describe("FilteringHierarchyDefinition", () => {
     beforeEach(() => {
       classHierarchyInspector = createClassHierarchyInspectorStub();
     });
+
     it("uses `defaultNodeParser` when source definitions factory doesn't have one", async () => {
-      const filteringFactory = createFilteringHierarchyDefinition();
       const defaultParserSpy = sinon.spy(reader, "defaultNodesParser");
+
       const row = {
         [NodeSelectClauseColumnNames.FullClassName]: "",
       };
+
+      const filteringFactory = createFilteringHierarchyDefinition();
       await filteringFactory.parseNode(row);
       expect(defaultParserSpy).to.be.calledOnceWithExactly(row);
     });
@@ -62,13 +65,15 @@ describe("FilteringHierarchyDefinition", () => {
       const sourceFactory = {
         parseNode: sinon.stub().returns({} as unknown as HierarchyNode),
       } as unknown as HierarchyDefinition;
-      const filteringFactory = createFilteringHierarchyDefinition({
-        sourceFactory,
-      });
+
       const defaultParserSpy = sinon.spy(reader, "defaultNodesParser");
+
       const row = {
         [NodeSelectClauseColumnNames.FullClassName]: "",
       };
+      const filteringFactory = createFilteringHierarchyDefinition({
+        sourceFactory,
+      });
       await filteringFactory.parseNode(row);
       expect(defaultParserSpy).to.not.be.called;
       expect(sourceFactory.parseNode).to.be.calledOnceWithExactly(row);
@@ -1561,7 +1566,7 @@ describe("FilteringHierarchyDefinition", () => {
 });
 
 function createFilteringHierarchyDefinition(props?: {
-  imodelAccess?: FilteringHierarchyDefinition["_imodelAccess"];
+  imodelAccess?: ECClassHierarchyInspector & { imodelKey: string };
   sourceFactory?: HierarchyDefinition;
   nodeIdentifierPaths?: HierarchyFilteringPath[];
 }) {

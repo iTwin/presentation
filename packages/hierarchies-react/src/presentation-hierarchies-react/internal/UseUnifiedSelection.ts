@@ -4,12 +4,13 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { useEffect, useState } from "react";
+import { assert } from "@itwin/core-bentley";
 import { HierarchyNode, InstancesNodeKey } from "@itwin/presentation-hierarchies";
 import { InstanceKey } from "@itwin/presentation-shared";
 import { Selectable, Selectables, SelectionStorage } from "@itwin/unified-selection";
-import { useUnifiedSelectionContext } from "../UnifiedSelectionContext";
-import { SelectionChangeType } from "../UseSelectionHandler";
-import { isTreeModelHierarchyNode, TreeModelHierarchyNode, TreeModelNode, TreeModelRootNode } from "./TreeModel";
+import { useUnifiedSelectionContext } from "../UnifiedSelectionContext.js";
+import { SelectionChangeType } from "../UseSelectionHandler.js";
+import { isTreeModelHierarchyNode, TreeModelHierarchyNode, TreeModelNode, TreeModelRootNode } from "./TreeModel.js";
 
 /** @internal */
 export interface TreeSelectionOptions {
@@ -110,18 +111,6 @@ function createOptions(
 
 function groupNodeSelectablesByIModelKey(modelNode: TreeModelHierarchyNode): { [imodelKey: string]: Selectable[] } {
   const hierarchyNode = modelNode.nodeData;
-  if (HierarchyNode.isGeneric(hierarchyNode)) {
-    return {
-      // note: generic nodes aren't associated with an imodel
-      [""]: [
-        {
-          identifier: modelNode.id,
-          data: hierarchyNode,
-          async *loadInstanceKeys() {},
-        },
-      ],
-    };
-  }
   if (HierarchyNode.isInstancesNode(hierarchyNode)) {
     return groupIModelInstanceKeys(hierarchyNode.key.instanceKeys);
   }
@@ -144,8 +133,17 @@ function groupNodeSelectablesByIModelKey(modelNode: TreeModelHierarchyNode): { [
       {} as { [imodelKey: string]: Selectable[] },
     );
   }
-  // istanbul ignore next
-  return {};
+  assert(HierarchyNode.isGeneric(hierarchyNode));
+  return {
+    // note: generic nodes aren't associated with an imodel
+    [""]: [
+      {
+        identifier: modelNode.id,
+        data: hierarchyNode,
+        async *loadInstanceKeys() {},
+      },
+    ],
+  };
 }
 
 function groupIModelInstanceKeys(instanceKeys: InstancesNodeKey["instanceKeys"]) {

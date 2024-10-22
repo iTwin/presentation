@@ -5,8 +5,8 @@
 
 import { Id64 } from "@itwin/core-bentley";
 import { ECSqlBinding, ECSqlQueryDef, ECSqlQueryExecutor, ECSqlQueryRow } from "@itwin/presentation-shared";
-import { SelectableInstanceKey } from "./Selectable";
-import { formIdBindings, genericExecuteQuery } from "./Utils";
+import { SelectableInstanceKey } from "./Selectable.js";
+import { formIdBindings, genericExecuteQuery } from "./Utils.js";
 
 /**
  * Available selection scopes.

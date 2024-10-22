@@ -4,8 +4,8 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { assert } from "@itwin/core-bentley";
-import { HierarchyNodeKey } from "../HierarchyNodeKey";
-import { HierarchyNodeLabelGroupingParams, InstanceHierarchyNodeProcessingParams, ProcessedInstanceHierarchyNode } from "./IModelHierarchyNode";
+import { HierarchyNodeKey } from "../HierarchyNodeKey.js";
+import { HierarchyNodeLabelGroupingParams, InstanceHierarchyNodeProcessingParams, ProcessedInstanceHierarchyNode } from "./IModelHierarchyNode.js";
 
 function mergeNodeHandlingParams(
   lhs: InstanceHierarchyNodeProcessingParams | undefined,

@@ -7,7 +7,7 @@ import { ReactElement } from "react";
 import sinon from "sinon";
 import { GroupingHierarchyNode, NonGroupingHierarchyNode } from "@itwin/presentation-hierarchies";
 import { configure, RenderOptions, RenderResult, render as renderRTL } from "@testing-library/react";
-import userEvent, { UserEvent } from "@testing-library/user-event";
+import { userEvent, UserEvent } from "@testing-library/user-event";
 import {
   isTreeModelHierarchyNode,
   isTreeModelInfoNode,
@@ -17,7 +17,7 @@ import {
   TreeModelInfoNode,
   TreeModelNoFilterMatchesInfoNode,
   TreeModelResultSetTooLargeInfoNode,
-} from "../presentation-hierarchies-react/internal/TreeModel";
+} from "../presentation-hierarchies-react/internal/TreeModel.js";
 
 configure({ reactStrictMode: true });
 

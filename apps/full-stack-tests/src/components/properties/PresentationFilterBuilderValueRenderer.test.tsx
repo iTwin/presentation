@@ -10,9 +10,9 @@ import { ClassInfo, DefaultContentDisplayTypes, KeySet } from "@itwin/presentati
 import { PresentationFilterBuilderValueRenderer } from "@itwin/presentation-components";
 import { Presentation } from "@itwin/presentation-frontend";
 import { queryByText, render } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
-import { buildIModel, importSchema } from "../../IModelUtils";
-import { initialize, terminate } from "../../IntegrationTests";
+import { userEvent } from "@testing-library/user-event";
+import { buildIModel, importSchema } from "../../IModelUtils.js";
+import { initialize, terminate } from "../../IntegrationTests.js";
 
 describe("Presentation filter builder value renderer", () => {
   before(async () => {

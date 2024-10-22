@@ -4,10 +4,10 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { createMainThreadReleaseOnTimePassedHandler, ECSchemaProvider, getClass } from "@itwin/presentation-shared";
-import { HierarchyNode, ParentHierarchyNode } from "../../../HierarchyNode";
-import { ClassGroupingNodeKey } from "../../../HierarchyNodeKey";
-import { ProcessedInstanceHierarchyNode } from "../../IModelHierarchyNode";
-import { GroupingHandlerResult, ProcessedInstancesGroupingHierarchyNode } from "../Grouping";
+import { HierarchyNode, ParentHierarchyNode } from "../../../HierarchyNode.js";
+import { ClassGroupingNodeKey } from "../../../HierarchyNodeKey.js";
+import { ProcessedInstanceHierarchyNode } from "../../IModelHierarchyNode.js";
+import { GroupingHandlerResult, ProcessedInstancesGroupingHierarchyNode } from "../Grouping.js";
 
 interface ClassInfo {
   fullName: string;

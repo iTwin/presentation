@@ -21,12 +21,11 @@ import { IModel, Rank } from "@itwin/core-common";
 import { IModelConnection } from "@itwin/core-frontend";
 import { createValueFormatter } from "@itwin/presentation-core-interop";
 import { createNodesQueryClauseFactory, HierarchyDefinition } from "@itwin/presentation-hierarchies";
-import { createBisInstanceLabelSelectClauseFactory, ECSql } from "@itwin/presentation-shared";
-import { julianToDateTime } from "@itwin/presentation-shared/lib/cjs/shared/InternalUtils";
-import { buildIModel, importSchema } from "../IModelUtils";
-import { initialize, terminate } from "../IntegrationTests";
-import { validateHierarchy } from "./HierarchyValidation";
-import { createIModelAccess, createProvider } from "./Utils";
+import { createBisInstanceLabelSelectClauseFactory, ECSql, julianToDateTime } from "@itwin/presentation-shared";
+import { buildIModel, importSchema } from "../IModelUtils.js";
+import { initialize, terminate } from "../IntegrationTests.js";
+import { validateHierarchy } from "./HierarchyValidation.js";
+import { createIModelAccess, createProvider } from "./Utils.js";
 
 describe("Hierarchies", () => {
   let emptyIModel: IModelConnection;

@@ -5,10 +5,10 @@
 
 import { Id64String } from "@itwin/core-bentley";
 import { ECClassHierarchyInspector, InstanceKey } from "@itwin/presentation-shared";
-import { extractFilteringProps, HierarchyFilteringPath, HierarchyFilteringPathOptions } from "../HierarchyFiltering";
-import { HierarchyNodeFilteringProps } from "../HierarchyNode";
-import { HierarchyNodeIdentifier } from "../HierarchyNodeIdentifier";
-import { GenericNodeKey } from "../HierarchyNodeKey";
+import { extractFilteringProps, HierarchyFilteringPath, HierarchyFilteringPathOptions } from "../HierarchyFiltering.js";
+import { HierarchyNodeFilteringProps } from "../HierarchyNode.js";
+import { HierarchyNodeIdentifier } from "../HierarchyNodeIdentifier.js";
+import { GenericNodeKey } from "../HierarchyNodeKey.js";
 import {
   DefineHierarchyLevelProps,
   GenericHierarchyNodeDefinition,
@@ -20,9 +20,9 @@ import {
   NodeParser,
   NodePostProcessor,
   NodePreProcessor,
-} from "./IModelHierarchyDefinition";
-import { ProcessedGroupingHierarchyNode, ProcessedHierarchyNode, SourceHierarchyNode, SourceInstanceHierarchyNode } from "./IModelHierarchyNode";
-import { defaultNodesParser } from "./TreeNodesReader";
+} from "./IModelHierarchyDefinition.js";
+import { ProcessedGroupingHierarchyNode, ProcessedHierarchyNode, SourceHierarchyNode, SourceInstanceHierarchyNode } from "./IModelHierarchyNode.js";
+import { defaultNodesParser } from "./TreeNodesReader.js";
 
 interface FilteringHierarchyDefinitionProps {
   imodelAccess: ECClassHierarchyInspector & { imodelKey: string };
@@ -55,7 +55,7 @@ export class FilteringHierarchyDefinition implements HierarchyDefinition {
 
   private shouldExpandGroupingNode(node: ProcessedGroupingHierarchyNode) {
     for (const child of node.children) {
-      // istanbul ignore next
+      /* istanbul ignore next */
       if (!child.filtering) {
         continue;
       }
@@ -83,7 +83,7 @@ export class FilteringHierarchyDefinition implements HierarchyDefinition {
       }
 
       if (!child.filtering.filteredChildrenIdentifierPaths) {
-        // istanbul ignore next
+        /* istanbul ignore next */
         continue;
       }
 

@@ -4,10 +4,10 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { concatMap, map, Observable, of } from "rxjs";
-import { createNodeIdentifierForLogging, createOperatorLoggingNamespace, LOGGING_NAMESPACE_INTERNAL } from "../../internal/Common";
-import { log } from "../../internal/LoggingUtils";
-import { releaseMainThreadOnItemsCount } from "../../internal/operators/ReleaseMainThread";
-import { ProcessedHierarchyNode } from "../IModelHierarchyNode";
+import { createNodeIdentifierForLogging, createOperatorLoggingNamespace, LOGGING_NAMESPACE_INTERNAL } from "../../internal/Common.js";
+import { log } from "../../internal/LoggingUtils.js";
+import { releaseMainThreadOnItemsCount } from "../../internal/operators/ReleaseMainThread.js";
+import { ProcessedHierarchyNode } from "../IModelHierarchyNode.js";
 
 const OPERATOR_NAME = "DetermineChildren";
 /** @internal */

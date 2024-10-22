@@ -15,6 +15,7 @@ When using the `grouping` action, the library will create a new grouping node fo
 
 ```ts
 import { createIModelHierarchyProvider, createNodesQueryClauseFactory } from "@itwin/presentation-hierarchies";
+import { createBisInstanceLabelSelectClauseFactory } from "@itwin/presentation-shared";
 
 const hierarchyProvider = createIModelHierarchyProvider({
   imodelAccess,
@@ -81,6 +82,7 @@ When using the `merging` action, the library merges all nodes with the same labe
 
 ```ts
 import { createIModelHierarchyProvider, createNodesQueryClauseFactory } from "@itwin/presentation-hierarchies";
+import { createBisInstanceLabelSelectClauseFactory } from "@itwin/presentation-shared";
 
 const hierarchyProvider = createIModelHierarchyProvider({
   imodelAccess,
@@ -145,6 +147,7 @@ Example:
 
 ```ts
 import { createIModelHierarchyProvider, createNodesQueryClauseFactory } from "@itwin/presentation-hierarchies";
+import { createBisInstanceLabelSelectClauseFactory } from "@itwin/presentation-shared";
 
 const hierarchyProvider = createIModelHierarchyProvider({
   imodelAccess,
@@ -219,6 +222,7 @@ Example:
 
 ```ts
 import { createIModelHierarchyProvider, createNodesQueryClauseFactory } from "@itwin/presentation-hierarchies";
+import { createBisInstanceLabelSelectClauseFactory } from "@itwin/presentation-shared";
 
 const hierarchyProvider = createIModelHierarchyProvider({
   imodelAccess,
@@ -300,6 +304,7 @@ Example:
 
 ```ts
 import { createIModelHierarchyProvider, createNodesQueryClauseFactory } from "@itwin/presentation-hierarchies";
+import { createBisInstanceLabelSelectClauseFactory } from "@itwin/presentation-shared";
 
 const hierarchyProvider = createIModelHierarchyProvider({
   imodelAccess,
@@ -398,6 +403,7 @@ Example:
 
 ```ts
 import { createIModelHierarchyProvider, createNodesQueryClauseFactory } from "@itwin/presentation-hierarchies";
+import { createBisInstanceLabelSelectClauseFactory } from "@itwin/presentation-shared";
 
 const hierarchyProvider = createIModelHierarchyProvider({
   imodelAccess,
@@ -488,6 +494,7 @@ Using a combination of the grouping types described above is also possible. The 
 
 ```ts
 import { createIModelHierarchyProvider, createNodesQueryClauseFactory } from "@itwin/presentation-hierarchies";
+import { createBisInstanceLabelSelectClauseFactory } from "@itwin/presentation-shared";
 
 const hierarchyProvider = createIModelHierarchyProvider({
   imodelAccess,
@@ -628,6 +635,7 @@ In certain scenarios the purpose of grouping nodes is make hierarchy levels smal
 
 ```ts
 import { createIModelHierarchyProvider, createNodesQueryClauseFactory } from "@itwin/presentation-hierarchies";
+import { createBisInstanceLabelSelectClauseFactory } from "@itwin/presentation-shared";
 
 const hierarchyProvider = createIModelHierarchyProvider({
   imodelAccess,
@@ -695,6 +703,7 @@ Similar to above, if the purpose of grouping to is to make hierarchy level small
 
 ```ts
 import { createIModelHierarchyProvider, createNodesQueryClauseFactory } from "@itwin/presentation-hierarchies";
+import { createBisInstanceLabelSelectClauseFactory } from "@itwin/presentation-shared";
 
 const hierarchyProvider = createIModelHierarchyProvider({
   imodelAccess,

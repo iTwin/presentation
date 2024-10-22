@@ -5,8 +5,8 @@
 
 import { expect } from "chai";
 import { collect } from "presentation-test-utilities";
-import { from, Subject, throwError } from "rxjs";
-import { eachValueFrom } from "../../hierarchies/internal/EachValueFrom";
+import { from, Subject } from "rxjs";
+import { eachValueFrom } from "../../hierarchies/internal/EachValueFrom.js";
 
 describe("eachValueFrom", () => {
   it("returns observable values when they're emitted quicker than consumed", async () => {
@@ -32,8 +32,10 @@ describe("eachValueFrom", () => {
   });
 
   it("throws if observable throws before being consumed", async () => {
-    const obs = throwError(() => new Error());
-    await expect(eachValueFrom(obs).next()).to.eventually.be.rejected;
+    const sub = new Subject<number>();
+    sub.error(new Error());
+    await expect(eachValueFrom(sub).next()).to.eventually.be.rejected;
+    expect(sub.observed).to.be.false;
   });
 
   it("throws if observable throws after being consumed", async () => {
@@ -44,5 +46,6 @@ describe("eachValueFrom", () => {
     sub.error(new Error());
 
     await expect(value).to.eventually.be.rejected;
+    expect(sub.observed).to.be.false;
   });
 });

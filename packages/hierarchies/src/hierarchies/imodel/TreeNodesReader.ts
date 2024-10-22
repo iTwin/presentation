@@ -6,10 +6,10 @@
 import { from, mergeMap, Observable, of } from "rxjs";
 import { Id64String } from "@itwin/core-bentley";
 import { ECSqlQueryDef, parseInstanceLabel } from "@itwin/presentation-shared";
-import { NodeParser } from "./IModelHierarchyDefinition";
-import { InstanceHierarchyNodeProcessingParams, SourceInstanceHierarchyNode } from "./IModelHierarchyNode";
-import { LimitingECSqlQueryExecutor } from "./LimitingECSqlQueryExecutor";
-import { NodeSelectClauseColumnNames } from "./NodeSelectQueryFactory";
+import { NodeParser } from "./IModelHierarchyDefinition.js";
+import { InstanceHierarchyNodeProcessingParams, SourceInstanceHierarchyNode } from "./IModelHierarchyNode.js";
+import { LimitingECSqlQueryExecutor } from "./LimitingECSqlQueryExecutor.js";
+import { NodeSelectClauseColumnNames } from "./NodeSelectQueryFactory.js";
 
 interface ReadNodesProps {
   queryExecutor: LimitingECSqlQueryExecutor;

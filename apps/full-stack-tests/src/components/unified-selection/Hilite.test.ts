@@ -14,11 +14,11 @@ import {
 } from "presentation-test-utilities";
 import { Id64, using } from "@itwin/core-bentley";
 import { InstanceKey, KeySet } from "@itwin/presentation-common";
-import { ViewportSelectionHandler } from "@itwin/presentation-components/lib/cjs/presentation-components/viewport/ViewportSelectionHandler";
+import { ViewportSelectionHandler } from "@itwin/presentation-components/lib/cjs/presentation-components/viewport/ViewportSelectionHandler.js";
 import { Presentation, TRANSIENT_ELEMENT_CLASSNAME } from "@itwin/presentation-frontend";
 import { buildTestIModel as buildTestIModel } from "@itwin/presentation-testing";
 import { waitFor } from "@testing-library/react";
-import { initialize, terminate } from "../../IntegrationTests";
+import { initialize, terminate } from "../../IntegrationTests.js";
 
 describe("Unified Selection", () => {
   before(async () => {

@@ -10,9 +10,9 @@ import {
   GenericHierarchyNodeDefinition,
   HierarchyLevelDefinition,
   InstanceNodesQueryDefinition,
-} from "../../hierarchies/imodel/IModelHierarchyDefinition";
-import { createPredicateBasedHierarchyDefinition } from "../../hierarchies/imodel/PredicateBasedHierarchyDefinition";
-import { createClassHierarchyInspectorStub, createTestGenericNodeKey, createTestSourceGenericNode } from "../Utils";
+} from "../../hierarchies/imodel/IModelHierarchyDefinition.js";
+import { createPredicateBasedHierarchyDefinition } from "../../hierarchies/imodel/PredicateBasedHierarchyDefinition.js";
+import { createClassHierarchyInspectorStub, createTestGenericNodeKey, createTestSourceGenericNode } from "../Utils.js";
 
 describe("createPredicateBasedHierarchyDefinition", () => {
   let classHierarchyInspector: ReturnType<typeof createClassHierarchyInspectorStub>;
