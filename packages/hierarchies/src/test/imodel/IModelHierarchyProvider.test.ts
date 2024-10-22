@@ -15,9 +15,7 @@ import { GroupingNodeKey } from "../../hierarchies/HierarchyNodeKey";
 import {
   ECSQL_COLUMN_NAME_FilterClassName,
   ECSQL_COLUMN_NAME_FilterECInstanceId,
-  ECSQL_COLUMN_NAME_FilterTargetOptions,
   ECSQL_COLUMN_NAME_HasFilterTargetAncestor,
-  ECSQL_COLUMN_NAME_IsFilterTarget,
 } from "../../hierarchies/imodel/FilteringHierarchyDefinition";
 import { DefineHierarchyLevelProps, HierarchyDefinition, NodeParser } from "../../hierarchies/imodel/IModelHierarchyDefinition";
 import { ProcessedHierarchyNode, SourceInstanceHierarchyNode } from "../../hierarchies/imodel/IModelHierarchyNode";
@@ -731,18 +729,21 @@ describe("createIModelHierarchyProvider", () => {
             trimWhitespace(query.ctes[0]) ===
               trimWhitespace(
                 `
-                FilteringInfo(ECInstanceId, IsFilterTarget, FilterTargetOptions, FilterClassName) AS (
-                  VALUES (0x123, 0, CAST(NULL AS TEXT), 'a.b')
-                )
-                `,
+                FilteringInfo(ECInstanceId, FilterClassName) AS (
+                SELECT
+                  ECInstanceId,
+                  'a.b' AS FilterClassName
+                FROM ONLY
+                  a.b
+                WHERE
+                  ECInstanceId IN (0x123)
+              )`,
               ) &&
             trimWhitespace(query.ecsql) ===
               trimWhitespace(
                 `
                 SELECT
                     [q].*,
-                    [f].[IsFilterTarget] AS [${ECSQL_COLUMN_NAME_IsFilterTarget}],
-                    [f].[FilterTargetOptions] AS [${ECSQL_COLUMN_NAME_FilterTargetOptions}],
                     0 AS [${ECSQL_COLUMN_NAME_HasFilterTargetAncestor}],
                     IdToHex([f].[ECInstanceId]) AS [${ECSQL_COLUMN_NAME_FilterECInstanceId}],
                     [f].[FilterClassName] AS [${ECSQL_COLUMN_NAME_FilterClassName}]
