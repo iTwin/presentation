@@ -7,10 +7,10 @@ import { expect } from "chai";
 import { createAsyncIterator, throwingAsyncIterator } from "presentation-test-utilities";
 import { firstValueFrom, Subject } from "rxjs";
 import { GenericInstanceFilter, GetHierarchyNodesProps, HierarchyNode, HierarchyNodeKey, HierarchyProvider } from "@itwin/presentation-hierarchies";
-import { TreeActions } from "../../presentation-hierarchies-react/internal/TreeActions";
-import { TreeModel } from "../../presentation-hierarchies-react/internal/TreeModel";
-import { createNodeId } from "../../presentation-hierarchies-react/internal/Utils";
-import { createStub, createTestGroupingNode, createTestHierarchyNode, createTreeModel, getHierarchyNode, waitFor } from "../TestUtils";
+import { TreeActions } from "../../presentation-hierarchies-react/internal/TreeActions.js";
+import { TreeModel } from "../../presentation-hierarchies-react/internal/TreeModel.js";
+import { createNodeId } from "../../presentation-hierarchies-react/internal/Utils.js";
+import { createStub, createTestGroupingNode, createTestHierarchyNode, createTreeModel, getHierarchyNode, waitFor } from "../TestUtils.js";
 
 describe("TreeActions", () => {
   const provider = {

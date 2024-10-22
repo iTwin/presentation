@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { compareStrings, Id64, Id64String } from "@itwin/core-bentley";
-import { PrimitiveValueType } from "./Metadata";
+import { PrimitiveValueType } from "./Metadata.js";
 
 /**
  * A data structure uniquely identifying an ECInstance in an iModel.

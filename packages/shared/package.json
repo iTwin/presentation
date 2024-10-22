@@ -20,14 +20,21 @@
     "iTwin.js",
     "Presentation"
   ],
+  "type": "module",
   "main": "lib/cjs/presentation-shared.js",
+  "types": "lib/cjs/presentation-shared",
   "module": "lib/esm/presentation-shared.js",
-  "types": "lib/cjs/presentation-shared.d.ts",
+  "exports": {
+    ".": {
+      "import": "./lib/esm/presentation-shared.js",
+      "require": "./lib/cjs/presentation-shared.js"
+    },
+    "./package.json": "./package.json"
+  },
   "scripts": {
     "build": "npm run -s build:cjs && npm run -s build:esm",
-    "build:cjs": "tsc -p tsconfig.cjs.json",
+    "build:cjs": "node ../../scripts/package-cjs.mjs ./lib/cjs && tsc -p tsconfig.cjs.json",
     "build:esm": "tsc -p tsconfig.esm.json",
-    "build:watch": "npm run -s build:cjs -- -w",
     "clean": "rimraf lib temp",
     "cover": "nyc npm -s test",
     "lint": "eslint \"./src/**/*.ts\"",

@@ -4,8 +4,8 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { expect } from "chai";
-import { createNodeId, sameNodes } from "../../presentation-hierarchies-react/internal/Utils";
-import { createTestGroupingNode, createTestHierarchyNode } from "../TestUtils";
+import { createNodeId, sameNodes } from "../../presentation-hierarchies-react/internal/Utils.js";
+import { createTestGroupingNode, createTestHierarchyNode } from "../TestUtils.js";
 
 describe("createNodeId", () => {
   it("creates id for `generic` node", () => {

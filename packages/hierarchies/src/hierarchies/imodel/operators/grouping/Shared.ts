@@ -3,8 +3,8 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { HierarchyNodeGroupingParamsBase, InstanceHierarchyNodeProcessingParams } from "../../IModelHierarchyNode";
-import { GroupingType, ProcessedInstancesGroupingHierarchyNode } from "../Grouping";
+import { HierarchyNodeGroupingParamsBase, InstanceHierarchyNodeProcessingParams } from "../../IModelHierarchyNode.js";
+import { GroupingType, ProcessedInstancesGroupingHierarchyNode } from "../Grouping.js";
 
 /** @internal */
 export function iterateChildNodeGroupingParams(

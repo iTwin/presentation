@@ -6,15 +6,15 @@
 import sinon from "sinon";
 import { Logger, LogLevel } from "@itwin/core-bentley";
 import { EC, parseFullClassName } from "@itwin/presentation-shared";
-import { NonGroupingHierarchyNode } from "../hierarchies/HierarchyNode";
-import { GenericNodeKey, HierarchyNodeKey, IModelInstanceKey } from "../hierarchies/HierarchyNodeKey";
+import { NonGroupingHierarchyNode } from "../hierarchies/HierarchyNode.js";
+import { GenericNodeKey, HierarchyNodeKey, IModelInstanceKey } from "../hierarchies/HierarchyNodeKey.js";
 import {
   ProcessedGenericHierarchyNode,
   ProcessedGroupingHierarchyNode,
   ProcessedInstanceHierarchyNode,
   SourceGenericHierarchyNode,
   SourceInstanceHierarchyNode,
-} from "../hierarchies/imodel/IModelHierarchyNode";
+} from "../hierarchies/imodel/IModelHierarchyNode.js";
 
 export function setupLogging(levels: Array<{ namespace: string; level: LogLevel }>) {
   Logger.initializeToConsole();

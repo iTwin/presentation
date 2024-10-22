@@ -4,12 +4,12 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { expect } from "chai";
-import { HierarchyNode } from "../../../../hierarchies/HierarchyNode";
-import { GroupingNodeKey } from "../../../../hierarchies/HierarchyNodeKey";
-import { HierarchyNodeAutoExpandProp, InstanceHierarchyNodeProcessingParams } from "../../../../hierarchies/imodel/IModelHierarchyNode";
-import { GroupingType, ProcessedInstancesGroupingHierarchyNode } from "../../../../hierarchies/imodel/operators/Grouping";
-import { assignAutoExpand } from "../../../../hierarchies/imodel/operators/grouping/AutoExpand";
-import { createTestProcessedGroupingNode, createTestProcessedInstanceNode } from "../../../Utils";
+import { HierarchyNode } from "../../../../hierarchies/HierarchyNode.js";
+import { GroupingNodeKey } from "../../../../hierarchies/HierarchyNodeKey.js";
+import { HierarchyNodeAutoExpandProp, InstanceHierarchyNodeProcessingParams } from "../../../../hierarchies/imodel/IModelHierarchyNode.js";
+import { GroupingType, ProcessedInstancesGroupingHierarchyNode } from "../../../../hierarchies/imodel/operators/Grouping.js";
+import { assignAutoExpand } from "../../../../hierarchies/imodel/operators/grouping/AutoExpand.js";
+import { createTestProcessedGroupingNode, createTestProcessedInstanceNode } from "../../../Utils.js";
 
 describe("AutoExpand", () => {
   [

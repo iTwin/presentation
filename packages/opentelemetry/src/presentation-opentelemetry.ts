@@ -8,4 +8,4 @@
  * @docs-group-description Core
  * Types related to OpenTelemetry.
  */
-export * from "./presentation-opentelemetry/Diagnostics";
+export * from "./presentation-opentelemetry/Diagnostics.js";

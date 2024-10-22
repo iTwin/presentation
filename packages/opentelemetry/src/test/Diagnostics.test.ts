@@ -6,7 +6,7 @@
 import { expect } from "chai";
 import * as sinon from "sinon";
 import { context, Span, SpanKind, SpanStatusCode, trace } from "@opentelemetry/api";
-import { exportDiagnostics } from "../presentation-opentelemetry/Diagnostics";
+import { exportDiagnostics } from "../presentation-opentelemetry/Diagnostics.js";
 
 describe("exportDiagnostics", () => {
   interface TestSpanContext {

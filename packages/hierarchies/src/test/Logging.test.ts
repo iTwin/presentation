@@ -5,7 +5,7 @@
 
 import { expect } from "chai";
 import { ILogger } from "@itwin/presentation-shared";
-import { getLogger, setLogger } from "../hierarchies/Logging";
+import { getLogger, setLogger } from "../hierarchies/Logging.js";
 
 describe("getLogger", () => {
   it("returns custom logger", () => {

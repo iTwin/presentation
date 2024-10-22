@@ -7,11 +7,11 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { isIDisposable } from "@itwin/core-bentley";
 import { GenericInstanceFilter, HierarchyFilteringPath, HierarchyNode, HierarchyProvider } from "@itwin/presentation-hierarchies";
 import { InstanceKey, IPrimitiveValueFormatter } from "@itwin/presentation-shared";
-import { TreeActions } from "./internal/TreeActions";
-import { isTreeModelHierarchyNode, isTreeModelInfoNode, TreeModel, TreeModelHierarchyNode, TreeModelNode, TreeModelRootNode } from "./internal/TreeModel";
-import { useUnifiedTreeSelection, UseUnifiedTreeSelectionProps } from "./internal/UseUnifiedSelection";
-import { PresentationHierarchyNode, PresentationTreeNode } from "./TreeNode";
-import { SelectionChangeType } from "./UseSelectionHandler";
+import { TreeActions } from "./internal/TreeActions.js";
+import { isTreeModelHierarchyNode, isTreeModelInfoNode, TreeModel, TreeModelHierarchyNode, TreeModelNode, TreeModelRootNode } from "./internal/TreeModel.js";
+import { useUnifiedTreeSelection, UseUnifiedTreeSelectionProps } from "./internal/UseUnifiedSelection.js";
+import { PresentationHierarchyNode, PresentationTreeNode } from "./TreeNode.js";
+import { SelectionChangeType } from "./UseSelectionHandler.js";
 
 /**
  * A data structure that contains information about a single hierarchy level.
@@ -260,7 +260,7 @@ function useTreeInternal({
   const setFormatter = useCallback<UseTreeResult["setFormatter"]>(
     (formatter: IPrimitiveValueFormatter | undefined) => {
       currentFormatter.current = formatter;
-      // istanbul ignore if
+      /* istanbul ignore next 3 */
       if (!hierarchyProvider) {
         return;
       }

@@ -4,8 +4,8 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { ConcatenatedValue, InstanceKey, OmitOverUnion, PrimitiveValue } from "@itwin/presentation-shared";
-import { GroupingHierarchyNode, NonGroupingHierarchyNode } from "../HierarchyNode";
-import { GenericNodeKey, HierarchyNodeKey, InstancesNodeKey } from "../HierarchyNodeKey";
+import { GroupingHierarchyNode, NonGroupingHierarchyNode } from "../HierarchyNode.js";
+import { GenericNodeKey, HierarchyNodeKey, InstancesNodeKey } from "../HierarchyNodeKey.js";
 
 /**
  * Base processing parameters that apply to every node.

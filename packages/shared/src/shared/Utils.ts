@@ -44,7 +44,7 @@ export function trimWhitespace(str: string): string;
 export function trimWhitespace(str: string | undefined): string | undefined;
 /** @beta */
 export function trimWhitespace(str: string | undefined): string | undefined {
-  // istanbul ignore next
+  /* istanbul ignore next 3 */
   if (!str) {
     return str;
   }
@@ -93,4 +93,13 @@ export function createMainThreadReleaseOnTimePassedHandler(releaseOnTimePassed =
       start = Date.now();
     });
   };
+}
+
+/**
+ * An utility to convert a julian day format to `Date`.
+ * @beta
+ */
+export function julianToDateTime(julianDate: number): Date {
+  const millis = (julianDate - 2440587.5) * 86400000;
+  return new Date(millis);
 }

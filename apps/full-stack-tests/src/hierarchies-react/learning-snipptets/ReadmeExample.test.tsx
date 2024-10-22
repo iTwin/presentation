@@ -2,18 +2,17 @@
  * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
+/* eslint-disable no-duplicate-imports */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 
 import { expect } from "chai";
 import { insertPhysicalModelWithPartition } from "presentation-test-utilities";
-import { initialize, terminate } from "../../IntegrationTests";
-import { buildIModel } from "../../IModelUtils";
-import { stubGetBoundingClientRect } from "../../Utils";
 import { render, waitFor } from "@testing-library/react";
 // __PUBLISH_EXTRACT_START__ Presentation.HierarchiesReact.iModelAccess.Imports
 import { IModelConnection } from "@itwin/core-frontend";
 import { SchemaContext } from "@itwin/ecschema-metadata";
 import { ECSchemaRpcLocater } from "@itwin/ecschema-rpcinterface-common";
+import { createCachingECClassHierarchyInspector } from "@itwin/presentation-shared";
 import { createECSchemaProvider, createECSqlQueryExecutor } from "@itwin/presentation-core-interop";
 import { createLimitingECSqlQueryExecutor, createNodesQueryClauseFactory, HierarchyDefinition } from "@itwin/presentation-hierarchies";
 // __PUBLISH_EXTRACT_END__
@@ -23,8 +22,11 @@ import { createStorage } from "@itwin/unified-selection";
 import { useEffect, useState } from "react";
 // __PUBLISH_EXTRACT_END__
 // __PUBLISH_EXTRACT_START__ Presentation.HierarchiesReact.CustomTreeExample.Imports
-import { createBisInstanceLabelSelectClauseFactory, createCachingECClassHierarchyInspector } from "@itwin/presentation-shared";
+import { createBisInstanceLabelSelectClauseFactory } from "@itwin/presentation-shared";
 // __PUBLISH_EXTRACT_END__
+import { buildIModel } from "../../IModelUtils.js";
+import { initialize, terminate } from "../../IntegrationTests.js";
+import { stubGetBoundingClientRect } from "../../Utils.js";
 
 // __PUBLISH_EXTRACT_START__ Presentation.HierarchiesReact.iModelAccess
 // Not really part of the package, but we need SchemaContext to create the tree state. It's

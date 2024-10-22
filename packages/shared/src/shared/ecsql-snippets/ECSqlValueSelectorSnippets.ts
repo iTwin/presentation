@@ -4,8 +4,8 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { Id64 } from "@itwin/core-bentley";
-import { ECSchemaProvider, getClass, PrimitiveValueType } from "../Metadata";
-import { PrimitiveValue, TypedPrimitiveValue } from "../Values";
+import { ECSchemaProvider, getClass, PrimitiveValueType } from "../Metadata.js";
+import { PrimitiveValue, TypedPrimitiveValue } from "../Values.js";
 
 /**
  * Props for selecting a `TypedPrimitiveValue` using given ECSQL selector.

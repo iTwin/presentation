@@ -23,8 +23,11 @@ globalJsdom(undefined, {
 });
 
 // polyfill ResizeObserver
-import ResizeObserver from "resize-observer-polyfill";
-global.ResizeObserver = ResizeObserver;
+global.ResizeObserver = class ResizeObserver {
+  public observe() {}
+  public unobserve() {}
+  public disconnect() {}
+};
 
 // supply mocha hooks
 import path from "path";

@@ -6,8 +6,8 @@
 import { expect } from "chai";
 import { collect } from "presentation-test-utilities";
 import { from } from "rxjs";
-import { sortNodesByLabelOperator } from "../../../hierarchies/internal/operators/Sorting";
-import { createTestProcessedGenericNode } from "../../Utils";
+import { sortNodesByLabelOperator } from "../../../hierarchies/internal/operators/Sorting.js";
+import { createTestProcessedGenericNode } from "../../Utils.js";
 
 describe("Sorting", () => {
   it("sorts nodes", async () => {

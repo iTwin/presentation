@@ -4,11 +4,11 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { createNodesQueryClauseFactory, HierarchyDefinition, HierarchyNode } from "@itwin/presentation-hierarchies";
-import { importSchema, withECDb } from "../../IModelUtils";
-import { initialize, terminate } from "../../IntegrationTests";
-import { NodeValidators, validateHierarchy } from "../HierarchyValidation";
-import { createIModelAccess, createProvider } from "../Utils";
 import { createBisInstanceLabelSelectClauseFactory } from "@itwin/presentation-shared";
+import { importSchema, withECDb } from "../../IModelUtils.js";
+import { initialize, terminate } from "../../IntegrationTests.js";
+import { NodeValidators, validateHierarchy } from "../HierarchyValidation.js";
+import { createIModelAccess, createProvider } from "../Utils.js";
 
 describe("Hierarchies", () => {
   describe("Grouping special cases", () => {

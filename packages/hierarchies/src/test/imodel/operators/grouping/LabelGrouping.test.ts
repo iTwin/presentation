@@ -4,10 +4,10 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { expect } from "chai";
-import { GroupingNodeKey } from "../../../../hierarchies/HierarchyNodeKey";
-import { GroupingHandlerResult } from "../../../../hierarchies/imodel/operators/Grouping";
-import { createLabelGroups } from "../../../../hierarchies/imodel/operators/grouping/LabelGrouping";
-import { createTestGenericNodeKey, createTestInstanceKey, createTestProcessedGroupingNode, createTestProcessedInstanceNode } from "../../../Utils";
+import { GroupingNodeKey } from "../../../../hierarchies/HierarchyNodeKey.js";
+import { GroupingHandlerResult } from "../../../../hierarchies/imodel/operators/Grouping.js";
+import { createLabelGroups } from "../../../../hierarchies/imodel/operators/grouping/LabelGrouping.js";
+import { createTestGenericNodeKey, createTestInstanceKey, createTestProcessedGroupingNode, createTestProcessedInstanceNode } from "../../../Utils.js";
 
 describe("LabelGrouping", () => {
   it("groups one node", async () => {

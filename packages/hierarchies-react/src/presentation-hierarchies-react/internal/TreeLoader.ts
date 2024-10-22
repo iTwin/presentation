@@ -5,8 +5,8 @@
 
 import { catchError, expand, from, map, mergeMap, Observable, of, toArray } from "rxjs";
 import { GenericInstanceFilter, HierarchyNode, HierarchyProvider, RowsLimitExceededError } from "@itwin/presentation-hierarchies";
-import { isTreeModelHierarchyNode, TreeModelHierarchyNode, TreeModelInfoNode, TreeModelNode, TreeModelRootNode } from "./TreeModel";
-import { createNodeId } from "./Utils";
+import { isTreeModelHierarchyNode, TreeModelHierarchyNode, TreeModelInfoNode, TreeModelNode, TreeModelRootNode } from "./TreeModel.js";
+import { createNodeId } from "./Utils.js";
 
 /** @internal */
 export interface LoadedTreePart {

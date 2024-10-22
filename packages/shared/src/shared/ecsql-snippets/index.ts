@@ -11,5 +11,5 @@ export {
   createConcatenatedValueStringSelector,
   createInstanceKeySelector,
   createPrimitivePropertyValueSelectorProps,
-} from "./ECSqlValueSelectorSnippets";
-export { createRelationshipPathJoinClause } from "./ECSqlJoinSnippets";
+} from "./ECSqlValueSelectorSnippets.js";
+export { createRelationshipPathJoinClause } from "./ECSqlJoinSnippets.js";

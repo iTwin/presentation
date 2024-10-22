@@ -3,9 +3,9 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { NonGroupingHierarchyNode } from "./HierarchyNode";
-import { HierarchyNodeIdentifiersPath } from "./HierarchyNodeIdentifier";
-import { GroupingNodeKey } from "./HierarchyNodeKey";
+import { NonGroupingHierarchyNode } from "./HierarchyNode.js";
+import { HierarchyNodeIdentifiersPath } from "./HierarchyNodeIdentifier.js";
+import { GroupingNodeKey } from "./HierarchyNodeKey.js";
 
 /** @beta */
 export interface FilterTargetGroupingNodeInfo {
@@ -67,15 +67,15 @@ export namespace HierarchyFilteringPath {
     lhs: HierarchyFilteringPathOptions | undefined,
     rhs: HierarchyFilteringPathOptions | undefined,
   ): HierarchyFilteringPathOptions | undefined {
-    // istanbul ignore next
+    /* istanbul ignore next 3 */
     if (!lhs && !rhs) {
       return undefined;
     }
-    // istanbul ignore next
+    /* istanbul ignore next 3 */
     if (!lhs) {
       return rhs;
     }
-    // istanbul ignore next
+    /* istanbul ignore next 3 */
     if (!rhs) {
       return lhs;
     }

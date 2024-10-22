@@ -8,8 +8,8 @@ import { expect } from "chai";
 import { BeEvent } from "@itwin/core-bentley";
 import { GetHierarchyNodesProps, HierarchyNode, HierarchyProvider, mergeProviders } from "@itwin/presentation-hierarchies";
 // __PUBLISH_EXTRACT_END__
-import { initialize, terminate } from "../../IntegrationTests";
-import { collectHierarchy } from "./Utils";
+import { initialize, terminate } from "../../IntegrationTests.js";
+import { collectHierarchy } from "./Utils.js";
 
 describe("Hierarchies", () => {
   describe("Learning snippets", () => {

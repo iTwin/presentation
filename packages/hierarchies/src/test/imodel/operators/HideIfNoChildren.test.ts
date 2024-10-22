@@ -7,8 +7,8 @@ import { collect, waitFor } from "presentation-test-utilities";
 import { EMPTY, from, Observable, of, Subject } from "rxjs";
 import sinon from "sinon";
 import { LogLevel } from "@itwin/core-bentley";
-import { createHideIfNoChildrenOperator, LOGGING_NAMESPACE } from "../../../hierarchies/imodel/operators/HideIfNoChildren";
-import { createTestProcessedGenericNode, setupLogging } from "../../Utils";
+import { createHideIfNoChildrenOperator, LOGGING_NAMESPACE } from "../../../hierarchies/imodel/operators/HideIfNoChildren.js";
+import { createTestProcessedGenericNode, setupLogging } from "../../Utils.js";
 
 describe("HideIfNoChildrenOperator", () => {
   before(() => {

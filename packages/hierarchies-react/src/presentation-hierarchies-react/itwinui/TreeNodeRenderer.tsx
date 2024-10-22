@@ -8,11 +8,11 @@ import cx from "classnames";
 import { ComponentPropsWithoutRef, forwardRef, LegacyRef, MutableRefObject, ReactElement, Ref, useCallback, useRef } from "react";
 import { SvgFilter, SvgFilterHollow, SvgRemove } from "@itwin/itwinui-icons-react";
 import { Anchor, ButtonGroup, Flex, IconButton, ProgressRadial, Text, TreeNode } from "@itwin/itwinui-react";
-import { MAX_LIMIT_OVERRIDE } from "../internal/Utils";
-import { isPresentationHierarchyNode, PresentationHierarchyNode } from "../TreeNode";
-import { HierarchyLevelDetails, UseTreeResult } from "../UseTree";
-import { useLocalizationContext } from "./LocalizationContext";
-import { RenderedTreeNode } from "./TreeRenderer";
+import { MAX_LIMIT_OVERRIDE } from "../internal/Utils.js";
+import { isPresentationHierarchyNode, PresentationHierarchyNode } from "../TreeNode.js";
+import { HierarchyLevelDetails, UseTreeResult } from "../UseTree.js";
+import { useLocalizationContext } from "./LocalizationContext.js";
+import { RenderedTreeNode } from "./TreeRenderer.js";
 
 /** @beta */
 type TreeNodeProps = ComponentPropsWithoutRef<typeof TreeNode>;

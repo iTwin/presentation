@@ -12,9 +12,9 @@ import { PresentationPropertyDataProvider, usePropertyDataProviderWithUnifiedSel
 import { Presentation } from "@itwin/presentation-frontend";
 import { buildTestIModel } from "@itwin/presentation-testing";
 import { act, getByText, render, waitFor } from "@testing-library/react";
-import { initialize, terminate } from "../../IntegrationTests";
-import { useOptionalDisposable } from "../../UseOptionalDisposable";
-import { ensurePropertyGridHasPropertyRecord } from "../PropertyGridUtils";
+import { initialize, terminate } from "../../IntegrationTests.js";
+import { useOptionalDisposable } from "../../UseOptionalDisposable.js";
+import { ensurePropertyGridHasPropertyRecord } from "../PropertyGridUtils.js";
 
 /* eslint-disable @typescript-eslint/naming-convention */
 

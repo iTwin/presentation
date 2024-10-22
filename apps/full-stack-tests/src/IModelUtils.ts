@@ -12,7 +12,11 @@ import { BentleyError, DbResult, Guid, Id64, Id64String, OrderedId64Iterable } f
 import { IModelConnection } from "@itwin/core-frontend";
 import { ECSqlBinding, parseFullClassName, PrimitiveValue } from "@itwin/presentation-shared";
 import { buildTestIModel, TestIModelBuilder } from "@itwin/presentation-testing";
-import { createFileNameFromString, limitFilePathLength, setupOutputFileLocation } from "@itwin/presentation-testing/lib/cjs/presentation-testing/InternalUtils";
+import {
+  createFileNameFromString,
+  limitFilePathLength,
+  setupOutputFileLocation,
+} from "@itwin/presentation-testing/lib/cjs/presentation-testing/InternalUtils.js";
 
 function isBinding(value: ECSqlBinding | PrimitiveValue): value is ECSqlBinding {
   return typeof value === "object" && (value as ECSqlBinding).type !== undefined && (value as ECSqlBinding).value !== undefined;

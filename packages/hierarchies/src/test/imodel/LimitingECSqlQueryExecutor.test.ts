@@ -7,8 +7,8 @@ import { expect } from "chai";
 import { collect, createAsyncIterator } from "presentation-test-utilities";
 import sinon from "sinon";
 import { ECSqlQueryExecutor, trimWhitespace } from "@itwin/presentation-shared";
-import { RowsLimitExceededError } from "../../hierarchies/HierarchyErrors";
-import { createLimitingECSqlQueryExecutor } from "../../hierarchies/imodel/LimitingECSqlQueryExecutor";
+import { RowsLimitExceededError } from "../../hierarchies/HierarchyErrors.js";
+import { createLimitingECSqlQueryExecutor } from "../../hierarchies/imodel/LimitingECSqlQueryExecutor.js";
 
 describe("createLimitingECSqlQueryExecutor", () => {
   const baseExecutor = {

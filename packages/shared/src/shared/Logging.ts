@@ -31,7 +31,7 @@ export interface ILogger {
  * A logger implementation that does nothing.
  * @beta
  */
-// istanbul ignore next
+/* istanbul ignore next 7 */
 export const NOOP_LOGGER: ILogger = {
   isEnabled: () => false,
   logError: () => {},

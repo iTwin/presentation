@@ -15,15 +15,15 @@ import {
   IPrimitiveValueFormatter,
   TypedPrimitiveValue,
 } from "@itwin/presentation-shared";
-import { HierarchyNode, ParentHierarchyNode } from "../../../HierarchyNode";
-import { HierarchyNodeKey, PropertyGroupingNodeKey } from "../../../HierarchyNodeKey";
+import { HierarchyNode, ParentHierarchyNode } from "../../../HierarchyNode.js";
+import { HierarchyNodeKey, PropertyGroupingNodeKey } from "../../../HierarchyNodeKey.js";
 import {
   HierarchyNodePropertiesGroupingParams,
   HierarchyNodePropertyGroup,
   HierarchyNodePropertyValueRange,
   ProcessedInstanceHierarchyNode,
-} from "../../IModelHierarchyNode";
-import { GroupingHandler, GroupingHandlerResult, ProcessedInstancesGroupingHierarchyNode } from "../Grouping";
+} from "../../IModelHierarchyNode.js";
+import { GroupingHandler, GroupingHandlerResult, ProcessedInstancesGroupingHierarchyNode } from "../Grouping.js";
 
 interface DisplayablePropertyGroupingInfo {
   label: string;
@@ -279,19 +279,14 @@ function createNodePropertyGroupPathMatchers(node: ParentHierarchyNode): Array<(
   propertyGroupingNodeKeys.reverse();
 
   return propertyGroupingNodeKeys.map((key): ((x: ArrayElement<PreviousPropertiesGroupingInfo>) => boolean) => {
-    if (HierarchyNodeKey.isPropertyOtherValuesGrouping(key)) {
-      return (x) => key.properties.some((p) => p.className === x.propertiesClassName && p.propertyName === x.propertyName && !!x.isRange);
+    switch (key.type) {
+      case "property-grouping:other":
+        return (x) => key.properties.some((p) => p.className === x.propertiesClassName && p.propertyName === x.propertyName && !!x.isRange);
+      case "property-grouping:range":
+        return (x) => key.propertyClassName === x.propertiesClassName && key.propertyName === x.propertyName;
+      case "property-grouping:value":
+        return (x) => key.propertyClassName === x.propertiesClassName && key.propertyName === x.propertyName;
     }
-    if (HierarchyNodeKey.isPropertyValueRangeGrouping(key)) {
-      return (x) => key.propertyClassName === x.propertiesClassName && key.propertyName === x.propertyName;
-    }
-    // istanbul ignore else
-    if (HierarchyNodeKey.isPropertyValueGrouping(key)) {
-      return (x) => key.propertyClassName === x.propertiesClassName && key.propertyName === x.propertyName;
-    }
-    // https://github.com/microsoft/TypeScript/issues/21985
-    // istanbul ignore next
-    return ((x: never) => x)(key);
   });
 }
 

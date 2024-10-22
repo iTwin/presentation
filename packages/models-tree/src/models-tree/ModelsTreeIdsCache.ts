@@ -5,7 +5,7 @@
 
 import { assert, Id64Array, Id64Set, Id64String } from "@itwin/core-bentley";
 import { LimitingECSqlQueryExecutor } from "@itwin/presentation-hierarchies";
-import { ModelsTreeDefinition } from "./ModelsTreeDefinition";
+import { ModelsTreeDefinition } from "./ModelsTreeDefinition.js";
 
 interface SubjectInfo {
   parentSubject: Id64String | undefined;

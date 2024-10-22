@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { OmitOverUnion } from "@itwin/presentation-shared";
-import { HierarchyFilteringPath, HierarchyFilteringPathOptions } from "./HierarchyFiltering";
+import { HierarchyFilteringPath, HierarchyFilteringPathOptions } from "./HierarchyFiltering.js";
 import {
   ClassGroupingNodeKey,
   GenericNodeKey,
@@ -18,7 +18,7 @@ import {
   PropertyOtherValuesGroupingNodeKey,
   PropertyValueGroupingNodeKey,
   PropertyValueRangeGroupingNodeKey,
-} from "./HierarchyNodeKey";
+} from "./HierarchyNodeKey.js";
 
 /** @beta */
 export type HierarchyNodeFilteringProps = {

@@ -1,9 +1,9 @@
 {
   "compilerOptions": {
-    "module": "CommonJS",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
     "target": "ES2022",
     "lib": ["dom", "ES2022"],
-    "moduleResolution": "Node",
     "strict": true,
     "skipLibCheck": true,
     "experimentalDecorators": true,

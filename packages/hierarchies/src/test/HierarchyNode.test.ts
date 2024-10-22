@@ -4,8 +4,8 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { expect } from "chai";
-import { GroupingHierarchyNode, HierarchyNode } from "../hierarchies/HierarchyNode";
-import { createTestGenericNodeKey } from "./Utils";
+import { GroupingHierarchyNode, HierarchyNode } from "../hierarchies/HierarchyNode.js";
+import { createTestGenericNodeKey } from "./Utils.js";
 
 describe("HierarchyNode", () => {
   const genericNode: HierarchyNode = {
