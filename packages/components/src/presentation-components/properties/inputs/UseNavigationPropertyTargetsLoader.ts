@@ -23,10 +23,7 @@ import {
   RuleTypes,
 } from "@itwin/presentation-common";
 import { Presentation } from "@itwin/presentation-frontend";
-import { FILTER_WARNING_OPTION } from "./ItemsLoader";
-
-/** @internal */
-export const NAVIGATION_PROPERTY_TARGETS_BATCH_SIZE = 100;
+import { FILTER_WARNING_OPTION, VALUE_BATCH_SIZE } from "./ItemsLoader";
 
 /** @internal */
 export interface NavigationPropertyTarget {
@@ -85,7 +82,7 @@ export function useNavigationPropertyTargetsLoader(props: UseNavigationPropertyT
       async (filter?: string) => getItems(imodel, ruleset, filter),
     );
 
-    void loader.loadItems(initialSelectedTarget);
+    void loader.loadItems(initialSelectedTarget ?? "");
     setItemsLoader(loader);
     return () => {
       loader.dispose();
@@ -99,9 +96,7 @@ export function useNavigationPropertyTargetsLoader(props: UseNavigationPropertyT
     }
 
     const timeout = setTimeout(() => {
-      if (itemsLoader?.needsLoadingItems(filterText)) {
-        void itemsLoader?.loadItems(filterText);
-      }
+      void itemsLoader?.loadItems(filterText);
     }, 250);
 
     return () => {
@@ -118,7 +113,7 @@ export function useNavigationPropertyTargetsLoader(props: UseNavigationPropertyT
         };
       });
 
-      if (options.length >= NAVIGATION_PROPERTY_TARGETS_BATCH_SIZE) {
+      if (options.length >= VALUE_BATCH_SIZE) {
         options.push(FILTER_WARNING_OPTION);
       }
       return options;
@@ -178,7 +173,7 @@ async function getItems(imodel: IModelConnection, ruleset: Ruleset, filter?: str
       contentFlags: ContentFlags.ShowLabels | ContentFlags.NoFields,
       fieldsFilterExpression: filter ? `/DisplayLabel/ ~ \"%${filter}%\"` : undefined,
     },
-    paging: { size: NAVIGATION_PROPERTY_TARGETS_BATCH_SIZE },
+    paging: { size: VALUE_BATCH_SIZE },
   };
   const items = await new Promise<Item[]>((resolve, reject) => {
     (Presentation.presentation.getContentIterator
@@ -217,17 +212,13 @@ export class NavigationPropertyItemsLoader {
     this._disposed = true;
   }
 
-  public needsLoadingItems(filterText?: string) {
-    if (filterText === undefined || (filterText === "" && this._loadedItems.length >= NAVIGATION_PROPERTY_TARGETS_BATCH_SIZE)) {
-      return false;
+  public async loadItems(filterText?: string) {
+    if (this._isLoading || filterText === undefined || (filterText === "" && this._loadedItems.length >= VALUE_BATCH_SIZE)) {
+      return;
     }
 
     const filteredItems = this._loadedItems.filter((option) => option.label.displayValue.toLowerCase().includes(filterText.toLowerCase()));
-    return filteredItems.length < NAVIGATION_PROPERTY_TARGETS_BATCH_SIZE;
-  }
-
-  public async loadItems(filterText?: string) {
-    if (this._isLoading) {
+    if (filteredItems.length >= VALUE_BATCH_SIZE) {
       return;
     }
 

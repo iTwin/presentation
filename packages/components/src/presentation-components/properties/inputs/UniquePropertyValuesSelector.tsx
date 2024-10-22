@@ -10,8 +10,8 @@ import { ComboBox, SelectOption } from "@itwin/itwinui-react";
 import { ClassInfo, Descriptor, Field, Keys, KeySet, MultiSchemaClassesSpecification, Ruleset } from "@itwin/presentation-common";
 import { deserializeUniqueValues, findField, serializeUniqueValues, translate, UniqueValue } from "../../common/Utils";
 import { getInstanceFilterFieldName } from "../../instance-filter-builder/Utils";
-import { FILTER_WARNING_OPTION } from "./ItemsLoader";
-import { UNIQUE_PROPERTY_VALUES_BATCH_SIZE, useUniquePropertyValuesLoader } from "./UseUniquePropertyValuesLoader";
+import { FILTER_WARNING_OPTION, VALUE_BATCH_SIZE } from "./ItemsLoader";
+import { useUniquePropertyValuesLoader } from "./UseUniquePropertyValuesLoader";
 
 /** @internal */
 export interface UniquePropertyValuesSelectorProps {
@@ -87,13 +87,13 @@ export function UniquePropertyValuesSelector(props: UniquePropertyValuesSelector
       multiple={true}
       enableVirtualization={true}
       options={selectOptions}
-      onChange={(newValues) => onValueChange(newValues)}
+      onChange={onValueChange}
       filterFunction={(options: SelectOption<string>[], inputValue: string) => {
         const filteredOptions = options
           .filter((option) => option.label.toLowerCase().includes(inputValue.toLowerCase()) && option.value !== FILTER_WARNING_OPTION.value)
-          .slice(0, UNIQUE_PROPERTY_VALUES_BATCH_SIZE);
+          .slice(0, VALUE_BATCH_SIZE);
 
-        if (filteredOptions.length >= UNIQUE_PROPERTY_VALUES_BATCH_SIZE) {
+        if (filteredOptions.length >= VALUE_BATCH_SIZE) {
           filteredOptions.push(FILTER_WARNING_OPTION);
         }
         return filteredOptions;

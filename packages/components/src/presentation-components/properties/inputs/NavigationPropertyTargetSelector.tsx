@@ -12,13 +12,8 @@ import { ComboBox, SelectOption } from "@itwin/itwinui-react";
 import { InstanceKey, LabelDefinition, NavigationPropertyInfo } from "@itwin/presentation-common";
 import { translate } from "../../common/Utils";
 import { PropertyEditorAttributes } from "../editors/Common";
-import { FILTER_WARNING_OPTION } from "./ItemsLoader";
-import {
-  NAVIGATION_PROPERTY_TARGETS_BATCH_SIZE,
-  NavigationPropertyTarget,
-  useNavigationPropertyTargetsLoader,
-  useNavigationPropertyTargetsRuleset,
-} from "./UseNavigationPropertyTargetsLoader";
+import { FILTER_WARNING_OPTION, VALUE_BATCH_SIZE } from "./ItemsLoader";
+import { NavigationPropertyTarget, useNavigationPropertyTargetsLoader, useNavigationPropertyTargetsRuleset } from "./UseNavigationPropertyTargetsLoader";
 
 /** @internal */
 export interface NavigationPropertyTargetSelectorProps extends PropertyEditorProps {
@@ -76,13 +71,13 @@ export const NavigationPropertyTargetSelector = forwardRef<PropertyEditorAttribu
       multiple={false}
       enableVirtualization={true}
       options={selectOptions}
-      onChange={(newValue) => onChange(newValue)}
+      onChange={onChange}
       filterFunction={(options: SelectOption<string>[], inputValue: string) => {
         const filteredOptions = options
           .filter((option) => option.label.toLowerCase().includes(inputValue.toLowerCase()) && option.value !== FILTER_WARNING_OPTION.value)
-          .slice(0, NAVIGATION_PROPERTY_TARGETS_BATCH_SIZE);
+          .slice(0, VALUE_BATCH_SIZE);
 
-        if (filteredOptions.length >= NAVIGATION_PROPERTY_TARGETS_BATCH_SIZE) {
+        if (filteredOptions.length >= VALUE_BATCH_SIZE) {
           filteredOptions.push(FILTER_WARNING_OPTION);
         }
 

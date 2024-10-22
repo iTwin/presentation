@@ -10,10 +10,7 @@ import { SelectOption } from "@itwin/itwinui-react";
 import { DisplayValue, DisplayValueGroup, Field, FieldDescriptor, Keys, KeySet, Ruleset } from "@itwin/presentation-common";
 import { Presentation } from "@itwin/presentation-frontend";
 import { translate, UniqueValue } from "../../common/Utils";
-import { FILTER_WARNING_OPTION, ItemsLoader } from "./ItemsLoader";
-
-/** @internal */
-export const UNIQUE_PROPERTY_VALUES_BATCH_SIZE = 100;
+import { FILTER_WARNING_OPTION, ItemsLoader, VALUE_BATCH_SIZE } from "./ItemsLoader";
 
 interface UseUniquePropertyValuesLoaderProps {
   imodel: IModelConnection;
@@ -99,7 +96,7 @@ export function useUniquePropertyValuesLoader({
         };
       });
 
-      if (options.length >= UNIQUE_PROPERTY_VALUES_BATCH_SIZE) {
+      if (options.length >= VALUE_BATCH_SIZE) {
         options.push(FILTER_WARNING_OPTION);
       }
 
@@ -151,7 +148,7 @@ async function getItems({
     descriptor: {},
     fieldDescriptor: field,
     rulesetOrId: ruleset,
-    paging: { start: offset, size: UNIQUE_PROPERTY_VALUES_BATCH_SIZE },
+    paging: { start: offset, size: VALUE_BATCH_SIZE },
     keys,
   };
   const items = await new Promise<DisplayValueGroup[]>((resolve) => {
@@ -168,7 +165,7 @@ async function getItems({
     });
   });
 
-  const hasMore = items.length === UNIQUE_PROPERTY_VALUES_BATCH_SIZE;
+  const hasMore = items.length === VALUE_BATCH_SIZE;
   const options: UniqueValue[] = [];
   for (const option of items) {
     if (option.displayValue === undefined || !DisplayValue.isPrimitive(option.displayValue)) {

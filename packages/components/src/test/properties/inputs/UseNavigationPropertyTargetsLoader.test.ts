@@ -11,16 +11,14 @@ import { EmptyLocalization } from "@itwin/core-common";
 import { IModelApp, IModelConnection } from "@itwin/core-frontend";
 import { Content, Item, LabelDefinition, NavigationPropertyInfo } from "@itwin/presentation-common";
 import { Presentation, PresentationManager } from "@itwin/presentation-frontend";
-import { waitFor } from "@testing-library/react";
+import { VALUE_BATCH_SIZE } from "../../../presentation-components/properties/inputs/ItemsLoader";
 import {
-  NAVIGATION_PROPERTY_TARGETS_BATCH_SIZE,
   NavigationPropertyItemsLoader,
   useNavigationPropertyTargetsLoader,
   useNavigationPropertyTargetsRuleset,
 } from "../../../presentation-components/properties/inputs/UseNavigationPropertyTargetsLoader";
-import { UNIQUE_PROPERTY_VALUES_BATCH_SIZE } from "../../../presentation-components/properties/inputs/UseUniquePropertyValuesLoader";
 import { createTestContentDescriptor, createTestContentItem } from "../../_helpers/Content";
-import { renderHook } from "../../TestUtils";
+import { renderHook, waitFor } from "../../TestUtils";
 
 describe("useNavigationPropertyTargetsLoader", () => {
   let presentationManagerStub: sinon.SinonStub;
@@ -89,13 +87,11 @@ describe("useNavigationPropertyTargetsLoader", () => {
       });
     });
 
-    it("loads full batch of targets and sets 'hasMore' flag to true", async () => {
-      const contentItems: Item[] = []; // Array.from({ length: NAVIGATION_PROPERTY_TARGETS_BATCH_SIZE }, () => createTestContentItem({ displayValues: {}, values: {} }));
-      for (let i = 0; i < NAVIGATION_PROPERTY_TARGETS_BATCH_SIZE; i++) {
+    it("loads full batch of targets", async () => {
+      const contentItems: Item[] = [];
+      for (let i = 0; i < VALUE_BATCH_SIZE; i++) {
         contentItems.push(createTestContentItem({ label: i.toString(), displayValues: {}, values: {} }));
       }
-      // eslint-disable-next-line no-console
-      console.log(contentItems.length);
       getContentIteratorStub.callsFake(async () => {
         return {
           total: contentItems.length,
@@ -110,8 +106,8 @@ describe("useNavigationPropertyTargetsLoader", () => {
 
       await waitFor(() => {
         // add 1 for the filter reminder option
-        expect(result.current.selectOptions).to.have.lengthOf(NAVIGATION_PROPERTY_TARGETS_BATCH_SIZE + 1);
-        expect(result.current.loadedOptions).to.have.lengthOf(NAVIGATION_PROPERTY_TARGETS_BATCH_SIZE);
+        expect(result.current.selectOptions).to.have.lengthOf(VALUE_BATCH_SIZE + 1);
+        expect(result.current.loadedOptions).to.have.lengthOf(VALUE_BATCH_SIZE);
       });
     });
 
@@ -143,7 +139,9 @@ describe("useNavigationPropertyTargetsLoader", () => {
 
     it("returns empty targets array if there's no content", async () => {
       getContentStub.resolves(undefined);
-      const { result } = renderHook(useNavigationPropertyTargetsLoader, { initialProps: { imodel: testImodel, ruleset: { id: "testRuleset", rules: [] } } });
+      const { result } = renderHook(useNavigationPropertyTargetsLoader, {
+        initialProps: { imodel: testImodel, ruleset: { id: "testRuleset", rules: [] }, filterText: "" },
+      });
 
       await waitFor(() => expect(result.current.isLoading).to.eq(false));
       expect(result.current.selectOptions).to.be.empty;
@@ -161,7 +159,9 @@ describe("useNavigationPropertyTargetsLoader", () => {
         return new Content(createTestContentDescriptor({ fields: [] }), [contentItem]);
       });
 
-      const { result } = renderHook(useNavigationPropertyTargetsLoader, { initialProps: { imodel: testImodel, ruleset: { id: "testRuleset", rules: [] } } });
+      const { result } = renderHook(useNavigationPropertyTargetsLoader, {
+        initialProps: { imodel: testImodel, ruleset: { id: "testRuleset", rules: [] }, filterText: "" },
+      });
 
       await waitFor(() => expect(result.current.isLoading).to.eq(false));
       expect(result.current.selectOptions).to.have.lengthOf(1);
@@ -169,18 +169,20 @@ describe("useNavigationPropertyTargetsLoader", () => {
       expect(result.current.loadedOptions[0]).to.contain({ label: contentItem.label, key: contentItem.primaryKeys[0] });
     });
 
-    it("loads full batch of targets and sets 'hasMore' flag to true", async () => {
-      const contentItems = Array.from({ length: NAVIGATION_PROPERTY_TARGETS_BATCH_SIZE }, () => createTestContentItem({ displayValues: {}, values: {} }));
+    it("loads full batch of targets", async () => {
+      const contentItems = Array.from({ length: VALUE_BATCH_SIZE }, () => createTestContentItem({ displayValues: {}, values: {} }));
       getContentStub.callsFake(async () => {
         return new Content(createTestContentDescriptor({ fields: [], categories: [] }), contentItems);
       });
 
-      const { result } = renderHook(useNavigationPropertyTargetsLoader, { initialProps: { imodel: testImodel, ruleset: { id: "testRuleset", rules: [] } } });
+      const { result } = renderHook(useNavigationPropertyTargetsLoader, {
+        initialProps: { imodel: testImodel, ruleset: { id: "testRuleset", rules: [] }, filterText: "" },
+      });
 
       await waitFor(() => {
         // add 1 for the filter reminder option
-        expect(result.current.selectOptions).to.have.lengthOf(NAVIGATION_PROPERTY_TARGETS_BATCH_SIZE + 1);
-        expect(result.current.loadedOptions).to.have.lengthOf(NAVIGATION_PROPERTY_TARGETS_BATCH_SIZE);
+        expect(result.current.selectOptions).to.have.lengthOf(VALUE_BATCH_SIZE + 1);
+        expect(result.current.loadedOptions).to.have.lengthOf(VALUE_BATCH_SIZE);
       });
     });
 
@@ -252,7 +254,7 @@ describe("NavigationPropertyItemsLoader", () => {
 
   beforeEach(() => {
     getItemsStub.callsFake(() => {
-      return Array.from({ length: NAVIGATION_PROPERTY_TARGETS_BATCH_SIZE }, () => {
+      return Array.from({ length: VALUE_BATCH_SIZE }, () => {
         return { label: { displayValue: "filterText" }, key: { id: "0x01" } };
       });
     });
@@ -262,41 +264,32 @@ describe("NavigationPropertyItemsLoader", () => {
     sinon.restore();
   });
 
-  it("does not load items when filter is empty", async () => {
-    const itemsLoader = new NavigationPropertyItemsLoader(
-      () => {},
-      () => {},
-      () => getItemsStub(),
-    );
-    await itemsLoader.loadItems();
-
-    expect(itemsLoader.needsLoadingItems("")).to.be.false;
-  });
-
   it("does not load items when loaded options matches the filter", async () => {
+    const getItemsSpy = sinon.spy();
     const itemsLoader = new NavigationPropertyItemsLoader(
       () => {},
-      () => {},
+      () => getItemsSpy,
       () => getItemsStub(),
     );
     await itemsLoader.loadItems();
+    await itemsLoader.loadItems("filterText");
 
-    expect(itemsLoader.needsLoadingItems("filterText")).to.be.false;
+    expect(getItemsSpy.calledOnce);
   });
 
   it("does not load items when another load process is in progress", async () => {
-    const spy = sinon.spy();
+    const getItemsSpy = sinon.spy();
     const itemsLoader = new NavigationPropertyItemsLoader(
       () => {},
-      () => spy,
+      () => getItemsSpy,
       () => getItemsStub(),
     );
     await Promise.all([itemsLoader.loadItems("filterText"), itemsLoader.loadItems("filterText")]);
 
-    expect(spy.calledOnce);
+    expect(getItemsSpy.calledOnce);
   });
 
-  it("does not load duplicate items", async () => {
+  it("does not load items when enough items matches the filter", async () => {
     const loadedItems = [];
     const itemsLoader = new NavigationPropertyItemsLoader(
       () => {},
@@ -306,6 +299,25 @@ describe("NavigationPropertyItemsLoader", () => {
     await itemsLoader.loadItems("filterText");
     await itemsLoader.loadItems("filterText");
 
-    expect(loadedItems.length).to.be.eq(UNIQUE_PROPERTY_VALUES_BATCH_SIZE);
+    expect(loadedItems.length).to.be.eq(VALUE_BATCH_SIZE);
+  });
+
+  it("does not load duplicate items", async () => {
+    getItemsStub.callsFake(() => {
+      return Array.from({ length: VALUE_BATCH_SIZE / 2 }, () => {
+        return { label: { displayValue: "filterText" }, key: { id: "0x01" } };
+      });
+    });
+
+    const loadedItems = [];
+    const itemsLoader = new NavigationPropertyItemsLoader(
+      () => {},
+      (newItems) => loadedItems.push(...newItems),
+      () => getItemsStub(),
+    );
+    await itemsLoader.loadItems("filterText");
+    await itemsLoader.loadItems("filterText");
+
+    expect(loadedItems.length).to.be.eq(VALUE_BATCH_SIZE / 2);
   });
 });

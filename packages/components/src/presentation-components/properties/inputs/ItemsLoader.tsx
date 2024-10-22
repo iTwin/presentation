@@ -3,7 +3,8 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { UNIQUE_PROPERTY_VALUES_BATCH_SIZE } from "./UseUniquePropertyValuesLoader";
+/** @internal */
+export const VALUE_BATCH_SIZE = 100;
 
 /** @internal */
 export const FILTER_WARNING_OPTION = { label: "Too many values please use filter", value: "__filter__", disabled: true };
@@ -69,7 +70,7 @@ export class ItemsLoader<T> {
     }
 
     const filteredItems = this._loadedItems.filter((option) => this._getOptionLabel(option).toLowerCase().includes(filterText.toLowerCase()));
-    if (filteredItems.length >= UNIQUE_PROPERTY_VALUES_BATCH_SIZE) {
+    if (filteredItems.length >= VALUE_BATCH_SIZE) {
       return;
     }
 
@@ -106,7 +107,7 @@ export class ItemsLoader<T> {
       hasMore = batchHasMore;
       currOffset += length;
       matchingItems = loadedItems.filter((option) => this._getOptionLabel(option).toLowerCase().includes(filterText.toLowerCase()));
-    } while (hasMore && matchingItems.length < UNIQUE_PROPERTY_VALUES_BATCH_SIZE);
+    } while (hasMore && matchingItems.length < VALUE_BATCH_SIZE);
 
     return { options: loadedItems, hasMore, length: currOffset };
   }

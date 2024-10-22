@@ -12,11 +12,11 @@ import { IModelApp, IModelConnection } from "@itwin/core-frontend";
 import { Content, Item, LabelDefinition, NavigationPropertyInfo } from "@itwin/presentation-common";
 import { Presentation, PresentationManager } from "@itwin/presentation-frontend";
 import { PropertyEditorAttributes } from "../../../presentation-components/properties/editors/Common";
+import { VALUE_BATCH_SIZE } from "../../../presentation-components/properties/inputs/ItemsLoader";
 import {
   NavigationPropertyTargetSelector,
   NavigationPropertyTargetSelectorProps,
 } from "../../../presentation-components/properties/inputs/NavigationPropertyTargetSelector";
-import { NAVIGATION_PROPERTY_TARGETS_BATCH_SIZE } from "../../../presentation-components/properties/inputs/UseNavigationPropertyTargetsLoader";
 import { createTestContentDescriptor, createTestContentItem } from "../../_helpers/Content";
 import { render, waitFor } from "../../TestUtils";
 
@@ -228,7 +228,7 @@ describe("NavigationPropertyTargetSelector", () => {
     };
 
     const items: Item[] = [];
-    for (let i = 1; i <= NAVIGATION_PROPERTY_TARGETS_BATCH_SIZE; i++) {
+    for (let i = 1; i <= VALUE_BATCH_SIZE; i++) {
       items.push(
         createTestContentItem({
           label: LabelDefinition.fromLabelString(`1${i.toString()}`),

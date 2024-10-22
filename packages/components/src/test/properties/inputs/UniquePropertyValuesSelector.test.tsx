@@ -23,9 +23,8 @@ import {
 import { Presentation, PresentationManager } from "@itwin/presentation-frontend";
 import { PortalTargetContextProvider } from "../../../presentation-components/common/PortalTargetContext";
 import { serializeUniqueValues, UniqueValue } from "../../../presentation-components/common/Utils";
-import { ItemsLoader } from "../../../presentation-components/properties/inputs/ItemsLoader";
+import { ItemsLoader, VALUE_BATCH_SIZE } from "../../../presentation-components/properties/inputs/ItemsLoader";
 import { UniquePropertyValuesSelector } from "../../../presentation-components/properties/inputs/UniquePropertyValuesSelector";
-import { UNIQUE_PROPERTY_VALUES_BATCH_SIZE } from "../../../presentation-components/properties/inputs/UseUniquePropertyValuesLoader";
 import { createTestECClassInfo, createTestPropertyInfo, createTestRelatedClassInfo, createTestRelationshipPath } from "../../_helpers/Common";
 import {
   createTestCategoryDescription,
@@ -637,16 +636,16 @@ describe("UniquePropertyValuesSelector", () => {
         { displayValue: "SearchedValue2", groupedRawValues: ["SearchedValue2"] },
       ];
 
-      for (let i = 2; i < UNIQUE_PROPERTY_VALUES_BATCH_SIZE; i++) {
+      for (let i = 2; i < VALUE_BATCH_SIZE; i++) {
         const name = `SkippedValue${i}`;
         pageItems.push({ displayValue: name, groupedRawValues: [name] });
       }
 
       getDistinctValuesIteratorStub.withArgs(matchPageStart(0)).resolves({
-        total: UNIQUE_PROPERTY_VALUES_BATCH_SIZE,
+        total: VALUE_BATCH_SIZE,
         items: createAsyncIterator(pageItems),
       });
-      getDistinctValuesIteratorStub.withArgs(matchPageStart(UNIQUE_PROPERTY_VALUES_BATCH_SIZE)).resolves({
+      getDistinctValuesIteratorStub.withArgs(matchPageStart(VALUE_BATCH_SIZE)).resolves({
         total: 2,
         items: createAsyncIterator([
           { displayValue: "SkippedValue", groupedRawValues: ["SkippedValue"] },
@@ -685,22 +684,22 @@ describe("UniquePropertyValuesSelector", () => {
 
     it("loads second page when first page is already loaded and contains no matches", async () => {
       const pageItems = [];
-      for (let i = 0; i < UNIQUE_PROPERTY_VALUES_BATCH_SIZE; i++) {
+      for (let i = 0; i < VALUE_BATCH_SIZE; i++) {
         const name = `SkippedValue${i}`;
         pageItems.push({ displayValue: name, groupedRawValues: [name] });
       }
       // single page of values loaded before search filter is applied
       getDistinctValuesIteratorStub.withArgs(matchPageStart(0)).resolves({
-        total: UNIQUE_PROPERTY_VALUES_BATCH_SIZE,
+        total: VALUE_BATCH_SIZE,
         items: createAsyncIterator(pageItems),
       });
       // next page with search filter applied
-      getDistinctValuesIteratorStub.withArgs(matchPageStart(UNIQUE_PROPERTY_VALUES_BATCH_SIZE)).resolves({
-        total: UNIQUE_PROPERTY_VALUES_BATCH_SIZE,
+      getDistinctValuesIteratorStub.withArgs(matchPageStart(VALUE_BATCH_SIZE)).resolves({
+        total: VALUE_BATCH_SIZE,
         items: createAsyncIterator(pageItems),
       });
       // last page with search filter applied
-      getDistinctValuesIteratorStub.withArgs(matchPageStart(2 * UNIQUE_PROPERTY_VALUES_BATCH_SIZE)).resolves({
+      getDistinctValuesIteratorStub.withArgs(matchPageStart(2 * VALUE_BATCH_SIZE)).resolves({
         total: 2,
         items: createAsyncIterator([
           { displayValue: "SkippedValue", groupedRawValues: ["SkippedValue"] },
@@ -770,13 +769,13 @@ describe("UniquePropertyValuesSelector", () => {
 
     it("correctly determines `hasMore` value when fetched display value is undefined", async () => {
       const pageItems = [];
-      for (let i = 0; i < UNIQUE_PROPERTY_VALUES_BATCH_SIZE - 2; i++) {
+      for (let i = 0; i < VALUE_BATCH_SIZE - 2; i++) {
         const name = `SkippedValue${i}`;
         pageItems.push({ displayValue: name, groupedRawValues: [name] });
       }
       // single page of values loaded before search filter is applied
       getDistinctValuesIteratorStub.withArgs(matchPageStart(0)).resolves({
-        total: UNIQUE_PROPERTY_VALUES_BATCH_SIZE,
+        total: VALUE_BATCH_SIZE,
         items: createAsyncIterator([
           ...pageItems,
           { displayValue: "SearchedValue1", groupedRawValues: ["SearchedValue1"] },
@@ -784,8 +783,8 @@ describe("UniquePropertyValuesSelector", () => {
         ]),
       });
       // next page with search filter applied and an undefined value
-      getDistinctValuesIteratorStub.withArgs(matchPageStart(UNIQUE_PROPERTY_VALUES_BATCH_SIZE)).resolves({
-        total: UNIQUE_PROPERTY_VALUES_BATCH_SIZE,
+      getDistinctValuesIteratorStub.withArgs(matchPageStart(VALUE_BATCH_SIZE)).resolves({
+        total: VALUE_BATCH_SIZE,
         items: createAsyncIterator([
           ...pageItems,
           { displayValue: "SearchedValue2", groupedRawValues: ["SearchedValue2"] },
@@ -793,7 +792,7 @@ describe("UniquePropertyValuesSelector", () => {
         ]),
       });
       // last page with search filter applied
-      getDistinctValuesIteratorStub.withArgs(matchPageStart(2 * UNIQUE_PROPERTY_VALUES_BATCH_SIZE)).resolves({
+      getDistinctValuesIteratorStub.withArgs(matchPageStart(2 * VALUE_BATCH_SIZE)).resolves({
         total: 1,
         items: createAsyncIterator([{ displayValue: "SearchedValue3", groupedRawValues: ["SearchedValue3"] }]),
       });
@@ -1310,8 +1309,8 @@ describe("UniquePropertyValuesSelector", () => {
 
       getItemsStub.callsFake(() => {
         return {
-          options: Array.from({ length: UNIQUE_PROPERTY_VALUES_BATCH_SIZE }, () => "filterText"),
-          length: UNIQUE_PROPERTY_VALUES_BATCH_SIZE,
+          options: Array.from({ length: VALUE_BATCH_SIZE }, () => "filterText"),
+          length: VALUE_BATCH_SIZE,
           hasMore: true,
         };
       });
@@ -1333,8 +1332,8 @@ describe("UniquePropertyValuesSelector", () => {
 
       getItemsStub.callsFake(() => {
         return {
-          options: Array.from({ length: UNIQUE_PROPERTY_VALUES_BATCH_SIZE }, () => "filterText"),
-          length: UNIQUE_PROPERTY_VALUES_BATCH_SIZE,
+          options: Array.from({ length: VALUE_BATCH_SIZE }, () => "filterText"),
+          length: VALUE_BATCH_SIZE,
           hasMore: false,
         };
       });
@@ -1355,8 +1354,8 @@ describe("UniquePropertyValuesSelector", () => {
 
       getItemsStub.callsFake(() => {
         return {
-          options: Array.from({ length: UNIQUE_PROPERTY_VALUES_BATCH_SIZE }, () => "filterText"),
-          length: UNIQUE_PROPERTY_VALUES_BATCH_SIZE,
+          options: Array.from({ length: VALUE_BATCH_SIZE }, () => "filterText"),
+          length: VALUE_BATCH_SIZE,
           hasMore: false,
         };
       });
