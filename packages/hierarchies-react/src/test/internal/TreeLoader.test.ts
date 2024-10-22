@@ -15,10 +15,10 @@ import {
   HierarchyProvider,
   RowsLimitExceededError,
 } from "@itwin/presentation-hierarchies";
-import { LoadedTreePart, TreeLoader } from "../../presentation-hierarchies-react/internal/TreeLoader";
-import { TreeModelHierarchyNode, TreeModelInfoNode, TreeModelNode } from "../../presentation-hierarchies-react/internal/TreeModel";
-import { createNodeId } from "../../presentation-hierarchies-react/internal/Utils";
-import { createTestHierarchyNode, createTreeModelNode } from "../TestUtils";
+import { LoadedTreePart, TreeLoader } from "../../presentation-hierarchies-react/internal/TreeLoader.js";
+import { TreeModelHierarchyNode, TreeModelInfoNode, TreeModelNode } from "../../presentation-hierarchies-react/internal/TreeModel.js";
+import { createNodeId } from "../../presentation-hierarchies-react/internal/Utils.js";
+import { createTestHierarchyNode, createTreeModelNode } from "../TestUtils.js";
 
 describe("TreeLoader", () => {
   const onHierarchyLimitExceededStub = sinon.stub();

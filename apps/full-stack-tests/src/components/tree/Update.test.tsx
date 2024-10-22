@@ -22,7 +22,7 @@ import { ChildNodeSpecificationTypes, Ruleset, RuleTypes } from "@itwin/presenta
 import { IPresentationTreeDataProvider, usePresentationTreeState, UsePresentationTreeStateProps } from "@itwin/presentation-components";
 import { Presentation } from "@itwin/presentation-frontend";
 import { renderHook, waitFor } from "@testing-library/react";
-import { initialize, terminate } from "../../IntegrationTests";
+import { initialize, terminate } from "../../IntegrationTests.js";
 
 describe("Tree update", () => {
   let imodel: IModelConnection;

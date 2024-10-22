@@ -5,12 +5,9 @@
 
 /* eslint-disable no-duplicate-imports */
 import { expect } from "chai";
-import { buildIModel } from "../../IModelUtils";
-import { stubGetBoundingClientRect } from "../../Utils";
 import { SchemaContext } from "@itwin/ecschema-metadata";
 import { IModelConnection } from "@itwin/core-frontend";
 import { render, waitFor } from "@testing-library/react";
-import { initialize, terminate } from "../../IntegrationTests";
 import { ECSchemaRpcLocater } from "@itwin/ecschema-rpcinterface-common";
 import { insertPhysicalModelWithPartition } from "presentation-test-utilities";
 import { createECSchemaProvider, createECSqlQueryExecutor } from "@itwin/presentation-core-interop";
@@ -32,6 +29,9 @@ import {
   TreeRenderer,
 } from "@itwin/presentation-hierarchies-react";
 // __PUBLISH_EXTRACT_END__
+import { buildIModel } from "../../IModelUtils.js";
+import { stubGetBoundingClientRect } from "../../Utils.js";
+import { initialize, terminate } from "../../IntegrationTests.js";
 
 describe("Hierarchies React", () => {
   describe("Learning snippets", () => {

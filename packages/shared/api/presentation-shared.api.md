@@ -418,6 +418,9 @@ interface JoinRelationshipPathStep extends RelationshipPathStep {
 }
 
 // @beta
+export function julianToDateTime(julianDate: number): Date;
+
+// @beta
 export type LogFunction = (category: string, message: string) => void;
 
 // @beta

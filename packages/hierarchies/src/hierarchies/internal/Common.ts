@@ -5,7 +5,7 @@
 
 import naturalCompare from "natural-compare-lite";
 import { ConcatenatedValue } from "@itwin/presentation-shared";
-import { HierarchyNodeKey } from "../HierarchyNodeKey";
+import { HierarchyNodeKey } from "../HierarchyNodeKey.js";
 
 /**
  * This is a logging namespace for public log messages that may be interesting to consumers.
@@ -46,7 +46,7 @@ export function createOperatorLoggingNamespace(
 }
 
 /** @internal */
-// istanbul ignore next
+/* istanbul ignore next */
 export function createNodeIdentifierForLogging(
   node: { label: string | ConcatenatedValue; key: HierarchyNodeKey; parentKeys?: HierarchyNodeKey[] } | undefined,
 ) {

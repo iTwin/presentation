@@ -4,10 +4,10 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { createMainThreadReleaseOnTimePassedHandler, EC, ECClassHierarchyInspector, ECSchemaProvider, getClass } from "@itwin/presentation-shared";
-import { HierarchyNode, ParentHierarchyNode } from "../../../HierarchyNode";
-import { ClassGroupingNodeKey } from "../../../HierarchyNodeKey";
-import { ProcessedInstanceHierarchyNode } from "../../IModelHierarchyNode";
-import { GroupingHandler, GroupingHandlerResult } from "../Grouping";
+import { HierarchyNode, ParentHierarchyNode } from "../../../HierarchyNode.js";
+import { ClassGroupingNodeKey } from "../../../HierarchyNodeKey.js";
+import { ProcessedInstanceHierarchyNode } from "../../IModelHierarchyNode.js";
+import { GroupingHandler, GroupingHandlerResult } from "../Grouping.js";
 
 /** @internal */
 export async function getBaseClassGroupingECClasses(
@@ -63,7 +63,7 @@ export async function createBaseClassGroupsForSingleBaseClass(
     const fullCurrentNodeClassName = node.key.instanceKeys[0].className;
 
     const baseCheckerResult = classHierarchyInspector.classDerivesFrom(fullCurrentNodeClassName, baseClassFullName);
-    // istanbul ignore next
+    /* istanbul ignore next */
     const isCurrentNodeClassOfBase = baseCheckerResult instanceof Promise ? await baseCheckerResult : baseCheckerResult;
 
     if (isCurrentNodeClassOfBase) {

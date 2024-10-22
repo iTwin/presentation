@@ -65,6 +65,7 @@ The hook takes 2 required properties:
   import { IModelConnection } from "@itwin/core-frontend";
   import { SchemaContext } from "@itwin/ecschema-metadata";
   import { ECSchemaRpcLocater } from "@itwin/ecschema-rpcinterface-common";
+  import { createCachingECClassHierarchyInspector } from "@itwin/presentation-shared";
   import { createECSchemaProvider, createECSqlQueryExecutor } from "@itwin/presentation-core-interop";
   import { createLimitingECSqlQueryExecutor, createNodesQueryClauseFactory, HierarchyDefinition } from "@itwin/presentation-hierarchies";
 
@@ -209,21 +210,22 @@ The component is based on `TreeNode` component from iTwinUI library and supports
 
 ## Full example
 
-<!-- [[include: [Presentation.HierarchiesReact.iModelAccess.Imports, Presentation.HierarchiesReact.SelectionStorage.Imports, Presentation.HierarchiesReact.CustomTreeExample.Imports, Presentation.HierarchiesReact.iModelAccess, Presentation.HierarchiesReact.SelectionStorage, Presentation.HierarchiesReact.CustomTreeExample], tsx]] -->
+<!-- [[include: [Presentation.HierarchiesReact.iModelAccess.Imports, Presentation.HierarchiesReact.CustomTreeExample.Imports, Presentation.HierarchiesReact.SelectionStorage.Imports, Presentation.HierarchiesReact.iModelAccess, Presentation.HierarchiesReact.SelectionStorage, Presentation.HierarchiesReact.CustomTreeExample], tsx]] -->
 <!-- BEGIN EXTRACTION -->
 
 ```tsx
 import { IModelConnection } from "@itwin/core-frontend";
 import { SchemaContext } from "@itwin/ecschema-metadata";
 import { ECSchemaRpcLocater } from "@itwin/ecschema-rpcinterface-common";
+import { createCachingECClassHierarchyInspector } from "@itwin/presentation-shared";
 import { createECSchemaProvider, createECSqlQueryExecutor } from "@itwin/presentation-core-interop";
 import { createLimitingECSqlQueryExecutor, createNodesQueryClauseFactory, HierarchyDefinition } from "@itwin/presentation-hierarchies";
+
+import { createBisInstanceLabelSelectClauseFactory } from "@itwin/presentation-shared";
 
 import { TreeRenderer, UnifiedSelectionProvider, useIModelUnifiedSelectionTree } from "@itwin/presentation-hierarchies-react";
 import { createStorage } from "@itwin/unified-selection";
 import { useEffect, useState } from "react";
-
-import { createBisInstanceLabelSelectClauseFactory, createCachingECClassHierarchyInspector } from "@itwin/presentation-shared";
 
 // Not really part of the package, but we need SchemaContext to create the tree state. It's
 // recommended to cache the schema context and reuse it across different application's components to

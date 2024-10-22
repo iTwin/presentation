@@ -5,11 +5,11 @@
 
 import { expect } from "chai";
 import { ComponentPropsWithoutRef } from "react";
-import { MAX_LIMIT_OVERRIDE } from "../../presentation-hierarchies-react/internal/Utils";
-import { TreeRenderer } from "../../presentation-hierarchies-react/itwinui/TreeRenderer";
-import { PresentationHierarchyNode, PresentationInfoNode, PresentationTreeNode } from "../../presentation-hierarchies-react/TreeNode";
-import { HierarchyLevelDetails } from "../../presentation-hierarchies-react/UseTree";
-import { act, createStub, createTestHierarchyNode, render, stubGetBoundingClientRect, waitFor, within } from "../TestUtils";
+import { MAX_LIMIT_OVERRIDE } from "../../presentation-hierarchies-react/internal/Utils.js";
+import { TreeRenderer } from "../../presentation-hierarchies-react/itwinui/TreeRenderer.js";
+import { PresentationHierarchyNode, PresentationInfoNode, PresentationTreeNode } from "../../presentation-hierarchies-react/TreeNode.js";
+import { HierarchyLevelDetails } from "../../presentation-hierarchies-react/UseTree.js";
+import { act, createStub, createTestHierarchyNode, render, stubGetBoundingClientRect, waitFor, within } from "../TestUtils.js";
 
 type RequiredTreeProps = Required<ComponentPropsWithoutRef<typeof TreeRenderer>>;
 

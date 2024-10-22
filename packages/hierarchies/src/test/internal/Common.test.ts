@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { expect } from "chai";
-import { hasChildren } from "../../hierarchies/internal/Common";
+import { hasChildren } from "../../hierarchies/internal/Common.js";
 
 describe("hasChildren", () => {
   it("returns correct value", () => {

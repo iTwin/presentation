@@ -25,8 +25,8 @@ import {
   StrengthDirection,
 } from "@itwin/ecschema-metadata";
 import { EC } from "@itwin/presentation-shared";
-import { createECSchemaProvider } from "../core-interop/Metadata";
-import { createECClass, createECProperty, createECSchema } from "../core-interop/MetadataInternal";
+import { createECSchemaProvider } from "../core-interop/Metadata.js";
+import { createECClass, createECProperty, createECSchema } from "../core-interop/MetadataInternal.js";
 
 describe("createECSchemaProvider", () => {
   describe("getSchema", () => {

@@ -6,24 +6,24 @@
 import { concat, concatAll, delay, EMPTY, expand, finalize, from, last, map, merge, mergeMap, Observable, of, reduce, tap, toArray } from "rxjs";
 import { assert, StopWatch } from "@itwin/core-bentley";
 import { ECClassHierarchyInspector, ECSchemaProvider, IPrimitiveValueFormatter } from "@itwin/presentation-shared";
-import { HierarchyNode, ParentHierarchyNode } from "../../HierarchyNode";
+import { HierarchyNode, ParentHierarchyNode } from "../../HierarchyNode.js";
 import {
   LOGGING_NAMESPACE_PERFORMANCE as BASE_LOGGING_NAMESPACE_PERFORMANCE,
   LOGGING_NAMESPACE_PERFORMANCE_INTERNAL as BASE_LOGGING_NAMESPACE_PERFORMANCE_INTERNAL,
   createNodeIdentifierForLogging,
   createOperatorLoggingNamespace,
   LOGGING_NAMESPACE_INTERNAL,
-} from "../../internal/Common";
-import { doLog, log } from "../../internal/LoggingUtils";
-import { releaseMainThreadOnItemsCount } from "../../internal/operators/ReleaseMainThread";
-import { tapOnce } from "../../internal/operators/TapOnce";
-import { ProcessedGroupingHierarchyNode, ProcessedHierarchyNode, ProcessedInstanceHierarchyNode } from "../IModelHierarchyNode";
-import { assignAutoExpand } from "./grouping/AutoExpand";
-import { createBaseClassGroupingHandlers } from "./grouping/BaseClassGrouping";
-import { createClassGroups } from "./grouping/ClassGrouping";
-import { applyGroupHidingParams } from "./grouping/GroupHiding";
-import { createLabelGroups } from "./grouping/LabelGrouping";
-import { createPropertiesGroupingHandlers, PropertiesGroupingLocalizedStrings } from "./grouping/PropertiesGrouping";
+} from "../../internal/Common.js";
+import { doLog, log } from "../../internal/LoggingUtils.js";
+import { releaseMainThreadOnItemsCount } from "../../internal/operators/ReleaseMainThread.js";
+import { tapOnce } from "../../internal/operators/TapOnce.js";
+import { ProcessedGroupingHierarchyNode, ProcessedHierarchyNode, ProcessedInstanceHierarchyNode } from "../IModelHierarchyNode.js";
+import { assignAutoExpand } from "./grouping/AutoExpand.js";
+import { createBaseClassGroupingHandlers } from "./grouping/BaseClassGrouping.js";
+import { createClassGroups } from "./grouping/ClassGrouping.js";
+import { applyGroupHidingParams } from "./grouping/GroupHiding.js";
+import { createLabelGroups } from "./grouping/LabelGrouping.js";
+import { createPropertiesGroupingHandlers, PropertiesGroupingLocalizedStrings } from "./grouping/PropertiesGrouping.js";
 
 const OPERATOR_NAME = "Grouping";
 /** @internal */
@@ -69,7 +69,7 @@ export function createGroupingOperator(
       mergeMap((res) => {
         const out = of(res);
         const totalNodes = res.instanceNodes.length + res.restNodes.length;
-        // istanbul ignore next
+        /* istanbul ignore next */
         return totalNodes <= 1000 ? out : out.pipe(delay(0));
       }),
       mergeMap(({ instanceNodes, restNodes }): Observable<ProcessedHierarchyNode> => {

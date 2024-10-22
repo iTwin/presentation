@@ -13,8 +13,8 @@ import {
   GenericInstanceFilterRuleOperator,
 } from "@itwin/core-common";
 import { EC, trimWhitespace } from "@itwin/presentation-shared";
-import { createNodesQueryClauseFactory, NodeSelectClauseColumnNames, NodesQueryClauseFactory } from "../../hierarchies/imodel/NodeSelectQueryFactory";
-import { createIModelAccessStub, createInstanceLabelSelectClauseFactoryStub } from "../Utils";
+import { createNodesQueryClauseFactory, NodeSelectClauseColumnNames, NodesQueryClauseFactory } from "../../hierarchies/imodel/NodeSelectQueryFactory.js";
+import { createIModelAccessStub, createInstanceLabelSelectClauseFactoryStub } from "../Utils.js";
 
 describe("createNodesQueryClauseFactory", () => {
   let imodelAccess: ReturnType<typeof createIModelAccessStub>;

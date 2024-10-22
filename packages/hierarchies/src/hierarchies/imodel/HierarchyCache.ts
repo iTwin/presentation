@@ -5,8 +5,8 @@
 
 import { LRUCache, LRUDictionary, LRUMap } from "@itwin/core-bentley";
 import { InstanceKey } from "@itwin/presentation-shared";
-import { HierarchyNodeKey } from "../HierarchyNodeKey";
-import { GetHierarchyNodesProps } from "../HierarchyProvider";
+import { HierarchyNodeKey } from "../HierarchyNodeKey.js";
+import { GetHierarchyNodesProps } from "../HierarchyProvider.js";
 
 interface HierarchyCacheEntry<T> {
   /** Stores observables for the default case - no instance filter or custom limit for the hierarchy level. */

@@ -4,9 +4,7 @@
   "functions": 100,
   "branches": 100,
   "lines": 100,
-  "include": ["src/**/*", "lib/cjs/**/*"],
-  "exclude": ["src/presentation-opentelemetry.ts", "src/test/**", "lib/cjs/test/**"],
-  "extension": [".ts"],
+  "include": ["src/presentation-opentelemetry/**/*", "lib/cjs/presentation-opentelemetry/**/*"],
   "temp-dir": "./lib/test/coverage/.nyc_output",
   "report-dir": "./lib/test/coverage",
   "reporter": ["text-summary", "lcov", "cobertura"]

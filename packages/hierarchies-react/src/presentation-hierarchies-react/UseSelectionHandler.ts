@@ -4,8 +4,8 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { useCallback, useEffect, useRef } from "react";
-import { isPresentationHierarchyNode, PresentationHierarchyNode, PresentationTreeNode } from "./TreeNode";
-import { useTree } from "./UseTree";
+import { isPresentationHierarchyNode, PresentationHierarchyNode, PresentationTreeNode } from "./TreeNode.js";
+import { useTree } from "./UseTree.js";
 
 /**
  * A union of different supported selection modes in a tree component:

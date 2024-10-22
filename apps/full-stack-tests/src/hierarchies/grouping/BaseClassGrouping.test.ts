@@ -8,11 +8,11 @@ import { PhysicalPartition, Subject } from "@itwin/core-backend";
 import { IModel } from "@itwin/core-common";
 import { IModelConnection } from "@itwin/core-frontend";
 import { createNodesQueryClauseFactory, HierarchyDefinition } from "@itwin/presentation-hierarchies";
-import { buildIModel } from "../../IModelUtils";
-import { initialize, terminate } from "../../IntegrationTests";
-import { NodeValidators, validateHierarchy } from "../HierarchyValidation";
-import { createIModelAccess, createProvider } from "../Utils";
 import { createBisInstanceLabelSelectClauseFactory } from "@itwin/presentation-shared";
+import { buildIModel } from "../../IModelUtils.js";
+import { initialize, terminate } from "../../IntegrationTests.js";
+import { NodeValidators, validateHierarchy } from "../HierarchyValidation.js";
+import { createIModelAccess, createProvider } from "../Utils.js";
 
 describe("Hierarchies", () => {
   describe("Base class grouping", () => {

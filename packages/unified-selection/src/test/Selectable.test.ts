@@ -5,8 +5,8 @@
 
 import { expect } from "chai";
 import sinon from "sinon";
-import { CustomSelectable, Selectable, SelectableInstanceKey, Selectables } from "../unified-selection/Selectable";
-import { createCustomSelectable, createECInstanceId, createSelectableInstanceKey } from "./_helpers/SelectablesCreator";
+import { CustomSelectable, Selectable, SelectableInstanceKey, Selectables } from "../unified-selection/Selectable.js";
+import { createCustomSelectable, createECInstanceId, createSelectableInstanceKey } from "./_helpers/SelectablesCreator.js";
 
 describe("Selectable", () => {
   describe("isInstanceKey", () => {

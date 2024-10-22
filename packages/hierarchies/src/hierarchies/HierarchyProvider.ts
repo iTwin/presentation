@@ -7,10 +7,10 @@ import { filter, first, from, map, mergeMap, of } from "rxjs";
 import { BeEvent, isIDisposable } from "@itwin/core-bentley";
 import { GenericInstanceFilter } from "@itwin/core-common";
 import { Event, InstanceKey, IPrimitiveValueFormatter } from "@itwin/presentation-shared";
-import { HierarchyFilteringPath } from "./HierarchyFiltering";
-import { HierarchyNode, ParentHierarchyNode } from "./HierarchyNode";
-import { eachValueFrom } from "./internal/EachValueFrom";
-import { sortNodesByLabelOperator } from "./internal/operators/Sorting";
+import { HierarchyFilteringPath } from "./HierarchyFiltering.js";
+import { HierarchyNode, ParentHierarchyNode } from "./HierarchyNode.js";
+import { eachValueFrom } from "./internal/EachValueFrom.js";
+import { sortNodesByLabelOperator } from "./internal/operators/Sorting.js";
 
 /**
  * Props for the `HierarchyProvider.getNodes` call.

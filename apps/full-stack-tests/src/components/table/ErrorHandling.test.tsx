@@ -14,9 +14,9 @@ import { TableColumnDefinition, TableRowDefinition, usePresentationTable } from 
 import { Presentation } from "@itwin/presentation-frontend";
 import { buildTestIModel } from "@itwin/presentation-testing";
 import { render } from "@testing-library/react";
-import { initialize, terminate } from "../../IntegrationTests";
-import { ensureHasError, ErrorBoundary } from "../ErrorBoundary";
-import { ensureTableHasRowsWithCellValues } from "../TableUtils";
+import { initialize, terminate } from "../../IntegrationTests.js";
+import { ensureHasError, ErrorBoundary } from "../ErrorBoundary.js";
+import { ensureTableHasRowsWithCellValues } from "../TableUtils.js";
 
 /* eslint-disable @typescript-eslint/naming-convention */
 

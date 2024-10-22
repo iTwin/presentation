@@ -5,13 +5,13 @@
 
 import { concat, defer, EMPTY, filter, finalize, map, merge, mergeAll, mergeMap, Observable, take } from "rxjs";
 import { assert } from "@itwin/core-bentley";
-import { GenericNodeKey, HierarchyNodeKey, InstancesNodeKey } from "../../HierarchyNodeKey";
-import { createNodeIdentifierForLogging, createOperatorLoggingNamespace, hasChildren, LOGGING_NAMESPACE_INTERNAL } from "../../internal/Common";
-import { doLog, log } from "../../internal/LoggingUtils";
-import { partition } from "../../internal/operators/Partition";
-import { reduceToMergeMapItem } from "../../internal/operators/ReduceToMergeMap";
-import { ProcessedGenericHierarchyNode, ProcessedHierarchyNode, ProcessedInstanceHierarchyNode } from "../IModelHierarchyNode";
-import { mergeInstanceNodes } from "../Utils";
+import { GenericNodeKey, HierarchyNodeKey, InstancesNodeKey } from "../../HierarchyNodeKey.js";
+import { createNodeIdentifierForLogging, createOperatorLoggingNamespace, hasChildren, LOGGING_NAMESPACE_INTERNAL } from "../../internal/Common.js";
+import { doLog, log } from "../../internal/LoggingUtils.js";
+import { partition } from "../../internal/operators/Partition.js";
+import { reduceToMergeMapItem } from "../../internal/operators/ReduceToMergeMap.js";
+import { ProcessedGenericHierarchyNode, ProcessedHierarchyNode, ProcessedInstanceHierarchyNode } from "../IModelHierarchyNode.js";
+import { mergeInstanceNodes } from "../Utils.js";
 
 const OPERATOR_NAME = "HideNodesInHierarchy";
 /** @internal */

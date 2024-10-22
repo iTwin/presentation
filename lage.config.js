@@ -8,17 +8,17 @@ module.exports = {
     build: {
       dependsOn: ["^build"],
       outputs: ["lib/**"],
-      inputs: ["src/**"],
+      inputs: ["src/**", "tsconfig*.json"],
     },
     cover: {
       dependsOn: ["build"],
       outputs: [],
-      inputs: ["lib/**"],
+      inputs: ["lib/**", ".mocharc.json", ".nycrc"],
     },
     lint: {
       dependsOn: ["build"],
       outputs: [],
-      inputs: ["src/**"],
+      inputs: ["src/**", "eslint.config.cjs"],
     },
     docs: {
       dependsOn: ["build"],

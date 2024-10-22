@@ -5,16 +5,16 @@
 
 import { expect } from "chai";
 import sinon from "sinon";
-import { ConcatenatedValue } from "../shared/ConcatenatedValue";
-import { createConcatenatedValueJsonSelector, createRawPropertyValueSelector } from "../shared/ecsql-snippets/ECSqlValueSelectorSnippets";
+import { ConcatenatedValue } from "../shared/ConcatenatedValue.js";
+import { createConcatenatedValueJsonSelector, createRawPropertyValueSelector } from "../shared/ecsql-snippets/ECSqlValueSelectorSnippets.js";
 import {
   createBisInstanceLabelSelectClauseFactory,
   createClassBasedInstanceLabelSelectClauseFactory,
   createDefaultInstanceLabelSelectClauseFactory,
   IInstanceLabelSelectClauseFactory,
   parseInstanceLabel,
-} from "../shared/InstanceLabelSelectClauseFactory";
-import { trimWhitespace } from "../shared/Utils";
+} from "../shared/InstanceLabelSelectClauseFactory.js";
+import { trimWhitespace } from "../shared/Utils.js";
 
 describe("parseInstanceLabel", () => {
   it("parses empty value", () => {

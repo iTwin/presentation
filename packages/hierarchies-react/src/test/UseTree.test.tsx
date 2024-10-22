@@ -11,7 +11,7 @@ import { BeEvent } from "@itwin/core-bentley";
 import * as hierarchiesModule from "@itwin/presentation-hierarchies";
 import { IPrimitiveValueFormatter } from "@itwin/presentation-shared";
 import { createStorage, Selectables, SelectionStorage, StorageSelectionChangeEventArgs, StorageSelectionChangesListener } from "@itwin/unified-selection";
-import { createNodeId } from "../presentation-hierarchies-react/internal/Utils";
+import { createNodeId } from "../presentation-hierarchies-react/internal/Utils.js";
 import {
   PresentationGenericInfoNode,
   PresentationHierarchyNode,
@@ -19,10 +19,10 @@ import {
   PresentationNoFilterMatchesInfoNode,
   PresentationResultSetTooLargeInfoNode,
   PresentationTreeNode,
-} from "../presentation-hierarchies-react/TreeNode";
-import { UnifiedSelectionProvider } from "../presentation-hierarchies-react/UnifiedSelectionContext";
-import { useTree, useUnifiedSelectionTree } from "../presentation-hierarchies-react/UseTree";
-import { act, cleanup, createStub, createTestGroupingNode, createTestHierarchyNode, renderHook, waitFor } from "./TestUtils";
+} from "../presentation-hierarchies-react/TreeNode.js";
+import { UnifiedSelectionProvider } from "../presentation-hierarchies-react/UnifiedSelectionContext.js";
+import { useTree, useUnifiedSelectionTree } from "../presentation-hierarchies-react/UseTree.js";
+import { act, cleanup, createStub, createTestGroupingNode, createTestHierarchyNode, renderHook, waitFor } from "./TestUtils.js";
 
 describe("useTree", () => {
   const hierarchyProvider = {

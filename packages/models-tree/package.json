@@ -20,14 +20,21 @@
     "name": "Bentley Systems, Inc.",
     "url": "http://www.bentley.com"
   },
+  "type": "module",
   "main": "lib/cjs/models-tree.js",
+  "types": "lib/cjs/models-tree",
   "module": "lib/esm/models-tree.js",
-  "types": "lib/cjs/models-tree.d.ts",
+  "exports": {
+    ".": {
+      "import": "./lib/esm/models-tree.js",
+      "require": "./lib/cjs/models-tree.js"
+    },
+    "./package.json": "./package.json"
+  },
   "scripts": {
     "build": "npm run -s build:cjs && npm run -s build:esm",
-    "build:cjs": "tsc -p tsconfig.cjs.json",
+    "build:cjs": "node ../../scripts/package-cjs.mjs ./lib/cjs && tsc -p tsconfig.cjs.json",
     "build:esm": "tsc -p tsconfig.esm.json",
-    "build:watch": "npm run -s build:cjs -- -w",
     "clean": "rimraf lib",
     "lint": "eslint ./src/**/*.ts"
   },

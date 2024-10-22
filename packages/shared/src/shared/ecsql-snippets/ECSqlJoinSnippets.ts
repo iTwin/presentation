@@ -3,8 +3,8 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { EC, ECSchemaProvider, getClass, RelationshipPath, RelationshipPathStep } from "../Metadata";
-import { createRawPropertyValueSelector } from "./ECSqlValueSelectorSnippets";
+import { EC, ECSchemaProvider, getClass, RelationshipPath, RelationshipPathStep } from "../Metadata.js";
+import { createRawPropertyValueSelector } from "./ECSqlValueSelectorSnippets.js";
 
 /**
  * Describes a single JOIN step from source to target through a relationship.
@@ -148,13 +148,11 @@ async function getNavigationProperty(step: ResolvedRelationshipPathStep): Promis
   const source = !step.relationshipReverse ? step.source : step.target;
   const target = !step.relationshipReverse ? step.target : step.source;
   for (const prop of await source.getProperties()) {
-    // istanbul ignore else
     if (prop.isNavigation() && prop.direction === "Forward" && (await prop.relationshipClass).fullName === step.relationship.fullName) {
       return prop;
     }
   }
   for (const prop of await target.getProperties()) {
-    // istanbul ignore else
     if (prop.isNavigation() && prop.direction === "Backward" && (await prop.relationshipClass).fullName === step.relationship.fullName) {
       return prop;
     }

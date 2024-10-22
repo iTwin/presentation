@@ -15,8 +15,8 @@ import { PresentationTree, PresentationTreeRenderer, usePresentationTreeState } 
 import { Presentation } from "@itwin/presentation-frontend";
 import { buildTestIModel } from "@itwin/presentation-testing";
 import { getByRole, render, waitFor } from "@testing-library/react";
-import { initialize, terminate } from "../../IntegrationTests";
-import { getNodeByLabel, toggleExpandNode } from "../TreeUtils";
+import { initialize, terminate } from "../../IntegrationTests.js";
+import { getNodeByLabel, toggleExpandNode } from "../TreeUtils.js";
 
 /* eslint-disable @typescript-eslint/naming-convention */
 

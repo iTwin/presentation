@@ -6,7 +6,7 @@
 import { expect } from "chai";
 import { Observable } from "rxjs";
 import * as sinon from "sinon";
-import { shareReplayWithErrors } from "../../../hierarchies/internal/operators/ShareReplayWithErrors";
+import { shareReplayWithErrors } from "../../../hierarchies/internal/operators/ShareReplayWithErrors.js";
 
 describe("shareReplayWithErrors", () => {
   it(`has "replay" behavior`, () => {
