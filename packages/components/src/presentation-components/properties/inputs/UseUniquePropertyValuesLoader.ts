@@ -57,7 +57,7 @@ export function useUniquePropertyValuesLoader({
 
     const loader = new ItemsLoader(
       () => {
-        setLoadedOptions((prev) => ({ ...prev, loading: true }));
+        setLoadedOptions((prev) => ({ ...prev, isLoading: true }));
       },
       (newItems) => {
         setLoadedOptions((prev) => ({
