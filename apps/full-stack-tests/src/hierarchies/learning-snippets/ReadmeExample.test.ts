@@ -33,8 +33,6 @@ import { createBisInstanceLabelSelectClauseFactory, ECSqlBinding } from "@itwin/
 import { buildIModel } from "../../IModelUtils.js";
 import { initialize, terminate } from "../../IntegrationTests.js";
 
-// __PUBLISH_EXTRACT_END__
-
 // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.IModelAccess
 // Not really part of the package, but we need SchemaContext to create a hierarchy provider. It's
 // recommended to cache the schema context and reuse it across different application's components to
