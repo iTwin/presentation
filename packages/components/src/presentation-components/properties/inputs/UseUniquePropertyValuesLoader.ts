@@ -10,12 +10,10 @@ import { SelectOption } from "@itwin/itwinui-react";
 import { DisplayValue, DisplayValueGroup, Field, FieldDescriptor, Keys, KeySet, Ruleset } from "@itwin/presentation-common";
 import { Presentation } from "@itwin/presentation-frontend";
 import { translate, UniqueValue } from "../../common/Utils";
+import { FILTER_WARNING_OPTION, ItemsLoader } from "./ItemsLoader";
 
 /** @internal */
 export const UNIQUE_PROPERTY_VALUES_BATCH_SIZE = 100;
-
-/** @internal */
-export const FILTER_WARNING_OPTION = { label: "Too many values please use filter", value: "__filter__", disabled: true };
 
 interface UseUniquePropertyValuesLoaderProps {
   imodel: IModelConnection;
@@ -69,9 +67,8 @@ export function useUniquePropertyValuesLoader({
       },
       async (offset: number) => getItems({ imodel, offset, field: field.getFieldDescriptor(), ruleset, keys: new KeySet(descriptorInputKeys) }),
       (option) => option.displayValue,
-      initialSelectedValues,
     );
-    void loader.loadInitialItems();
+    void loader.loadInitialItems(initialSelectedValues);
     setItemsLoader(loader);
     return () => {
       loader.dispose();
@@ -80,14 +77,12 @@ export function useUniquePropertyValuesLoader({
 
   // On filter text change, check if more items need to be loaded
   useEffect(() => {
-    if (!filterText) {
+    if (!filterText || !itemsLoader) {
       return;
     }
 
     const timeout = setTimeout(() => {
-      if (itemsLoader?.needsLoadingItems(filterText)) {
-        void itemsLoader?.loadItems(filterText);
-      }
+      void itemsLoader?.loadItems(filterText);
     }, 250);
 
     return () => {
@@ -190,113 +185,4 @@ async function getItems({
     length: items.length,
     hasMore,
   };
-}
-
-interface LoadedItems<T> {
-  options: T[];
-  length: number;
-  hasMore: boolean;
-}
-
-/** @internal */
-export class ItemsLoader<T> {
-  private _loadedItems: T[] = [];
-  private _isLoading = false;
-  private _hasMore = true;
-  private _disposed = false;
-  private _offset = 0;
-
-  constructor(
-    private _beforeLoad: () => void,
-    private _onItemsLoaded: (newItems: T[]) => void,
-    private _loadItems: (offSet: number) => Promise<LoadedItems<T>>,
-    private _getOptionLabel: (option: T) => string,
-    private _initialSelectedValues?: string[],
-  ) {}
-
-  public dispose() {
-    this._disposed = true;
-  }
-
-  public needsLoadingItems(filterText?: string) {
-    if (!this._hasMore || !filterText) {
-      return false;
-    }
-
-    const filteredItems = this._loadedItems.filter((option) => this._getOptionLabel(option).toLowerCase().includes(filterText.toLowerCase()));
-    return filteredItems.length < UNIQUE_PROPERTY_VALUES_BATCH_SIZE;
-  }
-
-  public async loadInitialItems() {
-    let currOffset = this._offset;
-    let hasMore = this._hasMore;
-    const loadedItems: T[] = [];
-
-    this._isLoading = true;
-    this._beforeLoad();
-
-    do {
-      const { options, hasMore: batchHasMore, length } = await this._loadItems(currOffset);
-
-      if (this._disposed) {
-        return;
-      }
-
-      options.forEach((option) => {
-        this._initialSelectedValues = this._initialSelectedValues?.filter((initialSelectedValue) => initialSelectedValue !== this._getOptionLabel(option));
-      });
-
-      loadedItems.push(...options);
-      hasMore = batchHasMore;
-      currOffset += length;
-    } while (hasMore && this._initialSelectedValues && this._initialSelectedValues.length > 0);
-    this._loadedItems.push(...loadedItems);
-    this._offset = currOffset;
-    this._hasMore = hasMore;
-    this._onItemsLoaded(loadedItems);
-    this._isLoading = false;
-  }
-
-  public async loadItems(filterText: string) {
-    if (this._isLoading || !this._hasMore) {
-      return;
-    }
-
-    this._isLoading = true;
-    this._beforeLoad();
-
-    const { options, hasMore, length } = await this.loadFilteredItems(filterText);
-
-    if (this._disposed) {
-      return;
-    }
-
-    this._loadedItems.push(...options);
-    this._offset += length;
-    this._hasMore = hasMore;
-    this._onItemsLoaded(options);
-    this._isLoading = false;
-  }
-
-  private async loadFilteredItems(filterText: string) {
-    const loadedItems: T[] = [];
-    let currOffset = this._offset;
-    let hasMore = this._hasMore;
-    let matchingItems: T[] = [];
-
-    do {
-      const { options, hasMore: batchHasMore, length } = await this._loadItems(currOffset);
-
-      if (this._disposed) {
-        return { options: loadedItems, hasMore, length };
-      }
-
-      loadedItems.push(...options);
-      hasMore = batchHasMore;
-      currOffset += length;
-      matchingItems = loadedItems.filter((option) => this._getOptionLabel(option).toLowerCase().includes(filterText.toLowerCase()));
-    } while (hasMore && matchingItems.length < UNIQUE_PROPERTY_VALUES_BATCH_SIZE);
-
-    return { options: loadedItems, hasMore, length: currOffset };
-  }
 }

@@ -23,7 +23,7 @@ import {
   RuleTypes,
 } from "@itwin/presentation-common";
 import { Presentation } from "@itwin/presentation-frontend";
-import { FILTER_WARNING_OPTION } from "./UseUniquePropertyValuesLoader";
+import { FILTER_WARNING_OPTION } from "./ItemsLoader";
 
 /** @internal */
 export const NAVIGATION_PROPERTY_TARGETS_BATCH_SIZE = 100;
@@ -94,6 +94,10 @@ export function useNavigationPropertyTargetsLoader(props: UseNavigationPropertyT
 
   // On filter text change, check if more items need to be loaded
   useEffect(() => {
+    if (!itemsLoader) {
+      return;
+    }
+
     const timeout = setTimeout(() => {
       if (itemsLoader?.needsLoadingItems(filterText)) {
         void itemsLoader?.loadItems(filterText);

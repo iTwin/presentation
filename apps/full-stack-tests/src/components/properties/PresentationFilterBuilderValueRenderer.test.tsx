@@ -34,6 +34,7 @@ describe("Presentation filter builder value renderer", () => {
   });
 
   after(async () => {
+    sinon.restore();
     await terminate();
   });
 

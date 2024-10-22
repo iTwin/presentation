@@ -12,13 +12,13 @@ import { ComboBox, SelectOption } from "@itwin/itwinui-react";
 import { InstanceKey, LabelDefinition, NavigationPropertyInfo } from "@itwin/presentation-common";
 import { translate } from "../../common/Utils";
 import { PropertyEditorAttributes } from "../editors/Common";
+import { FILTER_WARNING_OPTION } from "./ItemsLoader";
 import {
   NAVIGATION_PROPERTY_TARGETS_BATCH_SIZE,
   NavigationPropertyTarget,
   useNavigationPropertyTargetsLoader,
   useNavigationPropertyTargetsRuleset,
 } from "./UseNavigationPropertyTargetsLoader";
-import { FILTER_WARNING_OPTION } from "./UseUniquePropertyValuesLoader";
 
 /** @internal */
 export interface NavigationPropertyTargetSelectorProps extends PropertyEditorProps {
@@ -45,11 +45,12 @@ export const NavigationPropertyTargetSelector = forwardRef<PropertyEditorAttribu
   }, [isLoading]);
 
   const onChange = useCallback(
-    (target?: NavigationPropertyTarget) => {
-      setSelectedTarget(target);
-      target && onCommit && onCommit({ propertyRecord, newValue: getPropertyValue(target) });
+    (newValue?: string) => {
+      const newSelectedTarget = loadedOptions.find((loadedOption) => loadedOption.label.displayValue === newValue);
+      setSelectedTarget(newSelectedTarget);
+      newSelectedTarget && onCommit && onCommit({ propertyRecord, newValue: getPropertyValue(newSelectedTarget) });
     },
-    [propertyRecord, onCommit],
+    [loadedOptions, onCommit, propertyRecord],
   );
 
   const divRef = useRef<HTMLDivElement>(null);
@@ -75,10 +76,7 @@ export const NavigationPropertyTargetSelector = forwardRef<PropertyEditorAttribu
       multiple={false}
       enableVirtualization={true}
       options={selectOptions}
-      onChange={(newValue) => {
-        const newSelectedTarget = loadedOptions.find((loadedOption) => loadedOption.label.displayValue === newValue);
-        onChange(newSelectedTarget);
-      }}
+      onChange={(newValue) => onChange(newValue)}
       filterFunction={(options: SelectOption<string>[], inputValue: string) => {
         const filteredOptions = options
           .filter((option) => option.label.toLowerCase().includes(inputValue.toLowerCase()) && option.value !== FILTER_WARNING_OPTION.value)

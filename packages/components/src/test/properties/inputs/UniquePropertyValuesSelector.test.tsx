@@ -23,8 +23,9 @@ import {
 import { Presentation, PresentationManager } from "@itwin/presentation-frontend";
 import { PortalTargetContextProvider } from "../../../presentation-components/common/PortalTargetContext";
 import { serializeUniqueValues, UniqueValue } from "../../../presentation-components/common/Utils";
+import { ItemsLoader } from "../../../presentation-components/properties/inputs/ItemsLoader";
 import { UniquePropertyValuesSelector } from "../../../presentation-components/properties/inputs/UniquePropertyValuesSelector";
-import { ItemsLoader, UNIQUE_PROPERTY_VALUES_BATCH_SIZE } from "../../../presentation-components/properties/inputs/UseUniquePropertyValuesLoader";
+import { UNIQUE_PROPERTY_VALUES_BATCH_SIZE } from "../../../presentation-components/properties/inputs/UseUniquePropertyValuesLoader";
 import { createTestECClassInfo, createTestPropertyInfo, createTestRelatedClassInfo, createTestRelationshipPath } from "../../_helpers/Common";
 import {
   createTestCategoryDescription,
@@ -1284,26 +1285,27 @@ describe("UniquePropertyValuesSelector", () => {
     });
   });
   describe("Items loader", () => {
-    it("does not load items when filter is empty", () => {
-      const spy = sinon.spy();
+    it("does not load items when filter is empty", async () => {
+      const getItemsSpy = sinon.spy();
+      const setItemsSpy = sinon.spy();
       const itemsLoader = new ItemsLoader<string>(
         () => {},
-        () => {},
-        () => spy(),
+        () => setItemsSpy,
+        () => getItemsSpy(),
         (option) => option,
-        [],
       );
-      expect(itemsLoader.needsLoadingItems("")).to.be.false;
+      await itemsLoader.loadItems("");
+      expect(setItemsSpy.notCalled);
     });
 
     it("does not load items when loaded options matches the filter", async () => {
       const getItemsStub = sinon.stub();
+      const setItemsSpy = sinon.spy();
       const itemsLoader = new ItemsLoader<string>(
         () => {},
-        () => {},
+        () => setItemsSpy,
         () => getItemsStub(),
         (option) => option,
-        [],
       );
 
       getItemsStub.callsFake(() => {
@@ -1314,7 +1316,9 @@ describe("UniquePropertyValuesSelector", () => {
         };
       });
       await itemsLoader.loadInitialItems();
-      expect(itemsLoader.needsLoadingItems("filterText")).to.be.false;
+      await itemsLoader.loadItems("filterText");
+      // loaded only initial items
+      expect(setItemsSpy.calledOnce);
     });
 
     it("does not load items when hasMore is set to false", async () => {
@@ -1325,7 +1329,6 @@ describe("UniquePropertyValuesSelector", () => {
         () => spy,
         () => getItemsStub(),
         (option) => option,
-        [],
       );
 
       getItemsStub.callsFake(() => {
@@ -1348,7 +1351,6 @@ describe("UniquePropertyValuesSelector", () => {
         () => spy,
         () => getItemsStub(),
         (option) => option,
-        [],
       );
 
       getItemsStub.callsFake(() => {

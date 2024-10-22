@@ -10,7 +10,8 @@ import { ComboBox, SelectOption } from "@itwin/itwinui-react";
 import { ClassInfo, Descriptor, Field, Keys, KeySet, MultiSchemaClassesSpecification, Ruleset } from "@itwin/presentation-common";
 import { deserializeUniqueValues, findField, serializeUniqueValues, translate, UniqueValue } from "../../common/Utils";
 import { getInstanceFilterFieldName } from "../../instance-filter-builder/Utils";
-import { FILTER_WARNING_OPTION, UNIQUE_PROPERTY_VALUES_BATCH_SIZE, useUniquePropertyValuesLoader } from "./UseUniquePropertyValuesLoader";
+import { FILTER_WARNING_OPTION } from "./ItemsLoader";
+import { UNIQUE_PROPERTY_VALUES_BATCH_SIZE, useUniquePropertyValuesLoader } from "./UseUniquePropertyValuesLoader";
 
 /** @internal */
 export interface UniquePropertyValuesSelectorProps {
@@ -46,7 +47,8 @@ export function UniquePropertyValuesSelector(props: UniquePropertyValuesSelector
     setSearchInput("");
   }, []);
 
-  const onValueChange = (newSelectedValues: UniqueValue[]) => {
+  const onValueChange = (newValues: string[]) => {
+    const newSelectedValues = loadedOptions.filter((opt) => newValues.includes(opt.displayValue));
     if (newSelectedValues.length === 0) {
       onChange({
         valueFormat: PropertyValueFormat.Primitive,
@@ -79,10 +81,7 @@ export function UniquePropertyValuesSelector(props: UniquePropertyValuesSelector
       multiple={true}
       enableVirtualization={true}
       options={selectOptions}
-      onChange={(newValue) => {
-        const newSelectedValues = loadedOptions.filter((opt) => newValue.includes(opt.displayValue));
-        onValueChange(newSelectedValues);
-      }}
+      onChange={(newValues) => onValueChange(newValues)}
       filterFunction={(options: SelectOption<string>[], inputValue: string) => {
         const filteredOptions = options
           .filter((option) => option.label.toLowerCase().includes(inputValue.toLowerCase()) && option.value !== FILTER_WARNING_OPTION.value)
