@@ -39,9 +39,10 @@ export const NavigationPropertyTargetSelector = forwardRef<PropertyEditorAttribu
     filterText: searchInput,
     initialSelectedTarget: selectedTarget?.label.displayValue,
   });
+  const divRef = useRef<HTMLDivElement>(null);
 
   const emptyContent = useMemo(() => {
-    return isLoading ? translate("navigation-property-editor.loading-target-instances") : "No options found";
+    return isLoading ? translate("navigation-property-editor.loading-target-instances") : translate("navigation-property-editor.no-target-instances");
   }, [isLoading]);
 
   const onChange = useCallback(
@@ -53,7 +54,6 @@ export const NavigationPropertyTargetSelector = forwardRef<PropertyEditorAttribu
     [loadedOptions, onCommit, propertyRecord],
   );
 
-  const divRef = useRef<HTMLDivElement>(null);
   useImperativeHandle(
     ref,
     () => ({

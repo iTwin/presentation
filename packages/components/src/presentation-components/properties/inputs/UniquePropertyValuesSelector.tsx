@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { PropertyDescription, PropertyValue, PropertyValueFormat } from "@itwin/appui-abstract";
 import { IModelConnection } from "@itwin/core-frontend";
 import { ComboBox, SelectOption } from "@itwin/itwinui-react";
@@ -37,6 +37,41 @@ export function UniquePropertyValuesSelector(props: UniquePropertyValuesSelector
   const [field, setField] = useState<Field | undefined>(() => findField(descriptor, getInstanceFilterFieldName(property)));
   const [searchInput, setSearchInput] = useState<string>();
   const selectedValues = useMemo(() => getUniqueValueFromProperty(value)?.map((val) => val.displayValue), [value]);
+  const ruleset = useUniquePropertyValuesRuleset(descriptor.ruleset, field, descriptorInputKeys, selectedClasses);
+  const { selectOptions, loadedOptions, isLoading } = useUniquePropertyValuesLoader({
+    imodel,
+    ruleset,
+    field,
+    descriptorInputKeys,
+    typeName: property.typename,
+    selectedValues,
+    filterText: searchInput,
+  });
+
+  const onValueChange = useCallback(
+    (newValues: string[]) => {
+      const newSelectedValues = loadedOptions.filter((opt) => newValues.includes(opt.displayValue));
+      if (newSelectedValues.length === 0) {
+        onChange({
+          valueFormat: PropertyValueFormat.Primitive,
+          displayValue: undefined,
+          value: undefined,
+        });
+      } else {
+        const { displayValues, groupedRawValues } = serializeUniqueValues(newSelectedValues);
+        onChange({
+          valueFormat: PropertyValueFormat.Primitive,
+          displayValue: displayValues,
+          value: groupedRawValues,
+        });
+      }
+    },
+    [loadedOptions, onChange],
+  );
+
+  const emptyContent = useMemo(() => {
+    return isLoading ? translate("unique-values-property-editor.loading-values") : translate("unique-values-property-editor.no-values");
+  }, [isLoading]);
 
   useEffect(() => {
     setField(findField(descriptor, getInstanceFilterFieldName(property)));
@@ -46,35 +81,6 @@ export function UniquePropertyValuesSelector(props: UniquePropertyValuesSelector
   useEffect(() => {
     setSearchInput("");
   }, []);
-
-  const onValueChange = (newValues: string[]) => {
-    const newSelectedValues = loadedOptions.filter((opt) => newValues.includes(opt.displayValue));
-    if (newSelectedValues.length === 0) {
-      onChange({
-        valueFormat: PropertyValueFormat.Primitive,
-        displayValue: undefined,
-        value: undefined,
-      });
-    } else {
-      const { displayValues, groupedRawValues } = serializeUniqueValues(newSelectedValues);
-      onChange({
-        valueFormat: PropertyValueFormat.Primitive,
-        displayValue: displayValues,
-        value: groupedRawValues,
-      });
-    }
-  };
-
-  const ruleset = useUniquePropertyValuesRuleset(descriptor.ruleset, field, descriptorInputKeys, selectedClasses);
-  const { selectOptions, loadedOptions } = useUniquePropertyValuesLoader({
-    imodel,
-    ruleset,
-    field,
-    descriptorInputKeys,
-    typeName: property.typename,
-    selectedValues,
-    filterText: searchInput,
-  });
 
   return (
     <ComboBox
@@ -92,7 +98,7 @@ export function UniquePropertyValuesSelector(props: UniquePropertyValuesSelector
         }
         return filteredOptions;
       }}
-      emptyStateMessage={translate("unique-values-property-editor.no-values")}
+      emptyStateMessage={emptyContent}
       value={selectedValues}
       inputProps={{
         placeholder: translate("unique-values-property-editor.select-values"),
