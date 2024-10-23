@@ -338,7 +338,7 @@ describe("FilteringHierarchyDefinition", () => {
       expect(node.autoExpand).to.be.true;
     });
 
-    it("sets `filtering.filterTargetOptions` and `filtering.isFilterTarget` attribute from parent node paths", async () => {
+    it("sets `filterTargetOptions` and `isFilterTarget` attributes from parent's `filteredChildrenIdentifierPaths`", async () => {
       const sourceFactory = {} as unknown as HierarchyDefinition;
       const className = "TestSchema.TestName";
       const filteringOptions: HierarchyFilteringPathOptions = {
