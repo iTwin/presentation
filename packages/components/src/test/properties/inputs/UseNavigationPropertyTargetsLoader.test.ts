@@ -266,11 +266,7 @@ describe("NavigationPropertyItemsLoader", () => {
 
   it("does not load items when loaded options matches the filter", async () => {
     const getItemsSpy = sinon.spy();
-    const itemsLoader = new NavigationPropertyItemsLoader(
-      () => {},
-      () => getItemsSpy,
-      () => getItemsStub(),
-    );
+    const itemsLoader = new NavigationPropertyItemsLoader(() => {}, getItemsSpy, getItemsStub);
     await itemsLoader.loadItems();
     await itemsLoader.loadItems("filterText");
 
@@ -279,11 +275,7 @@ describe("NavigationPropertyItemsLoader", () => {
 
   it("does not load items when another load process is in progress", async () => {
     const getItemsSpy = sinon.spy();
-    const itemsLoader = new NavigationPropertyItemsLoader(
-      () => {},
-      () => getItemsSpy,
-      () => getItemsStub(),
-    );
+    const itemsLoader = new NavigationPropertyItemsLoader(() => {}, getItemsSpy, getItemsStub);
     await Promise.all([itemsLoader.loadItems("filterText"), itemsLoader.loadItems("filterText")]);
 
     expect(getItemsSpy.calledOnce);
@@ -294,7 +286,7 @@ describe("NavigationPropertyItemsLoader", () => {
     const itemsLoader = new NavigationPropertyItemsLoader(
       () => {},
       (newItems) => loadedItems.push(...newItems),
-      () => getItemsStub(),
+      getItemsStub,
     );
     await itemsLoader.loadItems("filterText");
     await itemsLoader.loadItems("filterText");
@@ -313,7 +305,7 @@ describe("NavigationPropertyItemsLoader", () => {
     const itemsLoader = new NavigationPropertyItemsLoader(
       () => {},
       (newItems) => loadedItems.push(...newItems),
-      () => getItemsStub(),
+      getItemsStub,
     );
     await itemsLoader.loadItems("filterText");
     await itemsLoader.loadItems("filterText");

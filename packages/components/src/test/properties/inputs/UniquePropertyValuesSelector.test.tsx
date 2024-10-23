@@ -1289,8 +1289,8 @@ describe("UniquePropertyValuesSelector", () => {
       const setItemsSpy = sinon.spy();
       const itemsLoader = new ItemsLoader<string>(
         () => {},
-        () => setItemsSpy,
-        () => getItemsSpy(),
+        setItemsSpy,
+        getItemsSpy,
         (option) => option,
       );
       await itemsLoader.loadItems("");
@@ -1302,8 +1302,8 @@ describe("UniquePropertyValuesSelector", () => {
       const setItemsSpy = sinon.spy();
       const itemsLoader = new ItemsLoader<string>(
         () => {},
-        () => setItemsSpy,
-        () => getItemsStub(),
+        setItemsSpy,
+        getItemsStub,
         (option) => option,
       );
 
@@ -1322,11 +1322,11 @@ describe("UniquePropertyValuesSelector", () => {
 
     it("does not load items when hasMore is set to false", async () => {
       const getItemsStub = sinon.stub();
-      const spy = sinon.spy();
+      const setItemsSpy = sinon.spy();
       const itemsLoader = new ItemsLoader<string>(
         () => {},
-        () => spy,
-        () => getItemsStub(),
+        setItemsSpy,
+        getItemsStub,
         (option) => option,
       );
 
@@ -1339,16 +1339,16 @@ describe("UniquePropertyValuesSelector", () => {
       });
       await itemsLoader.loadInitialItems();
       await itemsLoader.loadItems("filterText");
-      expect(spy.calledOnce);
+      expect(setItemsSpy.calledOnce);
     });
 
     it("does not load items when items loader is disposed", async () => {
       const getItemsStub = sinon.stub();
-      const spy = sinon.spy();
+      const setItemsSpy = sinon.spy();
       const itemsLoader = new ItemsLoader<string>(
         () => {},
-        () => spy,
-        () => getItemsStub(),
+        setItemsSpy,
+        getItemsStub,
         (option) => option,
       );
 
@@ -1361,7 +1361,29 @@ describe("UniquePropertyValuesSelector", () => {
       });
       itemsLoader.dispose();
       await itemsLoader.loadItems("filterText");
-      expect(spy.notCalled);
+      expect(setItemsSpy.notCalled);
+    });
+
+    it("does not load intial items when load items was called and correct items are loaded", async () => {
+      const getItemsStub = sinon.stub();
+      const setItemsSpy = sinon.spy();
+      const itemsLoader = new ItemsLoader<string>(
+        () => {},
+        setItemsSpy,
+        getItemsStub,
+        (option) => option,
+      );
+
+      getItemsStub.callsFake(() => {
+        return {
+          options: Array.from({ length: VALUE_BATCH_SIZE }, () => "filterText"),
+          length: VALUE_BATCH_SIZE,
+          hasMore: false,
+        };
+      });
+      await itemsLoader.loadItems("filterText");
+      await itemsLoader.loadInitialItems(["filterText"]);
+      expect(setItemsSpy.calledOnce);
     });
   });
 });

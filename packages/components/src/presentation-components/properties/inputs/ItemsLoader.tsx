@@ -35,32 +35,34 @@ export class ItemsLoader<T> {
   }
 
   public async loadInitialItems(initialSelectedValues?: string[]) {
-    let currOffset = this._offset;
-    let hasMore = this._hasMore;
-    const loadedItems: T[] = [];
-
     this._isLoading = true;
     this._beforeLoad();
 
-    do {
-      const { options, hasMore: batchHasMore, length } = await this._loadItems(currOffset);
-
-      if (this._disposed) {
-        return;
-      }
-
-      options.forEach((option) => {
-        initialSelectedValues = initialSelectedValues?.filter((initialSelectedValue) => initialSelectedValue !== this._getOptionLabel(option));
+    const filterInitialSelectedValues = (items: T[]): void => {
+      items.forEach((item) => {
+        initialSelectedValues = initialSelectedValues?.filter((initialSelectedValue) => initialSelectedValue !== this._getOptionLabel(item));
       });
+    };
 
-      loadedItems.push(...options);
-      hasMore = batchHasMore;
-      currOffset += length;
-    } while (hasMore && initialSelectedValues && initialSelectedValues.length > 0);
-    this._loadedItems.push(...loadedItems);
-    this._offset = currOffset;
+    const needsMoreItems = (items: T[]): boolean => {
+      filterInitialSelectedValues(items);
+      return !!initialSelectedValues && initialSelectedValues.length > 0;
+    };
+
+    if (this._loadedItems.length > 0) {
+      filterInitialSelectedValues(this._loadedItems);
+    }
+
+    if (this._loadedItems.length >= VALUE_BATCH_SIZE && initialSelectedValues?.length === 0) {
+      return;
+    }
+
+    const { newItems, hasMore, length } = await this.loadUniqueItems(needsMoreItems);
+
+    this._loadedItems.push(...newItems);
+    this._offset = length;
     this._hasMore = hasMore;
-    this._onItemsLoaded(loadedItems);
+    this._onItemsLoaded(newItems);
     this._isLoading = false;
   }
 
@@ -74,41 +76,46 @@ export class ItemsLoader<T> {
       return;
     }
 
+    let matchingItems: T[] = [];
+
+    const needsMoreItems = (options: T[]): boolean => {
+      matchingItems = options.filter((option) => this._getOptionLabel(option).toLowerCase().includes(filterText.toLowerCase()));
+      return matchingItems.length < VALUE_BATCH_SIZE;
+    };
+
     this._isLoading = true;
     this._beforeLoad();
 
-    const { options, hasMore, length } = await this.loadFilteredItems(filterText);
+    const { newItems, hasMore, length } = await this.loadUniqueItems(needsMoreItems);
 
     if (this._disposed) {
       return;
     }
 
-    this._loadedItems.push(...options);
-    this._offset += length;
+    this._loadedItems.push(...newItems);
+    this._offset = length;
     this._hasMore = hasMore;
-    this._onItemsLoaded(options);
+    this._onItemsLoaded(newItems);
     this._isLoading = false;
   }
 
-  private async loadFilteredItems(filterText: string) {
+  private async loadUniqueItems(needsMoreItems: (options: T[]) => boolean) {
     const loadedItems: T[] = [];
     let currOffset = this._offset;
     let hasMore = this._hasMore;
-    let matchingItems: T[] = [];
 
     do {
       const { options, hasMore: batchHasMore, length } = await this._loadItems(currOffset);
 
       if (this._disposed) {
-        return { options: loadedItems, hasMore, length };
+        return { newItems: loadedItems, hasMore, length };
       }
 
       loadedItems.push(...options);
       hasMore = batchHasMore;
       currOffset += length;
-      matchingItems = loadedItems.filter((option) => this._getOptionLabel(option).toLowerCase().includes(filterText.toLowerCase()));
-    } while (hasMore && matchingItems.length < VALUE_BATCH_SIZE);
+    } while (hasMore && needsMoreItems(loadedItems));
 
-    return { options: loadedItems, hasMore, length: currOffset };
+    return { newItems: loadedItems, hasMore, length: currOffset };
   }
 }
