@@ -2,4 +2,4 @@
 "@itwin/presentation-hierarchies": patch
 ---
 
-Changed hierarchy filtering, it now works with any number of filter paths.
+Fixed hierarchy filtering having a limit of 500 filtered nodes under a single parent.
