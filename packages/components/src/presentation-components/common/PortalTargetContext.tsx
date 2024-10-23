@@ -2,6 +2,7 @@
  * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
+/* eslint-disable deprecation/deprecation */
 /** @packageDocumentation
  * @module Core
  */
@@ -11,6 +12,7 @@ import { createContext, PropsWithChildren } from "react";
 /**
  * Props for [[PortalTargetContextProvider]]
  * @public
+ * @deprecated in 5.6. No longer needed.
  */
 export interface PortalTargetContextProviderProps {
   portalTarget: HTMLElement | null;
@@ -19,6 +21,7 @@ export interface PortalTargetContextProviderProps {
 /**
  * Provides a portal target for components.
  * @public
+ * @deprecated in 5.6. No longer needed.
  */
 export function PortalTargetContextProvider({ portalTarget, children }: PropsWithChildren<PortalTargetContextProviderProps>) {
   return <portalTargetContext.Provider value={{ portalTarget }}>{children}</portalTargetContext.Provider>;
@@ -27,6 +30,7 @@ export function PortalTargetContextProvider({ portalTarget, children }: PropsWit
 /**
  * Context that stores a portal target. It will be used to portal popovers opened by presentation components.
  * @internal
+ * @deprecated in 5.6. No longer needed.
  */
 export interface PortalTargetContext {
   portalTarget: HTMLElement | null;

@@ -5,7 +5,6 @@
 
 import { expect } from "chai";
 import { createAsyncIterator } from "presentation-test-utilities";
-import { PropsWithChildren, useState } from "react";
 import sinon from "sinon";
 import { PropertyDescription, PropertyValue, PropertyValueFormat } from "@itwin/appui-abstract";
 import { omit } from "@itwin/core-bentley";
@@ -21,7 +20,6 @@ import {
   Ruleset,
 } from "@itwin/presentation-common";
 import { Presentation, PresentationManager } from "@itwin/presentation-frontend";
-import { PortalTargetContextProvider } from "../../../presentation-components/common/PortalTargetContext";
 import { serializeUniqueValues, UniqueValue } from "../../../presentation-components/common/Utils";
 import { ItemsLoader, VALUE_BATCH_SIZE } from "../../../presentation-components/properties/inputs/ItemsLoader";
 import { UniquePropertyValuesSelector } from "../../../presentation-components/properties/inputs/UniquePropertyValuesSelector";
@@ -34,16 +32,6 @@ import {
 } from "../../_helpers/Content";
 import { createTestECInstancesNodeKey } from "../../_helpers/Hierarchy";
 import { render, waitFor } from "../../TestUtils";
-
-function TestComponentWithPortalTarget({ children }: PropsWithChildren) {
-  const [portalTarget, setPortalTarget] = useState<HTMLElement | null>(null);
-
-  return (
-    <div ref={setPortalTarget}>
-      <PortalTargetContextProvider portalTarget={portalTarget}>{children}</PortalTargetContextProvider>
-    </div>
-  );
-}
 
 describe("UniquePropertyValuesSelector", () => {
   let presentationManagerStub: sinon.SinonStub;
@@ -128,9 +116,7 @@ describe("UniquePropertyValuesSelector", () => {
     }));
 
     const { getByText, getByPlaceholderText, user } = render(
-      <TestComponentWithPortalTarget>
-        <UniquePropertyValuesSelector property={propertyDescription} onChange={() => {}} imodel={testImodel} descriptor={descriptor} />,
-      </TestComponentWithPortalTarget>,
+      <UniquePropertyValuesSelector property={propertyDescription} onChange={() => {}} imodel={testImodel} descriptor={descriptor} />,
     );
 
     // open menu
@@ -153,9 +139,7 @@ describe("UniquePropertyValuesSelector", () => {
     });
 
     const { getByText, getByPlaceholderText, user } = render(
-      <TestComponentWithPortalTarget>
-        <UniquePropertyValuesSelector property={propertyDescription} onChange={() => {}} imodel={testImodel} descriptor={descriptor} />,
-      </TestComponentWithPortalTarget>,
+      <UniquePropertyValuesSelector property={propertyDescription} onChange={() => {}} imodel={testImodel} descriptor={descriptor} />,
     );
 
     // open menu
@@ -479,9 +463,7 @@ describe("UniquePropertyValuesSelector", () => {
     getDistinctValuesIteratorStub.rejects();
 
     const { getByPlaceholderText, getByText, user } = render(
-      <TestComponentWithPortalTarget>
-        <UniquePropertyValuesSelector property={propertyDescription} onChange={() => {}} imodel={testImodel} descriptor={descriptor} />,
-      </TestComponentWithPortalTarget>,
+      <UniquePropertyValuesSelector property={propertyDescription} onChange={() => {}} imodel={testImodel} descriptor={descriptor} />,
     );
 
     // open menu
@@ -510,9 +492,7 @@ describe("UniquePropertyValuesSelector", () => {
       });
 
       const { getByText, queryByText, user, getByPlaceholderText } = render(
-        <TestComponentWithPortalTarget>
-          <UniquePropertyValuesSelector property={propertyDescription} onChange={() => {}} imodel={testImodel} descriptor={descriptor} />,
-        </TestComponentWithPortalTarget>,
+        <UniquePropertyValuesSelector property={propertyDescription} onChange={() => {}} imodel={testImodel} descriptor={descriptor} />,
       );
 
       // type in search
@@ -537,9 +517,7 @@ describe("UniquePropertyValuesSelector", () => {
       });
 
       const { getByText, queryByText, getByPlaceholderText, user } = render(
-        <TestComponentWithPortalTarget>
-          <UniquePropertyValuesSelector property={propertyDescription} onChange={() => {}} imodel={testImodel} descriptor={descriptor} />,
-        </TestComponentWithPortalTarget>,
+        <UniquePropertyValuesSelector property={propertyDescription} onChange={() => {}} imodel={testImodel} descriptor={descriptor} />,
       );
 
       // open menu
@@ -654,9 +632,7 @@ describe("UniquePropertyValuesSelector", () => {
       });
 
       const { getByText, getByPlaceholderText, queryAllByText, user } = render(
-        <TestComponentWithPortalTarget>
-          <UniquePropertyValuesSelector property={propertyDescription} onChange={() => {}} imodel={testImodel} descriptor={descriptor} />,
-        </TestComponentWithPortalTarget>,
+        <UniquePropertyValuesSelector property={propertyDescription} onChange={() => {}} imodel={testImodel} descriptor={descriptor} />,
       );
 
       // open menu
@@ -708,9 +684,7 @@ describe("UniquePropertyValuesSelector", () => {
       });
 
       const { getByText, queryAllByText, getByPlaceholderText, user } = render(
-        <TestComponentWithPortalTarget>
-          <UniquePropertyValuesSelector property={propertyDescription} onChange={() => {}} imodel={testImodel} descriptor={descriptor} />,
-        </TestComponentWithPortalTarget>,
+        <UniquePropertyValuesSelector property={propertyDescription} onChange={() => {}} imodel={testImodel} descriptor={descriptor} />,
       );
 
       // open menu
@@ -742,9 +716,7 @@ describe("UniquePropertyValuesSelector", () => {
       });
 
       const { queryAllByText, getByPlaceholderText, user } = render(
-        <TestComponentWithPortalTarget>
-          <UniquePropertyValuesSelector property={propertyDescription} onChange={() => {}} imodel={testImodel} descriptor={descriptor} />,
-        </TestComponentWithPortalTarget>,
+        <UniquePropertyValuesSelector property={propertyDescription} onChange={() => {}} imodel={testImodel} descriptor={descriptor} />,
       );
 
       // open menu
@@ -798,9 +770,7 @@ describe("UniquePropertyValuesSelector", () => {
       });
 
       const { getByText, getByPlaceholderText, queryAllByText, user } = render(
-        <TestComponentWithPortalTarget>
-          <UniquePropertyValuesSelector property={propertyDescription} onChange={() => {}} imodel={testImodel} descriptor={descriptor} />,
-        </TestComponentWithPortalTarget>,
+        <UniquePropertyValuesSelector property={propertyDescription} onChange={() => {}} imodel={testImodel} descriptor={descriptor} />,
       );
 
       // open menu

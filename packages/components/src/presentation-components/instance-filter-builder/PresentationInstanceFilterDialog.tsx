@@ -14,7 +14,6 @@ import { IModelConnection } from "@itwin/core-frontend";
 import { SvgError } from "@itwin/itwinui-illustrations-react";
 import { Button, Dialog, NonIdealState, ProgressRadial } from "@itwin/itwinui-react";
 import { Descriptor, Keys } from "@itwin/presentation-common";
-import { PortalTargetContextProvider } from "../common/PortalTargetContext";
 import { translate, useDelay } from "../common/Utils";
 import { InstanceFilterBuilder, usePresentationInstanceFilteringProps } from "./InstanceFilterBuilder";
 import { PresentationInstanceFilterInfo } from "./PresentationFilterBuilder";
@@ -89,11 +88,9 @@ export interface FilteringDialogToolbarHandlers {
  */
 export function PresentationInstanceFilterDialog(props: PresentationInstanceFilterDialogProps) {
   const { isOpen, title, ...restProps } = props;
-  const [portalTarget, setPortalTarget] = useState<HTMLElement | null>(null);
 
   return (
     <Dialog
-      ref={setPortalTarget}
       className="presentation-instance-filter-dialog"
       isOpen={isOpen}
       onClose={props.onClose}
@@ -104,15 +101,13 @@ export function PresentationInstanceFilterDialog(props: PresentationInstanceFilt
       isResizable
       portal={true}
     >
-      <PortalTargetContextProvider portalTarget={portalTarget}>
-        <Dialog.Backdrop />
-        <Dialog.Main className="presentation-instance-filter-dialog-content-container">
-          <Dialog.TitleBar className="presentation-instance-filter-title" titleText={title ? title : translate("instance-filter-builder.filter")} />
-          <ErrorBoundary fallback={<ErrorState />}>
-            <FilterDialogContent {...restProps} />
-          </ErrorBoundary>
-        </Dialog.Main>
-      </PortalTargetContextProvider>
+      <Dialog.Backdrop />
+      <Dialog.Main className="presentation-instance-filter-dialog-content-container">
+        <Dialog.TitleBar className="presentation-instance-filter-title" titleText={title ? title : translate("instance-filter-builder.filter")} />
+        <ErrorBoundary fallback={<ErrorState />}>
+          <FilterDialogContent {...restProps} />
+        </ErrorBoundary>
+      </Dialog.Main>
     </Dialog>
   );
 }
