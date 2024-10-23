@@ -36,6 +36,13 @@ export class ItemsLoader<T> {
 
   public async loadInitialItems(initialSelectedValues?: string[]) {
     const matchingItems: T[] = [];
+    const filterInitialSelectedValues = (items: T[]) => {
+      matchingItems.push(
+        ...items.filter((item) => {
+          return initialSelectedValues?.some((initialSelectedValue) => initialSelectedValue === this._getOptionLabel(item));
+        }),
+      );
+    };
 
     const needsItems = (): boolean => {
       if (this._loadedItems.length > 0) {
@@ -43,14 +50,6 @@ export class ItemsLoader<T> {
       }
 
       return this._loadedItems.length < VALUE_BATCH_SIZE && (initialSelectedValues?.length === 0 || initialSelectedValues?.length !== matchingItems.length);
-    };
-
-    const filterInitialSelectedValues = (items: T[]) => {
-      matchingItems.push(
-        ...items.filter((item) => {
-          return initialSelectedValues?.some((initialSelectedValue) => initialSelectedValue === this._getOptionLabel(item));
-        }),
-      );
     };
 
     const needsMoreItems = (items: T[]): boolean => {
@@ -68,17 +67,12 @@ export class ItemsLoader<T> {
       return;
     }
 
-    const needItems = (): boolean => {
-      matchingItems.push(...this._loadedItems.filter((option) => this._getOptionLabel(option).toLowerCase().includes(filterText.toLowerCase())));
-      return matchingItems.length < VALUE_BATCH_SIZE;
-    };
-
     const needsMoreItems = (options: T[]): boolean => {
       matchingItems.push(...options.filter((option) => this._getOptionLabel(option).toLowerCase().includes(filterText.toLowerCase())));
       return matchingItems.length < VALUE_BATCH_SIZE;
     };
 
-    await this.loadUniqueItems(needItems, needsMoreItems);
+    await this.loadUniqueItems(() => needsMoreItems(this._loadedItems), needsMoreItems);
   }
 
   private async loadUniqueItems(needsItems: () => boolean, needsMoreItems: (options: T[]) => boolean) {
