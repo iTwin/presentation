@@ -1309,7 +1309,7 @@ describe("UniquePropertyValuesSelector", () => {
       });
       await itemsLoader.loadInitialItems();
       await itemsLoader.loadItems("filterText");
-      expect(setItemsSpy.calledOnce);
+      expect(getItemsStub.calledOnce);
     });
 
     it("does not load items when items loader is disposed", async () => {
@@ -1326,7 +1326,7 @@ describe("UniquePropertyValuesSelector", () => {
         return {
           options: Array.from({ length: VALUE_BATCH_SIZE }, () => "filterText"),
           length: VALUE_BATCH_SIZE,
-          hasMore: false,
+          hasMore: true,
         };
       });
       itemsLoader.dispose();
@@ -1348,7 +1348,7 @@ describe("UniquePropertyValuesSelector", () => {
         return {
           options: Array.from({ length: VALUE_BATCH_SIZE }, () => "filterText"),
           length: VALUE_BATCH_SIZE,
-          hasMore: false,
+          hasMore: true,
         };
       });
       await itemsLoader.loadItems("filterText");
