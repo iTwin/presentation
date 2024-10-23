@@ -79,7 +79,7 @@ export function useUniquePropertyValuesLoader({
     }
 
     const timeout = setTimeout(() => {
-      void itemsLoader?.loadItems(filterText);
+      void itemsLoader.loadItems(filterText);
     }, 250);
 
     return () => {
