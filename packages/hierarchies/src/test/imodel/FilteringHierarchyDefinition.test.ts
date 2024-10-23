@@ -5,7 +5,7 @@
 
 import { assert, expect } from "chai";
 import sinon from "sinon";
-import { ECClassHierarchyInspector, InstanceKey, trimWhitespace } from "@itwin/presentation-shared";
+import { ECClassHierarchyInspector, trimWhitespace } from "@itwin/presentation-shared";
 import { FilterTargetGroupingNodeInfo, HierarchyFilteringPath, HierarchyFilteringPathOptions } from "../../hierarchies/HierarchyFiltering.js";
 import { HierarchyNode } from "../../hierarchies/HierarchyNode.js";
 import { HierarchyNodeIdentifiersPath } from "../../hierarchies/HierarchyNodeIdentifier.js";
@@ -15,7 +15,6 @@ import {
   ECSQL_COLUMN_NAME_FilterECInstanceId,
   ECSQL_COLUMN_NAME_HasFilterTargetAncestor,
   FilteringHierarchyDefinition,
-  MatchedFilter,
 } from "../../hierarchies/imodel/FilteringHierarchyDefinition.js";
 import {
   GenericHierarchyNodeDefinition,
@@ -1169,7 +1168,7 @@ describe("FilteringHierarchyDefinition", () => {
               {
                 id: { className: filterPathClass1.fullName, id: "0x789" },
               },
-            ] as Array<MatchedFilter<InstanceKey>>,
+            ],
             false,
           ),
         ]);
@@ -1212,7 +1211,7 @@ describe("FilteringHierarchyDefinition", () => {
               {
                 id: { className: filterPathClass2.fullName, id: "0x456" },
               },
-            ] as Array<MatchedFilter<InstanceKey>>,
+            ],
             false,
           ),
         ]);
@@ -1258,7 +1257,7 @@ describe("FilteringHierarchyDefinition", () => {
               {
                 id: { className: filterPathClass0.fullName, id: "0x123" },
               },
-            ] as Array<MatchedFilter<InstanceKey>>,
+            ],
             false,
           ),
         ]);
@@ -1304,7 +1303,7 @@ describe("FilteringHierarchyDefinition", () => {
               {
                 id: { className: queryClass.fullName, id: "0x123" },
               },
-            ] as Array<MatchedFilter<InstanceKey>>,
+            ],
             false,
           ),
         ]);
@@ -1350,7 +1349,7 @@ describe("FilteringHierarchyDefinition", () => {
               {
                 id: { className: filterPathClass0.fullName, id: "0x123" },
               },
-            ] as Array<MatchedFilter<InstanceKey>>,
+            ],
             false,
           ),
         ]);
@@ -1401,7 +1400,7 @@ describe("FilteringHierarchyDefinition", () => {
               {
                 id: { className: filterPathClass0.fullName, id: "0x123" },
               },
-            ] as Array<MatchedFilter<InstanceKey>>,
+            ],
             false,
           ),
         ]);
@@ -1447,7 +1446,7 @@ describe("FilteringHierarchyDefinition", () => {
             {
               id: { className: childFilterClass.fullName, id: "0x456" },
             },
-          ] as Array<MatchedFilter<InstanceKey>>,
+          ],
           false,
         ),
       ]);
@@ -1501,7 +1500,6 @@ describe("FilteringHierarchyDefinition", () => {
 
   describe("applyECInstanceIdsFilter", () => {
     it("creates a valid CTE for filtered instance paths", () => {
-      const filteringOptions: HierarchyFilteringPathOptions = { autoExpand: { key: { type: "class-grouping", className: "test.class" }, depth: 123 } };
       const result = applyECInstanceIdsFilter(
         {
           fullClassName: "full-class-name",
@@ -1514,20 +1512,9 @@ describe("FilteringHierarchyDefinition", () => {
         [
           {
             id: { className: "test.class", id: "0x1" },
-            isFilterTarget: false,
-            childrenIdentifierPaths: [
-              [
-                { className: "a", id: "0x2" },
-                { className: "b", id: "0x3" },
-              ],
-              [{ className: "c", id: "0x4" }],
-            ],
           },
           {
             id: { className: "test.class", id: "0x5" },
-            isFilterTarget: true,
-            filterTargetOptions: filteringOptions,
-            childrenIdentifierPaths: [[{ className: "d", id: "0x6" }]],
           },
         ],
         true,
@@ -1540,7 +1527,7 @@ describe("FilteringHierarchyDefinition", () => {
           SELECT
             ECInstanceId,
             'test.class' AS FilterClassName
-          FROM ONLY
+          FROM
             test.class
           WHERE
             ECInstanceId IN (0x1, 0x5)

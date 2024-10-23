@@ -8,37 +8,40 @@ import { HierarchyFilteringPath, HierarchyFilteringPathOptions } from "../hierar
 
 describe("HierarchyFilteringPath", () => {
   describe("mergeOptions", () => {
-    const optionsInOrderOfPriority: Array<HierarchyFilteringPathOptions | undefined> = [
-      { autoExpand: true },
-      {
-        autoExpand: {
-          key: {
-            type: "label-grouping",
-            label: "",
+    describe("autoExpand", () => {
+      const optionsInOrderOfPriority: Array<HierarchyFilteringPathOptions | undefined> = [
+        { autoExpand: true },
+        {
+          autoExpand: {
+            key: {
+              type: "label-grouping",
+              label: "",
+            },
+            depth: 2,
           },
-          depth: 2,
         },
-      },
-      {
-        autoExpand: {
-          key: {
-            type: "label-grouping",
-            label: "",
+        {
+          autoExpand: {
+            key: {
+              type: "label-grouping",
+              label: "",
+            },
+            depth: 1,
           },
-          depth: 1,
         },
-      },
-      { autoExpand: false },
-      undefined,
-    ];
-    it("returns correct result for different types of identifiers", () => {
-      for (let i = 0; i < optionsInOrderOfPriority.length; ++i) {
-        for (let j = 0; j < optionsInOrderOfPriority.length; ++j) {
-          expect(HierarchyFilteringPath.mergeOptions(optionsInOrderOfPriority[i], optionsInOrderOfPriority[j])).to.deep.eq(
-            i < j ? optionsInOrderOfPriority[i] : optionsInOrderOfPriority[j],
-          );
+        { autoExpand: false },
+        undefined,
+      ];
+
+      it("returns correct result for different autoExpand options", () => {
+        for (let i = 0; i < optionsInOrderOfPriority.length; ++i) {
+          for (let j = 0; j < optionsInOrderOfPriority.length; ++j) {
+            expect(HierarchyFilteringPath.mergeOptions(optionsInOrderOfPriority[i], optionsInOrderOfPriority[j])).to.deep.eq(
+              i < j ? optionsInOrderOfPriority[i] : optionsInOrderOfPriority[j],
+            );
+          }
         }
-      }
+      });
     });
   });
 });

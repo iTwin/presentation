@@ -240,8 +240,7 @@ export class FilteringHierarchyDefinition implements HierarchyDefinition {
   }
 }
 
-/** @internal */
-export type MatchedFilter<TIdentifier extends HierarchyNodeIdentifier> = {
+type MatchedFilter<TIdentifier extends HierarchyNodeIdentifier> = {
   id: TIdentifier;
   childrenIdentifierPaths: HierarchyFilteringPath[];
 } & ({ isFilterTarget: false } | { isFilterTarget: true; filterTargetOptions?: HierarchyFilteringPathOptions });
@@ -359,19 +358,15 @@ export const ECSQL_COLUMN_NAME_FilterECInstanceId = "FilterECInstanceId";
 // eslint-disable-next-line @typescript-eslint/naming-convention
 export const ECSQL_COLUMN_NAME_FilterClassName = "FilterClassName";
 
-function getClassECInstanceIds(matchingFilters: Array<MatchedFilter<InstanceKey>>) {
-  const classNamePositions = new Map<string, number>();
-  const classNameECInstanceIds = new Array<{ className: string; ecInstanceIds: Id64String[] }>();
-  let nextPosition = 0;
+function getClassECInstanceIds(matchingFilters: Array<{ id: InstanceKey }>) {
+  const classNameECInstanceIds = new Map<string, Id64String[]>();
   for (const matchingFilter of matchingFilters) {
-    const entry = classNamePositions.get(matchingFilter.id.className);
+    const entry = classNameECInstanceIds.get(matchingFilter.id.className);
     if (entry === undefined) {
-      classNameECInstanceIds.push({ className: matchingFilter.id.className, ecInstanceIds: [matchingFilter.id.id] });
-      classNamePositions.set(matchingFilter.id.className, nextPosition);
-      ++nextPosition;
-    } else {
-      classNameECInstanceIds[entry].ecInstanceIds.push(matchingFilter.id.id);
+      classNameECInstanceIds.set(matchingFilter.id.className, [matchingFilter.id.id]);
+      continue;
     }
+    entry.push(matchingFilter.id.id);
   }
   return classNameECInstanceIds;
 }
@@ -379,7 +374,7 @@ function getClassECInstanceIds(matchingFilters: Array<MatchedFilter<InstanceKey>
 /** @internal */
 export function applyECInstanceIdsFilter(
   def: InstanceNodesQueryDefinition,
-  matchingFilters: Array<MatchedFilter<InstanceKey>>,
+  matchingFilters: Array<{ id: InstanceKey }>,
   hasFilterTargetAncestor: boolean,
 ): InstanceNodesQueryDefinition {
   if (matchingFilters.length === 0) {
@@ -392,15 +387,13 @@ export function applyECInstanceIdsFilter(
       ...def.query,
       ctes: [
         ...(def.query.ctes ?? []),
-        // note: generally we'd use `VALUES (1,1),(2,2)`, but that doesn't work in ECSQL (https://github.com/iTwin/itwinjs-backlog/issues/865),
-        // so using UNION as a workaround
         `FilteringInfo(ECInstanceId, FilterClassName) AS (
-          ${matchingFiltersToUse
+          ${Array.from(matchingFiltersToUse)
             .map(
-              (mc) => `
-                SELECT ECInstanceId, '${mc.className}' AS FilterClassName
-                FROM ${mc.className}
-                WHERE ECInstanceId IN (${mc.ecInstanceIds.join(", ")})
+              ([className, ecInstanceIds]) => `
+                SELECT ECInstanceId, '${className}' AS FilterClassName
+                FROM ${className}
+                WHERE ECInstanceId IN (${ecInstanceIds.join(", ")})
               `,
             )
             .join(" UNION ALL ")}

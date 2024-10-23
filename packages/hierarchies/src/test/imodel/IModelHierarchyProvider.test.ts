@@ -733,7 +733,7 @@ describe("createIModelHierarchyProvider", () => {
                 SELECT
                   ECInstanceId,
                   'a.b' AS FilterClassName
-                FROM ONLY
+                FROM
                   a.b
                 WHERE
                   ECInstanceId IN (0x123)
