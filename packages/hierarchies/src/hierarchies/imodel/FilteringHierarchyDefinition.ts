@@ -398,13 +398,10 @@ export function applyECInstanceIdsFilter(
           ${matchingFiltersToUse
             .map(
               (mc) => `
-              SELECT
-                ECInstanceId,
-                '${mc.className}' AS FilterClassName
-              FROM ONLY
-                ${mc.className}
-              WHERE
-                ECInstanceId IN (${mc.ecInstanceIds.join(", ")})`,
+                SELECT ECInstanceId, '${mc.className}' AS FilterClassName
+                FROM ${mc.className}
+                WHERE ECInstanceId IN (${mc.ecInstanceIds.join(", ")})
+              `,
             )
             .join(" UNION ALL ")}
         )`,
