@@ -1,6 +1,6 @@
 {
   "name": "@itwin/presentation-shared",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "The package contains types and utilities used across different iTwin.js Presentation packages.",
   "license": "MIT",
   "author": {
