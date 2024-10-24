@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { forwardRef, useImperativeHandle, useRef } from "react";
+import { forwardRef, useEffect, useImperativeHandle, useRef } from "react";
 import { PrimitiveValue, PropertyRecord, PropertyValueFormat } from "@itwin/appui-abstract";
 import { PropertyEditorProps } from "@itwin/components-react";
 import { Input } from "@itwin/itwinui-react";
@@ -71,6 +71,14 @@ const QuantityPropertyValueInput = forwardRef<PropertyEditorAttributes, Quantity
           },
         });
     };
+
+    useEffect(() => {
+      setTimeout(() => {
+        if (inputRef.current) {
+          inputRef.current.focus();
+        }
+      }, 0);
+    }, []);
 
     return <Input size="small" {...inputProps} ref={inputRef} onBlur={onBlur} onFocus={() => inputRef.current?.setSelectionRange(0, 9999)} />;
   },
