@@ -10,14 +10,14 @@ export {
   PresentationResultSetTooLargeInfoNode,
   PresentationTreeNode,
   isPresentationHierarchyNode,
-} from "./presentation-hierarchies-react/TreeNode";
-export { UnifiedSelectionProvider } from "./presentation-hierarchies-react/UnifiedSelectionContext";
-export { useSelectionHandler } from "./presentation-hierarchies-react/UseSelectionHandler";
-export { HierarchyLevelDetails, useTree, useUnifiedSelectionTree } from "./presentation-hierarchies-react/UseTree";
-export { useIModelTree, useIModelUnifiedSelectionTree } from "./presentation-hierarchies-react/UseIModelTree";
-export { TreeNodeRenderer } from "./presentation-hierarchies-react/itwinui/TreeNodeRenderer";
-export { RenderedTreeNode, TreeRenderer, createRenderedTreeNodeData } from "./presentation-hierarchies-react/itwinui/TreeRenderer";
-export { LocalizationContextProvider } from "./presentation-hierarchies-react/itwinui/LocalizationContext";
+} from "./presentation-hierarchies-react/TreeNode.js";
+export { UnifiedSelectionProvider } from "./presentation-hierarchies-react/UnifiedSelectionContext.js";
+export { useSelectionHandler } from "./presentation-hierarchies-react/UseSelectionHandler.js";
+export { HierarchyLevelDetails, useTree, useUnifiedSelectionTree } from "./presentation-hierarchies-react/UseTree.js";
+export { useIModelTree, useIModelUnifiedSelectionTree } from "./presentation-hierarchies-react/UseIModelTree.js";
+export { TreeNodeRenderer } from "./presentation-hierarchies-react/itwinui/TreeNodeRenderer.js";
+export { RenderedTreeNode, TreeRenderer, createRenderedTreeNodeData } from "./presentation-hierarchies-react/itwinui/TreeRenderer.js";
+export { LocalizationContextProvider } from "./presentation-hierarchies-react/itwinui/LocalizationContext.js";
 
 export { GenericInstanceFilter, HierarchyNode, HierarchyProvider } from "@itwin/presentation-hierarchies";
 export { SelectionStorage } from "@itwin/unified-selection";

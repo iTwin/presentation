@@ -106,7 +106,7 @@ interface FormattingProps {
 
 async function getFormattingProps(koq: KindOfQuantity, unitSystem?: UnitSystemKey): Promise<FormattingProps | undefined> {
   const persistenceUnit = await koq.persistenceUnit;
-  // istanbul ignore if
+  /* istanbul ignore next 3 */
   if (!persistenceUnit) {
     return undefined;
   }
@@ -144,7 +144,7 @@ async function getKoqPresentationFormat(koq: KindOfQuantity, unitSystems: string
   for (const system of unitSystems) {
     for (const format of presentationFormats) {
       const unit = format.units && format.units[0][0];
-      // istanbul ignore if
+      /* istanbul ignore next 3 */
       if (!unit) {
         continue;
       }

@@ -5,14 +5,14 @@
 
 import { GenericInstanceFilter } from "@itwin/core-common";
 import { ECSqlQueryDef } from "@itwin/presentation-shared";
-import { NonGroupingHierarchyNode } from "../HierarchyNode";
+import { NonGroupingHierarchyNode } from "../HierarchyNode.js";
 import {
   ProcessedGenericHierarchyNode,
   ProcessedHierarchyNode,
   ProcessedInstanceHierarchyNode,
   SourceGenericHierarchyNode,
   SourceInstanceHierarchyNode,
-} from "./IModelHierarchyNode";
+} from "./IModelHierarchyNode.js";
 
 /**
  * A nodes definition that returns a single generic node.

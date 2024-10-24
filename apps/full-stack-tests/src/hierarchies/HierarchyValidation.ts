@@ -7,12 +7,20 @@ import { assert, expect } from "chai";
 import { collect } from "presentation-test-utilities";
 import { isDeepStrictEqual } from "util";
 import { Logger } from "@itwin/core-bentley";
-import { GenericNodeKey, GroupingNodeKey, HierarchyNode, HierarchyNodeKey, HierarchyProvider, NonGroupingHierarchyNode } from "@itwin/presentation-hierarchies";
-import { IModelInstanceKey } from "@itwin/presentation-hierarchies/lib/cjs/hierarchies/HierarchyNodeKey";
-import { hasChildren } from "@itwin/presentation-hierarchies/lib/cjs/hierarchies/internal/Common";
-import { InstanceKey } from "@itwin/presentation-shared";
+import {
+  GenericNodeKey,
+  GroupingNodeKey,
+  HierarchyNode,
+  HierarchyNodeKey,
+  HierarchyProvider,
+  InstancesNodeKey,
+  NonGroupingHierarchyNode,
+} from "@itwin/presentation-hierarchies";
+import { ArrayElement, InstanceKey } from "@itwin/presentation-shared";
 
 const loggingNamespace = `Presentation.HierarchyBuilder.HierarchyValidation`;
+
+type IModelInstanceKey = ArrayElement<InstancesNodeKey["instanceKeys"]>;
 
 export interface HierarchyDef<TNode> {
   node: TNode;
@@ -267,6 +275,10 @@ export namespace NodeValidators {
       },
       children: props.children,
     };
+  }
+
+  function hasChildren<TNode extends { children?: boolean | Array<unknown> }>(node: TNode) {
+    return node.children === true || (Array.isArray(node.children) && node.children.length > 0);
   }
 }
 

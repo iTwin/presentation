@@ -5,9 +5,7 @@
   "branches": 100,
   "lines": 100,
   "all": true,
-  "include": ["src/**/*", "lib/cjs/**/*"],
-  "exclude": ["src/presentation-shared.ts", "src/test/**", "lib/cjs/test/**"],
-  "extension": [".ts"],
+  "include": ["src/shared/**/*", "lib/cjs/shared/**/*"],
   "temp-dir": "./lib/test/coverage/.nyc_output",
   "report-dir": "./lib/test/coverage",
   "reporter": ["text-summary", "lcov", "cobertura"]

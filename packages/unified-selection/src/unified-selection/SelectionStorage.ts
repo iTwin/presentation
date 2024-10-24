@@ -5,8 +5,8 @@
 
 import { BeEvent } from "@itwin/core-bentley";
 import { Event } from "@itwin/presentation-shared";
-import { Selectable, Selectables } from "./Selectable";
-import { StorageSelectionChangeEventArgs, StorageSelectionChangesListener, StorageSelectionChangeType } from "./SelectionChangeEvent";
+import { Selectable, Selectables } from "./Selectable.js";
+import { StorageSelectionChangeEventArgs, StorageSelectionChangesListener, StorageSelectionChangeType } from "./SelectionChangeEvent.js";
 
 /** @beta */
 type IModelKeyProp =

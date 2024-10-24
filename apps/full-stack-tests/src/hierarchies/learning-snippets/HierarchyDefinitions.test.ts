@@ -10,11 +10,11 @@ import { IModelConnection } from "@itwin/core-frontend";
 import { createNodesQueryClauseFactory, createPredicateBasedHierarchyDefinition, HierarchyDefinition, HierarchyNode } from "@itwin/presentation-hierarchies";
 // __PUBLISH_EXTRACT_END__
 import { createIModelHierarchyProvider } from "@itwin/presentation-hierarchies";
-import { buildIModel } from "../../IModelUtils";
-import { initialize, terminate } from "../../IntegrationTests";
-import { NodeValidators, validateHierarchy } from "../HierarchyValidation";
-import { createIModelAccess } from "../Utils";
 import { createBisInstanceLabelSelectClauseFactory } from "@itwin/presentation-shared";
+import { buildIModel } from "../../IModelUtils.js";
+import { initialize, terminate } from "../../IntegrationTests.js";
+import { NodeValidators, validateHierarchy } from "../HierarchyValidation.js";
+import { createIModelAccess } from "../Utils.js";
 
 describe("Hierarchies", () => {
   describe("Learning snippets", () => {

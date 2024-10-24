@@ -8,9 +8,9 @@ import { collect, waitFor } from "presentation-test-utilities";
 import { from, Observable } from "rxjs";
 import sinon from "sinon";
 import { LogLevel } from "@itwin/core-bentley";
-import { ProcessedHierarchyNode } from "../../../hierarchies/imodel/IModelHierarchyNode";
-import { createHideNodesInHierarchyOperator, LOGGING_NAMESPACE } from "../../../hierarchies/imodel/operators/HideNodesInHierarchy";
-import { createTestGenericNodeKey, createTestInstanceKey, createTestProcessedGenericNode, createTestProcessedInstanceNode, setupLogging } from "../../Utils";
+import { ProcessedHierarchyNode } from "../../../hierarchies/imodel/IModelHierarchyNode.js";
+import { createHideNodesInHierarchyOperator, LOGGING_NAMESPACE } from "../../../hierarchies/imodel/operators/HideNodesInHierarchy.js";
+import { createTestGenericNodeKey, createTestInstanceKey, createTestProcessedGenericNode, createTestProcessedInstanceNode, setupLogging } from "../../Utils.js";
 
 describe("HideNodesInHierarchyOperator", () => {
   before(() => {

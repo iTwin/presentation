@@ -3,4 +3,4 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-export * from "./models-tree/ModelsTreeDefinition";
+export * from "./models-tree/ModelsTreeDefinition.js";

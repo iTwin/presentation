@@ -5,7 +5,7 @@
 
 import { Schema as CoreSchema, SchemaKey as CoreSchemaKey } from "@itwin/ecschema-metadata";
 import { EC, ECSchemaProvider } from "@itwin/presentation-shared";
-import { createECSchema } from "./MetadataInternal";
+import { createECSchema } from "./MetadataInternal.js";
 
 /**
  * Defines input for `createECSchemaProvider`. Generally, this is an instance of [SchemaContext](https://www.itwinjs.org/reference/ecschema-metadata/context/schemacontext/)
@@ -43,7 +43,6 @@ export function createECSchemaProvider(schemaContext: CoreSchemaContext): ECSche
     try {
       return await getSchemaUnprotected(schemaName);
     } catch (e) {
-      // istanbul ignore else
       if (e instanceof Error) {
         if (e.message.includes("already exists within this cache") && !handledExistingSchemaErrors.has(schemaName)) {
           handledExistingSchemaErrors.add(schemaName);

@@ -27,7 +27,7 @@ import { ECSchemaRpcInterface } from "@itwin/ecschema-rpcinterface-common";
 import { ECSchemaRpcImpl } from "@itwin/ecschema-rpcinterface-impl";
 import { buildTestIModel, initialize, terminate } from "@itwin/presentation-testing";
 import { createHiliteSetProvider, SelectableInstanceKey, Selectables } from "@itwin/unified-selection";
-import { createIModelAccess } from "../hierarchies/Utils";
+import { createIModelAccess } from "../hierarchies/Utils.js";
 
 describe("HiliteSet", () => {
   let iModel: IModelConnection;

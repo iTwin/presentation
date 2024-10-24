@@ -20,7 +20,7 @@ import {
   UnitSystem,
 } from "@itwin/ecschema-metadata";
 import { IPrimitiveValueFormatter, TypedPrimitiveValue } from "@itwin/presentation-shared";
-import { createValueFormatter } from "../core-interop/Formatting";
+import { createValueFormatter } from "../core-interop/Formatting.js";
 
 describe("createValueFormatter", () => {
   const schemaContext = {

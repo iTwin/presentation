@@ -6,13 +6,13 @@
 import { from, Subject, takeUntil } from "rxjs";
 import { assert, Id64Arg, using } from "@itwin/core-bentley";
 import { ECClassHierarchyInspector, ECSqlQueryExecutor } from "@itwin/presentation-shared";
-import { CachingHiliteSetProvider, createCachingHiliteSetProvider } from "./CachingHiliteSetProvider";
-import { createHiliteSetProvider, HiliteSet, HiliteSetProvider } from "./HiliteSetProvider";
-import { SelectableInstanceKey, Selectables } from "./Selectable";
-import { StorageSelectionChangeEventArgs, StorageSelectionChangeType } from "./SelectionChangeEvent";
-import { computeSelection, ComputeSelectionProps } from "./SelectionScope";
-import { SelectionStorage } from "./SelectionStorage";
-import { CoreIModelHiliteSet, CoreIModelSelectionSet, CoreSelectionSetEventType, CoreSelectionSetEventUnsafe } from "./types/IModel";
+import { CachingHiliteSetProvider, createCachingHiliteSetProvider } from "./CachingHiliteSetProvider.js";
+import { createHiliteSetProvider, HiliteSet, HiliteSetProvider } from "./HiliteSetProvider.js";
+import { SelectableInstanceKey, Selectables } from "./Selectable.js";
+import { StorageSelectionChangeEventArgs, StorageSelectionChangeType } from "./SelectionChangeEvent.js";
+import { computeSelection, ComputeSelectionProps } from "./SelectionScope.js";
+import { SelectionStorage } from "./SelectionStorage.js";
+import { CoreIModelHiliteSet, CoreIModelSelectionSet, CoreSelectionSetEventType, CoreSelectionSetEventUnsafe } from "./types/IModel.js";
 
 /**
  * Props for `enableUnifiedSelectionSyncWithIModel`.

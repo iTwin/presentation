@@ -5,7 +5,7 @@
 
 import { concatAll, map, Observable, reduce } from "rxjs";
 import { DuplicatePolicy, SortedArray } from "@itwin/core-bentley";
-import { compareNodesByLabel } from "../Common";
+import { compareNodesByLabel } from "../Common.js";
 
 /**
  * This should accept sorting params in some form:

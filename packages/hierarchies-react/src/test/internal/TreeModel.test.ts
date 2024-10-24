@@ -5,14 +5,14 @@
 
 import { expect } from "chai";
 import { GenericInstanceFilter } from "@itwin/presentation-hierarchies";
-import { isTreeModelHierarchyNode, isTreeModelInfoNode, TreeModel } from "../../presentation-hierarchies-react/internal/TreeModel";
+import { isTreeModelHierarchyNode, isTreeModelInfoNode, TreeModel } from "../../presentation-hierarchies-react/internal/TreeModel.js";
 import {
   createTestHierarchyNode,
   createTestModelGenericInfoNode,
   createTestModelNoFilterMatchesInfoNode,
   createTreeModel,
   getHierarchyNode,
-} from "../TestUtils";
+} from "../TestUtils.js";
 
 describe("TreeModel", () => {
   describe("expandNode", () => {

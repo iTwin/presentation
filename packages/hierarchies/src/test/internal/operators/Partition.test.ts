@@ -7,7 +7,7 @@ import { expect } from "chai";
 import { collect } from "presentation-test-utilities";
 import { from, Observable } from "rxjs";
 import * as sinon from "sinon";
-import { partition } from "../../../hierarchies/internal/operators/Partition";
+import { partition } from "../../../hierarchies/internal/operators/Partition.js";
 
 describe("partition", () => {
   it("partitions items based on predicate", async () => {

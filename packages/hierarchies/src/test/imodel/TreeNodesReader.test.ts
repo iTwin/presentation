@@ -7,11 +7,11 @@ import { expect } from "chai";
 import { collect, createAsyncIterator } from "presentation-test-utilities";
 import sinon from "sinon";
 import { ConcatenatedValue } from "@itwin/presentation-shared";
-import { SourceHierarchyNode, SourceInstanceHierarchyNode } from "../../hierarchies/imodel/IModelHierarchyNode";
-import { LimitingECSqlQueryExecutor } from "../../hierarchies/imodel/LimitingECSqlQueryExecutor";
-import { NodeSelectClauseColumnNames } from "../../hierarchies/imodel/NodeSelectQueryFactory";
-import { defaultNodesParser, readNodes, RowDef } from "../../hierarchies/imodel/TreeNodesReader";
-import { createTestSourceInstanceNode } from "../Utils";
+import { SourceHierarchyNode, SourceInstanceHierarchyNode } from "../../hierarchies/imodel/IModelHierarchyNode.js";
+import { LimitingECSqlQueryExecutor } from "../../hierarchies/imodel/LimitingECSqlQueryExecutor.js";
+import { NodeSelectClauseColumnNames } from "../../hierarchies/imodel/NodeSelectQueryFactory.js";
+import { defaultNodesParser, readNodes, RowDef } from "../../hierarchies/imodel/TreeNodesReader.js";
+import { createTestSourceInstanceNode } from "../Utils.js";
 
 describe("readNodes", () => {
   const parser = sinon.stub<[{ [columnName: string]: any }], SourceInstanceHierarchyNode>();

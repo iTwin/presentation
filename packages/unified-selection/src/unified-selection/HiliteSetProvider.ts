@@ -7,8 +7,8 @@ import { EMPTY, filter, forkJoin, from, map, merge, mergeMap, Observable, scan, 
 import { eachValueFrom } from "rxjs-for-await";
 import { Id64String } from "@itwin/core-bentley";
 import { ECClassHierarchyInspector, ECSqlBinding, ECSqlQueryDef, ECSqlQueryExecutor, ECSqlQueryRow, normalizeFullClassName } from "@itwin/presentation-shared";
-import { SelectableInstanceKey, Selectables } from "./Selectable";
-import { formIdBindings, genericExecuteQuery, releaseMainThreadOnItemsCount } from "./Utils";
+import { SelectableInstanceKey, Selectables } from "./Selectable.js";
+import { formIdBindings, genericExecuteQuery, releaseMainThreadOnItemsCount } from "./Utils.js";
 
 const HILITE_SET_EMIT_FREQUENCY = 20;
 

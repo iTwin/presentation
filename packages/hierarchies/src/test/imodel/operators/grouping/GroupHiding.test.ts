@@ -4,9 +4,9 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { expect } from "chai";
-import { GroupingHandlerResult } from "../../../../hierarchies/imodel/operators/Grouping";
-import { applyGroupHidingParams } from "../../../../hierarchies/imodel/operators/grouping/GroupHiding";
-import { createTestProcessedGroupingNode, createTestProcessedInstanceNode } from "../../../Utils";
+import { GroupingHandlerResult } from "../../../../hierarchies/imodel/operators/Grouping.js";
+import { applyGroupHidingParams } from "../../../../hierarchies/imodel/operators/grouping/GroupHiding.js";
+import { createTestProcessedGroupingNode, createTestProcessedInstanceNode } from "../../../Utils.js";
 
 describe("GroupHiding", () => {
   describe("hideIfNoSiblings", () => {
