@@ -51,7 +51,7 @@ export class ItemsLoader<T> {
   public async loadItems(filterText?: string) {
     const needsItemsLoaded = (options: T[]): boolean => {
       if (!filterText) {
-        return options.length === 0;
+        return options.length < VALUE_BATCH_SIZE;
       }
 
       const matchingItems = options.filter((option) => this._getOptionLabel(option).toLowerCase().includes(filterText.toLowerCase()));
