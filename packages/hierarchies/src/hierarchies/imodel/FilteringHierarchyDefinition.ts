@@ -210,6 +210,7 @@ export class FilteringHierarchyDefinition implements HierarchyDefinition {
                   node: def.node,
                   filteredChildrenIdentifierPaths,
                   isFilterTarget: matchingFilters.some((mc) => mc.isFilterTarget),
+                  filterTargetOptions: matchingFilters.find((mc) => mc.isFilterTarget)?.filterTargetOptions,
                   hasFilterTargetAncestor: filteringProps.hasFilterTargetAncestor,
                 }),
               };

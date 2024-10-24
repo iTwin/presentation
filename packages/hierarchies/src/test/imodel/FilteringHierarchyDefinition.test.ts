@@ -934,7 +934,7 @@ describe("FilteringHierarchyDefinition", () => {
         const filteringFactory = createFilteringHierarchyDefinition({
           imodelAccess: { ...classHierarchyInspector, imodelKey: "test-imodel-key" },
           sourceFactory,
-          nodeIdentifierPaths: [[createTestGenericNodeKey({ id: "custom 2" })], [createTestGenericNodeKey({ id: "custom 2" })]],
+          nodeIdentifierPaths: [[createTestGenericNodeKey({ id: "custom 2" })]],
         });
         const result = await filteringFactory.defineHierarchyLevel({ parentNode: undefined });
         expect(result).to.deep.eq([
@@ -1013,6 +1013,41 @@ describe("FilteringHierarchyDefinition", () => {
                   { path: [createTestGenericNodeKey({ id: "456" })], options: { autoExpand: groupingNode } },
                   [createTestGenericNodeKey({ id: "789" })],
                 ],
+              },
+            },
+          },
+        ]);
+      });
+
+      it("applies correct filtering options to itself", async () => {
+        const sourceDefinition: GenericHierarchyNodeDefinition = {
+          node: createTestSourceGenericNode({
+            key: "custom",
+            children: false,
+          }),
+        };
+        const sourceFactory = {
+          defineHierarchyLevel: async () => [sourceDefinition],
+        } as unknown as HierarchyDefinition;
+        const filteringFactory = createFilteringHierarchyDefinition({
+          imodelAccess: { ...classHierarchyInspector, imodelKey: "test-imodel-key" },
+          sourceFactory,
+          nodeIdentifierPaths: [
+            { path: [createTestGenericNodeKey({ id: "custom" }), createTestGenericNodeKey({ id: "123" })], options: { autoExpand: true } },
+            { path: [createTestGenericNodeKey({ id: "custom" })], options: { autoExpand: false } },
+            { path: [createTestGenericNodeKey({ id: "custom" })], options: { autoExpand: true } },
+          ],
+        });
+        const result = await filteringFactory.defineHierarchyLevel({ parentNode: undefined });
+        expect(result).to.deep.eq([
+          {
+            node: {
+              ...sourceDefinition.node,
+              autoExpand: true,
+              filtering: {
+                filteredChildrenIdentifierPaths: [{ path: [createTestGenericNodeKey({ id: "123" })], options: { autoExpand: true } }],
+                isFilterTarget: true,
+                filterTargetOptions: { autoExpand: true },
               },
             },
           },
