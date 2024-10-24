@@ -34,13 +34,13 @@ export class ItemsLoader<T> {
     this._disposed = true;
   }
 
-  public async loadInitialItems(initialSelectedValues?: string[]) {
+  public async loadMatchingItems(valuesToMatch?: string[]) {
     const needsItemsLoaded = (items: T[]) => {
-      if (initialSelectedValues && initialSelectedValues.length > 0) {
+      if (valuesToMatch && valuesToMatch.length > 0) {
         const matchingItems = items.filter((item) => {
-          return initialSelectedValues.some((initialSelectedValue) => initialSelectedValue === this._getOptionLabel(item));
+          return valuesToMatch.some((valueToMatch) => valueToMatch === this._getOptionLabel(item));
         });
-        return matchingItems.length < initialSelectedValues.length;
+        return matchingItems.length < valuesToMatch.length;
       }
       return items.length < VALUE_BATCH_SIZE;
     };
@@ -49,11 +49,11 @@ export class ItemsLoader<T> {
   }
 
   public async loadItems(filterText?: string) {
-    if (!filterText) {
-      return;
-    }
-
     const needsItemsLoaded = (options: T[]): boolean => {
+      if (!filterText) {
+        return options.length === 0;
+      }
+
       const matchingItems = options.filter((option) => this._getOptionLabel(option).toLowerCase().includes(filterText.toLowerCase()));
       return matchingItems.length < VALUE_BATCH_SIZE;
     };
@@ -66,11 +66,7 @@ export class ItemsLoader<T> {
     let currOffset = this._offset;
     let hasMore = this._hasMore;
 
-    if (!this._hasMore || this._isLoading) {
-      return;
-    }
-
-    if (!needsItemsLoaded(this._loadedItems)) {
+    if (!this._hasMore || this._isLoading || !needsItemsLoaded(this._loadedItems)) {
       return;
     }
 

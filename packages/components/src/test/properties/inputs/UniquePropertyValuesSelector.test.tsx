@@ -1254,17 +1254,27 @@ describe("UniquePropertyValuesSelector", () => {
     });
   });
   describe("ItemsLoader", () => {
-    it("does not load items when filter is empty", async () => {
-      const getItemsSpy = sinon.spy();
+    it("does not load items when filter is empty and there are items loaded", async () => {
+      const getItemsStub = sinon.stub();
       const setItemsSpy = sinon.spy();
       const itemsLoader = new ItemsLoader<string>(
         () => {},
         setItemsSpy,
-        getItemsSpy,
+        getItemsStub,
         (option) => option,
       );
+
+      getItemsStub.callsFake(() => {
+        return {
+          options: Array.from({ length: VALUE_BATCH_SIZE }, () => "filterText"),
+          length: VALUE_BATCH_SIZE,
+          hasMore: true,
+        };
+      });
+      await itemsLoader.loadMatchingItems();
       await itemsLoader.loadItems("");
-      expect(setItemsSpy.notCalled);
+      expect(getItemsStub.calledOnce);
+      expect(setItemsSpy.calledOnce);
     });
 
     it("does not load items when loaded options matches the filter", async () => {
@@ -1284,9 +1294,9 @@ describe("UniquePropertyValuesSelector", () => {
           hasMore: true,
         };
       });
-      await itemsLoader.loadInitialItems();
+      await itemsLoader.loadMatchingItems();
       await itemsLoader.loadItems("filterText");
-      // loaded only initial items
+      // loaded only matching items
       expect(setItemsSpy.calledOnce);
     });
 
@@ -1307,7 +1317,7 @@ describe("UniquePropertyValuesSelector", () => {
           hasMore: false,
         };
       });
-      await itemsLoader.loadInitialItems();
+      await itemsLoader.loadMatchingItems();
       await itemsLoader.loadItems("filterText");
       expect(getItemsStub.calledOnce);
     });
@@ -1334,7 +1344,7 @@ describe("UniquePropertyValuesSelector", () => {
       expect(setItemsSpy.notCalled);
     });
 
-    it("does not load intial items when load items was called and correct items are loaded", async () => {
+    it("does not load matching items when load items was called and correct items are loaded", async () => {
       const getItemsStub = sinon.stub();
       const setItemsSpy = sinon.spy();
       const itemsLoader = new ItemsLoader<string>(
@@ -1352,7 +1362,7 @@ describe("UniquePropertyValuesSelector", () => {
         };
       });
       await itemsLoader.loadItems("filterText");
-      await itemsLoader.loadInitialItems(["filterText"]);
+      await itemsLoader.loadMatchingItems(["filterText"]);
       expect(setItemsSpy.calledOnce);
     });
   });

@@ -65,7 +65,7 @@ export function useUniquePropertyValuesLoader({
       async (offset: number) => getItems({ imodel, offset, field: field.getFieldDescriptor(), ruleset, keys: new KeySet(descriptorInputKeys) }),
       (option) => option.displayValue,
     );
-    void loader.loadInitialItems(initialSelectedValues);
+    void loader.loadMatchingItems(initialSelectedValues);
     setItemsLoader(loader);
     return () => {
       loader.dispose();
