@@ -61,7 +61,7 @@ export function useQuantityValueInput({ initialRawValue, schemaContext, koqName 
     }
 
     setState((prev): State => {
-      const newPlaceholder = formatter.applyFormatting(PLACEHOLDER_RAW_VALUE);
+      const newPlaceholder = formatter.applyFormatting(initialRawValue ?? PLACEHOLDER_RAW_VALUE);
       const newFormattedValue = prev.quantityValue.rawValue !== undefined ? formatter.applyFormatting(prev.quantityValue.rawValue) : "";
       const roundingError = getPersistenceUnitRoundingError(newFormattedValue, parser);
 
@@ -75,7 +75,7 @@ export function useQuantityValueInput({ initialRawValue, schemaContext, koqName 
         placeholder: newPlaceholder,
       };
     });
-  }, [formatter, parser]);
+  }, [formatter, initialRawValue, parser]);
 
   const onChange: ChangeEventHandler<HTMLInputElement> = (e) => {
     assert(parser !== undefined); // input should be disabled if parser is `undefined`
