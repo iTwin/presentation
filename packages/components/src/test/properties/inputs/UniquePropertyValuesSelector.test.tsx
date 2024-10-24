@@ -1253,7 +1253,7 @@ describe("UniquePropertyValuesSelector", () => {
       });
     });
   });
-  describe("Items loader", () => {
+  describe("ItemsLoader", () => {
     it("does not load items when filter is empty", async () => {
       const getItemsSpy = sinon.spy();
       const setItemsSpy = sinon.spy();
