@@ -1,6 +1,6 @@
 {
   "name": "@itwin/presentation-hierarchies",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "A package for creating hierarchies based on data in iTwin.js iModels.",
   "license": "MIT",
   "author": {
