@@ -4,20 +4,15 @@
  *--------------------------------------------------------------------------------------------*/
 
 import "./NavigationPropertyTargetSelector.scss";
-import classNames from "classnames";
-import { ChangeEvent, forwardRef, KeyboardEvent, useCallback, useEffect, useImperativeHandle, useRef, useState } from "react";
-import { components, ControlProps, MenuListProps, OptionProps, SingleValue } from "react-select";
-import { AsyncPaginate } from "react-select-async-paginate";
+import { forwardRef, useCallback, useEffect, useImperativeHandle, useMemo, useRef, useState } from "react";
 import { PropertyDescription, PropertyRecord, PropertyValue, PropertyValueFormat } from "@itwin/appui-abstract";
 import { PropertyEditorProps, PropertyValueRendererManager } from "@itwin/components-react";
 import { IModelConnection } from "@itwin/core-frontend";
-import { SvgCaretDownSmall } from "@itwin/itwinui-icons-react";
-import { Input, List, ListItem } from "@itwin/itwinui-react";
+import { ComboBox, SelectOption } from "@itwin/itwinui-react";
 import { InstanceKey, LabelDefinition, NavigationPropertyInfo } from "@itwin/presentation-common";
-import { usePortalTargetContext } from "../../common/PortalTargetContext";
-import { translate, useMergedRefs, useResizeObserver } from "../../common/Utils";
+import { translate } from "../../common/Utils";
 import { PropertyEditorAttributes } from "../editors/Common";
-import { useSelectMenuPlacement } from "./AsyncSelect";
+import { FILTER_WARNING_OPTION, VALUE_BATCH_SIZE } from "./ItemsLoader";
 import { NavigationPropertyTarget, useNavigationPropertyTargetsLoader, useNavigationPropertyTargetsRuleset } from "./UseNavigationPropertyTargetsLoader";
 
 /** @internal */
@@ -30,21 +25,30 @@ export interface NavigationPropertyTargetSelectorProps extends PropertyEditorPro
 /** @internal */
 export const NavigationPropertyTargetSelector = forwardRef<PropertyEditorAttributes, NavigationPropertyTargetSelectorProps>((props, ref) => {
   const { imodel, getNavigationPropertyInfo, propertyRecord, onCommit } = props;
-  const targetsRuleset = useNavigationPropertyTargetsRuleset(getNavigationPropertyInfo, propertyRecord.property);
-  const loadTargets = useNavigationPropertyTargetsLoader({ imodel, ruleset: targetsRuleset });
-
   const [selectedTarget, setSelectedTarget] = useState(() => getNavigationTargetFromPropertyRecord(propertyRecord));
+  const [searchInput, setSearchInput] = useState<string | undefined>();
+  const targetsRuleset = useNavigationPropertyTargetsRuleset(getNavigationPropertyInfo, propertyRecord.property);
+  const { selectOptions, loadedOptions, isLoading } = useNavigationPropertyTargetsLoader({
+    imodel,
+    ruleset: targetsRuleset,
+    filterText: searchInput,
+    initialSelectedTarget: selectedTarget?.label.displayValue,
+  });
+  const divRef = useRef<HTMLDivElement>(null);
+
+  const emptyContent = useMemo(() => {
+    return isLoading ? translate("navigation-property-editor.loading-target-instances") : translate("navigation-property-editor.no-target-instances");
+  }, [isLoading]);
 
   const onChange = useCallback(
-    (target: SingleValue<NavigationPropertyTarget>) => {
-      // istanbul ignore next
-      setSelectedTarget(target === null ? undefined : target);
-      target && onCommit && onCommit({ propertyRecord, newValue: getPropertyValue(target) });
+    (newValue?: string) => {
+      const newSelectedTarget = loadedOptions.find((loadedOption) => loadedOption.label.displayValue === newValue);
+      setSelectedTarget(newSelectedTarget);
+      newSelectedTarget && onCommit && onCommit({ propertyRecord, newValue: getPropertyValue(newSelectedTarget) });
     },
-    [propertyRecord, onCommit],
+    [loadedOptions, onCommit, propertyRecord],
   );
 
-  const divRef = useRef<HTMLDivElement>(null);
   useImperativeHandle(
     ref,
     () => ({
@@ -58,46 +62,37 @@ export const NavigationPropertyTargetSelector = forwardRef<PropertyEditorAttribu
     setSelectedTarget(getNavigationTargetFromPropertyRecord(propertyRecord));
   }, [propertyRecord]);
 
-  const { ref: selectRef, width } = useResizeObserver();
-  const { ref: selectorRef, ...menuProps } = useSelectMenuPlacement();
-  const mergedRefs = useMergedRefs(divRef, selectRef, selectorRef);
-  const { portalTarget } = usePortalTargetContext();
-
   if (!targetsRuleset) {
     return <ReadonlyNavigationPropertyTarget record={props.propertyRecord} />;
   }
 
   return (
-    <div ref={mergedRefs}>
-      <AsyncPaginate
-        isMulti={false}
-        onChange={onChange}
-        value={selectedTarget ?? null}
-        getOptionLabel={(option: NavigationPropertyTarget) => option.label.displayValue}
-        getOptionValue={(option: NavigationPropertyTarget) => option.key.id}
-        hideSelectedOptions={false}
-        debounceTimeout={500}
-        loadOptions={async (inputValue, options) => loadTargets(inputValue, options.length)}
-        cacheUniqs={[loadTargets]}
-        backspaceRemovesValue={false}
-        tabSelectsValue={false}
-        loadingMessage={() => translate("navigation-property-editor.loading-target-instances")}
-        styles={{
-          control: () => ({}),
-          container: () => ({}),
-          menuPortal: (base) => ({ ...base, zIndex: 9999, width, pointerEvents: "auto" }),
-          menu: (base) => ({ ...base, margin: 0 }),
-          dropdownIndicator: () => ({}),
-        }}
-        components={{
-          Control: TargetSelectControl,
-          MenuList: TargetSelectMenuList,
-          Option: TargetSelectOption,
-        }}
-        menuPortalTarget={portalTarget}
-        {...menuProps}
-      />
-    </div>
+    <ComboBox
+      multiple={false}
+      enableVirtualization={true}
+      options={selectOptions}
+      onChange={onChange}
+      filterFunction={(options: SelectOption<string>[], inputValue: string) => {
+        const filteredOptions = options
+          .filter((option) => option.label.toLowerCase().includes(inputValue.toLowerCase()) && option.value !== FILTER_WARNING_OPTION.value)
+          .slice(0, VALUE_BATCH_SIZE);
+
+        if (filteredOptions.length >= VALUE_BATCH_SIZE) {
+          filteredOptions.push(FILTER_WARNING_OPTION);
+        }
+
+        return filteredOptions;
+      }}
+      emptyStateMessage={emptyContent}
+      value={selectedTarget?.label.displayValue}
+      inputProps={{
+        placeholder: translate("navigation-property-editor.select-target-instance"),
+        size: "small",
+        onChange: (e) => {
+          setSearchInput(e.target.value);
+        },
+      }}
+    />
   );
 });
 NavigationPropertyTargetSelector.displayName = "NavigationPropertyTargetSelector";
@@ -124,98 +119,4 @@ function getNavigationTargetFromPropertyRecord(record: PropertyRecord): Navigati
   }
 
   return { key: value.value as InstanceKey, label: LabelDefinition.fromLabelString(value.displayValue) };
-}
-
-function TargetSelectControl<TOption, IsMulti extends boolean = boolean>(props: ControlProps<TOption, IsMulti>) {
-  const { getValue, selectProps } = props;
-  const selectedValue = getValue()[0];
-  const label = selectedValue ? selectProps.getOptionLabel(selectedValue) : "";
-  const [inputValue, setInputValue] = useState<string>(() => label);
-  const inputRef = useRef<HTMLInputElement>(null);
-
-  useEffect(() => {
-    setInputValue(label);
-  }, [label]);
-
-  const handleMenuOpen = () => {
-    // istanbul ignore else
-    if (!selectProps.menuIsOpen) {
-      selectProps.onMenuOpen();
-    }
-    inputRef.current?.focus();
-    selectProps.onInputChange("", { action: "input-change", prevInputValue: inputValue });
-  };
-
-  const handleInputBlur = () => {
-    setInputValue(label);
-    selectProps.onInputChange(label, { action: "input-blur", prevInputValue: inputValue });
-    selectProps.onMenuClose();
-  };
-
-  const handleDropdownButtonClick = () => {
-    if (selectProps.menuIsOpen) {
-      selectProps.onMenuClose();
-      inputRef.current?.blur();
-    } else {
-      handleMenuOpen();
-    }
-  };
-
-  const handleInputChange = (event: ChangeEvent<HTMLInputElement>) => {
-    if (!selectProps.menuIsOpen) {
-      selectProps.onMenuOpen();
-    }
-    setInputValue(event.target.value);
-    selectProps.onInputChange(event.target.value, { action: "input-change", prevInputValue: inputValue });
-  };
-
-  /** This function is used to cancel overriden react-select keyboard events. */
-  const handleInputKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
-    if (event.code === "Space" || event.code === "Home" || event.code === "End") {
-      event.stopPropagation();
-    }
-    if (event.key === "Tab") {
-      selectProps.onMenuClose();
-    }
-  };
-
-  return (
-    <components.Control {...props} className="presentation-navigation-property-select-control">
-      <Input
-        ref={inputRef}
-        className="presentation-navigation-property-select-input"
-        value={inputValue}
-        onBlur={handleInputBlur}
-        onFocus={handleMenuOpen}
-        onChange={handleInputChange}
-        onKeyDown={handleInputKeyDown}
-        size="small"
-        placeholder={translate("navigation-property-editor.select-target-instance")}
-        role="combobox"
-      />
-      <components.DropdownIndicator
-        {...props}
-        className={classNames("presentation-navigation-property-select-input-icon", { open: props.menuIsOpen })}
-        innerProps={{ onClick: handleDropdownButtonClick }}
-      >
-        <SvgCaretDownSmall />
-      </components.DropdownIndicator>
-    </components.Control>
-  );
-}
-
-function TargetSelectMenuList<TOption, IsMulti extends boolean = boolean>({ children, ...props }: MenuListProps<TOption, IsMulti>) {
-  return (
-    <List className="presentation-navigation-property-select-dropdown" ref={props.innerRef} {...props.innerProps} as="div">
-      {children}
-    </List>
-  );
-}
-
-function TargetSelectOption<TOption, IsMulti extends boolean = boolean>({ children: _, ...props }: OptionProps<TOption, IsMulti>) {
-  return (
-    <ListItem focused={props.isFocused} active={props.isSelected} ref={props.innerRef} {...props.innerProps} as="div">
-      {props.selectProps.getOptionLabel && props.selectProps.getOptionLabel(props.data)}
-    </ListItem>
-  );
 }

@@ -156,7 +156,7 @@ describe("InstanceFilterBuilder", () => {
         ],
       };
 
-      const { queryByText } = render(
+      const { getByPlaceholderText } = render(
         <InstanceFilterBuilder
           classes={classInfos}
           selectedClasses={[]}
@@ -168,7 +168,7 @@ describe("InstanceFilterBuilder", () => {
           descriptor={testDescriptor}
         />,
       );
-      await waitFor(() => expect(queryByText("unique-values-property-editor.select-values")).to.not.be.null);
+      await waitFor(() => getByPlaceholderText("unique-values-property-editor.select-values"));
     });
 
     it("renders <UniquePropertyValuesSelector /> when operator is `IsNotEqual`", async () => {
@@ -185,7 +185,7 @@ describe("InstanceFilterBuilder", () => {
         ],
       };
 
-      const { queryByText } = render(
+      const { getByPlaceholderText } = render(
         <InstanceFilterBuilder
           classes={classInfos}
           selectedClasses={[]}
@@ -197,7 +197,7 @@ describe("InstanceFilterBuilder", () => {
           descriptor={testDescriptor}
         />,
       );
-      await waitFor(() => expect(queryByText("unique-values-property-editor.select-values")).to.not.be.null);
+      await waitFor(() => getByPlaceholderText("unique-values-property-editor.select-values"));
     });
   });
 });
