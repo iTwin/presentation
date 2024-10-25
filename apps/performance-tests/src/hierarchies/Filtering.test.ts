@@ -14,20 +14,24 @@ import { ProviderOptions, StatelessHierarchyProvider } from "./StatelessHierarch
 
 describe("filtering", () => {
   const totalNumberOfFilteringPaths = 50000;
+  // We could use any number here.
+  // Using 1k because of two reasons:
+  // 1. It is more than Compound SELECT Statement limit (500);
+  // 2. Test takes < 20s. With more paths it would take longer.
+  const numberOfPathsForASingleParent = 1000;
   const physicalElementsSmallestDecimalId = 20;
 
   run({
     testName: `filters with ${totalNumberOfFilteringPaths} paths`,
     setup: (): ProviderOptions => {
       const { schemaName, itemsPerGroup, defaultClassName } = Datasets.CUSTOM_SCHEMA;
-
       const filtering = {
         paths: new Array<HierarchyFilteringPath>(),
       };
       const parentIdsArr = new Array<number>();
-      for (let i = 1; i <= 100; ++i) {
+      for (let i = 1; i <= totalNumberOfFilteringPaths / numberOfPathsForASingleParent; ++i) {
         parentIdsArr.push(i + physicalElementsSmallestDecimalId);
-        for (let j = (i - 1) * 500; j < i * 500; ++j) {
+        for (let j = (i - 1) * numberOfPathsForASingleParent; j < i * numberOfPathsForASingleParent; ++j) {
           filtering.paths.push([
             { className: `${schemaName}.${defaultClassName}_0`, id: `0x${physicalElementsSmallestDecimalId.toString(16)}` },
             {
@@ -77,9 +81,9 @@ describe("filtering", () => {
             //       /  .
             //  id:20   .
             //       \  .
-            //        id:120 -> all other BisCore.PhysicalElement
+            //        id:70 -> all other BisCore.PhysicalElement
             //
-            // We need to split the hierarchy in 100 parts, because we are using 50000 paths and there is a limit of 500 filtering paths for a single parent.
+            // We need to split the hierarchy in 50 parts to reduce the time of the test.
 
             if (!props.parentNode) {
               return createHierarchyLevelDefinition(imodelAccess, (alias) => `WHERE ${alias}.ECInstanceId = ${physicalElementsSmallestDecimalId}`);

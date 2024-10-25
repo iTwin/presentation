@@ -57,8 +57,9 @@ export namespace HierarchyFilteringPath {
    * - else, merge each option individually.
    *
    * For the `autoExpand` attribute, the merge chooses to auto-expand as deep as the deepest input:
-   * - if one of the inputs is `true`, return `true`,
+   * - if any one of the inputs is `true`, return `true`,
    * - else if both inputs are objects, return the one with the greater `depth` attribute.
+   * - else if one input is an object, return it.
    * - else, return `false` or `undefined`.
    *
    * @beta
@@ -67,27 +68,22 @@ export namespace HierarchyFilteringPath {
     lhs: HierarchyFilteringPathOptions | undefined,
     rhs: HierarchyFilteringPathOptions | undefined,
   ): HierarchyFilteringPathOptions | undefined {
-    /* istanbul ignore next 3 */
-    if (!lhs && !rhs) {
-      return undefined;
+    if (!lhs || !rhs) {
+      return lhs ?? rhs;
     }
-    /* istanbul ignore next 3 */
-    if (!lhs) {
-      return rhs;
-    }
-    /* istanbul ignore next 3 */
-    if (!rhs) {
-      return lhs;
-    }
+
     return {
       autoExpand: ((): HierarchyFilteringPathOptions["autoExpand"] => {
-        if (rhs.autoExpand === true) {
-          return rhs.autoExpand;
+        if (rhs.autoExpand === true || lhs.autoExpand === true) {
+          return true;
         }
-        if (typeof lhs.autoExpand === "object" && typeof rhs.autoExpand === "object" && rhs.autoExpand.depth > lhs.autoExpand.depth) {
-          return rhs.autoExpand;
+        if (typeof lhs.autoExpand === "object") {
+          if (typeof rhs.autoExpand === "object" && rhs.autoExpand.depth > lhs.autoExpand.depth) {
+            return rhs.autoExpand;
+          }
+          return lhs.autoExpand;
         }
-        return lhs.autoExpand;
+        return rhs.autoExpand;
       })(),
     };
   }

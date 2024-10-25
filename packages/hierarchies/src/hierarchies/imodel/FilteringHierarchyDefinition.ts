@@ -3,6 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
+import { Id64String } from "@itwin/core-bentley";
 import { ECClassHierarchyInspector, InstanceKey } from "@itwin/presentation-shared";
 import { extractFilteringProps, HierarchyFilteringPath, HierarchyFilteringPathOptions } from "../HierarchyFiltering.js";
 import { HierarchyNodeFilteringProps } from "../HierarchyNode.js";
@@ -109,18 +110,14 @@ export class FilteringHierarchyDefinition implements HierarchyDefinition {
   public get parseNode(): NodeParser {
     return async (row: { [columnName: string]: any }, parentNode?: HierarchyDefinitionParentNode): Promise<SourceInstanceHierarchyNode> => {
       const hasFilterTargetAncestor: boolean = !!row[ECSQL_COLUMN_NAME_HasFilterTargetAncestor];
-      const isFilterTarget: boolean = !!row[ECSQL_COLUMN_NAME_IsFilterTarget];
-      const filterTargetOptions: HierarchyFilteringPathOptions | undefined = row[ECSQL_COLUMN_NAME_FilterTargetOptions]
-        ? JSON.parse(row[ECSQL_COLUMN_NAME_FilterTargetOptions])
-        : undefined;
 
-      const filteredChildrenIdentifierPaths =
+      const { filteredChildrenIdentifierPaths, filterTargetOptions, isFilterTarget } =
         row[ECSQL_COLUMN_NAME_FilterECInstanceId] && row[ECSQL_COLUMN_NAME_FilterClassName]
           ? await this.getChildrenIdentifierPaths(parentNode?.filtering?.filteredChildrenIdentifierPaths ?? this._nodeIdentifierPaths, {
               className: row[ECSQL_COLUMN_NAME_FilterClassName],
               id: row[ECSQL_COLUMN_NAME_FilterECInstanceId],
             })
-          : [];
+          : { filteredChildrenIdentifierPaths: [], filterTargetOptions: undefined, isFilterTarget: false };
 
       const defaultNode = await (this._source.parseNode ?? defaultNodesParser)(row);
       return applyFilterAttributes({
@@ -137,16 +134,18 @@ export class FilteringHierarchyDefinition implements HierarchyDefinition {
     const { id, className } = providedIdentifier;
 
     let filteredChildrenIdentifierPaths: HierarchyFilteringPath[] | undefined;
+    let isFilterTarget = false;
+    let filterTargetOptions: HierarchyFilteringPathOptions | undefined;
     for (const filteredChildrenNodeIdentifierPath of filteredChildrenNodeIdentifierPaths) {
-      const path = HierarchyFilteringPath.normalize(filteredChildrenNodeIdentifierPath);
+      const { path, options } = HierarchyFilteringPath.normalize(filteredChildrenNodeIdentifierPath);
       // istanbul ignore if
-      if (path.path.length === 0) {
+      if (path.length === 0) {
         continue;
       }
 
       // We need to check if identifiers have the same id and imodelKey and are
       // of the same class / derived class / is derived from class
-      const identifier = path.path[0];
+      const identifier = path[0];
       if (identifier.id !== id) {
         continue;
       }
@@ -165,11 +164,16 @@ export class FilteringHierarchyDefinition implements HierarchyDefinition {
       if (!filteredChildrenIdentifierPaths) {
         filteredChildrenIdentifierPaths = [];
       }
-      if (path.path.length > 1) {
-        filteredChildrenIdentifierPaths.push(path.options ? { path: path.path.slice(1), options: path.options } : path.path.slice(1));
+      if (path.length > 1) {
+        filteredChildrenIdentifierPaths.push(options ? { path: path.slice(1), options } : path.slice(1));
+      } else if (isFilterTarget) {
+        filterTargetOptions = HierarchyFilteringPath.mergeOptions(filterTargetOptions, options);
+      } else {
+        isFilterTarget = true;
+        filterTargetOptions = options;
       }
     }
-    return filteredChildrenIdentifierPaths;
+    return { filteredChildrenIdentifierPaths, filterTargetOptions, isFilterTarget };
   }
 
   public async defineHierarchyLevel(props: DefineHierarchyLevelProps): Promise<HierarchyLevelDefinition> {
@@ -206,6 +210,7 @@ export class FilteringHierarchyDefinition implements HierarchyDefinition {
                   node: def.node,
                   filteredChildrenIdentifierPaths,
                   isFilterTarget: matchingFilters.some((mc) => mc.isFilterTarget),
+                  filterTargetOptions: matchingFilters.find((mc) => mc.isFilterTarget)?.filterTargetOptions,
                   hasFilterTargetAncestor: filteringProps.hasFilterTargetAncestor,
                 }),
               };
@@ -250,7 +255,7 @@ async function matchFilters<
   predicate: (id: HierarchyNodeIdentifier) => Promise<boolean>,
   classHierarchy: ECClassHierarchyInspector,
   matchedDefinitionProcessor: (def: TDefinition, matchingFilters: Array<MatchedFilter<TIdentifier>>) => TDefinition,
-  extractChildrenIdentifierPaths: boolean = true,
+  extractPathsAndOptions: boolean = true,
 ): Promise<TDefinition | undefined> {
   const { filteredNodePaths, hasFilterTargetAncestor } = filteringProps;
   const matchingFilters: Array<MatchedFilter<TIdentifier>> = [];
@@ -273,10 +278,12 @@ async function matchFilters<
         matchingFilters.push(entry);
       }
 
+      if (!extractPathsAndOptions) {
+        continue;
+      }
+
       if (path.length > 1) {
-        if (extractChildrenIdentifierPaths) {
-          entry.childrenIdentifierPaths.push(options ? { path: path.slice(1), options } : path.slice(1));
-        }
+        entry.childrenIdentifierPaths.push(options ? { path: path.slice(1), options } : path.slice(1));
       } else if (entry.isFilterTarget) {
         entry.filterTargetOptions = HierarchyFilteringPath.mergeOptions(entry.filterTargetOptions, options);
       } else {
@@ -342,14 +349,6 @@ function applyFilterAttributes<TNode extends SourceHierarchyNode>(props: {
 
 /** @internal */
 // eslint-disable-next-line @typescript-eslint/naming-convention
-export const ECSQL_COLUMN_NAME_IsFilterTarget = "IsFilterTarget";
-
-/** @internal */
-// eslint-disable-next-line @typescript-eslint/naming-convention
-export const ECSQL_COLUMN_NAME_FilterTargetOptions = "FilterTargetOptions";
-
-/** @internal */
-// eslint-disable-next-line @typescript-eslint/naming-convention
 export const ECSQL_COLUMN_NAME_HasFilterTargetAncestor = "HasFilterTargetAncestor";
 
 /** @internal */
@@ -360,29 +359,43 @@ export const ECSQL_COLUMN_NAME_FilterECInstanceId = "FilterECInstanceId";
 // eslint-disable-next-line @typescript-eslint/naming-convention
 export const ECSQL_COLUMN_NAME_FilterClassName = "FilterClassName";
 
+function getClassECInstanceIds(matchingFilters: Array<{ id: InstanceKey }>) {
+  const classNameECInstanceIds = new Map<string, Id64String[]>();
+  for (const matchingFilter of matchingFilters) {
+    const entry = classNameECInstanceIds.get(matchingFilter.id.className);
+    if (entry === undefined) {
+      classNameECInstanceIds.set(matchingFilter.id.className, [matchingFilter.id.id]);
+      continue;
+    }
+    entry.push(matchingFilter.id.id);
+  }
+  return classNameECInstanceIds;
+}
+
 /** @internal */
 export function applyECInstanceIdsFilter(
   def: InstanceNodesQueryDefinition,
-  matchingFilters: Array<MatchedFilter<InstanceKey>>,
+  matchingFilters: Array<{ id: InstanceKey }>,
   hasFilterTargetAncestor: boolean,
 ): InstanceNodesQueryDefinition {
   if (matchingFilters.length === 0) {
     return def;
   }
+  const matchingFiltersToUse = getClassECInstanceIds(matchingFilters);
   return {
     ...def,
     query: {
       ...def.query,
       ctes: [
         ...(def.query.ctes ?? []),
-        // note: generally we'd use `VALUES (1,1),(2,2)`, but that doesn't work in ECSQL (https://github.com/iTwin/itwinjs-backlog/issues/865),
-        // so using UNION as a workaround
-        `FilteringInfo(ECInstanceId, IsFilterTarget, FilterTargetOptions, FilterClassName) AS (
-          ${matchingFilters
-            .map((mc) =>
-              mc.isFilterTarget
-                ? `VALUES (${mc.id.id}, 1, ${mc.filterTargetOptions ? `'${JSON.stringify(mc.filterTargetOptions)}'` : "CAST(NULL AS TEXT)"}, '${mc.id.className}')`
-                : `VALUES (${mc.id.id}, 0, CAST(NULL AS TEXT), '${mc.id.className}')`,
+        `FilteringInfo(ECInstanceId, FilterClassName) AS (
+          ${Array.from(matchingFiltersToUse)
+            .map(
+              ([className, ecInstanceIds]) => `
+                SELECT ECInstanceId, '${className}' AS FilterClassName
+                FROM ${className}
+                WHERE ECInstanceId IN (${ecInstanceIds.join(", ")})
+              `,
             )
             .join(" UNION ALL ")}
         )`,
@@ -390,8 +403,6 @@ export function applyECInstanceIdsFilter(
       ecsql: `
         SELECT
           [q].*,
-          [f].[IsFilterTarget] AS [${ECSQL_COLUMN_NAME_IsFilterTarget}],
-          [f].[FilterTargetOptions] AS [${ECSQL_COLUMN_NAME_FilterTargetOptions}],
           ${hasFilterTargetAncestor ? "1" : "0"} AS [${ECSQL_COLUMN_NAME_HasFilterTargetAncestor}],
           IdToHex([f].[ECInstanceId]) AS [${ECSQL_COLUMN_NAME_FilterECInstanceId}],
           [f].[FilterClassName] AS [${ECSQL_COLUMN_NAME_FilterClassName}]
