@@ -32,6 +32,13 @@ module.exports = [
           allowRegExp: false,
         },
       ],
+      "@typescript-eslint/no-empty-object-type": [
+        "error",
+        {
+          allowInterfaces: "always",
+          allowObjectTypes: "always",
+        },
+      ],
       curly: ["error", "all"],
     },
   },
