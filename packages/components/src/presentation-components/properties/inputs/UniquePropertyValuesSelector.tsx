@@ -78,10 +78,6 @@ export function UniquePropertyValuesSelector(props: UniquePropertyValuesSelector
     setSearchInput("");
   }, [descriptor, property]);
 
-  useEffect(() => {
-    setSearchInput("");
-  }, []);
-
   return (
     <ComboBox
       multiple={true}
