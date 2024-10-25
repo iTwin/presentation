@@ -307,7 +307,6 @@ export class ContentDataProvider implements IContentDataProvider {
     return { displayType: this.displayType };
   }
 
-  // eslint-disable-next-line @typescript-eslint/naming-convention
   private getDefaultContentDescriptor = memoize(async (): Promise<Descriptor | undefined> => {
     this.setupListeners();
     // istanbul ignore if
@@ -425,11 +424,11 @@ export class ContentDataProvider implements IContentDataProvider {
 
       const requestSize = undefined !== pageOptions && 0 === pageOptions.start && undefined !== pageOptions.size;
       if (requestSize) {
-        // eslint-disable-next-line deprecation/deprecation
+        // eslint-disable-next-line @typescript-eslint/no-deprecated
         return Presentation.presentation.getContentAndSize(options);
       }
 
-      // eslint-disable-next-line deprecation/deprecation
+      // eslint-disable-next-line @typescript-eslint/no-deprecated
       const content = await Presentation.presentation.getContent(options);
       return content ? { content, size: content.contentSet.length } : undefined;
     },
@@ -442,26 +441,22 @@ export class ContentDataProvider implements IContentDataProvider {
     this.invalidateCache(CacheInvalidationProps.full());
   }
 
-  // eslint-disable-next-line @typescript-eslint/naming-convention
   private onIModelContentChanged = (args: IModelContentChangeEventArgs) => {
     if (args.rulesetId === this.rulesetId && args.imodelKey === this.imodel.key) {
       this.onContentUpdate();
     }
   };
 
-  // eslint-disable-next-line @typescript-eslint/naming-convention
   private onRulesetModified = (curr: RegisteredRuleset) => {
     if (curr.id === this.rulesetId) {
       this.onContentUpdate();
     }
   };
 
-  // eslint-disable-next-line @typescript-eslint/naming-convention
   private onRulesetVariableChanged = () => {
     this.onContentUpdate();
   };
 
-  // eslint-disable-next-line @typescript-eslint/naming-convention
   private onUnitSystemChanged = () => {
     this.invalidateCache({ content: true });
   };

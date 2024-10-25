@@ -11,7 +11,7 @@ import { Presentation, RulesetManager } from "@itwin/presentation-frontend";
 import { useRulesetRegistration } from "../../presentation-components/hooks/UseRulesetRegistration";
 import { renderHook } from "../TestUtils";
 
-/* eslint-disable deprecation/deprecation */
+/* eslint-disable @typescript-eslint/no-deprecated */
 
 describe("[deprecated] useRulesetRegistration", () => {
   interface HookProps {

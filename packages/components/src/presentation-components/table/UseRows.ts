@@ -227,7 +227,7 @@ async function loadRows(
             );
           }),
         )
-      : // eslint-disable-next-line deprecation/deprecation
+      : // eslint-disable-next-line @typescript-eslint/no-deprecated
         from(Presentation.presentation.getContentAndSize(requestProps)).pipe(
           map((result) =>
             result

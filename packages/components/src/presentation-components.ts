@@ -92,7 +92,6 @@ export * from "./presentation-components/table/CellRenderer";
  * @docs-group-description Viewport
  * Presentation features for [ViewportComponent]($imodel-components-react).
  */
-// eslint-disable-next-line deprecation/deprecation
 export { viewWithUnifiedSelection, ViewWithUnifiedSelectionProps } from "./presentation-components/viewport/WithUnifiedSelection";
 
 /**

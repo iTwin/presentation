@@ -62,7 +62,7 @@ describe("FavoritePropertiesDataFilterer", () => {
 
     const manager = sinon.createStubInstance(FavoritePropertiesManager);
     Object.assign(manager, { hasAsync: undefined });
-    // eslint-disable-next-line deprecation/deprecation
+    // eslint-disable-next-line @typescript-eslint/no-deprecated
     manager.has.callsFake((field) => field === matchingField);
 
     sinon.stub(Presentation, "favoriteProperties").get(() => manager);
@@ -73,7 +73,7 @@ describe("FavoritePropertiesDataFilterer", () => {
       isActive: true,
     });
     const matchResult = await filterer.recordMatchesFilter(record, []);
-    // eslint-disable-next-line deprecation/deprecation
+    // eslint-disable-next-line @typescript-eslint/no-deprecated
     expect(manager.has).to.be.called;
     expect(matchResult).to.deep.eq({ matchesFilter: true, shouldExpandNodeParents: true });
   });

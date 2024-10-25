@@ -614,7 +614,7 @@ describe("useUnifiedSelectionTreeEventHandler", () => {
   });
 
   it("creates and disposes UnifiedSelectionTreeEventHandler", () => {
-    // eslint-disable-next-line deprecation/deprecation
+    // eslint-disable-next-line @typescript-eslint/no-deprecated
     const { result, unmount } = renderHook((props: UnifiedSelectionTreeEventHandlerParams) => useUnifiedSelectionTreeEventHandler(props), {
       initialProps: { nodeLoader },
       disableStrictMode: true,

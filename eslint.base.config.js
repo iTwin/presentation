@@ -35,7 +35,6 @@ module.exports = [
       "@typescript-eslint/no-empty-object-type": [
         "error",
         {
-          allowInterfaces: "always",
           allowObjectTypes: "always",
         },
       ],

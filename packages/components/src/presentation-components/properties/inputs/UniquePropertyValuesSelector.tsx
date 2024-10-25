@@ -300,7 +300,7 @@ function useUniquePropertyValuesLoader({
             mergeMap((result) => result.items),
             toArray(),
           )
-        : // eslint-disable-next-line deprecation/deprecation
+        : // eslint-disable-next-line @typescript-eslint/no-deprecated
           from(Presentation.presentation.getPagedDistinctValues(requestProps)).pipe(map((result) => result.items))
       ).subscribe({
         next: resolve,
