@@ -29,8 +29,8 @@
     "@opentelemetry/api": "^1.8.0",
     "@types/node": "catalog:build-tools",
     "eslint": "catalog:build-tools",
-    "inversify": "^6.0.2",
-    "reflect-metadata": "^0.1.14",
+    "inversify": "catalog:itwinjs-core",
+    "reflect-metadata": "catalog:itwinjs-core",
     "rimraf": "catalog:build-tools",
     "typescript": "catalog:build-tools"
   }

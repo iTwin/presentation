@@ -87,7 +87,7 @@
     "eslint": "catalog:build-tools",
     "global-jsdom": "catalog:test-tools",
     "ignore-styles": "catalog:test-tools",
-    "inversify": "^6.0.2",
+    "inversify": "catalog:itwinjs-core",
     "jsdom": "catalog:test-tools",
     "mocha": "catalog:test-tools",
     "nyc": "catalog:test-tools",
@@ -95,7 +95,7 @@
     "presentation-test-utilities": "workspace:^",
     "react": "catalog:react",
     "react-dom": "catalog:react",
-    "reflect-metadata": "^0.1.14",
+    "reflect-metadata": "catalog:itwinjs-core",
     "sinon": "catalog:test-tools",
     "sinon-chai": "catalog:test-tools",
     "typescript": "catalog:build-tools"

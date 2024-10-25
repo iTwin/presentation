@@ -63,9 +63,9 @@
     "@itwin/presentation-hierarchies": "workspace:^",
     "@itwin/presentation-shared": "workspace:^",
     "@itwin/unified-selection": "workspace:^",
-    "classnames": "^2.5.1",
+    "classnames": "catalog:react",
     "immer": "^10.0.4",
-    "react-error-boundary": "^4.0.13",
+    "react-error-boundary": "catalog:react",
     "rxjs": "catalog:rxjs"
   },
   "peerDependencies": {
@@ -98,7 +98,7 @@
     "chai-subset": "catalog:test-tools",
     "cpx2": "catalog:build-tools",
     "eslint": "catalog:build-tools",
-    "eslint-plugin-react": "^7.34.1",
+    "eslint-plugin-react": "catalog:build-tools",
     "global-jsdom": "catalog:test-tools",
     "ignore-styles": "catalog:test-tools",
     "jsdom": "catalog:test-tools",

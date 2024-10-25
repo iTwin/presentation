@@ -37,6 +37,9 @@ catalogs:
     eslint:
       specifier: ^8.57.0
       version: 8.57.0
+    eslint-plugin-react:
+      specifier: ^7.34.1
+      version: 7.34.1
     rimraf:
       specifier: ^6.0.1
       version: 6.0.1
@@ -101,6 +104,12 @@ catalogs:
     '@itwin/webgl-compatibility':
       specifier: ^4.9.0
       version: 4.9.0
+    inversify:
+      specifier: ^6.0.2
+      version: 6.0.2
+    reflect-metadata:
+      specifier: ^0.1.14
+      version: 0.1.14
   itwinui:
     '@itwin/itwinui-icons-react':
       specifier: ^2.8.0
@@ -118,12 +127,18 @@ catalogs:
     '@types/react-dom':
       specifier: ^18.3.0
       version: 18.3.0
+    classnames:
+      specifier: ^2.5.1
+      version: 2.5.1
     react:
       specifier: ^18.3.1
       version: 18.3.1
     react-dom:
       specifier: ^18.3.1
       version: 18.3.1
+    react-error-boundary:
+      specifier: ^4.0.13
+      version: 4.0.13
   rxjs:
     rxjs:
       specifier: ^7.8.1
@@ -442,7 +457,7 @@ importers:
         specifier: catalog:test-tools
         version: 5.0.1
       inversify:
-        specifier: ^6.0.2
+        specifier: catalog:itwinjs-core
         version: 6.0.2
       jsdom:
         specifier: catalog:test-tools
@@ -463,7 +478,7 @@ importers:
         specifier: catalog:react
         version: 18.3.1(react@18.3.1)
       reflect-metadata:
-        specifier: ^0.1.14
+        specifier: catalog:itwinjs-core
         version: 0.1.14
       rimraf:
         specifier: catalog:build-tools
@@ -544,10 +559,10 @@ importers:
         specifier: catalog:build-tools
         version: 8.57.0
       inversify:
-        specifier: ^6.0.2
+        specifier: catalog:itwinjs-core
         version: 6.0.2
       reflect-metadata:
-        specifier: ^0.1.14
+        specifier: catalog:itwinjs-core
         version: 0.1.14
       rimraf:
         specifier: catalog:build-tools
@@ -714,7 +729,7 @@ importers:
         version: 4.9.0(@itwin/core-bentley@4.9.0)
       '@itwin/build-tools':
         specifier: catalog:build-tools
-        version: 4.9.0(@types/node@20.14.6)
+        version: 4.9.0(@types/node@20.12.12)
       '@itwin/core-backend':
         specifier: catalog:itwinjs-core
         version: 4.9.0(@itwin/core-bentley@4.9.0)(@itwin/core-common@4.9.0(@itwin/core-bentley@4.9.0)(@itwin/core-geometry@4.9.0))(@itwin/core-geometry@4.9.0)(@opentelemetry/api@1.8.0)(encoding@0.1.13)
@@ -794,10 +809,10 @@ importers:
         specifier: catalog:build-tools
         version: 8.57.0
       inversify:
-        specifier: ^6.0.2
+        specifier: catalog:itwinjs-core
         version: 6.0.2
       reflect-metadata:
-        specifier: ^0.1.14
+        specifier: catalog:itwinjs-core
         version: 0.1.14
       rimraf:
         specifier: catalog:build-tools
@@ -810,7 +825,7 @@ importers:
     dependencies:
       '@itwin/build-tools':
         specifier: catalog:build-tools
-        version: 4.9.0(@types/node@20.14.6)
+        version: 4.9.0(@types/node@20.12.12)
       '@itwin/core-bentley':
         specifier: catalog:itwinjs-core
         version: 4.9.0
@@ -968,7 +983,7 @@ importers:
         specifier: ^4.2.1
         version: 4.2.1(vite@5.2.14(@types/node@20.12.12)(sass@1.75.0))
       classnames:
-        specifier: ^2.5.1
+        specifier: catalog:react
         version: 2.5.1
       electron:
         specifier: ^28.3.1
@@ -977,13 +992,13 @@ importers:
         specifier: catalog:build-tools
         version: 8.57.0
       eslint-plugin-react:
-        specifier: ^7.34.1
+        specifier: catalog:build-tools
         version: 7.34.1(eslint@8.57.0)
       immer:
         specifier: ^10.0.4
         version: 10.0.4
       inversify:
-        specifier: ^6.0.2
+        specifier: catalog:itwinjs-core
         version: 6.0.2
       react:
         specifier: catalog:react
@@ -1001,7 +1016,7 @@ importers:
         specifier: ^4.2.1
         version: 4.2.1
       reflect-metadata:
-        specifier: ^0.1.14
+        specifier: catalog:itwinjs-core
         version: 0.1.14
       rimraf:
         specifier: catalog:build-tools
@@ -1031,7 +1046,7 @@ importers:
         specifier: catalog:itwinui
         version: 2.1.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       classnames:
-        specifier: ^2.5.1
+        specifier: catalog:react
         version: 2.5.1
       fast-deep-equal:
         specifier: ^3.1.3
@@ -1043,7 +1058,7 @@ importers:
         specifier: ^4.1.2
         version: 4.1.2
       react-error-boundary:
-        specifier: ^4.0.13
+        specifier: catalog:react
         version: 4.0.13(react@18.3.1)
       react-select:
         specifier: 5.7.0
@@ -1060,7 +1075,7 @@ importers:
         version: 4.9.0(@itwin/core-bentley@4.9.0)
       '@itwin/build-tools':
         specifier: catalog:build-tools
-        version: 4.9.0(@types/node@20.14.6)
+        version: 4.9.0(@types/node@20.12.12)
       '@itwin/components-react':
         specifier: catalog:appui
         version: 4.17.0(@itwin/appui-abstract@4.9.0(@itwin/core-bentley@4.9.0))(@itwin/core-bentley@4.9.0)(@itwin/core-react@4.17.0(@itwin/appui-abstract@4.9.0(@itwin/core-bentley@4.9.0))(@itwin/core-bentley@4.9.0)(@types/react@18.3.3)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@types/react@18.3.3)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -1170,7 +1185,7 @@ importers:
         specifier: catalog:build-tools
         version: 8.57.0
       eslint-plugin-react:
-        specifier: ^7.34.1
+        specifier: catalog:build-tools
         version: 7.34.1(eslint@8.57.0)
       global-jsdom:
         specifier: catalog:test-tools
@@ -1178,9 +1193,6 @@ importers:
       ignore-styles:
         specifier: catalog:test-tools
         version: 5.0.1
-      inversify:
-        specifier: ^6.0.2
-        version: 6.0.2
       jsdom:
         specifier: catalog:test-tools
         version: 24.1.0
@@ -1202,9 +1214,6 @@ importers:
       react-dom:
         specifier: catalog:react
         version: 18.3.1(react@18.3.1)
-      reflect-metadata:
-        specifier: ^0.1.14
-        version: 0.1.14
       rimraf:
         specifier: catalog:build-tools
         version: 6.0.1
@@ -1229,7 +1238,7 @@ importers:
     devDependencies:
       '@itwin/build-tools':
         specifier: catalog:build-tools
-        version: 4.9.0(@types/node@20.14.6)
+        version: 4.9.0(@types/node@20.12.12)
       '@itwin/core-bentley':
         specifier: catalog:itwinjs-core
         version: 4.9.0
@@ -1412,13 +1421,13 @@ importers:
         specifier: workspace:^
         version: link:../unified-selection
       classnames:
-        specifier: ^2.5.1
+        specifier: catalog:react
         version: 2.5.1
       immer:
         specifier: ^10.0.4
         version: 10.0.4
       react-error-boundary:
-        specifier: ^4.0.13
+        specifier: catalog:react
         version: 4.0.13(react@18.3.1)
       rxjs:
         specifier: catalog:rxjs
@@ -1426,7 +1435,7 @@ importers:
     devDependencies:
       '@itwin/build-tools':
         specifier: catalog:build-tools
-        version: 4.9.0(@types/node@20.14.6)
+        version: 4.9.0(@types/node@20.12.12)
       '@itwin/itwinui-react':
         specifier: catalog:itwinui
         version: 3.14.1(@types/react@18.3.3)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -1482,7 +1491,7 @@ importers:
         specifier: catalog:build-tools
         version: 8.57.0
       eslint-plugin-react:
-        specifier: ^7.34.1
+        specifier: catalog:build-tools
         version: 7.34.1(eslint@8.57.0)
       global-jsdom:
         specifier: catalog:test-tools
@@ -1538,7 +1547,7 @@ importers:
     devDependencies:
       '@itwin/build-tools':
         specifier: catalog:build-tools
-        version: 4.9.0(@types/node@20.14.6)
+        version: 4.9.0(@types/node@20.12.12)
       '@itwin/eslint-plugin':
         specifier: catalog:build-tools
         version: 4.1.1(eslint@8.57.0)(typescript@5.5.3)
@@ -1849,7 +1858,7 @@ importers:
         specifier: catalog:test-tools
         version: 5.0.1
       inversify:
-        specifier: ^6.0.2
+        specifier: catalog:itwinjs-core
         version: 6.0.2
       jsdom:
         specifier: catalog:test-tools
@@ -1873,7 +1882,7 @@ importers:
         specifier: catalog:react
         version: 18.3.1(react@18.3.1)
       reflect-metadata:
-        specifier: ^0.1.14
+        specifier: catalog:itwinjs-core
         version: 0.1.14
       sinon:
         specifier: catalog:test-tools

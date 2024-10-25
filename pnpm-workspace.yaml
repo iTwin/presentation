@@ -23,6 +23,8 @@ catalogs:
     "@itwin/presentation-common": "^4.9.0"
     "@itwin/presentation-frontend": "^4.9.0"
     "@itwin/webgl-compatibility": "^4.9.0"
+    "inversify": "^6.0.2"
+    "reflect-metadata": "^0.1.14"
 
   appui:
     "@itwin/appui-react": "^4.17.0"
@@ -36,6 +38,8 @@ catalogs:
     "@itwin/itwinui-react": "^3.14.1"
 
   react:
+    "classnames": "^2.5.1"
+    "react-error-boundary": "^4.0.13"
     "react": "^18.3.1"
     "react-dom": "^18.3.1"
     "@types/react": "^18.3.3"
@@ -76,5 +80,6 @@ catalogs:
     "cpx2": "^7.0.1"
     "cross-env": "^7.0.3"
     "eslint": "^8.57.0"
+    "eslint-plugin-react": "^7.34.1"
     "rimraf": "^6.0.1"
     "typescript": "~5.5.3"

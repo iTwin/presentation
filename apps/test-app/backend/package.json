@@ -40,8 +40,8 @@
     "cross-env": "catalog:build-tools",
     "electron": "^28.3.1",
     "eslint": "catalog:build-tools",
-    "inversify": "^6.0.2",
-    "reflect-metadata": "^0.1.14",
+    "inversify": "catalog:itwinjs-core",
+    "reflect-metadata": "catalog:itwinjs-core",
     "rimraf": "catalog:build-tools",
     "typescript": "catalog:build-tools"
   }
