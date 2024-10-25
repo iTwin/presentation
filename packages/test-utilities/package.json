@@ -21,16 +21,16 @@
     "./package.json": "./package.json"
   },
   "dependencies": {
-    "@itwin/core-bentley": "^4.9.0",
-    "@itwin/core-common": "^4.9.0",
-    "@itwin/core-geometry": "^4.9.0",
+    "@itwin/core-bentley": "catalog:itwinjs-core",
+    "@itwin/core-common": "catalog:itwinjs-core",
+    "@itwin/core-geometry": "catalog:itwinjs-core",
     "rxjs": "^7.8.1"
   },
   "devDependencies": {
-    "@itwin/eslint-plugin": "^4.1.1",
-    "@types/node": "^20.12.12",
-    "eslint": "^8.57.0",
-    "rimraf": "^6.0.1",
-    "typescript": "~5.5.3"
+    "@itwin/eslint-plugin": "catalog:dev-tools",
+    "@types/node": "catalog:dev-tools",
+    "eslint": "catalog:dev-tools",
+    "rimraf": "catalog:dev-tools",
+    "typescript": "catalog:dev-tools"
   }
 }

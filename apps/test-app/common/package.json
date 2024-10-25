@@ -19,17 +19,17 @@
     "docs": "betools extract --fileExt=ts --extractFrom=./src --recursive --out=./build/docs/extract"
   },
   "dependencies": {
-    "@itwin/build-tools": "^4.9.0",
-    "@itwin/core-bentley": "^4.9.0",
-    "@itwin/core-common": "^4.9.0",
-    "@itwin/core-geometry": "^4.9.0",
-    "@itwin/core-quantity": "^4.9.0",
-    "@itwin/ecschema-metadata": "^4.9.0",
-    "@itwin/ecschema-rpcinterface-common": "^4.9.0",
-    "@itwin/eslint-plugin": "^4.1.1",
-    "@itwin/presentation-common": "^4.9.0",
-    "eslint": "^8.57.0",
-    "rimraf": "^6.0.1",
-    "typescript": "~5.5.3"
+    "@itwin/build-tools": "catalog:dev-tools",
+    "@itwin/core-bentley": "catalog:itwinjs-core",
+    "@itwin/core-common": "catalog:itwinjs-core",
+    "@itwin/core-geometry": "catalog:itwinjs-core",
+    "@itwin/core-quantity": "catalog:itwinjs-core",
+    "@itwin/ecschema-metadata": "catalog:itwinjs-core",
+    "@itwin/ecschema-rpcinterface-common": "catalog:itwinjs-core",
+    "@itwin/eslint-plugin": "catalog:dev-tools",
+    "@itwin/presentation-common": "catalog:itwinjs-core",
+    "eslint": "catalog:dev-tools",
+    "rimraf": "catalog:dev-tools",
+    "typescript": "catalog:dev-tools"
   }
 }

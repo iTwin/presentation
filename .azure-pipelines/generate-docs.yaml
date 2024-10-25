@@ -102,7 +102,7 @@ stages:
               versionSpec: 20
               checkLatest: true
 
-          - script: npm install -g pnpm@9
+          - script: npm install -g pnpm@9.12.2
             displayName: Install pnpm
 
           - script: pnpm install

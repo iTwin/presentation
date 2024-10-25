@@ -39,7 +39,7 @@
     "lint": "eslint ./src/**/*.ts"
   },
   "dependencies": {
-    "@itwin/core-bentley": "^4.9.0",
+    "@itwin/core-bentley": "catalog:itwinjs-core",
     "@itwin/presentation-shared": "workspace:^",
     "rxjs": "^7.8.1"
   },
@@ -47,12 +47,12 @@
     "@itwin/presentation-hierarchies": "workspace:^"
   },
   "devDependencies": {
-    "@itwin/build-tools": "^4.9.0",
-    "@itwin/eslint-plugin": "^4.1.1",
+    "@itwin/build-tools": "catalog:dev-tools",
+    "@itwin/eslint-plugin": "catalog:dev-tools",
     "@itwin/presentation-hierarchies": "workspace:^",
-    "cpx2": "^7.0.1",
-    "eslint": "^8.57.0",
-    "rimraf": "^6.0.1",
-    "typescript": "~5.5.3"
+    "cpx2": "catalog:dev-tools",
+    "eslint": "catalog:dev-tools",
+    "rimraf": "catalog:dev-tools",
+    "typescript": "catalog:dev-tools"
   }
 }
