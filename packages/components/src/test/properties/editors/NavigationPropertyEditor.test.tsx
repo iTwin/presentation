@@ -52,6 +52,18 @@ describe("<NavigationPropertyTargetEditor />", () => {
     sinon.stub(Presentation, "presentation").get(() => ({
       getContent: getContentStub,
     }));
+
+    sinon.stub(window.Element.prototype, "getBoundingClientRect").returns({
+      height: 20,
+      width: 20,
+      x: 0,
+      y: 0,
+      bottom: 0,
+      left: 0,
+      right: 0,
+      top: 0,
+      toJSON: () => {},
+    });
   });
 
   after(() => {
@@ -88,7 +100,7 @@ describe("<NavigationPropertyTargetEditor />", () => {
     });
     getContentStub.resolves(new Content(createTestContentDescriptor({ fields: [], categories: [] }), [contentItem]));
     const spy = sinon.spy();
-    const { getByRole, getByText, queryByDisplayValue } = render(
+    const { getByPlaceholderText, getByText, getByDisplayValue } = render(
       <NavigationPropertyTargetEditor propertyRecord={testRecord} onCancel={() => {}} onCommit={spy} />,
       {
         getNavigationPropertyInfo: async () => ({
@@ -101,14 +113,14 @@ describe("<NavigationPropertyTargetEditor />", () => {
     );
 
     // open dropdown
-    const select = await waitFor(() => getByRole("combobox"));
+    const select = await waitFor(() => getByPlaceholderText("navigation-property-editor.select-target-instance"));
     await user.click(select);
 
     // select option from dropdown
     const target = await waitFor(() => getByText(contentItem.label.displayValue));
     await user.click(target);
 
-    await waitFor(() => expect(queryByDisplayValue(contentItem.label.displayValue)).to.not.be.null);
+    await waitFor(() => getByDisplayValue(contentItem.label.displayValue));
     expect(spy).to.be.calledOnce;
   });
 });
