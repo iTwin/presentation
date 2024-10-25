@@ -143,7 +143,6 @@ function createModelsTreeProvider(context: ScenarioContext, events: EventEmitter
   const schemaProvider = createECSchemaProvider(schemas);
   const queryExecutor = createECSqlQueryExecutor({
     createQueryReader(ecsql, bindings, config) {
-      // eslint-disable-next-line @itwin/no-internal
       return new ECSqlReader(schedulingQueryExecutor, ecsql, bindings, config);
     },
   });
