@@ -52,30 +52,30 @@
     "@opentelemetry/api": "^1.0.4"
   },
   "devDependencies": {
-    "@itwin/build-tools": "catalog:dev-tools",
+    "@itwin/build-tools": "catalog:build-tools",
     "@itwin/core-bentley": "catalog:itwinjs-core",
     "@itwin/core-common": "catalog:itwinjs-core",
     "@itwin/core-geometry": "catalog:itwinjs-core",
     "@itwin/core-quantity": "catalog:itwinjs-core",
     "@itwin/ecschema-metadata": "catalog:itwinjs-core",
-    "@itwin/eslint-plugin": "catalog:dev-tools",
+    "@itwin/eslint-plugin": "catalog:build-tools",
     "@itwin/presentation-common": "catalog:itwinjs-core",
     "@opentelemetry/api": "^1.8.0",
     "@types/chai": "catalog:test-tools",
     "@types/mocha": "catalog:test-tools",
-    "@types/node": "catalog:dev-tools",
+    "@types/node": "catalog:build-tools",
     "@types/sinon": "catalog:test-tools",
     "@types/sinon-chai": "catalog:test-tools",
     "chai": "catalog:test-tools",
-    "cpx2": "catalog:dev-tools",
-    "cross-env": "catalog:dev-tools",
-    "eslint": "catalog:dev-tools",
+    "cpx2": "catalog:build-tools",
+    "cross-env": "catalog:build-tools",
+    "eslint": "catalog:build-tools",
     "mocha": "catalog:test-tools",
     "nyc": "catalog:test-tools",
     "presentation-build-tools": "workspace:^",
-    "rimraf": "catalog:dev-tools",
+    "rimraf": "catalog:build-tools",
     "sinon": "catalog:test-tools",
     "sinon-chai": "catalog:test-tools",
-    "typescript": "catalog:dev-tools"
+    "typescript": "catalog:build-tools"
   }
 }

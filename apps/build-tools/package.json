@@ -7,7 +7,7 @@
     "extract-api": "bin/extract-api.cjs"
   },
   "dependencies": {
-    "@itwin/build-tools": "catalog:dev-tools",
+    "@itwin/build-tools": "catalog:build-tools",
     "@microsoft/api-extractor": "~7.47",
     "yargs": "^17.7.2"
   }

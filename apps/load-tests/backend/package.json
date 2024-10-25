@@ -10,7 +10,7 @@
   },
   "dependencies": {
     "@itwin/appui-abstract": "catalog:itwinjs-core",
-    "@itwin/build-tools": "catalog:dev-tools",
+    "@itwin/build-tools": "catalog:build-tools",
     "@itwin/core-backend": "catalog:itwinjs-core",
     "@itwin/core-bentley": "catalog:itwinjs-core",
     "@itwin/core-common": "catalog:itwinjs-core",
@@ -21,17 +21,17 @@
     "@itwin/ecschema-metadata": "catalog:itwinjs-core",
     "@itwin/ecschema-rpcinterface-common": "catalog:itwinjs-core",
     "@itwin/ecschema-rpcinterface-impl": "catalog:itwinjs-core",
-    "@itwin/eslint-plugin": "catalog:dev-tools",
+    "@itwin/eslint-plugin": "catalog:build-tools",
     "@itwin/express-server": "catalog:itwinjs-core",
     "@itwin/presentation-backend": "catalog:itwinjs-core",
     "@itwin/presentation-common": "catalog:itwinjs-core",
     "@itwin/webgl-compatibility": "catalog:itwinjs-core",
     "@opentelemetry/api": "^1.8.0",
-    "@types/node": "catalog:dev-tools",
-    "eslint": "catalog:dev-tools",
+    "@types/node": "catalog:build-tools",
+    "eslint": "catalog:build-tools",
     "inversify": "^6.0.2",
     "reflect-metadata": "^0.1.14",
-    "rimraf": "catalog:dev-tools",
-    "typescript": "catalog:dev-tools"
+    "rimraf": "catalog:build-tools",
+    "typescript": "catalog:build-tools"
   }
 }

@@ -56,28 +56,28 @@
     "rxjs": "catalog:rxjs"
   },
   "devDependencies": {
-    "@itwin/build-tools": "catalog:dev-tools",
-    "@itwin/eslint-plugin": "catalog:dev-tools",
+    "@itwin/build-tools": "catalog:build-tools",
+    "@itwin/eslint-plugin": "catalog:build-tools",
     "@types/chai": "catalog:test-tools",
     "@types/chai-as-promised": "catalog:test-tools",
     "@types/chai-subset": "catalog:test-tools",
     "@types/mocha": "catalog:test-tools",
     "@types/natural-compare-lite": "^1.4.2",
-    "@types/node": "catalog:dev-tools",
+    "@types/node": "catalog:build-tools",
     "@types/sinon": "catalog:test-tools",
     "@types/sinon-chai": "catalog:test-tools",
     "chai": "catalog:test-tools",
     "chai-as-promised": "catalog:test-tools",
     "chai-subset": "catalog:test-tools",
-    "cpx2": "catalog:dev-tools",
-    "eslint": "catalog:dev-tools",
+    "cpx2": "catalog:build-tools",
+    "eslint": "catalog:build-tools",
     "mocha": "catalog:test-tools",
     "nyc": "catalog:test-tools",
     "presentation-build-tools": "workspace:^",
     "presentation-test-utilities": "workspace:^",
-    "rimraf": "catalog:dev-tools",
+    "rimraf": "catalog:build-tools",
     "sinon": "catalog:test-tools",
     "sinon-chai": "catalog:test-tools",
-    "typescript": "catalog:dev-tools"
+    "typescript": "catalog:build-tools"
   }
 }

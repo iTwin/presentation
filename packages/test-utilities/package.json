@@ -27,10 +27,10 @@
     "rxjs": "catalog:rxjs"
   },
   "devDependencies": {
-    "@itwin/eslint-plugin": "catalog:dev-tools",
-    "@types/node": "catalog:dev-tools",
-    "eslint": "catalog:dev-tools",
-    "rimraf": "catalog:dev-tools",
-    "typescript": "catalog:dev-tools"
+    "@itwin/eslint-plugin": "catalog:build-tools",
+    "@types/node": "catalog:build-tools",
+    "eslint": "catalog:build-tools",
+    "rimraf": "catalog:build-tools",
+    "typescript": "catalog:build-tools"
   }
 }

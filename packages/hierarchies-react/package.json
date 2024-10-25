@@ -79,7 +79,7 @@
     }
   },
   "devDependencies": {
-    "@itwin/build-tools": "catalog:dev-tools",
+    "@itwin/build-tools": "catalog:build-tools",
     "@itwin/itwinui-react": "^3.14.1",
     "@testing-library/dom": "catalog:test-tools",
     "@testing-library/react": "catalog:test-tools",
@@ -96,8 +96,8 @@
     "chai": "catalog:test-tools",
     "chai-as-promised": "catalog:test-tools",
     "chai-subset": "catalog:test-tools",
-    "cpx2": "catalog:dev-tools",
-    "eslint": "catalog:dev-tools",
+    "cpx2": "catalog:build-tools",
+    "eslint": "catalog:build-tools",
     "eslint-plugin-react": "^7.34.1",
     "global-jsdom": "catalog:test-tools",
     "ignore-styles": "catalog:test-tools",
@@ -108,9 +108,9 @@
     "presentation-test-utilities": "workspace:^",
     "react": "catalog:react",
     "react-dom": "catalog:react",
-    "rimraf": "catalog:dev-tools",
+    "rimraf": "catalog:build-tools",
     "sinon": "catalog:test-tools",
     "sinon-chai": "catalog:test-tools",
-    "typescript": "catalog:dev-tools"
+    "typescript": "catalog:build-tools"
   }
 }
