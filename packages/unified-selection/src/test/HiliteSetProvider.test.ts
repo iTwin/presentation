@@ -33,6 +33,7 @@ describe("HiliteSetProvider", () => {
     async function* createFakeQueryReader<TRow extends {} = ECSqlQueryRow>(
       rows: (TRow | Promise<TRow>)[],
     ): ReturnType<ECSqlQueryExecutor["createQueryReader"]> {
+      // eslint-disable-next-line @typescript-eslint/await-thenable
       for await (const row of rows) {
         yield row;
       }
@@ -354,7 +355,7 @@ describe("HiliteSetProvider", () => {
 
       it("rethrows errors thrown by query observables", async () => {
         imodelAccess.classDerivesFrom.withArgs("TestSchema.TestElement", "BisCore.Element").returns(true);
-        mockQuery([], [], [Promise.reject("dummy error")]);
+        mockQuery([], [], [Promise.reject(new Error("dummy error"))]);
 
         const selectables = Selectables.create([createSelectableInstanceKey(1, "TestSchema:TestElement")]);
         await expect(loadHiliteSet(selectables)).to.be.rejected;
