@@ -164,23 +164,9 @@ const ruleset: Ruleset = {
  * 'DOMMatrix' is needed for tests using draggable 'Dialog'.
  */
 function stubGlobals() {
-  const raf = global.requestAnimationFrame;
-  const caf = global.cancelAnimationFrame;
   const domMatrix = global.DOMMatrix;
 
   before(() => {
-    Object.defineProperty(global, "requestAnimationFrame", {
-      writable: true,
-      value: (cb: FrameRequestCallback) => {
-        return setTimeout(cb, 0);
-      },
-    });
-    Object.defineProperty(global, "cancelAnimationFrame", {
-      writable: true,
-      value: (handle: number) => {
-        clearTimeout(handle);
-      },
-    });
     Object.defineProperty(global, "DOMMatrix", {
       writable: true,
       value: sinon.fake(() => ({ m41: 0, m42: 0 })),
@@ -188,14 +174,6 @@ function stubGlobals() {
   });
 
   after(() => {
-    Object.defineProperty(global, "requestAnimationFrame", {
-      writable: true,
-      value: raf,
-    });
-    Object.defineProperty(global, "cancelAnimationFrame", {
-      writable: true,
-      value: caf,
-    });
     Object.defineProperty(global, "DOMMatrix", {
       writable: true,
       value: domMatrix,

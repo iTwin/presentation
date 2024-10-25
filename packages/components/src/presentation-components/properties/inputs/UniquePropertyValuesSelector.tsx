@@ -3,29 +3,15 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { useEffect, useMemo, useState } from "react";
-import { ActionMeta, InputActionMeta, MultiValue } from "react-select";
-import { from, map, mergeMap, toArray } from "rxjs";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { PropertyDescription, PropertyValue, PropertyValueFormat } from "@itwin/appui-abstract";
 import { IModelConnection } from "@itwin/core-frontend";
-import {
-  ClassInfo,
-  Descriptor,
-  DisplayValue,
-  DisplayValueGroup,
-  Field,
-  Keys,
-  KeySet,
-  MultiSchemaClassesSpecification,
-  Ruleset,
-} from "@itwin/presentation-common";
-import { Presentation } from "@itwin/presentation-frontend";
+import { ComboBox, SelectOption } from "@itwin/itwinui-react";
+import { ClassInfo, Descriptor, Field, Keys, KeySet, MultiSchemaClassesSpecification, Ruleset } from "@itwin/presentation-common";
 import { deserializeUniqueValues, findField, serializeUniqueValues, translate, UniqueValue } from "../../common/Utils";
 import { getInstanceFilterFieldName } from "../../instance-filter-builder/Utils";
-import { AsyncSelect } from "./AsyncSelect";
-
-/** @internal */
-export const UNIQUE_PROPERTY_VALUES_BATCH_SIZE = 100;
+import { FILTER_WARNING_OPTION, VALUE_BATCH_SIZE } from "./ItemsLoader";
+import { useUniquePropertyValuesLoader } from "./UseUniquePropertyValuesLoader";
 
 /** @internal */
 export interface UniquePropertyValuesSelectorProps {
@@ -49,98 +35,80 @@ export interface UniquePropertyValuesSelectorProps {
 export function UniquePropertyValuesSelector(props: UniquePropertyValuesSelectorProps) {
   const { imodel, descriptor, property, onChange, value, descriptorInputKeys, selectedClasses } = props;
   const [field, setField] = useState<Field | undefined>(() => findField(descriptor, getInstanceFilterFieldName(property)));
-  const [searchInput, setSearchInput] = useState<string>("");
-  const selectedValues = useMemo(() => getUniqueValueFromProperty(value), [value]);
+  const [searchInput, setSearchInput] = useState<string>();
+  const selectedValues = useMemo(() => getUniqueValueFromProperty(value)?.map((val) => val.displayValue), [value]);
+  const ruleset = useUniquePropertyValuesRuleset(descriptor.ruleset, field, descriptorInputKeys, selectedClasses);
+  const { selectOptions, loadedOptions, isLoading } = useUniquePropertyValuesLoader({
+    imodel,
+    ruleset,
+    field,
+    descriptorInputKeys,
+    typeName: property.typename,
+    selectedValues,
+    filterText: searchInput,
+  });
+
+  const onValueChange = useCallback(
+    (newValues: string[]) => {
+      const newSelectedValues = loadedOptions.filter((opt) => newValues.includes(opt.displayValue));
+      if (newSelectedValues.length === 0) {
+        onChange({
+          valueFormat: PropertyValueFormat.Primitive,
+          displayValue: undefined,
+          value: undefined,
+        });
+      } else {
+        const { displayValues, groupedRawValues } = serializeUniqueValues(newSelectedValues);
+        onChange({
+          valueFormat: PropertyValueFormat.Primitive,
+          displayValue: displayValues,
+          value: groupedRawValues,
+        });
+      }
+    },
+    [loadedOptions, onChange],
+  );
+
+  const emptyContent = useMemo(() => {
+    return isLoading ? translate("unique-values-property-editor.loading-values") : translate("unique-values-property-editor.no-values");
+  }, [isLoading]);
 
   useEffect(() => {
     setField(findField(descriptor, getInstanceFilterFieldName(property)));
     setSearchInput("");
   }, [descriptor, property]);
 
-  const onValueChange = (_: MultiValue<UniqueValue>, action: ActionMeta<UniqueValue>) => {
-    const currentOptions = () => {
-      switch (action.action) {
-        case "select-option":
-          return [...selectedValues, action.option].filter((v): v is UniqueValue => v !== undefined);
-        case "deselect-option":
-          return [...selectedValues].filter((v) => v.displayValue !== action.option?.displayValue);
-        case "clear":
-          return [];
-      }
-      // istanbul ignore next
-      return [...selectedValues];
-    };
-
-    const newSelectedValue = currentOptions();
-    if (newSelectedValue.length === 0) {
-      onChange({
-        valueFormat: PropertyValueFormat.Primitive,
-        displayValue: undefined,
-        value: undefined,
-      });
-    } else {
-      const { displayValues, groupedRawValues } = serializeUniqueValues(newSelectedValue);
-      onChange({
-        valueFormat: PropertyValueFormat.Primitive,
-        displayValue: displayValues,
-        value: groupedRawValues,
-      });
-    }
-  };
-
-  const onInputChange = (input: string, actionMeta: InputActionMeta) => {
-    // Do not reset search input on option select
-    if (actionMeta.action !== "set-value") {
-      setSearchInput(input);
-    }
-  };
-
-  const isOptionSelected = (option: UniqueValue): boolean => selectedValues.map((selectedValue) => selectedValue.displayValue).includes(option.displayValue);
-  const ruleset = useUniquePropertyValuesRuleset(descriptor.ruleset, field, descriptorInputKeys, selectedClasses);
-  const { loadValues, hasMore, optionCount } = useUniquePropertyValuesLoader({ imodel, property, descriptor, ruleset, field, descriptorInputKeys });
-
   return (
-    <AsyncSelect
-      inputValue={searchInput}
-      value={selectedValues}
-      debounceTimeout={500}
-      loadOptions={async (input, options) => loadValues(input, options.length)}
-      placeholder={translate("unique-values-property-editor.select-values")}
+    <ComboBox
+      multiple={true}
+      enableVirtualization={true}
+      options={selectOptions}
       onChange={onValueChange}
-      isOptionSelected={isOptionSelected}
-      cacheUniqs={[property, searchInput]}
-      hideSelectedOptions={false}
-      isSearchable={true}
-      closeMenuOnSelect={false}
-      blurInputOnSelect={false}
-      tabSelectsValue={false}
-      getOptionLabel={(option) => formatOptionLabel(option.displayValue, property.typename)}
-      getOptionValue={(option) => option.displayValue}
-      onInputChange={onInputChange}
-      // do not show no data message if no options are shown but more can be loaded
-      isLoading={optionCount === 0 && hasMore ? true : undefined}
+      filterFunction={(options: SelectOption<string>[], inputValue: string) => {
+        const filteredOptions = options
+          .filter((option) => option.label.toLowerCase().includes(inputValue.toLowerCase()) && option.value !== FILTER_WARNING_OPTION.value)
+          .slice(0, VALUE_BATCH_SIZE);
+
+        if (filteredOptions.length >= VALUE_BATCH_SIZE) {
+          filteredOptions.push(FILTER_WARNING_OPTION);
+        }
+        return filteredOptions;
+      }}
+      emptyStateMessage={emptyContent}
+      value={selectedValues}
+      inputProps={{
+        placeholder: translate("unique-values-property-editor.select-values"),
+        size: "small",
+        value: searchInput,
+        onChange: (e) => setSearchInput(e.target.value),
+      }}
     />
   );
 }
 
-function formatOptionLabel(displayValue: string, type: string): string {
-  if (displayValue === "") {
-    return translate("unique-values-property-editor.empty-value");
-  }
-
-  switch (type) {
-    case "dateTime":
-      return new Date(displayValue).toLocaleString();
-    case "shortDate":
-      return new Date(displayValue).toLocaleDateString();
-    default:
-      return displayValue;
-  }
-}
-
-function getUniqueValueFromProperty(propertyValue: PropertyValue | undefined): UniqueValue[] {
+function getUniqueValueFromProperty(propertyValue: PropertyValue | undefined): UniqueValue[] | undefined {
   if (propertyValue?.valueFormat === PropertyValueFormat.Primitive && typeof propertyValue.value === "string" && propertyValue.displayValue) {
-    return deserializeUniqueValues(propertyValue.displayValue, propertyValue.value) ?? [];
+    return deserializeUniqueValues(propertyValue.displayValue, propertyValue.value);
   }
   return [];
 }
@@ -225,119 +193,6 @@ function getFieldClassInfos(field?: Field) {
   }
   const lastStepToPrimaryClass = rootParentField?.pathToPrimaryClass.slice(-1).pop();
   return lastStepToPrimaryClass ? [lastStepToPrimaryClass.targetClassInfo] : [];
-}
-
-interface UseUniquePropertyValuesLoaderProps {
-  imodel: IModelConnection;
-  property: PropertyDescription;
-  descriptor: Descriptor;
-  ruleset?: Ruleset;
-  field?: Field;
-  descriptorInputKeys?: Keys;
-}
-
-interface UseUniquePropertyValuesLoaderResult {
-  loadValues: (searchInput: string, loadedOptionsCount: number) => Promise<{ options: UniqueValue[]; hasMore: boolean }>;
-  optionCount: number;
-  hasMore: boolean;
-}
-
-interface UniquePropertyValuesLoaderState {
-  totalCount: number;
-  filteredCount: number;
-  options: UniqueValue[];
-  hasMore: boolean;
-}
-
-function useUniquePropertyValuesLoader({
-  imodel,
-  property,
-  descriptor,
-  ruleset,
-  field,
-  descriptorInputKeys,
-}: UseUniquePropertyValuesLoaderProps): UseUniquePropertyValuesLoaderResult {
-  const [loadedOptions, setLoadedOptions] = useState<UniquePropertyValuesLoaderState>({
-    totalCount: 0,
-    filteredCount: 0,
-    options: [],
-    hasMore: false,
-  });
-
-  useEffect(() => {
-    setLoadedOptions({ totalCount: 0, filteredCount: 0, options: [], hasMore: false });
-  }, [property, descriptor]);
-
-  const loadValues = async (searchInput: string, loadedOptionsCount: number) => {
-    searchInput = searchInput.toLowerCase();
-    const matchesSearchInput = (option: UniqueValue) => {
-      return !searchInput || option.displayValue.toLowerCase().includes(searchInput);
-    };
-
-    if (!ruleset || !field) {
-      return { options: [], hasMore: false };
-    }
-
-    // if the first page is requested and we already have the options loaded, return previous values.
-    if (loadedOptionsCount === 0 && loadedOptions.totalCount > 0) {
-      const searchedOptions = loadedOptions.options.filter(matchesSearchInput);
-      if (!loadedOptions.hasMore || searchedOptions.length !== 0) {
-        return { options: searchedOptions, hasMore: loadedOptions.hasMore };
-      }
-    }
-
-    const requestProps = {
-      imodel,
-      descriptor: {},
-      fieldDescriptor: field.getFieldDescriptor(),
-      rulesetOrId: ruleset,
-      paging: { start: loadedOptions.totalCount, size: UNIQUE_PROPERTY_VALUES_BATCH_SIZE },
-      keys: new KeySet(descriptorInputKeys),
-    };
-    const items = await new Promise<DisplayValueGroup[]>((resolve) => {
-      (Presentation.presentation.getDistinctValuesIterator
-        ? from(Presentation.presentation.getDistinctValuesIterator(requestProps)).pipe(
-            mergeMap((result) => result.items),
-            toArray(),
-          )
-        : // eslint-disable-next-line @typescript-eslint/no-deprecated
-          from(Presentation.presentation.getPagedDistinctValues(requestProps)).pipe(map((result) => result.items))
-      ).subscribe({
-        next: resolve,
-        error: () => resolve([]),
-      });
-    });
-
-    const options: UniqueValue[] = [];
-    for (const option of items) {
-      if (option.displayValue === undefined || !DisplayValue.isPrimitive(option.displayValue)) {
-        continue;
-      }
-      const groupedValues = option.groupedRawValues.filter((value) => value !== undefined);
-
-      if (groupedValues.length !== 0) {
-        options.push({ displayValue: option.displayValue, groupedRawValues: groupedValues });
-      }
-    }
-
-    const hasMoreOptions = items.length === UNIQUE_PROPERTY_VALUES_BATCH_SIZE;
-    const filteredOptions = options.filter(matchesSearchInput);
-
-    setLoadedOptions((prev) => ({
-      totalCount: prev.totalCount + items.length,
-      // when first page is requested reset filtered option count
-      filteredCount: loadedOptionsCount === 0 ? filteredOptions.length : prev.filteredCount + filteredOptions.length,
-      options: [...prev.options, ...options],
-      hasMore: hasMoreOptions,
-    }));
-
-    return {
-      options: filteredOptions,
-      hasMore: hasMoreOptions,
-    };
-  };
-
-  return { loadValues, optionCount: loadedOptions.filteredCount, hasMore: loadedOptions.hasMore };
 }
 
 function hasKeys(descriptorInputKeys?: Keys) {
