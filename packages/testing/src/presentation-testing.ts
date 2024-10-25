@@ -37,4 +37,4 @@ export * from "./presentation-testing/Helpers";
  */
 export * from "./presentation-testing/IModelUtilities";
 
-export { PresentationManagerMode }; // eslint-disable-line deprecation/deprecation
+export { PresentationManagerMode };
