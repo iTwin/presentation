@@ -34,7 +34,7 @@ describe("Unified Selection", () => {
       it("hilites models directly under subject", async function () {
         let subjectKey: InstanceKey;
         let modelKeys: InstanceKey[];
-        // eslint-disable-next-line deprecation/deprecation
+        // eslint-disable-next-line @typescript-eslint/no-deprecated
         const imodel = await buildTestIModel(this, async (builder) => {
           subjectKey = insertSubject({ builder, codeValue: "test subject" });
           modelKeys = [
@@ -58,7 +58,7 @@ describe("Unified Selection", () => {
       it("hilites models nested deeply under subject", async function () {
         let subjectKey: InstanceKey;
         let modelKeys: InstanceKey[];
-        // eslint-disable-next-line deprecation/deprecation
+        // eslint-disable-next-line @typescript-eslint/no-deprecated
         const imodel = await buildTestIModel(this, async (builder) => {
           subjectKey = insertSubject({ builder, codeValue: "test subject" });
           const subject2 = insertSubject({ builder, codeValue: "subject 2", parentId: subjectKey.id });
@@ -86,7 +86,7 @@ describe("Unified Selection", () => {
     describe("Model", () => {
       it("hilites model", async function () {
         let modelKey: InstanceKey;
-        // eslint-disable-next-line deprecation/deprecation
+        // eslint-disable-next-line @typescript-eslint/no-deprecated
         const imodel = await buildTestIModel(this, async (builder) => {
           modelKey = insertPhysicalModelWithPartition({ builder, codeValue: "test model" });
         });
@@ -106,7 +106,7 @@ describe("Unified Selection", () => {
       it("hilites category's subcategories", async function () {
         let categoryKey: InstanceKey;
         let subCategoryKeys: InstanceKey[];
-        // eslint-disable-next-line deprecation/deprecation
+        // eslint-disable-next-line @typescript-eslint/no-deprecated
         const imodel = await buildTestIModel(this, async (builder) => {
           categoryKey = insertSpatialCategory({ builder, codeValue: "test category" });
           subCategoryKeys = [
@@ -130,7 +130,7 @@ describe("Unified Selection", () => {
 
       it("hilites subcategory", async function () {
         let categoryKey: InstanceKey;
-        // eslint-disable-next-line deprecation/deprecation
+        // eslint-disable-next-line @typescript-eslint/no-deprecated
         const imodel = await buildTestIModel(this, async (builder) => {
           categoryKey = insertSpatialCategory({ builder, codeValue: "test category" });
         });
@@ -151,7 +151,7 @@ describe("Unified Selection", () => {
       it("hilites assembly element", async function () {
         let assemblyKey: InstanceKey;
         let expectedHighlightedElementKeys: InstanceKey[];
-        // eslint-disable-next-line deprecation/deprecation
+        // eslint-disable-next-line @typescript-eslint/no-deprecated
         const imodel = await buildTestIModel(this, async (builder) => {
           const modelKey = insertPhysicalModelWithPartition({ builder, codeValue: "test model" });
           const categoryKey = insertSpatialCategory({ builder, codeValue: "test category" });
@@ -191,7 +191,7 @@ describe("Unified Selection", () => {
 
       it("hilites leaf element", async function () {
         let elementKey: InstanceKey;
-        // eslint-disable-next-line deprecation/deprecation
+        // eslint-disable-next-line @typescript-eslint/no-deprecated
         const imodel = await buildTestIModel(this, async (builder) => {
           const modelKey = insertPhysicalModelWithPartition({ builder, codeValue: "test model" });
           const categoryKey = insertSpatialCategory({ builder, codeValue: "test category" });
@@ -211,7 +211,7 @@ describe("Unified Selection", () => {
       });
 
       it("hilites transient element", async function () {
-        // eslint-disable-next-line deprecation/deprecation
+        // eslint-disable-next-line @typescript-eslint/no-deprecated
         const imodel = await buildTestIModel(this, async (_) => {});
         const transientElementKey = { className: TRANSIENT_ELEMENT_CLASSNAME, id: Id64.fromLocalAndBriefcaseIds(123, 0xffffff) };
         await using(new ViewportSelectionHandler({ imodel }), async (_) => {
@@ -228,7 +228,7 @@ describe("Unified Selection", () => {
       });
 
       it("hilites transient element after removing and adding it back", async function () {
-        // eslint-disable-next-line deprecation/deprecation
+        // eslint-disable-next-line @typescript-eslint/no-deprecated
         const imodel = await buildTestIModel(this, async (_) => {});
         const transientElementKey = { className: TRANSIENT_ELEMENT_CLASSNAME, id: Id64.fromLocalAndBriefcaseIds(123, 0xffffff) };
         await using(new ViewportSelectionHandler({ imodel }), async (_) => {

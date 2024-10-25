@@ -18,8 +18,6 @@ import { initialize, terminate } from "../../IntegrationTests.js";
 import { ensureHasError, ErrorBoundary } from "../ErrorBoundary.js";
 import { ensureTableHasRowsWithCellValues } from "../TableUtils.js";
 
-/* eslint-disable @typescript-eslint/naming-convention */
-
 describe("Learning snippets", () => {
   describe("Table", () => {
     before(async () => {
@@ -115,7 +113,7 @@ describe("Learning snippets", () => {
 
       // set up imodel for the test
       let modelKey: InstanceKey | undefined;
-      // eslint-disable-next-line deprecation/deprecation
+      // eslint-disable-next-line @typescript-eslint/no-deprecated
       const imodel = await buildTestIModel(this, async (builder) => {
         const categoryKey = insertSpatialCategory({ builder, codeValue: "My Category" });
         modelKey = insertPhysicalModelWithPartition({ builder, codeValue: "My Model" });

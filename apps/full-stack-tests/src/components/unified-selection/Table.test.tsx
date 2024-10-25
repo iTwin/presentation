@@ -20,8 +20,6 @@ import { act, getByText, render, waitFor } from "@testing-library/react";
 import { initialize, terminate } from "../../IntegrationTests.js";
 import { ensureTableHasRowsWithCellValues } from "../TableUtils.js";
 
-/* eslint-disable @typescript-eslint/naming-convention */
-
 describe("Learning snippets", async () => {
   describe("Table", () => {
     before(async () => {
@@ -106,7 +104,7 @@ describe("Learning snippets", async () => {
       // set up imodel for the test
       let modelKey: InstanceKey;
       const elementKeys: InstanceKey[] = [];
-      // eslint-disable-next-line deprecation/deprecation
+      // eslint-disable-next-line @typescript-eslint/no-deprecated
       const imodel = await buildTestIModel(this, (builder) => {
         const categoryKey = insertSpatialCategory({ builder, codeValue: "My Category" });
         modelKey = insertPhysicalModelWithPartition({ builder, codeValue: "My Model" });

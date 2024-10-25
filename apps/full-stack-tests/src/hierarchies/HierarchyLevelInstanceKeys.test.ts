@@ -19,7 +19,7 @@ describe("Hierarchies", () => {
 
     before(async () => {
       await initialize();
-      // eslint-disable-next-line deprecation/deprecation
+      // eslint-disable-next-line @typescript-eslint/no-deprecated
       imodel = await buildTestIModel("hierarchy-level-instance-keys", async () => {});
     });
 

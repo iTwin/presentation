@@ -33,7 +33,6 @@ describe("SelectionScope", () => {
         cacheDir: path.join(__dirname, ".cache", `${process.pid}`),
       },
     });
-    // eslint-disable-next-line @itwin/no-internal
     RpcManager.registerImpl(ECSchemaRpcInterface, ECSchemaRpcImpl);
     RpcConfiguration.developmentMode = true;
     RpcManager.initializeInterface(ECSchemaRpcInterface);
@@ -59,7 +58,7 @@ describe("SelectionScope", () => {
   describe("`element` scope", () => {
     it("returns element", async function () {
       let elementKey1: SelectableInstanceKey;
-      // eslint-disable-next-line deprecation/deprecation
+      // eslint-disable-next-line @typescript-eslint/no-deprecated
       iModel = await buildTestIModel(this, async (builder) => {
         const modelKey = insertPhysicalModelWithPartition({ builder, codeValue: "test model" });
         const categoryKey = insertSpatialCategory({ builder, codeValue: "test category" });
@@ -79,7 +78,7 @@ describe("SelectionScope", () => {
 
     it("skips invalid ID's", async function () {
       let elementKey1: SelectableInstanceKey;
-      // eslint-disable-next-line deprecation/deprecation
+      // eslint-disable-next-line @typescript-eslint/no-deprecated
       iModel = await buildTestIModel(this, async (builder) => {
         const modelKey = insertPhysicalModelWithPartition({ builder, codeValue: "test model" });
         const categoryKey = insertSpatialCategory({ builder, codeValue: "test category" });
@@ -101,7 +100,7 @@ describe("SelectionScope", () => {
       let parentKey: SelectableInstanceKey;
       let elementKey1: SelectableInstanceKey;
       let elementKey2: SelectableInstanceKey;
-      // eslint-disable-next-line deprecation/deprecation
+      // eslint-disable-next-line @typescript-eslint/no-deprecated
       iModel = await buildTestIModel(this, async (builder) => {
         const modelKey = insertPhysicalModelWithPartition({ builder, codeValue: "test model" });
         const categoryKey = insertSpatialCategory({ builder, codeValue: "test category" });
@@ -127,7 +126,7 @@ describe("SelectionScope", () => {
 
     it("returns element when it has no parent", async function () {
       let elementKey: SelectableInstanceKey;
-      // eslint-disable-next-line deprecation/deprecation
+      // eslint-disable-next-line @typescript-eslint/no-deprecated
       iModel = await buildTestIModel(this, async (builder) => {
         const modelKey = insertPhysicalModelWithPartition({ builder, codeValue: "test model" });
         const categoryKey = insertSpatialCategory({ builder, codeValue: "test category" });
@@ -141,7 +140,7 @@ describe("SelectionScope", () => {
     it("returns grandparent of element", async function () {
       let grandParentKey: SelectableInstanceKey;
       let elementKey: SelectableInstanceKey;
-      // eslint-disable-next-line deprecation/deprecation
+      // eslint-disable-next-line @typescript-eslint/no-deprecated
       iModel = await buildTestIModel(this, async (builder) => {
         const modelKey = insertPhysicalModelWithPartition({ builder, codeValue: "test model" });
         const categoryKey = insertSpatialCategory({ builder, codeValue: "test category" });
@@ -169,7 +168,7 @@ describe("SelectionScope", () => {
     it("returns last existing ancestor", async function () {
       let parentKey: SelectableInstanceKey;
       let elementKey: SelectableInstanceKey;
-      // eslint-disable-next-line deprecation/deprecation
+      // eslint-disable-next-line @typescript-eslint/no-deprecated
       iModel = await buildTestIModel(this, async (builder) => {
         const modelKey = insertPhysicalModelWithPartition({ builder, codeValue: "test model" });
         const categoryKey = insertSpatialCategory({ builder, codeValue: "test category" });
@@ -189,7 +188,7 @@ describe("SelectionScope", () => {
 
     it("returns all selected elements", async function () {
       let elementKeys: SelectableInstanceKey[];
-      // eslint-disable-next-line deprecation/deprecation
+      // eslint-disable-next-line @typescript-eslint/no-deprecated
       iModel = await buildTestIModel(this, async (builder) => {
         const modelKey = insertPhysicalModelWithPartition({ builder, codeValue: "test model" });
         const categoryKey = insertSpatialCategory({ builder, codeValue: "test category" });
@@ -210,7 +209,7 @@ describe("SelectionScope", () => {
     it("returns root element", async function () {
       let rootElementKey: SelectableInstanceKey;
       let elementKey3: SelectableInstanceKey;
-      // eslint-disable-next-line deprecation/deprecation
+      // eslint-disable-next-line @typescript-eslint/no-deprecated
       iModel = await buildTestIModel(this, async (builder) => {
         const modelKey = insertPhysicalModelWithPartition({ builder, codeValue: "test model" });
         const categoryKey = insertSpatialCategory({ builder, codeValue: "test category" });
@@ -248,7 +247,7 @@ describe("SelectionScope", () => {
       let categoryKey1: SelectableInstanceKey;
       let categoryKey2: SelectableInstanceKey;
       let elementIds: string[];
-      // eslint-disable-next-line deprecation/deprecation
+      // eslint-disable-next-line @typescript-eslint/no-deprecated
       iModel = await buildTestIModel(this, async (builder) => {
         const modelKey = insertPhysicalModelWithPartition({ builder, codeValue: "test model" });
         categoryKey1 = insertSpatialCategory({ builder, codeValue: "test category 1" });
@@ -288,7 +287,7 @@ describe("SelectionScope", () => {
     it("returns element model", async function () {
       let modelKey: SelectableInstanceKey;
       let elementIds: string[];
-      // eslint-disable-next-line deprecation/deprecation
+      // eslint-disable-next-line @typescript-eslint/no-deprecated
       iModel = await buildTestIModel(this, async (builder) => {
         modelKey = insertPhysicalModelWithPartition({ builder, codeValue: "test model" });
         const categoryKey = insertSpatialCategory({ builder, codeValue: "test category" });
@@ -321,7 +320,7 @@ describe("SelectionScope", () => {
       it("returns `GeometricElement3d` related functional element", async function () {
         let physicalElement: SelectableInstanceKey;
         let functionalElement: SelectableInstanceKey;
-        // eslint-disable-next-line deprecation/deprecation
+        // eslint-disable-next-line @typescript-eslint/no-deprecated
         iModel = await buildTestIModel(this, async (builder) => {
           const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
           await builder.importSchema(schema);
@@ -343,7 +342,7 @@ describe("SelectionScope", () => {
 
       it("returns `GeometricElement3d` when no related functional element exists", async function () {
         let physicalElement: SelectableInstanceKey;
-        // eslint-disable-next-line deprecation/deprecation
+        // eslint-disable-next-line @typescript-eslint/no-deprecated
         iModel = await buildTestIModel(this, async (builder) => {
           const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
           await builder.importSchema(schema);
@@ -358,7 +357,7 @@ describe("SelectionScope", () => {
 
       it("returns `GeometricElement3d` when parent has related functional element", async function () {
         let physicalElement: SelectableInstanceKey;
-        // eslint-disable-next-line deprecation/deprecation
+        // eslint-disable-next-line @typescript-eslint/no-deprecated
         iModel = await buildTestIModel(this, async (builder) => {
           const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
           await builder.importSchema(schema);
@@ -389,7 +388,7 @@ describe("SelectionScope", () => {
         let physicalElement1: SelectableInstanceKey;
         let physicalElement2: SelectableInstanceKey;
         let functionalElement: SelectableInstanceKey;
-        // eslint-disable-next-line deprecation/deprecation
+        // eslint-disable-next-line @typescript-eslint/no-deprecated
         iModel = await buildTestIModel(this, async (builder) => {
           const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
           await builder.importSchema(schema);
@@ -419,7 +418,7 @@ describe("SelectionScope", () => {
       it("returns `GeometricElement3d` parent related functional element", async function () {
         let physicalElement: SelectableInstanceKey;
         let functionalElementKey: SelectableInstanceKey;
-        // eslint-disable-next-line deprecation/deprecation
+        // eslint-disable-next-line @typescript-eslint/no-deprecated
         iModel = await buildTestIModel(this, async (builder) => {
           const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
           await builder.importSchema(schema);
@@ -449,7 +448,7 @@ describe("SelectionScope", () => {
       it("returns parent without functional element", async function () {
         let parentKey: SelectableInstanceKey;
         let physicalElement: SelectableInstanceKey;
-        // eslint-disable-next-line deprecation/deprecation
+        // eslint-disable-next-line @typescript-eslint/no-deprecated
         iModel = await buildTestIModel(this, async (builder) => {
           const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
           await builder.importSchema(schema);
@@ -472,7 +471,7 @@ describe("SelectionScope", () => {
       it("returns parentless `GeometricElement3d` related functional element", async function () {
         let physicalElement: SelectableInstanceKey;
         let functionalElementKey: SelectableInstanceKey;
-        // eslint-disable-next-line deprecation/deprecation
+        // eslint-disable-next-line @typescript-eslint/no-deprecated
         iModel = await buildTestIModel(this, async (builder) => {
           const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
           await builder.importSchema(schema);
@@ -499,7 +498,7 @@ describe("SelectionScope", () => {
 
       it("returns parentless `GeometricElement3d` when functional element does not exist", async function () {
         let physicalElement: SelectableInstanceKey;
-        // eslint-disable-next-line deprecation/deprecation
+        // eslint-disable-next-line @typescript-eslint/no-deprecated
         iModel = await buildTestIModel(this, async (builder) => {
           const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
           await builder.importSchema(schema);
@@ -520,7 +519,7 @@ describe("SelectionScope", () => {
       it("returns `GeometricElement3d` grandparent related functional element", async function () {
         let physicalElement: SelectableInstanceKey;
         let functionalElementKey: SelectableInstanceKey;
-        // eslint-disable-next-line deprecation/deprecation
+        // eslint-disable-next-line @typescript-eslint/no-deprecated
         iModel = await buildTestIModel(this, async (builder) => {
           const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
           await builder.importSchema(schema);
@@ -557,7 +556,7 @@ describe("SelectionScope", () => {
       it("returns `GeometricElement3d` grandparent without related functional element", async function () {
         let physicalElementGrandParent: SelectableInstanceKey;
         let physicalElement: SelectableInstanceKey;
-        // eslint-disable-next-line deprecation/deprecation
+        // eslint-disable-next-line @typescript-eslint/no-deprecated
         iModel = await buildTestIModel(this, async (builder) => {
           const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
           await builder.importSchema(schema);
@@ -587,7 +586,7 @@ describe("SelectionScope", () => {
       it("returns last existing `GeometricElement3d` ancestor related functional element", async function () {
         let physicalElement: SelectableInstanceKey;
         let functionalElementKey: SelectableInstanceKey;
-        // eslint-disable-next-line deprecation/deprecation
+        // eslint-disable-next-line @typescript-eslint/no-deprecated
         iModel = await buildTestIModel(this, async (builder) => {
           const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
           await builder.importSchema(schema);
@@ -617,7 +616,7 @@ describe("SelectionScope", () => {
       it("returns last existing `GeometricElement3d` ancestor without related functional element", async function () {
         let physicalElementParent: SelectableInstanceKey;
         let physicalElement: SelectableInstanceKey;
-        // eslint-disable-next-line deprecation/deprecation
+        // eslint-disable-next-line @typescript-eslint/no-deprecated
         iModel = await buildTestIModel(this, async (builder) => {
           const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
           await builder.importSchema(schema);
@@ -640,7 +639,7 @@ describe("SelectionScope", () => {
       it("returns `GeometricElement3d` top assembly related functional element", async function () {
         let physicalElement: SelectableInstanceKey;
         let functionalElementKey: SelectableInstanceKey;
-        // eslint-disable-next-line deprecation/deprecation
+        // eslint-disable-next-line @typescript-eslint/no-deprecated
         iModel = await buildTestIModel(this, async (builder) => {
           const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
           await builder.importSchema(schema);
@@ -684,7 +683,7 @@ describe("SelectionScope", () => {
       it("returns `GeometricElement2d` related functional element", async function () {
         let graphicsElement: SelectableInstanceKey;
         let functionalElement: SelectableInstanceKey;
-        // eslint-disable-next-line deprecation/deprecation
+        // eslint-disable-next-line @typescript-eslint/no-deprecated
         iModel = await buildTestIModel(this, async (builder) => {
           const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
           await builder.importSchema(schema);
@@ -713,7 +712,7 @@ describe("SelectionScope", () => {
 
       it("returns `GeometricElement2d` when no related functional element exists", async function () {
         let graphicsElement: SelectableInstanceKey;
-        // eslint-disable-next-line deprecation/deprecation
+        // eslint-disable-next-line @typescript-eslint/no-deprecated
         iModel = await buildTestIModel(this, async (builder) => {
           const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
           await builder.importSchema(schema);
@@ -738,7 +737,7 @@ describe("SelectionScope", () => {
         let graphicsElement2: SelectableInstanceKey;
         let functionalElement1: SelectableInstanceKey;
         let functionalElement2: SelectableInstanceKey;
-        // eslint-disable-next-line deprecation/deprecation
+        // eslint-disable-next-line @typescript-eslint/no-deprecated
         iModel = await buildTestIModel(this, async (builder) => {
           const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
           await builder.importSchema(schema);
@@ -777,7 +776,7 @@ describe("SelectionScope", () => {
         let graphicsElement2: SelectableInstanceKey;
         let functionalElement1: SelectableInstanceKey;
         let functionalElement2: SelectableInstanceKey;
-        // eslint-disable-next-line deprecation/deprecation
+        // eslint-disable-next-line @typescript-eslint/no-deprecated
         iModel = await buildTestIModel(this, async (builder) => {
           const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
           await builder.importSchema(schema);
@@ -820,7 +819,7 @@ describe("SelectionScope", () => {
       it("returns `GeometricElement2d` nearest related functional element", async function () {
         let graphicsElement: SelectableInstanceKey;
         let functionalElementKey: SelectableInstanceKey;
-        // eslint-disable-next-line deprecation/deprecation
+        // eslint-disable-next-line @typescript-eslint/no-deprecated
         iModel = await buildTestIModel(this, async (builder) => {
           const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
           await builder.importSchema(schema);
@@ -850,7 +849,7 @@ describe("SelectionScope", () => {
       it("returns `GeometricElement2d` parent related functional element", async function () {
         let graphicsElement: SelectableInstanceKey;
         let functionalElementKey: SelectableInstanceKey;
-        // eslint-disable-next-line deprecation/deprecation
+        // eslint-disable-next-line @typescript-eslint/no-deprecated
         iModel = await buildTestIModel(this, async (builder) => {
           const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
           await builder.importSchema(schema);
@@ -880,7 +879,7 @@ describe("SelectionScope", () => {
       it("returns `GeometricElement2d` ancestor related functional element", async function () {
         let graphicsElement: SelectableInstanceKey;
         let functionalElementKey: SelectableInstanceKey;
-        // eslint-disable-next-line deprecation/deprecation
+        // eslint-disable-next-line @typescript-eslint/no-deprecated
         iModel = await buildTestIModel(this, async (builder) => {
           const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
           await builder.importSchema(schema);
@@ -911,7 +910,7 @@ describe("SelectionScope", () => {
         let graphicsElement1: SelectableInstanceKey;
         let graphicsElement2: SelectableInstanceKey;
         let functionalElementKeys: SelectableInstanceKey[];
-        // eslint-disable-next-line deprecation/deprecation
+        // eslint-disable-next-line @typescript-eslint/no-deprecated
         iModel = await buildTestIModel(this, async (builder) => {
           const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
           await builder.importSchema(schema);
@@ -950,7 +949,7 @@ describe("SelectionScope", () => {
       it("returns parentless `GeometricElement2d` related functional element", async function () {
         let graphicsElement: SelectableInstanceKey;
         let functionalElementKey: SelectableInstanceKey;
-        // eslint-disable-next-line deprecation/deprecation
+        // eslint-disable-next-line @typescript-eslint/no-deprecated
         iModel = await buildTestIModel(this, async (builder) => {
           const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
           await builder.importSchema(schema);
@@ -972,7 +971,7 @@ describe("SelectionScope", () => {
 
       it("returns parentless `GeometricElement2d` without related functional element", async function () {
         let graphicsElement: SelectableInstanceKey;
-        // eslint-disable-next-line deprecation/deprecation
+        // eslint-disable-next-line @typescript-eslint/no-deprecated
         iModel = await buildTestIModel(this, async (builder) => {
           const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
           await builder.importSchema(schema);
@@ -988,7 +987,7 @@ describe("SelectionScope", () => {
       it("returns `GeometricElement2d` grandparent", async function () {
         let graphicsElementGrandParent: SelectableInstanceKey;
         let graphicsElement: SelectableInstanceKey;
-        // eslint-disable-next-line deprecation/deprecation
+        // eslint-disable-next-line @typescript-eslint/no-deprecated
         iModel = await buildTestIModel(this, async (builder) => {
           const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
           await builder.importSchema(schema);
@@ -1011,7 +1010,7 @@ describe("SelectionScope", () => {
       it("returns last existing `GeometricElement2d` ancestor", async function () {
         let graphicsElementParent: SelectableInstanceKey;
         let graphicsElement: SelectableInstanceKey;
-        // eslint-disable-next-line deprecation/deprecation
+        // eslint-disable-next-line @typescript-eslint/no-deprecated
         iModel = await buildTestIModel(this, async (builder) => {
           const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
           await builder.importSchema(schema);
@@ -1028,7 +1027,7 @@ describe("SelectionScope", () => {
       it("returns `GeometricElement2d` grandparent related functional element", async function () {
         let graphicsElement: SelectableInstanceKey;
         let functionalElementKey: SelectableInstanceKey;
-        // eslint-disable-next-line deprecation/deprecation
+        // eslint-disable-next-line @typescript-eslint/no-deprecated
         iModel = await buildTestIModel(this, async (builder) => {
           const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
           await builder.importSchema(schema);
@@ -1061,7 +1060,7 @@ describe("SelectionScope", () => {
         let elementIds: string[];
         let physicalElement2: SelectableInstanceKey;
         let functionalElementKeys: SelectableInstanceKey[];
-        // eslint-disable-next-line deprecation/deprecation
+        // eslint-disable-next-line @typescript-eslint/no-deprecated
         iModel = await buildTestIModel(this, async (builder) => {
           const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
           await builder.importSchema(schema);
@@ -1128,7 +1127,7 @@ describe("SelectionScope", () => {
       it("returns parent related functional elements", async function () {
         let elementIds: string[];
         let functionalElementKeys: SelectableInstanceKey[];
-        // eslint-disable-next-line deprecation/deprecation
+        // eslint-disable-next-line @typescript-eslint/no-deprecated
         iModel = await buildTestIModel(this, async (builder) => {
           const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
           await builder.importSchema(schema);
@@ -1195,7 +1194,7 @@ describe("SelectionScope", () => {
       it("returns top assembly related functional elements", async function () {
         let elementIds: string[];
         let functionalElementKeys: SelectableInstanceKey[];
-        // eslint-disable-next-line deprecation/deprecation
+        // eslint-disable-next-line @typescript-eslint/no-deprecated
         iModel = await buildTestIModel(this, async (builder) => {
           const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
           await builder.importSchema(schema);

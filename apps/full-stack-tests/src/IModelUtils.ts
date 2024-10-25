@@ -27,7 +27,7 @@ export class ECDbBuilder {
 
   public importSchema(schemaXml: string) {
     // sadly, there's no API to import schema from string, so we have to save the XML into a file first...
-    // eslint-disable-next-line @itwin/no-internal, deprecation/deprecation
+    // eslint-disable-next-line @itwin/no-internal, @typescript-eslint/no-deprecated
     const schemaFilePath = limitFilePathLength(`${this._ecdb.nativeDb.getFilePath()}-${hash(schemaXml)}`);
     fs.writeFileSync(schemaFilePath, schemaXml);
     this._ecdb.importSchema(schemaFilePath);
@@ -190,7 +190,7 @@ export async function buildIModel<TFirstArg extends Mocha.Context | string, TRes
   setup?: (builder: TestIModelBuilder, mochaContextOrTestName: TFirstArg) => Promise<TResult>,
 ) {
   let res!: TResult;
-  // eslint-disable-next-line deprecation/deprecation
+  // eslint-disable-next-line @typescript-eslint/no-deprecated
   const imodel = await buildTestIModel(mochaContextOrTestName as any, async (builder) => {
     if (setup) {
       res = await setup(builder, mochaContextOrTestName);
