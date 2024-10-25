@@ -36,6 +36,10 @@ catalogs:
     "@types/react": "^18.3.3"
     "@types/react-dom": "^18.3.0"
 
+  rxjs:
+    "rxjs": "^7.8.1"
+    "rxjs-for-await": "^1.0.0"
+
   test-tools:
     "@testing-library/dom": "^10.3.2"
     "@testing-library/react": "^16.0.0"

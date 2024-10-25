@@ -64,7 +64,7 @@
     "react-resize-detector": "^10.0.1",
     "redux": "^4.2.1",
     "reflect-metadata": "^0.1.14",
-    "rxjs": "^7.8.1",
+    "rxjs": "catalog:rxjs",
     "sass": "^1.75.0",
     "typescript": "catalog:dev-tools",
     "vite": "^5.2.14",

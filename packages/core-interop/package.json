@@ -44,7 +44,7 @@
   },
   "dependencies": {
     "@itwin/presentation-shared": "workspace:~",
-    "rxjs": "^7.8.1"
+    "rxjs": "catalog:rxjs"
   },
   "peerDependencies": {
     "@itwin/core-bentley": "^4.1.0",
@@ -74,7 +74,7 @@
     "nyc": "catalog:test-tools",
     "presentation-build-tools": "workspace:^",
     "rimraf": "catalog:dev-tools",
-    "rxjs-for-await": "^1.0.0",
+    "rxjs-for-await": "catalog:rxjs",
     "sinon": "catalog:test-tools",
     "sinon-chai": "catalog:test-tools",
     "typescript": "catalog:dev-tools"

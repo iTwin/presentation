@@ -41,7 +41,7 @@
   "dependencies": {
     "@itwin/core-bentley": "catalog:itwinjs-core",
     "@itwin/presentation-shared": "workspace:^",
-    "rxjs": "^7.8.1"
+    "rxjs": "catalog:rxjs"
   },
   "peerDependencies": {
     "@itwin/presentation-hierarchies": "workspace:^"

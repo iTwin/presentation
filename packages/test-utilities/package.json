@@ -24,7 +24,7 @@
     "@itwin/core-bentley": "catalog:itwinjs-core",
     "@itwin/core-common": "catalog:itwinjs-core",
     "@itwin/core-geometry": "catalog:itwinjs-core",
-    "rxjs": "^7.8.1"
+    "rxjs": "catalog:rxjs"
   },
   "devDependencies": {
     "@itwin/eslint-plugin": "catalog:dev-tools",
