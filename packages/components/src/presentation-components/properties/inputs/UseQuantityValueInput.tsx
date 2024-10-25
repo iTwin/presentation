@@ -33,13 +33,14 @@ export interface UseQuantityValueInputProps {
   initialRawValue?: number;
   schemaContext: SchemaContext;
   koqName: string;
+  isReadOnly?: boolean;
 }
 
 /**
  * Custom hook that manages state for quantity values input.
  * @internal
  */
-export function useQuantityValueInput({ initialRawValue, schemaContext, koqName }: UseQuantityValueInputProps) {
+export function useQuantityValueInput({ initialRawValue, schemaContext, koqName, isReadOnly }: UseQuantityValueInputProps) {
   interface State {
     quantityValue: QuantityValue;
     placeholder: string;
@@ -101,7 +102,7 @@ export function useQuantityValueInput({ initialRawValue, schemaContext, koqName 
       onChange,
       placeholder,
       value: quantityValue.formattedValue,
-      disabled: !formatter || !parser,
+      disabled: !formatter || !parser || isReadOnly,
     },
   };
 }
