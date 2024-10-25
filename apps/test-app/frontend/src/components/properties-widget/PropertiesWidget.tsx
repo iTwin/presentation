@@ -329,7 +329,7 @@ function PropertiesWidgetContextMenu(props: PropertiesWidgetContextMenuProps) {
   }
 
   return (
-    // eslint-disable-next-line deprecation/deprecation
+    // eslint-disable-next-line @typescript-eslint/no-deprecated
     <GlobalContextMenu
       opened={true}
       onOutsideClick={onCloseContextMenu}
