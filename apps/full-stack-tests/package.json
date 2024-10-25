@@ -16,7 +16,7 @@
   "dependencies": {
     "@bentley/functional-schema": "^1.0.4",
     "@itwin/appui-abstract": "catalog:itwinjs-core",
-    "@itwin/itwinui-react": "^3.14.1",
+    "@itwin/itwinui-react": "catalog:itwinui",
     "@itwin/build-tools": "catalog:build-tools",
     "@itwin/components-react": "catalog:appui",
     "@itwin/core-backend": "catalog:itwinjs-core",

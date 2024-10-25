@@ -18,7 +18,7 @@ catalogs:
     '@itwin/imodel-components-react':
       specifier: ^4.17.0
       version: 4.17.0
-  dev-tools:
+  build-tools:
     '@itwin/build-tools':
       specifier: ^4.9.0
       version: 4.9.0
@@ -101,6 +101,16 @@ catalogs:
     '@itwin/webgl-compatibility':
       specifier: ^4.9.0
       version: 4.9.0
+  itwinui:
+    '@itwin/itwinui-icons-react':
+      specifier: ^2.8.0
+      version: 2.8.0
+    '@itwin/itwinui-illustrations-react':
+      specifier: ^2.1.0
+      version: 2.1.0
+    '@itwin/itwinui-react':
+      specifier: ^3.14.1
+      version: 3.14.1
   react:
     '@types/react':
       specifier: ^18.3.3
@@ -114,6 +124,13 @@ catalogs:
     react-dom:
       specifier: ^18.3.1
       version: 18.3.1
+  rxjs:
+    rxjs:
+      specifier: ^7.8.1
+      version: 7.8.1
+    rxjs-for-await:
+      specifier: ^1.0.0
+      version: 1.0.0
   test-tools:
     '@testing-library/dom':
       specifier: ^10.3.2
@@ -206,10 +223,10 @@ importers:
         specifier: ^2.27.7
         version: 2.27.7
       cpx2:
-        specifier: catalog:dev-tools
+        specifier: catalog:build-tools
         version: 7.0.1
       eslint:
-        specifier: catalog:dev-tools
+        specifier: catalog:build-tools
         version: 8.57.0
       eslint-config-prettier:
         specifier: ^9.1.0
@@ -236,7 +253,7 @@ importers:
         specifier: ^3.3.3
         version: 3.3.3
       rimraf:
-        specifier: catalog:dev-tools
+        specifier: catalog:build-tools
         version: 6.0.1
       yargs:
         specifier: ^17.7.2
@@ -245,7 +262,7 @@ importers:
   apps/build-tools:
     dependencies:
       '@itwin/build-tools':
-        specifier: catalog:dev-tools
+        specifier: catalog:build-tools
         version: 4.9.0(@types/node@20.14.6)
       '@microsoft/api-extractor':
         specifier: ~7.47
@@ -263,7 +280,7 @@ importers:
         specifier: catalog:itwinjs-core
         version: 4.9.0(@itwin/core-bentley@4.9.0)
       '@itwin/build-tools':
-        specifier: catalog:dev-tools
+        specifier: catalog:build-tools
         version: 4.9.0(@types/node@20.12.12)
       '@itwin/components-react':
         specifier: catalog:appui
@@ -305,13 +322,13 @@ importers:
         specifier: catalog:itwinjs-core
         version: 4.9.0(@itwin/core-backend@4.9.0(@itwin/core-bentley@4.9.0)(@itwin/core-common@4.9.0(@itwin/core-bentley@4.9.0)(@itwin/core-geometry@4.9.0))(@itwin/core-geometry@4.9.0)(@opentelemetry/api@1.8.0)(encoding@0.1.13))(@itwin/core-bentley@4.9.0)(@itwin/core-common@4.9.0(@itwin/core-bentley@4.9.0)(@itwin/core-geometry@4.9.0))(@itwin/core-geometry@4.9.0)(@itwin/ecschema-metadata@4.9.0(@itwin/core-bentley@4.9.0)(@itwin/core-quantity@4.9.0(@itwin/core-bentley@4.9.0)))(@itwin/ecschema-rpcinterface-common@4.9.0(@itwin/core-bentley@4.9.0)(@itwin/core-common@4.9.0(@itwin/core-bentley@4.9.0)(@itwin/core-geometry@4.9.0))(@itwin/core-geometry@4.9.0)(@itwin/ecschema-metadata@4.9.0(@itwin/core-bentley@4.9.0)(@itwin/core-quantity@4.9.0(@itwin/core-bentley@4.9.0))))
       '@itwin/eslint-plugin':
-        specifier: catalog:dev-tools
+        specifier: catalog:build-tools
         version: 4.1.1(eslint@8.57.0)(typescript@5.5.3)
       '@itwin/imodel-components-react':
         specifier: catalog:appui
-        version: 4.17.0(5bxgqeyspavecgkyhfymyjxjri)
+        version: 4.17.0(w6sgngvtulzkoge55lgz26tzie)
       '@itwin/itwinui-react':
-        specifier: ^3.14.1
+        specifier: catalog:itwinui
         version: 3.14.1(@types/react@18.3.3)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@itwin/presentation-backend':
         specifier: catalog:itwinjs-core
@@ -327,7 +344,7 @@ importers:
         version: link:../../packages/core-interop
       '@itwin/presentation-frontend':
         specifier: catalog:itwinjs-core
-        version: 4.9.0(@itwin/core-bentley@4.9.0)(@itwin/core-common@4.9.0(@itwin/core-bentley@4.9.0)(@itwin/core-geometry@4.9.0))(@itwin/core-frontend@4.9.0(@itwin/appui-abstract@4.9.0(@itwin/core-bentley@4.9.0))(@itwin/core-bentley@4.9.0)(@itwin/core-common@4.9.0(@itwin/core-bentley@4.9.0)(@itwin/core-geometry@4.9.0))(@itwin/core-geometry@4.9.0)(@itwin/core-orbitgt@4.9.0)(@itwin/core-quantity@4.9.0(@itwin/core-bentley@4.9.0))(encoding@0.1.13)(inversify@6.0.2)(reflect-metadata@0.1.14))(@itwin/core-quantity@4.9.0(@itwin/core-bentley@4.9.0))(@itwin/ecschema-metadata@4.9.0(@itwin/core-bentley@4.9.0)(@itwin/core-quantity@4.9.0(@itwin/core-bentley@4.9.0)))(@itwin/presentation-common@4.9.0(@itwin/core-bentley@4.9.0)(@itwin/core-common@4.9.0(@itwin/core-bentley@4.9.0)(@itwin/core-geometry@4.9.0))(@itwin/core-quantity@4.9.0(@itwin/core-bentley@4.9.0))(@itwin/ecschema-metadata@4.9.0(@itwin/core-bentley@4.9.0)(@itwin/core-quantity@4.9.0(@itwin/core-bentley@4.9.0))))
+        version: 4.9.0(@itwin/core-bentley@4.9.0)(@itwin/core-common@4.9.0(@itwin/core-bentley@4.9.0)(@itwin/core-geometry@4.9.0))(@itwin/core-frontend@4.9.0(@itwin/appui-abstract@4.9.0(@itwin/core-bentley@4.9.0))(@itwin/core-bentley@4.9.0)(@itwin/core-common@4.9.0(@itwin/core-bentley@4.9.0)(@itwin/core-geometry@4.9.0))(@itwin/core-geometry@4.9.0)(@itwin/core-orbitgt@4.9.0)(@itwin/core-quantity@4.9.0(@itwin/core-bentley@4.9.0))(inversify@6.0.2)(reflect-metadata@0.1.14))(@itwin/core-quantity@4.9.0(@itwin/core-bentley@4.9.0))(@itwin/ecschema-metadata@4.9.0(@itwin/core-bentley@4.9.0)(@itwin/core-quantity@4.9.0(@itwin/core-bentley@4.9.0)))(@itwin/presentation-common@4.9.0(@itwin/core-bentley@4.9.0)(@itwin/core-common@4.9.0(@itwin/core-bentley@4.9.0)(@itwin/core-geometry@4.9.0))(@itwin/core-quantity@4.9.0(@itwin/core-bentley@4.9.0))(@itwin/ecschema-metadata@4.9.0(@itwin/core-bentley@4.9.0)(@itwin/core-quantity@4.9.0(@itwin/core-bentley@4.9.0))))
       '@itwin/presentation-hierarchies':
         specifier: workspace:^
         version: link:../../packages/hierarchies
@@ -380,7 +397,7 @@ importers:
         specifier: catalog:test-tools
         version: 10.0.7
       '@types/node':
-        specifier: catalog:dev-tools
+        specifier: catalog:build-tools
         version: 20.12.12
       '@types/object-hash':
         specifier: ^3.0.6
@@ -407,10 +424,10 @@ importers:
         specifier: catalog:test-tools
         version: 1.6.0
       cpx2:
-        specifier: catalog:dev-tools
+        specifier: catalog:build-tools
         version: 7.0.1
       eslint:
-        specifier: catalog:dev-tools
+        specifier: catalog:build-tools
         version: 8.57.0
       fast-xml-parser:
         specifier: ^4.5.0
@@ -449,10 +466,10 @@ importers:
         specifier: ^0.1.14
         version: 0.1.14
       rimraf:
-        specifier: catalog:dev-tools
+        specifier: catalog:build-tools
         version: 6.0.1
       rxjs:
-        specifier: ^7.8.1
+        specifier: catalog:rxjs
         version: 7.8.1
       sinon:
         specifier: catalog:test-tools
@@ -461,7 +478,7 @@ importers:
         specifier: catalog:test-tools
         version: 3.7.0(chai@4.4.1)(sinon@18.0.0)
       typescript:
-        specifier: catalog:dev-tools
+        specifier: catalog:build-tools
         version: 5.5.3
 
   apps/load-tests/backend:
@@ -470,7 +487,7 @@ importers:
         specifier: catalog:itwinjs-core
         version: 4.9.0(@itwin/core-bentley@4.9.0)
       '@itwin/build-tools':
-        specifier: catalog:dev-tools
+        specifier: catalog:build-tools
         version: 4.9.0(@types/node@20.12.12)
       '@itwin/core-backend':
         specifier: catalog:itwinjs-core
@@ -503,7 +520,7 @@ importers:
         specifier: catalog:itwinjs-core
         version: 4.9.0(@itwin/core-backend@4.9.0(@itwin/core-bentley@4.9.0)(@itwin/core-common@4.9.0(@itwin/core-bentley@4.9.0)(@itwin/core-geometry@4.9.0))(@itwin/core-geometry@4.9.0)(@opentelemetry/api@1.8.0)(encoding@0.1.13))(@itwin/core-bentley@4.9.0)(@itwin/core-common@4.9.0(@itwin/core-bentley@4.9.0)(@itwin/core-geometry@4.9.0))(@itwin/core-geometry@4.9.0)(@itwin/ecschema-metadata@4.9.0(@itwin/core-bentley@4.9.0)(@itwin/core-quantity@4.9.0(@itwin/core-bentley@4.9.0)))(@itwin/ecschema-rpcinterface-common@4.9.0(@itwin/core-bentley@4.9.0)(@itwin/core-common@4.9.0(@itwin/core-bentley@4.9.0)(@itwin/core-geometry@4.9.0))(@itwin/core-geometry@4.9.0)(@itwin/ecschema-metadata@4.9.0(@itwin/core-bentley@4.9.0)(@itwin/core-quantity@4.9.0(@itwin/core-bentley@4.9.0))))
       '@itwin/eslint-plugin':
-        specifier: catalog:dev-tools
+        specifier: catalog:build-tools
         version: 4.1.1(eslint@8.57.0)(typescript@5.5.3)
       '@itwin/express-server':
         specifier: catalog:itwinjs-core
@@ -521,10 +538,10 @@ importers:
         specifier: ^1.8.0
         version: 1.8.0
       '@types/node':
-        specifier: catalog:dev-tools
+        specifier: catalog:build-tools
         version: 20.12.12
       eslint:
-        specifier: catalog:dev-tools
+        specifier: catalog:build-tools
         version: 8.57.0
       inversify:
         specifier: ^6.0.2
@@ -533,16 +550,16 @@ importers:
         specifier: ^0.1.14
         version: 0.1.14
       rimraf:
-        specifier: catalog:dev-tools
+        specifier: catalog:build-tools
         version: 6.0.1
       typescript:
-        specifier: catalog:dev-tools
+        specifier: catalog:build-tools
         version: 5.5.3
 
   apps/load-tests/tests:
     dependencies:
       '@itwin/build-tools':
-        specifier: catalog:dev-tools
+        specifier: catalog:build-tools
         version: 4.9.0(@types/node@20.12.12)
       '@itwin/core-bentley':
         specifier: catalog:itwinjs-core
@@ -563,7 +580,7 @@ importers:
         specifier: catalog:itwinjs-core
         version: 4.9.0(@itwin/core-bentley@4.9.0)(@itwin/core-common@4.9.0(@itwin/core-bentley@4.9.0)(@itwin/core-geometry@4.9.0))(@itwin/core-geometry@4.9.0)(@itwin/ecschema-metadata@4.9.0(@itwin/core-bentley@4.9.0)(@itwin/core-quantity@4.9.0(@itwin/core-bentley@4.9.0)))
       '@itwin/eslint-plugin':
-        specifier: catalog:dev-tools
+        specifier: catalog:build-tools
         version: 4.1.1(eslint@8.57.0)(typescript@5.5.3)
       '@itwin/presentation-common':
         specifier: catalog:itwinjs-core
@@ -587,7 +604,7 @@ importers:
         specifier: ^1.3.4
         version: 1.3.4
       '@types/node':
-        specifier: catalog:dev-tools
+        specifier: catalog:build-tools
         version: 20.12.12
       artillery:
         specifier: 2.0.15
@@ -596,16 +613,16 @@ importers:
         specifier: ^1.3.3
         version: 1.3.3
       eslint:
-        specifier: catalog:dev-tools
+        specifier: catalog:build-tools
         version: 8.57.0
       rimraf:
-        specifier: catalog:dev-tools
+        specifier: catalog:build-tools
         version: 6.0.1
       rxjs:
-        specifier: ^7.8.1
+        specifier: catalog:rxjs
         version: 7.8.1
       typescript:
-        specifier: catalog:dev-tools
+        specifier: catalog:build-tools
         version: 5.5.3
 
   apps/performance-tests:
@@ -659,14 +676,14 @@ importers:
         specifier: workspace:^
         version: link:../../packages/test-utilities
       rxjs:
-        specifier: ^7.8.1
+        specifier: catalog:rxjs
         version: 7.8.1
     devDependencies:
       '@itwin/build-tools':
-        specifier: catalog:dev-tools
+        specifier: catalog:build-tools
         version: 4.9.0(@types/node@20.12.12)
       '@itwin/eslint-plugin':
-        specifier: catalog:dev-tools
+        specifier: catalog:build-tools
         version: 4.1.1(eslint@8.57.0)(typescript@5.5.3)
       '@types/chai':
         specifier: catalog:test-tools
@@ -675,19 +692,19 @@ importers:
         specifier: catalog:test-tools
         version: 10.0.7
       '@types/node':
-        specifier: catalog:dev-tools
+        specifier: catalog:build-tools
         version: 20.12.12
       cross-env:
-        specifier: catalog:dev-tools
+        specifier: catalog:build-tools
         version: 7.0.3
       eslint:
-        specifier: catalog:dev-tools
+        specifier: catalog:build-tools
         version: 8.57.0
       rimraf:
-        specifier: catalog:dev-tools
+        specifier: catalog:build-tools
         version: 6.0.1
       typescript:
-        specifier: catalog:dev-tools
+        specifier: catalog:build-tools
         version: 5.5.3
 
   apps/test-app/backend:
@@ -696,7 +713,7 @@ importers:
         specifier: catalog:itwinjs-core
         version: 4.9.0(@itwin/core-bentley@4.9.0)
       '@itwin/build-tools':
-        specifier: catalog:dev-tools
+        specifier: catalog:build-tools
         version: 4.9.0(@types/node@20.14.6)
       '@itwin/core-backend':
         specifier: catalog:itwinjs-core
@@ -732,7 +749,7 @@ importers:
         specifier: catalog:itwinjs-core
         version: 4.9.0(@itwin/core-backend@4.9.0(@itwin/core-bentley@4.9.0)(@itwin/core-common@4.9.0(@itwin/core-bentley@4.9.0)(@itwin/core-geometry@4.9.0))(@itwin/core-geometry@4.9.0)(@opentelemetry/api@1.8.0)(encoding@0.1.13))(@itwin/core-bentley@4.9.0)(@itwin/core-common@4.9.0(@itwin/core-bentley@4.9.0)(@itwin/core-geometry@4.9.0))(@itwin/core-geometry@4.9.0)(@itwin/ecschema-metadata@4.9.0(@itwin/core-bentley@4.9.0)(@itwin/core-quantity@4.9.0(@itwin/core-bentley@4.9.0)))(@itwin/ecschema-rpcinterface-common@4.9.0(@itwin/core-bentley@4.9.0)(@itwin/core-common@4.9.0(@itwin/core-bentley@4.9.0)(@itwin/core-geometry@4.9.0))(@itwin/core-geometry@4.9.0)(@itwin/ecschema-metadata@4.9.0(@itwin/core-bentley@4.9.0)(@itwin/core-quantity@4.9.0(@itwin/core-bentley@4.9.0))))
       '@itwin/eslint-plugin':
-        specifier: catalog:dev-tools
+        specifier: catalog:build-tools
         version: 4.1.1(eslint@8.57.0)(typescript@5.5.3)
       '@itwin/express-server':
         specifier: catalog:itwinjs-core
@@ -768,13 +785,13 @@ importers:
         specifier: workspace:*
         version: link:../common
       cross-env:
-        specifier: catalog:dev-tools
+        specifier: catalog:build-tools
         version: 7.0.3
       electron:
         specifier: ^28.3.1
         version: 28.3.1
       eslint:
-        specifier: catalog:dev-tools
+        specifier: catalog:build-tools
         version: 8.57.0
       inversify:
         specifier: ^6.0.2
@@ -783,16 +800,16 @@ importers:
         specifier: ^0.1.14
         version: 0.1.14
       rimraf:
-        specifier: catalog:dev-tools
+        specifier: catalog:build-tools
         version: 6.0.1
       typescript:
-        specifier: catalog:dev-tools
+        specifier: catalog:build-tools
         version: 5.5.3
 
   apps/test-app/common:
     dependencies:
       '@itwin/build-tools':
-        specifier: catalog:dev-tools
+        specifier: catalog:build-tools
         version: 4.9.0(@types/node@20.14.6)
       '@itwin/core-bentley':
         specifier: catalog:itwinjs-core
@@ -813,19 +830,19 @@ importers:
         specifier: catalog:itwinjs-core
         version: 4.9.0(@itwin/core-bentley@4.9.0)(@itwin/core-common@4.9.0(@itwin/core-bentley@4.9.0)(@itwin/core-geometry@4.9.0))(@itwin/core-geometry@4.9.0)(@itwin/ecschema-metadata@4.9.0(@itwin/core-bentley@4.9.0)(@itwin/core-quantity@4.9.0(@itwin/core-bentley@4.9.0)))
       '@itwin/eslint-plugin':
-        specifier: catalog:dev-tools
+        specifier: catalog:build-tools
         version: 4.1.1(eslint@8.57.0)(typescript@5.5.3)
       '@itwin/presentation-common':
         specifier: catalog:itwinjs-core
         version: 4.9.0(@itwin/core-bentley@4.9.0)(@itwin/core-common@4.9.0(@itwin/core-bentley@4.9.0)(@itwin/core-geometry@4.9.0))(@itwin/core-quantity@4.9.0(@itwin/core-bentley@4.9.0))(@itwin/ecschema-metadata@4.9.0(@itwin/core-bentley@4.9.0)(@itwin/core-quantity@4.9.0(@itwin/core-bentley@4.9.0)))
       eslint:
-        specifier: catalog:dev-tools
+        specifier: catalog:build-tools
         version: 8.57.0
       rimraf:
-        specifier: catalog:dev-tools
+        specifier: catalog:build-tools
         version: 6.0.1
       typescript:
-        specifier: catalog:dev-tools
+        specifier: catalog:build-tools
         version: 5.5.3
 
   apps/test-app/frontend:
@@ -840,7 +857,7 @@ importers:
         specifier: catalog:appui
         version: 4.17.0(jgrsh243ki6dc6ozg2qm5xy6by)
       '@itwin/build-tools':
-        specifier: catalog:dev-tools
+        specifier: catalog:build-tools
         version: 4.9.0(@types/node@20.12.12)
       '@itwin/components-react':
         specifier: catalog:appui
@@ -885,16 +902,16 @@ importers:
         specifier: catalog:itwinjs-core
         version: 4.9.0(@itwin/core-bentley@4.9.0)(@itwin/core-common@4.9.0(@itwin/core-bentley@4.9.0)(@itwin/core-geometry@4.9.0))(@itwin/core-geometry@4.9.0)(@itwin/ecschema-metadata@4.9.0(@itwin/core-bentley@4.9.0)(@itwin/core-quantity@4.9.0(@itwin/core-bentley@4.9.0)))
       '@itwin/eslint-plugin':
-        specifier: catalog:dev-tools
+        specifier: catalog:build-tools
         version: 4.1.1(eslint@8.57.0)(typescript@5.5.3)
       '@itwin/imodel-components-react':
         specifier: catalog:appui
-        version: 4.17.0(5bxgqeyspavecgkyhfymyjxjri)
+        version: 4.17.0(w6sgngvtulzkoge55lgz26tzie)
       '@itwin/itwinui-icons-react':
-        specifier: ^2.8.0
+        specifier: catalog:itwinui
         version: 2.8.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@itwin/itwinui-react':
-        specifier: ^3.14.1
+        specifier: catalog:itwinui
         version: 3.14.1(@types/react@18.3.3)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@itwin/presentation-common':
         specifier: catalog:itwinjs-core
@@ -907,7 +924,7 @@ importers:
         version: link:../../../packages/core-interop
       '@itwin/presentation-frontend':
         specifier: catalog:itwinjs-core
-        version: 4.9.0(@itwin/core-bentley@4.9.0)(@itwin/core-common@4.9.0(@itwin/core-bentley@4.9.0)(@itwin/core-geometry@4.9.0))(@itwin/core-frontend@4.9.0(@itwin/appui-abstract@4.9.0(@itwin/core-bentley@4.9.0))(@itwin/core-bentley@4.9.0)(@itwin/core-common@4.9.0(@itwin/core-bentley@4.9.0)(@itwin/core-geometry@4.9.0))(@itwin/core-geometry@4.9.0)(@itwin/core-orbitgt@4.9.0)(@itwin/core-quantity@4.9.0(@itwin/core-bentley@4.9.0))(encoding@0.1.13)(inversify@6.0.2)(reflect-metadata@0.1.14))(@itwin/core-quantity@4.9.0(@itwin/core-bentley@4.9.0))(@itwin/ecschema-metadata@4.9.0(@itwin/core-bentley@4.9.0)(@itwin/core-quantity@4.9.0(@itwin/core-bentley@4.9.0)))(@itwin/presentation-common@4.9.0(@itwin/core-bentley@4.9.0)(@itwin/core-common@4.9.0(@itwin/core-bentley@4.9.0)(@itwin/core-geometry@4.9.0))(@itwin/core-quantity@4.9.0(@itwin/core-bentley@4.9.0))(@itwin/ecschema-metadata@4.9.0(@itwin/core-bentley@4.9.0)(@itwin/core-quantity@4.9.0(@itwin/core-bentley@4.9.0))))
+        version: 4.9.0(@itwin/core-bentley@4.9.0)(@itwin/core-common@4.9.0(@itwin/core-bentley@4.9.0)(@itwin/core-geometry@4.9.0))(@itwin/core-frontend@4.9.0(@itwin/appui-abstract@4.9.0(@itwin/core-bentley@4.9.0))(@itwin/core-bentley@4.9.0)(@itwin/core-common@4.9.0(@itwin/core-bentley@4.9.0)(@itwin/core-geometry@4.9.0))(@itwin/core-geometry@4.9.0)(@itwin/core-orbitgt@4.9.0)(@itwin/core-quantity@4.9.0(@itwin/core-bentley@4.9.0))(inversify@6.0.2)(reflect-metadata@0.1.14))(@itwin/core-quantity@4.9.0(@itwin/core-bentley@4.9.0))(@itwin/ecschema-metadata@4.9.0(@itwin/core-bentley@4.9.0)(@itwin/core-quantity@4.9.0(@itwin/core-bentley@4.9.0)))(@itwin/presentation-common@4.9.0(@itwin/core-bentley@4.9.0)(@itwin/core-common@4.9.0(@itwin/core-bentley@4.9.0)(@itwin/core-geometry@4.9.0))(@itwin/core-quantity@4.9.0(@itwin/core-bentley@4.9.0))(@itwin/ecschema-metadata@4.9.0(@itwin/core-bentley@4.9.0)(@itwin/core-quantity@4.9.0(@itwin/core-bentley@4.9.0))))
       '@itwin/presentation-hierarchies':
         specifier: workspace:*
         version: link:../../../packages/hierarchies
@@ -936,7 +953,7 @@ importers:
         specifier: workspace:*
         version: link:../common
       '@types/node':
-        specifier: catalog:dev-tools
+        specifier: catalog:build-tools
         version: 20.12.12
       '@types/react':
         specifier: catalog:react
@@ -957,7 +974,7 @@ importers:
         specifier: ^28.3.1
         version: 28.3.1
       eslint:
-        specifier: catalog:dev-tools
+        specifier: catalog:build-tools
         version: 8.57.0
       eslint-plugin-react:
         specifier: ^7.34.1
@@ -987,16 +1004,16 @@ importers:
         specifier: ^0.1.14
         version: 0.1.14
       rimraf:
-        specifier: catalog:dev-tools
+        specifier: catalog:build-tools
         version: 6.0.1
       rxjs:
-        specifier: ^7.8.1
+        specifier: catalog:rxjs
         version: 7.8.1
       sass:
         specifier: ^1.75.0
         version: 1.75.0
       typescript:
-        specifier: catalog:dev-tools
+        specifier: catalog:build-tools
         version: 5.5.3
       vite:
         specifier: ^5.2.14
@@ -1008,10 +1025,10 @@ importers:
   packages/components:
     dependencies:
       '@itwin/itwinui-icons-react':
-        specifier: ^2.8.0
+        specifier: catalog:itwinui
         version: 2.8.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@itwin/itwinui-illustrations-react':
-        specifier: ^2.1.0
+        specifier: catalog:itwinui
         version: 2.1.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       classnames:
         specifier: ^2.5.1
@@ -1035,14 +1052,14 @@ importers:
         specifier: 0.7.2
         version: 0.7.2(react-select@5.7.0(@types/react@18.3.3)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react@18.3.1)
       rxjs:
-        specifier: ^7.8.1
+        specifier: catalog:rxjs
         version: 7.8.1
     devDependencies:
       '@itwin/appui-abstract':
         specifier: catalog:itwinjs-core
         version: 4.9.0(@itwin/core-bentley@4.9.0)
       '@itwin/build-tools':
-        specifier: catalog:dev-tools
+        specifier: catalog:build-tools
         version: 4.9.0(@types/node@20.14.6)
       '@itwin/components-react':
         specifier: catalog:appui
@@ -1075,20 +1092,20 @@ importers:
         specifier: catalog:itwinjs-core
         version: 4.9.0(@itwin/core-bentley@4.9.0)(@itwin/core-quantity@4.9.0(@itwin/core-bentley@4.9.0))
       '@itwin/eslint-plugin':
-        specifier: catalog:dev-tools
+        specifier: catalog:build-tools
         version: 4.1.1(eslint@8.57.0)(typescript@5.5.3)
       '@itwin/imodel-components-react':
         specifier: catalog:appui
-        version: 4.17.0(5bxgqeyspavecgkyhfymyjxjri)
+        version: 4.17.0(w6sgngvtulzkoge55lgz26tzie)
       '@itwin/itwinui-react':
-        specifier: ^3.14.1
+        specifier: catalog:itwinui
         version: 3.14.1(@types/react@18.3.3)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@itwin/presentation-common':
         specifier: catalog:itwinjs-core
         version: 4.9.0(@itwin/core-bentley@4.9.0)(@itwin/core-common@4.9.0(@itwin/core-bentley@4.9.0)(@itwin/core-geometry@4.9.0))(@itwin/core-quantity@4.9.0(@itwin/core-bentley@4.9.0))(@itwin/ecschema-metadata@4.9.0(@itwin/core-bentley@4.9.0)(@itwin/core-quantity@4.9.0(@itwin/core-bentley@4.9.0)))
       '@itwin/presentation-frontend':
         specifier: catalog:itwinjs-core
-        version: 4.9.0(@itwin/core-bentley@4.9.0)(@itwin/core-common@4.9.0(@itwin/core-bentley@4.9.0)(@itwin/core-geometry@4.9.0))(@itwin/core-frontend@4.9.0(@itwin/appui-abstract@4.9.0(@itwin/core-bentley@4.9.0))(@itwin/core-bentley@4.9.0)(@itwin/core-common@4.9.0(@itwin/core-bentley@4.9.0)(@itwin/core-geometry@4.9.0))(@itwin/core-geometry@4.9.0)(@itwin/core-orbitgt@4.9.0)(@itwin/core-quantity@4.9.0(@itwin/core-bentley@4.9.0))(encoding@0.1.13)(inversify@6.0.2)(reflect-metadata@0.1.14))(@itwin/core-quantity@4.9.0(@itwin/core-bentley@4.9.0))(@itwin/ecschema-metadata@4.9.0(@itwin/core-bentley@4.9.0)(@itwin/core-quantity@4.9.0(@itwin/core-bentley@4.9.0)))(@itwin/presentation-common@4.9.0(@itwin/core-bentley@4.9.0)(@itwin/core-common@4.9.0(@itwin/core-bentley@4.9.0)(@itwin/core-geometry@4.9.0))(@itwin/core-quantity@4.9.0(@itwin/core-bentley@4.9.0))(@itwin/ecschema-metadata@4.9.0(@itwin/core-bentley@4.9.0)(@itwin/core-quantity@4.9.0(@itwin/core-bentley@4.9.0))))
+        version: 4.9.0(@itwin/core-bentley@4.9.0)(@itwin/core-common@4.9.0(@itwin/core-bentley@4.9.0)(@itwin/core-geometry@4.9.0))(@itwin/core-frontend@4.9.0(@itwin/appui-abstract@4.9.0(@itwin/core-bentley@4.9.0))(@itwin/core-bentley@4.9.0)(@itwin/core-common@4.9.0(@itwin/core-bentley@4.9.0)(@itwin/core-geometry@4.9.0))(@itwin/core-geometry@4.9.0)(@itwin/core-orbitgt@4.9.0)(@itwin/core-quantity@4.9.0(@itwin/core-bentley@4.9.0))(inversify@6.0.2)(reflect-metadata@0.1.14))(@itwin/core-quantity@4.9.0(@itwin/core-bentley@4.9.0))(@itwin/ecschema-metadata@4.9.0(@itwin/core-bentley@4.9.0)(@itwin/core-quantity@4.9.0(@itwin/core-bentley@4.9.0)))(@itwin/presentation-common@4.9.0(@itwin/core-bentley@4.9.0)(@itwin/core-common@4.9.0(@itwin/core-bentley@4.9.0)(@itwin/core-geometry@4.9.0))(@itwin/core-quantity@4.9.0(@itwin/core-bentley@4.9.0))(@itwin/ecschema-metadata@4.9.0(@itwin/core-bentley@4.9.0)(@itwin/core-quantity@4.9.0(@itwin/core-bentley@4.9.0))))
       '@itwin/webgl-compatibility':
         specifier: catalog:itwinjs-core
         version: 4.9.0
@@ -1144,13 +1161,13 @@ importers:
         specifier: catalog:test-tools
         version: 1.6.0
       cpx2:
-        specifier: catalog:dev-tools
+        specifier: catalog:build-tools
         version: 7.0.1
       cross-env:
-        specifier: catalog:dev-tools
+        specifier: catalog:build-tools
         version: 7.0.3
       eslint:
-        specifier: catalog:dev-tools
+        specifier: catalog:build-tools
         version: 8.57.0
       eslint-plugin-react:
         specifier: ^7.34.1
@@ -1189,7 +1206,7 @@ importers:
         specifier: ^0.1.14
         version: 0.1.14
       rimraf:
-        specifier: catalog:dev-tools
+        specifier: catalog:build-tools
         version: 6.0.1
       sinon:
         specifier: catalog:test-tools
@@ -1198,7 +1215,7 @@ importers:
         specifier: catalog:test-tools
         version: 3.7.0(chai@4.4.1)(sinon@18.0.0)
       typescript:
-        specifier: catalog:dev-tools
+        specifier: catalog:build-tools
         version: 5.5.3
 
   packages/core-interop:
@@ -1207,11 +1224,11 @@ importers:
         specifier: workspace:~
         version: link:../shared
       rxjs:
-        specifier: ^7.8.1
+        specifier: catalog:rxjs
         version: 7.8.1
     devDependencies:
       '@itwin/build-tools':
-        specifier: catalog:dev-tools
+        specifier: catalog:build-tools
         version: 4.9.0(@types/node@20.14.6)
       '@itwin/core-bentley':
         specifier: catalog:itwinjs-core
@@ -1229,7 +1246,7 @@ importers:
         specifier: catalog:itwinjs-core
         version: 4.9.0(@itwin/core-bentley@4.9.0)(@itwin/core-quantity@4.9.0(@itwin/core-bentley@4.9.0))
       '@itwin/eslint-plugin':
-        specifier: catalog:dev-tools
+        specifier: catalog:build-tools
         version: 4.1.1(eslint@8.57.0)(typescript@5.5.3)
       '@types/chai':
         specifier: catalog:test-tools
@@ -1253,10 +1270,10 @@ importers:
         specifier: catalog:test-tools
         version: 7.1.2(chai@4.4.1)
       cpx2:
-        specifier: catalog:dev-tools
+        specifier: catalog:build-tools
         version: 7.0.1
       eslint:
-        specifier: catalog:dev-tools
+        specifier: catalog:build-tools
         version: 8.57.0
       mocha:
         specifier: catalog:test-tools
@@ -1268,10 +1285,10 @@ importers:
         specifier: workspace:^
         version: link:../../apps/build-tools
       rimraf:
-        specifier: catalog:dev-tools
+        specifier: catalog:build-tools
         version: 6.0.1
       rxjs-for-await:
-        specifier: ^1.0.0
+        specifier: catalog:rxjs
         version: 1.0.0(rxjs@7.8.1)
       sinon:
         specifier: catalog:test-tools
@@ -1280,7 +1297,7 @@ importers:
         specifier: catalog:test-tools
         version: 3.7.0(chai@4.4.1)(sinon@18.0.0)
       typescript:
-        specifier: catalog:dev-tools
+        specifier: catalog:build-tools
         version: 5.5.3
 
   packages/hierarchies:
@@ -1301,14 +1318,14 @@ importers:
         specifier: ^1.4.0
         version: 1.4.0
       rxjs:
-        specifier: ^7.8.1
+        specifier: catalog:rxjs
         version: 7.8.1
     devDependencies:
       '@itwin/build-tools':
-        specifier: catalog:dev-tools
+        specifier: catalog:build-tools
         version: 4.9.0(@types/node@20.12.12)
       '@itwin/eslint-plugin':
-        specifier: catalog:dev-tools
+        specifier: catalog:build-tools
         version: 4.1.1(eslint@8.57.0)(typescript@5.5.3)
       '@types/chai':
         specifier: catalog:test-tools
@@ -1326,7 +1343,7 @@ importers:
         specifier: ^1.4.2
         version: 1.4.2
       '@types/node':
-        specifier: catalog:dev-tools
+        specifier: catalog:build-tools
         version: 20.12.12
       '@types/sinon':
         specifier: catalog:test-tools
@@ -1344,10 +1361,10 @@ importers:
         specifier: catalog:test-tools
         version: 1.6.0
       cpx2:
-        specifier: catalog:dev-tools
+        specifier: catalog:build-tools
         version: 7.0.1
       eslint:
-        specifier: catalog:dev-tools
+        specifier: catalog:build-tools
         version: 8.57.0
       mocha:
         specifier: catalog:test-tools
@@ -1362,7 +1379,7 @@ importers:
         specifier: workspace:^
         version: link:../test-utilities
       rimraf:
-        specifier: catalog:dev-tools
+        specifier: catalog:build-tools
         version: 6.0.1
       sinon:
         specifier: catalog:test-tools
@@ -1371,7 +1388,7 @@ importers:
         specifier: catalog:test-tools
         version: 3.7.0(chai@4.4.1)(sinon@18.0.0)
       typescript:
-        specifier: catalog:dev-tools
+        specifier: catalog:build-tools
         version: 5.5.3
 
   packages/hierarchies-react:
@@ -1380,10 +1397,10 @@ importers:
         specifier: catalog:itwinjs-core
         version: 4.9.0
       '@itwin/itwinui-icons-react':
-        specifier: ^2.8.0
+        specifier: catalog:itwinui
         version: 2.8.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@itwin/itwinui-illustrations-react':
-        specifier: ^2.1.0
+        specifier: catalog:itwinui
         version: 2.1.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@itwin/presentation-hierarchies':
         specifier: workspace:^
@@ -1404,14 +1421,14 @@ importers:
         specifier: ^4.0.13
         version: 4.0.13(react@18.3.1)
       rxjs:
-        specifier: ^7.8.1
+        specifier: catalog:rxjs
         version: 7.8.1
     devDependencies:
       '@itwin/build-tools':
-        specifier: catalog:dev-tools
+        specifier: catalog:build-tools
         version: 4.9.0(@types/node@20.14.6)
       '@itwin/itwinui-react':
-        specifier: ^3.14.1
+        specifier: catalog:itwinui
         version: 3.14.1(@types/react@18.3.3)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@testing-library/dom':
         specifier: catalog:test-tools
@@ -1459,10 +1476,10 @@ importers:
         specifier: catalog:test-tools
         version: 1.6.0
       cpx2:
-        specifier: catalog:dev-tools
+        specifier: catalog:build-tools
         version: 7.0.1
       eslint:
-        specifier: catalog:dev-tools
+        specifier: catalog:build-tools
         version: 8.57.0
       eslint-plugin-react:
         specifier: ^7.34.1
@@ -1495,7 +1512,7 @@ importers:
         specifier: catalog:react
         version: 18.3.1(react@18.3.1)
       rimraf:
-        specifier: catalog:dev-tools
+        specifier: catalog:build-tools
         version: 6.0.1
       sinon:
         specifier: catalog:test-tools
@@ -1504,7 +1521,7 @@ importers:
         specifier: catalog:test-tools
         version: 3.7.0(chai@4.4.1)(sinon@18.0.0)
       typescript:
-        specifier: catalog:dev-tools
+        specifier: catalog:build-tools
         version: 5.5.3
 
   packages/models-tree:
@@ -1516,35 +1533,35 @@ importers:
         specifier: workspace:^
         version: link:../shared
       rxjs:
-        specifier: ^7.8.1
+        specifier: catalog:rxjs
         version: 7.8.1
     devDependencies:
       '@itwin/build-tools':
-        specifier: catalog:dev-tools
+        specifier: catalog:build-tools
         version: 4.9.0(@types/node@20.14.6)
       '@itwin/eslint-plugin':
-        specifier: catalog:dev-tools
+        specifier: catalog:build-tools
         version: 4.1.1(eslint@8.57.0)(typescript@5.5.3)
       '@itwin/presentation-hierarchies':
         specifier: workspace:^
         version: link:../hierarchies
       cpx2:
-        specifier: catalog:dev-tools
+        specifier: catalog:build-tools
         version: 7.0.1
       eslint:
-        specifier: catalog:dev-tools
+        specifier: catalog:build-tools
         version: 8.57.0
       rimraf:
-        specifier: catalog:dev-tools
+        specifier: catalog:build-tools
         version: 6.0.1
       typescript:
-        specifier: catalog:dev-tools
+        specifier: catalog:build-tools
         version: 5.5.3
 
   packages/opentelemetry:
     devDependencies:
       '@itwin/build-tools':
-        specifier: catalog:dev-tools
+        specifier: catalog:build-tools
         version: 4.9.0(@types/node@20.12.12)
       '@itwin/core-bentley':
         specifier: catalog:itwinjs-core
@@ -1562,7 +1579,7 @@ importers:
         specifier: catalog:itwinjs-core
         version: 4.9.0(@itwin/core-bentley@4.9.0)(@itwin/core-quantity@4.9.0(@itwin/core-bentley@4.9.0))
       '@itwin/eslint-plugin':
-        specifier: catalog:dev-tools
+        specifier: catalog:build-tools
         version: 4.1.1(eslint@8.57.0)(typescript@5.5.3)
       '@itwin/presentation-common':
         specifier: catalog:itwinjs-core
@@ -1577,7 +1594,7 @@ importers:
         specifier: catalog:test-tools
         version: 10.0.7
       '@types/node':
-        specifier: catalog:dev-tools
+        specifier: catalog:build-tools
         version: 20.12.12
       '@types/sinon':
         specifier: catalog:test-tools
@@ -1589,13 +1606,13 @@ importers:
         specifier: catalog:test-tools
         version: 4.4.1
       cpx2:
-        specifier: catalog:dev-tools
+        specifier: catalog:build-tools
         version: 7.0.1
       cross-env:
-        specifier: catalog:dev-tools
+        specifier: catalog:build-tools
         version: 7.0.3
       eslint:
-        specifier: catalog:dev-tools
+        specifier: catalog:build-tools
         version: 8.57.0
       mocha:
         specifier: catalog:test-tools
@@ -1607,7 +1624,7 @@ importers:
         specifier: workspace:^
         version: link:../../apps/build-tools
       rimraf:
-        specifier: catalog:dev-tools
+        specifier: catalog:build-tools
         version: 6.0.1
       sinon:
         specifier: catalog:test-tools
@@ -1616,7 +1633,7 @@ importers:
         specifier: catalog:test-tools
         version: 3.7.0(chai@4.4.1)(sinon@18.0.0)
       typescript:
-        specifier: catalog:dev-tools
+        specifier: catalog:build-tools
         version: 5.5.3
 
   packages/shared:
@@ -1626,10 +1643,10 @@ importers:
         version: 4.9.0
     devDependencies:
       '@itwin/build-tools':
-        specifier: catalog:dev-tools
+        specifier: catalog:build-tools
         version: 4.9.0(@types/node@20.12.12)
       '@itwin/eslint-plugin':
-        specifier: catalog:dev-tools
+        specifier: catalog:build-tools
         version: 4.1.1(eslint@8.57.0)(typescript@5.5.3)
       '@types/chai':
         specifier: catalog:test-tools
@@ -1644,7 +1661,7 @@ importers:
         specifier: catalog:test-tools
         version: 10.0.7
       '@types/node':
-        specifier: catalog:dev-tools
+        specifier: catalog:build-tools
         version: 20.12.12
       '@types/sinon':
         specifier: catalog:test-tools
@@ -1662,7 +1679,7 @@ importers:
         specifier: catalog:test-tools
         version: 1.6.0
       eslint:
-        specifier: catalog:dev-tools
+        specifier: catalog:build-tools
         version: 8.57.0
       mocha:
         specifier: catalog:test-tools
@@ -1677,7 +1694,7 @@ importers:
         specifier: workspace:^
         version: link:../test-utilities
       rimraf:
-        specifier: catalog:dev-tools
+        specifier: catalog:build-tools
         version: 6.0.1
       sinon:
         specifier: catalog:test-tools
@@ -1686,7 +1703,7 @@ importers:
         specifier: catalog:test-tools
         version: 3.7.0(chai@4.4.1)(sinon@18.0.0)
       typescript:
-        specifier: catalog:dev-tools
+        specifier: catalog:build-tools
         version: 5.5.3
 
   packages/test-utilities:
@@ -1701,23 +1718,23 @@ importers:
         specifier: catalog:itwinjs-core
         version: 4.9.0
       rxjs:
-        specifier: ^7.8.1
+        specifier: catalog:rxjs
         version: 7.8.1
     devDependencies:
       '@itwin/eslint-plugin':
-        specifier: catalog:dev-tools
+        specifier: catalog:build-tools
         version: 4.1.1(eslint@8.57.0)(typescript@5.5.3)
       '@types/node':
-        specifier: catalog:dev-tools
+        specifier: catalog:build-tools
         version: 20.12.12
       eslint:
-        specifier: catalog:dev-tools
+        specifier: catalog:build-tools
         version: 8.57.0
       rimraf:
-        specifier: catalog:dev-tools
+        specifier: catalog:build-tools
         version: 6.0.1
       typescript:
-        specifier: catalog:dev-tools
+        specifier: catalog:build-tools
         version: 5.5.3
 
   packages/testing:
@@ -1726,7 +1743,7 @@ importers:
         specifier: workspace:^
         version: link:../components
       rimraf:
-        specifier: catalog:dev-tools
+        specifier: catalog:build-tools
         version: 6.0.1
       sanitize-filename:
         specifier: ^1.6.3
@@ -1736,7 +1753,7 @@ importers:
         specifier: catalog:itwinjs-core
         version: 4.9.0(@itwin/core-bentley@4.9.0)
       '@itwin/build-tools':
-        specifier: catalog:dev-tools
+        specifier: catalog:build-tools
         version: 4.9.0(@types/node@20.12.12)
       '@itwin/components-react':
         specifier: catalog:appui
@@ -1769,7 +1786,7 @@ importers:
         specifier: catalog:itwinjs-core
         version: 4.9.0(@itwin/core-bentley@4.9.0)(@itwin/core-quantity@4.9.0(@itwin/core-bentley@4.9.0))
       '@itwin/eslint-plugin':
-        specifier: catalog:dev-tools
+        specifier: catalog:build-tools
         version: 4.1.1(eslint@8.57.0)(typescript@5.5.3)
       '@itwin/presentation-backend':
         specifier: catalog:itwinjs-core
@@ -1779,7 +1796,7 @@ importers:
         version: 4.9.0(@itwin/core-bentley@4.9.0)(@itwin/core-common@4.9.0(@itwin/core-bentley@4.9.0)(@itwin/core-geometry@4.9.0))(@itwin/core-quantity@4.9.0(@itwin/core-bentley@4.9.0))(@itwin/ecschema-metadata@4.9.0(@itwin/core-bentley@4.9.0)(@itwin/core-quantity@4.9.0(@itwin/core-bentley@4.9.0)))
       '@itwin/presentation-frontend':
         specifier: catalog:itwinjs-core
-        version: 4.9.0(@itwin/core-bentley@4.9.0)(@itwin/core-common@4.9.0(@itwin/core-bentley@4.9.0)(@itwin/core-geometry@4.9.0))(@itwin/core-frontend@4.9.0(@itwin/appui-abstract@4.9.0(@itwin/core-bentley@4.9.0))(@itwin/core-bentley@4.9.0)(@itwin/core-common@4.9.0(@itwin/core-bentley@4.9.0)(@itwin/core-geometry@4.9.0))(@itwin/core-geometry@4.9.0)(@itwin/core-orbitgt@4.9.0)(@itwin/core-quantity@4.9.0(@itwin/core-bentley@4.9.0))(encoding@0.1.13)(inversify@6.0.2)(reflect-metadata@0.1.14))(@itwin/core-quantity@4.9.0(@itwin/core-bentley@4.9.0))(@itwin/ecschema-metadata@4.9.0(@itwin/core-bentley@4.9.0)(@itwin/core-quantity@4.9.0(@itwin/core-bentley@4.9.0)))(@itwin/presentation-common@4.9.0(@itwin/core-bentley@4.9.0)(@itwin/core-common@4.9.0(@itwin/core-bentley@4.9.0)(@itwin/core-geometry@4.9.0))(@itwin/core-quantity@4.9.0(@itwin/core-bentley@4.9.0))(@itwin/ecschema-metadata@4.9.0(@itwin/core-bentley@4.9.0)(@itwin/core-quantity@4.9.0(@itwin/core-bentley@4.9.0))))
+        version: 4.9.0(@itwin/core-bentley@4.9.0)(@itwin/core-common@4.9.0(@itwin/core-bentley@4.9.0)(@itwin/core-geometry@4.9.0))(@itwin/core-frontend@4.9.0(@itwin/appui-abstract@4.9.0(@itwin/core-bentley@4.9.0))(@itwin/core-bentley@4.9.0)(@itwin/core-common@4.9.0(@itwin/core-bentley@4.9.0)(@itwin/core-geometry@4.9.0))(@itwin/core-geometry@4.9.0)(@itwin/core-orbitgt@4.9.0)(@itwin/core-quantity@4.9.0(@itwin/core-bentley@4.9.0))(inversify@6.0.2)(reflect-metadata@0.1.14))(@itwin/core-quantity@4.9.0(@itwin/core-bentley@4.9.0))(@itwin/ecschema-metadata@4.9.0(@itwin/core-bentley@4.9.0)(@itwin/core-quantity@4.9.0(@itwin/core-bentley@4.9.0)))(@itwin/presentation-common@4.9.0(@itwin/core-bentley@4.9.0)(@itwin/core-common@4.9.0(@itwin/core-bentley@4.9.0)(@itwin/core-geometry@4.9.0))(@itwin/core-quantity@4.9.0(@itwin/core-bentley@4.9.0))(@itwin/ecschema-metadata@4.9.0(@itwin/core-bentley@4.9.0)(@itwin/core-quantity@4.9.0(@itwin/core-bentley@4.9.0))))
       '@itwin/webgl-compatibility':
         specifier: catalog:itwinjs-core
         version: 4.9.0
@@ -1799,7 +1816,7 @@ importers:
         specifier: catalog:test-tools
         version: 10.0.7
       '@types/node':
-        specifier: catalog:dev-tools
+        specifier: catalog:build-tools
         version: 20.12.12
       '@types/sinon':
         specifier: catalog:test-tools
@@ -1817,13 +1834,13 @@ importers:
         specifier: catalog:test-tools
         version: 2.0.0(chai@4.4.1)
       cpx2:
-        specifier: catalog:dev-tools
+        specifier: catalog:build-tools
         version: 7.0.1
       cross-env:
-        specifier: catalog:dev-tools
+        specifier: catalog:build-tools
         version: 7.0.3
       eslint:
-        specifier: catalog:dev-tools
+        specifier: catalog:build-tools
         version: 8.57.0
       global-jsdom:
         specifier: catalog:test-tools
@@ -1865,7 +1882,7 @@ importers:
         specifier: catalog:test-tools
         version: 3.7.0(chai@4.4.1)(sinon@18.0.0)
       typescript:
-        specifier: catalog:dev-tools
+        specifier: catalog:build-tools
         version: 5.5.3
 
   packages/unified-selection:
@@ -1877,17 +1894,17 @@ importers:
         specifier: workspace:^
         version: link:../shared
       rxjs:
-        specifier: ^7.8.1
+        specifier: catalog:rxjs
         version: 7.8.1
       rxjs-for-await:
-        specifier: ^1.0.0
+        specifier: catalog:rxjs
         version: 1.0.0(rxjs@7.8.1)
     devDependencies:
       '@itwin/build-tools':
-        specifier: catalog:dev-tools
+        specifier: catalog:build-tools
         version: 4.9.0(@types/node@20.12.12)
       '@itwin/eslint-plugin':
-        specifier: catalog:dev-tools
+        specifier: catalog:build-tools
         version: 4.1.1(eslint@8.57.0)(typescript@5.5.3)
       '@types/chai':
         specifier: catalog:test-tools
@@ -1899,7 +1916,7 @@ importers:
         specifier: catalog:test-tools
         version: 10.0.7
       '@types/node':
-        specifier: catalog:dev-tools
+        specifier: catalog:build-tools
         version: 20.12.12
       '@types/sinon':
         specifier: catalog:test-tools
@@ -1914,10 +1931,10 @@ importers:
         specifier: catalog:test-tools
         version: 7.1.2(chai@4.4.1)
       cpx2:
-        specifier: catalog:dev-tools
+        specifier: catalog:build-tools
         version: 7.0.1
       eslint:
-        specifier: catalog:dev-tools
+        specifier: catalog:build-tools
         version: 8.57.0
       mocha:
         specifier: catalog:test-tools
@@ -1932,7 +1949,7 @@ importers:
         specifier: workspace:^
         version: link:../test-utilities
       rimraf:
-        specifier: catalog:dev-tools
+        specifier: catalog:build-tools
         version: 6.0.1
       sinon:
         specifier: catalog:test-tools
@@ -1941,7 +1958,7 @@ importers:
         specifier: catalog:test-tools
         version: 3.7.0(chai@4.4.1)(sinon@18.0.0)
       typescript:
-        specifier: catalog:dev-tools
+        specifier: catalog:build-tools
         version: 5.5.3
 
 packages:
@@ -10153,7 +10170,7 @@ snapshots:
       '@itwin/core-quantity': 4.9.0(@itwin/core-bentley@4.9.0)
       '@itwin/core-react': 4.17.0(@itwin/appui-abstract@4.9.0(@itwin/core-bentley@4.9.0))(@itwin/core-bentley@4.9.0)(@types/react@18.3.3)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@itwin/core-telemetry': 4.9.0(@itwin/core-geometry@4.9.0)
-      '@itwin/imodel-components-react': 4.17.0(5bxgqeyspavecgkyhfymyjxjri)
+      '@itwin/imodel-components-react': 4.17.0(w6sgngvtulzkoge55lgz26tzie)
       '@itwin/itwinui-icons-react': 2.8.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@itwin/itwinui-illustrations-react': 2.1.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@itwin/itwinui-react': 3.14.1(@types/react@18.3.3)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -10443,7 +10460,7 @@ snapshots:
       - supports-color
       - utf-8-validate
 
-  '@itwin/imodel-components-react@4.17.0(5bxgqeyspavecgkyhfymyjxjri)':
+  '@itwin/imodel-components-react@4.17.0(w6sgngvtulzkoge55lgz26tzie)':
     dependencies:
       '@bentley/icons-generic': 1.0.34
       '@itwin/appui-abstract': 4.9.0(@itwin/core-bentley@4.9.0)
@@ -10544,7 +10561,7 @@ snapshots:
       '@itwin/core-quantity': 4.9.0(@itwin/core-bentley@4.9.0)
       '@itwin/ecschema-metadata': 4.9.0(@itwin/core-bentley@4.9.0)(@itwin/core-quantity@4.9.0(@itwin/core-bentley@4.9.0))
 
-  '@itwin/presentation-frontend@4.9.0(@itwin/core-bentley@4.9.0)(@itwin/core-common@4.9.0(@itwin/core-bentley@4.9.0)(@itwin/core-geometry@4.9.0))(@itwin/core-frontend@4.9.0(@itwin/appui-abstract@4.9.0(@itwin/core-bentley@4.9.0))(@itwin/core-bentley@4.9.0)(@itwin/core-common@4.9.0(@itwin/core-bentley@4.9.0)(@itwin/core-geometry@4.9.0))(@itwin/core-geometry@4.9.0)(@itwin/core-orbitgt@4.9.0)(@itwin/core-quantity@4.9.0(@itwin/core-bentley@4.9.0))(encoding@0.1.13)(inversify@6.0.2)(reflect-metadata@0.1.14))(@itwin/core-quantity@4.9.0(@itwin/core-bentley@4.9.0))(@itwin/ecschema-metadata@4.9.0(@itwin/core-bentley@4.9.0)(@itwin/core-quantity@4.9.0(@itwin/core-bentley@4.9.0)))(@itwin/presentation-common@4.9.0(@itwin/core-bentley@4.9.0)(@itwin/core-common@4.9.0(@itwin/core-bentley@4.9.0)(@itwin/core-geometry@4.9.0))(@itwin/core-quantity@4.9.0(@itwin/core-bentley@4.9.0))(@itwin/ecschema-metadata@4.9.0(@itwin/core-bentley@4.9.0)(@itwin/core-quantity@4.9.0(@itwin/core-bentley@4.9.0))))':
+  '@itwin/presentation-frontend@4.9.0(@itwin/core-bentley@4.9.0)(@itwin/core-common@4.9.0(@itwin/core-bentley@4.9.0)(@itwin/core-geometry@4.9.0))(@itwin/core-frontend@4.9.0(@itwin/appui-abstract@4.9.0(@itwin/core-bentley@4.9.0))(@itwin/core-bentley@4.9.0)(@itwin/core-common@4.9.0(@itwin/core-bentley@4.9.0)(@itwin/core-geometry@4.9.0))(@itwin/core-geometry@4.9.0)(@itwin/core-orbitgt@4.9.0)(@itwin/core-quantity@4.9.0(@itwin/core-bentley@4.9.0))(inversify@6.0.2)(reflect-metadata@0.1.14))(@itwin/core-quantity@4.9.0(@itwin/core-bentley@4.9.0))(@itwin/ecschema-metadata@4.9.0(@itwin/core-bentley@4.9.0)(@itwin/core-quantity@4.9.0(@itwin/core-bentley@4.9.0)))(@itwin/presentation-common@4.9.0(@itwin/core-bentley@4.9.0)(@itwin/core-common@4.9.0(@itwin/core-bentley@4.9.0)(@itwin/core-geometry@4.9.0))(@itwin/core-quantity@4.9.0(@itwin/core-bentley@4.9.0))(@itwin/ecschema-metadata@4.9.0(@itwin/core-bentley@4.9.0)(@itwin/core-quantity@4.9.0(@itwin/core-bentley@4.9.0))))':
     dependencies:
       '@itwin/core-bentley': 4.9.0
       '@itwin/core-common': 4.9.0(@itwin/core-bentley@4.9.0)(@itwin/core-geometry@4.9.0)
