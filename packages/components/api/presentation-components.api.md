@@ -346,10 +346,10 @@ export interface NavigationPropertyEditorContextProviderProps {
 // @beta @deprecated
 export const NavigationPropertyTargetEditor: new (props: PropertyEditorProps) => TypeEditor & PureComponent<PropertyEditorProps>;
 
-// @public
+// @public @deprecated
 export function PortalTargetContextProvider({ portalTarget, children }: PropsWithChildren<PortalTargetContextProviderProps>): JSX_2.Element;
 
-// @public
+// @public @deprecated
 export interface PortalTargetContextProviderProps {
     // (undocumented)
     portalTarget: HTMLElement | null;

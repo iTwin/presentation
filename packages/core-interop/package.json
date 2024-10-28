@@ -44,7 +44,7 @@
   },
   "dependencies": {
     "@itwin/presentation-shared": "workspace:~",
-    "rxjs": "^7.8.1"
+    "rxjs": "catalog:rxjs"
   },
   "peerDependencies": {
     "@itwin/core-bentley": "^4.1.0",
@@ -54,29 +54,29 @@
     "@itwin/ecschema-metadata": "^4.1.0"
   },
   "devDependencies": {
-    "@itwin/build-tools": "^4.9.0",
-    "@itwin/core-bentley": "^4.9.0",
-    "@itwin/core-common": "^4.9.0",
-    "@itwin/core-geometry": "^4.9.0",
-    "@itwin/core-quantity": "^4.9.0",
-    "@itwin/ecschema-metadata": "^4.9.0",
-    "@itwin/eslint-plugin": "^4.1.1",
-    "@types/chai": "^4.3.16",
-    "@types/chai-as-promised": "^7.1.8",
-    "@types/mocha": "^10.0.7",
-    "@types/sinon": "^17.0.3",
-    "@types/sinon-chai": "^3.2.12",
-    "chai": "^4.4.1",
-    "chai-as-promised": "^7.1.2",
-    "cpx2": "^7.0.1",
-    "eslint": "^8.57.0",
-    "mocha": "^10.6.0",
-    "nyc": "^17.0.0",
+    "@itwin/build-tools": "catalog:build-tools",
+    "@itwin/core-bentley": "catalog:itwinjs-core",
+    "@itwin/core-common": "catalog:itwinjs-core",
+    "@itwin/core-geometry": "catalog:itwinjs-core",
+    "@itwin/core-quantity": "catalog:itwinjs-core",
+    "@itwin/ecschema-metadata": "catalog:itwinjs-core",
+    "@itwin/eslint-plugin": "catalog:build-tools",
+    "@types/chai": "catalog:test-tools",
+    "@types/chai-as-promised": "catalog:test-tools",
+    "@types/mocha": "catalog:test-tools",
+    "@types/sinon": "catalog:test-tools",
+    "@types/sinon-chai": "catalog:test-tools",
+    "chai": "catalog:test-tools",
+    "chai-as-promised": "catalog:test-tools",
+    "cpx2": "catalog:build-tools",
+    "eslint": "catalog:build-tools",
+    "mocha": "catalog:test-tools",
+    "nyc": "catalog:test-tools",
     "presentation-build-tools": "workspace:^",
-    "rimraf": "^6.0.1",
-    "rxjs-for-await": "^1.0.0",
-    "sinon": "^18.0.0",
-    "sinon-chai": "^3.7.0",
-    "typescript": "~5.5.3"
+    "rimraf": "catalog:build-tools",
+    "rxjs-for-await": "catalog:rxjs",
+    "sinon": "catalog:test-tools",
+    "sinon-chai": "catalog:test-tools",
+    "typescript": "catalog:build-tools"
   }
 }
