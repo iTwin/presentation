@@ -80,7 +80,6 @@ export interface Selectables {
 }
 
 /** @beta */
-// eslint-disable-next-line @typescript-eslint/no-redeclare
 export namespace Selectables {
   /**
    * Creates `Selectables` from array of selectable

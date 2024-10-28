@@ -211,7 +211,7 @@ export class PresentationPropertyDataProvider extends ContentDataProvider implem
     this.invalidateCache({ content: true });
   }
 
-  /* eslint-disable deprecation/deprecation */
+  /* eslint-disable @typescript-eslint/no-deprecated */
   /**
    * Should the specified field be included in the favorites category.
    * @deprecated in 5.2. Use `isFieldFavoriteAsync` instead.
@@ -229,7 +229,7 @@ export class PresentationPropertyDataProvider extends ContentDataProvider implem
     // otherwise, we need to call the deprecated method to stay backwards compatible...
     return this.isFieldFavorite(field);
   }
-  /* eslint-enable deprecation/deprecation */
+  /* eslint-enable @typescript-eslint/no-deprecated */
 
   /**
    * Sorts the specified list of categories by priority. May be overriden
@@ -239,7 +239,7 @@ export class PresentationPropertyDataProvider extends ContentDataProvider implem
     inPlaceSort(categories).by([{ desc: (c) => c.priority }, { asc: (c) => c.label, comparer: labelsComparer }]);
   }
 
-  /* eslint-disable deprecation/deprecation */
+  /* eslint-disable @typescript-eslint/no-deprecated */
   /**
    * Sorts the specified list of fields by priority. May be overriden to supply a different sorting algorithm.
    * @deprecated in 5.2. Use `sortFieldsAsync` instead.
@@ -267,12 +267,12 @@ export class PresentationPropertyDataProvider extends ContentDataProvider implem
     // otherwise, we need to call the deprecated method to stay backwards compatible...
     this.sortFields(category, fields);
   }
-  /* eslint-enable deprecation/deprecation */
+  /* eslint-enable @typescript-eslint/no-deprecated */
 
   /**
    * Returns property data.
    */
-  // eslint-disable-next-line @typescript-eslint/naming-convention
+
   protected getMemoizedData = memoize(async (): Promise<PropertyData> => {
     this.setupFavoritePropertiesListener();
     const content = await this.getContent();
@@ -289,9 +289,9 @@ export class PresentationPropertyDataProvider extends ContentDataProvider implem
     };
     const builder = await PropertyDataBuilder.create({
       descriptor: content.descriptor,
-      // eslint-disable-next-line deprecation/deprecation
+      // eslint-disable-next-line @typescript-eslint/no-deprecated
       includeWithNoValues: this.includeFieldsWithNoValues,
-      // eslint-disable-next-line deprecation/deprecation
+      // eslint-disable-next-line @typescript-eslint/no-deprecated
       includeWithCompositeValues: this.includeFieldsWithCompositeValues,
       wantNestedCategories: this._isNestedPropertyCategoryGroupingEnabled,
       callbacks,
@@ -361,7 +361,7 @@ async function isFieldFavorite(field: Field, imodel: IModelConnection) {
   if (Presentation.favoriteProperties.hasAsync) {
     return Presentation.favoriteProperties.hasAsync(field, imodel, FavoritePropertiesScope.IModel);
   }
-  // eslint-disable-next-line deprecation/deprecation
+  // eslint-disable-next-line @typescript-eslint/no-deprecated
   return Presentation.favoriteProperties.has(field, imodel, FavoritePropertiesScope.IModel);
 }
 
@@ -370,7 +370,7 @@ async function sortFavoriteFields(fields: Field[], imodel: IModelConnection) {
     await Presentation.favoriteProperties.sortFieldsAsync(imodel, fields);
     return;
   }
-  // eslint-disable-next-line deprecation/deprecation
+  // eslint-disable-next-line @typescript-eslint/no-deprecated
   Presentation.favoriteProperties.sortFields(imodel, fields);
 }
 

@@ -33,7 +33,7 @@ describe("exportDiagnostics", () => {
       startActiveSpan: startActiveSpanStub,
       startSpan: sinon.stub(),
     });
-    startActiveSpanStub.callsFake((spanName: string, _spanAttributes: Object, _ctx: TestSpanContext, cb: (span: Span) => Span) => {
+    startActiveSpanStub.callsFake((spanName: string, _spanAttributes: object, _ctx: TestSpanContext, cb: (span: Span) => Span) => {
       currentSpanContext = { parentSpanName: spanName };
       return cb(spanStub);
     });

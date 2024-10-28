@@ -16,7 +16,7 @@ import { ViewportSelectionHandler } from "./ViewportSelectionHandler.js";
  * @public
  * @deprecated in 5.3.x This interface is empty.
  */
-// eslint-disable-next-line @typescript-eslint/no-empty-interface
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 export interface ViewWithUnifiedSelectionProps {}
 
 const ViewportSelectionHandlerContext = createContext<ViewportSelectionHandler | undefined>(undefined);

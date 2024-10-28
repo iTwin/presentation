@@ -25,7 +25,7 @@ const localizationNamespaceName = "PresentationComponents";
  */
 export const initializeLocalization = async () => {
   await Presentation.localization.registerNamespace(localizationNamespaceName);
-  return () => Presentation.localization.unregisterNamespace(localizationNamespaceName); // eslint-disable-line @itwin/no-internal
+  return () => Presentation.localization.unregisterNamespace(localizationNamespaceName);
 };
 
 /**

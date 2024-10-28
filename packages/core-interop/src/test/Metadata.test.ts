@@ -80,7 +80,6 @@ describe("createECSchemaProvider", () => {
       const provider = createECSchemaProvider(schemaContext);
       const schema = await provider.getSchema("x");
 
-      // eslint-disable-next-line @typescript-eslint/unbound-method
       expect(schemaContext.getSchema).to.be.calledOnceWith(matchSchemaName);
       expect(schema).to.be.undefined;
     });
@@ -285,7 +284,6 @@ describe("createECClass", () => {
       );
       const result = await class1.is(class2);
 
-      // eslint-disable-next-line @typescript-eslint/unbound-method
       expect(coreClass.is).to.be.calledOnceWithExactly("c2", "s");
       expect(result).to.be.true;
     });
@@ -294,7 +292,6 @@ describe("createECClass", () => {
       const class1 = createECClass(coreClass as unknown as CoreClass, schema);
       const result = await class1.is("a", "b");
 
-      // eslint-disable-next-line @typescript-eslint/unbound-method
       expect(coreClass.is).to.be.calledOnceWithExactly("a", "b");
       expect(result).to.be.true;
     });

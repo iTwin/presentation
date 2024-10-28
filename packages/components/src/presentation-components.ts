@@ -2,7 +2,7 @@
  * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
-/* eslint-disable deprecation/deprecation */
+
 import { Presentation } from "@itwin/presentation-frontend";
 import { initializeLocalization, initializePropertyValueRenderers } from "./presentation-components/common/Utils.js";
 
@@ -93,7 +93,6 @@ export * from "./presentation-components/table/CellRenderer.js";
  * @docs-group-description Viewport
  * Presentation features for [ViewportComponent]($imodel-components-react).
  */
-// eslint-disable-next-line deprecation/deprecation
 export { viewWithUnifiedSelection, ViewWithUnifiedSelectionProps } from "./presentation-components/viewport/WithUnifiedSelection.js";
 
 /**

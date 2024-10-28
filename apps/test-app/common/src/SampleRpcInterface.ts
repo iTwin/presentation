@@ -17,7 +17,7 @@ export abstract class SampleRpcInterface extends RpcInterface {
 
   public static getClient(): SampleRpcInterface {
     return RpcManager.getClientForInterface(SampleRpcInterface);
-  } // eslint-disable-line @itwin/no-internal
+  }
 
   @RpcOperation.setRoutingProps(localDeploymentOnly)
   public async getSampleImodels(): Promise<string[]> {

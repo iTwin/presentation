@@ -94,6 +94,6 @@ async function defaultFavoritePropertyCheckCallback(field: Field, imodel: IModel
   if (Presentation.favoriteProperties.hasAsync) {
     return Presentation.favoriteProperties.hasAsync(field, imodel, scope);
   }
-  // eslint-disable-next-line deprecation/deprecation
+  // eslint-disable-next-line @typescript-eslint/no-deprecated
   return Presentation.favoriteProperties.has(field, imodel, scope);
 }

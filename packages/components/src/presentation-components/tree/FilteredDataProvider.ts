@@ -152,7 +152,7 @@ export class FilteredPresentationTreeDataProvider implements IFilteredPresentati
   // istanbul ignore next
   /** @deprecated in 4.0. Use [[isPresentationTreeNodeItem]] and [[PresentationTreeNodeItem.key]] to get [NodeKey]($presentation-common). */
   public getNodeKey(node: TreeNodeItem): NodeKey {
-    // eslint-disable-next-line deprecation/deprecation
+    // eslint-disable-next-line @typescript-eslint/no-deprecated
     return this._parentDataProvider.getNodeKey(node);
   }
 

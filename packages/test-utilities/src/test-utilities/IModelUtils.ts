@@ -318,7 +318,7 @@ export function insertRepositoryLink(
 }
 
 export function insertExternalSourceAspect(
-  props: BaseInstanceInsertProps & { elementId: Id64String; identifier: String; repositoryId?: Id64String } & Partial<
+  props: BaseInstanceInsertProps & { elementId: Id64String; identifier: string; repositoryId?: Id64String } & Partial<
       Omit<ExternalSourceAspectProps, "id" | "classFullName" | "element" | "source">
     >,
 ) {
