@@ -15,8 +15,8 @@ import {
   TreeRendererProps,
   useTreeModel,
 } from "@itwin/components-react";
-import { IPresentationTreeDataProvider } from "../IPresentationTreeDataProvider";
-import { UsePresentationTreeStateResult } from "./UsePresentationTreeState";
+import { IPresentationTreeDataProvider } from "../IPresentationTreeDataProvider.js";
+import { UsePresentationTreeStateResult } from "./UsePresentationTreeState.js";
 
 /**
  * Props for [[PresentationTree]] component.

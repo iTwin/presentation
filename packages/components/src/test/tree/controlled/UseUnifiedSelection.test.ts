@@ -37,12 +37,12 @@ import {
   UnifiedSelectionTreeEventHandler,
   UnifiedSelectionTreeEventHandlerParams,
   useUnifiedSelectionTreeEventHandler,
-} from "../../../presentation-components/tree/controlled/UseUnifiedSelection";
-import { IPresentationTreeDataProvider } from "../../../presentation-components/tree/IPresentationTreeDataProvider";
-import { PresentationTreeNodeItem } from "../../../presentation-components/tree/PresentationTreeNodeItem";
-import { createTestECClassGroupingNodeKey, createTestECInstancesNodeKey } from "../../_helpers/Hierarchy";
-import { createTestTreeNodeItem } from "../../_helpers/UiComponents";
-import { renderHook } from "../../TestUtils";
+} from "../../../presentation-components/tree/controlled/UseUnifiedSelection.js";
+import { IPresentationTreeDataProvider } from "../../../presentation-components/tree/IPresentationTreeDataProvider.js";
+import { PresentationTreeNodeItem } from "../../../presentation-components/tree/PresentationTreeNodeItem.js";
+import { createTestECClassGroupingNodeKey, createTestECInstancesNodeKey } from "../../_helpers/Hierarchy.js";
+import { createTestTreeNodeItem } from "../../_helpers/UiComponents.js";
+import { renderHook } from "../../TestUtils.js";
 
 const awaitableObservable = <T>(input: ObservableInput<T>) => {
   const promise = new ResolvablePromise<void>();

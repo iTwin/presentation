@@ -11,9 +11,9 @@ import { PropertyRecord } from "@itwin/appui-abstract";
 import { DelayLoadedTreeNodeItem, ItemColorOverrides, ItemStyle, Observable, TreeNodeItem, PageOptions as UiPageOptions } from "@itwin/components-react";
 import { CheckBoxState } from "@itwin/core-react";
 import { LabelDefinition, Node, NodeKey, PartialNode, PageOptions as PresentationPageOptions } from "@itwin/presentation-common";
-import { StyleHelper } from "../common/StyleHelper";
-import { createLabelRecord } from "../common/Utils";
-import { InfoTreeNodeItemType, PresentationInfoTreeNodeItem, PresentationTreeNodeItem } from "./PresentationTreeNodeItem";
+import { StyleHelper } from "../common/StyleHelper.js";
+import { createLabelRecord } from "../common/Utils.js";
+import { InfoTreeNodeItemType, PresentationInfoTreeNodeItem, PresentationTreeNodeItem } from "./PresentationTreeNodeItem.js";
 
 /** @internal */
 export interface CreateTreeNodeItemProps {

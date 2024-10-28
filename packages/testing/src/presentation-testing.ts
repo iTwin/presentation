@@ -11,7 +11,7 @@ import { PresentationManagerMode } from "@itwin/presentation-backend";
  * @docs-group-description Hierarchies
  * Types for testing hierarchies.
  */
-export * from "./presentation-testing/HierarchyBuilder";
+export * from "./presentation-testing/HierarchyBuilder.js";
 
 /**
  * @module Content
@@ -19,7 +19,7 @@ export * from "./presentation-testing/HierarchyBuilder";
  * @docs-group-description Content
  * Types for testing content.
  */
-export * from "./presentation-testing/ContentBuilder";
+export * from "./presentation-testing/ContentBuilder.js";
 
 /**
  * @module Helpers
@@ -27,7 +27,14 @@ export * from "./presentation-testing/ContentBuilder";
  * @docs-group-description Helpers
  * Various test helpers.
  */
-export * from "./presentation-testing/Helpers";
+export * from "./presentation-testing/Helpers.js";
+export {
+  createFileNameFromString,
+  getTestOutputDir,
+  limitFilePathLength,
+  setTestOutputDir,
+  setupOutputFileLocation,
+} from "./presentation-testing/FilenameUtils.js";
 
 /**
  * @module IModel
@@ -35,6 +42,6 @@ export * from "./presentation-testing/Helpers";
  * @docs-group-description IModel
  * Utilities for creating test iModels that can be used to exercise presentation rules.
  */
-export * from "./presentation-testing/IModelUtilities";
+export * from "./presentation-testing/IModelUtilities.js";
 
 export { PresentationManagerMode }; // eslint-disable-line deprecation/deprecation

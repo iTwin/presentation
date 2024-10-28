@@ -9,14 +9,14 @@ import { BeEvent } from "@itwin/core-bentley";
 import { EmptyLocalization } from "@itwin/core-common";
 import { IModelApp, IModelConnection } from "@itwin/core-frontend";
 import { Presentation } from "@itwin/presentation-frontend";
-import { ECClassInfo, getIModelMetadataProvider } from "../../presentation-components/instance-filter-builder/ECMetadataProvider";
+import { ECClassInfo, getIModelMetadataProvider } from "../../presentation-components/instance-filter-builder/ECMetadataProvider.js";
 import {
   PresentationInstanceFilterBuilder,
   PresentationInstanceFilterInfo,
-} from "../../presentation-components/instance-filter-builder/PresentationFilterBuilder";
-import { createTestECClassInfo, stubDOMMatrix, stubGetBoundingClientRect, stubRaf } from "../_helpers/Common";
-import { createTestCategoryDescription, createTestContentDescriptor, createTestPropertiesContentField } from "../_helpers/Content";
-import { render, waitFor, waitForElement } from "../TestUtils";
+} from "../../presentation-components/instance-filter-builder/PresentationFilterBuilder.js";
+import { createTestECClassInfo, stubDOMMatrix, stubGetBoundingClientRect, stubRaf } from "../_helpers/Common.js";
+import { createTestCategoryDescription, createTestContentDescriptor, createTestPropertiesContentField } from "../_helpers/Content.js";
+import { render, waitFor, waitForElement } from "../TestUtils.js";
 
 describe("PresentationInstanceFilter", () => {
   stubRaf();

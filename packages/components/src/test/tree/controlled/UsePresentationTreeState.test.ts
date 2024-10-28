@@ -35,11 +35,11 @@ import {
   usePresentationTreeState,
   UsePresentationTreeStateProps,
   UsePresentationTreeStateResult,
-} from "../../../presentation-components/tree/controlled/UsePresentationTreeState";
-import { PresentationTreeDataProvider } from "../../../presentation-components/tree/DataProvider";
-import { ReportingTreeNodeLoader } from "../../../presentation-components/tree/ReportingTreeNodeLoader";
-import { createTreeNodeItem } from "../../../presentation-components/tree/Utils";
-import { renderHook, waitFor } from "../../TestUtils";
+} from "../../../presentation-components/tree/controlled/UsePresentationTreeState.js";
+import { PresentationTreeDataProvider } from "../../../presentation-components/tree/DataProvider.js";
+import { ReportingTreeNodeLoader } from "../../../presentation-components/tree/ReportingTreeNodeLoader.js";
+import { createTreeNodeItem } from "../../../presentation-components/tree/Utils.js";
+import { renderHook, waitFor } from "../../TestUtils.js";
 
 describe("usePresentationTreeState", () => {
   const onIModelHierarchyChanged: PresentationManager["onIModelHierarchyChanged"] = new BeEvent<(args: IModelHierarchyChangeEventArgs) => void>();

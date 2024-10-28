@@ -8,10 +8,10 @@ import sinon from "sinon";
 import { IModelConnection } from "@itwin/core-frontend";
 import { KeySet } from "@itwin/presentation-common";
 import { Presentation, PresentationManager } from "@itwin/presentation-frontend";
-import { useColumns, UseColumnsProps } from "../../presentation-components/table/UseColumns";
-import { createTestECInstanceKey, TestErrorBoundary } from "../_helpers/Common";
-import { createTestContentDescriptor, createTestNestedContentField, createTestPropertiesContentField } from "../_helpers/Content";
-import { render, renderHook, waitFor } from "../TestUtils";
+import { useColumns, UseColumnsProps } from "../../presentation-components/table/UseColumns.js";
+import { createTestECInstanceKey, TestErrorBoundary } from "../_helpers/Common.js";
+import { createTestContentDescriptor, createTestNestedContentField, createTestPropertiesContentField } from "../_helpers/Content.js";
+import { render, renderHook, waitFor } from "../TestUtils.js";
 
 describe("useColumns", () => {
   const imodel = {} as IModelConnection;

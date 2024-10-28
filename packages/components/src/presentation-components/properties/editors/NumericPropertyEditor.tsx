@@ -5,8 +5,8 @@
 
 import { createRef, PureComponent } from "react";
 import { PropertyEditorBase, PropertyEditorProps, TypeEditor } from "@itwin/components-react";
-import { NumericPropertyInput } from "../inputs/NumericPropertyInput";
-import { PropertyEditorAttributes } from "./Common";
+import { NumericPropertyInput } from "../inputs/NumericPropertyInput.js";
+import { PropertyEditorAttributes } from "./Common.js";
 
 /**
  * Name for `NumericPropertyEditor`.

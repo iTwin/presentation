@@ -6,9 +6,9 @@
 import { expect } from "chai";
 import sinon from "sinon";
 import { StandardTypeNames } from "@itwin/appui-abstract";
-import { NumericEditorName, NumericPropertyEditor } from "../../../presentation-components/properties/editors/NumericPropertyEditor";
-import { createTestPropertyRecord } from "../../_helpers/UiComponents";
-import { render, waitFor } from "../../TestUtils";
+import { NumericEditorName, NumericPropertyEditor } from "../../../presentation-components/properties/editors/NumericPropertyEditor.js";
+import { createTestPropertyRecord } from "../../_helpers/UiComponents.js";
+import { render, waitFor } from "../../TestUtils.js";
 
 const createRecord = (initialValue?: number) => {
   return createTestPropertyRecord(

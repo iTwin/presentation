@@ -7,8 +7,8 @@ import { expect } from "chai";
 import sinon from "sinon";
 import { CodeSpecs, IModelDb, Relationships } from "@itwin/core-backend";
 import { BisCodeSpec, Code, CodeScopeProps, CodeSpec, ElementAspectProps, ElementProps, ModelProps, RelationshipProps } from "@itwin/core-common";
-import { TestIModelBuilderImpl } from "../presentation-testing/IModelBuilderImpl";
-import { createStub } from "./Utils";
+import { TestIModelBuilderImpl } from "../presentation-testing/IModelBuilderImpl.js";
+import { createStub } from "./Utils.js";
 
 describe("TestIModelBuilderImpl", () => {
   it("insertModel calls iModel.models.insertModel", async () => {

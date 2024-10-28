@@ -44,7 +44,6 @@
     "lint": "eslint ./src/**/*.ts",
     "test": "mocha --enable-source-maps --config ./.mocharc.json",
     "test:dev": "mocha --enable-source-maps --config ./.mocharc.json",
-    "test:watch": "npm -s test -- --reporter min --watch-extensions ts --watch",
     "extract-api": "extract-api --entry=unified-selection --apiReportFolder=./api --apiReportTempFolder=./api/temp --apiSummaryFolder=./api",
     "check-internal": "node ../../scripts/checkInternal.js --apiSummary ./api/unified-selection.api.md",
     "validate-markdowns": "node ../../scripts/validateMarkdowns.js README.md"

@@ -7,12 +7,12 @@
  * @module UnifiedSelection
  */
 
-import memoize from "micro-memoize";
 import { createContext, useContext, useEffect, useRef, useState } from "react";
 import { assert } from "@itwin/core-bentley";
 import { IModelConnection } from "@itwin/core-frontend";
 import { Keys, KeySet } from "@itwin/presentation-common";
 import { Presentation } from "@itwin/presentation-frontend";
+import { memoize } from "../common/Utils.js";
 
 /**
  * Interface for accessing and modifying Unified Selection within React components.

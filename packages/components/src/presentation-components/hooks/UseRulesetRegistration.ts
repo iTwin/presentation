@@ -9,7 +9,7 @@
 import { useCallback } from "react";
 import { useDisposable } from "@itwin/core-react";
 import { Ruleset } from "@itwin/presentation-common";
-import { RulesetRegistrationHelper } from "../common/RulesetRegistrationHelper";
+import { RulesetRegistrationHelper } from "../common/RulesetRegistrationHelper.js";
 
 /**
  * Custom hook which registers supplied Ruleset on mount and removes on unmount.

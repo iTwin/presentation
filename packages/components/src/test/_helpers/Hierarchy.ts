@@ -4,8 +4,8 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { ECClassGroupingNodeKey, ECInstancesNodeKey, Node, NodePathElement, StandardNodeTypes } from "@itwin/presentation-common";
-import { createTestECInstanceKey } from "./Common";
-import { createTestLabelDefinition } from "./LabelDefinition";
+import { createTestECInstanceKey } from "./Common.js";
+import { createTestLabelDefinition } from "./LabelDefinition.js";
 
 export function createTestECInstancesNodeKey(key?: Partial<ECInstancesNodeKey>): ECInstancesNodeKey {
   return {

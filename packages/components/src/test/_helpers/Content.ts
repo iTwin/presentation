@@ -26,7 +26,7 @@ import {
   TypeDescription,
   ValuesMap,
 } from "@itwin/presentation-common";
-import { createTestECClassInfo, createTestECInstanceKey, createTestRelationshipPath } from "./Common";
+import { createTestECClassInfo, createTestECInstanceKey, createTestRelationshipPath } from "./Common.js";
 
 export const createTestCategoryDescription = (props?: Partial<CategoryDescription>) => ({
   name: "test-category",

@@ -8,10 +8,10 @@ import { PropertyDescription, PropertyValue, PropertyValueFormat } from "@itwin/
 import { IModelConnection } from "@itwin/core-frontend";
 import { ComboBox, SelectOption } from "@itwin/itwinui-react";
 import { ClassInfo, Descriptor, Field, Keys, KeySet, MultiSchemaClassesSpecification, Ruleset } from "@itwin/presentation-common";
-import { deserializeUniqueValues, findField, serializeUniqueValues, translate, UniqueValue } from "../../common/Utils";
-import { getInstanceFilterFieldName } from "../../instance-filter-builder/Utils";
-import { FILTER_WARNING_OPTION, VALUE_BATCH_SIZE } from "./ItemsLoader";
-import { useUniquePropertyValuesLoader } from "./UseUniquePropertyValuesLoader";
+import { deserializeUniqueValues, findField, serializeUniqueValues, translate, UniqueValue } from "../../common/Utils.js";
+import { getInstanceFilterFieldName } from "../../instance-filter-builder/Utils.js";
+import { FILTER_WARNING_OPTION, VALUE_BATCH_SIZE } from "./ItemsLoader.js";
+import { useUniquePropertyValuesLoader } from "./UseUniquePropertyValuesLoader.js";
 
 /** @internal */
 export interface UniquePropertyValuesSelectorProps {

@@ -15,8 +15,8 @@ import {
   TreeNodeItem,
   TreeNodeLoadResult,
 } from "@itwin/components-react";
-import { ReportingTreeNodeLoader } from "../../presentation-components/tree/ReportingTreeNodeLoader";
-import { waitFor } from "../TestUtils";
+import { ReportingTreeNodeLoader } from "../../presentation-components/tree/ReportingTreeNodeLoader.js";
+import { waitFor } from "../TestUtils.js";
 
 describe("ReportingTreeNodeLoader", () => {
   let reportingNodeLoader: ReportingTreeNodeLoader<TreeDataProvider>;

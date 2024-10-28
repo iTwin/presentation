@@ -36,8 +36,8 @@ import {
   VisibleTreeNodes,
 } from "@itwin/components-react";
 import { assert, isIDisposable } from "@itwin/core-bentley";
-import { IPresentationTreeDataProvider } from "../IPresentationTreeDataProvider";
-import { toRxjsObservable } from "../Utils";
+import { IPresentationTreeDataProvider } from "../IPresentationTreeDataProvider.js";
+import { toRxjsObservable } from "../Utils.js";
 
 /**
  * Creates a new tree model from scratch while attempting to match provided tree model's expanded structure.

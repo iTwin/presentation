@@ -10,13 +10,13 @@ import { BeEvent } from "@itwin/core-bentley";
 import { IModelConnection } from "@itwin/core-frontend";
 import { InstanceFilterDefinition, LabelDefinition, NodePathElement } from "@itwin/presentation-common";
 import { Presentation, PresentationManager, RulesetVariablesManager } from "@itwin/presentation-frontend";
-import { PresentationTreeDataProvider } from "../../presentation-components/tree/DataProvider";
-import { FilteredPresentationTreeDataProvider } from "../../presentation-components/tree/FilteredDataProvider";
-import { IPresentationTreeDataProvider } from "../../presentation-components/tree/IPresentationTreeDataProvider";
-import { createTreeNodeItem } from "../../presentation-components/tree/Utils";
-import { createTestECInstanceKey } from "../_helpers/Common";
-import { createTestECInstancesNode, createTestECInstancesNodeKey, createTestNodePathElement } from "../_helpers/Hierarchy";
-import { createStub } from "../TestUtils";
+import { PresentationTreeDataProvider } from "../../presentation-components/tree/DataProvider.js";
+import { FilteredPresentationTreeDataProvider } from "../../presentation-components/tree/FilteredDataProvider.js";
+import { IPresentationTreeDataProvider } from "../../presentation-components/tree/IPresentationTreeDataProvider.js";
+import { createTreeNodeItem } from "../../presentation-components/tree/Utils.js";
+import { createTestECInstanceKey } from "../_helpers/Common.js";
+import { createTestECInstancesNode, createTestECInstancesNodeKey, createTestNodePathElement } from "../_helpers/Hierarchy.js";
+import { createStub } from "../TestUtils.js";
 
 describe("FilteredTreeDataProvider", () => {
   function createTestNodePathElementWithId(id: string) {

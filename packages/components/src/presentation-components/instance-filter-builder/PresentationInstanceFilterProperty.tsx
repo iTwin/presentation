@@ -9,7 +9,7 @@
 import "./PresentationInstanceFilterProperty.scss";
 import { PropertyDescription } from "@itwin/appui-abstract";
 import { Badge, Text, Tooltip } from "@itwin/itwinui-react";
-import { translate } from "../common/Utils";
+import { translate } from "../common/Utils.js";
 
 /**
  * Props for [[PresentationInstanceFilterProperty]] component.

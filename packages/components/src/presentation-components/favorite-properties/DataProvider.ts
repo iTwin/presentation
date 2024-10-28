@@ -11,8 +11,8 @@ import { Id64Arg, using } from "@itwin/core-bentley";
 import { IModelConnection } from "@itwin/core-frontend";
 import { KeySet, Ruleset } from "@itwin/presentation-common";
 import { createSelectionScopeProps, Presentation } from "@itwin/presentation-frontend";
-import { PresentationPropertyDataProvider } from "../propertygrid/DataProvider";
-import { getFavoritesCategory } from "./Utils";
+import { PresentationPropertyDataProvider } from "../propertygrid/DataProvider.js";
+import { getFavoritesCategory } from "./Utils.js";
 
 /**
  * An data provider interface for returning favorite properties for the given elements

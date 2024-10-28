@@ -11,8 +11,8 @@ import { BeEvent, Guid } from "@itwin/core-bentley";
 import { IModelConnection } from "@itwin/core-frontend";
 import { HierarchyRequestOptions, LabelDefinition, Node, NodeKey, RegisteredRuleset, Ruleset } from "@itwin/presentation-common";
 import { Presentation, PresentationManager, RulesetManager, RulesetVariablesManager } from "@itwin/presentation-frontend";
-import { HierarchyBuilder, NodeMappingFunc } from "../presentation-testing/HierarchyBuilder";
-import { createStub } from "./Utils";
+import { HierarchyBuilder, NodeMappingFunc } from "../presentation-testing/HierarchyBuilder.js";
+import { createStub } from "./Utils.js";
 
 async function getRootNodes() {
   const root: Node = {

@@ -10,15 +10,15 @@ import { BeUiEvent } from "@itwin/core-bentley";
 import { FormattingUnitSystemChangedArgs, IModelApp, IModelConnection } from "@itwin/core-frontend";
 import { ContentDescriptorRequestOptions, InstanceKey, Item, KeySet, RulesetVariable } from "@itwin/presentation-common";
 import { Presentation, PresentationManager, SelectionManager } from "@itwin/presentation-frontend";
-import { TableColumnDefinition, TableRowDefinition } from "../../presentation-components/table/Types";
+import { TableColumnDefinition, TableRowDefinition } from "../../presentation-components/table/Types.js";
 import {
   usePresentationTable,
   UsePresentationTableProps,
   usePresentationTableWithUnifiedSelection,
-} from "../../presentation-components/table/UsePresentationTable";
-import { createTestECInstanceKey, createTestPropertyInfo } from "../_helpers/Common";
-import { createTestContentDescriptor, createTestContentItem, createTestPropertiesContentField } from "../_helpers/Content";
-import { act, renderHook, waitFor } from "../TestUtils";
+} from "../../presentation-components/table/UsePresentationTable.js";
+import { createTestECInstanceKey, createTestPropertyInfo } from "../_helpers/Common.js";
+import { createTestContentDescriptor, createTestContentItem, createTestPropertiesContentField } from "../_helpers/Content.js";
+import { act, renderHook, waitFor } from "../TestUtils.js";
 
 describe("usePresentationTable", () => {
   const imodel = {

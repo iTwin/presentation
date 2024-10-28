@@ -23,9 +23,9 @@ import { Guid, IDisposable } from "@itwin/core-bentley";
 import { useDisposable } from "@itwin/core-react";
 import { Keys, KeySet, NodeKey } from "@itwin/presentation-common";
 import { Presentation, SelectionChangeEventArgs, SelectionChangeType, SelectionHelper } from "@itwin/presentation-frontend";
-import { IPresentationTreeDataProvider } from "../IPresentationTreeDataProvider";
-import { isPresentationTreeNodeItem } from "../PresentationTreeNodeItem";
-import { toRxjsObservable } from "../Utils";
+import { IPresentationTreeDataProvider } from "../IPresentationTreeDataProvider.js";
+import { isPresentationTreeNodeItem } from "../PresentationTreeNodeItem.js";
+import { toRxjsObservable } from "../Utils.js";
 
 /**
  * Data structure that describes parameters for UnifiedSelectionTreeEventHandler

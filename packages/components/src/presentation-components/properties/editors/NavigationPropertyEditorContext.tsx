@@ -11,7 +11,7 @@ import { createContext, PropsWithChildren, useContext, useMemo } from "react";
 import { PropertyDescription } from "@itwin/appui-abstract";
 import { IModelConnection } from "@itwin/core-frontend";
 import { NavigationPropertyInfo } from "@itwin/presentation-common";
-import { IContentDataProvider } from "../../common/ContentDataProvider";
+import { IContentDataProvider } from "../../common/ContentDataProvider.js";
 
 /**
  * A context providing necessary information for [[NavigationPropertyEditor]].

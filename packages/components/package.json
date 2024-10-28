@@ -22,23 +22,29 @@
     "name": "Bentley Systems, Inc.",
     "url": "http://www.bentley.com"
   },
+  "type": "module",
   "main": "lib/cjs/presentation-components.js",
+  "types": "lib/cjs/presentation-components",
   "module": "lib/esm/presentation-components.js",
-  "types": "lib/cjs/presentation-components.d.ts",
+  "exports": {
+    ".": {
+      "import": "./lib/esm/presentation-components.js",
+      "require": "./lib/cjs/presentation-components.js"
+    },
+    "./package.json": "./package.json"
+  },
   "scripts": {
     "build": "npm run -s copy:locale && npm run -s build:cjs && npm run -s build:esm",
-    "build:cjs": "npm run -s copy:cjs && tsc -p tsconfig.cjs.json",
+    "build:cjs": "node ../../scripts/package-cjs.mjs ./lib/cjs && npm run -s copy:cjs && tsc -p tsconfig.cjs.json",
     "build:esm": "npm run -s copy:esm && tsc -p tsconfig.esm.json",
     "copy:locale": "cpx \"./public/**/*\" ./lib/public",
     "copy:cjs": "cpx \"./src/**/*.{scss,json}\" ./lib/cjs",
     "copy:esm": "cpx \"./src/**/*.{scss,json}\" ./lib/esm",
-    "build:watch": "npm run -s build:cjs -- -w",
     "clean": "rimraf lib build",
     "cover": "nyc npm -s test",
     "lint": "eslint ./src/**/*.{ts,tsx}",
     "test": "mocha --enable-source-maps --parallel --config ./.mocharc.json",
     "test:dev": "mocha --enable-source-maps --config ./.mocharc.json",
-    "test:watch": "npm run -s test:dev -- --reporter min --watch-extensions ts,tsx --watch",
     "docs": "npm run -s docs:extract && npm run -s docs:reference && npm run -s docs:changelog",
     "docs:changelog": "cpx ./CHANGELOG.md ./build/docs/reference/presentation-components",
     "docs:reference": "cross-env NODE_PROJECT_ROOT_DIRECTORY=../../ betools docs --includes=./build/docs/extract --json=./build/docs/reference/presentation-components/file.json --tsIndexFile=presentation-components.ts --onlyJson",

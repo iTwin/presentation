@@ -18,10 +18,10 @@ import {
 } from "@itwin/components-react";
 import { IModelConnection } from "@itwin/core-frontend";
 import { CategoryDescription, ClassInfo, combineFieldNames, Descriptor, Field, NestedContentField, PropertiesField } from "@itwin/presentation-common";
-import { createPropertyDescriptionFromFieldInfo } from "../common/ContentBuilder";
-import { translate } from "../common/Utils";
-import { NavigationPropertyEditorContextProviderProps } from "../properties/editors/NavigationPropertyEditorContext";
-import { PresentationInstanceFilterPropertyInfo } from "./PresentationFilterBuilder";
+import { createPropertyDescriptionFromFieldInfo } from "../common/ContentBuilder.js";
+import { translate } from "../common/Utils.js";
+import { NavigationPropertyEditorContextProviderProps } from "../properties/editors/NavigationPropertyEditorContext.js";
+import { PresentationInstanceFilterPropertyInfo } from "./PresentationFilterBuilder.js";
 
 /** @internal */
 export function createInstanceFilterPropertyInfos(descriptor: Descriptor): PresentationInstanceFilterPropertyInfo[] {

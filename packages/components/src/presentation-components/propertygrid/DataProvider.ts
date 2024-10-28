@@ -7,7 +7,6 @@
  */
 
 import { inPlaceSort } from "fast-sort";
-import memoize from "micro-memoize";
 import { PropertyRecord, PropertyValueFormat as UiPropertyValueFormat } from "@itwin/appui-abstract";
 import { IPropertyDataProvider, PropertyCategory, PropertyData, PropertyDataChangeEvent } from "@itwin/components-react";
 import { assert } from "@itwin/core-bentley";
@@ -37,11 +36,11 @@ import {
   ValuesMap,
 } from "@itwin/presentation-common";
 import { FavoritePropertiesScope, Presentation } from "@itwin/presentation-frontend";
-import { FieldHierarchyRecord, InternalPropertyRecordsBuilder, IPropertiesAppender } from "../common/ContentBuilder";
-import { CacheInvalidationProps, ContentDataProvider, IContentDataProvider } from "../common/ContentDataProvider";
-import { DiagnosticsProps } from "../common/Diagnostics";
-import { createLabelRecord, findField } from "../common/Utils";
-import { FAVORITES_CATEGORY_NAME, getFavoritesCategory } from "../favorite-properties/Utils";
+import { FieldHierarchyRecord, InternalPropertyRecordsBuilder, IPropertiesAppender } from "../common/ContentBuilder.js";
+import { CacheInvalidationProps, ContentDataProvider, IContentDataProvider } from "../common/ContentDataProvider.js";
+import { DiagnosticsProps } from "../common/Diagnostics.js";
+import { createLabelRecord, findField, memoize } from "../common/Utils.js";
+import { FAVORITES_CATEGORY_NAME, getFavoritesCategory } from "../favorite-properties/Utils.js";
 
 const labelsComparer = new Intl.Collator(undefined, { sensitivity: "base" }).compare;
 
