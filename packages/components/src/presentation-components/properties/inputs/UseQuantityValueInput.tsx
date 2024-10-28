@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { ChangeEventHandler, useEffect, useState } from "react";
+import { ChangeEventHandler, useEffect, useRef, useState } from "react";
 import { assert } from "@itwin/core-bentley";
 import { IModelApp } from "@itwin/core-frontend";
 import { FormatterSpec, ParserSpec } from "@itwin/core-quantity";
@@ -44,10 +44,11 @@ export function useQuantityValueInput({ initialRawValue, schemaContext, koqName 
     quantityValue: QuantityValue;
     placeholder: string;
   }
+  const initialRawValueRef = useRef(initialRawValue);
 
   const [{ quantityValue, placeholder }, setState] = useState<State>(() => ({
     quantityValue: {
-      rawValue: initialRawValue,
+      rawValue: initialRawValueRef.current,
       formattedValue: "",
       roundingError: undefined,
     },
@@ -61,7 +62,7 @@ export function useQuantityValueInput({ initialRawValue, schemaContext, koqName 
     }
 
     setState((prev): State => {
-      const newPlaceholder = formatter.applyFormatting(initialRawValue ?? PLACEHOLDER_RAW_VALUE);
+      const newPlaceholder = formatter.applyFormatting(initialRawValueRef.current ?? PLACEHOLDER_RAW_VALUE);
       const newFormattedValue = prev.quantityValue.rawValue !== undefined ? formatter.applyFormatting(prev.quantityValue.rawValue) : "";
       const roundingError = getPersistenceUnitRoundingError(newFormattedValue, parser);
 
@@ -75,7 +76,7 @@ export function useQuantityValueInput({ initialRawValue, schemaContext, koqName 
         placeholder: newPlaceholder,
       };
     });
-  }, [formatter, initialRawValue, parser]);
+  }, [formatter, parser]);
 
   const onChange: ChangeEventHandler<HTMLInputElement> = (e) => {
     assert(parser !== undefined); // input should be disabled if parser is `undefined`

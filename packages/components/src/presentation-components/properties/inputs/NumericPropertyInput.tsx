@@ -117,7 +117,7 @@ export const NumericInput = forwardRef<PropertyEditorAttributes, NumericInputPro
       value={value}
       onChange={handleChange}
       onBlur={onBlur}
-      onFocus={() => inputRef.current?.setSelectionRange(0, 9999)}
+      onFocus={() => inputRef.current?.setSelectionRange(0, value.length)}
     />
   );
 });

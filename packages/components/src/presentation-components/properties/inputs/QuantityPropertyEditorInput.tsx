@@ -87,7 +87,7 @@ const QuantityPropertyValueInput = forwardRef<PropertyEditorAttributes, Quantity
         disabled={propertyRecord.isReadonly || inputProps.disabled}
         ref={inputRef}
         onBlur={onBlur}
-        onFocus={() => inputRef.current?.setSelectionRange(0, 9999)}
+        onFocus={() => inputRef.current?.setSelectionRange(0, inputProps.value.length)}
       />
     );
   },
