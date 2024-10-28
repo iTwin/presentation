@@ -9,8 +9,8 @@ import sinon, { SinonStub } from "sinon";
 import { IModelJsFs, SnapshotDb } from "@itwin/core-backend";
 import { CreateEmptySnapshotIModelProps } from "@itwin/core-common";
 import { SnapshotConnection } from "@itwin/core-frontend";
+import { createFileNameFromString, getTestOutputDir } from "../presentation-testing/FilenameUtils.js";
 import { buildTestIModel } from "../presentation-testing/IModelUtilities.js";
-import { createFileNameFromString, getTestOutputDir } from "../presentation-testing/InternalUtils.js";
 import { createStub } from "./Utils.js";
 
 describe("buildTestIModel", () => {
@@ -53,7 +53,7 @@ describe("buildTestIModel", () => {
     // eslint-disable-next-line deprecation/deprecation
     await buildTestIModel(fileName, async () => {});
 
-    const outputFile = join(getTestOutputDir(), `${fileName}.bim`);
+    const outputFile = join(getTestOutputDir(), fileName);
     expect(unlinkFake.calledOnceWith(outputFile));
   });
 
@@ -89,7 +89,7 @@ describe("buildTestIModel", () => {
     // eslint-disable-next-line deprecation/deprecation
     await buildTestIModel(fileName, async () => {});
 
-    expect(createSnapshotDb.firstCall.args[0]).to.include(`${fileName}.bim`);
+    expect(createSnapshotDb.firstCall.args[0]).to.include(fileName);
     expect(createSnapshotDb.firstCall.lastArg).to.deep.equal({ rootSubject: { name: fileName } });
   });
 
@@ -99,7 +99,7 @@ describe("buildTestIModel", () => {
     // eslint-disable-next-line deprecation/deprecation
     await buildTestIModel(this, async () => {});
 
-    expect(createSnapshotDb.firstCall.args[0]).to.include(`${fileName}.bim`);
+    expect(createSnapshotDb.firstCall.args[0]).to.include(fileName);
     expect(createSnapshotDb.firstCall.lastArg).to.deep.equal({ rootSubject: { name: fileName } });
   });
 

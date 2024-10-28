@@ -10,8 +10,8 @@ import { SnapshotDb } from "@itwin/core-backend";
 import { Id64String } from "@itwin/core-bentley";
 import { BisCodeSpec, Code, CodeScopeProps, ElementAspectProps, ElementProps, ModelProps, RelationshipProps } from "@itwin/core-common";
 import { IModelConnection, SnapshotConnection } from "@itwin/core-frontend";
+import { createFileNameFromString, setupOutputFileLocation } from "./FilenameUtils.js";
 import { TestIModelBuilderImpl } from "./IModelBuilderImpl.js";
-import { createFileNameFromString, setupOutputFileLocation } from "./InternalUtils.js";
 
 /**
  * Interface for IModel builder pattern. Used for building IModels to test rulesets.
@@ -75,7 +75,7 @@ export async function buildTestIModel(mochaContext: Mocha.Context, cb: (builder:
 export async function buildTestIModel(mochaContext: Mocha.Context, cb: (builder: TestIModelBuilder) => Promise<void>): Promise<IModelConnection>;
 export async function buildTestIModel(nameParam: string | Mocha.Context, cb: (builder: TestIModelBuilder) => void | Promise<void>): Promise<IModelConnection> {
   const name = typeof nameParam === "string" ? nameParam : createFileNameFromString(nameParam.test!.fullTitle());
-  const outputFile = setupOutputFileLocation(name);
+  const outputFile = setupOutputFileLocation(`${name}.bim`);
   const db = SnapshotDb.createEmpty(outputFile, { rootSubject: { name } });
   const builder = new TestIModelBuilderImpl(db);
   try {

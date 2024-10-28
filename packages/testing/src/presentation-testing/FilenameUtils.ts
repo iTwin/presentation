@@ -12,34 +12,46 @@ import { LocalFileName } from "@itwin/core-common";
 const defaultTestOutputDir = tmpdir();
 let testOutputDir: string | undefined;
 
-/** @internal */
+/**
+ * Get the output directory used by `setupOutputFileLocation` utility.
+ * @public
+ */
 export function getTestOutputDir() {
   return testOutputDir ?? defaultTestOutputDir;
 }
 
-/** @internal */
+/**
+ * Set the output directory used by `setupOutputFileLocation` utility.
+ * @public
+ */
 export function setTestOutputDir(directoryPath: string | undefined) {
   testOutputDir = directoryPath;
 }
 
 /**
- * Prepare for an output file by:
- * - Resolving the output file name under the known test output directory
- * - Making directories as necessary
- * - Removing a previous copy of the output file
+ * Prepare for an output file path by:
+ * - Resolving the output file name under the known test output directory (see `getTestOutputDir` & `setTestOutputDir`).
+ * - Making sure the output directories exist.
+ * - Removing a previous copy of the output file.
+ *
  * @param fileName Name of output file. The actual file name may get modified to fit within the file system limits.
- * @internal
+ *
+ * @public
  */
 export function setupOutputFileLocation(fileName: string): LocalFileName {
   const outputDirectoryPath = getTestOutputDir();
   !IModelJsFs.existsSync(outputDirectoryPath) && IModelJsFs.mkdirSync(outputDirectoryPath);
-
-  const outputFilePath = limitFilePathLength(path.join(outputDirectoryPath, `${fileName}.bim`));
+  const outputFilePath = limitFilePathLength(path.join(outputDirectoryPath, fileName));
   IModelJsFs.existsSync(outputFilePath) && IModelJsFs.unlinkSync(outputFilePath);
   return outputFilePath;
 }
 
-/** @internal */
+/**
+ * An utility to create a valid file name from any string. Sanitizes all invalid characters,
+ * replaces spaces with `-`, makes everything lower case.
+ *
+ * @public
+ */
 export function createFileNameFromString(str: string) {
   return sanitize(str.replace(/[ ]+/g, "-").replaceAll("`", "").replaceAll("'", "")).toLocaleLowerCase();
 }
@@ -51,7 +63,16 @@ export function createFileNameFromString(str: string) {
  */
 export const FILE_PATH_RESERVED_CHARACTERS = 13;
 
-/** @internal */
+/**
+ * An utility to make sure file path is shorter than 260 characters.
+ *
+ * 1. Takes a full file path, splits into directory and file name parts.
+ * 2. If the path is already short enough, returns it.
+ * 3. Else, calculates tha max allowed file name length, and shortens the file name by replacing the middle part with `...`.
+ * 4. Joins back the directory with the shortened file name and returns it.
+ *
+ * @public
+ */
 export function limitFilePathLength(filePath: string) {
   const { dir, name, ext } = path.parse(filePath);
   const THREE_DOTS_LENGTH = 3;

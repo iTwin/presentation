@@ -28,6 +28,13 @@ export * from "./presentation-testing/ContentBuilder.js";
  * Various test helpers.
  */
 export * from "./presentation-testing/Helpers.js";
+export {
+  createFileNameFromString,
+  getTestOutputDir,
+  limitFilePathLength,
+  setTestOutputDir,
+  setupOutputFileLocation,
+} from "./presentation-testing/FilenameUtils.js";
 
 /**
  * @module IModel
