@@ -10,8 +10,8 @@ import { SnapshotDb } from "@itwin/core-backend";
 import { Id64String } from "@itwin/core-bentley";
 import { BisCodeSpec, Code, CodeScopeProps, ElementAspectProps, ElementProps, ModelProps, RelationshipProps } from "@itwin/core-common";
 import { IModelConnection, SnapshotConnection } from "@itwin/core-frontend";
-import { TestIModelBuilderImpl } from "./IModelBuilderImpl";
-import { createFileNameFromString, setupOutputFileLocation } from "./InternalUtils";
+import { TestIModelBuilderImpl } from "./IModelBuilderImpl.js";
+import { createFileNameFromString, setupOutputFileLocation } from "./InternalUtils.js";
 
 /**
  * Interface for IModel builder pattern. Used for building IModels to test rulesets.

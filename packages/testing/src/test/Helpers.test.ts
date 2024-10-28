@@ -11,7 +11,7 @@ import { Guid } from "@itwin/core-bentley";
 import { IModelApp, NoRenderApp } from "@itwin/core-frontend";
 import { Presentation as PresentationBackend, PresentationProps } from "@itwin/presentation-backend";
 import { Presentation as PresentationFrontend } from "@itwin/presentation-frontend";
-import { HierarchyCacheMode, initialize, PresentationTestingInitProps, terminate } from "../presentation-testing/Helpers";
+import { HierarchyCacheMode, initialize, PresentationTestingInitProps, terminate } from "../presentation-testing/Helpers.js";
 
 describe("Helpers", () => {
   let backendInitializationStub: sinon.SinonStub;

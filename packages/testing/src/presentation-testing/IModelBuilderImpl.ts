@@ -9,7 +9,7 @@
 import { IModelDb } from "@itwin/core-backend";
 import { Id64String } from "@itwin/core-bentley";
 import { BisCodeSpec, Code, CodeScopeProps, CodeSpec, ElementAspectProps, ElementProps, ModelProps, RelationshipProps } from "@itwin/core-common";
-import { TestIModelBuilder } from "./IModelUtilities";
+import { TestIModelBuilder } from "./IModelUtilities.js";
 
 /**
  * Default implementation of the IModel builder interface.

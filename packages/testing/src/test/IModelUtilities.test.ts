@@ -9,9 +9,9 @@ import sinon, { SinonStub } from "sinon";
 import { IModelJsFs, SnapshotDb } from "@itwin/core-backend";
 import { CreateEmptySnapshotIModelProps } from "@itwin/core-common";
 import { SnapshotConnection } from "@itwin/core-frontend";
-import { buildTestIModel } from "../presentation-testing/IModelUtilities";
-import { createFileNameFromString, getTestOutputDir } from "../presentation-testing/InternalUtils";
-import { createStub } from "./Utils";
+import { buildTestIModel } from "../presentation-testing/IModelUtilities.js";
+import { createFileNameFromString, getTestOutputDir } from "../presentation-testing/InternalUtils.js";
+import { createStub } from "./Utils.js";
 
 describe("buildTestIModel", () => {
   const snapshotDb = {

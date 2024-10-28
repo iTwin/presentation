@@ -5,7 +5,7 @@
 
 import { expect } from "chai";
 import * as path from "path";
-import { FILE_PATH_RESERVED_CHARACTERS, limitFilePathLength } from "../presentation-testing/InternalUtils";
+import { FILE_PATH_RESERVED_CHARACTERS, limitFilePathLength } from "../presentation-testing/InternalUtils.js";
 
 describe("limitFilePathLength", () => {
   it("returns given file path when length is within limits", async () => {
