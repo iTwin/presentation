@@ -15,7 +15,7 @@ import { IModelApp, IModelAppOptions, NoRenderApp } from "@itwin/core-frontend";
 import { HierarchyCacheMode, Presentation as PresentationBackend, PresentationManagerProps as PresentationBackendProps } from "@itwin/presentation-backend";
 import { PresentationRpcInterface } from "@itwin/presentation-common";
 import { Presentation as PresentationFrontend, PresentationProps as PresentationFrontendProps } from "@itwin/presentation-frontend";
-import { setTestOutputDir } from "./InternalUtils";
+import { setTestOutputDir } from "./FilenameUtils.js";
 
 function initializeRpcInterfaces(interfaces: RpcInterfaceDefinition[]) {
   const config = class extends RpcDefaultConfiguration {

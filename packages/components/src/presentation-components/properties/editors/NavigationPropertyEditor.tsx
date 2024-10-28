@@ -5,9 +5,9 @@
 
 import { createRef, forwardRef, PureComponent } from "react";
 import { PropertyEditorBase, PropertyEditorProps, TypeEditor } from "@itwin/components-react";
-import { NavigationPropertyTargetSelector, ReadonlyNavigationPropertyTarget } from "../inputs/NavigationPropertyTargetSelector";
-import { PropertyEditorAttributes } from "./Common";
-import { useNavigationPropertyEditorContext } from "./NavigationPropertyEditorContext";
+import { NavigationPropertyTargetSelector, ReadonlyNavigationPropertyTarget } from "../inputs/NavigationPropertyTargetSelector.js";
+import { PropertyEditorAttributes } from "./Common.js";
+import { useNavigationPropertyEditorContext } from "./NavigationPropertyEditorContext.js";
 
 /**
  * Editor for navigation properties.

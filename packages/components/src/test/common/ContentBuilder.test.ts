@@ -6,10 +6,10 @@
 import { expect } from "chai";
 import { ArrayValue, PropertyRecord, StandardTypeNames, StructValue, PropertyValueFormat as UiPropertyValueFormat } from "@itwin/appui-abstract";
 import { EnumerationInfo, PropertyValueFormat, traverseContentItem } from "@itwin/presentation-common";
-import { PropertyRecordsBuilder } from "../../presentation-components/common/PropertyRecordsBuilder";
-import { NumericEditorName } from "../../presentation-components/properties/editors/NumericPropertyEditor";
-import { QuantityEditorName } from "../../presentation-components/properties/editors/QuantityPropertyEditor";
-import { createTestECClassInfo, createTestECInstanceKey, createTestPropertyInfo } from "../_helpers/Common";
+import { PropertyRecordsBuilder } from "../../presentation-components/common/PropertyRecordsBuilder.js";
+import { NumericEditorName } from "../../presentation-components/properties/editors/NumericPropertyEditor.js";
+import { QuantityEditorName } from "../../presentation-components/properties/editors/QuantityPropertyEditor.js";
+import { createTestECClassInfo, createTestECInstanceKey, createTestPropertyInfo } from "../_helpers/Common.js";
 import {
   createTestCategoryDescription,
   createTestContentDescriptor,
@@ -17,8 +17,8 @@ import {
   createTestNestedContentField,
   createTestPropertiesContentField,
   createTestSimpleContentField,
-} from "../_helpers/Content";
-import { createTestLabelDefinition } from "../_helpers/LabelDefinition";
+} from "../_helpers/Content.js";
+import { createTestLabelDefinition } from "../_helpers/LabelDefinition.js";
 
 class TestPropertyRecordsBuilder extends PropertyRecordsBuilder {
   public entries: Array<PropertyRecord> = [];

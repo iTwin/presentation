@@ -7,8 +7,8 @@ import { forwardRef, useImperativeHandle, useRef, useState } from "react";
 import { PrimitiveValue, PropertyRecord, PropertyValueFormat } from "@itwin/appui-abstract";
 import { PropertyEditorProps } from "@itwin/components-react";
 import { Input } from "@itwin/itwinui-react";
-import { PropertyEditorAttributes } from "../editors/Common";
-import { getDecimalRoundingError } from "./Utils";
+import { PropertyEditorAttributes } from "../editors/Common.js";
+import { getDecimalRoundingError } from "./Utils.js";
 
 /** @internal */
 export interface NumericPropertyInputProps extends PropertyEditorProps {

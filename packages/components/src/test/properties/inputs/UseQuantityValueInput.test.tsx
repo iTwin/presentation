@@ -11,8 +11,8 @@ import { FormattingUnitSystemChangedArgs, IModelApp } from "@itwin/core-frontend
 import { Format, FormatterSpec, ParseError, ParserSpec, QuantityParseResult } from "@itwin/core-quantity";
 import { SchemaContext } from "@itwin/ecschema-metadata";
 import { KoqPropertyValueFormatter } from "@itwin/presentation-common";
-import { QuantityValue, useQuantityValueInput, UseQuantityValueInputProps } from "../../../presentation-components/properties/inputs/UseQuantityValueInput";
-import { render, waitFor } from "../../TestUtils";
+import { QuantityValue, useQuantityValueInput, UseQuantityValueInputProps } from "../../../presentation-components/properties/inputs/UseQuantityValueInput.js";
+import { render, waitFor } from "../../TestUtils.js";
 
 function TestInput({ onChange, ...restProps }: UseQuantityValueInputProps & { onChange?: (value: QuantityValue) => void }) {
   const { quantityValue, inputProps } = useQuantityValueInput(restProps);

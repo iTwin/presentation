@@ -8,11 +8,11 @@ import sinon from "sinon";
 import { PropertyDescription, PropertyRecord, PropertyValueFormat } from "@itwin/appui-abstract";
 import { IModelConnection } from "@itwin/core-frontend";
 import { FavoritePropertiesManager, FavoritePropertiesScope, Presentation } from "@itwin/presentation-frontend";
-import { IPresentationPropertyDataProvider } from "../../presentation-components/propertygrid/DataProvider";
-import { FavoritePropertiesDataFilterer } from "../../presentation-components/propertygrid/FavoritePropertiesDataFilterer";
-import { createTestSimpleContentField } from "../_helpers/Content";
-import { createArrayProperty, createPrimitiveStringProperty, createStructProperty } from "../_helpers/Properties";
-import { createStub } from "../TestUtils";
+import { IPresentationPropertyDataProvider } from "../../presentation-components/propertygrid/DataProvider.js";
+import { FavoritePropertiesDataFilterer } from "../../presentation-components/propertygrid/FavoritePropertiesDataFilterer.js";
+import { createTestSimpleContentField } from "../_helpers/Content.js";
+import { createArrayProperty, createPrimitiveStringProperty, createStructProperty } from "../_helpers/Properties.js";
+import { createStub } from "../TestUtils.js";
 
 describe("FavoritePropertiesDataFilterer", () => {
   const imodel = {} as IModelConnection;

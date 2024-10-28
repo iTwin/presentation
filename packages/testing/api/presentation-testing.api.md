@@ -18,6 +18,7 @@ import { IModelConnection } from '@itwin/core-frontend';
 import { IModelHostOptions } from '@itwin/core-backend';
 import { InstanceKey } from '@itwin/presentation-common';
 import { KeySet } from '@itwin/presentation-common';
+import { LocalFileName } from '@itwin/core-common';
 import { ModelProps } from '@itwin/core-common';
 import { Omit as Omit_2 } from '@itwin/presentation-common';
 import { PageOptions } from '@itwin/presentation-common';
@@ -66,7 +67,13 @@ export interface ContentBuilderResult {
 }
 
 // @public
+export function createFileNameFromString(str: string): string;
+
+// @public
 export const defaultNodeMappingFunc: NodeMappingFunc;
+
+// @public
+export function getTestOutputDir(): string;
 
 // @public
 export class HierarchyBuilder {
@@ -98,6 +105,9 @@ export interface IContentBuilderDataProvider {
 export const initialize: (props?: PresentationTestingInitProps) => Promise<void>;
 
 // @public
+export function limitFilePathLength(filePath: string): string;
+
+// @public
 export interface MappedNode {
     [index: string]: any;
     children?: never;
@@ -122,6 +132,12 @@ export interface PresentationTestingInitProps {
     rpcs?: RpcInterfaceDefinition[];
     testOutputDir?: string;
 }
+
+// @public
+export function setTestOutputDir(directoryPath: string | undefined): void;
+
+// @public
+export function setupOutputFileLocation(fileName: string): LocalFileName;
 
 // @public
 export const terminate: (frontendApp?: typeof IModelApp) => Promise<void>;

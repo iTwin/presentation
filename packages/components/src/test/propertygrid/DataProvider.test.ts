@@ -29,10 +29,10 @@ import {
   ValuesDictionary,
 } from "@itwin/presentation-common";
 import { FavoritePropertiesManager, FavoritePropertiesScope, Presentation, PresentationManager } from "@itwin/presentation-frontend";
-import { CacheInvalidationProps } from "../../presentation-components/common/ContentDataProvider";
-import { FAVORITES_CATEGORY_NAME } from "../../presentation-components/favorite-properties/Utils";
-import { DEFAULT_PROPERTY_GRID_RULESET, PresentationPropertyDataProvider } from "../../presentation-components/propertygrid/DataProvider";
-import { createTestECClassInfo, createTestECInstanceKey, createTestPropertyInfo } from "../_helpers/Common";
+import { CacheInvalidationProps } from "../../presentation-components/common/ContentDataProvider.js";
+import { FAVORITES_CATEGORY_NAME } from "../../presentation-components/favorite-properties/Utils.js";
+import { DEFAULT_PROPERTY_GRID_RULESET, PresentationPropertyDataProvider } from "../../presentation-components/propertygrid/DataProvider.js";
+import { createTestECClassInfo, createTestECInstanceKey, createTestPropertyInfo } from "../_helpers/Common.js";
 import {
   createTestCategoryDescription,
   createTestContentDescriptor,
@@ -40,7 +40,7 @@ import {
   createTestNestedContentField,
   createTestPropertiesContentField,
   createTestSimpleContentField,
-} from "../_helpers/Content";
+} from "../_helpers/Content.js";
 
 /**
  * This is just a helper class to provide public access to

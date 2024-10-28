@@ -6,6 +6,7 @@
  * @module Core
  */
 
+import * as mm from "micro-memoize";
 import { LegacyRef, MutableRefObject, RefCallback, useCallback, useEffect, useState } from "react";
 import { Primitives, PrimitiveValue, PropertyDescription, PropertyRecord, PropertyValueFormat } from "@itwin/appui-abstract";
 import { IPropertyValueRenderer, PropertyValueRendererManager } from "@itwin/components-react";
@@ -13,7 +14,7 @@ import { Guid, GuidString, IDisposable } from "@itwin/core-bentley";
 import { TranslationOptions } from "@itwin/core-common";
 import { Descriptor, Field, LabelCompositeValue, LabelDefinition, parseCombinedFieldNames, Ruleset, Value } from "@itwin/presentation-common";
 import { Presentation } from "@itwin/presentation-frontend";
-import { InstanceKeyValueRenderer } from "../properties/InstanceKeyValueRenderer";
+import { InstanceKeyValueRenderer } from "../properties/InstanceKeyValueRenderer.js";
 
 const localizationNamespaceName = "PresentationComponents";
 
@@ -261,4 +262,9 @@ export function deserializeUniqueValues(serializedDisplayValues: string, seriali
     uniqueValues.push({ displayValue, groupedRawValues: groupedRawValues[displayValue] });
   }
   return uniqueValues;
+}
+
+export function memoize<Fn extends mm.AnyFn>(fn: Fn | mm.Memoized<Fn>, options?: mm.Options<Fn>): mm.Memoized<Fn> {
+  const microMemoize = mm.default as unknown as (fn: Fn | mm.Memoized<Fn>, options?: mm.Options<Fn>) => mm.Memoized<Fn>;
+  return microMemoize(fn, options);
 }

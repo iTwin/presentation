@@ -10,10 +10,10 @@ import { PropertyEditorProps, PropertyValueRendererManager } from "@itwin/compon
 import { IModelConnection } from "@itwin/core-frontend";
 import { ComboBox, SelectOption } from "@itwin/itwinui-react";
 import { InstanceKey, LabelDefinition, NavigationPropertyInfo } from "@itwin/presentation-common";
-import { translate } from "../../common/Utils";
-import { PropertyEditorAttributes } from "../editors/Common";
-import { FILTER_WARNING_OPTION, VALUE_BATCH_SIZE } from "./ItemsLoader";
-import { NavigationPropertyTarget, useNavigationPropertyTargetsLoader, useNavigationPropertyTargetsRuleset } from "./UseNavigationPropertyTargetsLoader";
+import { translate } from "../../common/Utils.js";
+import { PropertyEditorAttributes } from "../editors/Common.js";
+import { FILTER_WARNING_OPTION, VALUE_BATCH_SIZE } from "./ItemsLoader.js";
+import { NavigationPropertyTarget, useNavigationPropertyTargetsLoader, useNavigationPropertyTargetsRuleset } from "./UseNavigationPropertyTargetsLoader.js";
 
 /** @internal */
 export interface NavigationPropertyTargetSelectorProps extends PropertyEditorProps {

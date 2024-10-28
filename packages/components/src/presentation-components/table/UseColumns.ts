@@ -10,8 +10,8 @@ import { useEffect, useState } from "react";
 import { IModelConnection } from "@itwin/core-frontend";
 import { DefaultContentDisplayTypes, Descriptor, Field, KeySet, Ruleset } from "@itwin/presentation-common";
 import { Presentation } from "@itwin/presentation-frontend";
-import { useErrorState } from "../common/Utils";
-import { TableColumnDefinition } from "./Types";
+import { useErrorState } from "../common/Utils.js";
+import { TableColumnDefinition } from "./Types.js";
 
 /** @internal */
 export interface UseColumnsProps {

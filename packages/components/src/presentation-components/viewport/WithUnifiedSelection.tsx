@@ -8,8 +8,8 @@
 
 import { createContext, memo, PropsWithChildren, useContext, useEffect, useState } from "react";
 import { ViewportProps } from "@itwin/imodel-components-react";
-import { getDisplayName } from "../common/Utils";
-import { ViewportSelectionHandler } from "./ViewportSelectionHandler";
+import { getDisplayName } from "../common/Utils.js";
+import { ViewportSelectionHandler } from "./ViewportSelectionHandler.js";
 
 /**
  * Props that are injected to the ViewWithUnifiedSelection HOC component.

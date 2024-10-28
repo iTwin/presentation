@@ -6,8 +6,8 @@
 import { PrimitiveValue, PropertyDescription, PropertyRecord, PropertyValueFormat } from "@itwin/appui-abstract";
 import { DelayLoadedTreeNodeItem } from "@itwin/components-react";
 import { NodeKey } from "@itwin/presentation-common";
-import { PresentationTreeNodeItem } from "../../presentation-components/tree/PresentationTreeNodeItem";
-import { createTestECInstancesNodeKey } from "./Hierarchy";
+import { PresentationTreeNodeItem } from "../../presentation-components/tree/PresentationTreeNodeItem.js";
+import { createTestECInstancesNodeKey } from "./Hierarchy.js";
 
 export function createTestTreeNodeItem(key?: NodeKey, partialNode?: Partial<DelayLoadedTreeNodeItem>): PresentationTreeNodeItem {
   const node = {

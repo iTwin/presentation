@@ -7,7 +7,6 @@
     "inlineSources": true,
     "declaration": true,
     "declarationMap": true,
-    "allowSyntheticDefaultImports": true,
     "resolveJsonModule": true
   },
   "include": ["src"]

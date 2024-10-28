@@ -9,7 +9,7 @@ import { IModelApp } from "@itwin/core-frontend";
 import { FormatterSpec, ParserSpec } from "@itwin/core-quantity";
 import { SchemaContext } from "@itwin/ecschema-metadata";
 import { KoqPropertyValueFormatter } from "@itwin/presentation-common";
-import { getPersistenceUnitRoundingError } from "./Utils";
+import { getPersistenceUnitRoundingError } from "./Utils.js";
 
 /**
  * Value of kind of quantity property.

@@ -39,7 +39,7 @@ import { ECSchemaRpcImpl } from "@itwin/ecschema-rpcinterface-impl";
 import { registerTxnListeners } from "@itwin/presentation-core-interop";
 import { createNodesQueryClauseFactory, HierarchyDefinition } from "@itwin/presentation-hierarchies";
 import { createBisInstanceLabelSelectClauseFactory, ECSql } from "@itwin/presentation-shared";
-import { createFileNameFromString, setupOutputFileLocation } from "@itwin/presentation-testing/lib/cjs/presentation-testing/InternalUtils.js";
+import { createFileNameFromString, setupOutputFileLocation } from "@itwin/presentation-testing";
 import { NodeValidators, validateHierarchyLevel } from "./HierarchyValidation.js";
 import { createClassECSqlSelector, createIModelAccess, createProvider } from "./Utils.js";
 

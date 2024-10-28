@@ -5,8 +5,8 @@
 
 import { expect } from "chai";
 import { LabelDefinition, Node } from "@itwin/presentation-common";
-import { StyleHelper } from "../../presentation-components/common/StyleHelper";
-import { createTestECInstancesNodeKey } from "../_helpers/Hierarchy";
+import { StyleHelper } from "../../presentation-components/common/StyleHelper.js";
+import { createTestECInstancesNodeKey } from "../_helpers/Hierarchy.js";
 
 describe("StyleHelper", () => {
   const createNodeBase = (): Node => ({

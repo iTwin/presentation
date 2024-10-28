@@ -12,8 +12,8 @@ import {
   isPresentationTreeNodeItem,
   PresentationInfoTreeNodeItem,
   PresentationTreeNodeItem,
-} from "../../presentation-components/tree/PresentationTreeNodeItem";
-import { createTestECInstancesNodeKey } from "../_helpers/Hierarchy";
+} from "../../presentation-components/tree/PresentationTreeNodeItem.js";
+import { createTestECInstancesNodeKey } from "../_helpers/Hierarchy.js";
 
 describe("isPresentationTreeNodeItem", () => {
   it("returns correct values", () => {

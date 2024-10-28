@@ -9,7 +9,7 @@
 import { createContext, PropsWithChildren, useContext, useEffect, useState } from "react";
 import { KeySet } from "@itwin/presentation-common";
 import { Presentation, SelectionChangeEventArgs, SelectionHandler } from "@itwin/presentation-frontend";
-import { IPresentationPropertyDataProvider } from "./DataProvider";
+import { IPresentationPropertyDataProvider } from "./DataProvider.js";
 
 const DEFAULT_REQUESTED_CONTENT_INSTANCES_LIMIT = 100;
 

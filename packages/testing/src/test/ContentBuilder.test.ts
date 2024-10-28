@@ -28,8 +28,8 @@ import {
 } from "@itwin/presentation-common";
 import { ContentDataProvider } from "@itwin/presentation-components";
 import { Presentation, PresentationManager, RulesetManager } from "@itwin/presentation-frontend";
-import { ContentBuilder, IContentBuilderDataProvider } from "../presentation-testing/ContentBuilder";
-import { createStub } from "./Utils";
+import { ContentBuilder, IContentBuilderDataProvider } from "../presentation-testing/ContentBuilder.js";
+import { createStub } from "./Utils.js";
 
 class EmptyDataProvider implements IContentBuilderDataProvider {
   // Verifies that given keyset matches a template, otherwise it throws an error

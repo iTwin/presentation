@@ -3,7 +3,6 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import memoize from "micro-memoize";
 import {
   ActiveMatchInfo,
   DelayLoadedTreeNodeItem,
@@ -14,10 +13,11 @@ import {
 } from "@itwin/components-react";
 import { IModelConnection } from "@itwin/core-frontend";
 import { InstanceFilterDefinition, Node, NodeKey, NodePathElement } from "@itwin/presentation-common";
-import { PresentationTreeDataProvider } from "./DataProvider";
-import { IFilteredPresentationTreeDataProvider, IPresentationTreeDataProvider } from "./IPresentationTreeDataProvider";
-import { PresentationTreeNodeItem } from "./PresentationTreeNodeItem";
-import { createTreeNodeItem } from "./Utils";
+import { memoize } from "../common/Utils.js";
+import { PresentationTreeDataProvider } from "./DataProvider.js";
+import { IFilteredPresentationTreeDataProvider, IPresentationTreeDataProvider } from "./IPresentationTreeDataProvider.js";
+import { PresentationTreeNodeItem } from "./PresentationTreeNodeItem.js";
+import { createTreeNodeItem } from "./Utils.js";
 
 /** @internal */
 export interface FilteredPresentationTreeDataProviderProps {

@@ -6,7 +6,6 @@
  * @module Core
  */
 
-import memoize from "micro-memoize";
 import { PropertyDescription, PropertyRecord } from "@itwin/appui-abstract";
 import { Logger } from "@itwin/core-bentley";
 import { IModelApp, IModelConnection } from "@itwin/core-frontend";
@@ -26,10 +25,10 @@ import {
   SelectionInfo,
 } from "@itwin/presentation-common";
 import { IModelContentChangeEventArgs, Presentation } from "@itwin/presentation-frontend";
-import { PresentationComponentsLoggerCategory } from "../ComponentsLoggerCategory";
-import { createDiagnosticsOptions, DiagnosticsProps } from "./Diagnostics";
-import { IPresentationDataProvider } from "./IPresentationDataProvider";
-import { findField, getRulesetId, RulesetOrId } from "./Utils";
+import { PresentationComponentsLoggerCategory } from "../ComponentsLoggerCategory.js";
+import { createDiagnosticsOptions, DiagnosticsProps } from "./Diagnostics.js";
+import { IPresentationDataProvider } from "./IPresentationDataProvider.js";
+import { findField, getRulesetId, memoize, RulesetOrId } from "./Utils.js";
 
 /**
  * Properties for invalidating content cache.

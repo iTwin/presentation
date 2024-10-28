@@ -16,7 +16,7 @@ import {
   render as renderRTL,
   waitFor,
 } from "@testing-library/react";
-import userEvent, { UserEvent } from "@testing-library/user-event";
+import { userEvent, UserEvent } from "@testing-library/user-event";
 
 function createWrapper(Outer: React.JSXElementConstructor<{ children: React.ReactNode }>) {
   return (Inner?: React.JSXElementConstructor<{ children: React.ReactNode }>) => {

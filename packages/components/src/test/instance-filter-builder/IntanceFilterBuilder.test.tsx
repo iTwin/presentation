@@ -12,12 +12,12 @@ import { EmptyLocalization } from "@itwin/core-common";
 import { IModelApp, IModelConnection } from "@itwin/core-frontend";
 import { ClassInfo, Descriptor } from "@itwin/presentation-common";
 import { Presentation } from "@itwin/presentation-frontend";
-import { translate } from "../../presentation-components/common/Utils";
-import { ECClassInfo, getIModelMetadataProvider } from "../../presentation-components/instance-filter-builder/ECMetadataProvider";
-import { InstanceFilterBuilder, usePresentationInstanceFilteringProps } from "../../presentation-components/instance-filter-builder/InstanceFilterBuilder";
-import { createTestECClassInfo, stubGetBoundingClientRect, stubRaf } from "../_helpers/Common";
-import { createTestCategoryDescription, createTestContentDescriptor, createTestPropertiesContentField } from "../_helpers/Content";
-import { act, fireEvent, render, renderHook, waitFor } from "../TestUtils";
+import { translate } from "../../presentation-components/common/Utils.js";
+import { ECClassInfo, getIModelMetadataProvider } from "../../presentation-components/instance-filter-builder/ECMetadataProvider.js";
+import { InstanceFilterBuilder, usePresentationInstanceFilteringProps } from "../../presentation-components/instance-filter-builder/InstanceFilterBuilder.js";
+import { createTestECClassInfo, stubGetBoundingClientRect, stubRaf } from "../_helpers/Common.js";
+import { createTestCategoryDescription, createTestContentDescriptor, createTestPropertiesContentField } from "../_helpers/Content.js";
+import { act, fireEvent, render, renderHook, waitFor } from "../TestUtils.js";
 
 describe("InstanceFilterBuilder", () => {
   stubRaf();

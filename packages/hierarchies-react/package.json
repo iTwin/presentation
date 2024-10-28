@@ -49,7 +49,6 @@
     "lint": "eslint ./src/**/*.{ts,tsx}",
     "test": "mocha --enable-source-maps --parallel --config ./.mocharc.json",
     "test:dev": "mocha --enable-source-maps --config ./.mocharc.json",
-    "test:watch": "npm run -s test:dev -- --reporter min --watch-extensions ts,tsx --watch",
     "extract-api": "extract-api --entry=presentation-hierarchies-react --apiReportFolder=./api --apiReportTempFolder=./api/temp --apiSummaryFolder=./api",
     "check-internal": "node ../../scripts/checkInternal.js --apiSummary ./api/presentation-hierarchies-react.api.md",
     "update-extractions": "node ../../scripts/updateExtractions.js --targets=./README.md",

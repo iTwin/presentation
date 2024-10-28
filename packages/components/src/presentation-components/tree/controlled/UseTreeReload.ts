@@ -11,9 +11,9 @@ import { RenderedItemsRange, Subscription, TreeModelSource } from "@itwin/compon
 import { IModelApp } from "@itwin/core-frontend";
 import { Ruleset } from "@itwin/presentation-common";
 import { IModelHierarchyChangeEventArgs, Presentation } from "@itwin/presentation-frontend";
-import { getRulesetId } from "../../common/Utils";
-import { PresentationTreeDataProvider, PresentationTreeDataProviderProps } from "../DataProvider";
-import { reloadTree } from "./TreeReloader";
+import { getRulesetId } from "../../common/Utils.js";
+import { PresentationTreeDataProvider, PresentationTreeDataProviderProps } from "../DataProvider.js";
+import { reloadTree } from "./TreeReloader.js";
 
 /** @internal */
 export interface ReloadedTree {

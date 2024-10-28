@@ -35,8 +35,8 @@ import {
   RelationshipPath,
   Value,
 } from "@itwin/presentation-common";
-import { deserializeUniqueValues, findField, serializeUniqueValues, UniqueValue } from "../common/Utils";
-import { createPropertyInfoFromPropertiesField, getInstanceFilterFieldName } from "./Utils";
+import { deserializeUniqueValues, findField, serializeUniqueValues, UniqueValue } from "../common/Utils.js";
+import { createPropertyInfoFromPropertiesField, getInstanceFilterFieldName } from "./Utils.js";
 
 /**
  * Type that describes instance filter based on [Descriptor]($presentation-common) fields. It can be

@@ -16,10 +16,10 @@ import { PropertyFilterBuilderRenderer, PropertyFilterBuilderRendererProps, Prop
 import { IModelConnection } from "@itwin/core-frontend";
 import { Alert, ComboBox, SelectOption } from "@itwin/itwinui-react";
 import { ClassInfo, Descriptor, Keys } from "@itwin/presentation-common";
-import { translate } from "../common/Utils";
-import { getIModelMetadataProvider } from "./ECMetadataProvider";
-import { PresentationFilterBuilderValueRenderer, PresentationInstanceFilterPropertyInfo, useInstanceFilterPropertyInfos } from "./PresentationFilterBuilder";
-import { isFilterNonEmpty } from "./Utils";
+import { translate } from "../common/Utils.js";
+import { getIModelMetadataProvider } from "./ECMetadataProvider.js";
+import { PresentationFilterBuilderValueRenderer, PresentationInstanceFilterPropertyInfo, useInstanceFilterPropertyInfos } from "./PresentationFilterBuilder.js";
+import { isFilterNonEmpty } from "./Utils.js";
 
 /**
  * Props for [[InstanceFilterBuilder]] component.

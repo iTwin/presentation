@@ -5,7 +5,7 @@
 /** @packageDocumentation
  * @module Tree
  */
-import memoize from "micro-memoize";
+
 import { DelayLoadedTreeNodeItem, PageOptions, PropertyFilterRuleGroupOperator, TreeNodeItem } from "@itwin/components-react";
 import { IDisposable, Logger } from "@itwin/core-bentley";
 import { IModelConnection } from "@itwin/core-frontend";
@@ -26,14 +26,14 @@ import {
   Ruleset,
 } from "@itwin/presentation-common";
 import { Presentation } from "@itwin/presentation-frontend";
-import { createDiagnosticsOptions, DiagnosticsProps } from "../common/Diagnostics";
-import { getRulesetId, translate } from "../common/Utils";
-import { PresentationComponentsLoggerCategory } from "../ComponentsLoggerCategory";
-import { createInstanceFilterDefinition, PresentationInstanceFilterInfo } from "../instance-filter-builder/PresentationFilterBuilder";
-import { PresentationInstanceFilter } from "../instance-filter-builder/PresentationInstanceFilter";
-import { IPresentationTreeDataProvider } from "./IPresentationTreeDataProvider";
-import { InfoTreeNodeItemType, isPresentationTreeNodeItem, PresentationTreeNodeItem } from "./PresentationTreeNodeItem";
-import { createInfoNode, createTreeNodeItem, pageOptionsUiToPresentation } from "./Utils";
+import { createDiagnosticsOptions, DiagnosticsProps } from "../common/Diagnostics.js";
+import { getRulesetId, memoize, translate } from "../common/Utils.js";
+import { PresentationComponentsLoggerCategory } from "../ComponentsLoggerCategory.js";
+import { createInstanceFilterDefinition, PresentationInstanceFilterInfo } from "../instance-filter-builder/PresentationFilterBuilder.js";
+import { PresentationInstanceFilter } from "../instance-filter-builder/PresentationInstanceFilter.js";
+import { IPresentationTreeDataProvider } from "./IPresentationTreeDataProvider.js";
+import { InfoTreeNodeItemType, isPresentationTreeNodeItem, PresentationTreeNodeItem } from "./PresentationTreeNodeItem.js";
+import { createInfoNode, createTreeNodeItem, pageOptionsUiToPresentation } from "./Utils.js";
 
 /**
  * Properties for creating a `PresentationTreeDataProvider` instance.

@@ -10,10 +10,10 @@ import { useEffect, useMemo, useState } from "react";
 import { IModelConnection } from "@itwin/core-frontend";
 import { Key, KeySet, Ruleset } from "@itwin/presentation-common";
 import { Presentation } from "@itwin/presentation-frontend";
-import { TableColumnDefinition, TableRowDefinition } from "./Types";
-import { useColumns } from "./UseColumns";
-import { useRows } from "./UseRows";
-import { useTableOptions } from "./UseTableOptions";
+import { TableColumnDefinition, TableRowDefinition } from "./Types.js";
+import { useColumns } from "./UseColumns.js";
+import { useRows } from "./UseRows.js";
+import { useTableOptions } from "./UseTableOptions.js";
 
 /**
  * Props for [[usePresentationTable]] hook.

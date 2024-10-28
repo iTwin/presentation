@@ -5,7 +5,6 @@
   "private": true,
   "scripts": {
     "build": "node ./scripts/setup-tests.cjs && tsc",
-    "build:watch": "npm run build -- -w",
     "clean": "rimraf lib build",
     "cover": "npm run -s test",
     "lint": "eslint ./src/**/*.{ts,tsx}",
