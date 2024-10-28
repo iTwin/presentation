@@ -76,7 +76,7 @@ const QuantityPropertyValueInput = forwardRef<PropertyEditorAttributes, Quantity
       if (setFocus) {
         setTimeout(() => {
           inputRef.current && inputRef.current.focus();
-        }, 0);
+        }, 10);
       }
     }, [setFocus]);
 

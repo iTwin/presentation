@@ -104,7 +104,7 @@ export const NumericInput = forwardRef<PropertyEditorAttributes, NumericInputPro
     if (setFocus) {
       setTimeout(() => {
         inputRef.current && inputRef.current.focus();
-      }, 0);
+      }, 10);
     }
   }, [setFocus]);
 

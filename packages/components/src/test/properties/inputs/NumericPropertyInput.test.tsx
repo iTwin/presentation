@@ -276,14 +276,9 @@ describe("<NumericInput />", () => {
 
   it("should focus on input if setFocus is true", async () => {
     const { getByRole } = render(<NumericInput onChange={() => {}} value="1" setFocus={true} />);
-    let inputFocused = false;
 
     const input = await waitFor(() => getByRole("textbox"));
-    input.addEventListener("focusout", (event) => {
-      expect(event.relatedTarget).to.be.eq(input);
-      inputFocused = true;
-    });
-    await waitFor(() => expect(inputFocused));
+    await waitFor(() => expect(input).to.be.eq(document.activeElement));
   });
 
   it("commits undefined value when propertyRecord value is NaN on `onBlur` event", async () => {

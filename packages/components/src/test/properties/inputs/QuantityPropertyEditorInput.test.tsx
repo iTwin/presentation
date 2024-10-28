@@ -170,7 +170,6 @@ describe("<QuantityPropertyEditorInput />", () => {
   });
 
   it("should focus on input if setFocus is true", async () => {
-    let inputFocused = false;
     const record = createRecord({ initialValue: undefined, quantityType: "TestKOQ" });
     const ref = createRef<PropertyEditorAttributes>();
 
@@ -179,11 +178,10 @@ describe("<QuantityPropertyEditorInput />", () => {
         <QuantityPropertyEditorInput ref={ref} propertyRecord={record} setFocus={true} />
       </SchemaMetadataContextProvider>,
     );
+
     const input = await waitFor(() => getByRole("textbox"));
-    input.addEventListener("focusout", (event) => {
-      expect(event.relatedTarget).to.be.eq(input);
-      inputFocused = true;
+    await waitFor(() => {
+      expect(input).to.be.eq(document.activeElement);
     });
-    await waitFor(() => expect(inputFocused));
   });
 });
