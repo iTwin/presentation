@@ -139,7 +139,7 @@ describe("<QuantityPropertyEditorInput />", () => {
     const record = createRecord({ initialValue: undefined, quantityType: "TestKOQ" });
     const { getByRole, user } = render(
       <SchemaMetadataContextProvider imodel={{} as IModelConnection} schemaContextProvider={() => schemaContext}>
-        <QuantityPropertyEditorInput ref={ref} propertyRecord={record} onCommit={spy} />
+        <QuantityPropertyEditorInput ref={ref} propertyRecord={record} onCommit={spy} setFocus={true} />
       </SchemaMetadataContextProvider>,
     );
 
@@ -167,5 +167,23 @@ describe("<QuantityPropertyEditorInput />", () => {
       displayValue: "123.4 unit",
       roundingError: 0.05,
     });
+  });
+
+  it("should focus on input if setFocus is true", async () => {
+    let inputFocused = false;
+    const record = createRecord({ initialValue: undefined, quantityType: "TestKOQ" });
+    const ref = createRef<PropertyEditorAttributes>();
+
+    const { getByRole } = render(
+      <SchemaMetadataContextProvider imodel={{} as IModelConnection} schemaContextProvider={() => schemaContext}>
+        <QuantityPropertyEditorInput ref={ref} propertyRecord={record} setFocus={true} />
+      </SchemaMetadataContextProvider>,
+    );
+    const input = await waitFor(() => getByRole("textbox"));
+    input.addEventListener("focusout", (event) => {
+      expect(event.relatedTarget).to.be.eq(input);
+      inputFocused = true;
+    });
+    await waitFor(() => expect(inputFocused));
   });
 });

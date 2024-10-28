@@ -42,8 +42,7 @@ type QuantityPropertyValueInputProps = QuantityPropertyEditorImplProps & UseQuan
 
 const QuantityPropertyValueInput = forwardRef<PropertyEditorAttributes, QuantityPropertyValueInputProps>(
   ({ propertyRecord, onCommit, koqName, schemaContext, initialRawValue, setFocus }, ref) => {
-    const isReadOnly = propertyRecord.isReadonly;
-    const { quantityValue, inputProps } = useQuantityValueInput({ koqName, schemaContext, initialRawValue, isReadOnly });
+    const { quantityValue, inputProps } = useQuantityValueInput({ koqName, schemaContext, initialRawValue });
 
     const inputRef = useRef<HTMLInputElement>(null);
     useImperativeHandle(
@@ -74,14 +73,23 @@ const QuantityPropertyValueInput = forwardRef<PropertyEditorAttributes, Quantity
     };
 
     useEffect(() => {
-      setTimeout(() => {
-        if (inputRef.current && setFocus) {
-          inputRef.current.focus();
-        }
-      }, 0);
+      if (setFocus) {
+        setTimeout(() => {
+          inputRef.current && inputRef.current.focus();
+        }, 0);
+      }
     }, [setFocus]);
 
-    return <Input size="small" {...inputProps} ref={inputRef} onBlur={onBlur} onFocus={() => inputRef.current?.setSelectionRange(0, 9999)} />;
+    return (
+      <Input
+        size="small"
+        {...inputProps}
+        disabled={propertyRecord.isReadonly || inputProps.disabled}
+        ref={inputRef}
+        onBlur={onBlur}
+        onFocus={() => inputRef.current?.setSelectionRange(0, 9999)}
+      />
+    );
   },
 );
 QuantityPropertyValueInput.displayName = "QuantityPropertyValueInput";

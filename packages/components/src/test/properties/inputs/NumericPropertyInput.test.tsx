@@ -40,6 +40,7 @@ describe("<NumericPropertyInput />", () => {
 
     const inputContainer = await waitFor(() => getByRole("textbox"));
 
+    await user.click(inputContainer);
     await user.type(inputContainer, "0");
 
     await waitFor(() => expect((ref.current?.getValue() as PrimitiveValue).value).to.be.eq(10));
@@ -64,6 +65,7 @@ describe("<NumericPropertyInput />", () => {
 
     const inputContainer = await waitFor(() => getByRole("textbox"));
 
+    await user.click(inputContainer);
     await user.type(inputContainer, "1");
     expect(queryByDisplayValue("-101")).to.not.be.null;
     expect((ref.current?.getValue() as PrimitiveValue).value).to.be.eq(-101);
@@ -187,6 +189,7 @@ describe("<NumericInput />", () => {
     const { getByRole, user } = render(<NumericInput onChange={spy} value="1e90" />);
     const inputContainer = await waitFor(() => getByRole("textbox"));
 
+    await user.click(inputContainer);
     await user.type(inputContainer, "1");
 
     expect(spy.called).to.be.false;
@@ -222,6 +225,7 @@ describe("<NumericInput />", () => {
     const { getByRole, user } = render(<NumericInput onChange={spy} value="+" />);
     const inputContainer = await waitFor(() => getByRole("textbox"));
 
+    await user.click(inputContainer);
     await user.type(inputContainer, ".");
 
     expect(spy).to.be.calledWith("+.");
@@ -232,6 +236,7 @@ describe("<NumericInput />", () => {
     const { getByRole, user } = render(<NumericInput onChange={spy} value="-" />);
     const inputContainer = await waitFor(() => getByRole("textbox"));
 
+    await user.click(inputContainer);
     await user.type(inputContainer, ".");
 
     expect(spy).to.be.calledWith("-.");
@@ -242,6 +247,7 @@ describe("<NumericInput />", () => {
     const { getByRole, user } = render(<NumericInput onChange={spy} value="1" />);
     const inputContainer = await waitFor(() => getByRole("textbox"));
 
+    await user.click(inputContainer);
     await user.type(inputContainer, "e");
 
     expect(spy).to.be.calledWith("1e");
@@ -252,6 +258,7 @@ describe("<NumericInput />", () => {
     const { getByRole, user } = render(<NumericInput onChange={spy} value="1e" />);
     const inputContainer = await waitFor(() => getByRole("textbox"));
 
+    await user.click(inputContainer);
     await user.type(inputContainer, "-");
 
     expect(spy).to.be.calledWith("1e-");
@@ -265,6 +272,18 @@ describe("<NumericInput />", () => {
     await user.tab();
 
     expect(spy).to.be.be.calledOnce;
+  });
+
+  it("should focus on input if setFocus is true", async () => {
+    const { getByRole } = render(<NumericInput onChange={() => {}} value="1" setFocus={true} />);
+    let inputFocused = false;
+
+    const input = await waitFor(() => getByRole("textbox"));
+    input.addEventListener("focusout", (event) => {
+      expect(event.relatedTarget).to.be.eq(input);
+      inputFocused = true;
+    });
+    await waitFor(() => expect(inputFocused));
   });
 
   it("commits undefined value when propertyRecord value is NaN on `onBlur` event", async () => {

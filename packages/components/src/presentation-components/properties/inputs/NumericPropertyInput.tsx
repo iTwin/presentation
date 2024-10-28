@@ -32,7 +32,7 @@ export const NumericPropertyInput = forwardRef<PropertyEditorAttributes, Numeric
         newValue: parsePrimitiveValue(inputValue),
       });
   };
-  return <NumericInput onChange={handleChange} value={inputValue} onBlur={commitInput} isReadOnly={propertyRecord.isReadonly} setFocus={setFocus} ref={ref} />;
+  return <NumericInput onChange={handleChange} value={inputValue} onBlur={commitInput} isDisabled={propertyRecord.isReadonly} setFocus={setFocus} ref={ref} />;
 });
 NumericPropertyInput.displayName = "NumericPropertyInput";
 
@@ -60,11 +60,11 @@ export interface NumericInputProps extends PropertyEditorProps {
   onChange: (newValue: string) => void;
   onBlur?: React.FocusEventHandler;
   value: string;
-  isReadOnly?: boolean;
+  isDisabled?: boolean;
 }
 
 /** @internal */
-export const NumericInput = forwardRef<PropertyEditorAttributes, NumericInputProps>(({ value, onChange, onBlur, isReadOnly, setFocus }, ref) => {
+export const NumericInput = forwardRef<PropertyEditorAttributes, NumericInputProps>(({ value, onChange, onBlur, isDisabled, setFocus }, ref) => {
   const inputRef = useRef<HTMLInputElement>(null);
   useImperativeHandle(
     ref,
@@ -101,17 +101,17 @@ export const NumericInput = forwardRef<PropertyEditorAttributes, NumericInputPro
   };
 
   useEffect(() => {
-    setTimeout(() => {
-      if (inputRef.current && setFocus) {
-        inputRef.current.focus();
-      }
-    }, 0);
+    if (setFocus) {
+      setTimeout(() => {
+        inputRef.current && inputRef.current.focus();
+      }, 0);
+    }
   }, [setFocus]);
 
   return (
     <Input
       ref={inputRef}
-      disabled={isReadOnly}
+      disabled={isDisabled}
       data-testid="numeric-input"
       size="small"
       value={value}
