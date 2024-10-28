@@ -5,8 +5,8 @@
 
 import { expect } from "chai";
 import { ArrayValue, PrimitiveValue, PropertyDescription, PropertyRecord, PropertyValue, PropertyValueFormat, StructValue } from "@itwin/appui-abstract";
-import { TableCellRenderer } from "../../presentation-components/table/CellRenderer";
-import { fireEvent, render, waitFor } from "../TestUtils";
+import { TableCellRenderer } from "../../presentation-components/table/CellRenderer.js";
+import { fireEvent, render, waitFor } from "../TestUtils.js";
 
 describe("TableCellRenderer", () => {
   function createRecord(value: PropertyValue, propDescription?: Partial<PropertyDescription>) {

@@ -13,8 +13,8 @@ import {
   UnifiedSelectionContext,
   UnifiedSelectionContextProvider,
   useUnifiedSelectionContext,
-} from "../../presentation-components/unified-selection/UnifiedSelectionContext";
-import { act, render, renderHook, RenderHookResult, waitFor } from "../TestUtils";
+} from "../../presentation-components/unified-selection/UnifiedSelectionContext.js";
+import { act, render, renderHook, RenderHookResult, waitFor } from "../TestUtils.js";
 
 describe("UnifiedSelectionContext", () => {
   const testIModel = {} as IModelConnection;

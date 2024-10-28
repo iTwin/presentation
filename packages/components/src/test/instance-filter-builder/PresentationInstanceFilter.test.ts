@@ -8,16 +8,16 @@ import { PrimitiveValue, PropertyDescription, PropertyValueFormat } from "@itwin
 import { PropertyFilter, PropertyFilterRule, PropertyFilterRuleGroup } from "@itwin/components-react";
 import { GenericInstanceFilter } from "@itwin/core-common";
 import { Field } from "@itwin/presentation-common";
-import { serializeUniqueValues } from "../../presentation-components/common/Utils";
-import { PresentationInstanceFilter } from "../../presentation-components/instance-filter-builder/PresentationInstanceFilter";
-import { INSTANCE_FILTER_FIELD_SEPARATOR } from "../../presentation-components/instance-filter-builder/Utils";
-import { createTestECClassInfo } from "../_helpers/Common";
+import { serializeUniqueValues } from "../../presentation-components/common/Utils.js";
+import { PresentationInstanceFilter } from "../../presentation-components/instance-filter-builder/PresentationInstanceFilter.js";
+import { INSTANCE_FILTER_FIELD_SEPARATOR } from "../../presentation-components/instance-filter-builder/Utils.js";
+import { createTestECClassInfo } from "../_helpers/Common.js";
 import {
   createTestCategoryDescription,
   createTestContentDescriptor,
   createTestNestedContentField,
   createTestPropertiesContentField,
-} from "../_helpers/Content";
+} from "../_helpers/Content.js";
 
 describe("PresentationInstanceFilter", () => {
   const category = createTestCategoryDescription({ name: "root", label: "Root" });

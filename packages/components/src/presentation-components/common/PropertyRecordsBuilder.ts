@@ -20,7 +20,7 @@ import {
   StartItemProps,
   StartStructProps,
 } from "@itwin/presentation-common";
-import { FieldHierarchyRecord, InternalPropertyRecordsBuilder } from "./ContentBuilder";
+import { FieldHierarchyRecord, InternalPropertyRecordsBuilder } from "./ContentBuilder.js";
 
 /**
  * A `Content` visitor that traverses all content, creates a `PropertyRecord` for each property

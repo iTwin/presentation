@@ -25,15 +25,15 @@ import {
   VariableValue,
 } from "@itwin/presentation-common";
 import { IModelContentChangeEventArgs, Presentation, PresentationManager, RulesetManager, RulesetVariablesManager } from "@itwin/presentation-frontend";
-import { CacheInvalidationProps, ContentDataProvider, ContentDataProviderProps } from "../../presentation-components/common/ContentDataProvider";
-import { createTestECInstanceKey, createTestPropertyInfo, createTestRuleset } from "../_helpers/Common";
+import { CacheInvalidationProps, ContentDataProvider, ContentDataProviderProps } from "../../presentation-components/common/ContentDataProvider.js";
+import { createTestECInstanceKey, createTestPropertyInfo, createTestRuleset } from "../_helpers/Common.js";
 import {
   createTestContentDescriptor,
   createTestContentItem,
   createTestNestedContentField,
   createTestPropertiesContentField,
   createTestSimpleContentField,
-} from "../_helpers/Content";
+} from "../_helpers/Content.js";
 
 /**
  * The Provider class is used to make protected [[ContentDataProvider]]

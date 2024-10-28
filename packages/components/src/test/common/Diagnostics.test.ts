@@ -5,8 +5,8 @@
 
 import { expect } from "chai";
 import * as sinon from "sinon";
-import * as PresentationFrontendDiagnostics from "@itwin/presentation-frontend/lib/cjs/presentation-frontend/Diagnostics";
-import { createDiagnosticsOptions } from "../../presentation-components/common/Diagnostics";
+import * as PresentationFrontendDiagnostics from "@itwin/presentation-frontend/lib/cjs/presentation-frontend/Diagnostics.js";
+import { createDiagnosticsOptions } from "../../presentation-components/common/Diagnostics.js";
 
 describe("createDiagnosticsOptions", () => {
   afterEach(() => {

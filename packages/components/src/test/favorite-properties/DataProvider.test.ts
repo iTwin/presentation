@@ -11,9 +11,9 @@ import { EmptyLocalization } from "@itwin/core-common";
 import { IModelConnection } from "@itwin/core-frontend";
 import { KeySet, Ruleset } from "@itwin/presentation-common";
 import { FavoritePropertiesManager, Presentation, PresentationManager, SelectionManager } from "@itwin/presentation-frontend";
-import { FavoritePropertiesDataProvider } from "../../presentation-components/favorite-properties/DataProvider";
-import { getFavoritesCategory } from "../../presentation-components/favorite-properties/Utils";
-import { PresentationPropertyDataProvider } from "../../presentation-components/propertygrid/DataProvider";
+import { FavoritePropertiesDataProvider } from "../../presentation-components/favorite-properties/DataProvider.js";
+import { getFavoritesCategory } from "../../presentation-components/favorite-properties/Utils.js";
+import { PresentationPropertyDataProvider } from "../../presentation-components/propertygrid/DataProvider.js";
 
 describe("FavoritePropertiesDataProvider", () => {
   let provider: FavoritePropertiesDataProvider;

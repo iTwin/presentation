@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { CategoryDescription } from "@itwin/presentation-common";
-import { translate } from "../common/Utils";
+import { translate } from "../common/Utils.js";
 
 /** @internal */
 export const FAVORITES_CATEGORY_NAME = "Favorite";

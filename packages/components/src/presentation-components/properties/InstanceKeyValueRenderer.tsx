@@ -10,8 +10,8 @@
 import { Primitives, PrimitiveValue, PropertyRecord, PropertyValueFormat } from "@itwin/appui-abstract";
 import { IPropertyValueRenderer, PropertyValueRendererContext, TypeConverterManager, useAsyncValue } from "@itwin/components-react";
 import { Anchor } from "@itwin/itwinui-react";
-import { translate } from "../common/Utils";
-import { useUnifiedSelectionContext } from "../unified-selection/UnifiedSelectionContext";
+import { translate } from "../common/Utils.js";
+import { useUnifiedSelectionContext } from "../unified-selection/UnifiedSelectionContext.js";
 
 /**
  * Property value renderer for instance keys. If application provides a [[UnifiedSelectionContext]] and this value is

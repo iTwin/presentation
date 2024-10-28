@@ -9,8 +9,8 @@ import { IModelConnection } from "@itwin/core-frontend";
 import { SelectOption } from "@itwin/itwinui-react";
 import { DisplayValue, DisplayValueGroup, Field, FieldDescriptor, Keys, KeySet, Ruleset } from "@itwin/presentation-common";
 import { Presentation } from "@itwin/presentation-frontend";
-import { translate, UniqueValue } from "../../common/Utils";
-import { FILTER_WARNING_OPTION, ItemsLoader, VALUE_BATCH_SIZE } from "./ItemsLoader";
+import { translate, UniqueValue } from "../../common/Utils.js";
+import { FILTER_WARNING_OPTION, ItemsLoader, VALUE_BATCH_SIZE } from "./ItemsLoader.js";
 
 interface UseUniquePropertyValuesLoaderProps {
   imodel: IModelConnection;

@@ -22,16 +22,16 @@ import { EmptyLocalization } from "@itwin/core-common";
 import { IModelApp, IModelConnection } from "@itwin/core-frontend";
 import { Descriptor, PresentationError, PresentationStatus, PropertyValueFormat } from "@itwin/presentation-common";
 import { Presentation, PresentationManager } from "@itwin/presentation-frontend";
-import { translate } from "../../../presentation-components/common/Utils";
-import { PresentationInstanceFilterInfo } from "../../../presentation-components/instance-filter-builder/PresentationFilterBuilder";
-import { PresentationTreeRenderer } from "../../../presentation-components/tree/controlled/PresentationTreeRenderer";
-import { PresentationTreeDataProvider } from "../../../presentation-components/tree/DataProvider";
-import { IPresentationTreeDataProvider } from "../../../presentation-components/tree/IPresentationTreeDataProvider";
-import { PresentationTreeNodeItem } from "../../../presentation-components/tree/PresentationTreeNodeItem";
-import { createTestPropertyInfo, stubDOMMatrix, stubGetBoundingClientRect, stubRaf } from "../../_helpers/Common";
-import { createTestContentDescriptor, createTestPropertiesContentField } from "../../_helpers/Content";
-import { act, render, waitFor } from "../../TestUtils";
-import { createTreeModelNodeInput } from "./Helpers";
+import { translate } from "../../../presentation-components/common/Utils.js";
+import { PresentationInstanceFilterInfo } from "../../../presentation-components/instance-filter-builder/PresentationFilterBuilder.js";
+import { PresentationTreeRenderer } from "../../../presentation-components/tree/controlled/PresentationTreeRenderer.js";
+import { PresentationTreeDataProvider } from "../../../presentation-components/tree/DataProvider.js";
+import { IPresentationTreeDataProvider } from "../../../presentation-components/tree/IPresentationTreeDataProvider.js";
+import { PresentationTreeNodeItem } from "../../../presentation-components/tree/PresentationTreeNodeItem.js";
+import { createTestPropertyInfo, stubDOMMatrix, stubGetBoundingClientRect, stubRaf } from "../../_helpers/Common.js";
+import { createTestContentDescriptor, createTestPropertiesContentField } from "../../_helpers/Content.js";
+import { act, render, waitFor } from "../../TestUtils.js";
+import { createTreeModelNodeInput } from "./Helpers.js";
 
 describe("PresentationTreeRenderer", () => {
   stubRaf();

@@ -19,8 +19,8 @@ import {
 } from "@itwin/core-common";
 import { IModelConnection } from "@itwin/core-frontend";
 import { ClassInfo } from "@itwin/presentation-common";
-import { getIModelMetadataProvider } from "./ECMetadataProvider";
-import { PresentationInstanceFilter } from "./PresentationInstanceFilter";
+import { getIModelMetadataProvider } from "./ECMetadataProvider.js";
+import { PresentationInstanceFilter } from "./PresentationInstanceFilter.js";
 
 /** @internal */
 export async function findBaseExpressionClassName(imodel: IModelConnection, propertyClassNames: string[]) {

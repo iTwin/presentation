@@ -16,18 +16,18 @@ import {
 } from "@itwin/components-react";
 import { NodeKey, PresentationError, PresentationStatus } from "@itwin/presentation-common";
 import { Presentation } from "@itwin/presentation-frontend";
-import { translate } from "../../common/Utils";
-import { createInstanceFilterDefinition, PresentationInstanceFilterInfo } from "../../instance-filter-builder/PresentationFilterBuilder";
-import { PresentationInstanceFilterDialog } from "../../instance-filter-builder/PresentationInstanceFilterDialog";
-import { IPresentationTreeDataProvider } from "../IPresentationTreeDataProvider";
+import { translate } from "../../common/Utils.js";
+import { createInstanceFilterDefinition, PresentationInstanceFilterInfo } from "../../instance-filter-builder/PresentationFilterBuilder.js";
+import { PresentationInstanceFilterDialog } from "../../instance-filter-builder/PresentationInstanceFilterDialog.js";
+import { IPresentationTreeDataProvider } from "../IPresentationTreeDataProvider.js";
 import {
   FilterablePresentationTreeNodeItem,
   isFilterablePresentationTreeNodeItem,
   isPresentationTreeNodeItem,
   PresentationTreeNodeItem,
-} from "../PresentationTreeNodeItem";
-import { PresentationTreeNodeRenderer } from "./PresentationTreeNodeRenderer";
-import { useHierarchyLevelFiltering } from "./UseHierarchyLevelFiltering";
+} from "../PresentationTreeNodeItem.js";
+import { PresentationTreeNodeRenderer } from "./PresentationTreeNodeRenderer.js";
+import { useHierarchyLevelFiltering } from "./UseHierarchyLevelFiltering.js";
 
 /**
  * Props for [[PresentationTreeRenderer]] component.

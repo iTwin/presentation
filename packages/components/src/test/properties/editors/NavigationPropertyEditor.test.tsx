@@ -11,17 +11,17 @@ import { EmptyLocalization } from "@itwin/core-common";
 import { IModelApp, IModelConnection } from "@itwin/core-frontend";
 import { Content, KeySet, LabelDefinition, NavigationPropertyInfo } from "@itwin/presentation-common";
 import { Presentation, PresentationManager } from "@itwin/presentation-frontend";
-import userEvent from "@testing-library/user-event";
-import { IContentDataProvider } from "../../../presentation-components/common/ContentDataProvider";
-import { NavigationPropertyTargetEditor } from "../../../presentation-components/properties/editors/NavigationPropertyEditor";
+import { userEvent } from "@testing-library/user-event";
+import { IContentDataProvider } from "../../../presentation-components/common/ContentDataProvider.js";
+import { NavigationPropertyTargetEditor } from "../../../presentation-components/properties/editors/NavigationPropertyEditor.js";
 import {
   NavigationPropertyEditorContextProvider,
   NavigationPropertyEditorContextProviderProps,
   useNavigationPropertyEditorContextProviderProps,
-} from "../../../presentation-components/properties/editors/NavigationPropertyEditorContext";
-import { createTestContentDescriptor, createTestContentItem, createTestPropertiesContentField, createTestSimpleContentField } from "../../_helpers/Content";
-import { createTestPropertyRecord } from "../../_helpers/UiComponents";
-import { renderHook, render as renderRTL, waitFor } from "../../TestUtils";
+} from "../../../presentation-components/properties/editors/NavigationPropertyEditorContext.js";
+import { createTestContentDescriptor, createTestContentItem, createTestPropertiesContentField, createTestSimpleContentField } from "../../_helpers/Content.js";
+import { createTestPropertyRecord } from "../../_helpers/UiComponents.js";
+import { renderHook, render as renderRTL, waitFor } from "../../TestUtils.js";
 
 function createNavigationPropertyInfo(): NavigationPropertyInfo {
   return {

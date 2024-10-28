@@ -6,11 +6,11 @@
  * @module DisplayLabels
  */
 
-import memoize from "micro-memoize";
 import { bufferCount, from, map, mergeAll, mergeMap, reduce } from "rxjs";
 import { IModelConnection } from "@itwin/core-frontend";
 import { DEFAULT_KEYS_BATCH_SIZE, InstanceKey } from "@itwin/presentation-common";
 import { Presentation } from "@itwin/presentation-frontend";
+import { memoize } from "../common/Utils.js";
 
 /**
  * Interface for presentation rules-driven labels provider.

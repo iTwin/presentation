@@ -9,7 +9,7 @@
 import { ActiveMatchInfo, ITreeDataProvider, TreeNodeItem } from "@itwin/components-react";
 import { IModelConnection } from "@itwin/core-frontend";
 import { HierarchyRequestOptions, InstanceFilterDefinition, NodeKey, NodePathElement } from "@itwin/presentation-common";
-import { IPresentationDataProvider } from "../common/IPresentationDataProvider";
+import { IPresentationDataProvider } from "../common/IPresentationDataProvider.js";
 
 /**
  * Presentation tree data provider.

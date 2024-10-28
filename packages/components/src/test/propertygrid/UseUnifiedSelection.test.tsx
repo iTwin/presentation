@@ -9,10 +9,13 @@ import sinon from "sinon";
 import { IModelConnection } from "@itwin/core-frontend";
 import { KeySet } from "@itwin/presentation-common";
 import { ISelectionProvider, SelectionChangeEventArgs, SelectionChangeType, SelectionHandler } from "@itwin/presentation-frontend";
-import { IPresentationPropertyDataProvider } from "../../presentation-components/propertygrid/DataProvider";
-import { SelectionHandlerContextProvider, usePropertyDataProviderWithUnifiedSelection } from "../../presentation-components/propertygrid/UseUnifiedSelection";
-import { createTestECInstanceKey } from "../_helpers/Common";
-import { act, renderHook } from "../TestUtils";
+import { IPresentationPropertyDataProvider } from "../../presentation-components/propertygrid/DataProvider.js";
+import {
+  SelectionHandlerContextProvider,
+  usePropertyDataProviderWithUnifiedSelection,
+} from "../../presentation-components/propertygrid/UseUnifiedSelection.js";
+import { createTestECInstanceKey } from "../_helpers/Common.js";
+import { act, renderHook } from "../TestUtils.js";
 
 describe("usePropertyDataProviderWithUnifiedSelection", () => {
   let selectionHandler: sinon.SinonStubbedInstance<SelectionHandler>;

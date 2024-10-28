@@ -11,14 +11,14 @@ import { EmptyLocalization } from "@itwin/core-common";
 import { IModelApp, IModelConnection } from "@itwin/core-frontend";
 import { Content, Item, LabelDefinition, NavigationPropertyInfo } from "@itwin/presentation-common";
 import { Presentation, PresentationManager } from "@itwin/presentation-frontend";
-import { VALUE_BATCH_SIZE } from "../../../presentation-components/properties/inputs/ItemsLoader";
+import { VALUE_BATCH_SIZE } from "../../../presentation-components/properties/inputs/ItemsLoader.js";
 import {
   NavigationPropertyItemsLoader,
   useNavigationPropertyTargetsLoader,
   useNavigationPropertyTargetsRuleset,
-} from "../../../presentation-components/properties/inputs/UseNavigationPropertyTargetsLoader";
-import { createTestContentDescriptor, createTestContentItem } from "../../_helpers/Content";
-import { renderHook, waitFor } from "../../TestUtils";
+} from "../../../presentation-components/properties/inputs/UseNavigationPropertyTargetsLoader.js";
+import { createTestContentDescriptor, createTestContentItem } from "../../_helpers/Content.js";
+import { renderHook, waitFor } from "../../TestUtils.js";
 
 describe("useNavigationPropertyTargetsLoader", () => {
   let presentationManagerStub: sinon.SinonStub;

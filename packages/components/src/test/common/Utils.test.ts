@@ -20,11 +20,16 @@ import {
   getDisplayName,
   initializeLocalization,
   initializePropertyValueRenderers,
-} from "../../presentation-components/common/Utils";
-import { createTestPropertyInfo } from "../_helpers/Common";
-import { createTestContentDescriptor, createTestNestedContentField, createTestPropertiesContentField, createTestSimpleContentField } from "../_helpers/Content";
-import { createTestLabelCompositeValue, createTestLabelDefinition } from "../_helpers/LabelDefinition";
-import { createStub } from "../TestUtils";
+} from "../../presentation-components/common/Utils.js";
+import { createTestPropertyInfo } from "../_helpers/Common.js";
+import {
+  createTestContentDescriptor,
+  createTestNestedContentField,
+  createTestPropertiesContentField,
+  createTestSimpleContentField,
+} from "../_helpers/Content.js";
+import { createTestLabelCompositeValue, createTestLabelDefinition } from "../_helpers/LabelDefinition.js";
+import { createStub } from "../TestUtils.js";
 
 class TestComponent extends Component {}
 

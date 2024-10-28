@@ -20,18 +20,18 @@ import {
   Ruleset,
 } from "@itwin/presentation-common";
 import { Presentation, PresentationManager } from "@itwin/presentation-frontend";
-import { serializeUniqueValues, UniqueValue } from "../../../presentation-components/common/Utils";
-import { ItemsLoader, VALUE_BATCH_SIZE } from "../../../presentation-components/properties/inputs/ItemsLoader";
-import { UniquePropertyValuesSelector } from "../../../presentation-components/properties/inputs/UniquePropertyValuesSelector";
-import { createTestECClassInfo, createTestPropertyInfo, createTestRelatedClassInfo, createTestRelationshipPath } from "../../_helpers/Common";
+import { serializeUniqueValues, UniqueValue } from "../../../presentation-components/common/Utils.js";
+import { ItemsLoader, VALUE_BATCH_SIZE } from "../../../presentation-components/properties/inputs/ItemsLoader.js";
+import { UniquePropertyValuesSelector } from "../../../presentation-components/properties/inputs/UniquePropertyValuesSelector.js";
+import { createTestECClassInfo, createTestPropertyInfo, createTestRelatedClassInfo, createTestRelationshipPath } from "../../_helpers/Common.js";
 import {
   createTestCategoryDescription,
   createTestContentDescriptor,
   createTestNestedContentField,
   createTestPropertiesContentField,
-} from "../../_helpers/Content";
-import { createTestECInstancesNodeKey } from "../../_helpers/Hierarchy";
-import { render, waitFor } from "../../TestUtils";
+} from "../../_helpers/Content.js";
+import { createTestECInstancesNodeKey } from "../../_helpers/Hierarchy.js";
+import { render, waitFor } from "../../TestUtils.js";
 
 describe("UniquePropertyValuesSelector", () => {
   let presentationManagerStub: sinon.SinonStub;

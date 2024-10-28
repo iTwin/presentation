@@ -17,16 +17,16 @@ import {
   filterRuleValidator,
   INSTANCE_FILTER_FIELD_SEPARATOR,
   useFilterBuilderNavigationPropertyEditorContextProviderProps,
-} from "../../presentation-components/instance-filter-builder/Utils";
-import { createTestECClassInfo } from "../_helpers/Common";
+} from "../../presentation-components/instance-filter-builder/Utils.js";
+import { createTestECClassInfo } from "../_helpers/Common.js";
 import {
   createTestCategoryDescription,
   createTestContentDescriptor,
   createTestNestedContentField,
   createTestPropertiesContentField,
   createTestSimpleContentField,
-} from "../_helpers/Content";
-import { renderHook } from "../TestUtils";
+} from "../_helpers/Content.js";
+import { renderHook } from "../TestUtils.js";
 
 describe("createInstanceFilterPropertyInfos", () => {
   it("creates property infos when fields are in root category", () => {

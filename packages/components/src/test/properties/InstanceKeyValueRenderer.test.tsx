@@ -10,9 +10,9 @@ import { TypeConverter, TypeConverterManager } from "@itwin/components-react";
 import { EmptyLocalization } from "@itwin/core-common";
 import { IModelApp, IModelConnection } from "@itwin/core-frontend";
 import { Presentation, SelectionManager } from "@itwin/presentation-frontend";
-import { InstanceKeyValueRenderer } from "../../presentation-components/properties/InstanceKeyValueRenderer";
-import { UnifiedSelectionContextProvider } from "../../presentation-components/unified-selection/UnifiedSelectionContext";
-import { act, cleanup, render, waitFor } from "../TestUtils";
+import { InstanceKeyValueRenderer } from "../../presentation-components/properties/InstanceKeyValueRenderer.js";
+import { UnifiedSelectionContextProvider } from "../../presentation-components/unified-selection/UnifiedSelectionContext.js";
+import { act, cleanup, render, waitFor } from "../TestUtils.js";
 
 describe("InstanceKeyValueRenderer", () => {
   const renderer = new InstanceKeyValueRenderer();

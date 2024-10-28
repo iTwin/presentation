@@ -8,8 +8,8 @@ import { ResolvablePromise } from "presentation-test-utilities";
 import sinon from "sinon";
 import { RegisteredRuleset, Ruleset } from "@itwin/presentation-common";
 import { Presentation, RulesetManager } from "@itwin/presentation-frontend";
-import { useRulesetRegistration } from "../../presentation-components/hooks/UseRulesetRegistration";
-import { renderHook } from "../TestUtils";
+import { useRulesetRegistration } from "../../presentation-components/hooks/UseRulesetRegistration.js";
+import { renderHook } from "../TestUtils.js";
 
 /* eslint-disable deprecation/deprecation */
 

@@ -12,13 +12,13 @@ import { PropertyFilterBuilderRuleValue, PropertyFilterBuilderRuleValueRendererP
 import { assert } from "@itwin/core-bentley";
 import { IModelConnection } from "@itwin/core-frontend";
 import { ClassId, ClassInfo, Descriptor, InstanceFilterDefinition, Keys, PropertiesField } from "@itwin/presentation-common";
-import { NavigationPropertyEditorContextProvider } from "../properties/editors/NavigationPropertyEditorContext";
-import { UniquePropertyValuesSelector } from "../properties/inputs/UniquePropertyValuesSelector";
-import { InstanceFilterBuilder, usePresentationInstanceFilteringProps } from "./InstanceFilterBuilder";
-import { createFilterClassExpression, createInstanceFilterDefinitionBase } from "./InstanceFilterConverter";
-import { PresentationInstanceFilter, PresentationInstanceFilterConditionGroup } from "./PresentationInstanceFilter";
-import { PresentationInstanceFilterProperty } from "./PresentationInstanceFilterProperty";
-import { createInstanceFilterPropertyInfos, useFilterBuilderNavigationPropertyEditorContextProviderProps } from "./Utils";
+import { NavigationPropertyEditorContextProvider } from "../properties/editors/NavigationPropertyEditorContext.js";
+import { UniquePropertyValuesSelector } from "../properties/inputs/UniquePropertyValuesSelector.js";
+import { InstanceFilterBuilder, usePresentationInstanceFilteringProps } from "./InstanceFilterBuilder.js";
+import { createFilterClassExpression, createInstanceFilterDefinitionBase } from "./InstanceFilterConverter.js";
+import { PresentationInstanceFilter, PresentationInstanceFilterConditionGroup } from "./PresentationInstanceFilter.js";
+import { PresentationInstanceFilterProperty } from "./PresentationInstanceFilterProperty.js";
+import { createInstanceFilterPropertyInfos, useFilterBuilderNavigationPropertyEditorContextProviderProps } from "./Utils.js";
 
 /**
  * Function that checks if supplied [[PresentationInstanceFilter]] is [[PresentationInstanceFilterConditionGroup]].

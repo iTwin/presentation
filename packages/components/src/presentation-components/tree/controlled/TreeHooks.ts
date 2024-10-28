@@ -19,10 +19,10 @@ import {
 } from "@itwin/components-react";
 import { IModelApp } from "@itwin/core-frontend";
 import { IModelHierarchyChangeEventArgs, Presentation } from "@itwin/presentation-frontend";
-import { PresentationTreeDataProvider, PresentationTreeDataProviderProps } from "../DataProvider";
-import { IPresentationTreeDataProvider } from "../IPresentationTreeDataProvider";
-import { reloadTree } from "./TreeReloader";
-import { useFilteredNodeLoader, useNodeHighlightingProps } from "./UseControlledTreeFiltering";
+import { PresentationTreeDataProvider, PresentationTreeDataProviderProps } from "../DataProvider.js";
+import { IPresentationTreeDataProvider } from "../IPresentationTreeDataProvider.js";
+import { reloadTree } from "./TreeReloader.js";
+import { useFilteredNodeLoader, useNodeHighlightingProps } from "./UseControlledTreeFiltering.js";
 
 /**
  * Properties for [[usePresentationTreeNodeLoader]] hook.

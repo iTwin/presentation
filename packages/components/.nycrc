@@ -4,9 +4,7 @@
   "functions": 100,
   "branches": 100,
   "lines": 100,
-  "include": ["src/**/*", "lib/cjs/**/*"],
-  "exclude": ["src/presentation-components.ts", "src/test/**", "lib/cjs/test/**"],
-  "extension": [".ts", ".tsx"],
+  "include": ["src/presentation-components/**/*", "lib/cjs/presentation-components/**/*"],
   "temp-dir": "./lib/test/coverage/.nyc_output",
   "report-dir": "./lib/test/coverage",
   "reporter": ["text-summary", "lcov", "cobertura"]

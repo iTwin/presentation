@@ -11,7 +11,7 @@ import { PropertyDataFiltererBase, PropertyDataFilterResult } from "@itwin/compo
 import { IModelConnection } from "@itwin/core-frontend";
 import { Field } from "@itwin/presentation-common";
 import { FavoritePropertiesScope, Presentation } from "@itwin/presentation-frontend";
-import { IPresentationPropertyDataProvider } from "../../presentation-components/propertygrid/DataProvider";
+import { IPresentationPropertyDataProvider } from "../../presentation-components/propertygrid/DataProvider.js";
 
 /**
  * Props for [[FavoritePropertiesDataFilterer]].

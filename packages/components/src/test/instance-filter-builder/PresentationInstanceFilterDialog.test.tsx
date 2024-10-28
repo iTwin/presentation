@@ -12,16 +12,16 @@ import { BeEvent } from "@itwin/core-bentley";
 import { EmptyLocalization } from "@itwin/core-common";
 import { IModelApp, IModelConnection } from "@itwin/core-frontend";
 import { Presentation } from "@itwin/presentation-frontend";
-import { translate } from "../../presentation-components/common/Utils";
-import { ECClassInfo, getIModelMetadataProvider } from "../../presentation-components/instance-filter-builder/ECMetadataProvider";
-import { PresentationInstanceFilterInfo } from "../../presentation-components/instance-filter-builder/PresentationFilterBuilder";
-import { PresentationInstanceFilter } from "../../presentation-components/instance-filter-builder/PresentationInstanceFilter";
+import { translate } from "../../presentation-components/common/Utils.js";
+import { ECClassInfo, getIModelMetadataProvider } from "../../presentation-components/instance-filter-builder/ECMetadataProvider.js";
+import { PresentationInstanceFilterInfo } from "../../presentation-components/instance-filter-builder/PresentationFilterBuilder.js";
+import { PresentationInstanceFilter } from "../../presentation-components/instance-filter-builder/PresentationInstanceFilter.js";
 import {
   PresentationInstanceFilterDialog,
   PresentationInstanceFilterPropertiesSource,
-} from "../../presentation-components/instance-filter-builder/PresentationInstanceFilterDialog";
-import { createTestECClassInfo, stubDOMMatrix, stubGetBoundingClientRect, stubRaf } from "../_helpers/Common";
-import { createTestCategoryDescription, createTestContentDescriptor, createTestPropertiesContentField } from "../_helpers/Content";
+} from "../../presentation-components/instance-filter-builder/PresentationInstanceFilterDialog.js";
+import { createTestECClassInfo, stubDOMMatrix, stubGetBoundingClientRect, stubRaf } from "../_helpers/Common.js";
+import { createTestCategoryDescription, createTestContentDescriptor, createTestPropertiesContentField } from "../_helpers/Content.js";
 import {
   act,
   getAllByRole,
@@ -36,7 +36,7 @@ import {
   waitFor,
   waitForElement,
   within,
-} from "../TestUtils";
+} from "../TestUtils.js";
 
 describe("PresentationInstanceFilterDialog", () => {
   stubRaf();
