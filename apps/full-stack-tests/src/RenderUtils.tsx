@@ -5,7 +5,7 @@
 
 import { createElement, PropsWithChildren, ReactElement } from "react";
 import { ThemeProvider } from "@itwin/itwinui-react";
-import { render as renderRTL, RenderOptions, RenderResult } from "@testing-library/react";
+import { RenderOptions, RenderResult, render as renderRTL } from "@testing-library/react";
 import { userEvent, UserEvent } from "@testing-library/user-event";
 
 function createWrapper(Outer: React.JSXElementConstructor<{ children: React.ReactNode }>) {

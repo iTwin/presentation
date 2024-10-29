@@ -7,7 +7,7 @@ import { expect } from "chai";
 import { createElement, PropsWithChildren, ReactElement } from "react";
 import sinon from "sinon";
 import { ThemeProvider } from "@itwin/itwinui-react";
-import { render as renderRTL, RenderOptions, RenderResult, waitFor } from "@testing-library/react";
+import { RenderOptions, RenderResult, render as renderRTL, waitFor } from "@testing-library/react";
 import { userEvent, UserEvent } from "@testing-library/user-event";
 
 function createWrapper(Outer: React.JSXElementConstructor<{ children: React.ReactNode }>) {

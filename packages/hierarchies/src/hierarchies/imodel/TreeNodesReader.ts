@@ -39,7 +39,6 @@ export function readNodes(props: ReadNodesProps): Observable<SourceInstanceHiera
  * The interface should contain a member for each `NodeSelectClauseColumnNames` value.
  * @internal
  */
-/* eslint-disable @typescript-eslint/naming-convention */
 export interface RowDef {
   [NodeSelectClauseColumnNames.FullClassName]: string;
   [NodeSelectClauseColumnNames.ECInstanceId]: Id64String;
@@ -52,7 +51,6 @@ export interface RowDef {
   [NodeSelectClauseColumnNames.AutoExpand]?: boolean;
   [NodeSelectClauseColumnNames.SupportsFiltering]?: boolean;
 }
-/* eslint-enable @typescript-eslint/naming-convention */
 
 /** @internal */
 export function defaultNodesParser(row: { [columnName: string]: any }): SourceInstanceHierarchyNode {

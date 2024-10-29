@@ -52,6 +52,7 @@ export async function* eachValueFrom<T>(source: Observable<T>): AsyncIterableIte
         return;
       }
       if (error) {
+        // eslint-disable-next-line @typescript-eslint/only-throw-error
         throw error;
       }
       const result = await new Promise<IteratorResult<T>>((resolve, reject) => {
