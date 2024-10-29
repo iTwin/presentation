@@ -7,7 +7,6 @@
  */
 
 import { inPlaceSort } from "fast-sort";
-import memoize from "micro-memoize";
 import { PropertyRecord, PropertyValueFormat as UiPropertyValueFormat } from "@itwin/appui-abstract";
 import { IPropertyDataProvider, PropertyCategory, PropertyData, PropertyDataChangeEvent } from "@itwin/components-react";
 import { assert } from "@itwin/core-bentley";
@@ -37,11 +36,11 @@ import {
   ValuesMap,
 } from "@itwin/presentation-common";
 import { FavoritePropertiesScope, Presentation } from "@itwin/presentation-frontend";
-import { FieldHierarchyRecord, InternalPropertyRecordsBuilder, IPropertiesAppender } from "../common/ContentBuilder";
-import { CacheInvalidationProps, ContentDataProvider, IContentDataProvider } from "../common/ContentDataProvider";
-import { DiagnosticsProps } from "../common/Diagnostics";
-import { createLabelRecord, findField } from "../common/Utils";
-import { FAVORITES_CATEGORY_NAME, getFavoritesCategory } from "../favorite-properties/Utils";
+import { FieldHierarchyRecord, InternalPropertyRecordsBuilder, IPropertiesAppender } from "../common/ContentBuilder.js";
+import { CacheInvalidationProps, ContentDataProvider, IContentDataProvider } from "../common/ContentDataProvider.js";
+import { DiagnosticsProps } from "../common/Diagnostics.js";
+import { createLabelRecord, findField, memoize } from "../common/Utils.js";
+import { FAVORITES_CATEGORY_NAME, getFavoritesCategory } from "../favorite-properties/Utils.js";
 
 const labelsComparer = new Intl.Collator(undefined, { sensitivity: "base" }).compare;
 
@@ -212,7 +211,7 @@ export class PresentationPropertyDataProvider extends ContentDataProvider implem
     this.invalidateCache({ content: true });
   }
 
-  /* eslint-disable deprecation/deprecation */
+  /* eslint-disable @typescript-eslint/no-deprecated */
   /**
    * Should the specified field be included in the favorites category.
    * @deprecated in 5.2. Use `isFieldFavoriteAsync` instead.
@@ -230,7 +229,7 @@ export class PresentationPropertyDataProvider extends ContentDataProvider implem
     // otherwise, we need to call the deprecated method to stay backwards compatible...
     return this.isFieldFavorite(field);
   }
-  /* eslint-enable deprecation/deprecation */
+  /* eslint-enable @typescript-eslint/no-deprecated */
 
   /**
    * Sorts the specified list of categories by priority. May be overriden
@@ -240,7 +239,7 @@ export class PresentationPropertyDataProvider extends ContentDataProvider implem
     inPlaceSort(categories).by([{ desc: (c) => c.priority }, { asc: (c) => c.label, comparer: labelsComparer }]);
   }
 
-  /* eslint-disable deprecation/deprecation */
+  /* eslint-disable @typescript-eslint/no-deprecated */
   /**
    * Sorts the specified list of fields by priority. May be overriden to supply a different sorting algorithm.
    * @deprecated in 5.2. Use `sortFieldsAsync` instead.
@@ -268,12 +267,12 @@ export class PresentationPropertyDataProvider extends ContentDataProvider implem
     // otherwise, we need to call the deprecated method to stay backwards compatible...
     this.sortFields(category, fields);
   }
-  /* eslint-enable deprecation/deprecation */
+  /* eslint-enable @typescript-eslint/no-deprecated */
 
   /**
    * Returns property data.
    */
-  // eslint-disable-next-line @typescript-eslint/naming-convention
+
   protected getMemoizedData = memoize(async (): Promise<PropertyData> => {
     this.setupFavoritePropertiesListener();
     const content = await this.getContent();
@@ -290,9 +289,9 @@ export class PresentationPropertyDataProvider extends ContentDataProvider implem
     };
     const builder = await PropertyDataBuilder.create({
       descriptor: content.descriptor,
-      // eslint-disable-next-line deprecation/deprecation
+      // eslint-disable-next-line @typescript-eslint/no-deprecated
       includeWithNoValues: this.includeFieldsWithNoValues,
-      // eslint-disable-next-line deprecation/deprecation
+      // eslint-disable-next-line @typescript-eslint/no-deprecated
       includeWithCompositeValues: this.includeFieldsWithCompositeValues,
       wantNestedCategories: this._isNestedPropertyCategoryGroupingEnabled,
       callbacks,
@@ -362,7 +361,7 @@ async function isFieldFavorite(field: Field, imodel: IModelConnection) {
   if (Presentation.favoriteProperties.hasAsync) {
     return Presentation.favoriteProperties.hasAsync(field, imodel, FavoritePropertiesScope.IModel);
   }
-  // eslint-disable-next-line deprecation/deprecation
+  // eslint-disable-next-line @typescript-eslint/no-deprecated
   return Presentation.favoriteProperties.has(field, imodel, FavoritePropertiesScope.IModel);
 }
 
@@ -371,7 +370,7 @@ async function sortFavoriteFields(fields: Field[], imodel: IModelConnection) {
     await Presentation.favoriteProperties.sortFieldsAsync(imodel, fields);
     return;
   }
-  // eslint-disable-next-line deprecation/deprecation
+  // eslint-disable-next-line @typescript-eslint/no-deprecated
   Presentation.favoriteProperties.sortFields(imodel, fields);
 }
 

@@ -19,8 +19,6 @@ import { useOptionalDisposable } from "../../UseOptionalDisposable.js";
 import { ensureHasError, ErrorBoundary } from "../ErrorBoundary.js";
 import { ensurePropertyGridHasPropertyRecord } from "../PropertyGridUtils.js";
 
-/* eslint-disable @typescript-eslint/naming-convention */
-
 describe("Learning snippets", () => {
   describe("Property grid", () => {
     before(async () => {
@@ -70,7 +68,7 @@ describe("Learning snippets", () => {
 
       // set up imodel for the test
       let elementKey: InstanceKey | undefined;
-      // eslint-disable-next-line deprecation/deprecation
+      // eslint-disable-next-line @typescript-eslint/no-deprecated
       const imodel = await buildTestIModel(this, async (builder) => {
         const categoryKey = insertSpatialCategory({ builder, codeValue: "My Category" });
         const modelKey = insertPhysicalModelWithPartition({ builder, codeValue: "My Model" });

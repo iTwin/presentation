@@ -8,11 +8,11 @@ import sinon from "sinon";
 import { PropertyDescription, PropertyRecord, PropertyValueFormat } from "@itwin/appui-abstract";
 import { IModelConnection } from "@itwin/core-frontend";
 import { FavoritePropertiesManager, FavoritePropertiesScope, Presentation } from "@itwin/presentation-frontend";
-import { IPresentationPropertyDataProvider } from "../../presentation-components/propertygrid/DataProvider";
-import { FavoritePropertiesDataFilterer } from "../../presentation-components/propertygrid/FavoritePropertiesDataFilterer";
-import { createTestSimpleContentField } from "../_helpers/Content";
-import { createArrayProperty, createPrimitiveStringProperty, createStructProperty } from "../_helpers/Properties";
-import { createStub } from "../TestUtils";
+import { IPresentationPropertyDataProvider } from "../../presentation-components/propertygrid/DataProvider.js";
+import { FavoritePropertiesDataFilterer } from "../../presentation-components/propertygrid/FavoritePropertiesDataFilterer.js";
+import { createTestSimpleContentField } from "../_helpers/Content.js";
+import { createArrayProperty, createPrimitiveStringProperty, createStructProperty } from "../_helpers/Properties.js";
+import { createStub } from "../TestUtils.js";
 
 describe("FavoritePropertiesDataFilterer", () => {
   const imodel = {} as IModelConnection;
@@ -62,7 +62,7 @@ describe("FavoritePropertiesDataFilterer", () => {
 
     const manager = sinon.createStubInstance(FavoritePropertiesManager);
     Object.assign(manager, { hasAsync: undefined });
-    // eslint-disable-next-line deprecation/deprecation
+    // eslint-disable-next-line @typescript-eslint/no-deprecated
     manager.has.callsFake((field) => field === matchingField);
 
     sinon.stub(Presentation, "favoriteProperties").get(() => manager);
@@ -73,7 +73,7 @@ describe("FavoritePropertiesDataFilterer", () => {
       isActive: true,
     });
     const matchResult = await filterer.recordMatchesFilter(record, []);
-    // eslint-disable-next-line deprecation/deprecation
+    // eslint-disable-next-line @typescript-eslint/no-deprecated
     expect(manager.has).to.be.called;
     expect(matchResult).to.deep.eq({ matchesFilter: true, shouldExpandNodeParents: true });
   });

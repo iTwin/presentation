@@ -37,8 +37,8 @@ import {
   StartStructProps,
   TypeDescription,
 } from "@itwin/presentation-common";
-import { NumericEditorName } from "../properties/editors/NumericPropertyEditor";
-import { QuantityEditorName } from "../properties/editors/QuantityPropertyEditor";
+import { NumericEditorName } from "../properties/editors/NumericPropertyEditor.js";
+import { QuantityEditorName } from "../properties/editors/QuantityPropertyEditor.js";
 
 /** @internal */
 export interface FieldInfo {

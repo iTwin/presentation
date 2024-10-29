@@ -27,19 +27,19 @@ import {
   RulesetVariable,
 } from "@itwin/presentation-common";
 import { Presentation, PresentationManager, RulesetVariablesManager } from "@itwin/presentation-frontend";
-import { translate } from "../../presentation-components/common/Utils";
-import { PresentationInstanceFilterInfo } from "../../presentation-components/instance-filter-builder/PresentationFilterBuilder";
-import { PresentationTreeDataProvider } from "../../presentation-components/tree/DataProvider";
+import { translate } from "../../presentation-components/common/Utils.js";
+import { PresentationInstanceFilterInfo } from "../../presentation-components/instance-filter-builder/PresentationFilterBuilder.js";
+import { PresentationTreeDataProvider } from "../../presentation-components/tree/DataProvider.js";
 import {
   PresentationInfoTreeNodeItem,
   PresentationTreeNodeItem,
   PresentationTreeNodeItemFilteringInfo,
-} from "../../presentation-components/tree/PresentationTreeNodeItem";
-import { createTestECClassInfo, createTestECInstanceKey, createTestPropertyInfo } from "../_helpers/Common";
-import { createTestContentDescriptor, createTestPropertiesContentField } from "../_helpers/Content";
-import { createTestECClassGroupingNodeKey, createTestECInstancesNode, createTestECInstancesNodeKey, createTestNodePathElement } from "../_helpers/Hierarchy";
-import { createTestLabelDefinition } from "../_helpers/LabelDefinition";
-import { createTestTreeNodeItem } from "../_helpers/UiComponents";
+} from "../../presentation-components/tree/PresentationTreeNodeItem.js";
+import { createTestECClassInfo, createTestECInstanceKey, createTestPropertyInfo } from "../_helpers/Common.js";
+import { createTestContentDescriptor, createTestPropertiesContentField } from "../_helpers/Content.js";
+import { createTestECClassGroupingNodeKey, createTestECInstancesNode, createTestECInstancesNodeKey, createTestNodePathElement } from "../_helpers/Hierarchy.js";
+import { createTestLabelDefinition } from "../_helpers/LabelDefinition.js";
+import { createTestTreeNodeItem } from "../_helpers/UiComponents.js";
 
 function createTestECInstancesNodeKeyWithId(id?: string) {
   return createTestECInstancesNodeKey({
@@ -97,7 +97,7 @@ describe("TreeDataProvider", () => {
 
   describe("getNodeKey", () => {
     it("returns invalid key for non presentation tree node item", () => {
-      const key = provider.getNodeKey({ id: "test_id", label: PropertyRecord.fromString("Test Label") }); // eslint-disable-line deprecation/deprecation
+      const key = provider.getNodeKey({ id: "test_id", label: PropertyRecord.fromString("Test Label") }); // eslint-disable-line @typescript-eslint/no-deprecated
       expect(key.type).to.be.empty;
       expect(key.pathFromRoot).to.be.empty;
       expect(key.version).to.be.eq(0);
@@ -110,7 +110,7 @@ describe("TreeDataProvider", () => {
         label: PropertyRecord.fromString("Test Label"),
         key: nodeKey,
       };
-      expect(provider.getNodeKey(item)).to.be.eq(nodeKey); // eslint-disable-line deprecation/deprecation
+      expect(provider.getNodeKey(item)).to.be.eq(nodeKey); // eslint-disable-line @typescript-eslint/no-deprecated
     });
   });
 
@@ -277,13 +277,13 @@ describe("TreeDataProvider", () => {
     });
 
     it("uses `PresentationManager.getNodesAndCount` if `getNodesIterator` is not available", async () => {
-      /* eslint-disable deprecation/deprecation */
+      /* eslint-disable @typescript-eslint/no-deprecated */
       Object.assign(presentationManager, { getNodesIterator: undefined });
       presentationManager.getNodesAndCount.resolves({ count: 1, nodes: [createTestECInstancesNode()] });
       provider = new PresentationTreeDataProvider({ imodel, ruleset: rulesetId });
       await provider.getNodes();
       expect(presentationManager.getNodesAndCount).to.be.calledOnce;
-      /* eslint-enable deprecation/deprecation */
+      /* eslint-enable @typescript-eslint/no-deprecated */
     });
 
     it("logs a warning when requesting nodes and pagingSize is not the same as passed pageOptions", async () => {

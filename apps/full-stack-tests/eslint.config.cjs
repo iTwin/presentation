@@ -9,10 +9,14 @@ const reactPlugin = require("eslint-plugin-react");
 module.exports = [
   {
     files: ["**/*.{ts,tsx}"],
+    ...iTwinPlugin.configs.iTwinjsRecommendedConfig,
+  },
+  {
+    files: ["src/{components,hierarchies-react}/**/*.{ts,tsx}"],
     ...iTwinPlugin.configs.uiConfig,
   },
   {
-    files: ["**/*.{ts,tsx}"],
+    files: ["src/{components,hierarchies-react}/**/*.{ts,tsx}"],
     rules: {
       ...reactPlugin.configs["jsx-runtime"].rules,
     },

@@ -6,11 +6,11 @@
  * @module DisplayLabels
  */
 
-import memoize from "micro-memoize";
 import { bufferCount, from, map, mergeAll, mergeMap, reduce } from "rxjs";
 import { IModelConnection } from "@itwin/core-frontend";
 import { DEFAULT_KEYS_BATCH_SIZE, InstanceKey } from "@itwin/presentation-common";
 import { Presentation } from "@itwin/presentation-frontend";
+import { memoize } from "../common/Utils.js";
 
 /**
  * Interface for presentation rules-driven labels provider.
@@ -54,7 +54,6 @@ export class PresentationLabelsProvider implements IPresentationLabelsProvider {
     return (await Presentation.presentation.getDisplayLabelDefinition({ imodel: this.imodel, key })).displayValue; // WIP
   }
 
-  // eslint-disable-next-line @typescript-eslint/naming-convention
   private getMemoizedLabel = memoize(this.getLabelInternal, { isMatchingKey: MemoizationHelpers.areLabelRequestsEqual as any });
 
   /**
@@ -77,7 +76,7 @@ export class PresentationLabelsProvider implements IPresentationLabelsProvider {
                 map((item, itemIndex) => ({ value: item.displayValue, index: batchIndex * DEFAULT_KEYS_BATCH_SIZE + itemIndex })),
               );
             }
-            // eslint-disable-next-line deprecation/deprecation
+            // eslint-disable-next-line @typescript-eslint/no-deprecated
             return from(Presentation.presentation.getDisplayLabelDefinitions({ imodel: this.imodel, keys: keysBatch })).pipe(
               mergeAll(),
               map((item, valueIndex) => ({ value: item.displayValue, index: batchIndex * DEFAULT_KEYS_BATCH_SIZE + valueIndex })),
@@ -95,7 +94,6 @@ export class PresentationLabelsProvider implements IPresentationLabelsProvider {
     });
   }
 
-  // eslint-disable-next-line @typescript-eslint/naming-convention
   private getMemoizedLabels = memoize(this.getLabelsInternal, { isMatchingKey: MemoizationHelpers.areLabelsRequestsEqual as any });
 
   /**

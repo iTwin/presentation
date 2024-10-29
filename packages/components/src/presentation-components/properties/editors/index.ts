@@ -13,15 +13,15 @@ import { PropertyEditorBase, PropertyEditorManager, PropertyEditorProps, TypeEdi
 import {
   NavigationPropertyEditor as NavigationPropertyEditorInternal,
   NavigationPropertyTargetEditor as NavigationPropertyTargetEditorInternal,
-} from "./NavigationPropertyEditor";
-import { NumericEditorName, NumericPropertyEditorBase } from "./NumericPropertyEditor";
-import { QuantityEditorName, QuantityPropertyEditorBase } from "./QuantityPropertyEditor";
+} from "./NavigationPropertyEditor.js";
+import { NumericEditorName, NumericPropertyEditorBase } from "./NumericPropertyEditor.js";
+import { QuantityEditorName, QuantityPropertyEditorBase } from "./QuantityPropertyEditor.js";
 
 export {
   NavigationPropertyEditorContextProvider,
   NavigationPropertyEditorContextProviderProps,
   useNavigationPropertyEditorContextProviderProps,
-} from "./NavigationPropertyEditorContext";
+} from "./NavigationPropertyEditorContext.js";
 
 /**
  * Editor for navigation properties.
@@ -41,7 +41,6 @@ const NavigationPropertyEditor: new () => PropertyEditorBase = NavigationPropert
 const NavigationPropertyTargetEditor: new (props: PropertyEditorProps) => TypeEditor & PureComponent<PropertyEditorProps> =
   NavigationPropertyTargetEditorInternal;
 
-// eslint-disable-next-line deprecation/deprecation
 export { NavigationPropertyEditor, NavigationPropertyTargetEditor };
 
 // register editor for kind of quantity properties

@@ -106,7 +106,7 @@ function applySnapshotOpenHack() {
       return imodel;
     } catch (e) {
       if (e instanceof IModelError && e.errorNumber === IModelStatus.AlreadyOpen) {
-        // eslint-disable-next-line deprecation/deprecation
+        // eslint-disable-next-line @typescript-eslint/no-deprecated
         return IModelDb.findByKey(file.key!).nativeDb;
       }
       throw e;

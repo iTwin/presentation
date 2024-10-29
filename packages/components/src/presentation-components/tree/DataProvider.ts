@@ -5,7 +5,7 @@
 /** @packageDocumentation
  * @module Tree
  */
-import memoize from "micro-memoize";
+
 import { DelayLoadedTreeNodeItem, PageOptions, PropertyFilterRuleGroupOperator, TreeNodeItem } from "@itwin/components-react";
 import { IDisposable, Logger } from "@itwin/core-bentley";
 import { IModelConnection } from "@itwin/core-frontend";
@@ -26,14 +26,14 @@ import {
   Ruleset,
 } from "@itwin/presentation-common";
 import { Presentation } from "@itwin/presentation-frontend";
-import { createDiagnosticsOptions, DiagnosticsProps } from "../common/Diagnostics";
-import { getRulesetId, translate } from "../common/Utils";
-import { PresentationComponentsLoggerCategory } from "../ComponentsLoggerCategory";
-import { createInstanceFilterDefinition, PresentationInstanceFilterInfo } from "../instance-filter-builder/PresentationFilterBuilder";
-import { PresentationInstanceFilter } from "../instance-filter-builder/PresentationInstanceFilter";
-import { IPresentationTreeDataProvider } from "./IPresentationTreeDataProvider";
-import { InfoTreeNodeItemType, isPresentationTreeNodeItem, PresentationTreeNodeItem } from "./PresentationTreeNodeItem";
-import { createInfoNode, createTreeNodeItem, pageOptionsUiToPresentation } from "./Utils";
+import { createDiagnosticsOptions, DiagnosticsProps } from "../common/Diagnostics.js";
+import { getRulesetId, memoize, translate } from "../common/Utils.js";
+import { PresentationComponentsLoggerCategory } from "../ComponentsLoggerCategory.js";
+import { createInstanceFilterDefinition, PresentationInstanceFilterInfo } from "../instance-filter-builder/PresentationFilterBuilder.js";
+import { PresentationInstanceFilter } from "../instance-filter-builder/PresentationInstanceFilter.js";
+import { IPresentationTreeDataProvider } from "./IPresentationTreeDataProvider.js";
+import { InfoTreeNodeItemType, isPresentationTreeNodeItem, PresentationTreeNodeItem } from "./PresentationTreeNodeItem.js";
+import { createInfoNode, createTreeNodeItem, pageOptionsUiToPresentation } from "./Utils.js";
 
 /**
  * Properties for creating a `PresentationTreeDataProvider` instance.
@@ -138,18 +138,18 @@ export class PresentationTreeDataProvider implements IPresentationTreeDataProvid
     this._dataSource = {
       getNodesIterator: async (requestOptions) => {
         // we can't just drop support for the `getNodesAndCount` override, so if it's set - need to take data from it
-        /* eslint-disable deprecation/deprecation */
+        /* eslint-disable @typescript-eslint/no-deprecated */
         if (props.dataSourceOverrides?.getNodesAndCount) {
           return createNodesIteratorFromDeprecatedResponse(await props.dataSourceOverrides.getNodesAndCount(requestOptions));
         }
-        /* eslint-enable deprecation/deprecation */
+        /* eslint-enable @typescript-eslint/no-deprecated */
 
         // the `PresentationManager.getNodesIterator` has only been added to @itwin/presentation-frontend in 4.5.1, and our peerDependency is
         // set to 4.0.0, so we need to check if the method is really there
         if (Presentation.presentation.getNodesIterator) {
           return Presentation.presentation.getNodesIterator(requestOptions);
         }
-        // eslint-disable-next-line deprecation/deprecation
+        // eslint-disable-next-line @typescript-eslint/no-deprecated
         return createNodesIteratorFromDeprecatedResponse(await Presentation.presentation.getNodesAndCount(requestOptions));
       },
       getFilteredNodePaths: async (requestOptions: FilterByTextHierarchyRequestOptions<IModelConnection>) =>

@@ -15,7 +15,7 @@ import { IModelApp, IModelAppOptions, NoRenderApp } from "@itwin/core-frontend";
 import { HierarchyCacheMode, Presentation as PresentationBackend, PresentationManagerProps as PresentationBackendProps } from "@itwin/presentation-backend";
 import { PresentationRpcInterface } from "@itwin/presentation-common";
 import { Presentation as PresentationFrontend, PresentationProps as PresentationFrontendProps } from "@itwin/presentation-frontend";
-import { setTestOutputDir } from "./InternalUtils";
+import { setTestOutputDir } from "./FilenameUtils.js";
 
 function initializeRpcInterfaces(interfaces: RpcInterfaceDefinition[]) {
   const config = class extends RpcDefaultConfiguration {
@@ -23,13 +23,14 @@ function initializeRpcInterfaces(interfaces: RpcInterfaceDefinition[]) {
   };
 
   for (const definition of interfaces) {
-    RpcConfiguration.assign(definition, /* istanbul ignore next */ () => config); // eslint-disable-line @itwin/no-internal
+    // eslint-disable-next-line @itwin/no-internal
+    RpcConfiguration.assign(definition, /* istanbul ignore next */ () => config);
   }
 
-  const instance = RpcConfiguration.obtain(config); // eslint-disable-line @itwin/no-internal
+  const instance = RpcConfiguration.obtain(config);
 
   try {
-    RpcConfiguration.initializeInterfaces(instance); // eslint-disable-line @itwin/no-internal
+    RpcConfiguration.initializeInterfaces(instance);
   } catch {
     // this may fail with "Error: RPC interface "xxx" is already initialized." because
     // multiple different tests want to set up rpc interfaces

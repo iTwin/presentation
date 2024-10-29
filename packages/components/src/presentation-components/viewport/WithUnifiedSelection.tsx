@@ -8,15 +8,15 @@
 
 import { createContext, memo, PropsWithChildren, useContext, useEffect, useState } from "react";
 import { ViewportProps } from "@itwin/imodel-components-react";
-import { getDisplayName } from "../common/Utils";
-import { ViewportSelectionHandler } from "./ViewportSelectionHandler";
+import { getDisplayName } from "../common/Utils.js";
+import { ViewportSelectionHandler } from "./ViewportSelectionHandler.js";
 
 /**
  * Props that are injected to the ViewWithUnifiedSelection HOC component.
  * @public
  * @deprecated in 5.3.x This interface is empty.
  */
-// eslint-disable-next-line @typescript-eslint/no-empty-interface
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 export interface ViewWithUnifiedSelectionProps {}
 
 const ViewportSelectionHandlerContext = createContext<ViewportSelectionHandler | undefined>(undefined);

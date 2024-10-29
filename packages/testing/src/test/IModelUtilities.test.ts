@@ -9,9 +9,9 @@ import sinon, { SinonStub } from "sinon";
 import { IModelJsFs, SnapshotDb } from "@itwin/core-backend";
 import { CreateEmptySnapshotIModelProps } from "@itwin/core-common";
 import { SnapshotConnection } from "@itwin/core-frontend";
-import { buildTestIModel } from "../presentation-testing/IModelUtilities";
-import { createFileNameFromString, getTestOutputDir } from "../presentation-testing/InternalUtils";
-import { createStub } from "./Utils";
+import { createFileNameFromString, getTestOutputDir } from "../presentation-testing/FilenameUtils.js";
+import { buildTestIModel } from "../presentation-testing/IModelUtilities.js";
+import { createStub } from "./Utils.js";
 
 describe("buildTestIModel", () => {
   const snapshotDb = {
@@ -38,7 +38,7 @@ describe("buildTestIModel", () => {
     const mkdirFake = sinon.fake();
     sinon.replace(IModelJsFs, "mkdirSync", mkdirFake);
 
-    // eslint-disable-next-line deprecation/deprecation
+    // eslint-disable-next-line @typescript-eslint/no-deprecated
     await buildTestIModel("name", async () => {});
 
     expect(mkdirFake.calledOnceWith(getTestOutputDir()));
@@ -50,10 +50,10 @@ describe("buildTestIModel", () => {
     const unlinkFake = sinon.fake();
     sinon.replace(IModelJsFs, "unlinkSync", unlinkFake);
 
-    // eslint-disable-next-line deprecation/deprecation
+    // eslint-disable-next-line @typescript-eslint/no-deprecated
     await buildTestIModel(fileName, async () => {});
 
-    const outputFile = join(getTestOutputDir(), `${fileName}.bim`);
+    const outputFile = join(getTestOutputDir(), fileName);
     expect(unlinkFake.calledOnceWith(outputFile));
   });
 
@@ -64,7 +64,7 @@ describe("buildTestIModel", () => {
     const unlinkFake = sinon.fake();
     sinon.replace(IModelJsFs, "unlinkSync", unlinkFake);
 
-    // eslint-disable-next-line deprecation/deprecation
+    // eslint-disable-next-line @typescript-eslint/no-deprecated
     await buildTestIModel("name", async () => {});
 
     expect(unlinkFake.notCalled);
@@ -78,7 +78,7 @@ describe("buildTestIModel", () => {
     const unlinkFake = sinon.fake();
     sinon.replace(IModelJsFs, "unlinkSync", unlinkFake);
 
-    // eslint-disable-next-line deprecation/deprecation
+    // eslint-disable-next-line @typescript-eslint/no-deprecated
     await buildTestIModel(fileName, async () => {});
 
     expect(mkdirFake.notCalled);
@@ -86,34 +86,34 @@ describe("buildTestIModel", () => {
 
   it("calls `SnapshotDb.createEmpty` with correct parameters when using overload with imodel name", async () => {
     const fileName = "fileName";
-    // eslint-disable-next-line deprecation/deprecation
+    // eslint-disable-next-line @typescript-eslint/no-deprecated
     await buildTestIModel(fileName, async () => {});
 
-    expect(createSnapshotDb.firstCall.args[0]).to.include(`${fileName}.bim`);
+    expect(createSnapshotDb.firstCall.args[0]).to.include(fileName);
     expect(createSnapshotDb.firstCall.lastArg).to.deep.equal({ rootSubject: { name: fileName } });
   });
 
   it("calls `SnapshotDb.createEmpty` with correct parameters when using overload with mocha context", async function () {
     const fileName = createFileNameFromString(this.test!.fullTitle());
 
-    // eslint-disable-next-line deprecation/deprecation
+    // eslint-disable-next-line @typescript-eslint/no-deprecated
     await buildTestIModel(this, async () => {});
 
-    expect(createSnapshotDb.firstCall.args[0]).to.include(`${fileName}.bim`);
+    expect(createSnapshotDb.firstCall.args[0]).to.include(fileName);
     expect(createSnapshotDb.firstCall.lastArg).to.deep.equal({ rootSubject: { name: fileName } });
   });
 
   it("builder calls provided callback function", async () => {
     const cb: sinon.SinonSpy<any[], Promise<void>> = sinon.spy();
 
-    // eslint-disable-next-line deprecation/deprecation
+    // eslint-disable-next-line @typescript-eslint/no-deprecated
     await buildTestIModel("name", cb);
 
     expect(cb.calledOnce);
   });
 
   it("builder saves database changes and closes it when callback succeeds", async () => {
-    // eslint-disable-next-line deprecation/deprecation
+    // eslint-disable-next-line @typescript-eslint/no-deprecated
     await buildTestIModel("name", async () => {});
 
     expect(snapshotDb.saveChanges).to.be.calledOnceWith("Created test IModel");
@@ -125,7 +125,7 @@ describe("buildTestIModel", () => {
       throw new Error("TestError");
     };
 
-    // eslint-disable-next-line deprecation/deprecation
+    // eslint-disable-next-line @typescript-eslint/no-deprecated
     const promise = buildTestIModel("name", cb);
 
     await expect(promise).to.be.rejectedWith(Error);
@@ -134,7 +134,7 @@ describe("buildTestIModel", () => {
   });
 
   it("returns result of SnapshotConnection.openFile", async () => {
-    // eslint-disable-next-line deprecation/deprecation
+    // eslint-disable-next-line @typescript-eslint/no-deprecated
     const promise = buildTestIModel("name", async () => {});
     const result = await promise;
 

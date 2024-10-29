@@ -11,7 +11,7 @@ import { PropertyDataFiltererBase, PropertyDataFilterResult } from "@itwin/compo
 import { IModelConnection } from "@itwin/core-frontend";
 import { Field } from "@itwin/presentation-common";
 import { FavoritePropertiesScope, Presentation } from "@itwin/presentation-frontend";
-import { IPresentationPropertyDataProvider } from "../../presentation-components/propertygrid/DataProvider";
+import { IPresentationPropertyDataProvider } from "../../presentation-components/propertygrid/DataProvider.js";
 
 /**
  * Props for [[FavoritePropertiesDataFilterer]].
@@ -94,6 +94,6 @@ async function defaultFavoritePropertyCheckCallback(field: Field, imodel: IModel
   if (Presentation.favoriteProperties.hasAsync) {
     return Presentation.favoriteProperties.hasAsync(field, imodel, scope);
   }
-  // eslint-disable-next-line deprecation/deprecation
+  // eslint-disable-next-line @typescript-eslint/no-deprecated
   return Presentation.favoriteProperties.has(field, imodel, scope);
 }

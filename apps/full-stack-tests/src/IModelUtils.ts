@@ -11,12 +11,7 @@ import { ECDb, ECSqlStatement } from "@itwin/core-backend";
 import { BentleyError, DbResult, Guid, Id64, Id64String, OrderedId64Iterable } from "@itwin/core-bentley";
 import { IModelConnection } from "@itwin/core-frontend";
 import { ECSqlBinding, parseFullClassName, PrimitiveValue } from "@itwin/presentation-shared";
-import { buildTestIModel, TestIModelBuilder } from "@itwin/presentation-testing";
-import {
-  createFileNameFromString,
-  limitFilePathLength,
-  setupOutputFileLocation,
-} from "@itwin/presentation-testing/lib/cjs/presentation-testing/InternalUtils.js";
+import { buildTestIModel, createFileNameFromString, limitFilePathLength, setupOutputFileLocation, TestIModelBuilder } from "@itwin/presentation-testing";
 
 function isBinding(value: ECSqlBinding | PrimitiveValue): value is ECSqlBinding {
   return typeof value === "object" && (value as ECSqlBinding).type !== undefined && (value as ECSqlBinding).value !== undefined;
@@ -27,7 +22,7 @@ export class ECDbBuilder {
 
   public importSchema(schemaXml: string) {
     // sadly, there's no API to import schema from string, so we have to save the XML into a file first...
-    // eslint-disable-next-line @itwin/no-internal, deprecation/deprecation
+    // eslint-disable-next-line @itwin/no-internal, @typescript-eslint/no-deprecated
     const schemaFilePath = limitFilePathLength(`${this._ecdb.nativeDb.getFilePath()}-${hash(schemaXml)}`);
     fs.writeFileSync(schemaFilePath, schemaXml);
     this._ecdb.importSchema(schemaFilePath);
@@ -190,7 +185,7 @@ export async function buildIModel<TFirstArg extends Mocha.Context | string, TRes
   setup?: (builder: TestIModelBuilder, mochaContextOrTestName: TFirstArg) => Promise<TResult>,
 ) {
   let res!: TResult;
-  // eslint-disable-next-line deprecation/deprecation
+  // eslint-disable-next-line @typescript-eslint/no-deprecated
   const imodel = await buildTestIModel(mochaContextOrTestName as any, async (builder) => {
     if (setup) {
       res = await setup(builder, mochaContextOrTestName);

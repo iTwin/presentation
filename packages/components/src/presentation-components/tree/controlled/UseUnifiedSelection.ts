@@ -23,9 +23,9 @@ import { Guid, IDisposable } from "@itwin/core-bentley";
 import { useDisposable } from "@itwin/core-react";
 import { Keys, KeySet, NodeKey } from "@itwin/presentation-common";
 import { Presentation, SelectionChangeEventArgs, SelectionChangeType, SelectionHelper } from "@itwin/presentation-frontend";
-import { IPresentationTreeDataProvider } from "../IPresentationTreeDataProvider";
-import { isPresentationTreeNodeItem } from "../PresentationTreeNodeItem";
-import { toRxjsObservable } from "../Utils";
+import { IPresentationTreeDataProvider } from "../IPresentationTreeDataProvider.js";
+import { isPresentationTreeNodeItem } from "../PresentationTreeNodeItem.js";
+import { toRxjsObservable } from "../Utils.js";
 
 /**
  * Data structure that describes parameters for UnifiedSelectionTreeEventHandler
@@ -136,7 +136,7 @@ export class UnifiedSelectionTreeEventHandler extends TreeEventHandler implement
   /** @deprecated in 4.0. Use [[isPresentationTreeNodeItem]] and [[PresentationTreeNodeItem.key]] to get [NodeKey]($presentation-common). */
   // istanbul ignore next
   protected getNodeKey(node: TreeNodeItem): NodeKey {
-    // eslint-disable-next-line deprecation/deprecation
+    // eslint-disable-next-line @typescript-eslint/no-deprecated
     return this.#dataProvider.getNodeKey(node);
   }
 
@@ -267,7 +267,7 @@ export class UnifiedSelectionTreeEventHandler extends TreeEventHandler implement
  * [[UsePresentationTreeProps.eventHandlerFactory]] instead or manually create and dispose [[UnifiedSelectionTreeEventHandler]].
  */
 export function useUnifiedSelectionTreeEventHandler(props: UnifiedSelectionTreeEventHandlerParams) {
-  // eslint-disable-next-line deprecation/deprecation
+  // eslint-disable-next-line @typescript-eslint/no-deprecated
   return useDisposable(
     useCallback(
       () => new UnifiedSelectionTreeEventHandler(props),

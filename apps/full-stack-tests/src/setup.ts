@@ -49,6 +49,7 @@ export const mochaHooks = {
     delete getGlobalThis().IS_REACT_ACT_ENVIRONMENT;
   },
 };
+
 // eslint-disable-next-line @typescript-eslint/naming-convention
 function getGlobalThis(): typeof globalThis & { IS_REACT_ACT_ENVIRONMENT?: boolean } {
   if (typeof globalThis !== "undefined") {

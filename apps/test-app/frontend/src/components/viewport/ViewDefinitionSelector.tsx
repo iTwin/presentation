@@ -34,7 +34,6 @@ export default function ViewDefinitionSelector(props: ViewDefinitionSelectorProp
   );
   return (
     <div className="ViewDefinitionSelector">
-      {/* eslint-disable-next-line jsx-a11y/no-onchange */}
       <select onChange={memoizedOnViewDefinitionSelected} value={props.selectedViewDefinition}>
         {(availableViewDefinitions ?? []).map((definition) => (
           <option value={definition.id} key={definition.id}>

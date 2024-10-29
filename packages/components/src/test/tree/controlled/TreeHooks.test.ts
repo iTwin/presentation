@@ -25,12 +25,12 @@ import {
   PresentationTreeNodeLoaderProps,
   useControlledPresentationTreeFiltering,
   usePresentationTreeNodeLoader,
-} from "../../../presentation-components/tree/controlled/TreeHooks";
-import { IPresentationTreeDataProvider } from "../../../presentation-components/tree/IPresentationTreeDataProvider";
-import { createTreeNodeItem } from "../../../presentation-components/tree/Utils";
-import { renderHook, waitFor } from "../../TestUtils";
+} from "../../../presentation-components/tree/controlled/TreeHooks.js";
+import { IPresentationTreeDataProvider } from "../../../presentation-components/tree/IPresentationTreeDataProvider.js";
+import { createTreeNodeItem } from "../../../presentation-components/tree/Utils.js";
+import { renderHook, waitFor } from "../../TestUtils.js";
 
-/* eslint-disable deprecation/deprecation */
+/* eslint-disable @typescript-eslint/no-deprecated */
 
 describe("usePresentationNodeLoader", () => {
   const onIModelHierarchyChanged: PresentationManager["onIModelHierarchyChanged"] = new BeEvent<(args: IModelHierarchyChangeEventArgs) => void>();

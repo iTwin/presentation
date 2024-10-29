@@ -10,8 +10,8 @@ import { EmptyLocalization } from "@itwin/core-common";
 import { IModelConnection } from "@itwin/core-frontend";
 import { DEFAULT_KEYS_BATCH_SIZE, InstanceKey } from "@itwin/presentation-common";
 import { Presentation, PresentationManager } from "@itwin/presentation-frontend";
-import { PresentationLabelsProvider } from "../../presentation-components/labels/LabelsProvider";
-import { createTestECInstanceKey } from "../_helpers/Common";
+import { PresentationLabelsProvider } from "../../presentation-components/labels/LabelsProvider.js";
+import { createTestECInstanceKey } from "../_helpers/Common.js";
 
 describe("PresentationLabelsProvider", () => {
   let provider: PresentationLabelsProvider;
@@ -172,7 +172,7 @@ describe("PresentationLabelsProvider", () => {
         Object.assign(presentationManager, { getDisplayLabelDefinitionsIterator: undefined });
       });
 
-      /* eslint-disable deprecation/deprecation */
+      /* eslint-disable @typescript-eslint/no-deprecated */
       it("calls manager to get result and returns it", async () => {
         const keys = [createTestECInstanceKey({ id: "0x1" }), createTestECInstanceKey({ id: "0x2" })];
         const result = ["Label 1", "Label 2"];
@@ -245,7 +245,7 @@ describe("PresentationLabelsProvider", () => {
 
         expect(presentationManager.getDisplayLabelDefinitions).to.be.calledThrice;
       });
-      /* eslint-enable deprecation/deprecation */
+      /* eslint-enable @typescript-eslint/no-deprecated */
     });
   });
 });

@@ -6,7 +6,6 @@
     "benchmark:hierarchies": "npm run test:hierarchies -- -O BENCHMARK_OUTPUT_PATH=./hierarchies-benchmark.json",
     "benchmark:unified-selection": "npm run test:unified-selection -- -O BENCHMARK_OUTPUT_PATH=./unified-selection-benchmark.json",
     "build": "tsc",
-    "build:watch": "tsc -w",
     "clean": "rimraf lib temp",
     "docs": "betools extract --fileExt=ts --extractFrom=./src --recursive --out=./build/docs/extract",
     "lint": "eslint \"./src/**/*.ts\"",

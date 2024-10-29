@@ -11,9 +11,9 @@ import { PropertyRecord } from "@itwin/appui-abstract";
 import { DelayLoadedTreeNodeItem, ItemColorOverrides, ItemStyle, Observable, TreeNodeItem, PageOptions as UiPageOptions } from "@itwin/components-react";
 import { CheckBoxState } from "@itwin/core-react";
 import { LabelDefinition, Node, NodeKey, PartialNode, PageOptions as PresentationPageOptions } from "@itwin/presentation-common";
-import { StyleHelper } from "../common/StyleHelper";
-import { createLabelRecord } from "../common/Utils";
-import { InfoTreeNodeItemType, PresentationInfoTreeNodeItem, PresentationTreeNodeItem } from "./PresentationTreeNodeItem";
+import { StyleHelper } from "../common/StyleHelper.js";
+import { createLabelRecord } from "../common/Utils.js";
+import { InfoTreeNodeItemType, PresentationInfoTreeNodeItem, PresentationTreeNodeItem } from "./PresentationTreeNodeItem.js";
 
 /** @internal */
 export interface CreateTreeNodeItemProps {
@@ -38,7 +38,7 @@ export function createTreeNodeItem(node: Readonly<Node>, parentId?: string, prop
     key: node.key,
   };
   assignOptionalTreeNodeItemFields(item, node, parentId);
-  const customizeItemCallback = props?.customizeTreeNodeItem ?? customizeTreeNodeItem; // eslint-disable-line deprecation/deprecation
+  const customizeItemCallback = props?.customizeTreeNodeItem ?? customizeTreeNodeItem; // eslint-disable-line @typescript-eslint/no-deprecated
   customizeItemCallback(item, node);
   return item;
 }
@@ -52,7 +52,7 @@ export function createPartialTreeNodeItem(node: PartialNode, parentId: string | 
   }
 
   assignOptionalTreeNodeItemFields(item, node, parentId);
-  const customizeItemCallback = props.customizeTreeNodeItem ?? customizeTreeNodeItem; // eslint-disable-line deprecation/deprecation
+  const customizeItemCallback = props.customizeTreeNodeItem ?? customizeTreeNodeItem; // eslint-disable-line @typescript-eslint/no-deprecated
   customizeItemCallback(item, node);
   return item;
 }
@@ -98,21 +98,21 @@ function assignOptionalTreeNodeItemFields(item: Partial<PresentationTreeNodeItem
  */
 // istanbul ignore next
 export function customizeTreeNodeItem(item: Partial<DelayLoadedTreeNodeItem>, node: Partial<Node>) {
-  // eslint-disable-next-line deprecation/deprecation
+  // eslint-disable-next-line @typescript-eslint/no-deprecated
   if (node.imageId) {
-    item.icon = node.imageId; // eslint-disable-line deprecation/deprecation
+    item.icon = node.imageId; // eslint-disable-line @typescript-eslint/no-deprecated
   }
 
-  // eslint-disable-next-line deprecation/deprecation
+  // eslint-disable-next-line @typescript-eslint/no-deprecated
   if (node.isCheckboxVisible) {
     item.isCheckboxVisible = true;
-    // eslint-disable-next-line deprecation/deprecation
+    // eslint-disable-next-line @typescript-eslint/no-deprecated
     if (node.isChecked) {
-      // eslint-disable-next-line deprecation/deprecation
+      // eslint-disable-next-line @typescript-eslint/no-deprecated
       item.checkBoxState = CheckBoxState.On;
     }
 
-    // eslint-disable-next-line deprecation/deprecation
+    // eslint-disable-next-line @typescript-eslint/no-deprecated
     if (!node.isCheckboxEnabled) {
       item.isCheckboxDisabled = true;
     }

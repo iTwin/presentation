@@ -23,7 +23,7 @@ import {
   RuleTypes,
 } from "@itwin/presentation-common";
 import { Presentation } from "@itwin/presentation-frontend";
-import { FILTER_WARNING_OPTION, VALUE_BATCH_SIZE } from "./ItemsLoader";
+import { FILTER_WARNING_OPTION, VALUE_BATCH_SIZE } from "./ItemsLoader.js";
 
 /** @internal */
 export interface NavigationPropertyTarget {
@@ -180,7 +180,7 @@ async function getItems(imodel: IModelConnection, ruleset: Ruleset, filter?: str
           mergeMap((result) => (result ? result.items : EMPTY)),
           toArray(),
         )
-      : // eslint-disable-next-line deprecation/deprecation
+      : // eslint-disable-next-line @typescript-eslint/no-deprecated
         from(Presentation.presentation.getContent(requestProps)).pipe(map((content) => (content ? content.contentSet : [])))
     ).subscribe({
       next: resolve,

@@ -17,11 +17,11 @@ import {
   TreeModel,
   TreeModelSource,
 } from "@itwin/components-react";
-import { PresentationTreeDataProvider, PresentationTreeDataProviderProps } from "../DataProvider";
-import { IFilteredPresentationTreeDataProvider, IPresentationTreeDataProvider } from "../IPresentationTreeDataProvider";
-import { ReportingTreeNodeLoader } from "../ReportingTreeNodeLoader";
-import { useFilteredNodeLoader, useNodeHighlightingProps } from "./UseControlledTreeFiltering";
-import { ReloadedTree, useTreeReload } from "./UseTreeReload";
+import { PresentationTreeDataProvider, PresentationTreeDataProviderProps } from "../DataProvider.js";
+import { IFilteredPresentationTreeDataProvider, IPresentationTreeDataProvider } from "../IPresentationTreeDataProvider.js";
+import { ReportingTreeNodeLoader } from "../ReportingTreeNodeLoader.js";
+import { useFilteredNodeLoader, useNodeHighlightingProps } from "./UseControlledTreeFiltering.js";
+import { ReloadedTree, useTreeReload } from "./UseTreeReload.js";
 
 /**
  * Properties for [[usePresentationTreeState]] hook.

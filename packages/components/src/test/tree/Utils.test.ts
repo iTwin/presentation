@@ -4,10 +4,10 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { expect } from "chai";
-import { LabelDefinition, Node } from "@itwin/presentation-common";
 import { PageOptions } from "@itwin/components-react";
-import { createPartialTreeNodeItem, createTreeNodeItem, createTreeNodeItems, pageOptionsUiToPresentation } from "../../presentation-components/tree/Utils";
-import { createTestECClassGroupingNodeKey, createTestECInstancesNode } from "../_helpers/Hierarchy";
+import { LabelDefinition, Node } from "@itwin/presentation-common";
+import { createPartialTreeNodeItem, createTreeNodeItem, createTreeNodeItems, pageOptionsUiToPresentation } from "../../presentation-components/tree/Utils.js";
+import { createTestECClassGroupingNodeKey, createTestECInstancesNode } from "../_helpers/Hierarchy.js";
 
 describe("Utils", () => {
   describe("createTreeNodeItem", () => {
@@ -32,7 +32,7 @@ describe("Utils", () => {
 
     it("creates tree node with custom label styles", () => {
       const node = createTestECInstancesNode();
-      node.fontStyle = "Bold Italic"; // eslint-disable-line deprecation/deprecation
+      node.fontStyle = "Bold Italic"; // eslint-disable-line @typescript-eslint/no-deprecated
       const treeNode = createTreeNodeItem(node);
       expect(treeNode).to.matchSnapshot();
     });

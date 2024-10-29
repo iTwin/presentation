@@ -11,8 +11,8 @@ import { Id64Arg, using } from "@itwin/core-bentley";
 import { IModelConnection } from "@itwin/core-frontend";
 import { KeySet, Ruleset } from "@itwin/presentation-common";
 import { createSelectionScopeProps, Presentation } from "@itwin/presentation-frontend";
-import { PresentationPropertyDataProvider } from "../propertygrid/DataProvider";
-import { getFavoritesCategory } from "./Utils";
+import { PresentationPropertyDataProvider } from "../propertygrid/DataProvider.js";
+import { getFavoritesCategory } from "./Utils.js";
 
 /**
  * An data provider interface for returning favorite properties for the given elements
@@ -73,9 +73,9 @@ export class FavoritePropertiesDataProvider implements IFavoritePropertiesDataPr
     if (elementIds instanceof KeySet) {
       return using(this.createPropertyDataProvider(imodel, this._customRuleset), async (propertyDataProvider) => {
         propertyDataProvider.keys = elementIds;
-        // eslint-disable-next-line deprecation/deprecation
+        // eslint-disable-next-line @typescript-eslint/no-deprecated
         propertyDataProvider.includeFieldsWithNoValues = this.includeFieldsWithNoValues;
-        // eslint-disable-next-line deprecation/deprecation
+        // eslint-disable-next-line @typescript-eslint/no-deprecated
         propertyDataProvider.includeFieldsWithCompositeValues = this.includeFieldsWithCompositeValues;
         const propertyData = await propertyDataProvider.getData();
 

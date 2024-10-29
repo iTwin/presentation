@@ -10,10 +10,10 @@ import { PrimitiveValue, StandardTypeNames } from "@itwin/appui-abstract";
 import { EmptyLocalization } from "@itwin/core-common";
 import { IModelApp } from "@itwin/core-frontend";
 import { Presentation } from "@itwin/presentation-frontend";
-import { PropertyEditorAttributes } from "../../../presentation-components/properties/editors/Common";
-import { NumericInput, NumericPropertyInput } from "../../../presentation-components/properties/inputs/NumericPropertyInput";
-import { createTestPropertyRecord } from "../../_helpers/UiComponents";
-import { render, waitFor } from "../../TestUtils";
+import { PropertyEditorAttributes } from "../../../presentation-components/properties/editors/Common.js";
+import { NumericInput, NumericPropertyInput } from "../../../presentation-components/properties/inputs/NumericPropertyInput.js";
+import { createTestPropertyRecord } from "../../_helpers/UiComponents.js";
+import { render, waitFor } from "../../TestUtils.js";
 
 const createRecord = (initialValue?: number) => {
   return createTestPropertyRecord({ value: initialValue, displayValue: initialValue?.toString() }, { typename: StandardTypeNames.Double });

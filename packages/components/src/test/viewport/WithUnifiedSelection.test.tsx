@@ -20,10 +20,10 @@ import {
   SelectionChangeType,
   SelectionManager,
 } from "@itwin/presentation-frontend";
-import { ViewportSelectionHandler } from "../../presentation-components/viewport/ViewportSelectionHandler";
-import { ViewportSelectionHandlerContextProvider, viewWithUnifiedSelection } from "../../presentation-components/viewport/WithUnifiedSelection";
-import { createTestECInstanceKey } from "../_helpers/Common";
-import { render, waitFor } from "../TestUtils";
+import { ViewportSelectionHandler } from "../../presentation-components/viewport/ViewportSelectionHandler.js";
+import { ViewportSelectionHandlerContextProvider, viewWithUnifiedSelection } from "../../presentation-components/viewport/WithUnifiedSelection.js";
+import { createTestECInstanceKey } from "../_helpers/Common.js";
+import { render, waitFor } from "../TestUtils.js";
 
 const PresentationViewport = viewWithUnifiedSelection(ViewportComponent);
 

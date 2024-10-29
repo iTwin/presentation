@@ -28,8 +28,8 @@ import {
 } from "@itwin/presentation-common";
 import { ContentDataProvider } from "@itwin/presentation-components";
 import { Presentation, PresentationManager, RulesetManager } from "@itwin/presentation-frontend";
-import { ContentBuilder, IContentBuilderDataProvider } from "../presentation-testing/ContentBuilder";
-import { createStub } from "./Utils";
+import { ContentBuilder, IContentBuilderDataProvider } from "../presentation-testing/ContentBuilder.js";
+import { createStub } from "./Utils.js";
 
 class EmptyDataProvider implements IContentBuilderDataProvider {
   // Verifies that given keyset matches a template, otherwise it throws an error
@@ -356,7 +356,7 @@ describe("ContentBuilder", () => {
         dataProvider: new EmptyDataProvider((keyset: KeySet) => verifyKeyset(keyset, testInstances, verificationSpy)),
       });
 
-      // eslint-disable-next-line deprecation/deprecation
+      // eslint-disable-next-line @typescript-eslint/no-deprecated
       const content = await builder.createContentForAllInstances("1");
 
       expect(content.length).to.equal(2);
@@ -397,7 +397,7 @@ describe("ContentBuilder", () => {
           dataProvider: new EmptyDataProvider((keyset: KeySet) => verifyKeyset(keyset, testInstances, verificationSpy)),
         });
 
-        // eslint-disable-next-line deprecation/deprecation
+        // eslint-disable-next-line @typescript-eslint/no-deprecated
         const content = await builder.createContentForInstancePerClass("1");
 
         expect(content.length).to.equal(2);
@@ -422,7 +422,7 @@ describe("ContentBuilder", () => {
           dataProvider: new EmptyDataProvider((keyset: KeySet) => verifyKeyset(keyset, testInstances, verificationSpy)),
         });
 
-        // eslint-disable-next-line deprecation/deprecation
+        // eslint-disable-next-line @typescript-eslint/no-deprecated
         await expect(builder.createContentForInstancePerClass("1")).to.be.rejectedWith("Test error");
       });
     });
@@ -443,7 +443,7 @@ describe("ContentBuilder", () => {
           dataProvider: new EmptyDataProvider((keyset: KeySet) => verifyKeyset(keyset, testInstances, verificationSpy)),
         });
 
-        // eslint-disable-next-line deprecation/deprecation
+        // eslint-disable-next-line @typescript-eslint/no-deprecated
         const content = await builder.createContentForInstancePerClass("1");
 
         expect(content).to.be.empty;

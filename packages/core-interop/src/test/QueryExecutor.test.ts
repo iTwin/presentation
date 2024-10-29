@@ -22,7 +22,6 @@ describe("createECSqlQueryExecutor", () => {
       for await (const _ of reader) {
       }
 
-      // eslint-disable-next-line @typescript-eslint/unbound-method
       expect(imodel.createQueryReader).to.be.calledOnceWithExactly(
         "ecsql",
         sinon.match((binder: QueryBinder) => Object.keys(binder.serialize()).length === 0),
@@ -40,7 +39,6 @@ describe("createECSqlQueryExecutor", () => {
       for await (const _ of reader) {
       }
 
-      // eslint-disable-next-line @typescript-eslint/unbound-method
       expect(imodel.createQueryReader).to.be.calledOnceWith("WITH RECURSIVE cte1, cte2 ecsql");
     });
 
@@ -54,7 +52,6 @@ describe("createECSqlQueryExecutor", () => {
       for await (const _ of reader) {
       }
 
-      // eslint-disable-next-line @typescript-eslint/unbound-method
       expect(imodel.createQueryReader).to.be.calledOnceWith("WITH RECURSIVE cte with whitespace (ecsql, with whitespace)");
     });
 
@@ -68,7 +65,6 @@ describe("createECSqlQueryExecutor", () => {
       for await (const _ of reader) {
       }
 
-      // eslint-disable-next-line @typescript-eslint/unbound-method
       expect(imodel.createQueryReader).to.be.calledOnceWithExactly(
         "ecsql",
         sinon.match((binder: QueryBinder) => Object.keys(binder.serialize()).length === 0),
@@ -86,7 +82,6 @@ describe("createECSqlQueryExecutor", () => {
       for await (const _ of reader) {
       }
 
-      // eslint-disable-next-line @typescript-eslint/unbound-method
       expect(imodel.createQueryReader).to.be.calledOnceWithExactly(
         "ecsql",
         sinon.match((binder: QueryBinder) => Object.keys(binder.serialize()).length === 0),
@@ -104,7 +99,6 @@ describe("createECSqlQueryExecutor", () => {
       for await (const _ of reader) {
       }
 
-      // eslint-disable-next-line @typescript-eslint/unbound-method
       expect(imodel.createQueryReader).to.be.calledOnceWithExactly(
         "ecsql",
         sinon.match((binder: QueryBinder) => Object.keys(binder.serialize()).length === 0),
@@ -174,7 +168,6 @@ describe("createECSqlQueryExecutor", () => {
       for await (const _ of reader) {
       }
 
-      // eslint-disable-next-line @typescript-eslint/unbound-method
       expect(imodel.createQueryReader).to.be.calledOnceWithExactly(
         "ecsql",
         sinon.match((binder: QueryBinder) => JSON.stringify(expectedBinder.serialize()) === JSON.stringify(binder.serialize())),

@@ -11,7 +11,7 @@ import { IModelJsExpressServer } from "@itwin/express-server";
  * Initializes Web Server backend
  */
 export async function initialize(rpcInterfaces: RpcInterfaceDefinition[]) {
-  RpcConfiguration.developmentMode = true; // eslint-disable-line @itwin/no-internal
+  RpcConfiguration.developmentMode = true;
 
   // __PUBLISH_EXTRACT_START__ Presentation.Backend.WebApp.RpcInterface
 
@@ -19,7 +19,7 @@ export async function initialize(rpcInterfaces: RpcInterfaceDefinition[]) {
   await IModelHost.startup();
 
   // tell BentleyCloudRpcManager which RPC interfaces to handle
-  const rpcConfig = BentleyCloudRpcManager.initializeImpl({ info: { title: "presentation-test-app", version: "v1.0" } }, rpcInterfaces); // eslint-disable-line @itwin/no-internal
+  const rpcConfig = BentleyCloudRpcManager.initializeImpl({ info: { title: "presentation-test-app", version: "v1.0" } }, rpcInterfaces);
 
   // create a basic express web server
   const port = Number(process.env.PORT || 3001);

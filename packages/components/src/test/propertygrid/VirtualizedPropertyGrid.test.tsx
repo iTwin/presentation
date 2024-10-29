@@ -23,10 +23,10 @@ import {
   VirtualizedPropertyGridWithDataProvider,
 } from "@itwin/components-react";
 import { InstanceKey } from "@itwin/presentation-common";
-import { PresentationPropertyDataProvider } from "../../presentation-components/propertygrid/DataProvider";
-import { createTestCategoryDescription } from "../_helpers/Content";
-import { createPrimitiveStringProperty } from "../_helpers/Properties";
-import { render, renderHook, waitFor } from "../TestUtils";
+import { PresentationPropertyDataProvider } from "../../presentation-components/propertygrid/DataProvider.js";
+import { createTestCategoryDescription } from "../_helpers/Content.js";
+import { createPrimitiveStringProperty } from "../_helpers/Properties.js";
+import { render, renderHook, waitFor } from "../TestUtils.js";
 
 describe("Category renderer customization", () => {
   describe("documentation snippets", () => {

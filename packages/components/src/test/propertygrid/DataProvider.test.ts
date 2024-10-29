@@ -29,10 +29,10 @@ import {
   ValuesDictionary,
 } from "@itwin/presentation-common";
 import { FavoritePropertiesManager, FavoritePropertiesScope, Presentation, PresentationManager } from "@itwin/presentation-frontend";
-import { CacheInvalidationProps } from "../../presentation-components/common/ContentDataProvider";
-import { FAVORITES_CATEGORY_NAME } from "../../presentation-components/favorite-properties/Utils";
-import { DEFAULT_PROPERTY_GRID_RULESET, PresentationPropertyDataProvider } from "../../presentation-components/propertygrid/DataProvider";
-import { createTestECClassInfo, createTestECInstanceKey, createTestPropertyInfo } from "../_helpers/Common";
+import { CacheInvalidationProps } from "../../presentation-components/common/ContentDataProvider.js";
+import { FAVORITES_CATEGORY_NAME } from "../../presentation-components/favorite-properties/Utils.js";
+import { DEFAULT_PROPERTY_GRID_RULESET, PresentationPropertyDataProvider } from "../../presentation-components/propertygrid/DataProvider.js";
+import { createTestECClassInfo, createTestECInstanceKey, createTestPropertyInfo } from "../_helpers/Common.js";
 import {
   createTestCategoryDescription,
   createTestContentDescriptor,
@@ -40,7 +40,7 @@ import {
   createTestNestedContentField,
   createTestPropertiesContentField,
   createTestSimpleContentField,
-} from "../_helpers/Content";
+} from "../_helpers/Content.js";
 
 /**
  * This is just a helper class to provide public access to
@@ -85,7 +85,7 @@ describe("PropertyDataProvider", () => {
 
     favoritePropertiesManager = sinon.createStubInstance(FavoritePropertiesManager);
     favoritePropertiesManager.hasAsync.callsFake(async () => false);
-    // eslint-disable-next-line deprecation/deprecation
+    // eslint-disable-next-line @typescript-eslint/no-deprecated
     favoritePropertiesManager.has.callsFake(() => false);
     Object.assign(favoritePropertiesManager, {
       onFavoritesChanged,
@@ -116,12 +116,12 @@ describe("PropertyDataProvider", () => {
     });
 
     it("[deprecated] sets `includeFieldsWithNoValues` to true", () => {
-      // eslint-disable-next-line deprecation/deprecation
+      // eslint-disable-next-line @typescript-eslint/no-deprecated
       expect(provider.includeFieldsWithNoValues).to.be.true;
     });
 
     it("[deprecated] sets `includeFieldsWithCompositeValues` to true", () => {
-      // eslint-disable-next-line deprecation/deprecation
+      // eslint-disable-next-line @typescript-eslint/no-deprecated
       expect(provider.includeFieldsWithCompositeValues).to.be.true;
     });
 
@@ -166,14 +166,14 @@ describe("PropertyDataProvider", () => {
   describe("[deprecated] includeFieldsWithNoValues", () => {
     it("invalidates cache when setting to different value", () => {
       const invalidateCacheSpy = sinon.stub(provider, "invalidateCache");
-      // eslint-disable-next-line deprecation/deprecation
+      // eslint-disable-next-line @typescript-eslint/no-deprecated
       provider.includeFieldsWithNoValues = !provider.includeFieldsWithNoValues;
       expect(invalidateCacheSpy).to.be.calledOnce;
     });
 
     it("doesn't invalidate cache when setting to same value", () => {
       const invalidateCacheSpy = sinon.stub(provider, "invalidateCache");
-      // eslint-disable-next-line deprecation/deprecation
+      // eslint-disable-next-line @typescript-eslint/no-deprecated
       provider.includeFieldsWithNoValues = provider.includeFieldsWithNoValues;
       expect(invalidateCacheSpy).to.not.be.called;
     });
@@ -182,14 +182,14 @@ describe("PropertyDataProvider", () => {
   describe("[deprecated] includeFieldsWithCompositeValues", () => {
     it("invalidates cache when setting to different value", () => {
       const invalidateCacheSpy = sinon.stub(provider, "invalidateCache");
-      // eslint-disable-next-line deprecation/deprecation
+      // eslint-disable-next-line @typescript-eslint/no-deprecated
       provider.includeFieldsWithCompositeValues = !provider.includeFieldsWithCompositeValues;
       expect(invalidateCacheSpy).to.be.calledOnce;
     });
 
     it("doesn't invalidate cache when setting to same value", () => {
       const invalidateCacheSpy = sinon.stub(provider, "invalidateCache");
-      // eslint-disable-next-line deprecation/deprecation
+      // eslint-disable-next-line @typescript-eslint/no-deprecated
       provider.includeFieldsWithCompositeValues = provider.includeFieldsWithCompositeValues;
       expect(invalidateCacheSpy).to.not.be.called;
     });
@@ -206,14 +206,14 @@ describe("PropertyDataProvider", () => {
     it("calls `FavoritePropertiesManager.has` when `hasAsync` is not available", async () => {
       Object.assign(favoritePropertiesManager, { hasAsync: undefined });
       await provider.isFieldFavoriteAsync(field);
-      // eslint-disable-next-line deprecation/deprecation
+      // eslint-disable-next-line @typescript-eslint/no-deprecated
       expect(favoritePropertiesManager.has).to.be.calledOnceWith(field, imodel, FavoritePropertiesScope.IModel);
     });
 
     it("calls deprecated `isFieldFavorite` when it's overriden by a subclass", async () => {
       class Subclass extends Provider {
         public override isFieldFavorite(f: Field): boolean {
-          // eslint-disable-next-line deprecation/deprecation
+          // eslint-disable-next-line @typescript-eslint/no-deprecated
           return super.isFieldFavorite(f);
         }
       }
@@ -221,7 +221,7 @@ describe("PropertyDataProvider", () => {
         const spy = sinon.spy(subclassProvider, "isFieldFavorite");
         await subclassProvider.isFieldFavoriteAsync(field);
         expect(spy).to.be.calledOnce;
-        // eslint-disable-next-line deprecation/deprecation
+        // eslint-disable-next-line @typescript-eslint/no-deprecated
         expect(favoritePropertiesManager.has).to.be.calledOnceWith(field, imodel, FavoritePropertiesScope.IModel);
       });
     });
@@ -255,7 +255,7 @@ describe("PropertyDataProvider", () => {
     it("calls deprecated `sortFields` when it's overriden by a subclass", async () => {
       class Subclass extends Provider {
         public override sortFields(category: CategoryDescription, fields: Field[]) {
-          // eslint-disable-next-line deprecation/deprecation
+          // eslint-disable-next-line @typescript-eslint/no-deprecated
           super.sortFields(category, fields);
         }
       }
@@ -1145,7 +1145,7 @@ describe("PropertyDataProvider", () => {
 
         describe("[deprecated] includeFieldsWithNoValues handling", () => {
           beforeEach(() => {
-            // eslint-disable-next-line deprecation/deprecation
+            // eslint-disable-next-line @typescript-eslint/no-deprecated
             provider.includeFieldsWithNoValues = false;
           });
 
@@ -1281,7 +1281,7 @@ describe("PropertyDataProvider", () => {
 
         describe("[deprecated] includeFieldsWithCompositeValues handling", () => {
           beforeEach(() => {
-            // eslint-disable-next-line deprecation/deprecation
+            // eslint-disable-next-line @typescript-eslint/no-deprecated
             provider.includeFieldsWithCompositeValues = false;
           });
 

@@ -25,15 +25,15 @@ import {
   VariableValue,
 } from "@itwin/presentation-common";
 import { IModelContentChangeEventArgs, Presentation, PresentationManager, RulesetManager, RulesetVariablesManager } from "@itwin/presentation-frontend";
-import { CacheInvalidationProps, ContentDataProvider, ContentDataProviderProps } from "../../presentation-components/common/ContentDataProvider";
-import { createTestECInstanceKey, createTestPropertyInfo, createTestRuleset } from "../_helpers/Common";
+import { CacheInvalidationProps, ContentDataProvider, ContentDataProviderProps } from "../../presentation-components/common/ContentDataProvider.js";
+import { createTestECInstanceKey, createTestPropertyInfo, createTestRuleset } from "../_helpers/Common.js";
 import {
   createTestContentDescriptor,
   createTestContentItem,
   createTestNestedContentField,
   createTestPropertiesContentField,
   createTestSimpleContentField,
-} from "../_helpers/Content";
+} from "../_helpers/Content.js";
 
 /**
  * The Provider class is used to make protected [[ContentDataProvider]]
@@ -336,7 +336,7 @@ describe("ContentDataProvider", () => {
         Object.assign(presentationManager, { getContentIterator: undefined });
       });
 
-      /* eslint-disable deprecation/deprecation */
+      /* eslint-disable @typescript-eslint/no-deprecated */
       it("requests presentation manager for size", async () => {
         presentationManager.getContentAndSize.resolves({ content: new Content(createTestContentDescriptor({ fields: [] }), []), size: 2 });
         provider.pagingSize = 10;
@@ -380,7 +380,7 @@ describe("ContentDataProvider", () => {
         expect(presentationManager.getContentSetSize).to.not.be.called;
         expect(presentationManager.getContent).to.be.calledOnceWith(matchOptions(({ paging }) => paging === undefined));
       });
-      /* eslint-enable deprecation/deprecation */
+      /* eslint-enable @typescript-eslint/no-deprecated */
     });
   });
 
@@ -482,7 +482,7 @@ describe("ContentDataProvider", () => {
         Object.assign(presentationManager, { getContentIterator: undefined });
       });
 
-      /* eslint-disable deprecation/deprecation */
+      /* eslint-disable @typescript-eslint/no-deprecated */
       it("returns undefined when manager returns undefined content", async () => {
         presentationManager.getContent.resolves(undefined);
         const c = await provider.getContent();
@@ -569,7 +569,7 @@ describe("ContentDataProvider", () => {
         expect(presentationManager.getContent).to.not.be.called;
         expect(presentationManager.getContentAndSize).to.not.be.called;
       });
-      /* eslint-enable deprecation/deprecation */
+      /* eslint-enable @typescript-eslint/no-deprecated */
     });
   });
 
@@ -598,7 +598,7 @@ describe("ContentDataProvider", () => {
       });
       provider.getFieldByPropertyDescription = sinon.fake(async () => field);
 
-      // eslint-disable-next-line deprecation/deprecation
+      // eslint-disable-next-line @typescript-eslint/no-deprecated
       const actualField = await provider.getFieldByPropertyRecord(record);
 
       expect(provider.getFieldByPropertyDescription).to.be.calledOnceWith(record.property);

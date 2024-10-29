@@ -195,9 +195,10 @@ describe("IModelSelectionHandler", () => {
       return keys.map((key) => ({ ["ClassName"]: key.className, ["ECInstanceId"]: key.id }));
     };
 
-    async function* createFakeQueryReader<TRow extends {} = ECSqlQueryRow>(
+    async function* createFakeQueryReader<TRow extends object = ECSqlQueryRow>(
       rows: (TRow | Promise<TRow>)[],
     ): ReturnType<ECSqlQueryExecutor["createQueryReader"]> {
+      // eslint-disable-next-line @typescript-eslint/await-thenable
       for await (const row of rows) {
         yield row;
       }

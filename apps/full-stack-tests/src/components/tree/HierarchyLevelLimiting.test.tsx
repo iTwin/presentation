@@ -15,8 +15,6 @@ import { getByRole, render, waitFor } from "@testing-library/react";
 import { initialize, terminate } from "../../IntegrationTests.js";
 import { getNodeByLabel, toggleExpandNode } from "../TreeUtils.js";
 
-/* eslint-disable @typescript-eslint/naming-convention */
-
 describe("Learning snippets", () => {
   describe("Tree", () => {
     before(async () => {
@@ -65,7 +63,7 @@ describe("Learning snippets", () => {
       // __PUBLISH_EXTRACT_END__
 
       // set up imodel for the test
-      // eslint-disable-next-line deprecation/deprecation
+      // eslint-disable-next-line @typescript-eslint/no-deprecated
       const imodel = await buildTestIModel(this, async (builder) => {
         const categoryKey = insertSpatialCategory({ builder, codeValue: "My Category" });
         const modelKeyA = insertPhysicalModelWithPartition({ builder, codeValue: "My Model A" });

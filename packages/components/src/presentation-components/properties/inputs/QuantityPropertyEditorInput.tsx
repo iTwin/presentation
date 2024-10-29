@@ -7,10 +7,10 @@ import { forwardRef, useEffect, useImperativeHandle, useRef } from "react";
 import { PrimitiveValue, PropertyRecord, PropertyValueFormat } from "@itwin/appui-abstract";
 import { PropertyEditorProps } from "@itwin/components-react";
 import { Input } from "@itwin/itwinui-react";
-import { useSchemaMetadataContext } from "../../common/SchemaMetadataContext";
-import { PropertyEditorAttributes } from "../editors/Common";
-import { NumericPropertyInput } from "./NumericPropertyInput";
-import { useQuantityValueInput, UseQuantityValueInputProps } from "./UseQuantityValueInput";
+import { useSchemaMetadataContext } from "../../common/SchemaMetadataContext.js";
+import { PropertyEditorAttributes } from "../editors/Common.js";
+import { NumericPropertyInput } from "./NumericPropertyInput.js";
+import { useQuantityValueInput, UseQuantityValueInputProps } from "./UseQuantityValueInput.js";
 
 /** @internal */
 export interface QuantityPropertyEditorImplProps extends PropertyEditorProps {

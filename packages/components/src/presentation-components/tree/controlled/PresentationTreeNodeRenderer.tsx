@@ -12,8 +12,8 @@ import { TreeNodeRenderer, TreeNodeRendererProps } from "@itwin/components-react
 import { TreeNode } from "@itwin/core-react";
 import { SvgCloseSmall, SvgFilter, SvgFilterHollow } from "@itwin/itwinui-icons-react";
 import { Anchor, ButtonGroup, IconButton, Text } from "@itwin/itwinui-react";
-import { translate } from "../../common/Utils";
-import { InfoTreeNodeItemType, isPresentationInfoTreeNodeItem, isPresentationTreeNodeItem } from "../PresentationTreeNodeItem";
+import { translate } from "../../common/Utils.js";
+import { InfoTreeNodeItemType, isPresentationInfoTreeNodeItem, isPresentationTreeNodeItem } from "../PresentationTreeNodeItem.js";
 
 /**
  * Props for [[PresentationTreeNodeRenderer]] component.
@@ -37,7 +37,7 @@ export function PresentationTreeNodeRenderer(props: PresentationTreeNodeRenderer
   if (isPresentationInfoTreeNodeItem(nodeItem)) {
     return (
       // `PresentationTreeNodeRenderer` is about to be deprecated itself, so no point in resolving the TreeNode deprecation
-      // eslint-disable-next-line deprecation/deprecation
+      // eslint-disable-next-line @typescript-eslint/no-deprecated
       <TreeNode
         isLeaf={true}
         label={
