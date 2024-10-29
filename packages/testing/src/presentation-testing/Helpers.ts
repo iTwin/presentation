@@ -94,7 +94,7 @@ export const initialize = async (props?: PresentationTestingInitProps) => {
   }
   await IModelHost.startup({
     // @ts-ignore TS1343
-    cacheDir: join(typeof __dirname !== "undefined" ? __dirname : import.meta.url, ".cache"),
+    cacheDir: join(typeof __dirname !== "undefined" ? __dirname : import.meta.url, ".cache", `${process.pid}`),
     ...props.backendHostProps,
   });
   PresentationBackend.initialize(props.backendProps);

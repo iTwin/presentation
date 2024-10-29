@@ -3,9 +3,9 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { createElement, Fragment, PropsWithChildren, ReactElement, StrictMode } from "react";
+import { createElement, PropsWithChildren, ReactElement } from "react";
 import { ThemeProvider } from "@itwin/itwinui-react";
-import { RenderHookOptions, RenderHookResult, renderHook as renderHookRTL, RenderOptions, RenderResult, render as renderRTL } from "@testing-library/react";
+import { render as renderRTL, RenderOptions, RenderResult } from "@testing-library/react";
 import { userEvent, UserEvent } from "@testing-library/user-event";
 
 function createWrapper(Outer: React.JSXElementConstructor<{ children: React.ReactNode }>) {
@@ -22,16 +22,11 @@ function combineWrappers(wraps: Array<ReturnType<typeof createWrapper>>, wrapper
   return currWrapper;
 }
 
-function createDefaultWrappers(disableStrictMode?: boolean, addThemeProvider?: boolean) {
+function createDefaultWrappers(addThemeProvider?: boolean) {
   const wrappers: Array<ReturnType<typeof createWrapper>> = [];
   if (addThemeProvider) {
     wrappers.push(createWrapper(ThemeProvider));
   }
-
-  // if `DISABLE_STRICT_MODE` is set do not wrap components into `StrictMode` component
-  const StrictModeWrapper = process.env.DISABLE_STRICT_MODE || disableStrictMode ? Fragment : StrictMode;
-  wrappers.push(createWrapper(StrictModeWrapper));
-
   return wrappers;
 }
 
@@ -41,28 +36,14 @@ function createDefaultWrappers(disableStrictMode?: boolean, addThemeProvider?: b
  *
  * It should be used when test need to do interactions with rendered components.
  */
-function customRender(
-  ui: ReactElement,
-  options?: RenderOptions & { disableStrictMode?: boolean; addThemeProvider?: boolean },
-): RenderResult & { user: UserEvent } {
-  const wrappers = createDefaultWrappers(options?.disableStrictMode, options?.addThemeProvider);
+function customRender(ui: ReactElement, options?: RenderOptions & { addThemeProvider?: boolean }): RenderResult & { user: UserEvent } {
+  const wrappers = createDefaultWrappers(options?.addThemeProvider);
   const wrapper = combineWrappers(wrappers, options?.wrapper);
-
   return {
     ...renderRTL(ui, { ...options, wrapper }),
     user: userEvent.setup(),
   };
 }
 
-function customRenderHook<Result, Props>(
-  render: (initialProps: Props) => Result,
-  options?: RenderHookOptions<Props> & { disableStrictMode?: boolean },
-): RenderHookResult<Result, Props> {
-  const defaultWrappers = createDefaultWrappers(options?.disableStrictMode);
-  const combinedWrappers = combineWrappers(defaultWrappers, options?.wrapper);
-  return renderHookRTL(render, { ...options, wrapper: combinedWrappers });
-}
-
 export * from "@testing-library/react";
 export { customRender as render };
-export { customRenderHook as renderHook };
