@@ -18,6 +18,7 @@ import { JSX as JSX_3 } from 'react/jsx-runtime.js';
 import { NodeData } from '@itwin/itwinui-react';
 import { PropsWithChildren } from 'react';
 import { ReactElement } from 'react';
+import { RefAttributes } from 'react';
 import { SelectionStorage } from '@itwin/unified-selection';
 import { Tree } from '@itwin/itwinui-react';
 import { TreeNode } from '@itwin/itwinui-react';
@@ -161,7 +162,7 @@ export { SelectionStorage }
 type TreeNodeProps = ComponentPropsWithoutRef<typeof TreeNode>;
 
 // @beta
-export const TreeNodeRenderer: React.ForwardRefExoticComponent<TreeNodeRendererProps>;
+export const TreeNodeRenderer: React.ForwardRefExoticComponent<TreeNodeRendererProps & RefAttributes<HTMLDivElement>>;
 
 // @beta (undocumented)
 interface TreeNodeRendererOwnProps {
