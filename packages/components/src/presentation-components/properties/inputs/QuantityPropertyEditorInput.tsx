@@ -73,12 +73,10 @@ const QuantityPropertyValueInput = forwardRef<PropertyEditorAttributes, Quantity
     };
 
     useEffect(() => {
-      if (setFocus) {
-        setTimeout(() => {
-          inputRef.current && inputRef.current.focus();
-        }, 10);
+      if (setFocus && !inputProps.disabled) {
+        inputRef.current && inputRef.current.focus();
       }
-    }, [setFocus]);
+    }, [inputProps.disabled, setFocus]);
 
     return (
       <Input
@@ -87,7 +85,9 @@ const QuantityPropertyValueInput = forwardRef<PropertyEditorAttributes, Quantity
         disabled={propertyRecord.isReadonly || inputProps.disabled}
         ref={inputRef}
         onBlur={onBlur}
-        onFocus={() => inputRef.current?.setSelectionRange(0, inputProps.value.length)}
+        onFocus={() => {
+          inputRef.current?.setSelectionRange(0, 9999);
+        }}
       />
     );
   },

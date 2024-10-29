@@ -102,9 +102,7 @@ export const NumericInput = forwardRef<PropertyEditorAttributes, NumericInputPro
 
   useEffect(() => {
     if (setFocus) {
-      setTimeout(() => {
-        inputRef.current && inputRef.current.focus();
-      }, 10);
+      inputRef.current && inputRef.current.focus();
     }
   }, [setFocus]);
 
