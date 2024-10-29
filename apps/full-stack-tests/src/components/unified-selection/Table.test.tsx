@@ -16,8 +16,8 @@ import {
 } from "@itwin/presentation-components";
 import { Presentation } from "@itwin/presentation-frontend";
 import { buildTestIModel } from "@itwin/presentation-testing";
-import { act, getByText, render, waitFor } from "@testing-library/react";
 import { initialize, terminate } from "../../IntegrationTests.js";
+import { act, getByText, render, waitFor } from "../../RenderUtils.js";
 import { ensureTableHasRowsWithCellValues } from "../TableUtils.js";
 
 describe("Learning snippets", async () => {
@@ -28,6 +28,7 @@ describe("Learning snippets", async () => {
     });
 
     after(async () => {
+      UiComponents.terminate();
       await terminate();
     });
 

@@ -308,7 +308,7 @@ export class ContentDataProvider implements IContentDataProvider {
 
   private getDefaultContentDescriptor = memoize(async (): Promise<Descriptor | undefined> => {
     this.setupListeners();
-    // istanbul ignore if
+    /* c8 ignore next 5 */
     if (this.keys.size > DEFAULT_KEYS_BATCH_SIZE) {
       const msg = `ContentDataProvider.getContentDescriptor requesting descriptor with ${this.keys.size} keys which
         exceeds the suggested size of ${DEFAULT_KEYS_BATCH_SIZE}. Possible "HTTP 413 Payload Too Large" error.`;
@@ -388,7 +388,7 @@ export class ContentDataProvider implements IContentDataProvider {
       this.setupListeners();
       const descriptorOverrides = await this.getDescriptorOverrides();
 
-      // istanbul ignore if
+      /* c8 ignore next 5 */
       if (this.keys.size > DEFAULT_KEYS_BATCH_SIZE) {
         const msg = `ContentDataProvider.getContent requesting with ${this.keys.size} keys which
         exceeds the suggested size of ${DEFAULT_KEYS_BATCH_SIZE}. Possible "HTTP 413 Payload Too Large" error.`;
@@ -463,11 +463,11 @@ export class ContentDataProvider implements IContentDataProvider {
 
 class MemoizationHelpers {
   public static areContentRequestsEqual(lhsArgs: [PageOptions?], rhsArgs: [PageOptions?]): boolean {
-    // istanbul ignore next
+    /* c8 ignore next 3 */
     if ((lhsArgs[0]?.start ?? 0) !== (rhsArgs[0]?.start ?? 0)) {
       return false;
     }
-    // istanbul ignore next
+    /* c8 ignore next 3 */
     if ((lhsArgs[0]?.size ?? 0) !== (rhsArgs[0]?.size ?? 0)) {
       return false;
     }

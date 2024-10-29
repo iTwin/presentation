@@ -11,7 +11,6 @@ import { EmptyLocalization } from "@itwin/core-common";
 import { IModelApp, IModelConnection } from "@itwin/core-frontend";
 import { Content, KeySet, LabelDefinition, NavigationPropertyInfo } from "@itwin/presentation-common";
 import { Presentation, PresentationManager } from "@itwin/presentation-frontend";
-import { userEvent } from "@testing-library/user-event";
 import { IContentDataProvider } from "../../../presentation-components/common/ContentDataProvider.js";
 import { NavigationPropertyTargetEditor } from "../../../presentation-components/properties/editors/NavigationPropertyEditor.js";
 import {
@@ -91,7 +90,6 @@ describe("<NavigationPropertyTargetEditor />", () => {
   });
 
   it("invokes 'onCommit' when new target is selected changes", async () => {
-    const user = userEvent.setup();
     const contentItem = createTestContentItem({
       label: LabelDefinition.fromLabelString("TestLabel"),
       primaryKeys: [{ id: "1", className: "TestSchema:TestClass" }],
@@ -100,7 +98,7 @@ describe("<NavigationPropertyTargetEditor />", () => {
     });
     getContentStub.resolves(new Content(createTestContentDescriptor({ fields: [], categories: [] }), [contentItem]));
     const spy = sinon.spy();
-    const { getByPlaceholderText, getByText, getByDisplayValue } = render(
+    const { getByPlaceholderText, getByText, getByDisplayValue, user } = render(
       <NavigationPropertyTargetEditor propertyRecord={testRecord} onCancel={() => {}} onCommit={spy} />,
       {
         getNavigationPropertyInfo: async () => ({

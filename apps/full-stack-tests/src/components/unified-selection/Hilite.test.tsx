@@ -17,8 +17,8 @@ import { InstanceKey, KeySet } from "@itwin/presentation-common";
 import { viewWithUnifiedSelection } from "@itwin/presentation-components";
 import { Presentation, TRANSIENT_ELEMENT_CLASSNAME } from "@itwin/presentation-frontend";
 import { buildTestIModel as buildTestIModel } from "@itwin/presentation-testing";
-import { render, waitFor } from "@testing-library/react";
 import { initialize, terminate } from "../../IntegrationTests.js";
+import { render, waitFor } from "../../RenderUtils.js";
 
 describe("Unified Selection", () => {
   before(async () => {

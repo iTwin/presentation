@@ -154,7 +154,6 @@ function useDelayLoadedPropertiesSource(
     }
 
     const updateState = (...params: Parameters<typeof setState>) => {
-      // istanbul ignore else
       if (!disposed) {
         setState(...params);
       }

@@ -62,7 +62,7 @@ function parsePrimitiveValue(value: string): PrimitiveValue {
 
 function getInputTargetFromPropertyRecord(propertyRecord: PropertyRecord) {
   const value = propertyRecord.value;
-  // istanbul ignore if
+  /* c8 ignore next 3 */
   if (value.valueFormat !== PropertyValueFormat.Primitive) {
     return undefined;
   }

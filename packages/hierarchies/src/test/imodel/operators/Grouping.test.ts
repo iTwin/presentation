@@ -7,14 +7,15 @@ import { expect } from "chai";
 import { collect } from "presentation-test-utilities";
 import { from } from "rxjs";
 import sinon from "sinon";
+import * as td from "testdouble";
 import { LogLevel } from "@itwin/core-bentley";
 import { createDefaultValueFormatter, IPrimitiveValueFormatter } from "@itwin/presentation-shared";
-import { createGroupingHandlers, createGroupingOperator, GroupingHandlerResult, LOGGING_NAMESPACE } from "../../../hierarchies/imodel/operators/Grouping.js";
-import * as baseClassGrouping from "../../../hierarchies/imodel/operators/grouping/BaseClassGrouping.js";
-import * as classGrouping from "../../../hierarchies/imodel/operators/grouping/ClassGrouping.js";
-import * as groupHiding from "../../../hierarchies/imodel/operators/grouping/GroupHiding.js";
-import * as labelGrouping from "../../../hierarchies/imodel/operators/grouping/LabelGrouping.js";
-import * as propertiesGrouping from "../../../hierarchies/imodel/operators/grouping/PropertiesGrouping.js";
+import {
+  GroupingHandlerResult,
+  LOGGING_NAMESPACE,
+  createGroupingHandlers as originalCreateGroupingHandlers,
+  createGroupingOperator as originalCreateGroupingOperator,
+} from "../../../hierarchies/imodel/operators/Grouping.js";
 import {
   createIModelAccessStub,
   createTestProcessedGenericNode,
@@ -35,9 +36,18 @@ describe("Grouping", () => {
 
   describe("createGroupingOperator", () => {
     let applyGroupingHidingParamsStub: sinon.SinonSpy<[GroupingHandlerResult, number], GroupingHandlerResult>;
+    let createGroupingOperator: typeof originalCreateGroupingOperator;
 
     beforeEach(async () => {
-      applyGroupingHidingParamsStub = sinon.stub(groupHiding, "applyGroupHidingParams").callsFake((props) => props);
+      applyGroupingHidingParamsStub = sinon.fake<[GroupingHandlerResult, number], GroupingHandlerResult>((props) => props);
+      await td.replaceEsm("../../../hierarchies/imodel/operators/grouping/GroupHiding.js", {
+        applyGroupHidingParams: applyGroupingHidingParamsStub,
+      });
+      createGroupingOperator = (await import("../../../hierarchies/imodel/operators/Grouping.js")).createGroupingOperator;
+    });
+
+    afterEach(() => {
+      td.reset();
     });
 
     afterEach(() => {
@@ -320,18 +330,35 @@ describe("Grouping", () => {
     let baseClassHandlerStub: sinon.SinonStub;
     let propertyHandlerStub: sinon.SinonStub;
 
+    let createGroupingHandlers: typeof originalCreateGroupingHandlers;
+
     beforeEach(async () => {
       baseClassHandlerStub = sinon.stub();
       propertyHandlerStub = sinon.stub();
 
-      createBaseClassGroupingHandlersStub = sinon.stub(baseClassGrouping, "createBaseClassGroupingHandlers").resolves([baseClassHandlerStub]);
-      createPropertiesGroupingHandlersStub = sinon.stub(propertiesGrouping, "createPropertiesGroupingHandlers").resolves([propertyHandlerStub]);
-      createClassGroupsStub = sinon.stub(classGrouping, "createClassGroups");
-      createLabelGroupsStub = sinon.stub(labelGrouping, "createLabelGroups");
+      createBaseClassGroupingHandlersStub = sinon.fake(async () => [baseClassHandlerStub]);
+      createClassGroupsStub = sinon.stub();
+      createPropertiesGroupingHandlersStub = sinon.fake(async () => [propertyHandlerStub]);
+      createLabelGroupsStub = sinon.stub();
+
+      await td.replaceEsm("../../../hierarchies/imodel/operators/grouping/BaseClassGrouping.js", {
+        createBaseClassGroupingHandlers: createBaseClassGroupingHandlersStub,
+      });
+      await td.replaceEsm("../../../hierarchies/imodel/operators/grouping/ClassGrouping.js", {
+        createClassGroups: createClassGroupsStub,
+      });
+      await td.replaceEsm("../../../hierarchies/imodel/operators/grouping/PropertiesGrouping.js", {
+        createPropertiesGroupingHandlers: createPropertiesGroupingHandlersStub,
+      });
+      await td.replaceEsm("../../../hierarchies/imodel/operators/grouping/LabelGrouping.js", {
+        createLabelGroups: createLabelGroupsStub,
+      });
+
+      createGroupingHandlers = (await import("../../../hierarchies/imodel/operators/Grouping.js")).createGroupingHandlers;
     });
 
     afterEach(() => {
-      sinon.restore();
+      td.reset();
     });
 
     it("creates [base class, class, property, label] grouping handlers when requesting root nodes", async () => {

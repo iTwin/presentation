@@ -21,8 +21,8 @@ import { IModelApp, IModelConnection, SnapshotConnection } from "@itwin/core-fro
 import { ChildNodeSpecificationTypes, Ruleset, RuleTypes } from "@itwin/presentation-common";
 import { IPresentationTreeDataProvider, usePresentationTreeState, UsePresentationTreeStateProps } from "@itwin/presentation-components";
 import { Presentation } from "@itwin/presentation-frontend";
-import { renderHook, waitFor } from "@testing-library/react";
 import { initialize, terminate } from "../../IntegrationTests.js";
+import { renderHook, waitFor } from "../../RenderUtils.js";
 
 describe("Tree update", () => {
   let imodel: IModelConnection;

@@ -28,7 +28,7 @@ global.ResizeObserver = class ResizeObserver {
 };
 
 // supply mocha hooks
-import { cleanup } from "@testing-library/react";
+const { cleanup } = await import("@testing-library/react");
 export const mochaHooks = {
   beforeAll() {
     chaiJestSnapshot.resetSnapshotRegistry();

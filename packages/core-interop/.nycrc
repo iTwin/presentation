@@ -5,7 +5,7 @@
   "branches": 100,
   "lines": 100,
   "all": true,
-  "include": ["src/core-interop/**/*", "lib/cjs/core-interop/**/*"],
+  "include": ["src/core-interop/**/*", "lib/esm/core-interop/**/*"],
   "temp-dir": "./lib/test/coverage/.nyc_output",
   "report-dir": "./lib/test/coverage",
   "reporter": ["text-summary", "lcov", "cobertura"]

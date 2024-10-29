@@ -65,7 +65,7 @@ export async function* eachValueFrom<T>(source: Observable<T>): AsyncIterableIte
   } catch (err) {
     throw err;
     /* https://github.com/bcoe/c8/issues/229#issuecomment-1248533082 */
-    /* istanbul ignore next */
+    /* c8 ignore next */
   } finally {
     subs.unsubscribe();
   }

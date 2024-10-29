@@ -58,7 +58,7 @@ export function reloadTree(
   const nodeLoader = new TreeReloader(dataProvider, modelSource, pageSize, treeModel, itemsRange);
   return nodeLoader.reloadTree().pipe(
     endWith(modelSource),
-    finalize(() => isIDisposable(nodeLoader) && /* istanbul ignore next */ nodeLoader.dispose()),
+    finalize(() => isIDisposable(nodeLoader) && /* c8 ignore next */ nodeLoader.dispose()),
   );
 }
 

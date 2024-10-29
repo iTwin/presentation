@@ -25,7 +25,7 @@ import { createInstanceFilterPropertyInfos, useFilterBuilderNavigationPropertyEd
  * @beta
  * @deprecated in 5.0. Use `PresentationInstanceFilter.isConditionGroup` instead.
  */
-// istanbul ignore next
+/* c8 ignore next 3 */
 export function isPresentationInstanceFilterConditionGroup(filter: PresentationInstanceFilter): filter is PresentationInstanceFilterConditionGroup {
   return PresentationInstanceFilter.isConditionGroup(filter);
 }
@@ -36,7 +36,7 @@ export function isPresentationInstanceFilterConditionGroup(filter: PresentationI
  * @beta
  * @deprecated in 5.0. Use `createInstanceFilterDefinition` instead.
  */
-// istanbul ignore next
+/* c8 ignore next 3 */
 export async function convertToInstanceFilterDefinition(filter: PresentationInstanceFilter, imodel: IModelConnection): Promise<InstanceFilterDefinition> {
   return createInstanceFilterDefinitionBase(filter, imodel);
 }

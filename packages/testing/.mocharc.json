@@ -1,8 +1,8 @@
 {
-  "require": ["global-jsdom/register", "ignore-styles", "./lib/cjs/test/setup.js"],
+  "require": ["global-jsdom/register", "ignore-styles", "./lib/esm/test/setup.js"],
   "checkLeaks": true,
   "timeout": 60000,
   "parallel": false,
-  "spec": ["./lib/cjs/test/**/*.test.js"],
+  "spec": ["./lib/esm/test/**/*.test.js"],
   "exclude": ["./lib/test/coverage/**/*"]
 }

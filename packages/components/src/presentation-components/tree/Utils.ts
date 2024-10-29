@@ -96,7 +96,7 @@ function assignOptionalTreeNodeItemFields(item: Partial<PresentationTreeNodeItem
  * [TreeNodeItem]($components-react) customization based on values in extended data.
  * See [extended data usage page]($docs/presentation/customization/ExtendedDataUsage.md) for more details.
  */
-// istanbul ignore next
+/* c8 ignore start */
 export function customizeTreeNodeItem(item: Partial<DelayLoadedTreeNodeItem>, node: Partial<Node>) {
   // eslint-disable-next-line @typescript-eslint/no-deprecated
   if (node.imageId) {
@@ -124,7 +124,6 @@ export function customizeTreeNodeItem(item: Partial<DelayLoadedTreeNodeItem>, no
   }
 }
 
-// istanbul ignore next
 function createTreeNodeItemStyle(node: Partial<Node>): ItemStyle {
   const style: ItemStyle = {};
   if (StyleHelper.isBold(node)) {
@@ -152,6 +151,7 @@ function createTreeNodeItemStyle(node: Partial<Node>): ItemStyle {
 
   return style;
 }
+/* c8 ignore end */
 
 /** @internal */
 export function pageOptionsUiToPresentation(pageOptions?: UiPageOptions): PresentationPageOptions | undefined {

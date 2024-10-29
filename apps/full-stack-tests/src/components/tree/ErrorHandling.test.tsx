@@ -14,8 +14,8 @@ import { Ruleset } from "@itwin/presentation-common";
 import { PresentationTree, PresentationTreeRenderer, usePresentationTreeState } from "@itwin/presentation-components";
 import { Presentation } from "@itwin/presentation-frontend";
 import { buildTestIModel } from "@itwin/presentation-testing";
-import { getByRole, render, waitFor } from "@testing-library/react";
 import { initialize, terminate } from "../../IntegrationTests.js";
+import { getByRole, render, waitFor } from "../../RenderUtils.js";
 import { getNodeByLabel, toggleExpandNode } from "../TreeUtils.js";
 
 describe("Learning snippets", () => {
@@ -28,6 +28,7 @@ describe("Learning snippets", () => {
 
     after(async () => {
       delete (HTMLElement.prototype as any).scrollIntoView;
+      UiComponents.terminate();
       await terminate();
     });
 

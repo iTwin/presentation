@@ -13,7 +13,7 @@ let g_logger: ILogger = NOOP_LOGGER;
  * @beta
  */
 export function setLogger(logger: ILogger | undefined) {
-  g_logger = logger ?? /* istanbul ignore next */ NOOP_LOGGER;
+  g_logger = logger ?? /* c8 ignore next */ NOOP_LOGGER;
 }
 
 /**
