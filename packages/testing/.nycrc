@@ -4,7 +4,7 @@
   "functions": 100,
   "branches": 100,
   "lines": 100,
-  "include": ["src/presentation-testing/**/*", "lib/cjs/presentation-testing/**/*"],
+  "include": ["src/presentation-testing/**/*", "lib/esm/presentation-testing/**/*"],
   "temp-dir": "./lib/test/coverage/.nyc_output",
   "report-dir": "./lib/test/coverage",
   "reporter": ["text-summary", "lcov", "cobertura"]

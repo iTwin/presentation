@@ -7,7 +7,6 @@
 import { expect } from "chai";
 import { SchemaContext } from "@itwin/ecschema-metadata";
 import { IModelConnection } from "@itwin/core-frontend";
-import { render, waitFor } from "@testing-library/react";
 import { ECSchemaRpcLocater } from "@itwin/ecschema-rpcinterface-common";
 import { insertPhysicalModelWithPartition } from "presentation-test-utilities";
 import { createECSchemaProvider, createECSqlQueryExecutor } from "@itwin/presentation-core-interop";
@@ -30,6 +29,7 @@ import {
 } from "@itwin/presentation-hierarchies-react";
 // __PUBLISH_EXTRACT_END__
 import { buildIModel } from "../../IModelUtils.js";
+import { render, waitFor } from "../../RenderUtils.js";
 import { stubGetBoundingClientRect } from "../../Utils.js";
 import { initialize, terminate } from "../../IntegrationTests.js";
 

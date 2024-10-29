@@ -260,7 +260,7 @@ function useTreeInternal({
   const setFormatter = useCallback<UseTreeResult["setFormatter"]>(
     (formatter: IPrimitiveValueFormatter | undefined) => {
       currentFormatter.current = formatter;
-      /* istanbul ignore next 3 */
+      /* c8 ignore next 3 */
       if (!hierarchyProvider) {
         return;
       }

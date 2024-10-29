@@ -12,11 +12,11 @@ module.exports = [
     ...iTwinPlugin.configs.iTwinjsRecommendedConfig,
   },
   {
-    files: ["src/{components,hierarchies-react}/**/*.{ts,tsx}"],
+    files: ["src/{components,hierarchies-react}/**/*.{ts,tsx}", "src/**/*.tsx"],
     ...iTwinPlugin.configs.uiConfig,
   },
   {
-    files: ["src/{components,hierarchies-react}/**/*.{ts,tsx}"],
+    files: ["src/{components,hierarchies-react}/**/*.{ts,tsx}", "src/**/*.tsx"],
     rules: {
       ...reactPlugin.configs["jsx-runtime"].rules,
     },

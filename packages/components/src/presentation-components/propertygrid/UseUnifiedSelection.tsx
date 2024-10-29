@@ -78,7 +78,7 @@ export function usePropertyDataProviderWithUnifiedSelection(
       }
     };
 
-    // istanbul ignore next
+    /* c8 ignore start */
     const handler =
       suppliedSelectionHandler ??
       new SelectionHandler({
@@ -87,6 +87,7 @@ export function usePropertyDataProviderWithUnifiedSelection(
         imodel,
         rulesetId,
       });
+    /* c8 ignore end */
 
     handler.onSelect = (evt: SelectionChangeEventArgs): void => {
       updateProviderSelection(handler, evt.level);

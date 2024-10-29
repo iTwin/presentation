@@ -7,7 +7,6 @@
 
 import { expect } from "chai";
 import { insertPhysicalModelWithPartition } from "presentation-test-utilities";
-import { render, waitFor } from "@testing-library/react";
 // __PUBLISH_EXTRACT_START__ Presentation.HierarchiesReact.iModelAccess.Imports
 import { IModelConnection } from "@itwin/core-frontend";
 import { SchemaContext } from "@itwin/ecschema-metadata";
@@ -26,6 +25,7 @@ import { createBisInstanceLabelSelectClauseFactory } from "@itwin/presentation-s
 // __PUBLISH_EXTRACT_END__
 import { buildIModel } from "../../IModelUtils.js";
 import { initialize, terminate } from "../../IntegrationTests.js";
+import { render, waitFor } from "../../RenderUtils.js";
 import { stubGetBoundingClientRect } from "../../Utils.js";
 
 // __PUBLISH_EXTRACT_START__ Presentation.HierarchiesReact.iModelAccess

@@ -51,6 +51,7 @@ function useModelSourceUpdateOnBriefcaseUpdate(params: TreeReloadParams): void {
     let subscription: Subscription | undefined;
 
     const reload = () => {
+      /* c8 ignore next */
       subscription?.unsubscribe();
       subscription = startTreeReload({ dataProviderProps, ruleset, pageSize, modelSource, renderedItems, onReload });
     };
@@ -80,6 +81,7 @@ function useModelSourceUpdateOnIModelHierarchyUpdate(params: TreeReloadParams): 
         return;
       }
 
+      /* c8 ignore next */
       subscription?.unsubscribe();
       subscription = startTreeReload({ dataProviderProps, ruleset, pageSize, modelSource, renderedItems, onReload });
     });
@@ -106,6 +108,7 @@ function useModelSourceUpdateOnRulesetModification(params: TreeReloadParams): vo
       }
 
       // use ruleset id as only registered rulesets can be modified.
+      /* c8 ignore next */
       subscription?.unsubscribe();
       subscription = startTreeReload({ dataProviderProps, ruleset: modifiedRuleset.id, pageSize, modelSource, renderedItems, onReload });
     });
@@ -128,6 +131,7 @@ function useModelSourceUpdateOnRulesetVariablesChange(params: TreeReloadParams):
     let subscription: Subscription | undefined;
     const removeListener = Presentation.presentation.vars(getRulesetId(ruleset)).onVariableChanged.addListener(() => {
       // note: we should probably debounce these events while accumulating changed variables in case multiple vars are changed
+      /* c8 ignore next */
       subscription?.unsubscribe();
       subscription = startTreeReload({ dataProviderProps, ruleset, pageSize, modelSource, renderedItems, onReload });
     });
@@ -149,6 +153,7 @@ function useModelSourceUpdateOnUnitSystemChange(params: TreeReloadParams): void 
 
     let subscription: Subscription | undefined;
     const removeListener = IModelApp.quantityFormatter.onActiveFormattingUnitSystemChanged.addListener(() => {
+      /* c8 ignore next */
       subscription?.unsubscribe();
       subscription = startTreeReload({ dataProviderProps, ruleset, pageSize, modelSource, renderedItems, onReload });
     });

@@ -376,7 +376,6 @@ async function createNodesAndCountResult(
           };
       }
     }
-    // istanbul ignore else
     if (e instanceof Error) {
       // eslint-disable-next-line no-console
       console.error(`Error creating nodes: ${e.toString()}`);

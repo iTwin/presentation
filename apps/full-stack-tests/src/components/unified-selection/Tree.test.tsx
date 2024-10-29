@@ -17,8 +17,8 @@ import {
 } from "@itwin/presentation-components";
 import { Presentation } from "@itwin/presentation-frontend";
 import { buildTestIModel } from "@itwin/presentation-testing";
-import { act, fireEvent, render, waitFor } from "@testing-library/react";
 import { initialize, terminate } from "../../IntegrationTests.js";
+import { act, fireEvent, render, waitFor } from "../../RenderUtils.js";
 import { getNodeByLabel, isNodeSelectedInTree, toggleExpandNode } from "../TreeUtils.js";
 
 describe("Learning snippets", async () => {
@@ -29,6 +29,7 @@ describe("Learning snippets", async () => {
     });
 
     after(async () => {
+      UiComponents.terminate();
       await terminate();
     });
 

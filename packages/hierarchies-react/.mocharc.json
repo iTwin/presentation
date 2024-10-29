@@ -1,8 +1,8 @@
 {
-  "require": ["ignore-styles", "./lib/cjs/test/setup.js"],
+  "require": ["ignore-styles", "./lib/esm/test/setup.js"],
   "checkLeaks": true,
   "global": ["IS_REACT_ACT_ENVIRONMENT"],
   "timeout": 60000,
-  "spec": ["./lib/cjs/test/**/*.test.js"],
+  "spec": ["./lib/esm/test/**/*.test.js"],
   "exclude": ["./lib/test/coverage/**/*"]
 }

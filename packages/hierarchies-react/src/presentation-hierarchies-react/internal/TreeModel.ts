@@ -121,7 +121,7 @@ export namespace TreeModel {
     }
 
     const parentNode = rootId !== undefined ? model.idToNode.get(rootId) : model.rootNode;
-    /* istanbul ignore next 3*/
+    /* c8 ignore next 3*/
     if (!parentNode || isTreeModelInfoNode(parentNode)) {
       return;
     }
@@ -196,7 +196,7 @@ export namespace TreeModel {
       return;
     }
     const modelNode = model.idToNode.get(nodeId);
-    /* istanbul ignore next 3*/
+    /* c8 ignore next 3*/
     if (!modelNode || !isTreeModelHierarchyNode(modelNode)) {
       return;
     }

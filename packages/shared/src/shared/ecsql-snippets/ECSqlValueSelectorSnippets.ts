@@ -98,27 +98,27 @@ export async function createPrimitivePropertyValueSelectorProps({
       return {
         selector: `json_object('x', ${propertySelector}.[x], 'y', ${propertySelector}.[y])`,
         type: "Point2d",
-        ...(extendedType ? { extendedType } : /* istanbul ignore next */ {}),
+        ...(extendedType ? { extendedType } : /* c8 ignore next */ {}),
       };
     case "Point3d":
       return {
         selector: `json_object('x', ${propertySelector}.[x], 'y', ${propertySelector}.[y], 'z', ${propertySelector}.[z])`,
         type: "Point3d",
-        ...(extendedType ? { extendedType } : /* istanbul ignore next */ {}),
+        ...(extendedType ? { extendedType } : /* c8 ignore next */ {}),
       };
     case "Double":
       const koqName = (await property.kindOfQuantity)?.fullName;
       return {
         selector: propertySelector,
         type: "Double",
-        ...(extendedType ? { extendedType } : /* istanbul ignore next */ {}),
-        ...(koqName ? { koqName } : /* istanbul ignore next */ {}),
+        ...(extendedType ? { extendedType } : /* c8 ignore next */ {}),
+        ...(koqName ? { koqName } : /* c8 ignore next */ {}),
       };
   }
   return {
     selector: propertySelector,
     type: propertyValueType,
-    ...(extendedType ? { extendedType } : /* istanbul ignore next */ {}),
+    ...(extendedType ? { extendedType } : /* c8 ignore next */ {}),
   };
 }
 

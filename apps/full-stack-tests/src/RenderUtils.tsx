@@ -3,11 +3,9 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { expect } from "chai";
 import { createElement, PropsWithChildren, ReactElement } from "react";
-import sinon from "sinon";
 import { ThemeProvider } from "@itwin/itwinui-react";
-import { RenderOptions, RenderResult, render as renderRTL, waitFor } from "@testing-library/react";
+import { RenderOptions, RenderResult, render as renderRTL } from "@testing-library/react";
 import { userEvent, UserEvent } from "@testing-library/user-event";
 
 function createWrapper(Outer: React.JSXElementConstructor<{ children: React.ReactNode }>) {
@@ -47,21 +45,5 @@ function customRender(ui: ReactElement, options?: RenderOptions & { addThemeProv
   };
 }
 
-export async function waitForElement<T extends HTMLElement>(container: HTMLElement, selector: string, condition?: (e: T | null) => void): Promise<T> {
-  return waitFor(() => {
-    const element = container.querySelector<T>(selector);
-    if (condition) {
-      condition(element);
-    } else {
-      expect(element, `Failed to find element. Selector: "${selector}"`).to.not.be.null;
-    }
-    return element as T;
-  });
-}
-
 export * from "@testing-library/react";
 export { customRender as render };
-
-export function createStub<T extends (...args: any[]) => any>(): sinon.SinonStub<Parameters<T>, ReturnType<T>> {
-  return sinon.stub<Parameters<T>, ReturnType<T>>();
-}

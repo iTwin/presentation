@@ -6,10 +6,10 @@
 import { expect } from "chai";
 import { createAsyncIterator } from "presentation-test-utilities";
 import sinon from "sinon";
+import * as td from "testdouble";
 import { ECClassHierarchyInspector, ECSqlQueryExecutor } from "@itwin/presentation-shared";
-import { CachingHiliteSetProvider, createCachingHiliteSetProvider } from "../unified-selection/CachingHiliteSetProvider.js";
+import { CachingHiliteSetProvider } from "../unified-selection/CachingHiliteSetProvider.js";
 import { HiliteSet, HiliteSetProvider, HiliteSetProviderProps } from "../unified-selection/HiliteSetProvider.js";
-import * as hiliteSetProvider from "../unified-selection/HiliteSetProvider.js";
 import { SelectableInstanceKey } from "../unified-selection/Selectable.js";
 import { createStorage, SelectionStorage } from "../unified-selection/SelectionStorage.js";
 import { createSelectableInstanceKey } from "./_helpers/SelectablesCreator.js";
@@ -56,10 +56,14 @@ describe("CachingHiliteSetProvider", () => {
   }
 
   beforeEach(async () => {
-    factory = sinon.stub(hiliteSetProvider, "createHiliteSetProvider").returns(provider as unknown as hiliteSetProvider.HiliteSetProvider);
+    factory = sinon.stub<[props: HiliteSetProviderProps], HiliteSetProvider>().returns(provider as unknown as HiliteSetProvider);
+    await td.replaceEsm("../unified-selection/HiliteSetProvider.js", {
+      createHiliteSetProvider: factory,
+    });
 
     selectionStorage = createStorage();
 
+    const { createCachingHiliteSetProvider } = await import("../unified-selection/CachingHiliteSetProvider.js");
     hiliteSetCache = createCachingHiliteSetProvider({
       selectionStorage,
       imodelProvider,
@@ -78,7 +82,7 @@ describe("CachingHiliteSetProvider", () => {
   });
 
   afterEach(() => {
-    factory.restore();
+    td.reset();
   });
 
   describe("getHiliteSet", () => {

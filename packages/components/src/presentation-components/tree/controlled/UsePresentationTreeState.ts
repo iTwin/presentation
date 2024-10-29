@@ -155,7 +155,7 @@ export function usePresentationTreeState<TEventHandler extends TreeEventHandler 
 
   const { state, onReload } = useTreeState({ treeStateProps, onNodeLoaded, onHierarchyLimitExceeded });
   const renderedItems = useRef<RenderedItemsRange | undefined>(undefined);
-  // istanbul ignore next
+  /* c8 ignore next 3 */
   const onItemsRendered = useCallback((items: RenderedItemsRange) => {
     renderedItems.current = items;
   }, []);

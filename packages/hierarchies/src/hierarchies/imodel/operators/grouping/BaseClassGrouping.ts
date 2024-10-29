@@ -63,7 +63,7 @@ export async function createBaseClassGroupsForSingleBaseClass(
     const fullCurrentNodeClassName = node.key.instanceKeys[0].className;
 
     const baseCheckerResult = classHierarchyInspector.classDerivesFrom(fullCurrentNodeClassName, baseClassFullName);
-    /* istanbul ignore next */
+    /* c8 ignore next */
     const isCurrentNodeClassOfBase = baseCheckerResult instanceof Promise ? await baseCheckerResult : baseCheckerResult;
 
     if (isCurrentNodeClassOfBase) {

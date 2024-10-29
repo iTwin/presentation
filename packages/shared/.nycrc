@@ -5,7 +5,7 @@
   "branches": 100,
   "lines": 100,
   "all": true,
-  "include": ["src/shared/**/*", "lib/cjs/shared/**/*"],
+  "include": ["src/shared/**/*", "lib/esm/shared/**/*"],
   "temp-dir": "./lib/test/coverage/.nyc_output",
   "report-dir": "./lib/test/coverage",
   "reporter": ["text-summary", "lcov", "cobertura"]

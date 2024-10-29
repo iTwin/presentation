@@ -41,10 +41,10 @@
     "copy:cjs": "cpx \"./src/**/*.{scss,json}\" ./lib/cjs",
     "copy:esm": "cpx \"./src/**/*.{scss,json}\" ./lib/esm",
     "clean": "rimraf lib build",
-    "cover": "nyc npm -s test",
+    "cover": "c8 npm run -s test",
     "lint": "eslint ./src/**/*.{ts,tsx}",
-    "test": "mocha --enable-source-maps --parallel --config ./.mocharc.json",
-    "test:dev": "mocha --enable-source-maps --config ./.mocharc.json",
+    "test:dev": "cross-env NODE_OPTIONS=\"--import presentation-test-utilities/node-hooks/ignore-styles\" mocha --enable-source-maps --config ./.mocharc.json",
+    "test": "npm run test:dev -- --parallel --jobs=4",
     "docs": "npm run -s docs:extract && npm run -s docs:reference && npm run -s docs:changelog",
     "docs:changelog": "cpx ./CHANGELOG.md ./build/docs/reference/presentation-components",
     "docs:reference": "cross-env NODE_PROJECT_ROOT_DIRECTORY=../../ betools docs --includes=./build/docs/extract --json=./build/docs/reference/presentation-components/file.json --tsIndexFile=presentation-components.ts --onlyJson",
@@ -110,6 +110,7 @@
     "@types/react-dom": "catalog:react",
     "@types/sinon": "catalog:test-tools",
     "@types/sinon-chai": "catalog:test-tools",
+    "c8": "catalog:test-tools",
     "chai": "catalog:test-tools",
     "chai-as-promised": "catalog:test-tools",
     "chai-jest-snapshot": "catalog:test-tools",
@@ -122,7 +123,6 @@
     "ignore-styles": "catalog:test-tools",
     "jsdom": "catalog:test-tools",
     "mocha": "catalog:test-tools",
-    "nyc": "catalog:test-tools",
     "presentation-build-tools": "workspace:^",
     "presentation-test-utilities": "workspace:^",
     "react": "catalog:react",
@@ -130,6 +130,7 @@
     "rimraf": "catalog:build-tools",
     "sinon": "catalog:test-tools",
     "sinon-chai": "catalog:test-tools",
+    "testdouble": "catalog:test-tools",
     "typescript": "catalog:build-tools"
   }
 }

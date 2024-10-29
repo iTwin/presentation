@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { Component } from "react";
-import { getByText, waitFor } from "@testing-library/react";
+import { getByText, waitFor } from "../RenderUtils.js";
 
 // __PUBLISH_EXTRACT_START__ Presentation.Components.SampleErrorBoundary
 /**

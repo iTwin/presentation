@@ -51,7 +51,7 @@ export class FilteredPresentationTreeDataProvider implements IFilteredPresentati
     this._filteredDataProvider = new SimpleTreeDataProvider(hierarchy);
   }
 
-  // istanbul ignore next - only here to meet interface's requirements, nothing to test
+  /* c8 ignore next - only here to meet interface's requirements, nothing to test */
   public dispose() {}
 
   public get rulesetId(): string {
@@ -149,12 +149,13 @@ export class FilteredPresentationTreeDataProvider implements IFilteredPresentati
     return this._parentDataProvider.createRequestOptions(parentKey, instanceFilter);
   }
 
-  // istanbul ignore next
   /** @deprecated in 4.0. Use [[isPresentationTreeNodeItem]] and [[PresentationTreeNodeItem.key]] to get [NodeKey]($presentation-common). */
+  /* c8 ignore start */
   public getNodeKey(node: TreeNodeItem): NodeKey {
     // eslint-disable-next-line @typescript-eslint/no-deprecated
     return this._parentDataProvider.getNodeKey(node);
   }
+  /* c8 ignore end */
 
   /** Check if node matches currently applied filter */
   public nodeMatchesFilter(node: TreeNodeItem): boolean {
