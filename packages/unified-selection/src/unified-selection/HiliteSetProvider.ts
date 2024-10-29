@@ -21,7 +21,7 @@ const HILITE_SET_EMIT_FREQUENCY = 20;
  * @see https://www.itwinjs.org/reference/core-frontend/selectionset/hiliteset/
  * @see `HiliteSetProvider`
  * @see `createHiliteSetProvider`
- * @beta
+ * @public
  */
 export interface HiliteSet {
   models: Id64String[];
@@ -31,7 +31,7 @@ export interface HiliteSet {
 
 /**
  * Props for creating a `HiliteSetProvider` instance.
- * @beta
+ * @public
  */
 export interface HiliteSetProviderProps {
   /** An object that provides access to iModel's metadata and allows running ECSQL queries on it. */
@@ -45,7 +45,7 @@ export interface HiliteSetProviderProps {
  * consumers, may be supplemented with required attributes any time.
  *
  * @see `createHiliteSetProvider`
- * @beta
+ * @public
  */
 export interface HiliteSetProvider {
   /** Get the current hilite set iterator for the specified imodel */
@@ -54,7 +54,7 @@ export interface HiliteSetProvider {
 
 /**
  * Creates a hilite set provider that returns a `HiliteSet` for given selectables.
- * @beta
+ * @public
  */
 export function createHiliteSetProvider(props: HiliteSetProviderProps): HiliteSetProvider {
   return new HiliteSetProviderImpl(props);

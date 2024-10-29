@@ -8,7 +8,7 @@ import { assert } from "@itwin/core-bentley";
 /**
  * An utility to parse schema and class names from full class name, where
  * schema and class names are separated by either `:` or `.`.
- * @beta
+ * @public
  */
 export function parseFullClassName(fullClassName: string) {
   const [schemaName, className] = fullClassName.split(/[\.:]/);
@@ -19,7 +19,7 @@ export function parseFullClassName(fullClassName: string) {
 /**
  * An utility to normalize full class name from either `SchemaName:ClassName` or
  * `SchemaName.ClassName` to always use the dot format.
- * @beta
+ * @public
  */
 export function normalizeFullClassName(fullClassName: string): string {
   const colonPos = fullClassName.indexOf(":");
@@ -34,15 +34,15 @@ export function normalizeFullClassName(fullClassName: string): string {
 
 /**
  * An utility to remove all extra whitespace from a given string.
- * @beta
+ * @public
  */
 export function trimWhitespace(str: string): string;
 /**
  * An utility to remove all extra whitespace from a given string.
- * @beta
+ * @public
  */
 export function trimWhitespace(str: string | undefined): string | undefined;
-/** @beta */
+/** @public */
 export function trimWhitespace(str: string | undefined): string | undefined {
   /* c8 ignore next 3 */
   if (!str) {
@@ -60,7 +60,7 @@ export function trimWhitespace(str: string | undefined): string | undefined {
  * An utility that returns a promise that immediately resolves. Awaiting on the returned
  * promise releases the main thread and allows other tasks to run.
  *
- * @beta
+ * @public
  */
 export async function releaseMainThread() {
   return new Promise<void>((resolve) => setTimeout(resolve, 0));
@@ -80,7 +80,7 @@ export async function releaseMainThread() {
  * ```
  *
  * @param releaseOnTimePassed The amount of time in milliseconds after which the main thread should be released. Defaults to `40` ms.
- * @beta
+ * @public
  */
 export function createMainThreadReleaseOnTimePassedHandler(releaseOnTimePassed = 40) {
   let start = Date.now();
@@ -97,7 +97,7 @@ export function createMainThreadReleaseOnTimePassedHandler(releaseOnTimePassed =
 
 /**
  * An utility to convert a julian day format to `Date`.
- * @beta
+ * @public
  */
 export function julianToDateTime(julianDate: number): Date {
   const millis = (julianDate - 2440587.5) * 86400000;

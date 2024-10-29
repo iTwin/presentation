@@ -8,15 +8,15 @@ import { createIModelHierarchyProvider, HierarchyDefinition, HierarchyFilteringP
 import { UseUnifiedTreeSelectionProps } from "./internal/UseUnifiedSelection.js";
 import { useTree, UseTreeProps, UseTreeResult, useUnifiedSelectionTree } from "./UseTree.js";
 
-/** @beta */
+/** @public */
 type IModelHierarchyProviderProps = Parameters<typeof createIModelHierarchyProvider>[0];
 
-/** @beta */
+/** @public */
 type IModelAccess = IModelHierarchyProviderProps["imodelAccess"];
 
 /**
  * Props for `useIModelTree` and `useIModelUnifiedSelectionTree` hooks.
- * @beta
+ * @public
  */
 type UseIModelTreeProps = Omit<UseTreeProps, "getHierarchyProvider" | "getFilteredPaths"> &
   Pick<IModelHierarchyProviderProps, "localizedStrings" | "imodelAccess" | "imodelChanged"> & {
@@ -41,7 +41,7 @@ type UseIModelTreeProps = Omit<UseTreeProps, "getHierarchyProvider" | "getFilter
  *
  * @see `useTree`
  * @see `useIModelUnifiedSelectionTree`
- * @beta
+ * @public
  */
 export function useIModelTree(props: UseIModelTreeProps): UseTreeResult {
   const { imodelAccess, imodelChanged, getHierarchyDefinition, getFilteredPaths, localizedStrings, ...rest } = props;
@@ -63,7 +63,7 @@ export function useIModelTree(props: UseIModelTreeProps): UseTreeResult {
  * @see `useIModelTree`
  * @see `useUnifiedSelectionTree`
  * @see `UnifiedSelectionProvider`
- * @beta
+ * @public
  */
 export function useIModelUnifiedSelectionTree(props: UseIModelTreeProps & UseUnifiedTreeSelectionProps): UseTreeResult {
   const { imodelAccess, imodelChanged, getHierarchyDefinition, getFilteredPaths, localizedStrings, ...rest } = props;

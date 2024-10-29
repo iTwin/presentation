@@ -10,13 +10,13 @@ import { formIdBindings, genericExecuteQuery } from "./Utils.js";
 
 /**
  * Available selection scopes.
- * @beta
+ * @public
  */
 export type SelectionScope = "element" | "model" | "category" | "functional";
 
 /**
  * Props for computing element selection.
- * @beta
+ * @public
  */
 export interface ElementSelectionScopeProps {
   /** Identifies this as either "element" or "functional" selection scope */
@@ -34,7 +34,7 @@ export interface ElementSelectionScopeProps {
 
 /**
  * Props for `computeSelection`.
- * @beta
+ * @public
  */
 export interface ComputeSelectionProps {
   /** iModel query executor. */
@@ -47,7 +47,7 @@ export interface ComputeSelectionProps {
 
 /**
  * Computes selection from given element IDs.
- * @beta
+ * @public
  */
 export async function* computeSelection(props: ComputeSelectionProps): AsyncIterableIterator<SelectableInstanceKey> {
   const { queryExecutor, elementIds, scope } = props;

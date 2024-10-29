@@ -14,7 +14,7 @@ import { sortNodesByLabelOperator } from "./internal/operators/Sorting.js";
 
 /**
  * Props for the `HierarchyProvider.getNodes` call.
- * @beta
+ * @public
  */
 export interface GetHierarchyNodesProps {
   /** Parent node to get children for. Pass `undefined` to get root nodes. */
@@ -38,7 +38,7 @@ export interface GetHierarchyNodesProps {
 
 /**
  * An interface for a hierarchy provider that knows how to create child nodes for a given parent node.
- * @beta
+ * @public
  */
 export interface HierarchyProvider {
   /**
@@ -77,7 +77,7 @@ export interface HierarchyProvider {
 
 /**
  * Props for `mergeProviders` function.
- * @beta
+ * @public
  */
 interface MergeHierarchyProvidersProps {
   /** List of providers to merge. */
@@ -86,7 +86,7 @@ interface MergeHierarchyProvidersProps {
 
 /**
  * Creates a single, merged, hierarchy provider from multiple given providers.
- * @beta
+ * @public
  */
 export function mergeProviders({ providers }: MergeHierarchyProvidersProps): HierarchyProvider & { dispose: () => void } {
   const hierarchyChanged = new BeEvent<() => void>();

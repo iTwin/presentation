@@ -14,10 +14,10 @@ import { HierarchyLevelDetails, UseTreeResult } from "../UseTree.js";
 import { useLocalizationContext } from "./LocalizationContext.js";
 import { RenderedTreeNode } from "./TreeRenderer.js";
 
-/** @beta */
+/** @public */
 type TreeNodeProps = ComponentPropsWithoutRef<typeof TreeNode>;
 
-/** @beta */
+/** @public */
 interface TreeNodeRendererOwnProps {
   /** Node that is rendered. */
   node: RenderedTreeNode;
@@ -39,7 +39,7 @@ interface TreeNodeRendererOwnProps {
   actionButtonsClassName?: string;
 }
 
-/** @beta */
+/** @public */
 type TreeNodeRendererProps = Pick<UseTreeResult, "expandNode"> &
   Partial<Pick<UseTreeResult, "getHierarchyLevelDetails">> &
   Omit<TreeNodeProps, "label" | "onExpanded" | "onSelected" | "icon"> &
@@ -50,7 +50,7 @@ type TreeNodeRendererProps = Pick<UseTreeResult, "expandNode"> &
  *
  * @see `TreeRenderer`
  * @see https://itwinui.bentley.com/docs/tree
- * @beta
+ * @public
  */
 export const TreeNodeRenderer: React.ForwardRefExoticComponent<TreeNodeRendererProps> = forwardRef(
   (

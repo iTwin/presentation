@@ -18,7 +18,7 @@ import { doLog } from "../internal/LoggingUtils.js";
 
 /**
  * An interface for something that knows how to create a limiting ECSQL query reader.
- * @beta
+ * @public
  */
 export interface LimitingECSqlQueryExecutor {
   /**
@@ -34,7 +34,7 @@ export interface LimitingECSqlQueryExecutor {
 
 /**
  * Creates an `LimitingECSqlQueryExecutor` that throws `RowsLimitExceededError` if the query exceeds given amount of rows.
- * @beta
+ * @public
  */
 export function createLimitingECSqlQueryExecutor(baseExecutor: ECSqlQueryExecutor, defaultLimit: number | "unbounded"): LimitingECSqlQueryExecutor {
   return {

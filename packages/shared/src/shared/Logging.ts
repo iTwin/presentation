@@ -5,19 +5,19 @@
 
 /**
  * Defines a type for a logging function.
- * @beta
+ * @public
  */
 export type LogFunction = (category: string, message: string) => void;
 
 /**
  * Defines logging severities.
- * @beta
+ * @public
  */
 export type LogLevel = "error" | "warning" | "info" | "trace";
 
 /**
  * An interface for a logger used by presentation packages.
- * @beta
+ * @public
  */
 export interface ILogger {
   isEnabled: (category: string, level: LogLevel) => boolean;
@@ -29,7 +29,7 @@ export interface ILogger {
 
 /**
  * A logger implementation that does nothing.
- * @beta
+ * @public
  */
 /* c8 ignore next 7 */
 export const NOOP_LOGGER: ILogger = {

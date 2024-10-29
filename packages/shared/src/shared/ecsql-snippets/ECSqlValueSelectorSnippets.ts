@@ -9,7 +9,7 @@ import { PrimitiveValue, TypedPrimitiveValue } from "../Values.js";
 
 /**
  * Props for selecting a `TypedPrimitiveValue` using given ECSQL selector.
- * @beta
+ * @public
  */
 type TypedPrimitiveValueSelectorProps = {
   /** ECSQL selector to query the value */
@@ -32,11 +32,11 @@ type TypedPrimitiveValueSelectorProps = {
 
 /**
  * A union of prop types for selecting a value and its metadata in ECSQL query.
- * @beta
+ * @public
  */
 export type TypedValueSelectClauseProps = TypedPrimitiveValue | TypedPrimitiveValueSelectorProps;
 
-/** @beta */
+/** @public */
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export namespace TypedValueSelectClauseProps {
   export function isPrimitiveValue(props: TypedValueSelectClauseProps): props is TypedPrimitiveValue {
@@ -50,7 +50,7 @@ export namespace TypedValueSelectClauseProps {
 /**
  * A function for a creating a `TypedPrimitiveValueSelectorProps` object from given primitive ECProperty information.
  * @throws Error if the property is not found, is not primitive or has unsupported primitive type (Binary, IGeometry).
- * @beta
+ * @public
  */
 export async function createPrimitivePropertyValueSelectorProps({
   schemaProvider,
@@ -126,7 +126,7 @@ export async function createPrimitivePropertyValueSelectorProps({
  * Creates an ECSQL selector for raw property value, or, optionally - it's component. Example result:
  * `[classAlias].[propertyName].[componentName]`.
  *
- * @beta
+ * @public
  */
 export function createRawPropertyValueSelector(classAlias: string, propertyName: string, componentName?: string): string {
   let propertySelector = `[${classAlias}].[${propertyName}]`;
@@ -143,7 +143,7 @@ export function createRawPropertyValueSelector(classAlias: string, propertyName:
  * - `Point2d` and `Point3d` values are selected as serialized JSON objects, e.g. `{ x: 1, y: 2, z: 3 }`.
  * - Other kinds of values are selected as-is.
  *
- * @beta
+ * @public
  */
 export function createRawPrimitiveValueSelector(value: PrimitiveValue | undefined) {
   if (value === undefined) {
@@ -170,7 +170,7 @@ export function createRawPrimitiveValueSelector(value: PrimitiveValue | undefine
 
 /**
  * Creates an ECSQL selector that results in a stringified `InstanceKey` object.
- * @beta
+ * @public
  */
 export function createInstanceKeySelector(props: { alias: string }) {
   const classIdSelector = `[${props.alias}].[ECClassId]`;
@@ -185,7 +185,7 @@ export function createInstanceKeySelector(props: { alias: string }) {
  * @note In SQL `NULL` is not considered falsy, so when checking for `NULL` values, the `checkSelector` should
  * be like `{selector} IS NOT NULL` rather than just `${selector}`.
  *
- * @beta
+ * @public
  */
 export function createNullableSelector(props: { checkSelector: string; valueSelector: string }): string {
   return `IIF(${props.checkSelector}, ${props.valueSelector}, NULL)`;
@@ -206,7 +206,7 @@ export function createNullableSelector(props: { checkSelector: string; valueSele
  *
  * @see `ConcatenatedValue`
  *
- * @beta
+ * @public
  */
 export function createConcatenatedValueJsonSelector(selectors: TypedValueSelectClauseProps[], checkSelector?: string) {
   const combinedSelectors = `json_array(${selectors.map((sel) => createTypedValueJsonSelector(sel)).join(", ")})`;
@@ -273,7 +273,7 @@ function createPrimitiveValueJsonSelector(value: PrimitiveValue): string {
  * 2. The JSON should be parsed from resulting string and passed to `ConcatenatedValue.serialize`, which additionally
  *    takes a formatter. One can be created using `createDefaultValueFormatter`.
  *
- * @beta
+ * @public
  */
 export function createConcatenatedValueStringSelector(selectors: TypedValueSelectClauseProps[], checkSelector?: string) {
   const combinedSelectors = selectors.length ? selectors.map((sel) => createTypedValueStringSelector(sel)).join(" || ") : "''";

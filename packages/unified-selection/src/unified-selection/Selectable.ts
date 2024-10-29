@@ -8,7 +8,7 @@ import { normalizeFullClassName } from "@itwin/presentation-shared";
 
 /**
  * ECInstance selectable
- * @beta
+ * @public
  */
 export interface SelectableInstanceKey {
   /** Full class name in format `SchemaName:ClassName` or `SchemaName.ClassName`. */
@@ -26,7 +26,7 @@ export interface SelectableInstanceKey {
  * - `loadInstanceKeys` would know how to load grouped instance keys from the node,
  * - `data` could be set to the node itself.
  *
- * @beta
+ * @public
  */
 export interface CustomSelectable {
   /** Unique identifier of the selectable. */
@@ -39,17 +39,17 @@ export interface CustomSelectable {
 
 /**
  * A single selectable that identifies something that can be selected in an iTwin.js application.
- * @beta
+ * @public
  */
 export type Selectable = SelectableInstanceKey | CustomSelectable;
 
 /**
  * A type of identifier that can be used to identify a selectable in selection storage.
- * @beta
+ * @public
  */
 export type SelectableIdentifier = SelectableInstanceKey | Pick<CustomSelectable, "identifier">;
 
-/** @beta */
+/** @public */
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export namespace Selectable {
   /** Check if the supplied selectable is a `SelectableInstanceKey` */
@@ -66,7 +66,7 @@ export namespace Selectable {
 
 /**
  * A collection of selectables that identify something that can be selected in an iTwin.js application
- * @beta
+ * @public
  */
 export interface Selectables {
   /**
@@ -79,12 +79,12 @@ export interface Selectables {
   custom: Map<string, CustomSelectable>;
 }
 
-/** @beta */
+/** @public */
 export namespace Selectables {
   /**
    * Creates `Selectables` from array of selectable
    * @param source Source to create selectables from
-   * @beta
+   * @public
    */
   export function create(source: Selectable[]): Selectables {
     const newSelectables = {
@@ -98,7 +98,7 @@ export namespace Selectables {
   /**
    * Get the number of selectables stored in a `Selectables` object.
    * @param selectables `Selectables` object to get size for
-   * @beta
+   * @public
    */
   export function size(selectables: Selectables): number {
     let insatanceCount = 0;
@@ -109,7 +109,7 @@ export namespace Selectables {
   /**
    * Is a `Selectables` object currently empty.
    * @param selectables `Selectables` object to check
-   * @beta
+   * @public
    */
   export function isEmpty(selectables: Selectables): boolean {
     return Selectables.size(selectables) === 0;
@@ -119,7 +119,7 @@ export namespace Selectables {
    * Check if a `Selectables` object contains the specified selectable.
    * @param selectables `Selectables` object to check
    * @param value The selectable to check for.
-   * @beta
+   * @public
    */
   export function has(selectables: Selectables, value: SelectableIdentifier): boolean {
     if (Selectable.isInstanceKey(value)) {
@@ -134,7 +134,7 @@ export namespace Selectables {
    * Check if a `Selectables` object contains all the specified selectables.
    * @param selectables `Selectables` object to check
    * @param values The selectables to check for.
-   * @beta
+   * @public
    */
   export function hasAll(selectables: Selectables, values: SelectableIdentifier[]): boolean {
     if (Selectables.size(selectables) < values.length) {
@@ -152,7 +152,7 @@ export namespace Selectables {
    * Check if a `Selectables` object contains any of the specified selectables.
    * @param selectables `Selectables` object to check
    * @param values The selectables to check for.
-   * @beta
+   * @public
    */
   export function hasAny(selectables: Selectables, values: SelectableIdentifier[]): boolean {
     for (const selectable of values) {
@@ -167,7 +167,7 @@ export namespace Selectables {
    * Add a one or more selectables to a `Selectables`
    * @param selectables `Selectables` object to add selectables for
    * @param values Selectables to add.
-   * @beta
+   * @public
    */
   export function add(selectables: Selectables, values: Selectable[]): boolean {
     let hasChanged = false;
@@ -195,7 +195,7 @@ export namespace Selectables {
    * Removes one or more selectables from a `Selectables` object.
    * @param selectables `Selectables` object to remove selectables for
    * @param values Selectables to remove.
-   * @beta
+   * @public
    */
   export function remove(selectables: Selectables, values: Selectable[]): boolean {
     let hasChanged = false;
@@ -221,7 +221,7 @@ export namespace Selectables {
   /**
    * Clear a `Selectables` object.
    * @param selectables `Selectables` object to clear selectables for
-   * @beta
+   * @public
    */
   export function clear(selectables: Selectables): boolean {
     if (Selectables.size(selectables) === 0) {
@@ -235,7 +235,7 @@ export namespace Selectables {
   /**
    * Check whether at least one selectable passes a condition in a `Selectables` object.
    * @param selectables `Selectables` object to check
-   * @beta
+   * @public
    */
   export function some(selectables: Selectables, callback: (selectable: Selectable) => boolean) {
     for (const entry of selectables.instanceKeys) {
@@ -256,7 +256,7 @@ export namespace Selectables {
   /**
    * Iterate over all keys in a `Selectables` object.
    * @param selectables `Selectables` object to iterate over
-   * @beta
+   * @public
    */
   export function forEach(selectables: Selectables, callback: (selectable: Selectable, index: number) => void) {
     let index = 0;

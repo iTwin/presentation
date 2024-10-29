@@ -85,7 +85,7 @@ const DEFAULT_QUERY_CACHE_SIZE = 1;
 
 /**
  * Defines the strings used by hierarchy provider.
- * @beta
+ * @public
  */
 interface IModelHierarchyProviderLocalizedStrings {
   /**
@@ -101,12 +101,12 @@ interface IModelHierarchyProviderLocalizedStrings {
   other: string;
 }
 
-/** @beta */
+/** @public */
 type IModelAccess = ECSchemaProvider & LimitingECSqlQueryExecutor & ECClassHierarchyInspector & { imodelKey: string };
 
 /**
  * Props for `createIModelHierarchyProvider`.
- * @beta
+ * @public
  */
 interface IModelHierarchyProviderProps {
   /**
@@ -155,7 +155,7 @@ interface IModelHierarchyProviderProps {
  * Creates an instance of `HierarchyProvider` that creates a hierarchy based on given iModel and
  * a hierarchy definition, which defines each hierarchy level through ECSQL queries.
  *
- * @beta
+ * @public
  */
 export function createIModelHierarchyProvider(props: IModelHierarchyProviderProps): HierarchyProvider & { dispose: () => void } {
   return new IModelHierarchyProviderImpl(props);

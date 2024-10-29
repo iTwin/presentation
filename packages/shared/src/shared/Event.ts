@@ -5,7 +5,7 @@
 
 /**
  * An interface that allows subscribing and unsubscribing listeners that are called upon an event.
- * @beta
+ * @public
  */
 export interface Event<TListener extends (...args: any[]) => void = () => void> {
   addListener(listener: TListener): () => void;

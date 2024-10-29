@@ -16,7 +16,7 @@ import { CoreIModelHiliteSet, CoreIModelSelectionSet, CoreSelectionSetEventType,
 
 /**
  * Props for `enableUnifiedSelectionSyncWithIModel`.
- * @beta
+ * @public
  */
 export interface EnableUnifiedSelectionSyncWithIModelProps {
   /**
@@ -68,7 +68,7 @@ export interface EnableUnifiedSelectionSyncWithIModelProps {
 /**
  * Enables synchronization between iModel selection and unified selection.
  * @returns function for disposing the synchronization.
- * @beta
+ * @public
  */
 export function enableUnifiedSelectionSyncWithIModel(props: EnableUnifiedSelectionSyncWithIModelProps): () => void {
   const selectionHandler = new IModelSelectionHandler(props);

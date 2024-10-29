@@ -8,7 +8,7 @@ import { InstanceKey } from "@itwin/presentation-shared";
 
 /**
  * An instance key that may be associated with specific iModel.
- * @beta
+ * @public
  */
 export interface IModelInstanceKey extends InstanceKey {
   imodelKey?: string;
@@ -16,7 +16,7 @@ export interface IModelInstanceKey extends InstanceKey {
 
 /**
  * A key for a generic node.
- * @beta
+ * @public
  */
 export interface GenericNodeKey {
   /** Type of the node */
@@ -37,7 +37,7 @@ export interface GenericNodeKey {
 
 /**
  * A key for a node that represents one or more ECInstances.
- * @beta
+ * @public
  */
 export interface InstancesNodeKey {
   /** Type of the node */
@@ -52,7 +52,7 @@ export interface InstancesNodeKey {
 
 /**
  * A key for a class-grouping node.
- * @beta
+ * @public
  */
 export interface ClassGroupingNodeKey {
   /** Type of the node */
@@ -64,7 +64,7 @@ export interface ClassGroupingNodeKey {
 
 /**
  * A key for a label-grouping node.
- * @beta
+ * @public
  */
 export interface LabelGroupingNodeKey {
   /** Type of the node */
@@ -83,7 +83,7 @@ export interface LabelGroupingNodeKey {
 /**
  * A key property grouping node that groups nodes whose values don't fall into any other
  * property group in the hierarchy level.
- * @beta
+ * @public
  */
 export interface PropertyOtherValuesGroupingNodeKey {
   /** Type of the node */
@@ -97,7 +97,7 @@ export interface PropertyOtherValuesGroupingNodeKey {
 
 /**
  * A key for a property grouping node that groups nodes by formatted property value.
- * @beta
+ * @public
  */
 export interface PropertyValueGroupingNodeKey {
   /** Type of the node */
@@ -115,7 +115,7 @@ export interface PropertyValueGroupingNodeKey {
 
 /**
  * A key for a property grouping node that groups nodes by a range of property values.
- * @beta
+ * @public
  */
 export interface PropertyValueRangeGroupingNodeKey {
   /** Type of the node */
@@ -136,29 +136,29 @@ export interface PropertyValueRangeGroupingNodeKey {
 
 /**
  * A key for a property grouping node.
- * @beta
+ * @public
  */
 export type PropertyGroupingNodeKey = PropertyValueRangeGroupingNodeKey | PropertyValueGroupingNodeKey | PropertyOtherValuesGroupingNodeKey;
 
 /**
  * A key for one of the instance grouping nodes.
- * @beta
+ * @public
  */
 export type GroupingNodeKey = ClassGroupingNodeKey | LabelGroupingNodeKey | PropertyGroupingNodeKey;
 
 /**
  * A key for either an instance node or one of the instance grouping nodes.
- * @beta
+ * @public
  */
 export type IModelHierarchyNodeKey = InstancesNodeKey | GroupingNodeKey;
 
 /**
  * A key that uniquely identifies a node in a hierarchy level.
- * @beta
+ * @public
  */
 export type HierarchyNodeKey = IModelHierarchyNodeKey | GenericNodeKey;
 
-/** @beta */
+/** @public */
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export namespace HierarchyNodeKey {
   /** Checks whether the given node key is a generic node key. */
