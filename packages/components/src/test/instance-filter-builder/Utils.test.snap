@@ -137,6 +137,11 @@ Array [
               "label": "Class Label",
               "name": "SchemaName:ClassName",
             },
+            "kindOfQuantity": Object {
+              "label": "TestKoQ",
+              "name": "Test:KoQ",
+              "persistenceUnit": "u:M",
+            },
             "name": "prop2",
             "type": "number",
           },
@@ -150,7 +155,11 @@ Array [
     },
     "propertyDescription": Object {
       "displayLabel": "Properties Field",
+      "editor": Object {
+        "name": "presentation-quantity-editor",
+      },
       "name": "root#PropertiesField",
+      "quantityType": "Test:KoQ",
       "typename": "string",
     },
     "sourceClassId": "0x1",
