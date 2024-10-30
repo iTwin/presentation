@@ -13,7 +13,7 @@ import { DefineHierarchyLevelProps, HierarchyDefinition, HierarchyDefinitionPare
 /**
  * Props for defining child hierarchy level for specific parent instance node.
  * @see `createPredicateBasedHierarchyDefinition`
- * @beta
+ * @public
  */
 export type DefineInstanceNodeChildHierarchyLevelProps = Omit<DefineHierarchyLevelProps, "parentNode"> & {
   /** The parent instance node. */
@@ -43,7 +43,7 @@ export type DefineInstanceNodeChildHierarchyLevelProps = Omit<DefineHierarchyLev
 /**
  * A definition of a hierarchy level that should be used for specific parent instance nodes.
  * @see `createPredicateBasedHierarchyDefinition`
- * @beta
+ * @public
  */
 interface InstancesNodeChildHierarchyLevelDefinition {
   /**
@@ -86,7 +86,7 @@ interface InstancesNodeChildHierarchyLevelDefinition {
 /**
  * Props for defining child hierarchy level for specific generic parent node.
  * @see `createPredicateBasedHierarchyDefinition`
- * @beta
+ * @public
  */
 export type DefineGenericNodeChildHierarchyLevelProps = Omit<DefineHierarchyLevelProps, "parentNode"> & {
   /** The parent generic node. */
@@ -96,7 +96,7 @@ export type DefineGenericNodeChildHierarchyLevelProps = Omit<DefineHierarchyLeve
 /**
  * A definition of a hierarchy level for that should be used for specific generic parent nodes.
  * @see `createPredicateBasedHierarchyDefinition`
- * @beta
+ * @public
  */
 interface GenericNodeChildHierarchyLevelDefinition {
   /**
@@ -114,20 +114,20 @@ interface GenericNodeChildHierarchyLevelDefinition {
 /**
  * A hierarchy level definition associated with specific parent instance or generic node. *
  * @see `createPredicateBasedHierarchyDefinition`
- * @beta
+ * @public
  */
 type PredicateBasedHierarchyLevelDefinition = InstancesNodeChildHierarchyLevelDefinition | GenericNodeChildHierarchyLevelDefinition;
 
 /**
  * Props for defining root hierarchy level.
  * @see `createPredicateBasedHierarchyDefinition`
- * @beta
+ * @public
  */
 export type DefineRootHierarchyLevelProps = Omit<DefineHierarchyLevelProps, "parentNode">;
 
 /**
  * Props for `createPredicateBasedHierarchyDefinition`.
- * @beta
+ * @public
  */
 interface PredicateBasedHierarchyDefinitionProps {
   /** Access to ECClass hierarchy in the iModel */
@@ -151,7 +151,7 @@ interface PredicateBasedHierarchyDefinitionProps {
  * hierarchy - each hierarchy level is defined by specifying a parent node predicate and child hierarchy
  * level definitions, that are used when the predicate passes.
  *
- * @beta
+ * @public
  */
 export function createPredicateBasedHierarchyDefinition(props: PredicateBasedHierarchyDefinitionProps): HierarchyDefinition {
   return new PredicateBasedHierarchyDefinition(props);

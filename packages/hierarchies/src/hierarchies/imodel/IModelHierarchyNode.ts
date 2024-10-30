@@ -9,7 +9,7 @@ import { GenericNodeKey, HierarchyNodeKey, InstancesNodeKey } from "../Hierarchy
 
 /**
  * Base processing parameters that apply to every node.
- * @beta
+ * @public
  */
 interface HierarchyNodeProcessingParamsBase {
   /** Indicates if this node should be hidden if it has no child nodes. */
@@ -20,7 +20,7 @@ interface HierarchyNodeProcessingParamsBase {
 
 /**
  * A data structure for defining nodes' grouping requirements.
- * @beta
+ * @public
  */
 interface HierarchyNodeGroupingParams {
   byLabel?: HierarchyNodeLabelGroupingParams;
@@ -31,7 +31,7 @@ interface HierarchyNodeGroupingParams {
 
 /**
  * A data structure for defining params specifically used for label grouping.
- * @beta
+ * @public
  */
 interface HierarchyNodeLabelGroupingBaseParams {
   /** Label grouping option that determines whether to group nodes or to merge them. Defaults to "group".*/
@@ -42,7 +42,7 @@ interface HierarchyNodeLabelGroupingBaseParams {
 
 /**
  * A data structure for defining label merging.
- * @beta
+ * @public
  */
 interface HierarchyNodeLabelGroupingMergeParams extends HierarchyNodeLabelGroupingBaseParams {
   action: "merge";
@@ -50,7 +50,7 @@ interface HierarchyNodeLabelGroupingMergeParams extends HierarchyNodeLabelGroupi
 
 /**
  * A data structure for defining label grouping with additional parameters.
- * @beta
+ * @public
  */
 interface HierarchyNodeLabelGroupingGroupParams extends HierarchyNodeLabelGroupingBaseParams, HierarchyNodeGroupingParamsBase {
   action?: "group";
@@ -58,13 +58,13 @@ interface HierarchyNodeLabelGroupingGroupParams extends HierarchyNodeLabelGroupi
 
 /**
  * A data structure for defining possible label grouping types.
- * @beta
+ * @public
  */
 export type HierarchyNodeLabelGroupingParams = boolean | HierarchyNodeLabelGroupingMergeParams | HierarchyNodeLabelGroupingGroupParams;
 
 /**
  * Grouping parameters that are shared across all types of groupings.
- * @beta
+ * @public
  */
 export interface HierarchyNodeGroupingParamsBase {
   /** Hiding option that determines whether to hide group nodes which have no siblings at the same hierarchy level. */
@@ -79,13 +79,13 @@ export interface HierarchyNodeGroupingParamsBase {
  * Defines possible values for `BaseGroupingParams.autoExpand` attribute:
  * - `single-child` - set the grouping node to auto-expand if it groups a single node.
  * - `always` - always set the grouping node to auto-expand.
- * @beta
+ * @public
  */
 export type HierarchyNodeAutoExpandProp = "single-child" | "always";
 
 /**
  * A data structure that represents base class grouping.
- * @beta
+ * @public
  */
 interface HierarchyNodeBaseClassGroupingParams extends HierarchyNodeGroupingParamsBase {
   /**
@@ -99,7 +99,7 @@ interface HierarchyNodeBaseClassGroupingParams extends HierarchyNodeGroupingPara
 
 /**
  * A data structure that represents properties grouping.
- * @beta
+ * @public
  */
 export interface HierarchyNodePropertiesGroupingParams extends HierarchyNodeGroupingParamsBase {
   /**
@@ -149,7 +149,7 @@ export interface HierarchyNodePropertiesGroupingParams extends HierarchyNodeGrou
 
 /**
  * A data structure that represents specific properties' grouping params.
- * @beta
+ * @public
  */
 export interface HierarchyNodePropertyGroup {
   /** A string indicating the name of the property to group by. */
@@ -162,7 +162,7 @@ export interface HierarchyNodePropertyGroup {
 
 /**
  * A data structure that represents boundaries for a value.
- * @beta
+ * @public
  */
 export interface HierarchyNodePropertyValueRange {
   /** Defines the lower bound of the range. */
@@ -175,7 +175,7 @@ export interface HierarchyNodePropertyValueRange {
 
 /**
  * Processing parameters that apply to instance nodes.
- * @beta
+ * @public
  */
 export interface InstanceHierarchyNodeProcessingParams extends HierarchyNodeProcessingParamsBase {
   grouping?: HierarchyNodeGroupingParams;
@@ -183,7 +183,7 @@ export interface InstanceHierarchyNodeProcessingParams extends HierarchyNodeProc
 
 /**
  * A generic (not based on data in an iModel) node that has processing parameters.
- * @beta
+ * @public
  */
 export type ProcessedGenericHierarchyNode = Omit<NonGroupingHierarchyNode, "key" | "children"> & {
   key: GenericNodeKey;
@@ -193,7 +193,7 @@ export type ProcessedGenericHierarchyNode = Omit<NonGroupingHierarchyNode, "key"
 
 /**
  * An instances' (based on data in an iModel) node that has processing parameters.
- * @beta
+ * @public
  */
 export type ProcessedInstanceHierarchyNode = Omit<NonGroupingHierarchyNode, "key" | "children"> & {
   key: InstancesNodeKey;
@@ -203,7 +203,7 @@ export type ProcessedInstanceHierarchyNode = Omit<NonGroupingHierarchyNode, "key
 
 /**
  * A grouping node that groups either instance nodes or other grouping nodes.
- * @beta
+ * @public
  */
 export type ProcessedGroupingHierarchyNode = Omit<GroupingHierarchyNode, "children"> & {
   children: Array<ProcessedGroupingHierarchyNode | ProcessedInstanceHierarchyNode>;
@@ -216,11 +216,11 @@ export type ProcessedGroupingHierarchyNode = Omit<GroupingHierarchyNode, "childr
  * Type guards under `HierarchyNode` namespace can be used to differentiate between different sub-types of
  * `ProcessedHierarchyNode`.
  *
- * @beta
+ * @public
  */
 export type ProcessedHierarchyNode = ProcessedGenericHierarchyNode | ProcessedInstanceHierarchyNode | ProcessedGroupingHierarchyNode;
 
-/** @beta */
+/** @public */
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export namespace ProcessedHierarchyNode {
   /** Checks whether the given node is a generic node */
@@ -240,7 +240,7 @@ export namespace ProcessedHierarchyNode {
 /**
  * A `ProcessedHierarchyNode` that has an unformatted label in a form of `ConcatenatedValue`. Generally this is
  * returned by hierarchy definitions as a generic node or when the node is just parsed from query results.
- * @beta
+ * @public
  */
 export type SourceHierarchyNode<TBase = SourceGenericHierarchyNode | SourceInstanceHierarchyNode> = OmitOverUnion<TBase, "label" | "parentKeys"> & {
   label: string | ConcatenatedValue;
@@ -248,13 +248,13 @@ export type SourceHierarchyNode<TBase = SourceGenericHierarchyNode | SourceInsta
 
 /**
  * A kind of `ProcessedGenericHierarchyNode` that has unformatted label and doesn't know about its ancestors.
- * @beta
+ * @public
  */
 export type SourceGenericHierarchyNode = SourceHierarchyNode<Omit<ProcessedGenericHierarchyNode, "key"> & { key: string }>;
 
 /**
  * A kind of `ProcessedInstanceHierarchyNode` that has unformatted label and doesn't know about its ancestors.
- * @beta
+ * @public
  */
 export type SourceInstanceHierarchyNode = SourceHierarchyNode<
   Omit<ProcessedInstanceHierarchyNode, "key"> & {

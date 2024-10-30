@@ -18,7 +18,7 @@ export interface TreeSelectionOptions {
   selectNodes: (nodeIds: Array<string>, changeType: SelectionChangeType) => void;
 }
 
-/** @beta */
+/** @public */
 export interface UseUnifiedTreeSelectionProps {
   /**
    * Identifier to distinguish this source of changes to the unified selection from another ones in the application.

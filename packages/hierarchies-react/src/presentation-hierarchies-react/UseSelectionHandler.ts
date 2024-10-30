@@ -14,7 +14,7 @@ import { useTree } from "./UseTree.js";
  * - `extended` - multiple nodes can be selected using shift and ctrl keys,
  * - `multiple` - multiple nodes can be selected without using shift or ctrl keys.
  *
- * @beta
+ * @public
  */
 export type SelectionMode = "none" | "single" | "extended" | "multiple";
 
@@ -24,13 +24,13 @@ export type SelectionMode = "none" | "single" | "extended" | "multiple";
  * - `replace` - a selected node was replaced with a different one,
  * - `remove` - a node was removed from the selection.
  *
- * @beta
+ * @public
  */
 export type SelectionChangeType = "add" | "replace" | "remove";
 
 /**
  * Props for `useSelectionHandler` hook.
- * @beta
+ * @public
  */
 type UseSelectionHandlerProps = Pick<ReturnType<typeof useTree>, "rootNodes" | "selectNodes"> & {
   /** Selection mode that the component is working in. */
@@ -39,7 +39,7 @@ type UseSelectionHandlerProps = Pick<ReturnType<typeof useTree>, "rootNodes" | "
 
 /**
  * Result of `useSelectionHandler` hook.
- * @beta
+ * @public
  */
 interface UseSelectionHandlerResult {
   /** Should be called by node renderer when a node component is clicked. */
@@ -55,7 +55,7 @@ interface FlatTreeState {
 
 /**
  * A react hook that helps implement different selection modes in a tree component created using `useTree` hook.
- * @beta
+ * @public
  */
 export function useSelectionHandler(props: UseSelectionHandlerProps): UseSelectionHandlerResult {
   const { rootNodes, selectionMode, selectNodes } = props;

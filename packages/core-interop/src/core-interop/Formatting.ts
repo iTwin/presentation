@@ -19,7 +19,7 @@ import { createDefaultValueFormatter, IPrimitiveValueFormatter, parseFullClassNa
 
 /**
  * Props for `createValueFormatter` function.
- * @beta
+ * @public
  */
 interface CreateValueFormatterProps {
   /**
@@ -57,7 +57,7 @@ interface CreateValueFormatterProps {
  * const formattedValue = await formatter({ type: "Double", value: 1.234, koqName: "MySchema.LengthKindOfQuantity" });
  * ```
  *
- * @beta
+ * @public
  */
 export function createValueFormatter(props: CreateValueFormatterProps): IPrimitiveValueFormatter {
   const { schemaContext, unitSystem } = props;

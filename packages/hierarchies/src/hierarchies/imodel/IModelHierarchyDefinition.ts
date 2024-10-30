@@ -16,7 +16,7 @@ import {
 
 /**
  * A nodes definition that returns a single generic node.
- * @beta
+ * @public
  */
 export interface GenericHierarchyNodeDefinition {
   /** The node to be created in the hierarchy level */
@@ -25,7 +25,7 @@ export interface GenericHierarchyNodeDefinition {
 
 /**
  * A nodes definition that returns an ECSQL query for selecting nodes from an iModel.
- * @beta
+ * @public
  */
 export interface InstanceNodesQueryDefinition {
   /**
@@ -43,10 +43,10 @@ export interface InstanceNodesQueryDefinition {
 
 /**
  * A definition of nodes included in a hierarchy level.
- * @beta
+ * @public
  */
 export type HierarchyNodesDefinition = GenericHierarchyNodeDefinition | InstanceNodesQueryDefinition;
-/** @beta */
+/** @public */
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export namespace HierarchyNodesDefinition {
   export function isGenericNode(def: HierarchyNodesDefinition): def is GenericHierarchyNodeDefinition {
@@ -59,13 +59,13 @@ export namespace HierarchyNodesDefinition {
 
 /**
  * A definition of a hierarchy level, which may consist of multiple node definitions.
- * @beta
+ * @public
  */
 export type HierarchyLevelDefinition = HierarchyNodesDefinition[];
 
 /**
  * A type for a function that parses a `SourceInstanceHierarchyNode` from provided ECSQL `row` object.
- * @beta
+ * @public
  */
 export type NodeParser = (
   row: { [columnName: string]: any },
@@ -77,7 +77,7 @@ export type NodeParser = (
  * it should return a new - modified - node, rather than modifying the given one. Returning `undefined` omits the node
  * from the hierarchy.
  *
- * @beta
+ * @public
  */
 export type NodePreProcessor = <TNode extends ProcessedGenericHierarchyNode | ProcessedInstanceHierarchyNode>(node: TNode) => Promise<TNode | undefined>;
 
@@ -85,7 +85,7 @@ export type NodePreProcessor = <TNode extends ProcessedGenericHierarchyNode | Pr
  * A type for a function that post-processes given node. Unless the function decides not to make any modifications,
  * it should return a new - modified - node, rather than modifying the given one.
  *
- * @beta
+ * @public
  */
 export type NodePostProcessor = (node: ProcessedHierarchyNode) => Promise<ProcessedHierarchyNode>;
 
@@ -94,13 +94,13 @@ export type NodePostProcessor = (node: ProcessedHierarchyNode) => Promise<Proces
  * a `HierarchyNode` that:
  * - knows nothing about its children,
  * - is either an instances node (key is of `InstancesNodeKey` type) or a generic node (key is of `GenericNodeKey` type).
- * @beta
+ * @public
  */
 export type HierarchyDefinitionParentNode = Omit<NonGroupingHierarchyNode, "children">;
 
 /**
  * Props for `HierarchyDefinition.defineHierarchyLevel`.
- * @beta
+ * @public
  */
 export interface DefineHierarchyLevelProps {
   /** Parent node to get children for. Pass `undefined` to get root nodes. */
@@ -112,7 +112,7 @@ export interface DefineHierarchyLevelProps {
 
 /**
  * An interface for a factory that knows how define a hierarchy based on a given parent node.
- * @beta
+ * @public
  */
 export interface HierarchyDefinition {
   /**

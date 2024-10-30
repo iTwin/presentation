@@ -8,7 +8,7 @@ import { PrimitiveValueType } from "./Metadata.js";
 
 /**
  * A data structure uniquely identifying an ECInstance in an iModel.
- * @beta
+ * @public
  */
 export interface InstanceKey {
   /** Full class name in format `SchemaName.ClassName` */
@@ -17,11 +17,11 @@ export interface InstanceKey {
   id: Id64String;
 }
 
-/** @beta */
+/** @public */
 export namespace InstanceKey {
   /**
    * Checks whether the two given instance keys are equal.
-   * @beta
+   * @public
    */
   export function equals(lhs: InstanceKey, rhs: InstanceKey): boolean {
     return lhs.className === rhs.className && lhs.id === rhs.id;
@@ -44,7 +44,7 @@ export namespace InstanceKey {
 
 /**
  * A data structure for a 2d point.
- * @beta
+ * @public
  */
 export interface Point2d {
   x: number;
@@ -53,7 +53,7 @@ export interface Point2d {
 
 /**
  * A data structure for a 3d point.
- * @beta
+ * @public
  */
 export interface Point3d {
   x: number;
@@ -63,17 +63,17 @@ export interface Point3d {
 
 /**
  * A union for all supported primitive value types.
- * @beta
+ * @public
  */
 export type PrimitiveValue = Id64String | string | number | boolean | Date | Point2d | Point3d;
 
-/** @beta */
+/** @public */
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export namespace PrimitiveValue {
   /**
    * Checks whether the given value is a `Point2d`.
    * @note Since `Point3d` is a superset of `Point2d`, this function will return `true` for `Point3d` as well.
-   * @beta
+   * @public
    */
   export function isPoint2d(value: PrimitiveValue): value is Point2d {
     if (typeof value !== "object") {
@@ -85,7 +85,7 @@ export namespace PrimitiveValue {
 
   /**
    * Checks whether the given value is a `Point3d`.
-   * @beta
+   * @public
    */
   export function isPoint3d(value: PrimitiveValue): value is Point3d {
     if (typeof value !== "object") {
@@ -99,7 +99,7 @@ export namespace PrimitiveValue {
 /**
  * A type for a primitive value, its type and, optionally, its extended type.
  * @note Use `TypedPrimitiveValue.create` to create an instance of this type.
- * @beta
+ * @public
  */
 export type TypedPrimitiveValue = (
   | {
@@ -139,13 +139,13 @@ export type TypedPrimitiveValue = (
   extendedType?: string;
 };
 
-/** @beta */
+/** @public */
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export namespace TypedPrimitiveValue {
   /**
    * A function for a creating a `TypedPrimitiveValue` object.
    * @throws Error if primitive type and value are incompatible.
-   * @beta
+   * @public
    */
   export function create(value: PrimitiveValue, type: PrimitiveValueType, koqName?: string, extendedType?: string): TypedPrimitiveValue {
     switch (type) {

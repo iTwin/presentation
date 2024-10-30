@@ -10,7 +10,7 @@ import { createECSchema } from "./MetadataInternal.js";
 /**
  * Defines input for `createECSchemaProvider`. Generally, this is an instance of [SchemaContext](https://www.itwinjs.org/reference/ecschema-metadata/context/schemacontext/)
  * class from `@itwin/ecschema-metadata` package.
- * @beta
+ * @public
  */
 interface CoreSchemaContext {
   getSchema(key: CoreSchemaKey): Promise<CoreSchema | undefined>;
@@ -30,7 +30,7 @@ interface CoreSchemaContext {
  * // the created schema provider may be used in `@itwin/presentation-hierarchies` and other Presentation packages
  * ```
  *
- * @beta
+ * @public
  */
 export function createECSchemaProvider(schemaContext: CoreSchemaContext): ECSchemaProvider {
   const schemaRequestsCache = new Map<string, Promise<EC.Schema | undefined>>();

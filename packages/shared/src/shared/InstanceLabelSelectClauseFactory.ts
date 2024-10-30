@@ -13,7 +13,7 @@ import { ECClassHierarchyInspector } from "./Metadata.js";
 
 /**
  * Props for `IInstanceLabelSelectClauseFactory.createSelectClause`.
- * @beta
+ * @public
  */
 interface CreateInstanceLabelSelectClauseProps {
   /**
@@ -69,7 +69,7 @@ interface CreateInstanceLabelSelectClauseProps {
  * @see `createDefaultInstanceLabelSelectClauseFactory`
  * @see `createClassBasedInstanceLabelSelectClauseFactory`
  * @see `createBisInstanceLabelSelectClauseFactory`
- * @beta
+ * @public
  */
 export interface IInstanceLabelSelectClauseFactory {
   /** Creates a select clause for an instance label. */
@@ -81,7 +81,7 @@ export interface IInstanceLabelSelectClauseFactory {
  * is expected when label selector is created using `IInstanceLabelSelectClauseFactory.createSelectClause` with
  * `createConcatenatedValueJsonSelector`.
  *
- * @beta
+ * @public
  */
 export function parseInstanceLabel(value: string | undefined): ConcatenatedValue | string {
   if (!value) {
@@ -105,7 +105,7 @@ export function parseInstanceLabel(value: string | undefined): ConcatenatedValue
  * - `{local id} = ECInstanceId & (1 << 40 - 1)`
  *
  * @see https://www.itwinjs.org/presentation/advanced/defaultbisrules/#label-overrides
- * @beta
+ * @public
  */
 export function createDefaultInstanceLabelSelectClauseFactory(): IInstanceLabelSelectClauseFactory {
   return {
@@ -130,7 +130,7 @@ export function createDefaultInstanceLabelSelectClauseFactory(): IInstanceLabelS
 
 /**
  * An association of a class and an instance label select clause factory method.
- * @beta
+ * @public
  */
 interface ClassBasedLabelSelectClause {
   /** Full class name */
@@ -141,7 +141,7 @@ interface ClassBasedLabelSelectClause {
 
 /**
  * Props for `createClassBasedInstanceLabelSelectClauseFactory`.
- * @beta
+ * @public
  */
 interface ClassBasedInstanceLabelSelectClauseFactoryProps {
   /** Access to ECClass hierarchy in the iModel. */
@@ -165,7 +165,7 @@ interface ClassBasedInstanceLabelSelectClauseFactoryProps {
 
 /**
  * Creates an instance label select clause based on its class.
- * @beta
+ * @public
  */
 export function createClassBasedInstanceLabelSelectClauseFactory(props: ClassBasedInstanceLabelSelectClauseFactoryProps): IInstanceLabelSelectClauseFactory {
   const { classHierarchyInspector, clauses: labelClausesByClass } = props;
@@ -229,7 +229,7 @@ export function createClassBasedInstanceLabelSelectClauseFactory(props: ClassBas
 
 /**
  * Props for `createBisInstanceLabelSelectClauseFactory`.
- * @beta
+ * @public
  */
 interface BisInstanceLabelSelectClauseFactoryProps {
   classHierarchyInspector: ECClassHierarchyInspector;
@@ -238,7 +238,7 @@ interface BisInstanceLabelSelectClauseFactoryProps {
 /**
  * Creates a label select clause according to BIS instance label rules.
  * @see https://www.itwinjs.org/presentation/advanced/defaultbisrules/#label-overrides
- * @beta
+ * @public
  */
 export function createBisInstanceLabelSelectClauseFactory(props: BisInstanceLabelSelectClauseFactoryProps): IInstanceLabelSelectClauseFactory {
   const clauses: ClassBasedLabelSelectClause[] = [];

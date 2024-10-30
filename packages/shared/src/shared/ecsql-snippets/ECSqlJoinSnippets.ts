@@ -8,7 +8,7 @@ import { createRawPropertyValueSelector } from "./ECSqlValueSelectorSnippets.js"
 
 /**
  * Describes a single JOIN step from source to target through a relationship.
- * @beta
+ * @public
  */
 interface JoinRelationshipPathStep extends RelationshipPathStep {
   sourceAlias: string;
@@ -19,13 +19,13 @@ interface JoinRelationshipPathStep extends RelationshipPathStep {
 
 /**
  * Describes a path of JOINs from source to target.
- * @beta
+ * @public
  */
 type JoinRelationshipPath = RelationshipPath<JoinRelationshipPathStep>;
 
 /**
  * Props for `createRelationshipPathJoinClause`.
- * @beta
+ * @public
  */
 interface CreateRelationshipPathJoinClauseProps {
   schemaProvider: ECSchemaProvider;
@@ -54,7 +54,7 @@ interface CreateRelationshipPathJoinClauseProps {
  *   INNER JOIN [relationship_schema_name].[relationship_class_name] [relationship_alias] ON [relationship_alias].[SourceECInstanceId] = [source_alias].[ECInstanceId]
  *   INNER JOIN [target_schema_name].[target_class_name] [target_alias] ON [target_alias].[ECInstanceId] = [relationship_alias].[TargetECInstanceId]
  *   ```
- * @beta
+ * @public
  */
 export async function createRelationshipPathJoinClause(props: CreateRelationshipPathJoinClauseProps) {
   if (props.path.length === 0) {

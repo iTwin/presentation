@@ -10,7 +10,7 @@ import { parseFullClassName } from "./Utils.js";
  * An interface for an object that knows how to get an ECSchema from an iModel.
  *
  * @see `createECSchemaProvider` in `@itwin/presentation-core-interop`.
- * @beta
+ * @public
  */
 export interface ECSchemaProvider {
   getSchema(schemaName: string): Promise<EC.Schema | undefined>;
@@ -19,7 +19,7 @@ export interface ECSchemaProvider {
 /**
  * An interface for a class hierarchy inspector that can be used to determine if one class derives from another.
  * @see `createCachingECClassHierarchyInspector`
- * @beta
+ * @public
  */
 export interface ECClassHierarchyInspector {
   classDerivesFrom(derivedClassFullName: string, candidateBaseClassFullName: string): Promise<boolean> | boolean;
@@ -27,7 +27,7 @@ export interface ECClassHierarchyInspector {
 
 /**
  * Creates a new `ECClassHierarchyInspector` that caches results of `derivesFrom` calls.
- * @beta
+ * @public
  */
 export function createCachingECClassHierarchyInspector(props: {
   /** Schema provider used to load schemas and their classes. */
@@ -60,14 +60,14 @@ export function createCachingECClassHierarchyInspector(props: {
 
 /**
  * A namespace containing various [EC types](https://www.itwinjs.org/bis/ec/).
- * @beta
+ * @public
  * @see `ECSchemaProvider`
  */
 export namespace EC {
   /**
    * Represents an ECSchema that contains classes, relationships, etc.
    * @see https://www.itwinjs.org/reference/ecschema-metadata/metadata/schema/
-   * @beta
+   * @public
    */
   export interface Schema {
     name: string;
@@ -77,7 +77,7 @@ export namespace EC {
   /**
    * Represents an ECSchema item - a class, relationship, etc.
    * @see https://www.itwinjs.org/reference/ecschema-metadata/metadata/schemaitem/
-   * @beta
+   * @public
    */
   export interface SchemaItem {
     schema: Schema;
@@ -89,7 +89,7 @@ export namespace EC {
   /**
    * Represents an ECClass.
    * @see https://www.itwinjs.org/reference/ecschema-metadata/metadata/ecclass/
-   * @beta
+   * @public
    */
   export interface Class extends SchemaItem {
     is(className: string, schemaName: string): Promise<boolean>;
@@ -105,35 +105,35 @@ export namespace EC {
   /**
    * Represents an entity class.
    * @see https://www.itwinjs.org/reference/ecschema-metadata/metadata/entityclass/
-   * @beta
+   * @public
    */
   export type EntityClass = Class;
 
   /**
    * Represents a struct class.
    * @see https://www.itwinjs.org/reference/ecschema-metadata/metadata/structclass/
-   * @beta
+   * @public
    */
   export type StructClass = Class;
 
   /**
    * Represents a mixin.
    * @see https://www.itwinjs.org/reference/ecschema-metadata/metadata/mixin/
-   * @beta
+   * @public
    */
   export type Mixin = Class;
 
   /**
    * Represents a kind of quantity.
    * @see https://www.itwinjs.org/reference/ecschema-metadata/metadata/kindofquantity/
-   * @beta
+   * @public
    */
   export type KindOfQuantity = SchemaItem;
 
   /**
    * Represents a relationship constraint multiplicity.
    * @see https://www.itwinjs.org/reference/ecschema-metadata/metadata/relationshipmultiplicity/
-   * @beta
+   * @public
    */
   export interface RelationshipConstraintMultiplicity {
     lowerLimit: number;
@@ -143,7 +143,7 @@ export namespace EC {
   /**
    * Represents a relationship constraint.
    * @see https://www.itwinjs.org/reference/ecschema-metadata/metadata/relationshipconstraint/
-   * @beta
+   * @public
    */
   export interface RelationshipConstraint {
     multiplicity?: RelationshipConstraintMultiplicity;
@@ -154,7 +154,7 @@ export namespace EC {
   /**
    * Represents a relationship class.
    * @see https://www.itwinjs.org/reference/ecschema-metadata/metadata/relationshipclass/
-   * @beta
+   * @public
    */
   export interface RelationshipClass extends Class {
     direction: "Forward" | "Backward";
@@ -165,7 +165,7 @@ export namespace EC {
   /**
    * Represents an enumerator.
    * @see https://www.itwinjs.org/reference/ecschema-metadata/metadata/enumerator/
-   * @beta
+   * @public
    */
   export interface Enumerator<T> {
     name: string;
@@ -177,7 +177,7 @@ export namespace EC {
   /**
    * Represents an enumeration.
    * @see https://www.itwinjs.org/reference/ecschema-metadata/metadata/enumeration/
-   * @beta
+   * @public
    */
   export interface Enumeration extends SchemaItem {
     enumerators: Array<Enumerator<string | number>>;
@@ -188,7 +188,7 @@ export namespace EC {
   /**
    * Represents a property.
    * @see https://www.itwinjs.org/reference/ecschema-metadata/metadata/property/
-   * @beta
+   * @public
    */
   export interface Property {
     name: string;
@@ -206,7 +206,7 @@ export namespace EC {
   /**
    * Defines array property attributes.
    * @see https://www.itwinjs.org/reference/ecschema-metadata/metadata/arrayproperty/
-   * @beta
+   * @public
    */
   export interface ArrayPropertyAttributes {
     minOccurs: number;
@@ -216,32 +216,32 @@ export namespace EC {
   /**
    * Defines a structs array property.
    * @see https://www.itwinjs.org/reference/ecschema-metadata/metadata/structarrayproperty/
-   * @beta
+   * @public
    */
   export type StructArrayProperty = StructProperty & ArrayPropertyAttributes;
   /**
    * Defines an enumerations array property.
    * @see https://www.itwinjs.org/reference/ecschema-metadata/metadata/enumerationarrayproperty/
-   * @beta
+   * @public
    */
   export type EnumerationArrayProperty = EnumerationProperty & ArrayPropertyAttributes;
   /**
    * Defines a primitives array property.
    * @see https://www.itwinjs.org/reference/ecschema-metadata/metadata/primitivearrayproperty/
-   * @beta
+   * @public
    */
   export type PrimitiveArrayProperty = PrimitiveProperty & ArrayPropertyAttributes;
   /**
    * Defines an array property.
    * @see https://www.itwinjs.org/reference/ecschema-metadata/metadata/anyarrayproperty/
-   * @beta
+   * @public
    */
   export type ArrayProperty = StructArrayProperty | EnumerationArrayProperty | PrimitiveArrayProperty;
 
   /**
    * Defines a struct property.
    * @see https://www.itwinjs.org/reference/ecschema-metadata/metadata/structproperty/
-   * @beta
+   * @public
    */
   export interface StructProperty extends Property {
     structClass: StructClass;
@@ -250,7 +250,7 @@ export namespace EC {
   /**
    * Defines an enumeration property.
    * @see https://www.itwinjs.org/reference/ecschema-metadata/metadata/enumerationproperty/
-   * @beta
+   * @public
    */
   export interface EnumerationProperty extends Property {
     enumeration: Promise<Enumeration | undefined>;
@@ -260,7 +260,7 @@ export namespace EC {
   /**
    * Defines a navigation property.
    * @see https://www.itwinjs.org/reference/ecschema-metadata/metadata/navigationproperty/
-   * @beta
+   * @public
    */
   export interface NavigationProperty extends Property {
     relationshipClass: Promise<RelationshipClass>;
@@ -270,14 +270,14 @@ export namespace EC {
   /**
    * Defines a primitive property type.
    * @see https://www.itwinjs.org/reference/ecschema-metadata/metadata/primitivetype/
-   * @beta
+   * @public
    */
   export type PrimitiveType = "Binary" | "Boolean" | "DateTime" | "Double" | "Integer" | "Long" | "Point2d" | "Point3d" | "String" | "IGeometry";
 
   /**
    * Defines a primitive property.
    * @see https://www.itwinjs.org/reference/ecschema-metadata/metadata/primitiveproperty/
-   * @beta
+   * @public
    */
   export interface PrimitiveProperty extends Property {
     primitiveType: PrimitiveType;
@@ -287,13 +287,13 @@ export namespace EC {
 
 /**
  * An identifiers' union of all supported primitive value types.
- * @beta
+ * @public
  */
 export type PrimitiveValueType = "Id" | Exclude<EC.PrimitiveType, "Binary" | "IGeometry">;
 
 /**
  * Describes a single step through an ECRelationship from source ECClass to target ECClass.
- * @beta
+ * @public
  */
 export interface RelationshipPathStep {
   /** Full name of the source ECClass */
@@ -312,14 +312,14 @@ export interface RelationshipPathStep {
 
 /**
  * Describes a path from source ECClass to target ECClass through multiple ECRelationships.
- * @beta
+ * @public
  */
 export type RelationshipPath<TStep extends RelationshipPathStep = RelationshipPathStep> = TStep[];
 
 /**
  * Finds a class with the specified full class name using the given `ECSchemaProvider`.
  * @throws Error if the schema or class is not found.
- * @beta
+ * @public
  */
 export async function getClass(schemaProvider: ECSchemaProvider, fullClassName: string): Promise<EC.Class> {
   const { schemaName, className } = parseFullClassName(fullClassName);

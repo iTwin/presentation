@@ -14,7 +14,7 @@ const unifiedSelectionContext = createContext<SelectionStorage | undefined>(unde
  *
  * See `README.md` for a usage example.
  *
- * @beta
+ * @public
  */
 export function UnifiedSelectionProvider({ storage, children }: PropsWithChildren<{ storage: SelectionStorage }>) {
   return <unifiedSelectionContext.Provider value={storage}>{children}</unifiedSelectionContext.Provider>;
