@@ -1,5 +1,28 @@
 # Change Log - @itwin/presentation-components
 
+## 5.6.0
+
+### Minor Changes
+
+- [#747](https://github.com/iTwin/presentation/pull/747): KoQ and numeric editor improvements.
+
+  - ReadOnly properties now open a disabled input in property grid.
+  - KoQ input placeholder is now determined by initial value if one exists.
+  - Selecting/clicking a numeric or KoQ input will select all the text.
+
+- [#739](https://github.com/iTwin/presentation/pull/739): Replaced `react-select` with [iTwinUI's ComboBox](https://itwinui.bentley.com/docs/combobox).
+
+  - The number of select options is limited to 100. When more items exist, a non-selectable option is displayed at the bottom of the list, prompting users to provide an items filter. Previously, additional pages of select options was loaded when user scrolled to the bottom of the list.
+  - Deprecated `PortalTargetContext`. It is no longer needed.
+  
+  This affects `PresentationInstanceFilterBuilder` and `NavigationPropertyEditor` components.
+
+- [#754](https://github.com/iTwin/presentation/pull/754): Define `type` and `exports` attributes in `package.json`.
+
+  The change moves this package a step closer towards dropping CommonJS support - it's now transpiled from ESM to CommonJS instead of the opposite.
+
+  In addition, the `exports` attribute has been added to `package.json` to prohibit access to APIs that are not intended to be used by external consumers.
+
 ## 5.5.0
 
 ### Minor Changes
