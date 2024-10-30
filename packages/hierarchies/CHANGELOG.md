@@ -1,5 +1,22 @@
 # @itwin/presentation-hierarchies
 
+## 1.2.0
+
+### Minor Changes
+
+- [#740](https://github.com/iTwin/presentation/pull/740): Define `type` and `exports` attributes in `package.json`.
+
+  The change moves this package a step closer towards dropping CommonJS support - it's now transpiled from ESM to CommonJS instead of the opposite.
+
+  In addition, the `exports` attribute has been added to `package.json` to prohibit access to APIs that are not intended to be used by external consumers.
+
+### Patch Changes
+
+- [#743](https://github.com/iTwin/presentation/pull/743): Fixed hierarchy filtering having a limit of 500 filtered nodes under a single parent.
+- [#758](https://github.com/iTwin/presentation/pull/758): Promote `@beta` APIs to `@public`.
+- Updated dependencies:
+  - @itwin/presentation-shared@1.1.0
+
 ## 1.1.0
 
 ### Minor Changes
