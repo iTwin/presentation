@@ -13,8 +13,8 @@ import { InstanceKey, KeySet, PresentationRpcInterface } from "@itwin/presentati
 import { PresentationPropertyDataProvider } from "@itwin/presentation-components";
 import { Presentation } from "@itwin/presentation-frontend";
 import { buildTestIModel } from "@itwin/presentation-testing";
-import { render } from "@testing-library/react";
 import { initialize, terminate } from "../../IntegrationTests.js";
+import { render } from "../../RenderUtils.js";
 import { useOptionalDisposable } from "../../UseOptionalDisposable.js";
 import { ensureHasError, ErrorBoundary } from "../ErrorBoundary.js";
 import { ensurePropertyGridHasPropertyRecord } from "../PropertyGridUtils.js";
@@ -27,6 +27,7 @@ describe("Learning snippets", () => {
     });
 
     after(async () => {
+      UiComponents.terminate();
       await terminate();
     });
 

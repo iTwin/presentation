@@ -4,7 +4,7 @@
   "functions": 100,
   "branches": 100,
   "lines": 100,
-  "include": ["src/presentation-hierarchies-react/**/*", "lib/cjs/presentation-hierarchies-react/**/*"],
+  "include": ["src/presentation-hierarchies-react/**/*", "lib/esm/presentation-hierarchies-react/**/*"],
   "temp-dir": "./lib/test/coverage/.nyc_output",
   "report-dir": "./lib/test/coverage",
   "reporter": ["text-summary", "lcov", "cobertura"]

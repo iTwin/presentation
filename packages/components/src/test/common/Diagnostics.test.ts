@@ -5,45 +5,63 @@
 
 import { expect } from "chai";
 import * as sinon from "sinon";
-import * as PresentationFrontendDiagnostics from "@itwin/presentation-frontend/lib/cjs/presentation-frontend/Diagnostics.js";
-import { createDiagnosticsOptions } from "../../presentation-components/common/Diagnostics.js";
+import * as td from "testdouble";
+import * as presentationFrontendModule from "@itwin/presentation-frontend";
+import * as diagnostics from "../../presentation-components/common/Diagnostics.js";
+
+// this is needed for mocking external module
+const presentationFrontendModulePath = import.meta.resolve("@itwin/presentation-frontend");
 
 describe("createDiagnosticsOptions", () => {
   afterEach(() => {
-    sinon.restore();
+    td.reset();
   });
 
-  it("returns undefined when neither rule nor dev diagnostic props are set", () => {
-    expect(createDiagnosticsOptions({ ruleDiagnostics: undefined, devDiagnostics: undefined })).to.be.undefined;
+  async function createDiagnosticsOptions(
+    ...props: Parameters<typeof diagnostics.createDiagnosticsOptions>
+  ): Promise<ReturnType<typeof diagnostics.createDiagnosticsOptions>> {
+    const impl = await import("../../presentation-components/common/Diagnostics.js");
+    return impl.createDiagnosticsOptions(...props);
+  }
+
+  it("returns undefined when neither rule nor dev diagnostic props are set", async () => {
+    expect(await createDiagnosticsOptions({ ruleDiagnostics: undefined, devDiagnostics: undefined })).to.be.undefined;
   });
 
-  it("returns options with perf flag when dev diagnostic props have it", () => {
+  it("returns options with perf flag when dev diagnostic props have it", async () => {
     const handler = sinon.stub();
-    expect(createDiagnosticsOptions({ devDiagnostics: { perf: true, handler } })).to.deep.eq({ perf: true, handler });
+    expect(await createDiagnosticsOptions({ devDiagnostics: { perf: true, handler } })).to.deep.eq({ perf: true, handler });
   });
 
-  it("returns options with perf object when dev diagnostic props have it", () => {
+  it("returns options with perf object when dev diagnostic props have it", async () => {
     const handler = sinon.stub();
-    expect(createDiagnosticsOptions({ devDiagnostics: { perf: { minimumDuration: 100 }, handler } })).to.deep.eq({ perf: { minimumDuration: 100 }, handler });
+    expect(await createDiagnosticsOptions({ devDiagnostics: { perf: { minimumDuration: 100 }, handler } })).to.deep.eq({
+      perf: { minimumDuration: 100 },
+      handler,
+    });
   });
 
-  it("returns options with dev severity when dev diagnostic props have it", () => {
+  it("returns options with dev severity when dev diagnostic props have it", async () => {
     const handler = sinon.stub();
-    expect(createDiagnosticsOptions({ devDiagnostics: { severity: "warning", handler } })).to.deep.eq({ dev: "warning", handler });
+    expect(await createDiagnosticsOptions({ devDiagnostics: { severity: "warning", handler } })).to.deep.eq({ dev: "warning", handler });
   });
 
-  it("returns options with editor severity when rule diagnostic props are set", () => {
+  it("returns options with editor severity when rule diagnostic props are set", async () => {
     const handler = sinon.stub();
-    expect(createDiagnosticsOptions({ ruleDiagnostics: { severity: "warning", handler } })).to.deep.eq({ editor: "warning", handler });
+    expect(await createDiagnosticsOptions({ ruleDiagnostics: { severity: "warning", handler } })).to.deep.eq({ editor: "warning", handler });
   });
 
-  it("returns options with combined handler when rule and dev props have different handlers", () => {
+  it("returns options with combined handler when rule and dev props have different handlers", async () => {
     const combinedHandler = sinon.stub();
-    const combineFunc = sinon.stub(PresentationFrontendDiagnostics, "createCombinedDiagnosticsHandler").returns(combinedHandler);
+    const combineFunc = sinon.stub().returns(combinedHandler);
+    await td.replaceEsm(presentationFrontendModulePath, {
+      ...presentationFrontendModule,
+      createCombinedDiagnosticsHandler: combineFunc,
+    });
     const handler1 = sinon.stub();
     const handler2 = sinon.stub();
     expect(
-      createDiagnosticsOptions({
+      await createDiagnosticsOptions({
         devDiagnostics: { severity: "info", handler: handler1 },
         ruleDiagnostics: { severity: "warning", handler: handler2 },
       }),

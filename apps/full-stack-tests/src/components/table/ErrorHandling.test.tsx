@@ -13,8 +13,8 @@ import { InstanceKey, KeySet, Ruleset } from "@itwin/presentation-common";
 import { TableColumnDefinition, TableRowDefinition, usePresentationTable } from "@itwin/presentation-components";
 import { Presentation } from "@itwin/presentation-frontend";
 import { buildTestIModel } from "@itwin/presentation-testing";
-import { render } from "@testing-library/react";
 import { initialize, terminate } from "../../IntegrationTests.js";
+import { render } from "../../RenderUtils.js";
 import { ensureHasError, ErrorBoundary } from "../ErrorBoundary.js";
 import { ensureTableHasRowsWithCellValues } from "../TableUtils.js";
 
@@ -26,6 +26,7 @@ describe("Learning snippets", () => {
     });
 
     after(async () => {
+      UiComponents.terminate();
       await terminate();
     });
 

@@ -55,7 +55,7 @@ export class FilteringHierarchyDefinition implements HierarchyDefinition {
 
   private shouldExpandGroupingNode(node: ProcessedGroupingHierarchyNode) {
     for (const child of node.children) {
-      /* istanbul ignore next */
+      /* c8 ignore next 3 */
       if (!child.filtering) {
         continue;
       }
@@ -83,7 +83,7 @@ export class FilteringHierarchyDefinition implements HierarchyDefinition {
       }
 
       if (!child.filtering.filteredChildrenIdentifierPaths) {
-        /* istanbul ignore next */
+        /* c8 ignore next */
         continue;
       }
 
@@ -138,7 +138,7 @@ export class FilteringHierarchyDefinition implements HierarchyDefinition {
     let filterTargetOptions: HierarchyFilteringPathOptions | undefined;
     for (const filteredChildrenNodeIdentifierPath of filteredChildrenNodeIdentifierPaths) {
       const { path, options } = HierarchyFilteringPath.normalize(filteredChildrenNodeIdentifierPath);
-      // istanbul ignore if
+      /* c8 ignore next 3 */
       if (path.length === 0) {
         continue;
       }

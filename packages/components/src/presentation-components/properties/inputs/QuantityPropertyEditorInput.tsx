@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { forwardRef, useImperativeHandle, useRef } from "react";
+import { forwardRef, useEffect, useImperativeHandle, useRef } from "react";
 import { PrimitiveValue, PropertyRecord, PropertyValueFormat } from "@itwin/appui-abstract";
 import { PropertyEditorProps } from "@itwin/components-react";
 import { Input } from "@itwin/itwinui-react";
@@ -41,7 +41,7 @@ QuantityPropertyEditorInput.displayName = "QuantityPropertyEditorInput";
 type QuantityPropertyValueInputProps = QuantityPropertyEditorImplProps & UseQuantityValueInputProps;
 
 const QuantityPropertyValueInput = forwardRef<PropertyEditorAttributes, QuantityPropertyValueInputProps>(
-  ({ propertyRecord, onCommit, koqName, schemaContext, initialRawValue }, ref) => {
+  ({ propertyRecord, onCommit, koqName, schemaContext, initialRawValue, setFocus }, ref) => {
     const { quantityValue, inputProps } = useQuantityValueInput({ koqName, schemaContext, initialRawValue });
 
     const inputRef = useRef<HTMLInputElement>(null);
@@ -72,7 +72,24 @@ const QuantityPropertyValueInput = forwardRef<PropertyEditorAttributes, Quantity
         });
     };
 
-    return <Input size="small" {...inputProps} ref={inputRef} onBlur={onBlur} />;
+    useEffect(() => {
+      if (setFocus && !inputProps.disabled) {
+        inputRef.current && inputRef.current.focus();
+      }
+    }, [inputProps.disabled, setFocus]);
+
+    return (
+      <Input
+        size="small"
+        {...inputProps}
+        disabled={propertyRecord.isReadonly || inputProps.disabled}
+        ref={inputRef}
+        onBlur={onBlur}
+        onFocus={() => {
+          inputRef.current?.setSelectionRange(0, 9999);
+        }}
+      />
+    );
   },
 );
 QuantityPropertyValueInput.displayName = "QuantityPropertyValueInput";

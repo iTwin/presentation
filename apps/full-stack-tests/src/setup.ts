@@ -28,13 +28,16 @@ global.ResizeObserver = class ResizeObserver {
 };
 
 // supply mocha hooks
-import { cleanup } from "@testing-library/react";
+const { cleanup, configure } = await import("@testing-library/react");
 export const mochaHooks = {
   beforeAll() {
     chaiJestSnapshot.resetSnapshotRegistry();
     getGlobalThis().IS_REACT_ACT_ENVIRONMENT = true;
   },
   beforeEach() {
+    // enable strict mode for each test by default
+    configure({ reactStrictMode: !process.env.DISABLE_STRICT_MODE });
+
     // set up snapshot name
     const currentTest = (this as unknown as Mocha.Context).currentTest!;
     const sourceFilePath = currentTest.file!.replace("lib", "src").replace(/\.(jsx?|tsx?)$/, "");

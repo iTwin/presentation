@@ -158,9 +158,7 @@ export const TreeNodeRenderer: React.ForwardRefExoticComponent<TreeNodeRendererP
     }
 
     if (node.type === "NoFilterMatches") {
-      return (
-        <TreeNode {...treeNodeProps} ref={ref} label={localizedStrings.noFilteredChildren} isDisabled={true} onExpanded={/* istanbul ignore next */ () => {}} />
-      );
+      return <TreeNode {...treeNodeProps} ref={ref} label={localizedStrings.noFilteredChildren} isDisabled={true} onExpanded={/* c8 ignore next */ () => {}} />;
     }
 
     const onRetry = reloadTree ? () => reloadTree({ parentNodeId: node.parentNodeId, state: "reset" }) : undefined;
@@ -170,7 +168,7 @@ export const TreeNodeRenderer: React.ForwardRefExoticComponent<TreeNodeRendererP
         ref={ref}
         label={<ErrorNodeLabel message={node.message} onRetry={onRetry} />}
         isDisabled={true}
-        onExpanded={/* istanbul ignore next */ () => {}}
+        onExpanded={/* c8 ignore next */ () => {}}
       />
     );
   },
@@ -185,7 +183,7 @@ const PlaceholderNode = forwardRef<HTMLDivElement, Omit<TreeNodeProps, "onExpand
       ref={forwardedRef}
       label={localizedStrings.loading}
       icon={<ProgressRadial size="x-small" indeterminate title={localizedStrings.loading} />}
-      onExpanded={/* istanbul ignore next */ () => {}}
+      onExpanded={/* c8 ignore next */ () => {}}
     />
   );
 });
@@ -199,7 +197,7 @@ const ResultSetTooLargeNode = forwardRef<HTMLDivElement, Omit<TreeNodeProps, "on
         ref={forwardedRef}
         className="stateless-tree-node"
         label={<ResultSetTooLargeNodeLabel limit={limit} onFilterClick={onFilterClick} onOverrideLimit={onOverrideLimit} />}
-        onExpanded={/* istanbul ignore next */ () => {}}
+        onExpanded={/* c8 ignore next */ () => {}}
       />
     );
   },

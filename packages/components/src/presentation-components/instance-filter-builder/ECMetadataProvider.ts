@@ -10,7 +10,7 @@ import { compareStrings, Id64, Id64String, LRUDictionary } from "@itwin/core-ben
 import { ECSqlReader, QueryBinder, QueryOptions, QueryRowFormat } from "@itwin/core-common";
 import { IModelConnection } from "@itwin/core-frontend";
 
-// istanbul ignore file
+/* c8 ignore start */
 
 /** @internal */
 export class ECClassInfo {
@@ -141,7 +141,7 @@ export function getIModelMetadataProvider(imodel: IModelConnection) {
   if (!metadataProvider) {
     metadataProvider = new ECMetadataProvider((ecsql: string, params?: QueryBinder, config?: QueryOptions) => imodel.createQueryReader(ecsql, params, config));
     metadataProviders.set(imodel.key, metadataProvider);
-    // istanbul ignore next
+    /* c8 ignore next 3 */
     imodel.onClose.addOnce(() => {
       metadataProviders.delete(imodel.key);
     });

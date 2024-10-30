@@ -44,7 +44,7 @@ export function trimWhitespace(str: string): string;
 export function trimWhitespace(str: string | undefined): string | undefined;
 /** @beta */
 export function trimWhitespace(str: string | undefined): string | undefined {
-  /* istanbul ignore next 3 */
+  /* c8 ignore next 3 */
   if (!str) {
     return str;
   }

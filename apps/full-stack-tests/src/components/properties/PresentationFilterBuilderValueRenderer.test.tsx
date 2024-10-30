@@ -6,19 +6,18 @@ import { expect } from "chai";
 import { insertPhysicalElement, insertPhysicalModelWithPartition, insertSpatialCategory, waitFor } from "presentation-test-utilities";
 import sinon from "sinon";
 import { UiComponents } from "@itwin/components-react";
-import { EmptyLocalization } from "@itwin/core-common";
+import { IModelApp } from "@itwin/core-frontend";
 import { ClassInfo, DefaultContentDisplayTypes, KeySet } from "@itwin/presentation-common";
 import { PresentationFilterBuilderValueRenderer } from "@itwin/presentation-components";
 import { Presentation } from "@itwin/presentation-frontend";
-import { queryByText, render } from "@testing-library/react";
-import { userEvent } from "@testing-library/user-event";
 import { buildIModel, importSchema } from "../../IModelUtils.js";
 import { initialize, terminate } from "../../IntegrationTests.js";
+import { queryByText, render } from "../../RenderUtils.js";
 
 describe("Presentation filter builder value renderer", () => {
   before(async () => {
     await initialize();
-    await UiComponents.initialize(new EmptyLocalization());
+    await UiComponents.initialize(IModelApp.localization);
 
     sinon.stub(window.Element.prototype, "getBoundingClientRect").returns({
       height: 20,
@@ -35,6 +34,7 @@ describe("Presentation filter builder value renderer", () => {
 
   after(async () => {
     sinon.restore();
+    UiComponents.terminate();
     await terminate();
   });
 
@@ -133,7 +133,7 @@ describe("Presentation filter builder value renderer", () => {
       },
     ];
 
-    const { baseElement, getByRole } = render(
+    const { baseElement, getByRole, user } = render(
       <PresentationFilterBuilderValueRenderer
         property={testProperty}
         onChange={() => {}}
@@ -146,7 +146,6 @@ describe("Presentation filter builder value renderer", () => {
     );
 
     // trigger loadTargets function
-    const user = userEvent.setup();
     const combobox = await waitFor(() => getByRole("combobox"));
     await user.click(combobox);
     await waitFor(async () => {
@@ -250,7 +249,7 @@ describe("Presentation filter builder value renderer", () => {
       },
     ];
 
-    const { baseElement, getByRole } = render(
+    const { baseElement, getByRole, user } = render(
       <PresentationFilterBuilderValueRenderer
         property={testProperty}
         onChange={() => {}}
@@ -262,7 +261,6 @@ describe("Presentation filter builder value renderer", () => {
     );
 
     // trigger loadTargets function
-    const user = userEvent.setup();
     const combobox = await waitFor(() => getByRole("combobox"));
     await user.click(combobox);
     await waitFor(async () => {

@@ -277,7 +277,7 @@ async function computeClassesByProperty(
 ): Promise<ClassInfo[]> {
   const metadataProvider = getIModelMetadataProvider(imodel);
   const propertyClass = await metadataProvider.getECClassInfo(property.sourceClassId);
-  // istanbul ignore next
+  /* c8 ignore next 3 */
   if (!propertyClass) {
     return classes;
   }

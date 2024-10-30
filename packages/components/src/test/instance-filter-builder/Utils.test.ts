@@ -39,7 +39,16 @@ describe("createInstanceFilterPropertyInfos", () => {
           category: rootCategory,
         }),
         createTestPropertiesContentField({
-          properties: [{ property: { classInfo: createTestECClassInfo(), name: "prop2", type: "number" } }],
+          properties: [
+            {
+              property: {
+                classInfo: createTestECClassInfo(),
+                name: "prop2",
+                type: "number",
+                kindOfQuantity: { label: "TestKoQ", name: "Test:KoQ", persistenceUnit: "u:M" },
+              },
+            },
+          ],
           category: rootCategory,
         }),
       ],
