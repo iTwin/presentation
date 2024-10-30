@@ -29,7 +29,7 @@ import { HierarchyNodeAutoExpandProp } from "./IModelHierarchyNode.js";
  * Column names of the SELECT clause created by `NodeSelectClauseFactory`. Order of the names matches the order of columns
  * created by the factory.
  *
- * @beta
+ * @public
  */
 export enum NodeSelectClauseColumnNames {
   /** Full class name of the instance the node represents. Type: `string` in format `{schema name}:{class name}`. */
@@ -61,7 +61,7 @@ export enum NodeSelectClauseColumnNames {
 
 /**
  * A data structure for defining an ECSQL value selector.
- * @beta
+ * @public
  */
 interface ECSqlValueSelector {
   selector: string;
@@ -69,7 +69,7 @@ interface ECSqlValueSelector {
 
 /**
  * Props for `NodeSelectClauseFactory.createSelectClause`.
- * @beta
+ * @public
  */
 interface NodeSelectClauseProps {
   ecClassId: ECSqlValueSelector;
@@ -88,7 +88,7 @@ interface NodeSelectClauseProps {
 
 /**
  * A data structure for defining nodes' grouping requirements.
- * @beta
+ * @public
  */
 interface ECSqlSelectClauseGroupingParams {
   byLabel?: ECSqlSelectClauseLabelGroupingParams;
@@ -99,7 +99,7 @@ interface ECSqlSelectClauseGroupingParams {
 
 /**
  * A data structure for defining label grouping params.
- * @beta
+ * @public
  */
 interface ECSqlSelectClauseLabelGroupingBaseParams {
   /** Label grouping option that determines whether to group nodes or to merge them. Defaults to "group".*/
@@ -110,7 +110,7 @@ interface ECSqlSelectClauseLabelGroupingBaseParams {
 
 /**
  * A data structure for defining label merging.
- * @beta
+ * @public
  */
 interface ECSqlSelectClauseLabelGroupingMergeParams extends ECSqlSelectClauseLabelGroupingBaseParams {
   action: "merge";
@@ -118,7 +118,7 @@ interface ECSqlSelectClauseLabelGroupingMergeParams extends ECSqlSelectClauseLab
 
 /**
  * A data structure for defining label grouping.
- * @beta
+ * @public
  */
 interface ECSqlSelectClauseLabelGroupingGroupParams extends ECSqlSelectClauseLabelGroupingBaseParams, ECSqlSelectClauseGroupingParamsBase {
   action?: "group";
@@ -126,7 +126,7 @@ interface ECSqlSelectClauseLabelGroupingGroupParams extends ECSqlSelectClauseLab
 
 /**
  * A data structure for defining possible label grouping types.
- * @beta
+ * @public
  */
 type ECSqlSelectClauseLabelGroupingParams =
   | boolean
@@ -136,7 +136,7 @@ type ECSqlSelectClauseLabelGroupingParams =
 
 /**
  * A data structure for defining base grouping parameters shared across all types of grouping.
- * @beta
+ * @public
  */
 interface ECSqlSelectClauseGroupingParamsBase {
   hideIfNoSiblings?: boolean | ECSqlValueSelector;
@@ -146,7 +146,7 @@ interface ECSqlSelectClauseGroupingParamsBase {
 
 /**
  * A data structure for defining properties grouping.
- * @beta
+ * @public
  */
 interface ECSqlSelectClausePropertiesGroupingParams extends ECSqlSelectClauseGroupingParamsBase {
   /**
@@ -195,7 +195,7 @@ interface ECSqlSelectClausePropertiesGroupingParams extends ECSqlSelectClauseGro
 
 /**
  * A data structure for defining specific properties' grouping params.
- * @beta
+ * @public
  */
 interface ECSqlSelectClausePropertyGroup {
   /** A string indicating the name of the property to group by. */
@@ -208,7 +208,7 @@ interface ECSqlSelectClausePropertyGroup {
 
 /**
  * A data structure for defining boundaries for a value.
- * @beta
+ * @public
  */
 interface ECSqlSelectClausePropertyValueRange {
   /** Defines the lower bound of the range. */
@@ -221,7 +221,7 @@ interface ECSqlSelectClausePropertyValueRange {
 
 /**
  * A data structure for defining base class grouping.
- * @beta
+ * @public
  */
 interface ECSqlSelectClauseBaseClassGroupingParams extends ECSqlSelectClauseGroupingParamsBase {
   fullClassNames: string[] | ECSqlValueSelector[];
@@ -229,7 +229,7 @@ interface ECSqlSelectClauseBaseClassGroupingParams extends ECSqlSelectClauseGrou
 
 /**
  * An interface of a factory that knows how to create nodes' select ECSQL query.
- * @beta
+ * @public
  */
 export interface NodesQueryClauseFactory {
   /** Create a SELECT clause in a format understood by nodes query parser used by `HierarchyProvider`. */
@@ -255,7 +255,7 @@ export interface NodesQueryClauseFactory {
 
 /**
  * Creates an instance of `NodeSelectQueryFactory`.
- * @beta
+ * @public
  */
 export function createNodesQueryClauseFactory(props: {
   imodelAccess: ECSchemaProvider & ECClassHierarchyInspector;

@@ -20,7 +20,7 @@ import {
   PropertyValueRangeGroupingNodeKey,
 } from "./HierarchyNodeKey.js";
 
-/** @beta */
+/** @public */
 export type HierarchyNodeFilteringProps = {
   /** If set to true, then one of the ancestor nodes in the hierarchy is the filter target. */
   hasFilterTargetAncestor?: boolean;
@@ -38,7 +38,7 @@ export type HierarchyNodeFilteringProps = {
       filterTargetOptions?: HierarchyFilteringPathOptions;
     }
 );
-/** @beta */
+/** @public */
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export namespace HierarchyNodeFilteringProps {
   export function create(props: {
@@ -61,7 +61,7 @@ export namespace HierarchyNodeFilteringProps {
 
 /**
  * A data structure that defines attributes that are common to all types of hierarchy nodes.
- * @beta
+ * @public
  */
 interface BaseHierarchyNode {
   /** Identifiers of all node ancestors. Can be used to identify a node in the hierarchy. */
@@ -80,7 +80,7 @@ interface BaseHierarchyNode {
 
 /**
  * A data structure that represents a single non-grouping hierarchy node.
- * @beta
+ * @public
  */
 export interface NonGroupingHierarchyNode extends BaseHierarchyNode {
   /** An identifier to identify the node in its hierarchy level. */
@@ -94,7 +94,7 @@ export interface NonGroupingHierarchyNode extends BaseHierarchyNode {
 
 /**
  * A data structure that represents a grouping node that groups other nodes.
- * @beta
+ * @public
  */
 export interface GroupingHierarchyNode extends BaseHierarchyNode {
   /** An identifier to identify this grouping node in its hierarchy level. */
@@ -112,11 +112,11 @@ export interface GroupingHierarchyNode extends BaseHierarchyNode {
 
 /**
  * A data structure that represents a single hierarchy node.
- * @beta
+ * @public
  */
 export type HierarchyNode = NonGroupingHierarchyNode | GroupingHierarchyNode;
 
-/** @beta */
+/** @public */
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export namespace HierarchyNode {
   /** Checks whether the given node is a generic node */
@@ -176,6 +176,6 @@ export namespace HierarchyNode {
 /**
  * A type of `HierarchyNode` that doesn't know about its children and is an input when requesting
  * them using `HierarchyProvider.getNodes`.
- * @beta
+ * @public
  */
 export type ParentHierarchyNode<TBase = HierarchyNode> = OmitOverUnion<TBase, "children">;

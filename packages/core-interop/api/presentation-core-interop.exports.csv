@@ -1,7 +1,7 @@
 sep=;
 Release Tag;API Item Type;API Item Name
-beta;function;createECSchemaProvider
-beta;function;createECSqlQueryExecutor
-beta;function;createLogger
-beta;function;createValueFormatter
-beta;function;registerTxnListeners
+public;function;createECSchemaProvider
+public;function;createECSqlQueryExecutor
+public;function;createLogger
+public;function;createValueFormatter
+public;function;registerTxnListeners

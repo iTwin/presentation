@@ -13,7 +13,7 @@ import { Event } from "@itwin/presentation-shared";
  * through [BriefcaseDb.txns](https://www.itwinjs.org/reference/core-backend/imodels/briefcasedb/#txns), or
  * [BriefcaseTxns](https://www.itwinjs.org/reference/core-frontend/imodelconnection/briefcasetxns/), accessed
  * through [BriefcaseConnection.txns](https://www.itwinjs.org/reference/core-frontend/imodelconnection/briefcaseconnection/#txns).
- * @beta
+ * @public
  */
 interface ICoreTxnManager {
   /**
@@ -71,7 +71,7 @@ interface ICoreTxnManager {
  * through [BriefcaseConnection.txns](https://www.itwinjs.org/reference/core-frontend/imodelconnection/briefcaseconnection/#txns).
  * @param onChanged A function to call when transaction manager reports iModel data changes.
  * @returns A function that unregisters the transaction manager listeners.
- * @beta
+ * @public
  */
 export function registerTxnListeners(txns: ICoreTxnManager, onChanged: () => void): () => void {
   let hasChanges = false;

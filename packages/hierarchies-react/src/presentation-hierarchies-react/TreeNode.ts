@@ -7,7 +7,7 @@ import { HierarchyNode } from "@itwin/presentation-hierarchies";
 
 /**
  * A type that defines an actual expandable node in a UI tree component, built with `useTree` hook.
- * @beta
+ * @public
  */
 export interface PresentationHierarchyNode {
   id: string;
@@ -27,7 +27,7 @@ export interface PresentationHierarchyNode {
  * A type of `PresentationInfoNode` that is returned as the single child of a filtered parent node,
  * when none of the child nodes match the filter.
  *
- * @beta
+ * @public
  */
 export interface PresentationNoFilterMatchesInfoNode {
   id: string;
@@ -40,7 +40,7 @@ export interface PresentationNoFilterMatchesInfoNode {
  * number of child nodes exceeds the limit set on the tree nodes loader. The limit is also included
  * on this node as `resultSetSizeLimit` attribute.
  *
- * @beta
+ * @public
  */
 export interface PresentationResultSetTooLargeInfoNode {
   id: string;
@@ -54,7 +54,7 @@ export interface PresentationResultSetTooLargeInfoNode {
  * Generally, this is the only child of a parent node, created in cases like an error loading children. The
  * renderer may offer users to re-load the children or the whole component in such cases.
  *
- * @beta
+ * @public
  */
 export interface PresentationGenericInfoNode {
   id: string;
@@ -67,19 +67,19 @@ export interface PresentationGenericInfoNode {
  * A type that defines a non-expandable, non-selectable informational node in a UI tree component, built
  * with `useTree` hook.
  *
- * @beta
+ * @public
  */
 export type PresentationInfoNode = PresentationGenericInfoNode | PresentationResultSetTooLargeInfoNode | PresentationNoFilterMatchesInfoNode;
 
 /**
  * A type that defines a node in a UI tree component, built with `useTree` hook.
- * @beta
+ * @public
  */
 export type PresentationTreeNode = PresentationHierarchyNode | PresentationInfoNode;
 
 /**
  * An utility function to check if a node is a `PresentationHierarchyNode`.
- * @beta
+ * @public
  */
 export function isPresentationHierarchyNode(node: PresentationTreeNode): node is PresentationHierarchyNode {
   return "children" in node;

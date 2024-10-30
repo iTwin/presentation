@@ -13,24 +13,24 @@ import { TypedPrimitiveValue } from "./Values.js";
  * - `string` is just concatenated to other parts as-is.
  *
  * @see `ConcatenatedValue`
- * @beta
+ * @public
  */
 export type ConcatenatedValuePart = ConcatenatedValue | TypedPrimitiveValue | string;
 
-/** @beta */
+/** @public */
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export namespace ConcatenatedValuePart {
-  /** @beta */
+  /** @public */
   export function isString(part: ConcatenatedValuePart): part is string {
     return typeof part === "string";
   }
 
-  /** @beta */
+  /** @public */
   export function isPrimitive(part: ConcatenatedValuePart): part is TypedPrimitiveValue {
     return !!(part as TypedPrimitiveValue).type;
   }
 
-  /** @beta */
+  /** @public */
   export function isConcatenatedValue(part: ConcatenatedValuePart): part is ConcatenatedValue {
     return Array.isArray(part);
   }
@@ -40,18 +40,18 @@ export namespace ConcatenatedValuePart {
  * A data structure that contains `ConcatenatedValuePart` objects describing
  * pieces that may be formatted and concatenated together.
  *
- * @beta
+ * @public
  */
 export type ConcatenatedValue = ConcatenatedValuePart[];
 
-/** @beta */
+/** @public */
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export namespace ConcatenatedValue {
   /**
    * Serialize given `ConcatenatedValue` to string using a formatter function. The parts are
    * each formatted individually and then joined together.
    *
-   * @beta
+   * @public
    */
   export async function serialize(props: {
     /** The parts to join. */

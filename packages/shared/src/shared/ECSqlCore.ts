@@ -9,7 +9,7 @@ import { Id64String } from "@itwin/core-bentley";
  * Defines an ECSql binding consisting of a value and its type. Necessary to differentiate between numeric
  * types and `Id64String` vs `string`.
  *
- * @beta
+ * @public
  */
 export type ECSqlBinding =
   | {
@@ -43,7 +43,7 @@ export type ECSqlBinding =
 
 /**
  * Defines an ECSQL query and its bindings.
- * @beta
+ * @public
  */
 export interface ECSqlQueryDef {
   /** A list of CTEs used in the query. */
@@ -65,14 +65,14 @@ export interface ECSqlQueryDef {
 /**
  * Defines requested ECSQL result row format.
  * @see [QueryRowFormat](https://www.itwinjs.org/reference/core-common/imodels/queryrowformat/)
- * @beta
+ * @public
  */
 type ECSqlQueryRowFormat = "ECSqlPropertyNames" | "Indexes";
 
 /**
  * Defines options for ECSQL query reader.
  * @see [QueryOptions](https://www.itwinjs.org/reference/core-common/imodels/queryoptions/)
- * @beta
+ * @public
  */
 export interface ECSqlQueryReaderOptions {
   rowFormat?: ECSqlQueryRowFormat;
@@ -82,7 +82,7 @@ export interface ECSqlQueryReaderOptions {
 /**
  * Represents a single row of an ECSQL query result.
  * @see [QueryRowProxy](https://www.itwinjs.org/reference/core-common/imodels/queryrowproxy/)
- * @beta
+ * @public
  */
 export interface ECSqlQueryRow {
   [propertyName: string]: any;
@@ -92,14 +92,14 @@ export interface ECSqlQueryRow {
 /**
  * Represents ECSQL query results reader.
  * @see [ECSqlReader](https://www.itwinjs.org/reference/core-common/imodels/ecsqlreader/)
- * @beta
+ * @public
  */
 type ECSqlQueryReader = AsyncIterableIterator<ECSqlQueryRow>;
 
 /**
  * An interface for something that knows how to create an ECSQL query reader.
  * @see `createECSqlQueryExecutor` in `@itwin/presentation-core-interop`.
- * @beta
+ * @public
  */
 export interface ECSqlQueryExecutor {
   createQueryReader(query: ECSqlQueryDef, config?: ECSqlQueryReaderOptions): ECSqlQueryReader;

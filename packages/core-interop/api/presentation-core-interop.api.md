@@ -18,38 +18,38 @@ import { SchemaContext } from '@itwin/ecschema-metadata';
 import { SchemaKey } from '@itwin/ecschema-metadata';
 import { UnitSystemKey } from '@itwin/core-quantity';
 
-// @beta
+// @public
 interface CoreECSqlReaderFactory {
     // (undocumented)
     createQueryReader(ecsql: string, binder?: QueryBinder, options?: QueryOptions): ECSqlReader;
 }
 
-// @beta
+// @public
 interface CoreSchemaContext {
     // (undocumented)
     getSchema(key: SchemaKey): Promise<Schema | undefined>;
 }
 
-// @beta
+// @public
 export function createECSchemaProvider(schemaContext: CoreSchemaContext): ECSchemaProvider;
 
-// @beta
+// @public
 export function createECSqlQueryExecutor(imodel: CoreECSqlReaderFactory): ECSqlQueryExecutor;
 
-// @beta
+// @public
 export function createLogger(coreLogger: ICoreLogger): ILogger;
 
-// @beta
+// @public
 export function createValueFormatter(props: CreateValueFormatterProps): IPrimitiveValueFormatter;
 
-// @beta
+// @public
 interface CreateValueFormatterProps {
     baseFormatter?: IPrimitiveValueFormatter;
     schemaContext: SchemaContext;
     unitSystem?: UnitSystemKey;
 }
 
-// @beta
+// @public
 interface ICoreLogger {
     // (undocumented)
     isEnabled(category: string, level: LogLevel): boolean;
@@ -63,14 +63,14 @@ interface ICoreLogger {
     logWarning(category: string, message: string): void;
 }
 
-// @beta
+// @public
 interface ICoreTxnManager {
     onChangesApplied: Event;
     onCommit: Event;
     onCommitted: Event;
 }
 
-// @beta
+// @public
 export function registerTxnListeners(txns: ICoreTxnManager, onChanged: () => void): () => void;
 
 // (No @packageDocumentation comment for this package)

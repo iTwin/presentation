@@ -5,7 +5,7 @@
 
 /**
  * Error that is thrown when rows amount exceed hierarchy level limit.
- * @beta
+ * @public
  */
 export class RowsLimitExceededError extends Error {
   public constructor(public readonly limit: number) {

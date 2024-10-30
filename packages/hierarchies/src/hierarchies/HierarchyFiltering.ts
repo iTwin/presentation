@@ -7,7 +7,7 @@ import { NonGroupingHierarchyNode } from "./HierarchyNode.js";
 import { HierarchyNodeIdentifiersPath } from "./HierarchyNodeIdentifier.js";
 import { GroupingNodeKey } from "./HierarchyNodeKey.js";
 
-/** @beta */
+/** @public */
 export interface FilterTargetGroupingNodeInfo {
   /** Key of the grouping node. */
   key: GroupingNodeKey;
@@ -19,7 +19,7 @@ export interface FilterTargetGroupingNodeInfo {
   depth: number;
 }
 
-/** @beta */
+/** @public */
 export interface HierarchyFilteringPathOptions {
   /**
    * This option specifies the way `autoExpand` flag should be assigned to nodes in the filtered hierarchy.
@@ -33,15 +33,15 @@ export interface HierarchyFilteringPathOptions {
 
 /**
  * A path of hierarchy node identifiers for filtering the hierarchy with additional options.
- * @beta
+ * @public
  */
 export type HierarchyFilteringPath = HierarchyNodeIdentifiersPath | { path: HierarchyNodeIdentifiersPath; options?: HierarchyFilteringPathOptions };
-/** @beta */
+/** @public */
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export namespace HierarchyFilteringPath {
   /**
    * Normalizes the hierarchy filtering path to the object form.
-   * @beta
+   * @public
    */
   export function normalize(source: HierarchyFilteringPath): Exclude<HierarchyFilteringPath, HierarchyNodeIdentifiersPath> {
     if (Array.isArray(source)) {
@@ -62,7 +62,7 @@ export namespace HierarchyFilteringPath {
    * - else if one input is an object, return it.
    * - else, return `false` or `undefined`.
    *
-   * @beta
+   * @public
    */
   export function mergeOptions(
     lhs: HierarchyFilteringPathOptions | undefined,
@@ -92,7 +92,7 @@ export namespace HierarchyFilteringPath {
 /**
  * An utility that extracts filtering properties from given root level filtering props or
  * the parent node. Returns `undefined` if filtering props are not present.
- * @beta
+ * @public
  */
 export function extractFilteringProps(
   rootLevelFilteringProps: HierarchyFilteringPath[],

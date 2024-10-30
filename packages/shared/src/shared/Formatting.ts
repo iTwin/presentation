@@ -11,7 +11,7 @@ import { TypedPrimitiveValue } from "./Values.js";
 /**
  * A type definition for a function that knows how to create a display string for a typed primitive value.
  * @see `createDefaultValueFormatter`
- * @beta
+ * @public
  */
 export type IPrimitiveValueFormatter = (value: TypedPrimitiveValue) => Promise<string>;
 
@@ -19,7 +19,7 @@ export type IPrimitiveValueFormatter = (value: TypedPrimitiveValue) => Promise<s
  * Formats a concatenated value into a string, taking into account different types of `ConcatenatedValuePart` that
  * the value consists of.
  *
- * @beta
+ * @public
  */
 export async function formatConcatenatedValue(props: { value: ConcatenatedValue | string; valueFormatter: IPrimitiveValueFormatter }): Promise<string> {
   const { value, valueFormatter } = props;
@@ -64,7 +64,7 @@ export async function formatConcatenatedValue(props: { value: ConcatenatedValue 
  *
  * - `String` and `Id` values are returned as-is.
  *
- * @beta
+ * @public
  */
 export function createDefaultValueFormatter(): IPrimitiveValueFormatter {
   const formatters = [applyBooleanFormatting, applyNumericFormatting, applyDatesFormatting, applyPointsFormatting];
