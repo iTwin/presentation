@@ -5,7 +5,7 @@
 
 import "./TreeNodeRenderer.css";
 import cx from "classnames";
-import { ComponentPropsWithoutRef, forwardRef, LegacyRef, MutableRefObject, ReactElement, Ref, useCallback, useRef } from "react";
+import { ComponentPropsWithoutRef, forwardRef, LegacyRef, MutableRefObject, ReactElement, Ref, RefAttributes, useCallback, useRef } from "react";
 import { SvgFilter, SvgFilterHollow, SvgRemove } from "@itwin/itwinui-icons-react";
 import { Anchor, ButtonGroup, Flex, IconButton, ProgressRadial, Text, TreeNode } from "@itwin/itwinui-react";
 import { MAX_LIMIT_OVERRIDE } from "../internal/Utils.js";
@@ -52,7 +52,7 @@ type TreeNodeRendererProps = Pick<UseTreeResult, "expandNode"> &
  * @see https://itwinui.bentley.com/docs/tree
  * @public
  */
-export const TreeNodeRenderer: React.ForwardRefExoticComponent<TreeNodeRendererProps> = forwardRef(
+export const TreeNodeRenderer: React.ForwardRefExoticComponent<TreeNodeRendererProps & RefAttributes<HTMLDivElement>> = forwardRef(
   (
     {
       node,
