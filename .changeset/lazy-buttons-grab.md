@@ -5,4 +5,4 @@
 "@itwin/presentation-testing": patch
 ---
 
-Added missing `package.json` file under `cjs` folder.
+Added missing `package.json` file under `cjs` folder. It is needed for package to work as commonjs module.
