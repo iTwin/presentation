@@ -6,5 +6,7 @@
 !lib/**/*.js
 !lib/**/*.js.map
 !*.md
+!lib/**/*.json
+
 # then ignore some stuff again
 lib/**/test/**
