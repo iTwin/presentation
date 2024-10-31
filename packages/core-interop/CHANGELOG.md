@@ -1,5 +1,11 @@
 # @itwin/presentation-core-interop
 
+## 1.1.1
+
+### Patch Changes
+
+- [#760](https://github.com/iTwin/presentation/pull/760): Added missing `package.json` file under `cjs` folder. It is needed for package to work as commonjs module.
+
 ## 1.1.0
 
 ### Minor Changes
