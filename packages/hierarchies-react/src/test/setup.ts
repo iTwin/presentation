@@ -21,6 +21,7 @@ globalJsdom(undefined, {
 });
 
 // supply mocha hooks
+import v8 from "node:v8";
 const { cleanup } = await import("@testing-library/react");
 export const mochaHooks = {
   beforeAll() {
@@ -32,6 +33,7 @@ export const mochaHooks = {
   },
   afterAll() {
     delete getGlobalThis().IS_REACT_ACT_ENVIRONMENT;
+    v8.takeCoverage();
   },
 };
 function getGlobalThis(): typeof globalThis & { IS_REACT_ACT_ENVIRONMENT?: boolean } {
