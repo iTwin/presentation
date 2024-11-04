@@ -31,6 +31,7 @@ global.ResizeObserver = class ResizeObserver {
 
 // supply mocha hooks
 import path from "path";
+import v8 from "node:v8";
 const { cleanup, configure } = await import("@testing-library/react");
 export const mochaHooks = {
   beforeAll() {
@@ -53,6 +54,7 @@ export const mochaHooks = {
   },
   afterAll() {
     delete getGlobalThis().IS_REACT_ACT_ENVIRONMENT;
+    v8.takeCoverage();
   },
 };
 function getGlobalThis(): typeof globalThis & { IS_REACT_ACT_ENVIRONMENT?: boolean } {
