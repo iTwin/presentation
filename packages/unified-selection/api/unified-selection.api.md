@@ -229,6 +229,9 @@ export type StorageSelectionChangeType =
 | "clear";
 
 // @public
+export const TRANSIENT_ELEMENT_CLASSNAME = "/TRANSIENT";
+
+// @public
 interface Uint32Set {
     addIds(ids: Id64Arg): void;
     deleteIds(ids: Id64Arg): void;

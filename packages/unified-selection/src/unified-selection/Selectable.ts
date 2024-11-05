@@ -79,7 +79,10 @@ export interface Selectables {
   custom: Map<string, CustomSelectable>;
 }
 
-/** @internal */
+/**
+ * Class name used to create `SelectableInstanceKey` for transient elements.
+ * @public
+ */
 export const TRANSIENT_ELEMENT_CLASSNAME = "/TRANSIENT";
 
 /** @public */

@@ -19,3 +19,4 @@ public;interface;SelectionStorage
 public;interface;StorageSelectionChangeEventArgs
 public;type;StorageSelectionChangesListener
 public;type;StorageSelectionChangeType
+public;const;TRANSIENT_ELEMENT_CLASSNAME
