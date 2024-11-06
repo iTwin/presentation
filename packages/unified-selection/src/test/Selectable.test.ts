@@ -5,7 +5,7 @@
 
 import { expect } from "chai";
 import sinon from "sinon";
-import { CustomSelectable, Selectable, SelectableInstanceKey, Selectables } from "../unified-selection/Selectable.js";
+import { CustomSelectable, Selectable, SelectableInstanceKey, Selectables, TRANSIENT_ELEMENT_CLASSNAME } from "../unified-selection/Selectable.js";
 import { createCustomSelectable, createECInstanceId, createSelectableInstanceKey } from "./_helpers/SelectablesCreator.js";
 
 describe("Selectable", () => {
@@ -157,6 +157,12 @@ describe("Selectables", () => {
       const selectables = Selectables.create([selectable]);
       expect(Selectables.size(selectables)).to.eq(1);
       Selectables.add(selectables, [selectableFormat]);
+      expect(Selectables.size(selectables)).to.eq(1);
+    });
+
+    it("adds transient element instance key", () => {
+      const selectable = createSelectableInstanceKey(1, TRANSIENT_ELEMENT_CLASSNAME);
+      const selectables = Selectables.create([selectable]);
       expect(Selectables.size(selectables)).to.eq(1);
     });
 

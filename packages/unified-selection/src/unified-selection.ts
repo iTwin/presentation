@@ -3,7 +3,14 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-export * from "./unified-selection/Selectable.js";
+export {
+  TRANSIENT_ELEMENT_CLASSNAME,
+  CustomSelectable,
+  Selectable,
+  SelectableIdentifier,
+  SelectableInstanceKey,
+  Selectables,
+} from "./unified-selection/Selectable.js";
 export { SelectionStorage, createStorage } from "./unified-selection/SelectionStorage.js";
 export { createHiliteSetProvider, HiliteSet, HiliteSetProvider } from "./unified-selection/HiliteSetProvider.js";
 export { createCachingHiliteSetProvider, CachingHiliteSetProvider } from "./unified-selection/CachingHiliteSetProvider.js";

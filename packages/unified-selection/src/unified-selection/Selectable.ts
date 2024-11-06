@@ -79,6 +79,12 @@ export interface Selectables {
   custom: Map<string, CustomSelectable>;
 }
 
+/**
+ * Class name used to create `SelectableInstanceKey` for transient elements.
+ * @public
+ */
+export const TRANSIENT_ELEMENT_CLASSNAME = "/TRANSIENT";
+
 /** @public */
 export namespace Selectables {
   /**
@@ -123,7 +129,7 @@ export namespace Selectables {
    */
   export function has(selectables: Selectables, value: SelectableIdentifier): boolean {
     if (Selectable.isInstanceKey(value)) {
-      const normalizedClassName = normalizeFullClassName(value.className);
+      const normalizedClassName = normalizeClassName(value.className);
       const set = selectables.instanceKeys.get(normalizedClassName);
       return !!(set && set.has(value.id));
     }
@@ -173,7 +179,7 @@ export namespace Selectables {
     let hasChanged = false;
     for (const selectable of values) {
       if (Selectable.isInstanceKey(selectable)) {
-        const normalizedClassName = normalizeFullClassName(selectable.className);
+        const normalizedClassName = normalizeClassName(selectable.className);
         let set = selectables.instanceKeys.get(normalizedClassName);
         if (!set) {
           set = new Set<string>();
@@ -201,7 +207,7 @@ export namespace Selectables {
     let hasChanged = false;
     for (const selectable of values) {
       if (Selectable.isInstanceKey(selectable)) {
-        const normalizedClassName = normalizeFullClassName(selectable.className);
+        const normalizedClassName = normalizeClassName(selectable.className);
         const set = selectables.instanceKeys.get(normalizedClassName);
         if (set && set.has(selectable.id)) {
           set.delete(selectable.id);
@@ -267,4 +273,8 @@ export namespace Selectables {
       callback(data, index++);
     });
   }
+}
+
+function normalizeClassName(fullClassName: string) {
+  return fullClassName === TRANSIENT_ELEMENT_CLASSNAME ? fullClassName : normalizeFullClassName(fullClassName);
 }
