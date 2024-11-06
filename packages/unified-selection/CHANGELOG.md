@@ -1,5 +1,11 @@
 # @itwin/unified-selection
 
+## 1.1.1
+
+### Patch Changes
+
+- [#765](https://github.com/iTwin/presentation/pull/765): Fixed transient element keys handling in unified selection storage.
+
 ## 1.1.0
 
 ### Minor Changes
