@@ -30,7 +30,7 @@ import { IPresentationTreeDataProvider } from "../../../presentation-components/
 import { createTreeNodeItem } from "../../../presentation-components/tree/Utils.js";
 import { renderHook, waitFor } from "../../TestUtils.js";
 
-/* eslint-disable deprecation/deprecation */
+/* eslint-disable @typescript-eslint/no-deprecated */
 
 describe("usePresentationNodeLoader", () => {
   const onIModelHierarchyChanged: PresentationManager["onIModelHierarchyChanged"] = new BeEvent<(args: IModelHierarchyChangeEventArgs) => void>();

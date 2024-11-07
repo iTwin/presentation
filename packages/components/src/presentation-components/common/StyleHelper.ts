@@ -198,19 +198,19 @@ export class StyleHelper {
   }
 
   public static isBold(node: Partial<Node>): boolean {
-    return (node.fontStyle?.indexOf("Bold") ?? -1) !== -1; // eslint-disable-line deprecation/deprecation
+    return (node.fontStyle?.indexOf("Bold") ?? -1) !== -1; // eslint-disable-line @typescript-eslint/no-deprecated
   }
 
   public static isItalic(node: Partial<Node>): boolean {
-    return (node.fontStyle?.indexOf("Italic") ?? -1) !== -1; // eslint-disable-line deprecation/deprecation
+    return (node.fontStyle?.indexOf("Italic") ?? -1) !== -1; // eslint-disable-line @typescript-eslint/no-deprecated
   }
 
-  // istanbul ignore next
+  /* c8 ignore next 3 */
   public static getForeColor(node: Partial<Node>): number | undefined {
-    return node.foreColor ? StyleHelper.getColor(node.foreColor) : undefined; // eslint-disable-line deprecation/deprecation
+    return node.foreColor ? StyleHelper.getColor(node.foreColor) : undefined; // eslint-disable-line @typescript-eslint/no-deprecated
   }
 
   public static getBackColor(node: Partial<Node>): number | undefined {
-    return node.backColor ? StyleHelper.getColor(node.backColor) : undefined; // eslint-disable-line deprecation/deprecation
+    return node.backColor ? StyleHelper.getColor(node.backColor) : undefined; // eslint-disable-line @typescript-eslint/no-deprecated
   }
 }

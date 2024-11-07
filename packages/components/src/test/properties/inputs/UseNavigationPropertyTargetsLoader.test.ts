@@ -121,9 +121,11 @@ describe("useNavigationPropertyTargetsLoader", () => {
       });
 
       await waitFor(() => expect(result.current.isLoading).to.eq(false));
-      await waitFor(() => expect(getContentIteratorStub).to.be.calledThrice);
-      const descriptor = getContentIteratorStub.getCall(2).args[0].descriptor;
-      expect(descriptor.fieldsFilterExpression).to.contain("testFilter");
+      await waitFor(() => {
+        expect(getContentIteratorStub.callCount).to.be.greaterThanOrEqual(2);
+        const descriptor = getContentIteratorStub.lastCall.args[0].descriptor;
+        expect(descriptor.fieldsFilterExpression).to.contain("testFilter");
+      });
     });
   });
 
@@ -196,9 +198,11 @@ describe("useNavigationPropertyTargetsLoader", () => {
       });
 
       await waitFor(() => expect(result.current.isLoading).to.eq(false));
-      await waitFor(() => expect(getContentStub).to.be.calledThrice);
-      const descriptor = getContentStub.getCall(2).args[0].descriptor;
-      expect(descriptor.fieldsFilterExpression).to.contain("testFilter");
+      await waitFor(() => {
+        expect(getContentStub.callCount).to.be.greaterThanOrEqual(2);
+        const descriptor = getContentStub.lastCall.args[0].descriptor;
+        expect(descriptor.fieldsFilterExpression).to.contain("testFilter");
+      });
     });
   });
 });

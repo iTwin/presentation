@@ -6,32 +6,32 @@
 
 import { Id64String } from '@itwin/core-bentley';
 
-// @beta
+// @public
 export type ArrayElement<ArrayType extends readonly unknown[]> = ArrayType extends readonly (infer ElementType)[] ? ElementType : never;
 
-// @beta
+// @public
 interface BisInstanceLabelSelectClauseFactoryProps {
     // (undocumented)
     classHierarchyInspector: ECClassHierarchyInspector;
 }
 
-// @beta
+// @public
 interface ClassBasedInstanceLabelSelectClauseFactoryProps {
     classHierarchyInspector: ECClassHierarchyInspector;
     clauses: ClassBasedLabelSelectClause[];
     defaultClauseFactory?: IInstanceLabelSelectClauseFactory;
 }
 
-// @beta
+// @public
 interface ClassBasedLabelSelectClause {
     className: string;
     clause: (props: CreateInstanceLabelSelectClauseProps) => Promise<string>;
 }
 
-// @beta
+// @public
 export type ConcatenatedValue = ConcatenatedValuePart[];
 
-// @beta (undocumented)
+// @public (undocumented)
 export namespace ConcatenatedValue {
     export function serialize(props: {
         parts: ConcatenatedValue;
@@ -40,10 +40,10 @@ export namespace ConcatenatedValue {
     }): Promise<string>;
 }
 
-// @beta
+// @public
 export type ConcatenatedValuePart = ConcatenatedValue | TypedPrimitiveValue | string;
 
-// @beta (undocumented)
+// @public (undocumented)
 export namespace ConcatenatedValuePart {
     // (undocumented)
     export function isConcatenatedValue(part: ConcatenatedValuePart): part is ConcatenatedValue;
@@ -53,52 +53,52 @@ export namespace ConcatenatedValuePart {
     export function isString(part: ConcatenatedValuePart): part is string;
 }
 
-// @beta
+// @public
 export function createBisInstanceLabelSelectClauseFactory(props: BisInstanceLabelSelectClauseFactoryProps): IInstanceLabelSelectClauseFactory;
 
-// @beta
+// @public
 export function createCachingECClassHierarchyInspector(props: {
     schemaProvider: ECSchemaProvider;
     cacheSize?: number;
 }): ECClassHierarchyInspector;
 
-// @beta
+// @public
 export function createClassBasedInstanceLabelSelectClauseFactory(props: ClassBasedInstanceLabelSelectClauseFactoryProps): IInstanceLabelSelectClauseFactory;
 
-// @beta
+// @public
 function createConcatenatedValueJsonSelector(selectors: TypedValueSelectClauseProps[], checkSelector?: string): string;
 
-// @beta
+// @public
 function createConcatenatedValueStringSelector(selectors: TypedValueSelectClauseProps[], checkSelector?: string): string;
 
-// @beta
+// @public
 export function createDefaultInstanceLabelSelectClauseFactory(): IInstanceLabelSelectClauseFactory;
 
-// @beta
+// @public
 export function createDefaultValueFormatter(): IPrimitiveValueFormatter;
 
-// @beta
+// @public
 function createInstanceKeySelector(props: {
     alias: string;
 }): string;
 
-// @beta
+// @public
 interface CreateInstanceLabelSelectClauseProps {
     classAlias: string;
     className?: string;
     selectorsConcatenator?: (selectors: TypedValueSelectClauseProps[], checkSelector?: string) => string;
 }
 
-// @beta
+// @public
 export function createMainThreadReleaseOnTimePassedHandler(releaseOnTimePassed?: number): () => Promise<void> | undefined;
 
-// @beta
+// @public
 function createNullableSelector(props: {
     checkSelector: string;
     valueSelector: string;
 }): string;
 
-// @beta
+// @public
 function createPrimitivePropertyValueSelectorProps({ schemaProvider, propertyClassAlias, propertyClassName, propertyName, }: {
     schemaProvider: ECSchemaProvider;
     propertyClassName: string;
@@ -106,16 +106,16 @@ function createPrimitivePropertyValueSelectorProps({ schemaProvider, propertyCla
     propertyName: string;
 }): Promise<TypedPrimitiveValueSelectorProps>;
 
-// @beta
+// @public
 function createRawPrimitiveValueSelector(value: PrimitiveValue | undefined): string;
 
-// @beta
+// @public
 function createRawPropertyValueSelector(classAlias: string, propertyName: string, componentName?: string): string;
 
-// @beta
+// @public
 function createRelationshipPathJoinClause(props: CreateRelationshipPathJoinClauseProps): Promise<string>;
 
-// @beta
+// @public
 interface CreateRelationshipPathJoinClauseProps {
     // (undocumented)
     path: JoinRelationshipPath;
@@ -123,7 +123,7 @@ interface CreateRelationshipPathJoinClauseProps {
     schemaProvider: ECSchemaProvider;
 }
 
-// @beta
+// @public
 export namespace EC {
     export type ArrayProperty = StructArrayProperty | EnumerationArrayProperty | PrimitiveArrayProperty;
     export interface ArrayPropertyAttributes {
@@ -258,13 +258,13 @@ export namespace EC {
     }
 }
 
-// @beta
+// @public
 export interface ECClassHierarchyInspector {
     // (undocumented)
     classDerivesFrom(derivedClassFullName: string, candidateBaseClassFullName: string): Promise<boolean> | boolean;
 }
 
-// @beta
+// @public
 export interface ECSchemaProvider {
     // (undocumented)
     getSchema(schemaName: string): Promise<EC.Schema | undefined>;
@@ -284,7 +284,7 @@ declare namespace ECSql {
 }
 export { ECSql }
 
-// @beta
+// @public
 export type ECSqlBinding = {
     type: "boolean";
     value?: boolean;
@@ -315,23 +315,23 @@ export type ECSqlBinding = {
     };
 };
 
-// @beta
+// @public
 export interface ECSqlQueryDef {
     bindings?: ECSqlBinding[];
     ctes?: string[];
     ecsql: string;
 }
 
-// @beta
+// @public
 export interface ECSqlQueryExecutor {
     // (undocumented)
     createQueryReader(query: ECSqlQueryDef, config?: ECSqlQueryReaderOptions): ECSqlQueryReader;
 }
 
-// @beta
+// @public
 type ECSqlQueryReader = AsyncIterableIterator<ECSqlQueryRow>;
 
-// @beta
+// @public
 export interface ECSqlQueryReaderOptions {
     // (undocumented)
     restartToken?: string;
@@ -339,7 +339,7 @@ export interface ECSqlQueryReaderOptions {
     rowFormat?: ECSqlQueryRowFormat;
 }
 
-// @beta
+// @public
 export interface ECSqlQueryRow {
     // (undocumented)
     [propertyName: string]: any;
@@ -347,10 +347,10 @@ export interface ECSqlQueryRow {
     [propertyIndex: number]: any;
 }
 
-// @beta
+// @public
 type ECSqlQueryRowFormat = "ECSqlPropertyNames" | "Indexes";
 
-// @beta
+// @public
 interface Event_2<TListener extends (...args: any[]) => void = () => void> {
     // (undocumented)
     addListener(listener: TListener): () => void;
@@ -359,21 +359,21 @@ interface Event_2<TListener extends (...args: any[]) => void = () => void> {
 }
 export { Event_2 as Event }
 
-// @beta
+// @public
 export function formatConcatenatedValue(props: {
     value: ConcatenatedValue | string;
     valueFormatter: IPrimitiveValueFormatter;
 }): Promise<string>;
 
-// @beta
+// @public
 export function getClass(schemaProvider: ECSchemaProvider, fullClassName: string): Promise<EC.Class>;
 
-// @beta
+// @public
 export interface IInstanceLabelSelectClauseFactory {
     createSelectClause(props: CreateInstanceLabelSelectClauseProps): Promise<string>;
 }
 
-// @beta
+// @public
 export interface ILogger {
     // (undocumented)
     isEnabled: (category: string, level: LogLevel) => boolean;
@@ -387,25 +387,25 @@ export interface ILogger {
     logWarning: LogFunction;
 }
 
-// @beta
+// @public
 export interface InstanceKey {
     className: string;
     id: Id64String;
 }
 
-// @beta (undocumented)
+// @public (undocumented)
 export namespace InstanceKey {
     export function compare(lhs: InstanceKey, rhs: InstanceKey): number;
     export function equals(lhs: InstanceKey, rhs: InstanceKey): boolean;
 }
 
-// @beta
+// @public
 export type IPrimitiveValueFormatter = (value: TypedPrimitiveValue) => Promise<string>;
 
-// @beta
+// @public
 type JoinRelationshipPath = RelationshipPath<JoinRelationshipPathStep>;
 
-// @beta
+// @public
 interface JoinRelationshipPathStep extends RelationshipPathStep {
     // (undocumented)
     joinType?: "inner" | "outer";
@@ -417,34 +417,34 @@ interface JoinRelationshipPathStep extends RelationshipPathStep {
     targetAlias: string;
 }
 
-// @beta
+// @public
 export function julianToDateTime(julianDate: number): Date;
 
-// @beta
+// @public
 export type LogFunction = (category: string, message: string) => void;
 
-// @beta
+// @public
 export type LogLevel = "error" | "warning" | "info" | "trace";
 
-// @beta
+// @public
 export const NOOP_LOGGER: ILogger;
 
-// @beta
+// @public
 export function normalizeFullClassName(fullClassName: string): string;
 
-// @beta
+// @public
 export type OmitOverUnion<T, K extends PropertyKey> = T extends T ? Omit<T, K> : never;
 
-// @beta
+// @public
 export function parseFullClassName(fullClassName: string): {
     schemaName: string;
     className: string;
 };
 
-// @beta
+// @public
 export function parseInstanceLabel(value: string | undefined): ConcatenatedValue | string;
 
-// @beta
+// @public
 interface Point2d {
     // (undocumented)
     x: number;
@@ -452,7 +452,7 @@ interface Point2d {
     y: number;
 }
 
-// @beta
+// @public
 interface Point3d {
     // (undocumented)
     x: number;
@@ -462,22 +462,22 @@ interface Point3d {
     z: number;
 }
 
-// @beta
+// @public
 export type PrimitiveValue = Id64String | string | number | boolean | Date | Point2d | Point3d;
 
-// @beta (undocumented)
+// @public (undocumented)
 export namespace PrimitiveValue {
     export function isPoint2d(value: PrimitiveValue): value is Point2d;
     export function isPoint3d(value: PrimitiveValue): value is Point3d;
 }
 
-// @beta
+// @public
 type PrimitiveValueType = "Id" | Exclude<EC.PrimitiveType, "Binary" | "IGeometry">;
 
-// @beta
+// @public
 type RelationshipPath<TStep extends RelationshipPathStep = RelationshipPathStep> = TStep[];
 
-// @beta
+// @public
 interface RelationshipPathStep {
     relationshipName: string;
     relationshipReverse?: boolean;
@@ -485,16 +485,16 @@ interface RelationshipPathStep {
     targetClassName: string;
 }
 
-// @beta
+// @public
 export function releaseMainThread(): Promise<void>;
 
-// @beta
+// @public
 export function trimWhitespace(str: string): string;
 
-// @beta
+// @public
 export function trimWhitespace(str: string | undefined): string | undefined;
 
-// @beta
+// @public
 export type TypedPrimitiveValue = ({
     value: number;
     type: "Integer" | "Long";
@@ -524,12 +524,12 @@ export type TypedPrimitiveValue = ({
     extendedType?: string;
 };
 
-// @beta (undocumented)
+// @public (undocumented)
 export namespace TypedPrimitiveValue {
     export function create(value: PrimitiveValue, type: PrimitiveValueType, koqName?: string, extendedType?: string): TypedPrimitiveValue;
 }
 
-// @beta
+// @public
 type TypedPrimitiveValueSelectorProps = {
     selector: string;
 } & ({
@@ -543,10 +543,10 @@ type TypedPrimitiveValueSelectorProps = {
     koqName?: string;
 });
 
-// @beta
+// @public
 type TypedValueSelectClauseProps = TypedPrimitiveValue | TypedPrimitiveValueSelectorProps;
 
-// @beta (undocumented)
+// @public (undocumented)
 namespace TypedValueSelectClauseProps {
     // (undocumented)
     function isPrimitiveValue(props: TypedValueSelectClauseProps): props is TypedPrimitiveValue;

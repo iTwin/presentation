@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { forwardRef, useImperativeHandle, useRef, useState } from "react";
+import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from "react";
 import { PrimitiveValue, PropertyRecord, PropertyValueFormat } from "@itwin/appui-abstract";
 import { PropertyEditorProps } from "@itwin/components-react";
 import { Input } from "@itwin/itwinui-react";
@@ -17,19 +17,9 @@ export interface NumericPropertyInputProps extends PropertyEditorProps {
 
 /** @internal */
 export const NumericPropertyInput = forwardRef<PropertyEditorAttributes, NumericPropertyInputProps>((props, ref) => {
-  const { onCommit, propertyRecord } = props;
+  const { onCommit, propertyRecord, setFocus } = props;
 
   const [inputValue, setInputValue] = useState<string>(() => getInputTargetFromPropertyRecord(propertyRecord) ?? "");
-
-  const divRef = useRef<HTMLInputElement>(null);
-  useImperativeHandle(
-    ref,
-    () => ({
-      getValue: () => parsePrimitiveValue(inputValue),
-      htmlElement: divRef.current,
-    }),
-    [inputValue],
-  );
 
   const handleChange = (newVal: string) => {
     setInputValue(newVal);
@@ -42,11 +32,7 @@ export const NumericPropertyInput = forwardRef<PropertyEditorAttributes, Numeric
         newValue: parsePrimitiveValue(inputValue),
       });
   };
-  return (
-    <div ref={divRef}>
-      <NumericInput onChange={handleChange} value={inputValue} onBlur={commitInput} />
-    </div>
-  );
+  return <NumericInput onChange={handleChange} value={inputValue} onBlur={commitInput} isDisabled={propertyRecord.isReadonly} setFocus={setFocus} ref={ref} />;
 });
 NumericPropertyInput.displayName = "NumericPropertyInput";
 
@@ -62,7 +48,7 @@ function parsePrimitiveValue(value: string): PrimitiveValue {
 
 function getInputTargetFromPropertyRecord(propertyRecord: PropertyRecord) {
   const value = propertyRecord.value;
-  // istanbul ignore if
+  /* c8 ignore next 3 */
   if (value.valueFormat !== PropertyValueFormat.Primitive) {
     return undefined;
   }
@@ -70,14 +56,25 @@ function getInputTargetFromPropertyRecord(propertyRecord: PropertyRecord) {
 }
 
 /** @internal */
-export interface NumericInputProps {
+export interface NumericInputProps extends PropertyEditorProps {
   onChange: (newValue: string) => void;
   onBlur?: React.FocusEventHandler;
   value: string;
+  isDisabled?: boolean;
 }
 
 /** @internal */
-export const NumericInput = ({ value, onChange, onBlur }: NumericInputProps) => {
+export const NumericInput = forwardRef<PropertyEditorAttributes, NumericInputProps>(({ value, onChange, onBlur, isDisabled, setFocus }, ref) => {
+  const inputRef = useRef<HTMLInputElement>(null);
+  useImperativeHandle(
+    ref,
+    () => ({
+      getValue: () => parsePrimitiveValue(value),
+      htmlElement: inputRef.current,
+    }),
+    [value],
+  );
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.currentTarget.value;
     // Check if it is a correct number and it is not infinity.
@@ -103,5 +100,23 @@ export const NumericInput = ({ value, onChange, onBlur }: NumericInputProps) => 
     }
   };
 
-  return <Input data-testid="numeric-input" size="small" value={value} onChange={handleChange} onBlur={onBlur} />;
-};
+  useEffect(() => {
+    if (setFocus) {
+      inputRef.current && inputRef.current.focus();
+    }
+  }, [setFocus]);
+
+  return (
+    <Input
+      ref={inputRef}
+      disabled={isDisabled}
+      data-testid="numeric-input"
+      size="small"
+      value={value}
+      onChange={handleChange}
+      onBlur={onBlur}
+      onFocus={() => inputRef.current?.setSelectionRange(0, 9999)}
+    />
+  );
+});
+NumericInput.displayName = "NumericInput";

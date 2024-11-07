@@ -13,12 +13,10 @@ import { InstanceKey, KeySet, Ruleset } from "@itwin/presentation-common";
 import { TableColumnDefinition, TableRowDefinition, usePresentationTable } from "@itwin/presentation-components";
 import { Presentation } from "@itwin/presentation-frontend";
 import { buildTestIModel } from "@itwin/presentation-testing";
-import { render } from "@testing-library/react";
 import { initialize, terminate } from "../../IntegrationTests.js";
+import { render } from "../../RenderUtils.js";
 import { ensureHasError, ErrorBoundary } from "../ErrorBoundary.js";
 import { ensureTableHasRowsWithCellValues } from "../TableUtils.js";
-
-/* eslint-disable @typescript-eslint/naming-convention */
 
 describe("Learning snippets", () => {
   describe("Table", () => {
@@ -28,6 +26,7 @@ describe("Learning snippets", () => {
     });
 
     after(async () => {
+      UiComponents.terminate();
       await terminate();
     });
 
@@ -115,7 +114,7 @@ describe("Learning snippets", () => {
 
       // set up imodel for the test
       let modelKey: InstanceKey | undefined;
-      // eslint-disable-next-line deprecation/deprecation
+      // eslint-disable-next-line @typescript-eslint/no-deprecated
       const imodel = await buildTestIModel(this, async (builder) => {
         const categoryKey = insertSpatialCategory({ builder, codeValue: "My Category" });
         modelKey = insertPhysicalModelWithPartition({ builder, codeValue: "My Model" });

@@ -18,7 +18,8 @@
       "import": "./lib/esm/presentation-test-utilities.js",
       "require": "./lib/cjs/presentation-test-utilities.js"
     },
-    "./package.json": "./package.json"
+    "./package.json": "./package.json",
+    "./node-hooks/ignore-styles": "./node-hooks/ignore-styles.cjs"
   },
   "dependencies": {
     "@itwin/core-bentley": "catalog:itwinjs-core",

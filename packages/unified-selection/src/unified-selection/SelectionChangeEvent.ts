@@ -8,7 +8,7 @@ import { SelectionStorage } from "./SelectionStorage.js";
 
 /**
  * The type of selection change.
- * @beta
+ * @public
  */
 export type StorageSelectionChangeType =
   /** Added to selection. */
@@ -27,7 +27,7 @@ export type StorageSelectionChangeType =
  * by package consumers, may be supplemented with required attributes any time.
  *
  * @see `StorageSelectionChangesListener`
- * @beta
+ * @public
  */
 export interface StorageSelectionChangeEventArgs {
   /** The name of the selection source which caused the selection change. */
@@ -53,7 +53,7 @@ export interface StorageSelectionChangeEventArgs {
 
 /**
  * An interface for selection change listeners.
- * @beta
+ * @public
  */
 export type StorageSelectionChangesListener = (
   /** Arguments for the selection change event */

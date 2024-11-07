@@ -10,16 +10,16 @@ let g_logger: ILogger = NOOP_LOGGER;
 
 /**
  * Set logger to use by this package. By default the package uses a no-op logger.
- * @beta
+ * @public
  */
 export function setLogger(logger: ILogger | undefined) {
-  g_logger = logger ?? /* istanbul ignore next */ NOOP_LOGGER;
+  g_logger = logger ?? /* c8 ignore next */ NOOP_LOGGER;
 }
 
 /**
  * Get logger used by this package.
  * @see `setLogger`
- * @beta
+ * @public
  */
 export function getLogger(): ILogger {
   return g_logger;

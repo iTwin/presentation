@@ -774,7 +774,6 @@ async function createInstanceKeyPathsFromInstanceLabel(
   const elementLabelSelectClause = await props.labelsFactory.createSelectClause({
     classAlias: "e",
     className: "BisCore.Element",
-    // eslint-disable-next-line @typescript-eslint/unbound-method
     selectorsConcatenator: ECSql.createConcatenatedValueStringSelector,
   });
   const targetsReader = props.imodelAccess.createQueryReader(
@@ -830,6 +829,7 @@ async function collect<T>(obs: ObservableInput<T>): Promise<T[]> {
         resolve(arr);
       },
       error(reason) {
+        // eslint-disable-next-line @typescript-eslint/prefer-promise-reject-errors
         reject(reason);
       },
     });

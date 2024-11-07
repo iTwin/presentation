@@ -138,18 +138,18 @@ export class PresentationTreeDataProvider implements IPresentationTreeDataProvid
     this._dataSource = {
       getNodesIterator: async (requestOptions) => {
         // we can't just drop support for the `getNodesAndCount` override, so if it's set - need to take data from it
-        /* eslint-disable deprecation/deprecation */
+        /* eslint-disable @typescript-eslint/no-deprecated */
         if (props.dataSourceOverrides?.getNodesAndCount) {
           return createNodesIteratorFromDeprecatedResponse(await props.dataSourceOverrides.getNodesAndCount(requestOptions));
         }
-        /* eslint-enable deprecation/deprecation */
+        /* eslint-enable @typescript-eslint/no-deprecated */
 
         // the `PresentationManager.getNodesIterator` has only been added to @itwin/presentation-frontend in 4.5.1, and our peerDependency is
         // set to 4.0.0, so we need to check if the method is really there
         if (Presentation.presentation.getNodesIterator) {
           return Presentation.presentation.getNodesIterator(requestOptions);
         }
-        // eslint-disable-next-line deprecation/deprecation
+        // eslint-disable-next-line @typescript-eslint/no-deprecated
         return createNodesIteratorFromDeprecatedResponse(await Presentation.presentation.getNodesAndCount(requestOptions));
       },
       getFilteredNodePaths: async (requestOptions: FilterByTextHierarchyRequestOptions<IModelConnection>) =>
@@ -376,7 +376,6 @@ async function createNodesAndCountResult(
           };
       }
     }
-    // istanbul ignore else
     if (e instanceof Error) {
       // eslint-disable-next-line no-console
       console.error(`Error creating nodes: ${e.toString()}`);

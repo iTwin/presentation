@@ -14,10 +14,8 @@ import { InstanceKey, KeySet } from "@itwin/presentation-common";
 import { viewWithUnifiedSelection } from "@itwin/presentation-components";
 import { Presentation } from "@itwin/presentation-frontend";
 import { buildTestIModel } from "@itwin/presentation-testing";
-import { render, waitFor } from "@testing-library/react";
 import { initialize, terminate } from "../../IntegrationTests.js";
-
-/* eslint-disable @typescript-eslint/naming-convention */
+import { render, waitFor } from "../../RenderUtils.js";
 
 describe("Learning snippets", async () => {
   describe("Viewport", () => {
@@ -43,7 +41,7 @@ describe("Learning snippets", async () => {
 
       // set up imodel for the test
       const elementKeys: InstanceKey[] = [];
-      // eslint-disable-next-line deprecation/deprecation
+      // eslint-disable-next-line @typescript-eslint/no-deprecated
       const imodel = await buildTestIModel(this, async (builder) => {
         const categoryKey = insertSpatialCategory({ builder, fullClassNameSeparator: ":", codeValue: "My Category" });
         const modelKey = insertPhysicalModelWithPartition({ builder, fullClassNameSeparator: ":", codeValue: "My Model" });

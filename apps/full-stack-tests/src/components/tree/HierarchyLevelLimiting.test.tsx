@@ -11,11 +11,9 @@ import { IModelApp, IModelConnection } from "@itwin/core-frontend";
 import { PresentationRpcInterface, Ruleset } from "@itwin/presentation-common";
 import { PresentationTree, PresentationTreeRenderer, usePresentationTreeState } from "@itwin/presentation-components";
 import { buildTestIModel } from "@itwin/presentation-testing";
-import { getByRole, render, waitFor } from "@testing-library/react";
 import { initialize, terminate } from "../../IntegrationTests.js";
+import { getByRole, render, waitFor } from "../../RenderUtils.js";
 import { getNodeByLabel, toggleExpandNode } from "../TreeUtils.js";
-
-/* eslint-disable @typescript-eslint/naming-convention */
 
 describe("Learning snippets", () => {
   describe("Tree", () => {
@@ -27,6 +25,7 @@ describe("Learning snippets", () => {
 
     after(async () => {
       delete (HTMLElement.prototype as any).scrollIntoView;
+      UiComponents.terminate();
       await terminate();
     });
 
@@ -65,7 +64,7 @@ describe("Learning snippets", () => {
       // __PUBLISH_EXTRACT_END__
 
       // set up imodel for the test
-      // eslint-disable-next-line deprecation/deprecation
+      // eslint-disable-next-line @typescript-eslint/no-deprecated
       const imodel = await buildTestIModel(this, async (builder) => {
         const categoryKey = insertSpatialCategory({ builder, codeValue: "My Category" });
         const modelKeyA = insertPhysicalModelWithPartition({ builder, codeValue: "My Model A" });
@@ -79,7 +78,7 @@ describe("Learning snippets", () => {
       });
 
       // render the component
-      const { container, getByText } = render(<MyTree imodel={imodel} />);
+      const { container, getByText } = render(<MyTree imodel={imodel} />, { addThemeProvider: true });
       await waitFor(() => getByRole(container, "tree"));
 
       // find & expand both model nodes

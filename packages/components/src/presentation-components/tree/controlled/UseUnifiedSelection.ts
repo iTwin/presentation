@@ -134,11 +134,12 @@ export class UnifiedSelectionTreeEventHandler extends TreeEventHandler implement
   }
 
   /** @deprecated in 4.0. Use [[isPresentationTreeNodeItem]] and [[PresentationTreeNodeItem.key]] to get [NodeKey]($presentation-common). */
-  // istanbul ignore next
+  /* c8 ignore start */
   protected getNodeKey(node: TreeNodeItem): NodeKey {
-    // eslint-disable-next-line deprecation/deprecation
+    // eslint-disable-next-line @typescript-eslint/no-deprecated
     return this.#dataProvider.getNodeKey(node);
   }
+  /* c8 ignore end */
 
   /**
    * Determines if node should be selected.
@@ -146,7 +147,7 @@ export class UnifiedSelectionTreeEventHandler extends TreeEventHandler implement
    * or node is ECInstance node and instance key is in selection.
    */
   protected shouldSelectNode(node: TreeNodeItem, selection: Readonly<KeySet>) {
-    // istanbul ignore if
+    /* c8 ignore next 3 */
     if (!isPresentationTreeNodeItem(node)) {
       return false;
     }
@@ -174,7 +175,7 @@ export class UnifiedSelectionTreeEventHandler extends TreeEventHandler implement
 
   protected getKeys(nodes: TreeNodeItem[]): Keys {
     const nodeKeys: NodeKey[] = nodes
-      .map((node) => (isPresentationTreeNodeItem(node) ? node.key : /* istanbul ignore next */ undefined))
+      .map((node) => (isPresentationTreeNodeItem(node) ? node.key : /* c8 ignore next */ undefined))
       .filter((key) => key !== undefined) as NodeKey[];
     return SelectionHelper.getKeysForSelection(nodeKeys);
   }
@@ -240,7 +241,7 @@ export class UnifiedSelectionTreeEventHandler extends TreeEventHandler implement
     this.modelSource.modifyModel((model: MutableTreeModel) => {
       for (const nodeId of affectedNodeIds) {
         const node = model.getNode(nodeId);
-        // istanbul ignore if
+        /* c8 ignore next 3 */
         if (!node) {
           continue;
         }
@@ -267,7 +268,7 @@ export class UnifiedSelectionTreeEventHandler extends TreeEventHandler implement
  * [[UsePresentationTreeProps.eventHandlerFactory]] instead or manually create and dispose [[UnifiedSelectionTreeEventHandler]].
  */
 export function useUnifiedSelectionTreeEventHandler(props: UnifiedSelectionTreeEventHandlerParams) {
-  // eslint-disable-next-line deprecation/deprecation
+  // eslint-disable-next-line @typescript-eslint/no-deprecated
   return useDisposable(
     useCallback(
       () => new UnifiedSelectionTreeEventHandler(props),

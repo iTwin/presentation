@@ -3,9 +3,11 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-// need this because of https://github.com/bcoe/c8/issues/182
-import "../shared/ecsql-snippets/index.js";
-import "../shared/ECSqlCore.js";
-import "../shared/Event.js";
-import "../shared/Logging.js";
-import "../shared/MappedTypes.js";
+const STYLE_FILE_EXTENSIONS = [".css", ".scss", ".less", ".sass"];
+
+exports.load = (url, context, next) => {
+  if (STYLE_FILE_EXTENSIONS.some((ext) => url.endsWith(ext))) {
+    return { format: "module", shortCircuit: true, source: "" };
+  }
+  return next(url, context);
+};

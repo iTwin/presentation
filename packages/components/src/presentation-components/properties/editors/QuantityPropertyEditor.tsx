@@ -19,10 +19,11 @@ export const QuantityEditorName = "presentation-quantity-editor";
  * @internal
  */
 export class QuantityPropertyEditorBase extends PropertyEditorBase {
-  // istanbul ignore next
+  /* c8 ignore start */
   public get reactNode(): React.ReactNode {
     return <QuantityPropertyEditor />;
   }
+  /* c8 ignore end */
 }
 
 /**
@@ -32,23 +33,22 @@ export class QuantityPropertyEditorBase extends PropertyEditorBase {
 export class QuantityPropertyEditor extends PureComponent<PropertyEditorProps> implements TypeEditor {
   private _ref = createRef<PropertyEditorAttributes>();
 
-  // istanbul ignore next
+  /* c8 ignore start */
   public async getPropertyValue() {
     return this._ref.current?.getValue();
   }
 
-  // istanbul ignore next
   public get htmlElement() {
     return this._ref.current?.htmlElement ?? null;
   }
 
-  // istanbul ignore next
   public get hasFocus() {
     if (!this._ref.current?.htmlElement || !document.activeElement) {
       return false;
     }
     return this._ref.current.htmlElement.contains(document.activeElement);
   }
+  /* c8 ignore end */
 
   /** @internal */
   public override render() {

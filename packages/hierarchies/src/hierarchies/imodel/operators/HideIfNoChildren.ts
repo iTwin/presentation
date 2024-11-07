@@ -20,7 +20,7 @@ export const LOGGING_NAMESPACE = createOperatorLoggingNamespace(OPERATOR_NAME, L
  */
 export function createHideIfNoChildrenOperator(hasNodes: (node: ProcessedHierarchyNode) => Observable<boolean>) {
   return function (nodes: Observable<ProcessedHierarchyNode>): Observable<ProcessedHierarchyNode> {
-    const inputNodes = nodes.pipe(log({ category: LOGGING_NAMESPACE, message: /* istanbul ignore next */ (n) => `in: ${createNodeIdentifierForLogging(n)}` }));
+    const inputNodes = nodes.pipe(log({ category: LOGGING_NAMESPACE, message: /* c8 ignore next */ (n) => `in: ${createNodeIdentifierForLogging(n)}` }));
     // split input into 3 pieces:
     // - `doesntNeedHide` - nodes without the flag (return no matter if they have children or not)
     // - `determinedChildren` - nodes with the flag and known children
@@ -32,26 +32,24 @@ export function createHideIfNoChildrenOperator(hasNodes: (node: ProcessedHierarc
     );
     const [determinedChildren, undeterminedChildren] = partition(needsHide, (n) => n.children !== undefined);
     return merge(
-      doesntNeedHide.pipe(
-        log({ category: LOGGING_NAMESPACE, message: /* istanbul ignore next */ (n) => `${createNodeIdentifierForLogging(n)}: doesn't need hide` }),
-      ),
+      doesntNeedHide.pipe(log({ category: LOGGING_NAMESPACE, message: /* c8 ignore next */ (n) => `${createNodeIdentifierForLogging(n)}: doesn't need hide` })),
       merge(
         determinedChildren.pipe(
-          log({ category: LOGGING_NAMESPACE, message: /* istanbul ignore next */ (n) => `${createNodeIdentifierForLogging(n)}: needs hide, has children` }),
+          log({ category: LOGGING_NAMESPACE, message: /* c8 ignore next */ (n) => `${createNodeIdentifierForLogging(n)}: needs hide, has children` }),
         ),
         undeterminedChildren.pipe(
-          log({ category: LOGGING_NAMESPACE, message: /* istanbul ignore next */ (n) => `${createNodeIdentifierForLogging(n)}: needs hide, needs children` }),
+          log({ category: LOGGING_NAMESPACE, message: /* c8 ignore next */ (n) => `${createNodeIdentifierForLogging(n)}: needs hide, needs children` }),
           mergeMap(
             (n) =>
               defer(() => {
                 doLog({
                   category: LOGGING_NAMESPACE,
-                  message: /* istanbul ignore next */ () => `${createNodeIdentifierForLogging(n)}: requesting children flag`,
+                  message: /* c8 ignore next */ () => `${createNodeIdentifierForLogging(n)}: requesting children flag`,
                 });
                 return hasNodes(n).pipe(
                   log({
                     category: LOGGING_NAMESPACE,
-                    message: /* istanbul ignore next */ (childrenFlag) => `${createNodeIdentifierForLogging(n)}: determined children: ${childrenFlag}`,
+                    message: /* c8 ignore next */ (childrenFlag) => `${createNodeIdentifierForLogging(n)}: determined children: ${childrenFlag}`,
                   }),
                   map((children) => Object.assign(n, { children })),
                 );
@@ -65,10 +63,10 @@ export function createHideIfNoChildrenOperator(hasNodes: (node: ProcessedHierarc
           ),
           log({
             category: LOGGING_NAMESPACE,
-            message: /* istanbul ignore next */ (n) => `${createNodeIdentifierForLogging(n)}: needs hide, determined children: ${hasChildren(n)}`,
+            message: /* c8 ignore next */ (n) => `${createNodeIdentifierForLogging(n)}: needs hide, determined children: ${hasChildren(n)}`,
           }),
         ),
       ).pipe(filter(hasChildren)),
-    ).pipe(log({ category: LOGGING_NAMESPACE, message: /* istanbul ignore next */ (n) => `out: ${createNodeIdentifierForLogging(n)}` }));
+    ).pipe(log({ category: LOGGING_NAMESPACE, message: /* c8 ignore next */ (n) => `out: ${createNodeIdentifierForLogging(n)}` }));
   };
 }

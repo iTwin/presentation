@@ -16,14 +16,14 @@ import { useNavigationPropertyEditorContext } from "./NavigationPropertyEditorCo
  * @internal
  */
 export class NavigationPropertyEditor extends PropertyEditorBase {
-  // istanbul ignore next
+  /* c8 ignore start */
   public override get containerHandlesEnter(): boolean {
     return false;
   }
-  // istanbul ignore next
   public get reactNode(): React.ReactNode {
     return <NavigationPropertyTargetEditor />;
   }
+  /* c8 ignore end */
 }
 
 /**
@@ -35,23 +35,22 @@ export class NavigationPropertyEditor extends PropertyEditorBase {
 export class NavigationPropertyTargetEditor extends PureComponent<PropertyEditorProps> implements TypeEditor {
   private _ref = createRef<PropertyEditorAttributes>();
 
-  // istanbul ignore next
+  /* c8 ignore start */
   public async getPropertyValue() {
     return this._ref.current?.getValue();
   }
 
-  // istanbul ignore next
   public get htmlElement() {
     return this._ref.current?.htmlElement ?? null;
   }
 
-  // istanbul ignore next
   public get hasFocus() {
     if (!this._ref.current?.htmlElement || !document.activeElement) {
       return false;
     }
     return this._ref.current.htmlElement.contains(document.activeElement);
   }
+  /* c8 ignore end */
 
   public override render() {
     return <NavigationPropertyTargetEditorInner ref={this._ref} {...this.props} />;

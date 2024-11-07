@@ -13,9 +13,7 @@ module.exports = [
   },
   {
     files: ["**/*.{ts,tsx}"],
-    rules: {
-      ...reactPlugin.configs["jsx-runtime"].rules,
-    },
+    ...reactPlugin.configs.flat["jsx-runtime"],
   },
   ...eslintBaseConfig,
 ];

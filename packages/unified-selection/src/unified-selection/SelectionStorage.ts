@@ -8,7 +8,7 @@ import { Event } from "@itwin/presentation-shared";
 import { Selectable, Selectables } from "./Selectable.js";
 import { StorageSelectionChangeEventArgs, StorageSelectionChangesListener, StorageSelectionChangeType } from "./SelectionChangeEvent.js";
 
-/** @beta */
+/** @public */
 type IModelKeyProp =
   | {
       /** Key of the iModel to get selection levels for. */
@@ -29,7 +29,7 @@ type IModelKeyProp =
  * consumers, may be supplemented with required attributes any time.
  *
  * @see `createStorage`
- * @beta
+ * @public
  */
 export interface SelectionStorage {
   /** An event that is raised when selection changes. */
@@ -108,7 +108,7 @@ export interface SelectionStorage {
  * });
  * ```
  *
- * @beta
+ * @public
  */
 export function createStorage(): SelectionStorage {
   return new SelectionStorageImpl();
@@ -211,7 +211,7 @@ class SelectionStorageImpl implements SelectionStorage {
 }
 
 function getIModelKey(props: IModelKeyProp): string {
-  // eslint-disable-next-line deprecation/deprecation
+  // eslint-disable-next-line @typescript-eslint/no-deprecated
   return "imodelKey" in props ? props.imodelKey : props.iModelKey;
 }
 

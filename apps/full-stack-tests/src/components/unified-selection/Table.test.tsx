@@ -16,11 +16,9 @@ import {
 } from "@itwin/presentation-components";
 import { Presentation } from "@itwin/presentation-frontend";
 import { buildTestIModel } from "@itwin/presentation-testing";
-import { act, getByText, render, waitFor } from "@testing-library/react";
 import { initialize, terminate } from "../../IntegrationTests.js";
+import { act, getByText, render, waitFor } from "../../RenderUtils.js";
 import { ensureTableHasRowsWithCellValues } from "../TableUtils.js";
-
-/* eslint-disable @typescript-eslint/naming-convention */
 
 describe("Learning snippets", async () => {
   describe("Table", () => {
@@ -30,6 +28,7 @@ describe("Learning snippets", async () => {
     });
 
     after(async () => {
+      UiComponents.terminate();
       await terminate();
     });
 
@@ -106,7 +105,7 @@ describe("Learning snippets", async () => {
       // set up imodel for the test
       let modelKey: InstanceKey;
       const elementKeys: InstanceKey[] = [];
-      // eslint-disable-next-line deprecation/deprecation
+      // eslint-disable-next-line @typescript-eslint/no-deprecated
       const imodel = await buildTestIModel(this, (builder) => {
         const categoryKey = insertSpatialCategory({ builder, codeValue: "My Category" });
         modelKey = insertPhysicalModelWithPartition({ builder, codeValue: "My Model" });

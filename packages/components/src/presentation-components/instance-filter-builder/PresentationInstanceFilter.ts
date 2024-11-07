@@ -468,7 +468,6 @@ function findFieldByPath(fields: Field[], pathToField: GenericInstanceFilterRela
     }
 
     const nestedField = findFieldByPath(field.nestedFields, pathMatchResult.leftOver);
-    // istanbul ignore else
     if (nestedField) {
       return nestedField;
     }

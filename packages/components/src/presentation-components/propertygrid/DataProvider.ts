@@ -211,7 +211,7 @@ export class PresentationPropertyDataProvider extends ContentDataProvider implem
     this.invalidateCache({ content: true });
   }
 
-  /* eslint-disable deprecation/deprecation */
+  /* eslint-disable @typescript-eslint/no-deprecated */
   /**
    * Should the specified field be included in the favorites category.
    * @deprecated in 5.2. Use `isFieldFavoriteAsync` instead.
@@ -229,7 +229,7 @@ export class PresentationPropertyDataProvider extends ContentDataProvider implem
     // otherwise, we need to call the deprecated method to stay backwards compatible...
     return this.isFieldFavorite(field);
   }
-  /* eslint-enable deprecation/deprecation */
+  /* eslint-enable @typescript-eslint/no-deprecated */
 
   /**
    * Sorts the specified list of categories by priority. May be overriden
@@ -239,18 +239,19 @@ export class PresentationPropertyDataProvider extends ContentDataProvider implem
     inPlaceSort(categories).by([{ desc: (c) => c.priority }, { asc: (c) => c.label, comparer: labelsComparer }]);
   }
 
-  /* eslint-disable deprecation/deprecation */
+  /* eslint-disable @typescript-eslint/no-deprecated */
   /**
    * Sorts the specified list of fields by priority. May be overriden to supply a different sorting algorithm.
    * @deprecated in 5.2. Use `sortFieldsAsync` instead.
    */
   protected sortFields(category: CategoryDescription, fields: Field[]): void {
-    // istanbul ignore if
+    /* c8 ignore start */
     if (category.name === FAVORITES_CATEGORY_NAME) {
       Presentation.favoriteProperties.sortFields(this.imodel, fields);
     } else {
       inPlaceSort(fields).by([{ desc: (f) => f.priority }, { asc: (f) => f.label, comparer: labelsComparer }]);
     }
+    /* c8 ignore end */
   }
   /**
    * Sorts the specified list of fields by priority. May be overriden to supply a different sorting algorithm.
@@ -267,12 +268,12 @@ export class PresentationPropertyDataProvider extends ContentDataProvider implem
     // otherwise, we need to call the deprecated method to stay backwards compatible...
     this.sortFields(category, fields);
   }
-  /* eslint-enable deprecation/deprecation */
+  /* eslint-enable @typescript-eslint/no-deprecated */
 
   /**
    * Returns property data.
    */
-  // eslint-disable-next-line @typescript-eslint/naming-convention
+
   protected getMemoizedData = memoize(async (): Promise<PropertyData> => {
     this.setupFavoritePropertiesListener();
     const content = await this.getContent();
@@ -289,9 +290,9 @@ export class PresentationPropertyDataProvider extends ContentDataProvider implem
     };
     const builder = await PropertyDataBuilder.create({
       descriptor: content.descriptor,
-      // eslint-disable-next-line deprecation/deprecation
+      // eslint-disable-next-line @typescript-eslint/no-deprecated
       includeWithNoValues: this.includeFieldsWithNoValues,
-      // eslint-disable-next-line deprecation/deprecation
+      // eslint-disable-next-line @typescript-eslint/no-deprecated
       includeWithCompositeValues: this.includeFieldsWithCompositeValues,
       wantNestedCategories: this._isNestedPropertyCategoryGroupingEnabled,
       callbacks,
@@ -349,7 +350,7 @@ export class PresentationPropertyDataProvider extends ContentDataProvider implem
   }
 
   private setupFavoritePropertiesListener() {
-    // istanbul ignore if
+    /* c8 ignore next 3 */
     if (this._onFavoritesChangedRemoveListener) {
       return;
     }
@@ -361,7 +362,7 @@ async function isFieldFavorite(field: Field, imodel: IModelConnection) {
   if (Presentation.favoriteProperties.hasAsync) {
     return Presentation.favoriteProperties.hasAsync(field, imodel, FavoritePropertiesScope.IModel);
   }
-  // eslint-disable-next-line deprecation/deprecation
+  // eslint-disable-next-line @typescript-eslint/no-deprecated
   return Presentation.favoriteProperties.has(field, imodel, FavoritePropertiesScope.IModel);
 }
 
@@ -370,7 +371,7 @@ async function sortFavoriteFields(fields: Field[], imodel: IModelConnection) {
     await Presentation.favoriteProperties.sortFieldsAsync(imodel, fields);
     return;
   }
-  // eslint-disable-next-line deprecation/deprecation
+  // eslint-disable-next-line @typescript-eslint/no-deprecated
   Presentation.favoriteProperties.sortFields(imodel, fields);
 }
 
@@ -445,7 +446,6 @@ class PropertyDataBuilder extends InternalPropertyRecordsBuilder {
     const categorizedRecords: { [categoryName: string]: PropertyRecord[] } = {};
     this._categorizedRecords.forEach((recs, categoryName) => {
       destructureRecords(recs);
-      // istanbul ignore else
       if (recs.length) {
         // note: will await on all async tasks before returning the result
         this._asyncTasks.push(
@@ -474,7 +474,7 @@ class PropertyDataBuilder extends InternalPropertyRecordsBuilder {
     // determine which categories are actually used
     const usedCategoryNames = new Set();
     this._categorizedRecords.forEach((records, categoryName) => {
-      // istanbul ignore if
+      /* c8 ignore next 3 */
       if (records.length === 0) {
         return;
       }
@@ -802,7 +802,6 @@ function destructureStructArrayItems(items: PropertyRecord[], fieldHierarchy: Fi
 
   // if we got a chance to destructure at least one item, replace old members with new ones
   // in the field hierarchy that we got
-  // istanbul ignore else
   if (items.length > 0) {
     fieldHierarchy.childFields = destructuredFields;
   }
@@ -822,7 +821,6 @@ function destructureRecords(records: FieldHierarchyRecord[]) {
       // destructure 0 or 1 sized arrays by removing the array record and putting its first item in its place (if any)
       if (entry.record.value.items.length <= 1) {
         records.splice(i, 1);
-        // istanbul ignore else
         if (entry.record.value.items.length > 0) {
           const item = entry.record.value.items[0];
           records.splice(i, 0, { ...entry, fieldHierarchy: entry.fieldHierarchy, record: item });

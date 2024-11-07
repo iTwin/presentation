@@ -11,13 +11,13 @@ import { useTree } from "../UseTree.js";
 import { LocalizationContextProvider } from "./LocalizationContext.js";
 import { TreeNodeRenderer } from "./TreeNodeRenderer.js";
 
-/** @beta */
+/** @public */
 type TreeProps = ComponentPropsWithoutRef<typeof Tree<RenderedTreeNode>>;
 
-/** @beta */
+/** @public */
 type TreeNodeRendererProps = ComponentPropsWithoutRef<typeof TreeNodeRenderer>;
 
-/** @beta */
+/** @public */
 interface TreeRendererOwnProps {
   /** Root nodes of the tree. */
   rootNodes: PresentationTreeNode[];
@@ -25,7 +25,7 @@ interface TreeRendererOwnProps {
   selectionMode?: SelectionMode;
 }
 
-/** @beta */
+/** @public */
 type TreeRendererProps = Pick<ReturnType<typeof useTree>, "rootNodes" | "expandNode"> &
   Partial<Pick<ReturnType<typeof useTree>, "selectNodes" | "isNodeSelected" | "getHierarchyLevelDetails" | "reloadTree">> &
   Pick<TreeNodeRendererProps, "onFilterClick" | "getIcon" | "getLabel" | "getSublabel"> &
@@ -38,7 +38,7 @@ type TreeRendererProps = Pick<ReturnType<typeof useTree>, "rootNodes" | "expandN
  * are rendered using `TreeNodeRenderer` component from this package.
  *
  * @see https://itwinui.bentley.com/docs/tree
- * @beta
+ * @public
  */
 export function TreeRenderer({
   rootNodes,
@@ -102,7 +102,7 @@ function noopIsNodeSelected() {
  * while its children are being loaded. This allows the node renderer to show a placeholder under the parent during
  * the process.
  *
- * @beta
+ * @public
  */
 export type RenderedTreeNode =
   | PresentationTreeNode
@@ -124,7 +124,7 @@ export type RenderedTreeNode =
  * }
  * ```
  *
- * @beta
+ * @public
  */
 export function createRenderedTreeNodeData(node: RenderedTreeNode, isNodeSelected: (nodeId: string) => boolean): NodeData<RenderedTreeNode> {
   if ("type" in node) {

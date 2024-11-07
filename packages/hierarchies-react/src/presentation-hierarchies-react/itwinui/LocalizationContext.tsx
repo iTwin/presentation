@@ -7,7 +7,7 @@ import { createContext, PropsWithChildren, useContext, useEffect, useState } fro
 
 /**
  * Localized strings used in the components.
- * @beta
+ * @public
  */
 export interface LocalizedStrings {
   /**
@@ -78,7 +78,7 @@ const localizationContext = createContext<LocalizationContext>({ localizedString
 
 /**
  * Properties for `LocalizationContextProvider`.
- * @beta
+ * @public
  */
 interface LocalizationContextProviderProps {
   /** Localized strings used in the components. */
@@ -87,7 +87,7 @@ interface LocalizationContextProviderProps {
 
 /**
  * Context provider for localized strings used in the components.
- * @beta
+ * @public
  */
 export function LocalizationContextProvider({ localizedStrings, children }: PropsWithChildren<LocalizationContextProviderProps>) {
   const [state, setState] = useState({ localizedStrings: { ...defaultLocalizedStrings, ...localizedStrings } });

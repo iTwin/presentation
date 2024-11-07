@@ -10,7 +10,7 @@ import { Event as Event_2 } from '@itwin/presentation-shared';
 import { Id64Arg } from '@itwin/core-bentley';
 import { Id64String } from '@itwin/core-bentley';
 
-// @beta
+// @public
 export interface CachingHiliteSetProvider {
     dispose(): void;
     getHiliteSet(props: {
@@ -18,16 +18,16 @@ export interface CachingHiliteSetProvider {
     }): AsyncIterableIterator<HiliteSet>;
 }
 
-// @beta
+// @public
 interface CachingHiliteSetProviderProps {
     imodelProvider: (imodelKey: string) => ECClassHierarchyInspector & ECSqlQueryExecutor;
     selectionStorage: SelectionStorage;
 }
 
-// @beta
+// @public
 export function computeSelection(props: ComputeSelectionProps): AsyncIterableIterator<SelectableInstanceKey>;
 
-// @beta
+// @public
 interface ComputeSelectionProps {
     elementIds: string[];
     queryExecutor: ECSqlQueryExecutor;
@@ -36,7 +36,7 @@ interface ComputeSelectionProps {
     } | SelectionScope;
 }
 
-// @beta
+// @public
 interface CoreIModelHiliteSet {
     clear(): void;
     readonly elements: Uint32Set;
@@ -45,7 +45,7 @@ interface CoreIModelHiliteSet {
     wantSyncWithSelectionSet: boolean;
 }
 
-// @beta
+// @public
 interface CoreIModelSelectionSet {
     add(elem: Id64Arg): boolean;
     readonly elements: Set<string>;
@@ -54,7 +54,7 @@ interface CoreIModelSelectionSet {
     remove(elem: Id64Arg): boolean;
 }
 
-// @beta
+// @public
 interface CoreSelectionSetEventUnsafe {
     added?: Id64Arg;
     removed?: Id64Arg;
@@ -62,32 +62,32 @@ interface CoreSelectionSetEventUnsafe {
     type: number;
 }
 
-// @beta
+// @public
 export function createCachingHiliteSetProvider(props: CachingHiliteSetProviderProps): CachingHiliteSetProvider;
 
-// @beta
+// @public
 export function createHiliteSetProvider(props: HiliteSetProviderProps): HiliteSetProvider;
 
-// @beta
+// @public
 export function createStorage(): SelectionStorage;
 
-// @beta
+// @public
 export interface CustomSelectable {
     data: unknown;
     identifier: string;
     loadInstanceKeys: () => AsyncIterableIterator<SelectableInstanceKey>;
 }
 
-// @beta
+// @public
 interface ElementSelectionScopeProps {
     ancestorLevel?: number;
     id: "element" | "functional";
 }
 
-// @beta
+// @public
 export function enableUnifiedSelectionSyncWithIModel(props: EnableUnifiedSelectionSyncWithIModelProps): () => void;
 
-// @beta
+// @public
 interface EnableUnifiedSelectionSyncWithIModelProps {
     activeScopeProvider: () => ComputeSelectionProps["scope"];
     cachingHiliteSetProvider?: CachingHiliteSetProvider;
@@ -99,7 +99,7 @@ interface EnableUnifiedSelectionSyncWithIModelProps {
     selectionStorage: SelectionStorage;
 }
 
-// @beta
+// @public
 export interface HiliteSet {
     // (undocumented)
     elements: Id64String[];
@@ -109,50 +109,50 @@ export interface HiliteSet {
     subCategories: Id64String[];
 }
 
-// @beta
+// @public
 export interface HiliteSetProvider {
     getHiliteSet(props: {
         selectables: Selectables;
     }): AsyncIterableIterator<HiliteSet>;
 }
 
-// @beta
+// @public
 interface HiliteSetProviderProps {
     imodelAccess: ECClassHierarchyInspector & ECSqlQueryExecutor;
 }
 
-// @beta (undocumented)
+// @public (undocumented)
 type IModelKeyProp = {
     imodelKey: string;
 } | {
     iModelKey: string;
 };
 
-// @beta
+// @public
 export type Selectable = SelectableInstanceKey | CustomSelectable;
 
-// @beta (undocumented)
+// @public (undocumented)
 export namespace Selectable {
     export function isCustom(selectable: Selectable): selectable is CustomSelectable;
     export function isInstanceKey(selectable: Selectable | SelectableIdentifier): selectable is SelectableInstanceKey;
 }
 
-// @beta
+// @public
 export type SelectableIdentifier = SelectableInstanceKey | Pick<CustomSelectable, "identifier">;
 
-// @beta
+// @public
 export interface SelectableInstanceKey {
     className: string;
     id: string;
 }
 
-// @beta
+// @public
 export interface Selectables {
     custom: Map<string, CustomSelectable>;
     instanceKeys: Map<string, Set<Id64String>>;
 }
 
-// @beta (undocumented)
+// @public (undocumented)
 export namespace Selectables {
     export function add(selectables: Selectables, values: Selectable[]): boolean;
     export function clear(selectables: Selectables): boolean;
@@ -167,10 +167,10 @@ export namespace Selectables {
     export function some(selectables: Selectables, callback: (selectable: Selectable) => boolean): boolean;
 }
 
-// @beta
+// @public
 type SelectionScope = "element" | "model" | "category" | "functional";
 
-// @beta
+// @public
 export interface SelectionStorage {
     addToSelection(props: IModelKeyProp & {
         source: string;
@@ -199,7 +199,7 @@ export interface SelectionStorage {
     selectionChangeEvent: Event_2<StorageSelectionChangesListener>;
 }
 
-// @beta
+// @public
 export interface StorageSelectionChangeEventArgs {
     changeType: StorageSelectionChangeType;
     // @deprecated
@@ -212,12 +212,12 @@ export interface StorageSelectionChangeEventArgs {
     timestamp: Date;
 }
 
-// @beta
+// @public
 export type StorageSelectionChangesListener = (
 args: StorageSelectionChangeEventArgs,
 _?: any) => void;
 
-// @beta
+// @public
 export type StorageSelectionChangeType =
 /** Added to selection. */
 "add"
@@ -228,7 +228,10 @@ export type StorageSelectionChangeType =
 /** Selection was cleared. */
 | "clear";
 
-// @beta
+// @public
+export const TRANSIENT_ELEMENT_CLASSNAME = "/TRANSIENT";
+
+// @public
 interface Uint32Set {
     addIds(ids: Id64Arg): void;
     deleteIds(ids: Id64Arg): void;

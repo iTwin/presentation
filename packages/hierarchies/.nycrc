@@ -5,7 +5,7 @@
   "branches": 100,
   "lines": 100,
   "all": true,
-  "include": ["src/hierarchies/**/*", "lib/cjs/hierarchies/**/*"],
+  "include": ["src/hierarchies/**/*", "lib/esm/hierarchies/**/*"],
   "temp-dir": "./lib/test/coverage/.nyc_output",
   "report-dir": "./lib/test/coverage",
   "reporter": ["text-summary", "lcov", "cobertura"]

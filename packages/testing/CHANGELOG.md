@@ -1,5 +1,33 @@
 # Change Log - @itwin/presentation-testing
 
+## 5.1.1
+
+### Patch Changes
+
+- [#760](https://github.com/iTwin/presentation/pull/760): Added missing `package.json` file under `cjs` folder. It is needed for package to work as commonjs module.
+
+## 5.1.0
+
+### Minor Changes
+
+- [#754](https://github.com/iTwin/presentation/pull/754): Define `type` and `exports` attributes in `package.json`.
+
+  The change moves this package a step closer towards dropping CommonJS support - it's now transpiled from ESM to CommonJS instead of the opposite.
+
+  In addition, the `exports` attribute has been added to `package.json` to prohibit access to APIs that are not intended to be used by external consumers.
+
+- [#754](https://github.com/iTwin/presentation/pull/754): Export file name utility functions.
+
+  - `getTestOutputDir` and `setTestOutputDir` - get/set functions for the global test output directory used by this package.
+  - `setupOutputFileLocation` - given a file name, returns a full path to the file in the test output directory.
+  - `createFileNameFromString` - creates a valid, sanitized file name from any string.
+  - `limitFilePathLength` - makes sure the given file path is shorter than 260 characters.
+
+### Patch Changes
+
+- Updated dependencies:
+  - @itwin/presentation-components@5.6.0
+
 ## 5.0.17
 
 ### Patch Changes

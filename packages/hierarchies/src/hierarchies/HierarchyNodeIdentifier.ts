@@ -14,11 +14,11 @@ import { GenericNodeKey, IModelInstanceKey } from "./HierarchyNodeKey.js";
  * `HierarchyNodeIdentifier`, on the other hand, is used for matching a node, so it only needs
  * to contain information about a single instance.
  *
- * @beta
+ * @public
  */
 export type HierarchyNodeIdentifier = IModelInstanceKey | GenericNodeKey;
 
-/** @beta */
+/** @public */
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export namespace HierarchyNodeIdentifier {
   /** Checks whether the given identifier is an instance node identifier */
@@ -47,6 +47,6 @@ export namespace HierarchyNodeIdentifier {
  * A path of hierarchy node identifiers, typically used to describe a path from root down
  * to specific node deep in the hierarchy.
  *
- * @beta
+ * @public
  */
 export type HierarchyNodeIdentifiersPath = HierarchyNodeIdentifier[];

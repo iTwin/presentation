@@ -1,6 +1,6 @@
 {
   "name": "@itwin/presentation-testing",
-  "version": "5.0.17",
+  "version": "5.1.1",
   "description": "Testing utilities for iTwin.js Presentation library",
   "license": "MIT",
   "repository": {
@@ -34,13 +34,13 @@
     "build:cjs": "node ../../scripts/package-cjs.mjs ./lib/cjs && tsc -p tsconfig.cjs.json",
     "build:esm": "tsc -p tsconfig.esm.json",
     "clean": "rimraf lib build",
-    "cover": "nyc npm -s test",
+    "cover": "c8 npm -s test",
     "docs": "npm run -s docs:reference && npm run -s docs:changelog",
     "docs:changelog": "cpx ./CHANGELOG.md ./build/docs/reference/presentation-testing",
     "docs:reference": "cross-env NODE_PROJECT_ROOT_DIRECTORY=../../ betools docs --includes=./build/docs/extract --json=./build/docs/reference/presentation-testing/file.json --tsIndexFile=presentation-testing.ts --onlyJson --testExcludeGlob=./src/test/**",
     "lint": "eslint ./src/**/*.ts",
-    "test": "mocha --enable-source-maps --config ./.mocharc.json",
-    "test:dev": "mocha --enable-source-maps --config ./.mocharc.json",
+    "test:dev": "cross-env NODE_OPTIONS=\"--import presentation-test-utilities/node-hooks/ignore-styles\" mocha --enable-source-maps --config ./.mocharc.json",
+    "test": "npm run test:dev",
     "extract-api": "extract-api --entry=presentation-testing --apiReportFolder=./api --apiReportTempFolder=./api/temp --apiSummaryFolder=./api",
     "check-internal": "node ../../scripts/checkInternal.js --apiSummary ./api/presentation-testing.api.md"
   },
@@ -86,6 +86,7 @@
     "@types/node": "catalog:build-tools",
     "@types/sinon": "catalog:test-tools",
     "@types/sinon-chai": "catalog:test-tools",
+    "c8": "catalog:test-tools",
     "chai": "catalog:test-tools",
     "chai-as-promised": "catalog:test-tools",
     "chai-jest-snapshot": "catalog:test-tools",
@@ -97,7 +98,6 @@
     "inversify": "catalog:itwinjs-core",
     "jsdom": "catalog:test-tools",
     "mocha": "catalog:test-tools",
-    "nyc": "catalog:test-tools",
     "presentation-build-tools": "workspace:^",
     "presentation-test-utilities": "workspace:^",
     "react": "catalog:react",
@@ -105,6 +105,7 @@
     "reflect-metadata": "catalog:itwinjs-core",
     "sinon": "catalog:test-tools",
     "sinon-chai": "catalog:test-tools",
+    "testdouble": "catalog:test-tools",
     "typescript": "catalog:build-tools"
   }
 }

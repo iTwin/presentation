@@ -12,13 +12,10 @@ import { IModelApp, IModelConnection } from "@itwin/core-frontend";
 import { Ruleset } from "@itwin/presentation-common";
 import { PresentationTree, PresentationTreeRenderer, usePresentationTreeState } from "@itwin/presentation-components";
 import { buildTestIModel } from "@itwin/presentation-testing";
-import { getByPlaceholderText, getByRole, getByTitle, render, waitFor } from "@testing-library/react";
-import { userEvent } from "@testing-library/user-event";
 import { initialize, terminate } from "../../IntegrationTests.js";
+import { getByPlaceholderText, getByRole, getByTitle, render, waitFor } from "../../RenderUtils.js";
 import { stubGetBoundingClientRect } from "../../Utils.js";
 import { getNodeByLabel, toggleExpandNode } from "../TreeUtils.js";
-
-/* eslint-disable @typescript-eslint/naming-convention */
 
 describe("Learning snippets", () => {
   describe("Tree", () => {
@@ -33,6 +30,7 @@ describe("Learning snippets", () => {
 
     after(async () => {
       delete (HTMLElement.prototype as any).scrollIntoView;
+      UiComponents.terminate();
       await terminate();
     });
 
@@ -67,7 +65,7 @@ describe("Learning snippets", () => {
       // __PUBLISH_EXTRACT_END__
 
       // set up imodel for the test
-      // eslint-disable-next-line deprecation/deprecation
+      // eslint-disable-next-line @typescript-eslint/no-deprecated
       const imodel = await buildTestIModel(this, async (builder) => {
         const categoryKey = insertSpatialCategory({ builder, codeValue: "My Category" });
         const modelKey = insertPhysicalModelWithPartition({ builder, codeValue: "My Model" });
@@ -76,8 +74,7 @@ describe("Learning snippets", () => {
       });
 
       // render the component
-      const user = userEvent.setup();
-      const { container, baseElement } = render(<MyTree imodel={imodel} />);
+      const { container, baseElement, user } = render(<MyTree imodel={imodel} />, { addThemeProvider: true });
       await waitFor(() => getByRole(container, "tree"));
 
       // find & expand the model node

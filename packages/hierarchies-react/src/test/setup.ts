@@ -20,47 +20,9 @@ globalJsdom(undefined, {
   virtualConsole: new jsdom.VirtualConsole().sendTo(console, { omitJSDOMErrors: true }),
 });
 
-// make stubbing workspace package exports possible
-import m from "module";
-import { execSync } from "node:child_process";
-const workspacePackages = getPaths(execSync("pnpm -r list --depth -1 --json", { encoding: "utf-8" }));
-const root = workspacePackages.shift() as string;
-const packagePaths = workspacePackages.map((path) => path.substring(root.length + 1));
-function getPaths(json: string) {
-  return (JSON.parse(json) as Array<{ path: string }>).map((pkg) => pkg.path);
-}
-const originalCompile = (m as any).prototype._compile;
-(m as any).prototype._compile = function (content: any, filename: any) {
-  // Obtain exports from the loaded script
-  originalCompile.call(this, content, filename);
-
-  if (!packagePaths.find((workspacePkgPath) => filename.includes(workspacePkgPath))) {
-    return;
-  }
-
-  // Process the exports if and only if a plain object was exported
-  const exportsIsPlainObject = Object.getPrototypeOf(this.exports) === Object.prototype;
-  const exportsIsSettable = Object.getOwnPropertyDescriptor(this, "exports")?.configurable;
-  if (exportsIsPlainObject && exportsIsSettable) {
-    // Make properties writable
-    const relaxedExports: any = {};
-    for (const [key, value] of Object.entries(this.exports)) {
-      relaxedExports[key] = value;
-    }
-
-    // Object.entries does not list non-enumerable properties
-    for (const key of Object.getOwnPropertyNames(this.exports)) {
-      if (!(key in relaxedExports)) {
-        Object.defineProperty(relaxedExports, key, { configurable: true, enumerable: false, writable: true, value: this.exports[key] });
-      }
-    }
-
-    this.exports = relaxedExports;
-  }
-};
-
 // supply mocha hooks
-import { cleanup } from "@testing-library/react";
+import v8 from "node:v8";
+const { cleanup } = await import("@testing-library/react");
 export const mochaHooks = {
   beforeAll() {
     getGlobalThis().IS_REACT_ACT_ENVIRONMENT = true;
@@ -71,6 +33,7 @@ export const mochaHooks = {
   },
   afterAll() {
     delete getGlobalThis().IS_REACT_ACT_ENVIRONMENT;
+    v8.takeCoverage();
   },
 };
 function getGlobalThis(): typeof globalThis & { IS_REACT_ACT_ENVIRONMENT?: boolean } {

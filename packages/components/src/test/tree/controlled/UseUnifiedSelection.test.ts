@@ -42,7 +42,7 @@ import { IPresentationTreeDataProvider } from "../../../presentation-components/
 import { PresentationTreeNodeItem } from "../../../presentation-components/tree/PresentationTreeNodeItem.js";
 import { createTestECClassGroupingNodeKey, createTestECInstancesNodeKey } from "../../_helpers/Hierarchy.js";
 import { createTestTreeNodeItem } from "../../_helpers/UiComponents.js";
-import { renderHook } from "../../TestUtils.js";
+import { configure, renderHook } from "../../TestUtils.js";
 
 const awaitableObservable = <T>(input: ObservableInput<T>) => {
   const promise = new ResolvablePromise<void>();
@@ -614,10 +614,10 @@ describe("useUnifiedSelectionTreeEventHandler", () => {
   });
 
   it("creates and disposes UnifiedSelectionTreeEventHandler", () => {
-    // eslint-disable-next-line deprecation/deprecation
+    configure({ reactStrictMode: false });
+    // eslint-disable-next-line @typescript-eslint/no-deprecated
     const { result, unmount } = renderHook((props: UnifiedSelectionTreeEventHandlerParams) => useUnifiedSelectionTreeEventHandler(props), {
       initialProps: { nodeLoader },
-      disableStrictMode: true,
     });
 
     expect(result.current).to.not.be.undefined;

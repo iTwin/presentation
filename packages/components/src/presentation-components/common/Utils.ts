@@ -25,7 +25,7 @@ const localizationNamespaceName = "PresentationComponents";
  */
 export const initializeLocalization = async () => {
   await Presentation.localization.registerNamespace(localizationNamespaceName);
-  return () => Presentation.localization.unregisterNamespace(localizationNamespaceName); // eslint-disable-line @itwin/no-internal
+  return () => Presentation.localization.unregisterNamespace(localizationNamespaceName);
 };
 
 /**
@@ -162,12 +162,11 @@ export class AsyncTasksTracker {
 }
 
 /** @internal */
-// istanbul ignore next
+/* c8 ignore start */
 export function useMergedRefs<T>(...refs: Array<MutableRefObject<T | null> | LegacyRef<T>>): RefCallback<T> {
   return useCallback(
     (instance: T | null) => {
       refs.forEach((ref) => {
-        // istanbul ignore else
         if (typeof ref === "function") {
           ref(instance);
         } else if (ref) {
@@ -178,6 +177,7 @@ export function useMergedRefs<T>(...refs: Array<MutableRefObject<T | null> | Leg
     [...refs], // eslint-disable-line react-hooks/exhaustive-deps
   );
 }
+/* c8 ignore end */
 
 /**
  * A hook that helps components throw errors in React's render loop so they can be captured by React error
@@ -191,7 +191,7 @@ export function useErrorState() {
   const [_, setError] = useState(undefined);
   const setErrorState = useCallback((e: unknown) => {
     setError(() => {
-      throw e instanceof Error ? e : /* istanbul ignore next */ new Error();
+      throw e instanceof Error ? e : /* c8 ignore next */ new Error();
     });
   }, []);
   return setErrorState;

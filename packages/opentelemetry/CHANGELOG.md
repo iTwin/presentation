@@ -1,5 +1,21 @@
 # Change Log - @itwin/presentation-opentelemetry
 
+## 4.1.1
+
+### Patch Changes
+
+- [#760](https://github.com/iTwin/presentation/pull/760): Added missing `package.json` file under `cjs` folder. It is needed for package to work as commonjs module.
+
+## 4.1.0
+
+### Minor Changes
+
+- [#740](https://github.com/iTwin/presentation/pull/740): Define `type` and `exports` attributes in `package.json`.
+
+  The change moves this package a step closer towards dropping CommonJS support - it's now transpiled from ESM to CommonJS instead of the opposite.
+
+  In addition, the `exports` attribute has been added to `package.json` to prohibit access to APIs that are not intended to be used by external consumers.
+
 This log was last generated on Thu, 31 Aug 2023 11:51:06 GMT and should not be manually modified.
 
 <!-- Start content -->

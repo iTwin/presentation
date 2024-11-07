@@ -23,17 +23,20 @@ function initializeRpcInterfaces(interfaces: RpcInterfaceDefinition[]) {
   };
 
   for (const definition of interfaces) {
-    RpcConfiguration.assign(definition, /* istanbul ignore next */ () => config); // eslint-disable-line @itwin/no-internal
+    // eslint-disable-next-line @itwin/no-internal
+    RpcConfiguration.assign(definition, /* istanbul ignore next */ () => config);
   }
 
-  const instance = RpcConfiguration.obtain(config); // eslint-disable-line @itwin/no-internal
+  const instance = RpcConfiguration.obtain(config);
 
   try {
-    RpcConfiguration.initializeInterfaces(instance); // eslint-disable-line @itwin/no-internal
+    RpcConfiguration.initializeInterfaces(instance);
+    /* c8 ignore start */
   } catch {
     // this may fail with "Error: RPC interface "xxx" is already initialized." because
     // multiple different tests want to set up rpc interfaces
   }
+  /* c8 ignore end */
 }
 
 let isInitialized = false;
@@ -89,7 +92,11 @@ export const initialize = async (props?: PresentationTestingInitProps) => {
   if (!props.backendProps.id) {
     props.backendProps.id = `test-${Guid.createValue()}`; // eslint-disable-line @itwin/no-internal
   }
-  await IModelHost.startup({ cacheDir: join(__dirname, ".cache"), ...props.backendHostProps });
+  await IModelHost.startup({
+    // @ts-ignore TS1343
+    cacheDir: join(typeof __dirname !== "undefined" ? __dirname : import.meta.url, ".cache", `${process.pid}`),
+    ...props.backendHostProps,
+  });
   PresentationBackend.initialize(props.backendProps);
 
   // init frontend

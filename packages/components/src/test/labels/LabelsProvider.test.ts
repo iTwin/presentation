@@ -172,7 +172,7 @@ describe("PresentationLabelsProvider", () => {
         Object.assign(presentationManager, { getDisplayLabelDefinitionsIterator: undefined });
       });
 
-      /* eslint-disable deprecation/deprecation */
+      /* eslint-disable @typescript-eslint/no-deprecated */
       it("calls manager to get result and returns it", async () => {
         const keys = [createTestECInstanceKey({ id: "0x1" }), createTestECInstanceKey({ id: "0x2" })];
         const result = ["Label 1", "Label 2"];
@@ -245,7 +245,7 @@ describe("PresentationLabelsProvider", () => {
 
         expect(presentationManager.getDisplayLabelDefinitions).to.be.calledThrice;
       });
-      /* eslint-enable deprecation/deprecation */
+      /* eslint-enable @typescript-eslint/no-deprecated */
     });
   });
 });

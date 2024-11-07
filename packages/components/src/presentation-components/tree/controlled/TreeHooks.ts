@@ -68,7 +68,7 @@ export interface PresentationTreeNodeLoaderResult {
  * @public
  * @deprecated in 4.x. This hook is not compatible with React 18 `StrictMode`. Use [[usePresentationTreeState]] instead.
  */
-// eslint-disable-next-line deprecation/deprecation
+// eslint-disable-next-line @typescript-eslint/no-deprecated
 export function usePresentationTreeNodeLoader(props: PresentationTreeNodeLoaderProps): PresentationTreeNodeLoaderResult {
   const { seedTreeModel, ...rest } = props;
 
@@ -97,7 +97,7 @@ export function usePresentationTreeNodeLoader(props: PresentationTreeNodeLoaderP
   const nodeLoader = usePagedTreeNodeLoader(dataProvider, rest.pagingSize, modelSource);
 
   const renderedItems = useRef<RenderedItemsRange | undefined>(undefined);
-  // istanbul ignore next
+  /* c8 ignore next 3 */
   const onItemsRendered = useCallback((items: RenderedItemsRange) => {
     renderedItems.current = items;
   }, []);

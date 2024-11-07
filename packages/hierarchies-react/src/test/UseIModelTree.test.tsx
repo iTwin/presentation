@@ -6,13 +6,20 @@
 import { expect } from "chai";
 import { createAsyncIterator } from "presentation-test-utilities";
 import sinon from "sinon";
+import * as td from "testdouble";
 import { BeEvent } from "@itwin/core-bentley";
 import * as presentationHierarchiesModule from "@itwin/presentation-hierarchies";
-import { useIModelTree, useIModelUnifiedSelectionTree } from "../presentation-hierarchies-react/UseIModelTree.js";
+import {
+  useIModelTree as originalUseIModelTree,
+  useIModelUnifiedSelectionTree as originalUseIModelUnifiedSelectionTree,
+} from "../presentation-hierarchies-react/UseIModelTree.js";
 import { createStub, renderHook, waitFor } from "./TestUtils.js";
 
+// this is needed for mocking external module (see `td.replaceEsm` in `stubIModelHierarchyProviderFactory`)
+const presentationHierarchiesPath = import.meta.resolve("@itwin/presentation-hierarchies");
+
 describe("useIModelTree", () => {
-  type UseIModelTreeProps = Parameters<typeof useIModelTree>[0];
+  type UseIModelTreeProps = Parameters<typeof originalUseIModelTree>[0];
   const hierarchyDefinition = {} as presentationHierarchiesModule.HierarchyDefinition;
   const initialProps: UseIModelTreeProps = {
     imodelAccess: {} as UseIModelTreeProps["imodelAccess"],
@@ -21,8 +28,10 @@ describe("useIModelTree", () => {
   };
 
   let stubs: Awaited<ReturnType<typeof stubIModelHierarchyProviderFactory>>;
+  let useIModelTree: typeof originalUseIModelTree;
   before(async () => {
     stubs = await stubIModelHierarchyProviderFactory();
+    useIModelTree = (await import("../presentation-hierarchies-react/UseIModelTree.js")).useIModelTree;
   });
   afterEach(() => {
     stubs.createIModelHierarchyProvider.resetHistory();
@@ -70,8 +79,10 @@ describe("useIModelUnifiedSelectionTree", () => {
   };
 
   let stubs: Awaited<ReturnType<typeof stubIModelHierarchyProviderFactory>>;
+  let useIModelUnifiedSelectionTree: typeof originalUseIModelUnifiedSelectionTree;
   before(async () => {
     stubs = await stubIModelHierarchyProviderFactory();
+    useIModelUnifiedSelectionTree = (await import("../presentation-hierarchies-react/UseIModelTree.js")).useIModelUnifiedSelectionTree;
   });
   afterEach(() => {
     stubs.createIModelHierarchyProvider.resetHistory();
@@ -117,12 +128,20 @@ async function stubIModelHierarchyProviderFactory() {
     setHierarchyFilter: createStub<presentationHierarchiesModule.HierarchyProvider["setHierarchyFilter"]>(),
     dispose: createStub<() => void>(),
   };
-  const factory = sinon.stub(presentationHierarchiesModule, "createIModelHierarchyProvider").returns(hierarchyProvider);
+  const factory = sinon.fake<Parameters<typeof presentationHierarchiesModule.createIModelHierarchyProvider>, typeof hierarchyProvider>(() => {
+    return hierarchyProvider;
+  });
+
+  await td.replaceEsm(presentationHierarchiesPath, {
+    ...presentationHierarchiesModule,
+    createIModelHierarchyProvider: factory,
+  });
+
   return {
     hierarchyProvider,
     createIModelHierarchyProvider: factory,
     restore: () => {
-      sinon.restore();
+      td.reset();
     },
   };
 }

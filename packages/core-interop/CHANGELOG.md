@@ -1,5 +1,27 @@
 # @itwin/presentation-core-interop
 
+## 1.1.1
+
+### Patch Changes
+
+- [#760](https://github.com/iTwin/presentation/pull/760): Added missing `package.json` file under `cjs` folder. It is needed for package to work as commonjs module.
+
+## 1.1.0
+
+### Minor Changes
+
+- [#740](https://github.com/iTwin/presentation/pull/740): Define `type` and `exports` attributes in `package.json`.
+
+  The change moves this package a step closer towards dropping CommonJS support - it's now transpiled from ESM to CommonJS instead of the opposite.
+
+  In addition, the `exports` attribute has been added to `package.json` to prohibit access to APIs that are not intended to be used by external consumers.
+
+### Patch Changes
+
+- [#758](https://github.com/iTwin/presentation/pull/758): Promote `@beta` APIs to `@public`.
+- Updated dependencies:
+  - @itwin/presentation-shared@1.1.0
+
 ## 1.0.0
 
 ### Major Changes

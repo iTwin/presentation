@@ -18,7 +18,7 @@ export interface TreeSelectionOptions {
   selectNodes: (nodeIds: Array<string>, changeType: SelectionChangeType) => void;
 }
 
-/** @beta */
+/** @public */
 export interface UseUnifiedTreeSelectionProps {
   /**
    * Identifier to distinguish this source of changes to the unified selection from another ones in the application.
@@ -32,8 +32,8 @@ export function useUnifiedTreeSelection({
   getNode,
 }: UseUnifiedTreeSelectionProps & { getNode: (nodeId: string) => TreeModelNode | TreeModelRootNode | undefined }): TreeSelectionOptions {
   const [options, setOptions] = useState<TreeSelectionOptions>(() => ({
-    isNodeSelected: /* istanbul ignore next */ () => false,
-    selectNodes: /* istanbul ignore next */ () => {},
+    isNodeSelected: /* c8 ignore next */ () => false,
+    selectNodes: /* c8 ignore next */ () => {},
   }));
 
   const selectionStorage = useUnifiedSelectionContext();

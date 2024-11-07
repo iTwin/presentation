@@ -38,7 +38,7 @@ export function createTreeNodeItem(node: Readonly<Node>, parentId?: string, prop
     key: node.key,
   };
   assignOptionalTreeNodeItemFields(item, node, parentId);
-  const customizeItemCallback = props?.customizeTreeNodeItem ?? customizeTreeNodeItem; // eslint-disable-line deprecation/deprecation
+  const customizeItemCallback = props?.customizeTreeNodeItem ?? customizeTreeNodeItem; // eslint-disable-line @typescript-eslint/no-deprecated
   customizeItemCallback(item, node);
   return item;
 }
@@ -52,7 +52,7 @@ export function createPartialTreeNodeItem(node: PartialNode, parentId: string | 
   }
 
   assignOptionalTreeNodeItemFields(item, node, parentId);
-  const customizeItemCallback = props.customizeTreeNodeItem ?? customizeTreeNodeItem; // eslint-disable-line deprecation/deprecation
+  const customizeItemCallback = props.customizeTreeNodeItem ?? customizeTreeNodeItem; // eslint-disable-line @typescript-eslint/no-deprecated
   customizeItemCallback(item, node);
   return item;
 }
@@ -96,23 +96,23 @@ function assignOptionalTreeNodeItemFields(item: Partial<PresentationTreeNodeItem
  * [TreeNodeItem]($components-react) customization based on values in extended data.
  * See [extended data usage page]($docs/presentation/customization/ExtendedDataUsage.md) for more details.
  */
-// istanbul ignore next
+/* c8 ignore start */
 export function customizeTreeNodeItem(item: Partial<DelayLoadedTreeNodeItem>, node: Partial<Node>) {
-  // eslint-disable-next-line deprecation/deprecation
+  // eslint-disable-next-line @typescript-eslint/no-deprecated
   if (node.imageId) {
-    item.icon = node.imageId; // eslint-disable-line deprecation/deprecation
+    item.icon = node.imageId; // eslint-disable-line @typescript-eslint/no-deprecated
   }
 
-  // eslint-disable-next-line deprecation/deprecation
+  // eslint-disable-next-line @typescript-eslint/no-deprecated
   if (node.isCheckboxVisible) {
     item.isCheckboxVisible = true;
-    // eslint-disable-next-line deprecation/deprecation
+    // eslint-disable-next-line @typescript-eslint/no-deprecated
     if (node.isChecked) {
-      // eslint-disable-next-line deprecation/deprecation
+      // eslint-disable-next-line @typescript-eslint/no-deprecated
       item.checkBoxState = CheckBoxState.On;
     }
 
-    // eslint-disable-next-line deprecation/deprecation
+    // eslint-disable-next-line @typescript-eslint/no-deprecated
     if (!node.isCheckboxEnabled) {
       item.isCheckboxDisabled = true;
     }
@@ -124,7 +124,6 @@ export function customizeTreeNodeItem(item: Partial<DelayLoadedTreeNodeItem>, no
   }
 }
 
-// istanbul ignore next
 function createTreeNodeItemStyle(node: Partial<Node>): ItemStyle {
   const style: ItemStyle = {};
   if (StyleHelper.isBold(node)) {
@@ -152,6 +151,7 @@ function createTreeNodeItemStyle(node: Partial<Node>): ItemStyle {
 
   return style;
 }
+/* c8 ignore end */
 
 /** @internal */
 export function pageOptionsUiToPresentation(pageOptions?: UiPageOptions): PresentationPageOptions | undefined {

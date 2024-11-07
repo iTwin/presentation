@@ -30,7 +30,7 @@ export class TreeActions {
   ) {
     this._loader = new NoopTreeLoader();
     this._nodeIdFactory = nodeIdFactory ?? createNodeId;
-    this._currentModel = seed ?? /* istanbul ignore next */ {
+    this._currentModel = seed ?? /* c8 ignore next */ {
       idToNode: new Map(),
       parentChildMap: new Map(),
       rootNode: { id: undefined, nodeData: undefined },
@@ -90,7 +90,7 @@ export class TreeActions {
 
   private loadNodes(parentId: string, ignoreCache?: boolean) {
     const parentNode = this._currentModel.idToNode.get(parentId);
-    /* istanbul ignore next 3 */
+    /* c8 ignore next 3 */
     if (!parentNode || !isTreeModelHierarchyNode(parentNode)) {
       return;
     }
@@ -126,7 +126,7 @@ export class TreeActions {
     const buildNode = (node: TreeModelHierarchyNode) => (!!options?.discardState || node.id === parentId ? node : addAttributes(node, oldModel));
 
     const rootNode = parentId !== undefined ? this.getNode(parentId) : currModel.rootNode;
-    /* istanbul ignore next 3 */
+    /* c8 ignore next 3 */
     if (!rootNode || isTreeModelInfoNode(rootNode)) {
       return;
     }
@@ -160,7 +160,7 @@ export class TreeActions {
           },
           this._nodeIdFactory,
         )
-      : /* istanbul ignore next */ new NoopTreeLoader();
+      : /* c8 ignore next */ new NoopTreeLoader();
   }
 
   public getNode(nodeId: string | undefined): TreeModelNode | TreeModelRootNode | undefined {
@@ -313,12 +313,13 @@ function createHierarchyLevelOptions(model: TreeModel, nodeId: string | undefine
   return { instanceFilter: modelNode.instanceFilter, hierarchyLevelSizeLimit: modelNode.hierarchyLimit };
 }
 
-/* istanbul ignore next */
+/* c8 ignore start */
 class NoopTreeLoader implements ITreeLoader {
   public loadNodes(): Observable<LoadedTreePart> {
     return EMPTY;
   }
 }
+/* c8 ignore end */
 
 class TimeTracker {
   private _start: number;
@@ -333,7 +334,7 @@ class TimeTracker {
   }
 
   public finish() {
-    /* istanbul ignore next 3 */
+    /* c8 ignore next 3 */
     if (this._stopped) {
       return;
     }

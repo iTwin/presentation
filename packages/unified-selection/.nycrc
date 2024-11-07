@@ -4,7 +4,7 @@
   "functions": 100,
   "branches": 100,
   "lines": 100,
-  "include": ["src/unified-selection/**/*", "lib/cjs/unified-selection/**/*"],
+  "include": ["src/unified-selection/**/*", "lib/esm/unified-selection/**/*"],
   "temp-dir": "./lib/test/coverage/.nyc_output",
   "report-dir": "./lib/test/coverage",
   "reporter": ["text-summary", "lcov", "cobertura"]

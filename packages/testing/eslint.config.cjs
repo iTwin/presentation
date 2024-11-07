@@ -10,5 +10,11 @@ module.exports = [
     files: ["**/*.ts"],
     ...iTwinPlugin.configs.iTwinjsRecommendedConfig,
   },
+  {
+    files: ["src/presentation-testing/Helpers.ts"],
+    rules: {
+      "@typescript-eslint/ban-ts-comment": "warn",
+    },
+  },
   ...eslintBaseConfig,
 ];

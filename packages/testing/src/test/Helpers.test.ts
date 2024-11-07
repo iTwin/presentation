@@ -4,14 +4,18 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { expect } from "chai";
-import * as rimraf from "rimraf";
+import * as rimrafModule from "rimraf";
 import * as sinon from "sinon";
+import * as td from "testdouble";
 import { IModelHost } from "@itwin/core-backend";
 import { Guid } from "@itwin/core-bentley";
 import { IModelApp, NoRenderApp } from "@itwin/core-frontend";
 import { Presentation as PresentationBackend, PresentationProps } from "@itwin/presentation-backend";
 import { Presentation as PresentationFrontend } from "@itwin/presentation-frontend";
-import { HierarchyCacheMode, initialize, PresentationTestingInitProps, terminate } from "../presentation-testing/Helpers.js";
+import { HierarchyCacheMode, PresentationTestingInitProps } from "../presentation-testing/Helpers.js";
+
+// this is needed for mocking external module
+const rimrafModulePath = import.meta.resolve("rimraf");
 
 describe("Helpers", () => {
   let backendInitializationStub: sinon.SinonStub;
@@ -30,7 +34,14 @@ describe("Helpers", () => {
   });
 
   describe("initialize", () => {
+    let initialize: (props?: PresentationTestingInitProps) => Promise<void>;
+
+    beforeEach(async () => {
+      initialize = (await import("../presentation-testing/Helpers.js")).initialize;
+    });
+
     afterEach(async () => {
+      const { terminate } = await import("../presentation-testing/Helpers.js");
       await terminate();
     });
 
@@ -69,9 +80,22 @@ describe("Helpers", () => {
 
   describe("terminate", () => {
     let rimrafSyncStub: sinon.SinonStub;
+    let initialize: (props?: PresentationTestingInitProps) => Promise<void>;
+    let terminate: () => Promise<void>;
 
-    beforeEach(() => {
-      rimrafSyncStub = sinon.stub(rimraf, "sync");
+    beforeEach(async () => {
+      rimrafSyncStub = sinon.stub();
+      await td.replaceEsm(rimrafModulePath, {
+        ...rimrafModule,
+        sync: rimrafSyncStub,
+      });
+      const helpers = await import("../presentation-testing/Helpers.js");
+      initialize = helpers.initialize;
+      terminate = helpers.terminate;
+    });
+
+    afterEach(() => {
+      td.reset();
     });
 
     it("terminates PresentationBackend and PresentationFrontend on terminate", async () => {

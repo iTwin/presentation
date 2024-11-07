@@ -52,7 +52,6 @@ export default class SelectionScopePicker extends Component<SelectionScopePicker
     }
     return (
       <div className="SelectionScopePicker">
-        {/* eslint-disable-next-line jsx-a11y/no-onchange */}
         <select onChange={this.onSelectedScopeChanged} value={this.state.activeScopeId}>
           {this.state.availableSelectionScopes.map((scope: SelectionScope) => (
             <option value={scope.id} key={scope.id}>

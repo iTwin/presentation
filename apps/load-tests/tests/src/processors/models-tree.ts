@@ -79,7 +79,7 @@ function createProvider(context: ScenarioContext, events: EventEmitter) {
     ]);
     async function requestRepeatedly(): Promise<Node[]> {
       return doRequest("PresentationRpcInterface-4.1.0-getPagedNodes", requestBody, events, "nodes").then(async (response) => {
-        // eslint-disable-next-line deprecation/deprecation
+        // eslint-disable-next-line @typescript-eslint/no-deprecated
         const responseBody = response as PresentationRpcResponseData<PagedResponse<NodeJSON>>;
         switch (responseBody.statusCode) {
           case PresentationStatus.Canceled:
@@ -90,7 +90,7 @@ function createProvider(context: ScenarioContext, events: EventEmitter) {
           case PresentationStatus.BackendTimeout:
             return requestRepeatedly();
           case PresentationStatus.Success:
-            // eslint-disable-next-line deprecation/deprecation
+            // eslint-disable-next-line @typescript-eslint/no-deprecated
             return responseBody.result!.items.map(Node.fromJSON);
           default:
             throw new PresentationError(responseBody.statusCode, responseBody.errorMessage);

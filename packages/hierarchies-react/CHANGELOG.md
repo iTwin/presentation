@@ -1,5 +1,38 @@
 # @itwin/presentation-hierarchies-react
 
+## 1.1.2
+
+### Patch Changes
+
+- Updated dependencies:
+  - @itwin/unified-selection@1.1.1
+
+## 1.1.1
+
+### Patch Changes
+
+- Updated dependencies:
+  - @itwin/presentation-hierarchies@1.2.1
+
+## 1.1.0
+
+### Minor Changes
+
+- [#740](https://github.com/iTwin/presentation/pull/740): Define `type` and `exports` attributes in `package.json`.
+
+  The change moves this package a step closer towards dropping CommonJS support - it's now transpiled from ESM to CommonJS instead of the opposite.
+
+  In addition, the `exports` attribute has been added to `package.json` to prohibit access to APIs that are not intended to be used by external consumers.
+
+### Patch Changes
+
+- [#758](https://github.com/iTwin/presentation/pull/758): Promote `@beta` APIs to `@public`.
+- [#756](https://github.com/iTwin/presentation/pull/756): Added missing `ref` property to `TreeNodeRendererProps` type.
+- Updated dependencies:
+  - @itwin/presentation-shared@1.1.0
+  - @itwin/unified-selection@1.1.0
+  - @itwin/presentation-hierarchies@1.2.0
+
 ## 1.0.1
 
 ### Patch Changes

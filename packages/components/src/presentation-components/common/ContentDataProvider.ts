@@ -306,10 +306,9 @@ export class ContentDataProvider implements IContentDataProvider {
     return { displayType: this.displayType };
   }
 
-  // eslint-disable-next-line @typescript-eslint/naming-convention
   private getDefaultContentDescriptor = memoize(async (): Promise<Descriptor | undefined> => {
     this.setupListeners();
-    // istanbul ignore if
+    /* c8 ignore next 5 */
     if (this.keys.size > DEFAULT_KEYS_BATCH_SIZE) {
       const msg = `ContentDataProvider.getContentDescriptor requesting descriptor with ${this.keys.size} keys which
         exceeds the suggested size of ${DEFAULT_KEYS_BATCH_SIZE}. Possible "HTTP 413 Payload Too Large" error.`;
@@ -389,7 +388,7 @@ export class ContentDataProvider implements IContentDataProvider {
       this.setupListeners();
       const descriptorOverrides = await this.getDescriptorOverrides();
 
-      // istanbul ignore if
+      /* c8 ignore next 5 */
       if (this.keys.size > DEFAULT_KEYS_BATCH_SIZE) {
         const msg = `ContentDataProvider.getContent requesting with ${this.keys.size} keys which
         exceeds the suggested size of ${DEFAULT_KEYS_BATCH_SIZE}. Possible "HTTP 413 Payload Too Large" error.`;
@@ -424,11 +423,11 @@ export class ContentDataProvider implements IContentDataProvider {
 
       const requestSize = undefined !== pageOptions && 0 === pageOptions.start && undefined !== pageOptions.size;
       if (requestSize) {
-        // eslint-disable-next-line deprecation/deprecation
+        // eslint-disable-next-line @typescript-eslint/no-deprecated
         return Presentation.presentation.getContentAndSize(options);
       }
 
-      // eslint-disable-next-line deprecation/deprecation
+      // eslint-disable-next-line @typescript-eslint/no-deprecated
       const content = await Presentation.presentation.getContent(options);
       return content ? { content, size: content.contentSet.length } : undefined;
     },
@@ -441,26 +440,22 @@ export class ContentDataProvider implements IContentDataProvider {
     this.invalidateCache(CacheInvalidationProps.full());
   }
 
-  // eslint-disable-next-line @typescript-eslint/naming-convention
   private onIModelContentChanged = (args: IModelContentChangeEventArgs) => {
     if (args.rulesetId === this.rulesetId && args.imodelKey === this.imodel.key) {
       this.onContentUpdate();
     }
   };
 
-  // eslint-disable-next-line @typescript-eslint/naming-convention
   private onRulesetModified = (curr: RegisteredRuleset) => {
     if (curr.id === this.rulesetId) {
       this.onContentUpdate();
     }
   };
 
-  // eslint-disable-next-line @typescript-eslint/naming-convention
   private onRulesetVariableChanged = () => {
     this.onContentUpdate();
   };
 
-  // eslint-disable-next-line @typescript-eslint/naming-convention
   private onUnitSystemChanged = () => {
     this.invalidateCache({ content: true });
   };
@@ -468,11 +463,11 @@ export class ContentDataProvider implements IContentDataProvider {
 
 class MemoizationHelpers {
   public static areContentRequestsEqual(lhsArgs: [PageOptions?], rhsArgs: [PageOptions?]): boolean {
-    // istanbul ignore next
+    /* c8 ignore next 3 */
     if ((lhsArgs[0]?.start ?? 0) !== (rhsArgs[0]?.start ?? 0)) {
       return false;
     }
-    // istanbul ignore next
+    /* c8 ignore next 3 */
     if ((lhsArgs[0]?.size ?? 0) !== (rhsArgs[0]?.size ?? 0)) {
       return false;
     }

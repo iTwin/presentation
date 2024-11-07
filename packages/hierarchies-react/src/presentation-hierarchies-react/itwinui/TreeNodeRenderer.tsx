@@ -5,7 +5,7 @@
 
 import "./TreeNodeRenderer.css";
 import cx from "classnames";
-import { ComponentPropsWithoutRef, forwardRef, LegacyRef, MutableRefObject, ReactElement, Ref, useCallback, useRef } from "react";
+import { ComponentPropsWithoutRef, forwardRef, LegacyRef, MutableRefObject, ReactElement, Ref, RefAttributes, useCallback, useRef } from "react";
 import { SvgFilter, SvgFilterHollow, SvgRemove } from "@itwin/itwinui-icons-react";
 import { Anchor, ButtonGroup, Flex, IconButton, ProgressRadial, Text, TreeNode } from "@itwin/itwinui-react";
 import { MAX_LIMIT_OVERRIDE } from "../internal/Utils.js";
@@ -14,10 +14,10 @@ import { HierarchyLevelDetails, UseTreeResult } from "../UseTree.js";
 import { useLocalizationContext } from "./LocalizationContext.js";
 import { RenderedTreeNode } from "./TreeRenderer.js";
 
-/** @beta */
+/** @public */
 type TreeNodeProps = ComponentPropsWithoutRef<typeof TreeNode>;
 
-/** @beta */
+/** @public */
 interface TreeNodeRendererOwnProps {
   /** Node that is rendered. */
   node: RenderedTreeNode;
@@ -39,7 +39,7 @@ interface TreeNodeRendererOwnProps {
   actionButtonsClassName?: string;
 }
 
-/** @beta */
+/** @public */
 type TreeNodeRendererProps = Pick<UseTreeResult, "expandNode"> &
   Partial<Pick<UseTreeResult, "getHierarchyLevelDetails">> &
   Omit<TreeNodeProps, "label" | "onExpanded" | "onSelected" | "icon"> &
@@ -50,9 +50,9 @@ type TreeNodeRendererProps = Pick<UseTreeResult, "expandNode"> &
  *
  * @see `TreeRenderer`
  * @see https://itwinui.bentley.com/docs/tree
- * @beta
+ * @public
  */
-export const TreeNodeRenderer: React.ForwardRefExoticComponent<TreeNodeRendererProps> = forwardRef(
+export const TreeNodeRenderer: React.ForwardRefExoticComponent<TreeNodeRendererProps & RefAttributes<HTMLDivElement>> = forwardRef(
   (
     {
       node,
@@ -158,9 +158,7 @@ export const TreeNodeRenderer: React.ForwardRefExoticComponent<TreeNodeRendererP
     }
 
     if (node.type === "NoFilterMatches") {
-      return (
-        <TreeNode {...treeNodeProps} ref={ref} label={localizedStrings.noFilteredChildren} isDisabled={true} onExpanded={/* istanbul ignore next */ () => {}} />
-      );
+      return <TreeNode {...treeNodeProps} ref={ref} label={localizedStrings.noFilteredChildren} isDisabled={true} onExpanded={/* c8 ignore next */ () => {}} />;
     }
 
     const onRetry = reloadTree ? () => reloadTree({ parentNodeId: node.parentNodeId, state: "reset" }) : undefined;
@@ -170,7 +168,7 @@ export const TreeNodeRenderer: React.ForwardRefExoticComponent<TreeNodeRendererP
         ref={ref}
         label={<ErrorNodeLabel message={node.message} onRetry={onRetry} />}
         isDisabled={true}
-        onExpanded={/* istanbul ignore next */ () => {}}
+        onExpanded={/* c8 ignore next */ () => {}}
       />
     );
   },
@@ -185,7 +183,7 @@ const PlaceholderNode = forwardRef<HTMLDivElement, Omit<TreeNodeProps, "onExpand
       ref={forwardedRef}
       label={localizedStrings.loading}
       icon={<ProgressRadial size="x-small" indeterminate title={localizedStrings.loading} />}
-      onExpanded={/* istanbul ignore next */ () => {}}
+      onExpanded={/* c8 ignore next */ () => {}}
     />
   );
 });
@@ -199,7 +197,7 @@ const ResultSetTooLargeNode = forwardRef<HTMLDivElement, Omit<TreeNodeProps, "on
         ref={forwardedRef}
         className="stateless-tree-node"
         label={<ResultSetTooLargeNodeLabel limit={limit} onFilterClick={onFilterClick} onOverrideLimit={onOverrideLimit} />}
-        onExpanded={/* istanbul ignore next */ () => {}}
+        onExpanded={/* c8 ignore next */ () => {}}
       />
     );
   },

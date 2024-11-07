@@ -43,7 +43,7 @@ describe("PropertyDataProvider", async () => {
       });
 
       it("creates empty result when properties requested for 0 instances", async function () {
-        // eslint-disable-next-line deprecation/deprecation
+        // eslint-disable-next-line @typescript-eslint/no-deprecated
         const imodel = await buildTestIModel(this, async (builder) => {
           insertSpatialCategory({ builder, fullClassNameSeparator: ":", codeValue: "My Category" });
         });
@@ -58,7 +58,7 @@ describe("PropertyDataProvider", async () => {
         let categoryKey: InstanceKey;
         let modelKey: InstanceKey;
         let elementKey: InstanceKey;
-        // eslint-disable-next-line deprecation/deprecation
+        // eslint-disable-next-line @typescript-eslint/no-deprecated
         const imodel = await buildTestIModel(this, async (builder) => {
           categoryKey = insertSpatialCategory({ builder, fullClassNameSeparator: ":", codeValue: "My Category" });
           modelKey = insertPhysicalModelWithPartition({ builder, fullClassNameSeparator: ":", codeValue: "My Model" });
@@ -99,7 +99,7 @@ describe("PropertyDataProvider", async () => {
         let categoryKey: InstanceKey;
         let modelKey: InstanceKey;
         let elementKey: InstanceKey;
-        // eslint-disable-next-line deprecation/deprecation
+        // eslint-disable-next-line @typescript-eslint/no-deprecated
         const imodel = await buildTestIModel(this, async (builder) => {
           categoryKey = insertSpatialCategory({ builder, fullClassNameSeparator: ":", codeValue: "My Category" });
           modelKey = insertPhysicalModelWithPartition({ builder, fullClassNameSeparator: ":", codeValue: "My Model" });
@@ -138,7 +138,7 @@ describe("PropertyDataProvider", async () => {
 
       it("favorites properties", async function () {
         let categoryKey: InstanceKey;
-        // eslint-disable-next-line deprecation/deprecation
+        // eslint-disable-next-line @typescript-eslint/no-deprecated
         const imodel = await buildTestIModel(this, async (builder) => {
           categoryKey = insertSpatialCategory({ builder, fullClassNameSeparator: ":", codeValue: "My Category" });
         });
@@ -174,7 +174,7 @@ describe("PropertyDataProvider", async () => {
 
       it("overrides default property category", async function () {
         let categoryKey: InstanceKey;
-        // eslint-disable-next-line deprecation/deprecation
+        // eslint-disable-next-line @typescript-eslint/no-deprecated
         const imodel = await buildTestIModel(this, async (builder) => {
           categoryKey = insertSpatialCategory({ builder, fullClassNameSeparator: ":", codeValue: "My Category" });
         });
@@ -218,7 +218,7 @@ describe("PropertyDataProvider", async () => {
 
       it("finds root property record keys", async function () {
         let categoryKey: InstanceKey;
-        // eslint-disable-next-line deprecation/deprecation
+        // eslint-disable-next-line @typescript-eslint/no-deprecated
         const imodel = await buildTestIModel(this, async (builder) => {
           categoryKey = insertSpatialCategory({ builder, fullClassNameSeparator: ":", codeValue: "My Category" });
         });
@@ -241,7 +241,7 @@ describe("PropertyDataProvider", async () => {
       it("finds nested property record keys", async function () {
         let elementKey: InstanceKey;
         let externalsSourceAspectKey: InstanceKey;
-        // eslint-disable-next-line deprecation/deprecation
+        // eslint-disable-next-line @typescript-eslint/no-deprecated
         const imodel = await buildTestIModel(this, async (builder) => {
           const categoryKey = insertSpatialCategory({ builder, fullClassNameSeparator: ":", codeValue: "My Category" });
           const modelKey = insertPhysicalModelWithPartition({ builder, fullClassNameSeparator: ":", codeValue: "My Model" });
@@ -302,7 +302,7 @@ describe("PropertyDataProvider", async () => {
 
   it("gets property data after re-initializing Presentation", async function () {
     let categoryKey: InstanceKey;
-    // eslint-disable-next-line deprecation/deprecation
+    // eslint-disable-next-line @typescript-eslint/no-deprecated
     const imodel = await buildTestIModel(this, async (builder) => {
       categoryKey = insertSpatialCategory({ builder, fullClassNameSeparator: ":", codeValue: "My Category" });
     });

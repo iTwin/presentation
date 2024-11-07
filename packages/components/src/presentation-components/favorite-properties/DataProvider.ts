@@ -62,7 +62,7 @@ export class FavoritePropertiesDataProvider implements IFavoritePropertiesDataPr
   constructor(props?: FavoritePropertiesDataProviderProps) {
     this.includeFieldsWithNoValues = true;
     this.includeFieldsWithCompositeValues = true;
-    this._customRuleset = /* istanbul ignore next */ props?.ruleset;
+    this._customRuleset = /* c8 ignore next */ props?.ruleset;
   }
 
   /**
@@ -73,9 +73,9 @@ export class FavoritePropertiesDataProvider implements IFavoritePropertiesDataPr
     if (elementIds instanceof KeySet) {
       return using(this.createPropertyDataProvider(imodel, this._customRuleset), async (propertyDataProvider) => {
         propertyDataProvider.keys = elementIds;
-        // eslint-disable-next-line deprecation/deprecation
+        // eslint-disable-next-line @typescript-eslint/no-deprecated
         propertyDataProvider.includeFieldsWithNoValues = this.includeFieldsWithNoValues;
-        // eslint-disable-next-line deprecation/deprecation
+        // eslint-disable-next-line @typescript-eslint/no-deprecated
         propertyDataProvider.includeFieldsWithCompositeValues = this.includeFieldsWithCompositeValues;
         const propertyData = await propertyDataProvider.getData();
 
@@ -93,10 +93,11 @@ export class FavoritePropertiesDataProvider implements IFavoritePropertiesDataPr
     return this.getData(imodel, keys);
   }
 
-  // istanbul ignore next
+  /* c8 ignore start */
   private createPropertyDataProvider(imodel: IModelConnection, ruleset?: Ruleset | string) {
     const provider = new PresentationPropertyDataProvider({ imodel, ruleset });
     provider.isNestedPropertyCategoryGroupingEnabled = false;
     return provider;
   }
+  /* c8 ignore end */
 }

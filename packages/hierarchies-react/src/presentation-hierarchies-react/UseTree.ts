@@ -15,7 +15,7 @@ import { SelectionChangeType } from "./UseSelectionHandler.js";
 
 /**
  * A data structure that contains information about a single hierarchy level.
- * @beta
+ * @public
  */
 export interface HierarchyLevelDetails {
   /** The parent node whose hierarchy level's information is contained in this data structure */
@@ -48,7 +48,7 @@ export interface HierarchyLevelDetails {
  *
  * @see `useUnifiedSelectionTree`
  * @see `useIModelTree`
- * @beta
+ * @public
  */
 export function useTree(props: UseTreeProps): UseTreeResult {
   const { getNode: _, ...rest } = useTreeInternal(props);
@@ -67,14 +67,14 @@ export function useTree(props: UseTreeProps): UseTreeResult {
  * @see `useTree`
  * @see `useIModelUnifiedSelectionTree`
  * @see `UnifiedSelectionProvider`
- * @beta
+ * @public
  */
 export function useUnifiedSelectionTree({ sourceName, ...props }: UseTreeProps & UseUnifiedTreeSelectionProps): UseTreeResult {
   const { getNode, ...rest } = useTreeInternal(props);
   return { ...rest, ...useUnifiedTreeSelection({ sourceName, getNode }) };
 }
 
-/** @beta */
+/** @public */
 export interface UseTreeProps {
   /** Provides the hierarchy provider for the tree. */
   getHierarchyProvider: () => HierarchyProvider;
@@ -93,7 +93,7 @@ export interface UseTreeProps {
 
 /**
  * Options for doing either full or a sub tree reload.
- * @beta
+ * @public
  */
 interface ReloadTreeOptions {
   /** Specifies parent node under which sub tree should be reloaded. */
@@ -110,7 +110,7 @@ interface ReloadTreeOptions {
   state?: "keep" | "discard" | "reset";
 }
 
-/** @beta */
+/** @public */
 export interface UseTreeResult {
   /**
    * Array containing root tree nodes. It is `undefined` on initial render until any nodes are loaded.
@@ -260,7 +260,7 @@ function useTreeInternal({
   const setFormatter = useCallback<UseTreeResult["setFormatter"]>(
     (formatter: IPrimitiveValueFormatter | undefined) => {
       currentFormatter.current = formatter;
-      /* istanbul ignore next 3 */
+      /* c8 ignore next 3 */
       if (!hierarchyProvider) {
         return;
       }
