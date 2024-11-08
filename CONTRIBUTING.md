@@ -106,7 +106,7 @@ For local development it is recommended to setup [`CoSpace`](https://www.npmjs.c
 
 #### Debugging code from linked repos
 
-In order to debug packages from different repos using [`Visual Studio Code`](https://code.visualstudio.com/docs/editor/debugging) you will need launch configuration at your `CoSpace` root. Example configuration for debugging presentation test-app and locally built presentation packages from [itwinjs-core](https://github.com/iTwin/itwinjs-core) (you may need to adjust paths according your `CoSpace` setup):
+In order to debug packages from different repos using [`Visual Studio Code`](https://code.visualstudio.com/docs/editor/debugging) you will need launch configuration at your `CoSpace` root. Example configuration for debugging presentation test-app and locally built presentation packages from [itwinjs-core](https://github.com/iTwin/itwinjs-core) (you may need to adjust paths and `pathMapping` for `[presentation-test-app] Launch Browser` configuration according your `CoSpace` setup):
 
 ```json
 {
@@ -152,6 +152,35 @@ In order to debug packages from different repos using [`Visual Studio Code`](htt
         "configurations": ["[presentation-test-app] Start Web Backend", "[presentation-test-app] Start Web Server", "[presentation-test-app] Launch Browser"]
       }
     ]
+  }
+}
+```
+
+Additional configuration for presentation-test-app in `repos/presentation/apps/test-app/frontend/vite.config.mts` might be needed when linking with local version of `itwinjs-core` packages:
+
+```js
+{
+  server: {
+    // other settings
+    fs: {
+      allow: ["../../../../../"], // relative path to cospace root
+    }
+  },
+  resolve: {
+    alias: [
+      // other aliases
+      {
+        find: "@itwin/core-electron/lib/cjs/ElectronFrontend",
+        replacement: "@itwin/core-electron/src/ElectronFrontend.ts",
+      }
+    ]
+  },
+  optimizeDeps: {
+    force: true,
+    include: [
+      "@itwin/core-electron/lib/cjs/ElectronFrontend",
+    ]
+    exclude: ["@itwin/core-frontend", "@itwin/core-common"]
   }
 }
 ```
