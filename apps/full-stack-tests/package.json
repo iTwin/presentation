@@ -40,7 +40,6 @@
     "@itwin/presentation-frontend": "catalog:itwinjs-core",
     "@itwin/presentation-hierarchies": "workspace:^",
     "@itwin/presentation-hierarchies-react": "workspace:^",
-    "@itwin/presentation-models-tree": "workspace:^",
     "@itwin/presentation-shared": "workspace:^",
     "@itwin/presentation-testing": "workspace:^",
     "@itwin/unified-selection": "workspace:^",

@@ -237,7 +237,7 @@ export class ModelsTreeIdsCache {
     const query = /* sql */ `
       SELECT Model.Id modelId, Category.Id categoryId
       FROM ${this._hierarchyConfig.elementClassSpecification}
-      WHERE Parent IS NULL
+      WHERE Parent.Id IS NULL
       GROUP BY modelId, categoryId
     `;
     for await (const row of this._queryExecutor.createQueryReader({ ecsql: query }, { rowFormat: "ECSqlPropertyNames", limit: "unbounded" })) {
@@ -308,7 +308,7 @@ export class ModelsTreeIdsCache {
               WHERE
                 Model.Id = ?
                 AND Category.Id = ?
-                AND Parent IS NULL
+                AND Parent.Id IS NULL
 
               UNION ALL
 
