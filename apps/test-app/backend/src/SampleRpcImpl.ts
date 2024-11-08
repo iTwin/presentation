@@ -5,8 +5,8 @@
 
 import * as fs from "fs";
 import * as path from "path";
-import { IModelHost } from "@itwin/core-backend";
-import { RpcManager } from "@itwin/core-common";
+import { IModelHost, SnapshotDb } from "@itwin/core-backend";
+import { IModelConnectionProps, RpcManager } from "@itwin/core-common";
 import { SampleRpcInterface } from "@test-app/common";
 
 /** The backend implementation of SampleRpcInterface. */
@@ -32,7 +32,16 @@ export default class SampleRpcImpl extends SampleRpcInterface {
       .filter((fullPath) => extensions.some((ext) => fullPath.endsWith(ext)))
       .map((fullPath) => extensions.reduce((name, ext) => path.basename(name, ext), fullPath));
   }
+
+  public override async getConnectionProps(imodelPath: string): Promise<IModelConnectionProps> {
+    const db = SnapshotDb.openFile(imodelPath);
+    return db.getConnectionProps();
+  }
+
+  public override async closeConnection(imodelPath: string): Promise<void> {
+    SnapshotDb.findByFilename(imodelPath)?.close();
+  }
 }
 
 /** Auto-register the impl when this file is included. */
-RpcManager.registerImpl(SampleRpcInterface, SampleRpcImpl); // eslint-disable-line @itwin/no-internal
+RpcManager.registerImpl(SampleRpcInterface, SampleRpcImpl);

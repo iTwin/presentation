@@ -20,9 +20,19 @@ export default defineConfig({
       ],
     }),
   ],
+  css: {
+    preprocessorOptions: {
+      scss: {
+        api: "modern-compiler",
+      },
+    },
+  },
   server: {
     port: 3000,
     strictPort: true,
+    fs: {
+      allow: ["../../../../../"],
+    },
   },
   resolve: {
     alias: [
@@ -31,6 +41,17 @@ export default defineConfig({
         find: /^~(.*)$/,
         replacement: "$1",
       },
+      {
+        find: "@itwin/core-electron/lib/cjs/ElectronFrontend",
+        replacement: "@itwin/core-electron/src/ElectronFrontend.ts",
+      },
     ],
+  },
+  optimizeDeps: {
+    force: true,
+    include: [
+      "@itwin/core-electron/lib/cjs/ElectronFrontend", // import from module error
+    ],
+    exclude: ["@itwin/core-frontend", "@itwin/core-common"],
   },
 });
