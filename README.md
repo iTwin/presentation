@@ -36,3 +36,7 @@ The _new generation_ packages are designed to be more modular and have less peer
 The below diagram shows the typical dependency structure of a React application or component that uses Presentation packages to create a tree component:
 
 ![Presentation packages dependency diagram](./media/presentation-packages.png)
+
+## Contribution
+
+If you wish to contribute to this repository, see our [Contributing guide](./CONTRIBUTING.md).
