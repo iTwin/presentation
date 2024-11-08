@@ -132,7 +132,7 @@ const selectionHiliteSet = await selectionHiliteProvider.getHiliteSet({ imodel.k
 selectionHiliteProvider.dispose();
 ```
 
-#### Selection scopes
+### Selection scopes
 
 Selection scopes allow decoupling of what gets picked and what gets selected. Without selection scopes, whenever a user picks an element in the viewport, its ID goes straight into unified selection storage. With selection scopes we can modify that and add something different. The input to the selection scopes' processor is a query executor, element IDs, and the scope to apply, and the output is an iterator of `SelectableInstanceKey`. We get the input when the user picks some elements in the viewport, run that through the selection scope processor and put the output into unified selection storage.
 
