@@ -159,13 +159,15 @@ async function tryOpenStandalone(path: string) {
 }
 
 class LocalIModelConnection extends IModelConnection {
+  private _isClosed = false;
   constructor(connectionsProps: IModelConnectionProps, private _close: () => Promise<void>) {
     super(connectionsProps);
   }
 
-  public override get isClosed(): boolean { return false }
+  public override get isClosed(): boolean { return this._isClosed }
 
   public override async close(): Promise<void> {
+    this._isClosed = true;
     await this._close();
   }
 }
