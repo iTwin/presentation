@@ -21,6 +21,7 @@ import {
   NodeSelectClauseColumnNames,
   NodesQueryClauseFactory,
   ProcessedHierarchyNode,
+  RowsLimitExceededError,
 } from "@itwin/presentation-hierarchies";
 import {
   createBisInstanceLabelSelectClauseFactory,
@@ -41,7 +42,11 @@ export type ClassGroupingHierarchyNode = GroupingHierarchyNode & { key: ClassGro
 
 const MAX_FILTERING_INSTANCE_KEY_COUNT = 100;
 
-interface ModelsTreeHierarchyConfiguration {
+/**
+ * Defines hierarchy configuration supported by `ModelsTree`.
+ * @beta
+ */
+export interface ModelsTreeHierarchyConfiguration {
   /** Should element nodes be grouped by class. Defaults to `enable`. */
   elementClassGrouping: "enable" | "enableWithCounts" | "disable";
   /** Full class name of a `GeometricElement3d` sub-class that should be used to load element nodes. Defaults to `BisCore.GeometricElement3d` */
@@ -62,6 +67,7 @@ interface ModelsTreeDefinitionProps {
   hierarchyConfig?: ModelsTreeHierarchyConfiguration;
 }
 
+/** @beta */
 export interface ElementsGroupInfo {
   parent:
     | {
@@ -79,16 +85,16 @@ export interface ElementsGroupInfo {
 interface ModelsTreeInstanceKeyPathsFromTargetItemsProps {
   imodelAccess: ECClassHierarchyInspector & LimitingECSqlQueryExecutor;
   idsCache?: ModelsTreeIdsCache;
-  targetItems: Array<InstanceKey | ElementsGroupInfo>;
   hierarchyConfig?: ModelsTreeHierarchyConfiguration;
+  targetItems: Array<InstanceKey | ElementsGroupInfo>;
   limit?: number | "unbounded";
 }
 
 interface ModelsTreeInstanceKeyPathsFromInstanceLabelProps {
   imodelAccess: ECClassHierarchyInspector & LimitingECSqlQueryExecutor;
   idsCache?: ModelsTreeIdsCache;
-  label: string;
   hierarchyConfig?: ModelsTreeHierarchyConfiguration;
+  label: string;
   limit?: number | "unbounded";
 }
 
@@ -212,7 +218,7 @@ export class ModelsTreeDefinition implements HierarchyDefinition {
             FROM ${instanceFilterClauses.from} this
             ${instanceFilterClauses.joins}
             WHERE
-              this.Parent IS NULL
+              this.Parent.Id IS NULL
               ${instanceFilterClauses.where ? `AND ${instanceFilterClauses.where}` : ""}
           `,
         },
@@ -369,19 +375,6 @@ export class ModelsTreeDefinition implements HierarchyDefinition {
     parentNodeInstanceIds: modelIds,
     instanceFilter,
   }: DefineInstanceNodeChildHierarchyLevelProps): Promise<HierarchyLevelDefinition> {
-    function createIdsSelector(ids: Id64Array): string {
-      // Note: `json_array` function only accepts up to 127 arguments and we may have more `ids` than that. As a workaround,
-      // we're creating an array of arrays
-      const slices = new Array<Id64String[]>();
-      for (let sliceStartIndex = 0; sliceStartIndex < ids.length; sliceStartIndex += 127) {
-        let sliceEndIndex: number | undefined = sliceStartIndex + 127;
-        if (sliceEndIndex > ids.length) {
-          sliceEndIndex = undefined;
-        }
-        slices.push(ids.slice(sliceStartIndex, sliceEndIndex));
-      }
-      return `json_array(${slices.map((sliceIds) => `json_array(${sliceIds.map((id) => `'${id}'`).join(",")})`).join(",")})`;
-    }
     const instanceFilterClauses = await this._selectQueryFactory.createFilterClauses({
       filter: instanceFilter,
       contentClass: { fullName: "BisCore.SpatialCategory", alias: "this" },
@@ -419,7 +412,7 @@ export class ModelsTreeDefinition implements HierarchyDefinition {
                 WHERE
                   element.Model.Id IN (${modelIds.map(() => "?").join(",")})
                   AND element.Category.Id = +this.ECInstanceId
-                  AND element.Parent IS NULL
+                  AND element.Parent.Id IS NULL
               )
               ${instanceFilterClauses.where ? `AND ${instanceFilterClauses.where}` : ""}
           `,
@@ -486,7 +479,7 @@ export class ModelsTreeDefinition implements HierarchyDefinition {
             WHERE
               this.Category.Id IN (${categoryIds.map(() => "?").join(",")})
               AND this.Model.Id IN (${modelIds.map(() => "?").join(",")})
-              AND this.Parent IS NULL
+              AND this.Parent.Id IS NULL
               ${instanceFilterClauses.where ? `AND ${instanceFilterClauses.where}` : ""}
           `,
           bindings: [...categoryIds.map((id) => ({ type: "id", value: id })), ...modelIds.map((id) => ({ type: "id", value: id }))] as ECSqlBinding[],
@@ -738,15 +731,14 @@ function parseQueryRow(row: ECSqlQueryRow, groupInfos: ElementsGroupInfo[], sepa
 async function createInstanceKeyPathsFromTargetItems({
   targetItems,
   imodelAccess,
-  hierarchyConfig,
-  idsCache,
   limit,
+  ...props
 }: ModelsTreeInstanceKeyPathsFromTargetItemsProps): Promise<HierarchyFilteringPath[]> {
   if (limit !== "unbounded" && targetItems.length > (limit ?? MAX_FILTERING_INSTANCE_KEY_COUNT)) {
-    throw new Error(`Filter matches more than ${MAX_FILTERING_INSTANCE_KEY_COUNT} items`);
+    throw new RowsLimitExceededError(limit ?? MAX_FILTERING_INSTANCE_KEY_COUNT);
   }
-  const hierarchyConfigToUse = hierarchyConfig ?? defaultHierarchyConfiguration;
-  const idsCacheToUse = idsCache ?? new ModelsTreeIdsCache(imodelAccess, hierarchyConfigToUse);
+  const hierarchyConfig = props.hierarchyConfig ?? defaultHierarchyConfiguration;
+  const idsCache = props.idsCache ?? new ModelsTreeIdsCache(imodelAccess, hierarchyConfig);
   const ids = {
     models: new Array<Id64String>(),
     categories: new Array<Id64String>(),
@@ -777,10 +769,10 @@ async function createInstanceKeyPathsFromTargetItems({
 
   return collect(
     merge(
-      from(ids.subjects).pipe(mergeMap((id) => createSubjectInstanceKeysPath(id, idsCacheToUse))),
-      from(ids.models).pipe(mergeMap((id) => createModelInstanceKeyPaths(id, idsCacheToUse))),
-      from(ids.categories).pipe(mergeMap((id) => createCategoryInstanceKeyPaths(id, idsCacheToUse))),
-      from(elementBlocks).pipe(mergeMap((block) => createGeometricElementInstanceKeyPaths(imodelAccess, idsCacheToUse, hierarchyConfigToUse, block))),
+      from(ids.subjects).pipe(mergeMap((id) => createSubjectInstanceKeysPath(id, idsCache))),
+      from(ids.models).pipe(mergeMap((id) => createModelInstanceKeyPaths(id, idsCache))),
+      from(ids.categories).pipe(mergeMap((id) => createCategoryInstanceKeyPaths(id, idsCache))),
+      from(elementBlocks).pipe(mergeMap((block) => createGeometricElementInstanceKeyPaths(imodelAccess, idsCache, hierarchyConfig, block))),
     ),
   );
 }
@@ -792,6 +784,7 @@ async function createInstanceKeyPathsFromInstanceLabel(
   const elementLabelSelectClause = await props.labelsFactory.createSelectClause({
     classAlias: "e",
     className: "BisCore.Element",
+
     selectorsConcatenator: ECSql.createConcatenatedValueStringSelector,
   });
   const targetsReader = props.imodelAccess.createQueryReader(
@@ -852,6 +845,20 @@ async function collect<T>(obs: ObservableInput<T>): Promise<T[]> {
       },
     });
   });
+}
+
+function createIdsSelector(ids: Id64Array): string {
+  // Note: `json_array` function only accepts up to 127 arguments and we may have more `ids` than that. As a workaround,
+  // we're creating an array of arrays
+  const slices = new Array<Id64String[]>();
+  for (let sliceStartIndex = 0; sliceStartIndex < ids.length; sliceStartIndex += 127) {
+    let sliceEndIndex: number | undefined = sliceStartIndex + 127;
+    if (sliceEndIndex > ids.length) {
+      sliceEndIndex = undefined;
+    }
+    slices.push(ids.slice(sliceStartIndex, sliceEndIndex));
+  }
+  return `json_array(${slices.map((sliceIds) => `json_array(${sliceIds.map((id) => `'${id}'`).join(",")})`).join(",")})`;
 }
 
 function parseIdsSelectorResult(selectorResult: any): Id64Array {
