@@ -3,14 +3,14 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { expect } from "chai";
 import { IModelDb, PhysicalElement, SnapshotDb } from "@itwin/core-backend";
 import { Id64 } from "@itwin/core-bentley";
 import { createNodesQueryClauseFactory, HierarchyFilteringPath, HierarchyNode } from "@itwin/presentation-hierarchies";
 import { createBisInstanceLabelSelectClauseFactory, ECClassHierarchyInspector, ECSchemaProvider } from "@itwin/presentation-shared";
+import { expect } from "chai";
 import { Datasets } from "../util/Datasets";
 import { run } from "../util/TestUtilities";
-import { ProviderOptions, StatelessHierarchyProvider } from "./StatelessHierarchyProvider";
+import { ProviderOptionsWithIModel, StatelessHierarchyProvider } from "./StatelessHierarchyProvider";
 
 describe("filtering", () => {
   const totalNumberOfFilteringPaths = 50000;
@@ -23,7 +23,7 @@ describe("filtering", () => {
 
   run({
     testName: `filters with ${totalNumberOfFilteringPaths} paths`,
-    setup: (): ProviderOptions => {
+    setup: (): ProviderOptionsWithIModel => {
       const { schemaName, itemsPerGroup, defaultClassName } = Datasets.CUSTOM_SCHEMA;
       const filtering = {
         paths: new Array<HierarchyFilteringPath>(),

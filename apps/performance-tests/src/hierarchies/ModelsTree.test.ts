@@ -3,13 +3,13 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { expect } from "chai";
 import { IModelDb, SnapshotDb } from "@itwin/core-backend";
 import { ModelsTreeDefinition } from "@itwin/presentation-models-tree";
-import { ECClassHierarchyInspector, ECSchemaProvider, ECSqlQueryExecutor } from "@itwin/presentation-shared";
+import { ECClassHierarchyInspector, ECSchemaProvider, ECSqlQueryDef, ECSqlQueryExecutor, InstanceKey } from "@itwin/presentation-shared";
+import { expect } from "chai";
 import { Datasets } from "../util/Datasets";
 import { run } from "../util/TestUtilities";
-import { StatelessHierarchyProvider } from "./StatelessHierarchyProvider";
+import { IModelAccess, StatelessHierarchyProvider } from "./StatelessHierarchyProvider";
 
 describe("models tree", () => {
   const getHierarchyFactory = (imodelAccess: ECSchemaProvider & ECClassHierarchyInspector & ECSqlQueryExecutor) => new ModelsTreeDefinition({ imodelAccess });
@@ -35,6 +35,31 @@ describe("models tree", () => {
       const provider = new StatelessHierarchyProvider({ iModel, getHierarchyFactory });
       const result = await provider.loadHierarchy();
       expect(result).to.be.greaterThan(0);
+    },
+  });
+
+  run<{ iModel: SnapshotDb; imodelAccess: IModelAccess; targetItems: Array<InstanceKey> }>({
+    only: true,
+    testName: "gets filter 50k filter paths and filters",
+    setup: async () => {
+      const iModel = SnapshotDb.openFile(Datasets.getIModelPath("50k functional 3D elements"));
+      const imodelAccess = StatelessHierarchyProvider.getIModelAccess(iModel, "unbounded");
+      const targetItems = new Array<InstanceKey>();
+      const query: ECSqlQueryDef = {
+        ecsql: `SELECT CAST(IdToHex(ECInstanceId) AS TEXT) AS ECInstanceId FROM bis.GeometricElement3d`,
+      };
+      for await (const row of imodelAccess.createQueryReader(query, { limit: "unbounded" })) {
+        targetItems.push({ id: row.ECInstanceId, className: "Generic:PhysicalObject" });
+      }
+      return { iModel, imodelAccess, targetItems };
+    },
+    cleanup: (props) => props.iModel.close(),
+    test: async ({ imodelAccess, targetItems }) => {
+      const filtering = { paths: await ModelsTreeDefinition.createInstanceKeyPaths({ imodelAccess, limit: "unbounded", targetItems }) };
+      expect(filtering.paths.length).to.eq(50000);
+      const provider = new StatelessHierarchyProvider({ imodelAccess, getHierarchyFactory, filtering });
+      const result = await provider.loadHierarchy({ depth: 2 });
+      expect(result).to.eq(2);
     },
   });
 });
