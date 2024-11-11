@@ -4,12 +4,12 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { PhysicalElement, SnapshotDb } from "@itwin/core-backend";
-import { createNodesQueryClauseFactory, NodesQueryClauseFactory } from "@itwin/presentation-hierarchies";
-import { createBisInstanceLabelSelectClauseFactory } from "@itwin/presentation-shared";
+import { createNodesQueryClauseFactory, DefineHierarchyLevelProps, NodesQueryClauseFactory } from "@itwin/presentation-hierarchies";
+import { createBisInstanceLabelSelectClauseFactory, ECClassHierarchyInspector, ECSchemaProvider } from "@itwin/presentation-shared";
 import { expect } from "chai";
 import { Datasets, IModelName } from "../util/Datasets";
 import { run, RunOptions } from "../util/TestUtilities";
-import { ProviderOptionsWithIModel, StatelessHierarchyProvider } from "./StatelessHierarchyProvider";
+import { StatelessHierarchyProvider } from "./StatelessHierarchyProvider";
 
 /**
  * Runs a full hierarchy test against a given iModel. The hierarchy is created using the given
@@ -27,14 +27,13 @@ export function runHierarchyTest(
   const { iModelName, nodeSelectProps } = testProps;
   run({
     ...testProps,
-    setup: (): ProviderOptionsWithIModel => {
+    setup: () => {
       const iModel = SnapshotDb.openFile(Datasets.getIModelPath(iModelName));
       const fullClassName = testProps.fullClassName ?? PhysicalElement.classFullName.replace(":", ".");
       return {
         iModel,
-        rowLimit: "unbounded",
-        getHierarchyFactory: (imodelAccess) => ({
-          async defineHierarchyLevel(props) {
+        getHierarchyFactory: (imodelAccess: ECSchemaProvider & ECClassHierarchyInspector) => ({
+          async defineHierarchyLevel(props: DefineHierarchyLevelProps) {
             if (props.parentNode) {
               return [];
             }
@@ -64,7 +63,7 @@ export function runHierarchyTest(
       };
     },
     test: async (props) => {
-      const provider = new StatelessHierarchyProvider(props);
+      const provider = new StatelessHierarchyProvider({ ...props, rowLimit: "unbounded" });
       const nodeCount = await provider.loadHierarchy();
       if (testProps.expectedNodeCount !== undefined) {
         expect(nodeCount).to.eq(testProps.expectedNodeCount);

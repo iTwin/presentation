@@ -27,18 +27,18 @@ import {
 import { asyncScheduler, expand, filter, finalize, from, observeOn, of, tap } from "rxjs";
 import { LOGGER } from "../util/Logging";
 
-export interface ProviderOptionsBase {
+interface ProviderOptionsBase {
   rowLimit?: number | "unbounded";
   getHierarchyFactory(imodelAccess: ECSchemaProvider & ECClassHierarchyInspector): HierarchyDefinition;
   filtering?: {
     paths: HierarchyFilteringPath[];
   };
 }
-export type ProviderOptionsWithIModel = { iModel: IModelDb } & ProviderOptionsBase;
+type ProviderOptionsWithIModel = { iModel: IModelDb } & ProviderOptionsBase;
 
-export type ProviderOptionsWithIModelAccess = { imodelAccess: IModelAccess } & ProviderOptionsBase;
+type ProviderOptionsWithIModelAccess = { imodelAccess: IModelAccess } & ProviderOptionsBase;
 
-export type ProviderOptions = ProviderOptionsWithIModel | ProviderOptionsWithIModelAccess;
+type ProviderOptions = ProviderOptionsWithIModel | ProviderOptionsWithIModelAccess;
 
 const LOG_CATEGORY = "Presentation.PerformanceTests.StatelessHierarchyProvider";
 
