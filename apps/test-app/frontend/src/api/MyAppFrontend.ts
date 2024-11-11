@@ -5,7 +5,7 @@
 /* eslint-disable no-duplicate-imports */
 
 import { Guid, Id64Arg, Logger, OpenMode } from "@itwin/core-bentley";
-import { ElementProps, IModelError, ViewQueryParams } from "@itwin/core-common";
+import { ElementProps, IModelConnectionProps, IModelError, ViewQueryParams } from "@itwin/core-common";
 import { BriefcaseConnection, IpcApp, SnapshotConnection } from "@itwin/core-frontend";
 import { UnitSystemKey } from "@itwin/core-quantity";
 // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.PerformanceTuning.Imports
@@ -46,7 +46,7 @@ export class MyAppFrontend {
 
     if (!imodel) {
       Logger.logInfo("presentation", `Opening snapshot: ${path}`);
-      imodel = await SnapshotConnection.openFile(path);
+      imodel = IpcApp.isValid ? await SnapshotConnection.openFile(path) : await this.openLocalImodel(path);
       Logger.logInfo("presentation", `Opened snapshot: ${imodel.name}`);
     }
 
@@ -114,6 +114,15 @@ export class MyAppFrontend {
   public static getSchemaContext(imodel: IModelConnection) {
     return getSchemaContext(imodel);
   }
+
+  private static async openLocalImodel(path: string) {
+    const connectionsProps = await SampleRpcInterface.getClient().getConnectionProps(path);
+    const close = async () => {
+      await SampleRpcInterface.getClient().closeConnection(path);
+    }
+    const imodel = new LocalIModelConnection(connectionsProps, close);
+    return imodel;
+  }
 }
 
 // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.PerformanceTuning.CachingSchemaContexts
@@ -147,4 +156,19 @@ async function tryOpenStandalone(path: string) {
     }
   }
   return iModel;
+}
+
+class LocalIModelConnection extends IModelConnection {
+  private _isClosed = false;
+  constructor(connectionsProps: IModelConnectionProps, private _close: () => Promise<void>) {
+    // eslint-disable-next-line @itwin/no-internal
+    super(connectionsProps);
+  }
+
+  public override get isClosed(): boolean { return this._isClosed }
+
+  public override async close(): Promise<void> {
+    this._isClosed = true;
+    await this._close();
+  }
 }
