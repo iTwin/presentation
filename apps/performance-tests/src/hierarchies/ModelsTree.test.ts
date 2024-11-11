@@ -39,7 +39,7 @@ describe("models tree", () => {
   });
 
   run<{ iModel: SnapshotDb; imodelAccess: IModelAccess; targetItems: Array<InstanceKey> }>({
-    testName: "gets filter 50k filter paths and filters",
+    testName: "gets 50k filter paths using ModelsTreeDefinition and does initial load",
     setup: async () => {
       const iModel = SnapshotDb.openFile(Datasets.getIModelPath("50k functional 3D elements"));
       const imodelAccess = StatelessHierarchyProvider.getIModelAccess(iModel, "unbounded");
