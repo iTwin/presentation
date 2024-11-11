@@ -2,14 +2,12 @@
  * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
-/* eslint-disable no-duplicate-imports */
+ 
 
 import { Guid, Id64Arg, Logger, OpenMode } from "@itwin/core-bentley";
 import { ElementProps, IModelConnectionProps, IModelError, ViewQueryParams } from "@itwin/core-common";
-import { BriefcaseConnection, IpcApp, SnapshotConnection } from "@itwin/core-frontend";
+import { BriefcaseConnection, IModelConnection, IpcApp, SnapshotConnection } from "@itwin/core-frontend";
 import { UnitSystemKey } from "@itwin/core-quantity";
-// __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.PerformanceTuning.Imports
-import { IModelConnection } from "@itwin/core-frontend";
 import { SchemaContext } from "@itwin/ecschema-metadata";
 import { ECSchemaRpcLocater } from "@itwin/ecschema-rpcinterface-common";
 // __PUBLISH_EXTRACT_END__
@@ -161,6 +159,7 @@ async function tryOpenStandalone(path: string) {
 class LocalIModelConnection extends IModelConnection {
   private _isClosed = false;
   constructor(connectionsProps: IModelConnectionProps, private _close: () => Promise<void>) {
+    // eslint-disable-next-line @itwin/no-internal
     super(connectionsProps);
   }
 
