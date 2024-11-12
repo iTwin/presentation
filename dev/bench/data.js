@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1731065241839,
+  "lastUpdate": 1731413963071,
   "repoUrl": "https://github.com/iTwin/presentation",
   "entries": {
     "Benchmark": [
@@ -26391,6 +26391,162 @@ window.BENCHMARK_DATA = {
             "value": 86,
             "unit": "ms",
             "extra": "count: 2\nmax: 86\np95: 86\nmedian: 85"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "100586436+JonasDov@users.noreply.github.com",
+            "name": "JonasDov",
+            "username": "JonasDov"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "9374049632acf91de7018d02b49660b11e53caa6",
+          "message": "Update modelsTreeDefinition from viewer-components-react (#770)\n\n* Update ModelsTreeDefinition to match the one in viewer-components-react\r\n\r\n* Update modelsTreeDefinition to latest changes\r\n\r\n* Fix comments\r\n\r\n* Remove .only\r\n\r\n* Rename performance test\r\n\r\n* Update apps/performance-tests/src/hierarchies/ModelsTree.test.ts\r\n\r\nCo-authored-by: Grigas <35135765+grigasp@users.noreply.github.com>\r\n\r\n* Remove export from test interfaces\r\n\r\n---------\r\n\r\nCo-authored-by: Grigas <35135765+grigasp@users.noreply.github.com>",
+          "timestamp": "2024-11-12T14:15:58+02:00",
+          "tree_id": "e680bc89b31e4c7736c39ca305d8228dd4f58157",
+          "url": "https://github.com/iTwin/presentation/commit/9374049632acf91de7018d02b49660b11e53caa6"
+        },
+        "date": 1731413962422,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "flat 50k elements list",
+            "value": 4608.56,
+            "unit": "ms"
+          },
+          {
+            "name": "flat 50k elements list (P95 of main thread blocks)",
+            "value": 77,
+            "unit": "ms",
+            "extra": "count: 16\nmax: 77\np95: 77\nmedian: 33"
+          },
+          {
+            "name": "filtering filters with 50000 paths",
+            "value": 13770.6,
+            "unit": "ms"
+          },
+          {
+            "name": "filtering filters with 50000 paths (P95 of main thread blocks)",
+            "value": 127,
+            "unit": "ms",
+            "extra": "count: 27\nmax: 171\np95: 127\nmedian: 41"
+          },
+          {
+            "name": "grouping by label",
+            "value": 10808.75,
+            "unit": "ms"
+          },
+          {
+            "name": "grouping by label (P95 of main thread blocks)",
+            "value": 61,
+            "unit": "ms",
+            "extra": "count: 6\nmax: 61\np95: 61\nmedian: 32"
+          },
+          {
+            "name": "grouping by class",
+            "value": 10746.67,
+            "unit": "ms"
+          },
+          {
+            "name": "grouping by class (P95 of main thread blocks)",
+            "value": 46,
+            "unit": "ms",
+            "extra": "count: 4\nmax: 46\np95: 46\nmedian: 28"
+          },
+          {
+            "name": "grouping by property",
+            "value": 11319.61,
+            "unit": "ms"
+          },
+          {
+            "name": "grouping by property (P95 of main thread blocks)",
+            "value": 55,
+            "unit": "ms",
+            "extra": "count: 7\nmax: 55\np95: 55\nmedian: 32"
+          },
+          {
+            "name": "grouping by base class (10 classes)",
+            "value": 8036.84,
+            "unit": "ms"
+          },
+          {
+            "name": "grouping by base class (10 classes) (P95 of main thread blocks)",
+            "value": 74,
+            "unit": "ms",
+            "extra": "count: 17\nmax: 74\np95: 74\nmedian: 31"
+          },
+          {
+            "name": "grouping by multiple attributes",
+            "value": 28326.95,
+            "unit": "ms"
+          },
+          {
+            "name": "grouping by multiple attributes (P95 of main thread blocks)",
+            "value": 39,
+            "unit": "ms",
+            "extra": "count: 9\nmax: 39\np95: 39\nmedian: 32"
+          },
+          {
+            "name": "hide if no children required to finalize root, w/o children",
+            "value": 49108.75,
+            "unit": "ms"
+          },
+          {
+            "name": "hide if no children required to finalize root, w/o children (P95 of main thread blocks)",
+            "value": 30,
+            "unit": "ms",
+            "extra": "count: 4\nmax: 30\np95: 30\nmedian: 27"
+          },
+          {
+            "name": "hide if no children required to finalize root, w/ children",
+            "value": 205.1,
+            "unit": "ms"
+          },
+          {
+            "name": "hide if no children required to finalize root, w/ children (P95 of main thread blocks)",
+            "value": 0,
+            "unit": "ms",
+            "extra": "count: 0\nmax: N/A\np95: N/A\nmedian: N/A"
+          },
+          {
+            "name": "models tree initial (Baytown)",
+            "value": 43.49,
+            "unit": "ms"
+          },
+          {
+            "name": "models tree initial (Baytown) (P95 of main thread blocks)",
+            "value": 0,
+            "unit": "ms",
+            "extra": "count: 0\nmax: N/A\np95: N/A\nmedian: N/A"
+          },
+          {
+            "name": "models tree full (Baytown)",
+            "value": 7690.25,
+            "unit": "ms"
+          },
+          {
+            "name": "models tree full (Baytown) (P95 of main thread blocks)",
+            "value": 83,
+            "unit": "ms",
+            "extra": "count: 2\nmax: 83\np95: 83\nmedian: 79"
+          },
+          {
+            "name": "models tree creates initial filtered view for 50k target items",
+            "value": 2292.36,
+            "unit": "ms"
+          },
+          {
+            "name": "models tree creates initial filtered view for 50k target items (P95 of main thread blocks)",
+            "value": 361,
+            "unit": "ms",
+            "extra": "count: 11\nmax: 361\np95: 361\nmedian: 40"
           }
         ]
       }
