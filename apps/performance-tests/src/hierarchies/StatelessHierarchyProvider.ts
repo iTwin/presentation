@@ -95,7 +95,7 @@ export class StatelessHierarchyProvider {
     });
   }
 
-  private static createNewECSchemaProvider(iModel: IModelDb) {
+  private static createECSchemaProvider(iModel: IModelDb) {
     const schemas = new SchemaContext();
     const locater = new AsyncSchemaJsonLocater((schemaName) => iModel.getSchemaProps(schemaName));
     schemas.addLocater(locater);
@@ -104,7 +104,7 @@ export class StatelessHierarchyProvider {
 
   private createProvider() {
     const imodelAccess =
-      "iModel" in this._props ? StatelessHierarchyProvider.getIModelAccess(this._props.iModel, this._props.rowLimit) : this._props.imodelAccess;
+      "iModel" in this._props ? StatelessHierarchyProvider.createIModelAccess(this._props.iModel, this._props.rowLimit) : this._props.imodelAccess;
     return createIModelHierarchyProvider({
       imodelAccess,
       hierarchyDefinition: this._props.getHierarchyFactory(imodelAccess),
@@ -113,8 +113,8 @@ export class StatelessHierarchyProvider {
     });
   }
 
-  public static getIModelAccess(iModel: IModelDb, rowLimit?: number | "unbounded"): IModelAccess {
-    const schemaProvider = this.createNewECSchemaProvider(iModel);
+  public static createIModelAccess(iModel: IModelDb, rowLimit?: number | "unbounded"): IModelAccess {
+    const schemaProvider = this.createECSchemaProvider(iModel);
     const rowLimitToUse = rowLimit ?? DEFAULT_ROW_LIMIT;
     const imodelAccess = {
       imodelKey: iModel.key,

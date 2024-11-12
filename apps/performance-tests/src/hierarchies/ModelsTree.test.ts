@@ -42,7 +42,7 @@ describe("models tree", () => {
     testName: "creates initial filtered view for 50k target items",
     setup: async () => {
       const iModel = SnapshotDb.openFile(Datasets.getIModelPath("50k functional 3D elements"));
-      const imodelAccess = StatelessHierarchyProvider.getIModelAccess(iModel, "unbounded");
+      const imodelAccess = StatelessHierarchyProvider.createIModelAccess(iModel, "unbounded");
       const targetItems = new Array<InstanceKey>();
       const query: ECSqlQueryDef = {
         ecsql: `SELECT CAST(IdToHex(ECInstanceId) AS TEXT) AS ECInstanceId FROM bis.GeometricElement3d`,
