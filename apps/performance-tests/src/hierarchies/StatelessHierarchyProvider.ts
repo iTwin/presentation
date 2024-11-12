@@ -3,7 +3,6 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { asyncScheduler, expand, filter, finalize, from, observeOn, of, tap } from "rxjs";
 import { IModelDb } from "@itwin/core-backend";
 import { BeDuration } from "@itwin/core-bentley";
 import { Schema, SchemaContext, SchemaJsonLocater, SchemaKey, SchemaMatchType, SchemaPropsGetter } from "@itwin/ecschema-metadata";
@@ -16,17 +15,30 @@ import {
   HierarchyNode,
   HierarchyProvider,
 } from "@itwin/presentation-hierarchies";
-import { createCachingECClassHierarchyInspector, ECClassHierarchyInspector, ECSchemaProvider } from "@itwin/presentation-shared";
+import {
+  createCachingECClassHierarchyInspector,
+  EC,
+  ECClassHierarchyInspector,
+  ECSchemaProvider,
+  ECSqlQueryDef,
+  ECSqlQueryExecutor,
+  ECSqlQueryReaderOptions,
+} from "@itwin/presentation-shared";
+import { asyncScheduler, expand, filter, finalize, from, observeOn, of, tap } from "rxjs";
 import { LOGGER } from "../util/Logging";
 
-export interface ProviderOptions {
-  iModel: IModelDb;
+interface ProviderOptionsBase {
   rowLimit?: number | "unbounded";
   getHierarchyFactory(imodelAccess: ECSchemaProvider & ECClassHierarchyInspector): HierarchyDefinition;
   filtering?: {
     paths: HierarchyFilteringPath[];
   };
 }
+type ProviderOptionsWithIModel = { iModel: IModelDb } & ProviderOptionsBase;
+
+type ProviderOptionsWithIModelAccess = { imodelAccess: IModelAccess } & ProviderOptionsBase;
+
+type ProviderOptions = ProviderOptionsWithIModel | ProviderOptionsWithIModelAccess;
 
 const LOG_CATEGORY = "Presentation.PerformanceTests.StatelessHierarchyProvider";
 
@@ -37,6 +49,18 @@ function log(messageOrCallback: string | (() => string)) {
 }
 
 const DEFAULT_ROW_LIMIT = 1000;
+
+export interface IModelAccess {
+  createQueryReader(
+    query: ECSqlQueryDef,
+    config?: ECSqlQueryReaderOptions & {
+      limit?: number | "unbounded";
+    },
+  ): ReturnType<ECSqlQueryExecutor["createQueryReader"]>;
+  classDerivesFrom(derivedClassFullName: string, candidateBaseClassFullName: string): Promise<boolean> | boolean;
+  getSchema(schemaName: string): Promise<EC.Schema | undefined>;
+  imodelKey: string;
+}
 
 export class StatelessHierarchyProvider {
   private readonly _provider: HierarchyProvider;
@@ -71,8 +95,7 @@ export class StatelessHierarchyProvider {
     });
   }
 
-  private createECSchemaProvider() {
-    const iModel = this._props.iModel;
+  private static createECSchemaProvider(iModel: IModelDb) {
     const schemas = new SchemaContext();
     const locater = new AsyncSchemaJsonLocater((schemaName) => iModel.getSchemaProps(schemaName));
     schemas.addLocater(locater);
@@ -80,20 +103,26 @@ export class StatelessHierarchyProvider {
   }
 
   private createProvider() {
-    const schemaProvider = this.createECSchemaProvider();
-    const rowLimit = this._props.rowLimit ?? DEFAULT_ROW_LIMIT;
-    const imodelAccess = {
-      imodelKey: this._props.iModel.key,
-      ...schemaProvider,
-      ...createCachingECClassHierarchyInspector({ schemaProvider, cacheSize: 1000 }),
-      ...createLimitingECSqlQueryExecutor(createECSqlQueryExecutor(this._props.iModel), rowLimit),
-    };
+    const imodelAccess =
+      "iModel" in this._props ? StatelessHierarchyProvider.createIModelAccess(this._props.iModel, this._props.rowLimit) : this._props.imodelAccess;
     return createIModelHierarchyProvider({
       imodelAccess,
       hierarchyDefinition: this._props.getHierarchyFactory(imodelAccess),
       queryCacheSize: 0,
       filtering: this._props.filtering,
     });
+  }
+
+  public static createIModelAccess(iModel: IModelDb, rowLimit?: number | "unbounded"): IModelAccess {
+    const schemaProvider = this.createECSchemaProvider(iModel);
+    const rowLimitToUse = rowLimit ?? DEFAULT_ROW_LIMIT;
+    const imodelAccess = {
+      imodelKey: iModel.key,
+      ...schemaProvider,
+      ...createCachingECClassHierarchyInspector({ schemaProvider, cacheSize: 1000 }),
+      ...createLimitingECSqlQueryExecutor(createECSqlQueryExecutor(iModel), rowLimitToUse),
+    };
+    return imodelAccess;
   }
 }
 

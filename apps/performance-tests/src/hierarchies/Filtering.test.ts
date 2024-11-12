@@ -3,14 +3,14 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { expect } from "chai";
 import { IModelDb, PhysicalElement, SnapshotDb } from "@itwin/core-backend";
 import { Id64 } from "@itwin/core-bentley";
-import { createNodesQueryClauseFactory, HierarchyFilteringPath, HierarchyNode } from "@itwin/presentation-hierarchies";
+import { createNodesQueryClauseFactory, DefineHierarchyLevelProps, HierarchyFilteringPath, HierarchyNode } from "@itwin/presentation-hierarchies";
 import { createBisInstanceLabelSelectClauseFactory, ECClassHierarchyInspector, ECSchemaProvider } from "@itwin/presentation-shared";
+import { expect } from "chai";
 import { Datasets } from "../util/Datasets";
 import { run } from "../util/TestUtilities";
-import { ProviderOptions, StatelessHierarchyProvider } from "./StatelessHierarchyProvider";
+import { StatelessHierarchyProvider } from "./StatelessHierarchyProvider";
 
 describe("filtering", () => {
   const totalNumberOfFilteringPaths = 50000;
@@ -23,7 +23,7 @@ describe("filtering", () => {
 
   run({
     testName: `filters with ${totalNumberOfFilteringPaths} paths`,
-    setup: (): ProviderOptions => {
+    setup: () => {
       const { schemaName, itemsPerGroup, defaultClassName } = Datasets.CUSTOM_SCHEMA;
       const filtering = {
         paths: new Array<HierarchyFilteringPath>(),
@@ -72,9 +72,8 @@ describe("filtering", () => {
       };
       return {
         iModel,
-        rowLimit: "unbounded",
-        getHierarchyFactory: (imodelAccess) => ({
-          async defineHierarchyLevel(props) {
+        getHierarchyFactory: (imodelAccess: ECSchemaProvider & ECClassHierarchyInspector) => ({
+          async defineHierarchyLevel(props: DefineHierarchyLevelProps) {
             // A hierarchy with this structure is created:
             //
             //        id:21 -> all other BisCore.PhysicalElement
@@ -117,7 +116,7 @@ describe("filtering", () => {
       props.iModel.close();
     },
     test: async (props) => {
-      const provider = new StatelessHierarchyProvider(props);
+      const provider = new StatelessHierarchyProvider({ ...props, rowLimit: "unbounded" });
       const nodeCount = await provider.loadHierarchy();
       expect(nodeCount).to.eq(totalNumberOfFilteringPaths);
     },
