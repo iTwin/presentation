@@ -744,7 +744,7 @@ importers:
         version: 4.9.0(@itwin/core-bentley@4.9.0)(@itwin/core-geometry@4.9.0)
       '@itwin/core-electron':
         specifier: catalog:itwinjs-core
-        version: 4.9.0(@itwin/core-backend@4.9.0(@itwin/core-bentley@4.9.0)(@itwin/core-common@4.9.0(@itwin/core-bentley@4.9.0)(@itwin/core-geometry@4.9.0))(@itwin/core-geometry@4.9.0)(@opentelemetry/api@1.8.0))(@itwin/core-bentley@4.9.0)(@itwin/core-common@4.9.0(@itwin/core-bentley@4.9.0)(@itwin/core-geometry@4.9.0))(@itwin/core-frontend@4.9.0(@itwin/appui-abstract@4.9.0(@itwin/core-bentley@4.9.0))(@itwin/core-bentley@4.9.0)(@itwin/core-common@4.9.0(@itwin/core-bentley@4.9.0)(@itwin/core-geometry@4.9.0))(@itwin/core-geometry@4.9.0)(@itwin/core-orbitgt@4.9.0)(@itwin/core-quantity@4.9.0(@itwin/core-bentley@4.9.0))(inversify@6.0.2)(reflect-metadata@0.1.14))(electron@28.3.1)
+        version: 4.9.0(@itwin/core-backend@4.9.0(@itwin/core-bentley@4.9.0)(@itwin/core-common@4.9.0(@itwin/core-bentley@4.9.0)(@itwin/core-geometry@4.9.0))(@itwin/core-geometry@4.9.0)(@opentelemetry/api@1.8.0))(@itwin/core-bentley@4.9.0)(@itwin/core-common@4.9.0(@itwin/core-bentley@4.9.0)(@itwin/core-geometry@4.9.0))(@itwin/core-frontend@4.9.0(@itwin/appui-abstract@4.9.0(@itwin/core-bentley@4.9.0))(@itwin/core-bentley@4.9.0)(@itwin/core-common@4.9.0(@itwin/core-bentley@4.9.0)(@itwin/core-geometry@4.9.0))(@itwin/core-geometry@4.9.0)(@itwin/core-orbitgt@4.9.0)(@itwin/core-quantity@4.9.0(@itwin/core-bentley@4.9.0))(inversify@6.0.2)(reflect-metadata@0.1.14))(electron@32.2.3)
       '@itwin/core-frontend':
         specifier: catalog:itwinjs-core
         version: 4.9.0(@itwin/appui-abstract@4.9.0(@itwin/core-bentley@4.9.0))(@itwin/core-bentley@4.9.0)(@itwin/core-common@4.9.0(@itwin/core-bentley@4.9.0)(@itwin/core-geometry@4.9.0))(@itwin/core-geometry@4.9.0)(@itwin/core-orbitgt@4.9.0)(@itwin/core-quantity@4.9.0(@itwin/core-bentley@4.9.0))(encoding@0.1.13)(inversify@6.0.2)(reflect-metadata@0.1.14)
@@ -806,8 +806,8 @@ importers:
         specifier: catalog:build-tools
         version: 7.0.3
       electron:
-        specifier: ^28.3.1
-        version: 28.3.1
+        specifier: ^32.2.3
+        version: 32.2.3
       eslint:
         specifier: catalog:build-tools
         version: 9.13.0
@@ -891,7 +891,7 @@ importers:
         version: 4.9.0(@itwin/core-bentley@4.9.0)(@itwin/core-geometry@4.9.0)
       '@itwin/core-electron':
         specifier: catalog:itwinjs-core
-        version: 4.9.0(@itwin/core-backend@4.9.0(@itwin/core-bentley@4.9.0)(@itwin/core-common@4.9.0(@itwin/core-bentley@4.9.0)(@itwin/core-geometry@4.9.0))(@itwin/core-geometry@4.9.0)(@opentelemetry/api@1.8.0))(@itwin/core-bentley@4.9.0)(@itwin/core-common@4.9.0(@itwin/core-bentley@4.9.0)(@itwin/core-geometry@4.9.0))(@itwin/core-frontend@4.9.0(@itwin/appui-abstract@4.9.0(@itwin/core-bentley@4.9.0))(@itwin/core-bentley@4.9.0)(@itwin/core-common@4.9.0(@itwin/core-bentley@4.9.0)(@itwin/core-geometry@4.9.0))(@itwin/core-geometry@4.9.0)(@itwin/core-orbitgt@4.9.0)(@itwin/core-quantity@4.9.0(@itwin/core-bentley@4.9.0))(inversify@6.0.2)(reflect-metadata@0.1.14))(electron@28.3.1)
+        version: 4.9.0(@itwin/core-backend@4.9.0(@itwin/core-bentley@4.9.0)(@itwin/core-common@4.9.0(@itwin/core-bentley@4.9.0)(@itwin/core-geometry@4.9.0))(@itwin/core-geometry@4.9.0)(@opentelemetry/api@1.8.0))(@itwin/core-bentley@4.9.0)(@itwin/core-common@4.9.0(@itwin/core-bentley@4.9.0)(@itwin/core-geometry@4.9.0))(@itwin/core-frontend@4.9.0(@itwin/appui-abstract@4.9.0(@itwin/core-bentley@4.9.0))(@itwin/core-bentley@4.9.0)(@itwin/core-common@4.9.0(@itwin/core-bentley@4.9.0)(@itwin/core-geometry@4.9.0))(@itwin/core-geometry@4.9.0)(@itwin/core-orbitgt@4.9.0)(@itwin/core-quantity@4.9.0(@itwin/core-bentley@4.9.0))(inversify@6.0.2)(reflect-metadata@0.1.14))(electron@32.2.3)
       '@itwin/core-frontend':
         specifier: catalog:itwinjs-core
         version: 4.9.0(@itwin/appui-abstract@4.9.0(@itwin/core-bentley@4.9.0))(@itwin/core-bentley@4.9.0)(@itwin/core-common@4.9.0(@itwin/core-bentley@4.9.0)(@itwin/core-geometry@4.9.0))(@itwin/core-geometry@4.9.0)(@itwin/core-orbitgt@4.9.0)(@itwin/core-quantity@4.9.0(@itwin/core-bentley@4.9.0))(encoding@0.1.13)(inversify@6.0.2)(reflect-metadata@0.1.14)
@@ -989,8 +989,8 @@ importers:
         specifier: catalog:react
         version: 2.5.1
       electron:
-        specifier: ^28.3.1
-        version: 28.3.1
+        specifier: ^32.2.3
+        version: 32.2.3
       eslint:
         specifier: catalog:build-tools
         version: 9.13.0
@@ -4085,9 +4085,6 @@ packages:
   '@types/node@12.20.55':
     resolution: {integrity: sha512-J8xLz7q2OFulZ2cyGTLE1TbbZcjpno7FaN6zdJNrgAdrJ+DZzh/uFR6YrTb4C+nXakvud8Q4+rbhoIWlYQbUFQ==}
 
-  '@types/node@18.19.60':
-    resolution: {integrity: sha512-cYRj7igVqgxhlHFdBHHpU2SNw3+dN2x0VTZJtLYk6y/ieuGN4XiBgtDjYVktM/yk2y/8pKMileNc6IoEzEJnUw==}
-
   '@types/node@20.12.12':
     resolution: {integrity: sha512-eWLDGF/FOSPtAvEqeRAQ4C8LSA7M1I7i0ky1I8U7kD1J5ITyW3AsRhQrKVoWf5pFKZ2kILsEGJhsI9r93PYnOw==}
 
@@ -5163,8 +5160,8 @@ packages:
   electron-to-chromium@1.5.49:
     resolution: {integrity: sha512-ZXfs1Of8fDb6z7WEYZjXpgIRF6MEu8JdeGA0A40aZq6OQbS+eJpnnV49epZRna2DU/YsEjSQuGtQPPtvt6J65A==}
 
-  electron@28.3.1:
-    resolution: {integrity: sha512-aF9fONuhVDJlctJS7YOw76ynxVAQdfIWmlhRMKits24tDcdSL0eMHUS0wWYiRfGWbQnUKB6V49Rf17o32f4/fg==}
+  electron@32.2.3:
+    resolution: {integrity: sha512-ClTJrFuwBdZpDNEnVZSV1gTIYSq7c/TYoUv9AmOypL43/xtbfxXkz2vE67ehVoamFobWsIU2by087R5Av8cxJg==}
     engines: {node: '>= 12.20.55'}
     hasBin: true
 
@@ -10264,14 +10261,14 @@ snapshots:
       flatbuffers: 1.12.0
       js-base64: 3.7.7
 
-  '@itwin/core-electron@4.9.0(@itwin/core-backend@4.9.0(@itwin/core-bentley@4.9.0)(@itwin/core-common@4.9.0(@itwin/core-bentley@4.9.0)(@itwin/core-geometry@4.9.0))(@itwin/core-geometry@4.9.0)(@opentelemetry/api@1.8.0))(@itwin/core-bentley@4.9.0)(@itwin/core-common@4.9.0(@itwin/core-bentley@4.9.0)(@itwin/core-geometry@4.9.0))(@itwin/core-frontend@4.9.0(@itwin/appui-abstract@4.9.0(@itwin/core-bentley@4.9.0))(@itwin/core-bentley@4.9.0)(@itwin/core-common@4.9.0(@itwin/core-bentley@4.9.0)(@itwin/core-geometry@4.9.0))(@itwin/core-geometry@4.9.0)(@itwin/core-orbitgt@4.9.0)(@itwin/core-quantity@4.9.0(@itwin/core-bentley@4.9.0))(inversify@6.0.2)(reflect-metadata@0.1.14))(electron@28.3.1)':
+  '@itwin/core-electron@4.9.0(@itwin/core-backend@4.9.0(@itwin/core-bentley@4.9.0)(@itwin/core-common@4.9.0(@itwin/core-bentley@4.9.0)(@itwin/core-geometry@4.9.0))(@itwin/core-geometry@4.9.0)(@opentelemetry/api@1.8.0))(@itwin/core-bentley@4.9.0)(@itwin/core-common@4.9.0(@itwin/core-bentley@4.9.0)(@itwin/core-geometry@4.9.0))(@itwin/core-frontend@4.9.0(@itwin/appui-abstract@4.9.0(@itwin/core-bentley@4.9.0))(@itwin/core-bentley@4.9.0)(@itwin/core-common@4.9.0(@itwin/core-bentley@4.9.0)(@itwin/core-geometry@4.9.0))(@itwin/core-geometry@4.9.0)(@itwin/core-orbitgt@4.9.0)(@itwin/core-quantity@4.9.0(@itwin/core-bentley@4.9.0))(inversify@6.0.2)(reflect-metadata@0.1.14))(electron@32.2.3)':
     dependencies:
       '@itwin/core-backend': 4.9.0(@itwin/core-bentley@4.9.0)(@itwin/core-common@4.9.0(@itwin/core-bentley@4.9.0)(@itwin/core-geometry@4.9.0))(@itwin/core-geometry@4.9.0)(@opentelemetry/api@1.8.0)
       '@itwin/core-bentley': 4.9.0
       '@itwin/core-common': 4.9.0(@itwin/core-bentley@4.9.0)(@itwin/core-geometry@4.9.0)
       '@itwin/core-frontend': 4.9.0(@itwin/appui-abstract@4.9.0(@itwin/core-bentley@4.9.0))(@itwin/core-bentley@4.9.0)(@itwin/core-common@4.9.0(@itwin/core-bentley@4.9.0)(@itwin/core-geometry@4.9.0))(@itwin/core-geometry@4.9.0)(@itwin/core-orbitgt@4.9.0)(@itwin/core-quantity@4.9.0(@itwin/core-bentley@4.9.0))(encoding@0.1.13)(inversify@6.0.2)(reflect-metadata@0.1.14)
       '@openid/appauth': 1.3.2
-      electron: 28.3.1
+      electron: 32.2.3
       open: 7.4.2
       username: 5.1.0
     transitivePeerDependencies:
@@ -12044,10 +12041,6 @@ snapshots:
 
   '@types/node@12.20.55': {}
 
-  '@types/node@18.19.60':
-    dependencies:
-      undici-types: 5.26.5
-
   '@types/node@20.12.12':
     dependencies:
       undici-types: 5.26.5
@@ -12101,7 +12094,7 @@ snapshots:
 
   '@types/yauzl@2.10.3':
     dependencies:
-      '@types/node': 18.19.60
+      '@types/node': 20.12.12
     optional: true
 
   '@typescript-eslint/eslint-plugin@8.11.0(@typescript-eslint/parser@8.11.0(eslint@9.13.0)(typescript@5.6.3))(eslint@9.13.0)(typescript@5.6.3)':
@@ -13398,10 +13391,10 @@ snapshots:
 
   electron-to-chromium@1.5.49: {}
 
-  electron@28.3.1:
+  electron@32.2.3:
     dependencies:
       '@electron/get': 2.0.3
-      '@types/node': 18.19.60
+      '@types/node': 20.12.12
       extract-zip: 2.0.1
     transitivePeerDependencies:
       - supports-color
