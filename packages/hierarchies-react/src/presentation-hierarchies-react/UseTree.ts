@@ -186,7 +186,6 @@ function useTreeInternal({
     provider.setFormatter(currentFormatter.current);
     const removeHierarchyChangedListener = provider.hierarchyChanged.addListener(() => actions.reloadTree());
     actions.setHierarchyProvider(provider);
-    actions.reloadTree({ state: "keep" });
     setHierarchyProvider(provider);
     return () => {
       removeHierarchyChangedListener();
@@ -194,7 +193,6 @@ function useTreeInternal({
       if (isIDisposable(provider)) {
         provider.dispose();
       }
-      setHierarchyProvider(undefined);
     };
   }, [actions, getHierarchyProvider]);
 
@@ -218,12 +216,13 @@ function useTreeInternal({
         if (!disposed) {
           hierarchyProvider.setHierarchyFilter(paths ? { paths } : undefined);
           actions.reloadTree({ state: paths ? "discard" : "keep" });
+          setIsFiltering(false);
         }
-        setIsFiltering(false);
       }
     })();
     return () => {
       disposed = true;
+      actions.dispose();
     };
   }, [actions, hierarchyProvider, getFilteredPaths]);
 
