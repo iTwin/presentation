@@ -694,6 +694,7 @@ describe("useTree", () => {
         return createAsyncIterator(childNodes.slice(0, 1));
       }),
       setFormatter: sinon.stub(),
+      setHierarchyFilter: sinon.stub(),
     };
     rerender({ ...initialProps, getHierarchyProvider: () => newProvider as unknown as hierarchiesModule.HierarchyProvider });
 
@@ -788,6 +789,7 @@ describe("useUnifiedSelectionTree", () => {
     hierarchyChanged: new BeEvent(),
     getNodes: createStub<hierarchiesModule.HierarchyProvider["getNodes"]>(),
     setFormatter: sinon.stub(),
+    setHierarchyFilter: sinon.stub(),
   };
 
   type UseUnifiedSelectionTree = Parameters<typeof useUnifiedSelectionTree>[0];
