@@ -1,5 +1,11 @@
 # @itwin/presentation-hierarchies-react
 
+## 1.1.3
+
+### Patch Changes
+
+- [#780](https://github.com/iTwin/presentation/pull/780): Avoid double tree load when `getFilteredPaths` are provided during first render.
+
 ## 1.1.2
 
 ### Patch Changes
