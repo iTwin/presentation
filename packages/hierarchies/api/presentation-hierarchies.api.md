@@ -39,6 +39,21 @@ export interface ClassGroupingNodeKey {
 }
 
 // @public
+export function createHierarchyFilteringHelper(rootLevelFilteringProps: HierarchyFilteringPath[] | undefined, parentNode: Pick<NonGroupingHierarchyNode, "filtering"> | undefined): {
+    hasFilter: boolean;
+    hasFilterTargetAncestor: boolean;
+    getChildNodeFilteringIdentifiers: () => HierarchyNodeIdentifier[] | undefined;
+    createChildNodeProps: (props: {
+        nodeKey: InstancesNodeKey | GenericNodeKey;
+    } | {
+        pathMatcher: (identifier: HierarchyNodeIdentifier) => boolean;
+    }) => Pick<HierarchyNode, "filtering" | "autoExpand"> | undefined;
+    createChildNodePropsAsync: (props: {
+        pathMatcher: (identifier: HierarchyNodeIdentifier) => Promise<boolean>;
+    }) => Promise<Pick<HierarchyNode, "filtering" | "autoExpand"> | undefined>;
+};
+
+// @public
 export function createIModelHierarchyProvider(props: IModelHierarchyProviderProps): HierarchyProvider & {
     dispose: () => void;
 };
@@ -157,9 +172,9 @@ interface ECSqlValueSelector {
     selector: string;
 }
 
-// @public
+// @public @deprecated
 export function extractFilteringProps(rootLevelFilteringProps: HierarchyFilteringPath[], parentNode: Pick<NonGroupingHierarchyNode, "filtering"> | undefined): {
-    filteredNodePaths: HierarchyFilteringPath[];
+    filteredNodePaths: Exclude<HierarchyFilteringPath, HierarchyNodeIdentifiersPath>[];
     hasFilterTargetAncestor: boolean;
 } | undefined;
 
@@ -234,7 +249,7 @@ export namespace HierarchyFilteringPath {
 }
 
 // @public (undocumented)
-interface HierarchyFilteringPathOptions {
+export interface HierarchyFilteringPathOptions {
     autoExpand?: boolean | FilterTargetGroupingNodeInfo;
 }
 
@@ -323,7 +338,7 @@ type HierarchyNodeFilteringProps = {
 
 // @public (undocumented)
 namespace HierarchyNodeFilteringProps {
-    // (undocumented)
+    // @deprecated (undocumented)
     function create(props: {
         hasFilterTargetAncestor?: boolean;
         filteredChildrenIdentifierPaths?: HierarchyFilteringPath[];

@@ -16,10 +16,10 @@ import { BeEvent, Id64String } from "@itwin/core-bentley";
 import { IModel } from "@itwin/core-common";
 import { IModelConnection } from "@itwin/core-frontend";
 import {
+  createHierarchyFilteringHelper,
   createNodesQueryClauseFactory,
   createPredicateBasedHierarchyDefinition,
   DefineInstanceNodeChildHierarchyLevelProps,
-  extractFilteringProps,
   GenericNodeKey,
   HierarchyDefinition,
   HierarchyFilteringPath,
@@ -1619,25 +1619,13 @@ describe("Hierarchies", () => {
                 parentKeys: [...parentNode.parentKeys, parentNode.key],
                 children: false,
               };
-              const filteringProps = extractFilteringProps([], parentNode);
-              if (!filteringProps) {
+              const filteringHelper = createHierarchyFilteringHelper(undefined, parentNode);
+              if (!filteringHelper.hasFilter) {
                 return createAsyncIterator([myNode]);
               }
-              const nodeMatchesFilter =
-                filteringProps.hasFilterTargetAncestor ||
-                filteringProps.filteredNodePaths?.some((fp) => {
-                  const { path } = HierarchyFilteringPath.normalize(fp);
-                  return (
-                    path.length &&
-                    HierarchyNodeIdentifier.isGenericNodeIdentifier(path[0]) &&
-                    path[0].source === "custom-provider" &&
-                    path[0].id === myNode.key.id
-                  );
-                });
+              const nodeMatchesFilter = filteringHelper.getChildNodeFilteringIdentifiers()?.some((id) => HierarchyNodeIdentifier.equal(id, myNode.key));
               if (nodeMatchesFilter) {
-                return createAsyncIterator([
-                  { ...myNode, filtering: { isFilterTarget: true, hasFilterTargetAncestor: filteringProps.hasFilterTargetAncestor } },
-                ]);
+                return createAsyncIterator([{ ...myNode, ...filteringHelper.createChildNodeProps({ nodeKey: myNode.key }) }]);
               }
             }
             return createAsyncIterator([]);

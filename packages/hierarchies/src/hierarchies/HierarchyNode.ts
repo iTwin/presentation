@@ -41,6 +41,8 @@ export type HierarchyNodeFilteringProps = {
 /** @public */
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export namespace HierarchyNodeFilteringProps {
+  /** @deprecated in 1.3. Use `createHierarchyFilteringHelper` and its `createChildNodeProps` function to create filtering props for nodes. */
+  /* c8 ignore start */
   export function create(props: {
     hasFilterTargetAncestor?: boolean;
     filteredChildrenIdentifierPaths?: HierarchyFilteringPath[];
@@ -57,6 +59,7 @@ export namespace HierarchyNodeFilteringProps {
     }
     return undefined;
   }
+  /* c8 ignore end */
 }
 
 /**

@@ -32,7 +32,7 @@ export interface GetHierarchyNodesProps {
    */
   hierarchyLevelSizeLimit?: number | "unbounded";
 
-  /** When set to true ignores the cache and fetches the nodes again. */
+  /** When set to `true` ignores the cache and fetches the nodes again. */
   ignoreCache?: boolean;
 }
 
@@ -49,10 +49,19 @@ export interface HierarchyProvider {
    */
   readonly hierarchyChanged: Event<() => void>;
 
-  /** Gets nodes for the specified parent node. */
+  /**
+   * Gets nodes for the specified parent node. This is THE method to implement, otherwise
+   * the provider doesn't return any nodes.
+   */
   getNodes(props: GetHierarchyNodesProps): AsyncIterableIterator<HierarchyNode>;
 
-  /** Gets instance keys for the specified parent node. */
+  /**
+   * Gets instance keys for the specified parent node.
+   *
+   * The result of this method may be used to determine instances whose nodes would be displayed as children
+   * of the specified parent node. For such use cases calling this method should be more efficient compared
+   * to calling `getNodes`.
+   */
   getNodeInstanceKeys(props: Omit<GetHierarchyNodesProps, "ignoreCache">): AsyncIterableIterator<InstanceKey>;
 
   /**

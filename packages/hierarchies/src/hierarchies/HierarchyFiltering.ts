@@ -3,9 +3,10 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { NonGroupingHierarchyNode } from "./HierarchyNode.js";
-import { HierarchyNodeIdentifiersPath } from "./HierarchyNodeIdentifier.js";
-import { GroupingNodeKey } from "./HierarchyNodeKey.js";
+import { filter, firstValueFrom, from, map, mergeMap, toArray } from "rxjs";
+import { HierarchyNode, NonGroupingHierarchyNode } from "./HierarchyNode.js";
+import { HierarchyNodeIdentifier, HierarchyNodeIdentifiersPath } from "./HierarchyNodeIdentifier.js";
+import { GenericNodeKey, GroupingNodeKey, HierarchyNodeKey, InstancesNodeKey } from "./HierarchyNodeKey.js";
 
 /** @public */
 export interface FilterTargetGroupingNodeInfo {
@@ -45,7 +46,7 @@ export namespace HierarchyFilteringPath {
    */
   export function normalize(source: HierarchyFilteringPath): Exclude<HierarchyFilteringPath, HierarchyNodeIdentifiersPath> {
     if (Array.isArray(source)) {
-      return { path: source, options: undefined };
+      return { path: source };
     }
     return source;
   }
@@ -93,23 +94,173 @@ export namespace HierarchyFilteringPath {
  * An utility that extracts filtering properties from given root level filtering props or
  * the parent node. Returns `undefined` if filtering props are not present.
  * @public
+ * @deprecated in 1.3. Use `createHierarchyFilteringHelper` instead.
  */
+/* c8 ignore start */
 export function extractFilteringProps(
   rootLevelFilteringProps: HierarchyFilteringPath[],
   parentNode: Pick<NonGroupingHierarchyNode, "filtering"> | undefined,
 ):
   | {
-      filteredNodePaths: HierarchyFilteringPath[];
+      filteredNodePaths: Exclude<HierarchyFilteringPath, HierarchyNodeIdentifiersPath>[];
+      hasFilterTargetAncestor: boolean;
+    }
+  | undefined {
+  return extractFilteringPropsInternal(rootLevelFilteringProps, parentNode);
+}
+/* c8 ignore end */
+
+function extractFilteringPropsInternal(
+  rootLevelFilteringProps: HierarchyFilteringPath[] | undefined,
+  parentNode: Pick<NonGroupingHierarchyNode, "filtering"> | undefined,
+):
+  | {
+      filteredNodePaths: Exclude<HierarchyFilteringPath, HierarchyNodeIdentifiersPath>[];
       hasFilterTargetAncestor: boolean;
     }
   | undefined {
   if (!parentNode) {
-    return { filteredNodePaths: rootLevelFilteringProps, hasFilterTargetAncestor: false };
+    return rootLevelFilteringProps
+      ? { filteredNodePaths: rootLevelFilteringProps.map(HierarchyFilteringPath.normalize), hasFilterTargetAncestor: false }
+      : undefined;
   }
   return parentNode.filtering?.filteredChildrenIdentifierPaths
     ? {
-        filteredNodePaths: parentNode.filtering.filteredChildrenIdentifierPaths,
+        filteredNodePaths: parentNode.filtering.filteredChildrenIdentifierPaths.map(HierarchyFilteringPath.normalize),
         hasFilterTargetAncestor: !!parentNode.filtering.hasFilterTargetAncestor || !!parentNode.filtering.isFilterTarget,
       }
     : undefined;
+}
+
+/**
+ * Creates a set of utilities for making it easier to filter the given hierarchy
+ * level.
+ *
+ * @public
+ */
+export function createHierarchyFilteringHelper(
+  rootLevelFilteringProps: HierarchyFilteringPath[] | undefined,
+  parentNode: Pick<NonGroupingHierarchyNode, "filtering"> | undefined,
+) {
+  const filteringProps = extractFilteringPropsInternal(rootLevelFilteringProps, parentNode);
+  const hasFilter = !!filteringProps;
+
+  function createNodeFilteringProps(
+    matchingPaths: ReturnType<(typeof HierarchyFilteringPath)["normalize"]>[],
+  ): Pick<HierarchyNode, "autoExpand" | "filtering"> {
+    const nodeFilteringProps = matchingPaths.reduce(
+      (acc, { path, options }) => {
+        if (path.length === 1) {
+          acc.isFilterTarget ||= true;
+          acc.filterTargetOptions = HierarchyFilteringPath.mergeOptions(acc.filterTargetOptions, options);
+        } else if (path.length > 1) {
+          acc.filteredChildrenIdentifierPaths.push({ path: path.slice(1), options });
+        }
+        return acc;
+      },
+      {
+        filteredChildrenIdentifierPaths: new Array<ReturnType<(typeof HierarchyFilteringPath)["normalize"]>>(),
+        isFilterTarget: false,
+        filterTargetOptions: undefined as HierarchyFilteringPathOptions | undefined,
+      },
+    );
+    return {
+      ...(nodeFilteringProps.isFilterTarget || nodeFilteringProps.filteredChildrenIdentifierPaths.length > 0
+        ? {
+            filtering: {
+              ...(nodeFilteringProps.isFilterTarget ? { isFilterTarget: true, filterTargetOptions: nodeFilteringProps.filterTargetOptions } : undefined),
+              ...(nodeFilteringProps.filteredChildrenIdentifierPaths.length > 0
+                ? { filteredChildrenIdentifierPaths: nodeFilteringProps.filteredChildrenIdentifierPaths }
+                : undefined),
+            },
+          }
+        : undefined),
+      ...(nodeFilteringProps.filteredChildrenIdentifierPaths.some((path) => !!path.options?.autoExpand) ? { autoExpand: true } : undefined),
+    };
+  }
+
+  return {
+    /**
+     * Returns a flag indicating if the hierarchy level is filtered.
+     */
+    hasFilter,
+
+    /**
+     * Returns a flag indicating whether this hierarchy level has an ancestor node
+     * that is a filter target. That generally means that this and all downstream hierarchy
+     * levels should be displayed without filter being applied to them, even if filter paths
+     * say otherwise.
+     */
+    hasFilterTargetAncestor: filteringProps?.hasFilterTargetAncestor ?? false,
+
+    /**
+     * Returns a list of hierarchy node identifiers that apply specifically for this
+     * hierarchy level. Returns `undefined` if filtering is not applied to this level.
+     */
+    getChildNodeFilteringIdentifiers: () => {
+      if (!hasFilter) {
+        return undefined;
+      }
+      return filteringProps.filteredNodePaths.filter(({ path }) => path.length > 0).map(({ path }) => path[0]);
+    },
+
+    /**
+     * When a hierarchy node is created for a filtered hierarchy level, it needs some attributes (e.g. `filtering`
+     * and `autoExpand`) to be set based on the filter paths and filtering options. This function calculates
+     * these props for a child node based on its key or path matcher.
+     *
+     * When using `pathMatcher` prop, callers have more flexibility to decide whether the given `HierarchyNodeIdentifier` applies
+     * to their node. For example, only some parts of the identifier can be checked for improved performance. Otherwise, the
+     * `nodeKey` prop can be used to check the whole identifier.
+     */
+    createChildNodeProps: (
+      props:
+        | {
+            nodeKey: InstancesNodeKey | GenericNodeKey;
+          }
+        | {
+            pathMatcher: (identifier: HierarchyNodeIdentifier) => boolean;
+          },
+    ): Pick<HierarchyNode, "filtering" | "autoExpand"> | undefined => {
+      if (!hasFilter) {
+        return undefined;
+      }
+      if (filteringProps?.hasFilterTargetAncestor) {
+        return { filtering: { hasFilterTargetAncestor: true } };
+      }
+      return createNodeFilteringProps(
+        filteringProps.filteredNodePaths.filter(({ path }) => {
+          if ("nodeKey" in props) {
+            return (
+              (HierarchyNodeKey.isGeneric(props.nodeKey) && HierarchyNodeIdentifier.equal(path[0], props.nodeKey)) ||
+              (HierarchyNodeKey.isInstances(props.nodeKey) && props.nodeKey.instanceKeys.some((ik) => HierarchyNodeIdentifier.equal(path[0], ik)))
+            );
+          }
+          return props.pathMatcher(path[0]);
+        }),
+      );
+    },
+
+    /**
+     * Similar to `createChildNodeProps`, but takes an async `pathMatcher` prop.
+     */
+    createChildNodePropsAsync: async (props: {
+      pathMatcher: (identifier: HierarchyNodeIdentifier) => Promise<boolean>;
+    }): Promise<Pick<HierarchyNode, "filtering" | "autoExpand"> | undefined> => {
+      if (!hasFilter) {
+        return undefined;
+      }
+      if (filteringProps?.hasFilterTargetAncestor) {
+        return { filtering: { hasFilterTargetAncestor: true } };
+      }
+      return firstValueFrom(
+        from(filteringProps.filteredNodePaths).pipe(
+          mergeMap(async ({ path, options }) => ({ path, options, matchesNodeKey: await props.pathMatcher(path[0]) })),
+          filter(({ matchesNodeKey }) => !!matchesNodeKey),
+          toArray(),
+          map(createNodeFilteringProps),
+        ),
+      );
+    },
+  };
 }
