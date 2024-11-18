@@ -55,6 +55,11 @@ export interface LocalizedStrings {
    * Default value: `Retry`.
    */
   retry: string;
+  /**
+   * Tooltip for expander button in tree.
+   * Default value: `Expand node`.
+   */
+  expanderTooltip: string;
 }
 
 /** @internal */
@@ -72,6 +77,7 @@ const defaultLocalizedStrings: LocalizedStrings = {
   increaseHierarchyLimit: "<link>Increase the hierarchy level size limit to {{limit}}.</link>",
   increaseHierarchyLimitWithFiltering: "Or, <link>increase the hierarchy level size limit to {{limit}}.</link>",
   retry: "Retry",
+  expanderTooltip: "Expand node",
 };
 
 const localizationContext = createContext<LocalizationContext>({ localizedStrings: defaultLocalizedStrings });

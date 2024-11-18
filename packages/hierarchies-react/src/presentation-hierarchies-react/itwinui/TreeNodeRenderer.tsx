@@ -100,6 +100,7 @@ export const TreeNodeRenderer: React.ForwardRefExoticComponent<TreeNodeRendererP
           }}
           icon={getIcon ? getIcon(node) : undefined}
           label={getLabel ? getLabel(node) : node.label}
+          expanderProps={{ label: localizedStrings.expanderTooltip, labelProps: { placement: "left" } }}
           sublabel={getSublabel ? getSublabel(node) : undefined}
         >
           <ButtonGroup className={cx("action-buttons", actionButtonsClassName)}>
