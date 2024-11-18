@@ -49,7 +49,7 @@ export function createHierarchyFilteringHelper(rootLevelFilteringProps: Hierarch
         pathMatcher: (identifier: HierarchyNodeIdentifier) => boolean;
     }) => Pick<HierarchyNode, "filtering" | "autoExpand"> | undefined;
     createChildNodePropsAsync: (props: {
-        pathMatcher: (identifier: HierarchyNodeIdentifier) => Promise<boolean>;
+        pathMatcher: (identifier: HierarchyNodeIdentifier) => boolean | Promise<boolean>;
     }) => Promise<Pick<HierarchyNode, "filtering" | "autoExpand"> | undefined>;
 };
 
@@ -174,7 +174,7 @@ interface ECSqlValueSelector {
 
 // @public @deprecated
 export function extractFilteringProps(rootLevelFilteringProps: HierarchyFilteringPath[], parentNode: Pick<NonGroupingHierarchyNode, "filtering"> | undefined): {
-    filteredNodePaths: Exclude<HierarchyFilteringPath, HierarchyNodeIdentifiersPath>[];
+    filteredNodePaths: HierarchyFilteringPath[];
     hasFilterTargetAncestor: boolean;
 } | undefined;
 

@@ -3,7 +3,6 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { filter, firstValueFrom, from, map, mergeMap, toArray } from "rxjs";
 import { HierarchyNode, NonGroupingHierarchyNode } from "./HierarchyNode.js";
 import { HierarchyNodeIdentifier, HierarchyNodeIdentifiersPath } from "./HierarchyNodeIdentifier.js";
 import { GenericNodeKey, GroupingNodeKey, HierarchyNodeKey, InstancesNodeKey } from "./HierarchyNodeKey.js";
@@ -102,7 +101,7 @@ export function extractFilteringProps(
   parentNode: Pick<NonGroupingHierarchyNode, "filtering"> | undefined,
 ):
   | {
-      filteredNodePaths: Exclude<HierarchyFilteringPath, HierarchyNodeIdentifiersPath>[];
+      filteredNodePaths: HierarchyFilteringPath[];
       hasFilterTargetAncestor: boolean;
     }
   | undefined {
@@ -115,18 +114,16 @@ function extractFilteringPropsInternal(
   parentNode: Pick<NonGroupingHierarchyNode, "filtering"> | undefined,
 ):
   | {
-      filteredNodePaths: Exclude<HierarchyFilteringPath, HierarchyNodeIdentifiersPath>[];
+      filteredNodePaths: HierarchyFilteringPath[];
       hasFilterTargetAncestor: boolean;
     }
   | undefined {
   if (!parentNode) {
-    return rootLevelFilteringProps
-      ? { filteredNodePaths: rootLevelFilteringProps.map(HierarchyFilteringPath.normalize), hasFilterTargetAncestor: false }
-      : undefined;
+    return rootLevelFilteringProps ? { filteredNodePaths: rootLevelFilteringProps, hasFilterTargetAncestor: false } : undefined;
   }
   return parentNode.filtering?.filteredChildrenIdentifierPaths
     ? {
-        filteredNodePaths: parentNode.filtering.filteredChildrenIdentifierPaths.map(HierarchyFilteringPath.normalize),
+        filteredNodePaths: parentNode.filtering.filteredChildrenIdentifierPaths,
         hasFilterTargetAncestor: !!parentNode.filtering.hasFilterTargetAncestor || !!parentNode.filtering.isFilterTarget,
       }
     : undefined;
@@ -144,41 +141,6 @@ export function createHierarchyFilteringHelper(
 ) {
   const filteringProps = extractFilteringPropsInternal(rootLevelFilteringProps, parentNode);
   const hasFilter = !!filteringProps;
-
-  function createNodeFilteringProps(
-    matchingPaths: ReturnType<(typeof HierarchyFilteringPath)["normalize"]>[],
-  ): Pick<HierarchyNode, "autoExpand" | "filtering"> {
-    const nodeFilteringProps = matchingPaths.reduce(
-      (acc, { path, options }) => {
-        if (path.length === 1) {
-          acc.isFilterTarget ||= true;
-          acc.filterTargetOptions = HierarchyFilteringPath.mergeOptions(acc.filterTargetOptions, options);
-        } else if (path.length > 1) {
-          acc.filteredChildrenIdentifierPaths.push({ path: path.slice(1), options });
-        }
-        return acc;
-      },
-      {
-        filteredChildrenIdentifierPaths: new Array<ReturnType<(typeof HierarchyFilteringPath)["normalize"]>>(),
-        isFilterTarget: false,
-        filterTargetOptions: undefined as HierarchyFilteringPathOptions | undefined,
-      },
-    );
-    return {
-      ...(nodeFilteringProps.isFilterTarget || nodeFilteringProps.filteredChildrenIdentifierPaths.length > 0
-        ? {
-            filtering: {
-              ...(nodeFilteringProps.isFilterTarget ? { isFilterTarget: true, filterTargetOptions: nodeFilteringProps.filterTargetOptions } : undefined),
-              ...(nodeFilteringProps.filteredChildrenIdentifierPaths.length > 0
-                ? { filteredChildrenIdentifierPaths: nodeFilteringProps.filteredChildrenIdentifierPaths }
-                : undefined),
-            },
-          }
-        : undefined),
-      ...(nodeFilteringProps.filteredChildrenIdentifierPaths.some((path) => !!path.options?.autoExpand) ? { autoExpand: true } : undefined),
-    };
-  }
-
   return {
     /**
      * Returns a flag indicating if the hierarchy level is filtered.
@@ -201,7 +163,10 @@ export function createHierarchyFilteringHelper(
       if (!hasFilter) {
         return undefined;
       }
-      return filteringProps.filteredNodePaths.filter(({ path }) => path.length > 0).map(({ path }) => path[0]);
+      return filteringProps.filteredNodePaths
+        .map(HierarchyFilteringPath.normalize)
+        .filter(({ path }) => path.length > 0)
+        .map(({ path }) => path[0]);
     },
 
     /**
@@ -228,24 +193,27 @@ export function createHierarchyFilteringHelper(
       if (filteringProps?.hasFilterTargetAncestor) {
         return { filtering: { hasFilterTargetAncestor: true } };
       }
-      return createNodeFilteringProps(
-        filteringProps.filteredNodePaths.filter(({ path }) => {
-          if ("nodeKey" in props) {
-            return (
-              (HierarchyNodeKey.isGeneric(props.nodeKey) && HierarchyNodeIdentifier.equal(path[0], props.nodeKey)) ||
-              (HierarchyNodeKey.isInstances(props.nodeKey) && props.nodeKey.instanceKeys.some((ik) => HierarchyNodeIdentifier.equal(path[0], ik)))
-            );
-          }
-          return props.pathMatcher(path[0]);
-        }),
-      );
+      const reducer = new MatchingFilteringPathsReducer();
+      filteringProps.filteredNodePaths.forEach((filteredPath) => {
+        const normalizedPath = HierarchyFilteringPath.normalize(filteredPath);
+        if (
+          "nodeKey" in props &&
+          ((HierarchyNodeKey.isGeneric(props.nodeKey) && HierarchyNodeIdentifier.equal(normalizedPath.path[0], props.nodeKey)) ||
+            (HierarchyNodeKey.isInstances(props.nodeKey) && props.nodeKey.instanceKeys.some((ik) => HierarchyNodeIdentifier.equal(normalizedPath.path[0], ik))))
+        ) {
+          reducer.accept(normalizedPath);
+        } else if ("pathMatcher" in props && props.pathMatcher(normalizedPath.path[0])) {
+          reducer.accept(normalizedPath);
+        }
+      });
+      return reducer.getNodeProps();
     },
 
     /**
      * Similar to `createChildNodeProps`, but takes an async `pathMatcher` prop.
      */
     createChildNodePropsAsync: async (props: {
-      pathMatcher: (identifier: HierarchyNodeIdentifier) => Promise<boolean>;
+      pathMatcher: (identifier: HierarchyNodeIdentifier) => boolean | Promise<boolean>;
     }): Promise<Pick<HierarchyNode, "filtering" | "autoExpand"> | undefined> => {
       if (!hasFilter) {
         return undefined;
@@ -253,14 +221,61 @@ export function createHierarchyFilteringHelper(
       if (filteringProps?.hasFilterTargetAncestor) {
         return { filtering: { hasFilterTargetAncestor: true } };
       }
-      return firstValueFrom(
-        from(filteringProps.filteredNodePaths).pipe(
-          mergeMap(async ({ path, options }) => ({ path, options, matchesNodeKey: await props.pathMatcher(path[0]) })),
-          filter(({ matchesNodeKey }) => !!matchesNodeKey),
-          toArray(),
-          map(createNodeFilteringProps),
-        ),
-      );
+
+      const reducer = new MatchingFilteringPathsReducer();
+      for (const filteredChildrenNodeIdentifierPath of filteringProps.filteredNodePaths) {
+        const normalizedPath = HierarchyFilteringPath.normalize(filteredChildrenNodeIdentifierPath);
+        /* c8 ignore next 3 */
+        if (normalizedPath.path.length === 0) {
+          continue;
+        }
+
+        const matchesPossiblyPromise = props.pathMatcher(normalizedPath.path[0]);
+        if (matchesPossiblyPromise instanceof Promise) {
+          if (!(await matchesPossiblyPromise)) {
+            continue;
+          }
+        }
+        if (!matchesPossiblyPromise) {
+          continue;
+        }
+
+        reducer.accept(normalizedPath);
+      }
+      return reducer.getNodeProps();
     },
   };
+}
+
+type NormalizedFilteringPath = ReturnType<(typeof HierarchyFilteringPath)["normalize"]>;
+class MatchingFilteringPathsReducer {
+  private _filteredChildrenIdentifierPaths = new Array<NormalizedFilteringPath>();
+  private _isFilterTarget = false;
+  private _filterTargetOptions = undefined as HierarchyFilteringPathOptions | undefined;
+  private _needsAutoExpand = false;
+
+  public accept({ path, options }: NormalizedFilteringPath) {
+    if (path.length === 1) {
+      this._isFilterTarget ||= true;
+      this._filterTargetOptions = HierarchyFilteringPath.mergeOptions(this._filterTargetOptions, options);
+    } else if (path.length > 1) {
+      this._filteredChildrenIdentifierPaths.push({ path: path.slice(1), options });
+    }
+    if (options?.autoExpand) {
+      this._needsAutoExpand = true;
+    }
+  }
+  public getNodeProps(): Pick<HierarchyNode, "filtering" | "autoExpand"> {
+    return {
+      ...(this._isFilterTarget || this._filteredChildrenIdentifierPaths.length > 0
+        ? {
+            filtering: {
+              ...(this._isFilterTarget ? { isFilterTarget: true, filterTargetOptions: this._filterTargetOptions } : undefined),
+              ...(this._filteredChildrenIdentifierPaths.length > 0 ? { filteredChildrenIdentifierPaths: this._filteredChildrenIdentifierPaths } : undefined),
+            },
+          }
+        : undefined),
+      ...(this._needsAutoExpand ? { autoExpand: true } : undefined),
+    };
+  }
 }

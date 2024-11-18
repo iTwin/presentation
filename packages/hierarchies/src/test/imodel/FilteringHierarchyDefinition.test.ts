@@ -210,7 +210,7 @@ describe("FilteringHierarchyDefinition", () => {
       });
     });
 
-    it("sets correct filteredChildrenIdentifierPaths when nodes have same id's and different classNames that derive from one another", async () => {
+    it("sets correct filteredChildrenIdentifierPaths when nodes have same ids and different classNames that derive from one another", async () => {
       const sourceFactory = {} as unknown as HierarchyDefinition;
       const classHierarchyInspector = createClassHierarchyInspectorStub();
 
@@ -252,6 +252,35 @@ describe("FilteringHierarchyDefinition", () => {
           { path: [createTestInstanceKey({ id: "0x3" })], options: undefined },
           { path: [createTestInstanceKey({ id: "0x4" })], options: undefined },
         ],
+      });
+    });
+
+    it("sets correct filteredChildrenIdentifierPaths when path identifiers have same ids but different types", async () => {
+      const sourceFactory = {} as unknown as HierarchyDefinition;
+      const classHierarchyInspector = createClassHierarchyInspectorStub();
+
+      const testClass = classHierarchyInspector.stubEntityClass({
+        schemaName: "TestSchema",
+        className: "TestClass",
+        is: async () => true,
+      });
+      const paths: HierarchyNodeIdentifiersPath[] = [
+        [createTestInstanceKey({ id: "0x1", className: testClass.fullName }), createTestInstanceKey({ id: "0x2" })],
+        [createTestGenericNodeKey({ id: "0x1" }), createTestInstanceKey({ id: "0x3" })],
+      ];
+      const filteringFactory = await createFilteringHierarchyDefinition({
+        imodelAccess: { ...classHierarchyInspector, imodelKey: "someKey" },
+        sourceFactory,
+        nodeIdentifierPaths: paths,
+      });
+      const row = {
+        [NodeSelectClauseColumnNames.FullClassName]: "",
+        [ECSQL_COLUMN_NAME_FilterECInstanceId]: "0x1",
+        [ECSQL_COLUMN_NAME_FilterClassName]: testClass.fullName,
+      };
+      const node = await filteringFactory.parseNode(row, undefined);
+      expect(node.filtering).to.deep.eq({
+        filteredChildrenIdentifierPaths: [{ path: [createTestInstanceKey({ id: "0x2" })], options: undefined }],
       });
     });
 
