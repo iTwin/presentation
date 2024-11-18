@@ -22,12 +22,7 @@ import { registerTxnListeners } from "@itwin/presentation-core-interop";
 import { ConcatenatedValue, ConcatenatedValuePart, createDefaultValueFormatter, IPrimitiveValueFormatter, julianToDateTime } from "@itwin/presentation-shared";
 // __PUBLISH_EXTRACT_END__
 // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.CustomHierarchyProviders.FilteringProviderImports
-import {
-  createHierarchyFilteringHelper,
-  GenericNodeKey,
-  HierarchyFilteringPath,
-  HierarchyNodeIdentifier,
-} from "@itwin/presentation-hierarchies";
+import { createHierarchyFilteringHelper, GenericNodeKey, HierarchyFilteringPath, HierarchyNodeIdentifier } from "@itwin/presentation-hierarchies";
 // __PUBLISH_EXTRACT_END__
 import { buildIModel } from "../../IModelUtils.js";
 import { initialize, terminate } from "../../IntegrationTests.js";
