@@ -629,7 +629,7 @@ export interface NonGroupingHierarchyNode extends BaseHierarchyNode {
 type ParentHierarchyNode<TBase = HierarchyNode> = OmitOverUnion<TBase, "children">;
 
 // @public
-interface PredicateBasedHierarchyDefinitionProps {
+interface PredicateBasedHierarchyDefinitionProps extends Pick<HierarchyDefinition, "parseNode" | "preProcessNode" | "postProcessNode"> {
     classHierarchyInspector: ECClassHierarchyInspector;
     hierarchy: {
         rootNodes: (props: DefineRootHierarchyLevelProps) => Promise<HierarchyLevelDefinition>;

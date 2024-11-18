@@ -64,10 +64,12 @@
     "react-resize-detector": "^10.0.1",
     "redux": "^4.2.1",
     "reflect-metadata": "catalog:itwinjs-core",
+    "rss-parser": "^3.13.0",
     "rxjs": "catalog:rxjs",
     "sass": "^1.75.0",
     "typescript": "catalog:build-tools",
     "vite": "^5.2.14",
+    "vite-plugin-node-polyfills": "^0.22.0",
     "vite-plugin-static-copy": "^1.0.3"
   }
 }

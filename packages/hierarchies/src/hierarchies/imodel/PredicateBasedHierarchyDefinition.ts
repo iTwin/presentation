@@ -8,7 +8,15 @@ import { Id64String } from "@itwin/core-bentley";
 import { ECClassHierarchyInspector, InstanceKey } from "@itwin/presentation-shared";
 import { HierarchyNode } from "../HierarchyNode.js";
 import { GenericNodeKey, InstancesNodeKey } from "../HierarchyNodeKey.js";
-import { DefineHierarchyLevelProps, HierarchyDefinition, HierarchyDefinitionParentNode, HierarchyLevelDefinition } from "./IModelHierarchyDefinition.js";
+import {
+  DefineHierarchyLevelProps,
+  HierarchyDefinition,
+  HierarchyDefinitionParentNode,
+  HierarchyLevelDefinition,
+  NodeParser,
+  NodePostProcessor,
+  NodePreProcessor,
+} from "./IModelHierarchyDefinition.js";
 
 /**
  * Props for defining child hierarchy level for specific parent instance node.
@@ -129,7 +137,7 @@ export type DefineRootHierarchyLevelProps = Omit<DefineHierarchyLevelProps, "par
  * Props for `createPredicateBasedHierarchyDefinition`.
  * @public
  */
-interface PredicateBasedHierarchyDefinitionProps {
+interface PredicateBasedHierarchyDefinitionProps extends Pick<HierarchyDefinition, "parseNode" | "preProcessNode" | "postProcessNode"> {
   /** Access to ECClass hierarchy in the iModel */
   classHierarchyInspector: ECClassHierarchyInspector;
 
@@ -158,7 +166,21 @@ export function createPredicateBasedHierarchyDefinition(props: PredicateBasedHie
 }
 
 class PredicateBasedHierarchyDefinition implements HierarchyDefinition {
-  public constructor(private _props: PredicateBasedHierarchyDefinitionProps) {}
+  public parseNode: NodeParser | undefined;
+  public preProcessNode: NodePreProcessor | undefined;
+  public postProcessNode: NodePostProcessor | undefined;
+
+  public constructor(private _props: PredicateBasedHierarchyDefinitionProps) {
+    if (this._props.parseNode) {
+      this.parseNode = this._props.parseNode;
+    }
+    if (this._props.preProcessNode) {
+      this.preProcessNode = this._props.preProcessNode;
+    }
+    if (this._props.postProcessNode) {
+      this.postProcessNode = this._props.postProcessNode;
+    }
+  }
 
   /**
    * Create hierarchy level definitions for specific hierarchy level.
