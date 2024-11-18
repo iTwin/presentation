@@ -260,9 +260,9 @@ class MatchingFilteringPathsReducer {
       this._filterTargetOptions = HierarchyFilteringPath.mergeOptions(this._filterTargetOptions, options);
     } else if (path.length > 1) {
       this._filteredChildrenIdentifierPaths.push({ path: path.slice(1), options });
-    }
-    if (options?.autoExpand) {
-      this._needsAutoExpand = true;
+      if (options?.autoExpand) {
+        this._needsAutoExpand = true;
+      }
     }
   }
   public getNodeProps(): Pick<HierarchyNode, "filtering" | "autoExpand"> {

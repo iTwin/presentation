@@ -302,7 +302,7 @@ describe("FilteringHierarchyDefinition", () => {
       expect(node.autoExpand).to.be.undefined;
     });
 
-    it("does not set auto-expand when filtered children paths list is provided without `autoExpand` option", async () => {
+    it("does't set auto-expand when filtered children paths list is provided without `autoExpand` option", async () => {
       const paths: HierarchyNodeIdentifiersPath[] = [
         [createTestInstanceKey({ id: "0x1", className: "TestSchema.TestName" }), createTestInstanceKey({ id: "0x2", className: "TestSchema.TestName" })],
       ];
@@ -324,6 +324,23 @@ describe("FilteringHierarchyDefinition", () => {
             createTestInstanceKey({ id: "0x2", className: "TestSchema.TestName" }),
           ],
           options: { autoExpand: false },
+        },
+      ];
+      const filteringFactory = await createFilteringHierarchyDefinition({ nodeIdentifierPaths: paths });
+      const row = {
+        [NodeSelectClauseColumnNames.FullClassName]: "",
+        [ECSQL_COLUMN_NAME_FilterECInstanceId]: "0x1",
+        [ECSQL_COLUMN_NAME_FilterClassName]: "TestSchema.TestName",
+      };
+      const node = await filteringFactory.parseNode(row);
+      expect(node.autoExpand).to.be.undefined;
+    });
+
+    it("doesn't set auto-expand on filter targets", async () => {
+      const paths = [
+        {
+          path: [createTestInstanceKey({ id: "0x1", className: "TestSchema.TestName" })],
+          options: { autoExpand: true },
         },
       ];
       const filteringFactory = await createFilteringHierarchyDefinition({ nodeIdentifierPaths: paths });
@@ -959,14 +976,14 @@ describe("FilteringHierarchyDefinition", () => {
         const filteringFactory = await createFilteringHierarchyDefinition({
           imodelAccess: { ...classHierarchyInspector, imodelKey: "test-imodel-key" },
           sourceFactory,
-          nodeIdentifierPaths: [[createTestGenericNodeKey({ id: "custom 2" })]],
+          nodeIdentifierPaths: [{ path: [createTestGenericNodeKey({ id: "custom 2" })], options: { autoExpand: true } }],
         });
         const result = await filteringFactory.defineHierarchyLevel({ parentNode: undefined });
         expect(result).to.deep.eq([
           {
             node: {
               ...sourceDefinition2.node,
-              filtering: { isFilterTarget: true, filterTargetOptions: undefined },
+              filtering: { isFilterTarget: true, filterTargetOptions: { autoExpand: true } },
             },
           },
         ]);

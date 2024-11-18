@@ -139,6 +139,7 @@ describe("Hierarchies", () => {
                       instanceKeys: [keys.childSubject2],
                       isFilterTarget: true,
                       children: false,
+                      autoExpand: false,
                     }),
                   ],
                 }),
@@ -223,6 +224,7 @@ describe("Hierarchies", () => {
         });
       });
     });
+
     describe("instance nodes", () => {
       it("filters through instance nodes that are in multiple paths", async function () {
         const { imodel, ...keys } = await buildIModel(this, async (builder) => {
@@ -287,24 +289,29 @@ describe("Hierarchies", () => {
           expect: [
             NodeValidators.createForInstanceNode({
               instanceKeys: [keys.childSubject1],
+              autoExpand: true,
               children: [
                 NodeValidators.createForInstanceNode({
                   instanceKeys: [keys.childSubject3],
                   isFilterTarget: true,
                   children: false,
+                  autoExpand: false,
                 }),
               ],
             }),
             NodeValidators.createForInstanceNode({
               instanceKeys: [keys.childSubject4],
+              autoExpand: true,
               children: [
                 NodeValidators.createForInstanceNode({
                   instanceKeys: [keys.childSubject1],
+                  autoExpand: true,
                   children: [
                     NodeValidators.createForInstanceNode({
                       instanceKeys: [keys.childSubject2],
                       isFilterTarget: true,
                       children: false,
+                      autoExpand: false,
                     }),
                   ],
                 }),
@@ -404,6 +411,7 @@ describe("Hierarchies", () => {
                   instanceKeys: [keys.childSubject2],
                   isFilterTarget: true,
                   children: false,
+                  autoExpand: false,
                 }),
               ],
             }),
