@@ -24,6 +24,8 @@ describe("exportDiagnostics", () => {
     setStatus: sinon.stub(),
     spanContext: sinon.stub(),
     updateName: sinon.stub(),
+    addLink: sinon.stub(),
+    addLinks: sinon.stub(),
   };
   let currentSpanContext: TestSpanContext;
 
