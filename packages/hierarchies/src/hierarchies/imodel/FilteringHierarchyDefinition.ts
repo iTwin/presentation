@@ -119,8 +119,7 @@ export class FilteringHierarchyDefinition implements HierarchyDefinition {
           ? await (async () => {
               const rowInstanceKey = { className: row[ECSQL_COLUMN_NAME_FilterClassName], id: row[ECSQL_COLUMN_NAME_FilterECInstanceId] };
               return filteringHelper.createChildNodePropsAsync({
-                // eslint-disable-next-line @typescript-eslint/promise-function-async
-                pathMatcher: (identifier) => {
+                pathMatcher: (identifier): boolean | Promise<boolean> => {
                   if (identifier.id !== rowInstanceKey.id) {
                     return false;
                   }
@@ -168,9 +167,12 @@ export class FilteringHierarchyDefinition implements HierarchyDefinition {
           map((definition) => {
             if (
               filteringHelper.hasFilterTargetAncestor ||
-              childNodeFilteringIdentifiers
-                .filter((id) => HierarchyNodeIdentifier.isGenericNodeIdentifier(id) && (!id.source || id.source === this._imodelAccess.imodelKey))
-                .some(({ id }) => id === definition.node.key)
+              childNodeFilteringIdentifiers.some(
+                (identifier) =>
+                  HierarchyNodeIdentifier.isGenericNodeIdentifier(identifier) &&
+                  (!identifier.source || identifier.source === this._imodelAccess.imodelKey) &&
+                  identifier.id === definition.node.key,
+              )
             ) {
               return {
                 ...definition,
@@ -224,15 +226,14 @@ export class FilteringHierarchyDefinition implements HierarchyDefinition {
                 if (id.imodelKey && id.imodelKey !== imodelAccess.imodelKey) {
                   continue;
                 }
-                if (id.className !== definition.fullClassName) {
-                  if (
-                    !(await Promise.all([
-                      imodelAccess.classDerivesFrom(id.className, definition.fullClassName),
-                      imodelAccess.classDerivesFrom(definition.fullClassName, id.className),
-                    ]).then(([isDerivedFrom, isDerivedTo]) => isDerivedFrom || isDerivedTo))
-                  ) {
-                    continue;
-                  }
+                if (
+                  id.className !== definition.fullClassName &&
+                  !(await Promise.all([
+                    imodelAccess.classDerivesFrom(id.className, definition.fullClassName),
+                    imodelAccess.classDerivesFrom(definition.fullClassName, id.className),
+                  ]).then(([isDerivedFrom, isDerivedTo]) => isDerivedFrom || isDerivedTo))
+                ) {
+                  continue;
                 }
                 const entriesTargetForPathIdentifier = await getEntries(id);
                 if (entriesTargetForPathIdentifier) {
