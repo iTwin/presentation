@@ -33,14 +33,14 @@
     "benchmark:unified-selection": "pnpm run -C ./apps/performance-tests benchmark:unified-selection"
   },
   "dependencies": {
-    "@changesets/cli": "^2.27.7",
+    "@changesets/cli": "^2.27.9",
     "cpx2": "catalog:build-tools",
     "eslint": "catalog:build-tools",
     "eslint-config-prettier": "^9.1.0",
     "fast-glob": "^3.3.2",
-    "husky": "^9.1.1",
-    "lage": "^2.7.21",
-    "lint-staged": "^15.2.7",
+    "husky": "^9.1.7",
+    "lage": "^2.11.13",
+    "lint-staged": "^15.2.10",
     "markdown-link-check": "^3.13.6",
     "npm-run-all": "^4.1.5",
     "prettier": "^3.3.3",

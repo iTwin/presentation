@@ -78,7 +78,7 @@
     "@itwin/presentation-common": "catalog:itwinjs-core",
     "@itwin/presentation-frontend": "catalog:itwinjs-core",
     "@itwin/webgl-compatibility": "catalog:itwinjs-core",
-    "@opentelemetry/api": "^1.8.0",
+    "@opentelemetry/api": "^1.9.0",
     "@types/chai": "catalog:test-tools",
     "@types/chai-as-promised": "catalog:test-tools",
     "@types/chai-jest-snapshot": "catalog:test-tools",
