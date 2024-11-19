@@ -42,5 +42,10 @@ export {
   IModelHierarchyNodeKey,
 } from "./hierarchies/HierarchyNodeKey.js";
 export { GetHierarchyNodesProps, HierarchyProvider, mergeProviders } from "./hierarchies/HierarchyProvider.js";
-export { HierarchyFilteringPath, extractFilteringProps } from "./hierarchies/HierarchyFiltering.js";
+export {
+  createHierarchyFilteringHelper,
+  extractFilteringProps,
+  HierarchyFilteringPath,
+  HierarchyFilteringPathOptions,
+} from "./hierarchies/HierarchyFiltering.js";
 export { getLogger, setLogger } from "./hierarchies/Logging.js";

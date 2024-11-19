@@ -35,11 +35,16 @@ export default class SampleRpcImpl extends SampleRpcInterface {
 
   public override async getConnectionProps(imodelPath: string): Promise<IModelConnectionProps> {
     const db = SnapshotDb.openFile(imodelPath);
+    // eslint-disable-next-line @itwin/no-internal
     return db.getConnectionProps();
   }
 
   public override async closeConnection(imodelPath: string): Promise<void> {
     SnapshotDb.findByFilename(imodelPath)?.close();
+  }
+
+  public override async getRssFeed({ url }: { url: string }): Promise<string> {
+    return fetch(url).then(async (response) => response.text());
   }
 }
 

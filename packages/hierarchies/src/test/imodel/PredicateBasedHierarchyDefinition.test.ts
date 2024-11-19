@@ -246,6 +246,45 @@ describe("createPredicateBasedHierarchyDefinition", () => {
       parentNode: rootNode,
     });
   });
+
+  it("uses provided node parser", () => {
+    const parseNode = sinon.stub();
+    const factory = createPredicateBasedHierarchyDefinition({
+      classHierarchyInspector,
+      parseNode,
+      hierarchy: {
+        rootNodes: async () => [],
+        childNodes: [],
+      },
+    });
+    expect(factory.parseNode).to.eq(parseNode);
+  });
+
+  it("uses provided node pre-processor", () => {
+    const preprocessor = sinon.stub();
+    const factory = createPredicateBasedHierarchyDefinition({
+      classHierarchyInspector,
+      preProcessNode: preprocessor,
+      hierarchy: {
+        rootNodes: async () => [],
+        childNodes: [],
+      },
+    });
+    expect(factory.preProcessNode).to.eq(preprocessor);
+  });
+
+  it("uses provided node post-processor", () => {
+    const postprocessor = sinon.stub();
+    const factory = createPredicateBasedHierarchyDefinition({
+      classHierarchyInspector,
+      postProcessNode: postprocessor,
+      hierarchy: {
+        rootNodes: async () => [],
+        childNodes: [],
+      },
+    });
+    expect(factory.postProcessNode).to.eq(postprocessor);
+  });
 });
 
 function createParentNode(src: Partial<NonNullable<DefineHierarchyLevelProps["parentNode"]>>) {

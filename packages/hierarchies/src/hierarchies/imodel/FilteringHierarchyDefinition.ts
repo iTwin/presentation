@@ -3,12 +3,13 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
+import { defer, filter, firstValueFrom, map, merge, mergeMap, of, toArray } from "rxjs";
 import { Id64String } from "@itwin/core-bentley";
 import { ECClassHierarchyInspector, InstanceKey } from "@itwin/presentation-shared";
-import { extractFilteringProps, HierarchyFilteringPath, HierarchyFilteringPathOptions } from "../HierarchyFiltering.js";
-import { HierarchyNodeFilteringProps } from "../HierarchyNode.js";
+import { createHierarchyFilteringHelper, HierarchyFilteringPath } from "../HierarchyFiltering.js";
 import { HierarchyNodeIdentifier } from "../HierarchyNodeIdentifier.js";
-import { GenericNodeKey } from "../HierarchyNodeKey.js";
+import { IModelInstanceKey } from "../HierarchyNodeKey.js";
+import { partition } from "../internal/operators/Partition.js";
 import {
   DefineHierarchyLevelProps,
   GenericHierarchyNodeDefinition,
@@ -21,7 +22,8 @@ import {
   NodePostProcessor,
   NodePreProcessor,
 } from "./IModelHierarchyDefinition.js";
-import { ProcessedGroupingHierarchyNode, ProcessedHierarchyNode, SourceHierarchyNode, SourceInstanceHierarchyNode } from "./IModelHierarchyNode.js";
+import { ProcessedGroupingHierarchyNode, ProcessedHierarchyNode, SourceInstanceHierarchyNode } from "./IModelHierarchyNode.js";
+import { NodeSelectClauseColumnNames } from "./NodeSelectQueryFactory.js";
 import { defaultNodesParser } from "./TreeNodesReader.js";
 
 interface FilteringHierarchyDefinitionProps {
@@ -109,247 +111,149 @@ export class FilteringHierarchyDefinition implements HierarchyDefinition {
 
   public get parseNode(): NodeParser {
     return async (row: { [columnName: string]: any }, parentNode?: HierarchyDefinitionParentNode): Promise<SourceInstanceHierarchyNode> => {
-      const hasFilterTargetAncestor: boolean = !!row[ECSQL_COLUMN_NAME_HasFilterTargetAncestor];
+      const parsedNode = await (this._source.parseNode ?? defaultNodesParser)(row);
 
-      const { filteredChildrenIdentifierPaths, filterTargetOptions, isFilterTarget } =
+      const filteringHelper = createHierarchyFilteringHelper(this._nodeIdentifierPaths, parentNode);
+      const nodeExtraProps =
         row[ECSQL_COLUMN_NAME_FilterECInstanceId] && row[ECSQL_COLUMN_NAME_FilterClassName]
-          ? await this.getChildrenIdentifierPaths(parentNode?.filtering?.filteredChildrenIdentifierPaths ?? this._nodeIdentifierPaths, {
-              className: row[ECSQL_COLUMN_NAME_FilterClassName],
-              id: row[ECSQL_COLUMN_NAME_FilterECInstanceId],
-            })
-          : { filteredChildrenIdentifierPaths: [], filterTargetOptions: undefined, isFilterTarget: false };
+          ? await (async () => {
+              const rowInstanceKey = { className: row[ECSQL_COLUMN_NAME_FilterClassName], id: row[ECSQL_COLUMN_NAME_FilterECInstanceId] };
+              return filteringHelper.createChildNodePropsAsync({
+                pathMatcher: (identifier): boolean | Promise<boolean> => {
+                  if (identifier.id !== rowInstanceKey.id) {
+                    return false;
+                  }
+                  if (!HierarchyNodeIdentifier.isInstanceNodeIdentifier(identifier)) {
+                    return false;
+                  }
+                  if (identifier.imodelKey && identifier.imodelKey !== this._imodelAccess.imodelKey) {
+                    return false;
+                  }
+                  if (identifier.className === rowInstanceKey.className) {
+                    return true;
+                  }
+                  return Promise.all([
+                    this._imodelAccess.classDerivesFrom(identifier.className, rowInstanceKey.className),
+                    this._imodelAccess.classDerivesFrom(rowInstanceKey.className, identifier.className),
+                  ]).then(([isDerivedFrom, isDerivedTo]) => isDerivedFrom || isDerivedTo);
+                },
+              });
+            })()
+          : undefined;
+      if (nodeExtraProps?.autoExpand) {
+        parsedNode.autoExpand = true;
+      }
+      if (nodeExtraProps?.filtering) {
+        parsedNode.filtering = nodeExtraProps.filtering;
+      }
 
-      const defaultNode = await (this._source.parseNode ?? defaultNodesParser)(row);
-      return applyFilterAttributes({
-        node: defaultNode,
-        filteredChildrenIdentifierPaths,
-        isFilterTarget,
-        filterTargetOptions,
-        hasFilterTargetAncestor,
-      });
+      return parsedNode;
     };
-  }
-
-  private async getChildrenIdentifierPaths(filteredChildrenNodeIdentifierPaths: HierarchyFilteringPath[], providedIdentifier: InstanceKey) {
-    const { id, className } = providedIdentifier;
-
-    let filteredChildrenIdentifierPaths: HierarchyFilteringPath[] | undefined;
-    let isFilterTarget = false;
-    let filterTargetOptions: HierarchyFilteringPathOptions | undefined;
-    for (const filteredChildrenNodeIdentifierPath of filteredChildrenNodeIdentifierPaths) {
-      const { path, options } = HierarchyFilteringPath.normalize(filteredChildrenNodeIdentifierPath);
-      /* c8 ignore next 3 */
-      if (path.length === 0) {
-        continue;
-      }
-
-      // We need to check if identifiers have the same id and imodelKey and are
-      // of the same class / derived class / is derived from class
-      const identifier = path[0];
-      if (identifier.id !== id) {
-        continue;
-      }
-      if (HierarchyNodeIdentifier.isInstanceNodeIdentifier(identifier)) {
-        if (identifier.imodelKey && identifier.imodelKey !== this._imodelAccess.imodelKey) {
-          continue;
-        }
-        if (
-          identifier.className !== className &&
-          !(await this._imodelAccess.classDerivesFrom(identifier.className, className)) &&
-          !(await this._imodelAccess.classDerivesFrom(className, identifier.className))
-        ) {
-          continue;
-        }
-      }
-      if (!filteredChildrenIdentifierPaths) {
-        filteredChildrenIdentifierPaths = [];
-      }
-      if (path.length > 1) {
-        filteredChildrenIdentifierPaths.push(options ? { path: path.slice(1), options } : path.slice(1));
-      } else if (isFilterTarget) {
-        filterTargetOptions = HierarchyFilteringPath.mergeOptions(filterTargetOptions, options);
-      } else {
-        isFilterTarget = true;
-        filterTargetOptions = options;
-      }
-    }
-    return { filteredChildrenIdentifierPaths, filterTargetOptions, isFilterTarget };
   }
 
   public async defineHierarchyLevel(props: DefineHierarchyLevelProps): Promise<HierarchyLevelDefinition> {
     const sourceDefinitions = await this._source.defineHierarchyLevel(props);
-    const filteringProps = extractFilteringProps(this._nodeIdentifierPaths, props.parentNode);
-    if (!filteringProps) {
+
+    const filteringHelper = createHierarchyFilteringHelper(this._nodeIdentifierPaths, props.parentNode);
+    const childNodeFilteringIdentifiers = filteringHelper.getChildNodeFilteringIdentifiers();
+    if (!childNodeFilteringIdentifiers) {
       return sourceDefinitions;
     }
 
-    const filteredDefinitions: HierarchyLevelDefinition = [];
-    await Promise.all(
-      sourceDefinitions.map(async (definition) => {
-        let matchedDefinition: HierarchyNodesDefinition | undefined;
-        if (HierarchyNodesDefinition.isGenericNode(definition)) {
-          matchedDefinition = await matchFilters<GenericNodeKey>(
-            definition,
-            filteringProps,
-            async (id) => {
-              return (
-                HierarchyNodeIdentifier.isGenericNodeIdentifier(id) &&
-                (!id.source || id.source === this._imodelAccess.imodelKey) &&
-                id.id === definition.node.key
-              );
-            },
-            this._imodelAccess,
-            (def, matchingFilters) => {
-              const filteredChildrenIdentifierPaths = matchingFilters.reduce(
-                (r, c) => [...r, ...c.childrenIdentifierPaths],
-                new Array<HierarchyFilteringPath>(),
-              );
+    const [genericNodeDefinitions, instanceNodeDefinitions] = partition(sourceDefinitions, HierarchyNodesDefinition.isGenericNode);
+    return firstValueFrom(
+      merge(
+        genericNodeDefinitions.pipe(
+          map((definition) => {
+            if (
+              filteringHelper.hasFilterTargetAncestor ||
+              childNodeFilteringIdentifiers.some(
+                (identifier) =>
+                  HierarchyNodeIdentifier.isGenericNodeIdentifier(identifier) &&
+                  (!identifier.source || identifier.source === this._imodelAccess.imodelKey) &&
+                  identifier.id === definition.node.key,
+              )
+            ) {
               return {
-                ...def,
-                node: applyFilterAttributes({
-                  node: def.node,
-                  filteredChildrenIdentifierPaths,
-                  isFilterTarget: matchingFilters.some((mc) => mc.isFilterTarget),
-                  filterTargetOptions: matchingFilters.find((mc) => mc.isFilterTarget)?.filterTargetOptions,
-                  hasFilterTargetAncestor: filteringProps.hasFilterTargetAncestor,
-                }),
+                ...definition,
+                node: {
+                  ...definition.node,
+                  ...filteringHelper.createChildNodeProps({ pathMatcher: ({ id }) => id === definition.node.key }),
+                },
               };
-            },
-          );
-        } else {
-          matchedDefinition = await matchFilters<InstanceKey>(
-            definition,
-            filteringProps,
-            async (id) => {
-              return (
-                HierarchyNodeIdentifier.isInstanceNodeIdentifier(id) &&
-                (!id.imodelKey || id.imodelKey === this._imodelAccess.imodelKey) &&
-                (await this._imodelAccess.classDerivesFrom(id.className, definition.fullClassName))
-              );
-            },
-            this._imodelAccess,
-            (def, matchingFilters) => applyECInstanceIdsFilter(def, matchingFilters, !!filteringProps.hasFilterTargetAncestor),
-            false,
-          );
-        }
-        if (matchedDefinition) {
-          filteredDefinitions.push(matchedDefinition);
-        }
-      }),
-    );
-    return filteredDefinitions;
-  }
-}
+            }
+            return undefined;
+          }),
+          filter((def): def is GenericHierarchyNodeDefinition => !!def),
+        ),
 
-type MatchedFilter<TIdentifier extends HierarchyNodeIdentifier> = {
-  id: TIdentifier;
-  childrenIdentifierPaths: HierarchyFilteringPath[];
-} & ({ isFilterTarget: false } | { isFilterTarget: true; filterTargetOptions?: HierarchyFilteringPathOptions });
+        instanceNodeDefinitions.pipe(
+          mergeMap((definition) => {
+            if (filteringHelper.hasFilterTargetAncestor) {
+              // if we have a filter target ancestor, we don't need to filter the definitions - we use all of them
+              return of(applyECInstanceIdsSelector(definition));
+            }
+            return defer(async () => {
+              const imodelAccess = this._imodelAccess;
+              const matches = new Map<Id64String, IModelInstanceKey[]>();
+              async function getEntries(x: IModelInstanceKey) {
+                let entries = matches.get(x.id);
+                if (!entries) {
+                  entries = [];
+                  matches.set(x.id, entries);
+                }
+                // make sure that we don't have path identifiers that only differ by class name, where
+                // class names are in the same class hierarchy, e.g.:
+                // [{ className: "bis.Element", id: "0x1" }, { className: "bis.Subject", id: "0x1" }]
+                // are actually the same instance, so we only need to keep one of them, or otherwise the query will
+                // duplicate it
+                for (const entry of entries) {
+                  if (
+                    entry.className === x.className ||
+                    (await imodelAccess.classDerivesFrom(entry.className, x.className)) ||
+                    (await imodelAccess.classDerivesFrom(x.className, entry.className))
+                  ) {
+                    return undefined;
+                  }
+                }
+                return entries;
+              }
+              for (const id of childNodeFilteringIdentifiers) {
+                // take only identifiers that match the definition by type, source and class
+                if (!HierarchyNodeIdentifier.isInstanceNodeIdentifier(id)) {
+                  continue;
+                }
+                if (id.imodelKey && id.imodelKey !== imodelAccess.imodelKey) {
+                  continue;
+                }
+                if (
+                  id.className !== definition.fullClassName &&
+                  !(await Promise.all([
+                    imodelAccess.classDerivesFrom(id.className, definition.fullClassName),
+                    imodelAccess.classDerivesFrom(definition.fullClassName, id.className),
+                  ]).then(([isDerivedFrom, isDerivedTo]) => isDerivedFrom || isDerivedTo))
+                ) {
+                  continue;
+                }
+                const entriesTargetForPathIdentifier = await getEntries(id);
+                if (entriesTargetForPathIdentifier) {
+                  entriesTargetForPathIdentifier.push(id);
+                }
+              }
+              return Array.from(matches.values()).flat();
+            }).pipe(
+              // only take definitions that have matching path identifiers
+              filter((pathIdentifiers) => pathIdentifiers.length > 0),
 
-async function matchFilters<
-  TIdentifier extends HierarchyNodeIdentifier,
-  TDefinition = TIdentifier extends InstanceKey ? InstanceNodesQueryDefinition : GenericHierarchyNodeDefinition,
->(
-  definition: TDefinition,
-  filteringProps: { filteredNodePaths: HierarchyFilteringPath[]; hasFilterTargetAncestor?: boolean },
-  predicate: (id: HierarchyNodeIdentifier) => Promise<boolean>,
-  classHierarchy: ECClassHierarchyInspector,
-  matchedDefinitionProcessor: (def: TDefinition, matchingFilters: Array<MatchedFilter<TIdentifier>>) => TDefinition,
-  extractPathsAndOptions: boolean = true,
-): Promise<TDefinition | undefined> {
-  const { filteredNodePaths, hasFilterTargetAncestor } = filteringProps;
-  const matchingFilters: Array<MatchedFilter<TIdentifier>> = [];
-  for (const filteredNodePath of filteredNodePaths) {
-    const { path, options } = HierarchyFilteringPath.normalize(filteredNodePath);
-    if (path.length === 0) {
-      continue;
-    }
-    const nodeId = path[0];
-    if (await predicate(nodeId)) {
-      let entry = await findMatchingFilterEntry(matchingFilters, nodeId, classHierarchy);
-      if (!entry) {
-        entry = {
-          // ideally, `predicate` would act as a type guard to guarantee that `id` is `TIdentifier`, but at the moment
-          // async type guards aren't supported
-          id: nodeId as TIdentifier,
-          childrenIdentifierPaths: [],
-          isFilterTarget: false,
-        };
-        matchingFilters.push(entry);
-      }
-
-      if (!extractPathsAndOptions) {
-        continue;
-      }
-
-      if (path.length > 1) {
-        entry.childrenIdentifierPaths.push(options ? { path: path.slice(1), options } : path.slice(1));
-      } else if (entry.isFilterTarget) {
-        entry.filterTargetOptions = HierarchyFilteringPath.mergeOptions(entry.filterTargetOptions, options);
-      } else {
-        Object.assign(entry, { isFilterTarget: true, filterTargetOptions: options });
-      }
-    }
-  }
-  if (hasFilterTargetAncestor || matchingFilters.length > 0) {
-    return matchedDefinitionProcessor(definition, matchingFilters);
-  }
-  return undefined;
-}
-
-async function findMatchingFilterEntry<TEntry extends { id: TIdentifier }, TIdentifier extends HierarchyNodeIdentifier>(
-  filters: TEntry[],
-  nodeId: TIdentifier,
-  classHierarchy: ECClassHierarchyInspector,
-): Promise<TEntry | undefined> {
-  for (const filter of filters) {
-    if (await identifiersEqual(filter.id, nodeId, classHierarchy)) {
-      return filter;
-    }
-  }
-  return undefined;
-}
-
-async function identifiersEqual<TIdentifier extends HierarchyNodeIdentifier>(lhs: TIdentifier, rhs: TIdentifier, classHierarchy: ECClassHierarchyInspector) {
-  if (HierarchyNodeIdentifier.isInstanceNodeIdentifier(lhs) && HierarchyNodeIdentifier.isInstanceNodeIdentifier(rhs)) {
-    return (
-      lhs.id === rhs.id &&
-      (lhs.className === rhs.className ||
-        (await classHierarchy.classDerivesFrom(lhs.className, rhs.className)) ||
-        (await classHierarchy.classDerivesFrom(rhs.className, lhs.className)))
+              // for each definition that we're going to use, apply query-level filter
+              map((pathIdentifiers) => applyECInstanceIdsFilter(definition, pathIdentifiers)),
+            );
+          }),
+        ),
+      ).pipe(toArray()),
     );
   }
-  return HierarchyNodeIdentifier.equal(lhs, rhs);
 }
-
-function applyFilterAttributes<TNode extends SourceHierarchyNode>(props: {
-  node: TNode;
-  filteredChildrenIdentifierPaths: HierarchyFilteringPath[] | undefined;
-  isFilterTarget?: boolean;
-  filterTargetOptions?: HierarchyFilteringPathOptions;
-  hasFilterTargetAncestor: boolean;
-}): TNode {
-  const { node, filteredChildrenIdentifierPaths } = props;
-  const result = { ...node };
-
-  const shouldAutoExpand = !!filteredChildrenIdentifierPaths?.some((childPath) => {
-    return !!HierarchyFilteringPath.normalize(childPath).options?.autoExpand;
-  });
-  if (shouldAutoExpand) {
-    result.autoExpand = true;
-  }
-
-  const filteringProps = HierarchyNodeFilteringProps.create(props);
-  if (filteringProps) {
-    result.filtering = filteringProps;
-  }
-
-  return result;
-}
-
-/** @internal */
-// eslint-disable-next-line @typescript-eslint/naming-convention
-export const ECSQL_COLUMN_NAME_HasFilterTargetAncestor = "HasFilterTargetAncestor";
 
 /** @internal */
 // eslint-disable-next-line @typescript-eslint/naming-convention
@@ -359,29 +263,22 @@ export const ECSQL_COLUMN_NAME_FilterECInstanceId = "FilterECInstanceId";
 // eslint-disable-next-line @typescript-eslint/naming-convention
 export const ECSQL_COLUMN_NAME_FilterClassName = "FilterClassName";
 
-function getClassECInstanceIds(matchingFilters: Array<{ id: InstanceKey }>) {
+function getClassECInstanceIds(filteredInstanceKeys: InstanceKey[]) {
   const classNameECInstanceIds = new Map<string, Id64String[]>();
-  for (const matchingFilter of matchingFilters) {
-    const entry = classNameECInstanceIds.get(matchingFilter.id.className);
+  for (const key of filteredInstanceKeys) {
+    const entry = classNameECInstanceIds.get(key.className);
     if (entry === undefined) {
-      classNameECInstanceIds.set(matchingFilter.id.className, [matchingFilter.id.id]);
+      classNameECInstanceIds.set(key.className, [key.id]);
       continue;
     }
-    entry.push(matchingFilter.id.id);
+    entry.push(key.id);
   }
   return classNameECInstanceIds;
 }
 
 /** @internal */
-export function applyECInstanceIdsFilter(
-  def: InstanceNodesQueryDefinition,
-  matchingFilters: Array<{ id: InstanceKey }>,
-  hasFilterTargetAncestor: boolean,
-): InstanceNodesQueryDefinition {
-  if (matchingFilters.length === 0) {
-    return def;
-  }
-  const matchingFiltersToUse = getClassECInstanceIds(matchingFilters);
+export function applyECInstanceIdsFilter(def: InstanceNodesQueryDefinition, filteredInstanceKeys: InstanceKey[]): InstanceNodesQueryDefinition {
+  const instanceIdsByClass = getClassECInstanceIds(filteredInstanceKeys);
   return {
     ...def,
     query: {
@@ -389,7 +286,7 @@ export function applyECInstanceIdsFilter(
       ctes: [
         ...(def.query.ctes ?? []),
         `FilteringInfo(ECInstanceId, FilterClassName) AS (
-          ${Array.from(matchingFiltersToUse)
+          ${Array.from(instanceIdsByClass)
             .map(
               ([className, ecInstanceIds]) => `
                 SELECT ECInstanceId, '${className}' AS FilterClassName
@@ -403,13 +300,29 @@ export function applyECInstanceIdsFilter(
       ecsql: `
         SELECT
           [q].*,
-          ${hasFilterTargetAncestor ? "1" : "0"} AS [${ECSQL_COLUMN_NAME_HasFilterTargetAncestor}],
           IdToHex([f].[ECInstanceId]) AS [${ECSQL_COLUMN_NAME_FilterECInstanceId}],
           [f].[FilterClassName] AS [${ECSQL_COLUMN_NAME_FilterClassName}]
         FROM (
           ${def.query.ecsql}
         ) [q]
-        ${hasFilterTargetAncestor ? "LEFT " : ""} JOIN FilteringInfo [f] ON [f].[ECInstanceId] = [q].[ECInstanceId]
+        JOIN FilteringInfo [f] ON [f].[ECInstanceId] = [q].[ECInstanceId]
+      `,
+    },
+  };
+}
+
+/** @internal */
+export function applyECInstanceIdsSelector(def: InstanceNodesQueryDefinition): InstanceNodesQueryDefinition {
+  return {
+    ...def,
+    query: {
+      ...def.query,
+      ecsql: `
+        SELECT
+          [q].*,
+          IdToHex([q].[ECInstanceId]) AS [${ECSQL_COLUMN_NAME_FilterECInstanceId}],
+          [q].[${NodeSelectClauseColumnNames.FullClassName}] AS [${ECSQL_COLUMN_NAME_FilterClassName}]
+        FROM (${def.query.ecsql}) [q]
       `,
     },
   };

@@ -12,11 +12,7 @@ import { ECSqlQueryDef, ECSqlQueryReaderOptions, InstanceKey, trimWhitespace, Ty
 import { RowsLimitExceededError } from "../../hierarchies/HierarchyErrors.js";
 import { GroupingHierarchyNode, HierarchyNode, ParentHierarchyNode } from "../../hierarchies/HierarchyNode.js";
 import { GroupingNodeKey } from "../../hierarchies/HierarchyNodeKey.js";
-import {
-  ECSQL_COLUMN_NAME_FilterClassName,
-  ECSQL_COLUMN_NAME_FilterECInstanceId,
-  ECSQL_COLUMN_NAME_HasFilterTargetAncestor,
-} from "../../hierarchies/imodel/FilteringHierarchyDefinition.js";
+import { ECSQL_COLUMN_NAME_FilterClassName, ECSQL_COLUMN_NAME_FilterECInstanceId } from "../../hierarchies/imodel/FilteringHierarchyDefinition.js";
 import { DefineHierarchyLevelProps, HierarchyDefinition, NodeParser } from "../../hierarchies/imodel/IModelHierarchyDefinition.js";
 import { ProcessedHierarchyNode, SourceInstanceHierarchyNode } from "../../hierarchies/imodel/IModelHierarchyNode.js";
 import { createIModelHierarchyProvider } from "../../hierarchies/imodel/IModelHierarchyProvider.js";
@@ -744,7 +740,6 @@ describe("createIModelHierarchyProvider", () => {
                 `
                 SELECT
                     [q].*,
-                    0 AS [${ECSQL_COLUMN_NAME_HasFilterTargetAncestor}],
                     IdToHex([f].[ECInstanceId]) AS [${ECSQL_COLUMN_NAME_FilterECInstanceId}],
                     [f].[FilterClassName] AS [${ECSQL_COLUMN_NAME_FilterClassName}]
                   FROM (QUERY) [q]
@@ -764,7 +759,7 @@ describe("createIModelHierarchyProvider", () => {
           label: "test label",
           children: false,
           filtering: {
-            filteredChildrenIdentifierPaths: [[{ className: "c.d", id: "0x456" }]],
+            filteredChildrenIdentifierPaths: [{ path: [{ className: "c.d", id: "0x456" }], options: undefined }],
           },
         },
       ]);
@@ -893,7 +888,7 @@ describe("createIModelHierarchyProvider", () => {
         },
         children: false,
         filtering: {
-          filteredChildrenIdentifierPaths: [[{ className: "c.d", id: "0x456" }]],
+          filteredChildrenIdentifierPaths: [{ path: [{ className: "c.d", id: "0x456" }], options: undefined }],
         },
       });
 

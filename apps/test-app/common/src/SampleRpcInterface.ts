@@ -38,4 +38,9 @@ export abstract class SampleRpcInterface extends RpcInterface {
   public async closeConnection(_imodelName: string): Promise<void> {
     return this.forward(arguments);
   }
+
+  @RpcOperation.setRoutingProps(localDeploymentOnly)
+  public async getRssFeed(_: { url: string }): Promise<string> {
+    return this.forward(arguments);
+  }
 }

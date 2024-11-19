@@ -3,6 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 import { defineConfig } from "vite";
+import { nodePolyfills } from "vite-plugin-node-polyfills";
 import { viteStaticCopy } from "vite-plugin-static-copy";
 import react from "@vitejs/plugin-react";
 
@@ -10,6 +11,9 @@ import react from "@vitejs/plugin-react";
 export default defineConfig({
   plugins: [
     react(),
+    nodePolyfills({
+      include: ["stream", "events", "timers", "buffer", "util"],
+    }),
     viteStaticCopy({
       targets: [
         {

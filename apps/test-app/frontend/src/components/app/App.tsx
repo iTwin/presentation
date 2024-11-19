@@ -35,6 +35,7 @@ import { IModelSelector } from "../imodel-selector/IModelSelector";
 import { PropertiesWidget } from "../properties-widget/PropertiesWidget";
 import { RulesetSelector } from "../ruleset-selector/RulesetSelector";
 import { TableWidget } from "../table-widget/TableWidget";
+import { MultiDataSourceTree } from "../tree-widget/MultiDataSourceTree";
 import { RulesDrivenTreeWidget } from "../tree-widget/RulesDrivenTree";
 import { StatelessTreeV2 } from "../tree-widget/StatelessTree";
 import { UnitSystemSelector } from "../unit-system-selector/UnitSystemSelector";
@@ -233,9 +234,16 @@ function IModelComponents(props: IModelComponentsProps) {
               canPopout: true,
             },
             {
-              id: "stateless-tree",
-              label: "Stateless tree",
-              content: <StatelessTreePanel imodel={imodel} />,
+              id: "stateless-models-tree",
+              label: "Stateless Models tree",
+              content: <StatelessModelsTreePanel imodel={imodel} />,
+              defaultState: WidgetState.Open,
+              canPopout: true,
+            },
+            {
+              id: "multi-datasource-tree",
+              label: "Multi data source tree",
+              content: <MultiDataSourceTreePanel imodel={imodel} />,
               defaultState: WidgetState.Open,
               canPopout: true,
             },
@@ -313,11 +321,20 @@ function RulesDrivenTreePanel(props: { imodel: IModelConnection; rulesetId?: str
   );
 }
 
-function StatelessTreePanel(props: { imodel: IModelConnection }) {
+function StatelessModelsTreePanel(props: { imodel: IModelConnection }) {
   const { width, height, ref } = useResizeDetector<HTMLDivElement>();
   return (
     <div className="tree-widget-tabs-content" ref={ref} style={{ width: "100%", height: "100%", overflow: "hidden" }}>
       <StatelessTreeV2 imodel={props.imodel} width={width ?? 0} height={height ?? 0} />
+    </div>
+  );
+}
+
+function MultiDataSourceTreePanel(props: { imodel: IModelConnection }) {
+  const { width, height, ref } = useResizeDetector<HTMLDivElement>();
+  return (
+    <div className="tree-widget-tabs-content" ref={ref} style={{ width: "100%", height: "100%", overflow: "hidden" }}>
+      <MultiDataSourceTree imodel={props.imodel} width={width ?? 0} height={height ?? 0} />
     </div>
   );
 }

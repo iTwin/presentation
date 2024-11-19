@@ -35,7 +35,7 @@ A `HierarchyNode` data structure in the package represents a single node in a hi
 
 ### Hierarchy providers
 
-`HierarchyProvider` is the core concept of the library, which consumers use directly to build hierarchies. While that is an interface that consumers are free to implement, the package delivers a couple of built-in implementations:
+`HierarchyProvider` is the core concept of the library, which consumers use directly to build hierarchies. While that is an interface [that consumers are free to implement](./learning/CustomHierarchyProviders.md), the package delivers a couple of built-in implementations:
 
 - A provider that builds hierarchies based on data in an [iTwin.js iModel](https://www.itwinjs.org/learning/imodels/#imodel-overview). The `createIModelHierarchyProvider` function is used to create such a provider. See [iModel-based hierarchies](./learning/imodel/HierarchyProvider.md) learning page for more information.
 
@@ -52,6 +52,7 @@ Below is a list of learning material related to building hierarchies:
   - [Logging](./learning/Logging.md)
   - [Hierarchy filtering](./learning/HierarchyFiltering.md)
   - [Merged hierarchies](./learning/MergedHierarchies.md)
+  - [Custom hierarchy providers](./learning/CustomHierarchyProviders.md)
 - iModel-based hierarchies:
   - [Hierarchy provider](./learning/imodel/HierarchyProvider.md)
   - [Hierarchy definition](./learning/imodel/HierarchyDefinition.md)

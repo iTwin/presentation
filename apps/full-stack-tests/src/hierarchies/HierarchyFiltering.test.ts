@@ -16,10 +16,10 @@ import { BeEvent, Id64String } from "@itwin/core-bentley";
 import { IModel } from "@itwin/core-common";
 import { IModelConnection } from "@itwin/core-frontend";
 import {
+  createHierarchyFilteringHelper,
   createNodesQueryClauseFactory,
   createPredicateBasedHierarchyDefinition,
   DefineInstanceNodeChildHierarchyLevelProps,
-  extractFilteringProps,
   GenericNodeKey,
   HierarchyDefinition,
   HierarchyFilteringPath,
@@ -139,6 +139,7 @@ describe("Hierarchies", () => {
                       instanceKeys: [keys.childSubject2],
                       isFilterTarget: true,
                       children: false,
+                      autoExpand: false,
                     }),
                   ],
                 }),
@@ -222,7 +223,114 @@ describe("Hierarchies", () => {
           ],
         });
       });
+
+      it("filters generic nodes when targeting child and ancestor", async function () {
+        const { imodel } = await buildIModel(this, async () => {});
+        const hierarchy: HierarchyDefinition = {
+          async defineHierarchyLevel({ parentNode }) {
+            if (!parentNode) {
+              return [
+                {
+                  node: {
+                    key: "custom1",
+                    label: "custom1",
+                  },
+                },
+                {
+                  node: {
+                    key: "custom2",
+                    label: "custom2",
+                  },
+                },
+              ];
+            }
+            if (HierarchyNode.isGeneric(parentNode) && parentNode.label === "custom2") {
+              return [
+                {
+                  node: {
+                    key: "custom21",
+                    label: "custom21",
+                  },
+                },
+                {
+                  node: {
+                    key: "custom22",
+                    label: "custom22",
+                  },
+                },
+              ];
+            }
+            if (HierarchyNode.isGeneric(parentNode) && parentNode.label === "custom22") {
+              return [
+                {
+                  node: {
+                    key: "custom221",
+                    label: "custom221",
+                  },
+                },
+                {
+                  node: {
+                    key: "custom222",
+                    label: "custom222",
+                  },
+                },
+              ];
+            }
+            return [];
+          },
+        };
+        await validateHierarchy({
+          provider: createProvider({
+            imodel,
+            hierarchy,
+            filteredNodePaths: [
+              { path: [{ type: "generic", id: "custom2" }], options: { autoExpand: true } },
+              {
+                path: [
+                  { type: "generic", id: "custom2" },
+                  { type: "generic", id: "custom22" },
+                  { type: "generic", id: "custom222" },
+                ],
+                options: { autoExpand: true },
+              },
+            ],
+          }),
+          expect: [
+            NodeValidators.createForGenericNode({
+              key: "custom2",
+              autoExpand: true,
+              isFilterTarget: true,
+              children: [
+                NodeValidators.createForGenericNode({
+                  key: "custom21",
+                  autoExpand: false,
+                  isFilterTarget: false,
+                  children: false,
+                }),
+                NodeValidators.createForGenericNode({
+                  key: "custom22",
+                  autoExpand: true,
+                  isFilterTarget: false,
+                  children: [
+                    NodeValidators.createForGenericNode({
+                      key: "custom221",
+                      autoExpand: false,
+                      isFilterTarget: false,
+                    }),
+                    NodeValidators.createForGenericNode({
+                      key: "custom222",
+                      autoExpand: false,
+                      isFilterTarget: true,
+                    }),
+                  ],
+                }),
+              ],
+            }),
+          ],
+        });
+      });
     });
+
     describe("instance nodes", () => {
       it("filters through instance nodes that are in multiple paths", async function () {
         const { imodel, ...keys } = await buildIModel(this, async (builder) => {
@@ -287,24 +395,124 @@ describe("Hierarchies", () => {
           expect: [
             NodeValidators.createForInstanceNode({
               instanceKeys: [keys.childSubject1],
+              autoExpand: true,
               children: [
                 NodeValidators.createForInstanceNode({
                   instanceKeys: [keys.childSubject3],
                   isFilterTarget: true,
                   children: false,
+                  autoExpand: false,
                 }),
               ],
             }),
             NodeValidators.createForInstanceNode({
               instanceKeys: [keys.childSubject4],
+              autoExpand: true,
               children: [
                 NodeValidators.createForInstanceNode({
                   instanceKeys: [keys.childSubject1],
+                  autoExpand: true,
                   children: [
                     NodeValidators.createForInstanceNode({
                       instanceKeys: [keys.childSubject2],
                       isFilterTarget: true,
                       children: false,
+                      autoExpand: false,
+                    }),
+                  ],
+                }),
+              ],
+            }),
+          ],
+        });
+      });
+
+      it("filters instance nodes when targeting child and ancestor", async function () {
+        const { imodel, ...keys } = await buildIModel(this, async (builder) => {
+          const rootSubject = { className: subjectClassName, id: IModel.rootSubjectId };
+          const childSubject1 = insertSubject({ builder, codeValue: "test subject 1", parentId: rootSubject.id });
+          const childSubject2 = insertSubject({ builder, codeValue: "test subject 2", parentId: rootSubject.id });
+          const childSubject21 = insertSubject({ builder, codeValue: "test subject 21", parentId: rootSubject.id });
+          const childSubject22 = insertSubject({ builder, codeValue: "test subject 22", parentId: rootSubject.id });
+          const childSubject221 = insertSubject({ builder, codeValue: "test subject 221", parentId: rootSubject.id });
+          const childSubject222 = insertSubject({ builder, codeValue: "test subject 222", parentId: rootSubject.id });
+          return { rootSubject, childSubject1, childSubject2, childSubject21, childSubject22, childSubject221, childSubject222 };
+        });
+        const imodelAccess = createIModelAccess(imodel);
+        const selectQueryFactory = createNodesQueryClauseFactory({
+          imodelAccess,
+          instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
+        });
+        const createHierarchyLevelDefinition = async (whereClause: (alias: string) => string) => [
+          {
+            fullClassName: subjectClassName,
+            query: {
+              ecsql: `
+                SELECT ${await selectQueryFactory.createSelectClause({
+                  ecClassId: { selector: `this.ECClassId` },
+                  ecInstanceId: { selector: `this.ECInstanceId` },
+                  nodeLabel: { selector: `this.CodeValue` },
+                })}
+                FROM ${subjectClassName} AS this
+                ${whereClause("this")}
+              `,
+            },
+          },
+        ];
+        const hierarchy: HierarchyDefinition = {
+          async defineHierarchyLevel({ parentNode }) {
+            if (!parentNode) {
+              return createHierarchyLevelDefinition((alias: string) => `WHERE ${alias}.ECInstanceId IN (${keys.childSubject1.id}, ${keys.childSubject2.id})`);
+            }
+            if (HierarchyNode.isInstancesNode(parentNode) && parentNode.label === "test subject 2") {
+              return createHierarchyLevelDefinition((alias: string) => `WHERE ${alias}.ECInstanceId IN (${keys.childSubject21.id}, ${keys.childSubject22.id})`);
+            }
+            if (HierarchyNode.isInstancesNode(parentNode) && parentNode.label === "test subject 22") {
+              return createHierarchyLevelDefinition(
+                (alias: string) => `WHERE ${alias}.ECInstanceId IN (${keys.childSubject221.id}, ${keys.childSubject222.id})`,
+              );
+            }
+            return [];
+          },
+        };
+
+        await validateHierarchy({
+          provider: createProvider({
+            imodel,
+            hierarchy,
+            filteredNodePaths: [
+              { path: [keys.childSubject2], options: { autoExpand: true } },
+              { path: [keys.childSubject2, keys.childSubject22, keys.childSubject222], options: { autoExpand: true } },
+            ],
+          }),
+          expect: [
+            NodeValidators.createForInstanceNode({
+              instanceKeys: [keys.childSubject2],
+              isFilterTarget: true,
+              autoExpand: true,
+              children: [
+                NodeValidators.createForInstanceNode({
+                  instanceKeys: [keys.childSubject21],
+                  isFilterTarget: false,
+                  children: false,
+                  autoExpand: false,
+                }),
+                NodeValidators.createForInstanceNode({
+                  instanceKeys: [keys.childSubject22],
+                  autoExpand: true,
+                  isFilterTarget: false,
+                  children: [
+                    NodeValidators.createForInstanceNode({
+                      instanceKeys: [keys.childSubject221],
+                      isFilterTarget: false,
+                      children: false,
+                      autoExpand: false,
+                    }),
+                    NodeValidators.createForInstanceNode({
+                      instanceKeys: [keys.childSubject222],
+                      isFilterTarget: true,
+                      children: false,
+                      autoExpand: false,
                     }),
                   ],
                 }),
@@ -404,6 +612,7 @@ describe("Hierarchies", () => {
                   instanceKeys: [keys.childSubject2],
                   isFilterTarget: true,
                   children: false,
+                  autoExpand: false,
                 }),
               ],
             }),
@@ -1619,25 +1828,13 @@ describe("Hierarchies", () => {
                 parentKeys: [...parentNode.parentKeys, parentNode.key],
                 children: false,
               };
-              const filteringProps = extractFilteringProps([], parentNode);
-              if (!filteringProps) {
+              const filteringHelper = createHierarchyFilteringHelper(undefined, parentNode);
+              if (!filteringHelper.hasFilter) {
                 return createAsyncIterator([myNode]);
               }
-              const nodeMatchesFilter =
-                filteringProps.hasFilterTargetAncestor ||
-                filteringProps.filteredNodePaths?.some((fp) => {
-                  const { path } = HierarchyFilteringPath.normalize(fp);
-                  return (
-                    path.length &&
-                    HierarchyNodeIdentifier.isGenericNodeIdentifier(path[0]) &&
-                    path[0].source === "custom-provider" &&
-                    path[0].id === myNode.key.id
-                  );
-                });
+              const nodeMatchesFilter = filteringHelper.getChildNodeFilteringIdentifiers()?.some((id) => HierarchyNodeIdentifier.equal(id, myNode.key));
               if (nodeMatchesFilter) {
-                return createAsyncIterator([
-                  { ...myNode, filtering: { isFilterTarget: true, hasFilterTargetAncestor: filteringProps.hasFilterTargetAncestor } },
-                ]);
+                return createAsyncIterator([{ ...myNode, ...filteringHelper.createChildNodeProps({ nodeKey: myNode.key }) }]);
               }
             }
             return createAsyncIterator([]);
