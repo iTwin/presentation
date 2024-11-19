@@ -23,6 +23,7 @@ import {
   NodePreProcessor,
 } from "./IModelHierarchyDefinition.js";
 import { ProcessedGroupingHierarchyNode, ProcessedHierarchyNode, SourceInstanceHierarchyNode } from "./IModelHierarchyNode.js";
+import { NodeSelectClauseColumnNames } from "./NodeSelectQueryFactory.js";
 import { defaultNodesParser } from "./TreeNodesReader.js";
 
 interface FilteringHierarchyDefinitionProps {
@@ -165,18 +166,8 @@ export class FilteringHierarchyDefinition implements HierarchyDefinition {
       merge(
         genericNodeDefinitions.pipe(
           map((definition) => {
-            if (filteringHelper.hasFilterTargetAncestor) {
-              return {
-                ...definition,
-                node: {
-                  ...definition.node,
-                  filtering: {
-                    hasFilterTargetAncestor: true,
-                  },
-                },
-              };
-            }
             if (
+              filteringHelper.hasFilterTargetAncestor ||
               childNodeFilteringIdentifiers
                 .filter((id) => HierarchyNodeIdentifier.isGenericNodeIdentifier(id) && (!id.source || id.source === this._imodelAccess.imodelKey))
                 .some(({ id }) => id === definition.node.key)
@@ -198,7 +189,7 @@ export class FilteringHierarchyDefinition implements HierarchyDefinition {
           mergeMap((definition) => {
             if (filteringHelper.hasFilterTargetAncestor) {
               // if we have a filter target ancestor, we don't need to filter the definitions - we use all of them
-              return of(definition);
+              return of(applyECInstanceIdsSelector(definition));
             }
             return defer(async () => {
               const imodelAccess = this._imodelAccess;
@@ -314,6 +305,23 @@ export function applyECInstanceIdsFilter(def: InstanceNodesQueryDefinition, filt
           ${def.query.ecsql}
         ) [q]
         JOIN FilteringInfo [f] ON [f].[ECInstanceId] = [q].[ECInstanceId]
+      `,
+    },
+  };
+}
+
+/** @internal */
+export function applyECInstanceIdsSelector(def: InstanceNodesQueryDefinition): InstanceNodesQueryDefinition {
+  return {
+    ...def,
+    query: {
+      ...def.query,
+      ecsql: `
+        SELECT
+          [q].*,
+          IdToHex([q].[ECInstanceId]) AS [${ECSQL_COLUMN_NAME_FilterECInstanceId}],
+          [q].[${NodeSelectClauseColumnNames.FullClassName}] AS [${ECSQL_COLUMN_NAME_FilterClassName}]
+        FROM (${def.query.ecsql}) [q]
       `,
     },
   };

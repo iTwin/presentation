@@ -12,6 +12,7 @@ import { HierarchyNode } from "../../hierarchies/HierarchyNode.js";
 import { HierarchyNodeIdentifiersPath } from "../../hierarchies/HierarchyNodeIdentifier.js";
 import {
   applyECInstanceIdsFilter,
+  applyECInstanceIdsSelector,
   ECSQL_COLUMN_NAME_FilterClassName,
   ECSQL_COLUMN_NAME_FilterECInstanceId,
 } from "../../hierarchies/imodel/FilteringHierarchyDefinition.js";
@@ -1206,7 +1207,7 @@ describe("FilteringHierarchyDefinition", () => {
             },
           },
         });
-        expect(result).to.deep.eq([sourceDefinition]);
+        expect(result).to.deep.eq([applyECInstanceIdsSelector(sourceDefinition)]);
       });
 
       it("returns filtered source instance node query definitions when filter class matches query class", async () => {
@@ -1557,7 +1558,7 @@ describe("FilteringHierarchyDefinition", () => {
         {
           node: {
             ...matchingSourceDefinition.node,
-            filtering: { hasFilterTargetAncestor: true },
+            filtering: { hasFilterTargetAncestor: true, isFilterTarget: true, filterTargetOptions: undefined },
           },
         },
         {

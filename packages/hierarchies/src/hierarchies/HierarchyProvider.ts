@@ -50,7 +50,7 @@ export interface HierarchyProvider {
   readonly hierarchyChanged: Event<() => void>;
 
   /**
-   * Gets nodes for the specified parent node. This is THE method to implement, otherwise
+   * Gets nodes for the specified parent node. This is **the method to implement**, otherwise
    * the provider doesn't return any nodes.
    */
   getNodes(props: GetHierarchyNodesProps): AsyncIterableIterator<HierarchyNode>;

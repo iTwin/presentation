@@ -190,10 +190,7 @@ export function createHierarchyFilteringHelper(
       if (!hasFilter) {
         return undefined;
       }
-      if (filteringProps?.hasFilterTargetAncestor) {
-        return { filtering: { hasFilterTargetAncestor: true } };
-      }
-      const reducer = new MatchingFilteringPathsReducer();
+      const reducer = new MatchingFilteringPathsReducer(filteringProps?.hasFilterTargetAncestor);
       filteringProps.filteredNodePaths.forEach((filteredPath) => {
         const normalizedPath = HierarchyFilteringPath.normalize(filteredPath);
         if (
@@ -218,11 +215,7 @@ export function createHierarchyFilteringHelper(
       if (!hasFilter) {
         return undefined;
       }
-      if (filteringProps?.hasFilterTargetAncestor) {
-        return { filtering: { hasFilterTargetAncestor: true } };
-      }
-
-      const reducer = new MatchingFilteringPathsReducer();
+      const reducer = new MatchingFilteringPathsReducer(filteringProps?.hasFilterTargetAncestor);
       for (const filteredChildrenNodeIdentifierPath of filteringProps.filteredNodePaths) {
         const normalizedPath = HierarchyFilteringPath.normalize(filteredChildrenNodeIdentifierPath);
         /* c8 ignore next 3 */
@@ -254,9 +247,11 @@ class MatchingFilteringPathsReducer {
   private _filterTargetOptions = undefined as HierarchyFilteringPathOptions | undefined;
   private _needsAutoExpand = false;
 
+  public constructor(private _hasFilterTargetAncestor: boolean) {}
+
   public accept({ path, options }: NormalizedFilteringPath) {
     if (path.length === 1) {
-      this._isFilterTarget ||= true;
+      this._isFilterTarget = true;
       this._filterTargetOptions = HierarchyFilteringPath.mergeOptions(this._filterTargetOptions, options);
     } else if (path.length > 1) {
       this._filteredChildrenIdentifierPaths.push({ path: path.slice(1), options });
@@ -267,9 +262,10 @@ class MatchingFilteringPathsReducer {
   }
   public getNodeProps(): Pick<HierarchyNode, "filtering" | "autoExpand"> {
     return {
-      ...(this._isFilterTarget || this._filteredChildrenIdentifierPaths.length > 0
+      ...(this._hasFilterTargetAncestor || this._isFilterTarget || this._filteredChildrenIdentifierPaths.length > 0
         ? {
             filtering: {
+              ...(this._hasFilterTargetAncestor ? { hasFilterTargetAncestor: true } : undefined),
               ...(this._isFilterTarget ? { isFilterTarget: true, filterTargetOptions: this._filterTargetOptions } : undefined),
               ...(this._filteredChildrenIdentifierPaths.length > 0 ? { filteredChildrenIdentifierPaths: this._filteredChildrenIdentifierPaths } : undefined),
             },
