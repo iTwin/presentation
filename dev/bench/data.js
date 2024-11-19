@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1731413963071,
+  "lastUpdate": 1732014311238,
   "repoUrl": "https://github.com/iTwin/presentation",
   "entries": {
     "Benchmark": [
@@ -26547,6 +26547,162 @@ window.BENCHMARK_DATA = {
             "value": 361,
             "unit": "ms",
             "extra": "count: 11\nmax: 361\np95: 361\nmedian: 40"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "35135765+grigasp@users.noreply.github.com",
+            "name": "Grigas",
+            "username": "grigasp"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "df6c046c2e4820df217802731e8d83bcab308858",
+          "message": "Hierarchies: Custom hierarchy providers learning (#783)\n\n* Add a learning page for custom hierarchy providers, simplify implementing hierarchy filtering\r\n\r\n* Multi data source tree example in test app\r\n\r\n* optimize performance\r\n\r\n* prettier\r\n\r\n* Fix filter target nodes getting the `autoExpand` flag\r\n\r\n* Fix auto-expanding nodes when there's an ancestor filter target\r\n\r\n* peer review changes",
+          "timestamp": "2024-11-19T13:01:36+02:00",
+          "tree_id": "2b4220434289967e7395110649f6ef84f200a3f3",
+          "url": "https://github.com/iTwin/presentation/commit/df6c046c2e4820df217802731e8d83bcab308858"
+        },
+        "date": 1732014310403,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "flat 50k elements list",
+            "value": 4706.97,
+            "unit": "ms"
+          },
+          {
+            "name": "flat 50k elements list (P95 of main thread blocks)",
+            "value": 77,
+            "unit": "ms",
+            "extra": "count: 18\nmax: 77\np95: 77\nmedian: 32.5"
+          },
+          {
+            "name": "filtering filters with 50000 paths",
+            "value": 10058.53,
+            "unit": "ms"
+          },
+          {
+            "name": "filtering filters with 50000 paths (P95 of main thread blocks)",
+            "value": 114,
+            "unit": "ms",
+            "extra": "count: 15\nmax: 114\np95: 114\nmedian: 32"
+          },
+          {
+            "name": "grouping by label",
+            "value": 10832.19,
+            "unit": "ms"
+          },
+          {
+            "name": "grouping by label (P95 of main thread blocks)",
+            "value": 61,
+            "unit": "ms",
+            "extra": "count: 6\nmax: 61\np95: 61\nmedian: 31.5"
+          },
+          {
+            "name": "grouping by class",
+            "value": 10888.48,
+            "unit": "ms"
+          },
+          {
+            "name": "grouping by class (P95 of main thread blocks)",
+            "value": 46,
+            "unit": "ms",
+            "extra": "count: 4\nmax: 46\np95: 46\nmedian: 34"
+          },
+          {
+            "name": "grouping by property",
+            "value": 11555.55,
+            "unit": "ms"
+          },
+          {
+            "name": "grouping by property (P95 of main thread blocks)",
+            "value": 61,
+            "unit": "ms",
+            "extra": "count: 6\nmax: 61\np95: 61\nmedian: 30.5"
+          },
+          {
+            "name": "grouping by base class (10 classes)",
+            "value": 8374.93,
+            "unit": "ms"
+          },
+          {
+            "name": "grouping by base class (10 classes) (P95 of main thread blocks)",
+            "value": 65,
+            "unit": "ms",
+            "extra": "count: 22\nmax: 77\np95: 65\nmedian: 31.5"
+          },
+          {
+            "name": "grouping by multiple attributes",
+            "value": 28718.52,
+            "unit": "ms"
+          },
+          {
+            "name": "grouping by multiple attributes (P95 of main thread blocks)",
+            "value": 95,
+            "unit": "ms",
+            "extra": "count: 11\nmax: 95\np95: 95\nmedian: 32"
+          },
+          {
+            "name": "hide if no children required to finalize root, w/o children",
+            "value": 52869.81,
+            "unit": "ms"
+          },
+          {
+            "name": "hide if no children required to finalize root, w/o children (P95 of main thread blocks)",
+            "value": 35,
+            "unit": "ms",
+            "extra": "count: 5\nmax: 35\np95: 35\nmedian: 30"
+          },
+          {
+            "name": "hide if no children required to finalize root, w/ children",
+            "value": 181.95,
+            "unit": "ms"
+          },
+          {
+            "name": "hide if no children required to finalize root, w/ children (P95 of main thread blocks)",
+            "value": 0,
+            "unit": "ms",
+            "extra": "count: 0\nmax: N/A\np95: N/A\nmedian: N/A"
+          },
+          {
+            "name": "models tree initial (Baytown)",
+            "value": 42.2,
+            "unit": "ms"
+          },
+          {
+            "name": "models tree initial (Baytown) (P95 of main thread blocks)",
+            "value": 0,
+            "unit": "ms",
+            "extra": "count: 0\nmax: N/A\np95: N/A\nmedian: N/A"
+          },
+          {
+            "name": "models tree full (Baytown)",
+            "value": 7779.65,
+            "unit": "ms"
+          },
+          {
+            "name": "models tree full (Baytown) (P95 of main thread blocks)",
+            "value": 85,
+            "unit": "ms",
+            "extra": "count: 3\nmax: 85\np95: 85\nmedian: 76"
+          },
+          {
+            "name": "models tree creates initial filtered view for 50k target items",
+            "value": 2346.94,
+            "unit": "ms"
+          },
+          {
+            "name": "models tree creates initial filtered view for 50k target items (P95 of main thread blocks)",
+            "value": 242,
+            "unit": "ms",
+            "extra": "count: 18\nmax: 242\np95: 242\nmedian: 40.5"
           }
         ]
       }
