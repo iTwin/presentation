@@ -33,14 +33,14 @@
     "benchmark:unified-selection": "pnpm run -C ./apps/performance-tests benchmark:unified-selection"
   },
   "dependencies": {
-    "@changesets/cli": "^2.27.7",
+    "@changesets/cli": "^2.27.9",
     "cpx2": "catalog:build-tools",
     "eslint": "catalog:build-tools",
     "eslint-config-prettier": "^9.1.0",
     "fast-glob": "^3.3.2",
-    "husky": "^9.1.1",
-    "lage": "^2.7.21",
-    "lint-staged": "^15.2.7",
+    "husky": "^9.1.7",
+    "lage": "^2.11.13",
+    "lint-staged": "^15.2.10",
     "markdown-link-check": "^3.13.6",
     "npm-run-all": "^4.1.5",
     "prettier": "^3.3.3",
@@ -63,12 +63,10 @@
       "@opentelemetry/exporter-trace-otlp-grpc@^0.43.0": "^0.52.0",
       "@opentelemetry/exporter-trace-otlp-http@^0.41.2": "^0.52.0",
       "@opentelemetry/exporter-trace-otlp-proto@^0.41.2": "^0.52.0",
-      "csstype": "3.1.2",
-      "dependency-tree@^6": "^8.0.0",
-      "semver@>=7.0.0 <7.5.2": "^7.5.4",
-      "semver@>=6.0.0 <6.3.1": "^6.3.1",
-      "semver@>=5.0.0 <5.7.2": "^5.7.2",
-      "posthog-node@^2": "^3.1.3"
+      "npm-run-all@^4.1.5>cross-spawn@^6": "^7.0.6",
+      "posthog-node@^2": "^3.1.3",
+      "spawndamnit@^2.0.0>cross-spawn@^5": "^7.0.6",
+      "@itwin/core-electron@^4.10>username@^5": "^7.0.0"
     }
   }
 }

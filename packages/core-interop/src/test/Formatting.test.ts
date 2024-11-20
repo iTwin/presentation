@@ -13,6 +13,7 @@ import {
   Schema,
   SchemaContext,
   SchemaItemFormatProps,
+  SchemaItemKey,
   SchemaItemType,
   SchemaKey,
   SchemaUnitProvider,
@@ -350,6 +351,8 @@ describe("createValueFormatter", () => {
 function createUnit(fullName: string, unitSystem: UnitSystemKey) {
   return {
     schemaItemType: SchemaItemType.Unit,
+    key: {} as SchemaItemKey,
+    schema: {} as Schema,
     fullName,
     unitSystem: Promise.resolve({
       name: unitSystem,

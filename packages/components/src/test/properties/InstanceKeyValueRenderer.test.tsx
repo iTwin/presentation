@@ -72,7 +72,7 @@ describe("InstanceKeyValueRenderer", () => {
 
     describe("returned component", () => {
       const testIModel = {} as IModelConnection;
-      const instanceKey: Primitives.InstanceKey = { className: "test_class", id: "test_id" };
+      const instanceKey: Primitives.InstanceKey = { className: "test_schema:test_class", id: "test_id" };
 
       it("renders display value", () => {
         const record = createNavigationPropertyRecord(createPrimitiveValue(instanceKey, "test_display_value"));

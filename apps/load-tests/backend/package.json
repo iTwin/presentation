@@ -26,7 +26,7 @@
     "@itwin/presentation-backend": "catalog:itwinjs-core",
     "@itwin/presentation-common": "catalog:itwinjs-core",
     "@itwin/webgl-compatibility": "catalog:itwinjs-core",
-    "@opentelemetry/api": "^1.8.0",
+    "@opentelemetry/api": "^1.9.0",
     "@types/node": "catalog:build-tools",
     "eslint": "catalog:build-tools",
     "inversify": "catalog:itwinjs-core",

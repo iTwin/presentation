@@ -53,7 +53,7 @@ describe("UnifiedSelectionContext", () => {
     const firstResult = result.current;
 
     act(() => {
-      Presentation.selection.addToSelection("", testIModel, [{ className: "test", id: "1" }], 0);
+      Presentation.selection.addToSelection("", testIModel, [{ className: "schema:test", id: "1" }], 0);
     });
 
     await waitFor(() => {
@@ -72,7 +72,7 @@ describe("UnifiedSelectionContext", () => {
     const firstResult = result.current;
 
     act(() => {
-      Presentation.selection.addToSelection("", testIModel, [{ className: "test", id: "1" }], 1);
+      Presentation.selection.addToSelection("", testIModel, [{ className: "schema:test", id: "1" }], 1);
     });
     const secondResult = result.current;
 
@@ -157,7 +157,7 @@ describe("UnifiedSelectionContext", () => {
         const { result } = renderUnifiedSelectionContextHook(testIModel);
         const firstKeySet = result.current.getSelection();
 
-        act(() => result.current.addToSelection([{ className: "test", id: "1" }]));
+        act(() => result.current.addToSelection([{ className: "schema:test", id: "1" }]));
 
         await waitFor(() => {
           const secondKeySet = result.current.getSelection();
@@ -169,7 +169,7 @@ describe("UnifiedSelectionContext", () => {
         stubGetSelection.restore();
         const { result } = renderUnifiedSelectionContextHook(testIModel);
 
-        const key = { className: "test", id: "1" };
+        const key = { className: "schema:test", id: "1" };
         act(() => result.current.addToSelection([key]));
 
         await waitFor(() => {
