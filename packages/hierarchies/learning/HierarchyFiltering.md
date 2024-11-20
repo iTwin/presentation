@@ -35,9 +35,15 @@ The end result would be:
 
 The process of filtering a hierarchy has two major steps:
 
-1. Determine node identifier paths for the target nodes. While some hierarchy providers may be able to create these paths automatically, the implementations delivered with this library leave this responsibility to the consumers. This decouples hierarchy filtering logic from the type of filtering being done - the paths could be created based on a variety of ways, such as a filter string or a target instance ID, to name a few.
+1. Determine node identifier paths for the target nodes. While some hierarchy providers may be able to create these paths automatically, the implementations delivered with this library leave this responsibility to the consumers.
+2. Given the node identifier paths, the hierarchy provider has the responsibility to filter the hierarchy by implementing the `HierarchyProvider.setHierarchyFilter` method and making sure the given filter is accounted for, when `getNodes` is called. The given paths are used to filter root nodes and each returned node is assigned a `filtering` flag, containing identifier paths for its child nodes.
 
-2. Given the node identifier paths, the hierarchy provider has the responsibility to filter the hierarchy by implementing the `HierarchyProvider.setHierarchyFilter` method and making sure the given filter is accounted for. The given paths are used to filter root nodes and each returned node is assigned a `filtering` flag, containing identifier paths for its child nodes.
+The reasoning for having these two steps separate is twofold:
+
+- It decouples creation of the filtered hierarchy from the type of filtering being done - the paths could be created based on a variety of ways, such as a filter string or a target instance ID, to name a few. And building the filtered hierarchy doesn't depend on the way the paths are created.
+- Hierarchies' filtering is specific in a way that, generally, each hierarchy level has to be queried independently, and target nodes may be located somewhere deep in the hierarchy. Taking the hierarchy defined at the top of this document, for C target node we need to include its ancestors B and A when building their hierarchy levels, even though they aren't our filter targets. So the most efficient way to do that is to first find the filter targets, and then rebuild the paths in a bottom-up manner.
+
+See [Implementing hierarchy filtering support](./CustomHierarchyProviders.md#implementing-hierarchy-filtering-support) for more information on how to implement hierarchy filtering in a custom hierarchy provider.
 
 ## Handling automatic expansion of nodes
 
