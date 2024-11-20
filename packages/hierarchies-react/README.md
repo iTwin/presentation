@@ -113,7 +113,7 @@ The hook also relies on unified selection storage being provided to it through a
 
 #### Providing unified selection context
 
-The flavor of tree state hooks, that support unified selection integration, relies on unified selection storage being provided to it through a React context. For that, the package delivers the `UnifiedSelectionProvider` component, that should wrap the tree component, using the `useUnifiedSelectionTree` hook:
+Tree state hooks that support unified selection integration (`useUnifiedSelectionTree` & `useIModelUnifiedSelectionTree`), rely on unified selection storage being provided to them through a React context. For that, the package delivers the `UnifiedSelectionProvider` component, that should wrap the tree component using the hooks:
 
 <!-- [[include: [Presentation.HierarchiesReact.SelectionStorage.Imports, Presentation.HierarchiesReact.SelectionStorage], tsx]] -->
 <!-- BEGIN EXTRACTION -->
