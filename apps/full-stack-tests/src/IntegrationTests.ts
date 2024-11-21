@@ -37,12 +37,6 @@ export async function initialize(props?: { backendTimeout?: number }) {
   Logger.setLevel("SQLite", LogLevel.Error);
   Logger.setLevel(PresentationBackendNativeLoggerCategory.ECObjects, LogLevel.Warning);
 
-  const libDir = path.resolve("lib");
-  const hierarchiesCacheDir = path.join(libDir, "cache");
-  if (!fs.existsSync(hierarchiesCacheDir)) {
-    fs.mkdirSync(hierarchiesCacheDir);
-  }
-
   const backendInitProps: PresentationBackendProps = {
     id: `test-${Guid.createValue()}`,
     requestTimeout: props?.backendTimeout ?? 0,
