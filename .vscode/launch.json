@@ -225,6 +225,7 @@
         "${workspaceFolder}/packages/components/lib/**/*.js",
         "${workspaceFolder}/packages/core-interop/lib/**/*.js",
         "${workspaceFolder}/packages/hierarchies/lib/**/*.js",
+        "${workspaceFolder}/packages/hierarchies-react/lib/**/*.js",
         "${workspaceFolder}/packages/models-tree/lib/**/*.js",
         "${workspaceFolder}/packages/testing/lib/**/*.js",
         "${workspaceFolder}/packages/shared/lib/**/*.js",

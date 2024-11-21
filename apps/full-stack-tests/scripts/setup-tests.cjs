@@ -7,7 +7,11 @@ const cpx = require("cpx2");
 const fs = require("fs");
 const path = require("path");
 
-cpx.copySync(`assets/**/*`, "lib/assets");
+const libDir = "./lib";
+const cacheDir = path.join(libDir, ".cache");
+fs.mkdirSync(cacheDir, { recursive: true });
+
+cpx.copySync(`assets/**/*`, path.join(libDir, "assets"));
 copyITwinFrontendAssets("lib/public");
 pseudoLocalize("lib/public/locales");
 
