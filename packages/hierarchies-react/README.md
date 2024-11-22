@@ -113,7 +113,7 @@ The hook also relies on unified selection storage being provided to it through a
 
 #### Providing unified selection context
 
-The flavor of tree state hooks, that support unified selection integration, relies on unified selection storage being provided to it through a React context. For that, the package delivers the `UnifiedSelectionProvider` component, that should wrap the tree component, using the `useUnifiedSelectionTree` hook:
+Tree state hooks that support unified selection integration (`useUnifiedSelectionTree` & `useIModelUnifiedSelectionTree`), rely on unified selection storage being provided to them through a React context. For that, the package delivers the `UnifiedSelectionProvider` component, that should wrap the tree component using the hooks:
 
 <!-- [[include: [Presentation.HierarchiesReact.SelectionStorage.Imports, Presentation.HierarchiesReact.SelectionStorage], tsx]] -->
 <!-- BEGIN EXTRACTION -->
@@ -221,7 +221,7 @@ import { createCachingECClassHierarchyInspector } from "@itwin/presentation-shar
 import { createECSchemaProvider, createECSqlQueryExecutor } from "@itwin/presentation-core-interop";
 import { createLimitingECSqlQueryExecutor, createNodesQueryClauseFactory, HierarchyDefinition } from "@itwin/presentation-hierarchies";
 
-import { createBisInstanceLabelSelectClauseFactory } from "@itwin/presentation-shared";
+import { createBisInstanceLabelSelectClauseFactory, Props } from "@itwin/presentation-shared";
 
 import { TreeRenderer, UnifiedSelectionProvider, useIModelUnifiedSelectionTree } from "@itwin/presentation-hierarchies-react";
 import { createStorage } from "@itwin/unified-selection";
@@ -277,7 +277,7 @@ function MyTreeComponent({ imodel }: { imodel: IModelConnection }) {
   );
 }
 
-type IModelAccess = Parameters<typeof useIModelUnifiedSelectionTree>[0]["imodelAccess"];
+type IModelAccess = Props<typeof useIModelUnifiedSelectionTree>["imodelAccess"];
 
 // The hierarchy definition describes the hierarchy using ECSQL queries; here it just returns all `BisCore.PhysicalModel` instances
 function getHierarchyDefinition({ imodelAccess }: { imodelAccess: IModelAccess }): HierarchyDefinition {
@@ -333,13 +333,15 @@ Localization can be enabled for `TreeRenderer` component and [tree state hooks](
 
 Example:
 
-<!-- [[include: [Presentation.HierarchiesReact.Localization.Tree.Imports, Presentation.HierarchiesReact.Localization.Strings, Presentation.HierarchiesReact.Localization.Tree], tsx]] -->
+<!-- [[include: [Presentation.HierarchiesReact.Localization.CommonImports, Presentation.HierarchiesReact.Localization.Tree.Imports, Presentation.HierarchiesReact.Localization.Strings, Presentation.HierarchiesReact.Localization.Tree], tsx]] -->
 <!-- BEGIN EXTRACTION -->
 
 ```tsx
+import { Props } from "@itwin/presentation-shared";
+
 import { useIModelUnifiedSelectionTree } from "@itwin/presentation-hierarchies-react";
 
-type IModelAccess = Parameters<typeof useIModelUnifiedSelectionTree>[0]["imodelAccess"];
+type IModelAccess = Props<typeof useIModelUnifiedSelectionTree>["imodelAccess"];
 
 const localizedStrings = {
   // strings for the `useIModelUnifiedSelectionTree` hook
@@ -375,10 +377,14 @@ function MyTreeComponent({ imodelAccess }: { imodelAccess: IModelAccess }) {
 
 In case the `TreeNodeRenderer` component is used within a custom tree renderer, the tree component should supply localized strings through `LocalizationContextProvider`:
 
-<!-- [[include: [Presentation.HierarchiesReact.Localization.TreeRenderer.Imports, Presentation.HierarchiesReact.Localization.TreeRenderer], tsx]] -->
+<!-- [[include: [Presentation.HierarchiesReact.Localization.CommonImports, Presentation.HierarchiesReact.Localization.TreeRenderer.Imports, Presentation.HierarchiesReact.Localization.TreeRenderer], tsx]] -->
 <!-- BEGIN EXTRACTION -->
 
 ```tsx
+import { Props } from "@itwin/presentation-shared";
+
+import { ComponentPropsWithoutRef, useCallback } from "react";
+import { Tree } from "@itwin/itwinui-react";
 import {
   createRenderedTreeNodeData,
   LocalizationContextProvider,
@@ -388,7 +394,7 @@ import {
 } from "@itwin/presentation-hierarchies-react";
 
 type TreeProps = ComponentPropsWithoutRef<typeof Tree<RenderedTreeNode>>;
-type TreeRendererProps = Parameters<typeof TreeRenderer>[0];
+type TreeRendererProps = Props<typeof TreeRenderer>;
 
 function MyTreeRenderer(props: TreeRendererProps) {
   const nodeRenderer = useCallback<TreeProps["nodeRenderer"]>((nodeProps) => {

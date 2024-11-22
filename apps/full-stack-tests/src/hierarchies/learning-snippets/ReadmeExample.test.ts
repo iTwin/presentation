@@ -15,7 +15,7 @@ import { SchemaContext } from "@itwin/ecschema-metadata";
 import { ECSchemaRpcLocater } from "@itwin/ecschema-rpcinterface-common";
 import { createECSchemaProvider, createECSqlQueryExecutor } from "@itwin/presentation-core-interop";
 import { createLimitingECSqlQueryExecutor } from "@itwin/presentation-hierarchies";
-import { createCachingECClassHierarchyInspector } from "@itwin/presentation-shared";
+import { createCachingECClassHierarchyInspector, Props } from "@itwin/presentation-shared";
 // __PUBLISH_EXTRACT_END__
 
 // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.ReadmeExampleImports
@@ -66,7 +66,7 @@ function createIModelAccess(imodel: IModelConnection) {
 // __PUBLISH_EXTRACT_END__
 
 // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.ReadmeExample
-function createProvider(imodelAccess: Parameters<typeof createIModelHierarchyProvider>[0]["imodelAccess"]): HierarchyProvider {
+function createProvider(imodelAccess: Props<typeof createIModelHierarchyProvider>["imodelAccess"]): HierarchyProvider {
   // Create a factory for building labels SELECT query clauses according to BIS conventions
   const labelsQueryFactory = createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess });
 

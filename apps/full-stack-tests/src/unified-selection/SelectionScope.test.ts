@@ -21,6 +21,7 @@ import { IModelConnection } from "@itwin/core-frontend";
 import { ECSchemaRpcInterface } from "@itwin/ecschema-rpcinterface-common";
 import { ECSchemaRpcImpl } from "@itwin/ecschema-rpcinterface-impl";
 import { createECSqlQueryExecutor } from "@itwin/presentation-core-interop";
+import { Props } from "@itwin/presentation-shared";
 import { buildTestIModel, initialize, terminate } from "@itwin/presentation-testing";
 import { computeSelection, SelectableInstanceKey } from "@itwin/unified-selection";
 
@@ -47,7 +48,7 @@ describe("SelectionScope", () => {
     return fs.readFileSync(schemaFile, "utf8");
   }
 
-  async function getSelection(keys: string[], scope: Parameters<typeof computeSelection>[0]["scope"]): Promise<SelectableInstanceKey[]> {
+  async function getSelection(keys: string[], scope: Props<typeof computeSelection>["scope"]): Promise<SelectableInstanceKey[]> {
     const selectables: SelectableInstanceKey[] = [];
     for await (const selectable of computeSelection({ queryExecutor: createECSqlQueryExecutor(iModel), elementIds: keys, scope })) {
       selectables.push(selectable);

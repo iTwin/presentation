@@ -7,7 +7,7 @@ import { expect } from "chai";
 import { collect, createAsyncIterator } from "presentation-test-utilities";
 import sinon from "sinon";
 import { BeEvent } from "@itwin/core-bentley";
-import { InstanceKey } from "@itwin/presentation-shared";
+import { InstanceKey, Props } from "@itwin/presentation-shared";
 import { HierarchyNode, NonGroupingHierarchyNode } from "../hierarchies/HierarchyNode.js";
 import { HierarchyProvider, mergeProviders } from "../hierarchies/HierarchyProvider.js";
 import { createTestGenericNode, createTestGenericNodeKey } from "./Utils.js";
@@ -136,8 +136,8 @@ describe("mergeProviders", () => {
 });
 
 function createTestProvider(props?: {
-  nodes?: (props: Parameters<HierarchyProvider["getNodes"]>[0]) => Partial<NonGroupingHierarchyNode>[];
-  instanceKeys?: (props: Parameters<HierarchyProvider["getNodeInstanceKeys"]>[0]) => InstanceKey[];
+  nodes?: (props: Props<HierarchyProvider["getNodes"]>) => Partial<NonGroupingHierarchyNode>[];
+  instanceKeys?: (props: Props<HierarchyProvider["getNodeInstanceKeys"]>) => InstanceKey[];
   disposable?: boolean;
 }) {
   return {

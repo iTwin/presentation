@@ -5,7 +5,9 @@
 
 import { ReactElement } from "react";
 import sinon from "sinon";
-import { GroupingHierarchyNode, NonGroupingHierarchyNode } from "@itwin/presentation-hierarchies";
+import { BeEvent } from "@itwin/core-bentley";
+import { GroupingHierarchyNode, HierarchyProvider, NonGroupingHierarchyNode } from "@itwin/presentation-hierarchies";
+import { EventArgs } from "@itwin/presentation-shared";
 import { configure, RenderOptions, RenderResult, render as renderRTL } from "@testing-library/react";
 import { userEvent, UserEvent } from "@testing-library/user-event";
 import {
@@ -174,4 +176,25 @@ export function stubGetBoundingClientRect() {
   afterEach(() => {
     stub.restore();
   });
+}
+
+export type StubbedHierarchyProvider = {
+  [P in keyof Omit<HierarchyProvider, "hierarchyChanged">]: ReturnType<typeof createStub<HierarchyProvider[P]>>;
+} & {
+  hierarchyChanged: BeEvent<(args?: EventArgs<HierarchyProvider["hierarchyChanged"]>) => void>;
+  dispose: sinon.SinonStub<[], void>;
+};
+export function createHierarchyProviderStub(customizations?: Partial<StubbedHierarchyProvider>) {
+  const provider = {
+    hierarchyChanged: new BeEvent(),
+    getNodes: createStub<HierarchyProvider["getNodes"]>(),
+    getNodeInstanceKeys: createStub<HierarchyProvider["getNodeInstanceKeys"]>(),
+    setFormatter: createStub<HierarchyProvider["setFormatter"]>(),
+    setHierarchyFilter: createStub<HierarchyProvider["setHierarchyFilter"]>(),
+    dispose: createStub<() => void>(),
+    ...customizations,
+  };
+  provider.setFormatter.callsFake((arg) => provider.hierarchyChanged.raiseEvent({ formatterChange: { newFormatter: arg } }));
+  provider.setHierarchyFilter.callsFake((arg) => provider.hierarchyChanged.raiseEvent({ filterChange: { newFilter: arg } }));
+  return provider;
 }

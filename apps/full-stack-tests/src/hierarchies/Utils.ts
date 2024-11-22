@@ -9,9 +9,9 @@ import { Schema, SchemaContext, SchemaInfo, SchemaKey, SchemaMatchType } from "@
 import { ECSchemaRpcLocater } from "@itwin/ecschema-rpcinterface-common";
 import { createECSchemaProvider as createECSchemaProviderInterop, createECSqlQueryExecutor } from "@itwin/presentation-core-interop";
 import { createIModelHierarchyProvider, createLimitingECSqlQueryExecutor, HierarchyDefinition } from "@itwin/presentation-hierarchies";
-import { createCachingECClassHierarchyInspector, Event, IPrimitiveValueFormatter, parseFullClassName } from "@itwin/presentation-shared";
+import { createCachingECClassHierarchyInspector, Event, IPrimitiveValueFormatter, parseFullClassName, Props } from "@itwin/presentation-shared";
 
-type HierarchyProviderProps = Parameters<typeof createIModelHierarchyProvider>[0];
+type HierarchyProviderProps = Props<typeof createIModelHierarchyProvider>;
 type HierarchyFilteringPaths = NonNullable<NonNullable<HierarchyProviderProps["filtering"]>["paths"]>;
 
 export function createSchemaContext(imodel: IModelConnection | IModelDb | ECDb) {
@@ -60,7 +60,7 @@ export function createProvider(
         imodelAccess: ReturnType<typeof createIModelAccess>;
         imodelChanged?: Event<() => void>;
         hierarchy: HierarchyDefinition;
-        localizedStrings?: Parameters<typeof createIModelHierarchyProvider>[0]["localizedStrings"];
+        localizedStrings?: Props<typeof createIModelHierarchyProvider>["localizedStrings"];
         filteredNodePaths?: HierarchyFilteringPaths;
         queryCacheSize?: number;
       }
@@ -71,7 +71,7 @@ export function createProvider(
   ) & {
     imodelChanged?: Event<() => void>;
     hierarchy: HierarchyDefinition;
-    localizedStrings?: Parameters<typeof createIModelHierarchyProvider>[0]["localizedStrings"];
+    localizedStrings?: Props<typeof createIModelHierarchyProvider>["localizedStrings"];
     filteredNodePaths?: HierarchyFilteringPaths;
     queryCacheSize?: number;
   },

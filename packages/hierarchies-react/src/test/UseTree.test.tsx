@@ -7,9 +7,8 @@ import { expect } from "chai";
 import { collect, createAsyncIterator, ResolvablePromise, throwingAsyncIterator } from "presentation-test-utilities";
 import { PropsWithChildren } from "react";
 import sinon from "sinon";
-import { BeEvent } from "@itwin/core-bentley";
 import * as hierarchiesModule from "@itwin/presentation-hierarchies";
-import { IPrimitiveValueFormatter } from "@itwin/presentation-shared";
+import { IPrimitiveValueFormatter, Props } from "@itwin/presentation-shared";
 import { createStorage, Selectables, SelectionStorage, StorageSelectionChangeEventArgs, StorageSelectionChangesListener } from "@itwin/unified-selection";
 import { createNodeId } from "../presentation-hierarchies-react/internal/Utils.js";
 import {
@@ -22,31 +21,30 @@ import {
 } from "../presentation-hierarchies-react/TreeNode.js";
 import { UnifiedSelectionProvider } from "../presentation-hierarchies-react/UnifiedSelectionContext.js";
 import { useTree, useUnifiedSelectionTree } from "../presentation-hierarchies-react/UseTree.js";
-import { act, cleanup, createStub, createTestGroupingNode, createTestHierarchyNode, renderHook, waitFor } from "./TestUtils.js";
+import {
+  act,
+  cleanup,
+  createHierarchyProviderStub,
+  createStub,
+  createTestGroupingNode,
+  createTestHierarchyNode,
+  renderHook,
+  StubbedHierarchyProvider,
+  waitFor,
+} from "./TestUtils.js";
 
 describe("useTree", () => {
-  const hierarchyProvider = {
-    hierarchyChanged: new BeEvent(),
-    getNodes: createStub<hierarchiesModule.HierarchyProvider["getNodes"]>(),
-    getNodeInstanceKeys: createStub<hierarchiesModule.HierarchyProvider["getNodeInstanceKeys"]>(),
-    setFormatter: createStub<hierarchiesModule.HierarchyProvider["setFormatter"]>(),
-    setHierarchyFilter: createStub<hierarchiesModule.HierarchyProvider["setHierarchyFilter"]>(),
-    dispose: createStub<() => void>(),
-  };
+  let hierarchyProvider: StubbedHierarchyProvider;
   const onHierarchyLoadErrorStub = sinon.stub();
 
-  type UseTreeProps = Parameters<typeof useTree>[0];
+  type UseTreeProps = Props<typeof useTree>;
   const initialProps: UseTreeProps = {
     getHierarchyProvider: () => hierarchyProvider,
     onHierarchyLoadError: onHierarchyLoadErrorStub,
   };
 
   beforeEach(() => {
-    hierarchyProvider.getNodes.reset();
-    hierarchyProvider.getNodeInstanceKeys.reset();
-    hierarchyProvider.setFormatter.reset();
-    hierarchyProvider.setHierarchyFilter.reset();
-    hierarchyProvider.dispose.reset();
+    hierarchyProvider = createHierarchyProviderStub();
     onHierarchyLoadErrorStub.reset();
   });
 
@@ -548,9 +546,7 @@ describe("useTree", () => {
     const keys = await collect(details?.getInstanceKeysIterator({ instanceFilter: filter, hierarchyLevelSizeLimit: 100 }) ?? []);
     expect(keys).to.have.lengthOf(2);
     expect(hierarchyProvider.getNodeInstanceKeys).to.be.calledWith(
-      sinon.match(
-        (props: Parameters<typeof hierarchyProvider.getNodeInstanceKeys>[0]) => props.instanceFilter === filter && props.hierarchyLevelSizeLimit === 100,
-      ),
+      sinon.match((props: Props<typeof hierarchyProvider.getNodeInstanceKeys>) => props.instanceFilter === filter && props.hierarchyLevelSizeLimit === 100),
     );
   });
 
@@ -685,17 +681,14 @@ describe("useTree", () => {
       expect((result.current.rootNodes![0] as PresentationHierarchyNode).children).to.have.lengthOf(2);
     });
 
-    const newProvider = {
-      hierarchyChanged: new BeEvent(),
+    const newProvider = createHierarchyProviderStub({
       getNodes: createStub<hierarchiesModule.HierarchyProvider["getNodes"]>().callsFake((props) => {
         if (props.parentNode === undefined) {
           return createAsyncIterator(rootNodes);
         }
         return createAsyncIterator(childNodes.slice(0, 1));
       }),
-      setFormatter: sinon.stub(),
-      setHierarchyFilter: sinon.stub(),
-    };
+    });
     rerender({ ...initialProps, getHierarchyProvider: () => newProvider as unknown as hierarchiesModule.HierarchyProvider });
 
     await waitFor(() => {
@@ -785,14 +778,9 @@ describe("useUnifiedSelectionTree", () => {
   const sourceName = "test-source";
   const changeListener = createStub<StorageSelectionChangesListener>();
 
-  const hierarchyProvider = {
-    hierarchyChanged: new BeEvent(),
-    getNodes: createStub<hierarchiesModule.HierarchyProvider["getNodes"]>(),
-    setFormatter: sinon.stub(),
-    setHierarchyFilter: sinon.stub(),
-  };
+  const hierarchyProvider = createHierarchyProviderStub();
 
-  type UseUnifiedSelectionTree = Parameters<typeof useUnifiedSelectionTree>[0];
+  type UseUnifiedSelectionTree = Props<typeof useUnifiedSelectionTree>;
   const initialProps: UseUnifiedSelectionTree = {
     getHierarchyProvider: () => hierarchyProvider as unknown as hierarchiesModule.HierarchyProvider,
     sourceName,

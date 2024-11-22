@@ -22,6 +22,7 @@ import {
   IInstanceLabelSelectClauseFactory,
   parseFullClassName,
   PrimitiveValue,
+  Props,
 } from "@itwin/presentation-shared";
 import { HierarchyNodeAutoExpandProp } from "./IModelHierarchyNode.js";
 
@@ -737,7 +738,7 @@ function getECSqlComparisonOperator(op: Exclude<GenericInstanceFilterRuleOperato
   }
 }
 
-type JoinRelationshipPath = Parameters<typeof ECSql.createRelationshipPathJoinClause>[0]["path"];
+type JoinRelationshipPath = Props<typeof ECSql.createRelationshipPathJoinClause>["path"];
 function assignRelationshipPathAliases(
   path: GenericInstanceFilterRelationshipStep[],
   pathIndex: number,

@@ -8,7 +8,7 @@ import { Subject } from "@itwin/core-backend";
 import { IModel } from "@itwin/core-common";
 import { IModelConnection } from "@itwin/core-frontend";
 import { createIModelHierarchyProvider, createNodesQueryClauseFactory, HierarchyDefinition, NodesQueryClauseFactory } from "@itwin/presentation-hierarchies";
-import { createBisInstanceLabelSelectClauseFactory } from "@itwin/presentation-shared";
+import { createBisInstanceLabelSelectClauseFactory, Props } from "@itwin/presentation-shared";
 import { buildIModel, importSchema, withECDb } from "../../IModelUtils.js";
 import { initialize, terminate } from "../../IntegrationTests.js";
 import { NodeValidators, validateHierarchy } from "../HierarchyValidation.js";
@@ -16,9 +16,7 @@ import { createIModelAccess, createProvider } from "../Utils.js";
 
 describe("Hierarchies", () => {
   describe("Properties grouping", () => {
-    type ECSqlSelectClausePropertiesGroupingParams = NonNullable<
-      NonNullable<Parameters<NodesQueryClauseFactory["createSelectClause"]>[0]["grouping"]>["byProperties"]
-    >;
+    type ECSqlSelectClausePropertiesGroupingParams = NonNullable<NonNullable<Props<NodesQueryClauseFactory["createSelectClause"]>["grouping"]>["byProperties"]>;
     let subjectClassName: string;
     let emptyIModel: IModelConnection;
 

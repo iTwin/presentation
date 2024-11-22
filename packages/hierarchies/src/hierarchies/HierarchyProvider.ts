@@ -6,7 +6,7 @@
 import { filter, first, from, map, mergeMap, of } from "rxjs";
 import { BeEvent, isIDisposable } from "@itwin/core-bentley";
 import { GenericInstanceFilter } from "@itwin/core-common";
-import { Event, InstanceKey, IPrimitiveValueFormatter } from "@itwin/presentation-shared";
+import { Event, InstanceKey, IPrimitiveValueFormatter, Props } from "@itwin/presentation-shared";
 import { HierarchyFilteringPath } from "./HierarchyFiltering.js";
 import { HierarchyNode, ParentHierarchyNode } from "./HierarchyNode.js";
 import { eachValueFrom } from "./internal/EachValueFrom.js";
@@ -37,17 +37,35 @@ export interface GetHierarchyNodesProps {
 }
 
 /**
+ * Event arguments for `HierarchyProvider.hierarchyChanged` event.
+ * @public
+ */
+interface HierarchyChangedEventArgs {
+  /** Set when the hierarchy change was caused by a formatter change. */
+  formatterChange?: {
+    newFormatter: IPrimitiveValueFormatter | undefined;
+  };
+
+  /** Set when the hierarchy change was caused by a hierarchy filter change. */
+  filterChange?: {
+    newFilter: Props<HierarchyProvider["setHierarchyFilter"]>;
+  };
+}
+
+/**
  * An interface for a hierarchy provider that knows how to create child nodes for a given parent node.
  * @public
  */
 export interface HierarchyProvider {
   /**
-   * An event that provider raises when the internal data source changes, resulting in a
-   * hierarchy change.
+   * An event that provider raises due to a hierarchy change, that requires a reload. Provider may
+   * set additional event arguments to provide extra information about what caused the change.
    *
    * Consumers are expected to subscribe to this event and reload the hierarchy when it's raised.
+   * Implementations may provide additional details on what caused the change through the optional
+   * event arguments.
    */
-  readonly hierarchyChanged: Event<() => void>;
+  readonly hierarchyChanged: Event<(args?: HierarchyChangedEventArgs) => void>;
 
   /**
    * Gets nodes for the specified parent node. This is **the method to implement**, otherwise
@@ -66,13 +84,23 @@ export interface HierarchyProvider {
 
   /**
    * Overrides the property value formatter used by the hierarchy provider. Setting to `undefined`
-   * resets the formatter to the result of `createDefaultValueFormatter` called with default parameters.
+   * resets the formatter, but what that means depends on the provider implementation - it could just
+   * use unformatted values, or use some default formatter, e.g. the on created by `createDefaultValueFormatter`
+   * from `@itwin/presentation-shared` package.
+   *
+   * @note Changing formatter is expected to trigger the `hierarchyChanged` event with `formatterChange` arg.
    */
   setFormatter(formatter: IPrimitiveValueFormatter | undefined): void;
 
   /**
    * Sets the hierarchy filter used by this hierarchy provider. Setting to `undefined`
    * removes the filter.
+   *
+   * @note There's a difference between `undefined` filter and filter with empty paths list. The
+   * former means no filter is applied, while the latter means the filter is applied and it filters-out
+   * all hierarchy.
+   *
+   * @note Changing filter is expected to trigger the `hierarchyChanged` event with `filterChange` arg.
    */
   setHierarchyFilter(
     props:

@@ -7,19 +7,19 @@ import { expect } from "chai";
 import { createAsyncIterator } from "presentation-test-utilities";
 import sinon from "sinon";
 import * as td from "testdouble";
-import { BeEvent } from "@itwin/core-bentley";
 import * as presentationHierarchiesModule from "@itwin/presentation-hierarchies";
+import { Props } from "@itwin/presentation-shared";
 import {
   useIModelTree as originalUseIModelTree,
   useIModelUnifiedSelectionTree as originalUseIModelUnifiedSelectionTree,
 } from "../presentation-hierarchies-react/UseIModelTree.js";
-import { createStub, renderHook, waitFor } from "./TestUtils.js";
+import { createHierarchyProviderStub, renderHook, waitFor } from "./TestUtils.js";
 
 // this is needed for mocking external module (see `td.replaceEsm` in `stubIModelHierarchyProviderFactory`)
 const presentationHierarchiesPath = import.meta.resolve("@itwin/presentation-hierarchies");
 
 describe("useIModelTree", () => {
-  type UseIModelTreeProps = Parameters<typeof originalUseIModelTree>[0];
+  type UseIModelTreeProps = Props<typeof originalUseIModelTree>;
   const hierarchyDefinition = {} as presentationHierarchiesModule.HierarchyDefinition;
   const initialProps: UseIModelTreeProps = {
     imodelAccess: {} as UseIModelTreeProps["imodelAccess"],
@@ -47,7 +47,7 @@ describe("useIModelTree", () => {
       expect(result.current.isLoading).to.be.false;
     });
     expect(stubs.createIModelHierarchyProvider).to.be.calledWith(
-      sinon.match((props: Parameters<typeof stubs.createIModelHierarchyProvider>[0]) => {
+      sinon.match((props: Props<typeof stubs.createIModelHierarchyProvider>) => {
         return (
           props.imodelAccess === initialProps.imodelAccess &&
           props.hierarchyDefinition === hierarchyDefinition &&
@@ -69,7 +69,7 @@ describe("useIModelTree", () => {
 });
 
 describe("useIModelUnifiedSelectionTree", () => {
-  type UseIModelTreeProps = Parameters<typeof useIModelUnifiedSelectionTree>[0];
+  type UseIModelTreeProps = Props<typeof useIModelUnifiedSelectionTree>;
   const hierarchyDefinition = {} as presentationHierarchiesModule.HierarchyDefinition;
   const initialProps: UseIModelTreeProps = {
     imodelAccess: {} as UseIModelTreeProps["imodelAccess"],
@@ -98,7 +98,7 @@ describe("useIModelUnifiedSelectionTree", () => {
       expect(result.current.isLoading).to.be.false;
     });
     expect(stubs.createIModelHierarchyProvider).to.be.calledWith(
-      sinon.match((props: Parameters<typeof stubs.createIModelHierarchyProvider>[0]) => {
+      sinon.match((props: Props<typeof stubs.createIModelHierarchyProvider>) => {
         return (
           props.imodelAccess === initialProps.imodelAccess &&
           props.hierarchyDefinition === hierarchyDefinition &&
@@ -120,14 +120,7 @@ describe("useIModelUnifiedSelectionTree", () => {
 });
 
 async function stubIModelHierarchyProviderFactory() {
-  const hierarchyProvider = {
-    hierarchyChanged: new BeEvent(),
-    getNodes: createStub<presentationHierarchiesModule.HierarchyProvider["getNodes"]>(),
-    getNodeInstanceKeys: createStub<presentationHierarchiesModule.HierarchyProvider["getNodeInstanceKeys"]>(),
-    setFormatter: createStub<presentationHierarchiesModule.HierarchyProvider["setFormatter"]>(),
-    setHierarchyFilter: createStub<presentationHierarchiesModule.HierarchyProvider["setHierarchyFilter"]>(),
-    dispose: createStub<() => void>(),
-  };
+  const hierarchyProvider = createHierarchyProviderStub();
   const factory = sinon.fake<Parameters<typeof presentationHierarchiesModule.createIModelHierarchyProvider>, typeof hierarchyProvider>(() => {
     return hierarchyProvider;
   });

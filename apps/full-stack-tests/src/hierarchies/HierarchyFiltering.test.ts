@@ -29,7 +29,7 @@ import {
   HierarchyProvider,
   mergeProviders,
 } from "@itwin/presentation-hierarchies";
-import { createBisInstanceLabelSelectClauseFactory, ECSqlBinding, InstanceKey } from "@itwin/presentation-shared";
+import { createBisInstanceLabelSelectClauseFactory, ECSqlBinding, InstanceKey, Props } from "@itwin/presentation-shared";
 import { createFileNameFromString } from "@itwin/presentation-testing";
 import { buildIModel, importSchema, withECDb } from "../IModelUtils.js";
 import { initialize, terminate } from "../IntegrationTests.js";
@@ -1906,13 +1906,7 @@ describe("Hierarchies", () => {
   });
 });
 
-function mergeAndFilterProviders({
-  providers,
-  filterProps,
-}: {
-  providers: HierarchyProvider[];
-  filterProps: Parameters<HierarchyProvider["setHierarchyFilter"]>[0];
-}) {
+function mergeAndFilterProviders({ providers, filterProps }: { providers: HierarchyProvider[]; filterProps: Props<HierarchyProvider["setHierarchyFilter"]> }) {
   const mergedProvider = mergeProviders({ providers });
   mergedProvider.setHierarchyFilter(filterProps);
   return mergedProvider;

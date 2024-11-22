@@ -3,6 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
+import { defer, from, map, merge, mergeAll, mergeMap, Observable, ObservableInput } from "rxjs";
 import { Id64Array, Id64String } from "@itwin/core-bentley";
 import {
   ClassGroupingNodeKey,
@@ -33,8 +34,8 @@ import {
   ECSqlQueryRow,
   IInstanceLabelSelectClauseFactory,
   InstanceKey,
+  Props,
 } from "@itwin/presentation-shared";
-import { defer, from, map, merge, mergeAll, mergeMap, Observable, ObservableInput } from "rxjs";
 import { ModelsTreeIdsCache } from "./ModelsTreeIdsCache.js";
 
 /** @beta */
@@ -99,7 +100,7 @@ interface ModelsTreeInstanceKeyPathsFromInstanceLabelProps {
 }
 
 export type ModelsTreeInstanceKeyPathsProps = ModelsTreeInstanceKeyPathsFromTargetItemsProps | ModelsTreeInstanceKeyPathsFromInstanceLabelProps;
-type HierarchyProviderProps = Parameters<typeof createIModelHierarchyProvider>[0];
+type HierarchyProviderProps = Props<typeof createIModelHierarchyProvider>;
 type HierarchyFilteringPaths = NonNullable<NonNullable<HierarchyProviderProps["filtering"]>["paths"]>;
 type HierarchyFilteringPath = HierarchyFilteringPaths[number];
 
