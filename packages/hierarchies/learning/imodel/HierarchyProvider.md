@@ -22,7 +22,7 @@ import { SchemaContext } from "@itwin/ecschema-metadata";
 import { ECSchemaRpcLocater } from "@itwin/ecschema-rpcinterface-common";
 import { createECSchemaProvider, createECSqlQueryExecutor } from "@itwin/presentation-core-interop";
 import { createLimitingECSqlQueryExecutor } from "@itwin/presentation-hierarchies";
-import { createCachingECClassHierarchyInspector } from "@itwin/presentation-shared";
+import { createCachingECClassHierarchyInspector, Props } from "@itwin/presentation-shared";
 
 // Not really part of the package, but we need SchemaContext to create a hierarchy provider. It's
 // recommended to cache the schema context and reuse it across different application's components to

@@ -16,6 +16,7 @@ import { IPrimitiveValueFormatter } from '@itwin/presentation-shared';
 import { JSX as JSX_2 } from 'react/jsx-runtime';
 import { JSX as JSX_3 } from 'react/jsx-runtime.js';
 import { NodeData } from '@itwin/itwinui-react';
+import { Props } from '@itwin/presentation-shared';
 import { PropsWithChildren } from 'react';
 import { ReactElement } from 'react';
 import { RefAttributes } from 'react';
@@ -49,7 +50,7 @@ export { HierarchyProvider }
 type IModelAccess = IModelHierarchyProviderProps["imodelAccess"];
 
 // @public (undocumented)
-type IModelHierarchyProviderProps = Parameters<typeof createIModelHierarchyProvider>[0];
+type IModelHierarchyProviderProps = Props<typeof createIModelHierarchyProvider>;
 
 // @public
 export function isPresentationHierarchyNode(node: PresentationTreeNode): node is PresentationHierarchyNode;

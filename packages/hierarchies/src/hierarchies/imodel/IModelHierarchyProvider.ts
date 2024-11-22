@@ -33,6 +33,7 @@ import {
   ECSqlBinding,
   ECSqlQueryDef,
   Event,
+  EventArgs,
   formatConcatenatedValue,
   InstanceKey,
   IPrimitiveValueFormatter,
@@ -169,7 +170,7 @@ interface RequestContextProp {
 
 class IModelHierarchyProviderImpl implements HierarchyProvider {
   private _imodelAccess: IModelAccess;
-  private _imodelChanged: Event<() => void>;
+  private _hierarchyChanged: BeEvent<(args?: EventArgs<HierarchyProvider["hierarchyChanged"]>) => void>;
   private _valuesFormatter: IPrimitiveValueFormatter;
   private _sourceHierarchyDefinition: HierarchyDefinition;
   private _activeHierarchyDefinition: HierarchyDefinition;
@@ -181,7 +182,7 @@ class IModelHierarchyProviderImpl implements HierarchyProvider {
 
   public constructor(props: IModelHierarchyProviderProps) {
     this._imodelAccess = props.imodelAccess;
-    this._imodelChanged = props.imodelChanged ?? new BeEvent();
+    this._hierarchyChanged = new BeEvent();
     this._activeHierarchyDefinition = this._sourceHierarchyDefinition = props.hierarchyDefinition;
     this._valuesFormatter = props?.formatter ?? createDefaultValueFormatter();
     this._localizedStrings = { other: "Other", unspecified: "Not specified", ...props?.localizedStrings };
@@ -195,11 +196,13 @@ class IModelHierarchyProviderImpl implements HierarchyProvider {
         size: Math.ceil(queryCacheSize / 2),
         variationsCount: 1,
       });
-      this._unsubscribe = props.imodelChanged?.addListener(() => {
-        this.invalidateHierarchyCache("Data source changed");
-        this._dispose.next();
-      });
     }
+
+    this._unsubscribe = props.imodelChanged?.addListener(() => {
+      this.invalidateHierarchyCache("Data source changed");
+      this._dispose.next();
+      this._hierarchyChanged.raiseEvent();
+    });
   }
 
   public dispose() {
@@ -208,7 +211,7 @@ class IModelHierarchyProviderImpl implements HierarchyProvider {
   }
 
   public get hierarchyChanged() {
-    return this._imodelChanged;
+    return this._hierarchyChanged;
   }
 
   private invalidateHierarchyCache(reason?: string) {
@@ -225,6 +228,7 @@ class IModelHierarchyProviderImpl implements HierarchyProvider {
    */
   public setFormatter(formatter: IPrimitiveValueFormatter | undefined) {
     this._valuesFormatter = formatter ?? createDefaultValueFormatter();
+    this._hierarchyChanged.raiseEvent({ formatterChange: { newFormatter: this._valuesFormatter } });
   }
 
   public setHierarchyFilter(props: IModelHierarchyProviderProps["filtering"]) {
@@ -233,6 +237,7 @@ class IModelHierarchyProviderImpl implements HierarchyProvider {
         this._activeHierarchyDefinition = this._sourceHierarchyDefinition;
         this.invalidateHierarchyCache("Hierarchy filter reset");
       }
+      this._hierarchyChanged.raiseEvent({ filterChange: { newFilter: undefined } });
       return;
     }
     this._activeHierarchyDefinition = new FilteringHierarchyDefinition({
@@ -242,6 +247,7 @@ class IModelHierarchyProviderImpl implements HierarchyProvider {
     });
     this.invalidateHierarchyCache("Hierarchy filter set");
     this._dispose.next();
+    this._hierarchyChanged.raiseEvent({ filterChange: { newFilter: props } });
   }
 
   private onGroupingNodeCreated(groupingNode: ProcessedGroupingHierarchyNode, props: GetHierarchyNodesProps) {

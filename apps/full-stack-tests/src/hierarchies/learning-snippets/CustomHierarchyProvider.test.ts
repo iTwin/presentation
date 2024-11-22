@@ -12,6 +12,7 @@ import * as sinon from "sinon";
 // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.CustomHierarchyProviders.Imports
 import { BeEvent } from "@itwin/core-bentley";
 import { HierarchyNode, HierarchyProvider } from "@itwin/presentation-hierarchies";
+import { Props } from "@itwin/presentation-shared";
 // __PUBLISH_EXTRACT_END__
 // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.CustomHierarchyProviders.IModelProviderImports
 import { using } from "@itwin/core-bentley";
@@ -19,7 +20,14 @@ import { BriefcaseConnection, IModelConnection } from "@itwin/core-frontend";
 import { registerTxnListeners } from "@itwin/presentation-core-interop";
 // __PUBLISH_EXTRACT_END__
 // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.CustomHierarchyProviders.FormattingProviderImports
-import { ConcatenatedValue, ConcatenatedValuePart, createDefaultValueFormatter, IPrimitiveValueFormatter, julianToDateTime } from "@itwin/presentation-shared";
+import {
+  ConcatenatedValue,
+  ConcatenatedValuePart,
+  createDefaultValueFormatter,
+  EventListener,
+  IPrimitiveValueFormatter,
+  julianToDateTime,
+} from "@itwin/presentation-shared";
 // __PUBLISH_EXTRACT_END__
 // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.CustomHierarchyProviders.FilteringProviderImports
 import { createHierarchyFilteringHelper, GenericNodeKey, HierarchyFilteringPath, HierarchyNodeIdentifier } from "@itwin/presentation-hierarchies";
@@ -123,7 +131,7 @@ describe("Hierarchies", () => {
             this._disposeTxnListeners?.();
           }
 
-          public async *getNodes({ parentNode }: Parameters<HierarchyProvider["getNodes"]>[0]): AsyncIterableIterator<HierarchyNode> {
+          public async *getNodes({ parentNode }: Props<HierarchyProvider["getNodes"]>): AsyncIterableIterator<HierarchyNode> {
             if (!parentNode) {
               // Query and return root bis.Subject node
               for await (const row of this._imodel.createQueryReader(
@@ -173,7 +181,7 @@ describe("Hierarchies", () => {
 
           // Since we're returning nodes based on instances in an iModel, we should also implement the `getNodeInstanceKeys` method
           // allow efficient retrieval of instance keys
-          public async *getNodeInstanceKeys({ parentNode }: Parameters<HierarchyProvider["getNodeInstanceKeys"]>[0]) {
+          public async *getNodeInstanceKeys({ parentNode }: Props<HierarchyProvider["getNodeInstanceKeys"]>) {
             if (!parentNode) {
               // Don't need to run a query here - we know all iModels have one root Subject with `0x1` id
               yield { className: "BisCore.Subject", id: "0x1", imodelKey: this._imodel.key };
@@ -293,7 +301,7 @@ describe("Hierarchies", () => {
         // provider can be changed by calling the `setFormatter` method.
         class FormattingHierarchyProvider implements HierarchyProvider {
           private _formatter: IPrimitiveValueFormatter = createDefaultValueFormatter();
-          public hierarchyChanged = new BeEvent();
+          public hierarchyChanged = new BeEvent<EventListener<HierarchyProvider["hierarchyChanged"]>>();
           public async *getNodes(): ReturnType<HierarchyProvider["getNodes"]> {
             yield {
               key: { type: "generic", id: `formatted-node` },
@@ -321,6 +329,8 @@ describe("Hierarchies", () => {
           public async *getNodeInstanceKeys() {}
           public setFormatter(formatter: IPrimitiveValueFormatter | undefined) {
             this._formatter = formatter ?? createDefaultValueFormatter();
+            // Changing formatter requires a hierarchy reload - trigger the `hierarchyChanged` event to let components know
+            this.hierarchyChanged.raiseEvent({ formatterChange: { newFormatter: this._formatter } });
           }
           public setHierarchyFilter() {}
         }
@@ -392,7 +402,8 @@ describe("Hierarchies", () => {
         // __PUBLISH_EXTRACT_END__
 
         // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.CustomHierarchyProviders.FilteringProviderExample.Provider
-        let rootFilter: Parameters<HierarchyProvider["setHierarchyFilter"]>[0];
+        let rootFilter: Props<HierarchyProvider["setHierarchyFilter"]>;
+        const hierarchyChanged = new BeEvent<EventListener<HierarchyProvider["hierarchyChanged"]>>();
         const provider: HierarchyProvider = {
           async *getNodes({ parentNode }) {
             const filteringHelper = createHierarchyFilteringHelper(rootFilter?.paths, parentNode);
@@ -453,10 +464,12 @@ describe("Hierarchies", () => {
             // Here we receive all paths that we want to filter the hierarchy by. The paths start from root, so
             // we just store them in a variable to use later when querying root nodes.
             rootFilter = props;
+            // Changing the filter requires a hierarchy reload - trigger the `hierarchyChanged` event to let components know
+            hierarchyChanged.raiseEvent({ filterChange: { newFilter: rootFilter } });
           },
           async *getNodeInstanceKeys() {},
           setFormatter() {},
-          hierarchyChanged: new BeEvent(),
+          hierarchyChanged,
         };
         // __PUBLISH_EXTRACT_END__
 

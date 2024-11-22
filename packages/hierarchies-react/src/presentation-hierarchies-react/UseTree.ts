@@ -184,7 +184,10 @@ function useTreeInternal({
   useEffect(() => {
     const provider = getHierarchyProvider();
     provider.setFormatter(currentFormatter.current);
-    const removeHierarchyChangedListener = provider.hierarchyChanged.addListener(() => actions.reloadTree());
+    const removeHierarchyChangedListener = provider.hierarchyChanged.addListener((hierarchyChangeArgs) => {
+      const shouldDiscardState = hierarchyChangeArgs?.filterChange?.newFilter !== undefined;
+      actions.reloadTree({ state: shouldDiscardState ? "discard" : "keep" });
+    });
     actions.setHierarchyProvider(provider);
     setHierarchyProvider(provider);
     return () => {
@@ -202,7 +205,6 @@ function useTreeInternal({
     void (async () => {
       if (!getFilteredPaths || !hierarchyProvider) {
         hierarchyProvider?.setHierarchyFilter(undefined);
-        actions.reloadTree({ state: "keep" });
         setIsFiltering(false);
         return;
       }
@@ -215,16 +217,14 @@ function useTreeInternal({
       } finally {
         if (!disposed) {
           hierarchyProvider.setHierarchyFilter(paths ? { paths } : undefined);
-          actions.reloadTree({ state: paths ? "discard" : "keep" });
           setIsFiltering(false);
         }
       }
     })();
     return () => {
       disposed = true;
-      actions.dispose();
     };
-  }, [actions, hierarchyProvider, getFilteredPaths]);
+  }, [hierarchyProvider, getFilteredPaths]);
 
   const getNode = useCallback<(nodeId: string) => TreeModelRootNode | TreeModelNode | undefined>(
     (nodeId: string) => {
@@ -265,9 +265,8 @@ function useTreeInternal({
       }
 
       hierarchyProvider.setFormatter(formatter);
-      actions.reloadTree();
     },
-    [hierarchyProvider, actions],
+    [hierarchyProvider],
   );
 
   const getHierarchyLevelDetails = useCallback<UseTreeResult["getHierarchyLevelDetails"]>(

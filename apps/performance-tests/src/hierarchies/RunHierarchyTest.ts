@@ -3,10 +3,10 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
+import { expect } from "chai";
 import { PhysicalElement, SnapshotDb } from "@itwin/core-backend";
 import { createNodesQueryClauseFactory, DefineHierarchyLevelProps, NodesQueryClauseFactory } from "@itwin/presentation-hierarchies";
-import { createBisInstanceLabelSelectClauseFactory, ECClassHierarchyInspector, ECSchemaProvider } from "@itwin/presentation-shared";
-import { expect } from "chai";
+import { createBisInstanceLabelSelectClauseFactory, ECClassHierarchyInspector, ECSchemaProvider, Props } from "@itwin/presentation-shared";
 import { Datasets, IModelName } from "../util/Datasets";
 import { run, RunOptions } from "../util/TestUtilities";
 import { StatelessHierarchyProvider } from "./StatelessHierarchyProvider";
@@ -20,7 +20,7 @@ export function runHierarchyTest(
   testProps: {
     iModelName: IModelName;
     fullClassName?: string;
-    nodeSelectProps?: Partial<Parameters<NodesQueryClauseFactory["createSelectClause"]>[0]>;
+    nodeSelectProps?: Partial<Props<NodesQueryClauseFactory["createSelectClause"]>>;
     expectedNodeCount?: number;
   } & Omit<RunOptions<never>, "setup" | "test" | "cleanup">,
 ) {

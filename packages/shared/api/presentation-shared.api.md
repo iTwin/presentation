@@ -360,6 +360,13 @@ interface Event_2<TListener extends (...args: any[]) => void = () => void> {
 export { Event_2 as Event }
 
 // @public
+export type EventArgs<TEvent extends Event_2> = Props<EventListener_2<TEvent>>;
+
+// @public
+type EventListener_2<TEvent extends Event_2> = TEvent extends Event_2<infer TListener> ? TListener : never;
+export { EventListener_2 as EventListener }
+
+// @public
 export function formatConcatenatedValue(props: {
     value: ConcatenatedValue | string;
     valueFormatter: IPrimitiveValueFormatter;
@@ -473,6 +480,9 @@ export namespace PrimitiveValue {
 
 // @public
 type PrimitiveValueType = "Id" | Exclude<EC.PrimitiveType, "Binary" | "IGeometry">;
+
+// @public
+export type Props<TFunc extends (...args: any[]) => any> = Parameters<TFunc>[0];
 
 // @public
 type RelationshipPath<TStep extends RelationshipPathStep = RelationshipPathStep> = TStep[];

@@ -8,7 +8,7 @@ import { collect, createAsyncIterator, ResolvablePromise, waitFor } from "presen
 import sinon from "sinon";
 import { BeEvent, omit } from "@itwin/core-bentley";
 import { GenericInstanceFilter } from "@itwin/core-common";
-import { ECSqlQueryDef, ECSqlQueryReaderOptions, InstanceKey, trimWhitespace, TypedPrimitiveValue } from "@itwin/presentation-shared";
+import { ECSqlQueryDef, ECSqlQueryReaderOptions, InstanceKey, Props, trimWhitespace, TypedPrimitiveValue } from "@itwin/presentation-shared";
 import { RowsLimitExceededError } from "../../hierarchies/HierarchyErrors.js";
 import { GroupingHierarchyNode, HierarchyNode, ParentHierarchyNode } from "../../hierarchies/HierarchyNode.js";
 import { GroupingNodeKey } from "../../hierarchies/HierarchyNodeKey.js";
@@ -401,7 +401,7 @@ describe("createIModelHierarchyProvider", () => {
             [NodeSelectClauseColumnNames.DisplayLabel]: "test label",
             [NodeSelectClauseColumnNames.Grouping]: JSON.stringify({
               byLabel: true,
-            } satisfies Parameters<NodesQueryClauseFactory["createSelectClause"]>[0]["grouping"]),
+            } satisfies Props<NodesQueryClauseFactory["createSelectClause"]>["grouping"]),
           },
         ]),
       );
@@ -671,6 +671,30 @@ describe("createIModelHierarchyProvider", () => {
   });
 
   describe("Hierarchy filtering", () => {
+    it("triggers `hierarchyChanged` event when filter is set", () => {
+      const provider = createIModelHierarchyProvider({
+        imodelAccess,
+        hierarchyDefinition: {
+          async defineHierarchyLevel() {
+            return [];
+          },
+        },
+      });
+
+      const hierarchyChangedListener = sinon.spy();
+      provider.hierarchyChanged.addListener(hierarchyChangedListener);
+
+      // setting a filter should trigger `hierarchyChangedListener`
+      const filter = { paths: [] };
+      provider.setHierarchyFilter(filter);
+      expect(hierarchyChangedListener).to.be.calledOnceWith({ filterChange: { newFilter: filter } });
+      hierarchyChangedListener.resetHistory();
+
+      // setting to `undefined` should trigger `hierarchyChangedListener`
+      provider.setHierarchyFilter(undefined);
+      expect(hierarchyChangedListener).to.be.calledOnceWith({ filterChange: { newFilter: undefined } });
+    });
+
     it("applies filtering on query definitions", async () => {
       imodelAccess.stubEntityClass({
         schemaName: "a",
@@ -913,7 +937,7 @@ describe("createIModelHierarchyProvider", () => {
             [NodeSelectClauseColumnNames.DisplayLabel]: "ab",
             [NodeSelectClauseColumnNames.Grouping]: JSON.stringify({
               byLabel: true,
-            } satisfies Parameters<NodesQueryClauseFactory["createSelectClause"]>[0]["grouping"]),
+            } satisfies Props<NodesQueryClauseFactory["createSelectClause"]>["grouping"]),
           };
 
           // ctes is empty for non-filtered case and has one item for filtered case
@@ -957,7 +981,7 @@ describe("createIModelHierarchyProvider", () => {
         [NodeSelectClauseColumnNames.DisplayLabel]: "ab",
         [NodeSelectClauseColumnNames.Grouping]: JSON.stringify({
           byLabel: true,
-        } satisfies Parameters<NodesQueryClauseFactory["createSelectClause"]>[0]["grouping"]),
+        } satisfies Props<NodesQueryClauseFactory["createSelectClause"]>["grouping"]),
       });
 
       // setting instance filter while a nodes request is in progress cancels the request - ensure we get undefined
@@ -1597,7 +1621,7 @@ describe("createIModelHierarchyProvider", () => {
               [NodeSelectClauseColumnNames.HasChildren]: true,
               [NodeSelectClauseColumnNames.Grouping]: JSON.stringify({
                 byClass: true,
-              } satisfies Parameters<NodesQueryClauseFactory["createSelectClause"]>[0]["grouping"]),
+              } satisfies Props<NodesQueryClauseFactory["createSelectClause"]>["grouping"]),
             },
           ]);
         } else if (query.ecsql.includes("CHILD")) {
@@ -1751,7 +1775,33 @@ describe("createIModelHierarchyProvider", () => {
       sinon.restore();
     });
 
-    it("getNodes doesn't re-query with same props and a different formatter", async () => {
+    it("raises `hierarchyChanged` event with new formatter", async () => {
+      const provider = createIModelHierarchyProvider({
+        imodelAccess,
+        hierarchyDefinition: {
+          async defineHierarchyLevel() {
+            return [];
+          },
+        },
+      });
+
+      const hierarchyChangedListener = sinon.spy();
+      provider.hierarchyChanged.addListener(hierarchyChangedListener);
+
+      // setting to custom formatter should trigger `hierarchyChangedListener` with the new formatter
+      const formatter = async () => `doesn't matter`;
+      provider.setFormatter(formatter);
+      expect(hierarchyChangedListener).to.be.calledOnceWith({ formatterChange: { newFormatter: formatter } });
+      hierarchyChangedListener.resetHistory();
+
+      // setting to `undefined` should trigger `hierarchyChangedListener` with the default formatter
+      provider.setFormatter(undefined);
+      expect(hierarchyChangedListener).to.be.calledOnceWith({
+        formatterChange: { newFormatter: sinon.match((x) => typeof x === "function" && x !== formatter) },
+      });
+    });
+
+    it("`getNodes` doesn't re-query with same props and a different formatter", async () => {
       imodelAccess.createQueryReader.callsFake(() =>
         createAsyncIterator<RowDef>([
           {
@@ -1787,7 +1837,7 @@ describe("createIModelHierarchyProvider", () => {
       expect(imodelAccess.createQueryReader).to.be.calledOnce;
     });
 
-    it("getNodes uses formatter that is provided to setFormatter", async () => {
+    it("`getNodes` uses formatter that is provided to `setFormatter`", async () => {
       const node = createTestSourceGenericNode({ children: false });
       const provider = createIModelHierarchyProvider({
         imodelAccess,
@@ -1811,7 +1861,7 @@ describe("createIModelHierarchyProvider", () => {
       ]);
     });
 
-    it("getNodes uses default formatter when setFormatter is provided an undefined value", async () => {
+    it("`getNodes` uses default formatter when `setFormatter` is provided an `undefined` value", async () => {
       const node = createTestSourceGenericNode({ children: false });
       const provider = createIModelHierarchyProvider({
         imodelAccess,

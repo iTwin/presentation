@@ -35,12 +35,13 @@ import {
   IInstanceLabelSelectClauseFactory,
   InstanceKey,
   IPrimitiveValueFormatter,
+  Props,
 } from "@itwin/presentation-shared";
 import { SampleRpcInterface } from "@test-app/common";
 import { MyAppFrontend } from "../../api/MyAppFrontend";
 
-type UseTreeProps = Parameters<typeof useUnifiedSelectionTree>[0];
-type IModelAccess = Parameters<typeof createIModelHierarchyProvider>[0]["imodelAccess"];
+type UseTreeProps = Props<typeof useUnifiedSelectionTree>;
+type IModelAccess = Props<typeof createIModelHierarchyProvider>["imodelAccess"];
 
 export function MultiDataSourceTree({ imodel, ...props }: { imodel: IModelConnection; height: number; width: number }) {
   const [imodelAccess, setIModelAccess] = useState<IModelAccess>();

@@ -21,7 +21,7 @@ import { createStorage } from "@itwin/unified-selection";
 import { useEffect, useState } from "react";
 // __PUBLISH_EXTRACT_END__
 // __PUBLISH_EXTRACT_START__ Presentation.HierarchiesReact.CustomTreeExample.Imports
-import { createBisInstanceLabelSelectClauseFactory } from "@itwin/presentation-shared";
+import { createBisInstanceLabelSelectClauseFactory, Props } from "@itwin/presentation-shared";
 // __PUBLISH_EXTRACT_END__
 import { buildIModel } from "../../IModelUtils.js";
 import { initialize, terminate } from "../../IntegrationTests.js";
@@ -103,7 +103,7 @@ describe("Hierarchies React", () => {
         }
         // __PUBLISH_EXTRACT_END__
         // __PUBLISH_EXTRACT_START__ Presentation.HierarchiesReact.CustomTreeExample
-        type IModelAccess = Parameters<typeof useIModelUnifiedSelectionTree>[0]["imodelAccess"];
+        type IModelAccess = Props<typeof useIModelUnifiedSelectionTree>["imodelAccess"];
 
         // The hierarchy definition describes the hierarchy using ECSQL queries; here it just returns all `BisCore.PhysicalModel` instances
         function getHierarchyDefinition({ imodelAccess }: { imodelAccess: IModelAccess }): HierarchyDefinition {
@@ -159,7 +159,7 @@ describe("Hierarchies React", () => {
       });
 
       it("useIModelUnifiedSelectionTree", async function () {
-        type IModelAccess = Parameters<typeof useIModelUnifiedSelectionTree>[0]["imodelAccess"];
+        type IModelAccess = Props<typeof useIModelUnifiedSelectionTree>["imodelAccess"];
         const getHierarchyDefinition = () => ({
           defineHierarchyLevel: async () => [],
         });

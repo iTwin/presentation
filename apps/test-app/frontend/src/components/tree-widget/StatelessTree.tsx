@@ -21,10 +21,10 @@ import { Presentation } from "@itwin/presentation-frontend";
 import { createLimitingECSqlQueryExecutor, GenericInstanceFilter } from "@itwin/presentation-hierarchies";
 import { HierarchyLevelDetails, PresentationHierarchyNode, TreeRenderer, useIModelUnifiedSelectionTree } from "@itwin/presentation-hierarchies-react";
 import { ModelsTreeDefinition } from "@itwin/presentation-models-tree";
-import { createCachingECClassHierarchyInspector, IPrimitiveValueFormatter } from "@itwin/presentation-shared";
+import { createCachingECClassHierarchyInspector, IPrimitiveValueFormatter, Props } from "@itwin/presentation-shared";
 import { MyAppFrontend } from "../../api/MyAppFrontend";
 
-type UseIModelTreeProps = Parameters<typeof useIModelUnifiedSelectionTree>[0];
+type UseIModelTreeProps = Props<typeof useIModelUnifiedSelectionTree>;
 type IModelAccess = UseIModelTreeProps["imodelAccess"];
 
 export function StatelessTreeV2({ imodel, ...props }: { imodel: IModelConnection; height: number; width: number }) {

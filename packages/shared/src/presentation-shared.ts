@@ -18,7 +18,7 @@ export {
   parseInstanceLabel,
 } from "./shared/InstanceLabelSelectClauseFactory.js";
 export { ILogger, NOOP_LOGGER, LogFunction, LogLevel } from "./shared/Logging.js";
-export { ArrayElement, OmitOverUnion } from "./shared/MappedTypes.js";
+export { ArrayElement, EventArgs, EventListener, OmitOverUnion, Props } from "./shared/MappedTypes.js";
 export { createCachingECClassHierarchyInspector, EC, getClass, ECClassHierarchyInspector, ECSchemaProvider } from "./shared/Metadata.js";
 export {
   createMainThreadReleaseOnTimePassedHandler,

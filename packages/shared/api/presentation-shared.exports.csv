@@ -19,6 +19,7 @@ public;interface;ECSqlQueryDef
 public;interface;ECSqlQueryExecutor
 public;interface;ECSqlQueryReaderOptions
 public;interface;ECSqlQueryRow
+public;type;EventArgs
 public;function;formatConcatenatedValue
 public;function;getClass
 public;interface;IInstanceLabelSelectClauseFactory
@@ -36,6 +37,7 @@ public;function;parseFullClassName
 public;function;parseInstanceLabel
 public;type;PrimitiveValue
 public;namespace;PrimitiveValue
+public;type;Props
 public;function;releaseMainThread
 public;function;trimWhitespace
 public;function;trimWhitespace

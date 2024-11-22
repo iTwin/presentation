@@ -19,6 +19,7 @@ import { InstanceKey } from '@itwin/presentation-shared';
 import { IPrimitiveValueFormatter } from '@itwin/presentation-shared';
 import { OmitOverUnion } from '@itwin/presentation-shared';
 import { PrimitiveValue } from '@itwin/presentation-shared';
+import { Props } from '@itwin/presentation-shared';
 
 // @public
 interface BaseHierarchyNode {
@@ -224,6 +225,16 @@ export interface GroupingHierarchyNode extends BaseHierarchyNode {
 
 // @public
 export type GroupingNodeKey = ClassGroupingNodeKey | LabelGroupingNodeKey | PropertyGroupingNodeKey;
+
+// @public
+interface HierarchyChangedEventArgs {
+    filterChange?: {
+        newFilter: Props<HierarchyProvider["setHierarchyFilter"]>;
+    };
+    formatterChange?: {
+        newFormatter: IPrimitiveValueFormatter | undefined;
+    };
+}
 
 // @public
 export interface HierarchyDefinition {
@@ -462,7 +473,7 @@ export namespace HierarchyNodesDefinition {
 export interface HierarchyProvider {
     getNodeInstanceKeys(props: Omit<GetHierarchyNodesProps, "ignoreCache">): AsyncIterableIterator<InstanceKey>;
     getNodes(props: GetHierarchyNodesProps): AsyncIterableIterator<HierarchyNode>;
-    readonly hierarchyChanged: Event_2<() => void>;
+    readonly hierarchyChanged: Event_2<(args?: HierarchyChangedEventArgs) => void>;
     setFormatter(formatter: IPrimitiveValueFormatter | undefined): void;
     setHierarchyFilter(props: {
         paths: HierarchyFilteringPath[];
