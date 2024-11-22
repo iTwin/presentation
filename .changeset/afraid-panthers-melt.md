@@ -10,7 +10,7 @@ Added a number of mapped types:
   function func(props: { x: number, y: string }) {
     // ...
   }
-  type FunctionProps = Props(typeof func); // { x: number, y: string }
+  type FunctionProps = Props<typeof func>; // { x: number, y: string }
    ```
 
 - `EventListener<TEvent>` obtains the event listener type of given event type.
