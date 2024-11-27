@@ -96,12 +96,14 @@ export function UniquePropertyValuesSelector(props: UniquePropertyValuesSelector
       }}
       emptyStateMessage={emptyContent}
       value={selectedValues}
+      clearFilterOnOptionToggle={false}
       inputProps={{
         placeholder: translate("unique-values-property-editor.select-values"),
         size: "small",
         value: searchInput,
         onChange: (e) => setSearchInput(e.target.value),
       }}
+      onHide={() => setSearchInput("")}
     />
   );
 }
