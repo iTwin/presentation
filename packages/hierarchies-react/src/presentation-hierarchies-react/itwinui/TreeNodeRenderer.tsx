@@ -77,7 +77,7 @@ export const TreeNodeRenderer: React.ForwardRefExoticComponent<TreeNodeRendererP
     const nodeRef = useRef<HTMLDivElement>(null);
     const ref = useMergedRefs(forwardedRef, nodeRef);
     if ("type" in node && node.type === "ChildrenPlaceholder") {
-      return <PlaceholderNode {...treeNodeProps} />;
+      return <PlaceholderNode {...treeNodeProps} ref={ref} />;
     }
 
     if (isPresentationHierarchyNode(node)) {
@@ -143,6 +143,7 @@ export const TreeNodeRenderer: React.ForwardRefExoticComponent<TreeNodeRendererP
       return (
         <ResultSetTooLargeNode
           {...treeNodeProps}
+          ref={ref}
           limit={node.resultSetSizeLimit}
           onOverrideLimit={getHierarchyLevelDetails ? (limit) => getHierarchyLevelDetails(node.parentNodeId)?.setSizeLimit(limit) : undefined}
           onFilterClick={
