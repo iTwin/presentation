@@ -53,6 +53,7 @@ export function TreeRenderer({
   reloadTree,
   selectionMode,
   localizedStrings,
+  size,
   ...treeProps
 }: TreeRendererProps) {
   const { onNodeClick, onNodeKeyDown } = useSelectionHandler({
@@ -74,17 +75,18 @@ export function TreeRenderer({
           getLabel={getLabel}
           getSublabel={getSublabel}
           reloadTree={reloadTree}
+          size={size}
         />
       );
     },
-    [expandNode, getHierarchyLevelDetails, onFilterClick, onNodeClick, onNodeKeyDown, getIcon, getLabel, getSublabel, reloadTree],
+    [expandNode, getHierarchyLevelDetails, onFilterClick, onNodeClick, onNodeKeyDown, getIcon, getLabel, getSublabel, reloadTree, size],
   );
 
   const getNode = useCallback<TreeProps["getNode"]>((node) => createRenderedTreeNodeData(node, isNodeSelected ?? noopIsNodeSelected), [isNodeSelected]);
 
   return (
     <LocalizationContextProvider localizedStrings={localizedStrings}>
-      <Tree<RenderedTreeNode> {...treeProps} data={rootNodes} nodeRenderer={nodeRenderer} getNode={getNode} enableVirtualization={true} />
+      <Tree<RenderedTreeNode> {...treeProps} size={size} data={rootNodes} nodeRenderer={nodeRenderer} getNode={getNode} enableVirtualization={true} />
     </LocalizationContextProvider>
   );
 }

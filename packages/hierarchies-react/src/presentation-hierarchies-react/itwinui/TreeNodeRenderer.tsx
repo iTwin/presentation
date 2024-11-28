@@ -37,6 +37,8 @@ interface TreeNodeRendererOwnProps {
   reloadTree?: (options: { parentNodeId: string | undefined; state: "reset" }) => void;
   /** CSS class name for the action buttons. */
   actionButtonsClassName?: string;
+  /** Tree node size. Should match the size passed to `TreeRenderer` component. */
+  size?: "default" | "small";
 }
 
 /** @public */
@@ -68,6 +70,7 @@ export const TreeNodeRenderer: React.ForwardRefExoticComponent<TreeNodeRendererP
       actionButtonsClassName,
       getHierarchyLevelDetails,
       reloadTree,
+      size,
       ...treeNodeProps
     },
     forwardedRef,
@@ -77,7 +80,7 @@ export const TreeNodeRenderer: React.ForwardRefExoticComponent<TreeNodeRendererP
     const nodeRef = useRef<HTMLDivElement>(null);
     const ref = useMergedRefs(forwardedRef, nodeRef);
     if ("type" in node && node.type === "ChildrenPlaceholder") {
-      return <PlaceholderNode {...treeNodeProps} ref={ref} />;
+      return <PlaceholderNode {...treeNodeProps} ref={ref} size={size} />;
     }
 
     if (isPresentationHierarchyNode(node)) {
@@ -176,14 +179,26 @@ export const TreeNodeRenderer: React.ForwardRefExoticComponent<TreeNodeRendererP
 );
 TreeNodeRenderer.displayName = "TreeNodeRenderer";
 
-const PlaceholderNode = forwardRef<HTMLDivElement, Omit<TreeNodeProps, "onExpanded" | "label">>((props, forwardedRef) => {
+const PlaceholderNode = forwardRef<
+  HTMLDivElement,
+  Omit<TreeNodeProps, "onExpanded" | "label"> & {
+    size?: "default" | "small";
+  }
+>(({ size, ...props }, forwardedRef) => {
   const { localizedStrings } = useLocalizationContext();
   return (
     <TreeNode
       {...props}
       ref={forwardedRef}
       label={localizedStrings.loading}
-      icon={<ProgressRadial size="x-small" indeterminate title={localizedStrings.loading} />}
+      icon={
+        <ProgressRadial
+          size="x-small"
+          indeterminate
+          title={localizedStrings.loading}
+          className={cx(props.className, { "stateless-tree-node-small-spinner": size === "small" })}
+        />
+      }
       onExpanded={/* c8 ignore next */ () => {}}
     />
   );
