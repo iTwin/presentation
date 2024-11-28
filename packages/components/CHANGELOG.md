@@ -1,5 +1,12 @@
 # Change Log - @itwin/presentation-components
 
+## 5.6.1
+
+### Patch Changes
+
+- [#786](https://github.com/iTwin/presentation/pull/786): Bump package dependencies.
+- [#794](https://github.com/iTwin/presentation/pull/794): Do not clear filter in `UniqueValuesSelector` when value is selected.
+
 ## 5.6.0
 
 ### Minor Changes
@@ -14,7 +21,7 @@
 
   - The number of select options is limited to 100. When more items exist, a non-selectable option is displayed at the bottom of the list, prompting users to provide an items filter. Previously, additional pages of select options was loaded when user scrolled to the bottom of the list.
   - Deprecated `PortalTargetContext`. It is no longer needed.
-  
+
   This affects `PresentationInstanceFilterBuilder` and `NavigationPropertyEditor` components.
 
 - [#754](https://github.com/iTwin/presentation/pull/754): Define `type` and `exports` attributes in `package.json`.
