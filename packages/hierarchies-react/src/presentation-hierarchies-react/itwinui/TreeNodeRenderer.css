@@ -16,3 +16,8 @@
 .stateless-tree-node:focus-within .action-buttons {
   visibility: visible;
 }
+
+.stateless-tree-node-small-spinner {
+  height: var(--iui-size-s);
+  width: var(--iui-size-s);
+}

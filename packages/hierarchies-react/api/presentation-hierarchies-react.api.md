@@ -179,6 +179,7 @@ interface TreeNodeRendererOwnProps {
         parentNodeId: string | undefined;
         state: "reset";
     }) => void;
+    size?: "default" | "small";
 }
 
 // @public (undocumented)
@@ -191,7 +192,7 @@ type TreeNodeRendererProps_2 = ComponentPropsWithoutRef<typeof TreeNodeRenderer>
 type TreeProps = ComponentPropsWithoutRef<typeof Tree<RenderedTreeNode>>;
 
 // @public
-export function TreeRenderer({ rootNodes, expandNode, selectNodes, isNodeSelected, onFilterClick, getIcon, getLabel, getSublabel, getHierarchyLevelDetails, reloadTree, selectionMode, localizedStrings, ...treeProps }: TreeRendererProps): JSX_3.Element;
+export function TreeRenderer({ rootNodes, expandNode, selectNodes, isNodeSelected, onFilterClick, getIcon, getLabel, getSublabel, getHierarchyLevelDetails, reloadTree, selectionMode, localizedStrings, size, ...treeProps }: TreeRendererProps): JSX_3.Element;
 
 // @public (undocumented)
 interface TreeRendererOwnProps {
