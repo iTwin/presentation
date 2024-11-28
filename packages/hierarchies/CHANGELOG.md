@@ -1,5 +1,42 @@
 # @itwin/presentation-hierarchies
 
+## 1.3.0
+
+### Minor Changes
+
+- [#783](https://github.com/iTwin/presentation/pull/783): Extended `createPredicateBasedHierarchyDefinition` props to accept `HierarchyDefinition` functions: `parseNode`, `preProcessNode` and `postProcessNode`.
+
+  The change allows creating a fully capable `HierarchyDefinition` with all the custom behaviors provided by those functions.
+
+- [#791](https://github.com/iTwin/presentation/pull/791): Unify hierarchy updates' handling.
+
+  Previously, we'd only raise the `HierarchyProvider.hierarchyChanged` event on data source changes. The tree state hooks would listen to this event and trigger a hierarchy update. However, there are a few other reasons for the hierarchy to change - changing formatter or active hierarchy filter. In those situations the event was not raised, but tree state hooks still had to trigger hierarchy update. So we ended up with a mix of event-driven and manual hierarchy updates.
+
+  With this change we're clearly stating that a hierarchy provider should trigger its `hierarchyChanged` event whenever something happens that causes the hierarchy to change. That means, the event will be raised when formatter or hierarchy filter is set, and tree state hooks can initiate hierarchy reload from a single place - the `hierarchyChanged` event listener.
+
+  To let event listeners know what caused the hierarchy change, the event now has event arguments, which should be set by the hierarchy provider when raising the event. This allows listeners to customize hierarchy reload logic - for example, our tree state hooks always keep existing tree state except when a new hierarchy filter is set, in which case the existing state is discarded.
+
+- [#783](https://github.com/iTwin/presentation/pull/783): Added hierarchy filtering helper to make hierarchy filtering easier to implement.
+
+  The helper can be created using the `createHierarchyFilteringHelper` function and supplying it the root level filtering paths and parent node. From there, filtering information for specific hierarchy level is determined and an object with the following attributes is returned:
+
+  - `hasFilter` tells if the hierarchy level has a filter applied.
+  - `hasFilterTargetAncestor` tells if there's a filter target ancestor node up in the hierarchy.
+  - `getChildNodeFilteringIdentifiers()` returns an array of hierarchy node identifiers that apply specifically for this hierarchy level.
+  - `createChildNodeProps()` and `createChildNodePropsAsync()` return attributes that should be applied to nodes in filtered hierarchy levels, after applying the filter.
+
+  See the [Implementing hierarchy filtering support](./learning/CustomHierarchyProviders.md#implementing-hierarchy-filtering-support) learning page for a usage example.
+
+  In addition, deprecated a few APIs that are replaced by filtering helper:
+
+  - `extractFilteringProps` function,
+  - `HierarchyNodeFilteringProps.create` function.
+
+### Patch Changes
+
+- Updated dependencies:
+  - @itwin/presentation-shared@1.2.0
+
 ## 1.2.1
 
 ### Patch Changes
