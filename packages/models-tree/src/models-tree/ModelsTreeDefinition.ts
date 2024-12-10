@@ -3,7 +3,6 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { defer, from, map, merge, mergeAll, mergeMap, Observable, ObservableInput } from "rxjs";
 import { Id64Array, Id64String } from "@itwin/core-bentley";
 import {
   ClassGroupingNodeKey,
@@ -35,7 +34,9 @@ import {
   IInstanceLabelSelectClauseFactory,
   InstanceKey,
   Props,
+  releaseMainThread,
 } from "@itwin/presentation-shared";
+import { bufferCount, concatAll, concatMap, defer, delay, from, map, merge, mergeAll, mergeMap, Observable, ObservableInput, of } from "rxjs";
 import { ModelsTreeIdsCache } from "./ModelsTreeIdsCache.js";
 
 /** @beta */
@@ -86,16 +87,16 @@ export interface ElementsGroupInfo {
 interface ModelsTreeInstanceKeyPathsFromTargetItemsProps {
   imodelAccess: ECClassHierarchyInspector & LimitingECSqlQueryExecutor;
   idsCache?: ModelsTreeIdsCache;
-  hierarchyConfig?: ModelsTreeHierarchyConfiguration;
   targetItems: Array<InstanceKey | ElementsGroupInfo>;
+  hierarchyConfig?: ModelsTreeHierarchyConfiguration;
   limit?: number | "unbounded";
 }
 
 interface ModelsTreeInstanceKeyPathsFromInstanceLabelProps {
   imodelAccess: ECClassHierarchyInspector & LimitingECSqlQueryExecutor;
   idsCache?: ModelsTreeIdsCache;
-  hierarchyConfig?: ModelsTreeHierarchyConfiguration;
   label: string;
+  hierarchyConfig?: ModelsTreeHierarchyConfiguration;
   limit?: number | "unbounded";
 }
 
@@ -682,6 +683,7 @@ function createGeometricElementInstanceKeyPaths(
 
     return imodelAccess.createQueryReader({ ctes, ecsql }, { rowFormat: "Indexes", limit: "unbounded" });
   }).pipe(
+    releaseMainThreadOnItemsCount(500),
     map((row) => parseQueryRow(row, groupInfos, separator, hierarchyConfig.elementClassSpecification)),
     mergeMap(({ modelId, elementHierarchyPath, groupingNode }) =>
       createModelInstanceKeyPaths(modelId, idsCache).pipe(
@@ -704,6 +706,22 @@ function createGeometricElementInstanceKeyPaths(
       ),
     ),
   );
+}
+
+export function releaseMainThreadOnItemsCount<T>(elementCount: number) {
+  return (obs: Observable<T>): Observable<T> => {
+    return obs.pipe(
+      bufferCount(elementCount),
+      concatMap((buff, i) => {
+        const out = of(buff);
+        if (i === 0 && buff.length < elementCount) {
+          return out;
+        }
+        return out.pipe(delay(0));
+      }),
+      concatAll(),
+    );
+  };
 }
 
 function parseQueryRow(row: ECSqlQueryRow, groupInfos: ElementsGroupInfo[], separator: string, elementClassName: string) {
@@ -746,8 +764,12 @@ async function createInstanceKeyPathsFromTargetItems({
     subjects: new Array<Id64String>(),
     elements: new Array<Id64String | ElementsGroupInfo>(),
   };
-  await Promise.all(
-    targetItems.map(async (key) => {
+
+  return Promise.all(
+    targetItems.map(async (key, index) => {
+      if (index % 50 === 0) {
+        await releaseMainThread();
+      }
       if ("parent" in key) {
         ids.elements.push(key);
       } else if (await imodelAccess.classDerivesFrom(key.className, "BisCore.Subject")) {
@@ -760,22 +782,23 @@ async function createInstanceKeyPathsFromTargetItems({
         ids.elements.push(key.id);
       }
     }),
-  );
-  const elementBlocks: Array<Array<Id64String | ElementsGroupInfo>> = [];
-  const elementsLength = ids.elements.length;
-  const blockSize = Math.ceil(elementsLength / Math.ceil(elementsLength / 5000));
-  for (let i = 0; i < ids.elements.length; i += blockSize) {
-    elementBlocks.push(ids.elements.slice(i, i + blockSize));
-  }
+  ).then(async () => {
+    const elementBlocks: Array<Array<Id64String | ElementsGroupInfo>> = [];
+    const elementsLength = ids.elements.length;
+    const blockSize = Math.ceil(elementsLength / Math.ceil(elementsLength / 5000));
+    for (let i = 0; i < ids.elements.length; i += blockSize) {
+      elementBlocks.push(ids.elements.slice(i, i + blockSize));
+    }
 
-  return collect(
-    merge(
-      from(ids.subjects).pipe(mergeMap((id) => createSubjectInstanceKeysPath(id, idsCache))),
-      from(ids.models).pipe(mergeMap((id) => createModelInstanceKeyPaths(id, idsCache))),
-      from(ids.categories).pipe(mergeMap((id) => createCategoryInstanceKeyPaths(id, idsCache))),
-      from(elementBlocks).pipe(mergeMap((block) => createGeometricElementInstanceKeyPaths(imodelAccess, idsCache, hierarchyConfig, block))),
-    ),
-  );
+    return collect(
+      merge(
+        from(ids.subjects).pipe(mergeMap((id) => createSubjectInstanceKeysPath(id, idsCache))),
+        from(ids.models).pipe(mergeMap((id) => createModelInstanceKeyPaths(id, idsCache))),
+        from(ids.categories).pipe(mergeMap((id) => createCategoryInstanceKeyPaths(id, idsCache))),
+        from(elementBlocks).pipe(mergeMap((block) => createGeometricElementInstanceKeyPaths(imodelAccess, idsCache, hierarchyConfig, block))),
+      ),
+    );
+  });
 }
 
 async function createInstanceKeyPathsFromInstanceLabel(
