@@ -335,12 +335,11 @@ describe("IModelSelectionHandler", () => {
           const addedKeys = [createSelectableInstanceKey(1), createSelectableInstanceKey(2)];
           imodelAccess.createQueryReader.returns(createFakeQueryReader(toQueryResponse(addedKeys)));
 
-          await using(handler.suspendIModelToolSelectionSync(), async (_) => {
-            selectionSet.onChanged.raiseEvent({ type: CoreSelectionSetEventType.Clear, removed: [], set: selectionSet });
+          using _dispose = handler.suspendIModelToolSelectionSync();
 
-            await waitFor(() => {
-              expect(selectionStorageStub.clearSelection).to.not.be.called;
-            });
+          selectionSet.onChanged.raiseEvent({ type: CoreSelectionSetEventType.Clear, removed: [], set: selectionSet });
+          await waitFor(() => {
+            expect(selectionStorageStub.clearSelection).to.not.be.called;
           });
         },
       );

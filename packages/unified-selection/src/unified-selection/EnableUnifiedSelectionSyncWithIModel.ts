@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { from, Subject, takeUntil } from "rxjs";
-import { assert, Id64Arg, using } from "@itwin/core-bentley";
+import { assert, Id64Arg } from "@itwin/core-bentley";
 import { ECClassHierarchyInspector, ECSqlQueryExecutor } from "@itwin/presentation-shared";
 import { CachingHiliteSetProvider, createCachingHiliteSetProvider } from "./CachingHiliteSetProvider.js";
 import { createHiliteSetProvider, HiliteSet, HiliteSetProvider } from "./HiliteSetProvider.js";
@@ -127,12 +127,14 @@ export class IModelSelectionHandler {
     }
   }
 
-  /** Temporarily suspends tool selection synchronization until the returned `IDisposable` is disposed. */
+  /** Temporarily suspends tool selection synchronization until the returned disposable object is disposed. */
   public suspendIModelToolSelectionSync() {
     const wasSuspended = this._isSuspended;
     this._isSuspended = true;
     return {
-      dispose: () => (this._isSuspended = wasSuspended),
+      [Symbol.dispose]: () => {
+        this._isSuspended = wasSuspended;
+      },
     };
   }
 
@@ -179,12 +181,11 @@ export class IModelSelectionHandler {
 
   private applyCurrentHiliteSet({ activeSelectionAction }: { activeSelectionAction: "clearAll" | "clearHilited" | "keep" }) {
     if (activeSelectionAction !== "keep") {
-      using(this.suspendIModelToolSelectionSync(), (_) => {
-        this._imodelAccess.hiliteSet.clear();
-        if (activeSelectionAction === "clearAll") {
-          this._imodelAccess.selectionSet.emptyAll();
-        }
-      });
+      using _dispose = this.suspendIModelToolSelectionSync();
+      this._imodelAccess.hiliteSet.clear();
+      if (activeSelectionAction === "clearAll") {
+        this._imodelAccess.selectionSet.emptyAll();
+      }
     }
 
     from(this._cachingHiliteSetProvider.getHiliteSet({ imodelKey: this._imodelAccess.key }))
@@ -197,33 +198,31 @@ export class IModelSelectionHandler {
   }
 
   private addHiliteSet(set: HiliteSet) {
-    using(this.suspendIModelToolSelectionSync(), (_) => {
-      if (set.models && set.models.length) {
-        this._imodelAccess.hiliteSet.models.addIds(set.models);
-      }
-      if (set.subCategories && set.subCategories.length) {
-        this._imodelAccess.hiliteSet.subcategories.addIds(set.subCategories);
-      }
-      if (set.elements && set.elements.length) {
-        this._imodelAccess.hiliteSet.elements.addIds(set.elements);
-        this._imodelAccess.selectionSet.add(set.elements);
-      }
-    });
+    using _dispose = this.suspendIModelToolSelectionSync();
+    if (set.models && set.models.length) {
+      this._imodelAccess.hiliteSet.models.addIds(set.models);
+    }
+    if (set.subCategories && set.subCategories.length) {
+      this._imodelAccess.hiliteSet.subcategories.addIds(set.subCategories);
+    }
+    if (set.elements && set.elements.length) {
+      this._imodelAccess.hiliteSet.elements.addIds(set.elements);
+      this._imodelAccess.selectionSet.add(set.elements);
+    }
   }
 
   private removeHiliteSet(set: HiliteSet) {
-    using(this.suspendIModelToolSelectionSync(), (_) => {
-      if (set.models.length) {
-        this._imodelAccess.hiliteSet.models.deleteIds(set.models);
-      }
-      if (set.subCategories.length) {
-        this._imodelAccess.hiliteSet.subcategories.deleteIds(set.subCategories);
-      }
-      if (set.elements.length) {
-        this._imodelAccess.hiliteSet.elements.deleteIds(set.elements);
-        this._imodelAccess.selectionSet.remove(set.elements);
-      }
-    });
+    using _dispose = this.suspendIModelToolSelectionSync();
+    if (set.models.length) {
+      this._imodelAccess.hiliteSet.models.deleteIds(set.models);
+    }
+    if (set.subCategories.length) {
+      this._imodelAccess.hiliteSet.subcategories.deleteIds(set.subCategories);
+    }
+    if (set.elements.length) {
+      this._imodelAccess.hiliteSet.elements.deleteIds(set.elements);
+      this._imodelAccess.selectionSet.remove(set.elements);
+    }
   }
 
   private onIModelSelectionChanged = async (event?: CoreSelectionSetEventUnsafe): Promise<void> => {
