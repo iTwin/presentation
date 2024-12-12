@@ -25,6 +25,7 @@ import { ViewportSelectionHandlerContextProvider, viewWithUnifiedSelection } fro
 import { createTestECInstanceKey } from "../_helpers/Common.js";
 import { render, waitFor } from "../TestUtils.js";
 
+// eslint-disable-next-line @typescript-eslint/no-deprecated
 const PresentationViewport = viewWithUnifiedSelection(ViewportComponent);
 
 describe("Viewport withUnifiedSelection", () => {

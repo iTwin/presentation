@@ -3,8 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { from, Subject, takeUntil } from "rxjs";
-import { assert, Id64Arg, using } from "@itwin/core-bentley";
+import { EMPTY, firstValueFrom, from, map, merge, Observable, Subject, takeUntil, toArray } from "rxjs";
 import { ECClassHierarchyInspector, ECSqlQueryExecutor } from "@itwin/presentation-shared";
 import { CachingHiliteSetProvider, createCachingHiliteSetProvider } from "./CachingHiliteSetProvider.js";
 import { createHiliteSetProvider, HiliteSet, HiliteSetProvider } from "./HiliteSetProvider.js";
@@ -12,7 +11,7 @@ import { SelectableInstanceKey, Selectables } from "./Selectable.js";
 import { StorageSelectionChangeEventArgs, StorageSelectionChangeType } from "./SelectionChangeEvent.js";
 import { computeSelection, ComputeSelectionProps } from "./SelectionScope.js";
 import { SelectionStorage } from "./SelectionStorage.js";
-import { CoreIModelHiliteSet, CoreIModelSelectionSet, CoreSelectionSetEventType, CoreSelectionSetEventUnsafe } from "./types/IModel.js";
+import { CoreIModelHiliteSet, CoreIModelSelectionSet, CoreSelectableIds, CoreSelectionSetEventType, CoreSelectionSetEventUnsafe } from "./types/IModel.js";
 
 /**
  * Props for `enableUnifiedSelectionSyncWithIModel`.
@@ -113,9 +112,7 @@ export class IModelSelectionHandler {
     this._imodelListenerDisposeFunc = this._imodelAccess.selectionSet.onChanged.addListener(this.onIModelSelectionChanged);
     this._unifiedSelectionListenerDisposeFunc = this._selectionStorage.selectionChangeEvent.addListener(this.onUnifiedSelectionChanged);
 
-    // stop imodel from syncing tool selection with hilited list - we want to override that behavior
-    this._imodelAccess.hiliteSet.wantSyncWithSelectionSet = false;
-    this.applyCurrentHiliteSet({ activeSelectionAction: "clearAll" });
+    this.applyCurrentHiliteSet({ activeSelectionAction: "clear" });
   }
 
   public dispose() {
@@ -127,42 +124,42 @@ export class IModelSelectionHandler {
     }
   }
 
-  /** Temporarily suspends tool selection synchronization until the returned `IDisposable` is disposed. */
+  /** Temporarily suspends tool selection synchronization until the returned disposable object is disposed. */
   public suspendIModelToolSelectionSync() {
     const wasSuspended = this._isSuspended;
     this._isSuspended = true;
     return {
-      dispose: () => (this._isSuspended = wasSuspended),
+      [Symbol.dispose]: () => {
+        this._isSuspended = wasSuspended;
+      },
     };
   }
 
-  private handleUnifiedSelectionChange(changeType: StorageSelectionChangeType, selectables: Selectables, source: string) {
-    if (changeType === "clear" || changeType === "replace") {
-      this.applyCurrentHiliteSet({ activeSelectionAction: changeType === "replace" && source === "Tool" ? "clearHilited" : "clearAll" });
-      return;
+  private handleUnifiedSelectionChange(changeType: StorageSelectionChangeType, selectables: Selectables, source: string): void {
+    switch (changeType) {
+      case "clear":
+      case "replace":
+        return this.applyCurrentHiliteSet({ activeSelectionAction: source === "Tool" ? "keep" : "clear" });
+      case "add":
+        return void from(this._hiliteSetProvider.getHiliteSet({ selectables }))
+          .pipe(takeUntil(this._cancelOngoingChanges))
+          .subscribe({
+            next: (set) => {
+              this.addHiliteSet(set);
+            },
+          });
+      case "remove":
+        return void from(this._hiliteSetProvider.getHiliteSet({ selectables }))
+          .pipe(takeUntil(this._cancelOngoingChanges))
+          .subscribe({
+            next: (set) => {
+              this.removeHiliteSet(set);
+            },
+            complete: () => {
+              this.applyCurrentHiliteSet({ activeSelectionAction: "keep" });
+            },
+          });
     }
-
-    if (changeType === "add") {
-      from(this._hiliteSetProvider.getHiliteSet({ selectables }))
-        .pipe(takeUntil(this._cancelOngoingChanges))
-        .subscribe({
-          next: (set) => {
-            this.addHiliteSet(set);
-          },
-        });
-      return;
-    }
-
-    from(this._hiliteSetProvider.getHiliteSet({ selectables }))
-      .pipe(takeUntil(this._cancelOngoingChanges))
-      .subscribe({
-        next: (set) => {
-          this.removeHiliteSet(set);
-        },
-        complete: () => {
-          this.applyCurrentHiliteSet({ activeSelectionAction: "keep" });
-        },
-      });
   }
 
   private onUnifiedSelectionChanged = (args: StorageSelectionChangeEventArgs) => {
@@ -177,14 +174,11 @@ export class IModelSelectionHandler {
     this.handleUnifiedSelectionChange(args.changeType, args.selectables, args.source);
   };
 
-  private applyCurrentHiliteSet({ activeSelectionAction }: { activeSelectionAction: "clearAll" | "clearHilited" | "keep" }) {
-    if (activeSelectionAction !== "keep") {
-      using(this.suspendIModelToolSelectionSync(), (_) => {
-        this._imodelAccess.hiliteSet.clear();
-        if (activeSelectionAction === "clearAll") {
-          this._imodelAccess.selectionSet.emptyAll();
-        }
-      });
+  private applyCurrentHiliteSet({ activeSelectionAction }: { activeSelectionAction: "clear" | "keep" }) {
+    if (activeSelectionAction === "clear") {
+      using _dispose = this.suspendIModelToolSelectionSync();
+      this._imodelAccess.hiliteSet.clear();
+      this._imodelAccess.selectionSet.emptyAll();
     }
 
     from(this._cachingHiliteSetProvider.getHiliteSet({ imodelKey: this._imodelAccess.key }))
@@ -197,22 +191,40 @@ export class IModelSelectionHandler {
   }
 
   private addHiliteSet(set: HiliteSet) {
-    using(this.suspendIModelToolSelectionSync(), (_) => {
-      if (set.models && set.models.length) {
+    using _dispose = this.suspendIModelToolSelectionSync();
+    if ("active" in this._imodelAccess.selectionSet) {
+      // the `active` property tells us we're using 5.0 core, which supports models and subcategories
+      // in selection set - we can simply add the set as a whole
+      this._imodelAccess.selectionSet.add({
+        models: set.models,
+        subcategories: set.subCategories,
+        elements: set.elements,
+      });
+    } else {
+      // pre-5.0 core requires adding models and subcategories to hilite set separately
+      if (set.models.length) {
         this._imodelAccess.hiliteSet.models.addIds(set.models);
       }
-      if (set.subCategories && set.subCategories.length) {
+      if (set.subCategories.length) {
         this._imodelAccess.hiliteSet.subcategories.addIds(set.subCategories);
       }
-      if (set.elements && set.elements.length) {
-        this._imodelAccess.hiliteSet.elements.addIds(set.elements);
+      if (set.elements.length) {
         this._imodelAccess.selectionSet.add(set.elements);
       }
-    });
+    }
   }
 
   private removeHiliteSet(set: HiliteSet) {
-    using(this.suspendIModelToolSelectionSync(), (_) => {
+    using _dispose = this.suspendIModelToolSelectionSync();
+    if ("active" in this._imodelAccess.selectionSet) {
+      // the `active` property tells us we're using 5.0 core, which supports models and subcategories
+      // in selection set - we can simply remove the set as a whole
+      this._imodelAccess.selectionSet.remove({
+        models: set.models,
+        subcategories: set.subCategories,
+        elements: set.elements,
+      });
+    } else {
       if (set.models.length) {
         this._imodelAccess.hiliteSet.models.deleteIds(set.models);
       }
@@ -220,32 +232,34 @@ export class IModelSelectionHandler {
         this._imodelAccess.hiliteSet.subcategories.deleteIds(set.subCategories);
       }
       if (set.elements.length) {
-        this._imodelAccess.hiliteSet.elements.deleteIds(set.elements);
         this._imodelAccess.selectionSet.remove(set.elements);
       }
-    });
+    }
   }
 
-  private onIModelSelectionChanged = async (event?: CoreSelectionSetEventUnsafe): Promise<void> => {
+  private onIModelSelectionChanged = async (event: CoreSelectionSetEventUnsafe): Promise<void> => {
     if (this._isSuspended) {
       return;
     }
 
-    if (CoreSelectionSetEventType.Clear === event!.type) {
+    if (CoreSelectionSetEventType.Clear === event.type) {
       this._selectionStorage.clearSelection({ imodelKey: this._imodelAccess.key, source: this._selectionSourceName });
       return;
     }
 
-    const elementIds = this.getSelectionSetChangeIds(event!);
-    const scopedSelection = computeSelection({ queryExecutor: this._imodelAccess, elementIds, scope: this._activeScopeProvider() });
-    await this.handleIModelSelectionChange(event!.type, scopedSelection);
+    const ids = this.getSelectionSetChangeIds(event);
+    const scopedSelection = merge(
+      ids.elements
+        ? from(computeSelection({ queryExecutor: this._imodelAccess, elementIds: ids.elements, scope: this._activeScopeProvider() }))
+        : /* c8 ignore next */ EMPTY,
+      ids.models ? from(ids.models).pipe(map((id) => ({ className: "BisCore.Model", id }))) : /* c8 ignore next */ EMPTY,
+      ids.subcategories ? from(ids.subcategories).pipe(map((id) => ({ className: "BisCore.SubCategory", id }))) : /* c8 ignore next */ EMPTY,
+    );
+    await this.handleIModelSelectionChange(event.type, scopedSelection);
   };
 
-  private async handleIModelSelectionChange(type: CoreSelectionSetEventType, iterator: AsyncIterableIterator<SelectableInstanceKey>) {
-    const selectables: SelectableInstanceKey[] = [];
-    for await (const selectable of iterator) {
-      selectables.push(selectable);
-    }
+  private async handleIModelSelectionChange(type: CoreSelectionSetEventType, keys: Observable<SelectableInstanceKey>) {
+    const selectables = await firstValueFrom(keys.pipe(toArray()));
     const props = {
       imodelKey: this._imodelAccess.key,
       source: this._selectionSourceName,
@@ -261,25 +275,18 @@ export class IModelSelectionHandler {
     }
   }
 
-  private getSelectionSetChangeIds(event: CoreSelectionSetEventUnsafe): string[] {
+  private getSelectionSetChangeIds(
+    event: Omit<CoreSelectionSetEventUnsafe, "type"> & {
+      type: CoreSelectionSetEventType.Add | CoreSelectionSetEventType.Remove | CoreSelectionSetEventType.Replace;
+    },
+  ): CoreSelectableIds {
     switch (event.type) {
       case CoreSelectionSetEventType.Add:
+        return event.additions ?? (event.added ? { elements: event.added } : /* c8 ignore next */ {});
+      case CoreSelectionSetEventType.Remove:
+        return event.removals ?? (event.removed ? { elements: event.removed } : /* c8 ignore next */ {});
       case CoreSelectionSetEventType.Replace:
-        assert(!!event.added);
-        return this.idArgToIds(event.added);
-      default:
-        assert(!!event.removed);
-        return this.idArgToIds(event.removed);
+        return "active" in event.set ? event.set.active : { elements: event.set.elements };
     }
-  }
-
-  private idArgToIds(ids: Id64Arg): string[] {
-    if (typeof ids === "string") {
-      return [ids];
-    }
-    if (ids instanceof Set) {
-      return [...ids];
-    }
-    return ids;
   }
 }
