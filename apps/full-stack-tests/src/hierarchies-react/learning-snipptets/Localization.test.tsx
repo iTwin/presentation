@@ -138,7 +138,7 @@ describe("Hierarchies React", () => {
         type TreeProps = ComponentPropsWithoutRef<typeof Tree<RenderedTreeNode>>;
         type TreeRendererProps = Props<typeof TreeRenderer>;
 
-        function MyTreeRenderer(props: TreeRendererProps) {
+        function MyTreeRenderer({ rootNodes }: TreeRendererProps) {
           const nodeRenderer = useCallback<TreeProps["nodeRenderer"]>((nodeProps) => {
             return <TreeNodeRenderer {...nodeProps} onFilterClick={() => {}} expandNode={() => {}} />;
           }, []);
@@ -147,7 +147,7 @@ describe("Hierarchies React", () => {
 
           return (
             <LocalizationContextProvider localizedStrings={localizedStrings}>
-              <Tree<RenderedTreeNode> {...props} data={props.rootNodes} nodeRenderer={nodeRenderer} getNode={getNode} />
+              <Tree<RenderedTreeNode> data={rootNodes} nodeRenderer={nodeRenderer} getNode={getNode} enableVirtualization={true} />
             </LocalizationContextProvider>
           );
         }

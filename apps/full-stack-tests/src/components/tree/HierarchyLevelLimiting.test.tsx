@@ -6,6 +6,7 @@
 import { expect } from "chai";
 import { insertPhysicalElement, insertPhysicalModelWithPartition, insertSpatialCategory } from "presentation-test-utilities";
 import { useState } from "react";
+import sinon from "sinon";
 import { SelectionMode, TreeRendererProps, UiComponents } from "@itwin/components-react";
 import { IModelApp, IModelConnection } from "@itwin/core-frontend";
 import { PresentationRpcInterface, Ruleset } from "@itwin/presentation-common";
@@ -30,6 +31,8 @@ describe("Learning snippets", () => {
     });
 
     it("limits hierarchy level size", async function () {
+      // stub console log to avoid hierarchy limit warning in console
+      const consoleStub = sinon.stub(console, "log").callsFake(() => {});
       if (Number.parseInt(PresentationRpcInterface.interfaceVersion.split(".")[0], 10) < 4) {
         // hierarchy level size limiting requires core libraries at least @4.0
         this.skip();
@@ -98,6 +101,7 @@ describe("Learning snippets", () => {
         expect(() => getNodeByLabel(container, `B element ${i + 1}`)).to.throw();
       }
       await waitFor(() => expect(getByText(`thèré ârë möré îtëms thâñ älløwèd límît õf ${hierarchyLevelSizeLimit}`, { exact: false })).is.not.null);
+      consoleStub.restore();
     });
   });
 });

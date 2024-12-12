@@ -327,6 +327,7 @@ describe("PresentationInstanceFilterDialog", () => {
 
   it("throws error when filter is missing presentation metadata", async () => {
     const fromComponentsPropertyFilterStub = sinon.stub(PresentationInstanceFilter, "fromComponentsPropertyFilter").throws(new Error("Some Error"));
+    const consoleErrorStub = sinon.stub(console, "error").callsFake(() => {});
     const spy = sinon.spy();
     const { baseElement, user } = render(<PresentationInstanceFilterDialog imodel={imodel} propertiesSource={propertiesSource} onApply={spy} isOpen={true} />, {
       addThemeProvider: true,
@@ -350,6 +351,7 @@ describe("PresentationInstanceFilterDialog", () => {
 
     await waitFor(() => expect(queryByText(baseElement, "general.error")).to.not.be.null);
     fromComponentsPropertyFilterStub.restore();
+    consoleErrorStub.restore();
   });
 
   it("renders custom title", async () => {
@@ -383,6 +385,7 @@ describe("PresentationInstanceFilterDialog", () => {
   });
 
   it("renders error boundary if error is thrown", async () => {
+    const consoleErrorStub = sinon.stub(console, "error").callsFake(() => {});
     const propertiesSourceGetter = () => {
       throw new Error("Cannot load descriptor");
     };
@@ -392,6 +395,7 @@ describe("PresentationInstanceFilterDialog", () => {
     );
 
     await waitFor(() => expect(queryByText(baseElement, "general.error")).to.not.be.null);
+    consoleErrorStub.restore();
   });
 
   it("renders with lazy-loaded descriptor", async () => {

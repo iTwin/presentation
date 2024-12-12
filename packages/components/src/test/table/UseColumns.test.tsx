@@ -90,6 +90,8 @@ describe("useColumns", () => {
   });
 
   it("throws in React render loop on failure to get content descriptor", async () => {
+    // stub console error to avoid warnings/errors in console
+    const consoleErrorStub = sinon.stub(console, "error").callsFake(() => {});
     presentationManager.getContentDescriptor.resolves(undefined).rejects(new Error("test error"));
 
     const errorSpy = sinon.spy();
@@ -106,5 +108,6 @@ describe("useColumns", () => {
     await waitFor(() => {
       expect(errorSpy).to.be.calledOnce.and.calledWith(sinon.match((error: Error) => error.message === "test error"));
     });
+    consoleErrorStub.restore();
   });
 });

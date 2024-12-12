@@ -224,6 +224,8 @@ describe("useRows", () => {
   });
 
   it("throws in React render loop on failure to get content", async () => {
+    // stub console error to avoid warnings/errors in console
+    const consoleErrorStub = sinon.stub(console, "error").callsFake(() => {});
     getContentIteratorStub.throws(new Error("Failed to load"));
 
     const errorSpy = sinon.spy();
@@ -240,6 +242,7 @@ describe("useRows", () => {
     await waitFor(() => {
       expect(errorSpy).to.be.calledOnce.and.calledWith(sinon.match((error: Error) => error.message === "Failed to load"));
     });
+    consoleErrorStub.restore();
   });
 
   it("returns empty rows list if there are no content", async () => {

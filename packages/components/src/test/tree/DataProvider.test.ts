@@ -507,6 +507,7 @@ describe("TreeDataProvider", () => {
     });
 
     it("returns info node on generic error", async () => {
+      const consoleStub = sinon.stub(console, "error").callsFake(() => {});
       presentationManager.getNodesIterator.callsFake(async () => {
         throw new Error("test");
       });
@@ -514,6 +515,7 @@ describe("TreeDataProvider", () => {
       const actualResult = await provider.getNodes(undefined);
       expect(actualResult).to.have.lengthOf(1);
       expect((actualResult[0] as PresentationInfoTreeNodeItem).message).to.eq(translate("tree.unknown-error"));
+      consoleStub.restore();
     });
 
     it("returns empty result on cancellation", async () => {

@@ -6,7 +6,7 @@
 import { expect } from "chai";
 import { ArrayValue, PrimitiveValue, PropertyDescription, PropertyRecord, PropertyValue, PropertyValueFormat, StructValue } from "@itwin/appui-abstract";
 import { TableCellRenderer } from "../../presentation-components/table/CellRenderer.js";
-import { fireEvent, render, waitFor } from "../TestUtils.js";
+import { render, waitFor } from "../TestUtils.js";
 
 describe("TableCellRenderer", () => {
   function createRecord(value: PropertyValue, propDescription?: Partial<PropertyDescription>) {
@@ -32,6 +32,7 @@ describe("TableCellRenderer", () => {
   });
 
   it("renders array value as button that opens dialog", async () => {
+    // needs fixing. Modal causes findDOMNode warning https://github.com/iTwin/iTwinUI/issues/2199
     const arrayElementValue = "ArrayElement";
     const value: ArrayValue = {
       valueFormat: PropertyValueFormat.Array,
@@ -40,16 +41,17 @@ describe("TableCellRenderer", () => {
     };
     const record = createRecord(value, { typename: "array" });
 
-    const { getByText, queryByText } = render(<TableCellRenderer record={record} />);
+    const { getByText, queryByText, user } = render(<TableCellRenderer record={record} />);
     const buttonLabel = `${value.itemsTypeName}[1]`;
     const button = getByText(buttonLabel);
 
-    fireEvent.click(button);
+    await user.click(button);
     const dialogLabel = `Array of type "${value.itemsTypeName}"`;
     await waitFor(() => expect(queryByText(dialogLabel)).to.not.be.null);
   });
 
   it("renders empty array value as button that opens dialog", async () => {
+    // needs fixing. Modal causes findDOMNode warning https://github.com/iTwin/iTwinUI/issues/2199
     const value: ArrayValue = {
       valueFormat: PropertyValueFormat.Array,
       itemsTypeName: "TestArrayTypeName",
@@ -57,16 +59,17 @@ describe("TableCellRenderer", () => {
     };
     const record = createRecord(value, { typename: "array" });
 
-    const { getByText, queryByText } = render(<TableCellRenderer record={record} />);
+    const { getByText, queryByText, user } = render(<TableCellRenderer record={record} />);
     const buttonLabel = `[]`;
     const button = getByText(buttonLabel);
 
-    fireEvent.click(button);
+    await user.click(button);
     const dialogLabel = `Array of type "${value.itemsTypeName}"`;
     await waitFor(() => expect(queryByText(dialogLabel)).to.not.be.null);
   });
 
   it("renders struct value as button that opens dialog", async () => {
+    // needs fixing. Modal causes findDOMNode warning https://github.com/iTwin/iTwinUI/issues/2199
     const structMemberValue = "FirstMemberValue";
     const value: StructValue = {
       valueFormat: PropertyValueFormat.Struct,
@@ -76,11 +79,11 @@ describe("TableCellRenderer", () => {
     };
     const record = createRecord(value, { typename: "TestStruct" });
 
-    const { getByText, queryByText } = render(<TableCellRenderer record={record} />);
+    const { getByText, queryByText, user } = render(<TableCellRenderer record={record} />);
     const buttonLabel = `{${record.property.typename}}`;
     const button = getByText(buttonLabel);
 
-    fireEvent.click(button);
+    await user.click(button);
     const dialogLabel = `Struct of type "${record.property.typename}"`;
     await waitFor(() => expect(queryByText(dialogLabel)).to.not.be.null);
   });

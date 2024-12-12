@@ -133,7 +133,7 @@ describe("Presentation filter builder value renderer", () => {
       },
     ];
 
-    const { baseElement, getByRole, user } = render(
+    const { baseElement, findByRole, user } = render(
       <PresentationFilterBuilderValueRenderer
         property={testProperty}
         onChange={() => {}}
@@ -146,7 +146,7 @@ describe("Presentation filter builder value renderer", () => {
     );
 
     // trigger loadTargets function
-    const combobox = await waitFor(() => getByRole("combobox"));
+    const combobox = await findByRole("combobox");
     await user.click(combobox);
     await waitFor(async () => {
       expect(queryByText(baseElement, "Value1")).to.not.be.null;
@@ -249,7 +249,7 @@ describe("Presentation filter builder value renderer", () => {
       },
     ];
 
-    const { baseElement, getByRole, user } = render(
+    const { baseElement, findByRole, user } = render(
       <PresentationFilterBuilderValueRenderer
         property={testProperty}
         onChange={() => {}}
@@ -261,7 +261,7 @@ describe("Presentation filter builder value renderer", () => {
     );
 
     // trigger loadTargets function
-    const combobox = await waitFor(() => getByRole("combobox"));
+    const combobox = await findByRole("combobox");
     await user.click(combobox);
     await waitFor(async () => {
       expect(queryByText(baseElement, "Value1")).to.not.be.null;
