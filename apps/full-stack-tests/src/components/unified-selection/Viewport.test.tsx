@@ -2,6 +2,7 @@
  * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
+/* eslint-disable @typescript-eslint/no-deprecated */
 
 import { expect } from "chai";
 import { insertPhysicalElement, insertPhysicalModelWithPartition, insertSpatialCategory } from "presentation-test-utilities";
@@ -41,7 +42,7 @@ describe("Learning snippets", async () => {
 
       // set up imodel for the test
       const elementKeys: InstanceKey[] = [];
-      // eslint-disable-next-line @typescript-eslint/no-deprecated
+
       const imodel = await buildTestIModel(this, async (builder) => {
         const categoryKey = insertSpatialCategory({ builder, fullClassNameSeparator: ":", codeValue: "My Category" });
         const modelKey = insertPhysicalModelWithPartition({ builder, fullClassNameSeparator: ":", codeValue: "My Model" });
