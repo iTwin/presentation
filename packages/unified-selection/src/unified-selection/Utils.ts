@@ -62,10 +62,11 @@ export function releaseMainThreadOnItemsCount<T>(elementCount: number) {
 }
 
 /**
- * A helper that disposes the given object, if it's disposable. The first option is to dispose
- * using the `Symbol.dispose` method if it exists on the object. If not, fall back to the deprecated
- * `dispose` method if it exists. If not, the object is considered as non-disposable and nothing
- * is done with it.
+ * A helper that disposes the given object, if it's disposable.
+ *
+ * The first option is to dispose using the deprecated `dispose` method if it exists on the object.
+ * If not, we use the new `Symbol.dispose` method. If that doesn't exist either, the object is
+ * considered as non-disposable and nothing is done with it.
  *
  * @internal
  */
