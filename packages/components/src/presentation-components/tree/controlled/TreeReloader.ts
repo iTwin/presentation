@@ -2,9 +2,7 @@
  * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
-/** @packageDocumentation
- * @module Internal
- */
+/* eslint-disable @typescript-eslint/no-deprecated */
 
 import { Observable } from "rxjs/internal/Observable";
 import { concat } from "rxjs/internal/observable/concat";

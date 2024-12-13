@@ -2,6 +2,7 @@
  * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
+/* eslint-disable @typescript-eslint/no-deprecated */
 /** @packageDocumentation
  * @module Tree
  */
@@ -26,6 +27,8 @@ import { ReloadedTree, useTreeReload } from "./UseTreeReload.js";
 /**
  * Properties for [[usePresentationTreeState]] hook.
  * @public
+ * @deprecated in 5.7. All tree-related APIs have been deprecated in favor of the new generation hierarchy
+ * building APIs (see https://github.com/iTwin/presentation/blob/33e79ee8d77f30580a9bab81a72884bda008db25/README.md#the-packages).
  */
 export interface UsePresentationTreeStateProps<TEventHandler extends TreeEventHandler = TreeEventHandler> extends PresentationTreeDataProviderProps {
   /**
@@ -79,6 +82,8 @@ export interface UsePresentationTreeStateProps<TEventHandler extends TreeEventHa
 /**
  * Return type of [[usePresentationTreeState]] hook.
  * @public
+ * @deprecated in 5.7. All tree-related APIs have been deprecated in favor of the new generation hierarchy
+ * building APIs (see https://github.com/iTwin/presentation/blob/33e79ee8d77f30580a9bab81a72884bda008db25/README.md#the-packages).
  */
 export interface UsePresentationTreeStateResult<TEventHandler extends TreeEventHandler = TreeEventHandler> {
   /** Tree node loader to be used with a tree component. */
@@ -108,6 +113,8 @@ export interface UsePresentationTreeStateResult<TEventHandler extends TreeEventH
 /**
  * Props passed to [[UsePresentationTreeStateProps.eventHandlerFactory]] when creating event handler.
  * @public
+ * @deprecated in 5.7. All tree-related APIs have been deprecated in favor of the new generation hierarchy
+ * building APIs (see https://github.com/iTwin/presentation/blob/33e79ee8d77f30580a9bab81a72884bda008db25/README.md#the-packages).
  */
 export interface PresentationTreeEventHandlerProps {
   /** Node loader used to load nodes. */
@@ -135,6 +142,8 @@ interface TreeState {
 /**
  * Custom hook that creates and manages state for [ControlledTree]($components-react) component based on presentation data.
  * @public
+ * @deprecated in 5.7. All tree-related APIs have been deprecated in favor of the new generation hierarchy
+ * building APIs (see https://github.com/iTwin/presentation/blob/33e79ee8d77f30580a9bab81a72884bda008db25/README.md#the-packages).
  */
 export function usePresentationTreeState<TEventHandler extends TreeEventHandler = TreeEventHandler>({
   onHierarchyLimitExceeded,

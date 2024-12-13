@@ -2,6 +2,7 @@
  * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
+/* eslint-disable @typescript-eslint/no-deprecated */
 /** @packageDocumentation
  * @module Hierarchies
  */
@@ -18,6 +19,8 @@ import { Presentation } from "@itwin/presentation-frontend";
  * except `children`.
  *
  * @public
+ * @deprecated in 5.2. All tree-related APIs have been deprecated in favor of the new generation hierarchy
+ * building APIs (see https://github.com/iTwin/presentation/blob/33e79ee8d77f30580a9bab81a72884bda008db25/README.md#the-packages).
  */
 export interface MappedNode {
   /** Indexer for all properties in this data structure */
@@ -29,6 +32,8 @@ export interface MappedNode {
 /**
  * Node in a hierarchy.
  * @public
+ * @deprecated in 5.2. All tree-related APIs have been deprecated in favor of the new generation hierarchy
+ * building APIs (see https://github.com/iTwin/presentation/blob/33e79ee8d77f30580a9bab81a72884bda008db25/README.md#the-packages).
  */
 export interface HierarchyNode extends Omit<MappedNode, "children"> {
   /** Children of this node */
@@ -38,12 +43,16 @@ export interface HierarchyNode extends Omit<MappedNode, "children"> {
 /**
  * A function that converts `TreeNodeItem` into a new custom object.
  * @public
+ * @deprecated in 5.2. All tree-related APIs have been deprecated in favor of the new generation hierarchy
+ * building APIs (see https://github.com/iTwin/presentation/blob/33e79ee8d77f30580a9bab81a72884bda008db25/README.md#the-packages).
  */
 export type NodeMappingFunc = (node: TreeNodeItem) => MappedNode;
 
 /**
  * Default [[NodeMappingFunc]] implementation that outputs the whole `TreeNodeItem` object.
  * @public
+ * @deprecated in 5.2. All tree-related APIs have been deprecated in favor of the new generation hierarchy
+ * building APIs (see https://github.com/iTwin/presentation/blob/33e79ee8d77f30580a9bab81a72884bda008db25/README.md#the-packages).
  */
 export const defaultNodeMappingFunc: NodeMappingFunc = (node: TreeNodeItem) => {
   // Skip properties 'id', 'parentId' as they contain  internal stuff
@@ -56,6 +65,8 @@ export const defaultNodeMappingFunc: NodeMappingFunc = (node: TreeNodeItem) => {
 /**
  * Properties for creating a `HierarchyBuilder` instance.
  * @public
+ * @deprecated in 5.2. All tree-related APIs have been deprecated in favor of the new generation hierarchy
+ * building APIs (see https://github.com/iTwin/presentation/blob/33e79ee8d77f30580a9bab81a72884bda008db25/README.md#the-packages).
  */
 export interface HierarchyBuilderProps {
   /** The iModel to pull data from */
@@ -73,6 +84,8 @@ export interface HierarchyBuilderProps {
  * imodel and ruleset.
  *
  * @public
+ * @deprecated in 5.2. All tree-related APIs have been deprecated in favor of the new generation hierarchy
+ * building APIs (see https://github.com/iTwin/presentation/blob/33e79ee8d77f30580a9bab81a72884bda008db25/README.md#the-packages).
  */
 export class HierarchyBuilder {
   private readonly _iModel: IModelConnection;

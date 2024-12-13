@@ -2,6 +2,7 @@
  * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
+/* eslint-disable @typescript-eslint/no-deprecated */
 
 import {
   ActiveMatchInfo,
@@ -154,7 +155,6 @@ export class FilteredPresentationTreeDataProvider implements IFilteredPresentati
   /** @deprecated in 4.0. Use [[isPresentationTreeNodeItem]] and [[PresentationTreeNodeItem.key]] to get [NodeKey]($presentation-common). */
   /* c8 ignore start */
   public getNodeKey(node: TreeNodeItem): NodeKey {
-    // eslint-disable-next-line @typescript-eslint/no-deprecated
     return this._parentDataProvider.getNodeKey(node);
   }
   /* c8 ignore end */

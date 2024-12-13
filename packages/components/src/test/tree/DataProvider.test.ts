@@ -2,6 +2,7 @@
  * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
+/* eslint-disable @typescript-eslint/no-deprecated */
 
 import { expect } from "chai";
 import { createAsyncIterator, ResolvablePromise } from "presentation-test-utilities";
@@ -97,7 +98,7 @@ describe("TreeDataProvider", () => {
 
   describe("getNodeKey", () => {
     it("returns invalid key for non presentation tree node item", () => {
-      const key = provider.getNodeKey({ id: "test_id", label: PropertyRecord.fromString("Test Label") }); // eslint-disable-line @typescript-eslint/no-deprecated
+      const key = provider.getNodeKey({ id: "test_id", label: PropertyRecord.fromString("Test Label") });
       expect(key.type).to.be.empty;
       expect(key.pathFromRoot).to.be.empty;
       expect(key.version).to.be.eq(0);
@@ -110,7 +111,7 @@ describe("TreeDataProvider", () => {
         label: PropertyRecord.fromString("Test Label"),
         key: nodeKey,
       };
-      expect(provider.getNodeKey(item)).to.be.eq(nodeKey); // eslint-disable-line @typescript-eslint/no-deprecated
+      expect(provider.getNodeKey(item)).to.be.eq(nodeKey);
     });
   });
 
@@ -277,13 +278,11 @@ describe("TreeDataProvider", () => {
     });
 
     it("uses `PresentationManager.getNodesAndCount` if `getNodesIterator` is not available", async () => {
-      /* eslint-disable @typescript-eslint/no-deprecated */
       Object.assign(presentationManager, { getNodesIterator: undefined });
       presentationManager.getNodesAndCount.resolves({ count: 1, nodes: [createTestECInstancesNode()] });
       provider = new PresentationTreeDataProvider({ imodel, ruleset: rulesetId });
       await provider.getNodes();
       expect(presentationManager.getNodesAndCount).to.be.calledOnce;
-      /* eslint-enable @typescript-eslint/no-deprecated */
     });
 
     it("logs a warning when requesting nodes and pagingSize is not the same as passed pageOptions", async () => {

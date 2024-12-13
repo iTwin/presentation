@@ -2,6 +2,7 @@
  * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
+/* eslint-disable @typescript-eslint/no-deprecated */
 
 import { expect } from "chai";
 import { ResolvablePromise } from "presentation-test-utilities";
@@ -592,7 +593,7 @@ describe("useUnifiedSelectionTreeEventHandler", () => {
 
   it("creates and disposes UnifiedSelectionTreeEventHandler", () => {
     configure({ reactStrictMode: false });
-    // eslint-disable-next-line @typescript-eslint/no-deprecated
+
     const { result, unmount } = renderHook((props: UnifiedSelectionTreeEventHandlerParams) => useUnifiedSelectionTreeEventHandler(props), {
       initialProps: { nodeLoader },
     });

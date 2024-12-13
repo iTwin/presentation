@@ -2,6 +2,7 @@
  * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
+/* eslint-disable @typescript-eslint/no-deprecated */
 /** @packageDocumentation
  * @module Tree
  */
@@ -14,6 +15,8 @@ import { IPresentationDataProvider } from "../common/IPresentationDataProvider.j
 /**
  * Presentation tree data provider.
  * @public
+ * @deprecated in 5.7. All tree-related APIs have been deprecated in favor of the new generation hierarchy
+ * building APIs (see https://github.com/iTwin/presentation/blob/33e79ee8d77f30580a9bab81a72884bda008db25/README.md#the-packages).
  */
 export interface IPresentationTreeDataProvider extends ITreeDataProvider, IPresentationDataProvider {
   /**
@@ -37,6 +40,8 @@ export interface IPresentationTreeDataProvider extends ITreeDataProvider, IPrese
 /**
  * Filtered presentation tree data provider.
  * @public
+ * @deprecated in 5.7. All tree-related APIs have been deprecated in favor of the new generation hierarchy
+ * building APIs (see https://github.com/iTwin/presentation/blob/33e79ee8d77f30580a9bab81a72884bda008db25/README.md#the-packages).
  */
 export interface IFilteredPresentationTreeDataProvider extends IPresentationTreeDataProvider {
   /**

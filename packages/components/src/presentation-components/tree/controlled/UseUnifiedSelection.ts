@@ -2,6 +2,7 @@
  * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
+/* eslint-disable @typescript-eslint/no-deprecated */
 /** @packageDocumentation
  * @module Tree
  */
@@ -30,6 +31,8 @@ import { toRxjsObservable } from "../Utils.js";
 /**
  * Data structure that describes parameters for UnifiedSelectionTreeEventHandler
  * @public
+ * @deprecated in 5.7. All tree-related APIs have been deprecated in favor of the new generation hierarchy
+ * building APIs (see https://github.com/iTwin/presentation/blob/33e79ee8d77f30580a9bab81a72884bda008db25/README.md#the-packages).
  */
 export interface UnifiedSelectionTreeEventHandlerParams {
   /** Node loader used to load children when node is expanded. */
@@ -58,6 +61,8 @@ export interface UnifiedSelectionTreeEventHandlerParams {
  * unified selection can be controlled by overriding 'shouldSelectNode' and 'createKeysForSelection' methods.
  *
  * @public
+ * @deprecated in 5.7. All tree-related APIs have been deprecated in favor of the new generation hierarchy
+ * building APIs (see https://github.com/iTwin/presentation/blob/33e79ee8d77f30580a9bab81a72884bda008db25/README.md#the-packages).
  */
 export class UnifiedSelectionTreeEventHandler extends TreeEventHandler {
   #dataProvider: IPresentationTreeDataProvider;
@@ -142,7 +147,6 @@ export class UnifiedSelectionTreeEventHandler extends TreeEventHandler {
   /** @deprecated in 4.0. Use [[isPresentationTreeNodeItem]] and [[PresentationTreeNodeItem.key]] to get [NodeKey]($presentation-common). */
   /* c8 ignore start */
   protected getNodeKey(node: TreeNodeItem): NodeKey {
-    // eslint-disable-next-line @typescript-eslint/no-deprecated
     return this.#dataProvider.getNodeKey(node);
   }
   /* c8 ignore end */
@@ -274,7 +278,6 @@ export class UnifiedSelectionTreeEventHandler extends TreeEventHandler {
  * [[UsePresentationTreeProps.eventHandlerFactory]] instead or manually create and dispose [[UnifiedSelectionTreeEventHandler]].
  */
 export function useUnifiedSelectionTreeEventHandler(props: UnifiedSelectionTreeEventHandlerParams) {
-  // eslint-disable-next-line @typescript-eslint/no-deprecated
   return useDisposable(
     useCallback(
       () => new UnifiedSelectionTreeEventHandler(props),
