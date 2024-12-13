@@ -55,9 +55,9 @@ export const MAX_LIMIT_OVERRIDE = 10000;
  * @internal
  */
 export function safeDispose(disposable: {} | { [Symbol.dispose]: () => void } | { dispose: () => void }) {
-  if (Symbol.dispose in disposable) {
-    disposable[Symbol.dispose]();
-  } else if ("dispose" in disposable) {
+  if ("dispose" in disposable) {
     disposable.dispose();
+  } else if (Symbol.dispose in disposable) {
+    disposable[Symbol.dispose]();
   }
 }
