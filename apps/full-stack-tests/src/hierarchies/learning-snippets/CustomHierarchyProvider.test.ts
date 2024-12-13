@@ -210,7 +210,7 @@ describe("Hierarchies", () => {
 
         // The `using` keyword makes sure the provider is disposed when it goes out of scope
         using provider = new IModelHierarchyProvider(imodel);
-        
+
         // Traverse the hierarchy to ensure expected nodes are returned. The result depends on
         // the iModel given to the provider.
         await traverseHierarchy(provider);
