@@ -122,14 +122,14 @@ const hiliteSet = await hiliteProvider.getHiliteSet({ selectables });
 // Some others may want to get a hilite set for _current_ selection in storage - use `createCachingHiliteSetProvider` for that. It's
 // recommended to keep a single instance of this provider per application as it caches hilite sets per each iModel's selection.
 import { createCachingHiliteSetProvider } from "@itwin/unified-selection";
-const selectionHiliteProvider = createCachingHiliteSetProvider({
+// Note the use of `using` keyword here. The caching provider registers a selection change listener and should be disposed, in case
+// its lifetime is shorter than that of `SelectionStorage`, to unregister the listener. The `using` keyword ensures that the provider
+// is disposed when it goes out of scope.
+using selectionHiliteProvider = createCachingHiliteSetProvider({
   selectionStorage,
   imodelProvider: (imodelKey: string) => getIModelByKey(imodelKey),
 });
 const selectionHiliteSet = await selectionHiliteProvider.getHiliteSet({ imodel.key });
-// The caching provider registers a selection change listener and should be disposed, in case its lifetime
-// is shorter than that of `SelectionStorage`, to unregister the listener.
-selectionHiliteProvider.dispose();
 ```
 
 ### Selection scopes
