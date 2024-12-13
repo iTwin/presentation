@@ -4,12 +4,12 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { isIDisposable } from "@itwin/core-bentley";
 import { GenericInstanceFilter, HierarchyFilteringPath, HierarchyNode, HierarchyProvider } from "@itwin/presentation-hierarchies";
 import { InstanceKey, IPrimitiveValueFormatter } from "@itwin/presentation-shared";
 import { TreeActions } from "./internal/TreeActions.js";
 import { isTreeModelHierarchyNode, isTreeModelInfoNode, TreeModel, TreeModelHierarchyNode, TreeModelNode, TreeModelRootNode } from "./internal/TreeModel.js";
 import { useUnifiedTreeSelection, UseUnifiedTreeSelectionProps } from "./internal/UseUnifiedSelection.js";
+import { safeDispose } from "./internal/Utils.js";
 import { PresentationHierarchyNode, PresentationTreeNode } from "./TreeNode.js";
 import { SelectionChangeType } from "./UseSelectionHandler.js";
 
@@ -192,10 +192,8 @@ function useTreeInternal({
     setHierarchyProvider(provider);
     return () => {
       removeHierarchyChangedListener();
-      actions.dispose();
-      if (isIDisposable(provider)) {
-        provider.dispose();
-      }
+      actions[Symbol.dispose]();
+      safeDispose(provider);
     };
   }, [actions, getHierarchyProvider]);
 

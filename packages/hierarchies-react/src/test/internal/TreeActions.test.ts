@@ -73,7 +73,7 @@ describe("TreeActions", () => {
       expect(provider.getNodes).to.be.calledOnce;
       onModelChangedStub.resetHistory();
 
-      actions.dispose();
+      actions[Symbol.dispose]();
       await waitFor(() => {
         expect(onModelChangedStub).to.be.calledOnce;
         const newModel = onModelChangedStub.firstCall.args[0];
@@ -118,7 +118,7 @@ describe("TreeActions", () => {
       });
 
       onModelChangedStub.resetHistory();
-      actions.dispose();
+      actions[Symbol.dispose]();
 
       await waitFor(() => {
         expect(onModelChangedStub).to.be.calledOnce;

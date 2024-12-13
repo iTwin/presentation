@@ -66,7 +66,6 @@ export class TreeActions {
   private loadSubTree(options: LoadNodesOptions, initialRootNode?: TreeModelRootNode) {
     const loadAction = this.getLoadAction(options.parent.id);
     const timeTracker = new TimeTracker((time) => this._onLoad(loadAction, time));
-
     const parentId = options.parent.id;
     this._loader
       .loadNodes(options)
@@ -83,7 +82,7 @@ export class TreeActions {
         },
         complete: () => {
           this.onLoadingComplete(parentId);
-          timeTracker.dispose();
+          timeTracker[Symbol.dispose]();
         },
       });
   }
@@ -142,7 +141,7 @@ export class TreeActions {
     );
   }
 
-  public dispose() {
+  public [Symbol.dispose]() {
     this._disposed.next();
   }
 
@@ -329,7 +328,7 @@ class TimeTracker {
     this._start = Date.now();
   }
 
-  public dispose() {
+  public [Symbol.dispose]() {
     this._stopped = true;
   }
 
