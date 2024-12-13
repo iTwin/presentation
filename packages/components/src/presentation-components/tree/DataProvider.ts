@@ -7,7 +7,7 @@
  */
 
 import { DelayLoadedTreeNodeItem, PageOptions, PropertyFilterRuleGroupOperator, TreeNodeItem } from "@itwin/components-react";
-import { IDisposable, Logger } from "@itwin/core-bentley";
+import { Logger } from "@itwin/core-bentley";
 import { IModelConnection } from "@itwin/core-frontend";
 import {
   BaseNodeKey,
@@ -124,8 +124,8 @@ export interface PresentationTreeDataProviderDataSourceEntryPoints {
  * Presentation Rules-driven tree data provider.
  * @public
  */
-export class PresentationTreeDataProvider implements IPresentationTreeDataProvider, IDisposable {
-  private _disposeVariablesChangeListener?: () => void;
+export class PresentationTreeDataProvider implements IPresentationTreeDataProvider, Disposable {
+  private _unregisterVariablesChangeListener?: () => void;
   private _dataSource: PresentationTreeDataProviderDataSourceEntryPoints;
   private _diagnosticsOptions?: ClientDiagnosticsOptions;
   private _onHierarchyLimitExceeded?: () => void;
@@ -161,12 +161,16 @@ export class PresentationTreeDataProvider implements IPresentationTreeDataProvid
     this._onHierarchyLimitExceeded = props.onHierarchyLimitExceeded;
   }
 
-  /** Destructor. Must be called to clean up.  */
+  /** Destructor. Must be called to clean up. */
+  public [Symbol.dispose]() {
+    this._unregisterVariablesChangeListener?.();
+    this._unregisterVariablesChangeListener = undefined;
+  }
+
+  /** @deprecated in 5.7. Use `[Symbol.dispose]` instead. */
+  /* c8 ignore next 3 */
   public dispose() {
-    if (this._disposeVariablesChangeListener) {
-      this._disposeVariablesChangeListener();
-      this._disposeVariablesChangeListener = undefined;
-    }
+    this[Symbol.dispose]();
   }
 
   public get props(): Readonly<PresentationTreeDataProviderProps> {
@@ -292,10 +296,10 @@ export class PresentationTreeDataProvider implements IPresentationTreeDataProvid
   }
 
   private setupRulesetVariablesListener() {
-    if (this._disposeVariablesChangeListener) {
+    if (this._unregisterVariablesChangeListener) {
       return;
     }
-    this._disposeVariablesChangeListener = Presentation.presentation.vars(getRulesetId(this.props.ruleset)).onVariableChanged.addListener(() => {
+    this._unregisterVariablesChangeListener = Presentation.presentation.vars(getRulesetId(this.props.ruleset)).onVariableChanged.addListener(() => {
       this._getNodesAndCount.cache.values.length = 0;
       this._getNodesAndCount.cache.keys.length = 0;
     });

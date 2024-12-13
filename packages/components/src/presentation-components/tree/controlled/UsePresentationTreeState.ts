@@ -225,13 +225,13 @@ function useTreeState(props: UseTreeStateProps) {
 
     return () => {
       // eslint-disable-next-line react-hooks/exhaustive-deps
-      prevStateRef.current?.dataProvider.dispose();
+      prevStateRef.current?.dataProvider[Symbol.dispose]();
     };
   }, [props.treeStateProps, onNodeLoadedRef, onHierarchyLimitExceededRef, prevStateRef]);
 
   const onReload = useCallback(
     (reloadedTree: ReloadedTree) => {
-      prevStateRef.current?.dataProvider.dispose();
+      prevStateRef.current?.dataProvider[Symbol.dispose]();
 
       const { modelSource, dataProvider } = reloadedTree;
       const pagedLoader = new PagedTreeNodeLoader(dataProvider, modelSource, dataProvider.pagingSize!);

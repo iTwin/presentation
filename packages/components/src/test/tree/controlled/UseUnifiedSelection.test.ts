@@ -20,7 +20,6 @@ import {
   TreeSelectionReplacementEventArgs,
   UiComponents,
 } from "@itwin/components-react";
-import { using } from "@itwin/core-bentley";
 import { EmptyLocalization } from "@itwin/core-common";
 import { IModelConnection } from "@itwin/core-frontend";
 import { Key, KeySet, NodeKey } from "@itwin/presentation-common";
@@ -124,9 +123,8 @@ describe("UnifiedSelectionEventHandler", () => {
 
   describe("modelSource", () => {
     it("returns modelSource", () => {
-      using(createHandler(), (handler) => {
-        expect(handler.modelSource).to.be.eq(modelSource);
-      });
+      using handler = createHandler();
+      expect(handler.modelSource).to.be.eq(modelSource);
     });
   });
 
@@ -144,12 +142,11 @@ describe("UnifiedSelectionEventHandler", () => {
       const event: TreeSelectionModificationEventArgs = {
         modifications: observable,
       };
-      await using(createHandler(), async (handler) => {
-        handler.onSelectionModified(event);
-        await waitForCompletion();
+      using handler = createHandler();
+      handler.onSelectionModified(event);
+      await waitForCompletion();
 
-        expectCalledWithKeys(selectionManager.addToSelection, selectionKeys);
-      });
+      expectCalledWithKeys(selectionManager.addToSelection, selectionKeys);
     });
 
     it("removes nodes from selection", async () => {
@@ -166,12 +163,11 @@ describe("UnifiedSelectionEventHandler", () => {
         modifications: observable,
       };
 
-      await using(createHandler(), async (handler) => {
-        handler.onSelectionModified(event);
-        await waitForCompletion();
+      using handler = createHandler();
+      handler.onSelectionModified(event);
+      await waitForCompletion();
 
-        expectCalledWithKeys(selectionManager.removeFromSelection, selectionKeys);
-      });
+      expectCalledWithKeys(selectionManager.removeFromSelection, selectionKeys);
     });
 
     it("applies unified selection after event is handled", async () => {
@@ -190,13 +186,12 @@ describe("UnifiedSelectionEventHandler", () => {
       const event: TreeSelectionModificationEventArgs = {
         modifications: observable,
       };
-      await using(createHandler(), async (handler) => {
-        handler.onSelectionModified(event);
-        await waitForCompletion();
+      using handler = createHandler();
+      handler.onSelectionModified(event);
+      await waitForCompletion();
 
-        expect(modelSource.getModel().getNode(nodes[0].id)?.isSelected).to.be.true;
-        expect(modelSource.getModel().getNode(nodes[1].id)?.isSelected).to.be.true;
-      });
+      expect(modelSource.getModel().getNode(nodes[0].id)?.isSelected).to.be.true;
+      expect(modelSource.getModel().getNode(nodes[1].id)?.isSelected).to.be.true;
     });
 
     it("stops handling event when selection is cleared", () => {
@@ -206,24 +201,23 @@ describe("UnifiedSelectionEventHandler", () => {
         modifications: modificationsSubject,
       };
 
-      using(createHandler(), (handler) => {
-        handler.onSelectionModified(event);
-        expect(modificationsSubject.observed).to.be.true;
+      using handler = createHandler();
+      handler.onSelectionModified(event);
+      expect(modificationsSubject.observed).to.be.true;
 
-        selectionChangeEvent.raiseEvent(
-          {
-            changeType: SelectionChangeType.Clear,
-            imodel,
-            keys: new KeySet(),
-            level: 0,
-            source: "TestSource",
-            timestamp: new Date(),
-          },
-          {} as ISelectionProvider,
-        );
+      selectionChangeEvent.raiseEvent(
+        {
+          changeType: SelectionChangeType.Clear,
+          imodel,
+          keys: new KeySet(),
+          level: 0,
+          source: "TestSource",
+          timestamp: new Date(),
+        },
+        {} as ISelectionProvider,
+      );
 
-        expect(modificationsSubject.observed).to.be.false;
-      });
+      expect(modificationsSubject.observed).to.be.false;
     });
   });
 
@@ -242,12 +236,11 @@ describe("UnifiedSelectionEventHandler", () => {
         replacements: observable,
       };
 
-      await using(createHandler(), async (handler) => {
-        handler.onSelectionReplaced(event);
-        await waitForCompletion();
+      using handler = createHandler();
+      handler.onSelectionReplaced(event);
+      await waitForCompletion();
 
-        expectCalledWithKeys(selectionManager.replaceSelection, selectionKeys);
-      });
+      expectCalledWithKeys(selectionManager.replaceSelection, selectionKeys);
     });
 
     it("adds loaded nodes to selection", async () => {
@@ -263,13 +256,12 @@ describe("UnifiedSelectionEventHandler", () => {
         replacements: observable,
       };
 
-      await using(createHandler(), async (handler) => {
-        handler.onSelectionReplaced(event);
-        await waitForCompletion();
+      using handler = createHandler();
+      handler.onSelectionReplaced(event);
+      await waitForCompletion();
 
-        expectCalledWithKeys(selectionManager.replaceSelection, SelectionHelper.getKeysForSelection([getItemKey(node1.item)]));
-        expectCalledWithKeys(selectionManager.addToSelection, SelectionHelper.getKeysForSelection([getItemKey(node2.item)]));
-      });
+      expectCalledWithKeys(selectionManager.replaceSelection, SelectionHelper.getKeysForSelection([getItemKey(node1.item)]));
+      expectCalledWithKeys(selectionManager.addToSelection, SelectionHelper.getKeysForSelection([getItemKey(node2.item)]));
     });
 
     it("does not replace selection if event does not have nodes", async () => {
@@ -278,12 +270,11 @@ describe("UnifiedSelectionEventHandler", () => {
         replacements: observable,
       };
 
-      await using(createHandler(), async (handler) => {
-        handler.onSelectionReplaced(event);
-        await waitForCompletion();
+      using handler = createHandler();
+      handler.onSelectionReplaced(event);
+      await waitForCompletion();
 
-        expect(selectionManager.replaceSelection).to.not.be.called;
-      });
+      expect(selectionManager.replaceSelection).to.not.be.called;
     });
 
     it("cancels ongoing changes", async () => {
@@ -303,19 +294,18 @@ describe("UnifiedSelectionEventHandler", () => {
         replacements: observable,
       };
 
-      await using(createHandler(), async (handler) => {
-        handler.onSelectionReplaced(initialEvent);
+      using handler = createHandler();
+      handler.onSelectionReplaced(initialEvent);
 
-        replacements.next({ selectedNodeItems: [node1.item] });
-        handler.onSelectionReplaced(event);
-        replacements.next({ selectedNodeItems: [node2.item] });
-        await waitForCompletion();
+      replacements.next({ selectedNodeItems: [node1.item] });
+      handler.onSelectionReplaced(event);
+      replacements.next({ selectedNodeItems: [node2.item] });
+      await waitForCompletion();
 
-        expect(selectionManager.addToSelection).to.not.be.called;
-        expect(selectionManager.replaceSelection).to.be.calledTwice;
-        expectCalledWithKeys(selectionManager.replaceSelection, SelectionHelper.getKeysForSelection([getItemKey(node1.item)]));
-        expectCalledWithKeys(selectionManager.replaceSelection, SelectionHelper.getKeysForSelection([getItemKey(node3.item)]));
-      });
+      expect(selectionManager.addToSelection).to.not.be.called;
+      expect(selectionManager.replaceSelection).to.be.calledTwice;
+      expectCalledWithKeys(selectionManager.replaceSelection, SelectionHelper.getKeysForSelection([getItemKey(node1.item)]));
+      expectCalledWithKeys(selectionManager.replaceSelection, SelectionHelper.getKeysForSelection([getItemKey(node3.item)]));
     });
 
     it("applies unified selection after event is handled", async () => {
@@ -335,13 +325,12 @@ describe("UnifiedSelectionEventHandler", () => {
         replacements: observable,
       };
 
-      await using(createHandler(), async (handler) => {
-        handler.onSelectionReplaced(event);
-        await waitForCompletion();
+      using handler = createHandler();
+      handler.onSelectionReplaced(event);
+      await waitForCompletion();
 
-        expect(modelSource.getModel().getNode(nodes[0].id)?.isSelected).to.be.true;
-        expect(modelSource.getModel().getNode(nodes[1].id)?.isSelected).to.be.true;
-      });
+      expect(modelSource.getModel().getNode(nodes[0].id)?.isSelected).to.be.true;
+      expect(modelSource.getModel().getNode(nodes[1].id)?.isSelected).to.be.true;
     });
 
     it("stops handling event when selection is cleared", () => {
@@ -351,24 +340,23 @@ describe("UnifiedSelectionEventHandler", () => {
         replacements: replacementsSubject,
       };
 
-      using(createHandler(), (handler) => {
-        handler.onSelectionReplaced(event);
-        expect(replacementsSubject.observed).to.be.true;
+      using handler = createHandler();
+      handler.onSelectionReplaced(event);
+      expect(replacementsSubject.observed).to.be.true;
 
-        selectionChangeEvent.raiseEvent(
-          {
-            changeType: SelectionChangeType.Clear,
-            imodel,
-            keys: new KeySet(),
-            level: 0,
-            source: "TestSource",
-            timestamp: new Date(),
-          },
-          {} as ISelectionProvider,
-        );
+      selectionChangeEvent.raiseEvent(
+        {
+          changeType: SelectionChangeType.Clear,
+          imodel,
+          keys: new KeySet(),
+          level: 0,
+          source: "TestSource",
+          timestamp: new Date(),
+        },
+        {} as ISelectionProvider,
+      );
 
-        expect(replacementsSubject.observed).to.be.false;
-      });
+      expect(replacementsSubject.observed).to.be.false;
     });
   });
 
@@ -377,12 +365,11 @@ describe("UnifiedSelectionEventHandler", () => {
       const node = createNode();
       selectionManager.getSelection.returns(new KeySet([getItemKey(node.item)]));
 
-      using(createHandler(), (_) => {
-        modelSource.modifyModel((model) => {
-          model.setChildren(undefined, [node], 0);
-        });
-        expect(modelSource.getModel().getNode(node.id)?.isSelected).to.be.true;
+      using _handler = createHandler();
+      modelSource.modifyModel((model) => {
+        model.setChildren(undefined, [node], 0);
       });
+      expect(modelSource.getModel().getNode(node.id)?.isSelected).to.be.true;
     });
 
     it("applies unified selection for modified nodes", () => {
@@ -393,13 +380,12 @@ describe("UnifiedSelectionEventHandler", () => {
         model.setChildren(undefined, [node], 0);
       });
 
-      using(createHandler(), (_) => {
-        modelSource.modifyModel((model) => {
-          model.getNode(node.id)!.isExpanded = true;
-        });
-
-        expect(modelSource.getModel().getNode(node.id)?.isSelected).to.be.true;
+      using _handler = createHandler();
+      modelSource.modifyModel((model) => {
+        model.getNode(node.id)!.isExpanded = true;
       });
+
+      expect(modelSource.getModel().getNode(node.id)?.isSelected).to.be.true;
     });
 
     it("does not lookup selection when node is removed", () => {
@@ -410,14 +396,13 @@ describe("UnifiedSelectionEventHandler", () => {
         model.setChildren(undefined, nodes, 0);
       });
 
-      using(createHandler(), (_) => {
-        selectionManager.getSelection.resetHistory();
-        modelSource.modifyModel((model) => {
-          model.removeChild(undefined, nodes[1].id);
-        });
-
-        expect(selectionManager.getSelection).to.not.be.called;
+      using _handler = createHandler();
+      selectionManager.getSelection.resetHistory();
+      modelSource.modifyModel((model) => {
+        model.removeChild(undefined, nodes[1].id);
       });
+
+      expect(selectionManager.getSelection).to.not.be.called;
     });
   });
 
@@ -453,22 +438,21 @@ describe("UnifiedSelectionEventHandler", () => {
       // setup initial selection
       selectionManager.getSelection.returns(new KeySet(SelectionHelper.getKeysForSelection([getItemKey(nodes[1].item)])));
 
-      using(createHandler(), (_) => {
-        // verify nodes selected based on initial unified selection
-        expect(modelSource.getModel().getNode(nodes[0].id)?.isSelected).to.be.false;
-        expect(modelSource.getModel().getNode(nodes[1].id)?.isSelected).to.be.true;
-        expect(modelSource.getModel().getNode(nodes[2].id)?.isSelected).to.be.false;
+      using _handler = createHandler();
+      // verify nodes selected based on initial unified selection
+      expect(modelSource.getModel().getNode(nodes[0].id)?.isSelected).to.be.false;
+      expect(modelSource.getModel().getNode(nodes[1].id)?.isSelected).to.be.true;
+      expect(modelSource.getModel().getNode(nodes[2].id)?.isSelected).to.be.false;
 
-        selectionManager.getSelection.reset();
-        const selectionKeys = SelectionHelper.getKeysForSelection(nodes.map((n) => getItemKey(n.item)));
-        selectionManager.getSelection.returns(new KeySet(selectionKeys));
-        selectionChangeEvent.raiseEvent(createSelectionEvent({ changeType: SelectionChangeType.Add }), selectionProvider);
+      selectionManager.getSelection.reset();
+      const selectionKeys = SelectionHelper.getKeysForSelection(nodes.map((n) => getItemKey(n.item)));
+      selectionManager.getSelection.returns(new KeySet(selectionKeys));
+      selectionChangeEvent.raiseEvent(createSelectionEvent({ changeType: SelectionChangeType.Add }), selectionProvider);
 
-        // verify nodes selected based on updated unified selection
-        expect(modelSource.getModel().getNode(nodes[0].id)?.isSelected).to.be.true;
-        expect(modelSource.getModel().getNode(nodes[1].id)?.isSelected).to.be.true;
-        expect(modelSource.getModel().getNode(nodes[2].id)?.isSelected).to.be.true;
-      });
+      // verify nodes selected based on updated unified selection
+      expect(modelSource.getModel().getNode(nodes[0].id)?.isSelected).to.be.true;
+      expect(modelSource.getModel().getNode(nodes[1].id)?.isSelected).to.be.true;
+      expect(modelSource.getModel().getNode(nodes[2].id)?.isSelected).to.be.true;
     });
 
     it("deselects nodes according unified selection", () => {
@@ -484,19 +468,18 @@ describe("UnifiedSelectionEventHandler", () => {
       // setup initial selection
       selectionManager.getSelection.returns(new KeySet(SelectionHelper.getKeysForSelection([getItemKey(nodes[0].item)])));
 
-      using(createHandler(), (_) => {
-        // verify nodes selected based on initial unified selection
-        expect(modelSource.getModel().getNode(nodes[0].id)?.isSelected).to.be.true;
-        expect(modelSource.getModel().getNode(nodes[1].id)?.isSelected).to.be.false;
+      using _handler = createHandler();
+      // verify nodes selected based on initial unified selection
+      expect(modelSource.getModel().getNode(nodes[0].id)?.isSelected).to.be.true;
+      expect(modelSource.getModel().getNode(nodes[1].id)?.isSelected).to.be.false;
 
-        selectionManager.getSelection.reset();
-        selectionManager.getSelection.returns(new KeySet());
-        selectionChangeEvent.raiseEvent(createSelectionEvent({ changeType: SelectionChangeType.Add }), selectionProvider);
+      selectionManager.getSelection.reset();
+      selectionManager.getSelection.returns(new KeySet());
+      selectionChangeEvent.raiseEvent(createSelectionEvent({ changeType: SelectionChangeType.Add }), selectionProvider);
 
-        // verify nodes selected based on updated unified selection
-        expect(modelSource.getModel().getNode(nodes[0].id)?.isSelected).to.be.false;
-        expect(modelSource.getModel().getNode(nodes[1].id)?.isSelected).to.be.false;
-      });
+      // verify nodes selected based on updated unified selection
+      expect(modelSource.getModel().getNode(nodes[0].id)?.isSelected).to.be.false;
+      expect(modelSource.getModel().getNode(nodes[1].id)?.isSelected).to.be.false;
     });
 
     it("ignores selection changes on different imodel", () => {
@@ -512,22 +495,18 @@ describe("UnifiedSelectionEventHandler", () => {
       // setup initial selection
       selectionManager.getSelection.returns(new KeySet());
 
-      using(createHandler(), (_) => {
-        // verify nodes selected based on initial unified selection
-        expect(modelSource.getModel().getNode(nodes[0].id)?.isSelected).to.be.false;
-        expect(modelSource.getModel().getNode(nodes[1].id)?.isSelected).to.be.false;
+      using _handler = createHandler();
+      // verify nodes selected based on initial unified selection
+      expect(modelSource.getModel().getNode(nodes[0].id)?.isSelected).to.be.false;
+      expect(modelSource.getModel().getNode(nodes[1].id)?.isSelected).to.be.false;
 
-        selectionManager.getSelection.resetHistory();
-        selectionChangeEvent.raiseEvent(
-          { ...createSelectionEvent({ changeType: SelectionChangeType.Add }), imodel: {} as IModelConnection },
-          selectionProvider,
-        );
-        expect(selectionManager.getSelection).to.not.be.called;
+      selectionManager.getSelection.resetHistory();
+      selectionChangeEvent.raiseEvent({ ...createSelectionEvent({ changeType: SelectionChangeType.Add }), imodel: {} as IModelConnection }, selectionProvider);
+      expect(selectionManager.getSelection).to.not.be.called;
 
-        // verify selection change event was ignored
-        expect(modelSource.getModel().getNode(nodes[0].id)?.isSelected).to.be.false;
-        expect(modelSource.getModel().getNode(nodes[1].id)?.isSelected).to.be.false;
-      });
+      // verify selection change event was ignored
+      expect(modelSource.getModel().getNode(nodes[0].id)?.isSelected).to.be.false;
+      expect(modelSource.getModel().getNode(nodes[1].id)?.isSelected).to.be.false;
     });
 
     it("cancels ongoing changes when unified selection changes", async () => {
@@ -544,17 +523,16 @@ describe("UnifiedSelectionEventHandler", () => {
       // setup initial selection
       selectionManager.getSelection.returns(new KeySet());
 
-      await using(createHandler(), async (handler) => {
-        handler.onSelectionReplaced(event);
+      using handler = createHandler();
+      handler.onSelectionReplaced(event);
 
-        replacements.next({ selectedNodeItems: [node1.item] });
-        expectCalledWithKeys(selectionManager.replaceSelection, SelectionHelper.getKeysForSelection([getItemKey(node1.item)]));
+      replacements.next({ selectedNodeItems: [node1.item] });
+      expectCalledWithKeys(selectionManager.replaceSelection, SelectionHelper.getKeysForSelection([getItemKey(node1.item)]));
 
-        selectionChangeEvent.raiseEvent(createSelectionEvent({ changeType: SelectionChangeType.Replace, source: "Unified_Selection" }), selectionProvider);
+      selectionChangeEvent.raiseEvent(createSelectionEvent({ changeType: SelectionChangeType.Replace, source: "Unified_Selection" }), selectionProvider);
 
-        replacements.next({ selectedNodeItems: [node2.item] });
-        expect(selectionManager.addToSelection).to.not.be.called;
-      });
+      replacements.next({ selectedNodeItems: [node2.item] });
+      expect(selectionManager.addToSelection).to.not.be.called;
     });
 
     it("does not cancel ongoing changes when change caused by handler", async () => {
@@ -571,17 +549,16 @@ describe("UnifiedSelectionEventHandler", () => {
       // setup initial selection
       selectionManager.getSelection.returns(new KeySet());
 
-      await using(createHandler(), async (handler) => {
-        handler.onSelectionReplaced(event);
+      using handler = createHandler();
+      handler.onSelectionReplaced(event);
 
-        replacements.next({ selectedNodeItems: [node1.item] });
-        expectCalledWithKeys(selectionManager.replaceSelection, SelectionHelper.getKeysForSelection([getItemKey(node1.item)]));
+      replacements.next({ selectedNodeItems: [node1.item] });
+      expectCalledWithKeys(selectionManager.replaceSelection, SelectionHelper.getKeysForSelection([getItemKey(node1.item)]));
 
-        selectionChangeEvent.raiseEvent(createSelectionEvent({ changeType: SelectionChangeType.Replace, source: "Test_Handler" }), selectionProvider);
+      selectionChangeEvent.raiseEvent(createSelectionEvent({ changeType: SelectionChangeType.Replace, source: "Test_Handler" }), selectionProvider);
 
-        replacements.next({ selectedNodeItems: [node2.item] });
-        expectCalledWithKeys(selectionManager.addToSelection, SelectionHelper.getKeysForSelection([getItemKey(node2.item)]));
-      });
+      replacements.next({ selectedNodeItems: [node2.item] });
+      expectCalledWithKeys(selectionManager.addToSelection, SelectionHelper.getKeysForSelection([getItemKey(node2.item)]));
     });
   });
 });
@@ -621,7 +598,7 @@ describe("useUnifiedSelectionTreeEventHandler", () => {
     });
 
     expect(result.current).to.not.be.undefined;
-    const spy = sinon.spy(result.current, "dispose");
+    const spy = sinon.spy(result.current, Symbol.dispose);
     unmount();
     expect(spy).to.be.called;
   });

@@ -32,6 +32,7 @@ describe("reloadTree", () => {
       getFilteredNodePaths: async () => [],
       getNodesCount: async () => 3,
       getNodes: async (parent, page) => [createDelayLoadedTreeNodeItem(`${parent?.id ?? "root"}-${page?.start ?? 0}`)],
+      [Symbol.dispose]: () => {},
       dispose: () => {},
       createRequestOptions: () => ({ rulesetOrId: "", imodel: {} as IModelConnection }),
     };

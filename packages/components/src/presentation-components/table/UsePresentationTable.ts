@@ -124,7 +124,7 @@ export function usePresentationTableWithUnifiedSelection<TColumn, TRow>(
       setSelectedRows(rowsToAddToSelection);
     };
 
-    const disposeListener = Presentation.selection.selectionChange.addListener(({ imodel: selectionIModel, level }) => {
+    const unregisterListener = Presentation.selection.selectionChange.addListener(({ imodel: selectionIModel, level }) => {
       if (selectionIModel !== imodel || level > 1) {
         return;
       }
@@ -134,7 +134,7 @@ export function usePresentationTableWithUnifiedSelection<TColumn, TRow>(
 
     updateSelectedRows();
 
-    return disposeListener;
+    return unregisterListener;
   }, [rows, imodel]);
 
   const onSelect = (selectedKeys: string[]) => {

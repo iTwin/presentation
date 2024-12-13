@@ -25,7 +25,6 @@ import { HierarchyRequestOptions } from '@itwin/presentation-common';
 import { HighlightableTreeProps } from '@itwin/components-react';
 import { IContentVisitor } from '@itwin/presentation-common';
 import { Id64Arg } from '@itwin/core-bentley';
-import { IDisposable } from '@itwin/core-bentley';
 import { ImmediatelyLoadedTreeNodeItem } from '@itwin/components-react';
 import { IModelConnection } from '@itwin/core-frontend';
 import { InstanceFilterDefinition } from '@itwin/presentation-common';
@@ -112,8 +111,10 @@ export namespace CacheInvalidationProps {
 
 // @public
 export class ContentDataProvider implements IContentDataProvider {
+    [Symbol.dispose](): void;
     constructor(props: ContentDataProviderProps);
     get displayType(): string;
+    // @deprecated (undocumented)
     dispose(): void;
     getContent(pageOptions?: PageOptions): Promise<Content | undefined>;
     getContentDescriptor: Memoized<() => Promise<Descriptor | undefined>>;
@@ -291,7 +292,10 @@ export class InstanceKeyValueRenderer implements IPropertyValueRenderer {
 }
 
 // @public
-export interface IPresentationDataProvider extends IDisposable {
+export interface IPresentationDataProvider {
+    [Symbol.dispose]?: () => void;
+    // @deprecated
+    dispose(): void;
     readonly imodel: IModelConnection;
     readonly rulesetId: string;
 }
@@ -478,7 +482,9 @@ export interface PresentationLabelsProviderProps {
 
 // @public
 export class PresentationPropertyDataProvider extends ContentDataProvider implements IPresentationPropertyDataProvider {
+    [Symbol.dispose](): void;
     constructor(props: PresentationPropertyDataProviderProps);
+    // @deprecated (undocumented)
     dispose(): void;
     getData(): Promise<PropertyData>;
     protected getDescriptorOverrides(): Promise<DescriptorOverrides>;
@@ -516,7 +522,8 @@ export interface PresentationPropertyDataProviderProps extends DiagnosticsProps 
 export function PresentationTree<TEventHandler extends TreeEventHandler>({ state, ...props }: PresentationTreeProps<TEventHandler>): JSX_3.Element;
 
 // @public
-export class PresentationTreeDataProvider implements IPresentationTreeDataProvider, IDisposable {
+export class PresentationTreeDataProvider implements IPresentationTreeDataProvider, Disposable {
+    [Symbol.dispose](): void;
     constructor(props: PresentationTreeDataProviderProps);
     createRequestOptions(parentKey: NodeKey | undefined, instanceFilter?: InstanceFilterDefinition): {
         instanceFilter?: InstanceFilterDefinition | undefined;
@@ -529,6 +536,7 @@ export class PresentationTreeDataProvider implements IPresentationTreeDataProvid
         unitSystem?: UnitSystemKey;
         transport?: "unparsed-json";
     };
+    // @deprecated (undocumented)
     dispose(): void;
     getFilteredNodePaths(filter: string): Promise<NodePathElement[]>;
     // @deprecated
@@ -746,10 +754,11 @@ export interface UnifiedSelectionContextProviderProps {
 export type UnifiedSelectionState = (selectionLevel?: number) => Readonly<KeySet>;
 
 // @public
-export class UnifiedSelectionTreeEventHandler extends TreeEventHandler implements IDisposable {
+export class UnifiedSelectionTreeEventHandler extends TreeEventHandler {
+    [Symbol.dispose](): void;
     constructor(params: UnifiedSelectionTreeEventHandlerParams);
     protected createKeysForSelection(nodes: TreeNodeItem[], _selectionType: SelectionChangeType): Keys;
-    // (undocumented)
+    // @deprecated (undocumented)
     dispose(): void;
     // (undocumented)
     protected getKeys(nodes: TreeNodeItem[]): Keys;

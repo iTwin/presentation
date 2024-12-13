@@ -56,7 +56,7 @@ export function viewWithUnifiedSelection<P extends ViewportProps>(ViewportCompon
       handler.applyCurrentSelection();
       setViewportSelectionHandler(handler);
       return () => {
-        handler.dispose();
+        handler[Symbol.dispose]();
       };
     }, [selectionHandler, imodel]);
 

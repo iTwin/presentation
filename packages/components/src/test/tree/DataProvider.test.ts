@@ -79,7 +79,7 @@ describe("TreeDataProvider", () => {
 
   afterEach(() => {
     onHierarchyLimitExceededSpy.resetHistory();
-    provider.dispose();
+    provider[Symbol.dispose]();
     sinon.restore();
   });
 
@@ -549,7 +549,7 @@ describe("TreeDataProvider", () => {
     it("passes rule diagnostics options to presentation manager", async () => {
       const diagnosticsHandler = sinon.stub();
 
-      provider.dispose();
+      provider[Symbol.dispose]();
       provider = new PresentationTreeDataProvider({
         imodel,
         ruleset: rulesetId,
@@ -566,7 +566,7 @@ describe("TreeDataProvider", () => {
     it("passes dev diagnostics options to presentation manager", async () => {
       const diagnosticsHandler = sinon.stub();
 
-      provider.dispose();
+      provider[Symbol.dispose]();
       provider = new PresentationTreeDataProvider({
         imodel,
         ruleset: rulesetId,

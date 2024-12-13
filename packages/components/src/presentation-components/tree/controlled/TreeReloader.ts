@@ -15,7 +15,6 @@ import { concatMap } from "rxjs/internal/operators/concatMap";
 import { endWith } from "rxjs/internal/operators/endWith";
 import { expand } from "rxjs/internal/operators/expand";
 import { filter } from "rxjs/internal/operators/filter";
-import { finalize } from "rxjs/internal/operators/finalize";
 import { ignoreElements } from "rxjs/internal/operators/ignoreElements";
 import { map } from "rxjs/internal/operators/map";
 import { mergeMap } from "rxjs/internal/operators/mergeMap";
@@ -35,7 +34,7 @@ import {
   TreeNodeLoadResult,
   VisibleTreeNodes,
 } from "@itwin/components-react";
-import { assert, isIDisposable } from "@itwin/core-bentley";
+import { assert } from "@itwin/core-bentley";
 import { IPresentationTreeDataProvider } from "../IPresentationTreeDataProvider.js";
 import { toRxjsObservable } from "../Utils.js";
 
@@ -56,10 +55,7 @@ export function reloadTree(
 ): Observable<TreeModelSource> {
   const modelSource = new TreeModelSource();
   const nodeLoader = new TreeReloader(dataProvider, modelSource, pageSize, treeModel, itemsRange);
-  return nodeLoader.reloadTree().pipe(
-    endWith(modelSource),
-    finalize(() => isIDisposable(nodeLoader) && /* c8 ignore next */ nodeLoader.dispose()),
-  );
+  return nodeLoader.reloadTree().pipe(endWith(modelSource));
 }
 
 class TreeReloader extends PagedTreeNodeLoader<IPresentationTreeDataProvider> {

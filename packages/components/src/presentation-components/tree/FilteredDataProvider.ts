@@ -52,6 +52,8 @@ export class FilteredPresentationTreeDataProvider implements IFilteredPresentati
   }
 
   /* c8 ignore next - only here to meet interface's requirements, nothing to test */
+  public [Symbol.dispose]() {}
+  /* c8 ignore next - only here to meet interface's requirements, nothing to test */
   public dispose() {}
 
   public get rulesetId(): string {

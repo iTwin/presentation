@@ -6,7 +6,7 @@
 import { expect } from "chai";
 import { ResolvablePromise } from "presentation-test-utilities";
 import * as sinon from "sinon";
-import { BeDuration, using } from "@itwin/core-bentley";
+import { BeDuration } from "@itwin/core-bentley";
 import { RegisteredRuleset } from "@itwin/presentation-common";
 import { Presentation, RulesetManager } from "@itwin/presentation-frontend";
 import { RulesetRegistrationHelper } from "../../presentation-components/common/RulesetRegistrationHelper.js";
@@ -30,21 +30,21 @@ describe("RulesetRegistrationHelper", () => {
 
   it("does nothing when helper is created with ruleset id", () => {
     const rulesetId = "test";
-    using(new RulesetRegistrationHelper(rulesetId), (registration) => {
-      expect(registration.rulesetId).to.eq(rulesetId);
-      expect(rulesetManager.add).to.not.be.called;
-    });
+    using registration = new RulesetRegistrationHelper(rulesetId);
+    expect(registration.rulesetId).to.eq(rulesetId);
+    expect(rulesetManager.add).to.not.be.called;
   });
 
   it("registers ruleset when helper is created with ruleset object", async () => {
     const ruleset = createTestRuleset();
     const disposeSpy = sinon.spy();
     rulesetManager.add.resolves(new RegisteredRuleset(ruleset, "test-hash", disposeSpy));
-    await using(new RulesetRegistrationHelper(ruleset), async (registration) => {
+    {
+      using registration = new RulesetRegistrationHelper(ruleset);
       await BeDuration.wait(0); // handle the floating promise
       expect(registration.rulesetId).to.eq(ruleset.id);
       expect(rulesetManager.add).to.be.calledWith(ruleset);
-    });
+    }
     expect(disposeSpy).to.be.calledOnce;
   });
 
@@ -52,11 +52,12 @@ describe("RulesetRegistrationHelper", () => {
     const disposeSpy = sinon.spy();
     const ruleset = new RegisteredRuleset(createTestRuleset(), "test-hash-1", disposeSpy);
     rulesetManager.add.resolves(new RegisteredRuleset(ruleset, "test-hash-2", disposeSpy));
-    await using(new RulesetRegistrationHelper(ruleset), async (registration) => {
+    {
+      using registration = new RulesetRegistrationHelper(ruleset);
       await BeDuration.wait(0); // handle the floating promise
       expect(registration.rulesetId).to.eq(ruleset.id);
       expect(rulesetManager.add).to.be.calledWith(ruleset.toJSON());
-    });
+    }
     expect(disposeSpy).to.be.calledOnce;
   });
 
@@ -66,10 +67,11 @@ describe("RulesetRegistrationHelper", () => {
     const result = new ResolvablePromise<RegisteredRuleset>();
 
     rulesetManager.add.returns(result);
-    using(new RulesetRegistrationHelper(ruleset), (registration) => {
+    {
+      using registration = new RulesetRegistrationHelper(ruleset);
       expect(registration.rulesetId).to.eq(ruleset.id);
       expect(rulesetManager.add).to.be.calledWith(ruleset);
-    });
+    }
     expect(disposeSpy).to.not.be.called;
     await result.resolve(new RegisteredRuleset(ruleset, "test-hash", disposeSpy));
     expect(disposeSpy).to.be.calledOnce;

@@ -182,7 +182,7 @@ describe("ViewportSelectionHandler", () => {
 
     selectionManager.getHiliteSetIterator.reset();
 
-    handler.dispose();
+    handler[Symbol.dispose]();
     sinon.restore();
   });
 

@@ -6,7 +6,6 @@
  * @module Core
  */
 
-import { IDisposable } from "@itwin/core-bentley";
 import { RegisteredRuleset, Ruleset } from "@itwin/presentation-common";
 import { Presentation } from "@itwin/presentation-frontend";
 
@@ -14,7 +13,7 @@ import { Presentation } from "@itwin/presentation-frontend";
  * A helper class that registers a given ruleset on create and unregisters it on disposal.
  * @internal
  */
-export class RulesetRegistrationHelper implements IDisposable {
+export class RulesetRegistrationHelper implements Disposable {
   private _rulesetId: string;
   private _registeredRuleset?: RegisteredRuleset;
   private _isDisposed?: boolean;
@@ -28,9 +27,14 @@ export class RulesetRegistrationHelper implements IDisposable {
   }
 
   /** Destructor. Must be called to clean up.  */
-  public dispose() {
+  public [Symbol.dispose]() {
     this._isDisposed = true;
     this.disposeRegisteredRuleset();
+  }
+
+  /** @deprecated in 5.7. Use `[Symbol.dispose]` instead. */
+  public dispose() {
+    this[Symbol.dispose]();
   }
 
   /** Get ID of the ruleset. */
