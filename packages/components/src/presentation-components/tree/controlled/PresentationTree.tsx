@@ -2,6 +2,7 @@
  * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
+/* eslint-disable @typescript-eslint/no-deprecated */
 /** @packageDocumentation
  * @module Tree
  */
@@ -22,6 +23,8 @@ import { UsePresentationTreeStateResult } from "./UsePresentationTreeState.js";
  * Props for [[PresentationTree]] component.
  *
  * @public
+ * @deprecated in 5.7. All tree-related APIs have been deprecated in favor of the new generation hierarchy
+ * building APIs (see https://github.com/iTwin/presentation/blob/33e79ee8d77f30580a9bab81a72884bda008db25/README.md#the-packages).
  */
 export type PresentationTreeProps<TEventHandler extends TreeEventHandler> = Omit<
   ControlledTreeProps,
@@ -47,6 +50,8 @@ export type PresentationTreeProps<TEventHandler extends TreeEventHandler> = Omit
  * ```
  *
  * @public
+ * @deprecated in 5.7. All tree-related APIs have been deprecated in favor of the new generation hierarchy
+ * building APIs (see https://github.com/iTwin/presentation/blob/33e79ee8d77f30580a9bab81a72884bda008db25/README.md#the-packages).
  */
 export function PresentationTree<TEventHandler extends TreeEventHandler>({ state, ...props }: PresentationTreeProps<TEventHandler>) {
   const treeModel = useTreeModel(state.nodeLoader.modelSource);

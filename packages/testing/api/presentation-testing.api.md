@@ -69,19 +69,19 @@ export interface ContentBuilderResult {
 // @public
 export function createFileNameFromString(str: string): string;
 
-// @public
+// @public @deprecated
 export const defaultNodeMappingFunc: NodeMappingFunc;
 
 // @public
 export function getTestOutputDir(): string;
 
-// @public
+// @public @deprecated
 export class HierarchyBuilder {
     constructor(props: HierarchyBuilderProps);
     createHierarchy(rulesetOrId: Ruleset | string): Promise<HierarchyNode[]>;
 }
 
-// @public
+// @public @deprecated
 export interface HierarchyBuilderProps {
     imodel: IModelConnection;
     nodeMappingFunc?: NodeMappingFunc;
@@ -89,7 +89,7 @@ export interface HierarchyBuilderProps {
 
 export { HierarchyCacheMode }
 
-// @public
+// @public @deprecated
 export interface HierarchyNode extends Omit_2<MappedNode, "children"> {
     children?: HierarchyNode[];
 }
@@ -107,13 +107,13 @@ export const initialize: (props?: PresentationTestingInitProps) => Promise<void>
 // @public
 export function limitFilePathLength(filePath: string): string;
 
-// @public
+// @public @deprecated
 export interface MappedNode {
     [index: string]: any;
     children?: never;
 }
 
-// @public
+// @public @deprecated
 export type NodeMappingFunc = (node: TreeNodeItem) => MappedNode;
 
 export { PresentationBackendProps }
