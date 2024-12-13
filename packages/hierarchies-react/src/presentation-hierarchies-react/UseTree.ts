@@ -192,7 +192,7 @@ function useTreeInternal({
     setHierarchyProvider(provider);
     return () => {
       removeHierarchyChangedListener();
-      actions[Symbol.dispose]();
+      actions.reset();
       safeDispose(provider);
     };
   }, [actions, getHierarchyProvider]);

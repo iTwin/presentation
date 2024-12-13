@@ -18,7 +18,7 @@ export class TreeActions {
   private _loader: ITreeLoader;
   private _nodeIdFactory: (node: Pick<HierarchyNode, "key" | "parentKeys">) => string;
   private _currentModel: TreeModel;
-  private _disposed = new Subject<void>();
+  private _reset = new Subject<void>();
 
   constructor(
     private _onModelChanged: (model: TreeModel) => void,
@@ -69,7 +69,7 @@ export class TreeActions {
     const parentId = options.parent.id;
     this._loader
       .loadNodes(options)
-      .pipe(collectTreePartsUntil(this._disposed, initialRootNode))
+      .pipe(collectTreePartsUntil(this._reset, initialRootNode))
       .subscribe({
         next: (newModel) => {
           const childNodes = newModel.parentChildMap.get(parentId);
@@ -132,7 +132,7 @@ export class TreeActions {
 
     if (parentId === undefined) {
       // cancel all ongoing requests
-      this._disposed.next();
+      this._reset.next();
     }
 
     this.loadSubTree(
@@ -141,8 +141,8 @@ export class TreeActions {
     );
   }
 
-  public [Symbol.dispose]() {
-    this._disposed.next();
+  public reset() {
+    this._reset.next();
   }
 
   public setHierarchyProvider(provider?: HierarchyProvider) {
