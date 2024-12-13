@@ -7,7 +7,7 @@ import { expect } from "chai";
 import { createAsyncIterator, ResolvablePromise, waitFor } from "presentation-test-utilities";
 import sinon from "sinon";
 import * as td from "testdouble";
-import { BeEvent, Id64Arg, using } from "@itwin/core-bentley";
+import { BeEvent, Id64Arg } from "@itwin/core-bentley";
 import { ECSqlQueryDef, ECSqlQueryExecutor, ECSqlQueryReaderOptions, ECSqlQueryRow } from "@itwin/presentation-shared";
 import { CachingHiliteSetProvider, CachingHiliteSetProviderProps } from "../unified-selection/CachingHiliteSetProvider.js";
 import { EnableUnifiedSelectionSyncWithIModelProps } from "../unified-selection/EnableUnifiedSelectionSyncWithIModel.js";
@@ -27,7 +27,7 @@ describe("enableUnifiedSelectionSyncWithIModel", () => {
   };
   const provider = {
     getHiliteSet: sinon.stub<[{ imodelKey: string }], AsyncIterableIterator<HiliteSet>>(),
-    dispose: () => {},
+    [Symbol.dispose]: sinon.stub(),
   };
   const imodelAccess = {
     hiliteSet: {
@@ -87,7 +87,7 @@ describe("IModelSelectionHandler", () => {
 
   const cachingProvider = {
     getHiliteSet: sinon.stub<[{ imodelKey: string }], AsyncIterableIterator<HiliteSet>>(),
-    dispose: () => {},
+    [Symbol.dispose]: sinon.stub(),
   };
 
   const provider = {
@@ -274,263 +274,237 @@ describe("IModelSelectionHandler", () => {
       async function* emptyGenerator() {}
       const customCachingHiliteSetProviderStub = {
         getHiliteSet: sinon.stub<[{ imodelKey: string }], AsyncIterableIterator<HiliteSet>>(),
-        dispose: () => {},
+        [Symbol.dispose]: sinon.stub(),
       };
       customCachingHiliteSetProviderStub.getHiliteSet.callsFake(emptyGenerator);
-      using(
-        await createHandler({
+      {
+        using _handler = await createHandler({
           selectionStorage: selectionStorageStub as unknown as SelectionStorage,
           cachingHiliteSetProvider: customCachingHiliteSetProviderStub,
-        }),
-        (_) => {
-          expect(cachingHiliteSetProviderFactory).to.not.be.called;
-          expect(customCachingHiliteSetProviderStub.getHiliteSet).to.be.calledOnce;
-        },
-      );
+        });
+        expect(cachingHiliteSetProviderFactory).to.not.be.called;
+        expect(customCachingHiliteSetProviderStub.getHiliteSet).to.be.calledOnce;
+      }
+      expect(customCachingHiliteSetProviderStub[Symbol.dispose]).to.not.be.called;
     });
 
     it("creates `CachingHiliteSetProvider` when not provided", async () => {
       const imodelAccess = createIModelAccess();
-      using(
-        await createHandler({
+      {
+        using _handler = await createHandler({
           imodelAccess,
           selectionStorage: selectionStorageStub as SelectionStorage,
-        }),
-        (_) => {
-          expect(cachingHiliteSetProviderFactory).to.be.calledOnceWith(
-            sinon.match(
-              (props: CachingHiliteSetProviderProps) =>
-                props.selectionStorage === (selectionStorageStub as unknown as SelectionStorage) && props.imodelProvider("not used") === imodelAccess,
-            ),
-          );
-        },
-      );
+        });
+        expect(cachingHiliteSetProviderFactory).to.be.calledOnceWith(
+          sinon.match(
+            (props: CachingHiliteSetProviderProps) =>
+              props.selectionStorage === (selectionStorageStub as unknown as SelectionStorage) && props.imodelProvider("not used") === imodelAccess,
+          ),
+        );
+      }
+      expect(cachingProvider[Symbol.dispose]).to.be.called;
     });
 
     it("clears selection", async () => {
       const selectionSet = createSelectionSetV4();
       const imodelAccess = createIModelAccess({ selectionSet });
-      await using(
-        await createHandler({
-          selectionStorage: selectionStorageStub as unknown as SelectionStorage,
-          imodelAccess,
-        }),
-        async (_) => {
-          selectionSet.onChanged.raiseEvent({ type: CoreSelectionSetEventType.Clear, removed: [], set: selectionSet });
-          await waitFor(() => {
-            expect(selectionStorageStub.clearSelection).to.be.calledWith({ imodelKey: imodelAccess.key, source: "Tool" });
-          });
-        },
-      );
+      using _handler = await createHandler({
+        selectionStorage: selectionStorageStub as unknown as SelectionStorage,
+        imodelAccess,
+      });
+
+      selectionSet.onChanged.raiseEvent({ type: CoreSelectionSetEventType.Clear, removed: [], set: selectionSet });
+      await waitFor(() => {
+        expect(selectionStorageStub.clearSelection).to.be.calledWith({ imodelKey: imodelAccess.key, source: "Tool" });
+      });
     });
 
     it("adds elements to selection", async () => {
       const selectionSet = createSelectionSetV4();
       const imodelAccess = createIModelAccess({ selectionSet });
-      await using(
-        await createHandler({
-          selectionStorage: selectionStorageStub as SelectionStorage,
-          imodelAccess,
-        }),
-        async (_) => {
-          const addedKeys = [createSelectableInstanceKey(1)];
-          imodelAccess.createQueryReader.returns(createFakeQueryReader(toQueryResponse(addedKeys)));
+      using _handler = await createHandler({
+        selectionStorage: selectionStorageStub as SelectionStorage,
+        imodelAccess,
+      });
 
-          selectionSet.onChanged.raiseEvent({ type: CoreSelectionSetEventType.Add, added: addedKeys[0].id, set: selectionSet });
+      const addedKeys = [createSelectableInstanceKey(1)];
+      imodelAccess.createQueryReader.returns(createFakeQueryReader(toQueryResponse(addedKeys)));
 
-          await waitFor(() => {
-            expect(selectionStorageStub.addToSelection).to.be.calledWith({ imodelKey: imodelAccess.key, source: "Tool", selectables: addedKeys });
-          });
-        },
-      );
+      selectionSet.onChanged.raiseEvent({ type: CoreSelectionSetEventType.Add, added: addedKeys[0].id, set: selectionSet });
+
+      await waitFor(() => {
+        expect(selectionStorageStub.addToSelection).to.be.calledWith({ imodelKey: imodelAccess.key, source: "Tool", selectables: addedKeys });
+      });
     });
 
     it("adds models/subcategories/elements collection to selection", async () => {
       const selectionSet = createSelectionSetV5();
       const imodelAccess = createIModelAccess({ selectionSet });
-      await using(
-        await createHandler({
-          selectionStorage: selectionStorageStub as unknown as SelectionStorage,
-          imodelAccess,
-        }),
-        async (_) => {
-          const modelKeys = [createSelectableInstanceKey(1, "BisCore.Model")];
-          const subcategoryKeys = [createSelectableInstanceKey(2, "BisCore.SubCategory")];
-          const elementKeys = [createSelectableInstanceKey(3)];
-          imodelAccess.createQueryReader.returns(createFakeQueryReader(toQueryResponse(elementKeys)));
+      using _handler = await createHandler({
+        selectionStorage: selectionStorageStub as unknown as SelectionStorage,
+        imodelAccess,
+      });
 
-          selectionSet.onChanged.raiseEvent({
-            type: CoreSelectionSetEventType.Add,
-            added: elementKeys[0].id,
-            additions: {
-              models: modelKeys.map((k) => k.id),
-              subcategories: subcategoryKeys.map((k) => k.id),
-              elements: elementKeys.map((k) => k.id),
-            },
-            set: selectionSet,
-          });
+      const modelKeys = [createSelectableInstanceKey(1, "BisCore.Model")];
+      const subcategoryKeys = [createSelectableInstanceKey(2, "BisCore.SubCategory")];
+      const elementKeys = [createSelectableInstanceKey(3)];
+      imodelAccess.createQueryReader.returns(createFakeQueryReader(toQueryResponse(elementKeys)));
 
-          await waitFor(() => {
-            expect(selectionStorageStub.addToSelection).to.be.calledWith({
-              imodelKey: imodelAccess.key,
-              source: "Tool",
-              selectables: [...modelKeys, ...subcategoryKeys, ...elementKeys],
-            });
-          });
+      selectionSet.onChanged.raiseEvent({
+        type: CoreSelectionSetEventType.Add,
+        added: elementKeys[0].id,
+        additions: {
+          models: modelKeys.map((k) => k.id),
+          subcategories: subcategoryKeys.map((k) => k.id),
+          elements: elementKeys.map((k) => k.id),
         },
-      );
+        set: selectionSet,
+      });
+
+      await waitFor(() => {
+        expect(selectionStorageStub.addToSelection).to.be.calledWith({
+          imodelKey: imodelAccess.key,
+          source: "Tool",
+          selectables: [...modelKeys, ...subcategoryKeys, ...elementKeys],
+        });
+      });
     });
 
     it("removes elements from selection", async () => {
       const selectionSet = createSelectionSetV4();
       const imodelAccess = createIModelAccess({ selectionSet });
-      await using(
-        await createHandler({
-          selectionStorage: selectionStorageStub as unknown as SelectionStorage,
-          imodelAccess,
-        }),
-        async (_) => {
-          const removedKeys = [createSelectableInstanceKey(1), createSelectableInstanceKey(2)];
-          imodelAccess.createQueryReader.returns(createFakeQueryReader(toQueryResponse(removedKeys)));
+      using _handler = await createHandler({
+        selectionStorage: selectionStorageStub as unknown as SelectionStorage,
+        imodelAccess,
+      });
 
-          selectionSet.onChanged.raiseEvent({ type: CoreSelectionSetEventType.Remove, removed: removedKeys.map((k) => k.id), set: selectionSet });
+      const removedKeys = [createSelectableInstanceKey(1), createSelectableInstanceKey(2)];
+      imodelAccess.createQueryReader.returns(createFakeQueryReader(toQueryResponse(removedKeys)));
 
-          await waitFor(() => {
-            expect(selectionStorageStub.removeFromSelection).to.be.calledWith({ imodelKey: imodelAccess.key, source: "Tool", selectables: removedKeys });
-          });
-        },
-      );
+      selectionSet.onChanged.raiseEvent({ type: CoreSelectionSetEventType.Remove, removed: removedKeys.map((k) => k.id), set: selectionSet });
+
+      await waitFor(() => {
+        expect(selectionStorageStub.removeFromSelection).to.be.calledWith({ imodelKey: imodelAccess.key, source: "Tool", selectables: removedKeys });
+      });
     });
 
     it("removes models/subcategories/elements collection from selection", async () => {
       const selectionSet = createSelectionSetV5();
       const imodelAccess = createIModelAccess({ selectionSet });
-      await using(
-        await createHandler({
-          selectionStorage: selectionStorageStub as unknown as SelectionStorage,
-          imodelAccess,
-        }),
-        async (_) => {
-          const modelKeys = [createSelectableInstanceKey(1, "BisCore.Model")];
-          const subcategoryKeys = [createSelectableInstanceKey(2, "BisCore.SubCategory")];
-          const elementKeys = [createSelectableInstanceKey(3)];
-          imodelAccess.createQueryReader.returns(createFakeQueryReader(toQueryResponse(elementKeys)));
+      using _handler = await createHandler({
+        selectionStorage: selectionStorageStub as unknown as SelectionStorage,
+        imodelAccess,
+      });
 
-          selectionSet.onChanged.raiseEvent({
-            type: CoreSelectionSetEventType.Remove,
-            removed: elementKeys[0].id,
-            removals: {
-              models: modelKeys.map((k) => k.id),
-              subcategories: subcategoryKeys.map((k) => k.id),
-              elements: elementKeys.map((k) => k.id),
-            },
-            set: selectionSet,
-          });
+      const modelKeys = [createSelectableInstanceKey(1, "BisCore.Model")];
+      const subcategoryKeys = [createSelectableInstanceKey(2, "BisCore.SubCategory")];
+      const elementKeys = [createSelectableInstanceKey(3)];
+      imodelAccess.createQueryReader.returns(createFakeQueryReader(toQueryResponse(elementKeys)));
 
-          await waitFor(() => {
-            expect(selectionStorageStub.removeFromSelection).to.be.calledWith({
-              imodelKey: imodelAccess.key,
-              source: "Tool",
-              selectables: [...modelKeys, ...subcategoryKeys, ...elementKeys],
-            });
-          });
+      selectionSet.onChanged.raiseEvent({
+        type: CoreSelectionSetEventType.Remove,
+        removed: elementKeys[0].id,
+        removals: {
+          models: modelKeys.map((k) => k.id),
+          subcategories: subcategoryKeys.map((k) => k.id),
+          elements: elementKeys.map((k) => k.id),
         },
-      );
+        set: selectionSet,
+      });
+
+      await waitFor(() => {
+        expect(selectionStorageStub.removeFromSelection).to.be.calledWith({
+          imodelKey: imodelAccess.key,
+          source: "Tool",
+          selectables: [...modelKeys, ...subcategoryKeys, ...elementKeys],
+        });
+      });
     });
 
     it("replaces elements selection", async () => {
       const selectionSet = createSelectionSetV4();
       const imodelAccess = createIModelAccess({ selectionSet });
-      await using(
-        await createHandler({
-          selectionStorage: selectionStorageStub as unknown as SelectionStorage,
-          imodelAccess,
-        }),
-        async (_) => {
-          const addedKeys = [createSelectableInstanceKey(1), createSelectableInstanceKey(2)];
-          imodelAccess.createQueryReader.returns(createFakeQueryReader(toQueryResponse(addedKeys)));
+      using _handler = await createHandler({
+        selectionStorage: selectionStorageStub as unknown as SelectionStorage,
+        imodelAccess,
+      });
 
-          selectionSet.onChanged.raiseEvent({
-            type: CoreSelectionSetEventType.Replace,
-            added: new Set<string>(addedKeys.map((k) => k.id)),
-            removed: [],
-            set: selectionSet,
-          });
+      const addedKeys = [createSelectableInstanceKey(1), createSelectableInstanceKey(2)];
+      imodelAccess.createQueryReader.returns(createFakeQueryReader(toQueryResponse(addedKeys)));
 
-          await waitFor(() => {
-            expect(selectionStorageStub.replaceSelection).to.be.calledWith({ imodelKey: imodelAccess.key, source: "Tool", selectables: addedKeys });
-          });
-        },
-      );
+      selectionSet.onChanged.raiseEvent({
+        type: CoreSelectionSetEventType.Replace,
+        added: new Set<string>(addedKeys.map((k) => k.id)),
+        removed: [],
+        set: selectionSet,
+      });
+
+      await waitFor(() => {
+        expect(selectionStorageStub.replaceSelection).to.be.calledWith({ imodelKey: imodelAccess.key, source: "Tool", selectables: addedKeys });
+      });
     });
 
     it("replaces models/subcategories/elements collection selection", async () => {
       const selectionSet = createSelectionSetV5();
       const imodelAccess = createIModelAccess({ selectionSet });
-      await using(
-        await createHandler({
-          selectionStorage: selectionStorageStub as unknown as SelectionStorage,
-          imodelAccess,
-        }),
-        async (_) => {
-          const modelKeys = [createSelectableInstanceKey(1, "BisCore.Model"), createSelectableInstanceKey(4, "BisCore.Model")];
-          const subcategoryKeys = [createSelectableInstanceKey(2, "BisCore.SubCategory"), createSelectableInstanceKey(5, "BisCore.SubCategory")];
-          const elementKeys = [createSelectableInstanceKey(3), createSelectableInstanceKey(6)];
-          imodelAccess.createQueryReader.returns(createFakeQueryReader(toQueryResponse(elementKeys)));
+      using _handler = await createHandler({
+        selectionStorage: selectionStorageStub as unknown as SelectionStorage,
+        imodelAccess,
+      });
 
-          selectionSet.active = {
-            models: new Set(modelKeys.map((k) => k.id)),
-            subcategories: new Set(subcategoryKeys.map((k) => k.id)),
-            elements: new Set(elementKeys.map((k) => k.id)),
-          };
-          selectionSet.onChanged.raiseEvent({
-            type: CoreSelectionSetEventType.Replace,
-            added: elementKeys[0].id,
-            additions: {
-              models: modelKeys[0].id,
-              subcategories: subcategoryKeys[0].id,
-              elements: elementKeys[0].id,
-            },
-            removed: "0x789",
-            removals: {
-              models: "0x123",
-              subcategories: "0x456",
-              elements: "0x789",
-            },
-            set: selectionSet,
-          });
+      const modelKeys = [createSelectableInstanceKey(1, "BisCore.Model"), createSelectableInstanceKey(4, "BisCore.Model")];
+      const subcategoryKeys = [createSelectableInstanceKey(2, "BisCore.SubCategory"), createSelectableInstanceKey(5, "BisCore.SubCategory")];
+      const elementKeys = [createSelectableInstanceKey(3), createSelectableInstanceKey(6)];
+      imodelAccess.createQueryReader.returns(createFakeQueryReader(toQueryResponse(elementKeys)));
 
-          await waitFor(() => {
-            expect(selectionStorageStub.replaceSelection).to.be.calledWith({
-              imodelKey: imodelAccess.key,
-              source: "Tool",
-              selectables: [...modelKeys, ...subcategoryKeys, ...elementKeys],
-            });
-          });
+      selectionSet.active = {
+        models: new Set(modelKeys.map((k) => k.id)),
+        subcategories: new Set(subcategoryKeys.map((k) => k.id)),
+        elements: new Set(elementKeys.map((k) => k.id)),
+      };
+      selectionSet.onChanged.raiseEvent({
+        type: CoreSelectionSetEventType.Replace,
+        added: elementKeys[0].id,
+        additions: {
+          models: modelKeys[0].id,
+          subcategories: subcategoryKeys[0].id,
+          elements: elementKeys[0].id,
         },
-      );
+        removed: "0x789",
+        removals: {
+          models: "0x123",
+          subcategories: "0x456",
+          elements: "0x789",
+        },
+        set: selectionSet,
+      });
+
+      await waitFor(() => {
+        expect(selectionStorageStub.replaceSelection).to.be.calledWith({
+          imodelKey: imodelAccess.key,
+          source: "Tool",
+          selectables: [...modelKeys, ...subcategoryKeys, ...elementKeys],
+        });
+      });
     });
 
     it("ignores changes when suspended", async () => {
       const selectionSet = createSelectionSetV5();
       const imodelAccess = createIModelAccess({ selectionSet });
-      await using(
-        await createHandler({
-          selectionStorage: selectionStorageStub as unknown as SelectionStorage,
-          imodelAccess,
-        }),
-        async (handler) => {
-          const addedKeys = [createSelectableInstanceKey(1), createSelectableInstanceKey(2)];
-          imodelAccess.createQueryReader.returns(createFakeQueryReader(toQueryResponse(addedKeys)));
+      using handler = await createHandler({
+        selectionStorage: selectionStorageStub as unknown as SelectionStorage,
+        imodelAccess,
+      });
 
-          using _dispose = handler.suspendIModelToolSelectionSync();
+      const addedKeys = [createSelectableInstanceKey(1), createSelectableInstanceKey(2)];
+      imodelAccess.createQueryReader.returns(createFakeQueryReader(toQueryResponse(addedKeys)));
 
-          selectionSet.onChanged.raiseEvent({ type: CoreSelectionSetEventType.Clear, removed: [], set: selectionSet });
-          await waitFor(() => {
-            expect(selectionStorageStub.clearSelection).to.not.be.called;
-          });
-        },
-      );
+      using _dispose = handler.suspendIModelToolSelectionSync();
+
+      selectionSet.onChanged.raiseEvent({ type: CoreSelectionSetEventType.Clear, removed: [], set: selectionSet });
+      await waitFor(() => {
+        expect(selectionStorageStub.clearSelection).to.not.be.called;
+      });
     });
   });
 
@@ -593,12 +567,11 @@ describe("IModelSelectionHandler", () => {
       const hiliteSet = createHiliteSet();
       const selectionSet = createSelectionSetV5();
       const imodelAccess = createIModelAccess({ hiliteSet, selectionSet });
-      await using(await createHandler({ selectionStorage, imodelAccess }), async (_) => {
-        await waitFor(() => {
-          expect(hiliteSet.clear).to.be.calledOnce;
-          expect(selectionSet.emptyAll).to.be.calledOnce;
-          expect(selectionSet.add).to.be.calledOnceWith(ids);
-        });
+      using _handler = await createHandler({ selectionStorage, imodelAccess });
+      await waitFor(() => {
+        expect(hiliteSet.clear).to.be.calledOnce;
+        expect(selectionSet.emptyAll).to.be.calledOnce;
+        expect(selectionSet.add).to.be.calledOnceWith(ids);
       });
     });
 
@@ -606,16 +579,15 @@ describe("IModelSelectionHandler", () => {
       const hiliteSet = createHiliteSet();
       const selectionSet = createSelectionSetV5();
       const imodelAccess = createIModelAccess({ hiliteSet, selectionSet });
-      await using(await createHandler({ selectionStorage, imodelAccess }), async (_) => {
-        resetStubs();
-        const hiliteSetSpy = sinon.spy(imodelAccess, "hiliteSet", ["get"]).get;
-        const selectionSetSpy = sinon.spy(imodelAccess, "selectionSet", ["get"]).get;
-        triggerUnifiedSelectionChange({ imodelKey: "otherIModel" });
-        await waitFor(() => {
-          expect(cachingProvider.getHiliteSet).to.not.be.called;
-          expect(hiliteSetSpy).to.not.be.called;
-          expect(selectionSetSpy).to.not.be.called;
-        });
+      using _handler = await createHandler({ selectionStorage, imodelAccess });
+      resetStubs();
+      const hiliteSetSpy = sinon.spy(imodelAccess, "hiliteSet", ["get"]).get;
+      const selectionSetSpy = sinon.spy(imodelAccess, "selectionSet", ["get"]).get;
+      triggerUnifiedSelectionChange({ imodelKey: "otherIModel" });
+      await waitFor(() => {
+        expect(cachingProvider.getHiliteSet).to.not.be.called;
+        expect(hiliteSetSpy).to.not.be.called;
+        expect(selectionSetSpy).to.not.be.called;
       });
     });
 
@@ -623,16 +595,15 @@ describe("IModelSelectionHandler", () => {
       const hiliteSet = createHiliteSet();
       const selectionSet = createSelectionSetV5();
       const imodelAccess = createIModelAccess({ hiliteSet, selectionSet });
-      await using(await createHandler({ selectionStorage, imodelAccess }), async (_) => {
-        resetStubs();
-        const hiliteSetSpy = sinon.spy(imodelAccess, "hiliteSet", ["get"]).get;
-        const selectionSetSpy = sinon.spy(imodelAccess, "selectionSet", ["get"]).get;
-        triggerUnifiedSelectionChange({ imodelKey: imodelAccess.key, level: 1 });
-        await waitFor(() => {
-          expect(cachingProvider.getHiliteSet).to.not.be.called;
-          expect(hiliteSetSpy).to.not.be.called;
-          expect(selectionSetSpy).to.not.be.called;
-        });
+      using _handler = await createHandler({ selectionStorage, imodelAccess });
+      resetStubs();
+      const hiliteSetSpy = sinon.spy(imodelAccess, "hiliteSet", ["get"]).get;
+      const selectionSetSpy = sinon.spy(imodelAccess, "selectionSet", ["get"]).get;
+      triggerUnifiedSelectionChange({ imodelKey: imodelAccess.key, level: 1 });
+      await waitFor(() => {
+        expect(cachingProvider.getHiliteSet).to.not.be.called;
+        expect(hiliteSetSpy).to.not.be.called;
+        expect(selectionSetSpy).to.not.be.called;
       });
     });
 
@@ -641,16 +612,15 @@ describe("IModelSelectionHandler", () => {
       const selectionSet = createSelectionSetV5();
       const imodelAccess = createIModelAccess({ hiliteSet, selectionSet });
       selectionStorage.addToSelection({ imodelKey: imodelAccess.key, source: "", selectables: [createSelectableInstanceKey()] });
-      await using(await createHandler({ selectionStorage, imodelAccess }), async (_) => {
-        resetStubs([hiliteSet, selectionSet]);
+      using _handler = await createHandler({ selectionStorage, imodelAccess });
+      resetStubs([hiliteSet, selectionSet]);
 
-        cachingProvider.getHiliteSet.callsFake(() => createAsyncIterator([]));
-        triggerUnifiedSelectionChange({ imodelKey: imodelAccess.key, changeType: "clear" });
+      cachingProvider.getHiliteSet.callsFake(() => createAsyncIterator([]));
+      triggerUnifiedSelectionChange({ imodelKey: imodelAccess.key, changeType: "clear" });
 
-        await waitFor(() => {
-          expect(hiliteSet.clear).to.be.calledOnce;
-          expect(selectionSet.emptyAll).to.be.calledOnce;
-        });
+      await waitFor(() => {
+        expect(hiliteSet.clear).to.be.calledOnce;
+        expect(selectionSet.emptyAll).to.be.calledOnce;
       });
     });
 
@@ -658,25 +628,24 @@ describe("IModelSelectionHandler", () => {
       const hiliteSet = createHiliteSet();
       const selectionSet = createSelectionSetV4();
       const imodelAccess = createIModelAccess({ hiliteSet, selectionSet });
-      await using(await createHandler({ selectionStorage, imodelAccess }), async (_) => {
-        resetStubs([hiliteSet, selectionSet]);
+      using _handler = await createHandler({ selectionStorage, imodelAccess });
+      resetStubs([hiliteSet, selectionSet]);
 
-        const ids: HiliteSet = {
-          models: ["0x1"],
-          subCategories: ["0x2"],
-          elements: ["0x3"],
-        };
-        cachingProvider.getHiliteSet.callsFake(() => createAsyncIterator([ids]));
+      const ids: HiliteSet = {
+        models: ["0x1"],
+        subCategories: ["0x2"],
+        elements: ["0x3"],
+      };
+      cachingProvider.getHiliteSet.callsFake(() => createAsyncIterator([ids]));
 
-        triggerUnifiedSelectionChange({ imodelKey: imodelAccess.key });
+      triggerUnifiedSelectionChange({ imodelKey: imodelAccess.key });
 
-        await waitFor(() => {
-          expect(hiliteSet.clear).to.be.calledOnce;
-          expect(selectionSet.emptyAll).to.be.called;
-          expect(hiliteSet.models.addIds).to.be.calledOnceWith(ids.models);
-          expect(hiliteSet.subcategories.addIds).to.be.calledOnceWith(ids.subCategories);
-          expect(selectionSet.add).to.be.calledOnceWith(ids.elements);
-        });
+      await waitFor(() => {
+        expect(hiliteSet.clear).to.be.calledOnce;
+        expect(selectionSet.emptyAll).to.be.called;
+        expect(hiliteSet.models.addIds).to.be.calledOnceWith(ids.models);
+        expect(hiliteSet.subcategories.addIds).to.be.calledOnceWith(ids.subCategories);
+        expect(selectionSet.add).to.be.calledOnceWith(ids.elements);
       });
     });
 
@@ -684,23 +653,22 @@ describe("IModelSelectionHandler", () => {
       const hiliteSet = createHiliteSet();
       const selectionSet = createSelectionSetV5();
       const imodelAccess = createIModelAccess({ hiliteSet, selectionSet });
-      await using(await createHandler({ selectionStorage, imodelAccess }), async (_) => {
-        resetStubs([hiliteSet, selectionSet]);
+      using _handler = await createHandler({ selectionStorage, imodelAccess });
+      resetStubs([hiliteSet, selectionSet]);
 
-        const ids: HiliteSet = {
-          models: ["0x1"],
-          subCategories: ["0x2"],
-          elements: ["0x3"],
-        };
-        cachingProvider.getHiliteSet.callsFake(() => createAsyncIterator([ids]));
+      const ids: HiliteSet = {
+        models: ["0x1"],
+        subCategories: ["0x2"],
+        elements: ["0x3"],
+      };
+      cachingProvider.getHiliteSet.callsFake(() => createAsyncIterator([ids]));
 
-        triggerUnifiedSelectionChange({ imodelKey: imodelAccess.key });
+      triggerUnifiedSelectionChange({ imodelKey: imodelAccess.key });
 
-        await waitFor(() => {
-          expect(hiliteSet.clear).to.be.calledOnce;
-          expect(selectionSet.emptyAll).to.be.called;
-          expect(selectionSet.add).to.be.calledOnceWith({ models: ids.models, subcategories: ids.subCategories, elements: ids.elements });
-        });
+      await waitFor(() => {
+        expect(hiliteSet.clear).to.be.calledOnce;
+        expect(selectionSet.emptyAll).to.be.called;
+        expect(selectionSet.add).to.be.calledOnceWith({ models: ids.models, subcategories: ids.subCategories, elements: ids.elements });
       });
     });
 
@@ -708,35 +676,34 @@ describe("IModelSelectionHandler", () => {
       const hiliteSet = createHiliteSet();
       const selectionSet = createSelectionSetV4();
       const imodelAccess = createIModelAccess({ hiliteSet, selectionSet });
-      await using(await createHandler({ selectionStorage, imodelAccess }), async (_) => {
-        resetStubs([hiliteSet, selectionSet]);
+      using _handler = await createHandler({ selectionStorage, imodelAccess });
+      resetStubs([hiliteSet, selectionSet]);
 
-        const eventSelectables = [
-          { className: "BisCore.Model", id: "0x1" },
-          { className: "BisCore.SubCategory", id: "0x2" },
-          { className: "BisCore.PhysicalElement", id: "0x3" },
-        ];
-        const hilited: HiliteSet = {
-          models: ["0x4"],
-          subCategories: ["0x5"],
-          elements: ["0x6"],
-        };
-        provider.getHiliteSet.callsFake(() => createAsyncIterator([hilited]));
+      const eventSelectables = [
+        { className: "BisCore.Model", id: "0x1" },
+        { className: "BisCore.SubCategory", id: "0x2" },
+        { className: "BisCore.PhysicalElement", id: "0x3" },
+      ];
+      const hilited: HiliteSet = {
+        models: ["0x4"],
+        subCategories: ["0x5"],
+        elements: ["0x6"],
+      };
+      provider.getHiliteSet.callsFake(() => createAsyncIterator([hilited]));
 
-        triggerUnifiedSelectionChange({
-          imodelKey: imodelAccess.key,
-          changeType: "add",
-          selectables: eventSelectables,
-        });
+      triggerUnifiedSelectionChange({
+        imodelKey: imodelAccess.key,
+        changeType: "add",
+        selectables: eventSelectables,
+      });
 
-        await waitFor(() => {
-          expect(provider.getHiliteSet).to.be.calledOnceWith({ selectables: Selectables.create(eventSelectables) });
-          expect(hiliteSet.clear).to.not.be.called;
-          expect(selectionSet.emptyAll).to.not.be.called;
-          expect(hiliteSet.models.addIds).to.be.calledOnceWith(hilited.models);
-          expect(hiliteSet.subcategories.addIds).to.be.calledOnceWith(hilited.subCategories);
-          expect(selectionSet.add).to.be.calledOnceWith(hilited.elements);
-        });
+      await waitFor(() => {
+        expect(provider.getHiliteSet).to.be.calledOnceWith({ selectables: Selectables.create(eventSelectables) });
+        expect(hiliteSet.clear).to.not.be.called;
+        expect(selectionSet.emptyAll).to.not.be.called;
+        expect(hiliteSet.models.addIds).to.be.calledOnceWith(hilited.models);
+        expect(hiliteSet.subcategories.addIds).to.be.calledOnceWith(hilited.subCategories);
+        expect(selectionSet.add).to.be.calledOnceWith(hilited.elements);
       });
     });
 
@@ -744,33 +711,32 @@ describe("IModelSelectionHandler", () => {
       const hiliteSet = createHiliteSet();
       const selectionSet = createSelectionSetV5();
       const imodelAccess = createIModelAccess({ hiliteSet, selectionSet });
-      await using(await createHandler({ selectionStorage, imodelAccess }), async (_) => {
-        resetStubs([hiliteSet, selectionSet]);
+      using _handler = await createHandler({ selectionStorage, imodelAccess });
+      resetStubs([hiliteSet, selectionSet]);
 
-        const eventSelectables = [
-          { className: "BisCore.Model", id: "0x1" },
-          { className: "BisCore.SubCategory", id: "0x2" },
-          { className: "BisCore.PhysicalElement", id: "0x3" },
-        ];
-        const hilited: HiliteSet = {
-          models: ["0x4"],
-          subCategories: ["0x5"],
-          elements: ["0x6"],
-        };
-        provider.getHiliteSet.callsFake(() => createAsyncIterator([hilited]));
+      const eventSelectables = [
+        { className: "BisCore.Model", id: "0x1" },
+        { className: "BisCore.SubCategory", id: "0x2" },
+        { className: "BisCore.PhysicalElement", id: "0x3" },
+      ];
+      const hilited: HiliteSet = {
+        models: ["0x4"],
+        subCategories: ["0x5"],
+        elements: ["0x6"],
+      };
+      provider.getHiliteSet.callsFake(() => createAsyncIterator([hilited]));
 
-        triggerUnifiedSelectionChange({
-          imodelKey: imodelAccess.key,
-          changeType: "add",
-          selectables: eventSelectables,
-        });
+      triggerUnifiedSelectionChange({
+        imodelKey: imodelAccess.key,
+        changeType: "add",
+        selectables: eventSelectables,
+      });
 
-        await waitFor(() => {
-          expect(provider.getHiliteSet).to.be.calledOnceWith({ selectables: Selectables.create(eventSelectables) });
-          expect(hiliteSet.clear).to.not.be.called;
-          expect(selectionSet.emptyAll).to.not.be.called;
-          expect(selectionSet.add).to.be.calledOnceWith({ models: hilited.models, subcategories: hilited.subCategories, elements: hilited.elements });
-        });
+      await waitFor(() => {
+        expect(provider.getHiliteSet).to.be.calledOnceWith({ selectables: Selectables.create(eventSelectables) });
+        expect(hiliteSet.clear).to.not.be.called;
+        expect(selectionSet.emptyAll).to.not.be.called;
+        expect(selectionSet.add).to.be.calledOnceWith({ models: hilited.models, subcategories: hilited.subCategories, elements: hilited.elements });
       });
     });
 
@@ -779,35 +745,34 @@ describe("IModelSelectionHandler", () => {
       const selectionSet = createSelectionSetV4();
       const imodelAccess = createIModelAccess({ hiliteSet, selectionSet });
       selectionStorage.addToSelection({ imodelKey: imodelAccess.key, source: "", selectables: [{ className: "BisCore.PhysicalElement", id: "0x3" }] });
-      await using(await createHandler({ selectionStorage, imodelAccess }), async (_) => {
-        resetStubs([hiliteSet, selectionSet]);
+      using _handler = await createHandler({ selectionStorage, imodelAccess });
+      resetStubs([hiliteSet, selectionSet]);
 
-        const eventSelectables = [
-          { className: "BisCore.Model", id: "0x1" },
-          { className: "BisCore.SubCategory", id: "0x2" },
-          { className: "BisCore.PhysicalElement", id: "0x3" },
-        ];
-        const hilited: HiliteSet = {
-          models: ["0x4"],
-          subCategories: ["0x5"],
-          elements: ["0x6"],
-        };
-        provider.getHiliteSet.callsFake(() => createAsyncIterator([hilited]));
+      const eventSelectables = [
+        { className: "BisCore.Model", id: "0x1" },
+        { className: "BisCore.SubCategory", id: "0x2" },
+        { className: "BisCore.PhysicalElement", id: "0x3" },
+      ];
+      const hilited: HiliteSet = {
+        models: ["0x4"],
+        subCategories: ["0x5"],
+        elements: ["0x6"],
+      };
+      provider.getHiliteSet.callsFake(() => createAsyncIterator([hilited]));
 
-        triggerUnifiedSelectionChange({
-          imodelKey: imodelAccess.key,
-          changeType: "remove",
-          selectables: eventSelectables,
-        });
+      triggerUnifiedSelectionChange({
+        imodelKey: imodelAccess.key,
+        changeType: "remove",
+        selectables: eventSelectables,
+      });
 
-        await waitFor(() => {
-          expect(provider.getHiliteSet).to.be.calledOnceWith({ selectables: Selectables.create(eventSelectables) });
-          expect(hiliteSet.clear).to.not.be.called;
-          expect(selectionSet.emptyAll).to.not.be.called;
-          expect(hiliteSet.models.deleteIds).to.be.calledOnceWith(hilited.models);
-          expect(hiliteSet.subcategories.deleteIds).to.be.calledOnceWith(hilited.subCategories);
-          expect(selectionSet.remove).to.be.calledOnceWith(hilited.elements);
-        });
+      await waitFor(() => {
+        expect(provider.getHiliteSet).to.be.calledOnceWith({ selectables: Selectables.create(eventSelectables) });
+        expect(hiliteSet.clear).to.not.be.called;
+        expect(selectionSet.emptyAll).to.not.be.called;
+        expect(hiliteSet.models.deleteIds).to.be.calledOnceWith(hilited.models);
+        expect(hiliteSet.subcategories.deleteIds).to.be.calledOnceWith(hilited.subCategories);
+        expect(selectionSet.remove).to.be.calledOnceWith(hilited.elements);
       });
     });
 
@@ -816,33 +781,32 @@ describe("IModelSelectionHandler", () => {
       const selectionSet = createSelectionSetV5();
       const imodelAccess = createIModelAccess({ hiliteSet, selectionSet });
       selectionStorage.addToSelection({ imodelKey: imodelAccess.key, source: "", selectables: [{ className: "BisCore.PhysicalElement", id: "0x3" }] });
-      await using(await createHandler({ selectionStorage, imodelAccess }), async (_) => {
-        resetStubs([hiliteSet, selectionSet]);
+      using _handler = await createHandler({ selectionStorage, imodelAccess });
+      resetStubs([hiliteSet, selectionSet]);
 
-        const eventSelectables = [
-          { className: "BisCore.Model", id: "0x1" },
-          { className: "BisCore.SubCategory", id: "0x2" },
-          { className: "BisCore.PhysicalElement", id: "0x3" },
-        ];
-        const hilited: HiliteSet = {
-          models: ["0x4"],
-          subCategories: ["0x5"],
-          elements: ["0x6"],
-        };
-        provider.getHiliteSet.callsFake(() => createAsyncIterator([hilited]));
+      const eventSelectables = [
+        { className: "BisCore.Model", id: "0x1" },
+        { className: "BisCore.SubCategory", id: "0x2" },
+        { className: "BisCore.PhysicalElement", id: "0x3" },
+      ];
+      const hilited: HiliteSet = {
+        models: ["0x4"],
+        subCategories: ["0x5"],
+        elements: ["0x6"],
+      };
+      provider.getHiliteSet.callsFake(() => createAsyncIterator([hilited]));
 
-        triggerUnifiedSelectionChange({
-          imodelKey: imodelAccess.key,
-          changeType: "remove",
-          selectables: eventSelectables,
-        });
+      triggerUnifiedSelectionChange({
+        imodelKey: imodelAccess.key,
+        changeType: "remove",
+        selectables: eventSelectables,
+      });
 
-        await waitFor(() => {
-          expect(provider.getHiliteSet).to.be.calledOnceWith({ selectables: Selectables.create(eventSelectables) });
-          expect(hiliteSet.clear).to.not.be.called;
-          expect(selectionSet.emptyAll).to.not.be.called;
-          expect(selectionSet.remove).to.be.calledOnceWith({ models: hilited.models, subcategories: hilited.subCategories, elements: hilited.elements });
-        });
+      await waitFor(() => {
+        expect(provider.getHiliteSet).to.be.calledOnceWith({ selectables: Selectables.create(eventSelectables) });
+        expect(hiliteSet.clear).to.not.be.called;
+        expect(selectionSet.emptyAll).to.not.be.called;
+        expect(selectionSet.remove).to.be.calledOnceWith({ models: hilited.models, subcategories: hilited.subCategories, elements: hilited.elements });
       });
     });
 
@@ -851,39 +815,38 @@ describe("IModelSelectionHandler", () => {
       const selectionSet = createSelectionSetV5();
       const imodelAccess = createIModelAccess({ hiliteSet, selectionSet });
       selectionStorage.addToSelection({ imodelKey: imodelAccess.key, source: "", selectables: [{ className: "BisCore.PhysicalElement", id: "0x3" }] });
-      await using(await createHandler({ selectionStorage, imodelAccess }), async (_) => {
-        resetStubs([hiliteSet, selectionSet]);
+      using _handler = await createHandler({ selectionStorage, imodelAccess });
+      resetStubs([hiliteSet, selectionSet]);
 
-        const removeEventSelectables = [
-          { className: "BisCore.Model", id: "0x1" },
-          { className: "BisCore.SubCategory", id: "0x2" },
-          { className: "BisCore.PhysicalElement", id: "0x3" },
-        ];
-        const removed: HiliteSet = {
-          models: ["0x4"],
-          subCategories: ["0x5"],
-          elements: ["0x6"],
-        };
-        const readded: HiliteSet = {
-          models: ["0x7"],
-          subCategories: ["0x8"],
-          elements: ["0x9"],
-        };
+      const removeEventSelectables = [
+        { className: "BisCore.Model", id: "0x1" },
+        { className: "BisCore.SubCategory", id: "0x2" },
+        { className: "BisCore.PhysicalElement", id: "0x3" },
+      ];
+      const removed: HiliteSet = {
+        models: ["0x4"],
+        subCategories: ["0x5"],
+        elements: ["0x6"],
+      };
+      const readded: HiliteSet = {
+        models: ["0x7"],
+        subCategories: ["0x8"],
+        elements: ["0x9"],
+      };
 
-        provider.getHiliteSet.callsFake(() => createAsyncIterator([removed]));
-        cachingProvider.getHiliteSet.callsFake(() => createAsyncIterator([readded]));
+      provider.getHiliteSet.callsFake(() => createAsyncIterator([removed]));
+      cachingProvider.getHiliteSet.callsFake(() => createAsyncIterator([readded]));
 
-        triggerUnifiedSelectionChange({ imodelKey: imodelAccess.key, changeType: "remove", selectables: removeEventSelectables });
+      triggerUnifiedSelectionChange({ imodelKey: imodelAccess.key, changeType: "remove", selectables: removeEventSelectables });
 
-        await waitFor(() => {
-          expect(provider.getHiliteSet).to.be.calledOnceWith({ selectables: Selectables.create(removeEventSelectables) });
-          expect(hiliteSet.clear).to.not.be.called;
-          expect(selectionSet.emptyAll).to.not.be.called;
-          expect(selectionSet.remove).to.be.calledOnceWith({ models: removed.models, subcategories: removed.subCategories, elements: removed.elements });
-          expect(selectionSet.add)
-            .to.be.calledAfter(selectionSet.remove)
-            .and.calledOnceWith({ models: readded.models, subcategories: readded.subCategories, elements: readded.elements });
-        });
+      await waitFor(() => {
+        expect(provider.getHiliteSet).to.be.calledOnceWith({ selectables: Selectables.create(removeEventSelectables) });
+        expect(hiliteSet.clear).to.not.be.called;
+        expect(selectionSet.emptyAll).to.not.be.called;
+        expect(selectionSet.remove).to.be.calledOnceWith({ models: removed.models, subcategories: removed.subCategories, elements: removed.elements });
+        expect(selectionSet.add)
+          .to.be.calledAfter(selectionSet.remove)
+          .and.calledOnceWith({ models: readded.models, subcategories: readded.subCategories, elements: readded.elements });
       });
     });
 
@@ -891,39 +854,38 @@ describe("IModelSelectionHandler", () => {
       const hiliteSet = createHiliteSet();
       const selectionSet = createSelectionSetV5();
       const imodelAccess = createIModelAccess({ hiliteSet, selectionSet });
-      await using(await createHandler({ selectionStorage, imodelAccess }), async (_) => {
-        resetStubs([hiliteSet, selectionSet]);
+      using _handler = await createHandler({ selectionStorage, imodelAccess });
+      resetStubs([hiliteSet, selectionSet]);
 
-        const firstElementId = "0x1";
-        const secondElementId = "0x2";
-        const firstHiliteSetPromise = new ResolvablePromise<HiliteSet>();
-        const secondHiliteSetPromise = new ResolvablePromise<HiliteSet>();
+      const firstElementId = "0x1";
+      const secondElementId = "0x2";
+      const firstHiliteSetPromise = new ResolvablePromise<HiliteSet>();
+      const secondHiliteSetPromise = new ResolvablePromise<HiliteSet>();
 
-        cachingProvider.getHiliteSet.reset();
-        cachingProvider.getHiliteSet.callsFake(async function* () {
-          yield await firstHiliteSetPromise;
-          yield await secondHiliteSetPromise;
-        });
+      cachingProvider.getHiliteSet.reset();
+      cachingProvider.getHiliteSet.callsFake(async function* () {
+        yield await firstHiliteSetPromise;
+        yield await secondHiliteSetPromise;
+      });
 
-        triggerUnifiedSelectionChange({ imodelKey: imodelAccess.key });
+      triggerUnifiedSelectionChange({ imodelKey: imodelAccess.key });
 
-        await waitFor(() => {
-          expect(selectionSet.emptyAll).to.be.called;
-        });
-        selectionSet.emptyAll.resetHistory();
+      await waitFor(() => {
+        expect(selectionSet.emptyAll).to.be.called;
+      });
+      selectionSet.emptyAll.resetHistory();
 
-        await firstHiliteSetPromise.resolve({ elements: [firstElementId], models: [], subCategories: [] });
-        await waitFor(() => {
-          expect(selectionSet.emptyAll).to.not.be.called;
-          expect(selectionSet.add).to.be.calledOnceWith({ elements: [firstElementId], models: [], subcategories: [] });
-        });
-        selectionSet.add.resetHistory();
+      await firstHiliteSetPromise.resolve({ elements: [firstElementId], models: [], subCategories: [] });
+      await waitFor(() => {
+        expect(selectionSet.emptyAll).to.not.be.called;
+        expect(selectionSet.add).to.be.calledOnceWith({ elements: [firstElementId], models: [], subcategories: [] });
+      });
+      selectionSet.add.resetHistory();
 
-        await secondHiliteSetPromise.resolve({ elements: [secondElementId], models: [], subCategories: [] });
-        await waitFor(() => {
-          expect(selectionSet.emptyAll).to.not.be.called;
-          expect(selectionSet.add).to.be.calledOnceWith({ elements: [secondElementId], models: [], subcategories: [] });
-        });
+      await secondHiliteSetPromise.resolve({ elements: [secondElementId], models: [], subCategories: [] });
+      await waitFor(() => {
+        expect(selectionSet.emptyAll).to.not.be.called;
+        expect(selectionSet.add).to.be.calledOnceWith({ elements: [secondElementId], models: [], subcategories: [] });
       });
     });
 
@@ -931,62 +893,61 @@ describe("IModelSelectionHandler", () => {
       const hiliteSet = createHiliteSet();
       const selectionSet = createSelectionSetV5();
       const imodelAccess = createIModelAccess({ hiliteSet, selectionSet });
-      await using(await createHandler({ selectionStorage, imodelAccess }), async (_) => {
-        resetStubs([hiliteSet, selectionSet]);
+      using _handler = await createHandler({ selectionStorage, imodelAccess });
+      resetStubs([hiliteSet, selectionSet]);
 
-        const initialHilited = {
-          models: ["0x1"],
-          subCategories: ["0x2"],
-          elements: ["0x3"],
-        };
-        const initialHilitedPromise = new ResolvablePromise<HiliteSet>();
-        cachingProvider.getHiliteSet.reset();
-        cachingProvider.getHiliteSet.callsFake(async function* () {
-          yield initialHilited;
-          yield await initialHilitedPromise;
+      const initialHilited = {
+        models: ["0x1"],
+        subCategories: ["0x2"],
+        elements: ["0x3"],
+      };
+      const initialHilitedPromise = new ResolvablePromise<HiliteSet>();
+      cachingProvider.getHiliteSet.reset();
+      cachingProvider.getHiliteSet.callsFake(async function* () {
+        yield initialHilited;
+        yield await initialHilitedPromise;
+      });
+      triggerUnifiedSelectionChange({
+        imodelKey: imodelAccess.key,
+        source: "initial",
+        selectables: [{ className: "BisCore.Element", id: "0x123" }],
+      });
+      await waitFor(() => {
+        expect(cachingProvider.getHiliteSet).to.be.calledOnce;
+        expect(selectionSet.emptyAll).to.be.called;
+        expect(selectionSet.add).to.be.calledOnceWith({
+          elements: initialHilited.elements,
+          models: initialHilited.models,
+          subcategories: initialHilited.subCategories,
         });
-        triggerUnifiedSelectionChange({
-          imodelKey: imodelAccess.key,
-          source: "initial",
-          selectables: [{ className: "BisCore.Element", id: "0x123" }],
-        });
-        await waitFor(() => {
-          expect(cachingProvider.getHiliteSet).to.be.calledOnce;
-          expect(selectionSet.emptyAll).to.be.called;
-          expect(selectionSet.add).to.be.calledOnceWith({
-            elements: initialHilited.elements,
-            models: initialHilited.models,
-            subcategories: initialHilited.subCategories,
-          });
-        });
-        selectionSet.resetHistory();
+      });
+      selectionSet.resetHistory();
 
-        const replaceHilited = {
-          models: ["0x4"],
-          subCategories: ["0x5"],
-          elements: ["0x6"],
-        };
-        cachingProvider.getHiliteSet.reset();
-        cachingProvider.getHiliteSet.callsFake(async function* () {
-          yield replaceHilited;
+      const replaceHilited = {
+        models: ["0x4"],
+        subCategories: ["0x5"],
+        elements: ["0x6"],
+      };
+      cachingProvider.getHiliteSet.reset();
+      cachingProvider.getHiliteSet.callsFake(async function* () {
+        yield replaceHilited;
+      });
+      triggerUnifiedSelectionChange({ imodelKey: imodelAccess.key, source: "next", selectables: [{ className: "BisCore.Element", id: "0x456" }] });
+      await waitFor(() => {
+        expect(cachingProvider.getHiliteSet).to.be.calledOnce;
+        expect(selectionSet.emptyAll).to.be.calledOnce;
+        expect(selectionSet.add).to.be.calledOnceWith({
+          elements: replaceHilited.elements,
+          models: replaceHilited.models,
+          subcategories: replaceHilited.subCategories,
         });
-        triggerUnifiedSelectionChange({ imodelKey: imodelAccess.key, source: "next", selectables: [{ className: "BisCore.Element", id: "0x456" }] });
-        await waitFor(() => {
-          expect(cachingProvider.getHiliteSet).to.be.calledOnce;
-          expect(selectionSet.emptyAll).to.be.calledOnce;
-          expect(selectionSet.add).to.be.calledOnceWith({
-            elements: replaceHilited.elements,
-            models: replaceHilited.models,
-            subcategories: replaceHilited.subCategories,
-          });
-        });
-        selectionSet.resetHistory();
+      });
+      selectionSet.resetHistory();
 
-        await initialHilitedPromise.resolve({ elements: ["0x7"], models: ["0x8"], subCategories: ["0x9"] });
-        await waitFor(() => {
-          expect(selectionSet.emptyAll).to.not.be.called;
-          expect(selectionSet.add).to.not.be.called;
-        });
+      await initialHilitedPromise.resolve({ elements: ["0x7"], models: ["0x8"], subCategories: ["0x9"] });
+      await waitFor(() => {
+        expect(selectionSet.emptyAll).to.not.be.called;
+        expect(selectionSet.add).to.not.be.called;
       });
     });
 
@@ -994,62 +955,61 @@ describe("IModelSelectionHandler", () => {
       const hiliteSet = createHiliteSet();
       const selectionSet = createSelectionSetV5();
       const imodelAccess = createIModelAccess({ hiliteSet, selectionSet });
-      await using(await createHandler({ selectionStorage, imodelAccess }), async (_) => {
-        resetStubs([hiliteSet, selectionSet]);
+      using _handler = await createHandler({ selectionStorage, imodelAccess });
+      resetStubs([hiliteSet, selectionSet]);
 
-        const initialHilited = {
-          models: ["0x1"],
-          subCategories: ["0x2"],
-          elements: ["0x3"],
-        };
-        const initialHilitedPromise = new ResolvablePromise<HiliteSet>();
-        cachingProvider.getHiliteSet.reset();
-        cachingProvider.getHiliteSet.callsFake(async function* () {
-          yield initialHilited;
-          yield await initialHilitedPromise;
+      const initialHilited = {
+        models: ["0x1"],
+        subCategories: ["0x2"],
+        elements: ["0x3"],
+      };
+      const initialHilitedPromise = new ResolvablePromise<HiliteSet>();
+      cachingProvider.getHiliteSet.reset();
+      cachingProvider.getHiliteSet.callsFake(async function* () {
+        yield initialHilited;
+        yield await initialHilitedPromise;
+      });
+      triggerUnifiedSelectionChange({
+        imodelKey: imodelAccess.key,
+        source: "initial",
+        selectables: [{ className: "BisCore.Element", id: "0x123" }],
+      });
+      await waitFor(() => {
+        expect(cachingProvider.getHiliteSet).to.be.calledOnce;
+        expect(selectionSet.emptyAll).to.be.called;
+        expect(selectionSet.add).to.be.calledOnceWith({
+          elements: initialHilited.elements,
+          models: initialHilited.models,
+          subcategories: initialHilited.subCategories,
         });
-        triggerUnifiedSelectionChange({
-          imodelKey: imodelAccess.key,
-          source: "initial",
-          selectables: [{ className: "BisCore.Element", id: "0x123" }],
-        });
-        await waitFor(() => {
-          expect(cachingProvider.getHiliteSet).to.be.calledOnce;
-          expect(selectionSet.emptyAll).to.be.called;
-          expect(selectionSet.add).to.be.calledOnceWith({
-            elements: initialHilited.elements,
-            models: initialHilited.models,
-            subcategories: initialHilited.subCategories,
-          });
-        });
-        selectionSet.resetHistory();
+      });
+      selectionSet.resetHistory();
 
-        const clearHilited = {
-          models: ["0x4"],
-          subCategories: ["0x5"],
-          elements: ["0x6"],
-        };
-        cachingProvider.getHiliteSet.reset();
-        cachingProvider.getHiliteSet.callsFake(async function* () {
-          yield clearHilited;
+      const clearHilited = {
+        models: ["0x4"],
+        subCategories: ["0x5"],
+        elements: ["0x6"],
+      };
+      cachingProvider.getHiliteSet.reset();
+      cachingProvider.getHiliteSet.callsFake(async function* () {
+        yield clearHilited;
+      });
+      triggerUnifiedSelectionChange({ imodelKey: imodelAccess.key, source: "next", changeType: "clear", selectables: [] });
+      await waitFor(() => {
+        expect(cachingProvider.getHiliteSet).to.be.calledOnce;
+        expect(selectionSet.emptyAll).to.be.called;
+        expect(selectionSet.add).to.be.calledOnceWith({
+          elements: clearHilited.elements,
+          models: clearHilited.models,
+          subcategories: clearHilited.subCategories,
         });
-        triggerUnifiedSelectionChange({ imodelKey: imodelAccess.key, source: "next", changeType: "clear", selectables: [] });
-        await waitFor(() => {
-          expect(cachingProvider.getHiliteSet).to.be.calledOnce;
-          expect(selectionSet.emptyAll).to.be.called;
-          expect(selectionSet.add).to.be.calledOnceWith({
-            elements: clearHilited.elements,
-            models: clearHilited.models,
-            subcategories: clearHilited.subCategories,
-          });
-        });
-        selectionSet.resetHistory();
+      });
+      selectionSet.resetHistory();
 
-        await initialHilitedPromise.resolve({ elements: ["0x7"], models: ["0x8"], subCategories: ["0x9"] });
-        await waitFor(() => {
-          expect(selectionSet.emptyAll).to.not.be.called;
-          expect(selectionSet.add).to.not.be.called;
-        });
+      await initialHilitedPromise.resolve({ elements: ["0x7"], models: ["0x8"], subCategories: ["0x9"] });
+      await waitFor(() => {
+        expect(selectionSet.emptyAll).to.not.be.called;
+        expect(selectionSet.add).to.not.be.called;
       });
     });
 
@@ -1057,104 +1017,103 @@ describe("IModelSelectionHandler", () => {
       const hiliteSet = createHiliteSet();
       const selectionSet = createSelectionSetV5();
       const imodelAccess = createIModelAccess({ hiliteSet, selectionSet });
-      await using(await createHandler({ selectionStorage, imodelAccess }), async (_) => {
-        resetStubs([hiliteSet, selectionSet]);
+      using _handler = await createHandler({ selectionStorage, imodelAccess });
+      resetStubs([hiliteSet, selectionSet]);
 
-        const initialHilited = {
-          models: ["0x1"],
-          subCategories: ["0x2"],
-          elements: ["0x3"],
-        };
-        const delayedInitialHilitedPromise = new ResolvablePromise<HiliteSet>();
-        cachingProvider.getHiliteSet.reset();
-        cachingProvider.getHiliteSet.callsFake(async function* () {
-          yield initialHilited;
-          yield await delayedInitialHilitedPromise;
+      const initialHilited = {
+        models: ["0x1"],
+        subCategories: ["0x2"],
+        elements: ["0x3"],
+      };
+      const delayedInitialHilitedPromise = new ResolvablePromise<HiliteSet>();
+      cachingProvider.getHiliteSet.reset();
+      cachingProvider.getHiliteSet.callsFake(async function* () {
+        yield initialHilited;
+        yield await delayedInitialHilitedPromise;
+      });
+      triggerUnifiedSelectionChange({
+        imodelKey: imodelAccess.key,
+        source: "initial",
+        selectables: [{ className: "BisCore.Element", id: "0x123" }],
+      });
+      await waitFor(() => {
+        expect(cachingProvider.getHiliteSet).to.be.calledOnce;
+        expect(selectionSet.emptyAll).to.be.called;
+        expect(selectionSet.add).to.be.calledOnceWith({
+          elements: initialHilited.elements,
+          models: initialHilited.models,
+          subcategories: initialHilited.subCategories,
         });
-        triggerUnifiedSelectionChange({
-          imodelKey: imodelAccess.key,
-          source: "initial",
-          selectables: [{ className: "BisCore.Element", id: "0x123" }],
-        });
-        await waitFor(() => {
-          expect(cachingProvider.getHiliteSet).to.be.calledOnce;
-          expect(selectionSet.emptyAll).to.be.called;
-          expect(selectionSet.add).to.be.calledOnceWith({
-            elements: initialHilited.elements,
-            models: initialHilited.models,
-            subcategories: initialHilited.subCategories,
-          });
-        });
-        selectionSet.resetHistory();
+      });
+      selectionSet.resetHistory();
 
-        cachingProvider.getHiliteSet.reset();
-        cachingProvider.getHiliteSet.callsFake(async function* () {});
+      cachingProvider.getHiliteSet.reset();
+      cachingProvider.getHiliteSet.callsFake(async function* () {});
 
-        const addHilited = {
-          models: ["0x4"],
-          subCategories: ["0x5"],
-          elements: ["0x6"],
-        };
-        provider.getHiliteSet.reset();
-        provider.getHiliteSet.callsFake(async function* () {
-          yield addHilited;
+      const addHilited = {
+        models: ["0x4"],
+        subCategories: ["0x5"],
+        elements: ["0x6"],
+      };
+      provider.getHiliteSet.reset();
+      provider.getHiliteSet.callsFake(async function* () {
+        yield addHilited;
+      });
+      triggerUnifiedSelectionChange({
+        imodelKey: imodelAccess.key,
+        source: "next",
+        changeType: "add",
+        selectables: [{ className: "BisCore.Element", id: "0x456" }],
+      });
+      await waitFor(() => {
+        expect(provider.getHiliteSet).to.be.calledOnce;
+        expect(selectionSet.emptyAll).to.not.be.called;
+        expect(selectionSet.add).to.be.calledOnceWith({
+          elements: addHilited.elements,
+          models: addHilited.models,
+          subcategories: addHilited.subCategories,
         });
-        triggerUnifiedSelectionChange({
-          imodelKey: imodelAccess.key,
-          source: "next",
-          changeType: "add",
-          selectables: [{ className: "BisCore.Element", id: "0x456" }],
-        });
-        await waitFor(() => {
-          expect(provider.getHiliteSet).to.be.calledOnce;
-          expect(selectionSet.emptyAll).to.not.be.called;
-          expect(selectionSet.add).to.be.calledOnceWith({
-            elements: addHilited.elements,
-            models: addHilited.models,
-            subcategories: addHilited.subCategories,
-          });
-        });
-        selectionSet.resetHistory();
+      });
+      selectionSet.resetHistory();
 
-        const removeHilited = {
-          models: ["0x7"],
-          subCategories: ["0x8"],
-          elements: ["0x9"],
-        };
-        provider.getHiliteSet.reset();
-        provider.getHiliteSet.callsFake(async function* () {
-          yield removeHilited;
+      const removeHilited = {
+        models: ["0x7"],
+        subCategories: ["0x8"],
+        elements: ["0x9"],
+      };
+      provider.getHiliteSet.reset();
+      provider.getHiliteSet.callsFake(async function* () {
+        yield removeHilited;
+      });
+      triggerUnifiedSelectionChange({
+        imodelKey: imodelAccess.key,
+        source: "next",
+        changeType: "remove",
+        selectables: [{ className: "BisCore.Element", id: "0x456" }],
+      });
+      await waitFor(() => {
+        expect(provider.getHiliteSet).to.be.calledOnce;
+        expect(selectionSet.emptyAll).to.not.be.called;
+        expect(selectionSet.remove).to.be.calledOnceWith({
+          elements: removeHilited.elements,
+          models: removeHilited.models,
+          subcategories: removeHilited.subCategories,
         });
-        triggerUnifiedSelectionChange({
-          imodelKey: imodelAccess.key,
-          source: "next",
-          changeType: "remove",
-          selectables: [{ className: "BisCore.Element", id: "0x456" }],
-        });
-        await waitFor(() => {
-          expect(provider.getHiliteSet).to.be.calledOnce;
-          expect(selectionSet.emptyAll).to.not.be.called;
-          expect(selectionSet.remove).to.be.calledOnceWith({
-            elements: removeHilited.elements,
-            models: removeHilited.models,
-            subcategories: removeHilited.subCategories,
-          });
-        });
-        selectionSet.resetHistory();
+      });
+      selectionSet.resetHistory();
 
-        const delayedInitialHilited = {
-          models: ["0x11"],
-          subCategories: ["0x22"],
-          elements: ["0x33"],
-        };
-        await delayedInitialHilitedPromise.resolve(delayedInitialHilited);
-        await waitFor(() => {
-          expect(selectionSet.emptyAll).to.not.be.called;
-          expect(selectionSet.add).to.be.calledOnceWith({
-            elements: delayedInitialHilited.elements,
-            models: delayedInitialHilited.models,
-            subcategories: delayedInitialHilited.subCategories,
-          });
+      const delayedInitialHilited = {
+        models: ["0x11"],
+        subCategories: ["0x22"],
+        elements: ["0x33"],
+      };
+      await delayedInitialHilitedPromise.resolve(delayedInitialHilited);
+      await waitFor(() => {
+        expect(selectionSet.emptyAll).to.not.be.called;
+        expect(selectionSet.add).to.be.calledOnceWith({
+          elements: delayedInitialHilited.elements,
+          models: delayedInitialHilited.models,
+          subcategories: delayedInitialHilited.subCategories,
         });
       });
     });
@@ -1163,29 +1122,28 @@ describe("IModelSelectionHandler", () => {
       const hiliteSet = createHiliteSet();
       const selectionSet = createSelectionSetV5();
       const imodelAccess = createIModelAccess({ hiliteSet, selectionSet });
-      await using(await createHandler({ selectionStorage, imodelAccess }), async (_) => {
-        resetStubs([hiliteSet, selectionSet]);
+      using _handler = await createHandler({ selectionStorage, imodelAccess });
+      resetStubs([hiliteSet, selectionSet]);
 
-        const replaceHilited = {
-          models: ["0x7"],
-          subCategories: ["0x8"],
-          elements: ["0x9"],
-        };
-        cachingProvider.getHiliteSet.reset();
-        cachingProvider.getHiliteSet.callsFake(async function* () {
-          yield replaceHilited;
-        });
-        triggerUnifiedSelectionChange({ imodelKey: imodelAccess.key, source: "Tool" });
+      const replaceHilited = {
+        models: ["0x7"],
+        subCategories: ["0x8"],
+        elements: ["0x9"],
+      };
+      cachingProvider.getHiliteSet.reset();
+      cachingProvider.getHiliteSet.callsFake(async function* () {
+        yield replaceHilited;
+      });
+      triggerUnifiedSelectionChange({ imodelKey: imodelAccess.key, source: "Tool" });
 
-        await waitFor(() => {
-          // verify selection set was not cleared, but resulting hilite set was added to it
-          expect(hiliteSet.clear).to.not.be.called;
-          expect(selectionSet.emptyAll).to.not.be.called;
-          expect(selectionSet.add).to.be.calledOnceWith({
-            models: replaceHilited.models,
-            subcategories: replaceHilited.subCategories,
-            elements: replaceHilited.elements,
-          });
+      await waitFor(() => {
+        // verify selection set was not cleared, but resulting hilite set was added to it
+        expect(hiliteSet.clear).to.not.be.called;
+        expect(selectionSet.emptyAll).to.not.be.called;
+        expect(selectionSet.add).to.be.calledOnceWith({
+          models: replaceHilited.models,
+          subcategories: replaceHilited.subCategories,
+          elements: replaceHilited.elements,
         });
       });
     });

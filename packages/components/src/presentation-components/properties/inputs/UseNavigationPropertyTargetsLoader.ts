@@ -84,7 +84,7 @@ export function useNavigationPropertyTargetsLoader(props: UseNavigationPropertyT
     void loader.loadItems(initialSelectedTarget ?? "");
     setItemsLoader(loader);
     return () => {
-      loader.dispose();
+      loader[Symbol.dispose]();
     };
   }, [imodel, initialSelectedTarget, ruleset]);
 
@@ -207,7 +207,7 @@ export class NavigationPropertyItemsLoader {
     private _loadItems: (filterText?: string) => Promise<NavigationPropertyTarget[]>,
   ) {}
 
-  public dispose() {
+  public [Symbol.dispose]() {
     this._disposed = true;
   }
 

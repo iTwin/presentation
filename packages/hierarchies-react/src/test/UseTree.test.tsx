@@ -56,7 +56,7 @@ describe("useTree", () => {
     });
     unmount();
     await waitFor(() => {
-      expect(hierarchyProvider.dispose).to.be.called;
+      expect(hierarchyProvider[Symbol.dispose]).to.be.called;
     });
   });
 

@@ -174,11 +174,17 @@ export class ContentDataProvider implements IContentDataProvider {
   }
 
   /** Destructor. Must be called to clean up.  */
-  public dispose() {
+  public [Symbol.dispose]() {
     for (const removeListener of this._listeners) {
       removeListener();
     }
     this._listeners = [];
+  }
+
+  /** @deprecated in 5.7. Use `[Symbol.dispose]` instead. */
+  /* c8 ignore next 3 */
+  public dispose() {
+    this[Symbol.dispose]();
   }
 
   /** Display type used to format content */

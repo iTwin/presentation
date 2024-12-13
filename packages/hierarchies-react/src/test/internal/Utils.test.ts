@@ -4,7 +4,8 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { expect } from "chai";
-import { createNodeId, sameNodes } from "../../presentation-hierarchies-react/internal/Utils.js";
+import sinon from "sinon";
+import { createNodeId, safeDispose, sameNodes } from "../../presentation-hierarchies-react/internal/Utils.js";
 import { createTestGroupingNode, createTestHierarchyNode } from "../TestUtils.js";
 
 describe("createNodeId", () => {
@@ -149,5 +150,24 @@ describe("sameNodes", () => {
       ],
     });
     expect(sameNodes(lhs, rhs)).to.be.false;
+  });
+});
+
+describe("safeDispose", () => {
+  it("disposes object with `Symbol.dispose` method", () => {
+    const disposable = { [Symbol.dispose]: sinon.stub() };
+    safeDispose(disposable);
+    expect(disposable[Symbol.dispose]).to.be.calledOnce;
+  });
+
+  it("disposes object with `dispose` method", () => {
+    const disposable = { dispose: sinon.stub() };
+    safeDispose(disposable);
+    expect(disposable.dispose).to.be.calledOnce;
+  });
+
+  it("does nothing with non-disposable object", () => {
+    const disposable = { x: 123 };
+    expect(() => safeDispose(disposable)).to.not.throw();
   });
 });

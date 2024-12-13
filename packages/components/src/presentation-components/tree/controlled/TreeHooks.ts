@@ -90,7 +90,7 @@ export function usePresentationTreeNodeLoader(props: PresentationTreeNodeLoaderP
       dataProvider: provider,
     });
     return () => {
-      provider.dispose();
+      provider[Symbol.dispose]();
     };
   }, [treeNodeLoaderStateProps]);
 

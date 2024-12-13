@@ -10,7 +10,7 @@ import * as mm from "micro-memoize";
 import { LegacyRef, MutableRefObject, RefCallback, useCallback, useEffect, useState } from "react";
 import { Primitives, PrimitiveValue, PropertyDescription, PropertyRecord, PropertyValueFormat } from "@itwin/appui-abstract";
 import { IPropertyValueRenderer, PropertyValueRendererManager } from "@itwin/components-react";
-import { Guid, GuidString, IDisposable } from "@itwin/core-bentley";
+import { Guid, GuidString } from "@itwin/core-bentley";
 import { TranslationOptions } from "@itwin/core-common";
 import { Descriptor, Field, LabelCompositeValue, LabelDefinition, parseCombinedFieldNames, Ruleset, Value } from "@itwin/presentation-common";
 import { Presentation } from "@itwin/presentation-frontend";
@@ -137,9 +137,10 @@ export function getRulesetId(ruleset: RulesetOrId) {
 /**
  * A helper to track ongoing async tasks. Usage:
  * ```
- * await using(tracker.trackAsyncTask(), async (_r) => {
+ * {
+ *   using _r = tracker.trackAsyncTask();
  *   await doSomethingAsync();
- * });
+ * }
  * ```
  *
  * Can be used with `waitForPendingAsyncs` in test helpers to wait for all
@@ -152,11 +153,11 @@ export class AsyncTasksTracker {
   public get pendingAsyncs() {
     return this._asyncsInProgress;
   }
-  public trackAsyncTask(): IDisposable {
+  public trackAsyncTask(): Disposable {
     const id = Guid.createValue();
     this._asyncsInProgress.add(id);
     return {
-      dispose: () => this._asyncsInProgress.delete(id),
+      [Symbol.dispose]: () => this._asyncsInProgress.delete(id),
     };
   }
 }

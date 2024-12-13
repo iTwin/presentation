@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { from, Subject, takeUntil } from "rxjs";
-import { IDisposable, using } from "@itwin/core-bentley";
+import { using } from "@itwin/core-bentley";
 import { IModelConnection } from "@itwin/core-frontend";
 import { KeySet } from "@itwin/presentation-common";
 import { HiliteSet, HiliteSetProvider, Presentation, SelectionChangeEventArgs, SelectionChangeType, SelectionHandler } from "@itwin/presentation-frontend";
@@ -23,7 +23,7 @@ export interface ViewportSelectionHandlerProps {
  *
  * @internal
  */
-export class ViewportSelectionHandler implements IDisposable {
+export class ViewportSelectionHandler implements Disposable {
   private _imodel: IModelConnection;
   private _selectionHandler: SelectionHandler;
   private _cancelOngoingChanges = new Subject<void>();
@@ -45,7 +45,7 @@ export class ViewportSelectionHandler implements IDisposable {
     props.imodel.hilited.wantSyncWithSelectionSet = false;
   }
 
-  public dispose() {
+  public [Symbol.dispose]() {
     this._cancelOngoingChanges.next();
     this._selectionHandler.manager.setSyncWithIModelToolSelection(this._imodel, false);
     this._selectionHandler.dispose();

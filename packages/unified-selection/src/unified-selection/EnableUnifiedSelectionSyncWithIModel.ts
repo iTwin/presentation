@@ -12,6 +12,7 @@ import { StorageSelectionChangeEventArgs, StorageSelectionChangeType } from "./S
 import { computeSelection, ComputeSelectionProps } from "./SelectionScope.js";
 import { SelectionStorage } from "./SelectionStorage.js";
 import { CoreIModelHiliteSet, CoreIModelSelectionSet, CoreSelectableIds, CoreSelectionSetEventType, CoreSelectionSetEventUnsafe } from "./types/IModel.js";
+import { safeDispose } from "./Utils.js";
 
 /**
  * Props for `enableUnifiedSelectionSyncWithIModel`.
@@ -60,8 +61,11 @@ export interface EnableUnifiedSelectionSyncWithIModelProps {
    * will be created for the given iModel using the provided `imodelAccess`.
    * If the consuming application already has a `CachingHiliteSetProvider` defined, it should be provided instead
    * to reuse the cache and avoid creating new providers for each iModel.
+   *
+   * The type is defined in a way that makes it required for provider to have either the deprecated `dispose` or the
+   * new `Symbol.dispose` method.
    */
-  cachingHiliteSetProvider?: CachingHiliteSetProvider;
+  cachingHiliteSetProvider?: CachingHiliteSetProvider | (Omit<CachingHiliteSetProvider, "dispose"> & { [Symbol.dispose]: () => void });
 }
 
 /**
@@ -71,7 +75,7 @@ export interface EnableUnifiedSelectionSyncWithIModelProps {
  */
 export function enableUnifiedSelectionSyncWithIModel(props: EnableUnifiedSelectionSyncWithIModelProps): () => void {
   const selectionHandler = new IModelSelectionHandler(props);
-  return () => selectionHandler.dispose();
+  return () => selectionHandler[Symbol.dispose]();
 }
 
 /**
@@ -85,13 +89,13 @@ export class IModelSelectionHandler {
   private _imodelAccess: EnableUnifiedSelectionSyncWithIModelProps["imodelAccess"];
   private _selectionStorage: SelectionStorage;
   private _hiliteSetProvider: HiliteSetProvider;
-  private _cachingHiliteSetProvider: CachingHiliteSetProvider;
+  private _cachingHiliteSetProvider: NonNullable<EnableUnifiedSelectionSyncWithIModelProps["cachingHiliteSetProvider"]>;
   private _activeScopeProvider: () => ComputeSelectionProps["scope"];
 
   private _isSuspended: boolean;
   private _cancelOngoingChanges = new Subject<void>();
-  private _unifiedSelectionListenerDisposeFunc: () => void;
-  private _imodelListenerDisposeFunc: () => void;
+  private _unregisterUnifiedSelectionListener: () => void;
+  private _unregisterIModelSelectionSetListener: () => void;
   private _hasCustomCachingHiliteSetProvider: boolean;
 
   public constructor(props: EnableUnifiedSelectionSyncWithIModelProps) {
@@ -109,18 +113,18 @@ export class IModelSelectionHandler {
       });
 
     this._hiliteSetProvider = createHiliteSetProvider({ imodelAccess: this._imodelAccess });
-    this._imodelListenerDisposeFunc = this._imodelAccess.selectionSet.onChanged.addListener(this.onIModelSelectionChanged);
-    this._unifiedSelectionListenerDisposeFunc = this._selectionStorage.selectionChangeEvent.addListener(this.onUnifiedSelectionChanged);
+    this._unregisterIModelSelectionSetListener = this._imodelAccess.selectionSet.onChanged.addListener(this.onIModelSelectionChanged);
+    this._unregisterUnifiedSelectionListener = this._selectionStorage.selectionChangeEvent.addListener(this.onUnifiedSelectionChanged);
 
     this.applyCurrentHiliteSet({ activeSelectionAction: "clear" });
   }
 
-  public dispose() {
+  public [Symbol.dispose]() {
     this._cancelOngoingChanges.next();
-    this._imodelListenerDisposeFunc();
-    this._unifiedSelectionListenerDisposeFunc();
+    this._unregisterIModelSelectionSetListener();
+    this._unregisterUnifiedSelectionListener();
     if (!this._hasCustomCachingHiliteSetProvider) {
-      this._cachingHiliteSetProvider.dispose();
+      safeDispose(this._cachingHiliteSetProvider);
     }
   }
 

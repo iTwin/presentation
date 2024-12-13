@@ -20,7 +20,7 @@ import {
   TreeSelectionModificationEventArgs,
   TreeSelectionReplacementEventArgs,
 } from "@itwin/components-react";
-import { Guid, IDisposable } from "@itwin/core-bentley";
+import { Guid } from "@itwin/core-bentley";
 import { useDisposable } from "@itwin/core-react";
 import { Keys, KeySet, NodeKey } from "@itwin/presentation-common";
 import { Presentation, SelectionChangeEventArgs, SelectionChangeType, SelectionHelper } from "@itwin/presentation-frontend";
@@ -64,7 +64,7 @@ export interface UnifiedSelectionTreeEventHandlerParams {
  * @deprecated in 5.7. All tree-related APIs have been deprecated in favor of the new generation hierarchy
  * building APIs (see https://github.com/iTwin/presentation/blob/33e79ee8d77f30580a9bab81a72884bda008db25/README.md#the-packages).
  */
-export class UnifiedSelectionTreeEventHandler extends TreeEventHandler implements IDisposable {
+export class UnifiedSelectionTreeEventHandler extends TreeEventHandler {
   #dataProvider: IPresentationTreeDataProvider;
   #selectionSourceName: string;
   #listeners: Array<() => void> = [];
@@ -82,10 +82,16 @@ export class UnifiedSelectionTreeEventHandler extends TreeEventHandler implement
     this.selectNodes();
   }
 
-  public override dispose() {
+  /** Disposes this event handler */
+  public [Symbol.dispose]() {
     super.dispose();
     this.#cancelled.next();
-    this.#listeners.forEach((dispose) => dispose());
+    this.#listeners.forEach((unregister) => unregister());
+  }
+
+  /** @deprecated in 5.7. Use `[Symbol.dispose]` instead. */
+  public override dispose() {
+    this[Symbol.dispose]();
   }
 
   public override onSelectionModified({ modifications }: TreeSelectionModificationEventArgs) {
