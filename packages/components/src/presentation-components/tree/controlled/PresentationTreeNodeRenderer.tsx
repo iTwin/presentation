@@ -2,6 +2,7 @@
  * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
+/* eslint-disable @typescript-eslint/no-deprecated */
 /** @packageDocumentation
  * @module Tree
  */
@@ -18,6 +19,8 @@ import { InfoTreeNodeItemType, isPresentationInfoTreeNodeItem, isPresentationTre
 /**
  * Props for [[PresentationTreeNodeRenderer]] component.
  * @public
+ * @deprecated in 5.7. All tree-related APIs have been deprecated in favor of the new generation hierarchy
+ * building APIs (see https://github.com/iTwin/presentation/blob/33e79ee8d77f30580a9bab81a72884bda008db25/README.md#the-packages).
  */
 export interface PresentationTreeNodeRendererProps extends TreeNodeRendererProps {
   onFilterClick: (nodeId: string) => void;
@@ -29,6 +32,8 @@ export interface PresentationTreeNodeRendererProps extends TreeNodeRendererProps
  * tree node renderer, it renders action buttons for filterable hierarchy levels and also correctly renders
  * nodes that carry info messages.
  * @public
+ * @deprecated in 5.7. All tree-related APIs have been deprecated in favor of the new generation hierarchy
+ * building APIs (see https://github.com/iTwin/presentation/blob/33e79ee8d77f30580a9bab81a72884bda008db25/README.md#the-packages).
  */
 export function PresentationTreeNodeRenderer(props: PresentationTreeNodeRendererProps) {
   const { onFilterClick, onClearFilterClick, ...restProps } = props;
@@ -37,7 +42,7 @@ export function PresentationTreeNodeRenderer(props: PresentationTreeNodeRenderer
   if (isPresentationInfoTreeNodeItem(nodeItem)) {
     return (
       // `PresentationTreeNodeRenderer` is about to be deprecated itself, so no point in resolving the TreeNode deprecation
-      // eslint-disable-next-line @typescript-eslint/no-deprecated
+
       <TreeNode
         isLeaf={true}
         label={

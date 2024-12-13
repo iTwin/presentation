@@ -2,9 +2,7 @@
  * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
-/** @packageDocumentation
- * @module Tree
- */
+/* eslint-disable @typescript-eslint/no-deprecated */
 
 import { MutableRefObject, useEffect } from "react";
 import { RenderedItemsRange, Subscription, TreeModelSource } from "@itwin/components-react";

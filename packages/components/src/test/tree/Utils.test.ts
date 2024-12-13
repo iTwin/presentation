@@ -2,6 +2,7 @@
  * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
+/* eslint-disable @typescript-eslint/no-deprecated */
 
 import { expect } from "chai";
 import { PageOptions } from "@itwin/components-react";
@@ -32,7 +33,7 @@ describe("Utils", () => {
 
     it("creates tree node with custom label styles", () => {
       const node = createTestECInstancesNode();
-      node.fontStyle = "Bold Italic"; // eslint-disable-line @typescript-eslint/no-deprecated
+      node.fontStyle = "Bold Italic";
       const treeNode = createTreeNodeItem(node);
       expect(treeNode).to.matchSnapshot();
     });

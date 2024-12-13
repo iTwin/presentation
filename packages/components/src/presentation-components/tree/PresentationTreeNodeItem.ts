@@ -2,6 +2,7 @@
  * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
+/* eslint-disable @typescript-eslint/no-deprecated */
 /** @packageDocumentation
  * @module Tree
  */
@@ -13,12 +14,16 @@ import { PresentationInstanceFilterInfo } from "../instance-filter-builder/Prese
 /**
  * Describes descriptor used for hierarchy level filtering. It can be lazy loaded.
  * @public
+ * @deprecated in 5.7. All tree-related APIs have been deprecated in favor of the new generation hierarchy
+ * building APIs (see https://github.com/iTwin/presentation/blob/33e79ee8d77f30580a9bab81a72884bda008db25/README.md#the-packages).
  */
 export type HierarchyLevelFilteringDescriptor = Descriptor | (() => Promise<Descriptor>);
 
 /**
  * Data structure that describes information for tree item hierarchy level filtering.
  * @public
+ * @deprecated in 5.7. All tree-related APIs have been deprecated in favor of the new generation hierarchy
+ * building APIs (see https://github.com/iTwin/presentation/blob/33e79ee8d77f30580a9bab81a72884bda008db25/README.md#the-packages).
  */
 export interface PresentationTreeNodeItemFilteringInfo {
   /**
@@ -40,6 +45,8 @@ export interface PresentationTreeNodeItemFilteringInfo {
 /**
  * Data structure that describes tree node item created by [[PresentationTreeDataProvider]].
  * @public
+ * @deprecated in 5.7. All tree-related APIs have been deprecated in favor of the new generation hierarchy
+ * building APIs (see https://github.com/iTwin/presentation/blob/33e79ee8d77f30580a9bab81a72884bda008db25/README.md#the-packages).
  */
 export interface PresentationTreeNodeItem extends DelayLoadedTreeNodeItem {
   /** Node key of the node from which this item was created. */
@@ -51,6 +58,8 @@ export interface PresentationTreeNodeItem extends DelayLoadedTreeNodeItem {
 /**
  * Type that is assigned to a [[PresentationInfoTreeNodeItem]] to determine what type of message an item conveys.
  * @public
+ * @deprecated in 5.7. All tree-related APIs have been deprecated in favor of the new generation hierarchy
+ * building APIs (see https://github.com/iTwin/presentation/blob/33e79ee8d77f30580a9bab81a72884bda008db25/README.md#the-packages).
  */
 export enum InfoTreeNodeItemType {
   ResultSetTooLarge,
@@ -64,6 +73,8 @@ export enum InfoTreeNodeItemType {
  * Data structure that describes tree node item created by [[PresentationTreeDataProvider]]
  * which is used to carry information message.
  * @public
+ * @deprecated in 5.7. All tree-related APIs have been deprecated in favor of the new generation hierarchy
+ * building APIs (see https://github.com/iTwin/presentation/blob/33e79ee8d77f30580a9bab81a72884bda008db25/README.md#the-packages).
  */
 export interface PresentationInfoTreeNodeItem extends ImmediatelyLoadedTreeNodeItem {
   /** Message that his tree item is carrying. */
@@ -79,6 +90,8 @@ export interface PresentationInfoTreeNodeItem extends ImmediatelyLoadedTreeNodeI
 /**
  * Describes tree node item that supports hierarchy level filtering.
  * @public
+ * @deprecated in 5.7. All tree-related APIs have been deprecated in favor of the new generation hierarchy
+ * building APIs (see https://github.com/iTwin/presentation/blob/33e79ee8d77f30580a9bab81a72884bda008db25/README.md#the-packages).
  */
 export type FilterablePresentationTreeNodeItem = PresentationTreeNodeItem & {
   filtering: PresentationTreeNodeItemFilteringInfo;
@@ -87,6 +100,8 @@ export type FilterablePresentationTreeNodeItem = PresentationTreeNodeItem & {
 /**
  * Function that checks if supplied [TreeNodeItem]($components-react) is [[PresentationTreeNodeItem]].
  * @public
+ * @deprecated in 5.7. All tree-related APIs have been deprecated in favor of the new generation hierarchy
+ * building APIs (see https://github.com/iTwin/presentation/blob/33e79ee8d77f30580a9bab81a72884bda008db25/README.md#the-packages).
  */
 export function isPresentationTreeNodeItem(item: TreeNodeItem): item is PresentationTreeNodeItem {
   return (item as PresentationTreeNodeItem).key !== undefined;
@@ -95,6 +110,8 @@ export function isPresentationTreeNodeItem(item: TreeNodeItem): item is Presenta
 /**
  * Function that checks if supplied [TreeNodeItem]($components-react) is [[PresentationInfoTreeNodeItem]].
  * @public
+ * @deprecated in 5.7. All tree-related APIs have been deprecated in favor of the new generation hierarchy
+ * building APIs (see https://github.com/iTwin/presentation/blob/33e79ee8d77f30580a9bab81a72884bda008db25/README.md#the-packages).
  */
 export function isPresentationInfoTreeNodeItem(item: TreeNodeItem): item is PresentationInfoTreeNodeItem {
   return (item as PresentationInfoTreeNodeItem).message !== undefined;
@@ -103,6 +120,8 @@ export function isPresentationInfoTreeNodeItem(item: TreeNodeItem): item is Pres
 /**
  * Function that check if supplied [[PresentationTreeNodeItem]] is [[FilterablePresentationTreeNodeItem]].
  * @public
+ * @deprecated in 5.7. All tree-related APIs have been deprecated in favor of the new generation hierarchy
+ * building APIs (see https://github.com/iTwin/presentation/blob/33e79ee8d77f30580a9bab81a72884bda008db25/README.md#the-packages).
  */
 export function isFilterablePresentationTreeNodeItem(item: PresentationTreeNodeItem): item is FilterablePresentationTreeNodeItem {
   return item.filtering !== undefined;

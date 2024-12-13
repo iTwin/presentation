@@ -2,6 +2,7 @@
  * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
+/* eslint-disable @typescript-eslint/no-deprecated */
 /** @packageDocumentation
  * @module Tree
  */
@@ -38,7 +39,7 @@ export function createTreeNodeItem(node: Readonly<Node>, parentId?: string, prop
     key: node.key,
   };
   assignOptionalTreeNodeItemFields(item, node, parentId);
-  const customizeItemCallback = props?.customizeTreeNodeItem ?? customizeTreeNodeItem; // eslint-disable-line @typescript-eslint/no-deprecated
+  const customizeItemCallback = props?.customizeTreeNodeItem ?? customizeTreeNodeItem;
   customizeItemCallback(item, node);
   return item;
 }
@@ -52,7 +53,7 @@ export function createPartialTreeNodeItem(node: PartialNode, parentId: string | 
   }
 
   assignOptionalTreeNodeItemFields(item, node, parentId);
-  const customizeItemCallback = props.customizeTreeNodeItem ?? customizeTreeNodeItem; // eslint-disable-line @typescript-eslint/no-deprecated
+  const customizeItemCallback = props.customizeTreeNodeItem ?? customizeTreeNodeItem;
   customizeItemCallback(item, node);
   return item;
 }
@@ -98,21 +99,17 @@ function assignOptionalTreeNodeItemFields(item: Partial<PresentationTreeNodeItem
  */
 /* c8 ignore start */
 export function customizeTreeNodeItem(item: Partial<DelayLoadedTreeNodeItem>, node: Partial<Node>) {
-  // eslint-disable-next-line @typescript-eslint/no-deprecated
   if (node.imageId) {
-    item.icon = node.imageId; // eslint-disable-line @typescript-eslint/no-deprecated
+    item.icon = node.imageId;
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-deprecated
   if (node.isCheckboxVisible) {
     item.isCheckboxVisible = true;
-    // eslint-disable-next-line @typescript-eslint/no-deprecated
+
     if (node.isChecked) {
-      // eslint-disable-next-line @typescript-eslint/no-deprecated
       item.checkBoxState = CheckBoxState.On;
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-deprecated
     if (!node.isCheckboxEnabled) {
       item.isCheckboxDisabled = true;
     }

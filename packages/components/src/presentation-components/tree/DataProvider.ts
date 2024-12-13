@@ -2,6 +2,7 @@
  * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
+/* eslint-disable @typescript-eslint/no-deprecated */
 /** @packageDocumentation
  * @module Tree
  */
@@ -38,6 +39,8 @@ import { createInfoNode, createTreeNodeItem, pageOptionsUiToPresentation } from 
 /**
  * Properties for creating a `PresentationTreeDataProvider` instance.
  * @public
+ * @deprecated in 5.7. All tree-related APIs have been deprecated in favor of the new generation hierarchy
+ * building APIs (see https://github.com/iTwin/presentation/blob/33e79ee8d77f30580a9bab81a72884bda008db25/README.md#the-packages).
  */
 export interface PresentationTreeDataProviderProps extends DiagnosticsProps {
   /** IModel to pull data from. */
@@ -108,6 +111,8 @@ export interface PresentationTreeDataProviderProps extends DiagnosticsProps {
 /**
  * Definitions of methods used by [[PresentationTreeDataProvider]] to get nodes' data.
  * @public
+ * @deprecated in 5.7. All tree-related APIs have been deprecated in favor of the new generation hierarchy
+ * building APIs (see https://github.com/iTwin/presentation/blob/33e79ee8d77f30580a9bab81a72884bda008db25/README.md#the-packages).
  */
 export interface PresentationTreeDataProviderDataSourceEntryPoints {
   /** @deprecated in 4.0 The entry point is not used anymore, it's usage has been replaced by [[getNodesIterator]]. */
@@ -123,6 +128,8 @@ export interface PresentationTreeDataProviderDataSourceEntryPoints {
 /**
  * Presentation Rules-driven tree data provider.
  * @public
+ * @deprecated in 5.7. All tree-related APIs have been deprecated in favor of the new generation hierarchy
+ * building APIs (see https://github.com/iTwin/presentation/blob/33e79ee8d77f30580a9bab81a72884bda008db25/README.md#the-packages).
  */
 export class PresentationTreeDataProvider implements IPresentationTreeDataProvider, IDisposable {
   private _disposeVariablesChangeListener?: () => void;
@@ -138,18 +145,15 @@ export class PresentationTreeDataProvider implements IPresentationTreeDataProvid
     this._dataSource = {
       getNodesIterator: async (requestOptions) => {
         // we can't just drop support for the `getNodesAndCount` override, so if it's set - need to take data from it
-        /* eslint-disable @typescript-eslint/no-deprecated */
         if (props.dataSourceOverrides?.getNodesAndCount) {
           return createNodesIteratorFromDeprecatedResponse(await props.dataSourceOverrides.getNodesAndCount(requestOptions));
         }
-        /* eslint-enable @typescript-eslint/no-deprecated */
 
         // the `PresentationManager.getNodesIterator` has only been added to @itwin/presentation-frontend in 4.5.1, and our peerDependency is
         // set to 4.0.0, so we need to check if the method is really there
         if (Presentation.presentation.getNodesIterator) {
           return Presentation.presentation.getNodesIterator(requestOptions);
         }
-        // eslint-disable-next-line @typescript-eslint/no-deprecated
         return createNodesIteratorFromDeprecatedResponse(await Presentation.presentation.getNodesAndCount(requestOptions));
       },
       getFilteredNodePaths: async (requestOptions: FilterByTextHierarchyRequestOptions<IModelConnection>) =>

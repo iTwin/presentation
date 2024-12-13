@@ -2,9 +2,11 @@
  * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
+/* eslint-disable @typescript-eslint/no-deprecated */
 /** @packageDocumentation
  * @module Tree
  */
+
 import { useCallback, useMemo, useState } from "react";
 import {
   AbstractTreeNodeLoaderWithProvider,
@@ -32,6 +34,8 @@ import { useHierarchyLevelFiltering } from "./UseHierarchyLevelFiltering.js";
 /**
  * Props for [[PresentationTreeRenderer]] component.
  * @public
+ * @deprecated in 5.7. All tree-related APIs have been deprecated in favor of the new generation hierarchy
+ * building APIs (see https://github.com/iTwin/presentation/blob/33e79ee8d77f30580a9bab81a72884bda008db25/README.md#the-packages).
  */
 export interface PresentationTreeRendererProps extends Omit<TreeRendererProps, "nodeRenderer"> {
   nodeLoader: AbstractTreeNodeLoaderWithProvider<IPresentationTreeDataProvider>;
@@ -41,6 +45,8 @@ export interface PresentationTreeRendererProps extends Omit<TreeRendererProps, "
 /**
  * Return type of [[useFilterablePresentationTree]] hook.
  * @public
+ * @deprecated in 5.7. All tree-related APIs have been deprecated in favor of the new generation hierarchy
+ * building APIs (see https://github.com/iTwin/presentation/blob/33e79ee8d77f30580a9bab81a72884bda008db25/README.md#the-packages).
  */
 export interface FilterableTreeProps {
   onFilterClick: (nodeId: string) => void;
@@ -51,6 +57,8 @@ export interface FilterableTreeProps {
 /**
  * Props for [[useFilterablePresentationTree]] hook.
  * @public
+ * @deprecated in 5.7. All tree-related APIs have been deprecated in favor of the new generation hierarchy
+ * building APIs (see https://github.com/iTwin/presentation/blob/33e79ee8d77f30580a9bab81a72884bda008db25/README.md#the-packages).
  */
 export interface useFilterablePresentationTreeProps {
   nodeLoader: AbstractTreeNodeLoaderWithProvider<IPresentationTreeDataProvider>;
@@ -60,6 +68,8 @@ export interface useFilterablePresentationTreeProps {
 /**
  * Hook that enables hierarchy level filtering with action handlers for setting and clearing filters.
  * @public
+ * @deprecated in 5.7. All tree-related APIs have been deprecated in favor of the new generation hierarchy
+ * building APIs (see https://github.com/iTwin/presentation/blob/33e79ee8d77f30580a9bab81a72884bda008db25/README.md#the-packages).
  */
 export function useFilterablePresentationTree({ nodeLoader, onFilterApplied }: useFilterablePresentationTreeProps): FilterableTreeProps {
   const { applyFilter, clearFilter } = useHierarchyLevelFiltering({ nodeLoader, modelSource: nodeLoader.modelSource });
@@ -102,6 +112,8 @@ export function useFilterablePresentationTree({ nodeLoader, onFilterApplied }: u
  * It renders tree nodes with action buttons for setting and clearing filters. [[PresentationInstanceFilterDialog]] is opened
  * for creating filters for hierarchy levels.
  * @public
+ * @deprecated in 5.7. All tree-related APIs have been deprecated in favor of the new generation hierarchy
+ * building APIs (see https://github.com/iTwin/presentation/blob/33e79ee8d77f30580a9bab81a72884bda008db25/README.md#the-packages).
  */
 export function PresentationTreeRenderer(props: PresentationTreeRendererProps) {
   const { onClearFilterClick, onFilterClick, filterDialog } = useFilterablePresentationTree({

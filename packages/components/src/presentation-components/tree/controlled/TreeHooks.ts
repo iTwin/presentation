@@ -2,6 +2,7 @@
  * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
+/* eslint-disable @typescript-eslint/no-deprecated */
 /** @packageDocumentation
  * @module Tree
  */
@@ -68,7 +69,6 @@ export interface PresentationTreeNodeLoaderResult {
  * @public
  * @deprecated in 4.x. This hook is not compatible with React 18 `StrictMode`. Use [[usePresentationTreeState]] instead.
  */
-// eslint-disable-next-line @typescript-eslint/no-deprecated
 export function usePresentationTreeNodeLoader(props: PresentationTreeNodeLoaderProps): PresentationTreeNodeLoaderResult {
   const { seedTreeModel, ...rest } = props;
 
@@ -122,6 +122,8 @@ export function usePresentationTreeNodeLoader(props: PresentationTreeNodeLoaderP
 /**
  * Parameters for [[useControlledPresentationTreeFiltering]] hook
  * @public
+ * @deprecated in 5.7. All tree-related APIs have been deprecated in favor of the new generation hierarchy
+ * building APIs (see https://github.com/iTwin/presentation/blob/33e79ee8d77f30580a9bab81a72884bda008db25/README.md#the-packages).
  */
 export interface ControlledPresentationTreeFilteringProps {
   nodeLoader: AbstractTreeNodeLoaderWithProvider<IPresentationTreeDataProvider>;
@@ -135,6 +137,8 @@ export interface ControlledPresentationTreeFilteringProps {
  * model source and node loader.
  *
  * @public
+ * @deprecated in 5.7. All tree-related APIs have been deprecated in favor of the new generation hierarchy
+ * building APIs (see https://github.com/iTwin/presentation/blob/33e79ee8d77f30580a9bab81a72884bda008db25/README.md#the-packages).
  */
 export function useControlledPresentationTreeFiltering(props: ControlledPresentationTreeFilteringProps) {
   const { filteredNodeLoader, filteredProvider, isFiltering, matchesCount } = useFilteredNodeLoader({
