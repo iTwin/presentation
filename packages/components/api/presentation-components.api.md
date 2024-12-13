@@ -908,7 +908,7 @@ export function useUnifiedSelectionContext(): UnifiedSelectionContext | undefine
 // @public @deprecated
 export function useUnifiedSelectionTreeEventHandler(props: UnifiedSelectionTreeEventHandlerParams): UnifiedSelectionTreeEventHandler;
 
-// @public
+// @public @deprecated
 export function viewWithUnifiedSelection<P extends ViewportProps>(ViewportComponent: React.ComponentType<P>): React.ComponentType<P>;
 
 // @public @deprecated
