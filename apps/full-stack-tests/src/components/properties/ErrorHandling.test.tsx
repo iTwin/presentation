@@ -32,7 +32,7 @@ describe("Learning snippets", () => {
     });
 
     it("handles errors", async function () {
-      const consoleStub = sinon.stub(console, "error").callsFake(()=> {});
+      const consoleStub = sinon.stub(console, "error").callsFake(() => {});
       if (Number.parseInt(PresentationRpcInterface.interfaceVersion.split(".")[0], 10) < 4) {
         // property grid started supporting error boundaries since appui@4.0
         this.skip();

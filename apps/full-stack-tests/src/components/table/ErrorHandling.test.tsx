@@ -31,7 +31,7 @@ describe("Learning snippets", () => {
     });
 
     it("handles errors", async function () {
-      const consoleStub = sinon.stub(console, "error").callsFake(()=> {});
+      const consoleStub = sinon.stub(console, "error").callsFake(() => {});
       // __PUBLISH_EXTRACT_START__ Presentation.Components.Table.ErrorHandling
       /** Props for `MyTable` and `MyProtectedTable` components */
       interface MyTableProps {
