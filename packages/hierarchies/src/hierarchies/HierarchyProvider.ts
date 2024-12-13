@@ -4,11 +4,12 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { filter, first, from, map, mergeMap, of } from "rxjs";
-import { BeEvent, isIDisposable } from "@itwin/core-bentley";
+import { BeEvent } from "@itwin/core-bentley";
 import { GenericInstanceFilter } from "@itwin/core-common";
 import { Event, InstanceKey, IPrimitiveValueFormatter, Props } from "@itwin/presentation-shared";
 import { HierarchyFilteringPath } from "./HierarchyFiltering.js";
 import { HierarchyNode, ParentHierarchyNode } from "./HierarchyNode.js";
+import { safeDispose } from "./internal/Common.js";
 import { eachValueFrom } from "./internal/EachValueFrom.js";
 import { sortNodesByLabelOperator } from "./internal/operators/Sorting.js";
 
@@ -125,11 +126,19 @@ interface MergeHierarchyProvidersProps {
  * Creates a single, merged, hierarchy provider from multiple given providers.
  * @public
  */
-export function mergeProviders({ providers }: MergeHierarchyProvidersProps): HierarchyProvider & { dispose: () => void } {
+export function mergeProviders({ providers }: MergeHierarchyProvidersProps): HierarchyProvider & {
+  /** @deprecated in 1.4. Use `[Symbol.dispose]` instead. */
+  dispose: () => void;
+  [Symbol.dispose]: () => void;
+} {
   const hierarchyChanged = new BeEvent<() => void>();
   providers.forEach((p) => {
     p.hierarchyChanged.addListener(() => hierarchyChanged.raiseEvent());
   });
+  const dispose = () => {
+    hierarchyChanged.clear();
+    providers.forEach((p) => safeDispose(p));
+  };
 
   return {
     hierarchyChanged,
@@ -161,11 +170,7 @@ export function mergeProviders({ providers }: MergeHierarchyProvidersProps): Hie
     getNodeInstanceKeys: (props) => eachValueFrom(from(providers).pipe(mergeMap((p) => p.getNodeInstanceKeys(props)))),
     setFormatter: (formatter) => providers.forEach((p) => p.setFormatter(formatter)),
     setHierarchyFilter: (props) => providers.forEach((p) => p.setHierarchyFilter(props)),
-    dispose: () => {
-      hierarchyChanged.clear();
-      providers.forEach((p) => {
-        isIDisposable(p) && p.dispose();
-      });
-    },
+    [Symbol.dispose]: dispose,
+    dispose,
   };
 }

@@ -177,7 +177,7 @@ describe("createIModelHierarchyProvider", () => {
         },
       });
       expect(evt.numberOfListeners).to.eq(1);
-      provider.dispose();
+      provider[Symbol.dispose]();
       expect(evt.numberOfListeners).to.eq(0);
     });
 

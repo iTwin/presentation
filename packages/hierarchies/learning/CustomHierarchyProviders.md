@@ -54,7 +54,6 @@ import { BeEvent } from "@itwin/core-bentley";
 import { HierarchyNode, HierarchyProvider } from "@itwin/presentation-hierarchies";
 import { Props } from "@itwin/presentation-shared";
 
-import { using } from "@itwin/core-bentley";
 import { BriefcaseConnection, IModelConnection } from "@itwin/core-frontend";
 import { registerTxnListeners } from "@itwin/presentation-core-interop";
 
@@ -72,10 +71,10 @@ class IModelHierarchyProvider implements HierarchyProvider {
     }
   }
 
-  // Make this provider disposable. Owners of the provider should make sure `dispose` is called when the
+  // Make this provider disposable. Owners of the provider should make sure `Symbol.dispose` is called when the
   // provider is no longer needed.
   // The tree state hooks from `@itwin/presentation-hierarchies-react` package take care of this for you.
-  public dispose() {
+  public [Symbol.dispose]() {
     this._disposeTxnListeners?.();
   }
 
@@ -157,12 +156,12 @@ class IModelHierarchyProvider implements HierarchyProvider {
   public setHierarchyFilter() {}
 }
 
-// The `using` function makes sure the provider is disposed when it's no longer needed
-await using(new IModelHierarchyProvider(imodel), async (provider) => {
-  // Traverse the hierarchy to ensure expected nodes are returned. The result depends on
-  // the iModel given to the provider.
-  await traverseHierarchy(provider);
-});
+// The `using` keyword makes sure the provider is disposed when it goes out of scope
+using provider = new IModelHierarchyProvider(imodel);
+
+// Traverse the hierarchy to ensure expected nodes are returned. The result depends on
+// the iModel given to the provider.
+await traverseHierarchy(provider);
 ```
 
 <!-- END EXTRACTION -->
