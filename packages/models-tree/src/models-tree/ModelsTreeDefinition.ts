@@ -781,21 +781,26 @@ async function createInstanceKeyPathsFromTargetItems({
         if ("parent" in key) {
           return { key, type: 0 };
         }
+
         const subjectCheck = imodelAccess.classDerivesFrom(key.className, "BisCore.Subject");
         const isSubject = subjectCheck instanceof Promise ? await subjectCheck : subjectCheck;
         if (isSubject) {
           return { key: key.id, type: 1 };
         }
+
         const modelCheck = imodelAccess.classDerivesFrom(key.className, "BisCore.Model");
         const isModel = modelCheck instanceof Promise ? await modelCheck : modelCheck;
         if (isModel) {
           return { key: key.id, type: 2 };
         }
+
         const spatialCategoryCheck = imodelAccess.classDerivesFrom(key.className, "BisCore.SpatialCategory");
         const isSpatialCategoryCheck = spatialCategoryCheck instanceof Promise ? await spatialCategoryCheck : spatialCategoryCheck;
         if (isSpatialCategoryCheck) {
           return { key: key.id, type: 3 };
         }
+
+        return { key: key.id, type: 0 };
       }, 2),
       toArray(),
       switchMap(async (keysParsed) => {
