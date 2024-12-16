@@ -507,6 +507,7 @@ describe("TreeDataProvider", () => {
     });
 
     it("returns info node on generic error", async () => {
+      // stub console log to avoid expected error in console
       const consoleStub = sinon.stub(console, "error").callsFake(() => {});
       presentationManager.getNodesIterator.callsFake(async () => {
         throw new Error("test");

@@ -91,6 +91,7 @@ describe("TreeDataProvider", async () => {
   });
 
   it("creates error node when requesting root nodes with invalid paging", async () => {
+    // stub console log to avoid expected error in console
     const consoleStub = sinon.stub(console, "error").callsFake(() => {});
     provider.pagingSize = 5;
     const nodes = await provider.getNodes(undefined, { start: 1, size: 5 });
@@ -125,6 +126,7 @@ describe("TreeDataProvider", async () => {
   });
 
   it("returns error node when requesting child nodes with invalid paging", async () => {
+    // stub console log to avoid expected error in console
     const consoleStub = sinon.stub(console, "error").callsFake(() => {});
     const rootNodes = await provider.getNodes();
     provider.pagingSize = 5;

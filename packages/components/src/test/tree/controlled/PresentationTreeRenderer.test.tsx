@@ -30,7 +30,7 @@ import { IPresentationTreeDataProvider } from "../../../presentation-components/
 import { PresentationTreeNodeItem } from "../../../presentation-components/tree/PresentationTreeNodeItem.js";
 import { createTestPropertyInfo, stubDOMMatrix, stubGetBoundingClientRect, stubRaf } from "../../_helpers/Common.js";
 import { createTestContentDescriptor, createTestPropertiesContentField } from "../../_helpers/Content.js";
-import { act, render, waitFor } from "../../TestUtils.js";
+import { act, cleanup, render, waitFor } from "../../TestUtils.js";
 import { createTreeModelNodeInput } from "./Helpers.js";
 
 describe("PresentationTreeRenderer", () => {
@@ -216,11 +216,12 @@ describe("PresentationTreeRenderer", () => {
 
     const filterButton = container.querySelector(".presentation-components-node-action-buttons button");
     expect(filterButton).to.not.be.null;
-    await user.pointer({ target: filterButton!, keys: "[MouseLeft]" });
+    await user.click(filterButton!);
 
     // assert that dialog is not loaded
     const dialog = await waitFor(() => baseElement.querySelector(".presentation-instance-filter-dialog"));
     expect(dialog).to.be.null;
+    cleanup();
   });
 
   it("applies filter and closes dialog", async () => {
@@ -303,6 +304,7 @@ describe("PresentationTreeRenderer", () => {
     await applyFilter(result, propertyField.label);
 
     await waitFor(() => expect(onFilterAppliedSpy).to.be.calledOnce);
+    cleanup();
   });
 
   it("does not call `onFilterApplied` when filter is cleared", async () => {
@@ -336,7 +338,7 @@ describe("PresentationTreeRenderer", () => {
     expect(nodeItem.filtering?.active).to.not.be.undefined;
 
     const clearFilterButton = await waitFor(() => getByRole("button", { name: "tree.clear-hierarchy-level-filter" }));
-    await user.pointer({ target: clearFilterButton, keys: "[MouseLeft]" });
+    await user.click(clearFilterButton);
 
     await waitFor(() => {
       nodeItem = modelSource.getModel().getNode("A")?.item as PresentationTreeNodeItem;
@@ -344,6 +346,7 @@ describe("PresentationTreeRenderer", () => {
     });
 
     expect(onFilterAppliedSpy).to.not.be.called;
+    cleanup();
   });
 
   it("renders results count when filtering dialog has valid filter", async () => {
@@ -473,14 +476,14 @@ describe("PresentationTreeRenderer", () => {
       expect(button?.disabled).to.be.false;
       return button;
     });
-    await user.pointer({ target: resetButton!, keys: "[MouseLeft]" });
+    await user.click(resetButton!);
 
     // pressing apply on empty filter clears it
     const applyButton = await waitFor(() => {
       const button = baseElement.querySelector<HTMLInputElement>(".presentation-instance-filter-dialog-apply-button");
       return button;
     });
-    await user.pointer({ target: applyButton!, keys: "[MouseLeft]" });
+    await user.click(applyButton!);
 
     await waitFor(() => {
       expect(baseElement.querySelector(".presentation-instance-filter-dialog")).to.be.null;
@@ -488,12 +491,13 @@ describe("PresentationTreeRenderer", () => {
 
     nodeItem = modelSource.getModel().getNode("A")?.item as PresentationTreeNodeItem;
     expect(nodeItem.filtering?.active).to.be.undefined;
+    cleanup();
   });
 });
 
 async function openFilterDialog({ getByRole, baseElement, user }: ReturnType<typeof render>) {
   const filterButton = getByRole("button", { name: "tree.filter-hierarchy-level" });
-  await user.pointer({ target: filterButton, keys: "[MouseLeft]" });
+  await user.click(filterButton);
 
   // wait for dialog to be visible
   await waitFor(() => {
@@ -511,7 +515,8 @@ async function applyFilter(result: ReturnType<typeof render>, propertyLabel: str
   expect(propertySelector).to.not.be.null;
   await user.click(propertySelector!);
   // select property
-  await user.pointer({ target: getByTitle(propertyLabel), keys: "[MouseLeft]" });
+  const property = await waitFor(() => getByTitle(propertyLabel));
+  await user.click(property);
 
   // wait until apply button is enabled
   const applyButton = await waitFor(() => {

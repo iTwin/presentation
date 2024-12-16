@@ -327,6 +327,7 @@ describe("PresentationInstanceFilterDialog", () => {
 
   it("throws error when filter is missing presentation metadata", async () => {
     const fromComponentsPropertyFilterStub = sinon.stub(PresentationInstanceFilter, "fromComponentsPropertyFilter").throws(new Error("Some Error"));
+    // stub console log to avoid expected error in console
     const consoleErrorStub = sinon.stub(console, "error").callsFake(() => {});
     const spy = sinon.spy();
     const { baseElement, user } = render(<PresentationInstanceFilterDialog imodel={imodel} propertiesSource={propertiesSource} onApply={spy} isOpen={true} />, {
@@ -385,6 +386,7 @@ describe("PresentationInstanceFilterDialog", () => {
   });
 
   it("renders error boundary if error is thrown", async () => {
+    // stub console log to avoid expected error in console
     const consoleErrorStub = sinon.stub(console, "error").callsFake(() => {});
     const propertiesSourceGetter = () => {
       throw new Error("Cannot load descriptor");
