@@ -182,7 +182,7 @@ export type StubbedHierarchyProvider = {
   [P in keyof Omit<HierarchyProvider, "hierarchyChanged">]: ReturnType<typeof createStub<HierarchyProvider[P]>>;
 } & {
   hierarchyChanged: BeEvent<(args?: EventArgs<HierarchyProvider["hierarchyChanged"]>) => void>;
-  dispose: sinon.SinonStub<[], void>;
+  [Symbol.dispose]: sinon.SinonStub<[], void>;
 };
 export function createHierarchyProviderStub(customizations?: Partial<StubbedHierarchyProvider>) {
   const provider = {
@@ -191,7 +191,7 @@ export function createHierarchyProviderStub(customizations?: Partial<StubbedHier
     getNodeInstanceKeys: createStub<HierarchyProvider["getNodeInstanceKeys"]>(),
     setFormatter: createStub<HierarchyProvider["setFormatter"]>(),
     setHierarchyFilter: createStub<HierarchyProvider["setHierarchyFilter"]>(),
-    dispose: createStub<() => void>(),
+    [Symbol.dispose]: createStub<() => void>(),
     ...customizations,
   };
   provider.setFormatter.callsFake((arg) => provider.hierarchyChanged.raiseEvent({ formatterChange: { newFormatter: arg } }));

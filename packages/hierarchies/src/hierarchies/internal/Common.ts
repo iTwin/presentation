@@ -68,3 +68,20 @@ export function hasChildren<TNode extends { children?: boolean | Array<unknown> 
 export function compareNodesByLabel<TLhsNode extends { label: string }, TRhsNode extends { label: string }>(lhs: TLhsNode, rhs: TRhsNode): number {
   return naturalCompare(lhs.label.toLocaleLowerCase(), rhs.label.toLocaleLowerCase());
 }
+
+/**
+ * A helper that disposes the given object, if it's disposable.
+ *
+ * The first option is to dispose using the deprecated `dispose` method if it exists on the object.
+ * If not, we use the new `Symbol.dispose` method. If that doesn't exist either, the object is
+ * considered as non-disposable and nothing is done with it.
+ *
+ * @internal
+ */
+export function safeDispose(disposable: {} | { [Symbol.dispose]: () => void } | { dispose: () => void }) {
+  if ("dispose" in disposable) {
+    disposable.dispose();
+  } else if (Symbol.dispose in disposable) {
+    disposable[Symbol.dispose]();
+  }
+}

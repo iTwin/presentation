@@ -8,10 +8,13 @@ import { ECClassHierarchyInspector } from '@itwin/presentation-shared';
 import { ECSqlQueryExecutor } from '@itwin/presentation-shared';
 import { Event as Event_2 } from '@itwin/presentation-shared';
 import { Id64Arg } from '@itwin/core-bentley';
+import { Id64Set } from '@itwin/core-bentley';
 import { Id64String } from '@itwin/core-bentley';
 
 // @public
 export interface CachingHiliteSetProvider {
+    [Symbol.dispose]?: () => void;
+    // @deprecated
     dispose(): void;
     getHiliteSet(props: {
         imodelKey: string;
@@ -29,7 +32,7 @@ export function computeSelection(props: ComputeSelectionProps): AsyncIterableIte
 
 // @public
 interface ComputeSelectionProps {
-    elementIds: string[];
+    elementIds: Id64Arg;
     queryExecutor: ECSqlQueryExecutor;
     scope: ElementSelectionScopeProps | {
         id: SelectionScope;
@@ -46,24 +49,45 @@ interface CoreIModelHiliteSet {
 }
 
 // @public
-interface CoreIModelSelectionSet {
-    add(elem: Id64Arg): boolean;
+type CoreIModelSelectionSet = {
+    onChanged: Event_2<(ev: CoreSelectionSetEventUnsafe) => void>;
     readonly elements: Set<string>;
     emptyAll(): void;
-    onChanged: Event_2<(ev: CoreSelectionSetEventUnsafe) => void>;
+} & ({
+    add(elem: Id64Arg): boolean;
     remove(elem: Id64Arg): boolean;
+} | {
+    readonly active: {
+        [P in keyof CoreSelectableIds]-?: Id64Set;
+    };
+    add: (ids: Id64Arg | CoreSelectableIds) => boolean;
+    remove: (ids: Id64Arg | CoreSelectableIds) => boolean;
+});
+
+// @public
+interface CoreSelectableIds {
+    // (undocumented)
+    elements?: Id64Arg;
+    // (undocumented)
+    models?: Id64Arg;
+    // (undocumented)
+    subcategories?: Id64Arg;
 }
 
 // @public
 interface CoreSelectionSetEventUnsafe {
     added?: Id64Arg;
+    additions?: CoreSelectableIds;
+    removals?: CoreSelectableIds;
     removed?: Id64Arg;
     set: CoreIModelSelectionSet;
     type: number;
 }
 
 // @public
-export function createCachingHiliteSetProvider(props: CachingHiliteSetProviderProps): CachingHiliteSetProvider;
+export function createCachingHiliteSetProvider(props: CachingHiliteSetProviderProps): CachingHiliteSetProvider & {
+    [Symbol.dispose]: () => void;
+};
 
 // @public
 export function createHiliteSetProvider(props: HiliteSetProviderProps): HiliteSetProvider;
@@ -90,7 +114,9 @@ export function enableUnifiedSelectionSyncWithIModel(props: EnableUnifiedSelecti
 // @public
 interface EnableUnifiedSelectionSyncWithIModelProps {
     activeScopeProvider: () => ComputeSelectionProps["scope"];
-    cachingHiliteSetProvider?: CachingHiliteSetProvider;
+    cachingHiliteSetProvider?: CachingHiliteSetProvider | (Omit<CachingHiliteSetProvider, "dispose"> & {
+        [Symbol.dispose]: () => void;
+    });
     imodelAccess: ECSqlQueryExecutor & ECClassHierarchyInspector & {
         readonly key: string;
         readonly hiliteSet: CoreIModelHiliteSet;

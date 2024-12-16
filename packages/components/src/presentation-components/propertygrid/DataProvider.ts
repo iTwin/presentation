@@ -123,13 +123,19 @@ export class PresentationPropertyDataProvider extends ContentDataProvider implem
   /**
    * Dispose the presentation property data provider.
    */
-  public override dispose() {
-    super.dispose();
+  public override [Symbol.dispose]() {
+    super[Symbol.dispose]();
 
     if (this._onFavoritesChangedRemoveListener) {
       this._onFavoritesChangedRemoveListener();
       this._onFavoritesChangedRemoveListener = undefined;
     }
+  }
+
+  /** @deprecated in 5.7. Use `[Symbol.dispose]` instead. */
+  /* c8 ignore next 3 */
+  public override dispose() {
+    this[Symbol.dispose]();
   }
 
   /**

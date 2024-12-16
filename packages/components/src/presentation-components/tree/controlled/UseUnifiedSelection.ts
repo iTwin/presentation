@@ -2,6 +2,7 @@
  * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
+/* eslint-disable @typescript-eslint/no-deprecated */
 /** @packageDocumentation
  * @module Tree
  */
@@ -19,7 +20,7 @@ import {
   TreeSelectionModificationEventArgs,
   TreeSelectionReplacementEventArgs,
 } from "@itwin/components-react";
-import { Guid, IDisposable } from "@itwin/core-bentley";
+import { Guid } from "@itwin/core-bentley";
 import { useDisposable } from "@itwin/core-react";
 import { Keys, KeySet, NodeKey } from "@itwin/presentation-common";
 import { Presentation, SelectionChangeEventArgs, SelectionChangeType, SelectionHelper } from "@itwin/presentation-frontend";
@@ -30,6 +31,8 @@ import { toRxjsObservable } from "../Utils.js";
 /**
  * Data structure that describes parameters for UnifiedSelectionTreeEventHandler
  * @public
+ * @deprecated in 5.7. All tree-related APIs have been deprecated in favor of the new generation hierarchy
+ * building APIs (see https://github.com/iTwin/presentation/blob/33e79ee8d77f30580a9bab81a72884bda008db25/README.md#the-packages).
  */
 export interface UnifiedSelectionTreeEventHandlerParams {
   /** Node loader used to load children when node is expanded. */
@@ -58,8 +61,10 @@ export interface UnifiedSelectionTreeEventHandlerParams {
  * unified selection can be controlled by overriding 'shouldSelectNode' and 'createKeysForSelection' methods.
  *
  * @public
+ * @deprecated in 5.7. All tree-related APIs have been deprecated in favor of the new generation hierarchy
+ * building APIs (see https://github.com/iTwin/presentation/blob/33e79ee8d77f30580a9bab81a72884bda008db25/README.md#the-packages).
  */
-export class UnifiedSelectionTreeEventHandler extends TreeEventHandler implements IDisposable {
+export class UnifiedSelectionTreeEventHandler extends TreeEventHandler {
   #dataProvider: IPresentationTreeDataProvider;
   #selectionSourceName: string;
   #listeners: Array<() => void> = [];
@@ -77,10 +82,16 @@ export class UnifiedSelectionTreeEventHandler extends TreeEventHandler implement
     this.selectNodes();
   }
 
-  public override dispose() {
+  /** Disposes this event handler */
+  public [Symbol.dispose]() {
     super.dispose();
     this.#cancelled.next();
-    this.#listeners.forEach((dispose) => dispose());
+    this.#listeners.forEach((unregister) => unregister());
+  }
+
+  /** @deprecated in 5.7. Use `[Symbol.dispose]` instead. */
+  public override dispose() {
+    this[Symbol.dispose]();
   }
 
   public override onSelectionModified({ modifications }: TreeSelectionModificationEventArgs) {
@@ -136,7 +147,6 @@ export class UnifiedSelectionTreeEventHandler extends TreeEventHandler implement
   /** @deprecated in 4.0. Use [[isPresentationTreeNodeItem]] and [[PresentationTreeNodeItem.key]] to get [NodeKey]($presentation-common). */
   /* c8 ignore start */
   protected getNodeKey(node: TreeNodeItem): NodeKey {
-    // eslint-disable-next-line @typescript-eslint/no-deprecated
     return this.#dataProvider.getNodeKey(node);
   }
   /* c8 ignore end */
@@ -268,7 +278,6 @@ export class UnifiedSelectionTreeEventHandler extends TreeEventHandler implement
  * [[UsePresentationTreeProps.eventHandlerFactory]] instead or manually create and dispose [[UnifiedSelectionTreeEventHandler]].
  */
 export function useUnifiedSelectionTreeEventHandler(props: UnifiedSelectionTreeEventHandlerParams) {
-  // eslint-disable-next-line @typescript-eslint/no-deprecated
   return useDisposable(
     useCallback(
       () => new UnifiedSelectionTreeEventHandler(props),

@@ -21,13 +21,19 @@ describe("FavoritePropertiesDataProvider", () => {
   const imodel = {} as IModelConnection;
   let presentationManager: sinon.SinonStubbedInstance<PresentationManager>;
   let selectionManager: sinon.SinonStubbedInstance<SelectionManager>;
-  let presentationPropertyDataProvider: sinon.SinonStubbedInstance<PresentationPropertyDataProvider>;
+  let presentationPropertyDataProvider: {
+    getData: sinon.SinonStub<[], PropertyData>;
+    [Symbol.dispose]: sinon.SinonStub<[], void>;
+  };
   let favoritePropertiesManager: sinon.SinonStubbedInstance<FavoritePropertiesManager>;
 
   beforeEach(() => {
     presentationManager = sinon.createStubInstance(PresentationManager);
     selectionManager = sinon.createStubInstance(SelectionManager);
-    presentationPropertyDataProvider = sinon.createStubInstance(PresentationPropertyDataProvider);
+    presentationPropertyDataProvider = {
+      getData: sinon.stub(),
+      [Symbol.dispose]: sinon.stub(),
+    };
     favoritePropertiesManager = sinon.createStubInstance(FavoritePropertiesManager);
 
     const localization = new EmptyLocalization();
@@ -71,7 +77,7 @@ describe("FavoritePropertiesDataProvider", () => {
       });
       const factorySpy = sinon
         .stub<[IModelConnection, Ruleset | string | undefined], PresentationPropertyDataProvider>()
-        .returns(presentationPropertyDataProvider);
+        .returns(presentationPropertyDataProvider as unknown as PresentationPropertyDataProvider);
 
       const customRulesetId = "custom_ruleset_id";
       provider = new FavoritePropertiesDataProvider({ ruleset: customRulesetId });

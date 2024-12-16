@@ -36,6 +36,7 @@ export function useViewportSelectionHandlerContext() {
  * viewport component.
  *
  * @public
+ * @deprecated in 5.7. Use `enableUnifiedSelectionSyncWithIModel` from `@itwin/unified-selection` package instead.
  */
 export function viewWithUnifiedSelection<P extends ViewportProps>(ViewportComponent: React.ComponentType<P>): React.ComponentType<P> {
   const WithUnifiedSelection = memo<P>((props) => {
@@ -55,7 +56,7 @@ export function viewWithUnifiedSelection<P extends ViewportProps>(ViewportCompon
       handler.applyCurrentSelection();
       setViewportSelectionHandler(handler);
       return () => {
-        handler.dispose();
+        handler[Symbol.dispose]();
       };
     }, [selectionHandler, imodel]);
 

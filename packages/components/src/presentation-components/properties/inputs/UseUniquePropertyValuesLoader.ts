@@ -68,7 +68,7 @@ export function useUniquePropertyValuesLoader({
     void loader.loadMatchingItems(initialSelectedValues);
     setItemsLoader(loader);
     return () => {
-      loader.dispose();
+      loader[Symbol.dispose]();
     };
   }, [imodel, ruleset, field, descriptorInputKeys, initialSelectedValues]);
 

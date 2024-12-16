@@ -2,6 +2,7 @@
  * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
+/* eslint-disable @typescript-eslint/no-deprecated */
 
 import { expect } from "chai";
 import { Observable } from "rxjs/internal/Observable";
@@ -32,6 +33,7 @@ describe("reloadTree", () => {
       getFilteredNodePaths: async () => [],
       getNodesCount: async () => 3,
       getNodes: async (parent, page) => [createDelayLoadedTreeNodeItem(`${parent?.id ?? "root"}-${page?.start ?? 0}`)],
+      [Symbol.dispose]: () => {},
       dispose: () => {},
       createRequestOptions: () => ({ rulesetOrId: "", imodel: {} as IModelConnection }),
     };

@@ -8,7 +8,7 @@ import { createAsyncIterator } from "presentation-test-utilities";
 import sinon from "sinon";
 import * as td from "testdouble";
 import { ECClassHierarchyInspector, ECSqlQueryExecutor } from "@itwin/presentation-shared";
-import { CachingHiliteSetProvider } from "../unified-selection/CachingHiliteSetProvider.js";
+import { createCachingHiliteSetProvider as origCreateCachingHiliteSetProvider } from "../unified-selection/CachingHiliteSetProvider.js";
 import { HiliteSet, HiliteSetProvider, HiliteSetProviderProps } from "../unified-selection/HiliteSetProvider.js";
 import { SelectableInstanceKey } from "../unified-selection/Selectable.js";
 import { createStorage, SelectionStorage } from "../unified-selection/SelectionStorage.js";
@@ -18,10 +18,10 @@ const generateSelection = (): SelectableInstanceKey[] => {
   return [createSelectableInstanceKey(1), createSelectableInstanceKey(2), createSelectableInstanceKey(3)];
 };
 
-describe("CachingHiliteSetProvider", () => {
+describe("createCachingHiliteSetProvider", () => {
   let factory: sinon.SinonStub<[props: HiliteSetProviderProps], HiliteSetProvider>;
   let selectionStorage: SelectionStorage;
-  let hiliteSetCache: CachingHiliteSetProvider;
+  let hiliteSetCache: ReturnType<typeof origCreateCachingHiliteSetProvider>;
   const provider = {
     getHiliteSet: sinon.stub<[{ imodelKey: string }], AsyncIterableIterator<HiliteSet>>(),
   };
@@ -151,7 +151,7 @@ describe("CachingHiliteSetProvider", () => {
 
   describe("dispose", () => {
     it("unregisters listener from `SelectionStorage`", async () => {
-      hiliteSetCache.dispose();
+      hiliteSetCache[Symbol.dispose]();
       provider.getHiliteSet.resetHistory();
 
       hiliteSetCache.getHiliteSet({ imodelKey });

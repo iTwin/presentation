@@ -152,7 +152,7 @@ function PropertyGrid(props: PropertyGridProps) {
     provider.isNestedPropertyCategoryGroupingEnabled = true;
     setDataProvider(provider);
     return () => {
-      provider.dispose();
+      provider[Symbol.dispose]();
     };
   }, [imodel, rulesetId, diagnostics]);
 

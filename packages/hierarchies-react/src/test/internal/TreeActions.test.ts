@@ -42,7 +42,7 @@ describe("TreeActions", () => {
     provider.getNodes.resolves([]);
   });
 
-  describe("dispose", () => {
+  describe("reset", () => {
     it("cancels ongoing node load", async () => {
       const model = createTreeModel([
         {
@@ -73,7 +73,7 @@ describe("TreeActions", () => {
       expect(provider.getNodes).to.be.calledOnce;
       onModelChangedStub.resetHistory();
 
-      actions.dispose();
+      actions.reset();
       await waitFor(() => {
         expect(onModelChangedStub).to.be.calledOnce;
         const newModel = onModelChangedStub.firstCall.args[0];
@@ -118,7 +118,7 @@ describe("TreeActions", () => {
       });
 
       onModelChangedStub.resetHistory();
-      actions.dispose();
+      actions.reset();
 
       await waitFor(() => {
         expect(onModelChangedStub).to.be.calledOnce;

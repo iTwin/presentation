@@ -158,7 +158,11 @@ interface IModelHierarchyProviderProps {
  *
  * @public
  */
-export function createIModelHierarchyProvider(props: IModelHierarchyProviderProps): HierarchyProvider & { dispose: () => void } {
+export function createIModelHierarchyProvider(props: IModelHierarchyProviderProps): HierarchyProvider & {
+  /** @deprecated in 1.4. Use `[Symbol.dispose]` instead. */
+  dispose: () => void;
+  [Symbol.dispose]: () => void;
+} {
   return new IModelHierarchyProviderImpl(props);
 }
 
@@ -205,9 +209,14 @@ class IModelHierarchyProviderImpl implements HierarchyProvider {
     });
   }
 
-  public dispose() {
+  public [Symbol.dispose]() {
     this._dispose.next();
     this._unsubscribe?.();
+  }
+
+  /* c8 ignore next 3 */
+  public dispose() {
+    this[Symbol.dispose]();
   }
 
   public get hierarchyChanged() {
