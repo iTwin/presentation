@@ -29,8 +29,8 @@ export interface UseUnifiedTreeSelectionProps {
 /** @internal */
 export function useUnifiedTreeSelection({
   sourceName,
-  getNode,
-}: UseUnifiedTreeSelectionProps & { getNode: (nodeId: string) => TreeModelNode | TreeModelRootNode | undefined }): TreeSelectionOptions {
+  getTreeModelNode,
+}: UseUnifiedTreeSelectionProps & { getTreeModelNode: (nodeId: string) => TreeModelNode | TreeModelRootNode | undefined }): TreeSelectionOptions {
   const [options, setOptions] = useState<TreeSelectionOptions>(() => ({
     isNodeSelected: /* c8 ignore next */ () => false,
     selectNodes: /* c8 ignore next */ () => {},
@@ -46,14 +46,14 @@ export function useUnifiedTreeSelection({
       return;
     }
 
-    setOptions(createOptions(sourceName, selectionStorage, getNode));
+    setOptions(createOptions(sourceName, selectionStorage, getTreeModelNode));
     return selectionStorage.selectionChangeEvent.addListener((args) => {
       if (args.level > 0) {
         return;
       }
-      setOptions(createOptions(sourceName, selectionStorage, getNode));
+      setOptions(createOptions(sourceName, selectionStorage, getTreeModelNode));
     });
-  }, [selectionStorage, getNode, sourceName]);
+  }, [selectionStorage, getTreeModelNode, sourceName]);
 
   return options;
 }

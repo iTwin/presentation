@@ -51,7 +51,7 @@ export interface HierarchyLevelDetails {
  * @public
  */
 export function useTree(props: UseTreeProps): UseTreeResult {
-  const { getNode: _, ...rest } = useTreeInternal(props);
+  const { getTreeModelNode: _, ...rest } = useTreeInternal(props);
   return rest;
 }
 
@@ -70,8 +70,11 @@ export function useTree(props: UseTreeProps): UseTreeResult {
  * @public
  */
 export function useUnifiedSelectionTree({ sourceName, ...props }: UseTreeProps & UseUnifiedTreeSelectionProps): UseTreeResult {
-  const { getNode, ...rest } = useTreeInternal(props);
-  return { ...rest, ...useUnifiedTreeSelection({ sourceName, getNode }) };
+  const { getTreeModelNode, ...rest } = useTreeInternal(props);
+  return {
+    ...rest,
+    ...useUnifiedTreeSelection({ sourceName, getTreeModelNode }),
+  };
 }
 
 /** @public */
@@ -137,6 +140,8 @@ export interface UseTreeResult {
   selectNodes: (nodeIds: Array<string>, changeType: SelectionChangeType) => void;
   /** Determines whether a given node is selected. */
   isNodeSelected: (nodeId: string) => boolean;
+  /** Get a tree node by id */
+  getNode: (nodeId: string) => PresentationHierarchyNode | undefined;
   /** Returns hierarchy level details for a given node ID. */
   getHierarchyLevelDetails: (nodeId: string | undefined) => HierarchyLevelDetails | undefined;
   /** Sets a formatter for the primitive values that are displayed in the hierarchy. */
@@ -154,7 +159,9 @@ function useTreeInternal({
   onPerformanceMeasured,
   onHierarchyLimitExceeded,
   onHierarchyLoadError,
-}: UseTreeProps): UseTreeResult & { getNode: (nodeId: string) => TreeModelRootNode | TreeModelNode | undefined } {
+}: UseTreeProps): UseTreeResult & {
+  getTreeModelNode: (nodeId: string) => TreeModelRootNode | TreeModelNode | undefined;
+} {
   const [state, setState] = useState<TreeState>({
     model: { idToNode: new Map(), parentChildMap: new Map(), rootNode: { id: undefined, nodeData: undefined } },
     rootNodes: undefined,
@@ -224,11 +231,22 @@ function useTreeInternal({
     };
   }, [hierarchyProvider, getFilteredPaths]);
 
-  const getNode = useCallback<(nodeId: string) => TreeModelRootNode | TreeModelNode | undefined>(
+  const getTreeModelNode = useCallback<(nodeId: string) => TreeModelRootNode | TreeModelNode | undefined>(
     (nodeId: string) => {
       return actions.getNode(nodeId);
     },
     [actions],
+  );
+
+  const getNode = useCallback(
+    (nodeId: string): PresentationHierarchyNode | undefined => {
+      const node = actions.getNode(nodeId);
+      if (!node || !isTreeModelHierarchyNode(node)) {
+        return undefined;
+      }
+      return createPresentationHierarchyNode(node, state.model);
+    },
+    [actions, state.model],
   );
 
   const expandNode = useCallback<UseTreeResult["expandNode"]>(
@@ -302,6 +320,7 @@ function useTreeInternal({
     reloadTree,
     selectNodes,
     isNodeSelected,
+    getTreeModelNode,
     getNode,
     getHierarchyLevelDetails,
     setFormatter,
@@ -319,11 +338,7 @@ function generateTreeStructure(parentNodeId: string | undefined, model: TreeMode
     .filter((node): node is TreeModelNode => !!node)
     .map<PresentationTreeNode>((node) => {
       if (isTreeModelHierarchyNode(node)) {
-        const children = generateTreeStructure(node.id, model);
-        return {
-          ...toPresentationHierarchyNodeBase(node),
-          children: children ? children : node.children === true ? true : [],
-        };
+        return createPresentationHierarchyNode(node, model);
       }
 
       if (node.type === "ResultSetTooLarge") {
@@ -350,6 +365,19 @@ function generateTreeStructure(parentNodeId: string | undefined, model: TreeMode
         message: node.message,
       };
     });
+}
+
+function createPresentationHierarchyNode(modelNode: TreeModelHierarchyNode, model: TreeModel): PresentationHierarchyNode {
+  let children: Array<PresentationTreeNode> | undefined;
+  return {
+    ...toPresentationHierarchyNodeBase(modelNode),
+    get children() {
+      if (!children) {
+        children = generateTreeStructure(modelNode.id, model);
+      }
+      return children ? children : modelNode.children === true ? true : [];
+    },
+  };
 }
 
 function toPresentationHierarchyNodeBase(node: TreeModelHierarchyNode): Omit<PresentationHierarchyNode, "children"> {

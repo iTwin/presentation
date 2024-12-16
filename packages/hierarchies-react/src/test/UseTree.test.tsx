@@ -254,6 +254,35 @@ describe("useTree", () => {
     });
   });
 
+  it("`getNode` returns node when `nodeId` refers to a hierarchy node", async () => {
+    const rootNodes = [createTestHierarchyNode({ id: "root-1" })];
+
+    hierarchyProvider.getNodes.callsFake((props) => {
+      return createAsyncIterator(props.parentNode === undefined ? rootNodes : []);
+    });
+    const { result } = renderHook(useTree, { initialProps });
+
+    await waitFor(() => {
+      expect(result.current.rootNodes).to.have.lengthOf(1);
+      expect(result.current.getNode(createNodeId(rootNodes[0]))).to.containSubset({
+        id: createNodeId(rootNodes[0]),
+        nodeData: rootNodes[0],
+      });
+    });
+  });
+
+  it("`getNode` returns undefined when `nodeId` refers to a non-hierarchy node", async () => {
+    hierarchyProvider.getNodes.callsFake(() => {
+      return throwingAsyncIterator(new hierarchiesModule.RowsLimitExceededError(1));
+    });
+    const { result } = renderHook(useTree, { initialProps });
+
+    await waitFor(() => {
+      expect(result.current.rootNodes).to.have.lengthOf(1);
+      expect(result.current.getNode(result.current.rootNodes![0].id)).to.be.undefined;
+    });
+  });
+
   it("expands node", async () => {
     const rootNodes = [createTestHierarchyNode({ id: "root-1", children: true })];
     const childNodes = [createTestHierarchyNode({ id: "child-1" })];
