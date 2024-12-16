@@ -122,5 +122,6 @@ public;function;useUnifiedSelectionContext
 public;function;useUnifiedSelectionTreeEventHandler
 deprecated;function;useUnifiedSelectionTreeEventHandler
 public;function;viewWithUnifiedSelection
+deprecated;function;viewWithUnifiedSelection
 public;interface;ViewWithUnifiedSelectionProps
 deprecated;interface;ViewWithUnifiedSelectionProps

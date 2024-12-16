@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { Id64 } from "@itwin/core-bentley";
+import { Id64, Id64Arg, Id64Array } from "@itwin/core-bentley";
 import { ECSqlBinding, ECSqlQueryDef, ECSqlQueryExecutor, ECSqlQueryRow } from "@itwin/presentation-shared";
 import { SelectableInstanceKey } from "./Selectable.js";
 import { formIdBindings, genericExecuteQuery } from "./Utils.js";
@@ -40,7 +40,7 @@ export interface ComputeSelectionProps {
   /** iModel query executor. */
   queryExecutor: ECSqlQueryExecutor;
   /** IDs of elements to compute selection for. */
-  elementIds: string[];
+  elementIds: Id64Arg;
   /** Selection scope to compute selection with. */
   scope: ElementSelectionScopeProps | { id: SelectionScope } | SelectionScope;
 }
@@ -57,20 +57,25 @@ export async function* computeSelection(props: ComputeSelectionProps): AsyncIter
     return;
   }
 
-  const nonTransientKeys = elementIds.filter((key) => !Id64.isTransient(key));
+  const nonTransientIds: Id64Array = [];
+  for (const id of Id64.iterable(elementIds)) {
+    if (!Id64.isTransient(id)) {
+      nonTransientIds.push(id);
+    }
+  }
 
   switch (scope.id) {
     case "element":
-      yield* computeElementSelection(queryExecutor, nonTransientKeys, (scope as ElementSelectionScopeProps).ancestorLevel ?? 0);
+      yield* computeElementSelection(queryExecutor, nonTransientIds, (scope as ElementSelectionScopeProps).ancestorLevel ?? 0);
       return;
     case "category":
-      yield* computeCategorySelection(queryExecutor, nonTransientKeys);
+      yield* computeCategorySelection(queryExecutor, nonTransientIds);
       return;
     case "model":
-      yield* computeModelSelection(queryExecutor, nonTransientKeys);
+      yield* computeModelSelection(queryExecutor, nonTransientIds);
       return;
     case "functional":
-      yield* computeFunctionalElementSelection(queryExecutor, nonTransientKeys, (scope as ElementSelectionScopeProps).ancestorLevel ?? 0);
+      yield* computeFunctionalElementSelection(queryExecutor, nonTransientIds, (scope as ElementSelectionScopeProps).ancestorLevel ?? 0);
       return;
   }
 }
