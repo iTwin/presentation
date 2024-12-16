@@ -724,7 +724,7 @@ function createGeometricElementInstanceKeyPaths(
   );
 }
 
-export function releaseMainThreadOnItemsCount<T>(elementCount: number) {
+function releaseMainThreadOnItemsCount<T>(elementCount: number) {
   return (obs: Observable<T>): Observable<T> => {
     return obs.pipe(
       bufferCount(elementCount),
