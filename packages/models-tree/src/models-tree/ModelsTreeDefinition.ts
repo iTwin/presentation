@@ -3,6 +3,24 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
+import {
+  bufferCount,
+  concatAll,
+  concatMap,
+  defer,
+  delay,
+  from,
+  lastValueFrom,
+  map,
+  merge,
+  mergeAll,
+  mergeMap,
+  Observable,
+  ObservableInput,
+  of,
+  switchMap,
+  toArray,
+} from "rxjs";
 import { Id64Array, Id64String } from "@itwin/core-bentley";
 import {
   ClassGroupingNodeKey,
@@ -34,9 +52,7 @@ import {
   IInstanceLabelSelectClauseFactory,
   InstanceKey,
   Props,
-  releaseMainThread,
 } from "@itwin/presentation-shared";
-import { bufferCount, concatAll, concatMap, defer, delay, from, map, merge, mergeAll, mergeMap, Observable, ObservableInput, of } from "rxjs";
 import { ModelsTreeIdsCache } from "./ModelsTreeIdsCache.js";
 
 /** @beta */
@@ -683,7 +699,7 @@ function createGeometricElementInstanceKeyPaths(
 
     return imodelAccess.createQueryReader({ ctes, ecsql }, { rowFormat: "Indexes", limit: "unbounded" });
   }).pipe(
-    releaseMainThreadOnItemsCount(500),
+    releaseMainThreadOnItemsCount(300),
     map((row) => parseQueryRow(row, groupInfos, separator, hierarchyConfig.elementClassSpecification)),
     mergeMap(({ modelId, elementHierarchyPath, groupingNode }) =>
       createModelInstanceKeyPaths(modelId, idsCache).pipe(
@@ -758,47 +774,69 @@ async function createInstanceKeyPathsFromTargetItems({
   }
   const hierarchyConfig = props.hierarchyConfig ?? defaultHierarchyConfiguration;
   const idsCache = props.idsCache ?? new ModelsTreeIdsCache(imodelAccess, hierarchyConfig);
-  const ids = {
-    models: new Array<Id64String>(),
-    categories: new Array<Id64String>(),
-    subjects: new Array<Id64String>(),
-    elements: new Array<Id64String | ElementsGroupInfo>(),
-  };
+  return lastValueFrom(
+    from(targetItems).pipe(
+      releaseMainThreadOnItemsCount(2000),
+      mergeMap(async (key): Promise<{ key: string; type: number } | { key: ElementsGroupInfo; type: 0 }> => {
+        if ("parent" in key) {
+          return { key, type: 0 };
+        }
+        const subjectCheck = imodelAccess.classDerivesFrom(key.className, "BisCore.Subject");
+        const isSubject = subjectCheck instanceof Promise ? await subjectCheck : subjectCheck;
+        if (isSubject) {
+          return { key: key.id, type: 1 };
+        }
+        const modelCheck = imodelAccess.classDerivesFrom(key.className, "BisCore.Model");
+        const isModel = modelCheck instanceof Promise ? await modelCheck : modelCheck;
+        if (isModel) {
+          return { key: key.id, type: 2 };
+        }
+        const spatialCategoryCheck = imodelAccess.classDerivesFrom(key.className, "BisCore.SpatialCategory");
+        const isSpatialCategoryCheck = spatialCategoryCheck instanceof Promise ? await spatialCategoryCheck : spatialCategoryCheck;
+        if (isSpatialCategoryCheck) {
+          return { key: key.id, type: 3 };
+        }
+      }, 2),
+      toArray(),
+      switchMap(async (keysParsed) => {
+        const ids = {
+          models: new Array<Id64String>(),
+          categories: new Array<Id64String>(),
+          subjects: new Array<Id64String>(),
+          elements: new Array<Id64String | ElementsGroupInfo>(),
+        };
+        for (const keyParsed of keysParsed) {
+          if (keyParsed.type === 1) {
+            ids.subjects.push(keyParsed.key);
+            continue;
+          }
+          if (keyParsed.type === 2) {
+            ids.models.push(keyParsed.key);
+            continue;
+          }
+          if (keyParsed.type === 3) {
+            ids.categories.push(keyParsed.key);
+            continue;
+          }
+          ids.elements.push(keyParsed.key);
+        }
 
-  return Promise.all(
-    targetItems.map(async (key, index) => {
-      if (index % 50 === 0) {
-        await releaseMainThread();
-      }
-      if ("parent" in key) {
-        ids.elements.push(key);
-      } else if (await imodelAccess.classDerivesFrom(key.className, "BisCore.Subject")) {
-        ids.subjects.push(key.id);
-      } else if (await imodelAccess.classDerivesFrom(key.className, "BisCore.Model")) {
-        ids.models.push(key.id);
-      } else if (await imodelAccess.classDerivesFrom(key.className, "BisCore.SpatialCategory")) {
-        ids.categories.push(key.id);
-      } else {
-        ids.elements.push(key.id);
-      }
-    }),
-  ).then(async () => {
-    const elementBlocks: Array<Array<Id64String | ElementsGroupInfo>> = [];
-    const elementsLength = ids.elements.length;
-    const blockSize = Math.ceil(elementsLength / Math.ceil(elementsLength / 5000));
-    for (let i = 0; i < ids.elements.length; i += blockSize) {
-      elementBlocks.push(ids.elements.slice(i, i + blockSize));
-    }
-
-    return collect(
-      merge(
-        from(ids.subjects).pipe(mergeMap((id) => createSubjectInstanceKeysPath(id, idsCache))),
-        from(ids.models).pipe(mergeMap((id) => createModelInstanceKeyPaths(id, idsCache))),
-        from(ids.categories).pipe(mergeMap((id) => createCategoryInstanceKeyPaths(id, idsCache))),
-        from(elementBlocks).pipe(mergeMap((block) => createGeometricElementInstanceKeyPaths(imodelAccess, idsCache, hierarchyConfig, block))),
-      ),
-    );
-  });
+        const elementsLength = ids.elements.length;
+        return collect(
+          merge(
+            from(ids.subjects).pipe(mergeMap((id) => createSubjectInstanceKeysPath(id, idsCache))),
+            from(ids.models).pipe(mergeMap((id) => createModelInstanceKeyPaths(id, idsCache))),
+            from(ids.categories).pipe(mergeMap((id) => createCategoryInstanceKeyPaths(id, idsCache))),
+            from(ids.elements).pipe(
+              bufferCount(Math.ceil(elementsLength / Math.ceil(elementsLength / 5000))),
+              releaseMainThreadOnItemsCount(2),
+              mergeMap((block) => createGeometricElementInstanceKeyPaths(imodelAccess, idsCache, hierarchyConfig, block)),
+            ),
+          ),
+        );
+      }),
+    ),
+  );
 }
 
 async function createInstanceKeyPathsFromInstanceLabel(
