@@ -28,6 +28,8 @@ All these hooks return the same state object, which contains properties and func
 
 - `isNodeSelected` and `selectNodes` function to inspect and change tree selection.
 
+- `getNode` function to get node by its id.
+
 - `getHierarchyLevelDetails` function to access details of a specific hierarchy level. The returned object provides access to:
 
   - hierarchy level size limit,
