@@ -25,6 +25,6 @@ function MyTreeComponentInternal({ imodelAccess }: { imodelAccess: IModelAccess 
   if (!rootNodes || !rootNodes.length) {
     return "No data to display";
   }
-  return <TreeRenderer {...state} rootNodes={rootNodes} />;
+  return <TreeRenderer {...state} expandNode={expandNode} rootNodes={rootNodes} />;
 }
 ```
