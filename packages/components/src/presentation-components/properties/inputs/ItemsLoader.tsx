@@ -30,7 +30,7 @@ export class ItemsLoader<T> {
     private _getOptionLabel: (option: T) => string,
   ) {}
 
-  public dispose() {
+  public [Symbol.dispose]() {
     this._disposed = true;
   }
 

@@ -37,7 +37,18 @@ export interface CachingHiliteSetProvider {
     imodelKey: string;
   }): AsyncIterableIterator<HiliteSet>;
 
-  /** Disposes the cache. */
+  /**
+   * Disposes the cache.
+   *
+   * Optional to avoid breaking the API. Will be made required when the deprecated
+   * `dispose` is removed.
+   */
+  [Symbol.dispose]?: () => void;
+
+  /**
+   * Disposes the cache.
+   * @deprecated in 1.2. Use `[Symbol.dispose]` instead.
+   */
   dispose(): void;
 }
 
@@ -46,7 +57,7 @@ export interface CachingHiliteSetProvider {
  * hilite set requests for the same iModel don't cost until selection in given selection storage changes.
  * @public
  */
-export function createCachingHiliteSetProvider(props: CachingHiliteSetProviderProps): CachingHiliteSetProvider {
+export function createCachingHiliteSetProvider(props: CachingHiliteSetProviderProps): CachingHiliteSetProvider & { [Symbol.dispose]: () => void } {
   return new CachingHiliteSetProviderImpl(props);
 }
 
@@ -82,10 +93,15 @@ class CachingHiliteSetProviderImpl implements CachingHiliteSetProvider {
     return eachValueFrom(hiliteSet);
   }
 
-  public dispose(): void {
+  public [Symbol.dispose](): void {
     this._removeListener();
     this._hiliteSetProviders = new Map();
     this._cache = new Map();
+  }
+
+  /* c8 ignore next 3 */
+  public dispose(): void {
+    this[Symbol.dispose]();
   }
 
   private getHiliteSetProvider(imodelKey: string, imodelAccess: ECClassHierarchyInspector & ECSqlQueryExecutor) {

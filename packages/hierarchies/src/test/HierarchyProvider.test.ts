@@ -128,17 +128,20 @@ describe("mergeProviders", () => {
   });
 
   it("disposes all disposable providers", async () => {
-    const providers = [createTestProvider({ disposable: true }), createTestProvider()];
+    const providers = [createTestProvider({ disposable: "yes" }), createTestProvider({ disposable: "deprecated" }), createTestProvider()];
     const mergedProvider = mergeProviders({ providers });
-    mergedProvider.dispose();
-    providers.forEach((provider) => provider.dispose && expect(provider.dispose).to.be.calledOnce);
+    mergedProvider[Symbol.dispose]();
+    providers.forEach((provider) => {
+      provider.dispose && expect(provider.dispose).to.be.calledOnce;
+      provider[Symbol.dispose] && expect(provider[Symbol.dispose]).to.be.calledOnce;
+    });
   });
 });
 
 function createTestProvider(props?: {
   nodes?: (props: Props<HierarchyProvider["getNodes"]>) => Partial<NonGroupingHierarchyNode>[];
   instanceKeys?: (props: Props<HierarchyProvider["getNodeInstanceKeys"]>) => InstanceKey[];
-  disposable?: boolean;
+  disposable?: "yes" | "deprecated" | "no";
 }) {
   return {
     hierarchyChanged: new BeEvent(),
@@ -150,6 +153,7 @@ function createTestProvider(props?: {
       .callsFake((getNodeInstanceKeysProps) => createAsyncIterator(props?.instanceKeys ? props.instanceKeys(getNodeInstanceKeysProps) : [])),
     setFormatter: sinon.stub(),
     setHierarchyFilter: sinon.stub(),
-    ...(props?.disposable ? { dispose: sinon.stub() } : {}),
+    ...(props?.disposable === "yes" ? { [Symbol.dispose]: sinon.stub() } : {}),
+    ...(props?.disposable === "deprecated" ? { dispose: sinon.stub() } : {}),
   };
 }

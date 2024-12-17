@@ -99,7 +99,7 @@ describe("ContentDataProvider", () => {
   });
 
   afterEach(() => {
-    provider.dispose();
+    provider[Symbol.dispose]();
     sinon.restore();
   });
 
@@ -726,7 +726,7 @@ describe("ContentDataProvider", () => {
     it("passes rule diagnostics options to presentation manager", async () => {
       const diagnosticsHandler = sinon.stub();
 
-      provider.dispose();
+      provider[Symbol.dispose]();
       provider = new Provider({
         imodel,
         ruleset: rulesetId,
@@ -751,7 +751,7 @@ describe("ContentDataProvider", () => {
     it("passes dev diagnostics options to presentation manager", async () => {
       const diagnosticsHandler = sinon.stub();
 
-      provider.dispose();
+      provider[Symbol.dispose]();
       provider = new Provider({
         imodel,
         ruleset: rulesetId,

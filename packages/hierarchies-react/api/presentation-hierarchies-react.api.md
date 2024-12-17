@@ -261,6 +261,7 @@ interface UseTreeProps {
 interface UseTreeResult {
     expandNode: (nodeId: string, isExpanded: boolean) => void;
     getHierarchyLevelDetails: (nodeId: string | undefined) => HierarchyLevelDetails | undefined;
+    getNode: (nodeId: string) => PresentationHierarchyNode | undefined;
     isLoading: boolean;
     isNodeSelected: (nodeId: string) => boolean;
     reloadTree: (options?: ReloadTreeOptions) => void;

@@ -7,7 +7,7 @@
  */
 
 import { PropertyData } from "@itwin/components-react";
-import { Id64Arg, using } from "@itwin/core-bentley";
+import { Id64Arg } from "@itwin/core-bentley";
 import { IModelConnection } from "@itwin/core-frontend";
 import { KeySet, Ruleset } from "@itwin/presentation-common";
 import { createSelectionScopeProps, Presentation } from "@itwin/presentation-frontend";
@@ -71,22 +71,21 @@ export class FavoritePropertiesDataProvider implements IFavoritePropertiesDataPr
    */
   public async getData(imodel: IModelConnection, elementIds: Id64Arg | KeySet): Promise<PropertyData> {
     if (elementIds instanceof KeySet) {
-      return using(this.createPropertyDataProvider(imodel, this._customRuleset), async (propertyDataProvider) => {
-        propertyDataProvider.keys = elementIds;
-        // eslint-disable-next-line @typescript-eslint/no-deprecated
-        propertyDataProvider.includeFieldsWithNoValues = this.includeFieldsWithNoValues;
-        // eslint-disable-next-line @typescript-eslint/no-deprecated
-        propertyDataProvider.includeFieldsWithCompositeValues = this.includeFieldsWithCompositeValues;
-        const propertyData = await propertyDataProvider.getData();
+      using propertyDataProvider = this.createPropertyDataProvider(imodel, this._customRuleset);
+      propertyDataProvider.keys = elementIds;
+      // eslint-disable-next-line @typescript-eslint/no-deprecated
+      propertyDataProvider.includeFieldsWithNoValues = this.includeFieldsWithNoValues;
+      // eslint-disable-next-line @typescript-eslint/no-deprecated
+      propertyDataProvider.includeFieldsWithCompositeValues = this.includeFieldsWithCompositeValues;
+      const propertyData = await propertyDataProvider.getData();
 
-        // leave only favorite properties
-        const favoritesCategory = getFavoritesCategory();
-        propertyData.categories = propertyData.categories.filter((c) => c.name === favoritesCategory.name);
-        propertyData.records = propertyData.records.hasOwnProperty(favoritesCategory.name)
-          ? { [favoritesCategory.name]: propertyData.records[favoritesCategory.name] }
-          : {};
-        return propertyData;
-      });
+      // leave only favorite properties
+      const favoritesCategory = getFavoritesCategory();
+      propertyData.categories = propertyData.categories.filter((c) => c.name === favoritesCategory.name);
+      propertyData.records = propertyData.records.hasOwnProperty(favoritesCategory.name)
+        ? { [favoritesCategory.name]: propertyData.records[favoritesCategory.name] }
+        : {};
+      return propertyData;
     }
 
     const keys = await Presentation.selection.scopes.computeSelection(imodel, elementIds, createSelectionScopeProps(Presentation.selection.scopes.activeScope));

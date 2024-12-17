@@ -57,6 +57,7 @@ export function createHierarchyFilteringHelper(rootLevelFilteringProps: Hierarch
 // @public
 export function createIModelHierarchyProvider(props: IModelHierarchyProviderProps): HierarchyProvider & {
     dispose: () => void;
+    [Symbol.dispose]: () => void;
 };
 
 // @public
@@ -561,6 +562,7 @@ interface MergeHierarchyProvidersProps {
 // @public
 export function mergeProviders({ providers }: MergeHierarchyProvidersProps): HierarchyProvider & {
     dispose: () => void;
+    [Symbol.dispose]: () => void;
 };
 
 // @public

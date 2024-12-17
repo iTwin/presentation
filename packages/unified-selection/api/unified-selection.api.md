@@ -13,6 +13,8 @@ import { Id64String } from '@itwin/core-bentley';
 
 // @public
 export interface CachingHiliteSetProvider {
+    [Symbol.dispose]?: () => void;
+    // @deprecated
     dispose(): void;
     getHiliteSet(props: {
         imodelKey: string;
@@ -83,7 +85,9 @@ interface CoreSelectionSetEventUnsafe {
 }
 
 // @public
-export function createCachingHiliteSetProvider(props: CachingHiliteSetProviderProps): CachingHiliteSetProvider;
+export function createCachingHiliteSetProvider(props: CachingHiliteSetProviderProps): CachingHiliteSetProvider & {
+    [Symbol.dispose]: () => void;
+};
 
 // @public
 export function createHiliteSetProvider(props: HiliteSetProviderProps): HiliteSetProvider;
@@ -110,7 +114,9 @@ export function enableUnifiedSelectionSyncWithIModel(props: EnableUnifiedSelecti
 // @public
 interface EnableUnifiedSelectionSyncWithIModelProps {
     activeScopeProvider: () => ComputeSelectionProps["scope"];
-    cachingHiliteSetProvider?: CachingHiliteSetProvider;
+    cachingHiliteSetProvider?: CachingHiliteSetProvider | (Omit<CachingHiliteSetProvider, "dispose"> & {
+        [Symbol.dispose]: () => void;
+    });
     imodelAccess: ECSqlQueryExecutor & ECClassHierarchyInspector & {
         readonly key: string;
         readonly hiliteSet: CoreIModelHiliteSet;

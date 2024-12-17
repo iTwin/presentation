@@ -136,6 +136,7 @@ describe("useNavigationPropertyEditorContextProviderProps", () => {
       imodel: testImodel,
       rulesetId: "",
       displayType: "",
+      [Symbol.dispose]: () => {},
       dispose: () => {},
       getContent: async () => undefined,
       getContentDescriptor: async () => undefined,

@@ -7,7 +7,7 @@ import { expect } from "chai";
 import * as sinon from "sinon";
 import { PropertyRecord } from "@itwin/appui-abstract";
 import { PropertyCategory } from "@itwin/components-react";
-import { BeEvent, BeUiEvent, using } from "@itwin/core-bentley";
+import { BeEvent, BeUiEvent } from "@itwin/core-bentley";
 import { EmptyLocalization } from "@itwin/core-common";
 import { FormattingUnitSystemChangedArgs, IModelApp, IModelConnection } from "@itwin/core-frontend";
 import {
@@ -104,15 +104,14 @@ describe("PropertyDataProvider", () => {
   });
 
   afterEach(() => {
-    provider.dispose();
+    provider[Symbol.dispose]();
     sinon.restore();
   });
 
   describe("constructor", () => {
     it("uses default ruleset if not given through props", () => {
-      using(new PresentationPropertyDataProvider({ imodel }), (p) => {
-        expect(p.rulesetId).to.eq(DEFAULT_PROPERTY_GRID_RULESET.id);
-      });
+      using p = new PresentationPropertyDataProvider({ imodel });
+      expect(p.rulesetId).to.eq(DEFAULT_PROPERTY_GRID_RULESET.id);
     });
 
     it("[deprecated] sets `includeFieldsWithNoValues` to true", () => {
@@ -142,7 +141,7 @@ describe("PropertyDataProvider", () => {
       await provider.getData();
 
       expect(onFavoritesChanged.numberOfListeners).to.eq(1);
-      provider.dispose();
+      provider[Symbol.dispose]();
       expect(onFavoritesChanged.numberOfListeners).to.eq(0);
     });
   });
@@ -217,13 +216,12 @@ describe("PropertyDataProvider", () => {
           return super.isFieldFavorite(f);
         }
       }
-      await using(new Subclass({ imodel, ruleset: rulesetId }), async (subclassProvider) => {
-        const spy = sinon.spy(subclassProvider, "isFieldFavorite");
-        await subclassProvider.isFieldFavoriteAsync(field);
-        expect(spy).to.be.calledOnce;
-        // eslint-disable-next-line @typescript-eslint/no-deprecated
-        expect(favoritePropertiesManager.has).to.be.calledOnceWith(field, imodel, FavoritePropertiesScope.IModel);
-      });
+      using subclassProvider = new Subclass({ imodel, ruleset: rulesetId });
+      const spy = sinon.spy(subclassProvider, "isFieldFavorite");
+      await subclassProvider.isFieldFavoriteAsync(field);
+      expect(spy).to.be.calledOnce;
+      // eslint-disable-next-line @typescript-eslint/no-deprecated
+      expect(favoritePropertiesManager.has).to.be.calledOnceWith(field, imodel, FavoritePropertiesScope.IModel);
     });
   });
 
@@ -259,12 +257,13 @@ describe("PropertyDataProvider", () => {
           super.sortFields(category, fields);
         }
       }
-      await using(new Subclass({ imodel, ruleset: rulesetId }), async (subclassProvider) => {
-        const spy = sinon.spy(subclassProvider, "sortFields");
-        const fields = [0, 1, 2].map(() => createTestSimpleContentField());
-        await subclassProvider.sortFieldsAsync(createTestCategoryDescription(), fields);
-        expect(spy).to.be.calledOnce;
-      });
+      using subclassProvider = new Subclass({ imodel, ruleset: rulesetId });
+      const spy = sinon.spy(subclassProvider, "sortFields");
+      await subclassProvider.sortFieldsAsync(
+        createTestCategoryDescription(),
+        [0, 1, 2].map(() => createTestSimpleContentField()),
+      );
+      expect(spy).to.be.calledOnce;
     });
   });
 
@@ -1315,7 +1314,7 @@ describe("PropertyDataProvider", () => {
 
         describe("favorite properties handling", () => {
           it("doesn't create favorite fields category if `disableFavoritesCategory` is set", async () => {
-            provider.dispose();
+            provider[Symbol.dispose]();
             provider = new Provider({ imodel, ruleset: rulesetId, disableFavoritesCategory: true });
 
             favoritePropertiesManager.hasAsync.resetBehavior();

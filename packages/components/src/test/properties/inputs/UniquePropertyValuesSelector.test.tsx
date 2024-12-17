@@ -1339,7 +1339,7 @@ describe("UniquePropertyValuesSelector", () => {
           hasMore: true,
         };
       });
-      itemsLoader.dispose();
+      itemsLoader[Symbol.dispose]();
       await itemsLoader.loadItems("filterText");
       expect(setItemsSpy.notCalled);
     });

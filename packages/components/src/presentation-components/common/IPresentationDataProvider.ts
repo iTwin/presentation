@@ -6,14 +6,13 @@
  * @module Core
  */
 
-import { IDisposable } from "@itwin/core-bentley";
 import { IModelConnection } from "@itwin/core-frontend";
 
 /**
  * Interface for a presentation data provider
  * @public
  */
-export interface IPresentationDataProvider extends IDisposable {
+export interface IPresentationDataProvider {
   /**
    * [IModelConnection]($core-frontend) used by this data provider
    */
@@ -23,4 +22,18 @@ export interface IPresentationDataProvider extends IDisposable {
    * Id of the ruleset used by this data provider
    */
   readonly rulesetId: string;
+
+  /**
+   * Disposes the provider.
+   *
+   * Optional to avoid breaking the API. Will be made required when the deprecated
+   * `dispose` is removed.
+   */
+  [Symbol.dispose]?: () => void;
+
+  /**
+   * Disposes the provider.
+   * @deprecated in 5.7. Use `[Symbol.dispose]` instead.
+   */
+  dispose(): void;
 }

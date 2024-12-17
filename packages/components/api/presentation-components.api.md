@@ -25,7 +25,6 @@ import { HierarchyRequestOptions } from '@itwin/presentation-common';
 import { HighlightableTreeProps } from '@itwin/components-react';
 import { IContentVisitor } from '@itwin/presentation-common';
 import { Id64Arg } from '@itwin/core-bentley';
-import { IDisposable } from '@itwin/core-bentley';
 import { ImmediatelyLoadedTreeNodeItem } from '@itwin/components-react';
 import { IModelConnection } from '@itwin/core-frontend';
 import { InstanceFilterDefinition } from '@itwin/presentation-common';
@@ -112,8 +111,10 @@ export namespace CacheInvalidationProps {
 
 // @public
 export class ContentDataProvider implements IContentDataProvider {
+    [Symbol.dispose](): void;
     constructor(props: ContentDataProviderProps);
     get displayType(): string;
+    // @deprecated (undocumented)
     dispose(): void;
     getContent(pageOptions?: PageOptions): Promise<Content | undefined>;
     getContentDescriptor: Memoized<() => Promise<Descriptor | undefined>>;
@@ -144,7 +145,7 @@ export interface ContentDataProviderProps extends DiagnosticsProps {
     ruleset: string | Ruleset;
 }
 
-// @public
+// @public @deprecated
 export interface ControlledPresentationTreeFilteringProps {
     // (undocumented)
     activeMatchIndex?: number;
@@ -214,12 +215,12 @@ export interface FavoritePropertiesDataProviderProps {
     ruleset?: Ruleset | string;
 }
 
-// @public
+// @public @deprecated
 export type FilterablePresentationTreeNodeItem = PresentationTreeNodeItem & {
     filtering: PresentationTreeNodeItemFilteringInfo;
 };
 
-// @public
+// @public @deprecated
 export interface FilterableTreeProps {
     // (undocumented)
     filterDialog: React.ReactNode | null;
@@ -239,7 +240,7 @@ export interface FilteringDialogToolbarHandlers {
     handleReset: () => void;
 }
 
-// @public
+// @public @deprecated
 export type HierarchyLevelFilteringDescriptor = Descriptor | (() => Promise<Descriptor>);
 
 // @public
@@ -260,7 +261,7 @@ export interface IFavoritePropertiesDataProvider {
     getData: (imodel: IModelConnection, elementIds: Id64Arg | KeySet) => Promise<PropertyData>;
 }
 
-// @public
+// @public @deprecated
 export interface IFilteredPresentationTreeDataProvider extends IPresentationTreeDataProvider {
     countFilteringResults(nodePaths: ReadonlyArray<Readonly<NodePathElement>>): number;
     filter: string;
@@ -268,7 +269,7 @@ export interface IFilteredPresentationTreeDataProvider extends IPresentationTree
     nodeMatchesFilter(node: TreeNodeItem): boolean;
 }
 
-// @public
+// @public @deprecated
 export enum InfoTreeNodeItemType {
     // (undocumented)
     BackendTimeout = 1,
@@ -291,7 +292,10 @@ export class InstanceKeyValueRenderer implements IPropertyValueRenderer {
 }
 
 // @public
-export interface IPresentationDataProvider extends IDisposable {
+export interface IPresentationDataProvider {
+    [Symbol.dispose]?: () => void;
+    // @deprecated
+    dispose(): void;
     readonly imodel: IModelConnection;
     readonly rulesetId: string;
 }
@@ -306,7 +310,7 @@ export interface IPresentationLabelsProvider {
 // @public
 export type IPresentationPropertyDataProvider = IPropertyDataProvider & IContentDataProvider;
 
-// @public
+// @public @deprecated
 export interface IPresentationTreeDataProvider extends ITreeDataProvider, IPresentationDataProvider {
     createRequestOptions(parentKey?: NodeKey, instanceFilter?: InstanceFilterDefinition): HierarchyRequestOptions<IModelConnection, NodeKey>;
     getFilteredNodePaths(filter: string): Promise<NodePathElement[]>;
@@ -314,16 +318,16 @@ export interface IPresentationTreeDataProvider extends ITreeDataProvider, IPrese
     getNodeKey(node: TreeNodeItem): NodeKey;
 }
 
-// @public
+// @public @deprecated
 export function isFilterablePresentationTreeNodeItem(item: PresentationTreeNodeItem): item is FilterablePresentationTreeNodeItem;
 
-// @public
+// @public @deprecated
 export function isPresentationInfoTreeNodeItem(item: TreeNodeItem): item is PresentationInfoTreeNodeItem;
 
 // @beta @deprecated
 export function isPresentationInstanceFilterConditionGroup(filter: PresentationInstanceFilter): filter is PresentationInstanceFilterConditionGroup;
 
-// @public
+// @public @deprecated
 export function isPresentationTreeNodeItem(item: TreeNodeItem): item is PresentationTreeNodeItem;
 
 // @public
@@ -375,7 +379,7 @@ export interface PresentationFilterBuilderValueRendererProps extends PropertyFil
     selectedClasses?: ClassInfo[];
 }
 
-// @public
+// @public @deprecated
 export interface PresentationInfoTreeNodeItem extends ImmediatelyLoadedTreeNodeItem {
     children: undefined;
     isSelectionDisabled: true;
@@ -478,7 +482,9 @@ export interface PresentationLabelsProviderProps {
 
 // @public
 export class PresentationPropertyDataProvider extends ContentDataProvider implements IPresentationPropertyDataProvider {
+    [Symbol.dispose](): void;
     constructor(props: PresentationPropertyDataProviderProps);
+    // @deprecated (undocumented)
     dispose(): void;
     getData(): Promise<PropertyData>;
     protected getDescriptorOverrides(): Promise<DescriptorOverrides>;
@@ -512,11 +518,12 @@ export interface PresentationPropertyDataProviderProps extends DiagnosticsProps 
     ruleset?: string | Ruleset;
 }
 
-// @public
+// @public @deprecated
 export function PresentationTree<TEventHandler extends TreeEventHandler>({ state, ...props }: PresentationTreeProps<TEventHandler>): JSX_3.Element;
 
-// @public
-export class PresentationTreeDataProvider implements IPresentationTreeDataProvider, IDisposable {
+// @public @deprecated
+export class PresentationTreeDataProvider implements IPresentationTreeDataProvider, Disposable {
+    [Symbol.dispose](): void;
     constructor(props: PresentationTreeDataProviderProps);
     createRequestOptions(parentKey: NodeKey | undefined, instanceFilter?: InstanceFilterDefinition): {
         instanceFilter?: InstanceFilterDefinition | undefined;
@@ -529,6 +536,7 @@ export class PresentationTreeDataProvider implements IPresentationTreeDataProvid
         unitSystem?: UnitSystemKey;
         transport?: "unparsed-json";
     };
+    // @deprecated (undocumented)
     dispose(): void;
     getFilteredNodePaths(filter: string): Promise<NodePathElement[]>;
     // @deprecated
@@ -545,7 +553,7 @@ export class PresentationTreeDataProvider implements IPresentationTreeDataProvid
     get rulesetId(): string;
 }
 
-// @public
+// @public @deprecated
 export interface PresentationTreeDataProviderDataSourceEntryPoints {
     // (undocumented)
     getFilteredNodePaths: (requestOptions: FilterByTextHierarchyRequestOptions<IModelConnection>) => Promise<NodePathElement[]>;
@@ -566,7 +574,7 @@ export interface PresentationTreeDataProviderDataSourceEntryPoints {
     }>;
 }
 
-// @public
+// @public @deprecated
 export interface PresentationTreeDataProviderProps extends DiagnosticsProps {
     appendChildrenCountForGroupingNodes?: boolean;
     customizeTreeNodeItem?: (item: Partial<DelayLoadedTreeNodeItem>, node: Partial<Node_2>) => void;
@@ -578,19 +586,19 @@ export interface PresentationTreeDataProviderProps extends DiagnosticsProps {
     ruleset: string | Ruleset;
 }
 
-// @public
+// @public @deprecated
 export interface PresentationTreeEventHandlerProps {
     modelSource: TreeModelSource;
     nodeLoader: AbstractTreeNodeLoaderWithProvider<IPresentationTreeDataProvider>;
 }
 
-// @public
+// @public @deprecated
 export interface PresentationTreeNodeItem extends DelayLoadedTreeNodeItem {
     filtering?: PresentationTreeNodeItemFilteringInfo;
     key: NodeKey;
 }
 
-// @public
+// @public @deprecated
 export interface PresentationTreeNodeItemFilteringInfo {
     active?: PresentationInstanceFilterInfo;
     ancestorFilters: PresentationInstanceFilterInfo[];
@@ -609,10 +617,10 @@ export interface PresentationTreeNodeLoaderResult {
     onItemsRendered: (items: RenderedItemsRange) => void;
 }
 
-// @public
+// @public @deprecated
 export function PresentationTreeNodeRenderer(props: PresentationTreeNodeRendererProps): JSX_2.Element;
 
-// @public
+// @public @deprecated
 export interface PresentationTreeNodeRendererProps extends TreeNodeRendererProps {
     // (undocumented)
     onClearFilterClick: (nodeId: string) => void;
@@ -620,7 +628,7 @@ export interface PresentationTreeNodeRendererProps extends TreeNodeRendererProps
     onFilterClick: (nodeId: string) => void;
 }
 
-// @public
+// @public @deprecated
 export type PresentationTreeProps<TEventHandler extends TreeEventHandler> = Omit<ControlledTreeProps, "model" | "nodeLoader" | "eventsHandler" | "onItemsRendered" | "nodeHighlightingProps" | "treeRenderer"> & {
     state: UsePresentationTreeStateResult<TEventHandler>;
     treeRenderer?: (props: TreeRendererProps & {
@@ -628,10 +636,10 @@ export type PresentationTreeProps<TEventHandler extends TreeEventHandler> = Omit
     }) => ReactElement;
 };
 
-// @public
+// @public @deprecated
 export function PresentationTreeRenderer(props: PresentationTreeRendererProps): JSX_3.Element;
 
-// @public
+// @public @deprecated
 export interface PresentationTreeRendererProps extends Omit<TreeRendererProps, "nodeRenderer"> {
     // (undocumented)
     nodeLoader: AbstractTreeNodeLoaderWithProvider<IPresentationTreeDataProvider>;
@@ -745,11 +753,12 @@ export interface UnifiedSelectionContextProviderProps {
 // @public
 export type UnifiedSelectionState = (selectionLevel?: number) => Readonly<KeySet>;
 
-// @public
-export class UnifiedSelectionTreeEventHandler extends TreeEventHandler implements IDisposable {
+// @public @deprecated
+export class UnifiedSelectionTreeEventHandler extends TreeEventHandler {
+    [Symbol.dispose](): void;
     constructor(params: UnifiedSelectionTreeEventHandlerParams);
     protected createKeysForSelection(nodes: TreeNodeItem[], _selectionType: SelectionChangeType): Keys;
-    // (undocumented)
+    // @deprecated (undocumented)
     dispose(): void;
     // (undocumented)
     protected getKeys(nodes: TreeNodeItem[]): Keys;
@@ -764,7 +773,7 @@ export class UnifiedSelectionTreeEventHandler extends TreeEventHandler implement
     protected shouldSelectNode(node: TreeNodeItem, selection: Readonly<KeySet>): boolean;
 }
 
-// @public
+// @public @deprecated
 export interface UnifiedSelectionTreeEventHandlerParams {
     collapsedChildrenDisposalEnabled?: boolean;
     editingParams?: TreeEditingParams;
@@ -772,7 +781,7 @@ export interface UnifiedSelectionTreeEventHandlerParams {
     nodeLoader: AbstractTreeNodeLoaderWithProvider<IPresentationTreeDataProvider>;
 }
 
-// @public
+// @public @deprecated
 export function useControlledPresentationTreeFiltering(props: ControlledPresentationTreeFilteringProps): {
     nodeHighlightingProps: HighlightableTreeProps | undefined;
     filteredNodeLoader: AbstractTreeNodeLoaderWithProvider<IPresentationTreeDataProvider>;
@@ -781,10 +790,10 @@ export function useControlledPresentationTreeFiltering(props: ControlledPresenta
     matchesCount: number | undefined;
 };
 
-// @public
+// @public @deprecated
 export function useFilterablePresentationTree({ nodeLoader, onFilterApplied }: useFilterablePresentationTreeProps): FilterableTreeProps;
 
-// @public
+// @public @deprecated
 export interface useFilterablePresentationTreeProps {
     // (undocumented)
     nodeLoader: AbstractTreeNodeLoaderWithProvider<IPresentationTreeDataProvider>;
@@ -792,13 +801,13 @@ export interface useFilterablePresentationTreeProps {
     onFilterApplied?: () => void;
 }
 
-// @public
+// @public @deprecated
 export function useHierarchyLevelFiltering(props: UseHierarchyLevelFilteringProps): {
     applyFilter: (nodeId: string, info: PresentationInstanceFilterInfo) => void;
     clearFilter: (nodeId: string) => void;
 };
 
-// @public
+// @public @deprecated
 export interface UseHierarchyLevelFilteringProps {
     // (undocumented)
     modelSource: TreeModelSource;
@@ -855,10 +864,10 @@ export interface UsePresentationTableWithUnifiedSelectionResult<TColumns, TRow> 
 // @public @deprecated
 export function usePresentationTreeNodeLoader(props: PresentationTreeNodeLoaderProps): PresentationTreeNodeLoaderResult;
 
-// @public
+// @public @deprecated
 export function usePresentationTreeState<TEventHandler extends TreeEventHandler = TreeEventHandler>({ onHierarchyLimitExceeded, onNodeLoaded, eventHandlerFactory, seedTreeModel, filteringParams, ...dataProviderProps }: UsePresentationTreeStateProps<TEventHandler>): UsePresentationTreeStateResult<TEventHandler> | undefined;
 
-// @public
+// @public @deprecated
 export interface UsePresentationTreeStateProps<TEventHandler extends TreeEventHandler = TreeEventHandler> extends PresentationTreeDataProviderProps {
     eventHandlerFactory?: (props: PresentationTreeEventHandlerProps) => TEventHandler | undefined;
     filteringParams?: {
@@ -874,7 +883,7 @@ export interface UsePresentationTreeStateProps<TEventHandler extends TreeEventHa
     seedTreeModel?: TreeModel;
 }
 
-// @public
+// @public @deprecated
 export interface UsePresentationTreeStateResult<TEventHandler extends TreeEventHandler = TreeEventHandler> {
     eventHandler: TEventHandler;
     filteringResult?: {

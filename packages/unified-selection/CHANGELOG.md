@@ -1,5 +1,36 @@
 # @itwin/unified-selection
 
+## 1.2.0
+
+### Minor Changes
+
+- [#800](https://github.com/iTwin/presentation/pull/800): Add support for Models and SubCategories selection that's going to be available in `@itwin/core-frontend` version `5`.
+
+  The changes in `@itwin/core-frontend` allow us to stop manually syncing `HiliteSet` with `SelectionSet` and rely on automatic syncing instead.
+
+- [#800](https://github.com/iTwin/presentation/pull/800): `computeSelection`: Broadened the type of `elementIds` prop from `Id64String[]` to `Id64Arg`.
+- [#802](https://github.com/iTwin/presentation/pull/802): Prefer `Symbol.dispose` over `dispose` for disposable objects.
+
+  The package contained a number of types for disposable objects, that had a requirement of `dispose` method being called on them after they are no longer needed. In conjunction with the `using` utility from `@itwin/core-bentley`, usage of such objects looked like this:
+
+  ```ts
+  class MyDisposable() {
+    dispose() {
+      // do some cleanup
+    }
+  }
+  using(new MyDisposable(), (obj) => {
+    // do something with obj, it'll get disposed when the callback returns
+  });
+  ```
+
+  In version `5.2`, TypeScript [introduced](https://www.typescriptlang.org/docs/handbook/release-notes/typescript-5-2.html#using-declarations-and-explicit-resource-management) `Disposable` type and `using` declarations (from the upcoming [Explicit Resource Management](https://github.com/tc39/proposal-explicit-resource-management) feature in ECMAScript). Now we're making use of those new utilities in this package (while still supporting the old `dispose` method), which allows using `MyDisposable` from the above snippet like this:
+
+  ```ts
+  using obj = new MyDisposable();
+  // do something with obj, it'll get disposed when it goes out of scope
+  ```
+
 ## 1.1.2
 
 ### Patch Changes
