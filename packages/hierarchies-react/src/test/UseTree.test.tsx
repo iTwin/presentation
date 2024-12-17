@@ -34,7 +34,7 @@ import {
   waitFor,
 } from "./TestUtils.js";
 
-describe.only("useTree", () => {
+describe("useTree", () => {
   let hierarchyProvider: StubbedHierarchyProvider;
   const onHierarchyLoadErrorStub = sinon.stub();
 
