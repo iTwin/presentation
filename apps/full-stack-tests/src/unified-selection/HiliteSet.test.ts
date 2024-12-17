@@ -4,7 +4,6 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { expect } from "chai";
-import * as fs from "fs";
 import path from "path";
 import {
   getDefaultSubcategoryKey,
@@ -28,6 +27,7 @@ import { ECSchemaRpcImpl } from "@itwin/ecschema-rpcinterface-impl";
 import { buildTestIModel, initialize, terminate } from "@itwin/presentation-testing";
 import { createHiliteSetProvider, SelectableInstanceKey, Selectables } from "@itwin/unified-selection";
 import { createIModelAccess } from "../hierarchies/Utils.js";
+import { getSchemaFromPackage } from "./getSchema.js";
 
 describe("HiliteSet", () => {
   let iModel: IModelConnection;
@@ -201,6 +201,8 @@ describe("HiliteSet", () => {
         // eslint-disable-next-line @typescript-eslint/no-deprecated
         iModel = await buildTestIModel(this, async (builder) => {
           const modelKey = insertPhysicalModelWithPartition({ builder, codeValue: "test model" });
+          const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
+          await builder.importSchema(schema);
           const categoryKey = insertSpatialCategory({ builder, codeValue: "test category" });
           assemblyKey = insertPhysicalElement({ builder, userLabel: "element 1", modelId: modelKey.id, categoryId: categoryKey.id });
           const element2 = insertPhysicalElement({
@@ -236,6 +238,8 @@ describe("HiliteSet", () => {
         // eslint-disable-next-line @typescript-eslint/no-deprecated
         iModel = await buildTestIModel(this, async (builder) => {
           const modelKey = insertPhysicalModelWithPartition({ builder, codeValue: "test model" });
+          const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
+          await builder.importSchema(schema);
           const categoryKey = insertSpatialCategory({ builder, codeValue: "test category" });
           elementKey = insertPhysicalElement({ builder, userLabel: "element", modelId: modelKey.id, categoryId: categoryKey.id });
         });
@@ -252,6 +256,8 @@ describe("HiliteSet", () => {
         // eslint-disable-next-line @typescript-eslint/no-deprecated
         iModel = await buildTestIModel(this, async (builder) => {
           const modelKey = insertPhysicalModelWithPartition({ builder, codeValue: "test model" });
+          const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
+          await builder.importSchema(schema);
           const categoryKey = insertSpatialCategory({ builder, codeValue: "test category" });
           elementKeys = [
             insertPhysicalElement({ builder, userLabel: "element", modelId: modelKey.id, categoryId: categoryKey.id }),
@@ -271,11 +277,6 @@ describe("HiliteSet", () => {
     });
 
     describe("Functional element", () => {
-      async function getSchemaFromPackage(packageName: string, schemaFileName: string): Promise<string> {
-        const schemaFile = path.join(import.meta.dirname, "..", "..", "node_modules", "@bentley", packageName, schemaFileName);
-        return fs.readFileSync(schemaFile, "utf8");
-      }
-
       it("hilites functional element related physical elements", async function () {
         let functionalElement: SelectableInstanceKey;
         let physicalElement: SelectableInstanceKey;
@@ -378,6 +379,8 @@ describe("HiliteSet", () => {
         // eslint-disable-next-line @typescript-eslint/no-deprecated
         iModel = await buildTestIModel(this, async (builder) => {
           const groupModel = insertGroupInformationModelWithPartition({ builder, codeValue: "group information model" });
+          const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
+          await builder.importSchema(schema);
           const physicalModelKey = insertPhysicalModelWithPartition({ builder, codeValue: "test physical model" });
           const categoryKey = insertSpatialCategory({ builder, codeValue: "test category" });
           groupInformationElement = insertGroupInformationElement({

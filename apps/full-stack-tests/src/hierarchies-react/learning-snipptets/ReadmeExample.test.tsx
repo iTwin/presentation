@@ -183,7 +183,7 @@ describe("Hierarchies React", () => {
 
         const { getByText } = render(<MyTreeComponentInternal imodelAccess={createIModelAccess(iModel)} />);
 
-        expect(getByText("No data to display")).to.not.be.null;
+        await waitFor(() => expect(getByText("No data to display")).to.not.be.null);
       });
     });
   });

@@ -9,10 +9,15 @@
 import { join } from "path";
 import * as rimraf from "rimraf";
 import { IModelHost, IModelHostOptions } from "@itwin/core-backend";
-import { Guid } from "@itwin/core-bentley";
+import { Guid, Logger, LogLevel } from "@itwin/core-bentley";
 import { IModelReadRpcInterface, RpcConfiguration, RpcDefaultConfiguration, RpcInterfaceDefinition, SnapshotIModelRpcInterface } from "@itwin/core-common";
 import { IModelApp, IModelAppOptions, NoRenderApp } from "@itwin/core-frontend";
-import { HierarchyCacheMode, Presentation as PresentationBackend, PresentationManagerProps as PresentationBackendProps } from "@itwin/presentation-backend";
+import {
+  HierarchyCacheMode,
+  Presentation as PresentationBackend,
+  PresentationBackendNativeLoggerCategory,
+  PresentationManagerProps as PresentationBackendProps,
+} from "@itwin/presentation-backend";
 import { PresentationRpcInterface } from "@itwin/presentation-common";
 import { Presentation as PresentationFrontend, PresentationProps as PresentationFrontendProps } from "@itwin/presentation-frontend";
 import { getTestOutputDir, setTestOutputDir } from "./FilenameUtils.js";
@@ -81,6 +86,12 @@ export const initialize = async (props?: PresentationTestingInitProps) => {
   if (!props) {
     props = {};
   }
+
+  Logger.initializeToConsole();
+  Logger.setLevelDefault(LogLevel.Warning);
+  Logger.setLevel("i18n", LogLevel.Error);
+  Logger.setLevel("SQLite", LogLevel.Error);
+  Logger.setLevel(PresentationBackendNativeLoggerCategory.ECObjects, LogLevel.Warning);
 
   // set up rpc interfaces
   initializeRpcInterfaces(props.rpcs ?? [SnapshotIModelRpcInterface, IModelReadRpcInterface, PresentationRpcInterface]);

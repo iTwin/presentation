@@ -92,6 +92,8 @@ describe("TreeDataProvider", async () => {
   });
 
   it("creates error node when requesting root nodes with invalid paging", async () => {
+    // stub console log to avoid expected error in console
+    const consoleStub = sinon.stub(console, "error").callsFake(() => {});
     provider.pagingSize = 5;
     const nodes = await provider.getNodes(undefined, { start: 1, size: 5 });
     if (nodes.length === 1) {
@@ -102,6 +104,7 @@ describe("TreeDataProvider", async () => {
       // presentation-frontend@3.6 returns an empty list in case of invalid page options
       expect(nodes).to.be.empty;
     }
+    consoleStub.restore();
   });
 
   it("returns child nodes count", async () => {
@@ -124,6 +127,8 @@ describe("TreeDataProvider", async () => {
   });
 
   it("returns error node when requesting child nodes with invalid paging", async () => {
+    // stub console log to avoid expected error in console
+    const consoleStub = sinon.stub(console, "error").callsFake(() => {});
     const rootNodes = await provider.getNodes();
     provider.pagingSize = 5;
     const nodes = await provider.getNodes(rootNodes[0], { start: 1, size: 5 });
@@ -135,6 +140,7 @@ describe("TreeDataProvider", async () => {
       // presentation-frontend@3.6 returns an empty list in case of invalid page options
       expect(nodes).to.be.empty;
     }
+    consoleStub.restore();
   });
 
   it("requests backend only once to get first page", async () => {
