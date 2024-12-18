@@ -726,7 +726,7 @@ for await (const node of provider.getNodes({ parentNode: undefined, instanceFilt
   console.log(`- ${node.label}`);
 }
 
-// Create a filter to find books whose key contains "OL274" substring or title contains "Hobbit".
+// Create a filter to find books whose key contains "OL274" substring and title contains "Hobbit".
 const createBooksFilter = (): GenericInstanceFilter => ({
   propertyClassNames: ["book"],
   relatedInstances: [],
