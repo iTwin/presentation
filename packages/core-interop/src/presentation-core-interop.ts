@@ -4,6 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 export { createValueFormatter } from "./core-interop/Formatting.js";
+export { createIModelKey } from "./core-interop/IModelKey.js";
 export { createLogger } from "./core-interop/Logging.js";
 export { createECSchemaProvider } from "./core-interop/Metadata.js";
 export { createECSqlQueryExecutor } from "./core-interop/QueryExecutor.js";

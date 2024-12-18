@@ -103,8 +103,10 @@ export interface SelectionStorage {
  *
  * ```ts
  * import { IModelConnection } from "@itwin/core-frontend";
+ * import { createIModelKey } from "@itwin/presentation-core-interop";
+ *
  * IModelConnection.onClose.addListener((imodel) => {
- *   storage.clearStorage(imodel.key);
+ *   storage.clearStorage(createIModelKey(imodel));
  * });
  * ```
  *

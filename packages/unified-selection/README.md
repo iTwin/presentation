@@ -32,8 +32,9 @@ const unifiedSelection = createStore();
 
 // the store should to be cleaned up when iModels are closed to free up memory, e.g.:
 import { IModelConnection } from "@itwin/core-frontend";
+import { createIModelKey } from "@itwin/presentation-core-interop";
 IModelConnection.onClose.addListener((imodel) => {
-  unifiedSelection.clearStorage(imodel.key);
+  unifiedSelection.clearStorage(createIModelKey(imodel));
 });
 
 // add a demo selection listener
@@ -59,7 +60,7 @@ unifiedSelection.selectionChangeEvent.addListener(({ imodelKey, source, changeTy
 
 // in some component
 MyComponent.onECInstanceSelected((imodel: IModelConnection, key: { className: string; id: Id64String }) => {
-  unifiedSelection.addToSelection({ imodelKey: imodel.key, source: "MyComponent", selectables: [key] });
+  unifiedSelection.addToSelection({ imodelKey: createIModelKey(imodel), source: "MyComponent", selectables: [key] });
 });
 ```
 
@@ -111,6 +112,8 @@ The `@itwin/unified-selection` package delivers APIs for creating a `HiliteSet` 
 import { IModelConnection } from "@itwin/core-frontend";
 import { createECSqlQueryExecutor, createECSchemaProvider } from "@itwin/presentation-core-interop";
 import { createHiliteSetProvider } from "@itwin/unified-selection";
+
+const imodel: IModelConnection; // initialized elsewhere
 const hiliteProvider = createHiliteSetProvider({
   imodelAccess: {
     ...createECSchemaProvider(imodel),
@@ -119,17 +122,20 @@ const hiliteProvider = createHiliteSetProvider({
 });
 const hiliteSet = await hiliteProvider.getHiliteSet({ selectables });
 
-// Some others may want to get a hilite set for _current_ selection in storage - use `createCachingHiliteSetProvider` for that. It's
-// recommended to keep a single instance of this provider per application as it caches hilite sets per each iModel's selection.
+// Some others may want to get a hilite set for _current_ selection for specific iModel in storage - use `createCachingHiliteSetProvider`
+// for that. It's recommended to keep a single instance of this provider per application as it caches hilite sets per each iModel's selection.
 import { createCachingHiliteSetProvider } from "@itwin/unified-selection";
+import { createIModelKey } from "@itwin/presentation-core-interop";
+
 // Note the use of `using` keyword here. The caching provider registers a selection change listener and should be disposed, in case
 // its lifetime is shorter than that of `SelectionStorage`, to unregister the listener. The `using` keyword ensures that the provider
 // is disposed when it goes out of scope.
 using selectionHiliteProvider = createCachingHiliteSetProvider({
   selectionStorage,
-  imodelProvider: (imodelKey: string) => getIModelByKey(imodelKey),
+  // this is called to get iModel access based on the iModel key, used to get hilite set for that iModel (see below)
+  imodelProvider: (imodelKey) => getIModelByKey(imodelKey),
 });
-const selectionHiliteSet = await selectionHiliteProvider.getHiliteSet({ imodel.key });
+const selectionHiliteSet = await selectionHiliteProvider.getHiliteSet({ imodelKey: createIModelKey(imodel) });
 ```
 
 ### Selection scopes
@@ -171,13 +177,13 @@ const selection = computeSelection({ queryExecutor, elementIds, scope: { id: "el
 The `@itwin/unified-selection` package delivers a `enableUnifiedSelectionSyncWithIModel` function to enable selection synchronization between an iModel and a `SelectionStorage`. When called, it returns a cleanup function that should be used to disable the synchronization. There should only be one active synchronization between a single iModel and a `SelectionStorage` at a given time. For example, this function could be used inside a `useEffect` hook in a component that holds an iModel:
 
 ```ts
-import { createECSqlQueryExecutor, createECSchemaProvider } from "@itwin/presentation-core-interop";
+import { createECSqlQueryExecutor, createECSchemaProvider, createIModelKey } from "@itwin/presentation-core-interop";
 useEffect(() => {
   return enableUnifiedSelectionSyncWithIModel({
     imodelAccess: {
       ...createECSqlQueryExecutor(imodel),
       ...createECSchemaProvider(imodel),
-      key: imodel.key,
+      key: createIModelKey(imodel),
       hiliteSet: imodel.hilited,
       selectionSet: imodel.selectionSet,
     },
