@@ -629,7 +629,7 @@ describe("Hierarchies", () => {
         consoleLogSpy.resetHistory();
 
         // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.CustomHierarchyProviders.HierarchyLevelFilteringProvider.Result2
-        // Create a filter to find books whose key contains "OL274" substring or title contains "Hobbit".
+        // Create a filter to find books whose key contains "OL274" substring and title contains "Hobbit".
         const createBooksFilter = (): GenericInstanceFilter => ({
           propertyClassNames: ["book"],
           relatedInstances: [],
