@@ -1,12 +1,10 @@
 # iModel hierarchy level filtering
 
-Hierarchy level filtering is a concept where filtering is applied to a single hierarchy level (as opposed to [hierarchy filtering](../HierarchyFiltering.md), where filtering is applied to the whole hierarchy). This is useful when hierarchy levels contain very large numbers of nodes as it allows users to filter the list based on attributes of instances represented by the nodes.
-
-## Enabling hierarchy level filtering
+The concept of hierarchy level filtering is described in the [Hierarchy level filtering](../HierarchyLevelFiltering.md) learning page. This page describes how this is implemented in the iModel-specific hierarchy provider what additional steps are needed for it to work with iModels.
 
 The library creates hierarchies as described by hierarchy definitions and they define hierarchy levels through ECSQL queries. Due to loose structure of the queries and the need to be flexible on how the filter is applied on them, the library does not provide a built-in mechanism for hierarchy level filtering. Instead, it enables consumers to implement filtering through their hierarchy definitions.
 
-### Enable filtering for specific parent nodes
+## Enable filtering for specific parent nodes
 
 Because hierarchy definitions may not support hierarchy level filtering on all hierarchy levels (and by default they don't support it on any of them), the hierarchy definition has to explicitly tell if node supports it or not.
 
@@ -91,7 +89,7 @@ It's up to the UI component that renders the hierarchy to make such nodes filter
 
 The callback argument allows the filter to be assigned to the node. Upon that node's children request, the filter is passed to `HierarchyProvider.getNodes` call and gets forwarded to the hierarchy definition, whose job is to apply the filter on the `InstanceNodesQueryDefinition` it returns.
 
-### Filtering nodes
+## Filtering nodes
 
 As mentioned in the previous section, hierarchy definition gets the applied filter as the `DefineHierarchyLevelProps.instanceFilter` argument to its `defineHierarchyLevel` function. And it's definition's job to apply this filter on the returned `InstanceNodesQueryDefinition`.
 
