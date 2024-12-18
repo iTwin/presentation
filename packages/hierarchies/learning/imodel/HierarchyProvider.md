@@ -20,7 +20,7 @@ The `createIModelHierarchyProvider` factory function takes an `imodelAccess` pro
 import { IModelConnection } from "@itwin/core-frontend";
 import { SchemaContext } from "@itwin/ecschema-metadata";
 import { ECSchemaRpcLocater } from "@itwin/ecschema-rpcinterface-common";
-import { createECSchemaProvider, createECSqlQueryExecutor } from "@itwin/presentation-core-interop";
+import { createECSchemaProvider, createECSqlQueryExecutor, createIModelKey } from "@itwin/presentation-core-interop";
 import { createLimitingECSqlQueryExecutor } from "@itwin/presentation-hierarchies";
 import { createCachingECClassHierarchyInspector, Props } from "@itwin/presentation-shared";
 
@@ -29,12 +29,13 @@ import { createCachingECClassHierarchyInspector, Props } from "@itwin/presentati
 // avoid loading and storing same schemas multiple times.
 const imodelSchemaContextsCache = new Map<string, SchemaContext>();
 function getIModelSchemaContext(imodel: IModelConnection) {
-  let context = imodelSchemaContextsCache.get(imodel.key);
+  const imodelKey = createIModelKey(imodel);
+  let context = imodelSchemaContextsCache.get(imodelKey);
   if (!context) {
     context = new SchemaContext();
     context.addLocater(new ECSchemaRpcLocater(imodel.getRpcProps()));
-    imodelSchemaContextsCache.set(imodel.key, context);
-    imodel.onClose.addListener(() => imodelSchemaContextsCache.delete(imodel.key));
+    imodelSchemaContextsCache.set(imodelKey, context);
+    imodel.onClose.addListener(() => imodelSchemaContextsCache.delete(imodelKey));
   }
   return context;
 }
@@ -43,7 +44,7 @@ function createIModelAccess(imodel: IModelConnection) {
   const schemaProvider = createECSchemaProvider(getIModelSchemaContext(imodel));
   return {
     // The key of the iModel we're accessing
-    imodelKey: imodel.key,
+    imodelKey: createIModelKey(imodel),
     // Schema provider provides access to EC information (metadata)
     ...schemaProvider,
     // While caching for hierarchy inspector is not mandatory, it's recommended to use it to improve performance

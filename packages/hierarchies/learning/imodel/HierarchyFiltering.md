@@ -80,6 +80,7 @@ Let's consider two cases - filtering by label and by target element ID:
   <!-- BEGIN EXTRACTION -->
 
   ```ts
+  import { createIModelKey } from "@itwin/presentation-core-interop";
   import { HierarchyNodeIdentifiersPath } from "@itwin/presentation-hierarchies";
   import { ECSql, ECSqlQueryDef } from "@itwin/presentation-shared";
 
@@ -111,7 +112,7 @@ Let's consider two cases - filtering by label and by target element ID:
     };
     const result: HierarchyNodeIdentifiersPath[] = [];
     for await (const row of imodelAccess.createQueryReader(query, { rowFormat: "ECSqlPropertyNames" })) {
-      result.push((JSON.parse(row.Path) as InstanceKey[]).reverse().map((key) => ({ ...key, imodelKey: imodel.key })));
+      result.push((JSON.parse(row.Path) as InstanceKey[]).reverse().map((key) => ({ ...key, imodelKey: createIModelKey(imodel) })));
     }
     return result;
   }
@@ -132,6 +133,7 @@ Let's consider two cases - filtering by label and by target element ID:
   <!-- BEGIN EXTRACTION -->
 
   ```ts
+  import { createIModelKey } from "@itwin/presentation-core-interop";
   import { HierarchyNodeIdentifiersPath } from "@itwin/presentation-hierarchies";
   import { ECSql, ECSqlQueryDef } from "@itwin/presentation-shared";
 
@@ -163,7 +165,7 @@ Let's consider two cases - filtering by label and by target element ID:
     };
     const result: HierarchyNodeIdentifiersPath[] = [];
     for await (const row of imodelAccess.createQueryReader(query, { rowFormat: "ECSqlPropertyNames" })) {
-      result.push((JSON.parse(row.Path) as InstanceKey[]).reverse().map((key) => ({ ...key, imodelKey: imodel.key })));
+      result.push((JSON.parse(row.Path) as InstanceKey[]).reverse().map((key) => ({ ...key, imodelKey: createIModelKey(imodel) })));
     }
     return result;
   }

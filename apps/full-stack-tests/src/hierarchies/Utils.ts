@@ -7,7 +7,7 @@ import { ECDb, IModelDb } from "@itwin/core-backend";
 import { IModelConnection } from "@itwin/core-frontend";
 import { Schema, SchemaContext, SchemaInfo, SchemaKey, SchemaMatchType } from "@itwin/ecschema-metadata";
 import { ECSchemaRpcLocater } from "@itwin/ecschema-rpcinterface-common";
-import { createECSchemaProvider as createECSchemaProviderInterop, createECSqlQueryExecutor } from "@itwin/presentation-core-interop";
+import { createECSchemaProvider as createECSchemaProviderInterop, createECSqlQueryExecutor, createIModelKey } from "@itwin/presentation-core-interop";
 import { createIModelHierarchyProvider, createLimitingECSqlQueryExecutor, HierarchyDefinition } from "@itwin/presentation-hierarchies";
 import { createCachingECClassHierarchyInspector, Event, IPrimitiveValueFormatter, parseFullClassName, Props } from "@itwin/presentation-shared";
 
@@ -47,7 +47,7 @@ export function createIModelAccess(imodel: IModelConnection | IModelDb | ECDb) {
   const classHierarchyInspector = createCachingECClassHierarchyInspector({ schemaProvider });
   const queryExecutor = createLimitingECSqlQueryExecutor(createECSqlQueryExecutor(imodel), 123);
   return {
-    imodelKey: imodel instanceof IModelConnection || imodel instanceof IModelDb ? imodel.key : "ecdb",
+    imodelKey: imodel instanceof IModelConnection || imodel instanceof IModelDb ? createIModelKey(imodel) : "ecdb",
     ...schemaProvider,
     ...classHierarchyInspector,
     ...queryExecutor,
