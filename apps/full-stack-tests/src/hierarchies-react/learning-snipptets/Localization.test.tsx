@@ -9,7 +9,7 @@ import { SchemaContext } from "@itwin/ecschema-metadata";
 import { IModelConnection } from "@itwin/core-frontend";
 import { ECSchemaRpcLocater } from "@itwin/ecschema-rpcinterface-common";
 import { insertPhysicalModelWithPartition } from "presentation-test-utilities";
-import { createECSchemaProvider, createECSqlQueryExecutor } from "@itwin/presentation-core-interop";
+import { createECSchemaProvider, createECSqlQueryExecutor, createIModelKey } from "@itwin/presentation-core-interop";
 import { createLimitingECSqlQueryExecutor, createNodesQueryClauseFactory } from "@itwin/presentation-hierarchies";
 import { createBisInstanceLabelSelectClauseFactory, createCachingECClassHierarchyInspector } from "@itwin/presentation-shared";
 // __PUBLISH_EXTRACT_START__ Presentation.HierarchiesReact.Localization.CommonImports
@@ -74,7 +74,7 @@ describe("Hierarchies React", () => {
         context.addLocater(new ECSchemaRpcLocater(imodel.getRpcProps()));
         const schemaProvider = createECSchemaProvider(context);
         access = {
-          imodelKey: imodel.key,
+          imodelKey: createIModelKey(imodel),
           ...schemaProvider,
           ...createCachingECClassHierarchyInspector({ schemaProvider, cacheSize: 100 }),
           ...createLimitingECSqlQueryExecutor(createECSqlQueryExecutor(imodel), 1000),
@@ -138,7 +138,7 @@ describe("Hierarchies React", () => {
         type TreeProps = ComponentPropsWithoutRef<typeof Tree<RenderedTreeNode>>;
         type TreeRendererProps = Props<typeof TreeRenderer>;
 
-        function MyTreeRenderer(props: TreeRendererProps) {
+        function MyTreeRenderer({ rootNodes }: TreeRendererProps) {
           const nodeRenderer = useCallback<TreeProps["nodeRenderer"]>((nodeProps) => {
             return <TreeNodeRenderer {...nodeProps} onFilterClick={() => {}} expandNode={() => {}} />;
           }, []);
@@ -147,7 +147,7 @@ describe("Hierarchies React", () => {
 
           return (
             <LocalizationContextProvider localizedStrings={localizedStrings}>
-              <Tree<RenderedTreeNode> {...props} data={props.rootNodes} nodeRenderer={nodeRenderer} getNode={getNode} />
+              <Tree<RenderedTreeNode> data={rootNodes} nodeRenderer={nodeRenderer} getNode={getNode} enableVirtualization={true} />
             </LocalizationContextProvider>
           );
         }

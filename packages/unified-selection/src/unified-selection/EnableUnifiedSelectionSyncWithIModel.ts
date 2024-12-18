@@ -26,7 +26,7 @@ export interface EnableUnifiedSelectionSyncWithIModelProps {
    * `hilited` and `selectionSet` attributes like this:
    *
    * ```ts
-   * import { createECSqlQueryExecutor, createECSchemaProvider } from "@itwin/presentation-core-interop";
+   * import { createECSqlQueryExecutor, createECSchemaProvider, createIModelKey } from "@itwin/presentation-core-interop";
    * import { createCachingECClassHierarchyInspector } from "@itwin/presentation-shared";
    * import { IModelConnection } from "@itwin/core-frontend";
    *
@@ -34,7 +34,7 @@ export interface EnableUnifiedSelectionSyncWithIModelProps {
    * const imodelAccess = {
    *   ...createECSqlQueryExecutor(imodel),
    *   ...createCachingECClassHierarchyInspector({ schemaProvider: createECSchemaProvider(MyAppFrontend.getSchemaContext(imodel)) }),
-   *   key: imodel.key,
+   *   key: createIModelKey(imodel),
    *   hiliteSet: imodel.hilited,
    *   selectionSet: imodel.selectionSet,
    * };

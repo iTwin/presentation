@@ -34,6 +34,8 @@ describe("Learning snippets", () => {
     });
 
     it("handles errors", async function () {
+      // stub console log to avoid expected network error in console
+      const consoleStub = sinon.stub(console, "error").callsFake(() => {});
       // __PUBLISH_EXTRACT_START__ Presentation.Components.Tree.ErrorHandling
       function MyTree(props: { imodel: IModelConnection }) {
         const state = usePresentationTreeState({
@@ -98,6 +100,7 @@ describe("Learning snippets", () => {
       expect(() => getNodeByLabel(container, `My Model A`)).to.throw();
       expect(() => getNodeByLabel(container, `My Model B`)).to.throw();
       expect(getByText("Èrrór ¢rëätíñg thë hìérärçhý lévêl")).is.not.null;
+      consoleStub.restore();
     });
   });
 });

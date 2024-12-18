@@ -89,5 +89,6 @@
   },
   "terminal.integrated.env.windows": {
     "NODE_ENV": "development"
-  }
+  },
+  "terminal.integrated.scrollback": 5000,
 }

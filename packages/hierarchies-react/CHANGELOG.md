@@ -1,5 +1,72 @@
 # @itwin/presentation-hierarchies-react
 
+## 1.3.0
+
+### Minor Changes
+
+- [#807](https://github.com/iTwin/presentation/pull/807): Added `getNode` function to tree state hooks to allow getting a node by id.
+
+  Example usage:
+
+  ```tsx
+  function MyTreeComponentInternal({ imodelAccess }: { imodelAccess: IModelAccess }) {
+    const {
+      rootNodes,
+      getNode,
+      expandNode: doExpandNode,
+      ...state
+    } = useTree({
+      // tree props
+    });
+
+    // enhance the default `expandNode` handler to log the action to console
+    const expandNode = React.useCallback(
+      async (nodeId: string, isExpanded: boolean) => {
+        const node = getNode(nodeId);
+        if (node) {
+          console.log(`${isExpanded ? "Expanding" : "Collapsing"} node: ${node.label}`);
+        }
+        doExpandNode(nodeId, isExpanded);
+      },
+      [getNode, doExpandNode],
+    );
+
+    // render the tree
+    if (!rootNodes || !rootNodes.length) {
+      return "No data to display";
+    }
+    return <TreeRenderer {...state} expandNode={expandNode} rootNodes={rootNodes} />;
+  }
+  ```
+
+- [#802](https://github.com/iTwin/presentation/pull/802): Prefer `Symbol.dispose` over `dispose` for disposable objects.
+
+  The package contained a number of types for disposable objects, that had a requirement of `dispose` method being called on them after they are no longer needed. In conjunction with the `using` utility from `@itwin/core-bentley`, usage of such objects looked like this:
+
+  ```ts
+  class MyDisposable() {
+    dispose() {
+      // do some cleanup
+    }
+  }
+  using(new MyDisposable(), (obj) => {
+    // do something with obj, it'll get disposed when the callback returns
+  });
+  ```
+
+  In version `5.2`, TypeScript [introduced](https://www.typescriptlang.org/docs/handbook/release-notes/typescript-5-2.html#using-declarations-and-explicit-resource-management) `Disposable` type and `using` declarations (from the upcoming [Explicit Resource Management](https://github.com/tc39/proposal-explicit-resource-management) feature in ECMAScript). Now we're making use of those new utilities in this package (while still supporting the old `dispose` method), which allows using `MyDisposable` from the above snippet like this:
+
+  ```ts
+  using obj = new MyDisposable();
+  // do something with obj, it'll get disposed when it goes out of scope
+  ```
+
+### Patch Changes
+
+- Updated dependencies:
+  - @itwin/unified-selection@1.2.0
+  - @itwin/presentation-hierarchies@1.4.0
+
 ## 1.2.0
 
 ### Minor Changes

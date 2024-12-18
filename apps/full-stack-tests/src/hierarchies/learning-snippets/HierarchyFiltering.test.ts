@@ -15,6 +15,7 @@ import { createNodesQueryClauseFactory, GroupingHierarchyNode, HierarchyDefiniti
 import { ECSqlBinding } from "@itwin/presentation-shared";
 // __PUBLISH_EXTRACT_END__
 // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.HierarchyFiltering.FindPathsImports
+import { createIModelKey } from "@itwin/presentation-core-interop";
 import { HierarchyNodeIdentifiersPath } from "@itwin/presentation-hierarchies";
 import { ECSql, ECSqlQueryDef } from "@itwin/presentation-shared";
 // __PUBLISH_EXTRACT_END__
@@ -55,7 +56,7 @@ describe("Hierarchies", () => {
         const { imodel: _, ...elements } = res;
         imodel = res.imodel;
         elementKeys = Object.entries(elements).reduce(
-          (acc, [name, instanceKey]) => ({ ...acc, [name]: { ...instanceKey, imodelKey: imodel.key } }),
+          (acc, [name, instanceKey]) => ({ ...acc, [name]: { ...instanceKey, imodelKey: createIModelKey(imodel) } }),
           {} as { [name: string]: InstanceKey },
         );
         elementIds = Object.entries(elements).reduce((acc, [name, instanceKey]) => ({ ...acc, [name]: instanceKey.id }), {} as { [name: string]: Id64String });
@@ -165,7 +166,7 @@ describe("Hierarchies", () => {
           };
           const result: HierarchyNodeIdentifiersPath[] = [];
           for await (const row of imodelAccess.createQueryReader(query, { rowFormat: "ECSqlPropertyNames" })) {
-            result.push((JSON.parse(row.Path) as InstanceKey[]).reverse().map((key) => ({ ...key, imodelKey: imodel.key })));
+            result.push((JSON.parse(row.Path) as InstanceKey[]).reverse().map((key) => ({ ...key, imodelKey: createIModelKey(imodel) })));
           }
           return result;
         }
@@ -237,7 +238,7 @@ describe("Hierarchies", () => {
           };
           const result: HierarchyNodeIdentifiersPath[] = [];
           for await (const row of imodelAccess.createQueryReader(query, { rowFormat: "ECSqlPropertyNames" })) {
-            result.push((JSON.parse(row.Path) as InstanceKey[]).reverse().map((key) => ({ ...key, imodelKey: imodel.key })));
+            result.push((JSON.parse(row.Path) as InstanceKey[]).reverse().map((key) => ({ ...key, imodelKey: createIModelKey(imodel) })));
           }
           return result;
         }

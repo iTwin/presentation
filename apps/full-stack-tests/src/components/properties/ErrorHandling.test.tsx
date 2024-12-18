@@ -32,6 +32,8 @@ describe("Learning snippets", () => {
     });
 
     it("handles errors", async function () {
+      // stub console log to avoid ErrorBoundary warning in console
+      const consoleStub = sinon.stub(console, "error").callsFake(() => {});
       if (Number.parseInt(PresentationRpcInterface.interfaceVersion.split(".")[0], 10) < 4) {
         // property grid started supporting error boundaries since appui@4.0
         this.skip();
@@ -87,6 +89,7 @@ describe("Learning snippets", () => {
       // re-render the component, ensure we now get an error
       rerender(<MyPropertyGrid imodel={imodel} elementKey={{ ...elementKey }} />);
       await ensureHasError(container, "Network error");
+      consoleStub.restore();
     });
   });
 });

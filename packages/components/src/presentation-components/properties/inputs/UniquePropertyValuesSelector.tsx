@@ -35,7 +35,7 @@ export interface UniquePropertyValuesSelectorProps {
 export function UniquePropertyValuesSelector(props: UniquePropertyValuesSelectorProps) {
   const { imodel, descriptor, property, onChange, value, descriptorInputKeys, selectedClasses } = props;
   const [field, setField] = useState<Field | undefined>(() => findField(descriptor, getInstanceFilterFieldName(property)));
-  const [searchInput, setSearchInput] = useState<string>();
+  const [searchInput, setSearchInput] = useState<string>("");
   const selectedValues = useMemo(() => getUniqueValueFromProperty(value)?.map((val) => val.displayValue), [value]);
   const ruleset = useUniquePropertyValuesRuleset(descriptor.ruleset, field, descriptorInputKeys, selectedClasses);
   const { selectOptions, loadedOptions, isLoading } = useUniquePropertyValuesLoader({

@@ -19,11 +19,11 @@ describe("useUnifiedSelection", () => {
   const storage = createStorage();
   const imodelKey = "test-key";
   const source = "test-source";
-  const getNode = sinon.stub<[string], TreeModelNode | undefined>();
+  const getTreeModelNode = sinon.stub<[string], TreeModelNode | undefined>();
 
   const initialProps = {
     sourceName: source,
-    getNode,
+    getTreeModelNode,
   };
 
   function Wrapper(props: PropsWithChildren<{}>) {
@@ -32,7 +32,7 @@ describe("useUnifiedSelection", () => {
 
   beforeEach(() => {
     storage.clearStorage({ imodelKey });
-    getNode.reset();
+    getTreeModelNode.reset();
   });
 
   describe("isNodeSelected", () => {
@@ -51,7 +51,7 @@ describe("useUnifiedSelection", () => {
         selectables: [instanceKey],
       });
 
-      getNode.callsFake((id) => (id === "node-1" ? node : undefined));
+      getTreeModelNode.callsFake((id) => (id === "node-1" ? node : undefined));
 
       const { result } = renderHook(useUnifiedTreeSelection, { initialProps });
       expect(result.current.isNodeSelected("node-1")).to.be.false;
@@ -93,7 +93,7 @@ describe("useUnifiedSelection", () => {
         selectables: [selectedInstanceKey],
       });
 
-      getNode.callsFake((id) => nodes.find((node) => node.id === id));
+      getTreeModelNode.callsFake((id) => nodes.find((node) => node.id === id));
 
       const { result } = renderHook(useUnifiedTreeSelection, { initialProps, wrapper: Wrapper });
       expect(result.current.isNodeSelected("node-1")).to.be.true;
@@ -123,7 +123,7 @@ describe("useUnifiedSelection", () => {
         selectables: [{ identifier: "grouping-node", loadInstanceKeys: () => createAsyncIterator([selectedInstanceKey]), data: nodes[1] }],
       });
 
-      getNode.callsFake((id) => nodes.find((node) => node.id === id));
+      getTreeModelNode.callsFake((id) => nodes.find((node) => node.id === id));
 
       const { result } = renderHook(useUnifiedTreeSelection, { initialProps, wrapper: Wrapper });
       expect(result.current.isNodeSelected("node-1")).to.be.false;
@@ -150,7 +150,7 @@ describe("useUnifiedSelection", () => {
         result.current.selectNodes(["node-1"], "add");
       });
 
-      expect(getNode).to.not.be.called;
+      expect(getTreeModelNode).to.not.be.called;
     });
 
     it("adds instance node to selection", () => {
@@ -164,7 +164,7 @@ describe("useUnifiedSelection", () => {
       };
       const nodes = [createTreeModelNode({ id: "node-1", nodeData: createTestHierarchyNode({ id: "node-1", key: instancesNodesKey }) })];
 
-      getNode.callsFake((id) => nodes.find((node) => node.id === id));
+      getTreeModelNode.callsFake((id) => nodes.find((node) => node.id === id));
 
       const { result } = renderHook(useUnifiedTreeSelection, { initialProps, wrapper: Wrapper });
 
@@ -213,7 +213,7 @@ describe("useUnifiedSelection", () => {
       });
       const nodes = [createTreeModelNode({ id: "grouping-node", nodeData: groupingNode })];
 
-      getNode.callsFake((id) => nodes.find((node) => node.id === id));
+      getTreeModelNode.callsFake((id) => nodes.find((node) => node.id === id));
 
       const { result } = renderHook(useUnifiedTreeSelection, { initialProps, wrapper: Wrapper });
 
@@ -245,7 +245,7 @@ describe("useUnifiedSelection", () => {
     it("adds custom node to selection", async () => {
       const hierarchyNode = createTestHierarchyNode({ id: "custom-node" });
       const nodes = [createTreeModelNode({ id: "custom-node", nodeData: hierarchyNode })];
-      getNode.callsFake((id) => nodes.find((node) => node.id === id));
+      getTreeModelNode.callsFake((id) => nodes.find((node) => node.id === id));
 
       const { result } = renderHook(useUnifiedTreeSelection, { initialProps, wrapper: Wrapper });
 
@@ -274,7 +274,7 @@ describe("useUnifiedSelection", () => {
         ],
       };
       const nodes = [createTreeModelNode({ id: "node-1", nodeData: createTestHierarchyNode({ id: "node-1", key: instancesNodesKey }) })];
-      getNode.callsFake((id) => nodes.find((node) => node.id === id));
+      getTreeModelNode.callsFake((id) => nodes.find((node) => node.id === id));
 
       storage.addToSelection({ imodelKey, source, selectables: [instanceKey] });
       changeListener.reset();
@@ -325,7 +325,7 @@ describe("useUnifiedSelection", () => {
         ],
       });
       const nodes = [createTreeModelNode({ id: "grouping-node", nodeData: groupingNode })];
-      getNode.callsFake((id) => nodes.find((node) => node.id === id));
+      getTreeModelNode.callsFake((id) => nodes.find((node) => node.id === id));
 
       storage.addToSelection({
         imodelKey,
@@ -358,7 +358,7 @@ describe("useUnifiedSelection", () => {
     it("removes custom node from selection", async () => {
       const hierarchyNode = createTestHierarchyNode({ id: "custom-node" });
       const nodes = [createTreeModelNode({ id: "custom-node", nodeData: hierarchyNode })];
-      getNode.callsFake((id) => nodes.find((node) => node.id === id));
+      getTreeModelNode.callsFake((id) => nodes.find((node) => node.id === id));
 
       storage.addToSelection({
         imodelKey,
@@ -392,7 +392,7 @@ describe("useUnifiedSelection", () => {
       };
       const nodes = [createTreeModelNode({ id: "node-1", nodeData: createTestHierarchyNode({ id: "node-1", key: instancesNodesKey }) })];
 
-      getNode.callsFake((id) => nodes.find((node) => node.id === id));
+      getTreeModelNode.callsFake((id) => nodes.find((node) => node.id === id));
 
       const { result } = renderHook(useUnifiedTreeSelection, { initialProps, wrapper: Wrapper });
 

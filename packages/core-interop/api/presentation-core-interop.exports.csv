@@ -2,6 +2,7 @@ sep=;
 Release Tag;API Item Type;API Item Name
 public;function;createECSchemaProvider
 public;function;createECSqlQueryExecutor
+public;function;createIModelKey
 public;function;createLogger
 public;function;createValueFormatter
 public;function;registerTxnListeners

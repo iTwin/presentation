@@ -9,13 +9,18 @@
 import { join } from "path";
 import * as rimraf from "rimraf";
 import { IModelHost, IModelHostOptions } from "@itwin/core-backend";
-import { Guid } from "@itwin/core-bentley";
+import { Guid, Logger, LogLevel } from "@itwin/core-bentley";
 import { IModelReadRpcInterface, RpcConfiguration, RpcDefaultConfiguration, RpcInterfaceDefinition, SnapshotIModelRpcInterface } from "@itwin/core-common";
 import { IModelApp, IModelAppOptions, NoRenderApp } from "@itwin/core-frontend";
-import { HierarchyCacheMode, Presentation as PresentationBackend, PresentationManagerProps as PresentationBackendProps } from "@itwin/presentation-backend";
+import {
+  HierarchyCacheMode,
+  Presentation as PresentationBackend,
+  PresentationBackendNativeLoggerCategory,
+  PresentationManagerProps as PresentationBackendProps,
+} from "@itwin/presentation-backend";
 import { PresentationRpcInterface } from "@itwin/presentation-common";
 import { Presentation as PresentationFrontend, PresentationProps as PresentationFrontendProps } from "@itwin/presentation-frontend";
-import { setTestOutputDir } from "./FilenameUtils.js";
+import { getTestOutputDir, setTestOutputDir } from "./FilenameUtils.js";
 
 function initializeRpcInterfaces(interfaces: RpcInterfaceDefinition[]) {
   const config = class extends RpcDefaultConfiguration {
@@ -82,6 +87,12 @@ export const initialize = async (props?: PresentationTestingInitProps) => {
     props = {};
   }
 
+  Logger.initializeToConsole();
+  Logger.setLevelDefault(LogLevel.Warning);
+  Logger.setLevel("i18n", LogLevel.Error);
+  Logger.setLevel("SQLite", LogLevel.Error);
+  Logger.setLevel(PresentationBackendNativeLoggerCategory.ECObjects, LogLevel.Warning);
+
   // set up rpc interfaces
   initializeRpcInterfaces(props.rpcs ?? [SnapshotIModelRpcInterface, IModelReadRpcInterface, PresentationRpcInterface]);
 
@@ -93,8 +104,7 @@ export const initialize = async (props?: PresentationTestingInitProps) => {
     props.backendProps.id = `test-${Guid.createValue()}`; // eslint-disable-line @itwin/no-internal
   }
   await IModelHost.startup({
-    // @ts-ignore TS1343
-    cacheDir: join(typeof __dirname !== "undefined" ? __dirname : import.meta.url, ".cache", `${process.pid}`),
+    cacheDir: join(getTestOutputDir(), ".cache", `${process.pid}`),
     ...props.backendHostProps,
   });
   PresentationBackend.initialize(props.backendProps);
