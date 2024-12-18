@@ -625,10 +625,7 @@ describe("Hierarchies", () => {
           console.log(`- ${node.label}`);
         }
         // __PUBLISH_EXTRACT_END__
-        expect(consoleLogSpy.getCalls().map((call) => call.args[0])).to.deep.eq([
-          "- Grigas Petraitis",
-          "- Mark Twain",
-        ]);
+        expect(consoleLogSpy.getCalls().map((call) => call.args[0])).to.deep.eq(["- Grigas Petraitis", "- Mark Twain"]);
         consoleLogSpy.resetHistory();
 
         // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.CustomHierarchyProviders.HierarchyLevelFilteringProvider.Result2
@@ -675,9 +672,7 @@ describe("Hierarchies", () => {
           console.log(`- ${node.label}`);
         }
         // __PUBLISH_EXTRACT_END__
-        expect(consoleLogSpy.getCalls().map((call) => call.args[0])).to.deep.eq([
-          "- The Hobbit",
-        ]);
+        expect(consoleLogSpy.getCalls().map((call) => call.args[0])).to.deep.eq(["- The Hobbit"]);
       });
     });
   });
@@ -709,7 +704,11 @@ function createBooksService() {
     { key: "OL159642W", title: "Red storm rising", authorKey: "OL25277A" },
     { key: "OL449001W", title: "Executive orders", authorKey: "OL25277A" },
   ];
-  function filterEntries<TEntry>(entries: TEntry[], query: BooksServiceFilter<TEntry> | undefined, entryMatcher: (entry: TEntry, query: Partial<TEntry>) => boolean) {
+  function filterEntries<TEntry>(
+    entries: TEntry[],
+    query: BooksServiceFilter<TEntry> | undefined,
+    entryMatcher: (entry: TEntry, query: Partial<TEntry>) => boolean,
+  ) {
     function matchEntry(entry: TEntry, partialQuery?: BooksServiceFilter<TEntry>): boolean {
       return (
         !partialQuery ||
