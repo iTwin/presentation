@@ -1,5 +1,11 @@
 # Change Log - @itwin/presentation-testing
 
+## 5.2.1
+
+### Patch Changes
+
+- [#810](https://github.com/iTwin/presentation/pull/810): Fix the package not being usable in `cjs` builds due to usage of `import.meta`.
+
 ## 5.2.0
 
 ### Minor Changes
