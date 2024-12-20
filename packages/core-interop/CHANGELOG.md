@@ -1,5 +1,23 @@
 # @itwin/presentation-core-interop
 
+## 1.2.0
+
+### Minor Changes
+
+- [#814](https://github.com/iTwin/presentation/pull/814): Add a `createIModelKey` function to safely create an identifier for an `IModel` in different situations.
+
+  Example:
+
+  ```ts
+  import { IModelConnection } from "@itwin/core-frontend";
+  import { createIModelKey } from "@itwin/presentation-core-interop";
+
+  IModelConnection.onOpen.addListener((imodel: IModelConnection) => {
+    const key = createIModelKey(imodel);
+    console.log(`IModel opened: "${key}"`);
+  });
+  ```
+
 ## 1.1.2
 
 ### Patch Changes
