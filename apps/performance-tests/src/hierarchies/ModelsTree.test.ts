@@ -66,8 +66,7 @@ describe("models tree", () => {
       expect(filtering.paths.length).to.eq(50000);
       const provider = new StatelessHierarchyProvider({
         imodelAccess,
-        getHierarchyFactory: (imodelAccess: ECSchemaProvider & ECClassHierarchyInspector & ECSqlQueryExecutor) =>
-          new ModelsTreeDefinition({ imodelAccess, idsCache }),
+        getHierarchyFactory: () => new ModelsTreeDefinition({ imodelAccess, idsCache }),
         filtering,
       });
       const result = await provider.loadHierarchy({ depth: 2 });
