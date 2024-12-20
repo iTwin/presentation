@@ -31,6 +31,9 @@ import {
 // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.CustomHierarchyProviders.FilteringProviderImports
 import { createHierarchyFilteringHelper, GenericNodeKey, HierarchyFilteringPath, HierarchyNodeIdentifier } from "@itwin/presentation-hierarchies";
 // __PUBLISH_EXTRACT_END__
+// __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.CustomHierarchyProviders.HierarchyLevelFilteringProviderImports
+import { GenericInstanceFilter, GenericInstanceFilterRule, GenericInstanceFilterRuleGroup } from "@itwin/core-common";
+// __PUBLISH_EXTRACT_END__
 import { buildIModel } from "../../IModelUtils.js";
 import { initialize, terminate } from "../../IntegrationTests.js";
 
@@ -268,6 +271,7 @@ describe("Hierarchies", () => {
         //   The Hobbit
         //   The Fellowship of Ring
         //   The two towers
+        // Grigas Petraitis
         // Mark Twain
         //   Adventures of Huckleberry Finn
         //   The Adventures of Tom Sawyer
@@ -282,6 +286,7 @@ describe("Hierarchies", () => {
           "  The Hobbit",
           "  The Fellowship of Ring",
           "  The two towers",
+          "Grigas Petraitis",
           "Mark Twain",
           "  Adventures of Huckleberry Finn",
           "  The Adventures of Tom Sawyer",
@@ -484,7 +489,6 @@ describe("Hierarchies", () => {
         //   Adventures of Huckleberry Finn
         //   The Adventures of Tom Sawyer
         // __PUBLISH_EXTRACT_END__
-
         expect(consoleLogSpy.getCalls().map((call) => call.args[0])).to.deep.eq([
           "J.R.R. Tolkien",
           "  The Fellowship of Ring",
@@ -507,7 +511,6 @@ describe("Hierarchies", () => {
         //   Red storm rising
         //   Executive orders
         // __PUBLISH_EXTRACT_END__
-
         expect(consoleLogSpy.getCalls().map((call) => call.args[0])).to.deep.eq([
           "Mark Twain",
           "  The Adventures of Tom Sawyer",
@@ -517,17 +520,175 @@ describe("Hierarchies", () => {
           "  Executive orders",
         ]);
       });
+
+      it("creates provider with hierarchy level filtering support", async function () {
+        const consoleLogSpy = sinon.stub(console, "log");
+        const booksService = createBooksService();
+
+        // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.CustomHierarchyProviders.HierarchyLevelFilteringProvider.Filter
+        // A function that creates a books service - specific filter, based on the given parent node and children filters
+        function createBooksServiceFilter(parentNodeFilter: Record<string, unknown> | undefined, genericChildrenFilter: GenericInstanceFilter | undefined) {
+          function createRuleFilter(rule: GenericInstanceFilterRule): Record<string, unknown> {
+            // note: this is a very simplistic implementation that doesn't support different operators, value types, etc.
+            return { [rule.propertyName]: rule.value?.rawValue ?? "" };
+          }
+          function createGroupFilter(group: GenericInstanceFilterRuleGroup): BooksServiceFilter<Record<string, unknown>> {
+            return {
+              operator: group.operator,
+              rules: group.rules.map(createRuleOrGroupFilter),
+            };
+          }
+          function createRuleOrGroupFilter(ruleOrGroup: GenericInstanceFilter["rules"]): BooksServiceFilter<Record<string, unknown>> {
+            return GenericInstanceFilter.isFilterRuleGroup(ruleOrGroup) ? createGroupFilter(ruleOrGroup) : createRuleFilter(ruleOrGroup);
+          }
+          const childrenFilter = genericChildrenFilter ? createRuleOrGroupFilter(genericChildrenFilter.rules) : undefined;
+          if (parentNodeFilter && childrenFilter) {
+            return { rules: [parentNodeFilter, childrenFilter], operator: "and" };
+          }
+          return parentNodeFilter ?? childrenFilter ?? undefined;
+        }
+        // __PUBLISH_EXTRACT_END__
+
+        // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.CustomHierarchyProviders.HierarchyLevelFilteringProvider.Provider
+        const provider: HierarchyProvider = {
+          async *getNodes({ parentNode, instanceFilter }) {
+            if (!parentNode) {
+              // For root nodes, query authors and return nodes based on them
+              const authors = await booksService.getAuthors(createBooksServiceFilter(undefined, instanceFilter));
+              for (const author of authors) {
+                const nodeKey: GenericNodeKey = { type: "generic", id: `author:${author.key}` };
+                yield {
+                  key: nodeKey,
+                  label: author.name,
+                  children: author.hasBooks,
+                  parentKeys: [],
+                  // whoever renders the nodes, it should know that this node supports children filtering
+                  supportsFiltering: true,
+                };
+              }
+            } else if (HierarchyNode.isGeneric(parentNode) && parentNode.key.id.startsWith("author:")) {
+              // For author parent node, query books and return nodes based on them
+              const books = await booksService.getBooks(createBooksServiceFilter({ authorKey: parentNode.key.id.slice(7) }, instanceFilter));
+              for (const book of books) {
+                const nodeKey: GenericNodeKey = { type: "generic", id: `book:${book.key}` };
+                yield {
+                  key: nodeKey,
+                  label: book.title,
+                  children: false,
+                  parentKeys: [...parentNode.parentKeys, parentNode.key],
+                };
+              }
+            }
+          },
+          setHierarchyFilter() {},
+          async *getNodeInstanceKeys() {},
+          setFormatter() {},
+          hierarchyChanged: new BeEvent(),
+        };
+        // __PUBLISH_EXTRACT_END__
+
+        // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.CustomHierarchyProviders.HierarchyLevelFilteringProvider.Result1
+        // Create a filter to find authors that have "Mark" substring in their name or have no books.
+        const createAuthorsFilter = (): GenericInstanceFilter => ({
+          propertyClassNames: ["author"],
+          relatedInstances: [],
+          rules: {
+            operator: "or",
+            rules: [
+              {
+                propertyName: "name",
+                operator: "like",
+                propertyTypeName: "string",
+                sourceAlias: "",
+                value: {
+                  displayValue: "Mark",
+                  rawValue: "Mark",
+                },
+              },
+              {
+                propertyName: "hasBooks",
+                operator: "is-equal",
+                propertyTypeName: "boolean",
+                sourceAlias: "",
+                value: {
+                  displayValue: "False",
+                  rawValue: false,
+                },
+              },
+            ],
+          },
+        });
+        // Print the hierarchy level. Output:
+        // - Grigas Petraitis
+        // - Mark Twain
+        for await (const node of provider.getNodes({ parentNode: undefined, instanceFilter: createAuthorsFilter() })) {
+          console.log(`- ${node.label}`);
+        }
+        // __PUBLISH_EXTRACT_END__
+        expect(consoleLogSpy.getCalls().map((call) => call.args[0])).to.deep.eq(["- Grigas Petraitis", "- Mark Twain"]);
+        consoleLogSpy.resetHistory();
+
+        // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.CustomHierarchyProviders.HierarchyLevelFilteringProvider.Result2
+        // Create a filter to find books whose key contains "OL274" substring and title contains "Hobbit".
+        const createBooksFilter = (): GenericInstanceFilter => ({
+          propertyClassNames: ["book"],
+          relatedInstances: [],
+          rules: {
+            operator: "and",
+            rules: [
+              {
+                propertyName: "key",
+                operator: "like",
+                propertyTypeName: "string",
+                sourceAlias: "",
+                value: {
+                  displayValue: "OL274",
+                  rawValue: "OL274",
+                },
+              },
+              {
+                propertyName: "title",
+                operator: "like",
+                propertyTypeName: "string",
+                sourceAlias: "",
+                value: {
+                  displayValue: "Hobbit",
+                  rawValue: "Hobbit",
+                },
+              },
+            ],
+          },
+        });
+        // Print child hierarchy level for "J.R.R. Tolkien" author parent node. Output:
+        // - The Hobbit
+        for await (const node of provider.getNodes({
+          parentNode: {
+            key: { type: "generic" as const, id: "author:OL26320A" },
+            label: "J.R.R. Tolkien",
+            parentKeys: [],
+          },
+          instanceFilter: createBooksFilter(),
+        })) {
+          console.log(`- ${node.label}`);
+        }
+        // __PUBLISH_EXTRACT_END__
+        expect(consoleLogSpy.getCalls().map((call) => call.args[0])).to.deep.eq(["- The Hobbit"]);
+      });
     });
   });
 });
 
 // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.CustomHierarchyProviders.BooksService
+// Define a type for a filter that can be applied to books service queries.
+type BooksServiceFilter<TEntry> = { rules: (Partial<TEntry> | BooksServiceFilter<TEntry>)[]; operator: "and" | "or" } | Partial<TEntry>;
+
 // Creates a books service that provides authors and books data. The service has two methods:
 // - `getAuthors` - returns authors based on the provided query.
 // - `getBooks` - returns books based on the provided query.
 function createBooksService() {
   const authors = [
     { key: "OL26320A", name: "J.R.R. Tolkien", hasBooks: true },
+    { key: "GP00000X", name: "Grigas Petraitis", hasBooks: false },
     { key: "OL18319A", name: "Mark Twain", hasBooks: true },
     { key: "OL25277A", name: "Tom Clancy", hasBooks: true },
   ];
@@ -543,9 +704,12 @@ function createBooksService() {
     { key: "OL159642W", title: "Red storm rising", authorKey: "OL25277A" },
     { key: "OL449001W", title: "Executive orders", authorKey: "OL25277A" },
   ];
-  type Query<TEntry> = { rules: (Partial<TEntry> | Query<TEntry>)[]; operator: "and" | "or" } | Partial<TEntry>;
-  function filterEntries<TEntry>(entries: TEntry[], query: Query<TEntry> | undefined, entryMatcher: (entry: TEntry, query: Partial<TEntry>) => boolean) {
-    function matchEntry(entry: TEntry, partialQuery?: Query<TEntry>): boolean {
+  function filterEntries<TEntry>(
+    entries: TEntry[],
+    query: BooksServiceFilter<TEntry> | undefined,
+    entryMatcher: (entry: TEntry, query: Partial<TEntry>) => boolean,
+  ) {
+    function matchEntry(entry: TEntry, partialQuery?: BooksServiceFilter<TEntry>): boolean {
       return (
         !partialQuery ||
         ("rules" in partialQuery
@@ -555,9 +719,9 @@ function createBooksService() {
     }
     return entries.filter((entry) => matchEntry(entry, query));
   }
-  async function getAuthors(query?: Query<(typeof authors)[0]>) {
+  async function getAuthors(query?: BooksServiceFilter<(typeof authors)[0]>) {
     return filterEntries(authors, query, (entry, { key, name, hasBooks }) => {
-      if (key && entry.key !== key) {
+      if (key && !entry.key.toLocaleLowerCase().includes(key.toLocaleLowerCase())) {
         return false;
       }
       if (name && !entry.name.toLocaleLowerCase().includes(name.toLocaleLowerCase())) {
@@ -569,15 +733,15 @@ function createBooksService() {
       return true;
     });
   }
-  async function getBooks(query?: Query<(typeof books)[0]>) {
+  async function getBooks(query?: BooksServiceFilter<(typeof books)[0]>) {
     return filterEntries(books, query, (entry, { key, authorKey, title }) => {
-      if (key && entry.key !== key) {
+      if (key && !entry.key.toLocaleLowerCase().includes(key.toLocaleLowerCase())) {
         return false;
       }
       if (title && !entry.title.toLocaleLowerCase().includes(title.toLocaleLowerCase())) {
         return false;
       }
-      if (authorKey && entry.authorKey !== authorKey) {
+      if (authorKey && !entry.authorKey.toLocaleLowerCase().includes(authorKey.toLocaleLowerCase())) {
         return false;
       }
       return true;

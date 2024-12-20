@@ -42,7 +42,7 @@ const provider: HierarchyProvider = {
 
 ## iModel-based hierarchy provider example
 
-`@itwin/presentation-hierarchies` package provides the `createIModelHierarchyProvider` function to create a hierarchy provider that fetches nodes from an iModel. The provider has many advanced features like running multiple queries in parallel, grouping, caching an more.
+`@itwin/presentation-hierarchies` package provides the `createIModelHierarchyProvider` function to create a hierarchy provider that fetches nodes from an iModel. The provider has many advanced features like running multiple queries in parallel, grouping, caching an more. See more details about it in the [iModel-based hierarchy provider](./imodel/HierarchyProvider.md) learning page.
 
 However, it's possible to write one from scratch. The following example demonstrates how to create a simple iModel-based hierarchy provider:
 
@@ -176,12 +176,16 @@ First, let's define a sample books service:
 <!-- BEGIN EXTRACTION -->
 
 ```ts
+// Define a type for a filter that can be applied to books service queries.
+type BooksServiceFilter<TEntry> = { rules: (Partial<TEntry> | BooksServiceFilter<TEntry>)[]; operator: "and" | "or" } | Partial<TEntry>;
+
 // Creates a books service that provides authors and books data. The service has two methods:
 // - `getAuthors` - returns authors based on the provided query.
 // - `getBooks` - returns books based on the provided query.
 function createBooksService() {
   const authors = [
     { key: "OL26320A", name: "J.R.R. Tolkien", hasBooks: true },
+    { key: "GP00000X", name: "Grigas Petraitis", hasBooks: false },
     { key: "OL18319A", name: "Mark Twain", hasBooks: true },
     { key: "OL25277A", name: "Tom Clancy", hasBooks: true },
   ];
@@ -197,9 +201,12 @@ function createBooksService() {
     { key: "OL159642W", title: "Red storm rising", authorKey: "OL25277A" },
     { key: "OL449001W", title: "Executive orders", authorKey: "OL25277A" },
   ];
-  type Query<TEntry> = { rules: (Partial<TEntry> | Query<TEntry>)[]; operator: "and" | "or" } | Partial<TEntry>;
-  function filterEntries<TEntry>(entries: TEntry[], query: Query<TEntry> | undefined, entryMatcher: (entry: TEntry, query: Partial<TEntry>) => boolean) {
-    function matchEntry(entry: TEntry, partialQuery?: Query<TEntry>): boolean {
+  function filterEntries<TEntry>(
+    entries: TEntry[],
+    query: BooksServiceFilter<TEntry> | undefined,
+    entryMatcher: (entry: TEntry, query: Partial<TEntry>) => boolean,
+  ) {
+    function matchEntry(entry: TEntry, partialQuery?: BooksServiceFilter<TEntry>): boolean {
       return (
         !partialQuery ||
         ("rules" in partialQuery
@@ -209,9 +216,9 @@ function createBooksService() {
     }
     return entries.filter((entry) => matchEntry(entry, query));
   }
-  async function getAuthors(query?: Query<(typeof authors)[0]>) {
+  async function getAuthors(query?: BooksServiceFilter<(typeof authors)[0]>) {
     return filterEntries(authors, query, (entry, { key, name, hasBooks }) => {
-      if (key && entry.key !== key) {
+      if (key && !entry.key.toLocaleLowerCase().includes(key.toLocaleLowerCase())) {
         return false;
       }
       if (name && !entry.name.toLocaleLowerCase().includes(name.toLocaleLowerCase())) {
@@ -223,15 +230,15 @@ function createBooksService() {
       return true;
     });
   }
-  async function getBooks(query?: Query<(typeof books)[0]>) {
+  async function getBooks(query?: BooksServiceFilter<(typeof books)[0]>) {
     return filterEntries(books, query, (entry, { key, authorKey, title }) => {
-      if (key && entry.key !== key) {
+      if (key && !entry.key.toLocaleLowerCase().includes(key.toLocaleLowerCase())) {
         return false;
       }
       if (title && !entry.title.toLocaleLowerCase().includes(title.toLocaleLowerCase())) {
         return false;
       }
-      if (authorKey && entry.authorKey !== authorKey) {
+      if (authorKey && !entry.authorKey.toLocaleLowerCase().includes(authorKey.toLocaleLowerCase())) {
         return false;
       }
       return true;
@@ -295,6 +302,7 @@ await traverseHierarchy(provider);
 //   The Hobbit
 //   The Fellowship of Ring
 //   The two towers
+// Grigas Petraitis
 // Mark Twain
 //   Adventures of Huckleberry Finn
 //   The Adventures of Tom Sawyer
@@ -307,6 +315,8 @@ await traverseHierarchy(provider);
 <!-- END EXTRACTION -->
 
 ## Implementing node label formatting support
+
+> See more details about formatting in the [Formatting](./Formatting.md.md) learning page.
 
 While node labels' formatting is completely hierarchy provider's responsibility, the APIs are built to make it easy to implement:
 
@@ -412,6 +422,8 @@ console.log((await provider.getNodes().next()).value.label);
 <!-- END EXTRACTION -->
 
 ## Implementing hierarchy filtering support
+
+> See more details about hierarchy filtering in the [Hierarchy filtering](./HierarchyFiltering.md) learning page.
 
 For this example, let's use the books service defined in the [3rd party service-based hierarchy provider example](#3rd-party-service-based-hierarchy-provider-example) section and enhance the provider to support hierarchy filtering.
 
@@ -570,6 +582,192 @@ await traverseHierarchy(provider);
 //   The hunt for Red October
 //   Red storm rising
 //   Executive orders
+```
+
+<!-- END EXTRACTION -->
+
+## Implementing hierarchy level filtering support
+
+> See more details about hierarchy level filtering in the [Hierarchy level filtering](./HierarchyLevelFiltering.md) learning page.
+
+For this example, let's use the books service defined in the [3rd party service-based hierarchy provider example](#3rd-party-service-based-hierarchy-provider-example) section and enhance the provider to support hierarchy level filtering.
+
+Hierarchy level filters are defined using the `GenericInstanceFilter` data structure, which is data source-agnostic. The first step would be to implement a converter that converts the generic filter to a filter that the data source understands:
+
+<!-- [[include: [Presentation.Hierarchies.CustomHierarchyProviders.HierarchyLevelFilteringProviderImports, Presentation.Hierarchies.CustomHierarchyProviders.HierarchyLevelFilteringProvider.Filter], ts]] -->
+<!-- BEGIN EXTRACTION -->
+
+```ts
+import { GenericInstanceFilter, GenericInstanceFilterRule, GenericInstanceFilterRuleGroup } from "@itwin/core-common";
+
+// A function that creates a books service - specific filter, based on the given parent node and children filters
+function createBooksServiceFilter(parentNodeFilter: Record<string, unknown> | undefined, genericChildrenFilter: GenericInstanceFilter | undefined) {
+  function createRuleFilter(rule: GenericInstanceFilterRule): Record<string, unknown> {
+    // note: this is a very simplistic implementation that doesn't support different operators, value types, etc.
+    return { [rule.propertyName]: rule.value?.rawValue ?? "" };
+  }
+  function createGroupFilter(group: GenericInstanceFilterRuleGroup): BooksServiceFilter<Record<string, unknown>> {
+    return {
+      operator: group.operator,
+      rules: group.rules.map(createRuleOrGroupFilter),
+    };
+  }
+  function createRuleOrGroupFilter(ruleOrGroup: GenericInstanceFilter["rules"]): BooksServiceFilter<Record<string, unknown>> {
+    return GenericInstanceFilter.isFilterRuleGroup(ruleOrGroup) ? createGroupFilter(ruleOrGroup) : createRuleFilter(ruleOrGroup);
+  }
+  const childrenFilter = genericChildrenFilter ? createRuleOrGroupFilter(genericChildrenFilter.rules) : undefined;
+  if (parentNodeFilter && childrenFilter) {
+    return { rules: [parentNodeFilter, childrenFilter], operator: "and" };
+  }
+  return parentNodeFilter ?? childrenFilter ?? undefined;
+}
+```
+
+<!-- END EXTRACTION -->
+
+Now, the provider can be enhanced to support hierarchy level filtering. Two changes are required on top of the original provider implementation:
+
+1. Root nodes (authors) specify that they support filtering.
+2. The filter passed to provider's `getNodes` method is passed to the data source.
+
+Here's how the final provider looks like:
+
+<!-- [[include: [Presentation.Hierarchies.CustomHierarchyProviders.Imports, Presentation.Hierarchies.CustomHierarchyProviders.HierarchyLevelFilteringProvider.Provider], ts]] -->
+<!-- BEGIN EXTRACTION -->
+
+```ts
+import { BeEvent } from "@itwin/core-bentley";
+import { HierarchyNode, HierarchyProvider } from "@itwin/presentation-hierarchies";
+import { Props } from "@itwin/presentation-shared";
+
+const provider: HierarchyProvider = {
+  async *getNodes({ parentNode, instanceFilter }) {
+    if (!parentNode) {
+      // For root nodes, query authors and return nodes based on them
+      const authors = await booksService.getAuthors(createBooksServiceFilter(undefined, instanceFilter));
+      for (const author of authors) {
+        const nodeKey: GenericNodeKey = { type: "generic", id: `author:${author.key}` };
+        yield {
+          key: nodeKey,
+          label: author.name,
+          children: author.hasBooks,
+          parentKeys: [],
+          // whoever renders the nodes, it should know that this node supports children filtering
+          supportsFiltering: true,
+        };
+      }
+    } else if (HierarchyNode.isGeneric(parentNode) && parentNode.key.id.startsWith("author:")) {
+      // For author parent node, query books and return nodes based on them
+      const books = await booksService.getBooks(createBooksServiceFilter({ authorKey: parentNode.key.id.slice(7) }, instanceFilter));
+      for (const book of books) {
+        const nodeKey: GenericNodeKey = { type: "generic", id: `book:${book.key}` };
+        yield {
+          key: nodeKey,
+          label: book.title,
+          children: false,
+          parentKeys: [...parentNode.parentKeys, parentNode.key],
+        };
+      }
+    }
+  },
+  setHierarchyFilter() {},
+  async *getNodeInstanceKeys() {},
+  setFormatter() {},
+  hierarchyChanged: new BeEvent(),
+};
+```
+
+<!-- END EXTRACTION -->
+
+With the above, we can now request filtered nodes from the provider.
+
+As mentioned earlier, the filter is defined as a `GenericInstanceFilter` data structure. In real world scenarios, the component that renders the hierarchy would request metadata from the data source to know what properties are available for filtering. The component would then render some kind of filter building component to allow user define the filter. Finally, the component would pass the filter to the provider.
+
+For this example, we just create a filter manually.
+
+<!-- [[include: [Presentation.Hierarchies.CustomHierarchyProviders.HierarchyLevelFilteringProvider.Result1, Presentation.Hierarchies.CustomHierarchyProviders.HierarchyLevelFilteringProvider.Result2], ts]] -->
+<!-- BEGIN EXTRACTION -->
+
+```ts
+// Create a filter to find authors that have "Mark" substring in their name or have no books.
+const createAuthorsFilter = (): GenericInstanceFilter => ({
+  propertyClassNames: ["author"],
+  relatedInstances: [],
+  rules: {
+    operator: "or",
+    rules: [
+      {
+        propertyName: "name",
+        operator: "like",
+        propertyTypeName: "string",
+        sourceAlias: "",
+        value: {
+          displayValue: "Mark",
+          rawValue: "Mark",
+        },
+      },
+      {
+        propertyName: "hasBooks",
+        operator: "is-equal",
+        propertyTypeName: "boolean",
+        sourceAlias: "",
+        value: {
+          displayValue: "False",
+          rawValue: false,
+        },
+      },
+    ],
+  },
+});
+// Print the hierarchy level. Output:
+// - Grigas Petraitis
+// - Mark Twain
+for await (const node of provider.getNodes({ parentNode: undefined, instanceFilter: createAuthorsFilter() })) {
+  console.log(`- ${node.label}`);
+}
+
+// Create a filter to find books whose key contains "OL274" substring and title contains "Hobbit".
+const createBooksFilter = (): GenericInstanceFilter => ({
+  propertyClassNames: ["book"],
+  relatedInstances: [],
+  rules: {
+    operator: "and",
+    rules: [
+      {
+        propertyName: "key",
+        operator: "like",
+        propertyTypeName: "string",
+        sourceAlias: "",
+        value: {
+          displayValue: "OL274",
+          rawValue: "OL274",
+        },
+      },
+      {
+        propertyName: "title",
+        operator: "like",
+        propertyTypeName: "string",
+        sourceAlias: "",
+        value: {
+          displayValue: "Hobbit",
+          rawValue: "Hobbit",
+        },
+      },
+    ],
+  },
+});
+// Print child hierarchy level for "J.R.R. Tolkien" author parent node. Output:
+// - The Hobbit
+for await (const node of provider.getNodes({
+  parentNode: {
+    key: { type: "generic" as const, id: "author:OL26320A" },
+    label: "J.R.R. Tolkien",
+    parentKeys: [],
+  },
+  instanceFilter: createBooksFilter(),
+})) {
+  console.log(`- ${node.label}`);
+}
 ```
 
 <!-- END EXTRACTION -->
