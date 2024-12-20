@@ -12,8 +12,7 @@ import { run } from "../util/TestUtilities";
 import { IModelAccess, StatelessHierarchyProvider } from "./StatelessHierarchyProvider";
 
 describe("models tree", () => {
-  const getHierarchyFactory = (imodelAccess: ECSchemaProvider & ECClassHierarchyInspector & ECSqlQueryExecutor, idsCache?: ModelsTreeIdsCache) =>
-    new ModelsTreeDefinition({ imodelAccess, idsCache });
+  const getHierarchyFactory = (imodelAccess: ECSchemaProvider & ECClassHierarchyInspector & ECSqlQueryExecutor) => new ModelsTreeDefinition({ imodelAccess });
   const setup = () => SnapshotDb.openFile(Datasets.getIModelPath("baytown"));
   const cleanup = (iModel: IModelDb) => iModel.close();
 
@@ -65,7 +64,12 @@ describe("models tree", () => {
         }),
       };
       expect(filtering.paths.length).to.eq(50000);
-      const provider = new StatelessHierarchyProvider({ imodelAccess, getHierarchyFactory, filtering, idsCache });
+      const provider = new StatelessHierarchyProvider({
+        imodelAccess,
+        getHierarchyFactory: (imodelAccess: ECSchemaProvider & ECClassHierarchyInspector & ECSqlQueryExecutor) =>
+          new ModelsTreeDefinition({ imodelAccess, idsCache }),
+        filtering,
+      });
       const result = await provider.loadHierarchy({ depth: 2 });
       expect(result).to.eq(2);
     },

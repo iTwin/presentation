@@ -16,7 +16,6 @@ import {
   HierarchyNode,
   HierarchyProvider,
 } from "@itwin/presentation-hierarchies";
-import { ModelsTreeIdsCache } from "@itwin/presentation-models-tree";
 import {
   createCachingECClassHierarchyInspector,
   EC,
@@ -30,11 +29,10 @@ import { LOGGER } from "../util/Logging";
 
 interface ProviderOptionsBase {
   rowLimit?: number | "unbounded";
-  getHierarchyFactory(imodelAccess: ECSchemaProvider & ECClassHierarchyInspector, idsCache?: ModelsTreeIdsCache): HierarchyDefinition;
+  getHierarchyFactory(imodelAccess: ECSchemaProvider & ECClassHierarchyInspector): HierarchyDefinition;
   filtering?: {
     paths: HierarchyFilteringPath[];
   };
-  idsCache?: ModelsTreeIdsCache;
 }
 type ProviderOptionsWithIModel = { iModel: IModelDb } & ProviderOptionsBase;
 
@@ -109,7 +107,7 @@ export class StatelessHierarchyProvider {
       "iModel" in this._props ? StatelessHierarchyProvider.createIModelAccess(this._props.iModel, this._props.rowLimit) : this._props.imodelAccess;
     return createIModelHierarchyProvider({
       imodelAccess,
-      hierarchyDefinition: this._props.getHierarchyFactory(imodelAccess, this._props.idsCache),
+      hierarchyDefinition: this._props.getHierarchyFactory(imodelAccess),
       queryCacheSize: 0,
       filtering: this._props.filtering,
     });
