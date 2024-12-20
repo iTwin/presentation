@@ -3,6 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
+import { asyncScheduler, expand, filter, finalize, from, observeOn, of, tap } from "rxjs";
 import { IModelDb } from "@itwin/core-backend";
 import { BeDuration } from "@itwin/core-bentley";
 import { Schema, SchemaContext, SchemaJsonLocater, SchemaKey, SchemaMatchType, SchemaPropsGetter } from "@itwin/ecschema-metadata";
@@ -15,6 +16,7 @@ import {
   HierarchyNode,
   HierarchyProvider,
 } from "@itwin/presentation-hierarchies";
+import { ModelsTreeIdsCache } from "@itwin/presentation-models-tree";
 import {
   createCachingECClassHierarchyInspector,
   EC,
@@ -24,15 +26,15 @@ import {
   ECSqlQueryExecutor,
   ECSqlQueryReaderOptions,
 } from "@itwin/presentation-shared";
-import { asyncScheduler, expand, filter, finalize, from, observeOn, of, tap } from "rxjs";
 import { LOGGER } from "../util/Logging";
 
 interface ProviderOptionsBase {
   rowLimit?: number | "unbounded";
-  getHierarchyFactory(imodelAccess: ECSchemaProvider & ECClassHierarchyInspector): HierarchyDefinition;
+  getHierarchyFactory(imodelAccess: ECSchemaProvider & ECClassHierarchyInspector, idsCache?: ModelsTreeIdsCache): HierarchyDefinition;
   filtering?: {
     paths: HierarchyFilteringPath[];
   };
+  idsCache?: ModelsTreeIdsCache;
 }
 type ProviderOptionsWithIModel = { iModel: IModelDb } & ProviderOptionsBase;
 
@@ -107,7 +109,7 @@ export class StatelessHierarchyProvider {
       "iModel" in this._props ? StatelessHierarchyProvider.createIModelAccess(this._props.iModel, this._props.rowLimit) : this._props.imodelAccess;
     return createIModelHierarchyProvider({
       imodelAccess,
-      hierarchyDefinition: this._props.getHierarchyFactory(imodelAccess),
+      hierarchyDefinition: this._props.getHierarchyFactory(imodelAccess, this._props.idsCache),
       queryCacheSize: 0,
       filtering: this._props.filtering,
     });

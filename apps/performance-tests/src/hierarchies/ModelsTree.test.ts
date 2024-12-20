@@ -3,16 +3,17 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { IModelDb, SnapshotDb } from "@itwin/core-backend";
-import { ModelsTreeDefinition } from "@itwin/presentation-models-tree";
-import { ECClassHierarchyInspector, ECSchemaProvider, ECSqlQueryDef, ECSqlQueryExecutor, InstanceKey } from "@itwin/presentation-shared";
 import { expect } from "chai";
+import { IModelDb, SnapshotDb } from "@itwin/core-backend";
+import { defaultHierarchyConfiguration, ModelsTreeDefinition, ModelsTreeIdsCache } from "@itwin/presentation-models-tree";
+import { ECClassHierarchyInspector, ECSchemaProvider, ECSqlQueryDef, ECSqlQueryExecutor, InstanceKey } from "@itwin/presentation-shared";
 import { Datasets } from "../util/Datasets";
 import { run } from "../util/TestUtilities";
 import { IModelAccess, StatelessHierarchyProvider } from "./StatelessHierarchyProvider";
 
 describe("models tree", () => {
-  const getHierarchyFactory = (imodelAccess: ECSchemaProvider & ECClassHierarchyInspector & ECSqlQueryExecutor) => new ModelsTreeDefinition({ imodelAccess });
+  const getHierarchyFactory = (imodelAccess: ECSchemaProvider & ECClassHierarchyInspector & ECSqlQueryExecutor, idsCache?: ModelsTreeIdsCache) =>
+    new ModelsTreeDefinition({ imodelAccess, idsCache });
   const setup = () => SnapshotDb.openFile(Datasets.getIModelPath("baytown"));
   const cleanup = (iModel: IModelDb) => iModel.close();
 
@@ -54,9 +55,17 @@ describe("models tree", () => {
     },
     cleanup: (props) => props.iModel.close(),
     test: async ({ imodelAccess, targetItems }) => {
-      const filtering = { paths: await ModelsTreeDefinition.createInstanceKeyPaths({ imodelAccess, limit: "unbounded", targetItems }) };
+      const idsCache = new ModelsTreeIdsCache(imodelAccess, defaultHierarchyConfiguration);
+      const filtering = {
+        paths: await ModelsTreeDefinition.createInstanceKeyPaths({
+          imodelAccess,
+          limit: "unbounded",
+          targetItems,
+          idsCache,
+        }),
+      };
       expect(filtering.paths.length).to.eq(50000);
-      const provider = new StatelessHierarchyProvider({ imodelAccess, getHierarchyFactory, filtering });
+      const provider = new StatelessHierarchyProvider({ imodelAccess, getHierarchyFactory, filtering, idsCache });
       const result = await provider.loadHierarchy({ depth: 2 });
       expect(result).to.eq(2);
     },
