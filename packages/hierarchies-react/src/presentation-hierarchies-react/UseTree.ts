@@ -191,6 +191,8 @@ function useTreeInternal({
   useEffect(() => {
     const provider = getHierarchyProvider();
     provider.setFormatter(currentFormatter.current);
+    // load initial tree nodes
+    actions.reloadTree({ state: "keep" });
     const removeHierarchyChangedListener = provider.hierarchyChanged.addListener((hierarchyChangeArgs) => {
       const shouldDiscardState = hierarchyChangeArgs?.filterChange?.newFilter !== undefined;
       actions.reloadTree({ state: shouldDiscardState ? "discard" : "keep" });
