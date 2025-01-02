@@ -231,6 +231,15 @@ describe("usePresentationInstanceFilteringProps", () => {
     label: "ConcreteField2",
     category,
   });
+  const concretePropertiesField = createTestPropertiesContentField({
+    properties: [
+      { property: { classInfo: concreteClass1, name: "concreteProp", type: "string" } },
+      { property: { classInfo: concreteClass2, name: "concreteProp", type: "string" } },
+    ],
+    name: "concreteField",
+    label: "ConcreteField",
+    category,
+  });
   const derivedPropertiesField = createTestPropertiesContentField({
     properties: [{ property: { classInfo: derivedClass, name: "derivedProp", type: "string" } }],
     name: "derivedField",
@@ -243,7 +252,7 @@ describe("usePresentationInstanceFilteringProps", () => {
       { selectClassInfo: concreteClass2, isSelectPolymorphic: false },
     ],
     categories: [category],
-    fields: [basePropertiesField, concretePropertiesField1, concretePropertiesField2, derivedPropertiesField],
+    fields: [basePropertiesField, concretePropertiesField1, concretePropertiesField2, concretePropertiesField, derivedPropertiesField],
   });
 
   const onCloseEvent = new BeEvent<() => void>();
@@ -407,6 +416,17 @@ describe("usePresentationInstanceFilteringProps", () => {
       const { result } = renderHook((props: HookProps) => usePresentationInstanceFilteringProps(props.descriptor, props.imodel), { initialProps });
 
       const property = result.current.properties.find((prop) => prop.displayLabel === basePropertiesField.label) as PropertyDescription;
+
+      act(() => {
+        result.current.onRulePropertySelected(property);
+      });
+      await waitFor(() => expect(result.current.selectedClasses).to.have.lengthOf(2).and.containSubset([concreteClass1, concreteClass2]));
+    });
+
+    it("selects all classes that have selected property", async () => {
+      const { result } = renderHook((props: HookProps) => usePresentationInstanceFilteringProps(props.descriptor, props.imodel), { initialProps });
+
+      const property = result.current.properties.find((prop) => prop.displayLabel === concretePropertiesField.label) as PropertyDescription;
 
       act(() => {
         result.current.onRulePropertySelected(property);

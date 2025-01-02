@@ -276,16 +276,23 @@ async function computeClassesByProperty(
   imodel: IModelConnection,
 ): Promise<ClassInfo[]> {
   const metadataProvider = getIModelMetadataProvider(imodel);
-  const propertyClass = await metadataProvider.getECClassInfo(property.sourceClassId);
+
+  const propertyClasses = (
+    await Promise.all(
+      property.field.properties.map(async (fieldProperty) => {
+        return metadataProvider.getECClassInfo(fieldProperty.property.classInfo.id);
+      }),
+    )
+  ).filter((propertyClass) => propertyClass !== undefined);
+
   /* c8 ignore next 3 */
-  if (!propertyClass) {
+  if (propertyClasses.length === 0) {
     return classes;
   }
 
   const classesWithProperty: ClassInfo[] = [];
   for (const currentClass of classes) {
-    // add classes that are derived from property source class
-    if (propertyClass.isBaseOf(currentClass.id)) {
+    if (propertyClasses.some((propertyClass) => propertyClass.isBaseOf(currentClass.id))) {
       classesWithProperty.push(currentClass);
     }
   }
