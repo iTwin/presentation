@@ -6,7 +6,7 @@
 import { ComponentPropsWithoutRef, ReactElement, useCallback, useEffect, useMemo, useState } from "react";
 import RssParser from "rss-parser";
 import { debounceTime, Subject } from "rxjs";
-import { BeEvent, Id64String } from "@itwin/core-bentley";
+import { BeEvent, Id64String, Logger } from "@itwin/core-bentley";
 import { IModelConnection } from "@itwin/core-frontend";
 import { SvgFolder, SvgGlobe, SvgImodelHollow, SvgItem, SvgModel } from "@itwin/itwinui-icons-react";
 import { Flex, ProgressRadial, SearchBox, Text } from "@itwin/itwinui-react";
@@ -102,6 +102,9 @@ function Tree({ imodelAccess, height, width }: { imodelAccess: IModelAccess; hei
       [imodelAccess],
     ),
     getFilteredPaths,
+    onHierarchyLoadError: (props) => {
+      Logger.logWarning("loading error", props.error);
+    },
   });
 
   const renderContent = () => {

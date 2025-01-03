@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { GenericInstanceFilter, HierarchyFilteringPath, HierarchyNode, HierarchyProvider } from "@itwin/presentation-hierarchies";
+import { GenericInstanceFilter, getLogger, HierarchyFilteringPath, HierarchyNode, HierarchyProvider } from "@itwin/presentation-hierarchies";
 import { InstanceKey, IPrimitiveValueFormatter } from "@itwin/presentation-shared";
 import { TreeActions } from "./internal/TreeActions.js";
 import { isTreeModelHierarchyNode, isTreeModelInfoNode, TreeModel, TreeModelHierarchyNode, TreeModelNode, TreeModelRootNode } from "./internal/TreeModel.js";
@@ -91,7 +91,7 @@ export interface UseTreeProps {
   /** Action to perform when hierarchy level contains more items that the specified limit. */
   onHierarchyLimitExceeded?: (props: { parentId?: string; filter?: GenericInstanceFilter; limit?: number | "unbounded" }) => void;
   /** Action to perform when an error occurs while loading hierarchy. */
-  onHierarchyLoadError?: (props: { parentId?: string; type: "timeout" | "unknown" }) => void;
+  onHierarchyLoadError?: (props: { parentId?: string; type: "timeout" | "unknown"; error: any }) => void;
 }
 
 /**
@@ -168,7 +168,10 @@ function useTreeInternal({
   });
   const onPerformanceMeasuredRef = useLatest(onPerformanceMeasured);
   const onHierarchyLimitExceededRef = useLatest(onHierarchyLimitExceeded);
-  const onHierarchyLoadErrorRef = useLatest(onHierarchyLoadError);
+  const defaultOnHierarchyLoadError = (props: { parentId?: string; type: "timeout" | "unknown"; error: any }) => {
+    getLogger().logWarning("Hierarch load error", props.error);
+  };
+  const onHierarchyLoadErrorRef = useLatest(onHierarchyLoadError ?? defaultOnHierarchyLoadError);
 
   const [actions] = useState<TreeActions>(
     () =>

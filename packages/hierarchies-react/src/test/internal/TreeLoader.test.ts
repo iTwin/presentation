@@ -267,8 +267,9 @@ describe("TreeLoader", () => {
 
     it("reports when hierarchy load timeouts", async () => {
       const loader = createLoader();
+      const error = new Error("query too long to execute or server is too busy");
       hierarchyProvider.getNodes.callsFake(() => {
-        return throwingAsyncIterator(new Error("query too long to execute or server is too busy"));
+        return throwingAsyncIterator(error);
       });
 
       const filter = {} as GenericInstanceFilter;
@@ -281,13 +282,14 @@ describe("TreeLoader", () => {
         }),
       );
 
-      expect(onHierarchyLoadErrorStub).to.be.calledOnceWith({ parentId: undefined, type: "timeout" });
+      expect(onHierarchyLoadErrorStub).to.be.calledOnceWith({ parentId: undefined, type: "timeout", error });
     });
 
     it("reports unknown hierarchy load error", async () => {
       const loader = createLoader();
+      const error = new Error("Test error");
       hierarchyProvider.getNodes.callsFake(() => {
-        return throwingAsyncIterator(new Error("Test error"));
+        return throwingAsyncIterator(error);
       });
 
       const filter = {} as GenericInstanceFilter;
@@ -300,7 +302,7 @@ describe("TreeLoader", () => {
         }),
       );
 
-      expect(onHierarchyLoadErrorStub).to.be.calledOnceWith({ parentId: undefined, type: "unknown" });
+      expect(onHierarchyLoadErrorStub).to.be.calledOnceWith({ parentId: undefined, type: "unknown", error });
     });
   });
 });

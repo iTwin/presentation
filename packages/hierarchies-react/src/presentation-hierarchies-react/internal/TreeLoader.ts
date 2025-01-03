@@ -41,7 +41,7 @@ export class TreeLoader implements ITreeLoader {
   constructor(
     private _hierarchyProvider: HierarchyProvider,
     private _onHierarchyLimitExceeded: (props: { parentId?: string; filter?: GenericInstanceFilter; limit?: number | "unbounded" }) => void,
-    private _onHierarchyLoadError: (props: { parentId?: string; type: "timeout" | "unknown" }) => void,
+    private _onHierarchyLoadError: (props: { parentId?: string; type: "timeout" | "unknown"; error: any }) => void,
     treeNodeIdFactory?: (node: Pick<HierarchyNode, "key" | "parentKeys">) => string,
   ) {
     this._treeNodeIdFactory = treeNodeIdFactory ?? /* c8 ignore next */ createNodeId;
@@ -69,7 +69,7 @@ export class TreeLoader implements ITreeLoader {
           this._onHierarchyLimitExceeded({ parentId: parent.id, filter: instanceFilter, limit: err.limit });
           return of([{ ...nodeProps, type: "ResultSetTooLarge" as const, resultSetSizeLimit: err.limit }]);
         }
-        this._onHierarchyLoadError({ parentId: parent.id, type: isTimeoutError(err) ? "timeout" : "unknown" });
+        this._onHierarchyLoadError({ parentId: parent.id, type: isTimeoutError(err) ? "timeout" : "unknown", error: err });
         return of([{ ...nodeProps, type: "Unknown" as const, message: "Failed to create hierarchy level" }]);
       }),
       map(
