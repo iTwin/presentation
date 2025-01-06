@@ -262,7 +262,7 @@ async function computePropertiesByClasses(
   const filteredProperties: PresentationInstanceFilterPropertyInfo[] = [];
   for (const prop of properties) {
     // property should be shown if at least one of selected classes is derived from property source class
-    if (ecClassInfos.some((info) => info && info.isDerivedFrom(prop.sourceClassId))) {
+    if (ecClassInfos.some((info) => info && prop.sourceClassIds.some((sourceClassId) => info.isDerivedFrom(sourceClassId)))) {
       filteredProperties.push(prop);
     }
   }
@@ -279,8 +279,8 @@ async function computeClassesByProperty(
 
   const propertyClasses = (
     await Promise.all(
-      property.field.properties.map(async (fieldProperty) => {
-        return metadataProvider.getECClassInfo(fieldProperty.property.classInfo.id);
+      property.sourceClassIds.map(async (sourceClassId) => {
+        return metadataProvider.getECClassInfo(sourceClassId);
       }),
     )
   ).filter((propertyClass) => propertyClass !== undefined);

@@ -231,13 +231,13 @@ describe("usePresentationInstanceFilteringProps", () => {
     label: "ConcreteField2",
     category,
   });
-  const concretePropertiesField = createTestPropertiesContentField({
+  const mergedPropertiesField = createTestPropertiesContentField({
     properties: [
-      { property: { classInfo: concreteClass1, name: "concreteProp", type: "string" } },
-      { property: { classInfo: concreteClass2, name: "concreteProp", type: "string" } },
+      { property: { classInfo: concreteClass1, name: "mergedProp", type: "string" } },
+      { property: { classInfo: concreteClass2, name: "mergedProp", type: "string" } },
     ],
-    name: "concreteField",
-    label: "ConcreteField",
+    name: "mergedField",
+    label: "MergedField",
     category,
   });
   const derivedPropertiesField = createTestPropertiesContentField({
@@ -252,7 +252,7 @@ describe("usePresentationInstanceFilteringProps", () => {
       { selectClassInfo: concreteClass2, isSelectPolymorphic: false },
     ],
     categories: [category],
-    fields: [basePropertiesField, concretePropertiesField1, concretePropertiesField2, concretePropertiesField, derivedPropertiesField],
+    fields: [basePropertiesField, concretePropertiesField1, concretePropertiesField2, mergedPropertiesField, derivedPropertiesField],
   });
 
   const onCloseEvent = new BeEvent<() => void>();
@@ -426,7 +426,7 @@ describe("usePresentationInstanceFilteringProps", () => {
     it("selects all classes that have selected property", async () => {
       const { result } = renderHook((props: HookProps) => usePresentationInstanceFilteringProps(props.descriptor, props.imodel), { initialProps });
 
-      const property = result.current.properties.find((prop) => prop.displayLabel === concretePropertiesField.label) as PropertyDescription;
+      const property = result.current.properties.find((prop) => prop.displayLabel === mergedPropertiesField.label) as PropertyDescription;
 
       act(() => {
         result.current.onRulePropertySelected(property);

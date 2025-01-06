@@ -41,15 +41,17 @@ export function getInstanceFilterFieldName(property: PropertyDescription) {
 /** @internal */
 export const DEFAULT_ROOT_CATEGORY_NAME = "/selected-item/";
 
-function getPropertySourceClassInfo(field: PropertiesField | NestedContentField): ClassInfo {
+function getPropertySourceClassInfo(field: PropertiesField | NestedContentField): ClassInfo[] {
   if (field.parent) {
     return getPropertySourceClassInfo(field.parent);
   }
 
   if (field.isPropertiesField()) {
-    return field.properties[0].property.classInfo;
+    return field.properties.map((fieldProperty) => {
+      return fieldProperty.property.classInfo;
+    });
   }
-  return field.pathToPrimaryClass[field.pathToPrimaryClass.length - 1].targetClassInfo;
+  return [field.pathToPrimaryClass[field.pathToPrimaryClass.length - 1].targetClassInfo];
 }
 
 function getPropertyClassInfo(field: PropertiesField): ClassInfo {
@@ -114,7 +116,7 @@ export function createPropertyInfoFromPropertiesField(field: PropertiesField): P
 
   return {
     field,
-    sourceClassId: getPropertySourceClassInfo(field).id,
+    sourceClassIds: getPropertySourceClassInfo(field).map((classInfo) => classInfo.id),
     propertyDescription,
     categoryLabel: categoryInfo.label,
     className: getPropertyClassInfo(field).name,

@@ -62,7 +62,7 @@ export interface PresentationInstanceFilterPropertyInfo {
   /** Property description  */
   propertyDescription: PropertyDescription;
   /** Id of the class where this property is defined. */
-  sourceClassId: ClassId;
+  sourceClassIds: ClassId[];
   /** Name of the class that was used to access this property. */
   className: string;
   /** Label of related property category. */
