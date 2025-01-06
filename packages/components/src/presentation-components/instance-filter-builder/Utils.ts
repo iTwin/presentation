@@ -114,9 +114,11 @@ export function createPropertyInfoFromPropertiesField(field: PropertiesField): P
     koqName: field.properties[0].property.kindOfQuantity?.name,
   });
 
+  const sourceClassIds = getPropertySourceClassInfo(field).map((classInfo) => classInfo.id);
   return {
     field,
-    sourceClassIds: getPropertySourceClassInfo(field).map((classInfo) => classInfo.id),
+    sourceClassIds,
+    sourceClassId: sourceClassIds[0],
     propertyDescription,
     categoryLabel: categoryInfo.label,
     className: getPropertyClassInfo(field).name,
