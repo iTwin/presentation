@@ -47,9 +47,7 @@ function getPropertySourceClassInfo(field: PropertiesField | NestedContentField)
   }
 
   if (field.isPropertiesField()) {
-    return field.properties.map((fieldProperty) => {
-      return fieldProperty.property.classInfo;
-    });
+    return field.properties.map((fieldProperty) => fieldProperty.property.classInfo);
   }
   return [field.pathToPrimaryClass[field.pathToPrimaryClass.length - 1].targetClassInfo];
 }
