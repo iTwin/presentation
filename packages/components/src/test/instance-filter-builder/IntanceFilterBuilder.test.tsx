@@ -359,7 +359,7 @@ describe("usePresentationInstanceFilteringProps", () => {
       act(() => {
         result.current.onSelectedClassesChanged([concreteClass2.id]);
       });
-      await waitFor(() => expect(result.current.properties).to.have.lengthOf(2));
+      await waitFor(() => expect(result.current.properties).to.have.lengthOf(3));
     });
 
     it("return all properties when selected class contains all available properties", async () => {

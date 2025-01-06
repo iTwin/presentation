@@ -38,6 +38,9 @@ Array [
       "typename": "string",
     },
     "sourceClassId": "0x1",
+    "sourceClassIds": Array [
+      "0x1",
+    ],
   },
   Object {
     "categoryLabel": "Root Category | Nested Category 2 | Nested Category 2 1",
@@ -75,6 +78,9 @@ Array [
       "typename": "string",
     },
     "sourceClassId": "0x1",
+    "sourceClassIds": Array [
+      "0x1",
+    ],
   },
 ]
 `;
@@ -117,6 +123,9 @@ Array [
       "typename": "string",
     },
     "sourceClassId": "0x1",
+    "sourceClassIds": Array [
+      "0x1",
+    ],
   },
   Object {
     "categoryLabel": "Root Category",
@@ -163,6 +172,9 @@ Array [
       "typename": "string",
     },
     "sourceClassId": "0x1",
+    "sourceClassIds": Array [
+      "0x1",
+    ],
   },
 ]
 `;
@@ -205,6 +217,9 @@ Array [
       "typename": "string",
     },
     "sourceClassId": "0x2",
+    "sourceClassIds": Array [
+      "0x2",
+    ],
   },
   Object {
     "categoryLabel": "Root Category",
@@ -242,6 +257,9 @@ Array [
       "typename": "string",
     },
     "sourceClassId": "0x2",
+    "sourceClassIds": Array [
+      "0x2",
+    ],
   },
 ]
 `;
