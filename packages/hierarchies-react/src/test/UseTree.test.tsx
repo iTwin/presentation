@@ -647,8 +647,9 @@ describe("useTree", () => {
   });
 
   it("handles error during nodes load", async () => {
+    const error = new Error("test error");
     hierarchyProvider.getNodes.callsFake(() => {
-      return throwingAsyncIterator(new Error("test error"));
+      return throwingAsyncIterator(error);
     });
     const { result } = renderHook(useTree, { initialProps });
 
@@ -656,13 +657,14 @@ describe("useTree", () => {
       expect(result.current.rootNodes).to.have.lengthOf(1);
       const node = result.current.rootNodes![0] as PresentationGenericInfoNode;
       expect(node.type).to.be.eq("Unknown");
-      expect(onHierarchyLoadErrorStub).to.be.calledWith({ parentId: undefined, type: "unknown" });
+      expect(onHierarchyLoadErrorStub).to.be.calledWith({ parentId: undefined, type: "unknown", error });
     });
   });
 
   it("handles timeouts during nodes load", async () => {
+    const error = new Error("query too long to execute or server is too busy");
     hierarchyProvider.getNodes.callsFake(() => {
-      return throwingAsyncIterator(new Error("query too long to execute or server is too busy"));
+      return throwingAsyncIterator(error);
     });
     const { result } = renderHook(useTree, { initialProps });
 
@@ -670,7 +672,7 @@ describe("useTree", () => {
       expect(result.current.rootNodes).to.have.lengthOf(1);
       const node = result.current.rootNodes![0] as PresentationGenericInfoNode;
       expect(node.type).to.be.eq("Unknown");
-      expect(onHierarchyLoadErrorStub).to.be.calledWith({ parentId: undefined, type: "timeout" });
+      expect(onHierarchyLoadErrorStub).to.be.calledWith({ parentId: undefined, type: "timeout", error });
     });
   });
 

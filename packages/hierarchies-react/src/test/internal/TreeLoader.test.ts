@@ -304,6 +304,25 @@ describe("TreeLoader", () => {
 
       expect(onHierarchyLoadErrorStub).to.be.calledOnceWith({ parentId: undefined, type: "unknown", error });
     });
+    it("reports unknown hierarchy load error that isn't instanceof Error", async () => {
+      const loader = createLoader();
+      const error = true;
+      hierarchyProvider.getNodes.callsFake(() => {
+        return throwingAsyncIterator(error as unknown as Error);
+      });
+
+      const filter = {} as GenericInstanceFilter;
+
+      await collectNodes(
+        loader.loadNodes({
+          parent: { id: undefined, nodeData: undefined },
+          getHierarchyLevelOptions: () => ({ instanceFilter: filter, hierarchyLevelSizeLimit: 10 }),
+          shouldLoadChildren: () => false,
+        }),
+      );
+
+      expect(onHierarchyLoadErrorStub).to.be.calledOnceWith({ parentId: undefined, type: "unknown", error });
+    });
   });
 });
 

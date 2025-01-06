@@ -24,7 +24,7 @@ export class TreeActions {
     private _onModelChanged: (model: TreeModel) => void,
     private _onLoad: (actionType: "initial-load" | "hierarchy-level-load" | "reload", duration: number) => void,
     private _onHierarchyLimitExceeded: (props: { parentId?: string; filter?: GenericInstanceFilter; limit?: number | "unbounded" }) => void,
-    private _onHierarchyLoadError: (props: { parentId?: string; type: "timeout" | "unknown"; error: any }) => void,
+    private _onHierarchyLoadError: (props: { parentId?: string; type: "timeout" | "unknown"; error: unknown }) => void,
     nodeIdFactory?: (node: Pick<HierarchyNode, "key" | "parentKeys">) => string,
     seed?: TreeModel,
   ) {
