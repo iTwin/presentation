@@ -2,4 +2,4 @@
 "@itwin/presentation-components": patch
 ---
 
-Allow filtering multiple classes by a shared property
+`PresentationInstanceFilterDialog` and `PresentationInstanceFilterBuilder`: Fix classes selector not being updated with all classes that contain selected property.
