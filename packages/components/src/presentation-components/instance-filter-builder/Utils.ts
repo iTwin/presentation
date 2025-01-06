@@ -41,9 +41,9 @@ export function getInstanceFilterFieldName(property: PropertyDescription) {
 /** @internal */
 export const DEFAULT_ROOT_CATEGORY_NAME = "/selected-item/";
 
-function getPropertySourceClassInfo(field: PropertiesField | NestedContentField): ClassInfo[] {
+function getPropertySourceClassInfos(field: PropertiesField | NestedContentField): ClassInfo[] {
   if (field.parent) {
-    return getPropertySourceClassInfo(field.parent);
+    return getPropertySourceClassInfos(field.parent);
   }
 
   if (field.isPropertiesField()) {
@@ -114,7 +114,7 @@ export function createPropertyInfoFromPropertiesField(field: PropertiesField): P
     koqName: field.properties[0].property.kindOfQuantity?.name,
   });
 
-  const sourceClassIds = getPropertySourceClassInfo(field).map((classInfo) => classInfo.id);
+  const sourceClassIds = getPropertySourceClassInfos(field).map((classInfo) => classInfo.id);
   return {
     field,
     sourceClassIds,
