@@ -1,5 +1,11 @@
 # @itwin/presentation-hierarchies
 
+## 1.4.1
+
+### Patch Changes
+
+- [#828](https://github.com/iTwin/presentation/pull/828): Polyfill `Symbol.dispose` and `Symbol.asyncDispose` to make sure that code using the upcoming JS recource management API works in all environments.
+
 ## 1.4.0
 
 ### Minor Changes

@@ -1,5 +1,15 @@
 # Change Log - @itwin/presentation-components
 
+## 5.8.0
+
+### Minor Changes
+
+- [#825](https://github.com/iTwin/presentation/pull/825): `PresentationInstanceFilterDialog` and `PresentationInstanceFilterBuilder`: Fix classes selector not being updated with all classes that contain selected property. `PresentationInstanceFilterPropertyInfo` now has `sourceClassIds` and `sourceClassId` is deprecated.
+
+### Patch Changes
+
+- [#828](https://github.com/iTwin/presentation/pull/828): Polyfill `Symbol.dispose` and `Symbol.asyncDispose` to make sure that code using the upcoming JS recource management API works in all environments.
+
 ## 5.7.0
 
 ### Minor Changes
