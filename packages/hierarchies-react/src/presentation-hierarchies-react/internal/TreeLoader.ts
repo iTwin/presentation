@@ -41,7 +41,7 @@ export class TreeLoader implements ITreeLoader {
   constructor(
     private _hierarchyProvider: HierarchyProvider,
     private _onHierarchyLimitExceeded: (props: { parentId?: string; filter?: GenericInstanceFilter; limit?: number | "unbounded" }) => void,
-    private _onHierarchyLoadError: (props: { parentId?: string; type: "timeout" | "unknown" }) => void,
+    private _onHierarchyLoadError: (props: { parentId?: string; type: "timeout" | "unknown"; error: unknown }) => void,
     treeNodeIdFactory?: (node: Pick<HierarchyNode, "key" | "parentKeys">) => string,
   ) {
     this._treeNodeIdFactory = treeNodeIdFactory ?? /* c8 ignore next */ createNodeId;
@@ -62,15 +62,29 @@ export class TreeLoader implements ITreeLoader {
       toArray(),
       catchError((err) => {
         const nodeProps = {
-          id: `${infoNodeIdBase}-${err.message}`,
+          id: `${infoNodeIdBase}-Unknown`,
           parentId: parent.id,
         };
-        if (isRowsLimitError(err)) {
-          this._onHierarchyLimitExceeded({ parentId: parent.id, filter: instanceFilter, limit: err.limit });
-          return of([{ ...nodeProps, type: "ResultSetTooLarge" as const, resultSetSizeLimit: err.limit }]);
+        let hierarchyLoadErrorType: "unknown" | "timeout" = "unknown";
+        if (err instanceof Error) {
+          nodeProps.id = `${infoNodeIdBase}-${err.message}`;
+          if (isRowsLimitError(err)) {
+            this._onHierarchyLimitExceeded({ parentId: parent.id, filter: instanceFilter, limit: err.limit });
+            return of([{ ...nodeProps, type: "ResultSetTooLarge" as const, resultSetSizeLimit: err.limit }]);
+          }
+          if (isTimeoutError(err)) {
+            hierarchyLoadErrorType = "timeout";
+          }
         }
-        this._onHierarchyLoadError({ parentId: parent.id, type: isTimeoutError(err) ? "timeout" : "unknown" });
-        return of([{ ...nodeProps, type: "Unknown" as const, message: "Failed to create hierarchy level" }]);
+
+        this._onHierarchyLoadError({ parentId: parent.id, type: hierarchyLoadErrorType, error: err });
+        return of([
+          {
+            ...nodeProps,
+            type: "Unknown" as const,
+            message: "Failed to create hierarchy level",
+          },
+        ]);
       }),
       map(
         (childNodes): LoadedTreePart => ({
