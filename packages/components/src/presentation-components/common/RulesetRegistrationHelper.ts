@@ -6,6 +6,7 @@
  * @module Core
  */
 
+import "./DisposePolyfill.js";
 import { RegisteredRuleset, Ruleset } from "@itwin/presentation-common";
 import { Presentation } from "@itwin/presentation-frontend";
 

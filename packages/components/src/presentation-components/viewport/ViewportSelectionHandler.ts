@@ -3,6 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
+import "../common/DisposePolyfill.js";
 import { from, Subject, takeUntil } from "rxjs";
 import { using } from "@itwin/core-bentley";
 import { IModelConnection } from "@itwin/core-frontend";

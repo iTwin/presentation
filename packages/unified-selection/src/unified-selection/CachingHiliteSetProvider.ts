@@ -3,6 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
+import "./DisposePolyfill.js";
 import { from, Observable, shareReplay } from "rxjs";
 import { eachValueFrom } from "rxjs-for-await";
 import { ECClassHierarchyInspector, ECSqlQueryExecutor } from "@itwin/presentation-shared";
