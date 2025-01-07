@@ -3,6 +3,8 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-/** Polyfill for upcoming resource management feature */
+/**
+ * Polyfill for upcoming resource management feature: https://github.com/tc39/proposal-explicit-resource-management
+ */
 (Symbol as any).dispose ??= Symbol.for("dispose");
 (Symbol as any).asyncDispose ??= Symbol.for("asyncDispose");
