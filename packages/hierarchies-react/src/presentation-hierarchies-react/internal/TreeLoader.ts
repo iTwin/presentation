@@ -61,24 +61,26 @@ export class TreeLoader implements ITreeLoader {
     ).pipe(
       toArray(),
       catchError((err) => {
+        const nodeProps = {
+          id: `${infoNodeIdBase}-Unknown`,
+          parentId: parent.id,
+        };
+        let hierarchyLoadErrorType: "unknown" | "timeout" = "unknown";
         if (err instanceof Error) {
-          const nodeProps = {
-            id: `${infoNodeIdBase}-${err.message}`,
-            parentId: parent.id,
-          };
+          nodeProps.id = `${infoNodeIdBase}-${err.message}`;
           if (isRowsLimitError(err)) {
             this._onHierarchyLimitExceeded({ parentId: parent.id, filter: instanceFilter, limit: err.limit });
             return of([{ ...nodeProps, type: "ResultSetTooLarge" as const, resultSetSizeLimit: err.limit }]);
           }
-          this._onHierarchyLoadError({ parentId: parent.id, type: isTimeoutError(err) ? "timeout" : "unknown", error: err });
-          return of([{ ...nodeProps, type: "Unknown" as const, message: "Failed to create hierarchy level" }]);
+          if (isTimeoutError(err)) {
+            hierarchyLoadErrorType = "timeout";
+          }
         }
 
-        this._onHierarchyLoadError({ parentId: parent.id, type: "unknown", error: err });
+        this._onHierarchyLoadError({ parentId: parent.id, type: hierarchyLoadErrorType, error: err });
         return of([
           {
-            id: `${infoNodeIdBase}-Unknown`,
-            parentId: parent.id,
+            ...nodeProps,
             type: "Unknown" as const,
             message: "Failed to create hierarchy level",
           },
