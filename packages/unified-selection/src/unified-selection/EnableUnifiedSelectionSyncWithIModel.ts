@@ -3,6 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
+import "./DisposePolyfill.js";
 import { EMPTY, firstValueFrom, from, map, merge, Observable, Subject, takeUntil, toArray } from "rxjs";
 import { ECClassHierarchyInspector, ECSqlQueryExecutor } from "@itwin/presentation-shared";
 import { CachingHiliteSetProvider, createCachingHiliteSetProvider } from "./CachingHiliteSetProvider.js";
@@ -26,7 +27,7 @@ export interface EnableUnifiedSelectionSyncWithIModelProps {
    * `hilited` and `selectionSet` attributes like this:
    *
    * ```ts
-   * import { createECSqlQueryExecutor, createECSchemaProvider } from "@itwin/presentation-core-interop";
+   * import { createECSqlQueryExecutor, createECSchemaProvider, createIModelKey } from "@itwin/presentation-core-interop";
    * import { createCachingECClassHierarchyInspector } from "@itwin/presentation-shared";
    * import { IModelConnection } from "@itwin/core-frontend";
    *
@@ -34,7 +35,7 @@ export interface EnableUnifiedSelectionSyncWithIModelProps {
    * const imodelAccess = {
    *   ...createECSqlQueryExecutor(imodel),
    *   ...createCachingECClassHierarchyInspector({ schemaProvider: createECSchemaProvider(MyAppFrontend.getSchemaContext(imodel)) }),
-   *   key: imodel.key,
+   *   key: createIModelKey(imodel),
    *   hiliteSet: imodel.hilited,
    *   selectionSet: imodel.selectionSet,
    * };

@@ -3,5 +3,8 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-export * from "./models-tree/ModelsTreeIdsCache.js";
-export * from "./models-tree/ModelsTreeDefinition.js";
+/**
+ * Polyfill for upcoming resource management feature: https://github.com/tc39/proposal-explicit-resource-management
+ */
+(Symbol as any).dispose ??= Symbol("Symbol.dispose");
+(Symbol as any).asyncDispose ??= Symbol("Symbol.asyncDispose");

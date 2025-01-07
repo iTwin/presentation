@@ -18,7 +18,7 @@ describe("TreeActions", () => {
   };
   const onModelChangedStub = createStub<(model: TreeModel) => void>();
   const onLoadStub = createStub<(type: "initial-load" | "hierarchy-level-load" | "reload", duration: number) => void>();
-  const onHierarchyLoadErrorStub = createStub<(props: { parentId?: string; type: "timeout" | "unknown" }) => void>();
+  const onHierarchyLoadErrorStub = createStub<(props: { parentId?: string; type: "timeout" | "unknown"; error: any }) => void>();
 
   function createActions(seed: TreeModel) {
     const actions = new TreeActions(
@@ -1071,8 +1071,9 @@ describe("TreeActions", () => {
       const actions = createActions(createTreeModel([]));
 
       provider.getNodes.reset();
+      const error = new Error("query too long to execute or server is too busy");
       provider.getNodes.callsFake(() => {
-        return throwingAsyncIterator(new Error("query too long to execute or server is too busy"));
+        return throwingAsyncIterator(error);
       });
 
       actions.reloadTree();
@@ -1080,7 +1081,7 @@ describe("TreeActions", () => {
       await waitFor(() => {
         expect(onModelChangedStub).to.be.called;
         expect(onLoadStub).to.be.calledWith("initial-load", Number.MAX_SAFE_INTEGER);
-        expect(onHierarchyLoadErrorStub).to.be.calledWith({ parentId: undefined, type: "timeout" });
+        expect(onHierarchyLoadErrorStub).to.be.calledWith({ parentId: undefined, type: "timeout", error });
       });
     });
 
@@ -1124,8 +1125,9 @@ describe("TreeActions", () => {
       const actions = createActions(model);
 
       provider.getNodes.reset();
+      const error = new Error("query too long to execute or server is too busy");
       provider.getNodes.callsFake(() => {
-        return throwingAsyncIterator(new Error("query too long to execute or server is too busy"));
+        return throwingAsyncIterator(error);
       });
 
       actions.expandNode("root-1", true);
@@ -1133,7 +1135,7 @@ describe("TreeActions", () => {
       await waitFor(() => {
         expect(onModelChangedStub).to.be.called;
         expect(onLoadStub).to.be.calledWith("hierarchy-level-load", Number.MAX_SAFE_INTEGER);
-        expect(onHierarchyLoadErrorStub).to.be.calledWith({ parentId: "root-1", type: "timeout" });
+        expect(onHierarchyLoadErrorStub).to.be.calledWith({ parentId: "root-1", type: "timeout", error });
       });
     });
 
@@ -1179,8 +1181,9 @@ describe("TreeActions", () => {
       );
 
       provider.getNodes.reset();
+      const error = new Error("query too long to execute or server is too busy");
       provider.getNodes.callsFake(() => {
-        return throwingAsyncIterator(new Error("query too long to execute or server is too busy"));
+        return throwingAsyncIterator(error);
       });
 
       actions.reloadTree();
@@ -1188,7 +1191,7 @@ describe("TreeActions", () => {
       await waitFor(() => {
         expect(onModelChangedStub).to.be.called;
         expect(onLoadStub).to.be.calledWith("reload", Number.MAX_SAFE_INTEGER);
-        expect(onHierarchyLoadErrorStub).to.be.calledWith({ parentId: undefined, type: "timeout" });
+        expect(onHierarchyLoadErrorStub).to.be.calledWith({ parentId: undefined, type: "timeout", error });
       });
     });
 
@@ -1223,8 +1226,9 @@ describe("TreeActions", () => {
       const actions = createActions(createTreeModel([]));
 
       provider.getNodes.reset();
+      const error = new Error("Test error");
       provider.getNodes.callsFake(() => {
-        return throwingAsyncIterator(new Error("Test error"));
+        return throwingAsyncIterator(error);
       });
 
       actions.reloadTree();
@@ -1232,7 +1236,7 @@ describe("TreeActions", () => {
       await waitFor(() => {
         expect(onModelChangedStub).to.be.called;
         expect(onLoadStub).to.not.be.called;
-        expect(onHierarchyLoadErrorStub).to.be.calledWith({ parentId: undefined, type: "unknown" });
+        expect(onHierarchyLoadErrorStub).to.be.calledWith({ parentId: undefined, type: "unknown", error });
       });
     });
   });

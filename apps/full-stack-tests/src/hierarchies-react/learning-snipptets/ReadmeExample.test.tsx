@@ -12,7 +12,7 @@ import { IModelConnection } from "@itwin/core-frontend";
 import { SchemaContext } from "@itwin/ecschema-metadata";
 import { ECSchemaRpcLocater } from "@itwin/ecschema-rpcinterface-common";
 import { createCachingECClassHierarchyInspector } from "@itwin/presentation-shared";
-import { createECSchemaProvider, createECSqlQueryExecutor } from "@itwin/presentation-core-interop";
+import { createECSchemaProvider, createECSqlQueryExecutor, createIModelKey } from "@itwin/presentation-core-interop";
 import { createLimitingECSqlQueryExecutor, createNodesQueryClauseFactory, HierarchyDefinition } from "@itwin/presentation-hierarchies";
 // __PUBLISH_EXTRACT_END__
 // __PUBLISH_EXTRACT_START__ Presentation.HierarchiesReact.SelectionStorage.Imports
@@ -35,12 +35,13 @@ import { stubGetBoundingClientRect } from "../../Utils.js";
 const imodelSchemaContextsCache = new Map<string, SchemaContext>();
 
 function getIModelSchemaContext(imodel: IModelConnection) {
-  let context = imodelSchemaContextsCache.get(imodel.key);
+  const imodelKey = createIModelKey(imodel);
+  let context = imodelSchemaContextsCache.get(imodelKey);
   if (!context) {
     context = new SchemaContext();
     context.addLocater(new ECSchemaRpcLocater(imodel.getRpcProps()));
-    imodelSchemaContextsCache.set(imodel.key, context);
-    imodel.onClose.addListener(() => imodelSchemaContextsCache.delete(imodel.key));
+    imodelSchemaContextsCache.set(imodelKey, context);
+    imodel.onClose.addListener(() => imodelSchemaContextsCache.delete(imodelKey));
   }
   return context;
 }
@@ -48,7 +49,7 @@ function getIModelSchemaContext(imodel: IModelConnection) {
 function createIModelAccess(imodel: IModelConnection) {
   const schemaProvider = createECSchemaProvider(getIModelSchemaContext(imodel));
   return {
-    imodelKey: imodel.key,
+    imodelKey: createIModelKey(imodel),
     ...schemaProvider,
     // while caching for hierarchy inspector is not mandatory, it's recommended to use it to improve performance
     ...createCachingECClassHierarchyInspector({ schemaProvider, cacheSize: 100 }),
@@ -183,7 +184,7 @@ describe("Hierarchies React", () => {
 
         const { getByText } = render(<MyTreeComponentInternal imodelAccess={createIModelAccess(iModel)} />);
 
-        expect(getByText("No data to display")).to.not.be.null;
+        await waitFor(() => expect(getByText("No data to display")).to.not.be.null);
       });
     });
   });

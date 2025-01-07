@@ -6,6 +6,7 @@
  * @module Internal
  */
 
+import "../../common/DisposePolyfill.js";
 import { useEffect, useMemo, useState } from "react";
 import { EMPTY, from, map, mergeMap, toArray } from "rxjs";
 import { PropertyDescription } from "@itwin/appui-abstract";

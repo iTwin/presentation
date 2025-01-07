@@ -68,7 +68,7 @@ The hook takes 2 required properties:
   import { SchemaContext } from "@itwin/ecschema-metadata";
   import { ECSchemaRpcLocater } from "@itwin/ecschema-rpcinterface-common";
   import { createCachingECClassHierarchyInspector } from "@itwin/presentation-shared";
-  import { createECSchemaProvider, createECSqlQueryExecutor } from "@itwin/presentation-core-interop";
+  import { createECSchemaProvider, createECSqlQueryExecutor, createIModelKey } from "@itwin/presentation-core-interop";
   import { createLimitingECSqlQueryExecutor, createNodesQueryClauseFactory, HierarchyDefinition } from "@itwin/presentation-hierarchies";
 
   // Not really part of the package, but we need SchemaContext to create the tree state. It's
@@ -77,12 +77,13 @@ The hook takes 2 required properties:
   const imodelSchemaContextsCache = new Map<string, SchemaContext>();
 
   function getIModelSchemaContext(imodel: IModelConnection) {
-    let context = imodelSchemaContextsCache.get(imodel.key);
+    const imodelKey = createIModelKey(imodel);
+    let context = imodelSchemaContextsCache.get(imodelKey);
     if (!context) {
       context = new SchemaContext();
       context.addLocater(new ECSchemaRpcLocater(imodel.getRpcProps()));
-      imodelSchemaContextsCache.set(imodel.key, context);
-      imodel.onClose.addListener(() => imodelSchemaContextsCache.delete(imodel.key));
+      imodelSchemaContextsCache.set(imodelKey, context);
+      imodel.onClose.addListener(() => imodelSchemaContextsCache.delete(imodelKey));
     }
     return context;
   }
@@ -90,7 +91,7 @@ The hook takes 2 required properties:
   function createIModelAccess(imodel: IModelConnection) {
     const schemaProvider = createECSchemaProvider(getIModelSchemaContext(imodel));
     return {
-      imodelKey: imodel.key,
+      imodelKey: createIModelKey(imodel),
       ...schemaProvider,
       // while caching for hierarchy inspector is not mandatory, it's recommended to use it to improve performance
       ...createCachingECClassHierarchyInspector({ schemaProvider, cacheSize: 100 }),
@@ -220,7 +221,7 @@ import { IModelConnection } from "@itwin/core-frontend";
 import { SchemaContext } from "@itwin/ecschema-metadata";
 import { ECSchemaRpcLocater } from "@itwin/ecschema-rpcinterface-common";
 import { createCachingECClassHierarchyInspector } from "@itwin/presentation-shared";
-import { createECSchemaProvider, createECSqlQueryExecutor } from "@itwin/presentation-core-interop";
+import { createECSchemaProvider, createECSqlQueryExecutor, createIModelKey } from "@itwin/presentation-core-interop";
 import { createLimitingECSqlQueryExecutor, createNodesQueryClauseFactory, HierarchyDefinition } from "@itwin/presentation-hierarchies";
 
 import { createBisInstanceLabelSelectClauseFactory, Props } from "@itwin/presentation-shared";
@@ -235,12 +236,13 @@ import { useEffect, useState } from "react";
 const imodelSchemaContextsCache = new Map<string, SchemaContext>();
 
 function getIModelSchemaContext(imodel: IModelConnection) {
-  let context = imodelSchemaContextsCache.get(imodel.key);
+  const imodelKey = createIModelKey(imodel);
+  let context = imodelSchemaContextsCache.get(imodelKey);
   if (!context) {
     context = new SchemaContext();
     context.addLocater(new ECSchemaRpcLocater(imodel.getRpcProps()));
-    imodelSchemaContextsCache.set(imodel.key, context);
-    imodel.onClose.addListener(() => imodelSchemaContextsCache.delete(imodel.key));
+    imodelSchemaContextsCache.set(imodelKey, context);
+    imodel.onClose.addListener(() => imodelSchemaContextsCache.delete(imodelKey));
   }
   return context;
 }
@@ -248,7 +250,7 @@ function getIModelSchemaContext(imodel: IModelConnection) {
 function createIModelAccess(imodel: IModelConnection) {
   const schemaProvider = createECSchemaProvider(getIModelSchemaContext(imodel));
   return {
-    imodelKey: imodel.key,
+    imodelKey: createIModelKey(imodel),
     ...schemaProvider,
     // while caching for hierarchy inspector is not mandatory, it's recommended to use it to improve performance
     ...createCachingECClassHierarchyInspector({ schemaProvider, cacheSize: 100 }),
@@ -398,7 +400,7 @@ import {
 type TreeProps = ComponentPropsWithoutRef<typeof Tree<RenderedTreeNode>>;
 type TreeRendererProps = Props<typeof TreeRenderer>;
 
-function MyTreeRenderer(props: TreeRendererProps) {
+function MyTreeRenderer({ rootNodes }: TreeRendererProps) {
   const nodeRenderer = useCallback<TreeProps["nodeRenderer"]>((nodeProps) => {
     return <TreeNodeRenderer {...nodeProps} onFilterClick={() => {}} expandNode={() => {}} />;
   }, []);
@@ -407,7 +409,7 @@ function MyTreeRenderer(props: TreeRendererProps) {
 
   return (
     <LocalizationContextProvider localizedStrings={localizedStrings}>
-      <Tree<RenderedTreeNode> {...props} data={props.rootNodes} nodeRenderer={nodeRenderer} getNode={getNode} />
+      <Tree<RenderedTreeNode> data={rootNodes} nodeRenderer={nodeRenderer} getNode={getNode} enableVirtualization={true} />
     </LocalizationContextProvider>
   );
 }

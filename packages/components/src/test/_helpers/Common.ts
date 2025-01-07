@@ -119,6 +119,7 @@ export function stubRaf() {
 
 export const createTestPresentationInstanceFilterPropertyInfo = (props?: Partial<PresentationInstanceFilterPropertyInfo>) => ({
   sourceClassId: "0x1",
+  sourceClassIds: ["0x1"],
   field: createTestPropertiesContentField({ properties: [{ property: createTestPropertyInfo() }], category: createTestCategoryDescription() }),
   propertyDescription: {
     name: "TestName",

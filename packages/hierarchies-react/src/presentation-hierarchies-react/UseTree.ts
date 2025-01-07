@@ -91,7 +91,7 @@ export interface UseTreeProps {
   /** Action to perform when hierarchy level contains more items that the specified limit. */
   onHierarchyLimitExceeded?: (props: { parentId?: string; filter?: GenericInstanceFilter; limit?: number | "unbounded" }) => void;
   /** Action to perform when an error occurs while loading hierarchy. */
-  onHierarchyLoadError?: (props: { parentId?: string; type: "timeout" | "unknown" }) => void;
+  onHierarchyLoadError?: (props: { parentId?: string; type: "timeout" | "unknown"; error: unknown }) => void;
 }
 
 /**

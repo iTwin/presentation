@@ -231,6 +231,15 @@ describe("usePresentationInstanceFilteringProps", () => {
     label: "ConcreteField2",
     category,
   });
+  const mergedPropertiesField = createTestPropertiesContentField({
+    properties: [
+      { property: { classInfo: concreteClass1, name: "mergedProp", type: "string" } },
+      { property: { classInfo: concreteClass2, name: "mergedProp", type: "string" } },
+    ],
+    name: "mergedField",
+    label: "MergedField",
+    category,
+  });
   const derivedPropertiesField = createTestPropertiesContentField({
     properties: [{ property: { classInfo: derivedClass, name: "derivedProp", type: "string" } }],
     name: "derivedField",
@@ -243,7 +252,7 @@ describe("usePresentationInstanceFilteringProps", () => {
       { selectClassInfo: concreteClass2, isSelectPolymorphic: false },
     ],
     categories: [category],
-    fields: [basePropertiesField, concretePropertiesField1, concretePropertiesField2, derivedPropertiesField],
+    fields: [basePropertiesField, concretePropertiesField1, concretePropertiesField2, mergedPropertiesField, derivedPropertiesField],
   });
 
   const onCloseEvent = new BeEvent<() => void>();
@@ -350,7 +359,7 @@ describe("usePresentationInstanceFilteringProps", () => {
       act(() => {
         result.current.onSelectedClassesChanged([concreteClass2.id]);
       });
-      await waitFor(() => expect(result.current.properties).to.have.lengthOf(2));
+      await waitFor(() => expect(result.current.properties).to.have.lengthOf(3));
     });
 
     it("return all properties when selected class contains all available properties", async () => {
@@ -407,6 +416,17 @@ describe("usePresentationInstanceFilteringProps", () => {
       const { result } = renderHook((props: HookProps) => usePresentationInstanceFilteringProps(props.descriptor, props.imodel), { initialProps });
 
       const property = result.current.properties.find((prop) => prop.displayLabel === basePropertiesField.label) as PropertyDescription;
+
+      act(() => {
+        result.current.onRulePropertySelected(property);
+      });
+      await waitFor(() => expect(result.current.selectedClasses).to.have.lengthOf(2).and.containSubset([concreteClass1, concreteClass2]));
+    });
+
+    it("selects all classes that have selected property", async () => {
+      const { result } = renderHook((props: HookProps) => usePresentationInstanceFilteringProps(props.descriptor, props.imodel), { initialProps });
+
+      const property = result.current.properties.find((prop) => prop.displayLabel === mergedPropertiesField.label) as PropertyDescription;
 
       act(() => {
         result.current.onRulePropertySelected(property);

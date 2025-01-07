@@ -3,6 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
+import { asyncScheduler, expand, filter, finalize, from, observeOn, of, tap } from "rxjs";
 import { IModelDb } from "@itwin/core-backend";
 import { BeDuration } from "@itwin/core-bentley";
 import { Schema, SchemaContext, SchemaJsonLocater, SchemaKey, SchemaMatchType, SchemaPropsGetter } from "@itwin/ecschema-metadata";
@@ -24,7 +25,6 @@ import {
   ECSqlQueryExecutor,
   ECSqlQueryReaderOptions,
 } from "@itwin/presentation-shared";
-import { asyncScheduler, expand, filter, finalize, from, observeOn, of, tap } from "rxjs";
 import { LOGGER } from "../util/Logging";
 
 interface ProviderOptionsBase {

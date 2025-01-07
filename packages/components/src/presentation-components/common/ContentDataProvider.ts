@@ -6,6 +6,7 @@
  * @module Core
  */
 
+import "./DisposePolyfill.js";
 import { PropertyDescription, PropertyRecord } from "@itwin/appui-abstract";
 import { Logger } from "@itwin/core-bentley";
 import { IModelApp, IModelConnection } from "@itwin/core-frontend";

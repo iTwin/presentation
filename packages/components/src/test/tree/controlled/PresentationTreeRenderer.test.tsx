@@ -31,7 +31,7 @@ import { IPresentationTreeDataProvider } from "../../../presentation-components/
 import { PresentationTreeNodeItem } from "../../../presentation-components/tree/PresentationTreeNodeItem.js";
 import { createTestPropertyInfo, stubDOMMatrix, stubGetBoundingClientRect, stubRaf } from "../../_helpers/Common.js";
 import { createTestContentDescriptor, createTestPropertiesContentField } from "../../_helpers/Content.js";
-import { act, render, waitFor } from "../../TestUtils.js";
+import { act, cleanup, render, waitFor } from "../../TestUtils.js";
 import { createTreeModelNodeInput } from "./Helpers.js";
 
 describe("PresentationTreeRenderer", () => {
@@ -135,7 +135,7 @@ describe("PresentationTreeRenderer", () => {
       );
     });
 
-    const { queryByText, container, baseElement, user } = render(
+    const { queryByText, container, baseElement, user, findByText } = render(
       <PresentationTreeRenderer {...baseTreeProps} visibleNodes={visibleNodes} nodeLoader={nodeLoader} />,
     );
 
@@ -147,15 +147,13 @@ describe("PresentationTreeRenderer", () => {
     await user.click(filterButton!);
 
     // wait for dialog to be visible
-    await waitFor(() => {
-      expect(baseElement.querySelector(".presentation-instance-filter-dialog")).to.not.be.null;
-    });
+    await findByText("instance-filter-builder.filter");
 
-    const closeButton = baseElement.querySelector(".presentation-instance-filter-dialog-close-button");
+    const closeButton = await waitFor(() => baseElement.querySelector(".presentation-instance-filter-dialog-close-button"));
     expect(closeButton).to.not.be.null;
     await user.click(closeButton!);
 
-    const dialog = baseElement.querySelector(".presentation-instance-filter-dialog");
+    const dialog = await waitFor(() => baseElement.querySelector(".presentation-instance-filter-dialog"));
     expect(dialog).to.be.null;
   });
 
@@ -169,14 +167,14 @@ describe("PresentationTreeRenderer", () => {
       );
     });
 
-    const { queryByText, container, baseElement, user } = render(
+    const { findByText, container, baseElement, user } = render(
       <PresentationTreeRenderer {...baseTreeProps} visibleNodes={visibleNodes} nodeLoader={nodeLoader} />,
     );
 
-    await waitFor(() => expect(queryByText("A")).to.not.be.null);
+    await findByText("A");
     expect(container.querySelector(".presentation-components-node")).to.not.be.null;
 
-    const filterButton = container.querySelector(".presentation-components-node-action-buttons button");
+    const filterButton = await waitFor(() => container.querySelector(".presentation-components-node-action-buttons button"));
     expect(filterButton).to.not.be.null;
     await user.click(filterButton!);
 
@@ -215,7 +213,6 @@ describe("PresentationTreeRenderer", () => {
     const { queryByText, baseElement, user, container } = render(
       <PresentationTreeRenderer {...baseTreeProps} visibleNodes={visibleNodes} nodeLoader={nodeLoader} />,
     );
-
     await waitFor(() => expect(queryByText("A")).to.not.be.null);
 
     const filterButton = container.querySelector(".presentation-components-node-action-buttons button");
@@ -223,9 +220,9 @@ describe("PresentationTreeRenderer", () => {
     await user.click(filterButton!);
 
     // assert that dialog is not loaded
-    await waitFor(() => {
-      expect(baseElement.querySelector(".presentation-instance-filter-dialog")).to.be.null;
-    });
+    const dialog = await waitFor(() => baseElement.querySelector(".presentation-instance-filter-dialog"));
+    expect(dialog).to.be.null;
+    cleanup();
   });
 
   it("applies filter and closes dialog", async () => {
@@ -308,6 +305,7 @@ describe("PresentationTreeRenderer", () => {
     await applyFilter(result, propertyField.label);
 
     await waitFor(() => expect(onFilterAppliedSpy).to.be.calledOnce);
+    cleanup();
   });
 
   it("does not call `onFilterApplied` when filter is cleared", async () => {
@@ -332,13 +330,10 @@ describe("PresentationTreeRenderer", () => {
       );
     });
 
-    const result = render(
+    const { getByText, getByRole, user } = render(
       <PresentationTreeRenderer {...baseTreeProps} visibleNodes={visibleNodes} nodeLoader={nodeLoader} onFilterApplied={onFilterAppliedSpy} />,
     );
-
-    const { queryByText, user, getByRole } = result;
-    await waitFor(() => expect(queryByText("A")).to.not.be.null);
-
+    await waitFor(() => getByText("A"));
     // ensure that initially the filter is enabled
     let nodeItem = modelSource.getModel().getNode("A")?.item as PresentationTreeNodeItem;
     expect(nodeItem.filtering?.active).to.not.be.undefined;
@@ -352,6 +347,7 @@ describe("PresentationTreeRenderer", () => {
     });
 
     expect(onFilterAppliedSpy).to.not.be.called;
+    cleanup();
   });
 
   it("renders results count when filtering dialog has valid filter", async () => {
@@ -496,6 +492,7 @@ describe("PresentationTreeRenderer", () => {
 
     nodeItem = modelSource.getModel().getNode("A")?.item as PresentationTreeNodeItem;
     expect(nodeItem.filtering?.active).to.be.undefined;
+    cleanup();
   });
 });
 
@@ -519,7 +516,8 @@ async function applyFilter(result: ReturnType<typeof render>, propertyLabel: str
   expect(propertySelector).to.not.be.null;
   await user.click(propertySelector!);
   // select property
-  await user.click(getByTitle(propertyLabel));
+  const property = await waitFor(() => getByTitle(propertyLabel));
+  await user.click(property);
 
   // wait until apply button is enabled
   const applyButton = await waitFor(() => {

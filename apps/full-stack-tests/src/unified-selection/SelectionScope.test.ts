@@ -4,7 +4,6 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { expect } from "chai";
-import * as fs from "fs";
 import path from "path";
 import {
   insertDrawingCategory,
@@ -24,6 +23,7 @@ import { createECSqlQueryExecutor } from "@itwin/presentation-core-interop";
 import { Props } from "@itwin/presentation-shared";
 import { buildTestIModel, initialize, terminate } from "@itwin/presentation-testing";
 import { computeSelection, SelectableInstanceKey } from "@itwin/unified-selection";
+import { getSchemaFromPackage } from "./getSchema.js";
 
 describe("SelectionScope", () => {
   let iModel: IModelConnection;
@@ -42,11 +42,6 @@ describe("SelectionScope", () => {
   after(async () => {
     await terminate();
   });
-
-  async function getSchemaFromPackage(packageName: string, schemaFileName: string): Promise<string> {
-    const schemaFile = path.join(import.meta.dirname, "..", "..", "node_modules", "@bentley", packageName, schemaFileName);
-    return fs.readFileSync(schemaFile, "utf8");
-  }
 
   async function getSelection(keys: string[], scope: Props<typeof computeSelection>["scope"]): Promise<SelectableInstanceKey[]> {
     const selectables: SelectableInstanceKey[] = [];

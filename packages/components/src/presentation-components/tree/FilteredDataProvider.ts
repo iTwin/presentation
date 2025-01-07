@@ -4,6 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 /* eslint-disable @typescript-eslint/no-deprecated */
 
+import "../common/DisposePolyfill.js";
 import {
   ActiveMatchInfo,
   DelayLoadedTreeNodeItem,

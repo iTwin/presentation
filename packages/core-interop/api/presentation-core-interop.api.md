@@ -25,6 +25,14 @@ interface CoreECSqlReaderFactory {
 }
 
 // @public
+interface CoreIModel {
+    // (undocumented)
+    key: string;
+    // (undocumented)
+    name: string;
+}
+
+// @public
 interface CoreSchemaContext {
     // (undocumented)
     getSchema(key: SchemaKey): Promise<Schema | undefined>;
@@ -35,6 +43,9 @@ export function createECSchemaProvider(schemaContext: CoreSchemaContext): ECSche
 
 // @public
 export function createECSqlQueryExecutor(imodel: CoreECSqlReaderFactory): ECSqlQueryExecutor;
+
+// @public
+export function createIModelKey(imodel: CoreIModel): string;
 
 // @public
 export function createLogger(coreLogger: ICoreLogger): ILogger;

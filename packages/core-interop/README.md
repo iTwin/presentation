@@ -11,6 +11,22 @@ Having this interop layer helps us evolve both sides without affecting one anoth
 
 ## API
 
+### `createIModelKey`
+
+Attempts to create a unique identifier for the given iModel. In majority of cases that's going to be the `key` property, but if it's not set (e.g. when using [BlankConnection](https://www.itwinjs.org/reference/core-frontend/imodelconnection/blankconnection/)) - `name` property is used instead. Finally, if both are empty - the function will throw an error.
+
+Example:
+
+```ts
+import { IModelConnection } from "@itwin/core-frontend";
+import { createIModelKey } from "@itwin/presentation-core-interop";
+
+IModelConnection.onOpen.addListener((imodel: IModelConnection) => {
+  const key = createIModelKey(imodel);
+  console.log(`IModel opened: "${key}"`);
+});
+```
+
 ### `createECSqlQueryExecutor`
 
 Maps an iModel in the form of `itwinjs-core` [IModelDb](https://www.itwinjs.org/reference/core-backend/imodels/imodeldb/) or [IModelConnection](https://www.itwinjs.org/reference/core-frontend/imodelconnection/imodelconnection/) to an instance of `ECSqlQueryExecutor`, used in `@itwin/presentation-hierarchies` and `@itwin/unified-selection` packages.
