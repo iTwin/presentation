@@ -3,6 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
+import "./DisposePolyfill.js";
 import { EMPTY, firstValueFrom, from, map, merge, Observable, Subject, takeUntil, toArray } from "rxjs";
 import { ECClassHierarchyInspector, ECSqlQueryExecutor } from "@itwin/presentation-shared";
 import { CachingHiliteSetProvider, createCachingHiliteSetProvider } from "./CachingHiliteSetProvider.js";

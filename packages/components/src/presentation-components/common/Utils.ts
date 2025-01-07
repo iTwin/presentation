@@ -6,6 +6,7 @@
  * @module Core
  */
 
+import "../common/DisposePolyfill.js";
 import * as mm from "micro-memoize";
 import { LegacyRef, MutableRefObject, RefCallback, useCallback, useEffect, useState } from "react";
 import { Primitives, PrimitiveValue, PropertyDescription, PropertyRecord, PropertyValueFormat } from "@itwin/appui-abstract";

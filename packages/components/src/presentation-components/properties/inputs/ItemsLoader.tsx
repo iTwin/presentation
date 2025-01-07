@@ -3,6 +3,8 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
+import "../../common/DisposePolyfill.js";
+
 /** @internal */
 export const VALUE_BATCH_SIZE = 100;
 
