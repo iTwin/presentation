@@ -463,7 +463,9 @@ export interface PresentationInstanceFilterPropertyInfo {
     className: string;
     field: PropertiesField;
     propertyDescription: PropertyDescription;
+    // @deprecated
     sourceClassId: ClassId;
+    sourceClassIds: ClassId[];
 }
 
 // @public
