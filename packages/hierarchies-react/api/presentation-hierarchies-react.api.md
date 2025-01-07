@@ -253,6 +253,7 @@ interface UseTreeProps {
     onHierarchyLoadError?: (props: {
         parentId?: string;
         type: "timeout" | "unknown";
+        error: unknown;
     }) => void;
     onPerformanceMeasured?: (action: "initial-load" | "hierarchy-level-load" | "reload", duration: number) => void;
 }

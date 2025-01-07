@@ -262,7 +262,7 @@ async function computePropertiesByClasses(
   const filteredProperties: PresentationInstanceFilterPropertyInfo[] = [];
   for (const prop of properties) {
     // property should be shown if at least one of selected classes is derived from property source class
-    if (ecClassInfos.some((info) => info && info.isDerivedFrom(prop.sourceClassId))) {
+    if (ecClassInfos.some((info) => info && prop.sourceClassIds.some((sourceClassId) => info.isDerivedFrom(sourceClassId)))) {
       filteredProperties.push(prop);
     }
   }
@@ -276,16 +276,23 @@ async function computeClassesByProperty(
   imodel: IModelConnection,
 ): Promise<ClassInfo[]> {
   const metadataProvider = getIModelMetadataProvider(imodel);
-  const propertyClass = await metadataProvider.getECClassInfo(property.sourceClassId);
+
+  const propertyClasses = (
+    await Promise.all(
+      property.sourceClassIds.map(async (sourceClassId) => {
+        return metadataProvider.getECClassInfo(sourceClassId);
+      }),
+    )
+  ).filter((propertyClass) => propertyClass !== undefined);
+
   /* c8 ignore next 3 */
-  if (!propertyClass) {
+  if (propertyClasses.length === 0) {
     return classes;
   }
 
   const classesWithProperty: ClassInfo[] = [];
   for (const currentClass of classes) {
-    // add classes that are derived from property source class
-    if (propertyClass.isBaseOf(currentClass.id)) {
+    if (propertyClasses.some((propertyClass) => propertyClass.isBaseOf(currentClass.id))) {
       classesWithProperty.push(currentClass);
     }
   }
