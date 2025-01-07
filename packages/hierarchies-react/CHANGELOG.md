@@ -1,5 +1,18 @@
 # @itwin/presentation-hierarchies-react
 
+## 1.4.0
+
+### Minor Changes
+
+- [#827](https://github.com/iTwin/presentation/pull/827): Changed `onHierarchyLoadError` callback in `UseTreeProps`, it now accepts error as one of the props arguments.
+
+### Patch Changes
+
+- [#828](https://github.com/iTwin/presentation/pull/828): Polyfill `Symbol.dispose` and `Symbol.asyncDispose` to make sure that code using the upcoming JS recource management API works in all environments.
+- Updated dependencies:
+  - @itwin/unified-selection@1.2.1
+  - @itwin/presentation-hierarchies@1.4.1
+
 ## 1.3.0
 
 ### Minor Changes
