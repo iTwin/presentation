@@ -102,6 +102,10 @@ function Tree({ imodelAccess, height, width }: { imodelAccess: IModelAccess; hei
       [imodelAccess],
     ),
     getFilteredPaths,
+    onHierarchyLoadError: (props) => {
+      // eslint-disable-next-line no-console
+      console.error(props.error);
+    },
   });
 
   const renderContent = () => {
