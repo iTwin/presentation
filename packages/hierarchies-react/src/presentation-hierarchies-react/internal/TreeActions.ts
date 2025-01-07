@@ -9,7 +9,7 @@ import { GenericInstanceFilter, HierarchyNode, HierarchyProvider } from "@itwin/
 import { SelectionChangeType } from "../UseSelectionHandler.js";
 import { HierarchyLevelOptions, ITreeLoader, LoadedTreePart, LoadNodesOptions, TreeLoader } from "./TreeLoader.js";
 import { isTreeModelHierarchyNode, isTreeModelInfoNode, TreeModel, TreeModelHierarchyNode, TreeModelNode, TreeModelRootNode } from "./TreeModel.js";
-import { createNodeId, sameNodes } from "./Utils.js";
+import { createNodeId, debounceWrapper, sameNodes } from "./Utils.js";
 
 enableMapSet();
 
@@ -19,6 +19,11 @@ export class TreeActions {
   private _nodeIdFactory: (node: Pick<HierarchyNode, "key" | "parentKeys">) => string;
   private _currentModel: TreeModel;
   private _reset = new Subject<void>();
+
+  private _nodeLoader: Subject<LoadNodesOptions>;
+  private _parentId?: string;
+  private _timeTracker?: TimeTracker;
+  private _initialRootNode?: TreeModelRootNode;
 
   constructor(
     private _onModelChanged: (model: TreeModel) => void,
@@ -35,6 +40,29 @@ export class TreeActions {
       parentChildMap: new Map(),
       rootNode: { id: undefined, nodeData: undefined },
     };
+
+    this._nodeLoader = this.createNodeLoader();
+  }
+
+  private createNodeLoader() {
+    return debounceWrapper<LoadNodesOptions, TreeModel>(
+      (loaderOptions) => {
+        return this._loader.loadNodes(loaderOptions).pipe(collectTreePartsUntil(this._reset, this._initialRootNode));
+      },
+      (newModel: TreeModel) => {
+        const childNodes = newModel.parentChildMap.get(this._parentId);
+        const firstChildNode = childNodes?.length ? newModel.idToNode.get(childNodes[0]) : undefined;
+        this.handleLoadedHierarchy(this._parentId, newModel);
+        // only report load duration if no error occurs
+        if (!(firstChildNode && isTreeModelInfoNode(firstChildNode))) {
+          this._timeTracker?.finish();
+        }
+      },
+      () => {
+        this.onLoadingComplete(this._parentId);
+        this._timeTracker?.[Symbol.dispose]();
+      },
+    );
   }
 
   private updateTreeModel(updater: (model: Draft<TreeModel>) => void) {
@@ -65,26 +93,12 @@ export class TreeActions {
 
   private loadSubTree(options: LoadNodesOptions, initialRootNode?: TreeModelRootNode) {
     const loadAction = this.getLoadAction(options.parent.id);
-    const timeTracker = new TimeTracker((time) => this._onLoad(loadAction, time));
-    const parentId = options.parent.id;
-    this._loader
-      .loadNodes(options)
-      .pipe(collectTreePartsUntil(this._reset, initialRootNode))
-      .subscribe({
-        next: (newModel) => {
-          const childNodes = newModel.parentChildMap.get(parentId);
-          const firstChildNode = childNodes?.length ? newModel.idToNode.get(childNodes[0]) : undefined;
-          this.handleLoadedHierarchy(parentId, newModel);
-          // only report load duration if no error occurs
-          if (!(firstChildNode && isTreeModelInfoNode(firstChildNode))) {
-            timeTracker.finish();
-          }
-        },
-        complete: () => {
-          this.onLoadingComplete(parentId);
-          timeTracker[Symbol.dispose]();
-        },
-      });
+    this._timeTracker = new TimeTracker((time) => this._onLoad(loadAction, time));
+    this._parentId = options.parent.id;
+    this._initialRootNode = initialRootNode;
+
+    this._nodeLoader.next(options);
+    return this._nodeLoader;
   }
 
   private loadNodes(parentId: string, ignoreCache?: boolean) {
