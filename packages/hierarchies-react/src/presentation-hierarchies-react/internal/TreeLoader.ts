@@ -61,27 +61,28 @@ export class TreeLoader implements ITreeLoader {
     ).pipe(
       toArray(),
       catchError((err) => {
-        if (!(err instanceof Error)) {
-          this._onHierarchyLoadError({ parentId: parent.id, type: "unknown", error: err });
-          return of([
-            {
-              id: `${infoNodeIdBase}-Unknown`,
-              parentId: parent.id,
-              type: "Unknown" as const,
-              message: "Failed to create hierarchy level",
-            },
-          ]);
+        if (err instanceof Error) {
+          const nodeProps = {
+            id: `${infoNodeIdBase}-${err.message}`,
+            parentId: parent.id,
+          };
+          if (isRowsLimitError(err)) {
+            this._onHierarchyLimitExceeded({ parentId: parent.id, filter: instanceFilter, limit: err.limit });
+            return of([{ ...nodeProps, type: "ResultSetTooLarge" as const, resultSetSizeLimit: err.limit }]);
+          }
+          this._onHierarchyLoadError({ parentId: parent.id, type: isTimeoutError(err) ? "timeout" : "unknown", error: err });
+          return of([{ ...nodeProps, type: "Unknown" as const, message: "Failed to create hierarchy level" }]);
         }
-        const nodeProps = {
-          id: `${infoNodeIdBase}-${err.message}`,
-          parentId: parent.id,
-        };
-        if (isRowsLimitError(err)) {
-          this._onHierarchyLimitExceeded({ parentId: parent.id, filter: instanceFilter, limit: err.limit });
-          return of([{ ...nodeProps, type: "ResultSetTooLarge" as const, resultSetSizeLimit: err.limit }]);
-        }
-        this._onHierarchyLoadError({ parentId: parent.id, type: isTimeoutError(err) ? "timeout" : "unknown", error: err });
-        return of([{ ...nodeProps, type: "Unknown" as const, message: "Failed to create hierarchy level" }]);
+
+        this._onHierarchyLoadError({ parentId: parent.id, type: "unknown", error: err });
+        return of([
+          {
+            id: `${infoNodeIdBase}-Unknown`,
+            parentId: parent.id,
+            type: "Unknown" as const,
+            message: "Failed to create hierarchy level",
+          },
+        ]);
       }),
       map(
         (childNodes): LoadedTreePart => ({
