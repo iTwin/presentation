@@ -59,7 +59,7 @@ export class TreeActions {
         groupBy((item) => item.parentId),
         mergeMap((group) =>
           group.pipe(
-            debounceTime(50),
+            debounceTime(0),
             switchMap((props) =>
               this._loader.loadNodes(props.loadOptions).pipe(
                 collectTreePartsUntil(this._reset, props.initialRootNode),
