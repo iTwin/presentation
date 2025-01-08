@@ -127,7 +127,7 @@ export class TreeActions {
     const parentNode = this._currentModel.idToNode.get(parentId);
     /* c8 ignore next 3 */
     if (!parentNode || !isTreeModelHierarchyNode(parentNode)) {
-      return;
+      return { complete: Promise.resolve() };
     }
 
     return this.loadSubTree({
@@ -163,7 +163,7 @@ export class TreeActions {
     const rootNode = parentId !== undefined ? this.getNode(parentId) : currModel.rootNode;
     /* c8 ignore next 3 */
     if (!rootNode || isTreeModelInfoNode(rootNode)) {
-      return;
+      return { complete: Promise.resolve() };
     }
 
     if (parentId === undefined) {
@@ -215,7 +215,7 @@ export class TreeActions {
     });
 
     if (childrenAction === "none") {
-      return;
+      return { complete: Promise.resolve() };
     }
 
     return this.loadNodes(nodeId, childrenAction === "reloadChildren");
@@ -229,7 +229,7 @@ export class TreeActions {
     });
 
     if (!loadChildren) {
-      return;
+      return { complete: Promise.resolve() };
     }
 
     return this.reloadSubTree(nodeId, oldModel);
@@ -243,7 +243,7 @@ export class TreeActions {
     });
 
     if (!loadChildren) {
-      return;
+      return { complete: Promise.resolve() };
     }
 
     return this.reloadSubTree(nodeId, oldModel);
