@@ -16,7 +16,7 @@ enableMapSet();
 
 interface LoadDebouncedNodesOptions {
   loadOptions: LoadNodesOptions;
-  isComplete: Subject<void>;
+  onComplete: () => void;
   timeTracker?: TimeTracker;
   initialRootNode?: TreeModelRootNode;
   parentId?: string;
@@ -53,9 +53,6 @@ export class TreeActions {
     const subject = new Subject<LoadDebouncedNodesOptions>();
     subject
       .pipe(
-        tap((props) => {
-          props.isComplete.subscribe();
-        }),
         groupBy((item) => item.parentId),
         mergeMap((group) =>
           group.pipe(
@@ -76,7 +73,7 @@ export class TreeActions {
                   complete: () => {
                     this.onLoadingComplete(props.parentId);
                     props.timeTracker?.[Symbol.dispose]();
-                    props.isComplete.unsubscribe();
+                    props.onComplete();
                   },
                 }),
               ),
@@ -118,10 +115,12 @@ export class TreeActions {
   private loadSubTree(options: LoadNodesOptions, initialRootNode?: TreeModelRootNode) {
     const loadAction = this.getLoadAction(options.parent.id);
     const timeTracker = new TimeTracker((time) => this._onLoad(loadAction, time));
-    const isComplete = new Subject<void>();
 
-    this._nodeLoader.next({ loadOptions: options, isComplete, timeTracker, parentId: options.parent.id, initialRootNode });
-    return isComplete;
+    return {
+      complete: new Promise<void>((resolve) => {
+        this._nodeLoader.next({ loadOptions: options, onComplete: resolve, timeTracker, parentId: options.parent.id, initialRootNode });
+      }),
+    };
   }
 
   private loadNodes(parentId: string, ignoreCache?: boolean) {
@@ -233,7 +232,7 @@ export class TreeActions {
       return;
     }
 
-    this.reloadSubTree(nodeId, oldModel);
+    return this.reloadSubTree(nodeId, oldModel);
   }
 
   public setInstanceFilter(nodeId: string | undefined, filter?: GenericInstanceFilter) {
