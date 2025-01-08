@@ -2,4 +2,4 @@
 "@itwin/presentation-hierarchies-react": patch
 ---
 
-Fixed `UseTree` to return initial root nodes when changed hierarchy event is never raised.
+Fixed tree state hooks not returning root nodes when hierarchy provider doesn't raise the `onHierarchyChanged` event upon setting a hierarchy filter.
