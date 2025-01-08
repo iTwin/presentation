@@ -4,7 +4,6 @@
  *--------------------------------------------------------------------------------------------*/
 
 import "./DisposePolyfill.js";
-import { debounceTime, Observable, Subject, switchMap, tap } from "rxjs";
 import { HierarchyNode, HierarchyNodeKey } from "@itwin/presentation-hierarchies";
 
 /** @internal */
@@ -63,24 +62,4 @@ export function safeDispose(disposable: {} | { [Symbol.dispose]: () => void } | 
   } else if (Symbol.dispose in disposable) {
     disposable[Symbol.dispose]();
   }
-}
-
-/** @internal */
-export function debounceWrapper<T, R>(pipeline: (value: T) => Observable<R>, next: (value: R) => void, complete: () => void): Subject<T> {
-  const subject = new Subject<T>();
-  subject
-    .pipe(
-      debounceTime(50),
-      switchMap((value) =>
-        pipeline(value).pipe(
-          tap({
-            next,
-            complete,
-          }),
-        ),
-      ),
-    )
-    .subscribe();
-
-  return subject;
 }
