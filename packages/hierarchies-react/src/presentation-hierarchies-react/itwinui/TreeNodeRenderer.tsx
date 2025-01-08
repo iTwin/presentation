@@ -101,6 +101,9 @@ export const TreeNodeRenderer: React.ForwardRefExoticComponent<TreeNodeRendererP
           onExpanded={(_, isExpanded) => {
             expandNode(node.id, isExpanded);
           }}
+          expanderProps={{
+            onMouseDown: (e) => e.preventDefault(),
+          }}
           icon={getIcon ? getIcon(node) : undefined}
           label={getLabel ? getLabel(node) : node.label}
           sublabel={getSublabel ? getSublabel(node) : undefined}
