@@ -71,7 +71,7 @@ describe("PropertyRecordsBuilder", () => {
   it("sets constraints props for `string` type", () => {
     const constraints: StringPropertyValueConstraints = {
       minimumLength: 1,
-      maximumLength: 15
+      maximumLength: 15,
     };
     const descriptor = createTestContentDescriptor({
       fields: [
@@ -96,7 +96,7 @@ describe("PropertyRecordsBuilder", () => {
   it("sets constraints props for numeric type", () => {
     const constraints: NumericPropertyValueConstraints = {
       minimumValue: 1,
-      maximumValue: 15
+      maximumValue: 15,
     };
     const descriptor = createTestContentDescriptor({
       fields: [
@@ -121,7 +121,7 @@ describe("PropertyRecordsBuilder", () => {
   it("sets constraints props for `array` type", () => {
     const constraints: ArrayPropertyValueConstraints = {
       minOccurs: 1,
-      maxOccurs: 15
+      maxOccurs: 15,
     };
     const descriptor = createTestContentDescriptor({
       fields: [

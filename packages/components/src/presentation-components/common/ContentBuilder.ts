@@ -64,7 +64,7 @@ function createFieldInfo(field: Field, parentFieldName?: string): FieldInfo {
     renderer: field.renderer,
     enum: field.isPropertiesField() ? field.properties[0].property.enumerationInfo : undefined,
     koqName: field.isPropertiesField() ? field.properties[0].property.kindOfQuantity?.name : undefined,
-    constraints
+    constraints,
   };
 }
 

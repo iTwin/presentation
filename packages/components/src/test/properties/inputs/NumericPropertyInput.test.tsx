@@ -39,7 +39,7 @@ describe("<NumericPropertyInput />", () => {
 
   it("calls onCommit with adjusted value, when typed value out of constraint bounds", async () => {
     const record = createRecord(2);
-    record.property.constraints = {minimumValue: 1, maximumValue: 3}
+    record.property.constraints = { minimumValue: 1, maximumValue: 3 };
     const ref = createRef<PropertyEditorAttributes>();
     const spy = sinon.spy();
     const onCommit = (args: PropertyUpdatedArgs) => {
@@ -68,7 +68,6 @@ describe("<NumericPropertyInput />", () => {
     await user.tab();
     await waitFor(() => expect((ref.current?.getValue() as PrimitiveValue).value).to.be.eq(3));
     expect(spy).to.be.calledOnceWith(3);
-
   });
 
   it("get value from NumericPropertyInput reference", async () => {
@@ -363,7 +362,7 @@ describe("formatInternal", () => {
 
 describe("getMinMaxFromPropertyConstraints", () => {
   it("returns correct values with numeric constraints", () => {
-    const { min, max } = getMinMaxFromPropertyConstraints({minimumValue: 1, maximumValue: undefined});
+    const { min, max } = getMinMaxFromPropertyConstraints({ minimumValue: 1, maximumValue: undefined });
     expect(min).to.be.eq(1);
     expect(max).to.be.eq(undefined);
   });

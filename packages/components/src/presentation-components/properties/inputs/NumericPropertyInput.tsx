@@ -25,7 +25,9 @@ export const NumericPropertyInput = forwardRef<PropertyEditorAttributes, Numeric
     setInputValue(newVal);
   };
 
-  const { min, max } = propertyRecord.property.constraints ? getMinMaxFromPropertyConstraints(propertyRecord.property.constraints) : { min: undefined, max: undefined };
+  const { min, max } = propertyRecord.property.constraints
+    ? getMinMaxFromPropertyConstraints(propertyRecord.property.constraints)
+    : { min: undefined, max: undefined };
   const commitInput = () => {
     const formattedInputValue = formatInternal(inputValue, min, max);
     setInputValue(formattedInputValue);
@@ -36,7 +38,18 @@ export const NumericPropertyInput = forwardRef<PropertyEditorAttributes, Numeric
       });
   };
 
-  return <NumericInput onChange={handleChange} value={inputValue} onBlur={commitInput} isDisabled={propertyRecord.isReadonly} setFocus={setFocus} ref={ref} min={min} max={max} />;
+  return (
+    <NumericInput
+      onChange={handleChange}
+      value={inputValue}
+      onBlur={commitInput}
+      isDisabled={propertyRecord.isReadonly}
+      setFocus={setFocus}
+      ref={ref}
+      min={min}
+      max={max}
+    />
+  );
 });
 NumericPropertyInput.displayName = "NumericPropertyInput";
 
