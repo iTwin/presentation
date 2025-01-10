@@ -25,6 +25,7 @@ import {
   Item,
   LabelDefinition,
   PropertyValueFormat as PresentationPropertyValueFormat,
+  PropertyValueConstraints,
   ProcessFieldHierarchiesProps,
   ProcessMergedValueProps,
   ProcessPrimitiveValueProps,
@@ -50,9 +51,11 @@ export interface FieldInfo {
   enum?: EnumerationInfo;
   isReadonly?: boolean;
   koqName?: string;
+  constraints?: PropertyValueConstraints;
 }
 
-function createFieldInfo(field: Field, parentFieldName?: string) {
+function createFieldInfo(field: Field, parentFieldName?: string): FieldInfo {
+  const constraints = field.isPropertiesField() ? field.properties[0].property.constraints : undefined;
   return {
     type: field.isNestedContentField() ? field.type : { ...field.type, typeName: field.type.typeName.toLowerCase() },
     name: combineFieldNames(field.name, parentFieldName),
@@ -61,6 +64,7 @@ function createFieldInfo(field: Field, parentFieldName?: string) {
     renderer: field.renderer,
     enum: field.isPropertiesField() ? field.properties[0].property.enumerationInfo : undefined,
     koqName: field.isPropertiesField() ? field.properties[0].property.kindOfQuantity?.name : undefined,
+    constraints
   };
 }
 
@@ -83,6 +87,10 @@ export function createPropertyDescriptionFromFieldInfo(info: FieldInfo) {
   if (info.koqName) {
     descr.quantityType = info.koqName;
     descr.editor = { name: QuantityEditorName, ...descr.editor };
+  }
+
+  if (info.constraints) {
+    descr.constraints = info.constraints;
   }
 
   if (
