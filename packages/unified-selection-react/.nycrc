@@ -1,0 +1,11 @@
+{
+  "check-coverage": true,
+  "statements": 100,
+  "functions": 100,
+  "branches": 100,
+  "lines": 100,
+  "include": ["src/unified-selection-react/**/*", "lib/esm/unified-selection-react/**/*"],
+  "temp-dir": "./lib/coverage/.nyc_output",
+  "report-dir": "./lib/coverage",
+  "reporter": ["text-summary", "lcov", "cobertura"]
+}

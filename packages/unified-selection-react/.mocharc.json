@@ -1,0 +1,8 @@
+{
+  "require": ["./lib/esm/test/setup.js"],
+  "checkLeaks": true,
+  "global": ["IS_REACT_ACT_ENVIRONMENT"],
+  "timeout": 60000,
+  "spec": ["./lib/esm/test/**/*.test.js"],
+  "exclude": ["./lib/test/coverage/**/*"]
+}
