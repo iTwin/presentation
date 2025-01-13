@@ -255,7 +255,7 @@ interface UseTreeProps {
         type: "timeout" | "unknown";
         error: unknown;
     }) => void;
-    onPerformanceMeasured?: (action: "initial-load" | "hierarchy-level-load" | "reload", duration: number) => void;
+    onPerformanceMeasured?: (action: "initial-load" | "hierarchy-level-load" | "reload", duration: number, state?: "Completed" | "Debounced") => void;
 }
 
 // @public (undocumented)
