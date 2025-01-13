@@ -259,7 +259,7 @@ describe("TreeActions", () => {
       expect(getHierarchyNode(newModel, "root-1")?.isExpanded).to.be.false;
     });
 
-    it("Loads nodes correctly when different nodes are being expanded at the same time", async () => {
+    it("loads nodes correctly when different nodes are being expanded at the same time", async () => {
       const model = createTreeModel([
         {
           id: undefined,
