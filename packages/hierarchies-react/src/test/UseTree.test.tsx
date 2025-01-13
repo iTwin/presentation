@@ -85,7 +85,7 @@ describe("useTree", () => {
     });
   });
 
-  it("loads root nodes without raising hierarchy changed event using provider", async () => {
+  it("loads root nodes with minimal provider setup", async () => {
     const hierarchyChanged = new BeEvent();
     const customHierarchyProvider: hierarchiesModule.HierarchyProvider = {
       async *getNodes({}) {
