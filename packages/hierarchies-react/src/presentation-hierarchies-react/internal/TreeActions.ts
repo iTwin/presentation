@@ -59,15 +59,16 @@ export class TreeActions {
           group.pipe(
             buffer(group.pipe(debounceTime(0))),
             map((groupArr) => {
-              const last = groupArr.length - 1;
-              let returnIndex = last;
+              let returnIndex = groupArr.length - 1;
 
               groupArr.forEach((member, index) => {
                 if (member.discardState) {
                   returnIndex = index;
-                  return;
                 }
-                if (index === last && last === returnIndex) {
+              });
+
+              groupArr.forEach((member, index) => {
+                if (index === returnIndex) {
                   return;
                 }
                 member.onComplete();

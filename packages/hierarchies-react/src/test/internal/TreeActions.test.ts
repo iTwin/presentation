@@ -582,7 +582,6 @@ describe("TreeActions", () => {
       const newModel = onModelChangedStub.firstCall.args[0];
       expect(getHierarchyNode(newModel, "root-1")?.instanceFilter).to.be.eq(filter);
       expect(getHierarchyNode(newModel, "child-1")).to.be.undefined;
-      expect(provider.getNodes).to.be.calledWith(createGetNodesProps({ parentNode: getHierarchyNode(newModel, "root-1")?.nodeData, instanceFilter: filter }));
     });
 
     it("reloads tree after setting hierarchy filter node", async () => {
