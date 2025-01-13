@@ -78,7 +78,7 @@ function Tree({ imodel, imodelAccess, height, width }: { imodel: IModelConnectio
     getHierarchyDefinition,
     onPerformanceMeasured: (action, duration, state) => {
       // eslint-disable-next-line no-console
-      console.log(`${state} Stateless-tree-${action}, Duration: ${duration}ms`);
+      console.log(`${state ?? ""} Stateless-tree-${action}, Duration: ${duration}ms`);
     },
   });
 
