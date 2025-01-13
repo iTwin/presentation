@@ -87,7 +87,7 @@ export interface UseTreeProps {
    * Callback that is called just after a certain action is finished.
    * Can be used for performance tracking.
    */
-  onPerformanceMeasured?: (action: "initial-load" | "hierarchy-level-load" | "reload", duration: number, state?: string) => void;
+  onPerformanceMeasured?: (action: "initial-load" | "hierarchy-level-load" | "reload", duration: number, state?: "Completed" | "Debounced") => void;
   /** Action to perform when hierarchy level contains more items that the specified limit. */
   onHierarchyLimitExceeded?: (props: { parentId?: string; filter?: GenericInstanceFilter; limit?: number | "unbounded" }) => void;
   /** Action to perform when an error occurs while loading hierarchy. */

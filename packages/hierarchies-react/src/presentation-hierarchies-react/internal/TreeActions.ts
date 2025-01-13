@@ -33,7 +33,7 @@ export class TreeActions {
 
   constructor(
     private _onModelChanged: (model: TreeModel) => void,
-    private _onLoad: (actionType: "initial-load" | "hierarchy-level-load" | "reload", duration: number, aditionalMsg?: string) => void,
+    private _onLoad: (actionType: "initial-load" | "hierarchy-level-load" | "reload", duration: number, state?: "Completed" | "Debounced") => void,
     private _onHierarchyLimitExceeded: (props: { parentId?: string; filter?: GenericInstanceFilter; limit?: number | "unbounded" }) => void,
     private _onHierarchyLoadError: (props: { parentId?: string; type: "timeout" | "unknown"; error: unknown }) => void,
     nodeIdFactory?: (node: Pick<HierarchyNode, "key" | "parentKeys">) => string,
@@ -380,7 +380,7 @@ class TimeTracker {
   private _start: number;
   private _stopped: boolean = false;
 
-  constructor(private _onFinish: (time: number, state?: string) => void) {
+  constructor(private _onFinish: (time: number, state?: "Completed" | "Debounced") => void) {
     this._start = Date.now();
   }
 
@@ -388,7 +388,7 @@ class TimeTracker {
     this._stopped = true;
   }
 
-  public finish(state?: string) {
+  public finish(state?: "Completed" | "Debounced") {
     /* c8 ignore next 3 */
     if (this._stopped) {
       return;
