@@ -5,7 +5,7 @@
 
 import "./DisposePolyfill.js";
 import { Draft, enableMapSet, produce } from "immer";
-import { debounceTime, EMPTY, groupBy, mergeMap, Observable, reduce, Subject, switchMap, takeUntil, tap } from "rxjs";
+import { buffer, debounceTime, EMPTY, groupBy, map, mergeMap, Observable, reduce, Subject, switchMap, takeUntil, tap } from "rxjs";
 import { GenericInstanceFilter, HierarchyNode, HierarchyProvider } from "@itwin/presentation-hierarchies";
 import { SelectionChangeType } from "../UseSelectionHandler.js";
 import { HierarchyLevelOptions, ITreeLoader, LoadedTreePart, LoadNodesOptions, TreeLoader } from "./TreeLoader.js";
@@ -56,7 +56,23 @@ export class TreeActions {
         groupBy((item) => item.parentId),
         mergeMap((group) =>
           group.pipe(
-            debounceTime(0),
+            buffer(group.pipe(debounceTime(0))),
+            map((groupArr) => {
+              const last = groupArr.length - 1;
+              let returnIndex = last;
+
+              groupArr.forEach((member, index) => {
+                if (member.loadOptions.discardState) {
+                  returnIndex = index;
+                  return;
+                }
+                if (index === last && last === returnIndex) {
+                  return;
+                }
+                member.onComplete();
+              });
+              return groupArr[returnIndex];
+            }),
             switchMap((props) =>
               this._loader.loadNodes(props.loadOptions).pipe(
                 collectTreePartsUntil(this._reset, props.initialRootNode),
@@ -172,7 +188,7 @@ export class TreeActions {
     }
 
     return this.loadSubTree(
-      { parent: rootNode, getHierarchyLevelOptions, shouldLoadChildren, buildNode, ignoreCache: options?.ignoreCache },
+      { parent: rootNode, getHierarchyLevelOptions, shouldLoadChildren, buildNode, ignoreCache: options?.ignoreCache, discardState: options?.discardState },
       !!options?.discardState ? undefined : { ...currModel.rootNode },
     );
   }

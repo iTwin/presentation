@@ -117,7 +117,6 @@ describe("TreeActions", () => {
         const newModel = onModelChangedStub.firstCall.args[0];
         expect(newModel.rootNode.isLoading).to.be.true;
         expect(getHierarchyNode(newModel, "root-1")).to.not.be.undefined;
-        expect(provider.getNodes).to.be.calledOnce;
       });
 
       onModelChangedStub.resetHistory();
@@ -814,11 +813,52 @@ describe("TreeActions", () => {
 
       const actions = createActions(model);
 
-      actions.reloadTree({ state: "discard" });
       actions.reloadTree({ state: "keep" });
-      await actions.reloadTree({ state: "discard" })?.complete;
+      actions.reloadTree({ state: "keep" });
+      await actions.reloadTree({ state: "keep" })?.complete;
       await waitFor(() => {
-        expect(provider.getNodes).to.be.calledOnce;
+        expect(provider.getNodes).to.be.calledTwice; // once for root node, once for child node
+        expect(onModelChangedStub).to.be.calledTwice;
+      });
+    });
+
+    it("reloads nodes once with discarded state when multiple request are made at the same time and one of them had reset state", async () => {
+      const model = createTreeModel([
+        {
+          id: undefined,
+          children: ["root-1", "root-2"],
+        },
+        {
+          id: "root-1",
+          isExpanded: true,
+          children: ["child-1"],
+        },
+        {
+          id: "root-2",
+          children: ["child-2"],
+        },
+      ]);
+
+      provider.getNodes.reset();
+      provider.getNodes.callsFake((props) => {
+        if (props.parentNode === undefined) {
+          return createAsyncIterator([createTestHierarchyNode({ id: "root-1" }), createTestHierarchyNode({ id: "root-2" })]);
+        }
+        if (HierarchyNodeKey.equals(props.parentNode.key, { type: "generic", id: "root-1" })) {
+          return createAsyncIterator([createTestHierarchyNode({ id: "child-1-2" })]);
+        }
+        return createAsyncIterator([]);
+      });
+
+      const actions = createActions(model);
+
+      await Promise.all([
+        actions.reloadTree({ state: "keep" })?.complete,
+        actions.reloadTree({ state: "discard" })?.complete,
+        actions.reloadTree({ state: "keep" })?.complete,
+      ]);
+      await waitFor(() => {
+        expect(provider.getNodes).to.be.calledOnce; // state discarded loaded only root node
         expect(onModelChangedStub).to.be.calledTwice;
       });
     });

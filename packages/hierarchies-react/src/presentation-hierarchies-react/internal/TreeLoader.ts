@@ -27,6 +27,7 @@ export interface LoadNodesOptions {
   shouldLoadChildren: (node: TreeModelHierarchyNode) => boolean;
   buildNode?: (node: TreeModelHierarchyNode) => TreeModelHierarchyNode;
   ignoreCache?: boolean;
+  discardState?: boolean;
 }
 
 /** @internal */
