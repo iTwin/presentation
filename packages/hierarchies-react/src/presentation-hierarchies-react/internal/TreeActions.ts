@@ -20,6 +20,7 @@ interface LoadDebouncedNodesOptions {
   timeTracker?: TimeTracker;
   initialRootNode?: TreeModelRootNode;
   parentId?: string;
+  discardState?: boolean;
 }
 
 /** @internal */
@@ -62,7 +63,7 @@ export class TreeActions {
               let returnIndex = last;
 
               groupArr.forEach((member, index) => {
-                if (member.loadOptions.discardState) {
+                if (member.discardState) {
                   returnIndex = index;
                   return;
                 }
@@ -70,6 +71,7 @@ export class TreeActions {
                   return;
                 }
                 member.onComplete();
+                member.timeTracker?.[Symbol.dispose];
               });
               return groupArr[returnIndex];
             }),
@@ -128,13 +130,13 @@ export class TreeActions {
     return this._currentModel.idToNode.size === 0 ? "initial-load" : parentId === undefined ? "reload" : "hierarchy-level-load";
   }
 
-  private loadSubTree(options: LoadNodesOptions, initialRootNode?: TreeModelRootNode) {
+  private loadSubTree(options: LoadNodesOptions, initialRootNode?: TreeModelRootNode, discardState?: boolean) {
     const loadAction = this.getLoadAction(options.parent.id);
     const timeTracker = new TimeTracker((time) => this._onLoad(loadAction, time));
 
     return {
       complete: new Promise<void>((resolve) => {
-        this._nodeLoader.next({ loadOptions: options, onComplete: resolve, timeTracker, parentId: options.parent.id, initialRootNode });
+        this._nodeLoader.next({ loadOptions: options, onComplete: resolve, timeTracker, parentId: options.parent.id, initialRootNode, discardState });
       }),
     };
   }
@@ -188,8 +190,9 @@ export class TreeActions {
     }
 
     return this.loadSubTree(
-      { parent: rootNode, getHierarchyLevelOptions, shouldLoadChildren, buildNode, ignoreCache: options?.ignoreCache, discardState: options?.discardState },
+      { parent: rootNode, getHierarchyLevelOptions, shouldLoadChildren, buildNode, ignoreCache: options?.ignoreCache },
       !!options?.discardState ? undefined : { ...currModel.rootNode },
+      options?.discardState,
     );
   }
 
