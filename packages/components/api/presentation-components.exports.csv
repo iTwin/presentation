@@ -113,9 +113,13 @@ public;interface;TableCellRendererProps
 public;interface;TableColumnDefinition
 public;interface;TableRowDefinition
 public;interface;UnifiedSelectionContext
+deprecated;interface;UnifiedSelectionContext
 public;function;UnifiedSelectionContextProvider
+deprecated;function;UnifiedSelectionContextProvider
 public;interface;UnifiedSelectionContextProviderProps
+deprecated;interface;UnifiedSelectionContextProviderProps
 public;type;UnifiedSelectionState
+deprecated;type;UnifiedSelectionState
 public;class;UnifiedSelectionTreeEventHandler
 deprecated;class;UnifiedSelectionTreeEventHandler
 public;interface;UnifiedSelectionTreeEventHandlerParams
@@ -152,6 +156,7 @@ public;function;useRulesetRegistration
 deprecated;function;useRulesetRegistration
 public;function;useSchemaMetadataContext
 public;function;useUnifiedSelectionContext
+deprecated;function;useUnifiedSelectionContext
 public;function;useUnifiedSelectionTreeEventHandler
 deprecated;function;useUnifiedSelectionTreeEventHandler
 public;function;viewWithUnifiedSelection

@@ -2,6 +2,7 @@
  * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
+/* eslint-disable @typescript-eslint/no-deprecated */
 /**
  * @packageDocumentation
  * @module UnifiedSelection
@@ -17,6 +18,7 @@ import { memoize } from "../common/Utils.js";
 /**
  * Interface for accessing and modifying Unified Selection within React components.
  * @public
+ * @deprecated in 5.9.0. The `@itwin/unified-selection-react` package should be used instead.
  */
 export interface UnifiedSelectionContext {
   /** iModel associated with the selection. */
@@ -49,12 +51,14 @@ export interface UnifiedSelectionContext {
  * Describes how to access the current Unified Selection state. The returned `KeySet` object exposes global data and is
  * mutable.
  * @public
+ * @deprecated in 5.9.0. The `@itwin/unified-selection-react` package should be used instead.
  */
 export type UnifiedSelectionState = (selectionLevel?: number) => Readonly<KeySet>;
 
 /**
  * Props for Unified Selection context provider.
  * @public
+ * @deprecated in 5.9.0. The `@itwin/unified-selection-react` package should be used instead.
  */
 export interface UnifiedSelectionContextProviderProps {
   /** iModel associated with the selection. */
@@ -75,6 +79,7 @@ export interface UnifiedSelectionContextProviderProps {
  * [Unified Selection]($docs/presentation/unified-selection/index.md) API to be better suited for React
  * applications. The provided context is accessible via [[useUnifiedSelectionContext]] hook.
  * @public
+ * @deprecated in 5.9.0. Use `UnifiedSelectionContextProvider` from `@itwin/unified-selection-react` package instead.
  */
 export function UnifiedSelectionContextProvider(props: UnifiedSelectionContextProviderProps): React.ReactElement {
   const selectionLevel = props.selectionLevel ?? 0;
@@ -126,6 +131,7 @@ const unifiedSelectionContext = createContext<UnifiedSelectionContext | undefine
 /**
  * Returns Unified Selection context provided by [[UnifiedSelectionContextProvider]].
  * @public
+ * @deprecated in 5.9.0. Use `useUnifiedSelectionContext` from `@itwin/unified-selection-react` package instead.
  */
 export function useUnifiedSelectionContext(): UnifiedSelectionContext | undefined {
   return useContext(unifiedSelectionContext);

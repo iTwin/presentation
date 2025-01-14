@@ -7,15 +7,11 @@ import { insertPhysicalElement, insertPhysicalModelWithPartition, insertSpatialC
 import { PropertyRecord } from "@itwin/appui-abstract";
 import { PropertyValueRendererManager, UiComponents } from "@itwin/components-react";
 import { IModelApp, IModelConnection } from "@itwin/core-frontend";
-import { InstanceKey, KeySet, Ruleset } from "@itwin/presentation-common";
-import {
-  TableColumnDefinition,
-  TableRowDefinition,
-  UnifiedSelectionContextProvider,
-  usePresentationTableWithUnifiedSelection,
-} from "@itwin/presentation-components";
-import { Presentation } from "@itwin/presentation-frontend";
+import { InstanceKey, Ruleset } from "@itwin/presentation-common";
+import { TableColumnDefinition, TableRowDefinition, usePresentationTableWithUnifiedSelection } from "@itwin/presentation-components";
 import { buildTestIModel } from "@itwin/presentation-testing";
+import { createStorage } from "@itwin/unified-selection";
+import { UnifiedSelectionContextProvider } from "@itwin/unified-selection-react";
 import { initialize, terminate } from "../../IntegrationTests.js";
 import { act, getByText, render, waitFor } from "../../RenderUtils.js";
 import { ensureTableHasRowsWithCellValues } from "../TableUtils.js";
@@ -115,35 +111,38 @@ describe("Learning snippets", async () => {
         );
       });
 
-      function TableWithUnifiedSelection() {
+      // __PUBLISH_EXTRACT_START__ Presentation.Components.UnifiedSelection.TableWithinUnifiedSelectionContext
+      // Create a single unified selection storage to be shared between all application's components
+      const selectionStorage = createStorage();
+
+      function App() {
         return (
-          // __PUBLISH_EXTRACT_START__ Presentation.Components.UnifiedSelection.TableWithinUnifiedSelectionContext
-          <UnifiedSelectionContextProvider imodel={imodel}>
+          <UnifiedSelectionContextProvider storage={selectionStorage}>
             <MyTable imodel={imodel} />
           </UnifiedSelectionContextProvider>
-          // __PUBLISH_EXTRACT_END__
         );
       }
+      // __PUBLISH_EXTRACT_END__
 
       // render the component
-      const { container } = render(<TableWithUnifiedSelection />);
+      const { container } = render(<App />);
 
       await waitFor(() => getByText(container, "Select something to see properties"));
 
       // test Unified Selection -> Table content synchronization
-      act(() => Presentation.selection.replaceSelection("", imodel, new KeySet([elementKeys[0]])));
+      act(() => selectionStorage.replaceSelection({ imodelKey: imodel.key, source: "", selectables: [elementKeys[0]] }));
       await ensureTableHasRowsWithCellValues(container, "User Label", ["My Element 1"]);
 
-      act(() => Presentation.selection.replaceSelection("", imodel, new KeySet([elementKeys[1]])));
+      act(() => selectionStorage.replaceSelection({ imodelKey: imodel.key, source: "", selectables: [elementKeys[1]] }));
       await ensureTableHasRowsWithCellValues(container, "User Label", ["My Element 2"]);
 
-      act(() => Presentation.selection.replaceSelection("", imodel, new KeySet([elementKeys[0], elementKeys[1]])));
+      act(() => selectionStorage.replaceSelection({ imodelKey: imodel.key, source: "", selectables: [elementKeys[0], elementKeys[1]] }));
       await ensureTableHasRowsWithCellValues(container, "User Label", ["My Element 1", "My Element 2"]);
 
-      act(() => Presentation.selection.clearSelection("", imodel));
+      act(() => selectionStorage.clearSelection({ imodelKey: imodel.key, source: "" }));
       await waitFor(() => getByText(container, "Select something to see properties"));
 
-      act(() => Presentation.selection.replaceSelection("", imodel, new KeySet([modelKey])));
+      act(() => selectionStorage.replaceSelection({ imodelKey: imodel.key, source: "", selectables: [modelKey] }));
       await ensureTableHasRowsWithCellValues(container, "User Label", ["My Element 1", "My Element 2"]);
     });
   });

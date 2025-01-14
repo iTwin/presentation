@@ -731,7 +731,7 @@ export interface TableRowDefinition {
     key: string;
 }
 
-// @public
+// @public @deprecated
 export interface UnifiedSelectionContext {
     addToSelection(keys: Keys, level?: number): void;
     clearSelection(level?: number): void;
@@ -742,17 +742,17 @@ export interface UnifiedSelectionContext {
     selectionLevel: number;
 }
 
-// @public
+// @public @deprecated
 export function UnifiedSelectionContextProvider(props: UnifiedSelectionContextProviderProps): React.ReactElement;
 
-// @public
+// @public @deprecated
 export interface UnifiedSelectionContextProviderProps {
     children?: React.ReactNode;
     imodel: IModelConnection;
     selectionLevel?: number;
 }
 
-// @public
+// @public @deprecated
 export type UnifiedSelectionState = (selectionLevel?: number) => Readonly<KeySet>;
 
 // @public @deprecated
@@ -913,7 +913,7 @@ export function useRulesetRegistration(ruleset: Ruleset): void;
 // @public
 export function useSchemaMetadataContext(): SchemaMetadataContext | undefined;
 
-// @public
+// @public @deprecated
 export function useUnifiedSelectionContext(): UnifiedSelectionContext | undefined;
 
 // @public @deprecated

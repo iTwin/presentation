@@ -8,12 +8,13 @@
 
 import { useEffect, useRef, useState } from "react";
 import { EMPTY, from, map, mergeMap, Observable, of, Subject, toArray } from "rxjs";
+import { PropertyRecord } from "@itwin/appui-abstract";
 import { assert } from "@itwin/core-bentley";
 import { IModelApp, IModelConnection } from "@itwin/core-frontend";
 import { Content, DefaultContentDisplayTypes, KeySet, PageOptions, Ruleset, StartItemProps, traverseContent } from "@itwin/presentation-common";
 import { Presentation } from "@itwin/presentation-frontend";
 import { FieldHierarchyRecord, InternalPropertyRecordsBuilder } from "../common/ContentBuilder.js";
-import { useErrorState } from "../common/Utils.js";
+import { createIModelKey, useErrorState, WithIModelKey } from "../common/Utils.js";
 import { TableRowDefinition } from "./Types.js";
 import { TableOptions } from "./UseTableOptions.js";
 
@@ -243,7 +244,7 @@ async function loadRows(
         map((result) =>
           result
             ? {
-                rowDefinitions: createRows(result.content),
+                rowDefinitions: createRows(result.content, imodel),
                 total: result.total,
                 offset: paging.start,
               }
@@ -261,8 +262,8 @@ async function loadRows(
   });
 }
 
-function createRows(content: Content) {
-  const rowsBuilder = new RowsBuilder();
+function createRows(content: Content, imodel: IModelConnection) {
+  const rowsBuilder = new RowsBuilder({ imodel });
   traverseContent(rowsBuilder, content);
   return rowsBuilder.rows;
 }
@@ -271,21 +272,26 @@ class RowsBuilder extends InternalPropertyRecordsBuilder {
   public readonly rows: TableRowDefinition[] = [];
   private _currentRow: TableRowDefinition | undefined = undefined;
 
-  public constructor() {
-    super((item) => ({
-      item,
-      append: (record: FieldHierarchyRecord) => {
-        if (record.fieldHierarchy.field.isNestedContentField()) {
-          return;
-        }
+  public constructor({ imodel }: { imodel: IModelConnection }) {
+    super(
+      (item) => ({
+        item,
+        append: (record: FieldHierarchyRecord) => {
+          if (record.fieldHierarchy.field.isNestedContentField()) {
+            return;
+          }
 
-        assert(this._currentRow !== undefined);
-        this._currentRow.cells.push({
-          key: record.fieldHierarchy.field.name,
-          record: record.record,
-        });
+          assert(this._currentRow !== undefined);
+          this._currentRow.cells.push({
+            key: record.fieldHierarchy.field.name,
+            record: record.record,
+          });
+        },
+      }),
+      (record: WithIModelKey<PropertyRecord>) => {
+        record.imodelKey = createIModelKey(imodel);
       },
-    }));
+    );
   }
 
   public override startItem(props: StartItemProps): boolean {

@@ -23,7 +23,7 @@ import { act, render, renderHook, waitFor } from "../TestUtils.js";
 
 describe("useRows", () => {
   let onActiveFormattingUnitSystemChanged: QuantityFormatter["onActiveFormattingUnitSystemChanged"];
-  const imodel = {} as IModelConnection;
+  const imodel = { key: "test-imodel" } as IModelConnection;
   const initialProps: UseRowsProps = {
     imodel,
     keys: new KeySet([createTestECInstanceKey()]),

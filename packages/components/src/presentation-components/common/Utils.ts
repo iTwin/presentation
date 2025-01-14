@@ -270,3 +270,9 @@ export function memoize<Fn extends mm.AnyFn>(fn: Fn | mm.Memoized<Fn>, options?:
   const microMemoize = mm.default as unknown as (fn: Fn | mm.Memoized<Fn>, options?: mm.Options<Fn>) => mm.Memoized<Fn>;
   return microMemoize(fn, options);
 }
+
+export type WithIModelKey<TObj extends {}> = TObj & { imodelKey?: string };
+
+export function createIModelKey(imodel: { key: string; name: string }) {
+  return imodel.key.length ? imodel.key : /*c8 ignore next */ imodel.name;
+}

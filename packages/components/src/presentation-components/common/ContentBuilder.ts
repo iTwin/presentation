@@ -39,6 +39,7 @@ import {
 } from "@itwin/presentation-common";
 import { NumericEditorName } from "../properties/editors/NumericPropertyEditor.js";
 import { QuantityEditorName } from "../properties/editors/QuantityPropertyEditor.js";
+import { WithIModelKey } from "./Utils.js";
 
 /** @internal */
 export interface FieldInfo {
@@ -138,6 +139,7 @@ class StructMembersAppender implements INestedPropertiesAppender {
     private _fieldHierarchy: FieldHierarchy,
     private _fieldInfo: FieldInfo,
     private _label?: LabelDefinition,
+    private _propertyRecordsProcessor?: (record: PropertyRecord) => void,
   ) {}
   public append(record: FieldHierarchyRecord): void {
     this._members[record.fieldHierarchy.field.name] = record.record;
@@ -156,6 +158,7 @@ class StructMembersAppender implements INestedPropertiesAppender {
       this._fieldHierarchy.field,
       displayLabel === "@Presentation:label.notSpecified@" ? undefined : displayLabel,
       IPropertiesAppender.isRoot(this._parentAppender) ? this._parentAppender.item.extendedData : undefined,
+      this._propertyRecordsProcessor,
     );
     this._parentAppender.append({ record, fieldHierarchy: this._fieldHierarchy });
   }
@@ -166,6 +169,7 @@ class ArrayItemsAppender implements INestedPropertiesAppender {
     private _parentAppender: IPropertiesAppender,
     private _fieldHierarchy: FieldHierarchy,
     private _fieldInfo: FieldInfo,
+    private _propertyRecordsProcessor?: (record: PropertyRecord) => void,
   ) {}
   public append(record: FieldHierarchyRecord): void {
     this._items.push(record.record);
@@ -183,6 +187,7 @@ class ArrayItemsAppender implements INestedPropertiesAppender {
       this._fieldHierarchy.field,
       undefined,
       IPropertiesAppender.isRoot(this._parentAppender) ? this._parentAppender.item.extendedData : undefined,
+      this._propertyRecordsProcessor,
     );
     this._parentAppender.append({ record, fieldHierarchy: this._fieldHierarchy });
   }
@@ -192,9 +197,11 @@ class ArrayItemsAppender implements INestedPropertiesAppender {
 export class InternalPropertyRecordsBuilder implements IContentVisitor {
   private _appendersStack: Array<IPropertiesAppender> = [];
   private _rootAppenderFactory: (item: Item) => IRootPropertiesAppender;
+  private _propertyRecordsProcessor?: (record: PropertyRecord) => void;
 
-  public constructor(rootPropertiesAppenderFactory: (item: Item) => IRootPropertiesAppender) {
+  public constructor(rootPropertiesAppenderFactory: (item: Item) => IRootPropertiesAppender, propertyRecordsProcessor?: (record: PropertyRecord) => void) {
     this._rootAppenderFactory = rootPropertiesAppenderFactory;
+    this._propertyRecordsProcessor = propertyRecordsProcessor;
   }
 
   protected get currentPropertiesAppender(): IPropertiesAppender {
@@ -232,7 +239,9 @@ export class InternalPropertyRecordsBuilder implements IContentVisitor {
       ...createFieldInfo(props.hierarchy.field, props.parentFieldName),
       type: props.valueType,
     };
-    this._appendersStack.push(new StructMembersAppender(this.currentPropertiesAppender, props.hierarchy, fieldInfo, props.label));
+    this._appendersStack.push(
+      new StructMembersAppender(this.currentPropertiesAppender, props.hierarchy, fieldInfo, props.label, this._propertyRecordsProcessor),
+    );
     return true;
   }
   public finishStruct(): void {
@@ -243,10 +252,15 @@ export class InternalPropertyRecordsBuilder implements IContentVisitor {
 
   public startArray(props: StartArrayProps): boolean {
     this._appendersStack.push(
-      new ArrayItemsAppender(this.currentPropertiesAppender, props.hierarchy, {
-        ...createFieldInfo(props.hierarchy.field, props.parentFieldName),
-        type: props.valueType,
-      }),
+      new ArrayItemsAppender(
+        this.currentPropertiesAppender,
+        props.hierarchy,
+        {
+          ...createFieldInfo(props.hierarchy.field, props.parentFieldName),
+          type: props.valueType,
+        },
+        this._propertyRecordsProcessor,
+      ),
     );
     return true;
   }
@@ -265,6 +279,7 @@ export class InternalPropertyRecordsBuilder implements IContentVisitor {
     record.isMerged = true;
     record.isReadonly = true;
     record.autoExpand = propertyField.isNestedContentField() && propertyField.autoExpand;
+    this._propertyRecordsProcessor?.(record);
     this.currentPropertiesAppender.append({ record, fieldHierarchy: { field: propertyField, childFields: [] } });
   }
 
@@ -284,16 +299,18 @@ export class InternalPropertyRecordsBuilder implements IContentVisitor {
       props.field,
       props.displayValue?.toString(),
       IPropertiesAppender.isRoot(appender) ? appender.item.extendedData : undefined,
+      this._propertyRecordsProcessor,
     );
     appender.append({ record, fieldHierarchy: { field: props.field, childFields: [] } });
   }
 }
 
 function applyPropertyRecordAttributes(
-  record: PropertyRecord,
+  record: WithIModelKey<PropertyRecord>,
   field: Field,
   displayValue: string | undefined,
   extendedData: typeof Item.prototype.extendedData | undefined,
+  propertyRecordsProcessor?: (record: PropertyRecord) => void,
 ) {
   if (displayValue) {
     record.description = displayValue.toString();
@@ -307,4 +324,5 @@ function applyPropertyRecordAttributes(
   if (extendedData) {
     record.extendedData = extendedData;
   }
+  propertyRecordsProcessor?.(record);
 }

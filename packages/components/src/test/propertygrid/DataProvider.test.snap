@@ -28,6 +28,7 @@ Object {
   "records": Object {
     "my-category": Array [
       PropertyRecord {
+        "imodelKey": "test-imodel",
         "property": Object {
           "displayLabel": "Simple Field",
           "name": "SimpleField",
@@ -70,6 +71,7 @@ Object {
   "records": Object {
     "test-category": Array [
       PropertyRecord {
+        "imodelKey": "test-imodel",
         "property": Object {
           "displayLabel": "Simple Field",
           "name": "SimpleField",
@@ -113,6 +115,7 @@ Object {
     "Category2": Array [
       PropertyRecord {
         "autoExpand": false,
+        "imodelKey": "test-imodel",
         "isMerged": true,
         "isReadonly": true,
         "property": Object {
@@ -156,6 +159,7 @@ Object {
     "Category2": Array [
       PropertyRecord {
         "description": "display value 1",
+        "imodelKey": "test-imodel",
         "property": Object {
           "displayLabel": "Simple Field",
           "name": "root-field$nested-field-1",
@@ -169,6 +173,7 @@ Object {
       },
       PropertyRecord {
         "description": "display value 2",
+        "imodelKey": "test-imodel",
         "property": Object {
           "displayLabel": "Simple Field",
           "name": "root-field$nested-field-2",
@@ -217,6 +222,7 @@ Object {
     "Category1": Array [
       PropertyRecord {
         "description": "display value 1",
+        "imodelKey": "test-imodel",
         "property": Object {
           "displayLabel": "Simple Field",
           "name": "root-field$middle-field$nested-field-1",
@@ -230,6 +236,7 @@ Object {
       },
       PropertyRecord {
         "description": "display value 4",
+        "imodelKey": "test-imodel",
         "property": Object {
           "displayLabel": "Simple Field",
           "name": "nested-field-4",
@@ -244,6 +251,7 @@ Object {
     ],
     "Category2": Array [
       PropertyRecord {
+        "imodelKey": "test-imodel",
         "property": Object {
           "displayLabel": "Nested Content",
           "name": "root-field$middle-field",
@@ -253,6 +261,7 @@ Object {
           "members": Object {
             "nested-field-2": PropertyRecord {
               "description": "display value 2",
+              "imodelKey": "test-imodel",
               "property": Object {
                 "displayLabel": "Simple Field",
                 "name": "root-field$middle-field$nested-field-2",
@@ -270,6 +279,7 @@ Object {
       },
       PropertyRecord {
         "description": "display value 3",
+        "imodelKey": "test-imodel",
         "property": Object {
           "displayLabel": "Simple Field",
           "name": "root-field$nested-field-3",
@@ -317,6 +327,7 @@ Object {
   "records": Object {
     "Category1": Array [
       PropertyRecord {
+        "imodelKey": "test-imodel",
         "property": Object {
           "displayLabel": "Nested Content",
           "name": "root-field",
@@ -325,6 +336,7 @@ Object {
         "value": Object {
           "members": Object {
             "middle-field-1": PropertyRecord {
+              "imodelKey": "test-imodel",
               "isReadonly": true,
               "property": Object {
                 "displayLabel": "Nested Content",
@@ -334,6 +346,7 @@ Object {
               "value": Object {
                 "items": Array [
                   PropertyRecord {
+                    "imodelKey": "test-imodel",
                     "property": Object {
                       "displayLabel": "Nested Content",
                       "name": "root-field$middle-field-1",
@@ -343,6 +356,7 @@ Object {
                       "members": Object {
                         "nested-field-1": PropertyRecord {
                           "description": "display value 1",
+                          "imodelKey": "test-imodel",
                           "property": Object {
                             "displayLabel": "Simple Field",
                             "name": "root-field$middle-field-1$nested-field-1",
@@ -364,6 +378,7 @@ Object {
               },
             },
             "middle-field-2": PropertyRecord {
+              "imodelKey": "test-imodel",
               "isReadonly": true,
               "property": Object {
                 "displayLabel": "Nested Content",
@@ -373,6 +388,7 @@ Object {
               "value": Object {
                 "items": Array [
                   PropertyRecord {
+                    "imodelKey": "test-imodel",
                     "property": Object {
                       "displayLabel": "Nested Content",
                       "name": "root-field$middle-field-2",
@@ -382,6 +398,7 @@ Object {
                       "members": Object {
                         "nested-field-3": PropertyRecord {
                           "description": "display value 3",
+                          "imodelKey": "test-imodel",
                           "property": Object {
                             "displayLabel": "Simple Field",
                             "name": "root-field$middle-field-2$nested-field-3",
@@ -408,6 +425,7 @@ Object {
       },
       PropertyRecord {
         "description": "display value",
+        "imodelKey": "test-imodel",
         "property": Object {
           "displayLabel": "Simple Field",
           "name": "root-sibling",
@@ -422,6 +440,7 @@ Object {
     ],
     "Category2": Array [
       PropertyRecord {
+        "imodelKey": "test-imodel",
         "property": Object {
           "displayLabel": "Nested Content",
           "name": "root-field$middle-field-1",
@@ -431,6 +450,7 @@ Object {
           "members": Object {
             "nested-field-2": PropertyRecord {
               "description": "display value 2",
+              "imodelKey": "test-imodel",
               "property": Object {
                 "displayLabel": "Simple Field",
                 "name": "root-field$middle-field-1$nested-field-2",
@@ -447,6 +467,7 @@ Object {
         },
       },
       PropertyRecord {
+        "imodelKey": "test-imodel",
         "property": Object {
           "displayLabel": "Nested Content",
           "name": "root-field$middle-field-2",
@@ -456,6 +477,7 @@ Object {
           "members": Object {
             "nested-field-4": PropertyRecord {
               "description": "display value 4",
+              "imodelKey": "test-imodel",
               "property": Object {
                 "displayLabel": "Simple Field",
                 "name": "root-field$middle-field-2$nested-field-4",
@@ -469,6 +491,7 @@ Object {
             },
             "nested-field-5": PropertyRecord {
               "description": "display value 5",
+              "imodelKey": "test-imodel",
               "property": Object {
                 "displayLabel": "Simple Field",
                 "name": "root-field$middle-field-2$nested-field-5",
@@ -516,6 +539,7 @@ Object {
     "Category2": Array [
       PropertyRecord {
         "description": "display value 1",
+        "imodelKey": "test-imodel",
         "property": Object {
           "displayLabel": "Simple Field",
           "name": "root-field$nested-field-1",
@@ -564,6 +588,7 @@ Object {
     "Category1": Array [
       PropertyRecord {
         "description": "display value 1",
+        "imodelKey": "test-imodel",
         "property": Object {
           "displayLabel": "Simple Field",
           "name": "root-field$nested-field-1",
@@ -579,6 +604,7 @@ Object {
     "Category2": Array [
       PropertyRecord {
         "description": "display value 2",
+        "imodelKey": "test-imodel",
         "property": Object {
           "displayLabel": "Simple Field",
           "name": "root-field$nested-field-2",
@@ -626,6 +652,7 @@ Object {
   "records": Object {
     "Category1": Array [
       PropertyRecord {
+        "imodelKey": "test-imodel",
         "property": Object {
           "displayLabel": "Nested Content",
           "name": "root-field",
@@ -635,6 +662,7 @@ Object {
           "members": Object {
             "nested-field-1": PropertyRecord {
               "description": "display value 1",
+              "imodelKey": "test-imodel",
               "property": Object {
                 "displayLabel": "Simple Field",
                 "name": "root-field$nested-field-1",
@@ -652,6 +680,7 @@ Object {
       },
       PropertyRecord {
         "description": "display value 3",
+        "imodelKey": "test-imodel",
         "property": Object {
           "displayLabel": "Simple Field",
           "name": "sibling-root-field",
@@ -667,6 +696,7 @@ Object {
     "Category2": Array [
       PropertyRecord {
         "description": "display value 2",
+        "imodelKey": "test-imodel",
         "property": Object {
           "displayLabel": "Simple Field",
           "name": "root-field$nested-field-2",
@@ -709,6 +739,7 @@ Object {
   "records": Object {
     "test-category": Array [
       PropertyRecord {
+        "imodelKey": "test-imodel",
         "property": Object {
           "displayLabel": "Nested Content",
           "name": "root-field",
@@ -717,6 +748,7 @@ Object {
         "value": Object {
           "members": Object {
             "middle-field": PropertyRecord {
+              "imodelKey": "test-imodel",
               "isReadonly": true,
               "property": Object {
                 "displayLabel": "Nested Content",
@@ -726,6 +758,7 @@ Object {
               "value": Object {
                 "items": Array [
                   PropertyRecord {
+                    "imodelKey": "test-imodel",
                     "property": Object {
                       "displayLabel": "Nested Content",
                       "name": "root-field$middle-field",
@@ -735,6 +768,7 @@ Object {
                       "members": Object {
                         "primitive-field-3": PropertyRecord {
                           "description": "display value 1",
+                          "imodelKey": "test-imodel",
                           "property": Object {
                             "displayLabel": "Simple Field",
                             "name": "root-field$middle-field$primitive-field-3",
@@ -751,6 +785,7 @@ Object {
                     },
                   },
                   PropertyRecord {
+                    "imodelKey": "test-imodel",
                     "property": Object {
                       "displayLabel": "Nested Content",
                       "name": "root-field$middle-field",
@@ -760,6 +795,7 @@ Object {
                       "members": Object {
                         "primitive-field-3": PropertyRecord {
                           "description": "display value 2",
+                          "imodelKey": "test-imodel",
                           "property": Object {
                             "displayLabel": "Simple Field",
                             "name": "root-field$middle-field$primitive-field-3",
@@ -782,6 +818,7 @@ Object {
             },
             "primitive-field-2": PropertyRecord {
               "description": "test",
+              "imodelKey": "test-imodel",
               "property": Object {
                 "displayLabel": "Simple Field",
                 "name": "root-field$primitive-field-2",
@@ -799,6 +836,7 @@ Object {
       },
       PropertyRecord {
         "description": "test",
+        "imodelKey": "test-imodel",
         "property": Object {
           "displayLabel": "Simple Field",
           "name": "primitive-field-1",
@@ -841,6 +879,7 @@ Object {
   "records": Object {
     "test-category": Array [
       PropertyRecord {
+        "imodelKey": "test-imodel",
         "property": Object {
           "displayLabel": "Nested Content",
           "name": "root-field",
@@ -850,6 +889,7 @@ Object {
           "members": Object {
             "primitive-field-2": PropertyRecord {
               "description": "test",
+              "imodelKey": "test-imodel",
               "property": Object {
                 "displayLabel": "Simple Field",
                 "name": "root-field$primitive-field-2",
@@ -863,6 +903,7 @@ Object {
             },
             "primitive-field-3": PropertyRecord {
               "description": "display value 1",
+              "imodelKey": "test-imodel",
               "property": Object {
                 "displayLabel": "Simple Field",
                 "name": "root-field$middle-field$primitive-field-3",
@@ -880,6 +921,7 @@ Object {
       },
       PropertyRecord {
         "description": "test",
+        "imodelKey": "test-imodel",
         "property": Object {
           "displayLabel": "Simple Field",
           "name": "primitive-field-1",
@@ -922,6 +964,7 @@ Object {
   "records": Object {
     "test-category": Array [
       PropertyRecord {
+        "imodelKey": "test-imodel",
         "isReadonly": true,
         "property": Object {
           "displayLabel": "Nested Content",
@@ -932,6 +975,7 @@ Object {
         "value": Object {
           "items": Array [
             PropertyRecord {
+              "imodelKey": "test-imodel",
               "property": Object {
                 "displayLabel": "Nested Content",
                 "name": "root-field",
@@ -941,6 +985,7 @@ Object {
                 "members": Object {
                   "nested-field": PropertyRecord {
                     "description": "display value 1",
+                    "imodelKey": "test-imodel",
                     "property": Object {
                       "displayLabel": "Simple Field",
                       "name": "root-field$nested-field",
@@ -957,6 +1002,7 @@ Object {
               },
             },
             PropertyRecord {
+              "imodelKey": "test-imodel",
               "property": Object {
                 "displayLabel": "Nested Content",
                 "name": "root-field",
@@ -966,6 +1012,7 @@ Object {
                 "members": Object {
                   "nested-field": PropertyRecord {
                     "description": "display value 2",
+                    "imodelKey": "test-imodel",
                     "property": Object {
                       "displayLabel": "Simple Field",
                       "name": "root-field$nested-field",
@@ -1018,6 +1065,7 @@ Object {
     "test-category": Array [
       PropertyRecord {
         "description": "display value 1",
+        "imodelKey": "test-imodel",
         "property": Object {
           "displayLabel": "Simple Field",
           "name": "root-field$nested-field",
@@ -1060,6 +1108,7 @@ Object {
   "records": Object {
     "test-category": Array [
       PropertyRecord {
+        "imodelKey": "test-imodel",
         "property": Object {
           "displayLabel": "Nested Content",
           "name": "root-field",
@@ -1069,6 +1118,7 @@ Object {
           "members": Object {
             "nested-field": PropertyRecord {
               "description": "display value 1",
+              "imodelKey": "test-imodel",
               "property": Object {
                 "displayLabel": "Simple Field",
                 "name": "root-field$nested-field",
@@ -1086,6 +1136,7 @@ Object {
       },
       PropertyRecord {
         "description": "display value 3",
+        "imodelKey": "test-imodel",
         "property": Object {
           "displayLabel": "Simple Field",
           "name": "sibling-root-field",
@@ -1128,6 +1179,7 @@ Object {
   "records": Object {
     "test-category": Array [
       PropertyRecord {
+        "imodelKey": "test-imodel",
         "property": Object {
           "displayLabel": "Nested Content",
           "name": "root-field",
@@ -1137,6 +1189,7 @@ Object {
           "members": Object {
             "primitive-field-2": PropertyRecord {
               "description": "p2",
+              "imodelKey": "test-imodel",
               "property": Object {
                 "displayLabel": "Simple Field",
                 "name": "root-field$primitive-field-2",
@@ -1154,6 +1207,7 @@ Object {
       },
       PropertyRecord {
         "description": "p1",
+        "imodelKey": "test-imodel",
         "property": Object {
           "displayLabel": "Simple Field",
           "name": "primitive-field-1",
@@ -1196,6 +1250,7 @@ Object {
   "records": Object {
     "test-category": Array [
       PropertyRecord {
+        "imodelKey": "test-imodel",
         "property": Object {
           "displayLabel": "Properties Field",
           "name": "PropertiesField",
@@ -1205,6 +1260,7 @@ Object {
           "items": Array [
             PropertyRecord {
               "description": "some display value 1",
+              "imodelKey": "test-imodel",
               "property": Object {
                 "displayLabel": "Properties Field",
                 "name": "PropertiesField",
@@ -1218,6 +1274,7 @@ Object {
             },
             PropertyRecord {
               "description": "some display value 2",
+              "imodelKey": "test-imodel",
               "property": Object {
                 "displayLabel": "Properties Field",
                 "name": "PropertiesField",
@@ -1266,6 +1323,7 @@ Object {
     "test-category": Array [
       PropertyRecord {
         "description": "some display value",
+        "imodelKey": "test-imodel",
         "property": Object {
           "displayLabel": "Simple Field",
           "name": "SimpleField",
@@ -1308,6 +1366,7 @@ Object {
   "records": Object {
     "test-category": Array [
       PropertyRecord {
+        "imodelKey": "test-imodel",
         "property": Object {
           "displayLabel": "Properties Field",
           "name": "PropertiesField",
@@ -1317,6 +1376,7 @@ Object {
           "members": Object {
             "MyProperty": PropertyRecord {
               "description": "some display value",
+              "imodelKey": "test-imodel",
               "property": Object {
                 "displayLabel": "My Property",
                 "name": "MyProperty",
@@ -1366,6 +1426,7 @@ Object {
   "records": Object {
     "my-category": Array [
       PropertyRecord {
+        "imodelKey": "test-imodel",
         "property": Object {
           "displayLabel": "Simple Field",
           "name": "SimpleField",
@@ -1408,6 +1469,7 @@ Object {
   "records": Object {
     "test-category": Array [
       PropertyRecord {
+        "imodelKey": "test-imodel",
         "property": Object {
           "displayLabel": "Simple Field",
           "name": "SimpleField",
@@ -1451,6 +1513,7 @@ Object {
     "Category2": Array [
       PropertyRecord {
         "autoExpand": false,
+        "imodelKey": "test-imodel",
         "isMerged": true,
         "isReadonly": true,
         "property": Object {
@@ -1494,6 +1557,7 @@ Object {
     "Category2": Array [
       PropertyRecord {
         "description": "display value 1",
+        "imodelKey": "test-imodel",
         "property": Object {
           "displayLabel": "Simple Field",
           "name": "root-field$nested-field-1",
@@ -1507,6 +1571,7 @@ Object {
       },
       PropertyRecord {
         "description": "display value 2",
+        "imodelKey": "test-imodel",
         "property": Object {
           "displayLabel": "Simple Field",
           "name": "root-field$nested-field-2",
@@ -1555,6 +1620,7 @@ Object {
     "Category1": Array [
       PropertyRecord {
         "description": "display value 1",
+        "imodelKey": "test-imodel",
         "property": Object {
           "displayLabel": "Simple Field",
           "name": "root-field$middle-field$nested-field-1",
@@ -1568,6 +1634,7 @@ Object {
       },
       PropertyRecord {
         "description": "display value 4",
+        "imodelKey": "test-imodel",
         "property": Object {
           "displayLabel": "Simple Field",
           "name": "nested-field-4",
@@ -1582,6 +1649,7 @@ Object {
     ],
     "Category2": Array [
       PropertyRecord {
+        "imodelKey": "test-imodel",
         "property": Object {
           "displayLabel": "Nested Content",
           "name": "root-field$middle-field",
@@ -1591,6 +1659,7 @@ Object {
           "members": Object {
             "nested-field-2": PropertyRecord {
               "description": "display value 2",
+              "imodelKey": "test-imodel",
               "property": Object {
                 "displayLabel": "Simple Field",
                 "name": "root-field$middle-field$nested-field-2",
@@ -1608,6 +1677,7 @@ Object {
       },
       PropertyRecord {
         "description": "display value 3",
+        "imodelKey": "test-imodel",
         "property": Object {
           "displayLabel": "Simple Field",
           "name": "root-field$nested-field-3",
@@ -1655,6 +1725,7 @@ Object {
   "records": Object {
     "Category1": Array [
       PropertyRecord {
+        "imodelKey": "test-imodel",
         "property": Object {
           "displayLabel": "Nested Content",
           "name": "root-field",
@@ -1663,6 +1734,7 @@ Object {
         "value": Object {
           "members": Object {
             "middle-field-1": PropertyRecord {
+              "imodelKey": "test-imodel",
               "isReadonly": true,
               "property": Object {
                 "displayLabel": "Nested Content",
@@ -1672,6 +1744,7 @@ Object {
               "value": Object {
                 "items": Array [
                   PropertyRecord {
+                    "imodelKey": "test-imodel",
                     "property": Object {
                       "displayLabel": "Nested Content",
                       "name": "root-field$middle-field-1",
@@ -1681,6 +1754,7 @@ Object {
                       "members": Object {
                         "nested-field-1": PropertyRecord {
                           "description": "display value 1",
+                          "imodelKey": "test-imodel",
                           "property": Object {
                             "displayLabel": "Simple Field",
                             "name": "root-field$middle-field-1$nested-field-1",
@@ -1702,6 +1776,7 @@ Object {
               },
             },
             "middle-field-2": PropertyRecord {
+              "imodelKey": "test-imodel",
               "isReadonly": true,
               "property": Object {
                 "displayLabel": "Nested Content",
@@ -1711,6 +1786,7 @@ Object {
               "value": Object {
                 "items": Array [
                   PropertyRecord {
+                    "imodelKey": "test-imodel",
                     "property": Object {
                       "displayLabel": "Nested Content",
                       "name": "root-field$middle-field-2",
@@ -1720,6 +1796,7 @@ Object {
                       "members": Object {
                         "nested-field-3": PropertyRecord {
                           "description": "display value 3",
+                          "imodelKey": "test-imodel",
                           "property": Object {
                             "displayLabel": "Simple Field",
                             "name": "root-field$middle-field-2$nested-field-3",
@@ -1746,6 +1823,7 @@ Object {
       },
       PropertyRecord {
         "description": "display value",
+        "imodelKey": "test-imodel",
         "property": Object {
           "displayLabel": "Simple Field",
           "name": "root-sibling",
@@ -1760,6 +1838,7 @@ Object {
     ],
     "Category2": Array [
       PropertyRecord {
+        "imodelKey": "test-imodel",
         "property": Object {
           "displayLabel": "Nested Content",
           "name": "root-field$middle-field-1",
@@ -1769,6 +1848,7 @@ Object {
           "members": Object {
             "nested-field-2": PropertyRecord {
               "description": "display value 2",
+              "imodelKey": "test-imodel",
               "property": Object {
                 "displayLabel": "Simple Field",
                 "name": "root-field$middle-field-1$nested-field-2",
@@ -1785,6 +1865,7 @@ Object {
         },
       },
       PropertyRecord {
+        "imodelKey": "test-imodel",
         "property": Object {
           "displayLabel": "Nested Content",
           "name": "root-field$middle-field-2",
@@ -1794,6 +1875,7 @@ Object {
           "members": Object {
             "nested-field-4": PropertyRecord {
               "description": "display value 4",
+              "imodelKey": "test-imodel",
               "property": Object {
                 "displayLabel": "Simple Field",
                 "name": "root-field$middle-field-2$nested-field-4",
@@ -1807,6 +1889,7 @@ Object {
             },
             "nested-field-5": PropertyRecord {
               "description": "display value 5",
+              "imodelKey": "test-imodel",
               "property": Object {
                 "displayLabel": "Simple Field",
                 "name": "root-field$middle-field-2$nested-field-5",
@@ -1854,6 +1937,7 @@ Object {
     "Category2": Array [
       PropertyRecord {
         "description": "display value 1",
+        "imodelKey": "test-imodel",
         "property": Object {
           "displayLabel": "Simple Field",
           "name": "root-field$nested-field-1",
@@ -1902,6 +1986,7 @@ Object {
     "Category1": Array [
       PropertyRecord {
         "description": "display value 1",
+        "imodelKey": "test-imodel",
         "property": Object {
           "displayLabel": "Simple Field",
           "name": "root-field$nested-field-1",
@@ -1917,6 +2002,7 @@ Object {
     "Category2": Array [
       PropertyRecord {
         "description": "display value 2",
+        "imodelKey": "test-imodel",
         "property": Object {
           "displayLabel": "Simple Field",
           "name": "root-field$nested-field-2",
@@ -1964,6 +2050,7 @@ Object {
   "records": Object {
     "Category1": Array [
       PropertyRecord {
+        "imodelKey": "test-imodel",
         "property": Object {
           "displayLabel": "Nested Content",
           "name": "root-field",
@@ -1973,6 +2060,7 @@ Object {
           "members": Object {
             "nested-field-1": PropertyRecord {
               "description": "display value 1",
+              "imodelKey": "test-imodel",
               "property": Object {
                 "displayLabel": "Simple Field",
                 "name": "root-field$nested-field-1",
@@ -1990,6 +2078,7 @@ Object {
       },
       PropertyRecord {
         "description": "display value 3",
+        "imodelKey": "test-imodel",
         "property": Object {
           "displayLabel": "Simple Field",
           "name": "sibling-root-field",
@@ -2005,6 +2094,7 @@ Object {
     "Category2": Array [
       PropertyRecord {
         "description": "display value 2",
+        "imodelKey": "test-imodel",
         "property": Object {
           "displayLabel": "Simple Field",
           "name": "root-field$nested-field-2",
@@ -2047,6 +2137,7 @@ Object {
   "records": Object {
     "test-category": Array [
       PropertyRecord {
+        "imodelKey": "test-imodel",
         "property": Object {
           "displayLabel": "Nested Content",
           "name": "root-field",
@@ -2055,6 +2146,7 @@ Object {
         "value": Object {
           "members": Object {
             "middle-field": PropertyRecord {
+              "imodelKey": "test-imodel",
               "isReadonly": true,
               "property": Object {
                 "displayLabel": "Nested Content",
@@ -2064,6 +2156,7 @@ Object {
               "value": Object {
                 "items": Array [
                   PropertyRecord {
+                    "imodelKey": "test-imodel",
                     "property": Object {
                       "displayLabel": "Nested Content",
                       "name": "root-field$middle-field",
@@ -2073,6 +2166,7 @@ Object {
                       "members": Object {
                         "primitive-field-3": PropertyRecord {
                           "description": "display value 1",
+                          "imodelKey": "test-imodel",
                           "property": Object {
                             "displayLabel": "Simple Field",
                             "name": "root-field$middle-field$primitive-field-3",
@@ -2089,6 +2183,7 @@ Object {
                     },
                   },
                   PropertyRecord {
+                    "imodelKey": "test-imodel",
                     "property": Object {
                       "displayLabel": "Nested Content",
                       "name": "root-field$middle-field",
@@ -2098,6 +2193,7 @@ Object {
                       "members": Object {
                         "primitive-field-3": PropertyRecord {
                           "description": "display value 2",
+                          "imodelKey": "test-imodel",
                           "property": Object {
                             "displayLabel": "Simple Field",
                             "name": "root-field$middle-field$primitive-field-3",
@@ -2120,6 +2216,7 @@ Object {
             },
             "primitive-field-2": PropertyRecord {
               "description": "test",
+              "imodelKey": "test-imodel",
               "property": Object {
                 "displayLabel": "Simple Field",
                 "name": "root-field$primitive-field-2",
@@ -2137,6 +2234,7 @@ Object {
       },
       PropertyRecord {
         "description": "test",
+        "imodelKey": "test-imodel",
         "property": Object {
           "displayLabel": "Simple Field",
           "name": "primitive-field-1",
@@ -2179,6 +2277,7 @@ Object {
   "records": Object {
     "test-category": Array [
       PropertyRecord {
+        "imodelKey": "test-imodel",
         "property": Object {
           "displayLabel": "Nested Content",
           "name": "root-field",
@@ -2188,6 +2287,7 @@ Object {
           "members": Object {
             "primitive-field-2": PropertyRecord {
               "description": "test",
+              "imodelKey": "test-imodel",
               "property": Object {
                 "displayLabel": "Simple Field",
                 "name": "root-field$primitive-field-2",
@@ -2201,6 +2301,7 @@ Object {
             },
             "primitive-field-3": PropertyRecord {
               "description": "display value 1",
+              "imodelKey": "test-imodel",
               "property": Object {
                 "displayLabel": "Simple Field",
                 "name": "root-field$middle-field$primitive-field-3",
@@ -2218,6 +2319,7 @@ Object {
       },
       PropertyRecord {
         "description": "test",
+        "imodelKey": "test-imodel",
         "property": Object {
           "displayLabel": "Simple Field",
           "name": "primitive-field-1",
@@ -2260,6 +2362,7 @@ Object {
   "records": Object {
     "test-category": Array [
       PropertyRecord {
+        "imodelKey": "test-imodel",
         "isReadonly": true,
         "property": Object {
           "displayLabel": "Nested Content",
@@ -2270,6 +2373,7 @@ Object {
         "value": Object {
           "items": Array [
             PropertyRecord {
+              "imodelKey": "test-imodel",
               "property": Object {
                 "displayLabel": "Nested Content",
                 "name": "root-field",
@@ -2279,6 +2383,7 @@ Object {
                 "members": Object {
                   "nested-field": PropertyRecord {
                     "description": "display value 1",
+                    "imodelKey": "test-imodel",
                     "property": Object {
                       "displayLabel": "Simple Field",
                       "name": "root-field$nested-field",
@@ -2295,6 +2400,7 @@ Object {
               },
             },
             PropertyRecord {
+              "imodelKey": "test-imodel",
               "property": Object {
                 "displayLabel": "Nested Content",
                 "name": "root-field",
@@ -2304,6 +2410,7 @@ Object {
                 "members": Object {
                   "nested-field": PropertyRecord {
                     "description": "display value 2",
+                    "imodelKey": "test-imodel",
                     "property": Object {
                       "displayLabel": "Simple Field",
                       "name": "root-field$nested-field",
@@ -2356,6 +2463,7 @@ Object {
     "test-category": Array [
       PropertyRecord {
         "description": "display value 1",
+        "imodelKey": "test-imodel",
         "property": Object {
           "displayLabel": "Simple Field",
           "name": "root-field$nested-field",
@@ -2398,6 +2506,7 @@ Object {
   "records": Object {
     "test-category": Array [
       PropertyRecord {
+        "imodelKey": "test-imodel",
         "property": Object {
           "displayLabel": "Nested Content",
           "name": "root-field",
@@ -2407,6 +2516,7 @@ Object {
           "members": Object {
             "nested-field": PropertyRecord {
               "description": "display value 1",
+              "imodelKey": "test-imodel",
               "property": Object {
                 "displayLabel": "Simple Field",
                 "name": "root-field$nested-field",
@@ -2424,6 +2534,7 @@ Object {
       },
       PropertyRecord {
         "description": "display value 3",
+        "imodelKey": "test-imodel",
         "property": Object {
           "displayLabel": "Simple Field",
           "name": "sibling-root-field",
@@ -2466,6 +2577,7 @@ Object {
   "records": Object {
     "test-category": Array [
       PropertyRecord {
+        "imodelKey": "test-imodel",
         "property": Object {
           "displayLabel": "Nested Content",
           "name": "root-field",
@@ -2475,6 +2587,7 @@ Object {
           "members": Object {
             "primitive-field-2": PropertyRecord {
               "description": "p2",
+              "imodelKey": "test-imodel",
               "property": Object {
                 "displayLabel": "Simple Field",
                 "name": "root-field$primitive-field-2",
@@ -2492,6 +2605,7 @@ Object {
       },
       PropertyRecord {
         "description": "p1",
+        "imodelKey": "test-imodel",
         "property": Object {
           "displayLabel": "Simple Field",
           "name": "primitive-field-1",
@@ -2534,6 +2648,7 @@ Object {
   "records": Object {
     "test-category": Array [
       PropertyRecord {
+        "imodelKey": "test-imodel",
         "property": Object {
           "displayLabel": "Properties Field",
           "name": "PropertiesField",
@@ -2543,6 +2658,7 @@ Object {
           "items": Array [
             PropertyRecord {
               "description": "some display value 1",
+              "imodelKey": "test-imodel",
               "property": Object {
                 "displayLabel": "Properties Field",
                 "name": "PropertiesField",
@@ -2556,6 +2672,7 @@ Object {
             },
             PropertyRecord {
               "description": "some display value 2",
+              "imodelKey": "test-imodel",
               "property": Object {
                 "displayLabel": "Properties Field",
                 "name": "PropertiesField",
@@ -2604,6 +2721,7 @@ Object {
     "test-category": Array [
       PropertyRecord {
         "description": "some display value",
+        "imodelKey": "test-imodel",
         "property": Object {
           "displayLabel": "Simple Field",
           "name": "SimpleField",
@@ -2646,6 +2764,7 @@ Object {
   "records": Object {
     "test-category": Array [
       PropertyRecord {
+        "imodelKey": "test-imodel",
         "property": Object {
           "displayLabel": "Properties Field",
           "name": "PropertiesField",
@@ -2655,6 +2774,7 @@ Object {
           "members": Object {
             "MyProperty": PropertyRecord {
               "description": "some display value",
+              "imodelKey": "test-imodel",
               "property": Object {
                 "displayLabel": "My Property",
                 "name": "MyProperty",

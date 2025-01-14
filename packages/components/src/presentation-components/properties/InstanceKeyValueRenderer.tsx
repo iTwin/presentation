@@ -10,8 +10,9 @@
 import { Primitives, PrimitiveValue, PropertyRecord, PropertyValueFormat } from "@itwin/appui-abstract";
 import { IPropertyValueRenderer, PropertyValueRendererContext, TypeConverterManager, useAsyncValue } from "@itwin/components-react";
 import { Anchor } from "@itwin/itwinui-react";
-import { translate } from "../common/Utils.js";
-import { useUnifiedSelectionContext } from "../unified-selection/UnifiedSelectionContext.js";
+import { useUnifiedSelectionContext } from "@itwin/unified-selection-react";
+import { translate, WithIModelKey } from "../common/Utils.js";
+import { useUnifiedSelectionContext as useDeprecatedUnifiedSelectionContext } from "../unified-selection/UnifiedSelectionContext.js";
 
 /**
  * Property value renderer for instance keys. If application provides a [[UnifiedSelectionContext]] and this value is
@@ -30,7 +31,7 @@ export class InstanceKeyValueRenderer implements IPropertyValueRenderer {
 }
 
 interface InstanceKeyValueRendererImplProps {
-  record: PropertyRecord;
+  record: WithIModelKey<PropertyRecord>;
   context?: PropertyValueRendererContext;
 }
 
@@ -38,23 +39,32 @@ const InstanceKeyValueRendererImpl: React.FC<InstanceKeyValueRendererImplProps> 
   const stringValue = useAsyncValue(convertRecordToString(props.record));
   const valueElement = stringValue ?? props.context?.defaultValue;
 
+  // eslint-disable-next-line @typescript-eslint/no-deprecated
+  const deprecatedSelectionContext = useDeprecatedUnifiedSelectionContext();
   const selectionContext = useUnifiedSelectionContext();
-  const instanceKey = (props.record.value as PrimitiveValue).value as Primitives.InstanceKey | undefined;
 
-  if (instanceKey === undefined || selectionContext === undefined) {
-    return (
-      <span style={props.context?.style} title={stringValue}>
-        {valueElement}
-      </span>
-    );
+  const instanceKey = (props.record.value as PrimitiveValue).value as Primitives.InstanceKey | undefined;
+  if (instanceKey) {
+    let handleClick: (() => void) | undefined;
+    if (deprecatedSelectionContext) {
+      handleClick = () => deprecatedSelectionContext.replaceSelection([instanceKey]);
+    } else if (selectionContext && props.record.imodelKey?.length) {
+      const imodelKey = props.record.imodelKey;
+      handleClick = () => selectionContext.storage.replaceSelection({ imodelKey, source: "InstanceKeyValueRenderer", selectables: [instanceKey] });
+    }
+    if (handleClick) {
+      return (
+        <Anchor title={translate("instance-key-value-renderer.select-instance")} onClick={handleClick}>
+          {valueElement}
+        </Anchor>
+      );
+    }
   }
 
-  const title = translate("instance-key-value-renderer.select-instance");
-  const handleClick = () => selectionContext.replaceSelection([instanceKey]);
   return (
-    <Anchor title={title} onClick={handleClick}>
+    <span style={props.context?.style} title={stringValue}>
       {valueElement}
-    </Anchor>
+    </span>
   );
 };
 
