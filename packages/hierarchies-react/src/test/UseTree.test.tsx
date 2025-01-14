@@ -7,6 +7,7 @@ import { expect } from "chai";
 import { collect, createAsyncIterator, ResolvablePromise, throwingAsyncIterator } from "presentation-test-utilities";
 import { PropsWithChildren } from "react";
 import sinon from "sinon";
+import { BeEvent } from "@itwin/core-bentley";
 import * as hierarchiesModule from "@itwin/presentation-hierarchies";
 import { IPrimitiveValueFormatter, Props } from "@itwin/presentation-shared";
 import { createStorage, Selectables, SelectionStorage, StorageSelectionChangeEventArgs, StorageSelectionChangesListener } from "@itwin/unified-selection";
@@ -81,6 +82,29 @@ describe("useTree", () => {
 
     await waitFor(() => {
       expect(result.current.rootNodes).to.have.lengthOf(2);
+    });
+  });
+
+  it("loads root nodes with minimal provider setup", async () => {
+    const hierarchyChanged = new BeEvent();
+    const customHierarchyProvider: hierarchiesModule.HierarchyProvider = {
+      async *getNodes({}) {
+        yield createTestHierarchyNode({ id: "root-1" });
+      },
+      setHierarchyFilter() {},
+      async *getNodeInstanceKeys() {},
+      setFormatter() {},
+      hierarchyChanged,
+    };
+
+    const customProps: UseTreeProps = {
+      getHierarchyProvider: () => customHierarchyProvider,
+    };
+
+    const { result } = renderHook(useTree, { initialProps: customProps });
+
+    await waitFor(() => {
+      expect(result.current.rootNodes).to.have.lengthOf(1);
     });
   });
 

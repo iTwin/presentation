@@ -208,8 +208,14 @@ function useTreeInternal({
   useEffect(() => {
     let disposed = false;
     void (async () => {
-      if (!getFilteredPaths || !hierarchyProvider) {
-        hierarchyProvider?.setHierarchyFilter(undefined);
+      if (!hierarchyProvider) {
+        return;
+      }
+
+      if (!getFilteredPaths) {
+        hierarchyProvider.setHierarchyFilter(undefined);
+        // reload tree in case hierarchy provider does not use hierarchy filter to load initial nodes
+        actions.reloadTree({ state: "keep" });
         setIsFiltering(false);
         return;
       }
@@ -229,7 +235,7 @@ function useTreeInternal({
     return () => {
       disposed = true;
     };
-  }, [hierarchyProvider, getFilteredPaths]);
+  }, [hierarchyProvider, getFilteredPaths, actions]);
 
   const getTreeModelNode = useCallback<(nodeId: string) => TreeModelRootNode | TreeModelNode | undefined>(
     (nodeId: string) => {
