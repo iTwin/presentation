@@ -4,7 +4,14 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { expect } from "chai";
-import { ArrayValue, PropertyRecord, StandardTypeNames, StructValue, PropertyValueFormat as UiPropertyValueFormat } from "@itwin/appui-abstract";
+import {
+  ArrayValue,
+  PropertyDescription,
+  PropertyRecord,
+  StandardTypeNames,
+  StructValue,
+  PropertyValueFormat as UiPropertyValueFormat,
+} from "@itwin/appui-abstract";
 import {
   ArrayPropertyValueConstraints,
   EnumerationInfo,
@@ -13,6 +20,7 @@ import {
   StringPropertyValueConstraints,
   traverseContentItem,
 } from "@itwin/presentation-common";
+import { WithConstraints } from "../../presentation-components.js";
 import { PropertyRecordsBuilder } from "../../presentation-components/common/PropertyRecordsBuilder.js";
 import { NumericEditorName } from "../../presentation-components/properties/editors/NumericPropertyEditor.js";
 import { QuantityEditorName } from "../../presentation-components/properties/editors/QuantityPropertyEditor.js";
@@ -90,7 +98,8 @@ describe("PropertyRecordsBuilder", () => {
     });
     traverseContentItem(builder, descriptor, item);
     expect(builder.entries.length).to.eq(1);
-    expect(builder.entries[0].property.constraints).to.deep.eq(constraints);
+    const property: WithConstraints<PropertyDescription> = builder.entries[0].property;
+    expect(property.constraints).to.deep.eq(constraints);
   });
 
   it("sets constraints props for numeric type", () => {
@@ -115,7 +124,8 @@ describe("PropertyRecordsBuilder", () => {
     });
     traverseContentItem(builder, descriptor, item);
     expect(builder.entries.length).to.eq(1);
-    expect(builder.entries[0].property.constraints).to.deep.eq(constraints);
+    const property: WithConstraints<PropertyDescription> = builder.entries[0].property;
+    expect(property.constraints).to.deep.eq(constraints);
   });
 
   it("sets constraints props for `array` type", () => {
@@ -140,7 +150,8 @@ describe("PropertyRecordsBuilder", () => {
     });
     traverseContentItem(builder, descriptor, item);
     expect(builder.entries.length).to.eq(1);
-    expect(builder.entries[0].property.constraints).to.deep.eq(constraints);
+    const property: WithConstraints<PropertyDescription> = builder.entries[0].property;
+    expect(property.constraints).to.deep.eq(constraints);
   });
 
   it("sets extended data", () => {

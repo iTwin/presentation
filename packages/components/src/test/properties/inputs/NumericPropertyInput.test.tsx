@@ -6,11 +6,12 @@
 import { expect } from "chai";
 import { createRef } from "react";
 import sinon from "sinon";
-import { PrimitiveValue, StandardTypeNames } from "@itwin/appui-abstract";
+import { PrimitiveValue, PropertyDescription, PropertyRecord, StandardTypeNames } from "@itwin/appui-abstract";
 import { PropertyUpdatedArgs } from "@itwin/components-react";
 import { EmptyLocalization } from "@itwin/core-common";
 import { IModelApp } from "@itwin/core-frontend";
 import { Presentation } from "@itwin/presentation-frontend";
+import { WithConstraints } from "../../../presentation-components.js";
 import { PropertyEditorAttributes } from "../../../presentation-components/properties/editors/Common.js";
 import {
   formatInternal,
@@ -38,7 +39,7 @@ describe("<NumericPropertyInput />", () => {
   });
 
   it("calls onCommit with adjusted value, when typed value out of constraint bounds", async () => {
-    const record = createRecord(2);
+    const record: PropertyRecord & { property: WithConstraints<PropertyDescription> } = createRecord(2);
     record.property.constraints = { minimumValue: 1, maximumValue: 3 };
     const ref = createRef<PropertyEditorAttributes>();
     const spy = sinon.spy();

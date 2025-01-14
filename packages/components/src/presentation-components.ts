@@ -19,6 +19,7 @@ export * from "./presentation-components/common/IUnifiedSelectionComponent.js";
 export * from "./presentation-components/common/PropertyRecordsBuilder.js";
 export * from "./presentation-components/common/SchemaMetadataContext.js";
 export { PortalTargetContextProvider, type PortalTargetContextProviderProps } from "./presentation-components/common/PortalTargetContext.js";
+export { type WithConstraints } from "./presentation-components/common/ContentBuilder.js";
 export * from "./presentation-components/hooks/UseRulesetRegistration.js";
 
 /**

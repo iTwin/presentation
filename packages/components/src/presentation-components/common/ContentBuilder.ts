@@ -41,6 +41,9 @@ import {
 import { NumericEditorName } from "../properties/editors/NumericPropertyEditor.js";
 import { QuantityEditorName } from "../properties/editors/QuantityPropertyEditor.js";
 
+/** @public */
+export type WithConstraints<T extends {}> = T & { constraints?: PropertyValueConstraints };
+
 /** @internal */
 export interface FieldInfo {
   type: TypeDescription;
@@ -70,7 +73,7 @@ function createFieldInfo(field: Field, parentFieldName?: string): FieldInfo {
 
 /** @internal */
 export function createPropertyDescriptionFromFieldInfo(info: FieldInfo) {
-  const descr: PropertyDescription = {
+  const descr: WithConstraints<PropertyDescription> = {
     typename: info.type.typeName,
     name: info.name,
     displayLabel: info.label,

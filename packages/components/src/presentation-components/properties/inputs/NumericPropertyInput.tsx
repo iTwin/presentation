@@ -4,9 +4,11 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from "react";
-import { PrimitiveValue, PropertyRecord, PropertyValueFormat, PropertyValueConstraints } from "@itwin/appui-abstract";
+import { PrimitiveValue, PropertyDescription, PropertyRecord, PropertyValueFormat } from "@itwin/appui-abstract";
 import { PropertyEditorProps } from "@itwin/components-react";
 import { Input } from "@itwin/itwinui-react";
+import { PropertyValueConstraints } from "@itwin/presentation-common";
+import { WithConstraints } from "../../../presentation-components.js";
 import { PropertyEditorAttributes } from "../editors/Common.js";
 import { getDecimalRoundingError } from "./Utils.js";
 
@@ -18,6 +20,7 @@ export interface NumericPropertyInputProps extends PropertyEditorProps {
 /** @internal */
 export const NumericPropertyInput = forwardRef<PropertyEditorAttributes, NumericPropertyInputProps>((props, ref) => {
   const { onCommit, propertyRecord, setFocus } = props;
+  const property: WithConstraints<PropertyDescription> = propertyRecord.property;
 
   const [inputValue, setInputValue] = useState<string>(() => getInputTargetFromPropertyRecord(propertyRecord) ?? "");
 
@@ -25,9 +28,7 @@ export const NumericPropertyInput = forwardRef<PropertyEditorAttributes, Numeric
     setInputValue(newVal);
   };
 
-  const { min, max } = propertyRecord.property.constraints
-    ? getMinMaxFromPropertyConstraints(propertyRecord.property.constraints)
-    : { min: undefined, max: undefined };
+  const { min, max } = property.constraints ? getMinMaxFromPropertyConstraints(property.constraints) : { min: undefined, max: undefined };
   const commitInput = () => {
     const formattedInputValue = formatInternal(inputValue, min, max);
     setInputValue(formattedInputValue);

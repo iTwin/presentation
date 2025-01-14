@@ -22,7 +22,7 @@ export function createTestTreeNodeItem(key?: NodeKey, partialNode?: Partial<Dela
   return node;
 }
 
-export function createTestPropertyRecord(value?: Partial<PrimitiveValue>, property?: Partial<PropertyDescription>): PropertyRecord {
+export function createTestPropertyRecord(value?: Partial<PrimitiveValue>, property?: Partial<PropertyDescription>) {
   const recordValue: PrimitiveValue = {
     valueFormat: PropertyValueFormat.Primitive,
     value: "test_prop_value",

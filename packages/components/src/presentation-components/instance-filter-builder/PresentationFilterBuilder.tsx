@@ -12,6 +12,7 @@ import { PropertyFilterBuilderRuleValue, PropertyFilterBuilderRuleValueRendererP
 import { assert } from "@itwin/core-bentley";
 import { IModelConnection } from "@itwin/core-frontend";
 import { ClassId, ClassInfo, Descriptor, InstanceFilterDefinition, Keys, PropertiesField } from "@itwin/presentation-common";
+import { WithConstraints } from "../../presentation-components.js";
 import { NavigationPropertyEditorContextProvider } from "../properties/editors/NavigationPropertyEditorContext.js";
 import { UniquePropertyValuesSelector } from "../properties/inputs/UniquePropertyValuesSelector.js";
 import { InstanceFilterBuilder, usePresentationInstanceFilteringProps } from "./InstanceFilterBuilder.js";
@@ -60,7 +61,7 @@ export interface PresentationInstanceFilterPropertyInfo {
   /** Content descriptor field that represents this property. */
   field: PropertiesField;
   /** Property description  */
-  propertyDescription: PropertyDescription;
+  propertyDescription: WithConstraints<PropertyDescription>;
   /** Ids of the classes where this property is defined. */
   sourceClassIds: ClassId[];
   /**
