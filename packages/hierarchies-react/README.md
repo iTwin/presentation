@@ -116,14 +116,20 @@ The hook also relies on unified selection storage being provided to it through a
 
 #### Providing unified selection context
 
-Tree state hooks that support unified selection integration (`useUnifiedSelectionTree` & `useIModelUnifiedSelectionTree`), rely on unified selection storage being provided to them through a React context. For that, the package delivers the `UnifiedSelectionProvider` component, that should wrap the tree component using the hooks:
+Tree state hooks that support unified selection integration (`useUnifiedSelectionTree` & `useIModelUnifiedSelectionTree`), rely on unified selection storage being provided to them through a React context, delivered by the `@itwin/unified-selection-react` package. If the context is not set up, tree is not hooked into unified selection system.
+
+To provide the context, the following steps are required:
+
+1. `@itwin/unified-selection-react` package dependency should be added to the project. This package is an optional peer dependency to `@itwin/presentation-hierarchies-react` and needs to be supplied by the consumer if unified selection integration is desired.
+2. The tree component should be wrapped with the `UnifiedSelectionContextProvider` component:
 
 <!-- [[include: [Presentation.HierarchiesReact.SelectionStorage.Imports, Presentation.HierarchiesReact.SelectionStorage], tsx]] -->
 <!-- BEGIN EXTRACTION -->
 
 ```tsx
-import { TreeRenderer, UnifiedSelectionProvider, useIModelUnifiedSelectionTree } from "@itwin/presentation-hierarchies-react";
+import { TreeRenderer, useIModelUnifiedSelectionTree } from "@itwin/presentation-hierarchies-react";
 import { createStorage } from "@itwin/unified-selection";
+import { UnifiedSelectionContextProvider } from "@itwin/unified-selection-react";
 import { useEffect, useState } from "react";
 
 // Not part of the package - this should be created once and reused across different components of the application.
@@ -141,9 +147,9 @@ function MyTreeComponent({ imodel }: { imodel: IModelConnection }) {
   }
 
   return (
-    <UnifiedSelectionProvider storage={selectionStorage}>
+    <UnifiedSelectionContextProvider storage={selectionStorage}>
       <MyTreeComponentInternal imodelAccess={imodelAccess} />
-    </UnifiedSelectionProvider>
+    </UnifiedSelectionContextProvider>
   );
 }
 ```
@@ -226,8 +232,9 @@ import { createLimitingECSqlQueryExecutor, createNodesQueryClauseFactory, Hierar
 
 import { createBisInstanceLabelSelectClauseFactory, Props } from "@itwin/presentation-shared";
 
-import { TreeRenderer, UnifiedSelectionProvider, useIModelUnifiedSelectionTree } from "@itwin/presentation-hierarchies-react";
+import { TreeRenderer, useIModelUnifiedSelectionTree } from "@itwin/presentation-hierarchies-react";
 import { createStorage } from "@itwin/unified-selection";
+import { UnifiedSelectionContextProvider } from "@itwin/unified-selection-react";
 import { useEffect, useState } from "react";
 
 // Not really part of the package, but we need SchemaContext to create the tree state. It's
@@ -275,9 +282,9 @@ function MyTreeComponent({ imodel }: { imodel: IModelConnection }) {
   }
 
   return (
-    <UnifiedSelectionProvider storage={selectionStorage}>
+    <UnifiedSelectionContextProvider storage={selectionStorage}>
       <MyTreeComponentInternal imodelAccess={imodelAccess} />
-    </UnifiedSelectionProvider>
+    </UnifiedSelectionContextProvider>
   );
 }
 

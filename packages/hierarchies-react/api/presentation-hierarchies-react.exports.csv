@@ -13,6 +13,7 @@ public;type;RenderedTreeNode
 public;const;TreeNodeRenderer
 public;function;TreeRenderer
 public;function;UnifiedSelectionProvider
+deprecated;function;UnifiedSelectionProvider
 public;function;useIModelTree
 public;function;useIModelUnifiedSelectionTree
 public;function;useSelectionHandler

@@ -8,7 +8,7 @@ import { assert } from "@itwin/core-bentley";
 import { HierarchyNode, InstancesNodeKey } from "@itwin/presentation-hierarchies";
 import { InstanceKey } from "@itwin/presentation-shared";
 import { Selectable, Selectables, SelectionStorage } from "@itwin/unified-selection";
-import { useUnifiedSelectionContext } from "../UnifiedSelectionContext.js";
+import { useUnifiedSelectionStorage } from "../UnifiedSelectionContext.js";
 import { SelectionChangeType } from "../UseSelectionHandler.js";
 import { isTreeModelHierarchyNode, TreeModelHierarchyNode, TreeModelNode, TreeModelRootNode } from "./TreeModel.js";
 
@@ -36,13 +36,14 @@ export function useUnifiedTreeSelection({
     selectNodes: /* c8 ignore next */ () => {},
   }));
 
-  const selectionStorage = useUnifiedSelectionContext();
+  const selectionStorage = useUnifiedSelectionStorage();
   useEffect(() => {
     if (!selectionStorage) {
       setOptions({
         isNodeSelected: () => false,
         selectNodes: () => {},
       });
+      // TODO: should we throw instead?
       return;
     }
 

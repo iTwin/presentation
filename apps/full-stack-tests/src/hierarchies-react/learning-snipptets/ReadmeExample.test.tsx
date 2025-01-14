@@ -16,8 +16,9 @@ import { createECSchemaProvider, createECSqlQueryExecutor, createIModelKey } fro
 import { createLimitingECSqlQueryExecutor, createNodesQueryClauseFactory, HierarchyDefinition } from "@itwin/presentation-hierarchies";
 // __PUBLISH_EXTRACT_END__
 // __PUBLISH_EXTRACT_START__ Presentation.HierarchiesReact.SelectionStorage.Imports
-import { TreeRenderer, UnifiedSelectionProvider, useIModelUnifiedSelectionTree } from "@itwin/presentation-hierarchies-react";
+import { TreeRenderer, useIModelUnifiedSelectionTree } from "@itwin/presentation-hierarchies-react";
 import { createStorage } from "@itwin/unified-selection";
+import { UnifiedSelectionContextProvider } from "@itwin/unified-selection-react";
 import { useEffect, useState } from "react";
 // __PUBLISH_EXTRACT_END__
 // __PUBLISH_EXTRACT_START__ Presentation.HierarchiesReact.CustomTreeExample.Imports
@@ -97,9 +98,9 @@ describe("Hierarchies React", () => {
           }
 
           return (
-            <UnifiedSelectionProvider storage={selectionStorage}>
+            <UnifiedSelectionContextProvider storage={selectionStorage}>
               <MyTreeComponentInternal imodelAccess={imodelAccess} />
-            </UnifiedSelectionProvider>
+            </UnifiedSelectionContextProvider>
           );
         }
         // __PUBLISH_EXTRACT_END__

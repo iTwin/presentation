@@ -11,6 +11,7 @@ import { BeEvent } from "@itwin/core-bentley";
 import * as hierarchiesModule from "@itwin/presentation-hierarchies";
 import { IPrimitiveValueFormatter, Props } from "@itwin/presentation-shared";
 import { createStorage, Selectables, SelectionStorage, StorageSelectionChangeEventArgs, StorageSelectionChangesListener } from "@itwin/unified-selection";
+import { UnifiedSelectionContextProvider } from "@itwin/unified-selection-react";
 import { createNodeId } from "../presentation-hierarchies-react/internal/Utils.js";
 import {
   PresentationGenericInfoNode,
@@ -20,7 +21,6 @@ import {
   PresentationResultSetTooLargeInfoNode,
   PresentationTreeNode,
 } from "../presentation-hierarchies-react/TreeNode.js";
-import { UnifiedSelectionProvider } from "../presentation-hierarchies-react/UnifiedSelectionContext.js";
 import { useTree, useUnifiedSelectionTree } from "../presentation-hierarchies-react/UseTree.js";
 import {
   act,
@@ -842,7 +842,7 @@ describe("useUnifiedSelectionTree", () => {
   };
 
   function Wrapper(props: PropsWithChildren<{}>) {
-    return <UnifiedSelectionProvider storage={storage}>{props.children}</UnifiedSelectionProvider>;
+    return <UnifiedSelectionContextProvider storage={storage}>{props.children}</UnifiedSelectionContextProvider>;
   }
 
   function createNodeKey(id: string) {

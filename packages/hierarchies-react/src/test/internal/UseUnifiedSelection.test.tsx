@@ -10,9 +10,10 @@ import { PropsWithChildren } from "react";
 import sinon from "sinon";
 import { InstancesNodeKey } from "@itwin/presentation-hierarchies";
 import { createStorage, Selectables, StorageSelectionChangeEventArgs, StorageSelectionChangesListener } from "@itwin/unified-selection";
+import { UnifiedSelectionContextProvider } from "@itwin/unified-selection-react";
 import { TreeModelNode } from "../../presentation-hierarchies-react/internal/TreeModel.js";
 import { useUnifiedTreeSelection } from "../../presentation-hierarchies-react/internal/UseUnifiedSelection.js";
-import { UnifiedSelectionProvider } from "../../presentation-hierarchies-react/UnifiedSelectionContext.js";
+import { UnifiedSelectionProvider as UnifiedSelectionProviderDeprecated } from "../../presentation-hierarchies-react/UnifiedSelectionContext.js";
 import { act, createStub, createTestGroupingNode, createTestHierarchyNode, createTreeModelNode, renderHook } from "../TestUtils.js";
 
 describe("useUnifiedSelection", () => {
@@ -27,7 +28,7 @@ describe("useUnifiedSelection", () => {
   };
 
   function Wrapper(props: PropsWithChildren<{}>) {
-    return <UnifiedSelectionProvider storage={storage}>{props.children}</UnifiedSelectionProvider>;
+    return <UnifiedSelectionContextProvider storage={storage}>{props.children}</UnifiedSelectionContextProvider>;
   }
 
   beforeEach(() => {
@@ -35,29 +36,69 @@ describe("useUnifiedSelection", () => {
     getTreeModelNode.reset();
   });
 
-  describe("isNodeSelected", () => {
-    it("always returns false if storage context is not provided", () => {
-      const instanceKey = { id: "0x1", className: "Schema:Name" };
-      const instancesNodesKey: InstancesNodeKey = {
-        type: "instances",
-        instanceKeys: [instanceKey],
-      };
-      const hierarchyNode = createTestHierarchyNode({ id: "node-1", key: instancesNodesKey });
-      const node = createTreeModelNode({ id: "node-1", nodeData: hierarchyNode });
+  it("returns no-op handlers when unified selection context is not provided", () => {
+    // ensure tree model has a node, which represents a selected instance
+    const instanceKey = { id: "0x1", className: "Schema:Name" };
+    const instancesNodesKey: InstancesNodeKey = {
+      type: "instances",
+      instanceKeys: [instanceKey],
+    };
+    const hierarchyNode = createTestHierarchyNode({ id: "node-1", key: instancesNodesKey });
+    const node = createTreeModelNode({ id: "node-1", nodeData: hierarchyNode });
+    storage.addToSelection({
+      imodelKey,
+      source,
+      selectables: [instanceKey],
+    });
+    getTreeModelNode.callsFake((id) => (id === "node-1" ? node : undefined));
 
-      storage.addToSelection({
-        imodelKey,
-        source,
-        selectables: [instanceKey],
-      });
+    // test
+    const { result } = renderHook(useUnifiedTreeSelection, { initialProps });
+    act(() => {
+      result.current.selectNodes(["node-1"], "add");
+    });
+    expect(getTreeModelNode).to.not.be.called;
+    expect(result.current.isNodeSelected("node-1")).to.be.false;
+  });
 
-      getTreeModelNode.callsFake((id) => (id === "node-1" ? node : undefined));
+  it("prefers deprecated unified selection context provider", () => {
+    const instanceKey1 = { id: "0x1", className: "Schema:Name", imodelKey };
+    storage.replaceSelection({ imodelKey, source, selectables: [instanceKey1] });
 
-      const { result } = renderHook(useUnifiedTreeSelection, { initialProps });
-      expect(result.current.isNodeSelected("node-1")).to.be.false;
-      expect(result.current.isNodeSelected("invalid")).to.be.false;
+    const storage2 = createStorage();
+    const instanceKey2 = { id: "0x2", className: "Schema:Name", imodelKey };
+    storage2.replaceSelection({ imodelKey, source, selectables: [instanceKey2] });
+
+    getTreeModelNode.callsFake((id) => {
+      switch (id) {
+        case "node-1":
+          return createTreeModelNode({
+            id: "node-1",
+            nodeData: createTestHierarchyNode({ id: "node-1", key: { type: "instances", instanceKeys: [instanceKey1] } }),
+          });
+        case "node-2":
+          return createTreeModelNode({
+            id: "node-2",
+            nodeData: createTestHierarchyNode({ id: "node-2", key: { type: "instances", instanceKeys: [instanceKey2] } }),
+          });
+      }
+      return undefined;
     });
 
+    const { result } = renderHook(useUnifiedTreeSelection, {
+      initialProps,
+      wrapper: (props: PropsWithChildren<{}>) => (
+        // eslint-disable-next-line @typescript-eslint/no-deprecated
+        <UnifiedSelectionProviderDeprecated storage={storage2}>
+          <UnifiedSelectionContextProvider storage={storage}>{props.children}</UnifiedSelectionContextProvider>
+        </UnifiedSelectionProviderDeprecated>
+      ),
+    });
+    expect(result.current.isNodeSelected("node-1")).to.be.false;
+    expect(result.current.isNodeSelected("node-2")).to.be.true;
+  });
+
+  describe("isNodeSelected", () => {
     it("returns true if instance node is selected", () => {
       const selectedInstanceKey = { id: "0x1", className: "Schema:Name" };
       const selectedInstancesNodesKey: InstancesNodeKey = {
@@ -142,15 +183,6 @@ describe("useUnifiedSelection", () => {
 
     afterEach(() => {
       storage.selectionChangeEvent.removeListener(changeListener);
-    });
-
-    it("does nothing if selection storage context is not provided", () => {
-      const { result } = renderHook(useUnifiedTreeSelection, { initialProps });
-      act(() => {
-        result.current.selectNodes(["node-1"], "add");
-      });
-
-      expect(getTreeModelNode).to.not.be.called;
     });
 
     it("adds instance node to selection", () => {
