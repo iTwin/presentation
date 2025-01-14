@@ -33,7 +33,7 @@ export class TreeActions {
 
   constructor(
     private _onModelChanged: (model: TreeModel) => void,
-    private _onLoad: (actionType: "initial-load" | "hierarchy-level-load" | "reload", duration: number, state?: "Completed" | "Debounced") => void,
+    private _onLoad: (actionType: "initial-load" | "hierarchy-level-load" | "reload", duration: number) => void,
     private _onHierarchyLimitExceeded: (props: { parentId?: string; filter?: GenericInstanceFilter; limit?: number | "unbounded" }) => void,
     private _onHierarchyLoadError: (props: { parentId?: string; type: "timeout" | "unknown"; error: unknown }) => void,
     nodeIdFactory?: (node: Pick<HierarchyNode, "key" | "parentKeys">) => string,
@@ -71,7 +71,7 @@ export class TreeActions {
                 if (index === returnIndex) {
                   return;
                 }
-                member.timeTracker?.finish("Debounced");
+                member.timeTracker?.[Symbol.dispose];
                 member.onComplete();
               });
               return groupArr[returnIndex];
@@ -86,7 +86,7 @@ export class TreeActions {
                     this.handleLoadedHierarchy(props.parentId, newModel);
                     // only report load duration if no error occurs
                     if (!(firstChildNode && isTreeModelInfoNode(firstChildNode))) {
-                      props.timeTracker?.finish("Completed");
+                      props.timeTracker?.finish();
                     }
                   },
                   complete: () => {
@@ -133,7 +133,7 @@ export class TreeActions {
 
   private loadSubTree(options: LoadNodesOptions, initialRootNode?: TreeModelRootNode, discardState?: boolean) {
     const loadAction = this.getLoadAction(options.parent.id);
-    const timeTracker = new TimeTracker((time, state) => this._onLoad(loadAction, time, state));
+    const timeTracker = new TimeTracker((time) => this._onLoad(loadAction, time));
 
     return {
       complete: new Promise<void>((resolve) => {
@@ -380,7 +380,7 @@ class TimeTracker {
   private _start: number;
   private _stopped: boolean = false;
 
-  constructor(private _onFinish: (time: number, state?: "Completed" | "Debounced") => void) {
+  constructor(private _onFinish: (time: number) => void) {
     this._start = Date.now();
   }
 
@@ -388,7 +388,7 @@ class TimeTracker {
     this._stopped = true;
   }
 
-  public finish(state?: "Completed" | "Debounced") {
+  public finish() {
     /* c8 ignore next 3 */
     if (this._stopped) {
       return;
@@ -396,6 +396,6 @@ class TimeTracker {
 
     this._stopped = true;
     const elapsedTime = Date.now() - this._start;
-    this._onFinish(elapsedTime, state);
+    this._onFinish(elapsedTime);
   }
 }
