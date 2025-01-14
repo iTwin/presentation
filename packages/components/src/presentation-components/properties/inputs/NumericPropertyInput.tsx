@@ -8,7 +8,7 @@ import { PrimitiveValue, PropertyDescription, PropertyRecord, PropertyValueForma
 import { PropertyEditorProps } from "@itwin/components-react";
 import { Input } from "@itwin/itwinui-react";
 import { PropertyValueConstraints } from "@itwin/presentation-common";
-import { WithConstraints } from "../../../presentation-components.js";
+import { WithConstraints } from "../../common/ContentBuilder.js";
 import { PropertyEditorAttributes } from "../editors/Common.js";
 import { getDecimalRoundingError } from "./Utils.js";
 
@@ -30,7 +30,7 @@ export const NumericPropertyInput = forwardRef<PropertyEditorAttributes, Numeric
 
   const { min, max } = property.constraints ? getMinMaxFromPropertyConstraints(property.constraints) : { min: undefined, max: undefined };
   const commitInput = () => {
-    const formattedInputValue = formatInternal(inputValue, min, max);
+    const formattedInputValue = applyConstraints(inputValue, min, max);
     setInputValue(formattedInputValue);
     onCommit &&
       onCommit({
@@ -143,8 +143,7 @@ export const NumericInput = forwardRef<PropertyEditorAttributes, NumericInputPro
 });
 NumericInput.displayName = "NumericInput";
 
-/** @internal */
-export function formatInternal(inputAsNumber: string, min: number | undefined, max: number | undefined): string {
+function applyConstraints(inputAsNumber: string, min: number | undefined, max: number | undefined): string {
   if (min === undefined && max === undefined) {
     return inputAsNumber;
   }
@@ -163,8 +162,7 @@ export function formatInternal(inputAsNumber: string, min: number | undefined, m
   return valAsNumber.toString();
 }
 
-/** @internal */
-export function getMinMaxFromPropertyConstraints(constraints: PropertyValueConstraints): { min: number | undefined; max: number | undefined } {
+function getMinMaxFromPropertyConstraints(constraints: PropertyValueConstraints): { min: number | undefined; max: number | undefined } {
   if ("minimumValue" in constraints) {
     return { min: constraints.minimumValue, max: constraints.maximumValue };
   }

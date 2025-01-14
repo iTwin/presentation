@@ -11,14 +11,9 @@ import { PropertyUpdatedArgs } from "@itwin/components-react";
 import { EmptyLocalization } from "@itwin/core-common";
 import { IModelApp } from "@itwin/core-frontend";
 import { Presentation } from "@itwin/presentation-frontend";
-import { WithConstraints } from "../../../presentation-components.js";
+import { WithConstraints } from "../../../presentation-components/common/ContentBuilder.js";
 import { PropertyEditorAttributes } from "../../../presentation-components/properties/editors/Common.js";
-import {
-  formatInternal,
-  getMinMaxFromPropertyConstraints,
-  NumericInput,
-  NumericPropertyInput,
-} from "../../../presentation-components/properties/inputs/NumericPropertyInput.js";
+import { NumericInput, NumericPropertyInput } from "../../../presentation-components/properties/inputs/NumericPropertyInput.js";
 import { createTestPropertyRecord } from "../../_helpers/UiComponents.js";
 import { render, waitFor } from "../../TestUtils.js";
 
@@ -38,9 +33,42 @@ describe("<NumericPropertyInput />", () => {
     sinon.restore();
   });
 
-  it("calls onCommit with adjusted value, when typed value out of constraint bounds", async () => {
+  [
+    { testName: "the input value if min and max are undefined", input: "0", expectedResult: 0, min: undefined, max: undefined },
+    { testName: "undefined if input value isn't a number", input: "+", expectedResult: undefined, min: 1, max: 2 },
+    { testName: "the input value if value falls in min and max range", input: "1", expectedResult: 1, min: 1, max: 2 },
+    { testName: "min when input value is less than min", input: "0", expectedResult: 1, min: 1, max: undefined },
+    { testName: "max when input value is more than max", input: "3", expectedResult: 2, min: undefined, max: 2 },
+  ].forEach((testCase) =>
+    it(`calls onCommit with ${testCase.testName}`, async () => {
+      const record: PropertyRecord & { property: WithConstraints<PropertyDescription> } = createRecord(2);
+      record.property.constraints = { minimumValue: testCase.min, maximumValue: testCase.max };
+      const ref = createRef<PropertyEditorAttributes>();
+      const spy = sinon.spy();
+      const onCommit = (args: PropertyUpdatedArgs) => {
+        if ("value" in args.newValue) {
+          spy(args.newValue.value);
+        }
+      };
+      const { getByRole, user } = render(<NumericPropertyInput ref={ref} propertyRecord={record} onCommit={onCommit} />);
+
+      expect((ref.current?.getValue() as PrimitiveValue).value).to.be.eq(2);
+
+      const inputContainer = await waitFor(() => getByRole("textbox"));
+
+      await user.clear(inputContainer);
+      await user.click(inputContainer);
+      await user.type(inputContainer, testCase.input);
+      await user.tab();
+
+      await waitFor(() => expect((ref.current?.getValue() as PrimitiveValue).value).to.be.eq(testCase.expectedResult));
+      expect(spy).to.be.calledOnceWith(testCase.expectedResult);
+    }),
+  );
+
+  it("calls onCommit with correct values with non numeric constraints", async () => {
     const record: PropertyRecord & { property: WithConstraints<PropertyDescription> } = createRecord(2);
-    record.property.constraints = { minimumValue: 1, maximumValue: 3 };
+    record.property.constraints = { minimumLength: 2 };
     const ref = createRef<PropertyEditorAttributes>();
     const spy = sinon.spy();
     const onCommit = (args: PropertyUpdatedArgs) => {
@@ -56,17 +84,9 @@ describe("<NumericPropertyInput />", () => {
 
     await user.clear(inputContainer);
     await user.click(inputContainer);
-    await user.type(inputContainer, "0");
+    await user.type(inputContainer, "3");
     await user.tab();
 
-    await waitFor(() => expect((ref.current?.getValue() as PrimitiveValue).value).to.be.eq(1));
-    expect(spy).to.be.calledOnceWith(1);
-
-    spy.resetHistory();
-    await user.clear(inputContainer);
-    await user.click(inputContainer);
-    await user.type(inputContainer, "4");
-    await user.tab();
     await waitFor(() => expect((ref.current?.getValue() as PrimitiveValue).value).to.be.eq(3));
     expect(spy).to.be.calledOnceWith(3);
   });
@@ -331,52 +351,5 @@ describe("<NumericInput />", () => {
     await user.tab();
 
     expect(spy).to.be.calledWith({ propertyRecord: record, newValue: { valueFormat: 0, value: undefined, displayValue: "NaN", roundingError: undefined } });
-  });
-});
-
-describe("formatInternal", () => {
-  it("returns the same value if min and max are undefined", () => {
-    const valueFormatted = formatInternal("0", undefined, undefined);
-    expect(valueFormatted).to.be.eq("0");
-  });
-
-  it("returns the same value if it isn't a number", () => {
-    const valueFormatted = formatInternal("text", 1, 2);
-    expect(valueFormatted).to.be.eq("text");
-  });
-
-  it("returns the same value if value falls in min and max range", () => {
-    const valueFormatted = formatInternal("1", 1, 2);
-    expect(valueFormatted).to.be.eq("1");
-  });
-
-  it("returns min when value is less than min", () => {
-    const valueFormatted = formatInternal("0", 1, undefined);
-    expect(valueFormatted).to.be.eq("1");
-  });
-
-  it("returns max when value is more than max", () => {
-    const valueFormatted = formatInternal("2", undefined, 1);
-    expect(valueFormatted).to.be.eq("1");
-  });
-});
-
-describe("getMinMaxFromPropertyConstraints", () => {
-  it("returns correct values with numeric constraints", () => {
-    const { min, max } = getMinMaxFromPropertyConstraints({ minimumValue: 1, maximumValue: undefined });
-    expect(min).to.be.eq(1);
-    expect(max).to.be.eq(undefined);
-  });
-
-  it("returns correct values with array constraints", () => {
-    const { min, max } = getMinMaxFromPropertyConstraints({ minOccurs: 1, maxOccurs: undefined });
-    expect(min).to.be.eq(undefined);
-    expect(max).to.be.eq(undefined);
-  });
-
-  it("returns correct values with string constraints", () => {
-    const { min, max } = getMinMaxFromPropertyConstraints({ minimumLength: 1, maximumLength: undefined });
-    expect(min).to.be.eq(undefined);
-    expect(max).to.be.eq(undefined);
   });
 });

@@ -41,7 +41,7 @@ import {
 import { NumericEditorName } from "../properties/editors/NumericPropertyEditor.js";
 import { QuantityEditorName } from "../properties/editors/QuantityPropertyEditor.js";
 
-/** @public */
+/** @internal */
 export type WithConstraints<T extends {}> = T & { constraints?: PropertyValueConstraints };
 
 /** @internal */

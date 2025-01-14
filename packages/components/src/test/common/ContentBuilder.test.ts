@@ -20,7 +20,7 @@ import {
   StringPropertyValueConstraints,
   traverseContentItem,
 } from "@itwin/presentation-common";
-import { WithConstraints } from "../../presentation-components.js";
+import { WithConstraints } from "../../presentation-components/common/ContentBuilder.js";
 import { PropertyRecordsBuilder } from "../../presentation-components/common/PropertyRecordsBuilder.js";
 import { NumericEditorName } from "../../presentation-components/properties/editors/NumericPropertyEditor.js";
 import { QuantityEditorName } from "../../presentation-components/properties/editors/QuantityPropertyEditor.js";
