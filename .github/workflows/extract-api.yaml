@@ -7,14 +7,30 @@ on:
     branches:
       - master
       - stable
-    paths-ignore:
-      - apps/**
-      - packages/full-stack-tests/**
     types: [opened, synchronize, reopened, ready_for_review]
 
 jobs:
-  extract-api:
+  files-changed:
     if: '! github.event.pull_request.draft'
+    runs-on: ubuntu-latest
+    name: Detect what files changed
+    outputs:
+      packages: ${{ steps.changes.outputs.packages }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Check for file changes
+        uses: dorny/paths-filter@v3
+        id: changes
+        with:
+          filters: |
+            packages:
+              - 'packages/**'
+
+  extract-api:
+    needs: [files-changed]
+    if: ${{ needs.files-changed.outputs.packages == 'true' }}
     runs-on: ubuntu-latest
     name: Extract API
     steps:
