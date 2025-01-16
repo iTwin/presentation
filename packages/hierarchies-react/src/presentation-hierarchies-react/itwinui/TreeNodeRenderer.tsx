@@ -41,10 +41,12 @@ interface TreeNodeRendererOwnProps {
   size?: "default" | "small";
   /**
    * Configures filter buttons visibility.
-   * @Options
-   * `show-on-hover` - show filter buttons when hovering over node, or the node is in focus.
-   * `hide` - hide filter buttons, but will show them if the filter is applied.
-   *  @Default `show-on-hover`
+   *
+   * Options:
+   * - `show-on-hover` - show filter buttons when hovering over node, or the node is in focus.
+   * - `hide` - hide filter buttons, but will show them if the filter is applied.
+   *
+   * Default value: `show-on-hover`
    */
   filterButtonsVisibility?: "show-on-hover" | "hide";
 }
