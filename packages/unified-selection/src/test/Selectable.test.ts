@@ -4,6 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { expect } from "chai";
+import { collect } from "presentation-test-utilities";
 import sinon from "sinon";
 import { CustomSelectable, Selectable, SelectableInstanceKey, Selectables, TRANSIENT_ELEMENT_CLASSNAME } from "../unified-selection/Selectable.js";
 import { createCustomSelectable, createECInstanceId, createSelectableInstanceKey } from "./_helpers/SelectablesCreator.js";
@@ -408,6 +409,33 @@ describe("Selectables", () => {
       expect(callback).to.be.calledWith(instanceKeys[1]);
       expect(callback).to.be.calledWith(customSelectables[0]);
       expect(callback).to.be.calledWith(customSelectables[1]);
+    });
+  });
+
+  describe("load", () => {
+    it("loads instance keys", async () => {
+      const instanceKeys = [createSelectableInstanceKey(1), createSelectableInstanceKey(2)];
+      const selectables = Selectables.create(instanceKeys);
+      const result = await collect(Selectables.load(selectables));
+      expect(result).to.deep.eq(instanceKeys);
+    });
+
+    it("loads instance keys from custom selectables", async () => {
+      const instanceKeys1 = [createSelectableInstanceKey(1)];
+      const instanceKeys2 = [createSelectableInstanceKey(2)];
+      const customSelectables = [createCustomSelectable(1, instanceKeys1), createCustomSelectable(2, instanceKeys2)];
+      const selectables = Selectables.create(customSelectables);
+      const result = await collect(Selectables.load(selectables));
+      expect(result).to.deep.eq([...instanceKeys1, ...instanceKeys2]);
+    });
+
+    it("loads all instance keys", async () => {
+      const instanceKeys1 = [createSelectableInstanceKey(1), createSelectableInstanceKey(2)];
+      const instanceKeys2 = [createSelectableInstanceKey(3), createSelectableInstanceKey(4)];
+      const customSelectables = [createCustomSelectable(2, instanceKeys2)];
+      const selectables = Selectables.create([...instanceKeys1, ...customSelectables]);
+      const result = await collect(Selectables.load(selectables));
+      expect(result).to.deep.eq([...instanceKeys1, ...instanceKeys2]);
     });
   });
 });
