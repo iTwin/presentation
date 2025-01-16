@@ -353,7 +353,7 @@ describe("Tree", () => {
     expect(onFilterClick).to.be.calledOnceWith(hierarchyLevelDetails);
   });
 
-  it("renders filter button when filtering is disabled, but node is filtered", async () => {
+  it("renders filter button when filter buttons are hiden, but node is filtered", async () => {
     const rootNodes = createNodes([
       {
         id: "root-1",
@@ -365,7 +365,7 @@ describe("Tree", () => {
     const hierarchyLevelDetails = {} as unknown as HierarchyLevelDetails;
     getHierarchyLevelDetails.returns(hierarchyLevelDetails);
 
-    const { user, queryByText, getByRole } = render(<TreeRenderer rootNodes={rootNodes} disableFiltering={true} {...initialProps} />);
+    const { user, queryByText, getByRole } = render(<TreeRenderer rootNodes={rootNodes} filterButtonsVisibility={"hide"} {...initialProps} />);
 
     expect(queryByText("root-1")).to.not.be.null;
     await user.click(getByRole("button", { name: "Apply filter" }));

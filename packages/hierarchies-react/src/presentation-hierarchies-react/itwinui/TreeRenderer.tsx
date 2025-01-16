@@ -28,7 +28,7 @@ interface TreeRendererOwnProps {
 /** @public */
 type TreeRendererProps = Pick<ReturnType<typeof useTree>, "rootNodes" | "expandNode"> &
   Partial<Pick<ReturnType<typeof useTree>, "selectNodes" | "isNodeSelected" | "getHierarchyLevelDetails" | "reloadTree">> &
-  Pick<TreeNodeRendererProps, "onFilterClick" | "getIcon" | "getLabel" | "getSublabel" | "disableFiltering"> &
+  Pick<TreeNodeRendererProps, "onFilterClick" | "getIcon" | "getLabel" | "getSublabel" | "filterButtonsVisibility"> &
   TreeRendererOwnProps &
   Omit<TreeProps, "data" | "nodeRenderer" | "getNode" | "enableVirtualization"> &
   ComponentPropsWithoutRef<typeof LocalizationContextProvider>;
@@ -54,7 +54,7 @@ export function TreeRenderer({
   selectionMode,
   localizedStrings,
   size,
-  disableFiltering,
+  filterButtonsVisibility,
   ...treeProps
 }: TreeRendererProps) {
   const { onNodeClick, onNodeKeyDown } = useSelectionHandler({
@@ -67,7 +67,7 @@ export function TreeRenderer({
       return (
         <TreeNodeRenderer
           {...nodeProps}
-          disableFiltering={disableFiltering}
+          filterButtonsVisibility={filterButtonsVisibility}
           expandNode={expandNode}
           getHierarchyLevelDetails={getHierarchyLevelDetails}
           onFilterClick={onFilterClick}
@@ -81,7 +81,19 @@ export function TreeRenderer({
         />
       );
     },
-    [disableFiltering, expandNode, getHierarchyLevelDetails, onFilterClick, onNodeClick, onNodeKeyDown, getIcon, getLabel, getSublabel, reloadTree, size],
+    [
+      filterButtonsVisibility,
+      expandNode,
+      getHierarchyLevelDetails,
+      onFilterClick,
+      onNodeClick,
+      onNodeKeyDown,
+      getIcon,
+      getLabel,
+      getSublabel,
+      reloadTree,
+      size,
+    ],
   );
 
   const getNode = useCallback<TreeProps["getNode"]>((node) => createRenderedTreeNodeData(node, isNodeSelected ?? noopIsNodeSelected), [isNodeSelected]);

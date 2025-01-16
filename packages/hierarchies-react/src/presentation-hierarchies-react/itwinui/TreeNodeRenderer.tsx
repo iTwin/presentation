@@ -39,8 +39,8 @@ interface TreeNodeRendererOwnProps {
   actionButtonsClassName?: string;
   /** Tree node size. Should match the size passed to `TreeRenderer` component. */
   size?: "default" | "small";
-  /** Disables button-based filtering and hides filter buttons. Defaults to `false`*/
-  disableFiltering?: boolean;
+  /** Configures filter buttons visibility. Defaults to `show-on-hover`*/
+  filterButtonsVisibility?: "show-on-hover" | "hide";
 }
 
 /** @public */
@@ -73,7 +73,7 @@ export const TreeNodeRenderer: React.ForwardRefExoticComponent<TreeNodeRendererP
       getHierarchyLevelDetails,
       reloadTree,
       size,
-      disableFiltering,
+      filterButtonsVisibility,
       ...treeNodeProps
     },
     forwardedRef,
@@ -124,7 +124,7 @@ export const TreeNodeRenderer: React.ForwardRefExoticComponent<TreeNodeRendererP
                 <SvgRemove />
               </IconButton>
             ) : null}
-            {onFilterClick && node.isFilterable && (!disableFiltering || node.isFiltered) ? (
+            {onFilterClick && node.isFilterable && (filterButtonsVisibility !== "hide" || node.isFiltered) ? (
               <IconButton
                 ref={applyFilterButtonRef}
                 className="filtering-action-button"
