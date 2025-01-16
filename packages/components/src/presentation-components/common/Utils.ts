@@ -10,42 +10,14 @@ import "../common/DisposePolyfill.js";
 import * as mm from "micro-memoize";
 import { LegacyRef, MutableRefObject, RefCallback, useCallback, useEffect, useState } from "react";
 import { Primitives, PrimitiveValue, PropertyDescription, PropertyRecord, PropertyValueFormat } from "@itwin/appui-abstract";
-import { IPropertyValueRenderer, PropertyValueRendererManager } from "@itwin/components-react";
 import { Guid, GuidString } from "@itwin/core-bentley";
 import { TranslationOptions } from "@itwin/core-common";
-import { Descriptor, Field, LabelCompositeValue, LabelDefinition, parseCombinedFieldNames, Ruleset, Value } from "@itwin/presentation-common";
+import { Descriptor, Field, KeySet, LabelCompositeValue, LabelDefinition, parseCombinedFieldNames, Ruleset, Value } from "@itwin/presentation-common";
 import { Presentation } from "@itwin/presentation-frontend";
-import { InstanceKeyValueRenderer } from "../properties/InstanceKeyValueRenderer.js";
+import { Selectables } from "@itwin/unified-selection";
 
-const localizationNamespaceName = "PresentationComponents";
-
-/**
- * Registers 'PresentationComponents' localization namespace and returns callback
- * to unregister it.
- * @internal
- */
-export const initializeLocalization = async () => {
-  await Presentation.localization.registerNamespace(localizationNamespaceName);
-  return () => Presentation.localization.unregisterNamespace(localizationNamespaceName);
-};
-
-/**
- * Registers custom property value renderers and returns cleanup callback that unregisters them.
- * @internal
- */
-export const initializePropertyValueRenderers = async () => {
-  const customRenderers: Array<{ name: string; renderer: IPropertyValueRenderer }> = [{ name: "SelectableInstance", renderer: new InstanceKeyValueRenderer() }];
-
-  for (const { name, renderer } of customRenderers) {
-    PropertyValueRendererManager.defaultManager.registerRenderer(name, renderer);
-  }
-
-  return () => {
-    for (const { name } of customRenderers) {
-      PropertyValueRendererManager.defaultManager.unregisterRenderer(name);
-    }
-  };
-};
+/** @internal */
+export const localizationNamespaceName = "PresentationComponents";
 
 /**
  * Translate a string with the specified id from `PresentationComponents`
@@ -273,6 +245,10 @@ export function memoize<Fn extends mm.AnyFn>(fn: Fn | mm.Memoized<Fn>, options?:
 
 export type WithIModelKey<TObj extends {}> = TObj & { imodelKey?: string };
 
-export function createIModelKey(imodel: { key: string; name: string }) {
-  return imodel.key.length ? imodel.key : /*c8 ignore next */ imodel.name;
+export async function createKeySetFromSelectables(selectables: Selectables): Promise<KeySet> {
+  const keys = new KeySet();
+  for await (const instanceKey of Selectables.load(selectables)) {
+    keys.add(instanceKey);
+  }
+  return keys;
 }

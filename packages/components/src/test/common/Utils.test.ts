@@ -5,30 +5,16 @@
 
 import { expect } from "chai";
 import { Component } from "react";
-import sinon from "sinon";
 import { Primitives, PrimitiveValue } from "@itwin/appui-abstract";
-import { PropertyValueRendererManager } from "@itwin/components-react";
-import { ITwinLocalization } from "@itwin/core-i18n";
 import { combineFieldNames, LabelCompositeValue, LabelDefinition } from "@itwin/presentation-common";
-import { Presentation } from "@itwin/presentation-frontend";
 import {
-  AsyncTasksTracker,
-  createLabelRecord,
-  deserializeUniqueValues,
-  findField,
-  getDisplayName,
-  initializeLocalization,
-  initializePropertyValueRenderers,
+  AsyncTasksTracker, createLabelRecord, deserializeUniqueValues, findField, getDisplayName,
 } from "../../presentation-components/common/Utils.js";
 import { createTestPropertyInfo } from "../_helpers/Common.js";
 import {
-  createTestContentDescriptor,
-  createTestNestedContentField,
-  createTestPropertiesContentField,
-  createTestSimpleContentField,
+  createTestContentDescriptor, createTestNestedContentField, createTestPropertiesContentField, createTestSimpleContentField,
 } from "../_helpers/Content.js";
 import { createTestLabelCompositeValue, createTestLabelDefinition } from "../_helpers/LabelDefinition.js";
-import { createStub } from "../TestUtils.js";
 
 class TestComponent extends Component {}
 
@@ -93,21 +79,6 @@ describe("Utils", () => {
     });
   });
 
-  describe("initializeLocalization", () => {
-    it("registers and unregisters namespace", async () => {
-      const i18n = {
-        registerNamespace: createStub<ITwinLocalization["registerNamespace"]>().resolves(),
-        unregisterNamespace: createStub<ITwinLocalization["unregisterNamespace"]>(),
-      };
-      sinon.stub(Presentation, "localization").get(() => i18n);
-
-      const terminate = await initializeLocalization();
-      expect(i18n.registerNamespace).to.be.calledOnce;
-      terminate();
-      expect(i18n.unregisterNamespace).to.be.calledOnce;
-    });
-  });
-
   describe("createLabelRecord", () => {
     const validateCompositeValue = (actual: Primitives.Composite, expected: LabelCompositeValue) => {
       expect(actual.separator).to.be.eq(expected.separator);
@@ -135,20 +106,6 @@ describe("Utils", () => {
       validateCompositeValue(primitiveValue.value as Primitives.Composite, definition.rawValue as LabelCompositeValue);
       expect(primitiveValue.displayValue).to.be.eq(definition.displayValue);
       expect(record.property.typename).to.be.eq(definition.typeName);
-    });
-  });
-
-  describe("initializePropertyValueRenderers", () => {
-    it("registers custom renderers", async () => {
-      const registerSpy = sinon.spy(PropertyValueRendererManager.defaultManager, "registerRenderer");
-      const unregisterSpy = sinon.spy(PropertyValueRendererManager.defaultManager, "unregisterRenderer");
-
-      const unregisterCallback = await initializePropertyValueRenderers();
-      expect(registerSpy).to.be.calledOnceWith("SelectableInstance");
-      expect(unregisterSpy).to.not.be.called;
-
-      unregisterCallback();
-      expect(unregisterSpy).to.be.calledOnceWith("SelectableInstance");
     });
   });
 });
