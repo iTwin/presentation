@@ -353,7 +353,7 @@ describe("Tree", () => {
     expect(onFilterClick).to.be.calledOnceWith(hierarchyLevelDetails);
   });
 
-  it("renders filter button when filter buttons are hiden, but node is filtered", async () => {
+  it("renders filter button when filter buttons are hidden, but node is filtered", async () => {
     const rootNodes = createNodes([
       {
         id: "root-1",
