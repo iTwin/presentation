@@ -353,6 +353,25 @@ describe("Tree", () => {
     expect(onFilterClick).to.be.calledOnceWith(hierarchyLevelDetails);
   });
 
+  it("renders filter button when filtering is disabled, but node is filtered", async () => {
+    const rootNodes = createNodes([
+      {
+        id: "root-1",
+        isFilterable: true,
+        isFiltered: true,
+      },
+    ]);
+
+    const hierarchyLevelDetails = {} as unknown as HierarchyLevelDetails;
+    getHierarchyLevelDetails.returns(hierarchyLevelDetails);
+
+    const { user, queryByText, getByRole } = render(<TreeRenderer rootNodes={rootNodes} disableFiltering={true} {...initialProps} />);
+
+    expect(queryByText("root-1")).to.not.be.null;
+    await user.click(getByRole("button", { name: "Apply filter" }));
+    expect(onFilterClick).to.be.calledOnceWith(hierarchyLevelDetails);
+  });
+
   describe("`ResultSetTooLarge` node", () => {
     it("renders `ResultSetTooLarge` node with filtering and override support", async () => {
       const rootNodes = createNodes([
