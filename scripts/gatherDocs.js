@@ -23,6 +23,7 @@ if (fs.existsSync(tokenPath)) {
 }
 
 console.log("Gathering docs...");
+fs.mkdirSync(targetDir, { recursive: true });
 fs.writeFileSync(tokenPath, "in progress");
 
 // filter out root package
