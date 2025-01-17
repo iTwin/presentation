@@ -96,9 +96,7 @@ describe("Hierarchies React", () => {
             return null;
           }
 
-          return (
-            <MyTreeComponentInternal imodelAccess={imodelAccess} selectionStorage={unifiedSelectionStorage} />
-          );
+          return <MyTreeComponentInternal imodelAccess={imodelAccess} selectionStorage={unifiedSelectionStorage} />;
         }
         // __PUBLISH_EXTRACT_END__
         // __PUBLISH_EXTRACT_START__ Presentation.HierarchiesReact.CustomTreeExample
