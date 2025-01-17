@@ -9,8 +9,8 @@ import { PropertyRecord, PropertyValueFormat } from "@itwin/appui-abstract";
 import { PropertyData } from "@itwin/components-react";
 import { EmptyLocalization } from "@itwin/core-common";
 import { IModelConnection } from "@itwin/core-frontend";
-import { KeySet, Ruleset } from "@itwin/presentation-common";
-import { FavoritePropertiesManager, Presentation, PresentationManager, SelectionManager } from "@itwin/presentation-frontend";
+import { Ruleset } from "@itwin/presentation-common";
+import { FavoritePropertiesManager, Presentation, PresentationManager, SelectionManager, SelectionScopesManager } from "@itwin/presentation-frontend";
 import { FavoritePropertiesDataProvider } from "../../presentation-components/favorite-properties/DataProvider.js";
 import { getFavoritesCategory } from "../../presentation-components/favorite-properties/Utils.js";
 import { PresentationPropertyDataProvider } from "../../presentation-components/propertygrid/DataProvider.js";
@@ -18,9 +18,13 @@ import { PresentationPropertyDataProvider } from "../../presentation-components/
 describe("FavoritePropertiesDataProvider", () => {
   let provider: FavoritePropertiesDataProvider;
   const elementId = "0x11";
-  const imodel = {} as IModelConnection;
+  const imodel = {
+    async *createQueryReader() {
+      yield { toRow: () => ({ ECInstanceId: elementId, ClassName: "BisCore.Element" }) };
+    },
+  } as unknown as IModelConnection;
   let presentationManager: sinon.SinonStubbedInstance<PresentationManager>;
-  let selectionManager: sinon.SinonStubbedInstance<SelectionManager>;
+  let selectionManager: SelectionManager;
   let presentationPropertyDataProvider: {
     getData: sinon.SinonStub<[], PropertyData>;
     [Symbol.dispose]: sinon.SinonStub<[], void>;
@@ -29,7 +33,9 @@ describe("FavoritePropertiesDataProvider", () => {
 
   beforeEach(() => {
     presentationManager = sinon.createStubInstance(PresentationManager);
-    selectionManager = sinon.createStubInstance(SelectionManager);
+    selectionManager = {
+      scopes: {} as SelectionScopesManager,
+    } as SelectionManager;
     presentationPropertyDataProvider = {
       getData: sinon.stub(),
       [Symbol.dispose]: sinon.stub(),
@@ -61,14 +67,6 @@ describe("FavoritePropertiesDataProvider", () => {
   });
 
   describe("getData", () => {
-    beforeEach(() => {
-      Object.assign(selectionManager, {
-        scopes: {
-          computeSelection: async () => new KeySet(),
-        },
-      });
-    });
-
     it("passes `customRulesetId` to PropertyDataProvider if set", async () => {
       presentationPropertyDataProvider.getData.resolves({
         label: PropertyRecord.fromString("Test Item"),

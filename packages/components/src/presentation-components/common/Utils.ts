@@ -13,8 +13,8 @@ import { Primitives, PrimitiveValue, PropertyDescription, PropertyRecord, Proper
 import { Guid, GuidString } from "@itwin/core-bentley";
 import { TranslationOptions } from "@itwin/core-common";
 import { Descriptor, Field, KeySet, LabelCompositeValue, LabelDefinition, parseCombinedFieldNames, Ruleset, Value } from "@itwin/presentation-common";
-import { Presentation } from "@itwin/presentation-frontend";
-import { Selectables } from "@itwin/unified-selection";
+import { createSelectionScopeProps, Presentation, SelectionScopesManager } from "@itwin/presentation-frontend";
+import { computeSelection, Selectables } from "@itwin/unified-selection";
 
 /** @internal */
 export const localizationNamespaceName = "PresentationComponents";
@@ -251,4 +251,29 @@ export async function createKeySetFromSelectables(selectables: Selectables): Pro
     keys.add(instanceKey);
   }
   return keys;
+}
+
+export function mapPresentationFrontendSelectionScopeToUnifiedSelectionScope(
+  scope: SelectionScopesManager["activeScope"],
+): Parameters<typeof computeSelection>[0]["scope"] {
+  const scopeProps = createSelectionScopeProps(scope);
+  switch (scopeProps.id) {
+    case "functional-element":
+      return { id: "functional" };
+    case "functional-assembly":
+      return { id: "functional", ancestorLevel: 1 };
+    case "functional-top-assembly":
+      return { id: "functional", ancestorLevel: -1 };
+    case "element":
+      return { id: "element" };
+    case "assembly":
+      return { id: "element", ancestorLevel: 1 };
+    case "top-assembly":
+      return { id: "element", ancestorLevel: -1 };
+    case "category":
+      return { id: "category" };
+    case "model":
+      return { id: "model" };
+  }
+  throw new Error(`Unknown selection scope: "${scopeProps.id}"`);
 }

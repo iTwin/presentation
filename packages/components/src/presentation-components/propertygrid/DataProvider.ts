@@ -36,11 +36,12 @@ import {
   Value,
   ValuesMap,
 } from "@itwin/presentation-common";
+import { createIModelKey } from "@itwin/presentation-core-interop";
 import { FavoritePropertiesScope, Presentation } from "@itwin/presentation-frontend";
 import { FieldHierarchyRecord, InternalPropertyRecordsBuilder, IPropertiesAppender } from "../common/ContentBuilder.js";
 import { CacheInvalidationProps, ContentDataProvider, IContentDataProvider } from "../common/ContentDataProvider.js";
 import { DiagnosticsProps } from "../common/Diagnostics.js";
-import { createIModelKey, createLabelRecord, findField, memoize, WithIModelKey } from "../common/Utils.js";
+import { createLabelRecord, findField, memoize, WithIModelKey } from "../common/Utils.js";
 import { FAVORITES_CATEGORY_NAME, getFavoritesCategory } from "../favorite-properties/Utils.js";
 
 const labelsComparer = new Intl.Collator(undefined, { sensitivity: "base" }).compare;

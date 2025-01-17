@@ -6,10 +6,15 @@
  * @module Table
  */
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { debounceTime, EMPTY, from, map, mergeMap, Observable, of, Subject, switchMap, tap } from "rxjs";
+import { BeEvent, Guid } from "@itwin/core-bentley";
 import { IModelConnection } from "@itwin/core-frontend";
-import { Key, KeySet, Ruleset } from "@itwin/presentation-common";
+import { Key, KeySet, NodeKey, Ruleset } from "@itwin/presentation-common";
+import { createIModelKey } from "@itwin/presentation-core-interop";
 import { Presentation } from "@itwin/presentation-frontend";
+import { parseFullClassName } from "@itwin/presentation-shared";
+import { SelectableInstanceKey, Selectables, SelectionStorage } from "@itwin/unified-selection";
 import { TableColumnDefinition, TableRowDefinition } from "./Types.js";
 import { useColumns } from "./UseColumns.js";
 import { useRows } from "./UseRows.js";
@@ -54,20 +59,6 @@ export interface UsePresentationTableResult<TColumns, TRow> {
 }
 
 /**
- * Return type of [[usePresentationTableWithUnifiedSelection]] hook.
- * @public
- */
-export interface UsePresentationTableWithUnifiedSelectionResult<TColumns, TRow> extends UsePresentationTableResult<TColumns, TRow> {
-  /** Specifies rows that have been selected (toggled) by other components on the appropriate selection level. */
-  selectedRows: TRow[];
-  /**
-   * A function that should be called when a table row is selected.
-   * @param selectedRowKeys Keys of selected table rows. These should match `TableRowDefinition.key` passed to `UsePresentationTableProps.rowMapper` function when new rows are loaded.
-   */
-  onSelect: (selectedRowKeys: string[]) => void;
-}
-
-/**
  * Custom hook that loads data for generic table component.
  * @throws on failure to get table data. The error is thrown in the React's render loop, so it can be caught using an error boundary.
  * @public
@@ -89,74 +80,120 @@ export function usePresentationTable<TColumn, TRow>(props: UsePresentationTableP
 }
 
 /**
+ * Props for [[usePresentationTableWithUnifiedSelection]] hook.
+ * @public
+ */
+export interface UsePresentationTableWithUnifiedSelectionProps<TColumn, TRow> extends Omit<UsePresentationTableProps<TColumn, TRow>, "keys"> {
+  /**
+   * Unified selection storage to use for listening, getting and changing active selection.
+   *
+   * When not specified, the deprecated `SelectionManager` from `@itwin/presentation-frontend` package
+   * is used.
+   */
+  selectionStorage?: SelectionStorage;
+}
+
+/**
+ * Return type of [[usePresentationTableWithUnifiedSelection]] hook.
+ * @public
+ */
+export interface UsePresentationTableWithUnifiedSelectionResult<TColumns, TRow> extends UsePresentationTableResult<TColumns, TRow> {
+  /** Specifies rows that have been selected (toggled) by other components on the appropriate selection level. */
+  selectedRows: TRow[];
+
+  /**
+   * A function that should be called when a table row is selected.
+   * @param selectedRowKeys Keys of selected table rows. These should match `TableRowDefinition.key` passed to `UsePresentationTableProps.rowMapper` function when new rows are loaded.
+   */
+  onSelect: (selectedRowKeys: string[]) => void;
+}
+
+/**
  * Custom hook that load data for generic table component. It uses [Unified Selection]($docs/presentation/unified-selection/index.md) to get keys defining what to load rows for.
  *
  * @throws on failure to get table data. The error is thrown in the React's render loop, so it can be caught using an error boundary.
  * @public
  */
 export function usePresentationTableWithUnifiedSelection<TColumn, TRow>(
-  props: Omit<UsePresentationTableProps<TColumn, TRow>, "keys">,
+  props: UsePresentationTableWithUnifiedSelectionProps<TColumn, TRow>,
 ): UsePresentationTableWithUnifiedSelectionResult<TColumn, TRow> {
-  const { imodel, ruleset, pageSize, columnMapper, rowMapper } = props;
-  const [tableName] = useState(() => `UnifiedSelectionTable_${counter++}`);
-
+  const { imodel, ruleset, pageSize, columnMapper, rowMapper, selectionStorage } = props;
+  const [tableName] = useState(() => `UnifiedSelectionTable_${Guid.createValue()}`);
   const [selectedRows, setSelectedRows] = useState<TableRowDefinition[]>();
 
-  const keys = useUnifiedSelectionKeys(imodel);
+  const {
+    keys: { keys, isLoading: isLoadingKeys },
+    getSelection,
+    replaceSelection,
+    selectionChange,
+  } = useSelectionHandler({ imodel, selectionStorage, tableName });
+
   const columns = useColumns({ imodel, ruleset, keys });
   const { options, sort, filter } = useTableOptions({ columns });
-  const { rows, isLoading, loadMoreRows } = useRows({ imodel, ruleset, keys, pageSize, options });
+  const { rows, isLoading: isLoadingRows, loadMoreRows } = useRows({ imodel, ruleset, keys, pageSize, options });
 
   useEffect(() => {
-    const updateSelectedRows = () => {
-      const toggledRowKeys = Presentation.selection.getSelection(imodel, 1);
-
-      const rowsToAddToSelection: TableRowDefinition[] = [];
-      toggledRowKeys?.forEach((key) => {
-        // should return just one row
-        const selectedRow = rows.filter((row) => row.key === JSON.stringify(key));
-
-        if (selectedRow[0] !== undefined) {
-          rowsToAddToSelection.push(selectedRow[0]);
-        }
+    const updateSelectedRows = new Subject<number>();
+    const subscription = updateSelectedRows
+      .pipe(
+        mergeMap((level): Observable<TableRowDefinition[]> => {
+          if (level > 1) {
+            // ignore all selection changes with level > 1
+            return EMPTY;
+          }
+          if (level === 0) {
+            // selection at level 0 defines what the table shows, so just clear the selection
+            return of([]);
+          }
+          return from(getSelection({ level: 1 })).pipe(
+            debounceTime(0),
+            map((selectedKeys) => {
+              const rowsToAddToSelection: TableRowDefinition[] = [];
+              selectedKeys.forEach((selectable) => {
+                const selectedRow = rows.find((row) => {
+                  // table content is built using the legacy Presentation library, where full class name format is
+                  // "schema:class". In the unified selection library, the format is "schema.class".
+                  const { schemaName, className } = parseFullClassName(selectable.className);
+                  return row.key === JSON.stringify({ className: `${schemaName}:${className}`, id: selectable.id });
+                });
+                if (selectedRow !== undefined) {
+                  rowsToAddToSelection.push(selectedRow);
+                }
+              });
+              return rowsToAddToSelection;
+            }),
+          );
+        }),
+      )
+      .subscribe({
+        next: (rowsToSelect: TableRowDefinition[]) => {
+          setSelectedRows(rowsToSelect);
+        },
       });
-
-      setSelectedRows(rowsToAddToSelection);
+    updateSelectedRows.next(1);
+    const removeListener = selectionChange.addListener((level) => updateSelectedRows.next(level));
+    return () => {
+      subscription.unsubscribe();
+      removeListener();
     };
+  }, [rows, imodel, selectionChange, getSelection]);
 
-    const unregisterListener = Presentation.selection.selectionChange.addListener(({ imodel: selectionIModel, level }) => {
-      if (selectionIModel !== imodel || level > 1) {
-        return;
-      }
-
-      return level === 1 ? updateSelectedRows() : setSelectedRows([]);
-    });
-
-    updateSelectedRows();
-
-    return unregisterListener;
-  }, [rows, imodel]);
-
-  const onSelect = (selectedKeys: string[]) => {
-    const parsedKeys: Key[] = [];
-    for (const selectedKey of selectedKeys) {
-      try {
-        const parsedKey: Key = JSON.parse(selectedKey);
-        if (rows.some((row) => row.key === selectedKey)) {
-          parsedKeys.push(parsedKey);
-        }
-      } catch {
+  const onSelect = (selectedRowKeys: string[]) => {
+    const selectables: SelectableInstanceKey[] = [];
+    for (const selectedRowKey of selectedRowKeys) {
+      if (!rows.find((row) => row.key === selectedRowKey)) {
         continue;
       }
+      const selectableKey = JSON.parse(selectedRowKey);
+      selectables.push(selectableKey);
     }
-
-    Presentation.selection.replaceSelection(tableName, props.imodel, parsedKeys, 1);
+    replaceSelection({ source: tableName, selectables, level: 1 });
   };
 
   return {
     columns: useMemo(() => columns?.map(columnMapper), [columns, columnMapper]),
     rows: useMemo(() => rows.map(rowMapper), [rows, rowMapper]),
-    isLoading,
+    isLoading: !columns || isLoadingRows || isLoadingKeys,
     loadMoreRows,
     sort,
     filter,
@@ -165,18 +202,103 @@ export function usePresentationTableWithUnifiedSelection<TColumn, TRow>(
   };
 }
 
-function useUnifiedSelectionKeys(imodel: IModelConnection) {
-  const [keys, setKeys] = useState(Presentation.selection.getSelection(imodel, 0));
+function useSelectionHandler({ imodel, selectionStorage, tableName }: { imodel: IModelConnection; selectionStorage?: SelectionStorage; tableName: string }) {
+  const [selectionChange] = useState(() => new BeEvent<(level: number) => void>());
   useEffect(() => {
+    if (selectionStorage) {
+      return selectionStorage.selectionChangeEvent.addListener((args) => {
+        if (args.imodelKey === createIModelKey(imodel) && args.source !== tableName) {
+          selectionChange.raiseEvent(args.level);
+        }
+      });
+    }
     return Presentation.selection.selectionChange.addListener((args) => {
-      if (imodel !== args.imodel) {
-        return;
+      if (imodel === args.imodel && args.source !== tableName) {
+        selectionChange.raiseEvent(args.level);
       }
-      // make copy in case getSelection return mutated key set
-      setKeys(new KeySet(Presentation.selection.getSelection(imodel, 0)));
     });
-  }, [imodel]);
+  }, [imodel, selectionStorage, tableName, selectionChange]);
+
+  const getSelection = useCallback(
+    async (args: { level: number }): Promise<SelectableInstanceKey[]> => {
+      return selectionStorage
+        ? loadInstanceKeysFromSelectables(selectionStorage.getSelection({ imodelKey: createIModelKey(imodel), level: args.level }))
+        : loadInstanceKeysFromKeySet(Presentation.selection.getSelection(imodel, args.level));
+    },
+    [imodel, selectionStorage],
+  );
+
+  const replaceSelection = useCallback(
+    (args: { source: string; level: number; selectables: SelectableInstanceKey[] }) => {
+      return selectionStorage
+        ? selectionStorage.replaceSelection({
+            imodelKey: createIModelKey(imodel),
+            source: args.source,
+            level: args.level,
+            selectables: args.selectables,
+          })
+        : Presentation.selection.replaceSelection(args.source, imodel, args.selectables, args.level);
+    },
+    [imodel, selectionStorage],
+  );
+
+  const keys = useUnifiedSelectionKeys({ getSelection, selectionChange });
+
+  return {
+    keys,
+    getSelection,
+    replaceSelection,
+    selectionChange,
+  };
+}
+
+async function loadInstanceKeysFromSelectables(selectables: Selectables) {
+  const keys: SelectableInstanceKey[] = [];
+  for await (const selectable of Selectables.load(selectables)) {
+    keys.push(selectable);
+  }
   return keys;
 }
 
-let counter = 0;
+async function loadInstanceKeysFromKeySet(keySet: Readonly<KeySet>) {
+  const keys: SelectableInstanceKey[] = [];
+  keySet.forEach((key) => {
+    if (Key.isInstanceKey(key)) {
+      keys.push(key);
+    } else if (NodeKey.isInstancesNodeKey(key)) {
+      keys.push(...key.instanceKeys);
+    }
+  });
+  return keys;
+}
+
+function useUnifiedSelectionKeys({
+  getSelection,
+  selectionChange,
+}: {
+  getSelection: (args: { level: number }) => Promise<SelectableInstanceKey[]>;
+  selectionChange: BeEvent<(level: number) => void>;
+}) {
+  const [state, setState] = useState(() => ({ isLoading: false, keys: new KeySet() }));
+  useEffect(() => {
+    const update = new Subject<void>();
+    const subscription = update
+      .pipe(
+        tap(() => setState((prev) => ({ ...prev, isLoading: true }))),
+        switchMap(async () => getSelection({ level: 0 })),
+        map((selectables) => new KeySet(selectables)),
+      )
+      .subscribe({
+        next: (newKeys) => {
+          setState({ isLoading: false, keys: newKeys });
+        },
+      });
+    update.next();
+    const removeListener = selectionChange.addListener(() => update.next());
+    return () => {
+      subscription.unsubscribe();
+      removeListener();
+    };
+  }, [getSelection, selectionChange]);
+  return state;
+}

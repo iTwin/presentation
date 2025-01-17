@@ -10,7 +10,7 @@
 import { Primitives, PrimitiveValue, PropertyRecord, PropertyValueFormat } from "@itwin/appui-abstract";
 import { IPropertyValueRenderer, PropertyValueRendererContext, TypeConverterManager, useAsyncValue } from "@itwin/components-react";
 import { Anchor } from "@itwin/itwinui-react";
-import { useUnifiedSelectionContext } from "@itwin/unified-selection-react";
+import { useOptionalUnifiedSelectionContext } from "../common/UnifiedSelection.js";
 import { translate, WithIModelKey } from "../common/Utils.js";
 import { useUnifiedSelectionContext as useDeprecatedUnifiedSelectionContext } from "../unified-selection/UnifiedSelectionContext.js";
 
@@ -41,7 +41,7 @@ const InstanceKeyValueRendererImpl: React.FC<InstanceKeyValueRendererImplProps> 
 
   // eslint-disable-next-line @typescript-eslint/no-deprecated
   const deprecatedSelectionContext = useDeprecatedUnifiedSelectionContext();
-  const selectionContext = useUnifiedSelectionContext();
+  const selectionContext = useOptionalUnifiedSelectionContext();
 
   const instanceKey = (props.record.value as PrimitiveValue).value as Primitives.InstanceKey | undefined;
   if (instanceKey) {

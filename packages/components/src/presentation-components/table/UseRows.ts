@@ -12,9 +12,10 @@ import { PropertyRecord } from "@itwin/appui-abstract";
 import { assert } from "@itwin/core-bentley";
 import { IModelApp, IModelConnection } from "@itwin/core-frontend";
 import { Content, DefaultContentDisplayTypes, KeySet, PageOptions, Ruleset, StartItemProps, traverseContent } from "@itwin/presentation-common";
+import { createIModelKey } from "@itwin/presentation-core-interop";
 import { Presentation } from "@itwin/presentation-frontend";
 import { FieldHierarchyRecord, InternalPropertyRecordsBuilder } from "../common/ContentBuilder.js";
-import { createIModelKey, useErrorState, WithIModelKey } from "../common/Utils.js";
+import { useErrorState, WithIModelKey } from "../common/Utils.js";
 import { TableRowDefinition } from "./Types.js";
 import { TableOptions } from "./UseTableOptions.js";
 
