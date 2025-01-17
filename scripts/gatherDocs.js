@@ -4,6 +4,8 @@
  *--------------------------------------------------------------------------------------------*/
 const { execSync } = require("child_process");
 const cpx = require("cpx2");
+const fs = require("fs");
+const path = require("path");
 
 // gathers docs from all workspace packages to the root folder
 
@@ -13,10 +15,23 @@ const allWorkspacePackages = JSON.parse(execSync("pnpm list -r --depth -1 --only
 // get info about root package
 const [{ name: workspaceRootName, path: workspaceRootPath }] = JSON.parse(execSync("pnpm list -w --only-projects --json", { encoding: "utf-8" }));
 
+const targetDir = path.join(workspaceRootPath, "build");
+const tokenPath = path.join(targetDir, "in-progress.txt");
+if (fs.existsSync(tokenPath)) {
+  console.log("Docs build is already in progress. Skipping...");
+  return;
+}
+
+console.log("Gathering docs...");
+fs.writeFileSync(tokenPath, "in progress");
+
 // filter out root package
 const workspacePackages = allWorkspacePackages.filter(({ name }) => name !== workspaceRootName);
 
 for (const package of workspacePackages) {
   // copy docs build from each package to the root
-  cpx.copySync(`${package.path}/build/**`, `${workspaceRootPath}/build`);
+  cpx.copySync(`${package.path}/build/**`, targetDir);
 }
+
+console.log(`Gathered docs into "${targetDir}". Removed the "in progress" token...`);
+fs.rmSync(tokenPath);

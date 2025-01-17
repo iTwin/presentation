@@ -29,7 +29,8 @@ export interface UseUnifiedTreeSelectionProps {
    * Unified selection storage to use for listening, getting and changing active selection.
    *
    * When not specified, the deprecated unified selection React context is used to access the
-   * selection storage (see `UnifiedSelectionProvider`).
+   * selection storage (see `UnifiedSelectionProvider`). This prop will be made required in the
+   * next major release, where the deprecated context will also be removed.
    */
   selectionStorage?: SelectionStorage;
 }

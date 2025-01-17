@@ -10,8 +10,7 @@ import { IModelApp, IModelConnection } from "@itwin/core-frontend";
 import { InstanceKey, Ruleset } from "@itwin/presentation-common";
 import { TableColumnDefinition, TableRowDefinition, usePresentationTableWithUnifiedSelection } from "@itwin/presentation-components";
 import { buildTestIModel } from "@itwin/presentation-testing";
-import { createStorage } from "@itwin/unified-selection";
-import { UnifiedSelectionContextProvider } from "@itwin/unified-selection-react";
+import { createStorage, SelectionStorage } from "@itwin/unified-selection";
 import { initialize, terminate } from "../../IntegrationTests.js";
 import { act, getByText, render, waitFor } from "../../RenderUtils.js";
 import { ensureTableHasRowsWithCellValues } from "../TableUtils.js";
@@ -30,7 +29,7 @@ describe("Learning snippets", async () => {
 
     it("renders unified selection table", async function () {
       // __PUBLISH_EXTRACT_START__ Presentation.Components.UnifiedSelection.Table
-      function MyTable(props: { imodel: IModelConnection }) {
+      function MyTable(props: { imodel: IModelConnection; selectionStorage: SelectionStorage }) {
         // the library provides a variation of `usePresentationTable` that updates table content based
         // on unified selection
         const { columns, rows, isLoading } = usePresentationTableWithUnifiedSelection({
@@ -39,6 +38,7 @@ describe("Learning snippets", async () => {
           pageSize: 10,
           columnMapper: mapTableColumns,
           rowMapper: mapTableRow,
+          selectionStorage: props.selectionStorage,
         });
 
         // don't render anything if the table is loading
@@ -116,11 +116,8 @@ describe("Learning snippets", async () => {
       const selectionStorage = createStorage();
 
       function App() {
-        return (
-          <UnifiedSelectionContextProvider storage={selectionStorage}>
-            <MyTable imodel={imodel} />
-          </UnifiedSelectionContextProvider>
-        );
+        // pass selection storage to the component to hook into it
+        return <MyTable imodel={imodel} selectionStorage={selectionStorage} />;
       }
       // __PUBLISH_EXTRACT_END__
 
