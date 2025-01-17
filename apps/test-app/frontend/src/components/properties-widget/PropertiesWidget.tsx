@@ -38,6 +38,7 @@ import {
   usePropertyDataProviderWithUnifiedSelection,
 } from "@itwin/presentation-components";
 import { FavoritePropertiesScope, Presentation } from "@itwin/presentation-frontend";
+import { useUnifiedSelectionContext } from "@itwin/unified-selection-react";
 import { DiagnosticsSelector } from "../diagnostics-selector/DiagnosticsSelector";
 
 const FAVORITES_SCOPE = FavoritePropertiesScope.IModel;
@@ -170,7 +171,12 @@ function FilterablePropertyGrid({
   width,
   height,
 }: Omit<PropertyGridProps, "rulesetId" | "diagnostics"> & { dataProvider: PresentationPropertyDataProvider }) {
-  const { isOverLimit, numSelectedElements } = usePropertyDataProviderWithUnifiedSelection({ dataProvider });
+  const unifiedSelectionContext = useUnifiedSelectionContext();
+  if (!unifiedSelectionContext) {
+    throw new Error("Unified selection context is not available");
+  }
+
+  const { isOverLimit, numSelectedElements } = usePropertyDataProviderWithUnifiedSelection({ dataProvider, selectionStorage: unifiedSelectionContext.storage });
 
   const { filter: filterText, onlyFavorites, activeHighlight, onFilteringStateChanged } = filtering;
   const [filteringProvDataChanged, setFilteringProvDataChanged] = useState({});
