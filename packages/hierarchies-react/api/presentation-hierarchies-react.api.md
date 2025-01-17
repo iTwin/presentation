@@ -273,10 +273,11 @@ interface UseTreeResult {
 }
 
 // @public
-export function useUnifiedSelectionTree({ sourceName, ...props }: UseTreeProps & UseUnifiedTreeSelectionProps): UseTreeResult;
+export function useUnifiedSelectionTree({ sourceName, selectionStorage, ...props }: UseTreeProps & UseUnifiedTreeSelectionProps): UseTreeResult;
 
 // @public (undocumented)
 interface UseUnifiedTreeSelectionProps {
+    selectionStorage?: SelectionStorage;
     sourceName: string;
 }
 

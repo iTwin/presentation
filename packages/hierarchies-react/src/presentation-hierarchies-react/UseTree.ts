@@ -57,7 +57,8 @@ export function useTree(props: UseTreeProps): UseTreeResult {
 
 /**
  * A React hook that creates state for a tree component, that is integrated with unified selection
- * through context provided by `UnifiedSelectionProvider`.
+ * through the given selection storage (previously the storage was provided through the, now
+ * deprecated, `UnifiedSelectionProvider`).
  *
  * The hook uses `@itwin/presentation-hierarchies` package to load the hierarchy data and returns a
  * component-agnostic result which may be used to render the hierarchy using any UI framework.
@@ -69,11 +70,11 @@ export function useTree(props: UseTreeProps): UseTreeResult {
  * @see `UnifiedSelectionProvider`
  * @public
  */
-export function useUnifiedSelectionTree({ sourceName, ...props }: UseTreeProps & UseUnifiedTreeSelectionProps): UseTreeResult {
+export function useUnifiedSelectionTree({ sourceName, selectionStorage, ...props }: UseTreeProps & UseUnifiedTreeSelectionProps): UseTreeResult {
   const { getTreeModelNode, ...rest } = useTreeInternal(props);
   return {
     ...rest,
-    ...useUnifiedTreeSelection({ sourceName, getTreeModelNode }),
+    ...useUnifiedTreeSelection({ sourceName, selectionStorage, getTreeModelNode }),
   };
 }
 

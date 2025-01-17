@@ -5,9 +5,8 @@
 
 import { createContext, PropsWithChildren, useContext } from "react";
 import { SelectionStorage } from "@itwin/unified-selection";
-import { useUnifiedSelectionContext } from "@itwin/unified-selection-react";
 
-const unifiedSelectionContext = createContext<SelectionStorage | undefined>(undefined);
+const deprecatedUnifiedSelectionContext = createContext<SelectionStorage | undefined>(undefined);
 
 /**
  * A React context provider that makes given selection storage available to all child components. This
@@ -17,12 +16,10 @@ const unifiedSelectionContext = createContext<SelectionStorage | undefined>(unde
  * @deprecated in 1.5.0. Use `UnifiedSelectionContextProvider` from `@itwin/unified-selection-react` instead.
  */
 export function UnifiedSelectionProvider({ storage, children }: PropsWithChildren<{ storage: SelectionStorage }>) {
-  return <unifiedSelectionContext.Provider value={storage}>{children}</unifiedSelectionContext.Provider>;
+  return <deprecatedUnifiedSelectionContext.Provider value={storage}>{children}</deprecatedUnifiedSelectionContext.Provider>;
 }
 
 /** @internal */
 export function useUnifiedSelectionStorage() {
-  const deprecatedContext = useContext(unifiedSelectionContext);
-  const newContext = useUnifiedSelectionContext();
-  return deprecatedContext ? deprecatedContext : newContext ? newContext.storage : undefined;
+  return useContext(deprecatedUnifiedSelectionContext);
 }

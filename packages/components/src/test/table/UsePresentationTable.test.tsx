@@ -614,7 +614,10 @@ describe("usePresentationTableWithUnifiedSelection", () => {
           selectionStorage.addToSelection({
             imodelKey: imodel.key,
             source: selectionSource,
-            selectables: [selectablesInstanceKeys[0], { identifier: "custom", loadInstanceKeys: () => createAsyncIterator([selectablesInstanceKeys[1]]) }],
+            selectables: [
+              selectablesInstanceKeys[0],
+              { identifier: "custom", loadInstanceKeys: () => createAsyncIterator([selectablesInstanceKeys[1]]), data: undefined },
+            ],
             level: 0,
           });
         });

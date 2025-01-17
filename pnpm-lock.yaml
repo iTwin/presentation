@@ -1464,9 +1464,6 @@ importers:
       '@itwin/itwinui-react':
         specifier: catalog:itwinui
         version: 3.16.2(@types/react@18.3.3)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      '@itwin/unified-selection-react':
-        specifier: workspace:^
-        version: link:../unified-selection-react
       '@testing-library/dom':
         specifier: catalog:test-tools
         version: 10.3.2

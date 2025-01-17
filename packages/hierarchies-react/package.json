@@ -69,22 +69,17 @@
   },
   "peerDependencies": {
     "@itwin/itwinui-react": "^3.0.0",
-    "@itwin/unified-selection-react": "workspace:^",
     "react": "^17.0.0 || ^18.0.0",
     "react-dom": "^17.0.0 || ^18.0.0"
   },
   "peerDependenciesMeta": {
     "@itwin/itwinui-react": {
       "optional": true
-    },
-    "@itwin/unified-selection-react": {
-      "optional": true
     }
   },
   "devDependencies": {
     "@itwin/build-tools": "catalog:build-tools",
     "@itwin/itwinui-react": "catalog:itwinui",
-    "@itwin/unified-selection-react": "workspace:^",
     "@testing-library/dom": "catalog:test-tools",
     "@testing-library/react": "catalog:test-tools",
     "@testing-library/user-event": "catalog:test-tools",

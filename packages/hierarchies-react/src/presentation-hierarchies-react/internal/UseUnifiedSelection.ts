@@ -24,11 +24,20 @@ export interface UseUnifiedTreeSelectionProps {
    * Identifier to distinguish this source of changes to the unified selection from another ones in the application.
    */
   sourceName: string;
+
+  /**
+   * Unified selection storage to use for listening, getting and changing active selection.
+   *
+   * When not specified, the deprecated unified selection React context is used to access the
+   * selection storage (see `UnifiedSelectionProvider`).
+   */
+  selectionStorage?: SelectionStorage;
 }
 
 /** @internal */
 export function useUnifiedTreeSelection({
   sourceName,
+  selectionStorage,
   getTreeModelNode,
 }: UseUnifiedTreeSelectionProps & { getTreeModelNode: (nodeId: string) => TreeModelNode | TreeModelRootNode | undefined }): TreeSelectionOptions {
   const [options, setOptions] = useState<TreeSelectionOptions>(() => ({
@@ -36,14 +45,16 @@ export function useUnifiedTreeSelection({
     selectNodes: /* c8 ignore next */ () => {},
   }));
 
-  const selectionStorage = useUnifiedSelectionStorage();
+  const deprecatedSelectionStorage = useUnifiedSelectionStorage();
+  selectionStorage ??= deprecatedSelectionStorage;
+
   useEffect(() => {
     if (!selectionStorage) {
+      // TODO: make selectionStorage prop required
       setOptions({
         isNodeSelected: () => false,
         selectNodes: () => {},
       });
-      // TODO: should we throw instead?
       return;
     }
 

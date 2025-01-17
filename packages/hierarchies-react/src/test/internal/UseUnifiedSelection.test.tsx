@@ -10,7 +10,6 @@ import { PropsWithChildren } from "react";
 import sinon from "sinon";
 import { InstancesNodeKey } from "@itwin/presentation-hierarchies";
 import { createStorage, Selectables, StorageSelectionChangeEventArgs, StorageSelectionChangesListener } from "@itwin/unified-selection";
-import { UnifiedSelectionContextProvider } from "@itwin/unified-selection-react";
 import { TreeModelNode } from "../../presentation-hierarchies-react/internal/TreeModel.js";
 import { useUnifiedTreeSelection } from "../../presentation-hierarchies-react/internal/UseUnifiedSelection.js";
 import { UnifiedSelectionProvider as UnifiedSelectionProviderDeprecated } from "../../presentation-hierarchies-react/UnifiedSelectionContext.js";
@@ -24,19 +23,16 @@ describe("useUnifiedSelection", () => {
 
   const initialProps = {
     sourceName: source,
+    selectionStorage: storage,
     getTreeModelNode,
   };
-
-  function Wrapper(props: PropsWithChildren<{}>) {
-    return <UnifiedSelectionContextProvider storage={storage}>{props.children}</UnifiedSelectionContextProvider>;
-  }
 
   beforeEach(() => {
     storage.clearStorage({ imodelKey });
     getTreeModelNode.reset();
   });
 
-  it("returns no-op handlers when unified selection context is not provided", () => {
+  it("returns no-op handlers when unified selection storage is not provided", () => {
     // ensure tree model has a node, which represents a selected instance
     const instanceKey = { id: "0x1", className: "Schema:Name" };
     const instancesNodesKey: InstancesNodeKey = {
@@ -53,7 +49,8 @@ describe("useUnifiedSelection", () => {
     getTreeModelNode.callsFake((id) => (id === "node-1" ? node : undefined));
 
     // test
-    const { result } = renderHook(useUnifiedTreeSelection, { initialProps });
+    const { selectionStorage: _, ...initialPropsWithoutStorage } = initialProps;
+    const { result } = renderHook(useUnifiedTreeSelection, { initialProps: initialPropsWithoutStorage });
     act(() => {
       result.current.selectNodes(["node-1"], "add");
     });
@@ -61,7 +58,7 @@ describe("useUnifiedSelection", () => {
     expect(result.current.isNodeSelected("node-1")).to.be.false;
   });
 
-  it("prefers deprecated unified selection context provider", () => {
+  it("uses deprecated unified selection context provider if selection storage is not provided directly", () => {
     const instanceKey1 = { id: "0x1", className: "Schema:Name", imodelKey };
     storage.replaceSelection({ imodelKey, source, selectables: [instanceKey1] });
 
@@ -85,13 +82,12 @@ describe("useUnifiedSelection", () => {
       return undefined;
     });
 
+    const { selectionStorage: _, ...initialPropsWithoutStorage } = initialProps;
     const { result } = renderHook(useUnifiedTreeSelection, {
-      initialProps,
+      initialProps: initialPropsWithoutStorage,
       wrapper: (props: PropsWithChildren<{}>) => (
         // eslint-disable-next-line @typescript-eslint/no-deprecated
-        <UnifiedSelectionProviderDeprecated storage={storage2}>
-          <UnifiedSelectionContextProvider storage={storage}>{props.children}</UnifiedSelectionContextProvider>
-        </UnifiedSelectionProviderDeprecated>
+        <UnifiedSelectionProviderDeprecated storage={storage2}>{props.children}</UnifiedSelectionProviderDeprecated>
       ),
     });
     expect(result.current.isNodeSelected("node-1")).to.be.false;
@@ -136,7 +132,7 @@ describe("useUnifiedSelection", () => {
 
       getTreeModelNode.callsFake((id) => nodes.find((node) => node.id === id));
 
-      const { result } = renderHook(useUnifiedTreeSelection, { initialProps, wrapper: Wrapper });
+      const { result } = renderHook(useUnifiedTreeSelection, { initialProps });
       expect(result.current.isNodeSelected("node-1")).to.be.true;
       expect(result.current.isNodeSelected("node-2")).to.be.false;
       expect(result.current.isNodeSelected("node-3")).to.be.false;
@@ -166,7 +162,7 @@ describe("useUnifiedSelection", () => {
 
       getTreeModelNode.callsFake((id) => nodes.find((node) => node.id === id));
 
-      const { result } = renderHook(useUnifiedTreeSelection, { initialProps, wrapper: Wrapper });
+      const { result } = renderHook(useUnifiedTreeSelection, { initialProps });
       expect(result.current.isNodeSelected("node-1")).to.be.false;
       expect(result.current.isNodeSelected("grouping-node")).to.be.true;
       expect(result.current.isNodeSelected("invalid")).to.be.false;
@@ -198,7 +194,7 @@ describe("useUnifiedSelection", () => {
 
       getTreeModelNode.callsFake((id) => nodes.find((node) => node.id === id));
 
-      const { result } = renderHook(useUnifiedTreeSelection, { initialProps, wrapper: Wrapper });
+      const { result } = renderHook(useUnifiedTreeSelection, { initialProps });
 
       act(() => {
         result.current.selectNodes(["node-1"], "add");
@@ -247,7 +243,7 @@ describe("useUnifiedSelection", () => {
 
       getTreeModelNode.callsFake((id) => nodes.find((node) => node.id === id));
 
-      const { result } = renderHook(useUnifiedTreeSelection, { initialProps, wrapper: Wrapper });
+      const { result } = renderHook(useUnifiedTreeSelection, { initialProps });
 
       act(() => {
         result.current.selectNodes(["grouping-node"], "add");
@@ -279,7 +275,7 @@ describe("useUnifiedSelection", () => {
       const nodes = [createTreeModelNode({ id: "custom-node", nodeData: hierarchyNode })];
       getTreeModelNode.callsFake((id) => nodes.find((node) => node.id === id));
 
-      const { result } = renderHook(useUnifiedTreeSelection, { initialProps, wrapper: Wrapper });
+      const { result } = renderHook(useUnifiedTreeSelection, { initialProps });
 
       act(() => {
         result.current.selectNodes(["custom-node"], "add");
@@ -311,7 +307,7 @@ describe("useUnifiedSelection", () => {
       storage.addToSelection({ imodelKey, source, selectables: [instanceKey] });
       changeListener.reset();
 
-      const { result } = renderHook(useUnifiedTreeSelection, { initialProps, wrapper: Wrapper });
+      const { result } = renderHook(useUnifiedTreeSelection, { initialProps });
 
       act(() => {
         result.current.selectNodes(["node-1"], "remove");
@@ -366,7 +362,7 @@ describe("useUnifiedSelection", () => {
       });
       changeListener.reset();
 
-      const { result } = renderHook(useUnifiedTreeSelection, { initialProps, wrapper: Wrapper });
+      const { result } = renderHook(useUnifiedTreeSelection, { initialProps });
 
       act(() => {
         result.current.selectNodes(["grouping-node"], "remove");
@@ -399,7 +395,7 @@ describe("useUnifiedSelection", () => {
       });
       changeListener.reset();
 
-      const { result } = renderHook(useUnifiedTreeSelection, { initialProps, wrapper: Wrapper });
+      const { result } = renderHook(useUnifiedTreeSelection, { initialProps });
 
       act(() => {
         result.current.selectNodes(["custom-node"], "remove");
@@ -426,7 +422,7 @@ describe("useUnifiedSelection", () => {
 
       getTreeModelNode.callsFake((id) => nodes.find((node) => node.id === id));
 
-      const { result } = renderHook(useUnifiedTreeSelection, { initialProps, wrapper: Wrapper });
+      const { result } = renderHook(useUnifiedTreeSelection, { initialProps });
 
       act(() => {
         result.current.selectNodes(["node-1"], "replace");
@@ -448,7 +444,7 @@ describe("useUnifiedSelection", () => {
 
   describe("selection change", () => {
     it("updates function references when selection changes", () => {
-      const { result } = renderHook(useUnifiedTreeSelection, { initialProps, wrapper: Wrapper });
+      const { result } = renderHook(useUnifiedTreeSelection, { initialProps });
       const isSelected = result.current.isNodeSelected;
       const selectNodes = result.current.selectNodes;
 
@@ -461,7 +457,7 @@ describe("useUnifiedSelection", () => {
     });
 
     it("ignores changes on lower levels", () => {
-      const { result } = renderHook(useUnifiedTreeSelection, { initialProps, wrapper: Wrapper });
+      const { result } = renderHook(useUnifiedTreeSelection, { initialProps });
       const isSelected = result.current.isNodeSelected;
       const selectNodes = result.current.selectNodes;
 
