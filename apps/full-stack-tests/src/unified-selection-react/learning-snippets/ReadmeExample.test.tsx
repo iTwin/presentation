@@ -12,7 +12,7 @@ import { UnifiedSelectionContextProvider, useUnifiedSelectionContext } from "@it
 import { render, waitFor } from "../../RenderUtils.js";
 import { stubGetBoundingClientRect } from "../../Utils.js";
 
-describe.only("Unified Selection React", () => {
+describe("Unified Selection React", () => {
   describe("Learning snippets", () => {
     describe("Readme example", () => {
       stubGetBoundingClientRect();
