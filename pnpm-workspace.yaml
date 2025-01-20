@@ -27,10 +27,10 @@ catalogs:
     "reflect-metadata": "^0.1.14"
 
   appui:
-    "@itwin/appui-react": "^4.17.5"
-    "@itwin/core-react": "^4.17.5"
-    "@itwin/components-react": "^4.17.5"
-    "@itwin/imodel-components-react": "^4.17.5"
+    "@itwin/appui-react": "^5.0.4"
+    "@itwin/core-react": "^5.0.4"
+    "@itwin/components-react": "^5.0.4"
+    "@itwin/imodel-components-react": "^5.0.4"
 
   itwinui:
     "@itwin/itwinui-icons-react": "^2.9.0"
