@@ -98,13 +98,14 @@ describe("PresentationInstanceFilter", () => {
 
     // open operator selector
     const operatorSelector = await getRuleOperatorSelector(container);
+    expect(operatorSelector).to.be.not.null;
     await user.click(operatorSelector);
 
     // select operator
-    await user.click(getByText("Is not null"));
+    await user.click(getByText("filterBuilder.operators.isNotNull"));
 
     // wait until operator is selected
-    await waitFor(() => getByText("Is not null"));
+    await waitFor(() => getByText("filterBuilder.operators.isNotNull"));
 
     await waitFor(() =>
       expect(spy).to.be.calledWith({
