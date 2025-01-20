@@ -43,6 +43,7 @@
     "@itwin/presentation-shared": "workspace:^",
     "@itwin/presentation-testing": "workspace:^",
     "@itwin/unified-selection": "workspace:^",
+    "@itwin/unified-selection-react": "workspace:^",
     "@itwin/webgl-compatibility": "catalog:itwinjs-core",
     "@opentelemetry/api": "^1.9.0",
     "@testing-library/dom": "catalog:test-tools",

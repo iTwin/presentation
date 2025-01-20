@@ -1,0 +1,78 @@
+{
+  "name": "@itwin/unified-selection-react",
+  "version": "0.0.1",
+  "description": "React components for making use of `@itwin/unified-selection` package in React applications more straightforward",
+  "license": "MIT",
+  "author": {
+    "name": "Bentley Systems, Inc.",
+    "url": "http://www.bentley.com"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/iTwin/presentation.git",
+    "directory": "packages/unified-selection-react"
+  },
+  "keywords": [
+    "Bentley",
+    "iTwin.js",
+    "Presentation",
+    "React",
+    "Selection",
+    "Selection storage",
+    "Unified selection"
+  ],
+  "type": "module",
+  "main": "lib/cjs/unified-selection-react.js",
+  "types": "lib/cjs/unified-selection-react",
+  "module": "lib/esm/unified-selection-react.js",
+  "exports": {
+    ".": {
+      "import": "./lib/esm/unified-selection-react.js",
+      "require": "./lib/cjs/unified-selection-react.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "scripts": {
+    "build": "npm run -s build:cjs && npm run -s build:esm",
+    "build:cjs": "node ../../scripts/package-cjs.mjs ./lib/cjs && tsc -p tsconfig.cjs.json",
+    "build:esm": "tsc -p tsconfig.esm.json",
+    "clean": "rimraf lib",
+    "cover": "c8 npm -s test",
+    "lint": "eslint ./src/**/*.{ts,tsx}",
+    "test:dev": "mocha --enable-source-maps --config ./.mocharc.json",
+    "test": "npm run test:dev",
+    "extract-api": "betools extract-api --entry=lib/esm/unified-selection-react --apiReportFolder=./api --apiReportTempFolder=./api/temp --apiSummaryFolder=./api --includeUnexportedApis",
+    "check-internal": "node ../../scripts/checkInternal.js --apiSummary ./api/unified-selection-react.api.md",
+    "update-extractions": "node ../../scripts/updateExtractions.js --targets=./README.md",
+    "check-extractions": "node ../../scripts/updateExtractions.js --targets=./README.md --check",
+    "validate-markdowns": "node ../../scripts/validateMarkdowns.js README.md"
+  },
+  "dependencies": {},
+  "peerDependencies": {
+    "@itwin/unified-selection": "workspace:^",
+    "react": "^17.0.0 || ^18.0.0",
+    "react-dom": "^17.0.0 || ^18.0.0"
+  },
+  "devDependencies": {
+    "@itwin/build-tools": "catalog:build-tools",
+    "@itwin/unified-selection": "workspace:^",
+    "@testing-library/react": "catalog:test-tools",
+    "@types/chai": "catalog:test-tools",
+    "@types/jsdom": "catalog:test-tools",
+    "@types/mocha": "catalog:test-tools",
+    "@types/react": "catalog:react",
+    "c8": "catalog:test-tools",
+    "chai": "catalog:test-tools",
+    "cpx2": "catalog:build-tools",
+    "cross-env": "catalog:build-tools",
+    "eslint": "catalog:build-tools",
+    "eslint-plugin-react": "catalog:build-tools",
+    "global-jsdom": "catalog:test-tools",
+    "jsdom": "catalog:test-tools",
+    "mocha": "catalog:test-tools",
+    "react": "catalog:react",
+    "rimraf": "catalog:build-tools",
+    "testdouble": "catalog:test-tools",
+    "typescript": "catalog:build-tools"
+  }
+}

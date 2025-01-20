@@ -11,6 +11,7 @@ import { ClassId } from '@itwin/presentation-common';
 import { ClassInfo } from '@itwin/presentation-common';
 import { ClientDiagnosticsHandler } from '@itwin/presentation-common';
 import { ClientDiagnosticsOptions } from '@itwin/presentation-common';
+import { computeSelection } from '@itwin/unified-selection';
 import { Content } from '@itwin/presentation-common';
 import { ControlledTreeProps } from '@itwin/components-react';
 import { DelayLoadedTreeNodeItem } from '@itwin/components-react';
@@ -75,6 +76,7 @@ import { SchemaContext } from '@itwin/ecschema-metadata';
 import { SelectionChangeType } from '@itwin/presentation-frontend';
 import { SelectionHandler } from '@itwin/presentation-frontend';
 import { SelectionInfo } from '@itwin/presentation-common';
+import { SelectionStorage } from '@itwin/unified-selection';
 import { StartArrayProps } from '@itwin/presentation-common';
 import { StartCategoryProps } from '@itwin/presentation-common';
 import { StartContentProps } from '@itwin/presentation-common';
@@ -212,6 +214,7 @@ export class FavoritePropertiesDataProvider implements IFavoritePropertiesDataPr
 
 // @public
 export interface FavoritePropertiesDataProviderProps {
+    activeScopeProvider?: () => Parameters<typeof computeSelection>[0]["scope"];
     ruleset?: Ruleset | string;
 }
 
@@ -653,6 +656,7 @@ export interface PresentationTreeRendererProps extends Omit<TreeRendererProps, "
 export interface PropertyDataProviderWithUnifiedSelectionProps {
     dataProvider: IPresentationPropertyDataProvider;
     requestedContentInstancesLimit?: number;
+    selectionStorage?: SelectionStorage;
 }
 
 // @public
@@ -731,7 +735,7 @@ export interface TableRowDefinition {
     key: string;
 }
 
-// @public
+// @public @deprecated
 export interface UnifiedSelectionContext {
     addToSelection(keys: Keys, level?: number): void;
     clearSelection(level?: number): void;
@@ -742,17 +746,17 @@ export interface UnifiedSelectionContext {
     selectionLevel: number;
 }
 
-// @public
+// @public @deprecated
 export function UnifiedSelectionContextProvider(props: UnifiedSelectionContextProviderProps): React.ReactElement;
 
-// @public
+// @public @deprecated
 export interface UnifiedSelectionContextProviderProps {
     children?: React.ReactNode;
     imodel: IModelConnection;
     selectionLevel?: number;
 }
 
-// @public
+// @public @deprecated
 export type UnifiedSelectionState = (selectionLevel?: number) => Readonly<KeySet>;
 
 // @public @deprecated
@@ -855,7 +859,12 @@ export interface UsePresentationTableResult<TColumns, TRow> {
 }
 
 // @public
-export function usePresentationTableWithUnifiedSelection<TColumn, TRow>(props: Omit<UsePresentationTableProps<TColumn, TRow>, "keys">): UsePresentationTableWithUnifiedSelectionResult<TColumn, TRow>;
+export function usePresentationTableWithUnifiedSelection<TColumn, TRow>(props: UsePresentationTableWithUnifiedSelectionProps<TColumn, TRow>): UsePresentationTableWithUnifiedSelectionResult<TColumn, TRow>;
+
+// @public
+export interface UsePresentationTableWithUnifiedSelectionProps<TColumn, TRow> extends Omit<UsePresentationTableProps<TColumn, TRow>, "keys"> {
+    selectionStorage?: SelectionStorage;
+}
 
 // @public
 export interface UsePresentationTableWithUnifiedSelectionResult<TColumns, TRow> extends UsePresentationTableResult<TColumns, TRow> {
@@ -913,7 +922,7 @@ export function useRulesetRegistration(ruleset: Ruleset): void;
 // @public
 export function useSchemaMetadataContext(): SchemaMetadataContext | undefined;
 
-// @public
+// @public @deprecated
 export function useUnifiedSelectionContext(): UnifiedSelectionContext | undefined;
 
 // @public @deprecated

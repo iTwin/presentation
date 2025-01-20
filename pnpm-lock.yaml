@@ -376,6 +376,9 @@ importers:
       '@itwin/unified-selection':
         specifier: workspace:^
         version: link:../../packages/unified-selection
+      '@itwin/unified-selection-react':
+        specifier: workspace:^
+        version: link:../../packages/unified-selection-react
       '@itwin/webgl-compatibility':
         specifier: catalog:itwinjs-core
         version: 4.10.1
@@ -956,6 +959,9 @@ importers:
       '@itwin/unified-selection':
         specifier: workspace:*
         version: link:../../../packages/unified-selection
+      '@itwin/unified-selection-react':
+        specifier: workspace:*
+        version: link:../../../packages/unified-selection-react
       '@itwin/webgl-compatibility':
         specifier: catalog:itwinjs-core
         version: 4.10.1
@@ -1052,6 +1058,15 @@ importers:
       '@itwin/itwinui-illustrations-react':
         specifier: catalog:itwinui
         version: 2.1.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      '@itwin/presentation-core-interop':
+        specifier: workspace:^
+        version: link:../core-interop
+      '@itwin/presentation-shared':
+        specifier: workspace:^
+        version: link:../shared
+      '@itwin/unified-selection':
+        specifier: workspace:^
+        version: link:../unified-selection
       classnames:
         specifier: catalog:react
         version: 2.5.1
@@ -1122,6 +1137,9 @@ importers:
       '@itwin/presentation-frontend':
         specifier: catalog:itwinjs-core
         version: 4.10.1(@itwin/core-bentley@4.10.1)(@itwin/core-common@4.10.1(@itwin/core-bentley@4.10.1)(@itwin/core-geometry@4.10.1))(@itwin/core-frontend@4.10.1(@itwin/appui-abstract@4.10.1(@itwin/core-bentley@4.10.1))(@itwin/core-bentley@4.10.1)(@itwin/core-common@4.10.1(@itwin/core-bentley@4.10.1)(@itwin/core-geometry@4.10.1))(@itwin/core-geometry@4.10.1)(@itwin/core-orbitgt@4.10.1)(@itwin/core-quantity@4.10.1(@itwin/core-bentley@4.10.1))(inversify@6.0.2)(reflect-metadata@0.1.14))(@itwin/core-quantity@4.10.1(@itwin/core-bentley@4.10.1))(@itwin/ecschema-metadata@4.10.1(@itwin/core-bentley@4.10.1)(@itwin/core-quantity@4.10.1(@itwin/core-bentley@4.10.1)))(@itwin/presentation-common@4.10.1(@itwin/core-bentley@4.10.1)(@itwin/core-common@4.10.1(@itwin/core-bentley@4.10.1)(@itwin/core-geometry@4.10.1))(@itwin/core-quantity@4.10.1(@itwin/core-bentley@4.10.1))(@itwin/ecschema-metadata@4.10.1(@itwin/core-bentley@4.10.1)(@itwin/core-quantity@4.10.1(@itwin/core-bentley@4.10.1))))
+      '@itwin/unified-selection-react':
+        specifier: workspace:^
+        version: link:../unified-selection-react
       '@itwin/webgl-compatibility':
         specifier: catalog:itwinjs-core
         version: 4.10.1
@@ -1982,6 +2000,69 @@ importers:
       sinon-chai:
         specifier: catalog:test-tools
         version: 3.7.0(chai@4.4.1)(sinon@18.0.0)
+      testdouble:
+        specifier: catalog:test-tools
+        version: 3.20.2
+      typescript:
+        specifier: catalog:build-tools
+        version: 5.6.3
+
+  packages/unified-selection-react:
+    devDependencies:
+      '@itwin/build-tools':
+        specifier: catalog:build-tools
+        version: 4.10.1(@types/node@20.12.12)
+      '@itwin/unified-selection':
+        specifier: workspace:^
+        version: link:../unified-selection
+      '@testing-library/react':
+        specifier: catalog:test-tools
+        version: 16.0.0(@testing-library/dom@10.3.2)(@types/react-dom@18.3.0)(@types/react@18.3.3)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      '@types/chai':
+        specifier: catalog:test-tools
+        version: 4.3.16
+      '@types/jsdom':
+        specifier: catalog:test-tools
+        version: 21.1.7
+      '@types/mocha':
+        specifier: catalog:test-tools
+        version: 10.0.7
+      '@types/react':
+        specifier: catalog:react
+        version: 18.3.3
+      c8:
+        specifier: catalog:test-tools
+        version: 10.1.2
+      chai:
+        specifier: catalog:test-tools
+        version: 4.4.1
+      cpx2:
+        specifier: catalog:build-tools
+        version: 7.0.1
+      cross-env:
+        specifier: catalog:build-tools
+        version: 7.0.3
+      eslint:
+        specifier: catalog:build-tools
+        version: 9.13.0
+      eslint-plugin-react:
+        specifier: catalog:build-tools
+        version: 7.37.2(eslint@9.13.0)
+      global-jsdom:
+        specifier: catalog:test-tools
+        version: 25.0.0(jsdom@25.0.1)
+      jsdom:
+        specifier: catalog:test-tools
+        version: 25.0.1
+      mocha:
+        specifier: catalog:test-tools
+        version: 10.7.3
+      react:
+        specifier: catalog:react
+        version: 18.3.1
+      rimraf:
+        specifier: catalog:build-tools
+        version: 6.0.1
       testdouble:
         specifier: catalog:test-tools
         version: 3.20.2

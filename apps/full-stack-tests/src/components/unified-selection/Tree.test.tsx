@@ -64,7 +64,6 @@ describe("Learning snippets", async () => {
       // set up imodel for the test
       let modelKey: InstanceKey;
       let elementKey: InstanceKey;
-      // eslint-disable-next-line @typescript-eslint/no-deprecated
       const imodel = await buildTestIModel(this, async (builder) => {
         const categoryKey = insertSpatialCategory({ builder, fullClassNameSeparator: ":", codeValue: "My Category" });
         modelKey = insertPhysicalModelWithPartition({ builder, fullClassNameSeparator: ":", codeValue: "My Model" });

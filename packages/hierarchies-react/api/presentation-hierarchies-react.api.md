@@ -204,7 +204,7 @@ interface TreeRendererOwnProps {
 // @public (undocumented)
 type TreeRendererProps = Pick<ReturnType<typeof useTree>, "rootNodes" | "expandNode"> & Partial<Pick<ReturnType<typeof useTree>, "selectNodes" | "isNodeSelected" | "getHierarchyLevelDetails" | "reloadTree">> & Pick<TreeNodeRendererProps_2, "onFilterClick" | "getIcon" | "getLabel" | "getSublabel" | "filterButtonsVisibility"> & TreeRendererOwnProps & Omit<TreeProps, "data" | "nodeRenderer" | "getNode" | "enableVirtualization"> & ComponentPropsWithoutRef<typeof LocalizationContextProvider>;
 
-// @public
+// @public @deprecated
 export function UnifiedSelectionProvider({ storage, children }: PropsWithChildren<{
     storage: SelectionStorage;
 }>): JSX_2.Element;
@@ -273,10 +273,11 @@ interface UseTreeResult {
 }
 
 // @public
-export function useUnifiedSelectionTree({ sourceName, ...props }: UseTreeProps & UseUnifiedTreeSelectionProps): UseTreeResult;
+export function useUnifiedSelectionTree({ sourceName, selectionStorage, ...props }: UseTreeProps & UseUnifiedTreeSelectionProps): UseTreeResult;
 
 // @public (undocumented)
 interface UseUnifiedTreeSelectionProps {
+    selectionStorage?: SelectionStorage;
     sourceName: string;
 }
 

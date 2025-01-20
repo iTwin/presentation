@@ -50,9 +50,8 @@ The hook takes a single required prop:
 
 In addition to [props required by `useTree`](#usetree-props), the hook additionally requires:
 
+- `selectionStorage` - unified selection storage used across different app's components, allowing them all to share selection state.
 - `sourceName` - a string that distinguishes selection changes being made by different components. The value should be unique for each component.
-
-The hook also relies on unified selection storage being provided to it through a React context. See [Providing unified selection context](#providing-unified-selection-context) example below for more details.
 
 #### `useIModelTree` props
 
@@ -110,69 +109,8 @@ The hook takes 2 required properties:
 
 In addition to [props required by `useIModelTree`](#useimodeltree-props), the hook additionally requires:
 
+- `selectionStorage` - unified selection storage used across different app's components, allowing them all to share selection state.
 - `sourceName` - a string that distinguishes selection changes being made by different components. The value should be unique for each component.
-
-The hook also relies on unified selection storage being provided to it through a React context. See [Providing unified selection context](#providing-unified-selection-context) example below for more details.
-
-#### Providing unified selection context
-
-Tree state hooks that support unified selection integration (`useUnifiedSelectionTree` & `useIModelUnifiedSelectionTree`), rely on unified selection storage being provided to them through a React context. For that, the package delivers the `UnifiedSelectionProvider` component, that should wrap the tree component using the hooks:
-
-<!-- [[include: [Presentation.HierarchiesReact.SelectionStorage.Imports, Presentation.HierarchiesReact.SelectionStorage], tsx]] -->
-<!-- BEGIN EXTRACTION -->
-
-```tsx
-import { TreeRenderer, UnifiedSelectionProvider, useIModelUnifiedSelectionTree } from "@itwin/presentation-hierarchies-react";
-import { createStorage } from "@itwin/unified-selection";
-import { useEffect, useState } from "react";
-
-// Not part of the package - this should be created once and reused across different components of the application.
-const selectionStorage = createStorage();
-
-/** Component providing the selection storage and access to iModel. Usually this is done in a top-level component. */
-function MyTreeComponent({ imodel }: { imodel: IModelConnection }) {
-  const [imodelAccess, setIModelAccess] = useState<IModelAccess>();
-  useEffect(() => {
-    setIModelAccess(createIModelAccess(imodel));
-  }, [imodel]);
-
-  if (!imodelAccess) {
-    return null;
-  }
-
-  return (
-    <UnifiedSelectionProvider storage={selectionStorage}>
-      <MyTreeComponentInternal imodelAccess={imodelAccess} />
-    </UnifiedSelectionProvider>
-  );
-}
-```
-
-<!-- END EXTRACTION -->
-
-After providing the unified selection storage through the context, the `useUnifiedSelectionTree` and `useIModelUnifiedSelectionTree` hooks can be used inside the component as follows:
-
-<!-- [[include: Presentation.HierarchiesReact.UseUnifiedSelectionTree, tsx]] -->
-<!-- BEGIN EXTRACTION -->
-
-```tsx
-function MyTreeComponentInternal({ imodelAccess }: { imodelAccess: IModelAccess }) {
-  const { rootNodes, ...state } = useIModelUnifiedSelectionTree({
-    // the source name is used to distinguish selection changes being made by different components
-    sourceName: "MyTreeComponent",
-    // iModel access is used to build the hierarchy
-    imodelAccess,
-    // the hierarchy definition describes the hierarchy using ECSQL queries
-    getHierarchyDefinition,
-  });
-  if (!rootNodes || !rootNodes.length) {
-    return "No data to display";
-  }
-  return <TreeRenderer {...state} rootNodes={rootNodes} />;
-}
-```
-
-<!-- END EXTRACTION -->
 
 ### `useSelectionHandler` hook
 
@@ -226,8 +164,8 @@ import { createLimitingECSqlQueryExecutor, createNodesQueryClauseFactory, Hierar
 
 import { createBisInstanceLabelSelectClauseFactory, Props } from "@itwin/presentation-shared";
 
-import { TreeRenderer, UnifiedSelectionProvider, useIModelUnifiedSelectionTree } from "@itwin/presentation-hierarchies-react";
-import { createStorage } from "@itwin/unified-selection";
+import { TreeRenderer, useIModelUnifiedSelectionTree } from "@itwin/presentation-hierarchies-react";
+import { createStorage, SelectionStorage } from "@itwin/unified-selection";
 import { useEffect, useState } from "react";
 
 // Not really part of the package, but we need SchemaContext to create the tree state. It's
@@ -261,7 +199,7 @@ function createIModelAccess(imodel: IModelConnection) {
 }
 
 // Not part of the package - this should be created once and reused across different components of the application.
-const selectionStorage = createStorage();
+const unifiedSelectionStorage = createStorage();
 
 /** Component providing the selection storage and access to iModel. Usually this is done in a top-level component. */
 function MyTreeComponent({ imodel }: { imodel: IModelConnection }) {
@@ -274,11 +212,7 @@ function MyTreeComponent({ imodel }: { imodel: IModelConnection }) {
     return null;
   }
 
-  return (
-    <UnifiedSelectionProvider storage={selectionStorage}>
-      <MyTreeComponentInternal imodelAccess={imodelAccess} />
-    </UnifiedSelectionProvider>
-  );
+  return <MyTreeComponentInternal imodelAccess={imodelAccess} selectionStorage={unifiedSelectionStorage} />;
 }
 
 type IModelAccess = Props<typeof useIModelUnifiedSelectionTree>["imodelAccess"];
@@ -313,8 +247,10 @@ function getHierarchyDefinition({ imodelAccess }: { imodelAccess: IModelAccess }
 }
 
 /** Internal component that creates and renders tree state. */
-function MyTreeComponentInternal({ imodelAccess }: { imodelAccess: IModelAccess }) {
+function MyTreeComponentInternal({ imodelAccess, selectionStorage }: { imodelAccess: IModelAccess; selectionStorage: SelectionStorage }) {
   const { rootNodes, setFormatter, isLoading, ...state } = useIModelUnifiedSelectionTree({
+    // the unified selection storage used by all app components let them share selection state
+    selectionStorage,
     // the source name is used to distinguish selection changes being made by different components
     sourceName: "MyTreeComponent",
     // iModel access is used to build the hierarchy

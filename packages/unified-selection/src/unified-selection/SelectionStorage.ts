@@ -11,12 +11,12 @@ import { StorageSelectionChangeEventArgs, StorageSelectionChangesListener, Stora
 /** @public */
 type IModelKeyProp =
   | {
-      /** Key of the iModel to get selection levels for. */
+      /** Key of the iModel. It's recommended to use `createIModelKey` function from `@itwin/presentation-core-interop` package to create the key for an iModel. */
       imodelKey: string;
     }
   | {
       /**
-       * Key of the iModel to get selection levels for.
+       * Key of the iModel. It's recommended to use `createIModelKey` function from `@itwin/presentation-core-interop` package to create the key for an iModel.
        * @deprecated in 0.2. Use `imodelKey` instead.
        */
       iModelKey: string;
