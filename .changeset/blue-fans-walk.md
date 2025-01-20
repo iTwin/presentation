@@ -3,4 +3,4 @@
 "@itwin/presentation-testing": minor
 ---
 
-Updated peer dependencies to support appUi v5.
+Updated peer dependencies to support AppUI v5.
