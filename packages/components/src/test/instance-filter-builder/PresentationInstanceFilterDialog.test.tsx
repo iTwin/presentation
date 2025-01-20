@@ -251,7 +251,7 @@ describe("PresentationInstanceFilterDialog", () => {
       addThemeProvider: true,
     });
 
-    const addButton = getAllByRole(baseElement, "button").find((el) => within(el).queryByText("Add"))!;
+    const addButton = getAllByRole(baseElement, "button").find((el) => within(el).queryByText("filterBuilder.add"))!;
     await user.click(addButton);
 
     const applyButton = await getApplyButton(baseElement);
@@ -344,7 +344,7 @@ describe("PresentationInstanceFilterDialog", () => {
     const operatorSelector = await getRuleOperatorSelector(baseElement);
     await user.click(operatorSelector);
     // select operator
-    await user.click(getByText(baseElement, "Is not null"));
+    await user.click(getByText(baseElement, "filterBuilder.operators.isNotNull"));
 
     // wait until operator is selected
     const applyButton = await getApplyButton(baseElement);
