@@ -105,7 +105,6 @@
     "@itwin/itwinui-react": "catalog:itwinui",
     "@itwin/presentation-common": "catalog:itwinjs-core",
     "@itwin/presentation-frontend": "catalog:itwinjs-core",
-    "@itwin/unified-selection": "workspace:^",
     "@itwin/unified-selection-react": "workspace:^",
     "@itwin/webgl-compatibility": "catalog:itwinjs-core",
     "@testing-library/dom": "catalog:test-tools",
