@@ -1,5 +1,19 @@
 # @itwin/presentation-hierarchies-react
 
+## 1.5.0
+
+### Minor Changes
+
+- [#840](https://github.com/iTwin/presentation/pull/840): Added `filterButtonsVisibility` to `treeNodeRenderer`. Which allows configuring filter buttons visibility for the whole tree.
+
+  - `show-on-hover` - default value, shows filter buttons on node hover or focus.
+  - `hide` - hides filter buttons on focus and hover, but will continue to show buttons on nodes in which filter is applied. Reaching hierarchy limit will continue to provide a way to filter nodes.
+
+### Patch Changes
+
+- [#831](https://github.com/iTwin/presentation/pull/831): Clicking on tree node buttons now visually show focus on node.
+- [#812](https://github.com/iTwin/presentation/pull/812): Fixed tree state hooks not returning root nodes when hierarchy provider doesn't raise the `onHierarchyChanged` event upon setting a hierarchy filter.
+
 ## 1.4.0
 
 ### Minor Changes
