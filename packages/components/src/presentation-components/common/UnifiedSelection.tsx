@@ -30,10 +30,8 @@ async function getUnifiedSelectionContextFn() {
   try {
     const optionalPkg = await import("@itwin/unified-selection-react");
     return optionalPkg.useUnifiedSelectionContext;
-    /* c8 ignore next 5 */
-  } catch (e) {
-    // eslint-disable-next-line no-console
-    console.error(e);
+    /* c8 ignore next 3 */
+  } catch {
     return undefined;
   }
 }
