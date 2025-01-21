@@ -24,6 +24,7 @@ import { Id64String } from "@itwin/core-bentley";
 import { IModelApp, IModelConnection } from "@itwin/core-frontend";
 import { UnitSystemKey } from "@itwin/core-quantity";
 import { ThemeProvider, ToggleSwitch } from "@itwin/itwinui-react";
+import { Root } from "@itwin/itwinui-react-v5/bricks";
 import { SchemaMetadataContextProvider, UnifiedSelectionContextProvider } from "@itwin/presentation-components";
 import { createECSchemaProvider, createECSqlQueryExecutor } from "@itwin/presentation-core-interop";
 import { HiliteSet, Presentation, SelectionChangeEventArgs } from "@itwin/presentation-frontend";
@@ -38,6 +39,7 @@ import { TableWidget } from "../table-widget/TableWidget";
 import { MultiDataSourceTree } from "../tree-widget/MultiDataSourceTree";
 import { RulesDrivenTreeWidget } from "../tree-widget/RulesDrivenTree";
 import { StatelessTreeV2 } from "../tree-widget/StatelessTree";
+import { StatelessTreeV2Kiwi } from "../tree-widget/StatelessTreeKiwi";
 import { UnitSystemSelector } from "../unit-system-selector/UnitSystemSelector";
 import ViewportContentControl from "../viewport/ViewportContentControl";
 
@@ -125,20 +127,22 @@ export function App() {
   }, []);
 
   return (
-    <ThemeProvider theme="os">
-      <div className="app">
-        <div className="app-header">
-          <h2>{IModelApp.localization.getLocalizedString("Sample:welcome-message")}</h2>
+    <Root colorScheme="light" density="dense">
+      <ThemeProvider theme="light" future={{ themeBridge: true }}>
+        <div className="app">
+          <div className="app-header">
+            <h2>{IModelApp.localization.getLocalizedString("Sample:welcome-message")}</h2>
+          </div>
+          <div className="app-pickers">
+            <IModelSelector onIModelSelected={onIModelSelected} activeIModelPath={state.imodelPath} />
+            <RulesetSelector onRulesetSelected={onRulesetSelected} activeRulesetId={state.rulesetId} />
+            <UnitSystemSelector selectedUnitSystem={state.activeUnitSystem} onUnitSystemSelected={onUnitSystemSelected} />
+            <ToggleSwitch label="Persist settings" labelPosition="right" checked={state.persistSettings} onChange={onPersistSettingsValueChange} />
+          </div>
+          {state.imodel ? <IModelComponents imodel={state.imodel} rulesetId={state.rulesetId} /> : null}
         </div>
-        <div className="app-pickers">
-          <IModelSelector onIModelSelected={onIModelSelected} activeIModelPath={state.imodelPath} />
-          <RulesetSelector onRulesetSelected={onRulesetSelected} activeRulesetId={state.rulesetId} />
-          <UnitSystemSelector selectedUnitSystem={state.activeUnitSystem} onUnitSystemSelected={onUnitSystemSelected} />
-          <ToggleSwitch label="Persist settings" labelPosition="right" checked={state.persistSettings} onChange={onPersistSettingsValueChange} />
-        </div>
-        {state.imodel ? <IModelComponents imodel={state.imodel} rulesetId={state.rulesetId} /> : null}
-      </div>
-    </ThemeProvider>
+      </ThemeProvider>
+    </Root>
   );
 }
 
@@ -241,6 +245,13 @@ function IModelComponents(props: IModelComponentsProps) {
               canPopout: true,
             },
             {
+              id: "stateless-models-kiwi-tree",
+              label: "Stateless Models Kiwi tree",
+              content: <StatelessModelsKiwiTreePanel imodel={imodel} />,
+              defaultState: WidgetState.Open,
+              canPopout: true,
+            },
+            {
               id: "multi-datasource-tree",
               label: "Multi data source tree",
               content: <MultiDataSourceTreePanel imodel={imodel} />,
@@ -326,6 +337,15 @@ function StatelessModelsTreePanel(props: { imodel: IModelConnection }) {
   return (
     <div className="tree-widget-tabs-content" ref={ref} style={{ width: "100%", height: "100%", overflow: "hidden" }}>
       <StatelessTreeV2 imodel={props.imodel} width={width ?? 0} height={height ?? 0} />
+    </div>
+  );
+}
+
+function StatelessModelsKiwiTreePanel(props: { imodel: IModelConnection }) {
+  const { width, height, ref } = useResizeDetector<HTMLDivElement>();
+  return (
+    <div className="tree-widget-tabs-content" ref={ref} style={{ width: "100%", height: "100%", overflow: "hidden" }}>
+      <StatelessTreeV2Kiwi imodel={props.imodel} width={width ?? 0} height={height ?? 0} />
     </div>
   );
 }

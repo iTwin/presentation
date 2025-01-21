@@ -44,4 +44,10 @@ export default defineConfig({
       },
     ],
   },
+  build: {
+    assetsInlineLimit: (filePath) => {
+      if (filePath.includes("@itwin/itwinui-icons/")) return false;
+      return undefined;
+    },
+  },
 });
