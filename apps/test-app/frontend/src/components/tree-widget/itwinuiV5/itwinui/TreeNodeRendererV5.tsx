@@ -48,7 +48,7 @@ interface TreeNodeRendererOwnProps {
 /** @public */
 type TreeNodeRendererProps = Pick<ReturnType<typeof useTree>, "expandNode"> &
   Partial<Pick<ReturnType<typeof useTree>, "getHierarchyLevelDetails">> &
-  Omit<TreeNodeProps, "label" | "onExpanded" | "onSelected" | "icon"> &
+  Omit<TreeNodeProps, "label" | "icon"> &
   TreeNodeRendererOwnProps;
 
 /**
@@ -87,6 +87,8 @@ export const TreeNodeRenderer: React.ForwardRefExoticComponent<TreeNodeRendererP
     }
 
     if (isPresentationHierarchyNode(node)) {
+      // eslint-disable-next-line no-console
+      console.log("...", node.label, selected);
       return (
         <Tree.Item
           {...treeItemProps}

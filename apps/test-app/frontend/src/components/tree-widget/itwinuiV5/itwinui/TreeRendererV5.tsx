@@ -3,7 +3,6 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import { ComponentPropsWithoutRef } from "react";
 import { Tree } from "@itwin/itwinui-react-v5/bricks";
 import { LocalizationContextProvider, PresentationTreeNode, useSelectionHandler, useTree } from "@itwin/presentation-hierarchies-react";
@@ -45,13 +44,20 @@ export function TreeRenderer({ rootNodes, expandNode, localizedStrings, selectNo
   const { onNodeClick, onNodeKeyDown } = useSelectionHandler({
     rootNodes,
     selectNodes: selectNodes ?? noopSelectNodes,
-    selectionMode: selectionMode ?? "extended",
+    selectionMode: selectionMode ?? "single",
   });
 
   return (
     <LocalizationContextProvider localizedStrings={localizedStrings}>
       <Tree.Root style={{ height: "100%", width: "100%" }}>
-        <TreeNodesRenderer {...treeProps} nodes={rootNodes} expandNode={expandNode} onNodeClick={onNodeClick} onNodeKeyDown={onNodeKeyDown} />
+        <TreeNodesRenderer
+          {...treeProps}
+          nodes={rootNodes}
+          expandNode={expandNode}
+          onNodeClick={onNodeClick}
+          onNodeKeyDown={onNodeKeyDown}
+          isNodeSelected={isNodeSelected}
+        />
       </Tree.Root>
     </LocalizationContextProvider>
   );

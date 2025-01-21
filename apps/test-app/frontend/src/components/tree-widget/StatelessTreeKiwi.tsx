@@ -160,7 +160,7 @@ function Tree({ imodel, imodelAccess, height, width }: { imodel: IModelConnectio
         reloadTree={reloadTree}
         onFilterClick={setFilteringOptions}
         getIcon={getIcon}
-        // selectionMode={"extended"}
+        selectionMode={"extended"}
         // size="small"
         style={{ height: "100%", width: "100%" }}
       />
