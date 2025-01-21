@@ -8,22 +8,18 @@ import { isPresentationHierarchyNode, PresentationTreeNode, useTree } from "@itw
 import { TreeNodeRenderer } from "./TreeNodeRendererV5";
 import { TreeNodeRendererProps } from "./TreeRendererV5";
 
-type TreeNodesRendererProps = Omit<TreeNodeRendererProps, "node"> & Partial<Pick<ReturnType<typeof useTree>, "isNodeSelected">> & TreeNodesRendererOwnProps;
+type TreeNodesRendererProps = Omit<TreeNodeRendererProps, "node"> & Partial<Pick<ReturnType<typeof useTree>, "isNodeSelected">> & TreeLevelRendererOwnProps;
 
-interface TreeNodesRendererOwnProps {
+interface TreeLevelRendererOwnProps {
   nodes: PresentationTreeNode[];
 }
 
-export const TreeNodesRenderer = ({
-  nodes,
-  isNodeSelected,
-  ...rest
-}: TreeNodesRendererProps): ReactNode => // TODO rename to make it more distinguishable from TreeNodeRenderer
+export const TreeLevelRenderer = ({ nodes, isNodeSelected, ...rest }: TreeNodesRendererProps): ReactNode =>
   nodes.map((node) => {
     if (isPresentationHierarchyNode(node) && node.children !== true && node.isExpanded === true) {
       return (
         <TreeNodeRenderer {...rest} node={node} key={node.id} selected={isNodeSelected?.(node.id)}>
-          <TreeNodesRenderer {...rest} nodes={node.children} isNodeSelected={isNodeSelected} />
+          <TreeLevelRenderer {...rest} nodes={node.children} isNodeSelected={isNodeSelected} />
         </TreeNodeRenderer>
       );
     }

@@ -7,7 +7,7 @@ import { ComponentPropsWithoutRef } from "react";
 import { Tree } from "@itwin/itwinui-react-v5/bricks";
 import { LocalizationContextProvider, PresentationTreeNode, useSelectionHandler, useTree } from "@itwin/presentation-hierarchies-react";
 import { TreeNodeRenderer } from "./TreeNodeRendererV5";
-import { TreeNodesRenderer } from "./TreeNodesRendererV5";
+import { TreeLevelRenderer } from "./TreeNodesRendererV5";
 
 type SelectionMode = "none" | "single" | "extended" | "multiple"; // TODO: remove when moved to hierarchies-react
 
@@ -50,7 +50,7 @@ export function TreeRenderer({ rootNodes, expandNode, localizedStrings, selectNo
   return (
     <LocalizationContextProvider localizedStrings={localizedStrings}>
       <Tree.Root style={{ height: "100%", width: "100%" }}>
-        <TreeNodesRenderer
+        <TreeLevelRenderer
           {...treeProps}
           nodes={rootNodes}
           expandNode={expandNode}
