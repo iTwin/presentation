@@ -10,7 +10,7 @@ import { LocalizationContextProvider, PresentationTreeNode, useSelectionHandler,
 import { TreeNodeRenderer } from "./TreeNodeRendererV5";
 import { TreeNodesRenderer } from "./TreeNodesRendererV5";
 
-export type SelectionMode = "none" | "single" | "extended" | "multiple"; // TODO: remove when moved to hierarchies-react
+type SelectionMode = "none" | "single" | "extended" | "multiple"; // TODO: remove when moved to hierarchies-react
 
 /** @public */
 export type TreeProps = ComponentPropsWithoutRef<typeof Tree.Root>;
