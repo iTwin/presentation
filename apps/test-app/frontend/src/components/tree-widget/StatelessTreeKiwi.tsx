@@ -22,6 +22,7 @@ import { createLimitingECSqlQueryExecutor, GenericInstanceFilter } from "@itwin/
 import { HierarchyLevelDetails, PresentationHierarchyNode, useIModelUnifiedSelectionTree } from "@itwin/presentation-hierarchies-react";
 import { ModelsTreeDefinition } from "@itwin/presentation-models-tree";
 import { createCachingECClassHierarchyInspector, IPrimitiveValueFormatter, Props } from "@itwin/presentation-shared";
+import { useUnifiedSelectionContext } from "@itwin/unified-selection-react";
 import { MyAppFrontend } from "../../api/MyAppFrontend";
 import { TreeRenderer } from "./itwinuiV5/itwinui/TreeRendererV5";
 
@@ -71,7 +72,13 @@ function Tree({ imodel, imodelAccess, height, width }: { imodel: IModelConnectio
     return undefined;
   }, [imodel, imodelChanged]);
 
+  const unifiedSelectionContext = useUnifiedSelectionContext();
+  if (!unifiedSelectionContext) {
+    throw new Error("Unified selection context is not available");
+  }
+
   const { rootNodes, isLoading, reloadTree, setFormatter, ...treeProps } = useIModelUnifiedSelectionTree({
+    selectionStorage: unifiedSelectionContext.storage,
     sourceName: "StatelessTreeV2",
     imodelAccess,
     imodelChanged,

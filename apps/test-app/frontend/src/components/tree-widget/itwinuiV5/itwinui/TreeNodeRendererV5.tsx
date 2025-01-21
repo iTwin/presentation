@@ -87,15 +87,13 @@ export const TreeNodeRenderer: React.ForwardRefExoticComponent<TreeNodeRendererP
     }
 
     if (isPresentationHierarchyNode(node)) {
-      // eslint-disable-next-line no-console
-      console.log("...", node.label, selected);
       return (
         <Tree.Item
           {...treeItemProps}
           ref={ref}
           selected={selected}
           aria-disabled={isDisabled}
-          className={cx(treeItemProps.className, "stateless-tree-node", { filtered: node.isFiltered })}
+          className={cx(treeItemProps.className, "stateless-kiwi-tree-node", { filtered: node.isFiltered })}
           onClick={(event) => !isDisabled && onNodeClick?.(node, !selected, event)}
           onKeyDown={(event) => {
             // Ignore if it is called on the element inside, e.g. checkbox or expander
