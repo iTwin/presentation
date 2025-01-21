@@ -7,9 +7,10 @@
 import { ComponentPropsWithoutRef } from "react";
 import { Tree } from "@itwin/itwinui-react-v5/bricks";
 import { LocalizationContextProvider, PresentationTreeNode, useSelectionHandler, useTree } from "@itwin/presentation-hierarchies-react";
-import { SelectionMode } from "../UseSelectionHandler";
 import { TreeNodeRenderer } from "./TreeNodeRendererV5";
 import { TreeNodesRenderer } from "./TreeNodesRendererV5";
+
+export type SelectionMode = "none" | "single" | "extended" | "multiple"; // TODO: remove when moved to hierarchies-react
 
 /** @public */
 export type TreeProps = ComponentPropsWithoutRef<typeof Tree.Root>;

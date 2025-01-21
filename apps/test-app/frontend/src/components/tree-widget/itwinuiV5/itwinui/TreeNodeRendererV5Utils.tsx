@@ -5,8 +5,10 @@
 
 import { LegacyRef, MutableRefObject, Ref, useCallback } from "react";
 import { Anchor, Text } from "@itwin/itwinui-react-v5/bricks";
-import { MAX_LIMIT_OVERRIDE } from "../internal/Utils";
 import { useLocalizationContext } from "./LocalizationContext";
+
+/** @internal */
+export const MAX_LIMIT_OVERRIDE = 10000; // TODO: remove when moved to hierarchies-react
 
 /** @internal */
 export interface ResultSetTooLargeNodeLabelProps {

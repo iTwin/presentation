@@ -7,8 +7,7 @@
 import cx from "classnames";
 import { ComponentPropsWithoutRef, forwardRef, ReactElement, RefAttributes, useRef } from "react";
 import { IconButton, Spinner, Tree } from "@itwin/itwinui-react-v5/bricks";
-import { HierarchyLevelDetails, isPresentationHierarchyNode, PresentationHierarchyNode } from "@itwin/presentation-hierarchies-react";
-import { UseTreeResult } from "../UseTree";
+import { HierarchyLevelDetails, isPresentationHierarchyNode, PresentationHierarchyNode, useTree } from "@itwin/presentation-hierarchies-react";
 import { useLocalizationContext } from "./LocalizationContext";
 import { ErrorNodeLabel, ResultSetTooLargeNodeLabel, ResultSetTooLargeNodeLabelProps, useMergedRefs } from "./TreeNodeRendererV5Utils";
 import { RenderedTreeNode } from "./TreeRendererV5";
@@ -47,8 +46,8 @@ interface TreeNodeRendererOwnProps {
 }
 
 /** @public */
-type TreeNodeRendererProps = Pick<UseTreeResult, "expandNode"> &
-  Partial<Pick<UseTreeResult, "getHierarchyLevelDetails">> &
+type TreeNodeRendererProps = Pick<ReturnType<typeof useTree>, "expandNode"> &
+  Partial<Pick<ReturnType<typeof useTree>, "getHierarchyLevelDetails">> &
   Omit<TreeNodeProps, "label" | "onExpanded" | "onSelected" | "icon"> &
   TreeNodeRendererOwnProps;
 
