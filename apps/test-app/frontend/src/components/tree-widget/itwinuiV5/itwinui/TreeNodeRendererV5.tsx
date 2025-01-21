@@ -16,7 +16,7 @@ import { RenderedTreeNode } from "./TreeRendererV5";
 const filterIcon = new URL("@itwin/itwinui-icons/filter.svg", import.meta.url).href;
 // These icons have not been added yet
 const SvgRemove = new URL("@itwin/itwinui-icons/remove.svg", import.meta.url).href;
-const SvgFilterHollow = new URL("@itwin/itwinui/filterhollow.svg", import.meta.url).href;
+// const SvgFilterHollow = new URL("@itwin/itwinui/filterhollow.svg", import.meta.url).href;
 
 /** @public */
 type TreeNodeProps = ComponentPropsWithoutRef<typeof Tree.Item>;
@@ -113,6 +113,7 @@ export const TreeNodeRenderer: React.ForwardRefExoticComponent<TreeNodeRendererP
             <>
               {getHierarchyLevelDetails && node.isFiltered ? (
                 <IconButton
+                  style={{ position: "relative" }} // for button to work, should be fixed by kiwi
                   className="filtering-action-button"
                   label={localizedStrings.clearHierarchyLevelFilter}
                   onClick={(e) => {
@@ -125,6 +126,7 @@ export const TreeNodeRenderer: React.ForwardRefExoticComponent<TreeNodeRendererP
               ) : null}
               {onFilterClick && node.isFilterable ? (
                 <IconButton
+                  style={{ position: "relative" }} // for icons to be visible, should be fixed by kiwi
                   ref={applyFilterButtonRef}
                   className="filtering-action-button"
                   label={localizedStrings.filterHierarchyLevel}
@@ -133,7 +135,7 @@ export const TreeNodeRenderer: React.ForwardRefExoticComponent<TreeNodeRendererP
                     const hierarchyLevelDetails = getHierarchyLevelDetails?.(node.id);
                     hierarchyLevelDetails && onFilterClick(hierarchyLevelDetails);
                   }}
-                  icon={node.isFiltered ? filterIcon : SvgFilterHollow}
+                  icon={node.isFiltered ? filterIcon : filterIcon} // currently base filter icon is hollow
                 />
               ) : undefined}
             </>
