@@ -10,7 +10,10 @@ import { PropertyData } from "@itwin/components-react";
 import { Id64Arg } from "@itwin/core-bentley";
 import { IModelConnection } from "@itwin/core-frontend";
 import { KeySet, Ruleset } from "@itwin/presentation-common";
-import { createSelectionScopeProps, Presentation } from "@itwin/presentation-frontend";
+import { createECSqlQueryExecutor } from "@itwin/presentation-core-interop";
+import { Presentation } from "@itwin/presentation-frontend";
+import { computeSelection } from "@itwin/unified-selection";
+import { mapPresentationFrontendSelectionScopeToUnifiedSelectionScope } from "../common/Utils.js";
 import { PresentationPropertyDataProvider } from "../propertygrid/DataProvider.js";
 import { getFavoritesCategory } from "./Utils.js";
 
@@ -33,6 +36,12 @@ export interface FavoritePropertiesDataProviderProps {
    * set, default presentation rules are used which return content for the selected elements.
    */
   ruleset?: Ruleset | string;
+
+  /**
+   * Active selection scope provider.
+   * Takes active scope from `Presentation.selection.scopes.activeScope` if not provided.
+   */
+  activeScopeProvider?: () => Parameters<typeof computeSelection>[0]["scope"];
 }
 
 /**
@@ -41,6 +50,7 @@ export interface FavoritePropertiesDataProviderProps {
  */
 export class FavoritePropertiesDataProvider implements IFavoritePropertiesDataProvider {
   private _customRuleset?: Ruleset | string;
+  private _getActiveScope: () => Parameters<typeof computeSelection>[0]["scope"];
 
   /**
    * Should fields with no values be included in the property list. No value means:
@@ -63,6 +73,8 @@ export class FavoritePropertiesDataProvider implements IFavoritePropertiesDataPr
     this.includeFieldsWithNoValues = true;
     this.includeFieldsWithCompositeValues = true;
     this._customRuleset = /* c8 ignore next */ props?.ruleset;
+    this._getActiveScope =
+      props?.activeScopeProvider ?? (() => mapPresentationFrontendSelectionScopeToUnifiedSelectionScope(Presentation.selection.scopes.activeScope));
   }
 
   /**
@@ -88,7 +100,15 @@ export class FavoritePropertiesDataProvider implements IFavoritePropertiesDataPr
       return propertyData;
     }
 
-    const keys = await Presentation.selection.scopes.computeSelection(imodel, elementIds, createSelectionScopeProps(Presentation.selection.scopes.activeScope));
+    const iter = computeSelection({
+      queryExecutor: createECSqlQueryExecutor(imodel),
+      scope: this._getActiveScope(),
+      elementIds,
+    });
+    const keys = new KeySet();
+    for await (const key of iter) {
+      keys.add(key);
+    }
     return this.getData(imodel, keys);
   }
 

@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { Presentation } from "@itwin/presentation-frontend";
-import { initializeLocalization, initializePropertyValueRenderers } from "./presentation-components/common/Utils.js";
+import { initializeLocalization, initializePropertyValueRenderers } from "./presentation-components/Initialization.js";
 
 /**
  * @module Core

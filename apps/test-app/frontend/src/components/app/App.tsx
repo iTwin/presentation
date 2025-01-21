@@ -28,9 +28,9 @@ import { Root } from "@itwin/itwinui-react-v5/bricks";
 import { SchemaMetadataContextProvider, UnifiedSelectionContextProvider } from "@itwin/presentation-components";
 import { createECSchemaProvider, createECSqlQueryExecutor } from "@itwin/presentation-core-interop";
 import { HiliteSet, Presentation, SelectionChangeEventArgs } from "@itwin/presentation-frontend";
-import { UnifiedSelectionProvider } from "@itwin/presentation-hierarchies-react";
 import { createCachingECClassHierarchyInspector } from "@itwin/presentation-shared";
 import { enableUnifiedSelectionSyncWithIModel } from "@itwin/unified-selection";
+import { UnifiedSelectionContextProvider } from "@itwin/unified-selection-react";
 import { MyAppFrontend, MyAppSettings } from "../../api/MyAppFrontend";
 import { IModelSelector } from "../imodel-selector/IModelSelector";
 import { PropertiesWidget } from "../properties-widget/PropertiesWidget";
@@ -129,18 +129,20 @@ export function App() {
   return (
     <Root colorScheme="light" density="dense">
       <ThemeProvider theme="light" future={{ themeBridge: true }}>
-        <div className="app">
-          <div className="app-header">
-            <h2>{IModelApp.localization.getLocalizedString("Sample:welcome-message")}</h2>
+        <UnifiedSelectionContextProvider storage={MyAppFrontend.selectionStorage}>
+          <div className="app">
+            <div className="app-header">
+              <h2>{IModelApp.localization.getLocalizedString("Sample:welcome-message")}</h2>
+            </div>
+            <div className="app-pickers">
+              <IModelSelector onIModelSelected={onIModelSelected} activeIModelPath={state.imodelPath} />
+              <RulesetSelector onRulesetSelected={onRulesetSelected} activeRulesetId={state.rulesetId} />
+              <UnitSystemSelector selectedUnitSystem={state.activeUnitSystem} onUnitSystemSelected={onUnitSystemSelected} />
+              <ToggleSwitch label="Persist settings" labelPosition="right" checked={state.persistSettings} onChange={onPersistSettingsValueChange} />
+            </div>
+            {state.imodel ? <IModelComponents imodel={state.imodel} rulesetId={state.rulesetId} /> : null}
           </div>
-          <div className="app-pickers">
-            <IModelSelector onIModelSelected={onIModelSelected} activeIModelPath={state.imodelPath} />
-            <RulesetSelector onRulesetSelected={onRulesetSelected} activeRulesetId={state.rulesetId} />
-            <UnitSystemSelector selectedUnitSystem={state.activeUnitSystem} onUnitSystemSelected={onUnitSystemSelected} />
-            <ToggleSwitch label="Persist settings" labelPosition="right" checked={state.persistSettings} onChange={onPersistSettingsValueChange} />
-          </div>
-          {state.imodel ? <IModelComponents imodel={state.imodel} rulesetId={state.rulesetId} /> : null}
-        </div>
+        </UnifiedSelectionContextProvider>
       </ThemeProvider>
     </Root>
   );
@@ -310,15 +312,11 @@ function IModelComponents(props: IModelComponentsProps) {
 
   return (
     <SchemaMetadataContextProvider imodel={imodel} schemaContextProvider={MyAppFrontend.getSchemaContext.bind(MyAppFrontend)}>
-      <UnifiedSelectionContextProvider imodel={imodel} selectionLevel={0}>
-        <UnifiedSelectionProvider storage={MyAppFrontend.selectionStorage}>
-          <ThemeManager>
-            <UiStateStorageHandler>
-              <ConfigurableUiContent />
-            </UiStateStorageHandler>
-          </ThemeManager>
-        </UnifiedSelectionProvider>
-      </UnifiedSelectionContextProvider>
+      <ThemeManager>
+        <UiStateStorageHandler>
+          <ConfigurableUiContent />
+        </UiStateStorageHandler>
+      </ThemeManager>
     </SchemaMetadataContextProvider>
   );
 }

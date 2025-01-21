@@ -7,10 +7,10 @@ import { insertPhysicalElement, insertPhysicalModelWithPartition, insertSpatialC
 import { useCallback, useState } from "react";
 import { UiComponents, VirtualizedPropertyGridWithDataProvider } from "@itwin/components-react";
 import { IModelApp, IModelConnection } from "@itwin/core-frontend";
-import { InstanceKey, KeySet } from "@itwin/presentation-common";
+import { InstanceKey } from "@itwin/presentation-common";
 import { PresentationPropertyDataProvider, usePropertyDataProviderWithUnifiedSelection } from "@itwin/presentation-components";
-import { Presentation } from "@itwin/presentation-frontend";
 import { buildTestIModel } from "@itwin/presentation-testing";
+import { createStorage } from "@itwin/unified-selection";
 import { initialize, terminate } from "../../IntegrationTests.js";
 import { act, getByText, render, waitFor } from "../../RenderUtils.js";
 import { useOptionalDisposable } from "../../UseOptionalDisposable.js";
@@ -30,6 +30,9 @@ describe("Learning snippets", async () => {
 
     it("renders unified selection property grid", async function () {
       // __PUBLISH_EXTRACT_START__ Presentation.Components.UnifiedSelection.PropertyGrid
+      // Create a single unified selection storage to be shared between all application's components
+      const selectionStorage = createStorage();
+
       function MyPropertyGrid(props: { imodel: IModelConnection }) {
         // create a presentation rules driven data provider; the provider implements `IDisposable`, so we
         // create it through `useOptionalDisposable` hook to make sure it's properly cleaned up
@@ -48,8 +51,9 @@ describe("Learning snippets", async () => {
       }
 
       function MyPropertyGridWithProvider({ dataProvider }: { dataProvider: PresentationPropertyDataProvider }) {
-        // set up the data provider to be notified about changes in unified selection
-        const { isOverLimit, numSelectedElements } = usePropertyDataProviderWithUnifiedSelection({ dataProvider });
+        // set up the data provider to be notified about changes in unified selection, the provided
+        // selection storage is used to synchronize selection between different components
+        const { isOverLimit, numSelectedElements } = usePropertyDataProviderWithUnifiedSelection({ dataProvider, selectionStorage });
 
         // width and height should generally we computed using ResizeObserver API or one of its derivatives
         const [width] = useState(400);
@@ -87,10 +91,10 @@ describe("Learning snippets", async () => {
       await waitFor(() => getByText(container, "Select an element to see its properties"));
 
       // test Unified Selection -> Property Grid content synchronization
-      act(() => Presentation.selection.replaceSelection("", imodel, new KeySet([elementKeys[0]])));
+      act(() => selectionStorage.replaceSelection({ imodelKey: imodel.key, source: "", selectables: [elementKeys[0]] }));
       await ensurePropertyGridHasPropertyRecord(container, "$élêçtèd Ítêm(s)", "User Label", "My Element 1");
 
-      act(() => Presentation.selection.replaceSelection("", imodel, new KeySet([elementKeys[1]])));
+      act(() => selectionStorage.replaceSelection({ imodelKey: imodel.key, source: "", selectables: [elementKeys[1]] }));
       await ensurePropertyGridHasPropertyRecord(container, "$élêçtèd Ítêm(s)", "User Label", "My Element 2");
     });
   });

@@ -168,6 +168,7 @@ export const TreeNodeRenderer: React.ForwardRefExoticComponent<TreeNodeRendererP
 // @public (undocumented)
 interface TreeNodeRendererOwnProps {
     actionButtonsClassName?: string;
+    filterButtonsVisibility?: "show-on-hover" | "hide";
     getIcon?: (node: PresentationHierarchyNode) => ReactElement | undefined;
     getLabel?: (node: PresentationHierarchyNode) => ReactElement | undefined;
     getSublabel?: (node: PresentationHierarchyNode) => ReactElement | undefined;
@@ -192,7 +193,7 @@ type TreeNodeRendererProps_2 = ComponentPropsWithoutRef<typeof TreeNodeRenderer>
 type TreeProps = ComponentPropsWithoutRef<typeof Tree<RenderedTreeNode>>;
 
 // @public
-export function TreeRenderer({ rootNodes, expandNode, selectNodes, isNodeSelected, onFilterClick, getIcon, getLabel, getSublabel, getHierarchyLevelDetails, reloadTree, selectionMode, localizedStrings, size, ...treeProps }: TreeRendererProps): JSX_3.Element;
+export function TreeRenderer({ rootNodes, expandNode, selectNodes, isNodeSelected, onFilterClick, getIcon, getLabel, getSublabel, getHierarchyLevelDetails, reloadTree, selectionMode, localizedStrings, size, filterButtonsVisibility, ...treeProps }: TreeRendererProps): JSX_3.Element;
 
 // @public (undocumented)
 interface TreeRendererOwnProps {
@@ -201,9 +202,9 @@ interface TreeRendererOwnProps {
 }
 
 // @public (undocumented)
-type TreeRendererProps = Pick<ReturnType<typeof useTree>, "rootNodes" | "expandNode"> & Partial<Pick<ReturnType<typeof useTree>, "selectNodes" | "isNodeSelected" | "getHierarchyLevelDetails" | "reloadTree">> & Pick<TreeNodeRendererProps_2, "onFilterClick" | "getIcon" | "getLabel" | "getSublabel"> & TreeRendererOwnProps & Omit<TreeProps, "data" | "nodeRenderer" | "getNode" | "enableVirtualization"> & ComponentPropsWithoutRef<typeof LocalizationContextProvider>;
+type TreeRendererProps = Pick<ReturnType<typeof useTree>, "rootNodes" | "expandNode"> & Partial<Pick<ReturnType<typeof useTree>, "selectNodes" | "isNodeSelected" | "getHierarchyLevelDetails" | "reloadTree">> & Pick<TreeNodeRendererProps_2, "onFilterClick" | "getIcon" | "getLabel" | "getSublabel" | "filterButtonsVisibility"> & TreeRendererOwnProps & Omit<TreeProps, "data" | "nodeRenderer" | "getNode" | "enableVirtualization"> & ComponentPropsWithoutRef<typeof LocalizationContextProvider>;
 
-// @public
+// @public @deprecated
 export function UnifiedSelectionProvider({ storage, children }: PropsWithChildren<{
     storage: SelectionStorage;
 }>): JSX_2.Element;
@@ -272,10 +273,11 @@ interface UseTreeResult {
 }
 
 // @public
-export function useUnifiedSelectionTree({ sourceName, ...props }: UseTreeProps & UseUnifiedTreeSelectionProps): UseTreeResult;
+export function useUnifiedSelectionTree({ sourceName, selectionStorage, ...props }: UseTreeProps & UseUnifiedTreeSelectionProps): UseTreeResult;
 
 // @public (undocumented)
 interface UseUnifiedTreeSelectionProps {
+    selectionStorage?: SelectionStorage;
     sourceName: string;
 }
 

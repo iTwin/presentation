@@ -16,8 +16,8 @@ import { createECSchemaProvider, createECSqlQueryExecutor, createIModelKey } fro
 import { createLimitingECSqlQueryExecutor, createNodesQueryClauseFactory, HierarchyDefinition } from "@itwin/presentation-hierarchies";
 // __PUBLISH_EXTRACT_END__
 // __PUBLISH_EXTRACT_START__ Presentation.HierarchiesReact.SelectionStorage.Imports
-import { TreeRenderer, UnifiedSelectionProvider, useIModelUnifiedSelectionTree } from "@itwin/presentation-hierarchies-react";
-import { createStorage } from "@itwin/unified-selection";
+import { TreeRenderer, useIModelUnifiedSelectionTree } from "@itwin/presentation-hierarchies-react";
+import { createStorage, SelectionStorage } from "@itwin/unified-selection";
 import { useEffect, useState } from "react";
 // __PUBLISH_EXTRACT_END__
 // __PUBLISH_EXTRACT_START__ Presentation.HierarchiesReact.CustomTreeExample.Imports
@@ -83,7 +83,7 @@ describe("Hierarchies React", () => {
       it("Tree", async function () {
         // __PUBLISH_EXTRACT_START__ Presentation.HierarchiesReact.SelectionStorage
         // Not part of the package - this should be created once and reused across different components of the application.
-        const selectionStorage = createStorage();
+        const unifiedSelectionStorage = createStorage();
 
         /** Component providing the selection storage and access to iModel. Usually this is done in a top-level component. */
         function MyTreeComponent({ imodel }: { imodel: IModelConnection }) {
@@ -96,11 +96,7 @@ describe("Hierarchies React", () => {
             return null;
           }
 
-          return (
-            <UnifiedSelectionProvider storage={selectionStorage}>
-              <MyTreeComponentInternal imodelAccess={imodelAccess} />
-            </UnifiedSelectionProvider>
-          );
+          return <MyTreeComponentInternal imodelAccess={imodelAccess} selectionStorage={unifiedSelectionStorage} />;
         }
         // __PUBLISH_EXTRACT_END__
         // __PUBLISH_EXTRACT_START__ Presentation.HierarchiesReact.CustomTreeExample
@@ -136,8 +132,10 @@ describe("Hierarchies React", () => {
         }
 
         /** Internal component that creates and renders tree state. */
-        function MyTreeComponentInternal({ imodelAccess }: { imodelAccess: IModelAccess }) {
+        function MyTreeComponentInternal({ imodelAccess, selectionStorage }: { imodelAccess: IModelAccess; selectionStorage: SelectionStorage }) {
           const { rootNodes, setFormatter, isLoading, ...state } = useIModelUnifiedSelectionTree({
+            // the unified selection storage used by all app components let them share selection state
+            selectionStorage,
             // the source name is used to distinguish selection changes being made by different components
             sourceName: "MyTreeComponent",
             // iModel access is used to build the hierarchy
@@ -157,34 +155,6 @@ describe("Hierarchies React", () => {
 
         expect(getByText("My Model A")).to.not.be.null;
         expect(getByText("My Model B")).to.not.be.null;
-      });
-
-      it("useIModelUnifiedSelectionTree", async function () {
-        type IModelAccess = Props<typeof useIModelUnifiedSelectionTree>["imodelAccess"];
-        const getHierarchyDefinition = () => ({
-          defineHierarchyLevel: async () => [],
-        });
-
-        // __PUBLISH_EXTRACT_START__ Presentation.HierarchiesReact.UseUnifiedSelectionTree
-        function MyTreeComponentInternal({ imodelAccess }: { imodelAccess: IModelAccess }) {
-          const { rootNodes, ...state } = useIModelUnifiedSelectionTree({
-            // the source name is used to distinguish selection changes being made by different components
-            sourceName: "MyTreeComponent",
-            // iModel access is used to build the hierarchy
-            imodelAccess,
-            // the hierarchy definition describes the hierarchy using ECSQL queries
-            getHierarchyDefinition,
-          });
-          if (!rootNodes || !rootNodes.length) {
-            return "No data to display";
-          }
-          return <TreeRenderer {...state} rootNodes={rootNodes} />;
-        }
-        // __PUBLISH_EXTRACT_END__
-
-        const { getByText } = render(<MyTreeComponentInternal imodelAccess={createIModelAccess(iModel)} />);
-
-        await waitFor(() => expect(getByText("No data to display")).to.not.be.null);
       });
     });
   });

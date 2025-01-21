@@ -36,11 +36,12 @@ import {
   Value,
   ValuesMap,
 } from "@itwin/presentation-common";
+import { createIModelKey } from "@itwin/presentation-core-interop";
 import { FavoritePropertiesScope, Presentation } from "@itwin/presentation-frontend";
 import { FieldHierarchyRecord, InternalPropertyRecordsBuilder, IPropertiesAppender } from "../common/ContentBuilder.js";
 import { CacheInvalidationProps, ContentDataProvider, IContentDataProvider } from "../common/ContentDataProvider.js";
 import { DiagnosticsProps } from "../common/Diagnostics.js";
-import { createLabelRecord, findField, memoize } from "../common/Utils.js";
+import { createLabelRecord, findField, memoize, WithIModelKey } from "../common/Utils.js";
 import { FAVORITES_CATEGORY_NAME, getFavoritesCategory } from "../favorite-properties/Utils.js";
 
 const labelsComparer = new Intl.Collator(undefined, { sensitivity: "base" }).compare;
@@ -296,6 +297,7 @@ export class PresentationPropertyDataProvider extends ContentDataProvider implem
       sortFields: async (category, fields) => this.sortFieldsAsync(category, fields),
     };
     const builder = await PropertyDataBuilder.create({
+      imodel: this.imodel,
       descriptor: content.descriptor,
       // eslint-disable-next-line @typescript-eslint/no-deprecated
       includeWithNoValues: this.includeFieldsWithNoValues,
@@ -395,6 +397,7 @@ interface PropertyPaneCallbacks {
   sortFields: (category: CategoryDescription, fields: Field[]) => Promise<void>;
 }
 interface PropertyDataBuilderProps {
+  imodel: IModelConnection;
   descriptor: Descriptor;
   includeWithNoValues: boolean;
   includeWithCompositeValues: boolean;
@@ -410,18 +413,23 @@ class PropertyDataBuilder extends InternalPropertyRecordsBuilder {
   private _asyncTasks: Array<Promise<void>> = [];
 
   private constructor(props: PropertyDataBuilderProps) {
-    super((item) => ({
-      item,
-      append: (record: FieldHierarchyRecord): void => {
-        const category = record.fieldHierarchy.field.category;
-        let records = this._categorizedRecords.get(category.name);
-        if (!records) {
-          records = [];
-          this._categorizedRecords.set(category.name, records);
-        }
-        records.push(record);
+    super(
+      (item) => ({
+        item,
+        append: (record: FieldHierarchyRecord): void => {
+          const category = record.fieldHierarchy.field.category;
+          let records = this._categorizedRecords.get(category.name);
+          if (!records) {
+            records = [];
+            this._categorizedRecords.set(category.name, records);
+          }
+          records.push(record);
+        },
+      }),
+      (record: WithIModelKey<PropertyRecord>) => {
+        record.imodelKey = createIModelKey(props.imodel);
       },
-    }));
+    );
     this._props = props;
     this._categoriesCache = new PropertyCategoriesCache(props.wantNestedCategories);
   }

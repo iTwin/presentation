@@ -37,6 +37,7 @@ import {
   IPrimitiveValueFormatter,
   Props,
 } from "@itwin/presentation-shared";
+import { useUnifiedSelectionContext } from "@itwin/unified-selection-react";
 import { SampleRpcInterface } from "@test-app/common";
 import { MyAppFrontend } from "../../api/MyAppFrontend";
 
@@ -80,6 +81,11 @@ function Tree({ imodelAccess, height, width }: { imodelAccess: IModelAccess; hei
     };
   }, [filter, imodelAccess]);
 
+  const unifiedSelectionContext = useUnifiedSelectionContext();
+  if (!unifiedSelectionContext) {
+    throw new Error("Unified selection context is not available");
+  }
+
   const {
     rootNodes,
     isLoading,
@@ -87,6 +93,7 @@ function Tree({ imodelAccess, height, width }: { imodelAccess: IModelAccess; hei
     setFormatter: _,
     ...treeProps
   } = useUnifiedSelectionTree({
+    selectionStorage: unifiedSelectionContext.storage,
     sourceName: "MultiIModelTree",
     getHierarchyProvider: useCallback(
       () =>

@@ -54,7 +54,8 @@ export function useIModelTree(props: UseIModelTreeProps): UseTreeResult {
 
 /**
  * A React hook that creates state for a tree component whose displayed hierarchy is based on
- * iModel data and that is integrated with unified selection through context provided by `UnifiedSelectionProvider`.
+ * iModel data and that is integrated with unified selection through the given selection
+ * storage (previously the storage was provided through the, now deprecated, `UnifiedSelectionProvider`).
  *
  * The hook uses `@itwin/presentation-hierarchies` package to load the hierarchy data and returns a
  * component-agnostic result which may be used to render the hierarchy using any UI framework.
