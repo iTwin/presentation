@@ -25,7 +25,7 @@ import { IModelApp, IModelConnection } from "@itwin/core-frontend";
 import { UnitSystemKey } from "@itwin/core-quantity";
 import { ThemeProvider, ToggleSwitch } from "@itwin/itwinui-react";
 import { Root } from "@itwin/itwinui-react-v5/bricks";
-import { SchemaMetadataContextProvider, UnifiedSelectionContextProvider } from "@itwin/presentation-components";
+import { SchemaMetadataContextProvider } from "@itwin/presentation-components";
 import { createECSchemaProvider, createECSqlQueryExecutor } from "@itwin/presentation-core-interop";
 import { HiliteSet, Presentation, SelectionChangeEventArgs } from "@itwin/presentation-frontend";
 import { createCachingECClassHierarchyInspector } from "@itwin/presentation-shared";
