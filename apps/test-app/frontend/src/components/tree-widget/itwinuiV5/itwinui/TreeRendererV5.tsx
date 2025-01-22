@@ -28,7 +28,7 @@ interface TreeRendererOwnProps {
 /** @public */
 type TreeRendererProps = Pick<ReturnType<typeof useTree>, "expandNode"> &
   Partial<Pick<ReturnType<typeof useTree>, "selectNodes" | "isNodeSelected" | "getHierarchyLevelDetails" | "reloadTree">> &
-  Pick<TreeNodeRendererProps, "onFilterClick" | "getIcon" | "getLabel" | "getSublabel"> &
+  Pick<TreeNodeRendererProps, "onFilterClick" | "getIcon"> &
   TreeRendererOwnProps &
   TreeProps &
   ComponentPropsWithoutRef<typeof LocalizationContextProvider>;

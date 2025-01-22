@@ -3,13 +3,11 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-// import "./TreeNodeRenderer.css";
-import cx from "classnames";
-import { ComponentPropsWithoutRef, forwardRef, ReactElement, RefAttributes, useRef } from "react";
+import { ComponentPropsWithoutRef, forwardRef, LegacyRef, MutableRefObject, ReactElement, Ref, RefAttributes, useCallback, useRef } from "react";
 import { IconButton, Spinner, Tree } from "@itwin/itwinui-react-v5/bricks";
 import { HierarchyLevelDetails, isPresentationHierarchyNode, PresentationHierarchyNode, useTree } from "@itwin/presentation-hierarchies-react";
 import { useLocalizationContext } from "./LocalizationContext";
-import { ErrorNodeLabel, ResultSetTooLargeNodeLabel, ResultSetTooLargeNodeLabelProps, useMergedRefs } from "./TreeNodeRendererV5Utils";
+import { TreeErrorRenderer } from "./TreeErrorRendererV5";
 import { RenderedTreeNode } from "./TreeRendererV5";
 
 // Icons don't seem to work with tree actions right now
@@ -22,7 +20,7 @@ const SvgRemove = new URL("@itwin/itwinui-icons/remove.svg", import.meta.url).hr
 type TreeNodeProps = ComponentPropsWithoutRef<typeof Tree.Item>;
 
 /** @public */
-interface TreeNodeRendererOwnProps {
+export interface TreeNodeRendererOwnProps {
   /** Node that is rendered. */
   node: RenderedTreeNode;
   /** Action to perform when the filter button is clicked for this node. */
@@ -41,8 +39,6 @@ interface TreeNodeRendererOwnProps {
   reloadTree?: (options: { parentNodeId: string | undefined; state: "reset" }) => void;
   /** CSS class name for the action buttons. */
   actionButtonsClassName?: string;
-  /** Tree node size. Should match the size passed to `TreeRenderer` component. */
-  size?: "default" | "small";
 }
 
 /** @public */
@@ -69,140 +65,105 @@ export const TreeNodeRenderer: React.ForwardRefExoticComponent<TreeNodeRendererP
       onNodeClick,
       onNodeKeyDown,
       selected,
-      // isDisabled,
       getHierarchyLevelDetails,
       reloadTree,
-      size,
+      children,
       ...treeItemProps
     },
     forwardedRef,
   ) => {
-    const { localizedStrings } = useLocalizationContext();
-    const applyFilterButtonRef = useRef<HTMLButtonElement>(null);
     const nodeRef = useRef<HTMLDivElement>(null);
     const ref = useMergedRefs(forwardedRef, nodeRef);
-    const isDisabled = false; // TODO: needs to be discused if the prop is still needed
+    const { localizedStrings } = useLocalizationContext();
+    const applyFilterButtonRef = useRef<HTMLButtonElement>(null);
+
     if ("type" in node && node.type === "ChildrenPlaceholder") {
-      return <PlaceholderNode {...treeItemProps} ref={ref} size={size} />;
+      return <PlaceholderNode {...treeItemProps} ref={ref} />;
     }
 
-    if (isPresentationHierarchyNode(node)) {
+    if (!isPresentationHierarchyNode(node)) {
       return (
-        <Tree.Item
-          {...treeItemProps}
-          ref={ref}
-          selected={selected}
-          aria-disabled={isDisabled}
-          className={cx(treeItemProps.className, "stateless-kiwi-tree-node", { filtered: node.isFiltered })} // Renamed for styles of old stateless node not to be applied (remove `-kiwi` when moved to Hierarchies-react)
-          onClick={(event) => !isDisabled && onNodeClick?.(node, !selected, event)}
-          onKeyDown={(event) => {
-            // Ignore if it is called on the element inside, e.g. checkbox or expander
-            if (!isDisabled && event.target === nodeRef.current) {
-              onNodeKeyDown?.(node, !selected, event);
-            }
-          }}
-          onExpandedChange={(isExpanded) => {
-            expandNode(node.id, isExpanded);
-          }}
-          icon={getIcon ? getIcon(node) : undefined}
-          label={getLabel ? getLabel(node) : node.label}
-          expanded={node.isExpanded || node.children === true || node.children.length > 0 ? node.isExpanded : undefined}
-          actions={
-            <>
-              {getHierarchyLevelDetails && node.isFiltered ? (
-                <IconButton
-                  style={{ position: "relative" }} // for button to work, should be fixed by kiwi
-                  className="filtering-action-button"
-                  label={localizedStrings.clearHierarchyLevelFilter}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    getHierarchyLevelDetails(node.id)?.setInstanceFilter(undefined);
-                    applyFilterButtonRef.current?.focus();
-                  }}
-                  icon={SvgRemove}
-                />
-              ) : null}
-              {onFilterClick && node.isFilterable ? (
-                <IconButton
-                  style={{ position: "relative" }} // for icons to be visible, should be fixed by kiwi
-                  ref={applyFilterButtonRef}
-                  className="filtering-action-button"
-                  label={localizedStrings.filterHierarchyLevel}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    const hierarchyLevelDetails = getHierarchyLevelDetails?.(node.id);
-                    hierarchyLevelDetails && onFilterClick(hierarchyLevelDetails);
-                  }}
-                  icon={node.isFiltered ? filterIcon : filterIcon} // currently base filter icon is hollow
-                />
-              ) : undefined}
-            </>
-          }
-        >
-          {treeItemProps.children}
-        </Tree.Item>
+        <TreeErrorRenderer node={node} getHierarchyLevelDetails={getHierarchyLevelDetails} reloadTree={reloadTree} onFilterClick={onFilterClick} ref={ref} />
       );
     }
 
-    if (node.type === "ResultSetTooLarge") {
-      return (
-        <ResultSetTooLargeNode
-          {...treeItemProps}
-          ref={ref}
-          limit={node.resultSetSizeLimit}
-          onOverrideLimit={getHierarchyLevelDetails ? (limit) => getHierarchyLevelDetails(node.parentNodeId)?.setSizeLimit(limit) : undefined}
-          onFilterClick={
-            onFilterClick
-              ? () => {
-                  const hierarchyLevelDetails = getHierarchyLevelDetails?.(node.parentNodeId);
-                  hierarchyLevelDetails && onFilterClick(hierarchyLevelDetails);
-                }
-              : undefined
+    const isDisabled = false;
+    const ActionButtons = () => (
+      <>
+        {getHierarchyLevelDetails && node.isFiltered ? (
+          <IconButton
+            style={{ position: "relative" }} // for button to work, should be fixed by kiwi
+            className="filtering-action-button"
+            label={localizedStrings.clearHierarchyLevelFilter}
+            onClick={(e) => {
+              e.stopPropagation();
+              getHierarchyLevelDetails(node.id)?.setInstanceFilter(undefined);
+              applyFilterButtonRef.current?.focus();
+            }}
+            icon={SvgRemove}
+          />
+        ) : null}
+        {onFilterClick && node.isFilterable ? (
+          <IconButton
+            style={{ position: "relative" }} // for icons to be visible, should be fixed by kiwi
+            ref={applyFilterButtonRef}
+            className="filtering-action-button"
+            label={localizedStrings.filterHierarchyLevel}
+            onClick={(e) => {
+              e.stopPropagation();
+              const hierarchyLevelDetails = getHierarchyLevelDetails?.(node.id);
+              hierarchyLevelDetails && onFilterClick(hierarchyLevelDetails);
+            }}
+            icon={node.isFiltered ? filterIcon : filterIcon} // currently base filter icon is hollow
+          />
+        ) : undefined}
+      </>
+    );
+
+    return (
+      <Tree.Item
+        ref={ref}
+        label={getLabel ? getLabel(node) : node.label}
+        selected={selected}
+        expanded={node.isExpanded || node.children === true || node.children.length > 0 ? node.isExpanded : undefined}
+        aria-disabled={isDisabled}
+        onExpandedChange={(isExpanded) => {
+          expandNode(node.id, isExpanded);
+        }}
+        onClick={(event) => !isDisabled && onNodeClick?.(node, !selected, event)} // need a unified selection for mouse clicks and key down
+        onKeyDown={(event) => {
+          // Ignore if it is called on the element inside, e.g. checkbox or expander
+          if (!isDisabled && event.target === nodeRef.current) {
+            onNodeKeyDown?.(node, !selected, event);
           }
-        />
-      );
-    }
-
-    if (node.type === "NoFilterMatches") {
-      return <Tree.Item {...treeItemProps} ref={ref} label={localizedStrings.noFilteredChildren} aria-disabled={true} />;
-    }
-
-    const onRetry = reloadTree ? () => reloadTree({ parentNodeId: node.parentNodeId, state: "reset" }) : undefined;
-    return <Tree.Item {...treeItemProps} ref={ref} label={<ErrorNodeLabel message={node.message} onRetry={onRetry} />} aria-disabled={true} />;
+        }}
+        icon={getIcon ? getIcon(node) : undefined}
+        actions={<ActionButtons />}
+      >
+        {children}
+      </Tree.Item>
+    );
   },
 );
 TreeNodeRenderer.displayName = "TreeNodeRenderer";
 
-const PlaceholderNode = forwardRef<
-  HTMLDivElement,
-  Omit<TreeNodeProps, "onExpanded" | "label"> & {
-    size?: "default" | "small";
-  }
->(({ size, ...props }, forwardedRef) => {
+const PlaceholderNode = forwardRef<HTMLDivElement, Omit<TreeNodeProps, "onExpanded" | "label">>(({ ...props }, forwardedRef) => {
   const { localizedStrings } = useLocalizationContext();
-  return (
-    <Tree.Item
-      {...props}
-      ref={forwardedRef}
-      label={localizedStrings.loading}
-      icon={
-        <Spinner size="small" title={localizedStrings.loading} className={cx(props.className, { "stateless-tree-node-small-spinner": size === "small" })} />
-      }
-    />
-  );
+  return <Tree.Item {...props} ref={forwardedRef} label={localizedStrings.loading} icon={<Spinner size={"small"} title={localizedStrings.loading} />} />;
 });
 PlaceholderNode.displayName = "PlaceholderNode";
 
-const ResultSetTooLargeNode = forwardRef<HTMLDivElement, Omit<TreeNodeProps, "onExpanded" | "label"> & ResultSetTooLargeNodeLabelProps>(
-  ({ onFilterClick, onOverrideLimit, limit, ...props }, forwardedRef) => {
-    return (
-      <Tree.Item
-        {...props}
-        ref={forwardedRef}
-        className="stateless-tree-node"
-        label={<ResultSetTooLargeNodeLabel limit={limit} onFilterClick={onFilterClick} onOverrideLimit={onOverrideLimit} />}
-      />
-    );
-  },
-);
-ResultSetTooLargeNode.displayName = "ResultSetTooLargeNode";
+function useMergedRefs<T>(...refs: ReadonlyArray<Ref<T> | LegacyRef<T> | undefined | null>) {
+  return useCallback(
+    (instance: T | null) => {
+      refs.forEach((ref) => {
+        if (typeof ref === "function") {
+          ref(instance);
+        } else if (ref) {
+          (ref as MutableRefObject<T | null>).current = instance;
+        }
+      });
+    }, // eslint-disable-next-line react-hooks/exhaustive-deps
+    [...refs],
+  );
+}

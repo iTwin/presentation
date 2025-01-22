@@ -3,21 +3,75 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { LegacyRef, MutableRefObject, Ref, useCallback } from "react";
-import { Anchor, Text } from "@itwin/itwinui-react-v5/bricks";
+import { ComponentPropsWithoutRef, forwardRef, RefAttributes } from "react";
+import { Anchor, Text, Tree } from "@itwin/itwinui-react-v5/bricks";
+import { PresentationInfoNode, useTree } from "@itwin/presentation-hierarchies-react";
 import { useLocalizationContext } from "./LocalizationContext";
+import { TreeNodeRendererOwnProps } from "./TreeNodeRendererV5";
+
+interface TreeErrorRendererOwnProps {
+  node: PresentationInfoNode;
+}
+
+type TreeErrorRendererProps = TreeErrorRendererOwnProps &
+  Pick<TreeNodeRendererOwnProps, "onFilterClick" | "reloadTree"> &
+  Partial<Pick<ReturnType<typeof useTree>, "getHierarchyLevelDetails">>;
+
+export const TreeErrorRenderer: React.ForwardRefExoticComponent<TreeErrorRendererProps & RefAttributes<HTMLDivElement>> = forwardRef(
+  ({ node, getHierarchyLevelDetails, onFilterClick, reloadTree }, forwardedRef) => {
+    const { localizedStrings } = useLocalizationContext();
+    if (node.type === "ResultSetTooLarge") {
+      return (
+        <ResultSetTooLargeNode
+          ref={forwardedRef}
+          limit={node.resultSetSizeLimit}
+          onOverrideLimit={getHierarchyLevelDetails ? (limit) => getHierarchyLevelDetails(node.parentNodeId)?.setSizeLimit(limit) : undefined}
+          onFilterClick={
+            onFilterClick
+              ? () => {
+                  const hierarchyLevelDetails = getHierarchyLevelDetails?.(node.parentNodeId);
+                  hierarchyLevelDetails && onFilterClick(hierarchyLevelDetails);
+                }
+              : undefined
+          }
+        />
+      );
+    }
+
+    if (node.type === "NoFilterMatches") {
+      return <Tree.Item ref={forwardedRef} label={localizedStrings.noFilteredChildren} aria-disabled={true} />;
+    }
+
+    const onRetry = reloadTree ? () => reloadTree({ parentNodeId: node.parentNodeId, state: "reset" }) : undefined;
+    return <Tree.Item ref={forwardedRef} label={<ErrorNodeLabel message={node.message} onRetry={onRetry} />} aria-disabled={true} />;
+  },
+);
+TreeErrorRenderer.displayName = "TreeErrorRenderer";
+
+const ResultSetTooLargeNode = forwardRef<
+  HTMLDivElement,
+  Omit<ComponentPropsWithoutRef<typeof Tree.Item>, "onExpanded" | "label"> & ResultSetTooLargeNodeLabelProps
+>(({ onFilterClick, onOverrideLimit, limit, ...props }, forwardedRef) => {
+  return (
+    <Tree.Item
+      {...props}
+      ref={forwardedRef}
+      className="stateless-tree-node"
+      label={<ResultSetTooLargeNodeLabel limit={limit} onFilterClick={onFilterClick} onOverrideLimit={onOverrideLimit} />}
+    />
+  );
+});
+ResultSetTooLargeNode.displayName = "ResultSetTooLargeNode";
 
 const MAX_LIMIT_OVERRIDE = 10000; // TODO: remove when moved to hierarchies-react
 
-/** @internal */
-export interface ResultSetTooLargeNodeLabelProps {
+interface ResultSetTooLargeNodeLabelProps {
   limit: number;
   onFilterClick?: () => void;
   onOverrideLimit?: (limit: number) => void;
 }
 
-/** @internal */
-export function ResultSetTooLargeNodeLabel({ onFilterClick, onOverrideLimit, limit }: ResultSetTooLargeNodeLabelProps) {
+function ResultSetTooLargeNodeLabel({ onFilterClick, onOverrideLimit, limit }: ResultSetTooLargeNodeLabelProps) {
   const { localizedStrings } = useLocalizationContext();
   const supportsFiltering = !!onFilterClick;
   const supportsLimitOverride = !!onOverrideLimit && limit < MAX_LIMIT_OVERRIDE;
@@ -47,8 +101,7 @@ export function ResultSetTooLargeNodeLabel({ onFilterClick, onOverrideLimit, lim
   );
 }
 
-/** @internal */
-export function ErrorNodeLabel({ message, onRetry }: { message: string; onRetry?: () => void }) {
+function ErrorNodeLabel({ message, onRetry }: { message: string; onRetry?: () => void }) {
   const { localizedStrings } = useLocalizationContext();
   return (
     // <Flex flexDirection="row" gap="xs" title={message} alignItems="start"> // flex is not released yet
@@ -60,8 +113,7 @@ export function ErrorNodeLabel({ message, onRetry }: { message: string; onRetry?
   );
 }
 
-/** @internal */
-export function createLocalizedMessage(message: string, limit: number, onClick?: () => void) {
+function createLocalizedMessage(message: string, limit: number, onClick?: () => void) {
   const limitStr = limit.toLocaleString(undefined, { useGrouping: true });
   const messageWithLimit = message.replace("{{limit}}", limitStr);
   const exp = new RegExp("<link>(.*)</link>");
@@ -103,20 +155,4 @@ export function createLocalizedMessage(message: string, limit: number, onClick?:
       // </Flex>
     ),
   };
-}
-
-/** @internal */
-export function useMergedRefs<T>(...refs: ReadonlyArray<Ref<T> | LegacyRef<T> | undefined | null>) {
-  return useCallback(
-    (instance: T | null) => {
-      refs.forEach((ref) => {
-        if (typeof ref === "function") {
-          ref(instance);
-        } else if (ref) {
-          (ref as MutableRefObject<T | null>).current = instance;
-        }
-      });
-    }, // eslint-disable-next-line react-hooks/exhaustive-deps
-    [...refs],
-  );
 }
