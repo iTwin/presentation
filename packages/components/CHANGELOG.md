@@ -1,5 +1,31 @@
 # Change Log - @itwin/presentation-components
 
+## 6.0.0
+
+### Minor Changes
+
+- [#841](https://github.com/iTwin/presentation/pull/841): Changed how unified selection-enabled components access unified selection storage.
+
+  - Added `selectionStorage` prop to `usePresentationTableWithUnifiedSelection` and `usePropertyDataProviderWithUnifiedSelection`.
+
+    When the prop is provided, the hooks will use the provided selection storage instead of `Presentation.selection` global storage from `@itwin/presentation-frontend` package. This makes the dependencies clear and hooks ready for deprecation of the selection APIs in the `@itwin/presentation-frontend` package. At the moment the prop is optional, but will be made required in the next major release of the package.
+
+  - Deprecated `UnifiedSelectionContext`, `UnifiedSelectionContextProvider`, `UnifiedSelectionContextProviderProps`, `UnifiedSelectionState` and `useUnifiedSelectionContext`. All of them are being replaced by the APIs in the new `@itwin/unified-selection-react` package, which now is an optional peer dependency of this package.
+
+    One of the property renderers - `InstanceKeyValueRenderer` was relying on the deprecated context to access unified selection storage. It now prefers the context provided with `UnifiedSelectionContextProvider` from `@itwin/unified-selection-react` package. If the context is not provided, the renderer falls back to the deprecated context.
+
+- [#841](https://github.com/iTwin/presentation/pull/841): Added `activeScopeProvider` prop to `FavoritePropertiesDataProvider` constructor.
+
+  The new prop is a function that returns the active scope. When not provided, the provider uses the old way of getting the active scope - `SelectionScopesManager`, accessed through `Presentation.selection.scopes` global from `@itwin/presentation-frontend` package. The selection APIs in that package are about to be deprecated and this change makes the provider ready for that. The `activeScopeProvider` prop will be made required in the next major release of this package.
+
+  In addition, the `FavoritePropertiesDataProvider` now uses `@itwin/unified-selection` package for adjusting selection based on selection scope. This change does not affect the results.
+
+### Patch Changes
+
+- Updated dependencies:
+  - @itwin/unified-selection@1.3.0
+  - @itwin/unified-selection-react@1.0.0
+
 ## 5.9.0
 
 ### Minor Changes
