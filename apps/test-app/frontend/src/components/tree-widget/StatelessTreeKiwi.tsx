@@ -24,7 +24,7 @@ import { ModelsTreeDefinition } from "@itwin/presentation-models-tree";
 import { createCachingECClassHierarchyInspector, IPrimitiveValueFormatter, Props } from "@itwin/presentation-shared";
 import { useUnifiedSelectionContext } from "@itwin/unified-selection-react";
 import { MyAppFrontend } from "../../api/MyAppFrontend";
-import { TreeRenderer } from "./itwinuiV5/itwinui/TreeRendererV5";
+import { Tree as KiwiTree } from "./itwinuiV5/itwinui/TreeRendererV5";
 
 type UseIModelTreeProps = Props<typeof useIModelUnifiedSelectionTree>;
 type IModelAccess = UseIModelTreeProps["imodelAccess"];
@@ -158,7 +158,7 @@ function Tree({ imodel, imodelAccess, height, width }: { imodel: IModelConnectio
     }
 
     return (
-      <TreeRenderer
+      <KiwiTree
         {...treeProps}
         expandNode={treeProps.expandNode}
         selectNodes={treeProps.selectNodes}
