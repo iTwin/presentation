@@ -68,6 +68,7 @@ export const TreeNodeRenderer: React.ForwardRefExoticComponent<TreeNodeRendererP
       getHierarchyLevelDetails,
       reloadTree,
       children,
+      actions,
       ...treeItemProps
     },
     forwardedRef,
@@ -90,6 +91,7 @@ export const TreeNodeRenderer: React.ForwardRefExoticComponent<TreeNodeRendererP
     const isDisabled = false;
     const ActionButtons = () => (
       <>
+        {actions}
         {getHierarchyLevelDetails && node.isFiltered ? (
           <IconButton
             style={{ position: "relative" }} // for button to work, should be fixed by kiwi

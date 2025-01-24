@@ -4,15 +4,15 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { ComponentPropsWithoutRef } from "react";
-import { Tree } from "@itwin/itwinui-react-v5/bricks";
+import { Tree as KiwiTree } from "@itwin/itwinui-react-v5/bricks";
 import { LocalizationContextProvider, PresentationTreeNode, useSelectionHandler, useTree } from "@itwin/presentation-hierarchies-react";
+import { TreeLevelRenderer } from "./TreeLevelRendererV5";
 import { TreeNodeRenderer } from "./TreeNodeRendererV5";
-import { TreeLevelRenderer } from "./TreeNodesRendererV5";
 
 type SelectionMode = "none" | "single" | "extended" | "multiple"; // TODO: remove when moved to hierarchies-react
 
 /** @public */
-export type TreeProps = ComponentPropsWithoutRef<typeof Tree.Root>;
+export type TreeProps = ComponentPropsWithoutRef<typeof KiwiTree.Root>;
 
 /** @public */
 
@@ -40,7 +40,7 @@ type TreeRendererProps = Pick<ReturnType<typeof useTree>, "expandNode"> &
  * @see https://itwinui.bentley.com/docs/tree
  * @public
  */
-export function TreeRenderer({ rootNodes, expandNode, localizedStrings, selectNodes, isNodeSelected, selectionMode, ...treeProps }: TreeRendererProps) {
+export function Tree({ rootNodes, expandNode, localizedStrings, selectNodes, isNodeSelected, selectionMode, ...treeProps }: TreeRendererProps) {
   const { onNodeClick, onNodeKeyDown } = useSelectionHandler({
     rootNodes,
     selectNodes: selectNodes ?? noopSelectNodes,
@@ -49,7 +49,7 @@ export function TreeRenderer({ rootNodes, expandNode, localizedStrings, selectNo
 
   return (
     <LocalizationContextProvider localizedStrings={localizedStrings}>
-      <Tree.Root style={{ height: "100%", width: "100%" }}>
+      <KiwiTree.Root style={{ height: "100%", width: "100%" }}>
         <TreeLevelRenderer
           {...treeProps}
           nodes={rootNodes}
@@ -58,7 +58,7 @@ export function TreeRenderer({ rootNodes, expandNode, localizedStrings, selectNo
           onNodeKeyDown={onNodeKeyDown}
           isNodeSelected={isNodeSelected}
         />
-      </Tree.Root>
+      </KiwiTree.Root>
     </LocalizationContextProvider>
   );
 }
