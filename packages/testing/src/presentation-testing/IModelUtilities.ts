@@ -6,10 +6,10 @@
  * @module IModel
  */
 
-import { SnapshotDb } from "@itwin/core-backend";
+import { IModelDb, SnapshotDb } from "@itwin/core-backend";
 import { Id64String } from "@itwin/core-bentley";
 import { BisCodeSpec, Code, CodeScopeProps, ElementAspectProps, ElementProps, ModelProps, RelationshipProps } from "@itwin/core-common";
-import { IModelConnection, SnapshotConnection } from "@itwin/core-frontend";
+import { IModelConnection } from "@itwin/core-frontend";
 import { createFileNameFromString, setupOutputFileLocation } from "./FilenameUtils.js";
 import { TestIModelBuilderImpl } from "./IModelBuilderImpl.js";
 
@@ -84,5 +84,27 @@ export async function buildTestIModel(nameParam: string | Mocha.Context, cb: (bu
     db.saveChanges("Created test IModel");
     db.close();
   }
-  return SnapshotConnection.openFile(outputFile);
+  return TestIModelConnection.openFile(outputFile);
+}
+
+/** @beta */
+export class TestIModelConnection extends IModelConnection {
+  constructor(private readonly _db: IModelDb) {
+    // eslint-disable-next-line @itwin/no-internal
+    super(_db.getConnectionProps());
+    IModelConnection.onOpen.raiseEvent(this);
+  }
+
+  public override get isClosed(): boolean {
+    // eslint-disable-next-line @itwin/no-internal
+    return !this._db.isOpen;
+  }
+
+  public override async close(): Promise<void> {
+    this._db.close();
+  }
+
+  public static openFile(filePath: string): IModelConnection {
+    return new TestIModelConnection(SnapshotDb.openFile(filePath));
+  }
 }

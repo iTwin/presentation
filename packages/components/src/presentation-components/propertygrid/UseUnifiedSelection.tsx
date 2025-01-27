@@ -170,7 +170,7 @@ function initUnifiedSelectionFromPresentationFrontend({
 
   updateProviderSelection(handler);
   return () => {
-    handler.dispose();
+    handler[Symbol.dispose]();
   };
 }
 

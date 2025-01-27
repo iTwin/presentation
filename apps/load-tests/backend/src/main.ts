@@ -70,6 +70,7 @@ async function initBackend() {
   const rpcConfig = BentleyCloudRpcManager.initializeImpl({ info: { title: "presentation-load-tests-backend", version: "v1.0" } }, [
     ECSchemaRpcInterface,
     IModelReadRpcInterface,
+    // eslint-disable-next-line @typescript-eslint/no-deprecated
     SnapshotIModelRpcInterface,
     PresentationRpcInterface,
   ]);

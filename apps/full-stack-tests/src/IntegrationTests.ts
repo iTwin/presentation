@@ -58,6 +58,7 @@ export async function initialize(props?: { backendTimeout?: number }) {
   };
 
   const presentationTestingInitProps: PresentationTestingInitProps = {
+    // eslint-disable-next-line @typescript-eslint/no-deprecated
     rpcs: [SnapshotIModelRpcInterface, IModelReadRpcInterface, PresentationRpcInterface, ECSchemaRpcInterface],
     backendProps: backendInitProps,
     backendHostProps: { cacheDir: path.join(import.meta.dirname, ".cache", `${process.pid}`) },

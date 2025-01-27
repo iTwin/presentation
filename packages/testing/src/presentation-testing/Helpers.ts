@@ -94,6 +94,7 @@ export const initialize = async (props?: PresentationTestingInitProps) => {
   Logger.setLevel(PresentationBackendNativeLoggerCategory.ECObjects, LogLevel.Warning);
 
   // set up rpc interfaces
+  // eslint-disable-next-line @typescript-eslint/no-deprecated
   initializeRpcInterfaces(props.rpcs ?? [SnapshotIModelRpcInterface, IModelReadRpcInterface, PresentationRpcInterface]);
 
   // init backend

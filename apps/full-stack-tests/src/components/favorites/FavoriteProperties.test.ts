@@ -7,24 +7,25 @@ import { expect } from "chai";
 import sinon from "sinon";
 import { PropertyRecord } from "@itwin/appui-abstract";
 import { PropertyData } from "@itwin/components-react";
-import { IModelApp, IModelConnection, ITwinIdArg, PreferenceArg, PreferenceKeyArg, SnapshotConnection, TokenArg } from "@itwin/core-frontend";
+import { IModelApp, IModelConnection, ITwinIdArg, PreferenceArg, PreferenceKeyArg, TokenArg } from "@itwin/core-frontend";
 import { Field, KeySet } from "@itwin/presentation-common";
 import { DEFAULT_PROPERTY_GRID_RULESET, PresentationPropertyDataProvider } from "@itwin/presentation-components";
 import { createFavoritePropertiesStorage, DefaultFavoritePropertiesStorageTypes, FavoritePropertiesScope, Presentation } from "@itwin/presentation-frontend";
+import { TestIModelConnection } from "@itwin/presentation-testing";
 import { initialize, terminate } from "../../IntegrationTests.js";
 
 describe("Favorite properties", () => {
   const FAVORITES_CATEGORY_NAME = "Favorite";
 
   let imodel: IModelConnection;
-  async function openIModel() {
-    imodel = await SnapshotConnection.openFile("assets/datasets/Properties_60InstancesWithUrl2.ibim");
+  function openIModel() {
+    imodel = TestIModelConnection.openFile("assets/datasets/Properties_60InstancesWithUrl2.ibim");
     expect(imodel).is.not.null;
   }
 
   before(async () => {
     await initialize();
-    await openIModel();
+    openIModel();
   });
 
   after(async () => {

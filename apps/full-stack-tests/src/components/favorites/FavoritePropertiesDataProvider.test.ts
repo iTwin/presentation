@@ -6,10 +6,11 @@
 import { expect } from "chai";
 import { PropertyRecord } from "@itwin/appui-abstract";
 import { PropertyData } from "@itwin/components-react";
-import { IModelConnection, SnapshotConnection } from "@itwin/core-frontend";
+import { IModelConnection } from "@itwin/core-frontend";
 import { KeySet } from "@itwin/presentation-common";
 import { DEFAULT_PROPERTY_GRID_RULESET, FavoritePropertiesDataProvider, PresentationPropertyDataProvider } from "@itwin/presentation-components";
 import { FavoritePropertiesScope, Presentation } from "@itwin/presentation-frontend";
+import { TestIModelConnection } from "@itwin/presentation-testing";
 import { initialize, terminate } from "../../IntegrationTests.js";
 
 describe("FavoritePropertiesDataProvider", async () => {
@@ -20,7 +21,7 @@ describe("FavoritePropertiesDataProvider", async () => {
   before(async () => {
     await initialize();
     const testIModelName: string = "assets/datasets/Properties_60InstancesWithUrl2.ibim";
-    imodel = await SnapshotConnection.openFile(testIModelName);
+    imodel = TestIModelConnection.openFile(testIModelName);
   });
 
   beforeEach(() => {
