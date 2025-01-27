@@ -8,9 +8,8 @@ import { join } from "path";
 import sinon, { SinonStub } from "sinon";
 import { IModelJsFs, SnapshotDb } from "@itwin/core-backend";
 import { CreateEmptySnapshotIModelProps } from "@itwin/core-common";
-import { SnapshotConnection } from "@itwin/core-frontend";
 import { createFileNameFromString, getTestOutputDir } from "../presentation-testing/FilenameUtils.js";
-import { buildTestIModel } from "../presentation-testing/IModelUtilities.js";
+import { buildTestIModel, TestIModelConnection } from "../presentation-testing/IModelUtilities.js";
 import { createStub } from "./Utils.js";
 
 describe("buildTestIModel", () => {
@@ -19,12 +18,12 @@ describe("buildTestIModel", () => {
     close: createStub<SnapshotDb["close"]>(),
   };
 
-  const snapShotConnection = {} as SnapshotConnection;
+  const testIModelConnection = {} as TestIModelConnection;
   let createSnapshotDb: SinonStub<[filePath: string, options: CreateEmptySnapshotIModelProps], SnapshotDb>;
 
   beforeEach(() => {
     createSnapshotDb = sinon.stub(SnapshotDb, "createEmpty").returns(snapshotDb as unknown as SnapshotDb);
-    sinon.stub(SnapshotConnection, "openFile").resolves(snapShotConnection);
+    sinon.stub(TestIModelConnection, "openFile").resolves(testIModelConnection as unknown as TestIModelConnection);
   });
 
   afterEach(() => {
@@ -138,6 +137,6 @@ describe("buildTestIModel", () => {
     const promise = buildTestIModel("name", async () => {});
     const result = await promise;
 
-    expect(result).to.equal(snapShotConnection);
+    expect(result).to.equal(testIModelConnection);
   });
 });
