@@ -87,7 +87,11 @@ export async function buildTestIModel(nameParam: string | Mocha.Context, cb: (bu
   return TestIModelConnection.openFile(outputFile);
 }
 
-/** @beta */
+/* c8 ignore next 24*/
+/**
+ * This was added based on this: https://github.com/iTwin/itwinjs-core/pull/7171/files#diff-9d26b04e7ae074b911fb87be3425360d7bd55a7c9f947f5aed1ba36d359f01eb
+ * @beta
+ */
 export class TestIModelConnection extends IModelConnection {
   constructor(private readonly _db: IModelDb) {
     // eslint-disable-next-line @itwin/no-internal
