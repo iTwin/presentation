@@ -15,6 +15,7 @@ import { Id64String } from '@itwin/core-bentley';
 import { IModelApp } from '@itwin/core-frontend';
 import { IModelAppOptions } from '@itwin/core-frontend';
 import { IModelConnection } from '@itwin/core-frontend';
+import { IModelDb } from '@itwin/core-backend';
 import { IModelHostOptions } from '@itwin/core-backend';
 import { InstanceKey } from '@itwin/presentation-common';
 import { KeySet } from '@itwin/presentation-common';
@@ -150,6 +151,17 @@ export interface TestIModelBuilder {
     insertElement<TProps extends ElementProps>(props: TProps): Id64String;
     insertModel<TProps extends ModelProps>(props: TProps): Id64String;
     insertRelationship<TProps extends RelationshipProps>(props: TProps): Id64String;
+}
+
+// @beta
+export class TestIModelConnection extends IModelConnection {
+    constructor(_db: IModelDb);
+    // (undocumented)
+    close(): Promise<void>;
+    // (undocumented)
+    get isClosed(): boolean;
+    // (undocumented)
+    static openFile(filePath: string): IModelConnection;
 }
 
 // (No @packageDocumentation comment for this package)

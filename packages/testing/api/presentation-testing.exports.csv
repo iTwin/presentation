@@ -31,3 +31,4 @@ public;function;setTestOutputDir
 public;function;setupOutputFileLocation
 public;const;terminate
 beta;interface;TestIModelBuilder
+beta;class;TestIModelConnection
