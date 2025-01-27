@@ -5,8 +5,8 @@
 
 import { expect } from "chai";
 import { collect, createAsyncIterator, ResolvablePromise, throwingAsyncIterator } from "presentation-test-utilities";
-import { PropsWithChildren } from "react";
 import sinon from "sinon";
+import { BeEvent } from "@itwin/core-bentley";
 import * as hierarchiesModule from "@itwin/presentation-hierarchies";
 import { IPrimitiveValueFormatter, Props } from "@itwin/presentation-shared";
 import { createStorage, Selectables, SelectionStorage, StorageSelectionChangeEventArgs, StorageSelectionChangesListener } from "@itwin/unified-selection";
@@ -19,7 +19,6 @@ import {
   PresentationResultSetTooLargeInfoNode,
   PresentationTreeNode,
 } from "../presentation-hierarchies-react/TreeNode.js";
-import { UnifiedSelectionProvider } from "../presentation-hierarchies-react/UnifiedSelectionContext.js";
 import { useTree, useUnifiedSelectionTree } from "../presentation-hierarchies-react/UseTree.js";
 import {
   act,
@@ -81,6 +80,29 @@ describe("useTree", () => {
 
     await waitFor(() => {
       expect(result.current.rootNodes).to.have.lengthOf(2);
+    });
+  });
+
+  it("loads root nodes with minimal provider setup", async () => {
+    const hierarchyChanged = new BeEvent();
+    const customHierarchyProvider: hierarchiesModule.HierarchyProvider = {
+      async *getNodes({}) {
+        yield createTestHierarchyNode({ id: "root-1" });
+      },
+      setHierarchyFilter() {},
+      async *getNodeInstanceKeys() {},
+      setFormatter() {},
+      hierarchyChanged,
+    };
+
+    const customProps: UseTreeProps = {
+      getHierarchyProvider: () => customHierarchyProvider,
+    };
+
+    const { result } = renderHook(useTree, { initialProps: customProps });
+
+    await waitFor(() => {
+      expect(result.current.rootNodes).to.have.lengthOf(1);
     });
   });
 
@@ -808,18 +830,8 @@ describe("useUnifiedSelectionTree", () => {
   let storage: SelectionStorage;
   const sourceName = "test-source";
   const changeListener = createStub<StorageSelectionChangesListener>();
-
   const hierarchyProvider = createHierarchyProviderStub();
-
-  type UseUnifiedSelectionTree = Props<typeof useUnifiedSelectionTree>;
-  const initialProps: UseUnifiedSelectionTree = {
-    getHierarchyProvider: () => hierarchyProvider as unknown as hierarchiesModule.HierarchyProvider,
-    sourceName,
-  };
-
-  function Wrapper(props: PropsWithChildren<{}>) {
-    return <UnifiedSelectionProvider storage={storage}>{props.children}</UnifiedSelectionProvider>;
-  }
+  let initialProps: Props<typeof useUnifiedSelectionTree>;
 
   function createNodeKey(id: string) {
     const imodelKey = "test-imodel-key";
@@ -843,6 +855,11 @@ describe("useUnifiedSelectionTree", () => {
     changeListener.reset();
     storage = createStorage();
     storage.selectionChangeEvent.addListener(changeListener);
+    initialProps = {
+      getHierarchyProvider: () => hierarchyProvider as unknown as hierarchiesModule.HierarchyProvider,
+      sourceName,
+      selectionStorage: storage,
+    };
   });
 
   afterEach(() => {
@@ -855,7 +872,7 @@ describe("useUnifiedSelectionTree", () => {
       return createAsyncIterator(props.parentNode === undefined ? [node] : []);
     });
 
-    const { result } = renderHook(useUnifiedSelectionTree, { initialProps, wrapper: Wrapper });
+    const { result } = renderHook(useUnifiedSelectionTree, { initialProps });
 
     await waitFor(() => {
       expect(result.current.rootNodes).to.have.lengthOf(1);
@@ -889,7 +906,7 @@ describe("useUnifiedSelectionTree", () => {
       return createAsyncIterator(props.parentNode === undefined ? [node] : []);
     });
 
-    const { result } = renderHook(useUnifiedSelectionTree, { initialProps, wrapper: Wrapper });
+    const { result } = renderHook(useUnifiedSelectionTree, { initialProps });
 
     await waitFor(() => {
       expect(result.current.rootNodes).to.have.lengthOf(1);

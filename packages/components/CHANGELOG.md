@@ -1,5 +1,11 @@
 # Change Log - @itwin/presentation-components
 
+## 5.9.0
+
+### Minor Changes
+
+- [#842](https://github.com/iTwin/presentation/pull/842): Updated peer dependencies to support AppUI v5.
+
 ## 5.8.0
 
 ### Minor Changes

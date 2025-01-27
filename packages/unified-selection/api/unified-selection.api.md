@@ -188,6 +188,7 @@ export namespace Selectables {
     export function hasAll(selectables: Selectables, values: SelectableIdentifier[]): boolean;
     export function hasAny(selectables: Selectables, values: SelectableIdentifier[]): boolean;
     export function isEmpty(selectables: Selectables): boolean;
+    export function load(selectables: Selectables): AsyncIterableIterator<SelectableInstanceKey>;
     export function remove(selectables: Selectables, values: Selectable[]): boolean;
     export function size(selectables: Selectables): number;
     export function some(selectables: Selectables, callback: (selectable: Selectable) => boolean): boolean;

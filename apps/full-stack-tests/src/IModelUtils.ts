@@ -18,12 +18,15 @@ function isBinding(value: ECSqlBinding | PrimitiveValue): value is ECSqlBinding 
 }
 
 export class ECDbBuilder {
-  public constructor(private _ecdb: ECDb) {}
+  public constructor(
+    private _ecdb: ECDb,
+    private _filePath: string,
+  ) {}
 
   public importSchema(schemaXml: string) {
     // sadly, there's no API to import schema from string, so we have to save the XML into a file first...
     // eslint-disable-next-line @itwin/no-internal, @typescript-eslint/no-deprecated
-    const schemaFilePath = limitFilePathLength(`${this._ecdb.nativeDb.getFilePath()}-${hash(schemaXml)}`);
+    const schemaFilePath = limitFilePathLength(`${this._filePath}-${hash(schemaXml)}`);
     fs.writeFileSync(schemaFilePath, schemaXml);
     this._ecdb.importSchema(schemaFilePath);
   }
@@ -157,9 +160,10 @@ export async function withECDb<TResult extends {} | undefined>(
   const name = createFileNameFromString(mochaContext.test!.fullTitle());
   const outputFile = setupOutputFileLocation(name);
   const db = new ECDb();
+
   db.createDb(outputFile);
   try {
-    res = await setup(new ECDbBuilder(db), mochaContext);
+    res = await setup(new ECDbBuilder(db, outputFile), mochaContext);
     db.saveChanges("Created test ECDb");
   } catch (e) {
     db.dispose();

@@ -3,6 +3,8 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
+import { from, map, merge, mergeMap } from "rxjs";
+import { eachValueFrom } from "rxjs-for-await";
 import { Id64String } from "@itwin/core-bentley";
 import { normalizeFullClassName } from "@itwin/presentation-shared";
 
@@ -272,6 +274,20 @@ export namespace Selectables {
     selectables.custom.forEach((data) => {
       callback(data, index++);
     });
+  }
+
+  /**
+   * Load all instance keys from the given `Selectables` object.
+   * @param selectables `Selectables` object to load instance keys from
+   * @public
+   */
+  export function load(selectables: Selectables): AsyncIterableIterator<SelectableInstanceKey> {
+    return eachValueFrom(
+      merge(
+        from(selectables.instanceKeys).pipe(mergeMap(([className, ids]) => from(ids).pipe(map((id) => ({ className, id }))))),
+        from(selectables.custom).pipe(mergeMap(([_, selectable]) => from(selectable.loadInstanceKeys()))),
+      ),
+    );
   }
 }
 

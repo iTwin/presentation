@@ -78,7 +78,7 @@ describe("PropertyDataProvider", () => {
 
   const iTwinId = "itwin-id";
   const imodelId = "imodel-id";
-  const imodel = { iTwinId, imodelId } as unknown as IModelConnection;
+  const imodel = { iTwinId, imodelId, key: "test-imodel" } as unknown as IModelConnection;
 
   beforeEach(async () => {
     presentationManager = sinon.createStubInstance(PresentationManager);

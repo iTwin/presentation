@@ -8,6 +8,7 @@ import { PropertyRecord } from "@itwin/appui-abstract";
 import { IModelConnection } from "@itwin/core-frontend";
 import { ProgressRadial } from "@itwin/itwinui-react";
 import { TableCellRenderer, TableColumnDefinition, TableRowDefinition, usePresentationTableWithUnifiedSelection } from "@itwin/presentation-components";
+import { useUnifiedSelectionContext } from "@itwin/unified-selection-react";
 import { flexRender, getCoreRowModel, useReactTable } from "@tanstack/react-table";
 
 export interface ExperimentalTableWidgetProps {
@@ -33,12 +34,18 @@ interface PresentationTableProps {
 function PresentationTable(props: PresentationTableProps) {
   const { imodel, rulesetId } = props;
 
+  const unifiedSelectionContext = useUnifiedSelectionContext();
+  if (!unifiedSelectionContext) {
+    throw new Error("Unified selection context is not available");
+  }
+
   const { columns, rows, isLoading, loadMoreRows, selectedRows, onSelect } = usePresentationTableWithUnifiedSelection({
     imodel,
     ruleset: rulesetId,
     pageSize: 20,
     columnMapper: mapTableColumns,
     rowMapper: mapTableRow,
+    selectionStorage: unifiedSelectionContext.storage,
   });
 
   const visibleColumns = columns?.slice(0, 5);

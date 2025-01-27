@@ -57,7 +57,8 @@ export function useTree(props: UseTreeProps): UseTreeResult {
 
 /**
  * A React hook that creates state for a tree component, that is integrated with unified selection
- * through context provided by `UnifiedSelectionProvider`.
+ * through the given selection storage (previously the storage was provided through the, now
+ * deprecated, `UnifiedSelectionProvider`).
  *
  * The hook uses `@itwin/presentation-hierarchies` package to load the hierarchy data and returns a
  * component-agnostic result which may be used to render the hierarchy using any UI framework.
@@ -69,11 +70,11 @@ export function useTree(props: UseTreeProps): UseTreeResult {
  * @see `UnifiedSelectionProvider`
  * @public
  */
-export function useUnifiedSelectionTree({ sourceName, ...props }: UseTreeProps & UseUnifiedTreeSelectionProps): UseTreeResult {
+export function useUnifiedSelectionTree({ sourceName, selectionStorage, ...props }: UseTreeProps & UseUnifiedTreeSelectionProps): UseTreeResult {
   const { getTreeModelNode, ...rest } = useTreeInternal(props);
   return {
     ...rest,
-    ...useUnifiedTreeSelection({ sourceName, getTreeModelNode }),
+    ...useUnifiedTreeSelection({ sourceName, selectionStorage, getTreeModelNode }),
   };
 }
 
@@ -208,8 +209,14 @@ function useTreeInternal({
   useEffect(() => {
     let disposed = false;
     void (async () => {
-      if (!getFilteredPaths || !hierarchyProvider) {
-        hierarchyProvider?.setHierarchyFilter(undefined);
+      if (!hierarchyProvider) {
+        return;
+      }
+
+      if (!getFilteredPaths) {
+        hierarchyProvider.setHierarchyFilter(undefined);
+        // reload tree in case hierarchy provider does not use hierarchy filter to load initial nodes
+        actions.reloadTree({ state: "keep" });
         setIsFiltering(false);
         return;
       }
@@ -229,7 +236,7 @@ function useTreeInternal({
     return () => {
       disposed = true;
     };
-  }, [hierarchyProvider, getFilteredPaths]);
+  }, [hierarchyProvider, getFilteredPaths, actions]);
 
   const getTreeModelNode = useCallback<(nodeId: string) => TreeModelRootNode | TreeModelNode | undefined>(
     (nodeId: string) => {

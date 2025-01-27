@@ -8,7 +8,7 @@ import { assert } from "@itwin/core-bentley";
 import { HierarchyNode, InstancesNodeKey } from "@itwin/presentation-hierarchies";
 import { InstanceKey } from "@itwin/presentation-shared";
 import { Selectable, Selectables, SelectionStorage } from "@itwin/unified-selection";
-import { useUnifiedSelectionContext } from "../UnifiedSelectionContext.js";
+import { useUnifiedSelectionStorage } from "../UnifiedSelectionContext.js";
 import { SelectionChangeType } from "../UseSelectionHandler.js";
 import { isTreeModelHierarchyNode, TreeModelHierarchyNode, TreeModelNode, TreeModelRootNode } from "./TreeModel.js";
 
@@ -24,11 +24,21 @@ export interface UseUnifiedTreeSelectionProps {
    * Identifier to distinguish this source of changes to the unified selection from another ones in the application.
    */
   sourceName: string;
+
+  /**
+   * Unified selection storage to use for listening, getting and changing active selection.
+   *
+   * When not specified, the deprecated unified selection React context is used to access the
+   * selection storage (see `UnifiedSelectionProvider`). This prop will be made required in the
+   * next major release, where the deprecated context will also be removed.
+   */
+  selectionStorage?: SelectionStorage;
 }
 
 /** @internal */
 export function useUnifiedTreeSelection({
   sourceName,
+  selectionStorage,
   getTreeModelNode,
 }: UseUnifiedTreeSelectionProps & { getTreeModelNode: (nodeId: string) => TreeModelNode | TreeModelRootNode | undefined }): TreeSelectionOptions {
   const [options, setOptions] = useState<TreeSelectionOptions>(() => ({
@@ -36,9 +46,12 @@ export function useUnifiedTreeSelection({
     selectNodes: /* c8 ignore next */ () => {},
   }));
 
-  const selectionStorage = useUnifiedSelectionContext();
+  const deprecatedSelectionStorage = useUnifiedSelectionStorage();
+  selectionStorage ??= deprecatedSelectionStorage;
+
   useEffect(() => {
     if (!selectionStorage) {
+      // TODO: make selectionStorage prop required
       setOptions({
         isNodeSelected: () => false,
         selectNodes: () => {},

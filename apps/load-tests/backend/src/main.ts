@@ -8,8 +8,8 @@
 import cluster from "cluster";
 import * as path from "path";
 import { IModelDb, IModelHost, IModelJsFs, SnapshotDb } from "@itwin/core-backend";
-import { IModelStatus, Logger, LogLevel } from "@itwin/core-bentley";
-import { BentleyCloudRpcManager, IModelError, IModelReadRpcInterface, RpcConfiguration, SnapshotIModelRpcInterface } from "@itwin/core-common";
+import { Logger, LogLevel } from "@itwin/core-bentley";
+import { BentleyCloudRpcManager, IModelReadRpcInterface, RpcConfiguration, SnapshotIModelRpcInterface } from "@itwin/core-common";
 import { ECSchemaRpcInterface } from "@itwin/ecschema-rpcinterface-common";
 import { ECSchemaRpcImpl } from "@itwin/ecschema-rpcinterface-impl";
 import { IModelJsExpressServer } from "@itwin/express-server";
@@ -105,10 +105,12 @@ function applySnapshotOpenHack() {
       // imodel.concurrentQueryResetConfig({ workerThreads: 2 });
       return imodel;
     } catch (e) {
-      if (e instanceof IModelError && e.errorNumber === IModelStatus.AlreadyOpen) {
-        // eslint-disable-next-line @typescript-eslint/no-deprecated
-        return IModelDb.findByKey(file.key!).nativeDb;
-      }
+      // TODO: Add back a way to get opened IModel.
+      // nativeDb was deprecated in https://github.com/iTwin/itwinjs-core/pull/6945 and removed in https://github.com/iTwin/itwinjs-core/pull/7512
+      // if (e instanceof IModelError && e.errorNumber === IModelStatus.AlreadyOpen) {
+      //   // eslint-disable-next-line @typescript-eslint/no-deprecated
+      //   return IModelDb.findByKey(file.key!).nativeDb;
+      // }
       throw e;
     } finally {
       isOpeningSnapshot = false;

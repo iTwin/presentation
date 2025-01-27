@@ -7,8 +7,13 @@
  */
 
 import { createContext, PropsWithChildren, useContext, useEffect, useState } from "react";
+import { from, map, Subject, switchMap, takeLast } from "rxjs";
+import { IModelConnection } from "@itwin/core-frontend";
 import { KeySet } from "@itwin/presentation-common";
+import { createIModelKey } from "@itwin/presentation-core-interop";
 import { Presentation, SelectionChangeEventArgs, SelectionHandler } from "@itwin/presentation-frontend";
+import { SelectionStorage } from "@itwin/unified-selection";
+import { createKeySetFromSelectables } from "../common/Utils.js";
 import { IPresentationPropertyDataProvider } from "./DataProvider.js";
 
 const DEFAULT_REQUESTED_CONTENT_INSTANCES_LIMIT = 100;
@@ -30,6 +35,14 @@ export interface PropertyDataProviderWithUnifiedSelectionProps {
    * Defaults to `100`.
    */
   requestedContentInstancesLimit?: number;
+
+  /**
+   * Unified selection storage to use for listening and getting active selection.
+   *
+   * When not specified, the deprecated `SelectionManager` from `@itwin/presentation-frontend` package
+   * is used.
+   */
+  selectionStorage?: SelectionStorage;
 }
 
 /**
@@ -62,47 +75,104 @@ export function useSelectionHandlerContext() {
 export function usePropertyDataProviderWithUnifiedSelection(
   props: PropertyDataProviderWithUnifiedSelectionProps,
 ): UsePropertyDataProviderWithUnifiedSelectionResult {
-  const suppliedSelectionHandler = useSelectionHandlerContext();
-  const { dataProvider } = props;
+  const { dataProvider, selectionStorage } = props;
   const { imodel, rulesetId } = dataProvider;
   const requestedContentInstancesLimit = props.requestedContentInstancesLimit ?? DEFAULT_REQUESTED_CONTENT_INSTANCES_LIMIT;
-
   const [numSelectedElements, setNumSelectedElements] = useState(0);
 
+  const suppliedSelectionHandler = useSelectionHandlerContext();
+
   useEffect(() => {
-    const updateProviderSelection = (selectionHandler: SelectionHandler, selectionLevel?: number) => {
-      const selection = getSelectedKeys(selectionHandler, selectionLevel);
-      if (selection) {
-        setNumSelectedElements(selection.size);
-        dataProvider.keys = isOverLimit(selection.size, requestedContentInstancesLimit) ? new KeySet() : selection;
-      }
-    };
-
-    /* c8 ignore start */
-    const handler =
-      suppliedSelectionHandler ??
-      new SelectionHandler({
-        manager: Presentation.selection,
-        name,
-        imodel,
-        rulesetId,
-      });
-    /* c8 ignore end */
-
-    handler.onSelect = (evt: SelectionChangeEventArgs): void => {
-      updateProviderSelection(handler, evt.level);
-    };
-
-    updateProviderSelection(handler);
-    return () => {
-      handler.dispose();
-    };
-  }, [dataProvider, imodel, rulesetId, requestedContentInstancesLimit, suppliedSelectionHandler]);
+    function onSelectionChanged(newSelection: KeySet) {
+      setNumSelectedElements(newSelection.size);
+      dataProvider.keys = isOverLimit(newSelection.size, requestedContentInstancesLimit) ? new KeySet() : newSelection;
+    }
+    if (selectionStorage) {
+      return initUnifiedSelectionFromStorage({ imodel, selectionStorage, onSelectionChanged });
+    }
+    return initUnifiedSelectionFromPresentationFrontend({
+      imodel,
+      rulesetId,
+      suppliedSelectionHandler,
+      onSelectionChanged,
+    });
+  }, [dataProvider, imodel, rulesetId, requestedContentInstancesLimit, suppliedSelectionHandler, selectionStorage]);
 
   return { isOverLimit: isOverLimit(numSelectedElements, requestedContentInstancesLimit), numSelectedElements };
 }
 
-const name = `PropertyGrid`;
+function initUnifiedSelectionFromStorage({
+  imodel,
+  selectionStorage,
+  onSelectionChanged,
+}: {
+  imodel: IModelConnection;
+  selectionStorage: SelectionStorage;
+  onSelectionChanged: (newSelection: KeySet) => void;
+}) {
+  const imodelKey = createIModelKey(imodel);
+  const update = new Subject<number>();
+  const subscription = update
+    .pipe(
+      map((level) => selectionStorage.getSelection({ imodelKey, level })),
+      switchMap(async (selectables) => createKeySetFromSelectables(selectables)),
+    )
+    .subscribe({
+      next: onSelectionChanged,
+    });
+  const removeSelectionChangesListener = selectionStorage.selectionChangeEvent.addListener((args) => {
+    const isMyIModel = args.imodelKey === imodelKey;
+    isMyIModel && update.next(args.level);
+  });
+
+  from(selectionStorage.getSelectionLevels({ imodelKey }))
+    .pipe(takeLast(1))
+    .subscribe({
+      next: (level) => update.next(level),
+    });
+
+  return () => {
+    removeSelectionChangesListener();
+    subscription.unsubscribe();
+  };
+}
+
+function initUnifiedSelectionFromPresentationFrontend({
+  suppliedSelectionHandler,
+  imodel,
+  rulesetId,
+  onSelectionChanged,
+}: {
+  suppliedSelectionHandler?: SelectionHandler;
+  imodel: IModelConnection;
+  rulesetId: string;
+  onSelectionChanged: (newSelection: KeySet) => void;
+}) {
+  const updateProviderSelection = (selectionHandler: SelectionHandler, selectionLevel?: number) => {
+    const selection = getSelectedKeys(selectionHandler, selectionLevel);
+    selection && onSelectionChanged(selection);
+  };
+
+  /* c8 ignore start */
+  const handler =
+    suppliedSelectionHandler ??
+    new SelectionHandler({
+      manager: Presentation.selection,
+      name: "PropertyGrid",
+      imodel,
+      rulesetId,
+    });
+  /* c8 ignore end */
+
+  handler.onSelect = (evt: SelectionChangeEventArgs): void => {
+    updateProviderSelection(handler, evt.level);
+  };
+
+  updateProviderSelection(handler);
+  return () => {
+    handler.dispose();
+  };
+}
 
 function getSelectedKeys(selectionHandler: SelectionHandler, selectionLevel?: number): KeySet | undefined {
   if (undefined === selectionLevel) {
