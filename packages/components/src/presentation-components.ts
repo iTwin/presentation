@@ -14,6 +14,7 @@ import { initializeLocalization, initializePropertyValueRenderers } from "./pres
  * Common types used all across ($presentation-components) package.
  */
 export * from "./presentation-components/common/ContentDataProvider.js";
+export { type WithConstraints } from "./presentation-components/common/ContentBuilder.js";
 export * from "./presentation-components/common/Diagnostics.js";
 export * from "./presentation-components/common/IPresentationDataProvider.js";
 export * from "./presentation-components/common/IUnifiedSelectionComponent.js";
