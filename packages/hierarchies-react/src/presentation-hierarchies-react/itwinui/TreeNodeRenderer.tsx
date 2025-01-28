@@ -36,7 +36,7 @@ export interface TreeNodeRendererOwnProps {
   /** CSS class name for the action buttons. */
   actionButtonsClassName?: string;
   /** Renderer for additional tree items actions */
-  actionRenderers?: (node: PresentationHierarchyNode) => ReactElement;
+  actionsRenderer?: (node: PresentationHierarchyNode) => ReactElement;
 }
 
 /** @alpha */
