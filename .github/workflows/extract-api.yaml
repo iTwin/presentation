@@ -4,9 +4,7 @@ name: Extract API
 
 on:
   pull_request:
-    branches:
-      - master
-      - stable
+    branches: ["master", "stable", "next"]
     types: [opened, synchronize, reopened, ready_for_review]
 
 jobs:
