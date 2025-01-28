@@ -937,7 +937,7 @@ export interface ViewWithUnifiedSelectionProps {
 }
 
 // @public (undocumented)
-type WithConstraints<T extends {}> = T & {
+export type WithConstraints<T extends {}> = T & {
     constraints?: PropertyValueConstraints;
 };
 
