@@ -5,7 +5,7 @@
 ### Patch Changes
 
 - Updated dependencies:
-  - @itwin/presentation-components@6.0.0
+  - @itwin/presentation-components@5.10.0
 
 ## 5.3.0
 
