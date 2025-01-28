@@ -1,0 +1,26 @@
+{
+  "mode": "pre",
+  "tag": "alpha",
+  "initialVersions": {
+    "presentation-build-tools": "0.0.0",
+    "presentation-full-stack-tests": "0.0.0",
+    "@load-tests/backend": "0.0.0",
+    "@load-tests/frontend": "0.0.0",
+    "presentation-performance-tests": "0.0.0",
+    "@test-app/backend": "0.0.0",
+    "@test-app/common": "0.0.0",
+    "@test-app/frontend": "0.0.0",
+    "@itwin/presentation-components": "5.10.0",
+    "@itwin/presentation-core-interop": "1.2.0",
+    "@itwin/presentation-hierarchies": "1.4.1",
+    "@itwin/presentation-hierarchies-react": "1.6.0",
+    "@itwin/presentation-models-tree": "0.0.0",
+    "@itwin/presentation-opentelemetry": "4.1.1",
+    "@itwin/presentation-shared": "1.2.0",
+    "presentation-test-utilities": "0.0.0",
+    "@itwin/presentation-testing": "5.3.1",
+    "@itwin/unified-selection": "1.3.0",
+    "@itwin/unified-selection-react": "1.0.0"
+  },
+  "changesets": []
+}
