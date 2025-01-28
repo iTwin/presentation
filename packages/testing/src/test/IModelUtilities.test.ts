@@ -132,7 +132,7 @@ describe("buildTestIModel", () => {
     expect(snapshotDb.close).to.be.calledOnce;
   });
 
-  it("returns result of SnapshotConnection.openFile", async () => {
+  it("returns result of TestIModelConnection.openFile", async () => {
     // eslint-disable-next-line @typescript-eslint/no-deprecated
     const promise = buildTestIModel("name", async () => {});
     const result = await promise;

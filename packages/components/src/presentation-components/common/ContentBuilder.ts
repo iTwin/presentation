@@ -42,7 +42,10 @@ import { NumericEditorName } from "../properties/editors/NumericPropertyEditor.j
 import { QuantityEditorName } from "../properties/editors/QuantityPropertyEditor.js";
 import { WithIModelKey } from "./Utils.js";
 
-/** @public */
+/**
+ * Expands specified type with additional constraints property.
+ * @public
+ */
 export type WithConstraints<T extends {}> = T & { constraints?: PropertyValueConstraints };
 
 /** @internal */

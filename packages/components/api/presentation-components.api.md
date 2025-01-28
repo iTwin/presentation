@@ -936,7 +936,7 @@ export function viewWithUnifiedSelection<P extends ViewportProps>(ViewportCompon
 export interface ViewWithUnifiedSelectionProps {
 }
 
-// @public (undocumented)
+// @public
 export type WithConstraints<T extends {}> = T & {
     constraints?: PropertyValueConstraints;
 };

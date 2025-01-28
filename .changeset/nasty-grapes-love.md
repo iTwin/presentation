@@ -1,8 +1,8 @@
 ---
-"@itwin/presentation-opentelemetry": patch
-"@itwin/presentation-core-interop": patch
-"@itwin/presentation-components": patch
-"@itwin/presentation-testing": patch
+"@itwin/presentation-opentelemetry": minor
+"@itwin/presentation-core-interop": minor
+"@itwin/presentation-components": minor
+"@itwin/presentation-testing": minor
 ---
 
 Updated itwinjs-core dependencies to v5
