@@ -4,10 +4,12 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { ComponentPropsWithoutRef, forwardRef, RefAttributes } from "react";
-import { Anchor, Text, Tree } from "@itwin/itwinui-react-v5/bricks";
-import { PresentationInfoNode, useTree } from "@itwin/presentation-hierarchies-react";
-import { useLocalizationContext } from "./LocalizationContext";
-import { TreeNodeRendererOwnProps } from "./TreeNodeRendererV5";
+import { Anchor, Text, Tree } from "@itwin/itwinui-react/bricks";
+import { MAX_LIMIT_OVERRIDE } from "../internal/Utils.js";
+import { PresentationInfoNode } from "../TreeNode.js";
+import { useTree } from "../UseTree.js";
+import { useLocalizationContext } from "./LocalizationContext.js";
+import { TreeNodeRendererOwnProps } from "./TreeNodeRenderer.js";
 
 interface TreeErrorRendererOwnProps {
   node: PresentationInfoNode;
@@ -17,6 +19,7 @@ type TreeErrorRendererProps = TreeErrorRendererOwnProps &
   Pick<TreeNodeRendererOwnProps, "onFilterClick" | "reloadTree"> &
   Partial<Pick<ReturnType<typeof useTree>, "getHierarchyLevelDetails">>;
 
+/** @alpha */
 export const TreeErrorRenderer: React.ForwardRefExoticComponent<TreeErrorRendererProps & RefAttributes<HTMLDivElement>> = forwardRef(
   ({ node, getHierarchyLevelDetails, onFilterClick, reloadTree }, forwardedRef) => {
     const { localizedStrings } = useLocalizationContext();
@@ -63,8 +66,6 @@ const ResultSetTooLargeNode = forwardRef<
 });
 ResultSetTooLargeNode.displayName = "ResultSetTooLargeNode";
 
-const MAX_LIMIT_OVERRIDE = 10000; // TODO: remove when moved to hierarchies-react
-
 interface ResultSetTooLargeNodeLabelProps {
   limit: number;
   onFilterClick?: () => void;
@@ -92,24 +93,20 @@ function ResultSetTooLargeNodeLabel({ onFilterClick, onOverrideLimit, limit }: R
   const title = `${limitExceededMessage.title} ${increaseLimitMessage.title}`;
 
   return (
-    // <Flex flexDirection="column" gap="3xs" title={title} alignItems="start">
-    <div style={{ display: "flex" }} title={title}>
+    <div style={{ display: "flex", alignItems: "start" }} title={title}>
       {limitExceededMessage.element}
       {increaseLimitMessage.element}
     </div>
-    // </Flex>
   );
 }
 
 function ErrorNodeLabel({ message, onRetry }: { message: string; onRetry?: () => void }) {
   const { localizedStrings } = useLocalizationContext();
   return (
-    // <Flex flexDirection="row" gap="xs" title={message} alignItems="start"> // flex is not released yet
     <div style={{ display: "flex" }}>
       <Text>{message}</Text>
       {onRetry ? <Anchor onClick={onRetry}>{localizedStrings?.retry}</Anchor> : null}
     </div>
-    // </Flex>
   );
 }
 
@@ -124,9 +121,7 @@ function createLocalizedMessage(message: string, limit: number, onClick?: () => 
       title: messageWithLimit,
       element: (
         <div style={{ display: "flex" }}>
-          {/* <Flex flexDirection="row" gap="3xs"> */}
           <Text>{messageWithLimit}</Text>
-          {/* </Flex> */}
         </div>
       ),
     };
@@ -138,7 +133,6 @@ function createLocalizedMessage(message: string, limit: number, onClick?: () => 
   return {
     title: messageWithLimit.replace(fullText, innerText),
     element: (
-      // <Flex flexDirection="row" gap="3xs">
       <div style={{ display: "flex" }}>
         {textBefore ? <Text>{textBefore}</Text> : null}
         <Anchor
@@ -152,7 +146,6 @@ function createLocalizedMessage(message: string, limit: number, onClick?: () => 
         </Anchor>
         {textAfter ? <Text>{textAfter}</Text> : null}
       </div>
-      // </Flex>
     ),
   };
 }

@@ -39,7 +39,7 @@
     "./package.json": "./package.json"
   },
   "scripts": {
-    "build": "npm run -s build:cjs && npm run -s build:esm",
+    "build": "npm run -s build:esm",
     "build:cjs": "node ../../scripts/package-cjs.mjs ./lib/cjs && npm run -s copy:cjs && tsc -p tsconfig.cjs.json",
     "build:esm": "npm run -s copy:esm && tsc -p tsconfig.esm.json",
     "copy:cjs": "cpx \"./src/**/*.{css,json}\" ./lib/cjs",
@@ -57,7 +57,7 @@
   },
   "dependencies": {
     "@itwin/core-bentley": "catalog:itwinjs-core",
-    "@itwin/itwinui-icons-react": "catalog:itwinui",
+    "@itwin/itwinui-icons": "5.0.0-alpha.0",
     "@itwin/itwinui-illustrations-react": "catalog:itwinui",
     "@itwin/presentation-hierarchies": "workspace:^",
     "@itwin/presentation-shared": "workspace:^",
@@ -68,7 +68,7 @@
     "rxjs": "catalog:rxjs"
   },
   "peerDependencies": {
-    "@itwin/itwinui-react": "^3.0.0",
+    "@itwin/itwinui-react": "^5.0.0-alpha.2",
     "react": "^17.0.0 || ^18.0.0",
     "react-dom": "^17.0.0 || ^18.0.0"
   },
@@ -79,7 +79,7 @@
   },
   "devDependencies": {
     "@itwin/build-tools": "catalog:build-tools",
-    "@itwin/itwinui-react": "catalog:itwinui",
+    "@itwin/itwinui-react": "^5.0.0-alpha.2",
     "@testing-library/dom": "catalog:test-tools",
     "@testing-library/react": "catalog:test-tools",
     "@testing-library/user-event": "catalog:test-tools",

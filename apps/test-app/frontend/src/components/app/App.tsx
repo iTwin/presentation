@@ -38,7 +38,6 @@ import { RulesetSelector } from "../ruleset-selector/RulesetSelector";
 import { TableWidget } from "../table-widget/TableWidget";
 import { MultiDataSourceTree } from "../tree-widget/MultiDataSourceTree";
 import { RulesDrivenTreeWidget } from "../tree-widget/RulesDrivenTree";
-import { StatelessTreeV2 } from "../tree-widget/StatelessTree";
 import { StatelessTreeV2Kiwi } from "../tree-widget/StatelessTreeKiwi";
 import { UnitSystemSelector } from "../unit-system-selector/UnitSystemSelector";
 import ViewportContentControl from "../viewport/ViewportContentControl";
@@ -240,13 +239,6 @@ function IModelComponents(props: IModelComponentsProps) {
               canPopout: true,
             },
             {
-              id: "stateless-models-tree",
-              label: "Stateless Models tree",
-              content: <StatelessModelsTreePanel imodel={imodel} />,
-              defaultState: WidgetState.Open,
-              canPopout: true,
-            },
-            {
               id: "stateless-models-kiwi-tree",
               label: "Stateless Models Kiwi tree",
               content: <StatelessModelsKiwiTreePanel imodel={imodel} />,
@@ -326,15 +318,6 @@ function RulesDrivenTreePanel(props: { imodel: IModelConnection; rulesetId?: str
   return (
     <div className="tree-widget-tabs-content" ref={ref} style={{ width: "100%", height: "100%", overflow: "hidden" }}>
       <RulesDrivenTreeWidget imodel={props.imodel} rulesetId={props.rulesetId} width={width} height={height} />
-    </div>
-  );
-}
-
-function StatelessModelsTreePanel(props: { imodel: IModelConnection }) {
-  const { width, height, ref } = useResizeDetector<HTMLDivElement>();
-  return (
-    <div className="tree-widget-tabs-content" ref={ref} style={{ width: "100%", height: "100%", overflow: "hidden" }}>
-      <StatelessTreeV2 imodel={props.imodel} width={width ?? 0} height={height ?? 0} />
     </div>
   );
 }

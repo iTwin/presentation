@@ -1436,9 +1436,9 @@ importers:
       '@itwin/core-bentley':
         specifier: catalog:itwinjs-core
         version: 4.10.1
-      '@itwin/itwinui-icons-react':
-        specifier: catalog:itwinui
-        version: 2.9.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      '@itwin/itwinui-icons':
+        specifier: 5.0.0-alpha.0
+        version: 5.0.0-alpha.0
       '@itwin/itwinui-illustrations-react':
         specifier: catalog:itwinui
         version: 2.1.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -1468,8 +1468,8 @@ importers:
         specifier: catalog:build-tools
         version: 4.10.1(@types/node@20.12.12)
       '@itwin/itwinui-react':
-        specifier: catalog:itwinui
-        version: 3.16.2(@types/react@18.3.3)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+        specifier: ^5.0.0-alpha.2
+        version: 5.0.0-alpha.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@testing-library/dom':
         specifier: catalog:test-tools
         version: 10.3.2

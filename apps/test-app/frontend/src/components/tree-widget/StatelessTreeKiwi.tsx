@@ -19,12 +19,11 @@ import {
 import { createECSchemaProvider, createECSqlQueryExecutor, registerTxnListeners } from "@itwin/presentation-core-interop";
 import { Presentation } from "@itwin/presentation-frontend";
 import { createLimitingECSqlQueryExecutor, GenericInstanceFilter } from "@itwin/presentation-hierarchies";
-import { HierarchyLevelDetails, PresentationHierarchyNode, useIModelUnifiedSelectionTree } from "@itwin/presentation-hierarchies-react";
+import { HierarchyLevelDetails, PresentationHierarchyNode, TreeRenderer, useIModelUnifiedSelectionTree } from "@itwin/presentation-hierarchies-react";
 import { ModelsTreeDefinition } from "@itwin/presentation-models-tree";
 import { createCachingECClassHierarchyInspector, IPrimitiveValueFormatter, Props } from "@itwin/presentation-shared";
 import { useUnifiedSelectionContext } from "@itwin/unified-selection-react";
 import { MyAppFrontend } from "../../api/MyAppFrontend";
-import { Tree as KiwiTree } from "./itwinuiV5/itwinui/TreeRendererV5";
 
 type UseIModelTreeProps = Props<typeof useIModelUnifiedSelectionTree>;
 type IModelAccess = UseIModelTreeProps["imodelAccess"];
@@ -158,7 +157,7 @@ function Tree({ imodel, imodelAccess, height, width }: { imodel: IModelConnectio
     }
 
     return (
-      <KiwiTree
+      <TreeRenderer
         {...treeProps}
         expandNode={treeProps.expandNode}
         selectNodes={treeProps.selectNodes}
@@ -168,7 +167,6 @@ function Tree({ imodel, imodelAccess, height, width }: { imodel: IModelConnectio
         onFilterClick={setFilteringOptions}
         getIcon={getIcon}
         selectionMode={"extended"}
-        // size="small"
         style={{ height: "100%", width: "100%" }}
       />
     );
