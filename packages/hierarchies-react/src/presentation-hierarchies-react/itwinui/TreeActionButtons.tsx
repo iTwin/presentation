@@ -3,7 +3,6 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { useRef } from "react";
 import { IconButton } from "@itwin/itwinui-react/bricks";
 import { PresentationHierarchyNode } from "../TreeNode.js";
 import { HierarchyLevelDetails, useTree } from "../UseTree.js";
@@ -23,12 +22,10 @@ export type ActionButtonProps = {
 /** @internal */
 export function FilterActionButton({ node, onClick, getHierarchyLevelDetails }: ActionButtonProps) {
   const { localizedStrings } = useLocalizationContext();
-  const applyFilterButtonRef = useRef<HTMLButtonElement>(null);
 
   return onClick && node.isFilterable ? (
     <IconButton
       style={{ position: "relative" }} // for icons to be visible, should be fixed by kiwi
-      ref={applyFilterButtonRef}
       className="filtering-action-button"
       label={localizedStrings.filterHierarchyLevel}
       onClick={(e) => {
@@ -44,7 +41,6 @@ export function FilterActionButton({ node, onClick, getHierarchyLevelDetails }: 
 /** @internal */
 export function RemoveFilterActionButton({ node, getHierarchyLevelDetails }: ActionButtonProps) {
   const { localizedStrings } = useLocalizationContext();
-  const applyFilterButtonRef = useRef<HTMLButtonElement>(null);
 
   return getHierarchyLevelDetails && node.isFiltered ? (
     <IconButton
@@ -54,7 +50,6 @@ export function RemoveFilterActionButton({ node, getHierarchyLevelDetails }: Act
       onClick={(e) => {
         e.stopPropagation();
         getHierarchyLevelDetails(node.id)?.setInstanceFilter(undefined);
-        applyFilterButtonRef.current?.focus();
       }}
       icon={SvgRemove}
     />

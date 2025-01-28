@@ -5,12 +5,11 @@
 
 import { ComponentPropsWithoutRef, forwardRef, LegacyRef, MutableRefObject, ReactElement, Ref, RefAttributes, useCallback, useRef } from "react";
 import { Spinner, Tree } from "@itwin/itwinui-react/bricks";
-import { isPresentationHierarchyNode, PresentationHierarchyNode } from "../TreeNode.js";
+import { isPresentationHierarchyNode, PresentationHierarchyNode, PresentationTreeNode } from "../TreeNode.js";
 import { HierarchyLevelDetails, useTree } from "../UseTree.js";
 import { useLocalizationContext } from "./LocalizationContext.js";
 import { FilterActionButton, RemoveFilterActionButton } from "./TreeActionButtons.js";
 import { TreeErrorRenderer } from "./TreeErrorRenderer.js";
-import { RenderedTreeNode } from "./TreeRenderer.js";
 
 /** @alpha */
 type TreeNodeProps = Omit<ComponentPropsWithoutRef<typeof Tree.Item>, "actions">;
@@ -18,7 +17,7 @@ type TreeNodeProps = Omit<ComponentPropsWithoutRef<typeof Tree.Item>, "actions">
 /** @alpha */
 export interface TreeNodeRendererOwnProps {
   /** Node that is rendered. */
-  node: RenderedTreeNode;
+  node: PresentationTreeNode;
   /** Action to perform when the filter button is clicked for this node. */
   onFilterClick?: (hierarchyLevelDetails: HierarchyLevelDetails) => void;
   /** Returns an icon or icon href for a given node. */
@@ -33,8 +32,6 @@ export interface TreeNodeRendererOwnProps {
   onNodeKeyDown?: (node: PresentationHierarchyNode, isSelected: boolean, event: React.KeyboardEvent<HTMLElement>) => void;
   /** A callback to reload a hierarchy level when an error occurs and `retry` button is clicked. */
   reloadTree?: (options: { parentNodeId: string | undefined; state: "reset" }) => void;
-  /** CSS class name for the action buttons. */
-  actionButtonsClassName?: string;
   /** Renderer for additional tree items actions */
   actionsRenderer?: (node: PresentationHierarchyNode) => ReactElement;
 }
@@ -66,7 +63,7 @@ export const TreeNodeRenderer: React.ForwardRefExoticComponent<TreeNodeRendererP
       getHierarchyLevelDetails,
       reloadTree,
       children,
-      actionRenderers,
+      actionsRenderer,
       ...treeItemProps
     },
     forwardedRef,
@@ -74,20 +71,15 @@ export const TreeNodeRenderer: React.ForwardRefExoticComponent<TreeNodeRendererP
     const nodeRef = useRef<HTMLDivElement>(null);
     const ref = useMergedRefs(forwardedRef, nodeRef);
 
-    if ("type" in node && node.type === "ChildrenPlaceholder") {
-      return <PlaceholderNode {...treeItemProps} ref={ref} />;
-    }
-
     if (!isPresentationHierarchyNode(node)) {
       return (
         <TreeErrorRenderer node={node} getHierarchyLevelDetails={getHierarchyLevelDetails} reloadTree={reloadTree} onFilterClick={onFilterClick} ref={ref} />
       );
     }
 
-    const isDisabled = false;
     const ActionButtons = () => (
       <>
-        {actionRenderers && actionRenderers(node)}
+        {actionsRenderer && actionsRenderer(node)}
         <RemoveFilterActionButton node={node} getHierarchyLevelDetails={getHierarchyLevelDetails} />
         <FilterActionButton node={node} onClick={onFilterClick} getHierarchyLevelDetails={getHierarchyLevelDetails} />
       </>
@@ -99,21 +91,23 @@ export const TreeNodeRenderer: React.ForwardRefExoticComponent<TreeNodeRendererP
         label={getLabel ? getLabel(node) : node.label}
         selected={selected}
         expanded={node.isExpanded || node.children === true || node.children.length > 0 ? node.isExpanded : undefined}
-        aria-disabled={isDisabled}
         onExpandedChange={(isExpanded) => {
           expandNode(node.id, isExpanded);
         }}
-        onClick={(event) => !isDisabled && onNodeClick?.(node, !selected, event)} // need a unified selection for mouse clicks and key down
+        onClick={(event) => {
+          event.stopPropagation();
+          onNodeClick?.(node, !selected, event);
+        }}
         onKeyDown={(event) => {
           // Ignore if it is called on the element inside, e.g. checkbox or expander
-          if (!isDisabled && event.target === nodeRef.current) {
+          if (event.target === nodeRef.current) {
             onNodeKeyDown?.(node, !selected, event);
           }
         }}
         icon={getIcon ? getIcon(node) : undefined}
         actions={<ActionButtons />}
       >
-        {children}
+        {node.isExpanded && node.children === true ? <PlaceholderNode {...treeItemProps} ref={ref} /> : children}
       </Tree.Item>
     );
   },

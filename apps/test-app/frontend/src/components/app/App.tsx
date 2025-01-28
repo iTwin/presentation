@@ -38,7 +38,7 @@ import { RulesetSelector } from "../ruleset-selector/RulesetSelector";
 import { TableWidget } from "../table-widget/TableWidget";
 import { MultiDataSourceTree } from "../tree-widget/MultiDataSourceTree";
 import { RulesDrivenTreeWidget } from "../tree-widget/RulesDrivenTree";
-import { StatelessTreeV2Kiwi } from "../tree-widget/StatelessTreeKiwi";
+import { StatelessTreeV2 } from "../tree-widget/StatelessTree";
 import { UnitSystemSelector } from "../unit-system-selector/UnitSystemSelector";
 import ViewportContentControl from "../viewport/ViewportContentControl";
 
@@ -326,7 +326,7 @@ function StatelessModelsKiwiTreePanel(props: { imodel: IModelConnection }) {
   const { width, height, ref } = useResizeDetector<HTMLDivElement>();
   return (
     <div className="tree-widget-tabs-content" ref={ref} style={{ width: "100%", height: "100%", overflow: "hidden" }}>
-      <StatelessTreeV2Kiwi imodel={props.imodel} width={width ?? 0} height={height ?? 0} />
+      <StatelessTreeV2 imodel={props.imodel} width={width ?? 0} height={height ?? 0} />
     </div>
   );
 }

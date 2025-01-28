@@ -63,21 +63,3 @@ export function TreeRenderer({ rootNodes, expandNode, localizedStrings, selectNo
 }
 
 function noopSelectNodes() {}
-
-/**
- * A data structure for a tree node that is rendered using the `TreeRenderer` component.
- *
- * In addition to the `PresentationTreeNode` union, this type may have one additional variation - an informational
- * type of node with `ChildrenPlaceholder` type. This type of node is returned as the single child node of a parent
- * while its children are being loaded. This allows the node renderer to show a placeholder under the parent during
- * the process.
- *
- * @alpha
- */
-export type RenderedTreeNode =
-  | PresentationTreeNode
-  | {
-      id: string;
-      parentNodeId: string | undefined;
-      type: "ChildrenPlaceholder";
-    };

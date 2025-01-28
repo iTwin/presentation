@@ -28,7 +28,7 @@ import { MyAppFrontend } from "../../api/MyAppFrontend";
 type UseIModelTreeProps = Props<typeof useIModelUnifiedSelectionTree>;
 type IModelAccess = UseIModelTreeProps["imodelAccess"];
 
-export function StatelessTreeV2Kiwi({ imodel, ...props }: { imodel: IModelConnection; height: number; width: number }) {
+export function StatelessTreeV2({ imodel, ...props }: { imodel: IModelConnection; height: number; width: number }) {
   const [imodelAccess, setIModelAccess] = useState<IModelAccess>();
   useEffect(() => {
     const schemas = MyAppFrontend.getSchemaContext(imodel);
