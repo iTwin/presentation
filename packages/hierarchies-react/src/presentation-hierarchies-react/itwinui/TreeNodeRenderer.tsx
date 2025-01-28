@@ -87,6 +87,7 @@ export const TreeNodeRenderer: React.ForwardRefExoticComponent<TreeNodeRendererP
 
     return (
       <Tree.Item
+        {...treeItemProps}
         ref={ref}
         label={getLabel ? getLabel(node) : node.label}
         selected={selected}
@@ -96,11 +97,11 @@ export const TreeNodeRenderer: React.ForwardRefExoticComponent<TreeNodeRendererP
         }}
         onClick={(event) => {
           event.stopPropagation();
-          onNodeClick?.(node, !selected, event);
+          !treeItemProps["aria-disabled"] && onNodeClick?.(node, !selected, event);
         }}
         onKeyDown={(event) => {
           // Ignore if it is called on the element inside, e.g. checkbox or expander
-          if (event.target === nodeRef.current) {
+          if (!treeItemProps["aria-disabled"] && event.target === nodeRef.current) {
             onNodeKeyDown?.(node, !selected, event);
           }
         }}
