@@ -239,9 +239,9 @@ function IModelComponents(props: IModelComponentsProps) {
               canPopout: true,
             },
             {
-              id: "stateless-models-kiwi-tree",
-              label: "Stateless Models Kiwi tree",
-              content: <StatelessModelsKiwiTreePanel imodel={imodel} />,
+              id: "stateless-models-tree",
+              label: "Stateless Models tree",
+              content: <StatelessModelsTreePanel imodel={imodel} />,
               defaultState: WidgetState.Open,
               canPopout: true,
             },
@@ -322,7 +322,7 @@ function RulesDrivenTreePanel(props: { imodel: IModelConnection; rulesetId?: str
   );
 }
 
-function StatelessModelsKiwiTreePanel(props: { imodel: IModelConnection }) {
+function StatelessModelsTreePanel(props: { imodel: IModelConnection }) {
   const { width, height, ref } = useResizeDetector<HTMLDivElement>();
   return (
     <div className="tree-widget-tabs-content" ref={ref} style={{ width: "100%", height: "100%", overflow: "hidden" }}>

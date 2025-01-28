@@ -9,7 +9,7 @@ import { HierarchyLevelDetails, useTree } from "../UseTree.js";
 import { useLocalizationContext } from "./LocalizationContext.js";
 
 const filterIcon = new URL("@itwin/itwinui-icons/filter.svg", import.meta.url).href;
-const SvgRemove = new URL("@itwin/itwinui-icons/dismiss.svg", import.meta.url).href;
+const dismissIcon = new URL("@itwin/itwinui-icons/dismiss.svg", import.meta.url).href;
 
 /** @internal */
 export type ActionButtonProps = {
@@ -51,7 +51,7 @@ export function RemoveFilterActionButton({ node, getHierarchyLevelDetails }: Act
         e.stopPropagation();
         getHierarchyLevelDetails(node.id)?.setInstanceFilter(undefined);
       }}
-      icon={SvgRemove}
+      icon={dismissIcon}
     />
   ) : null;
 }
