@@ -159,9 +159,6 @@ function Tree({ imodel, imodelAccess, height, width }: { imodel: IModelConnectio
     return (
       <TreeRenderer
         {...treeProps}
-        expandNode={treeProps.expandNode}
-        selectNodes={treeProps.selectNodes}
-        getHierarchyLevelDetails={treeProps.getHierarchyLevelDetails}
         rootNodes={rootNodes ?? []}
         reloadTree={reloadTree}
         onFilterClick={setFilteringOptions}
