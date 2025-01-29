@@ -14,46 +14,46 @@ function readPackage(pkg, context) {
   if (pkg.name === "@itwin/components-react") {
     pkg.peerDependencies = {
       ...pkg.peerDependencies,
-      "@itwin/appui-abstract": commonVersion,
-      "@itwin/core-bentley": commonVersion,
+      "@itwin/appui-abstract": itwinjsCorePeerDependencyOverride,
+      "@itwin/core-bentley": itwinjsCorePeerDependencyOverride,
     };
   }
   if (pkg.name === "@itwin/core-react") {
     pkg.peerDependencies = {
       ...pkg.peerDependencies,
-      "@itwin/appui-abstract": commonVersion,
-      "@itwin/core-bentley": commonVersion,
+      "@itwin/appui-abstract": itwinjsCorePeerDependencyOverride,
+      "@itwin/core-bentley": itwinjsCorePeerDependencyOverride,
     };
   }
   if (pkg.name === "@itwin/imodel-components-react") {
     pkg.peerDependencies = {
       ...pkg.peerDependencies,
-      "@itwin/appui-abstract": commonVersion,
-      "@itwin/core-bentley": commonVersion,
-      "@itwin/core-common": commonVersion,
-      "@itwin/core-frontend": commonVersion,
-      "@itwin/core-geometry": commonVersion,
-      "@itwin/core-quantity": commonVersion,
+      "@itwin/appui-abstract": itwinjsCorePeerDependencyOverride,
+      "@itwin/core-bentley": itwinjsCorePeerDependencyOverride,
+      "@itwin/core-common": itwinjsCorePeerDependencyOverride,
+      "@itwin/core-frontend": itwinjsCorePeerDependencyOverride,
+      "@itwin/core-geometry": itwinjsCorePeerDependencyOverride,
+      "@itwin/core-quantity": itwinjsCorePeerDependencyOverride,
     };
   }
 
   if (pkg.name === "@itwin/appui-react") {
     pkg.peerDependencies = {
       ...pkg.peerDependencies,
-      "@itwin/appui-abstract": commonVersion,
-      "@itwin/core-bentley": commonVersion,
-      "@itwin/core-common": commonVersion,
-      "@itwin/core-frontend": commonVersion,
-      "@itwin/core-geometry": commonVersion,
-      "@itwin/core-quantity": commonVersion,
-      "@itwin/core-telemetry": commonVersion,
+      "@itwin/appui-abstract": itwinjsCorePeerDependencyOverride,
+      "@itwin/core-bentley": itwinjsCorePeerDependencyOverride,
+      "@itwin/core-common": itwinjsCorePeerDependencyOverride,
+      "@itwin/core-frontend": itwinjsCorePeerDependencyOverride,
+      "@itwin/core-geometry": itwinjsCorePeerDependencyOverride,
+      "@itwin/core-quantity": itwinjsCorePeerDependencyOverride,
+      "@itwin/core-telemetry": itwinjsCorePeerDependencyOverride,
     };
   }
 
   if (pkg.name === "@itwin/core-telemetry") {
     pkg.peerDependencies = {
       ...pkg.peerDependencies,
-      "@itwin/core-common": commonVersion,
+      "@itwin/core-common": itwinjsCorePeerDependencyOverride,
     };
   }
 
