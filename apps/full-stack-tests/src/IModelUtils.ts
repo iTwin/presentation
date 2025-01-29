@@ -155,19 +155,14 @@ export async function withECDb<TResult extends {} | undefined>(
   setup: (db: ECDbBuilder, mochaContext: Mocha.Context) => Promise<TResult | undefined>,
   use: (db: ECDb, res: TResult | undefined) => Promise<void>,
 ) {
-  let res: TResult | undefined;
   const name = createFileNameFromString(mochaContext.test!.fullTitle());
   const outputFile = setupOutputFileLocation(name);
   using db = new ECDb();
 
   db.createDb(outputFile);
-  try {
-    res = await setup(new ECDbBuilder(db, outputFile), mochaContext);
-    db.saveChanges("Created test ECDb");
-    await use(db, res);
-  } catch (e) {
-    throw e;
-  }
+  const res = await setup(new ECDbBuilder(db, outputFile), mochaContext);
+  db.saveChanges("Created test ECDb");
+  await use(db, res);
 }
 
 export async function buildIModel<TFirstArg extends Mocha.Context | string>(
