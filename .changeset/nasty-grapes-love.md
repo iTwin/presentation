@@ -5,4 +5,4 @@
 "@itwin/presentation-testing": minor
 ---
 
-Updated itwinjs-core dependencies to v5
+Updated peer dependencies to support iTwin.js Core v5 packages.
