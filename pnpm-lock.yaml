@@ -229,7 +229,7 @@ overrides:
   spawndamnit@^2.0.0>cross-spawn@^5: ^7.0.6
   '@itwin/core-electron@^4.10>username@^5': ^7.0.0
 
-pnpmfileChecksum: vypkgiwyy77skr5ctr6673i4am
+pnpmfileChecksum: b3gwcai4wfu3d3eq3uv2mlifuq
 
 importers:
 
