@@ -5,6 +5,7 @@ on:
     branches:
       - master
       - stable
+      - next
 
 env:
   NPM_CONFIG_PROVENANCE: true
