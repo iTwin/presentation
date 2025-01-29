@@ -10,7 +10,7 @@ function readPackage(pkg, context) {
   // @itwin/components-react, @itwin/core-react, @itwin/imodel-components-react and @itwin/appui-react has peerDependencies of itwinjs-core set to v4.
   // Need to change those peer dependencies to v5
 
-  const commonVersion = "^4.0.0 || ^5.0.0";
+  const itwinjsCorePeerDependencyOverride = "^4.0.0 || ^5.0.0";
   if (pkg.name === "@itwin/components-react") {
     pkg.peerDependencies = {
       ...pkg.peerDependencies,

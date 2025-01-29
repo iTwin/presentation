@@ -88,11 +88,12 @@ export async function buildTestIModel(nameParam: string | Mocha.Context, cb: (bu
 }
 
 /**
- * This was added based on this: https://github.com/iTwin/itwinjs-core/pull/7171/files#diff-9d26b04e7ae074b911fb87be3425360d7bd55a7c9f947f5aed1ba36d359f01eb
+ * Implementation of `IModelConnection` that allows opening local files in tests.
  * @beta
  */
 /* c8 ignore start */
 export class TestIModelConnection extends IModelConnection {
+  // This was added based on this: https://github.com/iTwin/itwinjs-core/pull/7171/files#diff-9d26b04e7ae074b911fb87be3425360d7bd55a7c9f947f5aed1ba36d359f01eb
   constructor(private readonly _db: IModelDb) {
     // eslint-disable-next-line @itwin/no-internal
     super(_db.getConnectionProps());
