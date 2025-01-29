@@ -4,7 +4,7 @@
 
 ### Major Changes
 
-- [#854](https://github.com/iTwin/presentation/pull/854): Moving tree rendering components to a new design systems.
+- [#847](https://github.com/iTwin/presentation/pull/847): Moving tree rendering components to a new design systems.
 
 ## 1.6.0
 
