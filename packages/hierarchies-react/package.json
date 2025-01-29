@@ -28,28 +28,24 @@
     "Tree"
   ],
   "type": "module",
-  "main": "lib/cjs/presentation-hierarchies-react.js",
-  "types": "lib/cjs/presentation-hierarchies-react",
+  "types": "lib/esm/presentation-hierarchies-react.d.ts",
   "module": "lib/esm/presentation-hierarchies-react.js",
   "exports": {
     ".": {
-      "import": "./lib/esm/presentation-hierarchies-react.js",
-      "require": "./lib/cjs/presentation-hierarchies-react.js"
+      "import": "./lib/esm/presentation-hierarchies-react.js"
     },
     "./package.json": "./package.json"
   },
   "scripts": {
-    "build": "npm run -s build:cjs && npm run -s build:esm",
-    "build:cjs": "node ../../scripts/package-cjs.mjs ./lib/cjs && npm run -s copy:cjs && tsc -p tsconfig.cjs.json",
+    "build": "npm run -s build:esm",
     "build:esm": "npm run -s copy:esm && tsc -p tsconfig.esm.json",
-    "copy:cjs": "cpx \"./src/**/*.{css,json}\" ./lib/cjs",
     "copy:esm": "cpx \"./src/**/*.{css,json}\" ./lib/esm",
     "clean": "rimraf lib build",
     "cover": "c8 npm -s test",
     "lint": "eslint ./src/**/*.{ts,tsx}",
     "test:dev": "cross-env NODE_OPTIONS=\"--import presentation-test-utilities/node-hooks/ignore-styles\" mocha --enable-source-maps --config ./.mocharc.json",
     "test": "npm run test:dev -- --parallel --jobs=4",
-    "extract-api": "extract-api --entry=presentation-hierarchies-react --apiReportFolder=./api --apiReportTempFolder=./api/temp --apiSummaryFolder=./api",
+    "extract-api": "betools extract-api --entry=lib/esm/presentation-hierarchies-react --apiReportFolder=./api --apiReportTempFolder=./api/temp --apiSummaryFolder=./api",
     "check-internal": "node ../../scripts/checkInternal.js --apiSummary ./api/presentation-hierarchies-react.api.md",
     "update-extractions": "node ../../scripts/updateExtractions.js --targets=./README.md",
     "check-extractions": "node ../../scripts/updateExtractions.js --targets=./README.md --check",
@@ -57,7 +53,7 @@
   },
   "dependencies": {
     "@itwin/core-bentley": "catalog:itwinjs-core",
-    "@itwin/itwinui-icons-react": "catalog:itwinui",
+    "@itwin/itwinui-icons": "5.0.0-alpha.0",
     "@itwin/itwinui-illustrations-react": "catalog:itwinui",
     "@itwin/presentation-hierarchies": "workspace:^",
     "@itwin/presentation-shared": "workspace:^",
@@ -68,7 +64,7 @@
     "rxjs": "catalog:rxjs"
   },
   "peerDependencies": {
-    "@itwin/itwinui-react": "^3.0.0",
+    "@itwin/itwinui-react": "^5.0.0-alpha.2",
     "react": "^17.0.0 || ^18.0.0",
     "react-dom": "^17.0.0 || ^18.0.0"
   },
@@ -79,7 +75,7 @@
   },
   "devDependencies": {
     "@itwin/build-tools": "catalog:build-tools",
-    "@itwin/itwinui-react": "catalog:itwinui",
+    "@itwin/itwinui-react": "^5.0.0-alpha.2",
     "@testing-library/dom": "catalog:test-tools",
     "@testing-library/react": "catalog:test-tools",
     "@testing-library/user-event": "catalog:test-tools",

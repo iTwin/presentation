@@ -1,6 +1,5 @@
 sep=;
 Release Tag;API Item Type;API Item Name
-public;function;createRenderedTreeNodeData
 public;interface;HierarchyLevelDetails
 public;function;isPresentationHierarchyNode
 public;function;LocalizationContextProvider
@@ -9,9 +8,10 @@ public;interface;PresentationHierarchyNode
 public;type;PresentationInfoNode
 public;interface;PresentationResultSetTooLargeInfoNode
 public;type;PresentationTreeNode
-public;type;RenderedTreeNode
+alpha;const;TreeErrorRenderer
+alpha;const;TreeLevelRenderer
 public;const;TreeNodeRenderer
-public;function;TreeRenderer
+alpha;function;TreeRenderer
 public;function;UnifiedSelectionProvider
 deprecated;function;UnifiedSelectionProvider
 public;function;useIModelTree

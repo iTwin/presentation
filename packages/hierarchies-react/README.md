@@ -59,9 +59,6 @@ The hook takes 2 required properties:
 
 - `imodelAccess` provides access to iModel's data and metadata, required to build the hierarchy. Generally, `@itwin/presentation-core-interop` and `@itwin/presentation-shared` packages are used to create this object:
 
-  <!-- [[include: [Presentation.HierarchiesReact.iModelAccess.Imports, Presentation.HierarchiesReact.iModelAccess], tsx]] -->
-  <!-- BEGIN EXTRACTION -->
-
   ```tsx
   import { IModelConnection } from "@itwin/core-frontend";
   import { SchemaContext } from "@itwin/ecschema-metadata";
@@ -100,8 +97,6 @@ The hook takes 2 required properties:
     };
   }
   ```
-
-  <!-- END EXTRACTION -->
 
 - `getHierarchyDefinition` is a factory function that creates a hierarchy definition, describing the hierarchy the tree component will render. The `@itwin/presentation-hierarchies` package describes the concept of hierarchy definitions [in more detail](https://github.com/iTwin/presentation/blob/master/packages/hierarchies/learning/imodel/HierarchyDefinition.md).
 
@@ -150,9 +145,6 @@ The component is based on `TreeNode` component from iTwinUI library and supports
 - Action buttons to clear / set hierarchy level instance filter.
 
 ## Full example
-
-<!-- [[include: [Presentation.HierarchiesReact.iModelAccess.Imports, Presentation.HierarchiesReact.CustomTreeExample.Imports, Presentation.HierarchiesReact.SelectionStorage.Imports, Presentation.HierarchiesReact.iModelAccess, Presentation.HierarchiesReact.SelectionStorage, Presentation.HierarchiesReact.CustomTreeExample], tsx]] -->
-<!-- BEGIN EXTRACTION -->
 
 ```tsx
 import { IModelConnection } from "@itwin/core-frontend";
@@ -265,16 +257,11 @@ function MyTreeComponentInternal({ imodelAccess, selectionStorage }: { imodelAcc
 }
 ```
 
-<!-- END EXTRACTION -->
-
 ## Localization
 
 Localization can be enabled for `TreeRenderer` component and [tree state hooks](#tree-state-hooks) by providing an object with localized strings that will be used instead of the default English ones.
 
 Example:
-
-<!-- [[include: [Presentation.HierarchiesReact.Localization.CommonImports, Presentation.HierarchiesReact.Localization.Tree.Imports, Presentation.HierarchiesReact.Localization.Strings, Presentation.HierarchiesReact.Localization.Tree], tsx]] -->
-<!-- BEGIN EXTRACTION -->
 
 ```tsx
 import { Props } from "@itwin/presentation-shared";
@@ -288,7 +275,7 @@ const localizedStrings = {
   unspecified: "Unspecified",
   other: "Other",
 
-  // strings for `TreeRenderer` and `TreeNodeRenderer`
+  // strings for `TreeRenderer` and `TreeNodeRenderPresentation.HierarchiesReact.iModelAccesser`
   loading: "Loading...",
   filterHierarchyLevel: "Apply hierarchy filter",
   clearHierarchyLevelFilter: "Clear active filter",
@@ -313,12 +300,7 @@ function MyTreeComponent({ imodelAccess }: { imodelAccess: IModelAccess }) {
 }
 ```
 
-<!-- END EXTRACTION -->
-
 In case the `TreeNodeRenderer` component is used within a custom tree renderer, the tree component should supply localized strings through `LocalizationContextProvider`:
-
-<!-- [[include: [Presentation.HierarchiesReact.Localization.CommonImports, Presentation.HierarchiesReact.Localization.TreeRenderer.Imports, Presentation.HierarchiesReact.Localization.TreeRenderer], tsx]] -->
-<!-- BEGIN EXTRACTION -->
 
 ```tsx
 import { Props } from "@itwin/presentation-shared";
@@ -350,5 +332,3 @@ function MyTreeRenderer({ rootNodes }: TreeRendererProps) {
   );
 }
 ```
-
-<!-- END EXTRACTION -->

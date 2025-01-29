@@ -164,7 +164,6 @@ function Tree({ imodel, imodelAccess, height, width }: { imodel: IModelConnectio
         onFilterClick={setFilteringOptions}
         getIcon={getIcon}
         selectionMode={"extended"}
-        size="small"
         style={{ height: "100%", width: "100%" }}
       />
     );
