@@ -164,3 +164,4 @@ public;function;viewWithUnifiedSelection
 deprecated;function;viewWithUnifiedSelection
 public;interface;ViewWithUnifiedSelectionProps
 deprecated;interface;ViewWithUnifiedSelectionProps
+public;type;WithConstraints

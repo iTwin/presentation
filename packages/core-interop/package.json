@@ -47,11 +47,11 @@
     "rxjs": "catalog:rxjs"
   },
   "peerDependencies": {
-    "@itwin/core-bentley": "^4.1.0",
-    "@itwin/core-common": "^4.1.0",
-    "@itwin/core-geometry": "^4.1.0",
-    "@itwin/core-quantity": "^4.1.0",
-    "@itwin/ecschema-metadata": "^4.1.0"
+    "@itwin/core-bentley": "^4.1.0 || ^5.0.0",
+    "@itwin/core-common": "^4.1.0 || ^5.0.0",
+    "@itwin/core-geometry": "^4.1.0 || ^5.0.0",
+    "@itwin/core-quantity": "^4.1.0 || ^5.0.0",
+    "@itwin/ecschema-metadata": "^4.1.0 || ^5.0.0"
   },
   "devDependencies": {
     "@itwin/build-tools": "catalog:build-tools",

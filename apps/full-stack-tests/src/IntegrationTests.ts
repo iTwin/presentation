@@ -7,7 +7,7 @@ import * as fs from "fs";
 import Backend from "i18next-http-backend";
 import * as path from "path";
 import { Guid, Logger, LogLevel } from "@itwin/core-bentley";
-import { IModelReadRpcInterface, SnapshotIModelRpcInterface } from "@itwin/core-common";
+import { IModelReadRpcInterface } from "@itwin/core-common";
 import { IModelApp, IModelAppOptions, NoRenderApp } from "@itwin/core-frontend";
 import { ITwinLocalization } from "@itwin/core-i18n";
 import { ECSchemaRpcInterface } from "@itwin/ecschema-rpcinterface-common";
@@ -58,7 +58,7 @@ export async function initialize(props?: { backendTimeout?: number }) {
   };
 
   const presentationTestingInitProps: PresentationTestingInitProps = {
-    rpcs: [SnapshotIModelRpcInterface, IModelReadRpcInterface, PresentationRpcInterface, ECSchemaRpcInterface],
+    rpcs: [IModelReadRpcInterface, PresentationRpcInterface, ECSchemaRpcInterface],
     backendProps: backendInitProps,
     backendHostProps: { cacheDir: path.join(import.meta.dirname, ".cache", `${process.pid}`) },
     frontendProps: frontendInitProps,

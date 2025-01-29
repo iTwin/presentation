@@ -6,6 +6,57 @@ function readPackage(pkg, context) {
       protobufjs: "^7.2.4",
     };
   }
+
+  // @itwin/components-react, @itwin/core-react, @itwin/imodel-components-react and @itwin/appui-react has peerDependencies of itwinjs-core set to v4.
+  // Need to change those peer dependencies to v5
+
+  const itwinjsCorePeerDependencyOverride = "^4.0.0 || ^5.0.0";
+  if (pkg.name === "@itwin/components-react") {
+    pkg.peerDependencies = {
+      ...pkg.peerDependencies,
+      "@itwin/appui-abstract": itwinjsCorePeerDependencyOverride,
+      "@itwin/core-bentley": itwinjsCorePeerDependencyOverride,
+    };
+  }
+  if (pkg.name === "@itwin/core-react") {
+    pkg.peerDependencies = {
+      ...pkg.peerDependencies,
+      "@itwin/appui-abstract": itwinjsCorePeerDependencyOverride,
+      "@itwin/core-bentley": itwinjsCorePeerDependencyOverride,
+    };
+  }
+  if (pkg.name === "@itwin/imodel-components-react") {
+    pkg.peerDependencies = {
+      ...pkg.peerDependencies,
+      "@itwin/appui-abstract": itwinjsCorePeerDependencyOverride,
+      "@itwin/core-bentley": itwinjsCorePeerDependencyOverride,
+      "@itwin/core-common": itwinjsCorePeerDependencyOverride,
+      "@itwin/core-frontend": itwinjsCorePeerDependencyOverride,
+      "@itwin/core-geometry": itwinjsCorePeerDependencyOverride,
+      "@itwin/core-quantity": itwinjsCorePeerDependencyOverride,
+    };
+  }
+
+  if (pkg.name === "@itwin/appui-react") {
+    pkg.peerDependencies = {
+      ...pkg.peerDependencies,
+      "@itwin/appui-abstract": itwinjsCorePeerDependencyOverride,
+      "@itwin/core-bentley": itwinjsCorePeerDependencyOverride,
+      "@itwin/core-common": itwinjsCorePeerDependencyOverride,
+      "@itwin/core-frontend": itwinjsCorePeerDependencyOverride,
+      "@itwin/core-geometry": itwinjsCorePeerDependencyOverride,
+      "@itwin/core-quantity": itwinjsCorePeerDependencyOverride,
+      "@itwin/core-telemetry": itwinjsCorePeerDependencyOverride,
+    };
+  }
+
+  if (pkg.name === "@itwin/core-telemetry") {
+    pkg.peerDependencies = {
+      ...pkg.peerDependencies,
+      "@itwin/core-common": itwinjsCorePeerDependencyOverride,
+    };
+  }
+
   return pkg;
 }
 

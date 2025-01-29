@@ -3,6 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
+import "@itwin/unified-selection";
 import { Presentation } from "@itwin/presentation-frontend";
 import { initializeLocalization, initializePropertyValueRenderers } from "./presentation-components/Initialization.js";
 
@@ -13,6 +14,7 @@ import { initializeLocalization, initializePropertyValueRenderers } from "./pres
  * Common types used all across ($presentation-components) package.
  */
 export * from "./presentation-components/common/ContentDataProvider.js";
+export { type WithConstraints } from "./presentation-components/common/ContentBuilder.js";
 export * from "./presentation-components/common/Diagnostics.js";
 export * from "./presentation-components/common/IPresentationDataProvider.js";
 export * from "./presentation-components/common/IUnifiedSelectionComponent.js";

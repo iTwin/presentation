@@ -8,10 +8,11 @@ import { expect } from "chai";
 import * as sinon from "sinon";
 import { PropertyValueFormat } from "@itwin/appui-abstract";
 import { assert, Guid } from "@itwin/core-bentley";
-import { IModelConnection, SnapshotConnection } from "@itwin/core-frontend";
+import { IModelConnection } from "@itwin/core-frontend";
 import { ChildNodeSpecificationTypes, NodeKey, Ruleset, RuleTypes } from "@itwin/presentation-common";
 import { isPresentationInfoTreeNodeItem, PresentationTreeDataProvider, PresentationTreeNodeItem } from "@itwin/presentation-components";
 import { Presentation } from "@itwin/presentation-frontend";
+import { TestIModelConnection } from "@itwin/presentation-testing";
 import { initialize, terminate } from "../../IntegrationTests.js";
 
 const RULESET: Ruleset = {
@@ -65,7 +66,7 @@ describe("TreeDataProvider", async () => {
   before(async () => {
     await initialize();
     const testIModelName: string = "assets/datasets/Properties_60InstancesWithUrl2.ibim";
-    imodel = await SnapshotConnection.openFile(testIModelName);
+    imodel = TestIModelConnection.openFile(testIModelName);
     expect(imodel).is.not.null;
     provider = new PresentationTreeDataProvider({ imodel, ruleset: RULESET });
   });

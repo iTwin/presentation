@@ -18,7 +18,7 @@ import {
 import { act, render, renderHook, RenderHookResult, waitFor } from "../TestUtils.js";
 
 describe("UnifiedSelectionContext", () => {
-  const testIModel = {} as IModelConnection;
+  const testIModel = { key: "" } as IModelConnection;
 
   function renderUnifiedSelectionContextHook(imodel = {} as IModelConnection, selectionLevel?: number): RenderHookResult<UnifiedSelectionContext, unknown> {
     const Wrapper = ({ children }: PropsWithChildren<unknown>) => {

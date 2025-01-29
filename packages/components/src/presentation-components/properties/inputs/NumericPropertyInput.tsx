@@ -4,9 +4,11 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from "react";
-import { PrimitiveValue, PropertyRecord, PropertyValueFormat } from "@itwin/appui-abstract";
+import { PrimitiveValue, PropertyDescription, PropertyRecord, PropertyValueFormat } from "@itwin/appui-abstract";
 import { PropertyEditorProps } from "@itwin/components-react";
 import { Input } from "@itwin/itwinui-react";
+import { PropertyValueConstraints } from "@itwin/presentation-common";
+import { WithConstraints } from "../../common/ContentBuilder.js";
 import { PropertyEditorAttributes } from "../editors/Common.js";
 import { getDecimalRoundingError } from "./Utils.js";
 
@@ -18,6 +20,7 @@ export interface NumericPropertyInputProps extends PropertyEditorProps {
 /** @internal */
 export const NumericPropertyInput = forwardRef<PropertyEditorAttributes, NumericPropertyInputProps>((props, ref) => {
   const { onCommit, propertyRecord, setFocus } = props;
+  const property: WithConstraints<PropertyDescription> = propertyRecord.property;
 
   const [inputValue, setInputValue] = useState<string>(() => getInputTargetFromPropertyRecord(propertyRecord) ?? "");
 
@@ -25,14 +28,29 @@ export const NumericPropertyInput = forwardRef<PropertyEditorAttributes, Numeric
     setInputValue(newVal);
   };
 
+  const { min, max } = property.constraints ? getMinMaxFromPropertyConstraints(property.constraints) : { min: undefined, max: undefined };
   const commitInput = () => {
+    const formattedInputValue = applyConstraints(inputValue, min, max);
+    setInputValue(formattedInputValue);
     onCommit &&
       onCommit({
         propertyRecord,
-        newValue: parsePrimitiveValue(inputValue),
+        newValue: parsePrimitiveValue(formattedInputValue),
       });
   };
-  return <NumericInput onChange={handleChange} value={inputValue} onBlur={commitInput} isDisabled={propertyRecord.isReadonly} setFocus={setFocus} ref={ref} />;
+
+  return (
+    <NumericInput
+      onChange={handleChange}
+      value={inputValue}
+      onBlur={commitInput}
+      isDisabled={propertyRecord.isReadonly}
+      setFocus={setFocus}
+      ref={ref}
+      min={min}
+      max={max}
+    />
+  );
 });
 NumericPropertyInput.displayName = "NumericPropertyInput";
 
@@ -61,10 +79,12 @@ export interface NumericInputProps extends PropertyEditorProps {
   onBlur?: React.FocusEventHandler;
   value: string;
   isDisabled?: boolean;
+  min?: number;
+  max?: number;
 }
 
 /** @internal */
-export const NumericInput = forwardRef<PropertyEditorAttributes, NumericInputProps>(({ value, onChange, onBlur, isDisabled, setFocus }, ref) => {
+export const NumericInput = forwardRef<PropertyEditorAttributes, NumericInputProps>(({ value, onChange, onBlur, isDisabled, setFocus, min, max }, ref) => {
   const inputRef = useRef<HTMLInputElement>(null);
   useImperativeHandle(
     ref,
@@ -113,6 +133,8 @@ export const NumericInput = forwardRef<PropertyEditorAttributes, NumericInputPro
       data-testid="numeric-input"
       size="small"
       value={value}
+      min={min}
+      max={max}
       onChange={handleChange}
       onBlur={onBlur}
       onFocus={() => inputRef.current?.setSelectionRange(0, 9999)}
@@ -120,3 +142,30 @@ export const NumericInput = forwardRef<PropertyEditorAttributes, NumericInputPro
   );
 });
 NumericInput.displayName = "NumericInput";
+
+function applyConstraints(inputAsNumber: string, min: number | undefined, max: number | undefined): string {
+  if (min === undefined && max === undefined) {
+    return inputAsNumber;
+  }
+
+  if (!isFinite(Number(inputAsNumber))) {
+    return inputAsNumber;
+  }
+
+  let valAsNumber = Number(inputAsNumber);
+  if (min !== undefined) {
+    valAsNumber = Math.max(valAsNumber, min);
+  }
+  if (max !== undefined) {
+    valAsNumber = Math.min(valAsNumber, max);
+  }
+  return valAsNumber.toString();
+}
+
+function getMinMaxFromPropertyConstraints(constraints: PropertyValueConstraints): { min: number | undefined; max: number | undefined } {
+  if ("minimumValue" in constraints) {
+    return { min: constraints.minimumValue, max: constraints.maximumValue };
+  }
+
+  return { min: undefined, max: undefined };
+}

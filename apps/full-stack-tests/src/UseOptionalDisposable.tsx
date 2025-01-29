@@ -4,16 +4,15 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { useEffect, useState } from "react";
-import type { IDisposable } from "@itwin/core-bentley";
 
-export function useOptionalDisposable<TDisposable extends IDisposable>(createDisposable: () => TDisposable | undefined): TDisposable | undefined {
+export function useOptionalDisposable<TDisposable extends Disposable>(createDisposable: () => TDisposable | undefined): TDisposable | undefined {
   const [value, setValue] = useState<TDisposable | undefined>();
 
   useEffect(() => {
     const disposable = createDisposable();
     setValue(disposable);
     return () => {
-      disposable && disposable.dispose();
+      disposable && disposable[Symbol.dispose]();
     };
   }, [createDisposable]);
 

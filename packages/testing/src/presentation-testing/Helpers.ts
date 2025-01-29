@@ -10,7 +10,7 @@ import { join } from "path";
 import * as rimraf from "rimraf";
 import { IModelHost, IModelHostOptions } from "@itwin/core-backend";
 import { Guid, Logger, LogLevel } from "@itwin/core-bentley";
-import { IModelReadRpcInterface, RpcConfiguration, RpcDefaultConfiguration, RpcInterfaceDefinition, SnapshotIModelRpcInterface } from "@itwin/core-common";
+import { IModelReadRpcInterface, RpcConfiguration, RpcDefaultConfiguration, RpcInterfaceDefinition } from "@itwin/core-common";
 import { IModelApp, IModelAppOptions, NoRenderApp } from "@itwin/core-frontend";
 import {
   HierarchyCacheMode,
@@ -51,7 +51,7 @@ export { HierarchyCacheMode, PresentationBackendProps };
 /** @public */
 export interface PresentationTestingInitProps {
   /**
-   * RPC interfaces to enable. Defaults to `[SnapshotIModelRpcInterface, IModelReadRpcInterface, PresentationRpcInterface]`.
+   * RPC interfaces to enable. Defaults to `[IModelReadRpcInterface, PresentationRpcInterface]`.
    *
    * Note: Implementations for these interfaces are **not** automatically registered on the backend - that has to be done manually.
    */
@@ -94,7 +94,8 @@ export const initialize = async (props?: PresentationTestingInitProps) => {
   Logger.setLevel(PresentationBackendNativeLoggerCategory.ECObjects, LogLevel.Warning);
 
   // set up rpc interfaces
-  initializeRpcInterfaces(props.rpcs ?? [SnapshotIModelRpcInterface, IModelReadRpcInterface, PresentationRpcInterface]);
+
+  initializeRpcInterfaces(props.rpcs ?? [IModelReadRpcInterface, PresentationRpcInterface]);
 
   // init backend
   // make sure backend gets assigned an id which puts its resources into a unique directory

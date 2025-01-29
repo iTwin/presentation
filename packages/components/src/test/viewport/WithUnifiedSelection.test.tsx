@@ -72,7 +72,7 @@ describe("Viewport withUnifiedSelection", () => {
     const selectionChangeEvent = new SelectionChangeEvent();
     const selectionManagerMock = {
       selectionChange: selectionChangeEvent,
-      suspendIModelToolSelectionSync: () => ({ dispose: () => {} }),
+      suspendIModelToolSelectionSync: () => ({ [Symbol.dispose]: () => {} }),
       *getHiliteSetIterator() {},
       setSyncWithIModelToolSelection: () => {},
     };
@@ -147,7 +147,7 @@ describe("ViewportSelectionHandler", () => {
     selectionChange: new SelectionChangeEvent(),
     setSyncWithIModelToolSelection: () => {},
     suspendIModelToolSelectionSync: () => ({
-      dispose: () => {},
+      [Symbol.dispose]: () => {},
     }),
     getHiliteSetIterator: sinon.stub<Parameters<SelectionManager["getHiliteSetIterator"]>, ReturnType<SelectionManager["getHiliteSetIterator"]>>(),
   };

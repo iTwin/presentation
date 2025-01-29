@@ -25,7 +25,6 @@ export class ECDbBuilder {
 
   public importSchema(schemaXml: string) {
     // sadly, there's no API to import schema from string, so we have to save the XML into a file first...
-    // eslint-disable-next-line @itwin/no-internal, @typescript-eslint/no-deprecated
     const schemaFilePath = limitFilePathLength(`${this._filePath}-${hash(schemaXml)}`);
     fs.writeFileSync(schemaFilePath, schemaXml);
     this._ecdb.importSchema(schemaFilePath);
@@ -156,24 +155,14 @@ export async function withECDb<TResult extends {} | undefined>(
   setup: (db: ECDbBuilder, mochaContext: Mocha.Context) => Promise<TResult | undefined>,
   use: (db: ECDb, res: TResult | undefined) => Promise<void>,
 ) {
-  let res: TResult | undefined;
   const name = createFileNameFromString(mochaContext.test!.fullTitle());
   const outputFile = setupOutputFileLocation(name);
-  const db = new ECDb();
+  using db = new ECDb();
 
   db.createDb(outputFile);
-  try {
-    res = await setup(new ECDbBuilder(db, outputFile), mochaContext);
-    db.saveChanges("Created test ECDb");
-  } catch (e) {
-    db.dispose();
-    throw e;
-  }
-  try {
-    await use(db, res);
-  } finally {
-    db.dispose();
-  }
+  const res = await setup(new ECDbBuilder(db, outputFile), mochaContext);
+  db.saveChanges("Created test ECDb");
+  await use(db, res);
 }
 
 export async function buildIModel<TFirstArg extends Mocha.Context | string>(
