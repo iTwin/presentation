@@ -2875,8 +2875,8 @@ packages:
       '@opentelemetry/api':
         optional: true
 
-  '@itwin/core-bentley@4.10.6':
-    resolution: {integrity: sha512-7IwXdLVVPJaFdOUym4c0Ry04KW5xzkZ5iCQQ/pQCEqAFtl9YRPp3+gXQoc2L0J+U9sQR7g2pB9p4KdnRv3FOwQ==}
+  '@itwin/core-bentley@4.10.1':
+    resolution: {integrity: sha512-gMP8VzCkzEVjH7GMxjnH9l5M3MfCnJbEzulhFasYjZ/Ox99Zsoi2pwMA517chAxjBqgJV1XkQ+HpaR4U5axB0g==}
 
   '@itwin/core-bentley@5.0.0-dev.49':
     resolution: {integrity: sha512-+n/ReRXBokbyNvwO2EOusEcmnHXdbZgMpkPeMst05k8BoPumRPNg2bAtxnZLbmP8W3psVbAEtBPF2tjZY6hHgw==}
@@ -10780,7 +10780,7 @@ snapshots:
       - supports-color
       - utf-8-validate
 
-  '@itwin/core-bentley@4.10.6': {}
+  '@itwin/core-bentley@4.10.1': {}
 
   '@itwin/core-bentley@5.0.0-dev.49': {}
 
