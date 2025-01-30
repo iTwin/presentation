@@ -9,7 +9,7 @@ import { HierarchyLevelDetails, useTree } from "../UseTree.js";
 import { useLocalizationContext } from "./LocalizationContext.js";
 
 const filterIcon = new URL("@itwin/itwinui-icons/filter.svg", import.meta.url).href;
-const dismissIcon = new URL("@itwin/itwinui-icons/dismiss.svg", import.meta.url).href;
+const activeFilterIcon = new URL("@itwin/itwinui-icons/placeholder.svg", import.meta.url).href; // Placeholder
 
 /** @internal */
 export type ActionButtonProps = {
@@ -25,6 +25,7 @@ export function FilterActionButton({ node, onClick, getHierarchyLevelDetails }: 
 
   return onClick && node.isFilterable ? (
     <IconButton
+      variant={"ghost"}
       style={{ position: "relative" }} // for icons to be visible, should be fixed by kiwi
       className="filtering-action-button"
       label={localizedStrings.filterHierarchyLevel}
@@ -33,25 +34,7 @@ export function FilterActionButton({ node, onClick, getHierarchyLevelDetails }: 
         const hierarchyLevelDetails = getHierarchyLevelDetails?.(node.id);
         hierarchyLevelDetails && onClick(hierarchyLevelDetails);
       }}
-      icon={node.isFiltered ? filterIcon : filterIcon} // currently base filter icon is hollow
+      icon={node.isFiltered ? activeFilterIcon : filterIcon}
     />
   ) : undefined;
-}
-
-/** @internal */
-export function RemoveFilterActionButton({ node, getHierarchyLevelDetails }: ActionButtonProps) {
-  const { localizedStrings } = useLocalizationContext();
-
-  return getHierarchyLevelDetails && node.isFiltered ? (
-    <IconButton
-      style={{ position: "relative" }} // for button to work, should be fixed by kiwi
-      className="filtering-action-button"
-      label={localizedStrings.clearHierarchyLevelFilter}
-      onClick={(e) => {
-        e.stopPropagation();
-        getHierarchyLevelDetails(node.id)?.setInstanceFilter(undefined);
-      }}
-      icon={dismissIcon}
-    />
-  ) : null;
 }

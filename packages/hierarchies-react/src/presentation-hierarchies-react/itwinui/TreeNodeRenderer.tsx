@@ -8,7 +8,7 @@ import { Spinner, Tree } from "@itwin/itwinui-react/bricks";
 import { isPresentationHierarchyNode, PresentationHierarchyNode, PresentationTreeNode } from "../TreeNode.js";
 import { HierarchyLevelDetails, useTree } from "../UseTree.js";
 import { useLocalizationContext } from "./LocalizationContext.js";
-import { FilterActionButton, RemoveFilterActionButton } from "./TreeActionButtons.js";
+import { FilterActionButton } from "./TreeActionButtons.js";
 import { TreeErrorRenderer } from "./TreeErrorRenderer.js";
 
 /** @alpha */
@@ -80,7 +80,6 @@ export const TreeNodeRenderer: React.ForwardRefExoticComponent<TreeNodeRendererP
     const ActionButtons = () => (
       <>
         {actionsRenderer && actionsRenderer(node)}
-        <RemoveFilterActionButton node={node} getHierarchyLevelDetails={getHierarchyLevelDetails} />
         <FilterActionButton node={node} onClick={onFilterClick} getHierarchyLevelDetails={getHierarchyLevelDetails} />
       </>
     );
@@ -96,7 +95,6 @@ export const TreeNodeRenderer: React.ForwardRefExoticComponent<TreeNodeRendererP
           expandNode(node.id, isExpanded);
         }}
         onClick={(event) => {
-          event.stopPropagation();
           !treeItemProps["aria-disabled"] && onNodeClick?.(node, !selected, event);
         }}
         onKeyDown={(event) => {
