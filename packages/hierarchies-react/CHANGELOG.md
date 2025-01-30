@@ -1,5 +1,11 @@
 # @itwin/presentation-hierarchies-react
 
+## 2.0.0-alpha.0
+
+### Major Changes
+
+- [#847](https://github.com/iTwin/presentation/pull/847): Moving tree rendering components to a new design systems.
+
 ## 1.6.0
 
 ### Minor Changes
