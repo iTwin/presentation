@@ -2,5 +2,6 @@
 "@itwin/presentation-hierarchies-react": patch
 ---
 
-Fix tree filter button style.
-Removed filter reset button.
+Changes to tree node action buttons related to filtering:
+- Fix filter button style.
+- Removed "reset filter" button. The filter can be reset through the filter editing dialog.
