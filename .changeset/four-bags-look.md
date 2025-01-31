@@ -2,6 +2,8 @@
 "@itwin/presentation-hierarchies-react": patch
 ---
 
-Update package to itwinUIv5.alpha3 which contains fixes:
-    - fix selecting node on expand
-    - fix tree action items rendering
+Update `@itwin/itwinui-react` dependency to `5.0.0-alpha.3`.
+
+This fixes the following issues:
+- nodes being selected on expand,
+- node action buttons being rendered incorrectly.
