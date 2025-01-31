@@ -26,7 +26,6 @@ export function FilterActionButton({ node, onClick, getHierarchyLevelDetails }: 
   return onClick && node.isFilterable ? (
     <IconButton
       variant={"ghost"}
-      style={{ position: "relative" }} // for icons to be visible, should be fixed by kiwi
       className="filtering-action-button"
       label={localizedStrings.filterHierarchyLevel}
       onClick={(e) => {

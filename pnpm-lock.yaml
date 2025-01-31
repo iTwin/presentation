@@ -936,8 +936,8 @@ importers:
         specifier: 3.17.0-dev.1
         version: 3.17.0-dev.1(@types/react@18.3.3)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@itwin/itwinui-react-v5':
-        specifier: npm:@itwin/itwinui-react@5.0.0-alpha.2
-        version: '@itwin/itwinui-react@5.0.0-alpha.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1)'
+        specifier: npm:@itwin/itwinui-react@5.0.0-alpha.3
+        version: '@itwin/itwinui-react@5.0.0-alpha.3(react-dom@18.3.1(react@18.3.1))(react@18.3.1)'
       '@itwin/presentation-common':
         specifier: catalog:itwinjs-core
         version: 4.10.1(@itwin/core-bentley@4.10.1)(@itwin/core-common@4.10.1(@itwin/core-bentley@4.10.1)(@itwin/core-geometry@4.10.1))(@itwin/core-quantity@4.10.1(@itwin/core-bentley@4.10.1))(@itwin/ecschema-metadata@4.10.1(@itwin/core-bentley@4.10.1)(@itwin/core-quantity@4.10.1(@itwin/core-bentley@4.10.1)))
@@ -1468,8 +1468,8 @@ importers:
         specifier: catalog:build-tools
         version: 4.10.1(@types/node@20.12.12)
       '@itwin/itwinui-react':
-        specifier: ^5.0.0-alpha.2
-        version: 5.0.0-alpha.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+        specifier: ^5.0.0-alpha.3
+        version: 5.0.0-alpha.3(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@testing-library/dom':
         specifier: catalog:test-tools
         version: 10.3.2
@@ -1803,7 +1803,7 @@ importers:
         version: 4.10.1(@types/node@20.12.12)
       '@itwin/components-react':
         specifier: catalog:appui
-        version: 5.0.4(@itwin/appui-abstract@4.10.1(@itwin/core-bentley@4.10.1))(@itwin/core-bentley@4.10.1)(@itwin/core-react@5.0.4(@itwin/appui-abstract@4.10.1(@itwin/core-bentley@4.10.1))(@itwin/core-bentley@4.10.1)(@itwin/itwinui-react@5.0.0-alpha.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@itwin/itwinui-react@5.0.0-alpha.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+        version: 5.0.4(@itwin/appui-abstract@4.10.1(@itwin/core-bentley@4.10.1))(@itwin/core-bentley@4.10.1)(@itwin/core-react@5.0.4(@itwin/appui-abstract@4.10.1(@itwin/core-bentley@4.10.1))(@itwin/core-bentley@4.10.1)(@itwin/itwinui-react@5.0.0-alpha.3(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@itwin/itwinui-react@5.0.0-alpha.3(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@itwin/core-backend':
         specifier: catalog:itwinjs-core
         version: 4.10.1(@itwin/core-bentley@4.10.1)(@itwin/core-common@4.10.1(@itwin/core-bentley@4.10.1)(@itwin/core-geometry@4.10.1))(@itwin/core-geometry@4.10.1)(@opentelemetry/api@1.9.0)
@@ -1827,7 +1827,7 @@ importers:
         version: 4.10.1(@itwin/core-bentley@4.10.1)
       '@itwin/core-react':
         specifier: catalog:appui
-        version: 5.0.4(@itwin/appui-abstract@4.10.1(@itwin/core-bentley@4.10.1))(@itwin/core-bentley@4.10.1)(@itwin/itwinui-react@5.0.0-alpha.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+        version: 5.0.4(@itwin/appui-abstract@4.10.1(@itwin/core-bentley@4.10.1))(@itwin/core-bentley@4.10.1)(@itwin/itwinui-react@5.0.0-alpha.3(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@itwin/ecschema-metadata':
         specifier: catalog:itwinjs-core
         version: 4.10.1(@itwin/core-bentley@4.10.1)(@itwin/core-quantity@4.10.1(@itwin/core-bentley@4.10.1))
@@ -3040,8 +3040,8 @@ packages:
       react: '>=17.0.0 <19.0.0'
       react-dom: '>=17.0.0 <19.0.0'
 
-  '@itwin/itwinui-react@5.0.0-alpha.2':
-    resolution: {integrity: sha512-aqg6F/AFNcjLJexrrImWlDDF5lYLcV0vEfawxB0exHwfvfwbkJANLgQzpFzD8tfiPZu1wE3Y9RfNGKZhLlKhkg==}
+  '@itwin/itwinui-react@5.0.0-alpha.3':
+    resolution: {integrity: sha512-ez9s2ORv8rCz0MV9aXmawazoqopm5s9brhB6/ww2jIspDrURz4n4RTsE+5iXpgMUULhrMQMflnzboQvFD6nlKw==}
     peerDependencies:
       react: '>=18.0.0'
       react-dom: '>=18.0.0'
@@ -10711,13 +10711,13 @@ snapshots:
       rxjs: 7.8.1
       ts-key-enum: 2.0.13
 
-  '@itwin/components-react@5.0.4(@itwin/appui-abstract@4.10.1(@itwin/core-bentley@4.10.1))(@itwin/core-bentley@4.10.1)(@itwin/core-react@5.0.4(@itwin/appui-abstract@4.10.1(@itwin/core-bentley@4.10.1))(@itwin/core-bentley@4.10.1)(@itwin/itwinui-react@5.0.0-alpha.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@itwin/itwinui-react@5.0.0-alpha.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
+  '@itwin/components-react@5.0.4(@itwin/appui-abstract@4.10.1(@itwin/core-bentley@4.10.1))(@itwin/core-bentley@4.10.1)(@itwin/core-react@5.0.4(@itwin/appui-abstract@4.10.1(@itwin/core-bentley@4.10.1))(@itwin/core-bentley@4.10.1)(@itwin/itwinui-react@5.0.0-alpha.3(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@itwin/itwinui-react@5.0.0-alpha.3(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
     dependencies:
       '@itwin/appui-abstract': 4.10.1(@itwin/core-bentley@4.10.1)
       '@itwin/core-bentley': 4.10.1
-      '@itwin/core-react': 5.0.4(@itwin/appui-abstract@4.10.1(@itwin/core-bentley@4.10.1))(@itwin/core-bentley@4.10.1)(@itwin/itwinui-react@5.0.0-alpha.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      '@itwin/core-react': 5.0.4(@itwin/appui-abstract@4.10.1(@itwin/core-bentley@4.10.1))(@itwin/core-bentley@4.10.1)(@itwin/itwinui-react@5.0.0-alpha.3(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@itwin/itwinui-icons-react': 2.9.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      '@itwin/itwinui-react': 5.0.0-alpha.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      '@itwin/itwinui-react': 5.0.0-alpha.3(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       classnames: 2.5.1
       immer: 10.1.1
       linkify-it: 2.2.0
@@ -10850,12 +10850,12 @@ snapshots:
       react-dom: 18.3.1(react@18.3.1)
       ts-key-enum: 2.0.13
 
-  '@itwin/core-react@5.0.4(@itwin/appui-abstract@4.10.1(@itwin/core-bentley@4.10.1))(@itwin/core-bentley@4.10.1)(@itwin/itwinui-react@5.0.0-alpha.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
+  '@itwin/core-react@5.0.4(@itwin/appui-abstract@4.10.1(@itwin/core-bentley@4.10.1))(@itwin/core-bentley@4.10.1)(@itwin/itwinui-react@5.0.0-alpha.3(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
     dependencies:
       '@itwin/appui-abstract': 4.10.1(@itwin/core-bentley@4.10.1)
       '@itwin/core-bentley': 4.10.1
       '@itwin/itwinui-icons-react': 2.9.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      '@itwin/itwinui-react': 5.0.0-alpha.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      '@itwin/itwinui-react': 5.0.0-alpha.3(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       classnames: 2.5.1
       dompurify: 2.5.7
       lodash: 4.17.21
@@ -10999,7 +10999,7 @@ snapshots:
     transitivePeerDependencies:
       - '@types/react'
 
-  '@itwin/itwinui-react@5.0.0-alpha.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
+  '@itwin/itwinui-react@5.0.0-alpha.3(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
     dependencies:
       '@ariakit/react': 0.4.15(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       classnames: 2.5.1
