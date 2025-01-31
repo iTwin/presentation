@@ -34,7 +34,7 @@
     "@itwin/itwinui-icons-react": "catalog:itwinui",
     "@itwin/itwinui-icons": "5.0.0-alpha.0",
     "@itwin/itwinui-react": "3.17.0-dev.1",
-    "@itwin/itwinui-react-v5": "npm:@itwin/itwinui-react@5.0.0-alpha.2",
+    "@itwin/itwinui-react-v5": "npm:@itwin/itwinui-react@5.0.0-alpha.3",
     "@itwin/presentation-common": "catalog:itwinjs-core",
     "@itwin/presentation-components": "workspace:*",
     "@itwin/presentation-core-interop": "workspace:*",
