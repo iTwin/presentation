@@ -14,8 +14,6 @@ catalogs:
     "@itwin/core-i18n": "^5.0.0-dev.49"
     "@itwin/core-orbitgt": "^5.0.0-dev.49"
     "@itwin/core-quantity": "^5.0.0-dev.49"
-    # Remove @itwin/core-telemetry after https://github.com/iTwin/appui/pull/1193 is released
-    "@itwin/core-telemetry": "^5.0.0-dev.41"
     "@itwin/ecschema-metadata": "^5.0.0-dev.49"
     "@itwin/ecschema-rpcinterface-common": "^5.0.0-dev.49"
     "@itwin/ecschema-rpcinterface-impl": "^5.0.0-dev.49"
@@ -28,10 +26,10 @@ catalogs:
     "reflect-metadata": "^0.1.14"
 
   appui:
-    "@itwin/appui-react": "^5.0.4"
-    "@itwin/core-react": "^5.0.4"
-    "@itwin/components-react": "^5.0.4"
-    "@itwin/imodel-components-react": "^5.0.4"
+    "@itwin/appui-react": "^5.1.0"
+    "@itwin/core-react": "^5.1.0"
+    "@itwin/components-react": "^5.1.0"
+    "@itwin/imodel-components-react": "^5.1.0"
 
   itwinui:
     "@itwin/itwinui-icons-react": "^2.9.0"

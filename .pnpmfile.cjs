@@ -46,14 +46,6 @@ function readPackage(pkg, context) {
       "@itwin/core-frontend": itwinjsCorePeerDependencyOverride,
       "@itwin/core-geometry": itwinjsCorePeerDependencyOverride,
       "@itwin/core-quantity": itwinjsCorePeerDependencyOverride,
-      "@itwin/core-telemetry": itwinjsCorePeerDependencyOverride,
-    };
-  }
-
-  if (pkg.name === "@itwin/core-telemetry") {
-    pkg.peerDependencies = {
-      ...pkg.peerDependencies,
-      "@itwin/core-common": itwinjsCorePeerDependencyOverride,
     };
   }
 

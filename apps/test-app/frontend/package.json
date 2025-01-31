@@ -26,7 +26,6 @@
     "@itwin/core-orbitgt": "catalog:itwinjs-core",
     "@itwin/core-quantity": "catalog:itwinjs-core",
     "@itwin/core-react": "catalog:appui",
-    "@itwin/core-telemetry": "catalog:itwinjs-core",
     "@itwin/ecschema-metadata": "catalog:itwinjs-core",
     "@itwin/ecschema-rpcinterface-common": "catalog:itwinjs-core",
     "@itwin/eslint-plugin": "catalog:build-tools",
