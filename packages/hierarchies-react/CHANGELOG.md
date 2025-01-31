@@ -1,5 +1,19 @@
 # @itwin/presentation-hierarchies-react
 
+## 2.0.0-alpha.1
+
+### Patch Changes
+
+- [#860](https://github.com/iTwin/presentation/pull/860): Changes to tree node action buttons related to filtering:
+  - Fix filter button style.
+  - Removed "reset filter" button. The filter can be reset through the filter editing dialog.
+- [#862](https://github.com/iTwin/presentation/pull/862): Update `@itwin/itwinui-react` dependency to `5.0.0-alpha.3`.
+
+  This fixes the following issues:
+
+  - nodes being selected on expand,
+  - node action buttons being rendered incorrectly.
+
 ## 2.0.0-alpha.0
 
 ### Major Changes

@@ -23,6 +23,8 @@
     "@itwin/unified-selection-react": "1.0.0"
   },
   "changesets": [
-    "clever-boats-knock"
+    "clever-boats-knock",
+    "famous-bags-pull",
+    "four-bags-look"
   ]
 }
