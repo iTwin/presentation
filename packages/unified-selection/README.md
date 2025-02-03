@@ -27,8 +27,8 @@ The API consists of a few very basic concepts:
 
 ```ts
 // create a global selection store (generally, somewhere in main.ts or similar)
-import { createStore } from "@itwin/unified-selection";
-const unifiedSelection = createStore();
+import { createStorage } from "@itwin/unified-selection";
+const unifiedSelection = createStorage();
 
 // the store should to be cleaned up when iModels are closed to free up memory, e.g.:
 import { IModelConnection } from "@itwin/core-frontend";
