@@ -1,5 +1,18 @@
 # Change Log - @itwin/presentation-components
 
+## 5.11.0
+
+### Minor Changes
+
+- [#834](https://github.com/iTwin/presentation/pull/834): Apply and use property value constraints for numeric properties
+- [#834](https://github.com/iTwin/presentation/pull/834): Updated peer dependencies to support iTwin.js Core v5 packages.
+
+### Patch Changes
+
+- [#868](https://github.com/iTwin/presentation/pull/868): Make sure resource that use `dispose` method instead of `Symbol.dispose` are properly disposed.
+- Updated dependencies:
+  - @itwin/presentation-core-interop@1.3.0
+
 ## 5.10.0
 
 ### Minor Changes
