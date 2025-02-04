@@ -170,7 +170,8 @@ describe("usePropertyDataProviderWithUnifiedSelection", () => {
       });
 
       unmount();
-      expect(selectionHandler[Symbol.dispose]).to.be.called;
+      // eslint-disable-next-line @typescript-eslint/no-deprecated
+      expect(selectionHandler.dispose).to.be.called;
     });
   });
 
