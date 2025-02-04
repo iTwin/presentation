@@ -1,5 +1,11 @@
 # @itwin/presentation-core-interop
 
+## 1.3.0
+
+### Minor Changes
+
+- [#834](https://github.com/iTwin/presentation/pull/834): Updated peer dependencies to support iTwin.js Core v5 packages.
+
 ## 1.2.0
 
 ### Minor Changes

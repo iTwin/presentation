@@ -1,5 +1,11 @@
 # @itwin/presentation-hierarchies-react
 
+## 1.6.1
+
+### Patch Changes
+
+- [#866](https://github.com/iTwin/presentation/pull/866): Updated hierarchy level size exceeded info message styling in narrow tree component to avoid cutting out text.
+
 ## 1.6.0
 
 ### Minor Changes

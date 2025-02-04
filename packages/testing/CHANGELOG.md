@@ -1,5 +1,17 @@
 # Change Log - @itwin/presentation-testing
 
+## 5.4.0
+
+### Minor Changes
+
+- [#834](https://github.com/iTwin/presentation/pull/834): Added `TestIModelConnection` that allows opening iModels from local files without the use of deprecated iTwin.js Core APIs.
+- [#834](https://github.com/iTwin/presentation/pull/834): Updated peer dependencies to support iTwin.js Core v5 packages.
+
+### Patch Changes
+
+- Updated dependencies:
+  - @itwin/presentation-components@5.11.0
+
 ## 5.3.1
 
 ### Patch Changes
