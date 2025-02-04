@@ -225,6 +225,7 @@ const ResultSetTooLargeNode = forwardRef<HTMLDivElement, Omit<TreeNodeProps, "on
         className="stateless-tree-node"
         label={<ResultSetTooLargeNodeLabel limit={limit} onFilterClick={onFilterClick} onOverrideLimit={onOverrideLimit} />}
         onExpanded={/* c8 ignore next */ () => {}}
+        isDisabled={true}
       />
     );
   },
@@ -285,9 +286,9 @@ function createLocalizedMessage(message: string, limit: number, onClick?: () => 
     return {
       title: messageWithLimit,
       element: (
-        <Flex flexDirection="row" gap="3xs">
-          <Text>{messageWithLimit}</Text>
-        </Flex>
+        <Text as="span" style={{ textWrap: "wrap" }}>
+          {messageWithLimit}
+        </Text>
       ),
     };
   }
@@ -298,9 +299,14 @@ function createLocalizedMessage(message: string, limit: number, onClick?: () => 
   return {
     title: messageWithLimit.replace(fullText, innerText),
     element: (
-      <Flex flexDirection="row" gap="3xs">
-        {textBefore ? <Text>{textBefore}</Text> : null}
+      <div>
+        {textBefore ? (
+          <Text as="span" style={{ textWrap: "wrap" }}>
+            {textBefore}
+          </Text>
+        ) : null}
         <Anchor
+          style={{ textWrap: "wrap" }}
           underline
           onClick={(e) => {
             e.stopPropagation();
@@ -309,8 +315,12 @@ function createLocalizedMessage(message: string, limit: number, onClick?: () => 
         >
           {innerText}
         </Anchor>
-        {textAfter ? <Text>{textAfter}</Text> : null}
-      </Flex>
+        {textAfter ? (
+          <Text as="span" style={{ textWrap: "wrap" }}>
+            {textAfter}
+          </Text>
+        ) : null}
+      </div>
     ),
   };
 }
