@@ -52,7 +52,7 @@
 
 - [#800](https://github.com/iTwin/presentation/pull/800): Deprecate `viewWithUnifiedSelection` in favor of `enableUnifiedSelectionSyncWithIModel` from `@itwin/unified-selection` package.
 
-  See [iModel selection synchronization with unified selection](https://github.com/iTwin/presentation/blob/master/packages/unified-selection/README.md#imodel-selection-synchronization-with-unified-selection) and [Using with legacy components](https://github.com/iTwin/presentation/blob/master/packages/unified-selection/README.md#imodel-selection-synchronization-with-unified-selection) for details on how to use `enableUnifiedSelectionSyncWithIModel` in React apps.
+  See [iModel selection synchronization with unified selection](https://github.com/iTwin/presentation/blob/master/packages/unified-selection/README.md#imodel-selection-synchronization-with-unified-selection) and [Using with legacy components](https://github.com/iTwin/presentation/blob/master/packages/unified-selection/README.md#imodel-selection-synchronization-with-unified-selection#using-with-legacy-components) for details on how to use `enableUnifiedSelectionSyncWithIModel` in React apps.
 
 - [#802](https://github.com/iTwin/presentation/pull/802): Prefer `Symbol.dispose` over `dispose` for disposable objects.
 
