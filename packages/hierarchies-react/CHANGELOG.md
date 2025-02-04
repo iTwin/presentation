@@ -1,5 +1,11 @@
 # @itwin/presentation-hierarchies-react
 
+## 2.0.0-alpha.2
+
+### Major Changes
+
+- [#864](https://github.com/iTwin/presentation/pull/864): Add `@itwin/itwinui-icons` as optional peer dependency (only required when using iTwinUI-based tree / node renderers).
+
 ## 2.0.0-alpha.1
 
 ### Patch Changes
