@@ -53,7 +53,6 @@
   },
   "dependencies": {
     "@itwin/core-bentley": "catalog:itwinjs-core",
-    "@itwin/itwinui-icons": "5.0.0-alpha.0",
     "@itwin/itwinui-illustrations-react": "catalog:itwinui",
     "@itwin/presentation-hierarchies": "workspace:^",
     "@itwin/presentation-shared": "workspace:^",
@@ -64,18 +63,23 @@
     "rxjs": "catalog:rxjs"
   },
   "peerDependencies": {
-    "@itwin/itwinui-react": "^5.0.0-alpha.3",
+    "@itwin/itwinui-icons": "^5.0.0-alpha.2",
+    "@itwin/itwinui-react": "^5.0.0-alpha.4",
     "react": "^17.0.0 || ^18.0.0",
     "react-dom": "^17.0.0 || ^18.0.0"
   },
   "peerDependenciesMeta": {
+    "@itwin/itwinui-icons": {
+      "optional": true
+    },
     "@itwin/itwinui-react": {
       "optional": true
     }
   },
   "devDependencies": {
     "@itwin/build-tools": "catalog:build-tools",
-    "@itwin/itwinui-react": "^5.0.0-alpha.3",
+    "@itwin/itwinui-icons": "^5.0.0-alpha.2",
+    "@itwin/itwinui-react": "^5.0.0-alpha.4",
     "@testing-library/dom": "catalog:test-tools",
     "@testing-library/react": "catalog:test-tools",
     "@testing-library/user-event": "catalog:test-tools",
