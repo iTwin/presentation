@@ -51,6 +51,9 @@
   As the new generation hierarchy building APIs are now available, the old tree-related APIs are now deprecated. See reasoning and migration guide [here](https://github.com/iTwin/presentation/blob/33e79ee8d77f30580a9bab81a72884bda008db25/packages/hierarchies/learning/PresentationRulesMigrationGuide.md).
 
 - [#800](https://github.com/iTwin/presentation/pull/800): Deprecate `viewWithUnifiedSelection` in favor of `enableUnifiedSelectionSyncWithIModel` from `@itwin/unified-selection` package.
+
+  See [iModel selection synchronization with unified selection](https://github.com/iTwin/presentation/blob/master/packages/unified-selection/README.md#imodel-selection-synchronization-with-unified-selection) and [Using with legacy components](https://github.com/iTwin/presentation/blob/master/packages/unified-selection/README.md#imodel-selection-synchronization-with-unified-selection#using-with-legacy-components) for details on how to use `enableUnifiedSelectionSyncWithIModel` in React apps.
+
 - [#802](https://github.com/iTwin/presentation/pull/802): Prefer `Symbol.dispose` over `dispose` for disposable objects.
 
   The package contained a number of types for disposable objects, that had a requirement of `dispose` method being called on them after they are no longer needed. In conjunction with the `using` utility from `@itwin/core-bentley`, usage of such objects looked like this:

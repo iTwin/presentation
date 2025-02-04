@@ -46,6 +46,8 @@
     "test": "npm run test:dev",
     "extract-api": "extract-api --entry=unified-selection --apiReportFolder=./api --apiReportTempFolder=./api/temp --apiSummaryFolder=./api",
     "check-internal": "node ../../scripts/checkInternal.js --apiSummary ./api/unified-selection.api.md",
+    "update-extractions": "node ../../scripts/updateExtractions.js --targets=./README.md",
+    "check-extractions": "node ../../scripts/updateExtractions.js --targets=./README.md --check",
     "validate-markdowns": "node ../../scripts/validateMarkdowns.js README.md"
   },
   "dependencies": {
