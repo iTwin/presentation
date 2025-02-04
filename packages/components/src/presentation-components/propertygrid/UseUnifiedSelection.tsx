@@ -13,7 +13,7 @@ import { KeySet } from "@itwin/presentation-common";
 import { createIModelKey } from "@itwin/presentation-core-interop";
 import { Presentation, SelectionChangeEventArgs, SelectionHandler } from "@itwin/presentation-frontend";
 import { SelectionStorage } from "@itwin/unified-selection";
-import { createKeySetFromSelectables } from "../common/Utils.js";
+import { createKeySetFromSelectables, safeDispose } from "../common/Utils.js";
 import { IPresentationPropertyDataProvider } from "./DataProvider.js";
 
 const DEFAULT_REQUESTED_CONTENT_INSTANCES_LIMIT = 100;
@@ -170,7 +170,7 @@ function initUnifiedSelectionFromPresentationFrontend({
 
   updateProviderSelection(handler);
   return () => {
-    handler[Symbol.dispose]();
+    safeDispose(handler);
   };
 }
 
