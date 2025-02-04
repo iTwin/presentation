@@ -174,21 +174,79 @@ const selection = computeSelection({ queryExecutor, elementIds, scope: { id: "el
 
 ## iModel selection synchronization with unified selection
 
-The `@itwin/unified-selection` package delivers a `enableUnifiedSelectionSyncWithIModel` function to enable selection synchronization between an iModel and a `SelectionStorage`. When called, it returns a cleanup function that should be used to disable the synchronization. There should only be one active synchronization between a single iModel and a `SelectionStorage` at a given time. For example, this function could be used inside a `useEffect` hook in a component that holds an iModel:
+The `@itwin/unified-selection` package delivers an `enableUnifiedSelectionSyncWithIModel` function to enable selection synchronization between an iModel and a `SelectionStorage`. When called, it returns a cleanup function that should be used to disable the synchronization.
+
+For example, this function could be used inside a `useEffect` hook in a component that maintains an iModel:
+
+<!-- [[include: [Presentation.UnifiedSelection.IModelSelectionSync.Imports, Presentation.UnifiedSelection.IModelSelectionSync.Example], ts]] -->
+<!-- BEGIN EXTRACTION -->
 
 ```ts
-import { createECSqlQueryExecutor, createECSchemaProvider, createIModelKey } from "@itwin/presentation-core-interop";
-useEffect(() => {
-  return enableUnifiedSelectionSyncWithIModel({
-    imodelAccess: {
-      ...createECSqlQueryExecutor(imodel),
-      ...createECSchemaProvider(imodel),
-      key: createIModelKey(imodel),
-      hiliteSet: imodel.hilited,
-      selectionSet: imodel.selectionSet,
-    },
-    selectionStorage,
-    activeScopeProvider: () => "element",
-  });
-}, [imodel]);
+import { IModelConnection } from "@itwin/core-frontend";
+import { SchemaContext } from "@itwin/ecschema-metadata";
+import { createECSchemaProvider, createECSqlQueryExecutor, createIModelKey } from "@itwin/presentation-core-interop";
+import { createCachingECClassHierarchyInspector } from "@itwin/presentation-shared";
+import { enableUnifiedSelectionSyncWithIModel, SelectionStorage } from "@itwin/unified-selection";
+
+/** An iModel-based component that handles iModel selection directly, through its `SelectionSet` */
+function IModelComponent({ selectionStorage }: { selectionStorage: SelectionStorage }) {
+  // get the active iModel connection (implementation is outside the scope of this example)
+  const iModelConnection: IModelConnection = useActiveIModelConnection();
+
+  // enable unified selection sync with the iModel
+  useEffect(() => {
+    // iModel's schema context should be shared between all components using the iModel (implementation
+    // of the getter is outside the scope of this example)
+    const imodelSchemaContext: SchemaContext = getSchemaContext(iModelConnection);
+
+    return enableUnifiedSelectionSyncWithIModel({
+      // Unified selection storage to synchronize iModel's tool selection with. The storage should be shared
+      // across all components in the application to ensure unified selection experience.
+      selectionStorage,
+
+      // `imodelAccess` provides access to different iModel's features: query executing, class hierarchy,
+      // selection and hilite sets
+      imodelAccess: {
+        ...createECSqlQueryExecutor(iModelConnection),
+        ...createCachingECClassHierarchyInspector({ schemaProvider: createECSchemaProvider(imodelSchemaContext) }),
+        key: createIModelKey(iModelConnection),
+        hiliteSet: iModelConnection.hilited,
+        selectionSet: iModelConnection.selectionSet,
+      },
+
+      // a function that returns the active selection scope (see "Selection scopes" section in README)
+      activeScopeProvider: () => "model",
+    });
+  }, [iModelConnection, selectionStorage]);
+
+  return <button onClick={() => iModelConnection.selectionSet.add(geometricElementId)}>Select element</button>;
+}
 ```
+
+<!-- END EXTRACTION -->
+
+There should only be one active synchronization between a single iModel and a `SelectionStorage` at a given time.
+
+## Using with legacy components
+
+To ensure unified selection experience across the whole application, it's important that the `SelectionStorage` is shared across all components. When used with legacy components that use unified selection APIs from `@itwin/presentation-frontend` package, the application should ensure that `Presentation` is initialized with the same selection storage:
+
+<!-- [[include: [Presentation.UnifiedSelection.LegacySelectionManagerSelectionSync.Imports, Presentation.LegacySelectionManagerSelectionSync.Example], ts]] -->
+<!-- BEGIN EXTRACTION -->
+
+```ts
+import { createStorage } from "@itwin/unified-selection";
+import { Presentation } from "@itwin/presentation-frontend";
+
+const selectionStorage = createStorage();
+
+// Initialize Presentation with our selection storage, to make sure that any components, using `Presentation.selection`,
+// use the same underlying selection store.
+await Presentation.initialize({
+  selection: {
+    selectionStorage,
+  },
+});
+```
+
+<!-- END EXTRACTION -->
