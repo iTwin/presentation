@@ -8,6 +8,7 @@ import { from, Subject, takeUntil } from "rxjs";
 import { IModelConnection } from "@itwin/core-frontend";
 import { KeySet } from "@itwin/presentation-common";
 import { HiliteSet, HiliteSetProvider, Presentation, SelectionChangeEventArgs, SelectionChangeType, SelectionHandler } from "@itwin/presentation-frontend";
+import { safeDispose } from "../common/Utils.js";
 
 /** @internal */
 export interface ViewportSelectionHandlerProps {
@@ -48,7 +49,7 @@ export class ViewportSelectionHandler implements Disposable {
   public [Symbol.dispose]() {
     this._cancelOngoingChanges.next();
     this._selectionHandler.manager.setSyncWithIModelToolSelection(this._imodel, false);
-    this._selectionHandler[Symbol.dispose]();
+    safeDispose(this._selectionHandler);
   }
 
   public get imodel() {
@@ -121,7 +122,7 @@ export class ViewportSelectionHandler implements Disposable {
 
   private applyCurrentHiliteSet(imodel: IModelConnection, clearAction: "all" | "onlyHilited" | "none" = "all") {
     if (clearAction !== "none") {
-      using _ = Presentation.selection.suspendIModelToolSelectionSync(this._imodel);
+      using _ = toDisposable(Presentation.selection.suspendIModelToolSelectionSync(this._imodel));
 
       imodel.hilited.clear();
       if (clearAction === "all") {
@@ -139,7 +140,7 @@ export class ViewportSelectionHandler implements Disposable {
   }
 
   private applyHiliteSet(imodel: IModelConnection, set: HiliteSet) {
-    using _ = Presentation.selection.suspendIModelToolSelectionSync(this._imodel);
+    using _ = toDisposable(Presentation.selection.suspendIModelToolSelectionSync(this._imodel));
     if (set.models && set.models.length) {
       imodel.hilited.models.addIds(set.models);
     }
@@ -153,7 +154,7 @@ export class ViewportSelectionHandler implements Disposable {
   }
 
   private removeHiliteSet(imodel: IModelConnection, set: HiliteSet) {
-    using _ = Presentation.selection.suspendIModelToolSelectionSync(this._imodel);
+    using _ = toDisposable(Presentation.selection.suspendIModelToolSelectionSync(this._imodel));
     if (set.models?.length) {
       imodel.hilited.models.deleteIds(set.models);
     }
@@ -168,3 +169,11 @@ export class ViewportSelectionHandler implements Disposable {
 }
 
 let counter = 1;
+
+function toDisposable(resource: {} | { [Symbol.dispose]: () => void } | { dispose: () => void }): { [Symbol.dispose]: () => void } {
+  return {
+    [Symbol.dispose]: () => {
+      safeDispose(resource);
+    },
+  };
+}
