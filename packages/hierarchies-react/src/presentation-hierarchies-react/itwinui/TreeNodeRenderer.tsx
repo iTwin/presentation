@@ -8,9 +8,9 @@ import { DropdownMenu, IconButton, Spinner, Tree } from "@itwin/itwinui-react/br
 import { isPresentationHierarchyNode, PresentationHierarchyNode, PresentationTreeNode } from "../TreeNode.js";
 import { HierarchyLevelDetails, useTree } from "../UseTree.js";
 import { useLocalizationContext } from "./LocalizationContext.js";
+import { TreeActionButton } from "./TreeActionButton.js";
 import { TreeErrorRenderer } from "./TreeErrorRenderer.js";
 
-const placeholderIcon = new URL("@itwin/itwinui-icons/placeholder.svg", import.meta.url).href;
 const dropdownIcon = new URL("@itwin/itwinui-icons/more-horizontal.svg", import.meta.url).href;
 
 /** @alpha */
@@ -100,15 +100,9 @@ export const TreeNodeRenderer: React.ForwardRefExoticComponent<TreeNodeRendererP
         return undefined;
       }
 
-      if (dropdownActions.length === 1 && dropdownActions[0](node).show) {
-        return (
-          <IconButton
-            variant={"ghost"}
-            onClick={() => dropdownActions[0](node).action()}
-            label={dropdownActions[0](node).label}
-            icon={dropdownActions[0](node).icon ?? placeholderIcon}
-          ></IconButton>
-        );
+      if (dropdownActions.length === 1) {
+        const actionInfo = dropdownActions[0](node);
+        return <TreeActionButton {...actionInfo} />;
       }
       return (
         <DropdownMenu.Root>
@@ -137,17 +131,9 @@ export const TreeNodeRenderer: React.ForwardRefExoticComponent<TreeNodeRendererP
 
       return (
         <>
-          {buttonActions.map((action) => {
+          {buttonActions.map((action, index) => {
             const actionInfo = action(node);
-            return (
-              <IconButton
-                variant={"ghost"}
-                key={actionInfo.label}
-                onClick={() => actionInfo.action()}
-                label={actionInfo.label}
-                icon={actionInfo.icon ?? placeholderIcon}
-              />
-            );
+            return <TreeActionButton key={index} {...actionInfo} />;
           })}
         </>
       );

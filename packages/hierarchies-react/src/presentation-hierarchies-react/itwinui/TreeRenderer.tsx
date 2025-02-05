@@ -9,7 +9,7 @@ import { PresentationTreeNode } from "../TreeNode.js";
 import { SelectionMode, useSelectionHandler } from "../UseSelectionHandler.js";
 import { useTree } from "../UseTree.js";
 import { LocalizationContextProvider } from "./LocalizationContext.js";
-import { getFilterAction } from "./TreeActionButtons.js";
+import { getFilterAction } from "./TreeActionButton.js";
 import { TreeLevelRenderer } from "./TreeLevelRenderer.js";
 import { TreeNodeRenderer } from "./TreeNodeRenderer.js";
 

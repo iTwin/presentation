@@ -3,12 +3,14 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
+import "./TreeActionButton.css";
+import { IconButton } from "@itwin/itwinui-react/bricks";
 import { PresentationHierarchyNode } from "../TreeNode.js";
 import { HierarchyLevelDetails, useTree } from "../UseTree.js";
 import { TreeItemAction } from "./TreeNodeRenderer.js";
 
 const filterIcon = new URL("@itwin/itwinui-icons/filter.svg", import.meta.url).href;
-const activeFilterIcon = new URL("@itwin/itwinui-icons/placeholder.svg", import.meta.url).href; // Placeholder
+const placeholderIcon = new URL("@itwin/itwinui-icons/placeholder.svg", import.meta.url).href; // TODO: active filter icon/placeholder icon if button was not given an icon
 
 /** @internal */
 export type ActionProps = {
@@ -17,6 +19,19 @@ export type ActionProps = {
 
   label?: string;
 } & Partial<Pick<ReturnType<typeof useTree>, "getHierarchyLevelDetails">>;
+
+/** @internal */
+export function TreeActionButton({ show, label, action, icon }: TreeItemAction) {
+  return (
+    <IconButton
+      className={`tree-action-item${!show ? "-invisible" : ""}`}
+      variant={"ghost"}
+      onClick={() => action()}
+      label={label}
+      icon={icon ?? placeholderIcon}
+    />
+  );
+}
 
 /** @internal */
 export function getFilterAction({ onClick, getHierarchyLevelDetails, label }: ActionProps): (node: PresentationHierarchyNode) => TreeItemAction {
@@ -29,7 +44,7 @@ export function getFilterAction({ onClick, getHierarchyLevelDetails, label }: Ac
       },
       show: !!onClick && node.isFilterable,
       isDropdownAction: false,
-      icon: node.isFiltered ? activeFilterIcon : filterIcon,
+      icon: node.isFiltered ? placeholderIcon : filterIcon,
     };
   };
 }
