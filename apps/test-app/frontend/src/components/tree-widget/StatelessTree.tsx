@@ -163,6 +163,14 @@ function Tree({ imodel, imodelAccess, height, width }: { imodel: IModelConnectio
         reloadTree={reloadTree}
         onFilterClick={setFilteringOptions}
         getIcon={getIcon}
+        actions={[
+          () => {
+            return { label: "Fake button 1", action: () => {}, show: true, isDropdownAction: true };
+          },
+          () => {
+            return { label: "Fake button 2", action: () => {}, show: true, isDropdownAction: true };
+          },
+        ]}
         selectionMode={"extended"}
         style={{ height: "100%", width: "100%" }}
       />

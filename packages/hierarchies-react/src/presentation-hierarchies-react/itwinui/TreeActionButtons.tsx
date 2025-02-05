@@ -3,37 +3,33 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { IconButton } from "@itwin/itwinui-react/bricks";
 import { PresentationHierarchyNode } from "../TreeNode.js";
 import { HierarchyLevelDetails, useTree } from "../UseTree.js";
-import { useLocalizationContext } from "./LocalizationContext.js";
+import { TreeItemAction } from "./TreeNodeRenderer.js";
 
 const filterIcon = new URL("@itwin/itwinui-icons/filter.svg", import.meta.url).href;
 const activeFilterIcon = new URL("@itwin/itwinui-icons/placeholder.svg", import.meta.url).href; // Placeholder
 
 /** @internal */
-export type ActionButtonProps = {
-  /** Node on which action is going to be performed */
-  node: PresentationHierarchyNode;
+export type ActionProps = {
   /** Action to perform when the filter button is clicked for this node. */
   onClick?: (hierarchyLevelDetails: HierarchyLevelDetails) => void;
+
+  label?: string;
 } & Partial<Pick<ReturnType<typeof useTree>, "getHierarchyLevelDetails">>;
 
 /** @internal */
-export function FilterActionButton({ node, onClick, getHierarchyLevelDetails }: ActionButtonProps) {
-  const { localizedStrings } = useLocalizationContext();
-
-  return onClick && node.isFilterable ? (
-    <IconButton
-      variant={"ghost"}
-      className="filtering-action-button"
-      label={localizedStrings.filterHierarchyLevel}
-      onClick={(e) => {
-        e.stopPropagation();
+export function getFilterAction({ onClick, getHierarchyLevelDetails, label }: ActionProps): (node: PresentationHierarchyNode) => TreeItemAction {
+  return (node) => {
+    return {
+      label: label ?? "Filter action", //TODO: fix naming
+      action: () => {
         const hierarchyLevelDetails = getHierarchyLevelDetails?.(node.id);
-        hierarchyLevelDetails && onClick(hierarchyLevelDetails);
-      }}
-      icon={node.isFiltered ? activeFilterIcon : filterIcon}
-    />
-  ) : undefined;
+        hierarchyLevelDetails && onClick?.(hierarchyLevelDetails);
+      },
+      show: !!onClick && node.isFilterable,
+      isDropdownAction: false,
+      icon: node.isFiltered ? activeFilterIcon : filterIcon,
+    };
+  };
 }
