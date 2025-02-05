@@ -91,11 +91,8 @@ export const TreeNodeRenderer: React.ForwardRefExoticComponent<TreeNodeRendererP
     }
 
     const DropdownActionsMenu = () => {
-      if (!actions || actions.length === 0) {
-        return undefined;
-      }
       const dropdownActions = actions?.filter((action) => action(node).isDropdownAction);
-      if (dropdownActions.length === 0) {
+      if (!dropdownActions || dropdownActions.length === 0) {
         return undefined;
       }
 
