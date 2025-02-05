@@ -95,15 +95,18 @@ export const TreeNodeRenderer: React.ForwardRefExoticComponent<TreeNodeRendererP
         return undefined;
       }
       const dropdownActions = actions?.filter((action) => action(node).isDropdownAction);
-
       if (dropdownActions.length === 0) {
         return undefined;
       }
 
-      if (dropdownActions.length === 1) {
-        const actionInfo = dropdownActions[0](node);
-        return <TreeActionButton {...actionInfo} />;
+      const visibleDropdownActions = dropdownActions?.filter((action) => action(node).show);
+      if (visibleDropdownActions.length === 0) {
+        return <TreeActionButton {...dropdownActions[0](node)} />;
       }
+      if (visibleDropdownActions.length === 1) {
+        return <TreeActionButton {...visibleDropdownActions[0](node)} />;
+      }
+
       return (
         <DropdownMenu.Root>
           <DropdownMenu.Button render={<IconButton icon={dropdownIcon} label="Tree actions dropdown" variant="ghost" />} />
