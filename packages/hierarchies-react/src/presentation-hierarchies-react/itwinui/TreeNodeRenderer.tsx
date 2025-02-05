@@ -13,7 +13,7 @@ import { TreeErrorRenderer } from "./TreeErrorRenderer.js";
 const placeholderIcon = new URL("@itwin/itwinui-icons/placeholder.svg", import.meta.url).href;
 const dropdownIcon = new URL("@itwin/itwinui-icons/more-horizontal.svg", import.meta.url).href;
 
-/** @public */
+/** @alpha */
 export interface TreeItemAction {
   label: string;
   action: () => void;
@@ -91,10 +91,14 @@ export const TreeNodeRenderer: React.ForwardRefExoticComponent<TreeNodeRendererP
     }
 
     const DropdownActionsMenu = () => {
-      if (!actions) {
+      if (!actions || actions.length === 0) {
         return undefined;
       }
       const dropdownActions = actions?.filter((action) => action(node).isDropdownAction);
+
+      if (dropdownActions.length === 0) {
+        return undefined;
+      }
 
       if (dropdownActions.length === 1 && dropdownActions[0](node).show) {
         return (
