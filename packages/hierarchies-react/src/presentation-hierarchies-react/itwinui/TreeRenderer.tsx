@@ -39,17 +39,7 @@ type TreeRendererProps = Pick<ReturnType<typeof useTree>, "expandNode"> &
  * @see https://itwinui.bentley.com/docs/tree
  * @alpha
  */
-export function TreeRenderer({
-  rootNodes,
-  expandNode,
-  localizedStrings,
-  selectNodes,
-  isNodeSelected,
-  selectionMode,
-  onFilterClick,
-  getHierarchyLevelDetails,
-  ...treeProps
-}: TreeRendererProps) {
+export function TreeRenderer({ rootNodes, expandNode, localizedStrings, selectNodes, isNodeSelected, selectionMode, ...treeProps }: TreeRendererProps) {
   const { onNodeClick, onNodeKeyDown } = useSelectionHandler({
     rootNodes,
     selectNodes: selectNodes ?? noopSelectNodes,
@@ -61,8 +51,6 @@ export function TreeRenderer({
       <Tree.Root style={{ height: "100%", width: "100%" }}>
         <TreeLevelRenderer
           {...treeProps}
-          onFilterClick={onFilterClick}
-          getHierarchyLevelDetails={getHierarchyLevelDetails}
           nodes={rootNodes}
           expandNode={expandNode}
           onNodeClick={onNodeClick}

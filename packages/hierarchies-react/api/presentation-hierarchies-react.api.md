@@ -21,6 +21,9 @@ import { RefAttributes } from 'react';
 import { SelectionStorage } from '@itwin/unified-selection';
 import { Tree } from '@itwin/itwinui-react/bricks';
 
+// @alpha (undocumented)
+export function createFilterAction({ onFilter, getHierarchyLevelDetails, label }: FilterActionProps): (node: PresentationHierarchyNode) => TreeItemAction;
+
 export { GenericInstanceFilter }
 
 // @public
@@ -104,13 +107,25 @@ export { SelectionStorage }
 export const TreeErrorRenderer: React.ForwardRefExoticComponent<TreeErrorRendererProps & RefAttributes<HTMLDivElement>>;
 
 // @alpha (undocumented)
+export interface TreeItemAction {
+    // (undocumented)
+    action: () => void;
+    // (undocumented)
+    icon?: string;
+    // (undocumented)
+    label: string;
+    // (undocumented)
+    show: boolean;
+}
+
+// @alpha (undocumented)
 export const TreeLevelRenderer: ({ nodes, isNodeSelected, ...rest }: TreeNodesRendererProps) => ReactElement[];
 
 // @public
 export const TreeNodeRenderer: React.ForwardRefExoticComponent<TreeNodeRendererProps_2 & RefAttributes<HTMLDivElement>>;
 
 // @alpha
-export function TreeRenderer({ rootNodes, expandNode, localizedStrings, selectNodes, isNodeSelected, selectionMode, actions, onFilterClick, getHierarchyLevelDetails, ...treeProps }: TreeRendererProps): JSX_2.Element;
+export function TreeRenderer({ rootNodes, expandNode, localizedStrings, selectNodes, isNodeSelected, selectionMode, onFilterClick, getHierarchyLevelDetails, ...treeProps }: TreeRendererProps): JSX_2.Element;
 
 // @public @deprecated
 export function UnifiedSelectionProvider({ storage, children }: PropsWithChildren<{
