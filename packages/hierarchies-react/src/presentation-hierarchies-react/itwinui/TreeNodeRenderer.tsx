@@ -4,12 +4,14 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { ComponentPropsWithoutRef, forwardRef, LegacyRef, MutableRefObject, ReactElement, Ref, RefAttributes, useCallback, useRef } from "react";
-import { Spinner, Tree } from "@itwin/itwinui-react/bricks";
+import { DropdownMenu, IconButton, Spinner, Tree } from "@itwin/itwinui-react/bricks";
 import { isPresentationHierarchyNode, PresentationHierarchyNode, PresentationTreeNode } from "../TreeNode.js";
 import { HierarchyLevelDetails, useTree } from "../UseTree.js";
 import { useLocalizationContext } from "./LocalizationContext.js";
-import { FilterActionButton } from "./TreeActionButtons.js";
+import { TreeActionButton, TreeItemAction } from "./TreeActionButton.js";
 import { TreeErrorRenderer } from "./TreeErrorRenderer.js";
+
+const dropdownIcon = new URL("@itwin/itwinui-icons/more-horizontal.svg", import.meta.url).href;
 
 /** @alpha */
 type TreeNodeProps = Omit<ComponentPropsWithoutRef<typeof Tree.Item>, "actions">;
@@ -32,8 +34,10 @@ export interface TreeNodeRendererOwnProps {
   onNodeKeyDown?: (node: PresentationHierarchyNode, isSelected: boolean, event: React.KeyboardEvent<HTMLElement>) => void;
   /** A callback to reload a hierarchy level when an error occurs and `retry` button is clicked. */
   reloadTree?: (options: { parentNodeId: string | undefined; state: "reset" }) => void;
-  /** Renderer for additional tree items actions */
-  actionsRenderer?: (node: PresentationHierarchyNode) => ReactElement;
+  /**
+   * Actions for tree item.
+   */
+  actions?: Array<(node: PresentationHierarchyNode) => TreeItemAction>;
 }
 
 /** @alpha */
@@ -63,7 +67,7 @@ export const TreeNodeRenderer: React.ForwardRefExoticComponent<TreeNodeRendererP
       getHierarchyLevelDetails,
       reloadTree,
       children,
-      actionsRenderer,
+      actions,
       ...treeItemProps
     },
     forwardedRef,
@@ -77,12 +81,42 @@ export const TreeNodeRenderer: React.ForwardRefExoticComponent<TreeNodeRendererP
       );
     }
 
-    const ActionButtons = () => (
-      <>
-        {actionsRenderer && actionsRenderer(node)}
-        <FilterActionButton node={node} onClick={onFilterClick} getHierarchyLevelDetails={getHierarchyLevelDetails} />
-      </>
-    );
+    const Actions = () => {
+      if (!actions || actions.length === 0) {
+        return undefined;
+      }
+
+      if (actions.length < 4) {
+        return (
+          <>
+            {actions.map((action, index) => {
+              const actionInfo = action(node);
+              return <TreeActionButton key={index} {...actionInfo} />;
+            })}
+          </>
+        );
+      }
+
+      return (
+        <>
+          <TreeActionButton {...actions[0](node)} />
+          <TreeActionButton {...actions[1](node)} />
+          <DropdownMenu.Root>
+            <DropdownMenu.Button render={<IconButton icon={dropdownIcon} label="Tree actions dropdown" variant="ghost" />} />
+            <DropdownMenu.Content>
+              {actions.slice(2, actions.length).map((action) => {
+                const info = action(node);
+                return (
+                  <DropdownMenu.Item key={info.label} onClick={() => info.action()}>
+                    {info.label}
+                  </DropdownMenu.Item>
+                );
+              })}
+            </DropdownMenu.Content>
+          </DropdownMenu.Root>
+        </>
+      );
+    };
 
     return (
       <Tree.Item
@@ -104,7 +138,7 @@ export const TreeNodeRenderer: React.ForwardRefExoticComponent<TreeNodeRendererP
           }
         }}
         icon={getIcon ? getIcon(node) : undefined}
-        actions={<ActionButtons />}
+        actions={<Actions />}
       >
         {node.isExpanded && node.children === true ? <PlaceholderNode {...treeItemProps} ref={ref} /> : children}
       </Tree.Item>

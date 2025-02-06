@@ -1,5 +1,6 @@
 sep=;
 Release Tag;API Item Type;API Item Name
+alpha;function;createFilterAction
 public;interface;HierarchyLevelDetails
 public;function;isPresentationHierarchyNode
 public;function;LocalizationContextProvider
@@ -9,6 +10,7 @@ public;type;PresentationInfoNode
 public;interface;PresentationResultSetTooLargeInfoNode
 public;type;PresentationTreeNode
 alpha;const;TreeErrorRenderer
+alpha;interface;TreeItemAction
 alpha;const;TreeLevelRenderer
 public;const;TreeNodeRenderer
 alpha;function;TreeRenderer
