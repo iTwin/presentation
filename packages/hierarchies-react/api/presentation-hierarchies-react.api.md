@@ -125,7 +125,7 @@ export const TreeLevelRenderer: ({ nodes, isNodeSelected, ...rest }: TreeNodesRe
 export const TreeNodeRenderer: React.ForwardRefExoticComponent<TreeNodeRendererProps_2 & RefAttributes<HTMLDivElement>>;
 
 // @alpha
-export function TreeRenderer({ rootNodes, expandNode, localizedStrings, selectNodes, isNodeSelected, selectionMode, onFilterClick, getHierarchyLevelDetails, ...treeProps }: TreeRendererProps): JSX_2.Element;
+export function TreeRenderer({ rootNodes, expandNode, localizedStrings, selectNodes, isNodeSelected, selectionMode, ...treeProps }: TreeRendererProps): JSX_2.Element;
 
 // @public @deprecated
 export function UnifiedSelectionProvider({ storage, children }: PropsWithChildren<{
