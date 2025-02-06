@@ -18,6 +18,7 @@ export { useIModelTree, useIModelUnifiedSelectionTree } from "./presentation-hie
 export { TreeErrorRenderer } from "./presentation-hierarchies-react/itwinui/TreeErrorRenderer.js";
 export { TreeLevelRenderer } from "./presentation-hierarchies-react/itwinui/TreeLevelRenderer.js";
 export { TreeNodeRenderer } from "./presentation-hierarchies-react/itwinui/TreeNodeRenderer.js";
+export { TreeItemAction, createFilterAction } from "./presentation-hierarchies-react/itwinui/TreeActionButton.js";
 export { TreeRenderer } from "./presentation-hierarchies-react/itwinui/TreeRenderer.js";
 export { LocalizationContextProvider } from "./presentation-hierarchies-react/itwinui/LocalizationContext.js";
 

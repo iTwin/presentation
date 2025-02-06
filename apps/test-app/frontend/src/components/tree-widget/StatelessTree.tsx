@@ -19,7 +19,13 @@ import {
 import { createECSchemaProvider, createECSqlQueryExecutor, registerTxnListeners } from "@itwin/presentation-core-interop";
 import { Presentation } from "@itwin/presentation-frontend";
 import { createLimitingECSqlQueryExecutor, GenericInstanceFilter } from "@itwin/presentation-hierarchies";
-import { HierarchyLevelDetails, PresentationHierarchyNode, TreeRenderer, useIModelUnifiedSelectionTree } from "@itwin/presentation-hierarchies-react";
+import {
+  createFilterAction,
+  HierarchyLevelDetails,
+  PresentationHierarchyNode,
+  TreeRenderer,
+  useIModelUnifiedSelectionTree,
+} from "@itwin/presentation-hierarchies-react";
 import { ModelsTreeDefinition } from "@itwin/presentation-models-tree";
 import { createCachingECClassHierarchyInspector, IPrimitiveValueFormatter, Props } from "@itwin/presentation-shared";
 import { useUnifiedSelectionContext } from "@itwin/unified-selection-react";
@@ -164,11 +170,15 @@ function Tree({ imodel, imodelAccess, height, width }: { imodel: IModelConnectio
         onFilterClick={setFilteringOptions}
         getIcon={getIcon}
         actions={[
+          createFilterAction({ onFilter: setFilteringOptions, getHierarchyLevelDetails: treeProps.getHierarchyLevelDetails, label: "Apply filter" }),
           () => {
-            return { label: "Fake button 1", action: () => {}, show: true, isDropdownAction: true };
+            return { label: "Fake button 1", action: () => {}, show: false };
           },
           () => {
-            return { label: "Fake button 2", action: () => {}, show: true, isDropdownAction: true };
+            return { label: "Fake button 2", action: () => {}, show: true };
+          },
+          () => {
+            return { label: "Fake button 2", action: () => {}, show: true };
           },
         ]}
         selectionMode={"extended"}

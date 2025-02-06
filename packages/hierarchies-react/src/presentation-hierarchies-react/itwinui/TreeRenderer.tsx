@@ -9,7 +9,6 @@ import { PresentationTreeNode } from "../TreeNode.js";
 import { SelectionMode, useSelectionHandler } from "../UseSelectionHandler.js";
 import { useTree } from "../UseTree.js";
 import { LocalizationContextProvider } from "./LocalizationContext.js";
-import { getFilterAction } from "./TreeActionButton.js";
 import { TreeLevelRenderer } from "./TreeLevelRenderer.js";
 import { TreeNodeRenderer } from "./TreeNodeRenderer.js";
 
@@ -47,7 +46,6 @@ export function TreeRenderer({
   selectNodes,
   isNodeSelected,
   selectionMode,
-  actions,
   onFilterClick,
   getHierarchyLevelDetails,
   ...treeProps
@@ -63,7 +61,6 @@ export function TreeRenderer({
       <Tree.Root style={{ height: "100%", width: "100%" }}>
         <TreeLevelRenderer
           {...treeProps}
-          actions={[...(actions || []), getFilterAction({ onClick: onFilterClick, getHierarchyLevelDetails, label: localizedStrings?.filterHierarchyLevel })]}
           onFilterClick={onFilterClick}
           getHierarchyLevelDetails={getHierarchyLevelDetails}
           nodes={rootNodes}

@@ -8,19 +8,10 @@ import { DropdownMenu, IconButton, Spinner, Tree } from "@itwin/itwinui-react/br
 import { isPresentationHierarchyNode, PresentationHierarchyNode, PresentationTreeNode } from "../TreeNode.js";
 import { HierarchyLevelDetails, useTree } from "../UseTree.js";
 import { useLocalizationContext } from "./LocalizationContext.js";
-import { TreeActionButton } from "./TreeActionButton.js";
+import { TreeActionButton, TreeItemAction } from "./TreeActionButton.js";
 import { TreeErrorRenderer } from "./TreeErrorRenderer.js";
 
 const dropdownIcon = new URL("@itwin/itwinui-icons/more-horizontal.svg", import.meta.url).href;
-
-/** @alpha */
-export interface TreeItemAction {
-  label: string;
-  action: () => void;
-  show: boolean;
-  isDropdownAction: boolean;
-  icon?: string;
-}
 
 /** @alpha */
 type TreeNodeProps = Omit<ComponentPropsWithoutRef<typeof Tree.Item>, "actions">;
@@ -90,51 +81,39 @@ export const TreeNodeRenderer: React.ForwardRefExoticComponent<TreeNodeRendererP
       );
     }
 
-    const DropdownActionsMenu = () => {
-      const dropdownActions = actions?.filter((action) => action(node).isDropdownAction);
-      if (!dropdownActions || dropdownActions.length === 0) {
+    const Actions = () => {
+      if (!actions || actions.length === 0) {
         return undefined;
       }
 
-      const visibleDropdownActions = dropdownActions?.filter((action) => action(node).show);
-      if (visibleDropdownActions.length === 0) {
-        return <TreeActionButton {...dropdownActions[0](node)} />;
-      }
-      if (visibleDropdownActions.length === 1) {
-        return <TreeActionButton {...visibleDropdownActions[0](node)} />;
-      }
-
-      return (
-        <DropdownMenu.Root>
-          <DropdownMenu.Button render={<IconButton icon={dropdownIcon} label="Tree actions dropdown" variant="ghost" />} />
-          <DropdownMenu.Content>
-            {dropdownActions.map((action) => {
-              const info = action(node);
-              return (
-                info.show && (
-                  <DropdownMenu.Item key={info.label} onClick={() => info.action()}>
-                    {info.label}
-                  </DropdownMenu.Item>
-                )
-              );
+      if (actions.length < 4) {
+        return (
+          <>
+            {actions.map((action, index) => {
+              const actionInfo = action(node);
+              return <TreeActionButton key={index} {...actionInfo} />;
             })}
-          </DropdownMenu.Content>
-        </DropdownMenu.Root>
-      );
-    };
-
-    const ActionButtons = () => {
-      const buttonActions = actions?.filter((action) => !action(node).isDropdownAction);
-      if (!buttonActions) {
-        return undefined;
+          </>
+        );
       }
 
       return (
         <>
-          {buttonActions.map((action, index) => {
-            const actionInfo = action(node);
-            return <TreeActionButton key={index} {...actionInfo} />;
-          })}
+          <TreeActionButton {...actions[0](node)} />
+          <TreeActionButton {...actions[1](node)} />
+          <DropdownMenu.Root>
+            <DropdownMenu.Button render={<IconButton icon={dropdownIcon} label="Tree actions dropdown" variant="ghost" />} />
+            <DropdownMenu.Content>
+              {actions.slice(2, actions.length).map((action) => {
+                const info = action(node);
+                return (
+                  <DropdownMenu.Item key={info.label} onClick={() => info.action()}>
+                    {info.label}
+                  </DropdownMenu.Item>
+                );
+              })}
+            </DropdownMenu.Content>
+          </DropdownMenu.Root>
         </>
       );
     };
@@ -159,12 +138,7 @@ export const TreeNodeRenderer: React.ForwardRefExoticComponent<TreeNodeRendererP
           }
         }}
         icon={getIcon ? getIcon(node) : undefined}
-        actions={
-          <>
-            <ActionButtons />
-            <DropdownActionsMenu />
-          </>
-        }
+        actions={<Actions />}
       >
         {node.isExpanded && node.children === true ? <PlaceholderNode {...treeItemProps} ref={ref} /> : children}
       </Tree.Item>
