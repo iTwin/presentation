@@ -33,7 +33,7 @@ export function TreeActionButton({ show, label, action, icon }: TreeItemAction) 
     <IconButton
       className={`tree-action-item${!show ? "-invisible" : ""}`}
       variant={"ghost"}
-      onClick={() => action()}
+      onClick={action}
       label={label}
       icon={icon ?? placeholderIcon}
     />
