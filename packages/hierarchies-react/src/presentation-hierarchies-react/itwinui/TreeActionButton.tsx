@@ -30,13 +30,7 @@ export type FilterActionProps = {
 /** @internal */
 export function TreeActionButton({ show, label, action, icon }: TreeItemAction) {
   return (
-    <IconButton
-      className={`tree-action-item${!show ? "-invisible" : ""}`}
-      variant={"ghost"}
-      onClick={action}
-      label={label}
-      icon={icon ?? placeholderIcon}
-    />
+    <IconButton className={`tree-action-item${!show ? "-invisible" : ""}`} variant={"ghost"} onClick={action} label={label} icon={icon ?? placeholderIcon} />
   );
 }
 
