@@ -11,10 +11,15 @@
   visibility: hidden;
 }
 
-.stateless-tree-node:hover .action-buttons,
 .stateless-tree-node.filtered .action-buttons,
 .stateless-tree-node:focus-within .action-buttons {
   visibility: visible;
+}
+
+@media (hover: hover) {
+  .stateless-tree-node:hover .action-buttons {
+    visibility: visible;
+  }
 }
 
 .stateless-tree-node:focus-within {

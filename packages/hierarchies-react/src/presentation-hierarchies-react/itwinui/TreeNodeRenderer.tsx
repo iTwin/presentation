@@ -286,7 +286,7 @@ function createLocalizedMessage(message: string, limit: number, onClick?: () => 
     return {
       title: messageWithLimit,
       element: (
-        <Text as="span" style={{ textWrap: "wrap" }}>
+        <Text as="span" style={{ whiteSpace: "normal" }}>
           {messageWithLimit}
         </Text>
       ),
@@ -301,12 +301,12 @@ function createLocalizedMessage(message: string, limit: number, onClick?: () => 
     element: (
       <div>
         {textBefore ? (
-          <Text as="span" style={{ textWrap: "wrap" }}>
+          <Text as="span" style={{ whiteSpace: "normal" }}>
             {textBefore}
           </Text>
         ) : null}
         <Anchor
-          style={{ textWrap: "wrap" }}
+          style={{ whiteSpace: "normal" }}
           underline
           onClick={(e) => {
             e.stopPropagation();
@@ -316,7 +316,7 @@ function createLocalizedMessage(message: string, limit: number, onClick?: () => 
           {innerText}
         </Anchor>
         {textAfter ? (
-          <Text as="span" style={{ textWrap: "wrap" }}>
+          <Text as="span" style={{ whiteSpace: "normal" }}>
             {textAfter}
           </Text>
         ) : null}
