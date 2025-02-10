@@ -1,5 +1,12 @@
 # @itwin/presentation-hierarchies-react
 
+## 1.6.2
+
+### Patch Changes
+
+- [#873](https://github.com/iTwin/presentation/pull/873): Fix hierarchy level size exceeds limit info message wrapping in narrow Tree on Safari browser.
+- [#873](https://github.com/iTwin/presentation/pull/873): Do not require two clicks to expand node with filter buttons on touch devices.
+
 ## 1.6.1
 
 ### Patch Changes
