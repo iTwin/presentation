@@ -48,7 +48,7 @@ using selectionHiliteProvider = createCachingHiliteSetProvider({
   // this is called to get iModel access based on the iModel key, used to get hilite set for that iModel (see below)
   imodelProvider: (imodelKey) => getIModelByKey(imodelKey),
 });
-const selectionHiliteSet = await selectionHiliteProvider.getHiliteSet({ imodelKey: createIModelKey(imodel) });
+const selectionHiliteSet = selectionHiliteProvider.getHiliteSet({ imodelKey: createIModelKey(imodel) });
 ```
 
 See [iModel selection synchronization with unified selection](./SyncWithIModelConnection.md) for an example of how to easily enable automatic synchronization of iModel's hilite set with a `SelectionStorage`.
