@@ -1,6 +1,6 @@
 # iModel selection synchronization with unified selection
 
-A Viewport is used to display `BisCore.GeometricElement` _ECInstances_ simply called _Elements_. The uses a container called the highlight (or often - just "hilite") set to represent selected elements. That container is maintained by [IModelConnection](https://www.itwinjs.org/reference/core-frontend/imodelconnection/imodelconnection/), containing the displayed elements. As a result, all viewports associated with the same `IModelConnection` share the same hilite set.
+A Viewport is used to display `BisCore.GeometricElement` _ECInstances_ simply called _Elements_. It uses a container called the highlight (or often - just "hilite") set to represent selected elements. That container is maintained by [IModelConnection](https://www.itwinjs.org/reference/core-frontend/imodelconnection/imodelconnection/), containing the displayed elements. As a result, all viewports associated with the same `IModelConnection` share the same hilite set.
 
 The rules for interacting with unified selection are:
 
