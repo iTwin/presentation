@@ -66,7 +66,6 @@ export const TreeNodeRenderer: React.ForwardRefExoticComponent<TreeNodeRendererP
       selected,
       getHierarchyLevelDetails,
       reloadTree,
-      children,
       actions,
       ...treeItemProps
     },
@@ -81,67 +80,64 @@ export const TreeNodeRenderer: React.ForwardRefExoticComponent<TreeNodeRendererP
       );
     }
 
-    const Actions = () => {
+    const getActions = () => {
       if (!actions || actions.length === 0) {
         return undefined;
       }
 
       if (actions.length < 4) {
-        return (
-          <>
-            {actions.map((action, index) => {
-              const actionInfo = action(node);
-              return <TreeActionButton key={index} {...actionInfo} />;
-            })}
-          </>
-        );
+        return actions.map((action, index) => {
+          const actionInfo = action(node);
+          return <TreeActionButton key={index} {...actionInfo} />;
+        });
       }
 
-      return (
-        <>
-          <TreeActionButton {...actions[0](node)} />
-          <TreeActionButton {...actions[1](node)} />
-          <DropdownMenu.Root>
-            <DropdownMenu.Button render={<IconButton icon={dropdownIcon} label="Tree actions dropdown" variant="ghost" />} />
-            <DropdownMenu.Content>
-              {actions.slice(2, actions.length).map((action) => {
-                const info = action(node);
-                return (
-                  <DropdownMenu.Item key={info.label} onClick={() => info.action()}>
-                    {info.label}
-                  </DropdownMenu.Item>
-                );
-              })}
-            </DropdownMenu.Content>
-          </DropdownMenu.Root>
-        </>
-      );
+      return [
+        <TreeActionButton key={0} {...actions[0](node)} />,
+        <TreeActionButton key={1} {...actions[1](node)} />,
+        <DropdownMenu.Root key={2}>
+          <DropdownMenu.Button render={<IconButton icon={dropdownIcon} label="Tree actions dropdown" variant="ghost" />} />
+          <DropdownMenu.Content>
+            {actions.slice(2, actions.length).map((action) => {
+              const info = action(node);
+              return (
+                <DropdownMenu.Item key={info.label} onClick={() => info.action()}>
+                  {info.label}
+                </DropdownMenu.Item>
+              );
+            })}
+          </DropdownMenu.Content>
+        </DropdownMenu.Root>,
+      ];
     };
 
     return (
-      <Tree.Item
-        {...treeItemProps}
-        ref={ref}
-        label={getLabel ? getLabel(node) : node.label}
-        selected={selected}
-        expanded={node.isExpanded || node.children === true || node.children.length > 0 ? node.isExpanded : undefined}
-        onExpandedChange={(isExpanded) => {
-          expandNode(node.id, isExpanded);
-        }}
-        onClick={(event) => {
-          !treeItemProps["aria-disabled"] && onNodeClick?.(node, !selected, event);
-        }}
-        onKeyDown={(event) => {
-          // Ignore if it is called on the element inside, e.g. checkbox or expander
-          if (!treeItemProps["aria-disabled"] && event.target === nodeRef.current) {
-            onNodeKeyDown?.(node, !selected, event);
-          }
-        }}
-        icon={getIcon ? getIcon(node) : undefined}
-        actions={<Actions />}
-      >
-        {node.isExpanded && node.children === true ? <PlaceholderNode {...treeItemProps} ref={ref} /> : children}
-      </Tree.Item>
+      <>
+        <Tree.Item
+          {...treeItemProps}
+          ref={ref}
+          label={getLabel ? getLabel(node) : node.label}
+          selected={selected}
+          expanded={node.isExpanded || node.children === true || node.children.length > 0 ? node.isExpanded : undefined}
+          onExpandedChange={(isExpanded) => {
+            expandNode(node.id, isExpanded);
+          }}
+          onClick={(event) => {
+            !treeItemProps["aria-disabled"] && onNodeClick?.(node, !selected, event);
+          }}
+          onKeyDown={(event) => {
+            // Ignore if it is called on the element inside, e.g. checkbox or expander
+            if (!treeItemProps["aria-disabled"] && event.target === nodeRef.current) {
+              onNodeKeyDown?.(node, !selected, event);
+            }
+          }}
+          icon={getIcon ? getIcon(node) : undefined}
+          actions={getActions()}
+        />
+        {node.isExpanded && node.children === true && (
+          <PlaceholderNode {...treeItemProps} aria-level={treeItemProps["aria-level"] + 1} aria-posinset={1} aria-setsize={1} ref={ref} />
+        )}
+      </>
     );
   },
 );

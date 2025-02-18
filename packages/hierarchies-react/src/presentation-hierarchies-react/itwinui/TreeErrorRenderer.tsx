@@ -37,16 +37,30 @@ export const TreeErrorRenderer: React.ForwardRefExoticComponent<TreeErrorRendere
                 }
               : undefined
           }
+          aria-level={0}
+          aria-posinset={1}
+          aria-setsize={1}
         />
       );
     }
 
     if (node.type === "NoFilterMatches") {
-      return <Tree.Item ref={forwardedRef} label={localizedStrings.noFilteredChildren} aria-disabled={true} />;
+      return (
+        <Tree.Item aria-level={0} aria-posinset={0} aria-setsize={0} ref={forwardedRef} label={localizedStrings.noFilteredChildren} aria-disabled={true} />
+      );
     }
 
     const onRetry = reloadTree ? () => reloadTree({ parentNodeId: node.parentNodeId, state: "reset" }) : undefined;
-    return <Tree.Item ref={forwardedRef} label={<ErrorNodeLabel message={node.message} onRetry={onRetry} />} aria-disabled={true} />;
+    return (
+      <Tree.Item
+        aria-level={0}
+        aria-posinset={1}
+        aria-setsize={1}
+        ref={forwardedRef}
+        label={<ErrorNodeLabel message={node.message} onRetry={onRetry} />}
+        aria-disabled={true}
+      />
+    );
   },
 );
 TreeErrorRenderer.displayName = "TreeErrorRenderer";

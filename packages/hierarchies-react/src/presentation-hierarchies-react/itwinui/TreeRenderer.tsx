@@ -3,13 +3,12 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { ComponentPropsWithoutRef } from "react";
+import { ComponentPropsWithoutRef, useMemo } from "react";
 import { Tree } from "@itwin/itwinui-react/bricks";
-import { PresentationTreeNode } from "../TreeNode.js";
+import { isPresentationHierarchyNode, PresentationTreeNode } from "../TreeNode.js";
 import { SelectionMode, useSelectionHandler } from "../UseSelectionHandler.js";
 import { useTree } from "../UseTree.js";
 import { LocalizationContextProvider } from "./LocalizationContext.js";
-import { TreeLevelRenderer } from "./TreeLevelRenderer.js";
 import { TreeNodeRenderer } from "./TreeNodeRenderer.js";
 
 /** @alpha */
@@ -28,7 +27,7 @@ interface TreeRendererOwnProps {
 /** @alpha */
 type TreeRendererProps = Pick<ReturnType<typeof useTree>, "expandNode"> &
   Partial<Pick<ReturnType<typeof useTree>, "selectNodes" | "isNodeSelected" | "getHierarchyLevelDetails" | "reloadTree">> &
-  Omit<TreeNodeRendererProps, "node" | "reloadTree"> &
+  Omit<TreeNodeRendererProps, "node" | "reloadTree" | "aria-level" | "aria-posinset" | "aria-setsize"> &
   TreeRendererOwnProps &
   ComponentPropsWithoutRef<typeof LocalizationContextProvider>;
 
@@ -46,20 +45,47 @@ export function TreeRenderer({ rootNodes, expandNode, localizedStrings, selectNo
     selectionMode: selectionMode ?? "single",
   });
 
+  const flatNodes = useMemo(() => getFlatNodes(rootNodes, 0), [rootNodes]);
+
   return (
     <LocalizationContextProvider localizedStrings={localizedStrings}>
       <Tree.Root style={{ height: "100%", width: "100%" }}>
-        <TreeLevelRenderer
-          {...treeProps}
-          nodes={rootNodes}
-          expandNode={expandNode}
-          onNodeClick={onNodeClick}
-          onNodeKeyDown={onNodeKeyDown}
-          isNodeSelected={isNodeSelected}
-        />
+        {flatNodes.map((flatNode) => (
+          <TreeNodeRenderer
+            {...treeProps}
+            aria-level={flatNode.level}
+            aria-posinset={flatNode.posInLevel}
+            aria-setsize={flatNode.levelSize}
+            expandNode={expandNode}
+            onNodeClick={onNodeClick}
+            onNodeKeyDown={onNodeKeyDown}
+            node={flatNode.node}
+            key={flatNode.node.id}
+            selected={isNodeSelected?.(flatNode.node.id)}
+          />
+        ))}
       </Tree.Root>
     </LocalizationContextProvider>
   );
 }
 
 function noopSelectNodes() {}
+
+interface FlatPresentationTreeNode {
+  node: PresentationTreeNode;
+  level: number;
+  levelSize: number;
+  posInLevel: number;
+}
+
+export function getFlatNodes(nodes: PresentationTreeNode[], level: number) {
+  const flatNodes: FlatPresentationTreeNode[] = [];
+  nodes.map((node, index) => {
+    flatNodes.push({ node, level, levelSize: nodes.length, posInLevel: index + 1 });
+    if (isPresentationHierarchyNode(node) && node.isExpanded && node.children !== true) {
+      const childNodes = getFlatNodes(node.children, level + 1);
+      flatNodes.push(...childNodes);
+    }
+  });
+  return flatNodes;
+}
