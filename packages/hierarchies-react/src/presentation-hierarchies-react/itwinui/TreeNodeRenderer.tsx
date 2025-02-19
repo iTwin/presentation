@@ -15,7 +15,7 @@ import { FlatPresentationTreeNode } from "./TreeRenderer.js";
 const dropdownIcon = new URL("@itwin/itwinui-icons/more-horizontal.svg", import.meta.url).href;
 
 /** @alpha */
-type TreeNodeProps = Omit<ComponentPropsWithoutRef<typeof Tree.Item>, "actions" | "aria-level" | "aria-posinset" | "aria-setsize">;
+type TreeNodeProps = Omit<ComponentPropsWithoutRef<typeof Tree.Item>, "actions" | "aria-level" | "aria-posinset" | "aria-setsize" | "label" | "icon">;
 
 /** @alpha */
 export interface TreeNodeRendererOwnProps {
@@ -44,7 +44,7 @@ export interface TreeNodeRendererOwnProps {
 /** @alpha */
 type TreeNodeRendererProps = Pick<ReturnType<typeof useTree>, "expandNode"> &
   Partial<Pick<ReturnType<typeof useTree>, "getHierarchyLevelDetails">> &
-  Omit<TreeNodeProps, "label" | "icon"> &
+  TreeNodeProps &
   TreeNodeRendererOwnProps;
 
 /**

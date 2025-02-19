@@ -27,7 +27,7 @@ interface TreeRendererOwnProps {
 /** @alpha */
 type TreeRendererProps = Pick<ReturnType<typeof useTree>, "expandNode"> &
   Partial<Pick<ReturnType<typeof useTree>, "selectNodes" | "isNodeSelected" | "getHierarchyLevelDetails" | "reloadTree">> &
-  Omit<TreeNodeRendererProps, "node" | "reloadTree" | "aria-level" | "aria-posinset" | "aria-setsize"> &
+  Omit<TreeNodeRendererProps, "node" | "reloadTree"> &
   TreeRendererOwnProps &
   ComponentPropsWithoutRef<typeof LocalizationContextProvider>;
 
