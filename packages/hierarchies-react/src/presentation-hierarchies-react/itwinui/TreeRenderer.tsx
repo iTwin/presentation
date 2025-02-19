@@ -45,7 +45,7 @@ export function TreeRenderer({ rootNodes, expandNode, localizedStrings, selectNo
     selectionMode: selectionMode ?? "single",
   });
 
-  const flatNodes = useMemo(() => getFlatNodes(rootNodes, 0), [rootNodes]);
+  const flatNodes = useMemo(() => flattenNodes(rootNodes), [rootNodes]);
 
   return (
     <LocalizationContextProvider localizedStrings={localizedStrings}>
