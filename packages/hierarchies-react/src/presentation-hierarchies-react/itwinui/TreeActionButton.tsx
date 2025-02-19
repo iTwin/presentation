@@ -6,7 +6,7 @@
 import { Tree } from "@itwin/itwinui-react/bricks";
 import { PresentationHierarchyNode } from "../TreeNode.js";
 import { HierarchyLevelDetails, useTree } from "../UseTree.js";
-import { useLocalizationContext } from "./LocalizationContext.js";
+import { LocalizedStrings, useLocalizationContext } from "./LocalizationContext.js";
 
 const filterIcon = new URL("@itwin/itwinui-icons/filter.svg", import.meta.url).href;
 const placeholderIcon = new URL("@itwin/itwinui-icons/placeholder.svg", import.meta.url).href; // TODO: active filter icon/placeholder icon if button was not given an icon

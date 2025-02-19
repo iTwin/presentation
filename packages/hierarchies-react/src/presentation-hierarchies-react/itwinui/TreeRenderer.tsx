@@ -68,13 +68,19 @@ export function TreeRenderer({ rootNodes, expandNode, localizedStrings, selectNo
 
 function noopSelectNodes() {}
 
+/** @alpha */
 export type FlatPresentationTreeNode = {
   level: number;
   levelSize: number;
   posInLevel: number;
 } & PresentationTreeNode;
 
-export function getFlatNodes(nodes: PresentationTreeNode[], level: number) {
+/** @alpha */
+export function flattenNodes(rootNodes: PresentationTreeNode[]) {
+  return getFlatNodes(rootNodes, 0);
+}
+
+function getFlatNodes(nodes: PresentationTreeNode[], level: number) {
   const flatNodes: FlatPresentationTreeNode[] = [];
   nodes.forEach((node, index) => {
     flatNodes.push({ ...node, level, levelSize: nodes.length, posInLevel: index + 1 });
