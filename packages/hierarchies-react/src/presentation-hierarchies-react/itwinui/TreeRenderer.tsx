@@ -3,13 +3,12 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { ComponentPropsWithoutRef } from "react";
+import { ComponentPropsWithoutRef, useMemo } from "react";
 import { Tree } from "@itwin/itwinui-react/bricks";
-import { PresentationTreeNode } from "../TreeNode.js";
+import { isPresentationHierarchyNode, PresentationTreeNode } from "../TreeNode.js";
 import { SelectionMode, useSelectionHandler } from "../UseSelectionHandler.js";
 import { useTree } from "../UseTree.js";
 import { LocalizationContextProvider } from "./LocalizationContext.js";
-import { TreeLevelRenderer } from "./TreeLevelRenderer.js";
 import { TreeNodeRenderer } from "./TreeNodeRenderer.js";
 
 /** @alpha */
@@ -46,20 +45,49 @@ export function TreeRenderer({ rootNodes, expandNode, localizedStrings, selectNo
     selectionMode: selectionMode ?? "single",
   });
 
+  const flatNodes = useMemo(() => flattenNodes(rootNodes), [rootNodes]);
+
   return (
     <LocalizationContextProvider localizedStrings={localizedStrings}>
       <Tree.Root style={{ height: "100%", width: "100%" }}>
-        <TreeLevelRenderer
-          {...treeProps}
-          nodes={rootNodes}
-          expandNode={expandNode}
-          onNodeClick={onNodeClick}
-          onNodeKeyDown={onNodeKeyDown}
-          isNodeSelected={isNodeSelected}
-        />
+        {flatNodes.map((flatNode) => (
+          <TreeNodeRenderer
+            {...treeProps}
+            expandNode={expandNode}
+            onNodeClick={onNodeClick}
+            onNodeKeyDown={onNodeKeyDown}
+            node={flatNode}
+            key={flatNode.id}
+            selected={isNodeSelected?.(flatNode.id)}
+          />
+        ))}
       </Tree.Root>
     </LocalizationContextProvider>
   );
 }
 
 function noopSelectNodes() {}
+
+/** @alpha */
+export type FlatPresentationTreeNode = {
+  level: number;
+  levelSize: number;
+  posInLevel: number;
+} & PresentationTreeNode;
+
+/** @alpha */
+export function flattenNodes(rootNodes: PresentationTreeNode[]) {
+  return getFlatNodes(rootNodes, 0);
+}
+
+function getFlatNodes(nodes: PresentationTreeNode[], level: number) {
+  const flatNodes: FlatPresentationTreeNode[] = [];
+  nodes.forEach((node, index) => {
+    flatNodes.push({ ...node, level, levelSize: nodes.length, posInLevel: index + 1 });
+    if (isPresentationHierarchyNode(node) && node.isExpanded && node.children !== true) {
+      const childNodes = getFlatNodes(node.children, level + 1);
+      flatNodes.push(...childNodes);
+    }
+  });
+  return flatNodes;
+}

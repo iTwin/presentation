@@ -4,22 +4,23 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { ComponentPropsWithoutRef, forwardRef, LegacyRef, MutableRefObject, ReactElement, Ref, RefAttributes, useCallback, useRef } from "react";
-import { DropdownMenu, IconButton, Spinner, Tree } from "@itwin/itwinui-react/bricks";
-import { isPresentationHierarchyNode, PresentationHierarchyNode, PresentationTreeNode } from "../TreeNode.js";
+import { DropdownMenu, Spinner, Tree } from "@itwin/itwinui-react/bricks";
+import { isPresentationHierarchyNode, PresentationHierarchyNode } from "../TreeNode.js";
 import { HierarchyLevelDetails, useTree } from "../UseTree.js";
 import { useLocalizationContext } from "./LocalizationContext.js";
 import { TreeActionButton, TreeItemAction } from "./TreeActionButton.js";
 import { TreeErrorRenderer } from "./TreeErrorRenderer.js";
+import { FlatPresentationTreeNode } from "./TreeRenderer.js";
 
 const dropdownIcon = new URL("@itwin/itwinui-icons/more-horizontal.svg", import.meta.url).href;
 
 /** @alpha */
-type TreeNodeProps = Omit<ComponentPropsWithoutRef<typeof Tree.Item>, "actions">;
+type TreeNodeProps = Omit<ComponentPropsWithoutRef<typeof Tree.Item>, "actions" | "aria-level" | "aria-posinset" | "aria-setsize" | "label" | "icon">;
 
 /** @alpha */
 export interface TreeNodeRendererOwnProps {
   /** Node that is rendered. */
-  node: PresentationTreeNode;
+  node: FlatPresentationTreeNode;
   /** Action to perform when the filter button is clicked for this node. */
   onFilterClick?: (hierarchyLevelDetails: HierarchyLevelDetails) => void;
   /** Returns an icon or icon href for a given node. */
@@ -43,7 +44,7 @@ export interface TreeNodeRendererOwnProps {
 /** @alpha */
 type TreeNodeRendererProps = Pick<ReturnType<typeof useTree>, "expandNode"> &
   Partial<Pick<ReturnType<typeof useTree>, "getHierarchyLevelDetails">> &
-  Omit<TreeNodeProps, "label" | "icon"> &
+  TreeNodeProps &
   TreeNodeRendererOwnProps;
 
 /**
@@ -66,7 +67,6 @@ export const TreeNodeRenderer: React.ForwardRefExoticComponent<TreeNodeRendererP
       selected,
       getHierarchyLevelDetails,
       reloadTree,
-      children,
       actions,
       ...treeItemProps
     },
@@ -77,79 +77,94 @@ export const TreeNodeRenderer: React.ForwardRefExoticComponent<TreeNodeRendererP
 
     if (!isPresentationHierarchyNode(node)) {
       return (
-        <TreeErrorRenderer node={node} getHierarchyLevelDetails={getHierarchyLevelDetails} reloadTree={reloadTree} onFilterClick={onFilterClick} ref={ref} />
+        <TreeErrorRenderer
+          node={node}
+          level={node.level}
+          getHierarchyLevelDetails={getHierarchyLevelDetails}
+          reloadTree={reloadTree}
+          onFilterClick={onFilterClick}
+          ref={ref}
+        />
       );
     }
 
-    const Actions = () => {
+    const getActions = () => {
       if (!actions || actions.length === 0) {
         return undefined;
       }
 
       if (actions.length < 4) {
-        return (
-          <>
-            {actions.map((action, index) => {
-              const actionInfo = action(node);
-              return <TreeActionButton key={index} {...actionInfo} />;
-            })}
-          </>
-        );
+        return actions.map((action, index) => {
+          const actionInfo = action(node);
+          return <TreeActionButton key={index} {...actionInfo} />;
+        });
       }
 
-      return (
-        <>
-          <TreeActionButton {...actions[0](node)} />
-          <TreeActionButton {...actions[1](node)} />
-          <DropdownMenu.Root>
-            <DropdownMenu.Button render={<IconButton icon={dropdownIcon} label="Tree actions dropdown" variant="ghost" />} />
-            <DropdownMenu.Content>
-              {actions.slice(2, actions.length).map((action) => {
-                const info = action(node);
-                return (
-                  <DropdownMenu.Item key={info.label} onClick={() => info.action()}>
-                    {info.label}
-                  </DropdownMenu.Item>
-                );
-              })}
-            </DropdownMenu.Content>
-          </DropdownMenu.Root>
-        </>
-      );
+      return [
+        <TreeActionButton key={0} {...actions[0](node)} />,
+        <TreeActionButton key={1} {...actions[1](node)} />,
+        <DropdownMenu.Root key={2}>
+          <DropdownMenu.Button render={<Tree.ItemAction icon={dropdownIcon} label="Tree actions dropdown" />} />
+          <DropdownMenu.Content>
+            {actions.slice(2, actions.length).map((action) => {
+              const info = action(node);
+              return (
+                <DropdownMenu.Item key={info.label} onClick={() => info.action()}>
+                  {info.label}
+                </DropdownMenu.Item>
+              );
+            })}
+          </DropdownMenu.Content>
+        </DropdownMenu.Root>,
+      ];
     };
 
     return (
-      <Tree.Item
-        {...treeItemProps}
-        ref={ref}
-        label={getLabel ? getLabel(node) : node.label}
-        selected={selected}
-        expanded={node.isExpanded || node.children === true || node.children.length > 0 ? node.isExpanded : undefined}
-        onExpandedChange={(isExpanded) => {
-          expandNode(node.id, isExpanded);
-        }}
-        onClick={(event) => {
-          !treeItemProps["aria-disabled"] && onNodeClick?.(node, !selected, event);
-        }}
-        onKeyDown={(event) => {
-          // Ignore if it is called on the element inside, e.g. checkbox or expander
-          if (!treeItemProps["aria-disabled"] && event.target === nodeRef.current) {
-            onNodeKeyDown?.(node, !selected, event);
-          }
-        }}
-        icon={getIcon ? getIcon(node) : undefined}
-        actions={<Actions />}
-      >
-        {node.isExpanded && node.children === true ? <PlaceholderNode {...treeItemProps} ref={ref} /> : children}
-      </Tree.Item>
+      <>
+        <Tree.Item
+          {...treeItemProps}
+          ref={ref}
+          aria-level={node.level}
+          aria-posinset={node.posInLevel}
+          aria-setsize={node.levelSize}
+          label={getLabel ? getLabel(node) : node.label}
+          selected={selected}
+          expanded={node.isExpanded || node.children === true || node.children.length > 0 ? node.isExpanded : undefined}
+          onExpandedChange={(isExpanded) => {
+            expandNode(node.id, isExpanded);
+          }}
+          onClick={(event) => {
+            !treeItemProps["aria-disabled"] && onNodeClick?.(node, !selected, event);
+          }}
+          onKeyDown={(event) => {
+            // Ignore if it is called on the element inside, e.g. checkbox or expander
+            if (!treeItemProps["aria-disabled"] && event.target === nodeRef.current) {
+              onNodeKeyDown?.(node, !selected, event);
+            }
+          }}
+          icon={getIcon ? getIcon(node) : undefined}
+          actions={getActions()}
+        />
+        {node.isExpanded && node.children === true && <PlaceholderNode {...treeItemProps} level={node.level + 1} ref={ref} />}
+      </>
     );
   },
 );
 TreeNodeRenderer.displayName = "TreeNodeRenderer";
 
-const PlaceholderNode = forwardRef<HTMLDivElement, Omit<TreeNodeProps, "onExpanded" | "label">>(({ ...props }, forwardedRef) => {
+const PlaceholderNode = forwardRef<HTMLDivElement, Omit<TreeNodeProps, "onExpanded" | "label"> & { level: number }>(({ level, ...props }, forwardedRef) => {
   const { localizedStrings } = useLocalizationContext();
-  return <Tree.Item {...props} ref={forwardedRef} label={localizedStrings.loading} icon={<Spinner size={"small"} title={localizedStrings.loading} />} />;
+  return (
+    <Tree.Item
+      {...props}
+      aria-level={level}
+      aria-posinset={1}
+      aria-setsize={1}
+      ref={forwardedRef}
+      label={localizedStrings.loading}
+      icon={<Spinner size={"small"} title={localizedStrings.loading} />}
+    />
+  );
 });
 PlaceholderNode.displayName = "PlaceholderNode";
 
