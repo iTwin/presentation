@@ -52,7 +52,7 @@ export function createFilterAction({ onFilter, getHierarchyLevelDetails }: Filte
     };
 
     return {
-      label: "filterHierarchyLevel",
+      label: "filterHierarchyLevel" satisfies keyof LocalizedStrings,
       action: () => {
         const hierarchyLevelDetails = getHierarchyLevelDetails?.(node.id);
         hierarchyLevelDetails && onFilter?.(hierarchyLevelDetails);
