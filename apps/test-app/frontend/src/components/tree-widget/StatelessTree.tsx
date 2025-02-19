@@ -169,7 +169,7 @@ function Tree({ imodel, imodelAccess, height, width }: { imodel: IModelConnectio
         onFilterClick={setFilteringOptions}
         getIcon={getIcon}
         actions={[
-          createFilterAction({ onFilter: setFilteringOptions, getHierarchyLevelDetails: treeProps.getHierarchyLevelDetails, label: "Apply filter" }),
+          createFilterAction({ onFilter: setFilteringOptions, getHierarchyLevelDetails: treeProps.getHierarchyLevelDetails }),
           () => {
             return { label: "Fake button 1", action: () => {}, show: false };
           },
@@ -315,6 +315,7 @@ const classIcon = new URL("@itwin/itwinui-icons/tree-class.svg", import.meta.url
 const modelIcon = new URL("@itwin/itwinui-icons/model-cube.svg", import.meta.url).href;
 const categoryIcon = new URL("@itwin/itwinui-icons/tree-category.svg", import.meta.url).href;
 const elementIcon = new URL("@itwin/itwinui-icons/tree-element.svg", import.meta.url).href;
+const iModelIcon = new URL("@itwin/itwinui-icons/imodel.svg", import.meta.url).href;
 
 function getIcon(node: PresentationHierarchyNode): string | undefined {
   if (node.extendedData?.imageId === undefined) {
@@ -329,11 +330,11 @@ function getIcon(node: PresentationHierarchyNode): string | undefined {
     case "icon-ec-class":
       return classIcon;
     case "icon-imodel-hollow-2":
-      return modelIcon;
+      return iModelIcon;
     case "icon-folder":
-      return categoryIcon;
-    case "icon-model":
       return subjectIcon;
+    case "icon-model":
+      return modelIcon;
   }
 
   return undefined;

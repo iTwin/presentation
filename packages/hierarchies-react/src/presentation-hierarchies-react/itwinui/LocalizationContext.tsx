@@ -62,8 +62,7 @@ export interface LocalizationContext {
   localizedStrings: LocalizedStrings;
 }
 
-/** @internal */
-export const defaultLocalizedStrings: LocalizedStrings = {
+const defaultLocalizedStrings: LocalizedStrings = {
   loading: "Loading...",
   filterHierarchyLevel: "Apply filter",
   clearHierarchyLevelFilter: "Clear active filter",

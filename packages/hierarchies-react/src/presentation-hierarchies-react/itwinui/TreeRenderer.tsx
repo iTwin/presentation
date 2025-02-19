@@ -53,15 +53,12 @@ export function TreeRenderer({ rootNodes, expandNode, localizedStrings, selectNo
         {flatNodes.map((flatNode) => (
           <TreeNodeRenderer
             {...treeProps}
-            aria-level={flatNode.level}
-            aria-posinset={flatNode.posInLevel}
-            aria-setsize={flatNode.levelSize}
             expandNode={expandNode}
             onNodeClick={onNodeClick}
             onNodeKeyDown={onNodeKeyDown}
-            node={flatNode.node}
-            key={flatNode.node.id}
-            selected={isNodeSelected?.(flatNode.node.id)}
+            node={flatNode}
+            key={flatNode.id}
+            selected={isNodeSelected?.(flatNode.id)}
           />
         ))}
       </Tree.Root>
@@ -71,17 +68,16 @@ export function TreeRenderer({ rootNodes, expandNode, localizedStrings, selectNo
 
 function noopSelectNodes() {}
 
-interface FlatPresentationTreeNode {
-  node: PresentationTreeNode;
+export type FlatPresentationTreeNode = {
   level: number;
   levelSize: number;
   posInLevel: number;
-}
+} & PresentationTreeNode;
 
 export function getFlatNodes(nodes: PresentationTreeNode[], level: number) {
   const flatNodes: FlatPresentationTreeNode[] = [];
-  nodes.map((node, index) => {
-    flatNodes.push({ node, level, levelSize: nodes.length, posInLevel: index + 1 });
+  nodes.forEach((node, index) => {
+    flatNodes.push({ ...node, level, levelSize: nodes.length, posInLevel: index + 1 });
     if (isPresentationHierarchyNode(node) && node.isExpanded && node.children !== true) {
       const childNodes = getFlatNodes(node.children, level + 1);
       flatNodes.push(...childNodes);

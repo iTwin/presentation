@@ -9,19 +9,20 @@ import { MAX_LIMIT_OVERRIDE } from "../internal/Utils.js";
 import { PresentationInfoNode } from "../TreeNode.js";
 import { useTree } from "../UseTree.js";
 import { useLocalizationContext } from "./LocalizationContext.js";
-import { TreeNodeRendererOwnProps } from "./TreeNodeRenderer.js";
+import { TreeNodeRenderer } from "./TreeNodeRenderer.js";
 
 interface TreeErrorRendererOwnProps {
   node: PresentationInfoNode;
+  level: number;
 }
 
 type TreeErrorRendererProps = TreeErrorRendererOwnProps &
-  Pick<TreeNodeRendererOwnProps, "onFilterClick" | "reloadTree"> &
+  Pick<ComponentPropsWithoutRef<typeof TreeNodeRenderer>, "onFilterClick" | "reloadTree"> &
   Partial<Pick<ReturnType<typeof useTree>, "getHierarchyLevelDetails">>;
 
 /** @alpha */
 export const TreeErrorRenderer: React.ForwardRefExoticComponent<TreeErrorRendererProps & RefAttributes<HTMLDivElement>> = forwardRef(
-  ({ node, getHierarchyLevelDetails, onFilterClick, reloadTree }, forwardedRef) => {
+  ({ node, getHierarchyLevelDetails, onFilterClick, reloadTree, level }, forwardedRef) => {
     const { localizedStrings } = useLocalizationContext();
     if (node.type === "ResultSetTooLarge") {
       return (
@@ -37,7 +38,7 @@ export const TreeErrorRenderer: React.ForwardRefExoticComponent<TreeErrorRendere
                 }
               : undefined
           }
-          aria-level={0}
+          aria-level={level}
           aria-posinset={1}
           aria-setsize={1}
         />
@@ -46,14 +47,14 @@ export const TreeErrorRenderer: React.ForwardRefExoticComponent<TreeErrorRendere
 
     if (node.type === "NoFilterMatches") {
       return (
-        <Tree.Item aria-level={0} aria-posinset={0} aria-setsize={0} ref={forwardedRef} label={localizedStrings.noFilteredChildren} aria-disabled={true} />
+        <Tree.Item aria-level={level} aria-posinset={1} aria-setsize={1} ref={forwardedRef} label={localizedStrings.noFilteredChildren} aria-disabled={true} />
       );
     }
 
     const onRetry = reloadTree ? () => reloadTree({ parentNodeId: node.parentNodeId, state: "reset" }) : undefined;
     return (
       <Tree.Item
-        aria-level={0}
+        aria-level={level}
         aria-posinset={1}
         aria-setsize={1}
         ref={forwardedRef}

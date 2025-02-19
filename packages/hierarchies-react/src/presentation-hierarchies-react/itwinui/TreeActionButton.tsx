@@ -6,7 +6,7 @@
 import { Tree } from "@itwin/itwinui-react/bricks";
 import { PresentationHierarchyNode } from "../TreeNode.js";
 import { HierarchyLevelDetails, useTree } from "../UseTree.js";
-import { defaultLocalizedStrings } from "./LocalizationContext.js";
+import { useLocalizationContext } from "./LocalizationContext.js";
 
 const filterIcon = new URL("@itwin/itwinui-icons/filter.svg", import.meta.url).href;
 const placeholderIcon = new URL("@itwin/itwinui-icons/placeholder.svg", import.meta.url).href; // TODO: active filter icon/placeholder icon if button was not given an icon
@@ -29,17 +29,17 @@ export interface TreeItemAction {
 export type FilterActionProps = {
   /** Action to perform when the filter button is clicked for this node. */
   onFilter?: (hierarchyLevelDetails: HierarchyLevelDetails) => void;
-
-  label?: string;
 } & Partial<Pick<ReturnType<typeof useTree>, "getHierarchyLevelDetails">>;
 
 /** @internal */
 export function TreeActionButton({ show, label, action, icon }: TreeItemAction) {
-  return <Tree.ItemAction visible={show} onClick={action} label={label} icon={icon ?? placeholderIcon} />;
+  const { localizedStrings } = useLocalizationContext();
+  const localizedLabel: string | undefined = localizedStrings[label as keyof typeof localizedStrings];
+  return <Tree.ItemAction visible={show} onClick={action} label={localizedLabel ?? label} icon={icon ?? placeholderIcon} />;
 }
 
 /** @alpha */
-export function createFilterAction({ onFilter, getHierarchyLevelDetails, label }: FilterActionProps): (node: PresentationHierarchyNode) => TreeItemAction {
+export function createFilterAction({ onFilter, getHierarchyLevelDetails }: FilterActionProps): (node: PresentationHierarchyNode) => TreeItemAction {
   return (node) => {
     const handleVisibility = () => {
       if (!onFilter || !node.isFilterable) {
@@ -52,7 +52,7 @@ export function createFilterAction({ onFilter, getHierarchyLevelDetails, label }
     };
 
     return {
-      label: label ?? defaultLocalizedStrings.filterHierarchyLevel,
+      label: "filterHierarchyLevel",
       action: () => {
         const hierarchyLevelDetails = getHierarchyLevelDetails?.(node.id);
         hierarchyLevelDetails && onFilter?.(hierarchyLevelDetails);
