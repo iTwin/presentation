@@ -44,7 +44,7 @@ function getFlatNodes(nodes: PresentationTreeNode[], level: number) {
       return;
     }
 
-    flatNodes.push({ id: "placeholderNode", level: level + 1, placeholder: true } satisfies PlaceholderNode);
+    flatNodes.push({ id: `${node.id}-children-placeholder`, level: level + 1, placeholder: true } satisfies PlaceholderNode);
   });
   return flatNodes;
 }
