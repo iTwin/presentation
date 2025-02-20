@@ -10,10 +10,10 @@ import { PresentationInfoNode } from "../TreeNode.js";
 import { useTree } from "../UseTree.js";
 import { useLocalizationContext } from "./LocalizationContext.js";
 import { TreeNodeRenderer } from "./TreeNodeRenderer.js";
+import { FlatTreeNode } from "./TreeRenderer.js";
 
 interface TreeErrorRendererOwnProps {
-  node: PresentationInfoNode;
-  level: number;
+  node: FlatTreeNode<PresentationInfoNode>;
 }
 
 type TreeErrorRendererProps = TreeErrorRendererOwnProps &
@@ -22,7 +22,7 @@ type TreeErrorRendererProps = TreeErrorRendererOwnProps &
 
 /** @alpha */
 export const TreeErrorRenderer: React.ForwardRefExoticComponent<TreeErrorRendererProps & RefAttributes<HTMLDivElement>> = forwardRef(
-  ({ node, getHierarchyLevelDetails, onFilterClick, reloadTree, level }, forwardedRef) => {
+  ({ node, getHierarchyLevelDetails, onFilterClick, reloadTree }, forwardedRef) => {
     const { localizedStrings } = useLocalizationContext();
     if (node.type === "ResultSetTooLarge") {
       return (
@@ -38,25 +38,32 @@ export const TreeErrorRenderer: React.ForwardRefExoticComponent<TreeErrorRendere
                 }
               : undefined
           }
-          aria-level={level}
-          aria-posinset={1}
-          aria-setsize={1}
+          aria-level={node.level}
+          aria-posinset={node.posInLevel}
+          aria-setsize={node.levelSize}
         />
       );
     }
 
     if (node.type === "NoFilterMatches") {
       return (
-        <Tree.Item aria-level={level} aria-posinset={1} aria-setsize={1} ref={forwardedRef} label={localizedStrings.noFilteredChildren} aria-disabled={true} />
+        <Tree.Item
+          aria-level={node.level}
+          aria-posinset={node.posInLevel}
+          aria-setsize={node.levelSize}
+          ref={forwardedRef}
+          label={localizedStrings.noFilteredChildren}
+          aria-disabled={true}
+        />
       );
     }
 
     const onRetry = reloadTree ? () => reloadTree({ parentNodeId: node.parentNodeId, state: "reset" }) : undefined;
     return (
       <Tree.Item
-        aria-level={level}
-        aria-posinset={1}
-        aria-setsize={1}
+        aria-level={node.level}
+        aria-posinset={node.posInLevel}
+        aria-setsize={node.levelSize}
         ref={forwardedRef}
         label={<ErrorNodeLabel message={node.message} onRetry={onRetry} />}
         aria-disabled={true}

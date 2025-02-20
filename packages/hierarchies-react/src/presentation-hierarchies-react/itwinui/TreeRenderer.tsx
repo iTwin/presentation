@@ -69,11 +69,13 @@ export function TreeRenderer({ rootNodes, expandNode, localizedStrings, selectNo
 function noopSelectNodes() {}
 
 /** @alpha */
-export type FlatPresentationTreeNode = {
+
+export type FlatTreeNode<TNode extends PresentationTreeNode = PresentationTreeNode> = {
   level: number;
   levelSize: number;
   posInLevel: number;
-} & PresentationTreeNode;
+  placeholder: boolean;
+} & TNode;
 
 /** @alpha */
 export function flattenNodes(rootNodes: PresentationTreeNode[]) {
@@ -81,13 +83,19 @@ export function flattenNodes(rootNodes: PresentationTreeNode[]) {
 }
 
 function getFlatNodes(nodes: PresentationTreeNode[], level: number) {
-  const flatNodes: FlatPresentationTreeNode[] = [];
+  const flatNodes: FlatTreeNode<PresentationTreeNode>[] = [];
   nodes.forEach((node, index) => {
-    flatNodes.push({ ...node, level, levelSize: nodes.length, posInLevel: index + 1 });
-    if (isPresentationHierarchyNode(node) && node.isExpanded && node.children !== true) {
+    flatNodes.push({ ...node, level, levelSize: nodes.length, posInLevel: index + 1, placeholder: false });
+    if (!isPresentationHierarchyNode(node) || !node.isExpanded) {
+      return;
+    }
+    if (node.children !== true) {
       const childNodes = getFlatNodes(node.children, level + 1);
       flatNodes.push(...childNodes);
+      return;
     }
+
+    flatNodes.push({ ...node, level: level + 1, levelSize: 1, posInLevel: 1, placeholder: true });
   });
   return flatNodes;
 }
