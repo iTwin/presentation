@@ -8,7 +8,7 @@
   },
   "dependencies": {
     "@itwin/build-tools": "catalog:build-tools",
-    "@microsoft/api-extractor": "~7.47.11",
+    "@microsoft/api-extractor": "~7.50.0",
     "yargs": "^17.7.2"
   }
 }
