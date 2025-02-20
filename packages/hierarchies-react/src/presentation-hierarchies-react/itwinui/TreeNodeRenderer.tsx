@@ -5,12 +5,12 @@
 
 import { ComponentPropsWithoutRef, forwardRef, LegacyRef, MutableRefObject, ReactElement, Ref, RefAttributes, useCallback, useRef } from "react";
 import { DropdownMenu, Spinner, Tree } from "@itwin/itwinui-react/bricks";
-import { isPresentationHierarchyNode, PresentationHierarchyNode, PresentationTreeNode } from "../TreeNode.js";
+import { isPresentationHierarchyNode, PresentationHierarchyNode } from "../TreeNode.js";
 import { HierarchyLevelDetails, useTree } from "../UseTree.js";
+import { FlatTreeNode, isPlaceholderNode } from "./FlatTreeNode.js";
 import { useLocalizationContext } from "./LocalizationContext.js";
 import { TreeActionButton, TreeItemAction } from "./TreeActionButton.js";
 import { TreeErrorRenderer } from "./TreeErrorRenderer.js";
-import { FlatTreeNode } from "./TreeRenderer.js";
 
 const dropdownIcon = new URL("@itwin/itwinui-icons/more-horizontal.svg", import.meta.url).href;
 
@@ -20,7 +20,7 @@ type TreeNodeProps = ComponentPropsWithoutRef<typeof Tree.Item>;
 /** @alpha */
 export interface TreeNodeRendererOwnProps {
   /** Node that is rendered. */
-  node: FlatTreeNode<PresentationTreeNode>;
+  node: FlatTreeNode;
   /** Action to perform when the filter button is clicked for this node. */
   onFilterClick?: (hierarchyLevelDetails: HierarchyLevelDetails) => void;
   /** Returns an icon or icon href for a given node. */
@@ -75,6 +75,10 @@ export const TreeNodeRenderer: React.ForwardRefExoticComponent<TreeNodeRendererP
     const nodeRef = useRef<HTMLDivElement>(null);
     const ref = useMergedRefs(forwardedRef, nodeRef);
 
+    if (isPlaceholderNode(node)) {
+      return <PlaceholderNode {...treeItemProps} level={node.level} ref={ref} />;
+    }
+
     if (!isPresentationHierarchyNode(node)) {
       return (
         <TreeErrorRenderer node={node} getHierarchyLevelDetails={getHierarchyLevelDetails} reloadTree={reloadTree} onFilterClick={onFilterClick} ref={ref} />
@@ -111,10 +115,6 @@ export const TreeNodeRenderer: React.ForwardRefExoticComponent<TreeNodeRendererP
         </DropdownMenu.Root>,
       ];
     };
-
-    if (node.placeholder === true) {
-      return <PlaceholderNode {...treeItemProps} level={node.level} ref={ref} />;
-    }
 
     return (
       <Tree.Item

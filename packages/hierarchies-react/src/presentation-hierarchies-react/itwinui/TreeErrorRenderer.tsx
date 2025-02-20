@@ -8,19 +8,19 @@ import { Anchor, Text, Tree } from "@itwin/itwinui-react/bricks";
 import { MAX_LIMIT_OVERRIDE } from "../internal/Utils.js";
 import { PresentationInfoNode } from "../TreeNode.js";
 import { useTree } from "../UseTree.js";
+import { FlatNode } from "./FlatTreeNode.js";
 import { useLocalizationContext } from "./LocalizationContext.js";
 import { TreeNodeRenderer } from "./TreeNodeRenderer.js";
-import { FlatTreeNode } from "./TreeRenderer.js";
 
 interface TreeErrorRendererOwnProps {
-  node: FlatTreeNode<PresentationInfoNode>;
+  node: FlatNode<PresentationInfoNode>;
 }
 
 type TreeErrorRendererProps = TreeErrorRendererOwnProps &
   Pick<ComponentPropsWithoutRef<typeof TreeNodeRenderer>, "onFilterClick" | "reloadTree"> &
   Partial<Pick<ReturnType<typeof useTree>, "getHierarchyLevelDetails">>;
 
-/** @alpha */
+/** @internal */
 export const TreeErrorRenderer: React.ForwardRefExoticComponent<TreeErrorRendererProps & RefAttributes<HTMLDivElement>> = forwardRef(
   ({ node, getHierarchyLevelDetails, onFilterClick, reloadTree }, forwardedRef) => {
     const { localizedStrings } = useLocalizationContext();

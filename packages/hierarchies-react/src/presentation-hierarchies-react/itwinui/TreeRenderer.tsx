@@ -5,9 +5,10 @@
 
 import { ComponentPropsWithoutRef, useMemo } from "react";
 import { Tree } from "@itwin/itwinui-react/bricks";
-import { isPresentationHierarchyNode, PresentationTreeNode } from "../TreeNode.js";
+import { PresentationTreeNode } from "../TreeNode.js";
 import { SelectionMode, useSelectionHandler } from "../UseSelectionHandler.js";
 import { useTree } from "../UseTree.js";
+import { flattenNodes } from "./FlatTreeNode.js";
 import { LocalizationContextProvider } from "./LocalizationContext.js";
 import { TreeNodeRenderer } from "./TreeNodeRenderer.js";
 
@@ -67,35 +68,3 @@ export function TreeRenderer({ rootNodes, expandNode, localizedStrings, selectNo
 }
 
 function noopSelectNodes() {}
-
-/** @alpha */
-
-export type FlatTreeNode<TNode extends PresentationTreeNode = PresentationTreeNode> = {
-  level: number;
-  levelSize: number;
-  posInLevel: number;
-  placeholder: boolean;
-} & TNode;
-
-/** @alpha */
-export function flattenNodes(rootNodes: PresentationTreeNode[]) {
-  return getFlatNodes(rootNodes, 0);
-}
-
-function getFlatNodes(nodes: PresentationTreeNode[], level: number) {
-  const flatNodes: FlatTreeNode<PresentationTreeNode>[] = [];
-  nodes.forEach((node, index) => {
-    flatNodes.push({ ...node, level, levelSize: nodes.length, posInLevel: index + 1, placeholder: false });
-    if (!isPresentationHierarchyNode(node) || !node.isExpanded) {
-      return;
-    }
-    if (node.children !== true) {
-      const childNodes = getFlatNodes(node.children, level + 1);
-      flatNodes.push(...childNodes);
-      return;
-    }
-
-    flatNodes.push({ ...node, level: level + 1, levelSize: 1, posInLevel: 1, placeholder: true });
-  });
-  return flatNodes;
-}
