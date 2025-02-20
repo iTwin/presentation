@@ -28,12 +28,7 @@ export function createFilterAction({ onFilter, getHierarchyLevelDetails }: Filte
 export function flattenNodes(rootNodes: PresentationTreeNode[]): FlatTreeNode<PresentationTreeNode>[];
 
 // @alpha (undocumented)
-export type FlatTreeNode<TNode extends PresentationTreeNode = PresentationTreeNode> = {
-    level: number;
-    levelSize: number;
-    posInLevel: number;
-    placeholder: boolean;
-} & TNode;
+export type FlatTreeNode<TNode extends PresentationTreeNode = PresentationTreeNode> = FlatNode<TNode> | PlaceholderNode;
 
 export { GenericInstanceFilter }
 
@@ -115,9 +110,6 @@ export type PresentationTreeNode = PresentationHierarchyNode | PresentationInfoN
 export { SelectionStorage }
 
 // @alpha (undocumented)
-export const TreeErrorRenderer: React.ForwardRefExoticComponent<TreeErrorRendererProps & RefAttributes<HTMLDivElement>>;
-
-// @alpha (undocumented)
 export interface TreeItemAction {
     // (undocumented)
     action: () => void;
@@ -132,7 +124,7 @@ export interface TreeItemAction {
 export const TreeNodeRenderer: React.ForwardRefExoticComponent<TreeNodeRendererProps & RefAttributes<HTMLDivElement>>;
 
 // @alpha
-export function TreeRenderer({ rootNodes, expandNode, localizedStrings, selectNodes, isNodeSelected, selectionMode, ...treeProps }: TreeRendererProps): JSX_2.Element;
+export function TreeRenderer({ rootNodes, expandNode, localizedStrings, selectNodes, selectionMode, ...treeProps }: TreeRendererProps): JSX_2.Element;
 
 // @public @deprecated
 export function UnifiedSelectionProvider({ storage, children }: PropsWithChildren<{

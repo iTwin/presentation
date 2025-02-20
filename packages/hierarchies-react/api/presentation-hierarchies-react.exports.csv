@@ -11,7 +11,6 @@ public;interface;PresentationHierarchyNode
 public;type;PresentationInfoNode
 public;interface;PresentationResultSetTooLargeInfoNode
 public;type;PresentationTreeNode
-alpha;const;TreeErrorRenderer
 alpha;interface;TreeItemAction
 public;const;TreeNodeRenderer
 alpha;function;TreeRenderer
