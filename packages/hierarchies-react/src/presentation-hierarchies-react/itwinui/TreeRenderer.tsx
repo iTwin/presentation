@@ -39,7 +39,7 @@ type TreeRendererProps = Pick<ReturnType<typeof useTree>, "expandNode"> &
  * @see https://itwinui.bentley.com/docs/tree
  * @alpha
  */
-export function TreeRenderer({ rootNodes, expandNode, localizedStrings, selectNodes, isNodeSelected, selectionMode, ...treeProps }: TreeRendererProps) {
+export function TreeRenderer({ rootNodes, expandNode, localizedStrings, selectNodes, selectionMode, ...treeProps }: TreeRendererProps) {
   const { onNodeClick, onNodeKeyDown } = useSelectionHandler({
     rootNodes,
     selectNodes: selectNodes ?? noopSelectNodes,
@@ -52,15 +52,7 @@ export function TreeRenderer({ rootNodes, expandNode, localizedStrings, selectNo
     <LocalizationContextProvider localizedStrings={localizedStrings}>
       <Tree.Root style={{ height: "100%", width: "100%" }}>
         {flatNodes.map((flatNode) => (
-          <TreeNodeRenderer
-            {...treeProps}
-            expandNode={expandNode}
-            onNodeClick={onNodeClick}
-            onNodeKeyDown={onNodeKeyDown}
-            node={flatNode}
-            key={flatNode.id}
-            selected={isNodeSelected?.(flatNode.id)}
-          />
+          <TreeNodeRenderer {...treeProps} expandNode={expandNode} onNodeClick={onNodeClick} onNodeKeyDown={onNodeKeyDown} node={flatNode} key={flatNode.id} />
         ))}
       </Tree.Root>
     </LocalizationContextProvider>

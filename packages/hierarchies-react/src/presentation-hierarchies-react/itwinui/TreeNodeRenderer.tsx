@@ -42,9 +42,9 @@ export interface TreeNodeRendererOwnProps {
 }
 
 /** @alpha */
-type TreeNodeRendererProps = Pick<ReturnType<typeof useTree>, "expandNode"> &
+type TreeNodeRendererProps = Pick<ReturnType<typeof useTree>, "expandNode" | "isNodeSelected"> &
   Partial<Pick<ReturnType<typeof useTree>, "getHierarchyLevelDetails">> &
-  Omit<TreeNodeProps, "actions" | "aria-level" | "aria-posinset" | "aria-setsize" | "label" | "icon"> &
+  Omit<TreeNodeProps, "actions" | "aria-level" | "aria-posinset" | "aria-setsize" | "label" | "icon" | "expanded" | "selected"> &
   TreeNodeRendererOwnProps;
 
 /**
@@ -64,7 +64,7 @@ export const TreeNodeRenderer: React.ForwardRefExoticComponent<TreeNodeRendererP
       onFilterClick,
       onNodeClick,
       onNodeKeyDown,
-      selected,
+      isNodeSelected,
       getHierarchyLevelDetails,
       reloadTree,
       actions,
@@ -116,6 +116,7 @@ export const TreeNodeRenderer: React.ForwardRefExoticComponent<TreeNodeRendererP
       ];
     };
 
+    const selected = isNodeSelected(node.id);
     return (
       <Tree.Item
         {...treeItemProps}
