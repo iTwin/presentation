@@ -22,7 +22,18 @@ import { SelectionStorage } from '@itwin/unified-selection';
 import { Tree } from '@itwin/itwinui-react/bricks';
 
 // @alpha (undocumented)
-export function createFilterAction({ onFilter, getHierarchyLevelDetails, label }: FilterActionProps): (node: PresentationHierarchyNode) => TreeItemAction;
+export function createFilterAction({ onFilter, getHierarchyLevelDetails }: FilterActionProps): (node: PresentationHierarchyNode) => TreeItemAction;
+
+// @alpha (undocumented)
+export function flattenNodes(rootNodes: PresentationTreeNode[]): FlatTreeNode<PresentationTreeNode>[];
+
+// @alpha (undocumented)
+export type FlatTreeNode<TNode extends PresentationTreeNode = PresentationTreeNode> = {
+    level: number;
+    levelSize: number;
+    posInLevel: number;
+    placeholder: boolean;
+} & TNode;
 
 export { GenericInstanceFilter }
 
@@ -114,15 +125,11 @@ export interface TreeItemAction {
     icon?: string;
     // (undocumented)
     label: string;
-    // (undocumented)
-    show: boolean;
+    show?: boolean;
 }
 
-// @alpha (undocumented)
-export const TreeLevelRenderer: ({ nodes, isNodeSelected, ...rest }: TreeNodesRendererProps) => ReactElement[];
-
 // @public
-export const TreeNodeRenderer: React.ForwardRefExoticComponent<TreeNodeRendererProps_2 & RefAttributes<HTMLDivElement>>;
+export const TreeNodeRenderer: React.ForwardRefExoticComponent<TreeNodeRendererProps & RefAttributes<HTMLDivElement>>;
 
 // @alpha
 export function TreeRenderer({ rootNodes, expandNode, localizedStrings, selectNodes, isNodeSelected, selectionMode, ...treeProps }: TreeRendererProps): JSX_2.Element;
