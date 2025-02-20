@@ -74,7 +74,7 @@ catalogs:
     "testdouble": "^3.20.2"
 
   build-tools:
-    "@itwin/build-tools": "^4.10.1"
+    "@itwin/build-tools": "5.0.0-dev.67"
     "@itwin/eslint-plugin": "5.0.0-dev.1"
     "@types/node": "^20.12.12"
     "cpx2": "^7.0.1"
