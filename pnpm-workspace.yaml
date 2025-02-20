@@ -74,7 +74,7 @@ catalogs:
     "testdouble": "^3.20.2"
 
   build-tools:
-    "@itwin/build-tools": "^4.10.1"
+    "@itwin/build-tools": "5.0.0-dev.67"
     "@itwin/eslint-plugin": "5.0.0-dev.1"
     "@types/node": "^20.12.12"
     "cpx2": "^7.0.1"
@@ -82,4 +82,4 @@ catalogs:
     "eslint": "^9.13.0"
     "eslint-plugin-react": "^7.37.2"
     "rimraf": "^6.0.1"
-    "typescript": "~5.6.3"
+    "typescript": "~5.7.3"

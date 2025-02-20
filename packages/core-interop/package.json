@@ -38,7 +38,7 @@
     "lint": "eslint ./src/**/*.ts",
     "test:dev": "mocha --enable-source-maps --config ./.mocharc.json",
     "test": "npm run test:dev",
-    "extract-api": "extract-api --entry=presentation-core-interop --apiReportFolder=./api --apiReportTempFolder=./api/temp --apiSummaryFolder=./api",
+    "extract-api": "betools extract-api --entry=presentation-core-interop --apiReportFolder=./api --apiReportTempFolder=./api/temp --apiSummaryFolder=./api --includeUnexportedApis",
     "check-internal": "node ../../scripts/checkInternal.js --apiSummary ./api/presentation-core-interop.api.md",
     "validate-markdowns": "node ../../scripts/validateMarkdowns.js README.md"
   },
@@ -72,7 +72,6 @@
     "cpx2": "catalog:build-tools",
     "eslint": "catalog:build-tools",
     "mocha": "catalog:test-tools",
-    "presentation-build-tools": "workspace:^",
     "rimraf": "catalog:build-tools",
     "rxjs-for-await": "catalog:rxjs",
     "sinon": "catalog:test-tools",
