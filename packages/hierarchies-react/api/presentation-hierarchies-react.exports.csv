@@ -1,6 +1,8 @@
 sep=;
 Release Tag;API Item Type;API Item Name
 alpha;function;createFilterAction
+alpha;function;flattenNodes
+alpha;type;FlatTreeNode
 public;interface;HierarchyLevelDetails
 public;function;isPresentationHierarchyNode
 public;function;LocalizationContextProvider
@@ -9,9 +11,7 @@ public;interface;PresentationHierarchyNode
 public;type;PresentationInfoNode
 public;interface;PresentationResultSetTooLargeInfoNode
 public;type;PresentationTreeNode
-alpha;const;TreeErrorRenderer
 alpha;interface;TreeItemAction
-alpha;const;TreeLevelRenderer
 public;const;TreeNodeRenderer
 alpha;function;TreeRenderer
 public;function;UnifiedSelectionProvider

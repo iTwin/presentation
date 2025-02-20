@@ -22,7 +22,13 @@ import { SelectionStorage } from '@itwin/unified-selection';
 import { Tree } from '@itwin/itwinui-react/bricks';
 
 // @alpha (undocumented)
-export function createFilterAction({ onFilter, getHierarchyLevelDetails, label }: FilterActionProps): (node: PresentationHierarchyNode) => TreeItemAction;
+export function createFilterAction({ onFilter, getHierarchyLevelDetails }: FilterActionProps): (node: PresentationHierarchyNode) => TreeItemAction;
+
+// @alpha (undocumented)
+export function flattenNodes(rootNodes: PresentationTreeNode[]): FlatTreeNode<PresentationTreeNode>[];
+
+// @alpha (undocumented)
+export type FlatTreeNode<TNode extends PresentationTreeNode = PresentationTreeNode> = FlatNode<TNode> | PlaceholderNode;
 
 export { GenericInstanceFilter }
 
@@ -104,9 +110,6 @@ export type PresentationTreeNode = PresentationHierarchyNode | PresentationInfoN
 export { SelectionStorage }
 
 // @alpha (undocumented)
-export const TreeErrorRenderer: React.ForwardRefExoticComponent<TreeErrorRendererProps & RefAttributes<HTMLDivElement>>;
-
-// @alpha (undocumented)
 export interface TreeItemAction {
     // (undocumented)
     action: () => void;
@@ -114,18 +117,14 @@ export interface TreeItemAction {
     icon?: string;
     // (undocumented)
     label: string;
-    // (undocumented)
-    show: boolean;
+    show?: boolean;
 }
 
-// @alpha (undocumented)
-export const TreeLevelRenderer: ({ nodes, isNodeSelected, ...rest }: TreeNodesRendererProps) => ReactElement[];
-
 // @public
-export const TreeNodeRenderer: React.ForwardRefExoticComponent<TreeNodeRendererProps_2 & RefAttributes<HTMLDivElement>>;
+export const TreeNodeRenderer: React.ForwardRefExoticComponent<TreeNodeRendererProps & RefAttributes<HTMLDivElement>>;
 
 // @alpha
-export function TreeRenderer({ rootNodes, expandNode, localizedStrings, selectNodes, isNodeSelected, selectionMode, ...treeProps }: TreeRendererProps): JSX_2.Element;
+export function TreeRenderer({ rootNodes, expandNode, localizedStrings, selectNodes, selectionMode, ...treeProps }: TreeRendererProps): JSX_2.Element;
 
 // @public @deprecated
 export function UnifiedSelectionProvider({ storage, children }: PropsWithChildren<{

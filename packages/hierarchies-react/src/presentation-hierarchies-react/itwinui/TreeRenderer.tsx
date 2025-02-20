@@ -3,13 +3,13 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { ComponentPropsWithoutRef } from "react";
+import { ComponentPropsWithoutRef, useMemo } from "react";
 import { Tree } from "@itwin/itwinui-react/bricks";
 import { PresentationTreeNode } from "../TreeNode.js";
 import { SelectionMode, useSelectionHandler } from "../UseSelectionHandler.js";
 import { useTree } from "../UseTree.js";
+import { flattenNodes } from "./FlatTreeNode.js";
 import { LocalizationContextProvider } from "./LocalizationContext.js";
-import { TreeLevelRenderer } from "./TreeLevelRenderer.js";
 import { TreeNodeRenderer } from "./TreeNodeRenderer.js";
 
 /** @alpha */
@@ -39,24 +39,21 @@ type TreeRendererProps = Pick<ReturnType<typeof useTree>, "expandNode"> &
  * @see https://itwinui.bentley.com/docs/tree
  * @alpha
  */
-export function TreeRenderer({ rootNodes, expandNode, localizedStrings, selectNodes, isNodeSelected, selectionMode, ...treeProps }: TreeRendererProps) {
+export function TreeRenderer({ rootNodes, expandNode, localizedStrings, selectNodes, selectionMode, ...treeProps }: TreeRendererProps) {
   const { onNodeClick, onNodeKeyDown } = useSelectionHandler({
     rootNodes,
     selectNodes: selectNodes ?? noopSelectNodes,
     selectionMode: selectionMode ?? "single",
   });
 
+  const flatNodes = useMemo(() => flattenNodes(rootNodes), [rootNodes]);
+
   return (
     <LocalizationContextProvider localizedStrings={localizedStrings}>
       <Tree.Root style={{ height: "100%", width: "100%" }}>
-        <TreeLevelRenderer
-          {...treeProps}
-          nodes={rootNodes}
-          expandNode={expandNode}
-          onNodeClick={onNodeClick}
-          onNodeKeyDown={onNodeKeyDown}
-          isNodeSelected={isNodeSelected}
-        />
+        {flatNodes.map((flatNode) => (
+          <TreeNodeRenderer {...treeProps} expandNode={expandNode} onNodeClick={onNodeClick} onNodeKeyDown={onNodeKeyDown} node={flatNode} key={flatNode.id} />
+        ))}
       </Tree.Root>
     </LocalizationContextProvider>
   );

@@ -3,11 +3,10 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { ComponentPropsWithoutRef, ReactElement, useEffect, useMemo, useState } from "react";
+import { ComponentPropsWithoutRef, useEffect, useMemo, useState } from "react";
 import { debounceTime, Subject } from "rxjs";
 import { BeEvent } from "@itwin/core-bentley";
 import { IModelConnection } from "@itwin/core-frontend";
-import { SvgFolder, SvgImodelHollow, SvgItem, SvgLayers, SvgModel } from "@itwin/itwinui-icons-react";
 import { Button, Flex, ProgressRadial, SearchBox, Text, ToggleSwitch } from "@itwin/itwinui-react";
 import { ClassInfo, DefaultContentDisplayTypes, Descriptor, InstanceKey, KeySet } from "@itwin/presentation-common";
 import {
@@ -170,7 +169,7 @@ function Tree({ imodel, imodelAccess, height, width }: { imodel: IModelConnectio
         onFilterClick={setFilteringOptions}
         getIcon={getIcon}
         actions={[
-          createFilterAction({ onFilter: setFilteringOptions, getHierarchyLevelDetails: treeProps.getHierarchyLevelDetails, label: "Apply filter" }),
+          createFilterAction({ onFilter: setFilteringOptions, getHierarchyLevelDetails: treeProps.getHierarchyLevelDetails }),
           () => {
             return { label: "Fake button 1", action: () => {}, show: false };
           },
@@ -311,24 +310,31 @@ function toGenericFilter(filterInfo?: PresentationInstanceFilterInfo): GenericIn
   return PresentationInstanceFilter.toGenericInstanceFilter(filterInfo.filter, filterInfo.usedClasses);
 }
 
-function getIcon(node: PresentationHierarchyNode): ReactElement | undefined {
+const subjectIcon = new URL("@itwin/itwinui-icons/tree-subject.svg", import.meta.url).href;
+const classIcon = new URL("@itwin/itwinui-icons/tree-class.svg", import.meta.url).href;
+const modelIcon = new URL("@itwin/itwinui-icons/model-cube.svg", import.meta.url).href;
+const categoryIcon = new URL("@itwin/itwinui-icons/tree-category.svg", import.meta.url).href;
+const elementIcon = new URL("@itwin/itwinui-icons/tree-element.svg", import.meta.url).href;
+const iModelIcon = new URL("@itwin/itwinui-icons/imodel.svg", import.meta.url).href;
+
+function getIcon(node: PresentationHierarchyNode): string | undefined {
   if (node.extendedData?.imageId === undefined) {
     return undefined;
   }
 
   switch (node.extendedData.imageId) {
     case "icon-layers":
-      return <SvgLayers />;
+      return categoryIcon;
     case "icon-item":
-      return <SvgItem />;
+      return elementIcon;
     case "icon-ec-class":
-      return <SvgItem />;
+      return classIcon;
     case "icon-imodel-hollow-2":
-      return <SvgImodelHollow />;
+      return iModelIcon;
     case "icon-folder":
-      return <SvgFolder />;
+      return subjectIcon;
     case "icon-model":
-      return <SvgModel />;
+      return modelIcon;
   }
 
   return undefined;

@@ -8,18 +8,19 @@ import { Anchor, Text, Tree } from "@itwin/itwinui-react/bricks";
 import { MAX_LIMIT_OVERRIDE } from "../internal/Utils.js";
 import { PresentationInfoNode } from "../TreeNode.js";
 import { useTree } from "../UseTree.js";
+import { FlatNode } from "./FlatTreeNode.js";
 import { useLocalizationContext } from "./LocalizationContext.js";
-import { TreeNodeRendererOwnProps } from "./TreeNodeRenderer.js";
+import { TreeNodeRenderer } from "./TreeNodeRenderer.js";
 
 interface TreeErrorRendererOwnProps {
-  node: PresentationInfoNode;
+  node: FlatNode<PresentationInfoNode>;
 }
 
 type TreeErrorRendererProps = TreeErrorRendererOwnProps &
-  Pick<TreeNodeRendererOwnProps, "onFilterClick" | "reloadTree"> &
+  Pick<ComponentPropsWithoutRef<typeof TreeNodeRenderer>, "onFilterClick" | "reloadTree"> &
   Partial<Pick<ReturnType<typeof useTree>, "getHierarchyLevelDetails">>;
 
-/** @alpha */
+/** @internal */
 export const TreeErrorRenderer: React.ForwardRefExoticComponent<TreeErrorRendererProps & RefAttributes<HTMLDivElement>> = forwardRef(
   ({ node, getHierarchyLevelDetails, onFilterClick, reloadTree }, forwardedRef) => {
     const { localizedStrings } = useLocalizationContext();
@@ -37,16 +38,37 @@ export const TreeErrorRenderer: React.ForwardRefExoticComponent<TreeErrorRendere
                 }
               : undefined
           }
+          aria-level={node.level}
+          aria-posinset={node.posInLevel}
+          aria-setsize={node.levelSize}
         />
       );
     }
 
     if (node.type === "NoFilterMatches") {
-      return <Tree.Item ref={forwardedRef} label={localizedStrings.noFilteredChildren} aria-disabled={true} />;
+      return (
+        <Tree.Item
+          aria-level={node.level}
+          aria-posinset={node.posInLevel}
+          aria-setsize={node.levelSize}
+          ref={forwardedRef}
+          label={localizedStrings.noFilteredChildren}
+          aria-disabled={true}
+        />
+      );
     }
 
     const onRetry = reloadTree ? () => reloadTree({ parentNodeId: node.parentNodeId, state: "reset" }) : undefined;
-    return <Tree.Item ref={forwardedRef} label={<ErrorNodeLabel message={node.message} onRetry={onRetry} />} aria-disabled={true} />;
+    return (
+      <Tree.Item
+        aria-level={node.level}
+        aria-posinset={node.posInLevel}
+        aria-setsize={node.levelSize}
+        ref={forwardedRef}
+        label={<ErrorNodeLabel message={node.message} onRetry={onRetry} />}
+        aria-disabled={true}
+      />
+    );
   },
 );
 TreeErrorRenderer.displayName = "TreeErrorRenderer";
