@@ -5,13 +5,14 @@
 
 import { isPresentationHierarchyNode, PresentationTreeNode } from "../TreeNode.js";
 
+/** @alpha */
 interface PlaceholderNode {
   id: string;
   level: number;
   placeholder: true;
 }
 
-/** @internal */
+/** @alpha */
 export type FlatNode<TNode extends PresentationTreeNode = PresentationTreeNode> = {
   level: number;
   levelSize: number;
