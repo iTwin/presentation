@@ -1,6 +1,6 @@
 {
   "name": "@itwin/presentation-components",
-  "version": "5.10.0",
+  "version": "5.11.0",
   "description": "React components based on iTwin.js Presentation library",
   "license": "MIT",
   "repository": {
@@ -49,7 +49,7 @@
     "docs:changelog": "cpx ./CHANGELOG.md ./build/docs/reference/presentation-components",
     "docs:reference": "cross-env NODE_PROJECT_ROOT_DIRECTORY=../../ betools docs --json=./build/docs/reference/presentation-components/file.json --tsIndexFile=presentation-components.ts --onlyJson",
     "docs:extract": "betools extract --fileExt=ts,tsx --extractFrom=./src/test --recursive --out=./build/docs/extract",
-    "extract-api": "extract-api --entry=presentation-components --apiReportFolder=./api --apiReportTempFolder=./api/temp --apiSummaryFolder=./api",
+    "extract-api": "betools extract-api --entry=presentation-components --apiReportFolder=./api --apiReportTempFolder=./api/temp --apiSummaryFolder=./api --includeUnexportedApis",
     "check-internal": "node ../../scripts/checkInternal.js --apiSummary ./api/presentation-components.api.md"
   },
   "dependencies": {
@@ -66,18 +66,18 @@
     "rxjs": "catalog:rxjs"
   },
   "peerDependencies": {
-    "@itwin/appui-abstract": "^4.4.0",
+    "@itwin/appui-abstract": "^4.4.0 || ^5.0.0",
     "@itwin/components-react": "^4.9.0 || ^5.0.0",
-    "@itwin/core-bentley": "^4.4.0",
-    "@itwin/core-common": "^4.4.0",
-    "@itwin/core-frontend": "^4.4.0",
-    "@itwin/core-quantity": "^4.4.0",
+    "@itwin/core-bentley": "^4.4.0 || ^5.0.0",
+    "@itwin/core-common": "^4.4.0 || ^5.0.0",
+    "@itwin/core-frontend": "^4.4.0 || ^5.0.0",
+    "@itwin/core-quantity": "^4.4.0 || ^5.0.0",
     "@itwin/core-react": "^4.9.0 || ^5.0.0",
-    "@itwin/ecschema-metadata": "^4.4.0",
+    "@itwin/ecschema-metadata": "^4.4.0 || ^5.0.0",
     "@itwin/imodel-components-react": "^4.9.0 || ^5.0.0",
     "@itwin/itwinui-react": "^3.0.0",
-    "@itwin/presentation-common": "^4.4.0",
-    "@itwin/presentation-frontend": "^4.4.0",
+    "@itwin/presentation-common": "^4.4.0 || ^5.0.0",
+    "@itwin/presentation-frontend": "^4.4.0 || ^5.0.0",
     "@itwin/unified-selection-react": "workspace:^",
     "react": "^17.0.0 || ^18.0.0",
     "react-dom": "^17.0.0 || ^18.0.0"
@@ -133,7 +133,6 @@
     "ignore-styles": "catalog:test-tools",
     "jsdom": "catalog:test-tools",
     "mocha": "catalog:test-tools",
-    "presentation-build-tools": "workspace:^",
     "presentation-test-utilities": "workspace:^",
     "react": "catalog:react",
     "react-dom": "catalog:react",

@@ -4,8 +4,23 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { expect } from "chai";
-import { ArrayValue, PropertyRecord, StandardTypeNames, StructValue, PropertyValueFormat as UiPropertyValueFormat } from "@itwin/appui-abstract";
-import { EnumerationInfo, PropertyValueFormat, traverseContentItem } from "@itwin/presentation-common";
+import {
+  ArrayValue,
+  PropertyDescription,
+  PropertyRecord,
+  StandardTypeNames,
+  StructValue,
+  PropertyValueFormat as UiPropertyValueFormat,
+} from "@itwin/appui-abstract";
+import {
+  ArrayPropertyValueConstraints,
+  EnumerationInfo,
+  NumericPropertyValueConstraints,
+  PropertyValueFormat,
+  StringPropertyValueConstraints,
+  traverseContentItem,
+} from "@itwin/presentation-common";
+import { WithConstraints } from "../../presentation-components/common/ContentBuilder.js";
 import { PropertyRecordsBuilder } from "../../presentation-components/common/PropertyRecordsBuilder.js";
 import { NumericEditorName } from "../../presentation-components/properties/editors/NumericPropertyEditor.js";
 import { QuantityEditorName } from "../../presentation-components/properties/editors/QuantityPropertyEditor.js";
@@ -59,6 +74,84 @@ describe("PropertyRecordsBuilder", () => {
     traverseContentItem(builder, descriptor, item);
     expect(builder.entries.length).to.eq(1);
     expect(builder.entries[0].property.enum).to.deep.eq(enumerationInfo);
+  });
+
+  it("sets constraints props for `string` type", () => {
+    const constraints: StringPropertyValueConstraints = {
+      minimumLength: 1,
+      maximumLength: 15,
+    };
+    const descriptor = createTestContentDescriptor({
+      fields: [
+        createTestPropertiesContentField({
+          properties: [
+            {
+              property: createTestPropertyInfo({ constraints }),
+            },
+          ],
+        }),
+      ],
+    });
+    const item = createTestContentItem({
+      values: {},
+      displayValues: {},
+    });
+    traverseContentItem(builder, descriptor, item);
+    expect(builder.entries.length).to.eq(1);
+    const property: WithConstraints<PropertyDescription> = builder.entries[0].property;
+    expect(property.constraints).to.deep.eq(constraints);
+  });
+
+  it("sets constraints props for numeric type", () => {
+    const constraints: NumericPropertyValueConstraints = {
+      minimumValue: 1,
+      maximumValue: 15,
+    };
+    const descriptor = createTestContentDescriptor({
+      fields: [
+        createTestPropertiesContentField({
+          properties: [
+            {
+              property: createTestPropertyInfo({ constraints }),
+            },
+          ],
+        }),
+      ],
+    });
+    const item = createTestContentItem({
+      values: {},
+      displayValues: {},
+    });
+    traverseContentItem(builder, descriptor, item);
+    expect(builder.entries.length).to.eq(1);
+    const property: WithConstraints<PropertyDescription> = builder.entries[0].property;
+    expect(property.constraints).to.deep.eq(constraints);
+  });
+
+  it("sets constraints props for `array` type", () => {
+    const constraints: ArrayPropertyValueConstraints = {
+      minOccurs: 1,
+      maxOccurs: 15,
+    };
+    const descriptor = createTestContentDescriptor({
+      fields: [
+        createTestPropertiesContentField({
+          properties: [
+            {
+              property: createTestPropertyInfo({ constraints }),
+            },
+          ],
+        }),
+      ],
+    });
+    const item = createTestContentItem({
+      values: {},
+      displayValues: {},
+    });
+    traverseContentItem(builder, descriptor, item);
+    expect(builder.entries.length).to.eq(1);
+    const property: WithConstraints<PropertyDescription> = builder.entries[0].property;
+    expect(property.constraints).to.deep.eq(constraints);
   });
 
   it("sets extended data", () => {

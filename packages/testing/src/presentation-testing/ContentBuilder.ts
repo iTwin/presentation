@@ -7,7 +7,6 @@
  */
 
 import { PropertyRecord } from "@itwin/appui-abstract";
-import { using } from "@itwin/core-bentley";
 import { QueryRowFormat } from "@itwin/core-common";
 import { IModelConnection } from "@itwin/core-frontend";
 import {
@@ -18,7 +17,6 @@ import {
   KeySet,
   PageOptions,
   ProcessPrimitiveValueProps,
-  RegisteredRuleset,
   Ruleset,
   traverseContent,
   Value,
@@ -119,10 +117,8 @@ export class ContentBuilder {
     if (typeof rulesetOrId === "string") {
       return this.doCreateContent(rulesetOrId, instanceKeys, displayType);
     }
-
-    return using(await Presentation.presentation.rulesets().add(rulesetOrId), async (ruleset: RegisteredRuleset) => {
-      return this.doCreateContent(ruleset.id, instanceKeys, displayType);
-    });
+    using ruleset = await Presentation.presentation.rulesets().add(rulesetOrId);
+    return await this.doCreateContent(ruleset.id, instanceKeys, displayType);
   }
 
   private async getECClassNames(): Promise<Array<{ schemaName: string; className: string }>> {

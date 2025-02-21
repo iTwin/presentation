@@ -52,6 +52,19 @@
 
 - [#847](https://github.com/iTwin/presentation/pull/847): Moving tree rendering components to a new design systems.
 
+## 1.6.2
+
+### Patch Changes
+
+- [#873](https://github.com/iTwin/presentation/pull/873): Fix hierarchy level size exceeds limit info message wrapping in narrow Tree on Safari browser.
+- [#873](https://github.com/iTwin/presentation/pull/873): Do not require two clicks to expand node with filter buttons on touch devices.
+
+## 1.6.1
+
+### Patch Changes
+
+- [#866](https://github.com/iTwin/presentation/pull/866): Updated hierarchy level size exceeded info message styling in narrow tree component to avoid cutting out text.
+
 ## 1.6.0
 
 ### Minor Changes

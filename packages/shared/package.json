@@ -40,7 +40,7 @@
     "lint": "eslint \"./src/**/*.ts\"",
     "test:dev": "mocha --enable-source-maps --config ./.mocharc.json",
     "test": "npm run test:dev",
-    "extract-api": "extract-api --entry=presentation-shared --apiReportFolder=./api --apiReportTempFolder=./api/temp --apiSummaryFolder=./api",
+    "extract-api": "betools extract-api --entry=presentation-shared --apiReportFolder=./api --apiReportTempFolder=./api/temp --apiSummaryFolder=./api --includeUnexportedApis",
     "check-internal": "node ../../scripts/checkInternal.js --apiSummary ./api/presentation-shared.api.md",
     "validate-markdowns": "node ../../scripts/validateMarkdowns.js README.md"
   },
@@ -63,7 +63,6 @@
     "chai-subset": "catalog:test-tools",
     "eslint": "catalog:build-tools",
     "mocha": "catalog:test-tools",
-    "presentation-build-tools": "workspace:^",
     "presentation-test-utilities": "workspace:^",
     "rimraf": "catalog:build-tools",
     "sinon": "catalog:test-tools",

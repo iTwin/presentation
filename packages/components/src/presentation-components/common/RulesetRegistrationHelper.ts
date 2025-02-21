@@ -48,7 +48,7 @@ export class RulesetRegistrationHelper implements Disposable {
       return;
     }
 
-    this._registeredRuleset.dispose();
+    this._registeredRuleset[Symbol.dispose]();
     this._registeredRuleset = undefined;
   }
 

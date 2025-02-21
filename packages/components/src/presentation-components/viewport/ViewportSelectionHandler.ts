@@ -5,10 +5,10 @@
 
 import "../common/DisposePolyfill.js";
 import { from, Subject, takeUntil } from "rxjs";
-import { using } from "@itwin/core-bentley";
 import { IModelConnection } from "@itwin/core-frontend";
 import { KeySet } from "@itwin/presentation-common";
 import { HiliteSet, HiliteSetProvider, Presentation, SelectionChangeEventArgs, SelectionChangeType, SelectionHandler } from "@itwin/presentation-frontend";
+import { safeDispose } from "../common/Utils.js";
 
 /** @internal */
 export interface ViewportSelectionHandlerProps {
@@ -49,7 +49,7 @@ export class ViewportSelectionHandler implements Disposable {
   public [Symbol.dispose]() {
     this._cancelOngoingChanges.next();
     this._selectionHandler.manager.setSyncWithIModelToolSelection(this._imodel, false);
-    this._selectionHandler.dispose();
+    safeDispose(this._selectionHandler);
   }
 
   public get imodel() {
@@ -122,12 +122,12 @@ export class ViewportSelectionHandler implements Disposable {
 
   private applyCurrentHiliteSet(imodel: IModelConnection, clearAction: "all" | "onlyHilited" | "none" = "all") {
     if (clearAction !== "none") {
-      using(Presentation.selection.suspendIModelToolSelectionSync(this._imodel), (_) => {
-        imodel.hilited.clear();
-        if (clearAction === "all") {
-          imodel.selectionSet.emptyAll();
-        }
-      });
+      using _ = toDisposable(Presentation.selection.suspendIModelToolSelectionSync(this._imodel));
+
+      imodel.hilited.clear();
+      if (clearAction === "all") {
+        imodel.selectionSet.emptyAll();
+      }
     }
 
     from(Presentation.selection.getHiliteSetIterator(imodel))
@@ -140,34 +140,40 @@ export class ViewportSelectionHandler implements Disposable {
   }
 
   private applyHiliteSet(imodel: IModelConnection, set: HiliteSet) {
-    using(Presentation.selection.suspendIModelToolSelectionSync(this._imodel), (_) => {
-      if (set.models && set.models.length) {
-        imodel.hilited.models.addIds(set.models);
-      }
-      if (set.subCategories && set.subCategories.length) {
-        imodel.hilited.subcategories.addIds(set.subCategories);
-      }
-      if (set.elements && set.elements.length) {
-        imodel.hilited.elements.addIds(set.elements);
-        imodel.selectionSet.add(set.elements);
-      }
-    });
+    using _ = toDisposable(Presentation.selection.suspendIModelToolSelectionSync(this._imodel));
+    if (set.models && set.models.length) {
+      imodel.hilited.models.addIds(set.models);
+    }
+    if (set.subCategories && set.subCategories.length) {
+      imodel.hilited.subcategories.addIds(set.subCategories);
+    }
+    if (set.elements && set.elements.length) {
+      imodel.hilited.elements.addIds(set.elements);
+      imodel.selectionSet.add(set.elements);
+    }
   }
 
   private removeHiliteSet(imodel: IModelConnection, set: HiliteSet) {
-    using(Presentation.selection.suspendIModelToolSelectionSync(this._imodel), (_) => {
-      if (set.models?.length) {
-        imodel.hilited.models.deleteIds(set.models);
-      }
-      if (set.subCategories?.length) {
-        imodel.hilited.subcategories.deleteIds(set.subCategories);
-      }
-      if (set.elements?.length) {
-        imodel.hilited.elements.deleteIds(set.elements);
-        imodel.selectionSet.remove(set.elements);
-      }
-    });
+    using _ = toDisposable(Presentation.selection.suspendIModelToolSelectionSync(this._imodel));
+    if (set.models?.length) {
+      imodel.hilited.models.deleteIds(set.models);
+    }
+    if (set.subCategories?.length) {
+      imodel.hilited.subcategories.deleteIds(set.subCategories);
+    }
+    if (set.elements?.length) {
+      imodel.hilited.elements.deleteIds(set.elements);
+      imodel.selectionSet.remove(set.elements);
+    }
   }
 }
 
 let counter = 1;
+
+function toDisposable(resource: {} | { [Symbol.dispose]: () => void } | { dispose: () => void }): { [Symbol.dispose]: () => void } {
+  return {
+    [Symbol.dispose]: () => {
+      safeDispose(resource);
+    },
+  };
+}

@@ -1,6 +1,6 @@
 {
   "name": "@itwin/presentation-core-interop",
-  "version": "1.2.0",
+  "version": "1.3.0",
   "description": "The package acts as a layer between iTwin.js Core and Presentation packages.",
   "license": "MIT",
   "author": {
@@ -38,7 +38,7 @@
     "lint": "eslint ./src/**/*.ts",
     "test:dev": "mocha --enable-source-maps --config ./.mocharc.json",
     "test": "npm run test:dev",
-    "extract-api": "extract-api --entry=presentation-core-interop --apiReportFolder=./api --apiReportTempFolder=./api/temp --apiSummaryFolder=./api",
+    "extract-api": "betools extract-api --entry=presentation-core-interop --apiReportFolder=./api --apiReportTempFolder=./api/temp --apiSummaryFolder=./api --includeUnexportedApis",
     "check-internal": "node ../../scripts/checkInternal.js --apiSummary ./api/presentation-core-interop.api.md",
     "validate-markdowns": "node ../../scripts/validateMarkdowns.js README.md"
   },
@@ -47,11 +47,11 @@
     "rxjs": "catalog:rxjs"
   },
   "peerDependencies": {
-    "@itwin/core-bentley": "^4.1.0",
-    "@itwin/core-common": "^4.1.0",
-    "@itwin/core-geometry": "^4.1.0",
-    "@itwin/core-quantity": "^4.1.0",
-    "@itwin/ecschema-metadata": "^4.1.0"
+    "@itwin/core-bentley": "^4.1.0 || ^5.0.0",
+    "@itwin/core-common": "^4.1.0 || ^5.0.0",
+    "@itwin/core-geometry": "^4.1.0 || ^5.0.0",
+    "@itwin/core-quantity": "^4.1.0 || ^5.0.0",
+    "@itwin/ecschema-metadata": "^4.1.0 || ^5.0.0"
   },
   "devDependencies": {
     "@itwin/build-tools": "catalog:build-tools",
@@ -72,7 +72,6 @@
     "cpx2": "catalog:build-tools",
     "eslint": "catalog:build-tools",
     "mocha": "catalog:test-tools",
-    "presentation-build-tools": "workspace:^",
     "rimraf": "catalog:build-tools",
     "rxjs-for-await": "catalog:rxjs",
     "sinon": "catalog:test-tools",

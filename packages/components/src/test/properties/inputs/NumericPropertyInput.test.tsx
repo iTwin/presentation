@@ -6,10 +6,12 @@
 import { expect } from "chai";
 import { createRef } from "react";
 import sinon from "sinon";
-import { PrimitiveValue, StandardTypeNames } from "@itwin/appui-abstract";
+import { PrimitiveValue, PropertyDescription, PropertyRecord, StandardTypeNames } from "@itwin/appui-abstract";
+import { PropertyUpdatedArgs } from "@itwin/components-react";
 import { EmptyLocalization } from "@itwin/core-common";
 import { IModelApp } from "@itwin/core-frontend";
 import { Presentation } from "@itwin/presentation-frontend";
+import { WithConstraints } from "../../../presentation-components/common/ContentBuilder.js";
 import { PropertyEditorAttributes } from "../../../presentation-components/properties/editors/Common.js";
 import { NumericInput, NumericPropertyInput } from "../../../presentation-components/properties/inputs/NumericPropertyInput.js";
 import { createTestPropertyRecord } from "../../_helpers/UiComponents.js";
@@ -29,6 +31,64 @@ describe("<NumericPropertyInput />", () => {
 
   afterEach(async () => {
     sinon.restore();
+  });
+
+  [
+    { testName: "the input value if min and max are undefined", input: "0", expectedResult: 0, min: undefined, max: undefined },
+    { testName: "undefined if input value isn't a number", input: "+", expectedResult: undefined, min: 1, max: 2 },
+    { testName: "the input value if value falls in min and max range", input: "1", expectedResult: 1, min: 1, max: 2 },
+    { testName: "min when input value is less than min", input: "0", expectedResult: 1, min: 1, max: undefined },
+    { testName: "max when input value is more than max", input: "3", expectedResult: 2, min: undefined, max: 2 },
+  ].forEach((testCase) =>
+    it(`calls onCommit with ${testCase.testName}`, async () => {
+      const record: PropertyRecord & { property: WithConstraints<PropertyDescription> } = createRecord(2);
+      record.property.constraints = { minimumValue: testCase.min, maximumValue: testCase.max };
+      const ref = createRef<PropertyEditorAttributes>();
+      const spy = sinon.spy();
+      const onCommit = (args: PropertyUpdatedArgs) => {
+        if ("value" in args.newValue) {
+          spy(args.newValue.value);
+        }
+      };
+      const { getByRole, user } = render(<NumericPropertyInput ref={ref} propertyRecord={record} onCommit={onCommit} />);
+
+      expect((ref.current?.getValue() as PrimitiveValue).value).to.be.eq(2);
+
+      const inputContainer = await waitFor(() => getByRole("textbox"));
+
+      await user.clear(inputContainer);
+      await user.click(inputContainer);
+      await user.type(inputContainer, testCase.input);
+      await user.tab();
+
+      await waitFor(() => expect((ref.current?.getValue() as PrimitiveValue).value).to.be.eq(testCase.expectedResult));
+      expect(spy).to.be.calledOnceWith(testCase.expectedResult);
+    }),
+  );
+
+  it("calls onCommit with correct values with non numeric constraints", async () => {
+    const record: PropertyRecord & { property: WithConstraints<PropertyDescription> } = createRecord(2);
+    record.property.constraints = { minimumLength: 2 };
+    const ref = createRef<PropertyEditorAttributes>();
+    const spy = sinon.spy();
+    const onCommit = (args: PropertyUpdatedArgs) => {
+      if ("value" in args.newValue) {
+        spy(args.newValue.value);
+      }
+    };
+    const { getByRole, user } = render(<NumericPropertyInput ref={ref} propertyRecord={record} onCommit={onCommit} />);
+
+    expect((ref.current?.getValue() as PrimitiveValue).value).to.be.eq(2);
+
+    const inputContainer = await waitFor(() => getByRole("textbox"));
+
+    await user.clear(inputContainer);
+    await user.click(inputContainer);
+    await user.type(inputContainer, "3");
+    await user.tab();
+
+    await waitFor(() => expect((ref.current?.getValue() as PrimitiveValue).value).to.be.eq(3));
+    expect(spy).to.be.calledOnceWith(3);
   });
 
   it("get value from NumericPropertyInput reference", async () => {

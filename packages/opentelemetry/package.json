@@ -1,6 +1,6 @@
 {
   "name": "@itwin/presentation-opentelemetry",
-  "version": "4.1.1",
+  "version": "4.2.0",
   "description": "Utilities to enable OpenTelemetry tracing of Presentation requests",
   "license": "MIT",
   "repository": {
@@ -44,11 +44,11 @@
     "lint": "eslint \"./src/**/*.ts\"",
     "test:dev": "mocha --enable-source-maps --config ./.mocharc.json",
     "test": "npm run test:dev",
-    "extract-api": "extract-api --entry=presentation-opentelemetry --apiReportFolder=./api --apiReportTempFolder=./api/temp --apiSummaryFolder=./api",
+    "extract-api": "betools extract-api --entry=presentation-opentelemetry --apiReportFolder=./api --apiReportTempFolder=./api/temp --apiSummaryFolder=./api --includeUnexportedApis",
     "check-internal": "node ../../scripts/checkInternal.js --apiSummary ./api/presentation-opentelemetry.api.md"
   },
   "peerDependencies": {
-    "@itwin/presentation-common": "^3.6.3 || ^4.0.0",
+    "@itwin/presentation-common": "^3.6.3 || ^4.0.0  || ^5.0.0",
     "@opentelemetry/api": "^1.0.4"
   },
   "devDependencies": {
@@ -72,7 +72,6 @@
     "cross-env": "catalog:build-tools",
     "eslint": "catalog:build-tools",
     "mocha": "catalog:test-tools",
-    "presentation-build-tools": "workspace:^",
     "rimraf": "catalog:build-tools",
     "sinon": "catalog:test-tools",
     "sinon-chai": "catalog:test-tools",

@@ -110,6 +110,7 @@ export function createPropertyInfoFromPropertiesField(field: PropertiesField): P
     isReadonly: field.isReadonly,
     renderer: field.renderer,
     koqName: field.properties[0].property.kindOfQuantity?.name,
+    constraints: field.properties[0].property.constraints,
   });
 
   const sourceClassIds = getPropertySourceClassInfos(field).map((classInfo) => classInfo.id);

@@ -7,8 +7,6 @@ Array [
     "className": "SchemaName:ClassName",
     "field": Object {
       "category": "nested1",
-      "editor": undefined,
-      "extendedData": undefined,
       "isReadonly": false,
       "label": "Properties Field",
       "name": "PropertiesField",
@@ -26,7 +24,6 @@ Array [
           },
         },
       ],
-      "renderer": undefined,
       "type": Object {
         "typeName": "string",
         "valueFormat": "Primitive",
@@ -47,8 +44,6 @@ Array [
     "className": "SchemaName:ClassName",
     "field": Object {
       "category": "nested21",
-      "editor": undefined,
-      "extendedData": undefined,
       "isReadonly": false,
       "label": "Properties Field",
       "name": "PropertiesField",
@@ -66,7 +61,6 @@ Array [
           },
         },
       ],
-      "renderer": undefined,
       "type": Object {
         "typeName": "string",
         "valueFormat": "Primitive",
@@ -92,8 +86,6 @@ Array [
     "className": "SchemaName:ClassName",
     "field": Object {
       "category": "root",
-      "editor": undefined,
-      "extendedData": undefined,
       "isReadonly": false,
       "label": "Properties Field",
       "name": "PropertiesField",
@@ -111,7 +103,6 @@ Array [
           },
         },
       ],
-      "renderer": undefined,
       "type": Object {
         "typeName": "string",
         "valueFormat": "Primitive",
@@ -132,8 +123,6 @@ Array [
     "className": "SchemaName:ClassName",
     "field": Object {
       "category": "root",
-      "editor": undefined,
-      "extendedData": undefined,
       "isReadonly": false,
       "label": "Properties Field",
       "name": "PropertiesField",
@@ -156,7 +145,6 @@ Array [
           },
         },
       ],
-      "renderer": undefined,
       "type": Object {
         "typeName": "string",
         "valueFormat": "Primitive",
@@ -186,8 +174,6 @@ Array [
     "className": "SchemaName:ClassName",
     "field": Object {
       "category": "root",
-      "editor": undefined,
-      "extendedData": undefined,
       "isReadonly": false,
       "label": "Properties Field",
       "name": "PropertiesField",
@@ -205,7 +191,6 @@ Array [
           },
         },
       ],
-      "renderer": undefined,
       "type": Object {
         "typeName": "string",
         "valueFormat": "Primitive",
@@ -226,8 +211,6 @@ Array [
     "className": "SchemaName:ClassName",
     "field": Object {
       "category": "root",
-      "editor": undefined,
-      "extendedData": undefined,
       "isReadonly": false,
       "label": "Properties Field",
       "name": "PropertiesField",
@@ -245,7 +228,6 @@ Array [
           },
         },
       ],
-      "renderer": undefined,
       "type": Object {
         "typeName": "string",
         "valueFormat": "Primitive",

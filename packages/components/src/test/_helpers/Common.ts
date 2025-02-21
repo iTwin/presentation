@@ -7,6 +7,7 @@ import { Component } from "react";
 import sinon from "sinon";
 import { BeDuration } from "@itwin/core-bentley";
 import { ClassInfo, InstanceKey, PropertyInfo, RelatedClassInfo, RelatedClassInfoWithOptionalRelationship, Ruleset } from "@itwin/presentation-common";
+import { WithConstraints } from "../../presentation-components/common/ContentBuilder.js";
 import { PresentationInstanceFilterPropertyInfo } from "../../presentation-components/instance-filter-builder/PresentationFilterBuilder.js";
 import { createTestCategoryDescription, createTestPropertiesContentField } from "./Content.js";
 
@@ -24,7 +25,7 @@ export const createTestECClassInfo = (props?: Partial<ClassInfo>) => ({
   ...props,
 });
 
-export const createTestPropertyInfo = (props?: Partial<PropertyInfo>) => ({
+export const createTestPropertyInfo = (props?: Partial<WithConstraints<PropertyInfo>>) => ({
   classInfo: createTestECClassInfo(),
   name: "PropertyName",
   type: "string",

@@ -22,8 +22,9 @@ import { safeDispose } from "./Utils.js";
 export interface EnableUnifiedSelectionSyncWithIModelProps {
   /**
    * Provides access to different iModel's features: query executing, class hierarchy, selection and hilite sets.
-   * It's recommended to use `@itwin/presentation-core-interop` to create `ECSqlQueryExecutor` and `ECSchemaProvider` from
-   * [IModelConnection](https://www.itwinjs.org/reference/core-frontend/imodelconnection/imodelconnection/) and map its `key`,
+   *
+   * It's recommended to use `@itwin/presentation-core-interop` to create `key`, `ECSqlQueryExecutor` and `ECSchemaProvider` from
+   * [IModelConnection](https://www.itwinjs.org/reference/core-frontend/imodelconnection/imodelconnection/), and map its
    * `hilited` and `selectionSet` attributes like this:
    *
    * ```ts
@@ -39,7 +40,7 @@ export interface EnableUnifiedSelectionSyncWithIModelProps {
    *   hiliteSet: imodel.hilited,
    *   selectionSet: imodel.selectionSet,
    * };
-   * ```.
+   * ```
    */
   imodelAccess: ECSqlQueryExecutor &
     ECClassHierarchyInspector & {
@@ -51,10 +52,13 @@ export interface EnableUnifiedSelectionSyncWithIModelProps {
       readonly selectionSet: CoreIModelSelectionSet;
     };
 
-  /** Selection storage to synchronize IModel's tool selection with. */
+  /**
+   * Unified selection storage to synchronize IModel's tool selection with. The storage should be shared
+   * across all components in the application to ensure unified selection experience.
+   */
   selectionStorage: SelectionStorage;
 
-  /** Active scope provider. */
+  /** Active selection scope provider. */
   activeScopeProvider: () => ComputeSelectionProps["scope"];
 
   /**

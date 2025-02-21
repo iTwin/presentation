@@ -8,9 +8,9 @@ import { expect } from "chai";
 import ChaiJestSnapshot from "chai-jest-snapshot";
 import path from "path";
 import { Id64 } from "@itwin/core-bentley";
-import { IModelConnection, SnapshotConnection } from "@itwin/core-frontend";
+import { IModelConnection } from "@itwin/core-frontend";
 import { ChildNodeSpecificationTypes, ContentSpecificationTypes, RelationshipDirection, Ruleset, RuleTypes } from "@itwin/presentation-common";
-import { ContentBuilder, HierarchyBuilder } from "@itwin/presentation-testing";
+import { ContentBuilder, HierarchyBuilder, TestIModelConnection } from "@itwin/presentation-testing";
 import { initialize, terminate } from "../IntegrationTests.js";
 
 const iModelPath = "assets/datasets/Properties_60InstancesWithUrl2.ibim";
@@ -208,7 +208,7 @@ describe("RulesetTesting", () => {
     await initialize();
 
     // set up for testing iModel presentation data
-    iModel = await SnapshotConnection.openFile(iModelPath);
+    iModel = TestIModelConnection.openFile(iModelPath);
     // __PUBLISH_EXTRACT_END__
   });
 

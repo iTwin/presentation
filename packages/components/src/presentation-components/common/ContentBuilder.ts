@@ -2,6 +2,9 @@
  * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
+/** @packageDocumentation
+ * @module Core
+ */
 
 import { inPlaceSort } from "fast-sort";
 import {
@@ -28,6 +31,7 @@ import {
   ProcessFieldHierarchiesProps,
   ProcessMergedValueProps,
   ProcessPrimitiveValueProps,
+  PropertyValueConstraints,
   RendererDescription,
   StartArrayProps,
   StartCategoryProps,
@@ -41,6 +45,12 @@ import { NumericEditorName } from "../properties/editors/NumericPropertyEditor.j
 import { QuantityEditorName } from "../properties/editors/QuantityPropertyEditor.js";
 import { WithIModelKey } from "./Utils.js";
 
+/**
+ * Expands specified type with additional constraints property.
+ * @public
+ */
+export type WithConstraints<T extends {}> = T & { constraints?: PropertyValueConstraints };
+
 /** @internal */
 export interface FieldInfo {
   type: TypeDescription;
@@ -51,9 +61,11 @@ export interface FieldInfo {
   enum?: EnumerationInfo;
   isReadonly?: boolean;
   koqName?: string;
+  constraints?: PropertyValueConstraints;
 }
 
-function createFieldInfo(field: Field, parentFieldName?: string) {
+function createFieldInfo(field: Field, parentFieldName?: string): FieldInfo {
+  const constraints = field.isPropertiesField() ? field.properties[0].property.constraints : undefined;
   return {
     type: field.isNestedContentField() ? field.type : { ...field.type, typeName: field.type.typeName.toLowerCase() },
     name: combineFieldNames(field.name, parentFieldName),
@@ -62,12 +74,13 @@ function createFieldInfo(field: Field, parentFieldName?: string) {
     renderer: field.renderer,
     enum: field.isPropertiesField() ? field.properties[0].property.enumerationInfo : undefined,
     koqName: field.isPropertiesField() ? field.properties[0].property.kindOfQuantity?.name : undefined,
+    constraints,
   };
 }
 
 /** @internal */
 export function createPropertyDescriptionFromFieldInfo(info: FieldInfo) {
-  const descr: PropertyDescription = {
+  const descr: WithConstraints<PropertyDescription> = {
     typename: info.type.typeName,
     name: info.name,
     displayLabel: info.label,
@@ -84,6 +97,10 @@ export function createPropertyDescriptionFromFieldInfo(info: FieldInfo) {
   if (info.koqName) {
     descr.quantityType = info.koqName;
     descr.editor = { name: QuantityEditorName, ...descr.editor };
+  }
+
+  if (info.constraints) {
+    descr.constraints = info.constraints;
   }
 
   if (
