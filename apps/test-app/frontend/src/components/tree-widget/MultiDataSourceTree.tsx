@@ -91,6 +91,7 @@ function Tree({ imodelAccess, height, width }: { imodelAccess: IModelAccess; hei
     isLoading,
     reloadTree,
     setFormatter: _,
+    getNode: _getNode,
     ...treeProps
   } = useUnifiedSelectionTree({
     selectionStorage: unifiedSelectionContext.storage,
