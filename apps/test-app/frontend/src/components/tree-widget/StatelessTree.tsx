@@ -81,7 +81,14 @@ function Tree({ imodel, imodelAccess, height, width }: { imodel: IModelConnectio
     throw new Error("Unified selection context is not available");
   }
 
-  const { rootNodes, isLoading, reloadTree, setFormatter, ...treeProps } = useIModelUnifiedSelectionTree({
+  const {
+    rootNodes,
+    isLoading,
+    reloadTree,
+    setFormatter,
+    getNode: _getNode,
+    ...treeProps
+  } = useIModelUnifiedSelectionTree({
     selectionStorage: unifiedSelectionContext.storage,
     sourceName: "StatelessTreeV2",
     imodelAccess,
@@ -164,6 +171,7 @@ function Tree({ imodel, imodelAccess, height, width }: { imodel: IModelConnectio
     return (
       <TreeRenderer
         {...treeProps}
+        style={{ height: "100%", width: "100%" }}
         rootNodes={rootNodes ?? []}
         reloadTree={reloadTree}
         onFilterClick={setFilteringOptions}
@@ -177,11 +185,10 @@ function Tree({ imodel, imodelAccess, height, width }: { imodel: IModelConnectio
             return { label: "Fake button 2", action: () => {}, show: true };
           },
           () => {
-            return { label: "Fake button 2", action: () => {}, show: true };
+            return { label: "Fake button 3", action: () => {}, show: true };
           },
         ]}
         selectionMode={"extended"}
-        style={{ height: "100%", width: "100%" }}
       />
     );
   };

@@ -17,7 +17,6 @@ import { JSX as JSX_2 } from 'react/jsx-runtime';
 import { Props } from '@itwin/presentation-shared';
 import { PropsWithChildren } from 'react';
 import { ReactElement } from 'react';
-import { RefAttributes } from 'react';
 import { SelectionStorage } from '@itwin/unified-selection';
 import { Tree } from '@itwin/itwinui-react/bricks';
 
@@ -192,7 +191,7 @@ export interface TreeItemAction {
 type TreeNodeProps = ComponentPropsWithoutRef<typeof Tree.Item>;
 
 // @public
-export const TreeNodeRenderer: React.ForwardRefExoticComponent<TreeNodeRendererProps & RefAttributes<HTMLDivElement>>;
+export function TreeNodeRenderer({ node, expandNode, getIcon, getLabel, onFilterClick, onNodeClick, onNodeKeyDown, isNodeSelected, getHierarchyLevelDetails, reloadTree, actions, ...treeItemProps }: TreeNodeRendererProps): JSX_2.Element;
 
 // @alpha (undocumented)
 interface TreeNodeRendererOwnProps {

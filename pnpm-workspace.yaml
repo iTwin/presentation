@@ -34,7 +34,7 @@ catalogs:
   itwinui:
     "@itwin/itwinui-icons-react": "^2.9.0"
     "@itwin/itwinui-illustrations-react": "^2.1.0"
-    "@itwin/itwinui-react": "^3.17.1"
+    "@itwin/itwinui-react": "^3.17.2"
 
   react:
     "classnames": "^2.5.1"

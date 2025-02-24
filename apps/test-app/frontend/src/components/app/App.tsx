@@ -126,24 +126,22 @@ export function App() {
   }, []);
 
   return (
-    <Root colorScheme="light" density="dense">
-      <ThemeProvider theme="light" future={{ themeBridge: true }}>
-        <UnifiedSelectionContextProvider storage={MyAppFrontend.selectionStorage}>
-          <div className="app">
-            <div className="app-header">
-              <h2>{IModelApp.localization.getLocalizedString("Sample:welcome-message")}</h2>
-            </div>
-            <div className="app-pickers">
-              <IModelSelector onIModelSelected={onIModelSelected} activeIModelPath={state.imodelPath} />
-              <RulesetSelector onRulesetSelected={onRulesetSelected} activeRulesetId={state.rulesetId} />
-              <UnitSystemSelector selectedUnitSystem={state.activeUnitSystem} onUnitSystemSelected={onUnitSystemSelected} />
-              <ToggleSwitch label="Persist settings" labelPosition="right" checked={state.persistSettings} onChange={onPersistSettingsValueChange} />
-            </div>
-            {state.imodel ? <IModelComponents imodel={state.imodel} rulesetId={state.rulesetId} /> : null}
+    <ThemeProvider theme={"light"} future={{ themeBridge: true }} as={Root} colorScheme={"light"} synchronizeColorScheme density="dense">
+      <UnifiedSelectionContextProvider storage={MyAppFrontend.selectionStorage}>
+        <div className="app">
+          <div className="app-header">
+            <h2>{IModelApp.localization.getLocalizedString("Sample:welcome-message")}</h2>
           </div>
-        </UnifiedSelectionContextProvider>
-      </ThemeProvider>
-    </Root>
+          <div className="app-pickers">
+            <IModelSelector onIModelSelected={onIModelSelected} activeIModelPath={state.imodelPath} />
+            <RulesetSelector onRulesetSelected={onRulesetSelected} activeRulesetId={state.rulesetId} />
+            <UnitSystemSelector selectedUnitSystem={state.activeUnitSystem} onUnitSystemSelected={onUnitSystemSelected} />
+            <ToggleSwitch label="Persist settings" labelPosition="right" checked={state.persistSettings} onChange={onPersistSettingsValueChange} />
+          </div>
+          {state.imodel ? <IModelComponents imodel={state.imodel} rulesetId={state.rulesetId} /> : null}
+        </div>
+      </UnifiedSelectionContextProvider>
+    </ThemeProvider>
   );
 }
 
