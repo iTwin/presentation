@@ -53,15 +53,15 @@ export function TreeRenderer({ rootNodes, expandNode, localizedStrings, selectNo
     count: flatNodes.length,
     getScrollElement: () => parentRef.current,
     estimateSize: () => 28,
-    overscan: 30,
+    overscan: 5,
   });
 
   const items = virtualizer.getVirtualItems();
 
   return (
     <LocalizationContextProvider localizedStrings={localizedStrings}>
-      <div style={{ height: "100%", width: "100%", overflowY: "auto", position: "relative" }} ref={parentRef}>
-        <Tree.Root style={{ height: "100%", width: "100%", overflow: "initial" }}>
+      <div style={{ height: "100%", width: "100%", overflowY: "auto" }} ref={parentRef}>
+        <Tree.Root style={{ height: virtualizer.getTotalSize(), width: "100%", position: "relative" }}>
           {items.map((virtualizedItem) => {
             return (
               <div
@@ -73,7 +73,6 @@ export function TreeRenderer({ rootNodes, expandNode, localizedStrings, selectNo
                   top: 0,
                   left: 0,
                   width: "100%",
-                  height: `${virtualizedItem.size}px`,
                   transform: `translateY(${virtualizedItem.start}px)`,
                   willChange: "transform",
                 }}
