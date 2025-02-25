@@ -3,8 +3,9 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { ComponentPropsWithoutRef, useMemo } from "react";
+import { ComponentPropsWithoutRef, useMemo, useRef } from "react";
 import { Tree } from "@itwin/itwinui-react/bricks";
+import { useVirtualizer } from "@tanstack/react-virtual";
 import { PresentationTreeNode } from "../TreeNode.js";
 import { SelectionMode, useSelectionHandler } from "../UseSelectionHandler.js";
 import { useTree } from "../UseTree.js";
@@ -45,16 +46,51 @@ export function TreeRenderer({ rootNodes, expandNode, localizedStrings, selectNo
     selectNodes: selectNodes ?? noopSelectNodes,
     selectionMode: selectionMode ?? "single",
   });
-
+  const parentRef = useRef<HTMLDivElement>(null);
   const flatNodes = useMemo(() => flattenNodes(rootNodes), [rootNodes]);
+
+  const virtualizer = useVirtualizer({
+    count: flatNodes.length,
+    getScrollElement: () => parentRef.current,
+    estimateSize: () => 28,
+    overscan: 30,
+  });
+
+  const items = virtualizer.getVirtualItems();
 
   return (
     <LocalizationContextProvider localizedStrings={localizedStrings}>
-      <Tree.Root style={{ height: "100%", width: "100%" }}>
-        {flatNodes.map((flatNode) => (
-          <TreeNodeRenderer {...treeProps} expandNode={expandNode} onNodeClick={onNodeClick} onNodeKeyDown={onNodeKeyDown} node={flatNode} key={flatNode.id} />
-        ))}
-      </Tree.Root>
+      <div className="TreeContainerWIP" style={{ height: "100%", width: "100%", overflowY: "auto", position: "relative" }} ref={parentRef}>
+        <Tree.Root style={{ height: "100%", width: "100%", overflow: "initial" }}>
+          {items.map((virtualizedItem) => {
+            return (
+              <div
+                key={virtualizedItem.key}
+                data-index={virtualizedItem.index}
+                ref={virtualizer.measureElement}
+                style={{
+                  position: "absolute",
+                  top: 0,
+                  left: 0,
+                  width: "100%",
+                  height: `${virtualizedItem.size}px`,
+                  transform: `translateY(${virtualizedItem.start}px)`,
+                  willChange: "transform",
+                }}
+              >
+                <TreeNodeRenderer
+                  {...treeProps}
+                  expandNode={expandNode}
+                  onNodeClick={onNodeClick}
+                  onNodeKeyDown={onNodeKeyDown}
+                  node={flatNodes[virtualizedItem.index]}
+                  key={flatNodes[virtualizedItem.index].id}
+                />
+              </div>
+            );
+          })}
+        </Tree.Root>
+      </div>
     </LocalizationContextProvider>
   );
 }

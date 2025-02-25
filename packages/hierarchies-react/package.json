@@ -57,6 +57,7 @@
     "@itwin/presentation-hierarchies": "workspace:^",
     "@itwin/presentation-shared": "workspace:^",
     "@itwin/unified-selection": "workspace:^",
+    "@tanstack/react-virtual": "^3.13.0",
     "classnames": "catalog:react",
     "immer": "^10.1.1",
     "react-error-boundary": "catalog:react",
