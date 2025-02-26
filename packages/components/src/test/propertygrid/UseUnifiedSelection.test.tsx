@@ -47,7 +47,6 @@ describe("usePropertyDataProviderWithUnifiedSelection", () => {
 
     beforeEach(() => {
       selectionHandler = sinon.createStubInstance(SelectionHandler);
-      selectionHandler[Symbol.dispose] = sinon.stub();
     });
 
     it("doesn't set provider keys when handler returns no selection", () => {

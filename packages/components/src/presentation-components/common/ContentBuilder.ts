@@ -31,7 +31,7 @@ import {
   ProcessFieldHierarchiesProps,
   ProcessMergedValueProps,
   ProcessPrimitiveValueProps,
-  PropertyValueConstraints,
+  PropertyInfo,
   RendererDescription,
   StartArrayProps,
   StartCategoryProps,
@@ -44,6 +44,24 @@ import {
 import { NumericEditorName } from "../properties/editors/NumericPropertyEditor.js";
 import { QuantityEditorName } from "../properties/editors/QuantityPropertyEditor.js";
 import { WithIModelKey } from "./Utils.js";
+
+/**
+ * This is merely a copy of `PropertyValueConstraints` from @itwin/presentation-common package to support pre-5.0 version.
+ * @public
+ */
+export type PropertyValueConstraints =
+  | {
+      minimumLength?: number;
+      maximumLength?: number;
+    }
+  | {
+      minimumValue?: number;
+      maximumValue?: number;
+    }
+  | {
+      minOccurs?: number;
+      maxOccurs?: number;
+    };
 
 /**
  * Expands specified type with additional constraints property.
@@ -64,17 +82,19 @@ export interface FieldInfo {
   constraints?: PropertyValueConstraints;
 }
 
-function createFieldInfo(field: Field, parentFieldName?: string): FieldInfo {
-  const constraints = field.isPropertiesField() ? field.properties[0].property.constraints : undefined;
+/** @internal */
+export function createFieldInfo(field: Field, parentFieldName?: string): FieldInfo {
+  const property: undefined | WithConstraints<PropertyInfo> = field.isPropertiesField() ? field.properties[0].property : undefined;
   return {
-    type: field.isNestedContentField() ? field.type : { ...field.type, typeName: field.type.typeName.toLowerCase() },
     name: combineFieldNames(field.name, parentFieldName),
+    type: field.isNestedContentField() ? field.type : { ...field.type, typeName: field.type.typeName.toLowerCase() },
     label: field.label,
+    isReadonly: field.isReadonly,
     editor: field.editor,
     renderer: field.renderer,
-    enum: field.isPropertiesField() ? field.properties[0].property.enumerationInfo : undefined,
-    koqName: field.isPropertiesField() ? field.properties[0].property.kindOfQuantity?.name : undefined,
-    constraints,
+    enum: property?.enumerationInfo,
+    koqName: property?.kindOfQuantity?.name,
+    constraints: property?.constraints,
   };
 }
 
