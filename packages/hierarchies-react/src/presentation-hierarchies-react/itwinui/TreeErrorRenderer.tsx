@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { ComponentPropsWithoutRef, forwardRef, ForwardRefExoticComponent, RefAttributes } from "react";
+import { ComponentPropsWithoutRef, CSSProperties, forwardRef, ForwardRefExoticComponent, RefAttributes } from "react";
 import { Anchor, Text, Tree } from "@itwin/itwinui-react/bricks";
 import { MAX_LIMIT_OVERRIDE } from "../internal/Utils.js";
 import { PresentationInfoNode } from "../TreeNode.js";
@@ -21,7 +21,7 @@ export interface TreeErrorItemProps {
 
 interface TreeErrorRendererOwnProps {
   node: FlatNode<PresentationInfoNode>;
-  style?: React.CSSProperties;
+  style?: CSSProperties;
 }
 
 type TreeErrorRendererProps = TreeErrorRendererOwnProps & TreeErrorItemProps & Partial<Pick<ReturnType<typeof useTree>, "getHierarchyLevelDetails">>;
