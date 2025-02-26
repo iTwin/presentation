@@ -81,7 +81,7 @@ export const TreeNodeRenderer: React.ForwardRefExoticComponent<TreeNodeRendererP
 
     if (!isPresentationHierarchyNode(node)) {
       return (
-        <TreeErrorRenderer ref={ref} node={node} getHierarchyLevelDetails={getHierarchyLevelDetails} reloadTree={reloadTree} onFilterClick={onFilterClick} />
+        <TreeErrorRenderer {...treeItemPropps} ref={ref} node={node} getHierarchyLevelDetails={getHierarchyLevelDetails} reloadTree={reloadTree} onFilterClick={onFilterClick} />
       );
     }
 
