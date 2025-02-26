@@ -12,7 +12,7 @@ public;type;PresentationInfoNode
 public;interface;PresentationResultSetTooLargeInfoNode
 public;type;PresentationTreeNode
 alpha;interface;TreeItemAction
-public;function;TreeNodeRenderer
+public;const;TreeNodeRenderer
 alpha;function;TreeRenderer
 public;function;UnifiedSelectionProvider
 deprecated;function;UnifiedSelectionProvider
