@@ -12,15 +12,8 @@ import {
   StructValue,
   PropertyValueFormat as UiPropertyValueFormat,
 } from "@itwin/appui-abstract";
-import {
-  ArrayPropertyValueConstraints,
-  EnumerationInfo,
-  NumericPropertyValueConstraints,
-  PropertyValueFormat,
-  StringPropertyValueConstraints,
-  traverseContentItem,
-} from "@itwin/presentation-common";
-import { WithConstraints } from "../../presentation-components/common/ContentBuilder.js";
+import { EnumerationInfo, PropertyValueFormat, traverseContentItem } from "@itwin/presentation-common";
+import { PropertyValueConstraints, WithConstraints } from "../../presentation-components/common/ContentBuilder.js";
 import { PropertyRecordsBuilder } from "../../presentation-components/common/PropertyRecordsBuilder.js";
 import { NumericEditorName } from "../../presentation-components/properties/editors/NumericPropertyEditor.js";
 import { QuantityEditorName } from "../../presentation-components/properties/editors/QuantityPropertyEditor.js";
@@ -77,7 +70,7 @@ describe("PropertyRecordsBuilder", () => {
   });
 
   it("sets constraints props for `string` type", () => {
-    const constraints: StringPropertyValueConstraints = {
+    const constraints: PropertyValueConstraints = {
       minimumLength: 1,
       maximumLength: 15,
     };
@@ -103,7 +96,7 @@ describe("PropertyRecordsBuilder", () => {
   });
 
   it("sets constraints props for numeric type", () => {
-    const constraints: NumericPropertyValueConstraints = {
+    const constraints: PropertyValueConstraints = {
       minimumValue: 1,
       maximumValue: 15,
     };
@@ -129,7 +122,7 @@ describe("PropertyRecordsBuilder", () => {
   });
 
   it("sets constraints props for `array` type", () => {
-    const constraints: ArrayPropertyValueConstraints = {
+    const constraints: PropertyValueConstraints = {
       minOccurs: 1,
       maxOccurs: 15,
     };
