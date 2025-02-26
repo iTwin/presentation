@@ -161,3 +161,12 @@ export const terminate = async (frontendApp = IModelApp) => {
 
   isInitialized = false;
 };
+
+/** @internal */
+export function safeDispose(disposable: {} | { [Symbol.dispose]: () => void } | { dispose: () => void }) {
+  if ("dispose" in disposable) {
+    disposable.dispose();
+  } else if (Symbol.dispose in disposable) {
+    disposable[Symbol.dispose]();
+  }
+}
