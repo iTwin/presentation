@@ -11,7 +11,7 @@
     "lint": "eslint ./src/**/*.ts",
     "docs": "betools extract --fileExt=ts --extractFrom=./src --recursive --out=./build/docs/extract"
   },
-  "dependencies": {
+  "devDependencies": {
     "@itwin/appui-abstract": "catalog:itwinjs-core",
     "@itwin/build-tools": "catalog:build-tools",
     "@itwin/core-backend": "catalog:itwinjs-core",

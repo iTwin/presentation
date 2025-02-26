@@ -8,7 +8,7 @@
     "clean": "rimraf lib temp",
     "lint": "eslint ./src/**/*.ts"
   },
-  "dependencies": {
+  "devDependencies": {
     "@itwin/appui-abstract": "catalog:itwinjs-core",
     "@itwin/build-tools": "catalog:build-tools",
     "@itwin/core-backend": "catalog:itwinjs-core",

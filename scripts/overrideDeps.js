@@ -8,6 +8,7 @@
 
 "use strict";
 
+const { execSync } = require("child_process");
 const fs = require("fs");
 const path = require("path");
 const yargs = require("yargs");
@@ -54,7 +55,7 @@ function getOverrides(coreVersion, uiVersion) {
   return overrides;
 }
 
-function override(packageJsonPath, coreVersion, uiVersion) {
+function overrideAllDeps(packageJsonPath, coreVersion, uiVersion) {
   const pkgJsonData = JSON.parse(fs.readFileSync(packageJsonPath, { encoding: "utf8" }));
   if (!pkgJsonData) {
     throw new Error(`Failed to read package.json content at ${packagesJsonPath}`);
@@ -62,6 +63,33 @@ function override(packageJsonPath, coreVersion, uiVersion) {
 
   pkgJsonData.pnpm = { ...pkgJsonData.pnpm, overrides: { ...pkgJsonData.pnpm?.overrides, ...getOverrides(coreVersion, uiVersion) } };
   fs.writeFileSync(packageJsonPath, JSON.stringify(pkgJsonData, undefined, 2), { encoding: "utf8" });
+}
+
+function overrideDevDeps(packageJsonPath, coreVersion, uiVersion) {
+  const pkgJsonData = JSON.parse(fs.readFileSync(packageJsonPath, { encoding: "utf8" }));
+  if (!pkgJsonData) {
+    throw new Error(`Failed to read package.json content at ${packagesJsonPath}`);
+  }
+
+  if (!pkgJsonData.devDependencies) {
+    return;
+  }
+
+  const overrides = getOverrides(coreVersion, uiVersion);
+  Object.entries(overrides).forEach(([packageName, version]) => {
+    if (pkgJsonData.devDependencies[packageName]) {
+      pkgJsonData.devDependencies[packageName] = version;
+    }
+  });
+
+  fs.writeFileSync(packageJsonPath, JSON.stringify(pkgJsonData, undefined, 2), { encoding: "utf8" });
+}
+
+function forEachWorkspacePackage(callback) {
+  const workspaceProjects = JSON.parse(execSync("pnpm -r list --depth -1 --json"));
+  workspaceProjects.forEach((project) => {
+    callback(project);
+  });
 }
 
 const argv = yargs(process.argv).argv;
@@ -73,4 +101,7 @@ if (!coreVersion && uiVersion) {
   throw new Error("Argument --coreVersion or --uiVersion need to be provided.");
 }
 
-override(packageJsonPath, coreVersion, uiVersion);
+forEachWorkspacePackage((project) => {
+  const packageJsonDir = path.join(project.path, "package.json");
+  overrideDevDeps(packageJsonDir, coreVersion, uiVersion);
+});
