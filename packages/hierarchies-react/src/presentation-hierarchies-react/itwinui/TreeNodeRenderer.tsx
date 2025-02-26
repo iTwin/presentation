@@ -3,14 +3,25 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { ComponentPropsWithoutRef, forwardRef, LegacyRef, MutableRefObject, ReactElement, Ref, RefAttributes, useCallback, useRef } from "react";
+import {
+  ComponentPropsWithoutRef,
+  forwardRef,
+  ForwardRefExoticComponent,
+  LegacyRef,
+  MutableRefObject,
+  ReactElement,
+  Ref,
+  RefAttributes,
+  useCallback,
+  useRef,
+} from "react";
 import { DropdownMenu, Spinner, Tree } from "@itwin/itwinui-react/bricks";
 import { isPresentationHierarchyNode, PresentationHierarchyNode } from "../TreeNode.js";
-import { HierarchyLevelDetails, useTree } from "../UseTree.js";
+import { useTree } from "../UseTree.js";
 import { FlatTreeNode, isPlaceholderNode } from "./FlatTreeNode.js";
 import { useLocalizationContext } from "./LocalizationContext.js";
 import { TreeActionButton, TreeItemAction } from "./TreeActionButton.js";
-import { TreeErrorRenderer } from "./TreeErrorRenderer.js";
+import { TreeErrorActionsProps, TreeErrorRenderer } from "./TreeErrorRenderer.js";
 
 const dropdownIcon = new URL("@itwin/itwinui-icons/more-horizontal.svg", import.meta.url).href;
 
@@ -21,8 +32,6 @@ type TreeNodeProps = ComponentPropsWithoutRef<typeof Tree.Item>;
 export interface TreeNodeRendererOwnProps {
   /** Node that is rendered. */
   node: FlatTreeNode;
-  /** Action to perform when the filter button is clicked for this node. */
-  onFilterClick?: (hierarchyLevelDetails: HierarchyLevelDetails) => void;
   /** Returns an icon or icon href for a given node. */
   getIcon?: (node: PresentationHierarchyNode) => string | ReactElement | undefined;
   /** Returns a label for a given node. */
@@ -33,8 +42,6 @@ export interface TreeNodeRendererOwnProps {
   onNodeClick?: (node: PresentationHierarchyNode, isSelected: boolean, event: React.MouseEvent<HTMLElement, MouseEvent>) => void;
   /** Action to perform when a key is pressed when the node is hovered on. */
   onNodeKeyDown?: (node: PresentationHierarchyNode, isSelected: boolean, event: React.KeyboardEvent<HTMLElement>) => void;
-  /** A callback to reload a hierarchy level when an error occurs and `retry` button is clicked. */
-  reloadTree?: (options: { parentNodeId: string | undefined; state: "reset" }) => void;
   /**
    * Actions for tree item.
    */
@@ -45,7 +52,8 @@ export interface TreeNodeRendererOwnProps {
 type TreeNodeRendererProps = Pick<ReturnType<typeof useTree>, "expandNode" | "isNodeSelected"> &
   Partial<Pick<ReturnType<typeof useTree>, "getHierarchyLevelDetails">> &
   Omit<TreeNodeProps, "actions" | "aria-level" | "aria-posinset" | "aria-setsize" | "label" | "icon" | "expanded" | "selected"> &
-  TreeNodeRendererOwnProps;
+  TreeNodeRendererOwnProps &
+  TreeErrorActionsProps;
 
 /**
  * A component that renders `RenderedTreeNode` using the `TreeNode` component from `@itwin/itwinui-react`.
@@ -54,7 +62,7 @@ type TreeNodeRendererProps = Pick<ReturnType<typeof useTree>, "expandNode" | "is
  * @see https://itwinui.bentley.com/docs/tree
  * @public
  */
-export const TreeNodeRenderer: ForwardRefExoticComponent<TreeNodeRendererProps & RefAttributes<HTMLDivElement>> = forwardRef(
+export const TreeNodeRenderer: ForwardRefExoticComponent<TreeNodeRendererProps & RefAttributes<HTMLElement>> = forwardRef(
   (
     {
       node,
@@ -72,7 +80,7 @@ export const TreeNodeRenderer: ForwardRefExoticComponent<TreeNodeRendererProps &
     },
     forwardedRef,
   ) => {
-    const nodeRef = useRef<HTMLDivElement>(null);
+    const nodeRef = useRef<HTMLElement>(null);
     const ref = useMergedRefs(forwardedRef, nodeRef);
 
     if (isPlaceholderNode(node)) {
@@ -81,7 +89,14 @@ export const TreeNodeRenderer: ForwardRefExoticComponent<TreeNodeRendererProps &
 
     if (!isPresentationHierarchyNode(node)) {
       return (
-        <TreeErrorRenderer {...treeItemPropps} ref={ref} node={node} getHierarchyLevelDetails={getHierarchyLevelDetails} reloadTree={reloadTree} onFilterClick={onFilterClick} />
+        <TreeErrorRenderer
+          {...treeItemProps}
+          ref={ref}
+          node={node}
+          getHierarchyLevelDetails={getHierarchyLevelDetails}
+          reloadTree={reloadTree}
+          onFilterClick={onFilterClick}
+        />
       );
     }
 
