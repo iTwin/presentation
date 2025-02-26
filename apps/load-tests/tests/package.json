@@ -18,7 +18,7 @@
     "start:first-branch-models-tree-stateless": "artillery run ./scenarios/first-branch-models-tree-stateless.yml",
     "start:full-models-tree-stateless": "artillery run ./scenarios/full-models-tree-stateless.yml"
   },
-  "dependencies": {
+  "devDependencies": {
     "@itwin/build-tools": "catalog:build-tools",
     "@itwin/core-bentley": "catalog:itwinjs-core",
     "@itwin/core-common": "catalog:itwinjs-core",

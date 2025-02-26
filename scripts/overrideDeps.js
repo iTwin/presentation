@@ -8,6 +8,7 @@
 
 "use strict";
 
+const { execSync } = require("child_process");
 const fs = require("fs");
 const path = require("path");
 const yargs = require("yargs");
@@ -15,7 +16,6 @@ const yargs = require("yargs");
 // list of packages from `itwinjs-core`
 const corePackages = [
   "@itwin/appui-abstract",
-  "@itwin/build-tools",
   "@itwin/core-backend",
   "@itwin/core-bentley",
   "@itwin/core-common",
@@ -28,7 +28,6 @@ const corePackages = [
   "@itwin/ecschema-metadata",
   "@itwin/ecschema-rpcinterface-common",
   "@itwin/ecschema-rpcinterface-impl",
-  "@itwin/eslint-plugin",
   "@itwin/express-server",
   "@itwin/presentation-backend",
   "@itwin/presentation-common",
@@ -42,17 +41,21 @@ const uiPackages = ["@itwin/core-react", "@itwin/components-react", "@itwin/imod
 function getOverrides(coreVersion, uiVersion) {
   const overrides = {};
 
-  corePackages.forEach((packageName) => {
-    overrides[packageName] = coreVersion;
-  });
-  uiPackages.forEach((packageName) => {
-    overrides[packageName] = uiVersion;
-  });
+  if (coreVersion) {
+    corePackages.forEach((packageName) => {
+      overrides[packageName] = coreVersion;
+    });
+  }
+  if (uiVersion) {
+    uiPackages.forEach((packageName) => {
+      overrides[packageName] = uiVersion;
+    });
+  }
 
   return overrides;
 }
 
-function override(packageJsonPath, coreVersion, uiVersion) {
+function overrideAllDeps(packageJsonPath, coreVersion, uiVersion) {
   const pkgJsonData = JSON.parse(fs.readFileSync(packageJsonPath, { encoding: "utf8" }));
   if (!pkgJsonData) {
     throw new Error(`Failed to read package.json content at ${packagesJsonPath}`);
@@ -62,17 +65,43 @@ function override(packageJsonPath, coreVersion, uiVersion) {
   fs.writeFileSync(packageJsonPath, JSON.stringify(pkgJsonData, undefined, 2), { encoding: "utf8" });
 }
 
+function overrideDevDeps(packageJsonPath, coreVersion, uiVersion) {
+  const pkgJsonData = JSON.parse(fs.readFileSync(packageJsonPath, { encoding: "utf8" }));
+  if (!pkgJsonData) {
+    throw new Error(`Failed to read package.json content at ${packagesJsonPath}`);
+  }
+
+  if (!pkgJsonData.devDependencies) {
+    return;
+  }
+
+  const overrides = getOverrides(coreVersion, uiVersion);
+  Object.entries(overrides).forEach(([packageName, version]) => {
+    if (pkgJsonData.devDependencies[packageName]) {
+      pkgJsonData.devDependencies[packageName] = version;
+    }
+  });
+
+  fs.writeFileSync(packageJsonPath, JSON.stringify(pkgJsonData, undefined, 2), { encoding: "utf8" });
+}
+
+function forEachWorkspacePackage(callback) {
+  const workspaceProjects = JSON.parse(execSync("pnpm -r list --depth -1 --json"));
+  workspaceProjects.forEach((project) => {
+    callback(project);
+  });
+}
+
 const argv = yargs(process.argv).argv;
 const packageJsonPath = require.resolve(argv.packageJson ?? "../package.json");
 const coreVersion = argv.coreVersion;
 const uiVersion = argv.uiVersion;
 
-if (!coreVersion) {
-  throw new Error("Argument --coreVersion was not provided.");
+if (!coreVersion && uiVersion) {
+  throw new Error("Argument --coreVersion or --uiVersion need to be provided.");
 }
 
-if (!uiVersion) {
-  throw new Error("Argument --uiVersion was not provided.");
-}
-
-override(packageJsonPath, coreVersion, uiVersion);
+forEachWorkspacePackage((project) => {
+  const packageJsonDir = path.join(project.path, "package.json");
+  overrideDevDeps(packageJsonDir, coreVersion, uiVersion);
+});
