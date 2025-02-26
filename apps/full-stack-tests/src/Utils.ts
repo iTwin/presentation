@@ -27,14 +27,6 @@ export function stubGetBoundingClientRect() {
   });
 }
 
-export function toDisposable(resource: {} | { [Symbol.dispose]: () => void } | { dispose: () => void }): { [Symbol.dispose]: () => void } {
-  return {
-    [Symbol.dispose]: () => {
-      safeDispose(resource);
-    },
-  };
-}
-
 export function safeDispose(disposable: {} | { [Symbol.dispose]: () => void } | { dispose: () => void }) {
   if ("dispose" in disposable) {
     disposable.dispose();
