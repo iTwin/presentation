@@ -27,7 +27,7 @@ export * from "./presentation-testing/ContentBuilder.js";
  * @docs-group-description Helpers
  * Various test helpers.
  */
-export * from "./presentation-testing/Helpers.js";
+export { HierarchyCacheMode, PresentationBackendProps, PresentationTestingInitProps, initialize, terminate } from "./presentation-testing/Helpers.js";
 export {
   createFileNameFromString,
   getTestOutputDir,

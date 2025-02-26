@@ -18,7 +18,7 @@ import {
 } from "@itwin/components-react";
 import { IModelConnection } from "@itwin/core-frontend";
 import { CategoryDescription, ClassInfo, combineFieldNames, Descriptor, Field, NestedContentField, PropertiesField } from "@itwin/presentation-common";
-import { createPropertyDescriptionFromFieldInfo } from "../common/ContentBuilder.js";
+import { createFieldInfo, createPropertyDescriptionFromFieldInfo } from "../common/ContentBuilder.js";
 import { translate } from "../common/Utils.js";
 import { NavigationPropertyEditorContextProviderProps } from "../properties/editors/NavigationPropertyEditorContext.js";
 import { PresentationInstanceFilterPropertyInfo } from "./PresentationFilterBuilder.js";
@@ -100,19 +100,10 @@ function getParentNames(field: Field, name: string): string {
 export function createPropertyInfoFromPropertiesField(field: PropertiesField): PresentationInstanceFilterPropertyInfo {
   const categoryInfo = getCategoryInfo(field.category, { name: undefined, label: undefined });
   const name = field.parent ? getParentNames(field.parent, field.name) : field.name;
-
   const propertyDescription = createPropertyDescriptionFromFieldInfo({
+    ...createFieldInfo(field),
     name: getCategorizedFieldName(name, categoryInfo.name),
-    label: field.label,
-    type: field.type,
-    editor: field.editor,
-    enum: field.properties[0].property.enumerationInfo,
-    isReadonly: field.isReadonly,
-    renderer: field.renderer,
-    koqName: field.properties[0].property.kindOfQuantity?.name,
-    constraints: field.properties[0].property.constraints,
   });
-
   const sourceClassIds = getPropertySourceClassInfos(field).map((classInfo) => classInfo.id);
   return {
     field,
