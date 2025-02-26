@@ -21,7 +21,7 @@ type TreeErrorRendererProps = TreeErrorRendererOwnProps &
   Partial<Pick<ReturnType<typeof useTree>, "getHierarchyLevelDetails">>;
 
 /** @internal */
-export const TreeErrorRenderer: React.ForwardRefExoticComponent<TreeErrorRendererProps & RefAttributes<HTMLDivElement>> = forwardRef(
+export const TreeErrorRenderer: ForwardRefExoticComponent<TreeErrorRendererProps & RefAttributes<HTMLDivElement>> = forwardRef(
   ({ node, getHierarchyLevelDetails, onFilterClick, reloadTree }, forwardedRef) => {
     const { localizedStrings } = useLocalizationContext();
     if (node.type === "ResultSetTooLarge") {
