@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { ComponentPropsWithoutRef } from "react";
+import { ComponentPropsWithoutRef, forwardRef, RefAttributes } from "react";
 import { Anchor, Text, Tree } from "@itwin/itwinui-react/bricks";
 import { MAX_LIMIT_OVERRIDE } from "../internal/Utils.js";
 import { PresentationInfoNode } from "../TreeNode.js";
@@ -21,60 +21,71 @@ type TreeErrorRendererProps = TreeErrorRendererOwnProps &
   Partial<Pick<ReturnType<typeof useTree>, "getHierarchyLevelDetails">>;
 
 /** @internal */
-export function TreeErrorRenderer({ node, getHierarchyLevelDetails, onFilterClick, reloadTree }: TreeErrorRendererProps) {
-  const { localizedStrings } = useLocalizationContext();
-  if (node.type === "ResultSetTooLarge") {
-    return (
-      <ResultSetTooLargeNode
-        limit={node.resultSetSizeLimit}
-        onOverrideLimit={getHierarchyLevelDetails ? (limit) => getHierarchyLevelDetails(node.parentNodeId)?.setSizeLimit(limit) : undefined}
-        onFilterClick={
-          onFilterClick
-            ? () => {
-                const hierarchyLevelDetails = getHierarchyLevelDetails?.(node.parentNodeId);
-                hierarchyLevelDetails && onFilterClick(hierarchyLevelDetails);
-              }
-            : undefined
-        }
-        aria-level={node.level}
-        aria-posinset={node.posInLevel}
-        aria-setsize={node.levelSize}
-      />
-    );
-  }
+export const TreeErrorRenderer: React.ForwardRefExoticComponent<TreeErrorRendererProps & RefAttributes<HTMLDivElement>> = forwardRef(
+  ({ node, getHierarchyLevelDetails, onFilterClick, reloadTree }, forwardedRef) => {
+    const { localizedStrings } = useLocalizationContext();
+    if (node.type === "ResultSetTooLarge") {
+      return (
+        <ResultSetTooLargeNode
+          ref={forwardedRef}
+          limit={node.resultSetSizeLimit}
+          onOverrideLimit={getHierarchyLevelDetails ? (limit) => getHierarchyLevelDetails(node.parentNodeId)?.setSizeLimit(limit) : undefined}
+          onFilterClick={
+            onFilterClick
+              ? () => {
+                  const hierarchyLevelDetails = getHierarchyLevelDetails?.(node.parentNodeId);
+                  hierarchyLevelDetails && onFilterClick(hierarchyLevelDetails);
+                }
+              : undefined
+          }
+          aria-level={node.level}
+          aria-posinset={node.posInLevel}
+          aria-setsize={node.levelSize}
+        />
+      );
+    }
 
-  if (node.type === "NoFilterMatches") {
+    if (node.type === "NoFilterMatches") {
+      return (
+        <Tree.Item
+          ref={forwardedRef}
+          aria-level={node.level}
+          aria-posinset={node.posInLevel}
+          aria-setsize={node.levelSize}
+          label={localizedStrings.noFilteredChildren}
+          aria-disabled={true}
+        />
+      );
+    }
+
+    const onRetry = reloadTree ? () => reloadTree({ parentNodeId: node.parentNodeId, state: "reset" }) : undefined;
     return (
       <Tree.Item
+        ref={forwardedRef}
         aria-level={node.level}
         aria-posinset={node.posInLevel}
         aria-setsize={node.levelSize}
-        label={localizedStrings.noFilteredChildren}
+        label={<ErrorNodeLabel message={node.message} onRetry={onRetry} />}
         aria-disabled={true}
       />
     );
-  }
+  },
+);
+TreeErrorRenderer.displayName = "TreeErrorRenderer";
 
-  const onRetry = reloadTree ? () => reloadTree({ parentNodeId: node.parentNodeId, state: "reset" }) : undefined;
+const ResultSetTooLargeNode = forwardRef<
+  HTMLDivElement,
+  Omit<ComponentPropsWithoutRef<typeof Tree.Item>, "onExpanded" | "label"> & ResultSetTooLargeNodeLabelProps
+>(({ onFilterClick, onOverrideLimit, limit, ...props }, forwardedRef) => {
   return (
     <Tree.Item
-      aria-level={node.level}
-      aria-posinset={node.posInLevel}
-      aria-setsize={node.levelSize}
-      label={<ErrorNodeLabel message={node.message} onRetry={onRetry} />}
-      aria-disabled={true}
+      {...props}
+      ref={forwardedRef}
+      label={<ResultSetTooLargeNodeLabel limit={limit} onFilterClick={onFilterClick} onOverrideLimit={onOverrideLimit} />}
     />
   );
-}
-
-function ResultSetTooLargeNode({
-  onFilterClick,
-  onOverrideLimit,
-  limit,
-  ...props
-}: Omit<ComponentPropsWithoutRef<typeof Tree.Item>, "onExpanded" | "label"> & ResultSetTooLargeNodeLabelProps) {
-  return <Tree.Item {...props} label={<ResultSetTooLargeNodeLabel limit={limit} onFilterClick={onFilterClick} onOverrideLimit={onOverrideLimit} />} />;
-}
+});
+ResultSetTooLargeNode.displayName = "ResultSetTooLargeNode";
 
 interface ResultSetTooLargeNodeLabelProps {
   limit: number;

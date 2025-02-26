@@ -918,8 +918,8 @@ importers:
         specifier: catalog:itwinui
         version: 3.17.2(@types/react@18.3.3)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@itwin/itwinui-react-v5':
-        specifier: npm:@itwin/itwinui-react@5.0.0-alpha.6
-        version: '@itwin/itwinui-react@5.0.0-alpha.6(react-dom@18.3.1(react@18.3.1))(react@18.3.1)'
+        specifier: npm:@itwin/itwinui-react@5.0.0-alpha.7
+        version: '@itwin/itwinui-react@5.0.0-alpha.7(react-dom@18.3.1(react@18.3.1))(react@18.3.1)'
       '@itwin/presentation-common':
         specifier: catalog:itwinjs-core
         version: 5.0.0-dev.49(@itwin/core-bentley@5.0.0-dev.49)(@itwin/core-common@5.0.0-dev.49(@itwin/core-bentley@5.0.0-dev.49)(@itwin/core-geometry@5.0.0-dev.49))(@itwin/core-quantity@5.0.0-dev.49(@itwin/core-bentley@5.0.0-dev.49))(@itwin/ecschema-metadata@5.0.0-dev.49(@itwin/core-bentley@5.0.0-dev.49)(@itwin/core-quantity@5.0.0-dev.49(@itwin/core-bentley@5.0.0-dev.49)))
@@ -1444,8 +1444,8 @@ importers:
         specifier: ^5.0.0-alpha.3
         version: 5.0.0-alpha.3
       '@itwin/itwinui-react':
-        specifier: ^5.0.0-alpha.6
-        version: 5.0.0-alpha.6(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+        specifier: ^5.0.0-alpha.7
+        version: 5.0.0-alpha.7(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@testing-library/dom':
         specifier: catalog:test-tools
         version: 10.3.2
@@ -2996,8 +2996,8 @@ packages:
       react: '>=17.0.0'
       react-dom: '>=17.0.0'
 
-  '@itwin/itwinui-react@5.0.0-alpha.6':
-    resolution: {integrity: sha512-g6ipvdbHQSlK7sXOvjfAzC3PC+BvFflZ03uY1AFAS//c/svzdbK1ygk9/9VhbUJ+upPHeVCsChMAIGE/ib+IKA==}
+  '@itwin/itwinui-react@5.0.0-alpha.7':
+    resolution: {integrity: sha512-2vTZrWChBrcxK/U41DtYixRun02ylSKgCFRrBhsnXZlAirnYBJGZo97+9+lvPjjVXFsYEqSJfIPitouCaJZM3w==}
     peerDependencies:
       react: '>=18.0.0'
       react-dom: '>=18.0.0'
@@ -10855,7 +10855,7 @@ snapshots:
     transitivePeerDependencies:
       - '@types/react'
 
-  '@itwin/itwinui-react@5.0.0-alpha.6(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
+  '@itwin/itwinui-react@5.0.0-alpha.7(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
     dependencies:
       '@ariakit/react': 0.4.15(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       classnames: 2.5.1

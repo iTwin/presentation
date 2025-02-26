@@ -64,9 +64,8 @@ export function TreeRenderer({ rootNodes, expandNode, localizedStrings, selectNo
         <Tree.Root style={{ height: virtualizer.getTotalSize(), width: "100%", position: "relative" }}>
           {items.map((virtualizedItem) => {
             return (
-              <div
-                key={virtualizedItem.key}
-                data-index={virtualizedItem.index}
+              <TreeNodeRenderer
+                {...treeProps}
                 ref={virtualizer.measureElement}
                 style={{
                   position: "absolute",
@@ -76,16 +75,13 @@ export function TreeRenderer({ rootNodes, expandNode, localizedStrings, selectNo
                   transform: `translateY(${virtualizedItem.start}px)`,
                   willChange: "transform",
                 }}
-              >
-                <TreeNodeRenderer
-                  {...treeProps}
-                  expandNode={expandNode}
-                  onNodeClick={onNodeClick}
-                  onNodeKeyDown={onNodeKeyDown}
-                  node={flatNodes[virtualizedItem.index]}
-                  key={flatNodes[virtualizedItem.index].id}
-                />
-              </div>
+                expandNode={expandNode}
+                onNodeClick={onNodeClick}
+                onNodeKeyDown={onNodeKeyDown}
+                node={flatNodes[virtualizedItem.index]}
+                key={flatNodes[virtualizedItem.index].id}
+                data-index={virtualizedItem.index}
+              />
             );
           })}
         </Tree.Root>
