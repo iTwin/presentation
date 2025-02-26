@@ -61,7 +61,7 @@ export function TreeRenderer({ rootNodes, expandNode, localizedStrings, selectNo
   return (
     <LocalizationContextProvider localizedStrings={localizedStrings}>
       <div style={{ height: "100%", width: "100%", overflowY: "auto" }} ref={parentRef}>
-        <Tree.Root style={{ height: virtualizer.getTotalSize(), width: "100%", position: "relative" }}>
+        <Tree.Root style={{ height: virtualizer.getTotalSize(), minHeight: "100%", width: "100%", position: "relative" }}>
           {items.map((virtualizedItem) => {
             return (
               <TreeNodeRenderer
