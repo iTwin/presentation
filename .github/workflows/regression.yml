@@ -39,4 +39,4 @@ jobs:
         run: pnpm install --no-frozen-lockfile
 
       - name: Build, Test
-        run: pnpm lage build lint
+        run: pnpm lage build lint --continue
