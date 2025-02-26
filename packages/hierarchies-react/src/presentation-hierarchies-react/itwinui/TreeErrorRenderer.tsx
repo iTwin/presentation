@@ -12,7 +12,7 @@ import { FlatNode } from "./FlatTreeNode.js";
 import { useLocalizationContext } from "./LocalizationContext.js";
 
 /** @alpha */
-export interface TreeErrorActionsProps {
+export interface TreeErrorItemProps {
   /** A callback to reload a hierarchy level when an error occurs and `retry` button is clicked. */
   reloadTree?: (options: { parentNodeId: string | undefined; state: "reset" }) => void;
   /** Action to perform when the filter button is clicked for this node. */
@@ -21,12 +21,10 @@ export interface TreeErrorActionsProps {
 
 interface TreeErrorRendererOwnProps {
   node: FlatNode<PresentationInfoNode>;
+  style?: React.CSSProperties;
 }
 
-type TreeErrorRendererProps = Pick<ComponentPropsWithoutRef<typeof Tree.Item>, "style"> &
-  TreeErrorRendererOwnProps &
-  TreeErrorActionsProps &
-  Partial<Pick<ReturnType<typeof useTree>, "getHierarchyLevelDetails">>;
+type TreeErrorRendererProps = TreeErrorRendererOwnProps & TreeErrorItemProps & Partial<Pick<ReturnType<typeof useTree>, "getHierarchyLevelDetails">>;
 
 /** @internal */
 export const TreeErrorRenderer: ForwardRefExoticComponent<TreeErrorRendererProps & RefAttributes<HTMLElement>> = forwardRef(

@@ -21,7 +21,7 @@ import { useTree } from "../UseTree.js";
 import { FlatTreeNode, isPlaceholderNode } from "./FlatTreeNode.js";
 import { useLocalizationContext } from "./LocalizationContext.js";
 import { TreeActionButton, TreeItemAction } from "./TreeActionButton.js";
-import { TreeErrorActionsProps, TreeErrorRenderer } from "./TreeErrorRenderer.js";
+import { TreeErrorItemProps, TreeErrorRenderer } from "./TreeErrorRenderer.js";
 
 const dropdownIcon = new URL("@itwin/itwinui-icons/more-horizontal.svg", import.meta.url).href;
 
@@ -53,7 +53,7 @@ type TreeNodeRendererProps = Pick<ReturnType<typeof useTree>, "expandNode" | "is
   Partial<Pick<ReturnType<typeof useTree>, "getHierarchyLevelDetails">> &
   Omit<TreeNodeProps, "actions" | "aria-level" | "aria-posinset" | "aria-setsize" | "label" | "icon" | "expanded" | "selected"> &
   TreeNodeRendererOwnProps &
-  TreeErrorActionsProps;
+  TreeErrorItemProps;
 
 /**
  * A component that renders `RenderedTreeNode` using the `TreeNode` component from `@itwin/itwinui-react`.
@@ -90,7 +90,7 @@ export const TreeNodeRenderer: ForwardRefExoticComponent<TreeNodeRendererProps &
     if (!isPresentationHierarchyNode(node)) {
       return (
         <TreeErrorRenderer
-          {...treeItemProps}
+          style={treeItemProps.style}
           ref={ref}
           node={node}
           getHierarchyLevelDetails={getHierarchyLevelDetails}
