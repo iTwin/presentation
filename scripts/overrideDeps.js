@@ -15,7 +15,6 @@ const yargs = require("yargs");
 // list of packages from `itwinjs-core`
 const corePackages = [
   "@itwin/appui-abstract",
-  "@itwin/build-tools",
   "@itwin/core-backend",
   "@itwin/core-bentley",
   "@itwin/core-common",
@@ -28,7 +27,6 @@ const corePackages = [
   "@itwin/ecschema-metadata",
   "@itwin/ecschema-rpcinterface-common",
   "@itwin/ecschema-rpcinterface-impl",
-  "@itwin/eslint-plugin",
   "@itwin/express-server",
   "@itwin/presentation-backend",
   "@itwin/presentation-common",
@@ -42,12 +40,16 @@ const uiPackages = ["@itwin/core-react", "@itwin/components-react", "@itwin/imod
 function getOverrides(coreVersion, uiVersion) {
   const overrides = {};
 
-  corePackages.forEach((packageName) => {
-    overrides[packageName] = coreVersion;
-  });
-  uiPackages.forEach((packageName) => {
-    overrides[packageName] = uiVersion;
-  });
+  if (coreVersion) {
+    corePackages.forEach((packageName) => {
+      overrides[packageName] = coreVersion;
+    });
+  }
+  if (uiVersion) {
+    uiPackages.forEach((packageName) => {
+      overrides[packageName] = uiVersion;
+    });
+  }
 
   return overrides;
 }
@@ -67,12 +69,8 @@ const packageJsonPath = require.resolve(argv.packageJson ?? "../package.json");
 const coreVersion = argv.coreVersion;
 const uiVersion = argv.uiVersion;
 
-if (!coreVersion) {
-  throw new Error("Argument --coreVersion was not provided.");
-}
-
-if (!uiVersion) {
-  throw new Error("Argument --uiVersion was not provided.");
+if (!coreVersion && uiVersion) {
+  throw new Error("Argument --coreVersion or --uiVersion need to be provided.");
 }
 
 override(packageJsonPath, coreVersion, uiVersion);
