@@ -26,3 +26,11 @@ export function stubGetBoundingClientRect() {
     stub.restore();
   });
 }
+
+export function safeDispose(disposable: {} | { [Symbol.dispose]: () => void } | { dispose: () => void }) {
+  if ("dispose" in disposable) {
+    disposable.dispose();
+  } else if (Symbol.dispose in disposable) {
+    disposable[Symbol.dispose]();
+  }
+}
