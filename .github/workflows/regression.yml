@@ -38,5 +38,8 @@ jobs:
       - name: Install dependencies
         run: pnpm install --no-frozen-lockfile
 
-      - name: Build, Test
-        run: pnpm lage build lint --continue
+      - name: Build, Lint
+        run: pnpm lage build lint --grouped --continue
+
+      - name: Run full stack tests
+        run: pnpm test --filter presentation-full-stack-tests
