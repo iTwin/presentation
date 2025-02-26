@@ -12,6 +12,7 @@ import { BentleyError, DbResult, Guid, Id64, Id64String, OrderedId64Iterable } f
 import { IModelConnection } from "@itwin/core-frontend";
 import { ECSqlBinding, parseFullClassName, PrimitiveValue } from "@itwin/presentation-shared";
 import { buildTestIModel, createFileNameFromString, limitFilePathLength, setupOutputFileLocation, TestIModelBuilder } from "@itwin/presentation-testing";
+import { toDisposable } from "./Utils.js";
 
 function isBinding(value: ECSqlBinding | PrimitiveValue): value is ECSqlBinding {
   return typeof value === "object" && (value as ECSqlBinding).type !== undefined && (value as ECSqlBinding).value !== undefined;
@@ -157,7 +158,8 @@ export async function withECDb<TResult extends {} | undefined>(
 ) {
   const name = createFileNameFromString(mochaContext.test!.fullTitle());
   const outputFile = setupOutputFileLocation(name);
-  using db = new ECDb();
+  const db = new ECDb();
+  using _ = toDisposable(db);
 
   db.createDb(outputFile);
   const res = await setup(new ECDbBuilder(db, outputFile), mochaContext);
