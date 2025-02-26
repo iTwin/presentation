@@ -179,7 +179,7 @@ type SelectionMode_2 = "none" | "single" | "extended" | "multiple";
 export { SelectionStorage }
 
 // @alpha (undocumented)
-interface TreeErrorActionsProps {
+interface TreeErrorItemProps {
     onFilterClick?: (hierarchyLevelDetails: HierarchyLevelDetails) => void;
     reloadTree?: (options: {
         parentNodeId: string | undefined;
@@ -216,7 +216,7 @@ interface TreeNodeRendererOwnProps {
 }
 
 // @alpha (undocumented)
-type TreeNodeRendererProps = Pick<ReturnType<typeof useTree>, "expandNode" | "isNodeSelected"> & Partial<Pick<ReturnType<typeof useTree>, "getHierarchyLevelDetails">> & Omit<TreeNodeProps, "actions" | "aria-level" | "aria-posinset" | "aria-setsize" | "label" | "icon" | "expanded" | "selected"> & TreeNodeRendererOwnProps & TreeErrorActionsProps;
+type TreeNodeRendererProps = Pick<ReturnType<typeof useTree>, "expandNode" | "isNodeSelected"> & Partial<Pick<ReturnType<typeof useTree>, "getHierarchyLevelDetails">> & Omit<TreeNodeProps, "actions" | "aria-level" | "aria-posinset" | "aria-setsize" | "label" | "icon" | "expanded" | "selected"> & TreeNodeRendererOwnProps & TreeErrorItemProps;
 
 // @alpha (undocumented)
 type TreeNodeRendererProps_2 = ComponentPropsWithoutRef<typeof TreeNodeRenderer>;
