@@ -7,11 +7,14 @@ import { XMLParser } from "fast-xml-parser";
 import * as fs from "fs";
 import hash from "object-hash";
 import { getFullSchemaXml } from "presentation-test-utilities";
-import { ECDb, ECSqlStatement } from "@itwin/core-backend";
+import { ECDb, ECSqlStatement, IModelDb } from "@itwin/core-backend";
 import { BentleyError, DbResult, Guid, Id64, Id64String, OrderedId64Iterable } from "@itwin/core-bentley";
 import { IModelConnection } from "@itwin/core-frontend";
+import { Schema, SchemaContext, SchemaInfo, SchemaKey, SchemaMatchType } from "@itwin/ecschema-metadata";
+import { ECSchemaRpcLocater } from "@itwin/ecschema-rpcinterface-common";
 import { ECSqlBinding, parseFullClassName, PrimitiveValue } from "@itwin/presentation-shared";
 import { buildTestIModel, createFileNameFromString, limitFilePathLength, setupOutputFileLocation, TestIModelBuilder } from "@itwin/presentation-testing";
+import { safeDispose } from "./Utils.js";
 
 function isBinding(value: ECSqlBinding | PrimitiveValue): value is ECSqlBinding {
   return typeof value === "object" && (value as ECSqlBinding).type !== undefined && (value as ECSqlBinding).value !== undefined;
@@ -157,12 +160,13 @@ export async function withECDb<TResult extends {} | undefined>(
 ) {
   const name = createFileNameFromString(mochaContext.test!.fullTitle());
   const outputFile = setupOutputFileLocation(name);
-  using db = new ECDb();
+  const db = new ECDb();
 
   db.createDb(outputFile);
   const res = await setup(new ECDbBuilder(db, outputFile), mochaContext);
   db.saveChanges("Created test ECDb");
   await use(db, res);
+  safeDispose(db);
 }
 
 export async function buildIModel<TFirstArg extends Mocha.Context | string>(
@@ -222,4 +226,32 @@ export async function importSchema(
       };
     }, {}),
   };
+}
+
+export function createSchemaContext(imodel: IModelConnection | IModelDb | ECDb) {
+  const schemas = new SchemaContext();
+  if (imodel instanceof IModelConnection) {
+    schemas.addLocater(new ECSchemaRpcLocater(imodel.getRpcProps()));
+  } else {
+    schemas.addLocater({
+      getSchemaSync<T extends Schema>(_schemaKey: Readonly<SchemaKey>, _matchType: SchemaMatchType, _schemaContext: SchemaContext): T | undefined {
+        throw new Error(`getSchemaSync not implemented`);
+      },
+      async getSchemaInfo(schemaKey: Readonly<SchemaKey>, matchType: SchemaMatchType, schemaContext: SchemaContext): Promise<SchemaInfo | undefined> {
+        const schemaJson = imodel.getSchemaProps(schemaKey.name);
+        const schemaInfo = await Schema.startLoadingFromJson(schemaJson, schemaContext);
+        if (schemaInfo !== undefined && schemaInfo.schemaKey.matches(schemaKey, matchType)) {
+          return schemaInfo;
+        }
+        return undefined;
+      },
+      async getSchema<T extends Schema>(schemaKey: Readonly<SchemaKey>, matchType: SchemaMatchType, schemaContext: SchemaContext): Promise<T | undefined> {
+        await this.getSchemaInfo(schemaKey, matchType, schemaContext);
+        // eslint-disable-next-line @itwin/no-internal
+        const schema = await schemaContext.getCachedSchema(schemaKey, matchType);
+        return schema as T;
+      },
+    });
+  }
+  return schemas;
 }

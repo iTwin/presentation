@@ -10,9 +10,8 @@ import { createDefaultValueFormatter, IPrimitiveValueFormatter } from "@itwin/pr
 // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.Formatting.CoreInteropFormatterExample.Imports
 import { createValueFormatter } from "@itwin/presentation-core-interop";
 // __PUBLISH_EXTRACT_END__
-import { buildIModel, importSchema } from "../../IModelUtils.js";
+import { buildIModel, createSchemaContext, importSchema } from "../../IModelUtils.js";
 import { initialize, terminate } from "../../IntegrationTests.js";
-import { createSchemaContext } from "../Utils.js";
 
 describe("Hierarchies", () => {
   describe("Learning snippets", () => {

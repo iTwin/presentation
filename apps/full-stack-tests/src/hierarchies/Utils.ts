@@ -5,42 +5,14 @@
 
 import { ECDb, IModelDb } from "@itwin/core-backend";
 import { IModelConnection } from "@itwin/core-frontend";
-import { Schema, SchemaContext, SchemaInfo, SchemaKey, SchemaMatchType } from "@itwin/ecschema-metadata";
-import { ECSchemaRpcLocater } from "@itwin/ecschema-rpcinterface-common";
+import { SchemaContext } from "@itwin/ecschema-metadata";
 import { createECSchemaProvider as createECSchemaProviderInterop, createECSqlQueryExecutor, createIModelKey } from "@itwin/presentation-core-interop";
 import { createIModelHierarchyProvider, createLimitingECSqlQueryExecutor, HierarchyDefinition } from "@itwin/presentation-hierarchies";
 import { createCachingECClassHierarchyInspector, Event, IPrimitiveValueFormatter, parseFullClassName, Props } from "@itwin/presentation-shared";
+import { createSchemaContext } from "../IModelUtils.js";
 
 type HierarchyProviderProps = Props<typeof createIModelHierarchyProvider>;
 type HierarchyFilteringPaths = NonNullable<NonNullable<HierarchyProviderProps["filtering"]>["paths"]>;
-
-export function createSchemaContext(imodel: IModelConnection | IModelDb | ECDb) {
-  const schemas = new SchemaContext();
-  if (imodel instanceof IModelConnection) {
-    schemas.addLocater(new ECSchemaRpcLocater(imodel.getRpcProps()));
-  } else {
-    schemas.addLocater({
-      getSchemaSync<T extends Schema>(_schemaKey: Readonly<SchemaKey>, _matchType: SchemaMatchType, _schemaContext: SchemaContext): T | undefined {
-        throw new Error(`getSchemaSync not implemented`);
-      },
-      async getSchemaInfo(schemaKey: Readonly<SchemaKey>, matchType: SchemaMatchType, schemaContext: SchemaContext): Promise<SchemaInfo | undefined> {
-        const schemaJson = imodel.getSchemaProps(schemaKey.name);
-        const schemaInfo = await Schema.startLoadingFromJson(schemaJson, schemaContext);
-        if (schemaInfo !== undefined && schemaInfo.schemaKey.matches(schemaKey, matchType)) {
-          return schemaInfo;
-        }
-        return undefined;
-      },
-      async getSchema<T extends Schema>(schemaKey: Readonly<SchemaKey>, matchType: SchemaMatchType, schemaContext: SchemaContext): Promise<T | undefined> {
-        await this.getSchemaInfo(schemaKey, matchType, schemaContext);
-        // eslint-disable-next-line @itwin/no-internal
-        const schema = await schemaContext.getCachedSchema(schemaKey, matchType);
-        return schema as T;
-      },
-    });
-  }
-  return schemas;
-}
 
 export function createIModelAccess(imodel: IModelConnection | IModelDb | ECDb) {
   const schemaProvider = createECSchemaProviderInterop(createSchemaContext(imodel));
