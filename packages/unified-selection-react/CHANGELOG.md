@@ -1,5 +1,12 @@
 # @itwin/unified-selection-react
 
+## 1.0.1
+
+### Patch Changes
+
+- Updated dependencies:
+  - @itwin/unified-selection@1.3.1
+
 ## 1.0.0
 
 ### Major Changes
