@@ -1,5 +1,11 @@
 # @itwin/presentation-hierarchies-react
 
+## 2.0.0-alpha.5
+
+### Minor Changes
+
+- [#883](https://github.com/iTwin/presentation/pull/883): Trees rendered with `TreeRenderer` will now be virtualized.
+
 ## 2.0.0-alpha.4
 
 ### Minor Changes
