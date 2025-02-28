@@ -1,5 +1,11 @@
 # @itwin/presentation-hierarchies-react
 
+## 2.0.0-alpha.6
+
+### Patch Changes
+
+- [#890](https://github.com/iTwin/presentation/pull/890): Fix alpha peer dependencies to no longer have caret.
+
 ## 2.0.0-alpha.5
 
 ### Minor Changes
