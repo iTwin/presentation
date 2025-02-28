@@ -327,7 +327,7 @@ importers:
         version: 5.0.0-dev.1(eslint@9.13.0)(typescript@5.7.3)
       '@itwin/imodel-components-react':
         specifier: catalog:appui
-        version: 5.1.0(vqkky3ckm4phfnyoxeqaauu3vi)
+        version: 5.1.0(n4p36drt7ekczjbxhh6gvyrnve)
       '@itwin/itwinui-react':
         specifier: catalog:itwinui
         version: 3.17.2(@types/react@18.3.3)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -345,7 +345,7 @@ importers:
         version: link:../../packages/core-interop
       '@itwin/presentation-frontend':
         specifier: catalog:itwinjs-core
-        version: 5.0.0-dev.49(ehrnzcqec66upe7ju7s2vhhuoa)
+        version: 5.0.0-dev.49(wyxuqho7x5xpwxd4alb6zqx25m)
       '@itwin/presentation-hierarchies':
         specifier: workspace:^
         version: link:../../packages/hierarchies
@@ -907,10 +907,10 @@ importers:
         version: 5.0.0-dev.1(eslint@9.13.0)(typescript@5.7.3)
       '@itwin/imodel-components-react':
         specifier: catalog:appui
-        version: 5.1.0(vqkky3ckm4phfnyoxeqaauu3vi)
+        version: 5.1.0(n4p36drt7ekczjbxhh6gvyrnve)
       '@itwin/itwinui-icons':
-        specifier: 5.0.0-alpha.3
-        version: 5.0.0-alpha.3
+        specifier: 5.0.0-alpha.4
+        version: 5.0.0-alpha.4
       '@itwin/itwinui-icons-react':
         specifier: catalog:itwinui
         version: 2.9.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -931,7 +931,7 @@ importers:
         version: link:../../../packages/core-interop
       '@itwin/presentation-frontend':
         specifier: catalog:itwinjs-core
-        version: 5.0.0-dev.49(ehrnzcqec66upe7ju7s2vhhuoa)
+        version: 5.0.0-dev.49(wyxuqho7x5xpwxd4alb6zqx25m)
       '@itwin/presentation-hierarchies':
         specifier: workspace:*
         version: link:../../../packages/hierarchies
@@ -1115,7 +1115,7 @@ importers:
         version: 5.0.0-dev.1(eslint@9.13.0)(typescript@5.7.3)
       '@itwin/imodel-components-react':
         specifier: catalog:appui
-        version: 5.1.0(vqkky3ckm4phfnyoxeqaauu3vi)
+        version: 5.1.0(n4p36drt7ekczjbxhh6gvyrnve)
       '@itwin/itwinui-react':
         specifier: catalog:itwinui
         version: 3.17.2(@types/react@18.3.3)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -1124,7 +1124,7 @@ importers:
         version: 5.0.0-dev.49(@itwin/core-bentley@5.0.0-dev.49)(@itwin/core-common@5.0.0-dev.49(@itwin/core-bentley@5.0.0-dev.49)(@itwin/core-geometry@5.0.0-dev.49))(@itwin/core-quantity@5.0.0-dev.49(@itwin/core-bentley@5.0.0-dev.49))(@itwin/ecschema-metadata@5.0.0-dev.49(@itwin/core-bentley@5.0.0-dev.49)(@itwin/core-quantity@5.0.0-dev.49(@itwin/core-bentley@5.0.0-dev.49)))
       '@itwin/presentation-frontend':
         specifier: catalog:itwinjs-core
-        version: 5.0.0-dev.49(ehrnzcqec66upe7ju7s2vhhuoa)
+        version: 5.0.0-dev.49(wyxuqho7x5xpwxd4alb6zqx25m)
       '@itwin/unified-selection-react':
         specifier: workspace:^
         version: link:../unified-selection-react
@@ -1441,10 +1441,10 @@ importers:
         specifier: catalog:build-tools
         version: 5.0.0-dev.67(@types/node@20.12.12)
       '@itwin/itwinui-icons':
-        specifier: ^5.0.0-alpha.3
-        version: 5.0.0-alpha.3
+        specifier: 5.0.0-alpha.4
+        version: 5.0.0-alpha.4
       '@itwin/itwinui-react':
-        specifier: ^5.0.0-alpha.7
+        specifier: 5.0.0-alpha.7
         version: 5.0.0-alpha.7(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@testing-library/dom':
         specifier: catalog:test-tools
@@ -1812,7 +1812,7 @@ importers:
         version: 5.0.0-dev.49(@itwin/core-bentley@5.0.0-dev.49)(@itwin/core-common@5.0.0-dev.49(@itwin/core-bentley@5.0.0-dev.49)(@itwin/core-geometry@5.0.0-dev.49))(@itwin/core-quantity@5.0.0-dev.49(@itwin/core-bentley@5.0.0-dev.49))(@itwin/ecschema-metadata@5.0.0-dev.49(@itwin/core-bentley@5.0.0-dev.49)(@itwin/core-quantity@5.0.0-dev.49(@itwin/core-bentley@5.0.0-dev.49)))
       '@itwin/presentation-frontend':
         specifier: catalog:itwinjs-core
-        version: 5.0.0-dev.49(ehrnzcqec66upe7ju7s2vhhuoa)
+        version: 5.0.0-dev.49(wyxuqho7x5xpwxd4alb6zqx25m)
       '@itwin/webgl-compatibility':
         specifier: catalog:itwinjs-core
         version: 5.0.0-dev.49
@@ -2981,8 +2981,8 @@ packages:
       react: '>=16.8.6'
       react-dom: '>=16.8.6'
 
-  '@itwin/itwinui-icons@5.0.0-alpha.3':
-    resolution: {integrity: sha512-MR7t1H1KZ3m9thlRKUvPVnSTCl4q9SEjJ5ovRpLwvh4k6EYKXmiccR59CoulqoSZdTR8/u0hjLMfT0bQVO2HLA==}
+  '@itwin/itwinui-icons@5.0.0-alpha.4':
+    resolution: {integrity: sha512-vEb2C/0LEyWDn57zPgMgxyVDcwNDTYOsO0DBM13dlL7pm0U+ZLAgZwsa+AAJOxBAaP5VL05N+sCJqIgWJG9L5A==}
 
   '@itwin/itwinui-illustrations-react@2.1.0':
     resolution: {integrity: sha512-5JR2A3mZy0d0qwwHpveSG3fsXLheJkO6a0GoWb8NQWw5edNZMRynJg0l3hVw3CHMgaaCGbUoKC77MuG0jWDzuA==}
@@ -10591,7 +10591,7 @@ snapshots:
       '@itwin/core-geometry': 5.0.0-dev.49
       '@itwin/core-quantity': 5.0.0-dev.49(@itwin/core-bentley@5.0.0-dev.49)
       '@itwin/core-react': 5.1.0(@itwin/appui-abstract@5.0.0-dev.49(@itwin/core-bentley@5.0.0-dev.49))(@itwin/core-bentley@5.0.0-dev.49)(@itwin/itwinui-react@3.17.2(@types/react@18.3.3)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      '@itwin/imodel-components-react': 5.1.0(vqkky3ckm4phfnyoxeqaauu3vi)
+      '@itwin/imodel-components-react': 5.1.0(n4p36drt7ekczjbxhh6gvyrnve)
       '@itwin/itwinui-icons-react': 2.9.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@itwin/itwinui-illustrations-react': 2.1.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@itwin/itwinui-react': 3.17.2(@types/react@18.3.3)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -10812,7 +10812,7 @@ snapshots:
       - supports-color
       - utf-8-validate
 
-  '@itwin/imodel-components-react@5.1.0(vqkky3ckm4phfnyoxeqaauu3vi)':
+  '@itwin/imodel-components-react@5.1.0(n4p36drt7ekczjbxhh6gvyrnve)':
     dependencies:
       '@itwin/appui-abstract': 5.0.0-dev.49(@itwin/core-bentley@5.0.0-dev.49)
       '@itwin/components-react': 5.1.0(@itwin/appui-abstract@5.0.0-dev.49(@itwin/core-bentley@5.0.0-dev.49))(@itwin/core-bentley@5.0.0-dev.49)(@itwin/core-react@5.1.0(@itwin/appui-abstract@5.0.0-dev.49(@itwin/core-bentley@5.0.0-dev.49))(@itwin/core-bentley@5.0.0-dev.49)(@itwin/itwinui-react@3.17.2(@types/react@18.3.3)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@itwin/itwinui-react@3.17.2(@types/react@18.3.3)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -10834,7 +10834,7 @@ snapshots:
       react: 18.3.1
       react-dom: 18.3.1(react@18.3.1)
 
-  '@itwin/itwinui-icons@5.0.0-alpha.3': {}
+  '@itwin/itwinui-icons@5.0.0-alpha.4': {}
 
   '@itwin/itwinui-illustrations-react@2.1.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
     dependencies:
@@ -10903,7 +10903,7 @@ snapshots:
       '@itwin/core-quantity': 5.0.0-dev.49(@itwin/core-bentley@5.0.0-dev.49)
       '@itwin/ecschema-metadata': 5.0.0-dev.49(@itwin/core-bentley@5.0.0-dev.49)(@itwin/core-quantity@5.0.0-dev.49(@itwin/core-bentley@5.0.0-dev.49))
 
-  '@itwin/presentation-frontend@5.0.0-dev.49(ehrnzcqec66upe7ju7s2vhhuoa)':
+  '@itwin/presentation-frontend@5.0.0-dev.49(wyxuqho7x5xpwxd4alb6zqx25m)':
     dependencies:
       '@itwin/core-bentley': 5.0.0-dev.49
       '@itwin/core-common': 5.0.0-dev.49(@itwin/core-bentley@5.0.0-dev.49)(@itwin/core-geometry@5.0.0-dev.49)
