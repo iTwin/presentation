@@ -3,8 +3,8 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-// script that sets overrides for `@itwin` package versions.
-// this allows to test our packages with various supported versions of `@itwin` packages
+// this script setup `presentation-full-stack-tests` for running with older `itwinjs-core` or `appui` versions.
+// it will modify package.json files for `presentation-full-stack-tests` and `presentation-test-utilities` to use specified versions
 
 "use strict";
 
@@ -55,16 +55,6 @@ function getOverrides(coreVersion, uiVersion) {
   return overrides;
 }
 
-function overrideAllDeps(packageJsonPath, coreVersion, uiVersion) {
-  const pkgJsonData = JSON.parse(fs.readFileSync(packageJsonPath, { encoding: "utf8" }));
-  if (!pkgJsonData) {
-    throw new Error(`Failed to read package.json content at ${packagesJsonPath}`);
-  }
-
-  pkgJsonData.pnpm = { ...pkgJsonData.pnpm, overrides: { ...pkgJsonData.pnpm?.overrides, ...getOverrides(coreVersion, uiVersion) } };
-  fs.writeFileSync(packageJsonPath, JSON.stringify(pkgJsonData, undefined, 2), { encoding: "utf8" });
-}
-
 function overrideDevDeps(packageJsonPath, coreVersion, uiVersion) {
   const pkgJsonData = JSON.parse(fs.readFileSync(packageJsonPath, { encoding: "utf8" }));
   if (!pkgJsonData) {
@@ -93,9 +83,11 @@ function forEachWorkspacePackage(callback) {
 }
 
 const argv = yargs(process.argv).argv;
-const packageJsonPath = require.resolve(argv.packageJson ?? "../package.json");
 const coreVersion = argv.coreVersion;
 const uiVersion = argv.uiVersion;
+
+// list of packages that need to pull older version for tests to run
+const usedPackages = ["presentation-full-stack-tests", "presentation-test-utilities"];
 
 if (!coreVersion && uiVersion) {
   throw new Error("Argument --coreVersion or --uiVersion need to be provided.");
@@ -103,5 +95,7 @@ if (!coreVersion && uiVersion) {
 
 forEachWorkspacePackage((project) => {
   const packageJsonDir = path.join(project.path, "package.json");
-  overrideDevDeps(packageJsonDir, coreVersion, uiVersion);
+  if (usedPackages.includes(project.name)) {
+    overrideDevDeps(packageJsonDir, coreVersion, uiVersion);
+  }
 });
