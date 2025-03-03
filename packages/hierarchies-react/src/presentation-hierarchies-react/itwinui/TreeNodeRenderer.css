@@ -3,7 +3,12 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-.stateless-tree-node:focus-within {
-  outline: 2px solid var(--iui-color-border-accent);
+.stateless-tree-node:focus-within::before {
+  content: "";
+  z-index: 1;
+  pointer-events: none;
+  outline: 2px solid var(--ids-color-border-accent-strong);
   outline-offset: -1px;
+  position: absolute;
+  inset: 0px;
 }
