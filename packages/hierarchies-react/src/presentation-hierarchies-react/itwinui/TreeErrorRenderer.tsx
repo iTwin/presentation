@@ -134,7 +134,7 @@ function ErrorNodeLabel({ message, onRetry }: { message: string; onRetry?: () =>
   const { localizedStrings } = useLocalizationContext();
   return (
     <div style={{ display: "flex" }}>
-      <Text>{message}</Text>
+      <Text variant={"body-sm"}>{message}</Text>
       {onRetry ? <Anchor onClick={onRetry}>{localizedStrings?.retry}</Anchor> : null}
     </div>
   );
@@ -151,7 +151,7 @@ function createLocalizedMessage(message: string, limit: number, onClick?: () => 
       title: messageWithLimit,
       element: (
         <div style={{ display: "flex" }}>
-          <Text>{messageWithLimit}</Text>
+          <Text variant={"body-sm"}>{messageWithLimit}</Text>
         </div>
       ),
     };
@@ -164,7 +164,7 @@ function createLocalizedMessage(message: string, limit: number, onClick?: () => 
     title: messageWithLimit.replace(fullText, innerText),
     element: (
       <div style={{ display: "flex" }}>
-        {textBefore ? <Text>{textBefore}</Text> : null}
+        {textBefore ? <Text variant={"body-sm"}>{textBefore}</Text> : null}
         <Anchor
           // underline props does not exist in v5
           onClick={(e) => {
@@ -174,7 +174,7 @@ function createLocalizedMessage(message: string, limit: number, onClick?: () => 
         >
           {innerText}
         </Anchor>
-        {textAfter ? <Text>{textAfter}</Text> : null}
+        {textAfter ? <Text variant={"body-sm"}>{textAfter}</Text> : null}
       </div>
     ),
   };
