@@ -1,5 +1,12 @@
 # @itwin/presentation-hierarchies-react
 
+## 2.0.0-alpha.7
+
+### Patch Changes
+
+- [#892](https://github.com/iTwin/presentation/pull/892): Fix focus outline for tree items not being visible on action items click.
+- [#894](https://github.com/iTwin/presentation/pull/894): Fix `treeRenderer` property `getSublabel` not being used.
+
 ## 2.0.0-alpha.6
 
 ### Patch Changes
