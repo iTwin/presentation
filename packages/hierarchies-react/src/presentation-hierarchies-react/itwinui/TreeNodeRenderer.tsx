@@ -136,7 +136,7 @@ export const TreeNodeRenderer: ForwardRefExoticComponent<TreeNodeRendererProps &
     return (
       <Tree.Item
         {...treeItemProps}
-        className={"stateless-tree-node"}
+        className={"presentation-hierarchies-node"}
         ref={ref}
         aria-level={node.level}
         aria-posinset={node.posInLevel}

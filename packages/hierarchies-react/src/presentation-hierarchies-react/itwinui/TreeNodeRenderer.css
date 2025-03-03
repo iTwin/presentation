@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-.stateless-tree-node:focus-within::before {
+.presentation-hierarchies-node:focus-within::before {
   content: "";
   z-index: 1;
   pointer-events: none;
