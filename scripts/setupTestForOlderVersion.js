@@ -93,9 +93,14 @@ if (!coreVersion && uiVersion) {
   throw new Error("Argument --coreVersion or --uiVersion need to be provided.");
 }
 
+// override versions
 forEachWorkspacePackage((project) => {
   const packageJsonDir = path.join(project.path, "package.json");
   if (usedPackages.includes(project.name)) {
     overrideDevDeps(packageJsonDir, coreVersion, uiVersion);
   }
 });
+
+const patchPath = require.resolve("./full-stack-tests.patch");
+// path known build issues do to newer types used in full stack tests
+execSync(`git apply ${patchPath}`);
