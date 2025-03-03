@@ -70,6 +70,7 @@ export const TreeNodeRenderer: ForwardRefExoticComponent<TreeNodeRendererProps &
       expandNode,
       getIcon,
       getLabel,
+      getSublabel,
       onFilterClick,
       onNodeClick,
       onNodeKeyDown,
@@ -142,6 +143,7 @@ export const TreeNodeRenderer: ForwardRefExoticComponent<TreeNodeRendererProps &
         aria-posinset={node.posInLevel}
         aria-setsize={node.levelSize}
         label={getLabel ? getLabel(node) : node.label}
+        description={getSublabel ? getSublabel(node) : undefined}
         selected={selected}
         expanded={node.isExpanded || node.children === true || node.children.length > 0 ? node.isExpanded : undefined}
         onExpandedChange={(isExpanded) => {
