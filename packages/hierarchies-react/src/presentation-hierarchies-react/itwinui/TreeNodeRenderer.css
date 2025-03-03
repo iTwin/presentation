@@ -1,0 +1,9 @@
+/*---------------------------------------------------------------------------------------------
+ * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
+ * See LICENSE.md in the project root for license terms and full copyright notice.
+ *--------------------------------------------------------------------------------------------*/
+
+.stateless-tree-node:focus-within {
+  outline: 2px solid var(--iui-color-border-accent);
+  outline-offset: -1px;
+}

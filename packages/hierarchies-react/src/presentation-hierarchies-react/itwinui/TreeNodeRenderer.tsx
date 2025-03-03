@@ -3,6 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
+import "./TreeNodeRenderer.css";
 import {
   ComponentPropsWithoutRef,
   forwardRef,
@@ -135,6 +136,7 @@ export const TreeNodeRenderer: ForwardRefExoticComponent<TreeNodeRendererProps &
     return (
       <Tree.Item
         {...treeItemProps}
+        className={"stateless-tree-node"}
         ref={ref}
         aria-level={node.level}
         aria-posinset={node.posInLevel}
