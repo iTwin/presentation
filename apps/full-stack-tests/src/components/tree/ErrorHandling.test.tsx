@@ -17,6 +17,7 @@ import { Presentation } from "@itwin/presentation-frontend";
 import { buildTestIModel } from "@itwin/presentation-testing";
 import { initialize, terminate } from "../../IntegrationTests.js";
 import { getByRole, render, waitFor } from "../../RenderUtils.js";
+import { isIterableManager } from "../../Utils.js";
 import { getNodeByLabel, toggleExpandNode } from "../TreeUtils.js";
 
 describe("Learning snippets", () => {
@@ -83,7 +84,12 @@ describe("Learning snippets", () => {
       await waitFor(() => getNodeByLabel(container, `A element 2`));
 
       // simulate a network error for B model node's children
-      sinon.stub(Presentation.presentation, "getNodesIterator").throws(new Error("Network error"));
+      const manager = Presentation.presentation;
+      if (isIterableManager(manager)) {
+        sinon.stub(manager, "getNodesIterator").throws(new Error("Network error"));
+      } else {
+        sinon.stub(Presentation.presentation, "getNodesAndCount").throws(new Error("Network error"));
+      }
 
       // find & expand model B node
       const modelNodeB = await waitFor(() => getNodeByLabel(container, "My Model B"));
