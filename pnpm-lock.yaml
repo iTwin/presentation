@@ -210,9 +210,6 @@ catalogs:
     sinon-chai:
       specifier: ^3.7.0
       version: 3.7.0
-    testdouble:
-      specifier: ^3.20.2
-      version: 3.20.2
 
 overrides:
   '@opentelemetry/exporter-metrics-otlp-grpc@^0.41.2': ^0.52.0
@@ -1221,9 +1218,6 @@ importers:
       sinon-chai:
         specifier: catalog:test-tools
         version: 3.7.0(chai@4.4.1)(sinon@18.0.0)
-      testdouble:
-        specifier: catalog:test-tools
-        version: 3.20.2
       typescript:
         specifier: catalog:build-tools
         version: 5.7.3
@@ -1876,9 +1870,6 @@ importers:
       sinon-chai:
         specifier: catalog:test-tools
         version: 3.7.0(chai@4.4.1)(sinon@18.0.0)
-      testdouble:
-        specifier: catalog:test-tools
-        version: 3.20.2
       typescript:
         specifier: catalog:build-tools
         version: 5.7.3
@@ -6405,10 +6396,6 @@ packages:
     resolution: {integrity: sha512-l4RyHgRqGN4Y3+9JHVrNqO+tN0rV5My76uW5/nuO4K1b6vw5G8d/cmFjP9tRfEsdhZNt0IFdZuK/c2Vr4Nb+Qg==}
     engines: {node: '>=0.10.0'}
 
-  is-plain-obj@1.1.0:
-    resolution: {integrity: sha512-yvkRyxmFKEOQ4pNXCmJG5AEQNlXJS5LaONXo5/cLdTZdWvsZ1ioJEonLGAosKlMWE8lwUy/bJzMjcw8az73+Fg==}
-    engines: {node: '>=0.10.0'}
-
   is-plain-obj@2.1.0:
     resolution: {integrity: sha512-YWnfyRwxL/+SsrWYfOpUtz5b3YD+nyfkHvjbcanzk8zgyO4ASD67uVMRt8k5bM4lLMDnXfriRhOpemw+NfT1eA==}
     engines: {node: '>=8'}
@@ -7750,10 +7737,6 @@ packages:
   queue-microtask@1.2.3:
     resolution: {integrity: sha512-NuaNSa6flKT5JaSYQzJok04JzTL1CA6aGhv5rfLW3PgqA+M2ChpZQnAC8h8i4ZFkBS8X5RqkDBHA7r4hej3K9A==}
 
-  quibble@0.9.2:
-    resolution: {integrity: sha512-BrL7hrZcbyyt5ZDfePkGFDc3m82uUtxCPOnpRUrkOdtBnmV9ldQKxXORkKL8eIzToRNaCpIPyKyfdfq/tBlFAA==}
-    engines: {node: '>= 0.14.0'}
-
   quick-lru@5.1.1:
     resolution: {integrity: sha512-WuyALRjWPDGtt/wzJiadO5AXY+8hZ80hVpe6MyivgraREW751X3SbhRvG3eLKOYN+8VEvqLcf3wdnt44Z4S4SA==}
     engines: {node: '>=10'}
@@ -8373,10 +8356,6 @@ packages:
   stringify-entities@4.0.4:
     resolution: {integrity: sha512-IwfBptatlO+QCJUo19AqvrPNqlVMpW9YEL2LIVY+Rpv2qsjCGxaDLNRgeGsQWJhfItebuJhsGSLjaBbNSQ+ieg==}
 
-  stringify-object-es5@2.5.0:
-    resolution: {integrity: sha512-vE7Xdx9ylG4JI16zy7/ObKUB+MtxuMcWlj/WHHr3+yAlQoN6sst2stU9E+2Qs3OrlJw/Pf3loWxL1GauEHf6MA==}
-    engines: {node: '>=0.10.0'}
-
   stringify-object@3.3.0:
     resolution: {integrity: sha512-rHqiFh1elqCQ9WPLIC8I0Q/g/wj5J1eMkyoiD6eoQApWHP0FtlK7rqnhmabL5VUY9JQCcqwwvlOaSuutekgyrw==}
     engines: {node: '>=4'}
@@ -8500,15 +8479,8 @@ packages:
     resolution: {integrity: sha512-pFYqmTw68LXVjeWJMST4+borgQP2AyMNbg1BpZh9LbyhUeNkeaPF9gzfPGUAnSMV3qPYdWUwDIjjCLiSDOl7vg==}
     engines: {node: '>=18'}
 
-  testdouble@3.20.2:
-    resolution: {integrity: sha512-790e9vJKdfddWNOaxW1/V9FcMk48cPEl3eJSj2i8Hh1fX89qArEJ6cp3DBnaECpGXc3xKJVWbc1jeNlWYWgiMg==}
-    engines: {node: '>= 16'}
-
   text-table@0.2.0:
     resolution: {integrity: sha512-N+8UisAXDGk8PFXP4HAzVR9nbfmVJ3zYLAWiTIoqC5v5isinhr+r5uaO8+7r3BMfuNIufIsA7RdpVgacC2cSpw==}
-
-  theredoc@1.0.0:
-    resolution: {integrity: sha512-KU3SA3TjRRM932jpNfD3u4Ec3bSvedyo5ITPI7zgWYnKep7BwQQaxlhI9qbO+lKJoRnoAbEVfMcAHRuKVYikDA==}
 
   thrift@0.14.2:
     resolution: {integrity: sha512-bW8EaE6iw3hSt4HB2HpBdHW86Xpb9IUJfqufx4NwEu7OGuIpS0ISj+Yy1Z1Wvhfno6SPNhKRJ1qFXea84HcrOQ==}
@@ -15167,8 +15139,6 @@ snapshots:
 
   is-obj@1.0.1: {}
 
-  is-plain-obj@1.1.0: {}
-
   is-plain-obj@2.1.0: {}
 
   is-plain-object@5.0.0: {}
@@ -16659,11 +16629,6 @@ snapshots:
 
   queue-microtask@1.2.3: {}
 
-  quibble@0.9.2:
-    dependencies:
-      lodash: 4.17.21
-      resolve: 1.22.8
-
   quick-lru@5.1.1: {}
 
   quote-unquote@1.0.0: {}
@@ -17421,11 +17386,6 @@ snapshots:
       character-entities-html4: 2.1.0
       character-entities-legacy: 3.0.0
 
-  stringify-object-es5@2.5.0:
-    dependencies:
-      is-plain-obj: 1.1.0
-      is-regexp: 1.0.0
-
   stringify-object@3.3.0:
     dependencies:
       get-own-enumerable-property-symbols: 3.0.2
@@ -17590,16 +17550,7 @@ snapshots:
       glob: 10.4.5
       minimatch: 9.0.5
 
-  testdouble@3.20.2:
-    dependencies:
-      lodash: 4.17.21
-      quibble: 0.9.2
-      stringify-object-es5: 2.5.0
-      theredoc: 1.0.0
-
   text-table@0.2.0: {}
-
-  theredoc@1.0.0: {}
 
   thrift@0.14.2:
     dependencies:
