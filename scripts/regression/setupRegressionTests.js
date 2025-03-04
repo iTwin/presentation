@@ -110,6 +110,7 @@ function overrideDevDeps(pkgJsonData, coreVersion, uiVersion) {
 function useLocalTarballs(pkgJsonData, localPackagesPath) {
   const packageNameRegex = /^itwin-([\w-]+)-[\d]+.[\d]+.[\d]+.tgz$/;
   const localPackages = fs.readdirSync(localPackagesPath);
+  console.log(`Found local tarballs: ${localPackages.join(", ")}`);
   localPackages.forEach((localPackage) => {
     const match = localPackage.match(packageNameRegex);
     if (!match || !match[1]) {
@@ -118,7 +119,9 @@ function useLocalTarballs(pkgJsonData, localPackagesPath) {
     const packageName = match[1];
     const fullName = `@itwin/${packageName}`;
     if (pkgJsonData.devDependencies[fullName]) {
-      pkgJsonData.devDependencies[fullName] = `file:${path.join("../../", localPackagesPath, localPackage)}`;
+      const tarBallPath = `file:${path.join("../../", localPackagesPath, localPackage)}`;
+      console.log(`Using local tarball for ${fullName} at ${tarBallPath}`);
+      pkgJsonData.devDependencies[fullName] = tarBallPath;
     }
   });
 }
