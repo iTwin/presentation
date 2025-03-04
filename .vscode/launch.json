@@ -76,7 +76,15 @@
       "cwd": "${workspaceFolder}/packages/components",
       "type": "node",
       "request": "launch",
-      "program": "${workspaceFolder}/packages/components/node_modules/mocha/bin/_mocha",
+      "runtimeExecutable": "node",
+      "runtimeVersion": "22",
+      "runtimeArgs": [
+        "--experimental-test-module-mocks",
+        "--enable-source-maps",
+        "--import",
+        "presentation-test-utilities/node-hooks/ignore-styles",
+        "${workspaceFolder}/packages/hierarchies-react/node_modules/mocha/bin/mocha.js"
+      ],
       "args": [
         "--config",
         "./.mocharc.json",
@@ -87,8 +95,7 @@
         "${workspaceFolder}/packages/components/lib/**/*.js"
       ],
       "env": {
-        "NODE_ENV": "development",
-        "NODE_OPTIONS": "--enable-source-maps  --import presentation-test-utilities/node-hooks/ignore-styles"
+        "NODE_ENV": "development"
       }
     },
     {
@@ -116,7 +123,15 @@
       "cwd": "${workspaceFolder}/packages/testing",
       "type": "node",
       "request": "launch",
-      "program": "${workspaceFolder}/packages/testing/node_modules/mocha/bin/_mocha",
+      "runtimeExecutable": "node",
+      "runtimeVersion": "22",
+      "runtimeArgs": [
+        "--experimental-test-module-mocks",
+        "--enable-source-maps",
+        "--import",
+        "presentation-test-utilities/node-hooks/ignore-styles",
+        "${workspaceFolder}/packages/testing/node_modules/mocha/bin/mocha.js"
+      ],
       "args": [
         "--config",
         "./.mocharc.json",
@@ -127,8 +142,7 @@
         "${workspaceFolder}/packages/testing/lib/**/*.js"
       ],
       "env": {
-        "NODE_ENV": "development",
-        "NODE_OPTIONS": "--enable-source-maps  --import presentation-test-utilities/node-hooks/ignore-styles"
+        "NODE_ENV": "development"
       }
     },
     {
@@ -262,7 +276,15 @@
       "cwd": "${workspaceFolder}/packages/hierarchies-react",
       "type": "node",
       "request": "launch",
-      "program": "${workspaceFolder}/packages/hierarchies-react/node_modules/mocha/bin/_mocha",
+      "runtimeExecutable": "node",
+      "runtimeVersion": "22",
+      "runtimeArgs": [
+        "--experimental-test-module-mocks",
+        "--enable-source-maps",
+        "--import",
+        "presentation-test-utilities/node-hooks/ignore-styles",
+        "${workspaceFolder}/packages/hierarchies-react/node_modules/mocha/bin/mocha.js"
+      ],
       "args": [
         "--config",
         "./.mocharc.json",
@@ -273,8 +295,7 @@
         "${workspaceFolder}/packages/hierarchies-react/lib/**/*.js"
       ],
       "env": {
-        "NODE_ENV": "development",
-        "NODE_OPTIONS": "--enable-source-maps --import presentation-test-utilities/node-hooks/ignore-styles"
+        "NODE_ENV": "development"
       }
     }
   ],

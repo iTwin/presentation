@@ -7,7 +7,6 @@
  */
 
 import { join } from "path";
-import * as rimraf from "rimraf";
 import { IModelHost, IModelHostOptions } from "@itwin/core-backend";
 import { Guid, Logger, LogLevel } from "@itwin/core-bentley";
 import { IModelReadRpcInterface, RpcConfiguration, RpcDefaultConfiguration, RpcInterfaceDefinition } from "@itwin/core-common";
@@ -152,7 +151,8 @@ export const terminate = async (frontendApp = IModelApp) => {
   PresentationBackend.terminate();
   await IModelHost.shutdown();
   if (hierarchiesCacheDirectory) {
-    rimraf.sync(hierarchiesCacheDirectory);
+    const { sync: rimrafSync } = await import("rimraf");
+    rimrafSync(hierarchiesCacheDirectory);
   }
 
   // terminate frontend

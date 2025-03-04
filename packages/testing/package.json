@@ -39,9 +39,9 @@
     "docs:changelog": "cpx ./CHANGELOG.md ./build/docs/reference/presentation-testing",
     "docs:reference": "cross-env NODE_PROJECT_ROOT_DIRECTORY=../../ betools docs --json=./build/docs/reference/presentation-testing/file.json --tsIndexFile=presentation-testing.ts --onlyJson --testExcludeGlob=./src/test/**",
     "lint": "eslint ./src/**/*.ts",
-    "test:dev": "cross-env NODE_OPTIONS=\"--import presentation-test-utilities/node-hooks/ignore-styles\" mocha --enable-source-maps --config ./.mocharc.json",
+    "test:dev": "node --experimental-test-module-mocks --enable-source-maps --import presentation-test-utilities/node-hooks/ignore-styles ./node_modules/mocha/bin/mocha.js --config ./.mocharc.json",
     "test": "npm run test:dev",
-    "extract-api": "betools extract-api --entry=presentation-testing --apiReportFolder=./api --apiReportTempFolder=./api/temp --apiSummaryFolder=./api --includeUnexportedApis",
+    "extract-api": "betools extract-api --entry=lib/esm/presentation-testing --apiReportFolder=./api --apiReportTempFolder=./api/temp --apiSummaryFolder=./api --includeUnexportedApis",
     "check-internal": "node ../../scripts/checkInternal.js --apiSummary ./api/presentation-testing.api.md"
   },
   "dependencies": {
@@ -104,7 +104,6 @@
     "reflect-metadata": "catalog:itwinjs-core",
     "sinon": "catalog:test-tools",
     "sinon-chai": "catalog:test-tools",
-    "testdouble": "catalog:test-tools",
     "typescript": "catalog:build-tools"
   }
 }

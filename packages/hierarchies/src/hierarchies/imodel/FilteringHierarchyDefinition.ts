@@ -30,6 +30,7 @@ interface FilteringHierarchyDefinitionProps {
   imodelAccess: ECClassHierarchyInspector & { imodelKey: string };
   source: HierarchyDefinition;
   nodeIdentifierPaths: HierarchyFilteringPath[];
+  nodesParser?: NodeParser;
 }
 
 /** @internal */
@@ -37,11 +38,13 @@ export class FilteringHierarchyDefinition implements HierarchyDefinition {
   private _imodelAccess: ECClassHierarchyInspector & { imodelKey: string };
   private _source: HierarchyDefinition;
   private _nodeIdentifierPaths: HierarchyFilteringPath[];
+  private _nodesParser: NodeParser;
 
   public constructor(props: FilteringHierarchyDefinitionProps) {
     this._imodelAccess = props.imodelAccess;
     this._source = props.source;
     this._nodeIdentifierPaths = props.nodeIdentifierPaths;
+    this._nodesParser = props.nodesParser ?? this._source.parseNode ?? defaultNodesParser;
   }
 
   public get preProcessNode(): NodePreProcessor {
@@ -111,8 +114,7 @@ export class FilteringHierarchyDefinition implements HierarchyDefinition {
 
   public get parseNode(): NodeParser {
     return async (row: { [columnName: string]: any }, parentNode?: HierarchyDefinitionParentNode): Promise<SourceInstanceHierarchyNode> => {
-      const parsedNode = await (this._source.parseNode ?? defaultNodesParser)(row);
-
+      const parsedNode = await this._nodesParser(row);
       const filteringHelper = createHierarchyFilteringHelper(this._nodeIdentifierPaths, parentNode);
       const nodeExtraProps =
         row[ECSQL_COLUMN_NAME_FilterECInstanceId] && row[ECSQL_COLUMN_NAME_FilterClassName]

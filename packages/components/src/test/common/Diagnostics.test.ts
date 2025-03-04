@@ -4,17 +4,32 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { expect } from "chai";
+import { mock } from "node:test";
 import * as sinon from "sinon";
-import * as td from "testdouble";
 import * as presentationFrontendModule from "@itwin/presentation-frontend";
-import * as diagnostics from "../../presentation-components/common/Diagnostics.js";
 
-// this is needed for mocking external module
-const presentationFrontendModulePath = import.meta.resolve("@itwin/presentation-frontend");
+import type * as diagnostics from "../../presentation-components/common/Diagnostics.js";
 
 describe("createDiagnosticsOptions", () => {
+  const combinedDiagnosticsHandler = sinon.stub();
+  const createCombinedDiagnosticsHandlerStub = sinon.stub().returns(combinedDiagnosticsHandler);
+
+  before(() => {
+    mock.module("@itwin/presentation-frontend", {
+      namedExports: {
+        ...presentationFrontendModule,
+        createCombinedDiagnosticsHandler: createCombinedDiagnosticsHandlerStub,
+      },
+    });
+  });
+
+  after(() => {
+    mock.reset();
+  });
+
   afterEach(() => {
-    td.reset();
+    combinedDiagnosticsHandler.resetHistory();
+    createCombinedDiagnosticsHandlerStub.resetHistory();
   });
 
   async function createDiagnosticsOptions(
@@ -52,12 +67,6 @@ describe("createDiagnosticsOptions", () => {
   });
 
   it("returns options with combined handler when rule and dev props have different handlers", async () => {
-    const combinedHandler = sinon.stub();
-    const combineFunc = sinon.stub().returns(combinedHandler);
-    await td.replaceEsm(presentationFrontendModulePath, {
-      ...presentationFrontendModule,
-      createCombinedDiagnosticsHandler: combineFunc,
-    });
     const handler1 = sinon.stub();
     const handler2 = sinon.stub();
     expect(
@@ -68,8 +77,8 @@ describe("createDiagnosticsOptions", () => {
     ).to.deep.eq({
       editor: "warning",
       dev: "info",
-      handler: combinedHandler,
+      handler: combinedDiagnosticsHandler,
     });
-    expect(combineFunc).to.be.calledOnceWithExactly([handler1, handler2]);
+    expect(createCombinedDiagnosticsHandlerStub).to.be.calledOnceWithExactly([handler1, handler2]);
   });
 });
