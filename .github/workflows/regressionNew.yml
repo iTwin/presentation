@@ -44,11 +44,14 @@ jobs:
         run: pnpm pack
         working-directory: packages/core-interop
 
+      - name: Gather tarballs
+        run: node ./scripts/regression/gatherTarballs.js
+
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
           name: built-packages
-          path: packages/*/*.tgz
+          path: built-packages
 
   runTests:
     needs: [buildPackages]
