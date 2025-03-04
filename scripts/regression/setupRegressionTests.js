@@ -60,9 +60,21 @@ forEachWorkspacePackage((project) => {
   }
 });
 
-const patchPath = require.resolve("./full-stack-tests.patch");
-// path known build issues do to newer types used in full stack tests
-execSync(`git apply ${patchPath}`);
+try {
+  const patchPath = require.resolve(`./core-${coreVersion}.patch`);
+  // path known build issues in full stack tests due to older types from itwinjs-core
+  execSync(`git apply ${patchPath}`);
+} catch (e) {
+  console.log(`No patch found for 'itwinjs-core' - ${coreVersion}`);
+}
+
+try {
+  const patchPath = require.resolve(`./ui-${uiVersion}.patch`);
+  // path known build issues in full stack tests due to older types from appui
+  execSync(`git apply ${patchPath}`);
+} catch (e) {
+  console.log(`No patch found for 'appui' - ${uiVersion}`);
+}
 
 function updatePackageJson(packageJsonPath, updates) {
   const pkgJsonData = JSON.parse(fs.readFileSync(packageJsonPath, { encoding: "utf8" }));

@@ -60,7 +60,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        core-version: ["4.4.0"]
+        core-version: ["4.4.0", "4.10.7"]
 
     name: Build with Core - ${{ matrix.core-version }}
 
