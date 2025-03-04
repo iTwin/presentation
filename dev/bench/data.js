@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1741096990490,
+  "lastUpdate": 1741097018626,
   "repoUrl": "https://github.com/iTwin/presentation",
   "entries": {
     "Benchmark": [
@@ -32940,6 +32940,162 @@ window.BENCHMARK_DATA = {
             "value": 43,
             "unit": "ms",
             "extra": "count: 9\nmax: 43\np95: 43\nmedian: 28"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "35135765+grigasp@users.noreply.github.com",
+            "name": "Grigas",
+            "username": "grigasp"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "26cbfd23aa3019731707b194661bf72241f8254a",
+          "message": "Get rid of testdouble (#895)\n\n* remove the need for module mocking in `presentation-hierarchies`\n\n* remove the need of module mocking in `unified-selection` package\n\n* remove unnecessary `testdouble` dependency from `unified-selection-react` package\n\n* switch from `testdouble` to `mock` from `node:test` for mocking modules\n\n* switch from `testdouble` to `moc`k from `node:test` for mocking modules in `presentation-testing`\n\n* fixup `hierarchies-react`\n\n* switch from `testdouble` to `mock` from `node:test` for mocking modules in `presentation-components`\n\n* remove `testdouble` from `test-tools` catalog\n\n* extract-api",
+          "timestamp": "2025-03-04T16:00:16+02:00",
+          "tree_id": "d1734714cbd43fb8b9d72c1c51d5b69ba0bad9e3",
+          "url": "https://github.com/iTwin/presentation/commit/26cbfd23aa3019731707b194661bf72241f8254a"
+        },
+        "date": 1741097017717,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "flat 50k elements list",
+            "value": 4560.88,
+            "unit": "ms"
+          },
+          {
+            "name": "flat 50k elements list (P95 of main thread blocks)",
+            "value": 70,
+            "unit": "ms",
+            "extra": "count: 16\nmax: 70\np95: 70\nmedian: 31.5"
+          },
+          {
+            "name": "filtering filters with 50000 paths",
+            "value": 9921.03,
+            "unit": "ms"
+          },
+          {
+            "name": "filtering filters with 50000 paths (P95 of main thread blocks)",
+            "value": 134,
+            "unit": "ms",
+            "extra": "count: 16\nmax: 134\np95: 134\nmedian: 29.5"
+          },
+          {
+            "name": "grouping by label",
+            "value": 10294.46,
+            "unit": "ms"
+          },
+          {
+            "name": "grouping by label (P95 of main thread blocks)",
+            "value": 61,
+            "unit": "ms",
+            "extra": "count: 6\nmax: 61\np95: 61\nmedian: 32"
+          },
+          {
+            "name": "grouping by class",
+            "value": 10291.61,
+            "unit": "ms"
+          },
+          {
+            "name": "grouping by class (P95 of main thread blocks)",
+            "value": 35,
+            "unit": "ms",
+            "extra": "count: 6\nmax: 35\np95: 35\nmedian: 30.5"
+          },
+          {
+            "name": "grouping by property",
+            "value": 11033.67,
+            "unit": "ms"
+          },
+          {
+            "name": "grouping by property (P95 of main thread blocks)",
+            "value": 52,
+            "unit": "ms",
+            "extra": "count: 6\nmax: 52\np95: 52\nmedian: 31.5"
+          },
+          {
+            "name": "grouping by base class (10 classes)",
+            "value": 7323.96,
+            "unit": "ms"
+          },
+          {
+            "name": "grouping by base class (10 classes) (P95 of main thread blocks)",
+            "value": 81,
+            "unit": "ms",
+            "extra": "count: 20\nmax: 81\np95: 81\nmedian: 32.5"
+          },
+          {
+            "name": "grouping by multiple attributes",
+            "value": 27758.1,
+            "unit": "ms"
+          },
+          {
+            "name": "grouping by multiple attributes (P95 of main thread blocks)",
+            "value": 48,
+            "unit": "ms",
+            "extra": "count: 13\nmax: 48\np95: 48\nmedian: 30"
+          },
+          {
+            "name": "hide if no children required to finalize root, w/o children",
+            "value": 39116.27,
+            "unit": "ms"
+          },
+          {
+            "name": "hide if no children required to finalize root, w/o children (P95 of main thread blocks)",
+            "value": 35,
+            "unit": "ms",
+            "extra": "count: 6\nmax: 35\np95: 35\nmedian: 32"
+          },
+          {
+            "name": "hide if no children required to finalize root, w/ children",
+            "value": 157.88,
+            "unit": "ms"
+          },
+          {
+            "name": "hide if no children required to finalize root, w/ children (P95 of main thread blocks)",
+            "value": 0,
+            "unit": "ms",
+            "extra": "count: 0\nmax: N/A\np95: N/A\nmedian: N/A"
+          },
+          {
+            "name": "models tree initial (Baytown)",
+            "value": 43.25,
+            "unit": "ms"
+          },
+          {
+            "name": "models tree initial (Baytown) (P95 of main thread blocks)",
+            "value": 0,
+            "unit": "ms",
+            "extra": "count: 0\nmax: N/A\np95: N/A\nmedian: N/A"
+          },
+          {
+            "name": "models tree full (Baytown)",
+            "value": 8365.04,
+            "unit": "ms"
+          },
+          {
+            "name": "models tree full (Baytown) (P95 of main thread blocks)",
+            "value": 82,
+            "unit": "ms",
+            "extra": "count: 2\nmax: 82\np95: 82\nmedian: 81.5"
+          },
+          {
+            "name": "models tree creates initial filtered view for 50k target items",
+            "value": 2078.31,
+            "unit": "ms"
+          },
+          {
+            "name": "models tree creates initial filtered view for 50k target items (P95 of main thread blocks)",
+            "value": 81,
+            "unit": "ms",
+            "extra": "count: 8\nmax: 81\np95: 81\nmedian: 29"
           }
         ]
       }
