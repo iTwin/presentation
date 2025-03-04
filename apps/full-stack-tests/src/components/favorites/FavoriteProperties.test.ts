@@ -52,6 +52,8 @@ describe("Favorite properties", () => {
 
   describe("favoriting different types of properties", () => {
     beforeEach(async () => {
+      await Presentation.favoriteProperties.initializeConnection(imodel);
+
       // note: Presentation is initialized without client services, so favorite properties are stored locally - clearing
       // them doesn't affect what's stored in user settings service
       await Presentation.favoriteProperties.clear(imodel, FavoritePropertiesScope.Global);
@@ -149,6 +151,8 @@ describe("Favorite properties", () => {
 
   describe("ordering", () => {
     beforeEach(async () => {
+      await Presentation.favoriteProperties.initializeConnection(imodel);
+
       // note: Presentation is initialized without client services, so favorite properties are stored locally - clearing
       // them doesn't affect what's stored in user settings service
       await Presentation.favoriteProperties.clear(imodel, FavoritePropertiesScope.Global);
