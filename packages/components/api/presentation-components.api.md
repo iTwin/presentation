@@ -35,7 +35,6 @@ import { IPropertyValueRenderer } from '@itwin/components-react';
 import { ITreeDataProvider } from '@itwin/components-react';
 import { ITreeNodeLoader } from '@itwin/components-react';
 import { JSX as JSX_2 } from 'react/jsx-runtime';
-import { JSX as JSX_3 } from 'react/jsx-runtime.js';
 import { Keys } from '@itwin/presentation-common';
 import { KeySet } from '@itwin/presentation-common';
 import { Memoized } from 'micro-memoize';
@@ -291,7 +290,7 @@ export class InstanceKeyValueRenderer implements IPropertyValueRenderer {
     // (undocumented)
     canRender(record: PropertyRecord): boolean;
     // (undocumented)
-    render(record: PropertyRecord, context?: PropertyValueRendererContext): JSX_3.Element;
+    render(record: PropertyRecord, context?: PropertyValueRendererContext): JSX_2.Element;
 }
 
 // @public
@@ -343,7 +342,7 @@ export interface IUnifiedSelectionComponent {
 export const NavigationPropertyEditor: new () => PropertyEditorBase;
 
 // @public
-export function NavigationPropertyEditorContextProvider({ children, ...props }: PropsWithChildren<NavigationPropertyEditorContextProviderProps>): JSX_3.Element;
+export function NavigationPropertyEditorContextProvider({ children, ...props }: PropsWithChildren<NavigationPropertyEditorContextProviderProps>): JSX_2.Element;
 
 // @public
 export interface NavigationPropertyEditorContextProviderProps {
@@ -372,7 +371,7 @@ export enum PresentationComponentsLoggerCategory {
 }
 
 // @public
-export function PresentationFilterBuilderValueRenderer({ imodel, descriptor, descriptorInputKeys, selectedClasses, ...props }: PresentationFilterBuilderValueRendererProps): JSX_3.Element;
+export function PresentationFilterBuilderValueRenderer({ imodel, descriptor, descriptorInputKeys, selectedClasses, ...props }: PresentationFilterBuilderValueRendererProps): JSX_2.Element;
 
 // @public
 export interface PresentationFilterBuilderValueRendererProps extends PropertyFilterBuilderRuleValueRendererProps {
@@ -404,7 +403,7 @@ export namespace PresentationInstanceFilter {
 }
 
 // @public
-export function PresentationInstanceFilterBuilder(props: PresentationInstanceFilterBuilderProps): JSX_3.Element;
+export function PresentationInstanceFilterBuilder(props: PresentationInstanceFilterBuilderProps): JSX_2.Element;
 
 // @public
 export interface PresentationInstanceFilterBuilderProps {
@@ -524,7 +523,7 @@ export interface PresentationPropertyDataProviderProps extends DiagnosticsProps 
 }
 
 // @public @deprecated
-export function PresentationTree<TEventHandler extends TreeEventHandler>({ state, ...props }: PresentationTreeProps<TEventHandler>): JSX_3.Element;
+export function PresentationTree<TEventHandler extends TreeEventHandler>({ state, ...props }: PresentationTreeProps<TEventHandler>): JSX_2.Element;
 
 // @public @deprecated
 export class PresentationTreeDataProvider implements IPresentationTreeDataProvider, Disposable {
@@ -642,7 +641,7 @@ export type PresentationTreeProps<TEventHandler extends TreeEventHandler> = Omit
 };
 
 // @public @deprecated
-export function PresentationTreeRenderer(props: PresentationTreeRendererProps): JSX_3.Element;
+export function PresentationTreeRenderer(props: PresentationTreeRendererProps): JSX_2.Element;
 
 // @public @deprecated
 export interface PresentationTreeRendererProps extends Omit<TreeRendererProps, "nodeRenderer"> {
@@ -836,7 +835,7 @@ export interface UseHierarchyLevelFilteringProps {
 // @public
 export function useInstanceFilterPropertyInfos({ descriptor }: UseInstanceFilterPropertyInfosProps): {
     propertyInfos: PresentationInstanceFilterPropertyInfo[];
-    propertyRenderer: (name: string) => JSX_3.Element;
+    propertyRenderer: (name: string) => JSX_2.Element;
 };
 
 // @public
