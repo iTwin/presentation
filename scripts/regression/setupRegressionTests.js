@@ -38,6 +38,49 @@ const corePackages = [
 // list of packages from `appui`
 const uiPackages = ["@itwin/core-react", "@itwin/components-react", "@itwin/imodel-components-react"];
 
+const argv = yargs(process.argv).argv;
+const coreVersion = argv.coreVersion;
+const uiVersion = argv.uiVersion;
+const localPackagesPath = argv.localPackagesPath;
+
+if (!coreVersion && uiVersion) {
+  throw new Error("Argument --coreVersion or --uiVersion need to be provided.");
+}
+
+// list of packages that need to pull older version of itwinjs-core and appUi for tests to run
+const usedPackages = ["presentation-full-stack-tests", "presentation-test-utilities"];
+// override versions
+forEachWorkspacePackage((project) => {
+  const packageJsonPath = path.join(project.path, "package.json");
+  if (usedPackages.includes(project.name)) {
+    updatePackageJson(packageJsonPath, [
+      (pkgJsonData) => overrideDevDeps(pkgJsonData, coreVersion, uiVersion),
+      (pkgJsonData) => useLocalTarballs(pkgJsonData, localPackagesPath),
+    ]);
+  }
+});
+
+const patchPath = require.resolve("./full-stack-tests.patch");
+// path known build issues do to newer types used in full stack tests
+execSync(`git apply ${patchPath}`);
+
+function updatePackageJson(packageJsonPath, updates) {
+  const pkgJsonData = JSON.parse(fs.readFileSync(packageJsonPath, { encoding: "utf8" }));
+  if (!pkgJsonData) {
+    throw new Error(`Failed to read package.json content at ${packagesJsonPath}`);
+  }
+
+  if (!pkgJsonData.devDependencies) {
+    return;
+  }
+
+  for (const update of updates) {
+    update(pkgJsonData);
+  }
+
+  fs.writeFileSync(packageJsonPath, JSON.stringify(pkgJsonData, undefined, 2) + "\n", { encoding: "utf8" });
+}
+
 function getOverrides(coreVersion, uiVersion) {
   const overrides = {};
 
@@ -55,24 +98,29 @@ function getOverrides(coreVersion, uiVersion) {
   return overrides;
 }
 
-function overrideDevDeps(packageJsonPath, coreVersion, uiVersion) {
-  const pkgJsonData = JSON.parse(fs.readFileSync(packageJsonPath, { encoding: "utf8" }));
-  if (!pkgJsonData) {
-    throw new Error(`Failed to read package.json content at ${packagesJsonPath}`);
-  }
-
-  if (!pkgJsonData.devDependencies) {
-    return;
-  }
-
+function overrideDevDeps(pkgJsonData, coreVersion, uiVersion) {
   const overrides = getOverrides(coreVersion, uiVersion);
   Object.entries(overrides).forEach(([packageName, version]) => {
     if (pkgJsonData.devDependencies[packageName]) {
       pkgJsonData.devDependencies[packageName] = version;
     }
   });
+}
 
-  fs.writeFileSync(packageJsonPath, JSON.stringify(pkgJsonData, undefined, 2), { encoding: "utf8" });
+function useLocalTarballs(pkgJsonData, localPackagesPath) {
+  const packageNameRegex = /^itwin-([\w-]+)-[\d]+.[\d]+.[\d]+.tgz$/;
+  const localPackages = fs.readdirSync(localPackagesPath);
+  localPackages.forEach((localPackage) => {
+    const match = localPackage.match(packageNameRegex);
+    if (!match || !match[1]) {
+      return;
+    }
+    const packageName = match[1];
+    const fullName = `@itwin/${packageName}`;
+    if (pkgJsonData.devDependencies[fullName]) {
+      pkgJsonData.devDependencies[fullName] = `file:${path.join("../../", localPackagesPath, localPackage)}`;
+    }
+  });
 }
 
 function forEachWorkspacePackage(callback) {
@@ -81,26 +129,3 @@ function forEachWorkspacePackage(callback) {
     callback(project);
   });
 }
-
-const argv = yargs(process.argv).argv;
-const coreVersion = argv.coreVersion;
-const uiVersion = argv.uiVersion;
-
-// list of packages that need to pull older version for tests to run
-const usedPackages = ["presentation-full-stack-tests", "presentation-test-utilities"];
-
-if (!coreVersion && uiVersion) {
-  throw new Error("Argument --coreVersion or --uiVersion need to be provided.");
-}
-
-// override versions
-forEachWorkspacePackage((project) => {
-  const packageJsonDir = path.join(project.path, "package.json");
-  if (usedPackages.includes(project.name)) {
-    overrideDevDeps(packageJsonDir, coreVersion, uiVersion);
-  }
-});
-
-const patchPath = require.resolve("./full-stack-tests.patch");
-// path known build issues do to newer types used in full stack tests
-execSync(`git apply ${patchPath}`);
