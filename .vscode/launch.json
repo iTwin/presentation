@@ -269,7 +269,15 @@
       "cwd": "${workspaceFolder}/packages/hierarchies-react",
       "type": "node",
       "request": "launch",
-      "program": "${workspaceFolder}/packages/hierarchies-react/node_modules/mocha/bin/_mocha",
+      "runtimeExecutable": "node",
+      "runtimeVersion": "22",
+      "runtimeArgs": [
+        "--experimental-test-module-mocks",
+        "--enable-source-maps",
+        "--import",
+        "presentation-test-utilities/node-hooks/ignore-styles",
+        "${workspaceFolder}/packages/hierarchies-react/node_modules/mocha/bin/mocha.js"
+      ],
       "args": [
         "--config",
         "./.mocharc.json",
