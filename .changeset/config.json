@@ -16,5 +16,6 @@
     "@test-app/backend",
     "@test-app/common",
     "@test-app/frontend"
-  ]
+  ],
+  "bumpVersionsWithWorkspaceProtocolOnly": true
 }

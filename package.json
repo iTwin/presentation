@@ -33,7 +33,7 @@
     "benchmark:unified-selection": "pnpm run -C ./apps/performance-tests benchmark:unified-selection"
   },
   "dependencies": {
-    "@changesets/cli": "^2.27.9",
+    "@changesets/cli": "^2.28.1",
     "cpx2": "catalog:build-tools",
     "eslint": "catalog:build-tools",
     "eslint-config-prettier": "^9.1.0",
