@@ -76,7 +76,7 @@ catalogs:
   build-tools:
     "@itwin/build-tools": "5.0.0-dev.67"
     "@itwin/eslint-plugin": "5.0.0-dev.1"
-    "@types/node": "^20.12.12"
+    "@types/node": "^22.13.9"
     "cpx2": "^7.0.1"
     "cross-env": "^7.0.3"
     "eslint": "^9.13.0"
