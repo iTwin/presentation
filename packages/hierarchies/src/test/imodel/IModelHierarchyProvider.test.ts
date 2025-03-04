@@ -8,16 +8,16 @@ import { collect, createAsyncIterator, ResolvablePromise, waitFor } from "presen
 import sinon from "sinon";
 import { BeEvent, omit } from "@itwin/core-bentley";
 import { GenericInstanceFilter } from "@itwin/core-common";
-import { ECSqlQueryDef, ECSqlQueryReaderOptions, InstanceKey, Props, trimWhitespace, TypedPrimitiveValue } from "@itwin/presentation-shared";
+import { EC, ECSqlQueryDef, ECSqlQueryReaderOptions, InstanceKey, trimWhitespace, TypedPrimitiveValue } from "@itwin/presentation-shared";
 import { RowsLimitExceededError } from "../../hierarchies/HierarchyErrors.js";
 import { GroupingHierarchyNode, HierarchyNode, ParentHierarchyNode } from "../../hierarchies/HierarchyNode.js";
 import { GroupingNodeKey } from "../../hierarchies/HierarchyNodeKey.js";
 import { ECSQL_COLUMN_NAME_FilterClassName, ECSQL_COLUMN_NAME_FilterECInstanceId } from "../../hierarchies/imodel/FilteringHierarchyDefinition.js";
 import { DefineHierarchyLevelProps, HierarchyDefinition, NodeParser } from "../../hierarchies/imodel/IModelHierarchyDefinition.js";
-import { ProcessedHierarchyNode, SourceInstanceHierarchyNode } from "../../hierarchies/imodel/IModelHierarchyNode.js";
+import { InstanceHierarchyNodeProcessingParams, ProcessedHierarchyNode, SourceInstanceHierarchyNode } from "../../hierarchies/imodel/IModelHierarchyNode.js";
 import { createIModelHierarchyProvider } from "../../hierarchies/imodel/IModelHierarchyProvider.js";
 import { LimitingECSqlQueryExecutor } from "../../hierarchies/imodel/LimitingECSqlQueryExecutor.js";
-import { NodeSelectClauseColumnNames, NodesQueryClauseFactory } from "../../hierarchies/imodel/NodeSelectQueryFactory.js";
+import { NodeSelectClauseColumnNames } from "../../hierarchies/imodel/NodeSelectQueryFactory.js";
 import { RowDef } from "../../hierarchies/imodel/TreeNodesReader.js";
 import { createIModelAccessStub, createTestGenericNode, createTestGenericNodeKey, createTestInstanceKey, createTestSourceGenericNode } from "../Utils.js";
 
@@ -393,6 +393,11 @@ describe("createIModelHierarchyProvider", () => {
 
   describe("Grouping", () => {
     it("returns grouping node children", async () => {
+      const propertyClass = imodelAccess.stubEntityClass({
+        schemaName: "a",
+        className: "b",
+        properties: [{ name: "MyProperty", primitiveType: "Integer", isPrimitive: () => true, isNavigation: () => false } as unknown as EC.PrimitiveProperty],
+      });
       imodelAccess.createQueryReader.returns(
         createAsyncIterator<RowDef>([
           {
@@ -400,8 +405,11 @@ describe("createIModelHierarchyProvider", () => {
             [NodeSelectClauseColumnNames.ECInstanceId]: "0x123",
             [NodeSelectClauseColumnNames.DisplayLabel]: "test label",
             [NodeSelectClauseColumnNames.Grouping]: JSON.stringify({
-              byLabel: true,
-            } satisfies Props<NodesQueryClauseFactory["createSelectClause"]>["grouping"]),
+              byProperties: {
+                propertiesClassName: propertyClass.fullName,
+                propertyGroups: [{ propertyName: "MyProperty", propertyValue: 123 }],
+              },
+            } satisfies InstanceHierarchyNodeProcessingParams["grouping"]),
           },
         ]),
       );
@@ -424,16 +432,17 @@ describe("createIModelHierarchyProvider", () => {
 
       const rootNodes = await collect(provider.getNodes({ parentNode: undefined }));
       const expectedKey: GroupingNodeKey = {
-        type: "label-grouping",
-        label: "test label",
-        groupId: undefined,
+        type: "property-grouping:value",
+        propertyClassName: propertyClass.fullName,
+        propertyName: "MyProperty",
+        formattedPropertyValue: "123",
       };
       expect(rootNodes).to.deep.eq([
         {
           key: expectedKey,
           parentKeys: [],
           groupedInstanceKeys: [{ className: "a.b", id: "0x123", imodelKey: "test-imodel" }],
-          label: "test label",
+          label: "123",
           children: true,
         } satisfies GroupingHierarchyNode,
       ]);
@@ -448,7 +457,7 @@ describe("createIModelHierarchyProvider", () => {
           parentKeys: [expectedKey],
           label: "test label",
           children: false,
-        } as HierarchyNode,
+        } satisfies HierarchyNode,
       ]);
     });
   });
@@ -937,7 +946,7 @@ describe("createIModelHierarchyProvider", () => {
             [NodeSelectClauseColumnNames.DisplayLabel]: "ab",
             [NodeSelectClauseColumnNames.Grouping]: JSON.stringify({
               byLabel: true,
-            } satisfies Props<NodesQueryClauseFactory["createSelectClause"]>["grouping"]),
+            } satisfies InstanceHierarchyNodeProcessingParams["grouping"]),
           };
 
           // ctes is empty for non-filtered case and has one item for filtered case
@@ -981,7 +990,7 @@ describe("createIModelHierarchyProvider", () => {
         [NodeSelectClauseColumnNames.DisplayLabel]: "ab",
         [NodeSelectClauseColumnNames.Grouping]: JSON.stringify({
           byLabel: true,
-        } satisfies Props<NodesQueryClauseFactory["createSelectClause"]>["grouping"]),
+        } satisfies InstanceHierarchyNodeProcessingParams["grouping"]),
       });
 
       // setting instance filter while a nodes request is in progress cancels the request - ensure we get undefined
@@ -1621,7 +1630,7 @@ describe("createIModelHierarchyProvider", () => {
               [NodeSelectClauseColumnNames.HasChildren]: true,
               [NodeSelectClauseColumnNames.Grouping]: JSON.stringify({
                 byClass: true,
-              } satisfies Props<NodesQueryClauseFactory["createSelectClause"]>["grouping"]),
+              } satisfies InstanceHierarchyNodeProcessingParams["grouping"]),
             },
           ]);
         } else if (query.ecsql.includes("CHILD")) {

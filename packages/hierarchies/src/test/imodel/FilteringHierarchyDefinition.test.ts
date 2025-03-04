@@ -5,7 +5,6 @@
 
 import { assert, expect } from "chai";
 import sinon from "sinon";
-import * as td from "testdouble";
 import { ECClassHierarchyInspector, trimWhitespace } from "@itwin/presentation-shared";
 import { FilterTargetGroupingNodeInfo, HierarchyFilteringPath, HierarchyFilteringPathOptions } from "../../hierarchies/HierarchyFiltering.js";
 import { HierarchyNode } from "../../hierarchies/HierarchyNode.js";
@@ -15,6 +14,7 @@ import {
   applyECInstanceIdsSelector,
   ECSQL_COLUMN_NAME_FilterClassName,
   ECSQL_COLUMN_NAME_FilterECInstanceId,
+  FilteringHierarchyDefinition,
 } from "../../hierarchies/imodel/FilteringHierarchyDefinition.js";
 import {
   GenericHierarchyNodeDefinition,
@@ -22,6 +22,7 @@ import {
   HierarchyDefinitionParentNode,
   HierarchyLevelDefinition,
   InstanceNodesQueryDefinition,
+  NodeParser,
 } from "../../hierarchies/imodel/IModelHierarchyDefinition.js";
 import { ProcessedGenericHierarchyNode, ProcessedGroupingHierarchyNode, SourceGenericHierarchyNode } from "../../hierarchies/imodel/IModelHierarchyNode.js";
 import { NodeSelectClauseColumnNames } from "../../hierarchies/imodel/NodeSelectQueryFactory.js";
@@ -37,22 +38,13 @@ import {
 } from "../Utils.js";
 
 describe("FilteringHierarchyDefinition", () => {
-  afterEach(() => {
-    td.reset();
-  });
-
   describe("parseNode", () => {
     it("uses `defaultNodeParser` when source definitions factory doesn't have one", async () => {
       const spy = sinon.spy();
-      await td.replaceEsm("../../hierarchies/imodel/TreeNodesReader.js", {
-        defaultNodesParser: spy,
-      });
-
       const row = {
         [NodeSelectClauseColumnNames.FullClassName]: "",
       };
-
-      const filteringFactory = await createFilteringHierarchyDefinition();
+      const filteringFactory = await createFilteringHierarchyDefinition({ nodesParser: spy });
       await filteringFactory.parseNode(row);
       expect(spy).to.be.calledOnceWithExactly(row);
     });
@@ -61,21 +53,13 @@ describe("FilteringHierarchyDefinition", () => {
       const sourceFactory = {
         parseNode: sinon.stub().resolves({} as unknown as HierarchyNode),
       } as unknown as HierarchyDefinition;
-
-      const spy = sinon.spy();
-      await td.replaceEsm("../../hierarchies/imodel/TreeNodesReader.js", {
-        defaultNodesParser: spy,
-      });
-
       const row = {
         [NodeSelectClauseColumnNames.FullClassName]: "",
       };
-
       const filteringFactory = await createFilteringHierarchyDefinition({
         sourceFactory,
       });
       await filteringFactory.parseNode(row);
-      expect(spy).to.not.be.called;
       expect(sourceFactory.parseNode).to.be.calledOnceWithExactly(row);
     });
 
@@ -1629,13 +1613,13 @@ async function createFilteringHierarchyDefinition(props?: {
   imodelAccess?: ECClassHierarchyInspector & { imodelKey: string };
   sourceFactory?: HierarchyDefinition;
   nodeIdentifierPaths?: HierarchyFilteringPath[];
+  nodesParser?: NodeParser;
 }) {
-  // eslint-disable-next-line @typescript-eslint/naming-convention
-  const { FilteringHierarchyDefinition } = await import("../../hierarchies/imodel/FilteringHierarchyDefinition.js");
   const { imodelAccess, sourceFactory, nodeIdentifierPaths } = props ?? {};
   return new FilteringHierarchyDefinition({
     imodelAccess: imodelAccess ?? { classDerivesFrom: async () => false, imodelKey: "" },
     source: sourceFactory ?? ({} as unknown as HierarchyDefinition),
     nodeIdentifierPaths: nodeIdentifierPaths ?? [],
+    nodesParser: props?.nodesParser,
   });
 }

@@ -1391,9 +1391,6 @@ importers:
       sinon-chai:
         specifier: catalog:test-tools
         version: 3.7.0(chai@4.4.1)(sinon@18.0.0)
-      testdouble:
-        specifier: catalog:test-tools
-        version: 3.20.2
       typescript:
         specifier: catalog:build-tools
         version: 5.7.3
