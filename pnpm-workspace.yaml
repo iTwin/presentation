@@ -71,7 +71,6 @@ catalogs:
     "mocha": "^10.7.3"
     "sinon": "^18.0.0"
     "sinon-chai": "^3.7.0"
-    "testdouble": "^3.20.2"
 
   build-tools:
     "@itwin/build-tools": "5.0.0-dev.67"
