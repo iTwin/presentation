@@ -273,7 +273,7 @@ importers:
         version: 17.7.2
 
   apps/full-stack-tests:
-    dependencies:
+    devDependencies:
       '@bentley/functional-schema':
         specifier: ^1.0.4
         version: 1.0.4
@@ -486,7 +486,7 @@ importers:
         version: 5.7.3
 
   apps/load-tests/backend:
-    dependencies:
+    devDependencies:
       '@itwin/appui-abstract':
         specifier: catalog:itwinjs-core
         version: 5.0.0-dev.49(@itwin/core-bentley@5.0.0-dev.49)
@@ -561,7 +561,7 @@ importers:
         version: 5.7.3
 
   apps/load-tests/tests:
-    dependencies:
+    devDependencies:
       '@itwin/build-tools':
         specifier: catalog:build-tools
         version: 5.0.0-dev.67(@types/node@20.12.12)
@@ -630,10 +630,13 @@ importers:
         version: 5.7.3
 
   apps/performance-tests:
-    dependencies:
+    devDependencies:
       '@bentley/functional-schema':
         specifier: ^1.0.4
         version: 1.0.4
+      '@itwin/build-tools':
+        specifier: catalog:build-tools
+        version: 5.0.0-dev.67(@types/node@20.12.12)
       '@itwin/core-backend':
         specifier: catalog:itwinjs-core
         version: 5.0.0-dev.49(@itwin/core-bentley@5.0.0-dev.49)(@itwin/core-common@5.0.0-dev.49(@itwin/core-bentley@5.0.0-dev.49)(@itwin/core-geometry@5.0.0-dev.49))(@itwin/core-geometry@5.0.0-dev.49)(@opentelemetry/api@1.9.0)
@@ -652,6 +655,9 @@ importers:
       '@itwin/ecschema-metadata':
         specifier: catalog:itwinjs-core
         version: 5.0.0-dev.49(@itwin/core-bentley@5.0.0-dev.49)(@itwin/core-quantity@5.0.0-dev.49(@itwin/core-bentley@5.0.0-dev.49))
+      '@itwin/eslint-plugin':
+        specifier: catalog:build-tools
+        version: 5.0.0-dev.1(eslint@9.13.0)(typescript@5.7.3)
       '@itwin/presentation-core-interop':
         specifier: workspace:*
         version: link:../../packages/core-interop
@@ -667,28 +673,6 @@ importers:
       '@itwin/unified-selection':
         specifier: workspace:*
         version: link:../../packages/unified-selection
-      as-table:
-        specifier: ^1.0.55
-        version: 1.0.55
-      chai:
-        specifier: catalog:test-tools
-        version: 4.4.1
-      mocha:
-        specifier: catalog:test-tools
-        version: 10.7.3
-      presentation-test-utilities:
-        specifier: workspace:^
-        version: link:../../packages/test-utilities
-      rxjs:
-        specifier: catalog:rxjs
-        version: 7.8.1
-    devDependencies:
-      '@itwin/build-tools':
-        specifier: catalog:build-tools
-        version: 5.0.0-dev.67(@types/node@20.12.12)
-      '@itwin/eslint-plugin':
-        specifier: catalog:build-tools
-        version: 5.0.0-dev.1(eslint@9.13.0)(typescript@5.7.3)
       '@types/chai':
         specifier: catalog:test-tools
         version: 4.3.16
@@ -698,21 +682,36 @@ importers:
       '@types/node':
         specifier: catalog:build-tools
         version: 20.12.12
+      as-table:
+        specifier: ^1.0.55
+        version: 1.0.55
+      chai:
+        specifier: catalog:test-tools
+        version: 4.4.1
       cross-env:
         specifier: catalog:build-tools
         version: 7.0.3
       eslint:
         specifier: catalog:build-tools
         version: 9.13.0
+      mocha:
+        specifier: catalog:test-tools
+        version: 10.7.3
+      presentation-test-utilities:
+        specifier: workspace:^
+        version: link:../../packages/test-utilities
       rimraf:
         specifier: catalog:build-tools
         version: 6.0.1
+      rxjs:
+        specifier: catalog:rxjs
+        version: 7.8.1
       typescript:
         specifier: catalog:build-tools
         version: 5.7.3
 
   apps/test-app/backend:
-    dependencies:
+    devDependencies:
       '@itwin/appui-abstract':
         specifier: catalog:itwinjs-core
         version: 5.0.0-dev.49(@itwin/core-bentley@5.0.0-dev.49)
@@ -811,7 +810,7 @@ importers:
         version: 5.7.3
 
   apps/test-app/common:
-    dependencies:
+    devDependencies:
       '@itwin/build-tools':
         specifier: catalog:build-tools
         version: 5.0.0-dev.67(@types/node@20.12.12)
@@ -850,7 +849,7 @@ importers:
         version: 5.7.3
 
   apps/test-app/frontend:
-    dependencies:
+    devDependencies:
       '@bentley/icons-generic-webfont':
         specifier: ^1.0.34
         version: 1.0.34
@@ -1711,7 +1710,7 @@ importers:
         version: 5.7.3
 
   packages/test-utilities:
-    dependencies:
+    devDependencies:
       '@itwin/core-bentley':
         specifier: catalog:itwinjs-core
         version: 5.0.0-dev.49
@@ -1721,10 +1720,6 @@ importers:
       '@itwin/core-geometry':
         specifier: catalog:itwinjs-core
         version: 5.0.0-dev.49
-      rxjs:
-        specifier: catalog:rxjs
-        version: 7.8.1
-    devDependencies:
       '@itwin/eslint-plugin':
         specifier: catalog:build-tools
         version: 5.0.0-dev.1(eslint@9.13.0)(typescript@5.7.3)
@@ -1737,6 +1732,9 @@ importers:
       rimraf:
         specifier: catalog:build-tools
         version: 6.0.1
+      rxjs:
+        specifier: catalog:rxjs
+        version: 7.8.1
       typescript:
         specifier: catalog:build-tools
         version: 5.7.3

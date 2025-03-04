@@ -8,7 +8,8 @@
     "allowSyntheticDefaultImports": true,
     "noUnusedLocals": false,
     "jsx": "react-jsx",
-    "outDir": "lib"
+    "outDir": "lib",
+    "resolveJsonModule": true
   },
   "include": ["src"]
 }

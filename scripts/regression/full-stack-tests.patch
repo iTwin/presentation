@@ -1,0 +1,32 @@
+diff --git a/apps/full-stack-tests/src/hierarchies/learning-snippets/CustomHierarchyProvider.test.ts b/apps/full-stack-tests/src/hierarchies/learning-snippets/CustomHierarchyProvider.test.ts
+index 43251cf3..1dd378c8 100644
+--- a/apps/full-stack-tests/src/hierarchies/learning-snippets/CustomHierarchyProvider.test.ts
++++ b/apps/full-stack-tests/src/hierarchies/learning-snippets/CustomHierarchyProvider.test.ts
+@@ -621,6 +621,7 @@ describe("Hierarchies", () => {
+         // Print the hierarchy level. Output:
+         // - Grigas Petraitis
+         // - Mark Twain
++        // @ts-expect-error `createBooksFilter` doesn't match the expected type
+         for await (const node of provider.getNodes({ parentNode: undefined, instanceFilter: createAuthorsFilter() })) {
+           console.log(`- ${node.label}`);
+         }
+@@ -667,6 +668,7 @@ describe("Hierarchies", () => {
+             label: "J.R.R. Tolkien",
+             parentKeys: [],
+           },
++          // @ts-expect-error `createBooksFilter` doesn't match the expected type
+           instanceFilter: createBooksFilter(),
+         })) {
+           console.log(`- ${node.label}`);
+diff --git a/apps/full-stack-tests/src/unified-selection/learning-snippets/ReadmeExample.test.tsx b/apps/full-stack-tests/src/unified-selection/learning-snippets/ReadmeExample.test.tsx
+index 5347fec7..6dbace76 100644
+--- a/apps/full-stack-tests/src/unified-selection/learning-snippets/ReadmeExample.test.tsx
++++ b/apps/full-stack-tests/src/unified-selection/learning-snippets/ReadmeExample.test.tsx
+@@ -143,6 +143,7 @@ describe("Unified selection", () => {
+           // use the same underlying selection store.
+           await Presentation.initialize({
+             selection: {
++              // @ts-expect-error PresentationManager does not have `selection` property
+               selectionStorage,
+             },
+           });
