@@ -23,6 +23,7 @@ export interface CachingHiliteSetProvider {
 
 // @public
 interface CachingHiliteSetProviderProps {
+    createHiliteSetProvider?: typeof createHiliteSetProvider;
     imodelProvider: (imodelKey: string) => ECClassHierarchyInspector & ECSqlQueryExecutor;
     selectionStorage: SelectionStorage;
 }
