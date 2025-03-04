@@ -34,15 +34,15 @@ jobs:
 
       - name: Pack components
         run: pnpm pack
-        working-directory: ./packages/presentation-components
+        working-directory: packages/presentation-components
 
       - name: Pack testing
         run: pnpm pack
-        working-directory: ./packages/presentation-testing
+        working-directory: packages/presentation-testing
 
       - name: Pack core-interop
         run: pnpm pack
-        working-directory: ./packages/presentation-core-interop
+        working-directory: packages/presentation-core-interop
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
