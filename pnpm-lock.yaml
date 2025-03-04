@@ -2015,9 +2015,6 @@ importers:
       rimraf:
         specifier: catalog:build-tools
         version: 6.0.1
-      testdouble:
-        specifier: catalog:test-tools
-        version: 3.20.2
       typescript:
         specifier: catalog:build-tools
         version: 5.7.3

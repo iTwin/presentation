@@ -41,7 +41,7 @@
     "lint": "eslint ./src/**/*.{ts,tsx}",
     "test:dev": "mocha --enable-source-maps --config ./.mocharc.json",
     "test": "npm run test:dev",
-    "extract-api": "betools extract-api --entry=unified-selection-react --apiReportFolder=./api --apiReportTempFolder=./api/temp --apiSummaryFolder=./api --includeUnexportedApis",
+    "extract-api": "betools extract-api --entry=lib/esm/unified-selection-react --apiReportFolder=./api --apiReportTempFolder=./api/temp --apiSummaryFolder=./api --includeUnexportedApis",
     "check-internal": "node ../../scripts/checkInternal.js --apiSummary ./api/unified-selection-react.api.md",
     "update-extractions": "node ../../scripts/updateExtractions.js --targets=./README.md",
     "check-extractions": "node ../../scripts/updateExtractions.js --targets=./README.md --check",
@@ -72,7 +72,6 @@
     "mocha": "catalog:test-tools",
     "react": "catalog:react",
     "rimraf": "catalog:build-tools",
-    "testdouble": "catalog:test-tools",
     "typescript": "catalog:build-tools"
   }
 }
