@@ -20,7 +20,7 @@ import {
   RulesetVariable,
 } from "@itwin/presentation-common";
 import { PresentationManager } from "@itwin/presentation-frontend";
-import frontendPackageJson from "@itwin/presentation-frontend/package.json" assert { type: "json"};
+import frontendPackageJson from "@itwin/presentation-frontend/package.json" assert { type: "json" };
 
 export function stubGetBoundingClientRect() {
   let stub: sinon.SinonStub<[], DOMRect>;
