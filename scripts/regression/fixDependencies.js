@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-// this script makes it easier to use workspace packages with locally built tarballs by moving 
+// this script makes it easier to use workspace packages with locally built tarballs by moving
 // direct workspace package dependencies to peerDependencies
 
 "use strict";
@@ -18,7 +18,7 @@ const packagesToUpdate = [
     dependencies: [
       {
         name: "@itwin/presentation-components",
-        expectedVersion: "^5.0.0",
+        peerDependencyVersion: "^5.0.0",
       },
     ],
   },
@@ -44,7 +44,7 @@ forEachWorkspacePackage((project) => {
     if (pkgJsonData.dependencies[dependency.name]) {
       console.log(`Moving ${dependency.name} from dependencies to peerDependencies in ${pkgJsonData.name}`);
       pkgJsonData.devDependencies[dependency.name] = pkgJsonData.dependencies[dependency.name];
-      pkgJsonData.peerDependencies[dependency.name] = dependency.expectedVersion;
+      pkgJsonData.peerDependencies[dependency.name] = dependency.peerDependencyVersion;
       delete pkgJsonData.dependencies[dependency.name];
     }
   });
