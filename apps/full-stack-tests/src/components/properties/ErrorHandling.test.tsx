@@ -16,6 +16,7 @@ import { buildTestIModel } from "@itwin/presentation-testing";
 import { initialize, terminate } from "../../IntegrationTests.js";
 import { render } from "../../RenderUtils.js";
 import { useOptionalDisposable } from "../../UseOptionalDisposable.js";
+import { isIterableManager } from "../../Utils.js";
 import { ensureHasError, ErrorBoundary } from "../ErrorBoundary.js";
 import { ensurePropertyGridHasPropertyRecord } from "../PropertyGridUtils.js";
 
@@ -84,7 +85,12 @@ describe("Learning snippets", () => {
       await ensurePropertyGridHasPropertyRecord(container, "$élêçtèd Ítêm(s)", "User Label", "My Element");
 
       // simulate a network error in RPC request
-      sinon.stub(Presentation.presentation, "getContentIterator").throws(new Error("Network error"));
+      const manager = Presentation.presentation;
+      if (isIterableManager(manager)) {
+        sinon.stub(manager, "getContentIterator").throws(new Error("Network error"));
+      } else {
+        sinon.stub(Presentation.presentation, "getContentAndSize").throws(new Error("Network error"));
+      }
 
       // re-render the component, ensure we now get an error
       rerender(<MyPropertyGrid imodel={imodel} elementKey={{ ...elementKey }} />);

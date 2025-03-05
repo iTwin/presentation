@@ -15,6 +15,7 @@ import { Presentation } from "@itwin/presentation-frontend";
 import { buildTestIModel } from "@itwin/presentation-testing";
 import { initialize, terminate } from "../../IntegrationTests.js";
 import { render } from "../../RenderUtils.js";
+import { isIterableManager } from "../../Utils.js";
 import { ensureHasError, ErrorBoundary } from "../ErrorBoundary.js";
 import { ensureTableHasRowsWithCellValues } from "../TableUtils.js";
 
@@ -130,7 +131,12 @@ describe("Learning snippets", () => {
       await ensureTableHasRowsWithCellValues(container, "User Label", ["My Element 1", "My Element 2"]);
 
       // simulate a network error in RPC request
-      sinon.stub(Presentation.presentation, "getContentIterator").throws(new Error("Network error"));
+      const manager = Presentation.presentation;
+      if (isIterableManager(manager)) {
+        sinon.stub(manager, "getContentIterator").throws(new Error("Network error"));
+      } else {
+        sinon.stub(Presentation.presentation, "getContentAndSize").throws(new Error("Network error"));
+      }
 
       // re-render the component, ensure we now get an error
       rerender(<MyTable imodel={imodel} keys={new KeySet([modelKey])} />);

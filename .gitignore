@@ -2,6 +2,7 @@ coverage
 build
 lib
 node_modules
+built-packages
 
 /packages/*/api/temp
 

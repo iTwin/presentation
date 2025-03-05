@@ -24,7 +24,7 @@ import { Presentation } from "@itwin/presentation-frontend";
 import { buildIModel } from "../../IModelUtils.js";
 import { initialize, terminate } from "../../IntegrationTests.js";
 import { render, waitFor } from "../../RenderUtils.js";
-import { stubGetBoundingClientRect } from "../../Utils.js";
+import { isSelectionStorageSupported, stubGetBoundingClientRect } from "../../Utils.js";
 
 describe("Unified selection", () => {
   describe("Learning snippets", () => {
@@ -125,35 +125,37 @@ describe("Unified selection", () => {
         await waitFor(() => expect(getByText("Number of selected elements: 1")).to.not.be.null);
       });
 
-      it("Unified selection sync with legacy SelectionManager", async function () {
-        Presentation.terminate();
+      if (isSelectionStorageSupported()) {
+        it("Unified selection sync with legacy SelectionManager", async function () {
+          Presentation.terminate();
 
-        const { imodel, ...keys } = await buildIModel(this, async (builder) => {
-          const modelKey = insertPhysicalModelWithPartition({ builder, codeValue: "test model" });
-          const categoryKey = insertSpatialCategory({ builder, codeValue: "test category" });
-          const elementKey = insertPhysicalElement({ builder, userLabel: "root element", modelId: modelKey.id, categoryId: categoryKey.id });
-          return { modelKey, categoryKey, elementKey };
+          const { imodel, ...keys } = await buildIModel(this, async (builder) => {
+            const modelKey = insertPhysicalModelWithPartition({ builder, codeValue: "test model" });
+            const categoryKey = insertSpatialCategory({ builder, codeValue: "test category" });
+            const elementKey = insertPhysicalElement({ builder, userLabel: "root element", modelId: modelKey.id, categoryId: categoryKey.id });
+            return { modelKey, categoryKey, elementKey };
+          });
+
+          // __PUBLISH_EXTRACT_START__ Presentation.LegacySelectionManagerSelectionSync.Example
+          const selectionStorage = createStorage();
+
+          // Initialize Presentation with our selection storage, to make sure that any components, using `Presentation.selection`,
+          // use the same underlying selection store.
+          await Presentation.initialize({
+            selection: {
+              selectionStorage,
+            },
+          });
+          // __PUBLISH_EXTRACT_END__
+
+          expect(Selectables.isEmpty(selectionStorage.getSelection({ imodelKey: imodel.key }))).to.be.true;
+
+          Presentation.selection.addToSelection("test", imodel, new KeySet([keys.elementKey]));
+          await waitFor(() => {
+            expect(Selectables.size(selectionStorage.getSelection({ imodelKey: imodel.key }))).to.eq(1);
+          });
         });
-
-        // __PUBLISH_EXTRACT_START__ Presentation.LegacySelectionManagerSelectionSync.Example
-        const selectionStorage = createStorage();
-
-        // Initialize Presentation with our selection storage, to make sure that any components, using `Presentation.selection`,
-        // use the same underlying selection store.
-        await Presentation.initialize({
-          selection: {
-            selectionStorage,
-          },
-        });
-        // __PUBLISH_EXTRACT_END__
-
-        expect(Selectables.isEmpty(selectionStorage.getSelection({ imodelKey: imodel.key }))).to.be.true;
-
-        Presentation.selection.addToSelection("test", imodel, new KeySet([keys.elementKey]));
-        await waitFor(() => {
-          expect(Selectables.size(selectionStorage.getSelection({ imodelKey: imodel.key }))).to.eq(1);
-        });
-      });
+      }
     });
   });
 });

@@ -10,7 +10,7 @@
     "lint": "eslint ./src/**/*.{ts,tsx}",
     "docs": "betools extract --fileExt=ts,tsx --extractFrom=./src --recursive --out=./build/docs/extract"
   },
-  "dependencies": {
+  "devDependencies": {
     "@bentley/icons-generic-webfont": "^1.0.34",
     "@itwin/appui-abstract": "catalog:itwinjs-core",
     "@itwin/appui-react": "catalog:appui",

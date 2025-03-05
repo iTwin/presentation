@@ -21,17 +21,15 @@
     "./package.json": "./package.json",
     "./node-hooks/ignore-styles": "./node-hooks/ignore-styles.cjs"
   },
-  "dependencies": {
+  "devDependencies": {
     "@itwin/core-bentley": "catalog:itwinjs-core",
     "@itwin/core-common": "catalog:itwinjs-core",
     "@itwin/core-geometry": "catalog:itwinjs-core",
-    "rxjs": "catalog:rxjs"
-  },
-  "devDependencies": {
     "@itwin/eslint-plugin": "catalog:build-tools",
     "@types/node": "catalog:build-tools",
     "eslint": "catalog:build-tools",
     "rimraf": "catalog:build-tools",
+    "rxjs": "catalog:rxjs",
     "typescript": "catalog:build-tools"
   }
 }
