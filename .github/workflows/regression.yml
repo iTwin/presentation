@@ -61,8 +61,9 @@ jobs:
       fail-fast: false
       matrix:
         core-version: ["4.4.0", "4.10.7"]
+        appui-version: ["4.9.0", "4.17.6"]
 
-    name: Build with Core - ${{ matrix.core-version }}
+    name: Build with Core - ${{ matrix.core-version }}, AppUI - ${{ matrix.appui-version }}
 
     steps:
       - name: Checkout
@@ -88,8 +89,8 @@ jobs:
       - name: Install workspace dependencies
         run: pnpm install -w
 
-      - name: Override dependencies Core - ${{ matrix.core-version }}
-        run: node ./scripts/regression/setupRegressionTests.js --coreVersion ${{ matrix.core-version }} --localPackagesPath ./built-packages
+      - name: Override dependencies Core - ${{ matrix.core-version }}, AppUI - ${{ matrix.appui-version }}
+        run: node ./scripts/regression/setupRegressionTests.js --coreVersion ${{ matrix.core-version }} --uiVersion ${{ matrix.appui-version }} --localPackagesPath ./built-packages
 
       - name: Install dependencies
         run: pnpm install --no-frozen-lockfile
