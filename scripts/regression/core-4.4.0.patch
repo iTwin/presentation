@@ -26,7 +26,7 @@ index 5347fec7..6dbace76 100644
            // use the same underlying selection store.
            await Presentation.initialize({
              selection: {
-+              // @ts-expect-error PresentationManager does not have `selection` property
++              // @ts-expect-error SelectionManagerProps does not have `selectionStorage` property
                selectionStorage,
              },
            });

@@ -51,8 +51,8 @@ if (!coreVersion && uiVersion) {
 const usedPackages = ["presentation-full-stack-tests", "presentation-test-utilities"];
 // override versions
 forEachWorkspacePackage((project) => {
-  const packageJsonPath = path.join(project.path, "package.json");
   if (usedPackages.includes(project.name)) {
+    const packageJsonPath = path.join(project.path, "package.json");
     updatePackageJson(packageJsonPath, [
       (pkgJsonData) => overrideDevDeps(pkgJsonData, coreVersion, uiVersion),
       (pkgJsonData) => useLocalTarballs(pkgJsonData, localPackagesPath),
@@ -62,7 +62,7 @@ forEachWorkspacePackage((project) => {
 
 try {
   const patchPath = require.resolve(`./core-${coreVersion}.patch`);
-  // path known build issues in full stack tests due to older types from itwinjs-core
+  // patch known build issues in full stack tests due to older types from itwinjs-core
   execSync(`git apply ${patchPath}`);
 } catch (e) {
   console.log(`No patch found for 'itwinjs-core' - ${coreVersion}`);

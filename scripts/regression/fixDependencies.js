@@ -3,8 +3,8 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-// this script updates dependencies between workspace packages to make it easier to use them
-// with locally built tarballs. It moves packaged from direct dependencies to peerDependencies
+// this script makes it easier to use workspace packages with locally built tarballs by moving 
+// direct workspace package dependencies to peerDependencies
 
 "use strict";
 
