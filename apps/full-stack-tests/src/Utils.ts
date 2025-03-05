@@ -95,5 +95,7 @@ export function isIterableManager(manager: PresentationManager): manager is With
 }
 
 export function isSelectionStorageSupported() {
-  return !frontendPackageJson.version.startsWith("4.4.");
+  // selection storage support was added in 4.5
+  const [major, minor] = frontendPackageJson.version.split(".").map(Number.parseInt);
+  return major > 4 || major === 4 && minor >= 5;
 }
