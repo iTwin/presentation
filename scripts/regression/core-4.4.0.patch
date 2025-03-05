@@ -18,8 +18,45 @@ index 43251cf3..1dd378c8 100644
            instanceFilter: createBooksFilter(),
          })) {
            console.log(`- ${node.label}`);
+diff --git a/apps/full-stack-tests/src/testing/ruleset-testing-snapshots/my-test-hierarchy.snap b/apps/full-stack-tests/src/testing/ruleset-testing-snapshots/my-test-hierarchy.snap
+index 5657e34e..c7a05a84 100644
+--- a/apps/full-stack-tests/src/testing/ruleset-testing-snapshots/my-test-hierarchy.snap
++++ b/apps/full-stack-tests/src/testing/ruleset-testing-snapshots/my-test-hierarchy.snap
+@@ -1147,10 +1147,6 @@ Array [
+                 },
+               },
+             ],
+-            "filtering": Object {
+-              "ancestorFilters": Array [],
+-              "descriptor": [Function],
+-            },
+             "hasChildren": true,
+             "label": PropertyRecord {
+               "property": Object {
+@@ -1679,10 +1675,6 @@ Array [
+             },
+           },
+         ],
+-        "filtering": Object {
+-          "ancestorFilters": Array [],
+-          "descriptor": [Function],
+-        },
+         "hasChildren": true,
+         "label": PropertyRecord {
+           "property": Object {
+@@ -1698,10 +1690,6 @@ Array [
+         },
+       },
+     ],
+-    "filtering": Object {
+-      "ancestorFilters": Array [],
+-      "descriptor": [Function],
+-    },
+     "hasChildren": true,
+     "label": PropertyRecord {
+       "property": Object {
 diff --git a/apps/full-stack-tests/src/unified-selection/learning-snippets/ReadmeExample.test.tsx b/apps/full-stack-tests/src/unified-selection/learning-snippets/ReadmeExample.test.tsx
-index 5347fec7..6dbace76 100644
+index 5347fec7..26566aa5 100644
 --- a/apps/full-stack-tests/src/unified-selection/learning-snippets/ReadmeExample.test.tsx
 +++ b/apps/full-stack-tests/src/unified-selection/learning-snippets/ReadmeExample.test.tsx
 @@ -143,6 +143,7 @@ describe("Unified selection", () => {
