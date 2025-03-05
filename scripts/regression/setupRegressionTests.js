@@ -12,43 +12,23 @@ const { execSync } = require("child_process");
 const fs = require("fs");
 const path = require("path");
 const yargs = require("yargs");
-
-// list of packages from `itwinjs-core`
-const corePackages = [
-  "@itwin/appui-abstract",
-  "@itwin/core-backend",
-  "@itwin/core-bentley",
-  "@itwin/core-common",
-  "@itwin/core-electron",
-  "@itwin/core-frontend",
-  "@itwin/core-geometry",
-  "@itwin/core-i18n",
-  "@itwin/core-orbitgt",
-  "@itwin/core-quantity",
-  "@itwin/ecschema-metadata",
-  "@itwin/ecschema-rpcinterface-common",
-  "@itwin/ecschema-rpcinterface-impl",
-  "@itwin/express-server",
-  "@itwin/presentation-backend",
-  "@itwin/presentation-common",
-  "@itwin/presentation-frontend",
-  "@itwin/webgl-compatibility",
-];
-
-// list of packages from `appui`
-const uiPackages = ["@itwin/core-react", "@itwin/components-react", "@itwin/imodel-components-react"];
+const YAML = require("yaml");
 
 const argv = yargs(process.argv).argv;
 const coreVersion = argv.coreVersion;
 const uiVersion = argv.uiVersion;
 const localPackagesPath = argv.localPackagesPath;
+// list of packages that need to pull older version of itwinjs-core and appUi for tests to run
+const usedPackages = ["presentation-full-stack-tests", "presentation-test-utilities"];
 
-if (!coreVersion && uiVersion) {
+if (!coreVersion && !uiVersion) {
   throw new Error("Argument --coreVersion or --uiVersion need to be provided.");
 }
 
-// list of packages that need to pull older version of itwinjs-core and appUi for tests to run
-const usedPackages = ["presentation-full-stack-tests", "presentation-test-utilities"];
+const [{ name: workspaceRootName, path: workspaceRootPath }] = JSON.parse(execSync("pnpm list -w --only-projects --json", { encoding: "utf-8" }));
+
+const { corePackages, uiPackages } = parseWorkspaceFile(workspaceRootPath);
+
 // override versions
 forEachWorkspacePackage((project) => {
   if (usedPackages.includes(project.name)) {
@@ -60,20 +40,11 @@ forEachWorkspacePackage((project) => {
   }
 });
 
-try {
-  const patchPath = require.resolve(`./core-${coreVersion}.patch`);
-  // patch known build issues in full stack tests due to older types from itwinjs-core
-  execSync(`git apply ${patchPath}`);
-} catch (e) {
-  console.log(`No patch found for 'itwinjs-core' - ${coreVersion}`);
+if (coreVersion) {
+  applyGitPatch(`core-${coreVersion}.patch`);
 }
-
-try {
-  const patchPath = require.resolve(`./ui-${uiVersion}.patch`);
-  // path known build issues in full stack tests due to older types from appui
-  execSync(`git apply ${patchPath}`);
-} catch (e) {
-  console.log(`No patch found for 'appui' - ${uiVersion}`);
+if (uiVersion) {
+  applyGitPatch(`ui-${uiVersion}.patch`);
 }
 
 function updatePackageJson(packageJsonPath, updates) {
@@ -83,6 +54,7 @@ function updatePackageJson(packageJsonPath, updates) {
   }
 
   if (!pkgJsonData.devDependencies) {
+    console.log(`No devDependencies found for '${pkgJsonData.name}'`);
     return;
   }
 
@@ -112,6 +84,12 @@ function getOverrides(coreVersion, uiVersion) {
 
 function overrideDevDeps(pkgJsonData, coreVersion, uiVersion) {
   const overrides = getOverrides(coreVersion, uiVersion);
+  if (coreVersion) {
+    console.log(`Overriding '${pkgJsonData.name}' package 'itwinjs-core' devDependencies to version: ${coreVersion}`);
+  }
+  if (uiVersion) {
+    console.log(`Overriding '${pkgJsonData.name}' package 'appui' devDependencies to version: ${uiVersion}`);
+  }
   Object.entries(overrides).forEach(([packageName, version]) => {
     if (pkgJsonData.devDependencies[packageName]) {
       pkgJsonData.devDependencies[packageName] = version;
@@ -120,6 +98,11 @@ function overrideDevDeps(pkgJsonData, coreVersion, uiVersion) {
 }
 
 function useLocalTarballs(pkgJsonData, localPackagesPath) {
+  if (!localPackagesPath) {
+    console.log("No local packages path provided, skipping local tarballs");
+    return;
+  }
+
   const packageNameRegex = /^itwin-([\w-]+)-[\d]+.[\d]+.[\d]+.tgz$/;
   const localPackages = fs.readdirSync(localPackagesPath);
   console.log(`Found local tarballs: ${localPackages.join(", ")}`);
@@ -141,6 +124,38 @@ function useLocalTarballs(pkgJsonData, localPackagesPath) {
 function forEachWorkspacePackage(callback) {
   const workspaceProjects = JSON.parse(execSync("pnpm -r list --depth -1 --json"));
   workspaceProjects.forEach((project) => {
+    if (project.name === workspaceRootName) {
+      return;
+    }
     callback(project);
   });
+}
+
+function parseWorkspaceFile(workspaceRoot) {
+  const workspaceFile = fs.readFileSync(path.join(workspaceRoot, "pnpm-workspace.yaml"), "utf8");
+  const workspace = YAML.parse(workspaceFile);
+  if (workspace.catalogs["itwinjs-core"] === undefined) {
+    throw new Error("Catalog 'itwinjs-core' not found in workspace file. Please check the workspace file or update this script.");
+  }
+
+  if (workspace.catalogs["appui"] === undefined) {
+    throw new Error("Catalog 'appui' not found in workspace file. Please check the workspace file or update this script.");
+  }
+
+  // list of packages from `itwinjs-core`
+  const corePackages = Object.keys(workspace.catalogs["itwinjs-core"]).filter((dep) => dep.startsWith("@itwin"));
+  // list of packages from `appui`
+  const uiPackages = Object.keys(workspace.catalogs["appui"]).filter((dep) => dep.startsWith("@itwin"));
+  return { corePackages, uiPackages };
+}
+
+function applyGitPatch(patchFile) {
+  try {
+    const patchPath = require.resolve(`./${patchFile}`);
+    // patch known build issues in full stack tests due to older types from itwinjs-core
+    execSync(`git apply ${patchPath}`);
+    console.log(`Applied patch file: ${patchFile}`);
+  } catch (e) {
+    console.log(`Could not find patch file: ${patchFile}`);
+  }
 }
