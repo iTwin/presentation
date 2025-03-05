@@ -37,6 +37,7 @@ export function createGroupingOperator(
   parentNode: ParentHierarchyNode | undefined,
   valueFormatter: IPrimitiveValueFormatter,
   localizedStrings: PropertiesGroupingLocalizedStrings,
+  onNodesGrouped?: (groupingResult: GroupingHandlerResult | undefined, handler: GroupingHandler) => void,
   onGroupingNodeCreated?: (groupingNode: ProcessedGroupingHierarchyNode) => void,
   groupingHandlers?: GroupingHandler[],
 ) {
@@ -81,7 +82,7 @@ export function createGroupingOperator(
           groupingHandlersObs.pipe(
             toArray(),
             mergeMap((createdGroupingHandlers) =>
-              groupInstanceNodes(instanceNodes, restNodes.length, createdGroupingHandlers, parentNode, onGroupingNodeCreated),
+              groupInstanceNodes(instanceNodes, restNodes.length, createdGroupingHandlers, parentNode, onNodesGrouped, onGroupingNodeCreated),
             ),
             finalize(() => {
               doLog({
@@ -125,6 +126,7 @@ function groupInstanceNodes(
   extraSiblings: number,
   groupingHandlers: GroupingHandler[],
   parentNode: ParentHierarchyNode | undefined,
+  onNodesGrouped?: (groupingResult: GroupingHandlerResult | undefined, handler: GroupingHandler) => void,
   onGroupingNodeCreated?: (groupingNode: ProcessedGroupingHierarchyNode) => void,
 ): Observable<ProcessedGroupingHierarchyNode | ProcessedInstanceHierarchyNode> {
   if (groupingHandlers.length === 0) {
@@ -141,6 +143,9 @@ function groupInstanceNodes(
         log({
           category: LOGGING_NAMESPACE_PERFORMANCE_INTERNAL,
           message: /* c8 ignore next */ () => `Grouping handler ${handlerIndex} exclusively took ${timer.elapsedSeconds.toFixed(3)} s.`,
+        }),
+        tap((result) => {
+          onNodesGrouped?.(result, currentHandler);
         }),
         mergeMap((result) => {
           if (result.grouped.length === 0) {
@@ -195,8 +200,7 @@ function mergeInPlace<T>(target: T[] | undefined, source: T[]) {
   return target;
 }
 
-/** @internal */
-export function createGroupingHandlers(
+function createGroupingHandlers(
   imodelAccess: ECSchemaProvider & ECClassHierarchyInspector,
   parentNode: ParentHierarchyNode | undefined,
   processedInstanceNodes: ProcessedInstanceHierarchyNode[],

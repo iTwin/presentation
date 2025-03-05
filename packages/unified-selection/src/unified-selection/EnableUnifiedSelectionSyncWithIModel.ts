@@ -85,8 +85,9 @@ export function enableUnifiedSelectionSyncWithIModel(props: EnableUnifiedSelecti
 }
 
 /**
- * A handler that syncs selection between unified selection storage
- * (`SelectionStorage`) and an iModel (`iModel.selectionSet`, `iModel.hilited`).
+ * A handler that syncs selection between unified selection storage (`SelectionStorage`) and
+ * an iModel (`iModel.selectionSet`, `iModel.hilited`).
+ *
  * @internal
  */
 export class IModelSelectionHandler {
@@ -104,21 +105,21 @@ export class IModelSelectionHandler {
   private _unregisterIModelSelectionSetListener: () => void;
   private _hasCustomCachingHiliteSetProvider: boolean;
 
-  public constructor(props: EnableUnifiedSelectionSyncWithIModelProps) {
+  public constructor(props: EnableUnifiedSelectionSyncWithIModelProps & { hiliteSetProvider?: HiliteSetProvider }) {
     this._imodelAccess = props.imodelAccess;
     this._selectionStorage = props.selectionStorage;
     this._activeScopeProvider = props.activeScopeProvider;
     this._isSuspended = false;
+    this._hiliteSetProvider = props.hiliteSetProvider ?? createHiliteSetProvider({ imodelAccess: this._imodelAccess });
     this._hasCustomCachingHiliteSetProvider = !!props.cachingHiliteSetProvider;
-
     this._cachingHiliteSetProvider =
-      props.cachingHiliteSetProvider ??
-      createCachingHiliteSetProvider({
+      props.cachingHiliteSetProvider /* c8 ignore next */ ??
+      /* c8 ignore next 4 */ createCachingHiliteSetProvider({
         selectionStorage: this._selectionStorage,
         imodelProvider: () => this._imodelAccess,
+        createHiliteSetProvider: () => this._hiliteSetProvider,
       });
 
-    this._hiliteSetProvider = createHiliteSetProvider({ imodelAccess: this._imodelAccess });
     this._unregisterIModelSelectionSetListener = this._imodelAccess.selectionSet.onChanged.addListener(this.onIModelSelectionChanged);
     this._unregisterUnifiedSelectionListener = this._selectionStorage.selectionChangeEvent.addListener(this.onUnifiedSelectionChanged);
 
@@ -134,6 +135,7 @@ export class IModelSelectionHandler {
     this._cancelOngoingChanges.next();
     this._unregisterIModelSelectionSetListener();
     this._unregisterUnifiedSelectionListener();
+    /* c8 ignore next 3 */
     if (!this._hasCustomCachingHiliteSetProvider) {
       safeDispose(this._cachingHiliteSetProvider);
     }

@@ -43,13 +43,13 @@
     "clean": "rimraf lib build",
     "cover": "c8 npm run -s test",
     "lint": "eslint ./src/**/*.{ts,tsx}",
-    "test:dev": "cross-env NODE_OPTIONS=\"--import presentation-test-utilities/node-hooks/ignore-styles\" mocha --enable-source-maps --config ./.mocharc.json",
+    "test:dev": "node --experimental-test-module-mocks --enable-source-maps --import presentation-test-utilities/node-hooks/ignore-styles ./node_modules/mocha/bin/mocha.js --config ./.mocharc.json",
     "test": "npm run test:dev -- --parallel --jobs=4",
     "docs": "npm run -s docs:extract && npm run -s docs:reference && npm run -s docs:changelog",
     "docs:changelog": "cpx ./CHANGELOG.md ./build/docs/reference/presentation-components",
     "docs:reference": "cross-env NODE_PROJECT_ROOT_DIRECTORY=../../ betools docs --json=./build/docs/reference/presentation-components/file.json --tsIndexFile=presentation-components.ts --onlyJson",
     "docs:extract": "betools extract --fileExt=ts,tsx --extractFrom=./src/test --recursive --out=./build/docs/extract",
-    "extract-api": "betools extract-api --entry=presentation-components --apiReportFolder=./api --apiReportTempFolder=./api/temp --apiSummaryFolder=./api --includeUnexportedApis",
+    "extract-api": "betools extract-api --entry=lib/esm/presentation-components --apiReportFolder=./api --apiReportTempFolder=./api/temp --apiSummaryFolder=./api --includeUnexportedApis",
     "check-internal": "node ../../scripts/checkInternal.js --apiSummary ./api/presentation-components.api.md"
   },
   "dependencies": {
@@ -78,7 +78,7 @@
     "@itwin/itwinui-react": "^3.0.0",
     "@itwin/presentation-common": "^4.4.0 || ^5.0.0",
     "@itwin/presentation-frontend": "^4.4.0 || ^5.0.0",
-    "@itwin/unified-selection-react": "workspace:^",
+    "@itwin/unified-selection-react": "^1.0.0",
     "react": "^17.0.0 || ^18.0.0",
     "react-dom": "^17.0.0 || ^18.0.0"
   },
@@ -139,7 +139,6 @@
     "rimraf": "catalog:build-tools",
     "sinon": "catalog:test-tools",
     "sinon-chai": "catalog:test-tools",
-    "testdouble": "catalog:test-tools",
     "typescript": "catalog:build-tools"
   }
 }

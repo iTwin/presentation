@@ -71,12 +71,11 @@ catalogs:
     "mocha": "^10.7.3"
     "sinon": "^18.0.0"
     "sinon-chai": "^3.7.0"
-    "testdouble": "^3.20.2"
 
   build-tools:
     "@itwin/build-tools": "5.0.0-dev.67"
     "@itwin/eslint-plugin": "5.0.0-dev.1"
-    "@types/node": "^20.12.12"
+    "@types/node": "^22.13.9"
     "cpx2": "^7.0.1"
     "cross-env": "^7.0.3"
     "eslint": "^9.13.0"

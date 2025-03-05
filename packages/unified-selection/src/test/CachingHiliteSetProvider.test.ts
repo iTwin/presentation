@@ -6,9 +6,8 @@
 import { expect } from "chai";
 import { createAsyncIterator } from "presentation-test-utilities";
 import sinon from "sinon";
-import * as td from "testdouble";
 import { ECClassHierarchyInspector, ECSqlQueryExecutor } from "@itwin/presentation-shared";
-import { createCachingHiliteSetProvider as origCreateCachingHiliteSetProvider } from "../unified-selection/CachingHiliteSetProvider.js";
+import { createCachingHiliteSetProvider } from "../unified-selection/CachingHiliteSetProvider.js";
 import { HiliteSet, HiliteSetProvider, HiliteSetProviderProps } from "../unified-selection/HiliteSetProvider.js";
 import { SelectableInstanceKey } from "../unified-selection/Selectable.js";
 import { createStorage, SelectionStorage } from "../unified-selection/SelectionStorage.js";
@@ -21,7 +20,7 @@ const generateSelection = (): SelectableInstanceKey[] => {
 describe("createCachingHiliteSetProvider", () => {
   let factory: sinon.SinonStub<[props: HiliteSetProviderProps], HiliteSetProvider>;
   let selectionStorage: SelectionStorage;
-  let hiliteSetCache: ReturnType<typeof origCreateCachingHiliteSetProvider>;
+  let hiliteSetCache: ReturnType<typeof createCachingHiliteSetProvider>;
   const provider = {
     getHiliteSet: sinon.stub<[{ imodelKey: string }], AsyncIterableIterator<HiliteSet>>(),
   };
@@ -56,17 +55,13 @@ describe("createCachingHiliteSetProvider", () => {
   }
 
   beforeEach(async () => {
-    factory = sinon.stub<[props: HiliteSetProviderProps], HiliteSetProvider>().returns(provider as unknown as HiliteSetProvider);
-    await td.replaceEsm("../unified-selection/HiliteSetProvider.js", {
-      createHiliteSetProvider: factory,
-    });
-
     selectionStorage = createStorage();
 
-    const { createCachingHiliteSetProvider } = await import("../unified-selection/CachingHiliteSetProvider.js");
+    factory = sinon.stub<[props: HiliteSetProviderProps], HiliteSetProvider>().returns(provider as unknown as HiliteSetProvider);
     hiliteSetCache = createCachingHiliteSetProvider({
       selectionStorage,
       imodelProvider,
+      createHiliteSetProvider: factory,
     });
     imodelProvider.returns(stubIModelAccess());
     selectionStorage.addToSelection({ imodelKey, source: "test", selectables: generateSelection() });
@@ -79,10 +74,6 @@ describe("createCachingHiliteSetProvider", () => {
         { models: ["0x3"], subCategories: ["0x3"], elements: ["0x3"] },
       ]),
     );
-  });
-
-  afterEach(() => {
-    td.reset();
   });
 
   describe("getHiliteSet", () => {

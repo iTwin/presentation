@@ -155,15 +155,12 @@ export function createECSchemaProviderStub() {
     },
     getProperties: async (): Promise<Array<EC.Property>> => props.properties ?? [],
     is: sinon.fake(async (targetClassOrClassName: EC.Class | string, schemaName?: string) => {
-      if (!props.is) {
-        return false;
-      }
       if (typeof targetClassOrClassName === "string") {
-        return props.is(`${schemaName!}.${targetClassOrClassName}`);
+        return props.is ? props.is(`${schemaName!}.${targetClassOrClassName}`) : schemaName === props.schemaName && targetClassOrClassName === props.className;
       }
       // need this just to make sure `.` is used for separating schema and class names
       const { schemaName: parsedSchemaName, className: parsedClassName } = parseFullClassName(targetClassOrClassName.fullName);
-      return props.is(`${parsedSchemaName}.${parsedClassName}`);
+      return props.is ? props.is(`${parsedSchemaName}.${parsedClassName}`) : parsedSchemaName === props.schemaName && parsedClassName === props.className;
     }),
     isEntityClass: () => false,
     isRelationshipClass: () => false,
