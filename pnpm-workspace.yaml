@@ -68,7 +68,7 @@ catalogs:
     "global-jsdom": "^25.0.0"
     "ignore-styles": "^5.0.1"
     "jsdom": "^25.0.1"
-    "mocha": "^10.7.3"
+    "mocha": "^11.1.0"
     "sinon": "^18.0.0"
     "sinon-chai": "^3.7.0"
 

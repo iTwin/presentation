@@ -202,8 +202,8 @@ catalogs:
       specifier: ^25.0.1
       version: 25.0.1
     mocha:
-      specifier: ^10.7.3
-      version: 10.7.3
+      specifier: ^11.1.0
+      version: 11.1.0
     sinon:
       specifier: ^18.0.0
       version: 18.0.0
@@ -327,7 +327,7 @@ importers:
         version: 5.0.0-dev.1(eslint@9.13.0)(typescript@5.7.3)
       '@itwin/imodel-components-react':
         specifier: catalog:appui
-        version: 5.1.0(zrwn6lmp7tgwusoqr6j5x3e5sq)
+        version: 5.1.0(mdccyaywr4d2yqd4s2xdbevpbm)
       '@itwin/itwinui-react':
         specifier: catalog:itwinui
         version: 3.16.2(@types/react@18.3.3)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -345,7 +345,7 @@ importers:
         version: link:../../packages/core-interop
       '@itwin/presentation-frontend':
         specifier: catalog:itwinjs-core
-        version: 5.0.0-dev.49(ehrnzcqec66upe7ju7s2vhhuoa)
+        version: 5.0.0-dev.49(wyxuqho7x5xpwxd4alb6zqx25m)
       '@itwin/presentation-hierarchies':
         specifier: workspace:^
         version: link:../../packages/hierarchies
@@ -453,7 +453,7 @@ importers:
         version: 25.0.1
       mocha:
         specifier: catalog:test-tools
-        version: 10.7.3
+        version: 11.1.0
       object-hash:
         specifier: ^3.0.0
         version: 3.0.0
@@ -696,7 +696,7 @@ importers:
         version: 9.13.0
       mocha:
         specifier: catalog:test-tools
-        version: 10.7.3
+        version: 11.1.0
       presentation-test-utilities:
         specifier: workspace:^
         version: link:../../packages/test-utilities
@@ -906,7 +906,7 @@ importers:
         version: 5.0.0-dev.1(eslint@9.13.0)(typescript@5.7.3)
       '@itwin/imodel-components-react':
         specifier: catalog:appui
-        version: 5.1.0(zrwn6lmp7tgwusoqr6j5x3e5sq)
+        version: 5.1.0(mdccyaywr4d2yqd4s2xdbevpbm)
       '@itwin/itwinui-icons-react':
         specifier: catalog:itwinui
         version: 2.9.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -924,7 +924,7 @@ importers:
         version: link:../../../packages/core-interop
       '@itwin/presentation-frontend':
         specifier: catalog:itwinjs-core
-        version: 5.0.0-dev.49(ehrnzcqec66upe7ju7s2vhhuoa)
+        version: 5.0.0-dev.49(wyxuqho7x5xpwxd4alb6zqx25m)
       '@itwin/presentation-hierarchies':
         specifier: workspace:*
         version: link:../../../packages/hierarchies
@@ -1108,7 +1108,7 @@ importers:
         version: 5.0.0-dev.1(eslint@9.13.0)(typescript@5.7.3)
       '@itwin/imodel-components-react':
         specifier: catalog:appui
-        version: 5.1.0(zrwn6lmp7tgwusoqr6j5x3e5sq)
+        version: 5.1.0(mdccyaywr4d2yqd4s2xdbevpbm)
       '@itwin/itwinui-react':
         specifier: catalog:itwinui
         version: 3.16.2(@types/react@18.3.3)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -1117,7 +1117,7 @@ importers:
         version: 5.0.0-dev.49(@itwin/core-bentley@5.0.0-dev.49)(@itwin/core-common@5.0.0-dev.49(@itwin/core-bentley@5.0.0-dev.49)(@itwin/core-geometry@5.0.0-dev.49))(@itwin/core-quantity@5.0.0-dev.49(@itwin/core-bentley@5.0.0-dev.49))(@itwin/ecschema-metadata@5.0.0-dev.49(@itwin/core-bentley@5.0.0-dev.49)(@itwin/core-quantity@5.0.0-dev.49(@itwin/core-bentley@5.0.0-dev.49)))
       '@itwin/presentation-frontend':
         specifier: catalog:itwinjs-core
-        version: 5.0.0-dev.49(ehrnzcqec66upe7ju7s2vhhuoa)
+        version: 5.0.0-dev.49(wyxuqho7x5xpwxd4alb6zqx25m)
       '@itwin/unified-selection-react':
         specifier: workspace:^
         version: link:../unified-selection-react
@@ -1201,7 +1201,7 @@ importers:
         version: 25.0.1
       mocha:
         specifier: catalog:test-tools
-        version: 10.7.3
+        version: 11.1.0
       presentation-test-utilities:
         specifier: workspace:^
         version: link:../test-utilities
@@ -1286,7 +1286,7 @@ importers:
         version: 9.13.0
       mocha:
         specifier: catalog:test-tools
-        version: 10.7.3
+        version: 11.1.0
       rimraf:
         specifier: catalog:build-tools
         version: 6.0.1
@@ -1374,7 +1374,7 @@ importers:
         version: 9.13.0
       mocha:
         specifier: catalog:test-tools
-        version: 10.7.3
+        version: 11.1.0
       presentation-test-utilities:
         specifier: workspace:^
         version: link:../test-utilities
@@ -1501,7 +1501,7 @@ importers:
         version: 25.0.1
       mocha:
         specifier: catalog:test-tools
-        version: 10.7.3
+        version: 11.1.0
       presentation-test-utilities:
         specifier: workspace:^
         version: link:../test-utilities
@@ -1619,7 +1619,7 @@ importers:
         version: 9.13.0
       mocha:
         specifier: catalog:test-tools
-        version: 10.7.3
+        version: 11.1.0
       rimraf:
         specifier: catalog:build-tools
         version: 6.0.1
@@ -1683,7 +1683,7 @@ importers:
         version: 9.13.0
       mocha:
         specifier: catalog:test-tools
-        version: 10.7.3
+        version: 11.1.0
       presentation-test-utilities:
         specifier: workspace:^
         version: link:../test-utilities
@@ -1789,7 +1789,7 @@ importers:
         version: 5.0.0-dev.49(@itwin/core-bentley@5.0.0-dev.49)(@itwin/core-common@5.0.0-dev.49(@itwin/core-bentley@5.0.0-dev.49)(@itwin/core-geometry@5.0.0-dev.49))(@itwin/core-quantity@5.0.0-dev.49(@itwin/core-bentley@5.0.0-dev.49))(@itwin/ecschema-metadata@5.0.0-dev.49(@itwin/core-bentley@5.0.0-dev.49)(@itwin/core-quantity@5.0.0-dev.49(@itwin/core-bentley@5.0.0-dev.49)))
       '@itwin/presentation-frontend':
         specifier: catalog:itwinjs-core
-        version: 5.0.0-dev.49(ehrnzcqec66upe7ju7s2vhhuoa)
+        version: 5.0.0-dev.49(wyxuqho7x5xpwxd4alb6zqx25m)
       '@itwin/webgl-compatibility':
         specifier: catalog:itwinjs-core
         version: 5.0.0-dev.49
@@ -1852,7 +1852,7 @@ importers:
         version: 25.0.1
       mocha:
         specifier: catalog:test-tools
-        version: 10.7.3
+        version: 11.1.0
       presentation-test-utilities:
         specifier: workspace:^
         version: link:../test-utilities
@@ -1931,7 +1931,7 @@ importers:
         version: 9.13.0
       mocha:
         specifier: catalog:test-tools
-        version: 10.7.3
+        version: 11.1.0
       presentation-test-utilities:
         specifier: workspace:^
         version: link:../test-utilities
@@ -1997,7 +1997,7 @@ importers:
         version: 25.0.1
       mocha:
         specifier: catalog:test-tools
-        version: 10.7.3
+        version: 11.1.0
       react:
         specifier: catalog:react
         version: 18.3.1
@@ -7075,14 +7075,14 @@ packages:
     peerDependencies:
       mocha: '>=2.2.5'
 
-  mocha@10.7.3:
-    resolution: {integrity: sha512-uQWxAu44wwiACGqjbPYmjo7Lg8sFrS3dQe7PP2FQI+woptP4vZXSMcfMyFL/e1yFEeEpV4RtyTpZROOKmxis+A==}
-    engines: {node: '>= 14.0.0'}
-    hasBin: true
-
   mocha@10.8.2:
     resolution: {integrity: sha512-VZlYo/WE8t1tstuRmqgeyBgCbJc/lEdopaa+axcKzTBJ+UIdlAB9XnmvTCAH4pwR4ElNInaedhEBmZD8iCSVEg==}
     engines: {node: '>= 14.0.0'}
+    hasBin: true
+
+  mocha@11.1.0:
+    resolution: {integrity: sha512-8uJR5RTC2NgpY3GrYcgpZrsEd9zKbPDpob1RezyR2upGHRQtHWofmzTMzTMSV6dru3tj5Ukt0+Vnq1qhFEEwAg==}
+    engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
     hasBin: true
 
   module-definition@5.0.1:
@@ -10437,7 +10437,7 @@ snapshots:
       '@itwin/core-geometry': 5.0.0-dev.49
       '@itwin/core-quantity': 5.0.0-dev.49(@itwin/core-bentley@5.0.0-dev.49)
       '@itwin/core-react': 5.1.0(@itwin/appui-abstract@5.0.0-dev.49(@itwin/core-bentley@5.0.0-dev.49))(@itwin/core-bentley@5.0.0-dev.49)(@itwin/itwinui-react@3.16.2(@types/react@18.3.3)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      '@itwin/imodel-components-react': 5.1.0(zrwn6lmp7tgwusoqr6j5x3e5sq)
+      '@itwin/imodel-components-react': 5.1.0(mdccyaywr4d2yqd4s2xdbevpbm)
       '@itwin/itwinui-icons-react': 2.9.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@itwin/itwinui-illustrations-react': 2.1.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@itwin/itwinui-react': 3.16.2(@types/react@18.3.3)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -10658,7 +10658,7 @@ snapshots:
       - supports-color
       - utf-8-validate
 
-  '@itwin/imodel-components-react@5.1.0(zrwn6lmp7tgwusoqr6j5x3e5sq)':
+  '@itwin/imodel-components-react@5.1.0(mdccyaywr4d2yqd4s2xdbevpbm)':
     dependencies:
       '@itwin/appui-abstract': 5.0.0-dev.49(@itwin/core-bentley@5.0.0-dev.49)
       '@itwin/components-react': 5.1.0(@itwin/appui-abstract@5.0.0-dev.49(@itwin/core-bentley@5.0.0-dev.49))(@itwin/core-bentley@5.0.0-dev.49)(@itwin/core-react@5.1.0(@itwin/appui-abstract@5.0.0-dev.49(@itwin/core-bentley@5.0.0-dev.49))(@itwin/core-bentley@5.0.0-dev.49)(@itwin/itwinui-react@3.16.2(@types/react@18.3.3)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@itwin/itwinui-react@3.16.2(@types/react@18.3.3)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -10741,7 +10741,7 @@ snapshots:
       '@itwin/core-quantity': 5.0.0-dev.49(@itwin/core-bentley@5.0.0-dev.49)
       '@itwin/ecschema-metadata': 5.0.0-dev.49(@itwin/core-bentley@5.0.0-dev.49)(@itwin/core-quantity@5.0.0-dev.49(@itwin/core-bentley@5.0.0-dev.49))
 
-  '@itwin/presentation-frontend@5.0.0-dev.49(ehrnzcqec66upe7ju7s2vhhuoa)':
+  '@itwin/presentation-frontend@5.0.0-dev.49(wyxuqho7x5xpwxd4alb6zqx25m)':
     dependencies:
       '@itwin/core-bentley': 5.0.0-dev.49
       '@itwin/core-common': 5.0.0-dev.49(@itwin/core-bentley@5.0.0-dev.49)(@itwin/core-geometry@5.0.0-dev.49)
@@ -15878,7 +15878,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  mocha@10.7.3:
+  mocha@10.8.2:
     dependencies:
       ansi-colors: 4.1.3
       browser-stdout: 1.3.1
@@ -15901,7 +15901,7 @@ snapshots:
       yargs-parser: 20.2.9
       yargs-unparser: 2.0.0
 
-  mocha@10.8.2:
+  mocha@11.1.0:
     dependencies:
       ansi-colors: 4.1.3
       browser-stdout: 1.3.1
@@ -15910,7 +15910,7 @@ snapshots:
       diff: 5.2.0
       escape-string-regexp: 4.0.0
       find-up: 5.0.0
-      glob: 8.1.0
+      glob: 10.4.5
       he: 1.2.0
       js-yaml: 4.1.0
       log-symbols: 4.1.0
@@ -15920,8 +15920,8 @@ snapshots:
       strip-json-comments: 3.1.1
       supports-color: 8.1.1
       workerpool: 6.5.1
-      yargs: 16.2.0
-      yargs-parser: 20.2.9
+      yargs: 17.7.2
+      yargs-parser: 21.1.1
       yargs-unparser: 2.0.0
 
   module-definition@5.0.1:
