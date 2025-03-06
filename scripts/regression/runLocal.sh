@@ -11,7 +11,7 @@ echo "Installing dependencies"
 pnpm install
 
 echo "Building packages"
-pnpm build:all
+pnpm build:all --no-cache
 
 echo "Packing presentation-components"
 cd packages/components
@@ -32,6 +32,9 @@ node ./scripts/regression/gatherTarballs.js
 echo "Setting up regression tests to run with core - $CORE_VERSION and appui - $UI_VERSION"
 node ./scripts/regression/setupRegressionTests.js --coreVersion $CORE_VERSION --uiVersion $UI_VERSION --localPackagesPath ./built-packages
 
+echo "Cleaning build"
+pnpm clean:all --no-cache
+
 echo "Cleaning node_modules"
 rm -rf **/node_modules
 
@@ -39,7 +42,7 @@ echo "Installing dependencies"
 pnpm install
 
 echo "Building full stack tests"
-pnpm lage build --to presentation-full-stack-tests
+pnpm lage build --to presentation-full-stack-tests --no-cache
 
 echo "Running full stack tests"
 pnpm --filter presentation-full-stack-tests test:dev

@@ -22,6 +22,15 @@ const packagesToUpdate = [
       },
     ],
   },
+  {
+    name: "@itwin/presentation-components",
+    dependencies: [
+      {
+        name: "@itwin/presentation-core-interop",
+        peerDependencyVersion: "^1.0.0",
+      },
+    ],
+  },
 ];
 
 function forEachWorkspacePackage(callback) {
