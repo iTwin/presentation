@@ -1,0 +1,102 @@
+name: Regression Full stack tests
+
+on:
+  pull_request:
+    branches: [ "master" ]
+
+jobs:
+  buildPackages:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 9
+
+      - name: Use Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'pnpm'
+
+      - name: Update dependencies for testing
+        run: node ./scripts/regression/fixDependencies.js
+
+      - name: Install dependencies
+        run: pnpm install --no-frozen-lockfile
+
+      - name: Build packages
+        run: pnpm lage build --to @itwin/presentation-components @itwin/presentation-testing @itwin/presentation-core-interop --grouped
+
+      - name: Pack components
+        run: pnpm pack
+        working-directory: packages/components
+
+      - name: Pack testing
+        run: pnpm pack
+        working-directory: packages/testing
+
+      - name: Pack core-interop
+        run: pnpm pack
+        working-directory: packages/core-interop
+
+      - name: Gather tarballs
+        run: node ./scripts/regression/gatherTarballs.js
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: built-packages
+          path: built-packages
+
+  runTests:
+    needs: [buildPackages]
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        core-version: ["4.4.0", "4.10.7"]
+        appui-version: ["4.9.0", "4.17.6"]
+
+    name: Build with Core - ${{ matrix.core-version }}, AppUI - ${{ matrix.appui-version }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 9
+
+      - name: Use Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'pnpm'
+
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: built-packages
+          path: ./built-packages
+
+      - name: Install workspace dependencies
+        run: pnpm install -w
+
+      - name: Override dependencies Core - ${{ matrix.core-version }}, AppUI - ${{ matrix.appui-version }}
+        run: node ./scripts/regression/setupRegressionTests.js --coreVersion ${{ matrix.core-version }} --uiVersion ${{ matrix.appui-version }} --localPackagesPath ./built-packages
+
+      - name: Install dependencies
+        run: pnpm install --no-frozen-lockfile
+
+      - name: Build
+        run: pnpm lage build --to presentation-full-stack-tests --grouped --continue
+
+      - name: Run full stack tests
+        run: pnpm test --filter presentation-full-stack-tests

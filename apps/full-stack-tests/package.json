@@ -13,7 +13,7 @@
     "test": "npm run test:dev -- --parallel --jobs=4",
     "docs": "betools extract --fileExt=ts,tsx --extractFrom=./src --recursive --out=./build/docs/extract"
   },
-  "dependencies": {
+  "devDependencies": {
     "@bentley/functional-schema": "^1.0.4",
     "@itwin/appui-abstract": "catalog:itwinjs-core",
     "@itwin/build-tools": "catalog:build-tools",
