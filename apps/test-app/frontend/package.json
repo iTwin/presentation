@@ -52,7 +52,7 @@
     "@types/react-redux": "^7.1.34",
     "@vitejs/plugin-react": "^4.3.3",
     "classnames": "catalog:react",
-    "electron": "^33.3.2",
+    "electron": "^35.0.0",
     "eslint": "catalog:build-tools",
     "eslint-plugin-react": "catalog:build-tools",
     "immer": "^10.1.1",

@@ -368,24 +368,25 @@ async function createNodesAndCountResult(
     }
     return { nodes: await createTreeItems(items, baseOptions, treeItemFactory, parentNode), count };
   } catch (e) {
-    if (e instanceof PresentationError) {
-      switch (e.errorNumber) {
-        case PresentationStatus.Canceled:
-          return { nodes: [], count: 0 };
-        case PresentationStatus.BackendTimeout:
-          return createStatusNodeResult(parentNode, "tree.timeout", InfoTreeNodeItemType.BackendTimeout);
-        case PresentationStatus.ResultSetTooLarge:
-          // ResultSetTooLarge error can't occur if hierarchyLevelSizeLimit is undefined.
-          onHierarchyLimitExceeded?.();
-          return {
-            nodes: [
-              createInfoNode(parentNode, `${translate("tree.result-limit-exceeded")} ${hierarchyLevelSizeLimit!}.`, InfoTreeNodeItemType.ResultSetTooLarge),
-            ],
-            count: 1,
-          };
-      }
-    }
     if (e instanceof Error) {
+      if (isPresentationError(e)) {
+        switch (e.errorNumber) {
+          case PresentationStatus.Canceled:
+            return { nodes: [], count: 0 };
+          case PresentationStatus.BackendTimeout:
+            return createStatusNodeResult(parentNode, "tree.timeout", InfoTreeNodeItemType.BackendTimeout);
+          case PresentationStatus.ResultSetTooLarge:
+            // ResultSetTooLarge error can't occur if hierarchyLevelSizeLimit is undefined.
+            onHierarchyLimitExceeded?.();
+            return {
+              nodes: [
+                createInfoNode(parentNode, `${translate("tree.result-limit-exceeded")} ${hierarchyLevelSizeLimit!}.`, InfoTreeNodeItemType.ResultSetTooLarge),
+              ],
+              count: 1,
+            };
+        }
+      }
+
       // eslint-disable-next-line no-console
       console.error(`Error creating nodes: ${e.toString()}`);
     }
@@ -465,4 +466,8 @@ function createNodesIteratorFromDeprecatedResponse({ count, nodes }: { count: nu
       }
     })(),
   };
+}
+
+function isPresentationError(e: Error): e is PresentationError {
+  return "errorNumber" in e && e.errorNumber !== undefined;
 }

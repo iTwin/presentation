@@ -3,8 +3,6 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { PresentationManagerMode } from "@itwin/presentation-backend";
-
 /**
  * @module Hierarchies
  *
@@ -43,5 +41,3 @@ export {
  * Utilities for creating test iModels that can be used to exercise presentation rules.
  */
 export * from "./presentation-testing/IModelUtilities.js";
-
-export { PresentationManagerMode };

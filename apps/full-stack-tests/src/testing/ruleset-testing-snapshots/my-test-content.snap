@@ -3,6 +3,13 @@
 exports[`Generic:PhysicalObject-0x74`] = `
 Array [
   PropertyRecord {
+    "autoExpand": undefined,
+    "description": undefined,
+    "extendedData": undefined,
+    "isDisabled": undefined,
+    "isMerged": undefined,
+    "isReadonly": undefined,
+    "links": undefined,
     "property": Object {
       "displayLabel": "Code",
       "name": "pc_bis_Element_CodeValue",
@@ -15,6 +22,13 @@ Array [
     },
   },
   PropertyRecord {
+    "autoExpand": undefined,
+    "description": undefined,
+    "extendedData": undefined,
+    "isDisabled": undefined,
+    "isMerged": undefined,
+    "isReadonly": undefined,
+    "links": undefined,
     "property": Object {
       "displayLabel": "User Label",
       "name": "pc_bis_Element_UserLabel",
@@ -27,7 +41,13 @@ Array [
     },
   },
   PropertyRecord {
+    "autoExpand": undefined,
+    "description": undefined,
+    "extendedData": undefined,
+    "isDisabled": undefined,
+    "isMerged": undefined,
     "isReadonly": true,
+    "links": undefined,
     "property": Object {
       "displayLabel": "area",
       "name": "rc_generic_PhysicalObject_ncc_MyProp_areaElementAspect",
@@ -36,7 +56,13 @@ Array [
     "value": Object {
       "items": Array [
         PropertyRecord {
+          "autoExpand": undefined,
+          "description": undefined,
+          "extendedData": undefined,
+          "isDisabled": undefined,
+          "isMerged": undefined,
           "isReadonly": true,
+          "links": undefined,
           "property": Object {
             "displayLabel": "area",
             "name": "rc_generic_PhysicalObject_ncc_MyProp_areaElementAspect",
@@ -45,7 +71,13 @@ Array [
           "value": Object {
             "members": Object {
               "pc_MyProp_areaElementAspect_Acres": PropertyRecord {
+                "autoExpand": undefined,
                 "description": "150.1235 acres",
+                "extendedData": undefined,
+                "isDisabled": undefined,
+                "isMerged": undefined,
+                "isReadonly": undefined,
+                "links": undefined,
                 "property": Object {
                   "displayLabel": "Acres",
                   "editor": Object {
@@ -62,7 +94,13 @@ Array [
                 },
               },
               "pc_MyProp_areaElementAspect_cm2": PropertyRecord {
+                "autoExpand": undefined,
                 "description": "150.1235 cm²",
+                "extendedData": undefined,
+                "isDisabled": undefined,
+                "isMerged": undefined,
+                "isReadonly": undefined,
+                "links": undefined,
                 "property": Object {
                   "displayLabel": "cm2",
                   "editor": Object {
@@ -79,7 +117,13 @@ Array [
                 },
               },
               "pc_MyProp_areaElementAspect_ft2": PropertyRecord {
+                "autoExpand": undefined,
                 "description": "150.1235 ft²",
+                "extendedData": undefined,
+                "isDisabled": undefined,
+                "isMerged": undefined,
+                "isReadonly": undefined,
+                "links": undefined,
                 "property": Object {
                   "displayLabel": "ft2",
                   "editor": Object {
@@ -96,7 +140,13 @@ Array [
                 },
               },
               "pc_MyProp_areaElementAspect_ft__x0020__ft": PropertyRecord {
+                "autoExpand": undefined,
                 "description": "150.1235 ft·ft",
+                "extendedData": undefined,
+                "isDisabled": undefined,
+                "isMerged": undefined,
+                "isReadonly": undefined,
+                "links": undefined,
                 "property": Object {
                   "displayLabel": "ft ft",
                   "editor": Object {
@@ -113,7 +163,13 @@ Array [
                 },
               },
               "pc_MyProp_areaElementAspect_ft__x0020__mi": PropertyRecord {
+                "autoExpand": undefined,
                 "description": "150.1235 ft·mi",
+                "extendedData": undefined,
+                "isDisabled": undefined,
+                "isMerged": undefined,
+                "isReadonly": undefined,
+                "links": undefined,
                 "property": Object {
                   "displayLabel": "ft mi",
                   "editor": Object {
@@ -130,7 +186,13 @@ Array [
                 },
               },
               "pc_MyProp_areaElementAspect_ha": PropertyRecord {
+                "autoExpand": undefined,
                 "description": "150.1235 ha",
+                "extendedData": undefined,
+                "isDisabled": undefined,
+                "isMerged": undefined,
+                "isReadonly": undefined,
+                "links": undefined,
                 "property": Object {
                   "displayLabel": "ha",
                   "editor": Object {
@@ -147,7 +209,13 @@ Array [
                 },
               },
               "pc_MyProp_areaElementAspect_in2": PropertyRecord {
+                "autoExpand": undefined,
                 "description": "150.1235 in²",
+                "extendedData": undefined,
+                "isDisabled": undefined,
+                "isMerged": undefined,
+                "isReadonly": undefined,
+                "links": undefined,
                 "property": Object {
                   "displayLabel": "in2",
                   "editor": Object {
@@ -164,7 +232,13 @@ Array [
                 },
               },
               "pc_MyProp_areaElementAspect_in__x0020__ft": PropertyRecord {
+                "autoExpand": undefined,
                 "description": "150.1235 in·ft",
+                "extendedData": undefined,
+                "isDisabled": undefined,
+                "isMerged": undefined,
+                "isReadonly": undefined,
+                "links": undefined,
                 "property": Object {
                   "displayLabel": "in ft",
                   "editor": Object {
@@ -181,7 +255,13 @@ Array [
                 },
               },
               "pc_MyProp_areaElementAspect_in__x0020__m": PropertyRecord {
+                "autoExpand": undefined,
                 "description": "150.1235 in·m",
+                "extendedData": undefined,
+                "isDisabled": undefined,
+                "isMerged": undefined,
+                "isReadonly": undefined,
+                "links": undefined,
                 "property": Object {
                   "displayLabel": "in m",
                   "editor": Object {
@@ -198,7 +278,13 @@ Array [
                 },
               },
               "pc_MyProp_areaElementAspect_in__x0020__mi": PropertyRecord {
+                "autoExpand": undefined,
                 "description": "150.1235 in·mi",
+                "extendedData": undefined,
+                "isDisabled": undefined,
+                "isMerged": undefined,
+                "isReadonly": undefined,
+                "links": undefined,
                 "property": Object {
                   "displayLabel": "in mi",
                   "editor": Object {
@@ -215,7 +301,13 @@ Array [
                 },
               },
               "pc_MyProp_areaElementAspect_km2": PropertyRecord {
+                "autoExpand": undefined,
                 "description": "150.1235 km²",
+                "extendedData": undefined,
+                "isDisabled": undefined,
+                "isMerged": undefined,
+                "isReadonly": undefined,
+                "links": undefined,
                 "property": Object {
                   "displayLabel": "km2",
                   "editor": Object {
@@ -232,7 +324,13 @@ Array [
                 },
               },
               "pc_MyProp_areaElementAspect_m2": PropertyRecord {
+                "autoExpand": undefined,
                 "description": "150.1235 m²",
+                "extendedData": undefined,
+                "isDisabled": undefined,
+                "isMerged": undefined,
+                "isReadonly": undefined,
+                "links": undefined,
                 "property": Object {
                   "displayLabel": "m2",
                   "editor": Object {
@@ -249,7 +347,13 @@ Array [
                 },
               },
               "pc_MyProp_areaElementAspect_m__x0020__km": PropertyRecord {
+                "autoExpand": undefined,
                 "description": "150.1235 m·km",
+                "extendedData": undefined,
+                "isDisabled": undefined,
+                "isMerged": undefined,
+                "isReadonly": undefined,
+                "links": undefined,
                 "property": Object {
                   "displayLabel": "m km",
                   "editor": Object {
@@ -266,7 +370,13 @@ Array [
                 },
               },
               "pc_MyProp_areaElementAspect_m__x0020__m": PropertyRecord {
+                "autoExpand": undefined,
                 "description": "150.1235 mm·m",
+                "extendedData": undefined,
+                "isDisabled": undefined,
+                "isMerged": undefined,
+                "isReadonly": undefined,
+                "links": undefined,
                 "property": Object {
                   "displayLabel": "m m",
                   "editor": Object {
@@ -283,7 +393,13 @@ Array [
                 },
               },
               "pc_MyProp_areaElementAspect_mi2": PropertyRecord {
+                "autoExpand": undefined,
                 "description": "150.1235 mi²",
+                "extendedData": undefined,
+                "isDisabled": undefined,
+                "isMerged": undefined,
+                "isReadonly": undefined,
+                "links": undefined,
                 "property": Object {
                   "displayLabel": "mi2",
                   "editor": Object {
@@ -300,7 +416,13 @@ Array [
                 },
               },
               "pc_MyProp_areaElementAspect_mm__x0020__km": PropertyRecord {
+                "autoExpand": undefined,
                 "description": "150.1235 mm·km",
+                "extendedData": undefined,
+                "isDisabled": undefined,
+                "isMerged": undefined,
+                "isReadonly": undefined,
+                "links": undefined,
                 "property": Object {
                   "displayLabel": "mm km",
                   "editor": Object {
@@ -317,7 +439,13 @@ Array [
                 },
               },
               "pc_MyProp_areaElementAspect_thousand__x0020__ft2": PropertyRecord {
+                "autoExpand": undefined,
                 "description": "150.1235 thousand ft²",
+                "extendedData": undefined,
+                "isDisabled": undefined,
+                "isMerged": undefined,
+                "isReadonly": undefined,
+                "links": undefined,
                 "property": Object {
                   "displayLabel": "thousand ft2",
                   "editor": Object {
@@ -343,7 +471,13 @@ Array [
     },
   },
   PropertyRecord {
+    "autoExpand": undefined,
+    "description": undefined,
+    "extendedData": undefined,
+    "isDisabled": undefined,
+    "isMerged": undefined,
     "isReadonly": true,
+    "links": undefined,
     "property": Object {
       "displayLabel": "firstTry",
       "name": "rc_generic_PhysicalObject_ncc_MyProp_firstTryElementAspect",
@@ -352,7 +486,13 @@ Array [
     "value": Object {
       "items": Array [
         PropertyRecord {
+          "autoExpand": undefined,
+          "description": undefined,
+          "extendedData": undefined,
+          "isDisabled": undefined,
+          "isMerged": undefined,
           "isReadonly": true,
+          "links": undefined,
           "property": Object {
             "displayLabel": "firstTry",
             "name": "rc_generic_PhysicalObject_ncc_MyProp_firstTryElementAspect",
@@ -361,7 +501,13 @@ Array [
           "value": Object {
             "members": Object {
               "pc_MyProp_firstTryElementAspect_email": PropertyRecord {
+                "autoExpand": undefined,
                 "description": "justas.lauzadis@bentley.com",
+                "extendedData": undefined,
+                "isDisabled": undefined,
+                "isMerged": undefined,
+                "isReadonly": undefined,
+                "links": undefined,
                 "property": Object {
                   "displayLabel": "email",
                   "name": "rc_generic_PhysicalObject_ncc_MyProp_firstTryElementAspect$pc_MyProp_firstTryElementAspect_email",
@@ -374,7 +520,13 @@ Array [
                 },
               },
               "pc_MyProp_firstTryElementAspect_full__x0020__URL": PropertyRecord {
+                "autoExpand": undefined,
                 "description": "http://www.google.lt",
+                "extendedData": undefined,
+                "isDisabled": undefined,
+                "isMerged": undefined,
+                "isReadonly": undefined,
+                "links": undefined,
                 "property": Object {
                   "displayLabel": "full URL",
                   "name": "rc_generic_PhysicalObject_ncc_MyProp_firstTryElementAspect$pc_MyProp_firstTryElementAspect_full__x0020__URL",
@@ -387,7 +539,13 @@ Array [
                 },
               },
               "pc_MyProp_firstTryElementAspect_mailto": PropertyRecord {
+                "autoExpand": undefined,
                 "description": "mailto:justas.lauzadis@bentley.com",
+                "extendedData": undefined,
+                "isDisabled": undefined,
+                "isMerged": undefined,
+                "isReadonly": undefined,
+                "links": undefined,
                 "property": Object {
                   "displayLabel": "mailto",
                   "name": "rc_generic_PhysicalObject_ncc_MyProp_firstTryElementAspect$pc_MyProp_firstTryElementAspect_mailto",
@@ -400,7 +558,13 @@ Array [
                 },
               },
               "pc_MyProp_firstTryElementAspect_without__x0020__http": PropertyRecord {
+                "autoExpand": undefined,
                 "description": "www.bbc.co.uk",
+                "extendedData": undefined,
+                "isDisabled": undefined,
+                "isMerged": undefined,
+                "isReadonly": undefined,
+                "links": undefined,
                 "property": Object {
                   "displayLabel": "without http",
                   "name": "rc_generic_PhysicalObject_ncc_MyProp_firstTryElementAspect$pc_MyProp_firstTryElementAspect_without__x0020__http",
@@ -413,7 +577,13 @@ Array [
                 },
               },
               "pc_MyProp_firstTryElementAspect_without__x0020__www": PropertyRecord {
+                "autoExpand": undefined,
                 "description": "gmail.com",
+                "extendedData": undefined,
+                "isDisabled": undefined,
+                "isMerged": undefined,
+                "isReadonly": undefined,
+                "links": undefined,
                 "property": Object {
                   "displayLabel": "without www",
                   "name": "rc_generic_PhysicalObject_ncc_MyProp_firstTryElementAspect$pc_MyProp_firstTryElementAspect_without__x0020__www",
@@ -435,7 +605,13 @@ Array [
     },
   },
   PropertyRecord {
+    "autoExpand": undefined,
+    "description": undefined,
+    "extendedData": undefined,
+    "isDisabled": undefined,
+    "isMerged": undefined,
     "isReadonly": true,
+    "links": undefined,
     "property": Object {
       "displayLabel": "workingUnitsProp",
       "name": "rc_generic_PhysicalObject_ncc_MyProp_workingUnitsPropElementAspect",
@@ -444,7 +620,13 @@ Array [
     "value": Object {
       "items": Array [
         PropertyRecord {
+          "autoExpand": undefined,
+          "description": undefined,
+          "extendedData": undefined,
+          "isDisabled": undefined,
+          "isMerged": undefined,
           "isReadonly": true,
+          "links": undefined,
           "property": Object {
             "displayLabel": "workingUnitsProp",
             "name": "rc_generic_PhysicalObject_ncc_MyProp_workingUnitsPropElementAspect",
@@ -453,7 +635,13 @@ Array [
           "value": Object {
             "members": Object {
               "pc_MyProp_workingUnitsPropElementAspect_Angle": PropertyRecord {
+                "autoExpand": undefined,
                 "description": "2.62",
+                "extendedData": undefined,
+                "isDisabled": undefined,
+                "isMerged": undefined,
+                "isReadonly": undefined,
+                "links": undefined,
                 "property": Object {
                   "displayLabel": "Angle",
                   "editor": Object {
@@ -469,7 +657,13 @@ Array [
                 },
               },
               "pc_MyProp_workingUnitsPropElementAspect_Area": PropertyRecord {
+                "autoExpand": undefined,
                 "description": "150.12",
+                "extendedData": undefined,
+                "isDisabled": undefined,
+                "isMerged": undefined,
+                "isReadonly": undefined,
+                "links": undefined,
                 "property": Object {
                   "displayLabel": "Area",
                   "editor": Object {
@@ -485,7 +679,13 @@ Array [
                 },
               },
               "pc_MyProp_workingUnitsPropElementAspect_Distance": PropertyRecord {
+                "autoExpand": undefined,
                 "description": "150.12",
+                "extendedData": undefined,
+                "isDisabled": undefined,
+                "isMerged": undefined,
+                "isReadonly": undefined,
+                "links": undefined,
                 "property": Object {
                   "displayLabel": "Distance",
                   "editor": Object {
@@ -501,7 +701,13 @@ Array [
                 },
               },
               "pc_MyProp_workingUnitsPropElementAspect_Volume": PropertyRecord {
+                "autoExpand": undefined,
                 "description": "150.12",
+                "extendedData": undefined,
+                "isDisabled": undefined,
+                "isMerged": undefined,
+                "isReadonly": undefined,
+                "links": undefined,
                 "property": Object {
                   "displayLabel": "Volume",
                   "editor": Object {
