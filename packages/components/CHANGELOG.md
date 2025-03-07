@@ -1,5 +1,13 @@
 # Change Log - @itwin/presentation-components
 
+## 5.11.1
+
+### Patch Changes
+
+- [#886](https://github.com/iTwin/presentation/pull/886): Fix package compatibility with `itwinjs-core` peer dependencies at version `4.x`.
+- Updated dependencies:
+  - @itwin/unified-selection@1.4.0
+
 ## 5.11.0
 
 ### Minor Changes
