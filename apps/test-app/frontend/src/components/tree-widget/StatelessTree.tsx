@@ -16,12 +16,13 @@ import {
   PresentationInstanceFilterInfo,
   PresentationInstanceFilterPropertiesSource,
 } from "@itwin/presentation-components";
-import { createECSchemaProvider, createECSqlQueryExecutor, registerTxnListeners } from "@itwin/presentation-core-interop";
+import { createECSchemaProvider, createECSqlQueryExecutor, createIModelKey, registerTxnListeners } from "@itwin/presentation-core-interop";
 import { Presentation } from "@itwin/presentation-frontend";
 import { createLimitingECSqlQueryExecutor, GenericInstanceFilter } from "@itwin/presentation-hierarchies";
 import { HierarchyLevelDetails, PresentationHierarchyNode, TreeRenderer, useIModelUnifiedSelectionTree } from "@itwin/presentation-hierarchies-react";
 import { ModelsTreeDefinition } from "@itwin/presentation-models-tree";
 import { createCachingECClassHierarchyInspector, IPrimitiveValueFormatter, Props } from "@itwin/presentation-shared";
+import { Selectable, Selectables } from "@itwin/unified-selection";
 import { useUnifiedSelectionContext } from "@itwin/unified-selection-react";
 import { MyAppFrontend } from "../../api/MyAppFrontend";
 
@@ -327,12 +328,13 @@ async function removeSelectedElements(imodel: IModelConnection) {
 }
 
 function getSelectedElementIds(imodel: IModelConnection) {
-  const selection = Presentation.selection.getSelection(imodel);
+  const selection = MyAppFrontend.selectionStorage.getSelection({ imodelKey: createIModelKey(imodel) });
   const keys: InstanceKey[] = [];
-  selection.forEach((elementKey) => {
-    if ("id" in elementKey) {
-      keys.push(elementKey);
+  Selectables.forEach(selection, (selectable) => {
+    if (Selectable.isInstanceKey(selectable)) {
+      keys.push(selectable);
     }
   });
+
   return keys.map((key) => key.id);
 }
