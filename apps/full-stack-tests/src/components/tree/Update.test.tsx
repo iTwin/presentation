@@ -2,7 +2,6 @@
  * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
-/* eslint-disable @typescript-eslint/no-deprecated */
 
 import { expect } from "chai";
 import * as sinon from "sinon";
@@ -252,6 +251,82 @@ describe("Tree update", () => {
         await hierarchy.verifyChange([]);
       });
 
+      it("detects a change in customization rule's condition", async () => {
+        const ruleset: Ruleset = {
+          id: "test_ruleset_id",
+          rules: [
+            {
+              ruleType: RuleTypes.RootNodes,
+              specifications: [
+                {
+                  specType: ChildNodeSpecificationTypes.InstanceNodesOfSpecificClasses,
+                  classes: { schemaName: "Generic", classNames: ["PhysicalObject"] },
+                  groupByClass: false,
+                  groupByLabel: false,
+                },
+              ],
+            },
+            {
+              ruleType: RuleTypes.ExtendedData,
+              condition: `GetVariableBoolValue("should_customize")`,
+              items: {
+                color: `"Red"`,
+              },
+            },
+          ],
+        };
+        const hierarchy = await verifyHierarchy({ ...defaultProps, ruleset }, ["Physical Object [0-38]", "Physical Object [0-39]"]);
+
+        await Presentation.presentation.vars(ruleset.id).setBool("should_customize", true);
+        await hierarchy.verifyChange([
+          { label: "Physical Object [0-38]", extendedData: { color: "Red" } },
+          { label: "Physical Object [0-39]", extendedData: { color: "Red" } },
+        ]);
+      });
+
+      it("detects a change in customization rule's value", async () => {
+        const ruleset: Ruleset = {
+          id: "test_ruleset_id",
+          rules: [
+            {
+              ruleType: RuleTypes.RootNodes,
+              specifications: [
+                {
+                  specType: ChildNodeSpecificationTypes.InstanceNodesOfSpecificClasses,
+                  classes: { schemaName: "Generic", classNames: ["PhysicalObject"] },
+                  groupByClass: false,
+                  groupByLabel: false,
+                },
+              ],
+            },
+            {
+              ruleType: RuleTypes.ExtendedData,
+              condition: `ThisNode.IsOfClass("PhysicalObject", "Generic")`,
+              items: {
+                color: `GetVariableStringValue("custom_color")`,
+              },
+            },
+          ],
+        };
+        await Presentation.presentation.vars(ruleset.id).setString("custom_color", "Green");
+        const hierarchy = await verifyHierarchy({ ...defaultProps, ruleset }, [
+          { label: "Physical Object [0-38]", extendedData: { color: "Green" } },
+          { label: "Physical Object [0-39]", extendedData: { color: "Green" } },
+        ]);
+
+        await Presentation.presentation.vars(ruleset.id).setString("custom_color", "Red");
+        await hierarchy.verifyChange([
+          { label: "Physical Object [0-38]", extendedData: { color: "Red" } },
+          { label: "Physical Object [0-39]", extendedData: { color: "Red" } },
+        ]);
+
+        await Presentation.presentation.vars(ruleset.id).setString("custom_color", "Blue");
+        await hierarchy.verifyChange([
+          { label: "Physical Object [0-38]", extendedData: { color: "Blue" } },
+          { label: "Physical Object [0-39]", extendedData: { color: "Blue" } },
+        ]);
+      });
+
       it("detects changes of root and expanded nodes", async () => {
         const ruleset: Ruleset = {
           id: "test_ruleset_id",
@@ -399,6 +474,7 @@ describe("Tree update", () => {
           children?: TreeHierarchy[];
           expanded?: true;
           color?: number;
+          extendedData?: { [key: string]: any };
         };
 
     async function verifyHierarchy(props: UsePresentationTreeStateProps, expectedTree: TreeHierarchy[]): Promise<VerifiedHierarchy> {
@@ -450,6 +526,10 @@ describe("Tree update", () => {
 
           if (node.item.style?.colorOverrides?.color !== undefined) {
             additionalProperties.color = node.item.style.colorOverrides.color;
+          }
+
+          if (node.item.extendedData !== undefined) {
+            additionalProperties.extendedData = { ...node.item.extendedData };
           }
 
           if (Object.keys(additionalProperties).length > 0) {
