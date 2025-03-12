@@ -74,6 +74,7 @@ export class FavoritePropertiesDataProvider implements IFavoritePropertiesDataPr
     this.includeFieldsWithCompositeValues = true;
     this._customRuleset = /* c8 ignore next */ props?.ruleset;
     this._getActiveScope =
+      // eslint-disable-next-line @typescript-eslint/no-deprecated
       props?.activeScopeProvider ?? (() => mapPresentationFrontendSelectionScopeToUnifiedSelectionScope(Presentation.selection.scopes.activeScope));
   }
 

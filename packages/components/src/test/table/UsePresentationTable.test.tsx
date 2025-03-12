@@ -23,6 +23,8 @@ import { createTestContentDescriptor, createTestContentItem, createTestPropertie
 import { createTestECInstancesNodeKey } from "../_helpers/Hierarchy.js";
 import { act, renderHook, waitFor } from "../TestUtils.js";
 
+/* eslint-disable @typescript-eslint/no-deprecated */
+
 describe("usePresentationTable", () => {
   const imodel = {
     key: "imodel_key",

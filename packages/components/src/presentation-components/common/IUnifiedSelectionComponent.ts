@@ -18,5 +18,5 @@ export interface IUnifiedSelectionComponent {
   readonly imodel: IModelConnection;
 
   /** Selection handler used by this component */
-  readonly selectionHandler?: SelectionHandler;
+  readonly selectionHandler?: SelectionHandler; // eslint-disable-line @typescript-eslint/no-deprecated
 }

@@ -56,9 +56,11 @@ export interface UsePropertyDataProviderWithUnifiedSelectionResult {
   numSelectedElements: number;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-deprecated
 const SelectionHandlerContext = createContext<SelectionHandler | undefined>(undefined);
 
 /** @internal */
+// eslint-disable-next-line @typescript-eslint/no-deprecated
 export function SelectionHandlerContextProvider({ selectionHandler, children }: PropsWithChildren<{ selectionHandler: SelectionHandler }>) {
   return <SelectionHandlerContext.Provider value={selectionHandler}>{children}</SelectionHandlerContext.Provider>;
 }
@@ -143,11 +145,13 @@ function initUnifiedSelectionFromPresentationFrontend({
   rulesetId,
   onSelectionChanged,
 }: {
+  // eslint-disable-next-line @typescript-eslint/no-deprecated
   suppliedSelectionHandler?: SelectionHandler;
   imodel: IModelConnection;
   rulesetId: string;
   onSelectionChanged: (newSelection: KeySet) => void;
 }) {
+  // eslint-disable-next-line @typescript-eslint/no-deprecated
   const updateProviderSelection = (selectionHandler: SelectionHandler, selectionLevel?: number) => {
     const selection = getSelectedKeys(selectionHandler, selectionLevel);
     selection && onSelectionChanged(selection);
@@ -156,7 +160,9 @@ function initUnifiedSelectionFromPresentationFrontend({
   /* c8 ignore start */
   const handler =
     suppliedSelectionHandler ??
+    // eslint-disable-next-line @typescript-eslint/no-deprecated
     new SelectionHandler({
+      // eslint-disable-next-line @typescript-eslint/no-deprecated
       manager: Presentation.selection,
       name: "PropertyGrid",
       imodel,
@@ -164,6 +170,7 @@ function initUnifiedSelectionFromPresentationFrontend({
     });
   /* c8 ignore end */
 
+  // eslint-disable-next-line @typescript-eslint/no-deprecated
   handler.onSelect = (evt: SelectionChangeEventArgs): void => {
     updateProviderSelection(handler, evt.level);
   };
@@ -174,6 +181,7 @@ function initUnifiedSelectionFromPresentationFrontend({
   };
 }
 
+// eslint-disable-next-line @typescript-eslint/no-deprecated
 function getSelectedKeys(selectionHandler: SelectionHandler, selectionLevel?: number): KeySet | undefined {
   if (undefined === selectionLevel) {
     const availableLevels = selectionHandler.getSelectionLevels();
