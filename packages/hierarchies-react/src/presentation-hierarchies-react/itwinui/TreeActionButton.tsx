@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { Tree } from "@itwin/itwinui-react/bricks";
+import { IconButton, Tree } from "@itwin/itwinui-react/bricks";
 import { PresentationHierarchyNode } from "../TreeNode.js";
 import { HierarchyLevelDetails, useTree } from "../UseTree.js";
 import { LocalizedStrings, useLocalizationContext } from "./LocalizationContext.js";
@@ -22,6 +22,14 @@ export interface TreeItemAction {
    * - `Undefined` - action item is visible on hover/focus.
    */
   show?: boolean;
+  /**
+   * Provide a value when action button is in active state to display a dot above the button.
+   * Provided text value is used to set accessible description it should descibe why the action is in active state.
+   * If left undefined the action item will be rendered normally.
+   */
+  activeDescription?: string;
+
+  state?: string;
   icon?: string;
 }
 
@@ -32,10 +40,19 @@ export type FilterActionProps = {
 } & Partial<Pick<ReturnType<typeof useTree>, "getHierarchyLevelDetails">>;
 
 /** @internal */
-export function TreeActionButton({ show, label, action, icon }: TreeItemAction) {
+export function TreeActionButton({ show, label, action, icon, activeDescription }: TreeItemAction) {
   const { localizedStrings } = useLocalizationContext();
   const localizedLabel: string | undefined = localizedStrings[label as keyof typeof localizedStrings];
-  return <Tree.ItemAction visible={show} onClick={action} label={localizedLabel ?? label} icon={icon ?? placeholderIcon} />;
+  const localizedDescription: string | undefined = localizedStrings[activeDescription as keyof typeof localizedStrings];
+  return (
+    <Tree.ItemAction
+      render={<IconButton dot={localizedDescription ?? activeDescription} icon={icon ?? placeholderIcon} variant={"ghost"} label={localizedLabel ?? label} />}
+      label={localizedLabel ?? label}
+      icon={icon ?? placeholderIcon}
+      visible={show}
+      onClick={action}
+    />
+  );
 }
 
 /** @alpha */
@@ -59,7 +76,8 @@ export function createFilterAction({ onFilter, getHierarchyLevelDetails }: Filte
       },
       show: handleVisibility(),
       isDropdownAction: false,
-      icon: node.isFiltered ? placeholderIcon : filterIcon,
+      activeDescription: node.isFiltered ? ("filterHierarchyLevelActiveDescription" satisfies keyof LocalizedStrings) : undefined,
+      icon: filterIcon,
     };
   };
 }

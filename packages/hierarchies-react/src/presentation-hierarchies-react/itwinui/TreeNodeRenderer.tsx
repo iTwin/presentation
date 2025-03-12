@@ -122,11 +122,7 @@ export const TreeNodeRenderer: ForwardRefExoticComponent<TreeNodeRendererProps &
           <DropdownMenu.Content>
             {actions.slice(2, actions.length).map((action) => {
               const info = action(node);
-              return (
-                <DropdownMenu.Item key={info.label} onClick={() => info.action()}>
-                  {info.label}
-                </DropdownMenu.Item>
-              );
+              return <DropdownMenu.Item label={info.label} key={info.label} onClick={() => info.action()} />;
             })}
           </DropdownMenu.Content>
         </DropdownMenu.Root>,

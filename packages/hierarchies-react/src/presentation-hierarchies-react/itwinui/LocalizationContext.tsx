@@ -21,6 +21,11 @@ export interface LocalizedStrings {
    */
   filterHierarchyLevel: string;
   /**
+   * Accesible description for applied hierarchy filter button.
+   * Default value: `Filter is applied`.
+   */
+  filterHierarchyLevelActiveDescription: string;
+  /**
    * Title for clear hierarchy filter button.
    * Default value: `Clear active filter`.
    */
@@ -65,6 +70,7 @@ export interface LocalizationContext {
 const defaultLocalizedStrings: LocalizedStrings = {
   loading: "Loading...",
   filterHierarchyLevel: "Apply filter",
+  filterHierarchyLevelActiveDescription: "Filter is applied",
   clearHierarchyLevelFilter: "Clear active filter",
   noFilteredChildren: "No child nodes match current filter",
   resultLimitExceeded: "There are more items than allowed limit of {{limit}}.",
