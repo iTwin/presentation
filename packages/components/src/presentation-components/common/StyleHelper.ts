@@ -198,11 +198,11 @@ export class StyleHelper {
   }
 
   public static isBold(node: Partial<Node>): boolean {
-    return !!(hasFontStyle(node) && node.fontStyle && node.fontStyle?.indexOf("Bold") !== -1);
+    return !!(hasFontStyle(node) && node.fontStyle && node.fontStyle.indexOf("Bold") !== -1);
   }
 
   public static isItalic(node: Partial<Node>): boolean {
-    return !!(hasFontStyle(node) && node.fontStyle && node.fontStyle?.indexOf("Italic") !== -1);
+    return !!(hasFontStyle(node) && node.fontStyle && node.fontStyle.indexOf("Italic") !== -1);
   }
 
   /* c8 ignore next 3 */
