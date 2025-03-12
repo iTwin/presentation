@@ -11,7 +11,7 @@ import { CachingHiliteSetProvider, createCachingHiliteSetProvider } from "./Cach
 import { createHiliteSetProvider, HiliteSet, HiliteSetProvider } from "./HiliteSetProvider.js";
 import { SelectableInstanceKey, Selectables } from "./Selectable.js";
 import { StorageSelectionChangeEventArgs, StorageSelectionChangeType } from "./SelectionChangeEvent.js";
-import { computeSelection, ComputeSelectionProps } from "./SelectionScope.js";
+import { computeSelection, SelectionScope } from "./SelectionScope.js";
 import { SelectionStorage } from "./SelectionStorage.js";
 import { CoreIModelHiliteSet, CoreIModelSelectionSet, CoreSelectableIds, CoreSelectionSetEventType, CoreSelectionSetEventUnsafe } from "./types/IModel.js";
 import { safeDispose } from "./Utils.js";
@@ -60,7 +60,7 @@ export interface EnableUnifiedSelectionSyncWithIModelProps {
   selectionStorage: SelectionStorage;
 
   /** Active selection scope provider. */
-  activeScopeProvider: () => ComputeSelectionProps["scope"];
+  activeScopeProvider: () => SelectionScope;
 
   /**
    * A caching hilite set provider used to retrieve hilite sets for an iModel. If not provided, a new `CachingHiliteSetProvider`
@@ -97,7 +97,7 @@ export class IModelSelectionHandler {
   private _selectionStorage: SelectionStorage;
   private _hiliteSetProvider: HiliteSetProvider;
   private _cachingHiliteSetProvider: NonNullable<EnableUnifiedSelectionSyncWithIModelProps["cachingHiliteSetProvider"]>;
-  private _activeScopeProvider: () => ComputeSelectionProps["scope"];
+  private _activeScopeProvider: () => SelectionScope;
 
   private _isSuspended: boolean;
   private _cancelOngoingChanges = new Subject<void>();

@@ -14,6 +14,6 @@ export {
 export { SelectionStorage, createStorage } from "./unified-selection/SelectionStorage.js";
 export { createHiliteSetProvider, HiliteSet, HiliteSetProvider } from "./unified-selection/HiliteSetProvider.js";
 export { createCachingHiliteSetProvider, CachingHiliteSetProvider } from "./unified-selection/CachingHiliteSetProvider.js";
-export { computeSelection } from "./unified-selection/SelectionScope.js";
+export { computeSelection, SelectionScope } from "./unified-selection/SelectionScope.js";
 export { enableUnifiedSelectionSyncWithIModel } from "./unified-selection/EnableUnifiedSelectionSyncWithIModel.js";
 export { StorageSelectionChangeType, StorageSelectionChangeEventArgs, StorageSelectionChangesListener } from "./unified-selection/SelectionChangeEvent.js";
