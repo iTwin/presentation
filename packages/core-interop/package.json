@@ -36,7 +36,7 @@
     "validate-markdowns": "node ../../scripts/validateMarkdowns.js README.md"
   },
   "dependencies": {
-    "@itwin/presentation-shared": "~1.0.0",
+    "@itwin/presentation-shared": "workspace:~",
     "rxjs": "^7.8.1"
   },
   "peerDependencies": {
@@ -54,7 +54,6 @@
     "@itwin/core-quantity": "^4.9.0",
     "@itwin/ecschema-metadata": "^4.9.0",
     "@itwin/eslint-plugin": "^4.1.1",
-    "@itwin/imodelread-common": "workspace:^",
     "@types/chai": "^4.3.16",
     "@types/chai-as-promised": "^7.1.8",
     "@types/mocha": "^10.0.7",

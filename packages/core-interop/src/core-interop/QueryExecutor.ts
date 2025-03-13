@@ -3,11 +3,10 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { CompressedId64Set, Logger, OrderedId64Iterable } from "@itwin/core-bentley";
+import { OrderedId64Iterable } from "@itwin/core-bentley";
 import { ECSqlReader, QueryBinder, QueryOptions, QueryOptionsBuilder, QueryRowFormat } from "@itwin/core-common";
 import { Point2d, Point3d } from "@itwin/core-geometry";
 import { ECSqlBinding, ECSqlQueryDef, ECSqlQueryExecutor, ECSqlQueryReaderOptions, ECSqlQueryRow, trimWhitespace } from "@itwin/presentation-shared";
-import { QueryArgument, QueryRequest } from "@itwin/imodelread-common";
 
 /**
  * Defines input for `createECSqlQueryExecutor`. Generally, this is an instance of either [IModelDb](https://www.itwinjs.org/reference/core-backend/imodels/imodeldb/)
@@ -16,7 +15,6 @@ import { QueryArgument, QueryRequest } from "@itwin/imodelread-common";
  */
 interface CoreECSqlReaderFactory {
   createQueryReader(ecsql: string, binder?: QueryBinder, options?: QueryOptions): ECSqlReader;
-  runQuery?: (ecsql: QueryRequest) => AsyncIterableIterator<unknown>;
 }
 
 /**
@@ -42,46 +40,24 @@ export function createECSqlQueryExecutor(imodel: CoreECSqlReaderFactory): ECSqlQ
   return {
     createQueryReader(query: ECSqlQueryDef, config?: ECSqlQueryReaderOptions) {
       const { ctes, ecsql, bindings } = query;
-      Logger.logInfo("NO-SQL", `Executing ECSQL: ${config?.rowFormat}`);
-      if (imodel.runQuery !== undefined && config?.rowFormat !== "Indexes") {
-        const runQuery = imodel.runQuery.bind(imodel);
-        return (async function* () {
-          try {
-            const it = await runQuery({ query: addCTEs(ecsql, ctes), arguments: bindings === undefined ? undefined : noRpcBind(bindings) });
-            for await (const row of it) {
-              yield row as any;
-            }
-          } catch (error) {
-            console.error(error);
-            Logger.logError("NO-SQL", `runQuery failed, falling back to ECSqlReader: ${error}`);
-            const old = createOld(imodel, query, config);
-            for await (const row of old) {
-              yield row;
-            }
-          }
-        })();
-      } else {
-        return createOld(imodel, query, config);
+      const opts = new QueryOptionsBuilder();
+      switch (config?.rowFormat) {
+        case "ECSqlPropertyNames":
+          opts.setRowFormat(QueryRowFormat.UseECSqlPropertyNames);
+          break;
+        case "Indexes":
+          opts.setRowFormat(QueryRowFormat.UseECSqlPropertyIndexes);
+          break;
       }
+      if (config?.restartToken) {
+        opts.setRestartToken(config?.restartToken);
+      }
+      return new ECSqlQueryReaderImpl(
+        imodel.createQueryReader(trimWhitespace(addCTEs(ecsql, ctes)), bind(bindings ?? []), opts.getOptions()),
+        config?.rowFormat === "Indexes" ? "array" : "object",
+      );
     },
   };
-}
-
-function createOld(imodel: CoreECSqlReaderFactory, query: ECSqlQueryDef, config?: ECSqlQueryReaderOptions) {
-  const { ctes, ecsql, bindings } = query;
-  const opts = new QueryOptionsBuilder();
-  switch (config?.rowFormat) {
-    case "ECSqlPropertyNames":
-      opts.setRowFormat(QueryRowFormat.UseECSqlPropertyNames);
-      break;
-    case "Indexes":
-      opts.setRowFormat(QueryRowFormat.UseECSqlPropertyIndexes);
-      break;
-  }
-  return new ECSqlQueryReaderImpl(
-    imodel.createQueryReader(trimWhitespace(addCTEs(ecsql, ctes)), bind(bindings ?? []), opts.getOptions()),
-    config?.rowFormat === "Indexes" ? "array" : "object",
-  );
 }
 
 class ECSqlQueryReaderImpl implements ReturnType<ECSqlQueryExecutor["createQueryReader"]> {
@@ -102,46 +78,6 @@ class ECSqlQueryReaderImpl implements ReturnType<ECSqlQueryExecutor["createQuery
       value: this._format === "array" ? res.value.toArray() : res.value.toRow(),
     };
   }
-}
-
-function noRpcBind(bindings: ECSqlBinding[]): QueryArgument[] {
-  const bound: QueryArgument[] = [];
-  bindings.forEach((b) => {
-    if (b.value === undefined || b.value === null) {
-      bound.push({ type: "null" });
-      return;
-    }
-    switch (b.type) {
-      case "string":
-        bound.push({ type: "string", value: b.value });
-        break;
-      case "boolean":
-        bound.push({ type: b.type, value: b.value });
-        break;
-      case "double":
-        bound.push({ type: "double", value: b.value });
-        break;
-      case "long":
-        bound.push({ type: "long", value: b.value });
-        break;
-      case "id":
-        bound.push({ type: "id", value: b.value });
-        break;
-      case "int":
-        bound.push({ type: "integer", value: b.value });
-        break;
-      case "idset":
-        bound.push({ type: "idSet", value: CompressedId64Set.compressIds(b.value ?? []) });
-        break;
-      case "point2d":
-        bound.push({ type: "point2d", value: b.value });
-        break;
-      case "point3d":
-        bound.push({ type: "point3d", value: b.value });
-        break;
-    }
-  });
-  return bound;
 }
 
 function bind(bindings: ECSqlBinding[]): QueryBinder {
