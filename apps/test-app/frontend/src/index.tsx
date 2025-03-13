@@ -80,14 +80,6 @@ async function initializePresentation() {
   });
   // __PUBLISH_EXTRACT_END__
 
-  /* eslint-disable @typescript-eslint/no-deprecated */
-
-  // __PUBLISH_EXTRACT_START__ Presentation.Frontend.SetSelectionScope
-  Presentation.selection.scopes.activeScope = "top-assembly";
-  // __PUBLISH_EXTRACT_END__
-
-  /* eslint-enable @typescript-eslint/no-deprecated */
-
   // clear selection storage when iModel is closed
   IModelConnection.onClose.addListener((imodel) => {
     MyAppFrontend.selectionStorage.clearStorage({ imodelKey: imodel.key });
