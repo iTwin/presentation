@@ -23,9 +23,6 @@ import { SelectionStorage } from '@itwin/unified-selection';
 import { Tree } from '@itwin/itwinui-react/bricks';
 
 // @alpha (undocumented)
-export function createFilterAction({ onFilter, getHierarchyLevelDetails }: FilterActionProps): (node: PresentationHierarchyNode) => TreeItemAction;
-
-// @alpha (undocumented)
 type FilterActionProps = {
     onFilter?: (hierarchyLevelDetails: HierarchyLevelDetails) => void;
 } & Partial<Pick<ReturnType<typeof useTree>, "getHierarchyLevelDetails">>;
@@ -83,6 +80,7 @@ interface LocalizationContextProviderProps {
 interface LocalizedStrings {
     clearHierarchyLevelFilter: string;
     filterHierarchyLevel: string;
+    filterHierarchyLevelActiveDescription: string;
     increaseHierarchyLimit: string;
     increaseHierarchyLimitWithFiltering: string;
     loading: string;
@@ -191,8 +189,9 @@ interface TreeErrorItemProps {
 export interface TreeItemAction {
     // (undocumented)
     action: () => void;
+    activeDescription?: string;
     // (undocumented)
-    icon?: string;
+    icon: string;
     // (undocumented)
     label: string;
     show?: boolean;
@@ -237,6 +236,9 @@ type TreeRendererProps = Pick<ReturnType<typeof useTree>, "expandNode"> & Partia
 export function UnifiedSelectionProvider({ storage, children }: PropsWithChildren<{
     storage: SelectionStorage;
 }>): JSX_2.Element;
+
+// @alpha (undocumented)
+export function useFilterAction({ onFilter, getHierarchyLevelDetails }: FilterActionProps): (node: PresentationHierarchyNode) => TreeItemAction;
 
 // @public
 export function useIModelTree(props: UseIModelTreeProps): UseTreeResult;

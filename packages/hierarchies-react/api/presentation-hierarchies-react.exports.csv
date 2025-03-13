@@ -1,6 +1,5 @@
 sep=;
 Release Tag;API Item Type;API Item Name
-alpha;function;createFilterAction
 alpha;function;flattenNodes
 alpha;type;FlatTreeNode
 public;interface;HierarchyLevelDetails
@@ -16,6 +15,7 @@ public;const;TreeNodeRenderer
 alpha;function;TreeRenderer
 public;function;UnifiedSelectionProvider
 deprecated;function;UnifiedSelectionProvider
+alpha;function;useFilterAction
 public;function;useIModelTree
 public;function;useIModelUnifiedSelectionTree
 public;function;useSelectionHandler

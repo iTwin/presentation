@@ -19,10 +19,10 @@ import { createECSchemaProvider, createECSqlQueryExecutor, registerTxnListeners 
 import { Presentation } from "@itwin/presentation-frontend";
 import { createLimitingECSqlQueryExecutor, GenericInstanceFilter } from "@itwin/presentation-hierarchies";
 import {
-  createFilterAction,
   HierarchyLevelDetails,
   PresentationHierarchyNode,
   TreeRenderer,
+  useFilterAction,
   useIModelUnifiedSelectionTree,
 } from "@itwin/presentation-hierarchies-react";
 import { ModelsTreeDefinition } from "@itwin/presentation-models-tree";
@@ -159,6 +159,8 @@ function Tree({ imodel, imodelAccess, height, width }: { imodel: IModelConnectio
     return (descriptor: Descriptor) => fromGenericFilter(descriptor, currentFilter);
   }, [filteringOptions]);
 
+  const filterAction = useFilterAction({ onFilter: setFilteringOptions, getHierarchyLevelDetails: treeProps.getHierarchyLevelDetails });
+
   const renderContent = () => {
     if (rootNodes && rootNodes.length === 0 && filter) {
       return (
@@ -176,18 +178,7 @@ function Tree({ imodel, imodelAccess, height, width }: { imodel: IModelConnectio
         reloadTree={reloadTree}
         onFilterClick={setFilteringOptions}
         getIcon={getIcon}
-        actions={[
-          createFilterAction({ onFilter: setFilteringOptions, getHierarchyLevelDetails: treeProps.getHierarchyLevelDetails }),
-          () => {
-            return { label: "Fake button 1", action: () => {}, show: false };
-          },
-          () => {
-            return { label: "Fake button 2", action: () => {}, show: true };
-          },
-          () => {
-            return { label: "Fake button 3", action: () => {}, show: true };
-          },
-        ]}
+        actions={[filterAction]}
         selectionMode={"extended"}
       />
     );
