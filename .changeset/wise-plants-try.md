@@ -2,4 +2,4 @@
 "@itwin/presentation-hierarchies-react": patch
 ---
 
-Renamed `createFilterAction` to `useFilterAction`
+Changed `createFilterAction` function to a React hook and renamed it to `useFilterAction`.
