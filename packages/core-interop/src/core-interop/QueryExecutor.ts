@@ -47,7 +47,7 @@ export function createECSqlQueryExecutor(imodel: CoreECSqlReaderFactory): ECSqlQ
         const runQuery = imodel.runQuery.bind(imodel);
         return (async function* () {
           try {
-            const it = await runQuery({ query: addCTEs(ecsql, ctes), args: bindings === undefined ? undefined : noRpcBind(bindings) });
+            const it = await runQuery({ query: addCTEs(ecsql, ctes), arguments: bindings === undefined ? undefined : noRpcBind(bindings) });
             for await (const row of it) {
               yield row as any;
             }
