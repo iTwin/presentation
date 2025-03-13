@@ -6,7 +6,7 @@
 import { IconButton, Tree } from "@itwin/itwinui-react/bricks";
 import { PresentationHierarchyNode } from "../TreeNode.js";
 import { HierarchyLevelDetails, useTree } from "../UseTree.js";
-import { LocalizedStrings, useLocalizationContext } from "./LocalizationContext.js";
+import { useLocalizationContext } from "./LocalizationContext.js";
 
 const filterIcon = new URL("@itwin/itwinui-icons/filter.svg", import.meta.url).href;
 
@@ -38,13 +38,10 @@ export type FilterActionProps = {
 
 /** @internal */
 export function TreeActionButton({ show, label, action, icon, activeDescription }: TreeItemAction) {
-  const { localizedStrings } = useLocalizationContext();
-  const localizedLabel: string | undefined = localizedStrings[label as keyof typeof localizedStrings];
-  const localizedDescription: string | undefined = localizedStrings[activeDescription as keyof typeof localizedStrings];
   return (
     <Tree.ItemAction
-      render={<IconButton dot={localizedDescription ?? activeDescription} icon={icon} variant={"ghost"} label={localizedLabel ?? label} />}
-      label={localizedLabel ?? label}
+      render={<IconButton dot={activeDescription} icon={icon} variant={"ghost"} label={label} />}
+      label={label}
       icon={icon}
       visible={show}
       onClick={action}
@@ -53,7 +50,8 @@ export function TreeActionButton({ show, label, action, icon, activeDescription 
 }
 
 /** @alpha */
-export function createFilterAction({ onFilter, getHierarchyLevelDetails }: FilterActionProps): (node: PresentationHierarchyNode) => TreeItemAction {
+export function useFilterAction({ onFilter, getHierarchyLevelDetails }: FilterActionProps): (node: PresentationHierarchyNode) => TreeItemAction {
+  const { localizedStrings } = useLocalizationContext();
   return (node) => {
     const handleVisibility = () => {
       if (!onFilter || !node.isFilterable) {
@@ -66,14 +64,14 @@ export function createFilterAction({ onFilter, getHierarchyLevelDetails }: Filte
     };
 
     return {
-      label: "filterHierarchyLevel" satisfies keyof LocalizedStrings,
+      label: localizedStrings.filterHierarchyLevel,
       action: () => {
         const hierarchyLevelDetails = getHierarchyLevelDetails?.(node.id);
         hierarchyLevelDetails && onFilter?.(hierarchyLevelDetails);
       },
       show: handleVisibility(),
       isDropdownAction: false,
-      activeDescription: node.isFiltered ? ("filterHierarchyLevelActiveDescription" satisfies keyof LocalizedStrings) : undefined,
+      activeDescription: node.isFiltered ? localizedStrings.filterHierarchyLevelActiveDescription : undefined,
       icon: filterIcon,
     };
   };
