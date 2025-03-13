@@ -12,7 +12,7 @@ import { formIdBindings, genericExecuteQuery } from "./Utils.js";
  * Available selection scopes.
  * @public
  */
-export type SelectionScope = "element" | "model" | "category" | "functional";
+type SelectionScopeIdentifier = "element" | "model" | "category" | "functional";
 
 /**
  * Props for computing element selection.
@@ -33,6 +33,13 @@ export interface ElementSelectionScopeProps {
 }
 
 /**
+ * A union of types that can be used to define a selection scope.
+ * @public
+ * @since 1.4.0
+ */
+export type SelectionScope = ElementSelectionScopeProps | { id: SelectionScopeIdentifier } | SelectionScopeIdentifier;
+
+/**
  * Props for `computeSelection`.
  * @public
  */
@@ -42,7 +49,7 @@ export interface ComputeSelectionProps {
   /** IDs of elements to compute selection for. */
   elementIds: Id64Arg;
   /** Selection scope to compute selection with. */
-  scope: ElementSelectionScopeProps | { id: SelectionScope } | SelectionScope;
+  scope: SelectionScope;
 }
 
 /**
