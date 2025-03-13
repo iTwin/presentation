@@ -332,7 +332,7 @@ export function isPresentationInstanceFilterConditionGroup(filter: PresentationI
 // @public @deprecated
 export function isPresentationTreeNodeItem(item: TreeNodeItem): item is PresentationTreeNodeItem;
 
-// @public
+// @public @deprecated
 export interface IUnifiedSelectionComponent {
     readonly imodel: IModelConnection;
     readonly selectionHandler?: SelectionHandler;
