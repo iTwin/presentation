@@ -1,5 +1,12 @@
 # @itwin/presentation-hierarchies-react
 
+## 2.0.0-alpha.8
+
+### Patch Changes
+
+- [#903](https://github.com/iTwin/presentation/pull/903): Added `activeDescription` optional property to TreeItemAction interface, which when provided a value will display a dot above the button indicating an active state. The provided value is used to set accesible description and should explain why the action item is active.
+- [#903](https://github.com/iTwin/presentation/pull/903): Changed `createFilterAction` function to a React hook and renamed it to `useFilterAction`.
+
 ## 2.0.0-alpha.7
 
 ### Patch Changes
