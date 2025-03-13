@@ -176,18 +176,7 @@ function Tree({ imodel, imodelAccess, height, width }: { imodel: IModelConnectio
         reloadTree={reloadTree}
         onFilterClick={setFilteringOptions}
         getIcon={getIcon}
-        actions={[
-          createFilterAction({ onFilter: setFilteringOptions, getHierarchyLevelDetails: treeProps.getHierarchyLevelDetails }),
-          () => {
-            return { label: "Fake button 1", action: () => {}, show: false };
-          },
-          () => {
-            return { label: "Fake button 2", action: () => {}, show: true };
-          },
-          () => {
-            return { label: "Fake button 3", action: () => {}, show: true };
-          },
-        ]}
+        actions={[createFilterAction({ onFilter: setFilteringOptions, getHierarchyLevelDetails: treeProps.getHierarchyLevelDetails })]}
         selectionMode={"extended"}
       />
     );

@@ -9,12 +9,12 @@ import { HierarchyLevelDetails, useTree } from "../UseTree.js";
 import { LocalizedStrings, useLocalizationContext } from "./LocalizationContext.js";
 
 const filterIcon = new URL("@itwin/itwinui-icons/filter.svg", import.meta.url).href;
-const placeholderIcon = new URL("@itwin/itwinui-icons/placeholder.svg", import.meta.url).href; // TODO: active filter icon/placeholder icon if button was not given an icon
 
 /** @alpha */
 export interface TreeItemAction {
   label: string;
   action: () => void;
+  icon: string;
   /**
    * Determines action items visibility:
    * - `False` - action item is hidden.
@@ -28,9 +28,6 @@ export interface TreeItemAction {
    * If left undefined the action item will be rendered normally.
    */
   activeDescription?: string;
-
-  state?: string;
-  icon?: string;
 }
 
 /** @alpha */
@@ -46,9 +43,9 @@ export function TreeActionButton({ show, label, action, icon, activeDescription 
   const localizedDescription: string | undefined = localizedStrings[activeDescription as keyof typeof localizedStrings];
   return (
     <Tree.ItemAction
-      render={<IconButton dot={localizedDescription ?? activeDescription} icon={icon ?? placeholderIcon} variant={"ghost"} label={localizedLabel ?? label} />}
+      render={<IconButton dot={localizedDescription ?? activeDescription} icon={icon} variant={"ghost"} label={localizedLabel ?? label} />}
       label={localizedLabel ?? label}
-      icon={icon ?? placeholderIcon}
+      icon={icon}
       visible={show}
       onClick={action}
     />
