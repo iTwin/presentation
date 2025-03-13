@@ -369,7 +369,7 @@ async function createNodesAndCountResult(
     return { nodes: await createTreeItems(items, baseOptions, treeItemFactory, parentNode), count };
   } catch (e) {
     if (e instanceof Error) {
-      if (isPresentationError(e)) {
+      if (hasErrorNumber(e)) {
         switch (e.errorNumber) {
           case PresentationStatus.Canceled:
             return { nodes: [], count: 0 };
@@ -468,6 +468,6 @@ function createNodesIteratorFromDeprecatedResponse({ count, nodes }: { count: nu
   };
 }
 
-function isPresentationError(e: Error): e is PresentationError {
+function hasErrorNumber(e: Error): e is Error & { errorNumber: number } {
   return "errorNumber" in e && e.errorNumber !== undefined;
 }
