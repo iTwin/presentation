@@ -83,6 +83,7 @@ interface LocalizationContextProviderProps {
 interface LocalizedStrings {
     clearHierarchyLevelFilter: string;
     filterHierarchyLevel: string;
+    filterHierarchyLevelActiveDescription: string;
     increaseHierarchyLimit: string;
     increaseHierarchyLimitWithFiltering: string;
     loading: string;
@@ -191,8 +192,9 @@ interface TreeErrorItemProps {
 export interface TreeItemAction {
     // (undocumented)
     action: () => void;
+    activeDescription?: string;
     // (undocumented)
-    icon?: string;
+    icon: string;
     // (undocumented)
     label: string;
     show?: boolean;
