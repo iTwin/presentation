@@ -36,7 +36,7 @@
     "validate-markdowns": "node ../../scripts/validateMarkdowns.js README.md"
   },
   "dependencies": {
-    "@itwin/presentation-shared": "workspace:~",
+    "@itwin/presentation-shared": "~1.0.0",
     "rxjs": "^7.8.1"
   },
   "peerDependencies": {
