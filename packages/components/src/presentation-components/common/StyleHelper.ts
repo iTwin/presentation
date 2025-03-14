@@ -198,19 +198,36 @@ export class StyleHelper {
   }
 
   public static isBold(node: Partial<Node>): boolean {
-    return (node.fontStyle?.indexOf("Bold") ?? -1) !== -1; // eslint-disable-line @typescript-eslint/no-deprecated
+    return !!(hasFontStyle(node) && node.fontStyle && node.fontStyle.indexOf("Bold") !== -1);
   }
 
   public static isItalic(node: Partial<Node>): boolean {
-    return (node.fontStyle?.indexOf("Italic") ?? -1) !== -1; // eslint-disable-line @typescript-eslint/no-deprecated
+    return !!(hasFontStyle(node) && node.fontStyle && node.fontStyle.indexOf("Italic") !== -1);
   }
 
   /* c8 ignore next 3 */
   public static getForeColor(node: Partial<Node>): number | undefined {
-    return node.foreColor ? StyleHelper.getColor(node.foreColor) : undefined; // eslint-disable-line @typescript-eslint/no-deprecated
+    return hasForeColor(node) && node.foreColor ? StyleHelper.getColor(node.foreColor) : undefined;
   }
 
   public static getBackColor(node: Partial<Node>): number | undefined {
-    return node.backColor ? StyleHelper.getColor(node.backColor) : undefined; // eslint-disable-line @typescript-eslint/no-deprecated
+    return hasBackColor(node) && node.backColor ? StyleHelper.getColor(node.backColor) : undefined;
   }
+}
+
+// TODO: Remove these types after itwinjs-core 4.x is dropped
+type WithFontStyle<T> = T & { fontStyle?: string };
+type WithForeColor<T> = T & { foreColor?: string };
+type WithBackColor<T> = T & { backColor?: string };
+
+function hasFontStyle<T extends object>(obj: T): obj is WithFontStyle<T> {
+  return "fontStyle" in obj;
+}
+
+function hasForeColor<T extends object>(obj: T): obj is WithForeColor<T> {
+  return "foreColor" in obj;
+}
+
+function hasBackColor<T extends object>(obj: T): obj is WithBackColor<T> {
+  return "backColor" in obj;
 }

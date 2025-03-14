@@ -53,16 +53,15 @@ export function createTestSimpleContentField(props?: {
   editor?: EditorDescription;
   renderer?: RendererDescription;
 }) {
-  return new Field(
-    props?.category ?? createTestCategoryDescription(),
-    props?.name ?? "SimpleField",
-    props?.label ?? "Simple Field",
-    props?.type ?? { valueFormat: PropertyValueFormat.Primitive, typeName: "string" },
-    props?.isReadonly ?? false,
-    props?.priority ?? 0,
-    props?.editor,
-    props?.renderer,
-  );
+  return new Field({
+    ...props,
+    category: props?.category ?? createTestCategoryDescription(),
+    name: props?.name ?? "SimpleField",
+    label: props?.label ?? "Simple Field",
+    type: props?.type ?? { valueFormat: PropertyValueFormat.Primitive, typeName: "string" },
+    isReadonly: props?.isReadonly ?? false,
+    priority: props?.priority ?? 0,
+  });
 }
 
 export function createTestPropertiesContentField(props: {
@@ -76,17 +75,15 @@ export function createTestPropertiesContentField(props: {
   editor?: EditorDescription;
   renderer?: RendererDescription;
 }) {
-  return new PropertiesField(
-    props.category ?? createTestCategoryDescription(),
-    props.name ?? "PropertiesField",
-    props.label ?? "Properties Field",
-    props.type ?? { valueFormat: PropertyValueFormat.Primitive, typeName: "string" },
-    props.isReadonly ?? false,
-    props.priority ?? 0,
-    props.properties,
-    props.editor,
-    props.renderer,
-  );
+  return new PropertiesField({
+    ...props,
+    category: props.category ?? createTestCategoryDescription(),
+    name: props.name ?? "PropertiesField",
+    label: props.label ?? "Properties Field",
+    type: props.type ?? { valueFormat: PropertyValueFormat.Primitive, typeName: "string" },
+    isReadonly: props.isReadonly ?? false,
+    priority: props.priority ?? 0,
+  });
 }
 
 export function createTestNestedContentField(props: {
@@ -112,20 +109,20 @@ export function createTestNestedContentField(props: {
       type: f.type,
     })),
   };
-  const field = new NestedContentField(
-    props.category ?? createTestCategoryDescription(),
-    props.name ?? "NestedContentField",
-    props.label ?? "Nested Content",
-    nestedContentFieldType,
-    props.isReadonly ?? false,
-    props.priority ?? 0,
-    props.contentClassInfo ?? createTestECClassInfo(),
-    props.pathToPrimaryClass ?? createTestRelationshipPath(1),
-    props.nestedFields,
-    props.editor,
-    !!props.autoExpand,
-    props.renderer,
-  );
+  const field = new NestedContentField({
+    category: props.category ?? createTestCategoryDescription(),
+    name: props.name ?? "NestedContentField",
+    label: props.label ?? "Nested Content",
+    type: nestedContentFieldType,
+    isReadonly: props.isReadonly ?? false,
+    priority: props.priority ?? 0,
+    contentClassInfo: props.contentClassInfo ?? createTestECClassInfo(),
+    pathToPrimaryClass: props.pathToPrimaryClass ?? createTestRelationshipPath(1),
+    nestedFields: props.nestedFields,
+    editor: props.editor,
+    autoExpand: !!props.autoExpand,
+    renderer: props.renderer,
+  });
   if (props.relationshipMeaning) {
     field.relationshipMeaning = props.relationshipMeaning;
   }
@@ -154,14 +151,10 @@ export function createTestContentItem(props: {
   mergedFieldNames?: string[];
   extendedData?: { [key: string]: any };
 }) {
-  return new Item(
-    props.primaryKeys ?? [createTestECInstanceKey()],
-    props.label ?? "",
-    props.imageId ?? "",
-    props.classInfo,
-    props.values,
-    props.displayValues,
-    props.mergedFieldNames ?? [],
-    props.extendedData,
-  );
+  return new Item({
+    ...props,
+    primaryKeys: props.primaryKeys ?? [createTestECInstanceKey()],
+    label: props.label && typeof props.label !== "string" ? props.label : LabelDefinition.fromLabelString(props.label ?? ""),
+    mergedFieldNames: props.mergedFieldNames ?? [],
+  });
 }

@@ -28,10 +28,10 @@ const MY_HIERARCHY_RULESET: Ruleset = {
             {
               schemaName: "BisCore",
               classNames: ["Subject"],
+              arePolymorphic: false,
             },
           ],
           instanceFilter: "this.Parent = NULL",
-          arePolymorphic: false,
           groupByClass: false,
           groupByLabel: false,
         },
@@ -61,8 +61,8 @@ const MY_HIERARCHY_RULESET: Ruleset = {
           classes: {
             schemaName: "BisCore",
             classNames: ["Model"],
+            arePolymorphic: true,
           },
-          arePolymorphic: true,
           relatedInstances: [
             {
               relationshipPath: {

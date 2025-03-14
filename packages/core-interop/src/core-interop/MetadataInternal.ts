@@ -35,8 +35,9 @@ export function createECSchema(schema: CoreSchema): EC.Schema {
   return {
     name: schema.name,
     async getClass(name) {
-      const item = await schema.getItem<CoreClass>(name);
-      return item ? createECClass(item, this) : undefined;
+      // TODO: replace with `schema.getItem(name, CoreClass)` when itwinjs-core 4.x is dropped
+      const item = await schema.getItem(name);
+      return item ? createECClass(item as CoreClass, this) : undefined;
     },
   };
 }

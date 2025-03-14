@@ -3,8 +3,6 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { PresentationManagerMode } from "@itwin/presentation-backend";
-
 /**
  * @module Hierarchies
  *
@@ -44,4 +42,22 @@ export {
  */
 export * from "./presentation-testing/IModelUtilities.js";
 
-export { PresentationManagerMode };
+// TODO: remove when itwinjs-core 4.x is dropped.
+/**
+ * Presentation manager working mode.
+ * @public
+ * @deprecated in 3.x. The attribute is not used by [[PresentationManager]] anymore
+ */
+export enum PresentationManagerMode {
+  /**
+   * Presentation manager assumes iModels are opened in read-only mode and avoids doing some work
+   * related to reacting to changes in iModels.
+   */
+  ReadOnly,
+
+  /**
+   * Presentation manager assumes iModels are opened in read-write mode and it may need to
+   * react to changes. This involves some additional work and gives slightly worse performance.
+   */
+  ReadWrite,
+}

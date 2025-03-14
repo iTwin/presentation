@@ -2,7 +2,6 @@
  * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
-/* eslint-disable @typescript-eslint/no-deprecated */
 
 import { expect } from "chai";
 import * as sinon from "sinon";
@@ -47,6 +46,7 @@ describe("Tree update", () => {
   });
 
   describe("detection", () => {
+    // eslint-disable-next-line @typescript-eslint/no-deprecated
     let defaultProps: Omit<UsePresentationTreeStateProps, "ruleset">;
 
     before(async () => {
@@ -268,9 +268,11 @@ describe("Tree update", () => {
               ],
             },
             {
-              ruleType: RuleTypes.StyleOverride,
+              ruleType: RuleTypes.ExtendedData,
               condition: `GetVariableBoolValue("should_customize")`,
-              foreColor: `"Red"`,
+              items: {
+                color: `"Red"`,
+              },
             },
           ],
         };
@@ -278,8 +280,8 @@ describe("Tree update", () => {
 
         await Presentation.presentation.vars(ruleset.id).setBool("should_customize", true);
         await hierarchy.verifyChange([
-          { label: "Physical Object [0-38]", color: 0xff0000 },
-          { label: "Physical Object [0-39]", color: 0xff0000 },
+          { label: "Physical Object [0-38]", extendedData: { color: "Red" } },
+          { label: "Physical Object [0-39]", extendedData: { color: "Red" } },
         ]);
       });
 
@@ -299,24 +301,30 @@ describe("Tree update", () => {
               ],
             },
             {
-              ruleType: RuleTypes.StyleOverride,
+              ruleType: RuleTypes.ExtendedData,
               condition: `ThisNode.IsOfClass("PhysicalObject", "Generic")`,
-              foreColor: `GetVariableStringValue("custom_color")`,
+              items: {
+                color: `GetVariableStringValue("custom_color")`,
+              },
             },
           ],
         };
-        const hierarchy = await verifyHierarchy({ ...defaultProps, ruleset }, ["Physical Object [0-38]", "Physical Object [0-39]"]);
+        await Presentation.presentation.vars(ruleset.id).setString("custom_color", "Green");
+        const hierarchy = await verifyHierarchy({ ...defaultProps, ruleset }, [
+          { label: "Physical Object [0-38]", extendedData: { color: "Green" } },
+          { label: "Physical Object [0-39]", extendedData: { color: "Green" } },
+        ]);
 
         await Presentation.presentation.vars(ruleset.id).setString("custom_color", "Red");
         await hierarchy.verifyChange([
-          { label: "Physical Object [0-38]", color: 0xff0000 },
-          { label: "Physical Object [0-39]", color: 0xff0000 },
+          { label: "Physical Object [0-38]", extendedData: { color: "Red" } },
+          { label: "Physical Object [0-39]", extendedData: { color: "Red" } },
         ]);
 
         await Presentation.presentation.vars(ruleset.id).setString("custom_color", "Blue");
         await hierarchy.verifyChange([
-          { label: "Physical Object [0-38]", color: 0x0000ff },
-          { label: "Physical Object [0-39]", color: 0x0000ff },
+          { label: "Physical Object [0-38]", extendedData: { color: "Blue" } },
+          { label: "Physical Object [0-39]", extendedData: { color: "Blue" } },
         ]);
       });
 
@@ -467,9 +475,12 @@ describe("Tree update", () => {
           children?: TreeHierarchy[];
           expanded?: true;
           color?: number;
+          extendedData?: { [key: string]: any };
         };
 
+    // eslint-disable-next-line @typescript-eslint/no-deprecated
     async function verifyHierarchy(props: UsePresentationTreeStateProps, expectedTree: TreeHierarchy[]): Promise<VerifiedHierarchy> {
+      // eslint-disable-next-line @typescript-eslint/no-deprecated
       const { result } = renderHook((hookProps: UsePresentationTreeStateProps) => usePresentationTreeState(hookProps), {
         initialProps: props,
       });
@@ -496,6 +507,7 @@ describe("Tree update", () => {
     }
 
     async function expectTree(
+      // eslint-disable-next-line @typescript-eslint/no-deprecated
       nodeLoader: AbstractTreeNodeLoaderWithProvider<IPresentationTreeDataProvider>,
       expectedHierarchy: TreeHierarchy[],
     ): Promise<void> {
@@ -518,6 +530,10 @@ describe("Tree update", () => {
 
           if (node.item.style?.colorOverrides?.color !== undefined) {
             additionalProperties.color = node.item.style.colorOverrides.color;
+          }
+
+          if (node.item.extendedData !== undefined) {
+            additionalProperties.extendedData = { ...node.item.extendedData };
           }
 
           if (Object.keys(additionalProperties).length > 0) {

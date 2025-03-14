@@ -24,6 +24,7 @@ import {
   PhysicalElementProps,
   RelationshipProps,
   RepositoryLinkProps,
+  SheetIndexFolderProps,
   SubCategoryProps,
   SubjectProps,
 } from "@itwin/core-common";
@@ -468,6 +469,18 @@ export function insertGroupInformationElement(
   const id = builder.insertElement({
     classFullName: className,
     model: modelId,
+    code: Code.createEmpty(),
+    ...elementProps,
+  });
+  return { className, id };
+}
+
+export function insertSheetIndexFolder(props: BaseInstanceInsertProps & Partial<Omit<SheetIndexFolderProps, "id" | "parent" | "code" | "model">>) {
+  const { builder, ...elementProps } = props;
+  const className = `BisCore${props.fullClassNameSeparator ?? "."}SheetIndexFolder`;
+  const id = builder.insertElement({
+    classFullName: className,
+    model: IModel.repositoryModelId,
     code: Code.createEmpty(),
     ...elementProps,
   });

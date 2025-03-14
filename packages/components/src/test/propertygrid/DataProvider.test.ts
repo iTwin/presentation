@@ -19,6 +19,7 @@ import {
   DisplayValue,
   Field,
   Item,
+  LabelDefinition,
   Property,
   PropertyValueFormat,
   RelationshipMeaning,
@@ -1908,7 +1909,16 @@ describe("PropertyDataProvider", () => {
     });
 
     it("returns empty list when record is not made from current content", async () => {
-      (provider as any).getContent = async () => new Content(createTestContentDescriptor({ fields: [] }), [new Item([], "", "", undefined, {}, {}, [])]);
+      (provider as any).getContent = async () =>
+        new Content(createTestContentDescriptor({ fields: [] }), [
+          new Item({
+            primaryKeys: [],
+            label: LabelDefinition.fromLabelString(""),
+            values: {},
+            displayValues: {},
+            mergedFieldNames: [],
+          }),
+        ]);
       const record = PropertyRecord.fromString("test");
       expect(await provider.getPropertyRecordInstanceKeys(record)).to.deep.eq([]);
     });
@@ -1920,7 +1930,15 @@ describe("PropertyDataProvider", () => {
           createTestContentDescriptor({
             fields: [createTestSimpleContentField({ name: "test-field-name" })],
           }),
-          [new Item(instanceKeys, "", "", undefined, { ["test-field-name"]: "value" }, {}, [])],
+          [
+            new Item({
+              primaryKeys: instanceKeys,
+              label: LabelDefinition.fromLabelString(""),
+              values: { ["test-field-name"]: "value" },
+              displayValues: {},
+              mergedFieldNames: [],
+            }),
+          ],
         );
       const record = PropertyRecord.fromString("value", "test-field-name");
       expect(await provider.getPropertyRecordInstanceKeys(record)).to.deep.eq(instanceKeys);
@@ -1939,12 +1957,10 @@ describe("PropertyDataProvider", () => {
             ],
           }),
           [
-            new Item(
-              [],
-              "",
-              "",
-              undefined,
-              {
+            new Item({
+              primaryKeys: [],
+              label: LabelDefinition.fromLabelString(""),
+              values: {
                 ["root-field"]: [
                   {
                     primaryKeys: [instanceKeys[0]],
@@ -1960,9 +1976,9 @@ describe("PropertyDataProvider", () => {
                   },
                 ],
               },
-              {},
-              [],
-            ),
+              displayValues: {},
+              mergedFieldNames: [],
+            }),
           ],
         );
       const record = PropertyRecord.fromString("", combineFieldNames("nested-field", "root-field"));

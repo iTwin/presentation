@@ -9,7 +9,6 @@ import { Guid, StopWatch } from "@itwin/core-bentley";
 import {
   HierarchyRpcRequestOptions,
   Node,
-  NodeJSON,
   PagedResponse,
   PresentationError,
   PresentationRpcResponseData,
@@ -79,19 +78,15 @@ function createProvider(context: ScenarioContext, events: EventEmitter) {
     ]);
     async function requestRepeatedly(): Promise<Node[]> {
       return doRequest("PresentationRpcInterface-4.1.0-getPagedNodes", requestBody, events, "nodes").then(async (response) => {
-        // eslint-disable-next-line @typescript-eslint/no-deprecated
-        const responseBody = response as PresentationRpcResponseData<PagedResponse<NodeJSON>>;
+        const responseBody = response as PresentationRpcResponseData<PagedResponse<Node>>;
         switch (responseBody.statusCode) {
           case PresentationStatus.Canceled:
             return [];
           case PresentationStatus.ResultSetTooLarge:
             ++(context.vars.tooLargeHierarchyLevelsCount as number);
             return [];
-          case PresentationStatus.BackendTimeout:
-            return requestRepeatedly();
           case PresentationStatus.Success:
-            // eslint-disable-next-line @typescript-eslint/no-deprecated
-            return responseBody.result!.items.map(Node.fromJSON);
+            return responseBody.result!.items;
           default:
             throw new PresentationError(responseBody.statusCode, responseBody.errorMessage);
         }

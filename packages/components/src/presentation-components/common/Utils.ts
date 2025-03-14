@@ -254,8 +254,10 @@ export async function createKeySetFromSelectables(selectables: Selectables): Pro
 }
 
 export function mapPresentationFrontendSelectionScopeToUnifiedSelectionScope(
+  // eslint-disable-next-line @typescript-eslint/no-deprecated
   scope: SelectionScopesManager["activeScope"],
 ): Parameters<typeof computeSelection>[0]["scope"] {
+  // eslint-disable-next-line @typescript-eslint/no-deprecated
   const scopeProps = createSelectionScopeProps(scope);
   switch (scopeProps.id) {
     case "functional-element":

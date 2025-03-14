@@ -26,6 +26,8 @@ public;interface;MappedNode
 deprecated;interface;MappedNode
 public;type;NodeMappingFunc
 deprecated;type;NodeMappingFunc
+public;enum;PresentationManagerMode
+deprecated;enum;PresentationManagerMode
 public;interface;PresentationTestingInitProps
 public;function;setTestOutputDir
 public;function;setupOutputFileLocation

@@ -12,12 +12,13 @@ import {
   insertPhysicalModelWithPartition,
   insertPhysicalPartition,
   insertPhysicalSubModel,
+  insertSheetIndexFolder,
   insertSpatialCategory,
 } from "presentation-test-utilities";
 import sinon from "sinon";
 import { Subject } from "@itwin/core-backend";
 import { Guid, Id64 } from "@itwin/core-bentley";
-import { IModel, Rank } from "@itwin/core-common";
+import { IModel } from "@itwin/core-common";
 import { IModelConnection } from "@itwin/core-frontend";
 import { createValueFormatter } from "@itwin/presentation-core-interop";
 import { createNodesQueryClauseFactory, HierarchyDefinition } from "@itwin/presentation-hierarchies";
@@ -464,8 +465,8 @@ describe("Hierarchies", () => {
 
     describe("Integer", () => {
       it("formats instance node labels", async function () {
-        const { imodel, category } = await buildIModel(this, async (builder) => {
-          return { category: insertSpatialCategory({ builder, codeValue: "category", rank: Rank.Application }) };
+        const { imodel, sheetIndexFolder } = await buildIModel(this, async (builder) => {
+          return { sheetIndexFolder: insertSheetIndexFolder({ builder, entryPriority: 2 }) };
         });
         const imodelAccess = createIModelAccess(imodel);
 
@@ -478,7 +479,7 @@ describe("Hierarchies", () => {
             if (!parentNode) {
               return [
                 {
-                  fullClassName: category.className,
+                  fullClassName: sheetIndexFolder.className,
                   query: {
                     ecsql: `
                     SELECT ${await selectQueryFactory.createSelectClause({
@@ -489,15 +490,15 @@ describe("Hierarchies", () => {
                           { type: "String", value: "[" },
                           await ECSql.createPrimitivePropertyValueSelectorProps({
                             schemaProvider: imodelAccess,
-                            propertyClassName: category.className,
+                            propertyClassName: sheetIndexFolder.className,
                             propertyClassAlias: "this",
-                            propertyName: "Rank",
+                            propertyName: "EntryPriority",
                           }),
                           { type: "String", value: "]" },
                         ]),
                       },
                     })}
-                    FROM ${category.className} AS this
+                    FROM ${sheetIndexFolder.className} AS this
                   `,
                   },
                 },

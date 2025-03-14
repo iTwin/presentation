@@ -18,6 +18,8 @@ import {
 import { createTestECInstanceKey } from "../_helpers/Common.js";
 import { act, renderHook, waitFor } from "../TestUtils.js";
 
+/* eslint-disable @typescript-eslint/no-deprecated */
+
 describe("usePropertyDataProviderWithUnifiedSelection", () => {
   const imodelKey = "test-imodel-key";
   const setKeysSpy = sinon.stub<[KeySet], void>();
@@ -169,7 +171,7 @@ describe("usePropertyDataProviderWithUnifiedSelection", () => {
       });
 
       unmount();
-      // eslint-disable-next-line @typescript-eslint/no-deprecated
+
       expect(selectionHandler.dispose).to.be.called;
     });
   });

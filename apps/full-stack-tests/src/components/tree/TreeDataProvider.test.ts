@@ -29,19 +29,6 @@ const RULESET: Ruleset = {
           imageId: "root image id",
         },
       ],
-      customizationRules: [
-        {
-          ruleType: RuleTypes.CheckBox,
-          defaultValue: true,
-          isEnabled: false,
-        },
-        {
-          ruleType: RuleTypes.StyleOverride,
-          foreColor: `"Red"`,
-          backColor: `"Green"`,
-          fontStyle: `"Italic Bold"`,
-        },
-      ],
     },
     {
       ruleType: RuleTypes.ChildNodes,
@@ -166,8 +153,7 @@ describe("TreeDataProvider", async () => {
           specifications: [
             {
               specType: ChildNodeSpecificationTypes.InstanceNodesOfSpecificClasses,
-              classes: { schemaName: "BisCore", classNames: ["Model"] },
-              arePolymorphic: true,
+              classes: { schemaName: "BisCore", classNames: ["Model"], arePolymorphic: true },
               groupByClass: true,
             },
           ],

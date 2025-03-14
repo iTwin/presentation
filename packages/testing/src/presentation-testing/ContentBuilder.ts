@@ -218,11 +218,11 @@ class PropertyRecordsAccumulator extends PropertyRecordsBuilder {
       return +Number(value).toFixed(this._decimalPrecision);
     }
 
-    if (Array.isArray(value)) {
+    if (Value.isArray(value)) {
       return value.map((item) => this.processRawValue(item));
     }
 
-    if (value instanceof Object) {
+    if (Value.isMap(value)) {
       const res: ValuesMap = {};
       Object.entries(value).forEach(([key, memberValue]) => {
         res[key] = this.processRawValue(memberValue);

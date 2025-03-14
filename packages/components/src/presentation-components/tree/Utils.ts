@@ -103,14 +103,14 @@ export function customizeTreeNodeItem(item: Partial<DelayLoadedTreeNodeItem>, no
     item.icon = node.imageId;
   }
 
-  if (node.isCheckboxVisible) {
+  if (hasCheckboxVisible(node) && node.isCheckboxVisible) {
     item.isCheckboxVisible = true;
 
-    if (node.isChecked) {
+    if (hasIsChecked(node) && node.isChecked) {
       item.checkBoxState = CheckBoxState.On;
     }
 
-    if (!node.isCheckboxEnabled) {
+    if (hasIsCheckboxEnabled(node) && !node.isCheckboxEnabled) {
       item.isCheckboxDisabled = true;
     }
   }
@@ -194,4 +194,21 @@ export function createInfoNode(parentNode: TreeNodeItem | undefined, message: st
     children: undefined,
     type: type ?? InfoTreeNodeItemType.Unset,
   };
+}
+
+// TODO: Remove these types after itwinjs-core 4.x is dropped
+type WithCheckboxVisible<T> = T & { isCheckboxVisible?: boolean };
+type WithIsChecked<T> = T & { isChecked?: boolean };
+type WithIsCheckboxEnabled<T> = T & { isCheckboxEnabled?: boolean };
+
+function hasCheckboxVisible<T extends object>(node: T): node is WithCheckboxVisible<T> {
+  return "isCheckboxVisible" in node;
+}
+
+function hasIsChecked<T extends object>(node: T): node is WithIsChecked<T> {
+  return "isChecked" in node;
+}
+
+function hasIsCheckboxEnabled<T extends object>(node: T): node is WithIsCheckboxEnabled<T> {
+  return "isCheckboxEnabled" in node;
 }

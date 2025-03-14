@@ -38,7 +38,7 @@
     "@opentelemetry/semantic-conventions": "^1.27.0",
     "@test-app/common": "workspace:*",
     "cross-env": "catalog:build-tools",
-    "electron": "^33.3.2",
+    "electron": "^35.0.0",
     "eslint": "catalog:build-tools",
     "inversify": "catalog:itwinjs-core",
     "reflect-metadata": "catalog:itwinjs-core",

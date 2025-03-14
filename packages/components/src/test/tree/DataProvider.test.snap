@@ -103,6 +103,13 @@ Array [
       "version": 2,
     },
     "label": PropertyRecord {
+      "autoExpand": undefined,
+      "description": undefined,
+      "extendedData": undefined,
+      "isDisabled": undefined,
+      "isMerged": undefined,
+      "isReadonly": undefined,
+      "links": undefined,
       "property": Object {
         "displayLabel": "Label",
         "name": "node_label",
@@ -138,6 +145,13 @@ Array [
       "version": 2,
     },
     "label": PropertyRecord {
+      "autoExpand": undefined,
+      "description": undefined,
+      "extendedData": undefined,
+      "isDisabled": undefined,
+      "isMerged": undefined,
+      "isReadonly": undefined,
+      "links": undefined,
       "property": Object {
         "displayLabel": "Label",
         "name": "node_label",

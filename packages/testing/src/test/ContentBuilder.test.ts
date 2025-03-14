@@ -18,6 +18,7 @@ import {
   Field,
   Item,
   KeySet,
+  LabelDefinition,
   PrimitiveTypeDescription,
   PropertyValueFormat,
   RegisteredRuleset,
@@ -72,15 +73,13 @@ function createItem({ rawValues, displayValues }: ItemValues) {
       displayValues[key] = "";
     }
   }
-  return new Item(
-    Object.keys(rawValues).map((key) => ({ className: "testClass", id: key })),
-    "Test class",
-    "",
-    undefined,
-    rawValues,
+  return new Item({
+    primaryKeys: Object.keys(rawValues).map((key) => ({ className: "testClass", id: key })),
+    label: LabelDefinition.fromLabelString("Test Class"),
     displayValues,
-    [],
-  );
+    values: rawValues,
+    mergedFieldNames: [],
+  });
 }
 
 async function getContent(items: ItemValues[], descriptor: Descriptor) {
@@ -124,9 +123,30 @@ const createContentDescriptor = () => {
     selectClasses: [],
     categories: [category],
     fields: [
-      new Field(category, "width", "width", createStringTypeDescription(), false, 1),
-      new Field(category, "title", "title", createStringTypeDescription(), false, 1),
-      new Field(category, "radius", "radius", createStringTypeDescription(), false, 1),
+      new Field({
+        category,
+        name: "width",
+        label: "Width",
+        type: createIntTypeDescription(),
+        isReadonly: false,
+        priority: 1,
+      }),
+      new Field({
+        category,
+        name: "title",
+        label: "title",
+        type: createStringTypeDescription(),
+        isReadonly: false,
+        priority: 1,
+      }),
+      new Field({
+        category,
+        name: "radius",
+        label: "radius",
+        type: createStringTypeDescription(),
+        isReadonly: false,
+        priority: 1,
+      }),
     ],
     contentFlags: 1,
   });
@@ -295,7 +315,17 @@ describe("ContentBuilder", () => {
         displayType: "",
         selectClasses: [],
         categories: [category],
-        fields: testValues.map((v) => new Field(category, v.name, v.name, v.type, false, 1)),
+        fields: testValues.map(
+          (v) =>
+            new Field({
+              category,
+              name: v.name,
+              label: v.name,
+              type: v.type,
+              isReadonly: false,
+              priority: 1,
+            }),
+        ),
         contentFlags: 1,
       });
       class TestDataProvider extends EmptyDataProvider {
