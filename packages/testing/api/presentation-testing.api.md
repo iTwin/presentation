@@ -118,6 +118,12 @@ export type NodeMappingFunc = (node: TreeNodeItem) => MappedNode;
 
 export { PresentationBackendProps }
 
+// @public @deprecated
+export enum PresentationManagerMode {
+    ReadOnly = 0,
+    ReadWrite = 1
+}
+
 // @public (undocumented)
 export interface PresentationTestingInitProps {
     backendHostProps?: IModelHostOptions;
