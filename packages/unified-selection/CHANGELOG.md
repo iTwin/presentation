@@ -1,5 +1,24 @@
 # @itwin/unified-selection
 
+## 1.4.0
+
+### Minor Changes
+
+- [#901](https://github.com/iTwin/presentation/pull/901): Export `SelectionScope` type to make it easier for consumers to define "active scope" type.
+
+  APIs that use this type:
+
+  - The `scope` prop of `computeSelection` function.
+  - Return type of `activeScopeProvider` callback prop of `enableUnifiedSelectionSyncWithIModel` function.
+
+- [#895](https://github.com/iTwin/presentation/pull/895): `createCachingHiliteSetProvider`: Added a `createHiliteSetProvider` prop to allow using custom hilite sets for given iModel selections.
+
+### Patch Changes
+
+- [#884](https://github.com/iTwin/presentation/pull/884): Fix `enableUnifiedSelectionSyncWithIModel` not properly syncing `SelectionSet` and `SelectionStorage` with 4.x `itwinjs-core`.
+
+  When the selection change was made by a tool in graphics view (through the `SelectionSet`), the `SelectionStorage` was updated correctly, but the `IModelConnection.hiliteSet` - wasn't. As a result, clearing selection through graphics view wouldn't clear the hilite set and keep the elements hilited.
+
 ## 1.3.0
 
 ### Minor Changes
