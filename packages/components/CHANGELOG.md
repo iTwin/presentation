@@ -1,5 +1,18 @@
 # Change Log - @itwin/presentation-components
 
+## 5.12.0
+
+### Minor Changes
+
+- [#902](https://github.com/iTwin/presentation/pull/902): Updated `PresentationTreeDataProvider` to correctly handle new errors thrown by `PresentationManager` in 5.x version.
+- [#902](https://github.com/iTwin/presentation/pull/902): Deprecated `IUnifiedSelectionComponent`. `SelectionStorage` from `@itwin/unified-selection` should be used directly instead.
+
+### Patch Changes
+
+- [#886](https://github.com/iTwin/presentation/pull/886): Fix package compatibility with `itwinjs-core` peer dependencies at version `4.x`.
+- Updated dependencies:
+  - @itwin/unified-selection@1.4.0
+
 ## 5.11.0
 
 ### Minor Changes
