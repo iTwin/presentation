@@ -81,11 +81,12 @@ async function getKindOfQuantity(schemas: SchemaContext, fullName: string) {
   if (!schema) {
     throw new Error(`Invalid schema "${schemaName}" specified in KoQ full name "${fullName}"`);
   }
-  const koq = await schema.getItem<KindOfQuantity>(koqName);
+  // TODO: replace with `schema.getItem(koqName, KindOfQuantity)` when itwinjs-core 4.x is dropped
+  const koq = await schema.getItem(koqName);
   if (!koq) {
     throw new Error(`Invalid kind of quantity "${koqName}" specified in KoQ full name "${fullName}" - it does not exist in schema "${schemaName}"`);
   }
-  return koq;
+  return koq as KindOfQuantity;
 }
 
 async function getFormatterSpec(unitsProvider: UnitsProvider, koq: KindOfQuantity, unitSystem?: UnitSystemKey) {

@@ -44,6 +44,7 @@ deprecated;function;isPresentationInstanceFilterConditionGroup
 public;function;isPresentationTreeNodeItem
 deprecated;function;isPresentationTreeNodeItem
 public;interface;IUnifiedSelectionComponent
+deprecated;interface;IUnifiedSelectionComponent
 beta;const;NavigationPropertyEditor
 deprecated;const;NavigationPropertyEditor
 public;function;NavigationPropertyEditorContextProvider

@@ -212,6 +212,7 @@ function useSelectionHandler({ imodel, selectionStorage, tableName }: { imodel: 
         }
       });
     }
+    // eslint-disable-next-line @typescript-eslint/no-deprecated
     return Presentation.selection.selectionChange.addListener((args) => {
       if (imodel === args.imodel && args.source !== tableName) {
         selectionChange.raiseEvent(args.level);
@@ -223,7 +224,8 @@ function useSelectionHandler({ imodel, selectionStorage, tableName }: { imodel: 
     async (args: { level: number }): Promise<SelectableInstanceKey[]> => {
       return selectionStorage
         ? loadInstanceKeysFromSelectables(selectionStorage.getSelection({ imodelKey: createIModelKey(imodel), level: args.level }))
-        : loadInstanceKeysFromKeySet(Presentation.selection.getSelection(imodel, args.level));
+        : // eslint-disable-next-line @typescript-eslint/no-deprecated
+          loadInstanceKeysFromKeySet(Presentation.selection.getSelection(imodel, args.level));
     },
     [imodel, selectionStorage],
   );
@@ -237,7 +239,8 @@ function useSelectionHandler({ imodel, selectionStorage, tableName }: { imodel: 
             level: args.level,
             selectables: args.selectables,
           })
-        : Presentation.selection.replaceSelection(args.source, imodel, args.selectables, args.level);
+        : // eslint-disable-next-line @typescript-eslint/no-deprecated
+          Presentation.selection.replaceSelection(args.source, imodel, args.selectables, args.level);
     },
     [imodel, selectionStorage],
   );

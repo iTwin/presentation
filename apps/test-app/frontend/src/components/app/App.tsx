@@ -25,10 +25,9 @@ import { IModelApp, IModelConnection } from "@itwin/core-frontend";
 import { UnitSystemKey } from "@itwin/core-quantity";
 import { ThemeProvider, ToggleSwitch } from "@itwin/itwinui-react";
 import { SchemaMetadataContextProvider } from "@itwin/presentation-components";
-import { createECSchemaProvider, createECSqlQueryExecutor } from "@itwin/presentation-core-interop";
-import { HiliteSet, Presentation, SelectionChangeEventArgs } from "@itwin/presentation-frontend";
+import { createECSchemaProvider, createECSqlQueryExecutor, createIModelKey } from "@itwin/presentation-core-interop";
 import { createCachingECClassHierarchyInspector } from "@itwin/presentation-shared";
-import { enableUnifiedSelectionSyncWithIModel } from "@itwin/unified-selection";
+import { createHiliteSetProvider, enableUnifiedSelectionSyncWithIModel, HiliteSet } from "@itwin/unified-selection";
 import { UnifiedSelectionContextProvider } from "@itwin/unified-selection-react";
 import { MyAppFrontend, MyAppSettings } from "../../api/MyAppFrontend";
 import { IModelSelector } from "../imodel-selector/IModelSelector";
@@ -62,7 +61,11 @@ export function App() {
 
   const onRulesetSelected = (rulesetId: string | undefined) => {
     if (state.imodel) {
-      Presentation.selection.clearSelection("onRulesetChanged", state.imodel, 0);
+      MyAppFrontend.selectionStorage.clearSelection({
+        imodelKey: createIModelKey(state.imodel),
+        source: "onRulesetChanged",
+        level: 0,
+      });
     }
 
     setState((prev) => ({
@@ -84,9 +87,9 @@ export function App() {
 
   useEffect(() => {
     const cancel = new Subject<void>();
-    const removeListener = Presentation.selection.selectionChange.addListener(async (args: SelectionChangeEventArgs) => {
+    const removeListener = MyAppFrontend.selectionStorage.selectionChangeEvent.addListener(async (args) => {
       cancel.next();
-      if (!IModelApp.viewManager.selectedView) {
+      if (!IModelApp.viewManager.selectedView || !state.imodel) {
         // no viewport to zoom in
         return;
       }
@@ -96,9 +99,20 @@ export function App() {
         return;
       }
 
+      if (args.imodelKey !== createIModelKey(state.imodel)) {
+        return;
+      }
+
       // determine what the viewport is hiliting
       const selectedView = IModelApp.viewManager.selectedView;
-      from(Presentation.selection.getHiliteSetIterator(args.imodel))
+      const schemas = MyAppFrontend.getSchemaContext(state.imodel);
+      const hiliteSetProvider = createHiliteSetProvider({
+        imodelAccess: {
+          ...createECSqlQueryExecutor(state.imodel),
+          ...createCachingECClassHierarchyInspector({ schemaProvider: createECSchemaProvider(schemas) }),
+        },
+      });
+      from(hiliteSetProvider.getHiliteSet({ selectables: MyAppFrontend.selectionStorage.getSelection({ imodelKey: createIModelKey(state.imodel) }) }))
         .pipe(
           takeUntil(cancel),
           reduce<HiliteSet, { elements: Id64String[] }>(
@@ -122,7 +136,7 @@ export function App() {
       cancel.next();
       removeListener();
     };
-  }, []);
+  }, [state.imodel]);
 
   return (
     <ThemeProvider theme="os">

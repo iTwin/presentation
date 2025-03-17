@@ -24,7 +24,6 @@ import { ModelProps } from '@itwin/core-common';
 import { Omit as Omit_2 } from '@itwin/presentation-common';
 import { PageOptions } from '@itwin/presentation-common';
 import { PresentationManagerProps as PresentationBackendProps } from '@itwin/presentation-backend';
-import { PresentationManagerMode } from '@itwin/presentation-backend';
 import { PresentationProps } from '@itwin/presentation-frontend';
 import { PropertyRecord } from '@itwin/appui-abstract';
 import { RelationshipProps } from '@itwin/core-common';
@@ -119,7 +118,11 @@ export type NodeMappingFunc = (node: TreeNodeItem) => MappedNode;
 
 export { PresentationBackendProps }
 
-export { PresentationManagerMode }
+// @public @deprecated
+export enum PresentationManagerMode {
+    ReadOnly = 0,
+    ReadWrite = 1
+}
 
 // @public (undocumented)
 export interface PresentationTestingInitProps {

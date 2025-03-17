@@ -4,6 +4,8 @@
  *--------------------------------------------------------------------------------------------*/
 
 import "./index.css";
+// Need this because of https://github.com/microsoft/TypeScript/issues/60556
+import "@itwin/presentation-shared";
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { UiFramework } from "@itwin/appui-react";
@@ -12,8 +14,6 @@ import { BentleyCloudRpcManager } from "@itwin/core-common";
 import { ElectronApp } from "@itwin/core-electron/lib/cjs/ElectronFrontend";
 import { IModelApp, IModelAppOptions, IModelConnection } from "@itwin/core-frontend";
 import { ITwinLocalization } from "@itwin/core-i18n";
-// Need this because of https://github.com/microsoft/TypeScript/issues/60556
-import "@itwin/presentation-shared";
 // __PUBLISH_EXTRACT_START__ Presentation.Frontend.Imports
 import { createFavoritePropertiesStorage, DefaultFavoritePropertiesStorageTypes, Presentation } from "@itwin/presentation-frontend";
 // __PUBLISH_EXTRACT_END__
@@ -78,10 +78,6 @@ async function initializePresentation() {
       selectionStorage: MyAppFrontend.selectionStorage,
     },
   });
-  // __PUBLISH_EXTRACT_END__
-
-  // __PUBLISH_EXTRACT_START__ Presentation.Frontend.SetSelectionScope
-  Presentation.selection.scopes.activeScope = "top-assembly";
   // __PUBLISH_EXTRACT_END__
 
   // clear selection storage when iModel is closed

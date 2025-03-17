@@ -150,6 +150,7 @@ describe("Unified selection", () => {
 
           expect(Selectables.isEmpty(selectionStorage.getSelection({ imodelKey: imodel.key }))).to.be.true;
 
+          // eslint-disable-next-line @typescript-eslint/no-deprecated
           Presentation.selection.addToSelection("test", imodel, new KeySet([keys.elementKey]));
           await waitFor(() => {
             expect(Selectables.size(selectionStorage.getSelection({ imodelKey: imodel.key }))).to.eq(1);

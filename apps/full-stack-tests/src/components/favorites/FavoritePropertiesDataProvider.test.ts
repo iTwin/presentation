@@ -25,7 +25,7 @@ describe("FavoritePropertiesDataProvider", async () => {
   });
 
   beforeEach(() => {
-    provider = new FavoritePropertiesDataProvider({ ruleset: DEFAULT_PROPERTY_GRID_RULESET });
+    provider = new FavoritePropertiesDataProvider({ ruleset: DEFAULT_PROPERTY_GRID_RULESET, activeScopeProvider: () => ({ id: "element" }) });
   });
 
   after(async () => {
@@ -52,7 +52,6 @@ describe("FavoritePropertiesDataProvider", async () => {
       field = await propertyProvider.getFieldByPropertyDescription(record.property);
       await Presentation.favoriteProperties.add(field!, imodel, scope);
 
-      Presentation.selection.scopes.activeScope = "element";
       const tooltipData = await provider.getData(imodel, "0x38");
 
       expect(tooltipData.categories.length).to.eq(1);
