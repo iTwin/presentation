@@ -18,6 +18,7 @@ import { JSX as JSX_2 } from 'react/jsx-runtime';
 import { Props } from '@itwin/presentation-shared';
 import { PropsWithChildren } from 'react';
 import { ReactElement } from 'react';
+import { ReactNode } from 'react';
 import { RefAttributes } from 'react';
 import { SelectionStorage } from '@itwin/unified-selection';
 import { Tree } from '@itwin/itwinui-react/bricks';
@@ -206,7 +207,7 @@ export const TreeNodeRenderer: ForwardRefExoticComponent<TreeNodeRendererProps &
 // @alpha (undocumented)
 interface TreeNodeRendererOwnProps {
     actions?: Array<(node: PresentationHierarchyNode) => TreeItemAction>;
-    getDecorations?: Array<(node: PresentationHierarchyNode) => ReactElement | undefined>;
+    getDecorations?: (node: PresentationHierarchyNode) => ReactNode;
     getLabel?: (node: PresentationHierarchyNode) => ReactElement | undefined;
     getSublabel?: (node: PresentationHierarchyNode) => ReactElement | undefined;
     node: FlatTreeNode;
