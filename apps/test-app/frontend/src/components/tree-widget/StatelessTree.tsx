@@ -8,6 +8,7 @@ import { debounceTime, Subject } from "rxjs";
 import { BeEvent } from "@itwin/core-bentley";
 import { IModelConnection } from "@itwin/core-frontend";
 import { Button, Flex, ProgressRadial, SearchBox, Text, ToggleSwitch } from "@itwin/itwinui-react";
+import { Icon } from "@itwin/itwinui-react-v5/bricks";
 import { ClassInfo, DefaultContentDisplayTypes, Descriptor, InstanceKey, KeySet } from "@itwin/presentation-common";
 import {
   PresentationInstanceFilter,
@@ -177,9 +178,9 @@ function Tree({ imodel, imodelAccess, height, width }: { imodel: IModelConnectio
         rootNodes={rootNodes ?? []}
         reloadTree={reloadTree}
         onFilterClick={setFilteringOptions}
-        getIcon={getIcon}
         actions={[filterAction]}
         selectionMode={"extended"}
+        getDecorations={(node) => <Icon href={getIcon(node)} />}
       />
     );
   };

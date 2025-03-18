@@ -11,6 +11,7 @@ import {
   LegacyRef,
   MutableRefObject,
   ReactElement,
+  ReactNode,
   Ref,
   RefAttributes,
   useCallback,
@@ -33,8 +34,6 @@ type TreeNodeProps = ComponentPropsWithoutRef<typeof Tree.Item>;
 export interface TreeNodeRendererOwnProps {
   /** Node that is rendered. */
   node: FlatTreeNode;
-  /** Returns an icon or icon href for a given node. */
-  getIcon?: (node: PresentationHierarchyNode) => string | ReactElement | undefined;
   /** Returns a label for a given node. */
   getLabel?: (node: PresentationHierarchyNode) => ReactElement | undefined;
   /** Returns sublabel for a given node. */
@@ -47,12 +46,17 @@ export interface TreeNodeRendererOwnProps {
    * Actions for tree item.
    */
   actions?: Array<(node: PresentationHierarchyNode) => TreeItemAction>;
+  /**
+   * Used to render elements between expander and label.
+   * E.g. icons, color picker, etc.
+   */
+  getDecorations?: (node: PresentationHierarchyNode) => ReactNode;
 }
 
 /** @alpha */
 type TreeNodeRendererProps = Pick<ReturnType<typeof useTree>, "expandNode" | "isNodeSelected"> &
   Partial<Pick<ReturnType<typeof useTree>, "getHierarchyLevelDetails">> &
-  Omit<TreeNodeProps, "actions" | "aria-level" | "aria-posinset" | "aria-setsize" | "label" | "icon" | "expanded" | "selected"> &
+  Omit<TreeNodeProps, "actions" | "aria-level" | "aria-posinset" | "aria-setsize" | "label" | "icon" | "expanded" | "selected" | "unstable_decorations"> &
   TreeNodeRendererOwnProps &
   TreeErrorItemProps;
 
@@ -68,7 +72,6 @@ export const TreeNodeRenderer: ForwardRefExoticComponent<TreeNodeRendererProps &
     {
       node,
       expandNode,
-      getIcon,
       getLabel,
       getSublabel,
       onFilterClick,
@@ -78,6 +81,7 @@ export const TreeNodeRenderer: ForwardRefExoticComponent<TreeNodeRendererProps &
       getHierarchyLevelDetails,
       reloadTree,
       actions,
+      getDecorations,
       ...treeItemProps
     },
     forwardedRef,
@@ -154,8 +158,8 @@ export const TreeNodeRenderer: ForwardRefExoticComponent<TreeNodeRendererProps &
             onNodeKeyDown?.(node, !selected, event);
           }
         }}
-        icon={getIcon ? getIcon(node) : undefined}
         actions={getActions()}
+        unstable_decorations={getDecorations && getDecorations(node)}
       />
     );
   },
