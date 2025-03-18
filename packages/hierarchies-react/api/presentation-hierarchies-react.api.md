@@ -206,7 +206,7 @@ export const TreeNodeRenderer: ForwardRefExoticComponent<TreeNodeRendererProps &
 // @alpha (undocumented)
 interface TreeNodeRendererOwnProps {
     actions?: Array<(node: PresentationHierarchyNode) => TreeItemAction>;
-    getIcon?: (node: PresentationHierarchyNode) => string | ReactElement | undefined;
+    getDecorations?: Array<(node: PresentationHierarchyNode) => ReactElement | undefined>;
     getLabel?: (node: PresentationHierarchyNode) => ReactElement | undefined;
     getSublabel?: (node: PresentationHierarchyNode) => ReactElement | undefined;
     node: FlatTreeNode;
@@ -215,7 +215,7 @@ interface TreeNodeRendererOwnProps {
 }
 
 // @alpha (undocumented)
-type TreeNodeRendererProps = Pick<ReturnType<typeof useTree>, "expandNode" | "isNodeSelected"> & Partial<Pick<ReturnType<typeof useTree>, "getHierarchyLevelDetails">> & Omit<TreeNodeProps, "actions" | "aria-level" | "aria-posinset" | "aria-setsize" | "label" | "icon" | "expanded" | "selected"> & TreeNodeRendererOwnProps & TreeErrorItemProps;
+type TreeNodeRendererProps = Pick<ReturnType<typeof useTree>, "expandNode" | "isNodeSelected"> & Partial<Pick<ReturnType<typeof useTree>, "getHierarchyLevelDetails">> & Omit<TreeNodeProps, "actions" | "aria-level" | "aria-posinset" | "aria-setsize" | "label" | "icon" | "expanded" | "selected" | "unstable_decorations"> & TreeNodeRendererOwnProps & TreeErrorItemProps;
 
 // @alpha (undocumented)
 type TreeNodeRendererProps_2 = ComponentPropsWithoutRef<typeof TreeNodeRenderer>;
