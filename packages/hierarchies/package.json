@@ -48,9 +48,9 @@
     "validate-markdowns": "node ../../scripts/validateMarkdowns.js README.md ./learning/**/*.md"
   },
   "dependencies": {
-    "@itwin/core-bentley": "catalog:itwinjs-core",
-    "@itwin/core-common": "catalog:itwinjs-core",
-    "@itwin/core-geometry": "catalog:itwinjs-core",
+    "@itwin/core-bentley": "^4.10.10",
+    "@itwin/core-common": "^4.10.10",
+    "@itwin/core-geometry": "^4.10.10",
     "@itwin/presentation-shared": "workspace:^",
     "natural-compare-lite": "^1.4.0",
     "rxjs": "catalog:rxjs"

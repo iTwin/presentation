@@ -56,7 +56,7 @@
     "validate-markdowns": "node ../../scripts/validateMarkdowns.js README.md"
   },
   "dependencies": {
-    "@itwin/core-bentley": "catalog:itwinjs-core",
+    "@itwin/core-bentley": "^4.10.10",
     "@itwin/itwinui-icons-react": "catalog:itwinui",
     "@itwin/itwinui-illustrations-react": "catalog:itwinui",
     "@itwin/presentation-hierarchies": "workspace:^",

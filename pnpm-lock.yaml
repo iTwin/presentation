@@ -1306,14 +1306,14 @@ importers:
   packages/hierarchies:
     dependencies:
       '@itwin/core-bentley':
-        specifier: catalog:itwinjs-core
-        version: 5.0.0-dev.78
+        specifier: ^4.10.10
+        version: 4.10.10
       '@itwin/core-common':
-        specifier: catalog:itwinjs-core
-        version: 5.0.0-dev.78(@itwin/core-bentley@5.0.0-dev.78)(@itwin/core-geometry@5.0.0-dev.78)
+        specifier: ^4.10.10
+        version: 4.10.10(@itwin/core-bentley@4.10.10)(@itwin/core-geometry@4.10.10)
       '@itwin/core-geometry':
-        specifier: catalog:itwinjs-core
-        version: 5.0.0-dev.78
+        specifier: ^4.10.10
+        version: 4.10.10
       '@itwin/presentation-shared':
         specifier: workspace:^
         version: link:../shared
@@ -1394,8 +1394,8 @@ importers:
   packages/hierarchies-react:
     dependencies:
       '@itwin/core-bentley':
-        specifier: catalog:itwinjs-core
-        version: 5.0.0-dev.78
+        specifier: ^4.10.10
+        version: 4.10.10
       '@itwin/itwinui-icons-react':
         specifier: catalog:itwinui
         version: 2.9.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -1636,8 +1636,8 @@ importers:
   packages/shared:
     dependencies:
       '@itwin/core-bentley':
-        specifier: catalog:itwinjs-core
-        version: 5.0.0-dev.78
+        specifier: ^4.10.10
+        version: 4.10.10
     devDependencies:
       '@itwin/build-tools':
         specifier: catalog:build-tools
@@ -1878,8 +1878,8 @@ importers:
   packages/unified-selection:
     dependencies:
       '@itwin/core-bentley':
-        specifier: catalog:itwinjs-core
-        version: 5.0.0-dev.78
+        specifier: ^4.10.10
+        version: 4.10.10
       '@itwin/presentation-shared':
         specifier: workspace:^
         version: link:../shared
@@ -2800,11 +2800,17 @@ packages:
       '@opentelemetry/api':
         optional: true
 
-  '@itwin/core-bentley@4.10.1':
-    resolution: {integrity: sha512-gMP8VzCkzEVjH7GMxjnH9l5M3MfCnJbEzulhFasYjZ/Ox99Zsoi2pwMA517chAxjBqgJV1XkQ+HpaR4U5axB0g==}
+  '@itwin/core-bentley@4.10.10':
+    resolution: {integrity: sha512-LVTAbXrRDhQplk2w2MQXjsLMYwSMI8tMFbSzFol8SlvnY72k/O9kzMbJopK1QSn5xYIUZDUWYz7U8jgqDYQnNg==}
 
   '@itwin/core-bentley@5.0.0-dev.78':
     resolution: {integrity: sha512-Nik96vBntVRxBlQdYbsVtOMWH2ZZHYZlFTI4RayFLpiQYn32c+Ye3NKJ2wCJTl7h45Q/M0PLkCqbTHY7U2O4lQ==}
+
+  '@itwin/core-common@4.10.10':
+    resolution: {integrity: sha512-Wh4LH/RdzyMOVaFS0U1OXz02FShVgN/0oOTkcEEFJSeABmdoieLyauTQZQ2Zz5tul9OFPeuV2USmweOK7j7pHA==}
+    peerDependencies:
+      '@itwin/core-bentley': ^4.10.10
+      '@itwin/core-geometry': ^4.10.10
 
   '@itwin/core-common@5.0.0-dev.78':
     resolution: {integrity: sha512-wbbwIk3WGHGjsn1nWMJMTfCNf2I4+UPAg4zJMq53rszecH8T6j+t0yBBdc1p8+xfHcGSFd8JvUZ1jdEeGd62Vg==}
@@ -2831,6 +2837,9 @@ packages:
       '@itwin/core-geometry': 5.0.0-dev.78
       '@itwin/core-orbitgt': 5.0.0-dev.78
       '@itwin/core-quantity': 5.0.0-dev.78
+
+  '@itwin/core-geometry@4.10.10':
+    resolution: {integrity: sha512-6cQnXcUmqYskVHwxumpp4HAbVlvO+uyy3nKhzQjK2TWzRnXft4N65T6l7z4WsiA5jfksPeZBz7+VNLxeA8lCdA==}
 
   '@itwin/core-geometry@5.0.0-dev.78':
     resolution: {integrity: sha512-nxcOmDjTLQJpcLyPcHaVcETM4aBd0K6EeoqO2JeqzmZJRsuMwLikqs5t4zzzo6jvldqQSD9zLp/oVyCqPr5EzQ==}
@@ -10549,9 +10558,16 @@ snapshots:
       - supports-color
       - utf-8-validate
 
-  '@itwin/core-bentley@4.10.1': {}
+  '@itwin/core-bentley@4.10.10': {}
 
   '@itwin/core-bentley@5.0.0-dev.78': {}
+
+  '@itwin/core-common@4.10.10(@itwin/core-bentley@4.10.10)(@itwin/core-geometry@4.10.10)':
+    dependencies:
+      '@itwin/core-bentley': 4.10.10
+      '@itwin/core-geometry': 4.10.10
+      flatbuffers: 1.12.0
+      js-base64: 3.7.7
 
   '@itwin/core-common@5.0.0-dev.78(@itwin/core-bentley@5.0.0-dev.78)(@itwin/core-geometry@5.0.0-dev.78)':
     dependencies:
@@ -10594,6 +10610,11 @@ snapshots:
       - encoding
       - inversify
       - reflect-metadata
+
+  '@itwin/core-geometry@4.10.10':
+    dependencies:
+      '@itwin/core-bentley': 4.10.10
+      flatbuffers: 1.12.0
 
   '@itwin/core-geometry@5.0.0-dev.78':
     dependencies:
@@ -10778,11 +10799,11 @@ snapshots:
 
   '@itwin/presentation-shared@1.2.0':
     dependencies:
-      '@itwin/core-bentley': 4.10.1
+      '@itwin/core-bentley': 4.10.10
 
   '@itwin/unified-selection@1.2.1':
     dependencies:
-      '@itwin/core-bentley': 4.10.1
+      '@itwin/core-bentley': 4.10.10
       '@itwin/presentation-shared': 1.2.0
       rxjs: 7.8.1
       rxjs-for-await: 1.0.0(rxjs@7.8.1)

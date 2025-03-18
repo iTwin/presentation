@@ -51,7 +51,7 @@
     "validate-markdowns": "node ../../scripts/validateMarkdowns.js README.md ./learning/**/*.md"
   },
   "dependencies": {
-    "@itwin/core-bentley": "catalog:itwinjs-core",
+    "@itwin/core-bentley": "^4.10.10",
     "@itwin/presentation-shared": "workspace:^",
     "rxjs": "catalog:rxjs",
     "rxjs-for-await": "catalog:rxjs"
