@@ -127,7 +127,13 @@ function Tree({ imodelAccess, height, width }: { imodelAccess: IModelAccess; hei
 
     return (
       <Flex.Item alignSelf="flex-start" style={{ width: "100%", overflow: "auto" }}>
-        <TreeRenderer rootNodes={rootNodes ?? []} {...treeProps} reloadTree={reloadTree} getIcon={getIcon} selectionMode={"extended"} />
+        <TreeRenderer
+          rootNodes={rootNodes ?? []}
+          {...treeProps}
+          reloadTree={reloadTree}
+          getDecorations={[(node) => getIcon(node)]}
+          selectionMode={"extended"}
+        />
       </Flex.Item>
     );
   };
