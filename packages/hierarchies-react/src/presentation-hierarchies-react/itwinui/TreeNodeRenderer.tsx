@@ -47,8 +47,7 @@ export interface TreeNodeRendererOwnProps {
    */
   actions?: Array<(node: PresentationHierarchyNode) => TreeItemAction>;
   /**
-   * Used to display elements between expander and label.
-   * Elements are arranged from left to right, with the last array element positioned on the right.
+   * Used to render elements between expander and label.
    * E.g. icons, color picker, etc.
    */
   getDecorations?: (node: PresentationHierarchyNode) => ReactNode;
