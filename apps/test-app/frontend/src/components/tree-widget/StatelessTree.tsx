@@ -180,7 +180,7 @@ function Tree({ imodel, imodelAccess, height, width }: { imodel: IModelConnectio
         onFilterClick={setFilteringOptions}
         actions={[filterAction]}
         selectionMode={"extended"}
-        getDecorations={[(node) => <Icon href={getIcon(node)} />]}
+        getDecorations={(node) => <Icon href={getIcon(node)} />}
       />
     );
   };

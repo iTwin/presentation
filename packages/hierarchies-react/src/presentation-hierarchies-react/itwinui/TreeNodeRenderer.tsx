@@ -11,6 +11,7 @@ import {
   LegacyRef,
   MutableRefObject,
   ReactElement,
+  ReactNode,
   Ref,
   RefAttributes,
   useCallback,
@@ -50,7 +51,7 @@ export interface TreeNodeRendererOwnProps {
    * Elements are arranged from left to right, with the last array element positioned on the right.
    * E.g. icons, color picker, etc.
    */
-  getDecorations?: Array<(node: PresentationHierarchyNode) => ReactElement | undefined>;
+  getDecorations?: (node: PresentationHierarchyNode) => ReactNode;
 }
 
 /** @alpha */
@@ -159,7 +160,7 @@ export const TreeNodeRenderer: ForwardRefExoticComponent<TreeNodeRendererProps &
           }
         }}
         actions={getActions()}
-        unstable_decorations={getDecorations && getDecorations.map((getDecoration) => getDecoration(node))}
+        unstable_decorations={getDecorations && getDecorations(node)}
       />
     );
   },

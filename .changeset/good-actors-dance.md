@@ -14,7 +14,7 @@ function myGetIcon(node: PresentationHierarchyNode): React.ReactElement {
 <TreeNodeRenderer getIcon={myGetIcon} />
 
 // now:
-<TreeNodeRenderer getDecorations={[myGetIcon]} />
+<TreeNodeRenderer getDecorations={myGetIcon} />
 
 // previously, when `getIcon` returned an icon URI:
 function myGetIconUri(node: PresentationHierarchyNode): string {
@@ -23,5 +23,5 @@ function myGetIconUri(node: PresentationHierarchyNode): string {
 <TreeNodeRenderer getIcon={myGetIconUri} />
 
 // now:
-<TreeNodeRenderer getDecorations={[(node) => <Icon href={myGetIconUri(node)} />]} />
+<TreeNodeRenderer getDecorations={(node) => <Icon href={myGetIconUri(node)} />} />
 ```
