@@ -2,4 +2,4 @@
 "@itwin/presentation-hierarchies-react": patch
 ---
 
-Replaced `getIcons` with `getDecorations`. `getDecorations` takes in an array of callbacks that return an element, previously used `getIcons` should be used with kiwi provided `<Icon />` component.
+Replaced `getIcons` with `getDecorations`. `getDecorations` takes in an array of callbacks  each returning an element. Previously provided `getIcons` can be reused with kiwi `<Icon />` component to provide icons to the tree.
