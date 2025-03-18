@@ -159,7 +159,7 @@ export const TreeNodeRenderer: ForwardRefExoticComponent<TreeNodeRendererProps &
           }
         }}
         actions={getActions()}
-        unstable_decorations={getDecorations && [getDecorations.map((getDecoration) => getDecoration(node))]}
+        unstable_decorations={getDecorations && getDecorations.map((getDecoration) => getDecoration(node))}
       />
     );
   },
