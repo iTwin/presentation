@@ -29,7 +29,7 @@ export function isPlaceholderNode(node: FlatTreeNode): node is PlaceholderNode {
 
 /** @alpha */
 export function flattenNodes(rootNodes: PresentationTreeNode[]) {
-  return getFlatNodes(rootNodes, 0);
+  return getFlatNodes(rootNodes, 1);
 }
 
 function getFlatNodes(nodes: PresentationTreeNode[], level: number) {
