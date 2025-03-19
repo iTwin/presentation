@@ -1,5 +1,15 @@
 # @itwin/presentation-hierarchies-react
 
+## 1.6.4
+
+### Patch Changes
+
+- [#909](https://github.com/iTwin/presentation/pull/909): Do not use `dev` versions of `@itwin/*` packages.
+- Updated dependencies:
+  - @itwin/unified-selection@1.4.1
+  - @itwin/presentation-hierarchies@1.4.2
+  - @itwin/presentation-shared@1.2.1
+
 ## 1.6.3
 
 ### Patch Changes

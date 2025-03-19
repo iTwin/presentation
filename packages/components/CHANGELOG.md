@@ -1,5 +1,14 @@
 # Change Log - @itwin/presentation-components
 
+## 5.12.1
+
+### Patch Changes
+
+- Updated dependencies:
+  - @itwin/unified-selection@1.4.1
+  - @itwin/presentation-shared@1.2.1
+  - @itwin/presentation-core-interop@1.3.1
+
 ## 5.12.0
 
 ### Minor Changes

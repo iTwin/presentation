@@ -1,5 +1,11 @@
 # @itwin/presentation-shared
 
+## 1.2.1
+
+### Patch Changes
+
+- [#909](https://github.com/iTwin/presentation/pull/909): Do not use `dev` versions of `@itwin/*` packages.
+
 ## 1.2.0
 
 ### Minor Changes
