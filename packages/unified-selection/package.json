@@ -1,6 +1,6 @@
 {
   "name": "@itwin/unified-selection",
-  "version": "1.4.0",
+  "version": "1.4.1",
   "description": "Package for managing unified selection in iTwin.js applications.",
   "license": "MIT",
   "repository": {
