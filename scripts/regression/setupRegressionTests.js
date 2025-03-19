@@ -143,7 +143,7 @@ function parseWorkspaceFile(workspaceRoot) {
   }
 
   // list of packages from `itwinjs-core`
-  const corePackages = Object.keys(workspace.catalogs["itwinjs-core"]).filter((dep) => dep.startsWith("@itwin"));
+  const corePackages = Object.keys(workspace.catalogs["itwinjs-core-dev"]).filter((dep) => dep.startsWith("@itwin"));
   // list of packages from `appui`
   const uiPackages = Object.keys(workspace.catalogs["appui"]).filter((dep) => dep.startsWith("@itwin"));
   return { corePackages, uiPackages };
