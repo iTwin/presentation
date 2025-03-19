@@ -22,9 +22,9 @@
     "./node-hooks/ignore-styles": "./node-hooks/ignore-styles.cjs"
   },
   "devDependencies": {
-    "@itwin/core-bentley": "catalog:itwinjs-core",
-    "@itwin/core-common": "catalog:itwinjs-core",
-    "@itwin/core-geometry": "catalog:itwinjs-core",
+    "@itwin/core-bentley": "catalog:itwinjs-core-dev",
+    "@itwin/core-common": "catalog:itwinjs-core-dev",
+    "@itwin/core-geometry": "catalog:itwinjs-core-dev",
     "@itwin/eslint-plugin": "catalog:build-tools",
     "@types/node": "catalog:build-tools",
     "eslint": "catalog:build-tools",

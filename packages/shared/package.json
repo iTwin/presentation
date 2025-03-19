@@ -45,7 +45,7 @@
     "validate-markdowns": "node ../../scripts/validateMarkdowns.js README.md"
   },
   "dependencies": {
-    "@itwin/core-bentley": "^4.10.10"
+    "@itwin/core-bentley": "catalog:itwinjs-core"
   },
   "devDependencies": {
     "@itwin/build-tools": "catalog:build-tools",
