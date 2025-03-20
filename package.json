@@ -4,7 +4,7 @@
   "repository": {
     "url": "https://github.com/iTwin/presentation.git"
   },
-  "packageManager": "pnpm@9.12.2",
+  "packageManager": "pnpm@10.6.5",
   "scripts": {
     "start:web": "run-p --silent start:frontend start:web-backend",
     "start:electron": "run-p --silent start:frontend start:electron-backend",
