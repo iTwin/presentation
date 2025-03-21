@@ -19,6 +19,10 @@ resources:
       name: iTwin/itwinjs-core
       ref: refs/heads/master
 
+variables:
+  - name: pnpm_config_cache
+    value: $(Pipeline.Workspace)/.pnpm-store
+
 stages:
   - stage: Check_Changes
     condition: eq(variables['Build.Reason'], 'PullRequest')
@@ -96,14 +100,26 @@ stages:
           - checkout: self
             clean: true
 
-          - task: NodeTool@0
-            displayName: Use Node 20
+          - task: UseNode@1
+            displayName: "Use Node 22"
             inputs:
-              versionSpec: 20
-              checkLatest: true
+              version: 22
 
-          - script: npm install -g pnpm@9.12.2
-            displayName: Install pnpm
+          - task: Cache@2
+              displayName: Cache pnpm
+              inputs:
+                key: 'pnpm | "$(Agent.OS)" | pnpm-lock.yaml'
+                path: $(pnpm_config_cache)
+
+          - script: |
+              corepack enable
+            displayName: "Enable corepack"
+
+          - script: |
+              pnpm config set store-dir $(pnpm_config_cache)
+            displayName: "Setup pnpm"
+            env:
+              COREPACK_INTEGRITY_KEYS: 0
 
           - script: pnpm install
             displayName: Run 'pnpm install'
