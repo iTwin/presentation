@@ -16,7 +16,7 @@ import {
 } from "../../presentation-components/instance-filter-builder/PresentationFilterBuilder.js";
 import { createTestECClassInfo, stubDOMMatrix, stubGetBoundingClientRect, stubRaf } from "../_helpers/Common.js";
 import { createTestCategoryDescription, createTestContentDescriptor, createTestPropertiesContentField } from "../_helpers/Content.js";
-import { render, waitFor, waitForElement } from "../TestUtils.js";
+import { render, waitFor, waitForElement, within } from "../TestUtils.js";
 
 describe("PresentationInstanceFilter", () => {
   stubRaf();
@@ -184,7 +184,7 @@ describe("PresentationInstanceFilter", () => {
     await user.click(expander);
 
     // deselect class item from dropdown
-    const classItem = getByRole("option", { name: classInfo2.label });
+    const classItem = within(getByRole("listbox", { hidden: true })).getByText(classInfo2.label);
     await user.click(classItem);
 
     // assert that filtering rule was cleared
