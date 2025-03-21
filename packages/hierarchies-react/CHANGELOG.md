@@ -1,5 +1,11 @@
 # @itwin/presentation-hierarchies-react
 
+## 2.0.0-alpha.10
+
+### Patch Changes
+
+- [#913](https://github.com/iTwin/presentation/pull/913): Removed outline showed after node expander is clicked.
+
 ## 2.0.0-alpha.9
 
 ### Patch Changes
