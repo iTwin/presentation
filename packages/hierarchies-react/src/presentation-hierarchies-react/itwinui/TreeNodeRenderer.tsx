@@ -3,7 +3,6 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import "./TreeNodeRenderer.css";
 import {
   ComponentPropsWithoutRef,
   forwardRef,
@@ -137,7 +136,6 @@ export const TreeNodeRenderer: ForwardRefExoticComponent<TreeNodeRendererProps &
     return (
       <Tree.Item
         {...treeItemProps}
-        className={"presentation-hierarchies-node"}
         ref={ref}
         aria-level={node.level}
         aria-posinset={node.posInLevel}
