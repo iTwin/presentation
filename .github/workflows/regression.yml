@@ -15,7 +15,7 @@ jobs:
       - name: Install pnpm
         uses: pnpm/action-setup@v3
         with:
-          version: 9
+          version: 10.6.5
 
       - name: Use Node.js 22
         uses: actions/setup-node@v4
@@ -72,7 +72,7 @@ jobs:
       - name: Install pnpm
         uses: pnpm/action-setup@v3
         with:
-          version: 9
+          version: 10.6.5
 
       - name: Use Node.js 22
         uses: actions/setup-node@v4
@@ -99,4 +99,4 @@ jobs:
         run: pnpm lage build --to presentation-full-stack-tests --grouped --continue
 
       - name: Run full stack tests
-        run: pnpm test --filter presentation-full-stack-tests
+        run: pnpm --filter presentation-full-stack-tests test

@@ -7,11 +7,9 @@
 // setup chai
 import * as chai from "chai";
 import chaiJestSnapshot from "chai-jest-snapshot";
-import chaiSubset from "chai-subset";
 import sinonChai from "sinon-chai";
 chai.use(chaiJestSnapshot);
 chai.use(sinonChai);
-chai.use(chaiSubset);
 
 // get rid of various xhr errors in the console
 import globalJsdom from "global-jsdom";

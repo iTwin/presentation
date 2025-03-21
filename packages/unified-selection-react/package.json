@@ -55,6 +55,7 @@
   },
   "devDependencies": {
     "@itwin/build-tools": "catalog:build-tools",
+    "@itwin/eslint-plugin": "catalog:build-tools",
     "@itwin/unified-selection": "workspace:^",
     "@testing-library/react": "catalog:test-tools",
     "@types/chai": "catalog:test-tools",
