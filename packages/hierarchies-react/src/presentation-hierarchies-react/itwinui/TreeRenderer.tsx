@@ -52,6 +52,7 @@ export function TreeRenderer({ rootNodes, expandNode, localizedStrings, selectNo
   const virtualizer = useVirtualizer({
     count: flatNodes.length,
     getScrollElement: () => parentRef.current,
+    getItemKey: (index) => flatNodes[index].id,
     estimateSize: () => 28,
     overscan: 5,
   });
