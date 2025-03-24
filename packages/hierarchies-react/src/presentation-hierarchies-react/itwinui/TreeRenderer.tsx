@@ -79,7 +79,7 @@ export function TreeRenderer({ rootNodes, expandNode, localizedStrings, selectNo
                 onNodeClick={onNodeClick}
                 onNodeKeyDown={onNodeKeyDown}
                 node={flatNodes[virtualizedItem.index]}
-                key={flatNodes[virtualizedItem.index].id}
+                key={virtualizedItem.key}
                 data-index={virtualizedItem.index}
               />
             );
