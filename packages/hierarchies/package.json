@@ -1,6 +1,6 @@
 {
   "name": "@itwin/presentation-hierarchies",
-  "version": "1.4.1",
+  "version": "1.4.2",
   "description": "A package for creating hierarchies based on data in iTwin.js iModels.",
   "license": "MIT",
   "author": {
@@ -60,7 +60,6 @@
     "@itwin/eslint-plugin": "catalog:build-tools",
     "@types/chai": "catalog:test-tools",
     "@types/chai-as-promised": "catalog:test-tools",
-    "@types/chai-subset": "catalog:test-tools",
     "@types/mocha": "catalog:test-tools",
     "@types/natural-compare-lite": "^1.4.2",
     "@types/node": "catalog:build-tools",
@@ -69,7 +68,6 @@
     "c8": "catalog:test-tools",
     "chai": "catalog:test-tools",
     "chai-as-promised": "catalog:test-tools",
-    "chai-subset": "catalog:test-tools",
     "cpx2": "catalog:build-tools",
     "eslint": "catalog:build-tools",
     "mocha": "catalog:test-tools",
@@ -77,7 +75,6 @@
     "rimraf": "catalog:build-tools",
     "sinon": "catalog:test-tools",
     "sinon-chai": "catalog:test-tools",
-    "testdouble": "catalog:test-tools",
     "typescript": "catalog:build-tools"
   }
 }

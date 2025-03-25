@@ -201,7 +201,7 @@ describe("PresentationInstanceFilterDialog", () => {
     await user.click(classListContainer);
 
     // deselect class item from dropdown
-    await user.click(within(getByRole(baseElement, "listbox")).getByText("Class Label"));
+    await user.click(within(getByRole(baseElement, "option", { hidden: true })).getByText("Class Label"));
 
     // assert that filtering rule was cleared
     await waitFor(() => expect(queryByDisplayValue(baseElement, "test value")).to.be.null);
@@ -301,7 +301,7 @@ describe("PresentationInstanceFilterDialog", () => {
     await user.click(classListContainer);
 
     // deselect class item from dropdown
-    const classItem = getByRole(baseElement, "option", { name: "Class Label" });
+    const classItem = within(getByRole(baseElement, "option", { hidden: true })).getByText("Class Label");
     await user.click(classItem);
 
     const applyButton = await getApplyButton(baseElement);

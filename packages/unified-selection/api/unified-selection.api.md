@@ -23,6 +23,7 @@ export interface CachingHiliteSetProvider {
 
 // @public
 interface CachingHiliteSetProviderProps {
+    createHiliteSetProvider?: typeof createHiliteSetProvider;
     imodelProvider: (imodelKey: string) => ECClassHierarchyInspector & ECSqlQueryExecutor;
     selectionStorage: SelectionStorage;
 }
@@ -34,9 +35,7 @@ export function computeSelection(props: ComputeSelectionProps): AsyncIterableIte
 interface ComputeSelectionProps {
     elementIds: Id64Arg;
     queryExecutor: ECSqlQueryExecutor;
-    scope: ElementSelectionScopeProps | {
-        id: SelectionScope;
-    } | SelectionScope;
+    scope: SelectionScope;
 }
 
 // @public
@@ -113,7 +112,7 @@ export function enableUnifiedSelectionSyncWithIModel(props: EnableUnifiedSelecti
 
 // @public
 interface EnableUnifiedSelectionSyncWithIModelProps {
-    activeScopeProvider: () => ComputeSelectionProps["scope"];
+    activeScopeProvider: () => SelectionScope;
     cachingHiliteSetProvider?: CachingHiliteSetProvider | (Omit<CachingHiliteSetProvider, "dispose"> & {
         [Symbol.dispose]: () => void;
     });
@@ -195,7 +194,12 @@ export namespace Selectables {
 }
 
 // @public
-type SelectionScope = "element" | "model" | "category" | "functional";
+export type SelectionScope = ElementSelectionScopeProps | {
+    id: SelectionScopeIdentifier;
+} | SelectionScopeIdentifier;
+
+// @public
+type SelectionScopeIdentifier = "element" | "model" | "category" | "functional";
 
 // @public
 export interface SelectionStorage {

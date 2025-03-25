@@ -18,16 +18,16 @@
     "lint": "eslint ./src/**/*.ts",
     "docs": "betools extract --fileExt=ts --extractFrom=./src --recursive --out=./build/docs/extract"
   },
-  "dependencies": {
+  "devDependencies": {
     "@itwin/build-tools": "catalog:build-tools",
-    "@itwin/core-bentley": "catalog:itwinjs-core",
-    "@itwin/core-common": "catalog:itwinjs-core",
-    "@itwin/core-geometry": "catalog:itwinjs-core",
-    "@itwin/core-quantity": "catalog:itwinjs-core",
-    "@itwin/ecschema-metadata": "catalog:itwinjs-core",
-    "@itwin/ecschema-rpcinterface-common": "catalog:itwinjs-core",
+    "@itwin/core-bentley": "catalog:itwinjs-core-dev",
+    "@itwin/core-common": "catalog:itwinjs-core-dev",
+    "@itwin/core-geometry": "catalog:itwinjs-core-dev",
+    "@itwin/core-quantity": "catalog:itwinjs-core-dev",
+    "@itwin/ecschema-metadata": "catalog:itwinjs-core-dev",
+    "@itwin/ecschema-rpcinterface-common": "catalog:itwinjs-core-dev",
     "@itwin/eslint-plugin": "catalog:build-tools",
-    "@itwin/presentation-common": "catalog:itwinjs-core",
+    "@itwin/presentation-common": "catalog:itwinjs-core-dev",
     "eslint": "catalog:build-tools",
     "rimraf": "catalog:build-tools",
     "typescript": "catalog:build-tools"

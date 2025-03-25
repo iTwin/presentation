@@ -10,7 +10,7 @@ import { PropertyData } from "@itwin/components-react";
 import { EmptyLocalization } from "@itwin/core-common";
 import { IModelConnection } from "@itwin/core-frontend";
 import { Ruleset } from "@itwin/presentation-common";
-import { FavoritePropertiesManager, Presentation, PresentationManager, SelectionManager, SelectionScopesManager } from "@itwin/presentation-frontend";
+import { FavoritePropertiesManager, Presentation, PresentationManager } from "@itwin/presentation-frontend";
 import { FavoritePropertiesDataProvider } from "../../presentation-components/favorite-properties/DataProvider.js";
 import { getFavoritesCategory } from "../../presentation-components/favorite-properties/Utils.js";
 import { PresentationPropertyDataProvider } from "../../presentation-components/propertygrid/DataProvider.js";
@@ -24,7 +24,6 @@ describe("FavoritePropertiesDataProvider", () => {
     },
   } as unknown as IModelConnection;
   let presentationManager: sinon.SinonStubbedInstance<PresentationManager>;
-  let selectionManager: SelectionManager;
   let presentationPropertyDataProvider: {
     getData: sinon.SinonStub<[], PropertyData>;
     [Symbol.dispose]: sinon.SinonStub<[], void>;
@@ -33,9 +32,6 @@ describe("FavoritePropertiesDataProvider", () => {
 
   beforeEach(() => {
     presentationManager = sinon.createStubInstance(PresentationManager);
-    selectionManager = {
-      scopes: {} as SelectionScopesManager,
-    } as SelectionManager;
     presentationPropertyDataProvider = {
       getData: sinon.stub(),
       [Symbol.dispose]: sinon.stub(),
@@ -45,10 +41,9 @@ describe("FavoritePropertiesDataProvider", () => {
     const localization = new EmptyLocalization();
     sinon.stub(Presentation, "presentation").get(() => presentationManager);
     sinon.stub(Presentation, "favoriteProperties").get(() => favoritePropertiesManager);
-    sinon.stub(Presentation, "selection").get(() => selectionManager);
     sinon.stub(Presentation, "localization").get(() => localization);
 
-    provider = new FavoritePropertiesDataProvider();
+    provider = new FavoritePropertiesDataProvider({ activeScopeProvider: () => ({ id: "element" }) });
     (provider as any).createPropertyDataProvider = () => presentationPropertyDataProvider;
   });
 
@@ -78,7 +73,7 @@ describe("FavoritePropertiesDataProvider", () => {
         .returns(presentationPropertyDataProvider as unknown as PresentationPropertyDataProvider);
 
       const customRulesetId = "custom_ruleset_id";
-      provider = new FavoritePropertiesDataProvider({ ruleset: customRulesetId });
+      provider = new FavoritePropertiesDataProvider({ ruleset: customRulesetId, activeScopeProvider: () => ({ id: "element" }) });
       (provider as any).createPropertyDataProvider = factorySpy;
 
       await provider.getData(imodel, elementId);

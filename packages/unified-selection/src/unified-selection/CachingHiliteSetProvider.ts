@@ -18,8 +18,12 @@ import { IMODEL_CLOSE_SELECTION_CLEAR_SOURCE, SelectionStorage } from "./Selecti
 export interface CachingHiliteSetProviderProps {
   /** Selection storage to use for retrieving the hilite set. */
   selectionStorage: SelectionStorage;
+
   /** A callback that should return iModel access by iModel key. */
   imodelProvider: (imodelKey: string) => ECClassHierarchyInspector & ECSqlQueryExecutor;
+
+  /** An optional hilite set provider factory. If not provided, defaults to `createHiliteSetProvider` from this package. */
+  createHiliteSetProvider?: typeof createHiliteSetProvider;
 }
 
 /**
@@ -68,6 +72,7 @@ class CachingHiliteSetProviderImpl implements CachingHiliteSetProvider {
   private _cache = new Map<string, Observable<HiliteSet>>();
   private _removeListener: () => void;
   private _imodelProvider: (imodelKey: string) => ECClassHierarchyInspector & ECSqlQueryExecutor;
+  private _createHiliteSetProvider: typeof createHiliteSetProvider;
 
   constructor(props: CachingHiliteSetProviderProps) {
     this._selectionStorage = props.selectionStorage;
@@ -78,6 +83,7 @@ class CachingHiliteSetProviderImpl implements CachingHiliteSetProvider {
         this._hiliteSetProviders.delete(args.imodelKey);
       }
     });
+    this._createHiliteSetProvider = props.createHiliteSetProvider ?? /* c8 ignore next */ createHiliteSetProvider;
   }
 
   public getHiliteSet({ imodelKey }: { imodelKey: string }): AsyncIterableIterator<HiliteSet> {
@@ -108,7 +114,7 @@ class CachingHiliteSetProviderImpl implements CachingHiliteSetProvider {
   private getHiliteSetProvider(imodelKey: string, imodelAccess: ECClassHierarchyInspector & ECSqlQueryExecutor) {
     let provider = this._hiliteSetProviders.get(imodelKey);
     if (!provider) {
-      provider = createHiliteSetProvider({ imodelAccess });
+      provider = this._createHiliteSetProvider({ imodelAccess });
       this._hiliteSetProviders.set(imodelKey, provider);
     }
     return provider;

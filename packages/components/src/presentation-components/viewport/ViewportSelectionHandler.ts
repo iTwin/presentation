@@ -10,6 +10,8 @@ import { KeySet } from "@itwin/presentation-common";
 import { HiliteSet, HiliteSetProvider, Presentation, SelectionChangeEventArgs, SelectionChangeType, SelectionHandler } from "@itwin/presentation-frontend";
 import { safeDispose } from "../common/Utils.js";
 
+/* eslint-disable @typescript-eslint/no-deprecated */
+
 /** @internal */
 export interface ViewportSelectionHandlerProps {
   imodel: IModelConnection;

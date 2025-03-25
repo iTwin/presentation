@@ -8,6 +8,8 @@ import { IModelConnection } from "@itwin/core-frontend";
 import { SelectionScope } from "@itwin/presentation-common";
 import { Presentation } from "@itwin/presentation-frontend";
 
+/* eslint-disable @typescript-eslint/no-deprecated */
+
 export interface SelectionScopePickerProps {
   imodel: IModelConnection;
 }

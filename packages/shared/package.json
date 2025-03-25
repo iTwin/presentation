@@ -1,6 +1,6 @@
 {
   "name": "@itwin/presentation-shared",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "The package contains types and utilities used across different iTwin.js Presentation packages.",
   "license": "MIT",
   "author": {
@@ -52,7 +52,6 @@
     "@itwin/eslint-plugin": "catalog:build-tools",
     "@types/chai": "catalog:test-tools",
     "@types/chai-as-promised": "catalog:test-tools",
-    "@types/chai-subset": "catalog:test-tools",
     "@types/mocha": "catalog:test-tools",
     "@types/node": "catalog:build-tools",
     "@types/sinon": "catalog:test-tools",
@@ -60,7 +59,6 @@
     "c8": "catalog:test-tools",
     "chai": "catalog:test-tools",
     "chai-as-promised": "catalog:test-tools",
-    "chai-subset": "catalog:test-tools",
     "eslint": "catalog:build-tools",
     "mocha": "catalog:test-tools",
     "presentation-test-utilities": "workspace:^",

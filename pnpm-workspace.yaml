@@ -1,85 +1,92 @@
 packages:
- - apps/**
- - packages/*
+  - apps/**
+  - packages/*
 
 catalogs:
   itwinjs-core:
-    "@itwin/appui-abstract": "^5.0.0-dev.49"
-    "@itwin/core-backend": "^5.0.0-dev.49"
-    "@itwin/core-bentley": "^5.0.0-dev.49"
-    "@itwin/core-common": "^5.0.0-dev.49"
-    "@itwin/core-electron": "^5.0.0-dev.49"
-    "@itwin/core-frontend": "^5.0.0-dev.49"
-    "@itwin/core-geometry": "^5.0.0-dev.49"
-    "@itwin/core-i18n": "^5.0.0-dev.49"
-    "@itwin/core-orbitgt": "^5.0.0-dev.49"
-    "@itwin/core-quantity": "^5.0.0-dev.49"
-    "@itwin/ecschema-metadata": "^5.0.0-dev.49"
-    "@itwin/ecschema-rpcinterface-common": "^5.0.0-dev.49"
-    "@itwin/ecschema-rpcinterface-impl": "^5.0.0-dev.49"
-    "@itwin/express-server": "^5.0.0-dev.49"
-    "@itwin/presentation-backend": "^5.0.0-dev.49"
-    "@itwin/presentation-common": "^5.0.0-dev.49"
-    "@itwin/presentation-frontend": "^5.0.0-dev.49"
-    "@itwin/webgl-compatibility": "^5.0.0-dev.49"
-    "inversify": "~6.0.2"
-    "reflect-metadata": "^0.1.14"
+    '@itwin/core-bentley': ^4.10.10
+    '@itwin/core-common': ^4.10.10
+    '@itwin/core-geometry': ^4.10.10
+
+  itwinjs-core-dev:
+    '@itwin/appui-abstract': ^5.0.0-dev.78
+    '@itwin/core-backend': ^5.0.0-dev.78
+    '@itwin/core-bentley': ^5.0.0-dev.78
+    '@itwin/core-common': ^5.0.0-dev.78
+    '@itwin/core-electron': ^5.0.0-dev.78
+    '@itwin/core-frontend': ^5.0.0-dev.78
+    '@itwin/core-geometry': ^5.0.0-dev.78
+    '@itwin/core-i18n': ^5.0.0-dev.78
+    '@itwin/core-orbitgt': ^5.0.0-dev.78
+    '@itwin/core-quantity': ^5.0.0-dev.78
+    '@itwin/ecschema-metadata': ^5.0.0-dev.78
+    '@itwin/ecschema-rpcinterface-common': ^5.0.0-dev.78
+    '@itwin/ecschema-rpcinterface-impl': ^5.0.0-dev.78
+    '@itwin/express-server': ^5.0.0-dev.78
+    '@itwin/presentation-backend': ^5.0.0-dev.78
+    '@itwin/presentation-common': ^5.0.0-dev.78
+    '@itwin/presentation-frontend': ^5.0.0-dev.78
+    '@itwin/webgl-compatibility': ^5.0.0-dev.78
+    inversify: ~6.0.2
+    reflect-metadata: ^0.1.14
 
   appui:
-    "@itwin/appui-react": "^5.1.0"
-    "@itwin/core-react": "^5.1.0"
-    "@itwin/components-react": "^5.1.0"
-    "@itwin/imodel-components-react": "^5.1.0"
+    '@itwin/appui-react': ^5.1.0
+    '@itwin/core-react': ^5.1.0
+    '@itwin/components-react': ^5.1.0
+    '@itwin/imodel-components-react': ^5.1.0
 
   itwinui:
-    "@itwin/itwinui-icons-react": "^2.9.0"
-    "@itwin/itwinui-illustrations-react": "^2.1.0"
-    "@itwin/itwinui-react": "^3.17.2"
+    '@itwin/itwinui-icons-react': ^2.9.0
+    '@itwin/itwinui-illustrations-react': ^2.1.0
+    '@itwin/itwinui-react': ^3.17.2
 
   react:
-    "classnames": "^2.5.1"
-    "react-error-boundary": "^4.0.13"
-    "react": "^18.3.1"
-    "react-dom": "^18.3.1"
-    "@types/react": "^18.3.3"
-    "@types/react-dom": "^18.3.0"
+    classnames: ^2.5.1
+    react-error-boundary: ^4.0.13
+    react: ^18.3.1
+    react-dom: ^18.3.1
+    '@types/react': ^18.3.3
+    '@types/react-dom': ^18.3.0
 
   rxjs:
-    "rxjs": "^7.8.1"
-    "rxjs-for-await": "^1.0.0"
+    rxjs: ^7.8.1
+    rxjs-for-await: ^1.0.0
 
   test-tools:
-    "@testing-library/dom": "^10.3.2"
-    "@testing-library/react": "^16.0.0"
-    "@testing-library/user-event": "^14.5.2"
-    "@types/chai": "^4.3.16"
-    "@types/chai-as-promised": "^7.1.8"
-    "@types/chai-jest-snapshot": "^1.3.8"
-    "@types/chai-subset": "^1.3.5"
-    "@types/jsdom": "^21.1.7"
-    "@types/mocha": "^10.0.7"
-    "@types/sinon": "^17.0.3"
-    "@types/sinon-chai": "^3.2.12"
-    "c8": "^10.1.2"
-    "chai": "^4.4.1"
-    "chai-as-promised": "^7.1.2"
-    "chai-jest-snapshot": "^2.0.0"
-    "chai-subset": "^1.6.0"
-    "global-jsdom": "^25.0.0"
-    "ignore-styles": "^5.0.1"
-    "jsdom": "^25.0.1"
-    "mocha": "^10.7.3"
-    "sinon": "^18.0.0"
-    "sinon-chai": "^3.7.0"
-    "testdouble": "^3.20.2"
+    '@testing-library/dom': ^10.4.0
+    '@testing-library/react': ^16.2.0
+    '@testing-library/user-event': ^14.6.1
+    '@types/chai': ^5.2.0
+    '@types/chai-as-promised': ^8.0.2
+    '@types/chai-jest-snapshot': ^1.3.8
+    '@types/jsdom': ^21.1.7
+    '@types/mocha': ^10.0.10
+    '@types/sinon': ^17.0.4
+    '@types/sinon-chai': ^4.0.0
+    c8: ^10.1.3
+    chai: ^5.2.0
+    chai-as-promised: ^8.0.1
+    chai-jest-snapshot: ^2.0.0
+    global-jsdom: ^26.0.0
+    ignore-styles: ^5.0.1
+    jsdom: ^26.0.0
+    mocha: ^11.1.0
+    sinon: ^19.0.4
+    sinon-chai: ^4.0.0
 
   build-tools:
-    "@itwin/build-tools": "5.0.0-dev.67"
-    "@itwin/eslint-plugin": "5.0.0-dev.1"
-    "@types/node": "^20.12.12"
-    "cpx2": "^7.0.1"
-    "cross-env": "^7.0.3"
-    "eslint": "^9.13.0"
-    "eslint-plugin-react": "^7.37.2"
-    "rimraf": "^6.0.1"
-    "typescript": "~5.7.3"
+    '@itwin/build-tools': 5.0.0-dev.67
+    '@itwin/eslint-plugin': 5.0.0-dev.1
+    '@types/node': ^22.13.9
+    cpx2: ^7.0.1
+    cross-env: ^7.0.3
+    eslint: ^9.13.0
+    eslint-plugin-react: ^7.37.4
+    rimraf: ^6.0.1
+    typescript: ~5.7.3
+
+onlyBuiltDependencies:
+  - '@bentley/imodeljs-native'
+  - electron
+  - esbuild

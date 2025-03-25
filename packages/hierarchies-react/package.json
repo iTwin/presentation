@@ -43,9 +43,9 @@
     "clean": "rimraf lib build",
     "cover": "c8 npm -s test",
     "lint": "eslint ./src/**/*.{ts,tsx}",
-    "test:dev": "cross-env NODE_OPTIONS=\"--import presentation-test-utilities/node-hooks/ignore-styles\" mocha --enable-source-maps --config ./.mocharc.json",
+    "test:dev": "node --experimental-test-module-mocks --enable-source-maps --import presentation-test-utilities/node-hooks/ignore-styles ./node_modules/mocha/bin/mocha.js --config ./.mocharc.json",
     "test": "npm run test:dev -- --parallel --jobs=4",
-    "extract-api": "betools extract-api --entry=./lib/esm/presentation-hierarchies-react --apiReportFolder=./api --apiReportTempFolder=./api/temp --apiSummaryFolder=./api --includeUnexportedApis",
+    "extract-api": "betools extract-api --entry=lib/esm/presentation-hierarchies-react --apiReportFolder=./api --apiReportTempFolder=./api/temp --apiSummaryFolder=./api --includeUnexportedApis",
     "check-internal": "node ../../scripts/checkInternal.js --apiSummary ./api/presentation-hierarchies-react.api.md",
     "update-extractions": "node ../../scripts/updateExtractions.js --targets=./README.md",
     "check-extractions": "node ../../scripts/updateExtractions.js --targets=./README.md --check",
@@ -79,6 +79,7 @@
   },
   "devDependencies": {
     "@itwin/build-tools": "catalog:build-tools",
+    "@itwin/eslint-plugin": "catalog:build-tools",
     "@itwin/itwinui-icons": "5.0.0-alpha.4",
     "@itwin/itwinui-react": "5.0.0-alpha.11",
     "@testing-library/dom": "catalog:test-tools",
@@ -86,7 +87,6 @@
     "@testing-library/user-event": "catalog:test-tools",
     "@types/chai": "catalog:test-tools",
     "@types/chai-as-promised": "catalog:test-tools",
-    "@types/chai-subset": "catalog:test-tools",
     "@types/jsdom": "catalog:test-tools",
     "@types/mocha": "catalog:test-tools",
     "@types/react": "catalog:react",
@@ -96,7 +96,6 @@
     "c8": "catalog:test-tools",
     "chai": "catalog:test-tools",
     "chai-as-promised": "catalog:test-tools",
-    "chai-subset": "catalog:test-tools",
     "cpx2": "catalog:build-tools",
     "cross-env": "catalog:build-tools",
     "eslint": "catalog:build-tools",
@@ -111,7 +110,6 @@
     "rimraf": "catalog:build-tools",
     "sinon": "catalog:test-tools",
     "sinon-chai": "catalog:test-tools",
-    "testdouble": "catalog:test-tools",
     "typescript": "catalog:build-tools"
   }
 }

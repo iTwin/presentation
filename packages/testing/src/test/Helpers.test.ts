@@ -4,18 +4,15 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { expect } from "chai";
-import * as rimrafModule from "rimraf";
+import { mock } from "node:test";
 import * as sinon from "sinon";
-import * as td from "testdouble";
 import { IModelHost } from "@itwin/core-backend";
 import { Guid } from "@itwin/core-bentley";
 import { IModelApp, NoRenderApp } from "@itwin/core-frontend";
-import { Presentation as PresentationBackend, PresentationProps } from "@itwin/presentation-backend";
+import { HierarchyCacheMode, Presentation as PresentationBackend } from "@itwin/presentation-backend";
 import { Presentation as PresentationFrontend } from "@itwin/presentation-frontend";
-import { HierarchyCacheMode, PresentationTestingInitProps } from "../presentation-testing/Helpers.js";
 
-// this is needed for mocking external module
-const rimrafModulePath = import.meta.resolve("rimraf");
+import type { PresentationTestingInitProps } from "../presentation-testing/Helpers.js";
 
 describe("Helpers", () => {
   let backendInitializationStub: sinon.SinonStub;
@@ -83,24 +80,28 @@ describe("Helpers", () => {
     let initialize: (props?: PresentationTestingInitProps) => Promise<void>;
     let terminate: () => Promise<void>;
 
-    beforeEach(async () => {
+    before(async () => {
       rimrafSyncStub = sinon.stub();
-      await td.replaceEsm(rimrafModulePath, {
-        ...rimrafModule,
-        sync: rimrafSyncStub,
+      mock.module("rimraf", {
+        namedExports: {
+          sync: rimrafSyncStub,
+        },
       });
       const helpers = await import("../presentation-testing/Helpers.js");
       initialize = helpers.initialize;
       terminate = helpers.terminate;
     });
 
+    after(() => {
+      mock.reset();
+    });
+
     afterEach(() => {
-      td.reset();
+      rimrafSyncStub.reset();
     });
 
     it("terminates PresentationBackend and PresentationFrontend on terminate", async () => {
       await initialize();
-
       await terminate();
       expect(backendTerminationStub).to.be.calledOnce;
       expect(frontendTerminationStub).to.be.calledOnce;
@@ -122,8 +123,7 @@ describe("Helpers", () => {
 
     it("clears cache directory when PresentationBackend has DiskHierarchyCacheConfig in initProps", async () => {
       const testDirectory = "/test/directory/";
-      const cachingProps: PresentationProps = { caching: { hierarchies: { mode: HierarchyCacheMode.Disk, directory: testDirectory } } };
-      sinon.stub(PresentationBackend, "initProps").get(() => cachingProps);
+      sinon.stub(PresentationBackend, "initProps").get(() => ({ caching: { hierarchies: { mode: HierarchyCacheMode.Disk, directory: testDirectory } } }));
       await initialize();
 
       await terminate();
@@ -132,10 +132,9 @@ describe("Helpers", () => {
 
     it("clears cache directory when PresentationBackend has HybridCacheConfig in initProps", async () => {
       const testDirectory = "/test/directory/";
-      const cachingProps: PresentationProps = {
+      sinon.stub(PresentationBackend, "initProps").get(() => ({
         caching: { hierarchies: { mode: HierarchyCacheMode.Hybrid, disk: { mode: HierarchyCacheMode.Disk, directory: testDirectory } } },
-      };
-      sinon.stub(PresentationBackend, "initProps").get(() => cachingProps);
+      }));
       await initialize();
 
       await terminate();

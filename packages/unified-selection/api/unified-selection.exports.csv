@@ -15,6 +15,7 @@ public;type;SelectableIdentifier
 public;interface;SelectableInstanceKey
 public;interface;Selectables
 public;namespace;Selectables
+public;type;SelectionScope
 public;interface;SelectionStorage
 public;interface;StorageSelectionChangeEventArgs
 public;type;StorageSelectionChangesListener

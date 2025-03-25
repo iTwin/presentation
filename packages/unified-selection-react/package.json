@@ -49,12 +49,13 @@
   },
   "dependencies": {},
   "peerDependencies": {
-    "@itwin/unified-selection": "workspace:^",
+    "@itwin/unified-selection": "^1.3.0",
     "react": "^17.0.0 || ^18.0.0",
     "react-dom": "^17.0.0 || ^18.0.0"
   },
   "devDependencies": {
     "@itwin/build-tools": "catalog:build-tools",
+    "@itwin/eslint-plugin": "catalog:build-tools",
     "@itwin/unified-selection": "workspace:^",
     "@testing-library/react": "catalog:test-tools",
     "@types/chai": "catalog:test-tools",
@@ -72,7 +73,6 @@
     "mocha": "catalog:test-tools",
     "react": "catalog:react",
     "rimraf": "catalog:build-tools",
-    "testdouble": "catalog:test-tools",
     "typescript": "catalog:build-tools"
   }
 }

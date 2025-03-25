@@ -7,8 +7,7 @@ import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from "re
 import { PrimitiveValue, PropertyDescription, PropertyRecord, PropertyValueFormat } from "@itwin/appui-abstract";
 import { PropertyEditorProps } from "@itwin/components-react";
 import { Input } from "@itwin/itwinui-react";
-import { PropertyValueConstraints } from "@itwin/presentation-common";
-import { WithConstraints } from "../../common/ContentBuilder.js";
+import { PropertyValueConstraints, WithConstraints } from "../../common/ContentBuilder.js";
 import { PropertyEditorAttributes } from "../editors/Common.js";
 import { getDecimalRoundingError } from "./Utils.js";
 

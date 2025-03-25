@@ -24,6 +24,7 @@ import {
 } from "@itwin/presentation-common";
 import { ContentDataProvider, PropertyRecordsBuilder } from "@itwin/presentation-components";
 import { Presentation } from "@itwin/presentation-frontend";
+import { safeDispose } from "./Helpers.js";
 
 /**
  * Interface for a data provider, which is used by ContentBuilder.
@@ -117,7 +118,8 @@ export class ContentBuilder {
     if (typeof rulesetOrId === "string") {
       return this.doCreateContent(rulesetOrId, instanceKeys, displayType);
     }
-    using ruleset = await Presentation.presentation.rulesets().add(rulesetOrId);
+    const ruleset = await Presentation.presentation.rulesets().add(rulesetOrId);
+    using _ = { [Symbol.dispose]: () => safeDispose(ruleset) };
     return await this.doCreateContent(ruleset.id, instanceKeys, displayType);
   }
 
@@ -216,11 +218,11 @@ class PropertyRecordsAccumulator extends PropertyRecordsBuilder {
       return +Number(value).toFixed(this._decimalPrecision);
     }
 
-    if (Array.isArray(value)) {
+    if (Value.isArray(value)) {
       return value.map((item) => this.processRawValue(item));
     }
 
-    if (value instanceof Object) {
+    if (Value.isMap(value)) {
       const res: ValuesMap = {};
       Object.entries(value).forEach(([key, memberValue]) => {
         res[key] = this.processRawValue(memberValue);

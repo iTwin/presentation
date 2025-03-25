@@ -1,5 +1,20 @@
 # Change Log - @itwin/presentation-testing
 
+## 5.4.2
+
+### Patch Changes
+
+- Updated dependencies:
+  - @itwin/presentation-components@5.12.1
+
+## 5.4.1
+
+### Patch Changes
+
+- [#886](https://github.com/iTwin/presentation/pull/886): Fix package compatibility with `itwinjs-core` peer dependencies at version `4.x`.
+- Updated dependencies:
+  - @itwin/presentation-components@5.12.0
+
 ## 5.4.0
 
 ### Minor Changes

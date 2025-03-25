@@ -5,12 +5,13 @@
 
 import "./DisposePolyfill.js";
 import { EMPTY, firstValueFrom, from, map, merge, Observable, Subject, takeUntil, toArray } from "rxjs";
+import { Id64Arg, Id64Set } from "@itwin/core-bentley";
 import { ECClassHierarchyInspector, ECSqlQueryExecutor } from "@itwin/presentation-shared";
 import { CachingHiliteSetProvider, createCachingHiliteSetProvider } from "./CachingHiliteSetProvider.js";
 import { createHiliteSetProvider, HiliteSet, HiliteSetProvider } from "./HiliteSetProvider.js";
 import { SelectableInstanceKey, Selectables } from "./Selectable.js";
 import { StorageSelectionChangeEventArgs, StorageSelectionChangeType } from "./SelectionChangeEvent.js";
-import { computeSelection, ComputeSelectionProps } from "./SelectionScope.js";
+import { computeSelection, SelectionScope } from "./SelectionScope.js";
 import { SelectionStorage } from "./SelectionStorage.js";
 import { CoreIModelHiliteSet, CoreIModelSelectionSet, CoreSelectableIds, CoreSelectionSetEventType, CoreSelectionSetEventUnsafe } from "./types/IModel.js";
 import { safeDispose } from "./Utils.js";
@@ -59,7 +60,7 @@ export interface EnableUnifiedSelectionSyncWithIModelProps {
   selectionStorage: SelectionStorage;
 
   /** Active selection scope provider. */
-  activeScopeProvider: () => ComputeSelectionProps["scope"];
+  activeScopeProvider: () => SelectionScope;
 
   /**
    * A caching hilite set provider used to retrieve hilite sets for an iModel. If not provided, a new `CachingHiliteSetProvider`
@@ -84,8 +85,9 @@ export function enableUnifiedSelectionSyncWithIModel(props: EnableUnifiedSelecti
 }
 
 /**
- * A handler that syncs selection between unified selection storage
- * (`SelectionStorage`) and an iModel (`iModel.selectionSet`, `iModel.hilited`).
+ * A handler that syncs selection between unified selection storage (`SelectionStorage`) and
+ * an iModel (`iModel.selectionSet`, `iModel.hilited`).
+ *
  * @internal
  */
 export class IModelSelectionHandler {
@@ -95,7 +97,7 @@ export class IModelSelectionHandler {
   private _selectionStorage: SelectionStorage;
   private _hiliteSetProvider: HiliteSetProvider;
   private _cachingHiliteSetProvider: NonNullable<EnableUnifiedSelectionSyncWithIModelProps["cachingHiliteSetProvider"]>;
-  private _activeScopeProvider: () => ComputeSelectionProps["scope"];
+  private _activeScopeProvider: () => SelectionScope;
 
   private _isSuspended: boolean;
   private _cancelOngoingChanges = new Subject<void>();
@@ -103,31 +105,37 @@ export class IModelSelectionHandler {
   private _unregisterIModelSelectionSetListener: () => void;
   private _hasCustomCachingHiliteSetProvider: boolean;
 
-  public constructor(props: EnableUnifiedSelectionSyncWithIModelProps) {
+  public constructor(props: EnableUnifiedSelectionSyncWithIModelProps & { hiliteSetProvider?: HiliteSetProvider }) {
     this._imodelAccess = props.imodelAccess;
     this._selectionStorage = props.selectionStorage;
     this._activeScopeProvider = props.activeScopeProvider;
     this._isSuspended = false;
+    this._hiliteSetProvider = props.hiliteSetProvider ?? createHiliteSetProvider({ imodelAccess: this._imodelAccess });
     this._hasCustomCachingHiliteSetProvider = !!props.cachingHiliteSetProvider;
-
     this._cachingHiliteSetProvider =
-      props.cachingHiliteSetProvider ??
-      createCachingHiliteSetProvider({
+      props.cachingHiliteSetProvider /* c8 ignore next */ ??
+      /* c8 ignore next 4 */ createCachingHiliteSetProvider({
         selectionStorage: this._selectionStorage,
         imodelProvider: () => this._imodelAccess,
+        createHiliteSetProvider: () => this._hiliteSetProvider,
       });
 
-    this._hiliteSetProvider = createHiliteSetProvider({ imodelAccess: this._imodelAccess });
     this._unregisterIModelSelectionSetListener = this._imodelAccess.selectionSet.onChanged.addListener(this.onIModelSelectionChanged);
     this._unregisterUnifiedSelectionListener = this._selectionStorage.selectionChangeEvent.addListener(this.onUnifiedSelectionChanged);
 
-    this.applyCurrentHiliteSet({ activeSelectionAction: "clear" });
+    if (!is5xSelectionSet(this._imodelAccess.selectionSet)) {
+      // itwinjs-core@4: stop imodel from syncing tool selection with hilited list - we want to manage that sync ourselves
+      this._imodelAccess.hiliteSet.wantSyncWithSelectionSet = false;
+    }
+
+    this.applyCurrentHiliteSet({ activeSelectionAction: "clearAll" });
   }
 
   public [Symbol.dispose]() {
     this._cancelOngoingChanges.next();
     this._unregisterIModelSelectionSetListener();
     this._unregisterUnifiedSelectionListener();
+    /* c8 ignore next 3 */
     if (!this._hasCustomCachingHiliteSetProvider) {
       safeDispose(this._cachingHiliteSetProvider);
     }
@@ -147,8 +155,19 @@ export class IModelSelectionHandler {
   private handleUnifiedSelectionChange(changeType: StorageSelectionChangeType, selectables: Selectables, source: string): void {
     switch (changeType) {
       case "clear":
+        return this.applyCurrentHiliteSet({ activeSelectionAction: "clearAll" });
       case "replace":
-        return this.applyCurrentHiliteSet({ activeSelectionAction: source === "Tool" ? "keep" : "clear" });
+        return this.applyCurrentHiliteSet({
+          activeSelectionAction:
+            source === this._selectionSourceName
+              ? is5xSelectionSet(this._imodelAccess.selectionSet)
+                ? // with 5x core we don't need to clear anything when event is triggered by a Tool (hilite and selection sets are in sync already)
+                  "keep"
+                : // with 4x core we need to clear hilite set, because it's not synced with selection set
+                  "clearHilited"
+              : // when event is triggered not by a Tool, we need to clear everything
+                "clearAll",
+        });
       case "add":
         return void from(this._hiliteSetProvider.getHiliteSet({ selectables }))
           .pipe(takeUntil(this._cancelOngoingChanges))
@@ -183,11 +202,15 @@ export class IModelSelectionHandler {
     this.handleUnifiedSelectionChange(args.changeType, args.selectables, args.source);
   };
 
-  private applyCurrentHiliteSet({ activeSelectionAction }: { activeSelectionAction: "clear" | "keep" }) {
-    if (activeSelectionAction === "clear") {
+  private applyCurrentHiliteSet({ activeSelectionAction }: { activeSelectionAction: "clearAll" | "clearHilited" | "keep" }) {
+    if (activeSelectionAction !== "keep") {
       using _dispose = this.suspendIModelToolSelectionSync();
-      this._imodelAccess.hiliteSet.clear();
-      this._imodelAccess.selectionSet.emptyAll();
+      if (!is5xSelectionSet(this._imodelAccess.selectionSet)) {
+        this._imodelAccess.hiliteSet.clear();
+      }
+      if (activeSelectionAction === "clearAll") {
+        this._imodelAccess.selectionSet.emptyAll();
+      }
     }
 
     from(this._cachingHiliteSetProvider.getHiliteSet({ imodelKey: this._imodelAccess.key }))
@@ -201,9 +224,8 @@ export class IModelSelectionHandler {
 
   private addHiliteSet(set: HiliteSet) {
     using _dispose = this.suspendIModelToolSelectionSync();
-    if ("active" in this._imodelAccess.selectionSet) {
-      // the `active` property tells us we're using 5.0 core, which supports models and subcategories
-      // in selection set - we can simply add the set as a whole
+    if (is5xSelectionSet(this._imodelAccess.selectionSet)) {
+      // with 5.x core we can simply add the set as a whole
       this._imodelAccess.selectionSet.add({
         models: set.models,
         subcategories: set.subCategories,
@@ -218,6 +240,7 @@ export class IModelSelectionHandler {
         this._imodelAccess.hiliteSet.subcategories.addIds(set.subCategories);
       }
       if (set.elements.length) {
+        this._imodelAccess.hiliteSet.elements.addIds(set.elements);
         this._imodelAccess.selectionSet.add(set.elements);
       }
     }
@@ -225,9 +248,8 @@ export class IModelSelectionHandler {
 
   private removeHiliteSet(set: HiliteSet) {
     using _dispose = this.suspendIModelToolSelectionSync();
-    if ("active" in this._imodelAccess.selectionSet) {
-      // the `active` property tells us we're using 5.0 core, which supports models and subcategories
-      // in selection set - we can simply remove the set as a whole
+    if (is5xSelectionSet(this._imodelAccess.selectionSet)) {
+      // with 5.x core we can simply remove the set as a whole
       this._imodelAccess.selectionSet.remove({
         models: set.models,
         subcategories: set.subCategories,
@@ -241,6 +263,7 @@ export class IModelSelectionHandler {
         this._imodelAccess.hiliteSet.subcategories.deleteIds(set.subCategories);
       }
       if (set.elements.length) {
+        this._imodelAccess.hiliteSet.elements.deleteIds(set.elements);
         this._imodelAccess.selectionSet.remove(set.elements);
       }
     }
@@ -298,4 +321,12 @@ export class IModelSelectionHandler {
         return "active" in event.set ? event.set.active : { elements: event.set.elements };
     }
   }
+}
+
+function is5xSelectionSet(selectionSet: CoreIModelSelectionSet): selectionSet is Omit<CoreIModelSelectionSet, "add" | "remove"> & {
+  readonly active: { [P in keyof CoreSelectableIds]-?: Id64Set };
+  add: (ids: Id64Arg | CoreSelectableIds) => boolean;
+  remove: (ids: Id64Arg | CoreSelectableIds) => boolean;
+} {
+  return "active" in selectionSet;
 }

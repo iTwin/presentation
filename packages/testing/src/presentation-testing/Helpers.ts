@@ -7,7 +7,6 @@
  */
 
 import { join } from "path";
-import * as rimraf from "rimraf";
 import { IModelHost, IModelHostOptions } from "@itwin/core-backend";
 import { Guid, Logger, LogLevel } from "@itwin/core-bentley";
 import { IModelReadRpcInterface, RpcConfiguration, RpcDefaultConfiguration, RpcInterfaceDefinition } from "@itwin/core-common";
@@ -152,7 +151,8 @@ export const terminate = async (frontendApp = IModelApp) => {
   PresentationBackend.terminate();
   await IModelHost.shutdown();
   if (hierarchiesCacheDirectory) {
-    rimraf.sync(hierarchiesCacheDirectory);
+    const { sync: rimrafSync } = await import("rimraf");
+    rimrafSync(hierarchiesCacheDirectory);
   }
 
   // terminate frontend
@@ -161,3 +161,12 @@ export const terminate = async (frontendApp = IModelApp) => {
 
   isInitialized = false;
 };
+
+/** @internal */
+export function safeDispose(disposable: {} | { [Symbol.dispose]: () => void } | { dispose: () => void }) {
+  if ("dispose" in disposable) {
+    disposable.dispose();
+  } else if (Symbol.dispose in disposable) {
+    disposable[Symbol.dispose]();
+  }
+}

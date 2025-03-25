@@ -9,6 +9,7 @@
 import "./DisposePolyfill.js";
 import { RegisteredRuleset, Ruleset } from "@itwin/presentation-common";
 import { Presentation } from "@itwin/presentation-frontend";
+import { safeDispose } from "./Utils.js";
 
 /**
  * A helper class that registers a given ruleset on create and unregisters it on disposal.
@@ -48,7 +49,7 @@ export class RulesetRegistrationHelper implements Disposable {
       return;
     }
 
-    this._registeredRuleset[Symbol.dispose]();
+    safeDispose(this._registeredRuleset);
     this._registeredRuleset = undefined;
   }
 

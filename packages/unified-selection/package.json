@@ -1,6 +1,6 @@
 {
   "name": "@itwin/unified-selection",
-  "version": "1.3.0",
+  "version": "1.4.1",
   "description": "Package for managing unified selection in iTwin.js applications.",
   "license": "MIT",
   "repository": {
@@ -44,7 +44,7 @@
     "lint": "eslint ./src/**/*.ts",
     "test:dev": "mocha --enable-source-maps --config ./.mocharc.json",
     "test": "npm run test:dev",
-    "extract-api": "betools extract-api --entry=unified-selection --apiReportFolder=./api --apiReportTempFolder=./api/temp --apiSummaryFolder=./api --includeUnexportedApis",
+    "extract-api": "betools extract-api --entry=lib/esm/unified-selection --apiReportFolder=./api --apiReportTempFolder=./api/temp --apiSummaryFolder=./api --includeUnexportedApis",
     "check-internal": "node ../../scripts/checkInternal.js --apiSummary ./api/unified-selection.api.md",
     "update-extractions": "node ../../scripts/updateExtractions.js --targets=./README.md,./learning",
     "check-extractions": "node ../../scripts/updateExtractions.js --targets=./README.md,./learning --check",
@@ -75,7 +75,6 @@
     "rimraf": "catalog:build-tools",
     "sinon": "catalog:test-tools",
     "sinon-chai": "catalog:test-tools",
-    "testdouble": "catalog:test-tools",
     "typescript": "catalog:build-tools"
   }
 }
