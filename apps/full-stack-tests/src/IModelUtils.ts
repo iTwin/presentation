@@ -240,15 +240,15 @@ export function createSchemaContext(imodel: IModelConnection | IModelDb | ECDb) 
       async getSchemaInfo(schemaKey: Readonly<SchemaKey>, matchType: SchemaMatchType, schemaContext: SchemaContext): Promise<SchemaInfo | undefined> {
         const schemaJson = imodel.getSchemaProps(schemaKey.name);
         const schemaInfo = await Schema.startLoadingFromJson(schemaJson, schemaContext);
-        if (schemaInfo !== undefined && schemaInfo.schemaKey.matches(schemaKey, matchType)) {
+        if (schemaInfo !== undefined && schemaInfo.schemaKey.matches(schemaKey as SchemaKey, matchType)) {
           return schemaInfo;
         }
         return undefined;
       },
       async getSchema<T extends Schema>(schemaKey: Readonly<SchemaKey>, matchType: SchemaMatchType, schemaContext: SchemaContext): Promise<T | undefined> {
-        await this.getSchemaInfo(schemaKey, matchType, schemaContext);
+        await this.getSchemaInfo(schemaKey as SchemaKey, matchType, schemaContext);
         // eslint-disable-next-line @itwin/no-internal
-        const schema = await schemaContext.getCachedSchema(schemaKey, matchType);
+        const schema = await schemaContext.getCachedSchema(schemaKey as SchemaKey, matchType);
         return schema as T;
       },
     });

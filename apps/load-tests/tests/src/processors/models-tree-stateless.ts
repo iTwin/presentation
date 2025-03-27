@@ -103,7 +103,7 @@ function createModelsTreeProvider(context: ScenarioContext, events: EventEmitter
       }
       try {
         const schemaInfo = await Schema.startLoadingFromJson(schemaJson, schemaContext);
-        if (schemaInfo !== undefined && schemaInfo.schemaKey.matches(schemaKey, matchType)) {
+        if (schemaInfo !== undefined && schemaInfo.schemaKey.matches(schemaKey as SchemaKey, matchType)) {
           return schemaInfo;
         }
         return undefined;
@@ -115,9 +115,9 @@ function createModelsTreeProvider(context: ScenarioContext, events: EventEmitter
       }
     },
     async getSchema<T extends Schema>(schemaKey: Readonly<SchemaKey>, matchType: SchemaMatchType, schemaContext: SchemaContext): Promise<T | undefined> {
-      await this.getSchemaInfo(schemaKey, matchType, schemaContext);
+      await this.getSchemaInfo(schemaKey as SchemaKey, matchType, schemaContext);
       try {
-        const schema = await schemaContext.getCachedSchema(schemaKey, matchType);
+        const schema = await schemaContext.getCachedSchema(schemaKey as SchemaKey, matchType);
         return schema as T;
       } catch (e) {
         if (isTestTerminated()) {
