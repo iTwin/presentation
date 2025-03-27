@@ -1149,6 +1149,9 @@ importers:
       '@types/mocha':
         specifier: catalog:test-tools
         version: 10.0.10
+      '@types/node':
+        specifier: catalog:build-tools
+        version: 22.13.9
       '@types/react':
         specifier: catalog:react
         version: 18.3.3
@@ -1443,6 +1446,9 @@ importers:
       '@types/mocha':
         specifier: catalog:test-tools
         version: 10.0.10
+      '@types/node':
+        specifier: catalog:build-tools
+        version: 22.13.9
       '@types/react':
         specifier: catalog:react
         version: 18.3.3
