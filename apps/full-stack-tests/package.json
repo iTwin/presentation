@@ -68,7 +68,7 @@
     "eslint-plugin-react": "catalog:build-tools",
     "fast-xml-parser": "^4.5.3",
     "global-jsdom": "catalog:test-tools",
-    "i18next-http-backend": "^1.4.5",
+    "i18next-http-backend": "^3.0.2",
     "ignore-styles": "catalog:test-tools",
     "inversify": "catalog:itwinjs-core-dev",
     "jsdom": "catalog:test-tools",
