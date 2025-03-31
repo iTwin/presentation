@@ -40,7 +40,7 @@ export function createECSqlQueryExecutor(imodel: CoreECSqlReaderFactory): ECSqlQ
   return {
     createQueryReader(query: ECSqlQueryDef, config?: ECSqlQueryReaderOptions) {
       const { ctes, ecsql, bindings } = query;
-      const opts = new QueryOptionsBuilder({includeMetaData: true});
+      const opts = new QueryOptionsBuilder({ includeMetaData: true });
       switch (config?.rowFormat) {
         case "ECSqlPropertyNames":
           opts.setRowFormat(QueryRowFormat.UseECSqlPropertyNames);
