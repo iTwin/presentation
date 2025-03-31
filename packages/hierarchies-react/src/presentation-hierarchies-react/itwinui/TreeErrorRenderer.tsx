@@ -3,15 +3,13 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { ComponentPropsWithoutRef, CSSProperties, forwardRef, ForwardRefExoticComponent, RefAttributes } from "react";
-import { Anchor, Text, Tree } from "@itwin/itwinui-react/bricks";
+import { CSSProperties } from "react";
+import { Anchor } from "@itwin/itwinui-react/bricks";
 import { MAX_LIMIT_OVERRIDE } from "../internal/Utils.js";
-import { PresentationInfoNode } from "../TreeNode.js";
 import { HierarchyLevelDetails, useTree } from "../UseTree.js";
-import { FlatNode } from "./FlatTreeNode.js";
+import { ErrorType } from "./FlatTreeNode.js";
 import { useLocalizationContext } from "./LocalizationContext.js";
 
-/** @alpha */
 export interface TreeErrorItemProps {
   /** A callback to reload a hierarchy level when an error occurs and `retry` button is clicked. */
   reloadTree?: (options: { parentNodeId: string | undefined; state: "reset" }) => void;
@@ -20,162 +18,101 @@ export interface TreeErrorItemProps {
 }
 
 interface TreeErrorRendererOwnProps {
-  node: FlatNode<PresentationInfoNode>;
+  error: ErrorType;
   style?: CSSProperties;
 }
 
-type TreeErrorRendererProps = TreeErrorRendererOwnProps & TreeErrorItemProps & Partial<Pick<ReturnType<typeof useTree>, "getHierarchyLevelDetails">>;
+type TreeErrorRendererProps = TreeErrorRendererOwnProps &
+  TreeErrorItemProps &
+  Partial<Pick<ReturnType<typeof useTree>, "getHierarchyLevelDetails">> &
+  Pick<LinkedNodeProps, "scrollToElement">;
 
-/** @internal */
-export const TreeErrorRenderer: ForwardRefExoticComponent<TreeErrorRendererProps & RefAttributes<HTMLElement>> = forwardRef(
-  ({ node, getHierarchyLevelDetails, onFilterClick, reloadTree, ...rest }, forwardedRef) => {
-    const { localizedStrings } = useLocalizationContext();
-    if (node.type === "ResultSetTooLarge") {
-      return (
-        <ResultSetTooLargeNode
-          {...rest}
-          ref={forwardedRef}
-          limit={node.resultSetSizeLimit}
-          onOverrideLimit={getHierarchyLevelDetails ? (limit) => getHierarchyLevelDetails(node.parentNodeId)?.setSizeLimit(limit) : undefined}
-          onFilterClick={
-            onFilterClick
-              ? () => {
-                  const hierarchyLevelDetails = getHierarchyLevelDetails?.(node.parentNodeId);
-                  hierarchyLevelDetails && onFilterClick(hierarchyLevelDetails);
-                }
-              : undefined
-          }
-          aria-level={node.level}
-          aria-posinset={node.posInLevel}
-          aria-setsize={node.levelSize}
-        />
-      );
-    }
-
-    if (node.type === "NoFilterMatches") {
-      return (
-        <Tree.Item
-          {...rest}
-          ref={forwardedRef}
-          aria-level={node.level}
-          aria-posinset={node.posInLevel}
-          aria-setsize={node.levelSize}
-          label={localizedStrings.noFilteredChildren}
-          aria-disabled={true}
-        />
-      );
-    }
-
-    const onRetry = reloadTree ? () => reloadTree({ parentNodeId: node.parentNodeId, state: "reset" }) : undefined;
+export function TreeErrorRenderer({ error, scrollToElement, getHierarchyLevelDetails, onFilterClick }: TreeErrorRendererProps) {
+  if (error.errorNode.type === "ResultSetTooLarge") {
     return (
-      <Tree.Item
-        {...rest}
-        ref={forwardedRef}
-        aria-level={node.level}
-        aria-posinset={node.posInLevel}
-        aria-setsize={node.levelSize}
-        label={<ErrorNodeLabel message={node.message} onRetry={onRetry} />}
-        aria-disabled={true}
+      <ResultSetTooLarge
+        onFilterClick={() => {
+          const hierarchyLevelDetails = getHierarchyLevelDetails?.(error.parentNode?.id);
+          hierarchyLevelDetails && onFilterClick?.(hierarchyLevelDetails);
+        }}
+        onOverrideLimit={getHierarchyLevelDetails ? (limit) => getHierarchyLevelDetails(error.parentNode?.id)?.setSizeLimit(limit) : undefined}
+        scrollToElement={scrollToElement}
+        limit={error.errorNode.resultSetSizeLimit}
+        errorNode={error}
       />
     );
-  },
-);
-TreeErrorRenderer.displayName = "TreeErrorRenderer";
+  }
 
-const ResultSetTooLargeNode = forwardRef<
-  HTMLElement,
-  Omit<ComponentPropsWithoutRef<typeof Tree.Item>, "onExpanded" | "label"> & ResultSetTooLargeNodeLabelProps
->(({ onFilterClick, onOverrideLimit, limit, ...props }, forwardedRef) => {
+  if (error.errorNode.type === "NoFilterMatches") {
+    return <NoFilterMatches scrollToElement={scrollToElement} errorNode={error} />;
+  }
+
+  return <DefaultErrorContainer scrollToElement={scrollToElement} errorNode={error} />;
+}
+
+function NoFilterMatches({ onFilterClick, errorNode, scrollToElement }: LinkedNodeProps & Pick<TreeErrorItemProps, "onFilterClick">) {
+  const { localizedStrings } = useLocalizationContext();
   return (
-    <Tree.Item
-      {...props}
-      ref={forwardedRef}
-      label={<ResultSetTooLargeNodeLabel limit={limit} onFilterClick={onFilterClick} onOverrideLimit={onOverrideLimit} />}
-    />
+    <div style={{ gap: "8px", display: "flex", flexDirection: "column" }}>
+      <>
+        {localizedStrings.noFilteredChildren}
+        <LinkedNode errorNode={errorNode} scrollToElement={scrollToElement} />
+      </>
+      <Anchor onClick={() => onFilterClick}>Change filter localization</Anchor>
+    </div>
   );
-});
-ResultSetTooLargeNode.displayName = "ResultSetTooLargeNode";
+}
 
-interface ResultSetTooLargeNodeLabelProps {
+function DefaultErrorContainer({ reloadTree, errorNode, scrollToElement }: LinkedNodeProps & Pick<TreeErrorItemProps, "reloadTree">) {
+  const { localizedStrings } = useLocalizationContext();
+  return (
+    <div style={{ gap: "8px", display: "flex", flexDirection: "column" }}>
+      <>
+        {localizedStrings.noFilteredChildren}
+        <LinkedNode errorNode={errorNode} scrollToElement={scrollToElement} />
+      </>
+      <Anchor onClick={() => reloadTree}>{localizedStrings.retry}</Anchor>
+    </div>
+  );
+}
+
+type ResultSetTooLargeProps = {
   limit: number;
   onFilterClick?: () => void;
   onOverrideLimit?: (limit: number) => void;
-}
+} & LinkedNodeProps;
 
-function ResultSetTooLargeNodeLabel({ onFilterClick, onOverrideLimit, limit }: ResultSetTooLargeNodeLabelProps) {
+function ResultSetTooLarge({ errorNode, onFilterClick, limit, onOverrideLimit, scrollToElement }: ResultSetTooLargeProps) {
   const { localizedStrings } = useLocalizationContext();
   const supportsFiltering = !!onFilterClick;
   const supportsLimitOverride = !!onOverrideLimit && limit < MAX_LIMIT_OVERRIDE;
-
-  const limitExceededMessage = createLocalizedMessage(
-    supportsFiltering ? localizedStrings.resultLimitExceededWithFiltering : localizedStrings.resultLimitExceeded,
-    limit,
-    onFilterClick,
-  );
-  const increaseLimitMessage = supportsLimitOverride
-    ? createLocalizedMessage(
-        supportsFiltering ? localizedStrings.increaseHierarchyLimitWithFiltering : localizedStrings.increaseHierarchyLimit,
-        MAX_LIMIT_OVERRIDE,
-        () => onOverrideLimit(MAX_LIMIT_OVERRIDE),
-      )
-    : { title: "", element: null };
-
-  const title = `${limitExceededMessage.title} ${increaseLimitMessage.title}`;
+  const messageWithLimit = localizedStrings.resultLimitExceeded.replace("{{limit}}", limit.toString());
+  const finalMsg = messageWithLimit.split("{{node}}", 2);
 
   return (
-    <div style={{ display: "flex", alignItems: "start" }} title={title}>
-      {limitExceededMessage.element}
-      {increaseLimitMessage.element}
-    </div>
-  );
-}
-
-function ErrorNodeLabel({ message, onRetry }: { message: string; onRetry?: () => void }) {
-  const { localizedStrings } = useLocalizationContext();
-  return (
-    <div style={{ display: "flex" }}>
-      <Text variant={"body-sm"}>{message}</Text>
-      {onRetry ? <Anchor onClick={onRetry}>{localizedStrings?.retry}</Anchor> : null}
-    </div>
-  );
-}
-
-function createLocalizedMessage(message: string, limit: number, onClick?: () => void) {
-  const limitStr = limit.toLocaleString(undefined, { useGrouping: true });
-  const messageWithLimit = message.replace("{{limit}}", limitStr);
-  const exp = new RegExp("<link>(.*)</link>");
-  const match = messageWithLimit.match(exp);
-
-  if (!match) {
-    return {
-      title: messageWithLimit,
-      element: (
-        <div style={{ display: "flex" }}>
-          <Text variant={"body-sm"}>{messageWithLimit}</Text>
-        </div>
-      ),
-    };
-  }
-
-  const [fullText, innerText] = match;
-  const [textBefore, textAfter] = messageWithLimit.split(fullText);
-
-  return {
-    title: messageWithLimit.replace(fullText, innerText),
-    element: (
-      <div style={{ display: "flex" }}>
-        {textBefore ? <Text variant={"body-sm"}>{textBefore}</Text> : null}
-        <Anchor
-          // underline props does not exist in v5
-          onClick={(e) => {
-            e.stopPropagation();
-            onClick?.();
-          }}
-        >
-          {innerText}
-        </Anchor>
-        {textAfter ? <Text variant={"body-sm"}>{textAfter}</Text> : null}
+    <div style={{ gap: "8px", display: "flex", flexDirection: "column" }}>
+      <div>
+        {finalMsg[0]}
+        <LinkedNode errorNode={errorNode} scrollToElement={scrollToElement} />
+        {finalMsg[1]}
       </div>
-    ),
-  };
+      <div style={{ display: "flex", flexDirection: "column" }}>
+        {supportsLimitOverride && (
+          <Anchor onClick={() => onOverrideLimit(MAX_LIMIT_OVERRIDE)}>
+            {localizedStrings.increaseHierarchyLimit.replace("{{limit}}", MAX_LIMIT_OVERRIDE.toString())}
+          </Anchor>
+        )}
+        {supportsFiltering && <Anchor onClick={onFilterClick}>{localizedStrings.increaseHierarchyLimitWithFiltering}</Anchor>}
+      </div>
+    </div>
+  );
+}
+
+interface LinkedNodeProps {
+  errorNode: ErrorType;
+  scrollToElement: (node: ErrorType) => void;
+}
+
+function LinkedNode({ errorNode, scrollToElement }: LinkedNodeProps) {
+  return <Anchor onClick={() => scrollToElement(errorNode)}>{errorNode.parentNode?.label}</Anchor>;
 }

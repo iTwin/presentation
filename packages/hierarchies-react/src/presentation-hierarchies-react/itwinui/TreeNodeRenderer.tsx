@@ -14,15 +14,15 @@ import {
   Ref,
   RefAttributes,
   useCallback,
+  useMemo,
   useRef,
 } from "react";
 import { DropdownMenu, Spinner, Tree } from "@itwin/itwinui-react/bricks";
-import { isPresentationHierarchyNode, PresentationHierarchyNode } from "../TreeNode.js";
+import { PresentationHierarchyNode } from "../TreeNode.js";
 import { useTree } from "../UseTree.js";
 import { FlatTreeNode, isPlaceholderNode } from "./FlatTreeNode.js";
 import { useLocalizationContext } from "./LocalizationContext.js";
 import { TreeActionButton, TreeItemAction } from "./TreeActionButton.js";
-import { TreeErrorItemProps, TreeErrorRenderer } from "./TreeErrorRenderer.js";
 
 const dropdownIcon = new URL("@itwin/itwinui-icons/more-horizontal.svg", import.meta.url).href;
 
@@ -50,14 +50,17 @@ export interface TreeNodeRendererOwnProps {
    * E.g. icons, color picker, etc.
    */
   getDecorations?: (node: PresentationHierarchyNode) => ReactNode;
+  /**
+   * Used to determine if node contains errors.
+   */
+  isErrorNode?: (node: PresentationHierarchyNode) => boolean;
 }
 
 /** @alpha */
 type TreeNodeRendererProps = Pick<ReturnType<typeof useTree>, "expandNode" | "isNodeSelected"> &
   Partial<Pick<ReturnType<typeof useTree>, "getHierarchyLevelDetails">> &
   Omit<TreeNodeProps, "actions" | "aria-level" | "aria-posinset" | "aria-setsize" | "label" | "icon" | "expanded" | "selected" | "unstable_decorations"> &
-  TreeNodeRendererOwnProps &
-  TreeErrorItemProps;
+  TreeNodeRendererOwnProps;
 
 /**
  * A component that renders `RenderedTreeNode` using the `TreeNode` component from `@itwin/itwinui-react`.
@@ -68,41 +71,18 @@ type TreeNodeRendererProps = Pick<ReturnType<typeof useTree>, "expandNode" | "is
  */
 export const TreeNodeRenderer: ForwardRefExoticComponent<TreeNodeRendererProps & RefAttributes<HTMLElement>> = forwardRef(
   (
-    {
-      node,
-      expandNode,
-      getLabel,
-      getSublabel,
-      onFilterClick,
-      onNodeClick,
-      onNodeKeyDown,
-      isNodeSelected,
-      getHierarchyLevelDetails,
-      reloadTree,
-      actions,
-      getDecorations,
-      ...treeItemProps
-    },
+    { node, expandNode, getLabel, getSublabel, onNodeClick, onNodeKeyDown, isNodeSelected, actions, getDecorations, isErrorNode, ...treeItemProps },
     forwardedRef,
   ) => {
     const nodeRef = useRef<HTMLElement>(null);
     const ref = useMergedRefs(forwardedRef, nodeRef);
 
+    const error = useMemo(() => {
+      return !isPlaceholderNode(node) ? isErrorNode?.(node) : false;
+    }, [isErrorNode, node]);
+
     if (isPlaceholderNode(node)) {
       return <PlaceholderNode {...treeItemProps} level={node.level} ref={ref} />;
-    }
-
-    if (!isPresentationHierarchyNode(node)) {
-      return (
-        <TreeErrorRenderer
-          style={treeItemProps.style}
-          ref={ref}
-          node={node}
-          getHierarchyLevelDetails={getHierarchyLevelDetails}
-          reloadTree={reloadTree}
-          onFilterClick={onFilterClick}
-        />
-      );
     }
 
     const getActions = () => {
@@ -111,10 +91,12 @@ export const TreeNodeRenderer: ForwardRefExoticComponent<TreeNodeRendererProps &
       }
 
       if (actions.length < 4) {
-        return actions.map((action, index) => {
-          const actionInfo = action(node);
-          return <TreeActionButton key={index} {...actionInfo} />;
-        });
+        return [
+          ...actions.map((action, index) => {
+            const actionInfo = action(node);
+            return <TreeActionButton key={index} {...actionInfo} />;
+          }),
+        ];
       }
 
       return [
@@ -158,6 +140,7 @@ export const TreeNodeRenderer: ForwardRefExoticComponent<TreeNodeRendererProps &
         }}
         actions={getActions()}
         unstable_decorations={getDecorations && getDecorations(node)}
+        error={error}
       />
     );
   },
