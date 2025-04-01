@@ -41,6 +41,11 @@ export interface LocalizedStrings {
    */
   noFilteredChildrenChangeFilter: string;
   /**
+   * Label for change filter action.
+   * Default value: `Failed to create hierarchy for {{node}}`.
+   */
+  failedToCreateHierarchy: string;
+  /**
    * Message displayed when result limit exceeds hierarchy size limit.
    * Default value: `The hierarchy for {{node}} contains {{limit}}+ items. Try using filters or increase the limit`.
    */
@@ -74,6 +79,7 @@ const defaultLocalizedStrings: LocalizedStrings = {
   clearHierarchyLevelFilter: "Clear active filter",
   noFilteredChildren: "No matches for current filter for {{node}}",
   noFilteredChildrenChangeFilter: "Change filter",
+  failedToCreateHierarchy: "Failed to create hierarchy for {{node}}",
   resultLimitExceeded: "The hierarchy for {{node}} contains {{limit}}+ items. Try using filters or increase the limit",
   increaseHierarchyLimit: "Increase limit to {{limit}}",
   increaseHierarchyLimitWithFiltering: "Add Filter",

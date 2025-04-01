@@ -42,22 +42,18 @@ export function TreeErrorRenderer({ error, scrollToElement, getHierarchyLevelDet
       />
     );
   }
-
   if (error.errorNode.type === "NoFilterMatches") {
     return <NoFilterMatches scrollToElement={scrollToElement} errorNode={error} />;
   }
-
   return <DefaultErrorContainer scrollToElement={scrollToElement} errorNode={error} />;
 }
 
 function NoFilterMatches({ onFilterClick, errorNode, scrollToElement }: LinkedNodeProps & Pick<TreeErrorItemProps, "onFilterClick">) {
   const { localizedStrings } = useLocalizationContext();
+
   return (
     <div style={{ gap: "8px", display: "flex", flexDirection: "column" }}>
-      <>
-        {localizedStrings.noFilteredChildren}
-        <LinkedNode errorNode={errorNode} scrollToElement={scrollToElement} />
-      </>
+      <MessageWithNode errorNode={errorNode} scrollToElement={scrollToElement} message={localizedStrings.noFilteredChildren} />
       <Anchor onClick={() => onFilterClick}>Change filter localization</Anchor>
     </div>
   );
@@ -65,12 +61,10 @@ function NoFilterMatches({ onFilterClick, errorNode, scrollToElement }: LinkedNo
 
 function DefaultErrorContainer({ reloadTree, errorNode, scrollToElement }: LinkedNodeProps & Pick<TreeErrorItemProps, "reloadTree">) {
   const { localizedStrings } = useLocalizationContext();
+
   return (
     <div style={{ gap: "8px", display: "flex", flexDirection: "column" }}>
-      <>
-        {localizedStrings.noFilteredChildren}
-        <LinkedNode errorNode={errorNode} scrollToElement={scrollToElement} />
-      </>
+      <MessageWithNode errorNode={errorNode} scrollToElement={scrollToElement} message={localizedStrings.failedToCreateHierarchy} />
       <Anchor onClick={() => reloadTree}>{localizedStrings.retry}</Anchor>
     </div>
   );
@@ -87,15 +81,10 @@ function ResultSetTooLarge({ errorNode, onFilterClick, limit, onOverrideLimit, s
   const supportsFiltering = !!onFilterClick;
   const supportsLimitOverride = !!onOverrideLimit && limit < MAX_LIMIT_OVERRIDE;
   const messageWithLimit = localizedStrings.resultLimitExceeded.replace("{{limit}}", limit.toString());
-  const finalMsg = messageWithLimit.split("{{node}}", 2);
 
   return (
     <div style={{ gap: "8px", display: "flex", flexDirection: "column" }}>
-      <div>
-        {finalMsg[0]}
-        <LinkedNode errorNode={errorNode} scrollToElement={scrollToElement} />
-        {finalMsg[1]}
-      </div>
+      <MessageWithNode errorNode={errorNode} scrollToElement={scrollToElement} message={messageWithLimit} />
       <div style={{ display: "flex", flexDirection: "column" }}>
         {supportsLimitOverride && (
           <Anchor onClick={() => onOverrideLimit(MAX_LIMIT_OVERRIDE)}>
@@ -115,4 +104,15 @@ interface LinkedNodeProps {
 
 function LinkedNode({ errorNode, scrollToElement }: LinkedNodeProps) {
   return <Anchor onClick={() => scrollToElement(errorNode)}>{errorNode.parentNode?.label}</Anchor>;
+}
+
+function MessageWithNode({ errorNode, scrollToElement, message }: LinkedNodeProps & { message: string }) {
+  const splitMessage = message.split("{{node}}", 2);
+  return (
+    <div>
+      {splitMessage[0]}
+      <LinkedNode errorNode={errorNode} scrollToElement={scrollToElement} />
+      {splitMessage[1]}
+    </div>
+  );
 }
