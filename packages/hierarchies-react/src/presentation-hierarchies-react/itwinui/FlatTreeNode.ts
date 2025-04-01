@@ -74,7 +74,6 @@ export function getErrors(rootNodes: PresentationTreeNode[]): ErrorNode[] {
 
 function getErrorNodes(parent: PresentationHierarchyNode, path: string[]) {
   const errorList: ErrorNode[] = [];
-  const newPath = [...path];
 
   if (parent.children === true) {
     return [];
@@ -82,13 +81,12 @@ function getErrorNodes(parent: PresentationHierarchyNode, path: string[]) {
 
   parent.children.forEach((node) => {
     if (!isPresentationHierarchyNode(node)) {
-      errorList.push({ parent, error: node, expandTo: (expandNode) => expandTo(expandNode, newPath) });
+      errorList.push({ parent, error: node, expandTo: (expandNode) => expandTo(expandNode, path) });
       return;
     }
 
     if (node.children !== true) {
-      newPath.push(...(!parent.isExpanded ? [parent.id] : []));
-      const childErrorList = getErrorNodes(node, newPath);
+      const childErrorList = getErrorNodes(node, [...path, ...(!parent.isExpanded ? [parent.id] : [])]);
       errorList.push(...childErrorList);
       return;
     }
