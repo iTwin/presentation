@@ -88,12 +88,10 @@ export const TreeNodeRenderer: ForwardRefExoticComponent<TreeNodeRendererProps &
         return undefined;
       }
 
-      return [
-        ...actions.map((action, index) => {
-          const actionInfo = action(node);
-          return <TreeActionButton key={index} {...actionInfo} />;
-        }),
-      ];
+      return actions.map((action, index) => {
+        const actionInfo = action(node);
+        return <TreeActionButton key={index} {...actionInfo} />;
+      });
     };
 
     const selected = isNodeSelected(node.id);
