@@ -79,6 +79,7 @@ function getErrorNodes(parent: PresentationHierarchyNode, path: string[]) {
     return [];
   }
 
+  const pathToChild = [...path, ...(!parent.isExpanded ? [parent.id] : [])];
   parent.children.forEach((node) => {
     if (!isPresentationHierarchyNode(node)) {
       errorList.push({ parent, error: node, expandTo: (expandNode) => expandTo(expandNode, path) });
@@ -86,7 +87,7 @@ function getErrorNodes(parent: PresentationHierarchyNode, path: string[]) {
     }
 
     if (node.children !== true) {
-      const childErrorList = getErrorNodes(node, [...path, ...(!parent.isExpanded ? [parent.id] : [])]);
+      const childErrorList = getErrorNodes(node, pathToChild);
       errorList.push(...childErrorList);
       return;
     }
