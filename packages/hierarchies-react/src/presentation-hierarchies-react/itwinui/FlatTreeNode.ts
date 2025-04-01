@@ -20,10 +20,10 @@ export type FlatNode = {
 } & PresentationHierarchyNode;
 
 /** @alpha */
-export interface ErrorType {
-  errorNode: PresentationInfoNode;
-  parentNode?: PresentationHierarchyNode;
-  expandToNode: (expandNode: (nodeId: string) => void) => void;
+export interface ErrorNode {
+  error: PresentationInfoNode;
+  parent?: PresentationHierarchyNode;
+  expandTo: (expandNode: (nodeId: string) => void) => void;
 }
 
 /** @alpha */
@@ -60,29 +60,34 @@ function getFlatNodes(nodes: PresentationTreeNode[], level: number) {
   return flatNodes;
 }
 
-export function getErrors(rootNodes: PresentationTreeNode[]) {
-  return rootNodes.flatMap((rootNode) => getErrorNodes(rootNode, []));
+export function getErrors(rootNodes: PresentationTreeNode[]): ErrorNode[] {
+  return rootNodes.flatMap((rootNode) => {
+    if (!isPresentationHierarchyNode(rootNode)) {
+      return [{ parent: undefined, error: rootNode, expandTo: (expandNode) => expandTo(expandNode, []) }];
+    }
+    if (rootNode.children === true) {
+      return [];
+    }
+    return getErrorNodes(rootNode, !rootNode.isExpanded ? [rootNode.id] : []);
+  });
 }
 
-function getErrorNodes(parentNode: PresentationTreeNode, path: string[]) {
-  const errorList: ErrorType[] = [];
+function getErrorNodes(parent: PresentationHierarchyNode, path: string[]) {
+  const errorList: ErrorNode[] = [];
   const newPath = [...path];
 
-  if (!isPresentationHierarchyNode(parentNode)) {
-    errorList.push({ parentNode: undefined, errorNode: parentNode, expandToNode: (expandNode) => expandToNode(expandNode, newPath) });
+  if (parent.children === true) {
     return [];
   }
-  if (parentNode.children === true) {
-    return [];
-  }
-  parentNode.children.forEach((node) => {
+
+  parent.children.forEach((node) => {
     if (!isPresentationHierarchyNode(node)) {
-      errorList.push({ parentNode, errorNode: node, expandToNode: (expandNode) => expandToNode(expandNode, newPath) });
+      errorList.push({ parent, error: node, expandTo: (expandNode) => expandTo(expandNode, newPath) });
       return;
     }
 
     if (node.children !== true) {
-      newPath.push(...(!parentNode.isExpanded ? [parentNode.id] : []));
+      newPath.push(...(!parent.isExpanded ? [parent.id] : []));
       const childErrorList = getErrorNodes(node, newPath);
       errorList.push(...childErrorList);
       return;
@@ -91,6 +96,6 @@ function getErrorNodes(parentNode: PresentationTreeNode, path: string[]) {
   return errorList;
 }
 
-function expandToNode(expandNode: (nodeId: string) => void, path: string[]) {
+function expandTo(expandNode: (nodeId: string) => void, path: string[]) {
   path.forEach((nodeId) => expandNode(nodeId));
 }

@@ -9,7 +9,7 @@ import { useVirtualizer } from "@tanstack/react-virtual";
 import { PresentationHierarchyNode, PresentationTreeNode } from "../TreeNode.js";
 import { SelectionMode, useSelectionHandler } from "../UseSelectionHandler.js";
 import { useTree } from "../UseTree.js";
-import { ErrorType, flattenNodes, getErrors } from "./FlatTreeNode.js";
+import { ErrorNode, flattenNodes, getErrors } from "./FlatTreeNode.js";
 import { LocalizationContextProvider } from "./LocalizationContext.js";
 import { TreeErrorItemProps, TreeErrorRenderer } from "./TreeErrorRenderer.js";
 import { TreeNodeRenderer } from "./TreeNodeRenderer.js";
@@ -63,9 +63,9 @@ export function TreeRenderer({
   const flatNodes = useMemo(() => flattenNodes(rootNodes), [rootNodes]);
   const errorList = useMemo(() => getErrors(rootNodes), [rootNodes]);
 
-  const isErrorNode = useCallback(
+  const hasError = useCallback(
     (node: PresentationHierarchyNode) => {
-      return !!errorList.find((error) => error.parentNode?.id === node.id);
+      return !!errorList.find((error) => error.parent?.id === node.id);
     },
     [errorList],
   );
@@ -80,11 +80,11 @@ export function TreeRenderer({
 
   const items = virtualizer.getVirtualItems();
 
-  const scrollToElement = (errorNode: ErrorType) => {
-    errorNode.expandToNode((nodeId) => expandNode(nodeId, true));
-    const index = flatNodes.findIndex((flatNode) => flatNode.id === errorNode.parentNode?.id);
+  const scrollToElement = (errorNode: ErrorNode) => {
+    const index = flatNodes.findIndex((flatNode) => flatNode.id === errorNode.parent?.id);
     if (index === -1) {
-      scrollToNode.current = errorNode.parentNode?.id;
+      errorNode.expandTo((nodeId) => expandNode(nodeId, true));
+      scrollToNode.current = errorNode.parent?.id;
       return;
     }
     virtualizer.scrollToIndex(index);
@@ -96,23 +96,21 @@ export function TreeRenderer({
     }
     const index = flatNodes.findIndex((flatNode) => flatNode.id === scrollToNode.current);
     virtualizer.scrollToIndex(index);
+    if (index === -1) {
+      return;
+    }
     scrollToNode.current = undefined;
   }, [flatNodes, virtualizer]);
 
   return (
     <LocalizationContextProvider localizedStrings={localizedStrings}>
-      <div>
-        {errorList.map((error) => (
-          <TreeErrorRenderer
-            key={error.parentNode?.id}
-            error={error}
-            scrollToElement={scrollToElement}
-            getHierarchyLevelDetails={getHierarchyLevelDetails}
-            onFilterClick={onFilterClick}
-            reloadTree={reloadTree}
-          />
-        ))}
-      </div>
+      <TreeErrorRenderer
+        errorList={errorList}
+        scrollToElement={scrollToElement}
+        getHierarchyLevelDetails={getHierarchyLevelDetails}
+        onFilterClick={onFilterClick}
+        reloadTree={reloadTree}
+      />
       <div style={{ height: "100%", width: "100%", overflowY: "auto" }} ref={parentRef}>
         <Tree.Root style={{ height: virtualizer.getTotalSize(), minHeight: "100%", width: "100%", position: "relative" }}>
           {items.map((virtualizedItem) => {
@@ -131,7 +129,7 @@ export function TreeRenderer({
                 expandNode={expandNode}
                 onNodeClick={onNodeClick}
                 onNodeKeyDown={onNodeKeyDown}
-                isErrorNode={isErrorNode}
+                hasError={hasError}
                 node={flatNodes[virtualizedItem.index]}
                 key={virtualizedItem.key}
                 data-index={virtualizedItem.index}

@@ -17,14 +17,12 @@ import {
   useMemo,
   useRef,
 } from "react";
-import { DropdownMenu, Spinner, Tree } from "@itwin/itwinui-react/bricks";
+import { Spinner, Tree } from "@itwin/itwinui-react/bricks";
 import { PresentationHierarchyNode } from "../TreeNode.js";
 import { useTree } from "../UseTree.js";
 import { FlatTreeNode, isPlaceholderNode } from "./FlatTreeNode.js";
 import { useLocalizationContext } from "./LocalizationContext.js";
 import { TreeActionButton, TreeItemAction } from "./TreeActionButton.js";
-
-const dropdownIcon = new URL("@itwin/itwinui-icons/more-horizontal.svg", import.meta.url).href;
 
 /** @alpha */
 type TreeNodeProps = ComponentPropsWithoutRef<typeof Tree.Item>;
@@ -53,7 +51,7 @@ export interface TreeNodeRendererOwnProps {
   /**
    * Used to determine if node contains errors.
    */
-  isErrorNode?: (node: PresentationHierarchyNode) => boolean;
+  hasError?: (node: PresentationHierarchyNode) => boolean;
 }
 
 /** @alpha */
@@ -71,15 +69,15 @@ type TreeNodeRendererProps = Pick<ReturnType<typeof useTree>, "expandNode" | "is
  */
 export const TreeNodeRenderer: ForwardRefExoticComponent<TreeNodeRendererProps & RefAttributes<HTMLElement>> = forwardRef(
   (
-    { node, expandNode, getLabel, getSublabel, onNodeClick, onNodeKeyDown, isNodeSelected, actions, getDecorations, isErrorNode, ...treeItemProps },
+    { node, expandNode, getLabel, getSublabel, onNodeClick, onNodeKeyDown, isNodeSelected, actions, getDecorations, hasError, ...treeItemProps },
     forwardedRef,
   ) => {
     const nodeRef = useRef<HTMLElement>(null);
     const ref = useMergedRefs(forwardedRef, nodeRef);
 
     const error = useMemo(() => {
-      return !isPlaceholderNode(node) ? isErrorNode?.(node) : false;
-    }, [isErrorNode, node]);
+      return !isPlaceholderNode(node) ? hasError?.(node) : false;
+    }, [hasError, node]);
 
     if (isPlaceholderNode(node)) {
       return <PlaceholderNode {...treeItemProps} level={node.level} ref={ref} />;
@@ -90,27 +88,11 @@ export const TreeNodeRenderer: ForwardRefExoticComponent<TreeNodeRendererProps &
         return undefined;
       }
 
-      if (actions.length < 4) {
-        return [
-          ...actions.map((action, index) => {
-            const actionInfo = action(node);
-            return <TreeActionButton key={index} {...actionInfo} />;
-          }),
-        ];
-      }
-
       return [
-        <TreeActionButton key={0} {...actions[0](node)} />,
-        <TreeActionButton key={1} {...actions[1](node)} />,
-        <DropdownMenu.Root key={2}>
-          <DropdownMenu.Button render={<Tree.ItemAction icon={dropdownIcon} label="Tree actions dropdown" />} />
-          <DropdownMenu.Content>
-            {actions.slice(2, actions.length).map((action) => {
-              const info = action(node);
-              return <DropdownMenu.Item label={info.label} key={info.label} onClick={() => info.action()} />;
-            })}
-          </DropdownMenu.Content>
-        </DropdownMenu.Root>,
+        ...actions.map((action, index) => {
+          const actionInfo = action(node);
+          return <TreeActionButton key={index} {...actionInfo} />;
+        }),
       ];
     };
 
