@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { Anchor, unstable_ErrorRegion } from "@itwin/itwinui-react/bricks";
+import { Anchor, unstable_ErrorRegion as ErrorRegion } from "@itwin/itwinui-react/bricks";
 import { MAX_LIMIT_OVERRIDE } from "../internal/Utils.js";
 import { HierarchyLevelDetails, useTree } from "../UseTree.js";
 import { ErrorNode } from "./FlatTreeNode.js";
