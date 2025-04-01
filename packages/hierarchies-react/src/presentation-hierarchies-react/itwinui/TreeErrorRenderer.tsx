@@ -50,7 +50,7 @@ export function TreeErrorRenderer({ errorList, scrollToElement, getHierarchyLeve
   });
 
   return (
-    <unstable_ErrorRegion.Root
+    <ErrorRegion.Root
       style={{ width: "100%" }}
       label={errorList.length !== 0 ? `${errorList.length} ${localizedStrings?.issuesFound}` : undefined}
       items={errorItems}
@@ -62,7 +62,7 @@ function NoFilterMatches({ onFilterClick, errorNode, scrollToElement }: LinkedNo
   const { localizedStrings } = useLocalizationContext();
 
   return (
-    <unstable_ErrorRegion.Item
+    <ErrorRegion.Item
       message={<MessageWithNode errorNode={errorNode} scrollToElement={scrollToElement} message={localizedStrings.noFilteredChildren} />}
       actions={<Anchor onClick={() => onFilterClick}>{localizedStrings.noFilteredChildrenChangeFilter}</Anchor>}
     />
@@ -73,7 +73,7 @@ function DefaultErrorContainer({ reloadTree, errorNode, scrollToElement }: Linke
   const { localizedStrings } = useLocalizationContext();
 
   return (
-    <unstable_ErrorRegion.Item
+    <ErrorRegion.Item
       message={<MessageWithNode errorNode={errorNode} scrollToElement={scrollToElement} message={localizedStrings.failedToCreateHierarchy} />}
       actions={<Anchor onClick={() => reloadTree}>{localizedStrings.retry}</Anchor>}
     />
@@ -93,7 +93,7 @@ function ResultSetTooLarge({ errorNode, onFilterClick, limit, onOverrideLimit, s
   const messageWithLimit = localizedStrings.resultLimitExceeded.replace("{{limit}}", limit.toString());
 
   return (
-    <unstable_ErrorRegion.Item
+    <ErrorRegion.Item
       message={<MessageWithNode errorNode={errorNode} scrollToElement={scrollToElement} message={messageWithLimit} />}
       actions={
         <div style={{ display: "flex", flexDirection: "column" }}>
