@@ -95,10 +95,10 @@ export function TreeRenderer({
       return;
     }
     const index = flatNodes.findIndex((flatNode) => flatNode.id === scrollToNode.current);
-    virtualizer.scrollToIndex(index);
     if (index === -1) {
       return;
     }
+    virtualizer.scrollToIndex(index);
     scrollToNode.current = undefined;
   }, [flatNodes, virtualizer]);
 

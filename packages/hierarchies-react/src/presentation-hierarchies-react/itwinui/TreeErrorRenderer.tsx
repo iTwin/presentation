@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { Anchor, unstable_ErrorRegion as ErrorRegion } from "@itwin/itwinui-react/bricks";
+import { Anchor, unstable_ErrorRegion as ErrorRegion, Text } from "@itwin/itwinui-react/bricks";
 import { MAX_LIMIT_OVERRIDE } from "../internal/Utils.js";
 import { HierarchyLevelDetails, useTree } from "../UseTree.js";
 import { ErrorNode } from "./FlatTreeNode.js";
@@ -122,9 +122,9 @@ function MessageWithNode({ errorNode, scrollToElement, message }: LinkedNodeProp
   const splitMessage = message.split("{{node}}", 2);
   return (
     <div>
-      {splitMessage[0]}
+      <Text variant={"body-sm"}>{splitMessage[0]}</Text>
       <LinkedNode errorNode={errorNode} scrollToElement={scrollToElement} />
-      {splitMessage[1]}
+      <Text variant={"body-sm"}>{splitMessage[1]}</Text>
     </div>
   );
 }
