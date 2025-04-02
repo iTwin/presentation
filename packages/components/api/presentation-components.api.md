@@ -63,7 +63,6 @@ import { PropertyFilterBuilderRuleValueRendererProps } from '@itwin/components-r
 import { PropertyFilterRuleGroupOperator } from '@itwin/components-react';
 import { PropertyFilterRuleOperator } from '@itwin/components-react';
 import { PropertyRecord } from '@itwin/appui-abstract';
-import { PropertyValueConstraints } from '@itwin/presentation-common';
 import { PropertyValueRendererContext } from '@itwin/components-react';
 import { PropsWithChildren } from 'react';
 import { PureComponent } from 'react';
