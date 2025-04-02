@@ -125,7 +125,7 @@ function MessageWithNode({ errorNode, scrollToElement, message }: LinkedNodeProp
     <div>
       <Text variant={"body-sm"}>{splitMessage[0]}</Text>
       <LinkedNode errorNode={errorNode} scrollToElement={scrollToElement} />
-      {!!splitMessage[1] && <Text variant={"body-sm"}>{splitMessage[1]}</Text>}
+      {splitMessage[1] ? <Text variant={"body-sm"}>{splitMessage[1]}</Text> : null}
     </div>
   );
 }
