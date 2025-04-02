@@ -3,12 +3,12 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { IconButton, Tree } from "@itwin/itwinui-react/bricks";
+import { Tree } from "@itwin/itwinui-react/bricks";
 import { PresentationHierarchyNode } from "../TreeNode.js";
 import { HierarchyLevelDetails, useTree } from "../UseTree.js";
 import { useLocalizationContext } from "./LocalizationContext.js";
 
-const filterIcon = new URL("@itwin/itwinui-icons/filter.svg", import.meta.url).href;
+const filterSvg = new URL("@itwin/itwinui-icons/filter.svg", import.meta.url).href;
 
 /** @alpha */
 export interface TreeItemAction {
@@ -38,15 +38,7 @@ export type FilterActionProps = {
 
 /** @internal */
 export function TreeActionButton({ show, label, action, icon, activeDescription }: TreeItemAction) {
-  return (
-    <Tree.ItemAction
-      render={<IconButton dot={activeDescription} icon={icon} variant={"ghost"} label={label} />}
-      label={label}
-      icon={icon}
-      visible={show}
-      onClick={action}
-    />
-  );
+  return <Tree.ItemAction label={label} dot={activeDescription} icon={icon} visible={show} onClick={action} />;
 }
 
 /** @alpha */
@@ -70,9 +62,8 @@ export function useFilterAction({ onFilter, getHierarchyLevelDetails }: FilterAc
         hierarchyLevelDetails && onFilter?.(hierarchyLevelDetails);
       },
       show: handleVisibility(),
-      isDropdownAction: false,
       activeDescription: node.isFiltered ? localizedStrings.filterHierarchyLevelActiveDescription : undefined,
-      icon: filterIcon,
+      icon: filterSvg,
     };
   };
 }

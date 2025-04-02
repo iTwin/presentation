@@ -44,7 +44,7 @@ export function StatelessTreeV2({ imodel, ...props }: { imodel: IModelConnection
       imodelKey: imodel.key,
       ...schemaProvider,
       ...createCachingECClassHierarchyInspector({ schemaProvider }),
-      ...createLimitingECSqlQueryExecutor(createECSqlQueryExecutor(imodel), 1000),
+      ...createLimitingECSqlQueryExecutor(createECSqlQueryExecutor(imodel), 10),
     });
   }, [imodel]);
 
@@ -310,12 +310,12 @@ function toGenericFilter(filterInfo?: PresentationInstanceFilterInfo): GenericIn
   return PresentationInstanceFilter.toGenericInstanceFilter(filterInfo.filter, filterInfo.usedClasses);
 }
 
-const subjectIcon = new URL("@itwin/itwinui-icons/bis-subject.svg", import.meta.url).href;
-const classIcon = new URL("@itwin/itwinui-icons/bis-class.svg", import.meta.url).href;
-const modelIcon = new URL("@itwin/itwinui-icons/model-cube.svg", import.meta.url).href;
-const categoryIcon = new URL("@itwin/itwinui-icons/bis-category-3d.svg", import.meta.url).href;
-const elementIcon = new URL("@itwin/itwinui-icons/bis-element.svg", import.meta.url).href;
-const iModelIcon = new URL("@itwin/itwinui-icons/imodel.svg", import.meta.url).href;
+const subjectSvg = new URL("@itwin/itwinui-icons/bis-subject.svg", import.meta.url).href;
+const classSvg = new URL("@itwin/itwinui-icons/bis-class.svg", import.meta.url).href;
+const modelSvg = new URL("@itwin/itwinui-icons/model-cube.svg", import.meta.url).href;
+const categorySvg = new URL("@itwin/itwinui-icons/bis-category-3d.svg", import.meta.url).href;
+const elementSvg = new URL("@itwin/itwinui-icons/bis-element.svg", import.meta.url).href;
+const iModelSvg = new URL("@itwin/itwinui-icons/imodel.svg", import.meta.url).href;
 
 function getIcon(node: PresentationHierarchyNode): string | undefined {
   if (node.extendedData?.imageId === undefined) {
@@ -324,17 +324,17 @@ function getIcon(node: PresentationHierarchyNode): string | undefined {
 
   switch (node.extendedData.imageId) {
     case "icon-layers":
-      return categoryIcon;
+      return categorySvg;
     case "icon-item":
-      return elementIcon;
+      return elementSvg;
     case "icon-ec-class":
-      return classIcon;
+      return classSvg;
     case "icon-imodel-hollow-2":
-      return iModelIcon;
+      return iModelSvg;
     case "icon-folder":
-      return subjectIcon;
+      return subjectSvg;
     case "icon-model":
-      return modelIcon;
+      return modelSvg;
   }
 
   return undefined;
