@@ -8,7 +8,7 @@ import { PresentationHierarchyNode } from "../TreeNode.js";
 import { HierarchyLevelDetails, useTree } from "../UseTree.js";
 import { useLocalizationContext } from "./LocalizationContext.js";
 
-const filterIcon = new URL("@itwin/itwinui-icons/filter.svg", import.meta.url).href;
+const filterSvg = new URL("@itwin/itwinui-icons/filter.svg", import.meta.url).href;
 
 /** @alpha */
 export interface TreeItemAction {
@@ -62,9 +62,8 @@ export function useFilterAction({ onFilter, getHierarchyLevelDetails }: FilterAc
         hierarchyLevelDetails && onFilter?.(hierarchyLevelDetails);
       },
       show: handleVisibility(),
-      isDropdownAction: false,
       activeDescription: node.isFiltered ? localizedStrings.filterHierarchyLevelActiveDescription : undefined,
-      icon: filterIcon,
+      icon: filterSvg,
     };
   };
 }

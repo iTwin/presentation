@@ -19,10 +19,12 @@ import {
 } from "react";
 import { Spinner, Tree } from "@itwin/itwinui-react/bricks";
 import { PresentationHierarchyNode } from "../TreeNode.js";
-import { useTree } from "../UseTree.js";
-import { FlatTreeNode, isPlaceholderNode } from "./FlatTreeNode.js";
+import { useTree, UseTreeResult } from "../UseTree.js";
+import { ErrorNode, FlatTreeNode, isPlaceholderNode } from "./FlatTreeNode.js";
 import { useLocalizationContext } from "./LocalizationContext.js";
 import { TreeActionButton, TreeItemAction } from "./TreeActionButton.js";
+
+const refreshSvg = new URL("@itwin/itwinui-icons/refresh.svg", import.meta.url).href;
 
 /** @alpha */
 type TreeNodeProps = ComponentPropsWithoutRef<typeof Tree.Item>;
@@ -50,14 +52,16 @@ export interface TreeNodeRendererOwnProps {
   getDecorations?: (node: PresentationHierarchyNode) => ReactNode;
   /**
    * Used to determine if node contains errors.
+   * Returns an error if node contains one, otherwise returns undefined.
    */
-  hasError?: (node: PresentationHierarchyNode) => boolean;
+  hasError?: (node: PresentationHierarchyNode) => ErrorNode | undefined;
 }
 
 /** @alpha */
 type TreeNodeRendererProps = Pick<ReturnType<typeof useTree>, "expandNode" | "isNodeSelected"> &
   Partial<Pick<ReturnType<typeof useTree>, "getHierarchyLevelDetails">> &
   Omit<TreeNodeProps, "actions" | "aria-level" | "aria-posinset" | "aria-setsize" | "label" | "icon" | "expanded" | "selected" | "unstable_decorations"> &
+  Partial<Pick<UseTreeResult, "reloadTree">> &
   TreeNodeRendererOwnProps;
 
 /**
@@ -69,13 +73,14 @@ type TreeNodeRendererProps = Pick<ReturnType<typeof useTree>, "expandNode" | "is
  */
 export const TreeNodeRenderer: ForwardRefExoticComponent<TreeNodeRendererProps & RefAttributes<HTMLElement>> = forwardRef(
   (
-    { node, expandNode, getLabel, getSublabel, onNodeClick, onNodeKeyDown, isNodeSelected, actions, getDecorations, hasError, ...treeItemProps },
+    { node, expandNode, getLabel, getSublabel, onNodeClick, onNodeKeyDown, isNodeSelected, actions, getDecorations, hasError, reloadTree, ...treeItemProps },
     forwardedRef,
   ) => {
     const nodeRef = useRef<HTMLElement>(null);
     const ref = useMergedRefs(forwardedRef, nodeRef);
+    const { localizedStrings } = useLocalizationContext();
 
-    const error = useMemo(() => {
+    const childErrorNode = useMemo(() => {
       return !isPlaceholderNode(node) ? hasError?.(node) : false;
     }, [hasError, node]);
 
@@ -88,10 +93,22 @@ export const TreeNodeRenderer: ForwardRefExoticComponent<TreeNodeRendererProps &
         return undefined;
       }
 
-      return actions.map((action, index) => {
-        const actionInfo = action(node);
-        return <TreeActionButton key={index} {...actionInfo} />;
-      });
+      const actionButtons: ReactElement[] = [];
+
+      if (childErrorNode && childErrorNode.error.type === "Unknown") {
+        actionButtons.push(
+          <TreeActionButton label={localizedStrings.retry} action={() => reloadTree?.({ parentNodeId: node.id })} show={true} icon={refreshSvg} />,
+        );
+      }
+
+      actionButtons.push(
+        ...actions.map((action, index) => {
+          const actionInfo = action(node);
+          return <TreeActionButton key={index} {...actionInfo} />;
+        }),
+      );
+
+      return actionButtons;
     };
 
     const selected = isNodeSelected(node.id);
@@ -120,7 +137,7 @@ export const TreeNodeRenderer: ForwardRefExoticComponent<TreeNodeRendererProps &
         }}
         actions={getActions()}
         unstable_decorations={getDecorations && getDecorations(node)}
-        error={error}
+        error={!!childErrorNode}
       />
     );
   },

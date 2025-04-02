@@ -65,7 +65,12 @@ export function TreeRenderer({
 
   const hasError = useCallback(
     (node: PresentationHierarchyNode) => {
-      return !!errorList.find((error) => error.parent?.id === node.id);
+      if (node.children === true) {
+        return undefined;
+      }
+
+      const error = errorList.find((errorNode) => errorNode.parent?.id === node.id);
+      return error;
     },
     [errorList],
   );
@@ -133,6 +138,7 @@ export function TreeRenderer({
                 node={flatNodes[virtualizedItem.index]}
                 key={virtualizedItem.key}
                 data-index={virtualizedItem.index}
+                reloadTree={reloadTree}
               />
             );
           })}
