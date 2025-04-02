@@ -1,5 +1,12 @@
 # @itwin/presentation-hierarchies-react
 
+## 2.0.0-alpha.11
+
+### Patch Changes
+
+- [#916](https://github.com/iTwin/presentation/pull/916): Fix tree nodes overlapping when nodes with and without sublabel are rendered alongside.
+- [#920](https://github.com/iTwin/presentation/pull/920): Changed error display for node errors to match new design system.
+
 ## 2.0.0-alpha.10
 
 ### Patch Changes
