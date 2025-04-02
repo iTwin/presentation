@@ -44,7 +44,7 @@ export function StatelessTreeV2({ imodel, ...props }: { imodel: IModelConnection
       imodelKey: imodel.key,
       ...schemaProvider,
       ...createCachingECClassHierarchyInspector({ schemaProvider }),
-      ...createLimitingECSqlQueryExecutor(createECSqlQueryExecutor(imodel), 10),
+      ...createLimitingECSqlQueryExecutor(createECSqlQueryExecutor(imodel), 1000),
     });
   }, [imodel]);
 
