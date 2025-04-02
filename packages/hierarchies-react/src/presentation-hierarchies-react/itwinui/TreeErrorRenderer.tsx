@@ -9,6 +9,7 @@ import { HierarchyLevelDetails, useTree } from "../UseTree.js";
 import { ErrorNode } from "./FlatTreeNode.js";
 import { useLocalizationContext } from "./LocalizationContext.js";
 
+/** @alpha */
 export interface TreeErrorItemProps {
   /** A callback to reload a hierarchy level when an error occurs and `retry` button is clicked. */
   reloadTree?: (options: { parentNodeId: string | undefined; state: "reset" }) => void;
