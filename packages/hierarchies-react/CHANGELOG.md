@@ -1,5 +1,11 @@
 # @itwin/presentation-hierarchies-react
 
+## 2.0.0-alpha.12
+
+### Patch Changes
+
+- [#922](https://github.com/iTwin/presentation/pull/922): Fix tree displaying aditional scrollbars, when scrolling to the last element with low tree width.
+
 ## 2.0.0-alpha.11
 
 ### Patch Changes
