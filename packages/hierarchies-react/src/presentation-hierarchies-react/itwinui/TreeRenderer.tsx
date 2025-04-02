@@ -92,7 +92,7 @@ export function TreeRenderer({
       scrollToNode.current = errorNode.parent?.id;
       return;
     }
-    virtualizer.scrollToIndex(index);
+    virtualizer.scrollToIndex(index, { align: "end" });
   };
 
   useEffect(() => {
@@ -103,7 +103,7 @@ export function TreeRenderer({
     if (index === -1) {
       return;
     }
-    virtualizer.scrollToIndex(index);
+    virtualizer.scrollToIndex(index, { align: "end" });
     scrollToNode.current = undefined;
   }, [flatNodes, virtualizer]);
 
@@ -117,7 +117,7 @@ export function TreeRenderer({
         reloadTree={reloadTree}
       />
       <div style={{ height: "100%", width: "100%", overflowY: "auto" }} ref={parentRef}>
-        <Tree.Root style={{ height: virtualizer.getTotalSize(), minHeight: "100%", width: "100%", position: "relative" }}>
+        <Tree.Root style={{ height: virtualizer.getTotalSize(), minHeight: "100%", width: "100%", position: "relative", overflow: "hidden" }}>
           {items.map((virtualizedItem) => {
             return (
               <TreeNodeRenderer
