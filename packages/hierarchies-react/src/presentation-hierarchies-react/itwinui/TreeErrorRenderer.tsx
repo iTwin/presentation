@@ -122,7 +122,7 @@ function LinkedNode({ errorNode, scrollToElement }: LinkedNodeProps) {
 function MessageWithNode({ errorNode, scrollToElement, message }: LinkedNodeProps & { message: string }) {
   const splitMessage = message.split("{{node}}", 2);
   return (
-    <div>
+    <div style={{ display: "flex", whiteSpace: "pre", flexWrap: "wrap" }}>
       <Text variant={"body-sm"}>{splitMessage[0]}</Text>
       <LinkedNode errorNode={errorNode} scrollToElement={scrollToElement} />
       {!!splitMessage[1] && <Text variant={"body-sm"}>{splitMessage[1]}</Text>}
