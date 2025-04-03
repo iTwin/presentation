@@ -1,5 +1,11 @@
 # @itwin/presentation-hierarchies-react
 
+## 2.0.0-alpha.13
+
+### Patch Changes
+
+- [#924](https://github.com/iTwin/presentation/pull/924): Fix tree error dropdown not applying actions.
+
 ## 2.0.0-alpha.12
 
 ### Patch Changes
