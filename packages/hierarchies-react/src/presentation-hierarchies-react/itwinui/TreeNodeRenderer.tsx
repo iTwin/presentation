@@ -97,7 +97,12 @@ export const TreeNodeRenderer: ForwardRefExoticComponent<TreeNodeRendererProps &
 
       if (childErrorNode && childErrorNode.error.type === "Unknown") {
         actionButtons.push(
-          <TreeActionButton label={localizedStrings.retry} action={() => reloadTree?.({ parentNodeId: node.id })} show={true} icon={refreshSvg} />,
+          <TreeActionButton
+            label={localizedStrings.retry}
+            action={() => reloadTree?.({ parentNodeId: node.id, state: "reset" })}
+            show={true}
+            icon={refreshSvg}
+          />,
         );
       }
 
