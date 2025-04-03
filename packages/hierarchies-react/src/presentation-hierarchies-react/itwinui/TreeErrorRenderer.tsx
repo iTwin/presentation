@@ -26,7 +26,7 @@ type TreeErrorRendererProps = TreeErrorRendererOwnProps &
   Partial<Pick<ReturnType<typeof useTree>, "getHierarchyLevelDetails">> &
   Pick<LinkedNodeProps, "scrollToElement">;
 
-export function TreeErrorRenderer({ errorList, scrollToElement, getHierarchyLevelDetails, onFilterClick }: TreeErrorRendererProps) {
+export function TreeErrorRenderer({ errorList, reloadTree, scrollToElement, getHierarchyLevelDetails, onFilterClick }: TreeErrorRendererProps) {
   const { localizedStrings } = useLocalizationContext();
   const errorItems = errorList.map((errorNode) => {
     if (errorNode.error.type === "ResultSetTooLarge") {
@@ -45,9 +45,19 @@ export function TreeErrorRenderer({ errorList, scrollToElement, getHierarchyLeve
       );
     }
     if (errorNode.error.type === "NoFilterMatches") {
-      return <NoFilterMatches key={errorNode.error.id} scrollToElement={scrollToElement} errorNode={errorNode} />;
+      return (
+        <NoFilterMatches
+          key={errorNode.error.id}
+          scrollToElement={scrollToElement}
+          onFilterClick={() => {
+            const hierarchyLevelDetails = getHierarchyLevelDetails?.(errorNode.parent?.id);
+            hierarchyLevelDetails && onFilterClick?.(hierarchyLevelDetails);
+          }}
+          errorNode={errorNode}
+        />
+      );
     }
-    return <DefaultErrorContainer key={errorNode.error.id} scrollToElement={scrollToElement} errorNode={errorNode} />;
+    return <DefaultErrorContainer key={errorNode.error.id} scrollToElement={scrollToElement} reloadTree={reloadTree} errorNode={errorNode} />;
   });
 
   return (
@@ -59,13 +69,13 @@ export function TreeErrorRenderer({ errorList, scrollToElement, getHierarchyLeve
   );
 }
 
-function NoFilterMatches({ onFilterClick, errorNode, scrollToElement }: LinkedNodeProps & Pick<TreeErrorItemProps, "onFilterClick">) {
+function NoFilterMatches({ onFilterClick, errorNode, scrollToElement }: LinkedNodeProps & { onFilterClick?: () => void }) {
   const { localizedStrings } = useLocalizationContext();
 
   return (
     <ErrorRegion.Item
       message={<MessageWithNode errorNode={errorNode} scrollToElement={scrollToElement} message={localizedStrings.noFilteredChildren} />}
-      actions={<Anchor onClick={() => onFilterClick}>{localizedStrings.noFilteredChildrenChangeFilter}</Anchor>}
+      actions={<Anchor onClick={onFilterClick}>{localizedStrings.noFilteredChildrenChangeFilter}</Anchor>}
     />
   );
 }
@@ -76,7 +86,7 @@ function DefaultErrorContainer({ reloadTree, errorNode, scrollToElement }: Linke
   return (
     <ErrorRegion.Item
       message={<MessageWithNode errorNode={errorNode} scrollToElement={scrollToElement} message={localizedStrings.failedToCreateHierarchy} />}
-      actions={<Anchor onClick={() => reloadTree}>{localizedStrings.retry}</Anchor>}
+      actions={<Anchor onClick={() => reloadTree?.({ parentNodeId: errorNode.parent?.id, state: "reset" })}>{localizedStrings.retry}</Anchor>}
     />
   );
 }

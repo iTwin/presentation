@@ -32,7 +32,7 @@ export interface LocalizedStrings {
   clearHierarchyLevelFilter: string;
   /**
    * Message displayed when no nodes matching filter are found.
-   * Default value: `No matches for current filter for {{node}}`.
+   * Default value: `No matches for current filter for {{node}}.`.
    */
   noFilteredChildren: string;
   /**
@@ -42,12 +42,12 @@ export interface LocalizedStrings {
   noFilteredChildrenChangeFilter: string;
   /**
    * Message displayed when hierarchy creation for a node failed.
-   * Default value: `Failed to create hierarchy for {{node}}`.
+   * Default value: `Failed to create hierarchy for {{node}}.`.
    */
   failedToCreateHierarchy: string;
   /**
    * Message displayed when result limit exceeds hierarchy size limit.
-   * Default value: `The hierarchy for {{node}} contains {{limit}}+ items. Try using filters or increase the limit`.
+   * Default value: `The hierarchy for {{node}} contains {{limit}}+ items. Try using filters or increase the limit.`.
    */
   resultLimitExceeded: string;
   /**
@@ -82,10 +82,10 @@ const defaultLocalizedStrings: LocalizedStrings = {
   filterHierarchyLevel: "Apply filter",
   filterHierarchyLevelActiveDescription: "Filter is applied",
   clearHierarchyLevelFilter: "Clear active filter",
-  noFilteredChildren: "No matches for current filter for {{node}}",
+  noFilteredChildren: "No matches for current filter for {{node}}.",
   noFilteredChildrenChangeFilter: "Change filter",
-  failedToCreateHierarchy: "Failed to create hierarchy for {{node}}",
-  resultLimitExceeded: "The hierarchy for {{node}} contains {{limit}}+ items. Try using filters or increase the limit",
+  failedToCreateHierarchy: "Failed to create hierarchy for {{node}}.",
+  resultLimitExceeded: "The hierarchy for {{node}} contains {{limit}}+ items. Try using filters or increase the limit.",
   issuesFound: "issues found",
   increaseHierarchyLimit: "Increase limit to {{limit}}",
   increaseHierarchyLimitWithFiltering: "Add Filter",
