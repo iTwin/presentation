@@ -3,6 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
+import { useCallback } from "react";
 import { Tree } from "@itwin/itwinui-react/bricks";
 import { PresentationHierarchyNode } from "../TreeNode.js";
 import { HierarchyLevelDetails, useTree } from "../UseTree.js";
@@ -44,26 +45,30 @@ export function TreeActionButton({ show, label, action, icon, activeDescription 
 /** @alpha */
 export function useFilterAction({ onFilter, getHierarchyLevelDetails }: FilterActionProps): (node: PresentationHierarchyNode) => TreeItemAction {
   const { localizedStrings } = useLocalizationContext();
-  return (node) => {
-    const handleVisibility = () => {
-      if (!onFilter || !node.isFilterable) {
-        return false;
-      }
-      if (node.isFiltered) {
-        return true;
-      }
-      return undefined;
-    };
+  const { filterHierarchyLevel, filterHierarchyLevelActiveDescription } = localizedStrings;
+  return useCallback(
+    (node) => {
+      const handleVisibility = () => {
+        if (!onFilter || !node.isFilterable) {
+          return false;
+        }
+        if (node.isFiltered) {
+          return true;
+        }
+        return undefined;
+      };
 
-    return {
-      label: localizedStrings.filterHierarchyLevel,
-      action: () => {
-        const hierarchyLevelDetails = getHierarchyLevelDetails?.(node.id);
-        hierarchyLevelDetails && onFilter?.(hierarchyLevelDetails);
-      },
-      show: handleVisibility(),
-      activeDescription: node.isFiltered ? localizedStrings.filterHierarchyLevelActiveDescription : undefined,
-      icon: filterSvg,
-    };
-  };
+      return {
+        label: filterHierarchyLevel,
+        action: () => {
+          const hierarchyLevelDetails = getHierarchyLevelDetails?.(node.id);
+          hierarchyLevelDetails && onFilter?.(hierarchyLevelDetails);
+        },
+        show: handleVisibility(),
+        activeDescription: node.isFiltered ? filterHierarchyLevelActiveDescription : undefined,
+        icon: filterSvg,
+      };
+    },
+    [filterHierarchyLevel, filterHierarchyLevelActiveDescription, onFilter, getHierarchyLevelDetails],
+  );
 }

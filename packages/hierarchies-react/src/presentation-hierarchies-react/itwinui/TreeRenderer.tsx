@@ -3,12 +3,13 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { ComponentPropsWithoutRef, useCallback, useEffect, useMemo, useRef } from "react";
+import { ComponentPropsWithoutRef, forwardRef, memo, useCallback, useEffect, useMemo, useRef } from "react";
 import { Tree } from "@itwin/itwinui-react/bricks";
 import { useVirtualizer } from "@tanstack/react-virtual";
-import { PresentationHierarchyNode, PresentationTreeNode } from "../TreeNode.js";
+import { PresentationTreeNode } from "../TreeNode.js";
 import { SelectionMode, useSelectionHandler } from "../UseSelectionHandler.js";
 import { useTree } from "../UseTree.js";
+import { useEvent } from "../Utils.js";
 import { ErrorNode, flattenNodes, getErrors } from "./FlatTreeNode.js";
 import { LocalizationContextProvider } from "./LocalizationContext.js";
 import { TreeErrorItemProps, TreeErrorRenderer } from "./TreeErrorRenderer.js";
@@ -31,7 +32,7 @@ interface TreeRendererOwnProps {
 type TreeRendererProps = Pick<ReturnType<typeof useTree>, "expandNode"> &
   Partial<Pick<ReturnType<typeof useTree>, "selectNodes" | "isNodeSelected" | "getHierarchyLevelDetails" | "reloadTree">> &
   Pick<TreeErrorItemProps, "onFilterClick"> &
-  Omit<TreeNodeRendererProps, "node" | "reloadTree"> &
+  Omit<TreeNodeRendererProps, "node" | "reloadTree" | "selected" | "error"> &
   TreeRendererOwnProps &
   ComponentPropsWithoutRef<typeof LocalizationContextProvider>;
 
@@ -51,6 +52,11 @@ export function TreeRenderer({
   getHierarchyLevelDetails,
   onFilterClick,
   reloadTree,
+  isNodeSelected,
+  actions,
+  getDecorations,
+  getLabel,
+  getSublabel,
   ...treeProps
 }: TreeRendererProps) {
   const { onNodeClick, onNodeKeyDown } = useSelectionHandler({
@@ -63,14 +69,12 @@ export function TreeRenderer({
   const flatNodes = useMemo(() => flattenNodes(rootNodes), [rootNodes]);
   const errorList = useMemo(() => getErrors(rootNodes), [rootNodes]);
 
-  const hasError = useCallback(
-    (node: PresentationHierarchyNode) => {
-      if (node.children === true) {
-        return undefined;
-      }
+  const handleNodeClick = useEvent(onNodeClick);
+  const handleKeyDown = useEvent(onNodeKeyDown);
 
-      const error = errorList.find((errorNode) => errorNode.parent?.id === node.id);
-      return error;
+  const hasError = useCallback(
+    (nodeId: string) => {
+      return errorList.find((errorNode) => errorNode.parent?.id === nodeId);
     },
     [errorList],
   );
@@ -80,20 +84,23 @@ export function TreeRenderer({
     getScrollElement: () => parentRef.current,
     getItemKey: (index) => flatNodes[index].id,
     estimateSize: () => 28,
-    overscan: 5,
+    overscan: 10,
   });
 
   const items = virtualizer.getVirtualItems();
 
-  const scrollToElement = (errorNode: ErrorNode) => {
-    const index = flatNodes.findIndex((flatNode) => flatNode.id === errorNode.parent?.id);
-    if (index === -1) {
-      errorNode.expandTo((nodeId) => expandNode(nodeId, true));
-      scrollToNode.current = errorNode.parent?.id;
-      return;
-    }
-    virtualizer.scrollToIndex(index, { align: "end" });
-  };
+  const scrollToElement = useCallback(
+    (errorNode: ErrorNode) => {
+      const index = flatNodes.findIndex((flatNode) => flatNode.id === errorNode.parent?.id);
+      if (index === -1) {
+        errorNode.expandTo((nodeId) => expandNode(nodeId, true));
+        scrollToNode.current = errorNode.parent?.id;
+        return;
+      }
+      virtualizer.scrollToIndex(index, { align: "end" });
+    },
+    [expandNode, flatNodes, virtualizer],
+  );
 
   useEffect(() => {
     if (scrollToNode.current === undefined) {
@@ -119,26 +126,26 @@ export function TreeRenderer({
       <div style={{ height: "100%", width: "100%", overflowY: "auto" }} ref={parentRef}>
         <Tree.Root style={{ height: virtualizer.getTotalSize(), minHeight: "100%", width: "100%", position: "relative", overflow: "hidden" }}>
           {items.map((virtualizedItem) => {
+            const selected = isNodeSelected?.(flatNodes[virtualizedItem.index].id) ?? false;
+            const error = hasError(flatNodes[virtualizedItem.index].id);
             return (
-              <TreeNodeRenderer
+              <VirtualTreeItem
                 {...treeProps}
                 ref={virtualizer.measureElement}
-                style={{
-                  position: "absolute",
-                  top: 0,
-                  left: 0,
-                  width: "100%",
-                  transform: `translateY(${virtualizedItem.start}px)`,
-                  willChange: "transform",
-                }}
+                start={virtualizedItem.start}
                 expandNode={expandNode}
-                onNodeClick={onNodeClick}
-                onNodeKeyDown={onNodeKeyDown}
-                hasError={hasError}
+                onNodeClick={handleNodeClick}
+                onNodeKeyDown={handleKeyDown}
+                error={error}
                 node={flatNodes[virtualizedItem.index]}
                 key={virtualizedItem.key}
                 data-index={virtualizedItem.index}
                 reloadTree={reloadTree}
+                selected={selected}
+                actions={actions}
+                getDecorations={getDecorations}
+                getLabel={getLabel}
+                getSublabel={getSublabel}
               />
             );
           })}
@@ -147,5 +154,27 @@ export function TreeRenderer({
     </LocalizationContextProvider>
   );
 }
+
+const VirtualTreeItem = memo(
+  forwardRef<HTMLElement, TreeNodeRendererProps & { start: number }>(function VirtualTreeItem({ start, ...props }, forwardedRef) {
+    return (
+      <TreeNodeRenderer
+        {...props}
+        ref={forwardedRef}
+        style={useMemo(
+          () => ({
+            position: "absolute",
+            top: 0,
+            left: 0,
+            width: "100%",
+            transform: `translateY(${start}px)`,
+            willChange: "transform",
+          }),
+          [start],
+        )}
+      />
+    );
+  }),
+);
 
 function noopSelectNodes() {}
