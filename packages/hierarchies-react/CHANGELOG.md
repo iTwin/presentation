@@ -1,5 +1,11 @@
 # @itwin/presentation-hierarchies-react
 
+## 2.0.0-alpha.14
+
+### Patch Changes
+
+- [#928](https://github.com/iTwin/presentation/pull/928): Memoize tree components to reduce the amount of renders.
+
 ## 2.0.0-alpha.13
 
 ### Patch Changes
