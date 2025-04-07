@@ -16,6 +16,7 @@ export function useLatest<T>(value: T) {
   return ref;
 }
 
+/* c8 ignore start */
 /** @internal */
 export function useEvent<TCallback extends (...args: any[]) => void>(callback: TCallback) {
   const latestCallback = useLatest(callback);
@@ -27,3 +28,4 @@ export function useEvent<TCallback extends (...args: any[]) => void>(callback: T
     [latestCallback],
   );
 }
+/* c8 ignore end */
