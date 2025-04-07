@@ -49,7 +49,7 @@ export interface TreeNodeRendererOwnProps {
    */
   getDecorations?: (node: PresentationHierarchyNode) => ReactNode;
   /** Specifies if tree item is selected. */
-  selected: boolean;
+  selected?: boolean;
   /** Actions for tree item. */
   actions?: Array<(node: PresentationHierarchyNode) => TreeItemAction>;
   /** Specifies if tree item has error. */

@@ -227,7 +227,7 @@ interface TreeNodeRendererOwnProps {
     node: FlatTreeNode;
     onNodeClick?: (node: PresentationHierarchyNode, isSelected: boolean, event: React.MouseEvent<HTMLElement>) => void;
     onNodeKeyDown?: (node: PresentationHierarchyNode, isSelected: boolean, event: React.KeyboardEvent<HTMLElement>) => void;
-    selected: boolean;
+    selected?: boolean;
 }
 
 // @alpha (undocumented)
