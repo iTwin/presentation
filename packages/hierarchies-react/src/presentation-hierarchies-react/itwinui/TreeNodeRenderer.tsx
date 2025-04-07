@@ -75,7 +75,7 @@ type TreeNodeRendererProps = Pick<ReturnType<typeof useTree>, "expandNode"> &
  */
 export const TreeNodeRenderer: FC<PropsWithRef<TreeNodeRendererProps & RefAttributes<HTMLElement>>> = memo(
   forwardRef<HTMLElement, TreeNodeRendererProps>(function TreeNodeRenderer(
-    { node, selected, actions, error, expandNode, getLabel, getSublabel, getDecorations, reloadTree, onNodeClick, onKeyDown, ...treeItemProps },
+    { node, selected, actions, error, expandNode, getLabel, getSublabel, getDecorations, reloadTree, onNodeClick, onNodeKeyDown, ...treeItemProps },
     forwardedRef,
   ) {
     if (isPlaceholderNode(node)) {
@@ -94,7 +94,7 @@ export const TreeNodeRenderer: FC<PropsWithRef<TreeNodeRendererProps & RefAttrib
         getLabel={getLabel}
         getSublabel={getSublabel}
         getDecorations={getDecorations}
-        onKeyDown={onKeyDown}
+        onNodeKeyDown={onNodeKeyDown}
         onNodeClick={onNodeClick}
         reloadTree={reloadTree}
       />
