@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { ComponentPropsWithoutRef, useEffect, useMemo, useState } from "react";
+import { ComponentPropsWithoutRef, useCallback, useEffect, useMemo, useState } from "react";
 import { debounceTime, Subject } from "rxjs";
 import { BeEvent } from "@itwin/core-bentley";
 import { IModelConnection } from "@itwin/core-frontend";
@@ -104,11 +104,11 @@ function Tree({ imodel, imodelAccess, height, width }: { imodel: IModelConnectio
   });
 
   const [shouldUseCustomFormatter, setShouldUseCustomFormatter] = useState<boolean>(false);
-  const toggleFormatter = () => {
+  const toggleFormatter = useCallback(() => {
     const newValue = !shouldUseCustomFormatter;
     setShouldUseCustomFormatter(newValue);
     setFormatter(newValue ? customFormatter : undefined);
-  };
+  }, [shouldUseCustomFormatter, setFormatter]);
 
   const [filteringOptions, setFilteringOptions] = useState<HierarchyLevelDetails>();
   const propertiesSource = useMemo<(() => Promise<PresentationInstanceFilterPropertiesSource>) | undefined>(() => {
@@ -162,6 +162,13 @@ function Tree({ imodel, imodelAccess, height, width }: { imodel: IModelConnectio
   }, [filteringOptions]);
 
   const filterAction = useFilterAction({ onFilter: setFilteringOptions, getHierarchyLevelDetails: treeProps.getHierarchyLevelDetails });
+  const actions = useMemo(() => {
+    return [filterAction];
+  }, [filterAction]);
+
+  const getDecorations = useCallback((node: PresentationHierarchyNode) => {
+    return <Icon href={getIcon(node)} />;
+  }, []);
 
   const renderContent = () => {
     if (rootNodes && rootNodes.length === 0 && filter) {
@@ -179,9 +186,9 @@ function Tree({ imodel, imodelAccess, height, width }: { imodel: IModelConnectio
         rootNodes={rootNodes ?? []}
         reloadTree={reloadTree}
         onFilterClick={setFilteringOptions}
-        actions={[filterAction]}
+        actions={actions}
         selectionMode={"extended"}
-        getDecorations={(node) => <Icon href={getIcon(node)} />}
+        getDecorations={getDecorations}
       />
     );
   };

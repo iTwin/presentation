@@ -12,6 +12,7 @@ import { useUnifiedTreeSelection, UseUnifiedTreeSelectionProps } from "./interna
 import { safeDispose } from "./internal/Utils.js";
 import { PresentationHierarchyNode, PresentationTreeNode } from "./TreeNode.js";
 import { SelectionChangeType } from "./UseSelectionHandler.js";
+import { useLatest } from "./Utils.js";
 
 /**
  * A data structure that contains information about a single hierarchy level.
@@ -398,13 +399,4 @@ function toPresentationHierarchyNodeBase(node: TreeModelHierarchyNode): Omit<Pre
     isFiltered: !!node.instanceFilter,
     extendedData: node.nodeData.extendedData,
   };
-}
-
-function useLatest<T>(value: T) {
-  const ref = useRef(value);
-  useEffect(() => {
-    ref.current = value;
-  }, [value]);
-
-  return ref;
 }

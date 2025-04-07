@@ -6,7 +6,7 @@
 
 import { ComponentPropsWithoutRef } from 'react';
 import { createIModelHierarchyProvider } from '@itwin/presentation-hierarchies';
-import { ForwardRefExoticComponent } from 'react';
+import { FC } from 'react';
 import { GenericInstanceFilter } from '@itwin/presentation-hierarchies';
 import { HierarchyDefinition } from '@itwin/presentation-hierarchies';
 import { HierarchyFilteringPath } from '@itwin/presentation-hierarchies';
@@ -17,6 +17,7 @@ import { IPrimitiveValueFormatter } from '@itwin/presentation-shared';
 import { JSX as JSX_2 } from 'react/jsx-runtime';
 import { Props } from '@itwin/presentation-shared';
 import { PropsWithChildren } from 'react';
+import { PropsWithRef } from 'react';
 import { ReactElement } from 'react';
 import { ReactNode } from 'react';
 import { RefAttributes } from 'react';
@@ -214,28 +215,29 @@ export interface TreeItemAction {
 type TreeNodeProps = ComponentPropsWithoutRef<typeof Tree.Item>;
 
 // @public
-export const TreeNodeRenderer: ForwardRefExoticComponent<TreeNodeRendererProps & RefAttributes<HTMLElement>>;
+export const TreeNodeRenderer: FC<PropsWithRef<TreeNodeRendererProps & RefAttributes<HTMLElement>>>;
 
 // @alpha (undocumented)
 interface TreeNodeRendererOwnProps {
     actions?: Array<(node: PresentationHierarchyNode) => TreeItemAction>;
+    error?: ErrorNode;
     getDecorations?: (node: PresentationHierarchyNode) => ReactNode;
     getLabel?: (node: PresentationHierarchyNode) => ReactElement | undefined;
     getSublabel?: (node: PresentationHierarchyNode) => ReactElement | undefined;
-    hasError?: (node: PresentationHierarchyNode) => ErrorNode | undefined;
     node: FlatTreeNode;
-    onNodeClick?: (node: PresentationHierarchyNode, isSelected: boolean, event: React.MouseEvent<HTMLElement, MouseEvent>) => void;
+    onNodeClick?: (node: PresentationHierarchyNode, isSelected: boolean, event: React.MouseEvent<HTMLElement>) => void;
     onNodeKeyDown?: (node: PresentationHierarchyNode, isSelected: boolean, event: React.KeyboardEvent<HTMLElement>) => void;
+    selected?: boolean;
 }
 
 // @alpha (undocumented)
-type TreeNodeRendererProps = Pick<ReturnType<typeof useTree>, "expandNode" | "isNodeSelected"> & Partial<Pick<ReturnType<typeof useTree>, "getHierarchyLevelDetails">> & Omit<TreeNodeProps, "actions" | "aria-level" | "aria-posinset" | "aria-setsize" | "label" | "icon" | "expanded" | "selected" | "unstable_decorations"> & Partial<Pick<UseTreeResult, "reloadTree">> & TreeNodeRendererOwnProps;
+type TreeNodeRendererProps = Pick<ReturnType<typeof useTree>, "expandNode"> & Partial<Pick<ReturnType<typeof useTree>, "getHierarchyLevelDetails">> & Omit<TreeNodeProps, "actions" | "aria-level" | "aria-posinset" | "aria-setsize" | "label" | "icon" | "expanded" | "selected" | "unstable_decorations" | "error"> & Partial<Pick<UseTreeResult, "reloadTree">> & TreeNodeRendererOwnProps;
 
 // @alpha (undocumented)
 type TreeNodeRendererProps_2 = ComponentPropsWithoutRef<typeof TreeNodeRenderer>;
 
 // @alpha
-export function TreeRenderer({ rootNodes, expandNode, localizedStrings, selectNodes, selectionMode, getHierarchyLevelDetails, onFilterClick, reloadTree, ...treeProps }: TreeRendererProps): JSX_2.Element;
+export function TreeRenderer({ rootNodes, expandNode, localizedStrings, selectNodes, selectionMode, getHierarchyLevelDetails, onFilterClick, reloadTree, isNodeSelected, actions, getDecorations, getLabel, getSublabel, ...treeProps }: TreeRendererProps): JSX_2.Element;
 
 // @alpha (undocumented)
 interface TreeRendererOwnProps {
@@ -244,7 +246,7 @@ interface TreeRendererOwnProps {
 }
 
 // @alpha (undocumented)
-type TreeRendererProps = Pick<ReturnType<typeof useTree>, "expandNode"> & Partial<Pick<ReturnType<typeof useTree>, "selectNodes" | "isNodeSelected" | "getHierarchyLevelDetails" | "reloadTree">> & Pick<TreeErrorItemProps, "onFilterClick"> & Omit<TreeNodeRendererProps_2, "node" | "reloadTree"> & TreeRendererOwnProps & ComponentPropsWithoutRef<typeof LocalizationContextProvider>;
+type TreeRendererProps = Pick<ReturnType<typeof useTree>, "expandNode"> & Partial<Pick<ReturnType<typeof useTree>, "selectNodes" | "isNodeSelected" | "getHierarchyLevelDetails" | "reloadTree">> & Pick<TreeErrorItemProps, "onFilterClick"> & Omit<TreeNodeRendererProps_2, "node" | "reloadTree" | "selected" | "error"> & TreeRendererOwnProps & ComponentPropsWithoutRef<typeof LocalizationContextProvider>;
 
 // @public @deprecated
 export function UnifiedSelectionProvider({ storage, children }: PropsWithChildren<{
