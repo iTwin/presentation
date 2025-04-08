@@ -130,6 +130,7 @@ function ResultSetTooLarge({ errorNode, onFilterClick, limit, onOverrideLimit, s
   );
 }
 
+/** @alpha */
 interface LinkedNodeProps {
   errorNode: ErrorNode;
   scrollToElement: (node: ErrorNode) => void;

@@ -47,9 +47,6 @@ type FlatNode = {
 } & PresentationHierarchyNode;
 
 // @alpha (undocumented)
-export function flattenNodes(rootNodes: PresentationTreeNode[]): FlatTreeNode[];
-
-// @alpha (undocumented)
 export type FlatTreeNode = FlatNode | PlaceholderNode;
 
 export { GenericInstanceFilter }
@@ -79,6 +76,14 @@ type IModelHierarchyProviderProps = Props<typeof createIModelHierarchyProvider>;
 
 // @public
 export function isPresentationHierarchyNode(node: PresentationTreeNode): node is PresentationHierarchyNode;
+
+// @alpha (undocumented)
+interface LinkedNodeProps {
+    // (undocumented)
+    errorNode: ErrorNode;
+    // (undocumented)
+    scrollToElement: (node: ErrorNode) => void;
+}
 
 // @public
 export function LocalizationContextProvider({ localizedStrings, children }: PropsWithChildren<LocalizationContextProviderProps>): JSX_2.Element;
@@ -200,6 +205,21 @@ interface TreeErrorItemProps {
 }
 
 // @alpha (undocumented)
+export function TreeErrorRenderer({ errorList, reloadTree, scrollToElement, getHierarchyLevelDetails, onFilterClick, renderError }: TreeErrorRendererProps): JSX_2.Element;
+
+// @alpha (undocumented)
+interface TreeErrorRendererOwnProps {
+    errorList: ErrorNode[];
+    // (undocumented)
+    renderError?: ({ error, scrollToElement }: {
+        error: ErrorNode;
+    } & Pick<LinkedNodeProps, "scrollToElement">) => ReactElement;
+}
+
+// @alpha (undocumented)
+type TreeErrorRendererProps = TreeErrorRendererOwnProps & TreeErrorItemProps & Partial<Pick<ReturnType<typeof useTree>, "getHierarchyLevelDetails">> & Pick<LinkedNodeProps, "scrollToElement">;
+
+// @alpha (undocumented)
 export interface TreeItemAction {
     // (undocumented)
     action: () => void;
@@ -237,7 +257,7 @@ type TreeNodeRendererProps = Pick<ReturnType<typeof useTree>, "expandNode"> & Pa
 type TreeNodeRendererProps_2 = ComponentPropsWithoutRef<typeof TreeNodeRenderer>;
 
 // @alpha
-export function TreeRenderer({ rootNodes, expandNode, localizedStrings, selectNodes, selectionMode, getHierarchyLevelDetails, onFilterClick, reloadTree, isNodeSelected, actions, getDecorations, getLabel, getSublabel, ...treeProps }: TreeRendererProps): JSX_2.Element;
+export function TreeRenderer({ rootNodes, expandNode, localizedStrings, selectNodes, selectionMode, getHierarchyLevelDetails, onFilterClick, reloadTree, isNodeSelected, actions, getDecorations, getLabel, getSublabel, renderError, ...treeProps }: TreeRendererProps): JSX_2.Element;
 
 // @alpha (undocumented)
 interface TreeRendererOwnProps {
@@ -246,7 +266,7 @@ interface TreeRendererOwnProps {
 }
 
 // @alpha (undocumented)
-type TreeRendererProps = Pick<ReturnType<typeof useTree>, "expandNode"> & Partial<Pick<ReturnType<typeof useTree>, "selectNodes" | "isNodeSelected" | "getHierarchyLevelDetails" | "reloadTree">> & Pick<TreeErrorItemProps, "onFilterClick"> & Omit<TreeNodeRendererProps_2, "node" | "reloadTree" | "selected" | "error"> & TreeRendererOwnProps & ComponentPropsWithoutRef<typeof LocalizationContextProvider>;
+type TreeRendererProps = Pick<ReturnType<typeof useTree>, "expandNode"> & Partial<Pick<ReturnType<typeof useTree>, "selectNodes" | "isNodeSelected" | "getHierarchyLevelDetails" | "reloadTree">> & Pick<TreeErrorRendererProps, "onFilterClick" | "renderError"> & Omit<TreeNodeRendererProps_2, "node" | "reloadTree" | "selected" | "error"> & TreeRendererOwnProps & ComponentPropsWithoutRef<typeof LocalizationContextProvider>;
 
 // @public @deprecated
 export function UnifiedSelectionProvider({ storage, children }: PropsWithChildren<{
@@ -254,7 +274,13 @@ export function UnifiedSelectionProvider({ storage, children }: PropsWithChildre
 }>): JSX_2.Element;
 
 // @alpha (undocumented)
+export function useErrorList(rootNodes: PresentationTreeNode[]): ErrorNode[];
+
+// @alpha (undocumented)
 export function useFilterAction({ onFilter, getHierarchyLevelDetails }: FilterActionProps): (node: PresentationHierarchyNode) => TreeItemAction;
+
+// @alpha (undocumented)
+export function useFlattenNodes(rootNodes: PresentationTreeNode[]): FlatTreeNode[];
 
 // @public
 export function useIModelTree(props: UseIModelTreeProps): UseTreeResult;

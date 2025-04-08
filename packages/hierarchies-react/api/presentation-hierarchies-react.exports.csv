@@ -1,6 +1,5 @@
 sep=;
 Release Tag;API Item Type;API Item Name
-alpha;function;flattenNodes
 alpha;type;FlatTreeNode
 public;interface;HierarchyLevelDetails
 public;function;isPresentationHierarchyNode
@@ -10,12 +9,15 @@ public;interface;PresentationHierarchyNode
 public;type;PresentationInfoNode
 public;interface;PresentationResultSetTooLargeInfoNode
 public;type;PresentationTreeNode
+alpha;function;TreeErrorRenderer
 alpha;interface;TreeItemAction
 public;const;TreeNodeRenderer
 alpha;function;TreeRenderer
 public;function;UnifiedSelectionProvider
 deprecated;function;UnifiedSelectionProvider
+alpha;function;useErrorList
 alpha;function;useFilterAction
+alpha;function;useFlattenNodes
 public;function;useIModelTree
 public;function;useIModelUnifiedSelectionTree
 public;function;useSelectionHandler
