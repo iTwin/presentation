@@ -3,6 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
+import { ReactElement } from "react";
 import { Anchor, unstable_ErrorRegion as ErrorRegion, Text } from "@itwin/itwinui-react/bricks";
 import { MAX_LIMIT_OVERRIDE } from "../internal/Utils.js";
 import { HierarchyLevelDetails, useTree } from "../UseTree.js";
@@ -10,25 +11,34 @@ import { ErrorNode } from "./FlatTreeNode.js";
 import { useLocalizationContext } from "./LocalizationContext.js";
 
 /** @alpha */
-export interface TreeErrorItemProps {
+interface TreeErrorItemProps {
   /** A callback to reload a hierarchy level when an error occurs and `retry` button is clicked. */
   reloadTree?: (options: { parentNodeId: string | undefined; state: "reset" }) => void;
   /** Action to perform when the filter button is clicked for this node. */
   onFilterClick?: (hierarchyLevelDetails: HierarchyLevelDetails) => void;
 }
-
+/** @alpha */
 interface TreeErrorRendererOwnProps {
+  /** List of errors to be displayed */
   errorList: ErrorNode[];
+  // Callback to render custom error messages. Component should be wrapped in `ErrorRegion.Item` from itwinUI.
+  renderError?: ({ error, scrollToElement }: { error: ErrorNode } & Pick<LinkedNodeProps, "scrollToElement">) => ReactElement;
 }
 
-type TreeErrorRendererProps = TreeErrorRendererOwnProps &
+/** @alpha */
+export type TreeErrorRendererProps = TreeErrorRendererOwnProps &
   TreeErrorItemProps &
   Partial<Pick<ReturnType<typeof useTree>, "getHierarchyLevelDetails">> &
   Pick<LinkedNodeProps, "scrollToElement">;
 
-export function TreeErrorRenderer({ errorList, reloadTree, scrollToElement, getHierarchyLevelDetails, onFilterClick }: TreeErrorRendererProps) {
+/** @alpha */
+export function TreeErrorRenderer({ errorList, reloadTree, scrollToElement, getHierarchyLevelDetails, onFilterClick, renderError }: TreeErrorRendererProps) {
   const { localizedStrings } = useLocalizationContext();
   const errorItems = errorList.map((errorNode) => {
+    if (renderError) {
+      return renderError({ error: errorNode, scrollToElement });
+    }
+
     if (errorNode.error.type === "ResultSetTooLarge") {
       return (
         <ResultSetTooLarge

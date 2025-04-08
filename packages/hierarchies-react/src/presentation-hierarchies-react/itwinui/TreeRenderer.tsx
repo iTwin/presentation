@@ -10,9 +10,9 @@ import { PresentationTreeNode } from "../TreeNode.js";
 import { SelectionMode, useSelectionHandler } from "../UseSelectionHandler.js";
 import { useTree } from "../UseTree.js";
 import { useEvent } from "../Utils.js";
-import { ErrorNode, flattenNodes, getErrors } from "./FlatTreeNode.js";
+import { ErrorNode, useErrorList, useFlattenNodes } from "./FlatTreeNode.js";
 import { LocalizationContextProvider } from "./LocalizationContext.js";
-import { TreeErrorItemProps, TreeErrorRenderer } from "./TreeErrorRenderer.js";
+import { TreeErrorRenderer, TreeErrorRendererProps } from "./TreeErrorRenderer.js";
 import { TreeNodeRenderer } from "./TreeNodeRenderer.js";
 
 /** @alpha */
@@ -31,7 +31,7 @@ interface TreeRendererOwnProps {
 /** @alpha */
 type TreeRendererProps = Pick<ReturnType<typeof useTree>, "expandNode"> &
   Partial<Pick<ReturnType<typeof useTree>, "selectNodes" | "isNodeSelected" | "getHierarchyLevelDetails" | "reloadTree">> &
-  Pick<TreeErrorItemProps, "onFilterClick"> &
+  Pick<TreeErrorRendererProps, "onFilterClick" | "renderError"> &
   Omit<TreeNodeRendererProps, "node" | "reloadTree" | "selected" | "error"> &
   TreeRendererOwnProps &
   ComponentPropsWithoutRef<typeof LocalizationContextProvider>;
@@ -57,6 +57,7 @@ export function TreeRenderer({
   getDecorations,
   getLabel,
   getSublabel,
+  renderError,
   ...treeProps
 }: TreeRendererProps) {
   const { onNodeClick, onNodeKeyDown } = useSelectionHandler({
@@ -66,8 +67,8 @@ export function TreeRenderer({
   });
   const scrollToNode = useRef<string | undefined>(undefined);
   const parentRef = useRef<HTMLDivElement>(null);
-  const flatNodes = useMemo(() => flattenNodes(rootNodes), [rootNodes]);
-  const errorList = useMemo(() => getErrors(rootNodes), [rootNodes]);
+  const flatNodes = useFlattenNodes(rootNodes);
+  const errorList = useErrorList(rootNodes);
 
   const handleNodeClick = useEvent(onNodeClick);
   const handleKeyDown = useEvent(onNodeKeyDown);
@@ -117,6 +118,7 @@ export function TreeRenderer({
   return (
     <LocalizationContextProvider localizedStrings={localizedStrings}>
       <TreeErrorRenderer
+        renderError={renderError}
         errorList={errorList}
         scrollToElement={scrollToElement}
         getHierarchyLevelDetails={getHierarchyLevelDetails}

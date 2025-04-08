@@ -3,6 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
+import { useMemo } from "react";
 import { isPresentationHierarchyNode, PresentationHierarchyNode, PresentationInfoNode, PresentationTreeNode } from "../TreeNode.js";
 
 /** @alpha */
@@ -35,8 +36,8 @@ export function isPlaceholderNode(node: FlatTreeNode): node is PlaceholderNode {
 }
 
 /** @alpha */
-export function flattenNodes(rootNodes: PresentationTreeNode[]) {
-  return getFlatNodes(rootNodes, 1);
+export function useFlattenNodes(rootNodes: PresentationTreeNode[]) {
+  return useMemo(() => getFlatNodes(rootNodes, 1), [rootNodes]);
 }
 
 function getFlatNodes(nodes: PresentationTreeNode[], level: number) {
@@ -60,16 +61,21 @@ function getFlatNodes(nodes: PresentationTreeNode[], level: number) {
   return flatNodes;
 }
 
-export function getErrors(rootNodes: PresentationTreeNode[]): ErrorNode[] {
-  return rootNodes.flatMap((rootNode) => {
-    if (!isPresentationHierarchyNode(rootNode)) {
-      return [{ parent: undefined, error: rootNode, expandTo: (expandNode) => expandTo(expandNode, []) }];
-    }
-    if (rootNode.children === true) {
-      return [];
-    }
-    return getErrorNodes(rootNode, !rootNode.isExpanded ? [rootNode.id] : []);
-  });
+/** @alpha */
+export function useErrorList(rootNodes: PresentationTreeNode[]): ErrorNode[] {
+  return useMemo(
+    () =>
+      rootNodes.flatMap((rootNode) => {
+        if (!isPresentationHierarchyNode(rootNode)) {
+          return [{ parent: undefined, error: rootNode, expandTo: (expandNode) => expandTo(expandNode, []) }];
+        }
+        if (rootNode.children === true) {
+          return [];
+        }
+        return getErrorNodes(rootNode, !rootNode.isExpanded ? [rootNode.id] : []);
+      }),
+    [rootNodes],
+  );
 }
 
 function getErrorNodes(parent: PresentationHierarchyNode, path: string[]) {
