@@ -22,7 +22,7 @@ interface TreeErrorRendererOwnProps {
   /** List of errors to be displayed */
   errorList: ErrorNode[];
   // Callback to render custom error messages. Component should be wrapped in `ErrorRegion.Item` from `@itwin/itwinui-react` package.
-  renderError?: ({ error, scrollToElement }: { error: ErrorNode } & Pick<LinkedNodeProps, "scrollToElement">) => ReactElement;
+  renderError?: ({ errorNode, scrollToElement }: { errorNode: ErrorNode } & Pick<LinkedNodeProps, "scrollToElement">) => ReactElement;
 }
 
 /** @alpha */
@@ -36,7 +36,7 @@ export function TreeErrorRenderer({ errorList, reloadTree, scrollToElement, getH
   const { localizedStrings } = useLocalizationContext();
   const errorItems = errorList.map((errorNode) => {
     if (renderError) {
-      return renderError({ error: errorNode, scrollToElement });
+      return renderError({ errorNode, scrollToElement });
     }
 
     if (errorNode.error.type === "ResultSetTooLarge") {
