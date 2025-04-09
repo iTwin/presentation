@@ -6,28 +6,46 @@
 import { useMemo } from "react";
 import { isPresentationHierarchyNode, PresentationHierarchyNode, PresentationInfoNode, PresentationTreeNode } from "../TreeNode.js";
 
-/** @alpha */
+/**
+ * Placeholder node used to indicate that child nodes are loading.
+ *
+ * @alpha
+ * */
 interface PlaceholderNode {
   id: string;
   level: number;
   placeholder: true;
 }
 
-/** @alpha */
+/**
+ * An extended `PresentationHierarchyNode` node with properties needed for a flat tree structure.
+ *
+ * @alpha
+ */
 export type FlatNode = {
   level: number;
   levelSize: number;
   posInLevel: number;
 } & PresentationHierarchyNode;
 
-/** @alpha */
+/**
+ * A node used to build an error message.
+ * Returned by `useErrorList`.
+ *
+ * @alpha
+ * */
 export interface ErrorNode {
   error: PresentationInfoNode;
   parent?: PresentationHierarchyNode;
   expandTo: (expandNode: (nodeId: string) => void) => void;
 }
 
-/** @alpha */
+/**
+ * A node describing single tree item position and its content inside tree.
+ * Returned by `useFlatNodesList` hook.
+ *
+ *  @alpha
+ */
 export type FlatTreeNode = FlatNode | PlaceholderNode;
 
 /** @alpha */
@@ -35,8 +53,12 @@ export function isPlaceholderNode(node: FlatTreeNode): node is PlaceholderNode {
   return "placeholder" in node;
 }
 
-/** @alpha */
-export function useFlattenNodes(rootNodes: PresentationTreeNode[]) {
+/**
+ * Used to get flat nodes for the tree using root nodes.
+ *
+ * @alpha
+ */
+export function useFlatNodesList(rootNodes: PresentationTreeNode[]) {
   return useMemo(() => getFlatNodes(rootNodes, 1), [rootNodes]);
 }
 
@@ -61,7 +83,11 @@ function getFlatNodes(nodes: PresentationTreeNode[], level: number) {
   return flatNodes;
 }
 
-/** @alpha */
+/**
+ * Used to get error list from all loaded nodes.
+ *
+ * @alpha
+ */
 export function useErrorList(rootNodes: PresentationTreeNode[]): ErrorNode[] {
   return useMemo(
     () =>

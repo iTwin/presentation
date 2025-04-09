@@ -19,7 +19,7 @@ export { TreeNodeRenderer } from "./presentation-hierarchies-react/itwinui/TreeN
 export { TreeItemAction, useFilterAction } from "./presentation-hierarchies-react/itwinui/TreeActionButton.js";
 export { TreeRenderer } from "./presentation-hierarchies-react/itwinui/TreeRenderer.js";
 export { TreeErrorRenderer } from "./presentation-hierarchies-react/itwinui/TreeErrorRenderer.js";
-export { useFlattenNodes, useErrorList, FlatTreeNode } from "./presentation-hierarchies-react/itwinui/FlatTreeNode.js";
+export { useFlatNodesList, useErrorList, FlatTreeNode } from "./presentation-hierarchies-react/itwinui/FlatTreeNode.js";
 export { LocalizationContextProvider } from "./presentation-hierarchies-react/itwinui/LocalizationContext.js";
 
 export { GenericInstanceFilter, HierarchyNode, HierarchyProvider } from "@itwin/presentation-hierarchies";
