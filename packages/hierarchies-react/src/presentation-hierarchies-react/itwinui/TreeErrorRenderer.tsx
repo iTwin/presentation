@@ -21,7 +21,7 @@ interface TreeErrorItemProps {
 interface TreeErrorRendererOwnProps {
   /** List of errors to be displayed */
   errorList: ErrorNode[];
-  // Callback to render custom error messages. Component should be wrapped in `ErrorRegion.Item` from itwinUI.
+  // Callback to render custom error messages. Component should be wrapped in `ErrorRegion.Item` from `@itwin/itwinui-react` package.
   renderError?: ({ error, scrollToElement }: { error: ErrorNode } & Pick<LinkedNodeProps, "scrollToElement">) => ReactElement;
 }
 
