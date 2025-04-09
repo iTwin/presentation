@@ -281,7 +281,7 @@ export function useErrorList(rootNodes: PresentationTreeNode[]): ErrorNode[];
 export function useFilterAction({ onFilter, getHierarchyLevelDetails }: FilterActionProps): (node: PresentationHierarchyNode) => TreeItemAction;
 
 // @alpha
-export function useFlatNodesList(rootNodes: PresentationTreeNode[]): FlatTreeNode[];
+export function useFlatTreeNodeList(rootNodes: PresentationTreeNode[]): FlatTreeNode[];
 
 // @public
 export function useIModelTree(props: UseIModelTreeProps): UseTreeResult;

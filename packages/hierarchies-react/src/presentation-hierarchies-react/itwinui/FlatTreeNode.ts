@@ -54,11 +54,11 @@ export function isPlaceholderNode(node: FlatTreeNode): node is PlaceholderNode {
 }
 
 /**
- * Used to get flat nodes for the tree using root nodes.
+ * Used to get `flatTreeNodes` for the tree using root nodes.
  *
  * @alpha
  */
-export function useFlatNodesList(rootNodes: PresentationTreeNode[]) {
+export function useFlatTreeNodeList(rootNodes: PresentationTreeNode[]) {
   return useMemo(() => getFlatNodes(rootNodes, 1), [rootNodes]);
 }
 

@@ -17,7 +17,7 @@ public;function;UnifiedSelectionProvider
 deprecated;function;UnifiedSelectionProvider
 alpha;function;useErrorList
 alpha;function;useFilterAction
-alpha;function;useFlatNodesList
+alpha;function;useFlatTreeNodeList
 public;function;useIModelTree
 public;function;useIModelUnifiedSelectionTree
 public;function;useSelectionHandler

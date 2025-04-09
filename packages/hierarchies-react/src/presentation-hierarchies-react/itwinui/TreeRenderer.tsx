@@ -10,7 +10,7 @@ import { PresentationTreeNode } from "../TreeNode.js";
 import { SelectionMode, useSelectionHandler } from "../UseSelectionHandler.js";
 import { useTree } from "../UseTree.js";
 import { useEvent } from "../Utils.js";
-import { ErrorNode, useErrorList, useFlatNodesList } from "./FlatTreeNode.js";
+import { ErrorNode, useErrorList, useFlatTreeNodeList } from "./FlatTreeNode.js";
 import { LocalizationContextProvider } from "./LocalizationContext.js";
 import { TreeErrorRenderer, TreeErrorRendererProps } from "./TreeErrorRenderer.js";
 import { TreeNodeRenderer } from "./TreeNodeRenderer.js";
@@ -69,7 +69,7 @@ export function TreeRenderer({
   });
   const scrollToNode = useRef<string | undefined>(undefined);
   const parentRef = useRef<HTMLDivElement>(null);
-  const flatNodes = useFlatNodesList(rootNodes);
+  const flatNodes = useFlatTreeNodeList(rootNodes);
   const errorList = useErrorList(rootNodes);
 
   const handleNodeClick = useEvent(onNodeClick);
