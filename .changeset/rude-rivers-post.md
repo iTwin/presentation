@@ -1,5 +1,5 @@
 ---
-"@itwin/presentation-hierarchies-react": patch
+"@itwin/presentation-hierarchies-react": minor
 ---
 
 Exposed `TreeErrorRenderer`.
