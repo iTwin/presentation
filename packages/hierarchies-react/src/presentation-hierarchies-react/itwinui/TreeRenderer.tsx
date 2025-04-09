@@ -26,7 +26,7 @@ interface TreeRendererOwnProps {
   rootNodes: PresentationTreeNode[];
   /** Active selection mode used by the tree. Defaults to `"single"`. */
   selectionMode?: SelectionMode;
-  /** Active selection mode used by the tree. Defaults to `"single"`. */
+  /** Callback for providing a custom implementation of error display component */
   errorRenderer?: (props: TreeErrorRendererProps) => ReactElement;
 }
 
