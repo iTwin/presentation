@@ -211,8 +211,8 @@ export function TreeErrorRenderer({ errorList, reloadTree, scrollToElement, getH
 interface TreeErrorRendererOwnProps {
     errorList: ErrorNode[];
     // (undocumented)
-    renderError?: ({ error, scrollToElement }: {
-        error: ErrorNode;
+    renderError?: ({ errorNode, scrollToElement }: {
+        errorNode: ErrorNode;
     } & Pick<LinkedNodeProps, "scrollToElement">) => ReactElement;
 }
 
