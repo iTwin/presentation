@@ -77,14 +77,6 @@ type IModelHierarchyProviderProps = Props<typeof createIModelHierarchyProvider>;
 // @public
 export function isPresentationHierarchyNode(node: PresentationTreeNode): node is PresentationHierarchyNode;
 
-// @alpha (undocumented)
-interface LinkedNodeProps {
-    // (undocumented)
-    errorNode: ErrorNode;
-    // (undocumented)
-    scrollToElement: (node: ErrorNode) => void;
-}
-
 // @public
 export function LocalizationContextProvider({ localizedStrings, children }: PropsWithChildren<LocalizationContextProviderProps>): JSX_2.Element;
 
@@ -202,6 +194,7 @@ interface TreeErrorItemProps {
         parentNodeId: string | undefined;
         state: "reset";
     }) => void;
+    scrollToElement: (errorNode: ErrorNode) => void;
 }
 
 // @alpha (undocumented)
@@ -213,11 +206,12 @@ interface TreeErrorRendererOwnProps {
     // (undocumented)
     renderError?: ({ errorNode, scrollToElement }: {
         errorNode: ErrorNode;
-    } & Pick<LinkedNodeProps, "scrollToElement">) => ReactElement;
+        scrollToElement: () => void;
+    }) => ReactElement;
 }
 
 // @alpha (undocumented)
-type TreeErrorRendererProps = TreeErrorRendererOwnProps & TreeErrorItemProps & Partial<Pick<ReturnType<typeof useTree>, "getHierarchyLevelDetails">> & Pick<LinkedNodeProps, "scrollToElement">;
+type TreeErrorRendererProps = TreeErrorRendererOwnProps & TreeErrorItemProps & Partial<Pick<ReturnType<typeof useTree>, "getHierarchyLevelDetails">>;
 
 // @alpha (undocumented)
 export interface TreeItemAction {
