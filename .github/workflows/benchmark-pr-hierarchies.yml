@@ -19,7 +19,7 @@ on:
 jobs:
   benchmark:
     name: 'Hierarchies: Benchmark performance'
-    if: '!github.event.pull_request.draft'
+    if: 'github.event.pull_request.draft'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -69,4 +69,12 @@ jobs:
           output-file-path: ./apps/performance-tests/hierarchies-benchmark.json
           github-token: ${{ secrets.GITHUB_TOKEN }}
           save-data-file: false
-          comment-on-pull-request: true
+          comment-always: true
+          comment-on-pull-request: false
+          output-comment-file: hierarchies-benchmark.md
+      - name: Adjust benchmark comment with correct symbols
+        run: node ./scripts/filterBenchmarkComment.js -- commentFilePath ./hierarchies-benchmark.md
+      - name: Post adjusted benchmark comment
+        uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          path: hierarchies-benchmark.md
