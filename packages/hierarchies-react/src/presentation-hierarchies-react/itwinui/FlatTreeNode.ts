@@ -42,7 +42,7 @@ export interface ErrorNode {
 
 /**
  * A node describing single tree item position and its content inside tree.
- * Returned by `useFlatNodesList` hook.
+ * Returned by `useFlatTreeNodeList` hook.
  *
  *  @alpha
  */
