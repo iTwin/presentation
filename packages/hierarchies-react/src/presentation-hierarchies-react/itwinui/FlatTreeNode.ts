@@ -7,7 +7,7 @@ import { useMemo } from "react";
 import { isPresentationHierarchyNode, PresentationHierarchyNode, PresentationInfoNode, PresentationTreeNode } from "../TreeNode.js";
 
 /**
- * Placeholder node used to indicate that child nodes are loading.
+ * Placeholder node that is added to hierarchy as a child for a parent node while its child nodes are loading.
  *
  * @alpha
  * */
@@ -42,7 +42,7 @@ export interface ErrorNode {
 
 /**
  * A node describing single tree item position and its content inside tree.
- * Returned by `useFlatNodesList` hook.
+ * Returned by `useFlatTreeNodeList` hook.
  *
  *  @alpha
  */
@@ -54,7 +54,9 @@ export function isPlaceholderNode(node: FlatTreeNode): node is PlaceholderNode {
 }
 
 /**
- * Used to get `flatTreeNodes` for the tree using root nodes.
+ * Used to get a list of `FlatTreeNode` objects for the given list of `PresentationTreeNode` objects that represent
+ * a hierarchical structure. The resulting nodes can be used to render the hierarchy in a flat manner, e.g. using a
+ * virtualized list.
  *
  * @alpha
  */
@@ -84,7 +86,7 @@ function getFlatNodes(nodes: PresentationTreeNode[], level: number) {
 }
 
 /**
- * Used to get error list from all loaded nodes.
+ * Finds and returns all error nodes in a given hierarchy in the form of `PresentationTreeNode[]`.
  *
  * @alpha
  */
