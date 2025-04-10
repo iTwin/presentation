@@ -112,21 +112,20 @@ const HierarchyNode = memo(
     const { localizedStrings } = useLocalizationContext();
 
     const nodeActions = useMemo(() => {
-      if (!actions || actions.length === 0) {
-        return undefined;
-      }
-
       const actionButtons: ReactElement[] = [];
-
-      if (error && error.error.type === "Unknown") {
+      if (error && error.error.type === "Unknown" && reloadTree) {
         actionButtons.push(
           <TreeActionButton
             label={localizedStrings.retry}
-            action={() => reloadTree?.({ parentNodeId: node.id, state: "reset" })}
+            action={() => reloadTree({ parentNodeId: node.id, state: "reset" })}
             show={true}
             icon={refreshSvg}
           />,
         );
+      }
+
+      if (!actions || actions.length === 0) {
+        return actionButtons;
       }
 
       actionButtons.push(
