@@ -7,7 +7,7 @@ import { useMemo } from "react";
 import { isPresentationHierarchyNode, PresentationHierarchyNode, PresentationInfoNode, PresentationTreeNode } from "../TreeNode.js";
 
 /**
- * Placeholder node used to indicate that child nodes are loading.
+ * Placeholder node that is added to hierarchy as a child for a parent node while its child nodes are loading.
  *
  * @alpha
  * */
