@@ -86,7 +86,7 @@ function getFlatNodes(nodes: PresentationTreeNode[], level: number) {
 }
 
 /**
- * Used to get error list from all loaded nodes.
+ * Finds and returns all error nodes in a given hierarchy in the form of `PresentationTreeNode[]`.
  *
  * @alpha
  */
