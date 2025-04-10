@@ -10,7 +10,11 @@ import { HierarchyLevelDetails, useTree } from "../UseTree.js";
 import { ErrorNode } from "./FlatTreeNode.js";
 import { useLocalizationContext } from "./LocalizationContext.js";
 
-/** @alpha */
+/**
+ * Interface containing error item related actions.
+ *
+ * @alpha
+ */
 interface TreeErrorItemProps {
   /** A callback to reload a hierarchy level when an error occurs and `retry` button is clicked. */
   reloadTree?: (options: { parentNodeId: string | undefined; state: "reset" }) => void;
@@ -19,7 +23,11 @@ interface TreeErrorItemProps {
   /** Action to perform when an error accurs and node label is clicked in the error message */
   scrollToElement: (errorNode: ErrorNode) => void;
 }
-/** @alpha */
+/**
+ * Interface containing building blocks for `TreeErrorRenderer`.
+ *
+ * @alpha
+ */
 interface TreeErrorRendererOwnProps {
   /** List of errors to be displayed */
   errorList: ErrorNode[];
@@ -30,7 +38,12 @@ interface TreeErrorRendererOwnProps {
 /** @alpha */
 export type TreeErrorRendererProps = TreeErrorRendererOwnProps & TreeErrorItemProps & Partial<Pick<ReturnType<typeof useTree>, "getHierarchyLevelDetails">>;
 
-/** @alpha */
+/**
+ * A component that renders error display dropdown using the `unstable_ErrorRegion` component from `@itwin/itwinui-react`.
+ * Component uses error list as input from `useErrorList` hook.
+ *
+ * @alpha
+ */
 export function TreeErrorRenderer({ errorList, reloadTree, scrollToElement, getHierarchyLevelDetails, onFilterClick, renderError }: TreeErrorRendererProps) {
   const { localizedStrings } = useLocalizationContext();
   const errorItems = errorList.map((errorNode) => {

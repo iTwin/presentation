@@ -187,7 +187,7 @@ type SelectionMode_2 = "none" | "single" | "extended" | "multiple";
 
 export { SelectionStorage }
 
-// @alpha (undocumented)
+// @alpha
 interface TreeErrorItemProps {
     onFilterClick?: (hierarchyLevelDetails: HierarchyLevelDetails) => void;
     reloadTree?: (options: {
@@ -197,10 +197,10 @@ interface TreeErrorItemProps {
     scrollToElement: (errorNode: ErrorNode) => void;
 }
 
-// @alpha (undocumented)
+// @alpha
 export function TreeErrorRenderer({ errorList, reloadTree, scrollToElement, getHierarchyLevelDetails, onFilterClick, renderError }: TreeErrorRendererProps): JSX_2.Element;
 
-// @alpha (undocumented)
+// @alpha
 interface TreeErrorRendererOwnProps {
     errorList: ErrorNode[];
     // (undocumented)
