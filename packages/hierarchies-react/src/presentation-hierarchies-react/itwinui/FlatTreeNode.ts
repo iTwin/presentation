@@ -54,7 +54,9 @@ export function isPlaceholderNode(node: FlatTreeNode): node is PlaceholderNode {
 }
 
 /**
- * Used to get `flatTreeNodes` for the tree using root nodes.
+ * Used to get a list of `FlatTreeNode` objects for the given list of `PresentationTreeNode` objects that represent
+ * a hierarchical structure. The resulting nodes can be used to render the hierarchy in a flat manner, e.g. using a
+ * virtualized list.
  *
  * @alpha
  */
