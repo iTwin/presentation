@@ -71,7 +71,6 @@ jobs:
           save-data-file: false
           comment-always: true
           comment-on-pull-request: false
-          output-comment-file: hierarchies-benchmark.md
           benchmark-data-dir-path: ./apps/action-generated-benchmark.json
       - name: Adjust benchmark comment with correct symbols
         run: node ./scripts/filterBenchmarkComment.js --commentFilePath ./apps/action-generated-benchmark.json
