@@ -7,6 +7,7 @@ const fs = require("fs");
 
 const yargs = require("yargs");
 const path = require("path");
+const { execFileSync } = require("child_process");
 
 const argv = yargs(process.argv).argv;
 
