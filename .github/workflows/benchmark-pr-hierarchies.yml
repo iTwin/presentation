@@ -66,15 +66,14 @@ jobs:
         with:
           name: Hierarchies benchmark
           tool: 'customSmallerIsBetter'
-          output-file-path: ./apps/performance-tests/hierarchies-benchmark.json
           github-token: ${{ secrets.GITHUB_TOKEN }}
           save-data-file: false
           comment-always: true
           comment-on-pull-request: false
-          benchmark-data-dir-path: ./apps/action-generated-benchmark.json
+          output-file-path: ./apps/action-generated-benchmark.txt
       - name: Adjust benchmark comment with correct symbols
-        run: node ./scripts/filterBenchmarkComment.js --commentFilePath ./apps/action-generated-benchmark.json
+        run: node ./scripts/filterBenchmarkComment.js --commentFilePath ./apps/action-generated-benchmark.txt
       - name: Post adjusted benchmark comment
         uses: marocchino/sticky-pull-request-comment@v2
         with:
-          path: ./apps/action-generated-benchmark.json
+          path: ./apps/action-generated-benchmark.txt
