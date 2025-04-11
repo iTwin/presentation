@@ -67,7 +67,8 @@ type TreeNodeRendererProps = Pick<ReturnType<typeof useTree>, "expandNode"> &
   TreeNodeRendererOwnProps;
 
 /**
- * A component that renders `RenderedTreeNode` using the `TreeNode` component from `@itwin/itwinui-react`.
+ * A component that renders given `FlatTreeNode` using the `Tree.Item` component from `@itwin/itwinui-react`. The
+ * `FlatTreeNode` objects for this renderer are generally created using the `useFlatTreeNodeList` hook.
  *
  * @see `TreeRenderer`
  * @see https://itwinui.bentley.com/docs/tree
@@ -112,21 +113,20 @@ const HierarchyNode = memo(
     const { localizedStrings } = useLocalizationContext();
 
     const nodeActions = useMemo(() => {
-      if (!actions || actions.length === 0) {
-        return undefined;
-      }
-
       const actionButtons: ReactElement[] = [];
-
-      if (error && error.error.type === "Unknown") {
+      if (error && error.error.type === "Unknown" && reloadTree) {
         actionButtons.push(
           <TreeActionButton
             label={localizedStrings.retry}
-            action={() => reloadTree?.({ parentNodeId: node.id, state: "reset" })}
+            action={() => reloadTree({ parentNodeId: node.id, state: "reset" })}
             show={true}
             icon={refreshSvg}
           />,
         );
+      }
+
+      if (!actions || actions.length === 0) {
+        return actionButtons;
       }
 
       actionButtons.push(
