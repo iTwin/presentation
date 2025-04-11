@@ -11,7 +11,7 @@ const path = require("path");
 const argv = yargs(process.argv).argv;
 const inputPath = path.resolve(argv.commentFilePath);
 
-const lines = fs.readFileSync(inputPath);
+const lines = JSON.parse(fs.readFileSync(inputPath));
 console.log(lines);
 // const result = lines.map((line) => {
 //   // Keep all lines that don't contain information about tests
