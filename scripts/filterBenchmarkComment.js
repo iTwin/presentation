@@ -7,15 +7,11 @@ const fs = require("fs");
 
 const yargs = require("yargs");
 const path = require("path");
-const { execFileSync } = require("child_process");
 
 const argv = yargs(process.argv).argv;
-
-// get workspace root path
-const [{ path: workspaceRootPath }] = JSON.parse(execFileSync("pnpm", ["list", "-w", "--only-projects", "--json"], { shell: true, encoding: "utf-8" }));
 const inputPath = path.resolve(argv.commentFilePath);
 
-const lines = JSON.parse(fs.readFileSync(path.join(workspaceRootPath, inputPath)));
+const lines = JSON.parse(fs.readFileSync(inputPath));
 console.log(lines);
 // const result = lines.map((line) => {
 //   // Keep all lines that don't contain information about tests
