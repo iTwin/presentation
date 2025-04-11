@@ -73,7 +73,7 @@ jobs:
           comment-on-pull-request: false
           external-data-json-path: ./apps/performance-tests/hierarchies-benchmark.json
       - name: Adjust benchmark comment with correct symbols
-        run: node ./scripts/filterBenchmarkComment.js --commentFilePath ./apps/hierarchies-benchmark.json
+        run: node ./scripts/filterBenchmarkComment.js --commentFilePath /apps/hierarchies-benchmark.json
       # - name: Post adjusted benchmark comment
       #   uses: marocchino/sticky-pull-request-comment@v2
       #   with:
