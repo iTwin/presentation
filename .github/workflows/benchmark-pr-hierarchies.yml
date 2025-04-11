@@ -71,7 +71,7 @@ jobs:
           save-data-file: false
           comment-always: true
           comment-on-pull-request: false
-          external-data-json-path: ./apps/performance-tests/hierarchies-benchmark.json
+          external-data-json-path: ./apps
       - name: Adjust benchmark comment with correct symbols
         run: node ./scripts/filterBenchmarkComment.js --commentFilePath /apps/hierarchies-benchmark.json
       # - name: Post adjusted benchmark comment
