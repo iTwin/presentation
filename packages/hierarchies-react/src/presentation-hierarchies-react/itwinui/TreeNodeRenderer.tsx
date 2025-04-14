@@ -63,7 +63,7 @@ type TreeNodeRendererProps = Pick<ReturnType<typeof useTree>, "expandNode"> &
     TreeNodeProps,
     "actions" | "aria-level" | "aria-posinset" | "aria-setsize" | "label" | "icon" | "expanded" | "selected" | "unstable_decorations" | "error"
   > &
-  Partial<Pick<UseTreeResult, "reloadTree">> &
+  Pick<UseTreeResult, "reloadTree"> &
   TreeNodeRendererOwnProps;
 
 /**
@@ -114,7 +114,7 @@ const HierarchyNode = memo(
 
     const nodeActions = useMemo(() => {
       const actionButtons: ReactElement[] = [];
-      if (error && error.error.type === "Unknown" && reloadTree) {
+      if (error && error.error.type === "Unknown") {
         actionButtons.push(
           <TreeActionButton
             label={localizedStrings.retry}

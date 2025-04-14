@@ -17,7 +17,7 @@ import { useLocalizationContext } from "./LocalizationContext.js";
  */
 interface TreeErrorItemProps {
   /** A callback to reload a hierarchy level when an error occurs and `retry` button is clicked. */
-  reloadTree?: (options: { parentNodeId: string | undefined; state: "reset" }) => void;
+  reloadTree: (options: { parentNodeId: string | undefined; state: "reset" }) => void;
   /** Action to perform when the filter button is clicked for this node. */
   onFilterClick?: (hierarchyLevelDetails: HierarchyLevelDetails) => void;
   /** Action to perform when an error accurs and node label is clicked in the error message */
@@ -106,9 +106,9 @@ export function TreeErrorRenderer({ errorList, reloadTree, scrollToElement, getH
         errorNode={errorNode}
         actions={[
           {
-            action: () => reloadTree?.({ parentNodeId: errorNode.parent?.id, state: "reset" }),
+            action: () => reloadTree({ parentNodeId: errorNode.parent?.id, state: "reset" }),
             label: localizedStrings.retry,
-            condition: () => !!reloadTree,
+            condition: () => true,
           },
         ]}
         message={localizedStrings.failedToCreateHierarchy}
