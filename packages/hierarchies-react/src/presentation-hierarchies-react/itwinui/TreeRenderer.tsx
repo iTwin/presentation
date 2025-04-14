@@ -32,7 +32,8 @@ interface TreeRendererOwnProps {
 
 /** @alpha */
 type TreeRendererProps = Pick<ReturnType<typeof useTree>, "expandNode"> &
-  Partial<Pick<ReturnType<typeof useTree>, "selectNodes" | "isNodeSelected" | "getHierarchyLevelDetails" | "reloadTree">> &
+  Partial<Pick<ReturnType<typeof useTree>, "selectNodes" | "isNodeSelected" | "getHierarchyLevelDetails">> &
+  Pick<ReturnType<typeof useTree>, "reloadTree"> &
   Pick<TreeErrorRendererProps, "onFilterClick"> &
   Omit<TreeNodeRendererProps, "node" | "reloadTree" | "selected" | "error"> &
   TreeRendererOwnProps &
