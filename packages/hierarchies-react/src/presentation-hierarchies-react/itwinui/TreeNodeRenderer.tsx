@@ -67,7 +67,8 @@ type TreeNodeRendererProps = Pick<ReturnType<typeof useTree>, "expandNode"> &
   TreeNodeRendererOwnProps;
 
 /**
- * A component that renders `FlatTreeNode` from `useFlatTreeNodeList` hook using the `Tree.Item` component from `@itwin/itwinui-react`.
+ * A component that renders given `FlatTreeNode` using the `Tree.Item` component from `@itwin/itwinui-react`. The
+ * `FlatTreeNode` objects for this renderer are generally created using the `useFlatTreeNodeList` hook.
  *
  * @see `TreeRenderer`
  * @see https://itwinui.bentley.com/docs/tree
