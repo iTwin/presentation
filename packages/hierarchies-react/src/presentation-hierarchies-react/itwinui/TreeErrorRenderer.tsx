@@ -138,14 +138,13 @@ function ErrorItemContainer({ errorNode, message, actions, scrollToElement }: Er
       message={<MessageWithLink linkLabel={errorNode.parent?.label} scrollToElement={scrollToElement} message={message} />}
       actions={
         <div style={{ display: "flex", flexDirection: "column" }}>
-          {actions?.map(
-            (actionItem) =>
-              actionItem.condition() && (
-                <Anchor key={actionItem.label} onClick={actionItem.action}>
-                  {actionItem.label}
-                </Anchor>
-              ),
-          )}
+          {actions
+            ?.filter(({ condition }) => condition())
+            .map(({ label, action }) => (
+              <Anchor key={label} onClick={action}>
+                {label}
+              </Anchor>
+            ))}
         </div>
       }
     />
