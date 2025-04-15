@@ -3,16 +3,16 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { ComponentPropsWithoutRef, forwardRef, memo, useCallback, useEffect, useMemo, useRef } from "react";
+import { ComponentPropsWithoutRef, forwardRef, memo, ReactElement, useCallback, useEffect, useMemo, useRef } from "react";
 import { Tree } from "@itwin/itwinui-react/bricks";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { PresentationTreeNode } from "../TreeNode.js";
 import { SelectionMode, useSelectionHandler } from "../UseSelectionHandler.js";
 import { useTree } from "../UseTree.js";
 import { useEvent } from "../Utils.js";
-import { ErrorNode, flattenNodes, getErrors } from "./FlatTreeNode.js";
+import { ErrorNode, useErrorList, useFlatTreeNodeList } from "./FlatTreeNode.js";
 import { LocalizationContextProvider } from "./LocalizationContext.js";
-import { TreeErrorItemProps, TreeErrorRenderer } from "./TreeErrorRenderer.js";
+import { TreeErrorRenderer, TreeErrorRendererProps } from "./TreeErrorRenderer.js";
 import { TreeNodeRenderer } from "./TreeNodeRenderer.js";
 
 /** @alpha */
@@ -26,12 +26,15 @@ interface TreeRendererOwnProps {
   rootNodes: PresentationTreeNode[];
   /** Active selection mode used by the tree. Defaults to `"single"`. */
   selectionMode?: SelectionMode;
+  /** A render function for errors' display component. Defaults to `<TreeErrorRenderer />`. */
+  errorRenderer?: (props: TreeErrorRendererProps) => ReactElement;
 }
 
 /** @alpha */
 type TreeRendererProps = Pick<ReturnType<typeof useTree>, "expandNode"> &
-  Partial<Pick<ReturnType<typeof useTree>, "selectNodes" | "isNodeSelected" | "getHierarchyLevelDetails" | "reloadTree">> &
-  Pick<TreeErrorItemProps, "onFilterClick"> &
+  Partial<Pick<ReturnType<typeof useTree>, "selectNodes" | "isNodeSelected" | "getHierarchyLevelDetails">> &
+  Pick<ReturnType<typeof useTree>, "reloadTree"> &
+  Pick<TreeErrorRendererProps, "onFilterClick"> &
   Omit<TreeNodeRendererProps, "node" | "reloadTree" | "selected" | "error"> &
   TreeRendererOwnProps &
   ComponentPropsWithoutRef<typeof LocalizationContextProvider>;
@@ -57,6 +60,7 @@ export function TreeRenderer({
   getDecorations,
   getLabel,
   getSublabel,
+  errorRenderer,
   ...treeProps
 }: TreeRendererProps) {
   const { onNodeClick, onNodeKeyDown } = useSelectionHandler({
@@ -66,8 +70,8 @@ export function TreeRenderer({
   });
   const scrollToNode = useRef<string | undefined>(undefined);
   const parentRef = useRef<HTMLDivElement>(null);
-  const flatNodes = useMemo(() => flattenNodes(rootNodes), [rootNodes]);
-  const errorList = useMemo(() => getErrors(rootNodes), [rootNodes]);
+  const flatNodes = useFlatTreeNodeList(rootNodes);
+  const errorList = useErrorList(rootNodes);
 
   const handleNodeClick = useEvent(onNodeClick);
   const handleKeyDown = useEvent(onNodeKeyDown);
@@ -114,15 +118,17 @@ export function TreeRenderer({
     scrollToNode.current = undefined;
   }, [flatNodes, virtualizer]);
 
+  const errorRendererProps: TreeErrorRendererProps = {
+    errorList,
+    scrollToElement,
+    getHierarchyLevelDetails,
+    onFilterClick,
+    reloadTree,
+  };
+
   return (
     <LocalizationContextProvider localizedStrings={localizedStrings}>
-      <TreeErrorRenderer
-        errorList={errorList}
-        scrollToElement={scrollToElement}
-        getHierarchyLevelDetails={getHierarchyLevelDetails}
-        onFilterClick={onFilterClick}
-        reloadTree={reloadTree}
-      />
+      {errorRenderer ? errorRenderer(errorRendererProps) : <TreeErrorRenderer {...errorRendererProps} />}
       <div style={{ height: "100%", width: "100%", overflowY: "auto" }} ref={parentRef}>
         <Tree.Root style={{ height: virtualizer.getTotalSize(), minHeight: "100%", width: "100%", position: "relative", overflow: "hidden" }}>
           {items.map((virtualizedItem) => {

@@ -24,7 +24,7 @@ import { RefAttributes } from 'react';
 import { SelectionStorage } from '@itwin/unified-selection';
 import { Tree } from '@itwin/itwinui-react/bricks';
 
-// @alpha (undocumented)
+// @alpha
 interface ErrorNode {
     // (undocumented)
     error: PresentationInfoNode;
@@ -39,17 +39,14 @@ type FilterActionProps = {
     onFilter?: (hierarchyLevelDetails: HierarchyLevelDetails) => void;
 } & Partial<Pick<ReturnType<typeof useTree>, "getHierarchyLevelDetails">>;
 
-// @alpha (undocumented)
+// @alpha
 type FlatNode = {
     level: number;
     levelSize: number;
     posInLevel: number;
 } & PresentationHierarchyNode;
 
-// @alpha (undocumented)
-export function flattenNodes(rootNodes: PresentationTreeNode[]): FlatTreeNode[];
-
-// @alpha (undocumented)
+// @alpha
 export type FlatTreeNode = FlatNode | PlaceholderNode;
 
 export { GenericInstanceFilter }
@@ -104,7 +101,7 @@ interface LocalizedStrings {
     retry: string;
 }
 
-// @alpha (undocumented)
+// @alpha
 interface PlaceholderNode {
     // (undocumented)
     id: string;
@@ -190,14 +187,31 @@ type SelectionMode_2 = "none" | "single" | "extended" | "multiple";
 
 export { SelectionStorage }
 
-// @alpha (undocumented)
+// @alpha
 interface TreeErrorItemProps {
     onFilterClick?: (hierarchyLevelDetails: HierarchyLevelDetails) => void;
-    reloadTree?: (options: {
+    reloadTree: (options: {
         parentNodeId: string | undefined;
         state: "reset";
     }) => void;
+    scrollToElement: (errorNode: ErrorNode) => void;
 }
+
+// @alpha
+export function TreeErrorRenderer({ errorList, reloadTree, scrollToElement, getHierarchyLevelDetails, onFilterClick, renderError }: TreeErrorRendererProps): JSX_2.Element;
+
+// @alpha
+interface TreeErrorRendererOwnProps {
+    errorList: ErrorNode[];
+    // (undocumented)
+    renderError?: ({ errorNode, scrollToElement }: {
+        errorNode: ErrorNode;
+        scrollToElement: () => void;
+    }) => ReactElement;
+}
+
+// @alpha (undocumented)
+type TreeErrorRendererProps = TreeErrorRendererOwnProps & TreeErrorItemProps & Partial<Pick<ReturnType<typeof useTree>, "getHierarchyLevelDetails">>;
 
 // @alpha (undocumented)
 export interface TreeItemAction {
@@ -231,30 +245,37 @@ interface TreeNodeRendererOwnProps {
 }
 
 // @alpha (undocumented)
-type TreeNodeRendererProps = Pick<ReturnType<typeof useTree>, "expandNode"> & Partial<Pick<ReturnType<typeof useTree>, "getHierarchyLevelDetails">> & Omit<TreeNodeProps, "actions" | "aria-level" | "aria-posinset" | "aria-setsize" | "label" | "icon" | "expanded" | "selected" | "unstable_decorations" | "error"> & Partial<Pick<UseTreeResult, "reloadTree">> & TreeNodeRendererOwnProps;
+type TreeNodeRendererProps = Pick<ReturnType<typeof useTree>, "expandNode"> & Partial<Pick<ReturnType<typeof useTree>, "getHierarchyLevelDetails">> & Omit<TreeNodeProps, "actions" | "aria-level" | "aria-posinset" | "aria-setsize" | "label" | "icon" | "expanded" | "selected" | "unstable_decorations" | "error"> & Pick<UseTreeResult, "reloadTree"> & TreeNodeRendererOwnProps;
 
 // @alpha (undocumented)
 type TreeNodeRendererProps_2 = ComponentPropsWithoutRef<typeof TreeNodeRenderer>;
 
 // @alpha
-export function TreeRenderer({ rootNodes, expandNode, localizedStrings, selectNodes, selectionMode, getHierarchyLevelDetails, onFilterClick, reloadTree, isNodeSelected, actions, getDecorations, getLabel, getSublabel, ...treeProps }: TreeRendererProps): JSX_2.Element;
+export function TreeRenderer({ rootNodes, expandNode, localizedStrings, selectNodes, selectionMode, getHierarchyLevelDetails, onFilterClick, reloadTree, isNodeSelected, actions, getDecorations, getLabel, getSublabel, errorRenderer, ...treeProps }: TreeRendererProps): JSX_2.Element;
 
 // @alpha (undocumented)
 interface TreeRendererOwnProps {
+    errorRenderer?: (props: TreeErrorRendererProps) => ReactElement;
     rootNodes: PresentationTreeNode[];
     selectionMode?: SelectionMode_2;
 }
 
 // @alpha (undocumented)
-type TreeRendererProps = Pick<ReturnType<typeof useTree>, "expandNode"> & Partial<Pick<ReturnType<typeof useTree>, "selectNodes" | "isNodeSelected" | "getHierarchyLevelDetails" | "reloadTree">> & Pick<TreeErrorItemProps, "onFilterClick"> & Omit<TreeNodeRendererProps_2, "node" | "reloadTree" | "selected" | "error"> & TreeRendererOwnProps & ComponentPropsWithoutRef<typeof LocalizationContextProvider>;
+type TreeRendererProps = Pick<ReturnType<typeof useTree>, "expandNode"> & Partial<Pick<ReturnType<typeof useTree>, "selectNodes" | "isNodeSelected" | "getHierarchyLevelDetails">> & Pick<ReturnType<typeof useTree>, "reloadTree"> & Pick<TreeErrorRendererProps, "onFilterClick"> & Omit<TreeNodeRendererProps_2, "node" | "reloadTree" | "selected" | "error"> & TreeRendererOwnProps & ComponentPropsWithoutRef<typeof LocalizationContextProvider>;
 
 // @public @deprecated
 export function UnifiedSelectionProvider({ storage, children }: PropsWithChildren<{
     storage: SelectionStorage;
 }>): JSX_2.Element;
 
+// @alpha
+export function useErrorList(rootNodes: PresentationTreeNode[]): ErrorNode[];
+
 // @alpha (undocumented)
 export function useFilterAction({ onFilter, getHierarchyLevelDetails }: FilterActionProps): (node: PresentationHierarchyNode) => TreeItemAction;
+
+// @alpha
+export function useFlatTreeNodeList(rootNodes: PresentationTreeNode[]): FlatTreeNode[];
 
 // @public
 export function useIModelTree(props: UseIModelTreeProps): UseTreeResult;

@@ -3,61 +3,118 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
+import { ReactElement } from "react";
 import { Anchor, unstable_ErrorRegion as ErrorRegion, Text } from "@itwin/itwinui-react/bricks";
 import { MAX_LIMIT_OVERRIDE } from "../internal/Utils.js";
 import { HierarchyLevelDetails, useTree } from "../UseTree.js";
 import { ErrorNode } from "./FlatTreeNode.js";
 import { useLocalizationContext } from "./LocalizationContext.js";
 
-/** @alpha */
-export interface TreeErrorItemProps {
+/**
+ * Interface containing error item related actions.
+ *
+ * @alpha
+ */
+interface TreeErrorItemProps {
   /** A callback to reload a hierarchy level when an error occurs and `retry` button is clicked. */
-  reloadTree?: (options: { parentNodeId: string | undefined; state: "reset" }) => void;
+  reloadTree: (options: { parentNodeId: string | undefined; state: "reset" }) => void;
   /** Action to perform when the filter button is clicked for this node. */
   onFilterClick?: (hierarchyLevelDetails: HierarchyLevelDetails) => void;
+  /** Action to perform when an error accurs and node label is clicked in the error message */
+  scrollToElement: (errorNode: ErrorNode) => void;
 }
-
+/**
+ * Interface containing building blocks for `TreeErrorRenderer`.
+ *
+ * @alpha
+ */
 interface TreeErrorRendererOwnProps {
+  /** List of errors to be displayed */
   errorList: ErrorNode[];
+  // Callback to render custom error messages. Component should be wrapped in `ErrorRegion.Item` from `@itwin/itwinui-react` package.
+  renderError?: ({ errorNode, scrollToElement }: { errorNode: ErrorNode; scrollToElement: () => void }) => ReactElement;
 }
 
-type TreeErrorRendererProps = TreeErrorRendererOwnProps &
-  TreeErrorItemProps &
-  Partial<Pick<ReturnType<typeof useTree>, "getHierarchyLevelDetails">> &
-  Pick<LinkedNodeProps, "scrollToElement">;
+/** @alpha */
+export type TreeErrorRendererProps = TreeErrorRendererOwnProps & TreeErrorItemProps & Partial<Pick<ReturnType<typeof useTree>, "getHierarchyLevelDetails">>;
 
-export function TreeErrorRenderer({ errorList, reloadTree, scrollToElement, getHierarchyLevelDetails, onFilterClick }: TreeErrorRendererProps) {
+/**
+ * A component that renders error display dropdown using the `unstable_ErrorRegion` component from `@itwin/itwinui-react`.
+ * As input, the component uses a list of `ErrorNode` objects, which are generally created using the `useErrorList` hook.
+ *
+ * @alpha
+ */
+export function TreeErrorRenderer({ errorList, reloadTree, scrollToElement, getHierarchyLevelDetails, onFilterClick, renderError }: TreeErrorRendererProps) {
   const { localizedStrings } = useLocalizationContext();
   const errorItems = errorList.map((errorNode) => {
+    if (renderError) {
+      return renderError({ errorNode, scrollToElement: () => scrollToElement(errorNode) });
+    }
+
     if (errorNode.error.type === "ResultSetTooLarge") {
+      const limit = errorNode.error.resultSetSizeLimit;
+      const onOverrideLimit = getHierarchyLevelDetails ? () => getHierarchyLevelDetails(errorNode.parent?.id)?.setSizeLimit(MAX_LIMIT_OVERRIDE) : undefined;
       return (
-        <ResultSetTooLarge
+        <ErrorItemContainer
           key={errorNode.error.id}
-          onFilterClick={() => {
-            const hierarchyLevelDetails = getHierarchyLevelDetails?.(errorNode.parent?.id);
-            hierarchyLevelDetails && onFilterClick?.(hierarchyLevelDetails);
-          }}
-          onOverrideLimit={getHierarchyLevelDetails ? (limit) => getHierarchyLevelDetails(errorNode.parent?.id)?.setSizeLimit(limit) : undefined}
-          scrollToElement={scrollToElement}
-          limit={errorNode.error.resultSetSizeLimit}
           errorNode={errorNode}
+          actions={[
+            {
+              action: () => {
+                onOverrideLimit?.();
+              },
+              label: localizedStrings.increaseHierarchyLimit.replace("{{limit}}", MAX_LIMIT_OVERRIDE.toString()),
+              condition: () => !!onOverrideLimit && limit < MAX_LIMIT_OVERRIDE,
+            },
+            {
+              action: () => {
+                const hierarchyLevelDetails = getHierarchyLevelDetails?.(errorNode.parent?.id);
+                hierarchyLevelDetails && onFilterClick?.(hierarchyLevelDetails);
+              },
+              label: localizedStrings.increaseHierarchyLimitWithFiltering,
+              condition: () => !!onFilterClick && !!errorNode.parent?.isFilterable,
+            },
+          ]}
+          message={localizedStrings.resultLimitExceeded.replace("{{limit}}", limit.toString())}
+          scrollToElement={() => scrollToElement(errorNode)}
         />
       );
     }
     if (errorNode.error.type === "NoFilterMatches") {
       return (
-        <NoFilterMatches
+        <ErrorItemContainer
           key={errorNode.error.id}
-          scrollToElement={scrollToElement}
-          onFilterClick={() => {
-            const hierarchyLevelDetails = getHierarchyLevelDetails?.(errorNode.parent?.id);
-            hierarchyLevelDetails && onFilterClick?.(hierarchyLevelDetails);
-          }}
           errorNode={errorNode}
+          actions={[
+            {
+              action: () => {
+                const hierarchyLevelDetails = getHierarchyLevelDetails?.(errorNode.parent?.id);
+                hierarchyLevelDetails && onFilterClick?.(hierarchyLevelDetails);
+              },
+              label: localizedStrings.noFilteredChildrenChangeFilter,
+              condition: () => true,
+            },
+          ]}
+          message={localizedStrings.noFilteredChildren}
+          scrollToElement={() => scrollToElement(errorNode)}
         />
       );
     }
-    return <DefaultErrorContainer key={errorNode.error.id} scrollToElement={scrollToElement} reloadTree={reloadTree} errorNode={errorNode} />;
+    return (
+      <ErrorItemContainer
+        key={errorNode.error.id}
+        errorNode={errorNode}
+        actions={[
+          {
+            action: () => reloadTree({ parentNodeId: errorNode.parent?.id, state: "reset" }),
+            label: localizedStrings.retry,
+            condition: () => true,
+          },
+        ]}
+        message={localizedStrings.failedToCreateHierarchy}
+        scrollToElement={() => scrollToElement(errorNode)}
+      />
+    );
   });
 
   return (
@@ -69,72 +126,43 @@ export function TreeErrorRenderer({ errorList, reloadTree, scrollToElement, getH
   );
 }
 
-function NoFilterMatches({ onFilterClick, errorNode, scrollToElement }: LinkedNodeProps & { onFilterClick?: () => void }) {
-  const { localizedStrings } = useLocalizationContext();
+type ErrorItemContainerProps = {
+  errorNode: ErrorNode;
+  message: string;
+  actions?: { action: () => void; label: string; condition: () => boolean }[];
+} & Pick<MessageWithLinkProps, "scrollToElement">;
 
+function ErrorItemContainer({ errorNode, message, actions, scrollToElement }: ErrorItemContainerProps) {
   return (
     <ErrorRegion.Item
-      message={<MessageWithNode errorNode={errorNode} scrollToElement={scrollToElement} message={localizedStrings.noFilteredChildren} />}
-      actions={<Anchor onClick={onFilterClick}>{localizedStrings.noFilteredChildrenChangeFilter}</Anchor>}
-    />
-  );
-}
-
-function DefaultErrorContainer({ reloadTree, errorNode, scrollToElement }: LinkedNodeProps & Pick<TreeErrorItemProps, "reloadTree">) {
-  const { localizedStrings } = useLocalizationContext();
-
-  return (
-    <ErrorRegion.Item
-      message={<MessageWithNode errorNode={errorNode} scrollToElement={scrollToElement} message={localizedStrings.failedToCreateHierarchy} />}
-      actions={<Anchor onClick={() => reloadTree?.({ parentNodeId: errorNode.parent?.id, state: "reset" })}>{localizedStrings.retry}</Anchor>}
-    />
-  );
-}
-
-type ResultSetTooLargeProps = {
-  limit: number;
-  onFilterClick?: () => void;
-  onOverrideLimit?: (limit: number) => void;
-} & LinkedNodeProps;
-
-function ResultSetTooLarge({ errorNode, onFilterClick, limit, onOverrideLimit, scrollToElement }: ResultSetTooLargeProps) {
-  const { localizedStrings } = useLocalizationContext();
-  const supportsFiltering = !!onFilterClick;
-  const supportsLimitOverride = !!onOverrideLimit && limit < MAX_LIMIT_OVERRIDE;
-  const messageWithLimit = localizedStrings.resultLimitExceeded.replace("{{limit}}", limit.toString());
-
-  return (
-    <ErrorRegion.Item
-      message={<MessageWithNode errorNode={errorNode} scrollToElement={scrollToElement} message={messageWithLimit} />}
+      message={<MessageWithLink linkLabel={errorNode.parent?.label} scrollToElement={scrollToElement} message={message} />}
       actions={
         <div style={{ display: "flex", flexDirection: "column" }}>
-          {supportsLimitOverride && (
-            <Anchor onClick={() => onOverrideLimit(MAX_LIMIT_OVERRIDE)}>
-              {localizedStrings.increaseHierarchyLimit.replace("{{limit}}", MAX_LIMIT_OVERRIDE.toString())}
-            </Anchor>
-          )}
-          {supportsFiltering && <Anchor onClick={onFilterClick}>{localizedStrings.increaseHierarchyLimitWithFiltering}</Anchor>}
+          {actions
+            ?.filter(({ condition }) => condition())
+            .map(({ label, action }) => (
+              <Anchor key={label} onClick={action}>
+                {label}
+              </Anchor>
+            ))}
         </div>
       }
     />
   );
 }
 
-interface LinkedNodeProps {
-  errorNode: ErrorNode;
-  scrollToElement: (node: ErrorNode) => void;
+interface MessageWithLinkProps {
+  scrollToElement: () => void;
+  message: string;
+  linkLabel?: string;
 }
 
-function LinkedNode({ errorNode, scrollToElement }: LinkedNodeProps) {
-  return <Anchor onClick={() => scrollToElement(errorNode)}>{errorNode.parent?.label}</Anchor>;
-}
-
-function MessageWithNode({ errorNode, scrollToElement, message }: LinkedNodeProps & { message: string }) {
+function MessageWithLink({ linkLabel, scrollToElement, message }: MessageWithLinkProps) {
   const splitMessage = message.split("{{node}}", 2);
   return (
     <div style={{ display: "flex", whiteSpace: "pre", flexWrap: "wrap" }}>
       <Text variant={"body-sm"}>{splitMessage[0]}</Text>
-      <LinkedNode errorNode={errorNode} scrollToElement={scrollToElement} />
+      <Anchor onClick={scrollToElement}>{linkLabel}</Anchor>
       {splitMessage[1] ? <Text variant={"body-sm"}>{splitMessage[1]}</Text> : null}
     </div>
   );
