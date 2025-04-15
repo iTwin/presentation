@@ -128,7 +128,7 @@ export function TreeRenderer({
 
   return (
     <LocalizationContextProvider localizedStrings={localizedStrings}>
-      {errorRenderer ? errorRenderer({ ...errorRendererProps }) : <TreeErrorRenderer {...errorRendererProps} />}
+      {errorRenderer ? errorRenderer(errorRendererProps) : <TreeErrorRenderer {...errorRendererProps} />}
       <div style={{ height: "100%", width: "100%", overflowY: "auto" }} ref={parentRef}>
         <Tree.Root style={{ height: virtualizer.getTotalSize(), minHeight: "100%", width: "100%", position: "relative", overflow: "hidden" }}>
           {items.map((virtualizedItem) => {
