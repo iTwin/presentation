@@ -20,9 +20,9 @@ import { createECSchemaProvider, createECSqlQueryExecutor, createIModelKey, regi
 import { Presentation } from "@itwin/presentation-frontend";
 import { createLimitingECSqlQueryExecutor, GenericInstanceFilter } from "@itwin/presentation-hierarchies";
 import {
+  FilterAction,
   HierarchyLevelDetails,
   PresentationHierarchyNode,
-  TreeFilterActionButton,
   TreeRenderer,
   useIModelUnifiedSelectionTree,
 } from "@itwin/presentation-hierarchies-react";
@@ -166,9 +166,9 @@ function Tree({ imodel, imodelAccess, height, width }: { imodel: IModelConnectio
   }, []);
 
   const getActions = useCallback(
-    (node: PresentationHierarchyNode) => {
-      return [<TreeFilterActionButton key="filter" node={node} onFilter={setFilteringOptions} getHierarchyLevelDetails={treeProps.getHierarchyLevelDetails} />];
-    },
+    (node: PresentationHierarchyNode) => [
+      <FilterAction key="filter" node={node} onFilter={setFilteringOptions} getHierarchyLevelDetails={treeProps.getHierarchyLevelDetails} />,
+    ],
     [treeProps.getHierarchyLevelDetails],
   );
 

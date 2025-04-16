@@ -24,7 +24,6 @@ import { PresentationHierarchyNode } from "../TreeNode.js";
 import { useTree, UseTreeResult } from "../UseTree.js";
 import { ErrorNode } from "./FlatTreeNode.js";
 import { useLocalizationContext } from "./LocalizationContext.js";
-import { TreeActionButton } from "./TreeActionButton.js";
 
 const refreshSvg = new URL("@itwin/itwinui-icons/refresh.svg", import.meta.url).href;
 
@@ -49,7 +48,9 @@ export interface TreeNodeRendererOwnProps {
    * E.g. icons, color picker, etc.
    */
   getDecorations?: (node: PresentationHierarchyNode) => ReactNode;
-  /** Actions for tree item. */
+  /**
+   * Callback that returns actions for tree item. Must return an array of `Tree.ItemAction` elements.
+   */
   getActions?: (node: PresentationHierarchyNode) => ReactNode[];
   /** Specifies if tree item has error. */
   error?: ErrorNode;
@@ -86,11 +87,11 @@ export const TreeNodeRenderer: FC<PropsWithRef<TreeNodeRendererProps & RefAttrib
       () => [
         ...(error && error.error.type === "Unknown"
           ? [
-              <TreeActionButton
+              <Tree.ItemAction
                 key="retry"
                 label={localizedStrings.retry}
-                action={() => reloadTree({ parentNodeId: node.id, state: "reset" })}
-                show={true}
+                onClick={() => reloadTree({ parentNodeId: node.id, state: "reset" })}
+                visible={true}
                 icon={refreshSvg}
               />,
             ]

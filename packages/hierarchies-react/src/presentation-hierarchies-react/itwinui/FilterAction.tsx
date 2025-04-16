@@ -12,42 +12,16 @@ import { useLocalizationContext } from "./LocalizationContext.js";
 const filterSvg = new URL("@itwin/itwinui-icons/filter.svg", import.meta.url).href;
 
 /** @alpha */
-export interface TreeActionButtonProps {
-  label: string;
-  action: () => void;
-  icon: string;
-  /**
-   * Determines action items visibility:
-   * - `False` - action item is hidden.
-   * - `True` - action item is visible at all times.
-   * - `Undefined` - action item is visible on hover/focus.
-   */
-  show?: boolean;
-  /**
-   * Provide a value when action button is in active state to display a dot above the button.
-   * Provided text value is used to set accessible description it should descibe why the action is in active state.
-   * If left undefined the action item will be rendered normally.
-   */
-  activeDescription?: string;
-}
-
-/** @alpha */
 export type FilterActionProps = {
   /** Action to perform when the filter button is clicked for this node. */
   onFilter?: (hierarchyLevelDetails: HierarchyLevelDetails) => void;
 } & Partial<Pick<ReturnType<typeof useTree>, "getHierarchyLevelDetails">>;
 
-/** @alpha */
-export function TreeActionButton({ show, label, action, icon, activeDescription }: TreeActionButtonProps) {
-  return <Tree.ItemAction label={label} dot={activeDescription} icon={icon} visible={show} onClick={action} />;
-}
-
-/** @alpha */
-export const TreeFilterActionButton = memo(function TreeFilterActionButton({
-  node,
-  onFilter,
-  getHierarchyLevelDetails,
-}: FilterActionProps & { node: PresentationHierarchyNode }) {
+/**
+ * React component that renders a filter action for a tree item.
+ * @alpha
+ */
+export const FilterAction = memo(function FilterAction({ node, onFilter, getHierarchyLevelDetails }: FilterActionProps & { node: PresentationHierarchyNode }) {
   const { localizedStrings } = useLocalizationContext();
   const { filterHierarchyLevel, filterHierarchyLevelActiveDescription } = localizedStrings;
   const shouldShow = () => {
@@ -66,12 +40,12 @@ export const TreeFilterActionButton = memo(function TreeFilterActionButton({
   }, [node, getHierarchyLevelDetails, onFilter]);
 
   return (
-    <TreeActionButton
+    <Tree.ItemAction
       label={filterHierarchyLevel}
-      action={handleClick}
+      onClick={handleClick}
       icon={filterSvg}
-      show={shouldShow()}
-      activeDescription={node.isFiltered ? filterHierarchyLevelActiveDescription : undefined}
+      visible={shouldShow()}
+      dot={node.isFiltered ? filterHierarchyLevelActiveDescription : undefined}
     />
   );
 });
