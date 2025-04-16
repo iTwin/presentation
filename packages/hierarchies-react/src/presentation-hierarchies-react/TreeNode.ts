@@ -19,8 +19,6 @@ export interface PresentationHierarchyNode {
   isFiltered: boolean;
   /** UI-agnostic source of this node object. */
   nodeData: HierarchyNode;
-  /** Additional data that may be assigned to this node. */
-  extendedData?: { [key: string]: any };
 }
 
 /**
