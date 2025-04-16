@@ -64,8 +64,8 @@
     "rxjs": "catalog:rxjs"
   },
   "peerDependencies": {
-    "@itwin/itwinui-icons": "5.0.0-alpha.4",
-    "@itwin/itwinui-react": "5.0.0-alpha.13",
+    "@itwin/itwinui-icons": "5.0.0-alpha.7",
+    "@itwin/itwinui-react": "5.0.0-alpha.14",
     "react": "^17.0.0 || ^18.0.0",
     "react-dom": "^17.0.0 || ^18.0.0"
   },
@@ -80,8 +80,8 @@
   "devDependencies": {
     "@itwin/build-tools": "catalog:build-tools",
     "@itwin/eslint-plugin": "catalog:build-tools",
-    "@itwin/itwinui-icons": "5.0.0-alpha.4",
-    "@itwin/itwinui-react": "5.0.0-alpha.13",
+    "@itwin/itwinui-icons": "5.0.0-alpha.7",
+    "@itwin/itwinui-react": "5.0.0-alpha.14",
     "@testing-library/dom": "catalog:test-tools",
     "@testing-library/react": "catalog:test-tools",
     "@testing-library/user-event": "catalog:test-tools",

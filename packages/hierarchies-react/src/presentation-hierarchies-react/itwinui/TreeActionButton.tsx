@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { useCallback } from "react";
+import { memo, useCallback } from "react";
 import { Tree } from "@itwin/itwinui-react/bricks";
 import { PresentationHierarchyNode } from "../TreeNode.js";
 import { HierarchyLevelDetails, useTree } from "../UseTree.js";
@@ -12,7 +12,7 @@ import { useLocalizationContext } from "./LocalizationContext.js";
 const filterSvg = new URL("@itwin/itwinui-icons/filter.svg", import.meta.url).href;
 
 /** @alpha */
-export interface TreeItemAction {
+export interface TreeActionButtonProps {
   label: string;
   action: () => void;
   icon: string;
@@ -37,38 +37,41 @@ export type FilterActionProps = {
   onFilter?: (hierarchyLevelDetails: HierarchyLevelDetails) => void;
 } & Partial<Pick<ReturnType<typeof useTree>, "getHierarchyLevelDetails">>;
 
-/** @internal */
-export function TreeActionButton({ show, label, action, icon, activeDescription }: TreeItemAction) {
+/** @alpha */
+export function TreeActionButton({ show, label, action, icon, activeDescription }: TreeActionButtonProps) {
   return <Tree.ItemAction label={label} dot={activeDescription} icon={icon} visible={show} onClick={action} />;
 }
 
 /** @alpha */
-export function useFilterAction({ onFilter, getHierarchyLevelDetails }: FilterActionProps): (node: PresentationHierarchyNode) => TreeItemAction {
+export const TreeFilterActionButton = memo(function TreeFilterActionButton({
+  node,
+  onFilter,
+  getHierarchyLevelDetails,
+}: FilterActionProps & { node: PresentationHierarchyNode }) {
   const { localizedStrings } = useLocalizationContext();
   const { filterHierarchyLevel, filterHierarchyLevelActiveDescription } = localizedStrings;
-  return useCallback(
-    (node) => {
-      const handleVisibility = () => {
-        if (!onFilter || !node.isFilterable) {
-          return false;
-        }
-        if (node.isFiltered) {
-          return true;
-        }
-        return undefined;
-      };
+  const shouldShow = () => {
+    if (!onFilter || !node.isFilterable) {
+      return false;
+    }
+    if (node.isFiltered) {
+      return true;
+    }
+    return undefined;
+  };
 
-      return {
-        label: filterHierarchyLevel,
-        action: () => {
-          const hierarchyLevelDetails = getHierarchyLevelDetails?.(node.id);
-          hierarchyLevelDetails && onFilter?.(hierarchyLevelDetails);
-        },
-        show: handleVisibility(),
-        activeDescription: node.isFiltered ? filterHierarchyLevelActiveDescription : undefined,
-        icon: filterSvg,
-      };
-    },
-    [filterHierarchyLevel, filterHierarchyLevelActiveDescription, onFilter, getHierarchyLevelDetails],
+  const handleClick = useCallback(() => {
+    const hierarchyLevelDetails = getHierarchyLevelDetails?.(node.id);
+    hierarchyLevelDetails && onFilter?.(hierarchyLevelDetails);
+  }, [node, getHierarchyLevelDetails, onFilter]);
+
+  return (
+    <TreeActionButton
+      label={filterHierarchyLevel}
+      action={handleClick}
+      icon={filterSvg}
+      show={shouldShow()}
+      activeDescription={node.isFiltered ? filterHierarchyLevelActiveDescription : undefined}
+    />
   );
-}
+});
