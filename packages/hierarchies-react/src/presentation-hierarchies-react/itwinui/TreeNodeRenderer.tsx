@@ -109,7 +109,7 @@ export const TreeNodeRenderer: FC<PropsWithRef<TreeNodeRendererProps & RefAttrib
         label={label}
         description={description}
         selected={selected}
-        expanded={node.isExpanded || node.children ? node.isExpanded : undefined}
+        expanded={node.isExpanded || node.children === true || node.children.length > 0 ? node.isExpanded : undefined}
         onExpandedChange={useCallback(
           (isExpanded: boolean) => {
             expandNode(node.id, isExpanded);
