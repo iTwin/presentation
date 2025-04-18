@@ -1,5 +1,94 @@
 # @itwin/presentation-hierarchies-react
 
+## 2.0.0-alpha.15
+
+### Major Changes
+
+- [#936](https://github.com/iTwin/presentation/pull/936): Replaced `actions` property on `TreeNodeRenderer` with `getActions` to match how decorations are handled. Removed `useFilterAction` hook and replaced it with `FilterAction` component.
+
+  Before:
+
+  ```tsx
+  import { TreeNodeRenderer, useFilterAction } from "@itwin/presentation-hierarchies-react";
+
+  const filterAction = useFilterAction({ onFilter, getHierarchyLevelDetails });
+  return (
+    <TreeNodeRenderer
+      actions={useMemo(
+        () => [
+          filterAction,
+          (node) => ({
+            label: "Custom Action",
+            actions: () => log(node.label),
+            icon: customIconHref,
+          }),
+        ],
+        [filterAction],
+      )}
+    />
+  );
+  ```
+
+  After:
+
+  ```tsx
+  import { Icon, Tree } from "@itwin/itwinui-react";
+  import { FilterAction, TreeNodeRenderer } from "@itwin/presentation-hierarchies-react";
+
+  return (
+    <TreeNodeRenderer
+      getActions={useCallback(
+        (node) => [
+          <FilterAction key="filter" node={node} onFilter={onFilter} getHierarchyLevelDetails={getHierarchyLevelDetails} />,
+          <Tree.ItemAction key="customAction" label="Custom action" onClick={() => log(node.label)} icon={<Icon href={customIconHref} />} />,
+        ],
+        [onFilter, getHierarchyLevelDetails],
+      )}
+    />
+  );
+  ```
+
+### Minor Changes
+
+- 9a646323b81b3d7abfb0804987e1d9416bb4f824: Exposed `TreeErrorRenderer`, which takes `renderError` property to render custom error messages.
+  `TreeRenderer` now takes `errorRenderer` to render a custom error display component.
+
+  Custom error display component example:
+
+  ```ts
+  <TreeRenderer
+      {...treeProps}
+      errorRenderer={(errorsRendererProps) => (
+          <MyErrorRenderer {...errorsRendererProps} />
+      )}
+  />
+  ```
+
+  Custom error message example:
+
+  ```ts
+  <TreeRenderer
+      {...treeProps}
+      errorRenderer={(errorsRendererProps) => (
+          <TreeErrorRenderer
+              {...errorsRendererProps}
+              renderError={(errorProps) => {
+                  return <unstable_ErrorRegion.Item message={...} />;
+              }}
+          />
+      )}
+  />
+  ```
+
+- 9a646323b81b3d7abfb0804987e1d9416bb4f824: Changed flat tree building functions to hooks:
+
+  - `flattenNodes` => `useFlatTreeNodeList`.
+  - `getErrors` => `useErrorList`.
+
+### Patch Changes
+
+- 9a646323b81b3d7abfb0804987e1d9416bb4f824: Fix `ResultSetTooLarge` error suggesting filtering when parent node is not filterable.
+
 ## 2.0.0-alpha.14
 
 ### Patch Changes
