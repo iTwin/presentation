@@ -397,6 +397,5 @@ function toPresentationHierarchyNodeBase(node: TreeModelHierarchyNode): Omit<Pre
     isExpanded: !!node.isExpanded,
     isFilterable: !HierarchyNode.isGroupingNode(node.nodeData) && !!node.nodeData.supportsFiltering && node.children,
     isFiltered: !!node.instanceFilter,
-    extendedData: node.nodeData.extendedData,
   };
 }

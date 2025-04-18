@@ -136,6 +136,7 @@ function ErrorItemContainer({ errorNode, message, actions, scrollToElement }: Er
   return (
     <ErrorRegion.Item
       message={<MessageWithLink linkLabel={errorNode.parent?.label} scrollToElement={scrollToElement} message={message} />}
+      messageId={errorNode.error.id}
       actions={
         <div style={{ display: "flex", flexDirection: "column" }}>
           {actions
