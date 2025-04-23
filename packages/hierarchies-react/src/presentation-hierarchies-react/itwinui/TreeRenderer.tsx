@@ -50,7 +50,7 @@ type TreeRendererProps = Pick<ReturnType<typeof useTree>, "expandNode"> &
  * @see https://itwinui.bentley.com/docs/tree
  * @alpha
  */
-export function TreeRenderer({ rootNodes, selectNodes, selectionMode, ...treeProps }: TreeRendererProps) {
+export function TreeRenderer({ rootNodes, selectNodes, selectionMode, rootErrorRenderer, ...treeProps }: TreeRendererProps) {
   const { onNodeClick, onNodeKeyDown } = useSelectionHandler({
     rootNodes,
     selectNodes: selectNodes ?? noopSelectNodes,
@@ -62,7 +62,15 @@ export function TreeRenderer({ rootNodes, selectNodes, selectionMode, ...treePro
   const errorList = useErrorList(rootNodes);
 
   if (flatNodes.length === 0 && errorList.length > 0) {
-    return <RootErrorRenderer errorNode={errorList[0]} reloadTree={treeProps.reloadTree} getHierarchyLevelDetails={treeProps.getHierarchyLevelDetails} />;
+    return rootErrorRenderer ? (
+      rootErrorRenderer({
+        errorNode: errorList[0],
+        getHierarchyLevelDetails: treeProps.getHierarchyLevelDetails,
+        reloadTree: treeProps.reloadTree,
+      })
+    ) : (
+      <RootErrorRenderer errorNode={errorList[0]} reloadTree={treeProps.reloadTree} getHierarchyLevelDetails={treeProps.getHierarchyLevelDetails} />
+    );
   }
 
   return <TreeHierarchyRenderer onNodeClick={handleNodeClick} onNodeKeyDown={handleKeyDown} flatNodes={flatNodes} errorList={errorList} {...treeProps} />;

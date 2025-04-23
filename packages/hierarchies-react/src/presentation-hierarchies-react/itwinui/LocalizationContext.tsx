@@ -57,7 +57,7 @@ export interface LocalizedStrings {
   resultLimitExceeded: string;
   /**
    * Message displayed when result limit exceeds hierarchy size limit.
-   * Default value: `The root item hierarchy contains {{limit}}+ items. Try using filters or increase the limit.`.
+   * Default value: `The root item hierarchy contains {{limit}}+ items. Try increasing the limit.`.
    */
   rootResultLimitExceeded: string;
   /**
@@ -102,7 +102,7 @@ const defaultLocalizedStrings: LocalizedStrings = {
   failedToCreateHierarchy: "Failed to create hierarchy for {{node}}.",
   failedToCreateRootHierarchy: "Failed to load tree.",
   resultLimitExceeded: "The hierarchy for {{node}} contains {{limit}}+ items. Try using filters or increase the limit.",
-  rootResultLimitExceeded: "The root item hierarchy contains {{limit}}+ items. Try using filters or increase the limit.",
+  rootResultLimitExceeded: "The root item hierarchy contains {{limit}}+ items. Try increasing the limit.",
   issuesFound: "issues found",
   increaseHierarchyLimit: "Increase limit to {{limit}}",
   increaseHierarchyLimitToUnlimited: "Remove limit",

@@ -37,7 +37,7 @@ export function RootErrorRenderer({ errorNode, renderRootError, getHierarchyLeve
     const onOverrideLimit = () => getHierarchyLevelDetails(undefined)?.setSizeLimit("unbounded");
     return (
       <RootErrorContainer
-        message={localizedStrings.resultLimitExceeded.replace("{{limit}}", errorNode.error.resultSetSizeLimit.toString())}
+        message={localizedStrings.rootResultLimitExceeded.replace("{{limit}}", errorNode.error.resultSetSizeLimit.toString())}
         actions={[
           {
             action: onOverrideLimit,
