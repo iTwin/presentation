@@ -3,24 +3,25 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { ComponentPropsWithoutRef, forwardRef, memo, ReactElement, useCallback, useEffect, useMemo, useRef } from "react";
+import { ComponentPropsWithoutRef, CSSProperties, forwardRef, memo, ReactElement, useCallback, useEffect, useMemo, useRef } from "react";
 import { Tree } from "@itwin/itwinui-react/bricks";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { PresentationTreeNode } from "../TreeNode.js";
 import { SelectionMode, useSelectionHandler } from "../UseSelectionHandler.js";
 import { useTree } from "../UseTree.js";
 import { useEvent } from "../Utils.js";
-import { ErrorNode, FlatTreeNode, useErrorList, useFlatTreeNodeList } from "./FlatTreeNode.js";
+import { ErrorNode, FlatTreeNode, isPlaceholderNode, useErrorList, useFlatTreeNodeList } from "./FlatTreeNode.js";
 import { LocalizationContextProvider } from "./LocalizationContext.js";
 import { RootErrorRenderer, RootErrorRendererProps } from "./RootErrorRenderer.js";
 import { TreeErrorRenderer, TreeErrorRendererProps } from "./TreeErrorRenderer.js";
-import { TreeNodeRenderer } from "./TreeNodeRenderer.js";
+import { PlaceholderNode, TreeNodeRenderer } from "./TreeNodeRenderer.js";
 
 /** @alpha */
 export type TreeProps = ComponentPropsWithoutRef<typeof Tree.Root>;
 
 /** @alpha */
 export type TreeNodeRendererProps = ComponentPropsWithoutRef<typeof TreeNodeRenderer>;
+
 /** @alpha */
 interface TreeRendererOwnProps {
   /** Root nodes of the tree. */
@@ -38,7 +39,7 @@ type TreeRendererProps = Pick<ReturnType<typeof useTree>, "expandNode"> &
   Partial<Pick<ReturnType<typeof useTree>, "selectNodes" | "isNodeSelected">> &
   Pick<ReturnType<typeof useTree>, "reloadTree" | "getHierarchyLevelDetails"> &
   Pick<TreeErrorRendererProps, "onFilterClick"> &
-  Omit<TreeNodeRendererProps, "node" | "reloadTree" | "selected" | "error"> &
+  Omit<TreeNodeRendererProps, "node" | "aria-level" | "aria-posinset" | "aria-setsize" | "reloadTree" | "selected" | "error"> &
   TreeRendererOwnProps &
   ComponentPropsWithoutRef<typeof LocalizationContextProvider>;
 
@@ -76,10 +77,6 @@ function TreeHierarchyRenderer({
   onFilterClick,
   reloadTree,
   isNodeSelected,
-  actions,
-  getDecorations,
-  getLabel,
-  getSublabel,
   errorRenderer,
   ...treeProps
 }: Omit<TreeRendererProps, "rootNodes" | "selectionMode" | " selectNodes"> & { flatNodes: FlatTreeNode[]; errorList: ErrorNode[] }) {
@@ -142,8 +139,9 @@ function TreeHierarchyRenderer({
       <div style={{ height: "100%", width: "100%", overflowY: "auto" }} ref={parentRef}>
         <Tree.Root style={{ height: virtualizer.getTotalSize(), minHeight: "100%", width: "100%", position: "relative", overflow: "hidden" }}>
           {items.map((virtualizedItem) => {
-            const selected = isNodeSelected?.(flatNodes[virtualizedItem.index].id) ?? false;
-            const error = hasError(flatNodes[virtualizedItem.index].id);
+            const node = flatNodes[virtualizedItem.index];
+            const selected = isNodeSelected?.(node.id) ?? false;
+            const error = hasError(node.id);
             return (
               <VirtualTreeItem
                 {...treeProps}
@@ -151,15 +149,11 @@ function TreeHierarchyRenderer({
                 start={virtualizedItem.start}
                 expandNode={expandNode}
                 error={error}
-                node={flatNodes[virtualizedItem.index]}
+                node={node}
                 key={virtualizedItem.key}
                 data-index={virtualizedItem.index}
                 reloadTree={reloadTree}
                 selected={selected}
-                actions={actions}
-                getDecorations={getDecorations}
-                getLabel={getLabel}
-                getSublabel={getSublabel}
               />
             );
           })}
@@ -169,23 +163,45 @@ function TreeHierarchyRenderer({
   );
 }
 
+type VirtualTreeItemProps = Omit<TreeNodeRendererProps, "node" | "aria-level" | "aria-posinset" | "aria-setsize"> & {
+  start: number;
+  node: FlatTreeNode;
+};
+
 const VirtualTreeItem = memo(
-  forwardRef<HTMLElement, TreeNodeRendererProps & { start: number }>(function VirtualTreeItem({ start, ...props }, forwardedRef) {
+  forwardRef<HTMLElement, VirtualTreeItemProps>(function VirtualTreeItem(
+    { start, node, getDecorations, getActions, getLabel, getSublabel, ...props },
+    forwardedRef,
+  ) {
+    const style: CSSProperties = useMemo(
+      () => ({
+        position: "absolute",
+        top: 0,
+        left: 0,
+        width: "100%",
+        transform: `translateY(${start}px)`,
+        willChange: "transform",
+      }),
+      [start],
+    );
+
+    if (isPlaceholderNode(node)) {
+      return <PlaceholderNode {...props} ref={forwardedRef} style={style} aria-level={node.level} aria-posinset={1} aria-setsize={1} />;
+    }
+
     return (
       <TreeNodeRenderer
         {...props}
         ref={forwardedRef}
-        style={useMemo(
-          () => ({
-            position: "absolute",
-            top: 0,
-            left: 0,
-            width: "100%",
-            transform: `translateY(${start}px)`,
-            willChange: "transform",
-          }),
-          [start],
-        )}
+        style={style}
+        aria-level={node.level}
+        aria-posinset={node.posInLevel}
+        aria-setsize={node.levelSize}
+        node={node}
+        getDecorations={getDecorations}
+        getActions={getActions}
+        getLabel={getLabel}
+        getSublabel={getSublabel}
       />
     );
   }),

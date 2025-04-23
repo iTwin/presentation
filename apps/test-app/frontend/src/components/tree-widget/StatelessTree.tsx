@@ -20,10 +20,10 @@ import { createECSchemaProvider, createECSqlQueryExecutor, createIModelKey, regi
 import { Presentation } from "@itwin/presentation-frontend";
 import { createLimitingECSqlQueryExecutor, GenericInstanceFilter } from "@itwin/presentation-hierarchies";
 import {
+  FilterAction,
   HierarchyLevelDetails,
   PresentationHierarchyNode,
   TreeRenderer,
-  useFilterAction,
   useIModelUnifiedSelectionTree,
 } from "@itwin/presentation-hierarchies-react";
 import { ModelsTreeDefinition } from "@itwin/presentation-models-tree";
@@ -161,14 +161,16 @@ function Tree({ imodel, imodelAccess, height, width }: { imodel: IModelConnectio
     return (descriptor: Descriptor) => fromGenericFilter(descriptor, currentFilter);
   }, [filteringOptions]);
 
-  const filterAction = useFilterAction({ onFilter: setFilteringOptions, getHierarchyLevelDetails: treeProps.getHierarchyLevelDetails });
-  const actions = useMemo(() => {
-    return [filterAction];
-  }, [filterAction]);
-
   const getDecorations = useCallback((node: PresentationHierarchyNode) => {
     return <Icon href={getIcon(node)} />;
   }, []);
+
+  const getActions = useCallback(
+    (node: PresentationHierarchyNode) => [
+      <FilterAction key="filter" node={node} onFilter={setFilteringOptions} getHierarchyLevelDetails={treeProps.getHierarchyLevelDetails} />,
+    ],
+    [treeProps.getHierarchyLevelDetails],
+  );
 
   const renderContent = () => {
     if (rootNodes && rootNodes.length === 0 && filter) {
@@ -186,7 +188,7 @@ function Tree({ imodel, imodelAccess, height, width }: { imodel: IModelConnectio
         rootNodes={rootNodes ?? []}
         reloadTree={reloadTree}
         onFilterClick={setFilteringOptions}
-        actions={actions}
+        getActions={getActions}
         selectionMode={"extended"}
         getDecorations={getDecorations}
       />
@@ -325,11 +327,11 @@ const elementSvg = new URL("@itwin/itwinui-icons/bis-element.svg", import.meta.u
 const iModelSvg = new URL("@itwin/itwinui-icons/imodel.svg", import.meta.url).href;
 
 function getIcon(node: PresentationHierarchyNode): string | undefined {
-  if (node.extendedData?.imageId === undefined) {
+  if (node.nodeData.extendedData?.imageId === undefined) {
     return undefined;
   }
 
-  switch (node.extendedData.imageId) {
+  switch (node.nodeData.extendedData.imageId) {
     case "icon-layers":
       return categorySvg;
     case "icon-item":

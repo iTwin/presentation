@@ -373,7 +373,7 @@ async function getRootSubjectFilteredPath({
 }
 
 function getIcon(node: PresentationHierarchyNode): ReactElement | undefined {
-  switch (node.extendedData?.nodeType) {
+  switch (node.nodeData.extendedData?.nodeType) {
     case "root-subject":
       return <SvgImodelHollow />;
     case "model-class":

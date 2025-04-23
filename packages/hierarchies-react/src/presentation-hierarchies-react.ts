@@ -16,7 +16,7 @@ export { useSelectionHandler } from "./presentation-hierarchies-react/UseSelecti
 export { HierarchyLevelDetails, useTree, useUnifiedSelectionTree } from "./presentation-hierarchies-react/UseTree.js";
 export { useIModelTree, useIModelUnifiedSelectionTree } from "./presentation-hierarchies-react/UseIModelTree.js";
 export { TreeNodeRenderer } from "./presentation-hierarchies-react/itwinui/TreeNodeRenderer.js";
-export { TreeItemAction, useFilterAction } from "./presentation-hierarchies-react/itwinui/TreeActionButton.js";
+export { FilterAction } from "./presentation-hierarchies-react/itwinui/FilterAction.js";
 export { TreeRenderer } from "./presentation-hierarchies-react/itwinui/TreeRenderer.js";
 export { TreeErrorRenderer } from "./presentation-hierarchies-react/itwinui/TreeErrorRenderer.js";
 export { useFlatTreeNodeList, useErrorList, FlatTreeNode } from "./presentation-hierarchies-react/itwinui/FlatTreeNode.js";

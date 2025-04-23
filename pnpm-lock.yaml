@@ -909,8 +909,8 @@ importers:
         specifier: catalog:appui
         version: 5.1.0(72465abbd552a8fdf614e99e441e37fc)
       '@itwin/itwinui-icons':
-        specifier: 5.0.0-alpha.4
-        version: 5.0.0-alpha.4
+        specifier: 5.0.0-alpha.7
+        version: 5.0.0-alpha.7
       '@itwin/itwinui-icons-react':
         specifier: catalog:itwinui
         version: 2.9.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -918,8 +918,8 @@ importers:
         specifier: catalog:itwinui
         version: 3.17.2(@types/react@18.3.3)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@itwin/itwinui-react-v5':
-        specifier: npm:@itwin/itwinui-react@5.0.0-alpha.13
-        version: '@itwin/itwinui-react@5.0.0-alpha.13(react-dom@18.3.1(react@18.3.1))(react@18.3.1)'
+        specifier: npm:@itwin/itwinui-react@5.0.0-alpha.14
+        version: '@itwin/itwinui-react@5.0.0-alpha.14(react-dom@18.3.1(react@18.3.1))(react@18.3.1)'
       '@itwin/presentation-common':
         specifier: catalog:itwinjs-core-dev
         version: 5.0.0-dev.78(@itwin/core-bentley@5.0.0-dev.78)(@itwin/core-common@5.0.0-dev.78(@itwin/core-bentley@5.0.0-dev.78)(@itwin/core-geometry@5.0.0-dev.78))(@itwin/core-quantity@5.0.0-dev.78(@itwin/core-bentley@5.0.0-dev.78))(@itwin/ecschema-metadata@5.0.0-dev.78(@itwin/core-bentley@5.0.0-dev.78)(@itwin/core-quantity@5.0.0-dev.78(@itwin/core-bentley@5.0.0-dev.78)))
@@ -1426,11 +1426,11 @@ importers:
         specifier: catalog:build-tools
         version: 5.0.0-dev.1(eslint@9.13.0)(typescript@5.7.3)
       '@itwin/itwinui-icons':
-        specifier: 5.0.0-alpha.4
-        version: 5.0.0-alpha.4
+        specifier: 5.0.0-alpha.7
+        version: 5.0.0-alpha.7
       '@itwin/itwinui-react':
-        specifier: 5.0.0-alpha.13
-        version: 5.0.0-alpha.13(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+        specifier: 5.0.0-alpha.14
+        version: 5.0.0-alpha.14(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@testing-library/dom':
         specifier: catalog:test-tools
         version: 10.4.0
@@ -3014,8 +3014,8 @@ packages:
       react: '>=16.8.6'
       react-dom: '>=16.8.6'
 
-  '@itwin/itwinui-icons@5.0.0-alpha.4':
-    resolution: {integrity: sha512-vEb2C/0LEyWDn57zPgMgxyVDcwNDTYOsO0DBM13dlL7pm0U+ZLAgZwsa+AAJOxBAaP5VL05N+sCJqIgWJG9L5A==}
+  '@itwin/itwinui-icons@5.0.0-alpha.7':
+    resolution: {integrity: sha512-Tz/PmlnWacZoSq0XeOXj72NCCHVvwazlLPF0smKEuq5x9zZQnMmEiMFIAjqo6vrWsmLQqEYz6lMHoYDTlFhtIg==}
 
   '@itwin/itwinui-illustrations-react@2.1.0':
     resolution: {integrity: sha512-5JR2A3mZy0d0qwwHpveSG3fsXLheJkO6a0GoWb8NQWw5edNZMRynJg0l3hVw3CHMgaaCGbUoKC77MuG0jWDzuA==}
@@ -3029,8 +3029,8 @@ packages:
       react: '>=17.0.0'
       react-dom: '>=17.0.0'
 
-  '@itwin/itwinui-react@5.0.0-alpha.13':
-    resolution: {integrity: sha512-81lNt804oI0Uwch4LDPnF3bucktMkmffHloHH15SFSlm8/9NjT1P2qRjyj3fNcpFN51KDxS7Q7h94f1UJ7+Z0w==}
+  '@itwin/itwinui-react@5.0.0-alpha.14':
+    resolution: {integrity: sha512-7xfpcEKrr7UMuVGrmIckN4Cz82V+zrJaQ+AudJK47gOLMOLyb3nGih+q46lcrQMj5rFsyhlwTqTvmxNWMjJEcg==}
     peerDependencies:
       react: '>=18.0.0'
       react-dom: '>=18.0.0'
@@ -11012,7 +11012,7 @@ snapshots:
       react: 18.3.1
       react-dom: 18.3.1(react@18.3.1)
 
-  '@itwin/itwinui-icons@5.0.0-alpha.4': {}
+  '@itwin/itwinui-icons@5.0.0-alpha.7': {}
 
   '@itwin/itwinui-illustrations-react@2.1.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
     dependencies:
@@ -11033,7 +11033,7 @@ snapshots:
     transitivePeerDependencies:
       - '@types/react'
 
-  '@itwin/itwinui-react@5.0.0-alpha.13(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
+  '@itwin/itwinui-react@5.0.0-alpha.14(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
     dependencies:
       '@ariakit/react': 0.4.15(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       classnames: 2.5.1
