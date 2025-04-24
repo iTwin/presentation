@@ -5,6 +5,7 @@
 const iTwinPlugin = require("@itwin/eslint-plugin");
 const eslintBaseConfig = require("../../eslint.base.config");
 const reactPlugin = require("eslint-plugin-react");
+const { rules } = require("eslint-plugin-react");
 
 module.exports = [
   {
@@ -19,6 +20,12 @@ module.exports = [
     files: ["src/{components,hierarchies-react}/**/*.{ts,tsx}", "src/**/*.tsx"],
     rules: {
       ...reactPlugin.configs["jsx-runtime"].rules,
+    },
+  },
+  {
+    files: ["**/*.{ts,tsx}"],
+    rules: {
+      "@typescript-eslint/no-non-null-assertion": "off",
     },
   },
   ...eslintBaseConfig,
