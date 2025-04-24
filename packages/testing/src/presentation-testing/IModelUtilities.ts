@@ -74,6 +74,7 @@ export async function buildTestIModel(mochaContext: Mocha.Context, cb: (builder:
 // eslint-disable-next-line @typescript-eslint/unified-signatures
 export async function buildTestIModel(mochaContext: Mocha.Context, cb: (builder: TestIModelBuilder) => Promise<void>): Promise<IModelConnection>;
 export async function buildTestIModel(nameParam: string | Mocha.Context, cb: (builder: TestIModelBuilder) => void | Promise<void>): Promise<IModelConnection> {
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
   const name = typeof nameParam === "string" ? nameParam : createFileNameFromString(nameParam.test!.fullTitle());
   const outputFile = setupOutputFileLocation(`${name}.bim`);
   const db = SnapshotDb.createEmpty(outputFile, { rootSubject: { name } });

@@ -16,5 +16,11 @@ module.exports = [
       "@typescript-eslint/ban-ts-comment": "warn",
     },
   },
+  {
+    files: ["**/*.test.ts", "src/test/setup.ts"],
+    rules: {
+      "@typescript-eslint/no-non-null-assertion": "off",
+    },
+  },
   ...eslintBaseConfig,
 ];
