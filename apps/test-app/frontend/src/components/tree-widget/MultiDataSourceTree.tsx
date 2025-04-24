@@ -419,6 +419,7 @@ function createRssHierarchyProvider(): HierarchyProvider & { getFilteredPaths: (
         if ((item.title ?? "<no title>").toLocaleLowerCase().includes(filterString.toLocaleLowerCase())) {
           paths.push([
             { type: "generic", id: "rss-root", source: "rss" },
+            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
             { type: "generic", id: `rss-${item.guid!}`, source: "rss" },
           ]);
         }
@@ -450,6 +451,7 @@ function createRssHierarchyProvider(): HierarchyProvider & { getFilteredPaths: (
           let count = 0;
           for (const item of feed.items) {
             yield {
+              // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
               key: { type: "generic", id: `rss-${item.guid!}`, source: "rss" },
               label: item.title ?? "<no title>",
               parentKeys: [parentNode.key],
@@ -471,6 +473,7 @@ function createRssHierarchyProvider(): HierarchyProvider & { getFilteredPaths: (
         return;
       }
 
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       const targetNodeKeys = filteringHelper.getChildNodeFilteringIdentifiers()!;
       for await (const node of generateNodes()) {
         if (targetNodeKeys.some((target) => HierarchyNodeIdentifier.equal(target, node.key))) {
