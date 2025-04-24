@@ -82,14 +82,15 @@ export class FilteredPresentationTreeDataProvider implements IFilteredPresentati
   ) {
     const treeNodes: DelayLoadedTreeNodeItem[] = [];
     for (let i = 0; i < paths.length; i++) {
-      const node = treeNodeItemFactory(paths[i].node, parentId);
+      const path = paths[i];
+      const node = treeNodeItemFactory(path.node, parentId);
 
-      if (paths[i].filteringData && paths[i].filteringData!.matchesCount) {
-        this._filteredResultMatches.push({ id: node.id, matchesCount: paths[i].filteringData!.matchesCount });
+      if (path.filteringData && path.filteringData.matchesCount) {
+        this._filteredResultMatches.push({ id: node.id, matchesCount: path.filteringData.matchesCount });
       }
 
-      if (paths[i].children.length !== 0) {
-        this.createHierarchy(paths[i].children, hierarchy, treeNodeItemFactory, node.id);
+      if (path.children.length !== 0) {
+        this.createHierarchy(path.children, hierarchy, treeNodeItemFactory, node.id);
         node.hasChildren = true;
         node.autoExpand = true;
       } else {

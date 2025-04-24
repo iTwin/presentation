@@ -64,6 +64,7 @@ export function PresentationTree<TEventHandler extends TreeEventHandler>({ state
       eventsHandler={state.eventHandler}
       onItemsRendered={state.onItemsRendered}
       nodeHighlightingProps={state.filteringResult?.highlightProps}
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       treeRenderer={props.treeRenderer ? (treeProps) => props.treeRenderer!({ ...treeProps, nodeLoader: state.nodeLoader }) : undefined}
     />
   );

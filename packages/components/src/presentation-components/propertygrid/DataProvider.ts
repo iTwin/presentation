@@ -44,6 +44,7 @@ import { DiagnosticsProps } from "../common/Diagnostics.js";
 import { createLabelRecord, findField, memoize, WithIModelKey } from "../common/Utils.js";
 import { FAVORITES_CATEGORY_NAME, getFavoritesCategory } from "../favorite-properties/Utils.js";
 
+// eslint-disable-next-line @typescript-eslint/unbound-method
 const labelsComparer = new Intl.Collator(undefined, { sensitivity: "base" }).compare;
 
 /**
@@ -466,7 +467,9 @@ class PropertyDataBuilder extends InternalPropertyRecordsBuilder {
         this._asyncTasks.push(
           (async () => {
             const sortedFields = recs.map((r) => r.fieldHierarchy.field);
+            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
             await this._props.callbacks.sortFields(this._categoriesCache.getEntry(categoryName)!, sortedFields);
+            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
             categorizedRecords[categoryName] = sortedFields.map((field) => recs.find((r) => r.fieldHierarchy.field === field)!.record);
           })(),
         );

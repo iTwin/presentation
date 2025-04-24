@@ -192,6 +192,7 @@ function MatchingInstancesCount({ filter, dataProvider, parentKey }: MatchingIns
       } catch (e) {
         if (e instanceof PresentationError && e.errorNumber === PresentationStatus.ResultSetTooLarge) {
           // ResultSetTooLarge error can't occur if sizeLimit is undefined.
+          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
           return translate("tree.filter-dialog.result-limit-exceeded", { itemCount: requestOptions.sizeLimit!.toString() });
         }
       }

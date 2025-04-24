@@ -315,6 +315,7 @@ function getPathToPrimaryClass(field: NestedContentField): RelationshipPath {
 }
 
 function getAliasIndex(alias: string, usedAliases: Map<string, number>) {
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
   const index = usedAliases.has(alias) ? usedAliases.get(alias)! + 1 : 0;
   usedAliases.set(alias, index);
   return index;

@@ -73,6 +73,7 @@ export function createDiagnosticsOptions(props: DiagnosticsProps): ClientDiagnos
   return {
     ...options,
     ...(props.devDiagnostics?.backendVersion ? { backendVersion: props.devDiagnostics.backendVersion } : undefined),
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     handler: handler!,
   };
 }

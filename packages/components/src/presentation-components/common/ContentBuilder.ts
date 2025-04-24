@@ -170,6 +170,7 @@ export namespace IPropertiesAppender {
 }
 class StructMembersAppender implements INestedPropertiesAppender {
   private _members: { [name: string]: PropertyRecord } = {};
+  // eslint-disable-next-line @typescript-eslint/unbound-method
   private _labelsComparer = new Intl.Collator(undefined, { sensitivity: "base" }).compare;
   constructor(
     private _parentAppender: IPropertiesAppender,
@@ -325,6 +326,7 @@ export class InternalPropertyRecordsBuilder implements IContentVisitor {
     const value: PrimitiveValue = {
       valueFormat: UiPropertyValueFormat.Primitive,
       value: props.rawValue,
+      // eslint-disable-next-line @typescript-eslint/no-base-to-string
       displayValue: props.displayValue?.toString() ?? "",
     };
     const record = new PropertyRecord(
@@ -334,6 +336,7 @@ export class InternalPropertyRecordsBuilder implements IContentVisitor {
     applyPropertyRecordAttributes(
       record,
       props.field,
+      // eslint-disable-next-line @typescript-eslint/no-base-to-string
       props.displayValue?.toString(),
       IPropertiesAppender.isRoot(appender) ? appender.item.extendedData : undefined,
       this._propertyRecordsProcessor,
