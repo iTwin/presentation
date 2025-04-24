@@ -12,6 +12,7 @@ import { useTree } from "../UseTree.js";
 import { useEvent } from "../Utils.js";
 import { ErrorNode, FlatTreeNode, isPlaceholderNode, useErrorList, useFlatTreeNodeList } from "./FlatTreeNode.js";
 import { LocalizationContextProvider } from "./LocalizationContext.js";
+import { RootErrorRenderer, RootErrorRendererProps } from "./RootErrorRenderer.js";
 import { TreeErrorRenderer, TreeErrorRendererProps } from "./TreeErrorRenderer.js";
 import { PlaceholderNode, TreeNodeRenderer } from "./TreeNodeRenderer.js";
 
@@ -29,12 +30,14 @@ interface TreeRendererOwnProps {
   selectionMode?: SelectionMode;
   /** A render function for errors' display component. Defaults to `<TreeErrorRenderer />`. */
   errorRenderer?: (props: TreeErrorRendererProps) => ReactElement;
+  /** A render function for root errors' display component. Defaults to `<RootErrorRenderer />`. */
+  rootErrorRenderer?: (props: RootErrorRendererProps) => ReactElement;
 }
 
 /** @alpha */
 type TreeRendererProps = Pick<ReturnType<typeof useTree>, "expandNode"> &
-  Partial<Pick<ReturnType<typeof useTree>, "selectNodes" | "isNodeSelected" | "getHierarchyLevelDetails">> &
-  Pick<ReturnType<typeof useTree>, "reloadTree"> &
+  Partial<Pick<ReturnType<typeof useTree>, "selectNodes" | "isNodeSelected">> &
+  Pick<ReturnType<typeof useTree>, "reloadTree" | "getHierarchyLevelDetails"> &
   Pick<TreeErrorRendererProps, "onFilterClick"> &
   Omit<TreeNodeRendererProps, "node" | "aria-level" | "aria-posinset" | "aria-setsize" | "reloadTree" | "selected" | "error"> &
   TreeRendererOwnProps &
@@ -47,31 +50,46 @@ type TreeRendererProps = Pick<ReturnType<typeof useTree>, "expandNode"> &
  * @see https://itwinui.bentley.com/docs/tree
  * @alpha
  */
-export function TreeRenderer({
-  rootNodes,
+export function TreeRenderer({ rootNodes, selectNodes, selectionMode, rootErrorRenderer, ...treeProps }: TreeRendererProps) {
+  const { onNodeClick, onNodeKeyDown } = useSelectionHandler({
+    rootNodes,
+    selectNodes: selectNodes ?? noopSelectNodes,
+    selectionMode: selectionMode ?? "single",
+  });
+  const handleNodeClick = useEvent(onNodeClick);
+  const handleKeyDown = useEvent(onNodeKeyDown);
+  const flatNodes = useFlatTreeNodeList(rootNodes);
+  const errorList = useErrorList(rootNodes);
+
+  if (flatNodes.length === 0 && errorList.length > 0) {
+    return rootErrorRenderer ? (
+      rootErrorRenderer({
+        errorNode: errorList[0],
+        getHierarchyLevelDetails: treeProps.getHierarchyLevelDetails,
+        reloadTree: treeProps.reloadTree,
+      })
+    ) : (
+      <RootErrorRenderer errorNode={errorList[0]} reloadTree={treeProps.reloadTree} getHierarchyLevelDetails={treeProps.getHierarchyLevelDetails} />
+    );
+  }
+
+  return <TreeHierarchyRenderer onNodeClick={handleNodeClick} onNodeKeyDown={handleKeyDown} flatNodes={flatNodes} errorList={errorList} {...treeProps} />;
+}
+
+function TreeHierarchyRenderer({
+  flatNodes,
+  errorList,
   expandNode,
   localizedStrings,
-  selectNodes,
-  selectionMode,
   getHierarchyLevelDetails,
   onFilterClick,
   reloadTree,
   isNodeSelected,
   errorRenderer,
   ...treeProps
-}: TreeRendererProps) {
-  const { onNodeClick, onNodeKeyDown } = useSelectionHandler({
-    rootNodes,
-    selectNodes: selectNodes ?? noopSelectNodes,
-    selectionMode: selectionMode ?? "single",
-  });
+}: Omit<TreeRendererProps, "rootNodes" | "selectionMode" | " selectNodes"> & { flatNodes: FlatTreeNode[]; errorList: ErrorNode[] }) {
   const scrollToNode = useRef<string | undefined>(undefined);
   const parentRef = useRef<HTMLDivElement>(null);
-  const flatNodes = useFlatTreeNodeList(rootNodes);
-  const errorList = useErrorList(rootNodes);
-
-  const handleNodeClick = useEvent(onNodeClick);
-  const handleKeyDown = useEvent(onNodeKeyDown);
 
   const hasError = useCallback(
     (nodeId: string) => {
@@ -138,8 +156,6 @@ export function TreeRenderer({
                 ref={virtualizer.measureElement}
                 start={virtualizedItem.start}
                 expandNode={expandNode}
-                onNodeClick={handleNodeClick}
-                onNodeKeyDown={handleKeyDown}
                 error={error}
                 node={node}
                 key={virtualizedItem.key}
