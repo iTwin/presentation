@@ -97,6 +97,7 @@ abstract class ECClassImpl<TCoreClass extends CoreClass> extends ECSchemaItemImp
   }
   public async is(classOrClassName: EC.Class | string, schemaName?: string) {
     if (typeof classOrClassName === "string") {
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       return this._coreSchemaItem.is(classOrClassName, schemaName!);
     }
     return this._coreSchemaItem.is(classOrClassName.name, classOrClassName.schema.name);
