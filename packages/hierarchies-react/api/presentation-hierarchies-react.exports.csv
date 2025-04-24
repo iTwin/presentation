@@ -10,6 +10,7 @@ public;interface;PresentationHierarchyNode
 public;type;PresentationInfoNode
 public;interface;PresentationResultSetTooLargeInfoNode
 public;type;PresentationTreeNode
+alpha;function;RootErrorRenderer
 alpha;function;TreeErrorRenderer
 public;const;TreeNodeRenderer
 alpha;function;TreeRenderer

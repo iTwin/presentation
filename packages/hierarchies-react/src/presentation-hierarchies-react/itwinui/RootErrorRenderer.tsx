@@ -18,7 +18,7 @@ export type RootErrorRendererProps = {
   /** Root error to be displayed */
   errorNode: ErrorNode;
   // Callback to render custom root errors.
-  renderRootError?: ({ errorNode }: { errorNode: ErrorNode }) => ReactElement;
+  renderError?: ({ errorNode }: { errorNode: ErrorNode }) => ReactElement;
 } & Pick<ReturnType<typeof useTree>, "getHierarchyLevelDetails" | "reloadTree">;
 
 /**
@@ -26,11 +26,11 @@ export type RootErrorRendererProps = {
  *
  * @alpha
  */
-export function RootErrorRenderer({ errorNode, renderRootError, getHierarchyLevelDetails, reloadTree }: RootErrorRendererProps) {
+export function RootErrorRenderer({ errorNode, renderError, getHierarchyLevelDetails, reloadTree }: RootErrorRendererProps) {
   const { localizedStrings } = useLocalizationContext();
 
-  if (renderRootError) {
-    return renderRootError({ errorNode });
+  if (renderError) {
+    return renderError({ errorNode });
   }
 
   if (errorNode.error.type === "ResultSetTooLarge") {
