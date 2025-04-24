@@ -247,8 +247,8 @@ class MultiLevelSelectablesContainer {
     const storedLevels = this._selectablesContainers.keys();
     for (const storedLevel of storedLevels) {
       if (storedLevel >= level) {
-        const selectables = this._selectablesContainers.get(storedLevel)!;
-        Selectables.clear(selectables);
+        const selectables = this._selectablesContainers.get(storedLevel);
+        Selectables.clear(selectables ?? { instanceKeys: new Map(), custom: new Map() });
       }
     }
   }
