@@ -183,9 +183,6 @@ interface ReloadTreeOptions {
     state?: "keep" | "discard" | "reset";
 }
 
-// @alpha
-export function RootErrorRenderer({ errorNode, getHierarchyLevelDetails, reloadTree }: RootErrorRendererProps): JSX_2.Element;
-
 // @alpha (undocumented)
 type RootErrorRendererProps = {
     errorNode: ErrorNode;

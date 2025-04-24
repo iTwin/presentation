@@ -2,7 +2,6 @@
 "@itwin/presentation-hierarchies-react": minor
 ---
 
-Exposed `RootErrorRenderer`, which takes `renderRootError` property to render custom root error messages.
 `TreeRenderer` now takes `rootErrorRenderer` to render a custom root error display component.
 
 Custom error display component example:

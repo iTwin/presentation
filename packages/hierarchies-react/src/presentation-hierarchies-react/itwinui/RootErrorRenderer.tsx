@@ -21,7 +21,7 @@ export type RootErrorRendererProps = {
 /**
  * A component that renders root node error state.
  *
- * @alpha
+ * @internal
  */
 export function RootErrorRenderer({ errorNode, getHierarchyLevelDetails, reloadTree }: RootErrorRendererProps) {
   const { localizedStrings } = useLocalizationContext();
