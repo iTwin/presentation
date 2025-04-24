@@ -113,6 +113,7 @@ function applyDatesFormatting(value: TypedPrimitiveValue) {
 
 function applyPointsFormatting(value: TypedPrimitiveValue) {
   function formatComponent(n: number) {
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     return applyNumericFormatting({ type: "Double", value: n })!;
   }
   if (value.type === "Point3d") {
