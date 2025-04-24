@@ -93,9 +93,11 @@ interface LocalizationContextProviderProps {
 interface LocalizedStrings {
     clearHierarchyLevelFilter: string;
     failedToCreateHierarchy: string;
+    failedToCreateRootHierarchy: string;
     filterHierarchyLevel: string;
     filterHierarchyLevelActiveDescription: string;
     increaseHierarchyLimit: string;
+    increaseHierarchyLimitToUnlimited: string;
     increaseHierarchyLimitWithFiltering: string;
     issuesFound: string;
     loading: string;
@@ -103,6 +105,7 @@ interface LocalizedStrings {
     noFilteredChildrenChangeFilter: string;
     resultLimitExceeded: string;
     retry: string;
+    rootResultLimitExceeded: string;
 }
 
 // @alpha
@@ -180,6 +183,14 @@ interface ReloadTreeOptions {
     state?: "keep" | "discard" | "reset";
 }
 
+// @alpha (undocumented)
+type RootErrorRendererProps = {
+    errorNode: ErrorNode;
+    renderRootError?: ({ errorNode }: {
+        errorNode: ErrorNode;
+    }) => ReactElement;
+} & Pick<ReturnType<typeof useTree>, "getHierarchyLevelDetails" | "reloadTree">;
+
 // @public
 type SelectionChangeType = "add" | "replace" | "remove";
 
@@ -239,17 +250,18 @@ type TreeNodeRendererProps = Pick<ReturnType<typeof useTree>, "expandNode"> & Pa
 type TreeNodeRendererProps_2 = ComponentPropsWithoutRef<typeof TreeNodeRenderer>;
 
 // @alpha
-export function TreeRenderer({ rootNodes, expandNode, localizedStrings, selectNodes, selectionMode, getHierarchyLevelDetails, onFilterClick, reloadTree, isNodeSelected, errorRenderer, ...treeProps }: TreeRendererProps): JSX_2.Element;
+export function TreeRenderer({ rootNodes, selectNodes, selectionMode, rootErrorRenderer, ...treeProps }: TreeRendererProps): JSX_2.Element;
 
 // @alpha (undocumented)
 interface TreeRendererOwnProps {
     errorRenderer?: (props: TreeErrorRendererProps) => ReactElement;
+    rootErrorRenderer?: (props: RootErrorRendererProps) => ReactElement;
     rootNodes: PresentationTreeNode[];
     selectionMode?: SelectionMode_2;
 }
 
 // @alpha (undocumented)
-type TreeRendererProps = Pick<ReturnType<typeof useTree>, "expandNode"> & Partial<Pick<ReturnType<typeof useTree>, "selectNodes" | "isNodeSelected" | "getHierarchyLevelDetails">> & Pick<ReturnType<typeof useTree>, "reloadTree"> & Pick<TreeErrorRendererProps, "onFilterClick"> & Omit<TreeNodeRendererProps_2, "node" | "aria-level" | "aria-posinset" | "aria-setsize" | "reloadTree" | "selected" | "error"> & TreeRendererOwnProps & ComponentPropsWithoutRef<typeof LocalizationContextProvider>;
+type TreeRendererProps = Pick<ReturnType<typeof useTree>, "expandNode"> & Partial<Pick<ReturnType<typeof useTree>, "selectNodes" | "isNodeSelected">> & Pick<ReturnType<typeof useTree>, "reloadTree" | "getHierarchyLevelDetails"> & Pick<TreeErrorRendererProps, "onFilterClick"> & Omit<TreeNodeRendererProps_2, "node" | "aria-level" | "aria-posinset" | "aria-setsize" | "reloadTree" | "selected" | "error"> & TreeRendererOwnProps & ComponentPropsWithoutRef<typeof LocalizationContextProvider>;
 
 // @public @deprecated
 export function UnifiedSelectionProvider({ storage, children }: PropsWithChildren<{
