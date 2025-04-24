@@ -3,7 +3,6 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { ReactElement } from "react";
 import { Button, Icon, Text } from "@itwin/itwinui-react/bricks";
 import { useTree } from "../UseTree.js";
 import { ErrorNode } from "./FlatTreeNode.js";
@@ -17,8 +16,6 @@ const errorSvg = new URL("@itwin/itwinui-icons/status-error.svg", import.meta.ur
 export type RootErrorRendererProps = {
   /** Root error to be displayed */
   errorNode: ErrorNode;
-  // Callback to render custom root errors.
-  renderError?: ({ errorNode }: { errorNode: ErrorNode }) => ReactElement;
 } & Pick<ReturnType<typeof useTree>, "getHierarchyLevelDetails" | "reloadTree">;
 
 /**
@@ -26,12 +23,8 @@ export type RootErrorRendererProps = {
  *
  * @alpha
  */
-export function RootErrorRenderer({ errorNode, renderError, getHierarchyLevelDetails, reloadTree }: RootErrorRendererProps) {
+export function RootErrorRenderer({ errorNode, getHierarchyLevelDetails, reloadTree }: RootErrorRendererProps) {
   const { localizedStrings } = useLocalizationContext();
-
-  if (renderError) {
-    return renderError({ errorNode });
-  }
 
   if (errorNode.error.type === "ResultSetTooLarge") {
     const onOverrideLimit = () => getHierarchyLevelDetails(undefined)?.setSizeLimit("unbounded");

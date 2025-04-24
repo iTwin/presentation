@@ -15,19 +15,3 @@ Custom error display component example:
     )}
 />
 ```
-
-Custom error message example:
-
-```ts
-<TreeRenderer
-    {...treeProps}
-    rootErrorRenderer={(rootErrorRendererProps) => (
-        <RootErrorRenderer
-            {...rootErrorRendererProps}
-            renderRootError={(rootErrorProps) => {
-                return <>My error</>;
-            }}
-        />
-    )}
-/>
-```
