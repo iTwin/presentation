@@ -69,6 +69,7 @@ function getInputTargetFromPropertyRecord(propertyRecord: PropertyRecord) {
   if (value.valueFormat !== PropertyValueFormat.Primitive) {
     return undefined;
   }
+  // eslint-disable-next-line @typescript-eslint/no-base-to-string
   return value.value?.toString();
 }
 

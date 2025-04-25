@@ -44,6 +44,7 @@ import { DiagnosticsProps } from "../common/Diagnostics.js";
 import { createLabelRecord, findField, memoize, WithIModelKey } from "../common/Utils.js";
 import { FAVORITES_CATEGORY_NAME, getFavoritesCategory } from "../favorite-properties/Utils.js";
 
+// eslint-disable-next-line @typescript-eslint/unbound-method
 const labelsComparer = new Intl.Collator(undefined, { sensitivity: "base" }).compare;
 
 /**
