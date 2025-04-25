@@ -6,13 +6,11 @@
 import { expect } from "chai";
 import { describe } from "mocha";
 import { collect, createAsyncIterator } from "presentation-test-utilities";
-import { PropsWithChildren } from "react";
 import sinon from "sinon";
 import { InstancesNodeKey } from "@itwin/presentation-hierarchies";
 import { createStorage, Selectables, StorageSelectionChangeEventArgs, StorageSelectionChangesListener } from "@itwin/unified-selection";
 import { TreeModelNode } from "../../presentation-hierarchies-react/internal/TreeModel.js";
 import { useUnifiedTreeSelection } from "../../presentation-hierarchies-react/internal/UseUnifiedSelection.js";
-import { UnifiedSelectionProvider as UnifiedSelectionProviderDeprecated } from "../../presentation-hierarchies-react/UnifiedSelectionContext.js";
 import { act, createStub, createTestGroupingNode, createTestHierarchyNode, createTreeModelNode, renderHook } from "../TestUtils.js";
 
 describe("useUnifiedSelection", () => {
@@ -30,68 +28,6 @@ describe("useUnifiedSelection", () => {
   beforeEach(() => {
     storage.clearStorage({ imodelKey });
     getTreeModelNode.reset();
-  });
-
-  it("returns no-op handlers when unified selection storage is not provided", () => {
-    // ensure tree model has a node, which represents a selected instance
-    const instanceKey = { id: "0x1", className: "Schema:Name" };
-    const instancesNodesKey: InstancesNodeKey = {
-      type: "instances",
-      instanceKeys: [instanceKey],
-    };
-    const hierarchyNode = createTestHierarchyNode({ id: "node-1", key: instancesNodesKey });
-    const node = createTreeModelNode({ id: "node-1", nodeData: hierarchyNode });
-    storage.addToSelection({
-      imodelKey,
-      source,
-      selectables: [instanceKey],
-    });
-    getTreeModelNode.callsFake((id) => (id === "node-1" ? node : undefined));
-
-    // test
-    const { selectionStorage: _, ...initialPropsWithoutStorage } = initialProps;
-    const { result } = renderHook(useUnifiedTreeSelection, { initialProps: initialPropsWithoutStorage });
-    act(() => {
-      result.current.selectNodes(["node-1"], "add");
-    });
-    expect(getTreeModelNode).to.not.be.called;
-    expect(result.current.isNodeSelected("node-1")).to.be.false;
-  });
-
-  it("uses deprecated unified selection context provider if selection storage is not provided directly", () => {
-    const instanceKey1 = { id: "0x1", className: "Schema:Name", imodelKey };
-    storage.replaceSelection({ imodelKey, source, selectables: [instanceKey1] });
-
-    const storage2 = createStorage();
-    const instanceKey2 = { id: "0x2", className: "Schema:Name", imodelKey };
-    storage2.replaceSelection({ imodelKey, source, selectables: [instanceKey2] });
-
-    getTreeModelNode.callsFake((id) => {
-      switch (id) {
-        case "node-1":
-          return createTreeModelNode({
-            id: "node-1",
-            nodeData: createTestHierarchyNode({ id: "node-1", key: { type: "instances", instanceKeys: [instanceKey1] } }),
-          });
-        case "node-2":
-          return createTreeModelNode({
-            id: "node-2",
-            nodeData: createTestHierarchyNode({ id: "node-2", key: { type: "instances", instanceKeys: [instanceKey2] } }),
-          });
-      }
-      return undefined;
-    });
-
-    const { selectionStorage: _, ...initialPropsWithoutStorage } = initialProps;
-    const { result } = renderHook(useUnifiedTreeSelection, {
-      initialProps: initialPropsWithoutStorage,
-      wrapper: (props: PropsWithChildren<{}>) => (
-        // eslint-disable-next-line @typescript-eslint/no-deprecated
-        <UnifiedSelectionProviderDeprecated storage={storage2}>{props.children}</UnifiedSelectionProviderDeprecated>
-      ),
-    });
-    expect(result.current.isNodeSelected("node-1")).to.be.false;
-    expect(result.current.isNodeSelected("node-2")).to.be.true;
   });
 
   describe("isNodeSelected", () => {

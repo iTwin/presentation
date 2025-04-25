@@ -8,7 +8,6 @@ import { assert } from "@itwin/core-bentley";
 import { HierarchyNode, InstancesNodeKey } from "@itwin/presentation-hierarchies";
 import { InstanceKey } from "@itwin/presentation-shared";
 import { Selectable, Selectables, SelectionStorage } from "@itwin/unified-selection";
-import { useUnifiedSelectionStorage } from "../UnifiedSelectionContext.js";
 import { SelectionChangeType } from "../UseSelectionHandler.js";
 import { isTreeModelHierarchyNode, TreeModelHierarchyNode, TreeModelNode, TreeModelRootNode } from "./TreeModel.js";
 
@@ -27,12 +26,8 @@ export interface UseUnifiedTreeSelectionProps {
 
   /**
    * Unified selection storage to use for listening, getting and changing active selection.
-   *
-   * When not specified, the deprecated unified selection React context is used to access the
-   * selection storage (see `UnifiedSelectionProvider`). This prop will be made required in the
-   * next major release, where the deprecated context will also be removed.
    */
-  selectionStorage?: SelectionStorage;
+  selectionStorage: SelectionStorage;
 }
 
 /** @internal */
@@ -46,19 +41,7 @@ export function useUnifiedTreeSelection({
     selectNodes: /* c8 ignore next */ () => {},
   }));
 
-  const deprecatedSelectionStorage = useUnifiedSelectionStorage();
-  selectionStorage ??= deprecatedSelectionStorage;
-
   useEffect(() => {
-    if (!selectionStorage) {
-      // TODO: make selectionStorage prop required
-      setOptions({
-        isNodeSelected: () => false,
-        selectNodes: () => {},
-      });
-      return;
-    }
-
     setOptions(createOptions(sourceName, selectionStorage, getTreeModelNode));
     return selectionStorage.selectionChangeEvent.addListener((args) => {
       if (args.level > 0) {

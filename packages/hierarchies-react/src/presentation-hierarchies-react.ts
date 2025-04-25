@@ -11,7 +11,6 @@ export {
   PresentationTreeNode,
   isPresentationHierarchyNode,
 } from "./presentation-hierarchies-react/TreeNode.js";
-export { UnifiedSelectionProvider } from "./presentation-hierarchies-react/UnifiedSelectionContext.js";
 export { useSelectionHandler } from "./presentation-hierarchies-react/UseSelectionHandler.js";
 export { HierarchyLevelDetails, useTree, useUnifiedSelectionTree } from "./presentation-hierarchies-react/UseTree.js";
 export { useIModelTree, useIModelUnifiedSelectionTree } from "./presentation-hierarchies-react/UseIModelTree.js";

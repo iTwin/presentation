@@ -13,8 +13,6 @@ public;type;PresentationTreeNode
 alpha;function;TreeErrorRenderer
 public;const;TreeNodeRenderer
 alpha;function;TreeRenderer
-public;function;UnifiedSelectionProvider
-deprecated;function;UnifiedSelectionProvider
 alpha;function;useErrorList
 alpha;function;useFlatTreeNodeList
 public;function;useIModelTree
