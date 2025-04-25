@@ -1,5 +1,116 @@
 # @itwin/presentation-hierarchies-react
 
+## 2.0.0-alpha.15
+
+### Major Changes
+
+- [#942](https://github.com/iTwin/presentation/pull/942): Unified selection API cleanup.
+
+  - Remove deprecated `UnifiedSelectionProvider`.
+  - Make `selectionStorage` prop required for unified selection - enabled tree state hooks (`useUnifiedSelectionTree` and `useIModelUnifiedSelectionTree`).
+
+  Previously, the `selectionStorage` prop was optional, and if not provided, the hooks used unified selection React context (provided by `UnifiedSelectionProvider`) as fallback. Finally, if the context was not provided either, the hooks acted as regular non-unified selection hooks.
+
+  This didn't make much sense, as the hooks were designed to work with unified selection, as their name suggests. So it makes sense to require the selection storage to be provided to them, and at that point the context becomes redundant.
+
+- [#936](https://github.com/iTwin/presentation/pull/936): Replaced `actions` property on `TreeNodeRenderer` with `getActions` to match how decorations are handled. Removed `useFilterAction` hook and replaced it with `FilterAction` component.
+
+  Before:
+
+  ```tsx
+  import { TreeNodeRenderer, useFilterAction } from "@itwin/presentation-hierarchies-react";
+
+  const filterAction = useFilterAction({ onFilter, getHierarchyLevelDetails });
+  return (
+    <TreeNodeRenderer
+      actions={useMemo(
+        () => [
+          filterAction,
+          (node) => ({
+            label: "Custom Action",
+            actions: () => log(node.label),
+            icon: customIconHref,
+          }),
+        ],
+        [filterAction],
+      )}
+    />
+  );
+  ```
+
+  After:
+
+  ```tsx
+  import { Icon, Tree } from "@itwin/itwinui-react";
+  import { FilterAction, TreeNodeRenderer } from "@itwin/presentation-hierarchies-react";
+
+  return (
+    <TreeNodeRenderer
+      getActions={useCallback(
+        (node) => [
+          <FilterAction key="filter" node={node} onFilter={onFilter} getHierarchyLevelDetails={getHierarchyLevelDetails} />,
+          <Tree.ItemAction key="customAction" label="Custom action" onClick={() => log(node.label)} icon={<Icon href={customIconHref} />} />,
+        ],
+        [onFilter, getHierarchyLevelDetails],
+      )}
+    />
+  );
+  ```
+
+### Minor Changes
+
+- [#930](https://github.com/iTwin/presentation/pull/930): Exposed `TreeErrorRenderer`, which takes `renderError` property to render custom error messages.
+  `TreeRenderer` now takes `errorRenderer` to render a custom error display component.
+
+  Custom error display component example:
+
+  ```ts
+  <TreeRenderer
+      {...treeProps}
+      errorRenderer={(errorsRendererProps) => (
+          <MyErrorRenderer {...errorsRendererProps} />
+      )}
+  />
+  ```
+
+  Custom error message example:
+
+  ```ts
+  <TreeRenderer
+      {...treeProps}
+      errorRenderer={(errorsRendererProps) => (
+          <TreeErrorRenderer
+              {...errorsRendererProps}
+              renderError={(errorProps) => {
+                  return <unstable_ErrorRegion.Item message={...} />;
+              }}
+          />
+      )}
+  />
+  ```
+
+- [#937](https://github.com/iTwin/presentation/pull/937): `TreeRenderer` now takes `rootErrorRenderer` to render a custom root error display component.
+
+  Custom error display component example:
+
+  ```ts
+  <TreeRenderer
+      {...treeProps}
+      rootErrorRenderer={(rootErrorRendererProps) => (
+          <MyRootErrorRenderer {...rootErrorRendererProps} />
+      )}
+  />
+  ```
+
+- [#930](https://github.com/iTwin/presentation/pull/930): Changed flat tree building functions to hooks:
+
+  - `flattenNodes` => `useFlatTreeNodeList`.
+  - `getErrors` => `useErrorList`.
+
+### Patch Changes
+
+- [#930](https://github.com/iTwin/presentation/pull/930): Fix `ResultSetTooLarge` error suggesting filtering when parent node is not filterable.
+
 ## 2.0.0-alpha.14
 
 ### Patch Changes
