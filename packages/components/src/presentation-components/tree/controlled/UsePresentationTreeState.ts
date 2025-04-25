@@ -244,7 +244,6 @@ function useTreeState(props: UseTreeStateProps) {
       prevStateRef.current?.dataProvider[Symbol.dispose]();
 
       const { modelSource, dataProvider } = reloadedTree;
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       const pagedLoader = new PagedTreeNodeLoader(dataProvider, modelSource, dataProvider.pagingSize!);
       const nodeLoader = new ReportingTreeNodeLoader(pagedLoader, (nodeLoadedProps) => onNodeLoadedRef.current?.(nodeLoadedProps));
       setState({ dataProvider, nodeLoader });

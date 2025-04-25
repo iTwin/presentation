@@ -22,11 +22,5 @@ module.exports = [
       ...reactPlugin.configs["jsx-runtime"].rules,
     },
   },
-  {
-    files: ["**/*.{ts,tsx}"],
-    rules: {
-      "@typescript-eslint/no-non-null-assertion": "off",
-    },
-  },
   ...eslintBaseConfig,
 ];

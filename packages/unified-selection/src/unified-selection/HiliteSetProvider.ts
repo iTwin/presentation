@@ -93,7 +93,7 @@ class HiliteSetProviderImpl implements HiliteSetProvider {
     let lastEmitTime = performance.now();
     const subject = new Subject<HiliteSet>();
     const subscriptions = (["models", "subCategories", "elements"] as const).map((key) =>
-      observables[key]?.subscribe({
+      observables[key]!.subscribe({
         next(val) {
           hiliteSet[key].push(val);
           if (performance.now() - lastEmitTime < HILITE_SET_EMIT_FREQUENCY) {
@@ -115,7 +115,7 @@ class HiliteSetProviderImpl implements HiliteSetProvider {
           subject.complete();
         },
         error(err) {
-          subscriptions.forEach((x) => x?.unsubscribe());
+          subscriptions.forEach((x) => x.unsubscribe());
           subscriptions.length = 0;
           subject.error(err);
         },

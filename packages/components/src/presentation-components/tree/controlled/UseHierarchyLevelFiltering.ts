@@ -36,7 +36,7 @@ export function useHierarchyLevelFiltering(props: UseHierarchyLevelFilteringProp
 
   const handleFilterAction = (nodeId: string, info?: PresentationInstanceFilterInfo) => {
     if (ongoingSubscriptions.current.has(nodeId)) {
-      ongoingSubscriptions.current.get(nodeId)?.unsubscribe();
+      ongoingSubscriptions.current.get(nodeId)!.unsubscribe();
       ongoingSubscriptions.current.delete(nodeId);
     }
     const subscription = applyHierarchyLevelFilter(nodeLoader, modelSource, nodeId, () => ongoingSubscriptions.current.delete(nodeId), info);

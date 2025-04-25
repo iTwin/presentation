@@ -91,10 +91,8 @@ export class MyAppFrontend {
     return viewSpecs
       .filter((spec) => !spec.isPrivate)
       .map((spec) => ({
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         id: spec.id!,
         class: spec.classFullName,
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         label: spec.userLabel ?? spec.code.value!,
       }));
   }

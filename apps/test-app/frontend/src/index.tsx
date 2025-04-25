@@ -89,7 +89,6 @@ async function initializePresentation() {
 void (async () => {
   await initializeApp();
 
-  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
   const root = createRoot(document.getElementById("root")!);
   root.render(
     <StrictMode>

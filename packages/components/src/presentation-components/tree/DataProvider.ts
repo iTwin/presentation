@@ -381,7 +381,6 @@ async function createNodesAndCountResult(
             onHierarchyLimitExceeded?.();
             return {
               nodes: [
-                // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
                 createInfoNode(parentNode, `${translate("tree.result-limit-exceeded")} ${hierarchyLevelSizeLimit!}.`, InfoTreeNodeItemType.ResultSetTooLarge),
               ],
               count: 1,

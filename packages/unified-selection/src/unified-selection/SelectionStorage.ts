@@ -247,7 +247,6 @@ class MultiLevelSelectablesContainer {
     const storedLevels = this._selectablesContainers.keys();
     for (const storedLevel of storedLevels) {
       if (storedLevel >= level) {
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         const selectables = this._selectablesContainers.get(storedLevel)!;
         Selectables.clear(selectables);
       }

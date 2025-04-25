@@ -53,7 +53,6 @@ export const findField = (descriptor: Descriptor, recordPropertyName: string): F
   let fieldsSource: { getFieldByName: (name: string) => Field | undefined } | undefined = descriptor;
   const fieldNames = parseCombinedFieldNames(recordPropertyName);
   while (fieldsSource && fieldNames.length) {
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     const field: Field | undefined = fieldsSource.getFieldByName(fieldNames.shift()!);
     fieldsSource = field && field.isNestedContentField() ? field : undefined;
     if (!fieldNames.length) {

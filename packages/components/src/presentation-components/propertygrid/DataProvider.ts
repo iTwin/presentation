@@ -467,9 +467,7 @@ class PropertyDataBuilder extends InternalPropertyRecordsBuilder {
         this._asyncTasks.push(
           (async () => {
             const sortedFields = recs.map((r) => r.fieldHierarchy.field);
-            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
             await this._props.callbacks.sortFields(this._categoriesCache.getEntry(categoryName)!, sortedFields);
-            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
             categorizedRecords[categoryName] = sortedFields.map((field) => recs.find((r) => r.fieldHierarchy.field === field)!.record);
           })(),
         );
