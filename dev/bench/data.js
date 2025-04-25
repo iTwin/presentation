@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1743071724247,
+  "lastUpdate": 1745573393613,
   "repoUrl": "https://github.com/iTwin/presentation",
   "entries": {
     "Benchmark": [
@@ -34720,6 +34720,162 @@ window.BENCHMARK_DATA = {
             "value": 86,
             "unit": "ms",
             "extra": "count: 9\nmax: 86\np95: 86\nmedian: 25"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "24278440+saskliutas@users.noreply.github.com",
+            "name": "Saulius Skliutas",
+            "username": "saskliutas"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "a68be4ef32e321b4a210f55ba0af3fb9c7213680",
+          "message": "Bump `eslint` and `@itwin/eslint-plugin` (#941)\n\n* Bump eslint-plugin\n\n* Fix unified-selection\n\n* Fix testing\n\n* Fix shared\n\n* Fix models-tree\n\n* Fix hierarchies-react\n\n* Fix hierarchies\n\n* Fix core-interop\n\n* Fix components\n\n* Fix test-app\n\n* Fix performance-tests\n\n* Fix load-tests\n\n* Fix full-stack-tests\n\n* Bump eslint version\n\n* Fix CI\n\n* DIsable no-non-null-assertion\n\n* Remove unused import",
+          "timestamp": "2025-04-25T12:26:08+03:00",
+          "tree_id": "1c3ea4fce04a25a3f68389b6c38b45443733e8a8",
+          "url": "https://github.com/iTwin/presentation/commit/a68be4ef32e321b4a210f55ba0af3fb9c7213680"
+        },
+        "date": 1745573392173,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "flat 50k elements list",
+            "value": 4392.38,
+            "unit": "ms"
+          },
+          {
+            "name": "flat 50k elements list (P95 of main thread blocks)",
+            "value": 68,
+            "unit": "ms",
+            "extra": "count: 16\nmax: 68\np95: 68\nmedian: 30.5"
+          },
+          {
+            "name": "filtering filters with 50000 paths",
+            "value": 9484.89,
+            "unit": "ms"
+          },
+          {
+            "name": "filtering filters with 50000 paths (P95 of main thread blocks)",
+            "value": 130,
+            "unit": "ms",
+            "extra": "count: 14\nmax: 130\np95: 130\nmedian: 29.5"
+          },
+          {
+            "name": "grouping by label",
+            "value": 9596.68,
+            "unit": "ms"
+          },
+          {
+            "name": "grouping by label (P95 of main thread blocks)",
+            "value": 52,
+            "unit": "ms",
+            "extra": "count: 3\nmax: 52\np95: 52\nmedian: 38"
+          },
+          {
+            "name": "grouping by class",
+            "value": 9824.64,
+            "unit": "ms"
+          },
+          {
+            "name": "grouping by class (P95 of main thread blocks)",
+            "value": 35,
+            "unit": "ms",
+            "extra": "count: 8\nmax: 35\np95: 35\nmedian: 29"
+          },
+          {
+            "name": "grouping by property",
+            "value": 10548.21,
+            "unit": "ms"
+          },
+          {
+            "name": "grouping by property (P95 of main thread blocks)",
+            "value": 46,
+            "unit": "ms",
+            "extra": "count: 6\nmax: 46\np95: 46\nmedian: 31.5"
+          },
+          {
+            "name": "grouping by base class (10 classes)",
+            "value": 7169.22,
+            "unit": "ms"
+          },
+          {
+            "name": "grouping by base class (10 classes) (P95 of main thread blocks)",
+            "value": 73,
+            "unit": "ms",
+            "extra": "count: 17\nmax: 73\np95: 73\nmedian: 34"
+          },
+          {
+            "name": "grouping by multiple attributes",
+            "value": 25706.87,
+            "unit": "ms"
+          },
+          {
+            "name": "grouping by multiple attributes (P95 of main thread blocks)",
+            "value": 44,
+            "unit": "ms",
+            "extra": "count: 11\nmax: 44\np95: 44\nmedian: 30"
+          },
+          {
+            "name": "hide if no children required to finalize root, w/o children",
+            "value": 38164.75,
+            "unit": "ms"
+          },
+          {
+            "name": "hide if no children required to finalize root, w/o children (P95 of main thread blocks)",
+            "value": 34,
+            "unit": "ms",
+            "extra": "count: 4\nmax: 34\np95: 34\nmedian: 31.5"
+          },
+          {
+            "name": "hide if no children required to finalize root, w/ children",
+            "value": 150.38,
+            "unit": "ms"
+          },
+          {
+            "name": "hide if no children required to finalize root, w/ children (P95 of main thread blocks)",
+            "value": 0,
+            "unit": "ms",
+            "extra": "count: 0\nmax: N/A\np95: N/A\nmedian: N/A"
+          },
+          {
+            "name": "models tree initial (Baytown)",
+            "value": 38.82,
+            "unit": "ms"
+          },
+          {
+            "name": "models tree initial (Baytown) (P95 of main thread blocks)",
+            "value": 0,
+            "unit": "ms",
+            "extra": "count: 0\nmax: N/A\np95: N/A\nmedian: N/A"
+          },
+          {
+            "name": "models tree full (Baytown)",
+            "value": 6343.3,
+            "unit": "ms"
+          },
+          {
+            "name": "models tree full (Baytown) (P95 of main thread blocks)",
+            "value": 87,
+            "unit": "ms",
+            "extra": "count: 2\nmax: 87\np95: 87\nmedian: 85.5"
+          },
+          {
+            "name": "models tree creates initial filtered view for 50k target items",
+            "value": 2145.53,
+            "unit": "ms"
+          },
+          {
+            "name": "models tree creates initial filtered view for 50k target items (P95 of main thread blocks)",
+            "value": 255,
+            "unit": "ms",
+            "extra": "count: 11\nmax: 255\np95: 255\nmedian: 35"
           }
         ]
       }
