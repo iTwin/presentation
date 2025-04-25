@@ -7,6 +7,7 @@ import { expect } from "chai";
 import { mock } from "node:test";
 import { createAsyncIterator } from "presentation-test-utilities";
 import sinon from "sinon";
+import { BeEvent } from "@itwin/core-bentley";
 import * as presentationHierarchiesModule from "@itwin/presentation-hierarchies";
 import { Props } from "@itwin/presentation-shared";
 import { createHierarchyProviderStub, renderHook, waitFor } from "./TestUtils.js";
@@ -15,7 +16,6 @@ import type {
   useIModelTree as originalUseIModelTree,
   useIModelUnifiedSelectionTree as originalUseIModelUnifiedSelectionTree,
 } from "../presentation-hierarchies-react/UseIModelTree.js";
-
 describe("useIModelTree hooks", () => {
   let stubs: Awaited<ReturnType<typeof stubIModelHierarchyProviderFactory>>;
   let useIModelTree: typeof originalUseIModelTree;
@@ -76,12 +76,18 @@ describe("useIModelTree hooks", () => {
   describe("useIModelUnifiedSelectionTree", () => {
     type UseIModelTreeProps = Props<typeof useIModelUnifiedSelectionTree>;
     const hierarchyDefinition = {} as presentationHierarchiesModule.HierarchyDefinition;
+    const selectionStorage = {} as UseIModelTreeProps["selectionStorage"];
     const initialProps: UseIModelTreeProps = {
       imodelAccess: {} as UseIModelTreeProps["imodelAccess"],
       getHierarchyDefinition: () => hierarchyDefinition,
       localizedStrings: {} as UseIModelTreeProps["localizedStrings"],
       sourceName: "test-component",
+      selectionStorage,
     };
+
+    beforeEach(() => {
+      selectionStorage.selectionChangeEvent = new BeEvent();
+    });
 
     it("creates imodel hierarchy provider using given imodel and hierarchy definition", async () => {
       stubs.hierarchyProvider.getNodes.callsFake(() => createAsyncIterator([]));

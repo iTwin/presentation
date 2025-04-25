@@ -260,11 +260,6 @@ interface TreeRendererOwnProps {
 // @alpha (undocumented)
 type TreeRendererProps = Pick<ReturnType<typeof useTree>, "expandNode"> & Partial<Pick<ReturnType<typeof useTree>, "selectNodes" | "isNodeSelected">> & Pick<ReturnType<typeof useTree>, "reloadTree" | "getHierarchyLevelDetails"> & Pick<TreeErrorRendererProps, "onFilterClick"> & Omit<TreeNodeRendererProps_2, "node" | "aria-level" | "aria-posinset" | "aria-setsize" | "reloadTree" | "selected" | "error"> & TreeRendererOwnProps & ComponentPropsWithoutRef<typeof LocalizationContextProvider>;
 
-// @public @deprecated
-export function UnifiedSelectionProvider({ storage, children }: PropsWithChildren<{
-    storage: SelectionStorage;
-}>): JSX_2.Element;
-
 // @alpha
 export function useErrorList(rootNodes: PresentationTreeNode[]): ErrorNode[];
 
@@ -339,7 +334,7 @@ export function useUnifiedSelectionTree({ sourceName, selectionStorage, ...props
 
 // @public (undocumented)
 interface UseUnifiedTreeSelectionProps {
-    selectionStorage?: SelectionStorage;
+    selectionStorage: SelectionStorage;
     sourceName: string;
 }
 
