@@ -5,7 +5,6 @@
 const iTwinPlugin = require("@itwin/eslint-plugin");
 const eslintBaseConfig = require("../../eslint.base.config");
 const reactPlugin = require("eslint-plugin-react");
-const { rules } = require("eslint-plugin-react");
 
 module.exports = [
   {
