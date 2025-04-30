@@ -1,5 +1,11 @@
 # @itwin/presentation-hierarchies-react
 
+## 2.0.0-alpha.16
+
+### Minor Changes
+
+- [#945](https://github.com/iTwin/presentation/pull/945): Re-export `getLogger` and `setLogger` functions from `@itwin/presentation-hierarchies` to allow setting a logger.
+
 ## 2.0.0-alpha.15
 
 ### Major Changes
