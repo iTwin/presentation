@@ -8,6 +8,7 @@ import { ComponentPropsWithoutRef } from 'react';
 import { createIModelHierarchyProvider } from '@itwin/presentation-hierarchies';
 import { FC } from 'react';
 import { GenericInstanceFilter } from '@itwin/presentation-hierarchies';
+import { getLogger } from '@itwin/presentation-hierarchies';
 import { HierarchyDefinition } from '@itwin/presentation-hierarchies';
 import { HierarchyFilteringPath } from '@itwin/presentation-hierarchies';
 import { HierarchyNode } from '@itwin/presentation-hierarchies';
@@ -23,6 +24,7 @@ import { ReactElement } from 'react';
 import { ReactNode } from 'react';
 import { RefAttributes } from 'react';
 import { SelectionStorage } from '@itwin/unified-selection';
+import { setLogger } from '@itwin/presentation-hierarchies';
 import { Tree } from '@itwin/itwinui-react/bricks';
 import { UseTreeResult as UseTreeResult_2 } from '../UseTree.js';
 
@@ -54,6 +56,8 @@ type FlatNode = {
 export type FlatTreeNode = FlatNode | PlaceholderNode;
 
 export { GenericInstanceFilter }
+
+export { getLogger }
 
 // @public
 export interface HierarchyLevelDetails {
@@ -195,6 +199,8 @@ type SelectionChangeType = "add" | "replace" | "remove";
 type SelectionMode_2 = "none" | "single" | "extended" | "multiple";
 
 export { SelectionStorage }
+
+export { setLogger }
 
 // @alpha
 interface TreeErrorItemProps {
