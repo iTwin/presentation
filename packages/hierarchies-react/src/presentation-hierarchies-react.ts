@@ -21,5 +21,5 @@ export { TreeErrorRenderer } from "./presentation-hierarchies-react/itwinui/Tree
 export { useFlatTreeNodeList, useErrorList, FlatTreeNode } from "./presentation-hierarchies-react/itwinui/FlatTreeNode.js";
 export { LocalizationContextProvider } from "./presentation-hierarchies-react/itwinui/LocalizationContext.js";
 
-export { GenericInstanceFilter, HierarchyNode, HierarchyProvider } from "@itwin/presentation-hierarchies";
+export { GenericInstanceFilter, HierarchyNode, HierarchyProvider, getLogger, setLogger } from "@itwin/presentation-hierarchies";
 export { SelectionStorage } from "@itwin/unified-selection";
