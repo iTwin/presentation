@@ -102,7 +102,7 @@ function createTestLocalization(): ITwinLocalization {
             callback(error, { status: 500, data: "" });
           }
         } else {
-          new Backend().options.request!(options, url, payload, callback);
+          new Backend().options.request!(options, url, payload, (err, resp) => callback(err, resp!));
         }
       },
     },
