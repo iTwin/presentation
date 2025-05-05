@@ -4,12 +4,11 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { memo, useCallback } from "react";
+import filterSvg from "@itwin/itwinui-icons/filter.svg";
 import { Tree } from "@itwin/itwinui-react/bricks";
 import { PresentationHierarchyNode } from "../TreeNode.js";
 import { HierarchyLevelDetails, useTree } from "../UseTree.js";
 import { useLocalizationContext } from "./LocalizationContext.js";
-
-const filterSvg = new URL("@itwin/itwinui-icons/filter.svg", import.meta.url).href;
 
 /** @alpha */
 export type FilterActionProps = {
