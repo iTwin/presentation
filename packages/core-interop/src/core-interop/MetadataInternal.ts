@@ -25,6 +25,7 @@ import {
   StructProperty as CoreStructProperty,
   LazyLoadedSchemaItem,
   PrimitiveType,
+  SchemaFormatsProvider,
   SchemaItemType,
   StrengthDirection,
 } from "@itwin/ecschema-metadata";
@@ -102,7 +103,13 @@ abstract class ECClassImpl<TCoreClass extends CoreClass> extends ECSchemaItemImp
     return this._coreSchemaItem.is(classOrClassName.name, classOrClassName.schema.name);
   }
   public async getProperty(name: string): Promise<EC.Property | undefined> {
-    const coreProperty = await this._coreSchemaItem.getProperty(name, true);
+    const coreProperty = await this._coreSchemaItem.getProperty(
+      name,
+      // `SchemaFormatsProvider` was introduced around the same time the meaning of this second argument was changed
+      // from `includeInherited` to `excludeInherited` - we're using its existence to determine what we need to pass to get
+      // inherited properties
+      SchemaFormatsProvider ? false : true,
+    );
     return coreProperty ? createECProperty(coreProperty, this) : undefined;
   }
   public async getProperties(): Promise<Array<EC.Property>> {
