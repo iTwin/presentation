@@ -3,8 +3,8 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import errorSvg from "@itwin/itwinui-icons/status-error.svg";
-import { Button, Icon, Text } from "@itwin/itwinui-react/bricks";
+import { Button, Icon, Text } from "@stratakit/bricks";
+import errorSvg from "@stratakit/icons/status-error.svg";
 import { useTree } from "../UseTree.js";
 import { ErrorNode } from "./FlatTreeNode.js";
 import { useLocalizationContext } from "./LocalizationContext.js";

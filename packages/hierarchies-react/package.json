@@ -53,9 +53,9 @@
   },
   "dependencies": {
     "@itwin/core-bentley": "catalog:itwinjs-core",
-    "@itwin/itwinui-illustrations-react": "catalog:itwinui",
     "@itwin/presentation-hierarchies": "workspace:^",
     "@itwin/presentation-shared": "workspace:^",
+    "@stratakit/bricks": "~0.1.0",
     "@itwin/unified-selection": "workspace:^",
     "@tanstack/react-virtual": "^3.13.0",
     "classnames": "catalog:react",
@@ -64,24 +64,19 @@
     "rxjs": "catalog:rxjs"
   },
   "peerDependencies": {
-    "@itwin/itwinui-icons": "5.0.0-alpha.7",
-    "@itwin/itwinui-react": "5.0.0-alpha.14",
+    "@stratakit/icons": "~0.1.0",
     "react": "^17.0.0 || ^18.0.0",
     "react-dom": "^17.0.0 || ^18.0.0"
   },
   "peerDependenciesMeta": {
-    "@itwin/itwinui-icons": {
-      "optional": true
-    },
-    "@itwin/itwinui-react": {
+    "@stratakit/icons": {
       "optional": true
     }
   },
   "devDependencies": {
     "@itwin/build-tools": "catalog:build-tools",
     "@itwin/eslint-plugin": "catalog:build-tools",
-    "@itwin/itwinui-icons": "5.0.0-alpha.7",
-    "@itwin/itwinui-react": "5.0.0-alpha.14",
+    "@stratakit/icons": "~0.1.0",
     "@testing-library/dom": "catalog:test-tools",
     "@testing-library/react": "catalog:test-tools",
     "@testing-library/user-event": "catalog:test-tools",

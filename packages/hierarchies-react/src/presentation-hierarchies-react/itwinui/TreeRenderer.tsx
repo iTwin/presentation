@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { ComponentPropsWithoutRef, CSSProperties, forwardRef, memo, ReactElement, useCallback, useEffect, useMemo, useRef } from "react";
-import { Tree } from "@itwin/itwinui-react/bricks";
+import { Tree } from "@stratakit/bricks";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { PresentationTreeNode } from "../TreeNode.js";
 import { SelectionMode, useSelectionHandler } from "../UseSelectionHandler.js";
