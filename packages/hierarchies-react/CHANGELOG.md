@@ -1,5 +1,11 @@
 # @itwin/presentation-hierarchies-react
 
+## 1.6.5
+
+### Patch Changes
+
+- [#938](https://github.com/iTwin/presentation/pull/938): Fixed hierarchy level size exceeded message that suggest applying filtering on hierarchy levels that do not support filtering.
+
 ## 1.6.4
 
 ### Patch Changes

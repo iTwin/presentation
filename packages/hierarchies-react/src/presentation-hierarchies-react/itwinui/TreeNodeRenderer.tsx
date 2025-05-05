@@ -8,6 +8,7 @@ import cx from "classnames";
 import { ComponentPropsWithoutRef, forwardRef, LegacyRef, MutableRefObject, ReactElement, Ref, RefAttributes, useCallback, useRef } from "react";
 import { SvgFilter, SvgFilterHollow, SvgRemove } from "@itwin/itwinui-icons-react";
 import { Anchor, ButtonGroup, Flex, IconButton, ProgressRadial, Text, TreeNode } from "@itwin/itwinui-react";
+import { HierarchyNode } from "@itwin/presentation-hierarchies";
 import { MAX_LIMIT_OVERRIDE } from "../internal/Utils.js";
 import { isPresentationHierarchyNode, PresentationHierarchyNode } from "../TreeNode.js";
 import { HierarchyLevelDetails, UseTreeResult } from "../UseTree.js";
@@ -154,17 +155,21 @@ export const TreeNodeRenderer: React.ForwardRefExoticComponent<TreeNodeRendererP
     }
 
     if (node.type === "ResultSetTooLarge") {
+      const hierarchyLevelDetails = getHierarchyLevelDetails?.(node.parentNodeId);
+      const isFilterable =
+        hierarchyLevelDetails?.hierarchyNode &&
+        !HierarchyNode.isGroupingNode(hierarchyLevelDetails.hierarchyNode) &&
+        hierarchyLevelDetails.hierarchyNode.supportsFiltering;
       return (
         <ResultSetTooLargeNode
           {...treeNodeProps}
           ref={ref}
           limit={node.resultSetSizeLimit}
-          onOverrideLimit={getHierarchyLevelDetails ? (limit) => getHierarchyLevelDetails(node.parentNodeId)?.setSizeLimit(limit) : undefined}
+          onOverrideLimit={hierarchyLevelDetails ? (limit) => hierarchyLevelDetails.setSizeLimit(limit) : undefined}
           onFilterClick={
-            onFilterClick
+            onFilterClick && hierarchyLevelDetails && isFilterable
               ? () => {
-                  const hierarchyLevelDetails = getHierarchyLevelDetails?.(node.parentNodeId);
-                  hierarchyLevelDetails && onFilterClick(hierarchyLevelDetails);
+                  onFilterClick(hierarchyLevelDetails);
                 }
               : undefined
           }
