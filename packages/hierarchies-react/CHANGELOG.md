@@ -1,5 +1,11 @@
 # @itwin/presentation-hierarchies-react
 
+## 2.0.0-alpha.17
+
+### Patch Changes
+
+- [#949](https://github.com/iTwin/presentation/pull/949): Use default imports instead of `URL` constructor for icons.
+
 ## 2.0.0-alpha.16
 
 ### Minor Changes
