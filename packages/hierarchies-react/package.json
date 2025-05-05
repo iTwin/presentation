@@ -55,7 +55,6 @@
     "@itwin/core-bentley": "catalog:itwinjs-core",
     "@itwin/presentation-hierarchies": "workspace:^",
     "@itwin/presentation-shared": "workspace:^",
-    "@stratakit/bricks": "~0.1.0",
     "@itwin/unified-selection": "workspace:^",
     "@tanstack/react-virtual": "^3.13.0",
     "classnames": "catalog:react",
@@ -64,12 +63,16 @@
     "rxjs": "catalog:rxjs"
   },
   "peerDependencies": {
-    "@stratakit/foundations": "~0.1.0",
-    "@stratakit/icons": "~0.1.0",
+    "@stratakit/bricks": "^0.1.0",
+    "@stratakit/foundations": "^0.1.0",
+    "@stratakit/icons": "^0.1.0",
     "react": "^17.0.0 || ^18.0.0",
     "react-dom": "^17.0.0 || ^18.0.0"
   },
   "peerDependenciesMeta": {
+    "@stratakit/bricks": {
+      "optional": true
+    },
     "@stratakit/foundations": {
       "optional": true
     },
@@ -80,8 +83,9 @@
   "devDependencies": {
     "@itwin/build-tools": "catalog:build-tools",
     "@itwin/eslint-plugin": "catalog:build-tools",
-    "@stratakit/foundations": "~0.1.0",
-    "@stratakit/icons": "~0.1.0",
+    "@stratakit/bricks": "^0.1.0",
+    "@stratakit/foundations": "^0.1.0",
+    "@stratakit/icons": "^0.1.0",
     "@testing-library/dom": "catalog:test-tools",
     "@testing-library/react": "catalog:test-tools",
     "@testing-library/user-event": "catalog:test-tools",
