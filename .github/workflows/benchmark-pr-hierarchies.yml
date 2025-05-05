@@ -62,7 +62,7 @@ jobs:
           key: performance-test-dataset-${{ hashFiles('./apps/performance-tests/src/util/Datasets.ts') }}
 
       - name: Post benchmark summary
-        uses: JonasDov/github-action-benchmark@139de931ba900a931b1d1669b006a68e080b8d7d
+        uses: JonasDov/github-action-benchmark@a1808b2b798a9befa6b3c9988f2ad26b78ccb0cd
         with:
           name: Hierarchies benchmark
           tool: 'customSmallerIsBetter'
