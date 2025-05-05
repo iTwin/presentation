@@ -8,6 +8,7 @@ import {
   Format,
   InvertedUnit,
   KindOfQuantity,
+  LazyLoadedFormat,
   OverrideFormat,
   SchemaContext,
   SchemaKey,
@@ -144,12 +145,9 @@ async function getKoqPresentationFormat(koq: KindOfQuantity, unitSystems: string
   const presentationFormats = koq.presentationFormats;
   for (const system of unitSystems) {
     for (const format of presentationFormats) {
-      const unit = format.units && format.units[0][0];
-      /* c8 ignore next 3 */
-      if (!unit) {
-        continue;
-      }
-      const currentUnitSystem = await unit.unitSystem;
+      const units = format instanceof OverrideFormat ? format.units : (await format).units;
+      const lazyUnit = units && units[0][0];
+      const currentUnitSystem = lazyUnit && (await lazyUnit).unitSystem;
       if (currentUnitSystem && currentUnitSystem.name.toUpperCase() === system) {
         return format;
       }
@@ -158,8 +156,8 @@ async function getKoqPresentationFormat(koq: KindOfQuantity, unitSystems: string
   return undefined;
 }
 
-function getFormatProps(format: Format | OverrideFormat): FormatProps {
-  return format instanceof OverrideFormat ? format.getFormatProps() : format.toJSON();
+async function getFormatProps(format: LazyLoadedFormat | OverrideFormat | Format): Promise<FormatProps> {
+  return format instanceof OverrideFormat ? format.getFormatProps() : (await format).toJSON();
 }
 
 function getPersistenceUnitFormatProps(persistenceUnit: Unit | InvertedUnit): FormatProps {
