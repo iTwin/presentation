@@ -19,13 +19,12 @@ import {
   useMemo,
   useRef,
 } from "react";
+import refreshSvg from "@itwin/itwinui-icons/refresh.svg";
 import { Spinner, Tree } from "@itwin/itwinui-react/bricks";
 import { PresentationHierarchyNode } from "../TreeNode.js";
 import { useTree, UseTreeResult } from "../UseTree.js";
 import { ErrorNode } from "./FlatTreeNode.js";
 import { useLocalizationContext } from "./LocalizationContext.js";
-
-const refreshSvg = new URL("@itwin/itwinui-icons/refresh.svg", import.meta.url).href;
 
 /** @alpha */
 type TreeNodeProps = ComponentPropsWithoutRef<typeof Tree.Item>;
