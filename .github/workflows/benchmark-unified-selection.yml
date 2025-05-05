@@ -61,7 +61,7 @@ jobs:
           key: performance-test-dataset-${{ hashFiles('./apps/performance-tests/src/util/Datasets.ts') }}
 
       - name: Store benchmark result
-        uses: benchmark-action/github-action-benchmark@v1
+        uses: JonasDov/github-action-benchmark@v0.1.2
         if: ${{ github.ref == 'refs/heads/master' }}
         with:
           name: Unified selection benchmark
