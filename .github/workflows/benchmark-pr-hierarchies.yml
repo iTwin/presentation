@@ -62,19 +62,11 @@ jobs:
           key: performance-test-dataset-${{ hashFiles('./apps/performance-tests/src/util/Datasets.ts') }}
 
       - name: Post benchmark summary
-        uses: jalextowle/github-action-benchmark@35e54a2ea34188ca73481c2a0ce5919907978f4f
+        uses: JonasDov/github-action-benchmark@139de931ba900a931b1d1669b006a68e080b8d7d
         with:
           name: Hierarchies benchmark
           tool: 'customSmallerIsBetter'
           output-file-path: ./apps/performance-tests/hierarchies-benchmark.json
           github-token: ${{ secrets.GITHUB_TOKEN }}
           save-data-file: false
-          comment-always: true
-          comment-on-pull-request: false
-          external-data-json-path: ./apps/performance-tests/hierarchies-benchmark.json
-      - name: Adjust benchmark comment with correct symbols
-        run: node ./scripts/filterBenchmarkComment.js --commentFilePath ./apps/performance-tests/hierarchies-benchmark.json
-      # - name: Post adjusted benchmark comment
-      #   uses: marocchino/sticky-pull-request-comment@v2
-      #   with:
-      #     path: ./apps/action-generated-benchmark.json
+          comment-on-pull-request: true
