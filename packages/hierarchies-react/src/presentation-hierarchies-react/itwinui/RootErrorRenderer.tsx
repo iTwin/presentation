@@ -3,7 +3,8 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { Button, Icon, Text } from "@stratakit/bricks";
+import { Button, Text } from "@stratakit/bricks";
+import { Icon } from "@stratakit/foundations";
 import errorSvg from "@stratakit/icons/status-error.svg";
 import { useTree } from "../UseTree.js";
 import { ErrorNode } from "./FlatTreeNode.js";

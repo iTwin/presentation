@@ -1425,6 +1425,9 @@ importers:
       '@itwin/eslint-plugin':
         specifier: catalog:build-tools
         version: 5.0.0-dev.1(eslint@9.13.0)(typescript@5.7.3)
+      '@stratakit/foundations':
+        specifier: ~0.1.0
+        version: 0.1.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@stratakit/icons':
         specifier: ~0.1.0
         version: 0.1.0

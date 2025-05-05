@@ -64,11 +64,15 @@
     "rxjs": "catalog:rxjs"
   },
   "peerDependencies": {
+    "@stratakit/foundations": "~0.1.0",
     "@stratakit/icons": "~0.1.0",
     "react": "^17.0.0 || ^18.0.0",
     "react-dom": "^17.0.0 || ^18.0.0"
   },
   "peerDependenciesMeta": {
+    "@stratakit/foundations": {
+      "optional": true
+    },
     "@stratakit/icons": {
       "optional": true
     }
@@ -76,6 +80,7 @@
   "devDependencies": {
     "@itwin/build-tools": "catalog:build-tools",
     "@itwin/eslint-plugin": "catalog:build-tools",
+    "@stratakit/foundations": "~0.1.0",
     "@stratakit/icons": "~0.1.0",
     "@testing-library/dom": "catalog:test-tools",
     "@testing-library/react": "catalog:test-tools",
