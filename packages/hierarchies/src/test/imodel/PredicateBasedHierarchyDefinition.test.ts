@@ -90,10 +90,10 @@ describe("createPredicateBasedHierarchyDefinition", () => {
       },
     });
 
-    classHierarchyInspector.stubEntityClass({ schemaName: "TestSchema", className: "BaseOfX", is: async () => false });
-    classHierarchyInspector.stubEntityClass({ schemaName: "TestSchema", className: "ClassX", is: async (other) => other === "TestSchema.BaseOfX" });
-    classHierarchyInspector.stubEntityClass({ schemaName: "TestSchema", className: "DerivedFromX", is: async (other) => other === "TestSchema.ClassX" });
-    classHierarchyInspector.stubEntityClass({ schemaName: "TestSchema", className: "UnrelatedClass", is: async () => false });
+    const baseClass = classHierarchyInspector.stubEntityClass({ schemaName: "TestSchema", className: "BaseOfX" });
+    const xClass = classHierarchyInspector.stubEntityClass({ schemaName: "TestSchema", className: "ClassX", baseClass });
+    classHierarchyInspector.stubEntityClass({ schemaName: "TestSchema", className: "DerivedFromX", baseClass: xClass });
+    classHierarchyInspector.stubEntityClass({ schemaName: "TestSchema", className: "UnrelatedClass" });
 
     const def1: HierarchyLevelDefinition = [createGenericNodeDefinition({ node: createTestSourceGenericNode({ label: "1" }) })];
     const def2: HierarchyLevelDefinition = [createGenericNodeDefinition({ node: createTestSourceGenericNode({ label: "2" }) })];
@@ -155,7 +155,7 @@ describe("createPredicateBasedHierarchyDefinition", () => {
       },
     });
 
-    classHierarchyInspector.stubEntityClass({ schemaName: "TestSchema", className: "ClassX", is: async (other) => other === "TestSchema.ClassX" });
+    classHierarchyInspector.stubEntityClass({ schemaName: "TestSchema", className: "ClassX" });
 
     const spy = sinon.stub().resolves([]);
     const factory = createPredicateBasedHierarchyDefinition({
@@ -184,13 +184,19 @@ describe("createPredicateBasedHierarchyDefinition", () => {
       },
     });
 
-    const baseClassName = "TestSchema.BaseClass";
-    const derivedClassName = "TestSchema.ChildClass";
-
+    const baseClass = classHierarchyInspector.stubEntityClass({
+      schemaName: "TestSchema",
+      className: "BaseClass",
+    });
+    const childClass = classHierarchyInspector.stubEntityClass({
+      schemaName: "TestSchema",
+      className: "ChildClass",
+      baseClass,
+    });
     classHierarchyInspector.stubEntityClass({
       schemaName: "TestSchema",
       className: "ClassX",
-      is: async (other) => [baseClassName, derivedClassName].includes(other),
+      baseClass: childClass,
     });
 
     const derivedClassDefs = sinon.stub().resolves([]);
@@ -201,11 +207,11 @@ describe("createPredicateBasedHierarchyDefinition", () => {
         rootNodes: async () => [],
         childNodes: [
           {
-            parentInstancesNodePredicate: derivedClassName,
+            parentInstancesNodePredicate: childClass.fullName,
             definitions: derivedClassDefs,
           },
           {
-            parentInstancesNodePredicate: baseClassName,
+            parentInstancesNodePredicate: baseClass.fullName,
             definitions: baseClassDefs,
             onlyIfNotHandled: true,
           },
@@ -231,7 +237,7 @@ describe("createPredicateBasedHierarchyDefinition", () => {
             definitions: async () => [],
           },
           {
-            parentInstancesNodePredicate: baseClassName,
+            parentInstancesNodePredicate: baseClass.fullName,
             definitions: baseClassDefs,
             onlyIfNotHandled: true,
           },

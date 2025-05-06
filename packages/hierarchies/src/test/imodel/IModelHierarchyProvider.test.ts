@@ -708,7 +708,6 @@ describe("createIModelHierarchyProvider", () => {
       imodelAccess.stubEntityClass({
         schemaName: "a",
         className: "b",
-        is: async (fullClassName) => fullClassName === "a.b",
       });
 
       imodelAccess.createQueryReader.callsFake(() =>
@@ -822,12 +821,10 @@ describe("createIModelHierarchyProvider", () => {
       imodelAccess.stubEntityClass({
         schemaName: "a",
         className: "b",
-        is: async (fullClassName) => fullClassName === "a.b",
       });
       imodelAccess.stubEntityClass({
         schemaName: "c",
         className: "d",
-        is: async (fullClassName) => fullClassName === "c.d",
       });
 
       const rootNodePromise = new ResolvablePromise<
@@ -934,7 +931,6 @@ describe("createIModelHierarchyProvider", () => {
       imodelAccess.stubEntityClass({
         schemaName: "a",
         className: "b",
-        is: async (fullClassName) => fullClassName === "a.b",
       });
 
       const rootNodePromise = new ResolvablePromise<RowDef>();
