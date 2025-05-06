@@ -135,6 +135,7 @@ export function createECSchemaProviderStub() {
       schemaStub = {
         name: schemaName,
         getClass: sinon.stub(),
+        getCustomAttributes: sinon.stub(),
       };
       schemaStubs[schemaName] = schemaStub;
     }
