@@ -111,39 +111,43 @@ export function createTestNodeKey(): HierarchyNodeKey {
   };
 }
 
+interface ECClassExtraMembers {
+  readonly ecsqlSelector: string;
+  addDerivedClass: (derived: EC.Class) => void;
+}
 export interface StubClassFuncProps {
   schemaName: string;
   className: string;
   classLabel?: string;
-  baseClass?: EC.Class & { addDerivedClass: (derived: EC.Class) => void };
+  baseClass?: EC.Class & Pick<ECClassExtraMembers, "addDerivedClass">;
   properties?: EC.Property[];
-  customAttributes?: ReadonlyMap<string, string>;
+  customAttributes?: ReadonlyMap<string, { [key: string]: any }>;
 }
 export interface StubRelationshipClassFuncProps extends StubClassFuncProps {
   source?: EC.RelationshipConstraint;
   target?: EC.RelationshipConstraint;
   direction?: "Forward" | "Backward";
 }
-export type TStubClassFunc = (props: StubClassFuncProps) => EC.Class & { addDerivedClass: (derived: EC.Class) => void };
-export type TStubEntityClassFunc = (props: StubClassFuncProps) => EC.EntityClass & { addDerivedClass: (derived: EC.Class) => void };
-export type TStubRelationshipClassFunc = (props: StubRelationshipClassFuncProps) => EC.RelationshipClass & { addDerivedClass: (derived: EC.Class) => void };
+export type TStubClassFunc = (props: StubClassFuncProps) => EC.Class & ECClassExtraMembers;
+export type TStubEntityClassFunc = (props: StubClassFuncProps) => EC.EntityClass & ECClassExtraMembers;
+export type TStubRelationshipClassFunc = (props: StubRelationshipClassFuncProps) => EC.RelationshipClass & ECClassExtraMembers;
 
 export function createECSchemaProviderStub() {
-  const schemaStubs: { [schemaName: string]: EC.Schema } = {};
+  const schemaStubs: { [schemaName: string]: sinon.SinonStubbedInstance<EC.Schema> } = {};
   const classes = new Map<string, EC.Class>(); // className -> class
   const classHierarchy = new Map<string, string>(); // className -> baseClassName
-  const getSchemaStub = (schemaName: string) => {
+  const getSchemaStub = sinon.stub<[string], sinon.SinonStubbedInstance<EC.Schema>>().callsFake((schemaName: string) => {
     let schemaStub = schemaStubs[schemaName];
     if (!schemaStub) {
       schemaStub = {
         name: schemaName,
-        getClass: sinon.fake(async (className) => classes.get(`${schemaName}.${className}`)),
-        getCustomAttributes: sinon.stub(),
+        getClass: sinon.stub<[string], Promise<EC.Class | undefined>>().callsFake(async (className) => classes.get(`${schemaName}.${className}`)),
+        getCustomAttributes: sinon.stub<[], Promise<EC.CustomAttributeSet>>().callsFake(async () => new Map()),
       };
       schemaStubs[schemaName] = schemaStub;
     }
     return schemaStub;
-  };
+  });
   const getDerivedClasses = (classFullName: string): EC.Class[] => {
     const derivedClasses = new Array<EC.Class>();
     for (const [derivedClassName, baseClassName] of classHierarchy.entries()) {
@@ -164,13 +168,18 @@ export function createECSchemaProviderStub() {
     return baseClasses;
   };
   const createBaseClassProps = (props: StubClassFuncProps) => ({
-    schema: {
-      name: props.schemaName,
+    get schema() {
+      return getSchemaStub(props.schemaName);
     },
     fullName: `${props.schemaName}.${props.className}`,
     name: props.className,
     label: props.classLabel,
-    baseClass: async () => props.baseClass,
+    get ecsqlSelector() {
+      return `[${props.schemaName}].[${props.className}]`;
+    },
+    get baseClass() {
+      return Promise.resolve(props.baseClass);
+    },
     addDerivedClass: (derived: EC.Class) => {
       classHierarchy.set(derived.fullName, `${props.schemaName}.${props.className}`);
     },
@@ -225,9 +234,8 @@ export function createECSchemaProviderStub() {
     stubEntityClass,
     stubRelationshipClass,
     stubOtherClass,
-    getSchema: sinon.fake(async (schemaName: string): Promise<EC.Schema | undefined> => {
-      return getSchemaStub(schemaName);
-    }),
+    getSchemaStub,
+    getSchema: async (name: string): Promise<EC.Schema | undefined> => getSchemaStub(name),
   };
 }
 

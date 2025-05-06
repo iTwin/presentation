@@ -623,7 +623,7 @@ export interface NodesQueryClauseFactory {
             fullName: string;
             alias: string;
         };
-        filter: GenericInstanceFilter | undefined;
+        filter?: GenericInstanceFilter;
     }): Promise<{
         from: string;
         where: string;

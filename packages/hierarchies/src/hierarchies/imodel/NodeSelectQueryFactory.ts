@@ -250,7 +250,7 @@ export interface NodesQueryClauseFactory {
    */
   createFilterClauses(props: {
     contentClass: { fullName: string; alias: string };
-    filter: GenericInstanceFilter | undefined;
+    filter?: GenericInstanceFilter;
   }): Promise<{ from: string; where: string; joins: string }>;
 }
 
@@ -315,77 +315,108 @@ class NodeSelectQueryFactory {
    */
   public async createFilterClauses(props: {
     contentClass: { fullName: string; alias: string };
-    filter: GenericInstanceFilter | undefined;
+    filter?: GenericInstanceFilter;
   }): Promise<{ from: string; where: string; joins: string }> {
     const { contentClass, filter } = props;
-    if (!filter) {
-      // undefined filter means we don't want any filtering to be applied
-      return { from: contentClass.fullName, joins: "", where: "" };
-    }
+    const { from, joins, where } = filter
+      ? await createInstanceFilterClauses({ imodelAccess: this._imodelAccess, contentClass, filter })
+      : {
+          from: contentClass.fullName,
+          joins: [],
+          where: [],
+        };
 
-    const from = await specializeContentClass({
-      classHierarchyInspector: this._imodelAccess,
-      contentClassName: contentClass.fullName,
-      filterClassNames: filter.propertyClassNames,
-    });
-    if (!from) {
-      // filter class doesn't intersect with content class - make sure the query returns nothing by returning a `FALSE` WHERE clause
-      return { from: contentClass.fullName, joins: "", where: "FALSE" };
-    }
+    const fromClass = await getClass(this._imodelAccess, from);
+    const hiddenClasses = await getHiddenClassesTree(fromClass);
+    const hiddenClassesWhereClause = createWhereClauseForHiddenClasses(hiddenClasses, contentClass.alias);
+    hiddenClassesWhereClause.hideClause && where.push(hiddenClassesWhereClause.hideClause);
+    assert(!hiddenClassesWhereClause.showClause, "`showClause` is expected to always be empty here");
 
-    /**
-     * TODO:
-     * There may be similar related instance paths, e.g.:
-     * - A -> B -> C,
-     * - A -> B -> D.
-     * At this moment we're handling each path individually which means A and B would get joined twice. We could look into
-     * creating a join tree first, e.g.
-     *         C
-     *        /
-     * A -> B
-     *        \
-     *         D
-     */
-    const joins = await Promise.all(
-      filter.relatedInstances.map(async (rel, i) =>
-        ECSql.createRelationshipPathJoinClause({
-          schemaProvider: this._imodelAccess,
-          path: assignRelationshipPathAliases(rel.path, i, contentClass.alias, rel.alias),
-        }),
-      ),
-    );
+    return {
+      from,
+      joins: joins.join("\n"),
+      where: where.join(" AND "),
+    };
+  }
+}
 
-    const whereConditions = new Array<string>();
-    if (filter.filteredClassNames && filter.filteredClassNames.length > 0) {
-      whereConditions.push(
-        `${ECSql.createRawPropertyValueSelector(contentClass.alias, "ECClassId")} IS (
+/**
+ * Creates the necessary ECSQL snippets to create an instance filter described by the `filter` argument.
+ * - `from` is set to either the `contentClass.fullName` or one of `filter.propertyClassNames`, depending on which is more specific.
+ * - `joins` is set to a number of `JOIN` clauses required to join all relationships described by `filter.relatedInstances`.
+ * - `where` is set to a `WHERE` clause (without the `WHERE` keyword) that filters instances by classes on
+ * `filter.filterClassNames` and by properties as described by `filter.rules`.
+ *
+ * Special cases:
+ * - If `filter` is `undefined`, `joins` and `where` are set to empty strings and `from` is set to `contentClass.fullName`.
+ * - If the provided content class doesn't intersect with the property class in provided filter, a special result
+ * is returned to make sure the resulting query is valid and doesn't return anything.
+ */
+async function createInstanceFilterClauses(props: {
+  imodelAccess: ECSchemaProvider & ECClassHierarchyInspector;
+  contentClass: { fullName: string; alias: string };
+  filter: GenericInstanceFilter;
+}): Promise<{ from: string; where: string[]; joins: string[] }> {
+  const { imodelAccess, contentClass, filter } = props;
+
+  const from = await specializeContentClass({
+    classHierarchyInspector: imodelAccess,
+    contentClassName: contentClass.fullName,
+    filterClassNames: filter.propertyClassNames,
+  });
+  if (!from) {
+    // filter class doesn't intersect with content class - make sure the query returns nothing by returning a `FALSE` WHERE clause
+    return { from: contentClass.fullName, joins: [], where: ["FALSE"] };
+  }
+
+  /**
+   * TODO:
+   * There may be similar related instance paths, e.g.:
+   * - A -> B -> C,
+   * - A -> B -> D.
+   * At this moment we're handling each path individually which means A and B would get joined twice. We could look into
+   * creating a join tree first, e.g.
+   *         C
+   *        /
+   * A -> B
+   *        \
+   *         D
+   */
+  const joins = await Promise.all(
+    filter.relatedInstances.map(async (rel, i) =>
+      ECSql.createRelationshipPathJoinClause({
+        schemaProvider: imodelAccess,
+        path: assignRelationshipPathAliases(rel.path, i, contentClass.alias, rel.alias),
+      }),
+    ),
+  );
+
+  const where = new Array<string>();
+  if (filter.filteredClassNames && filter.filteredClassNames.length > 0) {
+    where.push(
+      `${ECSql.createRawPropertyValueSelector(contentClass.alias, "ECClassId")} IS (
           ${filter.filteredClassNames
             .map(parseFullClassName)
             .map(({ schemaName, className }) => `[${schemaName}].[${className}]`)
             .join(", ")}
         )`,
-      );
-    }
-    const classAliasMap = new Map<string, string>([[contentClass.alias, from]]);
-    filter.relatedInstances.forEach(({ path, alias }) => path.length > 0 && classAliasMap.set(alias, path[path.length - 1].targetClassName));
-    const propertiesFilter = await createWhereClause(
-      contentClass.alias,
-      async (alias) => {
-        const aliasClassName = classAliasMap.get(alias);
-        return aliasClassName ? getClass(this._imodelAccess, aliasClassName) : undefined;
-      },
-      filter.rules,
     );
-    if (propertiesFilter) {
-      whereConditions.push(propertiesFilter);
-    }
-
-    return {
-      from,
-      joins: joins.join("\n"),
-      where: whereConditions.join(" AND "),
-    };
   }
+  const classAliasMap = new Map<string, string>([[contentClass.alias, from]]);
+  filter.relatedInstances.forEach(({ path, alias }) => path.length > 0 && classAliasMap.set(alias, path[path.length - 1].targetClassName));
+  const propertiesFilter = await createWhereClause(
+    contentClass.alias,
+    async (alias) => {
+      const aliasClassName = classAliasMap.get(alias);
+      return aliasClassName ? getClass(imodelAccess, aliasClassName) : undefined;
+    },
+    filter.rules,
+  );
+  if (propertiesFilter) {
+    where.push(propertiesFilter);
+  }
+
+  return { from, joins, where };
 }
 
 function createECSqlValueSelector(input: undefined | PrimitiveValue | ECSqlValueSelector) {
@@ -795,4 +826,108 @@ async function getSpecializedPropertyClass(classHierarchyInspector: ECClassHiera
     }
   }
   return resolvedClassName;
+}
+
+interface HiddenClassNode {
+  fullName: string;
+  state: "hide" | "show";
+  children: HiddenClassNode[];
+}
+
+async function getHiddenClassesTree(selectClass: EC.Class, selectClassAttribute: "show" | "hide" = "show"): Promise<HiddenClassNode[]> {
+  const derivedClasses = await getDirectDerivedClasses(selectClass);
+
+  const derivedClassSchemas = derivedClasses.reduce(
+    (acc, ecClass) => {
+      if (!acc.set.has(ecClass.schema.name)) {
+        acc.schemas.push(ecClass.schema);
+        acc.set.add(ecClass.schema.name);
+      }
+      return acc;
+    },
+    { set: new Set<string>(), schemas: new Array<EC.Schema>() },
+  ).schemas;
+  const hiddenSchemas = new Map<string, "hide" | "show" | undefined>();
+  await Promise.all(
+    derivedClassSchemas.map(async (ecSchema) => {
+      hiddenSchemas.set(ecSchema.name, await getHiddenSchemaAttribute(ecSchema));
+    }),
+  );
+
+  const tree = (
+    await Promise.all(
+      derivedClasses.map(async (ecClass): Promise<HiddenClassNode[]> => {
+        const hiddenClassAttr = await getHiddenClassAttribute(ecClass);
+        const attr = hiddenClassAttr ?? hiddenSchemas.get(ecClass.schema.name);
+        if (!attr || attr === selectClassAttribute) {
+          return getHiddenClassesTree(ecClass, selectClassAttribute);
+        }
+        return [
+          {
+            fullName: ecClass.fullName,
+            state: attr,
+            children: await getHiddenClassesTree(ecClass, attr),
+          },
+        ];
+      }),
+    )
+  ).flat();
+  return tree;
+}
+
+async function getDirectDerivedClasses(ecClass: EC.Class): Promise<EC.Class[]> {
+  const allDerived = await ecClass.getDerivedClasses();
+  return (await Promise.all(allDerived.map(async (c) => ({ derived: c, base: await c.baseClass }))))
+    .filter(({ base }) => base?.fullName === ecClass.fullName)
+    .map(({ derived }) => derived);
+}
+
+async function getHiddenClassAttribute(ecClass: EC.Class): Promise<"hide" | "show" | undefined> {
+  const customAttributes = await ecClass.getCustomAttributes();
+  const hiddenClassAttribute = customAttributes.get("CoreCustomAttributes.HiddenClass");
+  return hiddenClassAttribute ? (hiddenClassAttribute.Show ? "show" : "hide") : undefined;
+}
+
+async function getHiddenSchemaAttribute(ecSchema: EC.Schema): Promise<"hide" | "show" | undefined> {
+  const customAttributes = await ecSchema.getCustomAttributes();
+  const hiddenSchemaAttribute = customAttributes.get("CoreCustomAttributes.HiddenSchema");
+  return hiddenSchemaAttribute ? (hiddenSchemaAttribute.ShowClasses ? "show" : "hide") : undefined;
+}
+
+function createWhereClauseForHiddenClasses(hiddenClasses: HiddenClassNode[], selectAlias: string): { showClause?: string; hideClause?: string } {
+  const res: { showClause?: string; hideClause?: string } = {};
+
+  const show = hiddenClasses.filter(({ state }) => state === "show");
+  if (show.length > 0) {
+    let showClause = `[${selectAlias}].[ECClassId] IS (${show
+      .map(({ fullName }) => parseFullClassName(fullName))
+      .map(({ schemaName, className }) => `[${schemaName}].[${className}]`)
+      .join(", ")})`;
+    const childClauses = createWhereClauseForHiddenClasses(
+      show.flatMap(({ children }) => children),
+      selectAlias,
+    );
+    if (childClauses.hideClause) {
+      showClause = `(${showClause} AND ${childClauses.hideClause})`;
+    }
+    res.showClause = showClause;
+  }
+
+  const hide = hiddenClasses.filter(({ state }) => state === "hide");
+  if (hide.length > 0) {
+    let hideClause = `[${selectAlias}].[ECClassId] IS NOT (${hide
+      .map(({ fullName }) => parseFullClassName(fullName))
+      .map(({ schemaName, className }) => `[${schemaName}].[${className}]`)
+      .join(", ")})`;
+    const childClauses = createWhereClauseForHiddenClasses(
+      hide.flatMap(({ children }) => children),
+      selectAlias,
+    );
+    if (childClauses.showClause) {
+      hideClause = `(${hideClause} OR ${childClauses.showClause})`;
+    }
+    res.hideClause = hideClause;
+  }
+
+  return res;
 }

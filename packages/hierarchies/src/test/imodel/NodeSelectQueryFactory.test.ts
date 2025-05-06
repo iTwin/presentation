@@ -1164,6 +1164,139 @@ describe("createNodesQueryClauseFactory", () => {
           ).to.eventually.be.rejected;
         });
       });
+
+      describe("by hidden classes / schemas", () => {
+        it("excludes hidden classes", async () => {
+          const selectClass = imodelAccess.stubEntityClass({ schemaName: "s", className: "x" });
+          const hideClass = imodelAccess.stubEntityClass({
+            schemaName: "s",
+            className: "y",
+            baseClass: selectClass,
+            customAttributes: new Map([["CoreCustomAttributes.HiddenClass", {}]]),
+          });
+          const clauses = await factory.createFilterClauses({ contentClass: { fullName: selectClass.fullName, alias: "content-class" } });
+          expect({ ...clauses, where: trimWhitespace(clauses.where) }).to.deep.eq({
+            from: selectClass.fullName,
+            joins: "",
+            where: `[content-class].[ECClassId] IS NOT (${hideClass.ecsqlSelector})`,
+          });
+        });
+
+        it("overrides hidden class with visible subclass", async () => {
+          const selectClass = imodelAccess.stubEntityClass({ schemaName: "s", className: "x" });
+          const hideClass = imodelAccess.stubEntityClass({
+            schemaName: "s",
+            className: "y",
+            baseClass: selectClass,
+            customAttributes: new Map([["CoreCustomAttributes.HiddenClass", { ["Show"]: false }]]),
+          });
+          const showClass = imodelAccess.stubEntityClass({
+            schemaName: "s",
+            className: "z",
+            baseClass: hideClass,
+            customAttributes: new Map([["CoreCustomAttributes.HiddenClass", { ["Show"]: true }]]),
+          });
+          const clauses = await factory.createFilterClauses({ contentClass: { fullName: selectClass.fullName, alias: "content-class" } });
+          expect({ ...clauses, where: trimWhitespace(clauses.where) }).to.deep.eq({
+            from: selectClass.fullName,
+            joins: "",
+            where: `([content-class].[ECClassId] IS NOT (${hideClass.ecsqlSelector}) OR [content-class].[ECClassId] IS (${showClass.ecsqlSelector}))`,
+          });
+        });
+
+        it("overrides shown class with hidden subclass", async () => {
+          const selectClass = imodelAccess.stubEntityClass({ schemaName: "s", className: "x" });
+          const hideClass1 = imodelAccess.stubEntityClass({
+            schemaName: "s",
+            className: "y",
+            baseClass: selectClass,
+            customAttributes: new Map([["CoreCustomAttributes.HiddenClass", { ["Show"]: false }]]),
+          });
+          const showClass = imodelAccess.stubEntityClass({
+            schemaName: "s",
+            className: "z",
+            baseClass: hideClass1,
+            customAttributes: new Map([["CoreCustomAttributes.HiddenClass", { ["Show"]: true }]]),
+          });
+          const hideClass2 = imodelAccess.stubEntityClass({
+            schemaName: "s",
+            className: "w",
+            baseClass: showClass,
+            customAttributes: new Map([["CoreCustomAttributes.HiddenClass", { ["Show"]: false }]]),
+          });
+          const clauses = await factory.createFilterClauses({ contentClass: { fullName: selectClass.fullName, alias: "content-class" } });
+          expect({ ...clauses, where: trimWhitespace(clauses.where) }).to.deep.eq({
+            from: selectClass.fullName,
+            joins: "",
+            where: `([content-class].[ECClassId] IS NOT (${hideClass1.ecsqlSelector}) OR ([content-class].[ECClassId] IS (${showClass.ecsqlSelector}) AND [content-class].[ECClassId] IS NOT (${hideClass2.ecsqlSelector})))`,
+          });
+        });
+
+        it("excludes classes from hidden schemas", async () => {
+          const selectClass = imodelAccess.stubEntityClass({ schemaName: "s1", className: "x" });
+          const hideClass = imodelAccess.stubEntityClass({ schemaName: "s2", className: "y", baseClass: selectClass });
+          imodelAccess
+            .getSchemaStub("s2")
+            .getCustomAttributes.resolves(
+              new Map<string, EC.CustomAttribute>([["CoreCustomAttributes.HiddenSchema", { className: "CoreCustomAttributes.HiddenSchema" }]]),
+            );
+          const clauses = await factory.createFilterClauses({ contentClass: { fullName: selectClass.fullName, alias: "content-class" } });
+          expect({ ...clauses, where: trimWhitespace(clauses.where) }).to.deep.eq({
+            from: selectClass.fullName,
+            joins: "",
+            where: `[content-class].[ECClassId] IS NOT (${hideClass.ecsqlSelector})`,
+          });
+        });
+
+        it("overrides class from hidden schema with subclass from visible schema", async () => {
+          const selectClass = imodelAccess.stubEntityClass({ schemaName: "s1", className: "x" });
+          const hideClass = imodelAccess.stubEntityClass({ schemaName: "s2", className: "y", baseClass: selectClass });
+          const showClass = imodelAccess.stubEntityClass({ schemaName: "s3", className: "z", baseClass: hideClass });
+          imodelAccess
+            .getSchemaStub("s2")
+            .getCustomAttributes.resolves(
+              new Map<string, EC.CustomAttribute>([
+                ["CoreCustomAttributes.HiddenSchema", { className: "CoreCustomAttributes.HiddenSchema", ["ShowClasses"]: false }],
+              ]),
+            );
+          imodelAccess
+            .getSchemaStub("s3")
+            .getCustomAttributes.resolves(
+              new Map<string, EC.CustomAttribute>([
+                ["CoreCustomAttributes.HiddenSchema", { className: "CoreCustomAttributes.HiddenSchema", ["ShowClasses"]: true }],
+              ]),
+            );
+          const clauses = await factory.createFilterClauses({ contentClass: { fullName: selectClass.fullName, alias: "content-class" } });
+          expect({ ...clauses, where: trimWhitespace(clauses.where) }).to.deep.eq({
+            from: selectClass.fullName,
+            joins: "",
+            where: `([content-class].[ECClassId] IS NOT (${hideClass.ecsqlSelector}) OR [content-class].[ECClassId] IS (${showClass.ecsqlSelector}))`,
+          });
+        });
+
+        it("hidden class attribute takes precedence over hidden schema", async () => {
+          const selectClass = imodelAccess.stubEntityClass({ schemaName: "s1", className: "x" });
+          imodelAccess.stubEntityClass({
+            schemaName: "s2",
+            className: "y",
+            baseClass: selectClass,
+            customAttributes: new Map([["CoreCustomAttributes.HiddenClass", { ["Show"]: true }]]),
+          });
+          imodelAccess
+            .getSchemaStub("s2")
+            .getCustomAttributes.resolves(
+              new Map<string, EC.CustomAttribute>([
+                ["CoreCustomAttributes.HiddenSchema", { className: "CoreCustomAttributes.HiddenSchema", ["ShowClasses"]: false }],
+              ]),
+            );
+          const clauses = await factory.createFilterClauses({ contentClass: { fullName: selectClass.fullName, alias: "content-class" } });
+          expect({ ...clauses, where: trimWhitespace(clauses.where) }).to.deep.eq({
+            from: selectClass.fullName,
+            joins: "",
+            where: "",
+          });
+        });
+      });
     });
 
     describe("join", () => {
