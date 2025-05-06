@@ -28,6 +28,7 @@ import {
   SchemaItemType,
   StrengthDirection,
 } from "@itwin/ecschema-metadata";
+import * as ecschemaMetadata from "@itwin/ecschema-metadata";
 import { EC } from "@itwin/presentation-shared";
 
 /** @internal */
@@ -102,7 +103,15 @@ abstract class ECClassImpl<TCoreClass extends CoreClass> extends ECSchemaItemImp
     return this._coreSchemaItem.is(classOrClassName.name, classOrClassName.schema.name);
   }
   public async getProperty(name: string): Promise<EC.Property | undefined> {
-    const coreProperty = await this._coreSchemaItem.getProperty(name, true);
+    const coreProperty = await this._coreSchemaItem.getProperty(
+      name,
+      // TODO: remove this when itwinjs-core 4.x support is dropped.
+      // `SchemaFormatsProvider` was introduced around the same time the meaning of this second argument was changed
+      // from `includeInherited` to `excludeInherited` - we're using its existence to determine what we need to pass to get
+      // inherited properties.
+      /* c8 ignore next */
+      ecschemaMetadata.SchemaFormatsProvider ? false : true,
+    );
     return coreProperty ? createECProperty(coreProperty, this) : undefined;
   }
   public async getProperties(): Promise<Array<EC.Property>> {

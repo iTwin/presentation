@@ -30,10 +30,10 @@ import {
 } from "@itwin/core-common";
 
 export interface TestIModelBuilder {
-  insertModel(props: ModelProps): Id64String;
-  insertElement(props: ElementProps): Id64String;
-  insertAspect(props: ElementAspectProps): Id64String;
-  insertRelationship(props: RelationshipProps): Id64String;
+  insertModel<TModelProps extends ModelProps>(props: TModelProps): Id64String;
+  insertElement<TElementProps extends ElementProps>(props: TElementProps): Id64String;
+  insertAspect<TAspectProps extends ElementAspectProps>(props: TAspectProps): Id64String;
+  insertRelationship<TRelationshipProps extends RelationshipProps>(props: TRelationshipProps): Id64String;
   createCode(scopeModelId: CodeScopeProps, codeSpecName: BisCodeSpec, codeValue: string): Code;
 }
 
@@ -239,7 +239,7 @@ export function insertPhysicalElement<TAdditionalProps extends {}>(
         }
       : undefined),
     ...elementProps,
-  } as PhysicalElementProps);
+  } satisfies PhysicalElementProps);
   return { className, id };
 }
 
@@ -254,7 +254,7 @@ export function insertPhysicalType<TAdditionalProps extends {}>(
     model: modelId ?? IModel.dictionaryId,
     code: Code.createEmpty(),
     ...elementProps,
-  } as DefinitionElementProps);
+  } satisfies DefinitionElementProps);
   return { className, id };
 }
 
@@ -269,7 +269,7 @@ export function insertPhysicalMaterial<TAdditionalProps extends {}>(
     model: modelId ?? IModel.dictionaryId,
     code: Code.createEmpty(),
     ...elementProps,
-  } as DefinitionElementProps);
+  } satisfies DefinitionElementProps);
   return { className, id };
 }
 
@@ -296,7 +296,7 @@ export function insertDrawingGraphic<TAdditionalProps extends {}>(
         }
       : undefined),
     ...elementProps,
-  } as GeometricElement2dProps);
+  } satisfies GeometricElement2dProps);
   return { className, id };
 }
 
@@ -313,8 +313,9 @@ export function insertRepositoryLink(
     model: IModel.repositoryModelId,
     url: repositoryUrl,
     userLabel: repositoryLabel,
+    code: Code.createEmpty(),
     ...repoLinkProps,
-  } as RepositoryLinkProps);
+  } satisfies RepositoryLinkProps);
   return { className, id };
 }
 
@@ -327,12 +328,13 @@ export function insertExternalSourceAspect(
   const externalSourceId = builder.insertElement({
     classFullName: `BisCore${props.fullClassNameSeparator ?? "."}ExternalSource`,
     model: IModel.repositoryModelId,
+    code: Code.createEmpty(),
     repository: repositoryId
       ? {
           id: repositoryId,
         }
       : undefined,
-  } as ExternalSourceProps);
+  } satisfies ExternalSourceProps);
 
   const className = `BisCore${props.fullClassNameSeparator ?? "."}ExternalSourceAspect`;
   const id = builder.insertAspect({
@@ -344,9 +346,12 @@ export function insertExternalSourceAspect(
     source: {
       id: externalSourceId,
     },
+    scope: {
+      id: elementId,
+    },
     identifier,
     ...externalSourceAspectProps,
-  } as ExternalSourceAspectProps);
+  } satisfies ExternalSourceAspectProps);
 
   return { className, id };
 }
@@ -411,7 +416,7 @@ export function insertFunctionalElement(
         }
       : undefined,
     ...elementProps,
-  } as FunctionalElementProps);
+  } satisfies FunctionalElementProps);
   builder.insertRelationship({
     sourceId: representedElementId,
     targetId: id,

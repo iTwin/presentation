@@ -172,7 +172,7 @@ function createNodeLabelRecord(node: Node, appendChildrenCountForGroupingNodes: 
         separator: " ",
         values: [labelDefinition, countDefinition],
       },
-      typeName: LabelDefinition.COMPOSITE_DEFINITION_TYPENAME,
+      typeName: "composite",
     };
   }
   return createLabelRecord(labelDefinition, "node_label");

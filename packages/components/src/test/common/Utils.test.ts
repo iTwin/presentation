@@ -6,7 +6,7 @@
 import { expect } from "chai";
 import { Component } from "react";
 import { Primitives, PrimitiveValue } from "@itwin/appui-abstract";
-import { combineFieldNames, LabelCompositeValue, LabelDefinition } from "@itwin/presentation-common";
+import { combineFieldNames, LabelCompositeValue } from "@itwin/presentation-common";
 import { AsyncTasksTracker, createLabelRecord, deserializeUniqueValues, findField, getDisplayName } from "../../presentation-components/common/Utils.js";
 import { createTestPropertyInfo } from "../_helpers/Common.js";
 import {
@@ -101,7 +101,7 @@ describe("Utils", () => {
     });
 
     it("creates PropertyRecord for label with composite value", () => {
-      const definition = createTestLabelDefinition({ rawValue: createTestLabelCompositeValue(), typeName: LabelDefinition.COMPOSITE_DEFINITION_TYPENAME });
+      const definition = createTestLabelDefinition({ rawValue: createTestLabelCompositeValue(), typeName: "composite" });
       const record = createLabelRecord(definition, "test");
       const primitiveValue = record.value as PrimitiveValue;
       validateCompositeValue(primitiveValue.value as Primitives.Composite, definition.rawValue as LabelCompositeValue);

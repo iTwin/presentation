@@ -41,6 +41,7 @@ describe("Hierarchies", () => {
   after(async () => {
     await terminate();
   });
+
   describe("Labels formatting", () => {
     it("formats labels with parts of different types", async function () {
       const date = new Date();
