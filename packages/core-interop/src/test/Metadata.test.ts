@@ -342,7 +342,7 @@ describe("createECClass", () => {
       const prop = await ecClass.getProperty("p");
 
       // eslint-disable-next-line @typescript-eslint/unbound-method
-      expect(coreClass.getProperty).to.be.calledOnceWith("p", true);
+      expect(coreClass.getProperty).to.be.calledOnceWith("p", false);
       expect(prop).to.not.be.undefined;
     });
 
@@ -358,7 +358,7 @@ describe("createECClass", () => {
       const prop = await ecClass.getProperty("p");
 
       // eslint-disable-next-line @typescript-eslint/unbound-method
-      expect(coreClass.getProperty).to.be.calledOnceWith("p", true);
+      expect(coreClass.getProperty).to.be.calledOnceWith("p", false);
       expect(prop).to.be.undefined;
     });
   });

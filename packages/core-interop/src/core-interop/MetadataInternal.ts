@@ -105,9 +105,11 @@ abstract class ECClassImpl<TCoreClass extends CoreClass> extends ECSchemaItemImp
   public async getProperty(name: string): Promise<EC.Property | undefined> {
     const coreProperty = await this._coreSchemaItem.getProperty(
       name,
+      // TODO: remove this when itwinjs-core 4.x support is dropped.
       // `SchemaFormatsProvider` was introduced around the same time the meaning of this second argument was changed
       // from `includeInherited` to `excludeInherited` - we're using its existence to determine what we need to pass to get
-      // inherited properties
+      // inherited properties.
+      /* c8 ignore next */
       ecschemaMetadata.SchemaFormatsProvider ? false : true,
     );
     return coreProperty ? createECProperty(coreProperty, this) : undefined;
