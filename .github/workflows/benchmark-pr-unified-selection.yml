@@ -60,7 +60,7 @@ jobs:
           key: performance-test-dataset-${{ hashFiles('./apps/performance-tests/src/util/Datasets.ts') }}
 
       - name: Post benchmark summary
-        uses: jalextowle/github-action-benchmark@35e54a2ea34188ca73481c2a0ce5919907978f4f
+        uses: JonasDov/github-action-benchmark@04d30c72aa7aad091b58aacbb6c182ebb2ecb6c0
         with:
           name: Unified selection benchmark
           tool: 'customSmallerIsBetter'
