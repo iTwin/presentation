@@ -7,7 +7,7 @@ import { XMLParser } from "fast-xml-parser";
 import * as fs from "fs";
 import hash from "object-hash";
 import { getFullSchemaXml } from "presentation-test-utilities";
-import { ECDb, ECSqlStatement, IModelDb } from "@itwin/core-backend";
+import { ECDb, ECSqlWriteStatement, IModelDb } from "@itwin/core-backend";
 import { BentleyError, DbResult, Guid, Id64, Id64String, OrderedId64Iterable } from "@itwin/core-bentley";
 import { IModelConnection } from "@itwin/core-frontend";
 import { Schema, SchemaContext, SchemaInfo, SchemaKey, SchemaMatchType } from "@itwin/ecschema-metadata";
@@ -44,7 +44,7 @@ export class ECDbBuilder {
         .map(() => "?")
         .join(", ")})
     `;
-    const binder = (stmt: ECSqlStatement) => {
+    const binder = (stmt: ECSqlWriteStatement) => {
       Object.values(props).forEach((value, i) => {
         const bindingIndex = i + 1;
         switch (typeof value) {
@@ -116,13 +116,19 @@ export class ECDbBuilder {
 
   public insertInstance(fullClassName: string, props?: { [propertyName: string]: PrimitiveValue | undefined }) {
     const query = this.createInsertQuery(fullClassName, props);
-    return this._ecdb.withStatement(query.clause, (stmt) => {
-      query.binder(stmt);
-      const res = stmt.stepForInsert();
-      if (res.status !== DbResult.BE_SQLITE_DONE) {
-        throw new BentleyError(res.status, `Failed to insert instance of class "${fullClassName}". Query: ${query.clause}`);
+    return this._ecdb.withWriteStatement(query.clause, (stmt) => {
+      try {
+        query.binder(stmt);
+        const res = stmt.stepForInsert();
+        if (res.status !== DbResult.BE_SQLITE_DONE) {
+          throw new BentleyError(res.status, `Failed to insert instance of class "${fullClassName}". Query: ${query.clause}`);
+        }
+        return { className: fullClassName, id: res.id! };
+      } finally {
+        // https://github.com/iTwin/itwinjs-core/issues/8040
+        // eslint-disable-next-line @itwin/no-internal
+        stmt.stmt[Symbol.dispose]();
       }
-      return { className: fullClassName, id: res.id! };
     });
   }
 
@@ -132,13 +138,19 @@ export class ECDbBuilder {
       sourceECInstanceId: sourceId,
       targetECInstanceId: targetId,
     });
-    return this._ecdb.withStatement(query.clause, (stmt) => {
-      query.binder(stmt);
-      const res = stmt.stepForInsert();
-      if (res.status !== DbResult.BE_SQLITE_DONE) {
-        throw new BentleyError(res.status, `Failed to insert instance of relationship "${fullClassName}". Query: ${query.clause}`);
+    return this._ecdb.withWriteStatement(query.clause, (stmt) => {
+      try {
+        query.binder(stmt);
+        const res = stmt.stepForInsert();
+        if (res.status !== DbResult.BE_SQLITE_DONE) {
+          throw new BentleyError(res.status, `Failed to insert instance of relationship "${fullClassName}". Query: ${query.clause}`);
+        }
+        return { className: fullClassName, id: res.id! };
+      } finally {
+        // https://github.com/iTwin/itwinjs-core/issues/8040
+        // eslint-disable-next-line @itwin/no-internal
+        stmt.stmt[Symbol.dispose]();
       }
-      return { className: fullClassName, id: res.id! };
     });
   }
 }

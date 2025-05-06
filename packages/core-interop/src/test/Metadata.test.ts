@@ -342,7 +342,7 @@ describe("createECClass", () => {
       const prop = await ecClass.getProperty("p");
 
       // eslint-disable-next-line @typescript-eslint/unbound-method
-      expect(coreClass.getProperty).to.be.calledOnceWith("p", true);
+      expect(coreClass.getProperty).to.be.calledOnceWith("p", false);
       expect(prop).to.not.be.undefined;
     });
 
@@ -358,7 +358,7 @@ describe("createECClass", () => {
       const prop = await ecClass.getProperty("p");
 
       // eslint-disable-next-line @typescript-eslint/unbound-method
-      expect(coreClass.getProperty).to.be.calledOnceWith("p", true);
+      expect(coreClass.getProperty).to.be.calledOnceWith("p", false);
       expect(prop).to.be.undefined;
     });
   });
@@ -408,6 +408,7 @@ describe("createECClass", () => {
 
         it("returns multiplicity from core constraint", () => {
           const rel = createECClass(
+            // eslint-disable-next-line @itwin/no-internal
             { ...coreRelationshipClass, source: { multiplicity: new RelationshipMultiplicity(123, 456) } } as unknown as CoreClass,
             schema,
           ) as EC.RelationshipClass;
