@@ -127,11 +127,11 @@ Our [tree renderer implementation](#treerenderer) calls this hook and passes the
 
 ## Stratakit components
 
-While the package provides a headless UI, it also delivers a set of [Strakit](https://www.npmjs.com/package/@stratakit/bricks)-based components for rendering the tree, which should cover majority of use cases. Consumers using the below components are required to provide a compatible `@stratakit/bricks`/`@stratakit/icons`/`@stratakit/foundations` packages, which are optional peer dependencies to this package.
+While the package provides a headless UI, it also delivers a set of [Strakit](https://www.npmjs.com/package/@stratakit/bricks)-based components for rendering the tree, which should cover majority of use cases. Consumers using the below components are required to provide compatible `@stratakit/bricks`/`@stratakit/icons`/`@stratakit/foundations` packages, which are optional peer dependencies to this package.
 
 ### `TreeRenderer`
 
-The component is based on Stratakit Tree component and uses our [`TreeNodeRenderer`](#treenoderenderer) to render the nodes. In addition, it makes use of the [`useSelectionHandler` hook](#useselectionhandler-hook) to add selection modes' support.
+The component is based on Stratakit `Tree` component and uses our [`TreeNodeRenderer`](#treenoderenderer) to render the nodes. In addition, it makes use of the [`useSelectionHandler` hook](#useselectionhandler-hook) to add selection modes' support.
 
 ### `TreeNodeRenderer`
 
