@@ -19,8 +19,8 @@ import {
   useMemo,
   useRef,
 } from "react";
-import refreshSvg from "@itwin/itwinui-icons/refresh.svg";
-import { Spinner, Tree } from "@itwin/itwinui-react/bricks";
+import { Spinner, Tree } from "@stratakit/bricks";
+import refreshSvg from "@stratakit/icons/refresh.svg";
 import { PresentationHierarchyNode } from "../TreeNode.js";
 import { useTree, UseTreeResult } from "../UseTree.js";
 import { ErrorNode } from "./FlatTreeNode.js";

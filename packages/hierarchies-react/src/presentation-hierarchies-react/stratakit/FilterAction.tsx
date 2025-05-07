@@ -4,8 +4,8 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { memo, useCallback } from "react";
-import filterSvg from "@itwin/itwinui-icons/filter.svg";
-import { Tree } from "@itwin/itwinui-react/bricks";
+import { Tree } from "@stratakit/bricks";
+import filterSvg from "@stratakit/icons/filter.svg";
 import { PresentationHierarchyNode } from "../TreeNode.js";
 import { HierarchyLevelDetails, useTree } from "../UseTree.js";
 import { useLocalizationContext } from "./LocalizationContext.js";

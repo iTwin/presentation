@@ -153,6 +153,16 @@ catalogs:
     rxjs-for-await:
       specifier: ^1.0.0
       version: 1.0.0
+  stratakit:
+    '@stratakit/bricks':
+      specifier: ^0.1.0
+      version: 0.1.0
+    '@stratakit/foundations':
+      specifier: ^0.1.0
+      version: 0.1.0
+    '@stratakit/icons':
+      specifier: ^0.1.0
+      version: 0.1.0
   test-tools:
     '@testing-library/dom':
       specifier: ^10.4.0
@@ -908,18 +918,12 @@ importers:
       '@itwin/imodel-components-react':
         specifier: catalog:appui
         version: 5.1.0(72465abbd552a8fdf614e99e441e37fc)
-      '@itwin/itwinui-icons':
-        specifier: 5.0.0-alpha.7
-        version: 5.0.0-alpha.7
       '@itwin/itwinui-icons-react':
         specifier: catalog:itwinui
         version: 2.9.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@itwin/itwinui-react':
         specifier: catalog:itwinui
         version: 3.17.2(@types/react@18.3.3)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      '@itwin/itwinui-react-v5':
-        specifier: npm:@itwin/itwinui-react@5.0.0-alpha.14
-        version: '@itwin/itwinui-react@5.0.0-alpha.14(react-dom@18.3.1(react@18.3.1))(react@18.3.1)'
       '@itwin/presentation-common':
         specifier: catalog:itwinjs-core-dev
         version: 5.0.0-dev.78(@itwin/core-bentley@5.0.0-dev.78)(@itwin/core-common@5.0.0-dev.78(@itwin/core-bentley@5.0.0-dev.78)(@itwin/core-geometry@5.0.0-dev.78))(@itwin/core-quantity@5.0.0-dev.78(@itwin/core-bentley@5.0.0-dev.78))(@itwin/ecschema-metadata@5.0.0-dev.78(@itwin/core-bentley@5.0.0-dev.78)(@itwin/core-quantity@5.0.0-dev.78(@itwin/core-bentley@5.0.0-dev.78)))
@@ -956,6 +960,15 @@ importers:
       '@opentelemetry/api':
         specifier: ^1.9.0
         version: 1.9.0
+      '@stratakit/bricks':
+        specifier: catalog:stratakit
+        version: 0.1.0(@stratakit/foundations@0.1.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      '@stratakit/foundations':
+        specifier: catalog:stratakit
+        version: 0.1.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      '@stratakit/icons':
+        specifier: catalog:stratakit
+        version: 0.1.0
       '@tanstack/react-table':
         specifier: ^8.21.2
         version: 8.21.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -1391,9 +1404,6 @@ importers:
       '@itwin/core-bentley':
         specifier: catalog:itwinjs-core
         version: 4.10.10
-      '@itwin/itwinui-illustrations-react':
-        specifier: catalog:itwinui
-        version: 2.1.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@itwin/presentation-hierarchies':
         specifier: workspace:^
         version: link:../hierarchies
@@ -1425,12 +1435,15 @@ importers:
       '@itwin/eslint-plugin':
         specifier: catalog:build-tools
         version: 5.0.0-dev.1(eslint@9.13.0)(typescript@5.7.3)
-      '@itwin/itwinui-icons':
-        specifier: 5.0.0-alpha.7
-        version: 5.0.0-alpha.7
-      '@itwin/itwinui-react':
-        specifier: 5.0.0-alpha.14
-        version: 5.0.0-alpha.14(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      '@stratakit/bricks':
+        specifier: catalog:stratakit
+        version: 0.1.0(@stratakit/foundations@0.1.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      '@stratakit/foundations':
+        specifier: catalog:stratakit
+        version: 0.1.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      '@stratakit/icons':
+        specifier: catalog:stratakit
+        version: 0.1.0
       '@testing-library/dom':
         specifier: catalog:test-tools
         version: 10.4.0
@@ -2013,17 +2026,17 @@ packages:
     resolution: {integrity: sha512-30iZtAPgz+LTIYoeivqYo853f02jBYSd5uGnGpkFV0M3xOt9aN73erkgYAmZU43x4VfqcnLxW9Kpg3R5LC4YYw==}
     engines: {node: '>=6.0.0'}
 
-  '@ariakit/core@0.4.14':
-    resolution: {integrity: sha512-hpzZvyYzGhP09S9jW1XGsU/FD5K3BKsH1eG/QJ8rfgEeUdPS7BvHPt5lHbOeJ2cMrRzBEvsEzLi1ivfDifHsVA==}
+  '@ariakit/core@0.4.15':
+    resolution: {integrity: sha512-vvxmZvkNhiisKM+Y1TbGMUfVVchV/sWu9F0xw0RYADXcimWPK31dd9JnIZs/OQ5pwAryAHmERHwuGQVESkSjwQ==}
 
-  '@ariakit/react-core@0.4.15':
-    resolution: {integrity: sha512-Up8+U97nAPJdyUh9E8BCEhJYTA+eVztWpHoo1R9zZfHd4cnBWAg5RHxEmMH+MamlvuRxBQA71hFKY/735fDg+A==}
+  '@ariakit/react-core@0.4.17':
+    resolution: {integrity: sha512-kFF6n+gC/5CRQIyaMTFoBPio2xUe0k9rZhMNdUobWRmc/twfeLVkODx+8UVYaNyKilTge8G0JFqwvFKku/jKEw==}
     peerDependencies:
       react: ^17.0.0 || ^18.0.0 || ^19.0.0
       react-dom: ^17.0.0 || ^18.0.0 || ^19.0.0
 
-  '@ariakit/react@0.4.15':
-    resolution: {integrity: sha512-0V2LkNPFrGRT+SEIiObx/LQjR6v3rR+mKEDUu/3tq7jfCZ+7+6Q6EMR1rFaK+XMkaRY1RWUcj/rRDWAUWnsDww==}
+  '@ariakit/react@0.4.17':
+    resolution: {integrity: sha512-HQaIboE2axtlncJz1hRTaiQfJ1GGjhdtNcAnPwdjvl2RybfmlHowIB+HTVBp36LzroKPs/M4hPCxk7XTaqRZGg==}
     peerDependencies:
       react: ^17.0.0 || ^18.0.0 || ^19.0.0
       react-dom: ^17.0.0 || ^18.0.0 || ^19.0.0
@@ -3014,9 +3027,6 @@ packages:
       react: '>=16.8.6'
       react-dom: '>=16.8.6'
 
-  '@itwin/itwinui-icons@5.0.0-alpha.7':
-    resolution: {integrity: sha512-Tz/PmlnWacZoSq0XeOXj72NCCHVvwazlLPF0smKEuq5x9zZQnMmEiMFIAjqo6vrWsmLQqEYz6lMHoYDTlFhtIg==}
-
   '@itwin/itwinui-illustrations-react@2.1.0':
     resolution: {integrity: sha512-5JR2A3mZy0d0qwwHpveSG3fsXLheJkO6a0GoWb8NQWw5edNZMRynJg0l3hVw3CHMgaaCGbUoKC77MuG0jWDzuA==}
     peerDependencies:
@@ -3028,12 +3038,6 @@ packages:
     peerDependencies:
       react: '>=17.0.0'
       react-dom: '>=17.0.0'
-
-  '@itwin/itwinui-react@5.0.0-alpha.14':
-    resolution: {integrity: sha512-7xfpcEKrr7UMuVGrmIckN4Cz82V+zrJaQ+AudJK47gOLMOLyb3nGih+q46lcrQMj5rFsyhlwTqTvmxNWMjJEcg==}
-    peerDependencies:
-      react: '>=18.0.0'
-      react-dom: '>=18.0.0'
 
   '@itwin/object-storage-azure@2.3.0':
     resolution: {integrity: sha512-WHECH+aBo9OVk5xcY5cdGnj5g08d2jMQefm6Q4rvHcqlfFtCKh4hfUMkaU5GAF8peNZxkxy06Goe206RWTtsVw==}
@@ -4044,6 +4048,22 @@ packages:
 
   '@socket.io/component-emitter@3.1.2':
     resolution: {integrity: sha512-9BCxFwvbGg/RsZK9tjXd8s4UcwR0MWeFQ1XEKIQVVvAGJyINdrqKMcTRyLoK8Rse1GjzLV9cwjWV1olXRWEXVA==}
+
+  '@stratakit/bricks@0.1.0':
+    resolution: {integrity: sha512-kjy/1jkn9za9kUHNJgIxwslMyl2GU+RDGVVbLA9gyEv5vAzmkDh9QWgWjZgaUlX+Ki1o9V1Bct2Ss/EQtPcHJw==}
+    peerDependencies:
+      '@stratakit/foundations': ^0.1.0
+      react: '>=18.0.0'
+      react-dom: '>=18.0.0'
+
+  '@stratakit/foundations@0.1.0':
+    resolution: {integrity: sha512-2TxB8JemLoFsP+ptVOLTg9fJhbuw2lsnUtGpesc/MihENwV462LshUdL+zpqeX5yIiMjMfENPv3ojTxBpj7odg==}
+    peerDependencies:
+      react: '>=18.0.0'
+      react-dom: '>=18.0.0'
+
+  '@stratakit/icons@0.1.0':
+    resolution: {integrity: sha512-PexG/eHpDZNNh0kJTjOTp8rXdZ7UIuCyOyO0YMHEGkp9XudvbdWfyenbvd/nIQ8cTzHxxb5rTzRyb38Z8lk4Og==}
 
   '@swc/helpers@0.5.15':
     resolution: {integrity: sha512-JQ5TuMi45Owi4/BIMAJBoSQoOJu12oOk/gADqlcUL9JEdHB8vyjUSsxqeNXnmXHjYKMi2WcYtezGEEhqUI/E2g==}
@@ -9437,19 +9457,19 @@ snapshots:
       '@jridgewell/gen-mapping': 0.3.8
       '@jridgewell/trace-mapping': 0.3.25
 
-  '@ariakit/core@0.4.14': {}
+  '@ariakit/core@0.4.15': {}
 
-  '@ariakit/react-core@0.4.15(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
+  '@ariakit/react-core@0.4.17(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
     dependencies:
-      '@ariakit/core': 0.4.14
+      '@ariakit/core': 0.4.15
       '@floating-ui/dom': 1.6.13
       react: 18.3.1
       react-dom: 18.3.1(react@18.3.1)
       use-sync-external-store: 1.4.0(react@18.3.1)
 
-  '@ariakit/react@0.4.15(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
+  '@ariakit/react@0.4.17(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
     dependencies:
-      '@ariakit/react-core': 0.4.15(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      '@ariakit/react-core': 0.4.17(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       react: 18.3.1
       react-dom: 18.3.1(react@18.3.1)
 
@@ -11012,8 +11032,6 @@ snapshots:
       react: 18.3.1
       react-dom: 18.3.1(react@18.3.1)
 
-  '@itwin/itwinui-icons@5.0.0-alpha.7': {}
-
   '@itwin/itwinui-illustrations-react@2.1.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
     dependencies:
       react: 18.3.1
@@ -11032,13 +11050,6 @@ snapshots:
       react-table: 7.8.0(react@18.3.1)
     transitivePeerDependencies:
       - '@types/react'
-
-  '@itwin/itwinui-react@5.0.0-alpha.14(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
-    dependencies:
-      '@ariakit/react': 0.4.15(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      classnames: 2.5.1
-      react: 18.3.1
-      react-dom: 18.3.1(react@18.3.1)
 
   '@itwin/object-storage-azure@2.3.0(inversify@6.0.2)(reflect-metadata@0.1.14)':
     dependencies:
@@ -12305,6 +12316,23 @@ snapshots:
       tslib: 2.8.1
 
   '@socket.io/component-emitter@3.1.2': {}
+
+  '@stratakit/bricks@0.1.0(@stratakit/foundations@0.1.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
+    dependencies:
+      '@ariakit/react': 0.4.17(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      '@stratakit/foundations': 0.1.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      classnames: 2.5.1
+      react: 18.3.1
+      react-dom: 18.3.1(react@18.3.1)
+
+  '@stratakit/foundations@0.1.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
+    dependencies:
+      '@ariakit/react': 0.4.17(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      classnames: 2.5.1
+      react: 18.3.1
+      react-dom: 18.3.1(react@18.3.1)
+
+  '@stratakit/icons@0.1.0': {}
 
   '@swc/helpers@0.5.15':
     dependencies:
