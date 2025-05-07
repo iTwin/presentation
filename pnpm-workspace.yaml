@@ -41,6 +41,11 @@ catalogs:
     '@itwin/itwinui-illustrations-react': ^2.1.0
     '@itwin/itwinui-react': ^3.17.2
 
+  stratakit:
+    '@stratakit/bricks': ^0.1.0
+    '@stratakit/icons': ^0.1.0
+    '@stratakit/foundations': ^0.1.0
+
   react:
     classnames: ^2.5.1
     react-error-boundary: ^4.0.13

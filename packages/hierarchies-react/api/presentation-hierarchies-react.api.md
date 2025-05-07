@@ -25,7 +25,7 @@ import { ReactNode } from 'react';
 import { RefAttributes } from 'react';
 import { SelectionStorage } from '@itwin/unified-selection';
 import { setLogger } from '@itwin/presentation-hierarchies';
-import { Tree } from '@itwin/itwinui-react/bricks';
+import { Tree } from '@stratakit/bricks';
 import { UseTreeResult as UseTreeResult_2 } from '../UseTree.js';
 
 // @alpha

@@ -2,7 +2,7 @@
 
 Copyright © Bentley Systems, Incorporated. All rights reserved. See LICENSE.md for license terms and full copyright notice.
 
-The `@itwin/presentation-hierarchies-react` package provides APIs for building a headless UI for rendering tree components based on data in an [iTwin.js iModel](https://www.itwinjs.org/learning/imodels/#imodel-overview). In addition, it delivers a set of [iTwinUI](https://itwinui.bentley.com/)-based components for rendering the tree.
+The `@itwin/presentation-hierarchies-react` package provides APIs for building a headless UI for rendering tree components based on data in an [iTwin.js iModel](https://www.itwinjs.org/learning/imodels/#imodel-overview). In addition, it delivers a set of [StrataKit](https://www.npmjs.com/package/@stratakit/bricks)-based components for rendering the tree.
 
 ## Headless UI
 
@@ -125,21 +125,18 @@ The returned object contains 2 functions, that should be called by the node rend
 
 Our [tree renderer implementation](#treerenderer) calls this hook and passes the callbacks to the [node renderer](#treenoderenderer), so there's no need to use it unless implementing a custom tree renderer.
 
-## iTwinUI components
+## StrataKit components
 
-While the package provides a headless UI, it also delivers a set of [iTwinUI](https://itwinui.bentley.com/)-based components for rendering the tree, which should cover majority of use cases. Consumers using the below components are required to provide a compatible `@itwin/itwinui-react` package, which is an optional peer dependency to this package.
+While the package provides a headless UI, it also delivers a set of [StrataKit](https://www.npmjs.com/package/@stratakit/bricks)-based components for rendering the tree, which should cover majority of use cases. Consumers using the below components are required to provide compatible `@stratakit/bricks`/`@stratakit/icons`/`@stratakit/foundations` packages, which are optional peer dependencies to this package.
 
 ### `TreeRenderer`
 
-The component is based on [iTwinUI Tree component](https://itwinui.bentley.com/docs/tree) and uses our [`TreeNodeRenderer`](#treenoderenderer) to render the nodes. In addition, it makes use of the [`useSelectionHandler` hook](#useselectionhandler-hook) to add selection modes' support.
-
-The iTwinUI Tree component requires a `getNode` function that maps nodes to `NodeData<TNode>` objects. Our `TreeRenderer` uses `createRenderedTreeNodeData` function for this purpose, and it's available for consumers as well, in case a custom iTwinUI Tree component implementation is being written.
+The component is based on StrataKit `Tree` component and uses our [`TreeNodeRenderer`](#treenoderenderer) to render the nodes. In addition, it makes use of the [`useSelectionHandler` hook](#useselectionhandler-hook) to add selection modes' support.
 
 ### `TreeNodeRenderer`
 
-The component is based on `TreeNode` component from iTwinUI library and supports the following features:
+The component is based on `Tree.Item` component from StrataKit library and supports the following features:
 
-- Rendering informational type of nodes (e.g. "No filter matches", "Too many nodes in a hierarchy level", etc.).
 - Reporting click and key down events for use with [`useSelectionHandler` hook](#useselectionhandler-hook).
 - Icons, selection, expand / collapse.
 - Action buttons to clear / set hierarchy level instance filter.
@@ -306,28 +303,31 @@ In case the `TreeNodeRenderer` component is used within a custom tree renderer, 
 import { Props } from "@itwin/presentation-shared";
 
 import { ComponentPropsWithoutRef, useCallback } from "react";
-import { Tree } from "@itwin/itwinui-react";
-import {
-  createRenderedTreeNodeData,
-  LocalizationContextProvider,
-  RenderedTreeNode,
-  TreeNodeRenderer,
-  TreeRenderer,
-} from "@itwin/presentation-hierarchies-react";
+import { Tree } from "@stratakit/bricks";
+import { LocalizationContextProvider, TreeRenderer, useFlatTreeNodeList } from "@itwin/presentation-hierarchies-react";
 
-type TreeProps = ComponentPropsWithoutRef<typeof Tree<RenderedTreeNode>>;
 type TreeRendererProps = Props<typeof TreeRenderer>;
 
 function MyTreeRenderer({ rootNodes }: TreeRendererProps) {
-  const nodeRenderer = useCallback<TreeProps["nodeRenderer"]>((nodeProps) => {
-    return <TreeNodeRenderer {...nodeProps} onFilterClick={() => {}} expandNode={() => {}} />;
-  }, []);
-
-  const getNode = useCallback<TreeProps["getNode"]>((node) => createRenderedTreeNodeData(node, () => false), []);
+  const flatNodes = useFlatTreeNodeList(rootNodes);
 
   return (
     <LocalizationContextProvider localizedStrings={localizedStrings}>
-      <Tree<RenderedTreeNode> data={rootNodes} nodeRenderer={nodeRenderer} getNode={getNode} enableVirtualization={true} />
+      <Tree.Root>
+        {flatNodes.map((flatNode) =>
+          isPlaceholderNode(flatNode) ? (
+            <Tree.Item key={flatNode.id} aria-level={flatNode.level} aria-posinset={1} aria-setsize={1} label="Loading" />
+          ) : (
+            <Tree.Item
+              key={flatNode.id}
+              aria-level={flatNode.level}
+              aria-posinset={flatNode.posInLevel}
+              aria-setsize={flatNode.levelSize}
+              label={flatNode.label}
+            />
+          ),
+        )}
+      </Tree.Root>
     </LocalizationContextProvider>
   );
 }

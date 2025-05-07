@@ -8,7 +8,6 @@ import { debounceTime, Subject } from "rxjs";
 import { BeEvent } from "@itwin/core-bentley";
 import { IModelConnection } from "@itwin/core-frontend";
 import { Button, Flex, ProgressRadial, SearchBox, Text, ToggleSwitch } from "@itwin/itwinui-react";
-import { Icon } from "@itwin/itwinui-react-v5/bricks";
 import { ClassInfo, DefaultContentDisplayTypes, Descriptor, InstanceKey, KeySet } from "@itwin/presentation-common";
 import {
   PresentationInstanceFilter,
@@ -30,6 +29,7 @@ import { ModelsTreeDefinition } from "@itwin/presentation-models-tree";
 import { createCachingECClassHierarchyInspector, IPrimitiveValueFormatter, Props } from "@itwin/presentation-shared";
 import { Selectable, Selectables } from "@itwin/unified-selection";
 import { useUnifiedSelectionContext } from "@itwin/unified-selection-react";
+import { Icon } from "@stratakit/foundations";
 import { MyAppFrontend } from "../../api/MyAppFrontend";
 
 type UseIModelTreeProps = Props<typeof useIModelUnifiedSelectionTree>;
@@ -319,12 +319,12 @@ function toGenericFilter(filterInfo?: PresentationInstanceFilterInfo): GenericIn
   return PresentationInstanceFilter.toGenericInstanceFilter(filterInfo.filter, filterInfo.usedClasses);
 }
 
-const subjectSvg = new URL("@itwin/itwinui-icons/bis-subject.svg", import.meta.url).href;
-const classSvg = new URL("@itwin/itwinui-icons/bis-class.svg", import.meta.url).href;
-const modelSvg = new URL("@itwin/itwinui-icons/model-cube.svg", import.meta.url).href;
-const categorySvg = new URL("@itwin/itwinui-icons/bis-category-3d.svg", import.meta.url).href;
-const elementSvg = new URL("@itwin/itwinui-icons/bis-element.svg", import.meta.url).href;
-const iModelSvg = new URL("@itwin/itwinui-icons/imodel.svg", import.meta.url).href;
+const subjectSvg = new URL("@stratakit/icons/bis-subject.svg", import.meta.url).href;
+const classSvg = new URL("@stratakit/icons/bis-class.svg", import.meta.url).href;
+const modelSvg = new URL("@stratakit/icons/model-cube.svg", import.meta.url).href;
+const categorySvg = new URL("@stratakit/icons/bis-category-3d.svg", import.meta.url).href;
+const elementSvg = new URL("@stratakit/icons/bis-element.svg", import.meta.url).href;
+const iModelSvg = new URL("@stratakit/icons/imodel.svg", import.meta.url).href;
 
 function getIcon(node: PresentationHierarchyNode): string | undefined {
   if (node.nodeData.extendedData?.imageId === undefined) {
