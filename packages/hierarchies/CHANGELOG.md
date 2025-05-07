@@ -1,5 +1,29 @@
 # @itwin/presentation-hierarchies
 
+## 2.0.0-alpha.0
+
+### Major Changes
+
+- [#954](https://github.com/iTwin/presentation/pull/954): Add additional requirements for types in `EC` metadata namespace, whose objects are returned by `ECSchemaProvider`.
+
+  - `EC.Schema`, `EC.Class` and `EC.Property` now all have an async `getCustomAttributes()` method that returns an `EC.CustomAttributeSet`, allowing consumers to access custom attributes of these schema items.
+  - `EC.Class` now additionally has these members:
+    - `baseClass: Promise<Class | undefined>`
+    - `getDerivedClasses(): Promise<Class[]>`
+
+  While this is an addition, it's considered a breaking change, because objects of the updated types are expected to be supplied to us by consumers.
+
+  In reality, consumers will likely use `@itwin/presentation-core-interop` package for creating them, and the package has been updated to handle the change, so reacting to the breaking change is as simple as bumping the version of `@itwin/presentation-core-interop` package in the consumer's `package.json`.
+
+### Patch Changes
+
+- [#954](https://github.com/iTwin/presentation/pull/954): Fix `HiddenSchema` and `HiddenClass` custom attributes not being taken into account when creating ECSQL query for hierarchies.
+
+  This is achieved through a `createFilterClauses` function change in `NodesQueryClauseFactory` implementation, created by `createNodesQueryClauseFactory` factory. Now the implementation checks the custom attributes of content class' derived classes and includes appropriate filters in the returned `where` clause.
+
+- Updated dependencies:
+  - @itwin/presentation-shared@2.0.0-alpha.0
+
 ## 1.4.2
 
 ### Patch Changes
