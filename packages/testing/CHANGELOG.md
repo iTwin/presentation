@@ -1,5 +1,12 @@
 # Change Log - @itwin/presentation-testing
 
+## 5.4.3-alpha.0
+
+### Patch Changes
+
+- Updated dependencies:
+  - @itwin/presentation-components@5.12.2-alpha.0
+
 ## 5.4.2
 
 ### Patch Changes

@@ -23,6 +23,7 @@
     "@itwin/unified-selection-react": "1.0.0"
   },
   "changesets": [
+    "breezy-rockets-throw",
     "clever-boats-knock",
     "famous-bags-pull",
     "four-bags-look",
@@ -47,8 +48,10 @@
     "sad-mugs-pump",
     "stupid-cameras-obey",
     "stupid-otters-listen",
+    "tall-bugs-march",
     "tame-years-make",
     "tender-carrots-search",
+    "thirty-ends-sit",
     "twenty-berries-collect",
     "wise-plants-try",
     "young-forks-punch"
