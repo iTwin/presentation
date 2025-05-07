@@ -39,6 +39,9 @@ export function createECSchema(schema: CoreSchema): EC.Schema {
       const item = await schema.getItem(name);
       return item ? createECClass(item as CoreClass, this) : undefined;
     },
+    async getCustomAttributes() {
+      return createCustomAttributesSet(schema.customAttributes);
+    },
   };
 }
 
@@ -95,6 +98,9 @@ abstract class ECClassImpl<TCoreClass extends CoreClass> extends ECSchemaItemImp
   public isMixin(): this is EC.Mixin {
     return false;
   }
+  public get baseClass(): Promise<EC.Class | undefined> {
+    return createFromOptionalLazyLoaded(this._coreSchemaItem.baseClass, (coreBaseClass) => createECClass(coreBaseClass, this.schema));
+  }
   public async is(classOrClassName: EC.Class | string, schemaName?: string) {
     if (typeof classOrClassName === "string") {
       return this._coreSchemaItem.is(classOrClassName, schemaName!);
@@ -108,6 +114,13 @@ abstract class ECClassImpl<TCoreClass extends CoreClass> extends ECSchemaItemImp
   public async getProperties(): Promise<Array<EC.Property>> {
     const coreProperties = await this._coreSchemaItem.getProperties();
     return coreProperties.map((coreProperty) => createECProperty(coreProperty, this));
+  }
+  public async getDerivedClasses(): Promise<EC.Class[]> {
+    const coreDerivedClasses = await this._coreSchemaItem.getDerivedClasses();
+    return coreDerivedClasses ? coreDerivedClasses.map((coreClass) => createECClass(coreClass, this.schema)) : [];
+  }
+  public async getCustomAttributes(): Promise<EC.CustomAttributeSet> {
+    return createCustomAttributesSet(this._coreSchemaItem.customAttributes);
   }
 }
 
@@ -216,6 +229,9 @@ abstract class ECPropertyImpl<TCoreProperty extends CoreProperty> implements EC.
   }
   public get kindOfQuantity(): Promise<EC.KindOfQuantity | undefined> {
     return createFromOptionalLazyLoaded(this._coreProperty.kindOfQuantity, (coreKindOfQuantity) => new ECKindOfQuantityImpl(coreKindOfQuantity));
+  }
+  public async getCustomAttributes(): Promise<EC.CustomAttributeSet> {
+    return createCustomAttributesSet(this._coreProperty.customAttributes);
   }
 }
 
@@ -363,6 +379,14 @@ async function createFromOptionalLazyLoaded<TSource extends CoreSchemaItem, TTar
     return undefined;
   }
   return source.then(convert);
+}
+
+const EMPTY_MAP: ReadonlyMap<string, EC.CustomAttribute> = new Map();
+async function createCustomAttributesSet(coreCustomAttributes: CoreClass["customAttributes"]): Promise<EC.CustomAttributeSet> {
+  if (!coreCustomAttributes) {
+    return EMPTY_MAP;
+  }
+  return coreCustomAttributes;
 }
 
 class ECRelationshipConstraintImpl implements EC.RelationshipConstraint {

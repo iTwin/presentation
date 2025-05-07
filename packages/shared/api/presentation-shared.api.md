@@ -134,6 +134,12 @@ export namespace EC {
     }
     export interface Class extends SchemaItem {
         // (undocumented)
+        baseClass: Promise<Class | undefined>;
+        // (undocumented)
+        getCustomAttributes(): Promise<CustomAttributeSet>;
+        // (undocumented)
+        getDerivedClasses(): Promise<Class[]>;
+        // (undocumented)
         getProperties(): Promise<Array<Property>>;
         // (undocumented)
         getProperty(name: string): Promise<Property | undefined>;
@@ -149,6 +155,18 @@ export namespace EC {
         isRelationshipClass(): this is RelationshipClass;
         // (undocumented)
         isStructClass(): this is StructClass;
+    }
+    export interface CustomAttribute {
+        // (undocumented)
+        [propName: string]: any;
+        // (undocumented)
+        className: string;
+    }
+    export interface CustomAttributeSet {
+        // (undocumented)
+        [Symbol.iterator]: () => IterableIterator<[string, CustomAttribute]>;
+        // (undocumented)
+        get(className: string): CustomAttribute | undefined;
     }
     export type EntityClass = Class;
     export interface Enumeration extends SchemaItem {
@@ -196,6 +214,8 @@ export namespace EC {
         // (undocumented)
         class: Class;
         // (undocumented)
+        getCustomAttributes(): Promise<CustomAttributeSet>;
+        // (undocumented)
         isArray(): this is ArrayProperty;
         // (undocumented)
         isEnumeration(): this is EnumerationProperty;
@@ -237,6 +257,8 @@ export namespace EC {
     export interface Schema {
         // (undocumented)
         getClass(name: string): Promise<Class | undefined>;
+        // (undocumented)
+        getCustomAttributes(): Promise<CustomAttributeSet>;
         // (undocumented)
         name: string;
     }

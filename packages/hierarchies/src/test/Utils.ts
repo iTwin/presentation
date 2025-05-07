@@ -5,7 +5,7 @@
 
 import sinon from "sinon";
 import { Logger, LogLevel } from "@itwin/core-bentley";
-import { EC, parseFullClassName } from "@itwin/presentation-shared";
+import { EC, normalizeFullClassName, parseFullClassName } from "@itwin/presentation-shared";
 import { NonGroupingHierarchyNode } from "../hierarchies/HierarchyNode.js";
 import { GenericNodeKey, HierarchyNodeKey, IModelInstanceKey } from "../hierarchies/HierarchyNodeKey.js";
 import {
@@ -111,42 +111,86 @@ export function createTestNodeKey(): HierarchyNodeKey {
   };
 }
 
+interface ECClassExtraMembers {
+  readonly ecsqlSelector: string;
+  addDerivedClass: (derived: EC.Class) => void;
+}
 export interface StubClassFuncProps {
   schemaName: string;
   className: string;
   classLabel?: string;
+  baseClass?: EC.Class & Pick<ECClassExtraMembers, "addDerivedClass">;
   properties?: EC.Property[];
-  is?: (fullClassName: string) => Promise<boolean>;
+  customAttributes?: ReadonlyMap<string, { [key: string]: any }>;
 }
 export interface StubRelationshipClassFuncProps extends StubClassFuncProps {
   source?: EC.RelationshipConstraint;
   target?: EC.RelationshipConstraint;
   direction?: "Forward" | "Backward";
 }
-export type TStubClassFunc = (props: StubClassFuncProps) => EC.Class;
-export type TStubEntityClassFunc = (props: StubClassFuncProps) => EC.EntityClass;
-export type TStubRelationshipClassFunc = (props: StubRelationshipClassFuncProps) => EC.RelationshipClass;
+export type TStubClassFunc = (props: StubClassFuncProps) => EC.Class & ECClassExtraMembers;
+export type TStubEntityClassFunc = (props: StubClassFuncProps) => EC.EntityClass & ECClassExtraMembers;
+export type TStubRelationshipClassFunc = (props: StubRelationshipClassFuncProps) => EC.RelationshipClass & ECClassExtraMembers;
 
 export function createECSchemaProviderStub() {
   const schemaStubs: { [schemaName: string]: sinon.SinonStubbedInstance<EC.Schema> } = {};
-  const getSchemaStub = (schemaName: string) => {
+  const classes = new Map<string, EC.Class>(); // className -> class
+  const classHierarchy = new Map<string, string>(); // className -> baseClassName
+  const getSchemaStub = sinon.stub<[string], sinon.SinonStubbedInstance<EC.Schema>>().callsFake((schemaName: string) => {
     let schemaStub = schemaStubs[schemaName];
     if (!schemaStub) {
       schemaStub = {
         name: schemaName,
-        getClass: sinon.stub(),
+        getClass: sinon.stub<[string], Promise<EC.Class | undefined>>().callsFake(async (className) => classes.get(`${schemaName}.${className}`)),
+        getCustomAttributes: sinon.stub<[], Promise<EC.CustomAttributeSet>>().callsFake(async () => new Map()),
       };
       schemaStubs[schemaName] = schemaStub;
     }
     return schemaStub;
+  });
+  const getDerivedClasses = (classFullName: string): EC.Class[] => {
+    const derivedClasses = new Array<EC.Class>();
+    for (const [derivedClassName, baseClassName] of classHierarchy.entries()) {
+      if (baseClassName === classFullName) {
+        derivedClasses.push(classes.get(derivedClassName)!);
+        derivedClasses.push(...getDerivedClasses(derivedClassName));
+      }
+    }
+    return derivedClasses;
+  };
+  const getBaseClasses = (classFullName: string): EC.Class[] => {
+    const baseClasses = new Array<EC.Class>();
+    const baseClassName = classHierarchy.get(classFullName);
+    if (baseClassName) {
+      baseClasses.push(classes.get(baseClassName)!);
+      baseClasses.push(...getBaseClasses(baseClassName));
+    }
+    return baseClasses;
   };
   const createBaseClassProps = (props: StubClassFuncProps) => ({
-    schema: {
-      name: props.schemaName,
+    get schema() {
+      return getSchemaStub(props.schemaName);
     },
     fullName: `${props.schemaName}.${props.className}`,
     name: props.className,
     label: props.classLabel,
+    get ecsqlSelector() {
+      return `[${props.schemaName}].[${props.className}]`;
+    },
+    get baseClass() {
+      return Promise.resolve(props.baseClass);
+    },
+    addDerivedClass: (derived: EC.Class) => {
+      classHierarchy.set(derived.fullName, `${props.schemaName}.${props.className}`);
+    },
+    getDerivedClasses: async () => getDerivedClasses(`${props.schemaName}.${props.className}`),
+    is: async (targetClassOrClassName: EC.Class | string, schemaName?: string) => {
+      const myName = `${props.schemaName}.${props.className}`;
+      const targetName =
+        typeof targetClassOrClassName === "string" ? `${schemaName!}.${targetClassOrClassName}` : normalizeFullClassName(targetClassOrClassName.fullName);
+      return targetName === myName || getBaseClasses(myName).some((baseClass) => baseClass.fullName === targetName);
+    },
+    getCustomAttributes: async () => props.customAttributes ?? new Map(),
     getProperty: async (propertyName: string): Promise<EC.Property | undefined> => {
       if (!props.properties) {
         return undefined;
@@ -154,14 +198,6 @@ export function createECSchemaProviderStub() {
       return props.properties.find((p) => p.name === propertyName);
     },
     getProperties: async (): Promise<Array<EC.Property>> => props.properties ?? [],
-    is: sinon.fake(async (targetClassOrClassName: EC.Class | string, schemaName?: string) => {
-      if (typeof targetClassOrClassName === "string") {
-        return props.is ? props.is(`${schemaName!}.${targetClassOrClassName}`) : schemaName === props.schemaName && targetClassOrClassName === props.className;
-      }
-      // need this just to make sure `.` is used for separating schema and class names
-      const { schemaName: parsedSchemaName, className: parsedClassName } = parseFullClassName(targetClassOrClassName.fullName);
-      return props.is ? props.is(`${parsedSchemaName}.${parsedClassName}`) : parsedSchemaName === props.schemaName && parsedClassName === props.className;
-    }),
     isEntityClass: () => false,
     isRelationshipClass: () => false,
   });
@@ -169,8 +205,9 @@ export function createECSchemaProviderStub() {
     const res = {
       ...createBaseClassProps(props),
       isEntityClass: () => true,
-    } as unknown as EC.EntityClass;
-    getSchemaStub(props.schemaName).getClass.withArgs(props.className).resolves(res);
+    } as unknown as ReturnType<TStubEntityClassFunc>;
+    classes.set(res.fullName, res);
+    props.baseClass && props.baseClass.addDerivedClass(res);
     return res;
   };
   const stubRelationshipClass: TStubRelationshipClassFunc = (props) => {
@@ -180,24 +217,25 @@ export function createECSchemaProviderStub() {
       source: props.source ?? { polymorphic: true, abstractConstraint: async () => undefined },
       target: props.target ?? { polymorphic: true, abstractConstraint: async () => undefined },
       isRelationshipClass: () => true,
-    } as unknown as EC.RelationshipClass;
-    getSchemaStub(props.schemaName).getClass.withArgs(props.className).resolves(res);
+    } as unknown as ReturnType<TStubRelationshipClassFunc>;
+    classes.set(res.fullName, res);
+    props.baseClass && props.baseClass.addDerivedClass(res);
     return res;
   };
   const stubOtherClass: TStubClassFunc = (props) => {
     const res = {
       ...createBaseClassProps(props),
-    } as unknown as EC.Class;
-    getSchemaStub(props.schemaName).getClass.withArgs(props.className).resolves(res);
+    } as unknown as ReturnType<TStubClassFunc>;
+    classes.set(res.fullName, res);
+    props.baseClass && props.baseClass.addDerivedClass(res);
     return res;
   };
   return {
     stubEntityClass,
     stubRelationshipClass,
     stubOtherClass,
-    getSchema: sinon.fake(async (schemaName: string): Promise<EC.Schema | undefined> => {
-      return schemaStubs[schemaName];
-    }),
+    getSchemaStub,
+    getSchema: async (name: string): Promise<EC.Schema | undefined> => getSchemaStub(name),
   };
 }
 

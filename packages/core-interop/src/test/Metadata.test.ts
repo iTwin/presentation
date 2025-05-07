@@ -150,6 +150,38 @@ describe("createECSchema", () => {
       expect(result).to.be.undefined;
     });
   });
+
+  describe("getCustomAttributes", () => {
+    it("returns custom attributes from core schema", async () => {
+      const coreSchema = {
+        name: "s",
+        customAttributes: new Map([["attr", { name: "x", label: "y" }]]),
+      } as unknown as CoreSchema;
+
+      const schema = createECSchema(coreSchema);
+      const result = await schema.getCustomAttributes();
+      assert(result !== undefined);
+
+      const entries = [...result];
+      expect(entries.length).to.eq(1);
+      expect(entries[0]).to.deep.eq(["attr", { name: "x", label: "y" }]);
+      expect(result.get("attr")).to.deep.eq({ name: "x", label: "y" });
+    });
+
+    it("returns empty set when core schema's custom attributes are not defined", async () => {
+      const coreSchema = {
+        name: "s",
+        customAttributes: undefined,
+      } as unknown as CoreSchema;
+
+      const schema = createECSchema(coreSchema);
+      const result = await schema.getCustomAttributes();
+      assert(result !== undefined);
+
+      const entries = [...result];
+      expect(entries.length).to.eq(0);
+    });
+  });
 });
 
 describe("createECClass", () => {
@@ -157,6 +189,9 @@ describe("createECClass", () => {
     name: "s",
     async getClass() {
       return undefined;
+    },
+    async getCustomAttributes() {
+      return new Map();
     },
   };
 
@@ -256,6 +291,71 @@ describe("createECClass", () => {
       label: "C",
     } as unknown as CoreClass;
     expect(() => createECClass(coreClass, schema)).to.throw();
+  });
+
+  describe("baseClass", () => {
+    it("returns base class", async () => {
+      const coreBaseClass = {
+        schemaItemType: SchemaItemType.EntityClass,
+        fullName: "s.b",
+        name: "b",
+      };
+      const coreClass = {
+        schemaItemType: SchemaItemType.EntityClass,
+        fullName: "s.c",
+        name: "c",
+        baseClass: Promise.resolve(coreBaseClass),
+      };
+      const ecClass = createECClass(coreClass as unknown as CoreClass, schema);
+      const result = await ecClass.baseClass;
+      expect(result!.fullName).to.eq("s.b");
+    });
+
+    it("returns undefined if core class has no base", async () => {
+      const coreClass = {
+        schemaItemType: SchemaItemType.EntityClass,
+        fullName: "s.c",
+        name: "c",
+        baseClass: undefined,
+      };
+      const ecClass = createECClass(coreClass as unknown as CoreClass, schema);
+      const result = await ecClass.baseClass;
+      expect(result).to.be.undefined;
+    });
+  });
+
+  describe("getDerivedClasses", () => {
+    it("returns derived classes", async () => {
+      const coreClass = {
+        schemaItemType: SchemaItemType.EntityClass,
+        fullName: "s.c",
+        name: "c",
+        getDerivedClasses: async () =>
+          Promise.resolve([
+            {
+              schemaItemType: SchemaItemType.EntityClass,
+              fullName: "s.d",
+              name: "d",
+            },
+          ]),
+      };
+      const ecClass = createECClass(coreClass as unknown as CoreClass, schema);
+      const result = await ecClass.getDerivedClasses();
+      expect(result.length).to.eq(1);
+      expect(result[0].fullName).to.eq("s.d");
+    });
+
+    it("returns empty list if core class has no derived classes", async () => {
+      const coreClass = {
+        schemaItemType: SchemaItemType.EntityClass,
+        fullName: "s.c",
+        name: "c",
+        getDerivedClasses: async () => Promise.resolve(undefined),
+      };
+      const ecClass = createECClass(coreClass as unknown as CoreClass, schema);
+      const result = await ecClass.getDerivedClasses();
+      expect(result.length).to.eq(0);
+    });
   });
 
   describe("is", () => {
@@ -363,6 +463,42 @@ describe("createECClass", () => {
     });
   });
 
+  describe("getCustomAttributes", () => {
+    it("returns custom attributes from core class", async () => {
+      const coreClass = {
+        schemaItemType: SchemaItemType.EntityClass,
+        fullName: "s.c",
+        name: "c",
+        label: "C",
+        customAttributes: new Map([["attr", { name: "x", label: "y" }]]),
+      } as unknown as CoreClass;
+      const ecClass = createECClass(coreClass, schema);
+      const result = await ecClass.getCustomAttributes();
+      assert(result !== undefined);
+
+      const entries = [...result];
+      expect(entries.length).to.eq(1);
+      expect(entries[0]).to.deep.eq(["attr", { name: "x", label: "y" }]);
+      expect(result.get("attr")).to.deep.eq({ name: "x", label: "y" });
+    });
+
+    it("returns empty set when core class' custom attributes are not defined", async () => {
+      const coreClass = {
+        schemaItemType: SchemaItemType.EntityClass,
+        fullName: "s.c",
+        name: "c",
+        label: "C",
+        customAttributes: undefined,
+      } as unknown as CoreClass;
+      const ecClass = createECClass(coreClass, schema);
+      const result = await ecClass.getCustomAttributes();
+      assert(result !== undefined);
+
+      const entries = [...result];
+      expect(entries.length).to.eq(0);
+    });
+  });
+
   describe("Relationship class", () => {
     const coreRelationshipClass = {
       schemaItemType: SchemaItemType.RelationshipClass,
@@ -459,6 +595,40 @@ describe("createECProperty", () => {
     fullName: "",
     name: "",
   };
+
+  describe("getCustomAttributes", () => {
+    it("returns custom attributes from core property", async () => {
+      const coreProperty = {
+        ...propertyStub,
+        isPrimitive: () => true,
+        name: "test-property",
+        customAttributes: new Map([["attr", { name: "x", label: "y" }]]),
+      } as unknown as CorePrimitiveProperty;
+      const property = createECProperty(coreProperty, propertyClass);
+      const result = await property.getCustomAttributes();
+      assert(result !== undefined);
+
+      const entries = [...result];
+      expect(entries.length).to.eq(1);
+      expect(entries[0]).to.deep.eq(["attr", { name: "x", label: "y" }]);
+      expect(result.get("attr")).to.deep.eq({ name: "x", label: "y" });
+    });
+
+    it("returns empty set when core property's custom attributes are not defined", async () => {
+      const coreProperty = {
+        ...propertyStub,
+        isPrimitive: () => true,
+        name: "test-property",
+        customAttributes: undefined,
+      } as unknown as CorePrimitiveProperty;
+      const property = createECProperty(coreProperty, propertyClass);
+      const result = await property.getCustomAttributes();
+      assert(result !== undefined);
+
+      const entries = [...result];
+      expect(entries.length).to.eq(0);
+    });
+  });
 
   describe("Primitive property", () => {
     it("creates property from core property", async () => {

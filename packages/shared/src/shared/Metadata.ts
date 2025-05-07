@@ -72,6 +72,7 @@ export namespace EC {
   export interface Schema {
     name: string;
     getClass(name: string): Promise<Class | undefined>;
+    getCustomAttributes(): Promise<CustomAttributeSet>;
   }
 
   /**
@@ -92,6 +93,7 @@ export namespace EC {
    * @public
    */
   export interface Class extends SchemaItem {
+    baseClass: Promise<Class | undefined>;
     is(className: string, schemaName: string): Promise<boolean>;
     is(other: Class): Promise<boolean>;
     getProperty(name: string): Promise<Property | undefined>;
@@ -100,6 +102,8 @@ export namespace EC {
     isRelationshipClass(): this is RelationshipClass;
     isStructClass(): this is StructClass;
     isMixin(): this is Mixin;
+    getDerivedClasses(): Promise<Class[]>;
+    getCustomAttributes(): Promise<CustomAttributeSet>;
   }
 
   /**
@@ -201,6 +205,8 @@ export namespace EC {
     isPrimitive(): this is PrimitiveProperty;
     isEnumeration(): this is EnumerationProperty;
     isNavigation(): this is NavigationProperty;
+
+    getCustomAttributes(): Promise<CustomAttributeSet>;
   }
 
   /**
@@ -282,6 +288,26 @@ export namespace EC {
   export interface PrimitiveProperty extends Property {
     primitiveType: PrimitiveType;
     extendedTypeName?: string;
+  }
+
+  /**
+   * Defines a set of custom attributes that may be applied to a class or property.
+   * @see https://www.itwinjs.org/reference/ecschema-metadata/metadata/customattribute/
+   * @public
+   */
+  export interface CustomAttributeSet {
+    [Symbol.iterator]: () => IterableIterator<[string, CustomAttribute]>;
+    get(className: string): CustomAttribute | undefined;
+  }
+
+  /**
+   * Defines a custom attribute that may be applied to a class or property.
+   * @see https://www.itwinjs.org/reference/ecschema-metadata/metadata/customattribute/
+   * @public
+   */
+  export interface CustomAttribute {
+    className: string;
+    [propName: string]: any;
   }
 }
 

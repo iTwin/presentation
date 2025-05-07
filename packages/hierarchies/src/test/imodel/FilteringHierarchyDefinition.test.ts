@@ -202,12 +202,11 @@ describe("FilteringHierarchyDefinition", () => {
       const class1 = classHierarchyInspector.stubEntityClass({
         schemaName: "BisCore",
         className: "SourceQueryClassName",
-        is: async (other) => other === class1.fullName,
       });
       const class2 = classHierarchyInspector.stubEntityClass({
         schemaName: "BisCore",
         className: "FilterPathClassName0",
-        is: async (other) => other === class1.fullName,
+        baseClass: class1,
       });
       const paths: HierarchyNodeIdentifiersPath[] = [
         [createTestInstanceKey({ id: "0x5", className: class1.fullName }), createTestInstanceKey({ id: "0x1" }), createTestInstanceKey({ id: "0x2" })],
@@ -247,7 +246,6 @@ describe("FilteringHierarchyDefinition", () => {
       const testClass = classHierarchyInspector.stubEntityClass({
         schemaName: "TestSchema",
         className: "TestClass",
-        is: async () => true,
       });
       const paths: HierarchyNodeIdentifiersPath[] = [
         [createTestInstanceKey({ id: "0x1", className: testClass.fullName }), createTestInstanceKey({ id: "0x2" })],
@@ -866,7 +864,7 @@ describe("FilteringHierarchyDefinition", () => {
 
     describe("filtering generic node definitions", () => {
       it("omits source generic node definition when using instance key filter", async () => {
-        const filterClass = classHierarchyInspector.stubEntityClass({ schemaName: "BisCore", className: "FilterClassName", is: async () => false });
+        const filterClass = classHierarchyInspector.stubEntityClass({ schemaName: "BisCore", className: "FilterClassName" });
         const sourceDefinition: GenericHierarchyNodeDefinition = {
           node: createTestSourceGenericNode({
             key: "custom",
@@ -1087,7 +1085,7 @@ describe("FilteringHierarchyDefinition", () => {
 
     describe("filtering instance node query definitions", () => {
       it("omits source instance node query definition when using custom node filter", async () => {
-        const queryClass = classHierarchyInspector.stubEntityClass({ schemaName: "BisCore", className: "SourceQueryClassName", is: async () => false });
+        const queryClass = classHierarchyInspector.stubEntityClass({ schemaName: "BisCore", className: "SourceQueryClassName" });
         const sourceDefinition: InstanceNodesQueryDefinition = {
           fullClassName: queryClass.fullName,
           query: {
@@ -1107,8 +1105,8 @@ describe("FilteringHierarchyDefinition", () => {
       });
 
       it("omits source instance node query definition if filter class doesn't match query class", async () => {
-        const queryClass = classHierarchyInspector.stubEntityClass({ schemaName: "BisCore", className: "SourceQueryClassName", is: async () => false });
-        const filterPathClass = classHierarchyInspector.stubEntityClass({ schemaName: "BisCore", className: "FilterPathClassName", is: async () => false });
+        const queryClass = classHierarchyInspector.stubEntityClass({ schemaName: "BisCore", className: "SourceQueryClassName" });
+        const filterPathClass = classHierarchyInspector.stubEntityClass({ schemaName: "BisCore", className: "FilterPathClassName" });
         const sourceDefinition: InstanceNodesQueryDefinition = {
           fullClassName: queryClass.fullName,
           query: {
@@ -1128,7 +1126,7 @@ describe("FilteringHierarchyDefinition", () => {
       });
 
       it("omits source instance node query definition when filter filtering by empty path", async () => {
-        const queryClass = classHierarchyInspector.stubEntityClass({ schemaName: "BisCore", className: "SourceQueryClassName", is: async () => false });
+        const queryClass = classHierarchyInspector.stubEntityClass({ schemaName: "BisCore", className: "SourceQueryClassName" });
         const sourceDefinition: InstanceNodesQueryDefinition = {
           fullClassName: queryClass.fullName,
           query: {
@@ -1167,7 +1165,7 @@ describe("FilteringHierarchyDefinition", () => {
       });
 
       it("returns unfiltered source instance node query definitions when filtering filter target parent node", async () => {
-        const queryClass = classHierarchyInspector.stubEntityClass({ schemaName: "BisCore", className: "SourceQueryClassName", is: async () => false });
+        const queryClass = classHierarchyInspector.stubEntityClass({ schemaName: "BisCore", className: "SourceQueryClassName" });
         const sourceDefinition: InstanceNodesQueryDefinition = {
           fullClassName: queryClass.fullName,
           query: {
@@ -1198,17 +1196,15 @@ describe("FilteringHierarchyDefinition", () => {
         const queryClass = classHierarchyInspector.stubEntityClass({
           schemaName: "BisCore",
           className: "SourceQueryClassName",
-          is: async () => false,
         });
         const filterPathClass1 = classHierarchyInspector.stubEntityClass({
           schemaName: "BisCore",
           className: "FilterPathClassName1",
-          is: async (other) => other === queryClass.fullName,
+          baseClass: queryClass,
         });
         const filterPathClass2 = classHierarchyInspector.stubEntityClass({
           schemaName: "BisCore",
           className: "FilterPathClassName2",
-          is: async () => false,
         });
         const sourceDefinition: InstanceNodesQueryDefinition = {
           fullClassName: queryClass.fullName,
@@ -1246,16 +1242,16 @@ describe("FilteringHierarchyDefinition", () => {
       });
 
       it("returns source instance node query definition filtered with multiple matching paths", async () => {
-        const queryClass = classHierarchyInspector.stubEntityClass({ schemaName: "BisCore", className: "SourceQueryClassName", is: async () => false });
+        const queryClass = classHierarchyInspector.stubEntityClass({ schemaName: "BisCore", className: "SourceQueryClassName" });
         const filterPathClass1 = classHierarchyInspector.stubEntityClass({
           schemaName: "BisCore",
           className: "FilterPathClassName1",
-          is: async (other) => other === queryClass.fullName,
+          baseClass: queryClass,
         });
         const filterPathClass2 = classHierarchyInspector.stubEntityClass({
           schemaName: "BisCore",
           className: "FilterPathClassName2",
-          is: async (other) => other === queryClass.fullName,
+          baseClass: queryClass,
         });
         const sourceDefinition: InstanceNodesQueryDefinition = {
           fullClassName: queryClass.fullName,
@@ -1287,14 +1283,14 @@ describe("FilteringHierarchyDefinition", () => {
       });
 
       it("returns source instance node query definition filtered with multiple matching paths having same beginning", async () => {
-        const queryClass = classHierarchyInspector.stubEntityClass({ schemaName: "BisCore", className: "SourceQueryClassName", is: async () => false });
+        const queryClass = classHierarchyInspector.stubEntityClass({ schemaName: "BisCore", className: "SourceQueryClassName" });
         const filterPathClass0 = classHierarchyInspector.stubEntityClass({
           schemaName: "BisCore",
           className: "FilterPathClassName0",
-          is: async (other) => other === queryClass.fullName,
+          baseClass: queryClass,
         });
-        const filterPathClass1 = classHierarchyInspector.stubEntityClass({ schemaName: "BisCore", className: "FilterPathClassName1", is: async () => false });
-        const filterPathClass2 = classHierarchyInspector.stubEntityClass({ schemaName: "BisCore", className: "FilterPathClassName2", is: async () => false });
+        const filterPathClass1 = classHierarchyInspector.stubEntityClass({ schemaName: "BisCore", className: "FilterPathClassName1" });
+        const filterPathClass2 = classHierarchyInspector.stubEntityClass({ schemaName: "BisCore", className: "FilterPathClassName2" });
         const sourceDefinition: InstanceNodesQueryDefinition = {
           fullClassName: queryClass.fullName,
           query: {
@@ -1333,17 +1329,15 @@ describe("FilteringHierarchyDefinition", () => {
         const queryClass = classHierarchyInspector.stubEntityClass({
           schemaName: "BisCore",
           className: "SourceQueryClassName",
-          is: async (other) => other === queryClass.fullName,
         });
         const filterPathClass0 = classHierarchyInspector.stubEntityClass({
           schemaName: "BisCore",
           className: "FilterPathClassName0",
-          is: async (other) => other === queryClass.fullName,
+          baseClass: queryClass,
         });
         const filterPathClass1 = classHierarchyInspector.stubEntityClass({
           schemaName: "BisCore",
           className: "FilterPathClassName1",
-          is: async () => false,
         });
         const sourceDefinition: InstanceNodesQueryDefinition = {
           fullClassName: queryClass.fullName,
@@ -1380,14 +1374,13 @@ describe("FilteringHierarchyDefinition", () => {
         const queryClass = classHierarchyInspector.stubEntityClass({
           schemaName: "BisCore",
           className: "SourceQueryClassName",
-          is: async (other) => other === queryClass.fullName,
         });
         const filterPathClass0 = classHierarchyInspector.stubEntityClass({
           schemaName: "BisCore",
           className: "FilterPathClassName0",
-          is: async (other) => other === queryClass.fullName,
+          baseClass: queryClass,
         });
-        const filterPathClass1 = classHierarchyInspector.stubEntityClass({ schemaName: "BisCore", className: "FilterPathClassName1", is: async () => false });
+        const filterPathClass1 = classHierarchyInspector.stubEntityClass({ schemaName: "BisCore", className: "FilterPathClassName1" });
         const sourceDefinition: InstanceNodesQueryDefinition = {
           fullClassName: queryClass.fullName,
           query: {
@@ -1420,11 +1413,11 @@ describe("FilteringHierarchyDefinition", () => {
       });
 
       it("sets most nested grouping node as filter target", async () => {
-        const queryClass = classHierarchyInspector.stubEntityClass({ schemaName: "BisCore", className: "SourceQueryClassName", is: async () => false });
+        const queryClass = classHierarchyInspector.stubEntityClass({ schemaName: "BisCore", className: "SourceQueryClassName" });
         const filterPathClass0 = classHierarchyInspector.stubEntityClass({
           schemaName: "BisCore",
           className: "FilterPathClassName0",
-          is: async (other) => other === queryClass.fullName,
+          baseClass: queryClass,
         });
         const groupingNode1: FilterTargetGroupingNodeInfo = { key: { type: "class-grouping", className: "class1" }, depth: 1 };
         const groupingNode2: FilterTargetGroupingNodeInfo = { key: { type: "class-grouping", className: "class2" }, depth: 3 };
@@ -1469,11 +1462,11 @@ describe("FilteringHierarchyDefinition", () => {
     });
 
     it("uses filtering paths from parent node", async () => {
-      const queryClass = classHierarchyInspector.stubEntityClass({ schemaName: "BisCore", className: "SourceQueryClassName", is: async () => false });
+      const queryClass = classHierarchyInspector.stubEntityClass({ schemaName: "BisCore", className: "SourceQueryClassName" });
       const childFilterClass = classHierarchyInspector.stubEntityClass({
         schemaName: "BisCore",
         className: "ChildFilterClass",
-        is: async (other) => other === queryClass.fullName,
+        baseClass: queryClass,
       });
       const sourceDefinition: InstanceNodesQueryDefinition = {
         fullClassName: queryClass.fullName,
