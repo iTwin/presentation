@@ -1,5 +1,11 @@
 # @itwin/presentation-hierarchies-react
 
+## 2.0.0-alpha.18
+
+### Major Changes
+
+- [#951](https://github.com/iTwin/presentation/pull/951): Move from `@itwin/itwinui-react@5.0.0-alpha` to `@stratakit/*` packages.
+
 ## 2.0.0-alpha.17
 
 ### Patch Changes
