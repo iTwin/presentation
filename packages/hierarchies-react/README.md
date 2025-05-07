@@ -2,7 +2,7 @@
 
 Copyright © Bentley Systems, Incorporated. All rights reserved. See LICENSE.md for license terms and full copyright notice.
 
-The `@itwin/presentation-hierarchies-react` package provides APIs for building a headless UI for rendering tree components based on data in an [iTwin.js iModel](https://www.itwinjs.org/learning/imodels/#imodel-overview). In addition, it delivers a set of [Stratakit](https://www.npmjs.com/package/@stratakit/bricks)-based components for rendering the tree.
+The `@itwin/presentation-hierarchies-react` package provides APIs for building a headless UI for rendering tree components based on data in an [iTwin.js iModel](https://www.itwinjs.org/learning/imodels/#imodel-overview). In addition, it delivers a set of [StrataKit](https://www.npmjs.com/package/@stratakit/bricks)-based components for rendering the tree.
 
 ## Headless UI
 
@@ -125,17 +125,17 @@ The returned object contains 2 functions, that should be called by the node rend
 
 Our [tree renderer implementation](#treerenderer) calls this hook and passes the callbacks to the [node renderer](#treenoderenderer), so there's no need to use it unless implementing a custom tree renderer.
 
-## Stratakit components
+## StrataKit components
 
-While the package provides a headless UI, it also delivers a set of [Strakit](https://www.npmjs.com/package/@stratakit/bricks)-based components for rendering the tree, which should cover majority of use cases. Consumers using the below components are required to provide compatible `@stratakit/bricks`/`@stratakit/icons`/`@stratakit/foundations` packages, which are optional peer dependencies to this package.
+While the package provides a headless UI, it also delivers a set of [StrataKit](https://www.npmjs.com/package/@stratakit/bricks)-based components for rendering the tree, which should cover majority of use cases. Consumers using the below components are required to provide compatible `@stratakit/bricks`/`@stratakit/icons`/`@stratakit/foundations` packages, which are optional peer dependencies to this package.
 
 ### `TreeRenderer`
 
-The component is based on Stratakit `Tree` component and uses our [`TreeNodeRenderer`](#treenoderenderer) to render the nodes. In addition, it makes use of the [`useSelectionHandler` hook](#useselectionhandler-hook) to add selection modes' support.
+The component is based on StrataKit `Tree` component and uses our [`TreeNodeRenderer`](#treenoderenderer) to render the nodes. In addition, it makes use of the [`useSelectionHandler` hook](#useselectionhandler-hook) to add selection modes' support.
 
 ### `TreeNodeRenderer`
 
-The component is based on `Tree.Item` component from Stratakit library and supports the following features:
+The component is based on `Tree.Item` component from StrataKit library and supports the following features:
 
 - Reporting click and key down events for use with [`useSelectionHandler` hook](#useselectionhandler-hook).
 - Icons, selection, expand / collapse.
