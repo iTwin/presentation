@@ -178,7 +178,7 @@ type VirtualTreeItemProps = Omit<TreeNodeRendererProps, "node" | "aria-level" | 
 
 const VirtualTreeItem = memo(
   forwardRef<HTMLElement, VirtualTreeItemProps>(function VirtualTreeItem(
-    { start, node, getDecorations, getActions, getLabel, getSublabel, ...props },
+    { start, node, getDecorations, getActions, getLabel, getSublabel, expandNode, error, reloadTree, onNodeClick, onNodeKeyDown, ...props },
     forwardedRef,
   ) {
     const style: CSSProperties = useMemo(
@@ -206,10 +206,15 @@ const VirtualTreeItem = memo(
         aria-posinset={node.posInLevel}
         aria-setsize={node.levelSize}
         node={node}
+        expandNode={expandNode}
+        error={error}
+        reloadTree={reloadTree}
         getDecorations={getDecorations}
         getActions={getActions}
         getLabel={getLabel}
         getSublabel={getSublabel}
+        onNodeClick={onNodeClick}
+        onNodeKeyDown={onNodeKeyDown}
       />
     );
   }),
