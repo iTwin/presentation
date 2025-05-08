@@ -1,5 +1,11 @@
 # @itwin/presentation-hierarchies-react
 
+## 1.6.6
+
+### Patch Changes
+
+- [#944](https://github.com/iTwin/presentation/pull/944): Fixed `extended` selection mode not replacing existing selection when selected node is clicked.
+
 ## 1.6.5
 
 ### Patch Changes
