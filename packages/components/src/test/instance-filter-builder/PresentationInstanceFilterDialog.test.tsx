@@ -20,7 +20,7 @@ import {
   PresentationInstanceFilterDialog,
   PresentationInstanceFilterPropertiesSource,
 } from "../../presentation-components/instance-filter-builder/PresentationInstanceFilterDialog.js";
-import { createTestECClassInfo, stubDOMMatrix, stubGetBoundingClientRect, stubRaf } from "../_helpers/Common.js";
+import { createTestECClassInfo, stubDOMMatrix, stubRaf, stubVirtualization } from "../_helpers/Common.js";
 import { createTestCategoryDescription, createTestContentDescriptor, createTestPropertiesContentField } from "../_helpers/Content.js";
 import {
   act,
@@ -41,7 +41,7 @@ import {
 describe("PresentationInstanceFilterDialog", () => {
   stubRaf();
   stubDOMMatrix();
-  stubGetBoundingClientRect();
+  stubVirtualization();
   const category = createTestCategoryDescription({ name: "root", label: "Root" });
   const classInfo = createTestECClassInfo();
   const stringField = createTestPropertiesContentField({

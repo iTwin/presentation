@@ -26,7 +26,7 @@ import { createBisInstanceLabelSelectClauseFactory, Props } from "@itwin/present
 import { buildIModel } from "../../IModelUtils.js";
 import { initialize, terminate } from "../../IntegrationTests.js";
 import { render, waitFor } from "../../RenderUtils.js";
-import { stubGetBoundingClientRect } from "../../Utils.js";
+import { stubVirtualization } from "../../Utils.js";
 
 // __PUBLISH_EXTRACT_START__ Presentation.HierarchiesReact.iModelAccess
 // Not really part of the package, but we need SchemaContext to create the tree state. It's
@@ -63,7 +63,7 @@ function createIModelAccess(imodel: IModelConnection) {
 describe("Hierarchies React", () => {
   describe("Learning snippets", () => {
     describe("Readme example", () => {
-      stubGetBoundingClientRect();
+      stubVirtualization();
       let iModel: IModelConnection;
 
       beforeEach(async function () {

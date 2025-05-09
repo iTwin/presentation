@@ -9,7 +9,7 @@ import { MAX_LIMIT_OVERRIDE } from "../../presentation-hierarchies-react/interna
 import { TreeRenderer } from "../../presentation-hierarchies-react/itwinui/TreeRenderer.js";
 import { PresentationHierarchyNode, PresentationInfoNode, PresentationTreeNode } from "../../presentation-hierarchies-react/TreeNode.js";
 import { HierarchyLevelDetails } from "../../presentation-hierarchies-react/UseTree.js";
-import { act, createStub, createTestHierarchyNode, render, stubGetBoundingClientRect, waitFor, within } from "../TestUtils.js";
+import { act, createStub, createTestHierarchyNode, render, stubVirtualization, waitFor, within } from "../TestUtils.js";
 
 type RequiredTreeProps = Required<ComponentPropsWithoutRef<typeof TreeRenderer>>;
 
@@ -38,7 +38,7 @@ describe("Tree", () => {
     getHierarchyLevelDetails.reset();
   });
 
-  stubGetBoundingClientRect();
+  stubVirtualization();
 
   it("renders nodes", () => {
     const rootNodes = createNodes([

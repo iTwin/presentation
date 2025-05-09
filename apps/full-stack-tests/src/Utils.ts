@@ -22,25 +22,31 @@ import {
 import { PresentationManager } from "@itwin/presentation-frontend";
 import frontendPackageJson from "@itwin/presentation-frontend/package.json" with { type: "json" };
 
-export function stubGetBoundingClientRect() {
-  let stub: sinon.SinonStub<[], DOMRect>;
+export function stubVirtualization() {
+  let stubs: sinon.SinonStub[] = [];
 
   beforeEach(() => {
-    stub = sinon.stub(window.Element.prototype, "getBoundingClientRect").returns({
-      height: 20,
-      width: 20,
-      x: 0,
-      y: 0,
-      bottom: 0,
-      left: 0,
-      right: 0,
-      top: 0,
-      toJSON: () => {},
-    });
+    stubs.push(sinon.stub(window.HTMLElement.prototype, "offsetHeight").get(() => 800));
+    stubs.push(sinon.stub(window.HTMLElement.prototype, "offsetWidth").get(() => 800));
+
+    stubs.push(
+      sinon.stub(window.Element.prototype, "getBoundingClientRect").returns({
+        height: 20,
+        width: 20,
+        x: 0,
+        y: 0,
+        bottom: 0,
+        left: 0,
+        right: 0,
+        top: 0,
+        toJSON: () => {},
+      }),
+    );
   });
 
   afterEach(() => {
-    stub.restore();
+    stubs.forEach((stub) => stub.restore());
+    stubs = [];
   });
 }
 

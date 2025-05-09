@@ -24,7 +24,7 @@ import { Presentation } from "@itwin/presentation-frontend";
 import { buildIModel } from "../../IModelUtils.js";
 import { initialize, terminate } from "../../IntegrationTests.js";
 import { render, waitFor } from "../../RenderUtils.js";
-import { isSelectionStorageSupported, stubGetBoundingClientRect } from "../../Utils.js";
+import { isSelectionStorageSupported, stubVirtualization } from "../../Utils.js";
 
 describe("Unified selection", () => {
   describe("Learning snippets", () => {
@@ -37,7 +37,7 @@ describe("Unified selection", () => {
         await terminate();
       });
 
-      stubGetBoundingClientRect();
+      stubVirtualization();
 
       it("Unified selection sync with iModel selection", async function () {
         const {
