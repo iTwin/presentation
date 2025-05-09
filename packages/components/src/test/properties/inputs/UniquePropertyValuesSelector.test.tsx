@@ -23,7 +23,13 @@ import { Presentation, PresentationManager } from "@itwin/presentation-frontend"
 import { serializeUniqueValues, UniqueValue } from "../../../presentation-components/common/Utils.js";
 import { ItemsLoader, VALUE_BATCH_SIZE } from "../../../presentation-components/properties/inputs/ItemsLoader.js";
 import { UniquePropertyValuesSelector } from "../../../presentation-components/properties/inputs/UniquePropertyValuesSelector.js";
-import { createTestECClassInfo, createTestPropertyInfo, createTestRelatedClassInfo, createTestRelationshipPath } from "../../_helpers/Common.js";
+import {
+  createTestECClassInfo,
+  createTestPropertyInfo,
+  createTestRelatedClassInfo,
+  createTestRelationshipPath,
+  stubVirtualization,
+} from "../../_helpers/Common.js";
 import {
   createTestCategoryDescription,
   createTestContentDescriptor,
@@ -40,6 +46,7 @@ describe("UniquePropertyValuesSelector", () => {
     ReturnType<PresentationManager["getDistinctValuesIterator"]>
   >();
 
+  stubVirtualization();
   beforeEach(async () => {
     window.innerHeight = 1000;
     const localization = new EmptyLocalization();
@@ -49,18 +56,6 @@ describe("UniquePropertyValuesSelector", () => {
     presentationManagerStub = sinon.stub(Presentation, "presentation").get(() => ({
       getDistinctValuesIterator: getDistinctValuesIteratorStub,
     }));
-
-    sinon.stub(window.Element.prototype, "getBoundingClientRect").returns({
-      height: 20,
-      width: 20,
-      x: 0,
-      y: 0,
-      bottom: 0,
-      left: 0,
-      right: 0,
-      top: 0,
-      toJSON: () => {},
-    });
   });
 
   afterEach(async () => {

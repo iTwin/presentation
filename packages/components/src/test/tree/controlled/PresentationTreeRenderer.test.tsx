@@ -29,7 +29,7 @@ import { PresentationTreeRenderer } from "../../../presentation-components/tree/
 import { PresentationTreeDataProvider } from "../../../presentation-components/tree/DataProvider.js";
 import { IPresentationTreeDataProvider } from "../../../presentation-components/tree/IPresentationTreeDataProvider.js";
 import { PresentationTreeNodeItem } from "../../../presentation-components/tree/PresentationTreeNodeItem.js";
-import { createTestPropertyInfo, stubDOMMatrix, stubGetBoundingClientRect, stubRaf } from "../../_helpers/Common.js";
+import { createTestPropertyInfo, stubDOMMatrix, stubRaf, stubVirtualization } from "../../_helpers/Common.js";
 import { createTestContentDescriptor, createTestPropertiesContentField } from "../../_helpers/Content.js";
 import { act, cleanup, render, waitFor } from "../../TestUtils.js";
 import { createTreeModelNodeInput } from "./Helpers.js";
@@ -37,7 +37,7 @@ import { createTreeModelNodeInput } from "./Helpers.js";
 describe("PresentationTreeRenderer", () => {
   stubRaf();
   stubDOMMatrix();
-  stubGetBoundingClientRect();
+  stubVirtualization();
 
   const baseTreeProps = {
     imodel: {} as IModelConnection,

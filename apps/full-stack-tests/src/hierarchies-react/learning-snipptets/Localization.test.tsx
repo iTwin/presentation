@@ -31,13 +31,13 @@ import {
 // __PUBLISH_EXTRACT_END__
 import { buildIModel } from "../../IModelUtils.js";
 import { render, waitFor } from "../../RenderUtils.js";
-import { stubGetBoundingClientRect } from "../../Utils.js";
+import { stubVirtualization } from "../../Utils.js";
 import { initialize, terminate } from "../../IntegrationTests.js";
 
 describe("Hierarchies React", () => {
   describe("Learning snippets", () => {
     describe("Localization", () => {
-      stubGetBoundingClientRect();
+      stubVirtualization();
       // __PUBLISH_EXTRACT_START__ Presentation.HierarchiesReact.Localization.Strings
       type IModelAccess = Props<typeof useIModelUnifiedSelectionTree>["imodelAccess"];
 

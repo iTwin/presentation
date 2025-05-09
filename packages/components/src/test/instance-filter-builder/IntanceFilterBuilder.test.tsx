@@ -15,13 +15,13 @@ import { Presentation } from "@itwin/presentation-frontend";
 import { translate } from "../../presentation-components/common/Utils.js";
 import { ECClassInfo, getIModelMetadataProvider } from "../../presentation-components/instance-filter-builder/ECMetadataProvider.js";
 import { InstanceFilterBuilder, usePresentationInstanceFilteringProps } from "../../presentation-components/instance-filter-builder/InstanceFilterBuilder.js";
-import { createTestECClassInfo, stubGetBoundingClientRect, stubRaf } from "../_helpers/Common.js";
+import { createTestECClassInfo, stubRaf, stubVirtualization } from "../_helpers/Common.js";
 import { createTestCategoryDescription, createTestContentDescriptor, createTestPropertiesContentField } from "../_helpers/Content.js";
 import { act, fireEvent, render, renderHook, waitFor } from "../TestUtils.js";
 
 describe("InstanceFilterBuilder", () => {
   stubRaf();
-  stubGetBoundingClientRect();
+  stubVirtualization();
   const classInfos: ClassInfo[] = [
     { id: "0x1", name: "Schema:Class1", label: "Class1" },
     { id: "0x2", name: "Schema:Class2", label: "Class2" },
