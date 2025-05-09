@@ -54,7 +54,8 @@ export class PresentationLabelsProvider implements IPresentationLabelsProvider {
     return (await Presentation.presentation.getDisplayLabelDefinition({ imodel: this.imodel, key })).displayValue; // WIP
   }
 
-  private getMemoizedLabel = memoize(this.getLabelInternal, { isMatchingKey: MemoizationHelpers.areLabelRequestsEqual as any });
+  // eslint-disable-next-line @typescript-eslint/unbound-method
+  private getMemoizedLabel = memoize(this.getLabelInternal, { isMatchingKey: areLabelRequestsEqual as any });
 
   /**
    * Returns label for the specified instance key. Memoizes *the last* response.
@@ -94,7 +95,8 @@ export class PresentationLabelsProvider implements IPresentationLabelsProvider {
     });
   }
 
-  private getMemoizedLabels = memoize(this.getLabelsInternal, { isMatchingKey: MemoizationHelpers.areLabelsRequestsEqual as any });
+  // eslint-disable-next-line @typescript-eslint/unbound-method
+  private getMemoizedLabels = memoize(this.getLabelsInternal, { isMatchingKey: areLabelsRequestsEqual as any });
 
   /**
    * Returns labels for the specified instance keys. Memoizes *the last* response.
@@ -105,14 +107,14 @@ export class PresentationLabelsProvider implements IPresentationLabelsProvider {
   }
 }
 
-class MemoizationHelpers {
-  private static areInstanceKeysEqual(lhs: InstanceKey, rhs: InstanceKey) {
-    return lhs.className === rhs.className && lhs.id === rhs.id;
-  }
-  public static areLabelRequestsEqual(lhsArgs: [InstanceKey], rhsArgs: [InstanceKey]): boolean {
-    return MemoizationHelpers.areInstanceKeysEqual(lhsArgs[0], rhsArgs[0]);
-  }
-  public static areLabelsRequestsEqual(lhsArgs: [InstanceKey[]], rhsArgs: [InstanceKey[]]): boolean {
-    return lhsArgs[0].length === rhsArgs[0].length && lhsArgs[0].every((key, index) => MemoizationHelpers.areInstanceKeysEqual(key, rhsArgs[0][index]));
-  }
+function areInstanceKeysEqual(lhs: InstanceKey, rhs: InstanceKey) {
+  return lhs.className === rhs.className && lhs.id === rhs.id;
+}
+
+function areLabelRequestsEqual(lhsArgs: [InstanceKey], rhsArgs: [InstanceKey]): boolean {
+  return areInstanceKeysEqual(lhsArgs[0], rhsArgs[0]);
+}
+
+function areLabelsRequestsEqual(lhsArgs: [InstanceKey[]], rhsArgs: [InstanceKey[]]): boolean {
+  return lhsArgs[0].length === rhsArgs[0].length && lhsArgs[0].every((key, index) => areInstanceKeysEqual(key, rhsArgs[0][index]));
 }

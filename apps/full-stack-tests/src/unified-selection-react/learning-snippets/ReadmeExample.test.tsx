@@ -10,12 +10,12 @@ import { createStorage, Selectables, SelectionStorage } from "@itwin/unified-sel
 import { UnifiedSelectionContextProvider, useUnifiedSelectionContext } from "@itwin/unified-selection-react";
 // __PUBLISH_EXTRACT_END__
 import { render, waitFor } from "../../RenderUtils.js";
-import { stubGetBoundingClientRect } from "../../Utils.js";
+import { stubVirtualization } from "../../Utils.js";
 
 describe("Unified Selection React", () => {
   describe("Learning snippets", () => {
     describe("Readme example", () => {
-      stubGetBoundingClientRect();
+      stubVirtualization();
 
       it("Unified selection context", async function () {
         const imodelKey = "test-imodel-key";

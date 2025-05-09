@@ -17,6 +17,7 @@ import {
   NavigationPropertyTargetSelector,
   NavigationPropertyTargetSelectorProps,
 } from "../../../presentation-components/properties/inputs/NavigationPropertyTargetSelector.js";
+import { stubVirtualization } from "../../_helpers/Common.js";
 import { createTestContentDescriptor, createTestContentItem } from "../../_helpers/Content.js";
 import { render, waitFor } from "../../TestUtils.js";
 
@@ -50,6 +51,7 @@ describe("NavigationPropertyTargetSelector", () => {
 
   const getContentStub = sinon.stub<Parameters<PresentationManager["getContent"]>, ReturnType<PresentationManager["getContent"]>>();
 
+  stubVirtualization();
   before(() => {
     const localization = new EmptyLocalization();
     sinon.stub(IModelApp, "initialized").get(() => true);
@@ -58,18 +60,6 @@ describe("NavigationPropertyTargetSelector", () => {
     sinon.stub(Presentation, "presentation").get(() => ({
       getContent: getContentStub,
     }));
-
-    sinon.stub(window.Element.prototype, "getBoundingClientRect").returns({
-      height: 20,
-      width: 20,
-      x: 0,
-      y: 0,
-      bottom: 0,
-      left: 0,
-      right: 0,
-      top: 0,
-      toJSON: () => {},
-    });
   });
 
   after(() => {

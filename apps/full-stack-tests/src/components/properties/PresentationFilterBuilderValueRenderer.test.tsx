@@ -13,23 +13,13 @@ import { Presentation } from "@itwin/presentation-frontend";
 import { buildIModel, importSchema } from "../../IModelUtils.js";
 import { initialize, terminate } from "../../IntegrationTests.js";
 import { queryByText, render } from "../../RenderUtils.js";
+import { stubVirtualization } from "../../Utils.js";
 
 describe("Presentation filter builder value renderer", () => {
+  stubVirtualization();
   before(async () => {
     await initialize();
     await UiComponents.initialize(IModelApp.localization);
-
-    sinon.stub(window.Element.prototype, "getBoundingClientRect").returns({
-      height: 20,
-      width: 20,
-      x: 0,
-      y: 0,
-      bottom: 0,
-      left: 0,
-      right: 0,
-      top: 0,
-      toJSON: () => {},
-    });
   });
 
   after(async () => {

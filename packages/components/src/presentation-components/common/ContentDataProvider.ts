@@ -438,7 +438,7 @@ export class ContentDataProvider implements IContentDataProvider {
       const content = await Presentation.presentation.getContent(options);
       return content ? { content, size: content.contentSet.length } : undefined;
     },
-    { isMatchingKey: MemoizationHelpers.areContentRequestsEqual as any },
+    { isMatchingKey: areContentRequestsEqual as any },
   );
 
   private onContentUpdate() {
@@ -468,16 +468,14 @@ export class ContentDataProvider implements IContentDataProvider {
   };
 }
 
-class MemoizationHelpers {
-  public static areContentRequestsEqual(lhsArgs: [PageOptions?], rhsArgs: [PageOptions?]): boolean {
-    /* c8 ignore next 3 */
-    if ((lhsArgs[0]?.start ?? 0) !== (rhsArgs[0]?.start ?? 0)) {
-      return false;
-    }
-    /* c8 ignore next 3 */
-    if ((lhsArgs[0]?.size ?? 0) !== (rhsArgs[0]?.size ?? 0)) {
-      return false;
-    }
-    return true;
+function areContentRequestsEqual(lhsArgs: [PageOptions?], rhsArgs: [PageOptions?]): boolean {
+  /* c8 ignore next 3 */
+  if ((lhsArgs[0]?.start ?? 0) !== (rhsArgs[0]?.start ?? 0)) {
+    return false;
   }
+  /* c8 ignore next 3 */
+  if ((lhsArgs[0]?.size ?? 0) !== (rhsArgs[0]?.size ?? 0)) {
+    return false;
+  }
+  return true;
 }

@@ -291,6 +291,18 @@
 
 - [#847](https://github.com/iTwin/presentation/pull/847): Moving tree rendering components to a new design systems.
 
+## 1.6.6
+
+### Patch Changes
+
+- [#944](https://github.com/iTwin/presentation/pull/944): Fixed `extended` selection mode not replacing existing selection when selected node is clicked.
+
+## 1.6.5
+
+### Patch Changes
+
+- [#938](https://github.com/iTwin/presentation/pull/938): Fixed hierarchy level size exceeded message that suggest applying filtering on hierarchy levels that do not support filtering.
+
 ## 1.6.4
 
 ### Patch Changes

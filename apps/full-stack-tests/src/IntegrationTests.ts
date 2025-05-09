@@ -12,14 +12,10 @@ import { IModelApp, IModelAppOptions, NoRenderApp } from "@itwin/core-frontend";
 import { ITwinLocalization } from "@itwin/core-i18n";
 import { ECSchemaRpcInterface } from "@itwin/ecschema-rpcinterface-common";
 import { ECSchemaRpcImpl } from "@itwin/ecschema-rpcinterface-impl";
-import {
-  HierarchyCacheMode,
-  Presentation as PresentationBackend,
-  PresentationBackendNativeLoggerCategory,
-  PresentationProps as PresentationBackendProps,
-} from "@itwin/presentation-backend";
+import { HierarchyCacheMode, Presentation as PresentationBackend, PresentationBackendNativeLoggerCategory } from "@itwin/presentation-backend";
 import { PresentationRpcInterface } from "@itwin/presentation-common";
 import { PresentationProps as PresentationFrontendProps } from "@itwin/presentation-frontend";
+import { Props } from "@itwin/presentation-shared";
 import { initialize as initializePresentation, PresentationTestingInitProps, terminate as terminatePresentation } from "@itwin/presentation-testing";
 
 class IntegrationTestsApp extends NoRenderApp {
@@ -37,7 +33,7 @@ export async function initialize(props?: { backendTimeout?: number }) {
   Logger.setLevel("SQLite", LogLevel.Error);
   Logger.setLevel(PresentationBackendNativeLoggerCategory.ECObjects, LogLevel.Warning);
 
-  const backendInitProps: PresentationBackendProps = {
+  const backendInitProps: NonNullable<Props<typeof initializePresentation>>["backendProps"] = {
     id: `test-${Guid.createValue()}`,
     requestTimeout: props?.backendTimeout ?? 0,
     workerThreadsCount: 1,
@@ -106,7 +102,10 @@ function createTestLocalization(): ITwinLocalization {
             callback(error, { status: 500, data: "" });
           }
         } else {
-          new Backend().options.request!(options, url, payload, callback);
+          // TODO: remove the type assertion when we drop support for itwinjs-core 4.x. It's
+          // currently needed for 4.x regression tests to pass, because in 4.x `resp` is nullable.
+          // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
+          new Backend().options.request!(options, url, payload, (err, resp) => callback(err, resp!));
         }
       },
     },

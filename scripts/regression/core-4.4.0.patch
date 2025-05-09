@@ -1,5 +1,65 @@
+diff --git a/apps/full-stack-tests/src/IModelUtils.ts b/apps/full-stack-tests/src/IModelUtils.ts
+index 9868ec59..9b695982 100644
+--- a/apps/full-stack-tests/src/IModelUtils.ts
++++ b/apps/full-stack-tests/src/IModelUtils.ts
+@@ -7,7 +7,7 @@ import { XMLParser } from "fast-xml-parser";
+ import * as fs from "fs";
+ import hash from "object-hash";
+ import { getFullSchemaXml } from "presentation-test-utilities";
+-import { ECDb, ECSqlWriteStatement, IModelDb } from "@itwin/core-backend";
++import { ECDb, ECSqlStatement, IModelDb } from "@itwin/core-backend";
+ import { BentleyError, DbResult, Guid, Id64, Id64String, OrderedId64Iterable } from "@itwin/core-bentley";
+ import { IModelConnection } from "@itwin/core-frontend";
+ import { Schema, SchemaContext, SchemaInfo, SchemaKey, SchemaMatchType } from "@itwin/ecschema-metadata";
+@@ -44,7 +44,7 @@ export class ECDbBuilder {
+         .map(() => "?")
+         .join(", ")})
+     `;
+-    const binder = (stmt: ECSqlWriteStatement) => {
++    const binder = (stmt: ECSqlStatement) => {
+       Object.values(props).forEach((value, i) => {
+         const bindingIndex = i + 1;
+         switch (typeof value) {
+@@ -116,7 +116,7 @@ export class ECDbBuilder {
+ 
+   public insertInstance(fullClassName: string, props?: { [propertyName: string]: PrimitiveValue | undefined }) {
+     const query = this.createInsertQuery(fullClassName, props);
+-    return this._ecdb.withWriteStatement(query.clause, (stmt) => {
++    return this._ecdb.withStatement(query.clause, (stmt) => {
+       try {
+         query.binder(stmt);
+         const res = stmt.stepForInsert();
+@@ -125,9 +125,6 @@ export class ECDbBuilder {
+         }
+         return { className: fullClassName, id: res.id! };
+       } finally {
+-        // https://github.com/iTwin/itwinjs-core/issues/8040
+-        // eslint-disable-next-line @itwin/no-internal
+-        stmt.stmt[Symbol.dispose]();
+       }
+     });
+   }
+@@ -138,7 +135,7 @@ export class ECDbBuilder {
+       sourceECInstanceId: sourceId,
+       targetECInstanceId: targetId,
+     });
+-    return this._ecdb.withWriteStatement(query.clause, (stmt) => {
++    return this._ecdb.withStatement(query.clause, (stmt) => {
+       try {
+         query.binder(stmt);
+         const res = stmt.stepForInsert();
+@@ -147,9 +144,6 @@ export class ECDbBuilder {
+         }
+         return { className: fullClassName, id: res.id! };
+       } finally {
+-        // https://github.com/iTwin/itwinjs-core/issues/8040
+-        // eslint-disable-next-line @itwin/no-internal
+-        stmt.stmt[Symbol.dispose]();
+       }
+     });
+   }
 diff --git a/apps/full-stack-tests/src/hierarchies/Formatting.test.ts b/apps/full-stack-tests/src/hierarchies/Formatting.test.ts
-index 421adeb0..4a81d757 100644
+index c84d13bd..bbcfc7af 100644
 --- a/apps/full-stack-tests/src/hierarchies/Formatting.test.ts
 +++ b/apps/full-stack-tests/src/hierarchies/Formatting.test.ts
 @@ -12,13 +12,12 @@ import {
@@ -17,7 +77,7 @@ index 421adeb0..4a81d757 100644
  import { IModelConnection } from "@itwin/core-frontend";
  import { createValueFormatter } from "@itwin/presentation-core-interop";
  import { createNodesQueryClauseFactory, HierarchyDefinition } from "@itwin/presentation-hierarchies";
-@@ -465,8 +464,8 @@ describe("Hierarchies", () => {
+@@ -466,8 +465,8 @@ describe("Hierarchies", () => {
  
      describe("Integer", () => {
        it("formats instance node labels", async function () {
@@ -28,7 +88,7 @@ index 421adeb0..4a81d757 100644
          });
          const imodelAccess = createIModelAccess(imodel);
  
-@@ -479,7 +478,7 @@ describe("Hierarchies", () => {
+@@ -480,7 +479,7 @@ describe("Hierarchies", () => {
              if (!parentNode) {
                return [
                  {
@@ -37,7 +97,7 @@ index 421adeb0..4a81d757 100644
                    query: {
                      ecsql: `
                      SELECT ${await selectQueryFactory.createSelectClause({
-@@ -490,15 +489,15 @@ describe("Hierarchies", () => {
+@@ -491,15 +490,15 @@ describe("Hierarchies", () => {
                            { type: "String", value: "[" },
                            await ECSql.createPrimitivePropertyValueSelectorProps({
                              schemaProvider: imodelAccess,
@@ -1895,7 +1955,7 @@ index 97e65eb8..c7a05a84 100644
          "displayLabel": "Label",
          "name": "node_label",
 diff --git a/apps/full-stack-tests/src/unified-selection/learning-snippets/ReadmeExample.test.tsx b/apps/full-stack-tests/src/unified-selection/learning-snippets/ReadmeExample.test.tsx
-index 5347fec7..26566aa5 100644
+index 6f1a5bc2..ec251142 100644
 --- a/apps/full-stack-tests/src/unified-selection/learning-snippets/ReadmeExample.test.tsx
 +++ b/apps/full-stack-tests/src/unified-selection/learning-snippets/ReadmeExample.test.tsx
 @@ -143,6 +143,7 @@ describe("Unified selection", () => {
@@ -1907,7 +1967,7 @@ index 5347fec7..26566aa5 100644
              },
            });
 diff --git a/packages/test-utilities/src/test-utilities/IModelUtils.ts b/packages/test-utilities/src/test-utilities/IModelUtils.ts
-index c2dd0263..87a045b3 100644
+index 477be1c2..8e91d766 100644
 --- a/packages/test-utilities/src/test-utilities/IModelUtils.ts
 +++ b/packages/test-utilities/src/test-utilities/IModelUtils.ts
 @@ -24,7 +24,6 @@ import {
@@ -1918,7 +1978,7 @@ index c2dd0263..87a045b3 100644
    SubCategoryProps,
    SubjectProps,
  } from "@itwin/core-common";
-@@ -475,18 +474,6 @@ export function insertGroupInformationElement(
+@@ -480,18 +479,6 @@ export function insertGroupInformationElement(
    return { className, id };
  }
  

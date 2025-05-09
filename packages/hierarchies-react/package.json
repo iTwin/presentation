@@ -93,6 +93,7 @@
     "@types/chai-as-promised": "catalog:test-tools",
     "@types/jsdom": "catalog:test-tools",
     "@types/mocha": "catalog:test-tools",
+    "@types/node": "catalog:build-tools",
     "@types/react": "catalog:react",
     "@types/react-dom": "catalog:react",
     "@types/sinon": "catalog:test-tools",

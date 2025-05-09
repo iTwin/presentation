@@ -11,11 +11,11 @@ import { BeEvent, BeUiEvent } from "@itwin/core-bentley";
 import { FormattingUnitSystemChangedArgs, IModelApp, IModelConnection, QuantityFormatter } from "@itwin/core-frontend";
 import {
   ClientDiagnosticsAttribute,
+  combineFieldNames,
   Content,
   ContentDescriptorRequestOptions,
   ContentRequestOptions,
   Descriptor,
-  FIELD_NAMES_SEPARATOR,
   Item,
   KeySet,
   Paged,
@@ -665,7 +665,7 @@ describe("ContentDataProvider", () => {
         nestedFields: [nestedField],
       });
       const descriptor = createTestContentDescriptor({ fields: [nestingField] });
-      propertyDescription.name = `${nestingField.name}${FIELD_NAMES_SEPARATOR}${nestedField.name}`;
+      propertyDescription.name = combineFieldNames(nestedField.name, nestingField.name);
 
       presentationManager.getContentDescriptor.resolves(descriptor);
 

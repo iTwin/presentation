@@ -127,7 +127,10 @@ export enum PresentationManagerMode {
 // @public (undocumented)
 export interface PresentationTestingInitProps {
     backendHostProps?: IModelHostOptions;
-    backendProps?: PresentationBackendProps;
+    backendProps?: PresentationBackendProps & {
+        id?: string;
+        requestTimeout?: number;
+    };
     frontendApp?: {
         startup: (opts?: IModelAppOptions) => Promise<void>;
     };

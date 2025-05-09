@@ -25,6 +25,13 @@ if (!coreVersion && !uiVersion) {
   throw new Error("Argument --coreVersion or --uiVersion need to be provided.");
 }
 
+if (coreVersion) {
+  applyGitPatch(`core-${coreVersion}.patch`);
+}
+if (uiVersion) {
+  applyGitPatch(`ui-${uiVersion}.patch`);
+}
+
 const [{ name: workspaceRootName, path: workspaceRootPath }] = JSON.parse(execSync("pnpm list -w --only-projects --json", { encoding: "utf-8" }));
 
 const { corePackages, uiPackages } = parseWorkspaceFile(workspaceRootPath);
@@ -39,13 +46,6 @@ forEachWorkspacePackage((project) => {
     ]);
   }
 });
-
-if (coreVersion) {
-  applyGitPatch(`core-${coreVersion}.patch`);
-}
-if (uiVersion) {
-  applyGitPatch(`ui-${uiVersion}.patch`);
-}
 
 function updatePackageJson(packageJsonPath, updates) {
   const pkgJsonData = JSON.parse(fs.readFileSync(packageJsonPath, { encoding: "utf8" }));

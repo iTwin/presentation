@@ -1,3 +1,63 @@
+diff --git a/apps/full-stack-tests/src/IModelUtils.ts b/apps/full-stack-tests/src/IModelUtils.ts
+index 9868ec59..9b695982 100644
+--- a/apps/full-stack-tests/src/IModelUtils.ts
++++ b/apps/full-stack-tests/src/IModelUtils.ts
+@@ -7,7 +7,7 @@ import { XMLParser } from "fast-xml-parser";
+ import * as fs from "fs";
+ import hash from "object-hash";
+ import { getFullSchemaXml } from "presentation-test-utilities";
+-import { ECDb, ECSqlWriteStatement, IModelDb } from "@itwin/core-backend";
++import { ECDb, ECSqlStatement, IModelDb } from "@itwin/core-backend";
+ import { BentleyError, DbResult, Guid, Id64, Id64String, OrderedId64Iterable } from "@itwin/core-bentley";
+ import { IModelConnection } from "@itwin/core-frontend";
+ import { Schema, SchemaContext, SchemaInfo, SchemaKey, SchemaMatchType } from "@itwin/ecschema-metadata";
+@@ -44,7 +44,7 @@ export class ECDbBuilder {
+         .map(() => "?")
+         .join(", ")})
+     `;
+-    const binder = (stmt: ECSqlWriteStatement) => {
++    const binder = (stmt: ECSqlStatement) => {
+       Object.values(props).forEach((value, i) => {
+         const bindingIndex = i + 1;
+         switch (typeof value) {
+@@ -116,7 +116,7 @@ export class ECDbBuilder {
+ 
+   public insertInstance(fullClassName: string, props?: { [propertyName: string]: PrimitiveValue | undefined }) {
+     const query = this.createInsertQuery(fullClassName, props);
+-    return this._ecdb.withWriteStatement(query.clause, (stmt) => {
++    return this._ecdb.withStatement(query.clause, (stmt) => {
+       try {
+         query.binder(stmt);
+         const res = stmt.stepForInsert();
+@@ -125,9 +125,6 @@ export class ECDbBuilder {
+         }
+         return { className: fullClassName, id: res.id! };
+       } finally {
+-        // https://github.com/iTwin/itwinjs-core/issues/8040
+-        // eslint-disable-next-line @itwin/no-internal
+-        stmt.stmt[Symbol.dispose]();
+       }
+     });
+   }
+@@ -138,7 +135,7 @@ export class ECDbBuilder {
+       sourceECInstanceId: sourceId,
+       targetECInstanceId: targetId,
+     });
+-    return this._ecdb.withWriteStatement(query.clause, (stmt) => {
++    return this._ecdb.withStatement(query.clause, (stmt) => {
+       try {
+         query.binder(stmt);
+         const res = stmt.stepForInsert();
+@@ -147,9 +144,6 @@ export class ECDbBuilder {
+         }
+         return { className: fullClassName, id: res.id! };
+       } finally {
+-        // https://github.com/iTwin/itwinjs-core/issues/8040
+-        // eslint-disable-next-line @itwin/no-internal
+-        stmt.stmt[Symbol.dispose]();
+       }
+     });
+   }
 diff --git a/apps/full-stack-tests/src/testing/ruleset-testing-snapshots/my-test-content.snap b/apps/full-stack-tests/src/testing/ruleset-testing-snapshots/my-test-content.snap
 index 86d72d00..904a52f4 100644
 --- a/apps/full-stack-tests/src/testing/ruleset-testing-snapshots/my-test-content.snap

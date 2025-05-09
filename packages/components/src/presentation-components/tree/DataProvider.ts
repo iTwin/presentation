@@ -286,6 +286,7 @@ export class PresentationTreeDataProvider implements IPresentationTreeDataProvid
         this._onHierarchyLimitExceeded,
       );
     },
+    // eslint-disable-next-line @typescript-eslint/unbound-method
     { isMatchingKey: MemoizationHelpers.areNodesRequestsEqual as any },
   );
 

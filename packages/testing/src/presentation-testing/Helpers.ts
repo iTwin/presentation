@@ -56,7 +56,7 @@ export interface PresentationTestingInitProps {
    */
   rpcs?: RpcInterfaceDefinition[];
   /** Properties for backend initialization */
-  backendProps?: PresentationBackendProps;
+  backendProps?: PresentationBackendProps & { id?: string; requestTimeout?: number };
   /** Properties for `IModelHost` */
   backendHostProps?: IModelHostOptions;
   /** Properties for frontend initialization */
@@ -99,9 +99,8 @@ export const initialize = async (props?: PresentationTestingInitProps) => {
   // init backend
   // make sure backend gets assigned an id which puts its resources into a unique directory
   props.backendProps = props.backendProps ?? {};
-  // eslint-disable-next-line @itwin/no-internal
   if (!props.backendProps.id) {
-    props.backendProps.id = `test-${Guid.createValue()}`; // eslint-disable-line @itwin/no-internal
+    props.backendProps.id = `test-${Guid.createValue()}`;
   }
   await IModelHost.startup({
     cacheDir: join(getTestOutputDir(), ".cache", `${process.pid}`),

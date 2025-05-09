@@ -18,6 +18,7 @@ import {
   NavigationPropertyEditorContextProviderProps,
   useNavigationPropertyEditorContextProviderProps,
 } from "../../../presentation-components/properties/editors/NavigationPropertyEditorContext.js";
+import { stubVirtualization } from "../../_helpers/Common.js";
 import { createTestContentDescriptor, createTestContentItem, createTestPropertiesContentField, createTestSimpleContentField } from "../../_helpers/Content.js";
 import { createTestPropertyRecord } from "../../_helpers/UiComponents.js";
 import { renderHook, render as renderRTL, waitFor } from "../../TestUtils.js";
@@ -43,6 +44,7 @@ describe("<NavigationPropertyTargetEditor />", () => {
   const getContentStub = sinon.stub<Parameters<PresentationManager["getContent"]>, ReturnType<PresentationManager["getContent"]>>();
   const testRecord = createTestPropertyRecord();
 
+  stubVirtualization();
   before(() => {
     const localization = new EmptyLocalization();
     sinon.stub(IModelApp, "initialized").get(() => true);
@@ -51,18 +53,6 @@ describe("<NavigationPropertyTargetEditor />", () => {
     sinon.stub(Presentation, "presentation").get(() => ({
       getContent: getContentStub,
     }));
-
-    sinon.stub(window.Element.prototype, "getBoundingClientRect").returns({
-      height: 20,
-      width: 20,
-      x: 0,
-      y: 0,
-      bottom: 0,
-      left: 0,
-      right: 0,
-      top: 0,
-      toJSON: () => {},
-    });
   });
 
   after(() => {

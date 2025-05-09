@@ -15,13 +15,13 @@ import { PresentationTree, PresentationTreeRenderer, usePresentationTreeState } 
 import { buildTestIModel } from "@itwin/presentation-testing";
 import { initialize, terminate } from "../../IntegrationTests.js";
 import { getByPlaceholderText, getByRole, getByTitle, render, waitFor } from "../../RenderUtils.js";
-import { stubGetBoundingClientRect } from "../../Utils.js";
+import { stubVirtualization } from "../../Utils.js";
 import { getNodeByLabel, toggleExpandNode } from "../TreeUtils.js";
 
 describe("Learning snippets", () => {
   describe("Tree", () => {
     stubGlobals();
-    stubGetBoundingClientRect();
+    stubVirtualization();
 
     before(async () => {
       await initialize();
