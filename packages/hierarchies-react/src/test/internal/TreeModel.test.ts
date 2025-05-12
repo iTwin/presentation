@@ -5,14 +5,8 @@
 
 import { expect } from "chai";
 import { GenericInstanceFilter } from "@itwin/presentation-hierarchies";
-import { isTreeModelHierarchyNode, isTreeModelInfoNode, TreeModel } from "../../presentation-hierarchies-react/internal/TreeModel.js";
-import {
-  createTestHierarchyNode,
-  createTestModelGenericInfoNode,
-  createTestModelNoFilterMatchesInfoNode,
-  createTreeModel,
-  getHierarchyNode,
-} from "../TestUtils.js";
+import { isTreeModelHierarchyNode, TreeModel } from "../../presentation-hierarchies-react/internal/TreeModel.js";
+import { createTestHierarchyNode, createTestModelGenericError, createTestModelNoFilterMatchesError, createTreeModel, getHierarchyNode } from "../TestUtils.js";
 
 describe("TreeModel", () => {
   describe("expandNode", () => {
@@ -127,7 +121,7 @@ describe("TreeModel", () => {
           children: ["info-1"],
         },
         {
-          ...createTestModelGenericInfoNode({ id: "info-1" }),
+          ...createTestModelGenericError({ id: "info-1" }),
         },
       ]);
 
@@ -148,7 +142,7 @@ describe("TreeModel", () => {
           children: ["info-1"],
         },
         {
-          ...createTestModelNoFilterMatchesInfoNode({ id: "info-1" }),
+          ...createTestModelNoFilterMatchesError({ id: "info-1" }),
         },
       ]);
 
@@ -764,11 +758,11 @@ describe("TreeModel", () => {
           id: "root-3",
           isSelected: false,
         },
-        {
-          id: "root-4",
-          type: "Unknown",
-          message: "info",
-        },
+        // {
+        //   id: "root-4",
+        //   type: "Unknown",
+        //   message: "info",
+        // },
       ]);
 
       TreeModel.selectNodes(model, ["root-2", "root-3"], "replace");
@@ -856,11 +850,11 @@ describe("isTreeModelHierarchyNode", () => {
   });
 });
 
-describe("isTreeModelInfoNode", () => {
-  it("returns correct result", () => {
-    expect(isTreeModelInfoNode({ id: undefined, nodeData: undefined })).to.be.false;
-    expect(isTreeModelInfoNode({ id: "info-node", parentId: undefined, type: "Unknown", message: "info" })).to.be.true;
-    expect(isTreeModelInfoNode({ id: "hierarchy-node", label: "Node", children: false, nodeData: createTestHierarchyNode({ id: "hierarchy-node" }) })).to.be
-      .false;
-  });
-});
+// describe("isTreeModelInfoNode", () => {
+//   it("returns correct result", () => {
+//     expect(isTreeModelInfoNode({ id: undefined, nodeData: undefined })).to.be.false;
+//     expect(isTreeModelInfoNode({ id: "info-node", parentId: undefined, type: "Unknown", message: "info" })).to.be.true;
+//     expect(isTreeModelInfoNode({ id: "hierarchy-node", label: "Node", children: false, nodeData: createTestHierarchyNode({ id: "hierarchy-node" }) })).to.be
+//       .false;
+//   });
+// });

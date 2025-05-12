@@ -13,6 +13,7 @@ export interface TreeModelRootNode {
   hierarchyLimit?: number | "unbounded";
   instanceFilter?: GenericInstanceFilter;
   isLoading?: boolean;
+  error?: TreeModelError;
 }
 
 /** @internal */
@@ -26,10 +27,11 @@ export interface TreeModelHierarchyNode {
   isSelected?: boolean;
   hierarchyLimit?: number | "unbounded";
   instanceFilter?: GenericInstanceFilter;
+  error?: TreeModelError;
 }
 
 /** @internal */
-export interface TreeModelGenericInfoNode {
+export interface TreeModelGenericError {
   id: string;
   parentId: string | undefined;
   type: "Unknown";
@@ -37,14 +39,14 @@ export interface TreeModelGenericInfoNode {
 }
 
 /** @internal */
-export interface TreeModelNoFilterMatchesInfoNode {
+export interface TreeModelNoFilterMatchesError {
   id: string;
   parentId: string | undefined;
   type: "NoFilterMatches";
 }
 
 /** @internal */
-export interface TreeModelResultSetTooLargeInfoNode {
+export interface TreeModelResultSetTooLargeError {
   id: string;
   parentId: string | undefined;
   type: "ResultSetTooLarge";
@@ -52,25 +54,17 @@ export interface TreeModelResultSetTooLargeInfoNode {
 }
 
 /** @internal */
-export type TreeModelInfoNode = TreeModelGenericInfoNode | TreeModelResultSetTooLargeInfoNode | TreeModelNoFilterMatchesInfoNode;
+export type TreeModelError = TreeModelGenericError | TreeModelResultSetTooLargeError | TreeModelNoFilterMatchesError;
 
 /** @internal */
-export type TreeModelNode = TreeModelHierarchyNode | TreeModelInfoNode;
-
-/** @internal */
-export function isTreeModelHierarchyNode(node: TreeModelHierarchyNode | TreeModelInfoNode | TreeModelRootNode): node is TreeModelHierarchyNode {
+export function isTreeModelHierarchyNode(node: TreeModelHierarchyNode | TreeModelError | TreeModelRootNode): node is TreeModelHierarchyNode {
   return "nodeData" in node && node.nodeData !== undefined;
-}
-
-/** @internal */
-export function isTreeModelInfoNode(node: TreeModelHierarchyNode | TreeModelInfoNode | TreeModelRootNode): node is TreeModelInfoNode {
-  return "type" in node && node.type !== undefined;
 }
 
 /** @internal */
 export interface TreeModel {
   parentChildMap: Map<string | undefined, string[]>;
-  idToNode: Map<string, TreeModelNode>;
+  idToNode: Map<string, TreeModelHierarchyNode>;
   rootNode: TreeModelRootNode;
 }
 
@@ -78,7 +72,7 @@ export interface TreeModel {
 export namespace TreeModel {
   export function expandNode(model: TreeModel, nodeId: string, isExpanded: boolean): "none" | "loadChildren" | "reloadChildren" {
     const node = model.idToNode.get(nodeId);
-    if (!node || !isTreeModelHierarchyNode(node)) {
+    if (!node) {
       return "none";
     }
 
@@ -98,7 +92,7 @@ export namespace TreeModel {
     }
 
     const firstChild = TreeModel.getNode(model, children[0]);
-    if (!firstChild || !isTreeModelInfoNode(firstChild) || firstChild.type !== "Unknown") {
+    if (!firstChild || firstChild.error?.type !== "Unknown") {
       return "none";
     }
 
@@ -122,13 +116,14 @@ export namespace TreeModel {
 
     const parentNode = rootId !== undefined ? model.idToNode.get(rootId) : model.rootNode;
     /* c8 ignore next 3*/
-    if (!parentNode || isTreeModelInfoNode(parentNode)) {
+    if (!parentNode) {
       return;
     }
     parentNode.isLoading = false;
   }
 
   export function removeSubTree(model: TreeModel, parentId: string | undefined): void {
+    clearNodeError(model, parentId);
     const currentChildren = model.parentChildMap.get(parentId);
     if (!currentChildren) {
       return;
@@ -137,7 +132,7 @@ export namespace TreeModel {
 
     for (const childId of currentChildren) {
       const childNode = model.idToNode.get(childId);
-      if (childNode && isTreeModelHierarchyNode(childNode)) {
+      if (childNode) {
         removeSubTree(model, childNode.id);
       }
       model.idToNode.delete(childId);
@@ -152,7 +147,7 @@ export namespace TreeModel {
 
   export function setInstanceFilter(model: TreeModel, nodeId: string | undefined, filter?: GenericInstanceFilter): boolean {
     return updateForReload(model, nodeId, (node) => {
-      if (filter && isTreeModelHierarchyNode(node)) {
+      if (filter && node.id !== undefined) {
         node.isExpanded = true;
       }
       node.instanceFilter = filter;
@@ -162,16 +157,13 @@ export namespace TreeModel {
   export function selectNodes(model: TreeModel, nodeIds: Array<string>, changeType: SelectionChangeType) {
     if (changeType === "replace") {
       for (const [nodeId, node] of model.idToNode) {
-        if (!isTreeModelHierarchyNode(node)) {
-          continue;
-        }
         node.isSelected = !!nodeIds.find((id) => id === nodeId);
       }
       return;
     }
     for (const nodeId of nodeIds) {
       const modelNode = model.idToNode.get(nodeId);
-      if (!modelNode || !isTreeModelHierarchyNode(modelNode)) {
+      if (!modelNode) {
         return;
       }
       modelNode.isSelected = changeType === "add";
@@ -180,10 +172,10 @@ export namespace TreeModel {
 
   export function isNodeSelected(model: TreeModel, nodeId: string): boolean {
     const currentNode = model.idToNode.get(nodeId);
-    return !!currentNode && isTreeModelHierarchyNode(currentNode) && !!currentNode.isSelected;
+    return !!currentNode && !!currentNode.isSelected;
   }
 
-  export function getNode(model: TreeModel, nodeId: string | undefined): TreeModelNode | TreeModelRootNode | undefined {
+  export function getNode(model: TreeModel, nodeId: string | undefined): TreeModelHierarchyNode | TreeModelRootNode | undefined {
     if (!nodeId) {
       return model.rootNode;
     }
@@ -197,7 +189,7 @@ export namespace TreeModel {
     }
     const modelNode = model.idToNode.get(nodeId);
     /* c8 ignore next 3*/
-    if (!modelNode || !isTreeModelHierarchyNode(modelNode)) {
+    if (!modelNode) {
       return;
     }
     modelNode.isLoading = isLoading;
@@ -213,7 +205,7 @@ function updateForReload(model: TreeModel, nodeId: string | undefined, update: (
   }
 
   const modelNode = model.idToNode.get(nodeId);
-  if (!modelNode || !isTreeModelHierarchyNode(modelNode)) {
+  if (!modelNode) {
     return false;
   }
 
@@ -223,4 +215,15 @@ function updateForReload(model: TreeModel, nodeId: string | undefined, update: (
     return true;
   }
   return false;
+}
+
+function clearNodeError(model: TreeModel, parentId: string | undefined) {
+  if (!parentId) {
+    return (model.rootNode.error = undefined);
+  }
+  const node = model.idToNode.get(parentId);
+  if (!node) {
+    return;
+  }
+  node.error = undefined;
 }

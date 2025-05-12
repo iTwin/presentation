@@ -12,13 +12,11 @@ import { configure, RenderOptions, RenderResult, render as renderRTL } from "@te
 import { userEvent, UserEvent } from "@testing-library/user-event";
 import {
   isTreeModelHierarchyNode,
-  isTreeModelInfoNode,
   TreeModel,
-  TreeModelGenericInfoNode,
+  TreeModelGenericError,
   TreeModelHierarchyNode,
-  TreeModelInfoNode,
-  TreeModelNoFilterMatchesInfoNode,
-  TreeModelResultSetTooLargeInfoNode,
+  TreeModelNoFilterMatchesError,
+  TreeModelResultSetTooLargeError,
 } from "../presentation-hierarchies-react/internal/TreeModel.js";
 
 configure({ reactStrictMode: true });
@@ -46,12 +44,8 @@ export function getHierarchyNode(model: TreeModel, id: string | undefined) {
   return node && isTreeModelHierarchyNode(node) ? node : undefined;
 }
 
-type ModelInputNode = (Partial<Omit<TreeModelHierarchyNode, "children" | "id">> & { id: string | undefined; children?: string[] }) | TreeModelInfoNode;
+type ModelInputNode = Partial<Omit<TreeModelHierarchyNode, "children" | "id">> & { id: string | undefined; children?: string[] };
 type ModelInput = Array<ModelInputNode>;
-
-function isModelInputInfoNode(node: ModelInputNode): node is TreeModelInfoNode {
-  return isTreeModelInfoNode(node as TreeModelInfoNode);
-}
 
 export function createTreeModel(seed: ModelInput) {
   const model: TreeModel = {
@@ -61,11 +55,6 @@ export function createTreeModel(seed: ModelInput) {
   };
 
   for (const input of seed) {
-    if (isModelInputInfoNode(input)) {
-      model.idToNode.set(input.id, input);
-      continue;
-    }
-
     if (input.children) {
       model.parentChildMap.set(input.id, input.children);
     }
@@ -100,7 +89,7 @@ export function createTreeModelNode(props: Partial<TreeModelHierarchyNode> & { i
   };
 }
 
-export function createTestModelGenericInfoNode({ id, ...props }: Partial<TreeModelGenericInfoNode> & { id: string }): TreeModelGenericInfoNode {
+export function createTestModelGenericError({ id, ...props }: Partial<TreeModelGenericError> & { id: string }): TreeModelGenericError {
   return {
     ...props,
     id,
@@ -110,10 +99,7 @@ export function createTestModelGenericInfoNode({ id, ...props }: Partial<TreeMod
   };
 }
 
-export function createTestModelNoFilterMatchesInfoNode({
-  id,
-  ...props
-}: Partial<TreeModelNoFilterMatchesInfoNode> & { id: string }): TreeModelNoFilterMatchesInfoNode {
+export function createTestModelNoFilterMatchesError({ id, ...props }: Partial<TreeModelNoFilterMatchesError> & { id: string }): TreeModelNoFilterMatchesError {
   return {
     ...props,
     id,
@@ -122,10 +108,10 @@ export function createTestModelNoFilterMatchesInfoNode({
   };
 }
 
-export function createTestModelResultSetTooLargeInfoNode({
+export function createTestModelResultSetTooLargeError({
   id,
   ...props
-}: Partial<TreeModelResultSetTooLargeInfoNode> & { id: string }): TreeModelResultSetTooLargeInfoNode {
+}: Partial<TreeModelResultSetTooLargeError> & { id: string }): TreeModelResultSetTooLargeError {
   return {
     ...props,
     id,

@@ -6,79 +6,64 @@
 import { HierarchyNode } from "@itwin/presentation-hierarchies";
 
 /**
- * A type that defines an actual expandable node in a UI tree component, built with `useTree` hook.
+ * A type that defines an node in a UI tree component, built with `useTree` hook.
  * @public
  */
 export interface PresentationHierarchyNode {
   id: string;
   label: string;
-  children: true | Array<PresentationTreeNode>;
+  children: true | Array<PresentationHierarchyNode>;
   isExpanded: boolean;
   isLoading: boolean;
   isFilterable: boolean;
   isFiltered: boolean;
   /** UI-agnostic source of this node object. */
   nodeData: HierarchyNode;
+  /** Contains error encountered from expanding the node */
+  error?: PresentationError;
 }
 
 /**
- * A type of `PresentationInfoNode` that is returned as the single child of a filtered parent node,
+ * A type of `PresentationError` that is returned,
  * when none of the child nodes match the filter.
  *
  * @public
  */
-export interface PresentationNoFilterMatchesInfoNode {
+export interface PresentationNoFilterMatchesError {
   id: string;
-  parentNodeId: string | undefined;
   type: "NoFilterMatches";
 }
 
 /**
- * A type of `PresentationInfoNode` that is returned as the single child of a parent node, when the
+ * A type of `PresentationError` that is returned, when the
  * number of child nodes exceeds the limit set on the tree nodes loader. The limit is also included
- * on this node as `resultSetSizeLimit` attribute.
+ * on this error as `resultSetSizeLimit` attribute.
  *
  * @public
  */
-export interface PresentationResultSetTooLargeInfoNode {
+export interface PresentationResultSetTooLargeError {
   id: string;
-  parentNodeId: string | undefined;
   type: "ResultSetTooLarge";
   resultSetSizeLimit: number;
 }
 
 /**
- * A type of `PresentationInfoNode` that contains a user-friendly message to be displayed in the UI.
- * Generally, this is the only child of a parent node, created in cases like an error loading children. The
+ * A type of `PresentationError` that contains a user-friendly message to be displayed in the UI.
+ * Created in cases like an error loading children. The
  * renderer may offer users to re-load the children or the whole component in such cases.
  *
  * @public
  */
-export interface PresentationGenericInfoNode {
+export interface PresentationGenericError {
   id: string;
-  parentNodeId: string | undefined;
   type: "Unknown";
   message: string;
 }
 
 /**
- * A type that defines a non-expandable, non-selectable informational node in a UI tree component, built
+ * A collection of types that defines an error state for `PresentationHierarchyNode` node in a UI tree component, built
  * with `useTree` hook.
  *
  * @public
  */
-export type PresentationInfoNode = PresentationGenericInfoNode | PresentationResultSetTooLargeInfoNode | PresentationNoFilterMatchesInfoNode;
-
-/**
- * A type that defines a node in a UI tree component, built with `useTree` hook.
- * @public
- */
-export type PresentationTreeNode = PresentationHierarchyNode | PresentationInfoNode;
-
-/**
- * An utility function to check if a node is a `PresentationHierarchyNode`.
- * @public
- */
-export function isPresentationHierarchyNode(node: PresentationTreeNode): node is PresentationHierarchyNode {
-  return "children" in node;
-}
+export type PresentationError = PresentationGenericError | PresentationResultSetTooLargeError | PresentationNoFilterMatchesError;

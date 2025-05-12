@@ -9,7 +9,7 @@ import { buffer, debounceTime, EMPTY, groupBy, map, mergeMap, Observable, reduce
 import { GenericInstanceFilter, HierarchyNode, HierarchyProvider } from "@itwin/presentation-hierarchies";
 import { SelectionChangeType } from "../UseSelectionHandler.js";
 import { HierarchyLevelOptions, ITreeLoader, LoadedTreePart, LoadNodesOptions, TreeLoader } from "./TreeLoader.js";
-import { isTreeModelHierarchyNode, isTreeModelInfoNode, TreeModel, TreeModelHierarchyNode, TreeModelNode, TreeModelRootNode } from "./TreeModel.js";
+import { isTreeModelHierarchyNode, TreeModel, TreeModelError, TreeModelHierarchyNode, TreeModelRootNode } from "./TreeModel.js";
 import { createNodeId, sameNodes } from "./Utils.js";
 
 enableMapSet();
@@ -78,14 +78,14 @@ export class TreeActions {
             }),
             switchMap((props) =>
               this._loader.loadNodes(props.loadOptions).pipe(
-                collectTreePartsUntil(this._reset, props.initialRootNode),
+                collectTreePartsUntil(this._reset, props.loadOptions.parent, props.initialRootNode),
                 tap({
                   next: (newModel: TreeModel) => {
                     const childNodes = newModel.parentChildMap.get(props.parentId);
                     const firstChildNode = childNodes?.length ? newModel.idToNode.get(childNodes[0]) : undefined;
                     this.handleLoadedHierarchy(props.parentId, newModel);
                     // only report load duration if no error occurs
-                    if (!(firstChildNode && isTreeModelInfoNode(firstChildNode))) {
+                    if (!firstChildNode) {
                       props.timeTracker?.finish();
                     }
                   },
@@ -109,6 +109,9 @@ export class TreeActions {
     const newModel = produce(this._currentModel, updater);
     if (this._currentModel === newModel) {
       return;
+    }
+
+    if (newModel.rootNode.error) {
     }
 
     this._currentModel = newModel;
@@ -145,10 +148,9 @@ export class TreeActions {
   private loadNodes(parentId: string, ignoreCache?: boolean) {
     const parentNode = this._currentModel.idToNode.get(parentId);
     /* c8 ignore next 3 */
-    if (!parentNode || !isTreeModelHierarchyNode(parentNode)) {
+    if (!parentNode) {
       return { complete: Promise.resolve() };
     }
-
     return this.loadSubTree({
       parent: parentNode,
       getHierarchyLevelOptions: (node) => createHierarchyLevelOptions(this._currentModel, getNonGroupedParentId(node, this._nodeIdFactory)),
@@ -181,7 +183,7 @@ export class TreeActions {
 
     const rootNode = parentId !== undefined ? this.getNode(parentId) : currModel.rootNode;
     /* c8 ignore next 3 */
-    if (!rootNode || isTreeModelInfoNode(rootNode)) {
+    if (!rootNode) {
       return { complete: Promise.resolve() };
     }
 
@@ -218,7 +220,7 @@ export class TreeActions {
       : /* c8 ignore next */ new NoopTreeLoader();
   }
 
-  public getNode(nodeId: string | undefined): TreeModelNode | TreeModelRootNode | undefined {
+  public getNode(nodeId: string | undefined): TreeModelHierarchyNode | TreeModelRootNode | undefined {
     return TreeModel.getNode(this._currentModel, nodeId);
   }
 
@@ -284,12 +286,16 @@ export class TreeActions {
   }
 }
 
-function collectTreePartsUntil(untilNotifier: Observable<void>, rootNode?: TreeModelRootNode) {
+function collectTreePartsUntil(untilNotifier: Observable<void>, parent: TreeModelHierarchyNode | TreeModelRootNode, rootNode?: TreeModelRootNode) {
   return (source: Observable<LoadedTreePart>) =>
     source.pipe(
       reduce<LoadedTreePart, TreeModel>(
         (treeModel, loadedPart) => {
-          addNodesToModel(treeModel, loadedPart);
+          if (!isTreeModelHierarchyNode(loadedPart.loadedNodes[0])) {
+            addErrorToModel(treeModel, loadedPart.loadedNodes[0], parent);
+          } else {
+            addNodesToModel(treeModel, loadedPart.loadedNodes as TreeModelHierarchyNode[], loadedPart.parentId);
+          }
           return treeModel;
         },
         {
@@ -302,23 +308,32 @@ function collectTreePartsUntil(untilNotifier: Observable<void>, rootNode?: TreeM
     );
 }
 
-function addNodesToModel(model: TreeModel, hierarchyPart: LoadedTreePart) {
+function addErrorToModel(model: TreeModel, error: TreeModelError, parent: TreeModelHierarchyNode | TreeModelRootNode) {
+  if (parent.id === undefined) {
+    model.rootNode.error = error;
+    return;
+  }
+  model.idToNode.set(parent.id, { ...parent, error });
+  return;
+}
+
+function addNodesToModel(model: TreeModel, loadedNodes: TreeModelHierarchyNode[], parentId?: string) {
   model.parentChildMap.set(
-    hierarchyPart.parentId,
-    hierarchyPart.loadedNodes.map((node) => node.id),
+    parentId,
+    loadedNodes.map((node) => node.id),
   );
-  for (const node of hierarchyPart.loadedNodes) {
+  for (const node of loadedNodes) {
     model.idToNode.set(node.id, node);
   }
-  const parentNode = hierarchyPart.parentId ? model.idToNode.get(hierarchyPart.parentId) : undefined;
-  if (parentNode && isTreeModelHierarchyNode(parentNode)) {
+  const parentNode = parentId ? model.idToNode.get(parentId) : undefined;
+  if (parentNode) {
     parentNode.isExpanded = true;
   }
 }
 
 function addAttributes(node: TreeModelHierarchyNode, oldModel: TreeModel) {
   const oldNode = oldModel.idToNode.get(node.id);
-  if (oldNode && isTreeModelHierarchyNode(oldNode)) {
+  if (oldNode) {
     node.hierarchyLimit = oldNode.hierarchyLimit;
     node.instanceFilter = oldNode.instanceFilter;
     node.isSelected = oldNode.isSelected;
@@ -337,7 +352,7 @@ function collectNodes(parentId: string | undefined, model: TreeModel, pred: (nod
   }
 
   const currNode = model.idToNode.get(parentId);
-  if (!currNode || !isTreeModelHierarchyNode(currNode) || !pred(currNode)) {
+  if (!currNode || !pred(currNode)) {
     return [];
   }
 
@@ -362,7 +377,7 @@ function createHierarchyLevelOptions(model: TreeModel, nodeId: string | undefine
   }
 
   const modelNode = model.idToNode.get(nodeId);
-  if (!modelNode || isTreeModelInfoNode(modelNode)) {
+  if (!modelNode) {
     return { instanceFilter: undefined, hierarchyLevelSizeLimit: undefined };
   }
   return { instanceFilter: modelNode.instanceFilter, hierarchyLevelSizeLimit: modelNode.hierarchyLimit };

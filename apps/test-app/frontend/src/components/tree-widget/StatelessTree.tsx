@@ -22,6 +22,7 @@ import {
   FilterAction,
   HierarchyLevelDetails,
   PresentationHierarchyNode,
+  RootErrorRenderer,
   TreeRenderer,
   useIModelUnifiedSelectionTree,
 } from "@itwin/presentation-hierarchies-react";
@@ -44,7 +45,7 @@ export function StatelessTreeV2({ imodel, ...props }: { imodel: IModelConnection
       imodelKey: imodel.key,
       ...schemaProvider,
       ...createCachingECClassHierarchyInspector({ schemaProvider }),
-      ...createLimitingECSqlQueryExecutor(createECSqlQueryExecutor(imodel), 1000),
+      ...createLimitingECSqlQueryExecutor(createECSqlQueryExecutor(imodel), 1),
     });
   }, [imodel]);
 
@@ -85,6 +86,7 @@ function Tree({ imodel, imodelAccess, height, width }: { imodel: IModelConnectio
 
   const {
     rootNodes,
+    rootError,
     isLoading,
     reloadTree,
     setFormatter,
@@ -173,6 +175,18 @@ function Tree({ imodel, imodelAccess, height, width }: { imodel: IModelConnectio
   );
 
   const renderContent = () => {
+    if (rootError) {
+      return <RootErrorRenderer error={rootError} reloadTree={reloadTree} getHierarchyLevelDetails={treeProps.getHierarchyLevelDetails} />;
+    }
+
+    if (!rootNodes) {
+      return (
+        <Flex alignItems="center" justifyContent="center" flexDirection="column" style={{ height: "100%" }}>
+          <Text isMuted> Loading </Text>
+        </Flex>
+      );
+    }
+
     if (rootNodes && rootNodes.length === 0 && filter) {
       return (
         <Flex alignItems="center" justifyContent="center" flexDirection="column" style={{ height: "100%" }}>
@@ -185,7 +199,7 @@ function Tree({ imodel, imodelAccess, height, width }: { imodel: IModelConnectio
       <TreeRenderer
         {...treeProps}
         style={{ height: "100%", width: "100%" }}
-        rootNodes={rootNodes ?? []}
+        rootNodes={rootNodes}
         reloadTree={reloadTree}
         onFilterClick={setFilteringOptions}
         getActions={getActions}
@@ -196,7 +210,7 @@ function Tree({ imodel, imodelAccess, height, width }: { imodel: IModelConnectio
   };
 
   const renderLoadingOverlay = () => {
-    if (rootNodes !== undefined && !isLoading) {
+    if (rootNodes !== undefined || !isLoading) {
       return <></>;
     }
     return (

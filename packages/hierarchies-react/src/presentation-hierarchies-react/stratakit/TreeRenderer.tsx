@@ -6,13 +6,12 @@
 import { ComponentPropsWithoutRef, CSSProperties, forwardRef, memo, ReactElement, useCallback, useEffect, useMemo, useRef } from "react";
 import { Tree } from "@stratakit/bricks";
 import { useVirtualizer } from "@tanstack/react-virtual";
-import { PresentationTreeNode } from "../TreeNode.js";
+import { PresentationHierarchyNode } from "../TreeNode.js";
 import { SelectionMode, useSelectionHandler } from "../UseSelectionHandler.js";
 import { useTree } from "../UseTree.js";
 import { useEvent } from "../Utils.js";
-import { ErrorNode, FlatTreeNode, isPlaceholderNode, useErrorList, useFlatTreeNodeList } from "./FlatTreeNode.js";
+import { ErrorItem, FlatTreeNode, isPlaceholderNode, useErrorList, useFlatTreeNodeList } from "./FlatTreeNode.js";
 import { LocalizationContextProvider } from "./LocalizationContext.js";
-import { RootErrorRenderer, RootErrorRendererProps } from "./RootErrorRenderer.js";
 import { TreeErrorRenderer, TreeErrorRendererProps } from "./TreeErrorRenderer.js";
 import { PlaceholderNode, TreeNodeRenderer } from "./TreeNodeRenderer.js";
 
@@ -25,13 +24,11 @@ export type TreeNodeRendererProps = ComponentPropsWithoutRef<typeof TreeNodeRend
 /** @alpha */
 interface TreeRendererOwnProps {
   /** Root nodes of the tree. */
-  rootNodes: PresentationTreeNode[];
+  rootNodes: PresentationHierarchyNode[];
   /** Active selection mode used by the tree. Defaults to `"single"`. */
   selectionMode?: SelectionMode;
   /** A render function for errors' display component. Defaults to `<TreeErrorRenderer />`. */
   errorRenderer?: (props: TreeErrorRendererProps) => ReactElement;
-  /** A render function for root errors' display component. Defaults to `<RootErrorRenderer />`. */
-  rootErrorRenderer?: (props: RootErrorRendererProps) => ReactElement;
 }
 
 /** @alpha */
@@ -50,35 +47,10 @@ type TreeRendererProps = Pick<ReturnType<typeof useTree>, "expandNode"> &
  * @see https://itwinui.bentley.com/docs/tree
  * @alpha
  */
-export function TreeRenderer({ rootNodes, selectNodes, selectionMode, rootErrorRenderer, ...treeProps }: TreeRendererProps) {
-  const { onNodeClick, onNodeKeyDown } = useSelectionHandler({
-    rootNodes,
-    selectNodes: selectNodes ?? noopSelectNodes,
-    selectionMode: selectionMode ?? "single",
-  });
-  const handleNodeClick = useEvent(onNodeClick);
-  const handleKeyDown = useEvent(onNodeKeyDown);
-  const flatNodes = useFlatTreeNodeList(rootNodes);
-  const errorList = useErrorList(rootNodes);
-
-  if (flatNodes.length === 0 && errorList.length > 0) {
-    return rootErrorRenderer ? (
-      rootErrorRenderer({
-        errorNode: errorList[0],
-        getHierarchyLevelDetails: treeProps.getHierarchyLevelDetails,
-        reloadTree: treeProps.reloadTree,
-      })
-    ) : (
-      <RootErrorRenderer errorNode={errorList[0]} reloadTree={treeProps.reloadTree} getHierarchyLevelDetails={treeProps.getHierarchyLevelDetails} />
-    );
-  }
-
-  return <TreeHierarchyRenderer onNodeClick={handleNodeClick} onNodeKeyDown={handleKeyDown} flatNodes={flatNodes} errorList={errorList} {...treeProps} />;
-}
-
-function TreeHierarchyRenderer({
-  flatNodes,
-  errorList,
+export function TreeRenderer({
+  rootNodes,
+  selectNodes,
+  selectionMode,
   expandNode,
   localizedStrings,
   getHierarchyLevelDetails,
@@ -86,17 +58,22 @@ function TreeHierarchyRenderer({
   reloadTree,
   isNodeSelected,
   errorRenderer,
+  onNodeClick: onNodeClickOverride,
+  onNodeKeyDown: onNodeKeyDownOverride,
   ...treeProps
-}: Omit<TreeRendererProps, "rootNodes" | "selectionMode" | " selectNodes"> & { flatNodes: FlatTreeNode[]; errorList: ErrorNode[] }) {
+}: Omit<TreeRendererProps, "rootNodes" | "rootError"> & { rootNodes: PresentationHierarchyNode[] }) {
+  const { onNodeClick, onNodeKeyDown } = useSelectionHandler({
+    rootNodes,
+    selectNodes: selectNodes ?? noopSelectNodes,
+    selectionMode: selectionMode ?? "single",
+  });
+  const handleNodeClick = useEvent(onNodeClickOverride ?? onNodeClick);
+  const handleKeyDown = useEvent(onNodeKeyDownOverride ?? onNodeKeyDown);
+  const flatNodes = useFlatTreeNodeList(rootNodes);
+  const errorList = useErrorList(rootNodes);
+
   const scrollToNode = useRef<string | undefined>(undefined);
   const parentRef = useRef<HTMLDivElement>(null);
-
-  const hasError = useCallback(
-    (nodeId: string) => {
-      return errorList.find((errorNode) => errorNode.parent?.id === nodeId);
-    },
-    [errorList],
-  );
 
   const virtualizer = useVirtualizer({
     count: flatNodes.length,
@@ -109,11 +86,11 @@ function TreeHierarchyRenderer({
   const items = virtualizer.getVirtualItems();
 
   const scrollToElement = useCallback(
-    (errorNode: ErrorNode) => {
-      const index = flatNodes.findIndex((flatNode) => flatNode.id === errorNode.parent?.id);
+    ({ errorNode, expandTo }: ErrorItem) => {
+      const index = flatNodes.findIndex((flatNode) => flatNode.id === errorNode.id);
       if (index === -1) {
-        errorNode.expandTo((nodeId) => expandNode(nodeId, true));
-        scrollToNode.current = errorNode.parent?.id;
+        expandTo((nodeId) => expandNode(nodeId, true));
+        scrollToNode.current = errorNode.id;
         return;
       }
       virtualizer.scrollToIndex(index, { align: "end" });
@@ -149,14 +126,14 @@ function TreeHierarchyRenderer({
           {items.map((virtualizedItem) => {
             const node = flatNodes[virtualizedItem.index];
             const selected = isNodeSelected?.(node.id) ?? false;
-            const error = hasError(node.id);
             return (
               <VirtualTreeItem
                 {...treeProps}
+                onNodeClick={handleNodeClick}
+                onNodeKeyDown={handleKeyDown}
                 ref={virtualizer.measureElement}
                 start={virtualizedItem.start}
                 expandNode={expandNode}
-                error={error}
                 node={node}
                 key={virtualizedItem.key}
                 data-index={virtualizedItem.index}
@@ -178,7 +155,7 @@ type VirtualTreeItemProps = Omit<TreeNodeRendererProps, "node" | "aria-level" | 
 
 const VirtualTreeItem = memo(
   forwardRef<HTMLElement, VirtualTreeItemProps>(function VirtualTreeItem(
-    { start, node, getDecorations, getActions, getLabel, getSublabel, expandNode, error, reloadTree, onNodeClick, onNodeKeyDown, ...props },
+    { start, node, getDecorations, getActions, getLabel, getSublabel, expandNode, reloadTree, onNodeClick, onNodeKeyDown, ...props },
     forwardedRef,
   ) {
     const style: CSSProperties = useMemo(
@@ -207,7 +184,6 @@ const VirtualTreeItem = memo(
         aria-setsize={node.levelSize}
         node={node}
         expandNode={expandNode}
-        error={error}
         reloadTree={reloadTree}
         getDecorations={getDecorations}
         getActions={getActions}

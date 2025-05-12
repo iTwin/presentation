@@ -23,7 +23,6 @@ import { Spinner, Tree } from "@stratakit/bricks";
 import refreshSvg from "@stratakit/icons/refresh.svg";
 import { PresentationHierarchyNode } from "../TreeNode.js";
 import { useTree, UseTreeResult } from "../UseTree.js";
-import { ErrorNode } from "./FlatTreeNode.js";
 import { useLocalizationContext } from "./LocalizationContext.js";
 
 /** @alpha */
@@ -51,8 +50,6 @@ export interface TreeNodeRendererOwnProps {
    * Callback that returns actions for tree item. Must return an array of `Tree.ItemAction` elements.
    */
   getActions?: (node: PresentationHierarchyNode) => ReactNode[];
-  /** Specifies if tree item has error. */
-  error?: ErrorNode;
 }
 
 /** @alpha */
@@ -72,7 +69,7 @@ type TreeNodeRendererProps = Pick<ReturnType<typeof useTree>, "expandNode"> &
  */
 export const TreeNodeRenderer: FC<PropsWithRef<TreeNodeRendererProps & RefAttributes<HTMLElement>>> = memo(
   forwardRef<HTMLElement, TreeNodeRendererProps>(function HierarchyNode(
-    { node, selected, error, expandNode, onNodeClick, onNodeKeyDown, reloadTree, getLabel, getSublabel, getActions, getDecorations, ...treeItemProps },
+    { node, selected, expandNode, onNodeClick, onNodeKeyDown, reloadTree, getLabel, getSublabel, getActions, getDecorations, ...treeItemProps },
     forwardedRef,
   ) {
     const nodeRef = useRef<HTMLElement>(null);
@@ -84,7 +81,7 @@ export const TreeNodeRenderer: FC<PropsWithRef<TreeNodeRendererProps & RefAttrib
     const decorations = useMemo(() => getDecorations?.(node), [getDecorations, node]);
     const actions = useMemo(
       () => [
-        ...(error && error.error.type === "Unknown"
+        ...(node.error?.type === "Unknown"
           ? [
               <Tree.ItemAction
                 key="retry"
@@ -97,8 +94,20 @@ export const TreeNodeRenderer: FC<PropsWithRef<TreeNodeRendererProps & RefAttrib
           : []),
         ...(getActions ? getActions(node) : []),
       ],
-      [getActions, node, error, localizedStrings, reloadTree],
+      [getActions, node, localizedStrings, reloadTree],
     );
+
+    const expanded = useMemo(() => {
+      if (node.error) {
+        return undefined;
+      }
+
+      if (node.isExpanded || node.children === true || node.children.length > 0) {
+        return node.isExpanded;
+      }
+
+      return undefined;
+    }, [node.children, node.error, node.isExpanded]);
 
     const isDisabled = treeItemProps["aria-disabled"] === true;
     return (
@@ -108,7 +117,7 @@ export const TreeNodeRenderer: FC<PropsWithRef<TreeNodeRendererProps & RefAttrib
         label={label}
         description={description}
         selected={selected}
-        expanded={node.isExpanded || node.children === true || node.children.length > 0 ? node.isExpanded : undefined}
+        expanded={expanded}
         onExpandedChange={useCallback(
           (isExpanded: boolean) => {
             expandNode(node.id, isExpanded);
@@ -132,7 +141,7 @@ export const TreeNodeRenderer: FC<PropsWithRef<TreeNodeRendererProps & RefAttrib
         )}
         actions={actions}
         unstable_decorations={decorations}
-        error={error?.error.id}
+        error={!!node.error}
       />
     );
   }),

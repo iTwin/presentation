@@ -16,7 +16,7 @@ import {
   RowsLimitExceededError,
 } from "@itwin/presentation-hierarchies";
 import { LoadedTreePart, TreeLoader } from "../../presentation-hierarchies-react/internal/TreeLoader.js";
-import { TreeModelHierarchyNode, TreeModelInfoNode, TreeModelNode } from "../../presentation-hierarchies-react/internal/TreeModel.js";
+import { TreeModelError, TreeModelHierarchyNode } from "../../presentation-hierarchies-react/internal/TreeModel.js";
 import { createNodeId } from "../../presentation-hierarchies-react/internal/Utils.js";
 import { createTestHierarchyNode, createTreeModelNode } from "../TestUtils.js";
 
@@ -126,7 +126,7 @@ describe("TreeLoader", () => {
       );
 
       const rootNodes = nodes.get(undefined);
-      const infoNode = rootNodes![0] as TreeModelInfoNode;
+      const infoNode = rootNodes![0] as TreeModelError;
       expect(infoNode.type).to.be.eq("ResultSetTooLarge");
     });
 
@@ -145,7 +145,7 @@ describe("TreeLoader", () => {
       );
 
       const rootNodes = nodes.get(undefined);
-      const infoNode = rootNodes![0] as TreeModelInfoNode;
+      const infoNode = rootNodes![0] as TreeModelError;
       expect(infoNode.type).to.be.eq("Unknown");
     });
 
@@ -238,7 +238,7 @@ describe("TreeLoader", () => {
 
       const children = nodes.get("root-1");
       expect(children).to.have.lengthOf(1);
-      expect((children![0] as TreeModelInfoNode).type).to.be.eq("NoFilterMatches");
+      expect((children![0] as TreeModelError).type).to.be.eq("NoFilterMatches");
       expect(hierarchyProvider.getNodes).to.be.calledWith(
         sinon.match((props: GetHierarchyNodesProps) => {
           return props.instanceFilter === filter;
@@ -327,8 +327,8 @@ describe("TreeLoader", () => {
 });
 
 async function collectNodes(loadObs: Observable<LoadedTreePart>) {
-  const nodes = new Map<string | undefined, TreeModelNode[]>();
-  return new Promise<Map<string | undefined, TreeModelNode[]>>((resolve) => {
+  const nodes = new Map<string | undefined, (TreeModelHierarchyNode | TreeModelError)[]>();
+  return new Promise<Map<string | undefined, (TreeModelHierarchyNode | TreeModelError)[]>>((resolve) => {
     loadObs.subscribe({
       next: (loaded) => {
         let hierarchyLevel = nodes.get(loaded.parentId);

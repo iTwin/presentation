@@ -6,8 +6,9 @@
 import { ReactElement } from "react";
 import { Anchor, unstable_ErrorRegion as ErrorRegion, Text } from "@stratakit/bricks";
 import { MAX_LIMIT_OVERRIDE } from "../internal/Utils.js";
+import { PresentationHierarchyNode } from "../TreeNode.js";
 import { HierarchyLevelDetails, useTree } from "../UseTree.js";
-import { ErrorNode } from "./FlatTreeNode.js";
+import { ErrorItem } from "./FlatTreeNode.js";
 import { useLocalizationContext } from "./LocalizationContext.js";
 
 /**
@@ -21,7 +22,7 @@ interface TreeErrorItemProps {
   /** Action to perform when the filter button is clicked for this node. */
   onFilterClick?: (hierarchyLevelDetails: HierarchyLevelDetails) => void;
   /** Action to perform when an error accurs and node label is clicked in the error message */
-  scrollToElement: (errorNode: ErrorNode) => void;
+  scrollToElement: (errorNode: ErrorItem) => void;
 }
 /**
  * Interface containing building blocks for `TreeErrorRenderer`.
@@ -30,9 +31,9 @@ interface TreeErrorItemProps {
  */
 interface TreeErrorRendererOwnProps {
   /** List of errors to be displayed */
-  errorList: ErrorNode[];
+  errorList: ErrorItem[];
   // Callback to render custom error messages. Component should be wrapped in `ErrorRegion.Item` from `@itwin/itwinui-react` package.
-  renderError?: ({ errorNode, scrollToElement }: { errorNode: ErrorNode; scrollToElement: () => void }) => ReactElement;
+  renderError?: ({ errorItem, scrollToElement }: { errorItem: ErrorItem; scrollToElement: () => void }) => ReactElement;
 }
 
 /** @alpha */
@@ -46,14 +47,14 @@ export type TreeErrorRendererProps = TreeErrorRendererOwnProps & TreeErrorItemPr
  */
 export function TreeErrorRenderer({ errorList, reloadTree, scrollToElement, getHierarchyLevelDetails, onFilterClick, renderError }: TreeErrorRendererProps) {
   const { localizedStrings } = useLocalizationContext();
-  const errorItems = errorList.map((errorNode) => {
+  const errorItems = errorList.map(({ errorNode, expandTo }) => {
     if (renderError) {
-      return renderError({ errorNode, scrollToElement: () => scrollToElement(errorNode) });
+      return renderError({ errorItem: { errorNode, expandTo }, scrollToElement: () => scrollToElement({ errorNode, expandTo }) });
     }
 
-    if (errorNode.error.type === "ResultSetTooLarge") {
+    if (errorNode.error?.type === "ResultSetTooLarge") {
       const limit = errorNode.error.resultSetSizeLimit;
-      const onOverrideLimit = getHierarchyLevelDetails ? () => getHierarchyLevelDetails(errorNode.parent?.id)?.setSizeLimit(MAX_LIMIT_OVERRIDE) : undefined;
+      const onOverrideLimit = getHierarchyLevelDetails ? () => getHierarchyLevelDetails(errorNode.id)?.setSizeLimit(MAX_LIMIT_OVERRIDE) : undefined;
       return (
         <ErrorItemContainer
           key={errorNode.error.id}
@@ -68,19 +69,19 @@ export function TreeErrorRenderer({ errorList, reloadTree, scrollToElement, getH
             },
             {
               action: () => {
-                const hierarchyLevelDetails = getHierarchyLevelDetails?.(errorNode.parent?.id);
+                const hierarchyLevelDetails = getHierarchyLevelDetails?.(errorNode.id);
                 hierarchyLevelDetails && onFilterClick?.(hierarchyLevelDetails);
               },
               label: localizedStrings.increaseHierarchyLimitWithFiltering,
-              condition: () => !!onFilterClick && !!errorNode.parent?.isFilterable,
+              condition: () => !!onFilterClick && !!errorNode?.isFilterable,
             },
           ]}
           message={localizedStrings.resultLimitExceeded.replace("{{limit}}", limit.toString())}
-          scrollToElement={() => scrollToElement(errorNode)}
+          scrollToElement={() => scrollToElement({ errorNode, expandTo })}
         />
       );
     }
-    if (errorNode.error.type === "NoFilterMatches") {
+    if (errorNode.error?.type === "NoFilterMatches") {
       return (
         <ErrorItemContainer
           key={errorNode.error.id}
@@ -88,7 +89,7 @@ export function TreeErrorRenderer({ errorList, reloadTree, scrollToElement, getH
           actions={[
             {
               action: () => {
-                const hierarchyLevelDetails = getHierarchyLevelDetails?.(errorNode.parent?.id);
+                const hierarchyLevelDetails = getHierarchyLevelDetails?.(errorNode.id);
                 hierarchyLevelDetails && onFilterClick?.(hierarchyLevelDetails);
               },
               label: localizedStrings.noFilteredChildrenChangeFilter,
@@ -96,23 +97,23 @@ export function TreeErrorRenderer({ errorList, reloadTree, scrollToElement, getH
             },
           ]}
           message={localizedStrings.noFilteredChildren}
-          scrollToElement={() => scrollToElement(errorNode)}
+          scrollToElement={() => scrollToElement({ errorNode, expandTo })}
         />
       );
     }
     return (
       <ErrorItemContainer
-        key={errorNode.error.id}
+        key={errorNode.id}
         errorNode={errorNode}
         actions={[
           {
-            action: () => reloadTree({ parentNodeId: errorNode.parent?.id, state: "reset" }),
+            action: () => reloadTree({ parentNodeId: errorNode.id, state: "reset" }),
             label: localizedStrings.retry,
             condition: () => true,
           },
         ]}
         message={localizedStrings.failedToCreateHierarchy}
-        scrollToElement={() => scrollToElement(errorNode)}
+        scrollToElement={() => scrollToElement({ errorNode, expandTo })}
       />
     );
   });
@@ -127,7 +128,7 @@ export function TreeErrorRenderer({ errorList, reloadTree, scrollToElement, getH
 }
 
 type ErrorItemContainerProps = {
-  errorNode: ErrorNode;
+  errorNode: PresentationHierarchyNode;
   message: string;
   actions?: { action: () => void; label: string; condition: () => boolean }[];
 } & Pick<MessageWithLinkProps, "scrollToElement">;
@@ -135,8 +136,8 @@ type ErrorItemContainerProps = {
 function ErrorItemContainer({ errorNode, message, actions, scrollToElement }: ErrorItemContainerProps) {
   return (
     <ErrorRegion.Item
-      message={<MessageWithLink linkLabel={errorNode.parent?.label} scrollToElement={scrollToElement} message={message} />}
-      messageId={errorNode.error.id}
+      message={<MessageWithLink linkLabel={errorNode.label} scrollToElement={scrollToElement} message={message} />}
+      messageId={errorNode.id}
       actions={
         <div style={{ display: "flex", flexDirection: "column" }}>
           {actions

@@ -7,10 +7,10 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { GenericInstanceFilter, HierarchyFilteringPath, HierarchyNode, HierarchyProvider } from "@itwin/presentation-hierarchies";
 import { InstanceKey, IPrimitiveValueFormatter } from "@itwin/presentation-shared";
 import { TreeActions } from "./internal/TreeActions.js";
-import { isTreeModelHierarchyNode, isTreeModelInfoNode, TreeModel, TreeModelHierarchyNode, TreeModelNode, TreeModelRootNode } from "./internal/TreeModel.js";
+import { TreeModel, TreeModelError, TreeModelHierarchyNode, TreeModelRootNode } from "./internal/TreeModel.js";
 import { useUnifiedTreeSelection, UseUnifiedTreeSelectionProps } from "./internal/UseUnifiedSelection.js";
 import { safeDispose } from "./internal/Utils.js";
-import { PresentationHierarchyNode, PresentationTreeNode } from "./TreeNode.js";
+import { PresentationError, PresentationHierarchyNode } from "./TreeNode.js";
 import { SelectionChangeType } from "./UseSelectionHandler.js";
 import { useLatest } from "./Utils.js";
 
@@ -117,10 +117,10 @@ interface ReloadTreeOptions {
 
 /** @public */
 export interface UseTreeResult {
-  /**
-   * Array containing root tree nodes. It is `undefined` on initial render until any nodes are loaded.
-   */
-  rootNodes: PresentationTreeNode[] | undefined;
+  /*   * Array containing root tree nodes. It is `undefined` on initial render until any nodes are loaded. */
+  rootNodes: PresentationHierarchyNode[] | undefined;
+  /** An error object which is defined when root nodes fail to load. Defined as undefined when rootNodes where sucessfully loaded or are in loading process */
+  rootError: PresentationError | undefined;
   /**
    * Specifies whether tree is loading or not. It is set to `true` when initial tree load is in progress
    * or tree is reloading.
@@ -152,7 +152,7 @@ export interface UseTreeResult {
 
 interface TreeState {
   model: TreeModel;
-  rootNodes: Array<PresentationTreeNode> | undefined;
+  rootNodes: Array<PresentationHierarchyNode> | undefined;
 }
 
 function useTreeInternal({
@@ -162,7 +162,7 @@ function useTreeInternal({
   onHierarchyLimitExceeded,
   onHierarchyLoadError,
 }: UseTreeProps): UseTreeResult & {
-  getTreeModelNode: (nodeId: string) => TreeModelRootNode | TreeModelNode | undefined;
+  getTreeModelNode: (nodeId: string) => TreeModelRootNode | TreeModelHierarchyNode | undefined;
 } {
   const [state, setState] = useState<TreeState>({
     model: { idToNode: new Map(), parentChildMap: new Map(), rootNode: { id: undefined, nodeData: undefined } },
@@ -239,7 +239,7 @@ function useTreeInternal({
     };
   }, [hierarchyProvider, getFilteredPaths, actions]);
 
-  const getTreeModelNode = useCallback<(nodeId: string) => TreeModelRootNode | TreeModelNode | undefined>(
+  const getTreeModelNode = useCallback<(nodeId: string) => TreeModelRootNode | TreeModelHierarchyNode | undefined>(
     (nodeId: string) => {
       return actions.getNode(nodeId);
     },
@@ -249,7 +249,7 @@ function useTreeInternal({
   const getNode = useCallback(
     (nodeId: string): PresentationHierarchyNode | undefined => {
       const node = actions.getNode(nodeId);
-      if (!node || !isTreeModelHierarchyNode(node)) {
+      if (!node || node.id === undefined) {
         return undefined;
       }
       return createPresentationHierarchyNode(node, state.model);
@@ -296,7 +296,7 @@ function useTreeInternal({
   const getHierarchyLevelDetails = useCallback<UseTreeResult["getHierarchyLevelDetails"]>(
     (nodeId) => {
       const node = actions.getNode(nodeId);
-      if (!hierarchyProvider || !node || isTreeModelInfoNode(node)) {
+      if (!hierarchyProvider || !node) {
         return undefined;
       }
       const hierarchyNode = node.nodeData;
@@ -323,7 +323,8 @@ function useTreeInternal({
 
   return {
     rootNodes: state.rootNodes,
-    isLoading: !!state.model.rootNode.isLoading || isFiltering,
+    rootError: ToHierarchyError(state.model.rootNode.error),
+    isLoading: (!state.model.rootNode.error && !!state.model.rootNode.isLoading) || isFiltering,
     expandNode,
     reloadTree,
     selectNodes,
@@ -335,7 +336,7 @@ function useTreeInternal({
   };
 }
 
-function generateTreeStructure(parentNodeId: string | undefined, model: TreeModel): Array<PresentationTreeNode> | undefined {
+function generateTreeStructure(parentNodeId: string | undefined, model: TreeModel): Array<PresentationHierarchyNode> | undefined {
   const currentChildren = model.parentChildMap.get(parentNodeId);
   if (!currentChildren) {
     return undefined;
@@ -343,40 +344,14 @@ function generateTreeStructure(parentNodeId: string | undefined, model: TreeMode
 
   return currentChildren
     .map((childId) => model.idToNode.get(childId))
-    .filter((node): node is TreeModelNode => !!node)
-    .map<PresentationTreeNode>((node) => {
-      if (isTreeModelHierarchyNode(node)) {
-        return createPresentationHierarchyNode(node, model);
-      }
-
-      if (node.type === "ResultSetTooLarge") {
-        return {
-          id: node.id,
-          parentNodeId,
-          type: node.type,
-          resultSetSizeLimit: node.resultSetSizeLimit,
-        };
-      }
-
-      if (node.type === "NoFilterMatches") {
-        return {
-          id: node.id,
-          parentNodeId,
-          type: node.type,
-        };
-      }
-
-      return {
-        id: node.id,
-        parentNodeId,
-        type: node.type,
-        message: node.message,
-      };
+    .filter((node): node is TreeModelHierarchyNode => !!node)
+    .map<PresentationHierarchyNode>((node) => {
+      return createPresentationHierarchyNode(node, model);
     });
 }
 
 function createPresentationHierarchyNode(modelNode: TreeModelHierarchyNode, model: TreeModel): PresentationHierarchyNode {
-  let children: Array<PresentationTreeNode> | undefined;
+  let children: Array<PresentationHierarchyNode> | undefined;
   return {
     ...toPresentationHierarchyNodeBase(modelNode),
     get children() {
@@ -397,5 +372,33 @@ function toPresentationHierarchyNodeBase(node: TreeModelHierarchyNode): Omit<Pre
     isExpanded: !!node.isExpanded,
     isFilterable: !HierarchyNode.isGroupingNode(node.nodeData) && !!node.nodeData.supportsFiltering && node.children,
     isFiltered: !!node.instanceFilter,
+    error: ToHierarchyError(node.error),
+  };
+}
+
+function ToHierarchyError(error: TreeModelError | undefined): PresentationError | undefined {
+  if (!error) {
+    return undefined;
+  }
+
+  if (error.type === "ResultSetTooLarge") {
+    return {
+      id: error.id,
+      type: error.type,
+      resultSetSizeLimit: error.resultSetSizeLimit,
+    };
+  }
+
+  if (error.type === "NoFilterMatches") {
+    return {
+      id: error.id,
+      type: error.type,
+    };
+  }
+
+  return {
+    id: error.id,
+    type: error.type,
+    message: error.message,
   };
 }

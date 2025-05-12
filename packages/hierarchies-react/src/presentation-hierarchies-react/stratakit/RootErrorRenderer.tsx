@@ -3,11 +3,10 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { Button, Text } from "@stratakit/bricks";
-import { Icon } from "@stratakit/foundations";
+import { Button, Icon, Text } from "@stratakit/bricks";
 import errorSvg from "@stratakit/icons/status-error.svg";
+import { PresentationError } from "../TreeNode.js";
 import { useTree } from "../UseTree.js";
-import { ErrorNode } from "./FlatTreeNode.js";
 import { useLocalizationContext } from "./LocalizationContext.js";
 
 /**
@@ -15,7 +14,7 @@ import { useLocalizationContext } from "./LocalizationContext.js";
  */
 export type RootErrorRendererProps = {
   /** Root error to be displayed */
-  errorNode: ErrorNode;
+  error: PresentationError;
 } & Pick<ReturnType<typeof useTree>, "getHierarchyLevelDetails" | "reloadTree">;
 
 /**
@@ -23,14 +22,14 @@ export type RootErrorRendererProps = {
  *
  * @internal
  */
-export function RootErrorRenderer({ errorNode, getHierarchyLevelDetails, reloadTree }: RootErrorRendererProps) {
+export function RootErrorRenderer({ error, getHierarchyLevelDetails, reloadTree }: RootErrorRendererProps) {
   const { localizedStrings } = useLocalizationContext();
 
-  if (errorNode.error.type === "ResultSetTooLarge") {
+  if (error.type === "ResultSetTooLarge") {
     const onOverrideLimit = () => getHierarchyLevelDetails(undefined)?.setSizeLimit("unbounded");
     return (
       <RootErrorContainer
-        message={localizedStrings.rootResultLimitExceeded.replace("{{limit}}", errorNode.error.resultSetSizeLimit.toString())}
+        message={localizedStrings.rootResultLimitExceeded.replace("{{limit}}", error.resultSetSizeLimit.toString())}
         actions={[
           {
             action: onOverrideLimit,

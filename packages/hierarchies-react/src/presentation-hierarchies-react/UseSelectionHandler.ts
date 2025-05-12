@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { useCallback, useEffect, useRef } from "react";
-import { isPresentationHierarchyNode, PresentationHierarchyNode, PresentationTreeNode } from "./TreeNode.js";
+import { PresentationHierarchyNode } from "./TreeNode.js";
 import { useTree } from "./UseTree.js";
 
 /**
@@ -152,15 +152,12 @@ function getExtendedSelectionAction(isSelected: boolean, shiftDown: boolean, ctr
   return { select: "node", type: "replace" };
 }
 
-function computeFlatNodeList(rootNodes: Array<PresentationTreeNode>): FlatTreeState {
+function computeFlatNodeList(rootNodes: Array<PresentationHierarchyNode>): FlatTreeState {
   const flatNodeList: Array<string> = [];
   const nodeIdToIndexMap: Map<string, number> = new Map();
 
-  const flattenNodeRecursively = (nodes: Array<PresentationTreeNode>) => {
+  const flattenNodeRecursively = (nodes: Array<PresentationHierarchyNode>) => {
     nodes.forEach((node) => {
-      if (!isPresentationHierarchyNode(node)) {
-        return;
-      }
       nodeIdToIndexMap.set(node.id, flatNodeList.length);
       flatNodeList.push(node.id);
       if (node.isExpanded && typeof node.children !== "boolean") {

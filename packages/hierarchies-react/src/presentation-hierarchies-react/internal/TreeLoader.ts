@@ -5,13 +5,13 @@
 
 import { catchError, expand, from, map, mergeMap, Observable, of, toArray } from "rxjs";
 import { GenericInstanceFilter, HierarchyNode, HierarchyProvider, RowsLimitExceededError } from "@itwin/presentation-hierarchies";
-import { isTreeModelHierarchyNode, TreeModelHierarchyNode, TreeModelInfoNode, TreeModelNode, TreeModelRootNode } from "./TreeModel.js";
+import { isTreeModelHierarchyNode, TreeModelError, TreeModelHierarchyNode, TreeModelRootNode } from "./TreeModel.js";
 import { createNodeId } from "./Utils.js";
 
 /** @internal */
 export interface LoadedTreePart {
   parentId: string | undefined;
-  loadedNodes: TreeModelNode[];
+  loadedNodes: (TreeModelHierarchyNode | TreeModelError)[];
 }
 
 /** @internal */
@@ -121,8 +121,8 @@ function createTreeModelNodesFactory({
 }: {
   buildNode?: (node: TreeModelHierarchyNode) => TreeModelHierarchyNode;
   treeNodeIdFactory: (node: Pick<HierarchyNode, "key" | "parentKeys">) => string;
-}): (node: TreeModelInfoNode | HierarchyNode) => TreeModelNode {
-  return (node: TreeModelInfoNode | HierarchyNode) => {
+}): (node: TreeModelError | HierarchyNode) => TreeModelHierarchyNode | TreeModelError {
+  return (node: TreeModelError | HierarchyNode) => {
     if (!isHierarchyNode(node)) {
       return node;
     }
@@ -137,7 +137,7 @@ function createTreeModelNodesFactory({
   };
 }
 
-function isHierarchyNode(node: TreeModelInfoNode | HierarchyNode): node is HierarchyNode {
+function isHierarchyNode(node: TreeModelError | HierarchyNode): node is HierarchyNode {
   return "key" in node && node.key !== undefined;
 }
 

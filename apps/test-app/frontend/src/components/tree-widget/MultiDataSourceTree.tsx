@@ -27,7 +27,7 @@ import {
   HierarchyProvider,
   mergeProviders,
 } from "@itwin/presentation-hierarchies";
-import { PresentationHierarchyNode, TreeRenderer, useUnifiedSelectionTree } from "@itwin/presentation-hierarchies-react";
+import { PresentationHierarchyNode, RootErrorRenderer, TreeRenderer, useUnifiedSelectionTree } from "@itwin/presentation-hierarchies-react";
 import {
   createBisInstanceLabelSelectClauseFactory,
   createCachingECClassHierarchyInspector,
@@ -90,6 +90,7 @@ function Tree({ imodelAccess, height, width }: { imodelAccess: IModelAccess; hei
     rootNodes,
     isLoading,
     reloadTree,
+    rootError,
     setFormatter: _,
     getNode: _getNode,
     ...treeProps
@@ -117,6 +118,18 @@ function Tree({ imodelAccess, height, width }: { imodelAccess: IModelAccess; hei
   });
 
   const renderContent = () => {
+    if (rootError) {
+      return <RootErrorRenderer error={rootError} reloadTree={reloadTree} getHierarchyLevelDetails={treeProps.getHierarchyLevelDetails} />;
+    }
+
+    if (!rootNodes) {
+      return (
+        <Flex alignItems="center" justifyContent="center" flexDirection="column" style={{ height: "100%" }}>
+          <Text isMuted> Loading </Text>
+        </Flex>
+      );
+    }
+
     if (rootNodes && rootNodes.length === 0 && filter) {
       return (
         <Flex alignItems="center" justifyContent="center" flexDirection="column" style={{ height: "100%" }}>
@@ -127,13 +140,13 @@ function Tree({ imodelAccess, height, width }: { imodelAccess: IModelAccess; hei
 
     return (
       <Flex.Item alignSelf="flex-start" style={{ width: "100%", overflow: "auto" }}>
-        <TreeRenderer rootNodes={rootNodes ?? []} {...treeProps} reloadTree={reloadTree} getDecorations={(node) => getIcon(node)} selectionMode={"extended"} />
+        <TreeRenderer rootNodes={rootNodes} {...treeProps} reloadTree={reloadTree} getDecorations={(node) => getIcon(node)} selectionMode={"extended"} />
       </Flex.Item>
     );
   };
 
   const renderLoadingOverlay = () => {
-    if (rootNodes !== undefined && !isLoading) {
+    if (rootNodes !== undefined || !isLoading) {
       return <></>;
     }
     return (

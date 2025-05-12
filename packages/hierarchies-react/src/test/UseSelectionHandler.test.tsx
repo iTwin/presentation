@@ -6,17 +6,12 @@
 import { expect } from "chai";
 import sinon from "sinon";
 import { UserEvent } from "@testing-library/user-event";
-import {
-  isPresentationHierarchyNode,
-  PresentationHierarchyNode,
-  PresentationInfoNode,
-  PresentationTreeNode,
-} from "../presentation-hierarchies-react/TreeNode.js";
+import { PresentationHierarchyNode } from "../presentation-hierarchies-react/TreeNode.js";
 import { SelectionChangeType, SelectionMode, useSelectionHandler } from "../presentation-hierarchies-react/UseSelectionHandler.js";
 import { render } from "./TestUtils.js";
 
 interface TestComponentProps {
-  rootNodes: Array<PresentationTreeNode> | undefined;
+  rootNodes: Array<PresentationHierarchyNode> | undefined;
   selectNodes: (nodeIds: Array<string>, changeType: SelectionChangeType) => void;
   selectionMode: SelectionMode;
   isSelected: boolean;
@@ -29,15 +24,8 @@ function TestComponent({ rootNodes, selectNodes, selectionMode, isSelected }: Te
   return (
     <>
       {nodes?.map((node) => {
-        const isHierarchyNode = isPresentationHierarchyNode(node);
         return (
-          <div
-            role="button"
-            key={node.id}
-            tabIndex={0}
-            onClick={(e) => isHierarchyNode && onNodeClick(node, isSelected, e)}
-            onKeyDown={(e) => isHierarchyNode && onNodeKeyDown(node, isSelected, e)}
-          >
+          <div role="button" key={node.id} tabIndex={0} onClick={(e) => onNodeClick(node, isSelected, e)} onKeyDown={(e) => onNodeKeyDown(node, isSelected, e)}>
             {node.id}
           </div>
         );
@@ -49,15 +37,15 @@ function TestComponent({ rootNodes, selectNodes, selectionMode, isSelected }: Te
 describe("useSelectionHandler", () => {
   const selectNodesStub = sinon.stub<[Array<string>, SelectionChangeType], void>();
 
-  const createHierarchyNode = (id: string, children: Array<PresentationTreeNode> = [], isExpanded: boolean = true) => {
+  const createHierarchyNode = (id: string, children: Array<PresentationHierarchyNode> = [], isExpanded: boolean = true) => {
     return { id, isExpanded, children } as PresentationHierarchyNode;
   };
 
-  const createInfoNode = (id: string) => {
-    return { id, message: "message" } as PresentationInfoNode;
-  };
+  // const createInfoNode = (id: string) => {
+  //   return { id, message: "message" } as PresentationError;
+  // };
 
-  const createProps = (rootNodes: Array<PresentationTreeNode> | undefined, selectionMode: SelectionMode, isSelected: boolean) => {
+  const createProps = (rootNodes: Array<PresentationHierarchyNode> | undefined, selectionMode: SelectionMode, isSelected: boolean) => {
     return { rootNodes, selectNodes: selectNodesStub, selectionMode, isSelected };
   };
 
@@ -290,7 +278,7 @@ describe("useSelectionHandler", () => {
       });
 
       it("skips info nodes when selecting range", async () => {
-        const nodes = [createHierarchyNode("node-1"), createInfoNode("node-2"), createHierarchyNode("node-3")];
+        const nodes = [createHierarchyNode("node-1"), createHierarchyNode("node-3")]; // TODO ADD error: createInfoNode("node-2")
         const { user, getByText } = render(<TestComponent {...createProps(nodes, selectionMode, true)} />);
 
         const node1 = getByText("node-1");
