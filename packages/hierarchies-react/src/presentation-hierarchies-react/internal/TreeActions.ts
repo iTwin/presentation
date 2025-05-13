@@ -85,7 +85,7 @@ export class TreeActions {
                     const firstChildNode = childNodes?.length ? newModel.idToNode.get(childNodes[0]) : undefined;
                     this.handleLoadedHierarchy(props.parentId, newModel);
                     // only report load duration if no error occurs
-                    if (!firstChildNode) {
+                    if (!(firstChildNode && firstChildNode.error)) {
                       props.timeTracker?.finish();
                     }
                   },
@@ -109,9 +109,6 @@ export class TreeActions {
     const newModel = produce(this._currentModel, updater);
     if (this._currentModel === newModel) {
       return;
-    }
-
-    if (newModel.rootNode.error) {
     }
 
     this._currentModel = newModel;

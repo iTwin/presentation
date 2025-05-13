@@ -323,7 +323,7 @@ function useTreeInternal({
 
   return {
     rootNodes: state.rootNodes,
-    rootError: ToHierarchyError(state.model.rootNode.error),
+    rootError: toHierarchyError(state.model.rootNode.error),
     isLoading: (!state.model.rootNode.error && !!state.model.rootNode.isLoading) || isFiltering,
     expandNode,
     reloadTree,
@@ -372,11 +372,11 @@ function toPresentationHierarchyNodeBase(node: TreeModelHierarchyNode): Omit<Pre
     isExpanded: !!node.isExpanded,
     isFilterable: !HierarchyNode.isGroupingNode(node.nodeData) && !!node.nodeData.supportsFiltering && node.children,
     isFiltered: !!node.instanceFilter,
-    error: ToHierarchyError(node.error),
+    error: toHierarchyError(node.error),
   };
 }
 
-function ToHierarchyError(error: TreeModelError | undefined): PresentationError | undefined {
+function toHierarchyError(error: TreeModelError | undefined): PresentationError | undefined {
   if (!error) {
     return undefined;
   }
