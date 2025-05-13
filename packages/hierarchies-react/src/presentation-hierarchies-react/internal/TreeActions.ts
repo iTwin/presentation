@@ -311,10 +311,9 @@ function collectTreePartsUntil(untilNotifier: Observable<void>, parent: TreeMode
 function addErrorToModel(model: TreeModel, error: TreeModelError, parent: TreeModelHierarchyNode | TreeModelRootNode) {
   if (parent.id === undefined) {
     model.rootNode.error = error;
-    return;
+  } else {
+    model.idToNode.set(parent.id, { ...parent, error });
   }
-  model.idToNode.set(parent.id, { ...parent, error });
-  return;
 }
 
 function addNodesToModel(model: TreeModel, loadedNodes: TreeModelHierarchyNode[], parentId?: string) {
