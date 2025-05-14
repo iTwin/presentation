@@ -22,7 +22,7 @@ import {
 import { Spinner, Tree } from "@stratakit/bricks";
 import refreshSvg from "@stratakit/icons/refresh.svg";
 import { PresentationHierarchyNode } from "../TreeNode.js";
-import { useTree, UseTreeResult } from "../UseTree.js";
+import { TreeRenderProps, UseTreeResult } from "../UseTree.js";
 import { useLocalizationContext } from "./LocalizationContext.js";
 
 /** @alpha */
@@ -53,10 +53,10 @@ export interface TreeNodeRendererOwnProps {
 }
 
 /** @alpha */
-type TreeNodeRendererProps = Pick<ReturnType<typeof useTree>, "expandNode"> &
-  Partial<Pick<ReturnType<typeof useTree>, "getHierarchyLevelDetails">> &
+type TreeNodeRendererProps = Pick<UseTreeResult, "reloadTree"> &
+  Pick<TreeRenderProps, "expandNode"> &
+  Partial<Pick<UseTreeResult, "getHierarchyLevelDetails">> &
   Omit<TreeNodeProps, "actions" | "label" | "expanded" | "unstable_decorations" | "error"> &
-  Pick<UseTreeResult, "reloadTree"> &
   TreeNodeRendererOwnProps;
 
 /**

@@ -45,7 +45,7 @@ export function StatelessTreeV2({ imodel, ...props }: { imodel: IModelConnection
       imodelKey: imodel.key,
       ...schemaProvider,
       ...createCachingECClassHierarchyInspector({ schemaProvider }),
-      ...createLimitingECSqlQueryExecutor(createECSqlQueryExecutor(imodel), 1),
+      ...createLimitingECSqlQueryExecutor(createECSqlQueryExecutor(imodel), 1000),
     });
   }, [imodel]);
 
@@ -84,15 +84,7 @@ function Tree({ imodel, imodelAccess, height, width }: { imodel: IModelConnectio
     throw new Error("Unified selection context is not available");
   }
 
-  const {
-    rootNodes,
-    rootError,
-    isLoading,
-    reloadTree,
-    setFormatter,
-    getNode: _getNode,
-    ...treeProps
-  } = useIModelUnifiedSelectionTree({
+  const { isReloading, setFormatter, reloadTree, getHierarchyLevelDetails, ...treeProps } = useIModelUnifiedSelectionTree({
     selectionStorage: unifiedSelectionContext.storage,
     sourceName: "StatelessTreeV2",
     imodelAccess,
@@ -169,17 +161,17 @@ function Tree({ imodel, imodelAccess, height, width }: { imodel: IModelConnectio
 
   const getActions = useCallback(
     (node: PresentationHierarchyNode) => [
-      <FilterAction key="filter" node={node} onFilter={setFilteringOptions} getHierarchyLevelDetails={treeProps.getHierarchyLevelDetails} />,
+      <FilterAction key="filter" node={node} onFilter={setFilteringOptions} getHierarchyLevelDetails={getHierarchyLevelDetails} />,
     ],
-    [treeProps.getHierarchyLevelDetails],
+    [getHierarchyLevelDetails],
   );
 
   const renderContent = () => {
-    if (rootError) {
-      return <RootErrorRenderer error={rootError} reloadTree={reloadTree} getHierarchyLevelDetails={treeProps.getHierarchyLevelDetails} />;
+    if (treeProps.rootErrorRenderProps) {
+      return <RootErrorRenderer {...treeProps.rootErrorRenderProps} reloadTree={reloadTree} getHierarchyLevelDetails={getHierarchyLevelDetails} />;
     }
 
-    if (!rootNodes) {
+    if (!treeProps.treeRenderProps) {
       return (
         <Flex alignItems="center" justifyContent="center" flexDirection="column" style={{ height: "100%" }}>
           <Text isMuted> Loading </Text>
@@ -187,7 +179,7 @@ function Tree({ imodel, imodelAccess, height, width }: { imodel: IModelConnectio
       );
     }
 
-    if (rootNodes && rootNodes.length === 0 && filter) {
+    if (treeProps.treeRenderProps.rootNodes.length === 0 && filter) {
       return (
         <Flex alignItems="center" justifyContent="center" flexDirection="column" style={{ height: "100%" }}>
           <Text isMuted>There are no nodes matching filter text {filter}</Text>
@@ -197,10 +189,10 @@ function Tree({ imodel, imodelAccess, height, width }: { imodel: IModelConnectio
 
     return (
       <TreeRenderer
-        {...treeProps}
-        style={{ height: "100%", width: "100%" }}
-        rootNodes={rootNodes}
+        {...treeProps.treeRenderProps}
         reloadTree={reloadTree}
+        getHierarchyLevelDetails={getHierarchyLevelDetails}
+        style={{ height: "100%", width: "100%" }}
         onFilterClick={setFilteringOptions}
         getActions={getActions}
         selectionMode={"extended"}
@@ -210,7 +202,7 @@ function Tree({ imodel, imodelAccess, height, width }: { imodel: IModelConnectio
   };
 
   const renderLoadingOverlay = () => {
-    if (rootNodes !== undefined || !isLoading) {
+    if (treeProps.rootErrorRenderProps !== undefined || treeProps.treeRenderProps !== undefined || !isReloading) {
       return <></>;
     }
     return (

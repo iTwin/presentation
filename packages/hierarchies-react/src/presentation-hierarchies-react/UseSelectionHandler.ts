@@ -5,7 +5,7 @@
 
 import { useCallback, useEffect, useRef } from "react";
 import { PresentationHierarchyNode } from "./TreeNode.js";
-import { useTree } from "./UseTree.js";
+import { TreeRenderProps } from "./UseTree.js";
 
 /**
  * A union of different supported selection modes in a tree component:
@@ -32,7 +32,7 @@ export type SelectionChangeType = "add" | "replace" | "remove";
  * Props for `useSelectionHandler` hook.
  * @public
  */
-type UseSelectionHandlerProps = Pick<ReturnType<typeof useTree>, "rootNodes" | "selectNodes"> & {
+type UseSelectionHandlerProps = Pick<TreeRenderProps, "selectNodes" | "rootNodes"> & {
   /** Selection mode that the component is working in. */
   selectionMode: SelectionMode;
 };

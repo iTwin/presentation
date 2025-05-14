@@ -8,7 +8,7 @@ import { Tree } from "@stratakit/bricks";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { PresentationHierarchyNode } from "../TreeNode.js";
 import { SelectionMode, useSelectionHandler } from "../UseSelectionHandler.js";
-import { useTree } from "../UseTree.js";
+import { TreeRenderProps, UseTreeResult } from "../UseTree.js";
 import { useEvent } from "../Utils.js";
 import { ErrorItem, FlatTreeNode, isPlaceholderNode, useErrorList, useFlatTreeNodeList } from "./FlatTreeNode.js";
 import { LocalizationContextProvider } from "./LocalizationContext.js";
@@ -23,8 +23,6 @@ export type TreeNodeRendererProps = ComponentPropsWithoutRef<typeof TreeNodeRend
 
 /** @alpha */
 interface TreeRendererOwnProps {
-  /** Root nodes of the tree. */
-  rootNodes: PresentationHierarchyNode[];
   /** Active selection mode used by the tree. Defaults to `"single"`. */
   selectionMode?: SelectionMode;
   /** A render function for errors' display component. Defaults to `<TreeErrorRenderer />`. */
@@ -32,9 +30,8 @@ interface TreeRendererOwnProps {
 }
 
 /** @alpha */
-type TreeRendererProps = Pick<ReturnType<typeof useTree>, "expandNode"> &
-  Partial<Pick<ReturnType<typeof useTree>, "selectNodes" | "isNodeSelected">> &
-  Pick<ReturnType<typeof useTree>, "reloadTree" | "getHierarchyLevelDetails"> &
+type TreeRendererProps = Pick<UseTreeResult, "reloadTree" | "getHierarchyLevelDetails"> &
+  Pick<TreeRenderProps, "expandNode" | "selectNodes" | "isNodeSelected" | "rootNodes"> &
   Pick<TreeErrorRendererProps, "onFilterClick"> &
   Omit<TreeNodeRendererProps, "node" | "aria-level" | "aria-posinset" | "aria-setsize" | "reloadTree" | "selected" | "error"> &
   TreeRendererOwnProps &

@@ -7,9 +7,10 @@ import "./DisposePolyfill.js";
 import { Draft, enableMapSet, produce } from "immer";
 import { buffer, debounceTime, EMPTY, groupBy, map, mergeMap, Observable, reduce, Subject, switchMap, takeUntil, tap } from "rxjs";
 import { GenericInstanceFilter, HierarchyNode, HierarchyProvider } from "@itwin/presentation-hierarchies";
+import { ErrorInfo } from "../TreeNode.js";
 import { SelectionChangeType } from "../UseSelectionHandler.js";
 import { HierarchyLevelOptions, ITreeLoader, LoadedTreePart, LoadNodesOptions, TreeLoader } from "./TreeLoader.js";
-import { isTreeModelHierarchyNode, TreeModel, TreeModelError, TreeModelHierarchyNode, TreeModelRootNode } from "./TreeModel.js";
+import { TreeModel, TreeModelHierarchyNode, TreeModelRootNode } from "./TreeModel.js";
 import { createNodeId, sameNodes } from "./Utils.js";
 
 enableMapSet();
@@ -288,10 +289,10 @@ function collectTreePartsUntil(untilNotifier: Observable<void>, parent: TreeMode
     source.pipe(
       reduce<LoadedTreePart, TreeModel>(
         (treeModel, loadedPart) => {
-          if (!isTreeModelHierarchyNode(loadedPart.loadedNodes[0])) {
-            addErrorToModel(treeModel, loadedPart.loadedNodes[0], parent);
+          if ("loadedNodes" in loadedPart) {
+            addNodesToModel(treeModel, loadedPart.loadedNodes, loadedPart.parentId);
           } else {
-            addNodesToModel(treeModel, loadedPart.loadedNodes as TreeModelHierarchyNode[], loadedPart.parentId);
+            addErrorToModel(treeModel, loadedPart.error, parent);
           }
           return treeModel;
         },
@@ -305,7 +306,7 @@ function collectTreePartsUntil(untilNotifier: Observable<void>, parent: TreeMode
     );
 }
 
-function addErrorToModel(model: TreeModel, error: TreeModelError, parent: TreeModelHierarchyNode | TreeModelRootNode) {
+function addErrorToModel(model: TreeModel, error: ErrorInfo, parent: TreeModelHierarchyNode | TreeModelRootNode) {
   if (parent.id === undefined) {
     model.rootNode.error = error;
   } else {

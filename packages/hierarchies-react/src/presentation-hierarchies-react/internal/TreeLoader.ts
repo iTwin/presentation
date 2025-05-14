@@ -5,14 +5,20 @@
 
 import { catchError, expand, from, map, mergeMap, Observable, of, toArray } from "rxjs";
 import { GenericInstanceFilter, HierarchyNode, HierarchyProvider, RowsLimitExceededError } from "@itwin/presentation-hierarchies";
-import { isTreeModelHierarchyNode, TreeModelError, TreeModelHierarchyNode, TreeModelRootNode } from "./TreeModel.js";
+import { ErrorInfo } from "../TreeNode.js";
+import { TreeModelHierarchyNode, TreeModelRootNode } from "./TreeModel.js";
 import { createNodeId } from "./Utils.js";
 
 /** @internal */
-export interface LoadedTreePart {
-  parentId: string | undefined;
-  loadedNodes: (TreeModelHierarchyNode | TreeModelError)[];
-}
+export type LoadedTreePart =
+  | {
+      parentId: string | undefined;
+      loadedNodes: TreeModelHierarchyNode[];
+    }
+  | {
+      parentId: string | undefined;
+      error: ErrorInfo;
+    };
 
 /** @internal */
 export interface HierarchyLevelOptions {
@@ -61,16 +67,11 @@ export class TreeLoader implements ITreeLoader {
     ).pipe(
       toArray(),
       catchError((err) => {
-        const nodeProps = {
-          id: `${infoNodeIdBase}-Unknown`,
-          parentId: parent.id,
-        };
         let hierarchyLoadErrorType: "unknown" | "timeout" = "unknown";
         if (err instanceof Error) {
-          nodeProps.id = `${infoNodeIdBase}-${err.message}`;
           if (isRowsLimitError(err)) {
             this._onHierarchyLimitExceeded({ parentId: parent.id, filter: instanceFilter, limit: err.limit });
-            return of([{ ...nodeProps, type: "ResultSetTooLarge" as const, resultSetSizeLimit: err.limit }]);
+            return of({ id: `${infoNodeIdBase}-${err.message}`, type: "ResultSetTooLarge" as const, resultSetSizeLimit: err.limit });
           }
           if (isTimeoutError(err)) {
             hierarchyLoadErrorType = "timeout";
@@ -78,39 +79,42 @@ export class TreeLoader implements ITreeLoader {
         }
 
         this._onHierarchyLoadError({ parentId: parent.id, type: hierarchyLoadErrorType, error: err });
-        return of([
-          {
-            ...nodeProps,
-            type: "Unknown" as const,
-            message: "Failed to create hierarchy level",
-          },
-        ]);
+        return of({
+          id: `${infoNodeIdBase}-Unknown`,
+          type: "Unknown" as const,
+          message: "Failed to create hierarchy level",
+        });
       }),
-      map(
-        (childNodes): LoadedTreePart => ({
+      map((childNodes): LoadedTreePart => {
+        if ("length" in childNodes) {
+          return instanceFilter && childNodes.length === 0
+            ? {
+                parentId: parent.id,
+                error: {
+                  id: `${infoNodeIdBase}-no-filter-matches`,
+                  type: "NoFilterMatches" as const,
+                },
+              }
+            : {
+                parentId: parent.id,
+                loadedNodes: childNodes.map(treeModelNodesFactory),
+              };
+        }
+        return {
           parentId: parent.id,
-          loadedNodes:
-            instanceFilter && childNodes.length === 0
-              ? [
-                  {
-                    id: `${infoNodeIdBase}-no-filter-matches`,
-                    parentId: parent.id,
-                    type: "NoFilterMatches" as const,
-                  },
-                ]
-              : childNodes.map(treeModelNodesFactory),
-        }),
-      ),
+          error: childNodes,
+        };
+      }),
     );
   }
 
   public loadNodes({ shouldLoadChildren, ...options }: LoadNodesOptions) {
     return this.loadChildren(options).pipe(
-      expand((loadedPart) =>
-        from(loadedPart.loadedNodes.filter((node): node is TreeModelHierarchyNode => isTreeModelHierarchyNode(node) && shouldLoadChildren(node))).pipe(
+      expand((loadedPart) => {
+        return from("loadedNodes" in loadedPart ? loadedPart.loadedNodes.filter((node) => shouldLoadChildren(node)) : []).pipe(
           mergeMap((node) => this.loadChildren({ ...options, parent: node })),
-        ),
-      ),
+        );
+      }),
     );
   }
 }
@@ -121,8 +125,8 @@ function createTreeModelNodesFactory({
 }: {
   buildNode?: (node: TreeModelHierarchyNode) => TreeModelHierarchyNode;
   treeNodeIdFactory: (node: Pick<HierarchyNode, "key" | "parentKeys">) => string;
-}): (node: TreeModelError | HierarchyNode) => TreeModelHierarchyNode | TreeModelError {
-  return (node: TreeModelError | HierarchyNode) => {
+}): (node: HierarchyNode) => TreeModelHierarchyNode {
+  return (node: HierarchyNode) => {
     if (!isHierarchyNode(node)) {
       return node;
     }
@@ -137,7 +141,7 @@ function createTreeModelNodesFactory({
   };
 }
 
-function isHierarchyNode(node: TreeModelError | HierarchyNode): node is HierarchyNode {
+function isHierarchyNode(node: ErrorInfo | HierarchyNode): node is HierarchyNode {
   return "key" in node && node.key !== undefined;
 }
 

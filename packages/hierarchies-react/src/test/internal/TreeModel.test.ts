@@ -6,7 +6,7 @@
 import { expect } from "chai";
 import { GenericInstanceFilter } from "@itwin/presentation-hierarchies";
 import { isTreeModelHierarchyNode, TreeModel } from "../../presentation-hierarchies-react/internal/TreeModel.js";
-import { createTestHierarchyNode, createTestModelGenericError, createTestModelNoFilterMatchesError, createTreeModel, getHierarchyNode } from "../TestUtils.js";
+import { createTestGenericError, createTestHierarchyNode, createTestNoFilterMatchesError, createTreeModel, getHierarchyNode } from "../TestUtils.js";
 
 describe("TreeModel", () => {
   describe("expandNode", () => {
@@ -121,7 +121,7 @@ describe("TreeModel", () => {
           children: ["info-1"],
         },
         {
-          ...createTestModelGenericError({ id: "info-1" }),
+          ...createTestGenericError({ id: "info-1" }),
         },
       ]);
 
@@ -142,7 +142,7 @@ describe("TreeModel", () => {
           children: ["info-1"],
         },
         {
-          ...createTestModelNoFilterMatchesError({ id: "info-1" }),
+          ...createTestNoFilterMatchesError({ id: "info-1" }),
         },
       ]);
 
@@ -844,7 +844,7 @@ describe("TreeModel", () => {
 describe("isTreeModelHierarchyNode", () => {
   it("returns correct result", () => {
     expect(isTreeModelHierarchyNode({ id: undefined, nodeData: undefined })).to.be.false;
-    expect(isTreeModelHierarchyNode({ id: "info-node", parentId: undefined, type: "Unknown", message: "info" })).to.be.false;
+    expect(isTreeModelHierarchyNode({ id: "info-node", type: "Unknown", message: "info" })).to.be.false;
     expect(isTreeModelHierarchyNode({ id: "hierarchy-node", label: "Node", children: false, nodeData: createTestHierarchyNode({ id: "hierarchy-node" }) })).to
       .be.true;
   });

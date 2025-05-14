@@ -4,6 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { GenericInstanceFilter, HierarchyNode } from "@itwin/presentation-hierarchies";
+import { ErrorInfo } from "../TreeNode.js";
 import { SelectionChangeType } from "../UseSelectionHandler.js";
 
 /** @internal */
@@ -13,7 +14,7 @@ export interface TreeModelRootNode {
   hierarchyLimit?: number | "unbounded";
   instanceFilter?: GenericInstanceFilter;
   isLoading?: boolean;
-  error?: TreeModelError;
+  error?: ErrorInfo;
 }
 
 /** @internal */
@@ -27,37 +28,11 @@ export interface TreeModelHierarchyNode {
   isSelected?: boolean;
   hierarchyLimit?: number | "unbounded";
   instanceFilter?: GenericInstanceFilter;
-  error?: TreeModelError;
+  error?: ErrorInfo;
 }
 
 /** @internal */
-export interface TreeModelGenericError {
-  id: string;
-  parentId: string | undefined;
-  type: "Unknown";
-  message: string;
-}
-
-/** @internal */
-export interface TreeModelNoFilterMatchesError {
-  id: string;
-  parentId: string | undefined;
-  type: "NoFilterMatches";
-}
-
-/** @internal */
-export interface TreeModelResultSetTooLargeError {
-  id: string;
-  parentId: string | undefined;
-  type: "ResultSetTooLarge";
-  resultSetSizeLimit: number;
-}
-
-/** @internal */
-export type TreeModelError = TreeModelGenericError | TreeModelResultSetTooLargeError | TreeModelNoFilterMatchesError;
-
-/** @internal */
-export function isTreeModelHierarchyNode(node: TreeModelHierarchyNode | TreeModelError | TreeModelRootNode): node is TreeModelHierarchyNode {
+export function isTreeModelHierarchyNode(node: TreeModelHierarchyNode | ErrorInfo | TreeModelRootNode): node is TreeModelHierarchyNode {
   return "nodeData" in node && node.nodeData !== undefined;
 }
 

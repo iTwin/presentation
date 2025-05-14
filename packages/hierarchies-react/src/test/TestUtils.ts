@@ -10,14 +10,8 @@ import { GroupingHierarchyNode, HierarchyProvider, NonGroupingHierarchyNode } fr
 import { EventArgs } from "@itwin/presentation-shared";
 import { configure, RenderOptions, RenderResult, render as renderRTL } from "@testing-library/react";
 import { userEvent, UserEvent } from "@testing-library/user-event";
-import {
-  isTreeModelHierarchyNode,
-  TreeModel,
-  TreeModelGenericError,
-  TreeModelHierarchyNode,
-  TreeModelNoFilterMatchesError,
-  TreeModelResultSetTooLargeError,
-} from "../presentation-hierarchies-react/internal/TreeModel.js";
+import { isTreeModelHierarchyNode, TreeModel, TreeModelHierarchyNode } from "../presentation-hierarchies-react/internal/TreeModel.js";
+import { GenericErrorInfo, NoFilterMatchesErrorInfo, ResultSetTooLargeErrorInfo } from "../presentation-hierarchies-react/TreeNode.js";
 
 configure({ reactStrictMode: true });
 
@@ -89,33 +83,27 @@ export function createTreeModelNode(props: Partial<TreeModelHierarchyNode> & { i
   };
 }
 
-export function createTestModelGenericError({ id, ...props }: Partial<TreeModelGenericError> & { id: string }): TreeModelGenericError {
+export function createTestGenericError({ id, ...props }: Partial<GenericErrorInfo> & { id: string }): GenericErrorInfo {
   return {
     ...props,
     id,
-    parentId: props.parentId ?? undefined,
     message: props.message ?? "test-message",
     type: props.type ?? "Unknown",
   };
 }
 
-export function createTestModelNoFilterMatchesError({ id, ...props }: Partial<TreeModelNoFilterMatchesError> & { id: string }): TreeModelNoFilterMatchesError {
+export function createTestNoFilterMatchesError({ id, ...props }: Partial<NoFilterMatchesErrorInfo> & { id: string }): NoFilterMatchesErrorInfo {
   return {
     ...props,
     id,
-    parentId: props.parentId ?? undefined,
     type: "NoFilterMatches",
   };
 }
 
-export function createTestModelResultSetTooLargeError({
-  id,
-  ...props
-}: Partial<TreeModelResultSetTooLargeError> & { id: string }): TreeModelResultSetTooLargeError {
+export function createTestResultSetTooLargeError({ id, ...props }: Partial<ResultSetTooLargeErrorInfo> & { id: string }): ResultSetTooLargeErrorInfo {
   return {
     ...props,
     id,
-    parentId: props.parentId ?? undefined,
     type: "ResultSetTooLarge",
     resultSetSizeLimit: props.resultSetSizeLimit ?? 10,
   };
