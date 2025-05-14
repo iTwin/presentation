@@ -142,7 +142,7 @@ export type RenderProps =
       };
     }
   | {
-      /** Defined as undefined when rootNodes where sucessfully loaded or are in initial loading process */
+      /** Is undefined when rootNodes where sucessfully loaded or are in initial loading process */
       rootErrorRenderProps: undefined;
       /** An object containing information used to render tree. Is undefined on initial loading process. */
       treeRenderProps?: TreeRenderProps;
