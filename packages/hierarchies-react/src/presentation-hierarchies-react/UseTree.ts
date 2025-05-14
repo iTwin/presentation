@@ -159,7 +159,7 @@ export type RenderProps =
 
 export interface TreeRenderProps {
   /**
-   * Array containing root tree nodes. It is `undefined` on initial render until any nodes are loaded.
+   * Array containing root tree nodes.
    */
   rootNodes: PresentationHierarchyNode[];
   /**
