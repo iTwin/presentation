@@ -136,15 +136,24 @@ export type UseTreeResult = {
 
 export type RenderProps =
   | {
+      /**
+       * An object containing information used to render root error handling UI.
+       * Use in combination with `RootErrorRenderer` or your custom implementation.
+       * Defined when root nodes fail to load.
+       */
       rootErrorRenderProps: {
-        /** An error object which is defined when root nodes fail to load. */
+        /** Object containing root error information */
         rootError: ErrorInfo;
       };
     }
   | {
       /** Is undefined when rootNodes where sucessfully loaded or are in initial loading process */
       rootErrorRenderProps: undefined;
-      /** An object containing information used to render tree. Is undefined on initial loading process. */
+      /**
+       * An object containing information used to render tree.
+       * Use with `TreeRenderer` or your custom implementation.
+       * Is undefined on initial loading process.
+       */
       treeRenderProps?: TreeRenderProps;
     };
 
