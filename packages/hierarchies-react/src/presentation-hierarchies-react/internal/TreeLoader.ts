@@ -10,15 +10,16 @@ import { TreeModelHierarchyNode, TreeModelRootNode } from "./TreeModel.js";
 import { createNodeId } from "./Utils.js";
 
 /** @internal */
-export type LoadedTreePart =
+export type LoadedTreePart = {
+  parent: TreeModelHierarchyNode | TreeModelRootNode;
+} & (
   | {
-      parentId: string | undefined;
       loadedNodes: TreeModelHierarchyNode[];
     }
   | {
-      parentId: string | undefined;
       error: ErrorInfo;
-    };
+    }
+);
 
 /** @internal */
 export interface HierarchyLevelOptions {
@@ -69,14 +70,14 @@ export class TreeLoader implements ITreeLoader {
       map((childNodes): LoadedTreePart => {
         return instanceFilter && childNodes.length === 0
           ? {
-              parentId: parent.id,
+              parent,
               error: {
                 id: `${infoNodeIdBase}-no-filter-matches`,
                 type: "NoFilterMatches" as const,
               },
             }
           : {
-              parentId: parent.id,
+              parent,
               loadedNodes: childNodes.map(treeModelNodesFactory),
             };
       }),
@@ -86,7 +87,7 @@ export class TreeLoader implements ITreeLoader {
           if (isRowsLimitError(err)) {
             this._onHierarchyLimitExceeded({ parentId: parent.id, filter: instanceFilter, limit: err.limit });
             return of({
-              parentId: parent.id,
+              parent,
               error: { id: `${infoNodeIdBase}-${err.message}`, type: "ResultSetTooLarge" as const, resultSetSizeLimit: err.limit },
             });
           }
@@ -97,7 +98,7 @@ export class TreeLoader implements ITreeLoader {
 
         this._onHierarchyLoadError({ parentId: parent.id, type: hierarchyLoadErrorType, error: err });
         return of({
-          parentId: parent.id,
+          parent,
           error: {
             id: `${infoNodeIdBase}-Unknown`,
             type: "Unknown" as const,

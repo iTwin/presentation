@@ -79,7 +79,7 @@ export class TreeActions {
             }),
             switchMap((props) =>
               this._loader.loadNodes(props.loadOptions).pipe(
-                collectTreePartsUntil(this._reset, props.loadOptions.parent, props.initialRootNode),
+                collectTreePartsUntil(this._reset, props.initialRootNode),
                 tap({
                   next: (newModel: TreeModel) => {
                     const childNodes = newModel.parentChildMap.get(props.parentId);
@@ -284,12 +284,12 @@ export class TreeActions {
   }
 }
 
-function collectTreePartsUntil(untilNotifier: Observable<void>, parent: TreeModelHierarchyNode | TreeModelRootNode, rootNode?: TreeModelRootNode) {
+function collectTreePartsUntil(untilNotifier: Observable<void>, rootNode?: TreeModelRootNode) {
   return (source: Observable<LoadedTreePart>) =>
     source.pipe(
       reduce<LoadedTreePart, TreeModel>(
         (treeModel, loadedPart) => {
-          addTreePartToModel(treeModel, loadedPart, parent);
+          addTreePartToModel(treeModel, loadedPart);
           return treeModel;
         },
         {
@@ -302,31 +302,31 @@ function collectTreePartsUntil(untilNotifier: Observable<void>, parent: TreeMode
     );
 }
 
-function addTreePartToModel(treeModel: TreeModel, loadedPart: LoadedTreePart, parent: TreeModelHierarchyNode | TreeModelRootNode) {
+function addTreePartToModel(treeModel: TreeModel, loadedPart: LoadedTreePart) {
   if ("loadedNodes" in loadedPart) {
     addNodesToModel(treeModel, loadedPart);
   } else {
-    addErrorToModel(treeModel, loadedPart.error, parent);
+    addErrorToModel(treeModel, loadedPart);
   }
 }
 
-function addErrorToModel(model: TreeModel, error: ErrorInfo, parent: TreeModelHierarchyNode | TreeModelRootNode) {
-  if (parent.id === undefined) {
-    model.rootNode.error = error;
+function addErrorToModel(model: TreeModel, loadedPart: { parent: TreeModelHierarchyNode | TreeModelRootNode; error: ErrorInfo }) {
+  if (loadedPart.parent.id === undefined) {
+    model.rootNode.error = loadedPart.error;
   } else {
-    model.idToNode.set(parent.id, { ...parent, error });
+    model.idToNode.set(loadedPart.parent.id, { ...loadedPart.parent, error: loadedPart.error });
   }
 }
 
-function addNodesToModel(model: TreeModel, loadedPart: { parentId: string | undefined; loadedNodes: TreeModelHierarchyNode[] }) {
+function addNodesToModel(model: TreeModel, loadedPart: { parent: TreeModelHierarchyNode | TreeModelRootNode; loadedNodes: TreeModelHierarchyNode[] }) {
   model.parentChildMap.set(
-    loadedPart.parentId,
+    loadedPart.parent.id,
     loadedPart.loadedNodes.map((node) => node.id),
   );
   for (const node of loadedPart.loadedNodes) {
     model.idToNode.set(node.id, node);
   }
-  const parentNode = loadedPart.parentId ? model.idToNode.get(loadedPart.parentId) : undefined;
+  const parentNode = loadedPart.parent.id ? model.idToNode.get(loadedPart.parent.id) : undefined;
   if (parentNode) {
     parentNode.isExpanded = true;
   }
