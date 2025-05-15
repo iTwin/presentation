@@ -66,12 +66,29 @@ export class TreeLoader implements ITreeLoader {
       }),
     ).pipe(
       toArray(),
+      map((childNodes): LoadedTreePart => {
+        return instanceFilter && childNodes.length === 0
+          ? {
+              parentId: parent.id,
+              error: {
+                id: `${infoNodeIdBase}-no-filter-matches`,
+                type: "NoFilterMatches" as const,
+              },
+            }
+          : {
+              parentId: parent.id,
+              loadedNodes: childNodes.map(treeModelNodesFactory),
+            };
+      }),
       catchError((err) => {
         let hierarchyLoadErrorType: "unknown" | "timeout" = "unknown";
         if (err instanceof Error) {
           if (isRowsLimitError(err)) {
             this._onHierarchyLimitExceeded({ parentId: parent.id, filter: instanceFilter, limit: err.limit });
-            return of({ id: `${infoNodeIdBase}-${err.message}`, type: "ResultSetTooLarge" as const, resultSetSizeLimit: err.limit });
+            return of({
+              parentId: parent.id,
+              error: { id: `${infoNodeIdBase}-${err.message}`, type: "ResultSetTooLarge" as const, resultSetSizeLimit: err.limit },
+            });
           }
           if (isTimeoutError(err)) {
             hierarchyLoadErrorType = "timeout";
@@ -80,30 +97,13 @@ export class TreeLoader implements ITreeLoader {
 
         this._onHierarchyLoadError({ parentId: parent.id, type: hierarchyLoadErrorType, error: err });
         return of({
-          id: `${infoNodeIdBase}-Unknown`,
-          type: "Unknown" as const,
-          message: "Failed to create hierarchy level",
-        });
-      }),
-      map((childNodes): LoadedTreePart => {
-        if ("length" in childNodes) {
-          return instanceFilter && childNodes.length === 0
-            ? {
-                parentId: parent.id,
-                error: {
-                  id: `${infoNodeIdBase}-no-filter-matches`,
-                  type: "NoFilterMatches" as const,
-                },
-              }
-            : {
-                parentId: parent.id,
-                loadedNodes: childNodes.map(treeModelNodesFactory),
-              };
-        }
-        return {
           parentId: parent.id,
-          error: childNodes,
-        };
+          error: {
+            id: `${infoNodeIdBase}-Unknown`,
+            type: "Unknown" as const,
+            message: "Failed to create hierarchy level",
+          },
+        });
       }),
     );
   }

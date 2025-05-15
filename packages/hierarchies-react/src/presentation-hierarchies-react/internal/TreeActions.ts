@@ -85,8 +85,8 @@ export class TreeActions {
                     const childNodes = newModel.parentChildMap.get(props.parentId);
                     const firstChildNode = childNodes?.length ? newModel.idToNode.get(childNodes[0]) : undefined;
                     this.handleLoadedHierarchy(props.parentId, newModel);
-                    // only report load duration if no error occurs
-                    if (!(firstChildNode && firstChildNode.error)) {
+                    // only report load duration if children were loaded
+                    if (!firstChildNode) {
                       props.timeTracker?.finish();
                     }
                   },
