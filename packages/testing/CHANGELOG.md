@@ -1,5 +1,13 @@
 # Change Log - @itwin/presentation-testing
 
+## 5.4.3-alpha.1
+
+### Patch Changes
+
+- [#963](https://github.com/iTwin/presentation/pull/963): Fix support for `itwinjs-core@5.0-rc`.
+- Updated dependencies:
+  - @itwin/presentation-components@5.12.2-alpha.1
+
 ## 5.4.3-alpha.0
 
 ### Patch Changes
