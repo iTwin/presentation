@@ -6,8 +6,8 @@
 import { ReactElement } from "react";
 import { Anchor, unstable_ErrorRegion as ErrorRegion, Text } from "@stratakit/bricks";
 import { MAX_LIMIT_OVERRIDE } from "../internal/Utils.js";
+import { HierarchyLevelDetails, TreeRendererProps } from "../Renderers.js";
 import { PresentationHierarchyNode } from "../TreeNode.js";
-import { HierarchyLevelDetails, UseTreeResult } from "../UseTree.js";
 import { ErrorItem } from "./FlatTreeNode.js";
 import { useLocalizationContext } from "./LocalizationContext.js";
 
@@ -37,7 +37,7 @@ interface TreeErrorRendererOwnProps {
 }
 
 /** @alpha */
-export type TreeErrorRendererProps = TreeErrorRendererOwnProps & TreeErrorItemProps & Pick<UseTreeResult, "getHierarchyLevelDetails">;
+export type TreeErrorRendererProps = TreeErrorRendererOwnProps & TreeErrorItemProps & Pick<TreeRendererProps, "getHierarchyLevelDetails">;
 
 /**
  * A component that renders error display dropdown using the `unstable_ErrorRegion` component from `@itwin/itwinui-react`.

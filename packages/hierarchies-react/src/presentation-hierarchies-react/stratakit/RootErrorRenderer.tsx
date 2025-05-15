@@ -6,24 +6,24 @@
 import { Button, Text } from "@stratakit/bricks";
 import { Icon } from "@stratakit/foundations";
 import errorSvg from "@stratakit/icons/status-error.svg";
+import { RootErrorRendererProps } from "../Renderers.js";
 import { ErrorInfo } from "../TreeNode.js";
-import { UseTreeResult } from "../UseTree.js";
 import { useLocalizationContext } from "./LocalizationContext.js";
 
 /**
  * @alpha
  */
-export type RootErrorRendererProps = {
+export type StrataKitRootErrorRendererProps = {
   /** Root error to be displayed */
   error: ErrorInfo;
-} & Pick<UseTreeResult, "getHierarchyLevelDetails" | "reloadTree">;
+} & RootErrorRendererProps;
 
 /**
  * A component that renders root node error state.
  *
  * @internal
  */
-export function RootErrorRenderer({ error, getHierarchyLevelDetails, reloadTree }: RootErrorRendererProps) {
+export function StrataKitRootErrorRenderer({ error, getHierarchyLevelDetails, reloadTree }: StrataKitRootErrorRendererProps) {
   const { localizedStrings } = useLocalizationContext();
 
   if (error.type === "ResultSetTooLarge") {

@@ -21,8 +21,8 @@ import {
 } from "react";
 import { Spinner, Tree } from "@stratakit/bricks";
 import refreshSvg from "@stratakit/icons/refresh.svg";
+import { TreeRendererProps } from "../Renderers.js";
 import { PresentationHierarchyNode } from "../TreeNode.js";
-import { TreeRenderProps, UseTreeResult } from "../UseTree.js";
 import { useLocalizationContext } from "./LocalizationContext.js";
 
 /** @alpha */
@@ -53,9 +53,7 @@ export interface TreeNodeRendererOwnProps {
 }
 
 /** @alpha */
-type TreeNodeRendererProps = Pick<UseTreeResult, "reloadTree"> &
-  Pick<TreeRenderProps, "expandNode"> &
-  Partial<Pick<UseTreeResult, "getHierarchyLevelDetails">> &
+type TreeNodeRendererProps = Pick<TreeRendererProps, "expandNode" | "reloadTree"> &
   Omit<TreeNodeProps, "actions" | "label" | "expanded" | "unstable_decorations" | "error"> &
   TreeNodeRendererOwnProps;
 
@@ -67,7 +65,7 @@ type TreeNodeRendererProps = Pick<UseTreeResult, "reloadTree"> &
  * @see https://itwinui.bentley.com/docs/tree
  * @public
  */
-export const TreeNodeRenderer: FC<PropsWithRef<TreeNodeRendererProps & RefAttributes<HTMLElement>>> = memo(
+export const StrataKitTreeNodeRenderer: FC<PropsWithRef<TreeNodeRendererProps & RefAttributes<HTMLElement>>> = memo(
   forwardRef<HTMLElement, TreeNodeRendererProps>(function HierarchyNode(
     { node, selected, expandNode, onNodeClick, onNodeKeyDown, reloadTree, getLabel, getSublabel, getActions, getDecorations, ...treeItemProps },
     forwardedRef,

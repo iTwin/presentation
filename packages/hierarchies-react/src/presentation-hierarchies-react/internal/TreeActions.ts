@@ -289,11 +289,7 @@ function collectTreePartsUntil(untilNotifier: Observable<void>, parent: TreeMode
     source.pipe(
       reduce<LoadedTreePart, TreeModel>(
         (treeModel, loadedPart) => {
-          if ("loadedNodes" in loadedPart) {
-            addNodesToModel(treeModel, loadedPart.loadedNodes, loadedPart.parentId);
-          } else {
-            addErrorToModel(treeModel, loadedPart.error, parent);
-          }
+          addTreePartToModel(treeModel, loadedPart, parent);
           return treeModel;
         },
         {
@@ -306,6 +302,14 @@ function collectTreePartsUntil(untilNotifier: Observable<void>, parent: TreeMode
     );
 }
 
+function addTreePartToModel(treeModel: TreeModel, loadedPart: LoadedTreePart, parent: TreeModelHierarchyNode | TreeModelRootNode) {
+  if ("loadedNodes" in loadedPart) {
+    addNodesToModel(treeModel, loadedPart);
+  } else {
+    addErrorToModel(treeModel, loadedPart.error, parent);
+  }
+}
+
 function addErrorToModel(model: TreeModel, error: ErrorInfo, parent: TreeModelHierarchyNode | TreeModelRootNode) {
   if (parent.id === undefined) {
     model.rootNode.error = error;
@@ -314,15 +318,15 @@ function addErrorToModel(model: TreeModel, error: ErrorInfo, parent: TreeModelHi
   }
 }
 
-function addNodesToModel(model: TreeModel, loadedNodes: TreeModelHierarchyNode[], parentId?: string) {
+function addNodesToModel(model: TreeModel, loadedPart: { parentId: string | undefined; loadedNodes: TreeModelHierarchyNode[] }) {
   model.parentChildMap.set(
-    parentId,
-    loadedNodes.map((node) => node.id),
+    loadedPart.parentId,
+    loadedPart.loadedNodes.map((node) => node.id),
   );
-  for (const node of loadedNodes) {
+  for (const node of loadedPart.loadedNodes) {
     model.idToNode.set(node.id, node);
   }
-  const parentNode = parentId ? model.idToNode.get(parentId) : undefined;
+  const parentNode = loadedPart.parentId ? model.idToNode.get(loadedPart.parentId) : undefined;
   if (parentNode) {
     parentNode.isExpanded = true;
   }

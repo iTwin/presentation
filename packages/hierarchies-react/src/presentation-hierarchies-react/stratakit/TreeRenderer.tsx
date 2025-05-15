@@ -6,20 +6,19 @@
 import { ComponentPropsWithoutRef, CSSProperties, forwardRef, memo, ReactElement, useCallback, useEffect, useMemo, useRef } from "react";
 import { Tree } from "@stratakit/bricks";
 import { useVirtualizer } from "@tanstack/react-virtual";
-import { PresentationHierarchyNode } from "../TreeNode.js";
+import { TreeRendererProps } from "../Renderers.js";
 import { SelectionMode, useSelectionHandler } from "../UseSelectionHandler.js";
-import { TreeRenderProps, UseTreeResult } from "../UseTree.js";
 import { useEvent } from "../Utils.js";
 import { ErrorItem, FlatTreeNode, isPlaceholderNode, useErrorList, useFlatTreeNodeList } from "./FlatTreeNode.js";
 import { LocalizationContextProvider } from "./LocalizationContext.js";
 import { TreeErrorRenderer, TreeErrorRendererProps } from "./TreeErrorRenderer.js";
-import { PlaceholderNode, TreeNodeRenderer } from "./TreeNodeRenderer.js";
+import { PlaceholderNode, StrataKitTreeNodeRenderer } from "./TreeNodeRenderer.js";
 
 /** @alpha */
 export type TreeProps = ComponentPropsWithoutRef<typeof Tree.Root>;
 
 /** @alpha */
-export type TreeNodeRendererProps = ComponentPropsWithoutRef<typeof TreeNodeRenderer>;
+export type TreeNodeRendererProps = ComponentPropsWithoutRef<typeof StrataKitTreeNodeRenderer>;
 
 /** @alpha */
 interface TreeRendererOwnProps {
@@ -30,8 +29,7 @@ interface TreeRendererOwnProps {
 }
 
 /** @alpha */
-type TreeRendererProps = Pick<UseTreeResult, "reloadTree" | "getHierarchyLevelDetails"> &
-  TreeRenderProps &
+type StrataKitTreeRendererProps = TreeRendererProps &
   Pick<TreeErrorRendererProps, "onFilterClick"> &
   Omit<TreeNodeRendererProps, "node" | "aria-level" | "aria-posinset" | "aria-setsize" | "reloadTree" | "selected" | "error"> &
   TreeRendererOwnProps &
@@ -44,7 +42,7 @@ type TreeRendererProps = Pick<UseTreeResult, "reloadTree" | "getHierarchyLevelDe
  * @see https://itwinui.bentley.com/docs/tree
  * @alpha
  */
-export function TreeRenderer({
+export function StrataKitTreeRenderer({
   rootNodes,
   selectNodes,
   selectionMode,
@@ -58,7 +56,7 @@ export function TreeRenderer({
   onNodeClick: onNodeClickOverride,
   onNodeKeyDown: onNodeKeyDownOverride,
   ...treeProps
-}: Omit<TreeRendererProps, "rootNodes" | "rootError"> & { rootNodes: PresentationHierarchyNode[] }) {
+}: StrataKitTreeRendererProps) {
   const { onNodeClick, onNodeKeyDown } = useSelectionHandler({
     rootNodes,
     selectNodes: selectNodes ?? noopSelectNodes,
@@ -172,7 +170,7 @@ const VirtualTreeItem = memo(
     }
 
     return (
-      <TreeNodeRenderer
+      <StrataKitTreeNodeRenderer
         {...props}
         ref={forwardedRef}
         style={style}
