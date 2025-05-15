@@ -53,13 +53,14 @@ import {
   hasChildren,
 } from "../internal/Common.js";
 import { eachValueFrom } from "../internal/EachValueFrom.js";
+import { FilteringHierarchyDefinition } from "../internal/FilteringHierarchyDefinition.js";
 import { doLog, log } from "../internal/LoggingUtils.js";
 import { partition } from "../internal/operators/Partition.js";
 import { reduceToMergeMapList } from "../internal/operators/ReduceToMergeMap.js";
 import { shareReplayWithErrors } from "../internal/operators/ShareReplayWithErrors.js";
 import { sortNodesByLabelOperator } from "../internal/operators/Sorting.js";
+import { getRxjsHierarchyDefinition, RxjsHierarchyDefinition } from "../internal/RxjsHierarchyDefinition.js";
 import { SubscriptionScheduler } from "../internal/SubscriptionScheduler.js";
-import { FilteringHierarchyDefinition } from "./FilteringHierarchyDefinition.js";
 import { HierarchyCache } from "./HierarchyCache.js";
 import { DefineHierarchyLevelProps, HierarchyDefinition, HierarchyNodesDefinition } from "./IModelHierarchyDefinition.js";
 import {
@@ -177,8 +178,8 @@ class IModelHierarchyProviderImpl implements HierarchyProvider {
   private _imodelAccess: IModelAccess;
   private _hierarchyChanged: BeEvent<(args?: EventArgs<HierarchyProvider["hierarchyChanged"]>) => void>;
   private _valuesFormatter: IPrimitiveValueFormatter;
-  private _sourceHierarchyDefinition: HierarchyDefinition;
-  private _activeHierarchyDefinition: HierarchyDefinition;
+  private _sourceHierarchyDefinition: RxjsHierarchyDefinition;
+  private _activeHierarchyDefinition: RxjsHierarchyDefinition;
   private _localizedStrings: IModelHierarchyProviderLocalizedStrings;
   private _queryScheduler: SubscriptionScheduler;
   private _nodesCache?: HierarchyCache<HierarchyCacheEntry>;
@@ -188,7 +189,7 @@ class IModelHierarchyProviderImpl implements HierarchyProvider {
   public constructor(props: IModelHierarchyProviderProps) {
     this._imodelAccess = props.imodelAccess;
     this._hierarchyChanged = new BeEvent();
-    this._activeHierarchyDefinition = this._sourceHierarchyDefinition = props.hierarchyDefinition;
+    this._activeHierarchyDefinition = this._sourceHierarchyDefinition = getRxjsHierarchyDefinition(props.hierarchyDefinition);
     this._valuesFormatter = props?.formatter ?? createDefaultValueFormatter();
     this._localizedStrings = { other: "Other", unspecified: "Not specified", ...props?.localizedStrings };
     this._queryScheduler = new SubscriptionScheduler(props.queryConcurrency ?? DEFAULT_QUERY_CONCURRENCY);
@@ -272,7 +273,7 @@ class IModelHierarchyProviderImpl implements HierarchyProvider {
         `[${requestContext.requestId}] Requesting hierarchy level definitions for ${createNodeIdentifierForLogging(props.parentNode)}`,
     });
     return from(
-      defer(async () => {
+      defer(() => {
         let parentNode = props.parentNode;
         if (parentNode && HierarchyNode.isGeneric(parentNode) && parentNode.key.source && parentNode.key.source !== this._imodelAccess.imodelKey) {
           return [];
@@ -321,9 +322,7 @@ class IModelHierarchyProviderImpl implements HierarchyProvider {
                 queryExecutor: this._imodelAccess,
                 query,
                 limit: props.hierarchyLevelSizeLimit,
-                parser: this._activeHierarchyDefinition.parseNode
-                  ? async (row) => this._activeHierarchyDefinition.parseNode!(row, props.parentNode)
-                  : undefined,
+                parser: this._activeHierarchyDefinition.parseNode ? (obs) => this._activeHierarchyDefinition.parseNode!(obs) : undefined,
               }),
             ),
             map((node) => ({
@@ -353,7 +352,7 @@ class IModelHierarchyProviderImpl implements HierarchyProvider {
       // set parent node keys on the source node
       map((node) => Object.assign(node, { parentKeys: createParentNodeKeysList(props.parentNode) })),
       // format `ConcatenatedValue` labels into string labels
-      mergeMap(async (node) => applyLabelsFormatting(node, this._valuesFormatter)),
+      mergeMap((node) => applyLabelsFormatting(node, this._valuesFormatter)),
       // we have `ProcessedHierarchyNode` from here
       preProcessNodes(this._activeHierarchyDefinition),
       // process hiding
@@ -676,37 +675,37 @@ type HierarchyCacheEntry =
   | { observable: SourceNodesObservable; processingStatus: "none" }
   | { observable: ProcessedNodesObservable; processingStatus: "pre-processed" };
 
-function preProcessNodes(hierarchyFactory: HierarchyDefinition) {
+function preProcessNodes(hierarchyFactory: RxjsHierarchyDefinition) {
   return hierarchyFactory.preProcessNode
     ? processNodes(hierarchyFactory.preProcessNode.bind(hierarchyFactory))
     : (o: Observable<ProcessedGenericHierarchyNode | ProcessedInstanceHierarchyNode>) => o;
 }
 
-function postProcessNodes<ProcessedHierarchyNode>(hierarchyFactory: HierarchyDefinition) {
+function postProcessNodes<ProcessedHierarchyNode>(hierarchyFactory: RxjsHierarchyDefinition) {
   return hierarchyFactory.postProcessNode
     ? processNodes(hierarchyFactory.postProcessNode.bind(hierarchyFactory))
     : (o: Observable<ProcessedHierarchyNode>) => o;
 }
 
-function processNodes<TNode>(processor: (node: TNode) => Promise<TNode | undefined>) {
-  return (nodes: Observable<TNode>) =>
-    nodes.pipe(
-      mergeMap(processor),
-      filter((n): n is TNode => !!n),
-    );
+function processNodes<TNode>(processor: (node: Observable<TNode>) => Observable<TNode | undefined>) {
+  return (nodes: Observable<TNode>) => processor(nodes).pipe(filter((n): n is TNode => !!n));
 }
 
-async function applyLabelsFormatting<TNode extends { label: string | ConcatenatedValue }>(
+function applyLabelsFormatting<TNode extends { label: string | ConcatenatedValue }>(
   node: TNode,
   valueFormatter: IPrimitiveValueFormatter,
-): Promise<TNode & { label: string }> {
-  return {
-    ...node,
-    label: await formatConcatenatedValue({
+): Observable<TNode & { label: string }> {
+  return from(
+    formatConcatenatedValue({
       value: node.label,
       valueFormatter,
     }),
-  };
+  ).pipe(
+    map((label) => ({
+      ...node,
+      label,
+    })),
+  );
 }
 
 function createParentNodeKeysList(parentNode: ParentHierarchyNode | undefined) {
