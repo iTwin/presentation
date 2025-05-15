@@ -31,7 +31,7 @@ interface TreeRendererOwnProps {
 
 /** @alpha */
 type TreeRendererProps = Pick<UseTreeResult, "reloadTree" | "getHierarchyLevelDetails"> &
-  Pick<TreeRenderProps, "expandNode" | "selectNodes" | "isNodeSelected" | "rootNodes"> &
+  TreeRenderProps &
   Pick<TreeErrorRendererProps, "onFilterClick"> &
   Omit<TreeNodeRendererProps, "node" | "aria-level" | "aria-posinset" | "aria-setsize" | "reloadTree" | "selected" | "error"> &
   TreeRendererOwnProps &

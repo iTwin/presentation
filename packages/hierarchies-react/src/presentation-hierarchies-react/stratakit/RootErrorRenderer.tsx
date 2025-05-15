@@ -15,7 +15,7 @@ import { useLocalizationContext } from "./LocalizationContext.js";
  */
 export type RootErrorRendererProps = {
   /** Root error to be displayed */
-  rootError: ErrorInfo;
+  error: ErrorInfo;
 } & Pick<UseTreeResult, "getHierarchyLevelDetails" | "reloadTree">;
 
 /**
@@ -23,14 +23,14 @@ export type RootErrorRendererProps = {
  *
  * @internal
  */
-export function RootErrorRenderer({ rootError, getHierarchyLevelDetails, reloadTree }: RootErrorRendererProps) {
+export function RootErrorRenderer({ error, getHierarchyLevelDetails, reloadTree }: RootErrorRendererProps) {
   const { localizedStrings } = useLocalizationContext();
 
-  if (rootError.type === "ResultSetTooLarge") {
+  if (error.type === "ResultSetTooLarge") {
     const onOverrideLimit = () => getHierarchyLevelDetails(undefined)?.setSizeLimit("unbounded");
     return (
       <RootErrorContainer
-        message={localizedStrings.rootResultLimitExceeded.replace("{{limit}}", rootError.resultSetSizeLimit.toString())}
+        message={localizedStrings.rootResultLimitExceeded.replace("{{limit}}", error.resultSetSizeLimit.toString())}
         actions={[
           {
             action: onOverrideLimit,

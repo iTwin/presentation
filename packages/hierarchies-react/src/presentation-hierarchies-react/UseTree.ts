@@ -143,7 +143,7 @@ export type RenderProps =
        */
       rootErrorRenderProps: {
         /** Object containing root error information */
-        rootError: ErrorInfo;
+        error: ErrorInfo;
       };
     }
   | {
@@ -351,7 +351,7 @@ function useTreeInternal({
     if (state.model.rootNode.error) {
       return {
         rootErrorRenderProps: {
-          rootError: state.model.rootNode.error,
+          error: state.model.rootNode.error,
         },
       };
     }
