@@ -82,11 +82,10 @@ export class TreeActions {
                 collectTreePartsUntil(this._reset, props.initialRootNode),
                 tap({
                   next: (newModel: TreeModel) => {
-                    const childNodes = newModel.parentChildMap.get(props.parentId);
-                    const firstChildNode = childNodes?.length ? newModel.idToNode.get(childNodes[0]) : undefined;
+                    const parentNode = props.parentId ? newModel.idToNode.get(props.parentId) : newModel.rootNode;
                     this.handleLoadedHierarchy(props.parentId, newModel);
                     // only report load duration if children were loaded
-                    if (!firstChildNode) {
+                    if (!(parentNode && parentNode.error)) {
                       props.timeTracker?.finish();
                     }
                   },

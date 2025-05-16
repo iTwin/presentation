@@ -29,7 +29,7 @@ export type TreeRendererProps = {
   selectNodes: (nodeIds: Array<string>, changeType: SelectionChangeType) => void;
   /** Determines whether a given node is selected. */
   isNodeSelected: (nodeId: string) => boolean;
-} & TreeErrorHandlingProps;
+} & CommonRendererProps;
 
 /**
  * Type definition used to render root error handling UI component.
@@ -38,13 +38,12 @@ export type TreeRendererProps = {
 export type RootErrorRendererProps = {
   /** Object containing root error information */
   error: ErrorInfo;
-} & TreeErrorHandlingProps;
+} & CommonRendererProps;
 
 /**
- * Actions used to handle errors.
  * @alpha
  */
-interface TreeErrorHandlingProps {
+interface CommonRendererProps {
   /**
    * A function that should be called to reload the tree.
    */
