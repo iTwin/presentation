@@ -2,4 +2,4 @@
 "@itwin/presentation-hierarchies-react": major
 ---
 
-Added `stratakit/structures` as a peer dependency.
+Added `@stratakit/structures` as a peer dependency.
