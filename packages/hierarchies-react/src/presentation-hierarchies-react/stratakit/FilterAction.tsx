@@ -4,8 +4,8 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { memo, useCallback } from "react";
-import { Tree } from "@stratakit/bricks";
 import filterSvg from "@stratakit/icons/filter.svg";
+import { Tree } from "@stratakit/structures";
 import { HierarchyLevelDetails, TreeRendererProps } from "../Renderers.js";
 import { PresentationHierarchyNode } from "../TreeNode.js";
 import { useLocalizationContext } from "./LocalizationContext.js";

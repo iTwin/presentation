@@ -1,5 +1,11 @@
 # @itwin/presentation-core-interop
 
+## 1.4.0-alpha.1
+
+### Patch Changes
+
+- [#963](https://github.com/iTwin/presentation/pull/963): Fix support for `itwinjs-core@5.0-rc`.
+
 ## 1.4.0-alpha.0
 
 ### Minor Changes
