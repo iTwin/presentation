@@ -63,8 +63,9 @@
     "rxjs": "catalog:rxjs"
   },
   "peerDependencies": {
-    "@stratakit/bricks": "^0.1.0",
-    "@stratakit/foundations": "^0.1.0",
+    "@stratakit/bricks": "^0.2.0",
+    "@stratakit/foundations": "^0.1.3",
+    "@stratakit/structures": "^0.1.1",
     "@stratakit/icons": "^0.1.0",
     "react": "^17.0.0 || ^18.0.0",
     "react-dom": "^17.0.0 || ^18.0.0"
@@ -76,6 +77,9 @@
     "@stratakit/foundations": {
       "optional": true
     },
+    "@stratakit/structures": {
+      "optional": true
+    },
     "@stratakit/icons": {
       "optional": true
     }
@@ -85,6 +89,7 @@
     "@itwin/eslint-plugin": "catalog:build-tools",
     "@stratakit/bricks": "catalog:stratakit",
     "@stratakit/foundations": "catalog:stratakit",
+    "@stratakit/structures": "catalog:stratakit",
     "@stratakit/icons": "catalog:stratakit",
     "@testing-library/dom": "catalog:test-tools",
     "@testing-library/react": "catalog:test-tools",
