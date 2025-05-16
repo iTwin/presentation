@@ -9,7 +9,7 @@ import { collect, createAsyncIterator } from "presentation-test-utilities";
 import sinon from "sinon";
 import { InstancesNodeKey } from "@itwin/presentation-hierarchies";
 import { createStorage, Selectables, StorageSelectionChangeEventArgs, StorageSelectionChangesListener } from "@itwin/unified-selection";
-import { TreeModelNode } from "../../presentation-hierarchies-react/internal/TreeModel.js";
+import { TreeModelHierarchyNode } from "../../presentation-hierarchies-react/internal/TreeModel.js";
 import { useUnifiedTreeSelection } from "../../presentation-hierarchies-react/internal/UseUnifiedSelection.js";
 import { act, createStub, createTestGroupingNode, createTestHierarchyNode, createTreeModelNode, renderHook } from "../TestUtils.js";
 
@@ -17,7 +17,7 @@ describe("useUnifiedSelection", () => {
   const storage = createStorage();
   const imodelKey = "test-key";
   const source = "test-source";
-  const getTreeModelNode = sinon.stub<[string], TreeModelNode | undefined>();
+  const getTreeModelNode = sinon.stub<[string], TreeModelHierarchyNode | undefined>();
 
   const initialProps = {
     sourceName: source,

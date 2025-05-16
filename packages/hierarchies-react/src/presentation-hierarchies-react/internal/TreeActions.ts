@@ -7,9 +7,10 @@ import "./DisposePolyfill.js";
 import { Draft, enableMapSet, produce } from "immer";
 import { buffer, debounceTime, EMPTY, groupBy, map, mergeMap, Observable, reduce, Subject, switchMap, takeUntil, tap } from "rxjs";
 import { GenericInstanceFilter, HierarchyNode, HierarchyProvider } from "@itwin/presentation-hierarchies";
+import { ErrorInfo } from "../TreeNode.js";
 import { SelectionChangeType } from "../UseSelectionHandler.js";
 import { HierarchyLevelOptions, ITreeLoader, LoadedTreePart, LoadNodesOptions, TreeLoader } from "./TreeLoader.js";
-import { isTreeModelHierarchyNode, isTreeModelInfoNode, TreeModel, TreeModelHierarchyNode, TreeModelNode, TreeModelRootNode } from "./TreeModel.js";
+import { TreeModel, TreeModelHierarchyNode, TreeModelRootNode } from "./TreeModel.js";
 import { createNodeId, sameNodes } from "./Utils.js";
 
 enableMapSet();
@@ -81,11 +82,10 @@ export class TreeActions {
                 collectTreePartsUntil(this._reset, props.initialRootNode),
                 tap({
                   next: (newModel: TreeModel) => {
-                    const childNodes = newModel.parentChildMap.get(props.parentId);
-                    const firstChildNode = childNodes?.length ? newModel.idToNode.get(childNodes[0]) : undefined;
+                    const parentNode = props.parentId ? newModel.idToNode.get(props.parentId) : newModel.rootNode;
                     this.handleLoadedHierarchy(props.parentId, newModel);
-                    // only report load duration if no error occurs
-                    if (!(firstChildNode && isTreeModelInfoNode(firstChildNode))) {
+                    // only report load duration if children were loaded
+                    if (!(parentNode && parentNode.error)) {
                       props.timeTracker?.finish();
                     }
                   },
@@ -145,10 +145,9 @@ export class TreeActions {
   private loadNodes(parentId: string, ignoreCache?: boolean) {
     const parentNode = this._currentModel.idToNode.get(parentId);
     /* c8 ignore next 3 */
-    if (!parentNode || !isTreeModelHierarchyNode(parentNode)) {
+    if (!parentNode) {
       return { complete: Promise.resolve() };
     }
-
     return this.loadSubTree({
       parent: parentNode,
       getHierarchyLevelOptions: (node) => createHierarchyLevelOptions(this._currentModel, getNonGroupedParentId(node, this._nodeIdFactory)),
@@ -181,7 +180,7 @@ export class TreeActions {
 
     const rootNode = parentId !== undefined ? this.getNode(parentId) : currModel.rootNode;
     /* c8 ignore next 3 */
-    if (!rootNode || isTreeModelInfoNode(rootNode)) {
+    if (!rootNode) {
       return { complete: Promise.resolve() };
     }
 
@@ -218,7 +217,7 @@ export class TreeActions {
       : /* c8 ignore next */ new NoopTreeLoader();
   }
 
-  public getNode(nodeId: string | undefined): TreeModelNode | TreeModelRootNode | undefined {
+  public getNode(nodeId: string | undefined): TreeModelHierarchyNode | TreeModelRootNode | undefined {
     return TreeModel.getNode(this._currentModel, nodeId);
   }
 
@@ -289,7 +288,7 @@ function collectTreePartsUntil(untilNotifier: Observable<void>, rootNode?: TreeM
     source.pipe(
       reduce<LoadedTreePart, TreeModel>(
         (treeModel, loadedPart) => {
-          addNodesToModel(treeModel, loadedPart);
+          addTreePartToModel(treeModel, loadedPart);
           return treeModel;
         },
         {
@@ -302,23 +301,39 @@ function collectTreePartsUntil(untilNotifier: Observable<void>, rootNode?: TreeM
     );
 }
 
-function addNodesToModel(model: TreeModel, hierarchyPart: LoadedTreePart) {
+function addTreePartToModel(treeModel: TreeModel, loadedPart: LoadedTreePart) {
+  if ("loadedNodes" in loadedPart) {
+    addNodesToModel(treeModel, loadedPart);
+  } else {
+    addErrorToModel(treeModel, loadedPart);
+  }
+}
+
+function addErrorToModel(model: TreeModel, loadedPart: { parent: TreeModelHierarchyNode | TreeModelRootNode; error: ErrorInfo }) {
+  if (loadedPart.parent.id === undefined) {
+    model.rootNode.error = loadedPart.error;
+  } else {
+    model.idToNode.set(loadedPart.parent.id, { ...loadedPart.parent, error: loadedPart.error });
+  }
+}
+
+function addNodesToModel(model: TreeModel, loadedPart: { parent: TreeModelHierarchyNode | TreeModelRootNode; loadedNodes: TreeModelHierarchyNode[] }) {
   model.parentChildMap.set(
-    hierarchyPart.parentId,
-    hierarchyPart.loadedNodes.map((node) => node.id),
+    loadedPart.parent.id,
+    loadedPart.loadedNodes.map((node) => node.id),
   );
-  for (const node of hierarchyPart.loadedNodes) {
+  for (const node of loadedPart.loadedNodes) {
     model.idToNode.set(node.id, node);
   }
-  const parentNode = hierarchyPart.parentId ? model.idToNode.get(hierarchyPart.parentId) : undefined;
-  if (parentNode && isTreeModelHierarchyNode(parentNode)) {
+  const parentNode = loadedPart.parent.id ? model.idToNode.get(loadedPart.parent.id) : undefined;
+  if (parentNode) {
     parentNode.isExpanded = true;
   }
 }
 
 function addAttributes(node: TreeModelHierarchyNode, oldModel: TreeModel) {
   const oldNode = oldModel.idToNode.get(node.id);
-  if (oldNode && isTreeModelHierarchyNode(oldNode)) {
+  if (oldNode) {
     node.hierarchyLimit = oldNode.hierarchyLimit;
     node.instanceFilter = oldNode.instanceFilter;
     node.isSelected = oldNode.isSelected;
@@ -337,7 +352,7 @@ function collectNodes(parentId: string | undefined, model: TreeModel, pred: (nod
   }
 
   const currNode = model.idToNode.get(parentId);
-  if (!currNode || !isTreeModelHierarchyNode(currNode) || !pred(currNode)) {
+  if (!currNode || !pred(currNode)) {
     return [];
   }
 
@@ -362,7 +377,7 @@ function createHierarchyLevelOptions(model: TreeModel, nodeId: string | undefine
   }
 
   const modelNode = model.idToNode.get(nodeId);
-  if (!modelNode || isTreeModelInfoNode(modelNode)) {
+  if (!modelNode) {
     return { instanceFilter: undefined, hierarchyLevelSizeLimit: undefined };
   }
   return { instanceFilter: modelNode.instanceFilter, hierarchyLevelSizeLimit: modelNode.hierarchyLimit };

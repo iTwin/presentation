@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { useMemo } from "react";
-import { isPresentationHierarchyNode, PresentationHierarchyNode, PresentationInfoNode, PresentationTreeNode } from "../TreeNode.js";
+import { PresentationHierarchyNode } from "../TreeNode.js";
 
 /**
  * Placeholder node that is added to hierarchy as a child for a parent node while its child nodes are loading.
@@ -34,9 +34,8 @@ export type FlatNode = {
  *
  * @alpha
  * */
-export interface ErrorNode {
-  error: PresentationInfoNode;
-  parent?: PresentationHierarchyNode;
+export interface ErrorItem {
+  errorNode: PresentationHierarchyNode;
   expandTo: (expandNode: (nodeId: string) => void) => void;
 }
 
@@ -60,18 +59,15 @@ export function isPlaceholderNode(node: FlatTreeNode): node is PlaceholderNode {
  *
  * @alpha
  */
-export function useFlatTreeNodeList(rootNodes: PresentationTreeNode[]) {
+export function useFlatTreeNodeList(rootNodes: PresentationHierarchyNode[]) {
   return useMemo(() => getFlatNodes(rootNodes, 1), [rootNodes]);
 }
 
-function getFlatNodes(nodes: PresentationTreeNode[], level: number) {
+function getFlatNodes(nodes: PresentationHierarchyNode[], level: number) {
   const flatNodes: FlatTreeNode[] = [];
   nodes.forEach((node, index) => {
-    if (!isPresentationHierarchyNode(node)) {
-      return;
-    }
     flatNodes.push({ ...node, level, levelSize: nodes.length, posInLevel: index + 1 });
-    if (!node.isExpanded) {
+    if (!node.isExpanded || node.error) {
       return;
     }
     if (node.children !== true) {
@@ -90,12 +86,12 @@ function getFlatNodes(nodes: PresentationTreeNode[], level: number) {
  *
  * @alpha
  */
-export function useErrorList(rootNodes: PresentationTreeNode[]): ErrorNode[] {
+export function useErrorList(rootNodes: PresentationHierarchyNode[]): ErrorItem[] {
   return useMemo(
     () =>
       rootNodes.flatMap((rootNode) => {
-        if (!isPresentationHierarchyNode(rootNode)) {
-          return [{ parent: undefined, error: rootNode, expandTo: (expandNode) => expandTo(expandNode, []) }];
+        if (!!rootNode.error) {
+          return [{ errorNode: rootNode, expandTo: (expandNode) => expandTo(expandNode, []) }];
         }
         if (rootNode.children === true) {
           return [];
@@ -107,7 +103,7 @@ export function useErrorList(rootNodes: PresentationTreeNode[]): ErrorNode[] {
 }
 
 function getErrorNodes(parent: PresentationHierarchyNode, path: string[]) {
-  const errorList: ErrorNode[] = [];
+  const errorList: ErrorItem[] = [];
 
   if (parent.children === true) {
     return [];
@@ -115,8 +111,8 @@ function getErrorNodes(parent: PresentationHierarchyNode, path: string[]) {
 
   const pathToChild = [...path, ...(!parent.isExpanded ? [parent.id] : [])];
   parent.children.forEach((node) => {
-    if (!isPresentationHierarchyNode(node)) {
-      errorList.push({ parent, error: node, expandTo: (expandNode) => expandTo(expandNode, path) });
+    if (!!node.error) {
+      errorList.push({ errorNode: node, expandTo: (expandNode) => expandTo(expandNode, path) });
       return;
     }
 

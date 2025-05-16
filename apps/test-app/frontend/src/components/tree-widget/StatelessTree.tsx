@@ -19,10 +19,9 @@ import { createECSchemaProvider, createECSqlQueryExecutor, createIModelKey, regi
 import { Presentation } from "@itwin/presentation-frontend";
 import { createLimitingECSqlQueryExecutor, GenericInstanceFilter } from "@itwin/presentation-hierarchies";
 import {
-  FilterAction,
   HierarchyLevelDetails,
   PresentationHierarchyNode,
-  TreeRenderer,
+  StrataKitRootErrorRenderer,
   useIModelUnifiedSelectionTree,
 } from "@itwin/presentation-hierarchies-react";
 import { ModelsTreeDefinition } from "@itwin/presentation-models-tree";
@@ -31,6 +30,7 @@ import { Selectable, Selectables } from "@itwin/unified-selection";
 import { useUnifiedSelectionContext } from "@itwin/unified-selection-react";
 import { Icon } from "@stratakit/foundations";
 import { MyAppFrontend } from "../../api/MyAppFrontend";
+import { TreeRendererWithFilterAction } from "./TreeRendererWithFilterAction";
 
 type UseIModelTreeProps = Props<typeof useIModelUnifiedSelectionTree>;
 type IModelAccess = UseIModelTreeProps["imodelAccess"];
@@ -83,14 +83,7 @@ function Tree({ imodel, imodelAccess, height, width }: { imodel: IModelConnectio
     throw new Error("Unified selection context is not available");
   }
 
-  const {
-    rootNodes,
-    isLoading,
-    reloadTree,
-    setFormatter,
-    getNode: _getNode,
-    ...treeProps
-  } = useIModelUnifiedSelectionTree({
+  const { isReloading, setFormatter, ...treeProps } = useIModelUnifiedSelectionTree({
     selectionStorage: unifiedSelectionContext.storage,
     sourceName: "StatelessTreeV2",
     imodelAccess,
@@ -165,15 +158,20 @@ function Tree({ imodel, imodelAccess, height, width }: { imodel: IModelConnectio
     return <Icon href={getIcon(node)} />;
   }, []);
 
-  const getActions = useCallback(
-    (node: PresentationHierarchyNode) => [
-      <FilterAction key="filter" node={node} onFilter={setFilteringOptions} getHierarchyLevelDetails={treeProps.getHierarchyLevelDetails} />,
-    ],
-    [treeProps.getHierarchyLevelDetails],
-  );
-
   const renderContent = () => {
-    if (rootNodes && rootNodes.length === 0 && filter) {
+    if (treeProps.rootErrorRendererProps) {
+      return <StrataKitRootErrorRenderer {...treeProps.rootErrorRendererProps} />;
+    }
+
+    if (!treeProps.treeRendererProps) {
+      return (
+        <Flex alignItems="center" justifyContent="center" flexDirection="column" style={{ height: "100%" }}>
+          <Text isMuted> Loading </Text>
+        </Flex>
+      );
+    }
+
+    if (treeProps.treeRendererProps.rootNodes.length === 0 && filter) {
       return (
         <Flex alignItems="center" justifyContent="center" flexDirection="column" style={{ height: "100%" }}>
           <Text isMuted>There are no nodes matching filter text {filter}</Text>
@@ -182,13 +180,10 @@ function Tree({ imodel, imodelAccess, height, width }: { imodel: IModelConnectio
     }
 
     return (
-      <TreeRenderer
-        {...treeProps}
+      <TreeRendererWithFilterAction
+        {...treeProps.treeRendererProps}
         style={{ height: "100%", width: "100%" }}
-        rootNodes={rootNodes ?? []}
-        reloadTree={reloadTree}
         onFilterClick={setFilteringOptions}
-        getActions={getActions}
         selectionMode={"extended"}
         getDecorations={getDecorations}
       />
@@ -196,7 +191,7 @@ function Tree({ imodel, imodelAccess, height, width }: { imodel: IModelConnectio
   };
 
   const renderLoadingOverlay = () => {
-    if (rootNodes !== undefined && !isLoading) {
+    if (treeProps.rootErrorRendererProps !== undefined || treeProps.treeRendererProps !== undefined || !isReloading) {
       return <></>;
     }
     return (
