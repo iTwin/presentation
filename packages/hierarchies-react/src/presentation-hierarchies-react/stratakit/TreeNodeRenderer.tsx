@@ -19,8 +19,9 @@ import {
   useMemo,
   useRef,
 } from "react";
-import { Spinner, Tree } from "@stratakit/bricks";
+import { Spinner } from "@stratakit/bricks";
 import refreshSvg from "@stratakit/icons/refresh.svg";
+import { Tree } from "@stratakit/structures";
 import { PresentationHierarchyNode } from "../TreeNode.js";
 import { useTree, UseTreeResult } from "../UseTree.js";
 import { ErrorNode } from "./FlatTreeNode.js";

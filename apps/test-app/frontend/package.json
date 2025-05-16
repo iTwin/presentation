@@ -44,6 +44,7 @@
     "@itwin/unified-selection-react": "workspace:*",
     "@itwin/webgl-compatibility": "catalog:itwinjs-core-dev",
     "@stratakit/bricks": "catalog:stratakit",
+    "@stratakit/structures": "catalog:stratakit",
     "@stratakit/foundations": "catalog:stratakit",
     "@stratakit/icons": "catalog:stratakit",
     "@opentelemetry/api": "^1.9.0",
