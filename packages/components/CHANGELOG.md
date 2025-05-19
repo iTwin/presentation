@@ -1,5 +1,11 @@
 # Change Log - @itwin/presentation-components
 
+## 5.12.3
+
+### Patch Changes
+
+- [#967](https://github.com/iTwin/presentation/pull/967): Fix potential infinite recursion when disposing objects of one of the following classes: `ContentDataProvider`, `PresentationPropertyDataProvider`, `UnifiedSelectionTreeEventHandler`, `PresentationTreeDataProvider`.
+
 ## 5.12.2
 
 ### Patch Changes
