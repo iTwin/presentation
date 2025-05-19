@@ -31,10 +31,10 @@ catalogs:
     reflect-metadata: ^0.1.14
 
   appui:
-    '@itwin/appui-react': ^5.1.0
-    '@itwin/core-react': ^5.1.0
-    '@itwin/components-react': ^5.1.0
-    '@itwin/imodel-components-react': ^5.1.0
+    '@itwin/appui-react': ^5.6.0
+    '@itwin/core-react': ^5.6.0
+    '@itwin/components-react': ^5.6.0
+    '@itwin/imodel-components-react': ^5.6.0
 
   itwinui:
     '@itwin/itwinui-icons-react': ^2.9.0

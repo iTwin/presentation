@@ -174,18 +174,22 @@ export class ContentDataProvider implements IContentDataProvider {
     this._diagnosticsOptions = createDiagnosticsOptions(props);
   }
 
-  /** Destructor. Must be called to clean up.  */
-  public [Symbol.dispose]() {
+  #dispose() {
     for (const removeListener of this._listeners) {
       removeListener();
     }
     this._listeners = [];
   }
 
+  /** Destructor. Must be called to clean up.  */
+  public [Symbol.dispose]() {
+    this.#dispose();
+  }
+
   /** @deprecated in 5.7. Use `[Symbol.dispose]` instead. */
   /* c8 ignore next 3 */
   public dispose() {
-    this[Symbol.dispose]();
+    this.#dispose();
   }
 
   /** Display type used to format content */

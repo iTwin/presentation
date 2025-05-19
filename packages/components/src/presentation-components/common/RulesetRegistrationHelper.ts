@@ -28,15 +28,19 @@ export class RulesetRegistrationHelper implements Disposable {
     }
   }
 
-  /** Destructor. Must be called to clean up.  */
-  public [Symbol.dispose]() {
+  #dispose() {
     this._isDisposed = true;
     this.disposeRegisteredRuleset();
   }
 
+  /** Destructor. Must be called to clean up.  */
+  public [Symbol.dispose]() {
+    this.#dispose();
+  }
+
   /** @deprecated in 5.7. Use `[Symbol.dispose]` instead. */
   public dispose() {
-    this[Symbol.dispose]();
+    this.#dispose();
   }
 
   /** Get ID of the ruleset. */
