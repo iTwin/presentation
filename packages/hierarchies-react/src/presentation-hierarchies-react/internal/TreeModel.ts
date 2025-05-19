@@ -52,7 +52,18 @@ export namespace TreeModel {
     }
 
     node.isExpanded = isExpanded;
-    if (!isExpanded || !node.children) {
+    if (!isExpanded) {
+      return "none";
+    }
+
+    if (node.error?.type === "Unknown") {
+      node.isLoading = true;
+      // remove subtree if there `Unknown` error info in order to attempt reloading children
+      TreeModel.removeSubTree(model, nodeId);
+      return "reloadChildren";
+    }
+
+    if (!node.children) {
       return "none";
     }
 
@@ -62,24 +73,13 @@ export namespace TreeModel {
       return "loadChildren";
     }
 
-    if (children.length !== 1) {
-      return "none";
-    }
-
-    const firstChild = TreeModel.getNode(model, children[0]);
-    if (!firstChild || firstChild.error?.type !== "Unknown") {
-      return "none";
-    }
-
-    // remove subtree if there is only one `Unknown` info node in order to attempt reloading children
-    TreeModel.removeSubTree(model, nodeId);
-    node.isLoading = true;
-    return "reloadChildren";
+    return "none";
   }
 
   /** @internal */
   export function addHierarchyPart(model: TreeModel, rootId: string | undefined, hierarchyPart: TreeModel): void {
     removeSubTree(model, rootId);
+    model.rootNode.error = hierarchyPart.rootNode.error;
 
     for (const [parentId, children] of hierarchyPart.parentChildMap) {
       model.parentChildMap.set(parentId, children);

@@ -6,7 +6,7 @@
 import { expect } from "chai";
 import { GenericInstanceFilter } from "@itwin/presentation-hierarchies";
 import { isTreeModelHierarchyNode, TreeModel } from "../../presentation-hierarchies-react/internal/TreeModel.js";
-import { createTestGenericError, createTestHierarchyNode, createTestNoFilterMatchesError, createTreeModel, getHierarchyNode } from "../TestUtils.js";
+import { createTestGenericErrorInfo, createTestHierarchyNode, createTestNoFilterMatchesErrorInfo, createTreeModel, getHierarchyNode } from "../TestUtils.js";
 
 describe("TreeModel", () => {
   describe("expandNode", () => {
@@ -118,16 +118,14 @@ describe("TreeModel", () => {
         {
           id: "root-1",
           isExpanded: false,
-          children: ["info-1"],
-        },
-        {
-          ...createTestGenericError({ id: "info-1" }),
+          children: [],
+          error: createTestGenericErrorInfo({ id: "info-1" }),
         },
       ]);
 
       expect(TreeModel.expandNode(model, "root-1", true)).to.be.eq("reloadChildren");
       expect(getHierarchyNode(model, "root-1")?.isLoading).to.be.true;
-      expect(TreeModel.getNode(model, "info-1")).to.be.undefined;
+      expect(TreeModel.getNode(model, "root-1")?.error).to.be.undefined;
     });
 
     it("returns `none` and does not remove child info node when expanding node", () => {
@@ -139,15 +137,13 @@ describe("TreeModel", () => {
         {
           id: "root-1",
           isExpanded: false,
-          children: ["info-1"],
-        },
-        {
-          ...createTestNoFilterMatchesError({ id: "info-1" }),
+          children: [],
+          error: createTestNoFilterMatchesErrorInfo({ id: "info-1" }),
         },
       ]);
 
       expect(TreeModel.expandNode(model, "root-1", true)).to.be.eq("none");
-      expect(TreeModel.getNode(model, "info-1")).to.not.be.undefined;
+      expect(TreeModel.getNode(model, "root-1")?.error).to.not.be.undefined;
     });
 
     it("does nothing if node does not exist", () => {

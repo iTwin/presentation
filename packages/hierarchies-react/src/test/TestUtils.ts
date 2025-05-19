@@ -3,6 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
+import { expect } from "chai";
 import { ReactElement } from "react";
 import sinon from "sinon";
 import { BeEvent } from "@itwin/core-bentley";
@@ -12,6 +13,7 @@ import { configure, RenderOptions, RenderResult, render as renderRTL } from "@te
 import { userEvent, UserEvent } from "@testing-library/user-event";
 import { isTreeModelHierarchyNode, TreeModel, TreeModelHierarchyNode } from "../presentation-hierarchies-react/internal/TreeModel.js";
 import { GenericErrorInfo, NoFilterMatchesErrorInfo, ResultSetTooLargeErrorInfo } from "../presentation-hierarchies-react/TreeNode.js";
+import { UseTreeResult } from "../presentation-hierarchies-react/UseTree.js";
 
 configure({ reactStrictMode: true });
 
@@ -83,7 +85,7 @@ export function createTreeModelNode(props: Partial<TreeModelHierarchyNode> & { i
   };
 }
 
-export function createTestGenericError({ id, ...props }: Partial<GenericErrorInfo> & { id: string }): GenericErrorInfo {
+export function createTestGenericErrorInfo({ id, ...props }: Partial<GenericErrorInfo> & { id: string }): GenericErrorInfo {
   return {
     ...props,
     id,
@@ -92,7 +94,7 @@ export function createTestGenericError({ id, ...props }: Partial<GenericErrorInf
   };
 }
 
-export function createTestNoFilterMatchesError({ id, ...props }: Partial<NoFilterMatchesErrorInfo> & { id: string }): NoFilterMatchesErrorInfo {
+export function createTestNoFilterMatchesErrorInfo({ id, ...props }: Partial<NoFilterMatchesErrorInfo> & { id: string }): NoFilterMatchesErrorInfo {
   return {
     ...props,
     id,
@@ -100,7 +102,7 @@ export function createTestNoFilterMatchesError({ id, ...props }: Partial<NoFilte
   };
 }
 
-export function createTestResultSetTooLargeError({ id, ...props }: Partial<ResultSetTooLargeErrorInfo> & { id: string }): ResultSetTooLargeErrorInfo {
+export function createTestResultSetTooLargeErrorInfo({ id, ...props }: Partial<ResultSetTooLargeErrorInfo> & { id: string }): ResultSetTooLargeErrorInfo {
   return {
     ...props,
     id,
@@ -177,4 +179,12 @@ export function createHierarchyProviderStub(customizations?: Partial<StubbedHier
   provider.setFormatter.callsFake((arg) => provider.hierarchyChanged.raiseEvent({ formatterChange: { newFormatter: arg } }));
   provider.setHierarchyFilter.callsFake((arg) => provider.hierarchyChanged.raiseEvent({ filterChange: { newFilter: arg } }));
   return provider;
+}
+
+export function getTreeRendererProps(useTreeResult: UseTreeResult) {
+  if (useTreeResult.rootErrorRendererProps !== undefined) {
+    expect(false).to.be.true;
+    return undefined;
+  }
+  return useTreeResult.treeRendererProps;
 }

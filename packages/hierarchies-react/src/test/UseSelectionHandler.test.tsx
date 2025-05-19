@@ -41,10 +41,6 @@ describe("useSelectionHandler", () => {
     return { id, isExpanded, children } as PresentationHierarchyNode;
   };
 
-  // const createInfoNode = (id: string) => {
-  //   return { id, message: "message" } as PresentationError;
-  // };
-
   const createProps = (rootNodes: Array<PresentationHierarchyNode>, selectionMode: SelectionMode, isSelected: boolean) => {
     return { rootNodes, selectNodes: selectNodesStub, selectionMode, isSelected };
   };
@@ -395,18 +391,18 @@ describe("useSelectionHandler", () => {
         expect(selectNodesStub).to.be.calledOnceWith(["node-3", "node-4"], "replace");
       });
 
-      // it("does nothing when invalid node clicked and `shift` used", async () => {
-      //   const { user, getByText } = render(<TestComponent {...createProps(undefined, selectionMode, true)} />);
+      it("does nothing when invalid node clicked and `shift` used", async () => {
+        const { user, getByText } = render(<TestComponent {...createProps([], selectionMode, true)} />);
 
-      //   const node = getByText("invalid");
-      //   node.focus();
+        const node = getByText("invalid");
+        node.focus();
 
-      //   await user.keyboard(`{Shift>}`);
-      //   await clickNode(user, node);
-      //   await user.keyboard(`{/Shift}`);
+        await user.keyboard(`{Shift>}`);
+        await clickNode(user, node);
+        await user.keyboard(`{/Shift}`);
 
-      //   expect(selectNodesStub).to.not.be.called;
-      // });
+        expect(selectNodesStub).to.not.be.called;
+      });
     });
   };
 
