@@ -41,9 +41,9 @@ describe("Learning snippets", async () => {
           selectionStorage: props.selectionStorage,
         });
 
-        // don't render anything if the table is loading
+        // render a "loading" message while the table content is loading
         if (isLoading) {
-          return null;
+          return <>Loading...</>;
         }
 
         // if we're not loading and still don't have any columns or the columns list is empty - there's nothing
