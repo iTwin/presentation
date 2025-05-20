@@ -1,5 +1,11 @@
 # @itwin/presentation-hierarchies-react
 
+## 2.0.0-alpha.20
+
+### Major Changes
+
+- [#965](https://github.com/iTwin/presentation/pull/965): Added `@stratakit/structures` as a peer dependency.
+
 ## 2.0.0-alpha.19
 
 ### Major Changes
