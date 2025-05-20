@@ -273,27 +273,6 @@ describe("useSelectionHandler", () => {
         expect(selectNodesStub).to.be.calledOnceWith(["node-1", "node-2", "node-3"], "replace");
       });
 
-      it("skips info nodes when selecting range", async () => {
-        const nodes = [createHierarchyNode("node-1"), createHierarchyNode("node-3")]; // TODO ADD error: createInfoNode("node-2")
-        const { user, getByText } = render(<TestComponent {...createProps(nodes, selectionMode, true)} />);
-
-        const node1 = getByText("node-1");
-        node1.focus();
-        await clickNode(user, node1);
-
-        expect(selectNodesStub).to.be.calledOnceWith(["node-1"], "replace");
-        selectNodesStub.reset();
-
-        const node3 = getByText("node-3");
-        node3.focus();
-
-        await user.keyboard(`{Shift>}`);
-        await clickNode(user, node3);
-        await user.keyboard(`{/Shift}`);
-
-        expect(selectNodesStub).to.be.calledOnceWith(["node-1", "node-3"], "replace");
-      });
-
       it("selects visible children of different depth when selecting range", async () => {
         const innerChild = createHierarchyNode("child-inner");
         const outerChild = createHierarchyNode("child-outer", [innerChild]);

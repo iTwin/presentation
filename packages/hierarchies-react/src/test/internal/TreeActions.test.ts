@@ -47,7 +47,9 @@ describe("TreeActions", () => {
     onLoadStub.reset();
     onHierarchyLoadErrorStub.reset();
 
-    provider.getNodes.resolves([]);
+    provider.getNodes.callsFake(() => {
+      return createAsyncIterator([]);
+    });
   });
 
   describe("reset", () => {
@@ -399,9 +401,9 @@ describe("TreeActions", () => {
       ]);
 
       // simulate loader return
-      provider.getNodes.callsFake(() => {
-        return createAsyncIterator([]);
-      });
+      // provider.getNodes.callsFake(() => {
+      //   return createAsyncIterator([]);
+      // });
 
       const actions = createActions(model);
 
@@ -437,9 +439,9 @@ describe("TreeActions", () => {
         },
       ]);
       // simulate loader return
-      provider.getNodes.callsFake(() => {
-        return createAsyncIterator([]);
-      });
+      // provider.getNodes.callsFake(() => {
+      //   return createAsyncIterator([]);
+      // });
 
       const actions = createActions(model);
 
@@ -494,9 +496,9 @@ describe("TreeActions", () => {
         },
       ]);
       // simulate loader return
-      provider.getNodes.callsFake(() => {
-        return createAsyncIterator([]);
-      });
+      // provider.getNodes.callsFake(() => {
+      //   return createAsyncIterator([]);
+      // });
 
       const actions = createActions(model);
 
@@ -558,9 +560,9 @@ describe("TreeActions", () => {
         },
       ]);
       // simulate loader return
-      provider.getNodes.callsFake(() => {
-        return createAsyncIterator([]);
-      });
+      // provider.getNodes.callsFake(() => {
+      //   return createAsyncIterator([]);
+      // });
 
       const actions = createActions(model);
 
@@ -599,9 +601,9 @@ describe("TreeActions", () => {
         },
       ]);
       // simulate loader return
-      provider.getNodes.callsFake(() => {
-        return createAsyncIterator([]);
-      });
+      // provider.getNodes.callsFake(() => {
+      //   return createAsyncIterator([]);
+      // });
 
       const actions = createActions(model);
 
@@ -743,16 +745,6 @@ describe("TreeActions", () => {
           children: [],
         },
       ]);
-      // simulate loader return
-      provider.getNodes.callsFake(() => {
-        return createAsyncIterator([]);
-      });
-
-      provider.getNodes.reset();
-      provider.getNodes.callsFake(() => {
-        return createAsyncIterator([]);
-      });
-
       const actions = createActions(model);
 
       await actions.setInstanceFilter("root-1", filter)?.complete;
@@ -781,9 +773,9 @@ describe("TreeActions", () => {
       ]);
 
       provider.getNodes.reset();
-      provider.getNodes.callsFake(() => {
-        return createAsyncIterator([]);
-      });
+      // provider.getNodes.callsFake(() => {
+      //   return createAsyncIterator([]);
+      // });
 
       const actions = createActions(model);
 
@@ -1289,11 +1281,6 @@ describe("TreeActions", () => {
         },
       ]);
       const actions = createActions(model);
-
-      provider.getNodes.reset();
-      provider.getNodes.callsFake(() => {
-        return createAsyncIterator([]);
-      });
 
       actions.expandNode("root-1", true);
 
