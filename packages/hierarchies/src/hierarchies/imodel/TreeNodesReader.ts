@@ -3,10 +3,10 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { from, mergeMap, Observable, of } from "rxjs";
+import { from, map, mergeMap, Observable, of } from "rxjs";
 import { Id64String } from "@itwin/core-bentley";
 import { ECSqlQueryDef, parseInstanceLabel } from "@itwin/presentation-shared";
-import { NodeParser } from "./IModelHierarchyDefinition.js";
+import { RxjsNodeParser } from "../internal/RxjsHierarchyDefinition.js";
 import { InstanceHierarchyNodeProcessingParams, SourceInstanceHierarchyNode } from "./IModelHierarchyNode.js";
 import { LimitingECSqlQueryExecutor } from "./LimitingECSqlQueryExecutor.js";
 import { NodeSelectClauseColumnNames } from "./NodeSelectQueryFactory.js";
@@ -15,13 +15,13 @@ interface ReadNodesProps {
   queryExecutor: LimitingECSqlQueryExecutor;
   query: ECSqlQueryDef;
   limit?: number | "unbounded";
-  parser?: NodeParser;
+  parser?: RxjsNodeParser;
 }
 
 /** @internal */
 export function readNodes(props: ReadNodesProps): Observable<SourceInstanceHierarchyNode> {
   const { queryExecutor, query, limit } = props;
-  const parser = props?.parser ?? defaultNodesParser;
+  const parser: RxjsNodeParser = props?.parser ?? ((obs) => obs.pipe(map(({ row }) => defaultNodesParser(row))));
   const config: Parameters<LimitingECSqlQueryExecutor["createQueryReader"]>[1] = {
     rowFormat: "ECSqlPropertyNames",
     ...(limit !== undefined ? { limit } : undefined),
@@ -29,8 +29,7 @@ export function readNodes(props: ReadNodesProps): Observable<SourceInstanceHiera
 
   return from(queryExecutor.createQueryReader(query, config)).pipe(
     mergeMap((row) => {
-      const node = parser(row);
-      return node instanceof Promise ? from(node) : of(node);
+      return parser(of({ row }));
     }),
   );
 }
