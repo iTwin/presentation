@@ -298,6 +298,19 @@ describe("useTree", () => {
     });
   });
 
+  it("`getNode` returns undefined when `nodeId` refers to non existing node", async () => {
+    hierarchyProvider.getNodes.callsFake(() => {
+      return createAsyncIterator([createTestHierarchyNode({ id: "root-1" })]);
+    });
+    const { result } = renderHook(useTree, { initialProps });
+
+    await waitFor(() => {
+      const treeRenderProps = getTreeRendererProps(result.current);
+      expect(treeRenderProps!.rootNodes).to.have.lengthOf(1);
+      expect(result.current.getNode("test-id")).to.be.undefined;
+    });
+  });
+
   it("expands node", async () => {
     const rootNodes = [createTestHierarchyNode({ id: "root-1", children: true })];
     const childNodes = [createTestHierarchyNode({ id: "child-1" })];

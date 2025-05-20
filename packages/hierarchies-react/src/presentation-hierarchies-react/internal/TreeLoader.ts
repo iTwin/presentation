@@ -131,10 +131,6 @@ function createTreeModelNodesFactory({
   treeNodeIdFactory: (node: Pick<HierarchyNode, "key" | "parentKeys">) => string;
 }): (node: HierarchyNode) => TreeModelHierarchyNode {
   return (node: HierarchyNode) => {
-    if (!isHierarchyNode(node)) {
-      return node;
-    }
-
     const modelNode: TreeModelHierarchyNode = {
       id: treeNodeIdFactory(node),
       children: node.children,
@@ -143,10 +139,6 @@ function createTreeModelNodesFactory({
     };
     return buildNode ? buildNode(modelNode) : modelNode;
   };
-}
-
-function isHierarchyNode(node: ErrorInfo | HierarchyNode): node is HierarchyNode {
-  return "key" in node && node.key !== undefined;
 }
 
 function isRowsLimitError(error: Error): error is RowsLimitExceededError {

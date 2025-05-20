@@ -66,9 +66,6 @@ export function useSelectionHandler(props: UseSelectionHandlerProps): UseSelecti
   });
 
   useEffect(() => {
-    if (!rootNodes) {
-      return;
-    }
     state.current = computeFlatNodeList(rootNodes);
   }, [rootNodes]);
 
