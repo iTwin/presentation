@@ -754,11 +754,6 @@ describe("TreeModel", () => {
           id: "root-3",
           isSelected: false,
         },
-        // {
-        //   id: "root-4",
-        //   type: "Unknown",
-        //   message: "info",
-        // },
       ]);
 
       TreeModel.selectNodes(model, ["root-2", "root-3"], "replace");
@@ -845,12 +840,3 @@ describe("isTreeModelHierarchyNode", () => {
       .be.true;
   });
 });
-
-// describe("isTreeModelInfoNode", () => {
-//   it("returns correct result", () => {
-//     expect(isTreeModelInfoNode({ id: undefined, nodeData: undefined })).to.be.false;
-//     expect(isTreeModelInfoNode({ id: "info-node", parentId: undefined, type: "Unknown", message: "info" })).to.be.true;
-//     expect(isTreeModelInfoNode({ id: "hierarchy-node", label: "Node", children: false, nodeData: createTestHierarchyNode({ id: "hierarchy-node" }) })).to.be
-//       .false;
-//   });
-// });

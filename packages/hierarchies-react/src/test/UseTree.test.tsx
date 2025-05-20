@@ -46,7 +46,7 @@ describe("useTree", () => {
     const { result, unmount } = renderHook(useTree, { initialProps });
     await waitFor(() => {
       const treeRenderProps = getTreeRendererProps(result.current);
-      expect(treeRenderProps?.rootNodes).to.have.lengthOf(1);
+      expect(treeRenderProps!.rootNodes).to.have.lengthOf(1);
     });
     unmount();
     await waitFor(() => {
@@ -76,7 +76,7 @@ describe("useTree", () => {
 
     await waitFor(() => {
       const treeRenderProps = getTreeRendererProps(result.current);
-      expect(treeRenderProps?.rootNodes).to.have.lengthOf(2);
+      expect(treeRenderProps!.rootNodes).to.have.lengthOf(2);
     });
   });
 
@@ -100,7 +100,7 @@ describe("useTree", () => {
 
     await waitFor(() => {
       const treeRenderProps = getTreeRendererProps(result.current);
-      expect(treeRenderProps?.rootNodes).to.have.lengthOf(1);
+      expect(treeRenderProps!.rootNodes).to.have.lengthOf(1);
     });
   });
 
@@ -127,7 +127,7 @@ describe("useTree", () => {
     await waitFor(() => {
       const treeRenderProps = getTreeRendererProps(result.current);
       expect(treeRenderProps).to.be.not.undefined;
-      expect(treeRenderProps?.rootNodes).to.have.lengthOf(1);
+      expect(treeRenderProps!.rootNodes).to.have.lengthOf(1);
       expect(hierarchyProvider.setHierarchyFilter).to.be.calledWith({ paths });
     });
   });
@@ -153,7 +153,7 @@ describe("useTree", () => {
 
     await waitFor(() => {
       const treeRenderProps = getTreeRendererProps(result.current);
-      expect(treeRenderProps?.rootNodes).to.have.lengthOf(1);
+      expect(treeRenderProps!.rootNodes).to.have.lengthOf(1);
       expect(hierarchyProvider.setHierarchyFilter).to.be.calledWith(undefined);
     });
   });
@@ -206,8 +206,8 @@ describe("useTree", () => {
 
     await waitFor(() => {
       const treeRenderProps = getTreeRendererProps(result.current);
-      expect(treeRenderProps?.rootNodes).to.have.lengthOf(1);
-      expect(treeRenderProps?.rootNodes![0].id).to.be.eq(createNodeId(rootNode2));
+      expect(treeRenderProps!.rootNodes).to.have.lengthOf(1);
+      expect(treeRenderProps!.rootNodes[0].id).to.be.eq(createNodeId(rootNode2));
       expect(hierarchyProvider.setHierarchyFilter).to.be.calledWith({ paths: paths2 });
     });
 
@@ -217,8 +217,8 @@ describe("useTree", () => {
 
     await waitFor(() => {
       const treeRenderProps = getTreeRendererProps(result.current);
-      expect(treeRenderProps?.rootNodes).to.have.lengthOf(1);
-      expect(treeRenderProps?.rootNodes![0].id).to.be.eq(createNodeId(rootNode2));
+      expect(treeRenderProps!.rootNodes).to.have.lengthOf(1);
+      expect(treeRenderProps!.rootNodes[0].id).to.be.eq(createNodeId(rootNode2));
       expect(hierarchyProvider.setHierarchyFilter).to.not.be.calledWith({ paths: paths1 });
     });
   });
@@ -236,7 +236,7 @@ describe("useTree", () => {
 
     await waitFor(() => {
       const treeRenderProps = getTreeRendererProps(result.current);
-      expect(treeRenderProps?.rootNodes).to.have.lengthOf(1);
+      expect(treeRenderProps!.rootNodes).to.have.lengthOf(1);
       const rootNode = treeRenderProps!.rootNodes[0];
       expect(rootNode.id).to.be.eq(createNodeId(rootNodes1[0]));
       expect(rootNode.isExpanded).to.be.true;
@@ -256,7 +256,7 @@ describe("useTree", () => {
 
     await waitFor(() => {
       const treeRenderProps = getTreeRendererProps(result.current);
-      expect(treeRenderProps?.rootNodes).to.have.lengthOf(1);
+      expect(treeRenderProps!.rootNodes).to.have.lengthOf(1);
       const rootNode = treeRenderProps!.rootNodes[0];
       expect(rootNode.id).to.be.eq(createNodeId(rootNodes2[0]));
       expect(rootNode.isExpanded).to.be.false;
@@ -275,7 +275,7 @@ describe("useTree", () => {
 
     await waitFor(() => {
       const treeRenderProps = getTreeRendererProps(result.current);
-      expect(treeRenderProps?.rootNodes).to.have.lengthOf(1);
+      expect(treeRenderProps!.rootNodes).to.have.lengthOf(1);
       expect(hierarchyProvider.setHierarchyFilter).to.be.calledWith(undefined);
     });
   });
@@ -290,7 +290,7 @@ describe("useTree", () => {
 
     await waitFor(() => {
       const treeRenderProps = getTreeRendererProps(result.current);
-      expect(treeRenderProps?.rootNodes).to.have.lengthOf(1);
+      expect(treeRenderProps!.rootNodes).to.have.lengthOf(1);
       expect(result.current.getNode(createNodeId(rootNodes[0]))).to.containSubset({
         id: createNodeId(rootNodes[0]),
         nodeData: rootNodes[0],
@@ -315,18 +315,18 @@ describe("useTree", () => {
 
     await waitFor(() => {
       const treeRenderProps = getTreeRendererProps(result.current);
-      expect(treeRenderProps?.rootNodes).to.have.lengthOf(1);
-      expect(treeRenderProps?.rootNodes[0].children).to.be.true;
+      expect(treeRenderProps!.rootNodes).to.have.lengthOf(1);
+      expect(treeRenderProps!.rootNodes[0].children).to.be.true;
     });
 
     act(() => {
-      getTreeRendererProps(result.current)?.expandNode(createNodeId(rootNodes[0]), true);
+      getTreeRendererProps(result.current)!.expandNode(createNodeId(rootNodes[0]), true);
     });
 
     await waitFor(() => {
       const treeRenderProps = getTreeRendererProps(result.current);
-      expect(treeRenderProps?.rootNodes).to.have.lengthOf(1);
-      expect(treeRenderProps?.rootNodes[0].children).to.have.lengthOf(1);
+      expect(treeRenderProps!.rootNodes).to.have.lengthOf(1);
+      expect(treeRenderProps!.rootNodes[0].children).to.have.lengthOf(1);
     });
   });
 
@@ -340,18 +340,18 @@ describe("useTree", () => {
 
     await waitFor(() => {
       const treeRenderProps = getTreeRendererProps(result.current);
-      expect(treeRenderProps?.rootNodes).to.have.lengthOf(1);
-      expect(treeRenderProps?.isNodeSelected(createNodeId(rootNodes[0]))).to.be.false;
+      expect(treeRenderProps!.rootNodes).to.have.lengthOf(1);
+      expect(treeRenderProps!.isNodeSelected(createNodeId(rootNodes[0]))).to.be.false;
     });
 
     act(() => {
-      getTreeRendererProps(result.current)?.selectNodes([createNodeId(rootNodes[0])], "add");
+      getTreeRendererProps(result.current)!.selectNodes([createNodeId(rootNodes[0])], "add");
     });
 
     await waitFor(() => {
       const treeRenderProps = getTreeRendererProps(result.current);
-      expect(treeRenderProps?.rootNodes).to.have.lengthOf(1);
-      expect(treeRenderProps?.isNodeSelected(createNodeId(rootNodes[0]))).to.be.true;
+      expect(treeRenderProps!.rootNodes).to.have.lengthOf(1);
+      expect(treeRenderProps!.isNodeSelected(createNodeId(rootNodes[0]))).to.be.true;
     });
   });
 
@@ -370,16 +370,16 @@ describe("useTree", () => {
     const { result } = renderHook(useTree, { initialProps });
 
     await waitFor(() => {
-      expect(result.current.rootErrorRendererProps?.error.type).to.be.eq("ResultSetTooLarge");
+      expect(result.current.rootErrorRendererProps!.error.type).to.be.eq("ResultSetTooLarge");
     });
 
     act(() => {
-      result.current.rootErrorRendererProps?.getHierarchyLevelDetails(undefined)?.setSizeLimit(50);
+      result.current.rootErrorRendererProps!.getHierarchyLevelDetails(undefined)?.setSizeLimit(50);
     });
 
     await waitFor(() => {
       const treeRenderProps = getTreeRendererProps(result.current);
-      expect(treeRenderProps?.rootNodes).to.have.lengthOf(2);
+      expect(treeRenderProps!.rootNodes).to.have.lengthOf(2);
     });
   });
 
@@ -396,28 +396,28 @@ describe("useTree", () => {
 
     await waitFor(() => {
       const treeRenderProps = getTreeRendererProps(result.current);
-      expect(treeRenderProps?.rootNodes).to.have.lengthOf(2);
+      expect(treeRenderProps!.rootNodes).to.have.lengthOf(2);
     });
 
     const filter: hierarchiesModule.GenericInstanceFilter = { propertyClassNames: [], relatedInstances: [], rules: { operator: "and", rules: [] } };
 
     act(() => {
       const treeRenderProps = getTreeRendererProps(result.current);
-      treeRenderProps?.getHierarchyLevelDetails(undefined)?.setInstanceFilter(filter);
+      treeRenderProps!.getHierarchyLevelDetails(undefined)!.setInstanceFilter(filter);
     });
 
     await waitFor(() => {
       const treeRenderProps = getTreeRendererProps(result.current);
-      expect(treeRenderProps?.rootNodes).to.have.lengthOf(1);
+      expect(treeRenderProps!.rootNodes).to.have.lengthOf(1);
     });
 
     act(() => {
-      getTreeRendererProps(result.current)?.getHierarchyLevelDetails(undefined)?.setInstanceFilter(undefined);
+      getTreeRendererProps(result.current)!.getHierarchyLevelDetails(undefined)?.setInstanceFilter(undefined);
     });
 
     await waitFor(() => {
       const treeRenderProps = getTreeRendererProps(result.current);
-      expect(treeRenderProps?.rootNodes).to.have.lengthOf(2);
+      expect(treeRenderProps!.rootNodes).to.have.lengthOf(2);
     });
   });
 
@@ -438,30 +438,30 @@ describe("useTree", () => {
 
     await waitFor(() => {
       const treeRenderProps = getTreeRendererProps(result.current);
-      expect(treeRenderProps?.rootNodes).to.have.lengthOf(1);
-      expect(treeRenderProps?.rootNodes[0].children).to.have.lengthOf(2);
+      expect(treeRenderProps!.rootNodes).to.have.lengthOf(1);
+      expect(treeRenderProps!.rootNodes[0].children).to.have.lengthOf(2);
     });
 
     const filter: hierarchiesModule.GenericInstanceFilter = { propertyClassNames: [], relatedInstances: [], rules: { operator: "and", rules: [] } };
 
     act(() => {
-      getTreeRendererProps(result.current)?.getHierarchyLevelDetails(createNodeId(rootNodes[0]))?.setInstanceFilter(filter);
+      getTreeRendererProps(result.current)!.getHierarchyLevelDetails(createNodeId(rootNodes[0]))?.setInstanceFilter(filter);
     });
 
     await waitFor(() => {
       const treeRenderProps = getTreeRendererProps(result.current);
-      expect(treeRenderProps?.rootNodes).to.have.lengthOf(1);
-      expect(treeRenderProps?.rootNodes[0].children).to.have.lengthOf(1);
+      expect(treeRenderProps!.rootNodes).to.have.lengthOf(1);
+      expect(treeRenderProps!.rootNodes[0].children).to.have.lengthOf(1);
     });
 
     act(() => {
-      getTreeRendererProps(result.current)?.getHierarchyLevelDetails(createNodeId(rootNodes[0]))?.setInstanceFilter(undefined);
+      getTreeRendererProps(result.current)!.getHierarchyLevelDetails(createNodeId(rootNodes[0]))!.setInstanceFilter(undefined);
     });
 
     await waitFor(() => {
       const treeRenderProps = getTreeRendererProps(result.current);
-      expect(treeRenderProps?.rootNodes).to.have.lengthOf(1);
-      expect(treeRenderProps?.rootNodes![0].children).to.have.lengthOf(2);
+      expect(treeRenderProps!.rootNodes).to.have.lengthOf(1);
+      expect(treeRenderProps!.rootNodes[0].children).to.have.lengthOf(2);
     });
   });
 
@@ -491,22 +491,22 @@ describe("useTree", () => {
 
     await waitFor(() => {
       const treeRenderProps = getTreeRendererProps(result.current);
-      expect(treeRenderProps?.rootNodes).to.have.lengthOf(1);
-      expect(treeRenderProps?.rootNodes[0].children).to.have.lengthOf(1);
-      const groupingTreeNode = (treeRenderProps?.rootNodes[0] as any).children[0] as PresentationHierarchyNode;
+      expect(treeRenderProps!.rootNodes).to.have.lengthOf(1);
+      expect(treeRenderProps!.rootNodes[0].children).to.have.lengthOf(1);
+      const groupingTreeNode = (treeRenderProps!.rootNodes[0] as any).children[0] as PresentationHierarchyNode;
       expect(groupingTreeNode.children).to.have.lengthOf(2);
     });
 
     const filter: hierarchiesModule.GenericInstanceFilter = { propertyClassNames: [], relatedInstances: [], rules: { operator: "and", rules: [] } };
 
     act(() => {
-      getTreeRendererProps(result.current)?.getHierarchyLevelDetails(createNodeId(rootNodes[0]))?.setInstanceFilter(filter);
+      getTreeRendererProps(result.current)!.getHierarchyLevelDetails(createNodeId(rootNodes[0]))!.setInstanceFilter(filter);
     });
 
     await waitFor(() => {
       const treeRenderProps = getTreeRendererProps(result.current);
-      expect(treeRenderProps?.rootNodes).to.have.lengthOf(1);
-      expect(treeRenderProps?.rootNodes![0].children).to.have.lengthOf(1);
+      expect(treeRenderProps!.rootNodes).to.have.lengthOf(1);
+      expect(treeRenderProps!.rootNodes[0].children).to.have.lengthOf(1);
       const groupingTreeNode = (treeRenderProps?.rootNodes[0] as any).children[0] as PresentationHierarchyNode;
       expect(groupingTreeNode.children).to.have.lengthOf(1);
     });
@@ -524,18 +524,18 @@ describe("useTree", () => {
 
     await waitFor(() => {
       const treeRenderProps = getTreeRendererProps(result.current);
-      expect(treeRenderProps?.rootNodes).to.have.lengthOf(1);
-      expect(treeRenderProps?.rootNodes![0].id).to.eq(createNodeId(rootNode));
+      expect(treeRenderProps!.rootNodes).to.have.lengthOf(1);
+      expect(treeRenderProps!.rootNodes[0].id).to.eq(createNodeId(rootNode));
     });
 
     const filter: hierarchiesModule.GenericInstanceFilter = { propertyClassNames: [], relatedInstances: [], rules: { operator: "and", rules: [] } };
     act(() => {
-      getTreeRendererProps(result.current)?.getHierarchyLevelDetails(undefined)?.setInstanceFilter(filter);
+      getTreeRendererProps(result.current)!.getHierarchyLevelDetails(undefined)!.setInstanceFilter(filter);
     });
 
     await waitFor(() => {
       expect(result.current.rootErrorRendererProps).to.not.be.undefined;
-      expect(result.current.rootErrorRendererProps?.error.type).to.eq("NoFilterMatches");
+      expect(result.current.rootErrorRendererProps!.error.type).to.eq("NoFilterMatches");
     });
   });
 
@@ -548,10 +548,10 @@ describe("useTree", () => {
     const { result } = renderHook(useTree, { initialProps });
 
     await waitFor(() => {
-      expect(getTreeRendererProps(result.current)?.rootNodes).to.have.lengthOf(1);
+      expect(getTreeRendererProps(result.current)!.rootNodes).to.have.lengthOf(1);
     });
 
-    const details = getTreeRendererProps(result.current)?.getHierarchyLevelDetails("invalid");
+    const details = getTreeRendererProps(result.current)!.getHierarchyLevelDetails("invalid");
     expect(details).to.be.undefined;
   });
 
@@ -573,11 +573,11 @@ describe("useTree", () => {
 
     await waitFor(() => {
       const treeRenderProps = getTreeRendererProps(result.current);
-      expect(treeRenderProps?.rootNodes).to.have.lengthOf(1);
-      expect(treeRenderProps?.rootNodes![0].children).to.have.lengthOf(2);
+      expect(treeRenderProps!.rootNodes).to.have.lengthOf(1);
+      expect(treeRenderProps!.rootNodes[0].children).to.have.lengthOf(2);
     });
 
-    const details = getTreeRendererProps(result.current)?.getHierarchyLevelDetails(nodeId);
+    const details = getTreeRendererProps(result.current)!.getHierarchyLevelDetails(nodeId);
     expect(details).to.be.undefined;
   });
 
@@ -598,9 +598,9 @@ describe("useTree", () => {
       expect(getTreeRendererProps(result.current)?.rootNodes).to.have.lengthOf(1);
     });
 
-    const details = getTreeRendererProps(result.current)?.getHierarchyLevelDetails(nodeId);
+    const details = getTreeRendererProps(result.current)!.getHierarchyLevelDetails(nodeId);
     expect(details).to.not.be.undefined;
-    expect(details?.hierarchyNode).to.be.eq(rootNodes[0]);
+    expect(details!.hierarchyNode).to.be.eq(rootNodes[0]);
     const filter = { rules: { rules: [], operator: "and" }, propertyClassNames: [], relatedInstances: [] } satisfies hierarchiesModule.GenericInstanceFilter;
     const keys = await collect(details?.getInstanceKeysIterator({ instanceFilter: filter, hierarchyLevelSizeLimit: 100 }) ?? []);
     expect(keys).to.have.lengthOf(2);
@@ -626,8 +626,8 @@ describe("useTree", () => {
 
     await waitFor(() => {
       const treeRenderProps = getTreeRendererProps(result.current);
-      expect(treeRenderProps?.rootNodes).to.have.lengthOf(1);
-      expect(treeRenderProps?.rootNodes![0].children).to.have.lengthOf(1);
+      expect(treeRenderProps!.rootNodes).to.have.lengthOf(1);
+      expect(treeRenderProps!.rootNodes[0].children).to.have.lengthOf(1);
     });
 
     hierarchyProvider.getNodes.reset();
@@ -642,13 +642,13 @@ describe("useTree", () => {
     });
 
     act(() => {
-      getTreeRendererProps(result.current)?.reloadTree();
+      getTreeRendererProps(result.current)!.reloadTree();
     });
 
     await waitFor(() => {
       const treeRenderProps = getTreeRendererProps(result.current);
-      expect(treeRenderProps?.rootNodes).to.have.lengthOf(1);
-      expect(treeRenderProps?.rootNodes![0].children).to.have.lengthOf(2);
+      expect(treeRenderProps!.rootNodes).to.have.lengthOf(1);
+      expect(treeRenderProps!.rootNodes[0].children).to.have.lengthOf(2);
     });
   });
 
@@ -659,7 +659,7 @@ describe("useTree", () => {
 
     await waitFor(() => {
       const treeRenderProps = getTreeRendererProps(result.current);
-      expect(treeRenderProps?.rootNodes).to.deep.eq([]);
+      expect(treeRenderProps!.rootNodes).to.deep.eq([]);
       expect(onPerformanceMeasuredSpy).to.be.calledWith("initial-load", sinon.match.number);
     });
   });
@@ -674,7 +674,7 @@ describe("useTree", () => {
     await waitFor(() => {
       expect(result.current.rootErrorRendererProps).to.not.be.undefined;
       const errorInfo = result.current.rootErrorRendererProps?.error;
-      expect(errorInfo?.type).to.be.eq("ResultSetTooLarge");
+      expect(errorInfo!.type).to.be.eq("ResultSetTooLarge");
       expect(onHierarchyLimitExceededSpy).to.be.calledWith({ parentId: undefined, filter: undefined, limit: 555 });
     });
   });
@@ -689,7 +689,7 @@ describe("useTree", () => {
     await waitFor(() => {
       expect(result.current.rootErrorRendererProps).to.not.be.undefined;
       const errorInfo = result.current.rootErrorRendererProps?.error;
-      expect(errorInfo?.type).to.be.eq("Unknown");
+      expect(errorInfo!.type).to.be.eq("Unknown");
       expect(onHierarchyLoadErrorStub).to.be.calledWith({ parentId: undefined, type: "unknown", error });
     });
   });
@@ -704,7 +704,7 @@ describe("useTree", () => {
     await waitFor(() => {
       expect(result.current.rootErrorRendererProps).to.not.be.undefined;
       const errorInfo = result.current.rootErrorRendererProps?.error;
-      expect(errorInfo?.type).to.be.eq("Unknown");
+      expect(errorInfo!.type).to.be.eq("Unknown");
       expect(onHierarchyLoadErrorStub).to.be.calledWith({ parentId: undefined, type: "timeout", error });
     });
   });
@@ -714,7 +714,7 @@ describe("useTree", () => {
     const { result } = renderHook(useTree, { initialProps });
 
     await waitFor(() => {
-      expect(getTreeRendererProps(result.current)?.rootNodes).to.have.lengthOf(1);
+      expect(getTreeRendererProps(result.current)!.rootNodes).to.have.lengthOf(1);
     });
     expect(hierarchyProvider.setFormatter).to.be.calledWith(undefined);
 
@@ -742,8 +742,8 @@ describe("useTree", () => {
 
     await waitFor(() => {
       const treeRenderProps = getTreeRendererProps(result.current);
-      expect(treeRenderProps?.rootNodes).to.have.lengthOf(1);
-      expect(treeRenderProps?.rootNodes![0].children).to.have.lengthOf(2);
+      expect(treeRenderProps!.rootNodes).to.have.lengthOf(1);
+      expect(treeRenderProps!.rootNodes[0].children).to.have.lengthOf(2);
     });
 
     const newProvider = createHierarchyProviderStub({
@@ -758,8 +758,8 @@ describe("useTree", () => {
 
     await waitFor(() => {
       const treeRenderProps = getTreeRendererProps(result.current);
-      expect(treeRenderProps?.rootNodes).to.have.lengthOf(1);
-      expect(treeRenderProps?.rootNodes[0].children).to.have.lengthOf(1);
+      expect(treeRenderProps!.rootNodes).to.have.lengthOf(1);
+      expect(treeRenderProps!.rootNodes[0].children).to.have.lengthOf(1);
     });
   });
 
@@ -777,9 +777,9 @@ describe("useTree", () => {
 
     await waitFor(() => {
       const treeRenderProps = getTreeRendererProps(result.current);
-      expect(treeRenderProps?.rootNodes).to.have.lengthOf(1);
-      expect(treeRenderProps?.rootNodes[0].error).to.not.be.undefined;
-      expect(treeRenderProps?.rootNodes[0].error?.type).to.be.eq("Unknown");
+      expect(treeRenderProps!.rootNodes).to.have.lengthOf(1);
+      expect(treeRenderProps!.rootNodes[0].error).to.not.be.undefined;
+      expect(treeRenderProps!.rootNodes[0].error!.type).to.be.eq("Unknown");
     });
 
     hierarchyProvider.getNodes.reset();
@@ -791,14 +791,14 @@ describe("useTree", () => {
     });
 
     act(() => {
-      getTreeRendererProps(result.current)?.reloadTree({ parentNodeId: createNodeId(rootNodes[0]) });
+      getTreeRendererProps(result.current)!.reloadTree({ parentNodeId: createNodeId(rootNodes[0]) });
     });
 
     await waitFor(() => {
       const treeRenderProps = getTreeRendererProps(result.current);
-      expect(treeRenderProps?.rootNodes).to.have.lengthOf(1);
-      expect(treeRenderProps?.rootNodes![0].children).to.have.lengthOf(2);
-      const children = treeRenderProps?.rootNodes[0].children;
+      expect(treeRenderProps!.rootNodes).to.have.lengthOf(1);
+      expect(treeRenderProps!.rootNodes[0].children).to.have.lengthOf(2);
+      const children = treeRenderProps!.rootNodes[0].children;
       expect(children).to.containSubset(childNodes.map((n) => ({ id: createNodeId(n) })));
     });
   });
@@ -817,7 +817,7 @@ describe("useTree", () => {
 
     await waitFor(() => {
       const treeRenderProps = getTreeRendererProps(result.current);
-      expect(treeRenderProps?.rootNodes)
+      expect(treeRenderProps!.rootNodes)
         .to.have.lengthOf(1)
         .and.containSubset([{ id: createNodeId(nodeBefore) }]);
     });
@@ -835,7 +835,7 @@ describe("useTree", () => {
 
     await waitFor(() => {
       const treeRenderProps = getTreeRendererProps(result.current);
-      expect(treeRenderProps?.rootNodes)
+      expect(treeRenderProps!.rootNodes)
         .to.have.lengthOf(1)
         .and.containSubset([{ id: createNodeId(nodeAfter) }]);
     });
@@ -892,12 +892,12 @@ describe("useUnifiedSelectionTree", () => {
 
     await waitFor(() => {
       const treeRenderProps = getTreeRendererProps(result.current);
-      expect(treeRenderProps?.rootNodes).to.have.lengthOf(1);
-      expect(treeRenderProps?.isNodeSelected(nodeId)).to.be.false;
+      expect(treeRenderProps!.rootNodes).to.have.lengthOf(1);
+      expect(treeRenderProps!.isNodeSelected(nodeId)).to.be.false;
     });
 
     act(() => {
-      getTreeRendererProps(result.current)?.selectNodes([nodeId], "add");
+      getTreeRendererProps(result.current)!.selectNodes([nodeId], "add");
     });
 
     await waitFor(() => {
@@ -913,7 +913,7 @@ describe("useUnifiedSelectionTree", () => {
         }),
       );
 
-      expect(getTreeRendererProps(result.current)?.isNodeSelected(nodeId)).to.be.true;
+      expect(getTreeRendererProps(result.current)!.isNodeSelected(nodeId)).to.be.true;
     });
   });
 
@@ -927,8 +927,8 @@ describe("useUnifiedSelectionTree", () => {
 
     await waitFor(() => {
       const treeRenderProps = getTreeRendererProps(result.current);
-      expect(treeRenderProps?.rootNodes).to.have.lengthOf(1);
-      expect(treeRenderProps?.isNodeSelected(nodeId)).to.be.false;
+      expect(treeRenderProps!.rootNodes).to.have.lengthOf(1);
+      expect(treeRenderProps!.isNodeSelected(nodeId)).to.be.false;
     });
 
     act(() => {
@@ -936,7 +936,7 @@ describe("useUnifiedSelectionTree", () => {
     });
 
     await waitFor(() => {
-      expect(getTreeRendererProps(result.current)?.isNodeSelected(nodeId)).to.be.true;
+      expect(getTreeRendererProps(result.current)!.isNodeSelected(nodeId)).to.be.true;
     });
   });
 });

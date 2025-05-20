@@ -400,11 +400,6 @@ describe("TreeActions", () => {
         },
       ]);
 
-      // simulate loader return
-      // provider.getNodes.callsFake(() => {
-      //   return createAsyncIterator([]);
-      // });
-
       const actions = createActions(model);
 
       await actions.expandNode("grouping-node", true)?.complete;
@@ -438,10 +433,6 @@ describe("TreeActions", () => {
           children: undefined,
         },
       ]);
-      // simulate loader return
-      // provider.getNodes.callsFake(() => {
-      //   return createAsyncIterator([]);
-      // });
 
       const actions = createActions(model);
 
@@ -495,10 +486,6 @@ describe("TreeActions", () => {
           children: [],
         },
       ]);
-      // simulate loader return
-      // provider.getNodes.callsFake(() => {
-      //   return createAsyncIterator([]);
-      // });
 
       const actions = createActions(model);
 
@@ -559,10 +546,6 @@ describe("TreeActions", () => {
           children: [],
         },
       ]);
-      // simulate loader return
-      // provider.getNodes.callsFake(() => {
-      //   return createAsyncIterator([]);
-      // });
 
       const actions = createActions(model);
 
@@ -600,10 +583,6 @@ describe("TreeActions", () => {
           children: [],
         },
       ]);
-      // simulate loader return
-      // provider.getNodes.callsFake(() => {
-      //   return createAsyncIterator([]);
-      // });
 
       const actions = createActions(model);
 
@@ -729,7 +708,7 @@ describe("TreeActions", () => {
       expect(getHierarchyNode(newModel, "root-2")).to.not.be.undefined;
     });
 
-    it("sets instance filter and creates `NoFilterMatchingNodes` info nodes if there are no children", async () => {
+    it("sets instance filter and sets node error to `NoFilterMatchingNodes`", async () => {
       const model = createTreeModel([
         {
           id: undefined,
@@ -751,13 +730,13 @@ describe("TreeActions", () => {
 
       expect(onModelChangedStub).to.be.calledTwice;
       let newModel = onModelChangedStub.firstCall.args[0];
-      expect(getHierarchyNode(newModel, "root-1")?.instanceFilter).to.be.eq(filter);
+      expect(getHierarchyNode(newModel, "root-1")!.instanceFilter).to.be.eq(filter);
       expect(provider.getNodes).to.be.calledWith(createGetNodesProps({ parentNode: getHierarchyNode(newModel, "root-1")?.nodeData, instanceFilter: filter }));
       expect(onModelChangedStub).to.be.calledTwice;
       newModel = onModelChangedStub.secondCall.args[0];
       expect(getHierarchyNode(newModel, "root-1")).to.not.be.undefined;
       expect(getHierarchyNode(newModel, "child-1")).to.be.undefined;
-      expect(newModel.idToNode.get("root-1")?.error).to.not.be.undefined;
+      expect(newModel.idToNode.get("root-1")!.error?.type).to.be.eq("NoFilterMatches");
     });
 
     it("does nothing when called on invalid node", async () => {
@@ -773,9 +752,6 @@ describe("TreeActions", () => {
       ]);
 
       provider.getNodes.reset();
-      // provider.getNodes.callsFake(() => {
-      //   return createAsyncIterator([]);
-      // });
 
       const actions = createActions(model);
 
