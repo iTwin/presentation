@@ -202,7 +202,7 @@ export { SelectionStorage }
 
 export { setLogger }
 
-// @internal
+// @alpha
 export function StrataKitRootErrorRenderer({ error, getHierarchyLevelDetails, reloadTree }: StrataKitRootErrorRendererProps): JSX_2.Element;
 
 // @alpha (undocumented)

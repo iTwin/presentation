@@ -8,7 +8,7 @@ public;interface;HierarchyLevelDetails
 public;function;LocalizationContextProvider
 public;interface;PresentationHierarchyNode
 public;interface;ResultSetTooLargeErrorInfo
-internal;function;StrataKitRootErrorRenderer
+alpha;function;StrataKitRootErrorRenderer
 public;const;StrataKitTreeNodeRenderer
 alpha;function;StrataKitTreeRenderer
 alpha;function;TreeErrorRenderer
