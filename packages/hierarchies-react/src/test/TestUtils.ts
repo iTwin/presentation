@@ -3,6 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
+import { expect } from "chai";
 import { ReactElement } from "react";
 import sinon from "sinon";
 import { BeEvent } from "@itwin/core-bentley";
@@ -10,16 +11,9 @@ import { GroupingHierarchyNode, HierarchyProvider, NonGroupingHierarchyNode } fr
 import { EventArgs } from "@itwin/presentation-shared";
 import { configure, RenderOptions, RenderResult, render as renderRTL } from "@testing-library/react";
 import { userEvent, UserEvent } from "@testing-library/user-event";
-import {
-  isTreeModelHierarchyNode,
-  isTreeModelInfoNode,
-  TreeModel,
-  TreeModelGenericInfoNode,
-  TreeModelHierarchyNode,
-  TreeModelInfoNode,
-  TreeModelNoFilterMatchesInfoNode,
-  TreeModelResultSetTooLargeInfoNode,
-} from "../presentation-hierarchies-react/internal/TreeModel.js";
+import { isTreeModelHierarchyNode, TreeModel, TreeModelHierarchyNode } from "../presentation-hierarchies-react/internal/TreeModel.js";
+import { GenericErrorInfo, NoFilterMatchesErrorInfo, ResultSetTooLargeErrorInfo } from "../presentation-hierarchies-react/TreeNode.js";
+import { UseTreeResult } from "../presentation-hierarchies-react/UseTree.js";
 
 configure({ reactStrictMode: true });
 
@@ -46,12 +40,8 @@ export function getHierarchyNode(model: TreeModel, id: string | undefined) {
   return node && isTreeModelHierarchyNode(node) ? node : undefined;
 }
 
-type ModelInputNode = (Partial<Omit<TreeModelHierarchyNode, "children" | "id">> & { id: string | undefined; children?: string[] }) | TreeModelInfoNode;
+type ModelInputNode = Partial<Omit<TreeModelHierarchyNode, "children" | "id">> & { id: string | undefined; children?: string[] };
 type ModelInput = Array<ModelInputNode>;
-
-function isModelInputInfoNode(node: ModelInputNode): node is TreeModelInfoNode {
-  return isTreeModelInfoNode(node as TreeModelInfoNode);
-}
 
 export function createTreeModel(seed: ModelInput) {
   const model: TreeModel = {
@@ -61,11 +51,6 @@ export function createTreeModel(seed: ModelInput) {
   };
 
   for (const input of seed) {
-    if (isModelInputInfoNode(input)) {
-      model.idToNode.set(input.id, input);
-      continue;
-    }
-
     if (input.children) {
       model.parentChildMap.set(input.id, input.children);
     }
@@ -100,36 +85,27 @@ export function createTreeModelNode(props: Partial<TreeModelHierarchyNode> & { i
   };
 }
 
-export function createTestModelGenericInfoNode({ id, ...props }: Partial<TreeModelGenericInfoNode> & { id: string }): TreeModelGenericInfoNode {
+export function createTestGenericErrorInfo({ id, ...props }: Partial<GenericErrorInfo> & { id: string }): GenericErrorInfo {
   return {
     ...props,
     id,
-    parentId: props.parentId ?? undefined,
     message: props.message ?? "test-message",
     type: props.type ?? "Unknown",
   };
 }
 
-export function createTestModelNoFilterMatchesInfoNode({
-  id,
-  ...props
-}: Partial<TreeModelNoFilterMatchesInfoNode> & { id: string }): TreeModelNoFilterMatchesInfoNode {
+export function createTestNoFilterMatchesErrorInfo({ id, ...props }: Partial<NoFilterMatchesErrorInfo> & { id: string }): NoFilterMatchesErrorInfo {
   return {
     ...props,
     id,
-    parentId: props.parentId ?? undefined,
     type: "NoFilterMatches",
   };
 }
 
-export function createTestModelResultSetTooLargeInfoNode({
-  id,
-  ...props
-}: Partial<TreeModelResultSetTooLargeInfoNode> & { id: string }): TreeModelResultSetTooLargeInfoNode {
+export function createTestResultSetTooLargeErrorInfo({ id, ...props }: Partial<ResultSetTooLargeErrorInfo> & { id: string }): ResultSetTooLargeErrorInfo {
   return {
     ...props,
     id,
-    parentId: props.parentId ?? undefined,
     type: "ResultSetTooLarge",
     resultSetSizeLimit: props.resultSetSizeLimit ?? 10,
   };
@@ -203,4 +179,12 @@ export function createHierarchyProviderStub(customizations?: Partial<StubbedHier
   provider.setFormatter.callsFake((arg) => provider.hierarchyChanged.raiseEvent({ formatterChange: { newFormatter: arg } }));
   provider.setHierarchyFilter.callsFake((arg) => provider.hierarchyChanged.raiseEvent({ filterChange: { newFilter: arg } }));
   return provider;
+}
+
+export function getTreeRendererProps(useTreeResult: UseTreeResult) {
+  if (useTreeResult.rootErrorRendererProps !== undefined) {
+    expect(false).to.be.true;
+    return undefined;
+  }
+  return useTreeResult.treeRendererProps;
 }

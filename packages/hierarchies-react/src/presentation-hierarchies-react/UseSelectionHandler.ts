@@ -4,8 +4,8 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { useCallback, useEffect, useRef } from "react";
-import { isPresentationHierarchyNode, PresentationHierarchyNode, PresentationTreeNode } from "./TreeNode.js";
-import { useTree } from "./UseTree.js";
+import { TreeRendererProps } from "./Renderers.js";
+import { PresentationHierarchyNode } from "./TreeNode.js";
 
 /**
  * A union of different supported selection modes in a tree component:
@@ -32,7 +32,7 @@ export type SelectionChangeType = "add" | "replace" | "remove";
  * Props for `useSelectionHandler` hook.
  * @public
  */
-type UseSelectionHandlerProps = Pick<ReturnType<typeof useTree>, "rootNodes" | "selectNodes"> & {
+type UseSelectionHandlerProps = Pick<TreeRendererProps, "selectNodes" | "rootNodes"> & {
   /** Selection mode that the component is working in. */
   selectionMode: SelectionMode;
 };
@@ -66,9 +66,6 @@ export function useSelectionHandler(props: UseSelectionHandlerProps): UseSelecti
   });
 
   useEffect(() => {
-    if (!rootNodes) {
-      return;
-    }
     state.current = computeFlatNodeList(rootNodes);
   }, [rootNodes]);
 
@@ -152,15 +149,12 @@ function getExtendedSelectionAction(isSelected: boolean, shiftDown: boolean, ctr
   return { select: "node", type: "replace" };
 }
 
-function computeFlatNodeList(rootNodes: Array<PresentationTreeNode>): FlatTreeState {
+function computeFlatNodeList(rootNodes: Array<PresentationHierarchyNode>): FlatTreeState {
   const flatNodeList: Array<string> = [];
   const nodeIdToIndexMap: Map<string, number> = new Map();
 
-  const flattenNodeRecursively = (nodes: Array<PresentationTreeNode>) => {
+  const flattenNodeRecursively = (nodes: Array<PresentationHierarchyNode>) => {
     nodes.forEach((node) => {
-      if (!isPresentationHierarchyNode(node)) {
-        return;
-      }
       nodeIdToIndexMap.set(node.id, flatNodeList.length);
       flatNodeList.push(node.id);
       if (node.isExpanded && typeof node.children !== "boolean") {

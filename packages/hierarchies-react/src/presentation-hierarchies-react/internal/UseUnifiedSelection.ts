@@ -9,7 +9,7 @@ import { HierarchyNode, InstancesNodeKey } from "@itwin/presentation-hierarchies
 import { InstanceKey } from "@itwin/presentation-shared";
 import { Selectable, Selectables, SelectionStorage } from "@itwin/unified-selection";
 import { SelectionChangeType } from "../UseSelectionHandler.js";
-import { isTreeModelHierarchyNode, TreeModelHierarchyNode, TreeModelNode, TreeModelRootNode } from "./TreeModel.js";
+import { TreeModelHierarchyNode, TreeModelRootNode } from "./TreeModel.js";
 
 /** @internal */
 export interface TreeSelectionOptions {
@@ -35,7 +35,7 @@ export function useUnifiedTreeSelection({
   sourceName,
   selectionStorage,
   getTreeModelNode,
-}: UseUnifiedTreeSelectionProps & { getTreeModelNode: (nodeId: string) => TreeModelNode | TreeModelRootNode | undefined }): TreeSelectionOptions {
+}: UseUnifiedTreeSelectionProps & { getTreeModelNode: (nodeId: string) => TreeModelHierarchyNode | TreeModelRootNode | undefined }): TreeSelectionOptions {
   const [options, setOptions] = useState<TreeSelectionOptions>(() => ({
     isNodeSelected: /* c8 ignore next */ () => false,
     selectNodes: /* c8 ignore next */ () => {},
@@ -57,12 +57,12 @@ export function useUnifiedTreeSelection({
 function createOptions(
   source: string,
   storage: SelectionStorage,
-  getNode: (nodeId: string) => TreeModelNode | TreeModelRootNode | undefined,
+  getNode: (nodeId: string) => TreeModelHierarchyNode | TreeModelRootNode | undefined,
 ): TreeSelectionOptions {
   return {
     isNodeSelected: (nodeId: string) => {
       const node = getNode(nodeId);
-      if (!node || !isTreeModelHierarchyNode(node)) {
+      if (!node || node?.id === undefined) {
         return false;
       }
       return Object.entries(groupNodeSelectablesByIModelKey(node)).some(([imodelKey, nodeSelectables]) => {
@@ -75,7 +75,7 @@ function createOptions(
       const imodelSelectables: { [imodelKey: string]: Selectable[] } = {};
       for (const nodeId of nodeIds) {
         const node = getNode(nodeId);
-        if (!node || !isTreeModelHierarchyNode(node)) {
+        if (!node || node?.id === undefined) {
           return;
         }
         Object.entries(groupNodeSelectablesByIModelKey(node)).forEach(([imodelKey, nodeSelectables]) => {

@@ -5,14 +5,8 @@
 
 import { expect } from "chai";
 import { GenericInstanceFilter } from "@itwin/presentation-hierarchies";
-import { isTreeModelHierarchyNode, isTreeModelInfoNode, TreeModel } from "../../presentation-hierarchies-react/internal/TreeModel.js";
-import {
-  createTestHierarchyNode,
-  createTestModelGenericInfoNode,
-  createTestModelNoFilterMatchesInfoNode,
-  createTreeModel,
-  getHierarchyNode,
-} from "../TestUtils.js";
+import { isTreeModelHierarchyNode, TreeModel } from "../../presentation-hierarchies-react/internal/TreeModel.js";
+import { createTestGenericErrorInfo, createTestHierarchyNode, createTestNoFilterMatchesErrorInfo, createTreeModel, getHierarchyNode } from "../TestUtils.js";
 
 describe("TreeModel", () => {
   describe("expandNode", () => {
@@ -124,16 +118,14 @@ describe("TreeModel", () => {
         {
           id: "root-1",
           isExpanded: false,
-          children: ["info-1"],
-        },
-        {
-          ...createTestModelGenericInfoNode({ id: "info-1" }),
+          children: [],
+          error: createTestGenericErrorInfo({ id: "info-1" }),
         },
       ]);
 
       expect(TreeModel.expandNode(model, "root-1", true)).to.be.eq("reloadChildren");
       expect(getHierarchyNode(model, "root-1")?.isLoading).to.be.true;
-      expect(TreeModel.getNode(model, "info-1")).to.be.undefined;
+      expect(TreeModel.getNode(model, "root-1")?.error).to.be.undefined;
     });
 
     it("returns `none` and does not remove child info node when expanding node", () => {
@@ -145,15 +137,13 @@ describe("TreeModel", () => {
         {
           id: "root-1",
           isExpanded: false,
-          children: ["info-1"],
-        },
-        {
-          ...createTestModelNoFilterMatchesInfoNode({ id: "info-1" }),
+          children: [],
+          error: createTestNoFilterMatchesErrorInfo({ id: "info-1" }),
         },
       ]);
 
       expect(TreeModel.expandNode(model, "root-1", true)).to.be.eq("none");
-      expect(TreeModel.getNode(model, "info-1")).to.not.be.undefined;
+      expect(TreeModel.getNode(model, "root-1")?.error).to.not.be.undefined;
     });
 
     it("does nothing if node does not exist", () => {
@@ -764,11 +754,6 @@ describe("TreeModel", () => {
           id: "root-3",
           isSelected: false,
         },
-        {
-          id: "root-4",
-          type: "Unknown",
-          message: "info",
-        },
       ]);
 
       TreeModel.selectNodes(model, ["root-2", "root-3"], "replace");
@@ -850,17 +835,8 @@ describe("TreeModel", () => {
 describe("isTreeModelHierarchyNode", () => {
   it("returns correct result", () => {
     expect(isTreeModelHierarchyNode({ id: undefined, nodeData: undefined })).to.be.false;
-    expect(isTreeModelHierarchyNode({ id: "info-node", parentId: undefined, type: "Unknown", message: "info" })).to.be.false;
+    expect(isTreeModelHierarchyNode({ id: "info-node", type: "Unknown", message: "info" })).to.be.false;
     expect(isTreeModelHierarchyNode({ id: "hierarchy-node", label: "Node", children: false, nodeData: createTestHierarchyNode({ id: "hierarchy-node" }) })).to
       .be.true;
-  });
-});
-
-describe("isTreeModelInfoNode", () => {
-  it("returns correct result", () => {
-    expect(isTreeModelInfoNode({ id: undefined, nodeData: undefined })).to.be.false;
-    expect(isTreeModelInfoNode({ id: "info-node", parentId: undefined, type: "Unknown", message: "info" })).to.be.true;
-    expect(isTreeModelInfoNode({ id: "hierarchy-node", label: "Node", children: false, nodeData: createTestHierarchyNode({ id: "hierarchy-node" }) })).to.be
-      .false;
   });
 });

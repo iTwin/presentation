@@ -10,7 +10,7 @@ import sinon from "sinon";
 import { BeEvent } from "@itwin/core-bentley";
 import * as presentationHierarchiesModule from "@itwin/presentation-hierarchies";
 import { Props } from "@itwin/presentation-shared";
-import { createHierarchyProviderStub, renderHook, waitFor } from "./TestUtils.js";
+import { createHierarchyProviderStub, getTreeRendererProps, renderHook, waitFor } from "./TestUtils.js";
 
 import type {
   useIModelTree as originalUseIModelTree,
@@ -49,7 +49,7 @@ describe("useIModelTree hooks", () => {
       stubs.hierarchyProvider.getNodes.callsFake(() => createAsyncIterator([]));
       const { result } = renderHook(useIModelTree, { initialProps });
       await waitFor(() => {
-        expect(result.current.isLoading).to.be.false;
+        expect(getTreeRendererProps(result.current)).to.not.be.undefined;
       });
       expect(stubs.createIModelHierarchyProvider).to.be.calledWith(
         sinon.match((props: Props<typeof stubs.createIModelHierarchyProvider>) => {
@@ -67,7 +67,7 @@ describe("useIModelTree hooks", () => {
       const getFilteredPaths = sinon.stub().callsFake(async () => undefined);
       const { result } = renderHook(useIModelTree, { initialProps: { ...initialProps, getFilteredPaths } });
       await waitFor(() => {
-        expect(result.current.isLoading).to.be.false;
+        expect(getTreeRendererProps(result.current)).to.not.be.undefined;
       });
       expect(getFilteredPaths).to.be.calledWith({ imodelAccess: initialProps.imodelAccess });
     });
@@ -93,7 +93,7 @@ describe("useIModelTree hooks", () => {
       stubs.hierarchyProvider.getNodes.callsFake(() => createAsyncIterator([]));
       const { result } = renderHook(useIModelUnifiedSelectionTree, { initialProps });
       await waitFor(() => {
-        expect(result.current.isLoading).to.be.false;
+        expect(getTreeRendererProps(result.current)).to.not.be.undefined;
       });
       expect(stubs.createIModelHierarchyProvider).to.be.calledWith(
         sinon.match((props: Props<typeof stubs.createIModelHierarchyProvider>) => {
@@ -111,7 +111,7 @@ describe("useIModelTree hooks", () => {
       const getFilteredPaths = sinon.stub().callsFake(async () => undefined);
       const { result } = renderHook(useIModelUnifiedSelectionTree, { initialProps: { ...initialProps, getFilteredPaths } });
       await waitFor(() => {
-        expect(result.current.isLoading).to.be.false;
+        expect(getTreeRendererProps(result.current)).to.not.be.undefined;
       });
       expect(getFilteredPaths).to.be.calledWith({ imodelAccess: initialProps.imodelAccess });
     });

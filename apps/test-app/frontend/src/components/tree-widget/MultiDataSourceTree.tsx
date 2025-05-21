@@ -27,7 +27,7 @@ import {
   HierarchyProvider,
   mergeProviders,
 } from "@itwin/presentation-hierarchies";
-import { PresentationHierarchyNode, TreeRenderer, useUnifiedSelectionTree } from "@itwin/presentation-hierarchies-react";
+import { PresentationHierarchyNode, StrataKitRootErrorRenderer, StrataKitTreeRenderer, useUnifiedSelectionTree } from "@itwin/presentation-hierarchies-react";
 import {
   createBisInstanceLabelSelectClauseFactory,
   createCachingECClassHierarchyInspector,
@@ -86,14 +86,7 @@ function Tree({ imodelAccess, height, width }: { imodelAccess: IModelAccess; hei
     throw new Error("Unified selection context is not available");
   }
 
-  const {
-    rootNodes,
-    isLoading,
-    reloadTree,
-    setFormatter: _,
-    getNode: _getNode,
-    ...treeProps
-  } = useUnifiedSelectionTree({
+  const { isReloading, ...treeProps } = useUnifiedSelectionTree({
     selectionStorage: unifiedSelectionContext.storage,
     sourceName: "MultiIModelTree",
     getHierarchyProvider: useCallback(
@@ -117,7 +110,18 @@ function Tree({ imodelAccess, height, width }: { imodelAccess: IModelAccess; hei
   });
 
   const renderContent = () => {
-    if (rootNodes && rootNodes.length === 0 && filter) {
+    if (treeProps.rootErrorRendererProps) {
+      return <StrataKitRootErrorRenderer {...treeProps.rootErrorRendererProps} />;
+    }
+    if (!treeProps.treeRendererProps) {
+      return (
+        <Flex alignItems="center" justifyContent="center" flexDirection="column" style={{ height: "100%" }}>
+          <Text isMuted> Loading </Text>
+        </Flex>
+      );
+    }
+
+    if (treeProps.treeRendererProps.rootNodes.length === 0 && filter) {
       return (
         <Flex alignItems="center" justifyContent="center" flexDirection="column" style={{ height: "100%" }}>
           <Text isMuted>There are no nodes matching filter text {filter}</Text>
@@ -127,13 +131,13 @@ function Tree({ imodelAccess, height, width }: { imodelAccess: IModelAccess; hei
 
     return (
       <Flex.Item alignSelf="flex-start" style={{ width: "100%", overflow: "auto" }}>
-        <TreeRenderer rootNodes={rootNodes ?? []} {...treeProps} reloadTree={reloadTree} getDecorations={(node) => getIcon(node)} selectionMode={"extended"} />
+        <StrataKitTreeRenderer {...treeProps.treeRendererProps} getDecorations={(node) => getIcon(node)} selectionMode={"extended"} />
       </Flex.Item>
     );
   };
 
   const renderLoadingOverlay = () => {
-    if (rootNodes !== undefined && !isLoading) {
+    if (treeProps.rootErrorRendererProps !== undefined || treeProps.treeRendererProps !== undefined || !isReloading) {
       return <></>;
     }
     return (

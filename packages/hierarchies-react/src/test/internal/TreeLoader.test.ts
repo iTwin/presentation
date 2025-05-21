@@ -16,8 +16,9 @@ import {
   RowsLimitExceededError,
 } from "@itwin/presentation-hierarchies";
 import { LoadedTreePart, TreeLoader } from "../../presentation-hierarchies-react/internal/TreeLoader.js";
-import { TreeModelHierarchyNode, TreeModelInfoNode, TreeModelNode } from "../../presentation-hierarchies-react/internal/TreeModel.js";
+import { TreeModelHierarchyNode } from "../../presentation-hierarchies-react/internal/TreeModel.js";
 import { createNodeId } from "../../presentation-hierarchies-react/internal/Utils.js";
+import { ErrorInfo } from "../../presentation-hierarchies-react/TreeNode.js";
 import { createTestHierarchyNode, createTreeModelNode } from "../TestUtils.js";
 
 describe("TreeLoader", () => {
@@ -55,8 +56,8 @@ describe("TreeLoader", () => {
         }),
       );
 
-      const rootNodes = nodes.get(undefined);
-      expect(rootNodes?.map((node) => (node as TreeModelHierarchyNode).nodeData.key)).to.containSubset([{ id: "root-1" }, { id: "root-2" }]);
+      const rootNodes = getTreeModelHierarchyNodeArray(nodes.get(undefined));
+      expect(rootNodes?.map((node) => node.nodeData.key)).to.containSubset([{ id: "root-1" }, { id: "root-2" }]);
     });
 
     it("loads root nodes and child nodes", async () => {
@@ -81,10 +82,10 @@ describe("TreeLoader", () => {
         }),
       );
 
-      const rootNodes = nodes.get(undefined);
-      const childNodes = nodes.get("root-1");
-      expect(rootNodes?.map((node) => (node as TreeModelHierarchyNode).nodeData.key)).to.containSubset([{ id: "root-1" }, { id: "root-2" }]);
-      expect(childNodes?.map((node) => (node as TreeModelHierarchyNode).nodeData.key)).to.containSubset([{ id: "child-1" }]);
+      const rootNodes = getTreeModelHierarchyNodeArray(nodes.get(undefined));
+      const childNodes = getTreeModelHierarchyNodeArray(nodes.get("root-1"));
+      expect(rootNodes!.map((node) => node.nodeData.key)).to.containSubset([{ id: "root-1" }, { id: "root-2" }]);
+      expect(childNodes!.map((node) => node.nodeData.key)).to.containSubset([{ id: "child-1" }]);
       expect(nodes.get("root-2")).to.be.undefined;
       expect(hierarchyProvider.getNodes).to.be.calledTwice;
     });
@@ -107,8 +108,8 @@ describe("TreeLoader", () => {
         }),
       );
 
-      const childNodes = nodes.get("root-1");
-      expect(childNodes?.map((node) => (node as TreeModelHierarchyNode).nodeData.key)).to.containSubset([{ id: "child-1" }]);
+      const childNodes = getTreeModelHierarchyNodeArray(nodes.get("root-1"));
+      expect(childNodes!.map((node) => node.nodeData.key)).to.containSubset([{ id: "child-1" }]);
     });
 
     it("loads info node when `RowsLimitExceededError` is thrown", async () => {
@@ -125,9 +126,8 @@ describe("TreeLoader", () => {
         }),
       );
 
-      const rootNodes = nodes.get(undefined);
-      const infoNode = rootNodes![0] as TreeModelInfoNode;
-      expect(infoNode.type).to.be.eq("ResultSetTooLarge");
+      const error = getErrorInfo(nodes.get(undefined));
+      expect(error!.type).to.be.eq("ResultSetTooLarge");
     });
 
     it("loads `Unknown` info node when error is thrown", async () => {
@@ -144,9 +144,8 @@ describe("TreeLoader", () => {
         }),
       );
 
-      const rootNodes = nodes.get(undefined);
-      const infoNode = rootNodes![0] as TreeModelInfoNode;
-      expect(infoNode.type).to.be.eq("Unknown");
+      const error = getErrorInfo(nodes.get(undefined));
+      expect(error!.type).to.be.eq("Unknown");
     });
 
     it("loads multiple child hierarchy levels", async () => {
@@ -175,12 +174,12 @@ describe("TreeLoader", () => {
         }),
       );
 
-      const rootNodes = nodes.get(undefined);
-      const childNodes = nodes.get("root-1");
-      const grandChildNodes = nodes.get("child-1");
-      expect(rootNodes?.map((node) => (node as TreeModelHierarchyNode).nodeData.key)).to.containSubset([{ id: "root-1" }]);
-      expect(childNodes?.map((node) => (node as TreeModelHierarchyNode).nodeData.key)).to.containSubset([{ id: "child-1" }]);
-      expect(grandChildNodes?.map((node) => (node as TreeModelHierarchyNode).nodeData.key)).to.containSubset([{ id: "grandchild-1" }]);
+      const rootNodes = getTreeModelHierarchyNodeArray(nodes.get(undefined));
+      const childNodes = getTreeModelHierarchyNodeArray(nodes.get("root-1"));
+      const grandChildNodes = getTreeModelHierarchyNodeArray(nodes.get("child-1"));
+      expect(rootNodes!.map((node) => node.nodeData.key)).to.containSubset([{ id: "root-1" }]);
+      expect(childNodes!.map((node) => node.nodeData.key)).to.containSubset([{ id: "child-1" }]);
+      expect(grandChildNodes!.map((node) => node.nodeData.key)).to.containSubset([{ id: "grandchild-1" }]);
       expect(nodes.get("grandchild-1")).to.be.empty;
       expect(hierarchyProvider.getNodes).to.have.callCount(4);
     });
@@ -206,8 +205,8 @@ describe("TreeLoader", () => {
         }),
       );
 
-      const rootNodes = nodes.get(undefined);
-      expect(rootNodes?.map((node) => (node as TreeModelHierarchyNode).nodeData.key)).to.containSubset([{ id: "root-1" }]);
+      const rootNodes = getTreeModelHierarchyNodeArray(nodes.get(undefined));
+      expect(rootNodes!.map((node) => node.nodeData.key)).to.containSubset([{ id: "root-1" }]);
       expect(hierarchyProvider.getNodes).to.be.calledWith(
         sinon.match((props: GetHierarchyNodesProps) => {
           return props.instanceFilter === filter;
@@ -236,9 +235,8 @@ describe("TreeLoader", () => {
         }),
       );
 
-      const children = nodes.get("root-1");
-      expect(children).to.have.lengthOf(1);
-      expect((children![0] as TreeModelInfoNode).type).to.be.eq("NoFilterMatches");
+      const error = getErrorInfo(nodes.get("root-1"));
+      expect(error!.type).to.be.eq("NoFilterMatches");
       expect(hierarchyProvider.getNodes).to.be.calledWith(
         sinon.match((props: GetHierarchyNodesProps) => {
           return props.instanceFilter === filter;
@@ -327,20 +325,32 @@ describe("TreeLoader", () => {
 });
 
 async function collectNodes(loadObs: Observable<LoadedTreePart>) {
-  const nodes = new Map<string | undefined, TreeModelNode[]>();
-  return new Promise<Map<string | undefined, TreeModelNode[]>>((resolve) => {
+  const nodes = new Map<string | undefined, TreeModelHierarchyNode[] | ErrorInfo>();
+  return new Promise<Map<string | undefined, TreeModelHierarchyNode[] | ErrorInfo>>((resolve) => {
     loadObs.subscribe({
       next: (loaded) => {
-        let hierarchyLevel = nodes.get(loaded.parentId);
+        const hierarchyLevel = nodes.get(loaded.parent.id);
         if (!hierarchyLevel) {
-          hierarchyLevel = [];
-          nodes.set(loaded.parentId, hierarchyLevel);
+          nodes.set(loaded.parent.id, "error" in loaded ? loaded.error : loaded.loadedNodes);
         }
-        hierarchyLevel.push(...loaded.loadedNodes);
       },
       complete: () => {
         resolve(nodes);
       },
     });
   });
+}
+
+function getTreeModelHierarchyNodeArray(nodes: ErrorInfo | TreeModelHierarchyNode[] | undefined) {
+  if (nodes && "length" in nodes) {
+    return nodes;
+  }
+  return undefined;
+}
+
+function getErrorInfo(error: ErrorInfo | TreeModelHierarchyNode[] | undefined) {
+  if (error && "type" in error) {
+    return error;
+  }
+  return undefined;
 }

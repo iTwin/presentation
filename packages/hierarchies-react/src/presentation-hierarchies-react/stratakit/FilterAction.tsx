@@ -6,15 +6,15 @@
 import { memo, useCallback } from "react";
 import filterSvg from "@stratakit/icons/filter.svg";
 import { Tree } from "@stratakit/structures";
+import { HierarchyLevelDetails, TreeRendererProps } from "../Renderers.js";
 import { PresentationHierarchyNode } from "../TreeNode.js";
-import { HierarchyLevelDetails, useTree } from "../UseTree.js";
 import { useLocalizationContext } from "./LocalizationContext.js";
 
 /** @alpha */
 export type FilterActionProps = {
   /** Action to perform when the filter button is clicked for this node. */
   onFilter?: (hierarchyLevelDetails: HierarchyLevelDetails) => void;
-} & Partial<Pick<ReturnType<typeof useTree>, "getHierarchyLevelDetails">>;
+} & Pick<TreeRendererProps, "getHierarchyLevelDetails">;
 
 /**
  * React component that renders a filter action for a tree item.
