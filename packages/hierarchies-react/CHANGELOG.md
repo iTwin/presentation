@@ -1,5 +1,11 @@
 # @itwin/presentation-hierarchies-react
 
+## 2.0.0-alpha.23
+
+### Minor Changes
+
+- [#972](https://github.com/iTwin/presentation/pull/972): Added `getEditingProps` prop to `<StrataKitTreeRenderer />` component that allows to make node labels editable. In order to enter label editing mode `<RenameAction />` component was added.
+
 ## 2.0.0-alpha.22
 
 ### Minor Changes
