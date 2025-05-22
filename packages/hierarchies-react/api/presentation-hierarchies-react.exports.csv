@@ -1,18 +1,18 @@
 sep=;
 Release Tag;API Item Type;API Item Name
+public;type;ErrorInfo
 alpha;const;FilterAction
 alpha;type;FlatTreeNode
+public;interface;GenericErrorInfo
 public;interface;HierarchyLevelDetails
-public;function;isPresentationHierarchyNode
 public;function;LocalizationContextProvider
-public;interface;PresentationGenericInfoNode
 public;interface;PresentationHierarchyNode
-public;type;PresentationInfoNode
-public;interface;PresentationResultSetTooLargeInfoNode
-public;type;PresentationTreeNode
+public;interface;ResultSetTooLargeErrorInfo
+alpha;function;StrataKitRootErrorRenderer
+public;const;StrataKitTreeNodeRenderer
+alpha;function;StrataKitTreeRenderer
 alpha;function;TreeErrorRenderer
-public;const;TreeNodeRenderer
-alpha;function;TreeRenderer
+alpha;type;TreeRendererProps
 alpha;function;useErrorList
 alpha;function;useFlatTreeNodeList
 public;function;useIModelTree
