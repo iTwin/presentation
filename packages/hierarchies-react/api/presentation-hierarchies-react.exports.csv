@@ -10,10 +10,11 @@ public;interface;PresentationHierarchyNode
 alpha;const;RenameAction
 alpha;function;RenameContextProvider
 public;interface;ResultSetTooLargeErrorInfo
-internal;function;StrataKitRootErrorRenderer
+alpha;function;StrataKitRootErrorRenderer
 public;const;StrataKitTreeNodeRenderer
 alpha;function;StrataKitTreeRenderer
 alpha;function;TreeErrorRenderer
+alpha;type;TreeRendererProps
 alpha;function;useErrorList
 alpha;function;useFlatTreeNodeList
 public;function;useIModelTree

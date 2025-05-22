@@ -1,5 +1,11 @@
 # @itwin/presentation-hierarchies-react
 
+## 2.0.0-alpha.22
+
+### Minor Changes
+
+- [#970](https://github.com/iTwin/presentation/pull/970): Exposed the type of tree state hooks' result `treeRendererProps` attribute - `TreeRendererProps`. The type can be useful when creating custom tree renderers.
+
 ## 2.0.0-alpha.21
 
 ### Major Changes

@@ -21,7 +21,7 @@ export type StrataKitRootErrorRendererProps = {
 /**
  * A component that renders root node error state.
  *
- * @internal
+ * @alpha
  */
 export function StrataKitRootErrorRenderer({ error, getHierarchyLevelDetails, reloadTree }: StrataKitRootErrorRendererProps) {
   const { localizedStrings } = useLocalizationContext();

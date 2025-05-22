@@ -30,7 +30,7 @@ export type SelectionChangeType = "add" | "replace" | "remove";
 
 /**
  * Props for `useSelectionHandler` hook.
- * @public
+ * @alpha
  */
 type UseSelectionHandlerProps = Pick<TreeRendererProps, "selectNodes" | "rootNodes"> & {
   /** Selection mode that the component is working in. */

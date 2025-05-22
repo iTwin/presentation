@@ -211,7 +211,7 @@ export { SelectionStorage }
 
 export { setLogger }
 
-// @internal
+// @alpha
 export function StrataKitRootErrorRenderer({ error, getHierarchyLevelDetails, reloadTree }: StrataKitRootErrorRendererProps): JSX_2.Element;
 
 // @alpha (undocumented)
@@ -284,7 +284,7 @@ interface TreeRendererOwnProps {
 }
 
 // @alpha
-type TreeRendererProps = {
+export type TreeRendererProps = {
     rootNodes: PresentationHierarchyNode[];
     expandNode: (nodeId: string, isExpanded: boolean) => void;
     selectNodes: (nodeIds: Array<string>, changeType: SelectionChangeType) => void;
@@ -316,7 +316,7 @@ export function useIModelUnifiedSelectionTree(props: UseIModelTreeProps & UseUni
 // @public
 export function useSelectionHandler(props: UseSelectionHandlerProps): UseSelectionHandlerResult;
 
-// @public
+// @alpha
 type UseSelectionHandlerProps = Pick<TreeRendererProps, "selectNodes" | "rootNodes"> & {
     selectionMode: SelectionMode_2;
 };
