@@ -155,9 +155,7 @@ export function StrataKitTreeRenderer({
 type VirtualTreeItemProps = Omit<TreeNodeRendererProps, "node" | "aria-level" | "aria-posinset" | "aria-setsize"> & {
   start: number;
   node: FlatTreeNode;
-  getEditingProps?: (node: PresentationHierarchyNode) => {
-    onLabelChanged?: (newLabel: string) => void;
-  };
+  getEditingProps?: TreeRendererOwnProps["getEditingProps"];
 };
 
 const VirtualTreeItem = memo(
