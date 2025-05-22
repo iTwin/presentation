@@ -12,6 +12,7 @@ import { SelectionMode, useSelectionHandler } from "../UseSelectionHandler.js";
 import { useEvent } from "../Utils.js";
 import { ErrorItem, FlatTreeNode, isPlaceholderNode, useErrorList, useFlatTreeNodeList } from "./FlatTreeNode.js";
 import { LocalizationContextProvider } from "./LocalizationContext.js";
+import { RenameContextProvider } from "./RenameAction.js";
 import { TreeErrorRenderer, TreeErrorRendererProps } from "./TreeErrorRenderer.js";
 import { PlaceholderNode, StrataKitTreeNodeRenderer } from "./TreeNodeRenderer.js";
 
@@ -181,26 +182,26 @@ const VirtualTreeItem = memo(
     }
 
     const editingProps = getEditingProps?.(node);
-
     return (
-      <StrataKitTreeNodeRenderer
-        {...props}
-        ref={forwardedRef}
-        style={style}
-        aria-level={node.level}
-        aria-posinset={node.posInLevel}
-        aria-setsize={node.levelSize}
-        node={node}
-        expandNode={expandNode}
-        reloadTree={reloadTree}
-        getDecorations={getDecorations}
-        getActions={getActions}
-        getLabel={getLabel}
-        getSublabel={getSublabel}
-        onNodeClick={onNodeClick}
-        onNodeKeyDown={onNodeKeyDown}
-        onLabelChanged={editingProps?.onLabelChanged}
-      />
+      <RenameContextProvider onLabelChanged={editingProps?.onLabelChanged}>
+        <StrataKitTreeNodeRenderer
+          {...props}
+          ref={forwardedRef}
+          style={style}
+          aria-level={node.level}
+          aria-posinset={node.posInLevel}
+          aria-setsize={node.levelSize}
+          node={node}
+          expandNode={expandNode}
+          reloadTree={reloadTree}
+          getDecorations={getDecorations}
+          getActions={getActions}
+          getLabel={getLabel}
+          getSublabel={getSublabel}
+          onNodeClick={onNodeClick}
+          onNodeKeyDown={onNodeKeyDown}
+        />
+      </RenameContextProvider>
     );
   }),
 );

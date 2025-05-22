@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { ComponentPropsWithoutRef, useCallback } from "react";
-import { FilterAction, PresentationHierarchyNode, StrataKitTreeRenderer } from "@itwin/presentation-hierarchies-react";
+import { FilterAction, PresentationHierarchyNode, RenameAction, StrataKitTreeRenderer } from "@itwin/presentation-hierarchies-react";
 
 type TreeRendererProps = ComponentPropsWithoutRef<typeof StrataKitTreeRenderer>;
 
@@ -14,6 +14,7 @@ export function TreeRendererWithFilterAction(props: TreeRendererProps) {
     (node: PresentationHierarchyNode) => [
       ...(getActions ? getActions(node) : []),
       <FilterAction key="filter" node={node} onFilter={onFilterClick} getHierarchyLevelDetails={getHierarchyLevelDetails} />,
+      <RenameAction key="rename" />,
     ],
     [getActions, onFilterClick, getHierarchyLevelDetails],
   );

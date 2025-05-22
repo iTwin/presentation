@@ -85,6 +85,11 @@ export interface LocalizedStrings {
    * Default value: `Retry`.
    */
   retry: string;
+  /**
+   * Label for rename action.
+   * Default value: `Rename`.
+   */
+  rename: string;
 }
 
 /** @internal */
@@ -108,6 +113,7 @@ const defaultLocalizedStrings: LocalizedStrings = {
   increaseHierarchyLimitToUnlimited: "Remove limit",
   increaseHierarchyLimitWithFiltering: "Add Filter",
   retry: "Retry",
+  rename: "Rename",
 };
 
 const localizationContext = createContext<LocalizationContext>({ localizedStrings: defaultLocalizedStrings });

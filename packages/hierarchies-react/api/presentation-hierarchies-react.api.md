@@ -120,6 +120,7 @@ interface LocalizedStrings {
     loading: string;
     noFilteredChildren: string;
     noFilteredChildrenChangeFilter: string;
+    rename: string;
     resultLimitExceeded: string;
     retry: string;
     rootResultLimitExceeded: string;
@@ -168,6 +169,14 @@ interface ReloadTreeOptions {
     parentNodeId: string | undefined;
     state?: "keep" | "discard" | "reset";
 }
+
+// @alpha
+export const RenameAction: NamedExoticComponent<object>;
+
+// @alpha (undocumented)
+export function RenameContextProvider({ onLabelChanged, children }: PropsWithChildren<{
+    onLabelChanged?: (newLabel: string) => void;
+}>): JSX_2.Element;
 
 // @alpha
 type RendererProps = {
@@ -255,8 +264,6 @@ interface TreeNodeRendererOwnProps {
     getLabel?: (node: PresentationHierarchyNode) => ReactElement | undefined;
     getSublabel?: (node: PresentationHierarchyNode) => ReactElement | undefined;
     node: PresentationHierarchyNode;
-    // (undocumented)
-    onLabelChanged?: (newLabel: string) => void;
     onNodeClick?: (node: PresentationHierarchyNode, isSelected: boolean, event: React.MouseEvent<HTMLElement>) => void;
     onNodeKeyDown?: (node: PresentationHierarchyNode, isSelected: boolean, event: React.KeyboardEvent<HTMLElement>) => void;
 }
