@@ -18,8 +18,9 @@ import {
   useCallback,
   useMemo,
   useRef,
+  useState,
 } from "react";
-import { Spinner } from "@stratakit/bricks";
+import { Spinner, TextBox } from "@stratakit/bricks";
 import refreshSvg from "@stratakit/icons/refresh.svg";
 import { Tree } from "@stratakit/structures";
 import { TreeRendererProps } from "../Renderers.js";
@@ -51,6 +52,7 @@ export interface TreeNodeRendererOwnProps {
    * Callback that returns actions for tree item. Must return an array of `Tree.ItemAction` elements.
    */
   getActions?: (node: PresentationHierarchyNode) => ReactNode[];
+  onLabelChanged?: (newLabel: string) => void;
 }
 
 /** @alpha */
@@ -68,12 +70,14 @@ type TreeNodeRendererProps = Pick<TreeRendererProps, "expandNode" | "reloadTree"
  */
 export const StrataKitTreeNodeRenderer: FC<PropsWithRef<TreeNodeRendererProps & RefAttributes<HTMLElement>>> = memo(
   forwardRef<HTMLElement, TreeNodeRendererProps>(function HierarchyNode(
-    { node, selected, expandNode, onNodeClick, onNodeKeyDown, reloadTree, getLabel, getSublabel, getActions, getDecorations, ...treeItemProps },
+    { node, selected, expandNode, onNodeClick, onNodeKeyDown, reloadTree, getLabel, getSublabel, getActions, getDecorations, onLabelChanged, ...treeItemProps },
     forwardedRef,
   ) {
     const nodeRef = useRef<HTMLElement>(null);
     const ref = useMergedRefs(forwardedRef, nodeRef);
     const { localizedStrings } = useLocalizationContext();
+    const [isEditing, setIsEditing] = useState(false);
+    const [newLabelValue, setNewLabelValue] = useState(node.label);
 
     const label = useMemo(() => (getLabel ? getLabel(node) : node.label), [getLabel, node]);
     const description = useMemo(() => (getSublabel ? getSublabel(node) : undefined), [getSublabel, node]);
@@ -96,6 +100,18 @@ export const StrataKitTreeNodeRenderer: FC<PropsWithRef<TreeNodeRendererProps & 
       [getActions, node, localizedStrings, reloadTree],
     );
 
+    const handleLabelChange = useCallback(() => {
+      if (node.label !== newLabelValue) {
+        onLabelChanged?.(newLabelValue);
+      }
+      setIsEditing(false);
+    }, [node, newLabelValue, onLabelChanged]);
+
+    const cancelLabelChange = useCallback(() => {
+      setNewLabelValue(node.label);
+      setIsEditing(false);
+    }, [node]);
+
     const expanded = useMemo(() => {
       if (node.error) {
         return undefined;
@@ -109,11 +125,29 @@ export const StrataKitTreeNodeRenderer: FC<PropsWithRef<TreeNodeRendererProps & 
     }, [node.children, node.error, node.isExpanded]);
 
     const isDisabled = treeItemProps["aria-disabled"] === true;
+
+    const labelEditor = isEditing ? (
+      <TextBox.Root>
+        <TextBox.Input
+          value={newLabelValue}
+          onChange={(event) => setNewLabelValue(event.target.value)}
+          onBlur={handleLabelChange}
+          onKeyDown={(event) => {
+            if (event.key === "Enter") {
+              handleLabelChange();
+            } else if (event.key === "Escape") {
+              cancelLabelChange();
+            }
+          }}
+        />
+      </TextBox.Root>
+    ) : undefined;
+
     return (
       <Tree.Item
         {...treeItemProps}
         ref={ref}
-        label={label}
+        label={labelEditor ?? label}
         description={description}
         selected={selected}
         expanded={expanded}
@@ -125,9 +159,17 @@ export const StrataKitTreeNodeRenderer: FC<PropsWithRef<TreeNodeRendererProps & 
         )}
         onClick={useCallback<Required<TreeNodeProps>["onClick"]>(
           (event) => {
-            !isDisabled && onNodeClick?.(node, !selected, event);
+            if (isDisabled) {
+              return;
+            }
+            if (onLabelChanged && !isEditing && selected) {
+              setIsEditing(true);
+              return;
+            }
+
+            onNodeClick?.(node, !selected, event);
           },
-          [node, isDisabled, selected, onNodeClick],
+          [node, isDisabled, isEditing, selected, onLabelChanged, onNodeClick],
         )}
         onKeyDown={useCallback<Required<TreeNodeProps>["onKeyDown"]>(
           (event) => {

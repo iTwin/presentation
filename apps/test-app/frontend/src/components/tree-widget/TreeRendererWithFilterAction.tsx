@@ -6,7 +6,9 @@
 import { ComponentPropsWithoutRef, useCallback } from "react";
 import { FilterAction, PresentationHierarchyNode, StrataKitTreeRenderer } from "@itwin/presentation-hierarchies-react";
 
-export function TreeRendererWithFilterAction(props: ComponentPropsWithoutRef<typeof StrataKitTreeRenderer>) {
+type TreeRendererProps = ComponentPropsWithoutRef<typeof StrataKitTreeRenderer>;
+
+export function TreeRendererWithFilterAction(props: TreeRendererProps) {
   const { getHierarchyLevelDetails, onFilterClick, getActions, ...treeProps } = props;
   const getAllActions = useCallback(
     (node: PresentationHierarchyNode) => [
@@ -15,6 +17,23 @@ export function TreeRendererWithFilterAction(props: ComponentPropsWithoutRef<typ
     ],
     [getActions, onFilterClick, getHierarchyLevelDetails],
   );
+  const getEditingProps = useCallback<Required<TreeRendererProps>["getEditingProps"]>((node) => {
+    return {
+      onLabelChanged: (newLabel: string) => {
+        // Handle label change
+        // eslint-disable-next-line no-console
+        console.log(`Node label changed from ${node.label} to ${newLabel}`);
+      },
+    };
+  }, []);
 
-  return <StrataKitTreeRenderer {...treeProps} getActions={getAllActions} onFilterClick={onFilterClick} getHierarchyLevelDetails={getHierarchyLevelDetails} />;
+  return (
+    <StrataKitTreeRenderer
+      {...treeProps}
+      getActions={getAllActions}
+      onFilterClick={onFilterClick}
+      getHierarchyLevelDetails={getHierarchyLevelDetails}
+      getEditingProps={getEditingProps}
+    />
+  );
 }

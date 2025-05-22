@@ -7,6 +7,7 @@ import { ComponentPropsWithoutRef, CSSProperties, forwardRef, memo, ReactElement
 import { Tree } from "@stratakit/structures";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { TreeRendererProps } from "../Renderers.js";
+import { PresentationHierarchyNode } from "../TreeNode.js";
 import { SelectionMode, useSelectionHandler } from "../UseSelectionHandler.js";
 import { useEvent } from "../Utils.js";
 import { ErrorItem, FlatTreeNode, isPlaceholderNode, useErrorList, useFlatTreeNodeList } from "./FlatTreeNode.js";
@@ -26,6 +27,11 @@ interface TreeRendererOwnProps {
   selectionMode?: SelectionMode;
   /** A render function for errors' display component. Defaults to `<TreeErrorRenderer />`. */
   errorRenderer?: (props: TreeErrorRendererProps) => ReactElement;
+  /** Props that defines if current node supports editing. */
+  getEditingProps?: (node: PresentationHierarchyNode) => {
+    /** Callback that is invoked when node label is changed. If `undefined` node label is not editable. */
+    onLabelChanged?: (newLabel: string) => void;
+  };
 }
 
 /** @alpha */
@@ -55,6 +61,7 @@ export function StrataKitTreeRenderer({
   errorRenderer,
   onNodeClick: onNodeClickOverride,
   onNodeKeyDown: onNodeKeyDownOverride,
+  getEditingProps,
   ...treeProps
 }: StrataKitTreeRendererProps) {
   const { onNodeClick, onNodeKeyDown } = useSelectionHandler({
@@ -134,6 +141,7 @@ export function StrataKitTreeRenderer({
                 data-index={virtualizedItem.index}
                 reloadTree={reloadTree}
                 selected={selected}
+                getEditingProps={getEditingProps}
               />
             );
           })}
@@ -146,11 +154,14 @@ export function StrataKitTreeRenderer({
 type VirtualTreeItemProps = Omit<TreeNodeRendererProps, "node" | "aria-level" | "aria-posinset" | "aria-setsize"> & {
   start: number;
   node: FlatTreeNode;
+  getEditingProps?: (node: PresentationHierarchyNode) => {
+    onLabelChanged?: (newLabel: string) => void;
+  };
 };
 
 const VirtualTreeItem = memo(
   forwardRef<HTMLElement, VirtualTreeItemProps>(function VirtualTreeItem(
-    { start, node, getDecorations, getActions, getLabel, getSublabel, expandNode, reloadTree, onNodeClick, onNodeKeyDown, ...props },
+    { start, node, getDecorations, getActions, getLabel, getSublabel, expandNode, reloadTree, onNodeClick, onNodeKeyDown, getEditingProps, ...props },
     forwardedRef,
   ) {
     const style: CSSProperties = useMemo(
@@ -169,6 +180,8 @@ const VirtualTreeItem = memo(
       return <PlaceholderNode {...props} ref={forwardedRef} style={style} aria-level={node.level} aria-posinset={1} aria-setsize={1} />;
     }
 
+    const editingProps = getEditingProps?.(node);
+
     return (
       <StrataKitTreeNodeRenderer
         {...props}
@@ -186,6 +199,7 @@ const VirtualTreeItem = memo(
         getSublabel={getSublabel}
         onNodeClick={onNodeClick}
         onNodeKeyDown={onNodeKeyDown}
+        onLabelChanged={editingProps?.onLabelChanged}
       />
     );
   }),
