@@ -278,7 +278,7 @@ type TreeNodeRendererProps_2 = ComponentPropsWithoutRef<typeof StrataKitTreeNode
 interface TreeRendererOwnProps {
     errorRenderer?: (props: TreeErrorRendererProps) => ReactElement;
     getEditingProps?: (node: PresentationHierarchyNode) => {
-        onLabelChanged: (newLabel: string) => void;
+        onLabelChanged?: (newLabel: string) => void;
     };
     selectionMode?: SelectionMode_2;
 }

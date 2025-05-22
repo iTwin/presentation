@@ -30,8 +30,8 @@ interface TreeRendererOwnProps {
   errorRenderer?: (props: TreeErrorRendererProps) => ReactElement;
   /** Props that defines if current node supports editing. */
   getEditingProps?: (node: PresentationHierarchyNode) => {
-    /** Callback that is invoked when node label is changed. */
-    onLabelChanged: (newLabel: string) => void;
+    /** Callback that is invoked when node label is changed. If `undefined` node label is not editable. */
+    onLabelChanged?: (newLabel: string) => void;
   };
 }
 
