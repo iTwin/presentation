@@ -120,6 +120,7 @@ interface LocalizedStrings {
     loading: string;
     noFilteredChildren: string;
     noFilteredChildrenChangeFilter: string;
+    rename: string;
     resultLimitExceeded: string;
     retry: string;
     rootResultLimitExceeded: string;
@@ -170,6 +171,14 @@ interface ReloadTreeOptions {
 }
 
 // @alpha
+export const RenameAction: NamedExoticComponent<object>;
+
+// @alpha (undocumented)
+export function RenameContextProvider({ onLabelChanged, children }: PropsWithChildren<{
+    onLabelChanged?: (newLabel: string) => void;
+}>): JSX_2.Element;
+
+// @alpha
 type RendererProps = {
     rootErrorRendererProps: RootErrorRendererProps;
 } | {
@@ -214,7 +223,7 @@ type StrataKitRootErrorRendererProps = {
 export const StrataKitTreeNodeRenderer: FC<PropsWithRef<TreeNodeRendererProps & RefAttributes<HTMLElement>>>;
 
 // @alpha
-export function StrataKitTreeRenderer({ rootNodes, selectNodes, selectionMode, expandNode, localizedStrings, getHierarchyLevelDetails, onFilterClick, reloadTree, isNodeSelected, errorRenderer, onNodeClick: onNodeClickOverride, onNodeKeyDown: onNodeKeyDownOverride, ...treeProps }: StrataKitTreeRendererProps): JSX_2.Element;
+export function StrataKitTreeRenderer({ rootNodes, selectNodes, selectionMode, expandNode, localizedStrings, getHierarchyLevelDetails, onFilterClick, reloadTree, isNodeSelected, errorRenderer, onNodeClick: onNodeClickOverride, onNodeKeyDown: onNodeKeyDownOverride, getEditingProps, ...treeProps }: StrataKitTreeRendererProps): JSX_2.Element;
 
 // @alpha (undocumented)
 type StrataKitTreeRendererProps = TreeRendererProps & Pick<TreeErrorRendererProps, "onFilterClick"> & Omit<TreeNodeRendererProps_2, "node" | "aria-level" | "aria-posinset" | "aria-setsize" | "reloadTree" | "selected" | "error"> & TreeRendererOwnProps & ComponentPropsWithoutRef<typeof LocalizationContextProvider>;
@@ -268,6 +277,9 @@ type TreeNodeRendererProps_2 = ComponentPropsWithoutRef<typeof StrataKitTreeNode
 // @alpha (undocumented)
 interface TreeRendererOwnProps {
     errorRenderer?: (props: TreeErrorRendererProps) => ReactElement;
+    getEditingProps?: (node: PresentationHierarchyNode) => {
+        onLabelChanged?: (newLabel: string) => void;
+    };
     selectionMode?: SelectionMode_2;
 }
 

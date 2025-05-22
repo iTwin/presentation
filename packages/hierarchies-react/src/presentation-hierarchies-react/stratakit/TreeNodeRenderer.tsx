@@ -16,15 +16,18 @@ import {
   Ref,
   RefAttributes,
   useCallback,
+  useEffect,
   useMemo,
   useRef,
+  useState,
 } from "react";
-import { Spinner } from "@stratakit/bricks";
+import { Spinner, TextBox } from "@stratakit/bricks";
 import refreshSvg from "@stratakit/icons/refresh.svg";
 import { Tree } from "@stratakit/structures";
 import { TreeRendererProps } from "../Renderers.js";
 import { PresentationHierarchyNode } from "../TreeNode.js";
 import { useLocalizationContext } from "./LocalizationContext.js";
+import { useRenameContext } from "./RenameAction.js";
 
 /** @alpha */
 type TreeNodeProps = ComponentPropsWithoutRef<typeof Tree.Item>;
@@ -74,6 +77,7 @@ export const StrataKitTreeNodeRenderer: FC<PropsWithRef<TreeNodeRendererProps & 
     const nodeRef = useRef<HTMLElement>(null);
     const ref = useMergedRefs(forwardedRef, nodeRef);
     const { localizedStrings } = useLocalizationContext();
+    const renameContext = useRenameContext();
 
     const label = useMemo(() => (getLabel ? getLabel(node) : node.label), [getLabel, node]);
     const description = useMemo(() => (getSublabel ? getSublabel(node) : undefined), [getSublabel, node]);
@@ -109,11 +113,26 @@ export const StrataKitTreeNodeRenderer: FC<PropsWithRef<TreeNodeRendererProps & 
     }, [node.children, node.error, node.isExpanded]);
 
     const isDisabled = treeItemProps["aria-disabled"] === true;
+
+    const { onLabelChanged, setIsRenaming, isRenaming } = renameContext ?? {};
+    const labelEditor = isRenaming ? (
+      <LabelEditor
+        initialLabel={node.label}
+        onChange={(newLabel) => {
+          onLabelChanged?.(newLabel);
+          setIsRenaming?.(false);
+        }}
+        onCancel={() => {
+          setIsRenaming?.(false);
+        }}
+      />
+    ) : undefined;
+
     return (
       <Tree.Item
         {...treeItemProps}
         ref={ref}
-        label={label}
+        label={labelEditor ?? label}
         description={description}
         selected={selected}
         expanded={expanded}
@@ -125,7 +144,11 @@ export const StrataKitTreeNodeRenderer: FC<PropsWithRef<TreeNodeRendererProps & 
         )}
         onClick={useCallback<Required<TreeNodeProps>["onClick"]>(
           (event) => {
-            !isDisabled && onNodeClick?.(node, !selected, event);
+            if (isDisabled) {
+              return;
+            }
+
+            onNodeClick?.(node, !selected, event);
           },
           [node, isDisabled, selected, onNodeClick],
         )}
@@ -152,6 +175,48 @@ export const PlaceholderNode: FC<PropsWithRef<Omit<TreeNodeProps, "onExpanded" |
     return <Tree.Item {...props} ref={forwardedRef} label={localizedStrings.loading} icon={<Spinner size={"small"} title={localizedStrings.loading} />} />;
   }),
 );
+
+function LabelEditor({ initialLabel, onChange, onCancel }: { initialLabel: string; onChange: (newLabel: string) => void; onCancel: () => void }) {
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [newLabelValue, setNewLabelValue] = useState(initialLabel);
+  const handleLabelChange = () => {
+    if (initialLabel !== newLabelValue) {
+      onChange(newLabelValue);
+      return;
+    }
+    onCancel();
+  };
+
+  const cancelLabelChange = () => {
+    setNewLabelValue(initialLabel);
+    onCancel();
+  };
+
+  useEffect(() => {
+    if (inputRef.current) {
+      inputRef.current.focus();
+      inputRef.current.select();
+    }
+  }, []);
+
+  return (
+    <TextBox.Root>
+      <TextBox.Input
+        ref={inputRef}
+        value={newLabelValue}
+        onChange={(event) => setNewLabelValue(event.target.value)}
+        onBlur={handleLabelChange}
+        onKeyDown={(event) => {
+          if (event.key === "Enter") {
+            handleLabelChange();
+          } else if (event.key === "Escape") {
+            cancelLabelChange();
+          }
+        }}
+      />
+    </TextBox.Root>
+  );
+}
 
 function useMergedRefs<T>(...refs: ReadonlyArray<Ref<T> | LegacyRef<T> | undefined | null>) {
   return useCallback(

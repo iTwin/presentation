@@ -7,6 +7,8 @@ public;interface;GenericErrorInfo
 public;interface;HierarchyLevelDetails
 public;function;LocalizationContextProvider
 public;interface;PresentationHierarchyNode
+alpha;const;RenameAction
+alpha;function;RenameContextProvider
 public;interface;ResultSetTooLargeErrorInfo
 alpha;function;StrataKitRootErrorRenderer
 public;const;StrataKitTreeNodeRenderer
