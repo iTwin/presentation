@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { assert, expect } from "chai";
-import { firstValueFrom, lastValueFrom, map, mergeMap, Observable, of } from "rxjs";
+import { firstValueFrom, from, lastValueFrom, of, toArray } from "rxjs";
 import sinon from "sinon";
 import { ECClassHierarchyInspector, trimWhitespace } from "@itwin/presentation-shared";
 import { FilterTargetGroupingNodeInfo, HierarchyFilteringPath, HierarchyFilteringPathOptions } from "../../hierarchies/HierarchyFiltering.js";
@@ -44,14 +44,15 @@ describe("FilteringHierarchyDefinition", () => {
       const row = {
         [NodeSelectClauseColumnNames.FullClassName]: "",
       };
-      const filteringFactory = await createFilteringHierarchyDefinition({ nodesParser: (obs) => obs.pipe(map((val) => spy(val.row))) });
-      await firstValueFrom(filteringFactory.parseNode(of({ row })));
+      const filteringFactory = await createFilteringHierarchyDefinition({ nodesParser: (rowProp) => of(spy(rowProp)) });
+      await firstValueFrom(filteringFactory.parseNode(row));
       expect(spy).to.be.calledOnceWithExactly(row);
     });
 
     it("uses source's node parser when it has one", async () => {
+      const stub = sinon.stub().resolves({} as unknown as HierarchyNode);
       const sourceFactory = {
-        parseNode: sinon.stub().resolves({} as unknown as HierarchyNode),
+        parseNode: (rowProp: any) => from(stub(rowProp)),
       } as unknown as RxjsHierarchyDefinition;
       const row = {
         [NodeSelectClauseColumnNames.FullClassName]: "",
@@ -59,9 +60,8 @@ describe("FilteringHierarchyDefinition", () => {
       const filteringFactory = await createFilteringHierarchyDefinition({
         sourceFactory,
       });
-      const rowObs = of({ row });
-      await firstValueFrom(filteringFactory.parseNode(rowObs));
-      expect(sourceFactory.parseNode).to.be.calledOnceWithExactly(rowObs);
+      await firstValueFrom(filteringFactory.parseNode(row));
+      expect(stub).to.be.calledOnceWithExactly(row);
     });
 
     it("sets filtered node attributes when parentNode is undefined", async () => {
@@ -82,7 +82,7 @@ describe("FilteringHierarchyDefinition", () => {
         [ECSQL_COLUMN_NAME_FilterECInstanceId]: "0x5",
         [ECSQL_COLUMN_NAME_FilterClassName]: className,
       };
-      const node = await firstValueFrom(filteringFactory.parseNode(of({ row })));
+      const node = await firstValueFrom(filteringFactory.parseNode(row));
       expect(node.filtering).to.deep.eq({
         filteredChildrenIdentifierPaths: [
           { path: [createTestInstanceKey({ id: "0x1" }), createTestInstanceKey({ id: "0x2" })], options: undefined },
@@ -120,7 +120,7 @@ describe("FilteringHierarchyDefinition", () => {
         key: { type: "generic", id: "" },
         filtering: { filteredChildrenIdentifierPaths: paths },
       };
-      const node = await firstValueFrom(filteringFactory.parseNode(of({ row, parentNode })));
+      const node = await firstValueFrom(filteringFactory.parseNode(row, parentNode));
       expect(node.filtering).to.deep.eq({
         filteredChildrenIdentifierPaths: [{ path: [createTestInstanceKey({ id: "0x1" }), createTestInstanceKey({ id: "0x2" })], options: undefined }],
         isFilterTarget: true,
@@ -152,7 +152,7 @@ describe("FilteringHierarchyDefinition", () => {
         key: { type: "generic", id: "" },
         filtering: { filteredChildrenIdentifierPaths: paths },
       };
-      const node = await firstValueFrom(filteringFactory.parseNode(of({ row, parentNode })));
+      const node = await firstValueFrom(filteringFactory.parseNode(row, parentNode));
       expect(node.filtering).to.deep.eq({
         filteredChildrenIdentifierPaths: [{ path: [createTestInstanceKey({ id: "0x2" })], options: undefined }],
       });
@@ -185,7 +185,7 @@ describe("FilteringHierarchyDefinition", () => {
         key: { type: "generic", id: "" },
         filtering: { filteredChildrenIdentifierPaths: paths },
       };
-      const node = await firstValueFrom(filteringFactory.parseNode(of({ row, parentNode })));
+      const node = await firstValueFrom(filteringFactory.parseNode(row, parentNode));
       expect(node.filtering).to.deep.eq({
         filteredChildrenIdentifierPaths: [
           {
@@ -231,7 +231,7 @@ describe("FilteringHierarchyDefinition", () => {
         key: { type: "generic", id: "" },
         filtering: { filteredChildrenIdentifierPaths: paths },
       };
-      const node = await firstValueFrom(filteringFactory.parseNode(of({ row, parentNode })));
+      const node = await firstValueFrom(filteringFactory.parseNode(row, parentNode));
       expect(node.filtering).to.deep.eq({
         filteredChildrenIdentifierPaths: [
           { path: [createTestInstanceKey({ id: "0x1" }), createTestInstanceKey({ id: "0x2" })], options: undefined },
@@ -264,7 +264,7 @@ describe("FilteringHierarchyDefinition", () => {
         [ECSQL_COLUMN_NAME_FilterECInstanceId]: "0x1",
         [ECSQL_COLUMN_NAME_FilterClassName]: testClass.fullName,
       };
-      const node = await firstValueFrom(filteringFactory.parseNode(of({ row, parentNode: undefined })));
+      const node = await firstValueFrom(filteringFactory.parseNode(row, undefined));
       expect(node.filtering).to.deep.eq({
         filteredChildrenIdentifierPaths: [{ path: [createTestInstanceKey({ id: "0x2" })], options: undefined }],
       });
@@ -275,7 +275,7 @@ describe("FilteringHierarchyDefinition", () => {
       const row = {
         [NodeSelectClauseColumnNames.FullClassName]: "",
       };
-      const node = await firstValueFrom(filteringFactory.parseNode(of({ row })));
+      const node = await firstValueFrom(filteringFactory.parseNode(row));
       expect(node.autoExpand).to.be.undefined;
     });
 
@@ -284,7 +284,7 @@ describe("FilteringHierarchyDefinition", () => {
       const row = {
         [NodeSelectClauseColumnNames.FullClassName]: "",
       };
-      const node = await firstValueFrom(filteringFactory.parseNode(of({ row })));
+      const node = await firstValueFrom(filteringFactory.parseNode(row));
       expect(node.autoExpand).to.be.undefined;
     });
 
@@ -298,7 +298,7 @@ describe("FilteringHierarchyDefinition", () => {
         [ECSQL_COLUMN_NAME_FilterECInstanceId]: "0x1",
         [ECSQL_COLUMN_NAME_FilterClassName]: "TestSchema.TestName",
       };
-      const node = await firstValueFrom(filteringFactory.parseNode(of({ row })));
+      const node = await firstValueFrom(filteringFactory.parseNode(row));
       expect(node.autoExpand).to.be.undefined;
     });
 
@@ -318,7 +318,7 @@ describe("FilteringHierarchyDefinition", () => {
         [ECSQL_COLUMN_NAME_FilterECInstanceId]: "0x1",
         [ECSQL_COLUMN_NAME_FilterClassName]: "TestSchema.TestName",
       };
-      const node = await firstValueFrom(filteringFactory.parseNode(of({ row })));
+      const node = await firstValueFrom(filteringFactory.parseNode(row));
       expect(node.autoExpand).to.be.undefined;
     });
 
@@ -335,7 +335,7 @@ describe("FilteringHierarchyDefinition", () => {
         [ECSQL_COLUMN_NAME_FilterECInstanceId]: "0x1",
         [ECSQL_COLUMN_NAME_FilterClassName]: "TestSchema.TestName",
       };
-      const node = await firstValueFrom(filteringFactory.parseNode(of({ row })));
+      const node = await firstValueFrom(filteringFactory.parseNode(row));
       expect(node.autoExpand).to.be.undefined;
     });
 
@@ -362,7 +362,7 @@ describe("FilteringHierarchyDefinition", () => {
         [ECSQL_COLUMN_NAME_FilterECInstanceId]: "0x1",
         [ECSQL_COLUMN_NAME_FilterClassName]: "TestSchema.TestName",
       };
-      const node = await firstValueFrom(filteringFactory.parseNode(of({ row })));
+      const node = await firstValueFrom(filteringFactory.parseNode(row));
       expect(node.autoExpand).to.be.true;
     });
 
@@ -389,7 +389,7 @@ describe("FilteringHierarchyDefinition", () => {
         key: { type: "generic", id: "" },
         filtering: { filteredChildrenIdentifierPaths: paths },
       };
-      const node = await firstValueFrom(filteringFactory.parseNode(of({ row, parentNode })));
+      const node = await firstValueFrom(filteringFactory.parseNode(row, parentNode));
 
       assert(node.filtering?.isFilterTarget);
       expect(node.filtering.filterTargetOptions).to.deep.eq(filteringOptions);
@@ -400,7 +400,7 @@ describe("FilteringHierarchyDefinition", () => {
     it("returns given node when source factory has no pre-processor", async () => {
       const node = createTestProcessedGenericNode();
       const filteringFactory = await createFilteringHierarchyDefinition();
-      const result = await firstValueFrom(filteringFactory.preProcessNode(of(node)));
+      const result = await firstValueFrom(filteringFactory.preProcessNode(node));
       expect(result).to.eq(node);
     });
 
@@ -409,12 +409,12 @@ describe("FilteringHierarchyDefinition", () => {
       const sourceFactoryNode = createTestProcessedGenericNode();
       const stub = sinon.stub().resolves(sourceFactoryNode);
       const sourceFactory = {
-        preProcessNode: (obs: Observable<any>) => obs.pipe(mergeMap(async (val) => stub(val))),
+        preProcessNode: (node: any) => from(stub(node)),
       } as unknown as RxjsHierarchyDefinition;
       const filteringFactory = await createFilteringHierarchyDefinition({
         sourceFactory,
       });
-      const result = await firstValueFrom(filteringFactory.preProcessNode(of(inputNode)));
+      const result = await firstValueFrom(filteringFactory.preProcessNode(inputNode));
       expect(stub).to.be.calledOnceWithExactly(inputNode);
       expect(result).to.eq(sourceFactoryNode);
     });
@@ -432,7 +432,7 @@ describe("FilteringHierarchyDefinition", () => {
         },
       };
       const filteringFactory = await createFilteringHierarchyDefinition();
-      const result = await firstValueFrom(filteringFactory.preProcessNode(of(inputNode)));
+      const result = await firstValueFrom(filteringFactory.preProcessNode(inputNode));
       expect(result).to.eq(inputNode);
     });
 
@@ -449,8 +449,8 @@ describe("FilteringHierarchyDefinition", () => {
         },
       };
       const filteringFactory = await createFilteringHierarchyDefinition();
-      const result = await firstValueFrom(filteringFactory.preProcessNode(of(inputNode)));
-      expect(result).to.be.undefined;
+      const result = await firstValueFrom(filteringFactory.preProcessNode(inputNode).pipe(toArray()));
+      expect(result).to.deep.eq([]);
     });
   });
 
@@ -458,36 +458,36 @@ describe("FilteringHierarchyDefinition", () => {
     it("returns given node when source factory has no post-processor", async () => {
       const node = createTestProcessedGenericNode();
       const filteringFactory = await createFilteringHierarchyDefinition();
-      const result = await firstValueFrom(filteringFactory.postProcessNode(of(node)));
+      const result = await firstValueFrom(filteringFactory.postProcessNode(node));
       expect(result).to.eq(node);
     });
 
     it("returns node post-processed by source factory", async () => {
       const inputNode = createTestProcessedGenericNode();
       const sourceFactoryNode = createTestProcessedGenericNode();
+      const stub = sinon.stub().resolves(sourceFactoryNode);
       const sourceFactory = {
-        postProcessNode: sinon.stub().resolves(sourceFactoryNode),
+        postProcessNode: (node: any) => from(stub(node)),
       } as unknown as RxjsHierarchyDefinition;
       const filteringFactory = await createFilteringHierarchyDefinition({
         sourceFactory,
       });
-      const inputNodeObs = of(inputNode);
-      const result = await firstValueFrom(filteringFactory.postProcessNode(inputNodeObs));
-      expect(sourceFactory.postProcessNode).to.be.calledOnceWithExactly(inputNodeObs);
+      const result = await firstValueFrom(filteringFactory.postProcessNode(inputNode));
+      expect(stub).to.be.calledOnceWithExactly(inputNode);
       expect(result).to.eq(sourceFactoryNode);
     });
 
     it("returns undefined when source factory post processor returns undefined", async () => {
       const inputNode = createTestProcessedGenericNode();
+      const stub = sinon.stub().resolves(undefined);
       const sourceFactory = {
-        postProcessNode: sinon.stub().resolves(undefined),
+        postProcessNode: (node: any) => from(stub(node)),
       } as unknown as RxjsHierarchyDefinition;
       const filteringFactory = await createFilteringHierarchyDefinition({
         sourceFactory,
       });
-      const inputNodeObs = of(inputNode);
-      const result = await firstValueFrom(filteringFactory.postProcessNode(inputNodeObs));
-      expect(sourceFactory.postProcessNode).to.be.calledOnceWithExactly(inputNodeObs);
+      const result = await firstValueFrom(filteringFactory.postProcessNode(inputNode));
+      expect(stub).to.be.calledOnceWithExactly(inputNode);
       expect(result).to.eq(undefined);
     });
 
@@ -495,7 +495,7 @@ describe("FilteringHierarchyDefinition", () => {
       it("doesn't set auto-expand on grouping nodes if none of the children have filtered children paths", async () => {
         const inputNode = createGroupingNode();
         const filteringFactory = await createFilteringHierarchyDefinition();
-        const result = await firstValueFrom(filteringFactory.postProcessNode(of(inputNode)));
+        const result = await firstValueFrom(filteringFactory.postProcessNode(inputNode));
         expect(result.autoExpand).to.be.undefined;
       });
 
@@ -510,7 +510,7 @@ describe("FilteringHierarchyDefinition", () => {
           ],
         };
         const filteringFactory = await createFilteringHierarchyDefinition();
-        const result = await firstValueFrom(filteringFactory.postProcessNode(of(inputNode)));
+        const result = await firstValueFrom(filteringFactory.postProcessNode(inputNode));
         expect(result.autoExpand).to.be.undefined;
       });
 
@@ -527,7 +527,7 @@ describe("FilteringHierarchyDefinition", () => {
           ],
         };
         const filteringFactory = await createFilteringHierarchyDefinition();
-        const result = await firstValueFrom(filteringFactory.postProcessNode(of(inputNode)));
+        const result = await firstValueFrom(filteringFactory.postProcessNode(inputNode));
         expect(result.autoExpand).to.be.undefined;
       });
 
@@ -547,7 +547,7 @@ describe("FilteringHierarchyDefinition", () => {
           ],
         };
         const filteringFactory = await createFilteringHierarchyDefinition();
-        const result = await firstValueFrom(filteringFactory.postProcessNode(of(inputNode)));
+        const result = await firstValueFrom(filteringFactory.postProcessNode(inputNode));
         expect(result.autoExpand).to.be.true;
       });
 
@@ -562,7 +562,7 @@ describe("FilteringHierarchyDefinition", () => {
           ],
         };
         const filteringFactory = await createFilteringHierarchyDefinition();
-        const result = await firstValueFrom(filteringFactory.postProcessNode(of(inputNode)));
+        const result = await firstValueFrom(filteringFactory.postProcessNode(inputNode));
         expect(result.autoExpand).to.be.undefined;
       });
 
@@ -577,7 +577,7 @@ describe("FilteringHierarchyDefinition", () => {
           ],
         };
         const filteringFactory = await createFilteringHierarchyDefinition();
-        const result = await firstValueFrom(filteringFactory.postProcessNode(of(inputNode)));
+        const result = await firstValueFrom(filteringFactory.postProcessNode(inputNode));
         expect(result.autoExpand).to.be.true;
       });
 
@@ -605,7 +605,7 @@ describe("FilteringHierarchyDefinition", () => {
           ],
         };
         const filteringFactory = await createFilteringHierarchyDefinition();
-        const result = await firstValueFrom(filteringFactory.postProcessNode(of(inputNode)));
+        const result = await firstValueFrom(filteringFactory.postProcessNode(inputNode));
         expect(result.autoExpand).to.be.undefined;
       });
 
@@ -634,7 +634,7 @@ describe("FilteringHierarchyDefinition", () => {
           ],
         };
         const filteringFactory = await createFilteringHierarchyDefinition();
-        const result = await firstValueFrom(filteringFactory.postProcessNode(of(inputNode)));
+        const result = await firstValueFrom(filteringFactory.postProcessNode(inputNode));
         expect(result.autoExpand).to.be.undefined;
       });
 
@@ -659,7 +659,7 @@ describe("FilteringHierarchyDefinition", () => {
           ],
         };
         const filteringFactory = await createFilteringHierarchyDefinition();
-        const result = await firstValueFrom(filteringFactory.postProcessNode(of(inputNode)));
+        const result = await firstValueFrom(filteringFactory.postProcessNode(inputNode));
         expect(result.autoExpand).to.be.true;
       });
 
@@ -683,7 +683,7 @@ describe("FilteringHierarchyDefinition", () => {
           ],
         };
         const filteringFactory = await createFilteringHierarchyDefinition();
-        const result = await firstValueFrom(filteringFactory.postProcessNode(of(inputNode)));
+        const result = await firstValueFrom(filteringFactory.postProcessNode(inputNode));
         expect(result.autoExpand).to.be.true;
       });
 
@@ -707,7 +707,7 @@ describe("FilteringHierarchyDefinition", () => {
           ],
         };
         const filteringFactory = await createFilteringHierarchyDefinition();
-        const result = await firstValueFrom(filteringFactory.postProcessNode(of(inputNode)));
+        const result = await firstValueFrom(filteringFactory.postProcessNode(inputNode));
         expect(!!result.autoExpand).to.be.false;
       });
 
@@ -735,7 +735,7 @@ describe("FilteringHierarchyDefinition", () => {
           ],
         };
         const filteringFactory = await createFilteringHierarchyDefinition();
-        const result = await firstValueFrom(filteringFactory.postProcessNode(of(inputNode)));
+        const result = await firstValueFrom(filteringFactory.postProcessNode(inputNode));
         expect(!!result.autoExpand).to.be.false;
       });
     };

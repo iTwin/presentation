@@ -8,7 +8,6 @@ import {
   catchError,
   concat,
   defaultIfEmpty,
-  defer,
   EMPTY,
   filter,
   finalize,
@@ -272,28 +271,24 @@ class IModelHierarchyProviderImpl implements HierarchyProvider {
       message: /* c8 ignore next */ () =>
         `[${requestContext.requestId}] Requesting hierarchy level definitions for ${createNodeIdentifierForLogging(props.parentNode)}`,
     });
-    return from(
-      defer(() => {
-        let parentNode = props.parentNode;
-        if (parentNode && HierarchyNode.isGeneric(parentNode) && parentNode.key.source && parentNode.key.source !== this._imodelAccess.imodelKey) {
-          return [];
-        }
-        if (parentNode && HierarchyNode.isInstancesNode(parentNode)) {
-          parentNode = {
-            ...parentNode,
-            key: {
-              ...parentNode.key,
-              instanceKeys: parentNode.key.instanceKeys.filter((ik) => !ik.imodelKey || ik.imodelKey === this._imodelAccess.imodelKey),
-            },
-          };
-          assert(HierarchyNodeKey.isInstances(parentNode.key));
-          if (parentNode.key.instanceKeys.length === 0) {
-            return [];
-          }
-        }
-        return this._activeHierarchyDefinition.defineHierarchyLevel({ ...defineHierarchyLevelProps, parentNode });
-      }),
-    ).pipe(
+    let parentNode = props.parentNode;
+    if (parentNode && HierarchyNode.isGeneric(parentNode) && parentNode.key.source && parentNode.key.source !== this._imodelAccess.imodelKey) {
+      return EMPTY;
+    }
+    if (parentNode && HierarchyNode.isInstancesNode(parentNode)) {
+      parentNode = {
+        ...parentNode,
+        key: {
+          ...parentNode.key,
+          instanceKeys: parentNode.key.instanceKeys.filter((ik) => !ik.imodelKey || ik.imodelKey === this._imodelAccess.imodelKey),
+        },
+      };
+      assert(HierarchyNodeKey.isInstances(parentNode.key));
+      if (parentNode.key.instanceKeys.length === 0) {
+        return EMPTY;
+      }
+    }
+    return this._activeHierarchyDefinition.defineHierarchyLevel({ ...defineHierarchyLevelProps, parentNode }).pipe(
       mergeAll(),
       finalize(() =>
         doLog({
@@ -322,7 +317,7 @@ class IModelHierarchyProviderImpl implements HierarchyProvider {
                 queryExecutor: this._imodelAccess,
                 query,
                 limit: props.hierarchyLevelSizeLimit,
-                parser: this._activeHierarchyDefinition.parseNode ? (obs) => this._activeHierarchyDefinition.parseNode!(obs) : undefined,
+                parser: this._activeHierarchyDefinition.parseNode ? (row) => this._activeHierarchyDefinition.parseNode!(row, props.parentNode) : undefined,
               }),
             ),
             map((node) => ({
@@ -677,18 +672,16 @@ type HierarchyCacheEntry =
 
 function preProcessNodes(hierarchyFactory: RxjsHierarchyDefinition) {
   return hierarchyFactory.preProcessNode
-    ? processNodes(hierarchyFactory.preProcessNode.bind(hierarchyFactory))
+    ? processNodes(hierarchyFactory.preProcessNode)
     : (o: Observable<ProcessedGenericHierarchyNode | ProcessedInstanceHierarchyNode>) => o;
 }
 
 function postProcessNodes<ProcessedHierarchyNode>(hierarchyFactory: RxjsHierarchyDefinition) {
-  return hierarchyFactory.postProcessNode
-    ? processNodes(hierarchyFactory.postProcessNode.bind(hierarchyFactory))
-    : (o: Observable<ProcessedHierarchyNode>) => o;
+  return hierarchyFactory.postProcessNode ? processNodes(hierarchyFactory.postProcessNode) : (o: Observable<ProcessedHierarchyNode>) => o;
 }
 
-function processNodes<TNode>(processor: (node: Observable<TNode>) => Observable<TNode | undefined>) {
-  return (nodes: Observable<TNode>) => processor(nodes).pipe(filter((n): n is TNode => !!n));
+function processNodes<TNode>(processor: (node: TNode) => Observable<TNode>) {
+  return (nodes: Observable<TNode>) => nodes.pipe(mergeMap(processor));
 }
 
 function applyLabelsFormatting<TNode extends { label: string | ConcatenatedValue }>(

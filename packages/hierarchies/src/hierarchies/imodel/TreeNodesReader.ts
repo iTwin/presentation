@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { from, map, mergeMap, Observable, of } from "rxjs";
+import { from, mergeMap, Observable, of } from "rxjs";
 import { Id64String } from "@itwin/core-bentley";
 import { ECSqlQueryDef, parseInstanceLabel } from "@itwin/presentation-shared";
 import { RxjsNodeParser } from "../internal/RxjsHierarchyDefinition.js";
@@ -21,17 +21,13 @@ interface ReadNodesProps {
 /** @internal */
 export function readNodes(props: ReadNodesProps): Observable<SourceInstanceHierarchyNode> {
   const { queryExecutor, query, limit } = props;
-  const parser: RxjsNodeParser = props?.parser ?? ((obs) => obs.pipe(map(({ row }) => defaultNodesParser(row))));
+  const parser: RxjsNodeParser = props?.parser ?? ((row) => of(defaultNodesParser(row)));
   const config: Parameters<LimitingECSqlQueryExecutor["createQueryReader"]>[1] = {
     rowFormat: "ECSqlPropertyNames",
     ...(limit !== undefined ? { limit } : undefined),
   };
 
-  return from(queryExecutor.createQueryReader(query, config)).pipe(
-    mergeMap((row) => {
-      return parser(of({ row }));
-    }),
-  );
+  return from(queryExecutor.createQueryReader(query, config)).pipe(mergeMap((row) => parser(row)));
 }
 
 /**

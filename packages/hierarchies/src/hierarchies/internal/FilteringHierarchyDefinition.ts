@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { defer, filter, forkJoin, map, merge, mergeAll, mergeMap, Observable, of, toArray } from "rxjs";
+import { defer, filter, map, merge, mergeAll, mergeMap, Observable, of, toArray } from "rxjs";
 import { Id64String } from "@itwin/core-bentley";
 import { ECClassHierarchyInspector, InstanceKey } from "@itwin/presentation-shared";
 import { createHierarchyFilteringHelper, HierarchyFilteringPath } from "../HierarchyFiltering.js";
@@ -21,7 +21,6 @@ import { NodeSelectClauseColumnNames } from "../imodel/NodeSelectQueryFactory.js
 import { defaultNodesParser } from "../imodel/TreeNodesReader.js";
 import { partition } from "./operators/Partition.js";
 import { RxjsHierarchyDefinition, RxjsNodeParser, RxjsNodePostProcessor, RxjsNodePreProcessor } from "./RxjsHierarchyDefinition.js";
-import { createHierarchyRxjsFilteringHelper } from "./RxjsHierarchyFiltering.js";
 
 interface FilteringHierarchyDefinitionProps {
   imodelAccess: ECClassHierarchyInspector & { imodelKey: string };
@@ -41,18 +40,17 @@ export class FilteringHierarchyDefinition implements RxjsHierarchyDefinition {
     this._imodelAccess = props.imodelAccess;
     this._source = props.source;
     this._nodeIdentifierPaths = props.nodeIdentifierPaths;
-    this._nodesParser = props.nodesParser ?? this._source.parseNode ?? ((obs) => obs.pipe(map(({ row }) => defaultNodesParser(row))));
+    this._nodesParser = props.nodesParser ?? this._source.parseNode ?? ((row) => of(defaultNodesParser(row)));
   }
 
   public get preProcessNode(): RxjsNodePreProcessor {
-    return (obs) => {
-      return (this._source.preProcessNode ? this._source.preProcessNode(obs) : obs).pipe(
-        map((processedNode) => {
-          if (processedNode?.processingParams?.hideInHierarchy && processedNode.filtering?.isFilterTarget && !processedNode.filtering.hasFilterTargetAncestor) {
-            // we want to hide target nodes if they have `hideInHierarchy` param, but only if they're not under another filter target
-            return undefined;
-          }
-          return processedNode;
+    return (node) => {
+      return (this._source.preProcessNode ? this._source.preProcessNode(node) : of(node)).pipe(
+        filter((processedNode) => {
+          return (
+            !!processedNode &&
+            (!processedNode.processingParams?.hideInHierarchy || !processedNode.filtering?.isFilterTarget || !!processedNode.filtering.hasFilterTargetAncestor)
+          );
         }),
       );
     };
@@ -102,12 +100,9 @@ export class FilteringHierarchyDefinition implements RxjsHierarchyDefinition {
   }
 
   public get postProcessNode(): RxjsNodePostProcessor {
-    return (obs) => {
-      return forkJoin({
-        processedNode: this._source.postProcessNode ? this._source.postProcessNode(obs) : obs,
-        node: obs,
-      }).pipe(
-        map(({ processedNode, node }) => {
+    return (node) => {
+      return (this._source.postProcessNode ? this._source.postProcessNode(node) : of(node)).pipe(
+        map((processedNode) => {
           if (ProcessedHierarchyNode.isGroupingNode(node) && this.shouldExpandGroupingNode(node)) {
             Object.assign(processedNode, { autoExpand: true });
           }
@@ -118,53 +113,42 @@ export class FilteringHierarchyDefinition implements RxjsHierarchyDefinition {
   }
 
   public get parseNode(): RxjsNodeParser {
-    return (obs) => {
-      return forkJoin({
-        parsedNode: this._nodesParser(obs),
-        props: obs,
-      }).pipe(
-        mergeMap(({ parsedNode, props }) => {
-          const { row, parentNode } = props;
+    return (row, parentNode) => {
+      return this._nodesParser(row).pipe(
+        mergeMap(async (parsedNode) => {
           if (!row[ECSQL_COLUMN_NAME_FilterECInstanceId] || !row[ECSQL_COLUMN_NAME_FilterClassName]) {
-            return of(parsedNode);
+            return parsedNode;
           }
           const rowInstanceKey = { className: row[ECSQL_COLUMN_NAME_FilterClassName], id: row[ECSQL_COLUMN_NAME_FilterECInstanceId] };
-          const filteringHelper = createHierarchyRxjsFilteringHelper(this._nodeIdentifierPaths, parentNode);
-          return filteringHelper
-            .createChildNodePropsObs({
-              pathMatcher: (identifier): Observable<boolean> => {
-                if (identifier.id !== rowInstanceKey.id) {
-                  return of(false);
-                }
-                if (!HierarchyNodeIdentifier.isInstanceNodeIdentifier(identifier)) {
-                  return of(false);
-                }
-                if (identifier.imodelKey && identifier.imodelKey !== this._imodelAccess.imodelKey) {
-                  return of(false);
-                }
-                if (identifier.className === rowInstanceKey.className) {
-                  return of(true);
-                }
-                const isDerivedFrom = this._imodelAccess.classDerivesFrom(identifier.className, rowInstanceKey.className);
-                const isDerivedTo = this._imodelAccess.classDerivesFrom(rowInstanceKey.className, identifier.className);
-                return forkJoin({
-                  derivedFrom: isDerivedFrom instanceof Promise ? isDerivedFrom : of(isDerivedFrom),
-                  derivedTo: isDerivedTo instanceof Promise ? isDerivedTo : of(isDerivedTo),
-                }).pipe(map(({ derivedFrom, derivedTo }) => derivedFrom || derivedTo));
-              },
-            })
-            .pipe(
-              map((nodeExtraProps) => {
-                if (nodeExtraProps?.autoExpand) {
-                  parsedNode.autoExpand = true;
-                }
-                if (nodeExtraProps?.filtering) {
-                  parsedNode.filtering = nodeExtraProps.filtering;
-                }
-
-                return parsedNode;
-              }),
-            );
+          const filteringHelper = createHierarchyFilteringHelper(this._nodeIdentifierPaths, parentNode);
+          const nodeExtraPropsPossiblyPromise = filteringHelper.createChildNodePropsAsync({
+            pathMatcher: (identifier): boolean | Promise<boolean> => {
+              if (identifier.id !== rowInstanceKey.id) {
+                return false;
+              }
+              if (!HierarchyNodeIdentifier.isInstanceNodeIdentifier(identifier)) {
+                return false;
+              }
+              if (identifier.imodelKey && identifier.imodelKey !== this._imodelAccess.imodelKey) {
+                return false;
+              }
+              if (identifier.className === rowInstanceKey.className) {
+                return true;
+              }
+              return Promise.all([
+                this._imodelAccess.classDerivesFrom(identifier.className, rowInstanceKey.className),
+                this._imodelAccess.classDerivesFrom(rowInstanceKey.className, identifier.className),
+              ]).then(([isDerivedFrom, isDerivedTo]) => isDerivedFrom || isDerivedTo);
+            },
+          });
+          const nodeExtraProps = nodeExtraPropsPossiblyPromise instanceof Promise ? await nodeExtraPropsPossiblyPromise : nodeExtraPropsPossiblyPromise;
+          if (nodeExtraProps?.autoExpand) {
+            parsedNode.autoExpand = true;
+          }
+          if (nodeExtraProps?.filtering) {
+            parsedNode.filtering = nodeExtraProps.filtering;
+          }
+          return parsedNode;
         }),
       );
     };
@@ -176,7 +160,7 @@ export class FilteringHierarchyDefinition implements RxjsHierarchyDefinition {
     const filteringHelper = createHierarchyFilteringHelper(this._nodeIdentifierPaths, props.parentNode);
     const childNodeFilteringIdentifiers = filteringHelper.getChildNodeFilteringIdentifiers();
     if (!childNodeFilteringIdentifiers) {
-      return this._source.defineHierarchyLevel(props);
+      return sourceDefinitions;
     }
 
     const [genericNodeDefinitions, instanceNodeDefinitions] = partition(sourceDefinitions.pipe(mergeAll()), HierarchyNodesDefinition.isGenericNode);
