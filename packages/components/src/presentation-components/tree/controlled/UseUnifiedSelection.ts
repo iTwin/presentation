@@ -83,16 +83,20 @@ export class UnifiedSelectionTreeEventHandler extends TreeEventHandler {
     this.selectNodes();
   }
 
-  /** Disposes this event handler */
-  public [Symbol.dispose]() {
+  #dispose() {
     super.dispose();
     this.#cancelled.next();
     this.#listeners.forEach((unregister) => unregister());
   }
 
+  /** Disposes this event handler */
+  public override [Symbol.dispose]() {
+    this.#dispose();
+  }
+
   /** @deprecated in 5.7. Use `[Symbol.dispose]` instead. */
   public override dispose() {
-    this[Symbol.dispose]();
+    this.#dispose();
   }
 
   public override onSelectionModified({ modifications }: TreeSelectionModificationEventArgs) {

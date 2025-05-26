@@ -166,16 +166,20 @@ export class PresentationTreeDataProvider implements IPresentationTreeDataProvid
     this._onHierarchyLimitExceeded = props.onHierarchyLimitExceeded;
   }
 
-  /** Destructor. Must be called to clean up. */
-  public [Symbol.dispose]() {
+  #dispose() {
     this._unregisterVariablesChangeListener?.();
     this._unregisterVariablesChangeListener = undefined;
+  }
+
+  /** Destructor. Must be called to clean up. */
+  public [Symbol.dispose]() {
+    this.#dispose();
   }
 
   /** @deprecated in 5.7. Use `[Symbol.dispose]` instead. */
   /* c8 ignore next 3 */
   public dispose() {
-    this[Symbol.dispose]();
+    this.#dispose();
   }
 
   public get props(): Readonly<PresentationTreeDataProviderProps> {
