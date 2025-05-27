@@ -47,10 +47,11 @@ export class FilteringHierarchyDefinition implements RxjsHierarchyDefinition {
     return (node) => {
       return (this._source.preProcessNode ? this._source.preProcessNode(node) : of(node)).pipe(
         filter((processedNode) => {
-          return (
-            !!processedNode &&
-            (!processedNode.processingParams?.hideInHierarchy || !processedNode.filtering?.isFilterTarget || !!processedNode.filtering.hasFilterTargetAncestor)
-          );
+          if (processedNode?.processingParams?.hideInHierarchy && processedNode.filtering?.isFilterTarget && !processedNode.filtering.hasFilterTargetAncestor) {
+            // we want to hide target nodes if they have `hideInHierarchy` param, but only if they're not under another filter target
+            return false;
+          }
+          return true;
         }),
       );
     };
