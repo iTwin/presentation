@@ -237,6 +237,7 @@ describe("createIModelHierarchyProvider", () => {
         { ...node, key: { ...node.key, instanceKeys: node.key.instanceKeys.map((k) => ({ ...k, imodelKey: "test-imodel" })) }, parentKeys: [] },
       ]);
     });
+
     it("calls hierarchy definition factory parser that returns a promise if supplied", async () => {
       const node: SourceInstanceHierarchyNode = {
         key: { type: "instances", instanceKeys: [{ className: "a.b", id: "0x123" }] },
