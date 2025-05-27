@@ -2,7 +2,8 @@
 "@itwin/presentation-hierarchies": minor
 ---
 
-Expose rxjs types in FilteringHierarchyDefinition. Return type of `createHierarchyFilteringHelper.createChildNodePropsAsync` has been to `Promise<Pick<HierarchyNode, "filtering" | "autoExpand"> | undefined> | Pick<HierarchyNode, "filtering" | "autoExpand"> | undefined` instead of `Promise<Pick<HierarchyNode, "filtering" | "autoExpand"> | undefined>`. This allows using the API in two different ways:
+`createHierarchyFilteringHelper.createChildNodePropsAsync` now also might return a synchronous value (not just a Promise). This was added as a small performance improvement.
+
 
 Before:
 
@@ -16,7 +17,10 @@ const childNodeProps = await createHierarchyFilteringHelper(undefined, undefined
 
 After:
 
-`Option A` - await only when Promise is returned:
+**Option A` - check if it's a Promise before awaiting:**
+
+Use this when you want to get slightly better performance by avoiding unnecessary `await`.
+
 ```ts
 const childNodePropsPossiblyPromise = createHierarchyFilteringHelper(undefined, undefined).createChildNodePropsAsync({
     pathMatcher: (identifier): boolean | Promise<boolean> => {
@@ -26,10 +30,13 @@ const childNodePropsPossiblyPromise = createHierarchyFilteringHelper(undefined, 
 const childNodeProps = childNodePropsPossiblyPromise instanceOf Promise ? await childNodePropsPossiblyPromise : childNodePropsPossiblyPromise;
 ```
 
-`Option B` - always await:
+**`Option B` - always await:**
+
+Use this if pathMatcher always returns a Promise or you prefer a simpler pattern.
+
 ```ts
 const childNodeProps = await createHierarchyFilteringHelper(undefined, undefined).createChildNodePropsAsync({
-    pathMatcher: (identifier): boolean | Promise<boolean> => {
+    pathMatcher: async (identifier): Promise<boolean> => {
         return false;
     },
 });

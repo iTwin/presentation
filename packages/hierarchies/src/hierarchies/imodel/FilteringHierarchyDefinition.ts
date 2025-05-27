@@ -19,8 +19,8 @@ import {
 import { ProcessedGroupingHierarchyNode, ProcessedHierarchyNode } from "../imodel/IModelHierarchyNode.js";
 import { NodeSelectClauseColumnNames } from "../imodel/NodeSelectQueryFactory.js";
 import { defaultNodesParser } from "../imodel/TreeNodesReader.js";
-import { partition } from "./operators/Partition.js";
-import { RxjsHierarchyDefinition, RxjsNodeParser, RxjsNodePostProcessor, RxjsNodePreProcessor } from "./RxjsHierarchyDefinition.js";
+import { partition } from "../internal/operators/Partition.js";
+import { RxjsHierarchyDefinition, RxjsNodeParser, RxjsNodePostProcessor, RxjsNodePreProcessor } from "../internal/RxjsHierarchyDefinition.js";
 
 interface FilteringHierarchyDefinitionProps {
   imodelAccess: ECClassHierarchyInspector & { imodelKey: string };

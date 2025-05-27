@@ -12,6 +12,7 @@ import {
   filter,
   finalize,
   from,
+  identity,
   map,
   merge,
   mergeAll,
@@ -52,7 +53,6 @@ import {
   hasChildren,
 } from "../internal/Common.js";
 import { eachValueFrom } from "../internal/EachValueFrom.js";
-import { FilteringHierarchyDefinition } from "../internal/FilteringHierarchyDefinition.js";
 import { doLog, log } from "../internal/LoggingUtils.js";
 import { partition } from "../internal/operators/Partition.js";
 import { reduceToMergeMapList } from "../internal/operators/ReduceToMergeMap.js";
@@ -60,16 +60,10 @@ import { shareReplayWithErrors } from "../internal/operators/ShareReplayWithErro
 import { sortNodesByLabelOperator } from "../internal/operators/Sorting.js";
 import { getRxjsHierarchyDefinition, RxjsHierarchyDefinition } from "../internal/RxjsHierarchyDefinition.js";
 import { SubscriptionScheduler } from "../internal/SubscriptionScheduler.js";
+import { FilteringHierarchyDefinition } from "./FilteringHierarchyDefinition.js";
 import { HierarchyCache } from "./HierarchyCache.js";
 import { DefineHierarchyLevelProps, HierarchyDefinition, HierarchyNodesDefinition } from "./IModelHierarchyDefinition.js";
-import {
-  ProcessedGenericHierarchyNode,
-  ProcessedGroupingHierarchyNode,
-  ProcessedHierarchyNode,
-  ProcessedInstanceHierarchyNode,
-  SourceGenericHierarchyNode,
-  SourceInstanceHierarchyNode,
-} from "./IModelHierarchyNode.js";
+import { ProcessedGroupingHierarchyNode, ProcessedHierarchyNode, SourceGenericHierarchyNode, SourceInstanceHierarchyNode } from "./IModelHierarchyNode.js";
 import { LimitingECSqlQueryExecutor } from "./LimitingECSqlQueryExecutor.js";
 import { NodeSelectClauseColumnNames } from "./NodeSelectQueryFactory.js";
 import { createDetermineChildrenOperator } from "./operators/DetermineChildren.js";
@@ -671,13 +665,11 @@ type HierarchyCacheEntry =
   | { observable: ProcessedNodesObservable; processingStatus: "pre-processed" };
 
 function preProcessNodes(hierarchyFactory: RxjsHierarchyDefinition) {
-  return hierarchyFactory.preProcessNode
-    ? processNodes(hierarchyFactory.preProcessNode)
-    : (o: Observable<ProcessedGenericHierarchyNode | ProcessedInstanceHierarchyNode>) => o;
+  return hierarchyFactory.preProcessNode ? processNodes(hierarchyFactory.preProcessNode) : identity;
 }
 
-function postProcessNodes<ProcessedHierarchyNode>(hierarchyFactory: RxjsHierarchyDefinition) {
-  return hierarchyFactory.postProcessNode ? processNodes(hierarchyFactory.postProcessNode) : (o: Observable<ProcessedHierarchyNode>) => o;
+function postProcessNodes(hierarchyFactory: RxjsHierarchyDefinition) {
+  return hierarchyFactory.postProcessNode ? processNodes(hierarchyFactory.postProcessNode) : identity;
 }
 
 function processNodes<TNode>(processor: (node: TNode) => Observable<TNode>) {
