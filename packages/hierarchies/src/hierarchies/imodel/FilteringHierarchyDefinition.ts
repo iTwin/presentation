@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { defer, filter, map, merge, mergeAll, mergeMap, Observable, of, toArray } from "rxjs";
+import { defer, filter, from, map, merge, mergeAll, mergeMap, Observable, of, toArray } from "rxjs";
 import { Id64String } from "@itwin/core-bentley";
 import { ECClassHierarchyInspector, InstanceKey } from "@itwin/presentation-shared";
 import { createHierarchyFilteringHelper, HierarchyFilteringPath } from "../HierarchyFiltering.js";
@@ -47,7 +47,7 @@ export class FilteringHierarchyDefinition implements RxjsHierarchyDefinition {
     return (node) => {
       return (this._source.preProcessNode ? this._source.preProcessNode(node) : of(node)).pipe(
         filter((processedNode) => {
-          if (processedNode?.processingParams?.hideInHierarchy && processedNode.filtering?.isFilterTarget && !processedNode.filtering.hasFilterTargetAncestor) {
+          if (processedNode.processingParams?.hideInHierarchy && processedNode.filtering?.isFilterTarget && !processedNode.filtering.hasFilterTargetAncestor) {
             // we want to hide target nodes if they have `hideInHierarchy` param, but only if they're not under another filter target
             return false;
           }
@@ -104,6 +104,7 @@ export class FilteringHierarchyDefinition implements RxjsHierarchyDefinition {
     return (node) => {
       return (this._source.postProcessNode ? this._source.postProcessNode(node) : of(node)).pipe(
         map((processedNode) => {
+          // instance nodes get the auto-expand flag in `parseNode`, but grouping ones need to be handled during post-processing
           if (ProcessedHierarchyNode.isGroupingNode(node) && this.shouldExpandGroupingNode(node)) {
             Object.assign(processedNode, { autoExpand: true });
           }
@@ -116,9 +117,9 @@ export class FilteringHierarchyDefinition implements RxjsHierarchyDefinition {
   public get parseNode(): RxjsNodeParser {
     return (row, parentNode) => {
       return this._nodesParser(row).pipe(
-        mergeMap(async (parsedNode) => {
+        mergeMap((parsedNode) => {
           if (!row[ECSQL_COLUMN_NAME_FilterECInstanceId] || !row[ECSQL_COLUMN_NAME_FilterClassName]) {
-            return parsedNode;
+            return of(parsedNode);
           }
           const rowInstanceKey = { className: row[ECSQL_COLUMN_NAME_FilterClassName], id: row[ECSQL_COLUMN_NAME_FilterECInstanceId] };
           const filteringHelper = createHierarchyFilteringHelper(this._nodeIdentifierPaths, parentNode);
@@ -142,14 +143,17 @@ export class FilteringHierarchyDefinition implements RxjsHierarchyDefinition {
               ]).then(([isDerivedFrom, isDerivedTo]) => isDerivedFrom || isDerivedTo);
             },
           });
-          const nodeExtraProps = nodeExtraPropsPossiblyPromise instanceof Promise ? await nodeExtraPropsPossiblyPromise : nodeExtraPropsPossiblyPromise;
-          if (nodeExtraProps?.autoExpand) {
-            parsedNode.autoExpand = true;
-          }
-          if (nodeExtraProps?.filtering) {
-            parsedNode.filtering = nodeExtraProps.filtering;
-          }
-          return parsedNode;
+          return (nodeExtraPropsPossiblyPromise instanceof Promise ? from(nodeExtraPropsPossiblyPromise) : of(nodeExtraPropsPossiblyPromise)).pipe(
+            map((nodeExtraProps) => {
+              if (nodeExtraProps?.autoExpand) {
+                parsedNode.autoExpand = true;
+              }
+              if (nodeExtraProps?.filtering) {
+                parsedNode.filtering = nodeExtraProps.filtering;
+              }
+              return parsedNode;
+            }),
+          );
         }),
       );
     };

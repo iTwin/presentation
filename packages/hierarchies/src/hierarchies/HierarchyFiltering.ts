@@ -109,8 +109,7 @@ export function extractFilteringProps(
 }
 /* c8 ignore end */
 
-/** @internal */
-export function extractFilteringPropsInternal(
+function extractFilteringPropsInternal(
   rootLevelFilteringProps: HierarchyFilteringPath[] | undefined,
   parentNode: Pick<NonGroupingHierarchyNode, "filtering"> | undefined,
 ):
@@ -248,8 +247,7 @@ export function createHierarchyFilteringHelper(
 
 type NormalizedFilteringPath = ReturnType<(typeof HierarchyFilteringPath)["normalize"]>;
 
-/** @internal */
-export class MatchingFilteringPathsReducer {
+class MatchingFilteringPathsReducer {
   private _filteredChildrenIdentifierPaths = new Array<NormalizedFilteringPath>();
   private _isFilterTarget = false;
   private _filterTargetOptions = undefined as HierarchyFilteringPathOptions | undefined;
