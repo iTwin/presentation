@@ -11,6 +11,13 @@ import { FilterTargetGroupingNodeInfo, HierarchyFilteringPath, HierarchyFilterin
 import { HierarchyNode } from "../../hierarchies/HierarchyNode.js";
 import { HierarchyNodeIdentifiersPath } from "../../hierarchies/HierarchyNodeIdentifier.js";
 import {
+  applyECInstanceIdsFilter,
+  applyECInstanceIdsSelector,
+  ECSQL_COLUMN_NAME_FilterClassName,
+  ECSQL_COLUMN_NAME_FilterECInstanceId,
+  FilteringHierarchyDefinition,
+} from "../../hierarchies/imodel/FilteringHierarchyDefinition.js";
+import {
   GenericHierarchyNodeDefinition,
   HierarchyDefinitionParentNode,
   HierarchyLevelDefinition,
@@ -18,13 +25,6 @@ import {
 } from "../../hierarchies/imodel/IModelHierarchyDefinition.js";
 import { ProcessedGenericHierarchyNode, ProcessedGroupingHierarchyNode, SourceGenericHierarchyNode } from "../../hierarchies/imodel/IModelHierarchyNode.js";
 import { NodeSelectClauseColumnNames } from "../../hierarchies/imodel/NodeSelectQueryFactory.js";
-import {
-  applyECInstanceIdsFilter,
-  applyECInstanceIdsSelector,
-  ECSQL_COLUMN_NAME_FilterClassName,
-  ECSQL_COLUMN_NAME_FilterECInstanceId,
-  FilteringHierarchyDefinition,
-} from "../../hierarchies/internal/FilteringHierarchyDefinition.js";
 import { RxjsHierarchyDefinition, RxjsNodeParser } from "../../hierarchies/internal/RxjsHierarchyDefinition.js";
 import {
   createClassHierarchyInspectorStub,
