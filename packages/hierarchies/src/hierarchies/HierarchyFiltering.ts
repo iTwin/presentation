@@ -209,13 +209,14 @@ export function createHierarchyFilteringHelper(
     /**
      * Similar to `createChildNodeProps`, but takes an async `pathMatcher` prop.
      */
-    createChildNodePropsAsync: async (props: {
+    createChildNodePropsAsync: (props: {
       pathMatcher: (identifier: HierarchyNodeIdentifier) => boolean | Promise<boolean>;
-    }): Promise<Pick<HierarchyNode, "filtering" | "autoExpand"> | undefined> => {
+    }): Promise<Pick<HierarchyNode, "filtering" | "autoExpand"> | undefined> | Pick<HierarchyNode, "filtering" | "autoExpand"> | undefined => {
       if (!hasFilter) {
         return undefined;
       }
       const reducer = new MatchingFilteringPathsReducer(filteringProps?.hasFilterTargetAncestor);
+      const matchedPathPromises = new Array<Promise<NormalizedFilteringPath | undefined>>();
       for (const filteredChildrenNodeIdentifierPath of filteringProps.filteredNodePaths) {
         const normalizedPath = HierarchyFilteringPath.normalize(filteredChildrenNodeIdentifierPath);
         /* c8 ignore next 3 */
@@ -225,9 +226,8 @@ export function createHierarchyFilteringHelper(
 
         const matchesPossiblyPromise = props.pathMatcher(normalizedPath.path[0]);
         if (matchesPossiblyPromise instanceof Promise) {
-          if (!(await matchesPossiblyPromise)) {
-            continue;
-          }
+          matchedPathPromises.push(matchesPossiblyPromise.then((matches) => (matches ? normalizedPath : undefined)));
+          continue;
         }
         if (!matchesPossiblyPromise) {
           continue;
@@ -235,12 +235,18 @@ export function createHierarchyFilteringHelper(
 
         reducer.accept(normalizedPath);
       }
-      return reducer.getNodeProps();
+      if (matchedPathPromises.length === 0) {
+        return reducer.getNodeProps();
+      }
+      return Promise.all(matchedPathPromises)
+        .then((matchedPath) => matchedPath.forEach((normalizedPath) => normalizedPath && reducer.accept(normalizedPath)))
+        .then(() => reducer.getNodeProps());
     },
   };
 }
 
 type NormalizedFilteringPath = ReturnType<(typeof HierarchyFilteringPath)["normalize"]>;
+
 class MatchingFilteringPathsReducer {
   private _filteredChildrenIdentifierPaths = new Array<NormalizedFilteringPath>();
   private _isFilterTarget = false;

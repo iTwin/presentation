@@ -3,58 +3,57 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { defer, filter, firstValueFrom, map, merge, mergeMap, of, toArray } from "rxjs";
+import { defer, filter, from, map, merge, mergeAll, mergeMap, Observable, of, toArray } from "rxjs";
 import { Id64String } from "@itwin/core-bentley";
 import { ECClassHierarchyInspector, InstanceKey } from "@itwin/presentation-shared";
 import { createHierarchyFilteringHelper, HierarchyFilteringPath } from "../HierarchyFiltering.js";
 import { HierarchyNodeIdentifier } from "../HierarchyNodeIdentifier.js";
 import { IModelInstanceKey } from "../HierarchyNodeKey.js";
-import { partition } from "../internal/operators/Partition.js";
 import {
   DefineHierarchyLevelProps,
   GenericHierarchyNodeDefinition,
-  HierarchyDefinition,
-  HierarchyDefinitionParentNode,
   HierarchyLevelDefinition,
   HierarchyNodesDefinition,
   InstanceNodesQueryDefinition,
-  NodeParser,
-  NodePostProcessor,
-  NodePreProcessor,
-} from "./IModelHierarchyDefinition.js";
-import { ProcessedGroupingHierarchyNode, ProcessedHierarchyNode, SourceInstanceHierarchyNode } from "./IModelHierarchyNode.js";
-import { NodeSelectClauseColumnNames } from "./NodeSelectQueryFactory.js";
-import { defaultNodesParser } from "./TreeNodesReader.js";
+} from "../imodel/IModelHierarchyDefinition.js";
+import { ProcessedGroupingHierarchyNode, ProcessedHierarchyNode } from "../imodel/IModelHierarchyNode.js";
+import { NodeSelectClauseColumnNames } from "../imodel/NodeSelectQueryFactory.js";
+import { defaultNodesParser } from "../imodel/TreeNodesReader.js";
+import { partition } from "../internal/operators/Partition.js";
+import { RxjsHierarchyDefinition, RxjsNodeParser, RxjsNodePostProcessor, RxjsNodePreProcessor } from "../internal/RxjsHierarchyDefinition.js";
 
 interface FilteringHierarchyDefinitionProps {
   imodelAccess: ECClassHierarchyInspector & { imodelKey: string };
-  source: HierarchyDefinition;
+  source: RxjsHierarchyDefinition;
   nodeIdentifierPaths: HierarchyFilteringPath[];
-  nodesParser?: NodeParser;
+  nodesParser?: RxjsNodeParser;
 }
 
 /** @internal */
-export class FilteringHierarchyDefinition implements HierarchyDefinition {
+export class FilteringHierarchyDefinition implements RxjsHierarchyDefinition {
   private _imodelAccess: ECClassHierarchyInspector & { imodelKey: string };
-  private _source: HierarchyDefinition;
+  private _source: RxjsHierarchyDefinition;
   private _nodeIdentifierPaths: HierarchyFilteringPath[];
-  private _nodesParser: NodeParser;
+  private _nodesParser: RxjsNodeParser;
 
   public constructor(props: FilteringHierarchyDefinitionProps) {
     this._imodelAccess = props.imodelAccess;
     this._source = props.source;
     this._nodeIdentifierPaths = props.nodeIdentifierPaths;
-    this._nodesParser = props.nodesParser ?? this._source.parseNode ?? defaultNodesParser;
+    this._nodesParser = props.nodesParser ?? this._source.parseNode ?? ((row) => of(defaultNodesParser(row)));
   }
 
-  public get preProcessNode(): NodePreProcessor {
-    return async (node) => {
-      const processedNode = this._source.preProcessNode ? await this._source.preProcessNode(node) : node;
-      if (processedNode?.processingParams?.hideInHierarchy && processedNode.filtering?.isFilterTarget && !processedNode.filtering.hasFilterTargetAncestor) {
-        // we want to hide target nodes if they have `hideInHierarchy` param, but only if they're not under another filter target
-        return undefined;
-      }
-      return processedNode;
+  public get preProcessNode(): RxjsNodePreProcessor {
+    return (node) => {
+      return (this._source.preProcessNode ? this._source.preProcessNode(node) : of(node)).pipe(
+        filter((processedNode) => {
+          if (processedNode.processingParams?.hideInHierarchy && processedNode.filtering?.isFilterTarget && !processedNode.filtering.hasFilterTargetAncestor) {
+            // we want to hide target nodes if they have `hideInHierarchy` param, but only if they're not under another filter target
+            return false;
+          }
+          return true;
+        }),
+      );
     };
   }
 
@@ -101,60 +100,67 @@ export class FilteringHierarchyDefinition implements HierarchyDefinition {
     return false;
   }
 
-  public get postProcessNode(): NodePostProcessor {
-    return async (node: ProcessedHierarchyNode) => {
-      const processedNode = this._source.postProcessNode ? await this._source.postProcessNode(node) : node;
-      // instance nodes get the auto-expand flag in `parseNode`, but grouping ones need to be handled during post-processing
-      if (ProcessedHierarchyNode.isGroupingNode(node) && this.shouldExpandGroupingNode(node)) {
-        Object.assign(processedNode, { autoExpand: true });
-      }
-      return processedNode;
+  public get postProcessNode(): RxjsNodePostProcessor {
+    return (node) => {
+      return (this._source.postProcessNode ? this._source.postProcessNode(node) : of(node)).pipe(
+        map((processedNode) => {
+          // instance nodes get the auto-expand flag in `parseNode`, but grouping ones need to be handled during post-processing
+          if (ProcessedHierarchyNode.isGroupingNode(node) && this.shouldExpandGroupingNode(node)) {
+            Object.assign(processedNode, { autoExpand: true });
+          }
+          return processedNode;
+        }),
+      );
     };
   }
 
-  public get parseNode(): NodeParser {
-    return async (row: { [columnName: string]: any }, parentNode?: HierarchyDefinitionParentNode): Promise<SourceInstanceHierarchyNode> => {
-      const parsedNode = await this._nodesParser(row);
-      const filteringHelper = createHierarchyFilteringHelper(this._nodeIdentifierPaths, parentNode);
-      const nodeExtraProps =
-        row[ECSQL_COLUMN_NAME_FilterECInstanceId] && row[ECSQL_COLUMN_NAME_FilterClassName]
-          ? await (async () => {
-              const rowInstanceKey = { className: row[ECSQL_COLUMN_NAME_FilterClassName], id: row[ECSQL_COLUMN_NAME_FilterECInstanceId] };
-              return filteringHelper.createChildNodePropsAsync({
-                pathMatcher: (identifier): boolean | Promise<boolean> => {
-                  if (identifier.id !== rowInstanceKey.id) {
-                    return false;
-                  }
-                  if (!HierarchyNodeIdentifier.isInstanceNodeIdentifier(identifier)) {
-                    return false;
-                  }
-                  if (identifier.imodelKey && identifier.imodelKey !== this._imodelAccess.imodelKey) {
-                    return false;
-                  }
-                  if (identifier.className === rowInstanceKey.className) {
-                    return true;
-                  }
-                  return Promise.all([
-                    this._imodelAccess.classDerivesFrom(identifier.className, rowInstanceKey.className),
-                    this._imodelAccess.classDerivesFrom(rowInstanceKey.className, identifier.className),
-                  ]).then(([isDerivedFrom, isDerivedTo]) => isDerivedFrom || isDerivedTo);
-                },
-              });
-            })()
-          : undefined;
-      if (nodeExtraProps?.autoExpand) {
-        parsedNode.autoExpand = true;
-      }
-      if (nodeExtraProps?.filtering) {
-        parsedNode.filtering = nodeExtraProps.filtering;
-      }
-
-      return parsedNode;
+  public get parseNode(): RxjsNodeParser {
+    return (row, parentNode) => {
+      return this._nodesParser(row).pipe(
+        mergeMap((parsedNode) => {
+          if (!row[ECSQL_COLUMN_NAME_FilterECInstanceId] || !row[ECSQL_COLUMN_NAME_FilterClassName]) {
+            return of(parsedNode);
+          }
+          const rowInstanceKey = { className: row[ECSQL_COLUMN_NAME_FilterClassName], id: row[ECSQL_COLUMN_NAME_FilterECInstanceId] };
+          const filteringHelper = createHierarchyFilteringHelper(this._nodeIdentifierPaths, parentNode);
+          const nodeExtraPropsPossiblyPromise = filteringHelper.createChildNodePropsAsync({
+            pathMatcher: (identifier): boolean | Promise<boolean> => {
+              if (identifier.id !== rowInstanceKey.id) {
+                return false;
+              }
+              if (!HierarchyNodeIdentifier.isInstanceNodeIdentifier(identifier)) {
+                return false;
+              }
+              if (identifier.imodelKey && identifier.imodelKey !== this._imodelAccess.imodelKey) {
+                return false;
+              }
+              if (identifier.className === rowInstanceKey.className) {
+                return true;
+              }
+              return Promise.all([
+                this._imodelAccess.classDerivesFrom(identifier.className, rowInstanceKey.className),
+                this._imodelAccess.classDerivesFrom(rowInstanceKey.className, identifier.className),
+              ]).then(([isDerivedFrom, isDerivedTo]) => isDerivedFrom || isDerivedTo);
+            },
+          });
+          return (nodeExtraPropsPossiblyPromise instanceof Promise ? from(nodeExtraPropsPossiblyPromise) : of(nodeExtraPropsPossiblyPromise)).pipe(
+            map((nodeExtraProps) => {
+              if (nodeExtraProps?.autoExpand) {
+                parsedNode.autoExpand = true;
+              }
+              if (nodeExtraProps?.filtering) {
+                parsedNode.filtering = nodeExtraProps.filtering;
+              }
+              return parsedNode;
+            }),
+          );
+        }),
+      );
     };
   }
 
-  public async defineHierarchyLevel(props: DefineHierarchyLevelProps): Promise<HierarchyLevelDefinition> {
-    const sourceDefinitions = await this._source.defineHierarchyLevel(props);
+  public defineHierarchyLevel(props: DefineHierarchyLevelProps): Observable<HierarchyLevelDefinition> {
+    const sourceDefinitions = this._source.defineHierarchyLevel(props);
 
     const filteringHelper = createHierarchyFilteringHelper(this._nodeIdentifierPaths, props.parentNode);
     const childNodeFilteringIdentifiers = filteringHelper.getChildNodeFilteringIdentifiers();
@@ -162,98 +168,96 @@ export class FilteringHierarchyDefinition implements HierarchyDefinition {
       return sourceDefinitions;
     }
 
-    const [genericNodeDefinitions, instanceNodeDefinitions] = partition(sourceDefinitions, HierarchyNodesDefinition.isGenericNode);
-    return firstValueFrom(
-      merge(
-        genericNodeDefinitions.pipe(
-          map((definition) => {
-            if (
-              filteringHelper.hasFilterTargetAncestor ||
-              childNodeFilteringIdentifiers.some(
-                (identifier) =>
-                  HierarchyNodeIdentifier.isGenericNodeIdentifier(identifier) &&
-                  (!identifier.source || identifier.source === this._imodelAccess.imodelKey) &&
-                  identifier.id === definition.node.key,
-              )
-            ) {
-              return {
-                ...definition,
-                node: {
-                  ...definition.node,
-                  ...filteringHelper.createChildNodeProps({ pathMatcher: ({ id }) => id === definition.node.key }),
-                },
-              };
-            }
-            return undefined;
-          }),
-          filter((def): def is GenericHierarchyNodeDefinition => !!def),
-        ),
+    const [genericNodeDefinitions, instanceNodeDefinitions] = partition(sourceDefinitions.pipe(mergeAll()), HierarchyNodesDefinition.isGenericNode);
+    return merge(
+      genericNodeDefinitions.pipe(
+        map((definition) => {
+          if (
+            filteringHelper.hasFilterTargetAncestor ||
+            childNodeFilteringIdentifiers.some(
+              (identifier) =>
+                HierarchyNodeIdentifier.isGenericNodeIdentifier(identifier) &&
+                (!identifier.source || identifier.source === this._imodelAccess.imodelKey) &&
+                identifier.id === definition.node.key,
+            )
+          ) {
+            return {
+              ...definition,
+              node: {
+                ...definition.node,
+                ...filteringHelper.createChildNodeProps({ pathMatcher: ({ id }) => id === definition.node.key }),
+              },
+            };
+          }
+          return undefined;
+        }),
+        filter((def): def is GenericHierarchyNodeDefinition => !!def),
+      ),
 
-        instanceNodeDefinitions.pipe(
-          mergeMap((definition) => {
-            if (filteringHelper.hasFilterTargetAncestor) {
-              // if we have a filter target ancestor, we don't need to filter the definitions - we use all of them
-              return of(applyECInstanceIdsSelector(definition));
-            }
-            return defer(async () => {
-              const imodelAccess = this._imodelAccess;
-              const matches = new Map<Id64String, IModelInstanceKey[]>();
-              async function getEntries(x: IModelInstanceKey) {
-                let entries = matches.get(x.id);
-                if (!entries) {
-                  entries = [];
-                  matches.set(x.id, entries);
-                }
-                // make sure that we don't have path identifiers that only differ by class name, where
-                // class names are in the same class hierarchy, e.g.:
-                // [{ className: "bis.Element", id: "0x1" }, { className: "bis.Subject", id: "0x1" }]
-                // are actually the same instance, so we only need to keep one of them, or otherwise the query will
-                // duplicate it
-                for (const entry of entries) {
-                  if (
-                    entry.className === x.className ||
-                    (await imodelAccess.classDerivesFrom(entry.className, x.className)) ||
-                    (await imodelAccess.classDerivesFrom(x.className, entry.className))
-                  ) {
-                    return undefined;
-                  }
-                }
-                return entries;
+      instanceNodeDefinitions.pipe(
+        mergeMap((definition) => {
+          if (filteringHelper.hasFilterTargetAncestor) {
+            // if we have a filter target ancestor, we don't need to filter the definitions - we use all of them
+            return of(applyECInstanceIdsSelector(definition));
+          }
+          return defer(async () => {
+            const imodelAccess = this._imodelAccess;
+            const matches = new Map<Id64String, IModelInstanceKey[]>();
+            async function getEntries(x: IModelInstanceKey) {
+              let entries = matches.get(x.id);
+              if (!entries) {
+                entries = [];
+                matches.set(x.id, entries);
               }
-              for (const id of childNodeFilteringIdentifiers) {
-                // take only identifiers that match the definition by type, source and class
-                if (!HierarchyNodeIdentifier.isInstanceNodeIdentifier(id)) {
-                  continue;
-                }
-                if (id.imodelKey && id.imodelKey !== imodelAccess.imodelKey) {
-                  continue;
-                }
+              // make sure that we don't have path identifiers that only differ by class name, where
+              // class names are in the same class hierarchy, e.g.:
+              // [{ className: "bis.Element", id: "0x1" }, { className: "bis.Subject", id: "0x1" }]
+              // are actually the same instance, so we only need to keep one of them, or otherwise the query will
+              // duplicate it
+              for (const entry of entries) {
                 if (
-                  id.className !== definition.fullClassName &&
-                  !(await Promise.all([
-                    imodelAccess.classDerivesFrom(id.className, definition.fullClassName),
-                    imodelAccess.classDerivesFrom(definition.fullClassName, id.className),
-                  ]).then(([isDerivedFrom, isDerivedTo]) => isDerivedFrom || isDerivedTo))
+                  entry.className === x.className ||
+                  (await imodelAccess.classDerivesFrom(entry.className, x.className)) ||
+                  (await imodelAccess.classDerivesFrom(x.className, entry.className))
                 ) {
-                  continue;
-                }
-                const entriesTargetForPathIdentifier = await getEntries(id);
-                if (entriesTargetForPathIdentifier) {
-                  entriesTargetForPathIdentifier.push(id);
+                  return undefined;
                 }
               }
-              return Array.from(matches.values()).flat();
-            }).pipe(
-              // only take definitions that have matching path identifiers
-              filter((pathIdentifiers) => pathIdentifiers.length > 0),
+              return entries;
+            }
+            for (const id of childNodeFilteringIdentifiers) {
+              // take only identifiers that match the definition by type, source and class
+              if (!HierarchyNodeIdentifier.isInstanceNodeIdentifier(id)) {
+                continue;
+              }
+              if (id.imodelKey && id.imodelKey !== imodelAccess.imodelKey) {
+                continue;
+              }
+              if (
+                id.className !== definition.fullClassName &&
+                !(await Promise.all([
+                  imodelAccess.classDerivesFrom(id.className, definition.fullClassName),
+                  imodelAccess.classDerivesFrom(definition.fullClassName, id.className),
+                ]).then(([isDerivedFrom, isDerivedTo]) => isDerivedFrom || isDerivedTo))
+              ) {
+                continue;
+              }
+              const entriesTargetForPathIdentifier = await getEntries(id);
+              if (entriesTargetForPathIdentifier) {
+                entriesTargetForPathIdentifier.push(id);
+              }
+            }
+            return Array.from(matches.values()).flat();
+          }).pipe(
+            // only take definitions that have matching path identifiers
+            filter((pathIdentifiers) => pathIdentifiers.length > 0),
 
-              // for each definition that we're going to use, apply query-level filter
-              map((pathIdentifiers) => applyECInstanceIdsFilter(definition, pathIdentifiers)),
-            );
-          }),
-        ),
-      ).pipe(toArray()),
-    );
+            // for each definition that we're going to use, apply query-level filter
+            map((pathIdentifiers) => applyECInstanceIdsFilter(definition, pathIdentifiers)),
+          );
+        }),
+      ),
+    ).pipe(toArray());
   }
 }
 

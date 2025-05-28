@@ -5,6 +5,7 @@
 
 import { expect } from "chai";
 import { collect, createAsyncIterator } from "presentation-test-utilities";
+import { of } from "rxjs";
 import sinon from "sinon";
 import { ConcatenatedValue } from "@itwin/presentation-shared";
 import { SourceHierarchyNode, SourceInstanceHierarchyNode } from "../../hierarchies/imodel/IModelHierarchyNode.js";
@@ -37,7 +38,7 @@ describe("readNodes", () => {
     ids.forEach((_, i) => parser.onCall(i).returns(nodes[i]));
 
     const query = { ecsql: "QUERY", ctes: ["CTE1, CTE2"] };
-    const result = await collect(readNodes({ queryExecutor, query, parser }));
+    const result = await collect(readNodes({ queryExecutor, query, parser: (row) => of(parser(row)) }));
     expect(queryExecutor.createQueryReader).to.be.calledOnceWith(query, { rowFormat: "ECSqlPropertyNames" });
     expect(parser).to.be.calledThrice;
     expect(result).to.deep.eq(nodes);
@@ -46,7 +47,7 @@ describe("readNodes", () => {
   it("passes limit override to query queryExecutor", async () => {
     queryExecutor.createQueryReader.returns(createAsyncIterator([]));
     const query = { ecsql: "QUERY" };
-    await collect(readNodes({ queryExecutor, query, limit: 123, parser }));
+    await collect(readNodes({ queryExecutor, query, limit: 123, parser: (row) => of(parser(row)) }));
     expect(queryExecutor.createQueryReader).to.be.calledOnceWith(query, { rowFormat: "ECSqlPropertyNames", limit: 123 });
   });
 });
