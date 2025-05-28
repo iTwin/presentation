@@ -1,5 +1,13 @@
 # @itwin/presentation-hierarchies-react
 
+## 1.6.7
+
+### Patch Changes
+
+- [#974](https://github.com/iTwin/presentation/pull/974): Removed tree node outline on mobile devices.
+- Updated dependencies:
+  - @itwin/presentation-hierarchies@1.5.0
+
 ## 1.6.6
 
 ### Patch Changes
