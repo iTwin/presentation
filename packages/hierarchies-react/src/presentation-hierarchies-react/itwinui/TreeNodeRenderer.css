@@ -20,12 +20,12 @@
   .stateless-tree-node:hover .action-buttons {
     visibility: visible;
   }
-}
 
-.stateless-tree-node:focus-within {
-  outline: 1px solid var(--iui-color-border-accent);
-  outline-offset: -1px;
-  border-radius: var(--iui-border-radius-1);
+  .stateless-tree-node:focus-within {
+    outline: 1px solid var(--iui-color-border-accent);
+    outline-offset: -1px;
+    border-radius: var(--iui-border-radius-1);
+  }
 }
 
 .stateless-tree-node-small-spinner {
