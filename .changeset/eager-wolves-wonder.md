@@ -2,4 +2,4 @@
 "@itwin/presentation-hierarchies-react": patch
 ---
 
-Link TreeNode containing error with the error rendered in TreeErrorRenderer.
+Associate tree nodes rendered by `<StrataKitTreeNodeRenderer/>` component with error messages rendered in `<TreeErrorRenderer />`.
