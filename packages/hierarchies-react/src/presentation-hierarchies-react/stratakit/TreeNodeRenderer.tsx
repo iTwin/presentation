@@ -163,7 +163,7 @@ export const StrataKitTreeNodeRenderer: FC<PropsWithRef<TreeNodeRendererProps & 
         )}
         actions={actions}
         unstable_decorations={decorations}
-        error={!!node.error}
+        error={node.error ? node.error.id : undefined}
       />
     );
   }),
