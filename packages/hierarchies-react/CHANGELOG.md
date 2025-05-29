@@ -1,5 +1,11 @@
 # @itwin/presentation-hierarchies-react
 
+## 2.0.0-alpha.24
+
+### Patch Changes
+
+- [#975](https://github.com/iTwin/presentation/pull/975): Associate tree nodes rendered by `<StrataKitTreeNodeRenderer />` component with error messages rendered in `<TreeErrorRenderer />`. This improves accessibility by linking error information to the node.
+
 ## 2.0.0-alpha.23
 
 ### Minor Changes
