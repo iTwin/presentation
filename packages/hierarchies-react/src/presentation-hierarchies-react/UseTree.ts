@@ -316,7 +316,7 @@ function useTreeInternal({
 
   return {
     ...renderProps,
-    isReloading: isFiltering,
+    isReloading: !!state.model.rootNode.isLoading || isFiltering,
     getTreeModelNode,
     getNode,
     setFormatter,
