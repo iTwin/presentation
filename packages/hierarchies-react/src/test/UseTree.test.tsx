@@ -145,9 +145,7 @@ describe("useTree", () => {
           yield rootNode2;
         } else {
           await new Promise((res) => setTimeout(res, 50));
-          for (const node of [rootNode1]) {
-            yield node;
-          }
+          yield rootNode1;
         }
       },
       setHierarchyFilter() {
