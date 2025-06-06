@@ -141,9 +141,8 @@ describe("useTree", () => {
       async *getNodes() {
         if (getNodesCallCount < 1) {
           ++getNodesCallCount;
-          for (const node of [rootNode1, rootNode2]) {
-            yield node;
-          }
+          yield rootNode1;
+          yield rootNode2;
         } else {
           await new Promise((res) => setTimeout(res, 50));
           for (const node of [rootNode1]) {
