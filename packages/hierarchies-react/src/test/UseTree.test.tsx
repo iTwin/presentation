@@ -157,10 +157,8 @@ describe("useTree", () => {
     };
 
     const promise = new ResolvablePromise<hierarchiesModule.HierarchyNodeIdentifiersPath[]>();
-    const getFilteredPaths1 = sinon.stub().callsFake(async () => promise);
-
     const { result, rerender } = renderHook(useTree, {
-      initialProps: { getHierarchyProvider: () => customHierarchyProvider, getFilteredPaths: getFilteredPaths1 },
+      initialProps: { getHierarchyProvider: () => customHierarchyProvider, getFilteredPaths: () => promise },
     });
     await waitFor(() => {
       expect(getNodesCallCount).to.eq(0);
@@ -174,8 +172,7 @@ describe("useTree", () => {
     let treeRenderProps = getTreeRendererProps(result.current);
     expect(treeRenderProps?.rootNodes).to.have.lengthOf(2);
 
-    const getFilteredPaths2 = sinon.stub().callsFake(async () => promise);
-    rerender({ getHierarchyProvider: () => customHierarchyProvider, getFilteredPaths: getFilteredPaths2 });
+    rerender({ getHierarchyProvider: () => customHierarchyProvider, getFilteredPaths: () => promise });
     await waitFor(() => {
       expect(getNodesCallCount).to.eq(1);
       expect(result.current.isReloading).to.be.true;
