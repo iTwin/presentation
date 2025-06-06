@@ -1,5 +1,12 @@
 # @itwin/presentation-hierarchies-react
 
+## 2.0.0-alpha.24
+
+### Patch Changes
+
+- [#975](https://github.com/iTwin/presentation/pull/975): Associate tree nodes rendered by `<StrataKitTreeNodeRenderer />` component with error messages rendered in `<TreeErrorRenderer />`. This improves accessibility by linking error information to the node.
+- [#979](https://github.com/iTwin/presentation/pull/979): Adjust how `useTree` and other variants of it determines `isReloading` value. `isReloading` is now set to `true` if root nodes are being loaded.
+
 ## 2.0.0-alpha.23
 
 ### Minor Changes
