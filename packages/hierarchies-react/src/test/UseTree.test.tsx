@@ -132,6 +132,60 @@ describe("useTree", () => {
     });
   });
 
+  it("sets 'isReloading' to false only after root nodes are loaded", async () => {
+    const rootNode1 = createTestHierarchyNode({ id: "root-1" });
+    const rootNode2 = createTestHierarchyNode({ id: "root-2" });
+    const hierarchyChanged = new BeEvent();
+    let getNodesCallCount = 0;
+    const customHierarchyProvider: hierarchiesModule.HierarchyProvider = {
+      async *getNodes() {
+        if (getNodesCallCount < 1) {
+          ++getNodesCallCount;
+          yield rootNode1;
+          yield rootNode2;
+        } else {
+          await new Promise((res) => setTimeout(res, 50));
+          yield rootNode1;
+        }
+      },
+      setHierarchyFilter() {
+        hierarchyChanged.raiseEvent();
+      },
+      async *getNodeInstanceKeys() {},
+      setFormatter() {},
+      hierarchyChanged,
+    };
+
+    const promise = new ResolvablePromise<hierarchiesModule.HierarchyNodeIdentifiersPath[]>();
+    const { result, rerender } = renderHook(useTree, {
+      initialProps: { getHierarchyProvider: () => customHierarchyProvider, getFilteredPaths: () => promise },
+    });
+    await waitFor(() => {
+      expect(getNodesCallCount).to.eq(0);
+      expect(result.current.isReloading).to.be.true;
+    });
+    await waitFor(async () => {
+      await promise.resolve([]);
+      expect(getNodesCallCount).to.eq(1);
+      expect(result.current.isReloading).to.be.false;
+    });
+    let treeRenderProps = getTreeRendererProps(result.current);
+    expect(treeRenderProps?.rootNodes).to.have.lengthOf(2);
+
+    rerender({ getHierarchyProvider: () => customHierarchyProvider, getFilteredPaths: () => promise });
+    await waitFor(() => {
+      expect(getNodesCallCount).to.eq(1);
+      expect(result.current.isReloading).to.be.true;
+    });
+
+    await waitFor(async () => {
+      await promise.resolve([]);
+      expect(result.current.isReloading).to.be.false;
+    });
+    treeRenderProps = getTreeRendererProps(result.current);
+    expect(treeRenderProps?.rootNodes).to.have.lengthOf(1);
+  });
+
   it("loads unfiltered hierarchy when `getFilteredPaths` returns `undefined`", async () => {
     hierarchyProvider.getNodes.callsFake((props) => {
       return createAsyncIterator(props.parentNode === undefined ? [createTestHierarchyNode({ id: "root-1" })] : []);
