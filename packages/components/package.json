@@ -66,7 +66,7 @@
     "rxjs": "catalog:rxjs"
   },
   "peerDependencies": {
-    "@itwin/appui-abstract": "^5.0.0",
+    "@itwin/appui-abstract": "^4.4.0 || ^5.0.0",
     "@itwin/components-react": "^4.9.0 || ^5.0.0",
     "@itwin/core-bentley": "^4.4.0 || ^5.0.0",
     "@itwin/core-common": "^4.4.0 || ^5.0.0",

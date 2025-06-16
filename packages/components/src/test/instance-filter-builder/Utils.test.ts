@@ -166,174 +166,150 @@ describe("filterRuleValidator", () => {
 
   it("returns error message for invalid numeric rule", () => {
     expect(
-      filterRuleValidator(
-        {
-          id: "test-id",
-          groupId: "test-group-id",
-          property: numericProperty,
-          operator: "less",
-          value: {
-            valueFormat: PropertyValueFormat.Primitive,
-            value: undefined,
-            displayValue: "Invalid",
-          },
+      filterRuleValidator({
+        id: "test-id",
+        groupId: "test-group-id",
+        property: numericProperty,
+        operator: "less",
+        value: {
+          valueFormat: PropertyValueFormat.Primitive,
+          value: undefined,
+          displayValue: "Invalid",
         },
-        () => undefined,
-      ),
+      }),
     ).to.be.eq("instance-filter-builder.error-messages.not-a-number");
   });
 
   it("does not return error message for invalid numeric value if operator is 'IsEqual' or 'IsNotEqual'", () => {
     expect(
-      filterRuleValidator(
-        {
-          id: "test-id",
-          groupId: "test-group-id",
-          property: numericProperty,
-          operator: "is-equal",
-          value: {
-            valueFormat: PropertyValueFormat.Primitive,
-            value: "[Invalid]",
-            displayValue: "[Invalid]",
-          },
+      filterRuleValidator({
+        id: "test-id",
+        groupId: "test-group-id",
+        property: numericProperty,
+        operator: "is-equal",
+        value: {
+          valueFormat: PropertyValueFormat.Primitive,
+          value: "[Invalid]",
+          displayValue: "[Invalid]",
         },
-        () => undefined,
-      ),
+      }),
     ).to.be.undefined;
   });
 
   it("returns error message for invalid quantity rule", () => {
     expect(
-      filterRuleValidator(
-        {
-          id: "test-id",
-          groupId: "test-group-id",
-          property: quantityProperty,
-          operator: "less",
-          value: {
-            valueFormat: PropertyValueFormat.Primitive,
-            value: undefined,
-            displayValue: "Invalid",
-          },
+      filterRuleValidator({
+        id: "test-id",
+        groupId: "test-group-id",
+        property: quantityProperty,
+        operator: "less",
+        value: {
+          valueFormat: PropertyValueFormat.Primitive,
+          value: undefined,
+          displayValue: "Invalid",
         },
-        () => undefined,
-      ),
+      }),
     ).to.be.eq("instance-filter-builder.error-messages.invalid");
   });
 
   it("returns error message for invalid from quantity value in between rule", () => {
     expect(
-      filterRuleValidator(
-        {
-          id: "test-id",
-          groupId: "test-group-id",
-          property: quantityProperty,
-          operator: "between",
-          value: PropertyFilterBuilderRuleRangeValue.serialize({
-            from: {
-              valueFormat: PropertyValueFormat.Primitive,
-              value: undefined,
-              displayValue: "Invalid",
-            },
-            to: {
-              valueFormat: PropertyValueFormat.Primitive,
-              value: 123,
-              displayValue: "123 unit",
-            },
-          }),
-        },
-        () => undefined,
-      ),
+      filterRuleValidator({
+        id: "test-id",
+        groupId: "test-group-id",
+        property: quantityProperty,
+        operator: "between",
+        value: PropertyFilterBuilderRuleRangeValue.serialize({
+          from: {
+            valueFormat: PropertyValueFormat.Primitive,
+            value: undefined,
+            displayValue: "Invalid",
+          },
+          to: {
+            valueFormat: PropertyValueFormat.Primitive,
+            value: 123,
+            displayValue: "123 unit",
+          },
+        }),
+      }),
     ).to.be.eq("instance-filter-builder.error-messages.invalid");
   });
 
   it("returns error message for invalid to quantity value in between rule", () => {
     expect(
-      filterRuleValidator(
-        {
-          id: "test-id",
-          groupId: "test-group-id",
-          property: quantityProperty,
-          operator: "between",
-          value: PropertyFilterBuilderRuleRangeValue.serialize({
-            from: {
-              valueFormat: PropertyValueFormat.Primitive,
-              value: 123,
-              displayValue: "123 unit",
-            },
-            to: {
-              valueFormat: PropertyValueFormat.Primitive,
-              value: undefined,
-              displayValue: "Invalid",
-            },
-          }),
-        },
-        () => undefined,
-      ),
+      filterRuleValidator({
+        id: "test-id",
+        groupId: "test-group-id",
+        property: quantityProperty,
+        operator: "between",
+        value: PropertyFilterBuilderRuleRangeValue.serialize({
+          from: {
+            valueFormat: PropertyValueFormat.Primitive,
+            value: 123,
+            displayValue: "123 unit",
+          },
+          to: {
+            valueFormat: PropertyValueFormat.Primitive,
+            value: undefined,
+            displayValue: "Invalid",
+          },
+        }),
+      }),
     ).to.be.eq("instance-filter-builder.error-messages.invalid");
   });
 
   it("does not return error message for valid numeric rule", () => {
     expect(
-      filterRuleValidator(
-        {
-          id: "test-id",
-          groupId: "test-group-id",
-          property: numericProperty,
-          operator: "greater",
-          value: {
-            valueFormat: PropertyValueFormat.Primitive,
-            value: 10,
-            displayValue: "10",
-          },
+      filterRuleValidator({
+        id: "test-id",
+        groupId: "test-group-id",
+        property: numericProperty,
+        operator: "greater",
+        value: {
+          valueFormat: PropertyValueFormat.Primitive,
+          value: 10,
+          displayValue: "10",
         },
-        () => undefined,
-      ),
+      }),
     ).to.be.undefined;
   });
 
   it("does not return error message for valid quantity rule", () => {
     expect(
-      filterRuleValidator(
-        {
-          id: "test-id",
-          groupId: "test-group-id",
-          property: quantityProperty,
-          operator: "less",
-          value: {
-            valueFormat: PropertyValueFormat.Primitive,
-            value: 10,
-            displayValue: "10 unit",
-          },
+      filterRuleValidator({
+        id: "test-id",
+        groupId: "test-group-id",
+        property: quantityProperty,
+        operator: "less",
+        value: {
+          valueFormat: PropertyValueFormat.Primitive,
+          value: 10,
+          displayValue: "10 unit",
         },
-        () => undefined,
-      ),
+      }),
     ).to.be.undefined;
   });
 
   it("does not return error message for valid quantity value in between rule", () => {
     expect(
-      filterRuleValidator(
-        {
-          id: "test-id",
-          groupId: "test-group-id",
-          property: quantityProperty,
-          operator: "between",
-          value: PropertyFilterBuilderRuleRangeValue.serialize({
-            from: {
-              valueFormat: PropertyValueFormat.Primitive,
-              value: 123,
-              displayValue: "123 unit",
-            },
-            to: {
-              valueFormat: PropertyValueFormat.Primitive,
-              value: 456,
-              displayValue: "456 unit",
-            },
-          }),
-        },
-        () => undefined,
-      ),
+      filterRuleValidator({
+        id: "test-id",
+        groupId: "test-group-id",
+        property: quantityProperty,
+        operator: "between",
+        value: PropertyFilterBuilderRuleRangeValue.serialize({
+          from: {
+            valueFormat: PropertyValueFormat.Primitive,
+            value: 123,
+            displayValue: "123 unit",
+          },
+          to: {
+            valueFormat: PropertyValueFormat.Primitive,
+            value: 456,
+            displayValue: "456 unit",
+          },
+        }),
+      }),
     ).to.be.undefined;
   });
 });

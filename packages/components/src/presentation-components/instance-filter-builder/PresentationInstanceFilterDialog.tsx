@@ -9,7 +9,7 @@
 import "./PresentationInstanceFilterDialog.scss";
 import { ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ErrorBoundary } from "react-error-boundary";
-import { BuildFilterOptions, useDefaultPropertyFilterBuilderRuleValidator, usePropertyFilterBuilder } from "@itwin/components-react";
+import { BuildFilterOptions, usePropertyFilterBuilder } from "@itwin/components-react";
 import { IModelConnection } from "@itwin/core-frontend";
 import { SvgError } from "@itwin/itwinui-illustrations-react";
 import { Button, Dialog, NonIdealState, ProgressRadial } from "@itwin/itwinui-react";
@@ -192,7 +192,6 @@ interface LoadedFilterDialogContentProps extends Omit<PresentationInstanceFilter
 function LoadedFilterDialogContent(props: LoadedFilterDialogContentProps) {
   const { initialFilter, descriptor, imodel, filterResultsCountRenderer, descriptorInputKeys, onApply, onReset, onClose, toolbarButtonsRenderer } = props;
   const initialFilterInfo = useInitialFilter(descriptor, initialFilter);
-  const defaultValidator = useDefaultPropertyFilterBuilderRuleValidator();
   const [initialPropertyFilter] = useState(() => {
     if (!initialFilterInfo?.filter) {
       return undefined;
@@ -202,7 +201,7 @@ function LoadedFilterDialogContent(props: LoadedFilterDialogContentProps) {
 
   const { rootGroup, actions, buildFilter } = usePropertyFilterBuilder({
     initialFilter: initialPropertyFilter,
-    ruleValidator: (rule) => filterRuleValidator(rule, defaultValidator),
+    ruleValidator: filterRuleValidator,
   });
 
   const filteringProps = usePresentationInstanceFilteringProps(descriptor, imodel, initialFilterInfo?.usedClasses);
