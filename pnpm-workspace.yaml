@@ -82,7 +82,7 @@ catalogs:
     sinon-chai: ^4.0.0
 
   build-tools:
-    '@itwin/build-tools': rc
+    '@itwin/build-tools': ^5.0.0
     '@itwin/eslint-plugin': 5.1.0
     '@types/node': ^22.13.9
     cpx2: ^7.0.1

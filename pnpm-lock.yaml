@@ -20,8 +20,8 @@ catalogs:
       version: 5.1.0
   build-tools:
     '@itwin/build-tools':
-      specifier: rc
-      version: 5.0.0-dev.111
+      specifier: ^5.0.0
+      version: 5.0.0
     '@itwin/eslint-plugin':
       specifier: 5.1.0
       version: 5.1.0
@@ -299,7 +299,7 @@ importers:
         version: 5.0.0(@itwin/core-bentley@5.0.0)
       '@itwin/build-tools':
         specifier: catalog:build-tools
-        version: 5.0.0-dev.111(@types/node@22.13.9)
+        version: 5.0.0(@types/node@22.13.9)
       '@itwin/components-react':
         specifier: catalog:appui
         version: 5.1.0(@itwin/appui-abstract@5.0.0(@itwin/core-bentley@5.0.0))(@itwin/core-bentley@5.0.0)(@itwin/core-react@5.1.0(@itwin/appui-abstract@5.0.0(@itwin/core-bentley@5.0.0))(@itwin/core-bentley@5.0.0)(@itwin/itwinui-react@3.18.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@itwin/itwinui-react@3.18.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -506,7 +506,7 @@ importers:
         version: 5.0.0(@itwin/core-bentley@5.0.0)
       '@itwin/build-tools':
         specifier: catalog:build-tools
-        version: 5.0.0-dev.111(@types/node@22.13.9)
+        version: 5.0.0(@types/node@22.13.9)
       '@itwin/core-backend':
         specifier: catalog:itwinjs-core-dev
         version: 5.0.0(@itwin/core-bentley@5.0.0)(@itwin/core-common@5.0.0(@itwin/core-bentley@5.0.0)(@itwin/core-geometry@5.0.0))(@itwin/core-geometry@5.0.0)(@itwin/ecschema-metadata@5.0.0(@itwin/core-bentley@5.0.0)(@itwin/core-quantity@5.0.0(@itwin/core-bentley@5.0.0)))(@opentelemetry/api@1.9.0)
@@ -578,7 +578,7 @@ importers:
     devDependencies:
       '@itwin/build-tools':
         specifier: catalog:build-tools
-        version: 5.0.0-dev.111(@types/node@22.13.9)
+        version: 5.0.0(@types/node@22.13.9)
       '@itwin/core-bentley':
         specifier: catalog:itwinjs-core-dev
         version: 5.0.0
@@ -650,7 +650,7 @@ importers:
         version: 1.0.4
       '@itwin/build-tools':
         specifier: catalog:build-tools
-        version: 5.0.0-dev.111(@types/node@22.13.9)
+        version: 5.0.0(@types/node@22.13.9)
       '@itwin/core-backend':
         specifier: catalog:itwinjs-core-dev
         version: 5.0.0(@itwin/core-bentley@5.0.0)(@itwin/core-common@5.0.0(@itwin/core-bentley@5.0.0)(@itwin/core-geometry@5.0.0))(@itwin/core-geometry@5.0.0)(@itwin/ecschema-metadata@5.0.0(@itwin/core-bentley@5.0.0)(@itwin/core-quantity@5.0.0(@itwin/core-bentley@5.0.0)))(@opentelemetry/api@1.9.0)
@@ -731,7 +731,7 @@ importers:
         version: 5.0.0(@itwin/core-bentley@5.0.0)
       '@itwin/build-tools':
         specifier: catalog:build-tools
-        version: 5.0.0-dev.111(@types/node@22.13.9)
+        version: 5.0.0(@types/node@22.13.9)
       '@itwin/core-backend':
         specifier: catalog:itwinjs-core-dev
         version: 5.0.0(@itwin/core-bentley@5.0.0)(@itwin/core-common@5.0.0(@itwin/core-bentley@5.0.0)(@itwin/core-geometry@5.0.0))(@itwin/core-geometry@5.0.0)(@itwin/ecschema-metadata@5.0.0(@itwin/core-bentley@5.0.0)(@itwin/core-quantity@5.0.0(@itwin/core-bentley@5.0.0)))(@opentelemetry/api@1.9.0)
@@ -827,7 +827,7 @@ importers:
     devDependencies:
       '@itwin/build-tools':
         specifier: catalog:build-tools
-        version: 5.0.0-dev.111(@types/node@22.13.9)
+        version: 5.0.0(@types/node@22.13.9)
       '@itwin/core-bentley':
         specifier: catalog:itwinjs-core-dev
         version: 5.0.0
@@ -875,7 +875,7 @@ importers:
         version: 5.1.0(f23ee4cf313d235f59e5224b73cb5fb8)
       '@itwin/build-tools':
         specifier: catalog:build-tools
-        version: 5.0.0-dev.111(@types/node@22.13.9)
+        version: 5.0.0(@types/node@22.13.9)
       '@itwin/components-react':
         specifier: catalog:appui
         version: 5.1.0(@itwin/appui-abstract@5.0.0(@itwin/core-bentley@5.0.0))(@itwin/core-bentley@5.0.0)(@itwin/core-react@5.1.0(@itwin/appui-abstract@5.0.0(@itwin/core-bentley@5.0.0))(@itwin/core-bentley@5.0.0)(@itwin/itwinui-react@3.18.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@itwin/itwinui-react@3.18.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -1098,7 +1098,7 @@ importers:
         version: 5.0.0(@itwin/core-bentley@5.0.0)
       '@itwin/build-tools':
         specifier: catalog:build-tools
-        version: 5.0.0-dev.111(@types/node@22.13.9)
+        version: 5.0.0(@types/node@22.13.9)
       '@itwin/components-react':
         specifier: catalog:appui
         version: 5.1.0(@itwin/appui-abstract@5.0.0(@itwin/core-bentley@5.0.0))(@itwin/core-bentley@5.0.0)(@itwin/core-react@5.1.0(@itwin/appui-abstract@5.0.0(@itwin/core-bentley@5.0.0))(@itwin/core-bentley@5.0.0)(@itwin/itwinui-react@3.18.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@itwin/itwinui-react@3.18.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -1258,7 +1258,7 @@ importers:
     devDependencies:
       '@itwin/build-tools':
         specifier: catalog:build-tools
-        version: 5.0.0-dev.111(@types/node@22.13.9)
+        version: 5.0.0(@types/node@22.13.9)
       '@itwin/core-bentley':
         specifier: catalog:itwinjs-core-dev
         version: 5.0.0
@@ -1349,7 +1349,7 @@ importers:
     devDependencies:
       '@itwin/build-tools':
         specifier: catalog:build-tools
-        version: 5.0.0-dev.111(@types/node@22.13.9)
+        version: 5.0.0(@types/node@22.13.9)
       '@itwin/eslint-plugin':
         specifier: catalog:build-tools
         version: 5.1.0(eslint@9.25.1)(typescript@5.7.3)
@@ -1440,7 +1440,7 @@ importers:
     devDependencies:
       '@itwin/build-tools':
         specifier: catalog:build-tools
-        version: 5.0.0-dev.111(@types/node@22.13.9)
+        version: 5.0.0(@types/node@22.13.9)
       '@itwin/eslint-plugin':
         specifier: catalog:build-tools
         version: 5.1.0(eslint@9.25.1)(typescript@5.7.3)
@@ -1561,7 +1561,7 @@ importers:
     devDependencies:
       '@itwin/build-tools':
         specifier: catalog:build-tools
-        version: 5.0.0-dev.111(@types/node@22.13.9)
+        version: 5.0.0(@types/node@22.13.9)
       '@itwin/eslint-plugin':
         specifier: catalog:build-tools
         version: 5.1.0(eslint@9.25.1)(typescript@5.7.3)
@@ -1585,7 +1585,7 @@ importers:
     devDependencies:
       '@itwin/build-tools':
         specifier: catalog:build-tools
-        version: 5.0.0-dev.111(@types/node@22.13.9)
+        version: 5.0.0(@types/node@22.13.9)
       '@itwin/core-bentley':
         specifier: catalog:itwinjs-core-dev
         version: 5.0.0
@@ -1664,7 +1664,7 @@ importers:
     devDependencies:
       '@itwin/build-tools':
         specifier: catalog:build-tools
-        version: 5.0.0-dev.111(@types/node@22.13.9)
+        version: 5.0.0(@types/node@22.13.9)
       '@itwin/eslint-plugin':
         specifier: catalog:build-tools
         version: 5.1.0(eslint@9.25.1)(typescript@5.7.3)
@@ -1764,7 +1764,7 @@ importers:
         version: 5.0.0(@itwin/core-bentley@5.0.0)
       '@itwin/build-tools':
         specifier: catalog:build-tools
-        version: 5.0.0-dev.111(@types/node@22.13.9)
+        version: 5.0.0(@types/node@22.13.9)
       '@itwin/components-react':
         specifier: catalog:appui
         version: 5.1.0(@itwin/appui-abstract@5.0.0(@itwin/core-bentley@5.0.0))(@itwin/core-bentley@5.0.0)(@itwin/core-react@5.1.0(@itwin/appui-abstract@5.0.0(@itwin/core-bentley@5.0.0))(@itwin/core-bentley@5.0.0)(@itwin/itwinui-react@3.18.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@itwin/itwinui-react@3.18.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -1912,7 +1912,7 @@ importers:
     devDependencies:
       '@itwin/build-tools':
         specifier: catalog:build-tools
-        version: 5.0.0-dev.111(@types/node@22.13.9)
+        version: 5.0.0(@types/node@22.13.9)
       '@itwin/eslint-plugin':
         specifier: catalog:build-tools
         version: 5.1.0(eslint@9.25.1)(typescript@5.7.3)
@@ -1972,7 +1972,7 @@ importers:
     devDependencies:
       '@itwin/build-tools':
         specifier: catalog:build-tools
-        version: 5.0.0-dev.111(@types/node@22.13.9)
+        version: 5.0.0(@types/node@22.13.9)
       '@itwin/eslint-plugin':
         specifier: catalog:build-tools
         version: 5.1.0(eslint@9.25.1)(typescript@5.7.3)
@@ -2876,8 +2876,8 @@ packages:
       react-redux: ^7.2.2 || ^8.0.0 || ^9.0.0
       redux: ^4.1.0 || ^5.0.0
 
-  '@itwin/build-tools@5.0.0-dev.111':
-    resolution: {integrity: sha512-IGlREN79bJhZWCw/qPfGtKbqYzkjtvSCraexpm9sZh//K/1l9YezElyc3VPDcAHUnRfFqPAHrlGw8aLL50Xz1Q==}
+  '@itwin/build-tools@5.0.0':
+    resolution: {integrity: sha512-uBkIAXZ945qthY+bC73rlJNyP9nR9KBm2hPxjZEzIJ86szQ7C6cFKbXMrP0fXfTWO126dSumgpJmMfK/+b1P8Q==}
     hasBin: true
 
   '@itwin/cloud-agnostic-core@2.3.0':
@@ -10767,7 +10767,7 @@ snapshots:
     transitivePeerDependencies:
       - '@types/react'
 
-  '@itwin/build-tools@5.0.0-dev.111(@types/node@22.13.9)':
+  '@itwin/build-tools@5.0.0(@types/node@22.13.9)':
     dependencies:
       '@microsoft/api-extractor': 7.52.7(@types/node@22.13.9)
       chalk: 3.0.0
