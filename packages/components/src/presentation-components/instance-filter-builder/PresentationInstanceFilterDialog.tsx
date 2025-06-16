@@ -192,6 +192,7 @@ interface LoadedFilterDialogContentProps extends Omit<PresentationInstanceFilter
 function LoadedFilterDialogContent(props: LoadedFilterDialogContentProps) {
   const { initialFilter, descriptor, imodel, filterResultsCountRenderer, descriptorInputKeys, onApply, onReset, onClose, toolbarButtonsRenderer } = props;
   const initialFilterInfo = useInitialFilter(descriptor, initialFilter);
+
   const [initialPropertyFilter] = useState(() => {
     if (!initialFilterInfo?.filter) {
       return undefined;
