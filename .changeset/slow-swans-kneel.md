@@ -6,7 +6,6 @@
 "@itwin/presentation-hierarchies-react": patch
 "@itwin/presentation-opentelemetry": patch
 "@itwin/presentation-shared": patch
-"presentation-test-utilities": patch
 "@itwin/unified-selection": patch
 "@itwin/unified-selection-react": patch
 ---
