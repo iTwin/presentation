@@ -157,6 +157,7 @@ Array [
       },
       "kindOfQuantityName": "Test:KoQ",
       "name": "root#PropertiesField",
+      "quantityType": "Test:KoQ",
       "typename": "string",
     },
     "sourceClassId": "0x1",

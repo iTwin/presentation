@@ -6,6 +6,7 @@
 import { forwardRef, useEffect, useImperativeHandle, useRef } from "react";
 import { PrimitiveValue, PropertyRecord, PropertyValueFormat } from "@itwin/appui-abstract";
 import { PropertyEditorProps } from "@itwin/components-react";
+import { assert } from "@itwin/core-bentley";
 import { Input } from "@itwin/itwinui-react";
 import { useSchemaMetadataContext } from "../../common/SchemaMetadataContext.js";
 import { PropertyEditorAttributes } from "../editors/Common.js";
@@ -21,19 +22,17 @@ export interface QuantityPropertyEditorImplProps extends PropertyEditorProps {
 export const QuantityPropertyEditorInput = forwardRef<PropertyEditorAttributes, QuantityPropertyEditorImplProps>((props, ref) => {
   const schemaMetadataContext = useSchemaMetadataContext();
 
-  if (!props.propertyRecord.property.kindOfQuantityName || !schemaMetadataContext) {
+  // eslint-disable-next-line @typescript-eslint/no-deprecated
+  if ((!props.propertyRecord.property.kindOfQuantityName && !props.propertyRecord.property.quantityType) || !schemaMetadataContext) {
     return <NumericPropertyInput {...props} ref={ref} />;
   }
+  // eslint-disable-next-line @typescript-eslint/no-deprecated
+  const koqName = props.propertyRecord.property.kindOfQuantityName ?? props.propertyRecord.property.quantityType;
+  assert(koqName !== undefined);
 
   const initialValue = (props.propertyRecord.value as PrimitiveValue)?.value as number;
   return (
-    <QuantityPropertyValueInput
-      {...props}
-      ref={ref}
-      koqName={props.propertyRecord.property.kindOfQuantityName}
-      schemaContext={schemaMetadataContext.schemaContext}
-      initialRawValue={initialValue}
-    />
+    <QuantityPropertyValueInput {...props} ref={ref} koqName={koqName} schemaContext={schemaMetadataContext.schemaContext} initialRawValue={initialValue} />
   );
 });
 QuantityPropertyEditorInput.displayName = "QuantityPropertyEditorInput";
