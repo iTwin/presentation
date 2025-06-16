@@ -9,7 +9,6 @@
 import { useMemo } from "react";
 import { PrimitiveValue, PropertyDescription, PropertyValueFormat, StandardTypeNames } from "@itwin/appui-abstract";
 import {
-  defaultPropertyFilterBuilderRuleValidator,
   isUnaryPropertyFilterBuilderOperator,
   PropertyFilterBuilderRule,
   PropertyFilterBuilderRuleGroup,
@@ -145,7 +144,7 @@ export function useFilterBuilderNavigationPropertyEditorContextProviderProps(imo
 }
 
 /** @internal */
-export function filterRuleValidator(item: PropertyFilterBuilderRule) {
+export function filterRuleValidator(item: PropertyFilterBuilderRule, defaultValidator: (item: PropertyFilterBuilderRule) => string | undefined) {
   // skip empty rules and rules that do not require value
   if (item.property === undefined || item.operator === undefined || isUnaryPropertyFilterBuilderOperator(item.operator)) {
     return undefined;
@@ -165,10 +164,7 @@ export function filterRuleValidator(item: PropertyFilterBuilderRule) {
   if (error) {
     return error;
   }
-
-  // TODO: refactor to `useDefaultPropertyFilterBuilderRuleValidator` after AppUI peer dep bumped to 5.0
-  // eslint-disable-next-line @typescript-eslint/no-deprecated
-  return defaultPropertyFilterBuilderRuleValidator(item);
+  return defaultValidator(item);
 }
 
 interface ValidatorContext {
@@ -184,7 +180,7 @@ function numericPropertyValidator({ property, value, operator }: ValidatorContex
   }
 
   function getErrorMessage() {
-    return property.quantityType === undefined
+    return property.kindOfQuantityName === undefined
       ? translate("instance-filter-builder.error-messages.not-a-number")
       : translate("instance-filter-builder.error-messages.invalid");
   }

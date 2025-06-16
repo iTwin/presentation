@@ -115,7 +115,7 @@ export function createPropertyDescriptionFromFieldInfo(info: FieldInfo) {
   }
 
   if (info.koqName) {
-    descr.quantityType = info.koqName;
+    descr.kindOfQuantityName = info.koqName;
     descr.editor = { name: QuantityEditorName, ...descr.editor };
   }
 

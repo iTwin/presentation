@@ -16,10 +16,10 @@ import { QuantityEditorName, QuantityPropertyEditor } from "../../../presentatio
 import { createTestPropertyRecord } from "../../_helpers/UiComponents.js";
 import { render, waitFor } from "../../TestUtils.js";
 
-const createRecord = ({ initialValue, quantityType }: { initialValue?: number; quantityType?: string }) => {
+const createRecord = ({ initialValue, kindOfQuantityName }: { initialValue?: number; kindOfQuantityName?: string }) => {
   return createTestPropertyRecord(
     { value: initialValue, displayValue: undefined },
-    { typename: StandardTypeNames.Double, quantityType, editor: { name: QuantityEditorName } },
+    { typename: StandardTypeNames.Double, kindOfQuantityName, editor: { name: QuantityEditorName } },
   );
 };
 
@@ -59,7 +59,7 @@ describe("<QuantityPropertyEditor />", () => {
   });
 
   it("renders quantity input if schema context is available", async () => {
-    const record = createRecord({ initialValue: 10, quantityType: "TestKOQ" });
+    const record = createRecord({ initialValue: 10, kindOfQuantityName: "TestKOQ" });
     const { getByDisplayValue } = render(
       <SchemaMetadataContextProvider imodel={{} as IModelConnection} schemaContextProvider={() => ({}) as SchemaContext}>
         <QuantityPropertyEditor propertyRecord={record} />

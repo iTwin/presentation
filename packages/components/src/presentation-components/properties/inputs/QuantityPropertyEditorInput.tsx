@@ -21,7 +21,7 @@ export interface QuantityPropertyEditorImplProps extends PropertyEditorProps {
 export const QuantityPropertyEditorInput = forwardRef<PropertyEditorAttributes, QuantityPropertyEditorImplProps>((props, ref) => {
   const schemaMetadataContext = useSchemaMetadataContext();
 
-  if (!props.propertyRecord.property.quantityType || !schemaMetadataContext) {
+  if (!props.propertyRecord.property.kindOfQuantityName || !schemaMetadataContext) {
     return <NumericPropertyInput {...props} ref={ref} />;
   }
 
@@ -30,7 +30,7 @@ export const QuantityPropertyEditorInput = forwardRef<PropertyEditorAttributes, 
     <QuantityPropertyValueInput
       {...props}
       ref={ref}
-      koqName={props.propertyRecord.property.quantityType}
+      koqName={props.propertyRecord.property.kindOfQuantityName}
       schemaContext={schemaMetadataContext.schemaContext}
       initialRawValue={initialValue}
     />
