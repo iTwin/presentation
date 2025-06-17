@@ -154,6 +154,7 @@ describe("filterRuleValidator", () => {
     name: "quantity-prop",
     typename: StandardTypeNames.Double,
     kindOfQuantityName: "TestKOQ",
+    quantityType: "TestKOQ",
   };
 
   before(() => {
