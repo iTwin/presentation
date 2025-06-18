@@ -1,5 +1,13 @@
 # @itwin/presentation-hierarchies
 
+## 1.5.1
+
+### Patch Changes
+
+- [#982](https://github.com/iTwin/presentation/pull/982): Update itwinjs-core dependencies to v5.0.0
+- Updated dependencies:
+  - @itwin/presentation-shared@1.2.2
+
 ## 1.5.0
 
 ### Minor Changes

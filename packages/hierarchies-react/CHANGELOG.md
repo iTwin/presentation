@@ -1,5 +1,15 @@
 # @itwin/presentation-hierarchies-react
 
+## 1.6.8
+
+### Patch Changes
+
+- [#982](https://github.com/iTwin/presentation/pull/982): Update itwinjs-core dependencies to v5.0.0
+- Updated dependencies:
+  - @itwin/presentation-hierarchies@1.5.1
+  - @itwin/presentation-shared@1.2.2
+  - @itwin/unified-selection@1.4.2
+
 ## 1.6.7
 
 ### Patch Changes
