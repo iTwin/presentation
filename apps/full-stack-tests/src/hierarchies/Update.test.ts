@@ -58,6 +58,7 @@ describe("Hierarchies", () => {
           profileName: Guid.createValue(),
         },
       });
+
       RpcManager.registerImpl(ECSchemaRpcInterface, ECSchemaRpcImpl);
       await IpcApp.startup(socket, {
         iModelApp: {
