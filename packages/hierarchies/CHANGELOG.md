@@ -1,5 +1,13 @@
 # @itwin/presentation-hierarchies
 
+## 2.0.0-alpha.1
+
+### Patch Changes
+
+- [#985](https://github.com/iTwin/presentation/pull/985): Add support for `itwinjs-core@5`
+- Updated dependencies:
+  - @itwin/presentation-shared@2.0.0-alpha.1
+
 ## 2.0.0-alpha.0
 
 ### Major Changes
