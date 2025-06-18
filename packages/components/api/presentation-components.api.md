@@ -538,7 +538,6 @@ export class PresentationTreeDataProvider implements IPresentationTreeDataProvid
         imodel: IModelConnection;
         locale?: string;
         unitSystem?: UnitSystemKey;
-        transport?: "unparsed-json";
     };
     // @deprecated (undocumented)
     dispose(): void;
