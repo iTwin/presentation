@@ -2877,6 +2877,9 @@ packages:
       '@opentelemetry/api':
         optional: true
 
+  '@itwin/core-bentley@4.11.6':
+    resolution: {integrity: sha512-8jlNtx26TAmhBvWKuAY/xtOcl/bIVVLjSwf9pAeY3l35pdRf9KmOiMijWIXhICKeAI4s+sr4REY7BO44cT33fQ==}
+
   '@itwin/core-bentley@5.0.0':
     resolution: {integrity: sha512-9XJyk8q1NdsRBwuYPGo4U9ARKXVbyXSRHcU20PgHU8wU89omrDkXdQhTRJnWmGZk2a3R+OJY9DQnfM4/Wajnzw==}
 
@@ -3054,6 +3057,12 @@ packages:
       '@itwin/core-quantity': 5.0.0
       '@itwin/ecschema-metadata': 5.0.0
       '@itwin/presentation-common': 5.0.0
+
+  '@itwin/presentation-shared@1.2.1':
+    resolution: {integrity: sha512-b8In5BV+6q1FjMC+zUmkcSAVgbvp+F0M6WlOOiToSWVx+UpcolctlQZSMCKyBuvYvXVDh7DRfAFOm8k2nfgQfw==}
+
+  '@itwin/unified-selection@1.4.1':
+    resolution: {integrity: sha512-PCeoMtG7vtwfKfvEkkAKU5HSw087w4FDSn77DEPNKA9JtdpoMdg0XYZ+J3zg/fBlK/3Spf6vlkr1XDaYQl74jw==}
 
   '@itwin/webgl-compatibility@5.0.0':
     resolution: {integrity: sha512-ZEew+kioa7BFM3JasRrxORdGTctJ3ZHaUJkQR99dD3xEBV7wHPfYoUqhQbBe8f3mZAyZgIIt7z5Eb3GdXRrzVQ==}
@@ -10798,6 +10807,8 @@ snapshots:
       - supports-color
       - utf-8-validate
 
+  '@itwin/core-bentley@4.11.6': {}
+
   '@itwin/core-bentley@5.0.0': {}
 
   '@itwin/core-common@5.0.0(@itwin/core-bentley@5.0.0)(@itwin/core-geometry@5.0.0)':
@@ -10999,7 +11010,7 @@ snapshots:
       '@itwin/core-quantity': 5.0.0(@itwin/core-bentley@5.0.0)
       '@itwin/ecschema-metadata': 5.0.0(@itwin/core-bentley@5.0.0)(@itwin/core-quantity@5.0.0(@itwin/core-bentley@5.0.0))
       '@itwin/presentation-common': 5.0.0(@itwin/core-bentley@5.0.0)(@itwin/core-common@5.0.0(@itwin/core-bentley@5.0.0)(@itwin/core-geometry@5.0.0))(@itwin/core-quantity@5.0.0(@itwin/core-bentley@5.0.0))(@itwin/ecschema-metadata@5.0.0(@itwin/core-bentley@5.0.0)(@itwin/core-quantity@5.0.0(@itwin/core-bentley@5.0.0)))
-      '@itwin/presentation-shared': link:packages/shared
+      '@itwin/presentation-shared': 1.2.1
       object-hash: 1.3.1
       rxjs: 7.8.1
       rxjs-for-await: 1.0.0(rxjs@7.8.1)
@@ -11011,7 +11022,7 @@ snapshots:
       '@itwin/core-common': 5.0.0(@itwin/core-bentley@5.0.0)(@itwin/core-geometry@5.0.0)
       '@itwin/core-quantity': 5.0.0(@itwin/core-bentley@5.0.0)
       '@itwin/ecschema-metadata': 5.0.0(@itwin/core-bentley@5.0.0)(@itwin/core-quantity@5.0.0(@itwin/core-bentley@5.0.0))
-      '@itwin/presentation-shared': link:packages/shared
+      '@itwin/presentation-shared': 1.2.1
 
   '@itwin/presentation-frontend@5.0.0(fc151ad1745d18dbc9667a244fdfe2f2)':
     dependencies:
@@ -11021,7 +11032,18 @@ snapshots:
       '@itwin/core-quantity': 5.0.0(@itwin/core-bentley@5.0.0)
       '@itwin/ecschema-metadata': 5.0.0(@itwin/core-bentley@5.0.0)(@itwin/core-quantity@5.0.0(@itwin/core-bentley@5.0.0))
       '@itwin/presentation-common': 5.0.0(@itwin/core-bentley@5.0.0)(@itwin/core-common@5.0.0(@itwin/core-bentley@5.0.0)(@itwin/core-geometry@5.0.0))(@itwin/core-quantity@5.0.0(@itwin/core-bentley@5.0.0))(@itwin/ecschema-metadata@5.0.0(@itwin/core-bentley@5.0.0)(@itwin/core-quantity@5.0.0(@itwin/core-bentley@5.0.0)))
-      '@itwin/unified-selection': link:packages/unified-selection
+      '@itwin/unified-selection': 1.4.1
+      rxjs: 7.8.1
+      rxjs-for-await: 1.0.0(rxjs@7.8.1)
+
+  '@itwin/presentation-shared@1.2.1':
+    dependencies:
+      '@itwin/core-bentley': 4.11.6
+
+  '@itwin/unified-selection@1.4.1':
+    dependencies:
+      '@itwin/core-bentley': 4.11.6
+      '@itwin/presentation-shared': 1.2.1
       rxjs: 7.8.1
       rxjs-for-await: 1.0.0(rxjs@7.8.1)
 
