@@ -1,6 +1,6 @@
 {
   "name": "@itwin/unified-selection-react",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "React components for making use of `@itwin/unified-selection` package in React applications more straightforward",
   "license": "MIT",
   "author": {
