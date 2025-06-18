@@ -593,14 +593,12 @@ describe("useUnifiedSelectionTreeEventHandler", () => {
 
   it("creates and disposes UnifiedSelectionTreeEventHandler", () => {
     configure({ reactStrictMode: false });
-
     const { result, unmount } = renderHook((props: UnifiedSelectionTreeEventHandlerParams) => useUnifiedSelectionTreeEventHandler(props), {
       initialProps: { nodeLoader },
     });
-
     expect(result.current).to.not.be.undefined;
-    const spy = sinon.spy(result.current, Symbol.dispose);
+    expect(nodeLoader.modelSource.onModelChanged.numberOfListeners).to.be.eq(1);
     unmount();
-    expect(spy).to.be.called;
+    expect(nodeLoader.modelSource.onModelChanged.numberOfListeners).to.be.eq(0);
   });
 });

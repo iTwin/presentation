@@ -1,5 +1,11 @@
 # Change Log - @itwin/presentation-opentelemetry
 
+## 4.2.1
+
+### Patch Changes
+
+- [#982](https://github.com/iTwin/presentation/pull/982): Update itwinjs-core dependencies to v5.0.0
+
 ## 4.2.0
 
 ### Minor Changes

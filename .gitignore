@@ -11,5 +11,7 @@ built-packages
 /apps/load-tests/tests/artillery-output.json
 /apps/load-tests/tests/benchmark.json
 
+/apps/performance-tests/*benchmark.json
+
 npm-debug.log*
 pnpm-debug.log*

@@ -7,6 +7,14 @@
 - Updated dependencies:
   - @itwin/presentation-shared@2.0.0-alpha.0
 
+## 1.4.2
+
+### Patch Changes
+
+- [#982](https://github.com/iTwin/presentation/pull/982): Update itwinjs-core dependencies to v5.0.0
+- Updated dependencies:
+  - @itwin/presentation-shared@1.2.2
+
 ## 1.4.1
 
 ### Patch Changes

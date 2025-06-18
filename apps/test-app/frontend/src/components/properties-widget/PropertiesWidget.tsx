@@ -196,7 +196,7 @@ function FilterablePropertyGrid({
     });
     setFilteringDataProvider(filteringDataProv);
     return () => {
-      filteringDataProv.dispose();
+      filteringDataProv[Symbol.dispose]();
     };
   }, [dataProvider, filterText, onlyFavorites]);
 

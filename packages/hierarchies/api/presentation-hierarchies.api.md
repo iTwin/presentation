@@ -51,7 +51,7 @@ export function createHierarchyFilteringHelper(rootLevelFilteringProps: Hierarch
     }) => Pick<HierarchyNode, "filtering" | "autoExpand"> | undefined;
     createChildNodePropsAsync: (props: {
         pathMatcher: (identifier: HierarchyNodeIdentifier) => boolean | Promise<boolean>;
-    }) => Promise<Pick<HierarchyNode, "filtering" | "autoExpand"> | undefined>;
+    }) => Promise<Pick<HierarchyNode, "filtering" | "autoExpand"> | undefined> | Pick<HierarchyNode, "filtering" | "autoExpand"> | undefined;
 };
 
 // @public

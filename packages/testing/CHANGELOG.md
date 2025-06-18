@@ -1,5 +1,20 @@
 # Change Log - @itwin/presentation-testing
 
+## 5.4.5
+
+### Patch Changes
+
+- [#982](https://github.com/iTwin/presentation/pull/982): Update itwinjs-core dependencies to v5.0.0
+- Updated dependencies:
+  - @itwin/presentation-components@5.12.4
+
+## 5.4.4
+
+### Patch Changes
+
+- Updated dependencies:
+  - @itwin/presentation-components@5.12.3
+
 ## 5.4.3-alpha.1
 
 ### Patch Changes

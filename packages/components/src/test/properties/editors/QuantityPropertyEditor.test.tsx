@@ -16,10 +16,10 @@ import { QuantityEditorName, QuantityPropertyEditor } from "../../../presentatio
 import { createTestPropertyRecord } from "../../_helpers/UiComponents.js";
 import { render, waitFor } from "../../TestUtils.js";
 
-const createRecord = ({ initialValue, quantityType }: { initialValue?: number; quantityType?: string }) => {
+const createRecord = ({ initialValue, kindOfQuantityName, quantityType }: { initialValue?: number; kindOfQuantityName?: string; quantityType?: string }) => {
   return createTestPropertyRecord(
     { value: initialValue, displayValue: undefined },
-    { typename: StandardTypeNames.Double, quantityType, editor: { name: QuantityEditorName } },
+    { typename: StandardTypeNames.Double, kindOfQuantityName, quantityType, editor: { name: QuantityEditorName } },
   );
 };
 
@@ -58,7 +58,20 @@ describe("<QuantityPropertyEditor />", () => {
     expect(getByDisplayValue("10")).to.not.be.null;
   });
 
-  it("renders quantity input if schema context is available", async () => {
+  it("renders quantity input if schema context is available and kindOfQuantityName is provided", async () => {
+    const record = createRecord({ initialValue: 10, kindOfQuantityName: "TestKOQ" });
+    const { getByDisplayValue } = render(
+      <SchemaMetadataContextProvider imodel={{} as IModelConnection} schemaContextProvider={() => ({}) as SchemaContext}>
+        <QuantityPropertyEditor propertyRecord={record} />
+      </SchemaMetadataContextProvider>,
+    );
+
+    await waitFor(() => {
+      expect(getByDisplayValue("10 unit")).to.not.be.null;
+    });
+  });
+
+  it("renders quantity input if schema context is available and quantityType is provided", async () => {
     const record = createRecord({ initialValue: 10, quantityType: "TestKOQ" });
     const { getByDisplayValue } = render(
       <SchemaMetadataContextProvider imodel={{} as IModelConnection} schemaContextProvider={() => ({}) as SchemaContext}>

@@ -123,22 +123,25 @@ export class PresentationPropertyDataProvider extends ContentDataProvider implem
     this._shouldCreateFavoritesCategory = !props.disableFavoritesCategory;
   }
 
-  /**
-   * Dispose the presentation property data provider.
-   */
-  public override [Symbol.dispose]() {
+  #dispose() {
     super[Symbol.dispose]();
-
     if (this._onFavoritesChangedRemoveListener) {
       this._onFavoritesChangedRemoveListener();
       this._onFavoritesChangedRemoveListener = undefined;
     }
   }
 
+  /**
+   * Dispose the presentation property data provider.
+   */
+  public override [Symbol.dispose]() {
+    this.#dispose();
+  }
+
   /** @deprecated in 5.7. Use `[Symbol.dispose]` instead. */
   /* c8 ignore next 3 */
   public override dispose() {
-    this[Symbol.dispose]();
+    this.#dispose();
   }
 
   /**

@@ -349,6 +349,24 @@
 
 - [#847](https://github.com/iTwin/presentation/pull/847): Moving tree rendering components to a new design systems.
 
+## 1.6.8
+
+### Patch Changes
+
+- [#982](https://github.com/iTwin/presentation/pull/982): Update itwinjs-core dependencies to v5.0.0
+- Updated dependencies:
+  - @itwin/presentation-hierarchies@1.5.1
+  - @itwin/presentation-shared@1.2.2
+  - @itwin/unified-selection@1.4.2
+
+## 1.6.7
+
+### Patch Changes
+
+- [#974](https://github.com/iTwin/presentation/pull/974): Removed tree node outline on mobile devices.
+- Updated dependencies:
+  - @itwin/presentation-hierarchies@1.5.0
+
 ## 1.6.6
 
 ### Patch Changes

@@ -1,5 +1,22 @@
 # Change Log - @itwin/presentation-components
 
+## 5.12.4
+
+### Patch Changes
+
+- [#982](https://github.com/iTwin/presentation/pull/982): Update itwinjs-core dependencies to v5.0.0
+- Updated dependencies:
+  - @itwin/presentation-core-interop@1.3.3
+  - @itwin/presentation-shared@1.2.2
+  - @itwin/unified-selection@1.4.2
+  - @itwin/unified-selection-react@1.0.1
+
+## 5.12.3
+
+### Patch Changes
+
+- [#967](https://github.com/iTwin/presentation/pull/967): Fix potential infinite recursion when disposing objects of one of the following classes: `ContentDataProvider`, `PresentationPropertyDataProvider`, `UnifiedSelectionTreeEventHandler`, `PresentationTreeDataProvider`.
+
 ## 5.12.2-alpha.1
 
 ### Patch Changes
