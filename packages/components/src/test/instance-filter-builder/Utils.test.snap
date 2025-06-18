@@ -155,7 +155,6 @@ Array [
       "editor": Object {
         "name": "presentation-quantity-editor",
       },
-      "kindOfQuantityName": "Test:KoQ",
       "name": "root#PropertiesField",
       "quantityType": "Test:KoQ",
       "typename": "string",

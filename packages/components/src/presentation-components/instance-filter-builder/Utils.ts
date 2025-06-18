@@ -184,8 +184,7 @@ function numericPropertyValidator({ property, value, operator }: ValidatorContex
   }
 
   function getErrorMessage() {
-    // eslint-disable-next-line @typescript-eslint/no-deprecated
-    return property.kindOfQuantityName === undefined || property.quantityType === undefined
+    return property.quantityType === undefined
       ? translate("instance-filter-builder.error-messages.not-a-number")
       : translate("instance-filter-builder.error-messages.invalid");
   }

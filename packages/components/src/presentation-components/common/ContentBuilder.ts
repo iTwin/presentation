@@ -115,8 +115,6 @@ export function createPropertyDescriptionFromFieldInfo(info: FieldInfo) {
   }
 
   if (info.koqName) {
-    descr.kindOfQuantityName = info.koqName;
-    // eslint-disable-next-line @typescript-eslint/no-deprecated
     descr.quantityType = info.koqName;
     descr.editor = { name: QuantityEditorName, ...descr.editor };
   }

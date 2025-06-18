@@ -20,10 +20,10 @@ import { QuantityPropertyEditorInput } from "../../../presentation-components/pr
 import { createTestPropertyRecord } from "../../_helpers/UiComponents.js";
 import { render, waitFor } from "../../TestUtils.js";
 
-const createRecord = ({ initialValue, kindOfQuantityName }: { initialValue?: number; kindOfQuantityName?: string }) => {
+const createRecord = ({ initialValue, quantityType }: { initialValue?: number; quantityType?: string }) => {
   return createTestPropertyRecord(
     { value: initialValue, displayValue: undefined },
-    { typename: StandardTypeNames.Double, kindOfQuantityName, editor: { name: QuantityEditorName } },
+    { typename: StandardTypeNames.Double, quantityType, editor: { name: QuantityEditorName } },
   );
 };
 
@@ -86,7 +86,7 @@ describe("<QuantityPropertyEditorInput />", () => {
     expect(getByDisplayValue("10")).to.not.be.null;
   });
 
-  it("renders numeric input if property does not have kindOfQuantityName", async () => {
+  it("renders numeric input if property does not have quantityType", async () => {
     const record = createRecord({ initialValue: 10 });
     const { getByDisplayValue } = render(
       <SchemaMetadataContextProvider imodel={{} as IModelConnection} schemaContextProvider={() => schemaContext}>
@@ -98,7 +98,7 @@ describe("<QuantityPropertyEditorInput />", () => {
   });
 
   it("renders formatted quantity value if schema context is available", async () => {
-    const record = createRecord({ initialValue: 10, kindOfQuantityName: "TestKOQ" });
+    const record = createRecord({ initialValue: 10, quantityType: "TestKOQ" });
     const { getByDisplayValue } = render(
       <SchemaMetadataContextProvider imodel={{} as IModelConnection} schemaContextProvider={() => schemaContext}>
         <QuantityPropertyEditorInput propertyRecord={record} />
@@ -111,7 +111,7 @@ describe("<QuantityPropertyEditorInput />", () => {
   it("allows entering number when schema context is not available", async () => {
     const ref = createRef<PropertyEditorAttributes>();
     const spy = sinon.stub<Parameters<Required<PropertyEditorProps>["onCommit"]>, ReturnType<Required<PropertyEditorProps>["onCommit"]>>();
-    const record = createRecord({ initialValue: undefined, kindOfQuantityName: "TestKOQ" });
+    const record = createRecord({ initialValue: undefined, quantityType: "TestKOQ" });
     const { getByRole, user } = render(<QuantityPropertyEditorInput ref={ref} propertyRecord={record} onCommit={spy} />);
 
     const input = await waitFor(() => getByRole("textbox"));
@@ -136,7 +136,7 @@ describe("<QuantityPropertyEditorInput />", () => {
   it("allows entering quantity value when schema context is available", async () => {
     const ref = createRef<PropertyEditorAttributes>();
     const spy = sinon.stub<Parameters<Required<PropertyEditorProps>["onCommit"]>, ReturnType<Required<PropertyEditorProps>["onCommit"]>>();
-    const record = createRecord({ initialValue: undefined, kindOfQuantityName: "TestKOQ" });
+    const record = createRecord({ initialValue: undefined, quantityType: "TestKOQ" });
     const { getByRole, user } = render(
       <SchemaMetadataContextProvider imodel={{} as IModelConnection} schemaContextProvider={() => schemaContext}>
         <QuantityPropertyEditorInput ref={ref} propertyRecord={record} onCommit={spy} setFocus={true} />
@@ -170,7 +170,7 @@ describe("<QuantityPropertyEditorInput />", () => {
   });
 
   it("should focus on input if setFocus is true", async () => {
-    const record = createRecord({ initialValue: undefined, kindOfQuantityName: "TestKOQ" });
+    const record = createRecord({ initialValue: undefined, quantityType: "TestKOQ" });
     const ref = createRef<PropertyEditorAttributes>();
 
     const { getByRole } = render(

@@ -143,6 +143,7 @@ export class ContentBuilder {
     const contents: ContentBuilderResult[] = [];
 
     for (const nameEntry of classNameEntries) {
+      // try {
       const reader = this._iModel.createQueryReader(
         `
           SELECT ECInstanceId FROM ONLY "${nameEntry.schemaName}"."${nameEntry.className}"

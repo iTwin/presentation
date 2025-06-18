@@ -278,7 +278,7 @@ describe("PropertyRecordsBuilder", () => {
     const item = createTestContentItem({ values: {}, displayValues: {} });
     traverseContentItem(builder, descriptor, item);
     expect(builder.entries.length).to.eq(1);
-    expect(builder.entries[0].property.kindOfQuantityName).to.be.eq("testKOQ");
+    expect(builder.entries[0].property.quantityType).to.be.eq("testKOQ");
   });
 
   it("sets editor name when field has kind of quantity", () => {
@@ -305,7 +305,7 @@ describe("PropertyRecordsBuilder", () => {
     const item = createTestContentItem({ values: {}, displayValues: {} });
     traverseContentItem(builder, descriptor, item);
     expect(builder.entries.length).to.eq(1);
-    expect(builder.entries[0].property.kindOfQuantityName).to.be.eq("testKOQ");
+    expect(builder.entries[0].property.quantityType).to.be.eq("testKOQ");
     expect(builder.entries[0].property.editor?.name).to.be.eq(QuantityEditorName);
   });
 
@@ -334,7 +334,7 @@ describe("PropertyRecordsBuilder", () => {
     const item = createTestContentItem({ values: {}, displayValues: {} });
     traverseContentItem(builder, descriptor, item);
     expect(builder.entries.length).to.eq(1);
-    expect(builder.entries[0].property.kindOfQuantityName).to.be.eq("testKOQ");
+    expect(builder.entries[0].property.quantityType).to.be.eq("testKOQ");
     expect(builder.entries[0].property.editor?.name).to.be.eq("custom-editor");
   });
 
