@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/naming-convention */
 /*---------------------------------------------------------------------------------------------
  * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
  * See LICENSE.md in the project root for license terms and full copyright notice.
@@ -7,29 +8,74 @@
 import { EventEmitter, ScenarioContext } from "artillery";
 import { decompress as brotliDecompress } from "brotli";
 import * as http from "node:http";
-import * as https from "node:https";
 import * as path from "path";
 import { expand, filter, from, mergeAll, mergeMap, of, tap } from "rxjs";
 import { Guid, StopWatch } from "@itwin/core-bentley";
+import { CheckpointConnection, IModelApp, TileAdmin } from "@itwin/core-frontend";
+import {
+  BentleyCloudRpcManager,
+  ChangesetIndexAndId,
+  DbQueryResponse,
+  DbResponseKind,
+  DbResponseStatus,
+  ECSqlReader,
+  IModelReadRpcInterface,
+  IModelVersion,
+} from "@itwin/core-common";
+import * as sinon from "sinon";
+
+const config = {
+  FASTIFY_BACKEND_PORT: "3001",
+  USE_GPB: 1,
+  HOST_NAME: "127.0.0.1",
+  IMJS_AUTH_TOKEN: `[INSERT AUTH TOKEN WITHOUT "Bearer" keyword]`,
+  IMJS_ITWIN_ID: "[INSERT ITWIN ID]",
+  IMJS_IMODEL_ID: "[INSERT IMODEL ID]",
+  IMJS_CHANGESET_ID: "[INSERT CHANGESET ID]",
+  IMJS_CHANGESET_INDEX: 0, // [INSERT CHANGESET INDEX]
+  GPB_BACKEND_PORT: "5001",
+};
+// import { appendFileSync } from "node:fs";
 
 const ENABLE_NODES_LOGGING = false;
-const BACKEND_PORT = process.env.BACKEND_DEFAULT_PORT ? Number.parseInt(process.env.BACKEND_DEFAULT_PORT, 10) : 5001;
+const BACKEND_PORT = config.FASTIFY_BACKEND_PORT ? Number.parseInt(config.FASTIFY_BACKEND_PORT, 10) : 3001;
 const EMPTY_GUID = Guid.empty;
 
-const BACKEND_PROPS = process.env.USE_GPB
+sinon.stub(IModelApp, "createRenderSys").returns({
+  onInitialized() {},
+} as any);
+sinon.stub(TileAdmin, "create").callsFake(async () => {
+  return {} as TileAdmin;
+});
+sinon.stub(IModelApp, "hubAccess").value({
+  async getChangesetFromVersion(): Promise<ChangesetIndexAndId> {
+    return {
+      index: config.IMJS_CHANGESET_INDEX,
+      id: config.IMJS_CHANGESET_ID,
+    };
+  },
+});
+sinon.stub(IModelApp, "getAccessToken").callsFake(async () => {
+  return `Bearer ${config.IMJS_AUTH_TOKEN}`;
+});
+sinon.stub(IModelApp, "viewManager").value({
+  onSelectionSetChanged() {},
+});
+
+const BACKEND_PROPS = config.USE_GPB
   ? {
-      httpApi: https,
-      agent: new https.Agent({ keepAlive: true, maxSockets: 10 }),
-      hostname: "qa-api.bentley.com",
-      port: 443,
-      authToken: process.env.IMJS_AUTH_TOKEN ?? "<missing auth token>",
+      httpApi: http,
+      agent: new http.Agent({ keepAlive: true, maxSockets: 10 }),
+      hostname: config.HOST_NAME,
+      port: BACKEND_PORT,
+      authToken: config.IMJS_AUTH_TOKEN ?? "<missing auth token>",
       createPath: (operation: string) =>
-        `/imodel/rpc/v4/mode/1/context/${process.env.IMJS_ITWIN_ID ?? EMPTY_GUID}/imodel/${process.env.IMJS_IMODEL_ID ?? EMPTY_GUID}/changeset/${process.env.IMJS_CHANGESET_ID ?? ""}/${operation}`,
+        `/imodel/rpc/v4/mode/1/context/${config.IMJS_ITWIN_ID ?? EMPTY_GUID}/imodel/${config.IMJS_IMODEL_ID ?? EMPTY_GUID}/changeset/${config.IMJS_CHANGESET_ID ?? ""}/${operation}`,
       imodelRpcProps: () => ({
-        iTwinId: process.env.IMJS_ITWIN_ID,
-        iModelId: process.env.IMJS_IMODEL_ID,
-        key: `${process.env.IMJS_IMODEL_ID ?? EMPTY_GUID}:${process.env.IMJS_CHANGESET_ID ?? ""}`,
-        changeset: { index: process.env.IMJS_CHANGESET_INDEX, id: process.env.IMJS_CHANGESET_ID },
+        iTwinId: config.IMJS_ITWIN_ID,
+        iModelId: config.IMJS_IMODEL_ID,
+        key: `${config.IMJS_IMODEL_ID ?? EMPTY_GUID}:${config.IMJS_CHANGESET_ID ?? ""}`,
+        changeset: { index: config.IMJS_CHANGESET_INDEX, id: config.IMJS_CHANGESET_ID },
       }),
     }
   : {
@@ -51,20 +97,37 @@ const sessionId = Guid.createValue();
 console.log(`session id: ${sessionId}`);
 
 let connection: boolean = false;
-export async function openIModelConnectionIfNeeded() {
-  if (!process.env.USE_GPB || connection) {
-    return;
+let checkpointConnection: CheckpointConnection | undefined;
+export async function openIModelConnectionIfNeeded(iTwinId: string, iModelId: string): Promise<CheckpointConnection | undefined> {
+  if (!config.USE_GPB || connection) {
+    return checkpointConnection;
   }
 
-  while (!connection) {
+  await IModelApp.startup({
+    rpcInterfaces: [IModelReadRpcInterface],
+  });
+  BentleyCloudRpcManager.initializeClient(
+    { info: { title: "visualization", version: "v4" }, uriPrefix: `http://${config.HOST_NAME}:${config.GPB_BACKEND_PORT}` },
+    [IModelReadRpcInterface],
+  );
+  while (true) {
     try {
+      if (checkpointConnection === undefined) {
+        checkpointConnection = await CheckpointConnection.openRemote(
+          iTwinId,
+          iModelId,
+          IModelVersion.latest(),
+          `http://${config.HOST_NAME}:${config.FASTIFY_BACKEND_PORT}`,
+        );
+      }
+
       await new Promise((resolve, reject) => {
         const req = BACKEND_PROPS.httpApi.request(
           {
             agent: BACKEND_PROPS.agent,
             hostname: BACKEND_PROPS.hostname,
-            port: BACKEND_PROPS.port,
-            path: `${BACKEND_PROPS.createPath("IModelReadRpcInterface-3.6.0-getConnectionProps")}?parameters=W3siaVR3aW5JZCI6Ijg5MmFhMmM5LTViZTgtNDg2NS05ZjM3LTdkNGM3ZTc1ZWJiZiIsImlNb2RlbElkIjoiZWQwYzQwOGItYWRkMi00OTZlLWFjNTgtNWE3ZTg1M2NiYzBiIiwiY2hhbmdlc2V0Ijp7ImluZGV4Ijo2OSwiaWQiOiIyN2JlMTZkOTU5NjQ1OTg1ZmNhODBjZmY1MDJiZDIzN2I4MmYwZjg0In19XQ==`,
+            port: config.GPB_BACKEND_PORT,
+            path: `${BACKEND_PROPS.createPath("IModelReadRpcInterface-3.6.0-getConnectionProps")}?parameters=W3siaVR3aW5JZCI6IjlmNTQyY2MyLWVlN2EtNGI3Yi04YWU4LWQwNzhiNzFjMDMwNSIsImlNb2RlbElkIjoiNmQ0YTAwMzYtNzAwYS00ODdlLTg2YWUtOTE4NGVlZjkxOGIyIiwiY2hhbmdlc2V0Ijp7ImluZGV4Ijo0LCJpZCI6IjVmM2QwM2YzYzYwMzgzY2NkYzRjNTNmMWJkMThhOWY0Mzk0YTQ5MjMifX1d`,
             method: "get",
             headers: createRequestHeaders(),
           },
@@ -74,6 +137,7 @@ export async function openIModelConnectionIfNeeded() {
         req.end();
       });
       connection = true;
+      return checkpointConnection;
     } catch (e: any) {
       console.error(`Failed to open iModel connection: ${e.toString()}`);
     }
@@ -89,7 +153,7 @@ export async function doRequest(operation: string, body: string, events: EventEm
       {
         agent: BACKEND_PROPS.agent,
         hostname: BACKEND_PROPS.hostname,
-        port: BACKEND_PROPS.port,
+        port: config.GPB_BACKEND_PORT,
         path: BACKEND_PROPS.createPath(operation),
         method: "post",
         headers: createRequestHeaders(),
@@ -119,6 +183,43 @@ export async function doRequest(operation: string, body: string, events: EventEm
     req.end();
   });
 }
+
+export async function runQueryViaIModelConnectionOverEach(events: EventEmitter, createQueryReader: () => ECSqlReader) {
+  events.emit("rate", "http.request_rate");
+  events.emit("counter", "http.requests", 1);
+  events.emit("counter", "itwin.runQuery.requests", 1);
+  const timer = new StopWatch(undefined, true);
+
+  const ecsqlReader = createQueryReader();
+
+  const rows = [];
+  const meta = await ecsqlReader.getMetaData();
+  for await (const row of ecsqlReader) {
+    rows.push(row.toArray());
+  }
+
+  const time = timer.current.milliseconds;
+  events.emit("histogram", "http.response_time", time);
+  events.emit("histogram", "itwin.runQuery.response_time", time);
+  // appendFileSync("C:\\dev\\notes\\perf-rpc-FBMTS.csv", `,${time}`);
+  const dbQueryResp: DbQueryResponse = {
+    meta,
+    data: rows,
+    rowCount: rows.length,
+    stats: {
+      cpuTime: 0,
+      totalTime: 0,
+      timeLimit: 0,
+      memLimit: 0,
+      memUsed: 0,
+      prepareTime: 0,
+    },
+    status: DbResponseStatus.Done,
+    kind: DbResponseKind.ECSql,
+  };
+  return dbQueryResp;
+}
+
 function createRequestHeaders() {
   return {
     ["X-Session-Id"]: sessionId,

@@ -28,7 +28,7 @@ import {
   SchemaItemType,
   StrengthDirection,
 } from "@itwin/ecschema-metadata";
-import * as ecschemaMetadata from "@itwin/ecschema-metadata";
+// import * as ecschemaMetadata from "@itwin/ecschema-metadata";
 import { EC } from "@itwin/presentation-shared";
 
 /** @internal */
@@ -110,7 +110,7 @@ abstract class ECClassImpl<TCoreClass extends CoreClass> extends ECSchemaItemImp
       // from `includeInherited` to `excludeInherited` - we're using its existence to determine what we need to pass to get
       // inherited properties.
       /* c8 ignore next */
-      ecschemaMetadata.SchemaFormatsProvider ? false : true,
+      true,
     );
     return coreProperty ? createECProperty(coreProperty, this) : undefined;
   }

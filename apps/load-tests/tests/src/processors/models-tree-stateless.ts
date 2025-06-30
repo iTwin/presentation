@@ -2,31 +2,45 @@
  * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
-/* eslint-disable @itwin/no-internal */
+
 /* eslint-disable no-console */
 
 import { EventEmitter, Next, ScenarioContext } from "artillery";
 import { StopWatch } from "@itwin/core-bentley";
-import { DbQueryRequest, DbQueryResponse, DbRequestExecutor, ECSqlReader } from "@itwin/core-common";
+import { DbQueryRequest, DbQueryResponse, ECSqlReader, QueryBinder, QueryOptions } from "@itwin/core-common";
 import { ISchemaLocater, Schema, SchemaContext, SchemaInfo, SchemaKey, SchemaMatchType, SchemaProps } from "@itwin/ecschema-metadata";
 import { createECSchemaProvider, createECSqlQueryExecutor } from "@itwin/presentation-core-interop";
 import { createIModelHierarchyProvider, createLimitingECSqlQueryExecutor, HierarchyNode, RowsLimitExceededError } from "@itwin/presentation-hierarchies";
 import { defaultHierarchyConfiguration, ModelsTreeDefinition } from "@itwin/presentation-models-tree";
 import { createCachingECClassHierarchyInspector } from "@itwin/presentation-shared";
-import { doRequest, getCurrentIModelName, loadNodes, openIModelConnectionIfNeeded } from "./common";
+import { doRequest, getCurrentIModelName, loadNodes, openIModelConnectionIfNeeded, runQueryViaIModelConnectionOverEach } from "./common";
+import { CheckpointConnection } from "@itwin/core-frontend";
+import { IModelHost } from "@itwin/core-backend";
 
 console.log(`Frontend PID: ${process.pid}`);
 const ENABLE_REQUESTS_LOGGING = false;
 
 export function initScenario(context: ScenarioContext, _events: EventEmitter, next: Next) {
   context.vars.tooLargeHierarchyLevelsCount = 0;
-  void openIModelConnectionIfNeeded().then(() => {
+  const iTwinId = "[INSERT ITWIN ID]";
+  const iModelId = "[INSERT IMODEL ID]";
+  context.vars.imodelRpcProps = () => ({
+    iTwinId,
+    iModelId,
+    key: "[INSERT IMODEL ID]:[INSERT CHANGESET ID]",
+    changeset: { index: 4 /* [INSERT CHANGESET INDEX] */, id: "[INSERT CHANGESET ID]" },
+  });
+  void openIModelConnectionIfNeeded(iTwinId, iModelId).then((checkpointConnection) => {
+    if (checkpointConnection !== undefined) {
+      context.vars.checkpointConnection = checkpointConnection;
+    }
     next();
   });
 }
 
-export function terminateScenario(context: ScenarioContext, _ee: EventEmitter, next: Next) {
+export async function terminateScenario(context: ScenarioContext, _ee: EventEmitter, next: Next) {
   console.log(`Total hierarchy levels that exceeded nodes limit: ${context.vars.tooLargeHierarchyLevelsCount as number}`);
+  await IModelHost.shutdown();
   context.vars.tooLargeHierarchyLevelsCount = 0;
   context.vars.isTestTerminated = true;
   next();
@@ -127,25 +141,34 @@ function createModelsTreeProvider(context: ScenarioContext, events: EventEmitter
       }
     },
   };
-  const schedulingQueryExecutor: DbRequestExecutor<DbQueryRequest, DbQueryResponse> = {
+
+  const getExecutor = (eventsEm: EventEmitter, runQueryFunc: () => ECSqlReader) => ({
     async execute(request: DbQueryRequest): Promise<DbQueryResponse> {
       const timer = new StopWatch(undefined, true);
-      const body = JSON.stringify([imodelRpcProps, request]);
-      return doRequest("IModelReadRpcInterface-3.6.0-queryRows", body, events, "query_rows").then((response) => {
+      return runQueryViaIModelConnectionOverEach(eventsEm, runQueryFunc).then((response) => {
         ENABLE_REQUESTS_LOGGING && console.log(`Received "query rows" response for \`${request.query}\` in ${timer.current.milliseconds} ms`);
-        return response as DbQueryResponse;
+        return response;
       });
     },
-  };
+  });
 
   const schemas = new SchemaContext();
   schemas.addLocater(schedulingSchemaLocater);
   const schemaProvider = createECSchemaProvider(schemas);
+
+  const createRunQueryFunc = (ecsql: string, bindings?: QueryBinder, config?: QueryOptions) => {
+    return () => (context.vars.checkpointConnection as CheckpointConnection).createQueryReader(ecsql, bindings, config);
+  };
+
   const queryExecutor = createECSqlQueryExecutor({
     createQueryReader(ecsql, bindings, config) {
-      return new ECSqlReader(schedulingQueryExecutor, ecsql, bindings, config);
+      // Comment line bellow to run on Fastify backend or uncomment to run on RPC backend
+      config = { ...config, priority: 0 };
+      const runQueryFunc = createRunQueryFunc(ecsql, bindings, config);
+      return new ECSqlReader(getExecutor(events, runQueryFunc), ecsql, bindings, config);
     },
   });
+
   const imodelAccess = {
     imodelKey: imodelRpcProps.key,
     ...schemaProvider,

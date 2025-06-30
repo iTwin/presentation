@@ -19,7 +19,7 @@ import { doRequest, getCurrentIModelName, loadNodes, openIModelConnectionIfNeede
 
 export function initScenario(context: ScenarioContext, _events: EventEmitter, next: Next) {
   context.vars.tooLargeHierarchyLevelsCount = 0;
-  void openIModelConnectionIfNeeded().then(() => {
+  void openIModelConnectionIfNeeded("", "").then(() => {
     next();
   });
 }
