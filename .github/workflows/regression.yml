@@ -5,7 +5,24 @@ on:
     branches: [ "master" ]
 
 jobs:
+  checkPR:
+    runs-on: ubuntu-latest
+    outputs:
+      isReleasePR: ${{ steps.pr-checker.outputs.isReleasePR }}
+    steps:
+      - name: Check for release PR
+        id: pr-checker
+        env:
+            PR_TITLE: ${{ github.event.pull_request.title }}
+        run:
+          # [[ $PR_TITLE =~ ^Release packages ]]
+          IS_RELEASE_PR=[[ $PR_TITLE =~ ^Test Regression ]]
+          echo $IS_RELEASE_PR
+          echo "isReleasePR=IS_RELEASE_PR" >> "$GITHUB_OUTPUT"
+
   buildPackages:
+    needs: [checkPR]
+    if: ${{ needs.checkPR.outputs.isReleasePR == 'true' }}
     runs-on: ubuntu-latest
 
     steps:
