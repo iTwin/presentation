@@ -18,9 +18,9 @@ jobs:
           # [[ $PR_TITLE =~ ^(Release packages) ]]
           if [[ $PR_TITLE =~ ^(Test Regression) ]]
           then
-            echo "isReleasePR=true" >> "$GITHUB_OUTPUT"
+            echo "isReleasePR=true" >> "$GITHUB_OUTPUT";
           else
-            echo "isReleasePR=false" >> "$GITHUB_OUTPUT"
+            echo "isReleasePR=false" >> "$GITHUB_OUTPUT";
           fi
 
   buildPackages:
