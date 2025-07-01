@@ -25,7 +25,7 @@ jobs:
 
   buildPackages:
     needs: [checkRelease]
-    if: ${{ needs.checkRelease.outputs.isReleasePR == 'true' }}
+    if: ${{ needs.checkRelease.outputs.isReleasePR == 'false' }}
     runs-on: ubuntu-latest
 
     steps:
