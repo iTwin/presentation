@@ -15,8 +15,8 @@ jobs:
         env:
             PR_TITLE: ${{ github.event.pull_request.title }}
         run:
-          # [[ $PR_TITLE =~ ^Release packages ]]
-          if [[ $PR_TITLE =~ ^Test Regression ]]
+          # [[ $PR_TITLE =~ ^(Release packages) ]]
+          if [[ $PR_TITLE =~ ^(Test Regression) ]]
           then
             echo "isReleasePR=true" >> "$GITHUB_OUTPUT"
           else
