@@ -5,13 +5,13 @@ on:
     branches: [ "master" ]
 
 jobs:
-  checkPR:
+  checkRelease:
     runs-on: ubuntu-latest
     outputs:
-      isReleasePR: ${{ steps.pr-checker.outputs.isReleasePR }}
+      isReleasePR: ${{ steps.release-checker.outputs.isReleasePR }}
     steps:
       - name: Check for release PR
-        id: pr-checker
+        id: release-checker
         env:
             PR_TITLE: ${{ github.event.pull_request.title }}
         run:
@@ -21,8 +21,8 @@ jobs:
           echo "isReleasePR=IS_RELEASE_PR" >> "$GITHUB_OUTPUT"
 
   buildPackages:
-    needs: [checkPR]
-    if: ${{ needs.checkPR.outputs.isReleasePR == 'true' }}
+    needs: [checkRelease]
+    if: ${{ needs.checkRelease.outputs.isReleasePR == 'true' }}
     runs-on: ubuntu-latest
 
     steps:
