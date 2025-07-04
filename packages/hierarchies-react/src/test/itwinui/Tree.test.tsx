@@ -274,6 +274,51 @@ describe("Tree", () => {
     expect(applyFilterButton.matches(":focus")).to.be.true;
   });
 
+  it("focuses `Apply filter` button when node becomes filtered", async () => {
+    const rootNodes = createNodes([
+      {
+        id: "root-1",
+        isExpanded: false,
+        isFilterable: true,
+        isFiltered: false,
+        children: [
+          {
+            id: "child-1",
+          },
+        ],
+      },
+    ]);
+
+    const { rerender, getByRole, queryByText } = render(<TreeRenderer rootNodes={rootNodes} {...initialProps} />);
+
+    expect(queryByText("root-1")).to.not.be.null;
+    expect(queryByText("child-1")).to.be.null;
+
+    const rootNode = getByRole("treeitem", { expanded: false });
+    expect(within(rootNode).getByRole("button", { name: "Apply filter" }).matches(":focus")).to.be.false;
+
+    const filteredRootNodes = createNodes([
+      {
+        id: "root-1",
+        isExpanded: false,
+        isFilterable: true,
+        isFiltered: true,
+        children: [
+          {
+            id: "child-1",
+          },
+        ],
+      },
+    ]);
+    rerender(<TreeRenderer rootNodes={filteredRootNodes} {...initialProps} />);
+
+    expect(queryByText("root-1")).to.not.be.null;
+    expect(queryByText("child-1")).to.be.null;
+
+    const filteredRootNode = getByRole("treeitem", { expanded: false });
+    expect(within(filteredRootNode).getByRole("button", { name: "Apply filter" }).matches(":focus")).to.be.true;
+  });
+
   it("renders icon", async () => {
     const rootNodes = createNodes([
       {
