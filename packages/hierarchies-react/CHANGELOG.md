@@ -1,5 +1,11 @@
 # @itwin/presentation-hierarchies-react
 
+## 1.6.9
+
+### Patch Changes
+
+- [#1000](https://github.com/iTwin/presentation/pull/1000): Made sure `Apply filter` button becomes focused after hierarchy level filter is applied.
+
 ## 1.6.8
 
 ### Patch Changes
