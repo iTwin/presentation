@@ -753,10 +753,9 @@ async function createInstanceKeyPathsFromTargetItems({
   }
   const hierarchyConfig = props.hierarchyConfig ?? defaultHierarchyConfiguration;
   const idsCache = props.idsCache ?? new ModelsTreeIdsCache(imodelAccess, hierarchyConfig);
-  const abort = fromEvent(props.abortSignal, "abort");
   return lastValueFrom(
     from(targetItems).pipe(
-      takeUntil(abort),
+      takeUntil(fromEvent(props.abortSignal, "abort")),
       releaseMainThreadOnItemsCount(2000),
       mergeMap(async (key): Promise<{ key: string; type: number } | { key: ElementsGroupInfo; type: 0 }> => {
         if ("parent" in key) {

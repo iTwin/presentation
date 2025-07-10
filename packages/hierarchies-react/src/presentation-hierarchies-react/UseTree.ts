@@ -170,7 +170,6 @@ function useTreeInternal({
   const onPerformanceMeasuredRef = useLatest(onPerformanceMeasured);
   const onHierarchyLimitExceededRef = useLatest(onHierarchyLimitExceeded);
   const onHierarchyLoadErrorRef = useLatest(onHierarchyLoadError);
-  const controller = useRef<AbortController | undefined>();
 
   const [actions] = useState<TreeActions>(
     () =>
@@ -209,6 +208,7 @@ function useTreeInternal({
   const [isFiltering, setIsFiltering] = useState(false);
   useEffect(() => {
     let disposed = false;
+    const controller = new AbortController();
     void (async () => {
       if (!hierarchyProvider) {
         return;
@@ -225,8 +225,7 @@ function useTreeInternal({
       setIsFiltering(true);
       let paths: HierarchyFilteringPath[] | undefined;
       try {
-        controller.current = new AbortController();
-        paths = await getFilteredPaths({ abortSignal: controller.current.signal });
+        paths = await getFilteredPaths({ abortSignal: controller.signal });
       } catch {
       } finally {
         if (!disposed) {
@@ -236,7 +235,7 @@ function useTreeInternal({
       }
     })();
     return () => {
-      controller.current?.abort();
+      controller.abort();
       disposed = true;
     };
   }, [hierarchyProvider, getFilteredPaths, actions]);
