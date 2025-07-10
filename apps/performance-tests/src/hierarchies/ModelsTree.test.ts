@@ -55,12 +55,14 @@ describe("models tree", () => {
     cleanup: (props) => props.iModel.close(),
     test: async ({ imodelAccess, targetItems }) => {
       const idsCache = new ModelsTreeIdsCache(imodelAccess, defaultHierarchyConfiguration);
+      const abortSignal = new AbortController().signal;
       const filtering = {
         paths: await ModelsTreeDefinition.createInstanceKeyPaths({
           imodelAccess,
           limit: "unbounded",
           targetItems,
           idsCache,
+          abortSignal,
         }),
       };
       expect(filtering.paths.length).to.eq(50000);
