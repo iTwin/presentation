@@ -10,6 +10,7 @@ import {
   defer,
   delay,
   from,
+  fromEvent,
   lastValueFrom,
   map,
   merge,
@@ -20,6 +21,7 @@ import {
   of,
   reduce,
   switchMap,
+  takeUntil,
 } from "rxjs";
 import { Id64Array, Id64String } from "@itwin/core-bentley";
 import {
@@ -99,21 +101,20 @@ export interface ElementsGroupInfo {
   groupingNode: ClassGroupingHierarchyNode;
 }
 
-interface ModelsTreeInstanceKeyPathsFromTargetItemsProps {
+interface ModelsTreeInstanceKeyPathsBaseProps {
   imodelAccess: ECClassHierarchyInspector & LimitingECSqlQueryExecutor;
   idsCache?: ModelsTreeIdsCache;
+  hierarchyConfig?: ModelsTreeHierarchyConfiguration;
+  limit?: number | "unbounded";
+  abortSignal: AbortSignal;
+}
+type ModelsTreeInstanceKeyPathsFromTargetItemsProps = {
   targetItems: Array<InstanceKey | ElementsGroupInfo>;
-  hierarchyConfig?: ModelsTreeHierarchyConfiguration;
-  limit?: number | "unbounded";
-}
+} & ModelsTreeInstanceKeyPathsBaseProps;
 
-interface ModelsTreeInstanceKeyPathsFromInstanceLabelProps {
-  imodelAccess: ECClassHierarchyInspector & LimitingECSqlQueryExecutor;
-  idsCache?: ModelsTreeIdsCache;
+type ModelsTreeInstanceKeyPathsFromInstanceLabelProps = {
   label: string;
-  hierarchyConfig?: ModelsTreeHierarchyConfiguration;
-  limit?: number | "unbounded";
-}
+} & ModelsTreeInstanceKeyPathsBaseProps;
 
 export type ModelsTreeInstanceKeyPathsProps = ModelsTreeInstanceKeyPathsFromTargetItemsProps | ModelsTreeInstanceKeyPathsFromInstanceLabelProps;
 type HierarchyProviderProps = Props<typeof createIModelHierarchyProvider>;
@@ -752,8 +753,10 @@ async function createInstanceKeyPathsFromTargetItems({
   }
   const hierarchyConfig = props.hierarchyConfig ?? defaultHierarchyConfiguration;
   const idsCache = props.idsCache ?? new ModelsTreeIdsCache(imodelAccess, hierarchyConfig);
+  const abort = fromEvent(props.abortSignal, "abort");
   return lastValueFrom(
     from(targetItems).pipe(
+      takeUntil(abort),
       releaseMainThreadOnItemsCount(2000),
       mergeMap(async (key): Promise<{ key: string; type: number } | { key: ElementsGroupInfo; type: 0 }> => {
         if ("parent" in key) {
