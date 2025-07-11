@@ -9,12 +9,22 @@ import { GenericNodeKey, GroupingNodeKey, HierarchyNodeKey, InstancesNodeKey } f
 
 /** @public */
 export interface FilterTargetGroupingNodeInfo {
-  /** Key of the grouping node. */
+  /**
+   * Key of the grouping node.
+   * @deprecated in 1.6. This option is no longer needed.
+   */
   key: GroupingNodeKey;
 
   /**
-   * Depth of the grouping node in the hierarchy.
-   * Generally, it can be retrieved from `parentKeys.length`.
+   * Depth up to which nodes in the hierarchy should be expanded.
+   */
+  depth: number;
+}
+
+/** @public */
+export interface FilteringPathAutoExpandOption {
+  /**
+   * Depth up to which nodes in the hierarchy should be expanded.
    */
   depth: number;
 }
@@ -28,7 +38,7 @@ export interface HierarchyFilteringPathOptions {
    * - If it's an instance of `FilterTargetGroupingNodeInfo`, then all nodes up to the grouping node that matches this property,
    * will have `autoExpand` flag.
    */
-  autoExpand?: boolean | FilterTargetGroupingNodeInfo;
+  autoExpand?: boolean | FilterTargetGroupingNodeInfo | FilteringPathAutoExpandOption;
 }
 
 /**
@@ -186,7 +196,7 @@ export function createHierarchyFilteringHelper(
         | {
             pathMatcher: (identifier: HierarchyNodeIdentifier) => boolean;
           },
-    ): Pick<HierarchyNode, "filtering" | "autoExpand"> | undefined => {
+    ): (Pick<HierarchyNode, "autoExpand"> & { filtering?: HierarchyNode["filtering"] & { autoExpandDepth?: number } }) | undefined => {
       if (!hasFilter) {
         return undefined;
       }
@@ -211,7 +221,10 @@ export function createHierarchyFilteringHelper(
      */
     createChildNodePropsAsync: (props: {
       pathMatcher: (identifier: HierarchyNodeIdentifier) => boolean | Promise<boolean>;
-    }): Promise<Pick<HierarchyNode, "filtering" | "autoExpand"> | undefined> | Pick<HierarchyNode, "filtering" | "autoExpand"> | undefined => {
+    }):
+      | Promise<(Pick<HierarchyNode, "autoExpand"> & { filtering?: HierarchyNode["filtering"] & { autoExpandDepth?: number } }) | undefined>
+      | (Pick<HierarchyNode, "autoExpand"> & { filtering?: HierarchyNode["filtering"] & { autoExpandDepth?: number } })
+      | undefined => {
       if (!hasFilter) {
         return undefined;
       }
@@ -251,7 +264,7 @@ class MatchingFilteringPathsReducer {
   private _filteredChildrenIdentifierPaths = new Array<NormalizedFilteringPath>();
   private _isFilterTarget = false;
   private _filterTargetOptions = undefined as HierarchyFilteringPathOptions | undefined;
-  private _needsAutoExpand = false;
+  private _needsAutoExpand: boolean | { depth: number } = false;
 
   public constructor(private _hasFilterTargetAncestor: boolean) {}
 
@@ -262,11 +275,16 @@ class MatchingFilteringPathsReducer {
     } else if (path.length > 1) {
       this._filteredChildrenIdentifierPaths.push({ path: path.slice(1), options });
       if (options?.autoExpand) {
-        this._needsAutoExpand = true;
+        if (
+          !this._needsAutoExpand ||
+          (this._needsAutoExpand !== true && (options.autoExpand === true || this._needsAutoExpand.depth < options.autoExpand.depth))
+        ) {
+          this._needsAutoExpand = options.autoExpand;
+        }
       }
     }
   }
-  public getNodeProps(): Pick<HierarchyNode, "filtering" | "autoExpand"> {
+  public getNodeProps(): Pick<HierarchyNode, "autoExpand"> & { filtering?: HierarchyNode["filtering"] & { autoExpandDepth?: number } } {
     return {
       ...(this._hasFilterTargetAncestor || this._isFilterTarget || this._filteredChildrenIdentifierPaths.length > 0
         ? {
@@ -274,10 +292,11 @@ class MatchingFilteringPathsReducer {
               ...(this._hasFilterTargetAncestor ? { hasFilterTargetAncestor: true } : undefined),
               ...(this._isFilterTarget ? { isFilterTarget: true, filterTargetOptions: this._filterTargetOptions } : undefined),
               ...(this._filteredChildrenIdentifierPaths.length > 0 ? { filteredChildrenIdentifierPaths: this._filteredChildrenIdentifierPaths } : undefined),
+              ...(this._needsAutoExpand && this._needsAutoExpand !== true ? { autoExpandDepth: this._needsAutoExpand.depth } : undefined),
             },
           }
         : undefined),
-      ...(this._needsAutoExpand ? { autoExpand: true } : undefined),
+      ...(this._needsAutoExpand ? { autoExpand: !!this._needsAutoExpand } : undefined),
     };
   }
 }
