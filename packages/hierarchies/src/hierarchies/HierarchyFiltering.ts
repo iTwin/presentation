@@ -37,6 +37,7 @@ export interface HierarchyFilteringPathOptions {
    * - If it's `true`, then all nodes up to the filter target will have `autoExpand` flag.
    * - If it's an instance of `FilterTargetGroupingNodeInfo`, then all nodes up to the grouping node that matches this property,
    * will have `autoExpand` flag.
+   * - If it's an instance of `FilteringPathAutoExpandOption`, then all nodes up to and including `depth` will have `autoExpand` flag.
    */
   autoExpand?: boolean | FilterTargetGroupingNodeInfo | FilteringPathAutoExpandOption;
 }
