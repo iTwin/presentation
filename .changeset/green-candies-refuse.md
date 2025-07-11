@@ -1,0 +1,3 @@
+---
+"@itwin/presentation-hierarchies": patch
+---

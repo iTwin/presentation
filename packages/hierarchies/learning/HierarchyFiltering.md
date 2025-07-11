@@ -103,8 +103,8 @@ const filteringPath: HierarchyFilteringPath = {
   path: [elementKeys.a, elementKeys.b, elementKeys.c],
   // Supply grouping node attributes with the path to the "C" element.
   options: {
-    // Auto-expand the hierarchy up to the grouping node. The `depth` attribute equals to the number of parents.
-    autoExpand: { key: groupingNode.key, depth: groupingNode.parentKeys.length },
+    // Auto-expand the hierarchy up to and including the specified `depth`.
+    autoExpand: { depth: groupingNode.parentKeys.length },
   },
 };
 ```

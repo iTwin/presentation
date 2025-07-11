@@ -13,19 +13,11 @@ describe("HierarchyFilteringPath", () => {
         { autoExpand: true },
         {
           autoExpand: {
-            key: {
-              type: "label-grouping",
-              label: "",
-            },
             depth: 2,
           },
         },
         {
           autoExpand: {
-            key: {
-              type: "label-grouping",
-              label: "",
-            },
             depth: 1,
           },
         },

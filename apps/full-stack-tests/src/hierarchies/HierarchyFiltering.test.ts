@@ -1049,7 +1049,6 @@ describe("Hierarchies", () => {
               path: [rootNodeKey, elementKey],
               options: {
                 autoExpand: {
-                  key: { type: "class-grouping", className: keys.elements[0].className },
                   depth: 1,
                 },
               },
@@ -1123,7 +1122,6 @@ describe("Hierarchies", () => {
                 path: [rootNodeKey, keys.rootElement, keys.middleElement, keys.childElement],
                 options: {
                   autoExpand: {
-                    key: { type: "class-grouping", className: keys.childElement.className },
                     depth: 5, // root node + (grouping node and instance node for root and middle elements),
                   },
                 },
@@ -1224,7 +1222,6 @@ describe("Hierarchies", () => {
                 path: [rootNodeKey, elementKey],
                 options: {
                   autoExpand: {
-                    key: { type: "class-grouping" as const, className: elementKey.className },
                     depth: 1,
                   },
                 },
