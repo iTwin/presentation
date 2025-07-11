@@ -88,9 +88,9 @@ const filteringPath: HierarchyFilteringPath = {
 
 <!-- END EXTRACTION -->
 
-Additionally, hierarchies may contain grouping nodes, which don't represent anything by themselves, which means they can't be a filter target. However, in some cases it may be necessary to auto-expand the hierarchy up to a grouping node, which can be achieved by setting the `autoExpand` property to a grouping node's identifier - its key and depth in the hierarchy:
+Additionally, you might not want to add `autoExpand` flag to every node in `HierarchyFilteringPath`. For such cases hierarchies may be expanded up to desired depth, which can be achieved by setting the `autoExpand` property to `{ depth: number }` in the hierarchy:
 
-<!-- [[include: [Presentation.Hierarchies.HierarchyFiltering.HierarchyFilteringPathImport, Presentation.Hierarchies.HierarchyFiltering.AutoExpandUntilGroupingNode.FilteringPath], ts]] -->
+<!-- [[include: [Presentation.Hierarchies.HierarchyFiltering.HierarchyFilteringPathImport, Presentation.Hierarchies.HierarchyFiltering.AutoExpandUntilDepth.FilteringPath], ts]] -->
 <!-- BEGIN EXTRACTION -->
 
 ```ts

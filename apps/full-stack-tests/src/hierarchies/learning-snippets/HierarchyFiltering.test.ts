@@ -383,7 +383,7 @@ describe("Hierarchies", () => {
           );
         }
 
-        // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.HierarchyFiltering.AutoExpandUntilGroupingNode.FilteringPath
+        // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.HierarchyFiltering.AutoExpandUntilDepth.FilteringPath
         // Get a grouping node that groups the "C" element
         const groupingNode = await getSelectedGroupingNode();
         const filteringPath: HierarchyFilteringPath = {

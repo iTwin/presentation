@@ -14,7 +14,6 @@ A formatter is a simple async function that takes a value along with its type an
 
 <!-- [[include: [Presentation.Hierarchies.Formatting.BasicFormatterExample.Imports, Presentation.Hierarchies.Formatting.BasicFormatterExample], ts]] -->
 <!-- BEGIN EXTRACTION -->
-
 ```ts
 import { createDefaultValueFormatter, IPrimitiveValueFormatter } from "@itwin/presentation-shared";
 
@@ -28,14 +27,12 @@ const myFormatter: IPrimitiveValueFormatter = async (value) => {
 expect(await myFormatter({ type: "Boolean", value: true })).to.eq("yes!");
 expect(await myFormatter({ type: "Boolean", value: false })).to.eq("no!");
 ```
-
 <!-- END EXTRACTION -->
 
 In the above example, the formatter customizes boolean values' formatting and relies on the default formatter for other types. The default formatter is delivered through `@itwin/presentation-shared` package and knows how to format basic primitive types. To support units' formatting, a formatter needs access to ECSchemas and know the user's preferred unit system. `@itwin/presentation-core-interop` delivers one such formatter through the `createValueFormatter` factory function:
 
 <!-- [[include: [Presentation.Hierarchies.Formatting.CoreInteropFormatterExample.Imports, Presentation.Hierarchies.Formatting.CoreInteropFormatterExample], ts]] -->
 <!-- BEGIN EXTRACTION -->
-
 ```ts
 import { createValueFormatter } from "@itwin/presentation-core-interop";
 
@@ -64,7 +61,6 @@ expect(await metricFormatter({ type: "Double", value, koqName })).to.eq("74040.0
 // Imperial formatter formats the value in gallons per minute:
 expect(await imperialFormatter({ type: "Double", value, koqName })).to.eq("19559.2988 gal/min");
 ```
-
 <!-- END EXTRACTION -->
 
 ## Formatting hierarchy node labels
