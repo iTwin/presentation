@@ -8,6 +8,7 @@ In the most basic form, a hierarchy provider only needs to implement the `getNod
 
 <!-- [[include: [Presentation.Hierarchies.CustomHierarchyProviders.Imports, Presentation.Hierarchies.CustomHierarchyProviders.BasicProviderExample], ts]] -->
 <!-- BEGIN EXTRACTION -->
+
 ```ts
 import { BeEvent } from "@itwin/core-bentley";
 import { HierarchyNode, HierarchyProvider } from "@itwin/presentation-hierarchies";
@@ -36,6 +37,7 @@ const provider: HierarchyProvider = {
   hierarchyChanged: new BeEvent(),
 };
 ```
+
 <!-- END EXTRACTION -->
 
 ## iModel-based hierarchy provider example
@@ -46,6 +48,7 @@ However, it's possible to write one from scratch. The following example demonstr
 
 <!-- [[include: [Presentation.Hierarchies.CustomHierarchyProviders.Imports, Presentation.Hierarchies.CustomHierarchyProviders.IModelProviderImports, Presentation.Hierarchies.CustomHierarchyProviders.CustomIModelProviderExample], ts]] -->
 <!-- BEGIN EXTRACTION -->
+
 ```ts
 import { BeEvent } from "@itwin/core-bentley";
 import { HierarchyNode, HierarchyProvider } from "@itwin/presentation-hierarchies";
@@ -160,6 +163,7 @@ using provider = new IModelHierarchyProvider(imodel);
 // the iModel given to the provider.
 await traverseHierarchy(provider);
 ```
+
 <!-- END EXTRACTION -->
 
 ## 3rd party service-based hierarchy provider example
@@ -170,6 +174,7 @@ First, let's define a sample books service:
 
 <!-- [[include: [Presentation.Hierarchies.CustomHierarchyProviders.BooksService], ts]] -->
 <!-- BEGIN EXTRACTION -->
+
 ```ts
 // Define a type for a filter that can be applied to books service queries.
 type BooksServiceFilter<TEntry> = { rules: (Partial<TEntry> | BooksServiceFilter<TEntry>)[]; operator: "and" | "or" } | Partial<TEntry>;
@@ -242,12 +247,14 @@ function createBooksService() {
   return { getAuthors, getBooks };
 }
 ```
+
 <!-- END EXTRACTION -->
 
 Now that we have a service, let's create a hierarchy provider that creates a hierarchy based on the data returned from the service:
 
 <!-- [[include: [Presentation.Hierarchies.CustomHierarchyProviders.Imports, Presentation.Hierarchies.CustomHierarchyProviders.3rdPartyServiceProviderExample], ts]] -->
 <!-- BEGIN EXTRACTION -->
+
 ```ts
 import { BeEvent } from "@itwin/core-bentley";
 import { HierarchyNode, HierarchyProvider } from "@itwin/presentation-hierarchies";
@@ -304,6 +311,7 @@ await traverseHierarchy(provider);
 //   Red storm rising
 //   Executive orders
 ```
+
 <!-- END EXTRACTION -->
 
 ## Implementing node label formatting support
@@ -325,6 +333,7 @@ With the above APIs at hand, implementing node label formatting is straightforwa
 
 <!-- [[include: [Presentation.Hierarchies.CustomHierarchyProviders.Imports, Presentation.Hierarchies.CustomHierarchyProviders.FormattingProviderImports, Presentation.Hierarchies.CustomHierarchyProviders.FormattingProviderExample], ts]] -->
 <!-- BEGIN EXTRACTION -->
+
 ```ts
 import { BeEvent } from "@itwin/core-bentley";
 import { HierarchyNode, HierarchyProvider } from "@itwin/presentation-hierarchies";
@@ -409,6 +418,7 @@ provider.setFormatter(async (typedValue) => {
 // `Boolean: Yes | Integer: i123 | Double: 4.6e+0 | Date/Time: 2024-12-31T00:00:00.000Z | Point2d: { x: 1.2e+0, y: 5.7e+0 }`
 console.log((await provider.getNodes().next()).value.label);
 ```
+
 <!-- END EXTRACTION -->
 
 ## Implementing hierarchy filtering support
@@ -426,6 +436,7 @@ Let's start with the first step:
 
 <!-- [[include: [Presentation.Hierarchies.CustomHierarchyProviders.Imports, Presentation.Hierarchies.CustomHierarchyProviders.FilteringProviderImports, Presentation.Hierarchies.CustomHierarchyProviders.FilteringProviderExample.PathsLookup], ts]] -->
 <!-- BEGIN EXTRACTION -->
+
 ```ts
 import { BeEvent } from "@itwin/core-bentley";
 import { HierarchyNode, HierarchyProvider } from "@itwin/presentation-hierarchies";
@@ -451,6 +462,7 @@ async function createFilterPaths(filter: string): Promise<HierarchyFilteringPath
   return results;
 }
 ```
+
 <!-- END EXTRACTION -->
 
 There could be a number of ways to filter the hierarchy, such as by target instance identifier, by a complex query that uses multiple attributes, or simply by label. The above function filters the hierarchy by node label.
@@ -459,6 +471,7 @@ Now that we're able to find the paths, let's enhance our hierarchy provider to s
 
 <!-- [[include: [Presentation.Hierarchies.CustomHierarchyProviders.Imports, Presentation.Hierarchies.CustomHierarchyProviders.FilteringProviderImports, Presentation.Hierarchies.CustomHierarchyProviders.FilteringProviderExample.Provider], ts]] -->
 <!-- BEGIN EXTRACTION -->
+
 ```ts
 import { BeEvent } from "@itwin/core-bentley";
 import { HierarchyNode, HierarchyProvider } from "@itwin/presentation-hierarchies";
@@ -536,6 +549,7 @@ const provider: HierarchyProvider = {
   hierarchyChanged,
 };
 ```
+
 <!-- END EXTRACTION -->
 
 The provider uses target instance keys that it gets through a filtering helper function to filter each hierarchy level. Because we already know exactly what we're looking for, we can effectively apply filtering at query time, rather than doing that on the client side.
@@ -544,6 +558,7 @@ With the above provider, we can now filter the books hierarchy by label:
 
 <!-- [[include: [Presentation.Hierarchies.CustomHierarchyProviders.FilteringProviderExample.TraverseFiltered1, Presentation.Hierarchies.CustomHierarchyProviders.FilteringProviderExample.TraverseFiltered2], ts]] -->
 <!-- BEGIN EXTRACTION -->
+
 ```ts
 // Apply the filter "of" and traverse the filtered hierarchy. Notice that author node
 // of "The Fellowship of Ring" is included, even though it doesn't match the filter.
@@ -568,6 +583,7 @@ await traverseHierarchy(provider);
 //   Red storm rising
 //   Executive orders
 ```
+
 <!-- END EXTRACTION -->
 
 ## Implementing hierarchy level filtering support
@@ -580,6 +596,7 @@ Hierarchy level filters are defined using the `GenericInstanceFilter` data struc
 
 <!-- [[include: [Presentation.Hierarchies.CustomHierarchyProviders.HierarchyLevelFilteringProviderImports, Presentation.Hierarchies.CustomHierarchyProviders.HierarchyLevelFilteringProvider.Filter], ts]] -->
 <!-- BEGIN EXTRACTION -->
+
 ```ts
 import { GenericInstanceFilter, GenericInstanceFilterRule, GenericInstanceFilterRuleGroup } from "@itwin/core-common";
 
@@ -605,6 +622,7 @@ function createBooksServiceFilter(parentNodeFilter: Record<string, unknown> | un
   return parentNodeFilter ?? childrenFilter ?? undefined;
 }
 ```
+
 <!-- END EXTRACTION -->
 
 Now, the provider can be enhanced to support hierarchy level filtering. Two changes are required on top of the original provider implementation:
@@ -616,6 +634,7 @@ Here's how the final provider looks like:
 
 <!-- [[include: [Presentation.Hierarchies.CustomHierarchyProviders.Imports, Presentation.Hierarchies.CustomHierarchyProviders.HierarchyLevelFilteringProvider.Provider], ts]] -->
 <!-- BEGIN EXTRACTION -->
+
 ```ts
 import { BeEvent } from "@itwin/core-bentley";
 import { HierarchyNode, HierarchyProvider } from "@itwin/presentation-hierarchies";
@@ -657,6 +676,7 @@ const provider: HierarchyProvider = {
   hierarchyChanged: new BeEvent(),
 };
 ```
+
 <!-- END EXTRACTION -->
 
 With the above, we can now request filtered nodes from the provider.
@@ -667,6 +687,7 @@ For this example, we just create a filter manually.
 
 <!-- [[include: [Presentation.Hierarchies.CustomHierarchyProviders.HierarchyLevelFilteringProvider.Result1, Presentation.Hierarchies.CustomHierarchyProviders.HierarchyLevelFilteringProvider.Result2], ts]] -->
 <!-- BEGIN EXTRACTION -->
+
 ```ts
 // Create a filter to find authors that have "Mark" substring in their name or have no books.
 const createAuthorsFilter = (): GenericInstanceFilter => ({
@@ -748,4 +769,5 @@ for await (const node of provider.getNodes({
   console.log(`- ${node.label}`);
 }
 ```
+
 <!-- END EXTRACTION -->

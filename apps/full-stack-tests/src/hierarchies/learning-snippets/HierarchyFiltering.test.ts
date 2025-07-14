@@ -3,25 +3,28 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
+/* eslint-disable no-duplicate-imports */
+
 import { expect } from "chai";
 import { insertPhysicalElement, insertPhysicalModelWithPartition, insertSpatialCategory } from "presentation-test-utilities";
 import { expand, filter, first, firstValueFrom, from } from "rxjs";
 import { assert, Id64String } from "@itwin/core-bentley";
 import { IModelConnection } from "@itwin/core-frontend";
+import { createBisInstanceLabelSelectClauseFactory, InstanceKey } from "@itwin/presentation-shared";
+// __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.HierarchyFiltering.HierarchyDefinitionImports
+import { createNodesQueryClauseFactory, GroupingHierarchyNode, HierarchyDefinition, HierarchyNode } from "@itwin/presentation-hierarchies";
+import { ECSqlBinding } from "@itwin/presentation-shared";
 // __PUBLISH_EXTRACT_END__
 // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.HierarchyFiltering.FindPathsImports
 import { createIModelKey } from "@itwin/presentation-core-interop";
-// __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.HierarchyFiltering.HierarchyDefinitionImports
-import {
-  createIModelHierarchyProvider,
-  createNodesQueryClauseFactory,
-  GroupingHierarchyNode,
-  HierarchyDefinition,
-  HierarchyFilteringPath,
-  HierarchyNode,
-  HierarchyNodeIdentifiersPath,
-} from "@itwin/presentation-hierarchies";
-import { createBisInstanceLabelSelectClauseFactory, ECSql, ECSqlBinding, ECSqlQueryDef, InstanceKey } from "@itwin/presentation-shared";
+import { HierarchyNodeIdentifiersPath } from "@itwin/presentation-hierarchies";
+import { ECSql, ECSqlQueryDef } from "@itwin/presentation-shared";
+// __PUBLISH_EXTRACT_END__
+// __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.HierarchyFiltering.FilteringImports
+import { createIModelHierarchyProvider } from "@itwin/presentation-hierarchies";
+// __PUBLISH_EXTRACT_END__
+// __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.HierarchyFiltering.HierarchyFilteringPathImport
+import { HierarchyFilteringPath } from "@itwin/presentation-hierarchies";
 // __PUBLISH_EXTRACT_END__
 import { buildIModel } from "../../IModelUtils.js";
 import { initialize, terminate } from "../../IntegrationTests.js";
