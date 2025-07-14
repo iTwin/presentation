@@ -2,6 +2,17 @@ packages:
   - apps/**
   - packages/*
 
+autoInstallPeers: true
+strictPeerDependencies: true
+resolutionMode: "lowest-direct"
+hoistPattern:
+  - "!*"
+  - "@types/react"
+  - "@typescript-eslint/types"
+  - "*babel*"
+  - "ignore-styles"
+  - "global-jsdom"
+
 catalogs:
   itwinjs-core:
     '@itwin/core-bentley': ^5.0.0
