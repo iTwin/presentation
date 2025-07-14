@@ -48,19 +48,19 @@ export function createHierarchyFilteringHelper(rootLevelFilteringProps: Hierarch
         nodeKey: InstancesNodeKey | GenericNodeKey;
     } | {
         pathMatcher: (identifier: HierarchyNodeIdentifier) => boolean;
-    }) => (Pick<HierarchyNode, "autoExpand"> & {
-        filtering?: HierarchyNode["filtering"] & {
+    }) => (Pick<HierarchyNode, "autoExpand" | "filtering"> & {
+        filtering?: {
             autoExpandDepth?: number;
         };
     }) | undefined;
     createChildNodePropsAsync: (props: {
         pathMatcher: (identifier: HierarchyNodeIdentifier) => boolean | Promise<boolean>;
-    }) => Promise<(Pick<HierarchyNode, "autoExpand"> & {
-        filtering?: HierarchyNode["filtering"] & {
+    }) => Promise<(Pick<HierarchyNode, "autoExpand" | "filtering"> & {
+        filtering?: {
             autoExpandDepth?: number;
         };
-    }) | undefined> | (Pick<HierarchyNode, "autoExpand"> & {
-        filtering?: HierarchyNode["filtering"] & {
+    }) | undefined> | (Pick<HierarchyNode, "autoExpand" | "filtering"> & {
+        filtering?: {
             autoExpandDepth?: number;
         };
     }) | undefined;
