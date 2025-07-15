@@ -2,7 +2,7 @@
 "@itwin/presentation-hierarchies": minor
 ---
 
-`HierarchyFilteringPathOptions.autoExpand` now is now of type:
+`HierarchyFilteringPathOptions.autoExpand` is now of type:
 ```ts
 autoExpand?: { depth: number } | boolean;
 ```
