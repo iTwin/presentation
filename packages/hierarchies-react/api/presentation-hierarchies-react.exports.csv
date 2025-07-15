@@ -2,7 +2,7 @@ sep=;
 Release Tag;API Item Type;API Item Name
 public;type;ErrorInfo
 alpha;const;FilterAction
-alpha;type;FlatTreeNode
+alpha;type;FlatTreeItem
 public;interface;GenericErrorInfo
 public;interface;HierarchyLevelDetails
 public;function;LocalizationContextProvider
@@ -16,7 +16,7 @@ alpha;function;StrataKitTreeRenderer
 alpha;function;TreeErrorRenderer
 alpha;type;TreeRendererProps
 alpha;function;useErrorList
-alpha;function;useFlatTreeNodeList
+alpha;function;useFlatTreeItems
 public;function;useIModelTree
 public;function;useIModelUnifiedSelectionTree
 public;function;useSelectionHandler
