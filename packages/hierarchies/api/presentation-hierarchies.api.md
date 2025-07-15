@@ -48,10 +48,10 @@ export function createHierarchyFilteringHelper(rootLevelFilteringProps: Hierarch
         nodeKey: InstancesNodeKey | GenericNodeKey;
     } | {
         pathMatcher: (identifier: HierarchyNodeIdentifier) => boolean;
-    }) => Pick<HierarchyNode, "filtering" | "autoExpand"> | undefined;
+    }) => NodeProps | undefined;
     createChildNodePropsAsync: (props: {
         pathMatcher: (identifier: HierarchyNodeIdentifier) => boolean | Promise<boolean>;
-    }) => Promise<Pick<HierarchyNode, "filtering" | "autoExpand"> | undefined> | Pick<HierarchyNode, "filtering" | "autoExpand"> | undefined;
+    }) => Promise<NodeProps | undefined> | NodeProps | undefined;
 };
 
 // @public
@@ -181,8 +181,14 @@ export function extractFilteringProps(rootLevelFilteringProps: HierarchyFilterin
 } | undefined;
 
 // @public (undocumented)
+interface FilteringPathAutoExpandOption {
+    depth: number;
+}
+
+// @public (undocumented)
 interface FilterTargetGroupingNodeInfo {
     depth: number;
+    // @deprecated
     key: GroupingNodeKey;
 }
 
@@ -262,7 +268,7 @@ export namespace HierarchyFilteringPath {
 
 // @public (undocumented)
 export interface HierarchyFilteringPathOptions {
-    autoExpand?: boolean | FilterTargetGroupingNodeInfo;
+    autoExpand?: boolean | FilterTargetGroupingNodeInfo | FilteringPathAutoExpandOption;
 }
 
 // @public
@@ -575,6 +581,13 @@ export type NodePostProcessor = (node: ProcessedHierarchyNode) => Promise<Proces
 
 // @public
 export type NodePreProcessor = <TNode extends ProcessedGenericHierarchyNode | ProcessedInstanceHierarchyNode>(node: TNode) => Promise<TNode | undefined>;
+
+// @public (undocumented)
+type NodeProps = Pick<HierarchyNode, "autoExpand" | "filtering"> & {
+    filtering?: {
+        autoExpandDepth?: number;
+    };
+};
 
 // @public
 export enum NodeSelectClauseColumnNames {
