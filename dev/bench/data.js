@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1752151946530,
+  "lastUpdate": 1752575754974,
   "repoUrl": "https://github.com/iTwin/presentation",
   "entries": {
     "Benchmark": [
@@ -36023,6 +36023,162 @@ window.BENCHMARK_DATA = {
             "value": 285,
             "unit": "ms",
             "extra": "count: 8\nmax: 285\np95: 285\nmedian: 39"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "100586436+JonasDov@users.noreply.github.com",
+            "name": "JonasDov",
+            "username": "JonasDov"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "69a2db67917f84e99d532e8e9aabbc02ec262d91",
+          "message": "Change autoExpand option in HierarchyFilteringPathOptions (#1004)\n\n* Change autoExpand option in HierarchyFilteringPathOptions\n\n* Update comment\n\n* Adress comments\n\n* Run extract api\n\n* Adress comments\n\n* Run extract api\n\n* Update .changeset/shiny-poets-draw.md\n\nCo-authored-by: Saulius Skliutas <24278440+saskliutas@users.noreply.github.com>\n\n* Add tests\n\n* Update packages/hierarchies/src/test/imodel/FilteringHierarchyDefinition.test.ts\n\nCo-authored-by: Saulius Skliutas <24278440+saskliutas@users.noreply.github.com>\n\n---------\n\nCo-authored-by: Saulius Skliutas <24278440+saskliutas@users.noreply.github.com>",
+          "timestamp": "2025-07-15T10:32:51Z",
+          "tree_id": "1e0100c0d97cad992ee321c6349052be4b3fc4c7",
+          "url": "https://github.com/iTwin/presentation/commit/69a2db67917f84e99d532e8e9aabbc02ec262d91"
+        },
+        "date": 1752575753882,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "flat 50k elements list",
+            "value": 4475.48,
+            "unit": "ms"
+          },
+          {
+            "name": "flat 50k elements list (P95 of main thread blocks)",
+            "value": 69,
+            "unit": "ms",
+            "extra": "count: 16\nmax: 69\np95: 69\nmedian: 29.5"
+          },
+          {
+            "name": "filtering filters with 50000 paths",
+            "value": 8579.45,
+            "unit": "ms"
+          },
+          {
+            "name": "filtering filters with 50000 paths (P95 of main thread blocks)",
+            "value": 128,
+            "unit": "ms",
+            "extra": "count: 13\nmax: 128\np95: 128\nmedian: 28"
+          },
+          {
+            "name": "grouping by label",
+            "value": 9390.85,
+            "unit": "ms"
+          },
+          {
+            "name": "grouping by label (P95 of main thread blocks)",
+            "value": 60,
+            "unit": "ms",
+            "extra": "count: 6\nmax: 60\np95: 60\nmedian: 35"
+          },
+          {
+            "name": "grouping by class",
+            "value": 9528.89,
+            "unit": "ms"
+          },
+          {
+            "name": "grouping by class (P95 of main thread blocks)",
+            "value": 37,
+            "unit": "ms",
+            "extra": "count: 5\nmax: 37\np95: 37\nmedian: 31"
+          },
+          {
+            "name": "grouping by property",
+            "value": 10165.06,
+            "unit": "ms"
+          },
+          {
+            "name": "grouping by property (P95 of main thread blocks)",
+            "value": 52,
+            "unit": "ms",
+            "extra": "count: 8\nmax: 52\np95: 52\nmedian: 33.5"
+          },
+          {
+            "name": "grouping by base class (10 classes)",
+            "value": 7202.77,
+            "unit": "ms"
+          },
+          {
+            "name": "grouping by base class (10 classes) (P95 of main thread blocks)",
+            "value": 56,
+            "unit": "ms",
+            "extra": "count: 21\nmax: 72\np95: 56\nmedian: 32"
+          },
+          {
+            "name": "grouping by multiple attributes",
+            "value": 25045.24,
+            "unit": "ms"
+          },
+          {
+            "name": "grouping by multiple attributes (P95 of main thread blocks)",
+            "value": 40,
+            "unit": "ms",
+            "extra": "count: 9\nmax: 40\np95: 40\nmedian: 31"
+          },
+          {
+            "name": "hide if no children required to finalize root, w/o children",
+            "value": 40583.25,
+            "unit": "ms"
+          },
+          {
+            "name": "hide if no children required to finalize root, w/o children (P95 of main thread blocks)",
+            "value": 35,
+            "unit": "ms",
+            "extra": "count: 6\nmax: 35\np95: 35\nmedian: 31.5"
+          },
+          {
+            "name": "hide if no children required to finalize root, w/ children",
+            "value": 155.1,
+            "unit": "ms"
+          },
+          {
+            "name": "hide if no children required to finalize root, w/ children (P95 of main thread blocks)",
+            "value": 0,
+            "unit": "ms",
+            "extra": "count: 0\nmax: N/A\np95: N/A\nmedian: N/A"
+          },
+          {
+            "name": "models tree initial (Baytown)",
+            "value": 38.37,
+            "unit": "ms"
+          },
+          {
+            "name": "models tree initial (Baytown) (P95 of main thread blocks)",
+            "value": 0,
+            "unit": "ms",
+            "extra": "count: 0\nmax: N/A\np95: N/A\nmedian: N/A"
+          },
+          {
+            "name": "models tree full (Baytown)",
+            "value": 6368.73,
+            "unit": "ms"
+          },
+          {
+            "name": "models tree full (Baytown) (P95 of main thread blocks)",
+            "value": 87,
+            "unit": "ms",
+            "extra": "count: 2\nmax: 87\np95: 87\nmedian: 81"
+          },
+          {
+            "name": "models tree creates initial filtered view for 50k target items",
+            "value": 2093.63,
+            "unit": "ms"
+          },
+          {
+            "name": "models tree creates initial filtered view for 50k target items (P95 of main thread blocks)",
+            "value": 146,
+            "unit": "ms",
+            "extra": "count: 7\nmax: 146\np95: 146\nmedian: 30"
           }
         ]
       }
