@@ -1,5 +1,15 @@
 # @itwin/presentation-hierarchies
 
+## 1.6.0
+
+### Minor Changes
+
+- 69a2db67917f84e99d532e8e9aabbc02ec262d91: `HierarchyFilteringPathOptions.autoExpand` is now of type:
+  ```ts
+  autoExpand?: { depth: number } | boolean;
+  ```
+  When `depth` is set, only nodes up to specified `depth` in `HierarchyFilteringPath` will have `autoExpand` option set.
+
 ## 1.5.1
 
 ### Patch Changes
