@@ -93,9 +93,8 @@ function overrideDevDeps(pkgJsonData, coreVersion, uiVersion) {
     console.log(`Overriding '${pkgJsonData.name}' package 'appui' devDependencies to version: ${uiVersion}`);
   }
   Object.entries(overrides).forEach(([packageName, version]) => {
-    if (pkgJsonData.devDependencies[packageName]) {
-      pkgJsonData.devDependencies[packageName] = version;
-    }
+    // add all core and appui package to devDependencies to make sure they are resolved to expected versions
+    pkgJsonData.devDependencies[packageName] = version;
   });
 }
 
