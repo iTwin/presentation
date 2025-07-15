@@ -25,6 +25,8 @@ if (!coreVersion && !uiVersion) {
   throw new Error("Argument --coreVersion or --uiVersion need to be provided.");
 }
 
+applyGitPatch("dependencies.patch");
+
 if (coreVersion) {
   applyGitPatch(`core-${coreVersion}.patch`);
 }

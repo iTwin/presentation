@@ -1,0 +1,57 @@
+diff --git a/.pnpmfile.cjs b/.pnpmfile.cjs
+index dd4c53ca..44cf1ba9 100644
+--- a/.pnpmfile.cjs
++++ b/.pnpmfile.cjs
+@@ -1,3 +1,26 @@
++const corePackages = [
++  "@itwin/appui-abstract",
++  "@itwin/core-backend",
++  "@itwin/core-bentley",
++  "@itwin/core-common",
++  "@itwin/core-electron",
++  "@itwin/core-frontend",
++  "@itwin/core-geometry",
++  "@itwin/core-i18n",
++  "@itwin/core-orbitgt",
++  "@itwin/core-quantity",
++  "@itwin/ecschema-metadata",
++  "@itwin/ecschema-rpcinterface-common",
++  "@itwin/ecschema-rpcinterface-impl",
++  "@itwin/express-server",
++  "@itwin/presentation-backend",
++  "@itwin/presentation-common",
++  "@itwin/presentation-frontend",
++  "@itwin/webgl-compatibility",
++];
++
++const appuiPackages = ["@itwin/appui-react", "@itwin/core-react", "@itwin/components-react", "@itwin/imodel-components-react"];
++
+ function readPackage(pkg) {
+   if (pkg.name === "@artilleryio/sketches-js") {
+     // `@artilleryio/sketches-js` specifies `protobufjs` as a devDependency, although it should be a dependency...
+@@ -14,6 +37,25 @@ function readPackage(pkg) {
+       typescript: `${pkg.peerDependencies["typescript"]} || ^5.7.0`,
+     };
+   }
++
++  // fix peer dependencies for older itwinjs-core packages
++  if (corePackages.includes(pkg.name) && pkg.peerDependencies) {
++    for (const [key] of Object.entries(pkg.peerDependencies)) {
++      if (corePackages.includes(key)) {
++        pkg.peerDependencies[key] = pkg.version;
++      }
++    }
++  }
++
++  // fix peer dependencies for older appui packages
++  if (appuiPackages.includes(pkg.name) && pkg.peerDependencies) {
++    for (const [key] of Object.entries(pkg.peerDependencies)) {
++      if (appuiPackages.includes(key)) {
++        pkg.peerDependencies[key] = pkg.version;
++      }
++    }
++  }
++
+   return pkg;
+ }
+ 
