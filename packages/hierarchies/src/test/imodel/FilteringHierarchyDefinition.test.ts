@@ -486,12 +486,13 @@ describe("FilteringHierarchyDefinition", () => {
         [ECSQL_COLUMN_NAME_FilterClassName]: "TestSchema.TestName",
       };
       const node = await firstValueFrom(filteringFactory.parseNode(row));
+      expect(node.autoExpand).to.be.true;
+
       const row2 = {
         [NodeSelectClauseColumnNames.FullClassName]: "",
         [ECSQL_COLUMN_NAME_FilterECInstanceId]: "0x2",
         [ECSQL_COLUMN_NAME_FilterClassName]: "TestSchema.TestName",
       };
-      expect(node.autoExpand).to.be.true;
       const node2 = await firstValueFrom(
         filteringFactory.parseNode(row2, {
           key: { type: "instances", instanceKeys: [{ id: "0x1", className: "TestSchema.TestName" }] },
