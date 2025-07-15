@@ -59,13 +59,14 @@ function Tree({ imodel, imodelAccess, height, width }: { imodel: IModelConnectio
   const [filter, setFilter] = useState("");
 
   const getFilteredPaths = useMemo<UseIModelTreeProps["getFilteredPaths"]>(() => {
-    return async ({ imodelAccess: filterIModelAccess }) => {
+    return async ({ imodelAccess: filterIModelAccess, abortSignal }) => {
       if (!filter) {
         return undefined;
       }
       return ModelsTreeDefinition.createInstanceKeyPaths({
         imodelAccess: filterIModelAccess,
         label: filter,
+        abortSignal,
       });
     };
   }, [filter]);

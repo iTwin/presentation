@@ -186,6 +186,29 @@ describe("useTree", () => {
     expect(treeRenderProps?.rootNodes).to.have.lengthOf(1);
   });
 
+  it("aborts filtered nodes paths loading on useTree cleanup", async () => {
+    hierarchyProvider.getNodes.callsFake((props) => {
+      return createAsyncIterator(props.parentNode === undefined ? [createTestHierarchyNode({ id: "root-1" })] : []);
+    });
+
+    const promise = new ResolvablePromise<hierarchiesModule.HierarchyNodeIdentifiersPath[]>();
+    let signal: AbortSignal | undefined;
+    const getFilteredPaths = async ({ abortSignal }: { abortSignal: AbortSignal }) => {
+      signal = abortSignal;
+      return promise;
+    };
+
+    const { result, unmount } = renderHook(useTree, { initialProps: { ...initialProps, getFilteredPaths } });
+
+    await waitFor(() => {
+      expect(result.current.isReloading).to.be.true;
+    });
+    unmount();
+    await waitFor(() => {
+      expect(signal?.aborted).to.be.true;
+    });
+  });
+
   it("loads unfiltered hierarchy when `getFilteredPaths` returns `undefined`", async () => {
     hierarchyProvider.getNodes.callsFake((props) => {
       return createAsyncIterator(props.parentNode === undefined ? [createTestHierarchyNode({ id: "root-1" })] : []);

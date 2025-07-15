@@ -70,7 +70,7 @@ export interface UseTreeProps {
   /** Provides the hierarchy provider for the tree. */
   getHierarchyProvider: () => HierarchyProvider;
   /** Provides paths to filtered nodes. */
-  getFilteredPaths?: () => Promise<HierarchyFilteringPath[] | undefined>;
+  getFilteredPaths?: ({ abortSignal }: { abortSignal: AbortSignal }) => Promise<HierarchyFilteringPath[] | undefined>;
   /**
    * Callback that is called just after a certain action is finished.
    * Can be used for performance tracking.
@@ -177,6 +177,7 @@ function useTreeInternal({
   const [isFiltering, setIsFiltering] = useState(false);
   useEffect(() => {
     let disposed = false;
+    const controller = new AbortController();
     void (async () => {
       if (!hierarchyProvider) {
         return;
@@ -193,7 +194,7 @@ function useTreeInternal({
       setIsFiltering(true);
       let paths: HierarchyFilteringPath[] | undefined;
       try {
-        paths = await getFilteredPaths();
+        paths = await getFilteredPaths({ abortSignal: controller.signal });
       } catch {
       } finally {
         if (!disposed) {
@@ -203,6 +204,7 @@ function useTreeInternal({
       }
     })();
     return () => {
+      controller.abort();
       disposed = true;
     };
   }, [hierarchyProvider, getFilteredPaths, actions]);

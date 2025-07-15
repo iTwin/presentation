@@ -181,7 +181,7 @@ export function createHierarchyFilteringHelper(
         | {
             pathMatcher: (identifier: HierarchyNodeIdentifier) => boolean;
           },
-    ): (Pick<HierarchyNode, "autoExpand" | "filtering"> & { filtering?: { autoExpandDepth?: number } }) | undefined => {
+    ): NodeProps | undefined => {
       if (!hasFilter) {
         return undefined;
       }
@@ -206,10 +206,7 @@ export function createHierarchyFilteringHelper(
      */
     createChildNodePropsAsync: (props: {
       pathMatcher: (identifier: HierarchyNodeIdentifier) => boolean | Promise<boolean>;
-    }):
-      | Promise<(Pick<HierarchyNode, "autoExpand" | "filtering"> & { filtering?: { autoExpandDepth?: number } }) | undefined>
-      | (Pick<HierarchyNode, "autoExpand" | "filtering"> & { filtering?: { autoExpandDepth?: number } })
-      | undefined => {
+    }): Promise<NodeProps | undefined> | NodeProps | undefined => {
       if (!hasFilter) {
         return undefined;
       }
@@ -243,6 +240,9 @@ export function createHierarchyFilteringHelper(
   };
 }
 
+/** @public */
+export type NodeProps = Pick<HierarchyNode, "autoExpand" | "filtering"> & { filtering?: { autoExpandDepth?: number } };
+
 type NormalizedFilteringPath = ReturnType<(typeof HierarchyFilteringPath)["normalize"]>;
 
 class MatchingFilteringPathsReducer {
@@ -269,7 +269,7 @@ class MatchingFilteringPathsReducer {
       }
     }
   }
-  public getNodeProps(): Pick<HierarchyNode, "autoExpand" | "filtering"> & { filtering?: { autoExpandDepth?: number } } {
+  public getNodeProps(): NodeProps {
     return {
       ...(this._hasFilterTargetAncestor || this._isFilterTarget || this._filteredChildrenIdentifierPaths.length > 0
         ? {
