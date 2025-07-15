@@ -28,6 +28,8 @@ type UseIModelTreeProps = Omit<UseTreeProps, "getHierarchyProvider" | "getFilter
     getFilteredPaths?: (props: {
       /** Object that provides access to the iModel schema and can run queries against the iModel. */
       imodelAccess: IModelAccess;
+      /** Signal indicating that that the request was canceled */
+      abortSignal: AbortSignal;
     }) => Promise<HierarchyFilteringPath[] | undefined>;
   };
 
@@ -90,6 +92,9 @@ function useIModelTreeProps(
         }),
       [imodelAccess, imodelChanged, getHierarchyDefinition, localizedStrings],
     ),
-    getFilteredPaths: useCallback(async () => getFilteredPaths?.({ imodelAccess }), [imodelAccess, getFilteredPaths]),
+    getFilteredPaths: useCallback(
+      async ({ abortSignal }: { abortSignal: AbortSignal }) => getFilteredPaths?.({ imodelAccess, abortSignal }),
+      [imodelAccess, getFilteredPaths],
+    ),
   };
 }

@@ -365,6 +365,23 @@
 
 - [#847](https://github.com/iTwin/presentation/pull/847): Moving tree rendering components to a new design systems.
 
+## 1.7.0
+
+### Minor Changes
+
+- 64e80beaeb87e5797d8238c14fa9cd8dbfcee7c3: Added `abortSignal` to `getFilteredPaths` callback used by `UseTree` hook. This allows to cancel ongoing requests when component is unmounted or new request is started.
+
+### Patch Changes
+
+- Updated dependencies:
+  - @itwin/presentation-hierarchies@1.6.0
+
+## 1.6.9
+
+### Patch Changes
+
+- [#1000](https://github.com/iTwin/presentation/pull/1000): Made sure `Apply filter` button becomes focused after hierarchy level filter is applied.
+
 ## 1.6.8
 
 ### Patch Changes
