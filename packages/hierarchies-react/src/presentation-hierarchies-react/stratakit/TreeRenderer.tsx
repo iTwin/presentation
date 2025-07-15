@@ -10,7 +10,7 @@ import { TreeRendererProps } from "../Renderers.js";
 import { PresentationHierarchyNode } from "../TreeNode.js";
 import { SelectionMode, useSelectionHandler } from "../UseSelectionHandler.js";
 import { useEvent } from "../Utils.js";
-import { ErrorItem, FlatTreeNode, isPlaceholderNode, useErrorList, useFlatTreeNodeList } from "./FlatTreeNode.js";
+import { ErrorItem, FlatTreeItem, isPlaceholderItem, useErrorList, useFlatTreeItems } from "./FlatTreeNode.js";
 import { LocalizationContextProvider } from "./LocalizationContext.js";
 import { RenameContextProvider } from "./RenameAction.js";
 import { TreeErrorRenderer, TreeErrorRendererProps } from "./TreeErrorRenderer.js";
@@ -72,16 +72,16 @@ export function StrataKitTreeRenderer({
   });
   const handleNodeClick = useEvent(onNodeClickOverride ?? onNodeClick);
   const handleKeyDown = useEvent(onNodeKeyDownOverride ?? onNodeKeyDown);
-  const flatNodes = useFlatTreeNodeList(rootNodes);
+  const flatItems = useFlatTreeItems(rootNodes);
   const errorList = useErrorList(rootNodes);
 
   const scrollToNode = useRef<string | undefined>(undefined);
   const parentRef = useRef<HTMLDivElement>(null);
 
   const virtualizer = useVirtualizer({
-    count: flatNodes.length,
+    count: flatItems.length,
     getScrollElement: () => parentRef.current,
-    getItemKey: (index) => flatNodes[index].id,
+    getItemKey: (index) => flatItems[index].id, // fix
     estimateSize: () => 28,
     overscan: 10,
   });
@@ -90,7 +90,7 @@ export function StrataKitTreeRenderer({
 
   const scrollToElement = useCallback(
     ({ errorNode, expandTo }: ErrorItem) => {
-      const index = flatNodes.findIndex((flatNode) => flatNode.id === errorNode.id);
+      const index = flatItems.findIndex((flatItem) => flatItem.id === errorNode.id);
       if (index === -1) {
         expandTo((nodeId) => expandNode(nodeId, true));
         scrollToNode.current = errorNode.id;
@@ -98,20 +98,20 @@ export function StrataKitTreeRenderer({
       }
       virtualizer.scrollToIndex(index, { align: "end" });
     },
-    [expandNode, flatNodes, virtualizer],
+    [expandNode, flatItems, virtualizer],
   );
 
   useEffect(() => {
     if (scrollToNode.current === undefined) {
       return;
     }
-    const index = flatNodes.findIndex((flatNode) => flatNode.id === scrollToNode.current);
+    const index = flatItems.findIndex((flatItem) => flatItem.id === scrollToNode.current);
     if (index === -1) {
       return;
     }
     virtualizer.scrollToIndex(index, { align: "end" });
     scrollToNode.current = undefined;
-  }, [flatNodes, virtualizer]);
+  }, [flatItems, virtualizer]);
 
   const errorRendererProps: TreeErrorRendererProps = {
     errorList,
@@ -127,8 +127,8 @@ export function StrataKitTreeRenderer({
       <div style={{ height: "100%", width: "100%", overflowY: "auto" }} ref={parentRef}>
         <Tree.Root style={{ height: virtualizer.getTotalSize(), minHeight: "100%", width: "100%", position: "relative", overflow: "hidden" }}>
           {items.map((virtualizedItem) => {
-            const node = flatNodes[virtualizedItem.index];
-            const selected = isNodeSelected?.(node.id) ?? false;
+            const item = flatItems[virtualizedItem.index];
+            const selected = isNodeSelected?.(item.id) ?? false;
             return (
               <VirtualTreeItem
                 {...treeProps}
@@ -137,7 +137,7 @@ export function StrataKitTreeRenderer({
                 ref={virtualizer.measureElement}
                 start={virtualizedItem.start}
                 expandNode={expandNode}
-                node={node}
+                item={item}
                 key={virtualizedItem.key}
                 data-index={virtualizedItem.index}
                 reloadTree={reloadTree}
@@ -154,13 +154,13 @@ export function StrataKitTreeRenderer({
 
 type VirtualTreeItemProps = Omit<TreeNodeRendererProps, "node" | "aria-level" | "aria-posinset" | "aria-setsize"> & {
   start: number;
-  node: FlatTreeNode;
+  item: FlatTreeItem;
   getEditingProps?: TreeRendererOwnProps["getEditingProps"];
 };
 
 const VirtualTreeItem = memo(
   forwardRef<HTMLElement, VirtualTreeItemProps>(function VirtualTreeItem(
-    { start, node, getDecorations, getActions, getLabel, getSublabel, expandNode, reloadTree, onNodeClick, onNodeKeyDown, getEditingProps, ...props },
+    { start, item, getDecorations, getActions, getLabel, getSublabel, expandNode, reloadTree, onNodeClick, onNodeKeyDown, getEditingProps, ...props },
     forwardedRef,
   ) {
     const style: CSSProperties = useMemo(
@@ -175,21 +175,21 @@ const VirtualTreeItem = memo(
       [start],
     );
 
-    if (isPlaceholderNode(node)) {
-      return <PlaceholderNode {...props} ref={forwardedRef} style={style} aria-level={node.level} aria-posinset={1} aria-setsize={1} />;
+    if (isPlaceholderItem(item)) {
+      return <PlaceholderNode {...props} ref={forwardedRef} style={style} aria-level={item.level} aria-posinset={1} aria-setsize={1} />;
     }
 
-    const editingProps = getEditingProps?.(node);
+    const editingProps = getEditingProps?.(item.node);
     return (
       <RenameContextProvider onLabelChanged={editingProps?.onLabelChanged}>
         <StrataKitTreeNodeRenderer
           {...props}
           ref={forwardedRef}
           style={style}
-          aria-level={node.level}
-          aria-posinset={node.posInLevel}
-          aria-setsize={node.levelSize}
-          node={node}
+          aria-level={item.level}
+          aria-posinset={item.posInLevel}
+          aria-setsize={item.levelSize}
+          node={item.node}
           expandNode={expandNode}
           reloadTree={reloadTree}
           getDecorations={getDecorations}
