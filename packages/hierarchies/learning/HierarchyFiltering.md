@@ -91,7 +91,42 @@ const filteringPath: HierarchyFilteringPath = {
 Additionally, you might not want to add `autoExpand` flag to every node in `HierarchyFilteringPath`. For such cases hierarchies may be expanded up to desired depth, which can be achieved by setting the `autoExpand` property to `{ depth: number }`, where depth represents node's depth in the hierarchy excluding grouping nodes:
 
 <!-- [[include: [Presentation.Hierarchies.HierarchyFiltering.HierarchyFilteringPathImport, Presentation.Hierarchies.HierarchyFiltering.AutoExpandUntilDepthWithoutGrouping.FilteringPath], ts]] -->
+<!-- BEGIN EXTRACTION -->
+
+```ts
+import { HierarchyFilteringPath } from "@itwin/presentation-hierarchies";
+
+const filteringPath: HierarchyFilteringPath = {
+  // Path to the element "C"
+  path: [elementKeys.a, elementKeys.b, elementKeys.c],
+  options: {
+    // Auto-expand the hierarchy up to the specified depth. In this case up to and including element "B"
+    autoExpand: { depth: 2 },
+  },
+};
+```
+
+<!-- END EXTRACTION -->
 
 Also, hierarchies may contain grouping nodes, which don't represent anything by themselves, which means they can't be a filter target. In some cases it may be necessary to auto-expand the hierarchy up to a desired grouping node (and not auto-expand grouping nodes below them), which can be achieved by setting the `autoExpand` property to `{ depth: number, includeGroupingNodes: true }`, where depth represents grouping node depth in the hierarchy:
 
 <!-- [[include: [Presentation.Hierarchies.HierarchyFiltering.HierarchyFilteringPathImport, Presentation.Hierarchies.HierarchyFiltering.AutoExpandUntilDepthWithGrouping.FilteringPath], ts]] -->
+<!-- BEGIN EXTRACTION -->
+
+```ts
+import { HierarchyFilteringPath } from "@itwin/presentation-hierarchies";
+
+// Hierarchy has two grouping nodes under C element: one class grouping and one label grouping node.
+// Get grouping node that groups the "C" element and is the nearest grouping node to it
+const groupingNode = await getSelectedGroupingNode();
+const filteringPath: HierarchyFilteringPath = {
+  // Path to the element "C"
+  path: [elementKeys.a, elementKeys.b, elementKeys.c],
+  options: {
+    // Auto-expand the hierarchy up to the last grouping node. The `depth` attribute equals to the number of parents.
+    autoExpand: { includeGroupingNodes: true, depth: groupingNode.parentKeys.length },
+  },
+};
+```
+
+<!-- END EXTRACTION -->
