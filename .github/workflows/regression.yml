@@ -5,7 +5,26 @@ on:
     branches: [ "master" ]
 
 jobs:
+  checkRelease:
+    runs-on: ubuntu-latest
+    outputs:
+      isReleasePR: ${{ steps.release-checker.outputs.isReleasePR }}
+    steps:
+      - name: Check for release PR
+        id: release-checker
+        env:
+            PR_TITLE: ${{ github.event.pull_request.title }}
+        run:
+          if [[ $PR_TITLE =~ ^(Release packages) ]]
+          then
+            echo "isReleasePR=true" >> "$GITHUB_OUTPUT";
+          else
+            echo "isReleasePR=false" >> "$GITHUB_OUTPUT";
+          fi
+
   buildPackages:
+    needs: [checkRelease]
+    if: ${{ needs.checkRelease.outputs.isReleasePR == 'false' }}
     runs-on: ubuntu-latest
 
     steps:

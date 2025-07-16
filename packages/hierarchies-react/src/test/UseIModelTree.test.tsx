@@ -64,12 +64,16 @@ describe("useIModelTree hooks", () => {
 
     it("forwards `getFilteredPaths` call", async () => {
       stubs.hierarchyProvider.getNodes.callsFake(() => createAsyncIterator([]));
-      const getFilteredPaths = sinon.stub().callsFake(async () => undefined);
+      let signal;
+      const getFilteredPaths = sinon.stub().callsFake(async ({ abortSignal }) => {
+        signal = abortSignal;
+        return undefined;
+      });
       const { result } = renderHook(useIModelTree, { initialProps: { ...initialProps, getFilteredPaths } });
       await waitFor(() => {
         expect(getTreeRendererProps(result.current)).to.not.be.undefined;
       });
-      expect(getFilteredPaths).to.be.calledWith({ imodelAccess: initialProps.imodelAccess });
+      expect(getFilteredPaths).to.be.calledWith({ imodelAccess: initialProps.imodelAccess, abortSignal: signal });
     });
   });
 
@@ -108,12 +112,16 @@ describe("useIModelTree hooks", () => {
 
     it("forwards `getFilteredPaths` call", async () => {
       stubs.hierarchyProvider.getNodes.callsFake(() => createAsyncIterator([]));
-      const getFilteredPaths = sinon.stub().callsFake(async () => undefined);
+      let signal;
+      const getFilteredPaths = sinon.stub().callsFake(async ({ abortSignal }) => {
+        signal = abortSignal;
+        return undefined;
+      });
       const { result } = renderHook(useIModelUnifiedSelectionTree, { initialProps: { ...initialProps, getFilteredPaths } });
       await waitFor(() => {
         expect(getTreeRendererProps(result.current)).to.not.be.undefined;
       });
-      expect(getFilteredPaths).to.be.calledWith({ imodelAccess: initialProps.imodelAccess });
+      expect(getFilteredPaths).to.be.calledWith({ imodelAccess: initialProps.imodelAccess, abortSignal: signal });
     });
   });
 

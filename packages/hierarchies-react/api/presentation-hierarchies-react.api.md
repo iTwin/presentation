@@ -314,6 +314,7 @@ type UseIModelTreeProps = Omit<UseTreeProps, "getHierarchyProvider" | "getFilter
     }) => HierarchyDefinition;
     getFilteredPaths?: (props: {
         imodelAccess: IModelAccess;
+        abortSignal: AbortSignal;
     }) => Promise<HierarchyFilteringPath[] | undefined>;
 };
 
@@ -339,7 +340,9 @@ export function useTree(props: UseTreeProps): UseTreeResult;
 
 // @public (undocumented)
 interface UseTreeProps {
-    getFilteredPaths?: () => Promise<HierarchyFilteringPath[] | undefined>;
+    getFilteredPaths?: ({ abortSignal }: {
+        abortSignal: AbortSignal;
+    }) => Promise<HierarchyFilteringPath[] | undefined>;
     getHierarchyProvider: () => HierarchyProvider;
     onHierarchyLimitExceeded?: (props: {
         parentId?: string;
