@@ -488,6 +488,47 @@ describe("FilteringHierarchyDefinition", () => {
       expect(node.autoExpand).to.be.true;
     });
 
+    it("sets auto-expand when all filtered children paths autoExpand depth is greater than parent keys length and includeGroupingNodes is set to true", async () => {
+      const paths: HierarchyFilteringPath[] = [
+        {
+          path: [
+            createTestInstanceKey({ id: "0x1", className: "TestSchema.TestName" }),
+            createTestInstanceKey({ id: "0x2", className: "TestSchema.TestName" }),
+            createTestInstanceKey({ id: "0x3", className: "TestSchema.TestName" }),
+          ],
+          options: { autoExpand: { depth: 3, includeGroupingNodes: true } },
+        },
+      ];
+      const filteringFactory = await createFilteringHierarchyDefinition({ nodeIdentifierPaths: paths });
+      const row = {
+        [NodeSelectClauseColumnNames.FullClassName]: "",
+        [ECSQL_COLUMN_NAME_FilterECInstanceId]: "0x2",
+        [ECSQL_COLUMN_NAME_FilterClassName]: "TestSchema.TestName",
+      };
+      const node = await firstValueFrom(
+        filteringFactory.parseNode(row, {
+          key: { type: "instances", instanceKeys: [{ id: "0x1", className: "TestSchema.TestName" }] },
+          label: "",
+          parentKeys: [
+            {
+              type: "class-grouping",
+              className: "Generic.PhysicalObject",
+            },
+          ],
+          filtering: {
+            filteredChildrenIdentifierPaths: paths.map((path) => {
+              const normalizedPath = HierarchyFilteringPath.normalize(path);
+              return {
+                path: normalizedPath.path.slice(1),
+                options: normalizedPath.options,
+              };
+            }),
+          },
+        }),
+      );
+      expect(node.autoExpand).to.be.true;
+    });
+
     it("sets auto-expand on root node when all filtered children paths autoExpand depth is greater than 1", async () => {
       const paths: HierarchyFilteringPath[] = [
         {

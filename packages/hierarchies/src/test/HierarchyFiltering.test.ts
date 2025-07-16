@@ -11,6 +11,9 @@ describe("HierarchyFilteringPath", () => {
     describe("autoExpand", () => {
       const optionsInOrderOfPriority: Array<HierarchyFilteringPathOptions | undefined> = [
         { autoExpand: true },
+        { autoExpand: { depth: 2 } },
+        { autoExpand: { depth: 1 } },
+        { autoExpand: { depth: 3, includeGroupingNodes: true } },
         {
           autoExpand: {
             key: {

@@ -11,7 +11,7 @@ import { GenericNodeKey, GroupingNodeKey, HierarchyNodeKey, InstancesNodeKey } f
 export interface FilterTargetGroupingNodeInfo {
   /**
    * Key of the grouping node.
-   * @deprecated in 1.6. This option is no longer needed.
+   * @deprecated in 1.6. Use `FilteringPathAutoExpandOption` with `includeGroupingNodes` set to true instead.
    */
   key: GroupingNodeKey;
 
@@ -25,8 +25,26 @@ export interface FilterTargetGroupingNodeInfo {
 export interface FilteringPathAutoExpandOption {
   /**
    * Depth up to which nodes in the hierarchy should be expanded.
+   *
+   * If `includeGroupingNodes` is set to true, then depth should take into account the number of grouping nodes in hierarchy.
    */
   depth: number;
+  /**
+   * Whether or not `depth` includes grouping nodes.
+   *
+   * Use when you want to autoExpand only some of the grouping nodes.
+   *
+   * **Use case example:**
+   *
+   * You want to `autoExpand` only `Node1` and `GroupingNode1` in the following hierarchy:
+   * - Node1
+   *   - GroupingNode1
+   *     - GroupingNode2
+   *       - Element1
+   *       - Element2
+   * Then you provide `autoExpand: { depth: 2, includeGroupingNodes: true }`
+   */
+  includeGroupingNodes?: boolean;
 }
 
 /** @public */
@@ -40,6 +58,47 @@ export interface HierarchyFilteringPathOptions {
    * - If it's an instance of `FilteringPathAutoExpandOption`, then all nodes up to and including `depth` will have `autoExpand` flag.
    */
   autoExpand?: boolean | FilterTargetGroupingNodeInfo | FilteringPathAutoExpandOption;
+}
+/** @public */
+
+export namespace HierarchyFilteringPathOptions {
+  /**
+   * Merges two given `HierarchyFilteringPathOptions.autoExpand` values.
+   *
+   * For the `autoExpand` attribute, the merge chooses to auto-expand as deep as the deepest input:
+   * - if any one of the inputs is `true`, return `true`,
+   * - else if only one of the inputs is an object, return it,
+   * - else if both inputs are falsy, return `false` or `undefined`,
+   * - else:
+   *    - if only one of them has `includeGroupingNodes` set to `true` or `key` defined, return it,
+   *    - else return the one with greater `depth`.
+   * @public
+   */
+  export function mergeAutoExpandOptions(
+    lhs: HierarchyFilteringPathOptions["autoExpand"],
+    rhs: HierarchyFilteringPathOptions["autoExpand"],
+  ): HierarchyFilteringPathOptions["autoExpand"] {
+    if (rhs === true || lhs === true) {
+      return true;
+    }
+    if (!rhs || !lhs) {
+      return !!rhs ? rhs : lhs;
+    }
+
+    if (!("key" in lhs) && !lhs.includeGroupingNodes) {
+      if (!("key" in rhs) && !rhs.includeGroupingNodes) {
+        return { depth: lhs.depth > rhs.depth ? lhs.depth : rhs.depth };
+      }
+      return { depth: lhs.depth };
+    }
+    if (!("key" in rhs) && !rhs.includeGroupingNodes) {
+      return { depth: rhs.depth };
+    }
+    if (rhs.depth > lhs.depth) {
+      return rhs;
+    }
+    return lhs.depth > rhs.depth ? lhs : rhs;
+  }
 }
 
 /**
@@ -67,11 +126,7 @@ export namespace HierarchyFilteringPath {
    * - else if one of the inputs is `undefined`, the other one is returned.
    * - else, merge each option individually.
    *
-   * For the `autoExpand` attribute, the merge chooses to auto-expand as deep as the deepest input:
-   * - if any one of the inputs is `true`, return `true`,
-   * - else if both inputs are objects, return the one with the greater `depth` attribute.
-   * - else if one input is an object, return it.
-   * - else, return `false` or `undefined`.
+   * To know how specific attributes get merged, look at `HierarchyFilteringPathOptions`.
    *
    * @public
    */
@@ -84,18 +139,7 @@ export namespace HierarchyFilteringPath {
     }
 
     return {
-      autoExpand: ((): HierarchyFilteringPathOptions["autoExpand"] => {
-        if (rhs.autoExpand === true || lhs.autoExpand === true) {
-          return true;
-        }
-        if (typeof lhs.autoExpand === "object") {
-          if (typeof rhs.autoExpand === "object" && rhs.autoExpand.depth > lhs.autoExpand.depth) {
-            return rhs.autoExpand;
-          }
-          return lhs.autoExpand;
-        }
-        return rhs.autoExpand;
-      })(),
+      autoExpand: HierarchyFilteringPathOptions.mergeAutoExpandOptions(lhs.autoExpand, rhs.autoExpand),
     };
   }
 }
@@ -257,7 +301,7 @@ export function createHierarchyFilteringHelper(
 }
 
 /** @public */
-export type NodeProps = Pick<HierarchyNode, "autoExpand" | "filtering"> & { filtering?: { autoExpandDepth?: number } };
+export type NodeProps = Pick<HierarchyNode, "autoExpand" | "filtering"> & { filtering?: { autoExpandDepth?: number; includeGroupingNodes?: boolean } };
 
 type NormalizedFilteringPath = ReturnType<(typeof HierarchyFilteringPath)["normalize"]>;
 
@@ -265,7 +309,7 @@ class MatchingFilteringPathsReducer {
   private _filteredChildrenIdentifierPaths = new Array<NormalizedFilteringPath>();
   private _isFilterTarget = false;
   private _filterTargetOptions = undefined as HierarchyFilteringPathOptions | undefined;
-  private _needsAutoExpand: boolean | { depth: number } = false;
+  private _needsAutoExpand: HierarchyFilteringPathOptions["autoExpand"] = false;
 
   public constructor(private _hasFilterTargetAncestor: boolean) {}
 
@@ -275,14 +319,7 @@ class MatchingFilteringPathsReducer {
       this._filterTargetOptions = HierarchyFilteringPath.mergeOptions(this._filterTargetOptions, options);
     } else if (path.length > 1) {
       this._filteredChildrenIdentifierPaths.push({ path: path.slice(1), options });
-      if (options?.autoExpand) {
-        if (
-          !this._needsAutoExpand ||
-          (this._needsAutoExpand !== true && (options.autoExpand === true || this._needsAutoExpand.depth < options.autoExpand.depth))
-        ) {
-          this._needsAutoExpand = options.autoExpand;
-        }
-      }
+      this._needsAutoExpand = HierarchyFilteringPathOptions.mergeAutoExpandOptions(options?.autoExpand, this._needsAutoExpand);
     }
   }
   public getNodeProps(): NodeProps {
@@ -293,7 +330,12 @@ class MatchingFilteringPathsReducer {
               ...(this._hasFilterTargetAncestor ? { hasFilterTargetAncestor: true } : undefined),
               ...(this._isFilterTarget ? { isFilterTarget: true, filterTargetOptions: this._filterTargetOptions } : undefined),
               ...(this._filteredChildrenIdentifierPaths.length > 0 ? { filteredChildrenIdentifierPaths: this._filteredChildrenIdentifierPaths } : undefined),
-              ...(this._needsAutoExpand && this._needsAutoExpand !== true ? { autoExpandDepth: this._needsAutoExpand.depth } : undefined),
+              ...(this._needsAutoExpand && this._needsAutoExpand !== true
+                ? {
+                    autoExpandDepth: this._needsAutoExpand.depth,
+                    includeGroupingNodes: "key" in this._needsAutoExpand || this._needsAutoExpand.includeGroupingNodes ? true : false,
+                  }
+                : undefined),
             },
           }
         : undefined),
