@@ -852,6 +852,30 @@ describe("FilteringHierarchyDefinition", () => {
         expect(result.autoExpand).to.be.undefined;
       });
 
+      it("sets auto-expand when node has hierarchy depth smaller than the filter target", async () => {
+        const groupingNode = createGroupingNode();
+        const inputNode: ProcessedGroupingHierarchyNode = {
+          ...groupingNode,
+          parentKeys: [createTestNodeKey()],
+          children: [
+            {
+              ...createTestProcessedInstanceNode(),
+              filtering: {
+                isFilterTarget: true,
+                filterTargetOptions: {
+                  autoExpand: {
+                    depth: 2,
+                  },
+                },
+              },
+            },
+          ],
+        };
+        const filteringFactory = await createFilteringHierarchyDefinition();
+        const result = await firstValueFrom(filteringFactory.postProcessNode(inputNode));
+        expect(result.autoExpand).to.be.true;
+      });
+
       it("sets auto-expand when node has hierarchy depth smaller than the filter target and same key", async () => {
         const groupingNode = createGroupingNode();
         const inputNode: ProcessedGroupingHierarchyNode = {
