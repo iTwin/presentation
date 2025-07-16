@@ -8,7 +8,7 @@ import { Id64String } from "@itwin/core-bentley";
 import { ECClassHierarchyInspector, InstanceKey } from "@itwin/presentation-shared";
 import { createHierarchyFilteringHelper, HierarchyFilteringPath } from "../HierarchyFiltering.js";
 import { HierarchyNodeIdentifier } from "../HierarchyNodeIdentifier.js";
-import { IModelInstanceKey } from "../HierarchyNodeKey.js";
+import { HierarchyNodeKey, IModelInstanceKey } from "../HierarchyNodeKey.js";
 import {
   DefineHierarchyLevelProps,
   GenericHierarchyNodeDefinition,
@@ -79,7 +79,7 @@ export class FilteringHierarchyDefinition implements RxjsHierarchyDefinition {
 
         // If grouping node's child has `autoExpandUntil` flag,
         // auto-expand the grouping node only if it's depth is lower than that of the grouping node in associated with the target.
-        const nodeDepth = node.parentKeys.length;
+        const nodeDepth = node.parentKeys.filter((key) => !HierarchyNodeKey.isGrouping(key)).length;
         const filterTargetDepth = childAutoExpand.depth;
         if (nodeDepth < filterTargetDepth) {
           return true;
@@ -146,7 +146,7 @@ export class FilteringHierarchyDefinition implements RxjsHierarchyDefinition {
           return (nodeExtraPropsPossiblyPromise instanceof Promise ? from(nodeExtraPropsPossiblyPromise) : of(nodeExtraPropsPossiblyPromise)).pipe(
             map((nodeExtraProps) => {
               if (nodeExtraProps?.autoExpand) {
-                const parentLength = parentNode ? 1 + parentNode.parentKeys.length : 0;
+                const parentLength = parentNode ? 1 + parentNode.parentKeys.filter((key) => !HierarchyNodeKey.isGrouping(key)).length : 0;
                 parsedNode.autoExpand =
                   nodeExtraProps.filtering?.autoExpandDepth !== undefined && parentLength >= nodeExtraProps.filtering.autoExpandDepth ? undefined : true;
               }
