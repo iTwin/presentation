@@ -7,29 +7,31 @@ import { useMemo } from "react";
 import { PresentationHierarchyNode } from "../TreeNode.js";
 
 /**
- * Placeholder node that is added to hierarchy as a child for a parent node while its child nodes are loading.
+ * Placeholder item that is added to hierarchy as a child for a parent item while its child items are loading.
  *
  * @alpha
  * */
-interface PlaceholderNode {
+interface FlatPlaceholderItem {
   id: string;
   level: number;
   placeholder: true;
 }
 
 /**
- * An extended `PresentationHierarchyNode` node with properties needed for a flat tree structure.
+ * An item containing `PresentationHierarchyNode` node with properties needed for a flat tree structure.
  *
  * @alpha
  */
-export type FlatNode = {
+export interface FlatTreeNodeItem {
+  id: string;
   level: number;
   levelSize: number;
   posInLevel: number;
-} & PresentationHierarchyNode;
+  node: PresentationHierarchyNode;
+}
 
 /**
- * A node used to build an error message.
+ * An item used to build an error message.
  * Returned by `useErrorList`.
  *
  * @alpha
@@ -40,49 +42,49 @@ export interface ErrorItem {
 }
 
 /**
- * A node describing single tree item position and its content inside tree.
+ * An Item describing single tree item position and its content inside tree.
  * Returned by `useFlatTreeNodeList` hook.
  *
  *  @alpha
  */
-export type FlatTreeNode = FlatNode | PlaceholderNode;
+export type FlatTreeItem = FlatTreeNodeItem | FlatPlaceholderItem;
 
 /** @alpha */
-export function isPlaceholderNode(node: FlatTreeNode): node is PlaceholderNode {
-  return "placeholder" in node;
+export function isPlaceholderItem(item: FlatTreeItem): item is FlatPlaceholderItem {
+  return "placeholder" in item;
 }
 
 /**
- * Used to get a list of `FlatTreeNode` objects for the given list of `PresentationTreeNode` objects that represent
- * a hierarchical structure. The resulting nodes can be used to render the hierarchy in a flat manner, e.g. using a
+ * Used to get a list of `FlatTreeItem` objects for the given list of `PresentationHierarchyNode` objects that represent
+ * a hierarchical structure. The resulting items can be used to render the hierarchy in a flat manner, e.g. using a
  * virtualized list.
  *
  * @alpha
  */
-export function useFlatTreeNodeList(rootNodes: PresentationHierarchyNode[]) {
-  return useMemo(() => getFlatNodes(rootNodes, 1), [rootNodes]);
+export function useFlatTreeItems(rootNodes: PresentationHierarchyNode[]) {
+  return useMemo(() => getFlatItems(rootNodes, 1), [rootNodes]);
 }
 
-function getFlatNodes(nodes: PresentationHierarchyNode[], level: number) {
-  const flatNodes: FlatTreeNode[] = [];
+function getFlatItems(nodes: PresentationHierarchyNode[], level: number) {
+  const flatItems: FlatTreeItem[] = [];
   nodes.forEach((node, index) => {
-    flatNodes.push({ ...node, level, levelSize: nodes.length, posInLevel: index + 1 });
+    flatItems.push({ node, id: node.id, level, levelSize: nodes.length, posInLevel: index + 1 });
     if (!node.isExpanded || node.error) {
       return;
     }
     if (node.children !== true) {
-      const childNodes = getFlatNodes(node.children, level + 1);
-      flatNodes.push(...childNodes);
+      const childNodes = getFlatItems(node.children, level + 1);
+      flatItems.push(...childNodes);
       return;
     }
 
-    flatNodes.push({ id: `${node.id}-children-placeholder`, level: level + 1, placeholder: true } satisfies PlaceholderNode);
+    flatItems.push({ id: `${node.id}-children-placeholder`, level: level + 1, placeholder: true } satisfies FlatPlaceholderItem);
   });
-  return flatNodes;
+  return flatItems;
 }
 
 /**
- * Finds and returns all error nodes in a given hierarchy in the form of `PresentationTreeNode[]`.
+ * Finds and returns all items containing errors in a given hierarchy in the form of `ErrorItem[]`.
  *
  * @alpha
  */
@@ -96,13 +98,13 @@ export function useErrorList(rootNodes: PresentationHierarchyNode[]): ErrorItem[
         if (rootNode.children === true) {
           return [];
         }
-        return getErrorNodes(rootNode, !rootNode.isExpanded ? [rootNode.id] : []);
+        return getErrorItems(rootNode, !rootNode.isExpanded ? [rootNode.id] : []);
       }),
     [rootNodes],
   );
 }
 
-function getErrorNodes(parent: PresentationHierarchyNode, path: string[]) {
+function getErrorItems(parent: PresentationHierarchyNode, path: string[]) {
   const errorList: ErrorItem[] = [];
 
   if (parent.children === true) {
@@ -117,7 +119,7 @@ function getErrorNodes(parent: PresentationHierarchyNode, path: string[]) {
     }
 
     if (node.children !== true) {
-      const childErrorList = getErrorNodes(node, pathToChild);
+      const childErrorList = getErrorItems(node, pathToChild);
       errorList.push(...childErrorList);
       return;
     }

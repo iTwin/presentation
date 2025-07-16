@@ -52,14 +52,31 @@ node: PresentationHierarchyNode;
 }>;
 
 // @alpha
-type FlatNode = {
+interface FlatPlaceholderItem {
+    // (undocumented)
+    id: string;
+    // (undocumented)
     level: number;
-    levelSize: number;
-    posInLevel: number;
-} & PresentationHierarchyNode;
+    // (undocumented)
+    placeholder: true;
+}
 
 // @alpha
-export type FlatTreeNode = FlatNode | PlaceholderNode;
+export type FlatTreeItem = FlatTreeNodeItem | FlatPlaceholderItem;
+
+// @alpha
+interface FlatTreeNodeItem {
+    // (undocumented)
+    id: string;
+    // (undocumented)
+    level: number;
+    // (undocumented)
+    levelSize: number;
+    // (undocumented)
+    node: PresentationHierarchyNode;
+    // (undocumented)
+    posInLevel: number;
+}
 
 // @public
 export interface GenericErrorInfo {
@@ -132,16 +149,6 @@ interface NoFilterMatchesErrorInfo {
     id: string;
     // (undocumented)
     type: "NoFilterMatches";
-}
-
-// @alpha
-interface PlaceholderNode {
-    // (undocumented)
-    id: string;
-    // (undocumented)
-    level: number;
-    // (undocumented)
-    placeholder: true;
 }
 
 // @public
@@ -295,7 +302,7 @@ export type TreeRendererProps = {
 export function useErrorList(rootNodes: PresentationHierarchyNode[]): ErrorItem[];
 
 // @alpha
-export function useFlatTreeNodeList(rootNodes: PresentationHierarchyNode[]): FlatTreeNode[];
+export function useFlatTreeItems(rootNodes: PresentationHierarchyNode[]): FlatTreeItem[];
 
 // @public
 export function useIModelTree(props: UseIModelTreeProps): UseTreeResult;
