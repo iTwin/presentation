@@ -21,6 +21,7 @@ public;interface;HierarchyDefinition
 public;type;HierarchyFilteringPath
 public;namespace;HierarchyFilteringPath
 public;interface;HierarchyFilteringPathOptions
+public;namespace;HierarchyFilteringPathOptions
 public;type;HierarchyLevelDefinition
 public;type;HierarchyNode
 public;namespace;HierarchyNode

@@ -183,6 +183,7 @@ export function extractFilteringProps(rootLevelFilteringProps: HierarchyFilterin
 // @public (undocumented)
 interface FilteringPathAutoExpandOption {
     depth: number;
+    includeGroupingNodes?: boolean;
 }
 
 // @public (undocumented)
@@ -269,6 +270,11 @@ export namespace HierarchyFilteringPath {
 // @public (undocumented)
 export interface HierarchyFilteringPathOptions {
     autoExpand?: boolean | FilterTargetGroupingNodeInfo | FilteringPathAutoExpandOption;
+}
+
+// @public (undocumented)
+export namespace HierarchyFilteringPathOptions {
+    export function mergeAutoExpandOptions(lhs: HierarchyFilteringPathOptions["autoExpand"], rhs: HierarchyFilteringPathOptions["autoExpand"]): HierarchyFilteringPathOptions["autoExpand"];
 }
 
 // @public
@@ -586,6 +592,7 @@ export type NodePreProcessor = <TNode extends ProcessedGenericHierarchyNode | Pr
 type NodeProps = Pick<HierarchyNode, "autoExpand" | "filtering"> & {
     filtering?: {
         autoExpandDepth?: number;
+        includeGroupingNodes?: boolean;
     };
 };
 

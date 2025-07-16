@@ -59,8 +59,8 @@ export interface HierarchyFilteringPathOptions {
    */
   autoExpand?: boolean | FilterTargetGroupingNodeInfo | FilteringPathAutoExpandOption;
 }
-/** @public */
 
+/** @public */
 export namespace HierarchyFilteringPathOptions {
   /**
    * Merges two given `HierarchyFilteringPathOptions.autoExpand` values.
