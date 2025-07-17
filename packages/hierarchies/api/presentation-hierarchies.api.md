@@ -183,6 +183,7 @@ export function extractFilteringProps(rootLevelFilteringProps: HierarchyFilterin
 // @public (undocumented)
 interface FilteringPathAutoExpandOption {
     depth: number;
+    includeGroupingNodes?: boolean;
 }
 
 // @public (undocumented)
@@ -586,6 +587,7 @@ export type NodePreProcessor = <TNode extends ProcessedGenericHierarchyNode | Pr
 type NodeProps = Pick<HierarchyNode, "autoExpand" | "filtering"> & {
     filtering?: {
         autoExpandDepth?: number;
+        includeGroupingNodes?: boolean;
     };
 };
 
