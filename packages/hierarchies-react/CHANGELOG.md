@@ -365,6 +365,13 @@
 
 - [#847](https://github.com/iTwin/presentation/pull/847): Moving tree rendering components to a new design systems.
 
+
+## 1.7.1
+
+### Patch Changes
+- Updated dependencies:
+  - @itwin/presentation-hierarchies@1.6.1
+
 ## 1.7.0
 
 ### Minor Changes
