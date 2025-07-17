@@ -74,7 +74,7 @@ namespace HierarchyFilteringPathOptions {
 
     if (!("key" in lhs) && !lhs.includeGroupingNodes) {
       if (!("key" in rhs) && !rhs.includeGroupingNodes) {
-        return { depth: lhs.depth > rhs.depth ? lhs.depth : rhs.depth };
+        return lhs.depth > rhs.depth ? lhs : rhs;
       }
       return lhs;
     }
