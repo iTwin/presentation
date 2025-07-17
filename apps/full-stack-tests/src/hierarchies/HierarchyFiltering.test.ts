@@ -1122,6 +1122,7 @@ describe("Hierarchies", () => {
                 path: [rootNodeKey, keys.rootElement, keys.middleElement, keys.childElement],
                 options: {
                   autoExpand: {
+                    includeGroupingNodes: true,
                     depth: 5, // root node + (grouping node and instance node for root and middle elements),
                   },
                 },
