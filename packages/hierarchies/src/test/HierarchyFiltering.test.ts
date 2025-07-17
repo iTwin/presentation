@@ -14,16 +14,6 @@ describe("HierarchyFilteringPath", () => {
         { autoExpand: { depth: 2 } },
         { autoExpand: { depth: 1 } },
         { autoExpand: { depth: 3, includeGroupingNodes: true } },
-        {
-          autoExpand: {
-            depth: 2,
-          },
-        },
-        {
-          autoExpand: {
-            depth: 1,
-          },
-        },
         { autoExpand: false },
         undefined,
       ];
