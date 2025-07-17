@@ -324,7 +324,154 @@ describe("Hierarchies", () => {
         ]);
       });
 
-      it("sets auto-expand flag to parent nodes of the filter target until a given grouping node", async function () {
+      it("sets auto-expand flag to parent nodes of the filter target until specified depth when depth includes grouping nodes", async function () {
+        const imodelAccess = createIModelAccess(imodel);
+        const queryClauseFactory = createNodesQueryClauseFactory({
+          imodelAccess,
+          instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
+        });
+        // Define a hierarchy such that all elements except root are grouped by label.
+        const hierarchyDefinition: HierarchyDefinition = {
+          defineHierarchyLevel: async ({ parentNode }) => {
+            if (!parentNode) {
+              return [
+                {
+                  fullClassName: "BisCore.PhysicalElement",
+                  query: {
+                    ecsql: `
+                      SELECT ${await queryClauseFactory.createSelectClause({
+                        ecClassId: { selector: "this.ECClassId" },
+                        ecInstanceId: { selector: "this.ECInstanceId" },
+                        nodeLabel: { selector: "this.UserLabel" },
+                      })}
+                      FROM BisCore.PhysicalElement this
+                      WHERE this.Parent IS NULL
+                    `,
+                  },
+                },
+              ];
+            }
+
+            assert(HierarchyNode.isInstancesNode(parentNode));
+            return [
+              {
+                fullClassName: "BisCore.PhysicalElement",
+                query: {
+                  ecsql: `
+                    SELECT ${await queryClauseFactory.createSelectClause({
+                      ecClassId: { selector: "this.ECClassId" },
+                      ecInstanceId: { selector: "this.ECInstanceId" },
+                      nodeLabel: { selector: "this.UserLabel" },
+                      grouping: { byLabel: true, byClass: true },
+                    })}
+                    FROM BisCore.PhysicalElement this
+                    WHERE this.Parent.Id = ?
+                  `,
+                  bindings: [{ type: "id", value: parentNode.key.instanceKeys[0].id }],
+                },
+              },
+            ];
+          },
+        };
+
+        async function getSelectedGroupingNode(): Promise<GroupingHierarchyNode> {
+          const provider = createIModelHierarchyProvider({ imodelAccess, hierarchyDefinition });
+          return firstValueFrom(
+            from(provider.getNodes({ parentNode: undefined })).pipe(
+              expand((parentNode) => provider.getNodes({ parentNode })),
+              filter((node) => HierarchyNode.isGroupingNode(node)),
+              first(
+                (node) =>
+                  InstanceKey.equals(node.groupedInstanceKeys[0], elementKeys.c) &&
+                  node.parentKeys.length > 0 &&
+                  node.parentKeys[node.parentKeys.length - 1].type !== "instances",
+              ),
+            ),
+          );
+        }
+
+        // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.HierarchyFiltering.AutoExpandUntilDepthWithGrouping.FilteringPath
+        // Hierarchy has two grouping nodes under C element: one class grouping and one label grouping node.
+        // Get grouping node that groups the "C" element and is the nearest grouping node to it
+        const groupingNode = await getSelectedGroupingNode();
+        const filteringPath: HierarchyFilteringPath = {
+          // Path to the element "C"
+          path: [elementKeys.a, elementKeys.b, elementKeys.c],
+          options: {
+            // Auto-expand the hierarchy up to the last grouping node. The `depth` attribute equals to the number of parents.
+            autoExpand: { includeGroupingNodes: true, depth: groupingNode.parentKeys.length },
+          },
+        };
+        // __PUBLISH_EXTRACT_END__
+
+        // Construct a hierarchy provider for the filtered hierarchy
+        const hierarchyProvider = createIModelHierarchyProvider({
+          imodelAccess,
+          hierarchyDefinition,
+          filtering: {
+            paths: [filteringPath],
+          },
+        });
+
+        // Collect the hierarchy & confirm we get what we expect - a hierarchy from root element "A" to target element "C"
+        // Note that all nodes before grouping node for label "C" have `autoExpand` flag.
+        expect(await collectHierarchy(hierarchyProvider)).to.deep.eq([
+          {
+            // Root node. Has auto-expand flag.
+            nodeType: "instances",
+            label: "A",
+            autoExpand: true,
+            children: [
+              {
+                // B class grouping node. Has auto-expand flag.
+                nodeType: "class-grouping",
+                label: "Physical Object",
+                autoExpand: true,
+                children: [
+                  {
+                    // B label grouping node. Has auto-expand flag.
+                    nodeType: "label-grouping",
+                    label: "B",
+                    autoExpand: true,
+                    children: [
+                      {
+                        // B instance node. Has auto-expand flag.
+                        nodeType: "instances",
+                        label: "B",
+                        autoExpand: true,
+                        children: [
+                          {
+                            // C class grouping node. Has auto-expand flag.
+                            nodeType: "class-grouping",
+                            label: "Physical Object",
+                            autoExpand: true,
+                            children: [
+                              {
+                                // C label grouping node. Doesn't have auto-expand flag.
+                                nodeType: "label-grouping",
+                                label: "C",
+                                // Child is the filter target
+                                children: [
+                                  {
+                                    nodeType: "instances",
+                                    label: "C",
+                                  },
+                                ],
+                              },
+                            ],
+                          },
+                        ],
+                      },
+                    ],
+                  },
+                ],
+              },
+            ],
+          },
+        ]);
+      });
+
+      it("sets auto-expand flag to parent nodes of the filter target until specified depth", async function () {
         const imodelAccess = createIModelAccess(imodel);
         const queryClauseFactory = createNodesQueryClauseFactory({
           imodelAccess,
@@ -374,27 +521,13 @@ describe("Hierarchies", () => {
           },
         };
 
-        async function getSelectedGroupingNode(): Promise<GroupingHierarchyNode> {
-          const provider = createIModelHierarchyProvider({ imodelAccess, hierarchyDefinition });
-          return firstValueFrom(
-            from(provider.getNodes({ parentNode: undefined })).pipe(
-              expand((parentNode) => provider.getNodes({ parentNode })),
-              filter((node) => HierarchyNode.isGroupingNode(node)),
-              first((node) => InstanceKey.equals(node.groupedInstanceKeys[0], elementKeys.c)),
-            ),
-          );
-        }
-
-        // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.HierarchyFiltering.AutoExpandUntilGroupingNode.FilteringPath
-        // Get a grouping node that groups the "C" element
-        const groupingNode = await getSelectedGroupingNode();
+        // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.HierarchyFiltering.AutoExpandUntilDepthWithoutGrouping.FilteringPath
         const filteringPath: HierarchyFilteringPath = {
           // Path to the element "C"
           path: [elementKeys.a, elementKeys.b, elementKeys.c],
-          // Supply grouping node attributes with the path to the "C" element.
           options: {
-            // Auto-expand the hierarchy up to the grouping node. The `depth` attribute equals to the number of parents.
-            autoExpand: { key: groupingNode.key, depth: groupingNode.parentKeys.length },
+            // Auto-expand the hierarchy up to the specified depth. In this case up to and including element "B"
+            autoExpand: { depth: 2 },
           },
         };
         // __PUBLISH_EXTRACT_END__
