@@ -70,7 +70,7 @@ export interface UseTreeProps {
   /** Provides the hierarchy provider for the tree. */
   getHierarchyProvider: () => HierarchyProvider;
   /** Provides paths to filtered nodes. */
-  getFilteredPaths?: ({ abortSignal }: { abortSignal: AbortSignal }) => Promise<HierarchyFilteringPath[] | undefined>;
+  getSearchPaths?: ({ abortSignal }: { abortSignal: AbortSignal }) => Promise<HierarchyFilteringPath[] | undefined>;
   /**
    * Callback that is called just after a certain action is finished.
    * Can be used for performance tracking.
@@ -125,7 +125,7 @@ interface TreeState {
 
 function useTreeInternal({
   getHierarchyProvider,
-  getFilteredPaths,
+  getSearchPaths,
   onPerformanceMeasured,
   onHierarchyLimitExceeded,
   onHierarchyLoadError,
@@ -183,7 +183,7 @@ function useTreeInternal({
         return;
       }
 
-      if (!getFilteredPaths) {
+      if (!getSearchPaths) {
         hierarchyProvider.setHierarchyFilter(undefined);
         // reload tree in case hierarchy provider does not use hierarchy filter to load initial nodes
         actions.reloadTree({ state: "keep" });
@@ -194,7 +194,7 @@ function useTreeInternal({
       setIsFiltering(true);
       let paths: HierarchyFilteringPath[] | undefined;
       try {
-        paths = await getFilteredPaths({ abortSignal: controller.signal });
+        paths = await getSearchPaths({ abortSignal: controller.signal });
       } catch {
       } finally {
         if (!disposed) {
@@ -207,7 +207,7 @@ function useTreeInternal({
       controller.abort();
       disposed = true;
     };
-  }, [hierarchyProvider, getFilteredPaths, actions]);
+  }, [hierarchyProvider, getSearchPaths, actions]);
 
   const getTreeModelNode = useCallback<(nodeId: string) => TreeModelRootNode | TreeModelHierarchyNode | undefined>(
     (nodeId: string) => {

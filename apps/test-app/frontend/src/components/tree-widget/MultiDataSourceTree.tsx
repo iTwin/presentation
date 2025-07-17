@@ -70,7 +70,7 @@ const RSS_PROVIDER = createRssHierarchyProvider();
 
 function Tree({ imodelAccess, height, width }: { imodelAccess: IModelAccess; height: number; width: number }) {
   const [filter, setFilter] = useState("");
-  const getFilteredPaths = useMemo<UseTreeProps["getFilteredPaths"]>(() => {
+  const getSearchPaths = useMemo<UseTreeProps["getSearchPaths"]>(() => {
     return async () => {
       if (!filter) {
         return undefined;
@@ -102,7 +102,7 @@ function Tree({ imodelAccess, height, width }: { imodelAccess: IModelAccess; hei
         }),
       [imodelAccess],
     ),
-    getFilteredPaths,
+    getSearchPaths,
     onHierarchyLoadError: (props) => {
       // eslint-disable-next-line no-console
       console.error(props.error);
