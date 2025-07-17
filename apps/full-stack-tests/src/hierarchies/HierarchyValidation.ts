@@ -10,6 +10,7 @@ import { Logger } from "@itwin/core-bentley";
 import {
   GenericNodeKey,
   GroupingNodeKey,
+  HierarchyFilteringPathOptions,
   HierarchyNode,
   HierarchyNodeKey,
   HierarchyProvider,
@@ -38,9 +39,7 @@ interface BaseNodeExpectations {
   autoExpand?: boolean;
   supportsFiltering?: boolean;
   isFilterTarget?: boolean;
-  filterTargetOptions?: {
-    autoExpand?: { key: GroupingNodeKey; depth: number };
-  };
+  filterTargetOptions?: HierarchyFilteringPathOptions;
   extendedData?: { [key: string]: any };
   children?: ExpectedHierarchyDef[] | boolean;
 }

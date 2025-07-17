@@ -1382,7 +1382,7 @@ describe("Hierarchies", () => {
 
         it("sets auto-expand flag until property grouping node", async () => {
           const autoExpandOptions = {
-            key: { type: "property-grouping:value", propertyClassName: circleClassName, propertyName: "Color", formattedPropertyValue: "Red" },
+            includeGroupingNodes: true,
             depth: 2,
           } as const;
           await validateHierarchy({
@@ -1432,7 +1432,7 @@ describe("Hierarchies", () => {
 
         it("sets auto-expand flag until label grouping node", async () => {
           const autoExpandOptions = {
-            key: { type: "label-grouping", label: "Circle" },
+            includeGroupingNodes: true,
             depth: 3,
           } as const;
           await validateHierarchy({
