@@ -56,13 +56,13 @@ namespace HierarchyFilteringPathOptions {
       return !!rhs ? rhs : lhs;
     }
 
-    if (!("key" in lhs) && !lhs.includeGroupingNodes) {
-      if (!("key" in rhs) && !rhs.includeGroupingNodes) {
+    if (!lhs.includeGroupingNodes) {
+      if (!rhs.includeGroupingNodes) {
         return lhs.depth > rhs.depth ? lhs : rhs;
       }
       return lhs;
     }
-    if (!("key" in rhs) && !rhs.includeGroupingNodes) {
+    if (!rhs.includeGroupingNodes) {
       return rhs;
     }
     return lhs.depth > rhs.depth ? lhs : rhs;
@@ -307,7 +307,7 @@ class MatchingFilteringPathsReducer {
               ...(this._needsAutoExpand && this._needsAutoExpand !== true
                 ? {
                     autoExpandDepth: this._needsAutoExpand.depth,
-                    includeGroupingNodes: "key" in this._needsAutoExpand || this._needsAutoExpand.includeGroupingNodes ? true : false,
+                    includeGroupingNodes: this._needsAutoExpand.includeGroupingNodes ? true : false,
                   }
                 : undefined),
             },
