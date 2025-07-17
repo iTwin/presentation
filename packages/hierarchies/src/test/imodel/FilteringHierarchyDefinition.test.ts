@@ -910,10 +910,58 @@ describe("FilteringHierarchyDefinition", () => {
         expect(result.autoExpand).to.be.true;
       });
 
-      it("sets auto-expand when node has hierarchy depth smaller than the filter target and different key", async function () {
+      it("sets auto-expand for grouping node whose child has autoExpand depth with includeGroupingNodes set", async function () {
         const inputNode: ProcessedGroupingHierarchyNode = {
           ...createGroupingNode(),
           parentKeys: [createTestNodeKey()],
+          children: [
+            {
+              ...createTestProcessedInstanceNode(),
+              filtering: {
+                isFilterTarget: true,
+                filterTargetOptions: {
+                  autoExpand: {
+                    depth: 2,
+                    includeGroupingNodes: true,
+                  },
+                },
+              },
+            },
+          ],
+        };
+        const filteringFactory = await createFilteringHierarchyDefinition();
+        const result = await firstValueFrom(filteringFactory.postProcessNode(inputNode));
+        expect(result.autoExpand).to.be.true;
+      });
+
+      it("doesn't set auto-expand for grouping node whose child has autoExpand depth pointing to parent with includeGroupingNodes set", async function () {
+        const inputNode: ProcessedGroupingHierarchyNode = {
+          ...createGroupingNode(),
+          parentKeys: [createTestNodeKey(), createGroupingNode().key],
+          children: [
+            {
+              ...createTestProcessedInstanceNode(),
+              filtering: {
+                isFilterTarget: true,
+                filterTargetOptions: {
+                  autoExpand: {
+                    depth: 2,
+                    includeGroupingNodes: true,
+                  },
+                },
+              },
+            },
+          ],
+        };
+        const filteringFactory = await createFilteringHierarchyDefinition();
+        const result = await firstValueFrom(filteringFactory.postProcessNode(inputNode));
+        expect(result.autoExpand).to.be.undefined;
+      });
+
+      it("sets auto-expand for grouping node whose child has autoExpand depth", async function () {
+        const inputNode: ProcessedGroupingHierarchyNode = {
+          ...createGroupingNode(),
+          parentKeys: [createTestNodeKey(), createGroupingNode().key],
           children: [
             {
               ...createTestProcessedInstanceNode(),
@@ -933,7 +981,7 @@ describe("FilteringHierarchyDefinition", () => {
         expect(result.autoExpand).to.be.true;
       });
 
-      it("doesn't set auto-expand when node has same hierarchy depth and same keys as the filter target", async () => {
+      it("doesn't set auto-expand for grouping node whose child has autoExpand depth pointing to parent", async function () {
         const inputNode: ProcessedGroupingHierarchyNode = {
           ...createGroupingNode(),
           parentKeys: [createTestNodeKey()],
