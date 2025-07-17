@@ -60,20 +60,7 @@ export interface HierarchyFilteringPathOptions {
   autoExpand?: boolean | FilterTargetGroupingNodeInfo | FilteringPathAutoExpandOption;
 }
 
-/** @public */
-export namespace HierarchyFilteringPathOptions {
-  /**
-   * Merges two given `HierarchyFilteringPathOptions.autoExpand` values.
-   *
-   * For the `autoExpand` attribute, the merge chooses to auto-expand as deep as the deepest input:
-   * - if any one of the inputs is `true`, return `true`,
-   * - else if only one of the inputs is an object, return it,
-   * - else if both inputs are falsy, return `false` or `undefined`,
-   * - else:
-   *    - if only one of them has `includeGroupingNodes` set to `true` or `key` defined, return it,
-   *    - else return the one with greater `depth`.
-   * @public
-   */
+namespace HierarchyFilteringPathOptions {
   export function mergeAutoExpandOptions(
     lhs: HierarchyFilteringPathOptions["autoExpand"],
     rhs: HierarchyFilteringPathOptions["autoExpand"],
@@ -126,7 +113,13 @@ export namespace HierarchyFilteringPath {
    * - else if one of the inputs is `undefined`, the other one is returned.
    * - else, merge each option individually.
    *
-   * To know how specific attributes get merged, look at `HierarchyFilteringPathOptions`.
+   * For the `autoExpand` attribute, the merge chooses to auto-expand as deep as the deepest input:
+   * - if any one of the inputs is `true`, return `true`,
+   * - else if only one of the inputs is an object, return it,
+   * - else if both inputs are falsy, return `false` or `undefined`,
+   * - else:
+   *    - if only one of the inputs has `includeGroupingNodes` set to `true` or `key` defined, return the one that has only `depth` set,
+   *    - else return the one with greater `depth`.
    *
    * @public
    */

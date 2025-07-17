@@ -272,11 +272,6 @@ export interface HierarchyFilteringPathOptions {
     autoExpand?: boolean | FilterTargetGroupingNodeInfo | FilteringPathAutoExpandOption;
 }
 
-// @public (undocumented)
-export namespace HierarchyFilteringPathOptions {
-    export function mergeAutoExpandOptions(lhs: HierarchyFilteringPathOptions["autoExpand"], rhs: HierarchyFilteringPathOptions["autoExpand"]): HierarchyFilteringPathOptions["autoExpand"];
-}
-
 // @public
 export type HierarchyLevelDefinition = HierarchyNodesDefinition[];
 
