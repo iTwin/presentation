@@ -1,5 +1,12 @@
 # @itwin/presentation-hierarchies-react
 
+## 1.7.1
+
+### Patch Changes
+
+- Updated dependencies:
+  - @itwin/presentation-hierarchies@1.6.1
+
 ## 1.7.0
 
 ### Minor Changes
