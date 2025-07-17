@@ -9,7 +9,6 @@ import { isDeepStrictEqual } from "util";
 import { Logger } from "@itwin/core-bentley";
 import {
   GenericNodeKey,
-  GroupingNodeKey,
   HierarchyFilteringPathOptions,
   HierarchyNode,
   HierarchyNodeKey,
