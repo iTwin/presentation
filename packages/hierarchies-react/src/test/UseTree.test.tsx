@@ -329,7 +329,7 @@ describe("useTree", () => {
       return createAsyncIterator([createTestHierarchyNode({ id: "child-1" }), createTestHierarchyNode({ id: "child-2" })]);
     });
 
-    rerender({ ...initialProps, getFilteredPaths: async () => [] });
+    rerender({ ...initialProps, getSearchPaths: async () => [] });
 
     await waitFor(() => {
       const treeRenderProps = getTreeRendererProps(result.current);
