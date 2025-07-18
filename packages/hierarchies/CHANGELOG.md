@@ -1,5 +1,11 @@
 # @itwin/presentation-hierarchies
 
+## 2.0.0-alpha.2
+
+### Patch Changes
+
+- [#1005](https://github.com/iTwin/presentation/pull/1005): Removed deprecated `FilterTargetGroupingNodeInfo` interface.
+
 ## 2.0.0-alpha.1
 
 ### Patch Changes
