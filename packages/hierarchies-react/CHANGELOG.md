@@ -1,5 +1,22 @@
 # @itwin/presentation-hierarchies-react
 
+## 2.0.0-alpha.26
+
+### Minor Changes
+
+- [#1007](https://github.com/iTwin/presentation/pull/1007): Renames:
+  `FlatNode` => `FlatTreeNodeItem`
+  `FlatTreeNode` => `FlatTreeItem`
+  `PlaceholderNode` => `PlaceholderItem`
+  `useFlatTreeNodeList` => `useFlatTreeItems`
+
+  Changed `FlatTreeNodeItem` (previously `FlatNode`) to have property `node: PresentationHierarchyNode` instead of extending `PresentationHierarchyNode`.
+
+### Patch Changes
+
+- Updated dependencies:
+  - @itwin/presentation-hierarchies@2.0.0-alpha.2
+
 ## 2.0.0-alpha.25
 
 ### Patch Changes
