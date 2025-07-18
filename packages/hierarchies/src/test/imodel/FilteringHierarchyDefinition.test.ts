@@ -7,7 +7,7 @@ import { assert, expect } from "chai";
 import { firstValueFrom, from, lastValueFrom, of, toArray } from "rxjs";
 import sinon from "sinon";
 import { ECClassHierarchyInspector, trimWhitespace } from "@itwin/presentation-shared";
-import { FilterTargetGroupingNodeInfo, HierarchyFilteringPath, HierarchyFilteringPathOptions } from "../../hierarchies/HierarchyFiltering.js";
+import { FilteringPathAutoExpandOption, HierarchyFilteringPath, HierarchyFilteringPathOptions } from "../../hierarchies/HierarchyFiltering.js";
 import { HierarchyNode } from "../../hierarchies/HierarchyNode.js";
 import { HierarchyNodeIdentifiersPath } from "../../hierarchies/HierarchyNodeIdentifier.js";
 import {
@@ -623,7 +623,7 @@ describe("FilteringHierarchyDefinition", () => {
       const sourceFactory = {} as unknown as RxjsHierarchyDefinition;
       const className = "TestSchema.TestName";
       const filteringOptions: HierarchyFilteringPathOptions = {
-        autoExpand: { key: { type: "class-grouping", className: "" }, depth: 0 },
+        autoExpand: { depth: 0 },
       };
       const paths = [{ path: [createTestInstanceKey({ id: "0x5", className })], options: filteringOptions }, [createTestInstanceKey({ id: "0x5", className })]];
       const filteringFactory = await createFilteringHierarchyDefinition({
@@ -843,7 +843,7 @@ describe("FilteringHierarchyDefinition", () => {
               ...createTestProcessedInstanceNode(),
               filtering: {
                 isFilterTarget: true,
-                filterTargetOptions: { autoExpand: { key: groupingNode.key, depth: 0 } },
+                filterTargetOptions: { autoExpand: { depth: 0 } },
                 filteredChildrenIdentifierPaths: [],
               },
             },
@@ -851,36 +851,7 @@ describe("FilteringHierarchyDefinition", () => {
               ...createTestProcessedInstanceNode(),
               filtering: {
                 isFilterTarget: true,
-                filterTargetOptions: { autoExpand: { key: groupingNode.key, depth: 0 } },
-                filteredChildrenIdentifierPaths: [],
-              },
-            },
-          ],
-        };
-        const filteringFactory = await createFilteringHierarchyDefinition();
-        const result = await firstValueFrom(filteringFactory.postProcessNode(inputNode));
-        expect(result.autoExpand).to.be.undefined;
-      });
-
-      it("sets auto-expand when at least one child node targets another grouping node", async () => {
-        const groupingNode = createGroupingNode();
-        const otherGroupingNode = createGroupingNode();
-        const inputNode: ProcessedGroupingHierarchyNode = {
-          ...groupingNode,
-          children: [
-            {
-              ...createTestProcessedInstanceNode(),
-              filtering: {
-                isFilterTarget: true,
-                filterTargetOptions: { autoExpand: { key: groupingNode.key, depth: 0 } },
-                filteredChildrenIdentifierPaths: [],
-              },
-            },
-            {
-              ...createTestProcessedInstanceNode(),
-              filtering: {
-                isFilterTarget: true,
-                filterTargetOptions: { autoExpand: { key: otherGroupingNode.key, depth: 0 } },
+                filterTargetOptions: { autoExpand: { depth: 0 } },
                 filteredChildrenIdentifierPaths: [],
               },
             },
@@ -927,7 +898,6 @@ describe("FilteringHierarchyDefinition", () => {
                 isFilterTarget: true,
                 filterTargetOptions: {
                   autoExpand: {
-                    key: groupingNode.key,
                     depth: 2,
                   },
                 },
@@ -940,7 +910,7 @@ describe("FilteringHierarchyDefinition", () => {
         expect(result.autoExpand).to.be.true;
       });
 
-      it("sets auto-expand when node has hierarchy depth smaller than the filter target and different key", async function () {
+      it("sets auto-expand for grouping node whose child has autoExpand depth with includeGroupingNodes set", async function () {
         const inputNode: ProcessedGroupingHierarchyNode = {
           ...createGroupingNode(),
           parentKeys: [createTestNodeKey()],
@@ -951,7 +921,54 @@ describe("FilteringHierarchyDefinition", () => {
                 isFilterTarget: true,
                 filterTargetOptions: {
                   autoExpand: {
-                    key: { type: "class-grouping", className: this.test!.title },
+                    depth: 2,
+                    includeGroupingNodes: true,
+                  },
+                },
+              },
+            },
+          ],
+        };
+        const filteringFactory = await createFilteringHierarchyDefinition();
+        const result = await firstValueFrom(filteringFactory.postProcessNode(inputNode));
+        expect(result.autoExpand).to.be.true;
+      });
+
+      it("doesn't set auto-expand for grouping node whose child has autoExpand depth pointing to parent with includeGroupingNodes set", async function () {
+        const inputNode: ProcessedGroupingHierarchyNode = {
+          ...createGroupingNode(),
+          parentKeys: [createTestNodeKey(), createGroupingNode().key],
+          children: [
+            {
+              ...createTestProcessedInstanceNode(),
+              filtering: {
+                isFilterTarget: true,
+                filterTargetOptions: {
+                  autoExpand: {
+                    depth: 2,
+                    includeGroupingNodes: true,
+                  },
+                },
+              },
+            },
+          ],
+        };
+        const filteringFactory = await createFilteringHierarchyDefinition();
+        const result = await firstValueFrom(filteringFactory.postProcessNode(inputNode));
+        expect(result.autoExpand).to.be.undefined;
+      });
+
+      it("sets auto-expand for grouping node whose child has autoExpand depth", async function () {
+        const inputNode: ProcessedGroupingHierarchyNode = {
+          ...createGroupingNode(),
+          parentKeys: [createTestNodeKey(), createGroupingNode().key],
+          children: [
+            {
+              ...createTestProcessedInstanceNode(),
+              filtering: {
+                isFilterTarget: true,
+                filterTargetOptions: {
+                  autoExpand: {
                     depth: 2,
                   },
                 },
@@ -964,7 +981,7 @@ describe("FilteringHierarchyDefinition", () => {
         expect(result.autoExpand).to.be.true;
       });
 
-      it("doesn't set auto-expand when node has same hierarchy depth and same keys as the filter target", async () => {
+      it("doesn't set auto-expand for grouping node whose child has autoExpand depth pointing to parent", async function () {
         const inputNode: ProcessedGroupingHierarchyNode = {
           ...createGroupingNode(),
           parentKeys: [createTestNodeKey()],
@@ -975,7 +992,6 @@ describe("FilteringHierarchyDefinition", () => {
                 isFilterTarget: true,
                 filterTargetOptions: {
                   autoExpand: {
-                    key: createGroupingNode().key,
                     depth: 1,
                   },
                 },
@@ -1000,10 +1016,6 @@ describe("FilteringHierarchyDefinition", () => {
                 filterTargetOptions: {
                   autoExpand: {
                     ...createTestProcessedGroupingNode(),
-                    key: {
-                      type: "class-grouping",
-                      className: "foo",
-                    },
                     depth: 1,
                   },
                 },
@@ -1302,7 +1314,7 @@ describe("FilteringHierarchyDefinition", () => {
         const sourceFactory: RxjsHierarchyDefinition = {
           defineHierarchyLevel: () => of([sourceDefinition]),
         };
-        const groupingNode: FilterTargetGroupingNodeInfo = { key: { type: "class-grouping", className: "class" }, depth: 0 };
+        const groupingNode: FilteringPathAutoExpandOption = { depth: 0 };
         const filteringFactory = await createFilteringHierarchyDefinition({
           imodelAccess: { ...classHierarchyInspector, imodelKey: "test-imodel-key" },
           sourceFactory,
@@ -1707,9 +1719,9 @@ describe("FilteringHierarchyDefinition", () => {
           className: "FilterPathClassName0",
           baseClass: queryClass,
         });
-        const groupingNode1: FilterTargetGroupingNodeInfo = { key: { type: "class-grouping", className: "class1" }, depth: 1 };
-        const groupingNode2: FilterTargetGroupingNodeInfo = { key: { type: "class-grouping", className: "class2" }, depth: 3 };
-        const groupingNode3: FilterTargetGroupingNodeInfo = { key: { type: "class-grouping", className: "class2" }, depth: 0 };
+        const groupingNode1: FilteringPathAutoExpandOption = { depth: 1 };
+        const groupingNode2: FilteringPathAutoExpandOption = { depth: 3 };
+        const groupingNode3: FilteringPathAutoExpandOption = { depth: 0 };
         const sourceDefinition: InstanceNodesQueryDefinition = {
           fullClassName: queryClass.fullName,
           query: {

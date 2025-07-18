@@ -5,21 +5,7 @@
 
 import { HierarchyNode, NonGroupingHierarchyNode } from "./HierarchyNode.js";
 import { HierarchyNodeIdentifier, HierarchyNodeIdentifiersPath } from "./HierarchyNodeIdentifier.js";
-import { GenericNodeKey, GroupingNodeKey, HierarchyNodeKey, InstancesNodeKey } from "./HierarchyNodeKey.js";
-
-/** @public */
-export interface FilterTargetGroupingNodeInfo {
-  /**
-   * Key of the grouping node.
-   * @deprecated in 1.6. Use `FilteringPathAutoExpandOption` with `includeGroupingNodes` set to true instead.
-   */
-  key: GroupingNodeKey;
-
-  /**
-   * Depth up to which nodes in the hierarchy should be expanded.
-   */
-  depth: number;
-}
+import { GenericNodeKey, HierarchyNodeKey, InstancesNodeKey } from "./HierarchyNodeKey.js";
 
 /** @public */
 export interface FilteringPathAutoExpandOption {
@@ -53,11 +39,9 @@ export interface HierarchyFilteringPathOptions {
    * This option specifies the way `autoExpand` flag should be assigned to nodes in the filtered hierarchy.
    * - If it's `false` or `undefined`, nodes have no 'autoExpand' flag.
    * - If it's `true`, then all nodes up to the filter target will have `autoExpand` flag.
-   * - If it's an instance of `FilterTargetGroupingNodeInfo`, then all nodes up to the grouping node that matches this property,
-   * will have `autoExpand` flag.
    * - If it's an instance of `FilteringPathAutoExpandOption`, then all nodes up to and including `depth` will have `autoExpand` flag.
    */
-  autoExpand?: boolean | FilterTargetGroupingNodeInfo | FilteringPathAutoExpandOption;
+  autoExpand?: boolean | FilteringPathAutoExpandOption;
 }
 
 namespace HierarchyFilteringPathOptions {
@@ -72,13 +56,13 @@ namespace HierarchyFilteringPathOptions {
       return !!rhs ? rhs : lhs;
     }
 
-    if (!("key" in lhs) && !lhs.includeGroupingNodes) {
-      if (!("key" in rhs) && !rhs.includeGroupingNodes) {
+    if (!lhs.includeGroupingNodes) {
+      if (!rhs.includeGroupingNodes) {
         return lhs.depth > rhs.depth ? lhs : rhs;
       }
       return lhs;
     }
-    if (!("key" in rhs) && !rhs.includeGroupingNodes) {
+    if (!rhs.includeGroupingNodes) {
       return rhs;
     }
     return lhs.depth > rhs.depth ? lhs : rhs;
@@ -323,7 +307,7 @@ class MatchingFilteringPathsReducer {
               ...(this._needsAutoExpand && this._needsAutoExpand !== true
                 ? {
                     autoExpandDepth: this._needsAutoExpand.depth,
-                    includeGroupingNodes: "key" in this._needsAutoExpand || this._needsAutoExpand.includeGroupingNodes ? true : false,
+                    includeGroupingNodes: this._needsAutoExpand.includeGroupingNodes ? true : false,
                   }
                 : undefined),
             },

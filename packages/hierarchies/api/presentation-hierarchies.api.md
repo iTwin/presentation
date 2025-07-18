@@ -186,13 +186,6 @@ interface FilteringPathAutoExpandOption {
     includeGroupingNodes?: boolean;
 }
 
-// @public (undocumented)
-interface FilterTargetGroupingNodeInfo {
-    depth: number;
-    // @deprecated
-    key: GroupingNodeKey;
-}
-
 // @public
 interface GenericHierarchyNodeDefinition {
     node: SourceGenericHierarchyNode;
@@ -269,7 +262,7 @@ export namespace HierarchyFilteringPath {
 
 // @public (undocumented)
 export interface HierarchyFilteringPathOptions {
-    autoExpand?: boolean | FilterTargetGroupingNodeInfo | FilteringPathAutoExpandOption;
+    autoExpand?: boolean | FilteringPathAutoExpandOption;
 }
 
 // @public

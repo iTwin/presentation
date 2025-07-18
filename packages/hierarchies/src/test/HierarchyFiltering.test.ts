@@ -13,25 +13,8 @@ describe("HierarchyFilteringPath", () => {
         { autoExpand: true },
         { autoExpand: { depth: 2 } },
         { autoExpand: { depth: 1 } },
+        { autoExpand: { depth: 4, includeGroupingNodes: true } },
         { autoExpand: { depth: 3, includeGroupingNodes: true } },
-        {
-          autoExpand: {
-            key: {
-              type: "label-grouping",
-              label: "",
-            },
-            depth: 2,
-          },
-        },
-        {
-          autoExpand: {
-            key: {
-              type: "label-grouping",
-              label: "",
-            },
-            depth: 1,
-          },
-        },
         { autoExpand: false },
         undefined,
       ];
