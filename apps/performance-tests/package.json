@@ -20,8 +20,6 @@
     "@itwin/core-backend": "catalog:itwinjs-core-dev",
     "@itwin/core-bentley": "catalog:itwinjs-core-dev",
     "@itwin/core-common": "catalog:itwinjs-core-dev",
-    "@itwin/core-geometry": "catalog:itwinjs-core-dev",
-    "@itwin/core-quantity": "catalog:itwinjs-core-dev",
     "@itwin/ecschema-metadata": "catalog:itwinjs-core-dev",
     "@itwin/eslint-plugin": "catalog:build-tools",
     "@itwin/presentation-core-interop": "workspace:*",
