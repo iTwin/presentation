@@ -80,12 +80,14 @@ export class FilteringHierarchyDefinition implements RxjsHierarchyDefinition {
         // If grouping node's child has `autoExpandUntil` flag,
         // auto-expand the grouping node only if it's depth is lower than that of the grouping node in associated with the target.
         const nodeDepth =
+          // eslint-disable-next-line @typescript-eslint/no-deprecated
           "key" in childAutoExpand || "depthInHierarchy" in childAutoExpand || (!("depthInPath" in childAutoExpand) && childAutoExpand.includeGroupingNodes)
             ? node.parentKeys.length
             : node.parentKeys.filter((key) => !HierarchyNodeKey.isGrouping(key)).length;
         const filterTargetDepth =
           "depth" in childAutoExpand
-            ? childAutoExpand.depth
+            ? // eslint-disable-next-line @typescript-eslint/no-deprecated
+              childAutoExpand.depth
             : "depthInPath" in childAutoExpand
               ? childAutoExpand.depthInPath
               : childAutoExpand.depthInHierarchy;
@@ -159,6 +161,7 @@ export class FilteringHierarchyDefinition implements RxjsHierarchyDefinition {
                   : nodeExtraProps.filtering && "autoExpandDepthInHierarchy" in nodeExtraProps.filtering
                     ? 1 + parentNode.parentKeys.length
                     : 1 + parentNode.parentKeys.filter((key) => !HierarchyNodeKey.isGrouping(key)).length;
+                /* c8 ignore next 2 */
                 const depth = !nodeExtraProps.filtering
                   ? undefined
                   : "autoExpandDepthInHierarchy" in nodeExtraProps.filtering
