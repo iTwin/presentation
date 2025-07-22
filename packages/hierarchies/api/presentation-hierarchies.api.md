@@ -181,12 +181,22 @@ export function extractFilteringProps(rootLevelFilteringProps: HierarchyFilterin
 } | undefined;
 
 // @public (undocumented)
+interface FilteringPathAutoExpandDepthInHierarchy {
+    depthInHierarchy: number;
+}
+
+// @public (undocumented)
+interface FilteringPathAutoExpandDepthInPath {
+    depthInPath: number;
+}
+
+// @public @deprecated (undocumented)
 interface FilteringPathAutoExpandOption {
     depth: number;
     includeGroupingNodes?: boolean;
 }
 
-// @public (undocumented)
+// @public @deprecated (undocumented)
 interface FilterTargetGroupingNodeInfo {
     depth: number;
     // @deprecated
@@ -269,7 +279,7 @@ export namespace HierarchyFilteringPath {
 
 // @public (undocumented)
 export interface HierarchyFilteringPathOptions {
-    autoExpand?: boolean | FilterTargetGroupingNodeInfo | FilteringPathAutoExpandOption;
+    autoExpand?: boolean | FilterTargetGroupingNodeInfo | FilteringPathAutoExpandOption | FilteringPathAutoExpandDepthInHierarchy | FilteringPathAutoExpandDepthInPath;
 }
 
 // @public
@@ -586,8 +596,8 @@ export type NodePreProcessor = <TNode extends ProcessedGenericHierarchyNode | Pr
 // @public (undocumented)
 type NodeProps = Pick<HierarchyNode, "autoExpand" | "filtering"> & {
     filtering?: {
-        autoExpandDepth?: number;
-        includeGroupingNodes?: boolean;
+        autoExpandDepthInPath?: number;
+        autoExpandDepthInHierarchy?: number;
     };
 };
 

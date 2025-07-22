@@ -11,16 +11,18 @@ describe("HierarchyFilteringPath", () => {
     describe("autoExpand", () => {
       const optionsInOrderOfPriority: Array<HierarchyFilteringPathOptions | undefined> = [
         { autoExpand: true },
-        { autoExpand: { depth: 2 } },
+        { autoExpand: { depth: 3 } },
+        { autoExpand: { depthInPath: 2 } },
         { autoExpand: { depth: 1 } },
-        { autoExpand: { depth: 3, includeGroupingNodes: true } },
+        { autoExpand: { depth: 6, includeGroupingNodes: true } },
+        { autoExpand: { depthInHierarchy: 5 } },
         {
           autoExpand: {
             key: {
               type: "label-grouping",
               label: "",
             },
-            depth: 2,
+            depth: 4,
           },
         },
         {
@@ -29,7 +31,7 @@ describe("HierarchyFilteringPath", () => {
               type: "label-grouping",
               label: "",
             },
-            depth: 1,
+            depth: 3,
           },
         },
         { autoExpand: false },

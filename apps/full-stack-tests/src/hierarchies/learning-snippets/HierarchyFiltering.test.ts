@@ -390,16 +390,18 @@ describe("Hierarchies", () => {
           );
         }
 
-        // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.HierarchyFiltering.AutoExpandUntilDepthWithGrouping.FilteringPath
-        // Hierarchy has two grouping nodes under C element: one class grouping and one label grouping node.
-        // Get grouping node that groups the "C" element and is the nearest grouping node to it
+        // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.HierarchyFiltering.AutoExpandUntilDepthInHierarchy.FilteringPath
+        // Hierarchy has this structure: A -> class grouping node -> label grouping node -> B -> class grouping node -> label grouping node -> C.
+        // Hierarchy has two grouping nodes that group C element: one class grouping and one label grouping node.
+        
+        // Get label grouping node that groups the "C" element
         const groupingNode = await getSelectedGroupingNode();
         const filteringPath: HierarchyFilteringPath = {
           // Path to the element "C"
           path: [elementKeys.a, elementKeys.b, elementKeys.c],
           options: {
-            // Auto-expand the hierarchy up to the last grouping node. The `depth` attribute equals to the number of parents.
-            autoExpand: { includeGroupingNodes: true, depth: groupingNode.parentKeys.length },
+            // Auto-expand the hierarchy up to the last grouping node. The `depthInHierarchy` attribute equals to the number of parents.
+            autoExpand: { depthInHierarchy: groupingNode.parentKeys.length },
           },
         };
         // __PUBLISH_EXTRACT_END__
@@ -521,13 +523,13 @@ describe("Hierarchies", () => {
           },
         };
 
-        // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.HierarchyFiltering.AutoExpandUntilDepthWithoutGrouping.FilteringPath
+        // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.HierarchyFiltering.AutoExpandUntilDepthInPath.FilteringPath
         const filteringPath: HierarchyFilteringPath = {
           // Path to the element "C"
           path: [elementKeys.a, elementKeys.b, elementKeys.c],
           options: {
             // Auto-expand the hierarchy up to the specified depth. In this case up to and including element "B"
-            autoExpand: { depth: 2 },
+            autoExpand: { depthInPath: 2 },
           },
         };
         // __PUBLISH_EXTRACT_END__
