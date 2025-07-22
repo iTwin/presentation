@@ -393,7 +393,7 @@ describe("Hierarchies", () => {
         // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.HierarchyFiltering.AutoExpandUntilDepthInHierarchy.FilteringPath
         // Hierarchy has this structure: A -> class grouping node -> label grouping node -> B -> class grouping node -> label grouping node -> C.
         // Hierarchy has two grouping nodes that group C element: one class grouping and one label grouping node.
-        
+
         // Get label grouping node that groups the "C" element
         const groupingNode = await getSelectedGroupingNode();
         const filteringPath: HierarchyFilteringPath = {
