@@ -156,13 +156,16 @@ export class FilteringHierarchyDefinition implements RxjsHierarchyDefinition {
               if (nodeExtraProps?.autoExpand) {
                 const parentLength = !parentNode
                   ? 0
-                  : nodeExtraProps.filtering?.autoExpandDepthInHierarchy !== undefined
+                  : nodeExtraProps.filtering && "autoExpandDepthInHierarchy" in nodeExtraProps.filtering
                     ? 1 + parentNode.parentKeys.length
                     : 1 + parentNode.parentKeys.filter((key) => !HierarchyNodeKey.isGrouping(key)).length;
-                const depth =
-                  nodeExtraProps.filtering?.autoExpandDepthInHierarchy !== undefined
+                const depth = !nodeExtraProps.filtering
+                  ? undefined
+                  : "autoExpandDepthInHierarchy" in nodeExtraProps.filtering
                     ? nodeExtraProps.filtering.autoExpandDepthInHierarchy
-                    : nodeExtraProps.filtering?.autoExpandDepthInPath;
+                    : "autoExpandDepthInPath" in nodeExtraProps.filtering
+                      ? nodeExtraProps.filtering.autoExpandDepthInPath
+                      : undefined;
                 parsedNode.autoExpand = depth !== undefined && parentLength >= depth ? undefined : true;
               }
               if (nodeExtraProps?.filtering) {

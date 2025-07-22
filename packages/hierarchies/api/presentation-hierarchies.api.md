@@ -192,12 +192,15 @@ interface FilteringPathAutoExpandDepthInPath {
 
 // @public @deprecated (undocumented)
 interface FilteringPathAutoExpandOption {
+    // @deprecated
     depth: number;
+    // @deprecated
     includeGroupingNodes?: boolean;
 }
 
 // @public @deprecated (undocumented)
 interface FilterTargetGroupingNodeInfo {
+    // @deprecated
     depth: number;
     // @deprecated
     key: GroupingNodeKey;
@@ -597,6 +600,7 @@ export type NodePreProcessor = <TNode extends ProcessedGenericHierarchyNode | Pr
 type NodeProps = Pick<HierarchyNode, "autoExpand" | "filtering"> & {
     filtering?: {
         autoExpandDepthInPath?: number;
+    } | {
         autoExpandDepthInHierarchy?: number;
     };
 };

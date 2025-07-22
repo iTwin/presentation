@@ -14,12 +14,13 @@ import { GenericNodeKey, GroupingNodeKey, HierarchyNodeKey, InstancesNodeKey } f
 export interface FilterTargetGroupingNodeInfo {
   /**
    * Key of the grouping node.
-   * @deprecated in 1.6. Use `FilteringPathAutoExpandOption` with `includeGroupingNodes` set to true instead.
+   * @deprecated in 1.6. Use `FilteringPathAutoExpandDepthInHierarchy` instead.
    */
   key: GroupingNodeKey;
 
   /**
    * Depth up to which nodes in the hierarchy should be expanded.
+   * @deprecated in 1.6. Use `FilteringPathAutoExpandDepthInHierarchy` instead.
    */
   depth: number;
 }
@@ -33,6 +34,7 @@ export interface FilteringPathAutoExpandOption {
    * Depth up to which nodes in the hierarchy should be expanded.
    *
    * If `includeGroupingNodes` is set to true, then depth should take into account the number of grouping nodes in hierarchy.
+   * @deprecated in 1.7. Use `FilteringPathAutoExpandDepthInPath` or `FilteringPathAutoExpandDepthInHierarchy` instead.
    */
   depth: number;
   /**
@@ -51,6 +53,7 @@ export interface FilteringPathAutoExpandOption {
    * Then you provide `autoExpand: { depth: 2, includeGroupingNodes: true }`
    *
    * To get the correct depth use `HierarchyNode.parentKeys.length`.
+   * @deprecated in 1.7. Use `FilteringPathAutoExpandDepthInHierarchy` instead.
    */
   includeGroupingNodes?: boolean;
 }
@@ -345,7 +348,7 @@ export function createHierarchyFilteringHelper(
 
 /** @public */
 export type NodeProps = Pick<HierarchyNode, "autoExpand" | "filtering"> & {
-  filtering?: { autoExpandDepthInPath?: number; autoExpandDepthInHierarchy?: number };
+  filtering?: { autoExpandDepthInPath?: number } | { autoExpandDepthInHierarchy?: number };
 };
 
 type NormalizedFilteringPath = ReturnType<(typeof HierarchyFilteringPath)["normalize"]>;
