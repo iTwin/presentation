@@ -123,9 +123,13 @@ namespace HierarchyFilteringPathOptions {
     if (!rhs || !lhs) {
       return !!rhs ? rhs : lhs;
     }
+    // eslint-disable-next-line @typescript-eslint/no-deprecated
     const lhsDepth = "depth" in lhs ? lhs.depth : "depthInPath" in lhs ? lhs.depthInPath : lhs.depthInHierarchy;
+    // eslint-disable-next-line @typescript-eslint/no-deprecated
     const rhsDepth = "depth" in rhs ? rhs.depth : "depthInPath" in rhs ? rhs.depthInPath : rhs.depthInHierarchy;
+    // eslint-disable-next-line @typescript-eslint/no-deprecated
     const isLhsDepthBasedOnPath = "depthInPath" in lhs ? true : !("key" in lhs) && !("depthInHierarchy" in lhs) && !lhs.includeGroupingNodes;
+    // eslint-disable-next-line @typescript-eslint/no-deprecated
     const isRhsDepthBasedOnPath = "depthInPath" in rhs ? true : !("key" in rhs) && !("depthInHierarchy" in rhs) && !rhs.includeGroupingNodes;
 
     if (isLhsDepthBasedOnPath) {
@@ -380,12 +384,15 @@ class MatchingFilteringPathsReducer {
               ...(this._filteredChildrenIdentifierPaths.length > 0 ? { filteredChildrenIdentifierPaths: this._filteredChildrenIdentifierPaths } : undefined),
               ...(this._autoExpandOption && this._autoExpandOption !== true
                 ? "depthInPath" in this._autoExpandOption ||
+                  // eslint-disable-next-line @typescript-eslint/no-deprecated
                   (!("key" in this._autoExpandOption) && !("depthInHierarchy" in this._autoExpandOption) && !this._autoExpandOption.includeGroupingNodes)
                   ? {
+                      // eslint-disable-next-line @typescript-eslint/no-deprecated
                       autoExpandDepthInPath: "depthInPath" in this._autoExpandOption ? this._autoExpandOption.depthInPath : this._autoExpandOption.depth,
                     }
                   : {
                       autoExpandDepthInHierarchy:
+                        // eslint-disable-next-line @typescript-eslint/no-deprecated
                         "depthInHierarchy" in this._autoExpandOption ? this._autoExpandOption.depthInHierarchy : this._autoExpandOption.depth,
                     }
                 : undefined),
