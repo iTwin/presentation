@@ -3,9 +3,10 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { HierarchyNode, NonGroupingHierarchyNode } from "./HierarchyNode.js";
+import { HierarchyNode, NonGroupingHierarchyNode, ParentHierarchyNode } from "./HierarchyNode.js";
 import { HierarchyNodeIdentifier, HierarchyNodeIdentifiersPath } from "./HierarchyNodeIdentifier.js";
 import { GenericNodeKey, GroupingNodeKey, HierarchyNodeKey, InstancesNodeKey } from "./HierarchyNodeKey.js";
+import { HierarchyDefinitionParentNode } from "./imodel/IModelHierarchyDefinition.js";
 
 /**
  * @public
@@ -284,13 +285,14 @@ export function createHierarchyFilteringHelper(
      * `nodeKey` prop can be used to check the whole identifier.
      */
     createChildNodeProps: (
-      props:
+      props: { parentNode?: ParentHierarchyNode } & (
         | {
             nodeKey: InstancesNodeKey | GenericNodeKey;
           }
         | {
             pathMatcher: (identifier: HierarchyNodeIdentifier) => boolean;
-          },
+          }
+      ),
     ): NodeProps | undefined => {
       if (!hasFilter) {
         return undefined;
@@ -308,13 +310,14 @@ export function createHierarchyFilteringHelper(
           reducer.accept(normalizedPath);
         }
       });
-      return reducer.getNodeProps();
+      return reducer.getNodeProps(props.parentNode);
     },
 
     /**
      * Similar to `createChildNodeProps`, but takes an async `pathMatcher` prop.
      */
     createChildNodePropsAsync: (props: {
+      parentNode?: HierarchyDefinitionParentNode;
       pathMatcher: (identifier: HierarchyNodeIdentifier) => boolean | Promise<boolean>;
     }): Promise<NodeProps | undefined> | NodeProps | undefined => {
       if (!hasFilter) {
@@ -341,19 +344,17 @@ export function createHierarchyFilteringHelper(
         reducer.accept(normalizedPath);
       }
       if (matchedPathPromises.length === 0) {
-        return reducer.getNodeProps();
+        return reducer.getNodeProps(props.parentNode);
       }
       return Promise.all(matchedPathPromises)
         .then((matchedPath) => matchedPath.forEach((normalizedPath) => normalizedPath && reducer.accept(normalizedPath)))
-        .then(() => reducer.getNodeProps());
+        .then(() => reducer.getNodeProps(props.parentNode));
     },
   };
 }
 
 /** @public */
-export type NodeProps = Pick<HierarchyNode, "autoExpand" | "filtering"> & {
-  filtering?: { autoExpandDepthInPath?: number } | { autoExpandDepthInHierarchy?: number };
-};
+export type NodeProps = Pick<HierarchyNode, "autoExpand" | "filtering">;
 
 type NormalizedFilteringPath = ReturnType<(typeof HierarchyFilteringPath)["normalize"]>;
 
@@ -365,7 +366,8 @@ class MatchingFilteringPathsReducer {
 
   public constructor(private _hasFilterTargetAncestor: boolean) {}
 
-  public accept({ path, options }: NormalizedFilteringPath) {
+  public accept(normalizedPath: NormalizedFilteringPath): void {
+    const { path, options } = normalizedPath;
     if (path.length === 1) {
       this._isFilterTarget = true;
       this._filterTargetOptions = HierarchyFilteringPath.mergeOptions(this._filterTargetOptions, options);
@@ -374,7 +376,29 @@ class MatchingFilteringPathsReducer {
       this._autoExpandOption = HierarchyFilteringPathOptions.mergeAutoExpandOptions(options?.autoExpand, this._autoExpandOption);
     }
   }
-  public getNodeProps(): NodeProps {
+  public getNodeProps(parentNode: ParentHierarchyNode | undefined): NodeProps {
+    let needsAutoExpand = false;
+    if (this._autoExpandOption === true) {
+      needsAutoExpand = true;
+    } else if (typeof this._autoExpandOption === "object") {
+      const parentLength = !parentNode
+        ? 0
+        : "key" in this._autoExpandOption ||
+            "depthInHierarchy" in this._autoExpandOption ||
+            // eslint-disable-next-line @typescript-eslint/no-deprecated
+            ("includeGroupingNodes" in this._autoExpandOption && this._autoExpandOption.includeGroupingNodes)
+          ? 1 + parentNode.parentKeys.length
+          : 1 + parentNode.parentKeys.filter((key) => !HierarchyNodeKey.isGrouping(key)).length;
+      const depth =
+        "depthInHierarchy" in this._autoExpandOption
+          ? this._autoExpandOption.depthInHierarchy
+          : "depth" in this._autoExpandOption
+            ? // eslint-disable-next-line @typescript-eslint/no-deprecated
+              this._autoExpandOption.depth
+            : this._autoExpandOption.depthInPath;
+      needsAutoExpand = parentLength >= depth ? false : true;
+    }
+
     return {
       ...(this._hasFilterTargetAncestor || this._isFilterTarget || this._filteredChildrenIdentifierPaths.length > 0
         ? {
@@ -382,24 +406,10 @@ class MatchingFilteringPathsReducer {
               ...(this._hasFilterTargetAncestor ? { hasFilterTargetAncestor: true } : undefined),
               ...(this._isFilterTarget ? { isFilterTarget: true, filterTargetOptions: this._filterTargetOptions } : undefined),
               ...(this._filteredChildrenIdentifierPaths.length > 0 ? { filteredChildrenIdentifierPaths: this._filteredChildrenIdentifierPaths } : undefined),
-              ...(this._autoExpandOption && this._autoExpandOption !== true
-                ? "depthInPath" in this._autoExpandOption ||
-                  // eslint-disable-next-line @typescript-eslint/no-deprecated
-                  (!("key" in this._autoExpandOption) && !("depthInHierarchy" in this._autoExpandOption) && !this._autoExpandOption.includeGroupingNodes)
-                  ? {
-                      // eslint-disable-next-line @typescript-eslint/no-deprecated
-                      autoExpandDepthInPath: "depthInPath" in this._autoExpandOption ? this._autoExpandOption.depthInPath : this._autoExpandOption.depth,
-                    }
-                  : {
-                      autoExpandDepthInHierarchy:
-                        // eslint-disable-next-line @typescript-eslint/no-deprecated
-                        "depthInHierarchy" in this._autoExpandOption ? this._autoExpandOption.depthInHierarchy : this._autoExpandOption.depth,
-                    }
-                : undefined),
             },
           }
         : undefined),
-      ...(this._autoExpandOption ? { autoExpand: !!this._autoExpandOption } : undefined),
+      ...(needsAutoExpand ? { autoExpand: true } : undefined),
     };
   }
 }

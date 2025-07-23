@@ -134,6 +134,7 @@ export class FilteringHierarchyDefinition implements RxjsHierarchyDefinition {
           const rowInstanceKey = { className: row[ECSQL_COLUMN_NAME_FilterClassName], id: row[ECSQL_COLUMN_NAME_FilterECInstanceId] };
           const filteringHelper = createHierarchyFilteringHelper(this._nodeIdentifierPaths, parentNode);
           const nodeExtraPropsPossiblyPromise = filteringHelper.createChildNodePropsAsync({
+            parentNode,
             pathMatcher: (identifier): boolean | Promise<boolean> => {
               if (identifier.id !== rowInstanceKey.id) {
                 return false;
@@ -156,20 +157,7 @@ export class FilteringHierarchyDefinition implements RxjsHierarchyDefinition {
           return (nodeExtraPropsPossiblyPromise instanceof Promise ? from(nodeExtraPropsPossiblyPromise) : of(nodeExtraPropsPossiblyPromise)).pipe(
             map((nodeExtraProps) => {
               if (nodeExtraProps?.autoExpand) {
-                const parentLength = !parentNode
-                  ? 0
-                  : nodeExtraProps.filtering && "autoExpandDepthInHierarchy" in nodeExtraProps.filtering
-                    ? 1 + parentNode.parentKeys.length
-                    : 1 + parentNode.parentKeys.filter((key) => !HierarchyNodeKey.isGrouping(key)).length;
-                /* c8 ignore next 2 */
-                const depth = !nodeExtraProps.filtering
-                  ? undefined
-                  : "autoExpandDepthInHierarchy" in nodeExtraProps.filtering
-                    ? nodeExtraProps.filtering.autoExpandDepthInHierarchy
-                    : "autoExpandDepthInPath" in nodeExtraProps.filtering
-                      ? nodeExtraProps.filtering.autoExpandDepthInPath
-                      : undefined;
-                parsedNode.autoExpand = depth !== undefined && parentLength >= depth ? undefined : true;
+                parsedNode.autoExpand = true;
               }
               if (nodeExtraProps?.filtering) {
                 parsedNode.filtering = nodeExtraProps.filtering;
@@ -208,7 +196,7 @@ export class FilteringHierarchyDefinition implements RxjsHierarchyDefinition {
               ...definition,
               node: {
                 ...definition.node,
-                ...filteringHelper.createChildNodeProps({ pathMatcher: ({ id }) => id === definition.node.key }),
+                ...filteringHelper.createChildNodeProps({ parentNode: props.parentNode, pathMatcher: ({ id }) => id === definition.node.key }),
               },
             };
           }
