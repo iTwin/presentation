@@ -32,6 +32,12 @@
 - Updated dependencies:
   - @itwin/presentation-shared@2.0.0-alpha.0
 
+## 1.6.1
+
+### Patch Changes
+
+- [#1010](https://github.com/iTwin/presentation/pull/1010): Fixed `HierarchyFilteringPathOptions.autoExpand` depth option not working properly with grouping nodes. Added `includeGroupingNodes` attribute to `FilteringPathAutoExpandOption`, which allows auto-expanding only desired gouping nodes, when set together with `depth` value.
+
 ## 1.6.0
 
 ### Minor Changes

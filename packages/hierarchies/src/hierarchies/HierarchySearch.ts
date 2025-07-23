@@ -25,8 +25,26 @@ export interface SearchTargetGroupingNodeInfo {
 export interface SearchPathAutoExpandOption {
   /**
    * Depth up to which nodes in the hierarchy should be expanded.
+   *
+   * If `includeGroupingNodes` is set to true, then depth should take into account the number of grouping nodes in hierarchy.
    */
   depth: number;
+  /**
+   * Whether or not `depth` includes grouping nodes.
+   *
+   * Use when you want to autoExpand only some of the grouping nodes.
+   *
+   * **Use case example:**
+   *
+   * You want to `autoExpand` only `Node1` and `GroupingNode1` in the following hierarchy:
+   * - Node1
+   *   - GroupingNode1
+   *     - GroupingNode2
+   *       - Element1
+   *       - Element2
+   * Then you provide `autoExpand: { depth: 2, includeGroupingNodes: true }`
+   */
+  includeGroupingNodes?: boolean;
 }
 
 /** @public */
@@ -35,9 +53,9 @@ export interface HierarchySearchPathOptions {
    * This option specifies the way `autoExpand` flag should be assigned to nodes in the searched hierarchy.
    * - If it's `false` or `undefined`, nodes have no 'autoExpand' flag.
    * - If it's `true`, then all nodes up to the search target will have `autoExpand` flag.
-   * - If it's an instance of `FilterTargetGroupingNodeInfo`, then all nodes up to the grouping node that matches this property,
+   * - If it's an instance of `SearchTargetGroupingNodeInfo`, then all nodes up to the grouping node that matches this property,
    * will have `autoExpand` flag.
-   * - If it's an instance of `FilteringPathAutoExpandOption`, then all nodes up to and including `depth` will have `autoExpand` flag.
+   * - If it's an instance of `searchPathAutoExpandOption`, then all nodes up to and including `depth` will have `autoExpand` flag.
    */
   autoExpand?: boolean | SearchTargetGroupingNodeInfo | SearchPathAutoExpandOption;
 }
@@ -69,9 +87,11 @@ export namespace HierarchySearchPath {
    *
    * For the `autoExpand` attribute, the merge chooses to auto-expand as deep as the deepest input:
    * - if any one of the inputs is `true`, return `true`,
-   * - else if both inputs are objects, return the one with the greater `depth` attribute.
-   * - else if one input is an object, return it.
-   * - else, return `false` or `undefined`.
+   * - else if only one of the inputs is an object, return it,
+   * - else if both inputs are falsy, return `false` or `undefined`,
+   * - else:
+   *    - if only one of the inputs has `includeGroupingNodes` set to `true` or `key` defined, return the one that has only `depth` set,
+   *    - else return the one with greater `depth`.
    *
    * @public
    */
@@ -244,7 +264,7 @@ type NormalizedSearchPath = ReturnType<(typeof HierarchySearchPath)["normalize"]
 class MatchingSearchPathsReducer {
   private _searchedChildrenIdentifierPaths = new Array<NormalizedSearchPath>();
   private _isSearchTarget = false;
-  private _searchTargetOptions = undefined as HierarchySearchPathOptions | undefined;
+  private _searchedTargetOptions = undefined as HierarchySearchPathOptions | undefined;
   private _needsAutoExpand: boolean | { depth: number } = false;
 
   public constructor(private _hasSearchTargetAncestor: boolean) {}
@@ -252,7 +272,7 @@ class MatchingSearchPathsReducer {
   public accept({ path, options }: NormalizedSearchPath) {
     if (path.length === 1) {
       this._isSearchTarget = true;
-      this._searchTargetOptions = HierarchySearchPath.mergeOptions(this._searchTargetOptions, options);
+      this._searchedTargetOptions = HierarchySearchPath.mergeOptions(this._searchedTargetOptions, options);
     } else if (path.length > 1) {
       this._searchedChildrenIdentifierPaths.push({ path: path.slice(1), options });
       if (options?.autoExpand) {
@@ -269,9 +289,9 @@ class MatchingSearchPathsReducer {
     return {
       ...(this._hasSearchTargetAncestor || this._isSearchTarget || this._searchedChildrenIdentifierPaths.length > 0
         ? {
-            search: {
+            filtering: {
               ...(this._hasSearchTargetAncestor ? { hasSearchTargetAncestor: true } : undefined),
-              ...(this._isSearchTarget ? { isSearchTarget: true, searchTargetOptions: this._searchTargetOptions } : undefined),
+              ...(this._isSearchTarget ? { isSearchTarget: true, searchTargetOptions: this._searchedTargetOptions } : undefined),
               ...(this._searchedChildrenIdentifierPaths.length > 0 ? { searchedChildrenIdentifierPaths: this._searchedChildrenIdentifierPaths } : undefined),
               ...(this._needsAutoExpand && this._needsAutoExpand !== true ? { autoExpandDepth: this._needsAutoExpand.depth } : undefined),
             },

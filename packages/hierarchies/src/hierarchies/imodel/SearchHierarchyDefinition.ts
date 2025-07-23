@@ -7,7 +7,7 @@ import { defer, filter, from, map, merge, mergeAll, mergeMap, Observable, of, to
 import { Id64String } from "@itwin/core-bentley";
 import { ECClassHierarchyInspector, InstanceKey } from "@itwin/presentation-shared";
 import { HierarchyNodeIdentifier } from "../HierarchyNodeIdentifier.js";
-import { IModelInstanceKey } from "../HierarchyNodeKey.js";
+import { HierarchyNodeKey, IModelInstanceKey } from "../HierarchyNodeKey.js";
 import { createHierarchySearchHelper, HierarchySearchPath } from "../HierarchySearch.js";
 import { partition } from "../internal/operators/Partition.js";
 import { RxjsHierarchyDefinition, RxjsNodeParser, RxjsNodePostProcessor, RxjsNodePreProcessor } from "../internal/RxjsHierarchyDefinition.js";
@@ -79,7 +79,9 @@ export class SearchHierarchyDefinition implements RxjsHierarchyDefinition {
 
         // If grouping node's child has `autoExpandUntil` flag,
         // auto-expand the grouping node only if it's depth is lower than that of the grouping node in associated with the target.
-        const nodeDepth = node.parentKeys.length;
+        const nodeDepth = childAutoExpand.includeGroupingNodes
+          ? node.parentKeys.length
+          : node.parentKeys.filter((key) => !HierarchyNodeKey.isGrouping(key)).length;
         const filterTargetDepth = childAutoExpand.depth;
         if (nodeDepth < filterTargetDepth) {
           return true;
@@ -146,7 +148,11 @@ export class SearchHierarchyDefinition implements RxjsHierarchyDefinition {
           return (nodeExtraPropsPossiblyPromise instanceof Promise ? from(nodeExtraPropsPossiblyPromise) : of(nodeExtraPropsPossiblyPromise)).pipe(
             map((nodeExtraProps) => {
               if (nodeExtraProps?.autoExpand) {
-                const parentLength = parentNode ? 1 + parentNode.parentKeys.length : 0;
+                const parentLength = !parentNode
+                  ? 0
+                  : nodeExtraProps.search?.includeGroupingNodes
+                    ? 1 + parentNode.parentKeys.length
+                    : 1 + parentNode.parentKeys.filter((key) => !HierarchyNodeKey.isGrouping(key)).length;
                 parsedNode.autoExpand =
                   nodeExtraProps.search?.autoExpandDepth !== undefined && parentLength >= nodeExtraProps.search.autoExpandDepth ? undefined : true;
               }

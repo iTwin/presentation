@@ -1123,7 +1123,7 @@ describe("Hierarchies", () => {
                 path: [rootNodeKey, keys.rootElement, keys.middleElement, keys.childElement],
                 options: {
                   autoExpand: {
-                    key: { type: "class-grouping", className: keys.childElement.className },
+                    includeGroupingNodes: true,
                     depth: 5, // root node + (grouping node and instance node for root and middle elements),
                   },
                 },
@@ -1224,7 +1224,6 @@ describe("Hierarchies", () => {
                 path: [rootNodeKey, elementKey],
                 options: {
                   autoExpand: {
-                    key: { type: "class-grouping" as const, className: elementKey.className },
                     depth: 1,
                   },
                 },
@@ -1384,7 +1383,7 @@ describe("Hierarchies", () => {
 
         it("sets auto-expand flag until property grouping node", async () => {
           const autoExpandOptions = {
-            key: { type: "property-grouping:value", propertyClassName: circleClassName, propertyName: "Color", formattedPropertyValue: "Red" },
+            includeGroupingNodes: true,
             depth: 2,
           } as const;
           await validateHierarchy({
@@ -1434,7 +1433,7 @@ describe("Hierarchies", () => {
 
         it("sets auto-expand flag until label grouping node", async () => {
           const autoExpandOptions = {
-            key: { type: "label-grouping", label: "Circle" },
+            includeGroupingNodes: true,
             depth: 3,
           } as const;
           await validateHierarchy({
