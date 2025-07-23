@@ -56,20 +56,20 @@ export function StatelessTreeV2({ imodel, ...props }: { imodel: IModelConnection
 }
 
 function Tree({ imodel, imodelAccess, height, width }: { imodel: IModelConnection; imodelAccess: IModelAccess; height: number; width: number }) {
-  const [filter, setFilter] = useState("");
+  const [searchText, setSearchText] = useState("");
 
-  const getFilteredPaths = useMemo<UseIModelTreeProps["getFilteredPaths"]>(() => {
+  const getSearchPaths = useMemo<UseIModelTreeProps["getSearchPaths"]>(() => {
     return async ({ imodelAccess: filterIModelAccess, abortSignal }) => {
-      if (!filter) {
+      if (!searchText) {
         return undefined;
       }
       return ModelsTreeDefinition.createInstanceKeyPaths({
         imodelAccess: filterIModelAccess,
-        label: filter,
+        label: searchText,
         abortSignal,
       });
     };
-  }, [filter]);
+  }, [searchText]);
 
   const [imodelChanged] = useState(new BeEvent<() => void>());
   useEffect(() => {
@@ -89,7 +89,7 @@ function Tree({ imodel, imodelAccess, height, width }: { imodel: IModelConnectio
     sourceName: "StatelessTreeV2",
     imodelAccess,
     imodelChanged,
-    getFilteredPaths,
+    getSearchPaths,
     getHierarchyDefinition,
     onPerformanceMeasured: (action, duration) => {
       // eslint-disable-next-line no-console
@@ -172,10 +172,10 @@ function Tree({ imodel, imodelAccess, height, width }: { imodel: IModelConnectio
       );
     }
 
-    if (treeProps.treeRendererProps.rootNodes.length === 0 && filter) {
+    if (treeProps.treeRendererProps.rootNodes.length === 0 && searchText) {
       return (
         <Flex alignItems="center" justifyContent="center" flexDirection="column" style={{ height: "100%" }}>
-          <Text isMuted>There are no nodes matching filter text {filter}</Text>
+          <Text isMuted>There are no nodes matching search text {searchText}</Text>
         </Flex>
       );
     }
@@ -226,7 +226,7 @@ function Tree({ imodel, imodelAccess, height, width }: { imodel: IModelConnectio
   return (
     <Flex flexDirection="column" style={{ width, height }}>
       <Flex style={{ width: "100%", padding: "0.5rem" }}>
-        <DebouncedSearchBox onChange={setFilter} />
+        <DebouncedSearchBox onChange={setSearchText} />
         <ToggleSwitch onChange={toggleFormatter} checked={shouldUseCustomFormatter} />
         {imodel.isBriefcaseConnection() ? <Button onClick={() => void removeSelectedElements(imodel)}>Delete</Button> : null}
       </Flex>

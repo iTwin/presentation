@@ -2,28 +2,26 @@
  * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
-/* eslint-disable no-duplicate-imports */
 
 import { expect } from "chai";
 import { insertPhysicalElement, insertPhysicalModelWithPartition, insertSpatialCategory } from "presentation-test-utilities";
 import { expand, filter, first, firstValueFrom, from } from "rxjs";
 import { assert, Id64String } from "@itwin/core-bentley";
 import { IModelConnection } from "@itwin/core-frontend";
-import { createBisInstanceLabelSelectClauseFactory, InstanceKey } from "@itwin/presentation-shared";
-// __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.HierarchyFiltering.HierarchyDefinitionImports
-import { createNodesQueryClauseFactory, GroupingHierarchyNode, HierarchyDefinition, HierarchyNode } from "@itwin/presentation-hierarchies";
-import { ECSqlBinding } from "@itwin/presentation-shared";
 // __PUBLISH_EXTRACT_END__
 // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.HierarchyFiltering.FindPathsImports
 import { createIModelKey } from "@itwin/presentation-core-interop";
-import { HierarchyNodeIdentifiersPath } from "@itwin/presentation-hierarchies";
-import { ECSql, ECSqlQueryDef } from "@itwin/presentation-shared";
-// __PUBLISH_EXTRACT_END__
-// __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.HierarchyFiltering.FilteringImports
-import { createIModelHierarchyProvider } from "@itwin/presentation-hierarchies";
-// __PUBLISH_EXTRACT_END__
-// __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.HierarchyFiltering.HierarchyFilteringPathImport
-import { HierarchyFilteringPath } from "@itwin/presentation-hierarchies";
+// __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.HierarchyFiltering.HierarchyDefinitionImports
+import {
+  createIModelHierarchyProvider,
+  createNodesQueryClauseFactory,
+  GroupingHierarchyNode,
+  HierarchyDefinition,
+  HierarchyNode,
+  HierarchyNodeIdentifiersPath,
+  HierarchySearchPath,
+} from "@itwin/presentation-hierarchies";
+import { createBisInstanceLabelSelectClauseFactory, ECSql, ECSqlBinding, ECSqlQueryDef, InstanceKey } from "@itwin/presentation-shared";
 // __PUBLISH_EXTRACT_END__
 import { buildIModel } from "../../IModelUtils.js";
 import { initialize, terminate } from "../../IntegrationTests.js";
@@ -113,7 +111,7 @@ describe("Hierarchies", () => {
         const hierarchyProvider = createIModelHierarchyProvider({
           imodelAccess,
           hierarchyDefinition: createHierarchyDefinition(imodelAccess),
-          filtering: undefined,
+          search: undefined,
         });
         expect(await collectHierarchy(hierarchyProvider)).to.containSubset([
           {
@@ -184,7 +182,7 @@ describe("Hierarchies", () => {
         const hierarchyProvider = createIModelHierarchyProvider({
           imodelAccess,
           hierarchyDefinition: createHierarchyDefinition(imodelAccess),
-          filtering: { paths: filterPaths },
+          search: { paths: filterPaths },
         });
         // Collect the hierarchy & confirm we get what we expect - a hierarchy from root element "A" to target elements "C" and "E".
         // Note that "E" has a child "F", even though it's not a filter target. This is because subtrees under filter target nodes
@@ -255,7 +253,7 @@ describe("Hierarchies", () => {
         const hierarchyProvider = createIModelHierarchyProvider({
           imodelAccess,
           hierarchyDefinition: createHierarchyDefinition(imodelAccess),
-          filtering: { paths: filterPaths },
+          search: { paths: filterPaths },
         });
         // Collect the hierarchy & confirm we get what we expect - a hierarchy from root element "A" to target elements "C" and "E".
         // Note that "E" has a child "F", even though it's not a filter target. This is because subtrees under filter target nodes
@@ -282,7 +280,7 @@ describe("Hierarchies", () => {
 
         // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.HierarchyFiltering.AutoExpand.FilteringPath
         // Get a grouping node that groups the "C" element
-        const filteringPath: HierarchyFilteringPath = {
+        const filteringPath: HierarchySearchPath = {
           // Path to the element "C"
           path: [elementKeys.a, elementKeys.b, elementKeys.c],
           // Supply options for the filtering path
@@ -297,7 +295,7 @@ describe("Hierarchies", () => {
         const hierarchyProvider = createIModelHierarchyProvider({
           imodelAccess,
           hierarchyDefinition: createHierarchyDefinition(imodelAccess),
-          filtering: {
+          search: {
             paths: [filteringPath],
           },
         });
@@ -394,7 +392,7 @@ describe("Hierarchies", () => {
         // Hierarchy has two grouping nodes under C element: one class grouping and one label grouping node.
         // Get grouping node that groups the "C" element and is the nearest grouping node to it
         const groupingNode = await getSelectedGroupingNode();
-        const filteringPath: HierarchyFilteringPath = {
+        const searchPath: HierarchySearchPath = {
           // Path to the element "C"
           path: [elementKeys.a, elementKeys.b, elementKeys.c],
           options: {
@@ -408,8 +406,8 @@ describe("Hierarchies", () => {
         const hierarchyProvider = createIModelHierarchyProvider({
           imodelAccess,
           hierarchyDefinition,
-          filtering: {
-            paths: [filteringPath],
+          search: {
+            paths: [searchPath],
           },
         });
 
@@ -521,8 +519,8 @@ describe("Hierarchies", () => {
           },
         };
 
-        // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.HierarchyFiltering.AutoExpandUntilDepthWithoutGrouping.FilteringPath
-        const filteringPath: HierarchyFilteringPath = {
+        // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.HierarchyFiltering.AutoExpandUntilGroupingNode.FilteringPath
+        const filteringPath: HierarchySearchPath = {
           // Path to the element "C"
           path: [elementKeys.a, elementKeys.b, elementKeys.c],
           options: {
@@ -536,7 +534,7 @@ describe("Hierarchies", () => {
         const hierarchyProvider = createIModelHierarchyProvider({
           imodelAccess,
           hierarchyDefinition,
-          filtering: {
+          search: {
             paths: [filteringPath],
           },
         });

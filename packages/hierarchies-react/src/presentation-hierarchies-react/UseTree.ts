@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { GenericInstanceFilter, HierarchyFilteringPath, HierarchyNode, HierarchyProvider } from "@itwin/presentation-hierarchies";
+import { GenericInstanceFilter, HierarchyNode, HierarchyProvider, HierarchySearchPath } from "@itwin/presentation-hierarchies";
 import { IPrimitiveValueFormatter } from "@itwin/presentation-shared";
 import { TreeActions } from "./internal/TreeActions.js";
 import { TreeModel, TreeModelHierarchyNode, TreeModelRootNode } from "./internal/TreeModel.js";
@@ -70,7 +70,7 @@ export interface UseTreeProps {
   /** Provides the hierarchy provider for the tree. */
   getHierarchyProvider: () => HierarchyProvider;
   /** Provides paths to filtered nodes. */
-  getFilteredPaths?: ({ abortSignal }: { abortSignal: AbortSignal }) => Promise<HierarchyFilteringPath[] | undefined>;
+  getSearchPaths?: ({ abortSignal }: { abortSignal: AbortSignal }) => Promise<HierarchySearchPath[] | undefined>;
   /**
    * Callback that is called just after a certain action is finished.
    * Can be used for performance tracking.
@@ -125,7 +125,7 @@ interface TreeState {
 
 function useTreeInternal({
   getHierarchyProvider,
-  getFilteredPaths,
+  getSearchPaths,
   onPerformanceMeasured,
   onHierarchyLimitExceeded,
   onHierarchyLoadError,
@@ -183,7 +183,7 @@ function useTreeInternal({
         return;
       }
 
-      if (!getFilteredPaths) {
+      if (!getSearchPaths) {
         hierarchyProvider.setHierarchyFilter(undefined);
         // reload tree in case hierarchy provider does not use hierarchy filter to load initial nodes
         actions.reloadTree({ state: "keep" });
@@ -192,9 +192,9 @@ function useTreeInternal({
       }
 
       setIsFiltering(true);
-      let paths: HierarchyFilteringPath[] | undefined;
+      let paths: HierarchySearchPath[] | undefined;
       try {
-        paths = await getFilteredPaths({ abortSignal: controller.signal });
+        paths = await getSearchPaths({ abortSignal: controller.signal });
       } catch {
       } finally {
         if (!disposed) {
@@ -207,7 +207,7 @@ function useTreeInternal({
       controller.abort();
       disposed = true;
     };
-  }, [hierarchyProvider, getFilteredPaths, actions]);
+  }, [hierarchyProvider, getSearchPaths, actions]);
 
   const getTreeModelNode = useCallback<(nodeId: string) => TreeModelRootNode | TreeModelHierarchyNode | undefined>(
     (nodeId: string) => {
@@ -359,7 +359,7 @@ function toPresentationHierarchyNodeBase(node: TreeModelHierarchyNode): Omit<Pre
     nodeData: node.nodeData,
     isLoading: !!node.isLoading,
     isExpanded: !!node.isExpanded,
-    isFilterable: !HierarchyNode.isGroupingNode(node.nodeData) && !!node.nodeData.supportsFiltering && node.children,
+    isFilterable: !HierarchyNode.isGroupingNode(node.nodeData) && !!node.nodeData.supportsSearch && node.children,
     isFiltered: !!node.instanceFilter,
     error: node.error,
   };

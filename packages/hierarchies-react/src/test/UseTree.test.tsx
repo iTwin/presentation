@@ -214,7 +214,7 @@ describe("useTree", () => {
       return createAsyncIterator(props.parentNode === undefined ? [createTestHierarchyNode({ id: "root-1" })] : []);
     });
 
-    const promise = new ResolvablePromise<hierarchiesModule.HierarchyFilteringPath[] | undefined>();
+    const promise = new ResolvablePromise<hierarchiesModule.HierarchySearchPath[] | undefined>();
     const getFilteredPaths = async () => promise;
 
     const { result } = renderHook(useTree, { initialProps: { ...initialProps, getFilteredPaths } });
@@ -329,7 +329,7 @@ describe("useTree", () => {
       return createAsyncIterator([createTestHierarchyNode({ id: "child-1" }), createTestHierarchyNode({ id: "child-2" })]);
     });
 
-    rerender({ ...initialProps, getFilteredPaths: async () => [] });
+    rerender({ ...initialProps, getSearchPaths: async () => [] });
 
     await waitFor(() => {
       const treeRenderProps = getTreeRendererProps(result.current);
@@ -512,7 +512,7 @@ describe("useTree", () => {
   });
 
   it("applies and removes instance filter", async () => {
-    const rootNodes = [createTestHierarchyNode({ id: "root-1", autoExpand: true, supportsFiltering: true, children: true })];
+    const rootNodes = [createTestHierarchyNode({ id: "root-1", autoExpand: true, supportsSearch: true, children: true })];
     const childNodes = [createTestHierarchyNode({ id: "child-1" }), createTestHierarchyNode({ id: "child-1" })];
 
     hierarchyProvider.getNodes.callsFake((props) => {
@@ -556,7 +556,7 @@ describe("useTree", () => {
   });
 
   it("applies instance filter on grouping node parent", async () => {
-    const rootNodes = [createTestHierarchyNode({ id: "root-1", autoExpand: true, children: true, supportsFiltering: true })];
+    const rootNodes = [createTestHierarchyNode({ id: "root-1", autoExpand: true, children: true, supportsSearch: true })];
     const groupingNode = createTestGroupingNode({
       id: "grouping-node",
       key: { type: "class-grouping", className: "Schema:Class" },

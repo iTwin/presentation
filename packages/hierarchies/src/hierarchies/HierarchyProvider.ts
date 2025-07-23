@@ -8,8 +8,8 @@ import { filter, first, from, map, mergeMap, of } from "rxjs";
 import { BeEvent } from "@itwin/core-bentley";
 import { GenericInstanceFilter } from "@itwin/core-common";
 import { Event, InstanceKey, IPrimitiveValueFormatter, Props } from "@itwin/presentation-shared";
-import { HierarchyFilteringPath } from "./HierarchyFiltering.js";
 import { HierarchyNode, ParentHierarchyNode } from "./HierarchyNode.js";
+import { HierarchySearchPath } from "./HierarchySearch.js";
 import { safeDispose } from "./internal/Common.js";
 import { eachValueFrom } from "./internal/EachValueFrom.js";
 import { sortNodesByLabelOperator } from "./internal/operators/Sorting.js";
@@ -108,7 +108,7 @@ export interface HierarchyProvider {
     props:
       | {
           /** A list of node identifiers from root to target node. */
-          paths: HierarchyFilteringPath[];
+          paths: HierarchySearchPath[];
         }
       | undefined,
   ): void;

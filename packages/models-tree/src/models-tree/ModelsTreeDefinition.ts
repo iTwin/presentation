@@ -118,8 +118,8 @@ type ModelsTreeInstanceKeyPathsFromInstanceLabelProps = {
 
 export type ModelsTreeInstanceKeyPathsProps = ModelsTreeInstanceKeyPathsFromTargetItemsProps | ModelsTreeInstanceKeyPathsFromInstanceLabelProps;
 type HierarchyProviderProps = Props<typeof createIModelHierarchyProvider>;
-type HierarchyFilteringPaths = NonNullable<NonNullable<HierarchyProviderProps["filtering"]>["paths"]>;
-type HierarchyFilteringPath = HierarchyFilteringPaths[number];
+type HierarchySearchPaths = NonNullable<NonNullable<HierarchyProviderProps["search"]>["paths"]>;
+type HierarchySearchPath = HierarchySearchPaths[number];
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export namespace ModelsTreeInstanceKeyPathsProps {
@@ -606,7 +606,7 @@ function createGeometricElementInstanceKeyPaths(
   idsCache: ModelsTreeIdsCache,
   hierarchyConfig: ModelsTreeHierarchyConfiguration,
   targetItems: Array<Id64String | ElementsGroupInfo>,
-): Observable<HierarchyFilteringPath> {
+): Observable<HierarchySearchPath> {
   const elementIds = targetItems.filter((info): info is Id64String => typeof info === "string");
   const groupInfos = targetItems.filter((info): info is ElementsGroupInfo => typeof info !== "string");
   const separator = ";";
@@ -747,7 +747,7 @@ async function createInstanceKeyPathsFromTargetItems({
   imodelAccess,
   limit,
   ...props
-}: ModelsTreeInstanceKeyPathsFromTargetItemsProps): Promise<HierarchyFilteringPath[]> {
+}: ModelsTreeInstanceKeyPathsFromTargetItemsProps): Promise<HierarchySearchPath[]> {
   if (limit !== "unbounded" && targetItems.length > (limit ?? MAX_FILTERING_INSTANCE_KEY_COUNT)) {
     throw new RowsLimitExceededError(limit ?? MAX_FILTERING_INSTANCE_KEY_COUNT);
   }
