@@ -4,7 +4,6 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { OmitOverUnion } from "@itwin/presentation-shared";
-import { HierarchySearchPath, HierarchySearchPathOptions } from "./HierarchyFiltering.js";
 import {
   ClassGroupingNodeKey,
   GenericNodeKey,
@@ -19,6 +18,7 @@ import {
   PropertyValueGroupingNodeKey,
   PropertyValueRangeGroupingNodeKey,
 } from "./HierarchyNodeKey.js";
+import { HierarchySearchPath, HierarchySearchPathOptions } from "./HierarchySearch.js";
 
 /** @public */
 export type HierarchyNodeSearchProps = {
@@ -92,7 +92,7 @@ export interface NonGroupingHierarchyNode extends BaseHierarchyNode {
    * Identifies whether the hierarchy level below this node supports filtering. If not, supplying an instance
    * filter when requesting child hierarchy level will have no effect.
    */
-  supportsFiltering?: boolean;
+  supportsSearch?: boolean;
 }
 
 /**

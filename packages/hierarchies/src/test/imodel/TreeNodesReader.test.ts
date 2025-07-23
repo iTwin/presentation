@@ -88,7 +88,7 @@ describe("defaultNodesParser", () => {
       },
       children: true,
       autoExpand: true,
-      supportsFiltering: true,
+      supportsSearch: true,
       processingParams: {
         hideIfNoChildren: true,
         hideInHierarchy: true,

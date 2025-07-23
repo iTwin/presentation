@@ -181,7 +181,7 @@ export function createHierarchySearchHelper(
       if (!hasFilter) {
         return undefined;
       }
-      const reducer = new MatchingFilteringPathsReducer(searchProps?.hasSearchTargetAncestor);
+      const reducer = new MatchingSearchPathsReducer(searchProps?.hasSearchTargetAncestor);
       searchProps.searchedNodePaths.forEach((searchedPath) => {
         const normalizedPath = HierarchySearchPath.normalize(searchedPath);
         if (
@@ -206,7 +206,7 @@ export function createHierarchySearchHelper(
       if (!hasFilter) {
         return undefined;
       }
-      const reducer = new MatchingFilteringPathsReducer(searchProps?.hasSearchTargetAncestor);
+      const reducer = new MatchingSearchPathsReducer(searchProps?.hasSearchTargetAncestor);
       const matchedPathPromises = new Array<Promise<NormalizedSearchPath | undefined>>();
       for (const filteredChildrenNodeIdentifierPath of searchProps.searchedNodePaths) {
         const normalizedPath = HierarchySearchPath.normalize(filteredChildrenNodeIdentifierPath);
@@ -241,7 +241,7 @@ export type NodeProps = Pick<HierarchyNode, "autoExpand" | "search"> & { search?
 
 type NormalizedSearchPath = ReturnType<(typeof HierarchySearchPath)["normalize"]>;
 
-class MatchingFilteringPathsReducer {
+class MatchingSearchPathsReducer {
   private _searchedChildrenIdentifierPaths = new Array<NormalizedSearchPath>();
   private _isSearchTarget = false;
   private _searchTargetOptions = undefined as HierarchySearchPathOptions | undefined;

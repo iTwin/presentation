@@ -41,10 +41,10 @@ import {
   normalizeFullClassName,
 } from "@itwin/presentation-shared";
 import { RowsLimitExceededError } from "../HierarchyErrors.js";
-import { HierarchySearchPath } from "../HierarchyFiltering.js";
 import { HierarchyNode, NonGroupingHierarchyNode, ParentHierarchyNode } from "../HierarchyNode.js";
 import { GenericNodeKey, HierarchyNodeKey, IModelInstanceKey, InstancesNodeKey } from "../HierarchyNodeKey.js";
 import { GetHierarchyNodesProps, HierarchyProvider } from "../HierarchyProvider.js";
+import { HierarchySearchPath } from "../HierarchySearch.js";
 import {
   LOGGING_NAMESPACE as BASE_LOGGING_NAMESPACE,
   LOGGING_NAMESPACE_INTERNAL as BASE_LOGGING_NAMESPACE_INTERNAL,
@@ -60,7 +60,6 @@ import { shareReplayWithErrors } from "../internal/operators/ShareReplayWithErro
 import { sortNodesByLabelOperator } from "../internal/operators/Sorting.js";
 import { getRxjsHierarchyDefinition, RxjsHierarchyDefinition } from "../internal/RxjsHierarchyDefinition.js";
 import { SubscriptionScheduler } from "../internal/SubscriptionScheduler.js";
-import { FilteringHierarchyDefinition } from "./FilteringHierarchyDefinition.js";
 import { HierarchyCache } from "./HierarchyCache.js";
 import { DefineHierarchyLevelProps, HierarchyDefinition, HierarchyNodesDefinition } from "./IModelHierarchyDefinition.js";
 import { ProcessedGroupingHierarchyNode, ProcessedHierarchyNode, SourceGenericHierarchyNode, SourceInstanceHierarchyNode } from "./IModelHierarchyNode.js";
@@ -70,6 +69,7 @@ import { createDetermineChildrenOperator } from "./operators/DetermineChildren.j
 import { createGroupingOperator } from "./operators/Grouping.js";
 import { createHideIfNoChildrenOperator } from "./operators/HideIfNoChildren.js";
 import { createHideNodesInHierarchyOperator } from "./operators/HideNodesInHierarchy.js";
+import { SearchHierarchyDefinition } from "./SearchHierarchyDefinition.js";
 import { readNodes } from "./TreeNodesReader.js";
 
 const LOGGING_NAMESPACE = `${BASE_LOGGING_NAMESPACE}.IModelHierarchyProvider`;
@@ -244,7 +244,7 @@ class IModelHierarchyProviderImpl implements HierarchyProvider {
       this._hierarchyChanged.raiseEvent({ filterChange: { newFilter: undefined } });
       return;
     }
-    this._activeHierarchyDefinition = new FilteringHierarchyDefinition({
+    this._activeHierarchyDefinition = new SearchHierarchyDefinition({
       imodelAccess: this._imodelAccess,
       source: this._sourceHierarchyDefinition,
       nodeIdentifierPaths: props.paths,

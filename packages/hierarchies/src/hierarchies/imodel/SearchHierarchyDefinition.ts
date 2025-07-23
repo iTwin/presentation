@@ -6,23 +6,23 @@
 import { defer, filter, from, map, merge, mergeAll, mergeMap, Observable, of, toArray } from "rxjs";
 import { Id64String } from "@itwin/core-bentley";
 import { ECClassHierarchyInspector, InstanceKey } from "@itwin/presentation-shared";
-import { createHierarchySearchHelper, HierarchySearchPath } from "../HierarchyFiltering.js";
 import { HierarchyNodeIdentifier } from "../HierarchyNodeIdentifier.js";
 import { IModelInstanceKey } from "../HierarchyNodeKey.js";
+import { createHierarchySearchHelper, HierarchySearchPath } from "../HierarchySearch.js";
+import { partition } from "../internal/operators/Partition.js";
+import { RxjsHierarchyDefinition, RxjsNodeParser, RxjsNodePostProcessor, RxjsNodePreProcessor } from "../internal/RxjsHierarchyDefinition.js";
 import {
   DefineHierarchyLevelProps,
   GenericHierarchyNodeDefinition,
   HierarchyLevelDefinition,
   HierarchyNodesDefinition,
   InstanceNodesQueryDefinition,
-} from "../imodel/IModelHierarchyDefinition.js";
-import { ProcessedGroupingHierarchyNode, ProcessedHierarchyNode } from "../imodel/IModelHierarchyNode.js";
-import { NodeSelectClauseColumnNames } from "../imodel/NodeSelectQueryFactory.js";
-import { defaultNodesParser } from "../imodel/TreeNodesReader.js";
-import { partition } from "../internal/operators/Partition.js";
-import { RxjsHierarchyDefinition, RxjsNodeParser, RxjsNodePostProcessor, RxjsNodePreProcessor } from "../internal/RxjsHierarchyDefinition.js";
+} from "./IModelHierarchyDefinition.js";
+import { ProcessedGroupingHierarchyNode, ProcessedHierarchyNode } from "./IModelHierarchyNode.js";
+import { NodeSelectClauseColumnNames } from "./NodeSelectQueryFactory.js";
+import { defaultNodesParser } from "./TreeNodesReader.js";
 
-interface FilteringHierarchyDefinitionProps {
+interface SearchHierarchyDefinitionProps {
   imodelAccess: ECClassHierarchyInspector & { imodelKey: string };
   source: RxjsHierarchyDefinition;
   nodeIdentifierPaths: HierarchySearchPath[];
@@ -30,13 +30,13 @@ interface FilteringHierarchyDefinitionProps {
 }
 
 /** @internal */
-export class FilteringHierarchyDefinition implements RxjsHierarchyDefinition {
+export class SearchHierarchyDefinition implements RxjsHierarchyDefinition {
   private _imodelAccess: ECClassHierarchyInspector & { imodelKey: string };
   private _source: RxjsHierarchyDefinition;
   private _nodeIdentifierPaths: HierarchySearchPath[];
   private _nodesParser: RxjsNodeParser;
 
-  public constructor(props: FilteringHierarchyDefinitionProps) {
+  public constructor(props: SearchHierarchyDefinitionProps) {
     this._imodelAccess = props.imodelAccess;
     this._source = props.source;
     this._nodeIdentifierPaths = props.nodeIdentifierPaths;

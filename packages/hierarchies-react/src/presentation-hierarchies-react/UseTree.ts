@@ -359,7 +359,7 @@ function toPresentationHierarchyNodeBase(node: TreeModelHierarchyNode): Omit<Pre
     nodeData: node.nodeData,
     isLoading: !!node.isLoading,
     isExpanded: !!node.isExpanded,
-    isFilterable: !HierarchyNode.isGroupingNode(node.nodeData) && !!node.nodeData.supportsFiltering && node.children,
+    isFilterable: !HierarchyNode.isGroupingNode(node.nodeData) && !!node.nodeData.supportsSearch && node.children,
     isFiltered: !!node.instanceFilter,
     error: node.error,
   };

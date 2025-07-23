@@ -4,9 +4,9 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { expect } from "chai";
-import { HierarchySearchPath, HierarchySearchPathOptions } from "../hierarchies/HierarchyFiltering.js";
+import { HierarchySearchPath, HierarchySearchPathOptions } from "../hierarchies/HierarchySearch.js";
 
-describe("HierarchyFilteringPath", () => {
+describe("HierarchySearchPath", () => {
   describe("mergeOptions", () => {
     describe("autoExpand", () => {
       const optionsInOrderOfPriority: Array<HierarchySearchPathOptions | undefined> = [

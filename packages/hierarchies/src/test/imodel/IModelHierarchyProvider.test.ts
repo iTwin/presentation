@@ -12,12 +12,12 @@ import { EC, ECSqlQueryDef, ECSqlQueryReaderOptions, InstanceKey, trimWhitespace
 import { RowsLimitExceededError } from "../../hierarchies/HierarchyErrors.js";
 import { GroupingHierarchyNode, HierarchyNode, ParentHierarchyNode } from "../../hierarchies/HierarchyNode.js";
 import { GroupingNodeKey } from "../../hierarchies/HierarchyNodeKey.js";
-import { ECSQL_COLUMN_NAME_FilterClassName, ECSQL_COLUMN_NAME_FilterECInstanceId } from "../../hierarchies/imodel/FilteringHierarchyDefinition.js";
 import { DefineHierarchyLevelProps, HierarchyDefinition, NodeParser } from "../../hierarchies/imodel/IModelHierarchyDefinition.js";
 import { InstanceHierarchyNodeProcessingParams, ProcessedHierarchyNode, SourceInstanceHierarchyNode } from "../../hierarchies/imodel/IModelHierarchyNode.js";
 import { createIModelHierarchyProvider } from "../../hierarchies/imodel/IModelHierarchyProvider.js";
 import { LimitingECSqlQueryExecutor } from "../../hierarchies/imodel/LimitingECSqlQueryExecutor.js";
 import { NodeSelectClauseColumnNames } from "../../hierarchies/imodel/NodeSelectQueryFactory.js";
+import { ECSQL_COLUMN_NAME_FilterClassName, ECSQL_COLUMN_NAME_FilterECInstanceId } from "../../hierarchies/imodel/SearchHierarchyDefinition.js";
 import { RowDef } from "../../hierarchies/imodel/TreeNodesReader.js";
 import { createIModelAccessStub, createTestGenericNode, createTestGenericNodeKey, createTestInstanceKey, createTestSourceGenericNode } from "../Utils.js";
 
