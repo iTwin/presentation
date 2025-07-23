@@ -50,11 +50,11 @@ export function createHierarchyFilteringHelper(rootLevelFilteringProps: Hierarch
         nodeKey: InstancesNodeKey | GenericNodeKey;
     } | {
         pathMatcher: (identifier: HierarchyNodeIdentifier) => boolean;
-    })) => NodeProps | undefined;
+    })) => Pick<HierarchyNode, "autoExpand" | "filtering"> | undefined;
     createChildNodePropsAsync: (props: {
         parentNode?: HierarchyDefinitionParentNode;
         pathMatcher: (identifier: HierarchyNodeIdentifier) => boolean | Promise<boolean>;
-    }) => Promise<NodeProps | undefined> | NodeProps | undefined;
+    }) => Promise<Pick<HierarchyNode, "autoExpand" | "filtering"> | undefined> | Pick<HierarchyNode, "autoExpand" | "filtering"> | undefined;
 };
 
 // @public
@@ -598,9 +598,6 @@ export type NodePostProcessor = (node: ProcessedHierarchyNode) => Promise<Proces
 
 // @public
 export type NodePreProcessor = <TNode extends ProcessedGenericHierarchyNode | ProcessedInstanceHierarchyNode>(node: TNode) => Promise<TNode | undefined>;
-
-// @public (undocumented)
-type NodeProps = Pick<HierarchyNode, "autoExpand" | "filtering">;
 
 // @public
 export enum NodeSelectClauseColumnNames {

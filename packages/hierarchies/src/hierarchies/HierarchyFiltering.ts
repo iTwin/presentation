@@ -293,7 +293,7 @@ export function createHierarchyFilteringHelper(
             pathMatcher: (identifier: HierarchyNodeIdentifier) => boolean;
           }
       ),
-    ): NodeProps | undefined => {
+    ): Pick<HierarchyNode, "autoExpand" | "filtering"> | undefined => {
       if (!hasFilter) {
         return undefined;
       }
@@ -319,7 +319,7 @@ export function createHierarchyFilteringHelper(
     createChildNodePropsAsync: (props: {
       parentNode?: HierarchyDefinitionParentNode;
       pathMatcher: (identifier: HierarchyNodeIdentifier) => boolean | Promise<boolean>;
-    }): Promise<NodeProps | undefined> | NodeProps | undefined => {
+    }): Promise<Pick<HierarchyNode, "autoExpand" | "filtering"> | undefined> | Pick<HierarchyNode, "autoExpand" | "filtering"> | undefined => {
       if (!hasFilter) {
         return undefined;
       }
@@ -353,9 +353,6 @@ export function createHierarchyFilteringHelper(
   };
 }
 
-/** @public */
-export type NodeProps = Pick<HierarchyNode, "autoExpand" | "filtering">;
-
 type NormalizedFilteringPath = ReturnType<(typeof HierarchyFilteringPath)["normalize"]>;
 
 class MatchingFilteringPathsReducer {
@@ -376,7 +373,8 @@ class MatchingFilteringPathsReducer {
       this._autoExpandOption = HierarchyFilteringPathOptions.mergeAutoExpandOptions(options?.autoExpand, this._autoExpandOption);
     }
   }
-  public getNodeProps(parentNode: ParentHierarchyNode | undefined): NodeProps {
+
+  private getNeedsAutoExpand(parentNode?: ParentHierarchyNode): boolean {
     let needsAutoExpand = false;
     if (this._autoExpandOption === true) {
       needsAutoExpand = true;
@@ -398,7 +396,10 @@ class MatchingFilteringPathsReducer {
             : this._autoExpandOption.depthInPath;
       needsAutoExpand = parentLength >= depth ? false : true;
     }
+    return needsAutoExpand;
+  }
 
+  public getNodeProps(parentNode: ParentHierarchyNode | undefined): Pick<HierarchyNode, "autoExpand" | "filtering"> {
     return {
       ...(this._hasFilterTargetAncestor || this._isFilterTarget || this._filteredChildrenIdentifierPaths.length > 0
         ? {
@@ -409,7 +410,7 @@ class MatchingFilteringPathsReducer {
             },
           }
         : undefined),
-      ...(needsAutoExpand ? { autoExpand: true } : undefined),
+      ...(this.getNeedsAutoExpand(parentNode) ? { autoExpand: true } : undefined),
     };
   }
 }
