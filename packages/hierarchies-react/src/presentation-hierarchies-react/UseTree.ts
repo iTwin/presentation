@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { GenericInstanceFilter, HierarchyFilteringPath, HierarchyNode, HierarchyProvider } from "@itwin/presentation-hierarchies";
+import { GenericInstanceFilter, HierarchyNode, HierarchyProvider, HierarchySearchPath } from "@itwin/presentation-hierarchies";
 import { IPrimitiveValueFormatter } from "@itwin/presentation-shared";
 import { TreeActions } from "./internal/TreeActions.js";
 import { TreeModel, TreeModelHierarchyNode, TreeModelRootNode } from "./internal/TreeModel.js";
@@ -70,7 +70,7 @@ export interface UseTreeProps {
   /** Provides the hierarchy provider for the tree. */
   getHierarchyProvider: () => HierarchyProvider;
   /** Provides paths to filtered nodes. */
-  getSearchPaths?: ({ abortSignal }: { abortSignal: AbortSignal }) => Promise<HierarchyFilteringPath[] | undefined>;
+  getSearchPaths?: ({ abortSignal }: { abortSignal: AbortSignal }) => Promise<HierarchySearchPath[] | undefined>;
   /**
    * Callback that is called just after a certain action is finished.
    * Can be used for performance tracking.
@@ -192,7 +192,7 @@ function useTreeInternal({
       }
 
       setIsFiltering(true);
-      let paths: HierarchyFilteringPath[] | undefined;
+      let paths: HierarchySearchPath[] | undefined;
       try {
         paths = await getSearchPaths({ abortSignal: controller.signal });
       } catch {

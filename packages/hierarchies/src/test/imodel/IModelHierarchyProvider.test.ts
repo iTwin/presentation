@@ -749,7 +749,7 @@ describe("createIModelHierarchyProvider", () => {
             return [];
           },
         },
-        filtering: {
+        search: {
           paths: [
             [
               { className: "a.b", id: "0x123" },
@@ -798,8 +798,8 @@ describe("createIModelHierarchyProvider", () => {
           parentKeys: [],
           label: "test label",
           children: false,
-          filtering: {
-            filteredChildrenIdentifierPaths: [{ path: [{ className: "c.d", id: "0x456" }], options: undefined }],
+          search: {
+            searchedChildrenIdentifierPaths: [{ path: [{ className: "c.d", id: "0x456" }], options: undefined }],
           },
         },
       ]);
@@ -925,8 +925,8 @@ describe("createIModelHierarchyProvider", () => {
           instanceKeys: [{ className: "a.b", id: "0x123" }],
         },
         children: false,
-        filtering: {
-          filteredChildrenIdentifierPaths: [{ path: [{ className: "c.d", id: "0x456" }], options: undefined }],
+        search: {
+          searchedChildrenIdentifierPaths: [{ path: [{ className: "c.d", id: "0x456" }], options: undefined }],
         },
       });
 

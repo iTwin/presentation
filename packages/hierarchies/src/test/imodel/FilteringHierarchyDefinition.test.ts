@@ -7,7 +7,7 @@ import { assert, expect } from "chai";
 import { firstValueFrom, from, lastValueFrom, of, toArray } from "rxjs";
 import sinon from "sinon";
 import { ECClassHierarchyInspector, trimWhitespace } from "@itwin/presentation-shared";
-import { FilterTargetGroupingNodeInfo, HierarchyFilteringPath, HierarchyFilteringPathOptions } from "../../hierarchies/HierarchyFiltering.js";
+import { HierarchySearchPath, HierarchySearchPathOptions, SearchTargetGroupingNodeInfo } from "../../hierarchies/HierarchyFiltering.js";
 import { HierarchyNode } from "../../hierarchies/HierarchyNode.js";
 import { HierarchyNodeIdentifiersPath } from "../../hierarchies/HierarchyNodeIdentifier.js";
 import {
@@ -83,17 +83,17 @@ describe("FilteringHierarchyDefinition", () => {
         [ECSQL_COLUMN_NAME_FilterClassName]: className,
       };
       const node = await firstValueFrom(filteringFactory.parseNode(row));
-      expect(node.filtering).to.deep.eq({
-        filteredChildrenIdentifierPaths: [
+      expect(node.search).to.deep.eq({
+        searchedChildrenIdentifierPaths: [
           { path: [createTestInstanceKey({ id: "0x1" }), createTestInstanceKey({ id: "0x2" })], options: undefined },
           { path: [createTestInstanceKey({ id: "0x3" })], options: undefined },
         ],
-        isFilterTarget: true,
-        filterTargetOptions: undefined,
+        isSearchTarget: true,
+        searchTargetOptions: undefined,
       });
     });
 
-    it("sets correct filteredChildrenIdentifierPaths when parentNode paths have same id's and different classNames that don't derive from one another", async () => {
+    it("sets correct searchedChildrenIdentifierPaths when parentNode paths have same id's and different classNames that don't derive from one another", async () => {
       const sourceFactory = {} as unknown as RxjsHierarchyDefinition;
 
       const className = "TestSchema.TestName";
@@ -118,21 +118,21 @@ describe("FilteringHierarchyDefinition", () => {
         label: "",
         parentKeys: [],
         key: { type: "generic", id: "" },
-        filtering: { filteredChildrenIdentifierPaths: paths },
+        search: { searchedChildrenIdentifierPaths: paths },
       };
       const node = await firstValueFrom(filteringFactory.parseNode(row, parentNode));
-      expect(node.filtering).to.deep.eq({
-        filteredChildrenIdentifierPaths: [{ path: [createTestInstanceKey({ id: "0x1" }), createTestInstanceKey({ id: "0x2" })], options: undefined }],
-        isFilterTarget: true,
-        filterTargetOptions: undefined,
+      expect(node.search).to.deep.eq({
+        searchedChildrenIdentifierPaths: [{ path: [createTestInstanceKey({ id: "0x1" }), createTestInstanceKey({ id: "0x2" })], options: undefined }],
+        isSearchTarget: true,
+        searchTargetOptions: undefined,
       });
     });
 
-    it("sets correct filteredChildrenIdentifierPaths when same identifier is in different positions of different paths", async () => {
+    it("sets correct searchedChildrenIdentifierPaths when same identifier is in different positions of different paths", async () => {
       const sourceFactory = {} as unknown as RxjsHierarchyDefinition;
 
       const className = "TestSchema.TestName";
-      const paths: HierarchyFilteringPath[] = [
+      const paths: HierarchySearchPath[] = [
         [createTestInstanceKey({ id: "0x4", className }), createTestInstanceKey({ id: "0x2" })],
         [createTestInstanceKey({ id: "0x3" }), createTestInstanceKey({ id: "0x4", className }), createTestInstanceKey({ id: "0x5" })],
       ];
@@ -150,19 +150,19 @@ describe("FilteringHierarchyDefinition", () => {
         label: "",
         parentKeys: [],
         key: { type: "generic", id: "" },
-        filtering: { filteredChildrenIdentifierPaths: paths },
+        search: { searchedChildrenIdentifierPaths: paths },
       };
       const node = await firstValueFrom(filteringFactory.parseNode(row, parentNode));
-      expect(node.filtering).to.deep.eq({
-        filteredChildrenIdentifierPaths: [{ path: [createTestInstanceKey({ id: "0x2" })], options: undefined }],
+      expect(node.search).to.deep.eq({
+        searchedChildrenIdentifierPaths: [{ path: [createTestInstanceKey({ id: "0x2" })], options: undefined }],
       });
     });
 
-    it("sets correct filteredChildrenIdentifierPaths when same identifier is in different positions of the same path", async () => {
+    it("sets correct searchedChildrenIdentifierPaths when same identifier is in different positions of the same path", async () => {
       const sourceFactory = {} as unknown as RxjsHierarchyDefinition;
 
       const className = "TestSchema.TestName";
-      const paths: HierarchyFilteringPath[] = [
+      const paths: HierarchySearchPath[] = [
         [
           createTestInstanceKey({ id: "0x3", className }),
           createTestInstanceKey({ id: "0x1" }),
@@ -183,11 +183,11 @@ describe("FilteringHierarchyDefinition", () => {
         label: "",
         parentKeys: [],
         key: { type: "generic", id: "" },
-        filtering: { filteredChildrenIdentifierPaths: paths },
+        search: { searchedChildrenIdentifierPaths: paths },
       };
       const node = await firstValueFrom(filteringFactory.parseNode(row, parentNode));
-      expect(node.filtering).to.deep.eq({
-        filteredChildrenIdentifierPaths: [
+      expect(node.search).to.deep.eq({
+        searchedChildrenIdentifierPaths: [
           {
             path: [createTestInstanceKey({ id: "0x1" }), createTestInstanceKey({ id: "0x3", className }), createTestInstanceKey({ id: "0x2" })],
             options: undefined,
@@ -196,7 +196,7 @@ describe("FilteringHierarchyDefinition", () => {
       });
     });
 
-    it("sets correct filteredChildrenIdentifierPaths when nodes have same ids and different classNames that derive from one another", async () => {
+    it("sets correct searchedChildrenIdentifierPaths when nodes have same ids and different classNames that derive from one another", async () => {
       const sourceFactory = {} as unknown as RxjsHierarchyDefinition;
       const classHierarchyInspector = createClassHierarchyInspectorStub();
 
@@ -228,11 +228,11 @@ describe("FilteringHierarchyDefinition", () => {
         label: "",
         parentKeys: [],
         key: { type: "generic", id: "" },
-        filtering: { filteredChildrenIdentifierPaths: paths },
+        search: { searchedChildrenIdentifierPaths: paths },
       };
       const node = await firstValueFrom(filteringFactory.parseNode(row, parentNode));
-      expect(node.filtering).to.deep.eq({
-        filteredChildrenIdentifierPaths: [
+      expect(node.search).to.deep.eq({
+        searchedChildrenIdentifierPaths: [
           { path: [createTestInstanceKey({ id: "0x1" }), createTestInstanceKey({ id: "0x2" })], options: undefined },
           { path: [createTestInstanceKey({ id: "0x3" })], options: undefined },
           { path: [createTestInstanceKey({ id: "0x4" })], options: undefined },
@@ -240,7 +240,7 @@ describe("FilteringHierarchyDefinition", () => {
       });
     });
 
-    it("sets correct filteredChildrenIdentifierPaths when path identifiers have same ids but different types", async () => {
+    it("sets correct searchedChildrenIdentifierPaths when path identifiers have same ids but different types", async () => {
       const sourceFactory = {} as unknown as RxjsHierarchyDefinition;
       const classHierarchyInspector = createClassHierarchyInspectorStub();
 
@@ -263,8 +263,8 @@ describe("FilteringHierarchyDefinition", () => {
         [ECSQL_COLUMN_NAME_FilterClassName]: testClass.fullName,
       };
       const node = await firstValueFrom(filteringFactory.parseNode(row, undefined));
-      expect(node.filtering).to.deep.eq({
-        filteredChildrenIdentifierPaths: [{ path: [createTestInstanceKey({ id: "0x2" })], options: undefined }],
+      expect(node.search).to.deep.eq({
+        searchedChildrenIdentifierPaths: [{ path: [createTestInstanceKey({ id: "0x2" })], options: undefined }],
       });
     });
 
@@ -338,7 +338,7 @@ describe("FilteringHierarchyDefinition", () => {
     });
 
     it("doesn't set auto-expand when all filtered children paths autoExpand depth is equal to parent keys length", async () => {
-      const paths: HierarchyFilteringPath[] = [
+      const paths: HierarchySearchPath[] = [
         {
           path: [
             createTestInstanceKey({ id: "0x1", className: "TestSchema.TestName" }),
@@ -358,9 +358,9 @@ describe("FilteringHierarchyDefinition", () => {
           key: { type: "instances", instanceKeys: [{ id: "0x1", className: "TestSchema.TestName" }] },
           label: "",
           parentKeys: [],
-          filtering: {
-            filteredChildrenIdentifierPaths: paths.map((path) => {
-              const normalizedPath = HierarchyFilteringPath.normalize(path);
+          search: {
+            searchedChildrenIdentifierPaths: paths.map((path) => {
+              const normalizedPath = HierarchySearchPath.normalize(path);
               return {
                 path: normalizedPath.path.slice(1),
                 options: normalizedPath.options,
@@ -373,7 +373,7 @@ describe("FilteringHierarchyDefinition", () => {
     });
 
     it("doesn't set auto-expand when all filtered children paths autoExpand depth is less than parent keys length", async () => {
-      const paths: HierarchyFilteringPath[] = [
+      const paths: HierarchySearchPath[] = [
         {
           path: [
             createTestInstanceKey({ id: "0x1", className: "TestSchema.TestName" }),
@@ -395,9 +395,9 @@ describe("FilteringHierarchyDefinition", () => {
           key: { type: "instances", instanceKeys: [{ id: "0x2", className: "TestSchema.TestName" }] },
           label: "",
           parentKeys: [{ type: "instances", instanceKeys: [{ className: "TestSchema.TestName", id: "0x1" }] }],
-          filtering: {
-            filteredChildrenIdentifierPaths: paths.map((path) => {
-              const normalizedPath = HierarchyFilteringPath.normalize(path);
+          search: {
+            searchedChildrenIdentifierPaths: paths.map((path) => {
+              const normalizedPath = HierarchySearchPath.normalize(path);
               return {
                 path: normalizedPath.path.slice(2),
                 options: normalizedPath.options,
@@ -410,7 +410,7 @@ describe("FilteringHierarchyDefinition", () => {
     });
 
     it("sets auto-expand when all filtered children paths autoExpand depth is greater than parent keys length", async () => {
-      const paths: HierarchyFilteringPath[] = [
+      const paths: HierarchySearchPath[] = [
         {
           path: [
             createTestInstanceKey({ id: "0x1", className: "TestSchema.TestName" }),
@@ -431,9 +431,9 @@ describe("FilteringHierarchyDefinition", () => {
           key: { type: "instances", instanceKeys: [{ id: "0x1", className: "TestSchema.TestName" }] },
           label: "",
           parentKeys: [],
-          filtering: {
-            filteredChildrenIdentifierPaths: paths.map((path) => {
-              const normalizedPath = HierarchyFilteringPath.normalize(path);
+          search: {
+            searchedChildrenIdentifierPaths: paths.map((path) => {
+              const normalizedPath = HierarchySearchPath.normalize(path);
               return {
                 path: normalizedPath.path.slice(1),
                 options: normalizedPath.options,
@@ -446,7 +446,7 @@ describe("FilteringHierarchyDefinition", () => {
     });
 
     it("sets auto-expand on root node when all filtered children paths autoExpand depth is greater than 1", async () => {
-      const paths: HierarchyFilteringPath[] = [
+      const paths: HierarchySearchPath[] = [
         {
           path: [
             createTestInstanceKey({ id: "0x1", className: "TestSchema.TestName" }),
@@ -467,7 +467,7 @@ describe("FilteringHierarchyDefinition", () => {
     });
 
     it("sets auto-expand on nodes up to specified depth when some filtered children paths have autoExpand with depth greater than 0", async () => {
-      const paths: HierarchyFilteringPath[] = [
+      const paths: HierarchySearchPath[] = [
         [createTestInstanceKey({ id: "0x1", className: "TestSchema.TestName" }), createTestInstanceKey({ id: "0x2", className: "TestSchema.TestName" })],
         {
           path: [
@@ -496,9 +496,9 @@ describe("FilteringHierarchyDefinition", () => {
           key: { type: "instances", instanceKeys: [{ id: "0x1", className: "TestSchema.TestName" }] },
           label: "",
           parentKeys: [],
-          filtering: {
-            filteredChildrenIdentifierPaths: paths.map((path) => {
-              const normalizedPath = HierarchyFilteringPath.normalize(path);
+          search: {
+            searchedChildrenIdentifierPaths: paths.map((path) => {
+              const normalizedPath = HierarchySearchPath.normalize(path);
               return {
                 path: normalizedPath.path.slice(1),
                 options: normalizedPath.options,
@@ -537,10 +537,10 @@ describe("FilteringHierarchyDefinition", () => {
       expect(node.autoExpand).to.be.true;
     });
 
-    it("sets `filterTargetOptions` and `isFilterTarget` attributes from parent's `filteredChildrenIdentifierPaths`", async () => {
+    it("sets `searchTargetOptions` and `isSearchTarget` attributes from parent's `searchedChildrenIdentifierPaths`", async () => {
       const sourceFactory = {} as unknown as RxjsHierarchyDefinition;
       const className = "TestSchema.TestName";
-      const filteringOptions: HierarchyFilteringPathOptions = {
+      const filteringOptions: HierarchySearchPathOptions = {
         autoExpand: { key: { type: "class-grouping", className: "" }, depth: 0 },
       };
       const paths = [{ path: [createTestInstanceKey({ id: "0x5", className })], options: filteringOptions }, [createTestInstanceKey({ id: "0x5", className })]];
@@ -558,12 +558,12 @@ describe("FilteringHierarchyDefinition", () => {
         label: "",
         parentKeys: [],
         key: { type: "generic", id: "" },
-        filtering: { filteredChildrenIdentifierPaths: paths },
+        search: { searchedChildrenIdentifierPaths: paths },
       };
       const node = await firstValueFrom(filteringFactory.parseNode(row, parentNode));
 
-      assert(node.filtering?.isFilterTarget);
-      expect(node.filtering.filterTargetOptions).to.deep.eq(filteringOptions);
+      assert(node.search?.isSearchTarget);
+      expect(node.search.searchTargetOptions).to.deep.eq(filteringOptions);
     });
   });
 
@@ -597,9 +597,9 @@ describe("FilteringHierarchyDefinition", () => {
             hideInHierarchy: true,
           },
         }),
-        filtering: {
-          isFilterTarget: true,
-          hasFilterTargetAncestor: true,
+        search: {
+          isSearchTarget: true,
+          hasSearchTargetAncestor: true,
         },
       };
       const filteringFactory = await createFilteringHierarchyDefinition();
@@ -614,9 +614,9 @@ describe("FilteringHierarchyDefinition", () => {
             hideInHierarchy: true,
           },
         }),
-        filtering: {
-          isFilterTarget: true,
-          hasFilterTargetAncestor: false,
+        search: {
+          isSearchTarget: true,
+          hasSearchTargetAncestor: false,
         },
       };
       const filteringFactory = await createFilteringHierarchyDefinition();
@@ -676,7 +676,7 @@ describe("FilteringHierarchyDefinition", () => {
           children: [
             {
               ...createTestProcessedInstanceNode(),
-              filtering: { filteredChildrenIdentifierPaths: [[createTestInstanceKey({ id: "0x1" })]] },
+              search: { searchedChildrenIdentifierPaths: [[createTestInstanceKey({ id: "0x1" })]] },
             },
           ],
         };
@@ -691,8 +691,8 @@ describe("FilteringHierarchyDefinition", () => {
           children: [
             {
               ...createTestProcessedInstanceNode(),
-              filtering: {
-                filteredChildrenIdentifierPaths: [{ path: [createTestInstanceKey({ id: "0x1" })], options: { autoExpand: false } }],
+              search: {
+                searchedChildrenIdentifierPaths: [{ path: [createTestInstanceKey({ id: "0x1" })], options: { autoExpand: false } }],
               },
             },
           ],
@@ -708,8 +708,8 @@ describe("FilteringHierarchyDefinition", () => {
           children: [
             {
               ...createTestProcessedInstanceNode(),
-              filtering: {
-                filteredChildrenIdentifierPaths: [
+              search: {
+                searchedChildrenIdentifierPaths: [
                   { path: [createTestInstanceKey({ id: "0x1" })], options: { autoExpand: false } },
                   { path: [createTestInstanceKey({ id: "0x2" })], options: { autoExpand: true } },
                 ],
@@ -728,7 +728,7 @@ describe("FilteringHierarchyDefinition", () => {
           children: [
             {
               ...createTestProcessedInstanceNode(),
-              filtering: { isFilterTarget: true, filterTargetOptions: { autoExpand: false } },
+              search: { isSearchTarget: true, searchTargetOptions: { autoExpand: false } },
             },
           ],
         };
@@ -743,7 +743,7 @@ describe("FilteringHierarchyDefinition", () => {
           children: [
             {
               ...createTestProcessedInstanceNode(),
-              filtering: { isFilterTarget: true, filterTargetOptions: { autoExpand: true } },
+              search: { isSearchTarget: true, searchTargetOptions: { autoExpand: true } },
             },
           ],
         };
@@ -759,18 +759,18 @@ describe("FilteringHierarchyDefinition", () => {
           children: [
             {
               ...createTestProcessedInstanceNode(),
-              filtering: {
-                isFilterTarget: true,
-                filterTargetOptions: { autoExpand: { key: groupingNode.key, depth: 0 } },
-                filteredChildrenIdentifierPaths: [],
+              search: {
+                isSearchTarget: true,
+                searchTargetOptions: { autoExpand: { key: groupingNode.key, depth: 0 } },
+                searchedChildrenIdentifierPaths: [],
               },
             },
             {
               ...createTestProcessedInstanceNode(),
-              filtering: {
-                isFilterTarget: true,
-                filterTargetOptions: { autoExpand: { key: groupingNode.key, depth: 0 } },
-                filteredChildrenIdentifierPaths: [],
+              search: {
+                isSearchTarget: true,
+                searchTargetOptions: { autoExpand: { key: groupingNode.key, depth: 0 } },
+                searchedChildrenIdentifierPaths: [],
               },
             },
           ],
@@ -788,18 +788,18 @@ describe("FilteringHierarchyDefinition", () => {
           children: [
             {
               ...createTestProcessedInstanceNode(),
-              filtering: {
-                isFilterTarget: true,
-                filterTargetOptions: { autoExpand: { key: groupingNode.key, depth: 0 } },
-                filteredChildrenIdentifierPaths: [],
+              search: {
+                isSearchTarget: true,
+                searchTargetOptions: { autoExpand: { key: groupingNode.key, depth: 0 } },
+                searchedChildrenIdentifierPaths: [],
               },
             },
             {
               ...createTestProcessedInstanceNode(),
-              filtering: {
-                isFilterTarget: true,
-                filterTargetOptions: { autoExpand: { key: otherGroupingNode.key, depth: 0 } },
-                filteredChildrenIdentifierPaths: [],
+              search: {
+                isSearchTarget: true,
+                searchTargetOptions: { autoExpand: { key: otherGroupingNode.key, depth: 0 } },
+                searchedChildrenIdentifierPaths: [],
               },
             },
           ],
@@ -817,9 +817,9 @@ describe("FilteringHierarchyDefinition", () => {
           children: [
             {
               ...createTestProcessedInstanceNode(),
-              filtering: {
-                isFilterTarget: true,
-                filterTargetOptions: {
+              search: {
+                isSearchTarget: true,
+                searchTargetOptions: {
                   autoExpand: {
                     key: groupingNode.key,
                     depth: 2,
@@ -841,9 +841,9 @@ describe("FilteringHierarchyDefinition", () => {
           children: [
             {
               ...createTestProcessedInstanceNode(),
-              filtering: {
-                isFilterTarget: true,
-                filterTargetOptions: {
+              search: {
+                isSearchTarget: true,
+                searchTargetOptions: {
                   autoExpand: {
                     key: { type: "class-grouping", className: this.test!.title },
                     depth: 2,
@@ -865,9 +865,9 @@ describe("FilteringHierarchyDefinition", () => {
           children: [
             {
               ...createTestProcessedInstanceNode(),
-              filtering: {
-                isFilterTarget: true,
-                filterTargetOptions: {
+              search: {
+                isSearchTarget: true,
+                searchTargetOptions: {
                   autoExpand: {
                     key: createGroupingNode().key,
                     depth: 1,
@@ -889,9 +889,9 @@ describe("FilteringHierarchyDefinition", () => {
           children: [
             {
               ...createTestProcessedInstanceNode(),
-              filtering: {
-                isFilterTarget: true,
-                filterTargetOptions: {
+              search: {
+                isSearchTarget: true,
+                searchTargetOptions: {
                   autoExpand: {
                     ...createTestProcessedGroupingNode(),
                     key: {
@@ -1018,7 +1018,7 @@ describe("FilteringHierarchyDefinition", () => {
         filteringFactory.defineHierarchyLevel({
           parentNode: {
             ...createTestProcessedInstanceNode(),
-            filtering: { filteredChildrenIdentifierPaths: undefined },
+            search: { searchedChildrenIdentifierPaths: undefined },
           },
         }),
       );
@@ -1146,7 +1146,7 @@ describe("FilteringHierarchyDefinition", () => {
           {
             node: {
               ...sourceDefinition2.node,
-              filtering: { isFilterTarget: true, filterTargetOptions: { autoExpand: true } },
+              search: { isSearchTarget: true, searchTargetOptions: { autoExpand: true } },
             },
           },
         ]);
@@ -1175,8 +1175,8 @@ describe("FilteringHierarchyDefinition", () => {
           {
             node: {
               ...sourceDefinition.node,
-              filtering: {
-                filteredChildrenIdentifierPaths: [
+              search: {
+                searchedChildrenIdentifierPaths: [
                   { path: [createTestGenericNodeKey({ id: "123" })], options: undefined },
                   { path: [createTestGenericNodeKey({ id: "456" })], options: undefined },
                 ],
@@ -1196,7 +1196,7 @@ describe("FilteringHierarchyDefinition", () => {
         const sourceFactory: RxjsHierarchyDefinition = {
           defineHierarchyLevel: () => of([sourceDefinition]),
         };
-        const groupingNode: FilterTargetGroupingNodeInfo = { key: { type: "class-grouping", className: "class" }, depth: 0 };
+        const groupingNode: SearchTargetGroupingNodeInfo = { key: { type: "class-grouping", className: "class" }, depth: 0 };
         const filteringFactory = await createFilteringHierarchyDefinition({
           imodelAccess: { ...classHierarchyInspector, imodelKey: "test-imodel-key" },
           sourceFactory,
@@ -1215,8 +1215,8 @@ describe("FilteringHierarchyDefinition", () => {
             node: {
               ...sourceDefinition.node,
               autoExpand: true,
-              filtering: {
-                filteredChildrenIdentifierPaths: [
+              search: {
+                searchedChildrenIdentifierPaths: [
                   { path: [createTestGenericNodeKey({ id: "123" })], options: { autoExpand: true } },
                   { path: [createTestGenericNodeKey({ id: "456" })], options: { autoExpand: groupingNode } },
                   { path: [createTestGenericNodeKey({ id: "789" })], options: undefined },
@@ -1252,10 +1252,10 @@ describe("FilteringHierarchyDefinition", () => {
             node: {
               ...sourceDefinition.node,
               autoExpand: true,
-              filtering: {
-                filteredChildrenIdentifierPaths: [{ path: [createTestGenericNodeKey({ id: "123" })], options: { autoExpand: true } }],
-                isFilterTarget: true,
-                filterTargetOptions: { autoExpand: true },
+              search: {
+                searchedChildrenIdentifierPaths: [{ path: [createTestGenericNodeKey({ id: "123" })], options: { autoExpand: true } }],
+                isSearchTarget: true,
+                searchTargetOptions: { autoExpand: true },
               },
             },
           },
@@ -1364,9 +1364,9 @@ describe("FilteringHierarchyDefinition", () => {
           filteringFactory.defineHierarchyLevel({
             parentNode: {
               ...createTestProcessedInstanceNode(),
-              filtering: {
-                isFilterTarget: true,
-                filteredChildrenIdentifierPaths: new Array<HierarchyNodeIdentifiersPath>(),
+              search: {
+                isSearchTarget: true,
+                searchedChildrenIdentifierPaths: new Array<HierarchyNodeIdentifiersPath>(),
               },
             },
           }),
@@ -1601,9 +1601,9 @@ describe("FilteringHierarchyDefinition", () => {
           className: "FilterPathClassName0",
           baseClass: queryClass,
         });
-        const groupingNode1: FilterTargetGroupingNodeInfo = { key: { type: "class-grouping", className: "class1" }, depth: 1 };
-        const groupingNode2: FilterTargetGroupingNodeInfo = { key: { type: "class-grouping", className: "class2" }, depth: 3 };
-        const groupingNode3: FilterTargetGroupingNodeInfo = { key: { type: "class-grouping", className: "class2" }, depth: 0 };
+        const groupingNode1: SearchTargetGroupingNodeInfo = { key: { type: "class-grouping", className: "class1" }, depth: 1 };
+        const groupingNode2: SearchTargetGroupingNodeInfo = { key: { type: "class-grouping", className: "class2" }, depth: 3 };
+        const groupingNode3: SearchTargetGroupingNodeInfo = { key: { type: "class-grouping", className: "class2" }, depth: 0 };
         const sourceDefinition: InstanceNodesQueryDefinition = {
           fullClassName: queryClass.fullName,
           query: {
@@ -1671,8 +1671,8 @@ describe("FilteringHierarchyDefinition", () => {
               key: createTestGenericNodeKey({ id: "custom" }),
               label: "custom node",
             }),
-            filtering: {
-              filteredChildrenIdentifierPaths: [[{ className: childFilterClass.fullName, id: "0x456" }]],
+            search: {
+              searchedChildrenIdentifierPaths: [[{ className: childFilterClass.fullName, id: "0x456" }]],
             },
           },
         }),
@@ -1709,25 +1709,25 @@ describe("FilteringHierarchyDefinition", () => {
               key: createTestGenericNodeKey({ id: "parent" }),
               label: "parent",
             }),
-            filtering: {
-              isFilterTarget: true,
-              filteredChildrenIdentifierPaths: [[createTestGenericNodeKey({ id: "matches" })]],
+            search: {
+              isSearchTarget: true,
+              searchedChildrenIdentifierPaths: [[createTestGenericNodeKey({ id: "matches" })]],
             },
           },
         }),
       );
       expect(result).to.deep.eq([
-        // both definitions are returned because the parent is filter target
+        // both definitions are returned because the parent is search target
         {
           node: {
             ...matchingSourceDefinition.node,
-            filtering: { hasFilterTargetAncestor: true, isFilterTarget: true, filterTargetOptions: undefined },
+            search: { hasSearchTargetAncestor: true, isSearchTarget: true, searchTargetOptions: undefined },
           },
         },
         {
           node: {
             ...nonMatchingSourceDefinition.node,
-            filtering: { hasFilterTargetAncestor: true },
+            search: { hasSearchTargetAncestor: true },
           },
         },
       ]);
@@ -1791,7 +1791,7 @@ describe("FilteringHierarchyDefinition", () => {
 async function createFilteringHierarchyDefinition(props?: {
   imodelAccess?: ECClassHierarchyInspector & { imodelKey: string };
   sourceFactory?: RxjsHierarchyDefinition;
-  nodeIdentifierPaths?: HierarchyFilteringPath[];
+  nodeIdentifierPaths?: HierarchySearchPath[];
   nodesParser?: RxjsNodeParser;
 }) {
   const { imodelAccess, sourceFactory, nodeIdentifierPaths } = props ?? {};

@@ -4,12 +4,12 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { expect } from "chai";
-import { HierarchyFilteringPath, HierarchyFilteringPathOptions } from "../hierarchies/HierarchyFiltering.js";
+import { HierarchySearchPath, HierarchySearchPathOptions } from "../hierarchies/HierarchyFiltering.js";
 
 describe("HierarchyFilteringPath", () => {
   describe("mergeOptions", () => {
     describe("autoExpand", () => {
-      const optionsInOrderOfPriority: Array<HierarchyFilteringPathOptions | undefined> = [
+      const optionsInOrderOfPriority: Array<HierarchySearchPathOptions | undefined> = [
         { autoExpand: true },
         {
           autoExpand: {
@@ -36,7 +36,7 @@ describe("HierarchyFilteringPath", () => {
       it("returns correct result for different autoExpand options", () => {
         for (let i = 0; i < optionsInOrderOfPriority.length; ++i) {
           for (let j = 0; j < optionsInOrderOfPriority.length; ++j) {
-            expect(HierarchyFilteringPath.mergeOptions(optionsInOrderOfPriority[i], optionsInOrderOfPriority[j])).to.deep.eq(
+            expect(HierarchySearchPath.mergeOptions(optionsInOrderOfPriority[i], optionsInOrderOfPriority[j])).to.deep.eq(
               i < j ? optionsInOrderOfPriority[i] : optionsInOrderOfPriority[j],
             );
           }

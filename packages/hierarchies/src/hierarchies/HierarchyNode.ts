@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { OmitOverUnion } from "@itwin/presentation-shared";
-import { HierarchyFilteringPath, HierarchyFilteringPathOptions } from "./HierarchyFiltering.js";
+import { HierarchySearchPath, HierarchySearchPathOptions } from "./HierarchyFiltering.js";
 import {
   ClassGroupingNodeKey,
   GenericNodeKey,
@@ -21,40 +21,40 @@ import {
 } from "./HierarchyNodeKey.js";
 
 /** @public */
-export type HierarchyNodeFilteringProps = {
+export type HierarchyNodeSearchProps = {
   /** If set to true, then one of the ancestor nodes in the hierarchy is the filter target. */
-  hasFilterTargetAncestor?: boolean;
+  hasSearchTargetAncestor?: boolean;
   /** Paths to node's children that are filter targets. */
-  filteredChildrenIdentifierPaths?: HierarchyFilteringPath[];
+  searchedChildrenIdentifierPaths?: HierarchySearchPath[];
 } & (
   | {
       /** Whether or not this node is a filter target. */
-      isFilterTarget?: false;
+      isSearchTarget?: false;
     }
   | {
       /** Whether or not this node is a filter target. */
-      isFilterTarget: true;
+      isSearchTarget: true;
       /** Options that were used to filter the node. */
-      filterTargetOptions?: HierarchyFilteringPathOptions;
+      searchTargetOptions?: HierarchySearchPathOptions;
     }
 );
 /** @public */
-// eslint-disable-next-line @typescript-eslint/no-redeclare
+
 export namespace HierarchyNodeFilteringProps {
   /** @deprecated in 1.3. Use `createHierarchyFilteringHelper` and its `createChildNodeProps` function to create filtering props for nodes. */
   /* c8 ignore start */
   export function create(props: {
-    hasFilterTargetAncestor?: boolean;
-    filteredChildrenIdentifierPaths?: HierarchyFilteringPath[];
-    isFilterTarget?: boolean;
-    filterTargetOptions?: HierarchyFilteringPathOptions;
-  }): HierarchyNodeFilteringProps | undefined {
-    const { hasFilterTargetAncestor, filteredChildrenIdentifierPaths, isFilterTarget, filterTargetOptions } = props;
-    if (isFilterTarget || hasFilterTargetAncestor || filteredChildrenIdentifierPaths?.length) {
+    hasSearchTargetAncestor?: boolean;
+    searchedChildrenIdentifierPaths?: HierarchySearchPath[];
+    isSearchTarget?: boolean;
+    searchTargetOptions?: HierarchySearchPathOptions;
+  }): HierarchyNodeSearchProps | undefined {
+    const { hasSearchTargetAncestor, searchedChildrenIdentifierPaths, isSearchTarget, searchTargetOptions } = props;
+    if (isSearchTarget || hasSearchTargetAncestor || searchedChildrenIdentifierPaths?.length) {
       return {
-        ...(isFilterTarget ? { isFilterTarget, filterTargetOptions } : undefined),
-        ...(hasFilterTargetAncestor ? { hasFilterTargetAncestor } : undefined),
-        ...(!!filteredChildrenIdentifierPaths?.length ? { filteredChildrenIdentifierPaths } : undefined),
+        ...(isSearchTarget ? { isSearchTarget, searchTargetOptions } : undefined),
+        ...(hasSearchTargetAncestor ? { hasSearchTargetAncestor } : undefined),
+        ...(!!searchedChildrenIdentifierPaths?.length ? { searchedChildrenIdentifierPaths } : undefined),
       };
     }
     return undefined;
@@ -77,8 +77,8 @@ interface BaseHierarchyNode {
   autoExpand?: boolean;
   /** Additional data that may be assigned to this node. */
   extendedData?: { [key: string]: any };
-  /** Data that may be assigned to the node if filtering is enabled */
-  filtering?: HierarchyNodeFilteringProps;
+  /** Data that may be assigned to the node if search/filtering is enabled */
+  search?: HierarchyNodeSearchProps;
 }
 
 /**

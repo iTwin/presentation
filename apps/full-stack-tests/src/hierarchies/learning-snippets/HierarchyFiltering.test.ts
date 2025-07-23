@@ -23,7 +23,7 @@ import { ECSql, ECSqlQueryDef } from "@itwin/presentation-shared";
 import { createIModelHierarchyProvider } from "@itwin/presentation-hierarchies";
 // __PUBLISH_EXTRACT_END__
 // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.HierarchyFiltering.HierarchyFilteringPathImport
-import { HierarchyFilteringPath } from "@itwin/presentation-hierarchies";
+import { HierarchySearchPath } from "@itwin/presentation-hierarchies";
 // __PUBLISH_EXTRACT_END__
 import { buildIModel } from "../../IModelUtils.js";
 import { initialize, terminate } from "../../IntegrationTests.js";
@@ -113,7 +113,7 @@ describe("Hierarchies", () => {
         const hierarchyProvider = createIModelHierarchyProvider({
           imodelAccess,
           hierarchyDefinition: createHierarchyDefinition(imodelAccess),
-          filtering: undefined,
+          search: undefined,
         });
         expect(await collectHierarchy(hierarchyProvider)).to.containSubset([
           {
@@ -184,7 +184,7 @@ describe("Hierarchies", () => {
         const hierarchyProvider = createIModelHierarchyProvider({
           imodelAccess,
           hierarchyDefinition: createHierarchyDefinition(imodelAccess),
-          filtering: { paths: filterPaths },
+          search: { paths: filterPaths },
         });
         // Collect the hierarchy & confirm we get what we expect - a hierarchy from root element "A" to target elements "C" and "E".
         // Note that "E" has a child "F", even though it's not a filter target. This is because subtrees under filter target nodes
@@ -255,7 +255,7 @@ describe("Hierarchies", () => {
         const hierarchyProvider = createIModelHierarchyProvider({
           imodelAccess,
           hierarchyDefinition: createHierarchyDefinition(imodelAccess),
-          filtering: { paths: filterPaths },
+          search: { paths: filterPaths },
         });
         // Collect the hierarchy & confirm we get what we expect - a hierarchy from root element "A" to target elements "C" and "E".
         // Note that "E" has a child "F", even though it's not a filter target. This is because subtrees under filter target nodes
@@ -282,7 +282,7 @@ describe("Hierarchies", () => {
 
         // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.HierarchyFiltering.AutoExpand.FilteringPath
         // Get a grouping node that groups the "C" element
-        const filteringPath: HierarchyFilteringPath = {
+        const filteringPath: HierarchySearchPath = {
           // Path to the element "C"
           path: [elementKeys.a, elementKeys.b, elementKeys.c],
           // Supply options for the filtering path
@@ -297,7 +297,7 @@ describe("Hierarchies", () => {
         const hierarchyProvider = createIModelHierarchyProvider({
           imodelAccess,
           hierarchyDefinition: createHierarchyDefinition(imodelAccess),
-          filtering: {
+          search: {
             paths: [filteringPath],
           },
         });
@@ -388,7 +388,7 @@ describe("Hierarchies", () => {
         // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.HierarchyFiltering.AutoExpandUntilGroupingNode.FilteringPath
         // Get a grouping node that groups the "C" element
         const groupingNode = await getSelectedGroupingNode();
-        const filteringPath: HierarchyFilteringPath = {
+        const filteringPath: HierarchySearchPath = {
           // Path to the element "C"
           path: [elementKeys.a, elementKeys.b, elementKeys.c],
           // Supply grouping node attributes with the path to the "C" element.
@@ -403,7 +403,7 @@ describe("Hierarchies", () => {
         const hierarchyProvider = createIModelHierarchyProvider({
           imodelAccess,
           hierarchyDefinition,
-          filtering: {
+          search: {
             paths: [filteringPath],
           },
         });

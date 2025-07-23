@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { useCallback } from "react";
-import { createIModelHierarchyProvider, HierarchyDefinition, HierarchyFilteringPath } from "@itwin/presentation-hierarchies";
+import { createIModelHierarchyProvider, HierarchyDefinition, HierarchySearchPath } from "@itwin/presentation-hierarchies";
 import { Props } from "@itwin/presentation-shared";
 import { UseUnifiedTreeSelectionProps } from "./internal/UseUnifiedSelection.js";
 import { useTree, UseTreeProps, UseTreeResult, useUnifiedSelectionTree } from "./UseTree.js";
@@ -30,7 +30,7 @@ type UseIModelTreeProps = Omit<UseTreeProps, "getHierarchyProvider" | "getSearch
       imodelAccess: IModelAccess;
       /** Signal indicating that that the request was canceled */
       abortSignal: AbortSignal;
-    }) => Promise<HierarchyFilteringPath[] | undefined>;
+    }) => Promise<HierarchySearchPath[] | undefined>;
   };
 
 /**

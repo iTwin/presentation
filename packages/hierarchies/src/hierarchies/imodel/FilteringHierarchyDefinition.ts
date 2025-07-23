@@ -6,7 +6,7 @@
 import { defer, filter, from, map, merge, mergeAll, mergeMap, Observable, of, toArray } from "rxjs";
 import { Id64String } from "@itwin/core-bentley";
 import { ECClassHierarchyInspector, InstanceKey } from "@itwin/presentation-shared";
-import { createHierarchyFilteringHelper, HierarchyFilteringPath } from "../HierarchyFiltering.js";
+import { createHierarchySearchHelper, HierarchySearchPath } from "../HierarchyFiltering.js";
 import { HierarchyNodeIdentifier } from "../HierarchyNodeIdentifier.js";
 import { IModelInstanceKey } from "../HierarchyNodeKey.js";
 import {
@@ -25,7 +25,7 @@ import { RxjsHierarchyDefinition, RxjsNodeParser, RxjsNodePostProcessor, RxjsNod
 interface FilteringHierarchyDefinitionProps {
   imodelAccess: ECClassHierarchyInspector & { imodelKey: string };
   source: RxjsHierarchyDefinition;
-  nodeIdentifierPaths: HierarchyFilteringPath[];
+  nodeIdentifierPaths: HierarchySearchPath[];
   nodesParser?: RxjsNodeParser;
 }
 
@@ -33,7 +33,7 @@ interface FilteringHierarchyDefinitionProps {
 export class FilteringHierarchyDefinition implements RxjsHierarchyDefinition {
   private _imodelAccess: ECClassHierarchyInspector & { imodelKey: string };
   private _source: RxjsHierarchyDefinition;
-  private _nodeIdentifierPaths: HierarchyFilteringPath[];
+  private _nodeIdentifierPaths: HierarchySearchPath[];
   private _nodesParser: RxjsNodeParser;
 
   public constructor(props: FilteringHierarchyDefinitionProps) {
@@ -47,7 +47,7 @@ export class FilteringHierarchyDefinition implements RxjsHierarchyDefinition {
     return (node) => {
       return (this._source.preProcessNode ? this._source.preProcessNode(node) : of(node)).pipe(
         filter((processedNode) => {
-          if (processedNode.processingParams?.hideInHierarchy && processedNode.filtering?.isFilterTarget && !processedNode.filtering.hasFilterTargetAncestor) {
+          if (processedNode.processingParams?.hideInHierarchy && processedNode.search?.isSearchTarget && !processedNode.search.hasSearchTargetAncestor) {
             // we want to hide target nodes if they have `hideInHierarchy` param, but only if they're not under another filter target
             return false;
           }
@@ -60,12 +60,12 @@ export class FilteringHierarchyDefinition implements RxjsHierarchyDefinition {
   private shouldExpandGroupingNode(node: ProcessedGroupingHierarchyNode) {
     for (const child of node.children) {
       /* c8 ignore next 3 */
-      if (!child.filtering) {
+      if (!child.search) {
         continue;
       }
 
-      if (child.filtering.isFilterTarget) {
-        const childAutoExpand = child.filtering.filterTargetOptions?.autoExpand;
+      if (child.search.isSearchTarget) {
+        const childAutoExpand = child.search.searchTargetOptions?.autoExpand;
 
         // If child is a filter target and is has no `autoExpand` flag, then it's always to be expanded.
         if (childAutoExpand === true) {
@@ -86,12 +86,12 @@ export class FilteringHierarchyDefinition implements RxjsHierarchyDefinition {
         }
       }
 
-      if (!child.filtering.filteredChildrenIdentifierPaths) {
+      if (!child.search.searchedChildrenIdentifierPaths) {
         /* c8 ignore next */
         continue;
       }
 
-      for (const path of child.filtering.filteredChildrenIdentifierPaths) {
+      for (const path of child.search.searchedChildrenIdentifierPaths) {
         if ("path" in path && path.options?.autoExpand) {
           return true;
         }
@@ -122,7 +122,7 @@ export class FilteringHierarchyDefinition implements RxjsHierarchyDefinition {
             return of(parsedNode);
           }
           const rowInstanceKey = { className: row[ECSQL_COLUMN_NAME_FilterClassName], id: row[ECSQL_COLUMN_NAME_FilterECInstanceId] };
-          const filteringHelper = createHierarchyFilteringHelper(this._nodeIdentifierPaths, parentNode);
+          const filteringHelper = createHierarchySearchHelper(this._nodeIdentifierPaths, parentNode);
           const nodeExtraPropsPossiblyPromise = filteringHelper.createChildNodePropsAsync({
             pathMatcher: (identifier): boolean | Promise<boolean> => {
               if (identifier.id !== rowInstanceKey.id) {
@@ -148,10 +148,10 @@ export class FilteringHierarchyDefinition implements RxjsHierarchyDefinition {
               if (nodeExtraProps?.autoExpand) {
                 const parentLength = parentNode ? 1 + parentNode.parentKeys.length : 0;
                 parsedNode.autoExpand =
-                  nodeExtraProps.filtering?.autoExpandDepth !== undefined && parentLength >= nodeExtraProps.filtering.autoExpandDepth ? undefined : true;
+                  nodeExtraProps.search?.autoExpandDepth !== undefined && parentLength >= nodeExtraProps.search.autoExpandDepth ? undefined : true;
               }
-              if (nodeExtraProps?.filtering) {
-                parsedNode.filtering = nodeExtraProps.filtering;
+              if (nodeExtraProps?.search) {
+                parsedNode.search = nodeExtraProps.search;
               }
               return parsedNode;
             }),
@@ -164,8 +164,8 @@ export class FilteringHierarchyDefinition implements RxjsHierarchyDefinition {
   public defineHierarchyLevel(props: DefineHierarchyLevelProps): Observable<HierarchyLevelDefinition> {
     const sourceDefinitions = this._source.defineHierarchyLevel(props);
 
-    const filteringHelper = createHierarchyFilteringHelper(this._nodeIdentifierPaths, props.parentNode);
-    const childNodeFilteringIdentifiers = filteringHelper.getChildNodeFilteringIdentifiers();
+    const filteringHelper = createHierarchySearchHelper(this._nodeIdentifierPaths, props.parentNode);
+    const childNodeFilteringIdentifiers = filteringHelper.getChildNodeSearchIdentifiers();
     if (!childNodeFilteringIdentifiers) {
       return sourceDefinitions;
     }
@@ -175,7 +175,7 @@ export class FilteringHierarchyDefinition implements RxjsHierarchyDefinition {
       genericNodeDefinitions.pipe(
         map((definition) => {
           if (
-            filteringHelper.hasFilterTargetAncestor ||
+            filteringHelper.hasSearchTargetAncestor ||
             childNodeFilteringIdentifiers.some(
               (identifier) =>
                 HierarchyNodeIdentifier.isGenericNodeIdentifier(identifier) &&
@@ -198,7 +198,7 @@ export class FilteringHierarchyDefinition implements RxjsHierarchyDefinition {
 
       instanceNodeDefinitions.pipe(
         mergeMap((definition) => {
-          if (filteringHelper.hasFilterTargetAncestor) {
+          if (filteringHelper.hasSearchTargetAncestor) {
             // if we have a filter target ancestor, we don't need to filter the definitions - we use all of them
             return of(applyECInstanceIdsSelector(definition));
           }

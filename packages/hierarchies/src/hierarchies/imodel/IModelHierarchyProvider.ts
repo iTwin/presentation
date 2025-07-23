@@ -41,7 +41,7 @@ import {
   normalizeFullClassName,
 } from "@itwin/presentation-shared";
 import { RowsLimitExceededError } from "../HierarchyErrors.js";
-import { HierarchyFilteringPath } from "../HierarchyFiltering.js";
+import { HierarchySearchPath } from "../HierarchyFiltering.js";
 import { HierarchyNode, NonGroupingHierarchyNode, ParentHierarchyNode } from "../HierarchyNode.js";
 import { GenericNodeKey, HierarchyNodeKey, IModelInstanceKey, InstancesNodeKey } from "../HierarchyNodeKey.js";
 import { GetHierarchyNodesProps, HierarchyProvider } from "../HierarchyProvider.js";
@@ -141,9 +141,9 @@ interface IModelHierarchyProviderProps {
    */
   formatter?: IPrimitiveValueFormatter;
   /** Props for filtering the hierarchy. */
-  filtering?: {
+  search?: {
     /** A list of node identifiers from root to target node. */
-    paths: HierarchyFilteringPath[];
+    paths: HierarchySearchPath[];
   };
 }
 
@@ -186,7 +186,7 @@ class IModelHierarchyProviderImpl implements HierarchyProvider {
     this._valuesFormatter = props?.formatter ?? createDefaultValueFormatter();
     this._localizedStrings = { other: "Other", unspecified: "Not specified", ...props?.localizedStrings };
     this._queryScheduler = new SubscriptionScheduler(props.queryConcurrency ?? DEFAULT_QUERY_CONCURRENCY);
-    this.setHierarchyFilter(props.filtering);
+    this.setHierarchyFilter(props.search);
 
     const queryCacheSize = props.queryCacheSize ?? DEFAULT_QUERY_CACHE_SIZE;
     if (queryCacheSize !== 0) {
@@ -235,7 +235,7 @@ class IModelHierarchyProviderImpl implements HierarchyProvider {
     this._hierarchyChanged.raiseEvent({ formatterChange: { newFormatter: this._valuesFormatter } });
   }
 
-  public setHierarchyFilter(props: IModelHierarchyProviderProps["filtering"]) {
+  public setHierarchyFilter(props: IModelHierarchyProviderProps["search"]) {
     if (!props) {
       if (this._sourceHierarchyDefinition !== this._activeHierarchyDefinition) {
         this._activeHierarchyDefinition = this._sourceHierarchyDefinition;

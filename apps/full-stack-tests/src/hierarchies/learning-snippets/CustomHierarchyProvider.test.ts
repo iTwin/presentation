@@ -29,7 +29,7 @@ import {
 } from "@itwin/presentation-shared";
 // __PUBLISH_EXTRACT_END__
 // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.CustomHierarchyProviders.FilteringProviderImports
-import { createHierarchyFilteringHelper, GenericNodeKey, HierarchyFilteringPath, HierarchyNodeIdentifier } from "@itwin/presentation-hierarchies";
+import { createHierarchySearchHelper, GenericNodeKey, HierarchyNodeIdentifier, HierarchySearchPath } from "@itwin/presentation-hierarchies";
 // __PUBLISH_EXTRACT_END__
 // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.CustomHierarchyProviders.HierarchyLevelFilteringProviderImports
 import { GenericInstanceFilter, GenericInstanceFilterRule, GenericInstanceFilterRuleGroup } from "@itwin/core-common";
@@ -389,8 +389,8 @@ describe("Hierarchies", () => {
         // A function that matches given string against authors and books, and returns hierarchy paths
         // from root to the matched node. This function must be aware of the hierarchy structure to know what paths
         // to create.
-        async function createFilterPaths(filter: string): Promise<HierarchyFilteringPath[]> {
-          const results: HierarchyFilteringPath[] = [];
+        async function createFilterPaths(filter: string): Promise<HierarchySearchPath[]> {
+          const results: HierarchySearchPath[] = [];
           const [matchingAuthors, matchingBooks] = await Promise.all([booksService.getAuthors({ name: filter }), booksService.getBooks({ title: filter })]);
           for (const author of matchingAuthors) {
             results.push([{ type: "generic", id: `author:${author.key}` }]);
@@ -410,8 +410,8 @@ describe("Hierarchies", () => {
         const hierarchyChanged = new BeEvent<EventListener<HierarchyProvider["hierarchyChanged"]>>();
         const provider: HierarchyProvider = {
           async *getNodes({ parentNode }) {
-            const filteringHelper = createHierarchyFilteringHelper(rootFilter?.paths, parentNode);
-            const targetNodeKeys = filteringHelper.getChildNodeFilteringIdentifiers();
+            const filteringHelper = createHierarchySearchHelper(rootFilter?.paths, parentNode);
+            const targetNodeKeys = filteringHelper.getChildNodeSearchIdentifiers();
             if (!parentNode) {
               // For root nodes, query authors and return nodes based on them
               const authors = await booksService.getAuthors(

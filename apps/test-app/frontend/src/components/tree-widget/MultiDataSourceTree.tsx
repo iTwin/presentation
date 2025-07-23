@@ -12,7 +12,7 @@ import { SvgFolder, SvgGlobe, SvgImodelHollow, SvgItem, SvgModel } from "@itwin/
 import { Flex, ProgressRadial, SearchBox, Text } from "@itwin/itwinui-react";
 import { createECSchemaProvider, createECSqlQueryExecutor } from "@itwin/presentation-core-interop";
 import {
-  createHierarchyFilteringHelper,
+  createHierarchySearchHelper,
   createIModelHierarchyProvider,
   createLimitingECSqlQueryExecutor,
   createNodesQueryClauseFactory,
@@ -20,11 +20,11 @@ import {
   DefineInstanceNodeChildHierarchyLevelProps,
   GenericNodeKey,
   GetHierarchyNodesProps,
-  HierarchyFilteringPath,
   HierarchyNode,
   HierarchyNodeIdentifier,
   HierarchyNodeIdentifiersPath,
   HierarchyProvider,
+  HierarchySearchPath,
   mergeProviders,
 } from "@itwin/presentation-hierarchies";
 import { PresentationHierarchyNode, StrataKitRootErrorRenderer, StrataKitTreeRenderer, useUnifiedSelectionTree } from "@itwin/presentation-hierarchies-react";
@@ -75,9 +75,10 @@ function Tree({ imodelAccess, height, width }: { imodelAccess: IModelAccess; hei
       if (!filter) {
         return undefined;
       }
-      return Promise.all([getModelsHierarchyFilteringPaths({ imodelAccess, filter }), RSS_PROVIDER.getFilteredPaths(filter)]).then(
-        ([imodelPaths, rssPaths]) => [...imodelPaths, ...rssPaths],
-      );
+      return Promise.all([getModelsHierarchySearchPaths({ imodelAccess, filter }), RSS_PROVIDER.getFilteredPaths(filter)]).then(([imodelPaths, rssPaths]) => [
+        ...imodelPaths,
+        ...rssPaths,
+      ]);
     };
   }, [filter, imodelAccess]);
 
@@ -288,7 +289,7 @@ function createModelsHierarchyDefinition({ imodelAccess }: { imodelAccess: IMode
     },
   });
 }
-async function getModelsHierarchyFilteringPaths({ imodelAccess, filter }: { imodelAccess: IModelAccess; filter: string }): Promise<HierarchyFilteringPath[]> {
+async function getModelsHierarchySearchPaths({ imodelAccess, filter }: { imodelAccess: IModelAccess; filter: string }): Promise<HierarchySearchPath[]> {
   const labelsFactory = createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess });
   const [rootSubjectPath, modelPaths] = await Promise.all([
     getRootSubjectFilteredPath({ imodelAccess, filter, labelsFactory }),
@@ -304,7 +305,7 @@ async function* getModelsFilteringPaths({
   imodelAccess: IModelAccess;
   filter: string;
   labelsFactory: IInstanceLabelSelectClauseFactory;
-}): AsyncIterableIterator<HierarchyFilteringPath> {
+}): AsyncIterableIterator<HierarchySearchPath> {
   const whereClause = `${await labelsFactory.createSelectClause({
     classAlias: "m",
     className: "BisCore.Model",
@@ -392,7 +393,7 @@ function getIcon(node: PresentationHierarchyNode): ReactElement | undefined {
   return undefined;
 }
 
-function createRssHierarchyProvider(): HierarchyProvider & { getFilteredPaths: (filter: string) => Promise<HierarchyFilteringPath[]> } {
+function createRssHierarchyProvider(): HierarchyProvider & { getFilteredPaths: (filter: string) => Promise<HierarchySearchPath[]> } {
   let feedPromise: ReturnType<RssParser["parseURL"]> | undefined;
   async function getFeed() {
     if (!feedPromise) {
@@ -405,11 +406,11 @@ function createRssHierarchyProvider(): HierarchyProvider & { getFilteredPaths: (
     return feed;
   }
 
-  let filter: HierarchyFilteringPath[] | undefined;
+  let filter: HierarchySearchPath[] | undefined;
   return {
     hierarchyChanged: new BeEvent(),
 
-    async getFilteredPaths(filterString: string): Promise<HierarchyFilteringPath[]> {
+    async getFilteredPaths(filterString: string): Promise<HierarchySearchPath[]> {
       const feed = await getFeed();
       if (!feed) {
         return [];
@@ -470,13 +471,13 @@ function createRssHierarchyProvider(): HierarchyProvider & { getFilteredPaths: (
         }
       }
 
-      const filteringHelper = createHierarchyFilteringHelper(filter, parentNode);
+      const filteringHelper = createHierarchySearchHelper(filter, parentNode);
       if (!filteringHelper.hasFilter) {
         yield* generateNodes();
         return;
       }
 
-      const targetNodeKeys = filteringHelper.getChildNodeFilteringIdentifiers()!;
+      const targetNodeKeys = filteringHelper.getChildNodeSearchIdentifiers()!;
       for await (const node of generateNodes()) {
         if (targetNodeKeys.some((target) => HierarchyNodeIdentifier.equal(target, node.key))) {
           yield {
@@ -494,7 +495,7 @@ function createRssHierarchyProvider(): HierarchyProvider & { getFilteredPaths: (
     setHierarchyFilter(
       props:
         | {
-            paths: HierarchyFilteringPath[];
+            paths: HierarchySearchPath[];
           }
         | undefined,
     ): void {

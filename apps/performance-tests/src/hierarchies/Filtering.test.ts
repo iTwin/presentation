@@ -6,7 +6,7 @@
 import { expect } from "chai";
 import { IModelDb, PhysicalElement, SnapshotDb } from "@itwin/core-backend";
 import { Id64 } from "@itwin/core-bentley";
-import { createNodesQueryClauseFactory, DefineHierarchyLevelProps, HierarchyFilteringPath, HierarchyNode } from "@itwin/presentation-hierarchies";
+import { createNodesQueryClauseFactory, DefineHierarchyLevelProps, HierarchyNode, HierarchySearchPath } from "@itwin/presentation-hierarchies";
 import { createBisInstanceLabelSelectClauseFactory, ECClassHierarchyInspector, ECSchemaProvider } from "@itwin/presentation-shared";
 import { Datasets } from "../util/Datasets";
 import { run } from "../util/TestUtilities";
@@ -25,14 +25,14 @@ describe("filtering", () => {
     testName: `filters with ${totalNumberOfFilteringPaths} paths`,
     setup: () => {
       const { schemaName, itemsPerGroup, defaultClassName } = Datasets.CUSTOM_SCHEMA;
-      const filtering = {
-        paths: new Array<HierarchyFilteringPath>(),
+      const search = {
+        paths: new Array<HierarchySearchPath>(),
       };
       const parentIdsArr = new Array<number>();
       for (let i = 1; i <= totalNumberOfFilteringPaths / numberOfPathsForASingleParent; ++i) {
         parentIdsArr.push(i + physicalElementsSmallestDecimalId);
         for (let j = (i - 1) * numberOfPathsForASingleParent; j < i * numberOfPathsForASingleParent; ++j) {
-          filtering.paths.push([
+          search.paths.push([
             { className: `${schemaName}.${defaultClassName}_0`, id: `0x${physicalElementsSmallestDecimalId.toString(16)}` },
             {
               className: `${schemaName}.${defaultClassName}_${Math.floor(i / itemsPerGroup)}`,
@@ -109,7 +109,7 @@ describe("filtering", () => {
             return [];
           },
         }),
-        filtering,
+        search,
       };
     },
     cleanup: (props: { iModel: IModelDb }) => {

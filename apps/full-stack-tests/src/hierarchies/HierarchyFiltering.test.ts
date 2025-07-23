@@ -16,17 +16,17 @@ import { BeEvent, Id64String } from "@itwin/core-bentley";
 import { IModel } from "@itwin/core-common";
 import { IModelConnection } from "@itwin/core-frontend";
 import {
-  createHierarchyFilteringHelper,
+  createHierarchySearchHelper,
   createNodesQueryClauseFactory,
   createPredicateBasedHierarchyDefinition,
   DefineInstanceNodeChildHierarchyLevelProps,
   GenericNodeKey,
   HierarchyDefinition,
-  HierarchyFilteringPath,
   HierarchyNode,
   HierarchyNodeIdentifier,
   HierarchyNodeKey,
   HierarchyProvider,
+  HierarchySearchPath,
   mergeProviders,
 } from "@itwin/presentation-hierarchies";
 import { createBisInstanceLabelSelectClauseFactory, ECSqlBinding, InstanceKey, Props } from "@itwin/presentation-shared";
@@ -122,22 +122,22 @@ describe("Hierarchies", () => {
           provider: createProvider({
             imodel,
             hierarchy,
-            filteredNodePaths: [{ path: [keys.rootSubject, { type: "generic", id: "custom" }, keys.childSubject2], options: { autoExpand: true } }],
+            searchedNodePaths: [{ path: [keys.rootSubject, { type: "generic", id: "custom" }, keys.childSubject2], options: { autoExpand: true } }],
           }),
           expect: [
             NodeValidators.createForInstanceNode({
               instanceKeys: [keys.rootSubject],
               autoExpand: true,
-              isFilterTarget: false,
+              isSearchTarget: false,
               children: [
                 NodeValidators.createForGenericNode({
                   key: "custom",
                   autoExpand: true,
-                  isFilterTarget: false,
+                  isSearchTarget: false,
                   children: [
                     NodeValidators.createForInstanceNode({
                       instanceKeys: [keys.childSubject2],
-                      isFilterTarget: true,
+                      isSearchTarget: true,
                       children: false,
                       autoExpand: false,
                     }),
@@ -205,18 +205,18 @@ describe("Hierarchies", () => {
           provider: createProvider({
             imodel,
             hierarchy,
-            filteredNodePaths: [{ path: [keys.rootSubject, { type: "generic", id: "custom2" }], options: { autoExpand: true } }],
+            searchedNodePaths: [{ path: [keys.rootSubject, { type: "generic", id: "custom2" }], options: { autoExpand: true } }],
           }),
           expect: [
             NodeValidators.createForInstanceNode({
               instanceKeys: [keys.rootSubject],
               autoExpand: true,
-              isFilterTarget: false,
+              isSearchTarget: false,
               children: [
                 NodeValidators.createForGenericNode({
                   key: "custom2",
                   autoExpand: false,
-                  isFilterTarget: true,
+                  isSearchTarget: true,
                 }),
               ],
             }),
@@ -283,7 +283,7 @@ describe("Hierarchies", () => {
           provider: createProvider({
             imodel,
             hierarchy,
-            filteredNodePaths: [
+            searchedNodePaths: [
               { path: [{ type: "generic", id: "custom2" }], options: { autoExpand: true } },
               {
                 path: [
@@ -299,28 +299,28 @@ describe("Hierarchies", () => {
             NodeValidators.createForGenericNode({
               key: "custom2",
               autoExpand: true,
-              isFilterTarget: true,
+              isSearchTarget: true,
               children: [
                 NodeValidators.createForGenericNode({
                   key: "custom21",
                   autoExpand: false,
-                  isFilterTarget: false,
+                  isSearchTarget: false,
                   children: false,
                 }),
                 NodeValidators.createForGenericNode({
                   key: "custom22",
                   autoExpand: true,
-                  isFilterTarget: false,
+                  isSearchTarget: false,
                   children: [
                     NodeValidators.createForGenericNode({
                       key: "custom221",
                       autoExpand: false,
-                      isFilterTarget: false,
+                      isSearchTarget: false,
                     }),
                     NodeValidators.createForGenericNode({
                       key: "custom222",
                       autoExpand: false,
-                      isFilterTarget: true,
+                      isSearchTarget: true,
                     }),
                   ],
                 }),
@@ -387,7 +387,7 @@ describe("Hierarchies", () => {
           provider: createProvider({
             imodel,
             hierarchy,
-            filteredNodePaths: [
+            searchedNodePaths: [
               { path: [keys.childSubject1, keys.childSubject3], options: { autoExpand: true } },
               { path: [keys.childSubject4, keys.childSubject1, keys.childSubject2], options: { autoExpand: true } },
             ],
@@ -399,7 +399,7 @@ describe("Hierarchies", () => {
               children: [
                 NodeValidators.createForInstanceNode({
                   instanceKeys: [keys.childSubject3],
-                  isFilterTarget: true,
+                  isSearchTarget: true,
                   children: false,
                   autoExpand: false,
                 }),
@@ -415,7 +415,7 @@ describe("Hierarchies", () => {
                   children: [
                     NodeValidators.createForInstanceNode({
                       instanceKeys: [keys.childSubject2],
-                      isFilterTarget: true,
+                      isSearchTarget: true,
                       children: false,
                       autoExpand: false,
                     }),
@@ -480,7 +480,7 @@ describe("Hierarchies", () => {
           provider: createProvider({
             imodel,
             hierarchy,
-            filteredNodePaths: [
+            searchedNodePaths: [
               { path: [keys.childSubject2], options: { autoExpand: true } },
               { path: [keys.childSubject2, keys.childSubject22, keys.childSubject222], options: { autoExpand: true } },
             ],
@@ -488,29 +488,29 @@ describe("Hierarchies", () => {
           expect: [
             NodeValidators.createForInstanceNode({
               instanceKeys: [keys.childSubject2],
-              isFilterTarget: true,
+              isSearchTarget: true,
               autoExpand: true,
               children: [
                 NodeValidators.createForInstanceNode({
                   instanceKeys: [keys.childSubject21],
-                  isFilterTarget: false,
+                  isSearchTarget: false,
                   children: false,
                   autoExpand: false,
                 }),
                 NodeValidators.createForInstanceNode({
                   instanceKeys: [keys.childSubject22],
                   autoExpand: true,
-                  isFilterTarget: false,
+                  isSearchTarget: false,
                   children: [
                     NodeValidators.createForInstanceNode({
                       instanceKeys: [keys.childSubject221],
-                      isFilterTarget: false,
+                      isSearchTarget: false,
                       children: false,
                       autoExpand: false,
                     }),
                     NodeValidators.createForInstanceNode({
                       instanceKeys: [keys.childSubject222],
-                      isFilterTarget: true,
+                      isSearchTarget: true,
                       children: false,
                       autoExpand: false,
                     }),
@@ -600,17 +600,17 @@ describe("Hierarchies", () => {
           provider: createProvider({
             imodel,
             hierarchy,
-            filteredNodePaths: [{ path: [keys.rootSubject, { type: "generic", id: "custom" }, keys.childSubject2], options: { autoExpand: true } }],
+            searchedNodePaths: [{ path: [keys.rootSubject, { type: "generic", id: "custom" }, keys.childSubject2], options: { autoExpand: true } }],
           }),
           expect: [
             NodeValidators.createForInstanceNode({
               instanceKeys: [keys.rootSubject],
               autoExpand: true,
-              isFilterTarget: false,
+              isSearchTarget: false,
               children: [
                 NodeValidators.createForInstanceNode({
                   instanceKeys: [keys.childSubject2],
-                  isFilterTarget: true,
+                  isSearchTarget: true,
                   children: false,
                   autoExpand: false,
                 }),
@@ -695,11 +695,11 @@ describe("Hierarchies", () => {
         };
 
         await validateHierarchy({
-          provider: createProvider({ imodel, hierarchy, filteredNodePaths: [[keys.rootSubject, { type: "generic", id: "custom" }]] }),
+          provider: createProvider({ imodel, hierarchy, searchedNodePaths: [[keys.rootSubject, { type: "generic", id: "custom" }]] }),
           expect: [
             NodeValidators.createForInstanceNode({
               instanceKeys: [keys.rootSubject],
-              isFilterTarget: false,
+              isSearchTarget: false,
               children: false,
             }),
           ],
@@ -783,11 +783,11 @@ describe("Hierarchies", () => {
         };
 
         await validateHierarchy({
-          provider: createProvider({ imodel, hierarchy, filteredNodePaths: [[keys.rootSubject, keys.childSubject1]] }),
+          provider: createProvider({ imodel, hierarchy, searchedNodePaths: [[keys.rootSubject, keys.childSubject1]] }),
           expect: [
             NodeValidators.createForInstanceNode({
               instanceKeys: [keys.rootSubject],
-              isFilterTarget: false,
+              isSearchTarget: false,
               children: false,
             }),
           ],
@@ -876,7 +876,7 @@ describe("Hierarchies", () => {
               provider: createProvider({
                 imodel,
                 hierarchy,
-                filteredNodePaths: [
+                searchedNodePaths: [
                   { path: [x], options: { autoExpand: true } },
                   { path: [x, y], options: { autoExpand: true } },
                 ],
@@ -885,12 +885,12 @@ describe("Hierarchies", () => {
                 NodeValidators.createForInstanceNode({
                   instanceKeys: [x],
                   autoExpand: true,
-                  isFilterTarget: true,
+                  isSearchTarget: true,
                   children: [
                     NodeValidators.createForInstanceNode({
                       instanceKeys: [z],
                       autoExpand: false,
-                      isFilterTarget: false,
+                      isSearchTarget: false,
                       children: false,
                     }),
                   ],
@@ -971,7 +971,7 @@ describe("Hierarchies", () => {
               provider: createProvider({
                 imodel,
                 hierarchy,
-                filteredNodePaths: [
+                searchedNodePaths: [
                   { path: [x], options: { autoExpand: true } },
                   { path: [x, y1], options: { autoExpand: true } },
                 ],
@@ -980,12 +980,12 @@ describe("Hierarchies", () => {
                 NodeValidators.createForInstanceNode({
                   instanceKeys: [x],
                   autoExpand: true,
-                  isFilterTarget: true,
+                  isSearchTarget: true,
                   children: [
                     NodeValidators.createForInstanceNode({
                       instanceKeys: [y2],
                       autoExpand: false,
-                      isFilterTarget: false,
+                      isSearchTarget: false,
                       children: false,
                     }),
                   ],
@@ -1045,7 +1045,7 @@ describe("Hierarchies", () => {
           provider: createProvider({
             imodel,
             hierarchy,
-            filteredNodePaths: keys.elements.map((elementKey) => ({
+            searchedNodePaths: keys.elements.map((elementKey) => ({
               path: [rootNodeKey, elementKey],
               options: {
                 autoExpand: {
@@ -1118,7 +1118,7 @@ describe("Hierarchies", () => {
           provider: createProvider({
             imodel,
             hierarchy,
-            filteredNodePaths: [
+            searchedNodePaths: [
               {
                 path: [rootNodeKey, keys.rootElement, keys.middleElement, keys.childElement],
                 options: {
@@ -1218,7 +1218,7 @@ describe("Hierarchies", () => {
           provider: createProvider({
             imodel,
             hierarchy,
-            filteredNodePaths: [
+            searchedNodePaths: [
               { path: [rootNodeKey, keys.elements[0]], options: { autoExpand: true } },
               ...keys.elements.map((elementKey) => ({
                 path: [rootNodeKey, elementKey],
@@ -1242,10 +1242,10 @@ describe("Hierarchies", () => {
                   children: [
                     NodeValidators.createForInstanceNode({
                       instanceKeys: [keys.elements[0]],
-                      isFilterTarget: true,
+                      isSearchTarget: true,
                     }),
                     NodeValidators.createForInstanceNode({
-                      isFilterTarget: true,
+                      isSearchTarget: true,
                       instanceKeys: [keys.elements[1]],
                     }),
                   ],
@@ -1341,7 +1341,7 @@ describe("Hierarchies", () => {
             provider: createProvider({
               imodel,
               hierarchy,
-              filteredNodePaths: [
+              searchedNodePaths: [
                 {
                   path: [rootNodeKey, elementKey],
                   options: { autoExpand: autoExpandOptions },
@@ -1367,8 +1367,8 @@ describe("Hierarchies", () => {
                             children: [
                               NodeValidators.createForInstanceNode({
                                 instanceKeys: [elementKey],
-                                isFilterTarget: !!autoExpandOptions,
-                                filterTargetOptions: { autoExpand: autoExpandOptions },
+                                isSearchTarget: !!autoExpandOptions,
+                                searchTargetOptions: { autoExpand: autoExpandOptions },
                               }),
                             ],
                           }),
@@ -1391,7 +1391,7 @@ describe("Hierarchies", () => {
             provider: createProvider({
               imodel,
               hierarchy,
-              filteredNodePaths: [
+              searchedNodePaths: [
                 {
                   path: [rootNodeKey, elementKey],
                   options: { autoExpand: autoExpandOptions },
@@ -1417,8 +1417,8 @@ describe("Hierarchies", () => {
                             children: [
                               NodeValidators.createForInstanceNode({
                                 instanceKeys: [elementKey],
-                                isFilterTarget: true,
-                                filterTargetOptions: { autoExpand: autoExpandOptions },
+                                isSearchTarget: true,
+                                searchTargetOptions: { autoExpand: autoExpandOptions },
                               }),
                             ],
                           }),
@@ -1441,7 +1441,7 @@ describe("Hierarchies", () => {
             provider: createProvider({
               imodel,
               hierarchy,
-              filteredNodePaths: [
+              searchedNodePaths: [
                 {
                   path: [rootNodeKey, elementKey],
                   options: { autoExpand: autoExpandOptions },
@@ -1467,8 +1467,8 @@ describe("Hierarchies", () => {
                             children: [
                               NodeValidators.createForInstanceNode({
                                 instanceKeys: [elementKey],
-                                isFilterTarget: true,
-                                filterTargetOptions: { autoExpand: autoExpandOptions },
+                                isSearchTarget: true,
+                                searchTargetOptions: { autoExpand: autoExpandOptions },
                               }),
                             ],
                           }),
@@ -1487,7 +1487,7 @@ describe("Hierarchies", () => {
             provider: createProvider({
               imodel,
               hierarchy,
-              filteredNodePaths: [
+              searchedNodePaths: [
                 {
                   path: [rootNodeKey, elementKey],
                   options: { autoExpand: true },
@@ -1513,7 +1513,7 @@ describe("Hierarchies", () => {
                             children: [
                               NodeValidators.createForInstanceNode({
                                 instanceKeys: [elementKey],
-                                isFilterTarget: true,
+                                isSearchTarget: true,
                               }),
                             ],
                           }),
@@ -1624,7 +1624,7 @@ describe("Hierarchies", () => {
         });
         const provider4 = new (class implements HierarchyProvider {
           public hierarchyChanged = new BeEvent();
-          private _filter: HierarchyFilteringPath[] | undefined;
+          private _filter: HierarchySearchPath[] | undefined;
           public getNodes: HierarchyProvider["getNodes"] = ({ parentNode }) => {
             if (!parentNode) {
               const myNode = {
@@ -1637,7 +1637,7 @@ describe("Hierarchies", () => {
                 return createAsyncIterator([myNode]);
               }
               const nodeMatchesFilter = this._filter.some((fp) => {
-                const { path } = HierarchyFilteringPath.normalize(fp);
+                const { path } = HierarchySearchPath.normalize(fp);
                 return (
                   path.length &&
                   HierarchyNodeIdentifier.isGenericNodeIdentifier(path[0]) &&
@@ -1646,7 +1646,7 @@ describe("Hierarchies", () => {
                 );
               });
               if (nodeMatchesFilter) {
-                return createAsyncIterator([{ ...myNode, filtering: { isFilterTarget: true } }]);
+                return createAsyncIterator([{ ...myNode, search: { isSearchTarget: true } }]);
               }
             }
             return createAsyncIterator([]);
@@ -1828,11 +1828,11 @@ describe("Hierarchies", () => {
                 parentKeys: [...parentNode.parentKeys, parentNode.key],
                 children: false,
               };
-              const filteringHelper = createHierarchyFilteringHelper(undefined, parentNode);
+              const filteringHelper = createHierarchySearchHelper(undefined, parentNode);
               if (!filteringHelper.hasFilter) {
                 return createAsyncIterator([myNode]);
               }
-              const nodeMatchesFilter = filteringHelper.getChildNodeFilteringIdentifiers()?.some((id) => HierarchyNodeIdentifier.equal(id, myNode.key));
+              const nodeMatchesFilter = filteringHelper.getChildNodeSearchIdentifiers()?.some((id) => HierarchyNodeIdentifier.equal(id, myNode.key));
               if (nodeMatchesFilter) {
                 return createAsyncIterator([{ ...myNode, ...filteringHelper.createChildNodeProps({ nodeKey: myNode.key }) }]);
               }

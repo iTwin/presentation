@@ -37,8 +37,8 @@ interface BaseNodeExpectations {
   label?: string | RegExp;
   autoExpand?: boolean;
   supportsFiltering?: boolean;
-  isFilterTarget?: boolean;
-  filterTargetOptions?: {
+  isSearchTarget?: boolean;
+  searchTargetOptions?: {
     autoExpand?: { key: GroupingNodeKey; depth: number };
   };
   extendedData?: { [key: string]: any };
@@ -77,18 +77,18 @@ export namespace NodeValidators {
         )}, got ${optionalBooleanToString(node.supportsFiltering)}`,
       );
     }
-    if (expectations.isFilterTarget !== undefined && expectations.isFilterTarget !== !!node.filtering?.isFilterTarget) {
+    if (expectations.isSearchTarget !== undefined && expectations.isSearchTarget !== !!node.search?.isSearchTarget) {
       throw new Error(
-        `[${node.label}] Expected node's \`filtering.isFilterTarget\` to be ${optionalBooleanToString(
-          expectations.isFilterTarget,
-        )}, got ${optionalBooleanToString(node.filtering?.isFilterTarget)}`,
+        `[${node.label}] Expected node's \`filtering.isSearchTarget\` to be ${optionalBooleanToString(
+          expectations.isSearchTarget,
+        )}, got ${optionalBooleanToString(node.search?.isSearchTarget)}`,
       );
     }
-    if (expectations.filterTargetOptions !== undefined) {
-      assert(node.filtering?.isFilterTarget, `[${node.label}] Expected node to be a filter target`);
-      expect(node.filtering.filterTargetOptions).to.deep.eq(
-        expectations.filterTargetOptions,
-        `[${node.label}] Nodes's 'filtering.filterTargetOptions' flag property doesn't match the expectation.`,
+    if (expectations.searchTargetOptions !== undefined) {
+      assert(node.search?.isSearchTarget, `[${node.label}] Expected node to be a filter target`);
+      expect(node.search.searchTargetOptions).to.deep.eq(
+        expectations.searchTargetOptions,
+        `[${node.label}] Nodes's 'filtering.searchTargetOptions' flag property doesn't match the expectation.`,
       );
     }
     if (expectations.extendedData !== undefined && !isDeepStrictEqual(node.extendedData, expectations.extendedData)) {
@@ -102,7 +102,7 @@ export namespace NodeValidators {
   }
 
   export function createForGenericNode<TChildren extends ExpectedHierarchyDef[] | boolean>(
-    expectedNode: Partial<Omit<NonGroupingHierarchyNode, "label" | "children" | "filtering" | "key">> &
+    expectedNode: Partial<Omit<NonGroupingHierarchyNode, "label" | "children" | "search" | "key">> &
       BaseNodeExpectations & {
         key?: string | GenericNodeKey;
         label?: string;

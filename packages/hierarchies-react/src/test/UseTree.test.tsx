@@ -214,7 +214,7 @@ describe("useTree", () => {
       return createAsyncIterator(props.parentNode === undefined ? [createTestHierarchyNode({ id: "root-1" })] : []);
     });
 
-    const promise = new ResolvablePromise<hierarchiesModule.HierarchyFilteringPath[] | undefined>();
+    const promise = new ResolvablePromise<hierarchiesModule.HierarchySearchPath[] | undefined>();
     const getFilteredPaths = async () => promise;
 
     const { result } = renderHook(useTree, { initialProps: { ...initialProps, getFilteredPaths } });
