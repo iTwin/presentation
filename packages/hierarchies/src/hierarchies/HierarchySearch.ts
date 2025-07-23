@@ -32,9 +32,9 @@ export interface SearchPathAutoExpandOption {
 /** @public */
 export interface HierarchySearchPathOptions {
   /**
-   * This option specifies the way `autoExpand` flag should be assigned to nodes in the filtered hierarchy.
+   * This option specifies the way `autoExpand` flag should be assigned to nodes in the searched hierarchy.
    * - If it's `false` or `undefined`, nodes have no 'autoExpand' flag.
-   * - If it's `true`, then all nodes up to the filter target will have `autoExpand` flag.
+   * - If it's `true`, then all nodes up to the search target will have `autoExpand` flag.
    * - If it's an instance of `FilterTargetGroupingNodeInfo`, then all nodes up to the grouping node that matches this property,
    * will have `autoExpand` flag.
    * - If it's an instance of `FilteringPathAutoExpandOption`, then all nodes up to and including `depth` will have `autoExpand` flag.
@@ -121,7 +121,7 @@ function extractFilteringPropsInternal(
 }
 
 /**
- * Creates a set of utilities for making it easier to filter the given hierarchy
+ * Creates a set of utilities for making it easier to search the given hierarchy
  * level.
  *
  * @public
@@ -134,21 +134,21 @@ export function createHierarchySearchHelper(
   const hasFilter = !!searchProps;
   return {
     /**
-     * Returns a flag indicating if the hierarchy level is filtered.
+     * Returns a flag indicating if the hierarchy level is searched.
      */
     hasFilter,
 
     /**
      * Returns a flag indicating whether this hierarchy level has an ancestor node
-     * that is a filter target. That generally means that this and all downstream hierarchy
-     * levels should be displayed without filter being applied to them, even if filter paths
+     * that is a search target. That generally means that this and all downstream hierarchy
+     * levels should be displayed without search being applied to them, even if search paths
      * say otherwise.
      */
     hasSearchTargetAncestor: searchProps?.hasSearchTargetAncestor ?? false,
 
     /**
      * Returns a list of hierarchy node identifiers that apply specifically for this
-     * hierarchy level. Returns `undefined` if filtering is not applied to this level.
+     * hierarchy level. Returns `undefined` if search is not applied to this level.
      */
     getChildNodeSearchIdentifiers: () => {
       if (!hasFilter) {
@@ -161,8 +161,8 @@ export function createHierarchySearchHelper(
     },
 
     /**
-     * When a hierarchy node is created for a filtered hierarchy level, it needs some attributes (e.g. `filtering`
-     * and `autoExpand`) to be set based on the filter paths and filtering options. This function calculates
+     * When a hierarchy node is created for a search hierarchy level, it needs some attributes (e.g. `search`
+     * and `autoExpand`) to be set based on the search paths and search options. This function calculates
      * these props for a child node based on its key or path matcher.
      *
      * When using `pathMatcher` prop, callers have more flexibility to decide whether the given `HierarchyNodeIdentifier` applies

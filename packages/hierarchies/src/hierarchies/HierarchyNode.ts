@@ -22,19 +22,19 @@ import { HierarchySearchPath, HierarchySearchPathOptions } from "./HierarchySear
 
 /** @public */
 export type HierarchyNodeSearchProps = {
-  /** If set to true, then one of the ancestor nodes in the hierarchy is the filter target. */
+  /** If set to true, then one of the ancestor nodes in the hierarchy is the search target. */
   hasSearchTargetAncestor?: boolean;
-  /** Paths to node's children that are filter targets. */
+  /** Paths to node's children that are search targets. */
   searchedChildrenIdentifierPaths?: HierarchySearchPath[];
 } & (
   | {
-      /** Whether or not this node is a filter target. */
+      /** Whether or not this node is a search target. */
       isSearchTarget?: false;
     }
   | {
-      /** Whether or not this node is a filter target. */
+      /** Whether or not this node is a search target. */
       isSearchTarget: true;
-      /** Options that were used to filter the node. */
+      /** Options that were used to search the node. */
       searchTargetOptions?: HierarchySearchPathOptions;
     }
 );
@@ -77,7 +77,7 @@ interface BaseHierarchyNode {
   autoExpand?: boolean;
   /** Additional data that may be assigned to this node. */
   extendedData?: { [key: string]: any };
-  /** Data that may be assigned to the node if search/filtering is enabled */
+  /** Data that may be assigned to the node if search is enabled */
   search?: HierarchyNodeSearchProps;
 }
 

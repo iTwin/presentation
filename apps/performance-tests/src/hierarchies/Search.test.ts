@@ -12,8 +12,8 @@ import { Datasets } from "../util/Datasets";
 import { run } from "../util/TestUtilities";
 import { StatelessHierarchyProvider } from "./StatelessHierarchyProvider";
 
-describe("filtering", () => {
-  const totalNumberOfFilteringPaths = 50000;
+describe("search", () => {
+  const totalNumberOfSearchPaths = 50000;
   // We could use any number here.
   // Using 1k because of two reasons:
   // 1. It is more than Compound SELECT Statement limit (500);
@@ -22,14 +22,14 @@ describe("filtering", () => {
   const physicalElementsSmallestDecimalId = 20;
 
   run({
-    testName: `filters with ${totalNumberOfFilteringPaths} paths`,
+    testName: `searches with ${totalNumberOfSearchPaths} paths`,
     setup: () => {
       const { schemaName, itemsPerGroup, defaultClassName } = Datasets.CUSTOM_SCHEMA;
       const search = {
         paths: new Array<HierarchySearchPath>(),
       };
       const parentIdsArr = new Array<number>();
-      for (let i = 1; i <= totalNumberOfFilteringPaths / numberOfPathsForASingleParent; ++i) {
+      for (let i = 1; i <= totalNumberOfSearchPaths / numberOfPathsForASingleParent; ++i) {
         parentIdsArr.push(i + physicalElementsSmallestDecimalId);
         for (let j = (i - 1) * numberOfPathsForASingleParent; j < i * numberOfPathsForASingleParent; ++j) {
           search.paths.push([
@@ -118,7 +118,7 @@ describe("filtering", () => {
     test: async (props) => {
       const provider = new StatelessHierarchyProvider({ ...props, rowLimit: "unbounded" });
       const nodeCount = await provider.loadHierarchy();
-      expect(nodeCount).to.eq(totalNumberOfFilteringPaths);
+      expect(nodeCount).to.eq(totalNumberOfSearchPaths);
     },
   });
 });

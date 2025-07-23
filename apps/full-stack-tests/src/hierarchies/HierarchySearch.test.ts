@@ -37,7 +37,7 @@ import { NodeValidators, validateHierarchy } from "./HierarchyValidation.js";
 import { createIModelAccess, createProvider } from "./Utils.js";
 
 describe("Hierarchies", () => {
-  describe("Hierarchy filtering", () => {
+  describe("Hierarchy search", () => {
     let subjectClassName: string;
 
     before(async function () {
@@ -50,7 +50,7 @@ describe("Hierarchies", () => {
     });
 
     describe("generic nodes", () => {
-      it("filters through generic nodes", async function () {
+      it("searches through generic nodes", async function () {
         const { imodel, ...keys } = await buildIModel(this, async (builder) => {
           const rootSubject = { className: subjectClassName, id: IModel.rootSubjectId };
           const childSubject1 = insertSubject({ builder, codeValue: "test subject 1", parentId: rootSubject.id });
@@ -149,7 +149,7 @@ describe("Hierarchies", () => {
         });
       });
 
-      it("filters generic nodes", async function () {
+      it("searches generic nodes", async function () {
         const { imodel, ...keys } = await buildIModel(this, async () => {
           const rootSubject = { className: subjectClassName, id: IModel.rootSubjectId };
           return { rootSubject };
@@ -224,7 +224,7 @@ describe("Hierarchies", () => {
         });
       });
 
-      it("filters generic nodes when targeting child and ancestor", async function () {
+      it("searches generic nodes when targeting child and ancestor", async function () {
         const { imodel } = await buildIModel(this, async () => {});
         const hierarchy: HierarchyDefinition = {
           async defineHierarchyLevel({ parentNode }) {
@@ -332,7 +332,7 @@ describe("Hierarchies", () => {
     });
 
     describe("instance nodes", () => {
-      it("filters through instance nodes that are in multiple paths", async function () {
+      it("searches through instance nodes that are in multiple paths", async function () {
         const { imodel, ...keys } = await buildIModel(this, async (builder) => {
           const rootSubject = { className: subjectClassName, id: IModel.rootSubjectId };
           const childSubject1 = insertSubject({ builder, codeValue: "test subject 1", parentId: rootSubject.id });
@@ -427,7 +427,7 @@ describe("Hierarchies", () => {
         });
       });
 
-      it("filters instance nodes when targeting child and ancestor", async function () {
+      it("searches instance nodes when targeting child and ancestor", async function () {
         const { imodel, ...keys } = await buildIModel(this, async (builder) => {
           const rootSubject = { className: subjectClassName, id: IModel.rootSubjectId };
           const childSubject1 = insertSubject({ builder, codeValue: "test subject 1", parentId: rootSubject.id });
@@ -524,7 +524,7 @@ describe("Hierarchies", () => {
     });
 
     describe("when filtering through hidden nodes", () => {
-      it("filters through hidden generic nodes", async function () {
+      it("searches through hidden generic nodes", async function () {
         const { imodel, ...keys } = await buildIModel(this, async (builder) => {
           const rootSubject = { className: subjectClassName, id: IModel.rootSubjectId };
           const childSubject1 = insertSubject({ builder, codeValue: "test subject 1", parentId: rootSubject.id });
