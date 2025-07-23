@@ -9,7 +9,7 @@ import sinon from "sinon";
 import { ECClassHierarchyInspector, trimWhitespace } from "@itwin/presentation-shared";
 import { HierarchyNode } from "../../hierarchies/HierarchyNode.js";
 import { HierarchyNodeIdentifiersPath } from "../../hierarchies/HierarchyNodeIdentifier.js";
-import { HierarchySearchPath, HierarchySearchPathOptions, SearchTargetGroupingNodeInfo } from "../../hierarchies/HierarchySearch.js";
+import { HierarchySearchPath, HierarchySearchPathOptions, SearchPathAutoExpandOption } from "../../hierarchies/HierarchySearch.js";
 import {
   GenericHierarchyNodeDefinition,
   HierarchyDefinitionParentNode,
@@ -37,7 +37,7 @@ import {
   createTestSourceGenericNode,
 } from "../Utils.js";
 
-describe("SearchHierarchyDefinition", () => {
+describe("FilteringHierarchyDefinition", () => {
   describe("parseNode", () => {
     it("uses `defaultNodeParser` when source definitions factory doesn't have one", async () => {
       const spy = sinon.spy();
@@ -445,6 +445,88 @@ describe("SearchHierarchyDefinition", () => {
       expect(node.autoExpand).to.be.true;
     });
 
+    it("sets auto-expand when all searched children paths autoExpand depth is greater than parent keys length and grouping nodes are present", async () => {
+      const paths: HierarchySearchPath[] = [
+        {
+          path: [
+            createTestInstanceKey({ id: "0x1", className: "TestSchema.TestName" }),
+            createTestInstanceKey({ id: "0x2", className: "TestSchema.TestName" }),
+            createTestInstanceKey({ id: "0x3", className: "TestSchema.TestName" }),
+          ],
+          options: { autoExpand: { depth: 2 } },
+        },
+      ];
+      const filteringFactory = await createSearchHierarchyDefinition({ nodeIdentifierPaths: paths });
+      const row = {
+        [NodeSelectClauseColumnNames.FullClassName]: "",
+        [ECSQL_COLUMN_NAME_FilterECInstanceId]: "0x2",
+        [ECSQL_COLUMN_NAME_FilterClassName]: "TestSchema.TestName",
+      };
+      const node = await firstValueFrom(
+        filteringFactory.parseNode(row, {
+          key: { type: "instances", instanceKeys: [{ id: "0x1", className: "TestSchema.TestName" }] },
+          label: "",
+          parentKeys: [
+            {
+              type: "class-grouping",
+              className: "Generic.PhysicalObject",
+            },
+          ],
+          search: {
+            searchedChildrenIdentifierPaths: paths.map((path) => {
+              const normalizedPath = HierarchySearchPath.normalize(path);
+              return {
+                path: normalizedPath.path.slice(1),
+                options: normalizedPath.options,
+              };
+            }),
+          },
+        }),
+      );
+      expect(node.autoExpand).to.be.true;
+    });
+
+    it("sets auto-expand when all searched children paths autoExpand depth is greater than parent keys length and includeGroupingNodes is set to true", async () => {
+      const paths: HierarchySearchPath[] = [
+        {
+          path: [
+            createTestInstanceKey({ id: "0x1", className: "TestSchema.TestName" }),
+            createTestInstanceKey({ id: "0x2", className: "TestSchema.TestName" }),
+            createTestInstanceKey({ id: "0x3", className: "TestSchema.TestName" }),
+          ],
+          options: { autoExpand: { depth: 3, includeGroupingNodes: true } },
+        },
+      ];
+      const filteringFactory = await createSearchHierarchyDefinition({ nodeIdentifierPaths: paths });
+      const row = {
+        [NodeSelectClauseColumnNames.FullClassName]: "",
+        [ECSQL_COLUMN_NAME_FilterECInstanceId]: "0x2",
+        [ECSQL_COLUMN_NAME_FilterClassName]: "TestSchema.TestName",
+      };
+      const node = await firstValueFrom(
+        filteringFactory.parseNode(row, {
+          key: { type: "instances", instanceKeys: [{ id: "0x1", className: "TestSchema.TestName" }] },
+          label: "",
+          parentKeys: [
+            {
+              type: "class-grouping",
+              className: "Generic.PhysicalObject",
+            },
+          ],
+          search: {
+            searchedChildrenIdentifierPaths: paths.map((path) => {
+              const normalizedPath = HierarchySearchPath.normalize(path);
+              return {
+                path: normalizedPath.path.slice(1),
+                options: normalizedPath.options,
+              };
+            }),
+          },
+        }),
+      );
+      expect(node.autoExpand).to.be.true;
+    });
+
     it("sets auto-expand on root node when all searched children paths autoExpand depth is greater than 1", async () => {
       const paths: HierarchySearchPath[] = [
         {
@@ -541,7 +623,7 @@ describe("SearchHierarchyDefinition", () => {
       const sourceFactory = {} as unknown as RxjsHierarchyDefinition;
       const className = "TestSchema.TestName";
       const filteringOptions: HierarchySearchPathOptions = {
-        autoExpand: { key: { type: "class-grouping", className: "" }, depth: 0 },
+        autoExpand: { depth: 0 },
       };
       const paths = [{ path: [createTestInstanceKey({ id: "0x5", className })], options: filteringOptions }, [createTestInstanceKey({ id: "0x5", className })]];
       const filteringFactory = await createSearchHierarchyDefinition({
@@ -761,7 +843,7 @@ describe("SearchHierarchyDefinition", () => {
               ...createTestProcessedInstanceNode(),
               search: {
                 isSearchTarget: true,
-                searchTargetOptions: { autoExpand: { key: groupingNode.key, depth: 0 } },
+                searchTargetOptions: { autoExpand: { depth: 0 } },
                 searchedChildrenIdentifierPaths: [],
               },
             },
@@ -769,7 +851,7 @@ describe("SearchHierarchyDefinition", () => {
               ...createTestProcessedInstanceNode(),
               search: {
                 isSearchTarget: true,
-                searchTargetOptions: { autoExpand: { key: groupingNode.key, depth: 0 } },
+                searchTargetOptions: { autoExpand: { depth: 0 } },
                 searchedChildrenIdentifierPaths: [],
               },
             },
@@ -780,33 +862,28 @@ describe("SearchHierarchyDefinition", () => {
         expect(result.autoExpand).to.be.undefined;
       });
 
-      it("sets auto-expand when at least one child node targets another grouping node", async () => {
+      it("sets auto-expand when node has hierarchy depth smaller than the search target", async () => {
         const groupingNode = createGroupingNode();
-        const otherGroupingNode = createGroupingNode();
         const inputNode: ProcessedGroupingHierarchyNode = {
           ...groupingNode,
+          parentKeys: [createTestNodeKey()],
           children: [
             {
               ...createTestProcessedInstanceNode(),
               search: {
                 isSearchTarget: true,
-                searchTargetOptions: { autoExpand: { key: groupingNode.key, depth: 0 } },
-                searchedChildrenIdentifierPaths: [],
-              },
-            },
-            {
-              ...createTestProcessedInstanceNode(),
-              search: {
-                isSearchTarget: true,
-                searchTargetOptions: { autoExpand: { key: otherGroupingNode.key, depth: 0 } },
-                searchedChildrenIdentifierPaths: [],
+                searchTargetOptions: {
+                  autoExpand: {
+                    depth: 2,
+                  },
+                },
               },
             },
           ],
         };
         const filteringFactory = await createSearchHierarchyDefinition();
         const result = await firstValueFrom(filteringFactory.postProcessNode(inputNode));
-        expect(result.autoExpand).to.be.undefined;
+        expect(result.autoExpand).to.be.true;
       });
 
       it("sets auto-expand when node has hierarchy depth smaller than the search target and same key", async () => {
@@ -821,7 +898,6 @@ describe("SearchHierarchyDefinition", () => {
                 isSearchTarget: true,
                 searchTargetOptions: {
                   autoExpand: {
-                    key: groupingNode.key,
                     depth: 2,
                   },
                 },
@@ -834,7 +910,7 @@ describe("SearchHierarchyDefinition", () => {
         expect(result.autoExpand).to.be.true;
       });
 
-      it("sets auto-expand when node has hierarchy depth smaller than the search target and different key", async function () {
+      it("sets auto-expand for grouping node whose child has autoExpand depth with includeGroupingNodes set", async function () {
         const inputNode: ProcessedGroupingHierarchyNode = {
           ...createGroupingNode(),
           parentKeys: [createTestNodeKey()],
@@ -845,7 +921,54 @@ describe("SearchHierarchyDefinition", () => {
                 isSearchTarget: true,
                 searchTargetOptions: {
                   autoExpand: {
-                    key: { type: "class-grouping", className: this.test!.title },
+                    depth: 2,
+                    includeGroupingNodes: true,
+                  },
+                },
+              },
+            },
+          ],
+        };
+        const filteringFactory = await createSearchHierarchyDefinition();
+        const result = await firstValueFrom(filteringFactory.postProcessNode(inputNode));
+        expect(result.autoExpand).to.be.true;
+      });
+
+      it("doesn't set auto-expand for grouping node whose child has autoExpand depth pointing to parent with includeGroupingNodes set", async function () {
+        const inputNode: ProcessedGroupingHierarchyNode = {
+          ...createGroupingNode(),
+          parentKeys: [createTestNodeKey(), createGroupingNode().key],
+          children: [
+            {
+              ...createTestProcessedInstanceNode(),
+              search: {
+                isSearchTarget: true,
+                searchTargetOptions: {
+                  autoExpand: {
+                    depth: 2,
+                    includeGroupingNodes: true,
+                  },
+                },
+              },
+            },
+          ],
+        };
+        const filteringFactory = await createSearchHierarchyDefinition();
+        const result = await firstValueFrom(filteringFactory.postProcessNode(inputNode));
+        expect(result.autoExpand).to.be.undefined;
+      });
+
+      it("sets auto-expand for grouping node whose child has autoExpand depth", async function () {
+        const inputNode: ProcessedGroupingHierarchyNode = {
+          ...createGroupingNode(),
+          parentKeys: [createTestNodeKey(), createGroupingNode().key],
+          children: [
+            {
+              ...createTestProcessedInstanceNode(),
+              search: {
+                isSearchTarget: true,
+                searchTargetOptions: {
+                  autoExpand: {
                     depth: 2,
                   },
                 },
@@ -858,7 +981,7 @@ describe("SearchHierarchyDefinition", () => {
         expect(result.autoExpand).to.be.true;
       });
 
-      it("doesn't set auto-expand when node has same hierarchy depth and same keys as the search target", async () => {
+      it("doesn't set auto-expand for grouping node whose child has autoExpand depth pointing to parent", async function () {
         const inputNode: ProcessedGroupingHierarchyNode = {
           ...createGroupingNode(),
           parentKeys: [createTestNodeKey()],
@@ -869,7 +992,6 @@ describe("SearchHierarchyDefinition", () => {
                 isSearchTarget: true,
                 searchTargetOptions: {
                   autoExpand: {
-                    key: createGroupingNode().key,
                     depth: 1,
                   },
                 },
@@ -894,10 +1016,6 @@ describe("SearchHierarchyDefinition", () => {
                 searchTargetOptions: {
                   autoExpand: {
                     ...createTestProcessedGroupingNode(),
-                    key: {
-                      type: "class-grouping",
-                      className: "foo",
-                    },
                     depth: 1,
                   },
                 },
@@ -1042,7 +1160,7 @@ describe("SearchHierarchyDefinition", () => {
       expect(result).to.be.empty;
     });
 
-    describe("search generic node definitions", () => {
+    describe("filtering generic node definitions", () => {
       it("omits source generic node definition when using instance key search", async () => {
         const filterClass = classHierarchyInspector.stubEntityClass({ schemaName: "BisCore", className: "FilterClassName" });
         const sourceDefinition: GenericHierarchyNodeDefinition = {
@@ -1063,7 +1181,7 @@ describe("SearchHierarchyDefinition", () => {
         expect(result).to.be.empty;
       });
 
-      it("omits source generic node definition if filter type doesn't match node's key", async () => {
+      it("omits source generic node definition if search type doesn't match node's key", async () => {
         const sourceDefinition: GenericHierarchyNodeDefinition = {
           node: createTestSourceGenericNode({
             key: "custom",
@@ -1082,7 +1200,7 @@ describe("SearchHierarchyDefinition", () => {
         expect(result).to.be.empty;
       });
 
-      it("omits source generic node definition when searching by empty path", async () => {
+      it("omits source generic node definition when search filtering by empty path", async () => {
         const sourceDefinition: GenericHierarchyNodeDefinition = {
           node: createTestSourceGenericNode({
             key: "custom",
@@ -1120,7 +1238,7 @@ describe("SearchHierarchyDefinition", () => {
         expect(result).to.be.empty;
       });
 
-      it("returns searched source custom node definitions when filter type matches node's key", async () => {
+      it("returns searched source custom node definitions when search type matches node's key", async () => {
         const sourceDefinition1: GenericHierarchyNodeDefinition = {
           node: createTestSourceGenericNode({
             key: "custom 1",
@@ -1196,7 +1314,7 @@ describe("SearchHierarchyDefinition", () => {
         const sourceFactory: RxjsHierarchyDefinition = {
           defineHierarchyLevel: () => of([sourceDefinition]),
         };
-        const groupingNode: SearchTargetGroupingNodeInfo = { key: { type: "class-grouping", className: "class" }, depth: 0 };
+        const groupingNode: SearchPathAutoExpandOption = { depth: 0 };
         const filteringFactory = await createSearchHierarchyDefinition({
           imodelAccess: { ...classHierarchyInspector, imodelKey: "test-imodel-key" },
           sourceFactory,
@@ -1227,7 +1345,7 @@ describe("SearchHierarchyDefinition", () => {
         ]);
       });
 
-      it("applies correct search options to itself", async () => {
+      it("applies correct filtering options to itself", async () => {
         const sourceDefinition: GenericHierarchyNodeDefinition = {
           node: createTestSourceGenericNode({
             key: "custom",
@@ -1263,7 +1381,7 @@ describe("SearchHierarchyDefinition", () => {
       });
     });
 
-    describe("instance node query definitions", () => {
+    describe("filtering instance node query definitions", () => {
       it("omits source instance node query definition when using custom node search", async () => {
         const queryClass = classHierarchyInspector.stubEntityClass({ schemaName: "BisCore", className: "SourceQueryClassName" });
         const sourceDefinition: InstanceNodesQueryDefinition = {
@@ -1305,7 +1423,7 @@ describe("SearchHierarchyDefinition", () => {
         expect(result).to.be.empty;
       });
 
-      it("omits source instance node query definition when searching by empty path", async () => {
+      it("omits source instance node query definition when search filtering by empty path", async () => {
         const queryClass = classHierarchyInspector.stubEntityClass({ schemaName: "BisCore", className: "SourceQueryClassName" });
         const sourceDefinition: InstanceNodesQueryDefinition = {
           fullClassName: queryClass.fullName,
@@ -1338,13 +1456,13 @@ describe("SearchHierarchyDefinition", () => {
         const filteringFactory = await createSearchHierarchyDefinition({
           imodelAccess: { ...classHierarchyInspector, imodelKey: "test-imodel-key" },
           sourceFactory,
-          nodeIdentifierPaths: [[{ className: "filter.class", id: "0x123", imodelKey: "other-source" }]],
+          nodeIdentifierPaths: [[{ className: "search.class", id: "0x123", imodelKey: "other-source" }]],
         });
         const result = await lastValueFrom(filteringFactory.defineHierarchyLevel({ parentNode: undefined }));
         expect(result).to.be.empty;
       });
 
-      it("returns unsearched source instance node query definitions when searching target parent node", async () => {
+      it("returns unfiltered source instance node query definitions when filtering search target parent node", async () => {
         const queryClass = classHierarchyInspector.stubEntityClass({ schemaName: "BisCore", className: "SourceQueryClassName" });
         const sourceDefinition: InstanceNodesQueryDefinition = {
           fullClassName: queryClass.fullName,
@@ -1601,9 +1719,9 @@ describe("SearchHierarchyDefinition", () => {
           className: "FilterPathClassName0",
           baseClass: queryClass,
         });
-        const groupingNode1: SearchTargetGroupingNodeInfo = { key: { type: "class-grouping", className: "class1" }, depth: 1 };
-        const groupingNode2: SearchTargetGroupingNodeInfo = { key: { type: "class-grouping", className: "class2" }, depth: 3 };
-        const groupingNode3: SearchTargetGroupingNodeInfo = { key: { type: "class-grouping", className: "class2" }, depth: 0 };
+        const groupingNode1: SearchPathAutoExpandOption = { depth: 1 };
+        const groupingNode2: SearchPathAutoExpandOption = { depth: 3 };
+        const groupingNode3: SearchPathAutoExpandOption = { depth: 0 };
         const sourceDefinition: InstanceNodesQueryDefinition = {
           fullClassName: queryClass.fullName,
           query: {
@@ -1643,7 +1761,7 @@ describe("SearchHierarchyDefinition", () => {
       });
     });
 
-    it("uses search paths from parent node", async () => {
+    it("uses filtering paths from parent node", async () => {
       const queryClass = classHierarchyInspector.stubEntityClass({ schemaName: "BisCore", className: "SourceQueryClassName" });
       const childFilterClass = classHierarchyInspector.stubEntityClass({
         schemaName: "BisCore",
@@ -1735,7 +1853,7 @@ describe("SearchHierarchyDefinition", () => {
   });
 
   describe("applyECInstanceIdsFilter", () => {
-    it("creates a valid CTE for filtered instance paths", () => {
+    it("creates a valid CTE for searched instance paths", () => {
       const result = applyECInstanceIdsFilter(
         {
           fullClassName: "full-class-name",
