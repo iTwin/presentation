@@ -504,7 +504,7 @@ const provider: HierarchyProvider = {
           label: author.name,
           children: author.hasBooks,
           parentKeys: [],
-          ...filteringHelper.createChildNodeProps({ nodeKey }),
+          ...filteringHelper.createChildNodeProps({ nodeKey, parentNode }),
         };
       }
     } else if (HierarchyNode.isGeneric(parentNode) && parentNode.key.id.startsWith("author:")) {
@@ -532,7 +532,7 @@ const provider: HierarchyProvider = {
           label: book.title,
           children: false,
           parentKeys: [...parentNode.parentKeys, parentNode.key],
-          ...filteringHelper.createChildNodeProps({ nodeKey }),
+          ...filteringHelper.createChildNodeProps({ nodeKey, parentNode }),
         };
       }
     }
