@@ -40,7 +40,7 @@ export interface ClassGroupingNodeKey {
 }
 
 // @public
-export function createHierarchyFilteringHelper(rootLevelFilteringProps: HierarchyFilteringPath[] | undefined, parentNode: Pick<NonGroupingHierarchyNode, "filtering"> | undefined): {
+export function createHierarchyFilteringHelper(rootLevelFilteringProps: HierarchyFilteringPath[] | undefined, parentNode: Pick<NonGroupingHierarchyNode, "filtering" | "parentKeys"> | undefined): {
     hasFilter: boolean;
     hasFilterTargetAncestor: boolean;
     getChildNodeFilteringIdentifiers: () => HierarchyNodeIdentifier[] | undefined;
@@ -48,10 +48,10 @@ export function createHierarchyFilteringHelper(rootLevelFilteringProps: Hierarch
         nodeKey: InstancesNodeKey | GenericNodeKey;
     } | {
         pathMatcher: (identifier: HierarchyNodeIdentifier) => boolean;
-    }) => NodeProps | undefined;
+    }) => Pick<HierarchyNode, "autoExpand" | "filtering"> | undefined;
     createChildNodePropsAsync: (props: {
         pathMatcher: (identifier: HierarchyNodeIdentifier) => boolean | Promise<boolean>;
-    }) => Promise<NodeProps | undefined> | NodeProps | undefined;
+    }) => Promise<Pick<HierarchyNode, "autoExpand" | "filtering"> | undefined> | Pick<HierarchyNode, "autoExpand" | "filtering"> | undefined;
 };
 
 // @public
@@ -181,13 +181,26 @@ export function extractFilteringProps(rootLevelFilteringProps: HierarchyFilterin
 } | undefined;
 
 // @public (undocumented)
-interface FilteringPathAutoExpandOption {
-    depth: number;
-    includeGroupingNodes?: boolean;
+interface FilteringPathAutoExpandDepthInHierarchy {
+    depthInHierarchy: number;
 }
 
 // @public (undocumented)
+interface FilteringPathAutoExpandDepthInPath {
+    depthInPath: number;
+}
+
+// @public @deprecated (undocumented)
+interface FilteringPathAutoExpandOption {
+    // @deprecated
+    depth: number;
+    // @deprecated
+    includeGroupingNodes?: boolean;
+}
+
+// @public @deprecated (undocumented)
 interface FilterTargetGroupingNodeInfo {
+    // @deprecated
     depth: number;
     // @deprecated
     key: GroupingNodeKey;
@@ -269,7 +282,7 @@ export namespace HierarchyFilteringPath {
 
 // @public (undocumented)
 export interface HierarchyFilteringPathOptions {
-    autoExpand?: boolean | FilterTargetGroupingNodeInfo | FilteringPathAutoExpandOption;
+    autoExpand?: boolean | FilterTargetGroupingNodeInfo | FilteringPathAutoExpandOption | FilteringPathAutoExpandDepthInHierarchy | FilteringPathAutoExpandDepthInPath;
 }
 
 // @public
@@ -582,14 +595,6 @@ export type NodePostProcessor = (node: ProcessedHierarchyNode) => Promise<Proces
 
 // @public
 export type NodePreProcessor = <TNode extends ProcessedGenericHierarchyNode | ProcessedInstanceHierarchyNode>(node: TNode) => Promise<TNode | undefined>;
-
-// @public (undocumented)
-type NodeProps = Pick<HierarchyNode, "autoExpand" | "filtering"> & {
-    filtering?: {
-        autoExpandDepth?: number;
-        includeGroupingNodes?: boolean;
-    };
-};
 
 // @public
 export enum NodeSelectClauseColumnNames {

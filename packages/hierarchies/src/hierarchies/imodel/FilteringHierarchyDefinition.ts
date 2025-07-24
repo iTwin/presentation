@@ -80,10 +80,17 @@ export class FilteringHierarchyDefinition implements RxjsHierarchyDefinition {
         // If grouping node's child has `autoExpandUntil` flag,
         // auto-expand the grouping node only if it's depth is lower than that of the grouping node in associated with the target.
         const nodeDepth =
-          "key" in childAutoExpand || childAutoExpand.includeGroupingNodes
+          // eslint-disable-next-line @typescript-eslint/no-deprecated
+          "key" in childAutoExpand || "depthInHierarchy" in childAutoExpand || (!("depthInPath" in childAutoExpand) && childAutoExpand.includeGroupingNodes)
             ? node.parentKeys.length
             : node.parentKeys.filter((key) => !HierarchyNodeKey.isGrouping(key)).length;
-        const filterTargetDepth = childAutoExpand.depth;
+        const filterTargetDepth =
+          "depth" in childAutoExpand
+            ? // eslint-disable-next-line @typescript-eslint/no-deprecated
+              childAutoExpand.depth
+            : "depthInPath" in childAutoExpand
+              ? childAutoExpand.depthInPath
+              : childAutoExpand.depthInHierarchy;
         if (nodeDepth < filterTargetDepth) {
           return true;
         }
@@ -149,13 +156,7 @@ export class FilteringHierarchyDefinition implements RxjsHierarchyDefinition {
           return (nodeExtraPropsPossiblyPromise instanceof Promise ? from(nodeExtraPropsPossiblyPromise) : of(nodeExtraPropsPossiblyPromise)).pipe(
             map((nodeExtraProps) => {
               if (nodeExtraProps?.autoExpand) {
-                const parentLength = !parentNode
-                  ? 0
-                  : nodeExtraProps.filtering?.includeGroupingNodes
-                    ? 1 + parentNode.parentKeys.length
-                    : 1 + parentNode.parentKeys.filter((key) => !HierarchyNodeKey.isGrouping(key)).length;
-                parsedNode.autoExpand =
-                  nodeExtraProps.filtering?.autoExpandDepth !== undefined && parentLength >= nodeExtraProps.filtering.autoExpandDepth ? undefined : true;
+                parsedNode.autoExpand = true;
               }
               if (nodeExtraProps?.filtering) {
                 parsedNode.filtering = nodeExtraProps.filtering;
