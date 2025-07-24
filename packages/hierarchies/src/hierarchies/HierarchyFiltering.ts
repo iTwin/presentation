@@ -3,10 +3,9 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { HierarchyNode, NonGroupingHierarchyNode, ParentHierarchyNode } from "./HierarchyNode.js";
+import { HierarchyNode, NonGroupingHierarchyNode } from "./HierarchyNode.js";
 import { HierarchyNodeIdentifier, HierarchyNodeIdentifiersPath } from "./HierarchyNodeIdentifier.js";
 import { GenericNodeKey, GroupingNodeKey, HierarchyNodeKey, InstancesNodeKey } from "./HierarchyNodeKey.js";
-import { HierarchyDefinitionParentNode } from "./imodel/IModelHierarchyDefinition.js";
 
 /**
  * @public
@@ -243,7 +242,7 @@ function extractFilteringPropsInternal(
  */
 export function createHierarchyFilteringHelper(
   rootLevelFilteringProps: HierarchyFilteringPath[] | undefined,
-  parentNode: Pick<NonGroupingHierarchyNode, "filtering"> | undefined,
+  parentNode: Pick<NonGroupingHierarchyNode, "filtering" | "parentKeys"> | undefined,
 ) {
   const filteringProps = extractFilteringPropsInternal(rootLevelFilteringProps, parentNode);
   const hasFilter = !!filteringProps;
@@ -285,14 +284,13 @@ export function createHierarchyFilteringHelper(
      * `nodeKey` prop can be used to check the whole identifier.
      */
     createChildNodeProps: (
-      props: { parentNode?: ParentHierarchyNode } & (
+      props:
         | {
             nodeKey: InstancesNodeKey | GenericNodeKey;
           }
         | {
             pathMatcher: (identifier: HierarchyNodeIdentifier) => boolean;
-          }
-      ),
+          },
     ): Pick<HierarchyNode, "autoExpand" | "filtering"> | undefined => {
       if (!hasFilter) {
         return undefined;
@@ -310,14 +308,13 @@ export function createHierarchyFilteringHelper(
           reducer.accept(normalizedPath);
         }
       });
-      return reducer.getNodeProps(props.parentNode);
+      return reducer.getNodeProps(parentNode);
     },
 
     /**
      * Similar to `createChildNodeProps`, but takes an async `pathMatcher` prop.
      */
     createChildNodePropsAsync: (props: {
-      parentNode?: HierarchyDefinitionParentNode;
       pathMatcher: (identifier: HierarchyNodeIdentifier) => boolean | Promise<boolean>;
     }): Promise<Pick<HierarchyNode, "autoExpand" | "filtering"> | undefined> | Pick<HierarchyNode, "autoExpand" | "filtering"> | undefined => {
       if (!hasFilter) {
@@ -344,11 +341,11 @@ export function createHierarchyFilteringHelper(
         reducer.accept(normalizedPath);
       }
       if (matchedPathPromises.length === 0) {
-        return reducer.getNodeProps(props.parentNode);
+        return reducer.getNodeProps(parentNode);
       }
       return Promise.all(matchedPathPromises)
         .then((matchedPath) => matchedPath.forEach((normalizedPath) => normalizedPath && reducer.accept(normalizedPath)))
-        .then(() => reducer.getNodeProps(props.parentNode));
+        .then(() => reducer.getNodeProps(parentNode));
     },
   };
 }
@@ -374,7 +371,7 @@ class MatchingFilteringPathsReducer {
     }
   }
 
-  private getNeedsAutoExpand(parentNode?: ParentHierarchyNode): boolean {
+  private getNeedsAutoExpand(parentNode: Pick<NonGroupingHierarchyNode, "parentKeys"> | undefined): boolean {
     let needsAutoExpand = false;
     if (this._autoExpandOption === true) {
       needsAutoExpand = true;
@@ -399,7 +396,7 @@ class MatchingFilteringPathsReducer {
     return needsAutoExpand;
   }
 
-  public getNodeProps(parentNode: ParentHierarchyNode | undefined): Pick<HierarchyNode, "autoExpand" | "filtering"> {
+  public getNodeProps(parentNode: Pick<NonGroupingHierarchyNode, "parentKeys"> | undefined): Pick<HierarchyNode, "autoExpand" | "filtering"> {
     return {
       ...(this._hasFilterTargetAncestor || this._isFilterTarget || this._filteredChildrenIdentifierPaths.length > 0
         ? {

@@ -2,7 +2,7 @@
 "@itwin/presentation-hierarchies": minor
 ---
 
-Added optional `parentNode` parameter to `createChildNodeProps` and `createChildNodePropsAsync` functions. Deprecated `FilteringPathAutoExpandOption` and `FilterTargetGroupingNodeInfo`, added `FilteringPathAutoExpandDepthInPath` and  `FilteringPathAutoExpandDepthInHierarchy` which should be used instead.
+Deprecated `FilteringPathAutoExpandOption` and `FilterTargetGroupingNodeInfo`, added `FilteringPathAutoExpandDepthInPath` and  `FilteringPathAutoExpandDepthInHierarchy` which should be used instead.
 
 **Before:**
 

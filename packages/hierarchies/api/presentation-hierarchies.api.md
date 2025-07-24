@@ -40,19 +40,16 @@ export interface ClassGroupingNodeKey {
 }
 
 // @public
-export function createHierarchyFilteringHelper(rootLevelFilteringProps: HierarchyFilteringPath[] | undefined, parentNode: Pick<NonGroupingHierarchyNode, "filtering"> | undefined): {
+export function createHierarchyFilteringHelper(rootLevelFilteringProps: HierarchyFilteringPath[] | undefined, parentNode: Pick<NonGroupingHierarchyNode, "filtering" | "parentKeys"> | undefined): {
     hasFilter: boolean;
     hasFilterTargetAncestor: boolean;
     getChildNodeFilteringIdentifiers: () => HierarchyNodeIdentifier[] | undefined;
     createChildNodeProps: (props: {
-        parentNode?: ParentHierarchyNode;
-    } & ({
         nodeKey: InstancesNodeKey | GenericNodeKey;
     } | {
         pathMatcher: (identifier: HierarchyNodeIdentifier) => boolean;
-    })) => Pick<HierarchyNode, "autoExpand" | "filtering"> | undefined;
+    }) => Pick<HierarchyNode, "autoExpand" | "filtering"> | undefined;
     createChildNodePropsAsync: (props: {
-        parentNode?: HierarchyDefinitionParentNode;
         pathMatcher: (identifier: HierarchyNodeIdentifier) => boolean | Promise<boolean>;
     }) => Promise<Pick<HierarchyNode, "autoExpand" | "filtering"> | undefined> | Pick<HierarchyNode, "autoExpand" | "filtering"> | undefined;
 };

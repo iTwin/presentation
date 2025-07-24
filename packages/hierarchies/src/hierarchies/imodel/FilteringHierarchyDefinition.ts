@@ -134,7 +134,6 @@ export class FilteringHierarchyDefinition implements RxjsHierarchyDefinition {
           const rowInstanceKey = { className: row[ECSQL_COLUMN_NAME_FilterClassName], id: row[ECSQL_COLUMN_NAME_FilterECInstanceId] };
           const filteringHelper = createHierarchyFilteringHelper(this._nodeIdentifierPaths, parentNode);
           const nodeExtraPropsPossiblyPromise = filteringHelper.createChildNodePropsAsync({
-            parentNode,
             pathMatcher: (identifier): boolean | Promise<boolean> => {
               if (identifier.id !== rowInstanceKey.id) {
                 return false;
@@ -196,7 +195,7 @@ export class FilteringHierarchyDefinition implements RxjsHierarchyDefinition {
               ...definition,
               node: {
                 ...definition.node,
-                ...filteringHelper.createChildNodeProps({ parentNode: props.parentNode, pathMatcher: ({ id }) => id === definition.node.key }),
+                ...filteringHelper.createChildNodeProps({ pathMatcher: ({ id }) => id === definition.node.key }),
               },
             };
           }

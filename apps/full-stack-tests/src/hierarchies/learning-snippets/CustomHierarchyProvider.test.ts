@@ -431,7 +431,7 @@ describe("Hierarchies", () => {
                   label: author.name,
                   children: author.hasBooks,
                   parentKeys: [],
-                  ...filteringHelper.createChildNodeProps({ nodeKey, parentNode }),
+                  ...filteringHelper.createChildNodeProps({ nodeKey }),
                 };
               }
             } else if (HierarchyNode.isGeneric(parentNode) && parentNode.key.id.startsWith("author:")) {
@@ -459,7 +459,7 @@ describe("Hierarchies", () => {
                   label: book.title,
                   children: false,
                   parentKeys: [...parentNode.parentKeys, parentNode.key],
-                  ...filteringHelper.createChildNodeProps({ nodeKey, parentNode }),
+                  ...filteringHelper.createChildNodeProps({ nodeKey }),
                 };
               }
             }

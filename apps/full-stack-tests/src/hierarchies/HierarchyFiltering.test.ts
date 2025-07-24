@@ -1834,7 +1834,7 @@ describe("Hierarchies", () => {
               }
               const nodeMatchesFilter = filteringHelper.getChildNodeFilteringIdentifiers()?.some((id) => HierarchyNodeIdentifier.equal(id, myNode.key));
               if (nodeMatchesFilter) {
-                return createAsyncIterator([{ ...myNode, ...filteringHelper.createChildNodeProps({ nodeKey: myNode.key, parentNode }) }]);
+                return createAsyncIterator([{ ...myNode, ...filteringHelper.createChildNodeProps({ nodeKey: myNode.key }) }]);
               }
             }
             return createAsyncIterator([]);
