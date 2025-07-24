@@ -2,34 +2,33 @@
 "@itwin/presentation-hierarchies": minor
 ---
 
-Deprecated `FilteringPathAutoExpandOption` and `FilterTargetGroupingNodeInfo`, added `FilteringPathAutoExpandDepthInPath` and  `FilteringPathAutoExpandDepthInHierarchy` which should be used instead.
+Refactored specifying the depth / level to which filtering path should be auto-expanded.
 
-**Before:**
+- Deprecated `FilteringPathAutoExpandOption` and `FilterTargetGroupingNodeInfo`.
+- Added `FilteringPathAutoExpandDepthInPath` and  `FilteringPathAutoExpandDepthInHierarchy` which should be used instead.
 
-```ts
-const options1: FilterTargetGroupingNodeInfo = {
-  key: { type: "label-grouping", label: "" },
-  depth: 1,
-};
-const options2: FilteringPathAutoExpandOption = {
-  depth: 2,
-  includeGroupingNodes: true
-};
-const options3: FilteringPathAutoExpandOption = {
-  depth: 3,
-};
-```
-
-**After:**
+Migration:
 
 ```ts
-const options1: FilteringPathAutoExpandDepthInHierarchy = {
-  depthInHierarchy: 1,
+const pathExpandedToInstanceInPath: HierarchyFilteringPath = {
+  path: [instanceKey1, instanceKey2, instanceKey3],
+  options: {
+    // deprecated:
+    autoExpand: { depth: 1 },
+    // do this instead:
+    autoExpand: { depthInPath: 1 },
+  },
 };
-const options2: FilteringPathAutoExpandDepthInHierarchy = {
-  depthInHierarchy: 2,
-};
-const options3: FilteringPathAutoExpandDepthInPath = {
-  depthInPath: 3,
+
+const pathExpandedToGroupingNode: HierarchyFilteringPath = {
+  path: [instanceKey1, instanceKey2, instanceKey3],
+  options: {
+    // deprecated:
+    autoExpand: { depth: 1, key: groupingNodeKey },
+    // also deprecated:
+    autoExpand: { depth: 1, includeGroupingNodes: true },
+    // do this instead:
+    autoExpand: { depthInHierarchy: 1 },
+  },
 };
 ```
