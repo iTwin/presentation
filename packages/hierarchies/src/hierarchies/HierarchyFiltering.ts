@@ -372,9 +372,8 @@ class MatchingFilteringPathsReducer {
   }
 
   private getNeedsAutoExpand(parentNode: Pick<NonGroupingHierarchyNode, "parentKeys"> | undefined): boolean {
-    let needsAutoExpand = false;
     if (this._autoExpandOption === true) {
-      needsAutoExpand = true;
+      return true;
     } else if (typeof this._autoExpandOption === "object") {
       const parentLength = !parentNode
         ? 0
@@ -391,9 +390,10 @@ class MatchingFilteringPathsReducer {
             ? // eslint-disable-next-line @typescript-eslint/no-deprecated
               this._autoExpandOption.depth
             : this._autoExpandOption.depthInPath;
-      needsAutoExpand = parentLength >= depth ? false : true;
+
+      return parentLength < depth;
     }
-    return needsAutoExpand;
+    return false;
   }
 
   public getNodeProps(parentNode: Pick<NonGroupingHierarchyNode, "parentKeys"> | undefined): Pick<HierarchyNode, "autoExpand" | "filtering"> {
