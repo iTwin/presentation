@@ -374,7 +374,8 @@ class MatchingFilteringPathsReducer {
   private getNeedsAutoExpand(parentNode: Pick<NonGroupingHierarchyNode, "parentKeys"> | undefined): boolean {
     if (this._autoExpandOption === true) {
       return true;
-    } else if (typeof this._autoExpandOption === "object") {
+    }
+    if (typeof this._autoExpandOption === "object") {
       const parentLength = !parentNode
         ? 0
         : "key" in this._autoExpandOption ||
