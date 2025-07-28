@@ -72,6 +72,7 @@
     "jsdom": "catalog:test-tools",
     "mocha": "catalog:test-tools",
     "react": "catalog:react",
+    "react-dom": "catalog:react",
     "rimraf": "catalog:build-tools",
     "typescript": "catalog:build-tools"
   }
