@@ -7,8 +7,8 @@ import { expect } from "chai";
 import { createAsyncIterator } from "presentation-test-utilities";
 import sinon from "sinon";
 import { ECClassHierarchyInspector, ECSqlQueryExecutor } from "@itwin/presentation-shared";
-import { createCachingHiliteSetProvider } from "../unified-selection/CachingHiliteSetProvider.js";
 import { HiliteSet, HiliteSetProvider, HiliteSetProviderProps } from "../unified-selection/HiliteSetProvider.js";
+import { createIModelHiliteSetProvider } from "../unified-selection/IModelHiliteSetProvider.js";
 import { SelectableInstanceKey } from "../unified-selection/Selectable.js";
 import { createStorage, SelectionStorage } from "../unified-selection/SelectionStorage.js";
 import { createSelectableInstanceKey } from "./_helpers/SelectablesCreator.js";
@@ -17,10 +17,10 @@ const generateSelection = (): SelectableInstanceKey[] => {
   return [createSelectableInstanceKey(1), createSelectableInstanceKey(2), createSelectableInstanceKey(3)];
 };
 
-describe("createCachingHiliteSetProvider", () => {
+describe("createIModelHiliteSetProvider", () => {
   let factory: sinon.SinonStub<[props: HiliteSetProviderProps], HiliteSetProvider>;
   let selectionStorage: SelectionStorage;
-  let hiliteSetCache: ReturnType<typeof createCachingHiliteSetProvider>;
+  let hiliteSetCache: ReturnType<typeof createIModelHiliteSetProvider>;
   const provider = {
     getHiliteSet: sinon.stub<[{ imodelKey: string }], AsyncIterableIterator<HiliteSet>>(),
   };
@@ -28,7 +28,7 @@ describe("createCachingHiliteSetProvider", () => {
   const imodelKey = "iModelKey";
 
   async function loadHiliteSet() {
-    const iterator = hiliteSetCache.getHiliteSet({ imodelKey });
+    const iterator = hiliteSetCache.getCurrentHiliteSet({ imodelKey });
 
     const models: string[] = [];
     const subCategories: string[] = [];
@@ -58,7 +58,7 @@ describe("createCachingHiliteSetProvider", () => {
     selectionStorage = createStorage();
 
     factory = sinon.stub<[props: HiliteSetProviderProps], HiliteSetProvider>().returns(provider as unknown as HiliteSetProvider);
-    hiliteSetCache = createCachingHiliteSetProvider({
+    hiliteSetCache = createIModelHiliteSetProvider({
       selectionStorage,
       imodelProvider,
       createHiliteSetProvider: factory,
@@ -82,19 +82,19 @@ describe("createCachingHiliteSetProvider", () => {
       const imodel2 = stubIModelAccess();
       imodelProvider.returns(imodel1);
 
-      hiliteSetCache.getHiliteSet({ imodelKey: "model1" });
+      hiliteSetCache.getCurrentHiliteSet({ imodelKey: "model1" });
       expect(factory).to.be.calledOnceWith({ imodelAccess: imodel1 });
       factory.resetHistory();
 
-      hiliteSetCache.getHiliteSet({ imodelKey: "model1" });
+      hiliteSetCache.getCurrentHiliteSet({ imodelKey: "model1" });
       expect(factory).to.not.be.called;
 
       imodelProvider.returns(imodel2);
-      hiliteSetCache.getHiliteSet({ imodelKey: "model2" });
+      hiliteSetCache.getCurrentHiliteSet({ imodelKey: "model2" });
       expect(factory).to.be.calledOnceWith({ imodelAccess: imodel2 });
       factory.resetHistory();
 
-      hiliteSetCache.getHiliteSet({ imodelKey: "model1" });
+      hiliteSetCache.getCurrentHiliteSet({ imodelKey: "model1" });
       expect(factory).to.not.be.called;
     });
 
@@ -129,13 +129,13 @@ describe("createCachingHiliteSetProvider", () => {
       const imodelAccess = stubIModelAccess();
       imodelProvider.returns(imodelAccess);
 
-      hiliteSetCache.getHiliteSet({ imodelKey });
+      hiliteSetCache.getCurrentHiliteSet({ imodelKey });
       expect(factory).to.be.calledOnceWith({ imodelAccess });
       factory.resetHistory();
 
       selectionStorage.clearStorage({ imodelKey });
 
-      hiliteSetCache.getHiliteSet({ imodelKey });
+      hiliteSetCache.getCurrentHiliteSet({ imodelKey });
       expect(factory).to.be.calledOnceWith({ imodelAccess });
     });
   });
@@ -145,9 +145,9 @@ describe("createCachingHiliteSetProvider", () => {
       hiliteSetCache[Symbol.dispose]();
       provider.getHiliteSet.resetHistory();
 
-      hiliteSetCache.getHiliteSet({ imodelKey });
+      hiliteSetCache.getCurrentHiliteSet({ imodelKey });
       selectionStorage.clearSelection({ imodelKey, source: "test" });
-      hiliteSetCache.getHiliteSet({ imodelKey });
+      hiliteSetCache.getCurrentHiliteSet({ imodelKey });
 
       expect(provider.getHiliteSet).to.be.calledOnce;
     });
