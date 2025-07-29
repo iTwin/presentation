@@ -253,7 +253,7 @@ describe("IModelSelectionHandler", () => {
       using _handler = await createHandler({
         selectionStorage: selectionStorageStub as unknown as SelectionStorage,
       });
-      expect(imodelHiliteSetProvider.getCurrentHiliteSet).to.be.called;
+      expect(imodelHiliteSetProvider.getCurrentHiliteSet).to.be.calledOnce;
       imodelHiliteSetProvider.getHiliteSetProvider.resetHistory();
       imodelHiliteSetProvider.getCurrentHiliteSet.resetHistory();
       hiliteSetProvider.getHiliteSet.resetHistory();
@@ -272,10 +272,10 @@ describe("IModelSelectionHandler", () => {
           timestamp: new Date(),
         });
         if (selectionChangeType === "clear" || selectionChangeType === "replace") {
-          expect(imodelHiliteSetProvider.getCurrentHiliteSet).to.be.called;
+          expect(imodelHiliteSetProvider.getCurrentHiliteSet).to.be.calledOnce;
         } else {
-          expect(imodelHiliteSetProvider.getHiliteSetProvider).to.be.called;
-          expect(hiliteSetProvider.getHiliteSet).to.be.called;
+          expect(imodelHiliteSetProvider.getHiliteSetProvider).to.be.calledOnce;
+          expect(hiliteSetProvider.getHiliteSet).to.be.calledOnce;
         }
         imodelHiliteSetProvider.getHiliteSetProvider.resetHistory();
         imodelHiliteSetProvider.getCurrentHiliteSet.resetHistory();
