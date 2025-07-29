@@ -7,6 +7,7 @@
 import { ComponentPropsWithoutRef } from 'react';
 import { createIModelHierarchyProvider } from '@itwin/presentation-hierarchies';
 import { GenericInstanceFilter } from '@itwin/presentation-hierarchies';
+import { GenericNodeKey } from '@itwin/presentation-hierarchies';
 import { HierarchyDefinition } from '@itwin/presentation-hierarchies';
 import { HierarchyFilteringPath } from '@itwin/presentation-hierarchies';
 import { HierarchyNode } from '@itwin/presentation-hierarchies';
@@ -15,10 +16,12 @@ import { InstanceKey } from '@itwin/presentation-shared';
 import { IPrimitiveValueFormatter } from '@itwin/presentation-shared';
 import { JSX as JSX_2 } from 'react/jsx-runtime';
 import { NodeData } from '@itwin/itwinui-react';
+import { NonGroupingHierarchyNode } from '@itwin/presentation-hierarchies';
 import { Props } from '@itwin/presentation-shared';
 import { PropsWithChildren } from 'react';
 import { ReactElement } from 'react';
 import { RefAttributes } from 'react';
+import { Selectable } from '@itwin/unified-selection';
 import { SelectionStorage } from '@itwin/unified-selection';
 import { Tree } from '@itwin/itwinui-react';
 import { TreeNode } from '@itwin/itwinui-react';
@@ -279,6 +282,9 @@ export function useUnifiedSelectionTree({ sourceName, selectionStorage, ...props
 
 // @public (undocumented)
 interface UseUnifiedTreeSelectionProps {
+    createSelectableForGenericNode?: (node: NonGroupingHierarchyNode & {
+        key: GenericNodeKey;
+    }, treeModelNodeId: string) => Selectable;
     selectionStorage?: SelectionStorage;
     sourceName: string;
 }
