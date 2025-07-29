@@ -17,16 +17,28 @@ export type FilterActionProps = {
 } & Pick<TreeRendererProps, "getHierarchyLevelDetails">;
 
 /**
+ * React hook returning a getter for Filter action.
+ * @alpha
+ */
+export function useFilterAction({ onFilter, getHierarchyLevelDetails }: FilterActionProps) {
+  return {
+    getFilterAction: (node: PresentationHierarchyNode) => {
+      if (!onFilter || !node.isFilterable) {
+        return undefined;
+      }
+      return <FilterAction getHierarchyLevelDetails={getHierarchyLevelDetails} node={node} onFilter={onFilter} />;
+    },
+  };
+}
+
+/**
  * React component that renders a filter action for a tree item.
  * @alpha
  */
-export const FilterAction = memo(function FilterAction({ node, onFilter, getHierarchyLevelDetails }: FilterActionProps & { node: PresentationHierarchyNode }) {
+const FilterAction = memo(function FilterAction({ node, onFilter, getHierarchyLevelDetails }: FilterActionProps & { node: PresentationHierarchyNode }) {
   const { localizedStrings } = useLocalizationContext();
   const { filterHierarchyLevel, filterHierarchyLevelActiveDescription } = localizedStrings;
   const shouldShow = () => {
-    if (!onFilter || !node.isFilterable) {
-      return false;
-    }
     if (node.isFiltered) {
       return true;
     }

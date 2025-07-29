@@ -51,9 +51,16 @@ export interface TreeNodeRendererOwnProps {
    */
   getDecorations?: (node: PresentationHierarchyNode) => ReactNode;
   /**
-   * Callback that returns actions for tree item. Must return an array of `Tree.ItemAction` elements.
+   * Callback that returns menu action getters for tree item.
+   * Getters must return an array of `Tree.ItemAction` or `undefined` in case the action should not be displayed.
    */
-  getActions?: (node: PresentationHierarchyNode) => ReactNode[];
+  getMenuActions?: () => ((node: PresentationHierarchyNode) => ReactElement | undefined)[];
+  /**
+   * Callback that returns inline action getters for tree item.
+   * Getters must return an array of `Tree.ItemAction` or `undefined` in case the action should not be displayed.
+   * Max 2 items.
+   */
+  getInlineActions?: () => ((node: PresentationHierarchyNode) => ReactElement | undefined)[];
 }
 
 /** @alpha */
@@ -71,7 +78,20 @@ type TreeNodeRendererProps = Pick<TreeRendererProps, "expandNode" | "reloadTree"
  */
 export const StrataKitTreeNodeRenderer: FC<PropsWithRef<TreeNodeRendererProps & RefAttributes<HTMLElement>>> = memo(
   forwardRef<HTMLElement, TreeNodeRendererProps>(function HierarchyNode(
-    { node, selected, expandNode, onNodeClick, onNodeKeyDown, reloadTree, getLabel, getSublabel, getActions, getDecorations, ...treeItemProps },
+    {
+      node,
+      selected,
+      expandNode,
+      onNodeClick,
+      onNodeKeyDown,
+      reloadTree,
+      getLabel,
+      getSublabel,
+      getInlineActions,
+      getMenuActions,
+      getDecorations,
+      ...treeItemProps
+    },
     forwardedRef,
   ) {
     const nodeRef = useRef<HTMLElement>(null);
@@ -82,23 +102,31 @@ export const StrataKitTreeNodeRenderer: FC<PropsWithRef<TreeNodeRendererProps & 
     const label = useMemo(() => (getLabel ? getLabel(node) : node.label), [getLabel, node]);
     const description = useMemo(() => (getSublabel ? getSublabel(node) : undefined), [getSublabel, node]);
     const decorations = useMemo(() => getDecorations?.(node), [getDecorations, node]);
-    const actions = useMemo(
-      () => [
-        ...(node.error?.type === "Unknown"
-          ? [
-              <Tree.ItemAction
-                key="retry"
-                label={localizedStrings.retry}
-                onClick={() => reloadTree({ parentNodeId: node.id, state: "reset" })}
-                visible={true}
-                icon={refreshSvg}
-              />,
-            ]
-          : []),
-        ...(getActions ? getActions(node) : []),
-      ],
-      [getActions, node, localizedStrings, reloadTree],
-    );
+    const inlineActions = useMemo(() => {
+      if (node.error === undefined) {
+        const actions = getInlineActions?.();
+        if (!actions) {
+          return [];
+        }
+        return [
+          actions[0](node) ?? <Tree.ItemAction label="hidden-action" visible={false} icon={refreshSvg} />,
+          actions[1](node) ?? <Tree.ItemAction label="hidden-action" visible={false} icon={refreshSvg} />,
+        ];
+      }
+
+      if (node.error.type === "Unknown") {
+        return [
+          <Tree.ItemAction
+            key="retry"
+            label={localizedStrings.retry}
+            onClick={() => reloadTree({ parentNodeId: node.id, state: "reset" })}
+            visible={true}
+            icon={refreshSvg}
+          />,
+        ];
+      }
+      return [];
+    }, [node, getInlineActions, localizedStrings.retry, reloadTree]);
 
     const expanded = useMemo(() => {
       if (node.error) {
@@ -161,7 +189,8 @@ export const StrataKitTreeNodeRenderer: FC<PropsWithRef<TreeNodeRendererProps & 
           },
           [onNodeKeyDown, selected, isDisabled, node],
         )}
-        actions={actions}
+        actions={useMemo(() => getMenuActions?.().map((menuAction) => menuAction(node)), [getMenuActions, node])}
+        inlineActions={inlineActions}
         unstable_decorations={decorations}
         error={node.error ? node.error.id : undefined}
       />
