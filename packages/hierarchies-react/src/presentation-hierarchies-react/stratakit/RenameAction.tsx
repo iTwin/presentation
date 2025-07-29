@@ -9,22 +9,29 @@ import { Tree } from "@stratakit/structures";
 import { useLocalizationContext } from "./LocalizationContext.js";
 
 /**
+ * React hook returning a getter for the Rename action.
+ * @alpha
+ */
+export function useRenameAction() {
+  const context = useRenameContext();
+  return {
+    getRenameAction: useCallback(() => (context?.onLabelChanged !== undefined ? <RenameAction /> : undefined), [context?.onLabelChanged]),
+  };
+}
+
+/**
  * React component that renders a rename action for a tree item.
  * @alpha
  */
 export const RenameAction = memo(function RenameAction() {
   const { localizedStrings } = useLocalizationContext();
-  const context = useRenameContext();
   const { rename } = localizedStrings;
+  const context = useRenameContext();
 
   const setIsRenaming = context?.setIsRenaming;
   const handleClick = useCallback(() => {
     setIsRenaming?.(true);
   }, [setIsRenaming]);
-
-  if (!context?.onLabelChanged) {
-    return undefined;
-  }
 
   return <Tree.ItemAction label={rename} onClick={handleClick} icon={renameSvg} />;
 });

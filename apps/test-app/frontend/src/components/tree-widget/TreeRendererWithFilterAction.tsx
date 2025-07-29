@@ -3,21 +3,16 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { ComponentPropsWithoutRef, useCallback } from "react";
-import { FilterAction, PresentationHierarchyNode, RenameAction, StrataKitTreeRenderer } from "@itwin/presentation-hierarchies-react";
+import { ComponentPropsWithoutRef, useCallback, useMemo } from "react";
+import { StrataKitTreeRenderer, useFilterAction, useRenameAction } from "@itwin/presentation-hierarchies-react";
 
 type TreeRendererProps = ComponentPropsWithoutRef<typeof StrataKitTreeRenderer>;
 
 export function TreeRendererWithFilterAction(props: TreeRendererProps) {
-  const { getHierarchyLevelDetails, onFilterClick, getActions, ...treeProps } = props;
-  const getAllActions = useCallback(
-    (node: PresentationHierarchyNode) => [
-      ...(getActions ? getActions(node) : []),
-      <FilterAction key="filter" node={node} onFilter={onFilterClick} getHierarchyLevelDetails={getHierarchyLevelDetails} />,
-      <RenameAction key="rename" />,
-    ],
-    [getActions, onFilterClick, getHierarchyLevelDetails],
-  );
+  const { getHierarchyLevelDetails, onFilterClick, getMenuActions, ...treeProps } = props;
+  const { getRenameAction } = useRenameAction();
+  const { getFilterAction } = useFilterAction({ onFilter: onFilterClick, getHierarchyLevelDetails });
+  const getInlineActions = useMemo(() => [getFilterAction, getRenameAction], [getFilterAction, getRenameAction]);
   const getEditingProps = useCallback<Required<TreeRendererProps>["getEditingProps"]>((node) => {
     return {
       onLabelChanged: (newLabel: string) => {
@@ -31,7 +26,8 @@ export function TreeRendererWithFilterAction(props: TreeRendererProps) {
   return (
     <StrataKitTreeRenderer
       {...treeProps}
-      getActions={getAllActions}
+      getInlineActions={getInlineActions}
+      getMenuActions={getMenuActions}
       onFilterClick={onFilterClick}
       getHierarchyLevelDetails={getHierarchyLevelDetails}
       getEditingProps={getEditingProps}

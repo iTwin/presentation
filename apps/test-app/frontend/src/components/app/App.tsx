@@ -140,7 +140,7 @@ export function App() {
   }, [state.imodel]);
 
   return (
-    <ThemeProvider theme={"light"} future={{ themeBridge: true }} as={Root} colorScheme={"light"} synchronizeColorScheme density="dense">
+    <ThemeProvider theme={"light"} future={true} as={Root} colorScheme={"light"} synchronizeColorScheme density="dense">
       <UnifiedSelectionContextProvider storage={MyAppFrontend.selectionStorage}>
         <div className="app">
           <div className="app-header">
