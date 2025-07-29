@@ -1,5 +1,12 @@
 # Change Log - @itwin/presentation-components
 
+## 5.12.5
+
+### Patch Changes
+
+- Updated dependencies:
+  - @itwin/unified-selection@1.5.0
+
 ## 5.12.4
 
 ### Patch Changes
