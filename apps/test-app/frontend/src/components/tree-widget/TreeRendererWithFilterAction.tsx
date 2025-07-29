@@ -3,8 +3,8 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { ComponentPropsWithoutRef, useCallback } from "react";
-import { PresentationHierarchyNode, StrataKitTreeRenderer, useFilterAction, useRenameAction } from "@itwin/presentation-hierarchies-react";
+import { ComponentPropsWithoutRef, useCallback, useMemo } from "react";
+import { StrataKitTreeRenderer, useFilterAction, useRenameAction } from "@itwin/presentation-hierarchies-react";
 
 type TreeRendererProps = ComponentPropsWithoutRef<typeof StrataKitTreeRenderer>;
 
@@ -12,10 +12,7 @@ export function TreeRendererWithFilterAction(props: TreeRendererProps) {
   const { getHierarchyLevelDetails, onFilterClick, getMenuActions, ...treeProps } = props;
   const { getRenameAction } = useRenameAction();
   const { getFilterAction } = useFilterAction({ onFilter: onFilterClick, getHierarchyLevelDetails });
-  const getInlineActions = useCallback(
-    () => [(node: PresentationHierarchyNode) => getFilterAction(node), () => getRenameAction()],
-    [getFilterAction, getRenameAction],
-  );
+  const getInlineActions = useMemo(() => [getFilterAction, getRenameAction], [getFilterAction, getRenameAction]);
   const getEditingProps = useCallback<Required<TreeRendererProps>["getEditingProps"]>((node) => {
     return {
       onLabelChanged: (newLabel: string) => {

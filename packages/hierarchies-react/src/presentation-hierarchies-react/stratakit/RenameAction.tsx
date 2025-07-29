@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { createContext, PropsWithChildren, useCallback, useContext, useMemo, useState } from "react";
+import { createContext, memo, PropsWithChildren, useCallback, useContext, useMemo, useState } from "react";
 import renameSvg from "@stratakit/icons/rename.svg";
 import { Tree } from "@stratakit/structures";
 import { useLocalizationContext } from "./LocalizationContext.js";
@@ -14,18 +14,16 @@ import { useLocalizationContext } from "./LocalizationContext.js";
  */
 export function useRenameAction() {
   const context = useRenameContext();
-  if (!context?.onLabelChanged) {
-    return { getRenameAction: () => undefined };
-  }
-
-  return { getRenameAction: () => <RenameAction /> };
+  return {
+    getRenameAction: useCallback(() => (context?.onLabelChanged !== undefined ? <RenameAction /> : undefined), [context?.onLabelChanged]),
+  };
 }
 
 /**
  * React component that renders a rename action for a tree item.
  * @alpha
  */
-function RenameAction() {
+export const RenameAction = memo(function RenameAction() {
   const { localizedStrings } = useLocalizationContext();
   const { rename } = localizedStrings;
   const context = useRenameContext();
@@ -36,7 +34,7 @@ function RenameAction() {
   }, [setIsRenaming]);
 
   return <Tree.ItemAction label={rename} onClick={handleClick} icon={renameSvg} />;
-}
+});
 
 interface RenameContext {
   isRenaming: boolean;

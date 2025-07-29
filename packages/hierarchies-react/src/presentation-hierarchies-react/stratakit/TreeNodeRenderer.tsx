@@ -22,6 +22,7 @@ import {
   useState,
 } from "react";
 import { Spinner, TextBox } from "@stratakit/bricks";
+import placeholderSvg from "@stratakit/icons/placeholder.svg";
 import refreshSvg from "@stratakit/icons/refresh.svg";
 import { Tree } from "@stratakit/structures";
 import { TreeRendererProps } from "../Renderers.js";
@@ -54,13 +55,13 @@ export interface TreeNodeRendererOwnProps {
    * Callback that returns menu action getters for tree item.
    * Getters must return an array of `Tree.ItemAction` or `undefined` in case the action should not be displayed.
    */
-  getMenuActions?: () => ((node: PresentationHierarchyNode) => ReactElement | undefined)[];
+  getMenuActions?: ((node: PresentationHierarchyNode) => ReactElement | undefined)[];
   /**
    * Callback that returns inline action getters for tree item.
    * Getters must return an array of `Tree.ItemAction` or `undefined` in case the action should not be displayed.
    * Max 2 items.
    */
-  getInlineActions?: () => ((node: PresentationHierarchyNode) => ReactElement | undefined)[];
+  getInlineActions?: ((node: PresentationHierarchyNode) => ReactElement | undefined)[];
 }
 
 /** @alpha */
@@ -104,13 +105,12 @@ export const StrataKitTreeNodeRenderer: FC<PropsWithRef<TreeNodeRendererProps & 
     const decorations = useMemo(() => getDecorations?.(node), [getDecorations, node]);
     const inlineActions = useMemo(() => {
       if (node.error === undefined) {
-        const actions = getInlineActions?.();
-        if (!actions) {
+        if (!getInlineActions || getInlineActions.length === 0) {
           return [];
         }
         return [
-          actions[0](node) ?? <Tree.ItemAction label="hidden-action" visible={false} icon={refreshSvg} />,
-          actions[1](node) ?? <Tree.ItemAction label="hidden-action" visible={false} icon={refreshSvg} />,
+          getInlineActions[0](node) ?? <Tree.ItemAction label="hidden-action" visible={false} icon={placeholderSvg} />,
+          getInlineActions[1](node) ?? <Tree.ItemAction label="hidden-action" visible={false} icon={placeholderSvg} />,
         ];
       }
 
@@ -189,7 +189,7 @@ export const StrataKitTreeNodeRenderer: FC<PropsWithRef<TreeNodeRendererProps & 
           },
           [onNodeKeyDown, selected, isDisabled, node],
         )}
-        actions={useMemo(() => getMenuActions?.().map((menuAction) => menuAction(node)), [getMenuActions, node])}
+        actions={useMemo(() => getMenuActions?.map((menuAction) => menuAction(node)), [getMenuActions, node])}
         inlineActions={inlineActions}
         unstable_decorations={decorations}
         error={node.error ? node.error.id : undefined}

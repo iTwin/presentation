@@ -22,12 +22,15 @@ export type FilterActionProps = {
  */
 export function useFilterAction({ onFilter, getHierarchyLevelDetails }: FilterActionProps) {
   return {
-    getFilterAction: (node: PresentationHierarchyNode) => {
-      if (!onFilter || !node.isFilterable) {
-        return undefined;
-      }
-      return <FilterAction getHierarchyLevelDetails={getHierarchyLevelDetails} node={node} onFilter={onFilter} />;
-    },
+    getFilterAction: useCallback(
+      (node: PresentationHierarchyNode) => {
+        if (!onFilter || !node.isFilterable) {
+          return undefined;
+        }
+        return <FilterAction getHierarchyLevelDetails={getHierarchyLevelDetails} node={node} onFilter={onFilter} />;
+      },
+      [getHierarchyLevelDetails, onFilter],
+    ),
   };
 }
 
