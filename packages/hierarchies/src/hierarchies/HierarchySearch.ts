@@ -5,21 +5,7 @@
 
 import { HierarchyNode, NonGroupingHierarchyNode } from "./HierarchyNode.js";
 import { HierarchyNodeIdentifier, HierarchyNodeIdentifiersPath } from "./HierarchyNodeIdentifier.js";
-import { GenericNodeKey, GroupingNodeKey, HierarchyNodeKey, InstancesNodeKey } from "./HierarchyNodeKey.js";
-
-/** @public */
-export interface SearchTargetGroupingNodeInfo {
-  /**
-   * Key of the grouping node.
-   * @deprecated in 1.6. This option is no longer needed.
-   */
-  key: GroupingNodeKey;
-
-  /**
-   * Depth up to which nodes in the hierarchy should be expanded.
-   */
-  depth: number;
-}
+import { GenericNodeKey, HierarchyNodeKey, InstancesNodeKey } from "./HierarchyNodeKey.js";
 
 /** @public */
 export interface SearchPathAutoExpandOption {
@@ -53,15 +39,38 @@ export interface HierarchySearchPathOptions {
    * This option specifies the way `autoExpand` flag should be assigned to nodes in the searched hierarchy.
    * - If it's `false` or `undefined`, nodes have no 'autoExpand' flag.
    * - If it's `true`, then all nodes up to the search target will have `autoExpand` flag.
-   * - If it's an instance of `SearchTargetGroupingNodeInfo`, then all nodes up to the grouping node that matches this property,
-   * will have `autoExpand` flag.
-   * - If it's an instance of `searchPathAutoExpandOption`, then all nodes up to and including `depth` will have `autoExpand` flag.
+   * - If it's an instance of `SearchPathAutoExpandOption`, then all nodes up to and including `depth` will have `autoExpand` flag.
    */
-  autoExpand?: boolean | SearchTargetGroupingNodeInfo | SearchPathAutoExpandOption;
+  autoExpand?: boolean | SearchPathAutoExpandOption;
+}
+
+namespace HierarchySearchPathOptions {
+  export function mergeAutoExpandOptions(
+    lhs: HierarchySearchPathOptions["autoExpand"],
+    rhs: HierarchySearchPathOptions["autoExpand"],
+  ): HierarchySearchPathOptions["autoExpand"] {
+    if (rhs === true || lhs === true) {
+      return true;
+    }
+    if (!rhs || !lhs) {
+      return !!rhs ? rhs : lhs;
+    }
+
+    if (!lhs.includeGroupingNodes) {
+      if (!rhs.includeGroupingNodes) {
+        return lhs.depth > rhs.depth ? lhs : rhs;
+      }
+      return lhs;
+    }
+    if (!rhs.includeGroupingNodes) {
+      return rhs;
+    }
+    return lhs.depth > rhs.depth ? lhs : rhs;
+  }
 }
 
 /**
- * A path of hierarchy node identifiers for filtering the hierarchy with additional options.
+ * A path of hierarchy node identifiers for Search the hierarchy with additional options.
  * @public
  */
 export type HierarchySearchPath = HierarchyNodeIdentifiersPath | { path: HierarchyNodeIdentifiersPath; options?: HierarchySearchPathOptions };
@@ -69,7 +78,7 @@ export type HierarchySearchPath = HierarchyNodeIdentifiersPath | { path: Hierarc
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export namespace HierarchySearchPath {
   /**
-   * Normalizes the hierarchy search path to the object form.
+   * Normalizes the hierarchy Search path to the object form.
    * @public
    */
   export function normalize(source: HierarchySearchPath): Exclude<HierarchySearchPath, HierarchyNodeIdentifiersPath> {
@@ -80,7 +89,7 @@ export namespace HierarchySearchPath {
   }
 
   /**
-   * Merges two given `HierarchyFilteringPathOptions` objects.
+   * Merges two given `HierarchySearchPathOptions` objects.
    * - if both inputs are `undefined`, `undefined` is returned,
    * - else if one of the inputs is `undefined`, the other one is returned.
    * - else, merge each option individually.
@@ -104,23 +113,32 @@ export namespace HierarchySearchPath {
     }
 
     return {
-      autoExpand: ((): HierarchySearchPathOptions["autoExpand"] => {
-        if (rhs.autoExpand === true || lhs.autoExpand === true) {
-          return true;
-        }
-        if (typeof lhs.autoExpand === "object") {
-          if (typeof rhs.autoExpand === "object" && rhs.autoExpand.depth > lhs.autoExpand.depth) {
-            return rhs.autoExpand;
-          }
-          return lhs.autoExpand;
-        }
-        return rhs.autoExpand;
-      })(),
+      autoExpand: HierarchySearchPathOptions.mergeAutoExpandOptions(lhs.autoExpand, rhs.autoExpand),
     };
   }
 }
 
-function extractFilteringPropsInternal(
+/**
+ * An utility that extracts Search properties from given root level Search props or
+ * the parent node. Returns `undefined` if Search props are not present.
+ * @public
+ * @deprecated in 1.3. Use `createHierarchySearchHelper` instead.
+ */
+/* c8 ignore start */
+export function extractSearchProps(
+  rootLevelSearchProps: HierarchySearchPath[],
+  parentNode: Pick<NonGroupingHierarchyNode, "search"> | undefined,
+):
+  | {
+      searchedNodePaths: HierarchySearchPath[];
+      hasSearchTargetAncestor: boolean;
+    }
+  | undefined {
+  return extractSearchPropsInternal(rootLevelSearchProps, parentNode);
+}
+/* c8 ignore end */
+
+function extractSearchPropsInternal(
   rootLevelSearchProps: HierarchySearchPath[] | undefined,
   parentNode: Pick<NonGroupingHierarchyNode, "search"> | undefined,
 ):
@@ -150,13 +168,13 @@ export function createHierarchySearchHelper(
   rootLevelSearchProps: HierarchySearchPath[] | undefined,
   parentNode: Pick<NonGroupingHierarchyNode, "search"> | undefined,
 ) {
-  const searchProps = extractFilteringPropsInternal(rootLevelSearchProps, parentNode);
-  const hasFilter = !!searchProps;
+  const searchProps = extractSearchPropsInternal(rootLevelSearchProps, parentNode);
+  const hasSearch = !!searchProps;
   return {
     /**
      * Returns a flag indicating if the hierarchy level is searched.
      */
-    hasFilter,
+    hasSearch,
 
     /**
      * Returns a flag indicating whether this hierarchy level has an ancestor node
@@ -168,10 +186,10 @@ export function createHierarchySearchHelper(
 
     /**
      * Returns a list of hierarchy node identifiers that apply specifically for this
-     * hierarchy level. Returns `undefined` if search is not applied to this level.
+     * hierarchy level. Returns `undefined` if Search is not applied to this level.
      */
     getChildNodeSearchIdentifiers: () => {
-      if (!hasFilter) {
+      if (!hasSearch) {
         return undefined;
       }
       return searchProps.searchedNodePaths
@@ -181,8 +199,8 @@ export function createHierarchySearchHelper(
     },
 
     /**
-     * When a hierarchy node is created for a search hierarchy level, it needs some attributes (e.g. `search`
-     * and `autoExpand`) to be set based on the search paths and search options. This function calculates
+     * When a hierarchy node is created for a searched hierarchy level, it needs some attributes (e.g. `Search`
+     * and `autoExpand`) to be set based on the search paths and Search options. This function calculates
      * these props for a child node based on its key or path matcher.
      *
      * When using `pathMatcher` prop, callers have more flexibility to decide whether the given `HierarchyNodeIdentifier` applies
@@ -198,7 +216,7 @@ export function createHierarchySearchHelper(
             pathMatcher: (identifier: HierarchyNodeIdentifier) => boolean;
           },
     ): NodeProps | undefined => {
-      if (!hasFilter) {
+      if (!hasSearch) {
         return undefined;
       }
       const reducer = new MatchingSearchPathsReducer(searchProps?.hasSearchTargetAncestor);
@@ -223,13 +241,13 @@ export function createHierarchySearchHelper(
     createChildNodePropsAsync: (props: {
       pathMatcher: (identifier: HierarchyNodeIdentifier) => boolean | Promise<boolean>;
     }): Promise<NodeProps | undefined> | NodeProps | undefined => {
-      if (!hasFilter) {
+      if (!hasSearch) {
         return undefined;
       }
       const reducer = new MatchingSearchPathsReducer(searchProps?.hasSearchTargetAncestor);
       const matchedPathPromises = new Array<Promise<NormalizedSearchPath | undefined>>();
-      for (const filteredChildrenNodeIdentifierPath of searchProps.searchedNodePaths) {
-        const normalizedPath = HierarchySearchPath.normalize(filteredChildrenNodeIdentifierPath);
+      for (const searchedChildrenNodeIdentifierPath of searchProps.searchedNodePaths) {
+        const normalizedPath = HierarchySearchPath.normalize(searchedChildrenNodeIdentifierPath);
         /* c8 ignore next 3 */
         if (normalizedPath.path.length === 0) {
           continue;
@@ -257,43 +275,41 @@ export function createHierarchySearchHelper(
 }
 
 /** @public */
-export type NodeProps = Pick<HierarchyNode, "autoExpand" | "search"> & { search?: { autoExpandDepth?: number } };
+export type NodeProps = Pick<HierarchyNode, "autoExpand" | "search"> & { search?: { autoExpandDepth?: number; includeGroupingNodes?: boolean } };
 
 type NormalizedSearchPath = ReturnType<(typeof HierarchySearchPath)["normalize"]>;
 
 class MatchingSearchPathsReducer {
   private _searchedChildrenIdentifierPaths = new Array<NormalizedSearchPath>();
-  private _isSearchTarget = false;
-  private _searchedTargetOptions = undefined as HierarchySearchPathOptions | undefined;
-  private _needsAutoExpand: boolean | { depth: number } = false;
+  private _issearchTarget = false;
+  private _searchTargetOptions = undefined as HierarchySearchPathOptions | undefined;
+  private _needsAutoExpand: HierarchySearchPathOptions["autoExpand"] = false;
 
-  public constructor(private _hasSearchTargetAncestor: boolean) {}
+  public constructor(private _hassearchTargetAncestor: boolean) {}
 
   public accept({ path, options }: NormalizedSearchPath) {
     if (path.length === 1) {
-      this._isSearchTarget = true;
-      this._searchedTargetOptions = HierarchySearchPath.mergeOptions(this._searchedTargetOptions, options);
+      this._issearchTarget = true;
+      this._searchTargetOptions = HierarchySearchPath.mergeOptions(this._searchTargetOptions, options);
     } else if (path.length > 1) {
       this._searchedChildrenIdentifierPaths.push({ path: path.slice(1), options });
-      if (options?.autoExpand) {
-        if (
-          !this._needsAutoExpand ||
-          (this._needsAutoExpand !== true && (options.autoExpand === true || this._needsAutoExpand.depth < options.autoExpand.depth))
-        ) {
-          this._needsAutoExpand = options.autoExpand;
-        }
-      }
+      this._needsAutoExpand = HierarchySearchPathOptions.mergeAutoExpandOptions(options?.autoExpand, this._needsAutoExpand);
     }
   }
   public getNodeProps(): NodeProps {
     return {
-      ...(this._hasSearchTargetAncestor || this._isSearchTarget || this._searchedChildrenIdentifierPaths.length > 0
+      ...(this._hassearchTargetAncestor || this._issearchTarget || this._searchedChildrenIdentifierPaths.length > 0
         ? {
-            filtering: {
-              ...(this._hasSearchTargetAncestor ? { hasSearchTargetAncestor: true } : undefined),
-              ...(this._isSearchTarget ? { isSearchTarget: true, searchTargetOptions: this._searchedTargetOptions } : undefined),
+            search: {
+              ...(this._hassearchTargetAncestor ? { hassearchTargetAncestor: true } : undefined),
+              ...(this._issearchTarget ? { issearchTarget: true, searchTargetOptions: this._searchTargetOptions } : undefined),
               ...(this._searchedChildrenIdentifierPaths.length > 0 ? { searchedChildrenIdentifierPaths: this._searchedChildrenIdentifierPaths } : undefined),
-              ...(this._needsAutoExpand && this._needsAutoExpand !== true ? { autoExpandDepth: this._needsAutoExpand.depth } : undefined),
+              ...(this._needsAutoExpand && this._needsAutoExpand !== true
+                ? {
+                    autoExpandDepth: this._needsAutoExpand.depth,
+                    includeGroupingNodes: this._needsAutoExpand.includeGroupingNodes ? true : false,
+                  }
+                : undefined),
             },
           }
         : undefined),

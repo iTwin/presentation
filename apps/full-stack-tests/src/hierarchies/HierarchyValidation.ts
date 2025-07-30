@@ -9,10 +9,10 @@ import { isDeepStrictEqual } from "util";
 import { Logger } from "@itwin/core-bentley";
 import {
   GenericNodeKey,
-  GroupingNodeKey,
   HierarchyNode,
   HierarchyNodeKey,
   HierarchyProvider,
+  HierarchySearchPathOptions,
   InstancesNodeKey,
   NonGroupingHierarchyNode,
 } from "@itwin/presentation-hierarchies";
@@ -38,9 +38,7 @@ interface BaseNodeExpectations {
   autoExpand?: boolean;
   supportsFiltering?: boolean;
   isSearchTarget?: boolean;
-  searchTargetOptions?: {
-    autoExpand?: { key: GroupingNodeKey; depth: number };
-  };
+  searchTargetOptions?: HierarchySearchPathOptions;
   extendedData?: { [key: string]: any };
   children?: ExpectedHierarchyDef[] | boolean;
 }

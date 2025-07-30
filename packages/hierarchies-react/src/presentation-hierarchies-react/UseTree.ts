@@ -162,7 +162,7 @@ function useTreeInternal({
     const provider = getHierarchyProvider();
     provider.setFormatter(currentFormatter.current);
     const removeHierarchyChangedListener = provider.hierarchyChanged.addListener((hierarchyChangeArgs) => {
-      const shouldDiscardState = hierarchyChangeArgs?.filterChange?.newFilter !== undefined;
+      const shouldDiscardState = hierarchyChangeArgs?.searchChange?.newSearch !== undefined;
       actions.reloadTree({ state: shouldDiscardState ? "discard" : "keep" });
     });
     actions.setHierarchyProvider(provider);
@@ -184,7 +184,7 @@ function useTreeInternal({
       }
 
       if (!getSearchPaths) {
-        hierarchyProvider.setHierarchyFilter(undefined);
+        hierarchyProvider.setHierarchySearch(undefined);
         // reload tree in case hierarchy provider does not use hierarchy filter to load initial nodes
         actions.reloadTree({ state: "keep" });
         setIsFiltering(false);
@@ -198,7 +198,7 @@ function useTreeInternal({
       } catch {
       } finally {
         if (!disposed) {
-          hierarchyProvider.setHierarchyFilter(paths ? { paths } : undefined);
+          hierarchyProvider.setHierarchySearch(paths ? { paths } : undefined);
           setIsFiltering(false);
         }
       }

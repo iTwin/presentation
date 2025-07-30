@@ -140,7 +140,7 @@ interface IModelHierarchyProviderProps {
    * by calling `setFormatter` on the provider instance.
    */
   formatter?: IPrimitiveValueFormatter;
-  /** Props for filtering the hierarchy. */
+  /** Props for searching the hierarchy. */
   search?: {
     /** A list of node identifiers from root to target node. */
     paths: HierarchySearchPath[];
@@ -186,7 +186,7 @@ class IModelHierarchyProviderImpl implements HierarchyProvider {
     this._valuesFormatter = props?.formatter ?? createDefaultValueFormatter();
     this._localizedStrings = { other: "Other", unspecified: "Not specified", ...props?.localizedStrings };
     this._queryScheduler = new SubscriptionScheduler(props.queryConcurrency ?? DEFAULT_QUERY_CONCURRENCY);
-    this.setHierarchyFilter(props.search);
+    this.setHierarchySearch(props.search);
 
     const queryCacheSize = props.queryCacheSize ?? DEFAULT_QUERY_CACHE_SIZE;
     if (queryCacheSize !== 0) {
@@ -235,13 +235,13 @@ class IModelHierarchyProviderImpl implements HierarchyProvider {
     this._hierarchyChanged.raiseEvent({ formatterChange: { newFormatter: this._valuesFormatter } });
   }
 
-  public setHierarchyFilter(props: IModelHierarchyProviderProps["search"]) {
+  public setHierarchySearch(props: IModelHierarchyProviderProps["search"]) {
     if (!props) {
       if (this._sourceHierarchyDefinition !== this._activeHierarchyDefinition) {
         this._activeHierarchyDefinition = this._sourceHierarchyDefinition;
-        this.invalidateHierarchyCache("Hierarchy filter reset");
+        this.invalidateHierarchyCache("Hierarchy search reset");
       }
-      this._hierarchyChanged.raiseEvent({ filterChange: { newFilter: undefined } });
+      this._hierarchyChanged.raiseEvent({ searchChange: { newSearch: undefined } });
       return;
     }
     this._activeHierarchyDefinition = new SearchHierarchyDefinition({
@@ -249,9 +249,9 @@ class IModelHierarchyProviderImpl implements HierarchyProvider {
       source: this._sourceHierarchyDefinition,
       nodeIdentifierPaths: props.paths,
     });
-    this.invalidateHierarchyCache("Hierarchy filter set");
+    this.invalidateHierarchyCache("Hierarchy search set");
     this._dispose.next();
-    this._hierarchyChanged.raiseEvent({ filterChange: { newFilter: props } });
+    this._hierarchyChanged.raiseEvent({ searchChange: { newSearch: props } });
   }
 
   private onGroupingNodeCreated(groupingNode: ProcessedGroupingHierarchyNode, props: GetHierarchyNodesProps) {
@@ -295,7 +295,7 @@ class IModelHierarchyProviderImpl implements HierarchyProvider {
   }
 
   private createSourceNodesObservable(
-    props: DefineHierarchyLevelProps & { hierarchyLevelSizeLimit?: number | "unbounded"; filteredInstanceKeys?: InstanceKey[] } & RequestContextProp,
+    props: DefineHierarchyLevelProps & { hierarchyLevelSizeLimit?: number | "unbounded"; searchedInstanceKeys?: InstanceKey[] } & RequestContextProp,
   ): SourceNodesObservable {
     // pipe definitions to nodes and put "share replay" on it
     return this.createHierarchyLevelDefinitionsObservable(props).pipe(
@@ -305,7 +305,7 @@ class IModelHierarchyProviderImpl implements HierarchyProvider {
         }
         return this._queryScheduler.scheduleSubscription(
           of(def.query).pipe(
-            map((query) => filterQueryByInstanceKeys(query, props.filteredInstanceKeys)),
+            map((query) => searchQueryByInstanceKeys(query, props.searchedInstanceKeys)),
             mergeMap((query) =>
               readNodes({
                 queryExecutor: this._imodelAccess,
@@ -347,7 +347,7 @@ class IModelHierarchyProviderImpl implements HierarchyProvider {
       // process hiding
       createHideIfNoChildrenOperator((n) => this.getChildNodesObservables({ parentNode: n, requestContext: props.requestContext }).hasNodes),
       createHideNodesInHierarchyOperator(
-        // note: for child nodes created because of hidden parent, we want to use parent's request props (instance filter, limit)
+        // note: for child nodes created because of hidden parent, we want to use parent's request props (instance search, limit)
         (n) => this.getChildNodesObservables({ ...props, parentNode: n }).processedNodes,
         false,
       ),
@@ -448,13 +448,13 @@ class IModelHierarchyProviderImpl implements HierarchyProvider {
     }
 
     // if we don't find an entry for a grouping node, we load its instances by getting a query and applying
-    // a filter based on grouped instance keys
-    let filteredInstanceKeys: InstanceKey[] | undefined;
+    // a search based on grouped instance keys
+    let searchedInstanceKeys: InstanceKey[] | undefined;
     let parentNonGroupingNode: ParentHierarchyNode<NonGroupingHierarchyNode> | undefined;
     if (parentNode) {
       if (HierarchyNode.isGroupingNode(parentNode)) {
         parentNonGroupingNode = parentNode.nonGroupingAncestor;
-        filteredInstanceKeys = parentNode.groupedInstanceKeys;
+        searchedInstanceKeys = parentNode.groupedInstanceKeys;
       } else {
         // not sure why type checker doesn't pick this up
         assert(HierarchyNode.isGeneric(parentNode) || HierarchyNode.isInstancesNode(parentNode));
@@ -465,7 +465,7 @@ class IModelHierarchyProviderImpl implements HierarchyProvider {
     const nonGroupingNodeChildrenRequestProps = {
       ...restProps,
       parentNode: parentNonGroupingNode,
-      ...(filteredInstanceKeys ? { filteredInstanceKeys } : undefined),
+      ...(searchedInstanceKeys ? { searchedInstanceKeys } : undefined),
     };
     const value = { observable: this.createSourceNodesObservable(nonGroupingNodeChildrenRequestProps), processingStatus: "none" as const };
     this._nodesCache?.set(nonGroupingNodeChildrenRequestProps, value);
@@ -700,20 +700,20 @@ function createParentNodeKeysList(parentNode: ParentHierarchyNode | undefined) {
   return [...parentNode.parentKeys, parentNode.key];
 }
 
-function filterQueryByInstanceKeys(query: ECSqlQueryDef, filteredInstanceKeys: InstanceKey[] | undefined): ECSqlQueryDef {
-  if (!filteredInstanceKeys || !filteredInstanceKeys.length) {
+function searchQueryByInstanceKeys(query: ECSqlQueryDef, searchedInstanceKeys: InstanceKey[] | undefined): ECSqlQueryDef {
+  if (!searchedInstanceKeys || !searchedInstanceKeys.length) {
     return query;
   }
   const MAX_ALLOWED_BINDINGS = 1000;
-  if (filteredInstanceKeys.length < MAX_ALLOWED_BINDINGS) {
+  if (searchedInstanceKeys.length < MAX_ALLOWED_BINDINGS) {
     return {
       ...query,
       ecsql: `
         SELECT *
         FROM (${query.ecsql}) q
-        WHERE q.ECInstanceId IN (${filteredInstanceKeys.map(() => "?").join(",")})
+        WHERE q.ECInstanceId IN (${searchedInstanceKeys.map(() => "?").join(",")})
       `,
-      bindings: [...(query.bindings ?? []), ...filteredInstanceKeys.map((k): ECSqlBinding => ({ type: "id", value: k.id }))],
+      bindings: [...(query.bindings ?? []), ...searchedInstanceKeys.map((k): ECSqlBinding => ({ type: "id", value: k.id }))],
     };
   }
   /* c8 ignore start */
@@ -724,7 +724,7 @@ function filterQueryByInstanceKeys(query: ECSqlQueryDef, filteredInstanceKeys: I
       FROM (${query.ecsql}) q
       WHERE InVirtualSet(?, q.ECInstanceId)
     `,
-    bindings: [...(query.bindings ?? []), { type: "idset", value: filteredInstanceKeys.map((k) => k.id) }],
+    bindings: [...(query.bindings ?? []), { type: "idset", value: searchedInstanceKeys.map((k) => k.id) }],
   };
   /* c8 ignore end */
 }

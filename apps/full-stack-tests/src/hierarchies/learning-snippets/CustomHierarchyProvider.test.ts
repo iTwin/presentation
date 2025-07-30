@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 /* eslint-disable no-console */
-/* eslint-disable no-duplicate-imports */
+
 /* eslint-disable @typescript-eslint/no-base-to-string */
 
 import { expect } from "chai";
@@ -11,14 +11,21 @@ import { collect } from "presentation-test-utilities";
 import * as sinon from "sinon";
 // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.CustomHierarchyProviders.Imports
 import { BeEvent } from "@itwin/core-bentley";
-import { HierarchyNode, HierarchyProvider } from "@itwin/presentation-hierarchies";
-import { Props } from "@itwin/presentation-shared";
+// __PUBLISH_EXTRACT_END__
+// __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.CustomHierarchyProviders.HierarchyLevelFilteringProviderImports
+import { GenericInstanceFilter, GenericInstanceFilterRule, GenericInstanceFilterRuleGroup } from "@itwin/core-common";
 // __PUBLISH_EXTRACT_END__
 // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.CustomHierarchyProviders.IModelProviderImports
 import { BriefcaseConnection, IModelConnection } from "@itwin/core-frontend";
 import { registerTxnListeners } from "@itwin/presentation-core-interop";
-// __PUBLISH_EXTRACT_END__
-// __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.CustomHierarchyProviders.FormattingProviderImports
+import {
+  createHierarchySearchHelper,
+  GenericNodeKey,
+  HierarchyNode,
+  HierarchyNodeIdentifier,
+  HierarchyProvider,
+  HierarchySearchPath,
+} from "@itwin/presentation-hierarchies";
 import {
   ConcatenatedValue,
   ConcatenatedValuePart,
@@ -26,13 +33,8 @@ import {
   EventListener,
   IPrimitiveValueFormatter,
   julianToDateTime,
+  Props,
 } from "@itwin/presentation-shared";
-// __PUBLISH_EXTRACT_END__
-// __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.CustomHierarchyProviders.FilteringProviderImports
-import { createHierarchySearchHelper, GenericNodeKey, HierarchyNodeIdentifier, HierarchySearchPath } from "@itwin/presentation-hierarchies";
-// __PUBLISH_EXTRACT_END__
-// __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.CustomHierarchyProviders.HierarchyLevelFilteringProviderImports
-import { GenericInstanceFilter, GenericInstanceFilterRule, GenericInstanceFilterRuleGroup } from "@itwin/core-common";
 // __PUBLISH_EXTRACT_END__
 import { buildIModel } from "../../IModelUtils.js";
 import { initialize, terminate } from "../../IntegrationTests.js";
@@ -73,7 +75,7 @@ describe("Hierarchies", () => {
           },
           async *getNodeInstanceKeys() {},
           setFormatter() {},
-          setHierarchyFilter() {},
+          setHierarchySearch() {},
           hierarchyChanged: new BeEvent(),
         };
         // __PUBLISH_EXTRACT_END__
@@ -208,7 +210,7 @@ describe("Hierarchies", () => {
           }
 
           public setFormatter() {}
-          public setHierarchyFilter() {}
+          public setHierarchySearch() {}
         }
 
         // The `using` keyword makes sure the provider is disposed when it goes out of scope
@@ -259,7 +261,7 @@ describe("Hierarchies", () => {
             }
           },
           async *getNodeInstanceKeys() {},
-          setHierarchyFilter() {},
+          setHierarchySearch() {},
           setFormatter() {},
           hierarchyChanged: new BeEvent(),
         };
@@ -336,7 +338,7 @@ describe("Hierarchies", () => {
             // Changing formatter requires a hierarchy reload - trigger the `hierarchyChanged` event to let components know
             this.hierarchyChanged.raiseEvent({ formatterChange: { newFormatter: this._formatter } });
           }
-          public setHierarchyFilter() {}
+          public setHierarchySearch() {}
         }
 
         const provider = new FormattingHierarchyProvider();
@@ -406,7 +408,7 @@ describe("Hierarchies", () => {
         // __PUBLISH_EXTRACT_END__
 
         // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.CustomHierarchyProviders.FilteringProviderExample.Provider
-        let rootFilter: Props<HierarchyProvider["setHierarchyFilter"]>;
+        let rootFilter: Props<HierarchyProvider["setHierarchySearch"]>;
         const hierarchyChanged = new BeEvent<EventListener<HierarchyProvider["hierarchyChanged"]>>();
         const provider: HierarchyProvider = {
           async *getNodes({ parentNode }) {
@@ -464,12 +466,12 @@ describe("Hierarchies", () => {
               }
             }
           },
-          setHierarchyFilter(props) {
+          setHierarchySearch(props) {
             // Here we receive all paths that we want to filter the hierarchy by. The paths start from root, so
             // we just store them in a variable to use later when querying root nodes.
             rootFilter = props;
             // Changing the filter requires a hierarchy reload - trigger the `hierarchyChanged` event to let components know
-            hierarchyChanged.raiseEvent({ filterChange: { newFilter: rootFilter } });
+            hierarchyChanged.raiseEvent({ searchChange: { newSearch: rootFilter } });
           },
           async *getNodeInstanceKeys() {},
           setFormatter() {},
@@ -480,7 +482,7 @@ describe("Hierarchies", () => {
         // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.CustomHierarchyProviders.FilteringProviderExample.TraverseFiltered1
         // Apply the filter "of" and traverse the filtered hierarchy. Notice that author node
         // of "The Fellowship of Ring" is included, even though it doesn't match the filter.
-        provider.setHierarchyFilter({ paths: await createFilterPaths("of") });
+        provider.setHierarchySearch({ paths: await createFilterPaths("of") });
         await traverseHierarchy(provider);
         // Output:
         // J.R.R. Tolkien
@@ -501,7 +503,7 @@ describe("Hierarchies", () => {
         // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.CustomHierarchyProviders.FilteringProviderExample.TraverseFiltered2
         // Apply the filter "tom" and traverse the filtered hierarchy. Notice that all books
         // of "Tom Clancy" are included, even though they don't match the filter.
-        provider.setHierarchyFilter({ paths: await createFilterPaths("tom") });
+        provider.setHierarchySearch({ paths: await createFilterPaths("tom") });
         await traverseHierarchy(provider);
         // Output:
         // Mark Twain
@@ -580,7 +582,7 @@ describe("Hierarchies", () => {
               }
             }
           },
-          setHierarchyFilter() {},
+          setHierarchySearch() {},
           async *getNodeInstanceKeys() {},
           setFormatter() {},
           hierarchyChanged: new BeEvent(),

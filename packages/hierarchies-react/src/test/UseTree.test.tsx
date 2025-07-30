@@ -86,7 +86,7 @@ describe("useTree", () => {
       async *getNodes({}) {
         yield createTestHierarchyNode({ id: "root-1" });
       },
-      setHierarchyFilter() {},
+      setHierarchySearch() {},
       async *getNodeInstanceKeys() {},
       setFormatter() {},
       hierarchyChanged,
@@ -128,7 +128,7 @@ describe("useTree", () => {
       const treeRenderProps = getTreeRendererProps(result.current);
       expect(treeRenderProps).to.be.not.undefined;
       expect(treeRenderProps!.rootNodes).to.have.lengthOf(1);
-      expect(hierarchyProvider.setHierarchyFilter).to.be.calledWith({ paths });
+      expect(hierarchyProvider.setHierarchySearch).to.be.calledWith({ paths });
     });
   });
 
@@ -148,7 +148,7 @@ describe("useTree", () => {
           yield rootNode1;
         }
       },
-      setHierarchyFilter() {
+      setHierarchySearch() {
         hierarchyChanged.raiseEvent();
       },
       async *getNodeInstanceKeys() {},
@@ -231,7 +231,7 @@ describe("useTree", () => {
     await waitFor(() => {
       const treeRenderProps = getTreeRendererProps(result.current);
       expect(treeRenderProps!.rootNodes).to.have.lengthOf(1);
-      expect(hierarchyProvider.setHierarchyFilter).to.be.calledWith(undefined);
+      expect(hierarchyProvider.setHierarchySearch).to.be.calledWith(undefined);
     });
   });
 
@@ -243,7 +243,7 @@ describe("useTree", () => {
     const rootNode2 = createTestHierarchyNode({ id: "root-2" });
 
     hierarchyProvider.getNodes.callsFake(() => {
-      const activePaths = hierarchyProvider.setHierarchyFilter.lastCall?.args[0]?.paths;
+      const activePaths = hierarchyProvider.setHierarchySearch.lastCall?.args[0]?.paths;
       if (activePaths === paths1) {
         return createAsyncIterator([rootNode1]);
       }
@@ -262,7 +262,7 @@ describe("useTree", () => {
       const treeRenderProps = getTreeRendererProps(result.current);
       expect(treeRenderProps).to.be.undefined;
       expect(getFilteredPaths1).to.be.called;
-      expect(hierarchyProvider.setHierarchyFilter).to.not.be.called;
+      expect(hierarchyProvider.setHierarchySearch).to.not.be.called;
     });
 
     const promise2 = new ResolvablePromise<hierarchiesModule.HierarchyNodeIdentifiersPath[]>();
@@ -274,7 +274,7 @@ describe("useTree", () => {
       const treeRenderProps = getTreeRendererProps(result.current);
       expect(treeRenderProps).to.be.undefined;
       expect(getFilteredPaths2).to.be.called;
-      expect(hierarchyProvider.setHierarchyFilter).to.not.be.called;
+      expect(hierarchyProvider.setHierarchySearch).to.not.be.called;
     });
 
     await act(async () => {
@@ -285,7 +285,7 @@ describe("useTree", () => {
       const treeRenderProps = getTreeRendererProps(result.current);
       expect(treeRenderProps!.rootNodes).to.have.lengthOf(1);
       expect(treeRenderProps!.rootNodes[0].id).to.be.eq(createNodeId(rootNode2));
-      expect(hierarchyProvider.setHierarchyFilter).to.be.calledWith({ paths: paths2 });
+      expect(hierarchyProvider.setHierarchySearch).to.be.calledWith({ paths: paths2 });
     });
 
     await act(async () => {
@@ -296,7 +296,7 @@ describe("useTree", () => {
       const treeRenderProps = getTreeRendererProps(result.current);
       expect(treeRenderProps!.rootNodes).to.have.lengthOf(1);
       expect(treeRenderProps!.rootNodes[0].id).to.be.eq(createNodeId(rootNode2));
-      expect(hierarchyProvider.setHierarchyFilter).to.not.be.calledWith({ paths: paths1 });
+      expect(hierarchyProvider.setHierarchySearch).to.not.be.calledWith({ paths: paths1 });
     });
   });
 
@@ -353,7 +353,7 @@ describe("useTree", () => {
     await waitFor(() => {
       const treeRenderProps = getTreeRendererProps(result.current);
       expect(treeRenderProps!.rootNodes).to.have.lengthOf(1);
-      expect(hierarchyProvider.setHierarchyFilter).to.be.calledWith(undefined);
+      expect(hierarchyProvider.setHierarchySearch).to.be.calledWith(undefined);
     });
   });
 

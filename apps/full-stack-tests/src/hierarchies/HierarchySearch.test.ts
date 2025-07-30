@@ -1654,7 +1654,7 @@ describe("Hierarchies", () => {
             return createAsyncIterator([]);
           };
           public setFormatter: HierarchyProvider["setFormatter"] = () => {};
-          public setHierarchyFilter: HierarchyProvider["setHierarchyFilter"] = (props) => {
+          public setHierarchySearch: HierarchyProvider["setHierarchySearch"] = (props) => {
             this._filter = props?.paths;
           };
         })();
@@ -1828,7 +1828,7 @@ describe("Hierarchies", () => {
                 children: false,
               };
               const filteringHelper = createHierarchySearchHelper(undefined, parentNode);
-              if (!filteringHelper.hasFilter) {
+              if (!filteringHelper.hasSearch) {
                 return createAsyncIterator([myNode]);
               }
               const nodeMatchesFilter = filteringHelper.getChildNodeSearchIdentifiers()?.some((id) => HierarchyNodeIdentifier.equal(id, myNode.key));
@@ -1840,7 +1840,7 @@ describe("Hierarchies", () => {
           };
           public getNodeInstanceKeys: HierarchyProvider["getNodeInstanceKeys"] = () => createAsyncIterator([]);
           public setFormatter: HierarchyProvider["setFormatter"] = () => {};
-          public setHierarchyFilter: HierarchyProvider["setHierarchyFilter"] = () => {
+          public setHierarchySearch: HierarchyProvider["setHierarchySearch"] = () => {
             // don't need to save this, because this provider doesn't return any root nodes and for
             // child nodes we take filter paths from parent node
           };
@@ -1905,8 +1905,8 @@ describe("Hierarchies", () => {
   });
 });
 
-function mergeAndFilterProviders({ providers, filterProps }: { providers: HierarchyProvider[]; filterProps: Props<HierarchyProvider["setHierarchyFilter"]> }) {
+function mergeAndFilterProviders({ providers, filterProps }: { providers: HierarchyProvider[]; filterProps: Props<HierarchyProvider["setHierarchySearch"]> }) {
   const mergedProvider = mergeProviders({ providers });
-  mergedProvider.setHierarchyFilter(filterProps);
+  mergedProvider.setHierarchySearch(filterProps);
   return mergedProvider;
 }
