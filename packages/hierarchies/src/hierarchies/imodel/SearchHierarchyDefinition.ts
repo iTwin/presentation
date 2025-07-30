@@ -277,9 +277,9 @@ export const ECSQL_COLUMN_NAME_FilterECInstanceId = "FilterECInstanceId";
 // eslint-disable-next-line @typescript-eslint/naming-convention
 export const ECSQL_COLUMN_NAME_FilterClassName = "FilterClassName";
 
-function getClassECInstanceIds(filteredInstanceKeys: InstanceKey[]) {
+function getClassECInstanceIds(searchedInstanceKeys: InstanceKey[]) {
   const classNameECInstanceIds = new Map<string, Id64String[]>();
-  for (const key of filteredInstanceKeys) {
+  for (const key of searchedInstanceKeys) {
     const entry = classNameECInstanceIds.get(key.className);
     if (entry === undefined) {
       classNameECInstanceIds.set(key.className, [key.id]);
@@ -291,8 +291,8 @@ function getClassECInstanceIds(filteredInstanceKeys: InstanceKey[]) {
 }
 
 /** @internal */
-export function applyECInstanceIdsFilter(def: InstanceNodesQueryDefinition, filteredInstanceKeys: InstanceKey[]): InstanceNodesQueryDefinition {
-  const instanceIdsByClass = getClassECInstanceIds(filteredInstanceKeys);
+export function applyECInstanceIdsFilter(def: InstanceNodesQueryDefinition, searchedInstanceKeys: InstanceKey[]): InstanceNodesQueryDefinition {
+  const instanceIdsByClass = getClassECInstanceIds(searchedInstanceKeys);
   return {
     ...def,
     query: {

@@ -347,7 +347,7 @@ class IModelHierarchyProviderImpl implements HierarchyProvider {
       // process hiding
       createHideIfNoChildrenOperator((n) => this.getChildNodesObservables({ parentNode: n, requestContext: props.requestContext }).hasNodes),
       createHideNodesInHierarchyOperator(
-        // note: for child nodes created because of hidden parent, we want to use parent's request props (instance search, limit)
+        // note: for child nodes created because of hidden parent, we want to use parent's request props (instance filter, limit)
         (n) => this.getChildNodesObservables({ ...props, parentNode: n }).processedNodes,
         false,
       ),

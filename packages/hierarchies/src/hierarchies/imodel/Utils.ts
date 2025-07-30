@@ -62,6 +62,6 @@ export function mergeInstanceNodes(lhs: ProcessedInstanceHierarchyNode, rhs: Pro
   mergedProcessingParams ? (mergedNode.processingParams = mergedProcessingParams) : delete mergedNode.processingParams;
   lhs.autoExpand || rhs.autoExpand ? (mergedNode.autoExpand = true) : delete mergedNode.autoExpand;
   lhs.extendedData || rhs.extendedData ? (mergedNode.extendedData = { ...lhs.extendedData, ...rhs.extendedData }) : delete mergedNode.extendedData;
-  lhs.supportsSearch && rhs.supportsSearch ? (mergedNode.supportsSearch = true) : delete mergedNode.supportsSearch;
+  lhs.supportsFiltering && rhs.supportsFiltering ? (mergedNode.supportsFiltering = true) : delete mergedNode.supportsFiltering;
   return mergedNode;
 }

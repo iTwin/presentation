@@ -765,10 +765,10 @@ describe("createIModelHierarchyProvider", () => {
             trimWhitespace(query.ctes[0]) ===
               trimWhitespace(
                 `
-                searchingInfo(ECInstanceId, searchClassName) AS (
+                FilteringInfo(ECInstanceId, FilterClassName) AS (
                 SELECT
                   ECInstanceId,
-                  'a.b' AS searchClassName
+                  'a.b' AS FilterClassName
                 FROM
                   a.b
                 WHERE
@@ -781,9 +781,9 @@ describe("createIModelHierarchyProvider", () => {
                 SELECT
                     [q].*,
                     IdToHex([f].[ECInstanceId]) AS [${ECSQL_COLUMN_NAME_FilterECInstanceId}],
-                    [f].[searchClassName] AS [${ECSQL_COLUMN_NAME_FilterClassName}]
+                    [f].[FilterClassName] AS [${ECSQL_COLUMN_NAME_FilterClassName}]
                   FROM (QUERY) [q]
-                  JOIN searchingInfo [f] ON [f].[ECInstanceId] = [q].[ECInstanceId]
+                  JOIN FilteringInfo [f] ON [f].[ECInstanceId] = [q].[ECInstanceId]
                 `,
               ),
         ),

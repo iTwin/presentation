@@ -80,7 +80,7 @@ interface NodeSelectClauseProps {
     [key: string]: Id64String | string | number | boolean | ECSqlValueSelector;
   };
   autoExpand?: boolean | ECSqlValueSelector;
-  supportsFiltering?: boolean | ECSqlValueSelector;
+  supportsSearch?: boolean | ECSqlValueSelector;
   hasChildren?: boolean | ECSqlValueSelector;
   hideNodeInHierarchy?: boolean | ECSqlValueSelector;
   hideIfNoChildren?: boolean | ECSqlValueSelector;
@@ -297,7 +297,7 @@ class NodeSelectQueryFactory {
           : "CAST(NULL AS TEXT)"
       } AS ${NodeSelectClauseColumnNames.ExtendedData},
       CAST(${createECSqlValueSelector(props.autoExpand)} AS BOOLEAN) AS ${NodeSelectClauseColumnNames.AutoExpand},
-      CAST(${createECSqlValueSelector(props.supportsFiltering)} AS BOOLEAN) AS ${NodeSelectClauseColumnNames.SupportsFiltering}
+      CAST(${createECSqlValueSelector(props.supportsSearch)} AS BOOLEAN) AS ${NodeSelectClauseColumnNames.SupportsFiltering}
     `;
   }
 

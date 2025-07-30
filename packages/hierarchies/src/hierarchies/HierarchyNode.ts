@@ -40,28 +40,6 @@ export type HierarchyNodeSearchProps = {
 );
 /** @public */
 
-export namespace HierarchyNodeFilteringProps {
-  /** @deprecated in 1.3. Use `createHierarchyFilteringHelper` and its `createChildNodeProps` function to create filtering props for nodes. */
-  /* c8 ignore start */
-  export function create(props: {
-    hasSearchTargetAncestor?: boolean;
-    searchedChildrenIdentifierPaths?: HierarchySearchPath[];
-    isSearchTarget?: boolean;
-    searchTargetOptions?: HierarchySearchPathOptions;
-  }): HierarchyNodeSearchProps | undefined {
-    const { hasSearchTargetAncestor, searchedChildrenIdentifierPaths, isSearchTarget, searchTargetOptions } = props;
-    if (isSearchTarget || hasSearchTargetAncestor || searchedChildrenIdentifierPaths?.length) {
-      return {
-        ...(isSearchTarget ? { isSearchTarget, searchTargetOptions } : undefined),
-        ...(hasSearchTargetAncestor ? { hasSearchTargetAncestor } : undefined),
-        ...(!!searchedChildrenIdentifierPaths?.length ? { searchedChildrenIdentifierPaths } : undefined),
-      };
-    }
-    return undefined;
-  }
-  /* c8 ignore end */
-}
-
 /**
  * A data structure that defines attributes that are common to all types of hierarchy nodes.
  * @public
@@ -92,7 +70,7 @@ export interface NonGroupingHierarchyNode extends BaseHierarchyNode {
    * Identifies whether the hierarchy level below this node supports filtering. If not, supplying an instance
    * filter when requesting child hierarchy level will have no effect.
    */
-  supportsSearch?: boolean;
+  supportsFiltering?: boolean;
 }
 
 /**

@@ -281,15 +281,15 @@ type NormalizedSearchPath = ReturnType<(typeof HierarchySearchPath)["normalize"]
 
 class MatchingSearchPathsReducer {
   private _searchedChildrenIdentifierPaths = new Array<NormalizedSearchPath>();
-  private _issearchTarget = false;
+  private _isSearchTarget = false;
   private _searchTargetOptions = undefined as HierarchySearchPathOptions | undefined;
   private _needsAutoExpand: HierarchySearchPathOptions["autoExpand"] = false;
 
-  public constructor(private _hassearchTargetAncestor: boolean) {}
+  public constructor(private _hasSearchTargetAncestor: boolean) {}
 
   public accept({ path, options }: NormalizedSearchPath) {
     if (path.length === 1) {
-      this._issearchTarget = true;
+      this._isSearchTarget = true;
       this._searchTargetOptions = HierarchySearchPath.mergeOptions(this._searchTargetOptions, options);
     } else if (path.length > 1) {
       this._searchedChildrenIdentifierPaths.push({ path: path.slice(1), options });
@@ -298,11 +298,11 @@ class MatchingSearchPathsReducer {
   }
   public getNodeProps(): NodeProps {
     return {
-      ...(this._hassearchTargetAncestor || this._issearchTarget || this._searchedChildrenIdentifierPaths.length > 0
+      ...(this._hasSearchTargetAncestor || this._isSearchTarget || this._searchedChildrenIdentifierPaths.length > 0
         ? {
             search: {
-              ...(this._hassearchTargetAncestor ? { hassearchTargetAncestor: true } : undefined),
-              ...(this._issearchTarget ? { issearchTarget: true, searchTargetOptions: this._searchTargetOptions } : undefined),
+              ...(this._hasSearchTargetAncestor ? { hasSearchTargetAncestor: true } : undefined),
+              ...(this._isSearchTarget ? { isSearchTarget: true, searchTargetOptions: this._searchTargetOptions } : undefined),
               ...(this._searchedChildrenIdentifierPaths.length > 0 ? { searchedChildrenIdentifierPaths: this._searchedChildrenIdentifierPaths } : undefined),
               ...(this._needsAutoExpand && this._needsAutoExpand !== true
                 ? {

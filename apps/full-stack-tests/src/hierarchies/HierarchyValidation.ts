@@ -67,12 +67,12 @@ export namespace NodeValidators {
     if (
       (HierarchyNode.isInstancesNode(node) || HierarchyNode.isGeneric(node)) &&
       expectations.supportsFiltering !== undefined &&
-      !!node.supportsSearch !== !!expectations.supportsFiltering
+      !!node.supportsFiltering !== !!expectations.supportsFiltering
     ) {
       throw new Error(
         `[${node.label}] Expected node's \`supportsFiltering\` flag to be ${optionalBooleanToString(
           expectations.supportsFiltering,
-        )}, got ${optionalBooleanToString(node.supportsSearch)}`,
+        )}, got ${optionalBooleanToString(node.supportsFiltering)}`,
       );
     }
     if (expectations.isSearchTarget !== undefined && expectations.isSearchTarget !== !!node.search?.isSearchTarget) {

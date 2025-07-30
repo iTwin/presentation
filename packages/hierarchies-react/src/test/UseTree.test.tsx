@@ -512,7 +512,7 @@ describe("useTree", () => {
   });
 
   it("applies and removes instance filter", async () => {
-    const rootNodes = [createTestHierarchyNode({ id: "root-1", autoExpand: true, supportsSearch: true, children: true })];
+    const rootNodes = [createTestHierarchyNode({ id: "root-1", autoExpand: true, supportsFiltering: true, children: true })];
     const childNodes = [createTestHierarchyNode({ id: "child-1" }), createTestHierarchyNode({ id: "child-1" })];
 
     hierarchyProvider.getNodes.callsFake((props) => {
@@ -556,7 +556,7 @@ describe("useTree", () => {
   });
 
   it("applies instance filter on grouping node parent", async () => {
-    const rootNodes = [createTestHierarchyNode({ id: "root-1", autoExpand: true, children: true, supportsSearch: true })];
+    const rootNodes = [createTestHierarchyNode({ id: "root-1", autoExpand: true, children: true, supportsFiltering: true })];
     const groupingNode = createTestGroupingNode({
       id: "grouping-node",
       key: { type: "class-grouping", className: "Schema:Class" },

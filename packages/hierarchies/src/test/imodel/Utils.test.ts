@@ -37,24 +37,28 @@ describe("mergeInstanceNodes", () => {
 
   it("merges supports-filtering flag", () => {
     expect(
-      mergeInstanceNodes(createTestProcessedInstanceNode({ supportsSearch: undefined }), createTestProcessedInstanceNode({ supportsSearch: undefined }))
-        .supportsSearch,
+      mergeInstanceNodes(createTestProcessedInstanceNode({ supportsFiltering: undefined }), createTestProcessedInstanceNode({ supportsFiltering: undefined }))
+        .supportsFiltering,
     ).to.be.undefined;
     expect(
-      mergeInstanceNodes(createTestProcessedInstanceNode({ supportsSearch: false }), createTestProcessedInstanceNode({ supportsSearch: false })).supportsSearch,
+      mergeInstanceNodes(createTestProcessedInstanceNode({ supportsFiltering: false }), createTestProcessedInstanceNode({ supportsFiltering: false }))
+        .supportsFiltering,
     ).to.be.undefined;
     expect(
-      mergeInstanceNodes(createTestProcessedInstanceNode({ supportsSearch: false }), createTestProcessedInstanceNode({ supportsSearch: true })).supportsSearch,
+      mergeInstanceNodes(createTestProcessedInstanceNode({ supportsFiltering: false }), createTestProcessedInstanceNode({ supportsFiltering: true }))
+        .supportsFiltering,
     ).to.be.undefined;
     expect(
-      mergeInstanceNodes(createTestProcessedInstanceNode({ supportsSearch: true }), createTestProcessedInstanceNode({ supportsSearch: true })).supportsSearch,
+      mergeInstanceNodes(createTestProcessedInstanceNode({ supportsFiltering: true }), createTestProcessedInstanceNode({ supportsFiltering: true }))
+        .supportsFiltering,
     ).to.be.true;
     expect(
-      mergeInstanceNodes(createTestProcessedInstanceNode({ supportsSearch: true }), createTestProcessedInstanceNode({ supportsSearch: false })).supportsSearch,
+      mergeInstanceNodes(createTestProcessedInstanceNode({ supportsFiltering: true }), createTestProcessedInstanceNode({ supportsFiltering: false }))
+        .supportsFiltering,
     ).to.be.undefined;
     expect(
-      mergeInstanceNodes(createTestProcessedInstanceNode({ supportsSearch: true }), createTestProcessedInstanceNode({ supportsSearch: undefined }))
-        .supportsSearch,
+      mergeInstanceNodes(createTestProcessedInstanceNode({ supportsFiltering: true }), createTestProcessedInstanceNode({ supportsFiltering: undefined }))
+        .supportsFiltering,
     ).to.be.undefined;
   });
 
