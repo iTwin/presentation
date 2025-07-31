@@ -104,16 +104,16 @@ describe("useTree", () => {
     });
   });
 
-  it("loads filtered nodes paths", async () => {
+  it("loads searched nodes paths", async () => {
     hierarchyProvider.getNodes.callsFake((props) => {
       return createAsyncIterator(props.parentNode === undefined ? [createTestHierarchyNode({ id: "root-1" })] : []);
     });
 
     const paths: hierarchiesModule.HierarchyNodeIdentifiersPath[] = [[{ id: "0x1", className: "Schema:Class" }]];
     const promise = new ResolvablePromise<hierarchiesModule.HierarchyNodeIdentifiersPath[]>();
-    const getFilteredPaths = async () => promise;
+    const getSearchPaths = async () => promise;
 
-    const { result } = renderHook(useTree, { initialProps: { ...initialProps, getFilteredPaths } });
+    const { result } = renderHook(useTree, { initialProps: { ...initialProps, getSearchPaths } });
 
     await waitFor(() => {
       const treeRenderProps = getTreeRendererProps(result.current);
@@ -158,7 +158,7 @@ describe("useTree", () => {
 
     const promise = new ResolvablePromise<hierarchiesModule.HierarchyNodeIdentifiersPath[]>();
     const { result, rerender } = renderHook(useTree, {
-      initialProps: { getHierarchyProvider: () => customHierarchyProvider, getFilteredPaths: () => promise },
+      initialProps: { getHierarchyProvider: () => customHierarchyProvider, getSearchPaths: () => promise },
     });
     await waitFor(() => {
       expect(getNodesCallCount).to.eq(0);
@@ -172,7 +172,7 @@ describe("useTree", () => {
     let treeRenderProps = getTreeRendererProps(result.current);
     expect(treeRenderProps?.rootNodes).to.have.lengthOf(2);
 
-    rerender({ getHierarchyProvider: () => customHierarchyProvider, getFilteredPaths: () => promise });
+    rerender({ getHierarchyProvider: () => customHierarchyProvider, getSearchPaths: () => promise });
     await waitFor(() => {
       expect(getNodesCallCount).to.eq(1);
       expect(result.current.isReloading).to.be.true;
@@ -193,12 +193,12 @@ describe("useTree", () => {
 
     const promise = new ResolvablePromise<hierarchiesModule.HierarchyNodeIdentifiersPath[]>();
     let signal: AbortSignal | undefined;
-    const getFilteredPaths = async ({ abortSignal }: { abortSignal: AbortSignal }) => {
+    const getSearchPaths = async ({ abortSignal }: { abortSignal: AbortSignal }) => {
       signal = abortSignal;
       return promise;
     };
 
-    const { result, unmount } = renderHook(useTree, { initialProps: { ...initialProps, getFilteredPaths } });
+    const { result, unmount } = renderHook(useTree, { initialProps: { ...initialProps, getSearchPaths } });
 
     await waitFor(() => {
       expect(result.current.isReloading).to.be.true;
@@ -209,15 +209,15 @@ describe("useTree", () => {
     });
   });
 
-  it("loads unfiltered hierarchy when `getFilteredPaths` returns `undefined`", async () => {
+  it("loads unfiltered hierarchy when `getSearchPaths` returns `undefined`", async () => {
     hierarchyProvider.getNodes.callsFake((props) => {
       return createAsyncIterator(props.parentNode === undefined ? [createTestHierarchyNode({ id: "root-1" })] : []);
     });
 
     const promise = new ResolvablePromise<hierarchiesModule.HierarchySearchPath[] | undefined>();
-    const getFilteredPaths = async () => promise;
+    const getSearchPaths = async () => promise;
 
-    const { result } = renderHook(useTree, { initialProps: { ...initialProps, getFilteredPaths } });
+    const { result } = renderHook(useTree, { initialProps: { ...initialProps, getSearchPaths } });
 
     await waitFor(() => {
       const treeRenderProps = getTreeRendererProps(result.current);
@@ -254,26 +254,26 @@ describe("useTree", () => {
     });
 
     const promise1 = new ResolvablePromise<hierarchiesModule.HierarchyNodeIdentifiersPath[]>();
-    const getFilteredPaths1 = sinon.stub().callsFake(async () => promise1);
+    const getSearchPaths1 = sinon.stub().callsFake(async () => promise1);
 
-    const { result, rerender } = renderHook(useTree, { initialProps: { ...initialProps, getFilteredPaths: getFilteredPaths1 } });
+    const { result, rerender } = renderHook(useTree, { initialProps: { ...initialProps, getSearchPaths: getSearchPaths1 } });
 
     await waitFor(() => {
       const treeRenderProps = getTreeRendererProps(result.current);
       expect(treeRenderProps).to.be.undefined;
-      expect(getFilteredPaths1).to.be.called;
+      expect(getSearchPaths1).to.be.called;
       expect(hierarchyProvider.setHierarchySearch).to.not.be.called;
     });
 
     const promise2 = new ResolvablePromise<hierarchiesModule.HierarchyNodeIdentifiersPath[]>();
-    const getFilteredPaths2 = sinon.stub().callsFake(async () => promise2);
+    const getSearchPaths2 = sinon.stub().callsFake(async () => promise2);
 
-    rerender({ ...initialProps, getFilteredPaths: getFilteredPaths2 });
+    rerender({ ...initialProps, getSearchPaths: getSearchPaths2 });
 
     await waitFor(() => {
       const treeRenderProps = getTreeRendererProps(result.current);
       expect(treeRenderProps).to.be.undefined;
-      expect(getFilteredPaths2).to.be.called;
+      expect(getSearchPaths2).to.be.called;
       expect(hierarchyProvider.setHierarchySearch).to.not.be.called;
     });
 
@@ -345,10 +345,10 @@ describe("useTree", () => {
     hierarchyProvider.getNodes.callsFake(() => {
       return createAsyncIterator([createTestHierarchyNode({ id: "root-1" })]);
     });
-    const getFilteredPaths = async () => {
+    const getSearchPaths = async () => {
       throw new Error("test error");
     };
-    const { result } = renderHook(useTree, { initialProps: { ...initialProps, getFilteredPaths } });
+    const { result } = renderHook(useTree, { initialProps: { ...initialProps, getSearchPaths } });
 
     await waitFor(() => {
       const treeRenderProps = getTreeRendererProps(result.current);
