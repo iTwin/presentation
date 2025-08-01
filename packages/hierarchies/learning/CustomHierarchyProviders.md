@@ -421,13 +421,13 @@ console.log((await provider.getNodes().next()).value.label);
 
 <!-- END EXTRACTION -->
 
-## Implementing hierarchy filtering support
+## Implementing hierarchy search support
 
-> See more details about hierarchy filtering in the [Hierarchy filtering](./HierarchyFiltering.md) learning page.
+> See more details about hierarchy search in the [Hierarchy search](./HierarchySearch.md) learning page.
 
-For this example, let's use the books service defined in the [3rd party service-based hierarchy provider example](#3rd-party-service-based-hierarchy-provider-example) section and enhance the provider to support hierarchy filtering.
+For this example, let's use the books service defined in the [3rd party service-based hierarchy provider example](#3rd-party-service-based-hierarchy-provider-example) section and enhance the provider to support hierarchy search.
 
-As described in the [Hierarchy filtering](./HierarchyFiltering.md) learning page, the process of filtering a hierarchy has two major steps:
+As described in the [Hierarchy search](./HierarchySearch.md) learning page, the process of searching a hierarchy has two major steps:
 
 1. Determine node identifier paths for the target nodes.
 2. Given the node identifier paths, filter the hierarchy.
@@ -465,9 +465,9 @@ async function createFilterPaths(filter: string): Promise<HierarchySearchPath[]>
 
 <!-- END EXTRACTION -->
 
-There could be a number of ways to filter the hierarchy, such as by target instance identifier, by a complex query that uses multiple attributes, or simply by label. The above function filters the hierarchy by node label.
+There could be a number of ways to search the hierarchy, such as by target instance identifier, by a complex query that uses multiple attributes, or simply by label. The above function filters the hierarchy by node label.
 
-Now that we're able to find the paths, let's enhance our hierarchy provider to support filtering by them:
+Now that we're able to find the paths, let's enhance our hierarchy provider to support searching by them:
 
 <!-- [[include: [Presentation.Hierarchies.CustomHierarchyProviders.Imports, Presentation.Hierarchies.CustomHierarchyProviders.FilteringProviderImports, Presentation.Hierarchies.CustomHierarchyProviders.FilteringProviderExample.Provider], ts]] -->
 <!-- BEGIN EXTRACTION -->
@@ -552,9 +552,9 @@ const provider: HierarchyProvider = {
 
 <!-- END EXTRACTION -->
 
-The provider uses target instance keys that it gets through a filtering helper function to filter each hierarchy level. Because we already know exactly what we're looking for, we can effectively apply filtering at query time, rather than doing that on the client side.
+The provider uses target instance keys that it gets through a search helper function to search each hierarchy level. Because we already know exactly what we're looking for, we can effectively apply search at query time, rather than doing that on the client side.
 
-With the above provider, we can now filter the books hierarchy by label:
+With the above provider, we can now search the books hierarchy by label:
 
 <!-- [[include: [Presentation.Hierarchies.CustomHierarchyProviders.FilteringProviderExample.TraverseFiltered1, Presentation.Hierarchies.CustomHierarchyProviders.FilteringProviderExample.TraverseFiltered2], ts]] -->
 <!-- BEGIN EXTRACTION -->
