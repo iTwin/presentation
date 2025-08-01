@@ -72,13 +72,13 @@ The following code snippet shows, how to create a filtering path that includes t
 <!-- BEGIN EXTRACTION -->
 
 ```ts
-import { HierarchyFilteringPath } from "@itwin/presentation-hierarchies";
+import { HierarchySearchPath } from "@itwin/presentation-hierarchies";
 
 // Get a grouping node that groups the "C" element
-const filteringPath: HierarchyFilteringPath = {
+const searchPath: HierarchySearchPath = {
   // Path to the element "C"
   path: [elementKeys.a, elementKeys.b, elementKeys.c],
-  // Supply options for the filtering path
+  // Supply options for the search path
   options: {
     // Auto-expand the hierarchy up to the target "C" node
     autoExpand: true,
@@ -94,9 +94,9 @@ Additionally, you might not want to add `autoExpand` flag to every node in `Hier
 <!-- BEGIN EXTRACTION -->
 
 ```ts
-import { HierarchyFilteringPath } from "@itwin/presentation-hierarchies";
+import { HierarchySearchPath } from "@itwin/presentation-hierarchies";
 
-const filteringPath: HierarchyFilteringPath = {
+const searchPath: HierarchySearchPath = {
   // Path to the element "C"
   path: [elementKeys.a, elementKeys.b, elementKeys.c],
   options: {
@@ -114,12 +114,12 @@ Also, hierarchies may contain grouping nodes, which don't represent anything by 
 <!-- BEGIN EXTRACTION -->
 
 ```ts
-import { HierarchyFilteringPath } from "@itwin/presentation-hierarchies";
+import { HierarchySearchPath } from "@itwin/presentation-hierarchies";
 
 // Hierarchy has two grouping nodes under C element: one class grouping and one label grouping node.
 // Get grouping node that groups the "C" element and is the nearest grouping node to it
 const groupingNode = await getSelectedGroupingNode();
-const filteringPath: HierarchyFilteringPath = {
+const searchPath: HierarchySearchPath = {
   // Path to the element "C"
   path: [elementKeys.a, elementKeys.b, elementKeys.c],
   options: {

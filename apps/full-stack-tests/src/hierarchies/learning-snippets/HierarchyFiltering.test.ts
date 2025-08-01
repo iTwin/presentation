@@ -32,7 +32,7 @@ import { collectHierarchy } from "./Utils.js";
 
 describe("Hierarchies", () => {
   describe("Learning snippets", () => {
-    describe("Hierarchy filtering", () => {
+    describe("Hierarchy search", () => {
       type IModelAccess = ReturnType<typeof createIModelAccess>;
       let imodel: IModelConnection;
       let elementIds: { [name: string]: Id64String };
@@ -282,10 +282,10 @@ describe("Hierarchies", () => {
 
         // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.HierarchyFiltering.AutoExpand.FilteringPath
         // Get a grouping node that groups the "C" element
-        const filteringPath: HierarchySearchPath = {
+        const searchPath: HierarchySearchPath = {
           // Path to the element "C"
           path: [elementKeys.a, elementKeys.b, elementKeys.c],
-          // Supply options for the filtering path
+          // Supply options for the search path
           options: {
             // Auto-expand the hierarchy up to the target "C" node
             autoExpand: true,
@@ -298,7 +298,7 @@ describe("Hierarchies", () => {
           imodelAccess,
           hierarchyDefinition: createHierarchyDefinition(imodelAccess),
           search: {
-            paths: [filteringPath],
+            paths: [searchPath],
           },
         });
 
@@ -522,7 +522,7 @@ describe("Hierarchies", () => {
         };
 
         // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.HierarchyFiltering.AutoExpandUntilDepthWithoutGrouping.FilteringPath
-        const filteringPath: HierarchySearchPath = {
+        const searchPath: HierarchySearchPath = {
           // Path to the element "C"
           path: [elementKeys.a, elementKeys.b, elementKeys.c],
           options: {
@@ -537,7 +537,7 @@ describe("Hierarchies", () => {
           imodelAccess,
           hierarchyDefinition,
           search: {
-            paths: [filteringPath],
+            paths: [searchPath],
           },
         });
 

@@ -33,7 +33,7 @@ const provider: HierarchyProvider = {
   },
   async *getNodeInstanceKeys() {},
   setFormatter() {},
-  setHierarchyFilter() {},
+  setHierarchySearch() {},
   hierarchyChanged: new BeEvent(),
 };
 ```
@@ -153,7 +153,7 @@ class IModelHierarchyProvider implements HierarchyProvider {
   }
 
   public setFormatter() {}
-  public setHierarchyFilter() {}
+  public setHierarchySearch() {}
 }
 
 // The `using` keyword makes sure the provider is disposed when it goes out of scope
@@ -290,7 +290,7 @@ const provider: HierarchyProvider = {
     }
   },
   async *getNodeInstanceKeys() {},
-  setHierarchyFilter() {},
+  setHierarchySearch() {},
   setFormatter() {},
   hierarchyChanged: new BeEvent(),
 };
@@ -383,7 +383,7 @@ class FormattingHierarchyProvider implements HierarchyProvider {
     // Changing formatter requires a hierarchy reload - trigger the `hierarchyChanged` event to let components know
     this.hierarchyChanged.raiseEvent({ formatterChange: { newFormatter: this._formatter } });
   }
-  public setHierarchyFilter() {}
+  public setHierarchySearch() {}
 }
 
 const provider = new FormattingHierarchyProvider();
@@ -442,13 +442,13 @@ import { BeEvent } from "@itwin/core-bentley";
 import { HierarchyNode, HierarchyProvider } from "@itwin/presentation-hierarchies";
 import { Props } from "@itwin/presentation-shared";
 
-import { createHierarchyFilteringHelper, GenericNodeKey, HierarchyFilteringPath, HierarchyNodeIdentifier } from "@itwin/presentation-hierarchies";
+import { createHierarchySearchHelper, GenericNodeKey, HierarchyNodeIdentifier, HierarchySearchPath } from "@itwin/presentation-hierarchies";
 
 // A function that matches given string against authors and books, and returns hierarchy paths
 // from root to the matched node. This function must be aware of the hierarchy structure to know what paths
 // to create.
-async function createFilterPaths(filter: string): Promise<HierarchyFilteringPath[]> {
-  const results: HierarchyFilteringPath[] = [];
+async function createFilterPaths(filter: string): Promise<HierarchySearchPath[]> {
+  const results: HierarchySearchPath[] = [];
   const [matchingAuthors, matchingBooks] = await Promise.all([booksService.getAuthors({ name: filter }), booksService.getBooks({ title: filter })]);
   for (const author of matchingAuthors) {
     results.push([{ type: "generic", id: `author:${author.key}` }]);
@@ -477,14 +477,14 @@ import { BeEvent } from "@itwin/core-bentley";
 import { HierarchyNode, HierarchyProvider } from "@itwin/presentation-hierarchies";
 import { Props } from "@itwin/presentation-shared";
 
-import { createHierarchyFilteringHelper, GenericNodeKey, HierarchyFilteringPath, HierarchyNodeIdentifier } from "@itwin/presentation-hierarchies";
+import { createHierarchySearchHelper, GenericNodeKey, HierarchyNodeIdentifier, HierarchySearchPath } from "@itwin/presentation-hierarchies";
 
-let rootFilter: Props<HierarchyProvider["setHierarchyFilter"]>;
+let rootFilter: Props<HierarchyProvider["setHierarchySearch"]>;
 const hierarchyChanged = new BeEvent<EventListener<HierarchyProvider["hierarchyChanged"]>>();
 const provider: HierarchyProvider = {
   async *getNodes({ parentNode }) {
-    const filteringHelper = createHierarchyFilteringHelper(rootFilter?.paths, parentNode);
-    const targetNodeKeys = filteringHelper.getChildNodeFilteringIdentifiers();
+    const filteringHelper = createHierarchySearchHelper(rootFilter?.paths, parentNode);
+    const targetNodeKeys = filteringHelper.getChildNodeSearchIdentifiers();
     if (!parentNode) {
       // For root nodes, query authors and return nodes based on them
       const authors = await booksService.getAuthors(
@@ -537,12 +537,12 @@ const provider: HierarchyProvider = {
       }
     }
   },
-  setHierarchyFilter(props) {
+  setHierarchySearch(props) {
     // Here we receive all paths that we want to filter the hierarchy by. The paths start from root, so
     // we just store them in a variable to use later when querying root nodes.
     rootFilter = props;
     // Changing the filter requires a hierarchy reload - trigger the `hierarchyChanged` event to let components know
-    hierarchyChanged.raiseEvent({ filterChange: { newFilter: rootFilter } });
+    hierarchyChanged.raiseEvent({ searchChange: { newSearch: rootFilter } });
   },
   async *getNodeInstanceKeys() {},
   setFormatter() {},
@@ -562,7 +562,7 @@ With the above provider, we can now filter the books hierarchy by label:
 ```ts
 // Apply the filter "of" and traverse the filtered hierarchy. Notice that author node
 // of "The Fellowship of Ring" is included, even though it doesn't match the filter.
-provider.setHierarchyFilter({ paths: await createFilterPaths("of") });
+provider.setHierarchySearch({ paths: await createFilterPaths("of") });
 await traverseHierarchy(provider);
 // Output:
 // J.R.R. Tolkien
@@ -573,7 +573,7 @@ await traverseHierarchy(provider);
 
 // Apply the filter "tom" and traverse the filtered hierarchy. Notice that all books
 // of "Tom Clancy" are included, even though they don't match the filter.
-provider.setHierarchyFilter({ paths: await createFilterPaths("tom") });
+provider.setHierarchySearch({ paths: await createFilterPaths("tom") });
 await traverseHierarchy(provider);
 // Output:
 // Mark Twain
@@ -670,7 +670,7 @@ const provider: HierarchyProvider = {
       }
     }
   },
-  setHierarchyFilter() {},
+  setHierarchySearch() {},
   async *getNodeInstanceKeys() {},
   setFormatter() {},
   hierarchyChanged: new BeEvent(),
