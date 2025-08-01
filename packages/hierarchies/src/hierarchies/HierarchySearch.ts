@@ -8,7 +8,7 @@ import { HierarchyNodeIdentifier, HierarchyNodeIdentifiersPath } from "./Hierarc
 import { GenericNodeKey, HierarchyNodeKey, InstancesNodeKey } from "./HierarchyNodeKey.js";
 
 /** @public */
-export interface FilteringPathAutoExpandOption {
+export interface SearchPathAutoExpandOption {
   /**
    * Depth up to which nodes in the hierarchy should be expanded.
    *
@@ -34,21 +34,21 @@ export interface FilteringPathAutoExpandOption {
 }
 
 /** @public */
-export interface HierarchyFilteringPathOptions {
+export interface HierarchySearchPathOptions {
   /**
-   * This option specifies the way `autoExpand` flag should be assigned to nodes in the filtered hierarchy.
+   * This option specifies the way `autoExpand` flag should be assigned to nodes in the searched hierarchy.
    * - If it's `false` or `undefined`, nodes have no 'autoExpand' flag.
-   * - If it's `true`, then all nodes up to the filter target will have `autoExpand` flag.
-   * - If it's an instance of `FilteringPathAutoExpandOption`, then all nodes up to and including `depth` will have `autoExpand` flag.
+   * - If it's `true`, then all nodes up to the search target will have `autoExpand` flag.
+   * - If it's an instance of `SearchPathAutoExpandOption`, then all nodes up to and including `depth` will have `autoExpand` flag.
    */
-  autoExpand?: boolean | FilteringPathAutoExpandOption;
+  autoExpand?: boolean | SearchPathAutoExpandOption;
 }
 
-namespace HierarchyFilteringPathOptions {
+namespace HierarchySearchPathOptions {
   export function mergeAutoExpandOptions(
-    lhs: HierarchyFilteringPathOptions["autoExpand"],
-    rhs: HierarchyFilteringPathOptions["autoExpand"],
-  ): HierarchyFilteringPathOptions["autoExpand"] {
+    lhs: HierarchySearchPathOptions["autoExpand"],
+    rhs: HierarchySearchPathOptions["autoExpand"],
+  ): HierarchySearchPathOptions["autoExpand"] {
     if (rhs === true || lhs === true) {
       return true;
     }
@@ -70,18 +70,18 @@ namespace HierarchyFilteringPathOptions {
 }
 
 /**
- * A path of hierarchy node identifiers for filtering the hierarchy with additional options.
+ * A path of hierarchy node identifiers for Search the hierarchy with additional options.
  * @public
  */
-export type HierarchyFilteringPath = HierarchyNodeIdentifiersPath | { path: HierarchyNodeIdentifiersPath; options?: HierarchyFilteringPathOptions };
+export type HierarchySearchPath = HierarchyNodeIdentifiersPath | { path: HierarchyNodeIdentifiersPath; options?: HierarchySearchPathOptions };
 /** @public */
 // eslint-disable-next-line @typescript-eslint/no-redeclare
-export namespace HierarchyFilteringPath {
+export namespace HierarchySearchPath {
   /**
-   * Normalizes the hierarchy filtering path to the object form.
+   * Normalizes the hierarchy Search path to the object form.
    * @public
    */
-  export function normalize(source: HierarchyFilteringPath): Exclude<HierarchyFilteringPath, HierarchyNodeIdentifiersPath> {
+  export function normalize(source: HierarchySearchPath): Exclude<HierarchySearchPath, HierarchyNodeIdentifiersPath> {
     if (Array.isArray(source)) {
       return { path: source };
     }
@@ -89,7 +89,7 @@ export namespace HierarchyFilteringPath {
   }
 
   /**
-   * Merges two given `HierarchyFilteringPathOptions` objects.
+   * Merges two given `HierarchySearchPathOptions` objects.
    * - if both inputs are `undefined`, `undefined` is returned,
    * - else if one of the inputs is `undefined`, the other one is returned.
    * - else, merge each option individually.
@@ -105,102 +105,102 @@ export namespace HierarchyFilteringPath {
    * @public
    */
   export function mergeOptions(
-    lhs: HierarchyFilteringPathOptions | undefined,
-    rhs: HierarchyFilteringPathOptions | undefined,
-  ): HierarchyFilteringPathOptions | undefined {
+    lhs: HierarchySearchPathOptions | undefined,
+    rhs: HierarchySearchPathOptions | undefined,
+  ): HierarchySearchPathOptions | undefined {
     if (!lhs || !rhs) {
       return lhs ?? rhs;
     }
 
     return {
-      autoExpand: HierarchyFilteringPathOptions.mergeAutoExpandOptions(lhs.autoExpand, rhs.autoExpand),
+      autoExpand: HierarchySearchPathOptions.mergeAutoExpandOptions(lhs.autoExpand, rhs.autoExpand),
     };
   }
 }
 
 /**
- * An utility that extracts filtering properties from given root level filtering props or
- * the parent node. Returns `undefined` if filtering props are not present.
+ * An utility that extracts Search properties from given root level Search props or
+ * the parent node. Returns `undefined` if Search props are not present.
  * @public
- * @deprecated in 1.3. Use `createHierarchyFilteringHelper` instead.
+ * @deprecated in 1.3. Use `createHierarchySearchHelper` instead.
  */
 /* c8 ignore start */
-export function extractFilteringProps(
-  rootLevelFilteringProps: HierarchyFilteringPath[],
-  parentNode: Pick<NonGroupingHierarchyNode, "filtering"> | undefined,
+export function extractSearchProps(
+  rootLevelSearchProps: HierarchySearchPath[],
+  parentNode: Pick<NonGroupingHierarchyNode, "search"> | undefined,
 ):
   | {
-      filteredNodePaths: HierarchyFilteringPath[];
-      hasFilterTargetAncestor: boolean;
+      searchedNodePaths: HierarchySearchPath[];
+      hasSearchTargetAncestor: boolean;
     }
   | undefined {
-  return extractFilteringPropsInternal(rootLevelFilteringProps, parentNode);
+  return extractSearchPropsInternal(rootLevelSearchProps, parentNode);
 }
 /* c8 ignore end */
 
-function extractFilteringPropsInternal(
-  rootLevelFilteringProps: HierarchyFilteringPath[] | undefined,
-  parentNode: Pick<NonGroupingHierarchyNode, "filtering"> | undefined,
+function extractSearchPropsInternal(
+  rootLevelSearchProps: HierarchySearchPath[] | undefined,
+  parentNode: Pick<NonGroupingHierarchyNode, "search"> | undefined,
 ):
   | {
-      filteredNodePaths: HierarchyFilteringPath[];
-      hasFilterTargetAncestor: boolean;
+      searchedNodePaths: HierarchySearchPath[];
+      hasSearchTargetAncestor: boolean;
     }
   | undefined {
   if (!parentNode) {
-    return rootLevelFilteringProps ? { filteredNodePaths: rootLevelFilteringProps, hasFilterTargetAncestor: false } : undefined;
+    return rootLevelSearchProps ? { searchedNodePaths: rootLevelSearchProps, hasSearchTargetAncestor: false } : undefined;
   }
-  return parentNode.filtering?.filteredChildrenIdentifierPaths
+  return parentNode.search?.searchedChildrenIdentifierPaths
     ? {
-        filteredNodePaths: parentNode.filtering.filteredChildrenIdentifierPaths,
-        hasFilterTargetAncestor: !!parentNode.filtering.hasFilterTargetAncestor || !!parentNode.filtering.isFilterTarget,
+        searchedNodePaths: parentNode.search.searchedChildrenIdentifierPaths,
+        hasSearchTargetAncestor: !!parentNode.search.hasSearchTargetAncestor || !!parentNode.search.isSearchTarget,
       }
     : undefined;
 }
 
 /**
- * Creates a set of utilities for making it easier to filter the given hierarchy
+ * Creates a set of utilities for making it easier to search the given hierarchy
  * level.
  *
  * @public
  */
-export function createHierarchyFilteringHelper(
-  rootLevelFilteringProps: HierarchyFilteringPath[] | undefined,
-  parentNode: Pick<NonGroupingHierarchyNode, "filtering"> | undefined,
+export function createHierarchySearchHelper(
+  rootLevelSearchProps: HierarchySearchPath[] | undefined,
+  parentNode: Pick<NonGroupingHierarchyNode, "search"> | undefined,
 ) {
-  const filteringProps = extractFilteringPropsInternal(rootLevelFilteringProps, parentNode);
-  const hasFilter = !!filteringProps;
+  const searchProps = extractSearchPropsInternal(rootLevelSearchProps, parentNode);
+  const hasSearch = !!searchProps;
   return {
     /**
-     * Returns a flag indicating if the hierarchy level is filtered.
+     * Returns a flag indicating if the hierarchy level is searched.
      */
-    hasFilter,
+    hasSearch,
 
     /**
      * Returns a flag indicating whether this hierarchy level has an ancestor node
-     * that is a filter target. That generally means that this and all downstream hierarchy
-     * levels should be displayed without filter being applied to them, even if filter paths
+     * that is a search target. That generally means that this and all downstream hierarchy
+     * levels should be displayed without search being applied to them, even if search paths
      * say otherwise.
      */
-    hasFilterTargetAncestor: filteringProps?.hasFilterTargetAncestor ?? false,
+    hasSearchTargetAncestor: searchProps?.hasSearchTargetAncestor ?? false,
 
     /**
      * Returns a list of hierarchy node identifiers that apply specifically for this
-     * hierarchy level. Returns `undefined` if filtering is not applied to this level.
+     * hierarchy level. Returns `undefined` if Search is not applied to this level.
      */
-    getChildNodeFilteringIdentifiers: () => {
-      if (!hasFilter) {
+    getChildNodeSearchIdentifiers: () => {
+      if (!hasSearch) {
         return undefined;
       }
-      return filteringProps.filteredNodePaths
-        .map(HierarchyFilteringPath.normalize)
+      return searchProps.searchedNodePaths
+        .map(HierarchySearchPath.normalize)
         .filter(({ path }) => path.length > 0)
         .map(({ path }) => path[0]);
     },
 
     /**
-     * When a hierarchy node is created for a filtered hierarchy level, it needs some attributes (e.g. `filtering`
-     * and `autoExpand`) to be set based on the filter paths and filtering options. This function calculates
+     * When a hierarchy node is created for a searched hierarchy level, it needs some attributes (e.g. `Search`
+     * and `autoExpand`) to be set based on the search paths and Search options. This function calculates
      * these props for a child node based on its key or path matcher.
      *
      * When using `pathMatcher` prop, callers have more flexibility to decide whether the given `HierarchyNodeIdentifier` applies
@@ -216,12 +216,12 @@ export function createHierarchyFilteringHelper(
             pathMatcher: (identifier: HierarchyNodeIdentifier) => boolean;
           },
     ): NodeProps | undefined => {
-      if (!hasFilter) {
+      if (!hasSearch) {
         return undefined;
       }
-      const reducer = new MatchingFilteringPathsReducer(filteringProps?.hasFilterTargetAncestor);
-      filteringProps.filteredNodePaths.forEach((filteredPath) => {
-        const normalizedPath = HierarchyFilteringPath.normalize(filteredPath);
+      const reducer = new MatchingSearchPathsReducer(searchProps?.hasSearchTargetAncestor);
+      searchProps.searchedNodePaths.forEach((searchedPath) => {
+        const normalizedPath = HierarchySearchPath.normalize(searchedPath);
         if (
           "nodeKey" in props &&
           ((HierarchyNodeKey.isGeneric(props.nodeKey) && HierarchyNodeIdentifier.equal(normalizedPath.path[0], props.nodeKey)) ||
@@ -241,13 +241,13 @@ export function createHierarchyFilteringHelper(
     createChildNodePropsAsync: (props: {
       pathMatcher: (identifier: HierarchyNodeIdentifier) => boolean | Promise<boolean>;
     }): Promise<NodeProps | undefined> | NodeProps | undefined => {
-      if (!hasFilter) {
+      if (!hasSearch) {
         return undefined;
       }
-      const reducer = new MatchingFilteringPathsReducer(filteringProps?.hasFilterTargetAncestor);
-      const matchedPathPromises = new Array<Promise<NormalizedFilteringPath | undefined>>();
-      for (const filteredChildrenNodeIdentifierPath of filteringProps.filteredNodePaths) {
-        const normalizedPath = HierarchyFilteringPath.normalize(filteredChildrenNodeIdentifierPath);
+      const reducer = new MatchingSearchPathsReducer(searchProps?.hasSearchTargetAncestor);
+      const matchedPathPromises = new Array<Promise<NormalizedSearchPath | undefined>>();
+      for (const searchedChildrenNodeIdentifierPath of searchProps.searchedNodePaths) {
+        const normalizedPath = HierarchySearchPath.normalize(searchedChildrenNodeIdentifierPath);
         /* c8 ignore next 3 */
         if (normalizedPath.path.length === 0) {
           continue;
@@ -275,35 +275,35 @@ export function createHierarchyFilteringHelper(
 }
 
 /** @public */
-export type NodeProps = Pick<HierarchyNode, "autoExpand" | "filtering"> & { filtering?: { autoExpandDepth?: number; includeGroupingNodes?: boolean } };
+export type NodeProps = Pick<HierarchyNode, "autoExpand" | "search"> & { search?: { autoExpandDepth?: number; includeGroupingNodes?: boolean } };
 
-type NormalizedFilteringPath = ReturnType<(typeof HierarchyFilteringPath)["normalize"]>;
+type NormalizedSearchPath = ReturnType<(typeof HierarchySearchPath)["normalize"]>;
 
-class MatchingFilteringPathsReducer {
-  private _filteredChildrenIdentifierPaths = new Array<NormalizedFilteringPath>();
-  private _isFilterTarget = false;
-  private _filterTargetOptions = undefined as HierarchyFilteringPathOptions | undefined;
-  private _needsAutoExpand: HierarchyFilteringPathOptions["autoExpand"] = false;
+class MatchingSearchPathsReducer {
+  private _searchedChildrenIdentifierPaths = new Array<NormalizedSearchPath>();
+  private _isSearchTarget = false;
+  private _searchTargetOptions = undefined as HierarchySearchPathOptions | undefined;
+  private _needsAutoExpand: HierarchySearchPathOptions["autoExpand"] = false;
 
-  public constructor(private _hasFilterTargetAncestor: boolean) {}
+  public constructor(private _hasSearchTargetAncestor: boolean) {}
 
-  public accept({ path, options }: NormalizedFilteringPath) {
+  public accept({ path, options }: NormalizedSearchPath) {
     if (path.length === 1) {
-      this._isFilterTarget = true;
-      this._filterTargetOptions = HierarchyFilteringPath.mergeOptions(this._filterTargetOptions, options);
+      this._isSearchTarget = true;
+      this._searchTargetOptions = HierarchySearchPath.mergeOptions(this._searchTargetOptions, options);
     } else if (path.length > 1) {
-      this._filteredChildrenIdentifierPaths.push({ path: path.slice(1), options });
-      this._needsAutoExpand = HierarchyFilteringPathOptions.mergeAutoExpandOptions(options?.autoExpand, this._needsAutoExpand);
+      this._searchedChildrenIdentifierPaths.push({ path: path.slice(1), options });
+      this._needsAutoExpand = HierarchySearchPathOptions.mergeAutoExpandOptions(options?.autoExpand, this._needsAutoExpand);
     }
   }
   public getNodeProps(): NodeProps {
     return {
-      ...(this._hasFilterTargetAncestor || this._isFilterTarget || this._filteredChildrenIdentifierPaths.length > 0
+      ...(this._hasSearchTargetAncestor || this._isSearchTarget || this._searchedChildrenIdentifierPaths.length > 0
         ? {
-            filtering: {
-              ...(this._hasFilterTargetAncestor ? { hasFilterTargetAncestor: true } : undefined),
-              ...(this._isFilterTarget ? { isFilterTarget: true, filterTargetOptions: this._filterTargetOptions } : undefined),
-              ...(this._filteredChildrenIdentifierPaths.length > 0 ? { filteredChildrenIdentifierPaths: this._filteredChildrenIdentifierPaths } : undefined),
+            search: {
+              ...(this._hasSearchTargetAncestor ? { hasSearchTargetAncestor: true } : undefined),
+              ...(this._isSearchTarget ? { isSearchTarget: true, searchTargetOptions: this._searchTargetOptions } : undefined),
+              ...(this._searchedChildrenIdentifierPaths.length > 0 ? { searchedChildrenIdentifierPaths: this._searchedChildrenIdentifierPaths } : undefined),
               ...(this._needsAutoExpand && this._needsAutoExpand !== true
                 ? {
                     autoExpandDepth: this._needsAutoExpand.depth,

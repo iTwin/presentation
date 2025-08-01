@@ -33,7 +33,7 @@ const provider: HierarchyProvider = {
   },
   async *getNodeInstanceKeys() {},
   setFormatter() {},
-  setHierarchyFilter() {},
+  setHierarchySearch() {},
   hierarchyChanged: new BeEvent(),
 };
 ```
@@ -153,7 +153,7 @@ class IModelHierarchyProvider implements HierarchyProvider {
   }
 
   public setFormatter() {}
-  public setHierarchyFilter() {}
+  public setHierarchySearch() {}
 }
 
 // The `using` keyword makes sure the provider is disposed when it goes out of scope
@@ -290,7 +290,7 @@ const provider: HierarchyProvider = {
     }
   },
   async *getNodeInstanceKeys() {},
-  setHierarchyFilter() {},
+  setHierarchySearch() {},
   setFormatter() {},
   hierarchyChanged: new BeEvent(),
 };
@@ -383,7 +383,7 @@ class FormattingHierarchyProvider implements HierarchyProvider {
     // Changing formatter requires a hierarchy reload - trigger the `hierarchyChanged` event to let components know
     this.hierarchyChanged.raiseEvent({ formatterChange: { newFormatter: this._formatter } });
   }
-  public setHierarchyFilter() {}
+  public setHierarchySearch() {}
 }
 
 const provider = new FormattingHierarchyProvider();
@@ -421,13 +421,13 @@ console.log((await provider.getNodes().next()).value.label);
 
 <!-- END EXTRACTION -->
 
-## Implementing hierarchy filtering support
+## Implementing hierarchy search support
 
-> See more details about hierarchy filtering in the [Hierarchy filtering](./HierarchyFiltering.md) learning page.
+> See more details about hierarchy search in the [Hierarchy search](./HierarchySearch.md) learning page.
 
-For this example, let's use the books service defined in the [3rd party service-based hierarchy provider example](#3rd-party-service-based-hierarchy-provider-example) section and enhance the provider to support hierarchy filtering.
+For this example, let's use the books service defined in the [3rd party service-based hierarchy provider example](#3rd-party-service-based-hierarchy-provider-example) section and enhance the provider to support hierarchy search.
 
-As described in the [Hierarchy filtering](./HierarchyFiltering.md) learning page, the process of filtering a hierarchy has two major steps:
+As described in the [Hierarchy search](./HierarchySearch.md) learning page, the process of searching a hierarchy has two major steps:
 
 1. Determine node identifier paths for the target nodes.
 2. Given the node identifier paths, filter the hierarchy.
@@ -442,13 +442,13 @@ import { BeEvent } from "@itwin/core-bentley";
 import { HierarchyNode, HierarchyProvider } from "@itwin/presentation-hierarchies";
 import { Props } from "@itwin/presentation-shared";
 
-import { createHierarchyFilteringHelper, GenericNodeKey, HierarchyFilteringPath, HierarchyNodeIdentifier } from "@itwin/presentation-hierarchies";
+import { createHierarchySearchHelper, GenericNodeKey, HierarchyNodeIdentifier, HierarchySearchPath } from "@itwin/presentation-hierarchies";
 
 // A function that matches given string against authors and books, and returns hierarchy paths
 // from root to the matched node. This function must be aware of the hierarchy structure to know what paths
 // to create.
-async function createFilterPaths(filter: string): Promise<HierarchyFilteringPath[]> {
-  const results: HierarchyFilteringPath[] = [];
+async function createFilterPaths(filter: string): Promise<HierarchySearchPath[]> {
+  const results: HierarchySearchPath[] = [];
   const [matchingAuthors, matchingBooks] = await Promise.all([booksService.getAuthors({ name: filter }), booksService.getBooks({ title: filter })]);
   for (const author of matchingAuthors) {
     results.push([{ type: "generic", id: `author:${author.key}` }]);
@@ -465,9 +465,9 @@ async function createFilterPaths(filter: string): Promise<HierarchyFilteringPath
 
 <!-- END EXTRACTION -->
 
-There could be a number of ways to filter the hierarchy, such as by target instance identifier, by a complex query that uses multiple attributes, or simply by label. The above function filters the hierarchy by node label.
+There could be a number of ways to search the hierarchy, such as by target instance identifier, by a complex query that uses multiple attributes, or simply by label. The above function filters the hierarchy by node label.
 
-Now that we're able to find the paths, let's enhance our hierarchy provider to support filtering by them:
+Now that we're able to find the paths, let's enhance our hierarchy provider to support searching by them:
 
 <!-- [[include: [Presentation.Hierarchies.CustomHierarchyProviders.Imports, Presentation.Hierarchies.CustomHierarchyProviders.FilteringProviderImports, Presentation.Hierarchies.CustomHierarchyProviders.FilteringProviderExample.Provider], ts]] -->
 <!-- BEGIN EXTRACTION -->
@@ -477,14 +477,14 @@ import { BeEvent } from "@itwin/core-bentley";
 import { HierarchyNode, HierarchyProvider } from "@itwin/presentation-hierarchies";
 import { Props } from "@itwin/presentation-shared";
 
-import { createHierarchyFilteringHelper, GenericNodeKey, HierarchyFilteringPath, HierarchyNodeIdentifier } from "@itwin/presentation-hierarchies";
+import { createHierarchySearchHelper, GenericNodeKey, HierarchyNodeIdentifier, HierarchySearchPath } from "@itwin/presentation-hierarchies";
 
-let rootFilter: Props<HierarchyProvider["setHierarchyFilter"]>;
+let rootFilter: Props<HierarchyProvider["setHierarchySearch"]>;
 const hierarchyChanged = new BeEvent<EventListener<HierarchyProvider["hierarchyChanged"]>>();
 const provider: HierarchyProvider = {
   async *getNodes({ parentNode }) {
-    const filteringHelper = createHierarchyFilteringHelper(rootFilter?.paths, parentNode);
-    const targetNodeKeys = filteringHelper.getChildNodeFilteringIdentifiers();
+    const filteringHelper = createHierarchySearchHelper(rootFilter?.paths, parentNode);
+    const targetNodeKeys = filteringHelper.getChildNodeSearchIdentifiers();
     if (!parentNode) {
       // For root nodes, query authors and return nodes based on them
       const authors = await booksService.getAuthors(
@@ -537,12 +537,12 @@ const provider: HierarchyProvider = {
       }
     }
   },
-  setHierarchyFilter(props) {
+  setHierarchySearch(props) {
     // Here we receive all paths that we want to filter the hierarchy by. The paths start from root, so
     // we just store them in a variable to use later when querying root nodes.
     rootFilter = props;
     // Changing the filter requires a hierarchy reload - trigger the `hierarchyChanged` event to let components know
-    hierarchyChanged.raiseEvent({ filterChange: { newFilter: rootFilter } });
+    hierarchyChanged.raiseEvent({ searchChange: { newSearch: rootFilter } });
   },
   async *getNodeInstanceKeys() {},
   setFormatter() {},
@@ -552,9 +552,9 @@ const provider: HierarchyProvider = {
 
 <!-- END EXTRACTION -->
 
-The provider uses target instance keys that it gets through a filtering helper function to filter each hierarchy level. Because we already know exactly what we're looking for, we can effectively apply filtering at query time, rather than doing that on the client side.
+The provider uses target instance keys that it gets through a search helper function to search each hierarchy level. Because we already know exactly what we're looking for, we can effectively apply search at query time, rather than doing that on the client side.
 
-With the above provider, we can now filter the books hierarchy by label:
+With the above provider, we can now search the books hierarchy by label:
 
 <!-- [[include: [Presentation.Hierarchies.CustomHierarchyProviders.FilteringProviderExample.TraverseFiltered1, Presentation.Hierarchies.CustomHierarchyProviders.FilteringProviderExample.TraverseFiltered2], ts]] -->
 <!-- BEGIN EXTRACTION -->
@@ -562,7 +562,7 @@ With the above provider, we can now filter the books hierarchy by label:
 ```ts
 // Apply the filter "of" and traverse the filtered hierarchy. Notice that author node
 // of "The Fellowship of Ring" is included, even though it doesn't match the filter.
-provider.setHierarchyFilter({ paths: await createFilterPaths("of") });
+provider.setHierarchySearch({ paths: await createFilterPaths("of") });
 await traverseHierarchy(provider);
 // Output:
 // J.R.R. Tolkien
@@ -573,7 +573,7 @@ await traverseHierarchy(provider);
 
 // Apply the filter "tom" and traverse the filtered hierarchy. Notice that all books
 // of "Tom Clancy" are included, even though they don't match the filter.
-provider.setHierarchyFilter({ paths: await createFilterPaths("tom") });
+provider.setHierarchySearch({ paths: await createFilterPaths("tom") });
 await traverseHierarchy(provider);
 // Output:
 // Mark Twain
@@ -670,7 +670,7 @@ const provider: HierarchyProvider = {
       }
     }
   },
-  setHierarchyFilter() {},
+  setHierarchySearch() {},
   async *getNodeInstanceKeys() {},
   setFormatter() {},
   hierarchyChanged: new BeEvent(),
