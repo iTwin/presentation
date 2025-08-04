@@ -9,6 +9,9 @@ import renameSvg from "@stratakit/icons/rename.svg";
 import { Tree } from "@stratakit/structures";
 import { useLocalizationContext } from "./LocalizationContext.js";
 
+/**
+ * @alpha
+ */
 interface RenameActionProps {
   /**
    * Indicates if the action is inline.
