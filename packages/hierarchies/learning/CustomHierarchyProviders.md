@@ -421,6 +421,10 @@ console.log((await provider.getNodes().next()).value.label);
 
 <!-- END EXTRACTION -->
 
+## Hierarchy search and filtering
+
+Hierarchy filtering is divided into two types: full hierarchy filtering, called `search`, and level-specific filtering, referred to as `filtering`.
+
 ## Implementing hierarchy search support
 
 > See more details about hierarchy search in the [Hierarchy search](./HierarchySearch.md) learning page.
