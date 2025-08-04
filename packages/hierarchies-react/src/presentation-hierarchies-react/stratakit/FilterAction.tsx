@@ -43,15 +43,7 @@ export const FilterAction = memo(function FilterAction({
   }, [node, getHierarchyLevelDetails, onFilter]);
 
   if (!onFilter || !node.isFilterable) {
-    return reserveSpace ? (
-      <Tree.ItemAction
-        label={filterHierarchyLevel}
-        icon={filterSvg}
-        visible={false}
-        disabled
-        dot={node.isFiltered ? filterHierarchyLevelActiveDescription : undefined}
-      />
-    ) : undefined;
+    return reserveSpace ? <Tree.ItemAction label={filterHierarchyLevel} icon={filterSvg} visible={false} disabled /> : undefined;
   }
 
   return (

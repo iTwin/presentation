@@ -37,7 +37,7 @@ export const RenameAction = memo(function RenameAction({ reserveSpace }: RenameA
   }, [setIsRenaming]);
 
   if (!context?.onLabelChanged) {
-    return reserveSpace ? <Tree.ItemAction label={rename} onClick={handleClick} visible={false} disabled icon={renameSvg} /> : undefined;
+    return reserveSpace ? <Tree.ItemAction label={rename} icon={renameSvg} visible={false} disabled /> : undefined;
   }
 
   return <Tree.ItemAction label={rename} onClick={handleClick} icon={renameSvg} />;
