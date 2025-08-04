@@ -15,11 +15,13 @@ export type FilterActionProps = {
   /** Action to perform when the filter button is clicked for this node. */
   onFilter?: (hierarchyLevelDetails: HierarchyLevelDetails) => void;
   /**
-   * Indicates if the action is inline.
-   * Set to `true` to reserve space when not displayed.
-   * Leave `undefined` for menu items.
+   * Indicates that space for this action button should be reserved, even when the action is not available.
+   * For nodes that don't support filtering, `<FilterAction reserveSpace />` renders:
+   *
+   * - Blank space when the action is used as an inline action. It's recommended to set this prop to keep all action buttons of the same kind vertically aligned.
+   * - Disabled menu item when the action is used as a menu action.
    */
-  inline: true | undefined;
+  reserveSpace: true | undefined;
 } & Pick<TreeRendererProps, "getHierarchyLevelDetails">;
 
 /**
@@ -30,17 +32,10 @@ export const FilterAction = memo(function FilterAction({
   node,
   onFilter,
   getHierarchyLevelDetails,
-  inline,
+  reserveSpace,
 }: FilterActionProps & { node: PresentationHierarchyNode }) {
   const { localizedStrings } = useLocalizationContext();
   const { filterHierarchyLevel, filterHierarchyLevelActiveDescription } = localizedStrings;
-
-  const shouldShow = () => {
-    if (node.isFiltered) {
-      return true;
-    }
-    return undefined;
-  };
 
   const handleClick = useCallback(() => {
     const hierarchyLevelDetails = getHierarchyLevelDetails?.(node.id);
@@ -48,7 +43,7 @@ export const FilterAction = memo(function FilterAction({
   }, [node, getHierarchyLevelDetails, onFilter]);
 
   if (!onFilter || !node.isFilterable) {
-    return inline ? (
+    return reserveSpace ? (
       <Tree.ItemAction
         label={filterHierarchyLevel}
         icon={filterSvg}
@@ -64,7 +59,7 @@ export const FilterAction = memo(function FilterAction({
       label={filterHierarchyLevel}
       onClick={handleClick}
       icon={filterSvg}
-      visible={shouldShow()}
+      visible={node.isFiltered ? true : undefined}
       dot={node.isFiltered ? filterHierarchyLevelActiveDescription : undefined}
     />
   );

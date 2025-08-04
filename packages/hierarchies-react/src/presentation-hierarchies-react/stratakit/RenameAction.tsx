@@ -13,18 +13,20 @@ import { useLocalizationContext } from "./LocalizationContext.js";
  */
 interface RenameActionProps {
   /**
-   * Indicates if the action is inline.
-   * Set to `true` to reserve space when not displayed.
-   * Leave `undefined` for menu items.
+   * Indicates that space for this action button should be reserved, even when the action is not available.
+   * For nodes that don't support renaming, `<RenameAction reserveSpace />` renders:
+   *
+   * - Blank space when the action is used as an inline action. It's recommended to set this prop to keep all action buttons of the same kind vertically aligned.
+   * - Disabled menu item when the action is used as a menu action.
    */
-  inline?: true | undefined;
+  reserveSpace: true | undefined;
 }
 
 /**
  * React component that renders a rename action for a tree item.
  * @alpha
  */
-export const RenameAction = memo(function RenameAction({ inline }: RenameActionProps) {
+export const RenameAction = memo(function RenameAction({ reserveSpace }: RenameActionProps) {
   const { localizedStrings } = useLocalizationContext();
   const context = useRenameContext();
   const { rename } = localizedStrings;
@@ -35,7 +37,7 @@ export const RenameAction = memo(function RenameAction({ inline }: RenameActionP
   }, [setIsRenaming]);
 
   if (!context?.onLabelChanged) {
-    return inline ? <Tree.ItemAction label={rename} onClick={handleClick} visible={false} disabled icon={renameSvg} /> : undefined;
+    return reserveSpace ? <Tree.ItemAction label={rename} onClick={handleClick} visible={false} disabled icon={renameSvg} /> : undefined;
   }
 
   return <Tree.ItemAction label={rename} onClick={handleClick} icon={renameSvg} />;

@@ -12,8 +12,8 @@ export function TreeRendererWithFilterAction(props: TreeRendererProps) {
   const { getHierarchyLevelDetails, onFilterClick, getMenuActions: getActions, ...treeProps } = props;
   const getInlineActions = useCallback(
     (node: PresentationHierarchyNode) => [
-      <FilterAction key="filter" node={node} onFilter={onFilterClick} getHierarchyLevelDetails={getHierarchyLevelDetails} inline />,
-      <RenameAction key="rename" inline />,
+      <FilterAction key="filter" node={node} onFilter={onFilterClick} getHierarchyLevelDetails={getHierarchyLevelDetails} reserveSpace />,
+      <RenameAction key="rename" reserveSpace />,
     ],
     [onFilterClick, getHierarchyLevelDetails],
   );
