@@ -100,7 +100,7 @@ const filteringPath: HierarchyFilteringPath = {
   // Path to the element "C"
   path: [elementKeys.a, elementKeys.b, elementKeys.c],
   options: {
-    // Auto-expand the hierarchy up to the specified depth. In this case up to and including element "B"
+    // Auto-expand the hierarchy up to the specified depth. In this case up to element "B"
     autoExpand: { depthInPath: 2 },
   },
 };
