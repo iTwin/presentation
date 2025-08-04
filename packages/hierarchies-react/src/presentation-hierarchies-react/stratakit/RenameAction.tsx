@@ -4,15 +4,25 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { createContext, memo, PropsWithChildren, useCallback, useContext, useMemo, useState } from "react";
+import placeholderSvg from "@stratakit/icons/placeholder.svg";
 import renameSvg from "@stratakit/icons/rename.svg";
 import { Tree } from "@stratakit/structures";
 import { useLocalizationContext } from "./LocalizationContext.js";
+
+interface RenameActionProps {
+  /**
+   * Indicates if the action is inline.
+   * Set to `true` to reserve space when not displayed.
+   * Leave `undefined` for menu items.
+   */
+  inline?: true | undefined;
+}
 
 /**
  * React component that renders a rename action for a tree item.
  * @alpha
  */
-export const RenameAction = memo(function RenameAction() {
+export const RenameAction = memo(function RenameAction({ inline }: RenameActionProps) {
   const { localizedStrings } = useLocalizationContext();
   const context = useRenameContext();
   const { rename } = localizedStrings;
@@ -23,7 +33,7 @@ export const RenameAction = memo(function RenameAction() {
   }, [setIsRenaming]);
 
   if (!context?.onLabelChanged) {
-    return undefined;
+    return inline ? <Tree.ItemAction label="hidden-action" visible={false} icon={placeholderSvg} /> : undefined;
   }
 
   return <Tree.ItemAction label={rename} onClick={handleClick} icon={renameSvg} />;

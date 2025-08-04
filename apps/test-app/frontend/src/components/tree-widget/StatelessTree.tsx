@@ -184,6 +184,7 @@ function Tree({ imodel, imodelAccess, height, width }: { imodel: IModelConnectio
       <TreeRendererWithFilterAction
         {...treeProps.treeRendererProps}
         style={{ height: "100%", width: "100%" }}
+        getMenuActions={() => []}
         onFilterClick={setFilteringOptions}
         selectionMode={"extended"}
         getDecorations={getDecorations}

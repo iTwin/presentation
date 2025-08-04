@@ -9,15 +9,16 @@ import { FilterAction, PresentationHierarchyNode, RenameAction, StrataKitTreeRen
 type TreeRendererProps = ComponentPropsWithoutRef<typeof StrataKitTreeRenderer>;
 
 export function TreeRendererWithFilterAction(props: TreeRendererProps) {
-  const { getHierarchyLevelDetails, onFilterClick, getActions, ...treeProps } = props;
-  const getAllActions = useCallback(
+  const { getHierarchyLevelDetails, onFilterClick, getMenuActions: getActions, ...treeProps } = props;
+  const getInlineActions = useCallback(
     (node: PresentationHierarchyNode) => [
-      ...(getActions ? getActions(node) : []),
-      <FilterAction key="filter" node={node} onFilter={onFilterClick} getHierarchyLevelDetails={getHierarchyLevelDetails} />,
-      <RenameAction key="rename" />,
+      <FilterAction key="filter" node={node} onFilter={onFilterClick} getHierarchyLevelDetails={getHierarchyLevelDetails} inline />,
+      <RenameAction key="rename" inline />,
     ],
-    [getActions, onFilterClick, getHierarchyLevelDetails],
+    [onFilterClick, getHierarchyLevelDetails],
   );
+
+  const getMenuActions = useCallback((node: PresentationHierarchyNode) => (getActions ? getActions(node) : []), [getActions]);
   const getEditingProps = useCallback<Required<TreeRendererProps>["getEditingProps"]>((node) => {
     return {
       onLabelChanged: (newLabel: string) => {
@@ -31,7 +32,8 @@ export function TreeRendererWithFilterAction(props: TreeRendererProps) {
   return (
     <StrataKitTreeRenderer
       {...treeProps}
-      getActions={getAllActions}
+      getInlineActions={getInlineActions}
+      getMenuActions={getMenuActions}
       onFilterClick={onFilterClick}
       getHierarchyLevelDetails={getHierarchyLevelDetails}
       getEditingProps={getEditingProps}
