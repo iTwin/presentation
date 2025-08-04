@@ -4,7 +4,6 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { createContext, memo, PropsWithChildren, useCallback, useContext, useMemo, useState } from "react";
-import placeholderSvg from "@stratakit/icons/placeholder.svg";
 import renameSvg from "@stratakit/icons/rename.svg";
 import { Tree } from "@stratakit/structures";
 import { useLocalizationContext } from "./LocalizationContext.js";
@@ -36,7 +35,7 @@ export const RenameAction = memo(function RenameAction({ inline }: RenameActionP
   }, [setIsRenaming]);
 
   if (!context?.onLabelChanged) {
-    return inline ? <Tree.ItemAction label="hidden-action" visible={false} icon={placeholderSvg} /> : undefined;
+    return inline ? <Tree.ItemAction label={rename} onClick={handleClick} visible={false} disabled icon={renameSvg} /> : undefined;
   }
 
   return <Tree.ItemAction label={rename} onClick={handleClick} icon={renameSvg} />;

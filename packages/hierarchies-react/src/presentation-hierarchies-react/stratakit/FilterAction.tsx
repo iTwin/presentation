@@ -5,7 +5,6 @@
 
 import { memo, useCallback } from "react";
 import filterSvg from "@stratakit/icons/filter.svg";
-import placeholderSvg from "@stratakit/icons/placeholder.svg";
 import { Tree } from "@stratakit/structures";
 import { HierarchyLevelDetails, TreeRendererProps } from "../Renderers.js";
 import { PresentationHierarchyNode } from "../TreeNode.js";
@@ -49,7 +48,15 @@ export const FilterAction = memo(function FilterAction({
   }, [node, getHierarchyLevelDetails, onFilter]);
 
   if (!onFilter || !node.isFilterable) {
-    return inline ? <Tree.ItemAction label="hidden-action" visible={false} icon={placeholderSvg} /> : undefined;
+    return inline ? (
+      <Tree.ItemAction
+        label={filterHierarchyLevel}
+        icon={filterSvg}
+        visible={false}
+        disabled
+        dot={node.isFiltered ? filterHierarchyLevelActiveDescription : undefined}
+      />
+    ) : undefined;
   }
 
   return (
