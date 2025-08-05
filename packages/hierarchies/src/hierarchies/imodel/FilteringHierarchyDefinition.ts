@@ -59,7 +59,14 @@ export class FilteringHierarchyDefinition implements RxjsHierarchyDefinition {
 
   private shouldExpandGroupingNode(node: ProcessedGroupingHierarchyNode) {
     const nonGroupingParentNodesLength = node.parentKeys.filter((key) => !HierarchyNodeKey.isGrouping(key)).length;
-    const shouldBeExpanded = (autoExpand: HierarchyFilteringPathOptions["autoExpand"] & object): boolean => {
+    const shouldBeExpanded = (autoExpand: HierarchyFilteringPathOptions["autoExpand"]): boolean => {
+      if (!autoExpand) {
+        return false;
+      }
+      if (autoExpand === true) {
+        return true;
+      }
+
       // If grouping node's child has `autoExpandUntil` flag,
       // auto-expand the grouping node only if it's depth is lower than that of the grouping node in associated with the target.
       const nodeDepth =
@@ -85,22 +92,8 @@ export class FilteringHierarchyDefinition implements RxjsHierarchyDefinition {
         continue;
       }
 
-      if (child.filtering.isFilterTarget) {
-        const childAutoExpand = child.filtering.filterTargetOptions?.autoExpand;
-
-        // If child is a filter target and is has no `autoExpand` flag, then it's always to be expanded.
-        if (childAutoExpand === true) {
-          return true;
-        }
-
-        // If it's not an object and not `true`, then it's falsy - continue looking
-        if (typeof childAutoExpand !== "object") {
-          continue;
-        }
-
-        if (shouldBeExpanded(childAutoExpand)) {
-          return true;
-        }
+      if (child.filtering.isFilterTarget && shouldBeExpanded(child.filtering.filterTargetOptions?.autoExpand)) {
+        return true;
       }
 
       if (!child.filtering.filteredChildrenIdentifierPaths) {
@@ -109,13 +102,8 @@ export class FilteringHierarchyDefinition implements RxjsHierarchyDefinition {
       }
 
       for (const path of child.filtering.filteredChildrenIdentifierPaths) {
-        if ("path" in path && path.options?.autoExpand) {
-          if (path.options.autoExpand === true) {
-            return true;
-          }
-          if (shouldBeExpanded(path.options.autoExpand)) {
-            return true;
-          }
+        if ("path" in path && shouldBeExpanded(path.options?.autoExpand)) {
+          return true;
         }
       }
     }
