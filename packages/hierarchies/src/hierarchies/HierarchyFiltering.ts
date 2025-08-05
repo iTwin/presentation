@@ -89,7 +89,7 @@ export interface FilteringPathAutoExpandDepthInHierarchy {
    *
    * To get the correct depth use `HierarchyNode.parentKeys.length`.
    *
-   * **NOTE**: All nodes that are up to and including `depthInHierarchy` will be expanded. Node at the `depthInHierarchy` position will be expanded.
+   * **NOTE**: All nodes that are up to and including `depthInHierarchy` will be expanded.
    */
   depthInHierarchy: number;
 }
