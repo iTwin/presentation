@@ -1,5 +1,34 @@
 # @itwin/presentation-hierarchies-react
 
+## 2.0.0-alpha.26
+
+### Major Changes
+
+- [#1023](https://github.com/iTwin/presentation/pull/1023): Split `getActions` into `getMenuActions` & `getInlineActions` for `StrataKitTreeRenderer` and `StrataKitTreeNodeRenderer`.
+
+  Updated peer dependencies:
+
+  - @stratakit/bricks@0.3.3
+  - @stratakit/foundations@0.2.2
+  - @stratakit/structures@0.3.1
+
+  Added `reserveSpace` property to `FilterAction` and `RenameAction`, which reserves space for the action when it is not available
+
+### Minor Changes
+
+- [#1007](https://github.com/iTwin/presentation/pull/1007): Renames:
+  `FlatNode` => `FlatTreeNodeItem`
+  `FlatTreeNode` => `FlatTreeItem`
+  `PlaceholderNode` => `PlaceholderItem`
+  `useFlatTreeNodeList` => `useFlatTreeItems`
+
+  Changed `FlatTreeNodeItem` (previously `FlatNode`) to have property `node: PresentationHierarchyNode` instead of extending `PresentationHierarchyNode`.
+
+### Patch Changes
+
+- Updated dependencies:
+  - @itwin/presentation-hierarchies@2.0.0-alpha.2
+
 ## 2.0.0-alpha.25
 
 ### Patch Changes
