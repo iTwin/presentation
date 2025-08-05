@@ -61,9 +61,11 @@ export interface FilteringPathAutoExpandOption {
 /** @public */
 export interface FilteringPathAutoExpandDepthInPath {
   /**
-   * Depth up to which nodes in the filtering path should be expanded.
+   * Depth that tells which nodes in the filtering path should be expanded.
    *
    * Use when you want to expand up to specific instance node and don't care about grouping nodes.
+   *
+   * **NOTE**: All nodes that are up to `depthInPath` will be expanded. Node at the `depthInPath` position won't be expanded.
    */
   depthInPath: number;
 }
@@ -71,7 +73,7 @@ export interface FilteringPathAutoExpandDepthInPath {
 /** @public */
 export interface FilteringPathAutoExpandDepthInHierarchy {
   /**
-   * Depth up to which nodes in the hierarchy should be expanded.
+   * Depth that tells which nodes in the hierarchy should be expanded.
    *
    * This should take into account the number of grouping nodes in hierarchy.
    *
@@ -86,6 +88,8 @@ export interface FilteringPathAutoExpandDepthInHierarchy {
    * Then you provide `autoExpand: { depthInHierarchy: 2 }`
    *
    * To get the correct depth use `HierarchyNode.parentKeys.length`.
+   *
+   * **NOTE**: All nodes that are up to and including `depthInHierarchy` will be expanded.
    */
   depthInHierarchy: number;
 }
@@ -99,7 +103,7 @@ export interface HierarchyFilteringPathOptions {
    * - If it's an instance of `FilterTargetGroupingNodeInfo`, then all nodes up to the grouping node that matches this property,
    * will have `autoExpand` flag.
    * - If it's an instance of `FilteringPathAutoExpandOption`, then all nodes up to and including `depth` will have `autoExpand` flag.
-   * - If it's an instance of `FilteringPathAutoExpandDepthInPath`, then all nodes up to and including `depthInPath` will have `autoExpand` flag.
+   * - If it's an instance of `FilteringPathAutoExpandDepthInPath`, then all nodes up to `depthInPath` will have `autoExpand` flag.
    * - If it's an instance of `FilteringPathAutoExpandDepthInHierarchy`, then all nodes up to and including `depthInHierarchy` will have `autoExpand` flag.
    */
   autoExpand?:
@@ -390,7 +394,8 @@ class MatchingFilteringPathsReducer {
           : "depth" in this._autoExpandOption
             ? // eslint-disable-next-line @typescript-eslint/no-deprecated
               this._autoExpandOption.depth
-            : this._autoExpandOption.depthInPath;
+            : // With `depthInPath` option we don't want to expand node that is at the `depthInPath` position
+              this._autoExpandOption.depthInPath - 1;
 
       return parentLength < depth;
     }

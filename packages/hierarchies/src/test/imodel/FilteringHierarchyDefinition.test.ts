@@ -374,6 +374,26 @@ describe("FilteringHierarchyDefinition", () => {
       expect(node.autoExpand).to.be.undefined;
     });
 
+    it("doesn't set auto-expand when all filtered children paths autoExpand depthInPath is equal to node depth", async () => {
+      const paths: HierarchyFilteringPath[] = [
+        {
+          path: [
+            createTestInstanceKey({ id: "0x1", className: "TestSchema.TestName" }),
+            createTestInstanceKey({ id: "0x2", className: "TestSchema.TestName" }),
+          ],
+          options: { autoExpand: { depthInPath: 1 } },
+        },
+      ];
+      const filteringFactory = await createFilteringHierarchyDefinition({ nodeIdentifierPaths: paths });
+      const row = {
+        [NodeSelectClauseColumnNames.FullClassName]: "",
+        [ECSQL_COLUMN_NAME_FilterECInstanceId]: "0x2",
+        [ECSQL_COLUMN_NAME_FilterClassName]: "TestSchema.TestName",
+      };
+      const node = await firstValueFrom(filteringFactory.parseNode(row));
+      expect(node.autoExpand).to.be.undefined;
+    });
+
     it("doesn't set auto-expand when all filtered children paths autoExpand depth is less than parent keys length", async () => {
       const paths: HierarchyFilteringPath[] = [
         {
@@ -891,6 +911,118 @@ describe("FilteringHierarchyDefinition", () => {
         const filteringFactory = await createFilteringHierarchyDefinition();
         const result = await firstValueFrom(filteringFactory.postProcessNode(inputNode));
         expect(result.autoExpand).to.be.undefined;
+      });
+
+      it("doesn't set auto-expand when depthInPath is smaller than grouping node depth", async () => {
+        const groupingNode = createGroupingNode();
+        const inputNode: ProcessedGroupingHierarchyNode = {
+          ...groupingNode,
+          parentKeys: [createTestNodeKey()],
+          children: [
+            {
+              ...createTestProcessedInstanceNode(),
+              filtering: {
+                filteredChildrenIdentifierPaths: [
+                  {
+                    path: [createTestInstanceKey()],
+                    options: {
+                      autoExpand: {
+                        depthInPath: 1,
+                      },
+                    },
+                  },
+                ],
+              },
+            },
+          ],
+        };
+        const filteringFactory = await createFilteringHierarchyDefinition();
+        const result = await firstValueFrom(filteringFactory.postProcessNode(inputNode));
+        expect(result.autoExpand).to.be.undefined;
+      });
+
+      it("sets auto-expand when depthInPath is higher than grouping node depth", async () => {
+        const groupingNode = createGroupingNode();
+        const inputNode: ProcessedGroupingHierarchyNode = {
+          ...groupingNode,
+          parentKeys: [createTestNodeKey()],
+          children: [
+            {
+              ...createTestProcessedInstanceNode(),
+              filtering: {
+                filteredChildrenIdentifierPaths: [
+                  {
+                    path: [createTestInstanceKey()],
+                    options: {
+                      autoExpand: {
+                        depthInPath: 2,
+                      },
+                    },
+                  },
+                ],
+              },
+            },
+          ],
+        };
+        const filteringFactory = await createFilteringHierarchyDefinition();
+        const result = await firstValueFrom(filteringFactory.postProcessNode(inputNode));
+        expect(result.autoExpand).to.be.true;
+      });
+
+      it("doesn't set auto-expand when depthInHierarchy is smaller than grouping node depth", async () => {
+        const groupingNode = createGroupingNode();
+        const inputNode: ProcessedGroupingHierarchyNode = {
+          ...groupingNode,
+          parentKeys: [createTestNodeKey()],
+          children: [
+            {
+              ...createTestProcessedInstanceNode(),
+              filtering: {
+                filteredChildrenIdentifierPaths: [
+                  {
+                    path: [createTestInstanceKey()],
+                    options: {
+                      autoExpand: {
+                        depthInHierarchy: 1,
+                      },
+                    },
+                  },
+                ],
+              },
+            },
+          ],
+        };
+        const filteringFactory = await createFilteringHierarchyDefinition();
+        const result = await firstValueFrom(filteringFactory.postProcessNode(inputNode));
+        expect(result.autoExpand).to.be.undefined;
+      });
+
+      it("sets auto-expand when depthInHierarchy is higher than grouping node depth", async () => {
+        const groupingNode = createGroupingNode();
+        const inputNode: ProcessedGroupingHierarchyNode = {
+          ...groupingNode,
+          parentKeys: [createTestNodeKey()],
+          children: [
+            {
+              ...createTestProcessedInstanceNode(),
+              filtering: {
+                filteredChildrenIdentifierPaths: [
+                  {
+                    path: [createTestInstanceKey()],
+                    options: {
+                      autoExpand: {
+                        depthInHierarchy: 2,
+                      },
+                    },
+                  },
+                ],
+              },
+            },
+          ],
+        };
+        const filteringFactory = await createFilteringHierarchyDefinition();
+        const result = await firstValueFrom(filteringFactory.postProcessNode(inputNode));
+        expect(result.autoExpand).to.be.true;
       });
 
       it("sets auto-expand when node has hierarchy depth smaller than the filter target", async () => {

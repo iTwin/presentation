@@ -6,7 +6,7 @@
 import { defer, filter, from, map, merge, mergeAll, mergeMap, Observable, of, toArray } from "rxjs";
 import { Id64String } from "@itwin/core-bentley";
 import { ECClassHierarchyInspector, InstanceKey } from "@itwin/presentation-shared";
-import { createHierarchyFilteringHelper, HierarchyFilteringPath } from "../HierarchyFiltering.js";
+import { createHierarchyFilteringHelper, HierarchyFilteringPath, HierarchyFilteringPathOptions } from "../HierarchyFiltering.js";
 import { HierarchyNodeIdentifier } from "../HierarchyNodeIdentifier.js";
 import { HierarchyNodeKey, IModelInstanceKey } from "../HierarchyNodeKey.js";
 import {
@@ -57,65 +57,12 @@ export class FilteringHierarchyDefinition implements RxjsHierarchyDefinition {
     };
   }
 
-  private shouldExpandGroupingNode(node: ProcessedGroupingHierarchyNode) {
-    for (const child of node.children) {
-      /* c8 ignore next 3 */
-      if (!child.filtering) {
-        continue;
-      }
-
-      if (child.filtering.isFilterTarget) {
-        const childAutoExpand = child.filtering.filterTargetOptions?.autoExpand;
-
-        // If child is a filter target and is has no `autoExpand` flag, then it's always to be expanded.
-        if (childAutoExpand === true) {
-          return true;
-        }
-
-        // If it's not an object and not `true`, then it's falsy - continue looking
-        if (typeof childAutoExpand !== "object") {
-          continue;
-        }
-
-        // If grouping node's child has `autoExpandUntil` flag,
-        // auto-expand the grouping node only if it's depth is lower than that of the grouping node in associated with the target.
-        const nodeDepth =
-          // eslint-disable-next-line @typescript-eslint/no-deprecated
-          "key" in childAutoExpand || "depthInHierarchy" in childAutoExpand || (!("depthInPath" in childAutoExpand) && childAutoExpand.includeGroupingNodes)
-            ? node.parentKeys.length
-            : node.parentKeys.filter((key) => !HierarchyNodeKey.isGrouping(key)).length;
-        const filterTargetDepth =
-          "depth" in childAutoExpand
-            ? // eslint-disable-next-line @typescript-eslint/no-deprecated
-              childAutoExpand.depth
-            : "depthInPath" in childAutoExpand
-              ? childAutoExpand.depthInPath
-              : childAutoExpand.depthInHierarchy;
-        if (nodeDepth < filterTargetDepth) {
-          return true;
-        }
-      }
-
-      if (!child.filtering.filteredChildrenIdentifierPaths) {
-        /* c8 ignore next */
-        continue;
-      }
-
-      for (const path of child.filtering.filteredChildrenIdentifierPaths) {
-        if ("path" in path && path.options?.autoExpand) {
-          return true;
-        }
-      }
-    }
-    return false;
-  }
-
   public get postProcessNode(): RxjsNodePostProcessor {
     return (node) => {
       return (this._source.postProcessNode ? this._source.postProcessNode(node) : of(node)).pipe(
         map((processedNode) => {
           // instance nodes get the auto-expand flag in `parseNode`, but grouping ones need to be handled during post-processing
-          if (ProcessedHierarchyNode.isGroupingNode(node) && this.shouldExpandGroupingNode(node)) {
+          if (ProcessedHierarchyNode.isGroupingNode(node) && shouldExpandGroupingNode(node)) {
             Object.assign(processedNode, { autoExpand: true });
           }
           return processedNode;
@@ -342,4 +289,65 @@ export function applyECInstanceIdsSelector(def: InstanceNodesQueryDefinition): I
       `,
     },
   };
+}
+
+function shouldExpandGroupingNode(node: ProcessedGroupingHierarchyNode) {
+  const numberOfNonGroupingParentNodes = node.parentKeys.filter((key) => !HierarchyNodeKey.isGrouping(key)).length;
+  for (const child of node.children) {
+    /* c8 ignore next 3 */
+    if (!child.filtering) {
+      continue;
+    }
+
+    if (
+      child.filtering.isFilterTarget &&
+      getAutoExpandAsTrueFalse(child.filtering.filterTargetOptions?.autoExpand, numberOfNonGroupingParentNodes, node.parentKeys.length)
+    ) {
+      return true;
+    }
+
+    if (!child.filtering.filteredChildrenIdentifierPaths) {
+      /* c8 ignore next */
+      continue;
+    }
+
+    for (const path of child.filtering.filteredChildrenIdentifierPaths) {
+      if ("path" in path && getAutoExpandAsTrueFalse(path.options?.autoExpand, numberOfNonGroupingParentNodes, node.parentKeys.length)) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
+function getAutoExpandAsTrueFalse(
+  autoExpand: HierarchyFilteringPathOptions["autoExpand"],
+  numberOfNonGroupingParentNodes: number,
+  numberOfParentNodes: number,
+): boolean {
+  if (!autoExpand) {
+    return false;
+  }
+  if (autoExpand === true) {
+    return true;
+  }
+
+  // If grouping node's child has `autoExpandUntil` flag,
+  // auto-expand the grouping node only if it's depth is lower than that of the grouping node in associated with the target.
+  const nodeDepth =
+    // eslint-disable-next-line @typescript-eslint/no-deprecated
+    "key" in autoExpand || "depthInHierarchy" in autoExpand || (!("depthInPath" in autoExpand) && autoExpand.includeGroupingNodes)
+      ? numberOfParentNodes
+      : numberOfNonGroupingParentNodes;
+  const filterTargetDepth =
+    "depth" in autoExpand
+      ? // eslint-disable-next-line @typescript-eslint/no-deprecated
+        autoExpand.depth
+      : "depthInPath" in autoExpand
+        ? autoExpand.depthInPath
+        : autoExpand.depthInHierarchy;
+  if (nodeDepth < filterTargetDepth) {
+    return true;
+  }
+  return false;
 }

@@ -528,7 +528,7 @@ describe("Hierarchies", () => {
           // Path to the element "C"
           path: [elementKeys.a, elementKeys.b, elementKeys.c],
           options: {
-            // Auto-expand the hierarchy up to the specified depth. In this case up to and including element "B"
+            // Auto-expand the hierarchy up to the specified depth. In this case up to element "B"
             autoExpand: { depthInPath: 2 },
           },
         };
@@ -562,7 +562,6 @@ describe("Hierarchies", () => {
                     // B instance node. Has auto-expand flag.
                     nodeType: "instances",
                     label: "B",
-                    autoExpand: true,
                     children: [
                       {
                         // C grouping node. Doesn't have auto-expand flag.
