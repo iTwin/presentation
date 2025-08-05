@@ -47,7 +47,7 @@ interface ErrorItem {
 // @alpha
 export const FilterAction: NamedExoticComponent<    {
 onFilter?: (hierarchyLevelDetails: HierarchyLevelDetails) => void;
-reserveSpace: true | undefined;
+reserveSpace?: true;
 } & Pick<TreeRendererProps, "getHierarchyLevelDetails"> & {
 node: PresentationHierarchyNode;
 }>;
@@ -183,7 +183,7 @@ export const RenameAction: NamedExoticComponent<RenameActionProps>;
 
 // @alpha (undocumented)
 interface RenameActionProps {
-    reserveSpace: true | undefined;
+    reserveSpace?: true;
 }
 
 // @alpha (undocumented)

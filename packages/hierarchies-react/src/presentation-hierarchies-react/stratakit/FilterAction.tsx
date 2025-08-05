@@ -21,7 +21,7 @@ export type FilterActionProps = {
    * - Blank space when the action is used as an inline action. It's recommended to set this prop to keep all action buttons of the same kind vertically aligned.
    * - Disabled menu item when the action is used as a menu action.
    */
-  reserveSpace: true | undefined;
+  reserveSpace?: true;
 } & Pick<TreeRendererProps, "getHierarchyLevelDetails">;
 
 /**
