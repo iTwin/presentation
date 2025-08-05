@@ -6,8 +6,8 @@
 import "./TreeNodeRenderer.css";
 import cx from "classnames";
 import { ComponentPropsWithoutRef, forwardRef, LegacyRef, MutableRefObject, ReactElement, Ref, RefAttributes, useCallback, useEffect, useRef } from "react";
-import { SvgFilter, SvgFilterHollow, SvgRemove } from "@itwin/itwinui-icons-react";
-import { Anchor, ButtonGroup, Flex, IconButton, ProgressRadial, Text, TreeNode } from "@itwin/itwinui-react";
+import { SvgFilter, SvgFilterHollow, SvgMore, SvgRemove } from "@itwin/itwinui-icons-react";
+import { Anchor, ButtonGroup, DropdownMenu, Flex, IconButton, MenuItem, ProgressRadial, Text, TreeNode } from "@itwin/itwinui-react";
 import { HierarchyNode } from "@itwin/presentation-hierarchies";
 import { MAX_LIMIT_OVERRIDE } from "../internal/Utils.js";
 import { isPresentationHierarchyNode, PresentationHierarchyNode } from "../TreeNode.js";
@@ -17,6 +17,13 @@ import { RenderedTreeNode } from "./TreeRenderer.js";
 
 /** @public */
 type TreeNodeProps = ComponentPropsWithoutRef<typeof TreeNode>;
+
+/** @public */
+export interface TreeNodeActionDefinition {
+  label: string;
+  icon: ReactElement;
+  onClick: () => void;
+}
 
 /** @public */
 interface TreeNodeRendererOwnProps {
@@ -50,6 +57,10 @@ interface TreeNodeRendererOwnProps {
    * Default value: `show-on-hover`
    */
   filterButtonsVisibility?: "show-on-hover" | "hide";
+  /**
+   * Additional actions that should be rendered for specific hierarchy node.
+   */
+  getActions?: (node: PresentationHierarchyNode) => TreeNodeActionDefinition[];
 }
 
 /** @public */
@@ -83,6 +94,7 @@ export const TreeNodeRenderer: React.ForwardRefExoticComponent<TreeNodeRendererP
       reloadTree,
       size,
       filterButtonsVisibility,
+      getActions,
       ...treeNodeProps
     },
     forwardedRef,
@@ -110,6 +122,7 @@ export const TreeNodeRenderer: React.ForwardRefExoticComponent<TreeNodeRendererP
           actionButtonsClassName={actionButtonsClassName}
           getHierarchyLevelDetails={getHierarchyLevelDetails}
           filterButtonsVisibility={filterButtonsVisibility}
+          getActions={getActions}
         />
       );
     }
@@ -163,7 +176,11 @@ export const TreeNodeRenderer: React.ForwardRefExoticComponent<TreeNodeRendererP
 );
 TreeNodeRenderer.displayName = "TreeNodeRenderer";
 
-const HierarchyNodeRenderer = forwardRef<HTMLDivElement, Omit<TreeNodeRendererProps, "node" | "reloadTree" | "size"> & { node: PresentationHierarchyNode }>(
+type HierarchyNodeRendererProps = Omit<TreeNodeRendererProps, "node" | "reloadTree" | "size"> & {
+  node: PresentationHierarchyNode;
+};
+
+const HierarchyNodeRenderer = forwardRef<HTMLDivElement, HierarchyNodeRendererProps>(
   (
     {
       node,
@@ -179,23 +196,13 @@ const HierarchyNodeRenderer = forwardRef<HTMLDivElement, Omit<TreeNodeRendererPr
       actionButtonsClassName,
       getHierarchyLevelDetails,
       filterButtonsVisibility,
+      getActions,
       ...treeNodeProps
     },
     forwardedRef,
   ) => {
-    const { localizedStrings } = useLocalizationContext();
-    const applyFilterButtonRef = useRef<HTMLButtonElement>(null);
     const nodeRef = useRef<HTMLDivElement>(null);
     const ref = useMergedRefs(forwardedRef, nodeRef);
-
-    const prevIsFiltered = useRef(node.isFiltered);
-    useEffect(() => {
-      // If the node is filtered, focus the apply filter button
-      if (node.isFiltered && !prevIsFiltered.current) {
-        applyFilterButtonRef.current?.focus();
-      }
-      prevIsFiltered.current = node.isFiltered;
-    }, [node.isFiltered]);
 
     return (
       <TreeNode
@@ -218,39 +225,14 @@ const HierarchyNodeRenderer = forwardRef<HTMLDivElement, Omit<TreeNodeRendererPr
         label={getLabel ? getLabel(node) : node.label}
         sublabel={getSublabel ? getSublabel(node) : undefined}
       >
-        <ButtonGroup className={cx("action-buttons", actionButtonsClassName)}>
-          {getHierarchyLevelDetails && node.isFiltered ? (
-            <IconButton
-              className="filtering-action-button"
-              styleType="borderless"
-              size="small"
-              label={localizedStrings.clearHierarchyLevelFilter}
-              onClick={(e) => {
-                e.stopPropagation();
-                getHierarchyLevelDetails(node.id)?.setInstanceFilter(undefined);
-                applyFilterButtonRef.current?.focus();
-              }}
-            >
-              <SvgRemove />
-            </IconButton>
-          ) : null}
-          {onFilterClick && node.isFilterable && (filterButtonsVisibility !== "hide" || node.isFiltered) ? (
-            <IconButton
-              ref={applyFilterButtonRef}
-              className="filtering-action-button"
-              styleType="borderless"
-              size="small"
-              label={localizedStrings.filterHierarchyLevel}
-              onClick={(e) => {
-                e.stopPropagation();
-                const hierarchyLevelDetails = getHierarchyLevelDetails?.(node.id);
-                hierarchyLevelDetails && onFilterClick(hierarchyLevelDetails);
-              }}
-            >
-              {node.isFiltered ? <SvgFilter /> : <SvgFilterHollow />}
-            </IconButton>
-          ) : null}
-        </ButtonGroup>
+        <TreeNodeActions
+          node={node}
+          getHierarchyLevelDetails={getHierarchyLevelDetails}
+          onFilterClick={onFilterClick}
+          filterButtonsVisibility={filterButtonsVisibility}
+          actionButtonsClassName={actionButtonsClassName}
+          getActions={getActions}
+        />
       </TreeNode>
     );
   },
@@ -306,6 +288,89 @@ function ErrorNodeLabel({ message, onRetry }: { message: string; onRetry?: () =>
       <Text>{message}</Text>
       {onRetry ? <Anchor onClick={onRetry}>{localizedStrings?.retry}</Anchor> : null}
     </Flex>
+  );
+}
+
+function TreeNodeActions({
+  node,
+  getHierarchyLevelDetails,
+  onFilterClick,
+  filterButtonsVisibility,
+  actionButtonsClassName,
+  getActions,
+}: Pick<
+  HierarchyNodeRendererProps,
+  "node" | "actionButtonsClassName" | "getHierarchyLevelDetails" | "filterButtonsVisibility" | "getActions" | "onFilterClick"
+>) {
+  const { localizedStrings } = useLocalizationContext();
+  const applyFilterButtonRef = useRef<HTMLButtonElement>(null);
+  const prevIsFiltered = useRef(node.isFiltered);
+  useEffect(() => {
+    // If the node is filtered, focus the apply filter button
+    if (node.isFiltered && !prevIsFiltered.current) {
+      applyFilterButtonRef.current?.focus();
+    }
+    prevIsFiltered.current = node.isFiltered;
+  }, [node.isFiltered]);
+
+  const additionalButtons = getActions ? getActions(node) : [];
+  const isClearFilterVisible = getHierarchyLevelDetails && node.isFiltered;
+  const isFilterVisible = onFilterClick && node.isFilterable && (filterButtonsVisibility !== "hide" || node.isFiltered);
+
+  return (
+    <ButtonGroup className={cx("action-buttons", actionButtonsClassName)}>
+      {isClearFilterVisible ? (
+        <IconButton
+          styleType="borderless"
+          size="small"
+          label={localizedStrings.clearHierarchyLevelFilter}
+          onClick={(e) => {
+            e.stopPropagation();
+            getHierarchyLevelDetails(node.id)?.setInstanceFilter(undefined);
+            applyFilterButtonRef.current?.focus();
+          }}
+        >
+          <SvgRemove />
+        </IconButton>
+      ) : null}
+      {isFilterVisible ? (
+        <IconButton
+          ref={applyFilterButtonRef}
+          styleType="borderless"
+          size="small"
+          label={localizedStrings.filterHierarchyLevel}
+          onClick={(e) => {
+            e.stopPropagation();
+            const hierarchyLevelDetails = getHierarchyLevelDetails?.(node.id);
+            hierarchyLevelDetails && onFilterClick(hierarchyLevelDetails);
+          }}
+        >
+          {node.isFiltered ? <SvgFilter /> : <SvgFilterHollow />}
+        </IconButton>
+      ) : null}
+      {additionalButtons.length > 0 ? (
+        <DropdownMenu
+          menuItems={(close) =>
+            additionalButtons.map((button, index) => (
+              <MenuItem
+                key={index}
+                startIcon={button.icon}
+                onClick={() => {
+                  button.onClick();
+                  close();
+                }}
+              >
+                {button.label}
+              </MenuItem>
+            ))
+          }
+        >
+          <IconButton styleType="borderless" size="small" label={localizedStrings.more}>
+            <SvgMore />
+          </IconButton>
+        </DropdownMenu>
+      ) : null}
+    </ButtonGroup>
   );
 }
 

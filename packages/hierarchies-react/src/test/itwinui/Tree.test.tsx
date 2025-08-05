@@ -5,6 +5,7 @@
 
 import { expect } from "chai";
 import { ComponentPropsWithoutRef } from "react";
+import sinon from "sinon";
 import { MAX_LIMIT_OVERRIDE } from "../../presentation-hierarchies-react/internal/Utils.js";
 import { TreeRenderer } from "../../presentation-hierarchies-react/itwinui/TreeRenderer.js";
 import { PresentationHierarchyNode, PresentationInfoNode, PresentationTreeNode } from "../../presentation-hierarchies-react/TreeNode.js";
@@ -415,6 +416,38 @@ describe("Tree", () => {
     expect(queryByText("root-1")).to.not.be.null;
     await user.click(getByRole("button", { name: "Apply filter" }));
     expect(onFilterClick).to.be.calledOnceWith(hierarchyLevelDetails);
+  });
+
+  it("renders additional actions", async () => {
+    const rootNodes = createNodes([
+      {
+        id: "root-1",
+        isFilterable: true,
+      },
+    ]);
+
+    const hierarchyLevelDetails = {} as unknown as HierarchyLevelDetails;
+    getHierarchyLevelDetails.returns(hierarchyLevelDetails);
+
+    const actionSpy = sinon.spy();
+    const getActions: RequiredTreeProps["getActions"] = () => [
+      {
+        label: "Custom action",
+        onClick: actionSpy,
+        icon: <></>,
+      },
+    ];
+
+    const { user, getByRole, getByText, queryByText } = render(<TreeRenderer rootNodes={rootNodes} {...initialProps} getActions={getActions} />);
+
+    const moreButton = getByRole("button", { name: "More" });
+    await user.click(moreButton);
+    const actionButton = getByText("Custom action");
+    await user.click(actionButton);
+    expect(actionSpy).to.be.calledOnce;
+    await waitFor(() => {
+      expect(queryByText("Custom action")).to.be.null;
+    });
   });
 
   describe("`ResultSetTooLarge` node", () => {
