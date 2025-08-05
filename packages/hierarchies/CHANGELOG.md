@@ -1,5 +1,11 @@
 # @itwin/presentation-hierarchies
 
+## 1.7.1
+
+### Patch Changes
+
+- [#1024](https://github.com/iTwin/presentation/pull/1024): Update `depthInPath` documentation. Clarified that it does not set auto-expand for node that is at `depthInPath` position.
+
 ## 1.7.0
 
 ### Minor Changes
