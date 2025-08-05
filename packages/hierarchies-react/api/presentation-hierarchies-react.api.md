@@ -47,6 +47,7 @@ interface ErrorItem {
 // @alpha
 export const FilterAction: NamedExoticComponent<    {
 onFilter?: (hierarchyLevelDetails: HierarchyLevelDetails) => void;
+reserveSpace: true | undefined;
 } & Pick<TreeRendererProps, "getHierarchyLevelDetails"> & {
 node: PresentationHierarchyNode;
 }>;
@@ -178,7 +179,12 @@ interface ReloadTreeOptions {
 }
 
 // @alpha
-export const RenameAction: NamedExoticComponent<object>;
+export const RenameAction: NamedExoticComponent<RenameActionProps>;
+
+// @alpha (undocumented)
+interface RenameActionProps {
+    reserveSpace: true | undefined;
+}
 
 // @alpha (undocumented)
 export function RenameContextProvider({ onLabelChanged, children }: PropsWithChildren<{
@@ -266,9 +272,10 @@ type TreeNodeProps = ComponentPropsWithoutRef<typeof Tree.Item>;
 
 // @alpha (undocumented)
 interface TreeNodeRendererOwnProps {
-    getActions?: (node: PresentationHierarchyNode) => ReactNode[];
     getDecorations?: (node: PresentationHierarchyNode) => ReactNode;
+    getInlineActions?: (node: PresentationHierarchyNode) => ReactNode[];
     getLabel?: (node: PresentationHierarchyNode) => ReactElement | undefined;
+    getMenuActions?: (node: PresentationHierarchyNode) => ReactNode[];
     getSublabel?: (node: PresentationHierarchyNode) => ReactElement | undefined;
     node: PresentationHierarchyNode;
     onNodeClick?: (node: PresentationHierarchyNode, isSelected: boolean, event: React.MouseEvent<HTMLElement>) => void;

@@ -9,10 +9,24 @@ import { Tree } from "@stratakit/structures";
 import { useLocalizationContext } from "./LocalizationContext.js";
 
 /**
+ * @alpha
+ */
+interface RenameActionProps {
+  /**
+   * Indicates that space for this action button should be reserved, even when the action is not available.
+   * For nodes that don't support renaming, `<RenameAction reserveSpace />` renders:
+   *
+   * - Blank space when the action is used as an inline action. It's recommended to set this prop to keep all action buttons of the same kind vertically aligned.
+   * - Disabled menu item when the action is used as a menu action.
+   */
+  reserveSpace: true | undefined;
+}
+
+/**
  * React component that renders a rename action for a tree item.
  * @alpha
  */
-export const RenameAction = memo(function RenameAction() {
+export const RenameAction = memo(function RenameAction({ reserveSpace }: RenameActionProps) {
   const { localizedStrings } = useLocalizationContext();
   const context = useRenameContext();
   const { rename } = localizedStrings;
@@ -23,7 +37,7 @@ export const RenameAction = memo(function RenameAction() {
   }, [setIsRenaming]);
 
   if (!context?.onLabelChanged) {
-    return undefined;
+    return reserveSpace ? <Tree.ItemAction label={rename} icon={renameSvg} visible={false} disabled /> : undefined;
   }
 
   return <Tree.ItemAction label={rename} onClick={handleClick} icon={renameSvg} />;
