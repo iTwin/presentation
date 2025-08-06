@@ -1,5 +1,11 @@
 # @itwin/presentation-hierarchies-react
 
+## 2.0.0-alpha.27
+
+### Patch Changes
+
+- [#1026](https://github.com/iTwin/presentation/pull/1026): Fix `reserveSpace` property being required instead of optional for `FilterAction` and `RenameAction`.
+
 ## 2.0.0-alpha.26
 
 ### Major Changes
