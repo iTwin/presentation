@@ -1,5 +1,11 @@
 # @itwin/presentation-hierarchies-react
 
+## 1.9.0
+
+### Minor Changes
+
+- [#1027](https://github.com/iTwin/presentation/pull/1027): Added `getActions` property to `TreeRenderer` and `TreeNodeRenderer` to allow providing custom actions for tree nodes.
+
 ## 1.8.1
 
 ### Patch Changes
