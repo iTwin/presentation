@@ -72,6 +72,7 @@ interface LocalizedStrings {
     increaseHierarchyLimit: string;
     increaseHierarchyLimitWithFiltering: string;
     loading: string;
+    more: string;
     noFilteredChildren: string;
     resultLimitExceeded: string;
     resultLimitExceededWithFiltering: string;

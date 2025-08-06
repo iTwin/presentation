@@ -317,6 +317,52 @@ function TreeNodeActions({
   const isClearFilterVisible = getHierarchyLevelDetails && node.isFiltered;
   const isFilterVisible = onFilterClick && node.isFilterable && (filterButtonsVisibility !== "hide" || node.isFiltered);
 
+  const renderAdditionalActions = () => {
+    if (additionalButtons.length === 1) {
+      const button = additionalButtons[0];
+      return (
+        <IconButton
+          styleType="borderless"
+          size="small"
+          label={button.label}
+          onClick={(e) => {
+            e.stopPropagation();
+            button.onClick();
+          }}
+        >
+          {button.icon}
+        </IconButton>
+      );
+    }
+
+    if (additionalButtons.length > 1) {
+      return (
+        <DropdownMenu
+          menuItems={(close) =>
+            additionalButtons.map((button, index) => (
+              <MenuItem
+                key={index}
+                startIcon={button.icon}
+                onClick={() => {
+                  button.onClick();
+                  close();
+                }}
+              >
+                {button.label}
+              </MenuItem>
+            ))
+          }
+        >
+          <IconButton styleType="borderless" size="small" label={localizedStrings.more} onClick={(e) => e.stopPropagation()}>
+            <SvgMore />
+          </IconButton>
+        </DropdownMenu>
+      );
+    }
+
+    return null;
+  };
+
   return (
     <ButtonGroup className={cx("action-buttons", actionButtonsClassName)}>
       {isClearFilterVisible ? (
@@ -348,28 +394,7 @@ function TreeNodeActions({
           {node.isFiltered ? <SvgFilter /> : <SvgFilterHollow />}
         </IconButton>
       ) : null}
-      {additionalButtons.length > 0 ? (
-        <DropdownMenu
-          menuItems={(close) =>
-            additionalButtons.map((button, index) => (
-              <MenuItem
-                key={index}
-                startIcon={button.icon}
-                onClick={() => {
-                  button.onClick();
-                  close();
-                }}
-              >
-                {button.label}
-              </MenuItem>
-            ))
-          }
-        >
-          <IconButton styleType="borderless" size="small" label={localizedStrings.more}>
-            <SvgMore />
-          </IconButton>
-        </DropdownMenu>
-      ) : null}
+      {renderAdditionalActions()}
     </ButtonGroup>
   );
 }
