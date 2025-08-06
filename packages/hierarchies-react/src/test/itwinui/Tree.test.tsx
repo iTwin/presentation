@@ -418,7 +418,7 @@ describe("Tree", () => {
     expect(onFilterClick).to.be.calledOnceWith(hierarchyLevelDetails);
   });
 
-  it("renders additional actions", async () => {
+  it("renders single additional action inline", async () => {
     const rootNodes = createNodes([
       {
         id: "root-1",
@@ -438,15 +438,56 @@ describe("Tree", () => {
       },
     ];
 
+    const { user, getByRole } = render(<TreeRenderer rootNodes={rootNodes} {...initialProps} getActions={getActions} />);
+
+    const actionButton = getByRole("button", { name: "Custom action" });
+    await user.click(actionButton);
+    expect(actionSpy).to.be.calledOnce;
+  });
+
+  it("renders additional actions in dropdown menu", async () => {
+    const rootNodes = createNodes([
+      {
+        id: "root-1",
+        isFilterable: true,
+      },
+    ]);
+
+    const hierarchyLevelDetails = {} as unknown as HierarchyLevelDetails;
+    getHierarchyLevelDetails.returns(hierarchyLevelDetails);
+
+    const actionSpy1 = sinon.spy();
+    const actionSpy2 = sinon.spy();
+    const getActions: RequiredTreeProps["getActions"] = () => [
+      {
+        label: "Custom action 1",
+        onClick: actionSpy1,
+        icon: <></>,
+      },
+      {
+        label: "Custom action 2",
+        onClick: actionSpy2,
+        icon: <></>,
+      },
+    ];
+
     const { user, getByRole, getByText, queryByText } = render(<TreeRenderer rootNodes={rootNodes} {...initialProps} getActions={getActions} />);
 
     const moreButton = getByRole("button", { name: "More" });
     await user.click(moreButton);
-    const actionButton = getByText("Custom action");
-    await user.click(actionButton);
-    expect(actionSpy).to.be.calledOnce;
+    const actionButton1 = getByText("Custom action 1");
+    await user.click(actionButton1);
+    expect(actionSpy1).to.be.calledOnce;
     await waitFor(() => {
-      expect(queryByText("Custom action")).to.be.null;
+      expect(queryByText("Custom action 1")).to.be.null;
+    });
+
+    await user.click(moreButton);
+    const actionButton2 = getByText("Custom action 2");
+    await user.click(actionButton2);
+    expect(actionSpy2).to.be.calledOnce;
+    await waitFor(() => {
+      expect(queryByText("Custom action 2")).to.be.null;
     });
   });
 
