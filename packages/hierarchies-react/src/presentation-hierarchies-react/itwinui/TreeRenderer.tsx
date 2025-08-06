@@ -28,7 +28,7 @@ interface TreeRendererOwnProps {
 /** @public */
 type TreeRendererProps = Pick<ReturnType<typeof useTree>, "rootNodes" | "expandNode"> &
   Partial<Pick<ReturnType<typeof useTree>, "selectNodes" | "isNodeSelected" | "getHierarchyLevelDetails" | "reloadTree">> &
-  Pick<TreeNodeRendererProps, "onFilterClick" | "getIcon" | "getLabel" | "getSublabel" | "filterButtonsVisibility"> &
+  Pick<TreeNodeRendererProps, "onFilterClick" | "getIcon" | "getLabel" | "getSublabel" | "filterButtonsVisibility" | "getActions"> &
   TreeRendererOwnProps &
   Omit<TreeProps, "data" | "nodeRenderer" | "getNode" | "enableVirtualization"> &
   ComponentPropsWithoutRef<typeof LocalizationContextProvider>;
@@ -55,6 +55,7 @@ export function TreeRenderer({
   localizedStrings,
   size,
   filterButtonsVisibility,
+  getActions,
   ...treeProps
 }: TreeRendererProps) {
   const { onNodeClick, onNodeKeyDown } = useSelectionHandler({
@@ -78,6 +79,7 @@ export function TreeRenderer({
           getSublabel={getSublabel}
           reloadTree={reloadTree}
           size={size}
+          getActions={getActions}
         />
       );
     },
@@ -93,6 +95,7 @@ export function TreeRenderer({
       getSublabel,
       reloadTree,
       size,
+      getActions,
     ],
   );
 

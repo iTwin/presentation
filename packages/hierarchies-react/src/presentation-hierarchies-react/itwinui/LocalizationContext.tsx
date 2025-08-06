@@ -55,6 +55,11 @@ export interface LocalizedStrings {
    * Default value: `Retry`.
    */
   retry: string;
+  /**
+   * Label for more actions button.
+   * Default value: `More`.
+   */
+  more: string;
 }
 
 /** @internal */
@@ -72,6 +77,7 @@ const defaultLocalizedStrings: LocalizedStrings = {
   increaseHierarchyLimit: "<link>Increase the hierarchy level size limit to {{limit}}.</link>",
   increaseHierarchyLimitWithFiltering: "Or, <link>increase the hierarchy level size limit to {{limit}}.</link>",
   retry: "Retry",
+  more: "More",
 };
 
 const localizationContext = createContext<LocalizationContext>({ localizedStrings: defaultLocalizedStrings });
