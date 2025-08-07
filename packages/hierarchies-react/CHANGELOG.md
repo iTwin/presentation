@@ -1,5 +1,14 @@
 # @itwin/presentation-hierarchies-react
 
+## 2.0.0-alpha.28
+
+### Patch Changes
+
+- [#1031](https://github.com/iTwin/presentation/pull/1031): Version bump
+- Updated dependencies:
+  - @itwin/presentation-hierarchies@2.0.0-alpha.3
+  - @itwin/unified-selection@1.5.1-alpha.0
+
 ## 2.0.0-alpha.27
 
 ### Patch Changes

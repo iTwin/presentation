@@ -1,5 +1,11 @@
 # @itwin/unified-selection
 
+## 1.5.1-alpha.0
+
+### Patch Changes
+
+- [#1031](https://github.com/iTwin/presentation/pull/1031): Version bump
+
 ## 1.5.0
 
 ### Minor Changes
