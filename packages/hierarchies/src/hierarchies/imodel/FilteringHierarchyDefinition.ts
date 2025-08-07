@@ -332,28 +332,8 @@ function getAutoExpandAsTrueFalse(
     return true;
   }
 
-  // TODO: resolve merge conflicts
-  // // If grouping node's child has `autoExpandUntil` flag,
-  // // auto-expand the grouping node only if it's depth is lower than that of the grouping node in associated with the target.
-  // const nodeDepth =
-  //   // eslint-disable-next-line @typescript-eslint/no-deprecated
-  //   "key" in autoExpand || "depthInHierarchy" in autoExpand || (!("depthInPath" in autoExpand) && autoExpand.includeGroupingNodes)
-  //     ? numberOfParentNodes
-  //     : numberOfNonGroupingParentNodes;
-  // const filterTargetDepth =
-  //   "depth" in autoExpand
-  //     ? // eslint-disable-next-line @typescript-eslint/no-deprecated
-  //       autoExpand.depth
-  //     : "depthInPath" in autoExpand
-  //       ? autoExpand.depthInPath
-  //       : autoExpand.depthInHierarchy;
-  // If grouping node's child has `autoExpandUntil` flag,
-  // auto-expand the grouping node only if it's depth is lower than that of the grouping node in associated with the target.
+  // auto-expand should be set to true only if parentKeys length is smaller than depth.
   const nodeDepth = "depthInHierarchy" in autoExpand ? numberOfParentNodes : numberOfNonGroupingParentNodes;
   const filterTargetDepth = "depthInPath" in autoExpand ? autoExpand.depthInPath : autoExpand.depthInHierarchy;
-
-  if (nodeDepth < filterTargetDepth) {
-    return true;
-  }
-  return false;
+  return nodeDepth < filterTargetDepth;
 }

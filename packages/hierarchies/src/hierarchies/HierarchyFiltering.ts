@@ -49,7 +49,6 @@ export interface HierarchyFilteringPathOptions {
    * This option specifies the way `autoExpand` flag should be assigned to nodes in the filtered hierarchy.
    * - If it's `false` or `undefined`, nodes have no 'autoExpand' flag.
    * - If it's `true`, then all nodes up to the filter target will have `autoExpand` flag.
-   * - If it's an instance of `FilteringPathAutoExpandOption`, then all nodes up to and including `depth` will have `autoExpand` flag.
    * - If it's an instance of `FilteringPathAutoExpandDepthInPath`, then all nodes up to `depthInPath` will have `autoExpand` flag.
    * - If it's an instance of `FilteringPathAutoExpandDepthInHierarchy`, then all nodes up to and including `depthInHierarchy` will have `autoExpand` flag.
    */
@@ -68,15 +67,6 @@ namespace HierarchyFilteringPathOptions {
       return !!rhs ? rhs : lhs;
     }
 
-    // TODO: resolve merge conflict
-    // // eslint-disable-next-line @typescript-eslint/no-deprecated
-    // const lhsDepth = "depth" in lhs ? lhs.depth : "depthInPath" in lhs ? lhs.depthInPath : lhs.depthInHierarchy;
-    // // eslint-disable-next-line @typescript-eslint/no-deprecated
-    // const rhsDepth = "depth" in rhs ? rhs.depth : "depthInPath" in rhs ? rhs.depthInPath : rhs.depthInHierarchy;
-    // // eslint-disable-next-line @typescript-eslint/no-deprecated
-    // const isLhsDepthBasedOnPath = "depthInPath" in lhs ? true : !("key" in lhs) && !("depthInHierarchy" in lhs) && !lhs.includeGroupingNodes;
-    // // eslint-disable-next-line @typescript-eslint/no-deprecated
-    // const isRhsDepthBasedOnPath = "depthInPath" in rhs ? true : !("key" in rhs) && !("depthInHierarchy" in rhs) && !rhs.includeGroupingNodes;
     const lhsDepth = "depthInPath" in lhs ? lhs.depthInPath : lhs.depthInHierarchy;
     const rhsDepth = "depthInPath" in rhs ? rhs.depthInPath : rhs.depthInHierarchy;
     const isLhsDepthBasedOnPath = "depthInPath" in lhs;
@@ -326,24 +316,6 @@ class MatchingFilteringPathsReducer {
       return true;
     }
     if (typeof this._autoExpandOption === "object") {
-      // TODO: resolve merge conflict
-      // const parentLength = !parentNode
-      //   ? 0
-      //   : "key" in this._autoExpandOption ||
-      //       "depthInHierarchy" in this._autoExpandOption ||
-      //       // eslint-disable-next-line @typescript-eslint/no-deprecated
-      //       ("includeGroupingNodes" in this._autoExpandOption && this._autoExpandOption.includeGroupingNodes)
-      //     ? 1 + parentNode.parentKeys.length
-      //     : 1 + parentNode.parentKeys.filter((key) => !HierarchyNodeKey.isGrouping(key)).length;
-      // const depth =
-      //   "depthInHierarchy" in this._autoExpandOption
-      //     ? this._autoExpandOption.depthInHierarchy
-      //     : "depth" in this._autoExpandOption
-      //       ? // eslint-disable-next-line @typescript-eslint/no-deprecated
-      //         this._autoExpandOption.depth
-      //       : // With `depthInPath` option we don't want to expand node that is at the `depthInPath` position
-      //         this._autoExpandOption.depthInPath - 1;
-
       const parentLength = !parentNode
         ? 0
         : "depthInHierarchy" in this._autoExpandOption

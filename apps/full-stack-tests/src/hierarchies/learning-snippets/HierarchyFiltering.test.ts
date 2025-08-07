@@ -324,7 +324,7 @@ describe("Hierarchies", () => {
         ]);
       });
 
-      it("sets auto-expand flag to parent nodes of the filter target until specified depth when depth includes grouping nodes", async function () {
+      it("sets auto-expand flag to parent nodes of the filter target until specified depthInHierarchy", async function () {
         const imodelAccess = createIModelAccess(imodel);
         const queryClauseFactory = createNodesQueryClauseFactory({
           imodelAccess,
@@ -473,7 +473,7 @@ describe("Hierarchies", () => {
         ]);
       });
 
-      it("sets auto-expand flag to parent nodes of the filter target until specified depth", async function () {
+      it("sets auto-expand flag to parent nodes of the filter target until specified depthInPath", async function () {
         const imodelAccess = createIModelAccess(imodel);
         const queryClauseFactory = createNodesQueryClauseFactory({
           imodelAccess,
