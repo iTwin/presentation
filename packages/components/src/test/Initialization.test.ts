@@ -6,7 +6,7 @@
 import { expect } from "chai";
 import sinon from "sinon";
 import { PropertyValueRendererManager } from "@itwin/components-react";
-import { ITwinLocalization } from "@itwin/core-i18n";
+import { Localization } from "@itwin/core-common";
 import { Presentation } from "@itwin/presentation-frontend";
 import { initializeLocalization, initializePropertyValueRenderers } from "../presentation-components/Initialization.js";
 import { createStub } from "./TestUtils.js";
@@ -14,8 +14,8 @@ import { createStub } from "./TestUtils.js";
 describe("initializeLocalization", () => {
   it("registers and unregisters namespace", async () => {
     const i18n = {
-      registerNamespace: createStub<ITwinLocalization["registerNamespace"]>().resolves(),
-      unregisterNamespace: createStub<ITwinLocalization["unregisterNamespace"]>(),
+      registerNamespace: createStub<Localization["registerNamespace"]>().resolves(),
+      unregisterNamespace: createStub<Localization["unregisterNamespace"]>(),
     };
     sinon.stub(Presentation, "localization").get(() => i18n);
 
