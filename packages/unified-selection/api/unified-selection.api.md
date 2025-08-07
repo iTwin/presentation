@@ -11,7 +11,7 @@ import { Id64Arg } from '@itwin/core-bentley';
 import { Id64Set } from '@itwin/core-bentley';
 import { Id64String } from '@itwin/core-bentley';
 
-// @public
+// @public @deprecated
 export interface CachingHiliteSetProvider {
     [Symbol.dispose]?: () => void;
     // @deprecated
@@ -21,7 +21,7 @@ export interface CachingHiliteSetProvider {
     }): AsyncIterableIterator<HiliteSet>;
 }
 
-// @public
+// @public @deprecated
 interface CachingHiliteSetProviderProps {
     createHiliteSetProvider?: typeof createHiliteSetProvider;
     imodelProvider: (imodelKey: string) => ECClassHierarchyInspector & ECSqlQueryExecutor;
@@ -83,13 +83,16 @@ interface CoreSelectionSetEventUnsafe {
     type: number;
 }
 
-// @public
+// @public @deprecated
 export function createCachingHiliteSetProvider(props: CachingHiliteSetProviderProps): CachingHiliteSetProvider & {
     [Symbol.dispose]: () => void;
 };
 
 // @public
 export function createHiliteSetProvider(props: HiliteSetProviderProps): HiliteSetProvider;
+
+// @public
+export function createIModelHiliteSetProvider(props: IModelHiliteSetProviderProps): IModelHiliteSetProvider;
 
 // @public
 export function createStorage(): SelectionStorage;
@@ -113,6 +116,7 @@ export function enableUnifiedSelectionSyncWithIModel(props: EnableUnifiedSelecti
 // @public
 interface EnableUnifiedSelectionSyncWithIModelProps {
     activeScopeProvider: () => SelectionScope;
+    // @deprecated
     cachingHiliteSetProvider?: CachingHiliteSetProvider | (Omit<CachingHiliteSetProvider, "dispose"> & {
         [Symbol.dispose]: () => void;
     });
@@ -121,6 +125,7 @@ interface EnableUnifiedSelectionSyncWithIModelProps {
         readonly hiliteSet: CoreIModelHiliteSet;
         readonly selectionSet: CoreIModelSelectionSet;
     };
+    imodelHiliteSetProvider?: IModelHiliteSetProvider;
     selectionStorage: SelectionStorage;
 }
 
@@ -144,6 +149,24 @@ export interface HiliteSetProvider {
 // @public
 interface HiliteSetProviderProps {
     imodelAccess: ECClassHierarchyInspector & ECSqlQueryExecutor;
+}
+
+// @public
+export interface IModelHiliteSetProvider {
+    [Symbol.dispose]: () => void;
+    getCurrentHiliteSet(props: {
+        imodelKey: string;
+    }): AsyncIterableIterator<HiliteSet>;
+    getHiliteSetProvider(props: {
+        imodelKey: string;
+    }): HiliteSetProvider;
+}
+
+// @public
+interface IModelHiliteSetProviderProps {
+    createHiliteSetProvider?: typeof createHiliteSetProvider;
+    imodelProvider: (imodelKey: string) => ECClassHierarchyInspector & ECSqlQueryExecutor;
+    selectionStorage: SelectionStorage;
 }
 
 // @public (undocumented)

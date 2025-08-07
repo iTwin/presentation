@@ -7,8 +7,9 @@ import "./DisposePolyfill.js";
 import { EMPTY, firstValueFrom, from, map, merge, Observable, Subject, takeUntil, toArray } from "rxjs";
 import { Id64Arg, Id64Set } from "@itwin/core-bentley";
 import { ECClassHierarchyInspector, ECSqlQueryExecutor } from "@itwin/presentation-shared";
-import { CachingHiliteSetProvider, createCachingHiliteSetProvider } from "./CachingHiliteSetProvider.js";
+import { CachingHiliteSetProvider } from "./CachingHiliteSetProvider.js";
 import { createHiliteSetProvider, HiliteSet, HiliteSetProvider } from "./HiliteSetProvider.js";
+import { createIModelHiliteSetProvider, IModelHiliteSetProvider } from "./IModelHiliteSetProvider.js";
 import { SelectableInstanceKey, Selectables } from "./Selectable.js";
 import { StorageSelectionChangeEventArgs, StorageSelectionChangeType } from "./SelectionChangeEvent.js";
 import { computeSelection, SelectionScope } from "./SelectionScope.js";
@@ -63,6 +64,16 @@ export interface EnableUnifiedSelectionSyncWithIModelProps {
   activeScopeProvider: () => SelectionScope;
 
   /**
+   * An iModel hilite set provider used to retrieve hilite sets for different iModels. If not provided, a new `IModelHiliteSetProvider`
+   * will be created for the given iModel using the provided `imodelAccess`.
+   * If the consuming application already has a `IModelHiliteSetProvider` defined, it should be provided instead
+   * to reuse the cache and avoid creating new providers for each iModel.
+   *
+   * @see `createIModelHiliteSetProvider`
+   */
+  imodelHiliteSetProvider?: IModelHiliteSetProvider;
+
+  /**
    * A caching hilite set provider used to retrieve hilite sets for an iModel. If not provided, a new `CachingHiliteSetProvider`
    * will be created for the given iModel using the provided `imodelAccess`.
    * If the consuming application already has a `CachingHiliteSetProvider` defined, it should be provided instead
@@ -70,7 +81,14 @@ export interface EnableUnifiedSelectionSyncWithIModelProps {
    *
    * The type is defined in a way that makes it required for provider to have either the deprecated `dispose` or the
    * new `Symbol.dispose` method.
+   *
+   * **Warning:** When the given `CachingHiliteSetProvider` internally uses a custom `HiliteSetProvider`, the synchronization has
+   * no access to it, and thus uses its own, default, `HiliteSetProvider`. As a result, the synchronization may not work as expected.
+   * To alleviate this, the `imodelHiliteSetProvider` prop should be used instead.
+   *
+   * @deprecated in 1.5. Use `imodelHiliteSetProvider` prop instead.
    */
+  // eslint-disable-next-line @typescript-eslint/no-deprecated
   cachingHiliteSetProvider?: CachingHiliteSetProvider | (Omit<CachingHiliteSetProvider, "dispose"> & { [Symbol.dispose]: () => void });
 }
 
@@ -95,30 +113,47 @@ export class IModelSelectionHandler {
 
   private _imodelAccess: EnableUnifiedSelectionSyncWithIModelProps["imodelAccess"];
   private _selectionStorage: SelectionStorage;
-  private _hiliteSetProvider: HiliteSetProvider;
-  private _cachingHiliteSetProvider: NonNullable<EnableUnifiedSelectionSyncWithIModelProps["cachingHiliteSetProvider"]>;
+  private _imodelHiliteSetProvider: NonNullable<EnableUnifiedSelectionSyncWithIModelProps["imodelHiliteSetProvider"]>;
   private _activeScopeProvider: () => SelectionScope;
 
   private _isSuspended: boolean;
   private _cancelOngoingChanges = new Subject<void>();
   private _unregisterUnifiedSelectionListener: () => void;
   private _unregisterIModelSelectionSetListener: () => void;
-  private _hasCustomCachingHiliteSetProvider: boolean;
+  private _disposeInternalHiliteSetProvider: () => void;
 
   public constructor(props: EnableUnifiedSelectionSyncWithIModelProps & { hiliteSetProvider?: HiliteSetProvider }) {
     this._imodelAccess = props.imodelAccess;
     this._selectionStorage = props.selectionStorage;
     this._activeScopeProvider = props.activeScopeProvider;
     this._isSuspended = false;
-    this._hiliteSetProvider = props.hiliteSetProvider ?? createHiliteSetProvider({ imodelAccess: this._imodelAccess });
-    this._hasCustomCachingHiliteSetProvider = !!props.cachingHiliteSetProvider;
-    this._cachingHiliteSetProvider =
-      props.cachingHiliteSetProvider /* c8 ignore next */ ??
-      /* c8 ignore next 4 */ createCachingHiliteSetProvider({
+
+    [this._imodelHiliteSetProvider, this._disposeInternalHiliteSetProvider] = (() => {
+      if (props.imodelHiliteSetProvider) {
+        return [props.imodelHiliteSetProvider, () => {}];
+      }
+      // eslint-disable-next-line @typescript-eslint/no-deprecated
+      if (props.cachingHiliteSetProvider) {
+        return [
+          createIModelHiliteSetProviderFromCachingProvider(
+            // eslint-disable-next-line @typescript-eslint/no-deprecated
+            props.cachingHiliteSetProvider,
+            props.hiliteSetProvider ?? createHiliteSetProvider({ imodelAccess: props.imodelAccess }),
+          ),
+          // don't need to dispose anything, because our wrapper has no dispose logic, and `cachingHiliteSetProvider` should be disposed
+          // by whoever owns it
+          () => {},
+        ];
+      }
+      /* c8 ignore start */
+      const internalProvider = createIModelHiliteSetProvider({
         selectionStorage: this._selectionStorage,
         imodelProvider: () => this._imodelAccess,
-        createHiliteSetProvider: () => this._hiliteSetProvider,
+        createHiliteSetProvider: () => props.hiliteSetProvider ?? createHiliteSetProvider({ imodelAccess: props.imodelAccess }),
       });
+      return [internalProvider, () => safeDispose(internalProvider)];
+      /* c8 ignore end */
+    })();
 
     this._unregisterIModelSelectionSetListener = this._imodelAccess.selectionSet.onChanged.addListener(this.onIModelSelectionChanged);
     this._unregisterUnifiedSelectionListener = this._selectionStorage.selectionChangeEvent.addListener(this.onUnifiedSelectionChanged);
@@ -135,10 +170,7 @@ export class IModelSelectionHandler {
     this._cancelOngoingChanges.next();
     this._unregisterIModelSelectionSetListener();
     this._unregisterUnifiedSelectionListener();
-    /* c8 ignore next 3 */
-    if (!this._hasCustomCachingHiliteSetProvider) {
-      safeDispose(this._cachingHiliteSetProvider);
-    }
+    this._disposeInternalHiliteSetProvider();
   }
 
   /** Temporarily suspends tool selection synchronization until the returned disposable object is disposed. */
@@ -169,7 +201,7 @@ export class IModelSelectionHandler {
                 "clearAll",
         });
       case "add":
-        return void from(this._hiliteSetProvider.getHiliteSet({ selectables }))
+        return void from(this._imodelHiliteSetProvider.getHiliteSetProvider({ imodelKey: this._imodelAccess.key }).getHiliteSet({ selectables }))
           .pipe(takeUntil(this._cancelOngoingChanges))
           .subscribe({
             next: (set) => {
@@ -177,7 +209,7 @@ export class IModelSelectionHandler {
             },
           });
       case "remove":
-        return void from(this._hiliteSetProvider.getHiliteSet({ selectables }))
+        return void from(this._imodelHiliteSetProvider.getHiliteSetProvider({ imodelKey: this._imodelAccess.key }).getHiliteSet({ selectables }))
           .pipe(takeUntil(this._cancelOngoingChanges))
           .subscribe({
             next: (set) => {
@@ -213,7 +245,7 @@ export class IModelSelectionHandler {
       }
     }
 
-    from(this._cachingHiliteSetProvider.getHiliteSet({ imodelKey: this._imodelAccess.key }))
+    from(this._imodelHiliteSetProvider.getCurrentHiliteSet({ imodelKey: this._imodelAccess.key }))
       .pipe(takeUntil(this._cancelOngoingChanges))
       .subscribe({
         next: (ids) => {
@@ -330,3 +362,16 @@ function is5xSelectionSet(selectionSet: CoreIModelSelectionSet): selectionSet is
 } {
   return "active" in selectionSet;
 }
+
+/* c8 ignore start */
+function createIModelHiliteSetProviderFromCachingProvider(
+  cachingHiliteSetProvider: NonNullable<EnableUnifiedSelectionSyncWithIModelProps["cachingHiliteSetProvider"]>,
+  hiliteSetProvider: HiliteSetProvider,
+): IModelHiliteSetProvider {
+  return {
+    getHiliteSetProvider: () => hiliteSetProvider,
+    getCurrentHiliteSet: (props) => cachingHiliteSetProvider.getHiliteSet(props),
+    [Symbol.dispose]: () => {},
+  };
+}
+/* c8 ignore end */

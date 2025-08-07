@@ -88,9 +88,9 @@ const filteringPath: HierarchyFilteringPath = {
 
 <!-- END EXTRACTION -->
 
-Additionally, you might not want to add `autoExpand` flag to every node in `HierarchyFilteringPath`. For such cases hierarchies may be expanded up to desired depth, which can be achieved by setting the `autoExpand` property to `{ depth: number }`, where depth represents node's depth in the hierarchy excluding grouping nodes:
+Additionally, you might not want to add `autoExpand` flag to every node in `HierarchyFilteringPath`. For such cases hierarchies may be expanded up to desired depth, which can be achieved by setting the `autoExpand` property to `{ depthInPath: number }`, where `depthInPath` represents instance's index in the `path` array:
 
-<!-- [[include: [Presentation.Hierarchies.HierarchyFiltering.HierarchyFilteringPathImport, Presentation.Hierarchies.HierarchyFiltering.AutoExpandUntilDepthWithoutGrouping.FilteringPath], ts]] -->
+<!-- [[include: [Presentation.Hierarchies.HierarchyFiltering.HierarchyFilteringPathImport, Presentation.Hierarchies.HierarchyFiltering.AutoExpandUntilDepthInPath.FilteringPath], ts]] -->
 <!-- BEGIN EXTRACTION -->
 
 ```ts
@@ -100,31 +100,33 @@ const filteringPath: HierarchyFilteringPath = {
   // Path to the element "C"
   path: [elementKeys.a, elementKeys.b, elementKeys.c],
   options: {
-    // Auto-expand the hierarchy up to the specified depth. In this case up to and including element "B"
-    autoExpand: { depth: 2 },
+    // Auto-expand the hierarchy up to the specified depth. In this case up to element "B"
+    autoExpand: { depthInPath: 2 },
   },
 };
 ```
 
 <!-- END EXTRACTION -->
 
-Also, hierarchies may contain grouping nodes, which don't represent anything by themselves, which means they can't be a filter target. In some cases it may be necessary to auto-expand the hierarchy up to a desired grouping node (and not auto-expand grouping nodes below them), which can be achieved by setting the `autoExpand` property to `{ depth: number, includeGroupingNodes: true }`, where depth represents grouping node depth in the hierarchy:
+Also, hierarchies may contain grouping nodes, which don't represent anything by themselves, which means they can't be a filter target. In some cases it may be necessary to auto-expand the hierarchy up to a desired grouping node (and not auto-expand grouping nodes below them), which can be achieved by setting the `autoExpand` property to `{ depthInHierarchy: number }`, where depth represents grouping node depth in the hierarchy:
 
-<!-- [[include: [Presentation.Hierarchies.HierarchyFiltering.HierarchyFilteringPathImport, Presentation.Hierarchies.HierarchyFiltering.AutoExpandUntilDepthWithGrouping.FilteringPath], ts]] -->
+<!-- [[include: [Presentation.Hierarchies.HierarchyFiltering.HierarchyFilteringPathImport, Presentation.Hierarchies.HierarchyFiltering.AutoExpandUntilDepthInHierarchy.FilteringPath], ts]] -->
 <!-- BEGIN EXTRACTION -->
 
 ```ts
 import { HierarchyFilteringPath } from "@itwin/presentation-hierarchies";
 
-// Hierarchy has two grouping nodes under C element: one class grouping and one label grouping node.
-// Get grouping node that groups the "C" element and is the nearest grouping node to it
+// Hierarchy has this structure: A -> class grouping node -> label grouping node -> B -> class grouping node -> label grouping node -> C.
+// Hierarchy has two grouping nodes that group C element: one class grouping and one label grouping node.
+
+// Get label grouping node that groups the "C" element
 const groupingNode = await getSelectedGroupingNode();
 const filteringPath: HierarchyFilteringPath = {
   // Path to the element "C"
   path: [elementKeys.a, elementKeys.b, elementKeys.c],
   options: {
-    // Auto-expand the hierarchy up to the last grouping node. The `depth` attribute equals to the number of parents.
-    autoExpand: { includeGroupingNodes: true, depth: groupingNode.parentKeys.length },
+    // Auto-expand the hierarchy up to the last grouping node. The `depthInHierarchy` attribute equals to the number of parents.
+    autoExpand: { depthInHierarchy: groupingNode.parentKeys.length },
   },
 };
 ```

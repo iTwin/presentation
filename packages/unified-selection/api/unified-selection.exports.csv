@@ -1,14 +1,18 @@
 sep=;
 Release Tag;API Item Type;API Item Name
 public;interface;CachingHiliteSetProvider
+deprecated;interface;CachingHiliteSetProvider
 public;function;computeSelection
 public;function;createCachingHiliteSetProvider
+deprecated;function;createCachingHiliteSetProvider
 public;function;createHiliteSetProvider
+public;function;createIModelHiliteSetProvider
 public;function;createStorage
 public;interface;CustomSelectable
 public;function;enableUnifiedSelectionSyncWithIModel
 public;interface;HiliteSet
 public;interface;HiliteSetProvider
+public;interface;IModelHiliteSetProvider
 public;type;Selectable
 public;namespace;Selectable
 public;type;SelectableIdentifier
