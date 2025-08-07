@@ -324,7 +324,7 @@ describe("Hierarchies", () => {
         ]);
       });
 
-      it("sets auto-expand flag to parent nodes of the filter target until specified depth when depth includes grouping nodes", async function () {
+      it("sets auto-expand flag to parent nodes of the filter target until specified depthInHierarchy", async function () {
         const imodelAccess = createIModelAccess(imodel);
         const queryClauseFactory = createNodesQueryClauseFactory({
           imodelAccess,
@@ -390,16 +390,18 @@ describe("Hierarchies", () => {
           );
         }
 
-        // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.HierarchyFiltering.AutoExpandUntilDepthWithGrouping.FilteringPath
-        // Hierarchy has two grouping nodes under C element: one class grouping and one label grouping node.
-        // Get grouping node that groups the "C" element and is the nearest grouping node to it
+        // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.HierarchyFiltering.AutoExpandUntilDepthInHierarchy.FilteringPath
+        // Hierarchy has this structure: A -> class grouping node -> label grouping node -> B -> class grouping node -> label grouping node -> C.
+        // Hierarchy has two grouping nodes that group C element: one class grouping and one label grouping node.
+
+        // Get label grouping node that groups the "C" element
         const groupingNode = await getSelectedGroupingNode();
         const filteringPath: HierarchyFilteringPath = {
           // Path to the element "C"
           path: [elementKeys.a, elementKeys.b, elementKeys.c],
           options: {
-            // Auto-expand the hierarchy up to the last grouping node. The `depth` attribute equals to the number of parents.
-            autoExpand: { includeGroupingNodes: true, depth: groupingNode.parentKeys.length },
+            // Auto-expand the hierarchy up to the last grouping node. The `depthInHierarchy` attribute equals to the number of parents.
+            autoExpand: { depthInHierarchy: groupingNode.parentKeys.length },
           },
         };
         // __PUBLISH_EXTRACT_END__
@@ -471,7 +473,7 @@ describe("Hierarchies", () => {
         ]);
       });
 
-      it("sets auto-expand flag to parent nodes of the filter target until specified depth", async function () {
+      it("sets auto-expand flag to parent nodes of the filter target until specified depthInPath", async function () {
         const imodelAccess = createIModelAccess(imodel);
         const queryClauseFactory = createNodesQueryClauseFactory({
           imodelAccess,
@@ -521,13 +523,13 @@ describe("Hierarchies", () => {
           },
         };
 
-        // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.HierarchyFiltering.AutoExpandUntilDepthWithoutGrouping.FilteringPath
+        // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.HierarchyFiltering.AutoExpandUntilDepthInPath.FilteringPath
         const filteringPath: HierarchyFilteringPath = {
           // Path to the element "C"
           path: [elementKeys.a, elementKeys.b, elementKeys.c],
           options: {
-            // Auto-expand the hierarchy up to the specified depth. In this case up to and including element "B"
-            autoExpand: { depth: 2 },
+            // Auto-expand the hierarchy up to the specified depth. In this case up to element "B"
+            autoExpand: { depthInPath: 2 },
           },
         };
         // __PUBLISH_EXTRACT_END__
@@ -560,7 +562,6 @@ describe("Hierarchies", () => {
                     // B instance node. Has auto-expand flag.
                     nodeType: "instances",
                     label: "B",
-                    autoExpand: true,
                     children: [
                       {
                         // C grouping node. Doesn't have auto-expand flag.

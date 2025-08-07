@@ -8,19 +8,25 @@ import { HierarchyNodeIdentifier, HierarchyNodeIdentifiersPath } from "./Hierarc
 import { GenericNodeKey, HierarchyNodeKey, InstancesNodeKey } from "./HierarchyNodeKey.js";
 
 /** @public */
-export interface FilteringPathAutoExpandOption {
+export interface FilteringPathAutoExpandDepthInPath {
   /**
-   * Depth up to which nodes in the hierarchy should be expanded.
+   * Depth that tells which nodes in the filtering path should be expanded.
    *
-   * If `includeGroupingNodes` is set to true, then depth should take into account the number of grouping nodes in hierarchy.
+   * Use when you want to expand up to specific instance node and don't care about grouping nodes.
+   *
+   * **NOTE**: All nodes that are up to `depthInPath` will be expanded. Node at the `depthInPath` position won't be expanded.
    */
-  depth: number;
+  depthInPath: number;
+}
+
+/** @public */
+export interface FilteringPathAutoExpandDepthInHierarchy {
   /**
-   * Whether or not `depth` includes grouping nodes.
+   * Depth that tells which nodes in the hierarchy should be expanded.
    *
-   * Use when you want to autoExpand only some of the grouping nodes.
+   * This should take into account the number of grouping nodes in hierarchy.
    *
-   * **Use case example:**
+   * * **Use case example:**
    *
    * You want to `autoExpand` only `Node1` and `GroupingNode1` in the following hierarchy:
    * - Node1
@@ -28,9 +34,13 @@ export interface FilteringPathAutoExpandOption {
    *     - GroupingNode2
    *       - Element1
    *       - Element2
-   * Then you provide `autoExpand: { depth: 2, includeGroupingNodes: true }`
+   * Then you provide `autoExpand: { depthInHierarchy: 2 }`
+   *
+   * To get the correct depth use `HierarchyNode.parentKeys.length`.
+   *
+   * **NOTE**: All nodes that are up to and including `depthInHierarchy` will be expanded.
    */
-  includeGroupingNodes?: boolean;
+  depthInHierarchy: number;
 }
 
 /** @public */
@@ -39,9 +49,10 @@ export interface HierarchyFilteringPathOptions {
    * This option specifies the way `autoExpand` flag should be assigned to nodes in the filtered hierarchy.
    * - If it's `false` or `undefined`, nodes have no 'autoExpand' flag.
    * - If it's `true`, then all nodes up to the filter target will have `autoExpand` flag.
-   * - If it's an instance of `FilteringPathAutoExpandOption`, then all nodes up to and including `depth` will have `autoExpand` flag.
+   * - If it's an instance of `FilteringPathAutoExpandDepthInPath`, then all nodes up to `depthInPath` will have `autoExpand` flag.
+   * - If it's an instance of `FilteringPathAutoExpandDepthInHierarchy`, then all nodes up to and including `depthInHierarchy` will have `autoExpand` flag.
    */
-  autoExpand?: boolean | FilteringPathAutoExpandOption;
+  autoExpand?: boolean | FilteringPathAutoExpandDepthInHierarchy | FilteringPathAutoExpandDepthInPath;
 }
 
 namespace HierarchyFilteringPathOptions {
@@ -56,16 +67,21 @@ namespace HierarchyFilteringPathOptions {
       return !!rhs ? rhs : lhs;
     }
 
-    if (!lhs.includeGroupingNodes) {
-      if (!rhs.includeGroupingNodes) {
-        return lhs.depth > rhs.depth ? lhs : rhs;
+    const lhsDepth = "depthInPath" in lhs ? lhs.depthInPath : lhs.depthInHierarchy;
+    const rhsDepth = "depthInPath" in rhs ? rhs.depthInPath : rhs.depthInHierarchy;
+    const isLhsDepthBasedOnPath = "depthInPath" in lhs;
+    const isRhsDepthBasedOnPath = "depthInPath" in rhs;
+
+    if (isLhsDepthBasedOnPath) {
+      if (isRhsDepthBasedOnPath) {
+        return lhsDepth > rhsDepth ? lhs : rhs;
       }
       return lhs;
     }
-    if (!rhs.includeGroupingNodes) {
+    if (isRhsDepthBasedOnPath) {
       return rhs;
     }
-    return lhs.depth > rhs.depth ? lhs : rhs;
+    return lhsDepth > rhsDepth ? lhs : rhs;
   }
 }
 
@@ -99,8 +115,8 @@ export namespace HierarchyFilteringPath {
    * - else if only one of the inputs is an object, return it,
    * - else if both inputs are falsy, return `false` or `undefined`,
    * - else:
-   *    - if only one of the inputs has `includeGroupingNodes` set to `true` or `key` defined, return the one that has only `depth` set,
-   *    - else return the one with greater `depth`.
+   *    - if only one of the inputs has `includeGroupingNodes` set to `true` or `key` defined or `depthInHierarchy` set, return the other one,
+   *    - else return the one with greater `depth`, `depthInPath` or `depthInHierarchy`.
    *
    * @public
    */
@@ -166,7 +182,7 @@ function extractFilteringPropsInternal(
  */
 export function createHierarchyFilteringHelper(
   rootLevelFilteringProps: HierarchyFilteringPath[] | undefined,
-  parentNode: Pick<NonGroupingHierarchyNode, "filtering"> | undefined,
+  parentNode: Pick<NonGroupingHierarchyNode, "filtering" | "parentKeys"> | undefined,
 ) {
   const filteringProps = extractFilteringPropsInternal(rootLevelFilteringProps, parentNode);
   const hasFilter = !!filteringProps;
@@ -215,7 +231,7 @@ export function createHierarchyFilteringHelper(
         | {
             pathMatcher: (identifier: HierarchyNodeIdentifier) => boolean;
           },
-    ): NodeProps | undefined => {
+    ): Pick<HierarchyNode, "autoExpand" | "filtering"> | undefined => {
       if (!hasFilter) {
         return undefined;
       }
@@ -232,7 +248,7 @@ export function createHierarchyFilteringHelper(
           reducer.accept(normalizedPath);
         }
       });
-      return reducer.getNodeProps();
+      return reducer.getNodeProps(parentNode);
     },
 
     /**
@@ -240,7 +256,7 @@ export function createHierarchyFilteringHelper(
      */
     createChildNodePropsAsync: (props: {
       pathMatcher: (identifier: HierarchyNodeIdentifier) => boolean | Promise<boolean>;
-    }): Promise<NodeProps | undefined> | NodeProps | undefined => {
+    }): Promise<Pick<HierarchyNode, "autoExpand" | "filtering"> | undefined> | Pick<HierarchyNode, "autoExpand" | "filtering"> | undefined => {
       if (!hasFilter) {
         return undefined;
       }
@@ -265,17 +281,14 @@ export function createHierarchyFilteringHelper(
         reducer.accept(normalizedPath);
       }
       if (matchedPathPromises.length === 0) {
-        return reducer.getNodeProps();
+        return reducer.getNodeProps(parentNode);
       }
       return Promise.all(matchedPathPromises)
         .then((matchedPath) => matchedPath.forEach((normalizedPath) => normalizedPath && reducer.accept(normalizedPath)))
-        .then(() => reducer.getNodeProps());
+        .then(() => reducer.getNodeProps(parentNode));
     },
   };
 }
-
-/** @public */
-export type NodeProps = Pick<HierarchyNode, "autoExpand" | "filtering"> & { filtering?: { autoExpandDepth?: number; includeGroupingNodes?: boolean } };
 
 type NormalizedFilteringPath = ReturnType<(typeof HierarchyFilteringPath)["normalize"]>;
 
@@ -283,20 +296,43 @@ class MatchingFilteringPathsReducer {
   private _filteredChildrenIdentifierPaths = new Array<NormalizedFilteringPath>();
   private _isFilterTarget = false;
   private _filterTargetOptions = undefined as HierarchyFilteringPathOptions | undefined;
-  private _needsAutoExpand: HierarchyFilteringPathOptions["autoExpand"] = false;
+  private _autoExpandOption: HierarchyFilteringPathOptions["autoExpand"] = false;
 
   public constructor(private _hasFilterTargetAncestor: boolean) {}
 
-  public accept({ path, options }: NormalizedFilteringPath) {
+  public accept(normalizedPath: NormalizedFilteringPath): void {
+    const { path, options } = normalizedPath;
     if (path.length === 1) {
       this._isFilterTarget = true;
       this._filterTargetOptions = HierarchyFilteringPath.mergeOptions(this._filterTargetOptions, options);
     } else if (path.length > 1) {
       this._filteredChildrenIdentifierPaths.push({ path: path.slice(1), options });
-      this._needsAutoExpand = HierarchyFilteringPathOptions.mergeAutoExpandOptions(options?.autoExpand, this._needsAutoExpand);
+      this._autoExpandOption = HierarchyFilteringPathOptions.mergeAutoExpandOptions(options?.autoExpand, this._autoExpandOption);
     }
   }
-  public getNodeProps(): NodeProps {
+
+  private getNeedsAutoExpand(parentNode: Pick<NonGroupingHierarchyNode, "parentKeys"> | undefined): boolean {
+    if (this._autoExpandOption === true) {
+      return true;
+    }
+    if (typeof this._autoExpandOption === "object") {
+      const parentLength = !parentNode
+        ? 0
+        : "depthInHierarchy" in this._autoExpandOption
+          ? 1 + parentNode.parentKeys.length
+          : 1 + parentNode.parentKeys.filter((key) => !HierarchyNodeKey.isGrouping(key)).length;
+      const depth =
+        "depthInHierarchy" in this._autoExpandOption
+          ? this._autoExpandOption.depthInHierarchy
+          : // With `depthInPath` option we don't want to expand node that is at the `depthInPath` position
+            this._autoExpandOption.depthInPath - 1;
+
+      return parentLength < depth;
+    }
+    return false;
+  }
+
+  public getNodeProps(parentNode: Pick<NonGroupingHierarchyNode, "parentKeys"> | undefined): Pick<HierarchyNode, "autoExpand" | "filtering"> {
     return {
       ...(this._hasFilterTargetAncestor || this._isFilterTarget || this._filteredChildrenIdentifierPaths.length > 0
         ? {
@@ -304,16 +340,10 @@ class MatchingFilteringPathsReducer {
               ...(this._hasFilterTargetAncestor ? { hasFilterTargetAncestor: true } : undefined),
               ...(this._isFilterTarget ? { isFilterTarget: true, filterTargetOptions: this._filterTargetOptions } : undefined),
               ...(this._filteredChildrenIdentifierPaths.length > 0 ? { filteredChildrenIdentifierPaths: this._filteredChildrenIdentifierPaths } : undefined),
-              ...(this._needsAutoExpand && this._needsAutoExpand !== true
-                ? {
-                    autoExpandDepth: this._needsAutoExpand.depth,
-                    includeGroupingNodes: this._needsAutoExpand.includeGroupingNodes ? true : false,
-                  }
-                : undefined),
             },
           }
         : undefined),
-      ...(this._needsAutoExpand ? { autoExpand: !!this._needsAutoExpand } : undefined),
+      ...(this.getNeedsAutoExpand(parentNode) ? { autoExpand: true } : undefined),
     };
   }
 }

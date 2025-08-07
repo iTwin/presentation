@@ -6,14 +6,14 @@
 import { expect } from "chai";
 import { createAsyncIterator, ResolvablePromise, waitFor } from "presentation-test-utilities";
 import sinon from "sinon";
-import { BeEvent, Id64Arg } from "@itwin/core-bentley";
-import { ECSqlQueryDef, ECSqlQueryExecutor, ECSqlQueryReaderOptions, ECSqlQueryRow } from "@itwin/presentation-shared";
+import { BeEvent, BeUiEvent, Id64Arg } from "@itwin/core-bentley";
+import { ECSqlQueryDef, ECSqlQueryExecutor, ECSqlQueryReaderOptions, ECSqlQueryRow, EventArgs } from "@itwin/presentation-shared";
 import {
   enableUnifiedSelectionSyncWithIModel,
   EnableUnifiedSelectionSyncWithIModelProps,
   IModelSelectionHandler,
 } from "../unified-selection/EnableUnifiedSelectionSyncWithIModel.js";
-import { HiliteSet } from "../unified-selection/HiliteSetProvider.js";
+import { HiliteSet, HiliteSetProvider } from "../unified-selection/HiliteSetProvider.js";
 import { Selectable, SelectableInstanceKey, Selectables } from "../unified-selection/Selectable.js";
 import { StorageSelectionChangesListener, StorageSelectionChangeType } from "../unified-selection/SelectionChangeEvent.js";
 import { createStorage, SelectionStorage } from "../unified-selection/SelectionStorage.js";
@@ -78,7 +78,8 @@ describe("enableUnifiedSelectionSyncWithIModel", () => {
 
 describe("IModelSelectionHandler", () => {
   const imodelHiliteSetProvider = {
-    getHiliteSet: sinon.stub<[{ imodelKey: string }], AsyncIterableIterator<HiliteSet>>(),
+    getHiliteSetProvider: sinon.stub<[{ imodelKey: string }], HiliteSetProvider>(),
+    getCurrentHiliteSet: sinon.stub<[{ imodelKey: string }], AsyncIterableIterator<HiliteSet>>(),
     [Symbol.dispose]: sinon.stub(),
   };
 
@@ -94,7 +95,7 @@ describe("IModelSelectionHandler", () => {
       clearSelection: sinon.spy(),
       getSelection: sinon.stub<[{ imodelKey: string }], Selectables>().returns({ custom: new Map(), instanceKeys: new Map() }),
       getSelectionLevels: sinon.stub<[{ imodelKey: string }], number[]>().returns([]),
-      selectionChangeEvent: new BeEvent(),
+      selectionChangeEvent: new BeUiEvent<EventArgs<SelectionStorage["selectionChangeEvent"]>>(),
       clearStorage: sinon.stub<[{ imodelKey: string }], void>(),
     };
     return {
@@ -195,17 +196,19 @@ describe("IModelSelectionHandler", () => {
   }
 
   function resetStubs(resettable?: Array<{ resetHistory: () => void }>) {
-    imodelHiliteSetProvider.getHiliteSet.reset();
-    imodelHiliteSetProvider.getHiliteSet.callsFake(async function* () {});
-
     hiliteSetProvider.getHiliteSet.reset();
     hiliteSetProvider.getHiliteSet.callsFake(async function* () {});
+
+    imodelHiliteSetProvider.getHiliteSetProvider.reset();
+    imodelHiliteSetProvider.getHiliteSetProvider.returns(hiliteSetProvider as unknown as HiliteSetProvider);
+    imodelHiliteSetProvider.getCurrentHiliteSet.reset();
+    imodelHiliteSetProvider.getCurrentHiliteSet.callsFake(async function* () {});
 
     resettable?.forEach((r) => r.resetHistory());
   }
 
   async function createHandler(
-    props: Partial<Omit<EnableUnifiedSelectionSyncWithIModelProps, "imodelAccess" | "cachingHiliteSetProvider">> & {
+    props: Partial<Omit<EnableUnifiedSelectionSyncWithIModelProps, "imodelAccess" | "imodelHiliteSetProvider">> & {
       selectionStorage?: SelectionStorage;
       imodelAccess?: ReturnType<typeof createIModelAccess>;
     },
@@ -214,7 +217,7 @@ describe("IModelSelectionHandler", () => {
       activeScopeProvider: () => "element",
       selectionStorage: props.selectionStorage ?? (createSelectionStorage() as SelectionStorage),
       imodelAccess: (props.imodelAccess ?? createIModelAccess()) as unknown as EnableUnifiedSelectionSyncWithIModelProps["imodelAccess"],
-      cachingHiliteSetProvider: imodelHiliteSetProvider,
+      imodelHiliteSetProvider,
       hiliteSetProvider,
     });
     return selectionHandler;
@@ -245,11 +248,39 @@ describe("IModelSelectionHandler", () => {
       resetStubs();
     });
 
-    it("uses custom `CachingHiliteSetProvider`", async () => {
+    it("uses custom `CachingHiliteSetProvider` and its underlying `HiliteSetProvider`", async () => {
+      // ensure the providers are used on create
       using _handler = await createHandler({
         selectionStorage: selectionStorageStub as unknown as SelectionStorage,
       });
-      expect(imodelHiliteSetProvider.getHiliteSet).to.be.calledOnce;
+      expect(imodelHiliteSetProvider.getCurrentHiliteSet).to.be.calledOnce;
+      imodelHiliteSetProvider.getHiliteSetProvider.resetHistory();
+      imodelHiliteSetProvider.getCurrentHiliteSet.resetHistory();
+      hiliteSetProvider.getHiliteSet.resetHistory();
+
+      // ensure the providers are used on unified selection changes
+      const ev = selectionStorageStub.selectionChangeEvent;
+      (["clear", "replace", "add", "remove"] as StorageSelectionChangeType[]).forEach((selectionChangeType) => {
+        ev.emit({
+          storage: selectionStorageStub,
+          changeType: selectionChangeType,
+          imodelKey: "test",
+          iModelKey: "test",
+          source: "",
+          level: 0,
+          selectables: Selectables.create([]),
+          timestamp: new Date(),
+        });
+        if (selectionChangeType === "clear" || selectionChangeType === "replace") {
+          expect(imodelHiliteSetProvider.getCurrentHiliteSet).to.be.calledOnce;
+        } else {
+          expect(imodelHiliteSetProvider.getHiliteSetProvider).to.be.calledOnce;
+          expect(hiliteSetProvider.getHiliteSet).to.be.calledOnce;
+        }
+        imodelHiliteSetProvider.getHiliteSetProvider.resetHistory();
+        imodelHiliteSetProvider.getCurrentHiliteSet.resetHistory();
+        hiliteSetProvider.getHiliteSet.resetHistory();
+      });
     });
 
     it("clears selection", async () => {
@@ -498,7 +529,7 @@ describe("IModelSelectionHandler", () => {
         subcategories: ["0x2"],
         elements: ["0x3"],
       };
-      imodelHiliteSetProvider.getHiliteSet.callsFake(() =>
+      imodelHiliteSetProvider.getCurrentHiliteSet.callsFake(() =>
         createAsyncIterator([
           {
             elements: ids.elements,
@@ -528,7 +559,7 @@ describe("IModelSelectionHandler", () => {
       const selectionSetSpy = sinon.spy(imodelAccess, "selectionSet", ["get"]).get;
       triggerUnifiedSelectionChange({ imodelKey: "otherIModel" });
       await waitFor(() => {
-        expect(imodelHiliteSetProvider.getHiliteSet).to.not.be.called;
+        expect(imodelHiliteSetProvider.getCurrentHiliteSet).to.not.be.called;
         expect(hiliteSetSpy).to.not.be.called;
         expect(selectionSetSpy).to.not.be.called;
       });
@@ -544,7 +575,7 @@ describe("IModelSelectionHandler", () => {
       const selectionSetSpy = sinon.spy(imodelAccess, "selectionSet", ["get"]).get;
       triggerUnifiedSelectionChange({ imodelKey: imodelAccess.key, level: 1 });
       await waitFor(() => {
-        expect(imodelHiliteSetProvider.getHiliteSet).to.not.be.called;
+        expect(imodelHiliteSetProvider.getCurrentHiliteSet).to.not.be.called;
         expect(hiliteSetSpy).to.not.be.called;
         expect(selectionSetSpy).to.not.be.called;
       });
@@ -559,7 +590,7 @@ describe("IModelSelectionHandler", () => {
         using _handler = await createHandler({ selectionStorage, imodelAccess });
         resetStubs([hiliteSet, selectionSet]);
 
-        imodelHiliteSetProvider.getHiliteSet.callsFake(() => createAsyncIterator([]));
+        imodelHiliteSetProvider.getCurrentHiliteSet.callsFake(() => createAsyncIterator([]));
         triggerUnifiedSelectionChange({ imodelKey: imodelAccess.key, changeType: "clear", source });
 
         await waitFor(() => {
@@ -580,7 +611,7 @@ describe("IModelSelectionHandler", () => {
           subCategories: ["0x2"],
           elements: ["0x3"],
         };
-        imodelHiliteSetProvider.getHiliteSet.callsFake(() => createAsyncIterator([ids]));
+        imodelHiliteSetProvider.getCurrentHiliteSet.callsFake(() => createAsyncIterator([ids]));
 
         triggerUnifiedSelectionChange({ imodelKey: imodelAccess.key, source });
 
@@ -604,7 +635,7 @@ describe("IModelSelectionHandler", () => {
           subCategories: ["0x2"],
           elements: ["0x3"],
         };
-        imodelHiliteSetProvider.getHiliteSet.callsFake(() => createAsyncIterator([ids]));
+        imodelHiliteSetProvider.getCurrentHiliteSet.callsFake(() => createAsyncIterator([ids]));
 
         triggerUnifiedSelectionChange({ imodelKey: imodelAccess.key, source });
 
@@ -785,7 +816,7 @@ describe("IModelSelectionHandler", () => {
         };
 
         hiliteSetProvider.getHiliteSet.callsFake(() => createAsyncIterator([removed]));
-        imodelHiliteSetProvider.getHiliteSet.callsFake(() => createAsyncIterator([readded]));
+        imodelHiliteSetProvider.getCurrentHiliteSet.callsFake(() => createAsyncIterator([readded]));
 
         triggerUnifiedSelectionChange({ imodelKey: imodelAccess.key, changeType: "remove", selectables: removeEventSelectables, source });
 
@@ -813,8 +844,8 @@ describe("IModelSelectionHandler", () => {
       const firstHiliteSetPromise = new ResolvablePromise<HiliteSet>();
       const secondHiliteSetPromise = new ResolvablePromise<HiliteSet>();
 
-      imodelHiliteSetProvider.getHiliteSet.reset();
-      imodelHiliteSetProvider.getHiliteSet.callsFake(async function* () {
+      imodelHiliteSetProvider.getCurrentHiliteSet.reset();
+      imodelHiliteSetProvider.getCurrentHiliteSet.callsFake(async function* () {
         yield await firstHiliteSetPromise;
         yield await secondHiliteSetPromise;
       });
@@ -853,8 +884,8 @@ describe("IModelSelectionHandler", () => {
         elements: ["0x3"],
       };
       const initialHilitedPromise = new ResolvablePromise<HiliteSet>();
-      imodelHiliteSetProvider.getHiliteSet.reset();
-      imodelHiliteSetProvider.getHiliteSet.callsFake(async function* () {
+      imodelHiliteSetProvider.getCurrentHiliteSet.reset();
+      imodelHiliteSetProvider.getCurrentHiliteSet.callsFake(async function* () {
         yield initialHilited;
         yield await initialHilitedPromise;
       });
@@ -864,7 +895,7 @@ describe("IModelSelectionHandler", () => {
         selectables: [{ className: "BisCore.Element", id: "0x123" }],
       });
       await waitFor(() => {
-        expect(imodelHiliteSetProvider.getHiliteSet).to.be.calledOnce;
+        expect(imodelHiliteSetProvider.getCurrentHiliteSet).to.be.calledOnce;
         expect(selectionSet.emptyAll).to.be.called;
         expect(selectionSet.add).to.be.calledOnceWith({
           elements: initialHilited.elements,
@@ -879,13 +910,13 @@ describe("IModelSelectionHandler", () => {
         subCategories: ["0x5"],
         elements: ["0x6"],
       };
-      imodelHiliteSetProvider.getHiliteSet.reset();
-      imodelHiliteSetProvider.getHiliteSet.callsFake(async function* () {
+      imodelHiliteSetProvider.getCurrentHiliteSet.reset();
+      imodelHiliteSetProvider.getCurrentHiliteSet.callsFake(async function* () {
         yield replaceHilited;
       });
       triggerUnifiedSelectionChange({ imodelKey: imodelAccess.key, source: "next", selectables: [{ className: "BisCore.Element", id: "0x456" }] });
       await waitFor(() => {
-        expect(imodelHiliteSetProvider.getHiliteSet).to.be.calledOnce;
+        expect(imodelHiliteSetProvider.getCurrentHiliteSet).to.be.calledOnce;
         expect(selectionSet.emptyAll).to.be.calledOnce;
         expect(selectionSet.add).to.be.calledOnceWith({
           elements: replaceHilited.elements,
@@ -915,8 +946,8 @@ describe("IModelSelectionHandler", () => {
         elements: ["0x3"],
       };
       const initialHilitedPromise = new ResolvablePromise<HiliteSet>();
-      imodelHiliteSetProvider.getHiliteSet.reset();
-      imodelHiliteSetProvider.getHiliteSet.callsFake(async function* () {
+      imodelHiliteSetProvider.getCurrentHiliteSet.reset();
+      imodelHiliteSetProvider.getCurrentHiliteSet.callsFake(async function* () {
         yield initialHilited;
         yield await initialHilitedPromise;
       });
@@ -926,7 +957,7 @@ describe("IModelSelectionHandler", () => {
         selectables: [{ className: "BisCore.Element", id: "0x123" }],
       });
       await waitFor(() => {
-        expect(imodelHiliteSetProvider.getHiliteSet).to.be.calledOnce;
+        expect(imodelHiliteSetProvider.getCurrentHiliteSet).to.be.calledOnce;
         expect(selectionSet.emptyAll).to.be.called;
         expect(selectionSet.add).to.be.calledOnceWith({
           elements: initialHilited.elements,
@@ -941,13 +972,13 @@ describe("IModelSelectionHandler", () => {
         subCategories: ["0x5"],
         elements: ["0x6"],
       };
-      imodelHiliteSetProvider.getHiliteSet.reset();
-      imodelHiliteSetProvider.getHiliteSet.callsFake(async function* () {
+      imodelHiliteSetProvider.getCurrentHiliteSet.reset();
+      imodelHiliteSetProvider.getCurrentHiliteSet.callsFake(async function* () {
         yield clearHilited;
       });
       triggerUnifiedSelectionChange({ imodelKey: imodelAccess.key, source: "next", changeType: "clear", selectables: [] });
       await waitFor(() => {
-        expect(imodelHiliteSetProvider.getHiliteSet).to.be.calledOnce;
+        expect(imodelHiliteSetProvider.getCurrentHiliteSet).to.be.calledOnce;
         expect(selectionSet.emptyAll).to.be.called;
         expect(selectionSet.add).to.be.calledOnceWith({
           elements: clearHilited.elements,
@@ -977,8 +1008,8 @@ describe("IModelSelectionHandler", () => {
         elements: ["0x3"],
       };
       const delayedInitialHilitedPromise = new ResolvablePromise<HiliteSet>();
-      imodelHiliteSetProvider.getHiliteSet.reset();
-      imodelHiliteSetProvider.getHiliteSet.callsFake(async function* () {
+      imodelHiliteSetProvider.getCurrentHiliteSet.reset();
+      imodelHiliteSetProvider.getCurrentHiliteSet.callsFake(async function* () {
         yield initialHilited;
         yield await delayedInitialHilitedPromise;
       });
@@ -988,7 +1019,7 @@ describe("IModelSelectionHandler", () => {
         selectables: [{ className: "BisCore.Element", id: "0x123" }],
       });
       await waitFor(() => {
-        expect(imodelHiliteSetProvider.getHiliteSet).to.be.calledOnce;
+        expect(imodelHiliteSetProvider.getCurrentHiliteSet).to.be.calledOnce;
         expect(selectionSet.emptyAll).to.be.called;
         expect(selectionSet.add).to.be.calledOnceWith({
           elements: initialHilited.elements,
@@ -998,8 +1029,8 @@ describe("IModelSelectionHandler", () => {
       });
       selectionSet.resetHistory();
 
-      imodelHiliteSetProvider.getHiliteSet.reset();
-      imodelHiliteSetProvider.getHiliteSet.callsFake(async function* () {});
+      imodelHiliteSetProvider.getCurrentHiliteSet.reset();
+      imodelHiliteSetProvider.getCurrentHiliteSet.callsFake(async function* () {});
 
       const addHilited = {
         models: ["0x4"],
@@ -1081,8 +1112,8 @@ describe("IModelSelectionHandler", () => {
         subCategories: ["0x8"],
         elements: ["0x9"],
       };
-      imodelHiliteSetProvider.getHiliteSet.reset();
-      imodelHiliteSetProvider.getHiliteSet.callsFake(async function* () {
+      imodelHiliteSetProvider.getCurrentHiliteSet.reset();
+      imodelHiliteSetProvider.getCurrentHiliteSet.callsFake(async function* () {
         yield replaceHilited;
       });
       triggerUnifiedSelectionChange({ imodelKey: imodelAccess.key, source: "Tool" });
@@ -1109,8 +1140,8 @@ describe("IModelSelectionHandler", () => {
         subCategories: ["0x8"],
         elements: ["0x9"],
       };
-      imodelHiliteSetProvider.getHiliteSet.reset();
-      imodelHiliteSetProvider.getHiliteSet.callsFake(async function* () {
+      imodelHiliteSetProvider.getCurrentHiliteSet.reset();
+      imodelHiliteSetProvider.getCurrentHiliteSet.callsFake(async function* () {
         yield replaceHilited;
       });
       triggerUnifiedSelectionChange({ imodelKey: imodelAccess.key, source: "Tool" });
