@@ -409,6 +409,12 @@
 
 - [#847](https://github.com/iTwin/presentation/pull/847): Moving tree rendering components to a new design systems.
 
+## 1.9.1
+
+### Patch Changes
+
+- [#1033](https://github.com/iTwin/presentation/pull/1033): Fix unified selection tree state hooks `useUnifiedSelectionTree` and `useIModelUnifiedSelectionTree` not handling the recently added `createSelectableForGenericNode` prop.
+
 ## 1.9.0
 
 ### Minor Changes
