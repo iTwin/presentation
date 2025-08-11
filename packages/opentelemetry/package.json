@@ -53,11 +53,6 @@
   },
   "devDependencies": {
     "@itwin/build-tools": "catalog:build-tools",
-    "@itwin/core-bentley": "catalog:itwinjs-core-dev",
-    "@itwin/core-common": "catalog:itwinjs-core-dev",
-    "@itwin/core-geometry": "catalog:itwinjs-core-dev",
-    "@itwin/core-quantity": "catalog:itwinjs-core-dev",
-    "@itwin/ecschema-metadata": "catalog:itwinjs-core-dev",
     "@itwin/eslint-plugin": "catalog:build-tools",
     "@itwin/presentation-common": "catalog:itwinjs-core-dev",
     "@opentelemetry/api": "^1.9.0",
