@@ -1,5 +1,11 @@
 # @itwin/presentation-hierarchies-react
 
+## 2.0.0-alpha.29
+
+### Patch Changes
+
+- [#1035](https://github.com/iTwin/presentation/pull/1035): Version bump after merge from `master`.
+
 ## 2.0.0-alpha.28
 
 ### Patch Changes
