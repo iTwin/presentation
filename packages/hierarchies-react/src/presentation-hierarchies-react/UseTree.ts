@@ -70,11 +70,16 @@ export function useTree(props: UseTreeProps): UseTreeResult {
  * @see `UnifiedSelectionProvider`
  * @public
  */
-export function useUnifiedSelectionTree({ sourceName, selectionStorage, ...props }: UseTreeProps & UseUnifiedTreeSelectionProps): UseTreeResult {
+export function useUnifiedSelectionTree({
+  sourceName,
+  selectionStorage,
+  createSelectableForGenericNode,
+  ...props
+}: UseTreeProps & UseUnifiedTreeSelectionProps): UseTreeResult {
   const { getTreeModelNode, ...rest } = useTreeInternal(props);
   return {
     ...rest,
-    ...useUnifiedTreeSelection({ sourceName, selectionStorage, getTreeModelNode }),
+    ...useUnifiedTreeSelection({ sourceName, selectionStorage, getTreeModelNode, createSelectableForGenericNode }),
   };
 }
 
