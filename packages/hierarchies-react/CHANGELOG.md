@@ -1,5 +1,11 @@
 # @itwin/presentation-hierarchies-react
 
+## 1.9.1
+
+### Patch Changes
+
+- [#1033](https://github.com/iTwin/presentation/pull/1033): Fix unified selection tree state hooks `useUnifiedSelectionTree` and `useIModelUnifiedSelectionTree` not handling the recently added `createSelectableForGenericNode` prop.
+
 ## 1.9.0
 
 ### Minor Changes
