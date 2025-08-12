@@ -1,5 +1,11 @@
 # @itwin/presentation-hierarchies-react
 
+## 2.0.0-alpha.30
+
+### Patch Changes
+
+- [#1037](https://github.com/iTwin/presentation/pull/1037): Added additional documentation for `RenameAction`
+
 ## 2.0.0-alpha.29
 
 ### Patch Changes
