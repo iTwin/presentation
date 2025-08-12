@@ -24,6 +24,7 @@ interface RenameActionProps {
 
 /**
  * React component that renders a rename action for a tree item.
+ * The tree component must have `getEditingProps` set to enable renaming functionality.
  * @alpha
  */
 export const RenameAction = memo(function RenameAction({ reserveSpace }: RenameActionProps) {
