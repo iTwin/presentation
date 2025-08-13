@@ -1,5 +1,13 @@
 # @itwin/unified-selection
 
+## 1.5.1
+
+### Patch Changes
+
+- [#1039](https://github.com/iTwin/presentation/pull/1039): Bump iTwin.js core dependencies to `^5.1.1`.
+- Updated dependencies:
+  - @itwin/presentation-shared@1.2.3
+
 ## 1.5.0
 
 ### Minor Changes
