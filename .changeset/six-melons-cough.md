@@ -8,7 +8,8 @@ Example usage:
 
 ```ts
 import { StrataKitTreeRenderer, useNodeHighlighting } from "@itwin/presentation-hierarchies-react";
-import type { BaseTreeRendererProps } from "@itwin/tree-widget-react";
+
+type BaseTreeRendererProps = React.ComponentPropsWithoutRef<typeof StrataKitTreeRenderer>;
 
 function MyComponent(props: BaseTreeRendererProps & { searchText: string }) {
   // Create highlight based on searchText
