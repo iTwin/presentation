@@ -1,5 +1,12 @@
 # @itwin/presentation-core-interop
 
+## 1.3.4
+
+### Patch Changes
+
+- Updated dependencies:
+  - @itwin/presentation-shared@1.2.3
+
 ## 1.3.3
 
 ### Patch Changes
