@@ -11,6 +11,18 @@ import { useNodeHighlighting } from "../presentation-hierarchies-react/UseNodeHi
 import { render, renderHook } from "./TestUtils.js";
 
 describe("useNodeHighlighting", () => {
+  it("does not highlight when highlight is undefined", () => {
+    const rootNodes = [createHierarchyNode({ id: "node", label: "node" })];
+
+    const { result } = renderHook(useNodeHighlighting, {
+      initialProps: { rootNodes },
+    });
+
+    const { container } = render(result.current.getLabel(rootNodes[0]));
+
+    expect(container.querySelector("mark")).to.be.null;
+  });
+
   it("does not highlight text when no matches found", () => {
     const rootNodes = [createHierarchyNode({ id: "node", label: "node" })];
     const onHighlightChangedStub = sinon.stub();
