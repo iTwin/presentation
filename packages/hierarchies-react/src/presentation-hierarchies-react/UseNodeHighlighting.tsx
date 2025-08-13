@@ -31,7 +31,6 @@ interface UseNodeHighlightingResult {
 export function useNodeHighlighting({ highlightText }: UseNodeHighlightingProps): UseNodeHighlightingResult {
   const getLabel = useCallback(
     (node: PresentationHierarchyNode) => {
-      // We don't want to highligh if tree is reloading
       if (!highlightText) {
         return <span>{node.label}</span>;
       }
