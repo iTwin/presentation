@@ -44,6 +44,14 @@
 - Updated dependencies:
   - @itwin/presentation-shared@2.0.0-alpha.0
 
+## 1.7.2
+
+### Patch Changes
+
+- [#1039](https://github.com/iTwin/presentation/pull/1039): Bump iTwin.js core dependencies to `^5.1.1`.
+- Updated dependencies:
+  - @itwin/presentation-shared@1.2.3
+
 ## 1.7.1
 
 ### Patch Changes
@@ -96,9 +104,11 @@
 ### Minor Changes
 
 - 69a2db67917f84e99d532e8e9aabbc02ec262d91: `HierarchyFilteringPathOptions.autoExpand` is now of type:
+
   ```ts
   autoExpand?: { depth: number } | boolean;
   ```
+
   When `depth` is set, only nodes up to specified `depth` in `HierarchyFilteringPath` will have `autoExpand` option set.
 
 ## 1.5.1
