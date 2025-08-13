@@ -332,6 +332,19 @@ type UseIModelTreeProps = Omit<UseTreeProps, "getHierarchyProvider" | "getFilter
 // @public
 export function useIModelUnifiedSelectionTree(props: UseIModelTreeProps & UseUnifiedTreeSelectionProps): UseTreeResult;
 
+// @alpha
+export function useNodeHighlighting({ highlightText }: UseNodeHighlightingProps): UseNodeHighlightingResult;
+
+// @alpha
+interface UseNodeHighlightingProps {
+    highlightText?: string;
+}
+
+// @alpha
+interface UseNodeHighlightingResult {
+    getLabel: (node: PresentationHierarchyNode) => React.ReactElement;
+}
+
 // @public
 export function useSelectionHandler(props: UseSelectionHandlerProps): UseSelectionHandlerResult;
 
