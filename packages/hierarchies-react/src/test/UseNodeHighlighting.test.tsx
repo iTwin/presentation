@@ -4,7 +4,6 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { expect } from "chai";
-import sinon from "sinon";
 import { NonGroupingHierarchyNode } from "@itwin/presentation-hierarchies";
 import { PresentationHierarchyNode } from "../presentation-hierarchies-react/TreeNode.js";
 import { useNodeHighlighting } from "../presentation-hierarchies-react/UseNodeHighlighting.js";
@@ -15,7 +14,7 @@ describe("useNodeHighlighting", () => {
     const rootNodes = [createHierarchyNode({ id: "node", label: "node" })];
 
     const { result } = renderHook(useNodeHighlighting, {
-      initialProps: { rootNodes },
+      initialProps: {},
     });
 
     const { container } = render(result.current.getLabel(rootNodes[0]));
@@ -25,13 +24,11 @@ describe("useNodeHighlighting", () => {
 
   it("does not highlight text when no matches found", () => {
     const rootNodes = [createHierarchyNode({ id: "node", label: "node" })];
-    const onHighlightChangedStub = sinon.stub();
 
     const { result } = renderHook(useNodeHighlighting, {
-      initialProps: { rootNodes, highlight: { text: "test", activeMatchIndex: undefined, onHighlightChanged: onHighlightChangedStub } },
+      initialProps: { highlightText: "test" },
     });
 
-    expect(onHighlightChangedStub).to.be.calledWith(0, 0);
     const { container } = render(result.current.getLabel(rootNodes[0]));
 
     expect(container.querySelector("mark")).to.be.null;
@@ -39,13 +36,11 @@ describe("useNodeHighlighting", () => {
 
   it("highlights text when match found", () => {
     const rootNodes = [createHierarchyNode({ id: "node", label: "node" })];
-    const onHighlightChangedStub = sinon.stub();
 
     const { result } = renderHook(useNodeHighlighting, {
-      initialProps: { rootNodes, highlight: { text: "node", activeMatchIndex: undefined, onHighlightChanged: onHighlightChangedStub } },
+      initialProps: { highlightText: "node" },
     });
 
-    expect(onHighlightChangedStub).to.be.calledWith(0, 1);
     const { container } = render(result.current.getLabel(rootNodes[0]));
 
     expect(container.querySelector("mark")?.textContent).to.be.eq("node");
@@ -53,13 +48,11 @@ describe("useNodeHighlighting", () => {
 
   it("highlights text in the middle", () => {
     const rootNodes = [createHierarchyNode({ id: "node", label: "1 test 2" })];
-    const onHighlightChangedStub = sinon.stub();
 
     const { result } = renderHook(useNodeHighlighting, {
-      initialProps: { rootNodes, highlight: { text: "test", activeMatchIndex: undefined, onHighlightChanged: onHighlightChangedStub } },
+      initialProps: { highlightText: "test" },
     });
 
-    expect(onHighlightChangedStub).to.be.calledWith(0, 1);
     const { container } = render(result.current.getLabel(rootNodes[0]));
 
     const spans = container.querySelectorAll("span");
@@ -74,13 +67,11 @@ describe("useNodeHighlighting", () => {
 
   it("highlights edges of text", () => {
     const rootNodes = [createHierarchyNode({ id: "node", label: "test node test" })];
-    const onHighlightChangedStub = sinon.stub();
 
     const { result } = renderHook(useNodeHighlighting, {
-      initialProps: { rootNodes, highlight: { text: "test", activeMatchIndex: undefined, onHighlightChanged: onHighlightChangedStub } },
+      initialProps: { highlightText: "test" },
     });
 
-    expect(onHighlightChangedStub).to.be.calledWith(0, 2);
     const { container } = render(result.current.getLabel(rootNodes[0]));
 
     const spans = container.querySelectorAll("span");
@@ -91,190 +82,6 @@ describe("useNodeHighlighting", () => {
     expect(spans[0].textContent).to.be.eq(" node ");
     expect(marks[0].textContent).to.be.eq("test");
     expect(marks[1].textContent).to.be.eq("test");
-  });
-
-  it("merges adjacent non-active chunks", () => {
-    const rootNodes = [createHierarchyNode({ id: "node", label: "OOOO" })];
-    const onHighlightChangedStub = sinon.stub();
-
-    const { result } = renderHook(useNodeHighlighting, {
-      initialProps: { rootNodes, highlight: { text: "O", activeMatchIndex: undefined, onHighlightChanged: onHighlightChangedStub } },
-    });
-
-    expect(onHighlightChangedStub).to.be.calledWith(0, 4);
-    const { container } = render(result.current.getLabel(rootNodes[0]));
-
-    const marks = container.querySelectorAll("mark");
-
-    expect(marks).to.have.length(1);
-    expect(marks[0].textContent).to.be.eq("OOOO");
-  });
-
-  it("does not merge active chunk", () => {
-    const rootNodes = [createHierarchyNode({ id: "node", label: "OOOOO" })];
-    const onHighlightChangedStub = sinon.stub();
-
-    const { result } = renderHook(useNodeHighlighting, {
-      initialProps: { rootNodes, highlight: { text: "O", activeMatchIndex: 2, onHighlightChanged: onHighlightChangedStub } },
-    });
-
-    expect(onHighlightChangedStub).to.be.calledWith(2, 5);
-    const { container } = render(result.current.getLabel(rootNodes[0]));
-
-    const marks = container.querySelectorAll("mark");
-
-    expect(marks).to.have.length(3);
-    expect(marks[0].textContent).to.be.eq("OO");
-    expect(marks[1].textContent).to.be.eq("O");
-    expect(marks[1].className).to.be.eq("tw-active-match-highlight");
-    expect(marks[2].textContent).to.be.eq("OO");
-  });
-
-  it("adds and updates active match class", () => {
-    const rootNodes = [createHierarchyNode({ id: "node", label: "test test test" })];
-    const onHighlightChangedStub = sinon.stub();
-
-    const { result, rerender: rerenderHook } = renderHook(useNodeHighlighting, {
-      initialProps: { rootNodes, highlight: { text: "test", activeMatchIndex: 0, onHighlightChanged: onHighlightChangedStub } },
-    });
-
-    expect(onHighlightChangedStub).to.be.calledWith(0, 3);
-    const { container, rerender } = render(result.current.getLabel(rootNodes[0]));
-
-    let spans = container.querySelectorAll("span");
-    let marks = container.querySelectorAll("mark");
-
-    expect(spans).to.have.length(2);
-    expect(marks).to.have.length(3);
-    expect(spans[0].textContent).to.be.eq(" ");
-    expect(spans[1].textContent).to.be.eq(" ");
-    expect(marks[0].textContent).to.be.eq("test");
-    expect(marks[0].className).to.be.eq("tw-active-match-highlight");
-    expect(marks[1].textContent).to.be.eq("test");
-    expect(marks[2].textContent).to.be.eq("test");
-
-    rerenderHook({ rootNodes, highlight: { text: "test", activeMatchIndex: 1, onHighlightChanged: onHighlightChangedStub } });
-    rerender(result.current.getLabel(rootNodes[0]));
-
-    spans = container.querySelectorAll("span");
-    marks = container.querySelectorAll("mark");
-
-    expect(spans).to.have.length(2);
-    expect(marks).to.have.length(3);
-    expect(spans[0].textContent).to.be.eq(" ");
-    expect(spans[1].textContent).to.be.eq(" ");
-    expect(marks[0].textContent).to.be.eq("test");
-    expect(marks[1].textContent).to.be.eq("test");
-    expect(marks[1].className).to.be.eq("tw-active-match-highlight");
-    expect(marks[2].textContent).to.be.eq("test");
-  });
-
-  it("updates index when active node predecessor nodes change", () => {
-    const rootNodes = [createHierarchyNode({ id: "node", label: "OOOO" })];
-    const onHighlightChangedStub = sinon.stub();
-
-    const { result, rerender } = renderHook(useNodeHighlighting, {
-      initialProps: { rootNodes, highlight: { text: "O", activeMatchIndex: 2, onHighlightChanged: onHighlightChangedStub } },
-    });
-
-    expect(onHighlightChangedStub).to.be.calledWith(2, 4);
-    const { container } = render(result.current.getLabel(rootNodes[0]));
-
-    const marks = container.querySelectorAll("mark");
-
-    expect(marks).to.have.length(3);
-    expect(marks[0].textContent).to.be.eq("OO");
-    expect(marks[1].textContent).to.be.eq("O");
-    expect(marks[1].className).to.be.eq("tw-active-match-highlight");
-    expect(marks[2].textContent).to.be.eq("O");
-
-    const newRootNodes = [createHierarchyNode({ id: "predecessor-node", label: "O" }), createHierarchyNode({ id: "node", label: "OOOO" })];
-
-    onHighlightChangedStub.resetHistory();
-    rerender({ rootNodes: newRootNodes, highlight: { text: "O", activeMatchIndex: 2, onHighlightChanged: onHighlightChangedStub } });
-
-    expect(onHighlightChangedStub).to.be.calledWith(3, 5);
-  });
-
-  it("does not update index when active node successor nodes change", () => {
-    const rootNodes = [createHierarchyNode({ id: "node", label: "OOOO" })];
-    const onHighlightChangedStub = sinon.stub();
-
-    const { result, rerender } = renderHook(useNodeHighlighting, {
-      initialProps: { rootNodes, highlight: { text: "O", activeMatchIndex: 2, onHighlightChanged: onHighlightChangedStub } },
-    });
-
-    expect(onHighlightChangedStub).to.be.calledWith(2, 4);
-    const { container } = render(result.current.getLabel(rootNodes[0]));
-
-    const marks = container.querySelectorAll("mark");
-
-    expect(marks).to.have.length(3);
-    expect(marks[0].textContent).to.be.eq("OO");
-    expect(marks[1].textContent).to.be.eq("O");
-    expect(marks[1].className).to.be.eq("tw-active-match-highlight");
-    expect(marks[2].textContent).to.be.eq("O");
-
-    const newRootNodes = [createHierarchyNode({ id: "node", label: "OOOO" }), createHierarchyNode({ id: "successor-node", label: "O" })];
-
-    onHighlightChangedStub.resetHistory();
-    rerender({ rootNodes: newRootNodes, highlight: { text: "O", activeMatchIndex: 2, onHighlightChanged: onHighlightChangedStub } });
-
-    expect(onHighlightChangedStub).to.be.calledWith(2, 5);
-  });
-
-  it("returns currently active node", () => {
-    const rootNodes = [createHierarchyNode({ id: "node-1", label: "node" }), createHierarchyNode({ id: "node-2", label: "node" })];
-    const onHighlightChangedStub = sinon.stub();
-
-    const { result, rerender } = renderHook(useNodeHighlighting, {
-      initialProps: { rootNodes, highlight: { text: "node", activeMatchIndex: 0, onHighlightChanged: onHighlightChangedStub } },
-    });
-
-    expect(onHighlightChangedStub).to.be.calledWith(0, 2);
-    expect(result.current.activeNodeId).to.be.equal("node-1");
-
-    onHighlightChangedStub.resetHistory();
-    rerender({ rootNodes, highlight: { text: "node", activeMatchIndex: 1, onHighlightChanged: onHighlightChangedStub } });
-
-    expect(onHighlightChangedStub).to.not.be.called;
-    expect(result.current.activeNodeId).to.be.equal("node-2");
-  });
-
-  it("clears active node when `searchText` is empty", () => {
-    const rootNodes = [createHierarchyNode({ id: "node", label: "node" })];
-    const onHighlightChangedStub = sinon.stub();
-
-    const { result, rerender } = renderHook(useNodeHighlighting, {
-      initialProps: { rootNodes, highlight: { text: "node", activeMatchIndex: 0, onHighlightChanged: onHighlightChangedStub } },
-    });
-
-    expect(onHighlightChangedStub).to.be.calledWith(0, 1);
-    expect(result.current.activeNodeId).to.be.equal("node");
-
-    onHighlightChangedStub.resetHistory();
-    rerender({ rootNodes, highlight: { text: "", activeMatchIndex: 1, onHighlightChanged: onHighlightChangedStub } });
-
-    expect(onHighlightChangedStub).to.be.calledWith(0, 0);
-    expect(result.current.activeNodeId).to.be.undefined;
-  });
-
-  it("clears active node when `rootNodes` is empty", () => {
-    const rootNodes = [createHierarchyNode({ id: "node", label: "node" })];
-    const onHighlightChangedStub = sinon.stub();
-
-    const { result, rerender } = renderHook(useNodeHighlighting, {
-      initialProps: { rootNodes, highlight: { text: "node", activeMatchIndex: 0, onHighlightChanged: onHighlightChangedStub } },
-    });
-
-    expect(onHighlightChangedStub).to.be.calledWith(0, 1);
-    expect(result.current.activeNodeId).to.be.equal("node");
-
-    onHighlightChangedStub.resetHistory();
-    rerender({ rootNodes: [], highlight: { text: "node", activeMatchIndex: 1, onHighlightChanged: onHighlightChangedStub } });
-
-    expect(onHighlightChangedStub).to.be.calledWith(0, 0);
-    expect(result.current.activeNodeId).to.be.undefined;
   });
 });
 

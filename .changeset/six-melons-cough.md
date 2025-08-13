@@ -2,7 +2,7 @@
 "@itwin/presentation-hierarchies-react": patch
 ---
 
-Added a react hook `useNodeHighlighting` that helps create highlighted node labels based on provided highlight.
+Added a react hook `useNodeHighlighting` that helps create highlighted node labels based on provided text that should be highlighted.
 
 Example usage:
 

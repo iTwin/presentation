@@ -3,55 +3,24 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback } from "react";
 import { PresentationHierarchyNode } from "./TreeNode.js";
-import { useLatest } from "./Utils.js";
-
-/** @alpha */
-export interface HighlightInfo {
-  text: string;
-}
 
 /**
  * Props for `useNodeHighlighting` hook.
  * @alpha
  */
 interface UseNodeHighlightingProps {
-  rootNodes: PresentationHierarchyNode[] | undefined;
-  // TODO: move activeMatchIndex and onHighlightChanged to HighlightInfo when it's implemented.
-  highlight?: HighlightInfo & {
-    activeMatchIndex?: number;
-    onHighlightChanged?: (activeMatchIndex: number, matches: number) => void;
-  };
-}
-
-interface HighlightedChunk {
-  start: number;
-  end: number;
-}
-
-interface NodeChunkInfo {
-  chunks: HighlightedChunk[];
-  activeChunkIndex?: number;
-}
-
-interface NodeHighlightInfo {
-  startIndex: number;
-  matches: HighlightedChunk[];
-}
-
-interface HighlightState {
-  nodeInfoMap: Map<string, NodeHighlightInfo>;
-  totalMatches: number;
+  /** Text that should be highlighted */
+  highlightText?: string;
 }
 
 /**
  * Result of `useNodeHighlighting` hook.
- * @public
+ * @alpha
  */
 interface UseNodeHighlightingResult {
-  activeNodeId?: string;
-  // Function that creates highlighted node labels.
+  /** Function that creates highlighted node labels. */
   getLabel: (node: PresentationHierarchyNode) => React.ReactElement;
 }
 
@@ -59,159 +28,37 @@ interface UseNodeHighlightingResult {
  * A react hook that helps create highlighted node labels based on provided highlight.
  * @alpha
  */
-export function useNodeHighlighting({ rootNodes, highlight }: UseNodeHighlightingProps): UseNodeHighlightingResult {
-  const [state, setState] = useState<HighlightState>({ nodeInfoMap: new Map(), totalMatches: 0 });
-  const [activeNodeId, setActiveNodeId] = useState<string | undefined>();
-  const activeMatchIndexRef = useLatest(highlight?.activeMatchIndex);
-  const activeNodeIdRef = useLatest(activeNodeId);
-  const onHighlightChangedRef = useLatest(highlight?.onHighlightChanged);
-  const prevStateRef = useLatest(state);
-  const searchText = highlight?.text;
-
-  useEffect(() => {
-    const { state: newState, activeIndex } =
-      rootNodes && searchText
-        ? computeHighlightState(rootNodes, searchText, prevStateRef.current, activeNodeIdRef.current, activeMatchIndexRef.current)
-        : { state: { nodeInfoMap: new Map(), totalMatches: 0 }, activeIndex: 0 };
-
-    setState(newState);
-    if (newState.totalMatches === 0) {
-      setActiveNodeId(undefined);
-    }
-    onHighlightChangedRef.current?.(newState.totalMatches === 0 ? 0 : activeIndex, newState.totalMatches);
-  }, [rootNodes, searchText, activeNodeIdRef, activeMatchIndexRef, onHighlightChangedRef, prevStateRef]);
-
-  useEffect(() => {
-    for (const nodeId of state.nodeInfoMap.keys()) {
-      if (getNodeChunkInfo(state, nodeId, highlight?.activeMatchIndex)?.activeChunkIndex !== undefined) {
-        setActiveNodeId(nodeId);
-      }
-    }
-  }, [state, highlight?.activeMatchIndex]);
-
+export function useNodeHighlighting({ highlightText }: UseNodeHighlightingProps): UseNodeHighlightingResult {
   const getLabel = useCallback(
     (node: PresentationHierarchyNode) => {
-      const chunkInfo = getNodeChunkInfo(state, node.id, highlight?.activeMatchIndex);
-      if (searchText && chunkInfo) {
-        return <>{markChunks(node.label, chunkInfo.chunks, chunkInfo.activeChunkIndex)}</>;
+      // We don't want to highligh if tree is reloading
+      if (!highlightText) {
+        return <span>{node.label}</span>;
       }
-      return <span>{node.label}</span>;
+      const matchedIndexes = [...node.label.matchAll(new RegExp(highlightText, "gi"))].map((a) => a.index);
+      if (matchedIndexes.length === 0) {
+        return <span>{node.label}</span>;
+      }
+      const finalLabel = new Array<React.JSX.Element>();
+      let lastAddedPosition = 0;
+      for (let i = 0; i < matchedIndexes.length; ++i) {
+        const matchedIndex = matchedIndexes[i];
+        if (matchedIndex > lastAddedPosition) {
+          finalLabel.push(<span key={`normal-${i}`}>{node.label.substring(lastAddedPosition, matchedIndex)}</span>);
+          lastAddedPosition = matchedIndex;
+        }
+        const endingPlace = matchedIndex + highlightText.length;
+        finalLabel.push(<mark key={`marked-${i}`}>{node.label.substring(lastAddedPosition, endingPlace)}</mark>);
+        lastAddedPosition = endingPlace;
+      }
+      if (lastAddedPosition < node.label.length) {
+        finalLabel.push(<span key={`normal-${matchedIndexes.length + 1}`}>{node.label.substring(lastAddedPosition)}</span>);
+      }
+
+      return <>{finalLabel}</>;
     },
-    [state, searchText, highlight?.activeMatchIndex],
+    [highlightText],
   );
 
-  return { activeNodeId, getLabel };
-}
-
-function getNodeChunkInfo(state: HighlightState, nodeId: string, activeIndex?: number): NodeChunkInfo | undefined {
-  const info = state.nodeInfoMap.get(nodeId);
-  if (!info) {
-    return undefined;
-  }
-  if (activeIndex === undefined) {
-    return { chunks: info.matches };
-  }
-  const isActive = info && activeIndex >= info.startIndex && activeIndex < info.startIndex + info.matches.length;
-  return isActive ? { activeChunkIndex: activeIndex - info.startIndex, chunks: info.matches } : { chunks: info.matches };
-}
-
-function computeHighlightState(
-  rootNodes: PresentationHierarchyNode[],
-  searchText: string,
-  state: HighlightState,
-  activeNodeId?: string,
-  activeMatchIndex?: number,
-) {
-  const newState: HighlightState = { nodeInfoMap: new Map(), totalMatches: 0 };
-  let newActiveIndex = activeMatchIndex ?? 0;
-
-  const computeHighlightStateRecursively = (nodes: Array<PresentationHierarchyNode>) => {
-    nodes.forEach((node) => {
-      const matches = findChunks(node.label, searchText);
-      newState.nodeInfoMap.set(node.id, { startIndex: newState.totalMatches, matches });
-      newState.totalMatches += matches.length;
-
-      if (typeof node.children !== "boolean") {
-        computeHighlightStateRecursively(node.children);
-      }
-    });
-  };
-
-  computeHighlightStateRecursively(rootNodes);
-
-  // update active index to not cause active chunk jumps when hierarchy changes
-  if (activeNodeId && newActiveIndex !== 0) {
-    const activeNodeInfo = getNodeChunkInfo(state, activeNodeId, activeMatchIndex);
-    const updatedInfo = newState.nodeInfoMap.get(activeNodeId);
-
-    if (updatedInfo && activeNodeInfo?.activeChunkIndex !== undefined) {
-      newActiveIndex = updatedInfo.startIndex + activeNodeInfo.activeChunkIndex;
-    }
-  }
-
-  return { state: newState, activeIndex: newActiveIndex };
-}
-
-function findChunks(text: string, searchText: string): HighlightedChunk[] {
-  const chunks: HighlightedChunk[] = [];
-
-  const contentText = text.toLowerCase();
-  const inputText = searchText.toLowerCase();
-  let index = contentText.indexOf(inputText);
-
-  while (index !== -1) {
-    chunks.push({ start: index, end: index + inputText.length });
-    index = contentText.indexOf(inputText, index + 1);
-  }
-
-  return chunks;
-}
-
-function markChunks(text: string, chunks: HighlightedChunk[], activeChunk?: number) {
-  const markedText: React.ReactElement[] = [];
-  let previousIndex = 0;
-
-  const { mergedChunks, newActiveIndex } = mergeChunks(chunks, activeChunk);
-
-  for (let i = 0; i < mergedChunks.length; i++) {
-    const { start, end } = mergedChunks[i];
-
-    // add unmarked text between previous chunk and current one
-    const nonMarkedText = text.substring(previousIndex, start);
-    nonMarkedText.length && markedText.push(<span key={previousIndex}>{nonMarkedText}</span>);
-
-    // add marked chunk text
-    markedText.push(
-      <mark key={start} className={i === newActiveIndex ? "tw-active-match-highlight" : undefined}>
-        {text.substring(start, end)}
-      </mark>,
-    );
-    previousIndex = end;
-  }
-
-  // add unmarked text after last chunk
-  const lastNonMarkedText = text.substring(previousIndex, text.length);
-  lastNonMarkedText.length && markedText.push(<span key={previousIndex}>{lastNonMarkedText}</span>);
-
-  return markedText;
-}
-
-function mergeChunks(chunks: HighlightedChunk[], activeChunk?: number) {
-  const mergedChunks: HighlightedChunk[] = [];
-  let lastChunk: { isActive: boolean; info: HighlightedChunk } | undefined;
-  let newActiveIndex: number | undefined;
-
-  for (let i = 0; i < chunks.length; i++) {
-    const chunk = chunks[i];
-    const isActive = i === activeChunk;
-    if (lastChunk && lastChunk.info.end === chunk.start && !isActive && !lastChunk.isActive) {
-      lastChunk.info.end = chunk.end;
-      continue;
-    }
-    isActive && (newActiveIndex = mergedChunks.length);
-    const newChunk = { start: chunk.start, end: chunk.end };
-    lastChunk = { isActive, info: newChunk };
-    mergedChunks.push(newChunk);
-  }
-  return { mergedChunks, newActiveIndex };
+  return { getLabel };
 }
