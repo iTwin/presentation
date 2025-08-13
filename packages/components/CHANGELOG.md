@@ -1,5 +1,16 @@
 # Change Log - @itwin/presentation-components
 
+## 5.12.6
+
+### Patch Changes
+
+- [#1039](https://github.com/iTwin/presentation/pull/1039): Use `IModelApp.formatsProvider` when formatting numeric values with quantities in property editors.
+- [#1039](https://github.com/iTwin/presentation/pull/1039): Bump iTwin.js core dependencies to `^5.1.1`.
+- Updated dependencies:
+  - @itwin/presentation-shared@1.2.3
+  - @itwin/unified-selection@1.5.1
+  - @itwin/presentation-core-interop@1.3.4
+
 ## 5.12.6-alpha.0
 
 ### Patch Changes
