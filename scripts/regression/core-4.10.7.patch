@@ -58,8 +58,172 @@ index 9868ec59..9b695982 100644
        }
      });
    }
+diff --git a/apps/full-stack-tests/src/components/properties/PropertyEditors.test.tsx b/apps/full-stack-tests/src/components/properties/PropertyEditors.test.tsx
+deleted file mode 100644
+index cbb631a7..00000000
+--- a/apps/full-stack-tests/src/components/properties/PropertyEditors.test.tsx
++++ /dev/null
+@@ -1,136 +0,0 @@
+-/*---------------------------------------------------------------------------------------------
+- * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
+- * See LICENSE.md in the project root for license terms and full copyright notice.
+- *--------------------------------------------------------------------------------------------*/
+-
+-import { expect } from "chai";
+-import { insertPhysicalElement, insertPhysicalModelWithPartition, insertSpatialCategory } from "presentation-test-utilities";
+-import sinon from "sinon";
+-import { PrimitiveValue } from "@itwin/appui-abstract";
+-import { EditorContainer, UiComponents } from "@itwin/components-react";
+-import { BeEvent } from "@itwin/core-bentley";
+-import { IModelApp } from "@itwin/core-frontend";
+-import { FormatDefinition } from "@itwin/core-quantity";
+-import { FieldDescriptorType, KeySet } from "@itwin/presentation-common";
+-import { PresentationPropertyDataProvider, SchemaMetadataContextProvider } from "@itwin/presentation-components";
+-import { buildIModel, importSchema } from "../../IModelUtils.js";
+-import { initialize, terminate } from "../../IntegrationTests.js";
+-import { render, waitFor } from "../../RenderUtils.js";
+-
+-describe("Presentation filter builder value renderer", () => {
+-  before(async () => {
+-    await initialize();
+-    await UiComponents.initialize(IModelApp.localization);
+-  });
+-
+-  after(async () => {
+-    sinon.restore();
+-    UiComponents.terminate();
+-    await terminate();
+-  });
+-
+-  afterEach(() => {
+-    IModelApp.resetFormatsProvider();
+-  });
+-
+-  it("renders property values with koq's overridden through `IModelApp.formatsProvider`", async function () {
+-    const { imodel, schema, ...imodelKeys } = await buildIModel(this, async (builder, mochaContext) => {
+-      const mySchema = await importSchema(
+-        mochaContext,
+-        builder,
+-        `
+-          <ECSchemaReference name="BisCore" version="01.00.16" alias="bis" />
+-          <ECSchemaReference name="Units" version="01.00.09" alias="u" />
+-          <ECSchemaReference name="Formats" version="01.00.00" alias="f" />
+-          <KindOfQuantity typeName="TestKOQ" displayLabel="Test KOQ" persistenceUnit="u:M" relativeError="0.001" presentationUnits="f:DefaultRealU(4)[u:M]" />
+-          <ECEntityClass typeName="MyPhysicalObject">
+-            <BaseClass>bis:PhysicalElement</BaseClass>
+-            <ECProperty propertyName="MyProperty" typeName="double" kindOfQuantity="TestKOQ" />
+-          </ECEntityClass>
+-        `,
+-      );
+-      const model = insertPhysicalModelWithPartition({ builder, codeValue: "TestPhysicalModel" });
+-      const category = insertSpatialCategory({ builder, codeValue: "TestSpatialCategory" });
+-      const element = insertPhysicalElement({
+-        builder,
+-        modelId: model.id,
+-        categoryId: category.id,
+-        classFullName: mySchema.items.MyPhysicalObject.fullName,
+-        userLabel: "My element",
+-        ["MyProperty"]: 1.234,
+-      });
+-      return { element, schema: mySchema };
+-    });
+-
+-    IModelApp.formatsProvider = {
+-      async getFormat(name: string): Promise<FormatDefinition | undefined> {
+-        if (name === schema.items.TestKOQ.fullName.replaceAll(".", ":")) {
+-          return {
+-            name: "TestFormat",
+-            label: "Test format override",
+-            composite: {
+-              includeZero: true,
+-              spacer: "",
+-              units: [{ label: "in", name: "Units.IN" }],
+-            },
+-            formatTraits: ["keepSingleZero", "showUnitLabel"],
+-            precision: 1,
+-            type: "Decimal",
+-          };
+-        }
+-        return undefined;
+-      },
+-      onFormatsChanged: new BeEvent(),
+-    };
+-
+-    const provider = new PresentationPropertyDataProvider({ imodel });
+-    provider.keys = new KeySet([imodelKeys.element]);
+-
+-    const descriptor = await provider.getContentDescriptor();
+-    const field = descriptor!.getFieldByDescriptor(
+-      {
+-        type: FieldDescriptorType.Properties,
+-        pathFromSelectToPropertyClass: [],
+-        properties: [
+-          {
+-            class: schema.items.MyPhysicalObject.fullName.replaceAll(".", ":"),
+-            name: "MyProperty",
+-          },
+-        ],
+-      },
+-      true,
+-    );
+-    expect(field).to.not.be.undefined;
+-
+-    const propertyData = await provider.getData();
+-    const propertyRecord = propertyData.records[field!.category.name].find((r) => r.property.name === field!.name);
+-    expect(propertyRecord).to.not.be.undefined;
+-    expect(propertyRecord!.property.kindOfQuantityName).to.eq(schema.items.TestKOQ.fullName.replaceAll(".", ":"));
+-
+-    // ensure the display value is formatted with the overridden format
+-    expect((propertyRecord!.value as PrimitiveValue).displayValue).to.eq("48.6 in");
+-
+-    // render an editor for the property
+-    const commitSpy = sinon.spy();
+-    const cancelSpy = sinon.spy();
+-    const { getByPlaceholderText, findByRole, user } = render(
+-      <SchemaMetadataContextProvider imodel={imodel} schemaContextProvider={(x) => x.schemaContext}>
+-        <EditorContainer propertyRecord={propertyRecord!} onCommit={commitSpy} onCancel={cancelSpy} />
+-      </SchemaMetadataContextProvider>,
+-    );
+-    // ensure the input value is formatted
+-    await waitFor(async () => getByPlaceholderText("48.6 in"));
+-    // ensure the input is editable
+-    const input = await findByRole("textbox");
+-    await user.clear(input);
+-    await user.type(input, "4.56");
+-    await user.keyboard("{Enter}");
+-    // ensure the commit callback is called with the new value
+-    await waitFor(() => {
+-      expect(commitSpy).to.have.been.calledOnce;
+-      expect(commitSpy.firstCall.args[0].newValue.displayValue).to.eq("4.56"); // what user entered
+-      expect(commitSpy.firstCall.args[0].newValue.value.toFixed(6)).to.eq("0.115824"); // converted to persistence unit - meters
+-      expect(commitSpy.firstCall.args[0].newValue.roundingError.toFixed(6)).to.eq("0.000127");
+-    });
+-  });
+-});
+diff --git a/apps/full-stack-tests/src/testing/RulesetTesting.test.ts b/apps/full-stack-tests/src/testing/RulesetTesting.test.ts
+index 63947822..621c6df2 100644
+--- a/apps/full-stack-tests/src/testing/RulesetTesting.test.ts
++++ b/apps/full-stack-tests/src/testing/RulesetTesting.test.ts
+@@ -9,7 +9,6 @@ import ChaiJestSnapshot from "chai-jest-snapshot";
+ import path from "path";
+ import { Id64 } from "@itwin/core-bentley";
+ import { IModelApp, IModelConnection } from "@itwin/core-frontend";
+-import { SchemaFormatsProvider } from "@itwin/ecschema-metadata";
+ import { ChildNodeSpecificationTypes, ContentSpecificationTypes, RelationshipDirection, Ruleset, RuleTypes } from "@itwin/presentation-common";
+ import { ContentBuilder, HierarchyBuilder, TestIModelConnection } from "@itwin/presentation-testing";
+ import { initialize, terminate } from "../IntegrationTests.js";
+@@ -210,9 +209,6 @@ describe("RulesetTesting", () => {
+ 
+     // set up for testing iModel presentation data
+     iModel = TestIModelConnection.openFile(iModelPath);
+-
+-    // set up schema-based formatter
+-    IModelApp.formatsProvider = new SchemaFormatsProvider(iModel.schemaContext, "metric");
+     // __PUBLISH_EXTRACT_END__
+   });
+ 
 diff --git a/apps/full-stack-tests/src/testing/ruleset-testing-snapshots/my-test-content.snap b/apps/full-stack-tests/src/testing/ruleset-testing-snapshots/my-test-content.snap
-index 86d72d00..904a52f4 100644
+index c2ba40a4..6c2c3bc3 100644
 --- a/apps/full-stack-tests/src/testing/ruleset-testing-snapshots/my-test-content.snap
 +++ b/apps/full-stack-tests/src/testing/ruleset-testing-snapshots/my-test-content.snap
 @@ -3,13 +3,6 @@
@@ -132,7 +296,7 @@ index 86d72d00..904a52f4 100644
                  "property": Object {
                    "displayLabel": "Acres",
                    "editor": Object {
-@@ -94,13 +62,7 @@ Array [
+@@ -95,13 +63,7 @@ Array [
                  },
                },
                "pc_MyProp_areaElementAspect_cm2": PropertyRecord {
@@ -146,7 +310,7 @@ index 86d72d00..904a52f4 100644
                  "property": Object {
                    "displayLabel": "cm2",
                    "editor": Object {
-@@ -117,13 +79,7 @@ Array [
+@@ -119,13 +81,7 @@ Array [
                  },
                },
                "pc_MyProp_areaElementAspect_ft2": PropertyRecord {
@@ -160,7 +324,7 @@ index 86d72d00..904a52f4 100644
                  "property": Object {
                    "displayLabel": "ft2",
                    "editor": Object {
-@@ -140,13 +96,7 @@ Array [
+@@ -143,13 +99,7 @@ Array [
                  },
                },
                "pc_MyProp_areaElementAspect_ft__x0020__ft": PropertyRecord {
@@ -174,7 +338,7 @@ index 86d72d00..904a52f4 100644
                  "property": Object {
                    "displayLabel": "ft ft",
                    "editor": Object {
-@@ -163,13 +113,7 @@ Array [
+@@ -167,13 +117,7 @@ Array [
                  },
                },
                "pc_MyProp_areaElementAspect_ft__x0020__mi": PropertyRecord {
@@ -188,7 +352,7 @@ index 86d72d00..904a52f4 100644
                  "property": Object {
                    "displayLabel": "ft mi",
                    "editor": Object {
-@@ -186,13 +130,7 @@ Array [
+@@ -191,13 +135,7 @@ Array [
                  },
                },
                "pc_MyProp_areaElementAspect_ha": PropertyRecord {
@@ -202,7 +366,7 @@ index 86d72d00..904a52f4 100644
                  "property": Object {
                    "displayLabel": "ha",
                    "editor": Object {
-@@ -209,13 +147,7 @@ Array [
+@@ -215,13 +153,7 @@ Array [
                  },
                },
                "pc_MyProp_areaElementAspect_in2": PropertyRecord {
@@ -216,7 +380,7 @@ index 86d72d00..904a52f4 100644
                  "property": Object {
                    "displayLabel": "in2",
                    "editor": Object {
-@@ -232,13 +164,7 @@ Array [
+@@ -239,13 +171,7 @@ Array [
                  },
                },
                "pc_MyProp_areaElementAspect_in__x0020__ft": PropertyRecord {
@@ -230,7 +394,7 @@ index 86d72d00..904a52f4 100644
                  "property": Object {
                    "displayLabel": "in ft",
                    "editor": Object {
-@@ -255,13 +181,7 @@ Array [
+@@ -263,13 +189,7 @@ Array [
                  },
                },
                "pc_MyProp_areaElementAspect_in__x0020__m": PropertyRecord {
@@ -244,7 +408,7 @@ index 86d72d00..904a52f4 100644
                  "property": Object {
                    "displayLabel": "in m",
                    "editor": Object {
-@@ -278,13 +198,7 @@ Array [
+@@ -287,13 +207,7 @@ Array [
                  },
                },
                "pc_MyProp_areaElementAspect_in__x0020__mi": PropertyRecord {
@@ -258,7 +422,7 @@ index 86d72d00..904a52f4 100644
                  "property": Object {
                    "displayLabel": "in mi",
                    "editor": Object {
-@@ -301,13 +215,7 @@ Array [
+@@ -311,13 +225,7 @@ Array [
                  },
                },
                "pc_MyProp_areaElementAspect_km2": PropertyRecord {
@@ -272,7 +436,7 @@ index 86d72d00..904a52f4 100644
                  "property": Object {
                    "displayLabel": "km2",
                    "editor": Object {
-@@ -324,13 +232,7 @@ Array [
+@@ -335,13 +243,7 @@ Array [
                  },
                },
                "pc_MyProp_areaElementAspect_m2": PropertyRecord {
@@ -286,7 +450,7 @@ index 86d72d00..904a52f4 100644
                  "property": Object {
                    "displayLabel": "m2",
                    "editor": Object {
-@@ -347,13 +249,7 @@ Array [
+@@ -359,13 +261,7 @@ Array [
                  },
                },
                "pc_MyProp_areaElementAspect_m__x0020__km": PropertyRecord {
@@ -300,7 +464,7 @@ index 86d72d00..904a52f4 100644
                  "property": Object {
                    "displayLabel": "m km",
                    "editor": Object {
-@@ -370,13 +266,7 @@ Array [
+@@ -383,13 +279,7 @@ Array [
                  },
                },
                "pc_MyProp_areaElementAspect_m__x0020__m": PropertyRecord {
@@ -314,7 +478,7 @@ index 86d72d00..904a52f4 100644
                  "property": Object {
                    "displayLabel": "m m",
                    "editor": Object {
-@@ -393,13 +283,7 @@ Array [
+@@ -407,13 +297,7 @@ Array [
                  },
                },
                "pc_MyProp_areaElementAspect_mi2": PropertyRecord {
@@ -328,7 +492,7 @@ index 86d72d00..904a52f4 100644
                  "property": Object {
                    "displayLabel": "mi2",
                    "editor": Object {
-@@ -416,13 +300,7 @@ Array [
+@@ -431,13 +315,7 @@ Array [
                  },
                },
                "pc_MyProp_areaElementAspect_mm__x0020__km": PropertyRecord {
@@ -342,7 +506,7 @@ index 86d72d00..904a52f4 100644
                  "property": Object {
                    "displayLabel": "mm km",
                    "editor": Object {
-@@ -439,13 +317,7 @@ Array [
+@@ -455,13 +333,7 @@ Array [
                  },
                },
                "pc_MyProp_areaElementAspect_thousand__x0020__ft2": PropertyRecord {
@@ -356,7 +520,7 @@ index 86d72d00..904a52f4 100644
                  "property": Object {
                    "displayLabel": "thousand ft2",
                    "editor": Object {
-@@ -471,13 +343,7 @@ Array [
+@@ -488,13 +360,7 @@ Array [
      },
    },
    PropertyRecord {
@@ -370,7 +534,7 @@ index 86d72d00..904a52f4 100644
      "property": Object {
        "displayLabel": "firstTry",
        "name": "rc_generic_PhysicalObject_ncc_MyProp_firstTryElementAspect",
-@@ -486,13 +352,7 @@ Array [
+@@ -503,13 +369,7 @@ Array [
      "value": Object {
        "items": Array [
          PropertyRecord {
@@ -384,7 +548,7 @@ index 86d72d00..904a52f4 100644
            "property": Object {
              "displayLabel": "firstTry",
              "name": "rc_generic_PhysicalObject_ncc_MyProp_firstTryElementAspect",
-@@ -501,13 +361,7 @@ Array [
+@@ -518,13 +378,7 @@ Array [
            "value": Object {
              "members": Object {
                "pc_MyProp_firstTryElementAspect_email": PropertyRecord {
@@ -398,7 +562,7 @@ index 86d72d00..904a52f4 100644
                  "property": Object {
                    "displayLabel": "email",
                    "name": "rc_generic_PhysicalObject_ncc_MyProp_firstTryElementAspect$pc_MyProp_firstTryElementAspect_email",
-@@ -520,13 +374,7 @@ Array [
+@@ -537,13 +391,7 @@ Array [
                  },
                },
                "pc_MyProp_firstTryElementAspect_full__x0020__URL": PropertyRecord {
@@ -412,7 +576,7 @@ index 86d72d00..904a52f4 100644
                  "property": Object {
                    "displayLabel": "full URL",
                    "name": "rc_generic_PhysicalObject_ncc_MyProp_firstTryElementAspect$pc_MyProp_firstTryElementAspect_full__x0020__URL",
-@@ -539,13 +387,7 @@ Array [
+@@ -556,13 +404,7 @@ Array [
                  },
                },
                "pc_MyProp_firstTryElementAspect_mailto": PropertyRecord {
@@ -426,7 +590,7 @@ index 86d72d00..904a52f4 100644
                  "property": Object {
                    "displayLabel": "mailto",
                    "name": "rc_generic_PhysicalObject_ncc_MyProp_firstTryElementAspect$pc_MyProp_firstTryElementAspect_mailto",
-@@ -558,13 +400,7 @@ Array [
+@@ -575,13 +417,7 @@ Array [
                  },
                },
                "pc_MyProp_firstTryElementAspect_without__x0020__http": PropertyRecord {
@@ -440,7 +604,7 @@ index 86d72d00..904a52f4 100644
                  "property": Object {
                    "displayLabel": "without http",
                    "name": "rc_generic_PhysicalObject_ncc_MyProp_firstTryElementAspect$pc_MyProp_firstTryElementAspect_without__x0020__http",
-@@ -577,13 +413,7 @@ Array [
+@@ -594,13 +430,7 @@ Array [
                  },
                },
                "pc_MyProp_firstTryElementAspect_without__x0020__www": PropertyRecord {
@@ -454,7 +618,7 @@ index 86d72d00..904a52f4 100644
                  "property": Object {
                    "displayLabel": "without www",
                    "name": "rc_generic_PhysicalObject_ncc_MyProp_firstTryElementAspect$pc_MyProp_firstTryElementAspect_without__x0020__www",
-@@ -605,13 +435,7 @@ Array [
+@@ -622,13 +452,7 @@ Array [
      },
    },
    PropertyRecord {
@@ -468,7 +632,7 @@ index 86d72d00..904a52f4 100644
      "property": Object {
        "displayLabel": "workingUnitsProp",
        "name": "rc_generic_PhysicalObject_ncc_MyProp_workingUnitsPropElementAspect",
-@@ -620,13 +444,7 @@ Array [
+@@ -637,13 +461,7 @@ Array [
      "value": Object {
        "items": Array [
          PropertyRecord {
@@ -482,7 +646,7 @@ index 86d72d00..904a52f4 100644
            "property": Object {
              "displayLabel": "workingUnitsProp",
              "name": "rc_generic_PhysicalObject_ncc_MyProp_workingUnitsPropElementAspect",
-@@ -635,13 +453,7 @@ Array [
+@@ -652,13 +470,7 @@ Array [
            "value": Object {
              "members": Object {
                "pc_MyProp_workingUnitsPropElementAspect_Angle": PropertyRecord {
@@ -496,7 +660,7 @@ index 86d72d00..904a52f4 100644
                  "property": Object {
                    "displayLabel": "Angle",
                    "editor": Object {
-@@ -657,13 +469,7 @@ Array [
+@@ -674,13 +486,7 @@ Array [
                  },
                },
                "pc_MyProp_workingUnitsPropElementAspect_Area": PropertyRecord {
@@ -510,7 +674,7 @@ index 86d72d00..904a52f4 100644
                  "property": Object {
                    "displayLabel": "Area",
                    "editor": Object {
-@@ -679,13 +485,7 @@ Array [
+@@ -696,13 +502,7 @@ Array [
                  },
                },
                "pc_MyProp_workingUnitsPropElementAspect_Distance": PropertyRecord {
@@ -524,7 +688,7 @@ index 86d72d00..904a52f4 100644
                  "property": Object {
                    "displayLabel": "Distance",
                    "editor": Object {
-@@ -701,13 +501,7 @@ Array [
+@@ -718,13 +518,7 @@ Array [
                  },
                },
                "pc_MyProp_workingUnitsPropElementAspect_Volume": PropertyRecord {

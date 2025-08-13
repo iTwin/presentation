@@ -8,7 +8,8 @@ import { expect } from "chai";
 import ChaiJestSnapshot from "chai-jest-snapshot";
 import path from "path";
 import { Id64 } from "@itwin/core-bentley";
-import { IModelConnection } from "@itwin/core-frontend";
+import { IModelApp, IModelConnection } from "@itwin/core-frontend";
+import { SchemaFormatsProvider } from "@itwin/ecschema-metadata";
 import { ChildNodeSpecificationTypes, ContentSpecificationTypes, RelationshipDirection, Ruleset, RuleTypes } from "@itwin/presentation-common";
 import { ContentBuilder, HierarchyBuilder, TestIModelConnection } from "@itwin/presentation-testing";
 import { initialize, terminate } from "../IntegrationTests.js";
@@ -209,6 +210,9 @@ describe("RulesetTesting", () => {
 
     // set up for testing iModel presentation data
     iModel = TestIModelConnection.openFile(iModelPath);
+
+    // set up schema-based formatter
+    IModelApp.formatsProvider = new SchemaFormatsProvider(iModel.schemaContext, "metric");
     // __PUBLISH_EXTRACT_END__
   });
 
