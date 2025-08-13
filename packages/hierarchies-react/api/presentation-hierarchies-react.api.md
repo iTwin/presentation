@@ -113,6 +113,12 @@ export { HierarchyNode }
 
 export { HierarchyProvider }
 
+// @alpha (undocumented)
+export interface HighlightInfo {
+    // (undocumented)
+    text: string;
+}
+
 // @public (undocumented)
 type IModelAccess = IModelHierarchyProviderProps["imodelAccess"];
 
@@ -331,6 +337,28 @@ type UseIModelTreeProps = Omit<UseTreeProps, "getHierarchyProvider" | "getFilter
 
 // @public
 export function useIModelUnifiedSelectionTree(props: UseIModelTreeProps & UseUnifiedTreeSelectionProps): UseTreeResult;
+
+// @alpha
+export function useNodeHighlighting({ rootNodes, highlight }: UseNodeHighlightingProps): UseNodeHighlightingResult;
+
+// @alpha
+interface UseNodeHighlightingProps {
+    // (undocumented)
+    highlight?: HighlightInfo & {
+        activeMatchIndex?: number;
+        onHighlightChanged?: (activeMatchIndex: number, matches: number) => void;
+    };
+    // (undocumented)
+    rootNodes: PresentationHierarchyNode[] | undefined;
+}
+
+// @public
+interface UseNodeHighlightingResult {
+    // (undocumented)
+    activeNodeId?: string;
+    // (undocumented)
+    getLabel: (node: PresentationHierarchyNode) => React.ReactElement;
+}
 
 // @public
 export function useSelectionHandler(props: UseSelectionHandlerProps): UseSelectionHandlerResult;

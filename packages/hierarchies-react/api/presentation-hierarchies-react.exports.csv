@@ -5,6 +5,7 @@ alpha;const;FilterAction
 alpha;type;FlatTreeItem
 public;interface;GenericErrorInfo
 public;interface;HierarchyLevelDetails
+alpha;interface;HighlightInfo
 public;function;LocalizationContextProvider
 public;interface;PresentationHierarchyNode
 alpha;const;RenameAction
@@ -19,6 +20,7 @@ alpha;function;useErrorList
 alpha;function;useFlatTreeItems
 public;function;useIModelTree
 public;function;useIModelUnifiedSelectionTree
+alpha;function;useNodeHighlighting
 public;function;useSelectionHandler
 public;function;useTree
 public;function;useUnifiedSelectionTree
