@@ -13,8 +13,8 @@ type BaseTreeRendererProps = React.ComponentPropsWithoutRef<typeof StrataKitTree
 
 function MyComponent(props: BaseTreeRendererProps & { searchText: string }) {
   // Create highlight based on searchText
-  const highlight = useMemo(() => (props.searchText ? { text: props.searchText } : undefined), [props.searchText]);
-  const { getLabel } = useNodeHighlighting({ rootNodes: props.rootNodes, highlight });
+  const highlightText = useMemo(() => (props.searchText !== "" ? props.searchText : undefined), [props.searchText]);
+  const { getLabel } = useNodeHighlighting({ highlightText });
 
   // Provide getLabel function to tree renderer
   return <StrataKitTreeRenderer {...props} getLabel={getLabel} />;
