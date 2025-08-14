@@ -1,5 +1,13 @@
 # Change Log - @itwin/presentation-testing
 
+## 5.4.7-alpha.1
+
+### Patch Changes
+
+- [#1042](https://github.com/iTwin/presentation/pull/1042): Version bump
+- Updated dependencies:
+  - @itwin/presentation-components@5.12.6-alpha.1
+
 ## 5.4.7
 
 ### Patch Changes

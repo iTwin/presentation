@@ -1,5 +1,13 @@
 # @itwin/presentation-hierarchies
 
+## 2.0.0-alpha.4
+
+### Patch Changes
+
+- [#1042](https://github.com/iTwin/presentation/pull/1042): Version bump
+- Updated dependencies:
+  - @itwin/presentation-shared@2.0.0-alpha.2
+
 ## 2.0.0-alpha.3
 
 ### Patch Changes
