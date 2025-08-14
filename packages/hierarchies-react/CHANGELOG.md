@@ -1,5 +1,34 @@
 # @itwin/presentation-hierarchies-react
 
+## 2.0.0-alpha.31
+
+### Patch Changes
+
+- [#1042](https://github.com/iTwin/presentation/pull/1042): Version bump
+- [#1040](https://github.com/iTwin/presentation/pull/1040): Added a react hook `useNodeHighlighting` that helps create highlighted node labels based on provided text that should be highlighted.
+
+  Example usage:
+
+  ```ts
+  import { StrataKitTreeRenderer, useNodeHighlighting } from "@itwin/presentation-hierarchies-react";
+
+  type BaseTreeRendererProps = React.ComponentPropsWithoutRef<typeof StrataKitTreeRenderer>;
+
+  function MyComponent(props: BaseTreeRendererProps & { searchText: string }) {
+    // Create highlight based on searchText
+    const highlightText = props.searchText !== "" ? props.searchText : undefined;
+    const { getLabel } = useNodeHighlighting({ highlightText });
+
+    // Provide getLabel function to tree renderer
+    return <StrataKitTreeRenderer {...props} getLabel={getLabel} />;
+  }
+  ```
+
+- Updated dependencies:
+  - @itwin/presentation-hierarchies@2.0.0-alpha.4
+  - @itwin/presentation-shared@2.0.0-alpha.2
+  - @itwin/unified-selection@1.5.1-alpha.1
+
 ## 2.0.0-alpha.30
 
 ### Patch Changes
