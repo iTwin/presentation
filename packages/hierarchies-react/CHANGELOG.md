@@ -1,5 +1,11 @@
 # @itwin/presentation-hierarchies-react
 
+## 2.0.0-alpha.32
+
+### Patch Changes
+
+- [#1045](https://github.com/iTwin/presentation/pull/1045): Fix highlight matching in `useNodeHighlighting` hook. Highlighting now works when the `highlightText` contains special characters (`[`, `+`, `*`, etc.).
+
 ## 2.0.0-alpha.31
 
 ### Patch Changes
