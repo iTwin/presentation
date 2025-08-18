@@ -34,10 +34,26 @@ export function useNodeHighlighting({ highlightText }: UseNodeHighlightingProps)
       if (!highlightText) {
         return <span>{node.label}</span>;
       }
-      const matchedIndexes = [...node.label.matchAll(new RegExp(highlightText, "gi"))].map((a) => a.index);
+
+      const matchedIndexes = new Array<number>();
+      const nodeLabel = node.label.toLocaleLowerCase();
+      const searchText = highlightText.toLocaleLowerCase();
+      let fromPosition = 0;
+      // Find all occurrences of the search text in the node label
+      while (true) {
+        const foundIndex = nodeLabel.indexOf(searchText, fromPosition);
+        if (foundIndex === -1) {
+          break;
+        }
+        matchedIndexes.push(foundIndex);
+        fromPosition = foundIndex + searchText.length;
+      }
+
       if (matchedIndexes.length === 0) {
         return <span>{node.label}</span>;
       }
+
+      // Create the final label with highlighted parts
       const finalLabel = new Array<React.JSX.Element>();
       let lastAddedPosition = 0;
       for (let i = 0; i < matchedIndexes.length; ++i) {

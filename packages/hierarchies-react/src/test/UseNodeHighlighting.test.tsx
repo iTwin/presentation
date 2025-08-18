@@ -46,6 +46,18 @@ describe("useNodeHighlighting", () => {
     expect(container.querySelector("mark")?.textContent).to.be.eq("node");
   });
 
+  it("highlights text with special characters", () => {
+    const rootNodes = [createHierarchyNode({ id: "node", label: "[1-x]node" })];
+
+    const { result } = renderHook(useNodeHighlighting, {
+      initialProps: { highlightText: "[1-x]node" },
+    });
+
+    const { container } = render(result.current.getLabel(rootNodes[0]));
+
+    expect(container.querySelector("mark")?.textContent).to.be.eq("[1-x]node");
+  });
+
   it("highlights text in the middle", () => {
     const rootNodes = [createHierarchyNode({ id: "node", label: "1 test 2" })];
 
