@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { useCallback, useMemo } from "react";
+import { useCallback } from "react";
 import { PresentationHierarchyNode } from "./TreeNode.js";
 
 /**
@@ -29,23 +29,31 @@ interface UseNodeHighlightingResult {
  * @alpha
  */
 export function useNodeHighlighting({ highlightText }: UseNodeHighlightingProps): UseNodeHighlightingResult {
-  const getLabelProps = useMemo(() => {
-    if (highlightText) {
-      // Escape special regex characters in the highlight text
-      return { regex: new RegExp(highlightText.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "gi"), highlightLength: highlightText.length };
-    }
-    return null;
-  }, [highlightText]);
-
   const getLabel = useCallback(
     (node: PresentationHierarchyNode) => {
-      if (!getLabelProps) {
+      if (!highlightText) {
         return <span>{node.label}</span>;
       }
-      const matchedIndexes = [...node.label.matchAll(getLabelProps.regex)].map((a) => a.index);
+
+      const matchedIndexes = new Array<number>();
+      const nodeLabel = node.label.toLocaleLowerCase();
+      const searchText = highlightText.toLocaleLowerCase();
+      let fromPosition = 0;
+      // Find all occurrences of the search text in the node label
+      while (true) {
+        const foundIndex = nodeLabel.indexOf(searchText, fromPosition);
+        if (foundIndex === -1) {
+          break;
+        }
+        matchedIndexes.push(foundIndex);
+        fromPosition = foundIndex + searchText.length;
+      }
+
       if (matchedIndexes.length === 0) {
         return <span>{node.label}</span>;
       }
+
+      // Create the final label with highlighted parts
       const finalLabel = new Array<React.JSX.Element>();
       let lastAddedPosition = 0;
       for (let i = 0; i < matchedIndexes.length; ++i) {
@@ -54,7 +62,7 @@ export function useNodeHighlighting({ highlightText }: UseNodeHighlightingProps)
           finalLabel.push(<span key={`normal-${i}`}>{node.label.substring(lastAddedPosition, matchedIndex)}</span>);
           lastAddedPosition = matchedIndex;
         }
-        const endingPlace = matchedIndex + getLabelProps.highlightLength;
+        const endingPlace = matchedIndex + highlightText.length;
         finalLabel.push(<mark key={`marked-${i}`}>{node.label.substring(lastAddedPosition, endingPlace)}</mark>);
         lastAddedPosition = endingPlace;
       }
@@ -64,7 +72,7 @@ export function useNodeHighlighting({ highlightText }: UseNodeHighlightingProps)
 
       return <>{finalLabel}</>;
     },
-    [getLabelProps],
+    [highlightText],
   );
 
   return { getLabel };
