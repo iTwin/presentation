@@ -184,3 +184,20 @@ Additional configuration for presentation-test-app in `repos/presentation/apps/t
   }
 }
 ```
+
+### Fixing regression test failures
+
+Our regression tests make sure our full stack tests pass with versions of dependencies that we state our packages support. For example, our package may have a `peerDependency` on `@itwin/core-common` version range `^4.4.0 || ^5.0.0`, and our regular CI build pipeline will make sure that the tests pass with the latest `5.x` version. It's regression tests' job to ensure the tests also build & pass if we use the dependency at `4.4.0` or `4.10.0` versions.
+
+However, some new tests (not the library code) may rely on features that are only available in the latest version of the dependency, causing regression tests to fail. In this case, we want to either modify the test to expect result appropriate for the older version of the dependency, or remove the test altogether. That can be done using this workflow:
+
+1. Ensure working tree is clean.
+2. From repo root, run `./scripts/regression/runLocal.sh 4.4.0`. Expect the script to fail with build errors.
+3. Fix build errors.
+4. Stash all **code** changes. Do not stash `package.json`, lockfile or `*.tgz` files.
+5. `git diff --staged > ./scripts/regression/core-4.4.0.patch`. This will modify the patch file.
+6. Unstage everything, stage the modified patch file, revert working dir.
+7. Repeat step 2 to confirm that the patch file is correct and the script runs successfully. Revert working dir again afterwards.
+8. Commit the modified patch file.
+
+Repeat the above steps for core version `4.10.7` (specified in steps 2 and 5).

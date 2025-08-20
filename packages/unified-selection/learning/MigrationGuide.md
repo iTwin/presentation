@@ -3,11 +3,8 @@
 The unified selection system has been part of `@itwin/presentation-frontend` for a long time, providing a way for apps to have a single source of truth of what's selected. The implementation has a few drawbacks that we improved in the new `@itwin/unified-selection` package:
 
 - The unified selection API was tied to hierarchies' APIs (e.g. allowed selecting a "node key"). The new system handles this in a much more generic fashion, allowing selection of basically anything.
-
 - The system relied on specific RPC calls to produce result for certain requests. The new system handles everything using standard query APIs, so it's much more flexible.
-
 - All the unified selection APIs were tightly coupled together and relied on static initialization. The new system is more modular and allows using individual parts of functionality without requiring others.
-
 - The new system is not tied to a "frontend" and can be used anywhere.
 
 The below sections provide examples of how to migrate from the old system to the new one.
@@ -20,7 +17,7 @@ Before the deprecation, we made sure that migration is as smooth as possible by 
 
    The [Tree](./SyncWithTree.md), [Table](./SyncWithTable.md) and [Property grid](./SyncWithPropertyGrid.md) components simply got a new `selectionStorage` prop, which tells them to use the new system (click on the links for specific APIs). For Table and Property grid components, the new prop is optional to keep them backwards compatible - in that case they continue working with the deprecated API.
 
-   The [viewWithUnifiedSelection](https://www.itwinjs.org/reference/presentation-components/viewport/viewwithunifiedselection/) HOC was deprecated in favor of the `enableUnifiedSelectionSyncWithIModel` provided by this package. The API is quite a bit different, but it's more clear about what it does and is more flexible in how it can be used. See the [iModel selection synchronization with unified selection](./SyncWithIModelConnection.md) learning page for more information and example for using it in a React app.
+   The [viewWithUnifiedSelection](https://www.itwinjs.org/reference/presentation-components/viewport/viewwithunifiedselection/) HOC was deprecated in favor of the `enableUnifiedSelectionSyncWithIModel` provided by this package. The API is quite a bit different, but it's more clear about what it does and is more flexible in how it can be used. See the [iModel selection synchronization with unified selection](./SyncWithIModelConnection.md) learning page for more information and example for using it in a React app. **Warning:** the two approaches - `enableUnifiedSelectionSyncWithIModel` function and the deprecated `viewWithUnifiedSelection` HOC - are not compatible with each other and may result in unexpected selection changes. If you use the `enableUnifiedSelectionSyncWithIModel` function, you should NOT use the HOC.
 
 2. Existing components, that haven't migrated to the new system, continue working as expected.
 
@@ -284,6 +281,7 @@ function MyIModelComponent({ imodel, selectionStorage }: { imodel: IModelConnect
     activeScopeRef.current = activeScope;
   }, [activeScope]);
   React.useEffect(
+    // warning: ensure the viewport is rendered without the `viewWithUnifiedSelection` HOC when switching to `enableUnifiedSelectionSyncWithIModel`
     () => enableUnifiedSelectionSyncWithIModel({
       imodelAccess: createIModelAccess(imodel),
       selectionStorage,
@@ -320,7 +318,7 @@ const hiliteSet: AsyncIterableIterator<HiliteSet> = Presentation.selection.getHi
 In the new system, a hilite set provider has to be created. The provider holds the cached result and can be shared across components to avoid excessive requests.
 
 ```ts
-using provider = createCachingHiliteSetProvider({
+using provider = createIModelHiliteSetProvider({
   // this is called to get iModel access based on the iModel key
   imodelProvider: (imodelKey) => getIModelAccessByKey(imodelKey),
   selectionStorage,

@@ -1,5 +1,11 @@
 # @itwin/presentation-shared
 
+## 1.2.3
+
+### Patch Changes
+
+- [#1039](https://github.com/iTwin/presentation/pull/1039): Bump iTwin.js core dependencies to `^5.1.1`.
+
 ## 1.2.2
 
 ### Patch Changes

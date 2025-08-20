@@ -9,7 +9,14 @@ import sinon from "sinon";
 import { BeEvent } from "@itwin/core-bentley";
 import * as hierarchiesModule from "@itwin/presentation-hierarchies";
 import { IPrimitiveValueFormatter, Props } from "@itwin/presentation-shared";
-import { createStorage, Selectables, SelectionStorage, StorageSelectionChangeEventArgs, StorageSelectionChangesListener } from "@itwin/unified-selection";
+import {
+  createStorage,
+  Selectable,
+  Selectables,
+  SelectionStorage,
+  StorageSelectionChangeEventArgs,
+  StorageSelectionChangesListener,
+} from "@itwin/unified-selection";
 import { createNodeId } from "../presentation-hierarchies-react/internal/Utils.js";
 import {
   PresentationGenericInfoNode,
@@ -866,11 +873,10 @@ describe("useUnifiedSelectionTree", () => {
     return { instanceKey, instancesNodeKey, imodelKey };
   }
 
-  function createHierarchyNodeWithKey(id: string, name: string, children = false) {
-    const { instanceKey, instancesNodeKey, imodelKey } = createNodeKey(id);
-    const node = createTestHierarchyNode({ id: name, key: instancesNodeKey, autoExpand: true, children });
+  function createHierarchyNodeWithKey(key: hierarchiesModule.NonGroupingHierarchyNode["key"], name: string, children = false) {
+    const node = createTestHierarchyNode({ id: name, key, autoExpand: true, children });
     const nodeId = createNodeId(node);
-    return { nodeId, instanceKey, instancesNodeKey, node, imodelKey };
+    return { nodeId, node };
   }
 
   beforeEach(() => {
@@ -889,8 +895,9 @@ describe("useUnifiedSelectionTree", () => {
     cleanup();
   });
 
-  it("adds nodes to unified selection", async () => {
-    const { nodeId: nodeId, instanceKey: instanceKey, node: node, imodelKey } = createHierarchyNodeWithKey("0x1", "root-1");
+  it("adds instance node to unified selection", async () => {
+    const { instanceKey, instancesNodeKey, imodelKey } = createNodeKey("0x1");
+    const { nodeId: nodeId, node: node } = createHierarchyNodeWithKey(instancesNodeKey, "root-1");
     hierarchyProvider.getNodes.callsFake((props) => {
       return createAsyncIterator(props.parentNode === undefined ? [node] : []);
     });
@@ -923,8 +930,54 @@ describe("useUnifiedSelectionTree", () => {
     });
   });
 
+  it("adds custom selectable to unified selection", async () => {
+    const nodeKey: hierarchiesModule.GenericNodeKey = { type: "generic", id: "test-node" };
+    const { nodeId: nodeId, node: node } = createHierarchyNodeWithKey(nodeKey, "root-1");
+    hierarchyProvider.getNodes.callsFake((props) => {
+      return createAsyncIterator(props.parentNode === undefined ? [node] : []);
+    });
+
+    const testSelectable: Selectable = {
+      identifier: "test-selectable",
+      data: {},
+      async *loadInstanceKeys() {},
+    };
+
+    const { result } = renderHook(useUnifiedSelectionTree, {
+      initialProps: {
+        ...initialProps,
+        createSelectableForGenericNode: () => testSelectable,
+      },
+    });
+
+    await waitFor(() => {
+      expect(result.current.rootNodes).to.have.lengthOf(1);
+      expect(result.current.isNodeSelected(nodeId)).to.be.false;
+    });
+
+    act(() => {
+      result.current.selectNodes([nodeId], "add");
+    });
+
+    await waitFor(() => {
+      expect(changeListener).to.be.calledOnceWith(
+        sinon.match((args: StorageSelectionChangeEventArgs) => {
+          return (
+            args.changeType === "add" &&
+            args.source === sourceName &&
+            Selectables.size(args.selectables) === 1 &&
+            Selectables.has(args.selectables, testSelectable)
+          );
+        }),
+      );
+
+      expect(result.current.isNodeSelected(nodeId)).to.be.true;
+    });
+  });
+
   it("reacts to unified selection changes", async () => {
-    const { nodeId: nodeId, instanceKey: instanceKey, node: node, imodelKey } = createHierarchyNodeWithKey("0x1", "root-1");
+    const { instanceKey, instancesNodeKey, imodelKey } = createNodeKey("0x1");
+    const { nodeId: nodeId, node: node } = createHierarchyNodeWithKey(instancesNodeKey, "root-1");
     hierarchyProvider.getNodes.callsFake((props) => {
       return createAsyncIterator(props.parentNode === undefined ? [node] : []);
     });
