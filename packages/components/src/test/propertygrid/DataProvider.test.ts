@@ -5,11 +5,13 @@
 
 import { expect } from "chai";
 import * as sinon from "sinon";
-import { PropertyRecord } from "@itwin/appui-abstract";
+import { PrimitiveValue, PropertyRecord, PropertyValueFormat as UiPropertyValueFormat } from "@itwin/appui-abstract";
 import { PropertyCategory } from "@itwin/components-react";
 import { BeEvent, BeUiEvent } from "@itwin/core-bentley";
 import { EmptyLocalization } from "@itwin/core-common";
 import { FormattingUnitSystemChangedArgs, IModelApp, IModelConnection } from "@itwin/core-frontend";
+import { FormatsChangedArgs } from "@itwin/core-quantity";
+import { PrimitiveType, primitiveTypeToString, SchemaContext } from "@itwin/ecschema-metadata";
 import {
   ArrayTypeDescription,
   CategoryDescription,
@@ -19,6 +21,7 @@ import {
   DisplayValue,
   Field,
   Item,
+  KoqPropertyValueFormatter,
   LabelDefinition,
   Property,
   PropertyValueFormat,
@@ -29,7 +32,14 @@ import {
   Value,
   ValuesDictionary,
 } from "@itwin/presentation-common";
-import { FavoritePropertiesManager, FavoritePropertiesScope, Presentation, PresentationManager } from "@itwin/presentation-frontend";
+import {
+  FavoritePropertiesManager,
+  FavoritePropertiesScope,
+  Presentation,
+  PresentationManager,
+  RulesetManager,
+  RulesetVariablesManager,
+} from "@itwin/presentation-frontend";
 import { CacheInvalidationProps } from "../../presentation-components/common/ContentDataProvider.js";
 import { FAVORITES_CATEGORY_NAME } from "../../presentation-components/favorite-properties/Utils.js";
 import { DEFAULT_PROPERTY_GRID_RULESET, PresentationPropertyDataProvider } from "../../presentation-components/propertygrid/DataProvider.js";
@@ -50,6 +60,9 @@ import {
 class Provider extends PresentationPropertyDataProvider {
   public override invalidateCache(props: CacheInvalidationProps) {
     super.invalidateCache(props);
+  }
+  public override shouldRequestContentForEmptyKeyset(): boolean {
+    return true;
   }
   public override async getDescriptorOverrides() {
     return super.getDescriptorOverrides();
@@ -79,10 +92,23 @@ describe("PropertyDataProvider", () => {
 
   const iTwinId = "itwin-id";
   const imodelId = "imodel-id";
-  const imodel = { iTwinId, imodelId, key: "test-imodel" } as unknown as IModelConnection;
+  const imodel = {
+    iTwinId,
+    imodelId,
+    key: "test-imodel",
+    schemaContext: sinon.createStubInstance(SchemaContext),
+  } as unknown as IModelConnection;
 
   beforeEach(async () => {
-    presentationManager = sinon.createStubInstance(PresentationManager);
+    presentationManager = sinon.createStubInstance(PresentationManager, {
+      rulesets: {
+        onRulesetModified: new BeUiEvent(),
+      } as unknown as RulesetManager,
+      vars: {
+        onVariableChanged: new BeUiEvent(),
+      } as unknown as RulesetVariablesManager,
+    });
+    presentationManager.onIModelContentChanged = new BeUiEvent();
 
     favoritePropertiesManager = sinon.createStubInstance(FavoritePropertiesManager);
     favoritePropertiesManager.hasAsync.callsFake(async () => false);
@@ -389,6 +415,62 @@ describe("PropertyDataProvider", () => {
           const record = createTestContentItem({ values, displayValues });
           (provider as any).getContent = async () => new Content(descriptor, [record]);
           expect(await provider.getData()).to.matchSnapshot();
+        });
+
+        it("re-formats primitive property data", async () => {
+          // stub content
+          const field = createTestPropertiesContentField({
+            type: { valueFormat: PropertyValueFormat.Primitive, typeName: primitiveTypeToString(PrimitiveType.Double) },
+            properties: [
+              {
+                property: createTestPropertyInfo({
+                  kindOfQuantity: { name: "test.koq", label: "Test Koq", persistenceUnit: "Units.M" },
+                }),
+              },
+            ],
+          });
+          const descriptor = createTestContentDescriptor({ fields: [field] });
+          const values: ValuesDictionary<any> = {
+            [field.name]: 123.456789,
+          };
+          const displayValues: ValuesDictionary<any> = {
+            [field.name]: "123.5 m",
+          };
+          const record = createTestContentItem({ values, displayValues });
+          presentationManager.getContentIterator.resolves({
+            descriptor,
+            total: 1,
+            items: (async function* () {
+              yield record;
+            })(),
+          });
+
+          // stub formats provider
+          const onFormatsChanged = new BeUiEvent<FormatsChangedArgs>();
+          sinon.stub(IModelApp, "formatsProvider").get(() => ({
+            onFormatsChanged,
+          }));
+
+          // setup provider
+          const dataChangedSpy = sinon.spy();
+          provider.onDataChanged.addListener(dataChangedSpy);
+
+          // check the first (unformatted) request
+          expect((await provider.getData()).records[field.category.name][0].value).to.deep.eq({
+            valueFormat: UiPropertyValueFormat.Primitive,
+            value: 123.456789,
+            displayValue: "123.5 m",
+          } satisfies PrimitiveValue);
+
+          // change the format and ensure the results are different
+          sinon.stub(KoqPropertyValueFormatter.prototype, "format").resolves("formatted value");
+          onFormatsChanged.raiseEvent({ formatsChanged: "all" });
+          expect(dataChangedSpy).to.be.calledOnce;
+          expect((await provider.getData()).records[field.category.name][0].value).to.deep.eq({
+            valueFormat: UiPropertyValueFormat.Primitive,
+            value: 123.456789,
+            displayValue: "formatted value",
+          } satisfies PrimitiveValue);
         });
 
         it("returns array property data", async () => {

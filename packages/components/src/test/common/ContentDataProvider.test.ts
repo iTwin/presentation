@@ -9,6 +9,7 @@ import * as sinon from "sinon";
 import { PrimitiveValue, PropertyDescription, PropertyRecord } from "@itwin/appui-abstract";
 import { BeEvent, BeUiEvent } from "@itwin/core-bentley";
 import { FormattingUnitSystemChangedArgs, IModelApp, IModelConnection, QuantityFormatter } from "@itwin/core-frontend";
+import { FormatsChangedArgs, FormatsProvider } from "@itwin/core-quantity";
 import {
   ClientDiagnosticsAttribute,
   combineFieldNames,
@@ -70,6 +71,7 @@ describe("ContentDataProvider", () => {
   >();
   const onRulesetModified: RulesetManager["onRulesetModified"] = new BeEvent<(curr: RegisteredRuleset, prev: Ruleset) => void>();
   const onActiveFormattingUnitSystemChanged: QuantityFormatter["onActiveFormattingUnitSystemChanged"] = new BeUiEvent<FormattingUnitSystemChangedArgs>();
+  const onFormatsChanged: FormatsProvider["onFormatsChanged"] = new BeUiEvent<FormatsChangedArgs>();
 
   const rulesetManager = {
     onRulesetModified,
@@ -92,6 +94,9 @@ describe("ContentDataProvider", () => {
     sinon.stub(Presentation, "presentation").get(() => presentationManager);
     sinon.stub(IModelApp, "quantityFormatter").get(() => ({
       onActiveFormattingUnitSystemChanged,
+    }));
+    sinon.stub(IModelApp, "formatsProvider").get(() => ({
+      onFormatsChanged,
     }));
 
     provider = new Provider({ imodel, ruleset: rulesetId, displayType });
@@ -718,7 +723,12 @@ describe("ContentDataProvider", () => {
 
     it("invalidates cache when active unit system change", async () => {
       onActiveFormattingUnitSystemChanged.raiseEvent({ system: "metric" });
-      expect(invalidateCacheSpy).to.be.calledOnceWith({ content: true });
+      expect(invalidateCacheSpy).to.be.calledOnceWith({ formatting: true });
+    });
+
+    it("invalidates cache when formatting settings change", async () => {
+      onFormatsChanged.raiseEvent({ formatsChanged: "all" });
+      expect(invalidateCacheSpy).to.be.calledOnceWith({ formatting: true });
     });
   });
 

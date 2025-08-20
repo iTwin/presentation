@@ -102,6 +102,7 @@ export interface CacheInvalidationProps {
     content?: boolean;
     descriptor?: boolean;
     descriptorConfiguration?: boolean;
+    formatting?: boolean;
     size?: boolean;
 }
 
