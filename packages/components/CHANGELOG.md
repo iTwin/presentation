@@ -1,5 +1,12 @@
 # Change Log - @itwin/presentation-components
 
+## 5.12.7
+
+### Patch Changes
+
+- [#1047](https://github.com/iTwin/presentation/pull/1047): Fix content data providers not reacting to formats' changes, resulting in content components (table, property grid) showing property values, formatted with stale formatting settings.
+- [#1050](https://github.com/iTwin/presentation/pull/1050): Quantity properties editor now reacts to format settings change and updates value.
+
 ## 5.12.6
 
 ### Patch Changes
