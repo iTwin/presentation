@@ -224,6 +224,8 @@ const HierarchyNodeRenderer = forwardRef<HTMLDivElement, HierarchyNodeRendererPr
         icon={getIcon ? getIcon(node) : undefined}
         label={getLabel ? getLabel(node) : node.label}
         sublabel={getSublabel ? getSublabel(node) : undefined}
+        // TODO: review if this is needed when horizontal scroll is enabled back after fix for issue: https://github.com/iTwin/iTwinUI/issues/2330
+        title={node.label}
       >
         <TreeNodeActions
           node={node}
