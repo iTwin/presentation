@@ -89,6 +89,14 @@ function Tree({ imodelAccess, height, width }: { imodelAccess: IModelAccess; hei
 
   const { isReloading, ...treeProps } = useUnifiedSelectionTree({
     selectionStorage: unifiedSelectionContext.storage,
+    createSelectableForGenericNode: useCallback<NonNullable<Props<typeof useUnifiedSelectionTree>["createSelectableForGenericNode"]>>(
+      (node, uniqueId) => ({
+        identifier: node.key.source === "rss" ? node.key.id : uniqueId,
+        data: node,
+        async *loadInstanceKeys() {},
+      }),
+      [],
+    ),
     sourceName: "MultiIModelTree",
     getHierarchyProvider: useCallback(
       () =>

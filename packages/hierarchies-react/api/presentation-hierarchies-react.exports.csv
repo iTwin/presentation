@@ -19,6 +19,7 @@ alpha;function;useErrorList
 alpha;function;useFlatTreeItems
 public;function;useIModelTree
 public;function;useIModelUnifiedSelectionTree
+alpha;function;useNodeHighlighting
 public;function;useSelectionHandler
 public;function;useTree
 public;function;useUnifiedSelectionTree

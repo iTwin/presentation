@@ -8,7 +8,7 @@ import { Id64String } from "@itwin/core-bentley";
 import { ECClassHierarchyInspector, InstanceKey } from "@itwin/presentation-shared";
 import { HierarchyNodeIdentifier } from "../HierarchyNodeIdentifier.js";
 import { HierarchyNodeKey, IModelInstanceKey } from "../HierarchyNodeKey.js";
-import { createHierarchySearchHelper, HierarchySearchPath } from "../HierarchySearch.js";
+import { createHierarchySearchHelper, HierarchySearchPath, HierarchySearchPathOptions } from "../HierarchySearch.js";
 import { partition } from "../internal/operators/Partition.js";
 import { RxjsHierarchyDefinition, RxjsNodeParser, RxjsNodePostProcessor, RxjsNodePreProcessor } from "../internal/RxjsHierarchyDefinition.js";
 import {
@@ -57,57 +57,12 @@ export class SearchHierarchyDefinition implements RxjsHierarchyDefinition {
     };
   }
 
-  private shouldExpandGroupingNode(node: ProcessedGroupingHierarchyNode) {
-    for (const child of node.children) {
-      /* c8 ignore next 3 */
-      if (!child.search) {
-        continue;
-      }
-
-      if (child.search.isSearchTarget) {
-        const childAutoExpand = child.search.searchTargetOptions?.autoExpand;
-
-        // If child is a filter target and is has no `autoExpand` flag, then it's always to be expanded.
-        if (childAutoExpand === true) {
-          return true;
-        }
-
-        // If it's not an object and not `true`, then it's falsy - continue looking
-        if (typeof childAutoExpand !== "object") {
-          continue;
-        }
-
-        // If grouping node's child has `autoExpandUntil` flag,
-        // auto-expand the grouping node only if it's depth is lower than that of the grouping node in associated with the target.
-        const nodeDepth = childAutoExpand.includeGroupingNodes
-          ? node.parentKeys.length
-          : node.parentKeys.filter((key) => !HierarchyNodeKey.isGrouping(key)).length;
-        const filterTargetDepth = childAutoExpand.depth;
-        if (nodeDepth < filterTargetDepth) {
-          return true;
-        }
-      }
-
-      if (!child.search.searchedChildrenIdentifierPaths) {
-        /* c8 ignore next */
-        continue;
-      }
-
-      for (const path of child.search.searchedChildrenIdentifierPaths) {
-        if ("path" in path && path.options?.autoExpand) {
-          return true;
-        }
-      }
-    }
-    return false;
-  }
-
   public get postProcessNode(): RxjsNodePostProcessor {
     return (node) => {
       return (this._source.postProcessNode ? this._source.postProcessNode(node) : of(node)).pipe(
         map((processedNode) => {
           // instance nodes get the auto-expand flag in `parseNode`, but grouping ones need to be handled during post-processing
-          if (ProcessedHierarchyNode.isGroupingNode(node) && this.shouldExpandGroupingNode(node)) {
+          if (ProcessedHierarchyNode.isGroupingNode(node) && shouldExpandGroupingNode(node)) {
             Object.assign(processedNode, { autoExpand: true });
           }
           return processedNode;
@@ -148,13 +103,7 @@ export class SearchHierarchyDefinition implements RxjsHierarchyDefinition {
           return (nodeExtraPropsPossiblyPromise instanceof Promise ? from(nodeExtraPropsPossiblyPromise) : of(nodeExtraPropsPossiblyPromise)).pipe(
             map((nodeExtraProps) => {
               if (nodeExtraProps?.autoExpand) {
-                const parentLength = !parentNode
-                  ? 0
-                  : nodeExtraProps.search?.includeGroupingNodes
-                    ? 1 + parentNode.parentKeys.length
-                    : 1 + parentNode.parentKeys.filter((key) => !HierarchyNodeKey.isGrouping(key)).length;
-                parsedNode.autoExpand =
-                  nodeExtraProps.search?.autoExpandDepth !== undefined && parentLength >= nodeExtraProps.search.autoExpandDepth ? undefined : true;
+                parsedNode.autoExpand = true;
               }
               if (nodeExtraProps?.search) {
                 parsedNode.search = nodeExtraProps.search;
@@ -340,4 +289,51 @@ export function applyECInstanceIdsSelector(def: InstanceNodesQueryDefinition): I
       `,
     },
   };
+}
+
+function shouldExpandGroupingNode(node: ProcessedGroupingHierarchyNode) {
+  const numberOfNonGroupingParentNodes = node.parentKeys.filter((key) => !HierarchyNodeKey.isGrouping(key)).length;
+  for (const child of node.children) {
+    /* c8 ignore next 3 */
+    if (!child.search) {
+      continue;
+    }
+
+    if (
+      child.search.isSearchTarget &&
+      getAutoExpandAsTrueFalse(child.search.searchTargetOptions?.autoExpand, numberOfNonGroupingParentNodes, node.parentKeys.length)
+    ) {
+      return true;
+    }
+
+    if (!child.search.searchedChildrenIdentifierPaths) {
+      /* c8 ignore next */
+      continue;
+    }
+
+    for (const path of child.search.searchedChildrenIdentifierPaths) {
+      if ("path" in path && getAutoExpandAsTrueFalse(path.options?.autoExpand, numberOfNonGroupingParentNodes, node.parentKeys.length)) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
+function getAutoExpandAsTrueFalse(
+  autoExpand: HierarchySearchPathOptions["autoExpand"],
+  numberOfNonGroupingParentNodes: number,
+  numberOfParentNodes: number,
+): boolean {
+  if (!autoExpand) {
+    return false;
+  }
+  if (autoExpand === true) {
+    return true;
+  }
+
+  // auto-expand should be set to true only if parentKeys length is smaller than depth.
+  const nodeDepth = "depthInHierarchy" in autoExpand ? numberOfParentNodes : numberOfNonGroupingParentNodes;
+  const filterTargetDepth = "depthInPath" in autoExpand ? autoExpand.depthInPath : autoExpand.depthInHierarchy;
+  return nodeDepth < filterTargetDepth;
 }

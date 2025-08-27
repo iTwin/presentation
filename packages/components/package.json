@@ -1,6 +1,6 @@
 {
   "name": "@itwin/presentation-components",
-  "version": "5.12.5-alpha.0",
+  "version": "5.12.6-alpha.1",
   "description": "React components based on iTwin.js Presentation library",
   "license": "MIT",
   "repository": {
@@ -94,9 +94,6 @@
     "@itwin/core-bentley": "catalog:itwinjs-core-dev",
     "@itwin/core-common": "catalog:itwinjs-core-dev",
     "@itwin/core-frontend": "catalog:itwinjs-core-dev",
-    "@itwin/core-geometry": "catalog:itwinjs-core-dev",
-    "@itwin/core-i18n": "catalog:itwinjs-core-dev",
-    "@itwin/core-orbitgt": "catalog:itwinjs-core-dev",
     "@itwin/core-quantity": "catalog:itwinjs-core-dev",
     "@itwin/core-react": "catalog:appui",
     "@itwin/ecschema-metadata": "catalog:itwinjs-core-dev",
@@ -106,7 +103,6 @@
     "@itwin/presentation-common": "catalog:itwinjs-core-dev",
     "@itwin/presentation-frontend": "catalog:itwinjs-core-dev",
     "@itwin/unified-selection-react": "workspace:^",
-    "@itwin/webgl-compatibility": "catalog:itwinjs-core-dev",
     "@testing-library/dom": "catalog:test-tools",
     "@testing-library/react": "catalog:test-tools",
     "@testing-library/user-event": "catalog:test-tools",

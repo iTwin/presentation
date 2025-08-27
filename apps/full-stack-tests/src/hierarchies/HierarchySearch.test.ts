@@ -1049,8 +1049,7 @@ describe("Hierarchies", () => {
               path: [rootNodeKey, elementKey],
               options: {
                 autoExpand: {
-                  key: { type: "class-grouping", className: keys.elements[0].className },
-                  depth: 1,
+                  depthInHierarchy: 1,
                 },
               },
             })),
@@ -1123,8 +1122,7 @@ describe("Hierarchies", () => {
                 path: [rootNodeKey, keys.rootElement, keys.middleElement, keys.childElement],
                 options: {
                   autoExpand: {
-                    includeGroupingNodes: true,
-                    depth: 5, // root node + (grouping node and instance node for root and middle elements),
+                    depthInHierarchy: 5, // root node + (grouping node and instance node for root and middle elements),
                   },
                 },
               },
@@ -1224,7 +1222,7 @@ describe("Hierarchies", () => {
                 path: [rootNodeKey, elementKey],
                 options: {
                   autoExpand: {
-                    depth: 1,
+                    depthInPath: 1,
                   },
                 },
               })),
@@ -1333,9 +1331,8 @@ describe("Hierarchies", () => {
 
         it("sets auto-expand flag until class grouping node", async () => {
           const autoExpandOptions = {
-            key: { type: "class-grouping", className: circleClassName },
-            depth: 1,
-          } as const;
+            depthInHierarchy: 1,
+          };
           await validateHierarchy({
             provider: createProvider({
               imodel,
@@ -1383,8 +1380,7 @@ describe("Hierarchies", () => {
 
         it("sets auto-expand flag until property grouping node", async () => {
           const autoExpandOptions = {
-            includeGroupingNodes: true,
-            depth: 2,
+            depthInHierarchy: 2,
           } as const;
           await validateHierarchy({
             provider: createProvider({
@@ -1433,9 +1429,8 @@ describe("Hierarchies", () => {
 
         it("sets auto-expand flag until label grouping node", async () => {
           const autoExpandOptions = {
-            includeGroupingNodes: true,
-            depth: 3,
-          } as const;
+            depthInHierarchy: 3,
+          };
           await validateHierarchy({
             provider: createProvider({
               imodel,

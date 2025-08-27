@@ -30,7 +30,11 @@ interface TreeRendererOwnProps {
   errorRenderer?: (props: TreeErrorRendererProps) => ReactElement;
   /** Props that defines if current node supports editing. */
   getEditingProps?: (node: PresentationHierarchyNode) => {
-    /** Callback that is invoked when node label is changed. If `undefined` node label is not editable. */
+    /**
+     * A callback that is invoked when node label is changed. Should be used together
+     * with `<RenameAction />` to enter label editing mode. Node label is not editable
+     * when this is not supplied.
+     */
     onLabelChanged?: (newLabel: string) => void;
   };
 }
@@ -160,7 +164,21 @@ type VirtualTreeItemProps = Omit<TreeNodeRendererProps, "node" | "aria-level" | 
 
 const VirtualTreeItem = memo(
   forwardRef<HTMLElement, VirtualTreeItemProps>(function VirtualTreeItem(
-    { start, item, getDecorations, getActions, getLabel, getSublabel, expandNode, reloadTree, onNodeClick, onNodeKeyDown, getEditingProps, ...props },
+    {
+      start,
+      item,
+      getDecorations,
+      getMenuActions,
+      getInlineActions,
+      getLabel,
+      getSublabel,
+      expandNode,
+      reloadTree,
+      onNodeClick,
+      onNodeKeyDown,
+      getEditingProps,
+      ...props
+    },
     forwardedRef,
   ) {
     const style: CSSProperties = useMemo(
@@ -193,7 +211,8 @@ const VirtualTreeItem = memo(
           expandNode={expandNode}
           reloadTree={reloadTree}
           getDecorations={getDecorations}
-          getActions={getActions}
+          getMenuActions={getMenuActions}
+          getInlineActions={getInlineActions}
           getLabel={getLabel}
           getSublabel={getSublabel}
           onNodeClick={onNodeClick}

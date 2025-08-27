@@ -40,7 +40,7 @@ export interface ClassGroupingNodeKey {
 }
 
 // @public
-export function createHierarchySearchHelper(rootLevelSearchProps: HierarchySearchPath[] | undefined, parentNode: Pick<NonGroupingHierarchyNode, "search"> | undefined): {
+export function createHierarchySearchHelper(rootLevelSearchProps: HierarchySearchPath[] | undefined, parentNode: Pick<NonGroupingHierarchyNode, "search" | "parentKeys"> | undefined): {
     hasSearch: boolean;
     hasSearchTargetAncestor: boolean;
     getChildNodeSearchIdentifiers: () => HierarchyNodeIdentifier[] | undefined;
@@ -48,10 +48,10 @@ export function createHierarchySearchHelper(rootLevelSearchProps: HierarchySearc
         nodeKey: InstancesNodeKey | GenericNodeKey;
     } | {
         pathMatcher: (identifier: HierarchyNodeIdentifier) => boolean;
-    }) => NodeProps | undefined;
+    }) => Pick<HierarchyNode, "autoExpand" | "search"> | undefined;
     createChildNodePropsAsync: (props: {
         pathMatcher: (identifier: HierarchyNodeIdentifier) => boolean | Promise<boolean>;
-    }) => Promise<NodeProps | undefined> | NodeProps | undefined;
+    }) => Promise<Pick<HierarchyNode, "autoExpand" | "search"> | undefined> | Pick<HierarchyNode, "autoExpand" | "search"> | undefined;
 };
 
 // @public
@@ -455,7 +455,7 @@ export namespace HierarchySearchPath {
 
 // @public (undocumented)
 export interface HierarchySearchPathOptions {
-    autoExpand?: boolean | SearchPathAutoExpandOption;
+    autoExpand?: boolean | SearchPathAutoExpandDepthInHierarchy | SearchPathAutoExpandDepthInPath;
 }
 
 // @public (undocumented)
@@ -552,14 +552,6 @@ export type NodePostProcessor = (node: ProcessedHierarchyNode) => Promise<Proces
 
 // @public
 export type NodePreProcessor = <TNode extends ProcessedGenericHierarchyNode | ProcessedInstanceHierarchyNode>(node: TNode) => Promise<TNode | undefined>;
-
-// @public (undocumented)
-type NodeProps = Pick<HierarchyNode, "autoExpand" | "search"> & {
-    search?: {
-        autoExpandDepth?: number;
-        includeGroupingNodes?: boolean;
-    };
-};
 
 // @public
 export enum NodeSelectClauseColumnNames {
@@ -704,9 +696,13 @@ export class RowsLimitExceededError extends Error {
 }
 
 // @public (undocumented)
-interface SearchPathAutoExpandOption {
-    depth: number;
-    includeGroupingNodes?: boolean;
+interface SearchPathAutoExpandDepthInHierarchy {
+    depthInHierarchy: number;
+}
+
+// @public (undocumented)
+interface SearchPathAutoExpandDepthInPath {
+    depthInPath: number;
 }
 
 // @public

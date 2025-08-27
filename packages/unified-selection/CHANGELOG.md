@@ -1,18 +1,71 @@
 # @itwin/unified-selection
 
+## 1.5.1-alpha.1
+
+### Patch Changes
+
+- [#1042](https://github.com/iTwin/presentation/pull/1042): Version bump
+- Updated dependencies:
+  - @itwin/presentation-shared@2.0.0-alpha.2
+
+## 1.5.1-alpha.0
+
+### Patch Changes
+
+- [#1031](https://github.com/iTwin/presentation/pull/1031): Version bump
+
+## 1.5.1
+
+### Patch Changes
+
+- [#1039](https://github.com/iTwin/presentation/pull/1039): Bump iTwin.js core dependencies to `^5.1.1`.
+- Updated dependencies:
+  - @itwin/presentation-shared@1.2.3
+
+## 1.5.0
+
+### Minor Changes
+
+- [#1018](https://github.com/iTwin/presentation/pull/1018): Fixed `enableUnifiedSelectionSyncWithIModel` not using (and not being able to use) the underlying hilite set provider of the given custom `CachingHiliteSetProvider`, causing selection synchronization to work incorrectly in cases when items were added or removed to iModel's selection set.
+
+  - Introduced `IModelHiliteSetProvider` interface and a factory function `createIModelHiliteSetProvider` that creates an instance of it. Functionality-wise these are very similar to `CachingHiliteSetProvider` and `createCachingHiliteSetProvider` but the new type provides access to the underlying hilite set provider of the given iModel. And the naming better represents the purpose of the type.
+  - Deprecated `CachingHiliteSetProvider` and `createCachingHiliteSetProvider` in favor of the above.
+  - For the `enableUnifiedSelectionSyncWithIModel` function, deprecated the `cachingHiliteSetProvider` prop in favor of the newly added `imodelHiliteSetProvider`.
+
+  The migration is straightforward:
+
+  ```typescript
+  // before:
+  enableUnifiedSelectionSyncWithIModel({
+    imodelAccess,
+    selectionStorage,
+    activeScopeProvider,
+    cachingHiliteSetProvider: createCachingHiliteSetProvider({
+      selectionStorage,
+      imodelProvider: () => imodelAccess,
+      createHiliteSetProvider: () => createMyCustomHiliteSetProvider({ imodelAccess }),
+    }),
+  });
+
+  // after:
+  enableUnifiedSelectionSyncWithIModel({
+    imodelAccess,
+    selectionStorage,
+    activeScopeProvider,
+    imodelHiliteSetProvider: createIModelHiliteSetProvider({
+      selectionStorage,
+      imodelProvider: () => imodelAccess,
+      createHiliteSetProvider: () => createMyCustomHiliteSetProvider({ imodelAccess }),
+    }),
+  });
+  ```
+
 ## 1.4.3-alpha.0
 
 ### Patch Changes
 
 - Updated dependencies:
   - @itwin/presentation-shared@2.0.0-alpha.1
-
-## 1.4.2-alpha.0
-
-### Patch Changes
-
-- Updated dependencies:
-  - @itwin/presentation-shared@2.0.0-alpha.0
 
 ## 1.4.2
 
@@ -21,6 +74,13 @@
 - [#982](https://github.com/iTwin/presentation/pull/982): Update itwinjs-core dependencies to v5.0.0
 - Updated dependencies:
   - @itwin/presentation-shared@1.2.2
+
+## 1.4.2-alpha.0
+
+### Patch Changes
+
+- Updated dependencies:
+  - @itwin/presentation-shared@2.0.0-alpha.0
 
 ## 1.4.1
 

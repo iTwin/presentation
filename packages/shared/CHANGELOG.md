@@ -1,5 +1,11 @@
 # @itwin/presentation-shared
 
+## 2.0.0-alpha.2
+
+### Patch Changes
+
+- [#1042](https://github.com/iTwin/presentation/pull/1042): Version bump
+
 ## 2.0.0-alpha.1
 
 ### Patch Changes
@@ -20,6 +26,12 @@
   While this is an addition, it's considered a breaking change, because objects of the updated types are expected to be supplied to us by consumers.
 
   In reality, consumers will likely use `@itwin/presentation-core-interop` package for creating them, and the package has been updated to handle the change, so reacting to the breaking change is as simple as bumping the version of `@itwin/presentation-core-interop` package in the consumer's `package.json`.
+
+## 1.2.3
+
+### Patch Changes
+
+- [#1039](https://github.com/iTwin/presentation/pull/1039): Bump iTwin.js core dependencies to `^5.1.1`.
 
 ## 1.2.2
 

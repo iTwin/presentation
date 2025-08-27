@@ -1,5 +1,96 @@
 # @itwin/presentation-hierarchies-react
 
+## 2.0.0-alpha.32
+
+### Patch Changes
+
+- [#1045](https://github.com/iTwin/presentation/pull/1045): Fix highlight matching in `useNodeHighlighting` hook. Highlighting now works when the `highlightText` contains special characters (`[`, `+`, `*`, etc.).
+
+## 2.0.0-alpha.31
+
+### Patch Changes
+
+- [#1042](https://github.com/iTwin/presentation/pull/1042): Version bump
+- [#1040](https://github.com/iTwin/presentation/pull/1040): Added a react hook `useNodeHighlighting` that helps create highlighted node labels based on provided text that should be highlighted.
+
+  Example usage:
+
+  ```ts
+  import { StrataKitTreeRenderer, useNodeHighlighting } from "@itwin/presentation-hierarchies-react";
+
+  type BaseTreeRendererProps = React.ComponentPropsWithoutRef<typeof StrataKitTreeRenderer>;
+
+  function MyComponent(props: BaseTreeRendererProps & { searchText: string }) {
+    // Create highlight based on searchText
+    const highlightText = props.searchText !== "" ? props.searchText : undefined;
+    const { getLabel } = useNodeHighlighting({ highlightText });
+
+    // Provide getLabel function to tree renderer
+    return <StrataKitTreeRenderer {...props} getLabel={getLabel} />;
+  }
+  ```
+
+- Updated dependencies:
+  - @itwin/presentation-hierarchies@2.0.0-alpha.4
+  - @itwin/presentation-shared@2.0.0-alpha.2
+  - @itwin/unified-selection@1.5.1-alpha.1
+
+## 2.0.0-alpha.30
+
+### Patch Changes
+
+- [#1037](https://github.com/iTwin/presentation/pull/1037): Added additional documentation for `RenameAction`
+
+## 2.0.0-alpha.29
+
+### Patch Changes
+
+- [#1035](https://github.com/iTwin/presentation/pull/1035): Version bump after merge from `master`.
+
+## 2.0.0-alpha.28
+
+### Patch Changes
+
+- [#1031](https://github.com/iTwin/presentation/pull/1031): Version bump
+- Updated dependencies:
+  - @itwin/presentation-hierarchies@2.0.0-alpha.3
+  - @itwin/unified-selection@1.5.1-alpha.0
+
+## 2.0.0-alpha.27
+
+### Patch Changes
+
+- [#1026](https://github.com/iTwin/presentation/pull/1026): Fix `reserveSpace` property being required instead of optional for `FilterAction` and `RenameAction`.
+
+## 2.0.0-alpha.26
+
+### Major Changes
+
+- [#1023](https://github.com/iTwin/presentation/pull/1023): Split `getActions` into `getMenuActions` & `getInlineActions` for `StrataKitTreeRenderer` and `StrataKitTreeNodeRenderer`.
+
+  Updated peer dependencies:
+
+  - @stratakit/bricks@0.3.3
+  - @stratakit/foundations@0.2.2
+  - @stratakit/structures@0.3.1
+
+  Added `reserveSpace` property to `FilterAction` and `RenameAction`, which reserves space for the action when it is not available
+
+### Minor Changes
+
+- [#1007](https://github.com/iTwin/presentation/pull/1007): Renames:
+  `FlatNode` => `FlatTreeNodeItem`
+  `FlatTreeNode` => `FlatTreeItem`
+  `PlaceholderNode` => `PlaceholderItem`
+  `useFlatTreeNodeList` => `useFlatTreeItems`
+
+  Changed `FlatTreeNodeItem` (previously `FlatNode`) to have property `node: PresentationHierarchyNode` instead of extending `PresentationHierarchyNode`.
+
+### Patch Changes
+
+- Updated dependencies:
+  - @itwin/presentation-hierarchies@2.0.0-alpha.2
+
 ## 2.0.0-alpha.25
 
 ### Patch Changes
@@ -364,6 +455,68 @@
 ### Major Changes
 
 - [#847](https://github.com/iTwin/presentation/pull/847): Moving tree rendering components to a new design systems.
+
+## 1.9.2
+
+### Patch Changes
+
+- [#1039](https://github.com/iTwin/presentation/pull/1039): Bump iTwin.js core dependencies to `^5.1.1`.
+- Updated dependencies:
+  - @itwin/presentation-hierarchies@1.7.2
+  - @itwin/presentation-shared@1.2.3
+  - @itwin/unified-selection@1.5.1
+
+## 1.9.1
+
+### Patch Changes
+
+- [#1033](https://github.com/iTwin/presentation/pull/1033): Fix unified selection tree state hooks `useUnifiedSelectionTree` and `useIModelUnifiedSelectionTree` not handling the recently added `createSelectableForGenericNode` prop.
+
+## 1.9.0
+
+### Minor Changes
+
+- [#1027](https://github.com/iTwin/presentation/pull/1027): Added `getActions` property to `TreeRenderer` and `TreeNodeRenderer` to allow providing custom actions for tree nodes.
+
+## 1.8.1
+
+### Patch Changes
+
+- Updated dependencies:
+  - @itwin/presentation-hierarchies@1.7.1
+
+## 1.8.0
+
+### Minor Changes
+
+- [#1019](https://github.com/iTwin/presentation/pull/1019): Add ability to customize `Selectable` objects that are added to unified selection, when a generic node in a unified selection-driven tree component is selected.
+
+  By default, when a generic node is selected in a unified selection-driven tree component, the `Selectable` that is created for it gets a per-tree unique identifier. This means that a similar generic node somewhere else in the tree or a different tree will not be considered the same. However, in some cases we do want generic nodes to be treated as the same, and for that matter unified selection-enabling tree state hooks now have a new `createSelectableForGenericNode` option:
+
+  ```tsx
+  import { useUnifiedSelectionTree } from "@itwin/presentation-hierarchies-react";
+
+  const treeState = useUnifiedSelectionTree({
+    selectionStorage,
+    createSelectableForGenericNode: useCallback<NonNullable<Props<typeof useUnifiedSelectionTree>["createSelectableForGenericNode"]>>(
+      (node, uniqueId) => ({ identifier: node.key.id, data: node, async *loadInstanceKeys() {} }),
+      [],
+    ),
+    // ...other options
+  });
+  ```
+
+### Patch Changes
+
+- Updated dependencies:
+  - @itwin/unified-selection@1.5.0
+
+## 1.7.2
+
+### Patch Changes
+
+- Updated dependencies:
+  - @itwin/presentation-hierarchies@1.7.0
 
 ## 1.7.1
 

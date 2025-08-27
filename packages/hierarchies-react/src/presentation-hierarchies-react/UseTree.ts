@@ -47,9 +47,14 @@ export function useTree(props: UseTreeProps): UseTreeResult {
  * @see `UnifiedSelectionProvider`
  * @public
  */
-export function useUnifiedSelectionTree({ sourceName, selectionStorage, ...props }: UseTreeProps & UseUnifiedTreeSelectionProps): UseTreeResult {
+export function useUnifiedSelectionTree({
+  sourceName,
+  selectionStorage,
+  createSelectableForGenericNode,
+  ...props
+}: UseTreeProps & UseUnifiedTreeSelectionProps): UseTreeResult {
   const { getTreeModelNode, ...rest } = useTreeInternal(props);
-  const selectionProps = useUnifiedTreeSelection({ sourceName, selectionStorage, getTreeModelNode });
+  const selectionProps = useUnifiedTreeSelection({ sourceName, selectionStorage, getTreeModelNode, createSelectableForGenericNode });
   if (rest.rootErrorRendererProps === undefined && rest.treeRendererProps?.rootNodes) {
     return {
       ...rest,
@@ -59,10 +64,7 @@ export function useUnifiedSelectionTree({ sourceName, selectionStorage, ...props
       },
     };
   }
-
-  return {
-    ...rest,
-  };
+  return rest;
 }
 
 /** @public */

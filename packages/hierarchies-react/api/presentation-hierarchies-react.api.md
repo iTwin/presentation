@@ -8,6 +8,7 @@ import { ComponentPropsWithoutRef } from 'react';
 import { createIModelHierarchyProvider } from '@itwin/presentation-hierarchies';
 import { FC } from 'react';
 import { GenericInstanceFilter } from '@itwin/presentation-hierarchies';
+import { GenericNodeKey } from '@itwin/presentation-hierarchies';
 import { getLogger } from '@itwin/presentation-hierarchies';
 import { HierarchyDefinition } from '@itwin/presentation-hierarchies';
 import { HierarchyNode } from '@itwin/presentation-hierarchies';
@@ -17,12 +18,14 @@ import { InstanceKey } from '@itwin/presentation-shared';
 import { IPrimitiveValueFormatter } from '@itwin/presentation-shared';
 import { JSX as JSX_2 } from 'react/jsx-runtime';
 import { NamedExoticComponent } from 'react';
+import { NonGroupingHierarchyNode } from '@itwin/presentation-hierarchies';
 import { Props } from '@itwin/presentation-shared';
 import { PropsWithChildren } from 'react';
 import { PropsWithRef } from 'react';
 import { ReactElement } from 'react';
 import { ReactNode } from 'react';
 import { RefAttributes } from 'react';
+import { Selectable } from '@itwin/unified-selection';
 import { SelectionStorage } from '@itwin/unified-selection';
 import { setLogger } from '@itwin/presentation-hierarchies';
 import { Tree } from '@stratakit/structures';
@@ -47,6 +50,7 @@ interface ErrorItem {
 // @alpha
 export const FilterAction: NamedExoticComponent<    {
 onFilter?: (hierarchyLevelDetails: HierarchyLevelDetails) => void;
+reserveSpace?: true;
 } & Pick<TreeRendererProps, "getHierarchyLevelDetails"> & {
 node: PresentationHierarchyNode;
 }>;
@@ -135,6 +139,7 @@ interface LocalizedStrings {
     increaseHierarchyLimitWithFiltering: string;
     issuesFound: string;
     loading: string;
+    more: string;
     noFilteredChildren: string;
     noFilteredChildrenChangeFilter: string;
     rename: string;
@@ -178,7 +183,12 @@ interface ReloadTreeOptions {
 }
 
 // @alpha
-export const RenameAction: NamedExoticComponent<object>;
+export const RenameAction: NamedExoticComponent<RenameActionProps>;
+
+// @alpha (undocumented)
+interface RenameActionProps {
+    reserveSpace?: true;
+}
 
 // @alpha (undocumented)
 export function RenameContextProvider({ onLabelChanged, children }: PropsWithChildren<{
@@ -266,9 +276,10 @@ type TreeNodeProps = ComponentPropsWithoutRef<typeof Tree.Item>;
 
 // @alpha (undocumented)
 interface TreeNodeRendererOwnProps {
-    getActions?: (node: PresentationHierarchyNode) => ReactNode[];
     getDecorations?: (node: PresentationHierarchyNode) => ReactNode;
+    getInlineActions?: (node: PresentationHierarchyNode) => ReactNode[];
     getLabel?: (node: PresentationHierarchyNode) => ReactElement | undefined;
+    getMenuActions?: (node: PresentationHierarchyNode) => ReactNode[];
     getSublabel?: (node: PresentationHierarchyNode) => ReactElement | undefined;
     node: PresentationHierarchyNode;
     onNodeClick?: (node: PresentationHierarchyNode, isSelected: boolean, event: React.MouseEvent<HTMLElement>) => void;
@@ -321,6 +332,19 @@ type UseIModelTreeProps = Omit<UseTreeProps, "getHierarchyProvider" | "getSearch
 // @public
 export function useIModelUnifiedSelectionTree(props: UseIModelTreeProps & UseUnifiedTreeSelectionProps): UseTreeResult;
 
+// @alpha
+export function useNodeHighlighting({ highlightText }: UseNodeHighlightingProps): UseNodeHighlightingResult;
+
+// @alpha
+interface UseNodeHighlightingProps {
+    highlightText?: string;
+}
+
+// @alpha
+interface UseNodeHighlightingResult {
+    getLabel: (node: PresentationHierarchyNode) => React.ReactElement;
+}
+
 // @public
 export function useSelectionHandler(props: UseSelectionHandlerProps): UseSelectionHandlerResult;
 
@@ -365,10 +389,13 @@ type UseTreeResult = {
 } & RendererProps;
 
 // @public
-export function useUnifiedSelectionTree({ sourceName, selectionStorage, ...props }: UseTreeProps & UseUnifiedTreeSelectionProps): UseTreeResult;
+export function useUnifiedSelectionTree({ sourceName, selectionStorage, createSelectableForGenericNode, ...props }: UseTreeProps & UseUnifiedTreeSelectionProps): UseTreeResult;
 
 // @public (undocumented)
 interface UseUnifiedTreeSelectionProps {
+    createSelectableForGenericNode?: (node: NonGroupingHierarchyNode & {
+        key: GenericNodeKey;
+    }, treeModelNodeId: string) => Selectable;
     selectionStorage: SelectionStorage;
     sourceName: string;
 }
