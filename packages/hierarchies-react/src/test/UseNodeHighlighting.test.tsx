@@ -11,7 +11,7 @@ import { render, renderHook } from "./TestUtils.js";
 
 describe("useNodeHighlighting", () => {
   it("does not highlight when highlight is undefined", () => {
-    const rootNodes = [createHierarchyNode({ id: "node", label: "node" })];
+    const rootNodes = [createdFilterTargetHierarchyNode({ id: "node", label: "node" })];
 
     const { result } = renderHook(useNodeHighlighting, {
       initialProps: {},
@@ -23,7 +23,7 @@ describe("useNodeHighlighting", () => {
   });
 
   it("does not highlight text when no matches found", () => {
-    const rootNodes = [createHierarchyNode({ id: "node", label: "node" })];
+    const rootNodes = [createdFilterTargetHierarchyNode({ id: "node", label: "node" })];
 
     const { result } = renderHook(useNodeHighlighting, {
       initialProps: { highlightText: "test" },
@@ -34,8 +34,20 @@ describe("useNodeHighlighting", () => {
     expect(container.querySelector("mark")).to.be.null;
   });
 
-  it("highlights text when match found", () => {
+  it("does not highlight text when node is not filter target", () => {
     const rootNodes = [createHierarchyNode({ id: "node", label: "node" })];
+
+    const { result } = renderHook(useNodeHighlighting, {
+      initialProps: { highlightText: "node" },
+    });
+
+    const { container } = render(result.current.getLabel(rootNodes[0]));
+
+    expect(container.querySelector("mark")).to.be.null;
+  });
+
+  it("highlights text when match found", () => {
+    const rootNodes = [createdFilterTargetHierarchyNode({ id: "node", label: "node" })];
 
     const { result } = renderHook(useNodeHighlighting, {
       initialProps: { highlightText: "node" },
@@ -47,7 +59,7 @@ describe("useNodeHighlighting", () => {
   });
 
   it("highlights text with special characters", () => {
-    const rootNodes = [createHierarchyNode({ id: "node", label: "[1-x]node" })];
+    const rootNodes = [createdFilterTargetHierarchyNode({ id: "node", label: "[1-x]node" })];
 
     const { result } = renderHook(useNodeHighlighting, {
       initialProps: { highlightText: "[1-x]node" },
@@ -59,7 +71,7 @@ describe("useNodeHighlighting", () => {
   });
 
   it("highlights text in the middle", () => {
-    const rootNodes = [createHierarchyNode({ id: "node", label: "1 test 2" })];
+    const rootNodes = [createdFilterTargetHierarchyNode({ id: "node", label: "1 test 2" })];
 
     const { result } = renderHook(useNodeHighlighting, {
       initialProps: { highlightText: "test" },
@@ -78,7 +90,7 @@ describe("useNodeHighlighting", () => {
   });
 
   it("highlights edges of text", () => {
-    const rootNodes = [createHierarchyNode({ id: "node", label: "test node test" })];
+    const rootNodes = [createdFilterTargetHierarchyNode({ id: "node", label: "test node test" })];
 
     const { result } = renderHook(useNodeHighlighting, {
       initialProps: { highlightText: "test" },
@@ -110,6 +122,7 @@ function createHierarchyNode(partial?: Partial<PresentationHierarchyNode>): Pres
     ...partial,
   };
 }
+
 function createNonGroupingHierarchyNode(partial?: Partial<NonGroupingHierarchyNode>): NonGroupingHierarchyNode {
   return {
     label: "test-node",
@@ -117,5 +130,18 @@ function createNonGroupingHierarchyNode(partial?: Partial<NonGroupingHierarchyNo
     parentKeys: [],
     children: false,
     ...partial,
+  };
+}
+
+function createdFilterTargetHierarchyNode(partial?: Partial<PresentationHierarchyNode>): PresentationHierarchyNode {
+  const node = createHierarchyNode(partial);
+  return {
+    ...node,
+    nodeData: {
+      ...node.nodeData,
+      filtering: {
+        isFilterTarget: true,
+      },
+    },
   };
 }
