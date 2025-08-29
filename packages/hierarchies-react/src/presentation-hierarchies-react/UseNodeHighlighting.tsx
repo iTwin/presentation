@@ -31,7 +31,7 @@ interface UseNodeHighlightingResult {
 export function useNodeHighlighting({ highlightText }: UseNodeHighlightingProps): UseNodeHighlightingResult {
   const getLabel = useCallback(
     (node: PresentationHierarchyNode) => {
-      if (!highlightText) {
+      if (!highlightText || !node.nodeData.filtering?.isFilterTarget) {
         return <span>{node.label}</span>;
       }
 
