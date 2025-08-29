@@ -172,12 +172,12 @@ export function createHierarchyProviderStub(customizations?: Partial<StubbedHier
     getNodes: createStub<HierarchyProvider["getNodes"]>(),
     getNodeInstanceKeys: createStub<HierarchyProvider["getNodeInstanceKeys"]>(),
     setFormatter: createStub<HierarchyProvider["setFormatter"]>(),
-    setHierarchyFilter: createStub<HierarchyProvider["setHierarchyFilter"]>(),
+    setHierarchySearch: createStub<HierarchyProvider["setHierarchySearch"]>(),
     [Symbol.dispose]: createStub<() => void>(),
     ...customizations,
   };
   provider.setFormatter.callsFake((arg) => provider.hierarchyChanged.raiseEvent({ formatterChange: { newFormatter: arg } }));
-  provider.setHierarchyFilter.callsFake((arg) => provider.hierarchyChanged.raiseEvent({ filterChange: { newFilter: arg } }));
+  provider.setHierarchySearch.callsFake((arg) => provider.hierarchyChanged.raiseEvent({ searchChange: { newSearch: arg } }));
   return provider;
 }
 

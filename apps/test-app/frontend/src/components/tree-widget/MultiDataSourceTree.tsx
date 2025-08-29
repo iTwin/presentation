@@ -12,7 +12,7 @@ import { SvgFolder, SvgGlobe, SvgImodelHollow, SvgItem, SvgModel } from "@itwin/
 import { Flex, ProgressRadial, SearchBox, Text } from "@itwin/itwinui-react";
 import { createECSchemaProvider, createECSqlQueryExecutor } from "@itwin/presentation-core-interop";
 import {
-  createHierarchyFilteringHelper,
+  createHierarchySearchHelper,
   createIModelHierarchyProvider,
   createLimitingECSqlQueryExecutor,
   createNodesQueryClauseFactory,
@@ -20,11 +20,11 @@ import {
   DefineInstanceNodeChildHierarchyLevelProps,
   GenericNodeKey,
   GetHierarchyNodesProps,
-  HierarchyFilteringPath,
   HierarchyNode,
   HierarchyNodeIdentifier,
   HierarchyNodeIdentifiersPath,
   HierarchyProvider,
+  HierarchySearchPath,
   mergeProviders,
 } from "@itwin/presentation-hierarchies";
 import { PresentationHierarchyNode, StrataKitRootErrorRenderer, StrataKitTreeRenderer, useUnifiedSelectionTree } from "@itwin/presentation-hierarchies-react";
@@ -69,17 +69,18 @@ function createIModelAccess(imodel: IModelConnection) {
 const RSS_PROVIDER = createRssHierarchyProvider();
 
 function Tree({ imodelAccess, height, width }: { imodelAccess: IModelAccess; height: number; width: number }) {
-  const [filter, setFilter] = useState("");
-  const getFilteredPaths = useMemo<UseTreeProps["getFilteredPaths"]>(() => {
+  const [search, setsearch] = useState("");
+  const getSearchPaths = useMemo<UseTreeProps["getSearchPaths"]>(() => {
     return async () => {
-      if (!filter) {
+      if (!search) {
         return undefined;
       }
-      return Promise.all([getModelsHierarchyFilteringPaths({ imodelAccess, filter }), RSS_PROVIDER.getFilteredPaths(filter)]).then(
-        ([imodelPaths, rssPaths]) => [...imodelPaths, ...rssPaths],
-      );
+      return Promise.all([getModelsHierarchySearchPaths({ imodelAccess, search }), RSS_PROVIDER.getSearchedPaths(search)]).then(([imodelPaths, rssPaths]) => [
+        ...imodelPaths,
+        ...rssPaths,
+      ]);
     };
-  }, [filter, imodelAccess]);
+  }, [search, imodelAccess]);
 
   const unifiedSelectionContext = useUnifiedSelectionContext();
   if (!unifiedSelectionContext) {
@@ -110,7 +111,7 @@ function Tree({ imodelAccess, height, width }: { imodelAccess: IModelAccess; hei
         }),
       [imodelAccess],
     ),
-    getFilteredPaths,
+    getSearchPaths,
     onHierarchyLoadError: (props) => {
       // eslint-disable-next-line no-console
       console.error(props.error);
@@ -129,10 +130,10 @@ function Tree({ imodelAccess, height, width }: { imodelAccess: IModelAccess; hei
       );
     }
 
-    if (treeProps.treeRendererProps.rootNodes.length === 0 && filter) {
+    if (treeProps.treeRendererProps.rootNodes.length === 0 && search) {
       return (
         <Flex alignItems="center" justifyContent="center" flexDirection="column" style={{ height: "100%" }}>
-          <Text isMuted>There are no nodes matching filter text {filter}</Text>
+          <Text isMuted>There are no nodes matching search text {search}</Text>
         </Flex>
       );
     }
@@ -179,7 +180,7 @@ function Tree({ imodelAccess, height, width }: { imodelAccess: IModelAccess; hei
   return (
     <Flex flexDirection="column" style={{ width, height }}>
       <Flex style={{ width: "100%", padding: "0.5rem" }}>
-        <DebouncedSearchBox onChange={setFilter} />
+        <DebouncedSearchBox onChange={setsearch} />
       </Flex>
       {renderContent()}
       {renderLoadingOverlay()}
@@ -296,23 +297,23 @@ function createModelsHierarchyDefinition({ imodelAccess }: { imodelAccess: IMode
     },
   });
 }
-async function getModelsHierarchyFilteringPaths({ imodelAccess, filter }: { imodelAccess: IModelAccess; filter: string }): Promise<HierarchyFilteringPath[]> {
+async function getModelsHierarchySearchPaths({ imodelAccess, search }: { imodelAccess: IModelAccess; search: string }): Promise<HierarchySearchPath[]> {
   const labelsFactory = createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess });
   const [rootSubjectPath, modelPaths] = await Promise.all([
-    getRootSubjectFilteredPath({ imodelAccess, filter, labelsFactory }),
-    Array.fromAsync(getModelsFilteringPaths({ imodelAccess, filter, labelsFactory })),
+    getRootSubjectsearchedPath({ imodelAccess, search, labelsFactory }),
+    Array.fromAsync(getModelssearchingPaths({ imodelAccess, search, labelsFactory })),
   ]);
   return [...(rootSubjectPath ? [rootSubjectPath] : []), ...modelPaths];
 }
-async function* getModelsFilteringPaths({
+async function* getModelssearchingPaths({
   imodelAccess,
-  filter,
+  search,
   labelsFactory,
 }: {
   imodelAccess: IModelAccess;
-  filter: string;
+  search: string;
   labelsFactory: IInstanceLabelSelectClauseFactory;
-}): AsyncIterableIterator<HierarchyFilteringPath> {
+}): AsyncIterableIterator<HierarchySearchPath> {
   const whereClause = `${await labelsFactory.createSelectClause({
     classAlias: "m",
     className: "BisCore.Model",
@@ -346,7 +347,7 @@ async function* getModelsFilteringPaths({
       FROM ModelsHierarchy mh
       WHERE mh.ParentId IS NULL
     `,
-    bindings: [{ type: "string", value: filter.replace(/[%_\\]/g, "\\$&") }],
+    bindings: [{ type: "string", value: search.replace(/[%_\\]/g, "\\$&") }],
   });
   for await (const row of modelsReader) {
     const path = JSON.parse(row.path) as HierarchyNodeIdentifiersPath;
@@ -361,13 +362,13 @@ async function* getModelsFilteringPaths({
     };
   }
 }
-async function getRootSubjectFilteredPath({
+async function getRootSubjectsearchedPath({
   imodelAccess,
-  filter,
+  search,
   labelsFactory,
 }: {
   imodelAccess: IModelAccess;
-  filter: string;
+  search: string;
   labelsFactory: IInstanceLabelSelectClauseFactory;
 }): Promise<HierarchyNodeIdentifiersPath | undefined> {
   const reader = imodelAccess.createQueryReader({
@@ -378,7 +379,7 @@ async function getRootSubjectFilteredPath({
         ${await labelsFactory.createSelectClause({ classAlias: "this", className: "BisCore.Subject", selectorsConcatenator: ECSql.createConcatenatedValueStringSelector })} LIKE '%' || ? || '%' ESCAPE '\\'
         AND this.ECInstanceId = 0x1
     `,
-    bindings: [{ type: "string", value: filter.replace(/[%_\\]/g, "\\$&") }],
+    bindings: [{ type: "string", value: search.replace(/[%_\\]/g, "\\$&") }],
   });
   const row = (await reader.next()).value as { id: Id64String } | undefined;
   return row ? [{ className: "BisCore.Subject", id: row.id, imodelKey: imodelAccess.imodelKey }] : undefined;
@@ -400,7 +401,7 @@ function getIcon(node: PresentationHierarchyNode): ReactElement | undefined {
   return undefined;
 }
 
-function createRssHierarchyProvider(): HierarchyProvider & { getFilteredPaths: (filter: string) => Promise<HierarchyFilteringPath[]> } {
+function createRssHierarchyProvider(): HierarchyProvider & { getSearchedPaths: (search: string) => Promise<HierarchySearchPath[]> } {
   let feedPromise: ReturnType<RssParser["parseURL"]> | undefined;
   async function getFeed() {
     if (!feedPromise) {
@@ -413,23 +414,23 @@ function createRssHierarchyProvider(): HierarchyProvider & { getFilteredPaths: (
     return feed;
   }
 
-  let filter: HierarchyFilteringPath[] | undefined;
+  let search: HierarchySearchPath[] | undefined;
   return {
     hierarchyChanged: new BeEvent(),
 
-    async getFilteredPaths(filterString: string): Promise<HierarchyFilteringPath[]> {
+    async getSearchedPaths(searchString: string): Promise<HierarchySearchPath[]> {
       const feed = await getFeed();
       if (!feed) {
         return [];
       }
       const paths = new Array<HierarchyNodeIdentifiersPath>();
 
-      if ((feed.title ?? "<no title>").toLocaleLowerCase().includes(filterString.toLocaleLowerCase())) {
+      if ((feed.title ?? "<no title>").toLocaleLowerCase().includes(searchString.toLocaleLowerCase())) {
         paths.push([{ type: "generic", id: "rss-root", source: "rss" }]);
       }
 
       feed.items.forEach((item) => {
-        if ((item.title ?? "<no title>").toLocaleLowerCase().includes(filterString.toLocaleLowerCase())) {
+        if ((item.title ?? "<no title>").toLocaleLowerCase().includes(searchString.toLocaleLowerCase())) {
           paths.push([
             { type: "generic", id: "rss-root", source: "rss" },
             { type: "generic", id: `rss-${item.guid!}`, source: "rss" },
@@ -478,18 +479,18 @@ function createRssHierarchyProvider(): HierarchyProvider & { getFilteredPaths: (
         }
       }
 
-      const filteringHelper = createHierarchyFilteringHelper(filter, parentNode);
-      if (!filteringHelper.hasFilter) {
+      const searchingHelper = createHierarchySearchHelper(search, parentNode);
+      if (!searchingHelper.hasSearch) {
         yield* generateNodes();
         return;
       }
 
-      const targetNodeKeys = filteringHelper.getChildNodeFilteringIdentifiers()!;
+      const targetNodeKeys = searchingHelper.getChildNodeSearchIdentifiers()!;
       for await (const node of generateNodes()) {
         if (targetNodeKeys.some((target) => HierarchyNodeIdentifier.equal(target, node.key))) {
           yield {
             ...node,
-            ...filteringHelper.createChildNodeProps({ nodeKey: node.key }),
+            ...searchingHelper.createChildNodeProps({ nodeKey: node.key }),
           };
         }
       }
@@ -499,14 +500,14 @@ function createRssHierarchyProvider(): HierarchyProvider & { getFilteredPaths: (
 
     setFormatter(_formatter: IPrimitiveValueFormatter | undefined): void {},
 
-    setHierarchyFilter(
+    setHierarchySearch(
       props:
         | {
-            paths: HierarchyFilteringPath[];
+            paths: HierarchySearchPath[];
           }
         | undefined,
     ): void {
-      filter = props?.paths;
+      search = props?.paths;
     },
   };
 }
