@@ -52,7 +52,6 @@ For local development it is recommended to setup [`CoSpace`](https://www.npmjs.c
    ```
 
 2. Clone repos you want to link together under the `repos` sub directory. List of recommended repos to clone:
-
    - [presentation](https://github.com/iTwin/presentation)
    - [itwinjs-core](https://github.com/iTwin/itwinjs-core)
    - [appui](https://github.com/iTwin/appui)

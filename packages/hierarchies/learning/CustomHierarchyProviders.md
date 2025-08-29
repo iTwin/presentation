@@ -321,7 +321,6 @@ await traverseHierarchy(provider);
 While node labels' formatting is completely hierarchy provider's responsibility, the APIs are built to make it easy to implement:
 
 - We provide 2 built-in formatters:
-
   - `createDefaultValueFormatter` from `@itwin/presentation-shared` package creates a basic formatter, that's suitable for values that don't have units.
   - `createValueFormatter` from `@itwin/presentation-core-interop` package creates a formatter that knows how to handle values with units.
 
