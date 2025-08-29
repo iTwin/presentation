@@ -1,5 +1,11 @@
 # @itwin/presentation-hierarchies-react
 
+## 2.0.0-alpha.33
+
+### Patch Changes
+
+- [#1057](https://github.com/iTwin/presentation/pull/1057): Change `useNodeHighlighting` hook to only highlight nodes that are filter targets.
+
 ## 2.0.0-alpha.32
 
 ### Patch Changes
