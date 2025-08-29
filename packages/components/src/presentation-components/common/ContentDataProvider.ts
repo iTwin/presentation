@@ -132,7 +132,7 @@ export interface IContentDataProvider extends IPresentationDataProvider {
   getFieldByPropertyRecord: (propertyRecord: PropertyRecord) => Promise<Field | undefined>;
 
   /** Get field that was used to create a property record with given property description. */
-  getFieldByPropertyDescription: (descr: PropertyDescription) => Promise<Field | undefined>;
+  getFieldByPropertyDescription: (description: PropertyDescription) => Promise<Field | undefined>;
 }
 
 /**
@@ -339,7 +339,7 @@ export class ContentDataProvider implements IContentDataProvider {
   /**
    * Get the content descriptor overrides.
    *
-   * The method may be overriden to configure the content based on content descriptor. If necessary,
+   * The method may be overridden to configure the content based on content descriptor. If necessary,
    * it may use [[getContentDescriptor]] to get the descriptor first.
    */
   protected async getDescriptorOverrides(): Promise<DescriptorOverrides> {
@@ -414,9 +414,9 @@ export class ContentDataProvider implements IContentDataProvider {
   }
 
   /** Get field that was used to create a property record with given property description. */
-  public async getFieldByPropertyDescription(descr: PropertyDescription): Promise<Field | undefined> {
+  public async getFieldByPropertyDescription(description: PropertyDescription): Promise<Field | undefined> {
     const descriptor = await this.getContentDescriptor();
-    return descriptor ? findField(descriptor, descr.name) : undefined;
+    return descriptor ? findField(descriptor, description.name) : undefined;
   }
 
   private _getContentAndSize = memoize(

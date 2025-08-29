@@ -29,11 +29,11 @@ export function createTestPropertyRecord(value?: Partial<PrimitiveValue>, proper
     displayValue: "test_prop_displayValue",
     ...value,
   };
-  const descr: PropertyDescription = {
+  const description: PropertyDescription = {
     typename: "string",
     name: "test_prop",
     displayLabel: "TestProp",
     ...property,
   };
-  return new PropertyRecord(recordValue, descr);
+  return new PropertyRecord(recordValue, description);
 }

@@ -9,7 +9,10 @@ import { doLog, log } from "../../internal/LoggingUtils.js";
 import { partition } from "../../internal/operators/Partition.js";
 import { ProcessedGenericHierarchyNode, ProcessedHierarchyNode, ProcessedInstanceHierarchyNode } from "../IModelHierarchyNode.js";
 
+// cspell:words doesnt
+
 const OPERATOR_NAME = "HideIfNoChildren";
+
 /** @internal */
 export const LOGGING_NAMESPACE = createOperatorLoggingNamespace(OPERATOR_NAME, LOGGING_NAMESPACE_INTERNAL);
 

@@ -16,6 +16,8 @@ import { ECSqlBinding, parseFullClassName, PrimitiveValue } from "@itwin/present
 import { buildTestIModel, createFileNameFromString, limitFilePathLength, setupOutputFileLocation, TestIModelBuilder } from "@itwin/presentation-testing";
 import { safeDispose } from "./Utils.js";
 
+// cspell:words jpath
+
 function isBinding(value: ECSqlBinding | PrimitiveValue): value is ECSqlBinding {
   return typeof value === "object" && (value as ECSqlBinding).type !== undefined && (value as ECSqlBinding).value !== undefined;
 }

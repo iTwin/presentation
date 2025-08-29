@@ -28,6 +28,8 @@ import {
 } from "@itwin/presentation-common";
 import { createTestECClassInfo, createTestECInstanceKey, createTestRelationshipPath } from "./Common.js";
 
+// cspell:words Parentship
+
 export const createTestCategoryDescription = (props?: Partial<CategoryDescription>) => ({
   name: "test-category",
   label: "Test Category",

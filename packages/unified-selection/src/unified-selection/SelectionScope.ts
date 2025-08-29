@@ -8,6 +8,8 @@ import { ECSqlBinding, ECSqlQueryDef, ECSqlQueryExecutor, ECSqlQueryRow } from "
 import { SelectableInstanceKey } from "./Selectable.js";
 import { formIdBindings, genericExecuteQuery } from "./Utils.js";
 
+//cspell:words onfe dgrfe peff
+
 /**
  * Available selection scopes.
  * @public

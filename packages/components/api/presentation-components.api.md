@@ -122,7 +122,7 @@ export class ContentDataProvider implements IContentDataProvider {
     getContentDescriptor: Memoized<() => Promise<Descriptor | undefined>>;
     getContentSetSize(): Promise<number>;
     protected getDescriptorOverrides(): Promise<DescriptorOverrides>;
-    getFieldByPropertyDescription(descr: PropertyDescription): Promise<Field | undefined>;
+    getFieldByPropertyDescription(description: PropertyDescription): Promise<Field | undefined>;
     // @deprecated
     getFieldByPropertyRecord(propertyRecord: PropertyRecord): Promise<Field | undefined>;
     get imodel(): IModelConnection;
@@ -252,7 +252,7 @@ export interface IContentDataProvider extends IPresentationDataProvider {
     getContent: (pageOptions?: PageOptions) => Promise<Content | undefined>;
     getContentDescriptor: () => Promise<Descriptor | undefined>;
     getContentSetSize: () => Promise<number>;
-    getFieldByPropertyDescription: (descr: PropertyDescription) => Promise<Field | undefined>;
+    getFieldByPropertyDescription: (description: PropertyDescription) => Promise<Field | undefined>;
     // @deprecated
     getFieldByPropertyRecord: (propertyRecord: PropertyRecord) => Promise<Field | undefined>;
     keys: KeySet;

@@ -100,47 +100,47 @@ export function createFieldInfo(field: Field, parentFieldName?: string): FieldIn
 
 /** @internal */
 export function createPropertyDescriptionFromFieldInfo(info: FieldInfo) {
-  const descr: WithConstraints<PropertyDescription> = {
+  const description: WithConstraints<PropertyDescription> = {
     typename: info.type.typeName,
     name: info.name,
     displayLabel: info.label,
   };
 
   if (info.renderer) {
-    descr.renderer = { name: info.renderer.name };
+    description.renderer = { name: info.renderer.name };
   }
 
   if (info.editor) {
-    descr.editor = { name: info.editor.name } as PropertyEditorInfo;
+    description.editor = { name: info.editor.name } as PropertyEditorInfo;
   }
 
   if (info.koqName) {
-    descr.kindOfQuantityName = info.koqName;
+    description.kindOfQuantityName = info.koqName;
     // eslint-disable-next-line @typescript-eslint/no-deprecated
-    descr.quantityType = info.koqName;
-    descr.editor = { name: QuantityEditorName, ...descr.editor };
+    description.quantityType = info.koqName;
+    description.editor = { name: QuantityEditorName, ...description.editor };
   }
 
   if (info.constraints) {
-    descr.constraints = info.constraints;
+    description.constraints = info.constraints;
   }
 
   if (
-    descr.typename === StandardTypeNames.Number ||
-    descr.typename === StandardTypeNames.Int ||
-    descr.typename === StandardTypeNames.Float ||
-    descr.typename === StandardTypeNames.Double
+    description.typename === StandardTypeNames.Number ||
+    description.typename === StandardTypeNames.Int ||
+    description.typename === StandardTypeNames.Float ||
+    description.typename === StandardTypeNames.Double
   ) {
-    descr.editor = { name: NumericEditorName, ...descr.editor };
+    description.editor = { name: NumericEditorName, ...description.editor };
   }
 
   if (info.type.valueFormat === PresentationPropertyValueFormat.Primitive && info.enum) {
-    descr.enum = {
+    description.enum = {
       choices: info.enum.choices,
       isStrict: info.enum.isStrict,
     };
   }
-  return descr;
+  return description;
 }
 
 /** @internal */
