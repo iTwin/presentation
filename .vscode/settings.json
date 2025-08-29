@@ -1,23 +1,4 @@
 {
-  "cSpell.words": [
-    "concatenator",
-    "deferreds",
-    "ecschema",
-    "ecsql",
-    "hilite",
-    "hilited",
-    "hilites",
-    "imodel",
-    "itwin",
-    "itwinjs",
-    "julianday",
-    "ruleset",
-    "selectable",
-    "selectables",
-    "txns",
-    "unregisters"
-  ],
-
   "editor.insertSpaces": true,
   "editor.tabSize": 2,
   "editor.trimAutoWhitespace": true,

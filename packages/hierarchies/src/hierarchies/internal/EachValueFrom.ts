@@ -5,6 +5,8 @@
 
 import { Observable } from "rxjs";
 
+// cspell:words deferreds
+
 /**
  * This is pretty much a combination of:
  * - https://github.com/benlesh/rxjs-for-await/blob/94f9cf9cb015ac3700dfd1850eb81d36962eb70f/src/index.ts#L33,

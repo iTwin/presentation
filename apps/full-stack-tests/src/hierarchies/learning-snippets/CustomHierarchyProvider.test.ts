@@ -271,7 +271,7 @@ describe("Hierarchies", () => {
         //   The Hobbit
         //   The Fellowship of Ring
         //   The two towers
-        // Grigas Petraitis
+        // Albert Einstein
         // Mark Twain
         //   Adventures of Huckleberry Finn
         //   The Adventures of Tom Sawyer
@@ -286,7 +286,7 @@ describe("Hierarchies", () => {
           "  The Hobbit",
           "  The Fellowship of Ring",
           "  The two towers",
-          "Grigas Petraitis",
+          "Albert Einstein",
           "Mark Twain",
           "  Adventures of Huckleberry Finn",
           "  The Adventures of Tom Sawyer",
@@ -619,13 +619,13 @@ describe("Hierarchies", () => {
           },
         });
         // Print the hierarchy level. Output:
-        // - Grigas Petraitis
+        // - Albert Einstein
         // - Mark Twain
         for await (const node of provider.getNodes({ parentNode: undefined, instanceFilter: createAuthorsFilter() })) {
           console.log(`- ${node.label}`);
         }
         // __PUBLISH_EXTRACT_END__
-        expect(consoleLogSpy.getCalls().map((call) => call.args[0])).to.deep.eq(["- Grigas Petraitis", "- Mark Twain"]);
+        expect(consoleLogSpy.getCalls().map((call) => call.args[0])).to.deep.eq(["- Albert Einstein", "- Mark Twain"]);
         consoleLogSpy.resetHistory();
 
         // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.CustomHierarchyProviders.HierarchyLevelFilteringProvider.Result2
@@ -688,7 +688,7 @@ type BooksServiceFilter<TEntry> = { rules: (Partial<TEntry> | BooksServiceFilter
 function createBooksService() {
   const authors = [
     { key: "OL26320A", name: "J.R.R. Tolkien", hasBooks: true },
-    { key: "GP00000X", name: "Grigas Petraitis", hasBooks: false },
+    { key: "GP00000X", name: "Albert Einstein", hasBooks: false },
     { key: "OL18319A", name: "Mark Twain", hasBooks: true },
     { key: "OL25277A", name: "Tom Clancy", hasBooks: true },
   ];
