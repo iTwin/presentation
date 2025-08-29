@@ -193,7 +193,7 @@ However, some new tests (not the library code) may rely on features that are onl
 1. Ensure working tree is clean.
 2. From repo root, run `./scripts/regression/runLocal.sh 4.4.0`. Expect the script to fail with build errors.
 3. Fix build errors.
-4. Stash all **code** changes. Do not stash `package.json`, lockfile or `*.tgz` files.
+4. Stage all **code** changes. Do not stage `package.json`, lockfile or `*.tgz` files.
 5. `git diff --staged > ./scripts/regression/core-4.4.0.patch`. This will modify the patch file.
 6. Unstage everything, stage the modified patch file, revert working dir.
 7. Repeat step 2 to confirm that the patch file is correct and the script runs successfully. Revert working dir again afterwards.
