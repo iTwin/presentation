@@ -109,9 +109,9 @@ export namespace Selectables {
    * @public
    */
   export function size(selectables: Selectables): number {
-    let insatanceCount = 0;
-    selectables.instanceKeys.forEach((set: Set<string>) => (insatanceCount += set.size));
-    return insatanceCount + selectables.custom.size;
+    let instanceCount = 0;
+    selectables.instanceKeys.forEach((set: Set<string>) => (instanceCount += set.size));
+    return instanceCount + selectables.custom.size;
   }
 
   /**

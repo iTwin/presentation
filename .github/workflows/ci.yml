@@ -28,6 +28,9 @@ jobs:
       - name: Run prettier
         run: pnpm prettier
 
+      - name: Run cspell
+        run: pnpm cspell
+
       - name: Build, Lint, Test
         env:
           NODE_ENV: "development"

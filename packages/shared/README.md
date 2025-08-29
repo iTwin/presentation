@@ -125,7 +125,6 @@ The ECSql utilities group contains a number of functions to help create complex 
   ```
 
 - `createRawPrimitiveValueSelector` - creates an ECSQL selector for a raw primitive value.
-
   - `undefined` is selected as `NULL`.
   - `Date` values are selected in julian day format.
   - `Point2d` and `Point3d` values are selected as serialized JSON objects, e.g. `{ x: 1, y: 2, z: 3 }`.
@@ -273,21 +272,17 @@ The APIs in Values group contain various value types and utilities to work with 
 - `InstanceKey` - a pair of full ECClass name and ECInstance ID, uniquely identifying an ECInstance in an iModel.
 
 - `PrimitiveValue` - a union of different supported primitive values. Also, a namespace, containing the following utilities:
-
   - `isPoint2d` - type guard to check if the given `PrimitiveValue` is a `Point2d`.
   - `isPoint3d` - type guard to check if the given `PrimitiveValue` is a `Point3d`.
 
 - `TypedPrimitiveValue` - a union of all supported combinations of `PrimitiveValue` and its type, possibly with some extra metadata like extended type name or units-related information. Also, a namespace, containing the following utilities:
-
   - `create` - given a `PrimitiveValue`, its type and, optionally, extra information, validates the input and creates a `TypedPrimitiveValue`.
 
 - `ConcatenatedValuePart` - a union of different types that may be used to create a single, combined value: nested `ConcatenatedValue`, `TypedPrimitiveValue` or just plain string. Also, a namespace, containing the following utilities:
-
   - `isString` - type guard to check if the given `ConcatenatedValuePart` is a `string`.
   - `isPrimitive` - type guard to check if the given `ConcatenatedValuePart` is a `TypedPrimitiveValue`.
 
 - `ConcatenatedValue` - an array of `ConcatenatedValuePart`. Also, a namespace containing the following utilities:
-
   - `serialize` - joins the given `ConcatenatedValue` parts using provided formatter and separator.
 
 - `IPrimitiveValueFormatter` - an interface for a function that knows how to format a `TypedPrimitiveValue` into a string.
@@ -443,7 +438,6 @@ The package also delivers a number of utility types and functions:
   ```
 
 - `trimWhitespace` - trims all extra whitespace from the given string, including:
-
   - consecutive spaces,
   - spaces before closing parentheses and comma,
   - spaces after opening parentheses,

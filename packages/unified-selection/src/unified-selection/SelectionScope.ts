@@ -153,6 +153,7 @@ async function* computeFunctionalElementSelection(
 ): AsyncIterableIterator<SelectableInstanceKey> {
   const bindings: ECSqlBinding[] = [];
   const recurseUntilRoot = ancestorLevel < 0;
+  // cspell:disable
   const ctes = [
     `
       Elements2dOrNearestFunctionalElements(OriginalECInstanceId, OriginalECClassId, ECInstanceId, ECClassId, ParentId) AS (
@@ -239,6 +240,7 @@ async function* computeFunctionalElementSelection(
       SELECT DISTINCT ECInstanceId, ClassName FROM Element3dAncestorRelatedFunctionalElement
     `,
   ].join(" UNION ");
+  // cspell:enable
   yield* executeQuery(queryExecutor, { ctes, ecsql, bindings });
 }
 
