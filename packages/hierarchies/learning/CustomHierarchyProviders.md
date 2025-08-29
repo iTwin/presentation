@@ -185,7 +185,7 @@ type BooksServiceFilter<TEntry> = { rules: (Partial<TEntry> | BooksServiceFilter
 function createBooksService() {
   const authors = [
     { key: "OL26320A", name: "J.R.R. Tolkien", hasBooks: true },
-    { key: "GP00000X", name: "Grigas Petraitis", hasBooks: false },
+    { key: "GP00000X", name: "Albert Einstein", hasBooks: false },
     { key: "OL18319A", name: "Mark Twain", hasBooks: true },
     { key: "OL25277A", name: "Tom Clancy", hasBooks: true },
   ];
@@ -302,7 +302,7 @@ await traverseHierarchy(provider);
 //   The Hobbit
 //   The Fellowship of Ring
 //   The two towers
-// Grigas Petraitis
+// Albert Einstein
 // Mark Twain
 //   Adventures of Huckleberry Finn
 //   The Adventures of Tom Sawyer
@@ -719,7 +719,7 @@ const createAuthorsFilter = (): GenericInstanceFilter => ({
   },
 });
 // Print the hierarchy level. Output:
-// - Grigas Petraitis
+// - Albert Einstein
 // - Mark Twain
 for await (const node of provider.getNodes({ parentNode: undefined, instanceFilter: createAuthorsFilter() })) {
   console.log(`- ${node.label}`);

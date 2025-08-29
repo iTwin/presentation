@@ -80,7 +80,7 @@ For local development it is recommended to setup [`CoSpace`](https://www.npmjs.c
      - "repos/appui/ui/**"
    ```
 
-4. Copy all the pnpm catalogs configuration from `repos/presentation/pnpm-workspcace.yaml` to the root `pnpm-workspace.yaml` in the cospace.
+4. Copy all the pnpm catalogs configuration from `repos/presentation/pnpm-workspace.yaml` to the root `pnpm-workspace.yaml` in the cospace.
 
 5. Update the `cospace.code-workspace` file with all the repos you want to add to your [vscode multi-root workspace](https://code.visualstudio.com/docs/editor/multi-root-workspaces).
 

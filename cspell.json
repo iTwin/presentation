@@ -1,6 +1,5 @@
 {
   "words": [
-    "accesser",
     "ANDALSO",
     "appender",
     "appenders",
@@ -17,7 +16,6 @@
     "filterables",
     "frontstage",
     "frontstages",
-    "Grigas",
     "highlightable",
     "hilite",
     "hilited",
@@ -39,12 +37,10 @@
     "montecarlo",
     "overscan",
     "parentship",
-    "Petraitis",
     "popout",
     "propertygrid",
     "rpcinterface",
     "selectables",
-    "SEMRESATTRS",
     "spacebar",
     "stratakit",
     "sublabel",
@@ -54,8 +50,7 @@
     "USSURVEY",
     "viewport",
     "viewports",
-    "vusers",
-    "workspcace"
+    "vusers"
   ],
   "ignorePaths": [
     "lib",

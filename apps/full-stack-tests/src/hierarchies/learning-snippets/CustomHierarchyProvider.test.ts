@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 /* eslint-disable no-console */
-/* eslint-disable no-duplicate-imports */
+ 
 /* eslint-disable @typescript-eslint/no-base-to-string */
 
 import { expect } from "chai";
@@ -11,14 +11,21 @@ import { collect } from "presentation-test-utilities";
 import * as sinon from "sinon";
 // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.CustomHierarchyProviders.Imports
 import { BeEvent } from "@itwin/core-bentley";
-import { HierarchyNode, HierarchyProvider } from "@itwin/presentation-hierarchies";
-import { Props } from "@itwin/presentation-shared";
+// __PUBLISH_EXTRACT_END__
+// __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.CustomHierarchyProviders.HierarchyLevelFilteringProviderImports
+import { GenericInstanceFilter, GenericInstanceFilterRule, GenericInstanceFilterRuleGroup } from "@itwin/core-common";
 // __PUBLISH_EXTRACT_END__
 // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.CustomHierarchyProviders.IModelProviderImports
 import { BriefcaseConnection, IModelConnection } from "@itwin/core-frontend";
 import { registerTxnListeners } from "@itwin/presentation-core-interop";
-// __PUBLISH_EXTRACT_END__
-// __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.CustomHierarchyProviders.FormattingProviderImports
+import {
+  createHierarchyFilteringHelper,
+  GenericNodeKey,
+  HierarchyFilteringPath,
+  HierarchyNode,
+  HierarchyNodeIdentifier,
+  HierarchyProvider,
+} from "@itwin/presentation-hierarchies";
 import {
   ConcatenatedValue,
   ConcatenatedValuePart,
@@ -26,13 +33,8 @@ import {
   EventListener,
   IPrimitiveValueFormatter,
   julianToDateTime,
+  Props,
 } from "@itwin/presentation-shared";
-// __PUBLISH_EXTRACT_END__
-// __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.CustomHierarchyProviders.FilteringProviderImports
-import { createHierarchyFilteringHelper, GenericNodeKey, HierarchyFilteringPath, HierarchyNodeIdentifier } from "@itwin/presentation-hierarchies";
-// __PUBLISH_EXTRACT_END__
-// __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.CustomHierarchyProviders.HierarchyLevelFilteringProviderImports
-import { GenericInstanceFilter, GenericInstanceFilterRule, GenericInstanceFilterRuleGroup } from "@itwin/core-common";
 // __PUBLISH_EXTRACT_END__
 import { buildIModel } from "../../IModelUtils.js";
 import { initialize, terminate } from "../../IntegrationTests.js";
@@ -271,7 +273,7 @@ describe("Hierarchies", () => {
         //   The Hobbit
         //   The Fellowship of Ring
         //   The two towers
-        // Grigas Petraitis
+        // Albert Einstein
         // Mark Twain
         //   Adventures of Huckleberry Finn
         //   The Adventures of Tom Sawyer
@@ -286,7 +288,7 @@ describe("Hierarchies", () => {
           "  The Hobbit",
           "  The Fellowship of Ring",
           "  The two towers",
-          "Grigas Petraitis",
+          "Albert Einstein",
           "Mark Twain",
           "  Adventures of Huckleberry Finn",
           "  The Adventures of Tom Sawyer",
@@ -619,13 +621,13 @@ describe("Hierarchies", () => {
           },
         });
         // Print the hierarchy level. Output:
-        // - Grigas Petraitis
+        // - Albert Einstein
         // - Mark Twain
         for await (const node of provider.getNodes({ parentNode: undefined, instanceFilter: createAuthorsFilter() })) {
           console.log(`- ${node.label}`);
         }
         // __PUBLISH_EXTRACT_END__
-        expect(consoleLogSpy.getCalls().map((call) => call.args[0])).to.deep.eq(["- Grigas Petraitis", "- Mark Twain"]);
+        expect(consoleLogSpy.getCalls().map((call) => call.args[0])).to.deep.eq(["- Albert Einstein", "- Mark Twain"]);
         consoleLogSpy.resetHistory();
 
         // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.CustomHierarchyProviders.HierarchyLevelFilteringProvider.Result2
@@ -688,7 +690,7 @@ type BooksServiceFilter<TEntry> = { rules: (Partial<TEntry> | BooksServiceFilter
 function createBooksService() {
   const authors = [
     { key: "OL26320A", name: "J.R.R. Tolkien", hasBooks: true },
-    { key: "GP00000X", name: "Grigas Petraitis", hasBooks: false },
+    { key: "GP00000X", name: "Albert Einstein", hasBooks: false },
     { key: "OL18319A", name: "Mark Twain", hasBooks: true },
     { key: "OL25277A", name: "Tom Clancy", hasBooks: true },
   ];
