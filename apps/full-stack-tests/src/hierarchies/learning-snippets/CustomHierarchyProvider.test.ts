@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 /* eslint-disable no-console */
- 
+
 /* eslint-disable @typescript-eslint/no-base-to-string */
 
 import { expect } from "chai";
