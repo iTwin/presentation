@@ -122,6 +122,7 @@ function createHierarchyNode(partial?: Partial<PresentationHierarchyNode>): Pres
     ...partial,
   };
 }
+
 function createNonGroupingHierarchyNode(partial?: Partial<NonGroupingHierarchyNode>): NonGroupingHierarchyNode {
   return {
     label: "test-node",
