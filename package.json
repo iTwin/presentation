@@ -27,6 +27,7 @@
     "prepare": "husky",
     "change": "changeset add",
     "change:empty": "changeset add --empty",
+    "cspell": "cspell .",
     "check": "changeset status",
     "release": "npm run build:all && changeset publish",
     "benchmark:hierarchies": "pnpm run -C ./apps/performance-tests benchmark:hierarchies",
@@ -35,6 +36,7 @@
   "dependencies": {
     "@changesets/cli": "^2.28.1",
     "cpx2": "catalog:build-tools",
+    "cspell": "^9.2.0",
     "eslint": "catalog:build-tools",
     "eslint-config-prettier": "^9.1.0",
     "fast-glob": "^3.3.3",
@@ -43,7 +45,7 @@
     "lint-staged": "^15.5.0",
     "markdown-link-check": "^3.13.7",
     "npm-run-all": "^4.1.5",
-    "prettier": "^3.5.3",
+    "prettier": "^3.6.2",
     "rimraf": "catalog:build-tools",
     "yaml": "^2.7.0",
     "yargs": "^17.7.2"

@@ -21,7 +21,7 @@ export interface LocalizedStrings {
    */
   filterHierarchyLevel: string;
   /**
-   * Accesible description for applied hierarchy filter button.
+   * Accessible description for applied hierarchy filter button.
    * Default value: `Filter is applied`.
    */
   filterHierarchyLevelActiveDescription: string;

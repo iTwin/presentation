@@ -29,6 +29,8 @@ import {
   SubjectProps,
 } from "@itwin/core-common";
 
+// cspell:words ecdbmap
+
 export interface TestIModelBuilder {
   insertModel<TModelProps extends ModelProps>(props: TModelProps): Id64String;
   insertElement<TElementProps extends ElementProps>(props: TElementProps): Id64String;

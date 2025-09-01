@@ -185,7 +185,7 @@ type BooksServiceFilter<TEntry> = { rules: (Partial<TEntry> | BooksServiceFilter
 function createBooksService() {
   const authors = [
     { key: "OL26320A", name: "J.R.R. Tolkien", hasBooks: true },
-    { key: "GP00000X", name: "Grigas Petraitis", hasBooks: false },
+    { key: "GP00000X", name: "Albert Einstein", hasBooks: false },
     { key: "OL18319A", name: "Mark Twain", hasBooks: true },
     { key: "OL25277A", name: "Tom Clancy", hasBooks: true },
   ];
@@ -302,7 +302,7 @@ await traverseHierarchy(provider);
 //   The Hobbit
 //   The Fellowship of Ring
 //   The two towers
-// Grigas Petraitis
+// Albert Einstein
 // Mark Twain
 //   Adventures of Huckleberry Finn
 //   The Adventures of Tom Sawyer
@@ -321,7 +321,6 @@ await traverseHierarchy(provider);
 While node labels' formatting is completely hierarchy provider's responsibility, the APIs are built to make it easy to implement:
 
 - We provide 2 built-in formatters:
-
   - `createDefaultValueFormatter` from `@itwin/presentation-shared` package creates a basic formatter, that's suitable for values that don't have units.
   - `createValueFormatter` from `@itwin/presentation-core-interop` package creates a formatter that knows how to handle values with units.
 
@@ -720,7 +719,7 @@ const createAuthorsFilter = (): GenericInstanceFilter => ({
   },
 });
 // Print the hierarchy level. Output:
-// - Grigas Petraitis
+// - Albert Einstein
 // - Mark Twain
 for await (const node of provider.getNodes({ parentNode: undefined, instanceFilter: createAuthorsFilter() })) {
   console.log(`- ${node.label}`);
