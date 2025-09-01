@@ -272,7 +272,7 @@ const localizedStrings = {
   unspecified: "Unspecified",
   other: "Other",
 
-  // strings for `TreeRenderer` and `TreeNodeRenderPresentation.HierarchiesReact.iModelAccesser`
+  // strings for `TreeRenderer` and `TreeNodeRenderer`
   loading: "Loading...",
   filterHierarchyLevel: "Apply hierarchy filter",
   clearHierarchyLevelFilter: "Clear active filter",

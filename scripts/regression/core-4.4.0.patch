@@ -262,15 +262,15 @@ diff --git a/apps/full-stack-tests/src/hierarchies/learning-snippets/CustomHiera
 index 43251cf3..1dd378c8 100644
 --- a/apps/full-stack-tests/src/hierarchies/learning-snippets/CustomHierarchyProvider.test.ts
 +++ b/apps/full-stack-tests/src/hierarchies/learning-snippets/CustomHierarchyProvider.test.ts
-@@ -621,6 +621,7 @@ describe("Hierarchies", () => {
+@@ -620,6 +620,7 @@ describe("Hierarchies", () => {
          // Print the hierarchy level. Output:
-         // - Grigas Petraitis
+         // - Albert Einstein
          // - Mark Twain
 +        // @ts-expect-error `createBooksFilter` doesn't match the expected type
          for await (const node of provider.getNodes({ parentNode: undefined, instanceFilter: createAuthorsFilter() })) {
            console.log(`- ${node.label}`);
          }
-@@ -667,6 +668,7 @@ describe("Hierarchies", () => {
+@@ -666,6 +667,7 @@ describe("Hierarchies", () => {
              label: "J.R.R. Tolkien",
              parentKeys: [],
            },

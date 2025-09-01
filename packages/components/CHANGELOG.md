@@ -1,10 +1,11 @@
 # Change Log - @itwin/presentation-components
 
-## 5.12.6-alpha.2
+## 5.12.7
 
 ### Patch Changes
 
 - [#1047](https://github.com/iTwin/presentation/pull/1047): Fix content data providers not reacting to formats' changes, resulting in content components (table, property grid) showing property values, formatted with stale formatting settings.
+- [#1050](https://github.com/iTwin/presentation/pull/1050): Quantity properties editor now reacts to format settings change and updates value.
 
 ## 5.12.6-alpha.1
 
@@ -16,6 +17,13 @@
   - @itwin/presentation-shared@2.0.0-alpha.2
   - @itwin/unified-selection@1.5.1-alpha.1
 
+## 5.12.6-alpha.0
+
+### Patch Changes
+
+- Updated dependencies:
+  - @itwin/unified-selection@1.5.1-alpha.0
+
 ## 5.12.6
 
 ### Patch Changes
@@ -26,13 +34,6 @@
   - @itwin/presentation-shared@1.2.3
   - @itwin/unified-selection@1.5.1
   - @itwin/presentation-core-interop@1.3.4
-
-## 5.12.6-alpha.0
-
-### Patch Changes
-
-- Updated dependencies:
-  - @itwin/unified-selection@1.5.1-alpha.0
 
 ## 5.12.5
 

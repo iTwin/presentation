@@ -13,6 +13,7 @@ export interface ColorMap {
   [name: string]: number;
 }
 
+// cspell:disable
 const colors: ColorMap = {
   AliceBlue: 0xf0f8ffff,
   AntiqueWhite: 0xfaebd7ff,
@@ -156,6 +157,7 @@ const colors: ColorMap = {
   Yellow: 0xffff00ff,
   YellowGreen: 0x9acd32ff,
 };
+// cspell:enable
 
 /** @internal */
 export class StyleHelper {

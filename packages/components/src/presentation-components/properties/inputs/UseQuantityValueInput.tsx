@@ -130,7 +130,14 @@ function useFormatterAndParser(koqName: string, schemaContext: SchemaContext) {
     };
     void findFormatterAndParser();
 
-    return IModelApp.quantityFormatter.onActiveFormattingUnitSystemChanged.addListener(findFormatterAndParser);
+    const listeners = [IModelApp.quantityFormatter.onActiveFormattingUnitSystemChanged.addListener(findFormatterAndParser)];
+    if (IModelApp.formatsProvider) {
+      listeners.push(IModelApp.formatsProvider.onFormatsChanged.addListener(findFormatterAndParser));
+    }
+
+    return () => {
+      listeners.forEach((listener) => listener());
+    };
   }, [koqName, schemaContext]);
 
   return {

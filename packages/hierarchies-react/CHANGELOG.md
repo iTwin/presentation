@@ -462,6 +462,12 @@
 
 - [#847](https://github.com/iTwin/presentation/pull/847): Moving tree rendering components to a new design systems.
 
+## 1.9.3
+
+### Patch Changes
+
+- [#1054](https://github.com/iTwin/presentation/pull/1054): Show tooltip with full label on tree nodes.
+
 ## 1.9.2
 
 ### Patch Changes

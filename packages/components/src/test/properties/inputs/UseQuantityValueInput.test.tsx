@@ -38,6 +38,10 @@ describe("UseQuantityValueInput", () => {
     onActiveFormattingUnitSystemChanged: new BeUiEvent<FormattingUnitSystemChangedArgs>(),
   };
 
+  const formatProvider = {
+    onFormatsChanged: new BeUiEvent<void>(),
+  };
+
   let getFormatterSpecStub: sinon.SinonStub<
     Parameters<KoqPropertyValueFormatter["getFormatterSpec"]>,
     ReturnType<KoqPropertyValueFormatter["getFormatterSpec"]>
@@ -49,6 +53,7 @@ describe("UseQuantityValueInput", () => {
     getParserSpecStub = sinon.stub(KoqPropertyValueFormatter.prototype, "getParserSpec");
 
     sinon.stub(IModelApp, "quantityFormatter").get(() => quantityFormatter);
+    sinon.stub(IModelApp, "formatsProvider").get(() => formatProvider);
   });
 
   beforeEach(() => {
@@ -111,5 +116,30 @@ describe("UseQuantityValueInput", () => {
       expect(value.rawValue).to.be.eq(1.23);
       expect(value.formattedValue).to.be.eq("1.23 unit");
     });
+  });
+
+  it("reacts to format change", async () => {
+    const { queryByPlaceholderText } = render(<TestInput schemaContext={schemaContext} koqName="testKOQ" />);
+    await waitFor(() => expect(queryByPlaceholderText("12.34 unit")).to.not.be.null);
+
+    const newFormatterSpec = {
+      applyFormatting: (num: number) => `${num} new unit`,
+    };
+    const newParserSpec = {
+      parseToQuantityValue: (str: string) => {
+        if (!str.endsWith("new unit")) {
+          return { ok: false, error: ParseError.UnknownUnit };
+        }
+        return { ok: true, value: Number(str.substring(0, str.length - 8)) };
+      },
+      format,
+    };
+
+    getFormatterSpecStub.resolves(newFormatterSpec as unknown as FormatterSpec);
+    getParserSpecStub.resolves(newParserSpec as unknown as ParserSpec);
+
+    formatProvider.onFormatsChanged.raiseEvent();
+
+    await waitFor(() => expect(queryByPlaceholderText("12.34 new unit")).to.not.be.null);
   });
 });
