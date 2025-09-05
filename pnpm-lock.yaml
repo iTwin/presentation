@@ -651,7 +651,7 @@ importers:
         version: 5.1.1(@itwin/core-bentley@5.1.1)(@itwin/core-geometry@5.1.1)
       '@itwin/core-electron':
         specifier: catalog:itwinjs-core-dev
-        version: 5.1.1(16c490f61ae56666924ab42889365f6b)
+        version: 5.1.1(f8364023c8677426d2a5b87712556d56)
       '@itwin/ecschema-rpcinterface-impl':
         specifier: catalog:itwinjs-core-dev
         version: 5.1.1(@itwin/core-backend@5.1.1(@itwin/core-bentley@5.1.1)(@itwin/core-common@5.1.1(@itwin/core-bentley@5.1.1)(@itwin/core-geometry@5.1.1))(@itwin/core-geometry@5.1.1)(@itwin/ecschema-metadata@5.1.1(@itwin/core-bentley@5.1.1)(@itwin/core-quantity@5.1.1(@itwin/core-bentley@5.1.1)))(@opentelemetry/api@1.9.0))(@itwin/core-bentley@5.1.1)(@itwin/core-common@5.1.1(@itwin/core-bentley@5.1.1)(@itwin/core-geometry@5.1.1))(@itwin/core-geometry@5.1.1)(@itwin/ecschema-metadata@5.1.1(@itwin/core-bentley@5.1.1)(@itwin/core-quantity@5.1.1(@itwin/core-bentley@5.1.1)))(@itwin/ecschema-rpcinterface-common@5.1.1(@itwin/core-bentley@5.1.1)(@itwin/core-common@5.1.1(@itwin/core-bentley@5.1.1)(@itwin/core-geometry@5.1.1))(@itwin/core-geometry@5.1.1)(@itwin/ecschema-metadata@5.1.1(@itwin/core-bentley@5.1.1)(@itwin/core-quantity@5.1.1(@itwin/core-bentley@5.1.1))))
@@ -689,8 +689,8 @@ importers:
         specifier: catalog:build-tools
         version: 7.0.3
       electron:
-        specifier: ^35.0.3
-        version: 35.0.3
+        specifier: ^35.7.5
+        version: 35.7.5
       eslint:
         specifier: catalog:build-tools
         version: 9.25.1
@@ -756,7 +756,7 @@ importers:
         version: 5.1.1(@itwin/core-bentley@5.1.1)(@itwin/core-geometry@5.1.1)
       '@itwin/core-electron':
         specifier: catalog:itwinjs-core-dev
-        version: 5.1.1(16c490f61ae56666924ab42889365f6b)
+        version: 5.1.1(f8364023c8677426d2a5b87712556d56)
       '@itwin/core-frontend':
         specifier: catalog:itwinjs-core-dev
         version: 5.1.1(@itwin/appui-abstract@5.1.1(@itwin/core-bentley@5.1.1))(@itwin/core-bentley@5.1.1)(@itwin/core-common@5.1.1(@itwin/core-bentley@5.1.1)(@itwin/core-geometry@5.1.1))(@itwin/core-geometry@5.1.1)(@itwin/core-orbitgt@5.1.1)(@itwin/core-quantity@5.1.1(@itwin/core-bentley@5.1.1))(@itwin/ecschema-metadata@5.1.1(@itwin/core-bentley@5.1.1)(@itwin/core-quantity@5.1.1(@itwin/core-bentley@5.1.1)))(@itwin/ecschema-rpcinterface-common@5.1.1(@itwin/core-bentley@5.1.1)(@itwin/core-common@5.1.1(@itwin/core-bentley@5.1.1)(@itwin/core-geometry@5.1.1))(@itwin/core-geometry@5.1.1)(@itwin/ecschema-metadata@5.1.1(@itwin/core-bentley@5.1.1)(@itwin/core-quantity@5.1.1(@itwin/core-bentley@5.1.1))))(encoding@0.1.13)(inversify@6.0.3)(reflect-metadata@0.1.14)
@@ -4362,8 +4362,8 @@ packages:
   '@types/node@22.13.9':
     resolution: {integrity: sha512-acBjXdRJ3A6Pb3tqnw9HZmyR3Fiol3aGxRCK1x3d+6CDAMjl7I649wpSd+yNURCjbOUGu9tqtLKnTGxmK6CyGw==}
 
-  '@types/node@22.17.2':
-    resolution: {integrity: sha512-gL6z5N9Jm9mhY+U2KXZpteb+09zyffliRkZyZOHODGATyC5B1Jt/7TzuuiLkFsSUMLbS1OLmlj/E+/3KF4Q/4w==}
+  '@types/node@22.18.0':
+    resolution: {integrity: sha512-m5ObIqwsUp6BZzyiy4RdZpzWGub9bqLJMvZDD0QMXhxjqMHMENlj+SqF5QxoUwaQNFe+8kz8XM8ZQhqkQPTgMQ==}
 
   '@types/object-hash@3.0.6':
     resolution: {integrity: sha512-fOBV8C1FIu2ELinoILQ+ApxcUKz4ngq+IWUYrxSGjXzzjUALijilampwkMgEtJ+h2njAW3pi853QpzNVCHB73w==}
@@ -5641,8 +5641,8 @@ packages:
   electron-to-chromium@1.5.207:
     resolution: {integrity: sha512-mryFrrL/GXDTmAtIVMVf+eIXM09BBPlO5IQ7lUyKmK8d+A4VpRGG+M3ofoVef6qyF8s60rJei8ymlJxjUA8Faw==}
 
-  electron@35.0.3:
-    resolution: {integrity: sha512-kjQAYEWXSr2TyK19IZoF85dzFIBaYuX7Yp/C+34b5Y/jmI2z270CGie+RjmEGMMitsy0G8YJKftukhYMuWlK6g==}
+  electron@35.7.5:
+    resolution: {integrity: sha512-dnL+JvLraKZl7iusXTVTGYs10TKfzUi30uEDTqsmTm0guN9V2tbOjTzyIZbh9n3ygUjgEYyo+igAwMRXIi3IPw==}
     engines: {node: '>= 12.20.55'}
     hasBin: true
 
@@ -11224,14 +11224,14 @@ snapshots:
       flatbuffers: 1.12.0
       js-base64: 3.7.8
 
-  '@itwin/core-electron@5.1.1(16c490f61ae56666924ab42889365f6b)':
+  '@itwin/core-electron@5.1.1(f8364023c8677426d2a5b87712556d56)':
     dependencies:
       '@itwin/core-backend': 5.1.1(@itwin/core-bentley@5.1.1)(@itwin/core-common@5.1.1(@itwin/core-bentley@5.1.1)(@itwin/core-geometry@5.1.1))(@itwin/core-geometry@5.1.1)(@itwin/ecschema-metadata@5.1.1(@itwin/core-bentley@5.1.1)(@itwin/core-quantity@5.1.1(@itwin/core-bentley@5.1.1)))(@opentelemetry/api@1.9.0)
       '@itwin/core-bentley': 5.1.1
       '@itwin/core-common': 5.1.1(@itwin/core-bentley@5.1.1)(@itwin/core-geometry@5.1.1)
       '@itwin/core-frontend': 5.1.1(@itwin/appui-abstract@5.1.1(@itwin/core-bentley@5.1.1))(@itwin/core-bentley@5.1.1)(@itwin/core-common@5.1.1(@itwin/core-bentley@5.1.1)(@itwin/core-geometry@5.1.1))(@itwin/core-geometry@5.1.1)(@itwin/core-orbitgt@5.1.1)(@itwin/core-quantity@5.1.1(@itwin/core-bentley@5.1.1))(@itwin/ecschema-metadata@5.1.1(@itwin/core-bentley@5.1.1)(@itwin/core-quantity@5.1.1(@itwin/core-bentley@5.1.1)))(@itwin/ecschema-rpcinterface-common@5.1.1(@itwin/core-bentley@5.1.1)(@itwin/core-common@5.1.1(@itwin/core-bentley@5.1.1)(@itwin/core-geometry@5.1.1))(@itwin/core-geometry@5.1.1)(@itwin/ecschema-metadata@5.1.1(@itwin/core-bentley@5.1.1)(@itwin/core-quantity@5.1.1(@itwin/core-bentley@5.1.1))))(encoding@0.1.13)(inversify@6.0.3)(reflect-metadata@0.1.14)
       '@openid/appauth': 1.3.2
-      electron: 35.0.3
+      electron: 35.7.5
       open: 7.4.2
       username: 7.0.0
     transitivePeerDependencies:
@@ -13035,7 +13035,7 @@ snapshots:
     dependencies:
       '@types/http-cache-semantics': 4.0.4
       '@types/keyv': 3.1.4
-      '@types/node': 22.13.9
+      '@types/node': 22.18.0
       '@types/responselike': 1.0.3
 
   '@types/chai-as-promised@8.0.2':
@@ -13085,7 +13085,7 @@ snapshots:
 
   '@types/keyv@3.1.4':
     dependencies:
-      '@types/node': 22.13.9
+      '@types/node': 22.18.0
 
   '@types/mdast@4.0.4':
     dependencies:
@@ -13101,7 +13101,7 @@ snapshots:
     dependencies:
       undici-types: 6.20.0
 
-  '@types/node@22.17.2':
+  '@types/node@22.18.0':
     dependencies:
       undici-types: 6.21.0
 
@@ -13120,7 +13120,7 @@ snapshots:
 
   '@types/responselike@1.0.3':
     dependencies:
-      '@types/node': 22.13.9
+      '@types/node': 22.18.0
 
   '@types/shimmer@1.2.0': {}
 
@@ -13150,7 +13150,7 @@ snapshots:
 
   '@types/yauzl@2.10.3':
     dependencies:
-      '@types/node': 22.17.2
+      '@types/node': 22.18.0
     optional: true
 
   '@typescript-eslint/eslint-plugin@8.40.0(@typescript-eslint/parser@8.40.0(eslint@9.25.1)(typescript@5.7.3))(eslint@9.25.1)(typescript@5.7.3)':
@@ -14748,10 +14748,10 @@ snapshots:
 
   electron-to-chromium@1.5.207: {}
 
-  electron@35.0.3:
+  electron@35.7.5:
     dependencies:
       '@electron/get': 2.0.3
-      '@types/node': 22.17.2
+      '@types/node': 22.18.0
       extract-zip: 2.0.1
     transitivePeerDependencies:
       - supports-color
@@ -17505,7 +17505,7 @@ snapshots:
       '@protobufjs/path': 1.1.2
       '@protobufjs/pool': 1.1.0
       '@protobufjs/utf8': 1.1.0
-      '@types/node': 22.13.9
+      '@types/node': 22.18.0
       long: 5.3.2
 
   protocols@2.0.2: {}
