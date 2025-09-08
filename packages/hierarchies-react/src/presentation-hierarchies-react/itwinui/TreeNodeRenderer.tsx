@@ -210,7 +210,7 @@ const HierarchyNodeRenderer = forwardRef<HTMLDivElement, HierarchyNodeRendererPr
         ref={ref}
         isSelected={isSelected}
         isDisabled={isDisabled}
-        className={cx(treeNodeProps.className, "stateless-tree-node", { filtered: node.isFiltered })}
+        className={cx(treeNodeProps.className, "stateless-tree-node", { filtered: node.isFiltered, selected: isSelected })}
         onClick={(event) => !isDisabled && onNodeClick?.(node, !isSelected, event)}
         onKeyDown={(event) => {
           // Ignore if it is called on the element inside, e.g. checkbox or expander
@@ -226,6 +226,7 @@ const HierarchyNodeRenderer = forwardRef<HTMLDivElement, HierarchyNodeRendererPr
         sublabel={getSublabel ? getSublabel(node) : undefined}
         // TODO: review if this is needed when horizontal scroll is enabled back after fix for issue: https://github.com/iTwin/iTwinUI/issues/2330
         title={node.label}
+        contentProps={{ className: "stateless-tree-node-content" }}
       >
         <TreeNodeActions
           node={node}
