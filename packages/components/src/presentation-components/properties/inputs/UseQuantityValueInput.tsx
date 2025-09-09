@@ -119,7 +119,11 @@ function useFormatterAndParser(koqName: string, schemaContext: SchemaContext) {
     const findFormatterAndParser = async () => {
       // eslint-disable-next-line @typescript-eslint/no-deprecated
       const koqFormatter = new KoqPropertyValueFormatter(schemaContext, undefined, IModelApp.formatsProvider);
-      const formatterSpec = await koqFormatter.getFormatterSpec({ koqName, unitSystem: IModelApp.quantityFormatter.activeUnitSystem });
+      const formatterSpec = await koqFormatter.getFormatterSpec({
+        koqName,
+        unitSystem: IModelApp.quantityFormatter.activeUnitSystem,
+        formatOverride: { precision: 12 },
+      });
       const parserSpec = await koqFormatter.getParserSpec({ koqName, unitSystem: IModelApp.quantityFormatter.activeUnitSystem });
       if (formatterSpec && parserSpec) {
         setState({ formatterSpec, parserSpec });
