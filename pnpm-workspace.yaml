@@ -50,7 +50,7 @@ catalogs:
   itwinui:
     '@itwin/itwinui-icons-react': ^2.10.0
     '@itwin/itwinui-illustrations-react': ^2.1.0
-    '@itwin/itwinui-react': ^3.19.3
+    '@itwin/itwinui-react': ^3.19.4
 
   react:
     classnames: ^2.5.1
