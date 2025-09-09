@@ -1,5 +1,11 @@
 # @itwin/presentation-hierarchies-react
 
+## 1.9.4
+
+### Patch Changes
+
+- [#1063](https://github.com/iTwin/presentation/pull/1063): Make sure tree node actions are properly sticking to the right side when scrolling tree horizontally.
+
 ## 1.9.3
 
 ### Patch Changes
@@ -157,7 +163,6 @@
 ### Minor Changes
 
 - [#841](https://github.com/iTwin/presentation/pull/841): Changed how tree state hooks access unified selection storage.
-
   - The tree state hooks that hook into unified selection system now accept a `selectionStorage` prop. At the moment the prop is optional, but will be made required in the next major release of the package.
   - The `UnifiedSelectionProvider` React context provider is now deprecated. The context is still used by tree state hooks if the selection storage is not provided through prop.
 
@@ -203,7 +208,6 @@
 ### Minor Changes
 
 - [#840](https://github.com/iTwin/presentation/pull/840): Added `filterButtonsVisibility` to `treeNodeRenderer`. Which allows configuring filter buttons visibility for the whole tree.
-
   - `show-on-hover` - default value, shows filter buttons on node hover or focus.
   - `hide` - hides filter buttons on focus and hover, but will continue to show buttons on nodes in which filter is applied. Reaching hierarchy limit will continue to provide a way to filter nodes.
 
@@ -414,7 +418,6 @@
   See "Basic example" section in README learning page for the full example.
 
 - [#717](https://github.com/iTwin/presentation/pull/717): **BREAKING:** Add support for non-iModel-driven trees.
-
   - `useTree` and `useUnifiedSelectionTree` hooks have been changed to support non-iModel-driven trees. The hooks take a `getHierarchyProvider` prop, which returns a `HierarchyProvider`. The provider can return data from any data source.
   - New `useIModelTree` and `useIModelUnifiedSelectionTree` hooks have been added to cover the most common case, where a tree is created from a iModel's data. The API of these hooks is exactly the same as of the old `useTree` and `useUnifiedSelectionTree` hooks.
 
