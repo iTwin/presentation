@@ -8,6 +8,8 @@
 
 import { Node } from "@itwin/presentation-common";
 
+/* eslint-disable @typescript-eslint/no-deprecated */
+
 /** @internal */
 export interface ColorMap {
   [name: string]: number;

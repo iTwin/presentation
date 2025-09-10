@@ -49,6 +49,7 @@ describe("Utils", () => {
     });
 
     it("appends grouped nodes count if requested", () => {
+      // eslint-disable-next-line @typescript-eslint/no-deprecated
       const node: Node = {
         key: createTestECClassGroupingNodeKey({ groupedInstancesCount: 999 }),
         label: LabelDefinition.fromLabelString("test"),

@@ -39,6 +39,7 @@ export async function initialize(props?: { backendTimeout?: number }) {
     workerThreadsCount: 1,
     caching: {
       hierarchies: {
+        // eslint-disable-next-line @typescript-eslint/no-deprecated
         mode: HierarchyCacheMode.Memory,
       },
     },
