@@ -25,6 +25,8 @@ import { TestIModelConnection } from "@itwin/presentation-testing";
 import { initialize, terminate } from "../../IntegrationTests.js";
 import { renderHook, waitFor } from "../../RenderUtils.js";
 
+/* eslint-disable @typescript-eslint/no-deprecated */
+
 describe("Tree update", () => {
   let imodel: IModelConnection;
 
@@ -46,7 +48,6 @@ describe("Tree update", () => {
   });
 
   describe("detection", () => {
-    // eslint-disable-next-line @typescript-eslint/no-deprecated
     let defaultProps: Omit<UsePresentationTreeStateProps, "ruleset">;
 
     before(async () => {
@@ -478,9 +479,7 @@ describe("Tree update", () => {
           extendedData?: { [key: string]: any };
         };
 
-    // eslint-disable-next-line @typescript-eslint/no-deprecated
     async function verifyHierarchy(props: UsePresentationTreeStateProps, expectedTree: TreeHierarchy[]): Promise<VerifiedHierarchy> {
-      // eslint-disable-next-line @typescript-eslint/no-deprecated
       const { result } = renderHook((hookProps: UsePresentationTreeStateProps) => usePresentationTreeState(hookProps), {
         initialProps: props,
       });
@@ -507,7 +506,6 @@ describe("Tree update", () => {
     }
 
     async function expectTree(
-      // eslint-disable-next-line @typescript-eslint/no-deprecated
       nodeLoader: AbstractTreeNodeLoaderWithProvider<IPresentationTreeDataProvider>,
       expectedHierarchy: TreeHierarchy[],
     ): Promise<void> {

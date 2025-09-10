@@ -7,6 +7,8 @@ import { ECClassGroupingNodeKey, ECInstancesNodeKey, Node, NodePathElement, Stan
 import { createTestECInstanceKey } from "./Common.js";
 import { createTestLabelDefinition } from "./LabelDefinition.js";
 
+/* eslint-disable @typescript-eslint/no-deprecated */
+
 export function createTestECInstancesNodeKey(key?: Partial<ECInstancesNodeKey>): ECInstancesNodeKey {
   return {
     type: StandardNodeTypes.ECInstancesNode,
