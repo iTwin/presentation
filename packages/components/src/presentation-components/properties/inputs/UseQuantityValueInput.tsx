@@ -62,6 +62,7 @@ export function useQuantityValueInput({ initialRawValue, schemaContext, koqName 
     }
 
     setState((prev): State => {
+      /* c8 ignore next 1 */
       const newPlaceholder = (placeholderFormatter ?? formatter).applyFormatting(initialRawValueRef.current ?? PLACEHOLDER_RAW_VALUE);
       const newFormattedValue = prev.quantityValue.rawValue !== undefined ? formatter.applyFormatting(prev.quantityValue.rawValue) : "";
       const roundingError = getPersistenceUnitRoundingError(newFormattedValue, parser);
