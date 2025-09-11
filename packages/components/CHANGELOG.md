@@ -1,5 +1,11 @@
 # Change Log - @itwin/presentation-components
 
+## 5.12.9-alpha.0
+
+### Patch Changes
+
+- [#1070](https://github.com/iTwin/presentation/pull/1070): Version bump
+
 ## 5.12.8
 
 ### Patch Changes

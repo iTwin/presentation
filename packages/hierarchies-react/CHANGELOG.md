@@ -1,5 +1,11 @@
 # @itwin/presentation-hierarchies-react
 
+## 2.0.0-alpha.34
+
+### Patch Changes
+
+- [#1068](https://github.com/iTwin/presentation/pull/1068): Extend `@stratakit` peer dependency range to support the latest versions
+
 ## 2.0.0-alpha.33
 
 ### Patch Changes
@@ -75,7 +81,6 @@
 - [#1023](https://github.com/iTwin/presentation/pull/1023): Split `getActions` into `getMenuActions` & `getInlineActions` for `StrataKitTreeRenderer` and `StrataKitTreeNodeRenderer`.
 
   Updated peer dependencies:
-
   - @stratakit/bricks@0.3.3
   - @stratakit/foundations@0.2.2
   - @stratakit/structures@0.3.1
@@ -130,14 +135,12 @@
 ### Major Changes
 
 - [#961](https://github.com/iTwin/presentation/pull/961): **Breaking changes** to tree state hooks `useTree`, `useUnifiedSelectionTree`, `useIModelTree`, `useIModelUnifiedSelectionTree`:
-
   - All tree rendering props have been moved under `treeRendererProps`. The value can be passed to `<StrataKitTreeRenderer />` component.
   - In case an error occurs while loading the root hierarchy level, instead of `treeRendererProps`, the `rootErrorRendererProps` are set, which can be passed to `<StrataKitRootErrorRenderer />` component to render the error state.
   - The `isLoading` attribute has been renamed to `isReloading`.
   - Errors are no longer defined as children of `PresentationHierarchyNode` and instead are now included as `error` attribute for more fluent API.
 
   When rendering tree state, the recommended order of checks is:
-
   1. If `rootErrorRendererProps` is defined, there was an error - render error state.
   2. If `treeRendererProps` is not defined, the component is doing the initial load - render loading state.
   3. If `treeRendererProps` is defined, the hierarchy is loaded - render the tree component.
@@ -176,7 +179,6 @@
 ### Major Changes
 
 - [#954](https://github.com/iTwin/presentation/pull/954): Add additional requirements for types in `EC` metadata namespace, whose objects are returned by `ECSchemaProvider`.
-
   - `EC.Schema`, `EC.Class` and `EC.Property` now all have an async `getCustomAttributes()` method that returns an `EC.CustomAttributeSet`, allowing consumers to access custom attributes of these schema items.
   - `EC.Class` now additionally has these members:
     - `baseClass: Promise<Class | undefined>`
@@ -217,7 +219,6 @@
 ### Major Changes
 
 - [#942](https://github.com/iTwin/presentation/pull/942): Unified selection API cleanup.
-
   - Remove deprecated `UnifiedSelectionProvider`.
   - Make `selectionStorage` prop required for unified selection - enabled tree state hooks (`useUnifiedSelectionTree` and `useIModelUnifiedSelectionTree`).
 
@@ -315,7 +316,6 @@
   ```
 
 - [#930](https://github.com/iTwin/presentation/pull/930): Changed flat tree building functions to hooks:
-
   - `flattenNodes` => `useFlatTreeNodeList`.
   - `getErrors` => `useErrorList`.
 
@@ -415,13 +415,11 @@
 ### Minor Changes
 
 - [#878](https://github.com/iTwin/presentation/pull/878): Tree node renderer now uses `Tree.ItemAction`. `Show` property now takes in undefined values, values behave like this:
-
   - `undefined` - visible on hover/focus,
   - `true` - visible at all times,
   - `false` - hidden at all times.
 
   Updated peer dependencies:
-
   - itwinui-icons to 5.0.0-alpha.3,
   - itwinui-react to 5.0.0-alpha.6,
 
@@ -430,7 +428,6 @@
 ### Patch Changes
 
 - [#870](https://github.com/iTwin/presentation/pull/870): `TreeRenderer` and `TreeNodeRenderer` now take actions as specification function array.
-
   - `label`: Action item's label.
   - `action`: The action performed when the button is clicked.
   - `show` A boolean determining whether the button should be displayed.
@@ -452,7 +449,6 @@
 - [#862](https://github.com/iTwin/presentation/pull/862): Update `@itwin/itwinui-react` dependency to `5.0.0-alpha.3`.
 
   This fixes the following issues:
-
   - nodes being selected on expand,
   - node action buttons being rendered incorrectly.
 
