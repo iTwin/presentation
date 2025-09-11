@@ -931,6 +931,7 @@ describe("UniquePropertyValuesSelector", () => {
       const expectedKeySet = new KeySet([descriptorInputKeys]);
 
       expect(ruleset.id).to.be.equal(testDescriptor.ruleset?.id);
+      // eslint-disable-next-line @typescript-eslint/no-deprecated
       expect(getPagedDistinctValuesCallArguments.keys.nodeKeys).to.be.deep.equal(expectedKeySet.nodeKeys);
     });
 

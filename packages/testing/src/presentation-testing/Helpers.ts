@@ -139,9 +139,12 @@ export const terminate = async (frontendApp = IModelApp) => {
 
   // store directory that needs to be cleaned-up
   let hierarchiesCacheDirectory: string | undefined;
+  // eslint-disable-next-line @typescript-eslint/no-deprecated
   const hierarchiesCacheConfig = PresentationBackend.initProps?.caching?.hierarchies;
+  // eslint-disable-next-line @typescript-eslint/no-deprecated
   if (hierarchiesCacheConfig?.mode === HierarchyCacheMode.Disk) {
     hierarchiesCacheDirectory = hierarchiesCacheConfig?.directory;
+    // eslint-disable-next-line @typescript-eslint/no-deprecated
   } else if (hierarchiesCacheConfig?.mode === HierarchyCacheMode.Hybrid) {
     hierarchiesCacheDirectory = hierarchiesCacheConfig?.disk?.directory;
   }
