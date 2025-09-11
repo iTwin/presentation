@@ -53,10 +53,10 @@ catalogs:
     '@itwin/itwinui-react': ^3.19.3
 
   stratakit:
-    '@stratakit/bricks': ^0.3.3
-    '@stratakit/structures': ^0.3.1
-    '@stratakit/icons': ^0.1.0
-    '@stratakit/foundations': ^0.2.2
+    '@stratakit/foundations': ^0.3.2
+    '@stratakit/bricks': ^0.4.2
+    '@stratakit/structures': ^0.4.2
+    '@stratakit/icons': ^0.1.5
 
   react:
     classnames: ^2.5.1
