@@ -35,6 +35,7 @@ import { IModelSelector } from "../imodel-selector/IModelSelector";
 import { PropertiesWidget } from "../properties-widget/PropertiesWidget";
 import { RulesetSelector } from "../ruleset-selector/RulesetSelector";
 import { TableWidget } from "../table-widget/TableWidget";
+import { MUITree } from "../tree-widget/MUITree";
 import { MultiDataSourceTree } from "../tree-widget/MultiDataSourceTree";
 import { RulesDrivenTreeWidget } from "../tree-widget/RulesDrivenTree";
 import { StatelessTreeV2 } from "../tree-widget/StatelessTree";
@@ -264,6 +265,13 @@ function IModelComponents(props: IModelComponentsProps) {
               defaultState: WidgetState.Open,
               canPopout: true,
             },
+            {
+              id: "mui-tree",
+              label: "MUI Tree",
+              content: <MUITreePanel imodel={imodel} />,
+              defaultState: WidgetState.Open,
+              canPopout: true,
+            },
           ],
           end: [
             {
@@ -348,6 +356,15 @@ function MultiDataSourceTreePanel(props: { imodel: IModelConnection }) {
   return (
     <div className="tree-widget-tabs-content" ref={ref} style={{ width: "100%", height: "100%", overflow: "hidden" }}>
       <MultiDataSourceTree imodel={props.imodel} width={width ?? 0} height={height ?? 0} />
+    </div>
+  );
+}
+
+function MUITreePanel(props: { imodel: IModelConnection }) {
+  const { width, height, ref } = useResizeDetector<HTMLDivElement>();
+  return (
+    <div className="tree-widget-tabs-content" ref={ref} style={{ width: "100%", height: "100%", overflow: "hidden" }}>
+      <MUITree imodel={props.imodel} width={width ?? 0} height={height ?? 0} />
     </div>
   );
 }

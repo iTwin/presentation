@@ -63,6 +63,10 @@
     "typescript": "catalog:build-tools",
     "vite": "^6.3.6",
     "vite-plugin-node-polyfills": "^0.23.0",
-    "vite-plugin-static-copy": "^2.3.2"
+    "vite-plugin-static-copy": "^2.3.2",
+    "@mui/x-tree-view": "^8.11.2",
+    "@mui/material": "^7.3.2",
+    "@emotion/react": "^11.14.0",
+    "@emotion/styled": "^11.14.1"
   }
 }
