@@ -29,18 +29,22 @@ import { createECSchemaProvider, createECSqlQueryExecutor, createIModelKey } fro
 import { createCachingECClassHierarchyInspector } from "@itwin/presentation-shared";
 import { createHiliteSetProvider, enableUnifiedSelectionSyncWithIModel, HiliteSet } from "@itwin/unified-selection";
 import { UnifiedSelectionContextProvider } from "@itwin/unified-selection-react";
+import { ThemeProvider as MUIThemeProvider } from "@mui/material";
 import { Root } from "@stratakit/foundations";
 import { MyAppFrontend, MyAppSettings } from "../../api/MyAppFrontend";
 import { IModelSelector } from "../imodel-selector/IModelSelector";
 import { PropertiesWidget } from "../properties-widget/PropertiesWidget";
 import { RulesetSelector } from "../ruleset-selector/RulesetSelector";
-import { TableWidget } from "../table-widget/TableWidget";
+import { MUIDataGridWidget } from "../table-widget/MUIDataGrid";
+import { MUITableWidget } from "../table-widget/MUITable";
+import { StrataKitTableWidget } from "../table-widget/StrataKitTable";
 import { MUITree } from "../tree-widget/MUITree";
 import { MultiDataSourceTree } from "../tree-widget/MultiDataSourceTree";
 import { RulesDrivenTreeWidget } from "../tree-widget/RulesDrivenTree";
 import { StatelessTreeV2 } from "../tree-widget/StatelessTree";
 import { UnitSystemSelector } from "../unit-system-selector/UnitSystemSelector";
 import ViewportContentControl from "../viewport/ViewportContentControl";
+import { skTheme } from "./MUITheme";
 
 export interface State {
   imodel?: IModelConnection;
@@ -142,20 +146,22 @@ export function App() {
 
   return (
     <ThemeProvider theme={"light"} future={{ themeBridge: true }} as={Root} colorScheme={"light"} synchronizeColorScheme density="dense">
-      <UnifiedSelectionContextProvider storage={MyAppFrontend.selectionStorage}>
-        <div className="app">
-          <div className="app-header">
-            <h2>{IModelApp.localization.getLocalizedString("Sample:welcome-message")}</h2>
+      <MUIThemeProvider theme={skTheme}>
+        <UnifiedSelectionContextProvider storage={MyAppFrontend.selectionStorage}>
+          <div className="app">
+            <div className="app-header">
+              <h2>{IModelApp.localization.getLocalizedString("Sample:welcome-message")}</h2>
+            </div>
+            <div className="app-pickers">
+              <IModelSelector onIModelSelected={onIModelSelected} activeIModelPath={state.imodelPath} />
+              <RulesetSelector onRulesetSelected={onRulesetSelected} activeRulesetId={state.rulesetId} />
+              <UnitSystemSelector selectedUnitSystem={state.activeUnitSystem} onUnitSystemSelected={onUnitSystemSelected} />
+              <ToggleSwitch label="Persist settings" labelPosition="right" checked={state.persistSettings} onChange={onPersistSettingsValueChange} />
+            </div>
+            {state.imodel ? <IModelComponents imodel={state.imodel} rulesetId={state.rulesetId} /> : null}
           </div>
-          <div className="app-pickers">
-            <IModelSelector onIModelSelected={onIModelSelected} activeIModelPath={state.imodelPath} />
-            <RulesetSelector onRulesetSelected={onRulesetSelected} activeRulesetId={state.rulesetId} />
-            <UnitSystemSelector selectedUnitSystem={state.activeUnitSystem} onUnitSystemSelected={onUnitSystemSelected} />
-            <ToggleSwitch label="Persist settings" labelPosition="right" checked={state.persistSettings} onChange={onPersistSettingsValueChange} />
-          </div>
-          {state.imodel ? <IModelComponents imodel={state.imodel} rulesetId={state.rulesetId} /> : null}
-        </div>
-      </UnifiedSelectionContextProvider>
+        </UnifiedSelectionContextProvider>
+      </MUIThemeProvider>
     </ThemeProvider>
   );
 }
@@ -289,9 +295,25 @@ function IModelComponents(props: IModelComponentsProps) {
         sections: {
           start: [
             {
-              id: "table",
-              label: "Table widget",
-              content: <TableWidget imodel={imodel} rulesetId={rulesetId} />,
+              id: "strata-table",
+              label: "StrataKit Table widget",
+              content: <StrataKitTableWidget imodel={imodel} rulesetId={rulesetId} />,
+              defaultState: WidgetState.Closed,
+              canFloat: true,
+              canPopout: true,
+            },
+            {
+              id: "mui-table",
+              label: "MUI Table widget",
+              content: <MUITableWidget imodel={imodel} rulesetId={rulesetId} />,
+              defaultState: WidgetState.Closed,
+              canFloat: true,
+              canPopout: true,
+            },
+            {
+              id: "mui-data-grid",
+              label: "MUI Data Grid widget",
+              content: <MUIDataGridWidget imodel={imodel} rulesetId={rulesetId} />,
               defaultState: WidgetState.Closed,
               canFloat: true,
               canPopout: true,

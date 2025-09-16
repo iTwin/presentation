@@ -21,7 +21,7 @@ import { createIModelHierarchyProvider, createLimitingECSqlQueryExecutor } from 
 import { PresentationHierarchyNode, TreeRendererProps, useIModelUnifiedSelectionTree } from "@itwin/presentation-hierarchies-react";
 import { ModelsTreeDefinition } from "@itwin/presentation-models-tree";
 import { createCachingECClassHierarchyInspector, Props } from "@itwin/presentation-shared";
-import { IconButton } from "@mui/material";
+import { IconButton, styled } from "@mui/material";
 import {
   RichTreeView,
   TreeItem,
@@ -31,6 +31,7 @@ import {
   UseTreeItemContentSlotOwnProps,
   UseTreeItemLabelSlotOwnProps,
 } from "@mui/x-tree-view";
+import { Icon } from "@stratakit/foundations";
 import { MyAppFrontend } from "../../api/MyAppFrontend";
 
 type UseIModelTreeProps = Props<typeof useIModelUnifiedSelectionTree>;
@@ -116,7 +117,7 @@ function TreeImpl({ height, width, treeProps }: { height: number; width: number;
       if (!iconNode) {
         return undefined;
       }
-      return findTreeIcon(iconNode);
+      return <Icon href={findTreeIcon(iconNode)} />;
     },
     [rootNodes],
   );
@@ -197,7 +198,7 @@ const CustomTreeItem = forwardRef(function CustomTreeItem({ getActions, getIcon,
       }}
       slotProps={{
         content: { actions } as CustomContentProps,
-        label: { icon } as CustomLabelProps,
+        label: { icon, sublabel: "Description" } as CustomLabelProps,
       }}
     />
   );
@@ -229,20 +230,30 @@ const CustomContent = forwardRef(function CustomContent({ children, actions, ...
 });
 
 interface CustomLabelProps extends UseTreeItemLabelSlotOwnProps {
-  icon?: ReactElement;
+  icon?: React.ReactElement;
+  sublabel?: string;
 }
 
-const CustomLabel = forwardRef(function CustomLabel({ children, icon, ...props }: CustomLabelProps, ref: React.Ref<HTMLDivElement>) {
+const CustomLabel = forwardRef(function CustomLabel({ children, icon, sublabel, ...props }: CustomLabelProps, ref: React.Ref<HTMLDivElement>) {
   return (
     <TreeItemLabel {...props} ref={ref} sx={{ display: "flex", alignItems: "center", gap: "8px" }}>
       {icon}
       <div style={{ display: "flex", flexDirection: "column" }}>
         {children}
-        <div style={{ fontSize: "14px" }}>SubLabel</div>
+        {sublabel ? <CustomSublabel className="MuiTreeItem-sublabel">{sublabel}</CustomSublabel> : null}
       </div>
     </TreeItemLabel>
   );
 });
+
+// TODO: stable class name for the sublabel slot
+const CustomSublabel = styled("div", {
+  name: "MuiTreeItem",
+  slot: "sublabel",
+  overridesResolver: (_props, styles) => styles.root,
+})(() => ({
+  color: "var(--stratakit-color-text-neutral-secondary)",
+}));
 
 function findNode(nodes: PresentationHierarchyNode[], nodeId: string): PresentationHierarchyNode | undefined {
   for (const node of nodes) {
@@ -271,24 +282,31 @@ function traverseNodes<T>(nodes: PresentationHierarchyNode[], collect: (node: Pr
   return result;
 }
 
-function findTreeIcon(node: PresentationHierarchyNode): ReactElement | undefined {
+const subjectSvg = new URL("@stratakit/icons/bis-subject.svg", import.meta.url).href;
+const classSvg = new URL("@stratakit/icons/bis-class.svg", import.meta.url).href;
+const modelSvg = new URL("@stratakit/icons/model-cube.svg", import.meta.url).href;
+const categorySvg = new URL("@stratakit/icons/bis-category-3d.svg", import.meta.url).href;
+const elementSvg = new URL("@stratakit/icons/bis-element.svg", import.meta.url).href;
+const iModelSvg = new URL("@stratakit/icons/imodel.svg", import.meta.url).href;
+
+function findTreeIcon(node: PresentationHierarchyNode): string | undefined {
   if (node.nodeData.extendedData?.imageId === undefined) {
     return undefined;
   }
 
   switch (node.nodeData.extendedData.imageId) {
     case "icon-layers":
-      return <SvgLayers />;
+      return categorySvg;
     case "icon-item":
-      return <SvgItem />;
+      return elementSvg;
     case "icon-ec-class":
-      return <SvgItem />;
+      return classSvg;
     case "icon-imodel-hollow-2":
-      return <SvgImodelHollow />;
+      return iModelSvg;
     case "icon-folder":
-      return <SvgFolder />;
+      return subjectSvg;
     case "icon-model":
-      return <SvgModel />;
+      return modelSvg;
   }
 
   return undefined;

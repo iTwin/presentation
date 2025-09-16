@@ -16,6 +16,7 @@ import { IModelApp, IModelAppOptions, IModelConnection } from "@itwin/core-front
 import { ITwinLocalization } from "@itwin/core-i18n";
 // __PUBLISH_EXTRACT_START__ Presentation.Frontend.Imports
 import { createFavoritePropertiesStorage, DefaultFavoritePropertiesStorageTypes, Presentation } from "@itwin/presentation-frontend";
+import { CssBaseline } from "@mui/material";
 // __PUBLISH_EXTRACT_END__
 import { rpcInterfaces } from "@test-app/common";
 import { MyAppFrontend } from "./api/MyAppFrontend";
@@ -92,6 +93,7 @@ void (async () => {
   const root = createRoot(document.getElementById("root")!);
   root.render(
     <StrictMode>
+      <CssBaseline />
       <App />
     </StrictMode>,
   );
