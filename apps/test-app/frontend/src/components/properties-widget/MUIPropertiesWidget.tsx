@@ -9,7 +9,7 @@ import { PropertyCategory } from "@itwin/components-react";
 import { IModelConnection } from "@itwin/core-frontend";
 import { PresentationPropertyDataProvider, usePropertyDataProviderWithUnifiedSelection } from "@itwin/presentation-components";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
-import { Accordion, AccordionDetails, AccordionSummary, Grid, Typography } from "@mui/material";
+import { Accordion, AccordionDetails, AccordionSummary, Grid, Input, InputLabel, Typography } from "@mui/material";
 import { MyAppFrontend } from "../../api/MyAppFrontend";
 
 export interface Props {
@@ -102,10 +102,15 @@ function Properties({ data }: { data: PropertyRecord[] }) {
           return null;
         }
 
+        const inputId = `input-${p.property.name}`;
         return (
           <Grid container key={p.property.name} size={12} direction={"row"}>
-            <Grid size={4}>{p.property.displayLabel}</Grid>
-            <Grid size={8}>{p.value.displayValue}</Grid>
+            <Grid size={4}>
+              <InputLabel htmlFor={inputId}>{p.property.displayLabel}</InputLabel>
+            </Grid>
+            <Grid size={8}>
+              <Input id={inputId} defaultValue={p.value.displayValue} />
+            </Grid>
           </Grid>
         );
       })}

@@ -8,7 +8,7 @@ import { PropertyRecord, PropertyValueFormat } from "@itwin/appui-abstract";
 import { PropertyCategory } from "@itwin/components-react";
 import { IModelConnection } from "@itwin/core-frontend";
 import { PresentationPropertyDataProvider, usePropertyDataProviderWithUnifiedSelection } from "@itwin/presentation-components";
-import { Text } from "@stratakit/bricks";
+import { Field, TextBox } from "@stratakit/bricks";
 import { unstable_AccordionItem as AccordionItem } from "@stratakit/structures";
 import { MyAppFrontend } from "../../api/MyAppFrontend";
 
@@ -99,17 +99,21 @@ function CategoryProperties({ data }: { data: CategorizedProperties[] }) {
 
 function Properties({ data }: { data: PropertyRecord[] }) {
   return (
-    <div style={{ display: "flex", flexDirection: "column" }}>
+    <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
       {data.map((p) => {
         if (p.value.valueFormat !== PropertyValueFormat.Primitive) {
           return null;
         }
 
         return (
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 2fr", gap: 4 }} key={p.property.name}>
-            <Text variant="body-md">{p.property.displayLabel}</Text>
-            <Text variant="body-md">{p.value.displayValue}</Text>
-          </div>
+          <Field.Root
+            layout="inline"
+            style={{ display: "grid", gridTemplateColumns: "1fr 2fr", gap: 4, gridTemplateAreas: `"label control"` }}
+            key={p.property.name}
+          >
+            <Field.Label style={{ gridArea: "label" }}>{p.property.displayLabel}</Field.Label>
+            <Field.Control render={<TextBox.Input style={{ gridArea: "control" }} defaultValue={p.value.displayValue} />} />
+          </Field.Root>
         );
       })}
     </div>
