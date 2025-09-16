@@ -664,7 +664,7 @@ importers:
         version: 5.2.0-dev.25(@itwin/core-bentley@5.2.0-dev.25)(@itwin/core-geometry@5.2.0-dev.25)
       '@itwin/core-electron':
         specifier: catalog:itwinjs-core-dev
-        version: 5.2.0-dev.25(798a4385b64017d4754b9d5694646b99)
+        version: 5.2.0-dev.25(192a9402cf2f5df2d190209e7e0f733c)
       '@itwin/ecschema-rpcinterface-impl':
         specifier: catalog:itwinjs-core-dev
         version: 5.2.0-dev.25(7e3f1a9e4c76f31a9927a4a9a2798eb1)
@@ -760,7 +760,7 @@ importers:
         version: 5.2.0-dev.25(@itwin/core-bentley@5.2.0-dev.25)
       '@itwin/appui-react':
         specifier: catalog:appui
-        version: 5.13.0(990d7cb32c97dbcafc4c3bd0a4e8bab7)
+        version: 5.13.0(f3f1a7b56e786e4076a1a5c66c1cda6f)
       '@itwin/build-tools':
         specifier: catalog:build-tools
         version: 5.1.1(@types/node@22.13.9)
@@ -775,7 +775,7 @@ importers:
         version: 5.2.0-dev.25(@itwin/core-bentley@5.2.0-dev.25)(@itwin/core-geometry@5.2.0-dev.25)
       '@itwin/core-electron':
         specifier: catalog:itwinjs-core-dev
-        version: 5.2.0-dev.25(798a4385b64017d4754b9d5694646b99)
+        version: 5.2.0-dev.25(192a9402cf2f5df2d190209e7e0f733c)
       '@itwin/core-frontend':
         specifier: catalog:itwinjs-core-dev
         version: 5.2.0-dev.25(@itwin/appui-abstract@5.2.0-dev.25(@itwin/core-bentley@5.2.0-dev.25))(@itwin/core-bentley@5.2.0-dev.25)(@itwin/core-common@5.2.0-dev.25(@itwin/core-bentley@5.2.0-dev.25)(@itwin/core-geometry@5.2.0-dev.25))(@itwin/core-geometry@5.2.0-dev.25)(@itwin/core-orbitgt@5.2.0-dev.25)(@itwin/core-quantity@5.2.0-dev.25(@itwin/core-bentley@5.2.0-dev.25))(@itwin/ecschema-metadata@5.2.0-dev.25(@itwin/core-bentley@5.2.0-dev.25)(@itwin/core-quantity@5.2.0-dev.25(@itwin/core-bentley@5.2.0-dev.25)))(@itwin/ecschema-rpcinterface-common@5.2.0-dev.25(@itwin/core-bentley@5.2.0-dev.25)(@itwin/core-common@5.2.0-dev.25(@itwin/core-bentley@5.2.0-dev.25)(@itwin/core-geometry@5.2.0-dev.25))(@itwin/core-geometry@5.2.0-dev.25)(@itwin/ecschema-metadata@5.2.0-dev.25(@itwin/core-bentley@5.2.0-dev.25)(@itwin/core-quantity@5.2.0-dev.25(@itwin/core-bentley@5.2.0-dev.25))))(encoding@0.1.13)(inversify@6.0.3)(reflect-metadata@0.1.14)
@@ -839,6 +839,9 @@ importers:
       '@mui/material':
         specifier: ^7.3.2
         version: 7.3.2(@emotion/react@11.14.0(@types/react@18.3.3)(react@18.3.1))(@emotion/styled@11.14.1(@emotion/react@11.14.0(@types/react@18.3.3)(react@18.3.1))(@types/react@18.3.3)(react@18.3.1))(@types/react@18.3.3)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      '@mui/x-data-grid':
+        specifier: ^8.11.2
+        version: 8.11.2(@emotion/react@11.14.0(@types/react@18.3.3)(react@18.3.1))(@emotion/styled@11.14.1(@emotion/react@11.14.0(@types/react@18.3.3)(react@18.3.1))(@types/react@18.3.3)(react@18.3.1))(@mui/material@7.3.2(@emotion/react@11.14.0(@types/react@18.3.3)(react@18.3.1))(@emotion/styled@11.14.1(@emotion/react@11.14.0(@types/react@18.3.3)(react@18.3.1))(@types/react@18.3.3)(react@18.3.1))(@types/react@18.3.3)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@mui/system@7.3.2(@emotion/react@11.14.0(@types/react@18.3.3)(react@18.3.1))(@emotion/styled@11.14.1(@emotion/react@11.14.0(@types/react@18.3.3)(react@18.3.1))(@types/react@18.3.3)(react@18.3.1))(@types/react@18.3.3)(react@18.3.1))(@types/react@18.3.3)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@mui/x-tree-view':
         specifier: ^8.11.2
         version: 8.11.2(@emotion/react@11.14.0(@types/react@18.3.3)(react@18.3.1))(@emotion/styled@11.14.1(@emotion/react@11.14.0(@types/react@18.3.3)(react@18.3.1))(@types/react@18.3.3)(react@18.3.1))(@mui/material@7.3.2(@emotion/react@11.14.0(@types/react@18.3.3)(react@18.3.1))(@emotion/styled@11.14.1(@emotion/react@11.14.0(@types/react@18.3.3)(react@18.3.1))(@types/react@18.3.3)(react@18.3.1))(@types/react@18.3.3)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@mui/system@7.3.2(@emotion/react@11.14.0(@types/react@18.3.3)(react@18.3.1))(@emotion/styled@11.14.1(@emotion/react@11.14.0(@types/react@18.3.3)(react@18.3.1))(@types/react@18.3.3)(react@18.3.1))(@types/react@18.3.3)(react@18.3.1))(@types/react@18.3.3)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -3386,6 +3389,22 @@ packages:
       '@types/react':
         optional: true
 
+  '@mui/x-data-grid@8.11.2':
+    resolution: {integrity: sha512-GSMDD4SuqTtsbZQMnTDFlVtewbPINmxTcGDeMQpJAQG8DMgV24UaoT1FYTqJiBkqnib6avz8ME0q/6i6BQGt3w==}
+    engines: {node: '>=14.0.0'}
+    peerDependencies:
+      '@emotion/react': ^11.9.0
+      '@emotion/styled': ^11.8.1
+      '@mui/material': ^5.15.14 || ^6.0.0 || ^7.0.0
+      '@mui/system': ^5.15.14 || ^6.0.0 || ^7.0.0
+      react: ^17.0.0 || ^18.0.0 || ^19.0.0
+      react-dom: ^17.0.0 || ^18.0.0 || ^19.0.0
+    peerDependenciesMeta:
+      '@emotion/react':
+        optional: true
+      '@emotion/styled':
+        optional: true
+
   '@mui/x-internals@8.11.2':
     resolution: {integrity: sha512-3BFZ0Njgih+eWQBzSsdKEkRMlHtKRGFWz+/CGUrSBb5IApO0apkUSvG4v5augNYASsjksqWOXVlds7Wwznd0Lg==}
     engines: {node: '>=14.0.0'}
@@ -3407,6 +3426,13 @@ packages:
         optional: true
       '@emotion/styled':
         optional: true
+
+  '@mui/x-virtualizer@0.1.6':
+    resolution: {integrity: sha512-rZBS1+Y8micorIDs06REFsjQGMW+CJ0OiRnko32R2fvC7Wy5FrgZ/PK5im1vXG6a86lSg5YLKT9wr59/6NqRjQ==}
+    engines: {node: '>=14.0.0'}
+    peerDependencies:
+      react: ^17.0.0 || ^18.0.0 || ^19.0.0
+      react-dom: ^17.0.0 || ^18.0.0 || ^19.0.0
 
   '@ngneat/falso@7.4.0':
     resolution: {integrity: sha512-7MzPP0YGNHDrohf/epmz6SVIjHGhKyHbh0bm+iZ1z/7KVW4xZi9Dx6Tl9NMPy6a4lWh/t3WXSsCGkgkuJ/eroQ==}
@@ -11577,7 +11603,7 @@ snapshots:
     dependencies:
       '@itwin/core-bentley': 5.2.0-dev.25
 
-  '@itwin/appui-react@5.13.0(990d7cb32c97dbcafc4c3bd0a4e8bab7)':
+  '@itwin/appui-react@5.13.0(f3f1a7b56e786e4076a1a5c66c1cda6f)':
     dependencies:
       '@itwin/appui-abstract': 5.2.0-dev.25(@itwin/core-bentley@5.2.0-dev.25)
       '@itwin/components-react': 5.13.0(@itwin/appui-abstract@5.2.0-dev.25(@itwin/core-bentley@5.2.0-dev.25))(@itwin/core-bentley@5.2.0-dev.25)(@itwin/core-react@5.13.0(@itwin/appui-abstract@5.2.0-dev.25(@itwin/core-bentley@5.2.0-dev.25))(@itwin/core-bentley@5.2.0-dev.25)(@itwin/itwinui-react@3.19.4(@stratakit/foundations@0.3.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@itwin/itwinui-react@3.19.4(@stratakit/foundations@0.3.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -11619,7 +11645,7 @@ snapshots:
       rimraf: 6.0.1
       tree-kill: 1.2.2
       typedoc: 0.26.11(typescript@5.6.3)
-      typedoc-plugin-merge-modules: 6.1.0(typedoc@0.26.11(typescript@5.7.3))
+      typedoc-plugin-merge-modules: 6.1.0(typedoc@0.26.11(typescript@5.6.3))
       typescript: 5.6.3
       wtfnode: 0.9.4
       yargs: 17.7.2
@@ -11688,7 +11714,7 @@ snapshots:
       flatbuffers: 1.12.0
       js-base64: 3.7.8
 
-  '@itwin/core-electron@5.2.0-dev.25(798a4385b64017d4754b9d5694646b99)':
+  '@itwin/core-electron@5.2.0-dev.25(192a9402cf2f5df2d190209e7e0f733c)':
     dependencies:
       '@itwin/core-backend': 5.2.0-dev.25(@itwin/core-bentley@5.2.0-dev.25)(@itwin/core-common@5.2.0-dev.25(@itwin/core-bentley@5.2.0-dev.25)(@itwin/core-geometry@5.2.0-dev.25))(@itwin/core-geometry@5.2.0-dev.25)(@itwin/ecschema-metadata@5.2.0-dev.25(@itwin/core-bentley@5.2.0-dev.25)(@itwin/core-quantity@5.2.0-dev.25(@itwin/core-bentley@5.2.0-dev.25)))(@opentelemetry/api@1.9.0)
       '@itwin/core-bentley': 5.2.0-dev.25
@@ -12120,6 +12146,25 @@ snapshots:
     optionalDependencies:
       '@types/react': 18.3.3
 
+  '@mui/x-data-grid@8.11.2(@emotion/react@11.14.0(@types/react@18.3.3)(react@18.3.1))(@emotion/styled@11.14.1(@emotion/react@11.14.0(@types/react@18.3.3)(react@18.3.1))(@types/react@18.3.3)(react@18.3.1))(@mui/material@7.3.2(@emotion/react@11.14.0(@types/react@18.3.3)(react@18.3.1))(@emotion/styled@11.14.1(@emotion/react@11.14.0(@types/react@18.3.3)(react@18.3.1))(@types/react@18.3.3)(react@18.3.1))(@types/react@18.3.3)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@mui/system@7.3.2(@emotion/react@11.14.0(@types/react@18.3.3)(react@18.3.1))(@emotion/styled@11.14.1(@emotion/react@11.14.0(@types/react@18.3.3)(react@18.3.1))(@types/react@18.3.3)(react@18.3.1))(@types/react@18.3.3)(react@18.3.1))(@types/react@18.3.3)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
+    dependencies:
+      '@babel/runtime': 7.28.3
+      '@mui/material': 7.3.2(@emotion/react@11.14.0(@types/react@18.3.3)(react@18.3.1))(@emotion/styled@11.14.1(@emotion/react@11.14.0(@types/react@18.3.3)(react@18.3.1))(@types/react@18.3.3)(react@18.3.1))(@types/react@18.3.3)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      '@mui/system': 7.3.2(@emotion/react@11.14.0(@types/react@18.3.3)(react@18.3.1))(@emotion/styled@11.14.1(@emotion/react@11.14.0(@types/react@18.3.3)(react@18.3.1))(@types/react@18.3.3)(react@18.3.1))(@types/react@18.3.3)(react@18.3.1)
+      '@mui/utils': 7.3.2(@types/react@18.3.3)(react@18.3.1)
+      '@mui/x-internals': 8.11.2(@types/react@18.3.3)(react@18.3.1)
+      '@mui/x-virtualizer': 0.1.6(@types/react@18.3.3)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      clsx: 2.1.1
+      prop-types: 15.8.1
+      react: 18.3.1
+      react-dom: 18.3.1(react@18.3.1)
+      use-sync-external-store: 1.5.0(react@18.3.1)
+    optionalDependencies:
+      '@emotion/react': 11.14.0(@types/react@18.3.3)(react@18.3.1)
+      '@emotion/styled': 11.14.1(@emotion/react@11.14.0(@types/react@18.3.3)(react@18.3.1))(@types/react@18.3.3)(react@18.3.1)
+    transitivePeerDependencies:
+      - '@types/react'
+
   '@mui/x-internals@8.11.2(@types/react@18.3.3)(react@18.3.1)':
     dependencies:
       '@babel/runtime': 7.28.3
@@ -12147,6 +12192,16 @@ snapshots:
     optionalDependencies:
       '@emotion/react': 11.14.0(@types/react@18.3.3)(react@18.3.1)
       '@emotion/styled': 11.14.1(@emotion/react@11.14.0(@types/react@18.3.3)(react@18.3.1))(@types/react@18.3.3)(react@18.3.1)
+    transitivePeerDependencies:
+      - '@types/react'
+
+  '@mui/x-virtualizer@0.1.6(@types/react@18.3.3)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
+    dependencies:
+      '@babel/runtime': 7.28.3
+      '@mui/utils': 7.3.2(@types/react@18.3.3)(react@18.3.1)
+      '@mui/x-internals': 8.11.2(@types/react@18.3.3)(react@18.3.1)
+      react: 18.3.1
+      react-dom: 18.3.1(react@18.3.1)
     transitivePeerDependencies:
       - '@types/react'
 
@@ -19395,7 +19450,7 @@ snapshots:
       possible-typed-array-names: 1.1.0
       reflect.getprototypeof: 1.0.10
 
-  typedoc-plugin-merge-modules@6.1.0(typedoc@0.26.11(typescript@5.7.3)):
+  typedoc-plugin-merge-modules@6.1.0(typedoc@0.26.11(typescript@5.6.3)):
     dependencies:
       typedoc: 0.26.11(typescript@5.6.3)
 
