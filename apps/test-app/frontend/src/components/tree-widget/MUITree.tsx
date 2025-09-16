@@ -5,17 +5,7 @@
 
 import { forwardRef, ReactElement, useCallback, useEffect, useMemo, useState } from "react";
 import { IModelConnection } from "@itwin/core-frontend";
-import {
-  SvgFolder,
-  SvgImodelHollow,
-  SvgItem,
-  SvgLayers,
-  SvgLock,
-  SvgLockUnlocked,
-  SvgModel,
-  SvgVisibilityHide,
-  SvgVisibilityShow,
-} from "@itwin/itwinui-icons-react";
+import { SvgLock, SvgLockUnlocked, SvgVisibilityHide, SvgVisibilityShow } from "@itwin/itwinui-icons-react";
 import { createECSchemaProvider, createECSqlQueryExecutor } from "@itwin/presentation-core-interop";
 import { createIModelHierarchyProvider, createLimitingECSqlQueryExecutor } from "@itwin/presentation-hierarchies";
 import { PresentationHierarchyNode, TreeRendererProps, useIModelUnifiedSelectionTree } from "@itwin/presentation-hierarchies-react";

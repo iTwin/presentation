@@ -187,7 +187,7 @@ function Tree({ imodel, imodelAccess, height, width }: { imodel: IModelConnectio
         onFilterClick={setFilteringOptions}
         selectionMode={"extended"}
         getDecorations={getDecorations}
-        getSublabel={() => "Description"}
+        getSublabel={() => <>Description</>}
       />
     );
   };

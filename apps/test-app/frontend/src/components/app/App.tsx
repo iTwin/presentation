@@ -33,7 +33,9 @@ import { ThemeProvider as MUIThemeProvider } from "@mui/material";
 import { Root } from "@stratakit/foundations";
 import { MyAppFrontend, MyAppSettings } from "../../api/MyAppFrontend";
 import { IModelSelector } from "../imodel-selector/IModelSelector";
+import { MUIPropertiesWidget } from "../properties-widget/MUIPropertiesWidget";
 import { PropertiesWidget } from "../properties-widget/PropertiesWidget";
+import { StrataPropertiesWidget } from "../properties-widget/StrataKitPropertiesWidget";
 import { RulesetSelector } from "../ruleset-selector/RulesetSelector";
 import { MUIDataGridWidget } from "../table-widget/MUIDataGrid";
 import { MUITableWidget } from "../table-widget/MUITable";
@@ -264,13 +266,13 @@ function IModelComponents(props: IModelComponentsProps) {
               defaultState: WidgetState.Open,
               canPopout: true,
             },
-            {
-              id: "multi-datasource-tree",
-              label: "Multi data source tree",
-              content: <MultiDataSourceTreePanel imodel={imodel} />,
-              defaultState: WidgetState.Open,
-              canPopout: true,
-            },
+            // {
+            //   id: "multi-datasource-tree",
+            //   label: "Multi data source tree",
+            //   content: <MultiDataSourceTreePanel imodel={imodel} />,
+            //   defaultState: WidgetState.Open,
+            //   canPopout: true,
+            // },
             {
               id: "mui-tree",
               label: "MUI Tree",
@@ -284,6 +286,20 @@ function IModelComponents(props: IModelComponentsProps) {
               id: "properties",
               label: "Properties widget",
               content: <PropertiesWidget imodel={imodel} rulesetId={rulesetId} />,
+              defaultState: WidgetState.Open,
+              canPopout: true,
+            },
+            {
+              id: "mui-properties",
+              label: "MUI Properties widget",
+              content: <MUIPropertiesWidget imodel={imodel} rulesetId={rulesetId} />,
+              defaultState: WidgetState.Open,
+              canPopout: true,
+            },
+            {
+              id: "strata-properties",
+              label: "Strata Properties widget",
+              content: <StrataPropertiesWidget imodel={imodel} rulesetId={rulesetId} />,
               defaultState: WidgetState.Open,
               canPopout: true,
             },
