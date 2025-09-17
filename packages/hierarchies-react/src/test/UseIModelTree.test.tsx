@@ -62,18 +62,18 @@ describe("useIModelTree hooks", () => {
       );
     });
 
-    it("forwards `getFilteredPaths` call", async () => {
+    it("forwards `getSearchPaths` call", async () => {
       stubs.hierarchyProvider.getNodes.callsFake(() => createAsyncIterator([]));
       let signal;
-      const getFilteredPaths = sinon.stub().callsFake(async ({ abortSignal }) => {
+      const getSearchPaths = sinon.stub().callsFake(async ({ abortSignal }) => {
         signal = abortSignal;
         return undefined;
       });
-      const { result } = renderHook(useIModelTree, { initialProps: { ...initialProps, getFilteredPaths } });
+      const { result } = renderHook(useIModelTree, { initialProps: { ...initialProps, getSearchPaths } });
       await waitFor(() => {
         expect(getTreeRendererProps(result.current)).to.not.be.undefined;
       });
-      expect(getFilteredPaths).to.be.calledWith({ imodelAccess: initialProps.imodelAccess, abortSignal: signal });
+      expect(getSearchPaths).to.be.calledWith({ imodelAccess: initialProps.imodelAccess, abortSignal: signal });
     });
   });
 
@@ -110,18 +110,18 @@ describe("useIModelTree hooks", () => {
       );
     });
 
-    it("forwards `getFilteredPaths` call", async () => {
+    it("forwards `getSearchPaths` call", async () => {
       stubs.hierarchyProvider.getNodes.callsFake(() => createAsyncIterator([]));
       let signal;
-      const getFilteredPaths = sinon.stub().callsFake(async ({ abortSignal }) => {
+      const getSearchPaths = sinon.stub().callsFake(async ({ abortSignal }) => {
         signal = abortSignal;
         return undefined;
       });
-      const { result } = renderHook(useIModelUnifiedSelectionTree, { initialProps: { ...initialProps, getFilteredPaths } });
+      const { result } = renderHook(useIModelUnifiedSelectionTree, { initialProps: { ...initialProps, getSearchPaths } });
       await waitFor(() => {
         expect(getTreeRendererProps(result.current)).to.not.be.undefined;
       });
-      expect(getFilteredPaths).to.be.calledWith({ imodelAccess: initialProps.imodelAccess, abortSignal: signal });
+      expect(getSearchPaths).to.be.calledWith({ imodelAccess: initialProps.imodelAccess, abortSignal: signal });
     });
   });
 

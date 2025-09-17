@@ -196,7 +196,7 @@ import { createIModelHierarchyProvider } from "@itwin/presentation-hierarchies";
 const hierarchyProvider = createIModelHierarchyProvider({
   imodelAccess,
   hierarchyDefinition: createHierarchyDefinition(imodelAccess),
-  filtering: { paths: filterPaths },
+  search: { paths: filterPaths },
 });
 // Collect the hierarchy & confirm we get what we expect - a hierarchy from root element "A" to target elements "C" and "E".
 // Note that "E" has a child "F", even though it's not a filter target. This is because subtrees under filter target nodes

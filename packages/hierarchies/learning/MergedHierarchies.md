@@ -28,7 +28,7 @@ function createBasicHierarchyProvider(nodes: (parentNode: GetHierarchyNodesProps
     },
     async *getNodeInstanceKeys() {},
     setFormatter() {},
-    setHierarchyFilter() {},
+    setHierarchySearch() {},
   };
 }
 // A provider that returns a single "Node X" root node
