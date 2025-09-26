@@ -185,8 +185,8 @@ describe("usePresentationTableWithUnifiedSelection", () => {
     });
 
     it("loads data when grouping node is selected", async () => {
-      const grouingKey = createTestECClassGroupingNodeKey();
-      const keys = new KeySet([grouingKey]);
+      const groupingKey = createTestECClassGroupingNodeKey();
+      const keys = new KeySet([groupingKey]);
 
       sinon.stub(Presentation.selection, "getSelection").returns(keys);
 
