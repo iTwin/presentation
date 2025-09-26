@@ -292,18 +292,15 @@ describe("usePresentationTableWithUnifiedSelection", () => {
           createTestECInstanceKey({ id: "0x789" }),
         ];
 
+        const keySet = new KeySet([
+          selectionChangeInstanceKeys[0],
+          { classFullName: selectionChangeInstanceKeys[1].className, id: selectionChangeInstanceKeys[1].id },
+          createTestECInstancesNodeKey({ instanceKeys: [selectionChangeInstanceKeys[2]] }),
+        ]);
+
         act(() => {
           // select the row to get loaded onto the component
-          Presentation.selection.addToSelection(
-            selectionSource,
-            imodel,
-            new KeySet([
-              selectionChangeInstanceKeys[0],
-              { classFullName: selectionChangeInstanceKeys[1].className, id: selectionChangeInstanceKeys[1].id },
-              createTestECInstancesNodeKey({ instanceKeys: [selectionChangeInstanceKeys[2]] }),
-            ]),
-            0,
-          );
+          Presentation.selection.addToSelection(selectionSource, imodel, keySet, 0);
         });
 
         await waitFor(() => {
@@ -311,14 +308,10 @@ describe("usePresentationTableWithUnifiedSelection", () => {
           expect(result.current.rows.length).to.be.equal(1);
         });
         expect(presentationManager.getContentDescriptor).to.be.calledWith(
-          sinon.match((options: ContentDescriptorRequestOptions<IModelConnection, KeySet, RulesetVariable>) =>
-            options.keys.hasAll(selectionChangeInstanceKeys),
-          ),
+          sinon.match((options: ContentDescriptorRequestOptions<IModelConnection, KeySet, RulesetVariable>) => options.keys.hasAll(keySet)),
         );
         expect(presentationManager.getContentIterator).to.be.calledWith(
-          sinon.match((options: ContentDescriptorRequestOptions<IModelConnection, KeySet, RulesetVariable>) =>
-            options.keys.hasAll(selectionChangeInstanceKeys),
-          ),
+          sinon.match((options: ContentDescriptorRequestOptions<IModelConnection, KeySet, RulesetVariable>) => options.keys.hasAll(keySet)),
         );
       });
 

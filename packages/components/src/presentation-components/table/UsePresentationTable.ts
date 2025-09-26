@@ -278,10 +278,12 @@ async function loadInstanceKeysFromKeySet(keySet: Readonly<KeySet>) {
   keySet.forEach((key) => {
     if (Key.isInstanceKey(key)) {
       keys.push(key);
+      /* c8 ignore start */
       // eslint-disable-next-line @typescript-eslint/no-deprecated
     } else if (NodeKey.isInstancesNodeKey(key)) {
       keys.push(...key.instanceKeys);
     }
+    /* c8 ignore end */
   });
   return keys;
 }
