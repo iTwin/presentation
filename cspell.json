@@ -65,6 +65,7 @@
     "build",
     "**/*.api.md",
     "**/*.config.*",
-    "**/*.snap"
+    "**/*.snap",
+    "sample_documents"
   ]
 }
