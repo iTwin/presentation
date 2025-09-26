@@ -1,5 +1,11 @@
 # Change Log - @itwin/presentation-components
 
+## 5.12.9
+
+### Patch Changes
+
+- [#1072](https://github.com/iTwin/presentation/pull/1072): Fixed `usePresentationTable` not loading data when grouping node is selected.
+
 ## 5.12.8
 
 ### Patch Changes
