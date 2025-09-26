@@ -20,7 +20,7 @@ import {
 } from "../../presentation-components/table/UsePresentationTable.js";
 import { createTestECInstanceKey, createTestPropertyInfo } from "../_helpers/Common.js";
 import { createTestContentDescriptor, createTestContentItem, createTestPropertiesContentField } from "../_helpers/Content.js";
-import { createTestECInstancesNodeKey } from "../_helpers/Hierarchy.js";
+import { createTestECClassGroupingNodeKey, createTestECInstancesNodeKey } from "../_helpers/Hierarchy.js";
 import { act, renderHook, waitFor } from "../TestUtils.js";
 
 /* eslint-disable @typescript-eslint/no-deprecated */
@@ -182,6 +182,29 @@ describe("usePresentationTableWithUnifiedSelection", () => {
     beforeEach(() => {
       const selectionManager = new SelectionManager({ scopes: undefined as any });
       sinon.stub(Presentation, "selection").get(() => selectionManager);
+    });
+
+    it("loads data when grouping node is selected", async () => {
+      const grouingKey = createTestECClassGroupingNodeKey();
+      const keys = new KeySet([grouingKey]);
+
+      sinon.stub(Presentation.selection, "getSelection").returns(keys);
+
+      setupPresentationManager();
+
+      const { result } = renderHook(() => usePresentationTableWithUnifiedSelection(initialProps));
+
+      await waitFor(() => {
+        expect(result.current.isLoading).to.be.false;
+        expect(result.current.rows.length).to.be.equal(1);
+      });
+
+      expect(presentationManager.getContentDescriptor).to.be.calledWith(
+        sinon.match((options: ContentDescriptorRequestOptions<IModelConnection, KeySet, RulesetVariable>) => options.keys.hasAll(keys)),
+      );
+      expect(presentationManager.getContentIterator).to.be.calledWith(
+        sinon.match((options: ContentDescriptorRequestOptions<IModelConnection, KeySet, RulesetVariable>) => options.keys.hasAll(keys)),
+      );
     });
 
     describe("updating unified selection on table selection changes (`onSelect` calls)", () => {
