@@ -30,6 +30,7 @@ function copyITwinFrontendAssets(outputDir) {
 
 function pseudoLocalize(localesDir) {
   const betoolsPath = path.resolve("node_modules", "@itwin", "build-tools", "bin", "betools.js");
+  // cspell:disable-next-line
   const args = [betoolsPath, "pseudolocalize", "--englishDir", `${localesDir}/en`, "--out", `${localesDir}/en-PSEUDO`];
   try {
     execFileSync("node", args);

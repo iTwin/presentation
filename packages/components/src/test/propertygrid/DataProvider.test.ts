@@ -236,7 +236,7 @@ describe("PropertyDataProvider", () => {
       expect(favoritePropertiesManager.has).to.be.calledOnceWith(field, imodel, FavoritePropertiesScope.IModel);
     });
 
-    it("calls deprecated `isFieldFavorite` when it's overriden by a subclass", async () => {
+    it("calls deprecated `isFieldFavorite` when it's overridden by a subclass", async () => {
       class Subclass extends Provider {
         public override isFieldFavorite(f: Field): boolean {
           // eslint-disable-next-line @typescript-eslint/no-deprecated
@@ -277,7 +277,7 @@ describe("PropertyDataProvider", () => {
       expect(fields[2].priority).to.eq(1);
     });
 
-    it("calls deprecated `sortFields` when it's overriden by a subclass", async () => {
+    it("calls deprecated `sortFields` when it's overridden by a subclass", async () => {
       class Subclass extends Provider {
         public override sortFields(category: CategoryDescription, fields: Field[]) {
           // eslint-disable-next-line @typescript-eslint/no-deprecated

@@ -100,6 +100,7 @@ describe("Learning snippets", () => {
       for (let i = 0; i < 11; ++i) {
         expect(() => getNodeByLabel(container, `B element ${i + 1}`)).to.throw();
       }
+      // cspell:disable-next-line
       await waitFor(() => expect(getByText(`thèré ârë möré îtëms thâñ älløwèd límît õf ${hierarchyLevelSizeLimit}`, { exact: false })).is.not.null);
       consoleStub.restore();
     });

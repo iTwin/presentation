@@ -92,9 +92,11 @@ describe("Learning snippets", async () => {
 
       // test Unified Selection -> Property Grid content synchronization
       act(() => selectionStorage.replaceSelection({ imodelKey: imodel.key, source: "", selectables: [elementKeys[0]] }));
+      // cspell:disable-next-line
       await ensurePropertyGridHasPropertyRecord(container, "$élêçtèd Ítêm(s)", "User Label", "My Element 1");
 
       act(() => selectionStorage.replaceSelection({ imodelKey: imodel.key, source: "", selectables: [elementKeys[1]] }));
+      // cspell:disable-next-line
       await ensurePropertyGridHasPropertyRecord(container, "$élêçtèd Ítêm(s)", "User Label", "My Element 2");
     });
   });
