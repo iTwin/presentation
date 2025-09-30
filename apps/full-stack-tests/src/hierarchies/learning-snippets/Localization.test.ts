@@ -14,6 +14,8 @@ import { initialize, terminate } from "../../IntegrationTests.js";
 import { createIModelAccess } from "../Utils.js";
 import { collectHierarchy } from "./Utils.js";
 
+// cspell:words Kita Nenurodyta
+
 describe("Hierarchies", () => {
   describe("Learning snippets", () => {
     describe("Localization", () => {

@@ -680,11 +680,11 @@ describe("Hierarchies", () => {
           });
         }
 
-        function insertPhysicalModel(modeldElementId: Id64String, isPrivate: boolean) {
+        function insertPhysicalModel(modeledElementId: Id64String, isPrivate: boolean) {
           return db.models.insertModel({
             classFullName: PhysicalModel.classFullName,
             modeledElement: {
-              id: modeldElementId,
+              id: modeledElementId,
             },
             isPrivate,
           });
