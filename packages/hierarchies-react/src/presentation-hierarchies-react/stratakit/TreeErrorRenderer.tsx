@@ -119,13 +119,9 @@ export function TreeErrorRenderer({ errorList, reloadTree, scrollToElement, getH
     );
   });
 
-  return (
-    <ErrorRegion.Root
-      style={{ width: "100%" }}
-      label={errorList.length !== 0 ? `${errorList.length} ${localizedStrings?.issuesFound}` : undefined}
-      items={errorItems}
-    />
-  );
+  const regionLabel =
+    errorList.length === 0 ? localizedStrings.noIssuesFound : localizedStrings.issuesFound.replace("{{number_of_issues}}", errorList.length.toString());
+  return <ErrorRegion.Root style={{ width: "100%" }} aria-label={regionLabel} label={regionLabel} items={errorItems} />;
 }
 
 type ErrorItemContainerProps = {

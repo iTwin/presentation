@@ -142,6 +142,7 @@ interface LocalizedStrings {
     more: string;
     noFilteredChildren: string;
     noFilteredChildrenChangeFilter: string;
+    noIssuesFound: string;
     rename: string;
     resultLimitExceeded: string;
     retry: string;
