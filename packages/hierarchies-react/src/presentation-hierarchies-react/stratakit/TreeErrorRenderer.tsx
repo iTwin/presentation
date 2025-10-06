@@ -31,6 +31,11 @@ interface TreeErrorItemProps {
  * @alpha
  */
 interface TreeErrorRendererOwnProps {
+  /**
+   * A user friendly display label of the tree. Should be unique within the consuming application,
+   * as it's used for creating a unique accessible label for the error region.
+   */
+  treeLabel: string;
   /** List of errors to be displayed */
   errorList: ErrorItem[];
   // Callback to render custom error messages. Component should be wrapped in `ErrorRegion.Item` from `@itwin/itwinui-react` package.
@@ -46,7 +51,15 @@ export type TreeErrorRendererProps = TreeErrorRendererOwnProps & TreeErrorItemPr
  *
  * @alpha
  */
-export function TreeErrorRenderer({ errorList, reloadTree, scrollToElement, getHierarchyLevelDetails, onFilterClick, renderError }: TreeErrorRendererProps) {
+export function TreeErrorRenderer({
+  treeLabel,
+  errorList,
+  reloadTree,
+  scrollToElement,
+  getHierarchyLevelDetails,
+  onFilterClick,
+  renderError,
+}: TreeErrorRendererProps) {
   const { localizedStrings } = useLocalizationContext();
   const errorItems = errorList.map(({ errorNode, expandTo }) => {
     if (renderError) {
@@ -119,9 +132,16 @@ export function TreeErrorRenderer({ errorList, reloadTree, scrollToElement, getH
     );
   });
 
-  const regionLabel =
-    errorList.length === 0 ? localizedStrings.noIssuesFound : localizedStrings.issuesFound.replace("{{number_of_issues}}", errorList.length.toString());
-  return <ErrorRegion.Root style={{ width: "100%" }} aria-label={regionLabel} label={regionLabel} items={errorItems} />;
+  return (
+    <ErrorRegion.Root
+      style={{ width: "100%" }}
+      aria-label={localizedStrings.issuesForTree.replace("{{tree_label}}", treeLabel)}
+      label={
+        errorList.length === 0 ? localizedStrings.noIssuesFound : localizedStrings.issuesFound.replace("{{number_of_issues}}", errorList.length.toString())
+      }
+      items={errorItems}
+    />
+  );
 }
 
 type ErrorItemContainerProps = {
