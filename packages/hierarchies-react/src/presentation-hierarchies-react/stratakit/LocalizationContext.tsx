@@ -67,7 +67,7 @@ export interface LocalizedStrings {
   issuesForTree: string;
   /**
    * Label displayed on the error region, when errors are detected.
-   * Default value: `{{number_of_issues}} issues found.`.
+   * Default value: `{{number_of_issues}} issue(s) found.`.
    */
   issuesFound: string;
   /**
@@ -124,7 +124,7 @@ const defaultLocalizedStrings: LocalizedStrings = {
   resultLimitExceeded: "The hierarchy for {{node}} contains {{limit}}+ items. Try using filters or increase the limit.",
   rootResultLimitExceeded: "The root item hierarchy contains {{limit}}+ items. Try increasing the limit.",
   issuesForTree: "Issues for {{tree_label}}.",
-  issuesFound: "{{number_of_issues}} issues found.",
+  issuesFound: "{{number_of_issues}} issue(s) found.",
   noIssuesFound: "No issues found.",
   increaseHierarchyLimit: "Increase limit to {{limit}}",
   increaseHierarchyLimitToUnlimited: "Remove limit",
