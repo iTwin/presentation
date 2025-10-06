@@ -23,6 +23,7 @@
     "@itwin/unified-selection-react": "1.0.0"
   },
   "changesets": [
+    "angry-wings-accept",
     "breezy-rockets-throw",
     "brown-peaches-smash",
     "clever-boats-knock",
