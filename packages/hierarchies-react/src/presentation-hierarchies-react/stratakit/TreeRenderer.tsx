@@ -24,6 +24,11 @@ export type TreeNodeRendererProps = ComponentPropsWithoutRef<typeof StrataKitTre
 
 /** @alpha */
 interface TreeRendererOwnProps {
+  /**
+   * A user friendly display label of the tree. Should be unique within the consuming application,
+   * as it's used for accessibility purposes.
+   */
+  treeLabel: string;
   /** Active selection mode used by the tree. Defaults to `"single"`. */
   selectionMode?: SelectionMode;
   /** A render function for errors' display component. Defaults to `<TreeErrorRenderer />`. */
@@ -58,6 +63,7 @@ export function StrataKitTreeRenderer({
   selectNodes,
   selectionMode,
   expandNode,
+  treeLabel,
   localizedStrings,
   getHierarchyLevelDetails,
   onFilterClick,
@@ -118,6 +124,7 @@ export function StrataKitTreeRenderer({
   }, [flatItems, virtualizer]);
 
   const errorRendererProps: TreeErrorRendererProps = {
+    treeLabel,
     errorList,
     scrollToElement,
     getHierarchyLevelDetails,

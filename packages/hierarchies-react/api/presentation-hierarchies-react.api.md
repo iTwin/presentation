@@ -137,11 +137,13 @@ interface LocalizedStrings {
     increaseHierarchyLimit: string;
     increaseHierarchyLimitToUnlimited: string;
     increaseHierarchyLimitWithFiltering: string;
+    issuesForTree: string;
     issuesFound: string;
     loading: string;
     more: string;
     noFilteredChildren: string;
     noFilteredChildrenChangeFilter: string;
+    noIssuesFound: string;
     rename: string;
     resultLimitExceeded: string;
     retry: string;
@@ -240,7 +242,7 @@ type StrataKitRootErrorRendererProps = {
 export const StrataKitTreeNodeRenderer: FC<PropsWithRef<TreeNodeRendererProps & RefAttributes<HTMLElement>>>;
 
 // @alpha
-export function StrataKitTreeRenderer({ rootNodes, selectNodes, selectionMode, expandNode, localizedStrings, getHierarchyLevelDetails, onFilterClick, reloadTree, isNodeSelected, errorRenderer, onNodeClick: onNodeClickOverride, onNodeKeyDown: onNodeKeyDownOverride, getEditingProps, ...treeProps }: StrataKitTreeRendererProps): JSX_2.Element;
+export function StrataKitTreeRenderer({ rootNodes, selectNodes, selectionMode, expandNode, treeLabel, localizedStrings, getHierarchyLevelDetails, onFilterClick, reloadTree, isNodeSelected, errorRenderer, onNodeClick: onNodeClickOverride, onNodeKeyDown: onNodeKeyDownOverride, getEditingProps, ...treeProps }: StrataKitTreeRendererProps): JSX_2.Element;
 
 // @alpha (undocumented)
 type StrataKitTreeRendererProps = TreeRendererProps & Pick<TreeErrorRendererProps, "onFilterClick"> & Omit<TreeNodeRendererProps_2, "node" | "aria-level" | "aria-posinset" | "aria-setsize" | "reloadTree" | "selected" | "error"> & TreeRendererOwnProps & ComponentPropsWithoutRef<typeof LocalizationContextProvider>;
@@ -256,7 +258,7 @@ interface TreeErrorItemProps {
 }
 
 // @alpha
-export function TreeErrorRenderer({ errorList, reloadTree, scrollToElement, getHierarchyLevelDetails, onFilterClick, renderError }: TreeErrorRendererProps): JSX_2.Element;
+export function TreeErrorRenderer({ treeLabel, errorList, reloadTree, scrollToElement, getHierarchyLevelDetails, onFilterClick, renderError, }: TreeErrorRendererProps): JSX_2.Element;
 
 // @alpha
 interface TreeErrorRendererOwnProps {
@@ -266,6 +268,7 @@ interface TreeErrorRendererOwnProps {
         errorItem: ErrorItem;
         scrollToElement: () => void;
     }) => ReactElement;
+    treeLabel: string;
 }
 
 // @alpha (undocumented)
@@ -299,6 +302,7 @@ interface TreeRendererOwnProps {
         onLabelChanged?: (newLabel: string) => void;
     };
     selectionMode?: SelectionMode_2;
+    treeLabel: string;
 }
 
 // @alpha

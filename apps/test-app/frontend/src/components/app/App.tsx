@@ -338,7 +338,7 @@ function StatelessModelsTreePanel(props: { imodel: IModelConnection }) {
   const { width, height, ref } = useResizeDetector<HTMLDivElement>();
   return (
     <div className="tree-widget-tabs-content" ref={ref} style={{ width: "100%", height: "100%", overflow: "hidden" }}>
-      <StatelessTreeV2 imodel={props.imodel} width={width ?? 0} height={height ?? 0} />
+      <StatelessTreeV2 treeLabel="Models tree" imodel={props.imodel} width={width ?? 0} height={height ?? 0} />
     </div>
   );
 }
@@ -347,7 +347,7 @@ function MultiDataSourceTreePanel(props: { imodel: IModelConnection }) {
   const { width, height, ref } = useResizeDetector<HTMLDivElement>();
   return (
     <div className="tree-widget-tabs-content" ref={ref} style={{ width: "100%", height: "100%", overflow: "hidden" }}>
-      <MultiDataSourceTree imodel={props.imodel} width={width ?? 0} height={height ?? 0} />
+      <MultiDataSourceTree treeLabel="Multi data source tree" imodel={props.imodel} width={width ?? 0} height={height ?? 0} />
     </div>
   );
 }

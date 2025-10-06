@@ -35,7 +35,7 @@ import { TreeRendererWithFilterAction } from "./TreeRendererWithFilterAction";
 type UseIModelTreeProps = Props<typeof useIModelUnifiedSelectionTree>;
 type IModelAccess = UseIModelTreeProps["imodelAccess"];
 
-export function StatelessTreeV2({ imodel, ...props }: { imodel: IModelConnection; height: number; width: number }) {
+export function StatelessTreeV2({ imodel, ...props }: { imodel: IModelConnection; height: number; width: number; treeLabel: string }) {
   const [imodelAccess, setIModelAccess] = useState<IModelAccess>();
   useEffect(() => {
     const schemas = MyAppFrontend.getSchemaContext(imodel);
@@ -55,7 +55,19 @@ export function StatelessTreeV2({ imodel, ...props }: { imodel: IModelConnection
   return <Tree {...props} imodel={imodel} imodelAccess={imodelAccess} />;
 }
 
-function Tree({ imodel, imodelAccess, height, width }: { imodel: IModelConnection; imodelAccess: IModelAccess; height: number; width: number }) {
+function Tree({
+  imodel,
+  imodelAccess,
+  height,
+  width,
+  treeLabel,
+}: {
+  imodel: IModelConnection;
+  imodelAccess: IModelAccess;
+  height: number;
+  width: number;
+  treeLabel: string;
+}) {
   const [filter, setFilter] = useState("");
 
   const getFilteredPaths = useMemo<UseIModelTreeProps["getFilteredPaths"]>(() => {
@@ -187,6 +199,7 @@ function Tree({ imodel, imodelAccess, height, width }: { imodel: IModelConnectio
         onFilterClick={setFilteringOptions}
         selectionMode={"extended"}
         getDecorations={getDecorations}
+        treeLabel={treeLabel}
       />
     );
   };

@@ -61,10 +61,20 @@ export interface LocalizedStrings {
    */
   rootResultLimitExceeded: string;
   /**
-   * Label displayed on error dropdown.
-   * Default value: `issues found`.
+   * Name for the error region landmark.
+   * Default value: `Issues for {{tree_label}}.`.
+   */
+  issuesForTree: string;
+  /**
+   * Label displayed on the error region, when errors are detected.
+   * Default value: `{{number_of_issues}} issue(s) found.`.
    */
   issuesFound: string;
+  /**
+   * Label displayed on the error region, when no issues are found.
+   * Default value: `No issues found.`.
+   */
+  noIssuesFound: string;
   /**
    * Message displayed when hierarchy size limit can be overridden.
    * Default value: `Increase limit to {{limit}}`.
@@ -113,7 +123,9 @@ const defaultLocalizedStrings: LocalizedStrings = {
   failedToCreateRootHierarchy: "Failed to load tree.",
   resultLimitExceeded: "The hierarchy for {{node}} contains {{limit}}+ items. Try using filters or increase the limit.",
   rootResultLimitExceeded: "The root item hierarchy contains {{limit}}+ items. Try increasing the limit.",
-  issuesFound: "issues found",
+  issuesForTree: "Issues for {{tree_label}}.",
+  issuesFound: "{{number_of_issues}} issue(s) found.",
+  noIssuesFound: "No issues found.",
   increaseHierarchyLimit: "Increase limit to {{limit}}",
   increaseHierarchyLimitToUnlimited: "Remove limit",
   increaseHierarchyLimitWithFiltering: "Add Filter",

@@ -44,7 +44,7 @@ import { MyAppFrontend } from "../../api/MyAppFrontend";
 type UseTreeProps = Props<typeof useUnifiedSelectionTree>;
 type IModelAccess = Props<typeof createIModelHierarchyProvider>["imodelAccess"];
 
-export function MultiDataSourceTree({ imodel, ...props }: { imodel: IModelConnection; height: number; width: number }) {
+export function MultiDataSourceTree({ imodel, ...props }: { imodel: IModelConnection; height: number; width: number; treeLabel: string }) {
   const [imodelAccess, setIModelAccess] = useState<IModelAccess>();
   useEffect(() => setIModelAccess(createIModelAccess(imodel)), [imodel]);
 
@@ -68,7 +68,7 @@ function createIModelAccess(imodel: IModelConnection) {
 
 const RSS_PROVIDER = createRssHierarchyProvider();
 
-function Tree({ imodelAccess, height, width }: { imodelAccess: IModelAccess; height: number; width: number }) {
+function Tree({ imodelAccess, height, width, treeLabel }: { imodelAccess: IModelAccess; height: number; width: number; treeLabel: string }) {
   const [filter, setFilter] = useState("");
   const getFilteredPaths = useMemo<UseTreeProps["getFilteredPaths"]>(() => {
     return async () => {
@@ -139,7 +139,7 @@ function Tree({ imodelAccess, height, width }: { imodelAccess: IModelAccess; hei
 
     return (
       <Flex.Item alignSelf="flex-start" style={{ width: "100%", overflow: "auto" }}>
-        <StrataKitTreeRenderer {...treeProps.treeRendererProps} getDecorations={(node) => getIcon(node)} selectionMode={"extended"} />
+        <StrataKitTreeRenderer {...treeProps.treeRendererProps} getDecorations={(node) => getIcon(node)} selectionMode={"extended"} treeLabel={treeLabel} />
       </Flex.Item>
     );
   };
