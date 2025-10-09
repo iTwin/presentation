@@ -15,9 +15,7 @@ export function SelectionScopePicker(props: SelectionScopePickerProps) {
   const onSelectedScopeChanged = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const scopeId = e.target.value as keyof typeof SELECTION_SCOPES;
     setActiveScopeId(scopeId);
-    if (props.onSelectionScopeChanged) {
-      props.onSelectionScopeChanged(SELECTION_SCOPES[scopeId].scope);
-    }
+    props.onSelectionScopeChanged(SELECTION_SCOPES[scopeId].scope);
   };
   return (
     <div className="SelectionScopePicker">
