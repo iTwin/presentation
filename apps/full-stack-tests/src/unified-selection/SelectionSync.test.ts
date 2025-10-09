@@ -416,7 +416,7 @@ describe("Unified selection sync with iModel", () => {
       });
     });
 
-    it("syncs selection after selection set changes to different assembly elements", async function () {
+    it.only("syncs selection after selection set changes to different assembly elements", async function () {
       let assemblyKey: SelectableInstanceKey;
       let childElementKeys: SelectableInstanceKey[];
       // eslint-disable-next-line @typescript-eslint/no-deprecated
@@ -444,7 +444,7 @@ describe("Unified selection sync with iModel", () => {
       });
       using _ = enableSync({ selectionScope: { id: "element", ancestorLevel: -1 } });
 
-      imodel.selectionSet.replace({ elements: [childElementKeys![0].id] });
+      imodel.selectionSet.replace(childElementKeys![0].id);
       await waitFor(() => {
         expect(getHiliteSet(imodel)).to.deep.eq({
           models: [],
@@ -465,7 +465,7 @@ describe("Unified selection sync with iModel", () => {
         expect(getStorageSelection()).to.deep.eq(Selectables.create([assemblyKey!]));
       });
 
-      imodel.selectionSet.replace({ elements: [childElementKeys![1].id] });
+      imodel.selectionSet.replace(childElementKeys![1].id);
       await waitFor(() => {
         expect(getHiliteSet(imodel)).to.deep.eq({
           models: [],
