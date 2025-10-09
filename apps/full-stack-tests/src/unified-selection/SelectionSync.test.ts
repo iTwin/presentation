@@ -416,7 +416,7 @@ describe("Unified selection sync with iModel", () => {
       });
     });
 
-    it.only("syncs selection after selection set changes to different assembly elements", async function () {
+    it("syncs selection after selection set changes to different assembly elements", async function () {
       let assemblyKey: SelectableInstanceKey;
       let childElementKeys: SelectableInstanceKey[];
       // eslint-disable-next-line @typescript-eslint/no-deprecated
