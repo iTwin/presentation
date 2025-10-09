@@ -30,7 +30,15 @@ import { createECSchemaProvider, createECSqlQueryExecutor, createIModelKey } fro
 import { createLimitingECSqlQueryExecutor } from "@itwin/presentation-hierarchies";
 import { createCachingECClassHierarchyInspector, Props } from "@itwin/presentation-shared";
 import { buildTestIModel, initialize, terminate } from "@itwin/presentation-testing";
-import { createStorage, enableUnifiedSelectionSyncWithIModel, HiliteSet, SelectableInstanceKey, Selectables, SelectionStorage } from "@itwin/unified-selection";
+import {
+  createStorage,
+  enableUnifiedSelectionSyncWithIModel,
+  HiliteSet,
+  SelectableInstanceKey,
+  Selectables,
+  SelectionScope,
+  SelectionStorage,
+} from "@itwin/unified-selection";
 import { createSchemaContext } from "../IModelUtils.js";
 import { getSchemaFromPackage } from "./getSchema.js";
 
@@ -64,7 +72,11 @@ describe("Unified selection sync with iModel", () => {
     }
   });
 
-  function enableSync(): Disposable {
+  function getStorageSelection(): Selectables {
+    return selectionStorage.getSelection({ imodelKey: createIModelKey(imodel) });
+  }
+
+  function enableSync(props?: { selectionScope?: SelectionScope }): Disposable {
     const schemaProvider = createECSchemaProvider(createSchemaContext(imodel));
     const classHierarchyInspector = createCachingECClassHierarchyInspector({ schemaProvider });
     const queryExecutor = createLimitingECSqlQueryExecutor(createECSqlQueryExecutor(imodel), 123);
@@ -78,7 +90,7 @@ describe("Unified selection sync with iModel", () => {
         hiliteSet: imodel.hilited,
       },
       selectionStorage,
-      activeScopeProvider: () => "element",
+      activeScopeProvider: () => props?.selectionScope ?? "element",
     });
     return {
       [Symbol.dispose]: dispose,
@@ -403,6 +415,77 @@ describe("Unified selection sync with iModel", () => {
         expect(imodel.hilited.isEmpty).to.be.true;
       });
     });
+
+    it("syncs selection after selection set changes to different assembly elements", async function () {
+      let assemblyKey: SelectableInstanceKey;
+      let childElementKeys: SelectableInstanceKey[];
+      // eslint-disable-next-line @typescript-eslint/no-deprecated
+      imodel = await buildTestIModel(this, async (builder) => {
+        const modelKey = insertPhysicalModelWithPartition({ builder, codeValue: "test model" });
+        const categoryKey = insertSpatialCategory({ builder, codeValue: "test category" });
+        assemblyKey = insertPhysicalElement({ builder, userLabel: "element 1", modelId: modelKey.id, categoryId: categoryKey.id });
+        const element2 = insertPhysicalElement({
+          builder,
+          userLabel: "element 2",
+          modelId: modelKey.id,
+          categoryId: categoryKey.id,
+          parentId: assemblyKey.id,
+        });
+        const element3 = insertPhysicalElement({
+          builder,
+          userLabel: "element 3",
+          modelId: modelKey.id,
+          categoryId: categoryKey.id,
+          parentId: assemblyKey.id,
+        });
+        const element4 = insertPhysicalElement({ builder, userLabel: "element 4", modelId: modelKey.id, categoryId: categoryKey.id, parentId: element3.id });
+        const element5 = insertPhysicalElement({ builder, userLabel: "element 5", modelId: modelKey.id, categoryId: categoryKey.id, parentId: element3.id });
+        childElementKeys = [element2, element3, element4, element5];
+      });
+      using _ = enableSync({ selectionScope: { id: "element", ancestorLevel: -1 } });
+
+      imodel.selectionSet.replace({ elements: [childElementKeys![0].id] });
+      await waitFor(() => {
+        expect(getHiliteSet(imodel)).to.deep.eq({
+          models: [],
+          subCategories: [],
+          elements: [assemblyKey.id, ...childElementKeys.map(({ id }) => id)],
+        });
+        expect(getSelectionSet(imodel)).to.deep.eq(
+          is5xSelectionSet(imodel.selectionSet)
+            ? {
+                models: [],
+                subCategories: [],
+                elements: [assemblyKey.id, ...childElementKeys.map(({ id }) => id)],
+              }
+            : {
+                elements: [assemblyKey.id, ...childElementKeys.map(({ id }) => id)],
+              },
+        );
+        expect(getStorageSelection()).to.deep.eq(Selectables.create([assemblyKey!]));
+      });
+
+      imodel.selectionSet.replace({ elements: [childElementKeys![1].id] });
+      await waitFor(() => {
+        expect(getHiliteSet(imodel)).to.deep.eq({
+          models: [],
+          subCategories: [],
+          elements: [assemblyKey.id, ...childElementKeys.map(({ id }) => id)],
+        });
+        expect(getSelectionSet(imodel)).to.deep.eq(
+          is5xSelectionSet(imodel.selectionSet)
+            ? {
+                models: [],
+                subCategories: [],
+                elements: [assemblyKey.id, ...childElementKeys.map(({ id }) => id)],
+              }
+            : {
+                elements: [assemblyKey.id, ...childElementKeys.map(({ id }) => id)],
+              },
+        );
+        expect(getStorageSelection()).to.deep.eq(Selectables.create([assemblyKey!]));
+      });
+    });
   });
 
   describe("Functional element", () => {
@@ -621,22 +704,22 @@ describe("Unified selection sync with iModel", () => {
 
 function getHiliteSet(imodel: IModelConnection): HiliteSet {
   return {
-    models: imodel.hilited.models.toId64Array(),
-    subCategories: imodel.hilited.subcategories.toId64Array(),
-    elements: imodel.hilited.elements.toId64Array(),
+    models: imodel.hilited.models.toId64Array().sort(),
+    subCategories: imodel.hilited.subcategories.toId64Array().sort(),
+    elements: imodel.hilited.elements.toId64Array().sort(),
   };
 }
 function getSelectionSet(imodel: IModelConnection): HiliteSet | Pick<HiliteSet, "elements"> {
   const ss: CoreIModelSelectionSet = imodel.selectionSet;
   if (is5xSelectionSet(ss)) {
     return {
-      models: [...ss.active.models],
-      subCategories: [...ss.active.subcategories],
-      elements: [...ss.active.elements],
+      models: [...ss.active.models].sort(),
+      subCategories: [...ss.active.subcategories].sort(),
+      elements: [...ss.active.elements].sort(),
     };
   }
   return {
-    elements: [...ss.elements],
+    elements: [...ss.elements].sort(),
   };
 }
 
