@@ -7,7 +7,7 @@ import { expect } from "chai";
 import { createAsyncIterator, ResolvablePromise, waitFor } from "presentation-test-utilities";
 import sinon from "sinon";
 import { BeEvent, BeUiEvent, Id64Arg } from "@itwin/core-bentley";
-import { ECSqlQueryDef, ECSqlQueryExecutor, ECSqlQueryReaderOptions, ECSqlQueryRow, EventArgs } from "@itwin/presentation-shared";
+import { ECSqlQueryDef, ECSqlQueryExecutor, ECSqlQueryReaderOptions, ECSqlQueryRow, EventArgs, Props } from "@itwin/presentation-shared";
 import {
   enableUnifiedSelectionSyncWithIModel,
   EnableUnifiedSelectionSyncWithIModelProps,
@@ -89,10 +89,10 @@ describe("IModelSelectionHandler", () => {
 
   function createSelectionStorage() {
     const stub = {
-      addToSelection: sinon.spy(),
-      removeFromSelection: sinon.spy(),
-      replaceSelection: sinon.spy(),
-      clearSelection: sinon.spy(),
+      addToSelection: sinon.stub<[Props<SelectionStorage["addToSelection"]>], void>(),
+      removeFromSelection: sinon.stub<[Props<SelectionStorage["removeFromSelection"]>], void>(),
+      replaceSelection: sinon.stub<[Props<SelectionStorage["replaceSelection"]>], void>(),
+      clearSelection: sinon.stub<[Props<SelectionStorage["clearSelection"]>], void>(),
       getSelection: sinon.stub<[{ imodelKey: string }], Selectables>().returns({ custom: new Map(), instanceKeys: new Map() }),
       getSelectionLevels: sinon.stub<[{ imodelKey: string }], number[]>().returns([]),
       selectionChangeEvent: new BeUiEvent<EventArgs<SelectionStorage["selectionChangeEvent"]>>(),
@@ -482,6 +482,106 @@ describe("IModelSelectionHandler", () => {
       selectionSet.onChanged.raiseEvent({ type: CoreSelectionSetEventType.Clear, removed: [], set: selectionSet });
       await waitFor(() => {
         expect(selectionStorageStub.clearSelection).to.not.be.called;
+      });
+    });
+
+    it("syncs hilite set if selection storage doesn't change on tool selection change", async () => {
+      const selectionSet = createSelectionSetV5();
+      const imodelAccess = createIModelAccess({ selectionSet });
+      using _handler = await createHandler({
+        selectionStorage: selectionStorageStub as unknown as SelectionStorage,
+        imodelAccess,
+      });
+
+      const selectionStorageChangeSpy = sinon.spy();
+      selectionStorageStub.selectionChangeEvent.addListener(selectionStorageChangeSpy);
+
+      // set up the request to get current hilite set to return something specific
+      imodelHiliteSetProvider.getCurrentHiliteSet.callsFake(() =>
+        createAsyncIterator([
+          {
+            models: ["0x11"],
+            subCategories: ["0x22"],
+            elements: ["0x33"],
+          } satisfies HiliteSet,
+        ]),
+      );
+
+      // set up `computeSelection` to return some keys
+      const addedKeys = [createSelectableInstanceKey(1), createSelectableInstanceKey(2)];
+      imodelAccess.createQueryReader.returns(createFakeQueryReader(toQueryResponse(addedKeys)));
+
+      // trigger tool selection change
+      selectionSet.onChanged.raiseEvent({
+        type: CoreSelectionSetEventType.Replace,
+        added: new Set<string>(addedKeys.map((k) => k.id)),
+        removed: [],
+        set: selectionSet,
+      });
+
+      await waitFor(() => {
+        expect(selectionStorageStub.replaceSelection).to.be.calledWith({ imodelKey: imodelAccess.key, source: "Tool", selectables: addedKeys });
+        expect(selectionStorageChangeSpy).to.not.be.called;
+        expect(selectionSet.add).to.be.calledOnceWith({
+          models: ["0x11"],
+          subcategories: ["0x22"],
+          elements: ["0x33"],
+        });
+      });
+    });
+
+    it("doesn't sync hilite set more than once when tool selection change triggers selection storage change", async () => {
+      const selectionSet = createSelectionSetV5();
+      const imodelAccess = createIModelAccess({ selectionSet });
+      using _handler = await createHandler({
+        selectionStorage: selectionStorageStub as unknown as SelectionStorage,
+        imodelAccess,
+      });
+
+      // set up `SelectionStorage.replaceSelection` to trigger a selection change event
+      selectionStorageStub.replaceSelection.callsFake((args) => {
+        selectionStorageStub.selectionChangeEvent.emit({
+          imodelKey: imodelAccess.key,
+          iModelKey: imodelAccess.key,
+          changeType: "replace",
+          source: "Tool",
+          level: 0,
+          selectables: Selectables.create(args.selectables),
+          timestamp: new Date(),
+          storage: selectionStorageStub as unknown as SelectionStorage,
+        });
+      });
+
+      // set up the request to get current hilite set to return something specific
+      imodelHiliteSetProvider.getCurrentHiliteSet.callsFake(() =>
+        createAsyncIterator([
+          {
+            elements: ["0x11"],
+            models: ["0x22"],
+            subCategories: ["0x33"],
+          } satisfies HiliteSet,
+        ]),
+      );
+
+      // set up `computeSelection` to return some keys
+      const addedKeys = [createSelectableInstanceKey(1), createSelectableInstanceKey(2)];
+      imodelAccess.createQueryReader.returns(createFakeQueryReader(toQueryResponse(addedKeys)));
+
+      // trigger tool selection change
+      selectionSet.onChanged.raiseEvent({
+        type: CoreSelectionSetEventType.Replace,
+        added: new Set<string>(addedKeys.map((k) => k.id)),
+        removed: [],
+        set: selectionSet,
+      });
+
+      await waitFor(() => {
+        expect(selectionStorageStub.replaceSelection).to.be.calledWith({ imodelKey: imodelAccess.key, source: "Tool", selectables: addedKeys });
+        expect(selectionSet.add).to.be.calledOnce.and.calledWith({
+          elements: ["0x11"],
+          models: ["0x22"],
+          subcategories: ["0x33"],
+        });
       });
     });
   });
