@@ -3,65 +3,66 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { Component } from "react";
-import { IModelConnection } from "@itwin/core-frontend";
-import { SelectionScope } from "@itwin/presentation-common";
-import { Presentation } from "@itwin/presentation-frontend";
+import { useState } from "react";
+import { SelectionScope } from "@itwin/unified-selection";
 
-/* eslint-disable @typescript-eslint/no-deprecated */
+interface SelectionScopePickerProps {
+  onSelectionScopeChanged: (scope: SelectionScope) => void;
+}
 
-export interface SelectionScopePickerProps {
-  imodel: IModelConnection;
-}
-export interface SelectionScopePickerState {
-  availableSelectionScopes?: SelectionScope[];
-  activeScopeId?: string;
-}
-export default class SelectionScopePicker extends Component<SelectionScopePickerProps, SelectionScopePickerState> {
-  constructor(props: SelectionScopePickerProps) {
-    super(props);
-    this.state = {
-      activeScopeId:
-        typeof Presentation.selection.scopes.activeScope === "string"
-          ? Presentation.selection.scopes.activeScope
-          : Presentation.selection.scopes.activeScope?.id,
-    };
-  }
-  public override componentDidMount() {
-    void this.initAvailableSelectionScopes();
-  }
-  private async initAvailableSelectionScopes() {
-    const scopes = await Presentation.selection.scopes.getSelectionScopes(this.props.imodel);
-    // note: the functional selection scope is currently 'hidden' - we need to manually add it here
-    scopes.push({ id: "functional-element", label: "Functional Element", description: "Selected associated functional element" });
-    scopes.push({ id: "functional-assembly", label: "Functional Assembly", description: "Selected associated functional assembly" });
-    scopes.push({ id: "functional-top-assembly", label: "Functional Top Assembly", description: "Selected associated functional top assembly" });
-    this.setState({ availableSelectionScopes: scopes });
-  }
-  public override componentDidUpdate(prevProps: SelectionScopePickerProps, _prevState: SelectionScopePickerState) {
-    if (this.props.imodel !== prevProps.imodel) {
-      this.setState({ availableSelectionScopes: undefined });
-      void this.initAvailableSelectionScopes();
+export function SelectionScopePicker(props: SelectionScopePickerProps) {
+  const [activeScopeId, setActiveScopeId] = useState<keyof typeof SELECTION_SCOPES>("element");
+  const onSelectedScopeChanged = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const scopeId = e.target.value as keyof typeof SELECTION_SCOPES;
+    setActiveScopeId(scopeId);
+    if (props.onSelectionScopeChanged) {
+      props.onSelectionScopeChanged(SELECTION_SCOPES[scopeId].scope);
     }
-  }
-  private onSelectedScopeChanged = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    Presentation.selection.scopes.activeScope = e.target.value;
-    this.setState({ activeScopeId: e.target.value });
   };
-  public override render() {
-    if (!this.state.availableSelectionScopes || 0 === this.state.availableSelectionScopes.length) {
-      return null;
-    }
-    return (
-      <div className="SelectionScopePicker">
-        <select onChange={this.onSelectedScopeChanged} value={this.state.activeScopeId}>
-          {this.state.availableSelectionScopes.map((scope: SelectionScope) => (
-            <option value={scope.id} key={scope.id}>
-              {scope.label}
-            </option>
-          ))}
-        </select>
-      </div>
-    );
-  }
+  return (
+    <div className="SelectionScopePicker">
+      <select onChange={onSelectedScopeChanged} value={activeScopeId}>
+        {Object.entries(SELECTION_SCOPES).map(([id, { label }]) => (
+          <option value={id} key={id}>
+            {label}
+          </option>
+        ))}
+      </select>
+    </div>
+  );
 }
+
+const SELECTION_SCOPES: { [id: string]: { scope: SelectionScope; label: string } } = {
+  element: {
+    scope: { id: "element" },
+    label: "Element",
+  },
+  assembly: {
+    scope: { id: "element", ancestorLevel: 1 },
+    label: "Assembly",
+  },
+  "top-assembly": {
+    scope: { id: "element", ancestorLevel: -1 },
+    label: "Top assembly",
+  },
+  "functional-element": {
+    scope: { id: "functional" },
+    label: "Functional element",
+  },
+  "functional-assembly": {
+    scope: { id: "functional", ancestorLevel: 1 },
+    label: "Functional assembly",
+  },
+  "functional-top-assembly": {
+    scope: { id: "functional", ancestorLevel: -1 },
+    label: "Functional top assembly",
+  },
+  model: {
+    scope: { id: "model" },
+    label: "Model",
+  },
+  category: {
+    scope: { id: "category" },
+    label: "Category",
+  },
+};
