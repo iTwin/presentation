@@ -29,6 +29,9 @@
   @media (hover: hover) {
     &:hover .action-buttons {
       visibility: visible;
+    }
+
+    &:hover:not(.selected) .action-buttons {
       background-color: var(--iui-color-background-hover);
     }
 
