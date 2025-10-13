@@ -1,5 +1,11 @@
 # @itwin/presentation-hierarchies-react
 
+## 1.9.5
+
+### Patch Changes
+
+- [#1079](https://github.com/iTwin/presentation/pull/1079): Fixed tree node actions background color when node is selected and hovered.
+
 ## 1.9.4
 
 ### Patch Changes
