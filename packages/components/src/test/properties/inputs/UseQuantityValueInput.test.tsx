@@ -29,6 +29,7 @@ describe("UseQuantityValueInput", () => {
   const format = new Format("test format");
   const formatterSpec = {
     applyFormatting: sinon.stub<[number], string>(),
+    format,
   };
   const parserSpec = {
     parseToQuantityValue: sinon.stub<[string], QuantityParseResult>(),
@@ -124,6 +125,7 @@ describe("UseQuantityValueInput", () => {
 
     const newFormatterSpec = {
       applyFormatting: (num: number) => `${num} new unit`,
+      format
     };
     const newParserSpec = {
       parseToQuantityValue: (str: string) => {
