@@ -125,7 +125,7 @@ describe("UseQuantityValueInput", () => {
 
     const newFormatterSpec = {
       applyFormatting: (num: number) => `${num} new unit`,
-      format
+      format,
     };
     const newParserSpec = {
       parseToQuantityValue: (str: string) => {
