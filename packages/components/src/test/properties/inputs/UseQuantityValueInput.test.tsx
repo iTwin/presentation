@@ -8,7 +8,7 @@ import { useEffect } from "react";
 import sinon from "sinon";
 import { BeUiEvent } from "@itwin/core-bentley";
 import { FormattingUnitSystemChangedArgs, IModelApp } from "@itwin/core-frontend";
-import { Format, FormatterSpec, ParseError, ParserSpec, QuantityParseResult } from "@itwin/core-quantity";
+import { Format, FormatterSpec, FormatType, ParseError, ParserSpec, QuantityParseResult } from "@itwin/core-quantity";
 import { SchemaContext } from "@itwin/ecschema-metadata";
 import { KoqPropertyValueFormatter } from "@itwin/presentation-common";
 import { QuantityValue, useQuantityValueInput, UseQuantityValueInputProps } from "../../../presentation-components/properties/inputs/UseQuantityValueInput.js";
@@ -141,5 +141,25 @@ describe("UseQuantityValueInput", () => {
     formatProvider.onFormatsChanged.raiseEvent();
 
     await waitFor(() => expect(queryByPlaceholderText("12.34 new unit")).to.not.be.null);
+  });
+
+  it("sets precision to 12 for Decimal format types", async () => {
+    const decimalFormat = {
+      type: FormatType.Decimal,
+      precision: 6,
+    };
+    const decimalFormatterSpec = {
+      applyFormatting: sinon.stub<[number], string>(),
+      format: decimalFormat,
+    };
+
+    decimalFormatterSpec.applyFormatting.callsFake((raw) => `${raw} unit`);
+    getFormatterSpecStub.resolves(decimalFormatterSpec as unknown as FormatterSpec);
+
+    const { queryByPlaceholderText } = render(<TestInput schemaContext={schemaContext} koqName="testKOQ" />);
+    await waitFor(() => expect(queryByPlaceholderText("12.34 unit")).to.not.be.null);
+
+    // Verify that precision was set to 12 for Decimal format
+    expect(decimalFormat.precision).to.eq(12);
   });
 });
