@@ -164,4 +164,24 @@ describe("UseQuantityValueInput", () => {
     // Verify that precision was set to 12 for Decimal format
     expect(decimalFormat.precision).to.eq(12);
   });
+
+  it("does not set precision to 12 for Fractional format types", async () => {
+    const fractionalFormat = {
+      type: FormatType.Fractional,
+      precision: 6,
+    };
+    const fractionalFormatterSpec = {
+      applyFormatting: sinon.stub<[number], string>(),
+      format: fractionalFormat,
+    };
+
+    fractionalFormatterSpec.applyFormatting.callsFake((raw) => `${raw} unit`);
+    getFormatterSpecStub.resolves(fractionalFormatterSpec as unknown as FormatterSpec);
+
+    const { queryByPlaceholderText } = render(<TestInput schemaContext={schemaContext} koqName="testKOQ" />);
+    await waitFor(() => expect(queryByPlaceholderText("12.34 unit")).to.not.be.null);
+
+    // Verify that precision was NOT modified for Fractional format
+    expect(fractionalFormat.precision).to.eq(6);
+  });
 });
