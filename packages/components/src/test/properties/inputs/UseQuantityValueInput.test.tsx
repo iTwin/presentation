@@ -179,7 +179,7 @@ describe("UseQuantityValueInput", () => {
     getFormatterSpecStub.resolves(fractionalFormatterSpec as unknown as FormatterSpec);
 
     render(<TestInput schemaContext={schemaContext} koqName="testKOQ" />);
-    await waitFor(() => expect(fractionalFormatterSpec.applyFormatting).to.be.called);  
+    await waitFor(() => expect(fractionalFormatterSpec.applyFormatting).to.be.called);
 
     // Verify that precision was NOT modified for Fractional format
     expect(fractionalFormat.precision).to.eq(6);
