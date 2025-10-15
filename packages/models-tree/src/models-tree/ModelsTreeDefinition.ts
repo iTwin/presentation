@@ -23,7 +23,7 @@ import {
   switchMap,
   takeUntil,
 } from "rxjs";
-import { Id64Array, Id64String } from "@itwin/core-bentley";
+import { Guid, Id64Array, Id64String } from "@itwin/core-bentley";
 import {
   ClassGroupingNodeKey,
   createIModelHierarchyProvider,
@@ -594,7 +594,9 @@ export class ModelsTreeDefinition implements HierarchyDefinition {
       ],
     };
 
-    for await (const _row of this._queryExecutor.createQueryReader(query)) {
+    for await (const _row of this._queryExecutor.createQueryReader(query, {
+      restartToken: `ModelsTreeDefinition/is-class-supported-query/${Guid.createValue()}`,
+    })) {
       return true;
     }
     return false;
@@ -673,7 +675,10 @@ function createGeometricElementInstanceKeyPaths(
       WHERE mce.ParentId IS NULL
     `;
 
-    return imodelAccess.createQueryReader({ ctes, ecsql }, { rowFormat: "Indexes", limit: "unbounded" });
+    return imodelAccess.createQueryReader(
+      { ctes, ecsql },
+      { rowFormat: "Indexes", limit: "unbounded", restartToken: `ModelsTreeDefinition/geometric-element-paths-query/${Guid.createValue()}` },
+    );
   }).pipe(
     releaseMainThreadOnItemsCount(300),
     map((row) => parseQueryRow(row, groupInfos, separator, hierarchyConfig.elementClassSpecification)),
@@ -859,7 +864,7 @@ async function createInstanceKeyPathsFromInstanceLabel(
       `,
       bindings: [{ type: "string", value: props.label.replace(/[%_\\]/g, "\\$&") }],
     },
-    { rowFormat: "Indexes", restartToken: "tree-widget/models-tree/filter-by-label-query", limit: props.limit },
+    { rowFormat: "Indexes", restartToken: `ModelsTreeDefinition/filter-by-label-query/${Guid.createValue()}`, limit: props.limit },
   );
 
   const targetKeys = new Array<InstanceKey>();

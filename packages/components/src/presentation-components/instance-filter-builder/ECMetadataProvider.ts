@@ -6,7 +6,7 @@
  * @module Internal
  */
 
-import { compareStrings, Id64, Id64String, LRUDictionary } from "@itwin/core-bentley";
+import { compareStrings, Guid, Id64, Id64String, LRUDictionary } from "@itwin/core-bentley";
 import { ECSqlReader, QueryBinder, QueryOptions, QueryRowFormat } from "@itwin/core-common";
 import { IModelConnection } from "@itwin/core-frontend";
 
@@ -71,7 +71,10 @@ export class ECMetadataProvider {
         WHERE classDef.ECInstanceId = :id
       `;
       classInfo = await this.createECClassInfo(
-        this._queryReaderFactory(classQuery, QueryBinder.from({ id }), { rowFormat: QueryRowFormat.UseJsPropertyNames }),
+        this._queryReaderFactory(classQuery, QueryBinder.from({ id }), {
+          rowFormat: QueryRowFormat.UseJsPropertyNames,
+          restartToken: `ECMetadataProvider/class-by-id-query/${Guid.createValue()}`,
+        }),
       );
       classInfo && this._classInfoCache.set({ id: classInfo.id, name: classInfo.name }, classInfo);
     }
@@ -87,7 +90,10 @@ export class ECMetadataProvider {
       `;
       const [schemaName, className] = this.splitFullClassName(name);
       classInfo = await this.createECClassInfo(
-        this._queryReaderFactory(classQuery, QueryBinder.from({ schemaName, className }), { rowFormat: QueryRowFormat.UseJsPropertyNames }),
+        this._queryReaderFactory(classQuery, QueryBinder.from({ schemaName, className }), {
+          rowFormat: QueryRowFormat.UseJsPropertyNames,
+          restartToken: `ECMetadataProvider/class-by-name-query/${Guid.createValue()}`,
+        }),
       );
       classInfo && this._classInfoCache.set({ id: classInfo.id, name: classInfo.name }, classInfo);
     }
@@ -110,7 +116,10 @@ export class ECMetadataProvider {
     `;
 
     const hierarchy = { baseClasses: new Set<Id64String>(), derivedClasses: new Set<Id64String>() };
-    const reader = this._queryReaderFactory(classHierarchyQuery, QueryBinder.from({ id }), { rowFormat: QueryRowFormat.UseJsPropertyNames });
+    const reader = this._queryReaderFactory(classHierarchyQuery, QueryBinder.from({ id }), {
+      rowFormat: QueryRowFormat.UseJsPropertyNames,
+      restartToken: `ECMetadataProvider/class-hierarchy-query/${Guid.createValue()}`,
+    });
     while (await reader.step()) {
       if (reader.current.baseId === id) {
         hierarchy.derivedClasses.add(reader.current.derivedId);

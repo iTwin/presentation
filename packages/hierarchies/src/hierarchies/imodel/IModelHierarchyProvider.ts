@@ -559,7 +559,10 @@ class IModelHierarchyProviderImpl implements HierarchyProvider {
                   ${query.ecsql}
                 )
               `;
-              const reader = this._imodelAccess.createQueryReader({ ...query, ecsql }, { rowFormat: "Indexes", limit: hierarchyLevelSizeLimit });
+              const reader = this._imodelAccess.createQueryReader(
+                { ...query, ecsql },
+                { rowFormat: "Indexes", limit: hierarchyLevelSizeLimit, restartToken: `IModelHierarchyProvider/instance-keys-query/${Guid.createValue()}` },
+              );
               return from(reader).pipe(
                 map((row) => ({
                   key: {

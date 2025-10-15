@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { assert, Id64Array, Id64Set, Id64String } from "@itwin/core-bentley";
+import { assert, Guid, Id64Array, Id64Set, Id64String } from "@itwin/core-bentley";
 import { InstanceKey } from "@itwin/presentation-shared";
 
 import type { ModelsTreeDefinition } from "./ModelsTreeDefinition.js";
@@ -63,7 +63,10 @@ export class ModelsTreeIdsCache {
         END hideInHierarchy
       FROM bis.Subject s
     `;
-    for await (const row of this._queryExecutor.createQueryReader({ ecsql: subjectsQuery }, { rowFormat: "ECSqlPropertyNames", limit: "unbounded" })) {
+    for await (const row of this._queryExecutor.createQueryReader(
+      { ecsql: subjectsQuery },
+      { rowFormat: "ECSqlPropertyNames", limit: "unbounded", restartToken: `ModelsTreeIdsCache/subjects/${Guid.createValue()}` },
+    )) {
       yield { id: row.id, parentId: row.parentId, targetPartitionId: row.targetPartitionId, hideInHierarchy: !!row.hideInHierarchy };
     }
   }
@@ -77,7 +80,10 @@ export class ModelsTreeIdsCache {
         NOT m.IsPrivate
         ${this._hierarchyConfig.showEmptyModels ? "" : `AND EXISTS (SELECT 1 FROM ${this._hierarchyConfig.elementClassSpecification} WHERE Model.Id = m.ECInstanceId)`}
     `;
-    for await (const row of this._queryExecutor.createQueryReader({ ecsql: modelsQuery }, { rowFormat: "ECSqlPropertyNames", limit: "unbounded" })) {
+    for await (const row of this._queryExecutor.createQueryReader(
+      { ecsql: modelsQuery },
+      { rowFormat: "ECSqlPropertyNames", limit: "unbounded", restartToken: `ModelsTreeIdsCache/models-query/${Guid.createValue()}` },
+    )) {
       yield { id: row.id, parentId: row.parentId };
     }
   }
@@ -235,24 +241,30 @@ export class ModelsTreeIdsCache {
   }
 
   private async *queryModelElementCounts() {
-    const query = /* sql */ `
+    const query = `
       SELECT Model.Id modelId, COUNT(*) elementCount
       FROM ${this._hierarchyConfig.elementClassSpecification}
       GROUP BY Model.Id
     `;
-    for await (const row of this._queryExecutor.createQueryReader({ ecsql: query }, { rowFormat: "ECSqlPropertyNames", limit: "unbounded" })) {
+    for await (const row of this._queryExecutor.createQueryReader(
+      { ecsql: query },
+      { rowFormat: "ECSqlPropertyNames", limit: "unbounded", restartToken: `ModelsTreeIdsCache/model-elements-count-query/${Guid.createValue()}` },
+    )) {
       yield { modelId: row.modelId, elementCount: row.elementCount };
     }
   }
 
   private async *queryModelCategories() {
-    const query = /* sql */ `
+    const query = `
       SELECT Model.Id modelId, Category.Id categoryId
       FROM ${this._hierarchyConfig.elementClassSpecification}
       WHERE Parent.Id IS NULL
       GROUP BY modelId, categoryId
     `;
-    for await (const row of this._queryExecutor.createQueryReader({ ecsql: query }, { rowFormat: "ECSqlPropertyNames", limit: "unbounded" })) {
+    for await (const row of this._queryExecutor.createQueryReader(
+      { ecsql: query },
+      { rowFormat: "ECSqlPropertyNames", limit: "unbounded", restartToken: `ModelsTreeIdsCache/model-categories-query/${Guid.createValue()}` },
+    )) {
       yield { modelId: row.modelId, categoryId: row.categoryId };
     }
   }
@@ -322,7 +334,7 @@ export class ModelsTreeIdsCache {
     const reader = this._queryExecutor.createQueryReader(
       {
         ctes: [
-          /* sql */ `
+          `
             CategoryElements(id) AS (
               SELECT ECInstanceId id
               FROM ${this._hierarchyConfig.elementClassSpecification}
@@ -345,7 +357,7 @@ export class ModelsTreeIdsCache {
           { type: "id", value: categoryId },
         ],
       },
-      { rowFormat: "Indexes", limit: "unbounded" },
+      { rowFormat: "Indexes", limit: "unbounded", restartToken: `ModelsTreeIdsCache/category-elements-count-query/${Guid.createValue()}` },
     );
 
     return (await reader.next()).value[0];
@@ -398,7 +410,6 @@ function forEachChildSubject(
   const parentSubjectInfo = typeof parentSubject === "string" ? subjectInfos.get(parentSubject) : parentSubject;
   parentSubjectInfo &&
     parentSubjectInfo.childSubjects.forEach((childSubjectId) => {
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       const childSubjectInfo = subjectInfos.get(childSubjectId)!;
       if (cb(childSubjectId, childSubjectInfo) === "break") {
         return;

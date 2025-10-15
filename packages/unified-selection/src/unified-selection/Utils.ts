@@ -5,7 +5,14 @@
 
 import "./DisposePolyfill.js";
 import { bufferCount, concatAll, concatMap, delay, Observable, of } from "rxjs";
-import { createMainThreadReleaseOnTimePassedHandler, ECSqlBinding, ECSqlQueryDef, ECSqlQueryExecutor, ECSqlQueryRow } from "@itwin/presentation-shared";
+import {
+  createMainThreadReleaseOnTimePassedHandler,
+  ECSqlBinding,
+  ECSqlQueryDef,
+  ECSqlQueryExecutor,
+  ECSqlQueryReaderOptions,
+  ECSqlQueryRow,
+} from "@itwin/presentation-shared";
 
 /**
  * Forms ECSql bindings from given ID's.
@@ -29,13 +36,19 @@ export function formIdBindings(property: string, ids: string[], bindings: ECSqlB
  * Executes given ECSql query and extracts data from rows. Additionally handles main thread releasing.
  * @internal
  */
-export async function* genericExecuteQuery<T>(
-  queryExecutor: ECSqlQueryExecutor,
-  query: ECSqlQueryDef,
-  parseQueryRow: (row: ECSqlQueryRow) => T,
-): AsyncIterableIterator<T> {
+export async function* genericExecuteQuery<T>({
+  queryExecutor,
+  parseQueryRow,
+  query,
+  config,
+}: {
+  queryExecutor: ECSqlQueryExecutor;
+  query: ECSqlQueryDef;
+  parseQueryRow: (row: ECSqlQueryRow) => T;
+  config?: ECSqlQueryReaderOptions;
+}): AsyncIterableIterator<T> {
   const releaseMainThread = createMainThreadReleaseOnTimePassedHandler();
-  const reader = queryExecutor.createQueryReader(query);
+  const reader = queryExecutor.createQueryReader(query, config);
   for await (const row of reader) {
     yield parseQueryRow(row);
     await releaseMainThread();

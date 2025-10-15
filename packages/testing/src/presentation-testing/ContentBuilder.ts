@@ -7,6 +7,7 @@
  */
 
 import { PropertyRecord } from "@itwin/appui-abstract";
+import { Guid } from "@itwin/core-bentley";
 import { QueryRowFormat } from "@itwin/core-common";
 import { IModelConnection } from "@itwin/core-frontend";
 import {
@@ -132,7 +133,7 @@ export class ContentBuilder {
         ORDER BY s.Name, c.Name
       `,
       undefined,
-      { rowFormat: QueryRowFormat.UseJsPropertyNames },
+      { rowFormat: QueryRowFormat.UseJsPropertyNames, restartToken: `ContentBuilder/ec-class-names-query/${Guid.createValue()}` },
     );
     return reader.toArray();
   }
@@ -149,7 +150,11 @@ export class ContentBuilder {
           ORDER BY ECInstanceId
         `,
         undefined,
-        { rowFormat: QueryRowFormat.UseJsPropertyNames, limit: { count: limitInstances ? 1 : 4000 } },
+        {
+          rowFormat: QueryRowFormat.UseJsPropertyNames,
+          limit: { count: limitInstances ? 1 : 4000 },
+          restartToken: `ContentBuilder/instance-id-query/${Guid.createValue()}`,
+        },
       );
       const instanceIds: InstanceId[] = await reader.toArray();
 
