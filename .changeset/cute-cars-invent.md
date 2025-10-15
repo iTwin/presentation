@@ -2,4 +2,4 @@
 "@itwin/presentation-components": patch
 ---
 
-Fix UseQuantityValueInput formatted value to only override precision when it's a decimal value
+Fixed quantity-based property editors overriding precision for non-decimal values, causing errors when parsing and formatting fractional values.

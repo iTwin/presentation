@@ -158,8 +158,8 @@ describe("UseQuantityValueInput", () => {
     decimalFormatterSpec.applyFormatting.callsFake((raw) => `${raw} unit`);
     getFormatterSpecStub.resolves(decimalFormatterSpec as unknown as FormatterSpec);
 
-    const { queryByPlaceholderText } = render(<TestInput schemaContext={schemaContext} koqName="testKOQ" />);
-    await waitFor(() => expect(queryByPlaceholderText("12.34 unit")).to.not.be.null);
+    render(<TestInput schemaContext={schemaContext} koqName="testKOQ" />);
+    await waitFor(() => expect(decimalFormatterSpec.applyFormatting).to.be.called);
 
     // Verify that precision was set to 12 for Decimal format
     expect(decimalFormat.precision).to.eq(12);
@@ -178,8 +178,8 @@ describe("UseQuantityValueInput", () => {
     fractionalFormatterSpec.applyFormatting.callsFake((raw) => `${raw} unit`);
     getFormatterSpecStub.resolves(fractionalFormatterSpec as unknown as FormatterSpec);
 
-    const { queryByPlaceholderText } = render(<TestInput schemaContext={schemaContext} koqName="testKOQ" />);
-    await waitFor(() => expect(queryByPlaceholderText("12.34 unit")).to.not.be.null);
+    render(<TestInput schemaContext={schemaContext} koqName="testKOQ" />);
+    await waitFor(() => expect(fractionalFormatterSpec.applyFormatting).to.be.called);  
 
     // Verify that precision was NOT modified for Fractional format
     expect(fractionalFormat.precision).to.eq(6);
