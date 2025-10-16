@@ -6,7 +6,7 @@
 import { ChangeEventHandler, useEffect, useRef, useState } from "react";
 import { assert } from "@itwin/core-bentley";
 import { IModelApp } from "@itwin/core-frontend";
-import { FormatterSpec, ParserSpec } from "@itwin/core-quantity";
+import { FormatterSpec, FormatType, ParserSpec } from "@itwin/core-quantity";
 import { SchemaContext } from "@itwin/ecschema-metadata";
 import { KoqPropertyValueFormatter } from "@itwin/presentation-common";
 import { getPersistenceUnitRoundingError } from "./Utils.js";
@@ -124,7 +124,6 @@ function useFormatterAndParser(koqName: string, schemaContext: SchemaContext) {
       const formatterSpec = await koqFormatter.getFormatterSpec({
         koqName,
         unitSystem: IModelApp.quantityFormatter.activeUnitSystem,
-        formatOverride: { precision: 12 },
       });
       // formatter for placeholder should not have precision override
       const placeholderFormatter = await koqFormatter.getFormatterSpec({
@@ -133,6 +132,9 @@ function useFormatterAndParser(koqName: string, schemaContext: SchemaContext) {
       });
       const parserSpec = await koqFormatter.getParserSpec({ koqName, unitSystem: IModelApp.quantityFormatter.activeUnitSystem });
       if (formatterSpec && parserSpec) {
+        if (formatterSpec.format.type === FormatType.Decimal) {
+          formatterSpec.format.precision = 12;
+        }
         setState({ formatterSpec, parserSpec, placeholderFormatter });
         return;
       }
