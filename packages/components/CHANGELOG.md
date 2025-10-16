@@ -1,5 +1,11 @@
 # Change Log - @itwin/presentation-components
 
+## 5.12.10
+
+### Patch Changes
+
+- [#1082](https://github.com/iTwin/presentation/pull/1082): Fixed quantity-based property editors overriding precision for non-decimal values, causing errors when parsing and formatting fractional values.
+
 ## 5.12.9
 
 ### Patch Changes
