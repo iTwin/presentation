@@ -265,22 +265,16 @@ function formAncestorLevelBinding(ancestorLevel: number, bindings: ECSqlBinding[
   return "?";
 }
 
-async function* executeQuery({
-  queryExecutor,
-  query,
-  config,
-}: {
+async function* executeQuery(props: {
   queryExecutor: ECSqlQueryExecutor;
   query: ECSqlQueryDef;
   config?: ECSqlQueryReaderOptions;
 }): AsyncIterableIterator<SelectableInstanceKey> {
   yield* genericExecuteQuery({
-    queryExecutor,
-    query,
+    ...props,
     parseQueryRow: (row: ECSqlQueryRow) => ({
       className: row.ClassName,
       id: row.ECInstanceId,
     }),
-    config,
   });
 }
