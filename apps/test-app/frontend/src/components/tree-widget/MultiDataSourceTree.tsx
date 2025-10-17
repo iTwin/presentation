@@ -70,7 +70,7 @@ const RSS_PROVIDER = createRssHierarchyProvider();
 
 function Tree({ imodelAccess, height, width }: { imodelAccess: IModelAccess; height: number; width: number }) {
   const [filter, setFilter] = useState("");
-  const [componentId] = useState(Guid.createValue());
+  const [componentId] = useState(() => Guid.createValue());
   const getFilteredPaths = useMemo<UseTreeProps["getFilteredPaths"]>(() => {
     return async () => {
       if (!filter) {
