@@ -4,8 +4,8 @@
  *--------------------------------------------------------------------------------------------*/
 
 import "./DisposePolyfill.js";
-import { EMPTY, firstValueFrom, from, map, merge, Observable, Subject, takeUntil, toArray } from "rxjs";
-import { Id64Arg, Id64Set } from "@itwin/core-bentley";
+import { EMPTY, firstValueFrom, from, map, merge, Subject, takeUntil, toArray } from "rxjs";
+import { Guid, GuidString, Id64Arg, Id64Set } from "@itwin/core-bentley";
 import { ECClassHierarchyInspector, ECSqlQueryExecutor } from "@itwin/presentation-shared";
 import { CachingHiliteSetProvider } from "./CachingHiliteSetProvider.js";
 import { createHiliteSetProvider, HiliteSet, HiliteSetProvider } from "./HiliteSetProvider.js";
@@ -117,17 +117,20 @@ export class IModelSelectionHandler {
   private _activeScopeProvider: () => SelectionScope;
 
   private _isSuspended: boolean;
+  private _selectionStorageChangeTracker = 0;
   private _cancelOngoingChanges = new Subject<void>();
   private _unregisterUnifiedSelectionListener: () => void;
   private _unregisterIModelSelectionSetListener: () => void;
   private _disposeInternalHiliteSetProvider: () => void;
 
+  #componentId: GuidString;
+
   public constructor(props: EnableUnifiedSelectionSyncWithIModelProps & { hiliteSetProvider?: HiliteSetProvider }) {
+    this.#componentId = Guid.createValue();
     this._imodelAccess = props.imodelAccess;
     this._selectionStorage = props.selectionStorage;
     this._activeScopeProvider = props.activeScopeProvider;
     this._isSuspended = false;
-
     [this._imodelHiliteSetProvider, this._disposeInternalHiliteSetProvider] = (() => {
       if (props.imodelHiliteSetProvider) {
         return [props.imodelHiliteSetProvider, () => {}];
@@ -184,7 +187,8 @@ export class IModelSelectionHandler {
     };
   }
 
-  private handleUnifiedSelectionChange(changeType: StorageSelectionChangeType, selectables: Selectables, source: string): void {
+  private syncHiliteSet(props: { changeType: StorageSelectionChangeType; selectables: Selectables; source: string }): void {
+    const { changeType, selectables, source } = props;
     switch (changeType) {
       case "clear":
         return this.applyCurrentHiliteSet({ activeSelectionAction: "clearAll" });
@@ -228,10 +232,13 @@ export class IModelSelectionHandler {
       return;
     }
 
+    // update the selection storage change tracker so we know the selection storage changed
+    this._selectionStorageChangeTracker = (this._selectionStorageChangeTracker + 1) % Number.MAX_SAFE_INTEGER;
+
     if (args.changeType === "replace" || args.changeType === "clear") {
       this._cancelOngoingChanges.next();
     }
-    this.handleUnifiedSelectionChange(args.changeType, args.selectables, args.source);
+    this.syncHiliteSet(args);
   };
 
   private applyCurrentHiliteSet({ activeSelectionAction }: { activeSelectionAction: "clearAll" | "clearHilited" | "keep" }) {
@@ -311,47 +318,78 @@ export class IModelSelectionHandler {
       return;
     }
 
-    const ids = this.getSelectionSetChangeIds(event);
+    const ids = getSelectionSetChangeIds(event);
     const scopedSelection = merge(
       ids.elements
-        ? from(computeSelection({ queryExecutor: this._imodelAccess, elementIds: ids.elements, scope: this._activeScopeProvider() }))
+        ? from(
+            computeSelection({
+              queryExecutor: this._imodelAccess,
+              elementIds: ids.elements,
+              scope: this._activeScopeProvider(),
+              componentId: this.#componentId,
+            }),
+          )
         : /* c8 ignore next */ EMPTY,
-      ids.models ? from(ids.models).pipe(map((id) => ({ className: "BisCore.Model", id }))) : /* c8 ignore next */ EMPTY,
-      ids.subcategories ? from(ids.subcategories).pipe(map((id) => ({ className: "BisCore.SubCategory", id }))) : /* c8 ignore next */ EMPTY,
+      ids.models ? from(ids.models).pipe(map((id): SelectableInstanceKey => ({ className: "BisCore.Model", id }))) : /* c8 ignore next */ EMPTY,
+      ids.subcategories
+        ? from(ids.subcategories).pipe(map((id): SelectableInstanceKey => ({ className: "BisCore.SubCategory", id })))
+        : /* c8 ignore next */ EMPTY,
     );
-    await this.handleIModelSelectionChange(event.type, scopedSelection);
-  };
 
-  private async handleIModelSelectionChange(type: CoreSelectionSetEventType, keys: Observable<SelectableInstanceKey>) {
-    const selectables = await firstValueFrom(keys.pipe(toArray()));
-    const props = {
+    const selectionStorageVersion = this._selectionStorageChangeTracker;
+    const changeSelectionStorageProps = {
       imodelKey: this._imodelAccess.key,
       source: this._selectionSourceName,
-      selectables,
+      selectables: await firstValueFrom(scopedSelection.pipe(toArray())),
     };
-    switch (type) {
-      case CoreSelectionSetEventType.Add:
-        return this._selectionStorage.addToSelection(props);
-      case CoreSelectionSetEventType.Remove:
-        return this._selectionStorage.removeFromSelection(props);
-      case CoreSelectionSetEventType.Replace:
-        return this._selectionStorage.replaceSelection(props);
+    try {
+      switch (event.type) {
+        case CoreSelectionSetEventType.Add:
+          return this._selectionStorage.addToSelection(changeSelectionStorageProps);
+        case CoreSelectionSetEventType.Remove:
+          return this._selectionStorage.removeFromSelection(changeSelectionStorageProps);
+        case CoreSelectionSetEventType.Replace:
+          return this._selectionStorage.replaceSelection(changeSelectionStorageProps);
+      }
+    } finally {
+      if (this._selectionStorageChangeTracker === selectionStorageVersion) {
+        // if the storage wasn't changed while we were processing the selection change, we have to re-sync the
+        // hilite set (otherwise it's done by the selection storage change handler)
+        this.syncHiliteSet({
+          ...changeSelectionStorageProps,
+          selectables: Selectables.create(changeSelectionStorageProps.selectables),
+          changeType: getUnifiedSelectionChangeType(event.type),
+        });
+      }
     }
-  }
+  };
+}
 
-  private getSelectionSetChangeIds(
-    event: Omit<CoreSelectionSetEventUnsafe, "type"> & {
-      type: CoreSelectionSetEventType.Add | CoreSelectionSetEventType.Remove | CoreSelectionSetEventType.Replace;
-    },
-  ): CoreSelectableIds {
-    switch (event.type) {
-      case CoreSelectionSetEventType.Add:
-        return event.additions ?? (event.added ? { elements: event.added } : /* c8 ignore next */ {});
-      case CoreSelectionSetEventType.Remove:
-        return event.removals ?? (event.removed ? { elements: event.removed } : /* c8 ignore next */ {});
-      case CoreSelectionSetEventType.Replace:
-        return "active" in event.set ? event.set.active : { elements: event.set.elements };
-    }
+function getSelectionSetChangeIds(
+  event: Omit<CoreSelectionSetEventUnsafe, "type"> & {
+    type: CoreSelectionSetEventType.Add | CoreSelectionSetEventType.Remove | CoreSelectionSetEventType.Replace;
+  },
+): CoreSelectableIds {
+  switch (event.type) {
+    case CoreSelectionSetEventType.Add:
+      return event.additions ?? (event.added ? { elements: event.added } : /* c8 ignore next */ {});
+    case CoreSelectionSetEventType.Remove:
+      return event.removals ?? (event.removed ? { elements: event.removed } : /* c8 ignore next */ {});
+    case CoreSelectionSetEventType.Replace:
+      return "active" in event.set ? event.set.active : { elements: event.set.elements };
+  }
+}
+
+function getUnifiedSelectionChangeType(coreChangeType: CoreSelectionSetEventType): StorageSelectionChangeType {
+  switch (coreChangeType) {
+    case CoreSelectionSetEventType.Add:
+      return "add";
+    case CoreSelectionSetEventType.Remove:
+      return "remove";
+    case CoreSelectionSetEventType.Replace:
+      return "replace";
+    case CoreSelectionSetEventType.Clear:
+      return "clear";
   }
 }
 

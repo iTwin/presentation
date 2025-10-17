@@ -1,5 +1,20 @@
 # Change Log - @itwin/presentation-testing
 
+## 5.4.8
+
+### Patch Changes
+
+- [#1083](https://github.com/iTwin/presentation/pull/1083): Add unique guid to existing restart tokens, and add restart tokens to executed queries.
+- Updated dependencies:
+  - @itwin/presentation-components@5.12.11
+
+## 5.4.7
+
+### Patch Changes
+
+- Updated dependencies:
+  - @itwin/presentation-components@5.12.6
+
 ## 5.4.7-alpha.2
 
 ### Patch Changes
@@ -14,13 +29,6 @@
 - [#1042](https://github.com/iTwin/presentation/pull/1042): Version bump
 - Updated dependencies:
   - @itwin/presentation-components@5.12.6-alpha.1
-
-## 5.4.7
-
-### Patch Changes
-
-- Updated dependencies:
-  - @itwin/presentation-components@5.12.6
 
 ## 5.4.7-alpha.0
 

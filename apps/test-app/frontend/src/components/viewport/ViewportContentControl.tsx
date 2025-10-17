@@ -4,15 +4,15 @@
  *--------------------------------------------------------------------------------------------*/
 
 import "./ViewportContentControl.css";
-import { useCallback, useEffect, useState } from "react";
+import { ComponentProps, useCallback, useEffect, useState } from "react";
 import { Id64String } from "@itwin/core-bentley";
 import { IModelConnection } from "@itwin/core-frontend";
 import { ViewportComponent } from "@itwin/imodel-components-react";
 import { MyAppFrontend } from "../../api/MyAppFrontend";
-import SelectionScopePicker from "./SelectionScopePicker";
+import { SelectionScopePicker } from "./SelectionScopePicker";
 import ViewDefinitionSelector from "./ViewDefinitionSelector";
 
-export interface ViewportContentComponentProps {
+export interface ViewportContentComponentProps extends Pick<ComponentProps<typeof SelectionScopePicker>, "onSelectionScopeChanged"> {
   imodel: IModelConnection;
 }
 
@@ -39,7 +39,7 @@ export default function ViewportContentComponent(props: ViewportContentComponent
     <div className="ViewportContentComponent" style={{ height: "100%" }}>
       {selectedViewDefinitionId ? <ViewportComponent imodel={props.imodel} viewDefinitionId={selectedViewDefinitionId} /> : undefined}
       <ViewDefinitionSelector imodel={props.imodel} selectedViewDefinition={selectedViewDefinitionId} onViewDefinitionSelected={onViewDefinitionChanged} />
-      <SelectionScopePicker imodel={props.imodel} />
+      <SelectionScopePicker onSelectionScopeChanged={props.onSelectionScopeChanged} />
     </div>
   );
 }

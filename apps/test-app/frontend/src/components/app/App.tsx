@@ -6,7 +6,7 @@
 import "./App.css";
 import "@bentley/icons-generic-webfont/dist/bentley-icons-generic-webfont.css";
 import "@itwin/itwinui-react/styles.css";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useResizeDetector } from "react-resize-detector";
 import { from, reduce, Subject, takeUntil } from "rxjs";
 import {
@@ -27,7 +27,7 @@ import { ThemeProvider, ToggleSwitch } from "@itwin/itwinui-react";
 import { SchemaMetadataContextProvider } from "@itwin/presentation-components";
 import { createECSchemaProvider, createECSqlQueryExecutor, createIModelKey } from "@itwin/presentation-core-interop";
 import { createCachingECClassHierarchyInspector } from "@itwin/presentation-shared";
-import { createHiliteSetProvider, enableUnifiedSelectionSyncWithIModel, HiliteSet } from "@itwin/unified-selection";
+import { createHiliteSetProvider, enableUnifiedSelectionSyncWithIModel, HiliteSet, SelectionScope } from "@itwin/unified-selection";
 import { UnifiedSelectionContextProvider } from "@itwin/unified-selection-react";
 import { Root } from "@stratakit/foundations";
 import { MyAppFrontend, MyAppSettings } from "../../api/MyAppFrontend";
@@ -220,6 +220,8 @@ interface IModelComponentsProps {
 function IModelComponents(props: IModelComponentsProps) {
   const { imodel, rulesetId } = props;
 
+  const activeSelectionScope = useRef<SelectionScope>("element");
+
   useEffect(() => {
     UiFramework.frontstages.addFrontstage({
       id: "presentation-test-app-frontstage",
@@ -232,7 +234,7 @@ function IModelComponents(props: IModelComponentsProps) {
           {
             id: "primaryContent",
             classId: "",
-            content: <ViewportContentControl imodel={imodel} />,
+            content: <ViewportContentControl imodel={imodel} onSelectionScopeChanged={(scope) => (activeSelectionScope.current = scope)} />,
           },
         ],
       }),
@@ -309,7 +311,7 @@ function IModelComponents(props: IModelComponentsProps) {
           selectionSet: imodel.selectionSet,
         },
         selectionStorage: MyAppFrontend.selectionStorage,
-        activeScopeProvider: () => "element",
+        activeScopeProvider: () => activeSelectionScope.current,
       }),
     [imodel],
   );

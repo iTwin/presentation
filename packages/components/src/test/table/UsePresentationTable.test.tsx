@@ -20,7 +20,7 @@ import {
 } from "../../presentation-components/table/UsePresentationTable.js";
 import { createTestECInstanceKey, createTestPropertyInfo } from "../_helpers/Common.js";
 import { createTestContentDescriptor, createTestContentItem, createTestPropertiesContentField } from "../_helpers/Content.js";
-import { createTestECInstancesNodeKey } from "../_helpers/Hierarchy.js";
+import { createTestECClassGroupingNodeKey, createTestECInstancesNodeKey } from "../_helpers/Hierarchy.js";
 import { act, renderHook, waitFor } from "../TestUtils.js";
 
 /* eslint-disable @typescript-eslint/no-deprecated */
@@ -184,6 +184,29 @@ describe("usePresentationTableWithUnifiedSelection", () => {
       sinon.stub(Presentation, "selection").get(() => selectionManager);
     });
 
+    it("loads data when grouping node is selected", async () => {
+      const groupingKey = createTestECClassGroupingNodeKey();
+      const keys = new KeySet([groupingKey]);
+
+      sinon.stub(Presentation.selection, "getSelection").returns(keys);
+
+      setupPresentationManager();
+
+      const { result } = renderHook(() => usePresentationTableWithUnifiedSelection(initialProps));
+
+      await waitFor(() => {
+        expect(result.current.isLoading).to.be.false;
+        expect(result.current.rows.length).to.be.equal(1);
+      });
+
+      expect(presentationManager.getContentDescriptor).to.be.calledWith(
+        sinon.match((options: ContentDescriptorRequestOptions<IModelConnection, KeySet, RulesetVariable>) => options.keys.hasAll(keys)),
+      );
+      expect(presentationManager.getContentIterator).to.be.calledWith(
+        sinon.match((options: ContentDescriptorRequestOptions<IModelConnection, KeySet, RulesetVariable>) => options.keys.hasAll(keys)),
+      );
+    });
+
     describe("updating unified selection on table selection changes (`onSelect` calls)", () => {
       it("adds passed keys to `SelectionManager`", async () => {
         const keys = new KeySet([createTestECInstanceKey()]);
@@ -269,18 +292,15 @@ describe("usePresentationTableWithUnifiedSelection", () => {
           createTestECInstanceKey({ id: "0x789" }),
         ];
 
+        const keySet = new KeySet([
+          selectionChangeInstanceKeys[0],
+          { classFullName: selectionChangeInstanceKeys[1].className, id: selectionChangeInstanceKeys[1].id },
+          createTestECInstancesNodeKey({ instanceKeys: [selectionChangeInstanceKeys[2]] }),
+        ]);
+
         act(() => {
           // select the row to get loaded onto the component
-          Presentation.selection.addToSelection(
-            selectionSource,
-            imodel,
-            new KeySet([
-              selectionChangeInstanceKeys[0],
-              { classFullName: selectionChangeInstanceKeys[1].className, id: selectionChangeInstanceKeys[1].id },
-              createTestECInstancesNodeKey({ instanceKeys: [selectionChangeInstanceKeys[2]] }),
-            ]),
-            0,
-          );
+          Presentation.selection.addToSelection(selectionSource, imodel, keySet, 0);
         });
 
         await waitFor(() => {
@@ -288,14 +308,10 @@ describe("usePresentationTableWithUnifiedSelection", () => {
           expect(result.current.rows.length).to.be.equal(1);
         });
         expect(presentationManager.getContentDescriptor).to.be.calledWith(
-          sinon.match((options: ContentDescriptorRequestOptions<IModelConnection, KeySet, RulesetVariable>) =>
-            options.keys.hasAll(selectionChangeInstanceKeys),
-          ),
+          sinon.match((options: ContentDescriptorRequestOptions<IModelConnection, KeySet, RulesetVariable>) => options.keys.hasAll(keySet)),
         );
         expect(presentationManager.getContentIterator).to.be.calledWith(
-          sinon.match((options: ContentDescriptorRequestOptions<IModelConnection, KeySet, RulesetVariable>) =>
-            options.keys.hasAll(selectionChangeInstanceKeys),
-          ),
+          sinon.match((options: ContentDescriptorRequestOptions<IModelConnection, KeySet, RulesetVariable>) => options.keys.hasAll(keySet)),
         );
       });
 

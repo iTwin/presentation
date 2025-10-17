@@ -28,6 +28,7 @@ describe("<QuantityPropertyEditor />", () => {
     const format = new Format("test format");
     const formatterSpec = {
       applyFormatting: (raw: number) => `${raw} unit`,
+      format,
     };
     const parserSpec = {
       parseToQuantityValue: (value: string) => ({ ok: true, value: Number(value.substring(0, value.length - 4)) }),

@@ -39,7 +39,7 @@ describe("readNodes", () => {
 
     const query = { ecsql: "QUERY", ctes: ["CTE1, CTE2"] };
     const result = await collect(readNodes({ queryExecutor, query, parser: (row) => of(parser(row)) }));
-    expect(queryExecutor.createQueryReader).to.be.calledOnceWith(query, { rowFormat: "ECSqlPropertyNames" });
+    expect(queryExecutor.createQueryReader).to.be.calledOnceWith(query, sinon.match({ rowFormat: "ECSqlPropertyNames", restartToken: sinon.match.string }));
     expect(parser).to.be.calledThrice;
     expect(result).to.deep.eq(nodes);
   });
@@ -48,7 +48,14 @@ describe("readNodes", () => {
     queryExecutor.createQueryReader.returns(createAsyncIterator([]));
     const query = { ecsql: "QUERY" };
     await collect(readNodes({ queryExecutor, query, limit: 123, parser: (row) => of(parser(row)) }));
-    expect(queryExecutor.createQueryReader).to.be.calledOnceWith(query, { rowFormat: "ECSqlPropertyNames", limit: 123 });
+    expect(queryExecutor.createQueryReader).to.be.calledOnceWith(
+      query,
+      sinon.match({
+        rowFormat: "ECSqlPropertyNames",
+        limit: 123,
+        restartToken: sinon.match.string,
+      }),
+    );
   });
 });
 

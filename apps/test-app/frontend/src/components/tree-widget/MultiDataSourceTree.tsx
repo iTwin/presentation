@@ -6,7 +6,7 @@
 import { ComponentPropsWithoutRef, ReactElement, useCallback, useEffect, useMemo, useState } from "react";
 import RssParser from "rss-parser";
 import { debounceTime, Subject } from "rxjs";
-import { BeEvent, Id64String } from "@itwin/core-bentley";
+import { BeEvent, Guid, Id64String } from "@itwin/core-bentley";
 import { IModelConnection } from "@itwin/core-frontend";
 import { SvgFolder, SvgGlobe, SvgImodelHollow, SvgItem, SvgModel } from "@itwin/itwinui-icons-react";
 import { Flex, ProgressRadial, SearchBox, Text } from "@itwin/itwinui-react";
@@ -70,16 +70,18 @@ const RSS_PROVIDER = createRssHierarchyProvider();
 
 function Tree({ imodelAccess, height, width, treeLabel }: { imodelAccess: IModelAccess; height: number; width: number; treeLabel: string }) {
   const [filter, setFilter] = useState("");
+  const [componentId] = useState(() => Guid.createValue());
   const getFilteredPaths = useMemo<UseTreeProps["getFilteredPaths"]>(() => {
     return async () => {
       if (!filter) {
         return undefined;
       }
-      return Promise.all([getModelsHierarchyFilteringPaths({ imodelAccess, filter }), RSS_PROVIDER.getFilteredPaths(filter)]).then(
-        ([imodelPaths, rssPaths]) => [...imodelPaths, ...rssPaths],
-      );
+      return Promise.all([
+        getModelsHierarchyFilteringPaths({ imodelAccess, filter, componentId, componentName: "MultiDataSourceTree" }),
+        RSS_PROVIDER.getFilteredPaths(filter),
+      ]).then(([imodelPaths, rssPaths]) => [...imodelPaths, ...rssPaths]);
     };
-  }, [filter, imodelAccess]);
+  }, [filter, imodelAccess, componentId]);
 
   const unifiedSelectionContext = useUnifiedSelectionContext();
   if (!unifiedSelectionContext) {
@@ -296,11 +298,21 @@ function createModelsHierarchyDefinition({ imodelAccess }: { imodelAccess: IMode
     },
   });
 }
-async function getModelsHierarchyFilteringPaths({ imodelAccess, filter }: { imodelAccess: IModelAccess; filter: string }): Promise<HierarchyFilteringPath[]> {
+async function getModelsHierarchyFilteringPaths({
+  imodelAccess,
+  filter,
+  componentId,
+  componentName,
+}: {
+  imodelAccess: IModelAccess;
+  filter: string;
+  componentId: string;
+  componentName: string;
+}): Promise<HierarchyFilteringPath[]> {
   const labelsFactory = createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess });
   const [rootSubjectPath, modelPaths] = await Promise.all([
-    getRootSubjectFilteredPath({ imodelAccess, filter, labelsFactory }),
-    Array.fromAsync(getModelsFilteringPaths({ imodelAccess, filter, labelsFactory })),
+    getRootSubjectFilteredPath({ imodelAccess, filter, labelsFactory, componentId, componentName }),
+    Array.fromAsync(getModelsFilteringPaths({ imodelAccess, filter, labelsFactory, componentId, componentName })),
   ]);
   return [...(rootSubjectPath ? [rootSubjectPath] : []), ...modelPaths];
 }
@@ -308,19 +320,24 @@ async function* getModelsFilteringPaths({
   imodelAccess,
   filter,
   labelsFactory,
+  componentId,
+  componentName,
 }: {
   imodelAccess: IModelAccess;
   filter: string;
   labelsFactory: IInstanceLabelSelectClauseFactory;
+  componentId: string;
+  componentName: string;
 }): AsyncIterableIterator<HierarchyFilteringPath> {
   const whereClause = `${await labelsFactory.createSelectClause({
     classAlias: "m",
     className: "BisCore.Model",
     selectorsConcatenator: ECSql.createConcatenatedValueStringSelector,
   })} LIKE '%' || ? || '%' ESCAPE '\\'`;
-  const modelsReader = imodelAccess.createQueryReader({
-    ctes: [
-      `ModelsHierarchy(ECInstanceId, ParentId, Path) AS (
+  const modelsReader = imodelAccess.createQueryReader(
+    {
+      ctes: [
+        `ModelsHierarchy(ECInstanceId, ParentId, Path) AS (
         SELECT
           m.ECInstanceId,
           m.ParentModel.Id,
@@ -340,14 +357,16 @@ async function* getModelsFilteringPaths({
         FROM ModelsHierarchy cm
         JOIN BisCore.Model pm ON pm.ECInstanceId = cm.ParentId
       )`,
-    ],
-    ecsql: `
+      ],
+      ecsql: `
       SELECT mh.Path AS path
       FROM ModelsHierarchy mh
       WHERE mh.ParentId IS NULL
     `,
-    bindings: [{ type: "string", value: filter.replace(/[%_\\]/g, "\\$&") }],
-  });
+      bindings: [{ type: "string", value: filter.replace(/[%_\\]/g, "\\$&") }],
+    },
+    { restartToken: `${componentName}/${componentId}/models-paths` },
+  );
   for await (const row of modelsReader) {
     const path = JSON.parse(row.path) as HierarchyNodeIdentifiersPath;
     yield {
@@ -365,21 +384,28 @@ async function getRootSubjectFilteredPath({
   imodelAccess,
   filter,
   labelsFactory,
+  componentId,
+  componentName,
 }: {
   imodelAccess: IModelAccess;
   filter: string;
   labelsFactory: IInstanceLabelSelectClauseFactory;
+  componentId: string;
+  componentName: string;
 }): Promise<HierarchyNodeIdentifiersPath | undefined> {
-  const reader = imodelAccess.createQueryReader({
-    ecsql: `
+  const reader = imodelAccess.createQueryReader(
+    {
+      ecsql: `
       SELECT this.ECInstanceId AS id
       FROM BisCore.Subject this
       WHERE
         ${await labelsFactory.createSelectClause({ classAlias: "this", className: "BisCore.Subject", selectorsConcatenator: ECSql.createConcatenatedValueStringSelector })} LIKE '%' || ? || '%' ESCAPE '\\'
         AND this.ECInstanceId = 0x1
     `,
-    bindings: [{ type: "string", value: filter.replace(/[%_\\]/g, "\\$&") }],
-  });
+      bindings: [{ type: "string", value: filter.replace(/[%_\\]/g, "\\$&") }],
+    },
+    { restartToken: `${componentName}/${componentId}/subject-path` },
+  );
   const row = (await reader.next()).value as { id: Id64String } | undefined;
   return row ? [{ className: "BisCore.Subject", id: row.id, imodelKey: imodelAccess.imodelKey }] : undefined;
 }

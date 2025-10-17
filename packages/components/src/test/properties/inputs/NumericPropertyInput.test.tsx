@@ -239,6 +239,7 @@ describe("<NumericInput />", () => {
     const { getByRole, user } = render(<NumericInput onChange={spy} value="" />);
     const inputContainer = await waitFor(() => getByRole("textbox"));
 
+    // cspell:disable-next-line
     await user.type(inputContainer, "qwertyuiopasdfghjklzxcvbnm");
 
     expect(spy.called).to.be.false;
