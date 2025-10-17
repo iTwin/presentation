@@ -595,7 +595,7 @@ export class ModelsTreeDefinition implements HierarchyDefinition {
     };
 
     for await (const _row of this._queryExecutor.createQueryReader(query, {
-      restartToken: `ModelsTreeDefinition/is-class-supported-query/${Guid.createValue()}`,
+      restartToken: `ModelsTreeDefinition/${Guid.createValue()}/is-class-supported`,
     })) {
       return true;
     }
@@ -677,7 +677,7 @@ function createGeometricElementInstanceKeyPaths(
 
     return imodelAccess.createQueryReader(
       { ctes, ecsql },
-      { rowFormat: "Indexes", limit: "unbounded", restartToken: `ModelsTreeDefinition/geometric-element-paths-query/${Guid.createValue()}` },
+      { rowFormat: "Indexes", limit: "unbounded", restartToken: `ModelsTreeDefinition/${Guid.createValue()}/geometric-element-paths` },
     );
   }).pipe(
     releaseMainThreadOnItemsCount(300),
@@ -864,7 +864,7 @@ async function createInstanceKeyPathsFromInstanceLabel(
       `,
       bindings: [{ type: "string", value: props.label.replace(/[%_\\]/g, "\\$&") }],
     },
-    { rowFormat: "Indexes", restartToken: `ModelsTreeDefinition/filter-by-label-query/${Guid.createValue()}`, limit: props.limit },
+    { rowFormat: "Indexes", restartToken: `ModelsTreeDefinition/${Guid.createValue()}/filter-by-label`, limit: props.limit },
   );
 
   const targetKeys = new Array<InstanceKey>();

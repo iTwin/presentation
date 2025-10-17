@@ -33,6 +33,7 @@ export function computeSelection(props: ComputeSelectionProps): AsyncIterableIte
 
 // @public
 interface ComputeSelectionProps {
+    componentId?: string;
     elementIds: Id64Arg;
     queryExecutor: ECSqlQueryExecutor;
     scope: SelectionScope;

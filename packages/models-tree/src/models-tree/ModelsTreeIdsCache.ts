@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { assert, Guid, Id64Array, Id64Set, Id64String } from "@itwin/core-bentley";
+import { assert, Guid, GuidString, Id64Array, Id64Set, Id64String } from "@itwin/core-bentley";
 import { InstanceKey } from "@itwin/presentation-shared";
 
 import type { ModelsTreeDefinition } from "./ModelsTreeDefinition.js";
@@ -25,6 +25,8 @@ type ModelsTreeHierarchyConfiguration = NonNullable<ConstructorParameters<typeof
 
 /** @internal */
 export class ModelsTreeIdsCache {
+  #componentName: string;
+  #componentId: GuidString;
   private readonly _categoryElementCounts = new Map<Id64String, number>();
   private _subjectInfos: Promise<Map<Id64String, SubjectInfo>> | undefined;
   private _parentSubjectIds: Promise<Id64Array> | undefined; // the list should contain a subject id if its node should be shown as having children
@@ -37,6 +39,8 @@ export class ModelsTreeIdsCache {
     private _queryExecutor: LimitingECSqlQueryExecutor,
     private _hierarchyConfig: ModelsTreeHierarchyConfiguration,
   ) {
+    this.#componentId = Guid.createValue();
+    this.#componentName = "ModelsTreeIdsCache";
     this._modelKeyPaths = new Map();
     this._subjectKeyPaths = new Map();
     this._categoryKeyPaths = new Map();
@@ -65,7 +69,7 @@ export class ModelsTreeIdsCache {
     `;
     for await (const row of this._queryExecutor.createQueryReader(
       { ecsql: subjectsQuery },
-      { rowFormat: "ECSqlPropertyNames", limit: "unbounded", restartToken: `ModelsTreeIdsCache/subjects/${Guid.createValue()}` },
+      { rowFormat: "ECSqlPropertyNames", limit: "unbounded", restartToken: `${this.#componentName}/${this.#componentId}}/subjects` },
     )) {
       yield { id: row.id, parentId: row.parentId, targetPartitionId: row.targetPartitionId, hideInHierarchy: !!row.hideInHierarchy };
     }
@@ -82,7 +86,7 @@ export class ModelsTreeIdsCache {
     `;
     for await (const row of this._queryExecutor.createQueryReader(
       { ecsql: modelsQuery },
-      { rowFormat: "ECSqlPropertyNames", limit: "unbounded", restartToken: `ModelsTreeIdsCache/models-query/${Guid.createValue()}` },
+      { rowFormat: "ECSqlPropertyNames", limit: "unbounded", restartToken: `${this.#componentName}/${this.#componentId}}/models` },
     )) {
       yield { id: row.id, parentId: row.parentId };
     }
@@ -248,7 +252,7 @@ export class ModelsTreeIdsCache {
     `;
     for await (const row of this._queryExecutor.createQueryReader(
       { ecsql: query },
-      { rowFormat: "ECSqlPropertyNames", limit: "unbounded", restartToken: `ModelsTreeIdsCache/model-elements-count-query/${Guid.createValue()}` },
+      { rowFormat: "ECSqlPropertyNames", limit: "unbounded", restartToken: `${this.#componentName}/${this.#componentId}}/model-elements-count` },
     )) {
       yield { modelId: row.modelId, elementCount: row.elementCount };
     }
@@ -263,7 +267,7 @@ export class ModelsTreeIdsCache {
     `;
     for await (const row of this._queryExecutor.createQueryReader(
       { ecsql: query },
-      { rowFormat: "ECSqlPropertyNames", limit: "unbounded", restartToken: `ModelsTreeIdsCache/model-categories-query/${Guid.createValue()}` },
+      { rowFormat: "ECSqlPropertyNames", limit: "unbounded", restartToken: `${this.#componentName}/${this.#componentId}}/model-categories` },
     )) {
       yield { modelId: row.modelId, categoryId: row.categoryId };
     }
@@ -357,7 +361,7 @@ export class ModelsTreeIdsCache {
           { type: "id", value: categoryId },
         ],
       },
-      { rowFormat: "Indexes", limit: "unbounded", restartToken: `ModelsTreeIdsCache/category-elements-count-query/${Guid.createValue()}` },
+      { rowFormat: "Indexes", limit: "unbounded", restartToken: `${this.#componentName}/${this.#componentId}}/category-elements-count` },
     );
 
     return (await reader.next()).value[0];

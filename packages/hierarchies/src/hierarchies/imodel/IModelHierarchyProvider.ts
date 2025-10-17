@@ -25,7 +25,7 @@ import {
   takeUntil,
   tap,
 } from "rxjs";
-import { assert, BeEvent, Guid, StopWatch } from "@itwin/core-bentley";
+import { assert, BeEvent, Guid, GuidString, StopWatch } from "@itwin/core-bentley";
 import {
   ConcatenatedValue,
   createDefaultValueFormatter,
@@ -178,8 +178,12 @@ class IModelHierarchyProviderImpl implements HierarchyProvider {
   private _nodesCache?: HierarchyCache<HierarchyCacheEntry>;
   private _unsubscribe?: () => void;
   private _dispose = new Subject<void>();
+  #componentId: GuidString;
+  #componentName: string;
 
   public constructor(props: IModelHierarchyProviderProps) {
+    this.#componentId = Guid.createValue();
+    this.#componentName = "IModelHierarchyProviderImpl";
     this._imodelAccess = props.imodelAccess;
     this._hierarchyChanged = new BeEvent();
     this._activeHierarchyDefinition = this._sourceHierarchyDefinition = getRxjsHierarchyDefinition(props.hierarchyDefinition);
@@ -561,7 +565,7 @@ class IModelHierarchyProviderImpl implements HierarchyProvider {
               `;
               const reader = this._imodelAccess.createQueryReader(
                 { ...query, ecsql },
-                { rowFormat: "Indexes", limit: hierarchyLevelSizeLimit, restartToken: `IModelHierarchyProvider/node-instance-keys/${Guid.createValue()}` },
+                { rowFormat: "Indexes", limit: hierarchyLevelSizeLimit, restartToken: `${this.#componentName}/${this.#componentId}/node-instance-keys` },
               );
               return from(reader).pipe(
                 map((row) => ({

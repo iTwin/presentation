@@ -70,16 +70,18 @@ const RSS_PROVIDER = createRssHierarchyProvider();
 
 function Tree({ imodelAccess, height, width }: { imodelAccess: IModelAccess; height: number; width: number }) {
   const [filter, setFilter] = useState("");
+  const [componentId] = useState(Guid.createValue());
   const getFilteredPaths = useMemo<UseTreeProps["getFilteredPaths"]>(() => {
     return async () => {
       if (!filter) {
         return undefined;
       }
-      return Promise.all([getModelsHierarchyFilteringPaths({ imodelAccess, filter }), RSS_PROVIDER.getFilteredPaths(filter)]).then(
-        ([imodelPaths, rssPaths]) => [...imodelPaths, ...rssPaths],
-      );
+      return Promise.all([
+        getModelsHierarchyFilteringPaths({ imodelAccess, filter, componentId, componentName: "MultiDataSourceTree" }),
+        RSS_PROVIDER.getFilteredPaths(filter),
+      ]).then(([imodelPaths, rssPaths]) => [...imodelPaths, ...rssPaths]);
     };
-  }, [filter, imodelAccess]);
+  }, [filter, imodelAccess, componentId]);
 
   const unifiedSelectionContext = useUnifiedSelectionContext();
   if (!unifiedSelectionContext) {
@@ -291,11 +293,21 @@ function createModelsHierarchyDefinition({ imodelAccess }: { imodelAccess: IMode
     },
   });
 }
-async function getModelsHierarchyFilteringPaths({ imodelAccess, filter }: { imodelAccess: IModelAccess; filter: string }): Promise<HierarchyFilteringPath[]> {
+async function getModelsHierarchyFilteringPaths({
+  imodelAccess,
+  filter,
+  componentId,
+  componentName,
+}: {
+  imodelAccess: IModelAccess;
+  filter: string;
+  componentId: string;
+  componentName: string;
+}): Promise<HierarchyFilteringPath[]> {
   const labelsFactory = createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess });
   const [rootSubjectPath, modelPaths] = await Promise.all([
-    getRootSubjectFilteredPath({ imodelAccess, filter, labelsFactory }),
-    Array.fromAsync(getModelsFilteringPaths({ imodelAccess, filter, labelsFactory })),
+    getRootSubjectFilteredPath({ imodelAccess, filter, labelsFactory, componentId, componentName }),
+    Array.fromAsync(getModelsFilteringPaths({ imodelAccess, filter, labelsFactory, componentId, componentName })),
   ]);
   return [...(rootSubjectPath ? [rootSubjectPath] : []), ...modelPaths];
 }
@@ -303,10 +315,14 @@ async function* getModelsFilteringPaths({
   imodelAccess,
   filter,
   labelsFactory,
+  componentId,
+  componentName,
 }: {
   imodelAccess: IModelAccess;
   filter: string;
   labelsFactory: IInstanceLabelSelectClauseFactory;
+  componentId: string;
+  componentName: string;
 }): AsyncIterableIterator<HierarchyFilteringPath> {
   const whereClause = `${await labelsFactory.createSelectClause({
     classAlias: "m",
@@ -344,7 +360,7 @@ async function* getModelsFilteringPaths({
     `,
       bindings: [{ type: "string", value: filter.replace(/[%_\\]/g, "\\$&") }],
     },
-    { restartToken: `MultiDataSourceTree/models-paths-query/${Guid.createValue()}` },
+    { restartToken: `${componentName}/${componentId}/models-paths` },
   );
   for await (const row of modelsReader) {
     const path = JSON.parse(row.path) as HierarchyNodeIdentifiersPath;
@@ -363,10 +379,14 @@ async function getRootSubjectFilteredPath({
   imodelAccess,
   filter,
   labelsFactory,
+  componentId,
+  componentName,
 }: {
   imodelAccess: IModelAccess;
   filter: string;
   labelsFactory: IInstanceLabelSelectClauseFactory;
+  componentId: string;
+  componentName: string;
 }): Promise<HierarchyNodeIdentifiersPath | undefined> {
   const reader = imodelAccess.createQueryReader(
     {
@@ -379,7 +399,7 @@ async function getRootSubjectFilteredPath({
     `,
       bindings: [{ type: "string", value: filter.replace(/[%_\\]/g, "\\$&") }],
     },
-    { restartToken: `MultiDataSourceTree/subject-path-query/${Guid.createValue()}` },
+    { restartToken: `${componentName}/${componentId}/subject-path` },
   );
   const row = (await reader.next()).value as { id: Id64String } | undefined;
   return row ? [{ className: "BisCore.Subject", id: row.id, imodelKey: imodelAccess.imodelKey }] : undefined;

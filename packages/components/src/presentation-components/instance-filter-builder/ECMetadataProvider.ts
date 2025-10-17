@@ -6,7 +6,7 @@
  * @module Internal
  */
 
-import { compareStrings, Guid, Id64, Id64String, LRUDictionary } from "@itwin/core-bentley";
+import { compareStrings, Guid, GuidString, Id64, Id64String, LRUDictionary } from "@itwin/core-bentley";
 import { ECSqlReader, QueryBinder, QueryOptions, QueryRowFormat } from "@itwin/core-common";
 import { IModelConnection } from "@itwin/core-frontend";
 
@@ -47,8 +47,12 @@ export class ECClassInfo {
 /** @internal */
 export class ECMetadataProvider {
   private _classInfoCache = new LRUDictionary<CacheKey, ECClassInfo>(50, compareKeys);
-
-  constructor(private _queryReaderFactory: (ecsql: string, params?: QueryBinder, config?: QueryOptions) => ECSqlReader) {}
+  #componentId: GuidString;
+  #componentName: string;
+  constructor(private _queryReaderFactory: (ecsql: string, params?: QueryBinder, config?: QueryOptions) => ECSqlReader) {
+    this.#componentId = Guid.createValue();
+    this.#componentName = "ECMetadataProvider";
+  }
 
   public async getECClassInfo(idOrFullName: Id64String | string): Promise<ECClassInfo | undefined>;
   public async getECClassInfo(schemaName: string, className: string): Promise<ECClassInfo | undefined>;
@@ -73,7 +77,7 @@ export class ECMetadataProvider {
       classInfo = await this.createECClassInfo(
         this._queryReaderFactory(classQuery, QueryBinder.from({ id }), {
           rowFormat: QueryRowFormat.UseJsPropertyNames,
-          restartToken: `ECMetadataProvider/class-by-id-query/${Guid.createValue()}`,
+          restartToken: `${this.#componentName}/${this.#componentId}/class-by-id`,
         }),
       );
       classInfo && this._classInfoCache.set({ id: classInfo.id, name: classInfo.name }, classInfo);
@@ -92,7 +96,7 @@ export class ECMetadataProvider {
       classInfo = await this.createECClassInfo(
         this._queryReaderFactory(classQuery, QueryBinder.from({ schemaName, className }), {
           rowFormat: QueryRowFormat.UseJsPropertyNames,
-          restartToken: `ECMetadataProvider/class-by-name-query/${Guid.createValue()}`,
+          restartToken: `${this.#componentName}/${this.#componentId}/class-by-name`,
         }),
       );
       classInfo && this._classInfoCache.set({ id: classInfo.id, name: classInfo.name }, classInfo);
@@ -118,7 +122,7 @@ export class ECMetadataProvider {
     const hierarchy = { baseClasses: new Set<Id64String>(), derivedClasses: new Set<Id64String>() };
     const reader = this._queryReaderFactory(classHierarchyQuery, QueryBinder.from({ id }), {
       rowFormat: QueryRowFormat.UseJsPropertyNames,
-      restartToken: `ECMetadataProvider/class-hierarchy-query/${Guid.createValue()}`,
+      restartToken: `${this.#componentName}/${this.#componentId}/class-hierarchy`,
     });
     while (await reader.step()) {
       if (reader.current.baseId === id) {

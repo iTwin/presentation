@@ -5,7 +5,7 @@
 
 import { EMPTY, filter, forkJoin, from, map, merge, mergeMap, Observable, scan, shareReplay, Subject, toArray } from "rxjs";
 import { eachValueFrom } from "rxjs-for-await";
-import { Guid, Id64String } from "@itwin/core-bentley";
+import { Guid, GuidString, Id64String } from "@itwin/core-bentley";
 import {
   ECClassHierarchyInspector,
   ECSqlBinding,
@@ -72,10 +72,14 @@ class HiliteSetProviderImpl implements HiliteSetProvider {
   private _imodelAccess: ECClassHierarchyInspector & ECSqlQueryExecutor;
   // Map between a class name and its type
   private _classRelationCache: Map<string, InstanceIdType | Promise<InstanceIdType>>;
+  #componentId: GuidString;
+  #componentName: string;
 
   constructor(props: HiliteSetProviderProps) {
     this._imodelAccess = props.imodelAccess;
     this._classRelationCache = new Map();
+    this.#componentId = Guid.createValue();
+    this.#componentName = "HiliteSetProvider";
   }
 
   /**
@@ -249,7 +253,7 @@ class HiliteSetProviderImpl implements HiliteSetProvider {
           executeQuery({
             queryExecutor: this._imodelAccess,
             query: { ctes, ecsql, bindings },
-            config: { restartToken: `HiliteSetProvider/hilited-models-query/${Guid.createValue()}` },
+            config: { restartToken: `${this.#componentName}/${this.#componentId}/models` },
           }),
         );
       }),
@@ -289,7 +293,7 @@ class HiliteSetProviderImpl implements HiliteSetProvider {
           executeQuery({
             queryExecutor: this._imodelAccess,
             query: { ctes, ecsql, bindings },
-            config: { restartToken: `HiliteSetProvider/hilited-sub-categories-query/${Guid.createValue()}` },
+            config: { restartToken: `${this.#componentName}/${this.#componentId}/sub-categories` },
           }),
         );
       }),
@@ -361,7 +365,7 @@ class HiliteSetProviderImpl implements HiliteSetProvider {
           executeQuery({
             queryExecutor: this._imodelAccess,
             query: { ctes, ecsql, bindings },
-            config: { restartToken: `HiliteSetProvider/hilited-elements-query/${Guid.createValue()}` },
+            config: { restartToken: `${this.#componentName}/${this.#componentId}/elements` },
           }),
         );
       }),
