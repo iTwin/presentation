@@ -464,14 +464,10 @@ function unique<T>() {
   };
 }
 
-async function* executeQuery({
-  query,
-  queryExecutor,
-  config,
-}: {
+async function* executeQuery(props: {
   queryExecutor: ECSqlQueryExecutor;
   query: ECSqlQueryDef;
   config?: ECSqlQueryReaderOptions;
 }): AsyncIterableIterator<string> {
-  yield* genericExecuteQuery({ queryExecutor, query, parseQueryRow: (row: ECSqlQueryRow) => row.ECInstanceId, config });
+  yield* genericExecuteQuery({ ...props, parseQueryRow: (row: ECSqlQueryRow) => row.ECInstanceId });
 }
