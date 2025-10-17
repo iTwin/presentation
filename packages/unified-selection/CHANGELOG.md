@@ -1,5 +1,11 @@
 # @itwin/unified-selection
 
+## 1.6.0
+
+### Minor Changes
+
+- [#1083](https://github.com/iTwin/presentation/pull/1083): Added optional `componentId` to `ComputeSelectionProps`. This id is used as part of a `restartToken` when executing ECSQL queries inside the function. Restart token is used to cancel duplicate queries. The provided `componentId` should be unique and not shared across different components.
+
 ## 1.5.2
 
 ### Patch Changes

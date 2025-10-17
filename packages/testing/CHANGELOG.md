@@ -1,5 +1,13 @@
 # Change Log - @itwin/presentation-testing
 
+## 5.4.8
+
+### Patch Changes
+
+- [#1083](https://github.com/iTwin/presentation/pull/1083): Add unique guid to existing restart tokens, and add restart tokens to executed queries.
+- Updated dependencies:
+  - @itwin/presentation-components@5.12.11
+
 ## 5.4.7
 
 ### Patch Changes
@@ -127,7 +135,6 @@
   In addition, the `exports` attribute has been added to `package.json` to prohibit access to APIs that are not intended to be used by external consumers.
 
 - [#754](https://github.com/iTwin/presentation/pull/754): Export file name utility functions.
-
   - `getTestOutputDir` and `setTestOutputDir` - get/set functions for the global test output directory used by this package.
   - `setupOutputFileLocation` - given a file name, returns a full path to the file in the test output directory.
   - `createFileNameFromString` - creates a valid, sanitized file name from any string.
