@@ -1,5 +1,13 @@
 # Change Log - @itwin/presentation-components
 
+## 5.12.11
+
+### Patch Changes
+
+- [#1083](https://github.com/iTwin/presentation/pull/1083): Add unique guid to existing restart tokens, and add restart tokens to executed queries.
+- Updated dependencies:
+  - @itwin/unified-selection@1.6.0
+
 ## 5.12.10
 
 ### Patch Changes
