@@ -5,7 +5,7 @@
 
 import "./DisposePolyfill.js";
 import { EMPTY, firstValueFrom, from, map, merge, Subject, takeUntil, toArray } from "rxjs";
-import { Id64Arg, Id64Set } from "@itwin/core-bentley";
+import { Guid, GuidString, Id64Arg, Id64Set } from "@itwin/core-bentley";
 import { ECClassHierarchyInspector, ECSqlQueryExecutor } from "@itwin/presentation-shared";
 import { CachingHiliteSetProvider } from "./CachingHiliteSetProvider.js";
 import { createHiliteSetProvider, HiliteSet, HiliteSetProvider } from "./HiliteSetProvider.js";
@@ -123,12 +123,14 @@ export class IModelSelectionHandler {
   private _unregisterIModelSelectionSetListener: () => void;
   private _disposeInternalHiliteSetProvider: () => void;
 
+  #componentId: GuidString;
+
   public constructor(props: EnableUnifiedSelectionSyncWithIModelProps & { hiliteSetProvider?: HiliteSetProvider }) {
+    this.#componentId = Guid.createValue();
     this._imodelAccess = props.imodelAccess;
     this._selectionStorage = props.selectionStorage;
     this._activeScopeProvider = props.activeScopeProvider;
     this._isSuspended = false;
-
     [this._imodelHiliteSetProvider, this._disposeInternalHiliteSetProvider] = (() => {
       if (props.imodelHiliteSetProvider) {
         return [props.imodelHiliteSetProvider, () => {}];
@@ -319,7 +321,14 @@ export class IModelSelectionHandler {
     const ids = getSelectionSetChangeIds(event);
     const scopedSelection = merge(
       ids.elements
-        ? from(computeSelection({ queryExecutor: this._imodelAccess, elementIds: ids.elements, scope: this._activeScopeProvider() }))
+        ? from(
+            computeSelection({
+              queryExecutor: this._imodelAccess,
+              elementIds: ids.elements,
+              scope: this._activeScopeProvider(),
+              componentId: this.#componentId,
+            }),
+          )
         : /* c8 ignore next */ EMPTY,
       ids.models ? from(ids.models).pipe(map((id): SelectableInstanceKey => ({ className: "BisCore.Model", id }))) : /* c8 ignore next */ EMPTY,
       ids.subcategories

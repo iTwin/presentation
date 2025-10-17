@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { from, mergeMap, Observable, of } from "rxjs";
-import { Id64String } from "@itwin/core-bentley";
+import { Guid, Id64String } from "@itwin/core-bentley";
 import { ECSqlQueryDef, parseInstanceLabel } from "@itwin/presentation-shared";
 import { RxjsNodeParser } from "../internal/RxjsHierarchyDefinition.js";
 import { InstanceHierarchyNodeProcessingParams, SourceInstanceHierarchyNode } from "./IModelHierarchyNode.js";
@@ -24,6 +24,7 @@ export function readNodes(props: ReadNodesProps): Observable<SourceInstanceHiera
   const parser: RxjsNodeParser = props?.parser ?? ((row) => of(defaultNodesParser(row)));
   const config: Parameters<LimitingECSqlQueryExecutor["createQueryReader"]>[1] = {
     rowFormat: "ECSqlPropertyNames",
+    restartToken: `readNodes/${Guid.createValue()}`,
     ...(limit !== undefined ? { limit } : undefined),
   };
 
