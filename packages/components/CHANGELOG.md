@@ -1,5 +1,13 @@
 # Change Log - @itwin/presentation-components
 
+## 5.12.12
+
+### Patch Changes
+
+- [#1088](https://github.com/iTwin/presentation/pull/1088): Fix restart tokens not being unique when they need to, causing queries to be cancelled.
+- Updated dependencies:
+  - @itwin/unified-selection@1.6.1
+
 ## 5.12.11
 
 ### Patch Changes
