@@ -24,7 +24,7 @@ export function readNodes(props: ReadNodesProps): Observable<SourceInstanceHiera
   const parser: RxjsNodeParser = props?.parser ?? ((row) => of(defaultNodesParser(row)));
   const config: Parameters<LimitingECSqlQueryExecutor["createQueryReader"]>[1] = {
     rowFormat: "ECSqlPropertyNames",
-    restartToken: `TreeNodesReader/read-nodes-query/${Guid.createValue()}`,
+    restartToken: `readNodes/${Guid.createValue()}`,
     ...(limit !== undefined ? { limit } : undefined),
   };
 
