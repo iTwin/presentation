@@ -77,7 +77,7 @@ export class ECMetadataProvider {
       classInfo = await this.createECClassInfo(
         this._queryReaderFactory(classQuery, QueryBinder.from({ id }), {
           rowFormat: QueryRowFormat.UseJsPropertyNames,
-          restartToken: `${this.#componentName}/${this.#componentId}/class-by-id`,
+          restartToken: `${this.#componentName}/${this.#componentId}/class-by-id/${id}`,
         }),
       );
       classInfo && this._classInfoCache.set({ id: classInfo.id, name: classInfo.name }, classInfo);
@@ -96,7 +96,7 @@ export class ECMetadataProvider {
       classInfo = await this.createECClassInfo(
         this._queryReaderFactory(classQuery, QueryBinder.from({ schemaName, className }), {
           rowFormat: QueryRowFormat.UseJsPropertyNames,
-          restartToken: `${this.#componentName}/${this.#componentId}/class-by-name`,
+          restartToken: `${this.#componentName}/${this.#componentId}/class-by-name/${name}`,
         }),
       );
       classInfo && this._classInfoCache.set({ id: classInfo.id, name: classInfo.name }, classInfo);
@@ -122,7 +122,7 @@ export class ECMetadataProvider {
     const hierarchy = { baseClasses: new Set<Id64String>(), derivedClasses: new Set<Id64String>() };
     const reader = this._queryReaderFactory(classHierarchyQuery, QueryBinder.from({ id }), {
       rowFormat: QueryRowFormat.UseJsPropertyNames,
-      restartToken: `${this.#componentName}/${this.#componentId}/class-hierarchy`,
+      restartToken: `${this.#componentName}/${this.#componentId}/class-hierarchy/${id}`,
     });
     while (await reader.step()) {
       if (reader.current.baseId === id) {

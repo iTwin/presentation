@@ -127,7 +127,7 @@ async function* computeElementSelection(
   yield* executeQuery({
     queryExecutor,
     query: { ctes, ecsql, bindings },
-    config: { restartToken: `${componentName}/${componentId}/element` },
+    config: { restartToken: `${componentName}/${componentId}/element/${Guid.createValue()}` },
   });
 }
 
@@ -155,7 +155,7 @@ async function* computeCategorySelection(
   yield* executeQuery({
     queryExecutor,
     query: { ecsql, bindings },
-    config: { restartToken: `${componentName}/${componentId}/category` },
+    config: { restartToken: `${componentName}/${componentId}/category/${Guid.createValue()}` },
   });
 }
 
@@ -175,7 +175,7 @@ async function* computeModelSelection(
   yield* executeQuery({
     queryExecutor,
     query: { ecsql, bindings },
-    config: { restartToken: `${componentName}/${componentId}/model` },
+    config: { restartToken: `${componentName}/${componentId}/model/${Guid.createValue()}` },
   });
 }
 
@@ -279,7 +279,7 @@ async function* computeFunctionalElementSelection(
   yield* executeQuery({
     queryExecutor,
     query: { ctes, ecsql, bindings },
-    config: { restartToken: `${componentName}/${componentId}/functional-element` },
+    config: { restartToken: `${componentName}/${componentId}/functional-element/${Guid.createValue()}` },
   });
 }
 
