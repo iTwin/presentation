@@ -50,7 +50,7 @@ export interface ComputeSelectionProps {
   elementIds: Id64Arg;
   /** Selection scope to compute selection with. */
   scope: SelectionScope;
-  /** Optional id of the component that consumes this function. It can be any unique string that is */
+  /** Optional unique id of the component that consumes this function. It can be any string, as long as it is not shared across different components. */
   componentId?: string;
 }
 
