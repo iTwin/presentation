@@ -5,7 +5,7 @@
 
 import "./internal/DisposePolyfill.js";
 import { EMPTY, filter, first, from, map, mergeMap, Observable, ObservableInput, of, reduce } from "rxjs";
-import { assert, BeEvent, Dictionary } from "@itwin/core-bentley";
+import { assert, BeEvent, Dictionary, omit } from "@itwin/core-bentley";
 import { GenericInstanceFilter } from "@itwin/core-common";
 import { Event, InstanceKey, IPrimitiveValueFormatter, Props } from "@itwin/presentation-shared";
 import { HierarchyFilteringPath } from "./HierarchyFiltering.js";
@@ -184,7 +184,7 @@ function mergeSameInstanceNodes(source: ObservableInput<HierarchyNode>): Observa
       const { value: nodesForThisKey } = acc.findOrInsert(node.key, []);
       nodesForThisKey.push(node);
       return acc;
-    }, new Dictionary(HierarchyNodeKey.compare)),
+    }, new Dictionary(compareHierarchyNodeKeysForMerge)),
     mergeMap((dict) => from(dict.values())),
     mergeMap((mergedNodes) => {
       if (mergedNodes.length === 0) {
@@ -210,4 +210,14 @@ function mergeSameInstanceNodes(source: ObservableInput<HierarchyNode>): Observa
       return EMPTY;
     }),
   );
+}
+
+function compareHierarchyNodeKeysForMerge(lhs: HierarchyNodeKey, rhs: HierarchyNodeKey) {
+  if (HierarchyNodeKey.isInstances(lhs) && HierarchyNodeKey.isInstances(rhs)) {
+    return HierarchyNodeKey.compare(
+      { ...lhs, instanceKeys: lhs.instanceKeys.map((ik) => omit(ik, ["imodelKey"])) },
+      { ...rhs, instanceKeys: rhs.instanceKeys.map((ik) => omit(ik, ["imodelKey"])) },
+    );
+  }
+  return HierarchyNodeKey.compare(lhs, rhs);
 }
