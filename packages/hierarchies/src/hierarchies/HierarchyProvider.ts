@@ -5,12 +5,13 @@
 
 import "./internal/DisposePolyfill.js";
 
-import { filter, first, from, map, mergeMap, of } from "rxjs";
-import { BeEvent } from "@itwin/core-bentley";
+import { EMPTY, filter, first, from, map, mergeMap, Observable, ObservableInput, of, reduce } from "rxjs";
+import { assert, BeEvent, Dictionary, omit } from "@itwin/core-bentley";
 import { GenericInstanceFilter } from "@itwin/core-common";
 import { Event, InstanceKey, IPrimitiveValueFormatter, Props } from "@itwin/presentation-shared";
 import { HierarchyFilteringPath } from "./HierarchyFiltering.js";
-import { HierarchyNode, ParentHierarchyNode } from "./HierarchyNode.js";
+import { HierarchyNode, NonGroupingHierarchyNode, ParentHierarchyNode } from "./HierarchyNode.js";
+import { HierarchyNodeKey, InstancesNodeKey } from "./HierarchyNodeKey.js";
 import { safeDispose } from "./internal/Common.js";
 import { eachValueFrom } from "./internal/EachValueFrom.js";
 import { sortNodesByLabelOperator } from "./internal/operators/Sorting.js";
@@ -165,8 +166,8 @@ export function mergeProviders({ providers }: MergeHierarchyProvidersProps): Hie
               }),
             ),
           ),
+          mergeSameInstanceNodes,
           sortNodesByLabelOperator,
-          // TODO: consider merging similar nodes
         ),
       ),
     getNodeInstanceKeys: (props) => eachValueFrom(from(providers).pipe(mergeMap((p) => p.getNodeInstanceKeys(props)))),
@@ -175,4 +176,49 @@ export function mergeProviders({ providers }: MergeHierarchyProvidersProps): Hie
     [Symbol.dispose]: dispose,
     dispose,
   };
+}
+
+function mergeSameInstanceNodes(source: ObservableInput<HierarchyNode>): Observable<HierarchyNode> {
+  type NodesDictionary = Dictionary<HierarchyNodeKey, HierarchyNode[]>;
+  return from(source).pipe(
+    reduce<HierarchyNode, NodesDictionary>((acc, node): NodesDictionary => {
+      const { value: nodesForThisKey } = acc.findOrInsert(node.key, []);
+      nodesForThisKey.push(node);
+      return acc;
+    }, new Dictionary(compareHierarchyNodeKeysForMerge)),
+    mergeMap((dict) => from(dict.values())),
+    mergeMap((mergedNodes) => {
+      if (mergedNodes.length === 0) {
+        return EMPTY;
+      }
+      if (mergedNodes.length === 1) {
+        return of(mergedNodes[0]);
+      }
+      const firstNode = mergedNodes[0];
+      if (HierarchyNode.isInstancesNode(firstNode)) {
+        return of({
+          ...firstNode,
+          key: {
+            type: "instances",
+            instanceKeys: mergedNodes.flatMap(({ key }) => {
+              assert(HierarchyNodeKey.isInstances(key));
+              return key.instanceKeys;
+            }),
+          },
+          label: `${firstNode.label} (merged)`,
+        } satisfies NonGroupingHierarchyNode & { key: InstancesNodeKey });
+      }
+      return EMPTY;
+    }),
+  );
+}
+
+function compareHierarchyNodeKeysForMerge(lhs: HierarchyNodeKey, rhs: HierarchyNodeKey) {
+  if (HierarchyNodeKey.isInstances(lhs) && HierarchyNodeKey.isInstances(rhs)) {
+    return HierarchyNodeKey.compare(
+      { ...lhs, instanceKeys: lhs.instanceKeys.map((ik) => omit(ik, ["imodelKey"])) },
+      { ...rhs, instanceKeys: rhs.instanceKeys.map((ik) => omit(ik, ["imodelKey"])) },
+    );
+  }
+  return HierarchyNodeKey.compare(lhs, rhs);
 }
