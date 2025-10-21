@@ -1,5 +1,11 @@
 # Change Log - @itwin/presentation-components
 
+## 5.12.13
+
+### Patch Changes
+
+- [#1091](https://github.com/iTwin/presentation/pull/1091): Fixed merged property records being set as read-only.
+
 ## 5.12.12
 
 ### Patch Changes
