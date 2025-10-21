@@ -57,7 +57,7 @@
     "rxjs": "catalog:rxjs",
     "sass": "^1.86.0",
     "typescript": "catalog:build-tools",
-    "vite": "^6.3.6",
+    "vite": "^6.4.1",
     "vite-plugin-node-polyfills": "^0.23.0",
     "vite-plugin-static-copy": "^2.3.2"
   }
