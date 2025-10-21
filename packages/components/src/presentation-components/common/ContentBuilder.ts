@@ -317,7 +317,6 @@ export class InternalPropertyRecordsBuilder implements IContentVisitor {
     };
     const record = new PropertyRecord(value, createPropertyDescriptionFromFieldInfo(createFieldInfo(propertyField, props.parentFieldName)));
     record.isMerged = true;
-    record.isReadonly = true;
     record.autoExpand = propertyField.isNestedContentField() && propertyField.autoExpand;
     this._propertyRecordsProcessor?.(record);
     this.currentPropertiesAppender.append({ record, fieldHierarchy: { field: propertyField, childFields: [] } });

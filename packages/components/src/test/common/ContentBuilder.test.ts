@@ -361,7 +361,6 @@ describe("PropertyRecordsBuilder", () => {
     expect(builder.entries.length).to.eq(1);
     expect(builder.entries[0].property.name).to.eq(fieldName);
     expect(builder.entries[0].isMerged).to.be.true;
-    expect(builder.entries[0].isReadonly).to.be.true;
     expect(builder.entries[0].value).to.deep.eq({
       valueFormat: UiPropertyValueFormat.Primitive,
     });
