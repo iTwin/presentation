@@ -101,7 +101,7 @@ export class TreeLoader implements ITreeLoader {
           parent,
           error: {
             id: `${infoNodeIdBase}-Unknown`,
-            type: "Unknown" as const,
+            type: "ChildrenLoad" as const,
             message: "Failed to create hierarchy level",
           },
         });

@@ -56,9 +56,9 @@ export namespace TreeModel {
       return "none";
     }
 
-    if (node.error?.type === "Unknown") {
+    if (node.error?.type === "ChildrenLoad") {
       node.isLoading = true;
-      // remove subtree if there `Unknown` error info in order to attempt reloading children
+      // remove subtree if there `ChildrenLoad` error info in order to attempt reloading children
       TreeModel.removeSubTree(model, nodeId);
       return "reloadChildren";
     }

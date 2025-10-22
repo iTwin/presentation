@@ -12,7 +12,7 @@ import { EventArgs } from "@itwin/presentation-shared";
 import { configure, RenderOptions, RenderResult, render as renderRTL } from "@testing-library/react";
 import { userEvent, UserEvent } from "@testing-library/user-event";
 import { isTreeModelHierarchyNode, TreeModel, TreeModelHierarchyNode } from "../presentation-hierarchies-react/internal/TreeModel.js";
-import { GenericErrorInfo, NoFilterMatchesErrorInfo, ResultSetTooLargeErrorInfo } from "../presentation-hierarchies-react/TreeNode.js";
+import { ChildrenLoadErrorInfo, GenericErrorInfo, NoFilterMatchesErrorInfo, ResultSetTooLargeErrorInfo } from "../presentation-hierarchies-react/TreeNode.js";
 import { UseTreeResult } from "../presentation-hierarchies-react/UseTree.js";
 
 configure({ reactStrictMode: true });
@@ -91,6 +91,15 @@ export function createTestGenericErrorInfo({ id, ...props }: Partial<GenericErro
     id,
     message: props.message ?? "test-message",
     type: props.type ?? "Unknown",
+  };
+}
+
+export function createTestChildrenLoadErrorInfo({ id, ...props }: Partial<ChildrenLoadErrorInfo> & { id: string }): ChildrenLoadErrorInfo {
+  return {
+    ...props,
+    id,
+    message: props.message ?? "test-message",
+    type: "ChildrenLoad",
   };
 }
 

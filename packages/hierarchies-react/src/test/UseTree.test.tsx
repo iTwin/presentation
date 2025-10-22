@@ -786,7 +786,7 @@ describe("useTree", () => {
     await waitFor(() => {
       expect(result.current.rootErrorRendererProps).to.not.be.undefined;
       const errorInfo = result.current.rootErrorRendererProps?.error;
-      expect(errorInfo!.type).to.be.eq("Unknown");
+      expect(errorInfo!.type).to.be.eq("ChildrenLoad");
       expect(onHierarchyLoadErrorStub).to.be.calledWith({ parentId: undefined, type: "unknown", error });
     });
   });
@@ -801,7 +801,7 @@ describe("useTree", () => {
     await waitFor(() => {
       expect(result.current.rootErrorRendererProps).to.not.be.undefined;
       const errorInfo = result.current.rootErrorRendererProps?.error;
-      expect(errorInfo!.type).to.be.eq("Unknown");
+      expect(errorInfo!.type).to.be.eq("ChildrenLoad");
       expect(onHierarchyLoadErrorStub).to.be.calledWith({ parentId: undefined, type: "timeout", error });
     });
   });
@@ -876,7 +876,7 @@ describe("useTree", () => {
       const treeRenderProps = getTreeRendererProps(result.current);
       expect(treeRenderProps!.rootNodes).to.have.lengthOf(1);
       expect(treeRenderProps!.rootNodes[0].error).to.not.be.undefined;
-      expect(treeRenderProps!.rootNodes[0].error!.type).to.be.eq("Unknown");
+      expect(treeRenderProps!.rootNodes[0].error!.type).to.be.eq("ChildrenLoad");
     });
 
     hierarchyProvider.getNodes.reset();
