@@ -22,7 +22,15 @@ export interface ErrorItemRendererProps extends Pick<TreeRendererProps, "getHier
   onFilterClick?: (hierarchyLevelDetails: HierarchyLevelDetails) => void;
 }
 
-/** @beta */
+/**
+ * Renders StrataKit `<ErrorRegion.Item />` for all supported error types:
+ * - `ResultSetTooLarge` - renders `LocalizedStrings.resultLimitExceeded` message with actions to increase limit or apply filtering
+ * - `NoFilterMatches` - renders `LocalizedStrings.noFilteredChildren` message with action to change filter
+ * - `ChildrenLoad` - renders `LocalizedStrings.failedToCreateHierarchy` message with action to retry loading
+ * - `Unknown` - renders message set on error object.
+ *
+ * @beta
+ */
 export function ErrorItemRenderer({ errorItem, getHierarchyLevelDetails, onFilterClick, reloadTree, scrollToElement }: ErrorItemRendererProps) {
   const { localizedStrings } = useLocalizationContext();
 
