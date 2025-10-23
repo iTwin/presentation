@@ -130,7 +130,7 @@ describe("TreeLoader", () => {
       expect(error!.type).to.be.eq("ResultSetTooLarge");
     });
 
-    it("loads `Unknown` info node when error is thrown", async () => {
+    it("loads `ChildrenLoad` error info node when error is thrown", async () => {
       const loader = createLoader();
       hierarchyProvider.getNodes.callsFake(() => {
         return throwingAsyncIterator(new Error("Some Error"));
@@ -145,7 +145,7 @@ describe("TreeLoader", () => {
       );
 
       const error = getErrorInfo(nodes.get(undefined));
-      expect(error!.type).to.be.eq("Unknown");
+      expect(error!.type).to.be.eq("ChildrenLoad");
     });
 
     it("loads multiple child hierarchy levels", async () => {

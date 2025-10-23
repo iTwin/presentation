@@ -54,10 +54,25 @@ export interface ResultSetTooLargeErrorInfo {
  *
  * @public
  */
+export interface ChildrenLoadErrorInfo {
+  id: string;
+  type: "ChildrenLoad";
+  message: string;
+}
+
+/**
+ * A type of `ErrorInfo` that can be used to show/handle generic errors,
+ * that might not be directly caused by the tree components. (e.g. tree components
+ * shows hierarchy of connections to external systems and an error is show in the
+ * tree when some connections are unreachable).
+ *
+ * @public
+ */
 export interface GenericErrorInfo {
   id: string;
   type: "Unknown";
   message: string;
+  additionalData?: unknown;
 }
 
 /**
@@ -66,4 +81,4 @@ export interface GenericErrorInfo {
  *
  * @public
  */
-export type ErrorInfo = GenericErrorInfo | ResultSetTooLargeErrorInfo | NoFilterMatchesErrorInfo;
+export type ErrorInfo = GenericErrorInfo | ResultSetTooLargeErrorInfo | NoFilterMatchesErrorInfo | ChildrenLoadErrorInfo;

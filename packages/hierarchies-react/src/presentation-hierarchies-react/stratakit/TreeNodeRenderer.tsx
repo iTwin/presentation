@@ -102,7 +102,7 @@ export const StrataKitTreeNodeRenderer: FC<PropsWithRef<TreeNodeRendererProps & 
     const description = useMemo(() => (getSublabel ? getSublabel(node) : undefined), [getSublabel, node]);
     const decorations = useMemo(() => getDecorations?.(node), [getDecorations, node]);
     const inlineActions = useMemo(() => {
-      if (node.error !== undefined && node.error.type === "Unknown") {
+      if (node.error !== undefined && node.error.type === "ChildrenLoad") {
         return [
           <Tree.ItemAction
             key="retry"

@@ -12,7 +12,7 @@ import { TreeModel } from "../../presentation-hierarchies-react/internal/TreeMod
 import { createNodeId } from "../../presentation-hierarchies-react/internal/Utils.js";
 import {
   createStub,
-  createTestGenericErrorInfo,
+  createTestChildrenLoadErrorInfo,
   createTestGroupingNode,
   createTestHierarchyNode,
   createTreeModel,
@@ -1072,7 +1072,7 @@ describe("TreeActions", () => {
         {
           id: "root-1",
           children: ["info-node"],
-          error: createTestGenericErrorInfo({ id: "info-node", type: "Unknown", message: "Info node" }),
+          error: createTestChildrenLoadErrorInfo({ id: "info-node", message: "Info node" }),
         },
       ]);
 
