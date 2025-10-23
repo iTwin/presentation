@@ -30,6 +30,16 @@ import { SelectionStorage } from '@itwin/unified-selection';
 import { setLogger } from '@itwin/presentation-hierarchies';
 import { Tree } from '@stratakit/structures';
 
+// @public
+interface ChildrenLoadErrorInfo {
+    // (undocumented)
+    id: string;
+    // (undocumented)
+    message: string;
+    // (undocumented)
+    type: "ChildrenLoad";
+}
+
 // @alpha (undocumented)
 interface CommonRendererProps {
     getHierarchyLevelDetails: (nodeId: string | undefined) => HierarchyLevelDetails | undefined;
@@ -37,14 +47,29 @@ interface CommonRendererProps {
 }
 
 // @public
-export type ErrorInfo = GenericErrorInfo | ResultSetTooLargeErrorInfo | NoFilterMatchesErrorInfo;
+export type ErrorInfo = GenericErrorInfo | ResultSetTooLargeErrorInfo | NoFilterMatchesErrorInfo | ChildrenLoadErrorInfo;
 
 // @alpha
 interface ErrorItem {
     // (undocumented)
-    errorNode: PresentationHierarchyNode;
+    errorNode: PresentationHierarchyNode & Pick<Required<PresentationHierarchyNode>, "error">;
     // (undocumented)
     expandTo: (expandNode: (nodeId: string) => void) => void;
+}
+
+// @beta
+export function ErrorItemRenderer({ errorItem, getHierarchyLevelDetails, onFilterClick, reloadTree, scrollToElement }: ErrorItemRendererProps): JSX_2.Element;
+
+// @beta (undocumented)
+interface ErrorItemRendererProps extends Pick<TreeRendererProps, "getHierarchyLevelDetails"> {
+    // (undocumented)
+    errorItem: ErrorItem;
+    onFilterClick?: (hierarchyLevelDetails: HierarchyLevelDetails) => void;
+    reloadTree: (options: {
+        parentNodeId: string | undefined;
+        state: "reset";
+    }) => void;
+    scrollToElement: (errorNode: ErrorItem) => void;
 }
 
 // @alpha
@@ -84,6 +109,8 @@ interface FlatTreeNodeItem {
 
 // @public
 export interface GenericErrorInfo {
+    // (undocumented)
+    additionalData?: unknown;
     // (undocumented)
     id: string;
     // (undocumented)
@@ -263,11 +290,7 @@ export function TreeErrorRenderer({ treeLabel, errorList, reloadTree, scrollToEl
 // @alpha
 interface TreeErrorRendererOwnProps {
     errorList: ErrorItem[];
-    // (undocumented)
-    renderError?: ({ errorItem, scrollToElement }: {
-        errorItem: ErrorItem;
-        scrollToElement: () => void;
-    }) => ReactElement;
+    renderError?: (props: ErrorItemRendererProps) => ReactElement;
     treeLabel: string;
 }
 
