@@ -60,26 +60,19 @@ export function TreeErrorRenderer({
 }: TreeErrorRendererProps) {
   const { localizedStrings } = useLocalizationContext();
   const errorItems = errorList.map((errorItem) => {
+    const errorRendererProps: ErrorItemRendererProps = {
+      errorItem,
+      scrollToElement: () => scrollToElement(errorItem),
+      reloadTree,
+      getHierarchyLevelDetails,
+      onFilterClick,
+    };
+
     if (renderError) {
-      return renderError({
-        errorItem,
-        scrollToElement: () => scrollToElement(errorItem),
-        reloadTree,
-        getHierarchyLevelDetails,
-        onFilterClick,
-      });
+      return renderError(errorRendererProps);
     }
 
-    return (
-      <ErrorItemRenderer
-        key={errorItem.errorNode.id}
-        errorItem={errorItem}
-        onFilterClick={onFilterClick}
-        getHierarchyLevelDetails={getHierarchyLevelDetails}
-        reloadTree={reloadTree}
-        scrollToElement={() => scrollToElement(errorItem)}
-      />
-    );
+    return <ErrorItemRenderer key={errorItem.errorNode.id} {...errorRendererProps} />;
   });
 
   return (
