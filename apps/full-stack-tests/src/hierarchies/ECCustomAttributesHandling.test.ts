@@ -385,12 +385,12 @@ describe("Hierarchies", () => {
               `${this.test!.fullTitle()}_y`,
               db,
               `
-                <ECSchemaReference name="${xSchema.schemaName}" version="01.00.00" alias="xschema" />
+                <ECSchemaReference name="${xSchema.schemaName}" version="01.00.00" alias="xSchema" />
                 <ECCustomAttributes>
                   <HiddenSchema xmlns="CoreCustomAttributes.01.00.01" />
                 </ECCustomAttributes>
                 <ECEntityClass typeName="Y">
-                  <BaseClass>xschema:X</BaseClass>
+                  <BaseClass>xSchema:X</BaseClass>
                 </ECEntityClass>
               `,
             );
@@ -398,14 +398,14 @@ describe("Hierarchies", () => {
               `${this.test!.fullTitle()}_z`,
               db,
               `
-                <ECSchemaReference name="${ySchema.schemaName}" version="01.00.00" alias="yschema" />
+                <ECSchemaReference name="${ySchema.schemaName}" version="01.00.00" alias="ySchema" />
                 <ECCustomAttributes>
                   <HiddenSchema xmlns="CoreCustomAttributes.01.00.01">
                     <ShowClasses>true</ShowClasses>
                   </HiddenSchema>
                 </ECCustomAttributes>
                 <ECEntityClass typeName="Z">
-                  <BaseClass>yschema:Y</BaseClass>
+                  <BaseClass>ySchema:Y</BaseClass>
                 </ECEntityClass>
               `,
             );
@@ -413,14 +413,14 @@ describe("Hierarchies", () => {
               `${this.test!.fullTitle()}_w`,
               db,
               `
-                <ECSchemaReference name="${zSchema.schemaName}" version="01.00.00" alias="zschema" />
+                <ECSchemaReference name="${zSchema.schemaName}" version="01.00.00" alias="zSchema" />
                 <ECCustomAttributes>
                   <HiddenSchema xmlns="CoreCustomAttributes.01.00.01">
                     <ShowClasses>false</ShowClasses>
                   </HiddenSchema>
                 </ECCustomAttributes>
                 <ECEntityClass typeName="W">
-                  <BaseClass>zschema:Z</BaseClass>
+                  <BaseClass>zSchema:Z</BaseClass>
                 </ECEntityClass>
               `,
             );
