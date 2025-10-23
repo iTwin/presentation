@@ -11,7 +11,7 @@ import { PresentationHierarchyNode } from "../TreeNode.js";
 import { ErrorItem } from "./FlatTreeNode.js";
 import { useLocalizationContext } from "./LocalizationContext.js";
 
-/** @beta */
+/** @alpha */
 export interface ErrorItemRendererProps extends Pick<TreeRendererProps, "getHierarchyLevelDetails"> {
   errorItem: ErrorItem;
   /** A callback to reload a hierarchy level when an error occurs and `retry` button is clicked. */
@@ -29,7 +29,7 @@ export interface ErrorItemRendererProps extends Pick<TreeRendererProps, "getHier
  * - `ChildrenLoad` - renders `LocalizedStrings.failedToCreateHierarchy` message with action to retry loading
  * - `Unknown` - renders message set on error object.
  *
- * @beta
+ * @alpha
  */
 export function ErrorItemRenderer({ errorItem, getHierarchyLevelDetails, onFilterClick, reloadTree, scrollToElement }: ErrorItemRendererProps) {
   const { localizedStrings } = useLocalizationContext();

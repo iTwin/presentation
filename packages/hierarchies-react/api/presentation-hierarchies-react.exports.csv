@@ -1,7 +1,7 @@
 sep=;
 Release Tag;API Item Type;API Item Name
 public;type;ErrorInfo
-beta;function;ErrorItemRenderer
+alpha;function;ErrorItemRenderer
 alpha;const;FilterAction
 alpha;type;FlatTreeItem
 public;interface;GenericErrorInfo

@@ -57,10 +57,10 @@ interface ErrorItem {
     expandTo: (expandNode: (nodeId: string) => void) => void;
 }
 
-// @beta
+// @alpha
 export function ErrorItemRenderer({ errorItem, getHierarchyLevelDetails, onFilterClick, reloadTree, scrollToElement }: ErrorItemRendererProps): JSX_2.Element;
 
-// @beta (undocumented)
+// @alpha (undocumented)
 interface ErrorItemRendererProps extends Pick<TreeRendererProps, "getHierarchyLevelDetails"> {
     // (undocumented)
     errorItem: ErrorItem;
