@@ -7,6 +7,7 @@
  */
 
 import "./DisposePolyfill.js";
+
 import { IModelConnection } from "@itwin/core-frontend";
 
 /**

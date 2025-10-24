@@ -4,6 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import "./DisposePolyfill.js";
+
 import naturalCompare from "natural-compare-lite";
 import { ConcatenatedValue } from "@itwin/presentation-shared";
 import { HierarchyNodeKey } from "../HierarchyNodeKey.js";

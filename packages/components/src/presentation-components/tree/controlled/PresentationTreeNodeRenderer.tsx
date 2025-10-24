@@ -8,6 +8,7 @@
  */
 
 import "./PresentationTreeNodeRenderer.scss";
+
 import classnames from "classnames";
 import { TreeNodeRenderer, TreeNodeRendererProps } from "@itwin/components-react";
 import { TreeNode } from "@itwin/core-react";

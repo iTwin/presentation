@@ -20,9 +20,6 @@ import {
   Ruleset,
 } from "@itwin/presentation-common";
 import { Presentation, PresentationManager } from "@itwin/presentation-frontend";
-import { serializeUniqueValues, UniqueValue } from "../../../presentation-components/common/Utils.js";
-import { ItemsLoader, VALUE_BATCH_SIZE } from "../../../presentation-components/properties/inputs/ItemsLoader.js";
-import { UniquePropertyValuesSelector } from "../../../presentation-components/properties/inputs/UniquePropertyValuesSelector.js";
 import {
   createTestECClassInfo,
   createTestPropertyInfo,
@@ -37,6 +34,9 @@ import {
   createTestPropertiesContentField,
 } from "../../_helpers/Content.js";
 import { createTestECInstancesNodeKey } from "../../_helpers/Hierarchy.js";
+import { serializeUniqueValues, UniqueValue } from "../../../presentation-components/common/Utils.js";
+import { ItemsLoader, VALUE_BATCH_SIZE } from "../../../presentation-components/properties/inputs/ItemsLoader.js";
+import { UniquePropertyValuesSelector } from "../../../presentation-components/properties/inputs/UniquePropertyValuesSelector.js";
 import { render, waitFor } from "../../TestUtils.js";
 
 describe("UniquePropertyValuesSelector", () => {

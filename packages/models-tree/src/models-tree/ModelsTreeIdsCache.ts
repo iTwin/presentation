@@ -5,9 +5,8 @@
 
 import { assert, Guid, GuidString, Id64Array, Id64Set, Id64String } from "@itwin/core-bentley";
 import { InstanceKey } from "@itwin/presentation-shared";
-
-import type { ModelsTreeDefinition } from "./ModelsTreeDefinition.js";
 import type { HierarchyNodeIdentifiersPath, LimitingECSqlQueryExecutor } from "@itwin/presentation-hierarchies";
+import type { ModelsTreeDefinition } from "./ModelsTreeDefinition.js";
 
 interface SubjectInfo {
   parentSubject: Id64String | undefined;

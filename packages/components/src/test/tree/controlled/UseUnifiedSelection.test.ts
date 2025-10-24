@@ -33,6 +33,8 @@ import {
   SelectionHelper,
   SelectionManager,
 } from "@itwin/presentation-frontend";
+import { createTestECClassGroupingNodeKey, createTestECInstancesNodeKey } from "../../_helpers/Hierarchy.js";
+import { createTestTreeNodeItem } from "../../_helpers/UiComponents.js";
 import {
   UnifiedSelectionTreeEventHandler,
   UnifiedSelectionTreeEventHandlerParams,
@@ -40,8 +42,6 @@ import {
 } from "../../../presentation-components/tree/controlled/UseUnifiedSelection.js";
 import { IPresentationTreeDataProvider } from "../../../presentation-components/tree/IPresentationTreeDataProvider.js";
 import { PresentationTreeNodeItem } from "../../../presentation-components/tree/PresentationTreeNodeItem.js";
-import { createTestECClassGroupingNodeKey, createTestECInstancesNodeKey } from "../../_helpers/Hierarchy.js";
-import { createTestTreeNodeItem } from "../../_helpers/UiComponents.js";
 import { configure, renderHook } from "../../TestUtils.js";
 
 const awaitableObservable = <T>(input: ObservableInput<T>) => {
