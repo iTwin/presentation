@@ -687,7 +687,7 @@ describe("createIModelHierarchyProvider", () => {
     });
   });
 
-  describe("Hierarchy searching", () => {
+  describe("Hierarchy search", () => {
     it("triggers `hierarchyChanged` event when search is set", () => {
       using provider = createIModelHierarchyProvider({
         imodelAccess,
@@ -712,7 +712,7 @@ describe("createIModelHierarchyProvider", () => {
       expect(hierarchyChangedListener).to.be.calledOnceWith({ searchChange: { newSearch: undefined } });
     });
 
-    it("applies searching on query definitions", async () => {
+    it("applies search on query definitions", async () => {
       imodelAccess.stubEntityClass({
         schemaName: "a",
         className: "b",
@@ -886,7 +886,7 @@ describe("createIModelHierarchyProvider", () => {
       const unsearchedRootNodeIter = provider.getNodes({ parentNode: undefined }).next();
       await waitFor(() => expect(imodelAccess.createQueryReader).to.be.calledOnce);
 
-      // set the search and request searched nodes AFTER the root node query has been executed
+      // set the search and request nodes AFTER the root node query has been executed
       provider.setHierarchySearch({
         paths: [
           [

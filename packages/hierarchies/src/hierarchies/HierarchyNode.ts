@@ -55,7 +55,7 @@ interface BaseHierarchyNode {
   autoExpand?: boolean;
   /** Additional data that may be assigned to this node. */
   extendedData?: { [key: string]: any };
-  /** Data that may be assigned to the node if search is enabled */
+  /** Data that is assigned to the node if hierarchy search is enabled */
   search?: HierarchyNodeSearchProps;
 }
 
