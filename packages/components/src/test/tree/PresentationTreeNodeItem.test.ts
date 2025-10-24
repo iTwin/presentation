@@ -7,6 +7,7 @@
 import { expect } from "chai";
 import { PropertyRecord } from "@itwin/appui-abstract";
 import { TreeNodeItem } from "@itwin/components-react";
+import { createTestECInstancesNodeKey } from "../_helpers/Hierarchy.js";
 import {
   InfoTreeNodeItemType,
   isPresentationInfoTreeNodeItem,
@@ -14,7 +15,6 @@ import {
   PresentationInfoTreeNodeItem,
   PresentationTreeNodeItem,
 } from "../../presentation-components/tree/PresentationTreeNodeItem.js";
-import { createTestECInstancesNodeKey } from "../_helpers/Hierarchy.js";
 
 describe("isPresentationTreeNodeItem", () => {
   it("returns correct values", () => {

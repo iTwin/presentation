@@ -2,5 +2,26 @@
   "printWidth": 160,
   "trailingComma": "all",
   "tabWidth": 2,
-  "singleQuote": false
+  "singleQuote": false,
+  "plugins": ["@ianvs/prettier-plugin-sort-imports"],
+  "importOrder": ["", ".s?css$", "", "^[A-Za-z]", "^@", "^[.]", "<TYPES>", "<TYPES>^@", "<TYPES>^[.]", "", "<BUILTIN_MODULES>"],
+  "overrides": [
+    {
+      "files": [
+        "**/learning-snippets/**/*.ts*",
+        "**/test/**/setup.ts",
+        "**/full-stack-tests/**/setup.ts",
+        "**/*.md",
+        "apps/test-app/backend/src/main.ts",
+        "apps/test-app/frontend/src/index.tsx"
+      ],
+      "options": {
+        "importOrder": []
+      }
+    }
+  ],
+  "importOrderParserPlugins": ["typescript", "jsx", "decorators-legacy"],
+  "importOrderSafeSideEffects": [".s?css$"],
+  "importOrderTypeScriptVersion": "5.6.3",
+  "importOrderCaseSensitive": false
 }

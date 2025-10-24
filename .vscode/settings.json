@@ -32,36 +32,6 @@
     "editor.tabSize": 4,
   },
 
-  "importSorter.importStringConfiguration.maximumNumberOfImportExpressionsPerLine.count": 160,
-  "importSorter.importStringConfiguration.maximumNumberOfImportExpressionsPerLine.type": "newLineEachExpressionAfterCountLimitExceptIfOnlyOne",
-  "importSorter.importStringConfiguration.quoteMark": "double",
-  "importSorter.importStringConfiguration.tabSize": 2,
-  "importSorter.importStringConfiguration.trailingComma": "multiLine",
-  "importSorter.generalConfiguration.sortOnBeforeSave": true,
-  "importSorter.sortConfiguration.customOrderingRules.defaultNumberOfEmptyLinesAfterGroup": 0,
-  "importSorter.sortConfiguration.removeUnusedImports": false,
-  "importSorter.sortConfiguration.importMembers.order": "unsorted",
-  "importSorter.sortConfiguration.customOrderingRules.rules": [
-    {
-      "type": "importMember",
-      "regex": "^$",
-      "orderLevel": 5,
-      "disableSort": true
-    },
-    {
-      "regex": "^[^.@]",
-      "orderLevel": 10
-    },
-    {
-      "regex": "^[@]",
-      "orderLevel": 15
-    },
-    {
-      "regex": "^[.]",
-      "orderLevel": 30
-    }
-  ],
-
   "terminal.integrated.env.linux": {
     "NODE_ENV": "development"
   },

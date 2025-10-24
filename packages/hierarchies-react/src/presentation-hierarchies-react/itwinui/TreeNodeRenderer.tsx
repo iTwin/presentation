@@ -4,6 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import "./TreeNodeRenderer.css";
+
 import cx from "classnames";
 import { ComponentPropsWithoutRef, forwardRef, LegacyRef, MutableRefObject, ReactElement, Ref, RefAttributes, useCallback, useEffect, useRef } from "react";
 import { SvgFilter, SvgFilterHollow, SvgMore, SvgRemove } from "@itwin/itwinui-icons-react";

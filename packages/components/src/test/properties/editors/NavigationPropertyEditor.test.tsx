@@ -11,6 +11,9 @@ import { EmptyLocalization } from "@itwin/core-common";
 import { IModelApp, IModelConnection } from "@itwin/core-frontend";
 import { Content, KeySet, LabelDefinition, NavigationPropertyInfo } from "@itwin/presentation-common";
 import { Presentation, PresentationManager } from "@itwin/presentation-frontend";
+import { stubVirtualization } from "../../_helpers/Common.js";
+import { createTestContentDescriptor, createTestContentItem, createTestPropertiesContentField, createTestSimpleContentField } from "../../_helpers/Content.js";
+import { createTestPropertyRecord } from "../../_helpers/UiComponents.js";
 import { IContentDataProvider } from "../../../presentation-components/common/ContentDataProvider.js";
 import { NavigationPropertyTargetEditor } from "../../../presentation-components/properties/editors/NavigationPropertyEditor.js";
 import {
@@ -18,9 +21,6 @@ import {
   NavigationPropertyEditorContextProviderProps,
   useNavigationPropertyEditorContextProviderProps,
 } from "../../../presentation-components/properties/editors/NavigationPropertyEditorContext.js";
-import { stubVirtualization } from "../../_helpers/Common.js";
-import { createTestContentDescriptor, createTestContentItem, createTestPropertiesContentField, createTestSimpleContentField } from "../../_helpers/Content.js";
-import { createTestPropertyRecord } from "../../_helpers/UiComponents.js";
 import { renderHook, render as renderRTL, waitFor } from "../../TestUtils.js";
 
 function createNavigationPropertyInfo(): NavigationPropertyInfo {

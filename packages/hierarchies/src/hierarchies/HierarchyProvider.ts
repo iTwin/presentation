@@ -4,6 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import "./internal/DisposePolyfill.js";
+
 import { filter, first, from, map, mergeMap, of } from "rxjs";
 import { BeEvent } from "@itwin/core-bentley";
 import { GenericInstanceFilter } from "@itwin/core-common";

@@ -7,6 +7,7 @@
  */
 
 import "./InstanceFilterBuilder.scss";
+
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { BehaviorSubject, from, of } from "rxjs";
 import { map } from "rxjs/internal/operators/map";

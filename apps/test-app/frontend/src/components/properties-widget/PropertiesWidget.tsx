@@ -4,6 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import "./PropertiesWidget.css";
+
 import { ComponentPropsWithoutRef, useCallback, useEffect, useMemo, useState } from "react";
 import { useResizeDetector } from "react-resize-detector";
 import {

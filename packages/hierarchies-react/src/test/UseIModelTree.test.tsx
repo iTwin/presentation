@@ -10,7 +10,6 @@ import sinon from "sinon";
 import * as presentationHierarchiesModule from "@itwin/presentation-hierarchies";
 import { Props } from "@itwin/presentation-shared";
 import { createHierarchyProviderStub, renderHook, waitFor } from "./TestUtils.js";
-
 import type {
   useIModelTree as originalUseIModelTree,
   useIModelUnifiedSelectionTree as originalUseIModelUnifiedSelectionTree,

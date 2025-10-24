@@ -4,6 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import "./IModelSelector.css";
+
 import { Component } from "react";
 import { IModelApp, IModelConnection } from "@itwin/core-frontend";
 import { Select, SelectOption } from "@itwin/itwinui-react";
