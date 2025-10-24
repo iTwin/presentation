@@ -14,7 +14,7 @@ For example, let's say we have this hierarchy:
 +--+ G
 ```
 
-And these are the node paths we want to searched by:
+And these are the node paths we want to search by:
 
 ```txt
 A -> B -> C
