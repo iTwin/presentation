@@ -124,7 +124,7 @@ describe("reloadTree", () => {
   });
 
   it("looks for an expanded node a page after its original position", async () => {
-    // Simulating root-2 node moving from frist to second index after the update
+    // Simulating root-2 node moving from first to second index after the update
     const initialTreeModel = new MutableTreeModel();
     initialTreeModel.setChildren(undefined, [createTreeModelNodeInput("root-0"), createTreeModelNodeInput("root-2")], 0);
     initialTreeModel.getNode("root-2")!.isExpanded = true;

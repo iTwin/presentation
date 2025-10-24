@@ -7,6 +7,7 @@
  */
 
 import { PropertyRecord } from "@itwin/appui-abstract";
+import { Guid, GuidString } from "@itwin/core-bentley";
 import { QueryRowFormat } from "@itwin/core-common";
 import { IModelConnection } from "@itwin/core-frontend";
 import {
@@ -81,6 +82,8 @@ export class ContentBuilder {
   private readonly _iModel: IModelConnection;
   private _dataProvider: IContentBuilderDataProvider | undefined;
   private _decimalPrecision?: number;
+  #componentName: string;
+  #componentId: GuidString;
 
   /**
    * Constructor
@@ -88,6 +91,8 @@ export class ContentBuilder {
    * @param dataProvider
    */
   constructor(props: ContentBuilderProps) {
+    this.#componentId = Guid.createValue();
+    this.#componentName = "ContentBuilder";
     this._iModel = props.imodel;
     this._dataProvider = props.dataProvider;
     this._decimalPrecision = props.decimalPrecision;
@@ -132,7 +137,7 @@ export class ContentBuilder {
         ORDER BY s.Name, c.Name
       `,
       undefined,
-      { rowFormat: QueryRowFormat.UseJsPropertyNames },
+      { rowFormat: QueryRowFormat.UseJsPropertyNames, restartToken: `${this.#componentName}/${this.#componentId}/ec-class-names` },
     );
     return reader.toArray();
   }
@@ -149,7 +154,11 @@ export class ContentBuilder {
           ORDER BY ECInstanceId
         `,
         undefined,
-        { rowFormat: QueryRowFormat.UseJsPropertyNames, limit: { count: limitInstances ? 1 : 4000 } },
+        {
+          rowFormat: QueryRowFormat.UseJsPropertyNames,
+          limit: { count: limitInstances ? 1 : 4000 },
+          restartToken: `${this.#componentName}/${this.#componentId}/instance-id`,
+        },
       );
       const instanceIds: InstanceId[] = await reader.toArray();
 

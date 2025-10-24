@@ -6,7 +6,13 @@
 import { expect } from "chai";
 import { GenericInstanceFilter } from "@itwin/presentation-hierarchies";
 import { isTreeModelHierarchyNode, TreeModel } from "../../presentation-hierarchies-react/internal/TreeModel.js";
-import { createTestGenericErrorInfo, createTestHierarchyNode, createTestNoFilterMatchesErrorInfo, createTreeModel, getHierarchyNode } from "../TestUtils.js";
+import {
+  createTestChildrenLoadErrorInfo,
+  createTestHierarchyNode,
+  createTestNoFilterMatchesErrorInfo,
+  createTreeModel,
+  getHierarchyNode,
+} from "../TestUtils.js";
 
 describe("TreeModel", () => {
   describe("expandNode", () => {
@@ -109,7 +115,7 @@ describe("TreeModel", () => {
       expect(TreeModel.expandNode(model, "root-1", true)).to.be.eq("none");
     });
 
-    it("returns `reloadChildren` and removes child `Unknown` info node when expanding node", () => {
+    it("returns `reloadChildren` and removes child `ChildrenLoad` error info node when expanding node", () => {
       const model = createTreeModel([
         {
           id: undefined,
@@ -119,7 +125,7 @@ describe("TreeModel", () => {
           id: "root-1",
           isExpanded: false,
           children: [],
-          error: createTestGenericErrorInfo({ id: "info-1" }),
+          error: createTestChildrenLoadErrorInfo({ id: "info-1" }),
         },
       ]);
 

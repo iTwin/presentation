@@ -110,7 +110,7 @@ type RendererProps =
       rootErrorRendererProps: RootErrorRendererProps;
     }
   | {
-      /** Is undefined when rootNodes where sucessfully loaded or are in initial loading process */
+      /** Is undefined when rootNodes where successfully loaded or are in initial loading process */
       rootErrorRendererProps: undefined;
       /**
        * An object containing information used to render tree.

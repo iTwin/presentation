@@ -62,7 +62,7 @@
 
 .app-content-right-separator {
   z-index: 999;
-  height: 30px; /* Because ElementSeperator is 30 */
+  height: 30px; /* Because ElementSeparator is 30 */
 }
 
 .app-content-right-separator hr {

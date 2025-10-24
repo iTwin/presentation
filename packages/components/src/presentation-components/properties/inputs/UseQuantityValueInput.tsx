@@ -6,7 +6,7 @@
 import { ChangeEventHandler, useEffect, useRef, useState } from "react";
 import { assert } from "@itwin/core-bentley";
 import { IModelApp } from "@itwin/core-frontend";
-import { FormatterSpec, ParserSpec } from "@itwin/core-quantity";
+import { FormatterSpec, FormatType, ParserSpec } from "@itwin/core-quantity";
 import { SchemaContext } from "@itwin/ecschema-metadata";
 import { KoqPropertyValueFormatter } from "@itwin/presentation-common";
 import { getPersistenceUnitRoundingError } from "./Utils.js";
@@ -54,7 +54,7 @@ export function useQuantityValueInput({ initialRawValue, schemaContext, koqName 
     },
     placeholder: "",
   }));
-  const { formatter, parser } = useFormatterAndParser(koqName, schemaContext);
+  const { formatter, parser, placeholderFormatter } = useFormatterAndParser(koqName, schemaContext);
 
   useEffect(() => {
     if (!formatter || !parser) {
@@ -62,7 +62,8 @@ export function useQuantityValueInput({ initialRawValue, schemaContext, koqName 
     }
 
     setState((prev): State => {
-      const newPlaceholder = formatter.applyFormatting(initialRawValueRef.current ?? PLACEHOLDER_RAW_VALUE);
+      /* c8 ignore next 1 */
+      const newPlaceholder = (placeholderFormatter ?? formatter).applyFormatting(initialRawValueRef.current ?? PLACEHOLDER_RAW_VALUE);
       const newFormattedValue = prev.quantityValue.rawValue !== undefined ? formatter.applyFormatting(prev.quantityValue.rawValue) : "";
       const roundingError = getPersistenceUnitRoundingError(newFormattedValue, parser);
 
@@ -76,7 +77,7 @@ export function useQuantityValueInput({ initialRawValue, schemaContext, koqName 
         placeholder: newPlaceholder,
       };
     });
-  }, [formatter, parser]);
+  }, [formatter, placeholderFormatter, parser]);
 
   const onChange: ChangeEventHandler<HTMLInputElement> = (e) => {
     assert(parser !== undefined); // input should be disabled if parser is `undefined`
@@ -109,6 +110,7 @@ export function useQuantityValueInput({ initialRawValue, schemaContext, koqName 
 
 function useFormatterAndParser(koqName: string, schemaContext: SchemaContext) {
   interface State {
+    placeholderFormatter?: FormatterSpec;
     formatterSpec: FormatterSpec;
     parserSpec: ParserSpec;
   }
@@ -119,10 +121,21 @@ function useFormatterAndParser(koqName: string, schemaContext: SchemaContext) {
     const findFormatterAndParser = async () => {
       // eslint-disable-next-line @typescript-eslint/no-deprecated
       const koqFormatter = new KoqPropertyValueFormatter(schemaContext, undefined, IModelApp.formatsProvider);
-      const formatterSpec = await koqFormatter.getFormatterSpec({ koqName, unitSystem: IModelApp.quantityFormatter.activeUnitSystem });
+      const formatterSpec = await koqFormatter.getFormatterSpec({
+        koqName,
+        unitSystem: IModelApp.quantityFormatter.activeUnitSystem,
+      });
+      // formatter for placeholder should not have precision override
+      const placeholderFormatter = await koqFormatter.getFormatterSpec({
+        koqName,
+        unitSystem: IModelApp.quantityFormatter.activeUnitSystem,
+      });
       const parserSpec = await koqFormatter.getParserSpec({ koqName, unitSystem: IModelApp.quantityFormatter.activeUnitSystem });
       if (formatterSpec && parserSpec) {
-        setState({ formatterSpec, parserSpec });
+        if (formatterSpec.format.type === FormatType.Decimal) {
+          formatterSpec.format.precision = 12;
+        }
+        setState({ formatterSpec, parserSpec, placeholderFormatter });
         return;
       }
 
@@ -130,11 +143,19 @@ function useFormatterAndParser(koqName: string, schemaContext: SchemaContext) {
     };
     void findFormatterAndParser();
 
-    return IModelApp.quantityFormatter.onActiveFormattingUnitSystemChanged.addListener(findFormatterAndParser);
+    const listeners = [IModelApp.quantityFormatter.onActiveFormattingUnitSystemChanged.addListener(findFormatterAndParser)];
+    if (IModelApp.formatsProvider) {
+      listeners.push(IModelApp.formatsProvider.onFormatsChanged.addListener(findFormatterAndParser));
+    }
+
+    return () => {
+      listeners.forEach((listener) => listener());
+    };
   }, [koqName, schemaContext]);
 
   return {
     formatter: state?.formatterSpec,
     parser: state?.parserSpec,
+    placeholderFormatter: state?.placeholderFormatter,
   };
 }

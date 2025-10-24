@@ -46,7 +46,7 @@ describe("Learning snippets", async () => {
       const imodel = await buildTestIModel(this, async (builder) => {
         const categoryKey = insertSpatialCategory({ builder, fullClassNameSeparator: ":", codeValue: "My Category" });
         const modelKey = insertPhysicalModelWithPartition({ builder, fullClassNameSeparator: ":", codeValue: "My Model" });
-        elementKeys.push(
+        (elementKeys.push(
           insertPhysicalElement({ builder, fullClassNameSeparator: ":", userLabel: "My Assembly Element", modelId: modelKey.id, categoryId: categoryKey.id }),
         ),
           elementKeys.push(
@@ -66,7 +66,7 @@ describe("Learning snippets", async () => {
               categoryId: categoryKey.id,
               parentId: elementKeys[0].id,
             }),
-          );
+          ));
       });
 
       // we're not rendering on a screen, so need to stub some stuff

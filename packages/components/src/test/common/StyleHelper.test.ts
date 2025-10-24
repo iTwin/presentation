@@ -9,6 +9,7 @@ import { StyleHelper } from "../../presentation-components/common/StyleHelper.js
 import { createTestECInstancesNodeKey } from "../_helpers/Hierarchy.js";
 
 describe("StyleHelper", () => {
+  // eslint-disable-next-line @typescript-eslint/no-deprecated
   const createNodeBase = (): Node => ({
     label: LabelDefinition.fromLabelString("Test Label"),
     key: createTestECInstancesNodeKey(),

@@ -230,6 +230,16 @@ function useSelectionHandler({ imodel, selectionStorage, tableName }: { imodel: 
     [imodel, selectionStorage],
   );
 
+  const getSelectionKeySet = useCallback(
+    async (args: { level: number }): Promise<KeySet> => {
+      return selectionStorage
+        ? new KeySet(await loadInstanceKeysFromSelectables(selectionStorage.getSelection({ imodelKey: createIModelKey(imodel), level: args.level })))
+        : // eslint-disable-next-line @typescript-eslint/no-deprecated
+          new KeySet(Presentation.selection.getSelection(imodel, args.level));
+    },
+    [imodel, selectionStorage],
+  );
+
   const replaceSelection = useCallback(
     (args: { source: string; level: number; selectables: SelectableInstanceKey[] }) => {
       return selectionStorage
@@ -245,7 +255,7 @@ function useSelectionHandler({ imodel, selectionStorage, tableName }: { imodel: 
     [imodel, selectionStorage],
   );
 
-  const keys = useUnifiedSelectionKeys({ getSelection, selectionChange });
+  const keys = useUnifiedSelectionKeys({ getSelection: getSelectionKeySet, selectionChange });
 
   return {
     keys,
@@ -268,9 +278,12 @@ async function loadInstanceKeysFromKeySet(keySet: Readonly<KeySet>) {
   keySet.forEach((key) => {
     if (Key.isInstanceKey(key)) {
       keys.push(key);
+      /* c8 ignore start */
+      // eslint-disable-next-line @typescript-eslint/no-deprecated
     } else if (NodeKey.isInstancesNodeKey(key)) {
       keys.push(...key.instanceKeys);
     }
+    /* c8 ignore end */
   });
   return keys;
 }
@@ -279,7 +292,7 @@ function useUnifiedSelectionKeys({
   getSelection,
   selectionChange,
 }: {
-  getSelection: (args: { level: number }) => Promise<SelectableInstanceKey[]>;
+  getSelection: (args: { level: number }) => Promise<KeySet>;
   selectionChange: BeEvent<(level: number) => void>;
 }) {
   const [state, setState] = useState(() => ({ isLoading: false, keys: new KeySet() }));
@@ -289,7 +302,6 @@ function useUnifiedSelectionKeys({
       .pipe(
         tap(() => setState((prev) => ({ ...prev, isLoading: true }))),
         switchMap(async () => getSelection({ level: 0 })),
-        map((selectables) => new KeySet(selectables)),
       )
       .subscribe({
         next: (newKeys) => {

@@ -37,7 +37,7 @@ export interface FlatTreeNodeItem {
  * @alpha
  * */
 export interface ErrorItem {
-  errorNode: PresentationHierarchyNode;
+  errorNode: PresentationHierarchyNode & Pick<Required<PresentationHierarchyNode>, "error">;
   expandTo: (expandNode: (nodeId: string) => void) => void;
 }
 
@@ -92,7 +92,7 @@ export function useErrorList(rootNodes: PresentationHierarchyNode[]): ErrorItem[
   return useMemo(
     () =>
       rootNodes.flatMap((rootNode) => {
-        if (!!rootNode.error) {
+        if (isErrorNode(rootNode)) {
           return [{ errorNode: rootNode, expandTo: (expandNode) => expandTo(expandNode, []) }];
         }
         if (rootNode.children === true) {
@@ -113,7 +113,7 @@ function getErrorItems(parent: PresentationHierarchyNode, path: string[]) {
 
   const pathToChild = [...path, ...(!parent.isExpanded ? [parent.id] : [])];
   parent.children.forEach((node) => {
-    if (!!node.error) {
+    if (isErrorNode(node)) {
       errorList.push({ errorNode: node, expandTo: (expandNode) => expandTo(expandNode, path) });
       return;
     }
@@ -129,4 +129,8 @@ function getErrorItems(parent: PresentationHierarchyNode, path: string[]) {
 
 function expandTo(expandNode: (nodeId: string) => void, path: string[]) {
   path.forEach((nodeId) => expandNode(nodeId));
+}
+
+function isErrorNode(node: PresentationHierarchyNode): node is PresentationHierarchyNode & Pick<Required<PresentationHierarchyNode>, "error"> {
+  return node.error !== undefined;
 }

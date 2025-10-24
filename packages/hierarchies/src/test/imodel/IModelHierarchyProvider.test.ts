@@ -95,7 +95,7 @@ describe("createIModelHierarchyProvider", () => {
       },
     });
     const nodes = await collect(provider.getNodes({ parentNode: undefined }));
-    expect(imodelAccess.createQueryReader).to.be.calledOnceWith(query, { rowFormat: "ECSqlPropertyNames" });
+    expect(imodelAccess.createQueryReader).to.be.calledOnceWith(query, sinon.match({ rowFormat: "ECSqlPropertyNames", restartToken: sinon.match.string }));
     expect(nodes).to.deep.eq([
       {
         key: {
@@ -787,7 +787,7 @@ describe("createIModelHierarchyProvider", () => {
                 `,
               ),
         ),
-        { rowFormat: "ECSqlPropertyNames" },
+        sinon.match({ rowFormat: "ECSqlPropertyNames", restartToken: sinon.match.string }),
       );
       expect(nodes).to.deep.eq([
         {
@@ -810,7 +810,7 @@ describe("createIModelHierarchyProvider", () => {
       nodes = await collect(provider.getNodes({ parentNode: undefined }));
       expect(imodelAccess.createQueryReader).to.be.calledOnceWith(
         sinon.match((query) => query.ecsql === "QUERY"),
-        { rowFormat: "ECSqlPropertyNames" },
+        sinon.match({ rowFormat: "ECSqlPropertyNames", restartToken: sinon.match.string }),
       );
       expect(nodes).to.deep.eq([
         {

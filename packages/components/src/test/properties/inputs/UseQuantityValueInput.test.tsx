@@ -8,7 +8,7 @@ import { useEffect } from "react";
 import sinon from "sinon";
 import { BeUiEvent } from "@itwin/core-bentley";
 import { FormattingUnitSystemChangedArgs, IModelApp } from "@itwin/core-frontend";
-import { Format, FormatterSpec, ParseError, ParserSpec, QuantityParseResult } from "@itwin/core-quantity";
+import { Format, FormatterSpec, FormatType, ParseError, ParserSpec, QuantityParseResult } from "@itwin/core-quantity";
 import { SchemaContext } from "@itwin/ecschema-metadata";
 import { KoqPropertyValueFormatter } from "@itwin/presentation-common";
 import { QuantityValue, useQuantityValueInput, UseQuantityValueInputProps } from "../../../presentation-components/properties/inputs/UseQuantityValueInput.js";
@@ -29,6 +29,7 @@ describe("UseQuantityValueInput", () => {
   const format = new Format("test format");
   const formatterSpec = {
     applyFormatting: sinon.stub<[number], string>(),
+    format,
   };
   const parserSpec = {
     parseToQuantityValue: sinon.stub<[string], QuantityParseResult>(),
@@ -36,6 +37,10 @@ describe("UseQuantityValueInput", () => {
   };
   const quantityFormatter = {
     onActiveFormattingUnitSystemChanged: new BeUiEvent<FormattingUnitSystemChangedArgs>(),
+  };
+
+  const formatProvider = {
+    onFormatsChanged: new BeUiEvent<void>(),
   };
 
   let getFormatterSpecStub: sinon.SinonStub<
@@ -49,6 +54,7 @@ describe("UseQuantityValueInput", () => {
     getParserSpecStub = sinon.stub(KoqPropertyValueFormatter.prototype, "getParserSpec");
 
     sinon.stub(IModelApp, "quantityFormatter").get(() => quantityFormatter);
+    sinon.stub(IModelApp, "formatsProvider").get(() => formatProvider);
   });
 
   beforeEach(() => {
@@ -111,5 +117,71 @@ describe("UseQuantityValueInput", () => {
       expect(value.rawValue).to.be.eq(1.23);
       expect(value.formattedValue).to.be.eq("1.23 unit");
     });
+  });
+
+  it("reacts to format change", async () => {
+    const { queryByPlaceholderText } = render(<TestInput schemaContext={schemaContext} koqName="testKOQ" />);
+    await waitFor(() => expect(queryByPlaceholderText("12.34 unit")).to.not.be.null);
+
+    const newFormatterSpec = {
+      applyFormatting: (num: number) => `${num} new unit`,
+      format,
+    };
+    const newParserSpec = {
+      parseToQuantityValue: (str: string) => {
+        if (!str.endsWith("new unit")) {
+          return { ok: false, error: ParseError.UnknownUnit };
+        }
+        return { ok: true, value: Number(str.substring(0, str.length - 8)) };
+      },
+      format,
+    };
+
+    getFormatterSpecStub.resolves(newFormatterSpec as unknown as FormatterSpec);
+    getParserSpecStub.resolves(newParserSpec as unknown as ParserSpec);
+
+    formatProvider.onFormatsChanged.raiseEvent();
+
+    await waitFor(() => expect(queryByPlaceholderText("12.34 new unit")).to.not.be.null);
+  });
+
+  it("sets precision to 12 for Decimal format types", async () => {
+    const decimalFormat = {
+      type: FormatType.Decimal,
+      precision: 6,
+    };
+    const decimalFormatterSpec = {
+      applyFormatting: sinon.stub<[number], string>(),
+      format: decimalFormat,
+    };
+
+    decimalFormatterSpec.applyFormatting.callsFake((raw) => `${raw} unit`);
+    getFormatterSpecStub.resolves(decimalFormatterSpec as unknown as FormatterSpec);
+
+    render(<TestInput schemaContext={schemaContext} koqName="testKOQ" />);
+    await waitFor(() => expect(decimalFormatterSpec.applyFormatting).to.be.called);
+
+    // Verify that precision was set to 12 for Decimal format
+    expect(decimalFormat.precision).to.eq(12);
+  });
+
+  it("does not set precision to 12 for Fractional format types", async () => {
+    const fractionalFormat = {
+      type: FormatType.Fractional,
+      precision: 6,
+    };
+    const fractionalFormatterSpec = {
+      applyFormatting: sinon.stub<[number], string>(),
+      format: fractionalFormat,
+    };
+
+    fractionalFormatterSpec.applyFormatting.callsFake((raw) => `${raw} unit`);
+    getFormatterSpecStub.resolves(fractionalFormatterSpec as unknown as FormatterSpec);
+
+    render(<TestInput schemaContext={schemaContext} koqName="testKOQ" />);
+    await waitFor(() => expect(fractionalFormatterSpec.applyFormatting).to.be.called);
+
+    // Verify that precision was NOT modified for Fractional format
+    expect(fractionalFormat.precision).to.eq(6);
   });
 });

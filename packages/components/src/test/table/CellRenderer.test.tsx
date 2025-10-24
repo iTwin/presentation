@@ -10,13 +10,13 @@ import { render, waitFor } from "../TestUtils.js";
 
 describe("TableCellRenderer", () => {
   function createRecord(value: PropertyValue, propDescription?: Partial<PropertyDescription>) {
-    const descr: PropertyDescription = {
+    const description: PropertyDescription = {
       ...propDescription,
       typename: propDescription?.typename ?? "string",
       name: propDescription?.name ?? "test_prop",
       displayLabel: propDescription?.displayLabel ?? "TestProp",
     };
-    return new PropertyRecord(value, descr);
+    return new PropertyRecord(value, description);
   }
 
   it("renders primitive value", async () => {

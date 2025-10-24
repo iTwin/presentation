@@ -244,7 +244,7 @@ export class PresentationPropertyDataProvider extends ContentDataProvider implem
   /* eslint-enable @typescript-eslint/no-deprecated */
 
   /**
-   * Sorts the specified list of categories by priority. May be overriden
+   * Sorts the specified list of categories by priority. May be overridden
    * to supply a different sorting algorithm.
    */
   protected sortCategories(categories: CategoryDescription[]): void {
@@ -253,7 +253,7 @@ export class PresentationPropertyDataProvider extends ContentDataProvider implem
 
   /* eslint-disable @typescript-eslint/no-deprecated */
   /**
-   * Sorts the specified list of fields by priority. May be overriden to supply a different sorting algorithm.
+   * Sorts the specified list of fields by priority. May be overridden to supply a different sorting algorithm.
    * @deprecated in 5.2. Use `sortFieldsAsync` instead.
    */
   protected sortFields(category: CategoryDescription, fields: Field[]): void {
@@ -266,7 +266,7 @@ export class PresentationPropertyDataProvider extends ContentDataProvider implem
     /* c8 ignore end */
   }
   /**
-   * Sorts the specified list of fields by priority. May be overriden to supply a different sorting algorithm.
+   * Sorts the specified list of fields by priority. May be overridden to supply a different sorting algorithm.
    */
   protected async sortFieldsAsync(category: CategoryDescription, fields: Field[]): Promise<void> {
     if (this.sortFields === PresentationPropertyDataProvider.prototype.sortFields) {
@@ -546,18 +546,18 @@ class PropertyDataBuilder extends InternalPropertyRecordsBuilder {
       source: CategoryDescription;
       categoryHasParent: boolean;
     }>();
-    const pushPropertyCategories = (parentDescr?: CategoryDescription) => {
-      const childCategoryDescriptions = categoriesHierarchy.get(parentDescr);
-      const childPropertyCategories = (childCategoryDescriptions ?? []).map((categoryDescr) => {
+    const pushPropertyCategories = (parentDescription?: CategoryDescription) => {
+      const childCategoryDescriptions = categoriesHierarchy.get(parentDescription);
+      const childPropertyCategories = (childCategoryDescriptions ?? []).map((categoryDescription) => {
         const category: PropertyCategory = {
-          name: categoryDescr.name,
-          label: categoryDescr.label,
-          expand: categoryDescr.expand,
+          name: categoryDescription.name,
+          label: categoryDescription.label,
+          expand: categoryDescription.expand,
         };
-        if (categoryDescr.renderer) {
-          category.renderer = categoryDescr.renderer;
+        if (categoryDescription.renderer) {
+          category.renderer = categoryDescription.renderer;
         }
-        return { category, source: categoryDescr, categoryHasParent: parentDescr !== undefined };
+        return { category, source: categoryDescription, categoryHasParent: parentDescription !== undefined };
       });
       propertyCategories.push(...childPropertyCategories);
       for (const categoryInfo of childPropertyCategories) {
@@ -698,8 +698,8 @@ class PropertyCategoriesCache {
     return category;
   }
 
-  public getEntry(descr: string) {
-    return this._byName.get(descr);
+  public getEntry(description: string) {
+    return this._byName.get(description);
   }
 
   public getEntries() {

@@ -29,7 +29,7 @@
     "@opentelemetry/semantic-conventions": "^1.30.0",
     "@test-app/common": "workspace:*",
     "cross-env": "catalog:build-tools",
-    "electron": "^35.0.3",
+    "electron": "^35.7.5",
     "eslint": "catalog:build-tools",
     "rimraf": "catalog:build-tools",
     "typescript": "catalog:build-tools"

@@ -6,7 +6,7 @@
 import { ComponentPropsWithoutRef, ReactElement, useCallback, useEffect, useMemo, useState } from "react";
 import RssParser from "rss-parser";
 import { debounceTime, Subject } from "rxjs";
-import { BeEvent, Id64String } from "@itwin/core-bentley";
+import { BeEvent, Guid, Id64String } from "@itwin/core-bentley";
 import { IModelConnection } from "@itwin/core-frontend";
 import { SvgFolder, SvgGlobe, SvgImodelHollow, SvgItem, SvgModel } from "@itwin/itwinui-icons-react";
 import { Flex, ProgressRadial, SearchBox, Text } from "@itwin/itwinui-react";
@@ -44,7 +44,7 @@ import { MyAppFrontend } from "../../api/MyAppFrontend";
 type UseTreeProps = Props<typeof useUnifiedSelectionTree>;
 type IModelAccess = Props<typeof createIModelHierarchyProvider>["imodelAccess"];
 
-export function MultiDataSourceTree({ imodel, ...props }: { imodel: IModelConnection; height: number; width: number }) {
+export function MultiDataSourceTree({ imodel, ...props }: { imodel: IModelConnection; height: number; width: number; treeLabel: string }) {
   const [imodelAccess, setIModelAccess] = useState<IModelAccess>();
   useEffect(() => setIModelAccess(createIModelAccess(imodel)), [imodel]);
 
@@ -68,19 +68,20 @@ function createIModelAccess(imodel: IModelConnection) {
 
 const RSS_PROVIDER = createRssHierarchyProvider();
 
-function Tree({ imodelAccess, height, width }: { imodelAccess: IModelAccess; height: number; width: number }) {
+function Tree({ imodelAccess, height, width, treeLabel }: { imodelAccess: IModelAccess; height: number; width: number; treeLabel: string }) {
   const [search, setsearch] = useState("");
+  const [componentId] = useState(() => Guid.createValue());
   const getSearchPaths = useMemo<UseTreeProps["getSearchPaths"]>(() => {
     return async () => {
       if (!search) {
         return undefined;
       }
-      return Promise.all([getModelsHierarchySearchPaths({ imodelAccess, search }), RSS_PROVIDER.getSearchedPaths(search)]).then(([imodelPaths, rssPaths]) => [
-        ...imodelPaths,
-        ...rssPaths,
-      ]);
+      return Promise.all([
+        getModelsHierarchySearchPaths({ imodelAccess, search, componentId, componentName: "MultiDataSourceTree" }),
+        RSS_PROVIDER.getSearchedPaths(search),
+      ]).then(([imodelPaths, rssPaths]) => [...imodelPaths, ...rssPaths]);
     };
-  }, [search, imodelAccess]);
+  }, [search, imodelAccess, componentId]);
 
   const unifiedSelectionContext = useUnifiedSelectionContext();
   if (!unifiedSelectionContext) {
@@ -140,7 +141,7 @@ function Tree({ imodelAccess, height, width }: { imodelAccess: IModelAccess; hei
 
     return (
       <Flex.Item alignSelf="flex-start" style={{ width: "100%", overflow: "auto" }}>
-        <StrataKitTreeRenderer {...treeProps.treeRendererProps} getDecorations={(node) => getIcon(node)} selectionMode={"extended"} />
+        <StrataKitTreeRenderer {...treeProps.treeRendererProps} getDecorations={(node) => getIcon(node)} selectionMode={"extended"} treeLabel={treeLabel} />
       </Flex.Item>
     );
   };
@@ -297,31 +298,46 @@ function createModelsHierarchyDefinition({ imodelAccess }: { imodelAccess: IMode
     },
   });
 }
-async function getModelsHierarchySearchPaths({ imodelAccess, search }: { imodelAccess: IModelAccess; search: string }): Promise<HierarchySearchPath[]> {
+async function getModelsHierarchySearchPaths({
+  imodelAccess,
+  search,
+  componentId,
+  componentName,
+}: {
+  imodelAccess: IModelAccess;
+  search: string;
+  componentId: string;
+  componentName: string;
+}): Promise<HierarchySearchPath[]> {
   const labelsFactory = createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess });
   const [rootSubjectPath, modelPaths] = await Promise.all([
-    getRootSubjectsearchedPath({ imodelAccess, search, labelsFactory }),
-    Array.fromAsync(getModelssearchingPaths({ imodelAccess, search, labelsFactory })),
+    getRootSubjectSearchedPath({ imodelAccess, search, labelsFactory, componentId, componentName }),
+    Array.fromAsync(getModelsSearchPaths({ imodelAccess, search, labelsFactory, componentId, componentName })),
   ]);
   return [...(rootSubjectPath ? [rootSubjectPath] : []), ...modelPaths];
 }
-async function* getModelssearchingPaths({
+async function* getModelsSearchPaths({
   imodelAccess,
   search,
   labelsFactory,
+  componentId,
+  componentName,
 }: {
   imodelAccess: IModelAccess;
   search: string;
   labelsFactory: IInstanceLabelSelectClauseFactory;
+  componentId: string;
+  componentName: string;
 }): AsyncIterableIterator<HierarchySearchPath> {
   const whereClause = `${await labelsFactory.createSelectClause({
     classAlias: "m",
     className: "BisCore.Model",
     selectorsConcatenator: ECSql.createConcatenatedValueStringSelector,
   })} LIKE '%' || ? || '%' ESCAPE '\\'`;
-  const modelsReader = imodelAccess.createQueryReader({
-    ctes: [
-      `ModelsHierarchy(ECInstanceId, ParentId, Path) AS (
+  const modelsReader = imodelAccess.createQueryReader(
+    {
+      ctes: [
+        `ModelsHierarchy(ECInstanceId, ParentId, Path) AS (
         SELECT
           m.ECInstanceId,
           m.ParentModel.Id,
@@ -341,14 +357,16 @@ async function* getModelssearchingPaths({
         FROM ModelsHierarchy cm
         JOIN BisCore.Model pm ON pm.ECInstanceId = cm.ParentId
       )`,
-    ],
-    ecsql: `
+      ],
+      ecsql: `
       SELECT mh.Path AS path
       FROM ModelsHierarchy mh
       WHERE mh.ParentId IS NULL
     `,
-    bindings: [{ type: "string", value: search.replace(/[%_\\]/g, "\\$&") }],
-  });
+      bindings: [{ type: "string", value: search.replace(/[%_\\]/g, "\\$&") }],
+    },
+    { restartToken: `${componentName}/${componentId}/models-paths` },
+  );
   for await (const row of modelsReader) {
     const path = JSON.parse(row.path) as HierarchyNodeIdentifiersPath;
     yield {
@@ -362,25 +380,32 @@ async function* getModelssearchingPaths({
     };
   }
 }
-async function getRootSubjectsearchedPath({
+async function getRootSubjectSearchedPath({
   imodelAccess,
   search,
   labelsFactory,
+  componentId,
+  componentName,
 }: {
   imodelAccess: IModelAccess;
   search: string;
   labelsFactory: IInstanceLabelSelectClauseFactory;
+  componentId: string;
+  componentName: string;
 }): Promise<HierarchyNodeIdentifiersPath | undefined> {
-  const reader = imodelAccess.createQueryReader({
-    ecsql: `
+  const reader = imodelAccess.createQueryReader(
+    {
+      ecsql: `
       SELECT this.ECInstanceId AS id
       FROM BisCore.Subject this
       WHERE
         ${await labelsFactory.createSelectClause({ classAlias: "this", className: "BisCore.Subject", selectorsConcatenator: ECSql.createConcatenatedValueStringSelector })} LIKE '%' || ? || '%' ESCAPE '\\'
         AND this.ECInstanceId = 0x1
     `,
-    bindings: [{ type: "string", value: search.replace(/[%_\\]/g, "\\$&") }],
-  });
+      bindings: [{ type: "string", value: search.replace(/[%_\\]/g, "\\$&") }],
+    },
+    { restartToken: `${componentName}/${componentId}/subject-path` },
+  );
   const row = (await reader.next()).value as { id: Id64String } | undefined;
   return row ? [{ className: "BisCore.Subject", id: row.id, imodelKey: imodelAccess.imodelKey }] : undefined;
 }

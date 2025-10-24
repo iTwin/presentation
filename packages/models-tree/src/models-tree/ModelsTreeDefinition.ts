@@ -23,7 +23,7 @@ import {
   switchMap,
   takeUntil,
 } from "rxjs";
-import { Id64Array, Id64String } from "@itwin/core-bentley";
+import { Guid, Id64Array, Id64String } from "@itwin/core-bentley";
 import {
   ClassGroupingNodeKey,
   createIModelHierarchyProvider,
@@ -594,7 +594,9 @@ export class ModelsTreeDefinition implements HierarchyDefinition {
       ],
     };
 
-    for await (const _row of this._queryExecutor.createQueryReader(query)) {
+    for await (const _row of this._queryExecutor.createQueryReader(query, {
+      restartToken: `ModelsTreeDefinition/${Guid.createValue()}/is-class-supported`,
+    })) {
       return true;
     }
     return false;
@@ -673,7 +675,10 @@ function createGeometricElementInstanceKeyPaths(
       WHERE mce.ParentId IS NULL
     `;
 
-    return imodelAccess.createQueryReader({ ctes, ecsql }, { rowFormat: "Indexes", limit: "unbounded" });
+    return imodelAccess.createQueryReader(
+      { ctes, ecsql },
+      { rowFormat: "Indexes", limit: "unbounded", restartToken: `ModelsTreeDefinition/${Guid.createValue()}/geometric-element-paths` },
+    );
   }).pipe(
     releaseMainThreadOnItemsCount(300),
     map((row) => parseQueryRow(row, groupInfos, separator, hierarchyConfig.elementClassSpecification)),
@@ -681,7 +686,7 @@ function createGeometricElementInstanceKeyPaths(
       from(idsCache.createModelInstanceKeyPaths(modelId)).pipe(
         mergeAll(),
         map((modelPath) => {
-          // We dont want to modify the original path, we create a copy that we can modify
+          // We don't want to modify the original path, we create a copy that we can modify
           const newModelPath = [...modelPath];
           newModelPath.pop(); // model is already included in the element hierarchy path
           const path = [...newModelPath, ...elementHierarchyPath];
@@ -858,7 +863,7 @@ async function createInstanceKeyPathsFromInstanceLabel(
       `,
       bindings: [{ type: "string", value: props.label.replace(/[%_\\]/g, "\\$&") }],
     },
-    { rowFormat: "Indexes", restartToken: "tree-widget/models-tree/filter-by-label-query", limit: props.limit },
+    { rowFormat: "Indexes", restartToken: `ModelsTreeDefinition/${Guid.createValue()}/filter-by-label`, limit: props.limit },
   );
 
   const targetKeys = new Array<InstanceKey>();

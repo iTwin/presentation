@@ -29,7 +29,7 @@ describe("PropertyDataProvider", async () => {
     await terminate();
   });
 
-  const runTests = (configName: string, setup: (proider: PresentationPropertyDataProvider) => void) => {
+  const runTests = (configName: string, setup: (provider: PresentationPropertyDataProvider) => void) => {
     const createProvider = (props: PresentationPropertyDataProviderProps) => {
       const provider = new PresentationPropertyDataProvider(props);
       setup(provider);

@@ -87,6 +87,7 @@ describe("TreeDataProvider", async () => {
     if (nodes.length === 1) {
       const node = nodes[0];
       assert(isPresentationInfoTreeNodeItem(node));
+      // cspell:disable-next-line
       expect(node.message).to.eq("Èrrór ¢rëätíñg thë hìérärçhý lévêl");
     } else {
       // presentation-frontend@3.6 returns an empty list in case of invalid page options
@@ -123,6 +124,7 @@ describe("TreeDataProvider", async () => {
     if (nodes.length === 1) {
       const node = nodes[0];
       assert(isPresentationInfoTreeNodeItem(node));
+      // cspell:disable-next-line
       expect(node.message).to.eq("Èrrór ¢rëätíñg thë hìérärçhý lévêl");
     } else {
       // presentation-frontend@3.6 returns an empty list in case of invalid page options

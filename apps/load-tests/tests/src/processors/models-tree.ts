@@ -17,6 +17,8 @@ import {
 import RULESET_ModelsTree from "../rulesets/ModelsTree-GroupedByClass.PresentationRuleSet.json";
 import { doRequest, getCurrentIModelName, loadNodes, openIModelConnectionIfNeeded } from "./common";
 
+/* eslint-disable @typescript-eslint/no-deprecated */
+
 export function initScenario(context: ScenarioContext, _events: EventEmitter, next: Next) {
   context.vars.tooLargeHierarchyLevelsCount = 0;
   void openIModelConnectionIfNeeded().then(() => {
