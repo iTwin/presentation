@@ -443,7 +443,7 @@ function createRssHierarchyProvider(): HierarchyProvider & { getSearchedPaths: (
   return {
     hierarchyChanged: new BeEvent(),
 
-    async getSearchedPaths(searchString: string): Promise<HierarchySearchPath[]> {
+    async getSearchPaths(searchString: string): Promise<HierarchySearchPath[]> {
       const feed = await getFeed();
       if (!feed) {
         return [];
