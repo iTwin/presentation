@@ -69,19 +69,19 @@ function createIModelAccess(imodel: IModelConnection) {
 const RSS_PROVIDER = createRssHierarchyProvider();
 
 function Tree({ imodelAccess, height, width, treeLabel }: { imodelAccess: IModelAccess; height: number; width: number; treeLabel: string }) {
-  const [search, setsearch] = useState("");
+  const [searchText, setSearchText] = useState("");
   const [componentId] = useState(() => Guid.createValue());
   const getSearchPaths = useMemo<UseTreeProps["getSearchPaths"]>(() => {
     return async () => {
-      if (!search) {
+      if (!searchText) {
         return undefined;
       }
       return Promise.all([
-        getModelsHierarchySearchPaths({ imodelAccess, search, componentId, componentName: "MultiDataSourceTree" }),
-        RSS_PROVIDER.getSearchedPaths(search),
+        getModelsHierarchySearchPaths({ imodelAccess, search: searchText, componentId, componentName: "MultiDataSourceTree" }),
+        RSS_PROVIDER.getSearchedPaths(searchText),
       ]).then(([imodelPaths, rssPaths]) => [...imodelPaths, ...rssPaths]);
     };
-  }, [search, imodelAccess, componentId]);
+  }, [searchText, imodelAccess, componentId]);
 
   const unifiedSelectionContext = useUnifiedSelectionContext();
   if (!unifiedSelectionContext) {
@@ -131,10 +131,10 @@ function Tree({ imodelAccess, height, width, treeLabel }: { imodelAccess: IModel
       );
     }
 
-    if (treeProps.treeRendererProps.rootNodes.length === 0 && search) {
+    if (treeProps.treeRendererProps.rootNodes.length === 0 && searchText) {
       return (
         <Flex alignItems="center" justifyContent="center" flexDirection="column" style={{ height: "100%" }}>
-          <Text isMuted>There are no nodes matching search text {search}</Text>
+          <Text isMuted>There are no nodes matching search text {searchText}</Text>
         </Flex>
       );
     }
@@ -181,7 +181,7 @@ function Tree({ imodelAccess, height, width, treeLabel }: { imodelAccess: IModel
   return (
     <Flex flexDirection="column" style={{ width, height }}>
       <Flex style={{ width: "100%", padding: "0.5rem" }}>
-        <DebouncedSearchBox onChange={setsearch} />
+        <DebouncedSearchBox onChange={setSearchText} />
       </Flex>
       {renderContent()}
       {renderLoadingOverlay()}

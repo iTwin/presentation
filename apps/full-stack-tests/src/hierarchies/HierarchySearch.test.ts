@@ -122,7 +122,7 @@ describe("Hierarchies", () => {
           provider: createProvider({
             imodel,
             hierarchy,
-            searchedNodePaths: [{ path: [keys.rootSubject, { type: "generic", id: "custom" }, keys.childSubject2], options: { autoExpand: true } }],
+            hierarchySearchPaths: [{ path: [keys.rootSubject, { type: "generic", id: "custom" }, keys.childSubject2], options: { autoExpand: true } }],
           }),
           expect: [
             NodeValidators.createForInstanceNode({
@@ -205,7 +205,7 @@ describe("Hierarchies", () => {
           provider: createProvider({
             imodel,
             hierarchy,
-            searchedNodePaths: [{ path: [keys.rootSubject, { type: "generic", id: "custom2" }], options: { autoExpand: true } }],
+            hierarchySearchPaths: [{ path: [keys.rootSubject, { type: "generic", id: "custom2" }], options: { autoExpand: true } }],
           }),
           expect: [
             NodeValidators.createForInstanceNode({
@@ -283,7 +283,7 @@ describe("Hierarchies", () => {
           provider: createProvider({
             imodel,
             hierarchy,
-            searchedNodePaths: [
+            hierarchySearchPaths: [
               { path: [{ type: "generic", id: "custom2" }], options: { autoExpand: true } },
               {
                 path: [
@@ -387,7 +387,7 @@ describe("Hierarchies", () => {
           provider: createProvider({
             imodel,
             hierarchy,
-            searchedNodePaths: [
+            hierarchySearchPaths: [
               { path: [keys.childSubject1, keys.childSubject3], options: { autoExpand: true } },
               { path: [keys.childSubject4, keys.childSubject1, keys.childSubject2], options: { autoExpand: true } },
             ],
@@ -480,7 +480,7 @@ describe("Hierarchies", () => {
           provider: createProvider({
             imodel,
             hierarchy,
-            searchedNodePaths: [
+            hierarchySearchPaths: [
               { path: [keys.childSubject2], options: { autoExpand: true } },
               { path: [keys.childSubject2, keys.childSubject22, keys.childSubject222], options: { autoExpand: true } },
             ],
@@ -600,7 +600,7 @@ describe("Hierarchies", () => {
           provider: createProvider({
             imodel,
             hierarchy,
-            searchedNodePaths: [{ path: [keys.rootSubject, { type: "generic", id: "custom" }, keys.childSubject2], options: { autoExpand: true } }],
+            hierarchySearchPaths: [{ path: [keys.rootSubject, { type: "generic", id: "custom" }, keys.childSubject2], options: { autoExpand: true } }],
           }),
           expect: [
             NodeValidators.createForInstanceNode({
@@ -695,7 +695,7 @@ describe("Hierarchies", () => {
         };
 
         await validateHierarchy({
-          provider: createProvider({ imodel, hierarchy, searchedNodePaths: [[keys.rootSubject, { type: "generic", id: "custom" }]] }),
+          provider: createProvider({ imodel, hierarchy, hierarchySearchPaths: [[keys.rootSubject, { type: "generic", id: "custom" }]] }),
           expect: [
             NodeValidators.createForInstanceNode({
               instanceKeys: [keys.rootSubject],
@@ -783,7 +783,7 @@ describe("Hierarchies", () => {
         };
 
         await validateHierarchy({
-          provider: createProvider({ imodel, hierarchy, searchedNodePaths: [[keys.rootSubject, keys.childSubject1]] }),
+          provider: createProvider({ imodel, hierarchy, hierarchySearchPaths: [[keys.rootSubject, keys.childSubject1]] }),
           expect: [
             NodeValidators.createForInstanceNode({
               instanceKeys: [keys.rootSubject],
@@ -876,7 +876,7 @@ describe("Hierarchies", () => {
               provider: createProvider({
                 imodel,
                 hierarchy,
-                searchedNodePaths: [
+                hierarchySearchPaths: [
                   { path: [x], options: { autoExpand: true } },
                   { path: [x, y], options: { autoExpand: true } },
                 ],
@@ -971,7 +971,7 @@ describe("Hierarchies", () => {
               provider: createProvider({
                 imodel,
                 hierarchy,
-                searchedNodePaths: [
+                hierarchySearchPaths: [
                   { path: [x], options: { autoExpand: true } },
                   { path: [x, y1], options: { autoExpand: true } },
                 ],
@@ -1045,7 +1045,7 @@ describe("Hierarchies", () => {
           provider: createProvider({
             imodel,
             hierarchy,
-            searchedNodePaths: keys.elements.map((elementKey) => ({
+            hierarchySearchPaths: keys.elements.map((elementKey) => ({
               path: [rootNodeKey, elementKey],
               options: {
                 autoExpand: {
@@ -1117,7 +1117,7 @@ describe("Hierarchies", () => {
           provider: createProvider({
             imodel,
             hierarchy,
-            searchedNodePaths: [
+            hierarchySearchPaths: [
               {
                 path: [rootNodeKey, keys.rootElement, keys.middleElement, keys.childElement],
                 options: {
@@ -1216,7 +1216,7 @@ describe("Hierarchies", () => {
           provider: createProvider({
             imodel,
             hierarchy,
-            searchedNodePaths: [
+            hierarchySearchPaths: [
               { path: [rootNodeKey, keys.elements[0]], options: { autoExpand: true } },
               ...keys.elements.map((elementKey) => ({
                 path: [rootNodeKey, elementKey],
@@ -1337,7 +1337,7 @@ describe("Hierarchies", () => {
             provider: createProvider({
               imodel,
               hierarchy,
-              searchedNodePaths: [
+              hierarchySearchPaths: [
                 {
                   path: [rootNodeKey, elementKey],
                   options: { autoExpand: autoExpandOptions },
@@ -1386,7 +1386,7 @@ describe("Hierarchies", () => {
             provider: createProvider({
               imodel,
               hierarchy,
-              searchedNodePaths: [
+              hierarchySearchPaths: [
                 {
                   path: [rootNodeKey, elementKey],
                   options: { autoExpand: autoExpandOptions },
@@ -1435,7 +1435,7 @@ describe("Hierarchies", () => {
             provider: createProvider({
               imodel,
               hierarchy,
-              searchedNodePaths: [
+              hierarchySearchPaths: [
                 {
                   path: [rootNodeKey, elementKey],
                   options: { autoExpand: autoExpandOptions },
@@ -1481,7 +1481,7 @@ describe("Hierarchies", () => {
             provider: createProvider({
               imodel,
               hierarchy,
-              searchedNodePaths: [
+              hierarchySearchPaths: [
                 {
                   path: [rootNodeKey, elementKey],
                   options: { autoExpand: true },

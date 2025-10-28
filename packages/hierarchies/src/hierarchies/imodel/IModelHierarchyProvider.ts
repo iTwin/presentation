@@ -251,7 +251,7 @@ class IModelHierarchyProviderImpl implements HierarchyProvider {
     this._activeHierarchyDefinition = new SearchHierarchyDefinition({
       imodelAccess: this._imodelAccess,
       source: this._sourceHierarchyDefinition,
-      nodeIdentifierPaths: props.paths,
+      targetPaths: props.paths,
     });
     this.invalidateHierarchyCache("Hierarchy search set");
     this._dispose.next();
@@ -299,7 +299,7 @@ class IModelHierarchyProviderImpl implements HierarchyProvider {
   }
 
   private createSourceNodesObservable(
-    props: DefineHierarchyLevelProps & { hierarchyLevelSizeLimit?: number | "unbounded"; searchedInstanceKeys?: InstanceKey[] } & RequestContextProp,
+    props: DefineHierarchyLevelProps & { hierarchyLevelSizeLimit?: number | "unbounded"; targetInstanceKeys?: InstanceKey[] } & RequestContextProp,
   ): SourceNodesObservable {
     // pipe definitions to nodes and put "share replay" on it
     return this.createHierarchyLevelDefinitionsObservable(props).pipe(
@@ -309,7 +309,7 @@ class IModelHierarchyProviderImpl implements HierarchyProvider {
         }
         return this._queryScheduler.scheduleSubscription(
           of(def.query).pipe(
-            map((query) => searchQueryByInstanceKeys(query, props.searchedInstanceKeys)),
+            map((query) => createInstanceKeysFilteredQuery(query, props.targetInstanceKeys)),
             mergeMap((query) =>
               readNodes({
                 queryExecutor: this._imodelAccess,
@@ -453,12 +453,12 @@ class IModelHierarchyProviderImpl implements HierarchyProvider {
 
     // if we don't find an entry for a grouping node, we load its instances by getting a query and applying
     // a search based on grouped instance keys
-    let searchedInstanceKeys: InstanceKey[] | undefined;
+    let targetInstanceKeys: InstanceKey[] | undefined;
     let parentNonGroupingNode: ParentHierarchyNode<NonGroupingHierarchyNode> | undefined;
     if (parentNode) {
       if (HierarchyNode.isGroupingNode(parentNode)) {
         parentNonGroupingNode = parentNode.nonGroupingAncestor;
-        searchedInstanceKeys = parentNode.groupedInstanceKeys;
+        targetInstanceKeys = parentNode.groupedInstanceKeys;
       } else {
         // not sure why type checker doesn't pick this up
         assert(HierarchyNode.isGeneric(parentNode) || HierarchyNode.isInstancesNode(parentNode));
@@ -469,7 +469,7 @@ class IModelHierarchyProviderImpl implements HierarchyProvider {
     const nonGroupingNodeChildrenRequestProps = {
       ...restProps,
       parentNode: parentNonGroupingNode,
-      ...(searchedInstanceKeys ? { searchedInstanceKeys } : undefined),
+      ...(targetInstanceKeys ? { targetInstanceKeys } : undefined),
     };
     const value = { observable: this.createSourceNodesObservable(nonGroupingNodeChildrenRequestProps), processingStatus: "none" as const };
     this._nodesCache?.set(nonGroupingNodeChildrenRequestProps, value);
@@ -707,20 +707,20 @@ function createParentNodeKeysList(parentNode: ParentHierarchyNode | undefined) {
   return [...parentNode.parentKeys, parentNode.key];
 }
 
-function searchQueryByInstanceKeys(query: ECSqlQueryDef, searchedInstanceKeys: InstanceKey[] | undefined): ECSqlQueryDef {
-  if (!searchedInstanceKeys || !searchedInstanceKeys.length) {
+function createInstanceKeysFilteredQuery(query: ECSqlQueryDef, targetInstanceKeys: InstanceKey[] | undefined): ECSqlQueryDef {
+  if (!targetInstanceKeys || !targetInstanceKeys.length) {
     return query;
   }
   const MAX_ALLOWED_BINDINGS = 1000;
-  if (searchedInstanceKeys.length < MAX_ALLOWED_BINDINGS) {
+  if (targetInstanceKeys.length < MAX_ALLOWED_BINDINGS) {
     return {
       ...query,
       ecsql: `
         SELECT *
         FROM (${query.ecsql}) q
-        WHERE q.ECInstanceId IN (${searchedInstanceKeys.map(() => "?").join(",")})
+        WHERE q.ECInstanceId IN (${targetInstanceKeys.map(() => "?").join(",")})
       `,
-      bindings: [...(query.bindings ?? []), ...searchedInstanceKeys.map((k): ECSqlBinding => ({ type: "id", value: k.id }))],
+      bindings: [...(query.bindings ?? []), ...targetInstanceKeys.map((k): ECSqlBinding => ({ type: "id", value: k.id }))],
     };
   }
   /* c8 ignore start */
@@ -731,7 +731,7 @@ function searchQueryByInstanceKeys(query: ECSqlQueryDef, searchedInstanceKeys: I
       FROM (${query.ecsql}) q
       WHERE InVirtualSet(?, q.ECInstanceId)
     `,
-    bindings: [...(query.bindings ?? []), { type: "idset", value: searchedInstanceKeys.map((k) => k.id) }],
+    bindings: [...(query.bindings ?? []), { type: "idset", value: targetInstanceKeys.map((k) => k.id) }],
   };
   /* c8 ignore end */
 }

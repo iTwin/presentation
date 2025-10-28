@@ -799,7 +799,7 @@ describe("createIModelHierarchyProvider", () => {
           label: "test label",
           children: false,
           search: {
-            searchedChildrenIdentifierPaths: [{ path: [{ className: "c.d", id: "0x456" }], options: undefined }],
+            childrenTargetPaths: [{ path: [{ className: "c.d", id: "0x456" }], options: undefined }],
           },
         },
       ]);
@@ -883,7 +883,7 @@ describe("createIModelHierarchyProvider", () => {
       });
 
       // request non-searched root nodes
-      const unsearchedRootNodeIter = provider.getNodes({ parentNode: undefined }).next();
+      const defaultRootNodeIter = provider.getNodes({ parentNode: undefined }).next();
       await waitFor(() => expect(imodelAccess.createQueryReader).to.be.calledOnce);
 
       // set the search and request searched nodes AFTER the root node query has been executed
@@ -914,8 +914,8 @@ describe("createIModelHierarchyProvider", () => {
       });
 
       // setting instance search while a nodes request is in progress cancels the request - ensure we get undefined
-      const unsearchedRootNode = (await unsearchedRootNodeIter).value;
-      expect(unsearchedRootNode).to.be.undefined;
+      const defaultRootNode = (await defaultRootNodeIter).value;
+      expect(defaultRootNode).to.be.undefined;
 
       // ensure the searched node resolves with `children: false` and has searching props
       const searchedRootNode = (await searchedRootNodeIter).value;
@@ -926,7 +926,7 @@ describe("createIModelHierarchyProvider", () => {
         },
         children: false,
         search: {
-          searchedChildrenIdentifierPaths: [{ path: [{ className: "c.d", id: "0x456" }], options: undefined }],
+          childrenTargetPaths: [{ path: [{ className: "c.d", id: "0x456" }], options: undefined }],
         },
       });
 
@@ -977,8 +977,8 @@ describe("createIModelHierarchyProvider", () => {
         },
       });
 
-      // request non-searched root nodes
-      const unsearchedRootNodeIter = provider.getNodes({ parentNode: undefined }).next();
+      // request all root nodes
+      const defaultRootNodeIter = provider.getNodes({ parentNode: undefined }).next();
       await waitFor(() => expect(imodelAccess.createQueryReader).to.be.calledOnce);
 
       // set the search and request searched nodes AFTER the root node query has been executed
@@ -998,8 +998,8 @@ describe("createIModelHierarchyProvider", () => {
       });
 
       // setting instance search while a nodes request is in progress cancels the request - ensure we get undefined
-      const unsearchedRootNode = (await unsearchedRootNodeIter).value;
-      expect(unsearchedRootNode).to.be.undefined;
+      const defaultRootNode = (await defaultRootNodeIter).value;
+      expect(defaultRootNode).to.be.undefined;
 
       // ensure we do get the searched grouping node
       const searchedRootNode = (await searchedRootNodeIter).value;

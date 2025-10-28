@@ -33,15 +33,15 @@ export class HierarchyCache<T> {
   private createCacheKeys(
     props: Omit<GetHierarchyNodesProps, "parentNode"> & {
       parentNode: { key: HierarchyNodeKey; parentKeys: HierarchyNodeKey[] } | undefined;
-      searchedInstanceKeys?: InstanceKey[];
+      targetInstanceKeys?: InstanceKey[];
     },
   ) {
     function createVariationKey() {
-      const { instanceFilter, hierarchyLevelSizeLimit, searchedInstanceKeys } = props;
-      if (instanceFilter === undefined && hierarchyLevelSizeLimit === undefined && searchedInstanceKeys === undefined) {
+      const { instanceFilter, hierarchyLevelSizeLimit, targetInstanceKeys } = props;
+      if (instanceFilter === undefined && hierarchyLevelSizeLimit === undefined && targetInstanceKeys === undefined) {
         return undefined;
       }
-      return JSON.stringify({ instanceFilter, hierarchyLevelSizeLimit, searchedInstanceKeys });
+      return JSON.stringify({ instanceFilter, hierarchyLevelSizeLimit, targetInstanceKeys });
     }
 
     if (!props.parentNode) {

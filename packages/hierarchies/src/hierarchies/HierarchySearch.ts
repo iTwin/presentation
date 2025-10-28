@@ -166,9 +166,9 @@ function extractSearchPropsInternal(
   if (!parentNode) {
     return rootLevelSearchProps ? { searchedNodePaths: rootLevelSearchProps, hasSearchTargetAncestor: false } : undefined;
   }
-  return parentNode.search?.searchedChildrenIdentifierPaths
+  return parentNode.search?.childrenTargetPaths
     ? {
-        searchedNodePaths: parentNode.search.searchedChildrenIdentifierPaths,
+        searchedNodePaths: parentNode.search.childrenTargetPaths,
         hasSearchTargetAncestor: !!parentNode.search.hasSearchTargetAncestor || !!parentNode.search.isSearchTarget,
       }
     : undefined;
@@ -293,7 +293,7 @@ export function createHierarchySearchHelper(
 type NormalizedSearchPath = ReturnType<(typeof HierarchySearchPath)["normalize"]>;
 
 class MatchingSearchPathsReducer {
-  private _searchedChildrenIdentifierPaths = new Array<NormalizedSearchPath>();
+  private _childrenTargetPaths = new Array<NormalizedSearchPath>();
   private _isSearchTarget = false;
   private _searchTargetOptions = undefined as HierarchySearchPathOptions | undefined;
   private _autoExpandOption: HierarchySearchPathOptions["autoExpand"] = false;
@@ -306,7 +306,7 @@ class MatchingSearchPathsReducer {
       this._isSearchTarget = true;
       this._searchTargetOptions = HierarchySearchPath.mergeOptions(this._searchTargetOptions, options);
     } else if (path.length > 1) {
-      this._searchedChildrenIdentifierPaths.push({ path: path.slice(1), options });
+      this._childrenTargetPaths.push({ path: path.slice(1), options });
       this._autoExpandOption = HierarchySearchPathOptions.mergeAutoExpandOptions(options?.autoExpand, this._autoExpandOption);
     }
   }
@@ -334,12 +334,12 @@ class MatchingSearchPathsReducer {
 
   public getNodeProps(parentNode: Pick<NonGroupingHierarchyNode, "parentKeys"> | undefined): Pick<HierarchyNode, "autoExpand" | "search"> {
     return {
-      ...(this._hasSearchTargetAncestor || this._isSearchTarget || this._searchedChildrenIdentifierPaths.length > 0
+      ...(this._hasSearchTargetAncestor || this._isSearchTarget || this._childrenTargetPaths.length > 0
         ? {
             search: {
               ...(this._hasSearchTargetAncestor ? { hasSearchTargetAncestor: true } : undefined),
               ...(this._isSearchTarget ? { isSearchTarget: true, searchTargetOptions: this._searchTargetOptions } : undefined),
-              ...(this._searchedChildrenIdentifierPaths.length > 0 ? { searchedChildrenIdentifierPaths: this._searchedChildrenIdentifierPaths } : undefined),
+              ...(this._childrenTargetPaths.length > 0 ? { childrenTargetPaths: this._childrenTargetPaths } : undefined),
             },
           }
         : undefined),

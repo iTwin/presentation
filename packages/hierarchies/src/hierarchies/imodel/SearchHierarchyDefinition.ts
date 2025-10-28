@@ -25,7 +25,7 @@ import { defaultNodesParser } from "./TreeNodesReader.js";
 interface SearchHierarchyDefinitionProps {
   imodelAccess: ECClassHierarchyInspector & { imodelKey: string };
   source: RxjsHierarchyDefinition;
-  nodeIdentifierPaths: HierarchySearchPath[];
+  targetPaths: HierarchySearchPath[];
   nodesParser?: RxjsNodeParser;
 }
 
@@ -33,13 +33,13 @@ interface SearchHierarchyDefinitionProps {
 export class SearchHierarchyDefinition implements RxjsHierarchyDefinition {
   private _imodelAccess: ECClassHierarchyInspector & { imodelKey: string };
   private _source: RxjsHierarchyDefinition;
-  private _nodeIdentifierPaths: HierarchySearchPath[];
+  private _targetPaths: HierarchySearchPath[];
   private _nodesParser: RxjsNodeParser;
 
   public constructor(props: SearchHierarchyDefinitionProps) {
     this._imodelAccess = props.imodelAccess;
     this._source = props.source;
-    this._nodeIdentifierPaths = props.nodeIdentifierPaths;
+    this._targetPaths = props.targetPaths;
     this._nodesParser = props.nodesParser ?? this._source.parseNode ?? ((row) => of(defaultNodesParser(row)));
   }
 
@@ -79,7 +79,7 @@ export class SearchHierarchyDefinition implements RxjsHierarchyDefinition {
             return of(parsedNode);
           }
           const rowInstanceKey = { className: row[ECSQL_COLUMN_NAME_FilterClassName], id: row[ECSQL_COLUMN_NAME_FilterECInstanceId] };
-          const filteringHelper = createHierarchySearchHelper(this._nodeIdentifierPaths, parentNode);
+          const filteringHelper = createHierarchySearchHelper(this._targetPaths, parentNode);
           const nodeExtraPropsPossiblyPromise = filteringHelper.createChildNodePropsAsync({
             pathMatcher: (identifier): boolean | Promise<boolean> => {
               if (identifier.id !== rowInstanceKey.id) {
@@ -119,7 +119,7 @@ export class SearchHierarchyDefinition implements RxjsHierarchyDefinition {
   public defineHierarchyLevel(props: DefineHierarchyLevelProps): Observable<HierarchyLevelDefinition> {
     const sourceDefinitions = this._source.defineHierarchyLevel(props);
 
-    const filteringHelper = createHierarchySearchHelper(this._nodeIdentifierPaths, props.parentNode);
+    const filteringHelper = createHierarchySearchHelper(this._targetPaths, props.parentNode);
     const childNodeFilteringIdentifiers = filteringHelper.getChildNodeSearchIdentifiers();
     if (!childNodeFilteringIdentifiers) {
       return sourceDefinitions;
@@ -226,9 +226,9 @@ export const ECSQL_COLUMN_NAME_FilterECInstanceId = "FilterECInstanceId";
 // eslint-disable-next-line @typescript-eslint/naming-convention
 export const ECSQL_COLUMN_NAME_FilterClassName = "FilterClassName";
 
-function getClassECInstanceIds(searchedInstanceKeys: InstanceKey[]) {
+function getClassECInstanceIds(targetInstanceKeys: InstanceKey[]) {
   const classNameECInstanceIds = new Map<string, Id64String[]>();
-  for (const key of searchedInstanceKeys) {
+  for (const key of targetInstanceKeys) {
     const entry = classNameECInstanceIds.get(key.className);
     if (entry === undefined) {
       classNameECInstanceIds.set(key.className, [key.id]);
@@ -240,8 +240,8 @@ function getClassECInstanceIds(searchedInstanceKeys: InstanceKey[]) {
 }
 
 /** @internal */
-export function applyECInstanceIdsFilter(def: InstanceNodesQueryDefinition, searchedInstanceKeys: InstanceKey[]): InstanceNodesQueryDefinition {
-  const instanceIdsByClass = getClassECInstanceIds(searchedInstanceKeys);
+export function applyECInstanceIdsFilter(def: InstanceNodesQueryDefinition, targetInstanceKeys: InstanceKey[]): InstanceNodesQueryDefinition {
+  const instanceIdsByClass = getClassECInstanceIds(targetInstanceKeys);
   return {
     ...def,
     query: {
@@ -306,12 +306,12 @@ function shouldExpandGroupingNode(node: ProcessedGroupingHierarchyNode) {
       return true;
     }
 
-    if (!child.search.searchedChildrenIdentifierPaths) {
+    if (!child.search.childrenTargetPaths) {
       /* c8 ignore next */
       continue;
     }
 
-    for (const path of child.search.searchedChildrenIdentifierPaths) {
+    for (const path of child.search.childrenTargetPaths) {
       if ("path" in path && getAutoExpandAsTrueFalse(path.options?.autoExpand, numberOfNonGroupingParentNodes, node.parentKeys.length)) {
         return true;
       }

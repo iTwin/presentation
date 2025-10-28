@@ -2,7 +2,6 @@
  * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
-/* eslint-disable no-duplicate-imports */
 
 import { expect } from "chai";
 import { insertPhysicalElement, insertPhysicalModelWithPartition, insertSpatialCategory } from "presentation-test-utilities";
@@ -14,15 +13,15 @@ import { IModelConnection } from "@itwin/core-frontend";
 import { createIModelKey } from "@itwin/presentation-core-interop";
 // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.HierarchyFiltering.HierarchyDefinitionImports
 import {
+  createIModelHierarchyProvider,
   createNodesQueryClauseFactory,
   GroupingHierarchyNode,
   HierarchyDefinition,
   HierarchyNode,
   HierarchyNodeIdentifiersPath,
-  createIModelHierarchyProvider,
   HierarchySearchPath,
 } from "@itwin/presentation-hierarchies";
-import { createBisInstanceLabelSelectClauseFactory, InstanceKey, ECSqlBinding, ECSql, ECSqlQueryDef } from "@itwin/presentation-shared";
+import { createBisInstanceLabelSelectClauseFactory, ECSql, ECSqlBinding, ECSqlQueryDef, InstanceKey } from "@itwin/presentation-shared";
 // __PUBLISH_EXTRACT_END__
 import { buildIModel } from "../../IModelUtils.js";
 import { initialize, terminate } from "../../IntegrationTests.js";
@@ -140,7 +139,7 @@ describe("Hierarchies", () => {
         // Define a function that returns `HierarchyNodeIdentifiersPath[]` based on given search string. In this case, we run
         // a query to find matching elements by their `UserLabel` property. Then, we construct paths to the root element using recursive
         // CTE. Finally, we return the paths in reverse order to start from the root element.
-        async function createFilteredNodeIdentifierPaths(searchStrings: string[]): Promise<HierarchyNodeIdentifiersPath[]> {
+        async function createFilteredTargetPaths(searchStrings: string[]): Promise<HierarchyNodeIdentifiersPath[]> {
           const query: ECSqlQueryDef = {
             ctes: [
               `MatchingElements(Path, ParentId) AS (
@@ -170,7 +169,7 @@ describe("Hierarchies", () => {
           return result;
         }
         // Find paths to elements whose label contains "C" or "E"
-        const filterPaths = await createFilteredNodeIdentifierPaths(["C", "E"]);
+        const filterPaths = await createFilteredTargetPaths(["C", "E"]);
         expect(filterPaths).to.deep.eq([
           // We expect to find two paths A -> B -> C and A -> E
           [elementKeys.a, elementKeys.e],
@@ -212,7 +211,7 @@ describe("Hierarchies", () => {
         // Define a function that returns `HierarchyNodeIdentifiersPath[]` based on given target element IDs. In this case, we run
         // a query to find matching elements by their `ECInstanceId` property. Then, we construct paths to the root element using recursive
         // CTE. Finally, we return the paths in reverse order to start from the root element.
-        async function createFilteredNodeIdentifierPaths(targetElementIds: Id64String[]): Promise<HierarchyNodeIdentifiersPath[]> {
+        async function createFilteredTargetPaths(targetElementIds: Id64String[]): Promise<HierarchyNodeIdentifiersPath[]> {
           const query: ECSqlQueryDef = {
             ctes: [
               `MatchingElements(Path, ParentId) AS (
@@ -242,7 +241,7 @@ describe("Hierarchies", () => {
           return result;
         }
         // Find paths to target elements "C" and "E"
-        const filterPaths = await createFilteredNodeIdentifierPaths([elementIds.c, elementIds.e]);
+        const filterPaths = await createFilteredTargetPaths([elementIds.c, elementIds.e]);
         expect(filterPaths).to.deep.eq([
           // We expect to find two paths A -> B -> C and A -> E
           [elementKeys.a, elementKeys.e],

@@ -33,7 +33,7 @@ export function createProvider(
         imodelChanged?: Event<() => void>;
         hierarchy: HierarchyDefinition;
         localizedStrings?: Props<typeof createIModelHierarchyProvider>["localizedStrings"];
-        searchedNodePaths?: HierarchySearchPaths;
+        hierarchySearchPaths?: HierarchySearchPaths;
         queryCacheSize?: number;
       }
     | {
@@ -44,11 +44,11 @@ export function createProvider(
     imodelChanged?: Event<() => void>;
     hierarchy: HierarchyDefinition;
     localizedStrings?: Props<typeof createIModelHierarchyProvider>["localizedStrings"];
-    searchedNodePaths?: HierarchySearchPaths;
+    hierarchySearchPaths?: HierarchySearchPaths;
     queryCacheSize?: number;
   },
 ) {
-  const { imodelChanged, hierarchy, localizedStrings, searchedNodePaths, queryCacheSize } = props;
+  const { imodelChanged, hierarchy, localizedStrings, hierarchySearchPaths, queryCacheSize } = props;
   const formatter = "imodel" in props && props.formatterFactory ? props.formatterFactory(createSchemaContext(props.imodel)) : undefined;
   return createIModelHierarchyProvider({
     imodelAccess: "imodelAccess" in props ? props.imodelAccess : createIModelAccess(props.imodel),
@@ -56,7 +56,7 @@ export function createProvider(
     hierarchyDefinition: hierarchy,
     formatter,
     localizedStrings,
-    search: searchedNodePaths ? { paths: searchedNodePaths } : undefined,
+    search: hierarchySearchPaths ? { paths: hierarchySearchPaths } : undefined,
     queryCacheSize: queryCacheSize ?? 0,
   });
 }

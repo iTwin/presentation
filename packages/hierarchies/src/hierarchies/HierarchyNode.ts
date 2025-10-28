@@ -25,7 +25,7 @@ export type HierarchyNodeSearchProps = {
   /** If set to true, then one of the ancestor nodes in the hierarchy is the search target. */
   hasSearchTargetAncestor?: boolean;
   /** Paths to node's children that are search targets. */
-  searchedChildrenIdentifierPaths?: HierarchySearchPath[];
+  childrenTargetPaths?: HierarchySearchPath[];
 } & (
   | {
       /** Whether or not this node is a search target. */
