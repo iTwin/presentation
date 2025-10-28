@@ -391,7 +391,7 @@ describe("Hierarchies", () => {
         // A function that matches given string against authors and books, and returns hierarchy paths
         // from root to the matched node. This function must be aware of the hierarchy structure to know what paths
         // to create.
-        async function createFilterPaths(filter: string): Promise<HierarchySearchPath[]> {
+        async function createHierarchySearchPaths(searchText: string): Promise<HierarchySearchPath[]> {
           const results: HierarchySearchPath[] = [];
           const [matchingAuthors, matchingBooks] = await Promise.all([booksService.getAuthors({ name: filter }), booksService.getBooks({ title: filter })]);
           for (const author of matchingAuthors) {
