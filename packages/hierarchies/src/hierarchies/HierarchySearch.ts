@@ -134,26 +134,6 @@ export namespace HierarchySearchPath {
   }
 }
 
-/**
- * An utility that extracts Search properties from given root level Search props or
- * the parent node. Returns `undefined` if Search props are not present.
- * @public
- * @deprecated in 1.3. Use `createHierarchySearchHelper` instead.
- */
-/* c8 ignore start */
-export function extractSearchProps(
-  rootLevelSearchProps: HierarchySearchPath[],
-  parentNode: Pick<NonGroupingHierarchyNode, "search"> | undefined,
-):
-  | {
-      searchedNodePaths: HierarchySearchPath[];
-      hasSearchTargetAncestor: boolean;
-    }
-  | undefined {
-  return extractSearchPropsInternal(rootLevelSearchProps, parentNode);
-}
-/* c8 ignore end */
-
 function extractSearchPropsInternal(
   rootLevelSearchProps: HierarchySearchPath[] | undefined,
   parentNode: Pick<NonGroupingHierarchyNode, "search"> | undefined,
