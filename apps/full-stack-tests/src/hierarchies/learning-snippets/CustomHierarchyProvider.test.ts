@@ -11,30 +11,27 @@ import { collect } from "presentation-test-utilities";
 import * as sinon from "sinon";
 // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.CustomHierarchyProviders.Imports
 import { BeEvent } from "@itwin/core-bentley";
-// __PUBLISH_EXTRACT_END__
-// __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.CustomHierarchyProviders.HierarchyLevelFilteringProviderImports
-import { GenericInstanceFilter, GenericInstanceFilterRule, GenericInstanceFilterRuleGroup } from "@itwin/core-common";
+import { HierarchyNode, HierarchyProvider } from "@itwin/presentation-hierarchies";
+import { IPrimitiveValueFormatter, Props } from "@itwin/presentation-shared";
 // __PUBLISH_EXTRACT_END__
 // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.CustomHierarchyProviders.IModelProviderImports
 import { BriefcaseConnection, IModelConnection } from "@itwin/core-frontend";
 import { registerTxnListeners } from "@itwin/presentation-core-interop";
+// __PUBLISH_EXTRACT_END__
+// __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.CustomHierarchyProviders.FormattingProviderImports
 import {
-  HierarchyNode,
-  HierarchyProvider,
-  createHierarchySearchHelper,
-  GenericNodeKey,
-  HierarchyNodeIdentifier,
-  HierarchySearchPath,
-} from "@itwin/presentation-hierarchies";
-import {
-  Props,
   ConcatenatedValue,
   ConcatenatedValuePart,
   createDefaultValueFormatter,
-  EventListener,
-  IPrimitiveValueFormatter,
+    EventListener,
   julianToDateTime,
 } from "@itwin/presentation-shared";
+// __PUBLISH_EXTRACT_END__
+// __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.CustomHierarchyProviders.FilteringProviderImports
+import { createHierarchySearchHelper, GenericNodeKey, HierarchyNodeIdentifier, HierarchySearchPath } from "@itwin/presentation-hierarchies";
+// __PUBLISH_EXTRACT_END__
+// __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.CustomHierarchyProviders.HierarchyLevelFilteringProviderImports
+import { GenericInstanceFilter, GenericInstanceFilterRule, GenericInstanceFilterRuleGroup } from "@itwin/core-common";
 // __PUBLISH_EXTRACT_END__
 import { buildIModel } from "../../IModelUtils.js";
 import { initialize, terminate } from "../../IntegrationTests.js";
@@ -393,7 +390,7 @@ describe("Hierarchies", () => {
         // to create.
         async function createHierarchySearchPaths(searchText: string): Promise<HierarchySearchPath[]> {
           const results: HierarchySearchPath[] = [];
-          const [matchingAuthors, matchingBooks] = await Promise.all([booksService.getAuthors({ name: filter }), booksService.getBooks({ title: filter })]);
+          const [matchingAuthors, matchingBooks] = await Promise.all([booksService.getAuthors({ name: searchText }), booksService.getBooks({ title: searchText })]);
           for (const author of matchingAuthors) {
             results.push([{ type: "generic", id: `author:${author.key}` }]);
           }
@@ -482,7 +479,7 @@ describe("Hierarchies", () => {
         // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.CustomHierarchyProviders.FilteringProviderExample.TraverseFiltered1
         // Apply the filter "of" and traverse the filtered hierarchy. Notice that author node
         // of "The Fellowship of Ring" is included, even though it doesn't match the filter.
-        provider.setHierarchySearch({ paths: await createFilterPaths("of") });
+        provider.setHierarchySearch({ paths: await createHierarchySearchPaths("of") });
         await traverseHierarchy(provider);
         // Output:
         // J.R.R. Tolkien
@@ -503,7 +500,7 @@ describe("Hierarchies", () => {
         // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.CustomHierarchyProviders.FilteringProviderExample.TraverseFiltered2
         // Apply the filter "tom" and traverse the filtered hierarchy. Notice that all books
         // of "Tom Clancy" are included, even though they don't match the filter.
-        provider.setHierarchySearch({ paths: await createFilterPaths("tom") });
+        provider.setHierarchySearch({ paths: await createHierarchySearchPaths("tom") });
         await traverseHierarchy(provider);
         // Output:
         // Mark Twain

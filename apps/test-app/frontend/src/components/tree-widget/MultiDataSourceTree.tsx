@@ -78,7 +78,7 @@ function Tree({ imodelAccess, height, width, treeLabel }: { imodelAccess: IModel
       }
       return Promise.all([
         getModelsHierarchySearchPaths({ imodelAccess, search: searchText, componentId, componentName: "MultiDataSourceTree" }),
-        RSS_PROVIDER.getSearchedPaths(searchText),
+        RSS_PROVIDER.getSearchPaths(searchText),
       ]).then(([imodelPaths, rssPaths]) => [...imodelPaths, ...rssPaths]);
     };
   }, [searchText, imodelAccess, componentId]);
@@ -426,7 +426,7 @@ function getIcon(node: PresentationHierarchyNode): ReactElement | undefined {
   return undefined;
 }
 
-function createRssHierarchyProvider(): HierarchyProvider & { getSearchedPaths: (search: string) => Promise<HierarchySearchPath[]> } {
+function createRssHierarchyProvider(): HierarchyProvider & { getSearchPaths: (search: string) => Promise<HierarchySearchPath[]> } {
   let feedPromise: ReturnType<RssParser["parseURL"]> | undefined;
   async function getFeed() {
     if (!feedPromise) {
