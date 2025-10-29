@@ -64,7 +64,7 @@ describe("FilteringHierarchyDefinition", () => {
       expect(stub).to.be.calledOnceWithExactly(row);
     });
 
-    it("sets searched node attributes when parentNode is undefined", async () => {
+    it("sets node `search` attribute when `parentNode` is `undefined`", async () => {
       const sourceFactory = {} as unknown as RxjsHierarchyDefinition;
 
       const className = "TestSchema.TestName";

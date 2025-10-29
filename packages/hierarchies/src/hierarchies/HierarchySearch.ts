@@ -86,7 +86,7 @@ namespace HierarchySearchPathOptions {
 }
 
 /**
- * A path of hierarchy node identifiers for Search the hierarchy with additional options.
+ * A path of hierarchy node identifiers for searching the hierarchy with additional options.
  * @public
  */
 export type HierarchySearchPath = HierarchyNodeIdentifiersPath | { path: HierarchyNodeIdentifiersPath; options?: HierarchySearchPathOptions };
@@ -155,7 +155,7 @@ function extractSearchPropsInternal(
 }
 
 /**
- * Creates a set of utilities for making it easier to search the given hierarchy
+ * Creates a set of utilities for making it easier to implement hierarchy search for the given hierarchy
  * level.
  *
  * @public
@@ -168,7 +168,7 @@ export function createHierarchySearchHelper(
   const hasSearch = !!searchProps;
   return {
     /**
-     * Returns a flag indicating if the hierarchy level is searched.
+     * Returns a flag indicating if the hierarchy level is in a searched hierarchy.
      */
     hasSearch,
 
@@ -182,7 +182,7 @@ export function createHierarchySearchHelper(
 
     /**
      * Returns a list of hierarchy node identifiers that apply specifically for this
-     * hierarchy level. Returns `undefined` if Search is not applied to this level.
+     * hierarchy level. Returns `undefined` if search is not applied to this level.
      */
     getChildNodeSearchIdentifiers: () => {
       if (!hasSearch) {
@@ -195,9 +195,9 @@ export function createHierarchySearchHelper(
     },
 
     /**
-     * When a hierarchy node is created for a searched hierarchy level, it needs some attributes (e.g. `Search`
-     * and `autoExpand`) to be set based on the search paths and Search options. This function calculates
-     * these props for a child node based on its key or path matcher.
+     * When a hierarchy node is created for a hierarchy level that's affected by hierarchy search, it
+     * needs some attributes (e.g. `search` and `autoExpand`) to be set based on the search paths and
+     * search options. This function calculates these props for a child node based on its key or path matcher.
      *
      * When using `pathMatcher` prop, callers have more flexibility to decide whether the given `HierarchyNodeIdentifier` applies
      * to their node. For example, only some parts of the identifier can be checked for improved performance. Otherwise, the
