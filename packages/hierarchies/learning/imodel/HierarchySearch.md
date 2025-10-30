@@ -1,6 +1,6 @@
-# iModel hierarchy filtering
+# iModel hierarchy search
 
-The library allows creating iModel data-based hierarchies through a hierarchy provider implementation returned by the `createIModelHierarchyProvider` function. In addition to having the required `HierarchyProvider.setHierarchyFilter` function to apply the filter, it also has a `filtering` prop that can be used to provide the filtering paths at construction time.
+The library allows creating iModel data-based hierarchies through a hierarchy provider implementation returned by the `createIModelHierarchyProvider` function. In addition to having the required `HierarchyProvider.setHierarchySearch` function to apply the search, it also has a `search` prop that can be used to provide the search paths at construction time.
 
 ## Example
 
@@ -18,7 +18,7 @@ For an example, let's say we have an iModel with `BisCore.PhysicalElement` insta
 
 The hierarchy definition that creates such a hierarchy would look like this:
 
-<!-- [[include: [Presentation.Hierarchies.HierarchyFiltering.HierarchyDefinitionImports, Presentation.Hierarchies.HierarchyFiltering.HierarchyDefinition], ts]] -->
+<!-- [[include: [Presentation.Hierarchies.HierarchySearch.HierarchyDefinitionImports, Presentation.Hierarchies.HierarchySearch.HierarchyDefinition], ts]] -->
 <!-- BEGIN EXTRACTION -->
 
 ```ts
@@ -70,13 +70,13 @@ function createHierarchyDefinition(imodelAccess: IModelAccess): HierarchyDefinit
 
 ### Finding paths to target nodes
 
-As mentioned in the general [Hierarchy filtering](../HierarchyFiltering.md#the-process) learning page, the first step in filtering a hierarchy is to find the paths to the target nodes. This is the responsibility of the consumer, as only consumer knows how the hierarchy is structured and can determine the paths to the target nodes in the most efficient way possible.
+As mentioned in the general [Hierarchy search](../HierarchySearch.md#the-process) learning page, the first step to search a hierarchy is to find the paths to the target nodes. This is the responsibility of the consumer, as only consumer knows how the hierarchy is structured and can determine the paths to the target nodes in the most efficient way possible.
 
-Let's consider two cases - filtering by label and by target element ID:
+Let's consider two cases - searching by label and by target element ID:
 
-- To filter by label, we have to know what property(s) the hierarchy definition uses for the label. In this case, it's the `UserLabel` property:
+- To search by label, we have to know what property(s) the hierarchy definition uses for the label. In this case, it's the `UserLabel` property:
 
-  <!-- [[include: [Presentation.Hierarchies.HierarchyFiltering.FindPathsImports, Presentation.Hierarchies.HierarchyFiltering.FindPathsByLabel], ts]] -->
+  <!-- [[include: [Presentation.Hierarchies.HierarchySearch.FindPathsImports, Presentation.Hierarchies.HierarchySearch.FindPathsByLabel], ts]] -->
   <!-- BEGIN EXTRACTION -->
 
   ```ts
@@ -127,9 +127,9 @@ Let's consider two cases - filtering by label and by target element ID:
 
   <!-- END EXTRACTION -->
 
-- Filtering by target element ID is very similar, but instead of using the label, we use the element ID:
+- Searching by target element ID is very similar, but instead of using the label, we use the element ID:
 
-  <!-- [[include: [Presentation.Hierarchies.HierarchyFiltering.FindPathsImports, Presentation.Hierarchies.HierarchyFiltering.FindPathsByTargetElementId], ts]] -->
+  <!-- [[include: [Presentation.Hierarchies.HierarchySearch.FindPathsImports, Presentation.Hierarchies.HierarchySearch.FindPathsByTargetElementId], ts]] -->
   <!-- BEGIN EXTRACTION -->
 
   ```ts
@@ -182,11 +182,11 @@ Let's consider two cases - filtering by label and by target element ID:
 
 The above examples use a recursive CTE to create paths from target element to the root of the hierarchy, but that may not be the most efficient way to do it. In some situations, hierarchy definitions may have some cache that lets it quickly find the path from a node to the root without running a query at all.
 
-### Applying the filter paths
+### Applying the search paths
 
-The above section shows how paths to target nodes can be created. The next step, as described in the [Hierarchy filtering](../HierarchyFiltering.md#the-process) learning page, is to apply the filter paths to the hierarchy provider. While that can be achieved using `HierarchyProvider.setHierarchyFilter` method, the `createIModelHierarchyProvider` factory function also provides a `filtering` prop for convenience, to apply the filter at construction time. So applying the filter paths is straightforward:
+The above section shows how paths to target nodes can be created. The next step, as described in the [Hierarchy search](../HierarchySearch.md#the-process) learning page, is to apply the search paths to the hierarchy provider. While that can be achieved using `HierarchyProvider.setHierarchySearch` method, the `createIModelHierarchyProvider` factory function also provides a `search` prop for convenience, to apply the search at construction time. So applying the search paths is straightforward:
 
-<!-- [[include: [Presentation.Hierarchies.HierarchyFiltering.FilteringImports, Presentation.Hierarchies.HierarchyFiltering.ApplySearchPaths], ts]] -->
+<!-- [[include: [Presentation.Hierarchies.HierarchySearch.FilteringImports, Presentation.Hierarchies.HierarchySearch.ApplySearchPaths], ts]] -->
 <!-- BEGIN EXTRACTION -->
 
 ```ts
