@@ -139,16 +139,16 @@ function extractSearchPropsInternal(
   parentNode: Pick<NonGroupingHierarchyNode, "search"> | undefined,
 ):
   | {
-      searchedNodePaths: HierarchySearchPath[];
+      hierarchySearchPaths: HierarchySearchPath[];
       hasSearchTargetAncestor: boolean;
     }
   | undefined {
   if (!parentNode) {
-    return rootLevelSearchProps ? { searchedNodePaths: rootLevelSearchProps, hasSearchTargetAncestor: false } : undefined;
+    return rootLevelSearchProps ? { hierarchySearchPaths: rootLevelSearchProps, hasSearchTargetAncestor: false } : undefined;
   }
   return parentNode.search?.childrenTargetPaths
     ? {
-        searchedNodePaths: parentNode.search.childrenTargetPaths,
+        hierarchySearchPaths: parentNode.search.childrenTargetPaths,
         hasSearchTargetAncestor: !!parentNode.search.hasSearchTargetAncestor || !!parentNode.search.isSearchTarget,
       }
     : undefined;
@@ -188,7 +188,7 @@ export function createHierarchySearchHelper(
       if (!hasSearch) {
         return undefined;
       }
-      return searchProps.searchedNodePaths
+      return searchProps.hierarchySearchPaths
         .map(HierarchySearchPath.normalize)
         .filter(({ path }) => path.length > 0)
         .map(({ path }) => path[0]);
@@ -216,7 +216,7 @@ export function createHierarchySearchHelper(
         return undefined;
       }
       const reducer = new MatchingSearchPathsReducer(searchProps?.hasSearchTargetAncestor);
-      searchProps.searchedNodePaths.forEach((searchedPath) => {
+      searchProps.hierarchySearchPaths.forEach((searchedPath) => {
         const normalizedPath = HierarchySearchPath.normalize(searchedPath);
         if (
           "nodeKey" in props &&
@@ -242,7 +242,7 @@ export function createHierarchySearchHelper(
       }
       const reducer = new MatchingSearchPathsReducer(searchProps?.hasSearchTargetAncestor);
       const matchedPathPromises = new Array<Promise<NormalizedSearchPath | undefined>>();
-      for (const searchedChildrenNodeIdentifierPath of searchProps.searchedNodePaths) {
+      for (const searchedChildrenNodeIdentifierPath of searchProps.hierarchySearchPaths) {
         const normalizedPath = HierarchySearchPath.normalize(searchedChildrenNodeIdentifierPath);
         /* c8 ignore next 3 */
         if (normalizedPath.path.length === 0) {
