@@ -1,6 +1,6 @@
-# Hierarchy searching
+# Hierarchy search
 
-Hierarchy searching is a concept where the hierarchy is filtered to a subset that contains only the requested nodes, their ancestors and their children.
+Hierarchy search is a concept where the hierarchy is filtered to a subset that contains only the requested nodes, their ancestors and their children.
 
 For example, let's say we have this hierarchy:
 
