@@ -186,7 +186,7 @@ The above examples use a recursive CTE to create paths from target element to th
 
 The above section shows how paths to target nodes can be created. The next step, as described in the [Hierarchy filtering](../HierarchyFiltering.md#the-process) learning page, is to apply the filter paths to the hierarchy provider. While that can be achieved using `HierarchyProvider.setHierarchyFilter` method, the `createIModelHierarchyProvider` factory function also provides a `filtering` prop for convenience, to apply the filter at construction time. So applying the filter paths is straightforward:
 
-<!-- [[include: [Presentation.Hierarchies.HierarchyFiltering.FilteringImports, Presentation.Hierarchies.HierarchyFiltering.ApplyFilterPaths], ts]] -->
+<!-- [[include: [Presentation.Hierarchies.HierarchyFiltering.FilteringImports, Presentation.Hierarchies.HierarchyFiltering.ApplySearchPaths], ts]] -->
 <!-- BEGIN EXTRACTION -->
 
 ```ts

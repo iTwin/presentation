@@ -68,7 +68,7 @@ Let's say, we want the hierarchy to contain only the nodes with "C" label. In th
 
 The following code snippet shows, how to create a filtering path that includes the `autoExpand` flag:
 
-<!-- [[include: [Presentation.Hierarchies.HierarchyFiltering.HierarchyFilteringPathImport, Presentation.Hierarchies.HierarchyFiltering.AutoExpand.FilteringPath], ts]] -->
+<!-- [[include: [Presentation.Hierarchies.HierarchySearch.HierarchySearchPathImport, Presentation.Hierarchies.HierarchySearch.AutoExpand.SearchPath], ts]] -->
 <!-- BEGIN EXTRACTION -->
 
 ```ts
@@ -88,9 +88,9 @@ const searchPath: HierarchySearchPath = {
 
 <!-- END EXTRACTION -->
 
-Additionally, you might not want to add `autoExpand` flag to every node in `HierarchyFilteringPath`. For such cases hierarchies may be expanded up to desired depth, which can be achieved by setting the `autoExpand` property to `{ depthInPath: number }`, where `depthInPath` represents instance's index in the `path` array:
+Additionally, you might not want to add `autoExpand` flag to every node in `HierarchySearchPath`. For such cases hierarchies may be expanded up to desired depth, which can be achieved by setting the `autoExpand` property to `{ depthInPath: number }`, where `depthInPath` represents instance's index in the `path` array:
 
-<!-- [[include: [Presentation.Hierarchies.HierarchyFiltering.HierarchyFilteringPathImport, Presentation.Hierarchies.HierarchyFiltering.AutoExpandUntilDepthInPath.FilteringPath], ts]] -->
+<!-- [[include: [Presentation.Hierarchies.HierarchySearch.HierarchySearchPathImport, Presentation.Hierarchies.HierarchySearch.AutoExpandUntilDepthInPath.SearchPath], ts]] -->
 <!-- BEGIN EXTRACTION -->
 
 ```ts
@@ -110,7 +110,7 @@ const searchPath: HierarchySearchPath = {
 
 Also, hierarchies may contain grouping nodes, which don't represent anything by themselves, which means they can't be a filter target. In some cases it may be necessary to auto-expand the hierarchy up to a desired grouping node (and not auto-expand grouping nodes below them), which can be achieved by setting the `autoExpand` property to `{ depthInHierarchy: number }`, where depth represents grouping node depth in the hierarchy:
 
-<!-- [[include: [Presentation.Hierarchies.HierarchyFiltering.HierarchyFilteringPathImport, Presentation.Hierarchies.HierarchyFiltering.AutoExpandUntilDepthInHierarchy.FilteringPath], ts]] -->
+<!-- [[include: [Presentation.Hierarchies.HierarchySearch.HierarchySearchPathImport, Presentation.Hierarchies.HierarchySearch.AutoExpandUntilDepthInHierarchy.SearchPath], ts]] -->
 <!-- BEGIN EXTRACTION -->
 
 ```ts
