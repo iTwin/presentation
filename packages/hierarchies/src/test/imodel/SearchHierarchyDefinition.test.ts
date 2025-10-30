@@ -37,7 +37,7 @@ import {
   createTestSourceGenericNode,
 } from "../Utils.js";
 
-describe("FilteringHierarchyDefinition", () => {
+describe("SearchHierarchyDefinition", () => {
   describe("parseNode", () => {
     it("uses `defaultNodeParser` when source definitions factory doesn't have one", async () => {
       const spy = sinon.spy();
