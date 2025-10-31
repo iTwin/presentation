@@ -113,17 +113,13 @@ function ErrorItemContainer({ errorNode, message, actions, scrollToElement }: Er
     <ErrorRegion.Item
       message={<MessageWithLink linkLabel={errorNode.label} scrollToElement={scrollToElement} message={message} />}
       messageId={errorNode.id}
-      actions={
-        <div style={{ display: "flex", flexDirection: "column" }}>
-          {actions
-            ?.filter(({ condition }) => condition())
-            .map(({ label, action }) => (
-              <Anchor key={label} onClick={action}>
-                {label}
-              </Anchor>
-            ))}
-        </div>
-      }
+      actions={actions
+        ?.filter(({ condition }) => condition())
+        .map(({ label, action }) => (
+          <Anchor key={label} onClick={action} render={<button />}>
+            {label}
+          </Anchor>
+        ))}
     />
   );
 }

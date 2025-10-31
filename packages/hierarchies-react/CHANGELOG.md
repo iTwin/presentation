@@ -1,5 +1,11 @@
 # @itwin/presentation-hierarchies-react
 
+## 2.0.0-alpha.38
+
+### Patch Changes
+
+- [#1102](https://github.com/iTwin/presentation/pull/1102): Updated tree error item renderer to render error actions as buttons based on StrataKit docs JSDoc suggestion.
+
 ## 2.0.0-alpha.37
 
 ### Major Changes
