@@ -87,7 +87,7 @@ Let's consider two cases - searching by label and by target element ID:
   // Define a function that returns `HierarchyNodeIdentifiersPath[]` based on given search string. In this case, we run
   // a query to find matching elements by their `UserLabel` property. Then, we construct paths to the root element using recursive
   // CTE. Finally, we return the paths in reverse order to start from the root element.
-  async function createFilteredNodeIdentifierPaths(searchStrings: string[]): Promise<HierarchyNodeIdentifiersPath[]> {
+  async function createSearchTargetPaths(searchStrings: string[]): Promise<HierarchyNodeIdentifiersPath[]> {
     const query: ECSqlQueryDef = {
       ctes: [
         `MatchingElements(Path, ParentId) AS (
@@ -117,8 +117,8 @@ Let's consider two cases - searching by label and by target element ID:
     return result;
   }
   // Find paths to elements whose label contains "C" or "E"
-  const filterPaths = await createFilteredNodeIdentifierPaths(["C", "E"]);
-  expect(filterPaths).to.deep.eq([
+  const searchPaths = await createSearchTargetPaths(["C", "E"]);
+  expect(searchPaths).to.deep.eq([
     // We expect to find two paths A -> B -> C and A -> E
     [elementKeys.a, elementKeys.e],
     [elementKeys.a, elementKeys.b, elementKeys.c],
@@ -140,7 +140,7 @@ Let's consider two cases - searching by label and by target element ID:
   // Define a function that returns `HierarchyNodeIdentifiersPath[]` based on given target element IDs. In this case, we run
   // a query to find matching elements by their `ECInstanceId` property. Then, we construct paths to the root element using recursive
   // CTE. Finally, we return the paths in reverse order to start from the root element.
-  async function createFilteredNodeIdentifierPaths(targetElementIds: Id64String[]): Promise<HierarchyNodeIdentifiersPath[]> {
+  async function createSearchTargetPaths(targetElementIds: Id64String[]): Promise<HierarchyNodeIdentifiersPath[]> {
     const query: ECSqlQueryDef = {
       ctes: [
         `MatchingElements(Path, ParentId) AS (
@@ -170,8 +170,8 @@ Let's consider two cases - searching by label and by target element ID:
     return result;
   }
   // Find paths to target elements "C" and "E"
-  const filterPaths = await createFilteredNodeIdentifierPaths([elementIds.c, elementIds.e]);
-  expect(filterPaths).to.deep.eq([
+  const searchPaths = await createSearchTargetPaths([elementIds.c, elementIds.e]);
+  expect(searchPaths).to.deep.eq([
     // We expect to find two paths A -> B -> C and A -> E
     [elementKeys.a, elementKeys.e],
     [elementKeys.a, elementKeys.b, elementKeys.c],
@@ -186,20 +186,20 @@ The above examples use a recursive CTE to create paths from target element to th
 
 The above section shows how paths to target nodes can be created. The next step, as described in the [Hierarchy search](../HierarchySearch.md#the-process) learning page, is to apply the search paths to the hierarchy provider. While that can be achieved using `HierarchyProvider.setHierarchySearch` method, the `createIModelHierarchyProvider` factory function also provides a `search` prop for convenience, to apply the search at construction time. So applying the search paths is straightforward:
 
-<!-- [[include: [Presentation.Hierarchies.HierarchySearch.FilteringImports, Presentation.Hierarchies.HierarchySearch.ApplySearchPaths], ts]] -->
+<!-- [[include: [Presentation.Hierarchies.HierarchySearch.SearchImports, Presentation.Hierarchies.HierarchySearch.ApplySearchPaths], ts]] -->
 <!-- BEGIN EXTRACTION -->
 
 ```ts
 import { createIModelHierarchyProvider } from "@itwin/presentation-hierarchies";
 
-// Construct a hierarchy provider for the filtered hierarchy
+// Construct a hierarchy provider for the searched hierarchy
 const hierarchyProvider = createIModelHierarchyProvider({
   imodelAccess,
   hierarchyDefinition: createHierarchyDefinition(imodelAccess),
-  search: { paths: filterPaths },
+  search: { paths: searchPaths },
 });
 // Collect the hierarchy & confirm we get what we expect - a hierarchy from root element "A" to target elements "C" and "E".
-// Note that "E" has a child "F", even though it's not a filter target. This is because subtrees under filter target nodes
+// Note that "E" has a child "F", even though it's not a search target. This is because subtrees under search target nodes
 // (in this case - "E") are returned fully.
 expect(await collectHierarchy(hierarchyProvider)).to.containSubset([
   {

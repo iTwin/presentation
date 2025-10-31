@@ -12,7 +12,7 @@ In the most basic form, a hierarchy provider only needs to implement the `getNod
 ```ts
 import { BeEvent } from "@itwin/core-bentley";
 import { HierarchyNode, HierarchyProvider } from "@itwin/presentation-hierarchies";
-import { Props } from "@itwin/presentation-shared";
+import { IPrimitiveValueFormatter, Props } from "@itwin/presentation-shared";
 
 // Create a hierarchy provider that returns an infinite hierarchy, where each node has one child node.
 const provider: HierarchyProvider = {
@@ -52,7 +52,7 @@ However, it's possible to write one from scratch. The following example demonstr
 ```ts
 import { BeEvent } from "@itwin/core-bentley";
 import { HierarchyNode, HierarchyProvider } from "@itwin/presentation-hierarchies";
-import { Props } from "@itwin/presentation-shared";
+import { IPrimitiveValueFormatter, Props } from "@itwin/presentation-shared";
 
 import { BriefcaseConnection, IModelConnection } from "@itwin/core-frontend";
 import { registerTxnListeners } from "@itwin/presentation-core-interop";
@@ -258,7 +258,7 @@ Now that we have a service, let's create a hierarchy provider that creates a hie
 ```ts
 import { BeEvent } from "@itwin/core-bentley";
 import { HierarchyNode, HierarchyProvider } from "@itwin/presentation-hierarchies";
-import { Props } from "@itwin/presentation-shared";
+import { IPrimitiveValueFormatter, Props } from "@itwin/presentation-shared";
 
 // Create a fake books service that simulates fetching authors and books data.
 const booksService = createBooksService();
@@ -336,16 +336,9 @@ With the above APIs at hand, implementing node label formatting is straightforwa
 ```ts
 import { BeEvent } from "@itwin/core-bentley";
 import { HierarchyNode, HierarchyProvider } from "@itwin/presentation-hierarchies";
-import { Props } from "@itwin/presentation-shared";
+import { IPrimitiveValueFormatter, Props } from "@itwin/presentation-shared";
 
-import {
-  ConcatenatedValue,
-  ConcatenatedValuePart,
-  createDefaultValueFormatter,
-  EventListener,
-  IPrimitiveValueFormatter,
-  julianToDateTime,
-} from "@itwin/presentation-shared";
+import { ConcatenatedValue, ConcatenatedValuePart, createDefaultValueFormatter, EventListener, julianToDateTime } from "@itwin/presentation-shared";
 
 // Create a hierarchy provider that returns a single root node with formatted label. The formatter used by the
 // provider can be changed by calling the `setFormatter` method.
@@ -443,16 +436,16 @@ Let's start with the first step:
 ```ts
 import { BeEvent } from "@itwin/core-bentley";
 import { HierarchyNode, HierarchyProvider } from "@itwin/presentation-hierarchies";
-import { Props } from "@itwin/presentation-shared";
+import { IPrimitiveValueFormatter, Props } from "@itwin/presentation-shared";
 
 import { createHierarchySearchHelper, GenericNodeKey, HierarchyNodeIdentifier, HierarchySearchPath } from "@itwin/presentation-hierarchies";
 
 // A function that matches given string against authors and books, and returns hierarchy paths
 // from root to the matched node. This function must be aware of the hierarchy structure to know what paths
 // to create.
-async function createFilterPaths(filter: string): Promise<HierarchySearchPath[]> {
+async function createHierarchySearchPaths(searchText: string): Promise<HierarchySearchPath[]> {
   const results: HierarchySearchPath[] = [];
-  const [matchingAuthors, matchingBooks] = await Promise.all([booksService.getAuthors({ name: filter }), booksService.getBooks({ title: filter })]);
+  const [matchingAuthors, matchingBooks] = await Promise.all([booksService.getAuthors({ name: searchText }), booksService.getBooks({ title: searchText })]);
   for (const author of matchingAuthors) {
     results.push([{ type: "generic", id: `author:${author.key}` }]);
   }
@@ -478,7 +471,7 @@ Now that we're able to find the paths, let's enhance our hierarchy provider to s
 ```ts
 import { BeEvent } from "@itwin/core-bentley";
 import { HierarchyNode, HierarchyProvider } from "@itwin/presentation-hierarchies";
-import { Props } from "@itwin/presentation-shared";
+import { IPrimitiveValueFormatter, Props } from "@itwin/presentation-shared";
 
 import { createHierarchySearchHelper, GenericNodeKey, HierarchyNodeIdentifier, HierarchySearchPath } from "@itwin/presentation-hierarchies";
 
@@ -565,7 +558,7 @@ With the above provider, we can now search the books hierarchy by label:
 ```ts
 // Apply the filter "of" and traverse the filtered hierarchy. Notice that author node
 // of "The Fellowship of Ring" is included, even though it doesn't match the filter.
-provider.setHierarchySearch({ paths: await createFilterPaths("of") });
+provider.setHierarchySearch({ paths: await createHierarchySearchPaths("of") });
 await traverseHierarchy(provider);
 // Output:
 // J.R.R. Tolkien
@@ -576,7 +569,7 @@ await traverseHierarchy(provider);
 
 // Apply the filter "tom" and traverse the filtered hierarchy. Notice that all books
 // of "Tom Clancy" are included, even though they don't match the filter.
-provider.setHierarchySearch({ paths: await createFilterPaths("tom") });
+provider.setHierarchySearch({ paths: await createHierarchySearchPaths("tom") });
 await traverseHierarchy(provider);
 // Output:
 // Mark Twain
@@ -641,7 +634,7 @@ Here's how the final provider looks like:
 ```ts
 import { BeEvent } from "@itwin/core-bentley";
 import { HierarchyNode, HierarchyProvider } from "@itwin/presentation-hierarchies";
-import { Props } from "@itwin/presentation-shared";
+import { IPrimitiveValueFormatter, Props } from "@itwin/presentation-shared";
 
 const provider: HierarchyProvider = {
   async *getNodes({ parentNode, instanceFilter }) {

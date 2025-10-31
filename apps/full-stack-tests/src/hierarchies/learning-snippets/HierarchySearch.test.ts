@@ -10,19 +10,19 @@ import { expand, filter, first, firstValueFrom, from } from "rxjs";
 import { assert, Id64String } from "@itwin/core-bentley";
 import { IModelConnection } from "@itwin/core-frontend";
 import { createBisInstanceLabelSelectClauseFactory, InstanceKey } from "@itwin/presentation-shared";
-// __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.HierarchyFiltering.HierarchyDefinitionImports
+// __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.HierarchySearch.HierarchyDefinitionImports
 import { createNodesQueryClauseFactory, GroupingHierarchyNode, HierarchyDefinition, HierarchyNode } from "@itwin/presentation-hierarchies";
 import { ECSqlBinding } from "@itwin/presentation-shared";
 // __PUBLISH_EXTRACT_END__
-// __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.HierarchyFiltering.FindPathsImports
+// __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.HierarchySearch.FindPathsImports
 import { createIModelKey } from "@itwin/presentation-core-interop";
 import { HierarchyNodeIdentifiersPath } from "@itwin/presentation-hierarchies";
 import { ECSql, ECSqlQueryDef } from "@itwin/presentation-shared";
 // __PUBLISH_EXTRACT_END__
-// __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.HierarchyFiltering.FilteringImports
+// __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.HierarchySearch.SearchImports
 import { createIModelHierarchyProvider } from "@itwin/presentation-hierarchies";
 // __PUBLISH_EXTRACT_END__
-// __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.HierarchyFiltering.HierarchyFilteringPathImport
+// __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.HierarchySearch.HierarchySearchPathImport
 import { HierarchySearchPath } from "@itwin/presentation-hierarchies";
 // __PUBLISH_EXTRACT_END__
 import { buildIModel } from "../../IModelUtils.js";
