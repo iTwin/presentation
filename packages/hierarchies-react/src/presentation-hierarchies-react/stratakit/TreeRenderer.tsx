@@ -73,6 +73,7 @@ export function StrataKitTreeRenderer({
   onNodeClick: onNodeClickOverride,
   onNodeKeyDown: onNodeKeyDownOverride,
   getEditingProps,
+  id,
   ...treeProps
 }: StrataKitTreeRendererProps) {
   const { onNodeClick, onNodeKeyDown } = useSelectionHandler({
@@ -135,7 +136,7 @@ export function StrataKitTreeRenderer({
   return (
     <LocalizationContextProvider localizedStrings={localizedStrings}>
       {errorRenderer ? errorRenderer(errorRendererProps) : <TreeErrorRenderer {...errorRendererProps} />}
-      <div id={"phr-tree-renderer"} style={{ height: "100%", width: "100%", overflowY: "auto" }} ref={parentRef}>
+      <div id={id} style={{ height: "100%", width: "100%", overflowY: "auto" }} ref={parentRef}>
         <Tree.Root style={{ height: virtualizer.getTotalSize(), minHeight: "100%", width: "100%", position: "relative", overflow: "hidden" }}>
           {items.map((virtualizedItem) => {
             const item = flatItems[virtualizedItem.index];
