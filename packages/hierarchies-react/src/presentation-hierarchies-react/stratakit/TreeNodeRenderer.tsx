@@ -36,6 +36,8 @@ type TreeNodeProps = ComponentPropsWithoutRef<typeof Tree.Item>;
 export interface TreeNodeRendererOwnProps {
   /** Node that is rendered. */
   node: PresentationHierarchyNode;
+  /** Returns the class name for a given node. */
+  getClassName?: (node: PresentationHierarchyNode) => string | undefined;
   /** Returns a label for a given node. */
   getLabel?: (node: PresentationHierarchyNode) => ReactElement | undefined;
   /** Returns sublabel for a given node. */
@@ -84,6 +86,7 @@ export const StrataKitTreeNodeRenderer: FC<PropsWithRef<TreeNodeRendererProps & 
       onNodeClick,
       onNodeKeyDown,
       reloadTree,
+      getClassName,
       getLabel,
       getSublabel,
       getMenuActions,
@@ -98,6 +101,7 @@ export const StrataKitTreeNodeRenderer: FC<PropsWithRef<TreeNodeRendererProps & 
     const { localizedStrings } = useLocalizationContext();
     const renameContext = useRenameContext();
 
+    const className = useMemo(() => getClassName?.(node), [getClassName, node]);
     const label = useMemo(() => (getLabel ? getLabel(node) : node.label), [getLabel, node]);
     const description = useMemo(() => (getSublabel ? getSublabel(node) : undefined), [getSublabel, node]);
     const decorations = useMemo(() => getDecorations?.(node), [getDecorations, node]);
@@ -151,6 +155,7 @@ export const StrataKitTreeNodeRenderer: FC<PropsWithRef<TreeNodeRendererProps & 
       <Tree.Item
         {...treeItemProps}
         ref={ref}
+        className={className}
         label={labelEditor ?? label}
         description={description}
         selected={selected}
