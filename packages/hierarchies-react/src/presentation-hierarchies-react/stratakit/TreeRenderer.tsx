@@ -177,6 +177,7 @@ const VirtualTreeItem = memo(
       getDecorations,
       getMenuActions,
       getInlineActions,
+      getClassName,
       getLabel,
       getSublabel,
       expandNode,
@@ -220,6 +221,7 @@ const VirtualTreeItem = memo(
           getDecorations={getDecorations}
           getMenuActions={getMenuActions}
           getInlineActions={getInlineActions}
+          getClassName={getClassName}
           getLabel={getLabel}
           getSublabel={getSublabel}
           onNodeClick={onNodeClick}
