@@ -302,6 +302,7 @@ type TreeNodeProps = ComponentPropsWithoutRef<typeof Tree.Item>;
 
 // @alpha (undocumented)
 interface TreeNodeRendererOwnProps {
+    getClassName?: (node: PresentationHierarchyNode) => string | undefined;
     getDecorations?: (node: PresentationHierarchyNode) => ReactNode;
     getInlineActions?: (node: PresentationHierarchyNode) => ReactNode[];
     getLabel?: (node: PresentationHierarchyNode) => ReactElement | undefined;
