@@ -269,7 +269,7 @@ type StrataKitRootErrorRendererProps = {
 export const StrataKitTreeNodeRenderer: FC<PropsWithRef<TreeNodeRendererProps & RefAttributes<HTMLElement>>>;
 
 // @alpha
-export function StrataKitTreeRenderer({ rootNodes, selectNodes, selectionMode, expandNode, treeLabel, localizedStrings, getHierarchyLevelDetails, onFilterClick, reloadTree, isNodeSelected, errorRenderer, onNodeClick: onNodeClickOverride, onNodeKeyDown: onNodeKeyDownOverride, getEditingProps, ...treeProps }: StrataKitTreeRendererProps): JSX_2.Element;
+export function StrataKitTreeRenderer({ rootNodes, selectNodes, selectionMode, expandNode, treeLabel, localizedStrings, getHierarchyLevelDetails, onFilterClick, reloadTree, isNodeSelected, errorRenderer, onNodeClick: onNodeClickOverride, onNodeKeyDown: onNodeKeyDownOverride, getEditingProps, id, ...treeProps }: StrataKitTreeRendererProps): JSX_2.Element;
 
 // @alpha (undocumented)
 type StrataKitTreeRendererProps = TreeRendererProps & Pick<TreeErrorRendererProps, "onFilterClick"> & Omit<TreeNodeRendererProps_2, "node" | "aria-level" | "aria-posinset" | "aria-setsize" | "reloadTree" | "selected" | "error"> & TreeRendererOwnProps & ComponentPropsWithoutRef<typeof LocalizationContextProvider>;
