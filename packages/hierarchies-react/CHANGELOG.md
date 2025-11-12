@@ -1,5 +1,16 @@
 # @itwin/presentation-hierarchies-react
 
+## 2.0.0-alpha.39
+
+### Minor Changes
+
+- [#1106](https://github.com/iTwin/presentation/pull/1106): Added an `id` property to `StrataKitTreeRenderer` that is passed to it's scroll wrapper.
+- [#1107](https://github.com/iTwin/presentation/pull/1107): Introduced new `getClassName` callback to `StrataKitTreeRenderer` and `StrataKitTreeNodeRenderer` for providing class to tree node HTML element.
+
+### Patch Changes
+
+- [#1109](https://github.com/iTwin/presentation/pull/1109): Fixed error item Anchor font size.
+
 ## 2.0.0-alpha.38
 
 ### Patch Changes
