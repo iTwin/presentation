@@ -136,13 +136,11 @@ function MessageWithLink({ linkLabel, scrollToElement, message }: MessageWithLin
   const splitMessage = message.split("{{node}}", 2);
   return (
     <div style={{ display: "flex", whiteSpace: "pre", flexWrap: "wrap" }}>
-      <Text variant={"body-sm"}>{splitMessage[0]}</Text>
-      <Text variant={"body-sm"}>
-        <Anchor onClick={scrollToElement} render={<button />}>
-          {linkLabel}
-        </Anchor>
-      </Text>
-      {splitMessage[1] ? <Text variant={"body-sm"}>{splitMessage[1]}</Text> : null}
+      {splitMessage[0]}
+      <Anchor onClick={scrollToElement} render={<button />}>
+        {linkLabel}
+      </Anchor>
+      {splitMessage[1] ? splitMessage[1] : null}
     </div>
   );
 }
