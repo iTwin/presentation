@@ -116,9 +116,11 @@ function ErrorItemContainer({ errorNode, message, actions, scrollToElement }: Er
       actions={actions
         ?.filter(({ condition }) => condition())
         .map(({ label, action }) => (
-          <Anchor key={label} onClick={action} render={<button />}>
-            {label}
-          </Anchor>
+          <Text key={label} variant="body-sm">
+            <Anchor onClick={action} render={<button />}>
+              {label}
+            </Anchor>
+          </Text>
         ))}
     />
   );
@@ -135,7 +137,11 @@ function MessageWithLink({ linkLabel, scrollToElement, message }: MessageWithLin
   return (
     <div style={{ display: "flex", whiteSpace: "pre", flexWrap: "wrap" }}>
       <Text variant={"body-sm"}>{splitMessage[0]}</Text>
-      <Anchor onClick={scrollToElement}>{linkLabel}</Anchor>
+      <Text variant={"body-sm"}>
+        <Anchor onClick={scrollToElement} render={<button />}>
+          {linkLabel}
+        </Anchor>
+      </Text>
       {splitMessage[1] ? <Text variant={"body-sm"}>{splitMessage[1]}</Text> : null}
     </div>
   );
