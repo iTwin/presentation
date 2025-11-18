@@ -11,10 +11,10 @@ import { PropertyUpdatedArgs } from "@itwin/components-react";
 import { EmptyLocalization } from "@itwin/core-common";
 import { IModelApp } from "@itwin/core-frontend";
 import { Presentation } from "@itwin/presentation-frontend";
+import { createTestPropertyRecord } from "../../_helpers/UiComponents.js";
 import { WithConstraints } from "../../../presentation-components/common/ContentBuilder.js";
 import { PropertyEditorAttributes } from "../../../presentation-components/properties/editors/Common.js";
 import { NumericInput, NumericPropertyInput } from "../../../presentation-components/properties/inputs/NumericPropertyInput.js";
-import { createTestPropertyRecord } from "../../_helpers/UiComponents.js";
 import { render, waitFor } from "../../TestUtils.js";
 
 const createRecord = (initialValue?: number) => {

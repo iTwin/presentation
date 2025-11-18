@@ -11,11 +11,11 @@ import { TreeActions } from "@itwin/components-react";
 import { EmptyLocalization } from "@itwin/core-common";
 import { IModelApp } from "@itwin/core-frontend";
 import { Presentation } from "@itwin/presentation-frontend";
+import { createTestPropertyInfo } from "../../_helpers/Common.js";
+import { createTestContentDescriptor, createTestPropertiesContentField } from "../../_helpers/Content.js";
 import { PresentationInstanceFilterInfo } from "../../../presentation-components/instance-filter-builder/PresentationFilterBuilder.js";
 import { PresentationTreeNodeRenderer } from "../../../presentation-components/tree/controlled/PresentationTreeNodeRenderer.js";
 import { InfoTreeNodeItemType, PresentationInfoTreeNodeItem } from "../../../presentation-components/tree/PresentationTreeNodeItem.js";
-import { createTestPropertyInfo } from "../../_helpers/Common.js";
-import { createTestContentDescriptor, createTestPropertiesContentField } from "../../_helpers/Content.js";
 import { fireEvent, render, waitFor } from "../../TestUtils.js";
 import { createInfoTreeNodeItem, createTreeModelNode, createTreeNodeItem } from "./Helpers.js";
 

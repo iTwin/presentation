@@ -4,6 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import "../../common/DisposePolyfill.js";
+
 import { useEffect, useMemo, useState } from "react";
 import { from, map, mergeMap, toArray } from "rxjs";
 import { IModelConnection } from "@itwin/core-frontend";

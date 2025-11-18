@@ -52,6 +52,12 @@
 - Updated dependencies:
   - @itwin/presentation-shared@2.0.0-alpha.0
 
+## 1.7.4
+
+### Patch Changes
+
+- [#1088](https://github.com/iTwin/presentation/pull/1088): Fix restart tokens not being unique when they need to, causing queries to be cancelled.
+
 ## 1.7.3
 
 ### Patch Changes

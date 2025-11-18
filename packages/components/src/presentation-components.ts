@@ -4,6 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import "@itwin/unified-selection";
+
 import { Presentation } from "@itwin/presentation-frontend";
 import { initializeLocalization, initializePropertyValueRenderers } from "./presentation-components/Initialization.js";
 

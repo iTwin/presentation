@@ -9,8 +9,8 @@ import * as sinon from "sinon";
 import { BeDuration } from "@itwin/core-bentley";
 import { RegisteredRuleset } from "@itwin/presentation-common";
 import { Presentation, RulesetManager } from "@itwin/presentation-frontend";
-import { RulesetRegistrationHelper } from "../../presentation-components/common/RulesetRegistrationHelper.js";
 import { createTestRuleset } from "../_helpers/Common.js";
+import { RulesetRegistrationHelper } from "../../presentation-components/common/RulesetRegistrationHelper.js";
 import { createStub } from "../TestUtils.js";
 
 describe("RulesetRegistrationHelper", () => {

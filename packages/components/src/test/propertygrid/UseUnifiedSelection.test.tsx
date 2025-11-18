@@ -10,12 +10,12 @@ import { IModelConnection } from "@itwin/core-frontend";
 import { KeySet } from "@itwin/presentation-common";
 import { ISelectionProvider, SelectionChangeEventArgs, SelectionChangeType, SelectionHandler } from "@itwin/presentation-frontend";
 import { createStorage, Selectables, SelectionStorage } from "@itwin/unified-selection";
+import { createTestECInstanceKey } from "../_helpers/Common.js";
 import { IPresentationPropertyDataProvider } from "../../presentation-components/propertygrid/DataProvider.js";
 import {
   SelectionHandlerContextProvider,
   usePropertyDataProviderWithUnifiedSelection,
 } from "../../presentation-components/propertygrid/UseUnifiedSelection.js";
-import { createTestECInstanceKey } from "../_helpers/Common.js";
 import { act, renderHook, waitFor } from "../TestUtils.js";
 
 /* eslint-disable @typescript-eslint/no-deprecated */

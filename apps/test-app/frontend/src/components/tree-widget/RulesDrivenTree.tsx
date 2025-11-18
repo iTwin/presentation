@@ -5,6 +5,7 @@
 /* eslint-disable @typescript-eslint/no-deprecated */
 
 import "./TreeWidget.css";
+
 import { useCallback, useEffect, useState } from "react";
 import { FilteringInputStatus, SelectionMode } from "@itwin/components-react";
 import { IModelConnection } from "@itwin/core-frontend";

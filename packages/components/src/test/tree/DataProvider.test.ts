@@ -28,6 +28,11 @@ import {
   RulesetVariable,
 } from "@itwin/presentation-common";
 import { Presentation, PresentationManager, RulesetVariablesManager } from "@itwin/presentation-frontend";
+import { createTestECClassInfo, createTestECInstanceKey, createTestPropertyInfo } from "../_helpers/Common.js";
+import { createTestContentDescriptor, createTestPropertiesContentField } from "../_helpers/Content.js";
+import { createTestECClassGroupingNodeKey, createTestECInstancesNode, createTestECInstancesNodeKey, createTestNodePathElement } from "../_helpers/Hierarchy.js";
+import { createTestLabelDefinition } from "../_helpers/LabelDefinition.js";
+import { createTestTreeNodeItem } from "../_helpers/UiComponents.js";
 import { translate } from "../../presentation-components/common/Utils.js";
 import { PresentationInstanceFilterInfo } from "../../presentation-components/instance-filter-builder/PresentationFilterBuilder.js";
 import { PresentationTreeDataProvider } from "../../presentation-components/tree/DataProvider.js";
@@ -36,11 +41,6 @@ import {
   PresentationTreeNodeItem,
   PresentationTreeNodeItemFilteringInfo,
 } from "../../presentation-components/tree/PresentationTreeNodeItem.js";
-import { createTestECClassInfo, createTestECInstanceKey, createTestPropertyInfo } from "../_helpers/Common.js";
-import { createTestContentDescriptor, createTestPropertiesContentField } from "../_helpers/Content.js";
-import { createTestECClassGroupingNodeKey, createTestECInstancesNode, createTestECInstancesNodeKey, createTestNodePathElement } from "../_helpers/Hierarchy.js";
-import { createTestLabelDefinition } from "../_helpers/LabelDefinition.js";
-import { createTestTreeNodeItem } from "../_helpers/UiComponents.js";
 
 function createTestECInstancesNodeKeyWithId(id?: string) {
   return createTestECInstancesNodeKey({

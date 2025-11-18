@@ -1,5 +1,5 @@
 diff --git a/apps/full-stack-tests/src/IModelUtils.ts b/apps/full-stack-tests/src/IModelUtils.ts
-index 9868ec59..9b695982 100644
+index 4282b2d9..6761fbdc 100644
 --- a/apps/full-stack-tests/src/IModelUtils.ts
 +++ b/apps/full-stack-tests/src/IModelUtils.ts
 @@ -7,7 +7,7 @@ import { XMLParser } from "fast-xml-parser";
@@ -11,7 +11,7 @@ index 9868ec59..9b695982 100644
  import { BentleyError, DbResult, Guid, Id64, Id64String, OrderedId64Iterable } from "@itwin/core-bentley";
  import { IModelConnection } from "@itwin/core-frontend";
  import { Schema, SchemaContext, SchemaInfo, SchemaKey, SchemaMatchType } from "@itwin/ecschema-metadata";
-@@ -44,7 +44,7 @@ export class ECDbBuilder {
+@@ -46,7 +46,7 @@ export class ECDbBuilder {
          .map(() => "?")
          .join(", ")})
      `;
@@ -20,7 +20,7 @@ index 9868ec59..9b695982 100644
        Object.values(props).forEach((value, i) => {
          const bindingIndex = i + 1;
          switch (typeof value) {
-@@ -116,7 +116,7 @@ export class ECDbBuilder {
+@@ -118,7 +118,7 @@ export class ECDbBuilder {
  
    public insertInstance(fullClassName: string, props?: { [propertyName: string]: PrimitiveValue | undefined }) {
      const query = this.createInsertQuery(fullClassName, props);
@@ -29,7 +29,7 @@ index 9868ec59..9b695982 100644
        try {
          query.binder(stmt);
          const res = stmt.stepForInsert();
-@@ -125,9 +125,6 @@ export class ECDbBuilder {
+@@ -127,9 +127,6 @@ export class ECDbBuilder {
          }
          return { className: fullClassName, id: res.id! };
        } finally {
@@ -39,7 +39,7 @@ index 9868ec59..9b695982 100644
        }
      });
    }
-@@ -138,7 +135,7 @@ export class ECDbBuilder {
+@@ -140,7 +137,7 @@ export class ECDbBuilder {
        sourceECInstanceId: sourceId,
        targetECInstanceId: targetId,
      });
@@ -48,7 +48,7 @@ index 9868ec59..9b695982 100644
        try {
          query.binder(stmt);
          const res = stmt.stepForInsert();
-@@ -147,9 +144,6 @@ export class ECDbBuilder {
+@@ -149,9 +146,6 @@ export class ECDbBuilder {
          }
          return { className: fullClassName, id: res.id! };
        } finally {
@@ -59,42 +59,28 @@ index 9868ec59..9b695982 100644
      });
    }
 diff --git a/apps/full-stack-tests/src/components/properties/PropertyEditors.test.tsx b/apps/full-stack-tests/src/components/properties/PropertyEditors.test.tsx
-deleted file mode 100644
-index cbb631a7..00000000
+index b8c030e8..7cef9c80 100644
 --- a/apps/full-stack-tests/src/components/properties/PropertyEditors.test.tsx
-+++ /dev/null
-@@ -1,136 +0,0 @@
--/*---------------------------------------------------------------------------------------------
-- * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
-- * See LICENSE.md in the project root for license terms and full copyright notice.
-- *--------------------------------------------------------------------------------------------*/
--
--import { expect } from "chai";
--import { insertPhysicalElement, insertPhysicalModelWithPartition, insertSpatialCategory } from "presentation-test-utilities";
--import sinon from "sinon";
++++ b/apps/full-stack-tests/src/components/properties/PropertyEditors.test.tsx
+@@ -6,13 +6,10 @@
+ import { expect } from "chai";
+ import { insertPhysicalElement, insertPhysicalModelWithPartition, insertSpatialCategory } from "presentation-test-utilities";
+ import sinon from "sinon";
 -import { PrimitiveValue } from "@itwin/appui-abstract";
--import { EditorContainer, UiComponents } from "@itwin/components-react";
+ import { EditorContainer, UiComponents } from "@itwin/components-react";
 -import { BeEvent } from "@itwin/core-bentley";
--import { IModelApp } from "@itwin/core-frontend";
+ import { IModelApp } from "@itwin/core-frontend";
 -import { FormatDefinition } from "@itwin/core-quantity";
--import { FieldDescriptorType, KeySet } from "@itwin/presentation-common";
+ import { FieldDescriptorType, KeySet } from "@itwin/presentation-common";
 -import { PresentationPropertyDataProvider, SchemaMetadataContextProvider } from "@itwin/presentation-components";
--import { buildIModel, importSchema } from "../../IModelUtils.js";
--import { initialize, terminate } from "../../IntegrationTests.js";
--import { render, waitFor } from "../../RenderUtils.js";
--
--describe("Presentation filter builder value renderer", () => {
--  before(async () => {
--    await initialize();
--    await UiComponents.initialize(IModelApp.localization);
--  });
--
--  after(async () => {
--    sinon.restore();
--    UiComponents.terminate();
--    await terminate();
--  });
--
++import { PresentationPropertyDataProvider } from "@itwin/presentation-components";
+ import { buildIModel, importSchema } from "../../IModelUtils.js";
+ import { initialize, terminate } from "../../IntegrationTests.js";
+ import { render, waitFor } from "../../RenderUtils.js";
+@@ -29,111 +26,6 @@ describe("Property editors", () => {
+     await terminate();
+   });
+ 
 -  afterEach(() => {
 -    IModelApp.resetFormatsProvider();
 -  });
@@ -199,7 +185,10 @@ index cbb631a7..00000000
 -      expect(commitSpy.firstCall.args[0].newValue.roundingError.toFixed(6)).to.eq("0.000127");
 -    });
 -  });
--});
+-
+   it("edits merged values", async function () {
+     const { imodel, schema, ...imodelKeys } = await buildIModel(this, async (builder, mochaContext) => {
+       const mySchema = await importSchema(
 diff --git a/apps/full-stack-tests/src/testing/RulesetTesting.test.ts b/apps/full-stack-tests/src/testing/RulesetTesting.test.ts
 index 63947822..621c6df2 100644
 --- a/apps/full-stack-tests/src/testing/RulesetTesting.test.ts

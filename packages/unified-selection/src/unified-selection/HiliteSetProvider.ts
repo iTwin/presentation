@@ -253,7 +253,7 @@ class HiliteSetProviderImpl implements HiliteSetProvider {
           executeQuery({
             queryExecutor: this._imodelAccess,
             query: { ctes, ecsql, bindings },
-            config: { restartToken: `${this.#componentName}/${this.#componentId}/models` },
+            config: { restartToken: `${this.#componentName}/${this.#componentId}/models/${Guid.createValue()}` },
           }),
         );
       }),
@@ -293,7 +293,7 @@ class HiliteSetProviderImpl implements HiliteSetProvider {
           executeQuery({
             queryExecutor: this._imodelAccess,
             query: { ctes, ecsql, bindings },
-            config: { restartToken: `${this.#componentName}/${this.#componentId}/sub-categories` },
+            config: { restartToken: `${this.#componentName}/${this.#componentId}/sub-categories/${Guid.createValue()}` },
           }),
         );
       }),
@@ -365,7 +365,7 @@ class HiliteSetProviderImpl implements HiliteSetProvider {
           executeQuery({
             queryExecutor: this._imodelAccess,
             query: { ctes, ecsql, bindings },
-            config: { restartToken: `${this.#componentName}/${this.#componentId}/elements` },
+            config: { restartToken: `${this.#componentName}/${this.#componentId}/elements/${Guid.createValue()}` },
           }),
         );
       }),
