@@ -41,6 +41,7 @@ const NavigationPropertyEditor: new () => PropertyEditorBase = NavigationPropert
 const NavigationPropertyTargetEditor: new (props: PropertyEditorProps) => TypeEditor & PureComponent<PropertyEditorProps> =
   NavigationPropertyTargetEditorInternal;
 
+// eslint-disable-next-line @typescript-eslint/no-deprecated
 export { NavigationPropertyEditor, NavigationPropertyTargetEditor };
 
 // register editor for kind of quantity properties
