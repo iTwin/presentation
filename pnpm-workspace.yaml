@@ -12,6 +12,8 @@ hoistPattern:
   - '*babel*'
   - ignore-styles
   - global-jsdom
+  - '@smithy/node-config-provider'
+  - '@smithy/config-resolver'
 
 catalogs:
   appui:
