@@ -4,6 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import "./DisposePolyfill.js";
+
 import { EMPTY, firstValueFrom, from, map, merge, Subject, takeUntil, toArray } from "rxjs";
 import { Guid, GuidString, Id64Arg, Id64Set } from "@itwin/core-bentley";
 import { ECClassHierarchyInspector, ECSqlQueryExecutor } from "@itwin/presentation-shared";

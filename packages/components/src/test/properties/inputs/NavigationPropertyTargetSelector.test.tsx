@@ -11,14 +11,14 @@ import { EmptyLocalization } from "@itwin/core-common";
 import { IModelApp, IModelConnection } from "@itwin/core-frontend";
 import { Content, Item, LabelDefinition, NavigationPropertyInfo } from "@itwin/presentation-common";
 import { Presentation, PresentationManager } from "@itwin/presentation-frontend";
+import { stubVirtualization } from "../../_helpers/Common.js";
+import { createTestContentDescriptor, createTestContentItem } from "../../_helpers/Content.js";
 import { PropertyEditorAttributes } from "../../../presentation-components/properties/editors/Common.js";
 import { VALUE_BATCH_SIZE } from "../../../presentation-components/properties/inputs/ItemsLoader.js";
 import {
   NavigationPropertyTargetSelector,
   NavigationPropertyTargetSelectorProps,
 } from "../../../presentation-components/properties/inputs/NavigationPropertyTargetSelector.js";
-import { stubVirtualization } from "../../_helpers/Common.js";
-import { createTestContentDescriptor, createTestContentItem } from "../../_helpers/Content.js";
 import { render, waitFor } from "../../TestUtils.js";
 
 function createNavigationPropertyDescription(): PropertyDescription {

@@ -4,6 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.Logging.CreatingCustomLogger
+
 import { ILogger, LogLevel } from "@itwin/presentation-shared";
 
 export const LOGGER: ILogger = {

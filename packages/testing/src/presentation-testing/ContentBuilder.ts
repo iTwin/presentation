@@ -137,7 +137,7 @@ export class ContentBuilder {
         ORDER BY s.Name, c.Name
       `,
       undefined,
-      { rowFormat: QueryRowFormat.UseJsPropertyNames, restartToken: `${this.#componentName}/${this.#componentId}/ec-class-names` },
+      { rowFormat: QueryRowFormat.UseJsPropertyNames, restartToken: `${this.#componentName}/${this.#componentId}/ec-class-names/${Guid.createValue()}` },
     );
     return reader.toArray();
   }
@@ -157,7 +157,7 @@ export class ContentBuilder {
         {
           rowFormat: QueryRowFormat.UseJsPropertyNames,
           limit: { count: limitInstances ? 1 : 4000 },
-          restartToken: `${this.#componentName}/${this.#componentId}/instance-id`,
+          restartToken: `${this.#componentName}/${this.#componentId}/instance-id/${Guid.createValue()}`,
         },
       );
       const instanceIds: InstanceId[] = await reader.toArray();

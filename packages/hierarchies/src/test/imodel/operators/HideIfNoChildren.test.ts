@@ -2,6 +2,7 @@
  * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
+
 import { expect } from "chai";
 import { collect, waitFor } from "presentation-test-utilities";
 import { EMPTY, from, Observable, of, Subject } from "rxjs";

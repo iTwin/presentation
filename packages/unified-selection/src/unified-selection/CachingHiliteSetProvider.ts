@@ -5,6 +5,7 @@
 /* eslint-disable @typescript-eslint/no-deprecated */
 
 import "./DisposePolyfill.js";
+
 import { ECClassHierarchyInspector, ECSqlQueryExecutor } from "@itwin/presentation-shared";
 import { createHiliteSetProvider, HiliteSet } from "./HiliteSetProvider.js";
 import { createIModelHiliteSetProvider } from "./IModelHiliteSetProvider.js";

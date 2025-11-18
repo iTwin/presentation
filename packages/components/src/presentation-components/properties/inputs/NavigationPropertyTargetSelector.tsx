@@ -4,6 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import "./NavigationPropertyTargetSelector.scss";
+
 import { forwardRef, useCallback, useEffect, useImperativeHandle, useMemo, useRef, useState } from "react";
 import { PropertyDescription, PropertyRecord, PropertyValue, PropertyValueFormat } from "@itwin/appui-abstract";
 import { PropertyEditorProps, PropertyValueRendererManager } from "@itwin/components-react";

@@ -40,9 +40,6 @@ import {
   RulesetManager,
   RulesetVariablesManager,
 } from "@itwin/presentation-frontend";
-import { CacheInvalidationProps } from "../../presentation-components/common/ContentDataProvider.js";
-import { FAVORITES_CATEGORY_NAME } from "../../presentation-components/favorite-properties/Utils.js";
-import { DEFAULT_PROPERTY_GRID_RULESET, PresentationPropertyDataProvider } from "../../presentation-components/propertygrid/DataProvider.js";
 import { createTestECClassInfo, createTestECInstanceKey, createTestPropertyInfo } from "../_helpers/Common.js";
 import {
   createTestCategoryDescription,
@@ -52,6 +49,9 @@ import {
   createTestPropertiesContentField,
   createTestSimpleContentField,
 } from "../_helpers/Content.js";
+import { CacheInvalidationProps } from "../../presentation-components/common/ContentDataProvider.js";
+import { FAVORITES_CATEGORY_NAME } from "../../presentation-components/favorite-properties/Utils.js";
+import { DEFAULT_PROPERTY_GRID_RULESET, PresentationPropertyDataProvider } from "../../presentation-components/propertygrid/DataProvider.js";
 
 /**
  * This is just a helper class to provide public access to

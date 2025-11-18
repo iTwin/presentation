@@ -4,6 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 // need this because of https://github.com/bcoe/c8/issues/182
+
 import "../shared/ecsql-snippets/index.js";
 import "../shared/ECSqlCore.js";
 import "../shared/Event.js";

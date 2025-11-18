@@ -10,6 +10,8 @@ import { PropertyFilterRuleGroupOperator, PropertyFilterRuleOperator } from "@it
 import { BeEvent } from "@itwin/core-bentley";
 import { IModelConnection } from "@itwin/core-frontend";
 import { ClassInfo, RelationshipPath, PropertyValueFormat as TypeValueFormat, Value } from "@itwin/presentation-common";
+import { createTestECClassInfo, createTestPropertyInfo } from "../_helpers/Common.js";
+import { createTestNestedContentField, createTestPropertiesContentField } from "../_helpers/Content.js";
 import { serializeUniqueValues, UniqueValue } from "../../presentation-components/common/Utils.js";
 import { ECClassInfo, getIModelMetadataProvider } from "../../presentation-components/instance-filter-builder/ECMetadataProvider.js";
 import {
@@ -17,8 +19,6 @@ import {
   PresentationInstanceFilterInfo,
 } from "../../presentation-components/instance-filter-builder/PresentationFilterBuilder.js";
 import { PresentationInstanceFilterCondition } from "../../presentation-components/instance-filter-builder/PresentationInstanceFilter.js";
-import { createTestECClassInfo, createTestPropertyInfo } from "../_helpers/Common.js";
-import { createTestNestedContentField, createTestPropertiesContentField } from "../_helpers/Content.js";
 
 describe("createInstanceFilterDefinition", () => {
   describe("converts single condition with", () => {
