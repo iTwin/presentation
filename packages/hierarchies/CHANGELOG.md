@@ -1,5 +1,13 @@
 # @itwin/presentation-hierarchies
 
+## 2.0.0-alpha.5
+
+### Patch Changes
+
+- [#1112](https://github.com/iTwin/presentation/pull/1112): Version bump
+- Updated dependencies:
+  - @itwin/presentation-shared@2.0.0-alpha.3
+
 ## 2.0.0-alpha.4
 
 ### Patch Changes
@@ -33,7 +41,6 @@
 ### Major Changes
 
 - [#954](https://github.com/iTwin/presentation/pull/954): Add additional requirements for types in `EC` metadata namespace, whose objects are returned by `ECSchemaProvider`.
-
   - `EC.Schema`, `EC.Class` and `EC.Property` now all have an async `getCustomAttributes()` method that returns an `EC.CustomAttributeSet`, allowing consumers to access custom attributes of these schema items.
   - `EC.Class` now additionally has these members:
     - `baseClass: Promise<Class | undefined>`
