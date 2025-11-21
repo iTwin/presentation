@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { assert, compareStrings, compareStringsOrUndefined } from "@itwin/core-bentley";
-import { InstanceKey } from "@itwin/presentation-shared";
+import { InstanceKey, normalizeFullClassName } from "@itwin/presentation-shared";
 
 /**
  * An instance key that may be associated with specific iModel.
@@ -241,7 +241,7 @@ export namespace HierarchyNodeKey {
           if (instanceKeyCompareResult !== 0) {
             return instanceKeyCompareResult;
           }
-          const imodelKeyCompareResult = compareStringsOrUndefined(lhs.instanceKeys[0].imodelKey, rhs.instanceKeys[0].imodelKey);
+          const imodelKeyCompareResult = compareStringsOrUndefined(lhs.instanceKeys[i].imodelKey, rhs.instanceKeys[i].imodelKey);
           if (imodelKeyCompareResult !== 0) {
             return imodelKeyCompareResult;
           }
@@ -250,7 +250,7 @@ export namespace HierarchyNodeKey {
       }
       case "class-grouping": {
         assert(rhs.type === "class-grouping");
-        return compareStrings(lhs.className, rhs.className);
+        return compareStrings(normalizeFullClassName(lhs.className).toLocaleLowerCase(), normalizeFullClassName(rhs.className).toLocaleLowerCase());
       }
       case "label-grouping": {
         assert(rhs.type === "label-grouping");
@@ -266,11 +266,14 @@ export namespace HierarchyNodeKey {
           return lhs.properties.length - rhs.properties.length;
         }
         for (let i = 0; i < lhs.properties.length; ++i) {
-          const classCompareResult = compareStrings(lhs.properties[i].className, rhs.properties[i].className);
+          const classCompareResult = compareStrings(
+            normalizeFullClassName(lhs.properties[i].className).toLocaleLowerCase(),
+            normalizeFullClassName(rhs.properties[i].className).toLocaleLowerCase(),
+          );
           if (classCompareResult !== 0) {
             return classCompareResult;
           }
-          const nameCompareResult = compareStrings(lhs.properties[i].propertyName, rhs.properties[i].propertyName);
+          const nameCompareResult = compareStrings(lhs.properties[i].propertyName.toLocaleLowerCase(), rhs.properties[i].propertyName.toLocaleLowerCase());
           if (nameCompareResult !== 0) {
             return nameCompareResult;
           }
@@ -279,11 +282,14 @@ export namespace HierarchyNodeKey {
       }
       case "property-grouping:value": {
         assert(rhs.type === "property-grouping:value");
-        const propertyClassNameCompareResult = compareStrings(lhs.propertyClassName, rhs.propertyClassName);
+        const propertyClassNameCompareResult = compareStrings(
+          normalizeFullClassName(lhs.propertyClassName).toLocaleLowerCase(),
+          normalizeFullClassName(rhs.propertyClassName).toLocaleLowerCase(),
+        );
         if (propertyClassNameCompareResult !== 0) {
           return propertyClassNameCompareResult;
         }
-        const propertyNameCompareResult = compareStrings(lhs.propertyName, rhs.propertyName);
+        const propertyNameCompareResult = compareStrings(lhs.propertyName.toLocaleLowerCase(), rhs.propertyName.toLocaleLowerCase());
         if (propertyNameCompareResult !== 0) {
           return propertyNameCompareResult;
         }
@@ -291,11 +297,14 @@ export namespace HierarchyNodeKey {
       }
       case "property-grouping:range": {
         assert(rhs.type === "property-grouping:range");
-        const propertyClassNameCompareResult = compareStrings(lhs.propertyClassName, rhs.propertyClassName);
+        const propertyClassNameCompareResult = compareStrings(
+          normalizeFullClassName(lhs.propertyClassName).toLocaleLowerCase(),
+          normalizeFullClassName(rhs.propertyClassName).toLocaleLowerCase(),
+        );
         if (propertyClassNameCompareResult !== 0) {
           return propertyClassNameCompareResult;
         }
-        const propertyNameCompareResult = compareStrings(lhs.propertyName, rhs.propertyName);
+        const propertyNameCompareResult = compareStrings(lhs.propertyName.toLocaleLowerCase(), rhs.propertyName.toLocaleLowerCase());
         if (propertyNameCompareResult !== 0) {
           return propertyNameCompareResult;
         }

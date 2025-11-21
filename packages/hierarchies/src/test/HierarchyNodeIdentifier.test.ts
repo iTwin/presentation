@@ -11,7 +11,7 @@ import { createTestGenericNodeKey } from "./Utils.js";
 
 describe("HierarchyNodeIdentifier", () => {
   const instanceNodeIdentifier: InstanceKey = {
-    className: "a",
+    className: "s.a",
     id: "0x1",
   };
   const genericNodeIdentifier: GenericNodeKey = {
@@ -41,9 +41,9 @@ describe("HierarchyNodeIdentifier", () => {
     });
 
     it("compares instance node identifiers", () => {
-      expect(HierarchyNodeIdentifier.equal(instanceNodeIdentifier, { className: "b", id: "0x1" })).to.be.false;
-      expect(HierarchyNodeIdentifier.equal(instanceNodeIdentifier, { className: "a", id: "0x2" })).to.be.false;
-      expect(HierarchyNodeIdentifier.equal(instanceNodeIdentifier, { className: "a", id: "0x1" })).to.be.true;
+      expect(HierarchyNodeIdentifier.equal(instanceNodeIdentifier, { className: "s.b", id: "0x1" })).to.be.false;
+      expect(HierarchyNodeIdentifier.equal(instanceNodeIdentifier, { className: "s.a", id: "0x2" })).to.be.false;
+      expect(HierarchyNodeIdentifier.equal(instanceNodeIdentifier, { className: "s.a", id: "0x1" })).to.be.true;
     });
 
     it("compares instance and generic node identifiers", () => {
