@@ -17,15 +17,7 @@ import { unstable_ErrorRegion as ErrorRegion } from "@stratakit/structures";
 type TreeRendererProps = ComponentPropsWithoutRef<typeof StrataKitTreeRenderer>;
 
 export function TreeRendererWithFilterAction(props: TreeRendererProps) {
-  const { getHierarchyLevelDetails, onFilterClick, getMenuActions: getActions, ...treeProps } = props;
-  const getInlineActions = useCallback(
-    (node: PresentationHierarchyNode) => [
-      <FilterAction key="filter" node={node} onFilter={onFilterClick} getHierarchyLevelDetails={getHierarchyLevelDetails} reserveSpace />,
-      <RenameAction key="rename" reserveSpace />,
-    ],
-    [onFilterClick, getHierarchyLevelDetails],
-  );
-
+  const { getHierarchyLevelDetails, onFilterClick, ...treeProps } = props;
   const nodesWithError = useMemo(() => {
     return mapNodesHierarchy(treeProps.rootNodes, (node) => {
       if (node.label.includes("[0-1M]") || node.label.includes("[0-1U]") || node.label.includes("[0-29]")) {
@@ -45,7 +37,14 @@ export function TreeRendererWithFilterAction(props: TreeRendererProps) {
     });
   }, [treeProps.rootNodes]);
 
-  const getMenuActions = useCallback((node: PresentationHierarchyNode) => (getActions ? getActions(node) : []), [getActions]);
+  const getInlineActions = useCallback<Required<TreeRendererProps>["getInlineActions"]>(
+    ({ targetNode }) => [
+      <FilterAction key="filter" node={targetNode} onFilter={onFilterClick} getHierarchyLevelDetails={getHierarchyLevelDetails} reserveSpace />,
+      <RenameAction key="rename" reserveSpace />,
+    ],
+    [onFilterClick, getHierarchyLevelDetails],
+  );
+
   const getEditingProps = useCallback<Required<TreeRendererProps>["getEditingProps"]>((node) => {
     return {
       onLabelChanged: (newLabel: string) => {
@@ -61,7 +60,6 @@ export function TreeRendererWithFilterAction(props: TreeRendererProps) {
       {...treeProps}
       rootNodes={nodesWithError}
       getInlineActions={getInlineActions}
-      getMenuActions={getMenuActions}
       onFilterClick={onFilterClick}
       getHierarchyLevelDetails={getHierarchyLevelDetails}
       getEditingProps={getEditingProps}
