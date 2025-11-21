@@ -3,14 +3,14 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { ComponentPropsWithoutRef, CSSProperties, forwardRef, memo, ReactElement, useCallback, useEffect, useMemo, useRef } from "react";
+import { ComponentPropsWithoutRef, CSSProperties, forwardRef, memo, ReactElement, ReactNode, useCallback, useEffect, useMemo, useRef } from "react";
 import { Tree } from "@stratakit/structures";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { TreeRendererProps } from "../Renderers.js";
 import { PresentationHierarchyNode } from "../TreeNode.js";
 import { SelectionMode, useSelectionHandler } from "../UseSelectionHandler.js";
 import { useEvent } from "../Utils.js";
-import { ErrorItem, FlatTreeItem, isPlaceholderItem, useErrorList, useFlatTreeItems } from "./FlatTreeNode.js";
+import { ErrorItem, FlatTreeItem, FlatTreeNodeItem, isPlaceholderItem, useErrorList, useFlatTreeItems } from "./FlatTreeNode.js";
 import { LocalizationContextProvider } from "./LocalizationContext.js";
 import { RenameContextProvider } from "./RenameAction.js";
 import { TreeErrorRenderer, TreeErrorRendererProps } from "./TreeErrorRenderer.js";
@@ -42,12 +42,27 @@ interface TreeRendererOwnProps {
      */
     onLabelChanged?: (newLabel: string) => void;
   };
+
+  /**
+   * Callback that returns menu actions for tree item.
+   * Must return an array of `Tree.ItemAction` elements.
+   */
+  getMenuActions?: (props: { targetNode: PresentationHierarchyNode; selectedNodes: PresentationHierarchyNode[] }) => ReactNode[];
+  /**
+   * Callback that returns inline actions for tree item.
+   * Must return an array of `Tree.ItemAction` elements.
+   * Max 2 items.
+   */
+  getInlineActions?: (props: { targetNode: PresentationHierarchyNode; selectedNodes: PresentationHierarchyNode[] }) => ReactNode[];
 }
 
 /** @alpha */
 type StrataKitTreeRendererProps = TreeRendererProps &
   Pick<TreeErrorRendererProps, "onFilterClick"> &
-  Omit<TreeNodeRendererProps, "node" | "aria-level" | "aria-posinset" | "aria-setsize" | "reloadTree" | "selected" | "error"> &
+  Omit<
+    TreeNodeRendererProps,
+    "node" | "aria-level" | "aria-posinset" | "aria-setsize" | "reloadTree" | "selected" | "error" | "getMenuActions" | "getInlineActions"
+  > &
   TreeRendererOwnProps &
   ComponentPropsWithoutRef<typeof LocalizationContextProvider>;
 
@@ -74,6 +89,8 @@ export function StrataKitTreeRenderer({
   onNodeKeyDown: onNodeKeyDownOverride,
   getEditingProps,
   id,
+  getInlineActions,
+  getMenuActions,
   ...treeProps
 }: StrataKitTreeRendererProps) {
   const { onNodeClick, onNodeKeyDown } = useSelectionHandler({
@@ -133,6 +150,27 @@ export function StrataKitTreeRenderer({
     reloadTree,
   };
 
+  const getSelectedNodes = useMemo(() => {
+    let calculatedSelectedNodes: PresentationHierarchyNode[];
+    return () => {
+      if (calculatedSelectedNodes === undefined) {
+        calculatedSelectedNodes = flatItems
+          .filter((item): item is FlatTreeNodeItem => !isPlaceholderItem(item) && isNodeSelected?.(item.id))
+          .map((item) => item.node);
+      }
+      return calculatedSelectedNodes;
+    };
+  }, [flatItems, isNodeSelected]);
+
+  const nodeActions = useMemo(() => {
+    return {
+      getMenuActions: getMenuActions ? (node: PresentationHierarchyNode) => getMenuActions({ targetNode: node, selectedNodes: getSelectedNodes() }) : undefined,
+      getInlineActions: getInlineActions
+        ? (node: PresentationHierarchyNode) => getInlineActions({ targetNode: node, selectedNodes: getSelectedNodes() })
+        : undefined,
+    };
+  }, [getMenuActions, getInlineActions, getSelectedNodes]);
+
   return (
     <LocalizationContextProvider localizedStrings={localizedStrings}>
       {errorRenderer ? errorRenderer(errorRendererProps) : <TreeErrorRenderer {...errorRendererProps} />}
@@ -144,6 +182,7 @@ export function StrataKitTreeRenderer({
             return (
               <VirtualTreeItem
                 {...treeProps}
+                {...nodeActions}
                 onNodeClick={handleNodeClick}
                 onNodeKeyDown={handleKeyDown}
                 ref={virtualizer.measureElement}
