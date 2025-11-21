@@ -14,6 +14,8 @@ public;interface;ResultSetTooLargeErrorInfo
 alpha;function;StrataKitRootErrorRenderer
 public;const;StrataKitTreeNodeRenderer
 alpha;function;StrataKitTreeRenderer
+alpha;const;TreeActionBase
+alpha;interface;TreeActionBaseAttributes
 alpha;function;TreeErrorRenderer
 alpha;type;TreeRendererProps
 alpha;function;useErrorList

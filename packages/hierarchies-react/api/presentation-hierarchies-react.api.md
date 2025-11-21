@@ -4,6 +4,7 @@
 
 ```ts
 
+import { ComponentProps } from 'react';
 import { ComponentPropsWithoutRef } from 'react';
 import { createIModelHierarchyProvider } from '@itwin/presentation-hierarchies';
 import { FC } from 'react';
@@ -75,8 +76,7 @@ interface ErrorItemRendererProps extends Pick<TreeRendererProps, "getHierarchyLe
 // @alpha
 export const FilterAction: NamedExoticComponent<    {
 onFilter?: (hierarchyLevelDetails: HierarchyLevelDetails) => void;
-reserveSpace?: true;
-} & Pick<TreeRendererProps, "getHierarchyLevelDetails"> & {
+} & TreeActionBaseAttributes & Pick<TreeRendererProps, "getHierarchyLevelDetails"> & {
 node: PresentationHierarchyNode;
 }>;
 
@@ -212,12 +212,7 @@ interface ReloadTreeOptions {
 }
 
 // @alpha
-export const RenameAction: NamedExoticComponent<RenameActionProps>;
-
-// @alpha (undocumented)
-interface RenameActionProps {
-    reserveSpace?: true;
-}
+export const RenameAction: NamedExoticComponent<TreeActionBaseAttributes>;
 
 // @alpha (undocumented)
 export function RenameContextProvider({ onLabelChanged, children }: PropsWithChildren<{
@@ -269,10 +264,25 @@ type StrataKitRootErrorRendererProps = {
 export const StrataKitTreeNodeRenderer: FC<PropsWithRef<TreeNodeRendererProps & RefAttributes<HTMLElement>>>;
 
 // @alpha
-export function StrataKitTreeRenderer({ rootNodes, selectNodes, selectionMode, expandNode, treeLabel, localizedStrings, getHierarchyLevelDetails, onFilterClick, reloadTree, isNodeSelected, errorRenderer, onNodeClick: onNodeClickOverride, onNodeKeyDown: onNodeKeyDownOverride, getEditingProps, id, getInlineActions, getMenuActions, ...treeProps }: StrataKitTreeRendererProps): JSX_2.Element;
+export function StrataKitTreeRenderer({ rootNodes, selectNodes, selectionMode, expandNode, treeLabel, localizedStrings, getHierarchyLevelDetails, onFilterClick, reloadTree, isNodeSelected, errorRenderer, onNodeClick: onNodeClickOverride, onNodeKeyDown: onNodeKeyDownOverride, getEditingProps, id, getInlineActions, getMenuActions, getContextMenuActions, ...treeProps }: StrataKitTreeRendererProps): JSX_2.Element;
 
 // @alpha (undocumented)
-type StrataKitTreeRendererProps = TreeRendererProps & Pick<TreeErrorRendererProps, "onFilterClick"> & Omit<TreeNodeRendererProps_2, "node" | "aria-level" | "aria-posinset" | "aria-setsize" | "reloadTree" | "selected" | "error" | "getMenuActions" | "getInlineActions"> & TreeRendererOwnProps & ComponentPropsWithoutRef<typeof LocalizationContextProvider>;
+type StrataKitTreeRendererProps = TreeRendererProps & Pick<TreeErrorRendererProps, "onFilterClick"> & Omit<TreeNodeRendererProps_2, "node" | "aria-level" | "aria-posinset" | "aria-setsize" | "reloadTree" | "selected" | "error" | "getMenuActions" | "getInlineActions" | "getContextMenuActions"> & TreeRendererOwnProps & ComponentPropsWithoutRef<typeof LocalizationContextProvider>;
+
+// @public (undocumented)
+type StrataTreeActionProps = ComponentProps<typeof Tree.ItemAction>;
+
+// @alpha
+export const TreeActionBase: NamedExoticComponent<TreeActionBaseProps>;
+
+// @alpha
+export interface TreeActionBaseAttributes {
+    hide?: boolean;
+    variant?: "default" | "inline" | "context-menu";
+}
+
+// @alpha (undocumented)
+type TreeActionBaseProps = StrataTreeActionProps & TreeActionBaseAttributes;
 
 // @alpha
 interface TreeErrorItemProps {
@@ -303,6 +313,7 @@ type TreeNodeProps = ComponentPropsWithoutRef<typeof Tree.Item>;
 // @alpha (undocumented)
 interface TreeNodeRendererOwnProps {
     getClassName?: (node: PresentationHierarchyNode) => string | undefined;
+    getContextMenuActions?: (node: PresentationHierarchyNode) => ReactNode[];
     getDecorations?: (node: PresentationHierarchyNode) => ReactNode;
     getInlineActions?: (node: PresentationHierarchyNode) => ReactNode[];
     getLabel?: (node: PresentationHierarchyNode) => ReactElement | undefined;
@@ -322,6 +333,10 @@ type TreeNodeRendererProps_2 = ComponentPropsWithoutRef<typeof StrataKitTreeNode
 // @alpha (undocumented)
 interface TreeRendererOwnProps {
     errorRenderer?: (props: TreeErrorRendererProps) => ReactElement;
+    getContextMenuActions?: (props: {
+        targetNode: PresentationHierarchyNode;
+        selectedNodes: PresentationHierarchyNode[];
+    }) => ReactNode[];
     getEditingProps?: (node: PresentationHierarchyNode) => {
         onLabelChanged?: (newLabel: string) => void;
     };
