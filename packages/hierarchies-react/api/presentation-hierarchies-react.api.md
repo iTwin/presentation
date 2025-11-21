@@ -269,9 +269,6 @@ export function StrataKitTreeRenderer({ rootNodes, selectNodes, selectionMode, e
 // @alpha (undocumented)
 type StrataKitTreeRendererProps = TreeRendererProps & Pick<TreeErrorRendererProps, "onFilterClick"> & Omit<TreeNodeRendererProps_2, "node" | "aria-level" | "aria-posinset" | "aria-setsize" | "reloadTree" | "selected" | "error" | "getMenuActions" | "getInlineActions" | "getContextMenuActions"> & TreeRendererOwnProps & ComponentPropsWithoutRef<typeof LocalizationContextProvider>;
 
-// @public (undocumented)
-type StrataTreeActionProps = ComponentProps<typeof Tree.ItemAction>;
-
 // @alpha
 export const TreeActionBase: NamedExoticComponent<TreeActionBaseProps>;
 
@@ -282,7 +279,7 @@ export interface TreeActionBaseAttributes {
 }
 
 // @alpha (undocumented)
-type TreeActionBaseProps = StrataTreeActionProps & TreeActionBaseAttributes;
+type TreeActionBaseProps = ComponentProps<typeof Tree.ItemAction> & TreeActionBaseAttributes;
 
 // @alpha
 interface TreeErrorItemProps {
