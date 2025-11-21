@@ -12,7 +12,7 @@ Before
 ```tsx
 return <StrataKitTreeRenderer
   getInlineActions={(node) => [
-    <InlineAction node={node}/>
+    <InlineAction node={node} />
   ]}
   getMenuActions={(node) => [
     <MenuAction node={node} />
