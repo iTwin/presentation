@@ -31,7 +31,7 @@ export interface TreeActionBaseAttributes {
 export type TreeActionBaseProps = ComponentProps<typeof Tree.ItemAction> & TreeActionBaseAttributes;
 
 /**
- * Base component used to render tree actions. It is designed to be allow rendering same action in different context (inline, dropdown, context menu).
+ * Base component used to render tree actions. It is designed to allow rendering same action in different context (inline, dropdown, context menu).
  * Should be used together with `StrataKitTreeNodeRenderer` and returned from `getInlineActions`, `getMenuActions` and `getContextMenuActions` callbacks.
  *
  * When implementing custom action wrapping around this component make sure to forward `TreeActionBaseAttributes` props to it. Example:
