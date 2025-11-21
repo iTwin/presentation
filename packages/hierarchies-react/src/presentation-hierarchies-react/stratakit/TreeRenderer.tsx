@@ -45,7 +45,7 @@ interface TreeRendererOwnProps {
 
   /**
    * Callback that returns menu actions for tree item.
-   * Must return an array of `<TreeActionBase />` elements.
+   * Must return an array of `<TreeActionBase />` or `<Divider />` elements.
    */
   getMenuActions?: (props: { targetNode: PresentationHierarchyNode; selectedNodes: PresentationHierarchyNode[] }) => ReactNode[];
   /**
@@ -56,7 +56,7 @@ interface TreeRendererOwnProps {
   getInlineActions?: (props: { targetNode: PresentationHierarchyNode; selectedNodes: PresentationHierarchyNode[] }) => ReactNode[];
   /**
    * Callback that returns actions for tree item context menu.
-   * Must return an array of `<TreeActionBase />` elements.
+   * Must return an array of `<TreeActionBase />` or `<Divider />` elements.
    */
   getContextMenuActions?: (props: { targetNode: PresentationHierarchyNode; selectedNodes: PresentationHierarchyNode[] }) => ReactNode[];
 }

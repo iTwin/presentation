@@ -56,18 +56,18 @@ export interface TreeNodeRendererOwnProps {
   getDecorations?: (node: PresentationHierarchyNode) => ReactNode;
   /**
    * Callback that returns menu actions for tree item.
-   * Must return an array of `Tree.ItemAction` elements.
+   * Must return an array of `<TreeActionBase />` or `<Divider />` elements.
    */
   getMenuActions?: (node: PresentationHierarchyNode) => ReactNode[];
   /**
    * Callback that returns inline actions for tree item.
-   * Must return an array of `Tree.ItemAction` elements.
+   * Must return an array of `<TreeActionBase />` elements.
    * Max 2 items.
    */
   getInlineActions?: (node: PresentationHierarchyNode) => ReactNode[];
   /**
    * Callback that returns actions for tree item context menu.
-   * Must return an array of `Tree.ItemAction` elements.
+   * Must return an array of `<TreeActionBase />` or `<Divider />` elements.
    */
   getContextMenuActions?: (node: PresentationHierarchyNode) => ReactNode[];
 }
@@ -131,18 +131,14 @@ export const StrataKitTreeNodeRenderer: FC<PropsWithRef<TreeNodeRendererProps & 
       if (!getInlineActions) {
         return [];
       }
-      return getInlineActions(node)
-        .filter((action) => isValidElement<TreeActionBaseAttributes>(action))
-        .map((action) => cloneElement<TreeActionBaseAttributes>(action, { variant: "inline" }));
+      return injectActionVariant(getInlineActions(node), "inline");
     }, [node, getInlineActions, localizedStrings.retry, reloadTree]);
 
     const menuItems = useMemo(() => {
       if (!getMenuActions) {
         return undefined;
       }
-      return getMenuActions(node)
-        .filter((action) => isValidElement<TreeActionBaseAttributes>(action))
-        .map((action) => cloneElement<TreeActionBaseAttributes>(action, { variant: "default" }));
+      return injectActionVariant(getMenuActions(node), "default");
     }, [getMenuActions, node]);
 
     const expanded = useMemo(() => {
@@ -218,9 +214,7 @@ export const StrataKitTreeNodeRenderer: FC<PropsWithRef<TreeNodeRendererProps & 
             }
 
             e.preventDefault();
-            const contextMenuActions = getContextMenuActions(node)
-              .filter((action) => isValidElement<TreeActionBaseAttributes>(action))
-              .map((action) => cloneElement<TreeActionBaseAttributes>(action, { variant: "context-menu" }));
+            const contextMenuActions = injectActionVariant(getContextMenuActions(node), "context-menu");
             setContextMenuProps({
               position: {
                 x: e.clientX,
@@ -302,6 +296,12 @@ function LabelEditor({ initialLabel, onChange, onCancel }: { initialLabel: strin
       />
     </TextBox.Root>
   );
+}
+
+function injectActionVariant(actions: ReactNode[], variant: TreeActionBaseAttributes["variant"]) {
+  return actions
+    .filter((action) => isValidElement<TreeActionBaseAttributes>(action))
+    .map((action) => cloneElement<TreeActionBaseAttributes>(action, { variant }));
 }
 
 function useMergedRefs<T>(...refs: ReadonlyArray<Ref<T> | LegacyRef<T> | undefined | null>) {

@@ -21,7 +21,7 @@ export interface TreeActionBaseAttributes {
    */
   variant?: "default" | "inline" | "context-menu";
   /**
-   * Indicates that the actions is not applicable for current tree node and should be hidden.
+   * Indicates that the action is not applicable for current tree node and should be hidden.
    * When set to true, the action will not be rendered at all.
    */
   hide?: boolean;
