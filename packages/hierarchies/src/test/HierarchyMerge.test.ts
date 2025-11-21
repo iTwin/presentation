@@ -8,8 +8,9 @@ import { collect, createAsyncIterator } from "presentation-test-utilities";
 import sinon from "sinon";
 import { BeEvent } from "@itwin/core-bentley";
 import { InstanceKey, Props } from "@itwin/presentation-shared";
+import { mergeProviders } from "../hierarchies/HierarchyMerge.js";
 import { HierarchyNode, NonGroupingHierarchyNode } from "../hierarchies/HierarchyNode.js";
-import { HierarchyProvider, mergeProviders } from "../hierarchies/HierarchyProvider.js";
+import { HierarchyProvider } from "../hierarchies/HierarchyProvider.js";
 import { createTestGenericNode, createTestGenericNodeKey } from "./Utils.js";
 
 describe("mergeProviders", () => {

@@ -41,7 +41,8 @@ export {
   PropertyValueRangeGroupingNodeKey,
   IModelHierarchyNodeKey,
 } from "./hierarchies/HierarchyNodeKey.js";
-export { GetHierarchyNodesProps, HierarchyProvider, mergeProviders } from "./hierarchies/HierarchyProvider.js";
+export { GetHierarchyNodesProps, HierarchyProvider } from "./hierarchies/HierarchyProvider.js";
+export { mergeProviders } from "./hierarchies/HierarchyMerge.js";
 export {
   createHierarchyFilteringHelper,
   // eslint-disable-next-line @typescript-eslint/no-deprecated

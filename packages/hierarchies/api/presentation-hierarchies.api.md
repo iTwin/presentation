@@ -565,7 +565,6 @@ interface MergeHierarchyProvidersProps {
 
 // @public
 export function mergeProviders({ providers }: MergeHierarchyProvidersProps): HierarchyProvider & {
-    dispose: () => void;
     [Symbol.dispose]: () => void;
 };
 
