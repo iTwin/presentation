@@ -24,7 +24,7 @@ After
 ```tsx
 return <StrataKitTreeRenderer
   getInlineActions={({ targetNode }) => [
-    <InlineAction node={targetNode}/>
+    <InlineAction node={targetNode} />
   ]}
   getMenuActions={({ targetNode }) => [
     <MenuAction node={targetNode} />
