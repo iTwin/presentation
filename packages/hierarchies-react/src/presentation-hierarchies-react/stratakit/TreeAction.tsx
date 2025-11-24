@@ -51,12 +51,12 @@ export type TreeActionBaseProps = ComponentProps<typeof Tree.ItemAction> & TreeA
  */
 export const TreeActionBase = memo(function TreeActionBase({ hide, variant = "default", dot, visible, ...actionProps }: TreeActionBaseProps) {
   if (hide) {
-    return variant === "inline" ? <Tree.ItemAction {...actionProps} visible={false} disabled /> : undefined;
+    return variant === "inline" ? <Tree.ItemAction {...actionProps} visible={false} /> : undefined;
   }
 
   if (variant === "context-menu") {
     return <DropdownMenu.Item {...actionProps} />;
   }
 
-  return <Tree.ItemAction {...actionProps} dot={dot} visible={visible} />;
+  return <Tree.ItemAction {...actionProps} dot={dot} visible={variant === "inline" ? visible : undefined} />;
 });
