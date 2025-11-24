@@ -23,7 +23,7 @@ Promise.all(
   filePaths.map(
     (filePath) =>
       new Promise((resolve) => {
-        // TODO: fix false negatives for `npmjs.com` links.
+        // TODO: fix false negatives for `npmjs.com` links. https://github.com/iTwin/presentation/issues/1116
         const p = spawn("pnpm", ["markdown-link-check", "-a", "200,403", filePath], { shell: true });
 
         let myStdout = "";
