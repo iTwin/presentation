@@ -45,15 +45,20 @@ interface TreeRendererOwnProps {
 
   /**
    * Callback that returns menu actions for tree item.
-   * Must return an array of `Tree.ItemAction` elements.
+   * Must return an array of `<TreeActionBase />` or `<Divider />` elements.
    */
   getMenuActions?: (props: { targetNode: PresentationHierarchyNode; selectedNodes: PresentationHierarchyNode[] }) => ReactNode[];
   /**
    * Callback that returns inline actions for tree item.
-   * Must return an array of `Tree.ItemAction` elements.
+   * Must return an array of `<TreeActionBase />` elements.
    * Max 2 items.
    */
   getInlineActions?: (props: { targetNode: PresentationHierarchyNode; selectedNodes: PresentationHierarchyNode[] }) => ReactNode[];
+  /**
+   * Callback that returns actions for tree item context menu.
+   * Must return an array of `<TreeActionBase />` or `<Divider />` elements.
+   */
+  getContextMenuActions?: (props: { targetNode: PresentationHierarchyNode; selectedNodes: PresentationHierarchyNode[] }) => ReactNode[];
 }
 
 /** @alpha */
@@ -61,7 +66,16 @@ type StrataKitTreeRendererProps = TreeRendererProps &
   Pick<TreeErrorRendererProps, "onFilterClick"> &
   Omit<
     TreeNodeRendererProps,
-    "node" | "aria-level" | "aria-posinset" | "aria-setsize" | "reloadTree" | "selected" | "error" | "getMenuActions" | "getInlineActions"
+    | "node"
+    | "aria-level"
+    | "aria-posinset"
+    | "aria-setsize"
+    | "reloadTree"
+    | "selected"
+    | "error"
+    | "getMenuActions"
+    | "getInlineActions"
+    | "getContextMenuActions"
   > &
   TreeRendererOwnProps &
   ComponentPropsWithoutRef<typeof LocalizationContextProvider>;
@@ -91,6 +105,7 @@ export function StrataKitTreeRenderer({
   id,
   getInlineActions,
   getMenuActions,
+  getContextMenuActions,
   ...treeProps
 }: StrataKitTreeRendererProps) {
   const { onNodeClick, onNodeKeyDown } = useSelectionHandler({
@@ -168,8 +183,11 @@ export function StrataKitTreeRenderer({
       getInlineActions: getInlineActions
         ? (node: PresentationHierarchyNode) => getInlineActions({ targetNode: node, selectedNodes: getSelectedNodes() })
         : undefined,
+      getContextMenuActions: getContextMenuActions
+        ? (node: PresentationHierarchyNode) => getContextMenuActions({ targetNode: node, selectedNodes: getSelectedNodes() })
+        : undefined,
     };
-  }, [getMenuActions, getInlineActions, getSelectedNodes]);
+  }, [getMenuActions, getInlineActions, getContextMenuActions, getSelectedNodes]);
 
   return (
     <LocalizationContextProvider localizedStrings={localizedStrings}>
@@ -217,6 +235,7 @@ const VirtualTreeItem = memo(
       getDecorations,
       getMenuActions,
       getInlineActions,
+      getContextMenuActions,
       getClassName,
       getLabel,
       getSublabel,
@@ -261,6 +280,7 @@ const VirtualTreeItem = memo(
           getDecorations={getDecorations}
           getMenuActions={getMenuActions}
           getInlineActions={getInlineActions}
+          getContextMenuActions={getContextMenuActions}
           getClassName={getClassName}
           getLabel={getLabel}
           getSublabel={getSublabel}

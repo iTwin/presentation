@@ -4,9 +4,11 @@
  *--------------------------------------------------------------------------------------------*/
 
 import {
+  cloneElement,
   ComponentPropsWithoutRef,
   FC,
   forwardRef,
+  isValidElement,
   LegacyRef,
   memo,
   MutableRefObject,
@@ -23,11 +25,12 @@ import {
 } from "react";
 import { Spinner, TextBox } from "@stratakit/bricks";
 import refreshSvg from "@stratakit/icons/refresh.svg";
-import { Tree } from "@stratakit/structures";
+import { DropdownMenu, Tree } from "@stratakit/structures";
 import { TreeRendererProps } from "../Renderers.js";
 import { PresentationHierarchyNode } from "../TreeNode.js";
 import { useLocalizationContext } from "./LocalizationContext.js";
 import { useRenameContext } from "./RenameAction.js";
+import { TreeActionBase, TreeActionBaseAttributes } from "./TreeAction.js";
 
 /** @alpha */
 type TreeNodeProps = ComponentPropsWithoutRef<typeof Tree.Item>;
@@ -53,15 +56,20 @@ export interface TreeNodeRendererOwnProps {
   getDecorations?: (node: PresentationHierarchyNode) => ReactNode;
   /**
    * Callback that returns menu actions for tree item.
-   * Must return an array of `Tree.ItemAction` elements.
+   * Must return an array of `<TreeActionBase />` or `<Divider />` elements.
    */
   getMenuActions?: (node: PresentationHierarchyNode) => ReactNode[];
   /**
    * Callback that returns inline actions for tree item.
-   * Must return an array of `Tree.ItemAction` elements.
+   * Must return an array of `<TreeActionBase />` elements.
    * Max 2 items.
    */
   getInlineActions?: (node: PresentationHierarchyNode) => ReactNode[];
+  /**
+   * Callback that returns actions for tree item context menu.
+   * Must return an array of `<TreeActionBase />` or `<Divider />` elements.
+   */
+  getContextMenuActions?: (node: PresentationHierarchyNode) => ReactNode[];
 }
 
 /** @alpha */
@@ -92,6 +100,7 @@ export const StrataKitTreeNodeRenderer: FC<PropsWithRef<TreeNodeRendererProps & 
       getMenuActions,
       getInlineActions,
       getDecorations,
+      getContextMenuActions,
       ...treeItemProps
     },
     forwardedRef,
@@ -100,6 +109,7 @@ export const StrataKitTreeNodeRenderer: FC<PropsWithRef<TreeNodeRendererProps & 
     const ref = useMergedRefs(forwardedRef, nodeRef);
     const { localizedStrings } = useLocalizationContext();
     const renameContext = useRenameContext();
+    const [contextMenuProps, setContextMenuProps] = useState<{ position: { x: number; y: number }; actions: ReactNode[] } | undefined>(undefined);
 
     const className = useMemo(() => getClassName?.(node), [getClassName, node]);
     const label = useMemo(() => (getLabel ? getLabel(node) : node.label), [getLabel, node]);
@@ -108,20 +118,28 @@ export const StrataKitTreeNodeRenderer: FC<PropsWithRef<TreeNodeRendererProps & 
     const inlineActions = useMemo(() => {
       if (node.error !== undefined && node.error.type === "ChildrenLoad") {
         return [
-          <Tree.ItemAction
+          <TreeActionBase
             key="retry"
             label={localizedStrings.retry}
             onClick={() => reloadTree({ parentNodeId: node.id, state: "reset" })}
             visible={true}
             icon={refreshSvg}
+            variant="inline"
           />,
         ];
       }
       if (!getInlineActions) {
         return [];
       }
-      return getInlineActions(node);
+      return injectActionVariant(getInlineActions(node), "inline");
     }, [node, getInlineActions, localizedStrings.retry, reloadTree]);
+
+    const menuItems = useMemo(() => {
+      if (!getMenuActions) {
+        return undefined;
+      }
+      return injectActionVariant(getMenuActions(node), "default");
+    }, [getMenuActions, node]);
 
     const expanded = useMemo(() => {
       if (node.error) {
@@ -152,44 +170,81 @@ export const StrataKitTreeNodeRenderer: FC<PropsWithRef<TreeNodeRendererProps & 
     ) : undefined;
 
     return (
-      <Tree.Item
-        {...treeItemProps}
-        ref={ref}
-        className={className}
-        label={labelEditor ?? label}
-        description={description}
-        selected={selected}
-        expanded={expanded}
-        onExpandedChange={useCallback(
-          (isExpanded: boolean) => {
-            expandNode(node.id, isExpanded);
-          },
-          [node, expandNode],
-        )}
-        onClick={useCallback<Required<TreeNodeProps>["onClick"]>(
-          (event) => {
-            if (isDisabled) {
+      <>
+        <Tree.Item
+          {...treeItemProps}
+          ref={ref}
+          className={className}
+          label={labelEditor ?? label}
+          description={description}
+          selected={selected}
+          expanded={expanded}
+          onExpandedChange={useCallback(
+            (isExpanded: boolean) => {
+              expandNode(node.id, isExpanded);
+            },
+            [node, expandNode],
+          )}
+          onClick={useCallback<Required<TreeNodeProps>["onClick"]>(
+            (event) => {
+              if (isDisabled) {
+                return;
+              }
+
+              onNodeClick?.(node, !selected, event);
+            },
+            [node, isDisabled, selected, onNodeClick],
+          )}
+          onKeyDown={useCallback<Required<TreeNodeProps>["onKeyDown"]>(
+            (event) => {
+              // Ignore if it is called on the element inside, e.g. checkbox or expander
+              if (!isDisabled && event.target === nodeRef.current) {
+                onNodeKeyDown?.(node, !selected, event);
+              }
+            },
+            [onNodeKeyDown, selected, isDisabled, node],
+          )}
+          inlineActions={inlineActions}
+          actions={menuItems}
+          unstable_decorations={decorations}
+          error={node.error ? node.error.id : undefined}
+          onContextMenu={(e) => {
+            if (!getContextMenuActions) {
               return;
             }
 
-            onNodeClick?.(node, !selected, event);
-          },
-          [node, isDisabled, selected, onNodeClick],
-        )}
-        onKeyDown={useCallback<Required<TreeNodeProps>["onKeyDown"]>(
-          (event) => {
-            // Ignore if it is called on the element inside, e.g. checkbox or expander
-            if (!isDisabled && event.target === nodeRef.current) {
-              onNodeKeyDown?.(node, !selected, event);
+            e.preventDefault();
+            const contextMenuActions = injectActionVariant(getContextMenuActions(node), "context-menu");
+            setContextMenuProps({
+              position: {
+                x: e.clientX,
+                y: e.clientY,
+              },
+              actions: contextMenuActions,
+            });
+          }}
+        />
+        <DropdownMenu.Provider
+          open={contextMenuProps !== undefined}
+          setOpen={(open) => {
+            if (!open) {
+              setContextMenuProps(undefined);
             }
-          },
-          [onNodeKeyDown, selected, isDisabled, node],
-        )}
-        inlineActions={inlineActions}
-        actions={useMemo(() => (node.error === undefined && getMenuActions ? getMenuActions(node) : []), [getMenuActions, node])}
-        unstable_decorations={decorations}
-        error={node.error ? node.error.id : undefined}
-      />
+          }}
+          key={`${node.id}-${contextMenuProps?.position.x ?? ""}-${contextMenuProps?.position.y ?? ""}`}
+        >
+          {contextMenuProps ? (
+            <DropdownMenu.Button style={{ position: "fixed", top: contextMenuProps.position.y, left: contextMenuProps.position.x }} render={<div />} />
+          ) : null}
+          {/* `autoFocus` prop is coming from ariakit and is not native HTML `autoFocus` prop. */}
+          {/* `focusable` is needed for `autoFocus` to work. StrataKit exposes only `autoFocus` and does not set `focusable` internally. */}
+          {/* eslint-disable jsx-a11y/no-autofocus */}
+          {/* @ts-expect-error focusable is passed through */}
+          <DropdownMenu.Content focusable autoFocus={true}>
+            {contextMenuProps?.actions}
+          </DropdownMenu.Content>
+        </DropdownMenu.Provider>
+      </>
     );
   }),
 );
@@ -241,6 +296,12 @@ function LabelEditor({ initialLabel, onChange, onCancel }: { initialLabel: strin
       />
     </TextBox.Root>
   );
+}
+
+function injectActionVariant(actions: ReactNode[], variant: TreeActionBaseAttributes["variant"]) {
+  return actions
+    .filter((action) => isValidElement<TreeActionBaseAttributes>(action))
+    .map((action) => cloneElement<TreeActionBaseAttributes>(action, { variant }));
 }
 
 function useMergedRefs<T>(...refs: ReadonlyArray<Ref<T> | LegacyRef<T> | undefined | null>) {

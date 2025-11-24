@@ -10,6 +10,7 @@ export { useNodeHighlighting } from "./presentation-hierarchies-react/UseNodeHig
 export { HierarchyLevelDetails, TreeRendererProps } from "./presentation-hierarchies-react/Renderers.js";
 export { useIModelTree, useIModelUnifiedSelectionTree } from "./presentation-hierarchies-react/UseIModelTree.js";
 export { StrataKitTreeNodeRenderer } from "./presentation-hierarchies-react/stratakit/TreeNodeRenderer.js";
+export { TreeActionBase, TreeActionBaseAttributes } from "./presentation-hierarchies-react/stratakit/TreeAction.js";
 export { FilterAction } from "./presentation-hierarchies-react/stratakit/FilterAction.js";
 export { RenameAction, RenameContextProvider } from "./presentation-hierarchies-react/stratakit/RenameAction.js";
 export { StrataKitTreeRenderer } from "./presentation-hierarchies-react/stratakit/TreeRenderer.js";

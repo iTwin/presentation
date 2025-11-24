@@ -5,29 +5,15 @@
 
 import { createContext, memo, PropsWithChildren, useCallback, useContext, useMemo, useState } from "react";
 import renameSvg from "@stratakit/icons/rename.svg";
-import { Tree } from "@stratakit/structures";
 import { useLocalizationContext } from "./LocalizationContext.js";
-
-/**
- * @alpha
- */
-interface RenameActionProps {
-  /**
-   * Indicates that space for this action button should be reserved, even when the action is not available.
-   * For nodes that don't support renaming, `<RenameAction reserveSpace />` renders:
-   *
-   * - Blank space when the action is used as an inline action. It's recommended to set this prop to keep all action buttons of the same kind vertically aligned.
-   * - Disabled menu item when the action is used as a menu action.
-   */
-  reserveSpace?: true;
-}
+import { TreeActionBase, TreeActionBaseAttributes } from "./TreeAction.js";
 
 /**
  * React component that renders a rename action for a tree item.
  * The tree component must have `getEditingProps.onLabelChanged` prop set to enable renaming functionality. When the rename is completed, the `onLabelChanged` function is called to make the actual data update.
  * @alpha
  */
-export const RenameAction = memo(function RenameAction({ reserveSpace }: RenameActionProps) {
+export const RenameAction = memo(function RenameAction(actionAttributes: TreeActionBaseAttributes) {
   const { localizedStrings } = useLocalizationContext();
   const context = useRenameContext();
   const { rename } = localizedStrings;
@@ -37,11 +23,7 @@ export const RenameAction = memo(function RenameAction({ reserveSpace }: RenameA
     setIsRenaming?.(true);
   }, [setIsRenaming]);
 
-  if (!context?.onLabelChanged) {
-    return reserveSpace ? <Tree.ItemAction label={rename} icon={renameSvg} visible={false} disabled /> : undefined;
-  }
-
-  return <Tree.ItemAction label={rename} onClick={handleClick} icon={renameSvg} />;
+  return <TreeActionBase {...actionAttributes} label={rename} onClick={handleClick} icon={renameSvg} hide={!context?.onLabelChanged} />;
 });
 
 interface RenameContext {

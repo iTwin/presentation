@@ -3,16 +3,21 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { ComponentPropsWithoutRef, useCallback, useMemo } from "react";
+import { ComponentPropsWithoutRef, memo, useCallback, useMemo } from "react";
 import {
   ErrorItemRenderer,
   FilterAction,
   PresentationHierarchyNode,
   RenameAction,
   StrataKitTreeRenderer,
+  TreeActionBase,
+  TreeActionBaseAttributes,
   TreeErrorRenderer,
 } from "@itwin/presentation-hierarchies-react";
+import addSvg from "@stratakit/icons/add.svg";
 import { unstable_ErrorRegion as ErrorRegion } from "@stratakit/structures";
+
+/* eslint-disable no-console */
 
 type TreeRendererProps = ComponentPropsWithoutRef<typeof StrataKitTreeRenderer>;
 
@@ -38,9 +43,19 @@ export function TreeRendererWithFilterAction(props: TreeRendererProps) {
   }, [treeProps.rootNodes]);
 
   const getInlineActions = useCallback<Required<TreeRendererProps>["getInlineActions"]>(
-    ({ targetNode }) => [
-      <FilterAction key="filter" node={targetNode} onFilter={onFilterClick} getHierarchyLevelDetails={getHierarchyLevelDetails} reserveSpace />,
-      <RenameAction key="rename" reserveSpace />,
+    ({ targetNode, selectedNodes }) => [
+      <CustomAction key="custom" node={targetNode} selectedNodes={selectedNodes} />,
+      <FilterAction key="filter" node={targetNode} onFilter={onFilterClick} getHierarchyLevelDetails={getHierarchyLevelDetails} />,
+      <RenameAction key="rename" />,
+    ],
+    [onFilterClick, getHierarchyLevelDetails],
+  );
+  const getMenuActions = useCallback<Required<TreeRendererProps>["getMenuActions"]>(() => [<RenameAction key="rename" />], []);
+  const getContextMenuActions = useCallback<Required<TreeRendererProps>["getContextMenuActions"]>(
+    ({ targetNode, selectedNodes }) => [
+      <CustomAction key="custom" node={targetNode} selectedNodes={selectedNodes} />,
+      <FilterAction key="filter" node={targetNode} onFilter={onFilterClick} getHierarchyLevelDetails={getHierarchyLevelDetails} />,
+      <RenameAction key="rename" />,
     ],
     [onFilterClick, getHierarchyLevelDetails],
   );
@@ -49,7 +64,6 @@ export function TreeRendererWithFilterAction(props: TreeRendererProps) {
     return {
       onLabelChanged: (newLabel: string) => {
         // Handle label change
-        // eslint-disable-next-line no-console
         console.log(`Node label changed from ${node.label} to ${newLabel}`);
       },
     };
@@ -60,6 +74,8 @@ export function TreeRendererWithFilterAction(props: TreeRendererProps) {
       {...treeProps}
       rootNodes={nodesWithError}
       getInlineActions={getInlineActions}
+      getMenuActions={getMenuActions}
+      getContextMenuActions={getContextMenuActions}
       onFilterClick={onFilterClick}
       getHierarchyLevelDetails={getHierarchyLevelDetails}
       getEditingProps={getEditingProps}
@@ -92,3 +108,16 @@ function mapNodesHierarchy(
     };
   });
 }
+
+const CustomAction = memo(function CustomAction({
+  node,
+  selectedNodes,
+  ...actionAttributes
+}: { node: PresentationHierarchyNode; selectedNodes: PresentationHierarchyNode[] } & TreeActionBaseAttributes) {
+  const handleClick = useCallback(() => {
+    console.log("Custom action clicked for node:", node);
+    console.log("Currently selected nodes:", selectedNodes);
+  }, [node, selectedNodes]);
+
+  return <TreeActionBase {...actionAttributes} label={"Custom action"} onClick={handleClick} icon={addSvg} />;
+});
