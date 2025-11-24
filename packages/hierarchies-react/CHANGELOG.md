@@ -1,5 +1,42 @@
 # @itwin/presentation-hierarchies-react
 
+## 2.0.0-alpha.41
+
+### Major Changes
+
+- [#1113](https://github.com/iTwin/presentation/pull/1113): Pass selected nodes to tree node action getters to support actions that should be applied on all selected nodes.
+
+  **Breaking changes**
+  - `StrataKitTreeRenderer.getInlineActions` callback receives `{ targetNode: PresentationHierarchyNode; selectedNodes: PresentationHierarchyNode[] }` props instead of `PresentationHierarchyNode`.
+  - `StrataKitTreeRenderer.getMenuActions` callback receives `{ targetNode: PresentationHierarchyNode; selectedNodes: PresentationHierarchyNode[] }` props instead of `PresentationHierarchyNode`.
+
+  Before
+
+  ```tsx
+  return <StrataKitTreeRenderer getInlineActions={(node) => [<InlineAction node={node} />]} getMenuActions={(node) => [<MenuAction node={node} />]} />;
+  ```
+
+  After
+
+  ```tsx
+  return (
+    <StrataKitTreeRenderer
+      getInlineActions={({ targetNode }) => [<InlineAction node={targetNode} />]}
+      getMenuActions={({ targetNode }) => [<MenuAction node={targetNode} />]}
+    />
+  );
+  ```
+
+- [#1115](https://github.com/iTwin/presentation/pull/1115): Unified tree actions handling to make it easier defining actions that could be reused in different contexts: inline, context menu and actions dropdown.
+
+  **Breaking changes**
+  - Removed `reserveSpace` property from `<RenameAction />` and `<FilterAction />`. These actions now automatically infer the context they're used in.
+  - Added requirement to render newly introduced `<TreeActionBase />` component instead of `<Tree.ItemAction />` when rendering custom tree actions.
+
+### Minor Changes
+
+- [#1115](https://github.com/iTwin/presentation/pull/1115): Added `getContextMenuActions` callback for rendering tree actions in context menu.
+
 ## 2.0.0-alpha.40
 
 ### Patch Changes
