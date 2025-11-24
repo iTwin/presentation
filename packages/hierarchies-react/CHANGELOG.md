@@ -1,5 +1,11 @@
 # @itwin/presentation-hierarchies-react
 
+## 2.0.0-alpha.42
+
+### Patch Changes
+
+- [#1118](https://github.com/iTwin/presentation/pull/1118): Fixed first hidden inline action causing second action to be focused when navigating using keyboard.
+
 ## 2.0.0-alpha.41
 
 ### Major Changes
