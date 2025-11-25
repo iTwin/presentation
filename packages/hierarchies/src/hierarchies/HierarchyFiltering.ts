@@ -293,39 +293,44 @@ export function createHierarchyFilteringHelper(
 type NormalizedFilteringPath = ReturnType<(typeof HierarchyFilteringPath)["normalize"]>;
 
 class MatchingFilteringPathsReducer {
-  private _filteredChildrenIdentifierPaths = new Array<NormalizedFilteringPath>();
-  private _isFilterTarget = false;
-  private _filterTargetOptions = undefined as HierarchyFilteringPathOptions | undefined;
-  private _autoExpandOption: HierarchyFilteringPathOptions["autoExpand"] = false;
+  #filteredChildrenIdentifierPaths = new Array<NormalizedFilteringPath>();
+  #isFilterTarget = false;
+  #filterTargetOptions = undefined as HierarchyFilteringPathOptions | undefined;
+  #autoExpandOption: HierarchyFilteringPathOptions["autoExpand"] = undefined;
+  #hasFilterTargetAncestor: boolean;
 
-  public constructor(private _hasFilterTargetAncestor: boolean) {}
+  public constructor(hasFilterTargetAncestor: boolean) {
+    this.#hasFilterTargetAncestor = hasFilterTargetAncestor;
+  }
 
   public accept(normalizedPath: NormalizedFilteringPath): void {
     const { path, options } = normalizedPath;
     if (path.length === 1) {
-      this._isFilterTarget = true;
-      this._filterTargetOptions = HierarchyFilteringPath.mergeOptions(this._filterTargetOptions, options);
+      this.#isFilterTarget = true;
+      this.#filterTargetOptions = HierarchyFilteringPath.mergeOptions(this.#filterTargetOptions, options);
     } else if (path.length > 1) {
-      this._filteredChildrenIdentifierPaths.push({ path: path.slice(1), options });
-      this._autoExpandOption = HierarchyFilteringPathOptions.mergeAutoExpandOptions(options?.autoExpand, this._autoExpandOption);
+      this.#filteredChildrenIdentifierPaths.push({ path: path.slice(1), options });
+      this.#autoExpandOption = HierarchyFilteringPathOptions.mergeAutoExpandOptions(options?.autoExpand, this.#autoExpandOption);
     }
   }
 
   private getNeedsAutoExpand(parentNode: Pick<NonGroupingHierarchyNode, "parentKeys"> | undefined): boolean {
-    if (this._autoExpandOption === true) {
+    if (this.#autoExpandOption === true) {
       return true;
     }
-    if (typeof this._autoExpandOption === "object") {
+    // Auto expand filter targets only when they have depthInPath or depthInHierarchy set
+    const autoExpandOption = this.#autoExpandOption !== undefined ? this.#autoExpandOption : this.#filterTargetOptions?.autoExpand;
+    if (typeof autoExpandOption === "object") {
       const parentLength = !parentNode
         ? 0
-        : "depthInHierarchy" in this._autoExpandOption
+        : "depthInHierarchy" in autoExpandOption
           ? 1 + parentNode.parentKeys.length
           : 1 + parentNode.parentKeys.filter((key) => !HierarchyNodeKey.isGrouping(key)).length;
       const depth =
-        "depthInHierarchy" in this._autoExpandOption
-          ? this._autoExpandOption.depthInHierarchy
+        "depthInHierarchy" in autoExpandOption
+          ? autoExpandOption.depthInHierarchy
           : // With `depthInPath` option we don't want to expand node that is at the `depthInPath` position
-            this._autoExpandOption.depthInPath - 1;
+            autoExpandOption.depthInPath - 1;
 
       return parentLength < depth;
     }
@@ -334,12 +339,12 @@ class MatchingFilteringPathsReducer {
 
   public getNodeProps(parentNode: Pick<NonGroupingHierarchyNode, "parentKeys"> | undefined): Pick<HierarchyNode, "autoExpand" | "filtering"> {
     return {
-      ...(this._hasFilterTargetAncestor || this._isFilterTarget || this._filteredChildrenIdentifierPaths.length > 0
+      ...(this.#hasFilterTargetAncestor || this.#isFilterTarget || this.#filteredChildrenIdentifierPaths.length > 0
         ? {
             filtering: {
-              ...(this._hasFilterTargetAncestor ? { hasFilterTargetAncestor: true } : undefined),
-              ...(this._isFilterTarget ? { isFilterTarget: true, filterTargetOptions: this._filterTargetOptions } : undefined),
-              ...(this._filteredChildrenIdentifierPaths.length > 0 ? { filteredChildrenIdentifierPaths: this._filteredChildrenIdentifierPaths } : undefined),
+              ...(this.#hasFilterTargetAncestor ? { hasFilterTargetAncestor: true } : undefined),
+              ...(this.#isFilterTarget ? { isFilterTarget: true, filterTargetOptions: this.#filterTargetOptions } : undefined),
+              ...(this.#filteredChildrenIdentifierPaths.length > 0 ? { filteredChildrenIdentifierPaths: this.#filteredChildrenIdentifierPaths } : undefined),
             },
           }
         : undefined),
