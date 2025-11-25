@@ -215,6 +215,10 @@ export const StrataKitTreeNodeRenderer: FC<PropsWithRef<TreeNodeRendererProps & 
 
             e.preventDefault();
             const contextMenuActions = injectActionVariant(getContextMenuActions(node), "context-menu");
+            if (contextMenuActions.length === 0) {
+              return;
+            }
+
             setContextMenuProps({
               position: {
                 x: e.clientX,
