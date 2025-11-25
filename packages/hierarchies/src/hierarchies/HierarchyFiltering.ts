@@ -14,9 +14,39 @@ export interface FilteringPathAutoExpandDepthInPath {
    *
    * Use when you want to expand up to specific instance node and don't care about grouping nodes.
    *
-   * **NOTE**: All nodes that are up to `depthInPath` will be expanded. Node at the `depthInPath` position won't be expanded.
+   * **Use case example:**
+   *
+   * All nodes up to `Element1` should be expanded in the following hierarchy:
+   * - Node1
+   *   - GroupingNode1
+   *     - GroupingNode2
+   *       - Element1
+   *       - Element2
+   * Then provide `autoExpand: { depthInPath: 2 }`
+   *
+   * **NOTE**: All nodes that are up to `depthInPath` will be expanded. Node at the `depthInPath` position won't be expanded, unless `inclusive` flag is set.
    */
   depthInPath: number;
+  /**
+   * Whether or not to expand node at the position of `depthInPath`.
+   *
+   * Use when you want to expand up to and including specific instance node.
+   *
+   * **Use case example:**
+   *
+   * All nodes up to and including `Element1` should be expanded in the following hierarchy:
+   * - Node1
+   *   - GroupingNode1
+   *     - GroupingNode2
+   *       - Element1
+   *          - GroupingNode3
+   *            - Element2
+   *            - Element3
+   * Then you provide `autoExpand: { depthInPath: 2, inclusive: true }`
+   *
+   * **NOTE**: All nodes that are up to and including `depthInHierarchy` will be expanded.
+   */
+  inclusive?: boolean;
 }
 
 /** @public */
@@ -26,19 +56,19 @@ export interface FilteringPathAutoExpandDepthInHierarchy {
    *
    * This should take into account the number of grouping nodes in hierarchy.
    *
-   * * **Use case example:**
+   * **Use case example:**
    *
-   * You want to `autoExpand` only `Node1` and `GroupingNode1` in the following hierarchy:
+   * Only `Node1` and `GroupingNode1` should have `autoExpand` flag in the following hierarchy:
    * - Node1
    *   - GroupingNode1
    *     - GroupingNode2
    *       - Element1
    *       - Element2
-   * Then you provide `autoExpand: { depthInHierarchy: 2 }`
+   * Then provide `autoExpand: { depthInHierarchy: 2 }`
    *
    * To get the correct depth use `HierarchyNode.parentKeys.length`.
    *
-   * **NOTE**: All nodes that are up to and including `depthInHierarchy` will be expanded *EXCEPT* filter targets.
+   * **NOTE**: All nodes that are up to and including `depthInHierarchy` will be expanded **except** filter targets.
    */
   depthInHierarchy: number;
 }
@@ -51,6 +81,8 @@ export interface HierarchyFilteringPathOptions {
    * - If it's `true`, then all nodes up to the filter target will have `autoExpand` flag.
    * - If it's an instance of `FilteringPathAutoExpandDepthInPath`, then all nodes up to `depthInPath` will have `autoExpand` flag.
    * - If it's an instance of `FilteringPathAutoExpandDepthInHierarchy`, then all nodes up to and including `depthInHierarchy` will have `autoExpand` flag.
+   *
+   * **NOTE**: By default filter targets don't have `autoExpand`. To set `autoExpand` flag on filter targets, use `depthInPath` with `inclusive` flag.
    */
   autoExpand?: boolean | FilteringPathAutoExpandDepthInHierarchy | FilteringPathAutoExpandDepthInPath;
 }
@@ -318,14 +350,17 @@ class MatchingFilteringPathsReducer {
     if (this.#autoExpandOption === true) {
       return true;
     }
-    // Auto expand filter targets only when they have depthInPath set
     const autoExpandOption =
       this.#autoExpandOption !== undefined
         ? this.#autoExpandOption
-        : typeof this.#filterTargetOptions?.autoExpand === "object" && "depthInPath" in this.#filterTargetOptions?.autoExpand
+        : // Auto expand filter targets only when they have depthInPath set with inclusive flag
+          typeof this.#filterTargetOptions?.autoExpand === "object" &&
+            "depthInPath" in this.#filterTargetOptions?.autoExpand &&
+            this.#filterTargetOptions.autoExpand.inclusive
           ? this.#filterTargetOptions?.autoExpand
           : undefined;
     if (typeof autoExpandOption === "object") {
+      const isInclusive = "depthInPath" in autoExpandOption && !!autoExpandOption.inclusive;
       const parentLength = !parentNode
         ? 0
         : "depthInHierarchy" in autoExpandOption
@@ -336,7 +371,7 @@ class MatchingFilteringPathsReducer {
           ? autoExpandOption.depthInHierarchy
           : // With `depthInPath` option we don't want to expand node that is at the `depthInPath` position
             autoExpandOption.depthInPath - 1;
-      return parentLength < depth;
+      return parentLength < depth || (isInclusive && parentLength === depth);
     }
     return false;
   }
