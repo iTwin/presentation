@@ -533,7 +533,7 @@ describe("FilteringHierarchyDefinition", () => {
       expect(node.autoExpand).to.be.true;
     });
 
-    it("sets auto-expand on filter target root node when depthInHierarchy is 1", async () => {
+    it("doesn't set auto-expand on filter target root node when depthInHierarchy is 1", async () => {
       const paths: HierarchyFilteringPath[] = [
         {
           path: [createTestInstanceKey({ id: "0x1", className: "TestSchema.TestName" })],
@@ -547,7 +547,7 @@ describe("FilteringHierarchyDefinition", () => {
         [ECSQL_COLUMN_NAME_FilterClassName]: "TestSchema.TestName",
       };
       const node = await firstValueFrom(filteringFactory.parseNode(row));
-      expect(node.autoExpand).to.be.true;
+      expect(node.autoExpand).to.be.undefined;
     });
 
     it("sets auto-expand on filter target when all filtered children paths autoExpand depthInPath is greater than parent keys length +1", async () => {
@@ -585,7 +585,7 @@ describe("FilteringHierarchyDefinition", () => {
       expect(node.autoExpand).to.be.true;
     });
 
-    it("sets auto-expand on filter target when all filtered children paths autoExpand depthInHierarchy is equal to parent keys length + 1", async () => {
+    it("doesn't set auto-expand on filter target when all filtered children paths autoExpand depthInHierarchy is equal to parent keys length + 1", async () => {
       const paths: HierarchyFilteringPath[] = [
         {
           path: [
@@ -617,7 +617,7 @@ describe("FilteringHierarchyDefinition", () => {
           },
         }),
       );
-      expect(node.autoExpand).to.be.true;
+      expect(node.autoExpand).to.be.undefined;
     });
 
     it("sets auto-expand when all filtered children paths autoExpand depthInPath is greater than parent keys length +1", async () => {

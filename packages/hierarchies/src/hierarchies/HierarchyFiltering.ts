@@ -38,7 +38,7 @@ export interface FilteringPathAutoExpandDepthInHierarchy {
    *
    * To get the correct depth use `HierarchyNode.parentKeys.length`.
    *
-   * **NOTE**: All nodes that are up to and including `depthInHierarchy` will be expanded.
+   * **NOTE**: All nodes that are up to and including `depthInHierarchy` will be expanded *EXCEPT* filter targets.
    */
   depthInHierarchy: number;
 }
@@ -318,8 +318,13 @@ class MatchingFilteringPathsReducer {
     if (this.#autoExpandOption === true) {
       return true;
     }
-    // Auto expand filter targets only when they have depthInPath or depthInHierarchy set
-    const autoExpandOption = this.#autoExpandOption !== undefined ? this.#autoExpandOption : this.#filterTargetOptions?.autoExpand;
+    // Auto expand filter targets only when they have depthInPath set
+    const autoExpandOption =
+      this.#autoExpandOption !== undefined
+        ? this.#autoExpandOption
+        : typeof this.#filterTargetOptions?.autoExpand === "object" && "depthInPath" in this.#filterTargetOptions?.autoExpand
+          ? this.#filterTargetOptions?.autoExpand
+          : undefined;
     if (typeof autoExpandOption === "object") {
       const parentLength = !parentNode
         ? 0
@@ -331,7 +336,6 @@ class MatchingFilteringPathsReducer {
           ? autoExpandOption.depthInHierarchy
           : // With `depthInPath` option we don't want to expand node that is at the `depthInPath` position
             autoExpandOption.depthInPath - 1;
-
       return parentLength < depth;
     }
     return false;
