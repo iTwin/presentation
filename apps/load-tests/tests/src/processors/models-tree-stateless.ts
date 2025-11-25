@@ -5,7 +5,7 @@
 /* eslint-disable @itwin/no-internal */
 /* eslint-disable no-console */
 
-import { EventEmitter, Next, ScenarioContext } from "artillery";
+import { VUContext, VUEvents } from "artillery";
 import { StopWatch } from "@itwin/core-bentley";
 import { DbQueryRequest, DbQueryResponse, DbRequestExecutor, ECSqlReader } from "@itwin/core-common";
 import { ISchemaLocater, Schema, SchemaContext, SchemaInfo, SchemaKey, SchemaMatchType, SchemaProps } from "@itwin/ecschema-metadata";
@@ -13,63 +13,46 @@ import { createECSchemaProvider, createECSqlQueryExecutor } from "@itwin/present
 import { createIModelHierarchyProvider, createLimitingECSqlQueryExecutor, HierarchyNode, RowsLimitExceededError } from "@itwin/presentation-hierarchies";
 import { defaultHierarchyConfiguration, ModelsTreeDefinition } from "@itwin/presentation-models-tree";
 import { createCachingECClassHierarchyInspector } from "@itwin/presentation-shared";
-import { doRequest, getCurrentIModelName, loadNodes, openIModelConnectionIfNeeded } from "./common";
+import { doRequest, getCurrentIModelName, loadNodes, loadVariables, openIModelConnectionIfNeeded } from "./common";
 
 console.log(`Frontend PID: ${process.pid}`);
 const ENABLE_REQUESTS_LOGGING = false;
 
-export function initScenario(context: ScenarioContext, _events: EventEmitter, next: Next) {
+export async function initScenario(context: VUContext, _events: VUEvents) {
   context.vars.tooLargeHierarchyLevelsCount = 0;
-  void openIModelConnectionIfNeeded().then(() => {
-    next();
-  });
+  await openIModelConnectionIfNeeded();
+  loadVariables(context);
 }
 
-export function terminateScenario(context: ScenarioContext, _ee: EventEmitter, next: Next) {
+export function terminateScenario(context: VUContext, _ee: VUEvents) {
   console.log(`Total hierarchy levels that exceeded nodes limit: ${context.vars.tooLargeHierarchyLevelsCount as number}`);
   context.vars.tooLargeHierarchyLevelsCount = 0;
   context.vars.isTestTerminated = true;
-  next();
 }
 
-export function loadInitialHierarchy(context: ScenarioContext, events: EventEmitter, next: Next) {
+export async function loadInitialHierarchy(context: VUContext, events: VUEvents) {
   // we limit loaded hierarchy depth by telling that node has no children if it has `!autoExpand` (root node in models tree is always auto-expanded)
   const timer = new StopWatch(undefined, true);
-  void loadNodes(context, events, createModelsTreeProvider(context, events), (node) => node.children && !!node.autoExpand)
-    .then(() => {
-      events.emit("histogram", `Models Tree initial load: ${getCurrentIModelName(context)}`, timer.current.milliseconds);
-    })
-    .then(() => {
-      next();
-    });
+  await loadNodes(events, createModelsTreeProvider(context, events), (node) => node.children && !!node.autoExpand);
+  events.emit("histogram", `Models Tree initial load: ${getCurrentIModelName(context)}`, timer.current.milliseconds);
 }
 
-export function loadFirstBranch(context: ScenarioContext, events: EventEmitter, next: Next) {
+export async function loadFirstBranch(context: VUContext, events: VUEvents) {
   const timer = new StopWatch(undefined, true);
-  void loadNodes(context, events, createModelsTreeProvider(context, events), (node, index) => node.children && index === 0)
-    .then(() => {
-      events.emit("histogram", `Models Tree first branch load: ${getCurrentIModelName(context)}`, timer.current.milliseconds);
-    })
-    .then(() => {
-      next();
-    });
+  await loadNodes(events, createModelsTreeProvider(context, events), (node, index) => node.children && index === 0);
+  events.emit("histogram", `Models Tree first branch load: ${getCurrentIModelName(context)}`, timer.current.milliseconds);
 }
 
-export function loadFullHierarchy(context: ScenarioContext, events: EventEmitter, next: Next) {
+export async function loadFullHierarchy(context: VUContext, events: VUEvents) {
   const timer = new StopWatch(undefined, true);
-  void loadNodes(context, events, createModelsTreeProvider(context, events), (node) => node.children)
-    .then(() => {
-      events.emit("histogram", `Models Tree full load: ${getCurrentIModelName(context)}`, timer.current.milliseconds);
-    })
-    .then(() => {
-      next();
-    });
+  await loadNodes(events, createModelsTreeProvider(context, events), (node) => node.children);
+  events.emit("histogram", `Models Tree full load: ${getCurrentIModelName(context)}`, timer.current.milliseconds);
 }
 
-function createModelsTreeProvider(context: ScenarioContext, events: EventEmitter) {
+function createModelsTreeProvider(context: VUContext, events: VUEvents) {
   const pendingSchemaLoads = new Map<string, Promise<SchemaProps | undefined>>();
   const isTestTerminated = () => context.vars.isTestTerminated;
-  const imodelRpcProps = (context.vars.imodelRpcProps as (context: ScenarioContext) => any)(context);
+  const imodelRpcProps = (context.vars.imodelRpcProps as (context: VUContext) => any)(context);
   async function requestSchemaJson(schemaKey: Readonly<SchemaKey>) {
     const pending = pendingSchemaLoads.get(schemaKey.name);
     if (pending) {
@@ -131,7 +114,7 @@ function createModelsTreeProvider(context: ScenarioContext, events: EventEmitter
     async execute(request: DbQueryRequest): Promise<DbQueryResponse> {
       const timer = new StopWatch(undefined, true);
       const body = JSON.stringify([imodelRpcProps, request]);
-      return doRequest("IModelReadRpcInterface-3.6.0-queryRows", body, events, "query_rows").then((response) => {
+      return doRequest("IModelReadRpcInterface-3.7.0-queryRows", body, events, "query_rows").then((response) => {
         ENABLE_REQUESTS_LOGGING && console.log(`Received "query rows" response for \`${request.query}\` in ${timer.current.milliseconds} ms`);
         return response as DbQueryResponse;
       });
