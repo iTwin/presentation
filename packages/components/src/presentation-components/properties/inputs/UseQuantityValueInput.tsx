@@ -46,6 +46,7 @@ export function useQuantityValueInput({ initialRawValue, schemaContext, koqName 
     quantityValue: QuantityValue;
     placeholder: string;
   }
+  const { highPrecisionFormatter, parser, defaultFormatter } = useFormatterAndParser(koqName, schemaContext);
   const initialRawValueRef = useRef(initialRawValue);
 
   const [{ quantityValue, placeholder }, setState] = useState<State>(() => ({
@@ -57,7 +58,6 @@ export function useQuantityValueInput({ initialRawValue, schemaContext, koqName 
     },
     placeholder: "",
   }));
-  const { highPrecisionFormatter, parser, defaultFormatter } = useFormatterAndParser(koqName, schemaContext);
 
   useEffect(() => {
     if (!highPrecisionFormatter || !parser) {
@@ -66,7 +66,7 @@ export function useQuantityValueInput({ initialRawValue, schemaContext, koqName 
 
     setState((prev): State => {
       /* c8 ignore next 1 */
-      const newPlaceholder = (defaultFormatter ?? highPrecisionFormatter).applyFormatting(
+      const defaultValue = (defaultFormatter ?? highPrecisionFormatter).applyFormatting(
         initialRawValueRef.current ? initialRawValueRef.current : PLACEHOLDER_RAW_VALUE,
       );
       const newFormattedValue = prev.quantityValue.rawValue !== undefined ? highPrecisionFormatter.applyFormatting(prev.quantityValue.rawValue) : "";
@@ -77,10 +77,10 @@ export function useQuantityValueInput({ initialRawValue, schemaContext, koqName 
         quantityValue: {
           ...prev.quantityValue,
           fullFormattedValue: newFormattedValue,
-          defaultFormattedValue: newPlaceholder,
+          defaultFormattedValue: defaultValue,
           roundingError,
         },
-        placeholder: newPlaceholder,
+        placeholder: defaultValue,
       };
     });
   }, [highPrecisionFormatter, parser, defaultFormatter]);
@@ -130,7 +130,7 @@ function useFormatterAndParser(koqName: string, schemaContext: SchemaContext) {
         koqName,
         unitSystem: IModelApp.quantityFormatter.activeUnitSystem,
       });
-      // formatter for placeholder should not have precision override
+      // formatter for default value should not have precision override
       const defaultFormatter = await koqFormatter.getFormatterSpec({
         koqName,
         unitSystem: IModelApp.quantityFormatter.activeUnitSystem,

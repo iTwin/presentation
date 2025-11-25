@@ -21,7 +21,7 @@ function TestInput({ onChange, ...restProps }: UseQuantityValueInputProps & { on
     onChange && onChange(quantityValue);
   }, [quantityValue, onChange]);
 
-  return <input {...inputProps} />;
+  return <input {...inputProps} value={quantityValue.fullFormattedValue} />;
 }
 
 describe("UseQuantityValueInput", () => {
@@ -115,7 +115,7 @@ describe("UseQuantityValueInput", () => {
     await waitFor(() => {
       const value = spy.lastCall.args[0];
       expect(value.rawValue).to.be.eq(1.23);
-      expect(value.formattedValue).to.be.eq("1.23 unit");
+      expect(value.fullFormattedValue).to.be.eq("1.23 unit");
     });
   });
 

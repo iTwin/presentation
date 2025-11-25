@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from "react";
+import { forwardRef, useEffect, useImperativeHandle, useMemo, useRef, useState } from "react";
 import { PrimitiveValue, PropertyRecord, PropertyValueFormat } from "@itwin/appui-abstract";
 import { PropertyEditorProps } from "@itwin/components-react";
 import { assert } from "@itwin/core-bentley";
@@ -42,7 +42,10 @@ type QuantityPropertyValueInputProps = QuantityPropertyEditorImplProps & UseQuan
 const QuantityPropertyValueInput = forwardRef<PropertyEditorAttributes, QuantityPropertyValueInputProps>(
   ({ propertyRecord, onCommit, koqName, schemaContext, initialRawValue, setFocus }, ref) => {
     const { quantityValue, inputProps } = useQuantityValueInput({ koqName, schemaContext, initialRawValue });
-    const [value, setValue] = useState(quantityValue.defaultFormattedValue);
+    const [isEditing, setEditing] = useState(false);
+    const value = useMemo(() => {
+      return isEditing ? quantityValue.fullFormattedValue : quantityValue.defaultFormattedValue;
+    }, [isEditing, quantityValue.defaultFormattedValue, quantityValue.fullFormattedValue]);
 
     const inputRef = useRef<HTMLInputElement>(null);
     useImperativeHandle(
@@ -88,10 +91,10 @@ const QuantityPropertyValueInput = forwardRef<PropertyEditorAttributes, Quantity
         ref={inputRef}
         onBlur={() => {
           onBlur();
-          setValue(quantityValue.defaultFormattedValue);
+          setEditing(false);
         }}
         onFocus={() => {
-          setValue(quantityValue.fullFormattedValue);
+          setEditing(true);
           inputRef.current?.setSelectionRange(0, 9999);
         }}
       />
