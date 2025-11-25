@@ -88,7 +88,8 @@ const filteringPath: HierarchyFilteringPath = {
 
 <!-- END EXTRACTION -->
 
-Additionally, you might not want to add `autoExpand` flag to every node in `HierarchyFilteringPath`. For such cases hierarchies may be expanded up to desired depth, which can be achieved by setting the `autoExpand` property to `{ depthInPath: number }`, where `depthInPath` represents instance's index in the `path` array:
+Additionally, you might not want to add `autoExpand` flag to every node in `HierarchyFilteringPath`. For such cases hierarchies may be expanded up to desired depth, which can be achieved by setting the `autoExpand` property to `{ depthInPath: number }`, where `depthInPath` represents instance's index in the `path` array (where first index is 1). Node at the index of `depthInPath` won't be expanded, but all parent nodes (including grouping nodes) will get
+`autoExpand` flag set:
 
 <!-- [[include: [Presentation.Hierarchies.HierarchyFiltering.HierarchyFilteringPathImport, Presentation.Hierarchies.HierarchyFiltering.AutoExpandUntilDepthInPath.FilteringPath], ts]] -->
 <!-- BEGIN EXTRACTION -->
@@ -100,8 +101,28 @@ const filteringPath: HierarchyFilteringPath = {
   // Path to the element "C"
   path: [elementKeys.a, elementKeys.b, elementKeys.c],
   options: {
-    // Auto-expand the hierarchy up to the specified depth. In this case up to element "B"
+    // Auto-expand the hierarchy up to the specified depth. In this case up to, but not including element "B"
     autoExpand: { depthInPath: 2 },
+  },
+};
+```
+
+<!-- END EXTRACTION -->
+
+When using `depthInPath`, there is an option to provide `inclusive` flag, which sets `autoExpand` flag for the node at the index of `depthInPath`:
+
+<!-- [[include: [Presentation.Hierarchies.HierarchyFiltering.HierarchyFilteringPathImport, Presentation.Hierarchies.HierarchyFiltering.AutoExpandUntilDepthInPathWithInclusive.FilteringPath], ts]] -->
+<!-- BEGIN EXTRACTION -->
+
+```ts
+import { HierarchyFilteringPath } from "@itwin/presentation-hierarchies";
+
+const filteringPath: HierarchyFilteringPath = {
+  // Path to the element "B"
+  path: [elementKeys.a, elementKeys.b, elementKeys.c],
+  options: {
+    // Auto-expand the hierarchy up to and including the specified depth. In this case up to and including element "B"
+    autoExpand: { depthInPath: 2, inclusive: true },
   },
 };
 ```

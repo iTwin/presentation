@@ -528,8 +528,119 @@ describe("Hierarchies", () => {
           // Path to the element "C"
           path: [elementKeys.a, elementKeys.b, elementKeys.c],
           options: {
-            // Auto-expand the hierarchy up to the specified depth. In this case up to element "B"
+            // Auto-expand the hierarchy up to the specified depth. In this case up to, but not including element "B"
             autoExpand: { depthInPath: 2 },
+          },
+        };
+        // __PUBLISH_EXTRACT_END__
+
+        // Construct a hierarchy provider for the filtered hierarchy
+        const hierarchyProvider = createIModelHierarchyProvider({
+          imodelAccess,
+          hierarchyDefinition,
+          filtering: {
+            paths: [filteringPath],
+          },
+        });
+
+        // Collect the hierarchy & confirm we get what we expect - a hierarchy from root element "A" to target element "C"
+        // Note that all nodes before grouping node for label "C" have `autoExpand` flag.
+        expect(await collectHierarchy(hierarchyProvider)).to.deep.eq([
+          {
+            // Root node. Has auto-expand flag.
+            nodeType: "instances",
+            label: "A",
+            autoExpand: true,
+            children: [
+              {
+                // B grouping node. Has auto-expand flag.
+                nodeType: "label-grouping",
+                label: "B",
+                autoExpand: true,
+                children: [
+                  {
+                    // B instance node. Doesn't have auto-expand flag.
+                    nodeType: "instances",
+                    label: "B",
+                    children: [
+                      {
+                        // C grouping node. Doesn't have auto-expand flag.
+                        nodeType: "label-grouping",
+                        label: "C",
+                        // Child is the filter target
+                        children: [
+                          {
+                            nodeType: "instances",
+                            label: "C",
+                          },
+                        ],
+                      },
+                    ],
+                  },
+                ],
+              },
+            ],
+          },
+        ]);
+      });
+
+      it("sets auto-expand flag to parent nodes of the filter target until specified depthInPath with inclusive flag", async function () {
+        const imodelAccess = createIModelAccess(imodel);
+        const queryClauseFactory = createNodesQueryClauseFactory({
+          imodelAccess,
+          instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
+        });
+        // Define a hierarchy such that all elements except root are grouped by label.
+        const hierarchyDefinition: HierarchyDefinition = {
+          defineHierarchyLevel: async ({ parentNode }) => {
+            if (!parentNode) {
+              return [
+                {
+                  fullClassName: "BisCore.PhysicalElement",
+                  query: {
+                    ecsql: `
+                      SELECT ${await queryClauseFactory.createSelectClause({
+                        ecClassId: { selector: "this.ECClassId" },
+                        ecInstanceId: { selector: "this.ECInstanceId" },
+                        nodeLabel: { selector: "this.UserLabel" },
+                      })}
+                      FROM BisCore.PhysicalElement this
+                      WHERE this.Parent IS NULL
+                    `,
+                  },
+                },
+              ];
+            }
+
+            assert(HierarchyNode.isInstancesNode(parentNode));
+            return [
+              {
+                fullClassName: "BisCore.PhysicalElement",
+                query: {
+                  ecsql: `
+                    SELECT ${await queryClauseFactory.createSelectClause({
+                      ecClassId: { selector: "this.ECClassId" },
+                      ecInstanceId: { selector: "this.ECInstanceId" },
+                      nodeLabel: { selector: "this.UserLabel" },
+                      grouping: { byLabel: true },
+                    })}
+                    FROM BisCore.PhysicalElement this
+                    WHERE this.Parent.Id = ?
+                  `,
+                  bindings: [{ type: "id", value: parentNode.key.instanceKeys[0].id }],
+                },
+              },
+            ];
+          },
+        };
+
+        // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.HierarchyFiltering.AutoExpandUntilDepthInPathWithInclusive.FilteringPath
+        const filteringPath: HierarchyFilteringPath = {
+          // Path to the element "B"
+          path: [elementKeys.a, elementKeys.b, elementKeys.c],
+          options: {
+            // Auto-expand the hierarchy up to and including the specified depth. In this case up to and including element "B"
+            autoExpand: { depthInPath: 2, inclusive: true },
           },
         };
         // __PUBLISH_EXTRACT_END__
@@ -562,6 +673,7 @@ describe("Hierarchies", () => {
                     // B instance node. Has auto-expand flag.
                     nodeType: "instances",
                     label: "B",
+                    autoExpand: true,
                     children: [
                       {
                         // C grouping node. Doesn't have auto-expand flag.
