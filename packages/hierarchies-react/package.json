@@ -63,7 +63,7 @@
     "@itwin/presentation-shared": "workspace:^",
     "@itwin/unified-selection": "workspace:^",
     "classnames": "catalog:react",
-    "immer": "^10.1.1",
+    "immer": "^10.2.0",
     "react-error-boundary": "catalog:react",
     "rxjs": "catalog:rxjs"
   },
