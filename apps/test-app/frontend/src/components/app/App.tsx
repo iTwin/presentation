@@ -24,6 +24,7 @@ import {
 import { Id64String } from "@itwin/core-bentley";
 import { IModelApp, IModelConnection } from "@itwin/core-frontend";
 import { UnitSystemKey } from "@itwin/core-quantity";
+import { SchemaFormatsProvider, SchemaUnitProvider } from "@itwin/ecschema-metadata";
 import { ThemeProvider, ToggleSwitch } from "@itwin/itwinui-react";
 import { SchemaMetadataContextProvider } from "@itwin/presentation-components";
 import { createECSchemaProvider, createECSqlQueryExecutor, createIModelKey } from "@itwin/presentation-core-interop";
@@ -79,6 +80,29 @@ export function App() {
     await IModelApp.quantityFormatter.setActiveUnitSystem(unitSystem);
   };
 
+  function onIModelConnected(imodel?: IModelConnection) {
+    const setupFormatsProvider = async () => {
+      if (!imodel?.schemaContext) {
+        return;
+      }
+      const schemaUnitsProvider = new SchemaUnitProvider(imodel.schemaContext);
+      IModelApp.quantityFormatter.unitsProvider = schemaUnitsProvider;
+      const schemaFormatsProvider = new SchemaFormatsProvider(imodel.schemaContext, IModelApp.quantityFormatter.activeUnitSystem);
+      const removeFormatterListener = IModelApp.quantityFormatter.onActiveFormattingUnitSystemChanged.addListener((args) => {
+        schemaFormatsProvider.unitSystem = args.system;
+      });
+      IModelApp.formatsProvider = schemaFormatsProvider;
+
+      IModelConnection.onClose.addOnce(() => {
+        IModelApp.resetFormatsProvider();
+        removeFormatterListener?.();
+        void IModelApp.quantityFormatter.resetToUseInternalUnitsProvider();
+      });
+    };
+
+    void setupFormatsProvider();
+  }
+
   const onPersistSettingsValueChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setState((prev) => ({
       ...prev,
@@ -87,6 +111,7 @@ export function App() {
   };
 
   useEffect(() => {
+    onIModelConnected(state.imodel);
     const cancel = new Subject<void>();
     const removeListener = MyAppFrontend.selectionStorage.selectionChangeEvent.addListener(async (args) => {
       cancel.next();

@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { forwardRef, useEffect, useImperativeHandle, useRef } from "react";
+import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from "react";
 import { PrimitiveValue, PropertyRecord, PropertyValueFormat } from "@itwin/appui-abstract";
 import { PropertyEditorProps } from "@itwin/components-react";
 import { assert } from "@itwin/core-bentley";
@@ -42,6 +42,7 @@ type QuantityPropertyValueInputProps = QuantityPropertyEditorImplProps & UseQuan
 const QuantityPropertyValueInput = forwardRef<PropertyEditorAttributes, QuantityPropertyValueInputProps>(
   ({ propertyRecord, onCommit, koqName, schemaContext, initialRawValue, setFocus }, ref) => {
     const { quantityValue, inputProps } = useQuantityValueInput({ koqName, schemaContext, initialRawValue });
+    const [value, setValue] = useState(quantityValue.defaultFormattedValue);
 
     const inputRef = useRef<HTMLInputElement>(null);
     useImperativeHandle(
@@ -50,12 +51,12 @@ const QuantityPropertyValueInput = forwardRef<PropertyEditorAttributes, Quantity
         getValue: () => ({
           valueFormat: PropertyValueFormat.Primitive,
           value: quantityValue.rawValue,
-          displayValue: quantityValue.formattedValue,
+          displayValue: value,
           roundingError: quantityValue.roundingError,
         }),
         htmlElement: inputRef.current,
       }),
-      [quantityValue],
+      [quantityValue.rawValue, quantityValue.roundingError, value],
     );
 
     const onBlur = () => {
@@ -65,7 +66,7 @@ const QuantityPropertyValueInput = forwardRef<PropertyEditorAttributes, Quantity
           newValue: {
             valueFormat: PropertyValueFormat.Primitive,
             value: quantityValue.rawValue,
-            displayValue: quantityValue.formattedValue,
+            displayValue: quantityValue.fullFormattedValue,
             roundingError: quantityValue.roundingError,
           },
         });
@@ -79,12 +80,18 @@ const QuantityPropertyValueInput = forwardRef<PropertyEditorAttributes, Quantity
 
     return (
       <Input
-        size="small"
         {...inputProps}
+        value={value}
+        size="small"
+        id="quantityEditorId"
         disabled={propertyRecord.isReadonly || inputProps.disabled}
         ref={inputRef}
-        onBlur={onBlur}
+        onBlur={() => {
+          onBlur();
+          setValue(quantityValue.defaultFormattedValue);
+        }}
         onFocus={() => {
+          setValue(quantityValue.fullFormattedValue);
           inputRef.current?.setSelectionRange(0, 9999);
         }}
       />
