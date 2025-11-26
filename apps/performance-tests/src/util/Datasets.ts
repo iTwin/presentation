@@ -119,7 +119,7 @@ export class Datasets {
       throw new Error(`Failed to fetch ${name} iModel: ${response.statusText}`);
     }
 
-    await response.body!.pipeTo(fs.WriteStream.toWeb(fs.createWriteStream(localPath)));
+    await response.body!.pipeTo(fs.WriteStream.toWeb(fs.createWriteStream(localPath)) as WritableStream<Uint8Array<ArrayBuffer>>);
   }
 
   /**
