@@ -139,22 +139,32 @@ describe("mergeProviders", () => {
   });
 });
 
-function createTestProvider(props?: {
-  nodes?: (props: Props<HierarchyProvider["getNodes"]>) => Partial<NonGroupingHierarchyNode>[];
-  instanceKeys?: (props: Props<HierarchyProvider["getNodeInstanceKeys"]>) => InstanceKey[];
-  disposable?: "yes" | "deprecated" | "no";
-}) {
+function createTestProvider(
+  props: (
+    | {
+        nodes: (props: Props<HierarchyProvider["getNodes"]>) => Partial<NonGroupingHierarchyNode>[];
+      }
+    | {
+        rootNodes?: (props: Omit<Props<HierarchyProvider["getNodes"]>, "parentNode">) => Partial<NonGroupingHierarchyNode>[];
+      }
+  ) & {
+    instanceKeys?: (props: Props<HierarchyProvider["getNodeInstanceKeys"]>) => InstanceKey[];
+    disposable?: "yes" | "deprecated" | "no";
+  } = {},
+) {
   return {
     hierarchyChanged: new BeEvent(),
     getNodes: sinon
       .stub<Parameters<HierarchyProvider["getNodes"]>>()
-      .callsFake((getNodesProps) => createAsyncIterator(props?.nodes ? props.nodes(getNodesProps).map((partial) => createTestGenericNode(partial)) : [])),
+      .callsFake((getNodesProps) =>
+        createAsyncIterator("nodes" in props ? props.nodes(getNodesProps) : props.rootNodes && getNodesProps.parentNode ? props.rootNodes(getNodesProps) : []),
+      ),
     getNodeInstanceKeys: sinon
       .stub<Parameters<HierarchyProvider["getNodeInstanceKeys"]>>()
-      .callsFake((getNodeInstanceKeysProps) => createAsyncIterator(props?.instanceKeys ? props.instanceKeys(getNodeInstanceKeysProps) : [])),
+      .callsFake((getNodeInstanceKeysProps) => createAsyncIterator(props.instanceKeys ? props.instanceKeys(getNodeInstanceKeysProps) : [])),
     setFormatter: sinon.stub(),
     setHierarchyFilter: sinon.stub(),
-    ...(props?.disposable === "yes" ? { [Symbol.dispose]: sinon.stub() } : {}),
-    ...(props?.disposable === "deprecated" ? { dispose: sinon.stub() } : {}),
+    ...(props.disposable === "yes" ? { [Symbol.dispose]: sinon.stub() } : {}),
+    ...(props.disposable === "deprecated" ? { dispose: sinon.stub() } : {}),
   };
 }
