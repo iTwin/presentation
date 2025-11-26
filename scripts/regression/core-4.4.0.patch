@@ -21,7 +21,7 @@ index 4282b2d9..6761fbdc 100644
          const bindingIndex = i + 1;
          switch (typeof value) {
 @@ -118,7 +118,7 @@ export class ECDbBuilder {
- 
+
    public insertInstance(fullClassName: string, props?: { [propertyName: string]: PrimitiveValue | undefined }) {
      const query = this.createInsertQuery(fullClassName, props);
 -    return this._ecdb.withWriteStatement(query.clause, (stmt) => {
@@ -80,7 +80,7 @@ index 497eb88e..7cef9c80 100644
 @@ -29,111 +26,6 @@ describe("Property editors", () => {
      await terminate();
    });
- 
+
 -  afterEach(() => {
 -    IModelApp.resetFormatsProvider();
 -  });
@@ -209,7 +209,7 @@ index c84d13bd..bbcfc7af 100644
  import { createValueFormatter } from "@itwin/presentation-core-interop";
  import { createNodesQueryClauseFactory, HierarchyDefinition } from "@itwin/presentation-hierarchies";
 @@ -466,8 +465,8 @@ describe("Hierarchies", () => {
- 
+
      describe("Integer", () => {
        it("formats instance node labels", async function () {
 -        const { imodel, sheetIndexFolder } = await buildIModel(this, async (builder) => {
@@ -218,7 +218,7 @@ index c84d13bd..bbcfc7af 100644
 +          return { category: insertSpatialCategory({ builder, codeValue: "category", rank: Rank.Application }) };
          });
          const imodelAccess = createIModelAccess(imodel);
- 
+
 @@ -480,7 +479,7 @@ describe("Hierarchies", () => {
              if (!parentNode) {
                return [
@@ -280,7 +280,7 @@ index 63947822..621c6df2 100644
  import { ContentBuilder, HierarchyBuilder, TestIModelConnection } from "@itwin/presentation-testing";
  import { initialize, terminate } from "../IntegrationTests.js";
 @@ -210,9 +209,6 @@ describe("RulesetTesting", () => {
- 
+
      // set up for testing iModel presentation data
      iModel = TestIModelConnection.openFile(iModelPath);
 -
@@ -288,7 +288,7 @@ index 63947822..621c6df2 100644
 -    IModelApp.formatsProvider = new SchemaFormatsProvider(iModel.schemaContext, "metric");
      // __PUBLISH_EXTRACT_END__
    });
- 
+
 diff --git a/apps/full-stack-tests/src/testing/ruleset-testing-snapshots/my-test-content.snap b/apps/full-stack-tests/src/testing/ruleset-testing-snapshots/my-test-content.snap
 index c2ba40a4..6c2c3bc3 100644
 --- a/apps/full-stack-tests/src/testing/ruleset-testing-snapshots/my-test-content.snap
@@ -2134,7 +2134,7 @@ index 7e79a37c..77b57aa3 100644
 @@ -483,18 +482,6 @@ export function insertGroupInformationElement(
    return { className, id };
  }
- 
+
 -export function insertSheetIndexFolder(props: BaseInstanceInsertProps & Partial<Omit<SheetIndexFolderProps, "id" | "parent" | "code" | "model">>) {
 -  const { builder, ...elementProps } = props;
 -  const className = `BisCore${props.fullClassNameSeparator ?? "."}SheetIndexFolder`;
