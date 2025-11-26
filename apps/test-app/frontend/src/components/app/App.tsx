@@ -80,14 +80,21 @@ export function App() {
     await IModelApp.quantityFormatter.setActiveUnitSystem(unitSystem);
   };
 
-  function onIModelConnected(imodel?: IModelConnection) {
+  const onPersistSettingsValueChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setState((prev) => ({
+      ...prev,
+      persistSettings: e.target.checked,
+    }));
+  };
+
+  useEffect(() => {
     const setupFormatsProvider = async () => {
-      if (!imodel?.schemaContext) {
+      if (!state.imodel?.schemaContext) {
         return;
       }
-      const schemaUnitsProvider = new SchemaUnitProvider(imodel.schemaContext);
+      const schemaUnitsProvider = new SchemaUnitProvider(state.imodel.schemaContext);
       IModelApp.quantityFormatter.unitsProvider = schemaUnitsProvider;
-      const schemaFormatsProvider = new SchemaFormatsProvider(imodel.schemaContext, IModelApp.quantityFormatter.activeUnitSystem);
+      const schemaFormatsProvider = new SchemaFormatsProvider(state.imodel.schemaContext, IModelApp.quantityFormatter.activeUnitSystem);
       const removeFormatterListener = IModelApp.quantityFormatter.onActiveFormattingUnitSystemChanged.addListener((args) => {
         schemaFormatsProvider.unitSystem = args.system;
       });
@@ -101,17 +108,9 @@ export function App() {
     };
 
     void setupFormatsProvider();
-  }
-
-  const onPersistSettingsValueChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setState((prev) => ({
-      ...prev,
-      persistSettings: e.target.checked,
-    }));
-  };
+  }, [state.imodel]);
 
   useEffect(() => {
-    onIModelConnected(state.imodel);
     const cancel = new Subject<void>();
     const removeListener = MyAppFrontend.selectionStorage.selectionChangeEvent.addListener(async (args) => {
       cancel.next();
