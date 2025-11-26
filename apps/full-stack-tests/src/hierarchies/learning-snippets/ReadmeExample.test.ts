@@ -9,6 +9,7 @@
 import { expect } from "chai";
 import { insertPhysicalElement, insertPhysicalModelWithPartition, insertSpatialCategory } from "presentation-test-utilities";
 import * as sinon from "sinon";
+import { Logger } from "@itwin/core-bentley";
 // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.IModelAccessImports
 import { IModelConnection } from "@itwin/core-frontend";
 import { SchemaContext } from "@itwin/ecschema-metadata";
@@ -161,6 +162,8 @@ describe("Hierarchies", () => {
       let logStub: sinon.SinonStub;
       beforeEach(async () => {
         await initialize();
+        // re-initialize to stubs to avoid iTwin.js core logging to console an ruining our testing strategy
+        Logger.initialize(sinon.stub(), sinon.stub(), sinon.stub(), sinon.stub());
         logStub = sinon.stub(console, "log");
       });
       afterEach(async () => {

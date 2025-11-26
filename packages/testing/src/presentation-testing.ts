@@ -25,6 +25,7 @@ export * from "./presentation-testing/ContentBuilder.js";
  * @docs-group-description Helpers
  * Various test helpers.
  */
+// eslint-disable-next-line @typescript-eslint/no-deprecated
 export { HierarchyCacheMode, PresentationBackendProps, PresentationTestingInitProps, initialize, terminate } from "./presentation-testing/Helpers.js";
 export {
   createFileNameFromString,
