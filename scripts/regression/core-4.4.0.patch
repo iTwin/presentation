@@ -2127,7 +2127,7 @@ index 9cbe8313..b52f7185 100644
    PhysicalElementProps,
    RelationshipProps,
    RepositoryLinkProps,
-   SheetIndexFolderProps,
+-  SheetIndexFolderProps,
    SubCategoryProps,
    SubjectProps,
  } from "@itwin/core-common";
