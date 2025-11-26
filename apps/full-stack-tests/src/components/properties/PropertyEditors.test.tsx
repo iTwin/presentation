@@ -128,7 +128,7 @@ describe("Property editors", () => {
     // ensure the commit callback is called with the new value
     await waitFor(() => {
       expect(commitSpy).to.have.been.calledOnce;
-      expect(commitSpy.firstCall.args[0].newValue.displayValue).to.eq("4.56"); // what user entered
+      expect(commitSpy.firstCall.args[0].newValue.displayValue).to.eq("4.6 in"); // what is displayed after formatting
       expect(commitSpy.firstCall.args[0].newValue.value.toFixed(6)).to.eq("0.115824"); // converted to persistence unit - meters
       expect(commitSpy.firstCall.args[0].newValue.roundingError.toFixed(6)).to.eq("0.000127");
     });
