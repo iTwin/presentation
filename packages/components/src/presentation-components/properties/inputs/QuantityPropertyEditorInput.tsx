@@ -44,8 +44,8 @@ const QuantityPropertyValueInput = forwardRef<PropertyEditorAttributes, Quantity
     const { quantityValue, inputProps } = useQuantityValueInput({ koqName, schemaContext, initialRawValue });
     const [isEditing, setEditing] = useState(false);
     const value = useMemo(() => {
-      return isEditing ? quantityValue.fullFormattedValue : quantityValue.defaultFormattedValue;
-    }, [isEditing, quantityValue.defaultFormattedValue, quantityValue.fullFormattedValue]);
+      return isEditing ? quantityValue.highPrecisionFormattedValue : quantityValue.defaultFormattedValue;
+    }, [isEditing, quantityValue.defaultFormattedValue, quantityValue.highPrecisionFormattedValue]);
 
     const inputRef = useRef<HTMLInputElement>(null);
     useImperativeHandle(
@@ -54,12 +54,12 @@ const QuantityPropertyValueInput = forwardRef<PropertyEditorAttributes, Quantity
         getValue: () => ({
           valueFormat: PropertyValueFormat.Primitive,
           value: quantityValue.rawValue,
-          displayValue: value,
+          displayValue: quantityValue.defaultFormattedValue,
           roundingError: quantityValue.roundingError,
         }),
         htmlElement: inputRef.current,
       }),
-      [quantityValue.rawValue, quantityValue.roundingError, value],
+      [quantityValue.defaultFormattedValue, quantityValue.rawValue, quantityValue.roundingError],
     );
 
     const onBlur = () => {
@@ -69,7 +69,7 @@ const QuantityPropertyValueInput = forwardRef<PropertyEditorAttributes, Quantity
           newValue: {
             valueFormat: PropertyValueFormat.Primitive,
             value: quantityValue.rawValue,
-            displayValue: quantityValue.fullFormattedValue,
+            displayValue: quantityValue.highPrecisionFormattedValue,
             roundingError: quantityValue.roundingError,
           },
         });
@@ -86,7 +86,6 @@ const QuantityPropertyValueInput = forwardRef<PropertyEditorAttributes, Quantity
         {...inputProps}
         value={value}
         size="small"
-        id="quantityEditorId"
         disabled={propertyRecord.isReadonly || inputProps.disabled}
         ref={inputRef}
         onBlur={() => {

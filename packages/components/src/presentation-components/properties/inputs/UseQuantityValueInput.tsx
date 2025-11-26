@@ -19,7 +19,7 @@ export interface QuantityValue {
   /** Raw value in persistence unit. */
   rawValue?: number;
   /** Formatted value with unit label based on active unit system or user input. With precision set to 12*/
-  fullFormattedValue: string;
+  highPrecisionFormattedValue: string;
   /** Formatted value with unit label based on active unit system or user input. Default precision*/
   defaultFormattedValue: string;
   roundingError?: number;
@@ -52,7 +52,7 @@ export function useQuantityValueInput({ initialRawValue, schemaContext, koqName 
   const [{ quantityValue, placeholder }, setState] = useState<State>(() => ({
     quantityValue: {
       rawValue: initialRawValueRef.current,
-      fullFormattedValue: "",
+      highPrecisionFormattedValue: "",
       defaultFormattedValue: "",
       roundingError: undefined,
     },
@@ -76,7 +76,7 @@ export function useQuantityValueInput({ initialRawValue, schemaContext, koqName 
         ...prev,
         quantityValue: {
           ...prev.quantityValue,
-          fullFormattedValue: newFormattedValue,
+          highPrecisionFormattedValue: newFormattedValue,
           defaultFormattedValue: defaultValue,
           roundingError,
         },
@@ -96,7 +96,7 @@ export function useQuantityValueInput({ initialRawValue, schemaContext, koqName 
       (prev): State => ({
         ...prev,
         quantityValue: {
-          fullFormattedValue: newValue,
+          highPrecisionFormattedValue: newValue,
           defaultFormattedValue: defaultFormattedValue ?? newValue,
           rawValue: parseResult.ok ? parseResult.value : undefined,
           roundingError: parseResult.ok ? roundingError : undefined,
@@ -117,7 +117,7 @@ export function useQuantityValueInput({ initialRawValue, schemaContext, koqName 
 
 function useFormatterAndParser(koqName: string, schemaContext: SchemaContext) {
   interface State {
-    defaultFormatter?: FormatterSpec;
+    defaultFormatter: FormatterSpec;
     highPrecisionFormatter: FormatterSpec;
     parserSpec: ParserSpec;
   }
@@ -125,7 +125,8 @@ function useFormatterAndParser(koqName: string, schemaContext: SchemaContext) {
 
   useEffect(() => {
     const findFormatterAndParser = async () => {
-      const koqFormatter = new KoqPropertyValueFormatter({ schemaContext, formatsProvider: IModelApp.formatsProvider });
+      // eslint-disable-next-line @typescript-eslint/no-deprecated
+      const koqFormatter = new KoqPropertyValueFormatter(schemaContext, undefined, IModelApp.formatsProvider);
       const highPrecisionFormatter = await koqFormatter.getFormatterSpec({
         koqName,
         unitSystem: IModelApp.quantityFormatter.activeUnitSystem,
@@ -136,7 +137,7 @@ function useFormatterAndParser(koqName: string, schemaContext: SchemaContext) {
         unitSystem: IModelApp.quantityFormatter.activeUnitSystem,
       });
       const parserSpec = await koqFormatter.getParserSpec({ koqName, unitSystem: IModelApp.quantityFormatter.activeUnitSystem });
-      if (highPrecisionFormatter && parserSpec) {
+      if (highPrecisionFormatter && parserSpec && defaultFormatter) {
         if (highPrecisionFormatter.format.type === FormatType.Decimal) {
           highPrecisionFormatter.format.precision = 12;
         }
