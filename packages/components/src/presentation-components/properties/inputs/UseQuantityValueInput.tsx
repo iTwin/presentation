@@ -18,9 +18,9 @@ import { getPersistenceUnitRoundingError } from "./Utils.js";
 export interface QuantityValue {
   /** Raw value in persistence unit. */
   rawValue?: number;
-  /** Formatted value with unit label based on active unit system or user input. With precision set to 12*/
+  /** Formatted value with unit label based on active unit system or user input. With precision set to 12. */
   highPrecisionFormattedValue: string;
-  /** Formatted value with unit label based on active unit system or user input. Default precision*/
+  /** Formatted value with unit label based on active unit system or user input. Default precision. */
   defaultFormattedValue: string;
   roundingError?: number;
 }
