@@ -99,11 +99,11 @@ export function App() {
     });
     IModelApp.formatsProvider = schemaFormatsProvider;
 
-    IModelConnection.onClose.addOnce(() => {
+    return () => {
       IModelApp.resetFormatsProvider();
       removeFormatterListener?.();
       void IModelApp.quantityFormatter.resetToUseInternalUnitsProvider();
-    });
+    };
   }, [state.imodel]);
 
   useEffect(() => {
