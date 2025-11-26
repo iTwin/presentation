@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 /* eslint-disable no-console */
 
-import { EventEmitter, ScenarioContext } from "artillery";
+import { VUContext, VUEvents } from "artillery";
 import { decompress as brotliDecompress } from "brotli";
 import * as http from "node:http";
 import * as https from "node:https";
@@ -39,7 +39,7 @@ const BACKEND_PROPS = process.env.USE_GPB
       port: BACKEND_PORT,
       authToken: "",
       createPath: (operation: string) => `/presentation-test-app/v1.0/mode/1/context/${EMPTY_GUID}/imodel/${EMPTY_GUID}/changeset/0/${operation}`,
-      imodelRpcProps: (context: ScenarioContext) => ({
+      imodelRpcProps: (context: VUContext) => ({
         iTwinId: EMPTY_GUID,
         iModelId: EMPTY_GUID,
         key: getCurrentIModelPath(context),
@@ -64,7 +64,7 @@ export async function openIModelConnectionIfNeeded() {
             agent: BACKEND_PROPS.agent,
             hostname: BACKEND_PROPS.hostname,
             port: BACKEND_PROPS.port,
-            path: `${BACKEND_PROPS.createPath("IModelReadRpcInterface-3.6.0-getConnectionProps")}?parameters=W3siaVR3aW5JZCI6Ijg5MmFhMmM5LTViZTgtNDg2NS05ZjM3LTdkNGM3ZTc1ZWJiZiIsImlNb2RlbElkIjoiZWQwYzQwOGItYWRkMi00OTZlLWFjNTgtNWE3ZTg1M2NiYzBiIiwiY2hhbmdlc2V0Ijp7ImluZGV4Ijo2OSwiaWQiOiIyN2JlMTZkOTU5NjQ1OTg1ZmNhODBjZmY1MDJiZDIzN2I4MmYwZjg0In19XQ==`,
+            path: `${BACKEND_PROPS.createPath("IModelReadRpcInterface-3.7.0-getConnectionProps")}?parameters=W3siaVR3aW5JZCI6Ijg5MmFhMmM5LTViZTgtNDg2NS05ZjM3LTdkNGM3ZTc1ZWJiZiIsImlNb2RlbElkIjoiZWQwYzQwOGItYWRkMi00OTZlLWFjNTgtNWE3ZTg1M2NiYzBiIiwiY2hhbmdlc2V0Ijp7ImluZGV4Ijo2OSwiaWQiOiIyN2JlMTZkOTU5NjQ1OTg1ZmNhODBjZmY1MDJiZDIzN2I4MmYwZjg0In19XQ==`,
             method: "get",
             headers: createRequestHeaders(),
           },
@@ -79,9 +79,9 @@ export async function openIModelConnectionIfNeeded() {
     }
   }
 }
-export async function doRequest(operation: string, body: string, events: EventEmitter, reqName: string) {
+export async function doRequest(operation: string, body: string, events: VUEvents, reqName: string) {
   return new Promise((resolve, reject) => {
-    events.emit("rate", "http.request_rate");
+    events.emit("rate", "http.request_rate", 1);
     events.emit("counter", "http.requests", 1);
     events.emit("counter", `itwin.${reqName}.requests`, 1);
     const timer = new StopWatch(undefined, true);
@@ -151,22 +151,23 @@ function handleResponse(response: http.IncomingMessage, resolve: (value: any) =>
   response.once("error", reject);
 }
 
-export function getCurrentIModelPath(context: ScenarioContext) {
-  return (context.vars.$loopElement as any)[0] as string;
+export function getCurrentIModelPath(context: VUContext) {
+  return context.vars.$loopElement[0] as string;
 }
 
-export function getCurrentIModelName(context: ScenarioContext) {
+export function getCurrentIModelName(context: VUContext) {
   return path.basename(getCurrentIModelPath(context));
 }
 
+export function loadVariables(context: VUContext) {
+  context.vars.imodelRpcProps = BACKEND_PROPS.imodelRpcProps;
+}
+
 export async function loadNodes<TNode>(
-  context: ScenarioContext,
-  events: EventEmitter,
+  events: VUEvents,
   provider: (parent: TNode | undefined) => Promise<TNode[]>,
   shouldExpand: (node: TNode, index: number) => boolean,
 ) {
-  context.vars.imodelRpcProps = BACKEND_PROPS.imodelRpcProps;
-
   let nodesCreated = 0;
   await new Promise<void>((resolve, reject) => {
     const hierarchyTimer = new StopWatch(undefined, true);

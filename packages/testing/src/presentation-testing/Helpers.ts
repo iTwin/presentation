@@ -45,6 +45,7 @@ function initializeRpcInterfaces(interfaces: RpcInterfaceDefinition[]) {
 
 let isInitialized = false;
 
+// eslint-disable-next-line @typescript-eslint/no-deprecated
 export { HierarchyCacheMode, PresentationBackendProps };
 
 /** @public */

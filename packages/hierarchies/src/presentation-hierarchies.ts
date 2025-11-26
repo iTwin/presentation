@@ -44,6 +44,7 @@ export {
 export { GetHierarchyNodesProps, HierarchyProvider, mergeProviders } from "./hierarchies/HierarchyProvider.js";
 export {
   createHierarchyFilteringHelper,
+  // eslint-disable-next-line @typescript-eslint/no-deprecated
   extractFilteringProps,
   HierarchyFilteringPath,
   HierarchyFilteringPathOptions,

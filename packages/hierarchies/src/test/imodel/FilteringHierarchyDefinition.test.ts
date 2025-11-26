@@ -7,7 +7,7 @@ import { assert, expect } from "chai";
 import { firstValueFrom, from, lastValueFrom, of, toArray } from "rxjs";
 import sinon from "sinon";
 import { ECClassHierarchyInspector, trimWhitespace } from "@itwin/presentation-shared";
-import { FilterTargetGroupingNodeInfo, HierarchyFilteringPath, HierarchyFilteringPathOptions } from "../../hierarchies/HierarchyFiltering.js";
+import { HierarchyFilteringPath, HierarchyFilteringPathOptions } from "../../hierarchies/HierarchyFiltering.js";
 import { HierarchyNode } from "../../hierarchies/HierarchyNode.js";
 import { HierarchyNodeIdentifiersPath } from "../../hierarchies/HierarchyNodeIdentifier.js";
 import {
@@ -1434,7 +1434,6 @@ describe("FilteringHierarchyDefinition", () => {
         const sourceFactory: RxjsHierarchyDefinition = {
           defineHierarchyLevel: () => of([sourceDefinition]),
         };
-        const groupingNode: FilterTargetGroupingNodeInfo = { key: { type: "class-grouping", className: "class" }, depth: 0 };
         const filteringFactory = await createFilteringHierarchyDefinition({
           imodelAccess: { ...classHierarchyInspector, imodelKey: "test-imodel-key" },
           sourceFactory,
@@ -1442,7 +1441,7 @@ describe("FilteringHierarchyDefinition", () => {
             { path: [createTestGenericNodeKey({ id: "custom" }), createTestGenericNodeKey({ id: "123" })], options: { autoExpand: true } },
             {
               path: [createTestGenericNodeKey({ id: "custom" }), createTestGenericNodeKey({ id: "456" })],
-              options: { autoExpand: groupingNode },
+              options: { autoExpand: { depthInHierarchy: 1 } },
             },
             [createTestGenericNodeKey({ id: "custom" }), createTestGenericNodeKey({ id: "789" })],
           ],
@@ -1456,7 +1455,7 @@ describe("FilteringHierarchyDefinition", () => {
               filtering: {
                 filteredChildrenIdentifierPaths: [
                   { path: [createTestGenericNodeKey({ id: "123" })], options: { autoExpand: true } },
-                  { path: [createTestGenericNodeKey({ id: "456" })], options: { autoExpand: groupingNode } },
+                  { path: [createTestGenericNodeKey({ id: "456" })], options: { autoExpand: { depthInHierarchy: 1 } } },
                   { path: [createTestGenericNodeKey({ id: "789" })], options: undefined },
                 ],
               },
@@ -1824,54 +1823,6 @@ describe("FilteringHierarchyDefinition", () => {
               { className: queryClass.fullName, id: "0x123" },
               { className: filterPathClass1.fullName, id: "0x456" },
             ],
-          ],
-        });
-        const result = await lastValueFrom(filteringFactory.defineHierarchyLevel({ parentNode: undefined }));
-        expect(result).to.deep.eq([
-          applyECInstanceIdsFilter(sourceDefinition, [
-            {
-              className: filterPathClass0.fullName,
-              id: "0x123",
-            },
-          ]),
-        ]);
-      });
-
-      it("sets most nested grouping node as filter target", async () => {
-        const queryClass = classHierarchyInspector.stubEntityClass({ schemaName: "BisCore", className: "SourceQueryClassName", is: async () => false });
-        const filterPathClass0 = classHierarchyInspector.stubEntityClass({
-          schemaName: "BisCore",
-          className: "FilterPathClassName0",
-          is: async (other) => other === queryClass.fullName,
-        });
-        const groupingNode1: FilterTargetGroupingNodeInfo = { key: { type: "class-grouping", className: "class1" }, depth: 1 };
-        const groupingNode2: FilterTargetGroupingNodeInfo = { key: { type: "class-grouping", className: "class2" }, depth: 3 };
-        const groupingNode3: FilterTargetGroupingNodeInfo = { key: { type: "class-grouping", className: "class2" }, depth: 0 };
-        const sourceDefinition: InstanceNodesQueryDefinition = {
-          fullClassName: queryClass.fullName,
-          query: {
-            ecsql: "SOURCE_QUERY",
-          },
-        };
-        const sourceFactory: RxjsHierarchyDefinition = {
-          defineHierarchyLevel: () => of([sourceDefinition]),
-        };
-        const filteringFactory = await createFilteringHierarchyDefinition({
-          imodelAccess: { ...classHierarchyInspector, imodelKey: "test-imodel-key" },
-          sourceFactory,
-          nodeIdentifierPaths: [
-            {
-              path: [{ className: filterPathClass0.fullName, id: "0x123" }],
-              options: { autoExpand: groupingNode1 },
-            },
-            {
-              path: [{ className: filterPathClass0.fullName, id: "0x123" }],
-              options: { autoExpand: groupingNode2 },
-            },
-            {
-              path: [{ className: filterPathClass0.fullName, id: "0x123" }],
-              options: { autoExpand: groupingNode3 },
-            },
           ],
         });
         const result = await lastValueFrom(filteringFactory.defineHierarchyLevel({ parentNode: undefined }));
