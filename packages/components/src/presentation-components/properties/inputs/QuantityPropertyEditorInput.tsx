@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { forwardRef, useEffect, useImperativeHandle, useMemo, useRef, useState } from "react";
+import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from "react";
 import { PrimitiveValue, PropertyRecord, PropertyValueFormat } from "@itwin/appui-abstract";
 import { PropertyEditorProps } from "@itwin/components-react";
 import { assert } from "@itwin/core-bentley";
@@ -43,9 +43,7 @@ const QuantityPropertyValueInput = forwardRef<PropertyEditorAttributes, Quantity
   ({ propertyRecord, onCommit, koqName, schemaContext, initialRawValue, setFocus }, ref) => {
     const { quantityValue, inputProps } = useQuantityValueInput({ koqName, schemaContext, initialRawValue });
     const [isEditing, setEditing] = useState(false);
-    const value = useMemo(() => {
-      return isEditing ? quantityValue.highPrecisionFormattedValue : quantityValue.defaultFormattedValue;
-    }, [isEditing, quantityValue.defaultFormattedValue, quantityValue.highPrecisionFormattedValue]);
+    const value = isEditing ? quantityValue.highPrecisionFormattedValue : quantityValue.defaultFormattedValue;
 
     const inputRef = useRef<HTMLInputElement>(null);
     useImperativeHandle(
@@ -69,7 +67,7 @@ const QuantityPropertyValueInput = forwardRef<PropertyEditorAttributes, Quantity
           newValue: {
             valueFormat: PropertyValueFormat.Primitive,
             value: quantityValue.rawValue,
-            displayValue: quantityValue.highPrecisionFormattedValue,
+            displayValue: quantityValue.defaultFormattedValue,
             roundingError: quantityValue.roundingError,
           },
         });

@@ -88,26 +88,22 @@ export function App() {
   };
 
   useEffect(() => {
-    const setupFormatsProvider = async () => {
-      if (!state.imodel?.schemaContext) {
-        return;
-      }
-      const schemaUnitsProvider = new SchemaUnitProvider(state.imodel.schemaContext);
-      IModelApp.quantityFormatter.unitsProvider = schemaUnitsProvider;
-      const schemaFormatsProvider = new SchemaFormatsProvider(state.imodel.schemaContext, IModelApp.quantityFormatter.activeUnitSystem);
-      const removeFormatterListener = IModelApp.quantityFormatter.onActiveFormattingUnitSystemChanged.addListener((args) => {
-        schemaFormatsProvider.unitSystem = args.system;
-      });
-      IModelApp.formatsProvider = schemaFormatsProvider;
+    if (!state.imodel?.schemaContext) {
+      return;
+    }
+    const schemaUnitsProvider = new SchemaUnitProvider(state.imodel.schemaContext);
+    IModelApp.quantityFormatter.unitsProvider = schemaUnitsProvider;
+    const schemaFormatsProvider = new SchemaFormatsProvider(state.imodel.schemaContext, IModelApp.quantityFormatter.activeUnitSystem);
+    const removeFormatterListener = IModelApp.quantityFormatter.onActiveFormattingUnitSystemChanged.addListener((args) => {
+      schemaFormatsProvider.unitSystem = args.system;
+    });
+    IModelApp.formatsProvider = schemaFormatsProvider;
 
-      IModelConnection.onClose.addOnce(() => {
-        IModelApp.resetFormatsProvider();
-        removeFormatterListener?.();
-        void IModelApp.quantityFormatter.resetToUseInternalUnitsProvider();
-      });
-    };
-
-    void setupFormatsProvider();
+    IModelConnection.onClose.addOnce(() => {
+      IModelApp.resetFormatsProvider();
+      removeFormatterListener?.();
+      void IModelApp.quantityFormatter.resetToUseInternalUnitsProvider();
+    });
   }, [state.imodel]);
 
   useEffect(() => {
