@@ -539,7 +539,8 @@ describe("FilteringHierarchyDefinition", () => {
       expect(stub).to.be.calledOnceWithExactly(inputNode);
       expect(result).to.eq(sourceFactoryNode);
     });
-    describe("non grouping nodes auto-expand tests", () => {
+
+    describe("handling non-grouping nodes' `autoExpand` flag", () => {
       [
         { condition: "autoExpand is set to true", autoExpand: true },
         { condition: "autoExpand is set to true", autoExpand: false },
