@@ -679,6 +679,11 @@ describe("FilteringHierarchyDefinition", () => {
           { inputNode: createTestProcessedGenericNode(), filterPathNodeKey: { id: "0x1", className: "bis:Element" }, imodelKey: "" },
           {
             inputNode: createTestProcessedInstanceNode({ key: { type: "instances", instanceKeys: [{ id: "0x1", className: "bis:Element" }] } }),
+            filterPathNodeKey: { id: "0x2", className: "bis:Element", imodelKey: "" },
+            imodelKey: "",
+          },
+          {
+            inputNode: createTestProcessedInstanceNode({ key: { type: "instances", instanceKeys: [{ id: "0x1", className: "bis:Element" }] } }),
             filterPathNodeKey: { id: "0x1", className: "bis:Element", imodelKey: "a" },
             imodelKey: "b",
           },

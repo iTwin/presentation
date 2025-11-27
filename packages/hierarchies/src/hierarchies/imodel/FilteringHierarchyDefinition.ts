@@ -83,11 +83,15 @@ export class FilteringHierarchyDefinition implements RxjsHierarchyDefinition {
         if (identifier.imodelKey && identifier.imodelKey !== this._imodelAccess.imodelKey) {
           return false;
         }
-        if (node.key.instanceKeys.some((instanceKey) => instanceKey.id === identifier.id && instanceKey.className === identifier.className)) {
+        const instanceKeysMatchingIdentifier = node.key.instanceKeys.filter((instanceKey) => instanceKey.id === identifier.id);
+        if (instanceKeysMatchingIdentifier.length === 0) {
+          return false;
+        }
+        if (instanceKeysMatchingIdentifier.some((instanceKey) => instanceKey.className === identifier.className)) {
           return true;
         }
         return firstValueFrom(
-          from(node.key.instanceKeys).pipe(
+          from(instanceKeysMatchingIdentifier).pipe(
             filter((instanceKey) => instanceKey.id === identifier.id),
             mergeMap((instanceKey) => {
               const isDerivedFrom = this._imodelAccess.classDerivesFrom(identifier.className, instanceKey.className);
