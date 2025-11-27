@@ -40,7 +40,37 @@ export interface ClassGroupingNodeKey {
 }
 
 // @public
-export function createHierarchyFilteringHelper(rootLevelFilteringProps: HierarchyFilteringPath[] | undefined, parentNode: Pick<ParentHierarchyNode, "filtering"> | undefined): HierarchyFilteringHelper;
+export function createHierarchyFilteringHelper(rootLevelFilteringProps: HierarchyFilteringPath[] | undefined, parentNode: Pick<ParentHierarchyNode, "filtering"> | undefined): {
+    hasFilter: boolean;
+    hasFilterTargetAncestor: boolean;
+    getChildNodeFilteringIdentifiers: () => HierarchyNodeIdentifier[] | undefined;
+    createChildNodeProps: {
+        (props: {
+            parentKeys?: undefined;
+            nodeKey: InstancesNodeKey | GenericNodeKey;
+        }): Pick<HierarchyNode, "filtering"> | undefined;
+        (props: {
+            parentKeys?: undefined;
+            pathMatcher: (identifier: HierarchyNodeIdentifier) => boolean;
+        }): Pick<HierarchyNode, "filtering"> | undefined;
+        (props: {
+            parentKeys?: undefined;
+            asyncPathMatcher: (identifier: HierarchyNodeIdentifier) => boolean | Promise<boolean>;
+        }): Promise<Pick<HierarchyNode, "filtering"> | undefined> | Pick<HierarchyNode, "filtering"> | undefined;
+        (props: {
+            parentKeys: HierarchyNodeKey[];
+            nodeKey: InstancesNodeKey | GenericNodeKey;
+        }): Pick<HierarchyNode, "filtering" | "autoExpand"> | undefined;
+        (props: {
+            parentKeys: HierarchyNodeKey[];
+            pathMatcher: (identifier: HierarchyNodeIdentifier) => boolean;
+        }): Pick<HierarchyNode, "filtering" | "autoExpand"> | undefined;
+        (props: {
+            parentKeys: HierarchyNodeKey[];
+            asyncPathMatcher: (identifier: HierarchyNodeIdentifier) => boolean | Promise<boolean>;
+        }): Promise<Pick<HierarchyNode, "filtering" | "autoExpand"> | undefined> | Pick<HierarchyNode, "filtering" | "autoExpand"> | undefined;
+    };
+};
 
 // @public
 export function createIModelHierarchyProvider(props: IModelHierarchyProviderProps): HierarchyProvider & {
@@ -199,37 +229,6 @@ export interface GenericNodeKey {
 }
 
 // @public
-function getCreateChildNodeProps({ hasFilterTargetAncestor, filteredNodePaths, }: {
-    hasFilterTargetAncestor: boolean;
-    filteredNodePaths: HierarchyFilteringPath[];
-}): {
-    (props: {
-        parentKeys?: undefined;
-        nodeKey: InstancesNodeKey | GenericNodeKey;
-    }): Pick<HierarchyNode, "filtering"> | undefined;
-    (props: {
-        parentKeys?: undefined;
-        pathMatcher: (identifier: HierarchyNodeIdentifier) => boolean;
-    }): Pick<HierarchyNode, "filtering"> | undefined;
-    (props: {
-        parentKeys?: undefined;
-        asyncPathMatcher: (identifier: HierarchyNodeIdentifier) => boolean | Promise<boolean>;
-    }): Promise<Pick<HierarchyNode, "filtering"> | undefined> | Pick<HierarchyNode, "filtering"> | undefined;
-    (props: {
-        parentKeys: HierarchyNodeKey[];
-        nodeKey: InstancesNodeKey | GenericNodeKey;
-    }): Pick<HierarchyNode, "filtering" | "autoExpand"> | undefined;
-    (props: {
-        parentKeys: HierarchyNodeKey[];
-        pathMatcher: (identifier: HierarchyNodeIdentifier) => boolean;
-    }): Pick<HierarchyNode, "filtering" | "autoExpand"> | undefined;
-    (props: {
-        parentKeys: HierarchyNodeKey[];
-        asyncPathMatcher: (identifier: HierarchyNodeIdentifier) => boolean | Promise<boolean>;
-    }): Promise<Pick<HierarchyNode, "filtering" | "autoExpand"> | undefined> | Pick<HierarchyNode, "filtering" | "autoExpand"> | undefined;
-};
-
-// @public
 export interface GetHierarchyNodesProps {
     hierarchyLevelSizeLimit?: number | "unbounded";
     ignoreCache?: boolean;
@@ -270,14 +269,6 @@ export interface HierarchyDefinition {
 
 // @public
 type HierarchyDefinitionParentNode = Omit<NonGroupingHierarchyNode, "children">;
-
-// @public (undocumented)
-interface HierarchyFilteringHelper {
-    createChildNodeProps: ReturnType<typeof getCreateChildNodeProps>;
-    getChildNodeFilteringIdentifiers: () => HierarchyNodeIdentifier[] | undefined;
-    hasFilter: boolean;
-    hasFilterTargetAncestor: boolean;
-}
 
 // @public
 export type HierarchyFilteringPath = HierarchyNodeIdentifiersPath | {
