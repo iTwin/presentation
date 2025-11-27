@@ -21,7 +21,7 @@ index 4282b2d9..6761fbdc 100644
          const bindingIndex = i + 1;
          switch (typeof value) {
 @@ -118,7 +118,7 @@ export class ECDbBuilder {
- 
+
    public insertInstance(fullClassName: string, props?: { [propertyName: string]: PrimitiveValue | undefined }) {
      const query = this.createInsertQuery(fullClassName, props);
 -    return this._ecdb.withWriteStatement(query.clause, (stmt) => {
@@ -59,7 +59,7 @@ index 4282b2d9..6761fbdc 100644
      });
    }
 diff --git a/apps/full-stack-tests/src/components/properties/PropertyEditors.test.tsx b/apps/full-stack-tests/src/components/properties/PropertyEditors.test.tsx
-index b8c030e8..7cef9c80 100644
+index 497eb88e..7cef9c80 100644
 --- a/apps/full-stack-tests/src/components/properties/PropertyEditors.test.tsx
 +++ b/apps/full-stack-tests/src/components/properties/PropertyEditors.test.tsx
 @@ -6,13 +6,10 @@
@@ -80,7 +80,7 @@ index b8c030e8..7cef9c80 100644
 @@ -29,111 +26,6 @@ describe("Property editors", () => {
      await terminate();
    });
- 
+
 -  afterEach(() => {
 -    IModelApp.resetFormatsProvider();
 -  });
@@ -180,7 +180,7 @@ index b8c030e8..7cef9c80 100644
 -    // ensure the commit callback is called with the new value
 -    await waitFor(() => {
 -      expect(commitSpy).to.have.been.calledOnce;
--      expect(commitSpy.firstCall.args[0].newValue.displayValue).to.eq("4.56"); // what user entered
+-      expect(commitSpy.firstCall.args[0].newValue.displayValue).to.eq("4.6 in"); // what is displayed after formatting
 -      expect(commitSpy.firstCall.args[0].newValue.value.toFixed(6)).to.eq("0.115824"); // converted to persistence unit - meters
 -      expect(commitSpy.firstCall.args[0].newValue.roundingError.toFixed(6)).to.eq("0.000127");
 -    });
@@ -209,7 +209,7 @@ index c84d13bd..bbcfc7af 100644
  import { createValueFormatter } from "@itwin/presentation-core-interop";
  import { createNodesQueryClauseFactory, HierarchyDefinition } from "@itwin/presentation-hierarchies";
 @@ -466,8 +465,8 @@ describe("Hierarchies", () => {
- 
+
      describe("Integer", () => {
        it("formats instance node labels", async function () {
 -        const { imodel, sheetIndexFolder } = await buildIModel(this, async (builder) => {
@@ -218,7 +218,7 @@ index c84d13bd..bbcfc7af 100644
 +          return { category: insertSpatialCategory({ builder, codeValue: "category", rank: Rank.Application }) };
          });
          const imodelAccess = createIModelAccess(imodel);
- 
+
 @@ -480,7 +479,7 @@ describe("Hierarchies", () => {
              if (!parentNode) {
                return [
@@ -280,7 +280,7 @@ index 63947822..621c6df2 100644
  import { ContentBuilder, HierarchyBuilder, TestIModelConnection } from "@itwin/presentation-testing";
  import { initialize, terminate } from "../IntegrationTests.js";
 @@ -210,9 +209,6 @@ describe("RulesetTesting", () => {
- 
+
      // set up for testing iModel presentation data
      iModel = TestIModelConnection.openFile(iModelPath);
 -
@@ -288,7 +288,7 @@ index 63947822..621c6df2 100644
 -    IModelApp.formatsProvider = new SchemaFormatsProvider(iModel.schemaContext, "metric");
      // __PUBLISH_EXTRACT_END__
    });
- 
+
 diff --git a/apps/full-stack-tests/src/testing/ruleset-testing-snapshots/my-test-content.snap b/apps/full-stack-tests/src/testing/ruleset-testing-snapshots/my-test-content.snap
 index c2ba40a4..6c2c3bc3 100644
 --- a/apps/full-stack-tests/src/testing/ruleset-testing-snapshots/my-test-content.snap
@@ -2120,10 +2120,10 @@ index 84221799..7c9384d6 100644
              },
            });
 diff --git a/packages/test-utilities/src/test-utilities/IModelUtils.ts b/packages/test-utilities/src/test-utilities/IModelUtils.ts
-index 9cbe8313..b52f7185 100644
+index 7e79a37c..77b57aa3 100644
 --- a/packages/test-utilities/src/test-utilities/IModelUtils.ts
 +++ b/packages/test-utilities/src/test-utilities/IModelUtils.ts
-@@ -24,7 +24,6 @@ import {
+@@ -25,7 +25,6 @@ import {
    PhysicalElementProps,
    RelationshipProps,
    RepositoryLinkProps,
@@ -2131,10 +2131,10 @@ index 9cbe8313..b52f7185 100644
    SubCategoryProps,
    SubjectProps,
  } from "@itwin/core-common";
-@@ -482,18 +481,6 @@ export function insertGroupInformationElement(
+@@ -483,18 +482,6 @@ export function insertGroupInformationElement(
    return { className, id };
  }
- 
+
 -export function insertSheetIndexFolder(props: BaseInstanceInsertProps & Partial<Omit<SheetIndexFolderProps, "id" | "parent" | "code" | "model">>) {
 -  const { builder, ...elementProps } = props;
 -  const className = `BisCore${props.fullClassNameSeparator ?? "."}SheetIndexFolder`;

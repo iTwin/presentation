@@ -59,7 +59,7 @@ index 4282b2d9..6761fbdc 100644
      });
    }
 diff --git a/apps/full-stack-tests/src/components/properties/PropertyEditors.test.tsx b/apps/full-stack-tests/src/components/properties/PropertyEditors.test.tsx
-index b8c030e8..7cef9c80 100644
+index 497eb88e..7cef9c80 100644
 --- a/apps/full-stack-tests/src/components/properties/PropertyEditors.test.tsx
 +++ b/apps/full-stack-tests/src/components/properties/PropertyEditors.test.tsx
 @@ -6,13 +6,10 @@
@@ -180,7 +180,7 @@ index b8c030e8..7cef9c80 100644
 -    // ensure the commit callback is called with the new value
 -    await waitFor(() => {
 -      expect(commitSpy).to.have.been.calledOnce;
--      expect(commitSpy.firstCall.args[0].newValue.displayValue).to.eq("4.56"); // what user entered
+-      expect(commitSpy.firstCall.args[0].newValue.displayValue).to.eq("4.6 in"); // what is displayed after formatting
 -      expect(commitSpy.firstCall.args[0].newValue.value.toFixed(6)).to.eq("0.115824"); // converted to persistence unit - meters
 -      expect(commitSpy.firstCall.args[0].newValue.roundingError.toFixed(6)).to.eq("0.000127");
 -    });

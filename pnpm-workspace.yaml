@@ -17,43 +17,43 @@ hoistPattern:
 
 catalogs:
   appui:
-    '@itwin/appui-react': ^5.18.0
-    '@itwin/components-react': ^5.18.0
-    '@itwin/core-react': ^5.18.0
-    '@itwin/imodel-components-react': ^5.18.0
+    '@itwin/appui-react': ^5.19.0
+    '@itwin/components-react': ^5.19.0
+    '@itwin/core-react': ^5.19.0
+    '@itwin/imodel-components-react': ^5.19.0
   build-tools:
-    '@itwin/build-tools': ^5.3.2
+    '@itwin/build-tools': ^5.3.3
     '@itwin/eslint-plugin': 5.1.0
     '@types/node': ^22.19.1
     cpx2: ^7.0.2
     cross-env: ^7.0.3
     eslint: ^9.39.1
     eslint-plugin-react: ^7.37.5
-    rimraf: ^6.1.0
+    rimraf: ^6.1.2
     typescript: ~5.7.3
   itwinjs-core:
-    '@itwin/core-bentley': ^5.3.2
-    '@itwin/core-common': ^5.3.2
-    '@itwin/core-geometry': ^5.3.2
+    '@itwin/core-bentley': ^5.3.3
+    '@itwin/core-common': ^5.3.3
+    '@itwin/core-geometry': ^5.3.3
   itwinjs-core-dev:
-    '@itwin/appui-abstract': ^5.3.2
-    '@itwin/core-backend': ^5.3.2
-    '@itwin/core-bentley': ^5.3.2
-    '@itwin/core-common': ^5.3.2
-    '@itwin/core-electron': ^5.3.2
-    '@itwin/core-frontend': ^5.3.2
-    '@itwin/core-geometry': ^5.3.2
-    '@itwin/core-i18n': ^5.3.2
-    '@itwin/core-orbitgt': ^5.3.2
-    '@itwin/core-quantity': ^5.3.2
-    '@itwin/ecschema-metadata': ^5.3.2
-    '@itwin/ecschema-rpcinterface-common': ^5.3.2
-    '@itwin/ecschema-rpcinterface-impl': ^5.3.2
-    '@itwin/express-server': ^5.3.2
-    '@itwin/presentation-backend': ^5.3.2
-    '@itwin/presentation-common': ^5.3.2
-    '@itwin/presentation-frontend': ^5.3.2
-    '@itwin/webgl-compatibility': ^5.3.2
+    '@itwin/appui-abstract': ^5.3.3
+    '@itwin/core-backend': ^5.3.3
+    '@itwin/core-bentley': ^5.3.3
+    '@itwin/core-common': ^5.3.3
+    '@itwin/core-electron': ^5.3.3
+    '@itwin/core-frontend': ^5.3.3
+    '@itwin/core-geometry': ^5.3.3
+    '@itwin/core-i18n': ^5.3.3
+    '@itwin/core-orbitgt': ^5.3.3
+    '@itwin/core-quantity': ^5.3.3
+    '@itwin/ecschema-metadata': ^5.3.3
+    '@itwin/ecschema-rpcinterface-common': ^5.3.3
+    '@itwin/ecschema-rpcinterface-impl': ^5.3.3
+    '@itwin/express-server': ^5.3.3
+    '@itwin/presentation-backend': ^5.3.3
+    '@itwin/presentation-common': ^5.3.3
+    '@itwin/presentation-frontend': ^5.3.3
+    '@itwin/webgl-compatibility': ^5.3.3
     inversify: ~6.0.2
     reflect-metadata: ^0.1.14
   itwinui:
