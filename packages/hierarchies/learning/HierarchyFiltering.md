@@ -127,8 +127,8 @@ const filteringPath: HierarchyFilteringPath = {
   // Path to the element "C"
   path: [elementKeys.a, elementKeys.b, elementKeys.c],
   options: {
-    // Auto-expand the hierarchy up to (but not including) the last grouping node. The `depthInHierarchy` attribute is the index of the last grouping node.
-    // It is equal to the number of parents.
+    // Auto-expand the hierarchy up to (but not including) the first label grouping node.
+    // The `depthInHierarchy` attribute is the index of the first label grouping node. It is equal to the number of parents.
     autoExpand: { depthInHierarchy: groupingNode.parentKeys.length },
   },
 };
