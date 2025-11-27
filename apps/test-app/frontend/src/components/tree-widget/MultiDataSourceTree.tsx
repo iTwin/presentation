@@ -375,7 +375,7 @@ async function* getModelsFilteringPaths({
         ...path.reverse().map((k) => ({ ...k, imodelKey: imodelAccess.imodelKey })),
       ],
       options: {
-        autoExpand: true,
+        reveal: true,
       },
     };
   }
@@ -463,7 +463,7 @@ function createRssHierarchyProvider(): HierarchyProvider & { getFilteredPaths: (
         }
       });
 
-      return paths.map((path) => ({ path, options: { autoExpand: true } }));
+      return paths.map((path) => ({ path, options: { reveal: true } }));
     },
 
     async *getNodes({ parentNode }: GetHierarchyNodesProps): AsyncIterableIterator<HierarchyNode> {
