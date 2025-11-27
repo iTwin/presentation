@@ -42,8 +42,8 @@ export interface FilteringPathAutoExpandDepthInHierarchy {
    *     - GroupingNode2
    *       - Element1
    *       - Element2
-   * Then provide:
-   * ` { path: [Node1, Element1], autoExpand: { depthInHierarchy: 2 } }`
+   *
+   * Provide `{ path: [Node1, Element1], autoExpand: { depthInHierarchy: 2 } }`
    *
    * To get the correct depth use `HierarchyNode.parentKeys.length`.
    *
