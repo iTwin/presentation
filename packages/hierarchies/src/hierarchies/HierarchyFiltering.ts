@@ -357,7 +357,7 @@ export function createHierarchyFilteringHelper(
      * When using `pathMatcher` or `asyncPathMatcher` prop, callers have more flexibility to decide whether the given `HierarchyNodeIdentifier` applies
      * to their node. For example, only some parts of the identifier can be checked for improved performance. Otherwise, the
      * `nodeKey` prop can be used to check the whole identifier.
-     * 
+     *
      * There are multiple overloads of `createChildNodeProps`: depending on props type it returns different values:
      * - `parentKeys` is defined and `pathMatcher` or `nodeKey` is provided - returns undefined **or** `filtering` and `autoExpand` prop from `HierarchyNode`;
      * - `parentKeys` is undefined - does not return `HierarchyNode.autoExpand` option;
