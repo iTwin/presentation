@@ -90,9 +90,6 @@ export class FilteringHierarchyDefinition implements RxjsHierarchyDefinition {
           from(node.key.instanceKeys).pipe(
             filter((instanceKey) => instanceKey.id === identifier.id),
             mergeMap((instanceKey) => {
-              if (instanceKey.className === identifier.className) {
-                return of(true);
-              }
               const isDerivedFrom = this._imodelAccess.classDerivesFrom(identifier.className, instanceKey.className);
               const isDerivedTo = this._imodelAccess.classDerivesFrom(instanceKey.className, identifier.className);
               return merge(
