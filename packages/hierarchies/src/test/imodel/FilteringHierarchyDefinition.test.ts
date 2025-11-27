@@ -542,12 +542,12 @@ describe("FilteringHierarchyDefinition", () => {
 
     describe("handling non-grouping nodes' `autoExpand` flag", () => {
       [
-        { condition: "autoExpand is set to true", autoExpand: true },
-        { condition: "autoExpand is set to true", autoExpand: false },
-        { condition: "depthInPath is set to 0", autoExpand: { depthInPath: 0 } },
-        { condition: "depthInPath is set to 1", autoExpand: { depthInPath: 1 } },
-        { condition: "depthInHierarchy is set to 0", autoExpand: { depthInHierarchy: 0 } },
-        { condition: "depthInHierarchy is set to 1", autoExpand: { depthInHierarchy: 1 } },
+        { condition: "`autoExpand: true`", autoExpand: true },
+        { condition: "`autoExpand: false`", autoExpand: false },
+        { condition: "`depthInPath: 0`", autoExpand: { depthInPath: 0 } },
+        { condition: "`depthInPath: 1`", autoExpand: { depthInPath: 1 } },
+        { condition: "`depthInHierarchy: 0`", autoExpand: { depthInHierarchy: 0 } },
+        { condition: "`depthInHierarchy: 1`", autoExpand: { depthInHierarchy: 1 } },
       ].forEach(({ condition, autoExpand }) => {
         it(`doesn't set auto-expand on filter target instances node when ${condition}`, async () => {
           const inputNode = createTestProcessedInstanceNode({
