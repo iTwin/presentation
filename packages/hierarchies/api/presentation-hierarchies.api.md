@@ -198,7 +198,7 @@ export interface GenericNodeKey {
     type: "generic";
 }
 
-// @public (undocumented)
+// @public
 function getCreateChildNodeProps({ hasFilterTargetAncestor, filteredNodePaths, }: {
     hasFilterTargetAncestor: boolean;
     filteredNodePaths: HierarchyFilteringPath[];
