@@ -1,5 +1,17 @@
 # Change Log - @itwin/presentation-components
 
+## 5.12.14
+
+### Patch Changes
+
+- [#1121](https://github.com/iTwin/presentation/pull/1121): Changed quantity editor value to be adjusted to consumer precision in edit mode and to precision of 12 on focus.
+- [#1124](https://github.com/iTwin/presentation/pull/1124): Bump dependencies.
+- Updated dependencies:
+  - @itwin/unified-selection@1.6.2
+  - @itwin/presentation-core-interop@1.3.5
+  - @itwin/presentation-shared@1.2.4
+  - @itwin/unified-selection-react@1.0.2
+
 ## 5.12.14-alpha.0
 
 ### Patch Changes

@@ -59,7 +59,7 @@
     "rimraf": "catalog:build-tools",
     "rss-parser": "^3.13.0",
     "rxjs": "catalog:rxjs",
-    "sass": "^1.94.1",
+    "sass": "^1.94.2",
     "typescript": "catalog:build-tools",
     "vite": "^6.4.1",
     "vite-plugin-node-polyfills": "^0.23.0",

@@ -1345,7 +1345,6 @@ describe("FilteringHierarchyDefinition", () => {
         const sourceFactory: RxjsHierarchyDefinition = {
           defineHierarchyLevel: () => of([sourceDefinition]),
         };
-        const groupingNode: FilteringPathRevealDepthInPath = { depthInPath: 0 };
         const filteringFactory = await createFilteringHierarchyDefinition({
           imodelAccess: { ...classHierarchyInspector, imodelKey: "test-imodel-key" },
           sourceFactory,
@@ -1353,7 +1352,7 @@ describe("FilteringHierarchyDefinition", () => {
             { path: [createTestGenericNodeKey({ id: "custom" }), createTestGenericNodeKey({ id: "123" })], options: { reveal: true } },
             {
               path: [createTestGenericNodeKey({ id: "custom" }), createTestGenericNodeKey({ id: "456" })],
-              options: { reveal: groupingNode },
+              options: { reveal: { depthInHierarchy: 1 } },
             },
             [createTestGenericNodeKey({ id: "custom" }), createTestGenericNodeKey({ id: "789" })],
           ],
@@ -1366,7 +1365,7 @@ describe("FilteringHierarchyDefinition", () => {
               filtering: {
                 filteredChildrenIdentifierPaths: [
                   { path: [createTestGenericNodeKey({ id: "123" })], options: { reveal: true } },
-                  { path: [createTestGenericNodeKey({ id: "456" })], options: { reveal: groupingNode } },
+                  { path: [createTestGenericNodeKey({ id: "456" })], options: { reveal: { depthInHierarchy: 1 } } },
                   { path: [createTestGenericNodeKey({ id: "789" })], options: undefined },
                 ],
               },

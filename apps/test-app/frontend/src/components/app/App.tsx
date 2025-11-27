@@ -24,6 +24,7 @@ import {
 import { Id64String } from "@itwin/core-bentley";
 import { IModelApp, IModelConnection } from "@itwin/core-frontend";
 import { UnitSystemKey } from "@itwin/core-quantity";
+import { SchemaFormatsProvider, SchemaUnitProvider } from "@itwin/ecschema-metadata";
 import { ThemeProvider, ToggleSwitch } from "@itwin/itwinui-react";
 import { SchemaMetadataContextProvider } from "@itwin/presentation-components";
 import { createECSchemaProvider, createECSqlQueryExecutor, createIModelKey } from "@itwin/presentation-core-interop";
@@ -86,6 +87,25 @@ export function App() {
       persistSettings: e.target.checked,
     }));
   };
+
+  useEffect(() => {
+    if (!state.imodel?.schemaContext) {
+      return;
+    }
+    const schemaUnitsProvider = new SchemaUnitProvider(state.imodel.schemaContext);
+    IModelApp.quantityFormatter.unitsProvider = schemaUnitsProvider;
+    const schemaFormatsProvider = new SchemaFormatsProvider(state.imodel.schemaContext, IModelApp.quantityFormatter.activeUnitSystem);
+    const removeFormatterListener = IModelApp.quantityFormatter.onActiveFormattingUnitSystemChanged.addListener((args) => {
+      schemaFormatsProvider.unitSystem = args.system;
+    });
+    IModelApp.formatsProvider = schemaFormatsProvider;
+
+    return () => {
+      IModelApp.resetFormatsProvider();
+      removeFormatterListener?.();
+      void IModelApp.quantityFormatter.resetToUseInternalUnitsProvider();
+    };
+  }, [state.imodel]);
 
   useEffect(() => {
     const cancel = new Subject<void>();

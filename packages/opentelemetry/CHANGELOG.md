@@ -1,5 +1,11 @@
 # Change Log - @itwin/presentation-opentelemetry
 
+## 4.2.2
+
+### Patch Changes
+
+- [#1124](https://github.com/iTwin/presentation/pull/1124): Bump dependencies.
+
 ## 4.2.1
 
 ### Patch Changes

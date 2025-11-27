@@ -67,6 +67,7 @@ export type PropertyValueConstraints =
  * Expands specified type with additional constraints property.
  * @public
  */
+// eslint-disable-next-line @typescript-eslint/no-redundant-type-constituents
 export type WithConstraints<T extends {}> = T & { constraints?: PropertyValueConstraints };
 
 /** @internal */
@@ -350,7 +351,7 @@ function applyPropertyRecordAttributes(
   record: WithIModelKey<PropertyRecord>,
   field: Field,
   displayValue: string | undefined,
-  extendedData: typeof Item.prototype.extendedData | undefined,
+  extendedData: typeof Item.prototype.extendedData,
   propertyRecordsProcessor?: (record: PropertyRecord) => void,
 ) {
   if (displayValue) {
