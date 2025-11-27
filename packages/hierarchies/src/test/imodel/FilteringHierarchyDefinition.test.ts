@@ -827,7 +827,7 @@ describe("FilteringHierarchyDefinition", () => {
         expect(result.autoExpand).to.be.true;
       });
 
-      it("sets auto-expand when grouping node at the root and children have depthInPath set to 0", async () => {
+      it("sets auto-expand on grouping node when it's at the root level and its children have depthInPath set to 0", async () => {
         const groupingNode = createGroupingNode();
         const inputNode: ProcessedGroupingHierarchyNode = {
           ...groupingNode,
