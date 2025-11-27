@@ -1,5 +1,11 @@
 # @itwin/presentation-hierarchies-react
 
+## 2.0.0-alpha.43
+
+### Patch Changes
+
+- [#1122](https://github.com/iTwin/presentation/pull/1122): Do not open tree context menu is there is no actions.
+
 ## 2.0.0-alpha.42
 
 ### Patch Changes
