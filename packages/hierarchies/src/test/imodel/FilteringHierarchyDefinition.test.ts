@@ -585,9 +585,9 @@ describe("FilteringHierarchyDefinition", () => {
         {
           expectation: true,
           cases: [
-            { condition: "autoExpand is set to true", autoExpand: true },
-            { condition: "depthInPath is set to 1", autoExpand: { depthInPath: 1 } },
-            { condition: "depthInHierarchy is set to 1", autoExpand: { depthInHierarchy: 1 } },
+            { condition: "`autoExpand: true`", autoExpand: true },
+            { condition: "`depthInPath: 1`", autoExpand: { depthInPath: 1 } },
+            { condition: "`depthInHierarchy: 1`", autoExpand: { depthInHierarchy: 1 } },
           ],
         },
         {
