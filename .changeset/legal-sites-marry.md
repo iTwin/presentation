@@ -7,7 +7,7 @@ Fixed `depthInHierarchy` setting `autoExpand` flag for non grouping nodes. This 
 To achieve this, `autoExpand` is now determined in post processing step.
 
 **API Additions**
-Changed the return type of `createHierarchyFilteringHelper`, it returns these functions:
+Changed the return type of `createHierarchyFilteringHelper`, it also returns these functions:
 - createChildNodeAutoExpandProp
 - createChildNodeAutoExpandPropAsync
 - createChildNodeFilteringProp
