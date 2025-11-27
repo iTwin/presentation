@@ -619,6 +619,116 @@ describe("FilteringHierarchyDefinition", () => {
           });
         });
       });
+
+      it("sets auto-expand when classes in filter path and node relate", async () => {
+        const baseClass = "BisCore.GeometricElement3d";
+        const derivedClass = "BisCore.GeometricElement";
+        [
+          { inputNodeClass: baseClass, filteringPathNodeClass: derivedClass },
+          { inputNodeClass: derivedClass, filteringPathNodeClass: baseClass },
+        ].forEach(async ({ inputNodeClass, filteringPathNodeClass }) => {
+          const inputNode = createTestProcessedInstanceNode({ key: { type: "instances", instanceKeys: [{ id: "0x1", className: inputNodeClass }] } });
+          const imodelAccess = {
+            classDerivesFrom: sinon.stub<[string, string], boolean>().returns(false),
+            imodelKey: "",
+          };
+          imodelAccess.classDerivesFrom.withArgs(baseClass, derivedClass).returns(true);
+          const filteringFactory = await createFilteringHierarchyDefinition({
+            imodelAccess,
+            nodeIdentifierPaths: [
+              {
+                path: [
+                  { id: "0x1", className: filteringPathNodeClass },
+                  { id: "0x2", className: filteringPathNodeClass },
+                ],
+                options: { autoExpand: true },
+              },
+            ],
+          });
+          const result = await firstValueFrom(filteringFactory.postProcessNode(inputNode));
+          expect(result.autoExpand).to.eq(true);
+          const imodelAccessWithPromise = {
+            classDerivesFrom: sinon.stub<[string, string], Promise<boolean>>().resolves(false),
+            imodelKey: "",
+          };
+          imodelAccess.classDerivesFrom.withArgs(baseClass, derivedClass).resolves(true);
+          const filteringFactory2 = await createFilteringHierarchyDefinition({
+            imodelAccess: imodelAccessWithPromise,
+            nodeIdentifierPaths: [
+              {
+                path: [
+                  { id: "0x1", className: filteringPathNodeClass },
+                  { id: "0x2", className: filteringPathNodeClass },
+                ],
+                options: { autoExpand: true },
+              },
+            ],
+          });
+          const result2 = await firstValueFrom(filteringFactory2.postProcessNode(inputNode));
+          expect(result2.autoExpand).to.eq(true);
+        });
+      });
+
+      it("doesn't set auto-expand when filter paths don't match", async () => {
+        [
+          {
+            inputNode: createTestProcessedInstanceNode({ key: { type: "instances", instanceKeys: [{ id: "0x1", className: "bis:Element" }] } }),
+            filterPathNodeKey: { type: "generic" as const, id: "0x1" },
+            imodelKey: "",
+          },
+          { inputNode: createTestProcessedGenericNode(), filterPathNodeKey: { id: "0x1", className: "bis:Element" }, imodelKey: "" },
+          {
+            inputNode: createTestProcessedInstanceNode({ key: { type: "instances", instanceKeys: [{ id: "0x1", className: "bis:Element" }] } }),
+            filterPathNodeKey: { id: "0x1", className: "bis:Element", imodelKey: "a" },
+            imodelKey: "b",
+          },
+        ].forEach(async ({ inputNode, filterPathNodeKey, imodelKey }) => {
+          const imodelAccess = {
+            classDerivesFrom: sinon.stub<[string, string], Promise<boolean>>().resolves(true),
+            imodelKey,
+          };
+          const filteringFactory = await createFilteringHierarchyDefinition({
+            imodelAccess,
+            nodeIdentifierPaths: [
+              {
+                path: [filterPathNodeKey, { id: "0x2", className: "bis:Element" }],
+                options: { autoExpand: true },
+              },
+            ],
+          });
+          const result = await firstValueFrom(filteringFactory.postProcessNode(inputNode));
+          expect(result.autoExpand).to.eq(undefined);
+        });
+      });
+    });
+
+    it("sets filtering attributes on grouping node from it's parentNode", async () => {
+      const filteredChildrenIdentifierPaths = [{ path: [{ id: "child", type: "generic" as const }] }];
+      const parentNode = createTestProcessedGenericNode({
+        filtering: {
+          isFilterTarget: true,
+          hasFilterTargetAncestor: true,
+          filteredChildrenIdentifierPaths,
+          filterTargetOptions: {
+            autoExpand: true,
+          },
+        },
+      });
+      const groupingNode = createTestProcessedGroupingNode({
+        key: {
+          type: "label-grouping",
+          label: "test",
+        },
+        groupedInstanceKeys: [],
+        children: [],
+        parentKeys: [parentNode.key],
+      });
+      const filteringFactory = await createFilteringHierarchyDefinition();
+      const result = await firstValueFrom(filteringFactory.postProcessNode(groupingNode, parentNode));
+      expect(result.filtering).to.deep.eq({
+        hasFilterTargetAncestor: true,
+        filteredChildrenIdentifierPaths,
+      });
     });
 
     const commonGroupingNodeExpansionTestCases = (createGroupingNode: () => ProcessedGroupingHierarchyNode) => {
