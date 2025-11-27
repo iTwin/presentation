@@ -96,12 +96,14 @@ Additionally, you might not want to add `autoExpand` flag to every node in `Hier
 ```ts
 import { HierarchyFilteringPath } from "@itwin/presentation-hierarchies";
 
+// Hierarchy has this structure: A -> label grouping node -> B -> label grouping node -> C.
+// Hierarchy has two grouping nodes that group C element: one class grouping and one label grouping node.
 const filteringPath: HierarchyFilteringPath = {
   // Path to the element "C"
   path: [elementKeys.a, elementKeys.b, elementKeys.c],
   options: {
     // Auto-expand the hierarchy up to the specified depth. In this case up to element "B"
-    autoExpand: { depthInPath: 2 },
+    autoExpand: { depthInPath: 1 },
   },
 };
 ```
@@ -125,7 +127,8 @@ const filteringPath: HierarchyFilteringPath = {
   // Path to the element "C"
   path: [elementKeys.a, elementKeys.b, elementKeys.c],
   options: {
-    // Auto-expand the hierarchy up to the last grouping node. The `depthInHierarchy` attribute equals to the number of parents.
+    // Auto-expand the hierarchy up to (but not including) the last grouping node. The `depthInHierarchy` attribute is the index of the last grouping node.
+    // It is equal to the number of parents.
     autoExpand: { depthInHierarchy: groupingNode.parentKeys.length },
   },
 };

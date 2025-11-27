@@ -40,16 +40,38 @@ export interface ClassGroupingNodeKey {
 }
 
 // @public
-export function createHierarchyFilteringHelper(rootLevelFilteringProps: HierarchyFilteringPath[] | undefined, parentNode: Pick<NonGroupingHierarchyNode, "filtering" | "parentKeys"> | undefined): {
+export function createHierarchyFilteringHelper(rootLevelFilteringProps: HierarchyFilteringPath[] | undefined, parentNode: Pick<ParentHierarchyNode, "filtering"> | undefined): {
     hasFilter: boolean;
     hasFilterTargetAncestor: boolean;
     getChildNodeFilteringIdentifiers: () => HierarchyNodeIdentifier[] | undefined;
-    createChildNodeProps: (props: {
+    createChildNodeAutoExpandProp: (props: {
+        parentKeys: HierarchyNodeKey[];
+    } & ({
         nodeKey: InstancesNodeKey | GenericNodeKey;
     } | {
         pathMatcher: (identifier: HierarchyNodeIdentifier) => boolean;
-    }) => Pick<HierarchyNode, "autoExpand" | "filtering"> | undefined;
+    })) => Pick<HierarchyNode, "autoExpand"> | undefined;
+    createChildNodeAutoExpandPropAsync: (props: {
+        parentKeys: HierarchyNodeKey[];
+        pathMatcher: (identifier: HierarchyNodeIdentifier) => boolean | Promise<boolean>;
+    }) => Promise<Pick<HierarchyNode, "autoExpand"> | undefined> | Pick<HierarchyNode, "autoExpand"> | undefined;
+    createChildNodeFilteringProp: (props: {
+        nodeKey: InstancesNodeKey | GenericNodeKey;
+    } | {
+        pathMatcher: (identifier: HierarchyNodeIdentifier) => boolean;
+    }) => Pick<HierarchyNode, "filtering"> | undefined;
+    createChildNodeFilteringPropAsync: (props: {
+        pathMatcher: (identifier: HierarchyNodeIdentifier) => boolean | Promise<boolean>;
+    }) => Promise<Pick<HierarchyNode, "filtering"> | undefined> | Pick<HierarchyNode, "filtering"> | undefined;
+    createChildNodeProps: (props: {
+        parentKeys: HierarchyNodeKey[];
+    } & ({
+        nodeKey: InstancesNodeKey | GenericNodeKey;
+    } | {
+        pathMatcher: (identifier: HierarchyNodeIdentifier) => boolean;
+    })) => Pick<HierarchyNode, "autoExpand" | "filtering"> | undefined;
     createChildNodePropsAsync: (props: {
+        parentKeys: HierarchyNodeKey[];
         pathMatcher: (identifier: HierarchyNodeIdentifier) => boolean | Promise<boolean>;
     }) => Promise<Pick<HierarchyNode, "autoExpand" | "filtering"> | undefined> | Pick<HierarchyNode, "autoExpand" | "filtering"> | undefined;
 };
@@ -575,7 +597,7 @@ export type NodeParser = (row: {
 }, parentNode?: HierarchyDefinitionParentNode) => SourceInstanceHierarchyNode | Promise<SourceInstanceHierarchyNode>;
 
 // @public
-export type NodePostProcessor = (node: ProcessedHierarchyNode) => Promise<ProcessedHierarchyNode>;
+export type NodePostProcessor = (node: ProcessedHierarchyNode, parentNode?: ParentHierarchyNode) => Promise<ProcessedHierarchyNode>;
 
 // @public
 export type NodePreProcessor = <TNode extends ProcessedGenericHierarchyNode | ProcessedInstanceHierarchyNode>(node: TNode) => Promise<TNode | undefined>;

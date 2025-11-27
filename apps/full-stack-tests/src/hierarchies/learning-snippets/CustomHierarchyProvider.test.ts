@@ -431,7 +431,7 @@ describe("Hierarchies", () => {
                   label: author.name,
                   children: author.hasBooks,
                   parentKeys: [],
-                  ...filteringHelper.createChildNodeProps({ nodeKey }),
+                  ...filteringHelper.createChildNodeProps({ nodeKey, parentKeys: [] }),
                 };
               }
             } else if (HierarchyNode.isGeneric(parentNode) && parentNode.key.id.startsWith("author:")) {
@@ -454,12 +454,13 @@ describe("Hierarchies", () => {
               });
               for (const book of books) {
                 const nodeKey: GenericNodeKey = { type: "generic", id: `book:${book.key}` };
+                const parentKeys = [...parentNode.parentKeys, parentNode.key];
                 yield {
                   key: nodeKey,
                   label: book.title,
                   children: false,
-                  parentKeys: [...parentNode.parentKeys, parentNode.key],
-                  ...filteringHelper.createChildNodeProps({ nodeKey }),
+                  parentKeys,
+                  ...filteringHelper.createChildNodeProps({ nodeKey, parentKeys }),
                 };
               }
             }

@@ -382,7 +382,7 @@ describe("Hierarchies", () => {
               filter((node) => HierarchyNode.isGroupingNode(node)),
               first(
                 (node) =>
-                  InstanceKey.equals(node.groupedInstanceKeys[0], elementKeys.c) &&
+                  InstanceKey.equals(node.groupedInstanceKeys[0], elementKeys.b) &&
                   node.parentKeys.length > 0 &&
                   node.parentKeys[node.parentKeys.length - 1].type !== "instances",
               ),
@@ -400,7 +400,8 @@ describe("Hierarchies", () => {
           // Path to the element "C"
           path: [elementKeys.a, elementKeys.b, elementKeys.c],
           options: {
-            // Auto-expand the hierarchy up to the last grouping node. The `depthInHierarchy` attribute equals to the number of parents.
+            // Auto-expand the hierarchy up to (but not including) the first label grouping node.
+            // The `depthInHierarchy` attribute is the index of the first label grouping node. It is equal to the number of parents.
             autoExpand: { depthInHierarchy: groupingNode.parentKeys.length },
           },
         };
@@ -434,19 +435,16 @@ describe("Hierarchies", () => {
                     // B label grouping node. Has auto-expand flag.
                     nodeType: "label-grouping",
                     label: "B",
-                    autoExpand: true,
                     children: [
                       {
                         // B instance node. Has auto-expand flag.
                         nodeType: "instances",
                         label: "B",
-                        autoExpand: true,
                         children: [
                           {
                             // C class grouping node. Has auto-expand flag.
                             nodeType: "class-grouping",
                             label: "Physical Object",
-                            autoExpand: true,
                             children: [
                               {
                                 // C label grouping node. Doesn't have auto-expand flag.
@@ -524,12 +522,14 @@ describe("Hierarchies", () => {
         };
 
         // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.HierarchyFiltering.AutoExpandUntilDepthInPath.FilteringPath
+        // Hierarchy has this structure: A -> label grouping node -> B -> label grouping node -> C.
+        // Hierarchy has two grouping nodes that group C element: one class grouping and one label grouping node.
         const filteringPath: HierarchyFilteringPath = {
           // Path to the element "C"
           path: [elementKeys.a, elementKeys.b, elementKeys.c],
           options: {
             // Auto-expand the hierarchy up to the specified depth. In this case up to element "B"
-            autoExpand: { depthInPath: 2 },
+            autoExpand: { depthInPath: 1 },
           },
         };
         // __PUBLISH_EXTRACT_END__

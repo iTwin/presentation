@@ -515,7 +515,7 @@ function createRssHierarchyProvider(): HierarchyProvider & { getFilteredPaths: (
         if (targetNodeKeys.some((target) => HierarchyNodeIdentifier.equal(target, node.key))) {
           yield {
             ...node,
-            ...filteringHelper.createChildNodeProps({ nodeKey: node.key }),
+            ...filteringHelper.createChildNodeProps({ nodeKey: node.key, parentKeys: node.parentKeys }),
           };
         }
       }
