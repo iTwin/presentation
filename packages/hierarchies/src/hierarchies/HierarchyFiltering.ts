@@ -21,7 +21,8 @@ export interface FilteringPathAutoExpandDepthInPath {
    *     - GroupingNode2
    *       - Element1
    *       - Element2
-   * Then provide ` { path: [Node1, Element1], autoExpand: { depthInPath: 2 } }`
+   *
+   * Provide `{ path: [Node1, Element1], autoExpand: { depthInPath: 2 } }`
    *
    * **NOTE**: All nodes that are up to `depthInPath` will be expanded **except** filter targets.
    */
