@@ -527,7 +527,7 @@ describe("Hierarchies", () => {
           // Path to the element "C"
           path: [elementKeys.a, elementKeys.b, elementKeys.c],
           options: {
-            // Reveal (set auto-expand for all nodes up to the specified depth) the hierarchy up to the specified depth. In this case up to element "B"
+            // Reveal node "B" (index in filtering path equals `1`) in hierarchy by setting auto-expand flag on all its ancestors
             reveal: { depthInPath: 1 },
           },
         };
