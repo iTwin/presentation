@@ -621,8 +621,8 @@ describe("FilteringHierarchyDefinition", () => {
       });
 
       it("sets auto-expand when classes in filter path and node relate", async () => {
-        const baseClass = "BisCore.GeometricElement3d";
-        const derivedClass = "BisCore.GeometricElement";
+        const baseClass = "BisCore.GeometricElement";
+        const derivedClass = "BisCore.GeometricElement3d";
         [
           { inputNodeClass: baseClass, filteringPathNodeClass: derivedClass },
           { inputNodeClass: derivedClass, filteringPathNodeClass: baseClass },
