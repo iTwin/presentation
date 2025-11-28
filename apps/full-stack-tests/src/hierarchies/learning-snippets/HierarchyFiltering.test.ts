@@ -287,7 +287,7 @@ describe("Hierarchies", () => {
           path: [elementKeys.a, elementKeys.b, elementKeys.c],
           // Supply options for the filtering path
           options: {
-            // Reveal the hierarchy (set auto-expand flag for all nodes up to the target "C") up to the target "C" node
+            // Reveal the target "C" node in hierarchy by setting auto-expand flag on all its ancestor nodes
             reveal: true,
           },
         };
