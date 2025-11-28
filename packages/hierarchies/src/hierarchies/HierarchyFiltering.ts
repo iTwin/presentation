@@ -10,7 +10,7 @@ import { GenericNodeKey, HierarchyNodeKey, InstancesNodeKey } from "./HierarchyN
 /** @public */
 export interface FilteringPathRevealDepthInPath {
   /**
-   * Depth that tells which nodes in the filtering path should be expanded.
+   * Index of the node in filtering path should be revealed in hierarchy by auto-expanding its ancestors.
    *
    * Use when you want to expand up to specific instance node and don't care about grouping nodes.
    *
