@@ -33,7 +33,7 @@ export interface FilteringPathRevealDepthInPath {
 /** @public */
 export interface FilteringPathRevealDepthInHierarchy {
   /**
-   * Depth that tells which nodes in the hierarchy should be expanded.
+   * Considering the list of nodes from root to the target node, this is an index in that list, identifying the node that should be revealed in hierarchy by auto-expanding its ancestors.
    *
    * This should take into account the number of grouping nodes in hierarchy.
    *
