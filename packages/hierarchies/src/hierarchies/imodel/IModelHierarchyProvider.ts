@@ -348,7 +348,7 @@ class IModelHierarchyProviderImpl implements HierarchyProvider {
       // format `ConcatenatedValue` labels into string labels
       mergeMap((node) => applyLabelsFormatting(node, this._valuesFormatter)),
       // we have `ProcessedHierarchyNode` from here
-      preProcessNodes(this._activeHierarchyDefinition),
+      this._activeHierarchyDefinition.preProcessNode ? mergeMap((n) => this._activeHierarchyDefinition.preProcessNode!(n)) : identity,
       // process hiding
       createHideIfNoChildrenOperator((n) => this.getChildNodesObservables({ parentNode: n, requestContext: props.requestContext }).hasNodes),
       createHideNodesInHierarchyOperator(
@@ -390,7 +390,7 @@ class IModelHierarchyProviderImpl implements HierarchyProvider {
   ): Observable<HierarchyNode> {
     return processedNodesObservable.pipe(
       createDetermineChildrenOperator((n) => this.getChildNodesObservables({ parentNode: n, requestContext: props.requestContext }).hasNodes),
-      postProcessNodes(this._activeHierarchyDefinition),
+      this._activeHierarchyDefinition.postProcessNode ? mergeMap((n) => this._activeHierarchyDefinition.postProcessNode!(n, props.parentNode)) : identity,
       sortNodesByLabelOperator,
       map((n): HierarchyNode => {
         if ("processingParams" in n) {
@@ -675,18 +675,6 @@ type ProcessedNodesObservable = Observable<ProcessedHierarchyNode>;
 type HierarchyCacheEntry =
   | { observable: SourceNodesObservable; processingStatus: "none" }
   | { observable: ProcessedNodesObservable; processingStatus: "pre-processed" };
-
-function preProcessNodes(hierarchyFactory: RxjsHierarchyDefinition) {
-  return hierarchyFactory.preProcessNode ? processNodes(hierarchyFactory.preProcessNode) : identity;
-}
-
-function postProcessNodes(hierarchyFactory: RxjsHierarchyDefinition) {
-  return hierarchyFactory.postProcessNode ? processNodes(hierarchyFactory.postProcessNode) : identity;
-}
-
-function processNodes<TNode>(processor: (node: TNode) => Observable<TNode>) {
-  return (nodes: Observable<TNode>) => nodes.pipe(mergeMap(processor));
-}
 
 function applyLabelsFormatting<TNode extends { label: string | ConcatenatedValue }>(
   node: TNode,

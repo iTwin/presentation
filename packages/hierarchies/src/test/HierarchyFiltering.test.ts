@@ -8,18 +8,18 @@ import { HierarchyFilteringPath, HierarchyFilteringPathOptions } from "../hierar
 
 describe("HierarchyFilteringPath", () => {
   describe("mergeOptions", () => {
-    describe("autoExpand", () => {
+    describe("reveal", () => {
       const optionsInOrderOfPriority: Array<HierarchyFilteringPathOptions | undefined> = [
-        { autoExpand: true },
-        { autoExpand: { depthInPath: 2 } },
-        { autoExpand: { depthInPath: 1 } },
-        { autoExpand: { depthInHierarchy: 4 } },
-        { autoExpand: { depthInHierarchy: 3 } },
-        { autoExpand: false },
+        { reveal: true },
+        { reveal: { depthInPath: 2 } },
+        { reveal: { depthInPath: 1 } },
+        { reveal: { depthInHierarchy: 4 } },
+        { reveal: { depthInHierarchy: 3 } },
+        { reveal: false },
         undefined,
       ];
 
-      it("returns correct result for different autoExpand options", () => {
+      it("returns correct result for different reveal options", () => {
         for (let i = 0; i < optionsInOrderOfPriority.length; ++i) {
           for (let j = 0; j < optionsInOrderOfPriority.length; ++j) {
             expect(HierarchyFilteringPath.mergeOptions(optionsInOrderOfPriority[i], optionsInOrderOfPriority[j])).to.deep.eq(
