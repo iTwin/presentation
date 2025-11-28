@@ -188,6 +188,7 @@ interface FilteringPathAutoExpandDepthInHierarchy {
 // @public (undocumented)
 interface FilteringPathAutoExpandDepthInPath {
     depthInPath: number;
+    inclusive?: boolean;
 }
 
 // @public
