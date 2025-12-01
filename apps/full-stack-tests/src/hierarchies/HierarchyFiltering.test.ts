@@ -332,6 +332,108 @@ describe("Hierarchies", () => {
     });
 
     describe("instance nodes", () => {
+      it("sets auto-expand flag up to depthInHierarchy", async function () {
+        const { imodel, ...keys } = await buildIModel(this, async (builder) => {
+          const rootSubject = { className: subjectClassName, id: IModel.rootSubjectId };
+          const childSubject1 = insertSubject({ builder, codeValue: "test subject 1", parentId: rootSubject.id });
+          const childSubject21 = insertSubject({ builder, codeValue: "test subject 2.1", parentId: rootSubject.id });
+          const childSubject22 = insertSubject({ builder, codeValue: "test subject 2.2", parentId: rootSubject.id });
+          const childSubject3 = insertSubject({ builder, codeValue: "test subject 3", parentId: rootSubject.id });
+          return { rootSubject, childSubject1, childSubject21, childSubject22, childSubject3 };
+        });
+        const imodelAccess = createIModelAccess(imodel);
+        const selectQueryFactory = createNodesQueryClauseFactory({
+          imodelAccess,
+          instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
+        });
+        const createHierarchyLevelDefinition = async (whereClause: (alias: string) => string) => {
+          return [
+            {
+              fullClassName: subjectClassName,
+              query: {
+                ecsql: `
+                  SELECT ${await selectQueryFactory.createSelectClause({
+                    ecClassId: { selector: `this.ECClassId` },
+                    ecInstanceId: { selector: `this.ECInstanceId` },
+                    nodeLabel: { selector: `this.CodeValue` },
+                    grouping: { byClass: true, byLabel: whereClause("this").includes(keys.childSubject21.id) },
+                  })}
+                  FROM ${subjectClassName} AS this
+                  ${whereClause("this")}
+                `,
+              },
+            },
+          ];
+        };
+
+        const hierarchy: HierarchyDefinition = {
+          async defineHierarchyLevel({ parentNode }) {
+            if (!parentNode) {
+              return createHierarchyLevelDefinition((alias: string) => `WHERE ${alias}.ECInstanceId = ${keys.childSubject1.id}`);
+            }
+            if (HierarchyNode.isInstancesNode(parentNode) && parentNode.label === "test subject 1") {
+              return createHierarchyLevelDefinition((alias: string) => `WHERE ${alias}.ECInstanceId IN (${keys.childSubject21.id}, ${keys.childSubject22.id})`);
+            }
+            if (HierarchyNode.isInstancesNode(parentNode) && parentNode.label === "test subject 2.1") {
+              return createHierarchyLevelDefinition((alias: string) => `WHERE ${alias}.ECInstanceId = ${keys.childSubject3.id}`);
+            }
+            return [];
+          },
+        };
+
+        await validateHierarchy({
+          provider: createProvider({
+            imodel,
+            hierarchy,
+            filteredNodePaths: [{ path: [keys.childSubject1, keys.childSubject21, keys.childSubject3], options: { reveal: { depthInHierarchy: 3 } } }],
+          }),
+          expect: [
+            NodeValidators.createForClassGroupingNode({
+              autoExpand: true,
+              className: keys.childSubject1.className,
+              children: [
+                NodeValidators.createForInstanceNode({
+                  instanceKeys: [keys.childSubject1],
+                  autoExpand: true,
+                  children: [
+                    NodeValidators.createForClassGroupingNode({
+                      autoExpand: true,
+                      className: keys.childSubject21.className,
+                      children: [
+                        NodeValidators.createForLabelGroupingNode({
+                          autoExpand: false,
+                          label: "test subject 2.1",
+                          children: [
+                            NodeValidators.createForInstanceNode({
+                              instanceKeys: [keys.childSubject21],
+                              autoExpand: false,
+                              children: [
+                                NodeValidators.createForClassGroupingNode({
+                                  autoExpand: false,
+                                  className: keys.childSubject21.className,
+                                  children: [
+                                    NodeValidators.createForInstanceNode({
+                                      instanceKeys: [keys.childSubject3],
+                                      isFilterTarget: true,
+                                      children: false,
+                                      autoExpand: false,
+                                    }),
+                                  ],
+                                }),
+                              ],
+                            }),
+                          ],
+                        }),
+                      ],
+                    }),
+                  ],
+                }),
+              ],
+            }),
+          ],
+        });
+      });
+
       it("filters through instance nodes that are in multiple paths", async function () {
         const { imodel, ...keys } = await buildIModel(this, async (builder) => {
           const rootSubject = { className: subjectClassName, id: IModel.rootSubjectId };

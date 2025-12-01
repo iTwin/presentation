@@ -128,6 +128,53 @@ export class FilteringHierarchyDefinition implements RxjsHierarchyDefinition {
     );
   }
 
+  private getFilteringPathsForGroupingNode(
+    node: ProcessedGroupingHierarchyNode,
+    parentNode?: ParentHierarchyNode,
+  ): Observable<HierarchyFilteringPath[] | undefined> {
+    const parentPaths = parentNode ? parentNode.filtering?.filteredChildrenIdentifierPaths : this._nodeIdentifierPaths;
+    if (!parentPaths?.length) {
+      return of(undefined);
+    }
+    const getNonGroupingChildren = (groupingNode: ProcessedGroupingHierarchyNode) => {
+      const nonGroupingChildren = new Array<ProcessedInstanceHierarchyNode>();
+      groupingNode.children.forEach((child) => {
+        if (ProcessedHierarchyNode.isGroupingNode(child)) {
+          nonGroupingChildren.push(...getNonGroupingChildren(child));
+          return;
+        }
+        nonGroupingChildren.push(child);
+      });
+      return nonGroupingChildren;
+    };
+    const childNodeIdentifiers = getNonGroupingChildren(node);
+    return from(parentPaths).pipe(
+      mergeMap((path): Observable<undefined | HierarchyFilteringPath> => {
+        const normalizedPath = HierarchyFilteringPath.normalize(path).path;
+        /* c8 ignore next 3 */
+        if (normalizedPath.length === 0) {
+          return of(undefined);
+        }
+        const identifierFromPath = HierarchyFilteringPath.normalize(path).path[0];
+        return from(childNodeIdentifiers).pipe(
+          mergeMap((nodeKey) => {
+            const matchesPossiblyPromise = this.pathMatcher({ identifierFromPath, nodeKey: nodeKey.key });
+            return matchesPossiblyPromise instanceof Promise ? from(matchesPossiblyPromise) : of(matchesPossiblyPromise);
+          }),
+          filter((matches) => matches),
+          defaultIfEmpty(false),
+          take(1),
+          map((matches): undefined | HierarchyFilteringPath => (matches ? path : undefined)),
+        );
+      }),
+      filter((path) => path !== undefined),
+      toArray(),
+      map((matchingParentPaths) => {
+        return matchingParentPaths.length > 0 ? matchingParentPaths : undefined;
+      }),
+    );
+  }
+
   public get postProcessNode(): RxjsNodePostProcessor {
     return (node, parentNode) => {
       return (this._source.postProcessNode ? this._source.postProcessNode(node, parentNode) : of(node)).pipe(
@@ -137,22 +184,23 @@ export class FilteringHierarchyDefinition implements RxjsHierarchyDefinition {
             return this.setAutoExpandForProcessedNode(processedNode, parentNode);
           }
 
-          // Grouping node does not have filtering attributes,
-          // Assign them from parent node (exclude filter target attributes, since grouping node can't be a filter target)
-          const filteringProp: Pick<HierarchyNodeFilteringProps, "filteredChildrenIdentifierPaths" | "hasFilterTargetAncestor"> = {
-            ...(parentNode?.filtering?.filteredChildrenIdentifierPaths?.length
-              ? { filteredChildrenIdentifierPaths: parentNode.filtering.filteredChildrenIdentifierPaths }
-              : undefined),
-            ...(parentNode?.filtering?.hasFilterTargetAncestor ? { hasFilterTargetAncestor: parentNode.filtering.hasFilterTargetAncestor } : undefined),
-          };
-          if (filteringProp.filteredChildrenIdentifierPaths || filteringProp.hasFilterTargetAncestor) {
-            Object.assign(processedNode, { filtering: filteringProp });
-          }
-          // Grouping nodes need to have auto-expand flag set based on it's children
-          if (shouldExpandGroupingNode(processedNode)) {
-            Object.assign(processedNode, { autoExpand: true });
-          }
-          return of(processedNode);
+          return this.getFilteringPathsForGroupingNode(processedNode, parentNode).pipe(
+            map((filteringPaths) => {
+              // Grouping node does not have filtering attributes,
+              // Assign them from parent node (exclude filter target attributes, since grouping node can't be a filter target)
+              const filteringProp: Pick<HierarchyNodeFilteringProps, "filteredChildrenIdentifierPaths" | "hasFilterTargetAncestor"> = {
+                ...(filteringPaths?.length ? { filteredChildrenIdentifierPaths: filteringPaths } : undefined),
+                ...(parentNode?.filtering?.hasFilterTargetAncestor ? { hasFilterTargetAncestor: parentNode.filtering.hasFilterTargetAncestor } : undefined),
+              };
+              if (filteringProp.filteredChildrenIdentifierPaths || filteringProp.hasFilterTargetAncestor) {
+                Object.assign(processedNode, { filtering: filteringProp });
+              }
+              if (shouldExpandGroupingNode(processedNode)) {
+                Object.assign(processedNode, { autoExpand: true });
+              }
+              return processedNode;
+            }),
+          );
         }),
       );
     };
@@ -363,32 +411,53 @@ export function applyECInstanceIdsSelector(def: InstanceNodesQueryDefinition): I
 }
 
 function shouldExpandGroupingNode(node: ProcessedGroupingHierarchyNode) {
-  const numberOfNonGroupingParentNodes = node.parentKeys.filter((key) => !HierarchyNodeKey.isGrouping(key)).length;
-  for (const child of node.children) {
-    /* c8 ignore next 3 */
-    if (!child.filtering) {
-      continue;
-    }
+  const getAutoExpand = ({
+    groupingNode,
+    numberOfNonGroupingParentNodes,
+    numberOfParentNodes,
+  }: {
+    groupingNode: ProcessedGroupingHierarchyNode;
+    numberOfNonGroupingParentNodes: number;
+    numberOfParentNodes: number;
+  }) => {
+    for (const child of groupingNode.children) {
+      if (ProcessedHierarchyNode.isGroupingNode(child)) {
+        if (getAutoExpand({ groupingNode: child, numberOfNonGroupingParentNodes, numberOfParentNodes })) {
+          return true;
+        }
+        continue;
+      }
 
-    if (
-      child.filtering.isFilterTarget &&
-      getRevealAsTrueFalse(child.filtering.filterTargetOptions?.reveal, numberOfNonGroupingParentNodes, node.parentKeys.length)
-    ) {
-      return true;
-    }
+      /* c8 ignore next 3 */
+      if (!child.filtering) {
+        continue;
+      }
 
-    if (!child.filtering.filteredChildrenIdentifierPaths) {
-      /* c8 ignore next */
-      continue;
-    }
-
-    for (const path of child.filtering.filteredChildrenIdentifierPaths) {
-      if ("path" in path && getRevealAsTrueFalse(path.options?.reveal, numberOfNonGroupingParentNodes, node.parentKeys.length)) {
+      if (
+        child.filtering.isFilterTarget &&
+        getRevealAsTrueFalse(child.filtering.filterTargetOptions?.reveal, numberOfNonGroupingParentNodes, node.parentKeys.length)
+      ) {
         return true;
       }
+
+      if (!child.filtering.filteredChildrenIdentifierPaths) {
+        /* c8 ignore next */
+        continue;
+      }
+
+      for (const path of child.filtering.filteredChildrenIdentifierPaths) {
+        if ("path" in path && getRevealAsTrueFalse(path.options?.reveal, numberOfNonGroupingParentNodes, node.parentKeys.length)) {
+          return true;
+        }
+      }
     }
-  }
-  return false;
+    return false;
+  };
+  return getAutoExpand({
+    groupingNode: node,
+    numberOfNonGroupingParentNodes: node.parentKeys.filter((key) => !HierarchyNodeKey.isGrouping(key)).length,
+    numberOfParentNodes: node.parentKeys.length,
+  });
 }
 
 function getRevealAsTrueFalse(reveal: HierarchyFilteringPathOptions["reveal"], numberOfNonGroupingParentNodes: number, numberOfParentNodes: number): boolean {

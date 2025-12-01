@@ -382,7 +382,7 @@ describe("Hierarchies", () => {
               filter((node) => HierarchyNode.isGroupingNode(node)),
               first(
                 (node) =>
-                  InstanceKey.equals(node.groupedInstanceKeys[0], elementKeys.b) &&
+                  InstanceKey.equals(node.groupedInstanceKeys[0], elementKeys.c) &&
                   node.parentKeys.length > 0 &&
                   node.parentKeys[node.parentKeys.length - 1].type !== "instances",
               ),
@@ -394,14 +394,14 @@ describe("Hierarchies", () => {
         // Hierarchy has this structure: A -> class grouping node -> label grouping node -> B -> class grouping node -> label grouping node -> C.
         // Hierarchy has two grouping nodes that group C element: one class grouping and one label grouping node.
 
-        // Get label grouping node that groups the "B" element
+        // Get label grouping node that groups the "C" element
         const groupingNode = await getSelectedGroupingNode();
         const filteringPath: HierarchyFilteringPath = {
           // Path to the element "C"
           path: [elementKeys.a, elementKeys.b, elementKeys.c],
           options: {
-            // Reveal (set auto-expand flag for all nodes up to the specified depth) hierarchy up to (but not including) the first label grouping node.
-            // The `depthInHierarchy` attribute is the index of the first label grouping node. It is equal to the number of parents.
+            // Reveal (set auto-expand flag for all nodes up to the specified depth) hierarchy up to (but not including) the last label grouping node.
+            // The `depthInHierarchy` attribute is the index of the last label grouping node. It is equal to the number of parents.
             reveal: { depthInHierarchy: groupingNode.parentKeys.length },
           },
         };
@@ -435,16 +435,19 @@ describe("Hierarchies", () => {
                     // B label grouping node. Has auto-expand flag.
                     nodeType: "label-grouping",
                     label: "B",
+                    autoExpand: true,
                     children: [
                       {
                         // B instance node. Has auto-expand flag.
                         nodeType: "instances",
                         label: "B",
+                        autoExpand: true,
                         children: [
                           {
                             // C class grouping node. Has auto-expand flag.
                             nodeType: "class-grouping",
                             label: "Physical Object",
+                            autoExpand: true,
                             children: [
                               {
                                 // C label grouping node. Doesn't have auto-expand flag.
