@@ -162,7 +162,13 @@ export function extractFilteringProps(
       hasFilterTargetAncestor: boolean;
     }
   | undefined {
-  return extractFilteringPropsInternal(rootLevelFilteringProps, parentNode);
+  const filteringProps = extractFilteringPropsInternal(rootLevelFilteringProps, parentNode);
+  return filteringProps?.filteredNodePaths !== undefined
+    ? {
+        filteredNodePaths: filteringProps.filteredNodePaths,
+        hasFilterTargetAncestor: filteringProps.hasFilterTargetAncestor,
+      }
+    : undefined;
 }
 /* c8 ignore end */
 
@@ -171,19 +177,21 @@ function extractFilteringPropsInternal(
   parentNode: Pick<ParentHierarchyNode, "filtering"> | undefined,
 ):
   | {
-      filteredNodePaths: HierarchyFilteringPath[];
+      filteredNodePaths?: HierarchyFilteringPath[];
       hasFilterTargetAncestor: boolean;
     }
   | undefined {
   if (!parentNode) {
     return rootLevelFilteringProps ? { filteredNodePaths: rootLevelFilteringProps, hasFilterTargetAncestor: false } : undefined;
   }
-  return parentNode.filtering?.filteredChildrenIdentifierPaths
-    ? {
-        filteredNodePaths: parentNode.filtering.filteredChildrenIdentifierPaths,
-        hasFilterTargetAncestor: !!parentNode.filtering.hasFilterTargetAncestor || !!parentNode.filtering.isFilterTarget,
-      }
-    : undefined;
+  const filteringProps: {
+    filteredNodePaths?: HierarchyFilteringPath[];
+    hasFilterTargetAncestor: boolean;
+  } = {
+    ...(parentNode.filtering?.filteredChildrenIdentifierPaths ? { filteredNodePaths: parentNode.filtering.filteredChildrenIdentifierPaths } : undefined),
+    hasFilterTargetAncestor: !!parentNode.filtering?.hasFilterTargetAncestor || !!parentNode.filtering?.isFilterTarget,
+  };
+  return filteringProps.filteredNodePaths || filteringProps.hasFilterTargetAncestor ? filteringProps : undefined;
 }
 
 /**
@@ -210,7 +218,7 @@ export function createHierarchyFilteringHelper(
       | { pathMatcher: (identifier: HierarchyNodeIdentifier) => boolean }
     ),
   ): void => {
-    if (!hasFilter) {
+    if (!filteringProps?.filteredNodePaths) {
       return;
     }
     for (const filteredChildrenNodeIdentifierPath of filteringProps.filteredNodePaths) {
@@ -244,7 +252,7 @@ export function createHierarchyFilteringHelper(
     pathsReducer: MatchingFilteringPathsReducer;
     pathMatcher: (identifier: HierarchyNodeIdentifier) => boolean | Promise<boolean>;
   }): void | Promise<void> => {
-    if (!hasFilter) {
+    if (!filteringProps?.filteredNodePaths) {
       return;
     }
     const matchedPathPromises = new Array<Promise<NormalizedFilteringPath | undefined>>();
@@ -341,7 +349,7 @@ export function createHierarchyFilteringHelper(
      * hierarchy level. Returns `undefined` if filtering is not applied to this level.
      */
     getChildNodeFilteringIdentifiers: () => {
-      if (!hasFilter) {
+      if (!filteringProps?.filteredNodePaths) {
         return undefined;
       }
       return filteringProps.filteredNodePaths
