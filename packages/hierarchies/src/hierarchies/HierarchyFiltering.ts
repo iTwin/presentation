@@ -354,7 +354,7 @@ export function createHierarchyFilteringHelper(
         .map(({ path }) => path[0]);
     },
     /**
-     *  When a hierarchy node is created for a filtered hierarchy level, it needs some attributes (e.g. `filtering`
+     * When a hierarchy node is created for a filtered hierarchy level, it needs some attributes (e.g. `filtering`
      * and `autoExpand`) to be set based on the filter paths and filtering options. This function calculates
      * these props for a child node based on its key or path matcher.
      *
