@@ -356,7 +356,7 @@ describe("Hierarchies", () => {
                     ecClassId: { selector: `this.ECClassId` },
                     ecInstanceId: { selector: `this.ECInstanceId` },
                     nodeLabel: { selector: `this.CodeValue` },
-                    grouping: { byClass: true, byLabel: whereClause("this").includes(keys.childSubject21.id) },
+                    grouping: { byClass: true, byLabel: true },
                   })}
                   FROM ${subjectClassName} AS this
                   ${whereClause("this")}
@@ -385,38 +385,50 @@ describe("Hierarchies", () => {
           provider: createProvider({
             imodel,
             hierarchy,
-            filteredNodePaths: [{ path: [keys.childSubject1, keys.childSubject21, keys.childSubject3], options: { reveal: { depthInHierarchy: 3 } } }],
+            filteredNodePaths: [{ path: [keys.childSubject1, keys.childSubject21, keys.childSubject3], options: { reveal: { depthInHierarchy: 4 } } }],
           }),
           expect: [
             NodeValidators.createForClassGroupingNode({
               autoExpand: true,
               className: keys.childSubject1.className,
               children: [
-                NodeValidators.createForInstanceNode({
-                  instanceKeys: [keys.childSubject1],
+                NodeValidators.createForLabelGroupingNode({
                   autoExpand: true,
+                  label: "test subject 1",
                   children: [
-                    NodeValidators.createForClassGroupingNode({
+                    NodeValidators.createForInstanceNode({
+                      instanceKeys: [keys.childSubject1],
                       autoExpand: true,
-                      className: keys.childSubject21.className,
                       children: [
-                        NodeValidators.createForLabelGroupingNode({
-                          autoExpand: false,
-                          label: "test subject 2.1",
+                        NodeValidators.createForClassGroupingNode({
+                          autoExpand: true,
+                          className: keys.childSubject21.className,
                           children: [
-                            NodeValidators.createForInstanceNode({
-                              instanceKeys: [keys.childSubject21],
+                            NodeValidators.createForLabelGroupingNode({
                               autoExpand: false,
+                              label: "test subject 2.1",
                               children: [
-                                NodeValidators.createForClassGroupingNode({
+                                NodeValidators.createForInstanceNode({
+                                  instanceKeys: [keys.childSubject21],
                                   autoExpand: false,
-                                  className: keys.childSubject21.className,
                                   children: [
-                                    NodeValidators.createForInstanceNode({
-                                      instanceKeys: [keys.childSubject3],
-                                      isFilterTarget: true,
-                                      children: false,
+                                    NodeValidators.createForClassGroupingNode({
                                       autoExpand: false,
+                                      className: keys.childSubject21.className,
+                                      children: [
+                                        NodeValidators.createForLabelGroupingNode({
+                                          autoExpand: false,
+                                          label: "test subject 3",
+                                          children: [
+                                            NodeValidators.createForInstanceNode({
+                                              instanceKeys: [keys.childSubject3],
+                                              isFilterTarget: true,
+                                              children: false,
+                                              autoExpand: false,
+                                            }),
+                                          ],
+                                        }),
+                                      ],
                                     }),
                                   ],
                                 }),
