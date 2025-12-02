@@ -155,7 +155,7 @@ export class FilteringHierarchyDefinition implements RxjsHierarchyDefinition {
         if (normalizedPath.length === 0) {
           return of(undefined);
         }
-        const identifierFromPath = HierarchyFilteringPath.normalize(path).path[0];
+        const identifierFromPath = normalizedPath[0];
         return from(childNodeIdentifiers).pipe(
           mergeMap((nodeKey) => {
             const matchesPossiblyPromise = this.pathMatcher({ identifierFromPath, nodeKey: nodeKey.key });
