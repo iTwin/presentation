@@ -3,8 +3,6 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import "./internal/DisposePolyfill.js";
-
 import { GenericInstanceFilter } from "@itwin/core-common";
 import { Event, InstanceKey, IPrimitiveValueFormatter, Props } from "@itwin/presentation-shared";
 import { HierarchyFilteringPath } from "./HierarchyFiltering.js";

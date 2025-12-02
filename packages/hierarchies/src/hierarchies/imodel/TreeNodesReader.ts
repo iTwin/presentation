@@ -36,7 +36,7 @@ export function readNodes(props: ReadNodesProps): Observable<SourceInstanceHiera
     log({
       category: LOGGING_NAMESPACE,
       severity: "trace",
-      message: (row) => JSON.stringify(row),
+      message: /* c8 ignore next */ (row) => JSON.stringify(row),
     }),
     mergeMap((row) => parser(row)),
   );
