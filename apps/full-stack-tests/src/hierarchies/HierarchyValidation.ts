@@ -22,12 +22,24 @@ const loggingNamespace = `Presentation.HierarchyBuilder.HierarchyValidation`;
 
 type IModelInstanceKey = ArrayElement<InstancesNodeKey["instanceKeys"]>;
 
-export interface HierarchyDef<TNode> {
-  node: TNode;
-  children?: Array<HierarchyDef<TNode>> | boolean;
+export interface HierarchyDef {
+  node: HierarchyNode;
+  children?: Array<HierarchyDef>;
 }
 
-export type ExpectedHierarchyDef = HierarchyDef<(node: HierarchyNode) => void>;
+export type ExpectedHierarchyDef = {
+  node: (node: HierarchyNode) => void;
+} & (
+  | {
+      children?: boolean;
+    }
+  | {
+      children?: Array<ExpectedHierarchyDef>;
+    }
+  | {
+      childrenUnordered?: Array<ExpectedHierarchyDef>;
+    }
+);
 
 function optionalBooleanToString(value: boolean | undefined) {
   return value === undefined ? "undefined" : value ? "TRUE" : "FALSE";
@@ -280,43 +292,47 @@ export namespace NodeValidators {
   }
 }
 
-export async function validateHierarchy(props: { provider: HierarchyProvider; parentNode?: HierarchyNode; expect: ExpectedHierarchyDef[] }) {
+type ValidateHierarchyProps = {
+  provider: HierarchyProvider;
+  parentNode?: HierarchyNode;
+} & (
+  | {
+      expect: ExpectedHierarchyDef[];
+    }
+  | {
+      expectUnordered: ExpectedHierarchyDef[];
+    }
+);
+export async function validateHierarchy(props: ValidateHierarchyProps) {
   const parentIdentifier = props.parentNode ? props.parentNode.label : "<root>";
   const nodes = await collect(props.provider.getNodes({ parentNode: props.parentNode }));
   Logger.logInfo(loggingNamespace, `Received ${nodes.length} child nodes for ${parentIdentifier}`);
 
-  if (nodes.length !== props.expect.length) {
+  const expectLength = "expect" in props ? props.expect.length : props.expectUnordered.length;
+  if (nodes.length !== expectLength) {
     const truncatedNodeLabels = `${nodes
       .slice(0, 3)
       .map((n) => n.label)
       .join(", ")}${nodes.length > 3 ? ", ..." : ""}`;
     throw new Error(
-      `[${parentIdentifier}] Expected ${props.expect.length} ${props.parentNode ? "child" : "root"} nodes, got ${nodes.length}: [${truncatedNodeLabels}]`,
+      `[${parentIdentifier}] Expected ${expectLength} ${props.parentNode ? "child" : "root"} nodes, got ${nodes.length}: [${truncatedNodeLabels}]`,
     );
   }
 
-  const resultHierarchy = new Array<HierarchyDef<HierarchyNode>>();
+  const nodeValidator =
+    "expect" in props
+      ? new OrderedNodeValidator(props.provider, props.expect)
+      : new UnorderedNodeValidator(props.provider, parentIdentifier, props.expectUnordered);
 
+  const resultHierarchy = new Array<HierarchyDef>();
   for (let i = 0; i < nodes.length; ++i) {
     const node = nodes[i];
-    resultHierarchy.push({ node });
-
-    const expectation = props.expect[i];
-    expectation.node(node);
-
-    if (Array.isArray(expectation.children)) {
-      resultHierarchy[resultHierarchy.length - 1].children = await validateHierarchy({
-        ...props,
-        parentNode: node,
-        expect: expectation.children,
-      });
-    }
+    resultHierarchy.push(await nodeValidator.validate(node, i));
   }
-
   return resultHierarchy;
 }
 
-export function validateHierarchyLevel(props: { nodes: HierarchyNode[]; expect: Array<Omit<ExpectedHierarchyDef, "children"> & { children?: boolean }> }) {
+export function validateHierarchyLevel(props: { nodes: HierarchyNode[]; expect: Array<Pick<ExpectedHierarchyDef, "node"> & { children?: boolean }> }) {
   const { nodes, expect: expectations } = props;
   if (props.nodes.length !== props.expect.length) {
     throw new Error(`Expected ${expectations.length} nodes, got ${nodes.length}`);
@@ -324,5 +340,68 @@ export function validateHierarchyLevel(props: { nodes: HierarchyNode[]; expect: 
   for (let i = 0; i < nodes.length; ++i) {
     const expectation = expectations[i];
     expectation.node(nodes[i]);
+  }
+}
+
+async function validateNodeChildren({
+  provider,
+  parentNode,
+  expectation,
+}: {
+  provider: HierarchyProvider;
+  parentNode: HierarchyNode;
+  expectation: ExpectedHierarchyDef;
+}) {
+  if ("children" in expectation && Array.isArray(expectation.children)) {
+    return validateHierarchy({
+      provider,
+      parentNode,
+      expect: expectation.children,
+    });
+  }
+  if ("childrenUnordered" in expectation && Array.isArray(expectation.childrenUnordered)) {
+    return validateHierarchy({
+      provider,
+      parentNode,
+      expectUnordered: expectation.childrenUnordered,
+    });
+  }
+  return undefined;
+}
+
+class OrderedNodeValidator {
+  public constructor(
+    private _provider: HierarchyProvider,
+    private _expectations: ExpectedHierarchyDef[],
+  ) {}
+  public async validate(node: HierarchyNode, index: number): Promise<HierarchyDef> {
+    const expectation = this._expectations[index];
+    expectation.node(node);
+    const children = await validateNodeChildren({ provider: this._provider, parentNode: node, expectation });
+    return { node, children };
+  }
+}
+
+class UnorderedNodeValidator {
+  public constructor(
+    private _provider: HierarchyProvider,
+    private _parentIdentifier: string,
+    private _expectations: ExpectedHierarchyDef[],
+  ) {}
+  public async validate(node: HierarchyNode, index: number): Promise<HierarchyDef> {
+    const matchIndex = this._expectations.findIndex((expectation) => {
+      try {
+        expectation.node(node);
+        return true;
+      } catch {
+        return false;
+      }
+    });
+    if (matchIndex === -1) {
+      throw new Error(`[${this._parentIdentifier}] None of the children expectations matched the actual node "${node.label}" at index ${index}.`);
+    }
+    const matchedExpectation = this._expectations.splice(matchIndex, 1);
+    const children = await validateNodeChildren({ provider: this._provider, parentNode: node, expectation: matchedExpectation[0] });
+    return { node, children };
   }
 }

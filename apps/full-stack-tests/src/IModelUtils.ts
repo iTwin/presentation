@@ -35,19 +35,9 @@ export class ECDbBuilder {
     this._ecdb.importSchema(schemaFilePath);
   }
 
-  private createInsertQuery(fullClassName: string, props?: { [propertyName: string]: ECSqlBinding | PrimitiveValue | undefined }) {
-    if (!props) {
-      props = { ecInstanceId: undefined };
-    }
-    const { schemaName, className } = parseFullClassName(fullClassName);
-    const clause = `
-      INSERT INTO [${schemaName}].[${className}] (${Object.keys(props).join(", ")})
-      VALUES (${Object.keys(props)
-        .map(() => "?")
-        .join(", ")})
-    `;
-    const binder = (stmt: ECSqlWriteStatement) => {
-      Object.values(props).forEach((value, i) => {
+  private createECSqlStatementBinder(values: { [propertyName: string]: ECSqlBinding | PrimitiveValue | undefined }) {
+    return (stmt: ECSqlWriteStatement) => {
+      Object.values(values).forEach((value, i) => {
         const bindingIndex = i + 1;
         switch (typeof value) {
           case "undefined":
@@ -113,7 +103,32 @@ export class ECDbBuilder {
         }
       });
     };
-    return { clause, binder };
+  }
+
+  private createInsertQuery(fullClassName: string, props?: { [propertyName: string]: ECSqlBinding | PrimitiveValue | undefined }) {
+    if (!props) {
+      props = { ecInstanceId: undefined };
+    }
+    const { schemaName, className } = parseFullClassName(fullClassName);
+    const clause = `
+      INSERT INTO [${schemaName}].[${className}] (${Object.keys(props).join(", ")})
+      VALUES (${Object.keys(props)
+        .map(() => "?")
+        .join(", ")})
+    `;
+    return { clause, binder: this.createECSqlStatementBinder(props) };
+  }
+
+  private createUpdateQuery(key: InstanceKey, props: { [propertyName: string]: ECSqlBinding | PrimitiveValue | undefined }) {
+    const { schemaName, className } = parseFullClassName(key.className);
+    const clause = `
+      UPDATE [${schemaName}].[${className}]
+      SET ${Object.keys(props)
+        .map((k) => `${k} = ?`)
+        .join(", ")}
+      WHERE ECInstanceId = ?
+    `;
+    return { clause, binder: this.createECSqlStatementBinder({ ...props, ecInstanceId: key.id }) };
   }
 
   public insertInstance(fullClassName: string, props?: { [propertyName: string]: PrimitiveValue | undefined }) {
@@ -141,6 +156,17 @@ export class ECDbBuilder {
         throw new BentleyError(res.status, `Failed to insert instance of relationship "${fullClassName}". Query: ${query.clause}`);
       }
       return { className: fullClassName, id: res.id! };
+    });
+  }
+
+  public updateInstance(key: InstanceKey, props: { [propertyName: string]: PrimitiveValue | undefined }) {
+    const query = this.createUpdateQuery(key, props);
+    return this._ecdb.withWriteStatement(query.clause, (stmt) => {
+      query.binder(stmt);
+      const res = stmt.step();
+      if (res !== DbResult.BE_SQLITE_DONE) {
+        throw new BentleyError(res, `Failed to update instance of class "${key.className}", id: ${key.id}.`);
+      }
     });
   }
 
@@ -188,12 +214,12 @@ export async function cloneECDb<TResult extends {}>(
 
   const ecdb = new ECDb();
   ecdb.openDb(targetECDbPath, ECDbOpenMode.ReadWrite);
+  if (!ecdb.isOpen) {
+    throw new Error("Failed to open cloned ECDb");
+  }
   try {
     const res = await setup(new ECDbBuilder(ecdb, targetECDbPath));
     return { ...res, ecdb, ecdbPath: targetECDbPath };
-  } catch (e) {
-    ecdb[Symbol.dispose]();
-    throw e;
   } finally {
     ecdb.saveChanges("Updated cloned ECDb");
   }

@@ -22,7 +22,7 @@ export {
 } from "./hierarchies/imodel/PredicateBasedHierarchyDefinition.js";
 export { LimitingECSqlQueryExecutor, createLimitingECSqlQueryExecutor } from "./hierarchies/imodel/LimitingECSqlQueryExecutor.js";
 export { NodeSelectClauseColumnNames, NodesQueryClauseFactory, createNodesQueryClauseFactory } from "./hierarchies/imodel/NodeSelectQueryFactory.js";
-export { createIModelHierarchyProvider } from "./hierarchies/imodel/IModelHierarchyProvider.js";
+export { createIModelHierarchyProvider, createMergedIModelHierarchyProvider } from "./hierarchies/imodel/IModelHierarchyProvider.js";
 export { SourceHierarchyNode, ProcessedHierarchyNode } from "./hierarchies/imodel/IModelHierarchyNode.js";
 
 export { RowsLimitExceededError } from "./hierarchies/HierarchyErrors.js";
@@ -45,7 +45,6 @@ export { GetHierarchyNodesProps, HierarchyProvider } from "./hierarchies/Hierarc
 export { mergeProviders } from "./hierarchies/HierarchyMerge.js";
 export {
   createHierarchyFilteringHelper,
-  // eslint-disable-next-line @typescript-eslint/no-deprecated
   extractFilteringProps,
   HierarchyFilteringPath,
   HierarchyFilteringPathOptions,

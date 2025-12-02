@@ -6,10 +6,14 @@
 import { from, mergeMap, Observable, of } from "rxjs";
 import { Guid, Id64String } from "@itwin/core-bentley";
 import { ECSqlQueryDef, parseInstanceLabel } from "@itwin/presentation-shared";
+import { LOGGING_NAMESPACE_INTERNAL as BASE_LOGGING_NAMESPACE } from "../internal/Common.js";
+import { log } from "../internal/LoggingUtils.js";
 import { RxjsNodeParser } from "../internal/RxjsHierarchyDefinition.js";
 import { InstanceHierarchyNodeProcessingParams, SourceInstanceHierarchyNode } from "./IModelHierarchyNode.js";
 import { LimitingECSqlQueryExecutor } from "./LimitingECSqlQueryExecutor.js";
 import { NodeSelectClauseColumnNames } from "./NodeSelectQueryFactory.js";
+
+const LOGGING_NAMESPACE = `${BASE_LOGGING_NAMESPACE}.QueryRows`;
 
 interface ReadNodesProps {
   queryExecutor: LimitingECSqlQueryExecutor;
@@ -28,7 +32,14 @@ export function readNodes(props: ReadNodesProps): Observable<SourceInstanceHiera
     ...(limit !== undefined ? { limit } : undefined),
   };
 
-  return from(queryExecutor.createQueryReader(query, config)).pipe(mergeMap((row) => parser(row)));
+  return from(queryExecutor.createQueryReader(query, config)).pipe(
+    log({
+      category: LOGGING_NAMESPACE,
+      severity: "trace",
+      message: (row) => JSON.stringify(row),
+    }),
+    mergeMap((row) => parser(row)),
+  );
 }
 
 /**
