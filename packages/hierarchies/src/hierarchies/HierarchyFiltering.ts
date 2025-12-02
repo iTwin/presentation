@@ -23,7 +23,7 @@ export interface FilteringPathRevealDepthInPath {
    *       - Element1
    *       - Element2
    *
-   * Provide `{ path: [Node1, Element1], reveal: { depthInPath: 2 } }`
+   * Provide `{ path: [Node1, Element1], reveal: { depthInPath: 1 } }`
    *
    * **NOTE**: All nodes that are up to `depthInPath` will be expanded **except** filter targets.
    */
