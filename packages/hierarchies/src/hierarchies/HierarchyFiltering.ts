@@ -325,13 +325,11 @@ export function createHierarchyFilteringHelper(
     if ("asyncPathMatcher" in props) {
       const extractResult = saveFilteringPropsFromPathsIntoReducerAsync({ pathsReducer: reducer, pathMatcher: props.asyncPathMatcher });
       if (extractResult instanceof Promise) {
-        return extractResult.then(() => {
-          return reducer.getNodeProps(props.parentKeys);
-        });
+        return extractResult.then(() => reducer.getNodeProps(props.parentKeys));
       }
-      return reducer.getNodeProps(props.parentKeys);
+    } else {
+      saveFilteringPropsFromPathsIntoReducer({ ...props, pathsReducer: reducer });
     }
-    saveFilteringPropsFromPathsIntoReducer({ ...props, pathsReducer: reducer });
     return reducer.getNodeProps(props.parentKeys);
   }
   return {
