@@ -164,7 +164,7 @@ export class FilteringHierarchyDefinition implements RxjsHierarchyDefinition {
           filter((matches) => matches),
           defaultIfEmpty(false),
           take(1),
-          map((matches): undefined | HierarchyFilteringPath => (matches ? path : undefined)),
+          mergeMap((matches) => matches ? of(path) : EMPTY),
         );
       }),
       filter((path) => path !== undefined),
