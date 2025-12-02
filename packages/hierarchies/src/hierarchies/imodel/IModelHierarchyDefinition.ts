@@ -5,7 +5,7 @@
 
 import { GenericInstanceFilter } from "@itwin/core-common";
 import { ECSqlQueryDef } from "@itwin/presentation-shared";
-import { NonGroupingHierarchyNode, ParentHierarchyNode } from "../HierarchyNode.js";
+import { NonGroupingHierarchyNode } from "../HierarchyNode.js";
 import {
   ProcessedGenericHierarchyNode,
   ProcessedHierarchyNode,
@@ -87,7 +87,7 @@ export type NodePreProcessor = <TNode extends ProcessedGenericHierarchyNode | Pr
  *
  * @public
  */
-export type NodePostProcessor = (node: ProcessedHierarchyNode, parentNode?: ParentHierarchyNode) => Promise<ProcessedHierarchyNode>;
+export type NodePostProcessor = (node: ProcessedHierarchyNode) => Promise<ProcessedHierarchyNode>;
 
 /**
  * A type of node that can be passed to `HierarchyDefinition.defineHierarchyLevel`. This basically means

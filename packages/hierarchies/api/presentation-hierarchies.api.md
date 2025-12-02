@@ -28,7 +28,6 @@ interface BaseHierarchyNode {
     extendedData?: {
         [key: string]: any;
     };
-    filtering?: HierarchyNodeFilteringProps;
     label: string;
     parentKeys: HierarchyNodeKey[];
 }
@@ -40,7 +39,7 @@ export interface ClassGroupingNodeKey {
 }
 
 // @public
-export function createHierarchyFilteringHelper(rootLevelFilteringProps: HierarchyFilteringPath[] | undefined, parentNode: Pick<ParentHierarchyNode, "filtering"> | undefined): {
+export function createHierarchyFilteringHelper(rootLevelFilteringProps: HierarchyFilteringPath[] | undefined, parentNode: Pick<NonGroupingHierarchyNode, "filtering"> | undefined): {
     hasFilter: boolean;
     hasFilterTargetAncestor: boolean;
     getChildNodeFilteringIdentifiers: () => HierarchyNodeIdentifier[] | undefined;
@@ -48,27 +47,27 @@ export function createHierarchyFilteringHelper(rootLevelFilteringProps: Hierarch
         (props: {
             parentKeys?: undefined;
             nodeKey: InstancesNodeKey | GenericNodeKey;
-        }): Pick<HierarchyNode, "filtering"> | undefined;
+        }): Pick<NonGroupingHierarchyNode, "filtering"> | undefined;
         (props: {
             parentKeys?: undefined;
             pathMatcher: (identifier: HierarchyNodeIdentifier) => boolean;
-        }): Pick<HierarchyNode, "filtering"> | undefined;
+        }): Pick<NonGroupingHierarchyNode, "filtering"> | undefined;
         (props: {
             parentKeys?: undefined;
             asyncPathMatcher: (identifier: HierarchyNodeIdentifier) => boolean | Promise<boolean>;
-        }): Promise<Pick<HierarchyNode, "filtering"> | undefined> | Pick<HierarchyNode, "filtering"> | undefined;
+        }): Promise<Pick<NonGroupingHierarchyNode, "filtering"> | undefined> | Pick<NonGroupingHierarchyNode, "filtering"> | undefined;
         (props: {
             parentKeys: HierarchyNodeKey[];
             nodeKey: InstancesNodeKey | GenericNodeKey;
-        }): Pick<HierarchyNode, "filtering" | "autoExpand"> | undefined;
+        }): Pick<NonGroupingHierarchyNode, "filtering" | "autoExpand"> | undefined;
         (props: {
             parentKeys: HierarchyNodeKey[];
             pathMatcher: (identifier: HierarchyNodeIdentifier) => boolean;
-        }): Pick<HierarchyNode, "filtering" | "autoExpand"> | undefined;
+        }): Pick<NonGroupingHierarchyNode, "filtering" | "autoExpand"> | undefined;
         (props: {
             parentKeys: HierarchyNodeKey[];
             asyncPathMatcher: (identifier: HierarchyNodeIdentifier) => boolean | Promise<boolean>;
-        }): Promise<Pick<HierarchyNode, "filtering" | "autoExpand"> | undefined> | Pick<HierarchyNode, "filtering" | "autoExpand"> | undefined;
+        }): Promise<Pick<NonGroupingHierarchyNode, "filtering" | "autoExpand"> | undefined> | Pick<NonGroupingHierarchyNode, "filtering" | "autoExpand"> | undefined;
     };
 };
 
@@ -325,6 +324,9 @@ export namespace HierarchyNode {
         key: LabelGroupingNodeKey;
         supportsFiltering?: undefined;
     } & GroupingHierarchyNode;
+    export function isNonGroupingNode<TNode extends {
+        key: HierarchyNodeKey;
+    }>(node: TNode): node is TNode & NonGroupingHierarchyNode;
     export function isPropertyGroupingNode<TNode extends {
         key: HierarchyNodeKey;
     }>(node: TNode): node is TNode & {
@@ -593,7 +595,7 @@ export type NodeParser = (row: {
 }, parentNode?: HierarchyDefinitionParentNode) => SourceInstanceHierarchyNode | Promise<SourceInstanceHierarchyNode>;
 
 // @public
-export type NodePostProcessor = (node: ProcessedHierarchyNode, parentNode?: ParentHierarchyNode) => Promise<ProcessedHierarchyNode>;
+export type NodePostProcessor = (node: ProcessedHierarchyNode) => Promise<ProcessedHierarchyNode>;
 
 // @public
 export type NodePreProcessor = <TNode extends ProcessedGenericHierarchyNode | ProcessedInstanceHierarchyNode>(node: TNode) => Promise<TNode | undefined>;
@@ -656,6 +658,7 @@ export interface NodesQueryClauseFactory {
 
 // @public
 export interface NonGroupingHierarchyNode extends BaseHierarchyNode {
+    filtering?: HierarchyNodeFilteringProps;
     key: GenericNodeKey | InstancesNodeKey;
     supportsFiltering?: boolean;
 }

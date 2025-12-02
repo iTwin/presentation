@@ -3,13 +3,12 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { defaultIfEmpty, defer, filter, firstValueFrom, from, map, merge, mergeAll, mergeMap, Observable, of, take, toArray } from "rxjs";
+import { defaultIfEmpty, defer, filter, firstValueFrom, map, merge, mergeAll, mergeMap, Observable, of, take, toArray } from "rxjs";
 import { Id64String } from "@itwin/core-bentley";
 import { ECClassHierarchyInspector, InstanceKey } from "@itwin/presentation-shared";
-import { createHierarchyFilteringHelper, HierarchyFilteringPath, HierarchyFilteringPathOptions } from "../HierarchyFiltering.js";
-import { HierarchyNodeFilteringProps, ParentHierarchyNode } from "../HierarchyNode.js";
+import { createHierarchyFilteringHelper, getRevealAsTrueFalse, HierarchyFilteringPath } from "../HierarchyFiltering.js";
 import { HierarchyNodeIdentifier } from "../HierarchyNodeIdentifier.js";
-import { GenericNodeKey, HierarchyNodeKey, IModelInstanceKey, InstancesNodeKey } from "../HierarchyNodeKey.js";
+import { HierarchyNodeKey, IModelInstanceKey } from "../HierarchyNodeKey.js";
 import {
   DefineHierarchyLevelProps,
   GenericHierarchyNodeDefinition,
@@ -17,14 +16,10 @@ import {
   HierarchyNodesDefinition,
   InstanceNodesQueryDefinition,
 } from "../imodel/IModelHierarchyDefinition.js";
-import {
-  ProcessedGenericHierarchyNode,
-  ProcessedGroupingHierarchyNode,
-  ProcessedHierarchyNode,
-  ProcessedInstanceHierarchyNode,
-} from "../imodel/IModelHierarchyNode.js";
+import { ProcessedGroupingHierarchyNode, ProcessedHierarchyNode, ProcessedInstanceHierarchyNode } from "../imodel/IModelHierarchyNode.js";
 import { NodeSelectClauseColumnNames } from "../imodel/NodeSelectQueryFactory.js";
 import { defaultNodesParser } from "../imodel/TreeNodesReader.js";
+import { fromPossiblyPromise } from "../internal/Common.js";
 import { partition } from "../internal/operators/Partition.js";
 import { RxjsHierarchyDefinition, RxjsNodeParser, RxjsNodePostProcessor, RxjsNodePreProcessor } from "../internal/RxjsHierarchyDefinition.js";
 
@@ -63,144 +58,36 @@ export class FilteringHierarchyDefinition implements RxjsHierarchyDefinition {
     };
   }
 
-  private pathMatcher({
-    identifierFromPath,
-    nodeKey,
-  }: {
-    identifierFromPath: HierarchyNodeIdentifier;
-    nodeKey: GenericNodeKey | InstancesNodeKey;
-  }): boolean | Promise<boolean> {
-    // Check generic node case
-    if (HierarchyNodeIdentifier.isGenericNodeIdentifier(identifierFromPath)) {
-      if (!HierarchyNodeKey.isGeneric(nodeKey)) {
-        return false;
-      }
-      return nodeKey.id === identifierFromPath.id;
-    }
-    if (HierarchyNodeKey.isGeneric(nodeKey)) {
-      return false;
-    }
-
-    if (identifierFromPath.imodelKey && identifierFromPath.imodelKey !== this._imodelAccess.imodelKey) {
-      return false;
-    }
-    // Find matching ids
-    const instanceKeysMatchingIdentifier = nodeKey.instanceKeys.filter((instanceKey) => instanceKey.id === identifierFromPath.id);
-    if (instanceKeysMatchingIdentifier.length === 0) {
-      return false;
-    }
-    // If some of nodes' keys className exactly matches the className of identifier, we can return early
-    if (instanceKeysMatchingIdentifier.some((instanceKey) => instanceKey.className === identifierFromPath.className)) {
-      return true;
-    }
-    return firstValueFrom(
-      from(instanceKeysMatchingIdentifier).pipe(
-        mergeMap((instanceKey) => {
-          const isDerivedFrom = this._imodelAccess.classDerivesFrom(identifierFromPath.className, instanceKey.className);
-          const isDerivedTo = this._imodelAccess.classDerivesFrom(instanceKey.className, identifierFromPath.className);
-          return merge(
-            isDerivedFrom instanceof Promise ? from(isDerivedFrom) : of(isDerivedFrom),
-            isDerivedTo instanceof Promise ? from(isDerivedTo) : of(isDerivedTo),
-          ).pipe(filter((classDerives) => classDerives));
-        }),
-        defaultIfEmpty(false),
-        take(1),
-      ),
-    );
-  }
-
-  private setAutoExpandForProcessedNode<T extends ProcessedGenericHierarchyNode | ProcessedInstanceHierarchyNode>(
-    node: T,
-    parentNode?: ParentHierarchyNode,
-  ): Observable<T> {
-    const filteringHelper = createHierarchyFilteringHelper(this._nodeIdentifierPaths, parentNode);
-    const nodeAutoExpandPropPossiblyPromise = filteringHelper.createChildNodeProps({
-      asyncPathMatcher: (identifier): boolean | Promise<boolean> => this.pathMatcher({ identifierFromPath: identifier, nodeKey: node.key }),
-      parentKeys: node.parentKeys,
-    });
-    return (nodeAutoExpandPropPossiblyPromise instanceof Promise ? from(nodeAutoExpandPropPossiblyPromise) : of(nodeAutoExpandPropPossiblyPromise)).pipe(
-      map((autoExpandProp) => {
-        if (autoExpandProp?.autoExpand) {
-          Object.assign(node, { autoExpand: true });
-        }
-        return node;
-      }),
-    );
-  }
-
-  private getFilteringPathsForGroupingNode(
-    node: ProcessedGroupingHierarchyNode,
-    parentNode?: ParentHierarchyNode,
-  ): Observable<HierarchyFilteringPath[] | undefined> {
-    const parentPaths = parentNode ? parentNode.filtering?.filteredChildrenIdentifierPaths : this._nodeIdentifierPaths;
-    if (!parentPaths?.length) {
-      return of(undefined);
-    }
-    const getNonGroupingChildren = (groupingNode: ProcessedGroupingHierarchyNode) => {
-      const nonGroupingChildren = new Array<ProcessedInstanceHierarchyNode>();
-      groupingNode.children.forEach((child) => {
-        if (ProcessedHierarchyNode.isGroupingNode(child)) {
-          nonGroupingChildren.push(...getNonGroupingChildren(child));
-          return;
-        }
-        nonGroupingChildren.push(child);
-      });
-      return nonGroupingChildren;
-    };
-    const childNodeIdentifiers = getNonGroupingChildren(node);
-    return from(parentPaths).pipe(
-      mergeMap((path): Observable<undefined | HierarchyFilteringPath> => {
-        const normalizedPath = HierarchyFilteringPath.normalize(path).path;
-        /* c8 ignore next 3 */
-        if (normalizedPath.length === 0) {
-          return of(undefined);
-        }
-        const identifierFromPath = normalizedPath[0];
-        return from(childNodeIdentifiers).pipe(
-          mergeMap((nodeKey) => {
-            const matchesPossiblyPromise = this.pathMatcher({ identifierFromPath, nodeKey: nodeKey.key });
-            return matchesPossiblyPromise instanceof Promise ? from(matchesPossiblyPromise) : of(matchesPossiblyPromise);
-          }),
-          filter((matches) => matches),
-          defaultIfEmpty(false),
-          take(1),
-          mergeMap((matches) => matches ? of(path) : EMPTY),
-        );
-      }),
-      filter((path) => path !== undefined),
-      toArray(),
-      map((matchingParentPaths) => {
-        return matchingParentPaths.length > 0 ? matchingParentPaths : undefined;
-      }),
-    );
-  }
-
   public get postProcessNode(): RxjsNodePostProcessor {
-    return (node, parentNode) => {
-      return (this._source.postProcessNode ? this._source.postProcessNode(node, parentNode) : of(node)).pipe(
-        mergeMap((processedNode) => {
-          if (!ProcessedHierarchyNode.isGroupingNode(processedNode)) {
-            // auto-expand flag is set during post processing
-            return this.setAutoExpandForProcessedNode(processedNode, parentNode);
+    return (node) => {
+      return (this._source.postProcessNode ? this._source.postProcessNode(node) : of(node)).pipe(
+        map((processedNode) => {
+          if (ProcessedHierarchyNode.isGroupingNode(processedNode)) {
+            if (
+              shouldExpand({
+                children: processedNode.children,
+                nonGroupingChildNodePositionInPath: processedNode.parentKeys.filter((key) => !HierarchyNodeKey.isGrouping(key)).length,
+                nodePositionInHierarchy: processedNode.parentKeys.length,
+              })
+            ) {
+              Object.assign(processedNode, { autoExpand: true });
+            }
+          } else if (
+            processedNode.filtering?.filteredChildrenIdentifierPaths?.some((path) =>
+              getRevealAsTrueFalse({
+                reveal: HierarchyFilteringPath.normalize(path).options?.reveal,
+                nodePositionInPath: {
+                  position: processedNode.parentKeys.filter((key) => !HierarchyNodeKey.isGrouping(key)).length,
+                  type: "exact",
+                },
+                nodePositionInHierarchy: processedNode.parentKeys.length,
+              }),
+            )
+          ) {
+            Object.assign(processedNode, { autoExpand: true });
           }
 
-          return this.getFilteringPathsForGroupingNode(processedNode, parentNode).pipe(
-            map((filteringPaths) => {
-              // Grouping node does not have filtering attributes,
-              // Assign them from parent node (exclude filter target attributes, since grouping node can't be a filter target)
-              const filteringProp: Pick<HierarchyNodeFilteringProps, "filteredChildrenIdentifierPaths" | "hasFilterTargetAncestor"> = {
-                ...(filteringPaths?.length ? { filteredChildrenIdentifierPaths: filteringPaths } : undefined),
-                ...(parentNode?.filtering?.hasFilterTargetAncestor ? { hasFilterTargetAncestor: parentNode.filtering.hasFilterTargetAncestor } : undefined),
-              };
-              if (filteringProp.filteredChildrenIdentifierPaths || filteringProp.hasFilterTargetAncestor) {
-                Object.assign(processedNode, { filtering: filteringProp });
-              }
-              if (shouldExpandGroupingNode(processedNode)) {
-                Object.assign(processedNode, { autoExpand: true });
-              }
-              return processedNode;
-            }),
-          );
+          return processedNode;
         }),
       );
     };
@@ -216,13 +103,32 @@ export class FilteringHierarchyDefinition implements RxjsHierarchyDefinition {
           const rowInstanceKey = { className: row[ECSQL_COLUMN_NAME_FilterClassName], id: row[ECSQL_COLUMN_NAME_FilterECInstanceId] };
           const filteringHelper = createHierarchyFilteringHelper(this._nodeIdentifierPaths, parentNode);
           const nodeFilteringPropPossiblyPromise = filteringHelper.createChildNodeProps({
-            asyncPathMatcher: (identifier): boolean | Promise<boolean> =>
-              this.pathMatcher({
-                identifierFromPath: identifier,
-                nodeKey: { type: "instances", instanceKeys: [{ id: rowInstanceKey.id, className: rowInstanceKey.className }] },
-              }),
+            asyncPathMatcher: (identifier): boolean | Promise<boolean> => {
+              if (identifier.id !== rowInstanceKey.id) {
+                return false;
+              }
+              if (!HierarchyNodeIdentifier.isInstanceNodeIdentifier(identifier)) {
+                return false;
+              }
+              if (identifier.imodelKey && identifier.imodelKey !== this._imodelAccess.imodelKey) {
+                return false;
+              }
+              if (identifier.className === rowInstanceKey.className) {
+                return true;
+              }
+              return firstValueFrom(
+                merge(
+                  fromPossiblyPromise(this._imodelAccess.classDerivesFrom(identifier.className, rowInstanceKey.className)),
+                  fromPossiblyPromise(this._imodelAccess.classDerivesFrom(rowInstanceKey.className, identifier.className)),
+                ).pipe(
+                  filter((classDerives) => classDerives),
+                  defaultIfEmpty(false),
+                  take(1),
+                ),
+              );
+            },
           });
-          return (nodeFilteringPropPossiblyPromise instanceof Promise ? from(nodeFilteringPropPossiblyPromise) : of(nodeFilteringPropPossiblyPromise)).pipe(
+          return fromPossiblyPromise(nodeFilteringPropPossiblyPromise).pipe(
             map((nodeExtraProps) => {
               if (nodeExtraProps?.filtering) {
                 parsedNode.filtering = nodeExtraProps.filtering;
@@ -410,68 +316,62 @@ export function applyECInstanceIdsSelector(def: InstanceNodesQueryDefinition): I
   };
 }
 
-function shouldExpandGroupingNode(node: ProcessedGroupingHierarchyNode) {
-  const getAutoExpand = ({
-    groupingNode,
-    numberOfNonGroupingParentNodes,
-    numberOfParentNodes,
-  }: {
-    groupingNode: ProcessedGroupingHierarchyNode;
-    numberOfNonGroupingParentNodes: number;
-    numberOfParentNodes: number;
-  }) => {
-    for (const child of groupingNode.children) {
-      if (ProcessedHierarchyNode.isGroupingNode(child)) {
-        if (getAutoExpand({ groupingNode: child, numberOfNonGroupingParentNodes, numberOfParentNodes })) {
-          return true;
-        }
-        continue;
+function shouldExpand({
+  children,
+  nodePositionInHierarchy,
+  nonGroupingChildNodePositionInPath,
+}: {
+  children: Array<ProcessedGroupingHierarchyNode | ProcessedInstanceHierarchyNode>;
+  nodePositionInHierarchy: number;
+  nonGroupingChildNodePositionInPath: number;
+}) {
+  for (const child of children) {
+    if (ProcessedHierarchyNode.isGroupingNode(child)) {
+      if (shouldExpand({ children: child.children, nodePositionInHierarchy, nonGroupingChildNodePositionInPath })) {
+        return true;
       }
+      continue;
+    }
 
-      /* c8 ignore next 3 */
-      if (!child.filtering) {
-        continue;
-      }
+    /* c8 ignore next 3 */
+    if (!child.filtering) {
+      continue;
+    }
 
+    if (
+      child.filtering.isFilterTarget &&
+      getRevealAsTrueFalse({
+        reveal: child.filtering.filterTargetOptions?.reveal,
+        nodePositionInHierarchy,
+        nodePositionInPath: {
+          position: nonGroupingChildNodePositionInPath,
+          type: "before",
+        },
+      })
+    ) {
+      return true;
+    }
+
+    if (!child.filtering.filteredChildrenIdentifierPaths) {
+      /* c8 ignore next */
+      continue;
+    }
+
+    for (const path of child.filtering.filteredChildrenIdentifierPaths) {
       if (
-        child.filtering.isFilterTarget &&
-        getRevealAsTrueFalse(child.filtering.filterTargetOptions?.reveal, numberOfNonGroupingParentNodes, node.parentKeys.length)
+        "path" in path &&
+        getRevealAsTrueFalse({
+          reveal: path.options?.reveal,
+          nodePositionInHierarchy,
+          nodePositionInPath: {
+            position: nonGroupingChildNodePositionInPath,
+            type: "before",
+          },
+        })
       ) {
         return true;
       }
-
-      if (!child.filtering.filteredChildrenIdentifierPaths) {
-        /* c8 ignore next */
-        continue;
-      }
-
-      for (const path of child.filtering.filteredChildrenIdentifierPaths) {
-        if ("path" in path && getRevealAsTrueFalse(path.options?.reveal, numberOfNonGroupingParentNodes, node.parentKeys.length)) {
-          return true;
-        }
-      }
     }
-    return false;
-  };
-  return getAutoExpand({
-    groupingNode: node,
-    numberOfNonGroupingParentNodes: node.parentKeys.filter((key) => !HierarchyNodeKey.isGrouping(key)).length,
-    numberOfParentNodes: node.parentKeys.length,
-  });
-}
-
-function getRevealAsTrueFalse(reveal: HierarchyFilteringPathOptions["reveal"], numberOfNonGroupingParentNodes: number, numberOfParentNodes: number): boolean {
-  if (!reveal) {
-    return false;
   }
-  if (reveal === true) {
-    return true;
-  }
-  if ("depthInHierarchy" in reveal) {
-    return numberOfParentNodes < reveal.depthInHierarchy;
-  }
-  // When using depthInPath option, grouping nodes that are parents of node in depthInPath index, should be expanded
-  // Because of this need to use depthInPath +1
-  // When checking if non grouping node should be expanded, depthInPath can be used in the same way, but no need to add 1
-  return numberOfNonGroupingParentNodes < reveal.depthInPath + 1;
+  return false;
 }

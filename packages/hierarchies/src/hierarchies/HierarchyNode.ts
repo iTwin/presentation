@@ -77,8 +77,6 @@ interface BaseHierarchyNode {
   autoExpand?: boolean;
   /** Additional data that may be assigned to this node. */
   extendedData?: { [key: string]: any };
-  /** Data that may be assigned to the node if filtering is enabled */
-  filtering?: HierarchyNodeFilteringProps;
 }
 
 /**
@@ -93,6 +91,8 @@ export interface NonGroupingHierarchyNode extends BaseHierarchyNode {
    * filter when requesting child hierarchy level will have no effect.
    */
   supportsFiltering?: boolean;
+  /** Data that may be assigned to the node if filtering is enabled */
+  filtering?: HierarchyNodeFilteringProps;
 }
 
 /**
@@ -133,6 +133,10 @@ export namespace HierarchyNode {
   /** Checks whether the given node is an ECInstances-based node */
   export function isInstancesNode<TNode extends { key: HierarchyNodeKey }>(node: TNode): node is TNode & NonGroupingHierarchyNode & { key: InstancesNodeKey } {
     return HierarchyNodeKey.isInstances(node.key);
+  }
+  /** Checks whether the given node is a non-grouping node */
+  export function isNonGroupingNode<TNode extends { key: HierarchyNodeKey }>(node: TNode): node is TNode & NonGroupingHierarchyNode {
+    return !HierarchyNodeKey.isGrouping(node.key);
   }
   /** Checks whether the given node is a grouping node */
   export function isGroupingNode<TNode extends { key: HierarchyNodeKey }>(node: TNode): node is TNode & GroupingHierarchyNode {

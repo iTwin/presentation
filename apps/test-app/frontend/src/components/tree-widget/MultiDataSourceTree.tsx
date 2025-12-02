@@ -503,9 +503,9 @@ function createRssHierarchyProvider(): HierarchyProvider & { getFilteredPaths: (
           }
         }
       }
+      const filteringHelper = !parentNode || "filtering" in parentNode ? createHierarchyFilteringHelper(filter, parentNode) : undefined;
 
-      const filteringHelper = createHierarchyFilteringHelper(filter, parentNode);
-      if (!filteringHelper.hasFilter) {
+      if (!filteringHelper?.hasFilter) {
         yield* generateNodes();
         return;
       }

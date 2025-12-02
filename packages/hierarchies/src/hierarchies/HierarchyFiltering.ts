@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { HierarchyNode, NonGroupingHierarchyNode, ParentHierarchyNode } from "./HierarchyNode.js";
+import { NonGroupingHierarchyNode } from "./HierarchyNode.js";
 import { HierarchyNodeIdentifier, HierarchyNodeIdentifiersPath } from "./HierarchyNodeIdentifier.js";
 import { GenericNodeKey, HierarchyNodeKey, InstancesNodeKey } from "./HierarchyNodeKey.js";
 
@@ -174,7 +174,7 @@ export function extractFilteringProps(
 
 function extractFilteringPropsInternal(
   rootLevelFilteringProps: HierarchyFilteringPath[] | undefined,
-  parentNode: Pick<ParentHierarchyNode, "filtering"> | undefined,
+  parentNode: Pick<NonGroupingHierarchyNode, "filtering"> | undefined,
 ):
   | {
       filteredNodePaths?: HierarchyFilteringPath[];
@@ -202,25 +202,44 @@ function extractFilteringPropsInternal(
  */
 export function createHierarchyFilteringHelper(
   rootLevelFilteringProps: HierarchyFilteringPath[] | undefined,
-  parentNode: Pick<ParentHierarchyNode, "filtering"> | undefined,
+  parentNode: Pick<NonGroupingHierarchyNode, "filtering"> | undefined,
 ) {
   const filteringProps = extractFilteringPropsInternal(rootLevelFilteringProps, parentNode);
   const hasFilter = !!filteringProps;
-  /**
-   * Passes down matching normalized paths to the reducer.
-   *
-   * It uses `nodeKey` or `pathMatcher` to check if `HierarchyNodeIdentifier` at the first position in filtering path matches the node
-   * and if it does, the path is passed down to the reducer.
-   */
-  const saveFilteringPropsFromPathsIntoReducer = (
-    extractionProps: { pathsReducer: MatchingFilteringPathsReducer } & (
-      | { nodeKey: InstancesNodeKey | GenericNodeKey }
+
+  function saveFilteringPropsFromPathsIntoReducer(
+    extractionProps: {
+      pathsReducer: MatchingFilteringPathsReducer;
+    } & (
+      | {
+          nodeKey: InstancesNodeKey | GenericNodeKey;
+        }
       | { pathMatcher: (identifier: HierarchyNodeIdentifier) => boolean }
     ),
-  ): void => {
+  ): void;
+  function saveFilteringPropsFromPathsIntoReducer(extractionProps: {
+    pathsReducer: MatchingFilteringPathsReducer;
+    asyncPathMatcher: (identifier: HierarchyNodeIdentifier) => boolean | Promise<boolean>;
+  }): void | Promise<void>;
+  function saveFilteringPropsFromPathsIntoReducer(
+    extractionProps: {
+      pathsReducer: MatchingFilteringPathsReducer;
+    } & (
+      | {
+          nodeKey: InstancesNodeKey | GenericNodeKey;
+        }
+      | { pathMatcher: (identifier: HierarchyNodeIdentifier) => boolean }
+      | { asyncPathMatcher: (identifier: HierarchyNodeIdentifier) => boolean | Promise<boolean> }
+    ),
+  ): void | Promise<void> {
+    // Passes down matching normalized paths to the reducer.
+    // It uses `nodeKey`, `pathMatcher` or `asyncPathMatcher` to check if `HierarchyNodeIdentifier` at the first position in filtering path matches the node
+    // and if it does, the path is passed down to the reducer.
+    // This function returns a promise only if asyncPathMatcher returns a promise.
     if (!filteringProps?.filteredNodePaths) {
       return;
     }
+    const matchedPathPromises = new Array<Promise<NormalizedFilteringPath | undefined>>();
     for (const filteredChildrenNodeIdentifierPath of filteringProps.filteredNodePaths) {
       const normalizedPath = HierarchyFilteringPath.normalize(filteredChildrenNodeIdentifierPath);
       /* c8 ignore next 3 */
@@ -238,32 +257,8 @@ export function createHierarchyFilteringHelper(
         continue;
       }
 
-      if (extractionProps.pathMatcher(normalizedPath.path[0])) {
-        extractionProps.pathsReducer.accept(normalizedPath);
-      }
-    }
-  };
-  /**
-   * Does the same thing as `saveFilteringPropsFromPathsIntoReducer`, except uses `pathMatcher` that can return either Promise<boolean> or boolean.
-   *
-   * If pathMatcher returns a promise, then this function returns a promise, else it returns a boolean value.
-   */
-  const saveFilteringPropsFromPathsIntoReducerAsync = (extractionProps: {
-    pathsReducer: MatchingFilteringPathsReducer;
-    pathMatcher: (identifier: HierarchyNodeIdentifier) => boolean | Promise<boolean>;
-  }): void | Promise<void> => {
-    if (!filteringProps?.filteredNodePaths) {
-      return;
-    }
-    const matchedPathPromises = new Array<Promise<NormalizedFilteringPath | undefined>>();
-    for (const filteredChildrenNodeIdentifierPath of filteringProps.filteredNodePaths) {
-      const normalizedPath = HierarchyFilteringPath.normalize(filteredChildrenNodeIdentifierPath);
-      /* c8 ignore next 3 */
-      if (normalizedPath.path.length === 0) {
-        continue;
-      }
-
-      const matchesPossiblyPromise = extractionProps.pathMatcher(normalizedPath.path[0]);
+      const matchesPossiblyPromise =
+        "pathMatcher" in extractionProps ? extractionProps.pathMatcher(normalizedPath.path[0]) : extractionProps.asyncPathMatcher(normalizedPath.path[0]);
       if (matchesPossiblyPromise instanceof Promise) {
         matchedPathPromises.push(matchesPossiblyPromise.then((matches) => (matches ? normalizedPath : undefined)));
         continue;
@@ -272,35 +267,38 @@ export function createHierarchyFilteringHelper(
         extractionProps.pathsReducer.accept(normalizedPath);
       }
     }
-
     if (matchedPathPromises.length === 0) {
       return;
     }
     return Promise.all(matchedPathPromises).then((matchedPath) =>
       matchedPath.forEach((normalizedPath) => normalizedPath && extractionProps.pathsReducer.accept(normalizedPath)),
     );
-  };
-  function createChildNodeProps(props: { parentKeys?: undefined; nodeKey: InstancesNodeKey | GenericNodeKey }): Pick<HierarchyNode, "filtering"> | undefined;
+  }
+
+  function createChildNodeProps(props: {
+    parentKeys?: undefined;
+    nodeKey: InstancesNodeKey | GenericNodeKey;
+  }): Pick<NonGroupingHierarchyNode, "filtering"> | undefined;
   function createChildNodeProps(props: {
     parentKeys?: undefined;
     pathMatcher: (identifier: HierarchyNodeIdentifier) => boolean;
-  }): Pick<HierarchyNode, "filtering"> | undefined;
+  }): Pick<NonGroupingHierarchyNode, "filtering"> | undefined;
   function createChildNodeProps(props: {
     parentKeys?: undefined;
     asyncPathMatcher: (identifier: HierarchyNodeIdentifier) => boolean | Promise<boolean>;
-  }): Promise<Pick<HierarchyNode, "filtering"> | undefined> | Pick<HierarchyNode, "filtering"> | undefined;
+  }): Promise<Pick<NonGroupingHierarchyNode, "filtering"> | undefined> | Pick<NonGroupingHierarchyNode, "filtering"> | undefined;
   function createChildNodeProps(props: {
     parentKeys: HierarchyNodeKey[];
     nodeKey: InstancesNodeKey | GenericNodeKey;
-  }): Pick<HierarchyNode, "filtering" | "autoExpand"> | undefined;
+  }): Pick<NonGroupingHierarchyNode, "filtering" | "autoExpand"> | undefined;
   function createChildNodeProps(props: {
     parentKeys: HierarchyNodeKey[];
     pathMatcher: (identifier: HierarchyNodeIdentifier) => boolean;
-  }): Pick<HierarchyNode, "filtering" | "autoExpand"> | undefined;
+  }): Pick<NonGroupingHierarchyNode, "filtering" | "autoExpand"> | undefined;
   function createChildNodeProps(props: {
     parentKeys: HierarchyNodeKey[];
     asyncPathMatcher: (identifier: HierarchyNodeIdentifier) => boolean | Promise<boolean>;
-  }): Promise<Pick<HierarchyNode, "filtering" | "autoExpand"> | undefined> | Pick<HierarchyNode, "filtering" | "autoExpand"> | undefined;
+  }): Promise<Pick<NonGroupingHierarchyNode, "filtering" | "autoExpand"> | undefined> | Pick<NonGroupingHierarchyNode, "filtering" | "autoExpand"> | undefined;
   function createChildNodeProps(
     props: { parentKeys?: HierarchyNodeKey[] } & (
       | {
@@ -314,16 +312,16 @@ export function createHierarchyFilteringHelper(
         }
     ),
   ):
-    | Promise<Pick<HierarchyNode, "filtering" | "autoExpand"> | Pick<HierarchyNode, "filtering"> | undefined>
-    | Pick<HierarchyNode, "filtering" | "autoExpand">
-    | Pick<HierarchyNode, "filtering">
+    | Promise<Pick<NonGroupingHierarchyNode, "filtering" | "autoExpand"> | Pick<NonGroupingHierarchyNode, "filtering"> | undefined>
+    | Pick<NonGroupingHierarchyNode, "filtering" | "autoExpand">
+    | Pick<NonGroupingHierarchyNode, "filtering">
     | undefined {
     if (!hasFilter) {
       return undefined;
     }
     const reducer = new MatchingFilteringPathsReducer(filteringProps.hasFilterTargetAncestor);
     if ("asyncPathMatcher" in props) {
-      const extractResult = saveFilteringPropsFromPathsIntoReducerAsync({ pathsReducer: reducer, pathMatcher: props.asyncPathMatcher });
+      const extractResult = saveFilteringPropsFromPathsIntoReducer({ pathsReducer: reducer, asyncPathMatcher: props.asyncPathMatcher });
       if (extractResult instanceof Promise) {
         return extractResult.then(() => reducer.getNodeProps(props.parentKeys));
       }
@@ -403,24 +401,9 @@ class MatchingFilteringPathsReducer {
     }
   }
 
-  private getNeedsAutoExpand(parentKeys: HierarchyNodeKey[] | undefined): boolean {
-    if (this._revealOption === true) {
-      return true;
-    }
-    if (typeof this._revealOption === "object") {
-      if ("depthInHierarchy" in this._revealOption) {
-        return !parentKeys ? 0 < this._revealOption.depthInHierarchy : parentKeys.length < this._revealOption.depthInHierarchy;
-      }
-      return parentKeys
-        ? parentKeys.filter((key) => !HierarchyNodeKey.isGrouping(key)).length < this._revealOption.depthInPath
-        : 0 < this._revealOption.depthInPath;
-    }
-    return false;
-  }
-
   public getNodeProps<T extends HierarchyNodeKey[] | undefined = undefined>(
     parentKeys?: T,
-  ): T extends undefined ? Pick<HierarchyNode, "filtering"> : Pick<HierarchyNode, "filtering" | "autoExpand"> {
+  ): T extends undefined ? Pick<NonGroupingHierarchyNode, "filtering"> : Pick<NonGroupingHierarchyNode, "filtering" | "autoExpand"> {
     return {
       ...(this._hasFilterTargetAncestor || this._isFilterTarget || this._filteredChildrenIdentifierPaths.length > 0
         ? {
@@ -431,7 +414,36 @@ class MatchingFilteringPathsReducer {
             },
           }
         : undefined),
-      ...(parentKeys && this.getNeedsAutoExpand(parentKeys) ? { autoExpand: true } : undefined),
+      ...(parentKeys &&
+      getRevealAsTrueFalse({
+        reveal: this._revealOption,
+        nodePositionInHierarchy: parentKeys.length,
+        nodePositionInPath: { position: parentKeys.filter((key) => !HierarchyNodeKey.isGrouping(key)).length, type: "exact" },
+      })
+        ? { autoExpand: true }
+        : undefined),
     };
   }
+}
+
+/** @internal */
+export function getRevealAsTrueFalse({
+  reveal,
+  nodePositionInPath,
+  nodePositionInHierarchy,
+}: {
+  reveal: HierarchyFilteringPathOptions["reveal"];
+  nodePositionInPath: { position: number; type: "before" | "exact" };
+  nodePositionInHierarchy: number;
+}): boolean {
+  if (!reveal) {
+    return false;
+  }
+  if (reveal === true) {
+    return true;
+  }
+  if ("depthInHierarchy" in reveal) {
+    return nodePositionInHierarchy < reveal.depthInHierarchy;
+  }
+  return nodePositionInPath.type === "exact" ? nodePositionInPath.position < reveal.depthInPath : nodePositionInPath.position - 1 < reveal.depthInPath;
 }

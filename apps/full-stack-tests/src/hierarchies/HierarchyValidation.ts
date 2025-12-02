@@ -36,11 +36,14 @@ function optionalBooleanToString(value: boolean | undefined) {
 interface BaseNodeExpectations {
   label?: string | RegExp;
   autoExpand?: boolean;
+  extendedData?: { [key: string]: any };
+  children?: ExpectedHierarchyDef[] | boolean;
+}
+
+interface NonGroupingNodeExpectations extends BaseNodeExpectations {
   supportsFiltering?: boolean;
   isFilterTarget?: boolean;
   filterTargetOptions?: HierarchyFilteringPathOptions;
-  extendedData?: { [key: string]: any };
-  children?: ExpectedHierarchyDef[] | boolean;
 }
 
 export namespace NodeValidators {
@@ -64,6 +67,18 @@ export namespace NodeValidators {
         )}`,
       );
     }
+    if (expectations.extendedData !== undefined && !isDeepStrictEqual(node.extendedData, expectations.extendedData)) {
+      throw new Error(
+        `[${node.label}] Expected node's \`extendedData\` to be ${JSON.stringify(expectations.extendedData)}, got ${JSON.stringify(node.extendedData)}`,
+      );
+    }
+    if (expectations.children !== undefined && hasChildren(expectations) !== hasChildren(node)) {
+      throw new Error(`[${node.label}] Expected node to ${hasChildren(expectations) ? "" : "not "}have children but it does ${hasChildren(node) ? "" : "not"}`);
+    }
+  }
+
+  function validateNonGroupingNodeAttributes(node: NonGroupingHierarchyNode, expectations: NonGroupingNodeExpectations) {
+    validateBaseNodeAttributes(node, expectations);
     if (
       (HierarchyNode.isInstancesNode(node) || HierarchyNode.isGeneric(node)) &&
       expectations.supportsFiltering !== undefined &&
@@ -75,7 +90,7 @@ export namespace NodeValidators {
         )}, got ${optionalBooleanToString(node.supportsFiltering)}`,
       );
     }
-    if (expectations.isFilterTarget !== undefined && expectations.isFilterTarget !== !!node.filtering?.isFilterTarget) {
+    if ("isFilterTarget" in expectations && expectations.isFilterTarget !== undefined && expectations.isFilterTarget !== !!node.filtering?.isFilterTarget) {
       throw new Error(
         `[${node.label}] Expected node's \`filtering.isFilterTarget\` to be ${optionalBooleanToString(
           expectations.isFilterTarget,
@@ -89,19 +104,11 @@ export namespace NodeValidators {
         `[${node.label}] Nodes's 'filtering.filterTargetOptions' flag property doesn't match the expectation.`,
       );
     }
-    if (expectations.extendedData !== undefined && !isDeepStrictEqual(node.extendedData, expectations.extendedData)) {
-      throw new Error(
-        `[${node.label}] Expected node's \`extendedData\` to be ${JSON.stringify(expectations.extendedData)}, got ${JSON.stringify(node.extendedData)}`,
-      );
-    }
-    if (expectations.children !== undefined && hasChildren(expectations) !== hasChildren(node)) {
-      throw new Error(`[${node.label}] Expected node to ${hasChildren(expectations) ? "" : "not "}have children but it does ${hasChildren(node) ? "" : "not"}`);
-    }
   }
 
   export function createForGenericNode<TChildren extends ExpectedHierarchyDef[] | boolean>(
     expectedNode: Partial<Omit<NonGroupingHierarchyNode, "label" | "children" | "filtering" | "key">> &
-      BaseNodeExpectations & {
+      NonGroupingNodeExpectations & {
         key?: string | GenericNodeKey;
         label?: string;
         children?: TChildren;
@@ -123,14 +130,14 @@ export namespace NodeValidators {
             throw new Error(`[${node.label}] Expected a generic node with attributes "${JSON.stringify(expectedNode.key)}", got "${JSON.stringify(node.key)}"`);
           }
         }
-        validateBaseNodeAttributes(node, expectedNode);
+        validateNonGroupingNodeAttributes(node, expectedNode);
       },
       children: expectedNode.children,
     };
   }
 
   export function createForInstanceNode<TChildren extends ExpectedHierarchyDef[] | boolean>(
-    props: BaseNodeExpectations & {
+    props: NonGroupingNodeExpectations & {
       instanceKeys?: IModelInstanceKey[];
       children?: TChildren;
     },
@@ -151,7 +158,7 @@ export namespace NodeValidators {
             `[${node.label}] Expected node to represent instance keys ${JSON.stringify(props.instanceKeys)}, got ${JSON.stringify(node.key.instanceKeys)}`,
           );
         }
-        validateBaseNodeAttributes(node, props);
+        validateNonGroupingNodeAttributes(node, props);
       },
       children: props.children,
     };

@@ -3,8 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { filter, from, Observable, of } from "rxjs";
-import { ParentHierarchyNode } from "../HierarchyNode.js";
+import { filter, from, Observable } from "rxjs";
 import {
   DefineHierarchyLevelProps,
   HierarchyDefinition,
@@ -17,6 +16,7 @@ import {
   ProcessedInstanceHierarchyNode,
   SourceInstanceHierarchyNode,
 } from "../imodel/IModelHierarchyNode.js";
+import { fromPossiblyPromise } from "./Common.js";
 
 /**
  * A type for a function that parses a `SourceInstanceHierarchyNode` from provided ECSQL `row` object.
@@ -39,7 +39,7 @@ export type RxjsNodePreProcessor = <TNode extends ProcessedGenericHierarchyNode 
  *
  * @internal
  */
-export type RxjsNodePostProcessor = (node: ProcessedHierarchyNode, parentNode?: ParentHierarchyNode) => Observable<ProcessedHierarchyNode>;
+export type RxjsNodePostProcessor = (node: ProcessedHierarchyNode) => Observable<ProcessedHierarchyNode>;
 
 /**
  * An interface for a factory that knows how define a hierarchy based on a given parent node.
@@ -87,13 +87,13 @@ export function getRxjsHierarchyDefinition(hierarchyDefinition: HierarchyDefinit
     parseNode: hierarchyDefinition.parseNode
       ? (row, parentNode) => {
           const parsedNode = hierarchyDefinition.parseNode!(row, parentNode);
-          return parsedNode instanceof Promise ? from(parsedNode) : of(parsedNode);
+          return fromPossiblyPromise(parsedNode);
         }
       : undefined,
     preProcessNode: hierarchyDefinition.preProcessNode
       ? (node) => from(hierarchyDefinition.preProcessNode!(node)).pipe(filter((preprocessedNode) => !!preprocessedNode))
       : undefined,
-    postProcessNode: hierarchyDefinition.postProcessNode ? (node, parentNode) => from(hierarchyDefinition.postProcessNode!(node, parentNode)) : undefined,
+    postProcessNode: hierarchyDefinition.postProcessNode ? (node) => from(hierarchyDefinition.postProcessNode!(node)) : undefined,
     defineHierarchyLevel: (props) => from(hierarchyDefinition.defineHierarchyLevel(props)),
   };
 }

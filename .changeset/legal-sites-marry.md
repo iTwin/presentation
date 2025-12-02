@@ -2,16 +2,17 @@
 "@itwin/presentation-hierarchies": major
 ---
 
-Fixed `depthInHierarchy` setting `autoExpand` flag for non grouping nodes. This was happening when `depthInHierarchy` points to a grouping node that is between two non grouping nodes and the non grouping node is not a filter target.
+Fixed a bug where `HierarchyFilteringPathOptions.autoExpand.depthInHierarchy` would cause `HierarchyNode.autoExpand` flag to be present in non grouping nodes, when it shouldn't. This was happening when `HierarchyFilteringPathOptions.autoExpand.depthInHierarchy` points to a grouping node that has a child non-grouping node and the non-grouping node is not a filter target.
 
-To achieve this, `autoExpand` is now determined in post processing step.
+To fix this bug, `HierarchyNode.autoExpand` flag is now determined in post processing step.
 
 **API changes**
 
-Changed `NodePostProcessor` to now accept an optional second argument: `parentNode` of `ParentHierarchyNode` type.
+Added `isNonGroupingNode` to `HierarchyNode`, which checks whether the given node is a non-grouping node;
 
 **Breaking changes**
 
+- `BaseHierarchyNode` no longer contains `filtering` attribute. It was moved to `NonGroupingHierarchyNode` interface.
 - Changed return type of `createHierarchyFilteringHelper`:
   - Removed `createChildNodePropsAsync`.
   - Merged `createChildNodePropsAsync` into `createChildNodeProps`. Where `pathMatcher` prop from `createChildNodePropsAsync` was renamed to `asyncPathMatcher`.
