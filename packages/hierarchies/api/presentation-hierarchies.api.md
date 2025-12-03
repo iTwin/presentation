@@ -324,9 +324,6 @@ export namespace HierarchyNode {
         key: LabelGroupingNodeKey;
         supportsFiltering?: undefined;
     } & GroupingHierarchyNode;
-    export function isNonGroupingNode<TNode extends {
-        key: HierarchyNodeKey;
-    }>(node: TNode): node is TNode & NonGroupingHierarchyNode;
     export function isPropertyGroupingNode<TNode extends {
         key: HierarchyNodeKey;
     }>(node: TNode): node is TNode & {

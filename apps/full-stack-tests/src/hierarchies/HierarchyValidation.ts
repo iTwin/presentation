@@ -90,7 +90,7 @@ export namespace NodeValidators {
         )}, got ${optionalBooleanToString(node.supportsFiltering)}`,
       );
     }
-    if ("isFilterTarget" in expectations && expectations.isFilterTarget !== undefined && expectations.isFilterTarget !== !!node.filtering?.isFilterTarget) {
+    if (expectations.isFilterTarget !== undefined && expectations.isFilterTarget !== !!node.filtering?.isFilterTarget) {
       throw new Error(
         `[${node.label}] Expected node's \`filtering.isFilterTarget\` to be ${optionalBooleanToString(
           expectations.isFilterTarget,

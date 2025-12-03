@@ -134,10 +134,6 @@ export namespace HierarchyNode {
   export function isInstancesNode<TNode extends { key: HierarchyNodeKey }>(node: TNode): node is TNode & NonGroupingHierarchyNode & { key: InstancesNodeKey } {
     return HierarchyNodeKey.isInstances(node.key);
   }
-  /** Checks whether the given node is a non-grouping node */
-  export function isNonGroupingNode<TNode extends { key: HierarchyNodeKey }>(node: TNode): node is TNode & NonGroupingHierarchyNode {
-    return !HierarchyNodeKey.isGrouping(node.key);
-  }
   /** Checks whether the given node is a grouping node */
   export function isGroupingNode<TNode extends { key: HierarchyNodeKey }>(node: TNode): node is TNode & GroupingHierarchyNode {
     return HierarchyNodeKey.isGrouping(node.key);

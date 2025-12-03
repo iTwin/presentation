@@ -482,8 +482,7 @@ let rootFilter: Props<HierarchyProvider["setHierarchyFilter"]>;
 const hierarchyChanged = new BeEvent<EventListener<HierarchyProvider["hierarchyChanged"]>>();
 const provider: HierarchyProvider = {
   async *getNodes({ parentNode }) {
-    const filteringHelper =
-      !parentNode || HierarchyNode.isNonGroupingNode(parentNode) ? createHierarchyFilteringHelper(rootFilter?.paths, parentNode) : undefined;
+    const filteringHelper = !parentNode || HierarchyNode.isGeneric(parentNode) ? createHierarchyFilteringHelper(rootFilter?.paths, parentNode) : undefined;
     const targetNodeKeys = filteringHelper?.getChildNodeFilteringIdentifiers();
     if (!parentNode) {
       // For root nodes, query authors and return nodes based on them

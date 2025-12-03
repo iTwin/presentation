@@ -415,10 +415,10 @@ class MatchingFilteringPathsReducer {
           }
         : undefined),
       ...(parentKeys &&
-      getRevealAsTrueFalse({
+      shouldRevealNode({
         reveal: this._revealOption,
         nodePositionInHierarchy: parentKeys.length,
-        nodePositionInPath: { position: parentKeys.filter((key) => !HierarchyNodeKey.isGrouping(key)).length, type: "exact" },
+        nodePositionInPath: parentKeys.filter((key) => !HierarchyNodeKey.isGrouping(key)).length,
       })
         ? { autoExpand: true }
         : undefined),
@@ -427,13 +427,13 @@ class MatchingFilteringPathsReducer {
 }
 
 /** @internal */
-export function getRevealAsTrueFalse({
+export function shouldRevealNode({
   reveal,
   nodePositionInPath,
   nodePositionInHierarchy,
 }: {
   reveal: HierarchyFilteringPathOptions["reveal"];
-  nodePositionInPath: { position: number; type: "before" | "exact" };
+  nodePositionInPath: number;
   nodePositionInHierarchy: number;
 }): boolean {
   if (!reveal) {
@@ -445,5 +445,5 @@ export function getRevealAsTrueFalse({
   if ("depthInHierarchy" in reveal) {
     return nodePositionInHierarchy < reveal.depthInHierarchy;
   }
-  return nodePositionInPath.type === "exact" ? nodePositionInPath.position < reveal.depthInPath : nodePositionInPath.position - 1 < reveal.depthInPath;
+  return nodePositionInPath < reveal.depthInPath;
 }
