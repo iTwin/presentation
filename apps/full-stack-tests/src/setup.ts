@@ -7,9 +7,11 @@
 // setup chai
 import * as chai from "chai";
 import chaiJestSnapshot from "chai-jest-snapshot";
+import deepEqualInAnyOrder from "deep-equal-in-any-order";
 import sinonChai from "sinon-chai";
 chai.use(chaiJestSnapshot);
 chai.use(sinonChai);
+chai.use(deepEqualInAnyOrder);
 
 // get rid of various xhr errors in the console
 import globalJsdom from "global-jsdom";

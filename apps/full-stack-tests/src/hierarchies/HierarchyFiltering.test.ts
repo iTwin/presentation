@@ -1713,6 +1713,7 @@ describe("Hierarchies", () => {
           },
         });
         const provider3 = createProvider({
+          sourceName: "provider3",
           imodel: imodel2,
           hierarchy: {
             async defineHierarchyLevel({ parentNode }) {
@@ -1774,7 +1775,7 @@ describe("Hierarchies", () => {
           expect: [
             NodeValidators.createForInstanceNode({ instanceKeys: [testSubjectKey1] }),
             NodeValidators.createForInstanceNode({ instanceKeys: [testSubjectKey2] }),
-            NodeValidators.createForGenericNode({ key: { type: "generic", id: "gen", source: imodel2.key } }),
+            NodeValidators.createForGenericNode({ key: { type: "generic", id: "gen", source: "provider3" } }),
             NodeValidators.createForGenericNode({ key: { type: "generic", id: "gen", source: "custom-provider" } }),
           ],
         });
@@ -1787,7 +1788,7 @@ describe("Hierarchies", () => {
               paths: [
                 [testSubjectKey1],
                 [testSubjectKey2],
-                [{ type: "generic", id: "gen", source: imodel2.key }],
+                [{ type: "generic", id: "gen", source: "provider3" }],
                 [{ type: "generic", id: "gen", source: "custom-provider" }],
               ],
             },
@@ -1795,7 +1796,7 @@ describe("Hierarchies", () => {
           expect: [
             NodeValidators.createForInstanceNode({ instanceKeys: [testSubjectKey1] }),
             NodeValidators.createForInstanceNode({ instanceKeys: [testSubjectKey2] }),
-            NodeValidators.createForGenericNode({ key: { type: "generic", id: "gen", source: imodel2.key } }),
+            NodeValidators.createForGenericNode({ key: { type: "generic", id: "gen", source: "provider3" } }),
             NodeValidators.createForGenericNode({ key: { type: "generic", id: "gen", source: "custom-provider" } }),
           ],
         });
@@ -1823,10 +1824,10 @@ describe("Hierarchies", () => {
           provider: mergeAndFilterProviders({
             providers: [provider1, provider2, provider3, provider4],
             filterProps: {
-              paths: [[{ type: "generic", id: "gen", source: imodel2.key }]],
+              paths: [[{ type: "generic", id: "gen", source: "provider3" }]],
             },
           }),
-          expect: [NodeValidators.createForGenericNode({ key: { type: "generic", id: "gen", source: imodel2.key } })],
+          expect: [NodeValidators.createForGenericNode({ key: { type: "generic", id: "gen", source: "provider3" } })],
         });
         await validateHierarchy({
           provider: mergeAndFilterProviders({

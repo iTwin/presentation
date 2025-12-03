@@ -173,6 +173,9 @@ catalogs:
     '@types/chai-jest-snapshot':
       specifier: ^1.3.8
       version: 1.3.8
+    '@types/deep-equal-in-any-order':
+      specifier: ^1.0.4
+      version: 1.0.4
     '@types/jsdom':
       specifier: ^21.1.7
       version: 21.1.7
@@ -197,6 +200,9 @@ catalogs:
     chai-jest-snapshot:
       specifier: ^2.0.0
       version: 2.0.0
+    deep-equal-in-any-order:
+      specifier: ^2.1.0
+      version: 2.1.0
     global-jsdom:
       specifier: ^26.0.0
       version: 26.0.0
@@ -384,6 +390,9 @@ importers:
       '@types/cpx2':
         specifier: npm:@types/cpx@1.5.5
         version: '@types/cpx@1.5.5'
+      '@types/deep-equal-in-any-order':
+        specifier: catalog:test-tools
+        version: 1.0.4
       '@types/jsdom':
         specifier: catalog:test-tools
         version: 21.1.7
@@ -420,6 +429,9 @@ importers:
       cross-env:
         specifier: catalog:build-tools
         version: 7.0.3
+      deep-equal-in-any-order:
+        specifier: catalog:test-tools
+        version: 2.1.0
       eslint:
         specifier: catalog:build-tools
         version: 9.39.1
@@ -4374,6 +4386,9 @@ packages:
   '@types/deep-eql@4.0.2':
     resolution: {integrity: sha512-c9h9dVVMigMPc4bwTvC5dxqtqJZwQPePsWjPlpSOnojbor6pGqdk541lfA7AqFQr5pB1BRdq0juY9db81BwyFw==}
 
+  '@types/deep-equal-in-any-order@1.0.4':
+    resolution: {integrity: sha512-nkgl+KTkRWeybgMSBCrWrc1YHFrLADVxZ6Kllj40p9U499NGsCrFUjzgHgQY+Upsa/VWOc3YlsFEvhg+drUmkA==}
+
   '@types/estree@1.0.8':
     resolution: {integrity: sha512-dWHzHa2WqEXI/O1E9OjrocMTKJl2mSrEolh1Iomrv6U+JuNwaHXsXx9bLu5gG7BUWFIN0skIQJQ/L1rIex4X6w==}
 
@@ -5376,6 +5391,9 @@ packages:
   deep-eql@5.0.2:
     resolution: {integrity: sha512-h5k/5U50IJJFpzfL6nO9jaaumfjO/f2NjK/oYB2Djzm4p9L+3T9qWpZqZ2hAbLPuuYq9wrU08WQyBTL5GbPk5Q==}
     engines: {node: '>=6'}
+
+  deep-equal-in-any-order@2.1.0:
+    resolution: {integrity: sha512-9FklcFjcehm1yBWiOYtmazJOiMbT+v81Kq6nThIuXbWLWIZMX3ZI+QoLf7wCi0T8XzTAXf6XqEdEyVrjZkhbGA==}
 
   deep-extend@0.6.0:
     resolution: {integrity: sha512-LOHxIOaPYdHlJRtCQfDIVZtfw/ufM8+rVj649RIHzcm/vGwQRXFt6OPqIFWsm2XEMrNIEtWR64sY1LEKD2vAOA==}
@@ -6940,6 +6958,9 @@ packages:
   lodash.isstring@4.0.1:
     resolution: {integrity: sha512-0wJxfxH1wgO3GrbuP+dTTk7op+6L41QCXbGINEmD+ny/G/eCqGzxyCsh7159S+mgDDcoarnBw6PC1PS5+wUGgw==}
 
+  lodash.mapvalues@4.6.0:
+    resolution: {integrity: sha512-JPFqXFeZQ7BfS00H58kClY7SPVeHertPE0lNuCyZ26/XlN8TvakYD7b9bGyNmXbT/D3BbtPAAmq90gPWqLkxlQ==}
+
   lodash.merge@4.6.2:
     resolution: {integrity: sha512-0KpjqXRVvrYyCsX1swR/XTK0va6VQkQM6MNo7PqW77ByjAhoARA8EfrP1N4+KlKj8YS0ZUCtRT/YUuhyYDujIQ==}
 
@@ -8216,6 +8237,9 @@ packages:
   socks@2.8.7:
     resolution: {integrity: sha512-HLpt+uLy/pxB+bum/9DzAgiKS8CX1EvbWxI4zlmgGCExImLdiad2iCwXT5Z4c9c3Eq8rP2318mPW2c+QbtjK8A==}
     engines: {node: '>= 10.0.0', npm: '>= 3.0.0'}
+
+  sort-any@2.0.0:
+    resolution: {integrity: sha512-T9JoiDewQEmWcnmPn/s9h/PH9t3d/LSWi0RgVmXSuDYeZXTZOZ1/wrK2PHaptuR1VXe3clLLt0pD6sgVOwjNEA==}
 
   source-map-js@1.2.1:
     resolution: {integrity: sha512-UXWMKhLOwVKb728IUtQPXxfYU+usdybtUrK/8uGE8CQMvrhOpwvzDBwj0QhSL7MQc7vIsISBG8VQ8+IDQxpfQA==}
@@ -12846,6 +12870,8 @@ snapshots:
 
   '@types/deep-eql@4.0.2': {}
 
+  '@types/deep-equal-in-any-order@1.0.4': {}
+
   '@types/estree@1.0.8': {}
 
   '@types/geojson@7946.0.16': {}
@@ -14184,6 +14210,11 @@ snapshots:
       mimic-response: 3.1.0
 
   deep-eql@5.0.2: {}
+
+  deep-equal-in-any-order@2.1.0:
+    dependencies:
+      lodash.mapvalues: 4.6.0
+      sort-any: 2.0.0
 
   deep-extend@0.6.0: {}
 
@@ -16044,6 +16075,8 @@ snapshots:
 
   lodash.isstring@4.0.1: {}
 
+  lodash.mapvalues@4.6.0: {}
+
   lodash.merge@4.6.2: {}
 
   lodash.once@4.1.1: {}
@@ -17479,6 +17512,10 @@ snapshots:
     dependencies:
       ip-address: 10.1.0
       smart-buffer: 4.2.0
+
+  sort-any@2.0.0:
+    dependencies:
+      lodash: 4.17.21
 
   source-map-js@1.2.1: {}
 

@@ -58,7 +58,13 @@ export function createNodeIdentifierForLogging(
   }
   const { label, key } = node;
   const parentKeys = "parentKeys" in node ? node.parentKeys : "<unknown>";
-  return JSON.stringify({ label, key, parentKeys });
+  const groupedInstanceKeys =
+    "groupedInstanceKeys" in node && Array.isArray(node.groupedInstanceKeys)
+      ? node.groupedInstanceKeys.length <= 3
+        ? node.groupedInstanceKeys
+        : `<${node.groupedInstanceKeys.length} keys>`
+      : undefined;
+  return JSON.stringify({ label, key, parentKeys, groupedInstanceKeys });
 }
 /* c8 ignore end */
 

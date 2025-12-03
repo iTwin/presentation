@@ -4,6 +4,7 @@ public;interface;ClassGroupingNodeKey
 public;function;createHierarchyFilteringHelper
 public;function;createIModelHierarchyProvider
 public;function;createLimitingECSqlQueryExecutor
+alpha;function;createMergedIModelHierarchyProvider
 public;function;createNodesQueryClauseFactory
 public;function;createPredicateBasedHierarchyDefinition
 public;type;DefineGenericNodeChildHierarchyLevelProps
