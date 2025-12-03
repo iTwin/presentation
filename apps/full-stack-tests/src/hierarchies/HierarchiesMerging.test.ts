@@ -223,7 +223,7 @@ describe("Hierarchies", () => {
             ],
             createHierarchyDefinition: createHierarchyDefinitionFactory({
               schema: dbs.base.schema,
-              createGroupingParams: () => ({ byLabel: true }),
+              createYGroupingParams: () => ({ byLabel: true }),
             }),
           }),
           expect: [
@@ -332,7 +332,7 @@ describe("Hierarchies", () => {
             ],
             createHierarchyDefinition: createHierarchyDefinitionFactory({
               schema: dbs.base.schema,
-              createGroupingParams: () => ({ byLabel: { hideIfOneGroupedNode: true } }),
+              createYGroupingParams: () => ({ byLabel: { hideIfOneGroupedNode: true } }),
             }),
           }),
           expect: [
@@ -408,7 +408,7 @@ describe("Hierarchies", () => {
             ],
             createHierarchyDefinition: createHierarchyDefinitionFactory({
               schema: dbs.base.schema,
-              createGroupingParams: () => ({ byLabel: { hideIfNoSiblings: true } }),
+              createYGroupingParams: () => ({ byLabel: { hideIfNoSiblings: true } }),
             }),
           }),
           expect: [
@@ -477,7 +477,7 @@ describe("Hierarchies", () => {
             ],
             createHierarchyDefinition: createHierarchyDefinitionFactory({
               schema: dbs.base.schema,
-              createGroupingParams: (alias) => ({ byLabel: { groupId: { selector: `${alias}.PropY` } } }),
+              createYGroupingParams: (alias) => ({ byLabel: { groupId: { selector: `${alias}.PropY` } } }),
             }),
           }),
           expect: [
@@ -556,7 +556,7 @@ describe("Hierarchies", () => {
             ],
             createHierarchyDefinition: createHierarchyDefinitionFactory({
               schema: dbs.base.schema,
-              createGroupingParams: () => ({ byLabel: { action: "merge" } }),
+              createYGroupingParams: () => ({ byLabel: { action: "merge" } }),
             }),
           }),
           expect: [
@@ -621,7 +621,7 @@ describe("Hierarchies", () => {
             ],
             createHierarchyDefinition: createHierarchyDefinitionFactory({
               schema: dbs.base.schema,
-              createGroupingParams: () => ({ byClass: true }),
+              createYGroupingParams: () => ({ byClass: true }),
             }),
           }),
           expect: [
@@ -719,7 +719,7 @@ describe("Hierarchies", () => {
             ],
             createHierarchyDefinition: createHierarchyDefinitionFactory({
               schema: dbs.base.schema,
-              createGroupingParams: () => ({ byClass: { hideIfOneGroupedNode: true } }),
+              createYGroupingParams: () => ({ byClass: { hideIfOneGroupedNode: true } }),
             }),
           }),
           expect: [
@@ -791,7 +791,7 @@ describe("Hierarchies", () => {
             ],
             createHierarchyDefinition: createHierarchyDefinitionFactory({
               schema: dbs.base.schema,
-              createGroupingParams: () => ({ byClass: { hideIfNoSiblings: true } }),
+              createYGroupingParams: () => ({ byClass: { hideIfNoSiblings: true } }),
             }),
           }),
           expect: [
@@ -865,7 +865,7 @@ describe("Hierarchies", () => {
             ],
             createHierarchyDefinition: createHierarchyDefinitionFactory({
               schema: dbs.base.schema,
-              createGroupingParams: () => ({ byBaseClasses: { fullClassNames: [dbs.base.schema.items.Y.fullName] } }),
+              createYGroupingParams: () => ({ byBaseClasses: { fullClassNames: [dbs.base.schema.items.Y.fullName] } }),
             }),
           }),
           expect: [
@@ -963,7 +963,7 @@ describe("Hierarchies", () => {
             ],
             createHierarchyDefinition: createHierarchyDefinitionFactory({
               schema: dbs.base.schema,
-              createGroupingParams: () => ({ byBaseClasses: { fullClassNames: [dbs.base.schema.items.Y.fullName], hideIfOneGroupedNode: true } }),
+              createYGroupingParams: () => ({ byBaseClasses: { fullClassNames: [dbs.base.schema.items.Y.fullName], hideIfOneGroupedNode: true } }),
             }),
           }),
           expect: [
@@ -1035,7 +1035,7 @@ describe("Hierarchies", () => {
             ],
             createHierarchyDefinition: createHierarchyDefinitionFactory({
               schema: dbs.base.schema,
-              createGroupingParams: () => ({ byBaseClasses: { fullClassNames: [dbs.base.schema.items.Y.fullName], hideIfNoSiblings: true } }),
+              createYGroupingParams: () => ({ byBaseClasses: { fullClassNames: [dbs.base.schema.items.Y.fullName], hideIfNoSiblings: true } }),
             }),
           }),
           expect: [
@@ -1109,7 +1109,7 @@ describe("Hierarchies", () => {
             ],
             createHierarchyDefinition: createHierarchyDefinitionFactory({
               schema: dbs.base.schema,
-              createGroupingParams: (alias) => ({
+              createYGroupingParams: (alias) => ({
                 byProperties: {
                   propertiesClassName: dbs.base.schema.items.Y.fullName,
                   propertyGroups: [{ propertyClassAlias: alias, propertyName: "PropY" }],
@@ -1239,7 +1239,7 @@ describe("Hierarchies", () => {
             ],
             createHierarchyDefinition: createHierarchyDefinitionFactory({
               schema: dbs.base.schema,
-              createGroupingParams: (alias) => ({
+              createYGroupingParams: (alias) => ({
                 byProperties: {
                   propertiesClassName: dbs.base.schema.items.Y.fullName,
                   propertyGroups: [{ propertyClassAlias: alias, propertyName: "PropY" }],
@@ -1317,7 +1317,7 @@ describe("Hierarchies", () => {
             ],
             createHierarchyDefinition: createHierarchyDefinitionFactory({
               schema: dbs.base.schema,
-              createGroupingParams: (alias) => ({
+              createYGroupingParams: (alias) => ({
                 byProperties: {
                   propertiesClassName: dbs.base.schema.items.Y.fullName,
                   propertyGroups: [{ propertyClassAlias: alias, propertyName: "PropY" }],
@@ -1397,7 +1397,7 @@ describe("Hierarchies", () => {
             ],
             createHierarchyDefinition: createHierarchyDefinitionFactory({
               schema: dbs.base.schema,
-              createGroupingParams: (alias) => ({
+              createYGroupingParams: (alias) => ({
                 byProperties: {
                   propertiesClassName: dbs.base.schema.items.Y.fullName,
                   propertyGroups: [
@@ -1537,7 +1537,7 @@ describe("Hierarchies", () => {
             ],
             createHierarchyDefinition: createHierarchyDefinitionFactory({
               schema: dbs.base.schema,
-              createGroupingParams: (alias) => ({
+              createYGroupingParams: (alias) => ({
                 byProperties: {
                   propertiesClassName: dbs.base.schema.items.Y.fullName,
                   propertyGroups: [{ propertyClassAlias: alias, propertyName: "PropY", ranges: [{ fromValue: 100, toValue: 200 }] }],
@@ -1615,7 +1615,7 @@ describe("Hierarchies", () => {
             ],
             createHierarchyDefinition: createHierarchyDefinitionFactory({
               schema: dbs.base.schema,
-              createGroupingParams: (alias) => ({
+              createYGroupingParams: (alias) => ({
                 byProperties: {
                   propertiesClassName: dbs.base.schema.items.Y.fullName,
                   propertyGroups: [{ propertyClassAlias: alias, propertyName: "PropY", ranges: [{ fromValue: 100, toValue: 200 }] }],
@@ -1660,11 +1660,11 @@ describe("Hierarchies", () => {
 
 function createHierarchyDefinitionFactory({
   schema,
-  createGroupingParams,
+  createYGroupingParams,
   createGenericNodeForY,
 }: {
   schema: Awaited<ReturnType<typeof importSchema>>;
-  createGroupingParams?: (alias: string) => Props<NodesQueryClauseFactory["createSelectClause"]>["grouping"];
+  createYGroupingParams?: (alias: string) => Props<NodesQueryClauseFactory["createSelectClause"]>["grouping"];
   createGenericNodeForY?: boolean;
 }): Props<typeof createMergedHierarchyProvider>["createHierarchyDefinition"] {
   const classes = schema.items;
@@ -1699,7 +1699,7 @@ function createHierarchyDefinitionFactory({
               ecClassId: { selector: `this.ECClassId` },
               ecInstanceId: { selector: `this.ECInstanceId` },
               nodeLabel: { selector: "this.Label" },
-              grouping: createGroupingParams?.("this"),
+              grouping: createYGroupingParams?.("this"),
             })}
             FROM ${classes.Y.fullName} AS this
             JOIN ${classes.XY.fullName} AS xy ON xy.TargetECInstanceId = this.ECInstanceId
