@@ -8,7 +8,7 @@ import { collect, createAsyncIterator, ResolvablePromise, waitFor } from "presen
 import sinon from "sinon";
 import { BeEvent, omit } from "@itwin/core-bentley";
 import { GenericInstanceFilter } from "@itwin/core-common";
-import { EC, ECSqlQueryDef, ECSqlQueryReaderOptions, InstanceKey, Props, trimWhitespace, TypedPrimitiveValue } from "@itwin/presentation-shared";
+import { EC, ECSqlQueryDef, ECSqlQueryReaderOptions, InstanceKey, trimWhitespace, TypedPrimitiveValue } from "@itwin/presentation-shared";
 import { RowsLimitExceededError } from "../../hierarchies/HierarchyErrors.js";
 import { GroupingHierarchyNode, HierarchyNode, ParentHierarchyNode } from "../../hierarchies/HierarchyNode.js";
 import { GroupingNodeKey } from "../../hierarchies/HierarchyNodeKey.js";
@@ -16,7 +16,7 @@ import { ECSQL_COLUMN_NAME_FilterClassName, ECSQL_COLUMN_NAME_FilterECInstanceId
 import { DefineHierarchyLevelProps, HierarchyDefinition, NodeParser } from "../../hierarchies/imodel/IModelHierarchyDefinition.js";
 import { InstanceHierarchyNodeProcessingParams, ProcessedHierarchyNode, SourceInstanceHierarchyNode } from "../../hierarchies/imodel/IModelHierarchyNode.js";
 import {
-  IModelHierarchyProviderImpl,
+  createMergedIModelHierarchyProvider,
   createIModelHierarchyProvider as origCreateIModelHierarchyProvider,
 } from "../../hierarchies/imodel/IModelHierarchyProvider.js";
 import { LimitingECSqlQueryExecutor } from "../../hierarchies/imodel/LimitingECSqlQueryExecutor.js";
@@ -24,22 +24,7 @@ import { NodeSelectClauseColumnNames } from "../../hierarchies/imodel/NodeSelect
 import { RowDef } from "../../hierarchies/imodel/TreeNodesReader.js";
 import { createIModelAccessStub, createTestGenericNode, createTestGenericNodeKey, createTestInstanceKey, createTestSourceGenericNode } from "../Utils.js";
 
-function createIModelHierarchyProvider(props: Props<typeof origCreateIModelHierarchyProvider>) {
-  const { imodelAccess, imodelChanged, ...rest } = props;
-  return new IModelHierarchyProviderImpl({ ...rest, imodels: [{ imodelAccess, imodelChanged }] });
-}
-
 describe("createIModelHierarchyProvider", () => {
-  it("returns `IModelHierarchyProviderImpl`", () => {
-    using res = origCreateIModelHierarchyProvider({
-      hierarchyDefinition: {} as any,
-      imodelAccess: {} as any,
-    });
-    expect(res).to.be.instanceOf(IModelHierarchyProviderImpl);
-  });
-});
-
-describe("IModelHierarchyProviderImpl", () => {
   let imodelAccess: ReturnType<typeof createIModelAccessStub> & {
     createQueryReader: sinon.SinonStub<
       Parameters<LimitingECSqlQueryExecutor["createQueryReader"]>,
@@ -47,6 +32,14 @@ describe("IModelHierarchyProviderImpl", () => {
     >;
     imodelKey: string;
   };
+  const sourceName = "test-source-name";
+
+  const createIModelHierarchyProvider: typeof origCreateIModelHierarchyProvider = (props) =>
+    origCreateIModelHierarchyProvider({
+      ...props,
+      // @ts-expect-error: using non-exposed way to override source name
+      sourceName,
+    });
 
   beforeEach(() => {
     imodelAccess = {
@@ -58,18 +51,6 @@ describe("IModelHierarchyProviderImpl", () => {
 
   afterEach(() => {
     sinon.restore();
-  });
-
-  it("throws when given empty iModels list", () => {
-    expect(
-      () =>
-        new IModelHierarchyProviderImpl({
-          imodels: [],
-          hierarchyDefinition: {
-            defineHierarchyLevel: async () => [],
-          },
-        }),
-    ).to.throw("requires at least one iModel");
   });
 
   it("loads root generic nodes", async () => {
@@ -90,7 +71,7 @@ describe("IModelHierarchyProviderImpl", () => {
       },
     });
     const nodes = await collect(provider.getNodes({ parentNode: undefined }));
-    expect(nodes).to.deep.eq([{ ...node, key: createTestGenericNodeKey({ source: provider.sourceName }), parentKeys: [], children: false }]);
+    expect(nodes).to.deep.eq([{ ...node, key: createTestGenericNodeKey({ source: sourceName }), parentKeys: [], children: false }]);
   });
 
   it("loads root instance nodes", async () => {
@@ -157,7 +138,7 @@ describe("IModelHierarchyProviderImpl", () => {
     const nodes = await collect(provider.getNodes({ parentNode: rootNode }));
     const expectedChild = {
       ...childNode,
-      key: createTestGenericNodeKey({ id: "child", source: provider.sourceName }),
+      key: createTestGenericNodeKey({ id: "child", source: sourceName }),
       parentKeys: [rootNode.key],
       children: false,
     };
@@ -368,7 +349,7 @@ describe("IModelHierarchyProviderImpl", () => {
           },
         });
         const nodes = await collect(provider.getNodes({ parentNode: undefined }));
-        expect(preprocess).to.be.calledOnceWith({ ...node, key: createTestGenericNodeKey({ source: provider.sourceName }), parentKeys: [] });
+        expect(preprocess).to.be.calledOnceWith({ ...node, key: createTestGenericNodeKey({ source: sourceName }), parentKeys: [] });
         expect(nodes).to.deep.eq([]);
       });
 
@@ -407,7 +388,7 @@ describe("IModelHierarchyProviderImpl", () => {
         const nodes = await collect(provider.getNodes({ parentNode: undefined }));
         expect(postprocess).to.be.calledOnceWith({
           ...node,
-          key: createTestGenericNodeKey({ source: provider.sourceName }),
+          key: createTestGenericNodeKey({ source: sourceName }),
           parentKeys: [],
           children: false,
         });
@@ -522,8 +503,8 @@ describe("IModelHierarchyProviderImpl", () => {
       expect(rootNodes).to.deep.eq([
         {
           ...childNode,
-          key: createTestGenericNodeKey({ id: "visible child", source: provider.sourceName }),
-          parentKeys: [createTestGenericNodeKey({ id: "root", source: provider.sourceName })],
+          key: createTestGenericNodeKey({ id: "visible child", source: sourceName }),
+          parentKeys: [createTestGenericNodeKey({ id: "root", source: sourceName })],
           children: false,
         },
       ]);
@@ -554,18 +535,13 @@ describe("IModelHierarchyProviderImpl", () => {
         },
       });
       const rootNodes = await collect(provider.getNodes({ parentNode: undefined }));
-      expect(rootNodes).to.deep.eq([
-        { ...rootNode, key: createTestGenericNodeKey({ id: "root", source: provider.sourceName }), parentKeys: [], children: true },
-      ]);
+      expect(rootNodes).to.deep.eq([{ ...rootNode, key: createTestGenericNodeKey({ id: "root", source: sourceName }), parentKeys: [], children: true }]);
       const childNodes = await collect(provider.getNodes({ parentNode: rootNodes[0] }));
       expect(childNodes).to.deep.eq([
         {
           ...visibleChildNode,
-          key: createTestGenericNodeKey({ id: "visible child", source: provider.sourceName }),
-          parentKeys: [
-            createTestGenericNodeKey({ id: "root", source: provider.sourceName }),
-            createTestGenericNodeKey({ id: "hidden child", source: provider.sourceName }),
-          ],
+          key: createTestGenericNodeKey({ id: "visible child", source: sourceName }),
+          parentKeys: [createTestGenericNodeKey({ id: "root", source: sourceName }), createTestGenericNodeKey({ id: "hidden child", source: sourceName })],
           children: false,
         },
       ]);
@@ -600,9 +576,7 @@ describe("IModelHierarchyProviderImpl", () => {
         hierarchyDefinition,
       });
       const rootNodes = await collect(provider.getNodes({ parentNode: undefined }));
-      expect(rootNodes).to.deep.eq([
-        { ...rootNode, key: createTestGenericNodeKey({ id: "root", source: provider.sourceName }), parentKeys: [], children: true },
-      ]);
+      expect(rootNodes).to.deep.eq([{ ...rootNode, key: createTestGenericNodeKey({ id: "root", source: sourceName }), parentKeys: [], children: true }]);
       expect(hierarchyDefinition.defineHierarchyLevel).to.be.calledTwice;
       expect(hierarchyDefinition.defineHierarchyLevel.firstCall).to.be.calledWith({ parentNode: undefined });
       expect(hierarchyDefinition.defineHierarchyLevel.secondCall).to.be.calledWith({ parentNode: rootNodes[0] });
@@ -631,9 +605,7 @@ describe("IModelHierarchyProviderImpl", () => {
         },
       });
       const rootNodes = await collect(provider.getNodes({ parentNode: undefined }));
-      expect(rootNodes).to.deep.eq([
-        { ...rootNode, key: createTestGenericNodeKey({ id: "root", source: provider.sourceName }), parentKeys: [], children: false },
-      ]);
+      expect(rootNodes).to.deep.eq([{ ...rootNode, key: createTestGenericNodeKey({ id: "root", source: sourceName }), parentKeys: [], children: false }]);
       const childNodes = await collect(provider.getNodes({ parentNode: rootNodes[0] }));
       expect(childNodes).to.deep.eq([]);
     });
@@ -663,16 +635,14 @@ describe("IModelHierarchyProviderImpl", () => {
         },
       });
       const rootNodes = await collect(provider.getNodes({ parentNode: undefined }));
-      expect(rootNodes).to.deep.eq([
-        { ...rootNode, key: createTestGenericNodeKey({ id: "root", source: provider.sourceName }), parentKeys: [], children: true },
-      ]);
+      expect(rootNodes).to.deep.eq([{ ...rootNode, key: createTestGenericNodeKey({ id: "root", source: sourceName }), parentKeys: [], children: true }]);
       const childNodes = await collect(provider.getNodes({ parentNode: rootNodes[0] }));
       expect(childNodes).to.deep.eq([
         omit(
           {
             ...hiddenChildNode,
-            key: createTestGenericNodeKey({ id: "hidden child", source: provider.sourceName }),
-            parentKeys: [createTestGenericNodeKey({ id: "root", source: provider.sourceName })],
+            key: createTestGenericNodeKey({ id: "hidden child", source: sourceName }),
+            parentKeys: [createTestGenericNodeKey({ id: "root", source: sourceName })],
             children: true,
           },
           ["processingParams"],
@@ -682,11 +652,8 @@ describe("IModelHierarchyProviderImpl", () => {
       expect(grandChildNodes).to.deep.eq([
         {
           ...grandChildNode,
-          key: createTestGenericNodeKey({ id: "grand child", source: provider.sourceName }),
-          parentKeys: [
-            createTestGenericNodeKey({ id: "root", source: provider.sourceName }),
-            createTestGenericNodeKey({ id: "hidden child", source: provider.sourceName }),
-          ],
+          key: createTestGenericNodeKey({ id: "grand child", source: sourceName }),
+          parentKeys: [createTestGenericNodeKey({ id: "root", source: sourceName }), createTestGenericNodeKey({ id: "hidden child", source: sourceName })],
           children: false,
         },
       ]);
@@ -1085,7 +1052,7 @@ describe("IModelHierarchyProviderImpl", () => {
         },
       });
       const rootNodes = await collect(provider.getNodes({ parentNode: undefined, instanceFilter }));
-      expect(rootNodes).to.deep.eq([createTestGenericNode({ key: createTestGenericNodeKey({ id: "root", source: provider.sourceName }), children: true })]);
+      expect(rootNodes).to.deep.eq([createTestGenericNode({ key: createTestGenericNodeKey({ id: "root", source: sourceName }), children: true })]);
     });
   });
 
@@ -1519,7 +1486,7 @@ describe("IModelHierarchyProviderImpl", () => {
       });
 
       const rootNodes = await collect(provider.getNodes({ parentNode: undefined }));
-      expect(rootNodes).to.deep.eq([createTestGenericNode({ key: createTestGenericNodeKey({ id: "root", source: provider.sourceName }), children: true })]);
+      expect(rootNodes).to.deep.eq([createTestGenericNode({ key: createTestGenericNodeKey({ id: "root", source: sourceName }), children: true })]);
 
       await expect(provider.getNodes({ parentNode: rootNodes[0] }).next()).to.eventually.be.rejectedWith(RowsLimitExceededError);
     });
@@ -1928,5 +1895,18 @@ describe("IModelHierarchyProviderImpl", () => {
       provider.setFormatter(undefined);
       expect((await collect(provider.getNodes({ parentNode: undefined }))).map((n) => n.label)).to.deep.eq([node.label]);
     });
+  });
+});
+
+describe("createMergedIModelHierarchyProvider", () => {
+  it("throws when given empty iModels list", () => {
+    expect(() =>
+      createMergedIModelHierarchyProvider({
+        imodels: [],
+        hierarchyDefinition: {
+          defineHierarchyLevel: async () => [],
+        },
+      }),
+    ).to.throw("requires at least one iModel");
   });
 });

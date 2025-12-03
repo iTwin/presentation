@@ -46,6 +46,7 @@ export function createProvider(
     localizedStrings?: Props<typeof createIModelHierarchyProvider>["localizedStrings"];
     filteredNodePaths?: HierarchyFilteringPaths;
     queryCacheSize?: number;
+    sourceName?: string;
   },
 ) {
   const { imodelChanged, hierarchy, localizedStrings, filteredNodePaths, queryCacheSize } = props;
@@ -58,6 +59,8 @@ export function createProvider(
     localizedStrings,
     filtering: filteredNodePaths ? { paths: filteredNodePaths } : undefined,
     queryCacheSize: queryCacheSize ?? 0,
+    // @ts-expect-error: using non-exposed way to override source name
+    sourceName: props.sourceName,
   });
 }
 

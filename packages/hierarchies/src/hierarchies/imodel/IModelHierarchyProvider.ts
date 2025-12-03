@@ -221,8 +221,9 @@ interface RequestContextProp {
   };
 }
 
-/** @internal */
-export class IModelHierarchyProviderImpl implements HierarchyProvider {
+type WithSourceNameOverride<T> = T & { sourceName?: string };
+
+class IModelHierarchyProviderImpl implements HierarchyProvider {
   private _imodels: Array<{ imodelAccess: IModelAccess; imodelChanged?: Event<() => void> }>;
   private _hierarchyChanged: BeEvent<(args?: EventArgs<HierarchyProvider["hierarchyChanged"]>) => void>;
   private _valuesFormatter: IPrimitiveValueFormatter;
@@ -236,14 +237,17 @@ export class IModelHierarchyProviderImpl implements HierarchyProvider {
   private _dispose = new Subject<void>();
   #componentId: GuidString;
   #componentName: string;
+  #sourceName: string;
 
-  public constructor(props: MergedIModelHierarchyProviderProps) {
+  public constructor(props: WithSourceNameOverride<MergedIModelHierarchyProviderProps>) {
     if (props.imodels.length === 0) {
       throw new Error(`Creating an iModel hierarchy provider requires at least one iModel.`);
     }
 
     this.#componentId = Guid.createValue();
     this.#componentName = "IModelHierarchyProviderImpl";
+    /* c8 ignore next */
+    this.#sourceName = props.sourceName ?? `${this.#componentName}:${this.#componentId}`;
     this._imodels = props.imodels;
     this._hierarchyChanged = new BeEvent();
     this._activeHierarchyDefinition = this._sourceHierarchyDefinition = getRxjsHierarchyDefinition(props.hierarchyDefinition);
@@ -294,10 +298,6 @@ export class IModelHierarchyProviderImpl implements HierarchyProvider {
     this[Symbol.dispose]();
   }
 
-  public get sourceName() {
-    return `${this.#componentName}:${this.#componentId}`;
-  }
-
   public get hierarchyChanged() {
     return this._hierarchyChanged;
   }
@@ -344,6 +344,7 @@ export class IModelHierarchyProviderImpl implements HierarchyProvider {
     this._activeHierarchyDefinition = new FilteringHierarchyDefinition({
       imodelAccess: this.getPrimaryIModelAccess(),
       source: this._sourceHierarchyDefinition,
+      sourceName: this.#sourceName,
       nodeIdentifierPaths: props.paths,
     });
     this.invalidateHierarchyCache("Hierarchy filter set");
@@ -373,7 +374,7 @@ export class IModelHierarchyProviderImpl implements HierarchyProvider {
     return from(this._imodels).pipe(
       mergeMap(({ imodelAccess }, imodelAccessIndex) => {
         let parentNode = props.parentNode;
-        if (parentNode && HierarchyNode.isGeneric(parentNode) && parentNode.key.source && parentNode.key.source !== this.sourceName) {
+        if (parentNode && HierarchyNode.isGeneric(parentNode) && parentNode.key.source && parentNode.key.source !== this.#sourceName) {
           return EMPTY;
         }
         if (parentNode && HierarchyNode.isInstancesNode(parentNode)) {
@@ -420,7 +421,7 @@ export class IModelHierarchyProviderImpl implements HierarchyProvider {
           if (HierarchyNodesDefinition.isGenericNode(def)) {
             return of({
               ...def.node,
-              key: { type: "generic" as const, id: def.node.key, source: this.sourceName },
+              key: { type: "generic" as const, id: def.node.key, source: this.#sourceName },
             });
           }
           return this.getQueryScheduler(imodelAccess.imodelKey).scheduleSubscription(
@@ -724,7 +725,7 @@ export class IModelHierarchyProviderImpl implements HierarchyProvider {
           ({ hierarchyNodesDefinition }): GenericNodeKey => ({
             type: "generic",
             id: hierarchyNodesDefinition.node.key,
-            source: this.sourceName,
+            source: this.#sourceName,
           }),
         ),
       ),

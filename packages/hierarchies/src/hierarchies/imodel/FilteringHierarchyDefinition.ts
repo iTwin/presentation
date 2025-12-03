@@ -25,6 +25,7 @@ import { RxjsHierarchyDefinition, RxjsNodeParser, RxjsNodePostProcessor, RxjsNod
 interface FilteringHierarchyDefinitionProps {
   imodelAccess: ECClassHierarchyInspector & { imodelKey: string };
   source: RxjsHierarchyDefinition;
+  sourceName: string;
   nodeIdentifierPaths: HierarchyFilteringPath[];
   nodesParser?: RxjsNodeParser;
 }
@@ -35,10 +36,12 @@ export class FilteringHierarchyDefinition implements RxjsHierarchyDefinition {
   private _source: RxjsHierarchyDefinition;
   private _nodeIdentifierPaths: HierarchyFilteringPath[];
   private _nodesParser: RxjsNodeParser;
+  #sourceName: string;
 
   public constructor(props: FilteringHierarchyDefinitionProps) {
     this._imodelAccess = props.imodelAccess;
     this._source = props.source;
+    this.#sourceName = props.sourceName;
     this._nodeIdentifierPaths = props.nodeIdentifierPaths;
     this._nodesParser = props.nodesParser ?? this._source.parseNode ?? ((row) => of(defaultNodesParser(row)));
   }
@@ -134,7 +137,7 @@ export class FilteringHierarchyDefinition implements RxjsHierarchyDefinition {
             childNodeFilteringIdentifiers.some(
               (identifier) =>
                 HierarchyNodeIdentifier.isGenericNodeIdentifier(identifier) &&
-                (!identifier.source || identifier.source === this._imodelAccess.imodelKey) &&
+                (!identifier.source || identifier.source === this.#sourceName) &&
                 identifier.id === definition.node.key,
             )
           ) {
