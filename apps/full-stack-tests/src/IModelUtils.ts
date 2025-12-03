@@ -7,12 +7,12 @@ import { XMLParser } from "fast-xml-parser";
 import * as fs from "fs";
 import hash from "object-hash";
 import { getFullSchemaXml } from "presentation-test-utilities";
-import { ECDb, ECSqlWriteStatement, IModelDb } from "@itwin/core-backend";
+import { ECDb, ECDbOpenMode, ECSqlWriteStatement, IModelDb, IModelJsFs } from "@itwin/core-backend";
 import { BentleyError, DbResult, Guid, Id64, Id64String, OrderedId64Iterable } from "@itwin/core-bentley";
 import { IModelConnection } from "@itwin/core-frontend";
 import { Schema, SchemaContext, SchemaInfo, SchemaKey, SchemaMatchType } from "@itwin/ecschema-metadata";
 import { ECSchemaRpcLocater } from "@itwin/ecschema-rpcinterface-common";
-import { ECSqlBinding, parseFullClassName, PrimitiveValue } from "@itwin/presentation-shared";
+import { ECSqlBinding, InstanceKey, parseFullClassName, PrimitiveValue } from "@itwin/presentation-shared";
 import { buildTestIModel, createFileNameFromString, limitFilePathLength, setupOutputFileLocation, TestIModelBuilder } from "@itwin/presentation-testing";
 import { safeDispose } from "./Utils.js";
 
@@ -35,19 +35,9 @@ export class ECDbBuilder {
     this._ecdb.importSchema(schemaFilePath);
   }
 
-  private createInsertQuery(fullClassName: string, props?: { [propertyName: string]: ECSqlBinding | PrimitiveValue | undefined }) {
-    if (!props) {
-      props = { ecInstanceId: undefined };
-    }
-    const { schemaName, className } = parseFullClassName(fullClassName);
-    const clause = `
-      INSERT INTO [${schemaName}].[${className}] (${Object.keys(props).join(", ")})
-      VALUES (${Object.keys(props)
-        .map(() => "?")
-        .join(", ")})
-    `;
-    const binder = (stmt: ECSqlWriteStatement) => {
-      Object.values(props).forEach((value, i) => {
+  private createECSqlStatementBinder(values: { [propertyName: string]: ECSqlBinding | PrimitiveValue | undefined }) {
+    return (stmt: ECSqlWriteStatement) => {
+      Object.values(values).forEach((value, i) => {
         const bindingIndex = i + 1;
         switch (typeof value) {
           case "undefined":
@@ -113,24 +103,43 @@ export class ECDbBuilder {
         }
       });
     };
-    return { clause, binder };
+  }
+
+  private createInsertQuery(fullClassName: string, props?: { [propertyName: string]: ECSqlBinding | PrimitiveValue | undefined }) {
+    if (!props) {
+      props = { ecInstanceId: undefined };
+    }
+    const { schemaName, className } = parseFullClassName(fullClassName);
+    const clause = `
+      INSERT INTO [${schemaName}].[${className}] (${Object.keys(props).join(", ")})
+      VALUES (${Object.keys(props)
+        .map(() => "?")
+        .join(", ")})
+    `;
+    return { clause, binder: this.createECSqlStatementBinder(props) };
+  }
+
+  private createUpdateQuery(key: InstanceKey, props: { [propertyName: string]: ECSqlBinding | PrimitiveValue | undefined }) {
+    const { schemaName, className } = parseFullClassName(key.className);
+    const clause = `
+      UPDATE [${schemaName}].[${className}]
+      SET ${Object.keys(props)
+        .map((k) => `${k} = ?`)
+        .join(", ")}
+      WHERE ECInstanceId = ?
+    `;
+    return { clause, binder: this.createECSqlStatementBinder({ ...props, ecInstanceId: key.id }) };
   }
 
   public insertInstance(fullClassName: string, props?: { [propertyName: string]: PrimitiveValue | undefined }) {
     const query = this.createInsertQuery(fullClassName, props);
     return this._ecdb.withWriteStatement(query.clause, (stmt) => {
-      try {
-        query.binder(stmt);
-        const res = stmt.stepForInsert();
-        if (res.status !== DbResult.BE_SQLITE_DONE) {
-          throw new BentleyError(res.status, `Failed to insert instance of class "${fullClassName}". Query: ${query.clause}`);
-        }
-        return { className: fullClassName, id: res.id! };
-      } finally {
-        // https://github.com/iTwin/itwinjs-core/issues/8040
-        // eslint-disable-next-line @itwin/no-internal
-        stmt.stmt[Symbol.dispose]();
+      query.binder(stmt);
+      const res = stmt.stepForInsert();
+      if (res.status !== DbResult.BE_SQLITE_DONE) {
+        throw new BentleyError(res.status, `Failed to insert instance of class "${fullClassName}". Query: ${query.clause}`);
       }
+      return { className: fullClassName, id: res.id! };
     });
   }
 
@@ -141,19 +150,78 @@ export class ECDbBuilder {
       targetECInstanceId: targetId,
     });
     return this._ecdb.withWriteStatement(query.clause, (stmt) => {
-      try {
-        query.binder(stmt);
-        const res = stmt.stepForInsert();
-        if (res.status !== DbResult.BE_SQLITE_DONE) {
-          throw new BentleyError(res.status, `Failed to insert instance of relationship "${fullClassName}". Query: ${query.clause}`);
-        }
-        return { className: fullClassName, id: res.id! };
-      } finally {
-        // https://github.com/iTwin/itwinjs-core/issues/8040
-        // eslint-disable-next-line @itwin/no-internal
-        stmt.stmt[Symbol.dispose]();
+      query.binder(stmt);
+      const res = stmt.stepForInsert();
+      if (res.status !== DbResult.BE_SQLITE_DONE) {
+        throw new BentleyError(res.status, `Failed to insert instance of relationship "${fullClassName}". Query: ${query.clause}`);
+      }
+      return { className: fullClassName, id: res.id! };
+    });
+  }
+
+  public updateInstance(key: InstanceKey, props: { [propertyName: string]: PrimitiveValue | undefined }) {
+    const query = this.createUpdateQuery(key, props);
+    return this._ecdb.withWriteStatement(query.clause, (stmt) => {
+      query.binder(stmt);
+      const res = stmt.step();
+      if (res !== DbResult.BE_SQLITE_DONE) {
+        throw new BentleyError(res, `Failed to update instance of class "${key.className}", id: ${key.id}.`);
       }
     });
+  }
+
+  public deleteInstance(key: InstanceKey) {
+    const { schemaName, className } = parseFullClassName(key.className);
+    const clause = `
+      DELETE FROM [${schemaName}].[${className}] WHERE ECInstanceId = ?
+    `;
+    this._ecdb.withWriteStatement(clause, (stmt) => {
+      stmt.bindId(1, key.id);
+      const res = stmt.step();
+      if (res !== DbResult.BE_SQLITE_DONE) {
+        throw new BentleyError(res, `Failed to delete instance of class "${key.className}", id: ${key.id}.`);
+      }
+    });
+  }
+}
+
+export async function createECDb<TResult extends {}>(
+  mochaContextOrName: Mocha.Context | string,
+  setup: (db: ECDbBuilder) => Promise<TResult>,
+): Promise<TResult & { ecdb: ECDb; ecdbPath: string }> {
+  const name = createFileNameFromString(typeof mochaContextOrName === "string" ? mochaContextOrName : mochaContextOrName.test!.fullTitle());
+  const ecdbPath = setupOutputFileLocation(`${name}.bim`);
+  const ecdb = new ECDb();
+  ecdb.createDb(ecdbPath);
+  try {
+    const res = await setup(new ECDbBuilder(ecdb, ecdbPath));
+    return { ...res, ecdb, ecdbPath };
+  } catch (e) {
+    ecdb[Symbol.dispose]();
+    throw e;
+  } finally {
+    ecdb.saveChanges("Created test ECDb");
+  }
+}
+export async function cloneECDb<TResult extends {}>(
+  sourceECDbPath: string,
+  targetECDbName: string,
+  setup: (db: ECDbBuilder) => Promise<TResult>,
+): Promise<TResult & { ecdb: ECDb; ecdbPath: string }> {
+  const targetECDbPath = setupOutputFileLocation(`${targetECDbName}.bim`);
+  IModelJsFs.existsSync(targetECDbPath) && IModelJsFs.unlinkSync(targetECDbPath);
+  IModelJsFs.copySync(sourceECDbPath, targetECDbPath);
+
+  const ecdb = new ECDb();
+  ecdb.openDb(targetECDbPath, ECDbOpenMode.ReadWrite);
+  if (!ecdb.isOpen) {
+    throw new Error("Failed to open cloned ECDb");
+  }
+  try {
+    const res = await setup(new ECDbBuilder(ecdb, targetECDbPath));
+    return { ...res, ecdb, ecdbPath: targetECDbPath };
+  } finally {
+    ecdb.saveChanges("Updated cloned ECDb");
   }
 }
 

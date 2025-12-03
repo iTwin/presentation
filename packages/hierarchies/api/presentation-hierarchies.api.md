@@ -55,13 +55,13 @@ export function createHierarchyFilteringHelper(rootLevelFilteringProps: Hierarch
 };
 
 // @public
-export function createIModelHierarchyProvider(props: IModelHierarchyProviderProps): HierarchyProvider & {
-    dispose: () => void;
-    [Symbol.dispose]: () => void;
-};
+export function createIModelHierarchyProvider(props: IModelHierarchyProviderProps): HierarchyProvider & Disposable;
 
 // @public
 export function createLimitingECSqlQueryExecutor(baseExecutor: ECSqlQueryExecutor, defaultLimit: number | "unbounded"): LimitingECSqlQueryExecutor;
+
+// @alpha
+export function createMergedIModelHierarchyProvider(props: MergedIModelHierarchyProviderProps): HierarchyProvider & Disposable;
 
 // @public
 export function createNodesQueryClauseFactory(props: {
@@ -558,6 +558,14 @@ export interface LimitingECSqlQueryExecutor {
     }): ReturnType<ECSqlQueryExecutor["createQueryReader"]>;
 }
 
+// @alpha
+interface MergedIModelHierarchyProviderProps extends Omit<IModelHierarchyProviderProps, "imodelAccess" | "imodelChanged"> {
+    imodels: Array<{
+        imodelAccess: IModelAccess;
+        imodelChanged?: Event_2<() => void>;
+    }>;
+}
+
 // @public
 interface MergeHierarchyProvidersProps {
     providers: HierarchyProvider[];
@@ -565,7 +573,6 @@ interface MergeHierarchyProvidersProps {
 
 // @public
 export function mergeProviders({ providers }: MergeHierarchyProvidersProps): HierarchyProvider & {
-    dispose: () => void;
     [Symbol.dispose]: () => void;
 };
 

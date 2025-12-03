@@ -9,19 +9,18 @@ import { InstanceKey, TypedPrimitiveValue } from "../shared/Values.js";
 describe("InstanceKey", () => {
   describe("equals", () => {
     it("compares two keys", () => {
-      expect(InstanceKey.equals({ className: "a", id: "1" }, { className: "a", id: "1" })).to.be.true;
-      expect(InstanceKey.equals({ className: "a", id: "1" }, { className: "b", id: "2" })).to.be.false;
-      expect(InstanceKey.equals({ className: "a", id: "1" }, { className: "b", id: "1" })).to.be.false;
-      expect(InstanceKey.equals({ className: "a", id: "1" }, { className: "a", id: "2" })).to.be.false;
+      expect(InstanceKey.equals({ className: "s.a", id: "1" }, { className: "s.a", id: "1" })).to.be.true;
+      expect(InstanceKey.equals({ className: "s.a", id: "1" }, { className: "s.b", id: "2" })).to.be.false;
     });
   });
 
   describe("compare", () => {
     it("compares two keys", () => {
-      expect(InstanceKey.compare({ className: "a", id: "1" }, { className: "a", id: "1" })).to.eq(0);
-      expect(InstanceKey.compare({ className: "a", id: "1" }, { className: "b", id: "2" })).to.be.lessThan(0);
-      expect(InstanceKey.compare({ className: "a", id: "1" }, { className: "b", id: "1" })).to.be.lessThan(0);
-      expect(InstanceKey.compare({ className: "a", id: "1" }, { className: "a", id: "2" })).to.be.lessThan(0);
+      expect(InstanceKey.compare({ className: "s.a", id: "1" }, { className: "s.a", id: "1" })).to.eq(0);
+      expect(InstanceKey.compare({ className: "s.a", id: "1" }, { className: "S:A", id: "1" })).to.eq(0);
+      expect(InstanceKey.compare({ className: "s.a", id: "1" }, { className: "s.b", id: "2" })).to.be.lessThan(0);
+      expect(InstanceKey.compare({ className: "s.a", id: "1" }, { className: "s.b", id: "1" })).to.be.lessThan(0);
+      expect(InstanceKey.compare({ className: "s.a", id: "1" }, { className: "s.a", id: "2" })).to.be.lessThan(0);
     });
   });
 });

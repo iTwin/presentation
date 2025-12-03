@@ -1975,6 +1975,7 @@ async function createFilteringHierarchyDefinition(props?: {
   return new FilteringHierarchyDefinition({
     imodelAccess: imodelAccess ?? { classDerivesFrom: async () => false, imodelKey: "" },
     source: sourceFactory ?? ({} as unknown as RxjsHierarchyDefinition),
+    sourceName: "test-source-name",
     nodeIdentifierPaths: nodeIdentifierPaths ?? [],
     nodesParser: props?.nodesParser,
   });
