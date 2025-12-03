@@ -1841,6 +1841,7 @@ async function createChangedDbs<TResultBase extends {}, TResultChangeset1 extend
     [Symbol.dispose]() {
       base.ecdb[Symbol.dispose]();
       changeset1.ecdb[Symbol.dispose]();
+      changeset2?.ecdb[Symbol.dispose]();
     },
   };
 }
