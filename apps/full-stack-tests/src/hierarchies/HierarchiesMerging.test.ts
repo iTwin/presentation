@@ -543,12 +543,12 @@ describe("Hierarchies", () => {
           provider: createMergedHierarchyProvider({
             imodels: [
               {
-                // has Y node which is not grouped by class
+                // has one Y node with "y" label
                 ecdb: dbs.base.ecdb,
                 key: "base",
               },
               {
-                // has Z node
+                // has two Y nodes with "y" label - one from `base` and one that exists only in `changeset1`
                 ecdb: dbs.changeset1.ecdb,
                 key: "changeset1",
               },
