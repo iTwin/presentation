@@ -4,8 +4,6 @@
 
 Fixed a bug causing `HierarchyNode.autoExpand` flag to be set on non-grouping nodes, when `HierarchyFilteringPathOptions.autoExpand.depthInHierarchy` points to a grouping node whose child non-grouping node is not a filter target.
 
-To fix this bug, `HierarchyNode.autoExpand` flag is now determined in post processing step.
-
 **Breaking changes**
 
 - `BaseHierarchyNode` no longer contains `filtering` attribute. It was moved to `NonGroupingHierarchyNode` interface.
