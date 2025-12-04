@@ -6,6 +6,7 @@
 import "./DisposePolyfill.js";
 
 import naturalCompare from "natural-compare-lite";
+import { from, Observable, of } from "rxjs";
 import { ConcatenatedValue } from "@itwin/presentation-shared";
 import { HierarchyNodeKey } from "../HierarchyNodeKey.js";
 
@@ -92,4 +93,9 @@ export function safeDispose(disposable: {} | { [Symbol.dispose]: () => void } | 
   } else if (Symbol.dispose in disposable) {
     disposable[Symbol.dispose]();
   }
+}
+
+/** @internal */
+export function fromPossiblyPromise<T>(possiblyPromise: T | Promise<T>): Observable<T> {
+  return possiblyPromise instanceof Promise ? from(possiblyPromise) : of(possiblyPromise);
 }

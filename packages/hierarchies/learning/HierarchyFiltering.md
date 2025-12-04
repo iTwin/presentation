@@ -57,7 +57,7 @@ Imagine a case where we have this hierarchy:
 +--+ ...
 ```
 
-Let's say, we want the hierarchy to contain only the nodes with "C" label. In this case it may be useful to display to the user where exactly "C" node is located without showing all of its 100 children. This is possible to do by providing an additional `autoExpand` option to a filter path, which indicates that the hierarchy should be auto-expanded up to the target node. A `HierarchyProvider` would then set the `autoExpand` flag on the nodes that are part of the filtered hierarchy up to the target node, and the component that renders the hierarchy would make sure such nodes are expanded when the hierarchy is displayed. So the filtered and auto-expanded hierarchy would look like this:
+Let's say, we want the hierarchy to contain only the nodes with "C" label. In this case it may be useful to display to the user where exactly "C" node is located without showing all of its 100 children. This is possible to do by providing an additional `reveal` option to a filter path, which indicates that the hierarchy should be auto-expanded up to the target node. A `HierarchyProvider` would then set the `autoExpand` flag on the nodes that are part of the filtered hierarchy up to the target node, and the component that renders the hierarchy would make sure such nodes are expanded when the hierarchy is displayed. So the filtered and auto-expanded hierarchy would look like this:
 
 ```txt
 + A                       (auto-expanded)
@@ -80,15 +80,15 @@ const filteringPath: HierarchyFilteringPath = {
   path: [elementKeys.a, elementKeys.b, elementKeys.c],
   // Supply options for the filtering path
   options: {
-    // Auto-expand the hierarchy up to the target "C" node
-    autoExpand: true,
+    // Reveal the target "C" node in hierarchy by setting auto-expand flag on all its ancestor nodes
+    reveal: true,
   },
 };
 ```
 
 <!-- END EXTRACTION -->
 
-Additionally, you might not want to add `autoExpand` flag to every node in `HierarchyFilteringPath`. For such cases hierarchies may be expanded up to desired depth, which can be achieved by setting the `autoExpand` property to `{ depthInPath: number }`, where `depthInPath` represents instance's index in the `path` array:
+Additionally, you might not want to add `autoExpand` flag to every node in `HierarchyFilteringPath`. For such cases hierarchies may be expanded up to desired depth, which can be achieved by setting the `reveal` property to `{ depthInPath: number }`, where `depthInPath` represents instance's index in the `path` array:
 
 <!-- [[include: [Presentation.Hierarchies.HierarchyFiltering.HierarchyFilteringPathImport, Presentation.Hierarchies.HierarchyFiltering.AutoExpandUntilDepthInPath.FilteringPath], ts]] -->
 <!-- BEGIN EXTRACTION -->
@@ -96,19 +96,20 @@ Additionally, you might not want to add `autoExpand` flag to every node in `Hier
 ```ts
 import { HierarchyFilteringPath } from "@itwin/presentation-hierarchies";
 
+// Hierarchy has this structure: A -> label grouping node -> B -> label grouping node -> C.
 const filteringPath: HierarchyFilteringPath = {
   // Path to the element "C"
   path: [elementKeys.a, elementKeys.b, elementKeys.c],
   options: {
-    // Auto-expand the hierarchy up to the specified depth. In this case up to element "B"
-    autoExpand: { depthInPath: 2 },
+    // Reveal node "B" (index in filtering path equals `1`) in hierarchy by setting auto-expand flag on all its ancestors
+    reveal: { depthInPath: 1 },
   },
 };
 ```
 
 <!-- END EXTRACTION -->
 
-Also, hierarchies may contain grouping nodes, which don't represent anything by themselves, which means they can't be a filter target. In some cases it may be necessary to auto-expand the hierarchy up to a desired grouping node (and not auto-expand grouping nodes below them), which can be achieved by setting the `autoExpand` property to `{ depthInHierarchy: number }`, where depth represents grouping node depth in the hierarchy:
+Also, hierarchies may contain grouping nodes, which don't represent anything by themselves, which means they can't be a filter target. In some cases it may be necessary to auto-expand the hierarchy up to a desired grouping node (and not auto-expand grouping nodes below them), which can be achieved by setting the `reveal` property to `{ depthInHierarchy: number }`, where depth represents grouping node depth in the hierarchy:
 
 <!-- [[include: [Presentation.Hierarchies.HierarchyFiltering.HierarchyFilteringPathImport, Presentation.Hierarchies.HierarchyFiltering.AutoExpandUntilDepthInHierarchy.FilteringPath], ts]] -->
 <!-- BEGIN EXTRACTION -->
@@ -125,8 +126,9 @@ const filteringPath: HierarchyFilteringPath = {
   // Path to the element "C"
   path: [elementKeys.a, elementKeys.b, elementKeys.c],
   options: {
-    // Auto-expand the hierarchy up to the last grouping node. The `depthInHierarchy` attribute equals to the number of parents.
-    autoExpand: { depthInHierarchy: groupingNode.parentKeys.length },
+    // Reveal (set auto-expand flag for all nodes up to the specified depth) hierarchy up to (but not including) the last label grouping node.
+    // The `depthInHierarchy` attribute is the index of the last label grouping node. It is equal to the number of parents.
+    reveal: { depthInHierarchy: groupingNode.parentKeys.length },
   },
 };
 ```

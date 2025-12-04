@@ -28,7 +28,6 @@ interface BaseHierarchyNode {
     extendedData?: {
         [key: string]: any;
     };
-    filtering?: HierarchyNodeFilteringProps;
     label: string;
     parentKeys: HierarchyNodeKey[];
 }
@@ -40,18 +39,36 @@ export interface ClassGroupingNodeKey {
 }
 
 // @public
-export function createHierarchyFilteringHelper(rootLevelFilteringProps: HierarchyFilteringPath[] | undefined, parentNode: Pick<NonGroupingHierarchyNode, "filtering" | "parentKeys"> | undefined): {
+export function createHierarchyFilteringHelper(rootLevelFilteringProps: HierarchyFilteringPath[] | undefined, parentNode: Pick<NonGroupingHierarchyNode, "filtering"> | undefined): {
     hasFilter: boolean;
     hasFilterTargetAncestor: boolean;
     getChildNodeFilteringIdentifiers: () => HierarchyNodeIdentifier[] | undefined;
-    createChildNodeProps: (props: {
-        nodeKey: InstancesNodeKey | GenericNodeKey;
-    } | {
-        pathMatcher: (identifier: HierarchyNodeIdentifier) => boolean;
-    }) => Pick<HierarchyNode, "autoExpand" | "filtering"> | undefined;
-    createChildNodePropsAsync: (props: {
-        pathMatcher: (identifier: HierarchyNodeIdentifier) => boolean | Promise<boolean>;
-    }) => Promise<Pick<HierarchyNode, "autoExpand" | "filtering"> | undefined> | Pick<HierarchyNode, "autoExpand" | "filtering"> | undefined;
+    createChildNodeProps: {
+        (props: {
+            parentKeys?: undefined;
+            nodeKey: InstancesNodeKey | GenericNodeKey;
+        }): Pick<NonGroupingHierarchyNode, "filtering"> | undefined;
+        (props: {
+            parentKeys?: undefined;
+            pathMatcher: (identifier: HierarchyNodeIdentifier) => boolean;
+        }): Pick<NonGroupingHierarchyNode, "filtering"> | undefined;
+        (props: {
+            parentKeys?: undefined;
+            asyncPathMatcher: (identifier: HierarchyNodeIdentifier) => boolean | Promise<boolean>;
+        }): Promise<Pick<NonGroupingHierarchyNode, "filtering"> | undefined> | Pick<NonGroupingHierarchyNode, "filtering"> | undefined;
+        (props: {
+            parentKeys: HierarchyNodeKey[];
+            nodeKey: InstancesNodeKey | GenericNodeKey;
+        }): Pick<NonGroupingHierarchyNode, "filtering" | "autoExpand"> | undefined;
+        (props: {
+            parentKeys: HierarchyNodeKey[];
+            pathMatcher: (identifier: HierarchyNodeIdentifier) => boolean;
+        }): Pick<NonGroupingHierarchyNode, "filtering" | "autoExpand"> | undefined;
+        (props: {
+            parentKeys: HierarchyNodeKey[];
+            asyncPathMatcher: (identifier: HierarchyNodeIdentifier) => boolean | Promise<boolean>;
+        }): Promise<Pick<NonGroupingHierarchyNode, "filtering" | "autoExpand"> | undefined> | Pick<NonGroupingHierarchyNode, "filtering" | "autoExpand"> | undefined;
+    };
 };
 
 // @public
@@ -181,12 +198,12 @@ export function extractFilteringProps(rootLevelFilteringProps: HierarchyFilterin
 } | undefined;
 
 // @public (undocumented)
-interface FilteringPathAutoExpandDepthInHierarchy {
+interface FilteringPathRevealDepthInHierarchy {
     depthInHierarchy: number;
 }
 
 // @public (undocumented)
-interface FilteringPathAutoExpandDepthInPath {
+interface FilteringPathRevealDepthInPath {
     depthInPath: number;
 }
 
@@ -266,7 +283,7 @@ export namespace HierarchyFilteringPath {
 
 // @public (undocumented)
 export interface HierarchyFilteringPathOptions {
-    autoExpand?: boolean | FilteringPathAutoExpandDepthInHierarchy | FilteringPathAutoExpandDepthInPath;
+    reveal?: boolean | FilteringPathRevealDepthInHierarchy | FilteringPathRevealDepthInPath;
 }
 
 // @public
@@ -645,6 +662,7 @@ export interface NodesQueryClauseFactory {
 
 // @public
 export interface NonGroupingHierarchyNode extends BaseHierarchyNode {
+    filtering?: HierarchyNodeFilteringProps;
     key: GenericNodeKey | InstancesNodeKey;
     supportsFiltering?: boolean;
 }

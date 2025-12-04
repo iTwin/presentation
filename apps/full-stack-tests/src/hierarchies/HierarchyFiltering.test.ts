@@ -122,7 +122,7 @@ describe("Hierarchies", () => {
           provider: createProvider({
             imodel,
             hierarchy,
-            filteredNodePaths: [{ path: [keys.rootSubject, { type: "generic", id: "custom" }, keys.childSubject2], options: { autoExpand: true } }],
+            filteredNodePaths: [{ path: [keys.rootSubject, { type: "generic", id: "custom" }, keys.childSubject2], options: { reveal: true } }],
           }),
           expect: [
             NodeValidators.createForInstanceNode({
@@ -205,7 +205,7 @@ describe("Hierarchies", () => {
           provider: createProvider({
             imodel,
             hierarchy,
-            filteredNodePaths: [{ path: [keys.rootSubject, { type: "generic", id: "custom2" }], options: { autoExpand: true } }],
+            filteredNodePaths: [{ path: [keys.rootSubject, { type: "generic", id: "custom2" }], options: { reveal: true } }],
           }),
           expect: [
             NodeValidators.createForInstanceNode({
@@ -284,14 +284,14 @@ describe("Hierarchies", () => {
             imodel,
             hierarchy,
             filteredNodePaths: [
-              { path: [{ type: "generic", id: "custom2" }], options: { autoExpand: true } },
+              { path: [{ type: "generic", id: "custom2" }], options: { reveal: true } },
               {
                 path: [
                   { type: "generic", id: "custom2" },
                   { type: "generic", id: "custom22" },
                   { type: "generic", id: "custom222" },
                 ],
-                options: { autoExpand: true },
+                options: { reveal: true },
               },
             ],
           }),
@@ -332,6 +332,120 @@ describe("Hierarchies", () => {
     });
 
     describe("instance nodes", () => {
+      it("sets auto-expand flag up to depthInHierarchy", async function () {
+        const { imodel, ...keys } = await buildIModel(this, async (builder) => {
+          const rootSubject = { className: subjectClassName, id: IModel.rootSubjectId };
+          const childSubject1 = insertSubject({ builder, codeValue: "test subject 1", parentId: rootSubject.id });
+          const childSubject21 = insertSubject({ builder, codeValue: "test subject 2.1", parentId: rootSubject.id });
+          const childSubject22 = insertSubject({ builder, codeValue: "test subject 2.2", parentId: rootSubject.id });
+          const childSubject3 = insertSubject({ builder, codeValue: "test subject 3", parentId: rootSubject.id });
+          return { rootSubject, childSubject1, childSubject21, childSubject22, childSubject3 };
+        });
+        const imodelAccess = createIModelAccess(imodel);
+        const selectQueryFactory = createNodesQueryClauseFactory({
+          imodelAccess,
+          instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
+        });
+        const createHierarchyLevelDefinition = async (whereClause: (alias: string) => string) => {
+          return [
+            {
+              fullClassName: subjectClassName,
+              query: {
+                ecsql: `
+                  SELECT ${await selectQueryFactory.createSelectClause({
+                    ecClassId: { selector: `this.ECClassId` },
+                    ecInstanceId: { selector: `this.ECInstanceId` },
+                    nodeLabel: { selector: `this.CodeValue` },
+                    grouping: { byClass: true, byLabel: true },
+                  })}
+                  FROM ${subjectClassName} AS this
+                  ${whereClause("this")}
+                `,
+              },
+            },
+          ];
+        };
+
+        const hierarchy: HierarchyDefinition = {
+          async defineHierarchyLevel({ parentNode }) {
+            if (!parentNode) {
+              return createHierarchyLevelDefinition((alias: string) => `WHERE ${alias}.ECInstanceId = ${keys.childSubject1.id}`);
+            }
+            if (HierarchyNode.isInstancesNode(parentNode) && parentNode.label === "test subject 1") {
+              return createHierarchyLevelDefinition((alias: string) => `WHERE ${alias}.ECInstanceId IN (${keys.childSubject21.id}, ${keys.childSubject22.id})`);
+            }
+            if (HierarchyNode.isInstancesNode(parentNode) && parentNode.label === "test subject 2.1") {
+              return createHierarchyLevelDefinition((alias: string) => `WHERE ${alias}.ECInstanceId = ${keys.childSubject3.id}`);
+            }
+            return [];
+          },
+        };
+
+        await validateHierarchy({
+          provider: createProvider({
+            imodel,
+            hierarchy,
+            filteredNodePaths: [{ path: [keys.childSubject1, keys.childSubject21, keys.childSubject3], options: { reveal: { depthInHierarchy: 4 } } }],
+          }),
+          expect: [
+            NodeValidators.createForClassGroupingNode({
+              autoExpand: true,
+              className: keys.childSubject1.className,
+              children: [
+                NodeValidators.createForLabelGroupingNode({
+                  autoExpand: true,
+                  label: "test subject 1",
+                  children: [
+                    NodeValidators.createForInstanceNode({
+                      instanceKeys: [keys.childSubject1],
+                      autoExpand: true,
+                      children: [
+                        NodeValidators.createForClassGroupingNode({
+                          autoExpand: true,
+                          className: keys.childSubject21.className,
+                          children: [
+                            NodeValidators.createForLabelGroupingNode({
+                              autoExpand: false,
+                              label: "test subject 2.1",
+                              children: [
+                                NodeValidators.createForInstanceNode({
+                                  instanceKeys: [keys.childSubject21],
+                                  autoExpand: false,
+                                  children: [
+                                    NodeValidators.createForClassGroupingNode({
+                                      autoExpand: false,
+                                      className: keys.childSubject21.className,
+                                      children: [
+                                        NodeValidators.createForLabelGroupingNode({
+                                          autoExpand: false,
+                                          label: "test subject 3",
+                                          children: [
+                                            NodeValidators.createForInstanceNode({
+                                              instanceKeys: [keys.childSubject3],
+                                              isFilterTarget: true,
+                                              children: false,
+                                              autoExpand: false,
+                                            }),
+                                          ],
+                                        }),
+                                      ],
+                                    }),
+                                  ],
+                                }),
+                              ],
+                            }),
+                          ],
+                        }),
+                      ],
+                    }),
+                  ],
+                }),
+              ],
+            }),
+          ],
+        });
+      });
+
       it("filters through instance nodes that are in multiple paths", async function () {
         const { imodel, ...keys } = await buildIModel(this, async (builder) => {
           const rootSubject = { className: subjectClassName, id: IModel.rootSubjectId };
@@ -388,8 +502,8 @@ describe("Hierarchies", () => {
             imodel,
             hierarchy,
             filteredNodePaths: [
-              { path: [keys.childSubject1, keys.childSubject3], options: { autoExpand: true } },
-              { path: [keys.childSubject4, keys.childSubject1, keys.childSubject2], options: { autoExpand: true } },
+              { path: [keys.childSubject1, keys.childSubject3], options: { reveal: true } },
+              { path: [keys.childSubject4, keys.childSubject1, keys.childSubject2], options: { reveal: true } },
             ],
           }),
           expect: [
@@ -481,8 +595,8 @@ describe("Hierarchies", () => {
             imodel,
             hierarchy,
             filteredNodePaths: [
-              { path: [keys.childSubject2], options: { autoExpand: true } },
-              { path: [keys.childSubject2, keys.childSubject22, keys.childSubject222], options: { autoExpand: true } },
+              { path: [keys.childSubject2], options: { reveal: true } },
+              { path: [keys.childSubject2, keys.childSubject22, keys.childSubject222], options: { reveal: true } },
             ],
           }),
           expect: [
@@ -600,7 +714,7 @@ describe("Hierarchies", () => {
           provider: createProvider({
             imodel,
             hierarchy,
-            filteredNodePaths: [{ path: [keys.rootSubject, { type: "generic", id: "custom" }, keys.childSubject2], options: { autoExpand: true } }],
+            filteredNodePaths: [{ path: [keys.rootSubject, { type: "generic", id: "custom" }, keys.childSubject2], options: { reveal: true } }],
           }),
           expect: [
             NodeValidators.createForInstanceNode({
@@ -877,8 +991,8 @@ describe("Hierarchies", () => {
                 imodel,
                 hierarchy,
                 filteredNodePaths: [
-                  { path: [x], options: { autoExpand: true } },
-                  { path: [x, y], options: { autoExpand: true } },
+                  { path: [x], options: { reveal: true } },
+                  { path: [x, y], options: { reveal: true } },
                 ],
               }),
               expect: [
@@ -972,8 +1086,8 @@ describe("Hierarchies", () => {
                 imodel,
                 hierarchy,
                 filteredNodePaths: [
-                  { path: [x], options: { autoExpand: true } },
-                  { path: [x, y1], options: { autoExpand: true } },
+                  { path: [x], options: { reveal: true } },
+                  { path: [x, y1], options: { reveal: true } },
                 ],
               }),
               expect: [
@@ -1048,7 +1162,7 @@ describe("Hierarchies", () => {
             filteredNodePaths: keys.elements.map((elementKey) => ({
               path: [rootNodeKey, elementKey],
               options: {
-                autoExpand: {
+                reveal: {
                   depthInHierarchy: 1,
                 },
               },
@@ -1121,7 +1235,7 @@ describe("Hierarchies", () => {
               {
                 path: [rootNodeKey, keys.rootElement, keys.middleElement, keys.childElement],
                 options: {
-                  autoExpand: {
+                  reveal: {
                     depthInHierarchy: 5, // root node + (grouping node and instance node for root and middle elements),
                   },
                 },
@@ -1217,11 +1331,11 @@ describe("Hierarchies", () => {
             imodel,
             hierarchy,
             filteredNodePaths: [
-              { path: [rootNodeKey, keys.elements[0]], options: { autoExpand: true } },
+              { path: [rootNodeKey, keys.elements[0]], options: { reveal: true } },
               ...keys.elements.map((elementKey) => ({
                 path: [rootNodeKey, elementKey],
                 options: {
-                  autoExpand: {
+                  reveal: {
                     depthInPath: 1,
                   },
                 },
@@ -1330,7 +1444,7 @@ describe("Hierarchies", () => {
         });
 
         it("sets auto-expand flag until class grouping node", async () => {
-          const autoExpandOptions = {
+          const revealOptions = {
             depthInHierarchy: 1,
           };
           await validateHierarchy({
@@ -1340,7 +1454,7 @@ describe("Hierarchies", () => {
               filteredNodePaths: [
                 {
                   path: [rootNodeKey, elementKey],
-                  options: { autoExpand: autoExpandOptions },
+                  options: { reveal: revealOptions },
                 },
               ],
             }),
@@ -1363,8 +1477,8 @@ describe("Hierarchies", () => {
                             children: [
                               NodeValidators.createForInstanceNode({
                                 instanceKeys: [elementKey],
-                                isFilterTarget: !!autoExpandOptions,
-                                filterTargetOptions: { autoExpand: autoExpandOptions },
+                                isFilterTarget: !!revealOptions,
+                                filterTargetOptions: { reveal: revealOptions },
                               }),
                             ],
                           }),
@@ -1379,7 +1493,7 @@ describe("Hierarchies", () => {
         });
 
         it("sets auto-expand flag until property grouping node", async () => {
-          const autoExpandOptions = {
+          const revealOptions = {
             depthInHierarchy: 2,
           } as const;
           await validateHierarchy({
@@ -1389,7 +1503,7 @@ describe("Hierarchies", () => {
               filteredNodePaths: [
                 {
                   path: [rootNodeKey, elementKey],
-                  options: { autoExpand: autoExpandOptions },
+                  options: { reveal: revealOptions },
                 },
               ],
             }),
@@ -1413,7 +1527,7 @@ describe("Hierarchies", () => {
                               NodeValidators.createForInstanceNode({
                                 instanceKeys: [elementKey],
                                 isFilterTarget: true,
-                                filterTargetOptions: { autoExpand: autoExpandOptions },
+                                filterTargetOptions: { reveal: revealOptions },
                               }),
                             ],
                           }),
@@ -1428,7 +1542,7 @@ describe("Hierarchies", () => {
         });
 
         it("sets auto-expand flag until label grouping node", async () => {
-          const autoExpandOptions = {
+          const revealOptions = {
             depthInHierarchy: 3,
           };
           await validateHierarchy({
@@ -1438,7 +1552,7 @@ describe("Hierarchies", () => {
               filteredNodePaths: [
                 {
                   path: [rootNodeKey, elementKey],
-                  options: { autoExpand: autoExpandOptions },
+                  options: { reveal: revealOptions },
                 },
               ],
             }),
@@ -1462,7 +1576,7 @@ describe("Hierarchies", () => {
                               NodeValidators.createForInstanceNode({
                                 instanceKeys: [elementKey],
                                 isFilterTarget: true,
-                                filterTargetOptions: { autoExpand: autoExpandOptions },
+                                filterTargetOptions: { reveal: revealOptions },
                               }),
                             ],
                           }),
@@ -1484,7 +1598,7 @@ describe("Hierarchies", () => {
               filteredNodePaths: [
                 {
                   path: [rootNodeKey, elementKey],
-                  options: { autoExpand: true },
+                  options: { reveal: true },
                 },
               ],
             }),
@@ -1829,7 +1943,7 @@ describe("Hierarchies", () => {
               }
               const nodeMatchesFilter = filteringHelper.getChildNodeFilteringIdentifiers()?.some((id) => HierarchyNodeIdentifier.equal(id, myNode.key));
               if (nodeMatchesFilter) {
-                return createAsyncIterator([{ ...myNode, ...filteringHelper.createChildNodeProps({ nodeKey: myNode.key }) }]);
+                return createAsyncIterator([{ ...myNode, ...filteringHelper.createChildNodeProps({ nodeKey: myNode.key, parentKeys: myNode.parentKeys }) }]);
               }
             }
             return createAsyncIterator([]);

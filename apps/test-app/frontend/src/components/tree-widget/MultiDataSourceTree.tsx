@@ -375,7 +375,7 @@ async function* getModelsFilteringPaths({
         ...path.reverse().map((k) => ({ ...k, imodelKey: imodelAccess.imodelKey })),
       ],
       options: {
-        autoExpand: true,
+        reveal: true,
       },
     };
   }
@@ -463,7 +463,7 @@ function createRssHierarchyProvider(): HierarchyProvider & { getFilteredPaths: (
         }
       });
 
-      return paths.map((path) => ({ path, options: { autoExpand: true } }));
+      return paths.map((path) => ({ path, options: { reveal: true } }));
     },
 
     async *getNodes({ parentNode }: GetHierarchyNodesProps): AsyncIterableIterator<HierarchyNode> {
@@ -503,9 +503,9 @@ function createRssHierarchyProvider(): HierarchyProvider & { getFilteredPaths: (
           }
         }
       }
+      const filteringHelper = !parentNode || HierarchyNode.isGeneric(parentNode) ? createHierarchyFilteringHelper(filter, parentNode) : undefined;
 
-      const filteringHelper = createHierarchyFilteringHelper(filter, parentNode);
-      if (!filteringHelper.hasFilter) {
+      if (!filteringHelper?.hasFilter) {
         yield* generateNodes();
         return;
       }
@@ -515,7 +515,7 @@ function createRssHierarchyProvider(): HierarchyProvider & { getFilteredPaths: (
         if (targetNodeKeys.some((target) => HierarchyNodeIdentifier.equal(target, node.key))) {
           yield {
             ...node,
-            ...filteringHelper.createChildNodeProps({ nodeKey: node.key }),
+            ...filteringHelper.createChildNodeProps({ nodeKey: node.key, parentKeys: node.parentKeys }),
           };
         }
       }
