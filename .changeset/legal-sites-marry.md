@@ -2,7 +2,7 @@
 "@itwin/presentation-hierarchies": major
 ---
 
-Fixed a bug where `HierarchyFilteringPathOptions.autoExpand.depthInHierarchy` would cause `HierarchyNode.autoExpand` flag to be present in non grouping nodes, when it shouldn't. This was happening when `HierarchyFilteringPathOptions.autoExpand.depthInHierarchy` points to a grouping node that has a child non-grouping node and the non-grouping node is not a filter target.
+Fixed a bug causing `HierarchyNode.autoExpand` flag to be set on non-grouping nodes, when `HierarchyFilteringPathOptions.autoExpand.depthInHierarchy` points to a grouping node whose child non-grouping node is not a filter target.
 
 To fix this bug, `HierarchyNode.autoExpand` flag is now determined in post processing step.
 
