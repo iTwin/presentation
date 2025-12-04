@@ -29,5 +29,22 @@ describe("HierarchyFilteringPath", () => {
         }
       });
     });
+    describe("autoExpandFilterTarget", () => {
+      const optionsInOrderOfPriority: Array<HierarchyFilteringPathOptions | undefined> = [
+        { autoExpandFilterTarget: true },
+        { autoExpandFilterTarget: false },
+        undefined,
+      ];
+
+      it("returns correct result for different autoExpandFilterTarget options", () => {
+        for (let i = 0; i < optionsInOrderOfPriority.length; ++i) {
+          for (let j = 0; j < optionsInOrderOfPriority.length; ++j) {
+            expect(HierarchyFilteringPath.mergeOptions(optionsInOrderOfPriority[i], optionsInOrderOfPriority[j])).to.deep.eq(
+              i < j ? optionsInOrderOfPriority[i] : optionsInOrderOfPriority[j],
+            );
+          }
+        }
+      });
+    });
   });
 });

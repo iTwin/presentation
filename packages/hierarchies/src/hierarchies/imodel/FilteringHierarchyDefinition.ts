@@ -65,17 +65,20 @@ export class FilteringHierarchyDefinition implements RxjsHierarchyDefinition {
     return (node) => {
       return (this._source.postProcessNode ? this._source.postProcessNode(node) : of(node)).pipe(
         map((processedNode) => {
+          const parentKeysWithoutGroupingNodesLength = processedNode.parentKeys.filter((key) => !HierarchyNodeKey.isGrouping(key)).length;
+          const parentKeysLength = processedNode.parentKeys.length;
           const shouldReveal = ProcessedHierarchyNode.isGroupingNode(processedNode)
             ? shouldRevealGroupingNodeBasedOnNestedChildren({
                 directOrIndirectChildren: processedNode.children,
-                parentKeysWithoutGroupingNodesLength: processedNode.parentKeys.filter((key) => !HierarchyNodeKey.isGrouping(key)).length,
-                parentKeysLength: processedNode.parentKeys.length,
+                parentKeysWithoutGroupingNodesLength,
+                parentKeysLength,
               })
-            : processedNode.filtering?.filteredChildrenIdentifierPaths?.some((path) =>
+            : (processedNode.filtering?.isFilterTarget && !!processedNode.filtering.filterTargetOptions?.autoExpandFilterTarget) ||
+              processedNode.filtering?.filteredChildrenIdentifierPaths?.some((path) =>
                 shouldRevealNode({
                   reveal: HierarchyFilteringPath.normalize(path).options?.reveal,
-                  nodePositionInPath: processedNode.parentKeys.filter((key) => !HierarchyNodeKey.isGrouping(key)).length,
-                  nodePositionInHierarchy: processedNode.parentKeys.length,
+                  nodePositionInPath: parentKeysWithoutGroupingNodesLength,
+                  nodePositionInHierarchy: parentKeysLength,
                 }),
               );
           if (shouldReveal) {

@@ -88,6 +88,28 @@ const filteringPath: HierarchyFilteringPath = {
 
 <!-- END EXTRACTION -->
 
+There is also an option to expand filter targets, this can be achieved by setting `autoExpandFilterTarget` flag:
+
+<!-- [[include: [Presentation.Hierarchies.HierarchyFiltering.HierarchyFilteringPathImport, Presentation.Hierarchies.HierarchyFiltering.AutoExpandFilterTarget.FilteringPath], ts]] -->
+<!-- BEGIN EXTRACTION -->
+
+```ts
+import { HierarchyFilteringPath } from "@itwin/presentation-hierarchies";
+
+const filteringPath: HierarchyFilteringPath = {
+  // Path to the element "C"
+  path: [elementKeys.a, elementKeys.b, elementKeys.c],
+  options: {
+    // Auto-expand all nodes up to element "C".
+    reveal: true,
+    // Auto-expand the filter target ("C" node) as well.
+    autoExpandFilterTarget: true,
+  },
+};
+```
+
+<!-- END EXTRACTION -->
+
 Additionally, you might not want to add `autoExpand` flag to every node in `HierarchyFilteringPath`. For such cases hierarchies may be expanded up to desired depth, which can be achieved by setting the `reveal` property to `{ depthInPath: number }`, where `depthInPath` represents instance's index in the `path` array:
 
 <!-- [[include: [Presentation.Hierarchies.HierarchyFiltering.HierarchyFilteringPathImport, Presentation.Hierarchies.HierarchyFiltering.AutoExpandUntilDepthInPath.FilteringPath], ts]] -->

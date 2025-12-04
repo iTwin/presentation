@@ -65,6 +65,14 @@ export interface HierarchyFilteringPathOptions {
    * - If it's an instance of `FilteringPathRevealDepthInHierarchy`, then all nodes up to `depthInHierarchy` will have `autoExpand` flag.
    */
   reveal?: boolean | FilteringPathRevealDepthInHierarchy | FilteringPathRevealDepthInPath;
+  /**
+   * This option specifies whether or not filter target should be expanded.
+   * - If it's `false` or `undefined`, filter target won't have 'autoExpand' flag.
+   * - If it's `true`, filter target will have `autoExpand` flag.
+   *
+   * **NOTE**: this attribute does not set `autoExpand` flag on nodes up to the filter target. For that use `reveal`.
+   */
+  autoExpandFilterTarget?: boolean;
 }
 
 namespace HierarchyFilteringPathOptions {
@@ -94,6 +102,16 @@ namespace HierarchyFilteringPathOptions {
       return rhs;
     }
     return lhsDepth > rhsDepth ? lhs : rhs;
+  }
+
+  export function mergeAutoExpandOption(
+    lhs: HierarchyFilteringPathOptions["autoExpandFilterTarget"],
+    rhs: HierarchyFilteringPathOptions["autoExpandFilterTarget"],
+  ): HierarchyFilteringPathOptions["autoExpandFilterTarget"] {
+    if (lhs === true || rhs === true) {
+      return true;
+    }
+    return lhs !== undefined ? lhs : rhs;
   }
 }
 
@@ -139,9 +157,11 @@ export namespace HierarchyFilteringPath {
     if (!lhs || !rhs) {
       return lhs ?? rhs;
     }
-
+    const reveal = HierarchyFilteringPathOptions.mergeRevealOptions(lhs.reveal, rhs.reveal);
+    const autoExpandFilterTarget = HierarchyFilteringPathOptions.mergeAutoExpandOption(lhs.autoExpandFilterTarget, rhs.autoExpandFilterTarget);
     return {
-      reveal: HierarchyFilteringPathOptions.mergeRevealOptions(lhs.reveal, rhs.reveal),
+      ...(reveal !== undefined ? { reveal } : undefined),
+      ...(autoExpandFilterTarget !== undefined ? { autoExpandFilterTarget } : undefined),
     };
   }
 }
@@ -385,7 +405,7 @@ type NormalizedFilteringPath = ReturnType<(typeof HierarchyFilteringPath)["norma
 class MatchingFilteringPathsReducer {
   private _filteredChildrenIdentifierPaths = new Array<NormalizedFilteringPath>();
   private _isFilterTarget = false;
-  private _filterTargetOptions = undefined as HierarchyFilteringPathOptions | undefined;
+  private _filterTargetOptions: HierarchyFilteringPathOptions | undefined = undefined;
   private _revealOption: HierarchyFilteringPathOptions["reveal"] = false;
 
   public constructor(private _hasFilterTargetAncestor: boolean) {}
@@ -415,11 +435,12 @@ class MatchingFilteringPathsReducer {
           }
         : undefined),
       ...(parentKeys &&
-      shouldRevealNode({
+      (shouldRevealNode({
         reveal: this._revealOption,
         nodePositionInHierarchy: parentKeys.length,
         nodePositionInPath: parentKeys.filter((key) => !HierarchyNodeKey.isGrouping(key)).length,
-      })
+      }) ||
+        !!this._filterTargetOptions?.autoExpandFilterTarget)
         ? { autoExpand: true }
         : undefined),
     };
