@@ -12,7 +12,7 @@ import { SvgFolder, SvgGlobe, SvgImodelHollow, SvgItem, SvgModel } from "@itwin/
 import { Flex, ProgressRadial, SearchBox, Text } from "@itwin/itwinui-react";
 import { createECSchemaProvider, createECSqlQueryExecutor } from "@itwin/presentation-core-interop";
 import {
-  createHierarchyFilteringHelper,
+  createHierarchySearchHelper,
   createIModelHierarchyProvider,
   createLimitingECSqlQueryExecutor,
   createNodesQueryClauseFactory,
@@ -20,11 +20,11 @@ import {
   DefineInstanceNodeChildHierarchyLevelProps,
   GenericNodeKey,
   GetHierarchyNodesProps,
-  HierarchyFilteringPath,
   HierarchyNode,
   HierarchyNodeIdentifier,
   HierarchyNodeIdentifiersPath,
   HierarchyProvider,
+  HierarchySearchPath,
   mergeProviders,
 } from "@itwin/presentation-hierarchies";
 import { PresentationHierarchyNode, StrataKitRootErrorRenderer, StrataKitTreeRenderer, useUnifiedSelectionTree } from "@itwin/presentation-hierarchies-react";
@@ -69,19 +69,19 @@ function createIModelAccess(imodel: IModelConnection) {
 const RSS_PROVIDER = createRssHierarchyProvider();
 
 function Tree({ imodelAccess, height, width, treeLabel }: { imodelAccess: IModelAccess; height: number; width: number; treeLabel: string }) {
-  const [filter, setFilter] = useState("");
+  const [searchText, setSearchText] = useState("");
   const [componentId] = useState(() => Guid.createValue());
-  const getFilteredPaths = useMemo<UseTreeProps["getFilteredPaths"]>(() => {
+  const getSearchPaths = useMemo<UseTreeProps["getSearchPaths"]>(() => {
     return async () => {
-      if (!filter) {
+      if (!searchText) {
         return undefined;
       }
       return Promise.all([
-        getModelsHierarchyFilteringPaths({ imodelAccess, filter, componentId, componentName: "MultiDataSourceTree" }),
-        RSS_PROVIDER.getFilteredPaths(filter),
+        getModelsHierarchySearchPaths({ imodelAccess, searchText, componentId, componentName: "MultiDataSourceTree" }),
+        RSS_PROVIDER.getSearchPaths(searchText),
       ]).then(([imodelPaths, rssPaths]) => [...imodelPaths, ...rssPaths]);
     };
-  }, [filter, imodelAccess, componentId]);
+  }, [searchText, imodelAccess, componentId]);
 
   const unifiedSelectionContext = useUnifiedSelectionContext();
   if (!unifiedSelectionContext) {
@@ -112,7 +112,7 @@ function Tree({ imodelAccess, height, width, treeLabel }: { imodelAccess: IModel
         }),
       [imodelAccess],
     ),
-    getFilteredPaths,
+    getSearchPaths,
     onHierarchyLoadError: (props) => {
       // eslint-disable-next-line no-console
       console.error(props.error);
@@ -131,10 +131,10 @@ function Tree({ imodelAccess, height, width, treeLabel }: { imodelAccess: IModel
       );
     }
 
-    if (treeProps.treeRendererProps.rootNodes.length === 0 && filter) {
+    if (treeProps.treeRendererProps.rootNodes.length === 0 && searchText) {
       return (
         <Flex alignItems="center" justifyContent="center" flexDirection="column" style={{ height: "100%" }}>
-          <Text isMuted>There are no nodes matching filter text {filter}</Text>
+          <Text isMuted>There are no nodes matching search text {searchText}</Text>
         </Flex>
       );
     }
@@ -181,7 +181,7 @@ function Tree({ imodelAccess, height, width, treeLabel }: { imodelAccess: IModel
   return (
     <Flex flexDirection="column" style={{ width, height }}>
       <Flex style={{ width: "100%", padding: "0.5rem" }}>
-        <DebouncedSearchBox onChange={setFilter} />
+        <DebouncedSearchBox onChange={setSearchText} />
       </Flex>
       {renderContent()}
       {renderLoadingOverlay()}
@@ -298,37 +298,37 @@ function createModelsHierarchyDefinition({ imodelAccess }: { imodelAccess: IMode
     },
   });
 }
-async function getModelsHierarchyFilteringPaths({
+async function getModelsHierarchySearchPaths({
   imodelAccess,
-  filter,
+  searchText,
   componentId,
   componentName,
 }: {
   imodelAccess: IModelAccess;
-  filter: string;
+  searchText: string;
   componentId: string;
   componentName: string;
-}): Promise<HierarchyFilteringPath[]> {
+}): Promise<HierarchySearchPath[]> {
   const labelsFactory = createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess });
   const [rootSubjectPath, modelPaths] = await Promise.all([
-    getRootSubjectFilteredPath({ imodelAccess, filter, labelsFactory, componentId, componentName }),
-    Array.fromAsync(getModelsFilteringPaths({ imodelAccess, filter, labelsFactory, componentId, componentName })),
+    getRootSubjectSearchedPath({ imodelAccess, searchText, labelsFactory, componentId, componentName }),
+    Array.fromAsync(getModelsSearchPaths({ imodelAccess, searchText, labelsFactory, componentId, componentName })),
   ]);
   return [...(rootSubjectPath ? [rootSubjectPath] : []), ...modelPaths];
 }
-async function* getModelsFilteringPaths({
+async function* getModelsSearchPaths({
   imodelAccess,
-  filter,
+  searchText,
   labelsFactory,
   componentId,
   componentName,
 }: {
   imodelAccess: IModelAccess;
-  filter: string;
+  searchText: string;
   labelsFactory: IInstanceLabelSelectClauseFactory;
   componentId: string;
   componentName: string;
-}): AsyncIterableIterator<HierarchyFilteringPath> {
+}): AsyncIterableIterator<HierarchySearchPath> {
   const whereClause = `${await labelsFactory.createSelectClause({
     classAlias: "m",
     className: "BisCore.Model",
@@ -363,7 +363,7 @@ async function* getModelsFilteringPaths({
       FROM ModelsHierarchy mh
       WHERE mh.ParentId IS NULL
     `,
-      bindings: [{ type: "string", value: filter.replace(/[%_\\]/g, "\\$&") }],
+      bindings: [{ type: "string", value: searchText.replace(/[%_\\]/g, "\\$&") }],
     },
     { restartToken: `${componentName}/${componentId}/models-paths` },
   );
@@ -380,15 +380,15 @@ async function* getModelsFilteringPaths({
     };
   }
 }
-async function getRootSubjectFilteredPath({
+async function getRootSubjectSearchedPath({
   imodelAccess,
-  filter,
+  searchText,
   labelsFactory,
   componentId,
   componentName,
 }: {
   imodelAccess: IModelAccess;
-  filter: string;
+  searchText: string;
   labelsFactory: IInstanceLabelSelectClauseFactory;
   componentId: string;
   componentName: string;
@@ -402,7 +402,7 @@ async function getRootSubjectFilteredPath({
         ${await labelsFactory.createSelectClause({ classAlias: "this", className: "BisCore.Subject", selectorsConcatenator: ECSql.createConcatenatedValueStringSelector })} LIKE '%' || ? || '%' ESCAPE '\\'
         AND this.ECInstanceId = 0x1
     `,
-      bindings: [{ type: "string", value: filter.replace(/[%_\\]/g, "\\$&") }],
+      bindings: [{ type: "string", value: searchText.replace(/[%_\\]/g, "\\$&") }],
     },
     { restartToken: `${componentName}/${componentId}/subject-path` },
   );
@@ -426,7 +426,7 @@ function getIcon(node: PresentationHierarchyNode): ReactElement | undefined {
   return undefined;
 }
 
-function createRssHierarchyProvider(): HierarchyProvider & { getFilteredPaths: (filter: string) => Promise<HierarchyFilteringPath[]> } {
+function createRssHierarchyProvider(): HierarchyProvider & { getSearchPaths: (searchText: string) => Promise<HierarchySearchPath[]> } {
   let feedPromise: ReturnType<RssParser["parseURL"]> | undefined;
   async function getFeed() {
     if (!feedPromise) {
@@ -439,23 +439,23 @@ function createRssHierarchyProvider(): HierarchyProvider & { getFilteredPaths: (
     return feed;
   }
 
-  let filter: HierarchyFilteringPath[] | undefined;
+  let search: HierarchySearchPath[] | undefined;
   return {
     hierarchyChanged: new BeEvent(),
 
-    async getFilteredPaths(filterString: string): Promise<HierarchyFilteringPath[]> {
+    async getSearchPaths(searchText: string): Promise<HierarchySearchPath[]> {
       const feed = await getFeed();
       if (!feed) {
         return [];
       }
       const paths = new Array<HierarchyNodeIdentifiersPath>();
 
-      if ((feed.title ?? "<no title>").toLocaleLowerCase().includes(filterString.toLocaleLowerCase())) {
+      if ((feed.title ?? "<no title>").toLocaleLowerCase().includes(searchText.toLocaleLowerCase())) {
         paths.push([{ type: "generic", id: "rss-root", source: "rss" }]);
       }
 
       feed.items.forEach((item) => {
-        if ((item.title ?? "<no title>").toLocaleLowerCase().includes(filterString.toLocaleLowerCase())) {
+        if ((item.title ?? "<no title>").toLocaleLowerCase().includes(searchText.toLocaleLowerCase())) {
           paths.push([
             { type: "generic", id: "rss-root", source: "rss" },
             { type: "generic", id: `rss-${item.guid!}`, source: "rss" },
@@ -503,19 +503,19 @@ function createRssHierarchyProvider(): HierarchyProvider & { getFilteredPaths: (
           }
         }
       }
-      const filteringHelper = !parentNode || HierarchyNode.isGeneric(parentNode) ? createHierarchyFilteringHelper(filter, parentNode) : undefined;
+      const searchHelper = !parentNode || HierarchyNode.isGeneric(parentNode) ? createHierarchySearchHelper(search, parentNode) : undefined;
 
-      if (!filteringHelper?.hasFilter) {
+      if (!searchHelper?.hasSearch) {
         yield* generateNodes();
         return;
       }
 
-      const targetNodeKeys = filteringHelper.getChildNodeFilteringIdentifiers()!;
+      const targetNodeKeys = searchHelper.getChildNodeSearchIdentifiers()!;
       for await (const node of generateNodes()) {
         if (targetNodeKeys.some((target) => HierarchyNodeIdentifier.equal(target, node.key))) {
           yield {
             ...node,
-            ...filteringHelper.createChildNodeProps({ nodeKey: node.key, parentKeys: node.parentKeys }),
+            ...searchHelper.createChildNodeProps({ nodeKey: node.key }),
           };
         }
       }
@@ -525,14 +525,14 @@ function createRssHierarchyProvider(): HierarchyProvider & { getFilteredPaths: (
 
     setFormatter(_formatter: IPrimitiveValueFormatter | undefined): void {},
 
-    setHierarchyFilter(
+    setHierarchySearch(
       props:
         | {
-            paths: HierarchyFilteringPath[];
+            paths: HierarchySearchPath[];
           }
         | undefined,
     ): void {
-      filter = props?.paths;
+      search = props?.paths;
     },
   };
 }

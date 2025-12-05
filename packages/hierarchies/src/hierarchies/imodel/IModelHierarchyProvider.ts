@@ -46,10 +46,10 @@ import {
   normalizeFullClassName,
 } from "@itwin/presentation-shared";
 import { RowsLimitExceededError } from "../HierarchyErrors.js";
-import { HierarchyFilteringPath } from "../HierarchyFiltering.js";
 import { HierarchyNode, NonGroupingHierarchyNode, ParentHierarchyNode } from "../HierarchyNode.js";
 import { GenericNodeKey, HierarchyNodeKey, IModelInstanceKey, InstancesNodeKey } from "../HierarchyNodeKey.js";
 import { GetHierarchyNodesProps, HierarchyProvider } from "../HierarchyProvider.js";
+import { HierarchySearchPath } from "../HierarchySearch.js";
 import {
   LOGGING_NAMESPACE as BASE_LOGGING_NAMESPACE,
   LOGGING_NAMESPACE_INTERNAL as BASE_LOGGING_NAMESPACE_INTERNAL,
@@ -65,7 +65,6 @@ import { shareReplayWithErrors } from "../internal/operators/ShareReplayWithErro
 import { sortNodesByLabelOperator } from "../internal/operators/Sorting.js";
 import { getRxjsHierarchyDefinition, RxjsHierarchyDefinition } from "../internal/RxjsHierarchyDefinition.js";
 import { SubscriptionScheduler } from "../internal/SubscriptionScheduler.js";
-import { FilteringHierarchyDefinition } from "./FilteringHierarchyDefinition.js";
 import { HierarchyCache } from "./HierarchyCache.js";
 import {
   DefineHierarchyLevelProps,
@@ -81,6 +80,7 @@ import { createDetermineChildrenOperator } from "./operators/DetermineChildren.j
 import { createGroupingOperator } from "./operators/Grouping.js";
 import { createHideIfNoChildrenOperator } from "./operators/HideIfNoChildren.js";
 import { createHideNodesInHierarchyOperator } from "./operators/HideNodesInHierarchy.js";
+import { SearchHierarchyDefinition } from "./SearchHierarchyDefinition.js";
 import { readNodes } from "./TreeNodesReader.js";
 
 const LOGGING_NAMESPACE = `${BASE_LOGGING_NAMESPACE}.IModelHierarchyProvider`;
@@ -156,10 +156,10 @@ interface IModelHierarchyProviderProps {
    */
   formatter?: IPrimitiveValueFormatter;
 
-  /** Props for filtering the hierarchy. */
-  filtering?: {
+  /** Props for search the hierarchy. */
+  search?: {
     /** A list of node identifiers from root to target node. */
-    paths: HierarchyFilteringPath[];
+    paths: HierarchySearchPath[];
   };
 }
 
@@ -255,7 +255,7 @@ class IModelHierarchyProviderImpl implements HierarchyProvider {
     this._localizedStrings = { other: "Other", unspecified: "Not specified", ...props?.localizedStrings };
     this._queryConcurrency = props.queryConcurrency ?? DEFAULT_QUERY_CONCURRENCY;
     this._querySchedulers = new Map();
-    this.setHierarchyFilter(props.filtering);
+    this.setHierarchySearch(props.search);
 
     const queryCacheSize = props.queryCacheSize ?? DEFAULT_QUERY_CACHE_SIZE;
     if (queryCacheSize !== 0) {
@@ -332,24 +332,24 @@ class IModelHierarchyProviderImpl implements HierarchyProvider {
     this._hierarchyChanged.raiseEvent({ formatterChange: { newFormatter: this._valuesFormatter } });
   }
 
-  public setHierarchyFilter(props: IModelHierarchyProviderProps["filtering"]) {
+  public setHierarchySearch(props: IModelHierarchyProviderProps["search"]) {
     if (!props) {
       if (this._sourceHierarchyDefinition !== this._activeHierarchyDefinition) {
         this._activeHierarchyDefinition = this._sourceHierarchyDefinition;
-        this.invalidateHierarchyCache("Hierarchy filter reset");
+        this.invalidateHierarchyCache("Hierarchy search reset");
       }
-      this._hierarchyChanged.raiseEvent({ filterChange: { newFilter: undefined } });
+      this._hierarchyChanged.raiseEvent({ searchChange: { newSearch: undefined } });
       return;
     }
-    this._activeHierarchyDefinition = new FilteringHierarchyDefinition({
+    this._activeHierarchyDefinition = new SearchHierarchyDefinition({
       imodelAccess: this.getPrimaryIModelAccess(),
       source: this._sourceHierarchyDefinition,
       sourceName: this.#sourceName,
-      nodeIdentifierPaths: props.paths,
+      targetPaths: props.paths,
     });
-    this.invalidateHierarchyCache("Hierarchy filter set");
+    this.invalidateHierarchyCache("Hierarchy search set");
     this._dispose.next();
-    this._hierarchyChanged.raiseEvent({ filterChange: { newFilter: props } });
+    this._hierarchyChanged.raiseEvent({ searchChange: { newSearch: props } });
   }
 
   private onGroupingNodeCreated(groupingNode: ProcessedGroupingHierarchyNode, props: GetHierarchyNodesProps) {
@@ -412,7 +412,7 @@ class IModelHierarchyProviderImpl implements HierarchyProvider {
   }
 
   private createSourceNodesObservable(
-    props: DefineHierarchyLevelProps & { hierarchyLevelSizeLimit?: number | "unbounded"; filteredInstanceKeys?: InstanceKey[] } & RequestContextProp,
+    props: DefineHierarchyLevelProps & { hierarchyLevelSizeLimit?: number | "unbounded"; targetInstanceKeys?: InstanceKey[] } & RequestContextProp,
   ): SourceNodesObservable {
     // pipe definitions to nodes and put "share replay" on it
     return this.createHierarchyLevelDefinitionsObservable(props).pipe(
@@ -426,7 +426,7 @@ class IModelHierarchyProviderImpl implements HierarchyProvider {
           }
           return this.getQueryScheduler(imodelAccess.imodelKey).scheduleSubscription(
             of(def.query).pipe(
-              map((query) => filterQueryByInstanceKeys(query, props.filteredInstanceKeys)),
+              map((query) => createInstanceKeysFilteredQuery(query, props.targetInstanceKeys)),
               mergeMap((query) =>
                 readNodes({
                   queryExecutor: imodelAccess,
@@ -571,13 +571,13 @@ class IModelHierarchyProviderImpl implements HierarchyProvider {
     }
 
     // if we don't find an entry for a grouping node, we load its instances by getting a query and applying
-    // a filter based on grouped instance keys
-    let filteredInstanceKeys: InstanceKey[] | undefined;
+    // a search based on grouped instance keys
+    let targetInstanceKeys: InstanceKey[] | undefined;
     let parentNonGroupingNode: ParentHierarchyNode<NonGroupingHierarchyNode> | undefined;
     if (parentNode) {
       if (HierarchyNode.isGroupingNode(parentNode)) {
         parentNonGroupingNode = parentNode.nonGroupingAncestor;
-        filteredInstanceKeys = parentNode.groupedInstanceKeys;
+        targetInstanceKeys = parentNode.groupedInstanceKeys;
       } else {
         // not sure why type checker doesn't pick this up
         assert(HierarchyNode.isGeneric(parentNode) || HierarchyNode.isInstancesNode(parentNode));
@@ -588,7 +588,7 @@ class IModelHierarchyProviderImpl implements HierarchyProvider {
     const nonGroupingNodeChildrenRequestProps = {
       ...restProps,
       parentNode: parentNonGroupingNode,
-      ...(filteredInstanceKeys ? { filteredInstanceKeys } : undefined),
+      ...(targetInstanceKeys ? { targetInstanceKeys } : undefined),
     };
     const value = { observable: this.createSourceNodesObservable(nonGroupingNodeChildrenRequestProps), processingStatus: "none" as const };
     this._nodesCache?.set(nonGroupingNodeChildrenRequestProps, value);
@@ -836,20 +836,20 @@ function createParentNodeKeysList(parentNode: ParentHierarchyNode | undefined) {
   return [...parentNode.parentKeys, parentNode.key];
 }
 
-function filterQueryByInstanceKeys(query: ECSqlQueryDef, filteredInstanceKeys: InstanceKey[] | undefined): ECSqlQueryDef {
-  if (!filteredInstanceKeys || !filteredInstanceKeys.length) {
+function createInstanceKeysFilteredQuery(query: ECSqlQueryDef, targetInstanceKeys: InstanceKey[] | undefined): ECSqlQueryDef {
+  if (!targetInstanceKeys || !targetInstanceKeys.length) {
     return query;
   }
   const MAX_ALLOWED_BINDINGS = 1000;
-  if (filteredInstanceKeys.length < MAX_ALLOWED_BINDINGS) {
+  if (targetInstanceKeys.length < MAX_ALLOWED_BINDINGS) {
     return {
       ...query,
       ecsql: `
         SELECT *
         FROM (${query.ecsql}) q
-        WHERE q.ECInstanceId IN (${filteredInstanceKeys.map(() => "?").join(",")})
+        WHERE q.ECInstanceId IN (${targetInstanceKeys.map(() => "?").join(",")})
       `,
-      bindings: [...(query.bindings ?? []), ...filteredInstanceKeys.map((k): ECSqlBinding => ({ type: "id", value: k.id }))],
+      bindings: [...(query.bindings ?? []), ...targetInstanceKeys.map((k): ECSqlBinding => ({ type: "id", value: k.id }))],
     };
   }
   /* c8 ignore start */
@@ -860,7 +860,7 @@ function filterQueryByInstanceKeys(query: ECSqlQueryDef, filteredInstanceKeys: I
       FROM (${query.ecsql}) q
       WHERE InVirtualSet(?, q.ECInstanceId)
     `,
-    bindings: [...(query.bindings ?? []), { type: "idset", value: filteredInstanceKeys.map((k) => k.id) }],
+    bindings: [...(query.bindings ?? []), { type: "idset", value: targetInstanceKeys.map((k) => k.id) }],
   };
   /* c8 ignore end */
 }

@@ -30,6 +30,7 @@ interface BaseHierarchyNode {
     };
     label: string;
     parentKeys: HierarchyNodeKey[];
+    search?: HierarchyNodeSearchProps;
 }
 
 // @public
@@ -39,36 +40,18 @@ export interface ClassGroupingNodeKey {
 }
 
 // @public
-export function createHierarchyFilteringHelper(rootLevelFilteringProps: HierarchyFilteringPath[] | undefined, parentNode: Pick<NonGroupingHierarchyNode, "filtering"> | undefined): {
+export function createHierarchyFilteringHelper(rootLevelFilteringProps: HierarchyFilteringPath[] | undefined, parentNode: Pick<NonGroupingHierarchyNode, "filtering" | "parentKeys"> | undefined): {
     hasFilter: boolean;
     hasFilterTargetAncestor: boolean;
     getChildNodeFilteringIdentifiers: () => HierarchyNodeIdentifier[] | undefined;
-    createChildNodeProps: {
-        (props: {
-            parentKeys?: undefined;
-            nodeKey: InstancesNodeKey | GenericNodeKey;
-        }): Pick<NonGroupingHierarchyNode, "filtering"> | undefined;
-        (props: {
-            parentKeys?: undefined;
-            pathMatcher: (identifier: HierarchyNodeIdentifier) => boolean;
-        }): Pick<NonGroupingHierarchyNode, "filtering"> | undefined;
-        (props: {
-            parentKeys?: undefined;
-            asyncPathMatcher: (identifier: HierarchyNodeIdentifier) => boolean | Promise<boolean>;
-        }): Promise<Pick<NonGroupingHierarchyNode, "filtering"> | undefined> | Pick<NonGroupingHierarchyNode, "filtering"> | undefined;
-        (props: {
-            parentKeys: HierarchyNodeKey[];
-            nodeKey: InstancesNodeKey | GenericNodeKey;
-        }): Pick<NonGroupingHierarchyNode, "filtering" | "autoExpand"> | undefined;
-        (props: {
-            parentKeys: HierarchyNodeKey[];
-            pathMatcher: (identifier: HierarchyNodeIdentifier) => boolean;
-        }): Pick<NonGroupingHierarchyNode, "filtering" | "autoExpand"> | undefined;
-        (props: {
-            parentKeys: HierarchyNodeKey[];
-            asyncPathMatcher: (identifier: HierarchyNodeIdentifier) => boolean | Promise<boolean>;
-        }): Promise<Pick<NonGroupingHierarchyNode, "filtering" | "autoExpand"> | undefined> | Pick<NonGroupingHierarchyNode, "filtering" | "autoExpand"> | undefined;
-    };
+    createChildNodeProps: (props: {
+        nodeKey: InstancesNodeKey | GenericNodeKey;
+    } | {
+        pathMatcher: (identifier: HierarchyNodeIdentifier) => boolean;
+    }) => Pick<HierarchyNode, "autoExpand" | "filtering"> | undefined;
+    createChildNodePropsAsync: (props: {
+        pathMatcher: (identifier: HierarchyNodeIdentifier) => boolean | Promise<boolean>;
+    }) => Promise<Pick<HierarchyNode, "autoExpand" | "filtering"> | undefined> | Pick<HierarchyNode, "autoExpand" | "filtering"> | undefined;
 };
 
 // @public
@@ -198,12 +181,12 @@ export function extractFilteringProps(rootLevelFilteringProps: HierarchyFilterin
 } | undefined;
 
 // @public (undocumented)
-interface FilteringPathRevealDepthInHierarchy {
+interface FilteringPathAutoExpandDepthInHierarchy {
     depthInHierarchy: number;
 }
 
 // @public (undocumented)
-interface FilteringPathRevealDepthInPath {
+interface FilteringPathAutoExpandDepthInPath {
     depthInPath: number;
 }
 
@@ -250,11 +233,11 @@ export type GroupingNodeKey = ClassGroupingNodeKey | LabelGroupingNodeKey | Prop
 
 // @public
 interface HierarchyChangedEventArgs {
-    filterChange?: {
-        newFilter: Props<HierarchyProvider["setHierarchyFilter"]>;
-    };
     formatterChange?: {
         newFormatter: IPrimitiveValueFormatter | undefined;
+    };
+    searchChange?: {
+        newSearch: Props<HierarchyProvider["setHierarchySearch"]>;
     };
 }
 
@@ -283,7 +266,6 @@ export namespace HierarchyFilteringPath {
 
 // @public (undocumented)
 export interface HierarchyFilteringPathOptions {
-    autoExpand?: boolean;
     reveal?: boolean | FilteringPathRevealDepthInHierarchy | FilteringPathRevealDepthInPath;
 }
 
@@ -357,28 +339,6 @@ type HierarchyNodeAutoExpandProp = "single-child" | "always";
 // @public
 interface HierarchyNodeBaseClassGroupingParams extends HierarchyNodeGroupingParamsBase {
     fullClassNames: string[];
-}
-
-// @public (undocumented)
-type HierarchyNodeFilteringProps = {
-    hasFilterTargetAncestor?: boolean;
-    filteredChildrenIdentifierPaths?: HierarchyFilteringPath[];
-} & ({
-    isFilterTarget?: false;
-} | {
-    isFilterTarget: true;
-    filterTargetOptions?: HierarchyFilteringPathOptions;
-});
-
-// @public (undocumented)
-namespace HierarchyNodeFilteringProps {
-    // @deprecated (undocumented)
-    function create(props: {
-        hasFilterTargetAncestor?: boolean;
-        filteredChildrenIdentifierPaths?: HierarchyFilteringPath[];
-        isFilterTarget?: boolean;
-        filterTargetOptions?: HierarchyFilteringPathOptions;
-    }): HierarchyNodeFilteringProps | undefined;
 }
 
 // @public
@@ -492,15 +452,43 @@ export namespace HierarchyNodesDefinition {
     export function isInstanceNodesQuery(def: HierarchyNodesDefinition): def is InstanceNodesQueryDefinition;
 }
 
+// @public (undocumented)
+type HierarchyNodeSearchProps = {
+    hasSearchTargetAncestor?: boolean;
+    searchedChildrenIdentifierPaths?: HierarchySearchPath[];
+} & ({
+    isSearchTarget?: false;
+} | {
+    isSearchTarget: true;
+    searchTargetOptions?: HierarchySearchPathOptions;
+});
+
 // @public
 export interface HierarchyProvider {
     getNodeInstanceKeys(props: Omit<GetHierarchyNodesProps, "ignoreCache">): AsyncIterableIterator<InstanceKey>;
     getNodes(props: GetHierarchyNodesProps): AsyncIterableIterator<HierarchyNode>;
     readonly hierarchyChanged: Event_2<(args?: HierarchyChangedEventArgs) => void>;
     setFormatter(formatter: IPrimitiveValueFormatter | undefined): void;
-    setHierarchyFilter(props: {
-        paths: HierarchyFilteringPath[];
+    setHierarchySearch(props: {
+        paths: HierarchySearchPath[];
     } | undefined): void;
+}
+
+// @public
+export type HierarchySearchPath = HierarchyNodeIdentifiersPath | {
+    path: HierarchyNodeIdentifiersPath;
+    options?: HierarchySearchPathOptions;
+};
+
+// @public (undocumented)
+export namespace HierarchySearchPath {
+    export function mergeOptions(lhs: HierarchySearchPathOptions | undefined, rhs: HierarchySearchPathOptions | undefined): HierarchySearchPathOptions | undefined;
+    export function normalize(source: HierarchySearchPath): Exclude<HierarchySearchPath, HierarchyNodeIdentifiersPath>;
+}
+
+// @public (undocumented)
+export interface HierarchySearchPathOptions {
+    autoExpand?: boolean | SearchPathAutoExpandDepthInHierarchy | SearchPathAutoExpandDepthInPath;
 }
 
 // @public (undocumented)
@@ -519,9 +507,6 @@ interface IModelHierarchyProviderLocalizedStrings {
 
 // @public
 interface IModelHierarchyProviderProps {
-    filtering?: {
-        paths: HierarchyFilteringPath[];
-    };
     formatter?: IPrimitiveValueFormatter;
     hierarchyDefinition: HierarchyDefinition;
     imodelAccess: IModelAccess;
@@ -529,6 +514,9 @@ interface IModelHierarchyProviderProps {
     localizedStrings?: Partial<IModelHierarchyProviderLocalizedStrings>;
     queryCacheSize?: number;
     queryConcurrency?: number;
+    search?: {
+        paths: HierarchySearchPath[];
+    };
 }
 
 // @public
@@ -746,6 +734,16 @@ export class RowsLimitExceededError extends Error {
     constructor(limit: number);
     // (undocumented)
     readonly limit: number;
+}
+
+// @public (undocumented)
+interface SearchPathAutoExpandDepthInHierarchy {
+    depthInHierarchy: number;
+}
+
+// @public (undocumented)
+interface SearchPathAutoExpandDepthInPath {
+    depthInPath: number;
 }
 
 // @public

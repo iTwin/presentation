@@ -1,7 +1,7 @@
 sep=;
 Release Tag;API Item Type;API Item Name
 public;interface;ClassGroupingNodeKey
-public;function;createHierarchyFilteringHelper
+public;function;createHierarchySearchHelper
 public;function;createIModelHierarchyProvider
 public;function;createLimitingECSqlQueryExecutor
 alpha;function;createMergedIModelHierarchyProvider
@@ -11,17 +11,12 @@ public;type;DefineGenericNodeChildHierarchyLevelProps
 public;interface;DefineHierarchyLevelProps
 public;type;DefineInstanceNodeChildHierarchyLevelProps
 public;type;DefineRootHierarchyLevelProps
-public;function;extractFilteringProps
-deprecated;function;extractFilteringProps
 public;interface;GenericNodeKey
 public;interface;GetHierarchyNodesProps
 public;function;getLogger
 public;interface;GroupingHierarchyNode
 public;type;GroupingNodeKey
 public;interface;HierarchyDefinition
-public;type;HierarchyFilteringPath
-public;namespace;HierarchyFilteringPath
-public;interface;HierarchyFilteringPathOptions
 public;type;HierarchyLevelDefinition
 public;type;HierarchyNode
 public;namespace;HierarchyNode
@@ -33,6 +28,9 @@ public;namespace;HierarchyNodeKey
 public;type;HierarchyNodesDefinition
 public;namespace;HierarchyNodesDefinition
 public;interface;HierarchyProvider
+public;type;HierarchySearchPath
+public;namespace;HierarchySearchPath
+public;interface;HierarchySearchPathOptions
 public;type;IModelHierarchyNodeKey
 public;interface;InstancesNodeKey
 public;interface;LabelGroupingNodeKey

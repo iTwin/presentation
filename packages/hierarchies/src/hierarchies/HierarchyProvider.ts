@@ -5,8 +5,8 @@
 
 import { GenericInstanceFilter } from "@itwin/core-common";
 import { Event, InstanceKey, IPrimitiveValueFormatter, Props } from "@itwin/presentation-shared";
-import { HierarchyFilteringPath } from "./HierarchyFiltering.js";
 import { HierarchyNode, ParentHierarchyNode } from "./HierarchyNode.js";
+import { HierarchySearchPath } from "./HierarchySearch.js";
 
 /**
  * Props for the `HierarchyProvider.getNodes` call.
@@ -42,9 +42,9 @@ interface HierarchyChangedEventArgs {
     newFormatter: IPrimitiveValueFormatter | undefined;
   };
 
-  /** Set when the hierarchy change was caused by a hierarchy filter change. */
-  filterChange?: {
-    newFilter: Props<HierarchyProvider["setHierarchyFilter"]>;
+  /** Set when the hierarchy change was caused by a hierarchy search change. */
+  searchChange?: {
+    newSearch: Props<HierarchyProvider["setHierarchySearch"]>;
   };
 }
 
@@ -89,20 +89,20 @@ export interface HierarchyProvider {
   setFormatter(formatter: IPrimitiveValueFormatter | undefined): void;
 
   /**
-   * Sets the hierarchy filter used by this hierarchy provider. Setting to `undefined`
-   * removes the filter.
+   * Sets the hierarchy search used by this hierarchy provider. Setting to `undefined`
+   * removes the search.
    *
-   * @note There's a difference between `undefined` filter and filter with empty paths list. The
-   * former means no filter is applied, while the latter means the filter is applied and it filters-out
+   * @note There's a difference between `undefined` search and search with empty paths list. The
+   * former means no search is applied, while the latter means the search is applied and it filters-out
    * all hierarchy.
    *
-   * @note Changing filter is expected to trigger the `hierarchyChanged` event with `filterChange` arg.
+   * @note Changing search is expected to trigger the `hierarchyChanged` event with `searchChange` arg.
    */
-  setHierarchyFilter(
+  setHierarchySearch(
     props:
       | {
           /** A list of node identifiers from root to target node. */
-          paths: HierarchyFilteringPath[];
+          paths: HierarchySearchPath[];
         }
       | undefined,
   ): void;

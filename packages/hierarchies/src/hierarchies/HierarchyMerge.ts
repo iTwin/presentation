@@ -65,7 +65,7 @@ export function mergeProviders({ providers }: MergeHierarchyProvidersProps): Hie
       ),
     getNodeInstanceKeys: (props) => eachValueFrom(from(providers).pipe(mergeMap((p) => p.getNodeInstanceKeys(props)))),
     setFormatter: (formatter) => providers.forEach((p) => p.setFormatter(formatter)),
-    setHierarchyFilter: (props) => providers.forEach((p) => p.setHierarchyFilter(props)),
+    setHierarchySearch: (props) => providers.forEach((p) => p.setHierarchySearch(props)),
     [Symbol.dispose]: dispose,
   };
 }

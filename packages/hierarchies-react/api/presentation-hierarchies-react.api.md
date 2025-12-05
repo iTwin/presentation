@@ -12,9 +12,9 @@ import { GenericInstanceFilter } from '@itwin/presentation-hierarchies';
 import { GenericNodeKey } from '@itwin/presentation-hierarchies';
 import { getLogger } from '@itwin/presentation-hierarchies';
 import { HierarchyDefinition } from '@itwin/presentation-hierarchies';
-import { HierarchyFilteringPath } from '@itwin/presentation-hierarchies';
 import { HierarchyNode } from '@itwin/presentation-hierarchies';
 import { HierarchyProvider } from '@itwin/presentation-hierarchies';
+import { HierarchySearchPath } from '@itwin/presentation-hierarchies';
 import { InstanceKey } from '@itwin/presentation-shared';
 import { IPrimitiveValueFormatter } from '@itwin/presentation-shared';
 import { JSX as JSX_2 } from 'react/jsx-runtime';
@@ -367,14 +367,14 @@ export function useFlatTreeItems(rootNodes: PresentationHierarchyNode[]): FlatTr
 export function useIModelTree(props: UseIModelTreeProps): UseTreeResult;
 
 // @public
-type UseIModelTreeProps = Omit<UseTreeProps, "getHierarchyProvider" | "getFilteredPaths"> & Pick<IModelHierarchyProviderProps, "localizedStrings" | "imodelAccess" | "imodelChanged"> & {
+type UseIModelTreeProps = Omit<UseTreeProps, "getHierarchyProvider" | "getSearchPaths"> & Pick<IModelHierarchyProviderProps, "localizedStrings" | "imodelAccess" | "imodelChanged"> & {
     getHierarchyDefinition: (props: {
         imodelAccess: IModelAccess;
     }) => HierarchyDefinition;
-    getFilteredPaths?: (props: {
+    getSearchPaths?: (props: {
         imodelAccess: IModelAccess;
         abortSignal: AbortSignal;
-    }) => Promise<HierarchyFilteringPath[] | undefined>;
+    }) => Promise<HierarchySearchPath[] | undefined>;
 };
 
 // @public
@@ -412,10 +412,10 @@ export function useTree(props: UseTreeProps): UseTreeResult;
 
 // @public (undocumented)
 interface UseTreeProps {
-    getFilteredPaths?: ({ abortSignal }: {
-        abortSignal: AbortSignal;
-    }) => Promise<HierarchyFilteringPath[] | undefined>;
     getHierarchyProvider: () => HierarchyProvider;
+    getSearchPaths?: ({ abortSignal }: {
+        abortSignal: AbortSignal;
+    }) => Promise<HierarchySearchPath[] | undefined>;
     onHierarchyLimitExceeded?: (props: {
         parentId?: string;
         filter?: GenericInstanceFilter;
