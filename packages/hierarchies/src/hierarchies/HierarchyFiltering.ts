@@ -133,9 +133,6 @@ export namespace HierarchyFilteringPath {
 
   /**
    * Merges two given `HierarchyFilteringPathOptions` objects.
-   * - if both inputs are `undefined`, `undefined` is returned,
-   * - else if one of the inputs is `undefined`, the other one is returned.
-   * - else, merge each option individually.
    *
    * For the `reveal` attribute, the merge chooses to `reveal` as deep as the deepest input:
    * - if any one of the inputs is `true`, return `true`,
@@ -151,15 +148,14 @@ export namespace HierarchyFilteringPath {
     lhs: HierarchyFilteringPathOptions | undefined,
     rhs: HierarchyFilteringPathOptions | undefined,
   ): HierarchyFilteringPathOptions | undefined {
-    if (!lhs || !rhs) {
-      return lhs ?? rhs;
-    }
-    const reveal = HierarchyFilteringPathOptions.mergeRevealOptions(lhs.reveal, rhs.reveal);
-    const autoExpand = HierarchyFilteringPathOptions.mergeAutoExpandOption(lhs.autoExpand, rhs.autoExpand);
-    return {
-      ...(reveal !== undefined ? { reveal } : undefined),
-      ...(autoExpand !== undefined ? { autoExpand } : undefined),
-    };
+    const reveal = HierarchyFilteringPathOptions.mergeRevealOptions(lhs?.reveal, rhs?.reveal);
+    const autoExpand = HierarchyFilteringPathOptions.mergeAutoExpandOption(lhs?.autoExpand, rhs?.autoExpand);
+    return reveal || autoExpand
+      ? {
+          ...(reveal !== undefined ? { reveal } : undefined),
+          ...(autoExpand !== undefined ? { autoExpand } : undefined),
+        }
+      : undefined;
   }
 }
 
