@@ -1775,10 +1775,10 @@ describe("SearchHierarchyDefinition", () => {
       expect(result.query.ctes?.map(trimWhitespace)).to.deep.eq([
         "source cte",
         trimWhitespace(`
-          SearchInfo(ECInstanceId, searchClassName) AS (
+          SearchInfo(ECInstanceId, SearchClassName) AS (
           SELECT
             ECInstanceId,
-            'test.class' AS searchClassName
+            'test.class' AS SearchClassName
           FROM
             test.class
           WHERE
@@ -1791,7 +1791,7 @@ describe("SearchHierarchyDefinition", () => {
           SELECT
             [q].*,
             IdToHex([f].[ECInstanceId]) AS [${ECSQL_COLUMN_NAME_FilterECInstanceId}],
-            [f].[searchClassName] AS [${ECSQL_COLUMN_NAME_SearchClassName}]
+            [f].[SearchClassName] AS [${ECSQL_COLUMN_NAME_SearchClassName}]
           FROM (
             source query
           ) [q]
