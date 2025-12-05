@@ -1,5 +1,33 @@
 # @itwin/presentation-hierarchies
 
+## 2.0.0-alpha.6
+
+### Major Changes
+
+- 6a00754233e6d1b8956a5fc7680829562156d659: Fixed a bug causing `HierarchyNode.autoExpand` flag to be set on non-grouping nodes, when `HierarchyFilteringPathOptions.autoExpand.depthInHierarchy` points to a grouping node whose child non-grouping node is not a filter target.
+
+  **Breaking changes:**
+  - `GroupingHierarchyNode` no longer contains `filtering` attribute. This was always the case, but now the types have been updated to match it.
+  - Changed return type of `createHierarchyFilteringHelper`:
+    - Removed `createChildNodePropsAsync` - it became an overload of `createChildNodeProps`, whose path matching is done through `asyncPathMatcher` callback.
+    - `createChildNodeProps` now has multiple overloads and returns different types based on provided props. `autoExpand` flag is only returned when `parentKeys` are provided.
+  - Renamed `HierarchyFilteringPathOptions.autoExpand` -> `HierarchyFilteringPathOptions.reveal` to match intent.
+  - Changed `HierarchyFilteringPathOptions.reveal.depthInHierarchy` and `depthInPath` to use 0-based indexing instead of 1-based indexing.
+  - Changed `HierarchyFilteringPathOptions.reveal.depthInHierarchy` to not set `autoExpand` flag on the node that is at the `depthInHierarchy` position.
+
+- e9ef80880c776522ce3b2632c8c3c461e62d6444: The hierarchy provider returned by `mergeProviders` doesn't have the deprecated `dispose` method anymore. Use `[Symbol.dispose]` instead.
+
+### Minor Changes
+
+- e9e42c3a513cb7d594351ee2244c7efe67cc4385: Added `HierarchyFilteringPathOptions.autoExpand` option to enable auto-expanding of filter target nodes.
+- e9ef80880c776522ce3b2632c8c3c461e62d6444: Add an experimental (`@alpha`) function `createMergedIModelHierarchyProvider` for creating a hierarchy from multiple versions of the same iModel.
+
+### Patch Changes
+
+- e9ef80880c776522ce3b2632c8c3c461e62d6444: Fix `HierarchyNodeKey` methods `equals` and `compare` not handling different schema-class separators and casing.
+- Updated dependencies:
+  - @itwin/presentation-shared@2.0.0-alpha.4
+
 ## 2.0.0-alpha.5
 
 ### Patch Changes
