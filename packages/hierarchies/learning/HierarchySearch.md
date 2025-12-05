@@ -66,7 +66,7 @@ Let's say, we want the hierarchy to contain only the nodes with "C" label. In th
 |     +--+ ...100 nodes
 ```
 
-The following code snippet shows, how to create a filtering path that includes the `autoExpand` flag:
+The following code snippet shows, how to create a search path that includes the `autoExpand` flag:
 
 <!-- [[include: [Presentation.Hierarchies.HierarchySearch.HierarchySearchPathImport, Presentation.Hierarchies.HierarchySearch.AutoExpand.SearchPath], ts]] -->
 <!-- BEGIN EXTRACTION -->
