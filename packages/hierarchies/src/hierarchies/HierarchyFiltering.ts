@@ -72,7 +72,7 @@ export interface HierarchyFilteringPathOptions {
    *
    * **NOTE**: this attribute does not set `autoExpand` flag on nodes up to the filter target. For that use `reveal`.
    */
-  autoExpandFilterTarget?: boolean;
+  autoExpand?: boolean;
 }
 
 namespace HierarchyFilteringPathOptions {
@@ -105,13 +105,10 @@ namespace HierarchyFilteringPathOptions {
   }
 
   export function mergeAutoExpandOption(
-    lhs: HierarchyFilteringPathOptions["autoExpandFilterTarget"],
-    rhs: HierarchyFilteringPathOptions["autoExpandFilterTarget"],
-  ): HierarchyFilteringPathOptions["autoExpandFilterTarget"] {
-    if (lhs === true || rhs === true) {
-      return true;
-    }
-    return lhs !== undefined ? lhs : rhs;
+    lhs: HierarchyFilteringPathOptions["autoExpand"],
+    rhs: HierarchyFilteringPathOptions["autoExpand"],
+  ): HierarchyFilteringPathOptions["autoExpand"] {
+    return lhs || rhs ? true : undefined;
   }
 }
 
@@ -158,10 +155,10 @@ export namespace HierarchyFilteringPath {
       return lhs ?? rhs;
     }
     const reveal = HierarchyFilteringPathOptions.mergeRevealOptions(lhs.reveal, rhs.reveal);
-    const autoExpandFilterTarget = HierarchyFilteringPathOptions.mergeAutoExpandOption(lhs.autoExpandFilterTarget, rhs.autoExpandFilterTarget);
+    const autoExpand = HierarchyFilteringPathOptions.mergeAutoExpandOption(lhs.autoExpand, rhs.autoExpand);
     return {
       ...(reveal !== undefined ? { reveal } : undefined),
-      ...(autoExpandFilterTarget !== undefined ? { autoExpandFilterTarget } : undefined),
+      ...(autoExpand !== undefined ? { autoExpand } : undefined),
     };
   }
 }
@@ -435,12 +432,12 @@ class MatchingFilteringPathsReducer {
           }
         : undefined),
       ...(parentKeys &&
-      (shouldRevealNode({
+      (shouldAutoExpandBasedOnReveal({
         reveal: this._revealOption,
         nodePositionInHierarchy: parentKeys.length,
         nodePositionInPath: parentKeys.filter((key) => !HierarchyNodeKey.isGrouping(key)).length,
       }) ||
-        !!this._filterTargetOptions?.autoExpandFilterTarget)
+        !!this._filterTargetOptions?.autoExpand)
         ? { autoExpand: true }
         : undefined),
     };
@@ -448,7 +445,7 @@ class MatchingFilteringPathsReducer {
 }
 
 /** @internal */
-export function shouldRevealNode({
+export function shouldAutoExpandBasedOnReveal({
   reveal,
   nodePositionInPath,
   nodePositionInHierarchy,

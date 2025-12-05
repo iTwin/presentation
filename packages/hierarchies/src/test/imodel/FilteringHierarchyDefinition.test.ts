@@ -379,18 +379,18 @@ describe("FilteringHierarchyDefinition", () => {
       expect(result).to.eq(sourceFactoryNode);
     });
 
-    it("sets autoExpand when autoExpandFilterTarget is set to true and node is filter target", async () => {
+    it("sets autoExpand when autoExpand is set to true and node is filter target", async () => {
       const inputNode = createTestProcessedInstanceNode({
         key: { type: "instances", instanceKeys: [{ id: "0x1", className: "bis:element" }] },
         filtering: {
           isFilterTarget: true,
           filterTargetOptions: {
-            autoExpandFilterTarget: true,
+            autoExpand: true,
           },
         },
       });
       const filteringFactory = await createFilteringHierarchyDefinition({
-        nodeIdentifierPaths: [{ path: [inputNode.key.instanceKeys[0]], options: { autoExpandFilterTarget: true } }],
+        nodeIdentifierPaths: [{ path: [inputNode.key.instanceKeys[0]], options: { autoExpand: true } }],
       });
       const result = await firstValueFrom(filteringFactory.postProcessNode(inputNode));
       expect(result.autoExpand).to.be.true;

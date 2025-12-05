@@ -586,7 +586,7 @@ describe("Hierarchies", () => {
         ]);
       });
 
-      it("sets auto-expand flag on filter target when `HierarchyFilteringPathOptions.autoExpandFilterTarget` flag is set", async function () {
+      it("sets auto-expand flag on filter target when `HierarchyFilteringPathOptions.autoExpand` flag is set", async function () {
         const imodelAccess = createIModelAccess(imodel);
         const queryClauseFactory = createNodesQueryClauseFactory({
           imodelAccess,
@@ -636,7 +636,7 @@ describe("Hierarchies", () => {
           },
         };
 
-        // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.HierarchyFiltering.AutoExpandFilterTarget.FilteringPath
+        // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.HierarchyFiltering.autoExpand.FilteringPath
         const filteringPath: HierarchyFilteringPath = {
           // Path to the element "C"
           path: [elementKeys.a, elementKeys.b, elementKeys.c],
@@ -644,7 +644,7 @@ describe("Hierarchies", () => {
             // Auto-expand all nodes up to element "C".
             reveal: true,
             // Auto-expand the filter target ("C" node) as well.
-            autoExpandFilterTarget: true,
+            autoExpand: true,
           },
         };
         // __PUBLISH_EXTRACT_END__

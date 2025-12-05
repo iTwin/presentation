@@ -29,18 +29,14 @@ describe("HierarchyFilteringPath", () => {
         }
       });
     });
-    describe("autoExpandFilterTarget", () => {
-      const optionsInOrderOfPriority: Array<HierarchyFilteringPathOptions | undefined> = [
-        { autoExpandFilterTarget: true },
-        { autoExpandFilterTarget: false },
-        undefined,
-      ];
+    describe("autoExpand", () => {
+      const autoExpandOptions: Array<HierarchyFilteringPathOptions | undefined> = [{ autoExpand: true }, { autoExpand: false }, undefined];
 
-      it("returns correct result for different autoExpandFilterTarget options", () => {
-        for (let i = 0; i < optionsInOrderOfPriority.length; ++i) {
-          for (let j = 0; j < optionsInOrderOfPriority.length; ++j) {
-            expect(HierarchyFilteringPath.mergeOptions(optionsInOrderOfPriority[i], optionsInOrderOfPriority[j])).to.deep.eq(
-              i < j ? optionsInOrderOfPriority[i] : optionsInOrderOfPriority[j],
+      it("returns correct result for different autoExpand options", () => {
+        for (const autoExpandOption of autoExpandOptions) {
+          for (const autoExpandOption2 of autoExpandOptions) {
+            expect(HierarchyFilteringPath.mergeOptions(autoExpandOption, autoExpandOption2)).to.deep.eq(
+              autoExpandOption || autoExpandOption2 ? { autoExpand: true } : undefined,
             );
           }
         }

@@ -88,9 +88,9 @@ const filteringPath: HierarchyFilteringPath = {
 
 <!-- END EXTRACTION -->
 
-There is also an option to expand filter targets, this can be achieved by setting `autoExpandFilterTarget` flag:
+There is also an option to expand filter targets, this can be achieved by setting `autoExpand` flag:
 
-<!-- [[include: [Presentation.Hierarchies.HierarchyFiltering.HierarchyFilteringPathImport, Presentation.Hierarchies.HierarchyFiltering.AutoExpandFilterTarget.FilteringPath], ts]] -->
+<!-- [[include: [Presentation.Hierarchies.HierarchyFiltering.HierarchyFilteringPathImport, Presentation.Hierarchies.HierarchyFiltering.autoExpand.FilteringPath], ts]] -->
 <!-- BEGIN EXTRACTION -->
 
 ```ts
@@ -103,7 +103,7 @@ const filteringPath: HierarchyFilteringPath = {
     // Auto-expand all nodes up to element "C".
     reveal: true,
     // Auto-expand the filter target ("C" node) as well.
-    autoExpandFilterTarget: true,
+    autoExpand: true,
   },
 };
 ```

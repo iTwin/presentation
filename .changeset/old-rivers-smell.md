@@ -2,4 +2,4 @@
 "@itwin/presentation-hierarchies": minor
 ---
 
-Added `HierarchyFilteringPathOptions.autoExpandFilterTarget` it enables expanding filter targets.
+Added `HierarchyFilteringPathOptions.autoExpand` it enables expanding filter targets.
