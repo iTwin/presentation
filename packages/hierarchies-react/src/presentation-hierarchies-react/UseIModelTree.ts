@@ -24,7 +24,7 @@ type UseIModelTreeProps = Omit<UseTreeProps, "getHierarchyProvider" | "getSearch
     /** Provides the hierarchy definition for the tree. */
     getHierarchyDefinition: (props: { imodelAccess: IModelAccess }) => HierarchyDefinition;
 
-    /** Provides paths to filtered nodes. */
+    /** Provides paths to target nodes. */
     getSearchPaths?: (props: {
       /** Object that provides access to the iModel schema and can run queries against the iModel. */
       imodelAccess: IModelAccess;

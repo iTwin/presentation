@@ -176,7 +176,7 @@ function useTreeInternal({
     };
   }, [actions, getHierarchyProvider]);
 
-  const [isFiltering, setIsFiltering] = useState(false);
+  const [isSearching, setIsSearching] = useState(false);
   useEffect(() => {
     let disposed = false;
     const controller = new AbortController();
@@ -189,11 +189,11 @@ function useTreeInternal({
         hierarchyProvider.setHierarchySearch(undefined);
         // reload tree in case hierarchy provider does not use hierarchy filter to load initial nodes
         actions.reloadTree({ state: "keep" });
-        setIsFiltering(false);
+        setIsSearching(false);
         return;
       }
 
-      setIsFiltering(true);
+      setIsSearching(true);
       let paths: HierarchySearchPath[] | undefined;
       try {
         paths = await getSearchPaths({ abortSignal: controller.signal });
@@ -201,7 +201,7 @@ function useTreeInternal({
       } finally {
         if (!disposed) {
           hierarchyProvider.setHierarchySearch(paths ? { paths } : undefined);
-          setIsFiltering(false);
+          setIsSearching(false);
         }
       }
     })();
@@ -320,7 +320,7 @@ function useTreeInternal({
 
   return {
     ...renderProps,
-    isReloading: !!state.model.rootNode.isLoading || isFiltering,
+    isReloading: !!state.model.rootNode.isLoading || isSearching,
     getTreeModelNode,
     getNode,
     setFormatter,
