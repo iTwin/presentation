@@ -65,20 +65,23 @@ export class SearchHierarchyDefinition implements RxjsHierarchyDefinition {
     return (node) => {
       return (this._source.postProcessNode ? this._source.postProcessNode(node) : of(node)).pipe(
         map((processedNode) => {
-          const shouldReveal = ProcessedHierarchyNode.isGroupingNode(processedNode)
-            ? shouldRevealGroupingNodeBasedOnNestedChildren({
+          const parentKeysWithoutGroupingNodesLength = processedNode.parentKeys.filter((key) => !HierarchyNodeKey.isGrouping(key)).length;
+          const parentKeysLength = processedNode.parentKeys.length;
+          const shouldAutoExpand = ProcessedHierarchyNode.isGroupingNode(processedNode)
+            ? shouldAutoExpandGroupingNodeBasedOnNestedChildren({
                 directOrIndirectChildren: processedNode.children,
-                parentKeysWithoutGroupingNodesLength: processedNode.parentKeys.filter((key) => !HierarchyNodeKey.isGrouping(key)).length,
-                parentKeysLength: processedNode.parentKeys.length,
+                parentKeysWithoutGroupingNodesLength,
+                parentKeysLength,
               })
-            : processedNode.search?.childrenTargetPaths?.some((path) =>
+            : (processedNode.search?.isSearchTarget && !!processedNode.search.searchTargetOptions?.autoExpand) ||
+              processedNode.search?.childrenTargetPaths?.some((path) =>
                 shouldAutoExpandBasedOnReveal({
                   reveal: HierarchySearchPath.normalize(path).options?.reveal,
-                  nodePositionInPath: processedNode.parentKeys.filter((key) => !HierarchyNodeKey.isGrouping(key)).length,
-                  nodePositionInHierarchy: processedNode.parentKeys.length,
+                  nodePositionInPath: parentKeysWithoutGroupingNodesLength,
+                  nodePositionInHierarchy: parentKeysLength,
                 }),
               );
-          if (shouldReveal) {
+          if (shouldAutoExpand) {
             Object.assign(processedNode, { autoExpand: true });
           }
 
@@ -311,7 +314,7 @@ export function applyECInstanceIdsSelector(def: InstanceNodesQueryDefinition): I
   };
 }
 
-function shouldRevealGroupingNodeBasedOnNestedChildren({
+function shouldAutoExpandGroupingNodeBasedOnNestedChildren({
   directOrIndirectChildren,
   parentKeysLength,
   parentKeysWithoutGroupingNodesLength,
@@ -323,7 +326,9 @@ function shouldRevealGroupingNodeBasedOnNestedChildren({
   for (const child of directOrIndirectChildren) {
     if (ProcessedHierarchyNode.isGroupingNode(child)) {
       // Need to check if the same grouping node needs to be expanded, but check the indirect children instead
-      if (shouldRevealGroupingNodeBasedOnNestedChildren({ directOrIndirectChildren: child.children, parentKeysLength, parentKeysWithoutGroupingNodesLength })) {
+      if (
+        shouldAutoExpandGroupingNodeBasedOnNestedChildren({ directOrIndirectChildren: child.children, parentKeysLength, parentKeysWithoutGroupingNodesLength })
+      ) {
         return true;
       }
       continue;

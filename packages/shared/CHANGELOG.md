@@ -1,5 +1,11 @@
 # @itwin/presentation-shared
 
+## 2.0.0-alpha.4
+
+### Patch Changes
+
+- e9ef80880c776522ce3b2632c8c3c461e62d6444: Fix `InstanceKey` methods `equals` and `compare` not handling different schema-class separators and casing.
+
 ## 2.0.0-alpha.3
 
 ### Patch Changes

@@ -585,6 +585,122 @@ describe("Hierarchies", () => {
           },
         ]);
       });
+
+      it("sets auto-expand flag on filter target when `HierarchyFilteringPathOptions.autoExpand` flag is set", async function () {
+        const imodelAccess = createIModelAccess(imodel);
+        const queryClauseFactory = createNodesQueryClauseFactory({
+          imodelAccess,
+          instanceLabelSelectClauseFactory: createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess }),
+        });
+        // Define a hierarchy such that all elements except root are grouped by label.
+        const hierarchyDefinition: HierarchyDefinition = {
+          defineHierarchyLevel: async ({ parentNode }) => {
+            if (!parentNode) {
+              return [
+                {
+                  fullClassName: "BisCore.PhysicalElement",
+                  query: {
+                    ecsql: `
+                      SELECT ${await queryClauseFactory.createSelectClause({
+                        ecClassId: { selector: "this.ECClassId" },
+                        ecInstanceId: { selector: "this.ECInstanceId" },
+                        nodeLabel: { selector: "this.UserLabel" },
+                      })}
+                      FROM BisCore.PhysicalElement this
+                      WHERE this.Parent IS NULL
+                    `,
+                  },
+                },
+              ];
+            }
+
+            assert(HierarchyNode.isInstancesNode(parentNode));
+            return [
+              {
+                fullClassName: "BisCore.PhysicalElement",
+                query: {
+                  ecsql: `
+                    SELECT ${await queryClauseFactory.createSelectClause({
+                      ecClassId: { selector: "this.ECClassId" },
+                      ecInstanceId: { selector: "this.ECInstanceId" },
+                      nodeLabel: { selector: "this.UserLabel" },
+                      grouping: { byLabel: true },
+                    })}
+                    FROM BisCore.PhysicalElement this
+                    WHERE this.Parent.Id = ?
+                  `,
+                  bindings: [{ type: "id", value: parentNode.key.instanceKeys[0].id }],
+                },
+              },
+            ];
+          },
+        };
+
+        // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.HierarchyFiltering.autoExpand.FilteringPath
+        const filteringPath: HierarchyFilteringPath = {
+          // Path to the element "C"
+          path: [elementKeys.a, elementKeys.b, elementKeys.c],
+          options: {
+            // Auto-expand all nodes up to element "C".
+            reveal: true,
+            // Auto-expand the filter target ("C" node) as well.
+            autoExpand: true,
+          },
+        };
+        // __PUBLISH_EXTRACT_END__
+
+        // Construct a hierarchy provider for the filtered hierarchy
+        const hierarchyProvider = createIModelHierarchyProvider({
+          imodelAccess,
+          hierarchyDefinition,
+          filtering: {
+            paths: [filteringPath],
+          },
+        });
+
+        // Collect the hierarchy & confirm we get what we expect - a hierarchy from root element "A" to target element "C"
+        // Note that all nodes before grouping node for label "C" have `autoExpand` flag.
+        expect(await collectHierarchy(hierarchyProvider)).to.deep.eq([
+          {
+            // Root node. Has auto-expand flag.
+            nodeType: "instances",
+            label: "A",
+            autoExpand: true,
+            children: [
+              {
+                // B grouping node. Has auto-expand flag.
+                nodeType: "label-grouping",
+                label: "B",
+                autoExpand: true,
+                children: [
+                  {
+                    // B instance node. Has auto-expand flag.
+                    nodeType: "instances",
+                    label: "B",
+                    autoExpand: true,
+                    children: [
+                      {
+                        // C grouping node. Has auto-expand flag.
+                        nodeType: "label-grouping",
+                        label: "C",
+                        autoExpand: true,
+                        // Child is the filter target. Has auto-expand flag.
+                        children: [
+                          {
+                            nodeType: "instances",
+                            label: "C",
+                            autoExpand: true,
+                          },
+                        ],
+                      },
+                    ],
+                  },
+                ],
+              },
+            ],
+          },
+        ]);
+      });
     });
   });
 });

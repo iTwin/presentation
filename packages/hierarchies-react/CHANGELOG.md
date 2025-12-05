@@ -1,5 +1,21 @@
 # @itwin/presentation-hierarchies-react
 
+## 2.0.0-alpha.44
+
+### Patch Changes
+
+- Updated dependencies:
+  - @itwin/unified-selection@1.6.3-alpha.0
+
+## 2.0.0-alpha.43
+
+### Patch Changes
+
+- cc836290199b9ff778773b03ab578f90043e95f0: Do not open tree context menu is there is no actions.
+- Updated dependencies:
+  - @itwin/presentation-shared@2.0.0-alpha.4
+  - @itwin/presentation-hierarchies@2.0.0-alpha.6
+
 ## 2.0.0-alpha.42
 
 ### Patch Changes
