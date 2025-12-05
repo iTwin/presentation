@@ -1775,7 +1775,7 @@ describe("SearchHierarchyDefinition", () => {
       expect(result.query.ctes?.map(trimWhitespace)).to.deep.eq([
         "source cte",
         trimWhitespace(`
-          FilteringInfo(ECInstanceId, searchClassName) AS (
+          SearchInfo(ECInstanceId, searchClassName) AS (
           SELECT
             ECInstanceId,
             'test.class' AS searchClassName
@@ -1795,7 +1795,7 @@ describe("SearchHierarchyDefinition", () => {
           FROM (
             source query
           ) [q]
-          JOIN FilteringInfo [f] ON [f].[ECInstanceId] = [q].[ECInstanceId]
+          JOIN SearchInfo [f] ON [f].[ECInstanceId] = [q].[ECInstanceId]
         `),
       );
       expect(result.query.bindings).to.deep.eq([{ type: "string", value: "source binding" }]);
