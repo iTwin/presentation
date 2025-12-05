@@ -90,13 +90,13 @@ const searchPath: HierarchySearchPath = {
 
 There is also an option to expand filter targets, this can be achieved by setting `autoExpand` flag:
 
-<!-- [[include: [Presentation.Hierarchies.HierarchyFiltering.HierarchyFilteringPathImport, Presentation.Hierarchies.HierarchyFiltering.autoExpand.FilteringPath], ts]] -->
+<!-- [[include: [Presentation.Hierarchies.HierarchySearch.HierarchySearchPathImport, Presentation.Hierarchies.HierarchySearch.autoExpand.SearchPath], ts]] -->
 <!-- BEGIN EXTRACTION -->
 
 ```ts
-import { HierarchyFilteringPath } from "@itwin/presentation-hierarchies";
+import { HierarchySearchPath } from "@itwin/presentation-hierarchies";
 
-const filteringPath: HierarchyFilteringPath = {
+const searchPath: HierarchySearchPath = {
   // Path to the element "C"
   path: [elementKeys.a, elementKeys.b, elementKeys.c],
   options: {
@@ -118,6 +118,7 @@ Additionally, you might not want to add `autoExpand` flag to every node in `Hier
 ```ts
 import { HierarchySearchPath } from "@itwin/presentation-hierarchies";
 
+// Hierarchy has this structure: A -> label grouping node -> B -> label grouping node -> C.
 const searchPath: HierarchySearchPath = {
   // Path to the element "C"
   path: [elementKeys.a, elementKeys.b, elementKeys.c],

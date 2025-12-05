@@ -12,7 +12,7 @@ In the most basic form, a hierarchy provider only needs to implement the `getNod
 ```ts
 import { BeEvent } from "@itwin/core-bentley";
 import { HierarchyNode, HierarchyProvider } from "@itwin/presentation-hierarchies";
-import { IPrimitiveValueFormatter, Props } from "@itwin/presentation-shared";
+import { Props } from "@itwin/presentation-shared";
 
 // Create a hierarchy provider that returns an infinite hierarchy, where each node has one child node.
 const provider: HierarchyProvider = {
@@ -52,7 +52,7 @@ However, it's possible to write one from scratch. The following example demonstr
 ```ts
 import { BeEvent } from "@itwin/core-bentley";
 import { HierarchyNode, HierarchyProvider } from "@itwin/presentation-hierarchies";
-import { IPrimitiveValueFormatter, Props } from "@itwin/presentation-shared";
+import { Props } from "@itwin/presentation-shared";
 
 import { BriefcaseConnection, IModelConnection } from "@itwin/core-frontend";
 import { registerTxnListeners } from "@itwin/presentation-core-interop";
@@ -258,7 +258,7 @@ Now that we have a service, let's create a hierarchy provider that creates a hie
 ```ts
 import { BeEvent } from "@itwin/core-bentley";
 import { HierarchyNode, HierarchyProvider } from "@itwin/presentation-hierarchies";
-import { IPrimitiveValueFormatter, Props } from "@itwin/presentation-shared";
+import { Props } from "@itwin/presentation-shared";
 
 // Create a fake books service that simulates fetching authors and books data.
 const booksService = createBooksService();
@@ -336,9 +336,16 @@ With the above APIs at hand, implementing node label formatting is straightforwa
 ```ts
 import { BeEvent } from "@itwin/core-bentley";
 import { HierarchyNode, HierarchyProvider } from "@itwin/presentation-hierarchies";
-import { IPrimitiveValueFormatter, Props } from "@itwin/presentation-shared";
+import { Props } from "@itwin/presentation-shared";
 
-import { ConcatenatedValue, ConcatenatedValuePart, createDefaultValueFormatter, EventListener, julianToDateTime } from "@itwin/presentation-shared";
+import {
+  ConcatenatedValue,
+  ConcatenatedValuePart,
+  createDefaultValueFormatter,
+  EventListener,
+  IPrimitiveValueFormatter,
+  julianToDateTime,
+} from "@itwin/presentation-shared";
 
 // Create a hierarchy provider that returns a single root node with formatted label. The formatter used by the
 // provider can be changed by calling the `setFormatter` method.
@@ -430,20 +437,20 @@ As described in the [Hierarchy search](./HierarchySearch.md) learning page, the 
 
 Let's start with the first step:
 
-<!-- [[include: [Presentation.Hierarchies.CustomHierarchyProviders.Imports, Presentation.Hierarchies.CustomHierarchyProviders.FilteringProviderImports, Presentation.Hierarchies.CustomHierarchyProviders.FilteringProviderExample.PathsLookup], ts]] -->
+<!-- [[include: [Presentation.Hierarchies.CustomHierarchyProviders.Imports, Presentation.Hierarchies.CustomHierarchyProviders.SearchProviderImports, Presentation.Hierarchies.CustomHierarchyProviders.SearchProviderExample.PathsLookup], ts]] -->
 <!-- BEGIN EXTRACTION -->
 
 ```ts
 import { BeEvent } from "@itwin/core-bentley";
 import { HierarchyNode, HierarchyProvider } from "@itwin/presentation-hierarchies";
-import { IPrimitiveValueFormatter, Props } from "@itwin/presentation-shared";
+import { Props } from "@itwin/presentation-shared";
 
 import { createHierarchySearchHelper, GenericNodeKey, HierarchyNodeIdentifier, HierarchySearchPath } from "@itwin/presentation-hierarchies";
 
 // A function that matches given string against authors and books, and returns hierarchy paths
 // from root to the matched node. This function must be aware of the hierarchy structure to know what paths
 // to create.
-async function createHierarchySearchPaths(searchText: string): Promise<HierarchySearchPath[]> {
+async function createSearchPaths(searchText: string): Promise<HierarchySearchPath[]> {
   const results: HierarchySearchPath[] = [];
   const [matchingAuthors, matchingBooks] = await Promise.all([booksService.getAuthors({ name: searchText }), booksService.getBooks({ title: searchText })]);
   for (const author of matchingAuthors) {
@@ -465,22 +472,22 @@ There could be a number of ways to search the hierarchy, such as by target insta
 
 Now that we're able to find the paths, let's enhance our hierarchy provider to support searching by them:
 
-<!-- [[include: [Presentation.Hierarchies.CustomHierarchyProviders.Imports, Presentation.Hierarchies.CustomHierarchyProviders.FilteringProviderImports, Presentation.Hierarchies.CustomHierarchyProviders.FilteringProviderExample.Provider], ts]] -->
+<!-- [[include: [Presentation.Hierarchies.CustomHierarchyProviders.Imports, Presentation.Hierarchies.CustomHierarchyProviders.SearchProviderImports, Presentation.Hierarchies.CustomHierarchyProviders.SearchProviderExample.Provider], ts]] -->
 <!-- BEGIN EXTRACTION -->
 
 ```ts
 import { BeEvent } from "@itwin/core-bentley";
 import { HierarchyNode, HierarchyProvider } from "@itwin/presentation-hierarchies";
-import { IPrimitiveValueFormatter, Props } from "@itwin/presentation-shared";
+import { Props } from "@itwin/presentation-shared";
 
 import { createHierarchySearchHelper, GenericNodeKey, HierarchyNodeIdentifier, HierarchySearchPath } from "@itwin/presentation-hierarchies";
 
-let rootFilter: Props<HierarchyProvider["setHierarchySearch"]>;
+let rootSearch: Props<HierarchyProvider["setHierarchySearch"]>;
 const hierarchyChanged = new BeEvent<EventListener<HierarchyProvider["hierarchyChanged"]>>();
 const provider: HierarchyProvider = {
   async *getNodes({ parentNode }) {
-    const searcGHelper = !parentNode || HierarchyNode.isGeneric(parentNode) ? createHierarchySearchHelper(rootFilter?.paths, parentNode) : undefined;
-    const targetNodeKeys = filteringHelper?.getChildNodeSearchIdentifiers();
+    const searchHelper = !parentNode || HierarchyNode.isGeneric(parentNode) ? createHierarchySearchHelper(rootSearch?.paths, parentNode) : undefined;
+    const targetNodeKeys = searchHelper?.getChildNodeSearchIdentifiers();
     if (!parentNode) {
       // For root nodes, query authors and return nodes based on them
       const authors = await booksService.getAuthors(
@@ -500,7 +507,7 @@ const provider: HierarchyProvider = {
           label: author.name,
           children: author.hasBooks,
           parentKeys: [],
-          ...filteringHelper?.createChildNodeProps({ nodeKey, parentKeys: [] }),
+          ...searchHelper?.createChildNodeProps({ nodeKey, parentKeys: [] }),
         };
       }
     } else if (HierarchyNode.isGeneric(parentNode) && parentNode.key.id.startsWith("author:")) {
@@ -529,17 +536,17 @@ const provider: HierarchyProvider = {
           label: book.title,
           children: false,
           parentKeys,
-          ...filteringHelper?.createChildNodeProps({ nodeKey, parentKeys }),
+          ...searchHelper?.createChildNodeProps({ nodeKey, parentKeys }),
         };
       }
     }
   },
   setHierarchySearch(props) {
-    // Here we receive all paths that we want to filter the hierarchy by. The paths start from root, so
+    // Here we receive all paths that we want to search the hierarchy by. The paths start from root, so
     // we just store them in a variable to use later when querying root nodes.
-    rootFilter = props;
-    // Changing the filter requires a hierarchy reload - trigger the `hierarchyChanged` event to let components know
-    hierarchyChanged.raiseEvent({ searchChange: { newSearch: rootFilter } });
+    rootSearch = props;
+    // Changing the search requires a hierarchy reload - trigger the `hierarchyChanged` event to let components know
+    hierarchyChanged.raiseEvent({ searchChange: { newSearch: rootSearch } });
   },
   async *getNodeInstanceKeys() {},
   setFormatter() {},
@@ -553,13 +560,13 @@ The provider uses target instance keys that it gets through a search helper func
 
 With the above provider, we can now search the books hierarchy by label:
 
-<!-- [[include: [Presentation.Hierarchies.CustomHierarchyProviders.FilteringProviderExample.TraverseFiltered1, Presentation.Hierarchies.CustomHierarchyProviders.FilteringProviderExample.TraverseFiltered2], ts]] -->
+<!-- [[include: [Presentation.Hierarchies.CustomHierarchyProviders.SearchProviderExample.TraverseSearched1, Presentation.Hierarchies.CustomHierarchyProviders.SearchProviderExample.TraverseSearched2], ts]] -->
 <!-- BEGIN EXTRACTION -->
 
 ```ts
-// Apply the filter "of" and traverse the filtered hierarchy. Notice that author node
-// of "The Fellowship of Ring" is included, even though it doesn't match the filter.
-provider.setHierarchySearch({ paths: await createHierarchySearchPaths("of") });
+// Apply the search "of" and traverse the searched hierarchy. Notice that author node
+// of "The Fellowship of Ring" is included, even though it doesn't match the search.
+provider.setHierarchySearch({ paths: await createSearchPaths("of") });
 await traverseHierarchy(provider);
 // Output:
 // J.R.R. Tolkien
@@ -568,9 +575,9 @@ await traverseHierarchy(provider);
 //   Adventures of Huckleberry Finn
 //   The Adventures of Tom Sawyer
 
-// Apply the filter "tom" and traverse the filtered hierarchy. Notice that all books
-// of "Tom Clancy" are included, even though they don't match the filter.
-provider.setHierarchySearch({ paths: await createHierarchySearchPaths("tom") });
+// Apply the search "tom" and traverse the searched hierarchy. Notice that all books
+// of "Tom Clancy" are included, even though they don't match the search.
+provider.setHierarchySearch({ paths: await createSearchPaths("tom") });
 await traverseHierarchy(provider);
 // Output:
 // Mark Twain
@@ -635,7 +642,7 @@ Here's how the final provider looks like:
 ```ts
 import { BeEvent } from "@itwin/core-bentley";
 import { HierarchyNode, HierarchyProvider } from "@itwin/presentation-hierarchies";
-import { IPrimitiveValueFormatter, Props } from "@itwin/presentation-shared";
+import { Props } from "@itwin/presentation-shared";
 
 const provider: HierarchyProvider = {
   async *getNodes({ parentNode, instanceFilter }) {

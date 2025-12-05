@@ -19,10 +19,10 @@ import {
 import { ProcessedGenericHierarchyNode, ProcessedGroupingHierarchyNode, SourceGenericHierarchyNode } from "../../hierarchies/imodel/IModelHierarchyNode.js";
 import { NodeSelectClauseColumnNames } from "../../hierarchies/imodel/NodeSelectQueryFactory.js";
 import {
-  applyECInstanceIdsFilter,
+  applyECInstanceIdsSearch,
   applyECInstanceIdsSelector,
-  ECSQL_COLUMN_NAME_FilterClassName,
   ECSQL_COLUMN_NAME_FilterECInstanceId,
+  ECSQL_COLUMN_NAME_SearchClassName,
   SearchHierarchyDefinition,
 } from "../../hierarchies/imodel/SearchHierarchyDefinition.js";
 import { RxjsHierarchyDefinition, RxjsNodeParser } from "../../hierarchies/internal/RxjsHierarchyDefinition.js";
@@ -80,7 +80,7 @@ describe("SearchHierarchyDefinition", () => {
       const row = {
         [NodeSelectClauseColumnNames.FullClassName]: "",
         [ECSQL_COLUMN_NAME_FilterECInstanceId]: "0x5",
-        [ECSQL_COLUMN_NAME_FilterClassName]: className,
+        [ECSQL_COLUMN_NAME_SearchClassName]: className,
       };
       const node = await firstValueFrom(searchFactory.parseNode(row));
       expect(node.search).to.deep.eq({
@@ -112,7 +112,7 @@ describe("SearchHierarchyDefinition", () => {
       const row = {
         [NodeSelectClauseColumnNames.FullClassName]: "",
         [ECSQL_COLUMN_NAME_FilterECInstanceId]: "0x5",
-        [ECSQL_COLUMN_NAME_FilterClassName]: className,
+        [ECSQL_COLUMN_NAME_SearchClassName]: className,
       };
       const parentNode: HierarchyDefinitionParentNode = {
         label: "",
@@ -144,7 +144,7 @@ describe("SearchHierarchyDefinition", () => {
       const row = {
         [NodeSelectClauseColumnNames.FullClassName]: "",
         [ECSQL_COLUMN_NAME_FilterECInstanceId]: "0x4",
-        [ECSQL_COLUMN_NAME_FilterClassName]: className,
+        [ECSQL_COLUMN_NAME_SearchClassName]: className,
       };
       const parentNode: HierarchyDefinitionParentNode = {
         label: "",
@@ -177,7 +177,7 @@ describe("SearchHierarchyDefinition", () => {
       const row = {
         [NodeSelectClauseColumnNames.FullClassName]: "",
         [ECSQL_COLUMN_NAME_FilterECInstanceId]: "0x3",
-        [ECSQL_COLUMN_NAME_FilterClassName]: className,
+        [ECSQL_COLUMN_NAME_SearchClassName]: className,
       };
       const parentNode: HierarchyDefinitionParentNode = {
         label: "",
@@ -206,7 +206,7 @@ describe("SearchHierarchyDefinition", () => {
       });
       const class2 = classHierarchyInspector.stubEntityClass({
         schemaName: "BisCore",
-        className: "FilterPathClassName0",
+        className: "searchPathClassName0",
         baseClass: class1,
       });
       const paths: HierarchyNodeIdentifiersPath[] = [
@@ -222,7 +222,7 @@ describe("SearchHierarchyDefinition", () => {
       const row = {
         [NodeSelectClauseColumnNames.FullClassName]: "",
         [ECSQL_COLUMN_NAME_FilterECInstanceId]: "0x5",
-        [ECSQL_COLUMN_NAME_FilterClassName]: class1.fullName,
+        [ECSQL_COLUMN_NAME_SearchClassName]: class1.fullName,
       };
       const parentNode: HierarchyDefinitionParentNode = {
         label: "",
@@ -260,7 +260,7 @@ describe("SearchHierarchyDefinition", () => {
       const row = {
         [NodeSelectClauseColumnNames.FullClassName]: "",
         [ECSQL_COLUMN_NAME_FilterECInstanceId]: "0x1",
-        [ECSQL_COLUMN_NAME_FilterClassName]: testClass.fullName,
+        [ECSQL_COLUMN_NAME_SearchClassName]: testClass.fullName,
       };
       const node = await firstValueFrom(searchFactory.parseNode(row, undefined));
       expect(node.search).to.deep.eq({
@@ -283,7 +283,7 @@ describe("SearchHierarchyDefinition", () => {
       const row = {
         [NodeSelectClauseColumnNames.FullClassName]: "",
         [ECSQL_COLUMN_NAME_FilterECInstanceId]: "0x5",
-        [ECSQL_COLUMN_NAME_FilterClassName]: className,
+        [ECSQL_COLUMN_NAME_SearchClassName]: className,
       };
       const parentNode: HierarchyDefinitionParentNode = {
         label: "",
@@ -379,7 +379,7 @@ describe("SearchHierarchyDefinition", () => {
       expect(result).to.eq(sourceFactoryNode);
     });
 
-    it("sets autoExpand on node when path's autoExpand is set to true and node is filter target", async () => {
+    it("sets autoExpand on node when path's autoExpand is set to true and node is search target", async () => {
       const inputNode = createTestProcessedInstanceNode({
         key: { type: "instances", instanceKeys: [{ id: "0x1", className: "bis:element" }] },
         search: {
@@ -389,10 +389,10 @@ describe("SearchHierarchyDefinition", () => {
           },
         },
       });
-      const filteringFactory = await createSearchHierarchyDefinition({
+      const searchFactory = await createSearchHierarchyDefinition({
         targetPaths: [{ path: [inputNode.key.instanceKeys[0]], options: { autoExpand: true } }],
       });
-      const result = await firstValueFrom(filteringFactory.postProcessNode(inputNode));
+      const result = await firstValueFrom(searchFactory.postProcessNode(inputNode));
       expect(result.autoExpand).to.be.true;
     });
 
@@ -406,7 +406,7 @@ describe("SearchHierarchyDefinition", () => {
         { condition: "`depthInHierarchy: 0`", reveal: { depthInHierarchy: 0 } },
         { condition: "`depthInHierarchy: 1`", reveal: { depthInHierarchy: 1 } },
       ].forEach(({ condition, reveal }) => {
-        it(`doesn't set auto-expand on filter target instances node when ${condition}`, async () => {
+        it(`doesn't set auto-expand on search target instances node when ${condition}`, async () => {
           const inputNode = createTestProcessedInstanceNode({
             parentKeys: [
               {
@@ -423,7 +423,7 @@ describe("SearchHierarchyDefinition", () => {
           expect(result.autoExpand).to.be.undefined;
         });
 
-        it(`doesn't set auto-expand on filter target generic node when ${condition}`, async () => {
+        it(`doesn't set auto-expand on search target generic node when ${condition}`, async () => {
           const inputNode = createTestProcessedGenericNode({
             parentKeys: [
               {
@@ -458,7 +458,7 @@ describe("SearchHierarchyDefinition", () => {
         },
       ].forEach(({ expectation, cases }) => {
         cases.forEach(({ condition, reveal }) => {
-          it(`${expectation ? "sets" : "doesn't set"} auto-expand on instances' node when it's an ancestor of filter target node and ${condition}`, async () => {
+          it(`${expectation ? "sets" : "doesn't set"} auto-expand on instances' node when it's an ancestor of search target node and ${condition}`, async () => {
             const inputNode = createTestProcessedInstanceNode({
               key: { type: "instances", instanceKeys: [{ id: "0x1", className: "bis:element" }] },
               search: {
@@ -472,7 +472,7 @@ describe("SearchHierarchyDefinition", () => {
             expect(result.autoExpand).to.eq(expectation);
           });
 
-          it(`${expectation ? "sets" : "doesn't set"} auto-expand on generic node when it's an ancestor of filter target node and ${condition}`, async () => {
+          it(`${expectation ? "sets" : "doesn't set"} auto-expand on generic node when it's an ancestor of search target node and ${condition}`, async () => {
             const inputNode = createTestProcessedGenericNode({
               search: {
                 childrenTargetPaths: [{ path: [{ id: "child", type: "generic" }], options: { reveal } }],
@@ -487,25 +487,25 @@ describe("SearchHierarchyDefinition", () => {
         });
       });
 
-      it("doesn't set auto-expand when filter paths don't match", async () => {
+      it("doesn't set auto-expand when search paths don't match", async () => {
         [
           {
             inputNode: createTestProcessedInstanceNode({ key: { type: "instances", instanceKeys: [{ id: "0x1", className: "bis:Element" }] } }),
-            filterPathNodeKey: { type: "generic" as const, id: "0x1" },
+            searchPathNodeKey: { type: "generic" as const, id: "0x1" },
             imodelKey: "",
           },
-          { inputNode: createTestProcessedGenericNode(), filterPathNodeKey: { id: "0x1", className: "bis:Element" }, imodelKey: "" },
+          { inputNode: createTestProcessedGenericNode(), searchPathNodeKey: { id: "0x1", className: "bis:Element" }, imodelKey: "" },
           {
             inputNode: createTestProcessedInstanceNode({ key: { type: "instances", instanceKeys: [{ id: "0x1", className: "bis:Element" }] } }),
-            filterPathNodeKey: { id: "0x2", className: "bis:Element", imodelKey: "" },
+            searchPathNodeKey: { id: "0x2", className: "bis:Element", imodelKey: "" },
             imodelKey: "",
           },
           {
             inputNode: createTestProcessedInstanceNode({ key: { type: "instances", instanceKeys: [{ id: "0x1", className: "bis:Element" }] } }),
-            filterPathNodeKey: { id: "0x1", className: "bis:Element", imodelKey: "a" },
+            searchPathNodeKey: { id: "0x1", className: "bis:Element", imodelKey: "a" },
             imodelKey: "b",
           },
-        ].forEach(async ({ inputNode, filterPathNodeKey, imodelKey }) => {
+        ].forEach(async ({ inputNode, searchPathNodeKey, imodelKey }) => {
           const imodelAccess = {
             classDerivesFrom: sinon.stub<[string, string], Promise<boolean>>().resolves(true),
             imodelKey,
@@ -514,7 +514,7 @@ describe("SearchHierarchyDefinition", () => {
             imodelAccess,
             targetPaths: [
               {
-                path: [filterPathNodeKey, { id: "0x2", className: "bis:Element" }],
+                path: [searchPathNodeKey, { id: "0x2", className: "bis:Element" }],
                 options: { reveal: true },
               },
             ],
@@ -615,7 +615,7 @@ describe("SearchHierarchyDefinition", () => {
         expect(result.autoExpand).to.be.true;
       });
 
-      it("doesn't set auto-expand when one of nested filtered children has `filterTarget = true` and `reveal = false` option", async () => {
+      it("doesn't set auto-expand when one of nested searched children has `searchTarget = true` and `reveal = false` option", async () => {
         const inputNode = {
           ...createGroupingNode(),
           children: [
@@ -635,7 +635,7 @@ describe("SearchHierarchyDefinition", () => {
         expect(result.autoExpand).to.be.undefined;
       });
 
-      it("sets auto-expand when one of filtered nested children has `filterTarget = true` and `reveal = true` option", async () => {
+      it("sets auto-expand when one of searched nested children has `searchTarget = true` and `reveal = true` option", async () => {
         const inputNode = {
           ...createGroupingNode(),
           children: [
@@ -655,7 +655,7 @@ describe("SearchHierarchyDefinition", () => {
         expect(result.autoExpand).to.be.true;
       });
 
-      it("doesn't set auto-expand when one of nested filtered children has `filterTarget = true` and `reveal = false` option", async () => {
+      it("doesn't set auto-expand when one of nested searched children has `searchTarget = true` and `reveal = false` option", async () => {
         const inputNode = {
           ...createGroupingNode(),
           children: [
@@ -675,7 +675,7 @@ describe("SearchHierarchyDefinition", () => {
         expect(result.autoExpand).to.be.undefined;
       });
 
-      it("sets auto-expand when one of filtered nested children has `filterTarget = true` and `reveal = true` option", async () => {
+      it("sets auto-expand when one of searched nested children has `searchTarget = true` and `reveal = true` option", async () => {
         const inputNode = {
           ...createGroupingNode(),
           children: [
@@ -835,7 +835,7 @@ describe("SearchHierarchyDefinition", () => {
         expect(result.autoExpand).to.be.true;
       });
 
-      it("sets auto-expand when depthInPath is equal than the filter target depth", async () => {
+      it("sets auto-expand when depthInPath is equal than the search target depth", async () => {
         const groupingNode = createGroupingNode();
         const inputNode: ProcessedGroupingHierarchyNode = {
           ...groupingNode,
@@ -859,7 +859,7 @@ describe("SearchHierarchyDefinition", () => {
         expect(result.autoExpand).to.be.true;
       });
 
-      it("sets auto-expand when depthInHierarchy is equal to filter target depth", async function () {
+      it("sets auto-expand when depthInHierarchy is equal to search target depth", async function () {
         const inputNode: ProcessedGroupingHierarchyNode = {
           ...createGroupingNode(),
           parentKeys: [createTestNodeKey()],
@@ -1062,7 +1062,7 @@ describe("SearchHierarchyDefinition", () => {
 
     describe("search generic node definitions", () => {
       it("omits source generic node definition when using instance key search", async () => {
-        const filterClass = classHierarchyInspector.stubEntityClass({ schemaName: "BisCore", className: "FilterClassName" });
+        const searchClass = classHierarchyInspector.stubEntityClass({ schemaName: "BisCore", className: "searchClassName" });
         const sourceDefinition: GenericHierarchyNodeDefinition = {
           node: createTestSourceGenericNode({
             key: "custom",
@@ -1075,7 +1075,7 @@ describe("SearchHierarchyDefinition", () => {
         const searchFactory = await createSearchHierarchyDefinition({
           imodelAccess: { ...classHierarchyInspector, imodelKey: "test-imodel-key" },
           sourceFactory,
-          targetPaths: [[{ className: filterClass.fullName, id: "0x123" }]],
+          targetPaths: [[{ className: searchClass.fullName, id: "0x123" }]],
         });
         const result = await lastValueFrom(searchFactory.defineHierarchyLevel({ parentNode: undefined }));
         expect(result).to.be.empty;
@@ -1301,7 +1301,7 @@ describe("SearchHierarchyDefinition", () => {
 
       it("omits source instance node query definition if search class doesn't match query class", async () => {
         const queryClass = classHierarchyInspector.stubEntityClass({ schemaName: "BisCore", className: "SourceQueryClassName" });
-        const filterPathClass = classHierarchyInspector.stubEntityClass({ schemaName: "BisCore", className: "FilterPathClassName" });
+        const searchPathClass = classHierarchyInspector.stubEntityClass({ schemaName: "BisCore", className: "searchPathClassName" });
         const sourceDefinition: InstanceNodesQueryDefinition = {
           fullClassName: queryClass.fullName,
           query: {
@@ -1314,7 +1314,7 @@ describe("SearchHierarchyDefinition", () => {
         const searchFactory = await createSearchHierarchyDefinition({
           imodelAccess: { ...classHierarchyInspector, imodelKey: "test-imodel-key" },
           sourceFactory,
-          targetPaths: [[{ className: filterPathClass.fullName, id: "0x123" }]],
+          targetPaths: [[{ className: searchPathClass.fullName, id: "0x123" }]],
         });
         const result = await lastValueFrom(searchFactory.defineHierarchyLevel({ parentNode: undefined }));
         expect(result).to.be.empty;
@@ -1359,7 +1359,7 @@ describe("SearchHierarchyDefinition", () => {
         expect(result).to.be.empty;
       });
 
-      it("returns unfiltered source instance node query definitions when search search target parent node", async () => {
+      it("returns default source instance node query definitions when searching target parent node", async () => {
         const queryClass = classHierarchyInspector.stubEntityClass({ schemaName: "BisCore", className: "SourceQueryClassName" });
         const sourceDefinition: InstanceNodesQueryDefinition = {
           fullClassName: queryClass.fullName,
@@ -1394,14 +1394,14 @@ describe("SearchHierarchyDefinition", () => {
           schemaName: "BisCore",
           className: "SourceQueryClassName",
         });
-        const filterPathClass1 = classHierarchyInspector.stubEntityClass({
+        const searchPathClass1 = classHierarchyInspector.stubEntityClass({
           schemaName: "BisCore",
-          className: "FilterPathClassName1",
+          className: "searchPathClassName1",
           baseClass: queryClass,
         });
-        const filterPathClass2 = classHierarchyInspector.stubEntityClass({
+        const searchPathClass2 = classHierarchyInspector.stubEntityClass({
           schemaName: "BisCore",
-          className: "FilterPathClassName2",
+          className: "searchPathClassName2",
         });
         const sourceDefinition: InstanceNodesQueryDefinition = {
           fullClassName: queryClass.fullName,
@@ -1417,21 +1417,21 @@ describe("SearchHierarchyDefinition", () => {
           sourceFactory,
           targetPaths: [
             [
-              { className: filterPathClass1.fullName, id: "0x123" },
-              { className: filterPathClass2.fullName, id: "0x456" },
+              { className: searchPathClass1.fullName, id: "0x123" },
+              { className: searchPathClass2.fullName, id: "0x456" },
             ],
-            [{ className: filterPathClass1.fullName, id: "0x789" }],
+            [{ className: searchPathClass1.fullName, id: "0x789" }],
           ],
         });
         const result = await lastValueFrom(searchFactory.defineHierarchyLevel({ parentNode: undefined }));
         expect(result).to.deep.eq([
-          applyECInstanceIdsFilter(sourceDefinition, [
+          applyECInstanceIdsSearch(sourceDefinition, [
             {
-              className: filterPathClass1.fullName,
+              className: searchPathClass1.fullName,
               id: "0x123",
             },
             {
-              className: filterPathClass1.fullName,
+              className: searchPathClass1.fullName,
               id: "0x789",
             },
           ]),
@@ -1440,14 +1440,14 @@ describe("SearchHierarchyDefinition", () => {
 
       it("returns source instance node query definition searched with multiple matching paths", async () => {
         const queryClass = classHierarchyInspector.stubEntityClass({ schemaName: "BisCore", className: "SourceQueryClassName" });
-        const filterPathClass1 = classHierarchyInspector.stubEntityClass({
+        const searchPathClass1 = classHierarchyInspector.stubEntityClass({
           schemaName: "BisCore",
-          className: "FilterPathClassName1",
+          className: "searchPathClassName1",
           baseClass: queryClass,
         });
-        const filterPathClass2 = classHierarchyInspector.stubEntityClass({
+        const searchPathClass2 = classHierarchyInspector.stubEntityClass({
           schemaName: "BisCore",
-          className: "FilterPathClassName2",
+          className: "searchPathClassName2",
           baseClass: queryClass,
         });
         const sourceDefinition: InstanceNodesQueryDefinition = {
@@ -1462,17 +1462,17 @@ describe("SearchHierarchyDefinition", () => {
         const searchFactory = await createSearchHierarchyDefinition({
           imodelAccess: { ...classHierarchyInspector, imodelKey: "test-imodel-key" },
           sourceFactory,
-          targetPaths: [[{ className: filterPathClass1.fullName, id: "0x123" }], [{ className: filterPathClass2.fullName, id: "0x456" }]],
+          targetPaths: [[{ className: searchPathClass1.fullName, id: "0x123" }], [{ className: searchPathClass2.fullName, id: "0x456" }]],
         });
         const result = await lastValueFrom(searchFactory.defineHierarchyLevel({ parentNode: undefined }));
         expect(result).to.deep.eq([
-          applyECInstanceIdsFilter(sourceDefinition, [
+          applyECInstanceIdsSearch(sourceDefinition, [
             {
-              className: filterPathClass1.fullName,
+              className: searchPathClass1.fullName,
               id: "0x123",
             },
             {
-              className: filterPathClass2.fullName,
+              className: searchPathClass2.fullName,
               id: "0x456",
             },
           ]),
@@ -1481,13 +1481,13 @@ describe("SearchHierarchyDefinition", () => {
 
       it("returns source instance node query definition searched with multiple matching paths having same beginning", async () => {
         const queryClass = classHierarchyInspector.stubEntityClass({ schemaName: "BisCore", className: "SourceQueryClassName" });
-        const filterPathClass0 = classHierarchyInspector.stubEntityClass({
+        const searchPathClass0 = classHierarchyInspector.stubEntityClass({
           schemaName: "BisCore",
-          className: "FilterPathClassName0",
+          className: "searchPathClassName0",
           baseClass: queryClass,
         });
-        const filterPathClass1 = classHierarchyInspector.stubEntityClass({ schemaName: "BisCore", className: "FilterPathClassName1" });
-        const filterPathClass2 = classHierarchyInspector.stubEntityClass({ schemaName: "BisCore", className: "FilterPathClassName2" });
+        const searchPathClass1 = classHierarchyInspector.stubEntityClass({ schemaName: "BisCore", className: "searchPathClassName1" });
+        const searchPathClass2 = classHierarchyInspector.stubEntityClass({ schemaName: "BisCore", className: "searchPathClassName2" });
         const sourceDefinition: InstanceNodesQueryDefinition = {
           fullClassName: queryClass.fullName,
           query: {
@@ -1502,20 +1502,20 @@ describe("SearchHierarchyDefinition", () => {
           sourceFactory,
           targetPaths: [
             [
-              { className: filterPathClass0.fullName, id: "0x123" },
-              { className: filterPathClass1.fullName, id: "0x456" },
+              { className: searchPathClass0.fullName, id: "0x123" },
+              { className: searchPathClass1.fullName, id: "0x456" },
             ],
             [
-              { className: filterPathClass0.fullName, id: "0x123" },
-              { className: filterPathClass2.fullName, id: "0x789" },
+              { className: searchPathClass0.fullName, id: "0x123" },
+              { className: searchPathClass2.fullName, id: "0x789" },
             ],
           ],
         });
         const result = await lastValueFrom(searchFactory.defineHierarchyLevel({ parentNode: undefined }));
         expect(result).to.deep.eq([
-          applyECInstanceIdsFilter(sourceDefinition, [
+          applyECInstanceIdsSearch(sourceDefinition, [
             {
-              className: filterPathClass0.fullName,
+              className: searchPathClass0.fullName,
               id: "0x123",
             },
           ]),
@@ -1527,14 +1527,14 @@ describe("SearchHierarchyDefinition", () => {
           schemaName: "BisCore",
           className: "SourceQueryClassName",
         });
-        const filterPathClass0 = classHierarchyInspector.stubEntityClass({
+        const searchPathClass0 = classHierarchyInspector.stubEntityClass({
           schemaName: "BisCore",
-          className: "FilterPathClassName0",
+          className: "searchPathClassName0",
           baseClass: queryClass,
         });
-        const filterPathClass1 = classHierarchyInspector.stubEntityClass({
+        const searchPathClass1 = classHierarchyInspector.stubEntityClass({
           schemaName: "BisCore",
-          className: "FilterPathClassName1",
+          className: "searchPathClassName1",
         });
         const sourceDefinition: InstanceNodesQueryDefinition = {
           fullClassName: queryClass.fullName,
@@ -1551,14 +1551,14 @@ describe("SearchHierarchyDefinition", () => {
           targetPaths: [
             [{ className: queryClass.fullName, id: "0x123" }],
             [
-              { className: filterPathClass0.fullName, id: "0x123" },
-              { className: filterPathClass1.fullName, id: "0x456" },
+              { className: searchPathClass0.fullName, id: "0x123" },
+              { className: searchPathClass1.fullName, id: "0x456" },
             ],
           ],
         });
         const result = await lastValueFrom(searchFactory.defineHierarchyLevel({ parentNode: undefined }));
         expect(result).to.deep.eq([
-          applyECInstanceIdsFilter(sourceDefinition, [
+          applyECInstanceIdsSearch(sourceDefinition, [
             {
               className: queryClass.fullName,
               id: "0x123",
@@ -1572,12 +1572,12 @@ describe("SearchHierarchyDefinition", () => {
           schemaName: "BisCore",
           className: "SourceQueryClassName",
         });
-        const filterPathClass0 = classHierarchyInspector.stubEntityClass({
+        const searchPathClass0 = classHierarchyInspector.stubEntityClass({
           schemaName: "BisCore",
-          className: "FilterPathClassName0",
+          className: "searchPathClassName0",
           baseClass: queryClass,
         });
-        const filterPathClass1 = classHierarchyInspector.stubEntityClass({ schemaName: "BisCore", className: "FilterPathClassName1" });
+        const searchPathClass1 = classHierarchyInspector.stubEntityClass({ schemaName: "BisCore", className: "searchPathClassName1" });
         const sourceDefinition: InstanceNodesQueryDefinition = {
           fullClassName: queryClass.fullName,
           query: {
@@ -1591,18 +1591,18 @@ describe("SearchHierarchyDefinition", () => {
           imodelAccess: { ...classHierarchyInspector, imodelKey: "test-imodel-key" },
           sourceFactory,
           targetPaths: [
-            [{ className: filterPathClass0.fullName, id: "0x123" }],
+            [{ className: searchPathClass0.fullName, id: "0x123" }],
             [
               { className: queryClass.fullName, id: "0x123" },
-              { className: filterPathClass1.fullName, id: "0x456" },
+              { className: searchPathClass1.fullName, id: "0x456" },
             ],
           ],
         });
         const result = await lastValueFrom(searchFactory.defineHierarchyLevel({ parentNode: undefined }));
         expect(result).to.deep.eq([
-          applyECInstanceIdsFilter(sourceDefinition, [
+          applyECInstanceIdsSearch(sourceDefinition, [
             {
-              className: filterPathClass0.fullName,
+              className: searchPathClass0.fullName,
               id: "0x123",
             },
           ]),
@@ -1611,9 +1611,9 @@ describe("SearchHierarchyDefinition", () => {
 
       it("sets most nested grouping node as search target", async () => {
         const queryClass = classHierarchyInspector.stubEntityClass({ schemaName: "BisCore", className: "SourceQueryClassName" });
-        const filterPathClass0 = classHierarchyInspector.stubEntityClass({
+        const searchPathClass0 = classHierarchyInspector.stubEntityClass({
           schemaName: "BisCore",
-          className: "FilterPathClassName0",
+          className: "searchPathClassName0",
           baseClass: queryClass,
         });
         const autoExpandForGroupingNode1: SearchPathRevealDepthInPath = { depthInPath: 1 };
@@ -1633,24 +1633,24 @@ describe("SearchHierarchyDefinition", () => {
           sourceFactory,
           targetPaths: [
             {
-              path: [{ className: filterPathClass0.fullName, id: "0x123" }],
+              path: [{ className: searchPathClass0.fullName, id: "0x123" }],
               options: { reveal: autoExpandForGroupingNode1 },
             },
             {
-              path: [{ className: filterPathClass0.fullName, id: "0x123" }],
+              path: [{ className: searchPathClass0.fullName, id: "0x123" }],
               options: { reveal: autoExpandForGroupingNode2 },
             },
             {
-              path: [{ className: filterPathClass0.fullName, id: "0x123" }],
+              path: [{ className: searchPathClass0.fullName, id: "0x123" }],
               options: { reveal: autoExpandForGroupingNode3 },
             },
           ],
         });
         const result = await lastValueFrom(searchFactory.defineHierarchyLevel({ parentNode: undefined }));
         expect(result).to.deep.eq([
-          applyECInstanceIdsFilter(sourceDefinition, [
+          applyECInstanceIdsSearch(sourceDefinition, [
             {
-              className: filterPathClass0.fullName,
+              className: searchPathClass0.fullName,
               id: "0x123",
             },
           ]),
@@ -1660,9 +1660,9 @@ describe("SearchHierarchyDefinition", () => {
 
     it("uses search paths from parent node", async () => {
       const queryClass = classHierarchyInspector.stubEntityClass({ schemaName: "BisCore", className: "SourceQueryClassName" });
-      const childFilterClass = classHierarchyInspector.stubEntityClass({
+      const childSearchClass = classHierarchyInspector.stubEntityClass({
         schemaName: "BisCore",
-        className: "ChildFilterClass",
+        className: "ChildSearchClass",
         baseClass: queryClass,
       });
       const sourceDefinition: InstanceNodesQueryDefinition = {
@@ -1687,15 +1687,15 @@ describe("SearchHierarchyDefinition", () => {
               label: "custom node",
             }),
             search: {
-              childrenTargetPaths: [[{ className: childFilterClass.fullName, id: "0x456" }]],
+              childrenTargetPaths: [[{ className: childSearchClass.fullName, id: "0x456" }]],
             },
           },
         }),
       );
       expect(result).to.deep.eq([
-        applyECInstanceIdsFilter(sourceDefinition, [
+        applyECInstanceIdsSearch(sourceDefinition, [
           {
-            className: childFilterClass.fullName,
+            className: childSearchClass.fullName,
             id: "0x456",
           },
         ]),
@@ -1749,9 +1749,9 @@ describe("SearchHierarchyDefinition", () => {
     });
   });
 
-  describe("applyECInstanceIdsFilter", () => {
+  describe("applyECInstanceIdsSearch", () => {
     it("creates a valid CTE for searched instance paths", () => {
-      const result = applyECInstanceIdsFilter(
+      const result = applyECInstanceIdsSearch(
         {
           fullClassName: "full-class-name",
           query: {
@@ -1775,10 +1775,10 @@ describe("SearchHierarchyDefinition", () => {
       expect(result.query.ctes?.map(trimWhitespace)).to.deep.eq([
         "source cte",
         trimWhitespace(`
-          FilteringInfo(ECInstanceId, FilterClassName) AS (
+          FilteringInfo(ECInstanceId, searchClassName) AS (
           SELECT
             ECInstanceId,
-            'test.class' AS FilterClassName
+            'test.class' AS searchClassName
           FROM
             test.class
           WHERE
@@ -1791,7 +1791,7 @@ describe("SearchHierarchyDefinition", () => {
           SELECT
             [q].*,
             IdToHex([f].[ECInstanceId]) AS [${ECSQL_COLUMN_NAME_FilterECInstanceId}],
-            [f].[FilterClassName] AS [${ECSQL_COLUMN_NAME_FilterClassName}]
+            [f].[searchClassName] AS [${ECSQL_COLUMN_NAME_SearchClassName}]
           FROM (
             source query
           ) [q]

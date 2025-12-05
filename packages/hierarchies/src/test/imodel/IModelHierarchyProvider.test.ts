@@ -20,7 +20,7 @@ import {
 } from "../../hierarchies/imodel/IModelHierarchyProvider.js";
 import { LimitingECSqlQueryExecutor } from "../../hierarchies/imodel/LimitingECSqlQueryExecutor.js";
 import { NodeSelectClauseColumnNames } from "../../hierarchies/imodel/NodeSelectQueryFactory.js";
-import { ECSQL_COLUMN_NAME_FilterClassName, ECSQL_COLUMN_NAME_FilterECInstanceId } from "../../hierarchies/imodel/SearchHierarchyDefinition.js";
+import { ECSQL_COLUMN_NAME_FilterECInstanceId, ECSQL_COLUMN_NAME_SearchClassName } from "../../hierarchies/imodel/SearchHierarchyDefinition.js";
 import { RowDef } from "../../hierarchies/imodel/TreeNodesReader.js";
 import { createIModelAccessStub, createTestGenericNode, createTestGenericNodeKey, createTestInstanceKey, createTestSourceGenericNode } from "../Utils.js";
 
@@ -719,7 +719,7 @@ describe("createIModelHierarchyProvider", () => {
         createAsyncIterator<
           RowDef & {
             [ECSQL_COLUMN_NAME_FilterECInstanceId]: string;
-            [ECSQL_COLUMN_NAME_FilterClassName]: string;
+            [ECSQL_COLUMN_NAME_SearchClassName]: string;
           }
         >([
           {
@@ -727,7 +727,7 @@ describe("createIModelHierarchyProvider", () => {
             [NodeSelectClauseColumnNames.ECInstanceId]: "0x123",
             [NodeSelectClauseColumnNames.DisplayLabel]: "test label",
             [ECSQL_COLUMN_NAME_FilterECInstanceId]: "0x123",
-            [ECSQL_COLUMN_NAME_FilterClassName]: "a.b",
+            [ECSQL_COLUMN_NAME_SearchClassName]: "a.b",
           },
         ]),
       );
@@ -762,10 +762,10 @@ describe("createIModelHierarchyProvider", () => {
             trimWhitespace(query.ctes[0]) ===
               trimWhitespace(
                 `
-                FilteringInfo(ECInstanceId, FilterClassName) AS (
+                SearchInfo(ECInstanceId, SearchClassName) AS (
                 SELECT
                   ECInstanceId,
-                  'a.b' AS FilterClassName
+                  'a.b' AS SearchClassName
                 FROM
                   a.b
                 WHERE
@@ -778,9 +778,9 @@ describe("createIModelHierarchyProvider", () => {
                 SELECT
                     [q].*,
                     IdToHex([f].[ECInstanceId]) AS [${ECSQL_COLUMN_NAME_FilterECInstanceId}],
-                    [f].[FilterClassName] AS [${ECSQL_COLUMN_NAME_FilterClassName}]
+                    [f].[SearchClassName] AS [${ECSQL_COLUMN_NAME_SearchClassName}]
                   FROM (QUERY) [q]
-                  JOIN FilteringInfo [f] ON [f].[ECInstanceId] = [q].[ECInstanceId]
+                  JOIN SearchInfo [f] ON [f].[ECInstanceId] = [q].[ECInstanceId]
                 `,
               ),
         ),
@@ -835,13 +835,13 @@ describe("createIModelHierarchyProvider", () => {
       const rootNodePromise = new ResolvablePromise<
         RowDef & {
           [ECSQL_COLUMN_NAME_FilterECInstanceId]: string;
-          [ECSQL_COLUMN_NAME_FilterClassName]: string;
+          [ECSQL_COLUMN_NAME_SearchClassName]: string;
         }
       >();
       const childNodePromise = new ResolvablePromise<
         RowDef & {
           [ECSQL_COLUMN_NAME_FilterECInstanceId]: string;
-          [ECSQL_COLUMN_NAME_FilterClassName]: string;
+          [ECSQL_COLUMN_NAME_SearchClassName]: string;
         }
       >();
       imodelAccess.createQueryReader.callsFake(async function* ({ ecsql, ctes }) {
@@ -900,14 +900,14 @@ describe("createIModelHierarchyProvider", () => {
         [NodeSelectClauseColumnNames.ECInstanceId]: "0x123",
         [NodeSelectClauseColumnNames.DisplayLabel]: "ab",
         [ECSQL_COLUMN_NAME_FilterECInstanceId]: "0x123",
-        [ECSQL_COLUMN_NAME_FilterClassName]: "a.b",
+        [ECSQL_COLUMN_NAME_SearchClassName]: "a.b",
       });
       await childNodePromise.resolve({
         [NodeSelectClauseColumnNames.FullClassName]: "c.d",
         [NodeSelectClauseColumnNames.ECInstanceId]: "0x456",
         [NodeSelectClauseColumnNames.DisplayLabel]: "cd",
         [ECSQL_COLUMN_NAME_FilterECInstanceId]: "0x456",
-        [ECSQL_COLUMN_NAME_FilterClassName]: "c.d",
+        [ECSQL_COLUMN_NAME_SearchClassName]: "c.d",
       });
 
       // setting instance search while a nodes request is in progress cancels the request - ensure we get undefined

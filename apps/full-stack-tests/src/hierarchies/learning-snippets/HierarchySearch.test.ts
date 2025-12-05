@@ -524,7 +524,7 @@ describe("Hierarchies", () => {
           },
         };
 
-        // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.HierarchyFiltering.AutoExpandUntilDepthInPath.searchPath
+        // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.HierarchySearch.AutoExpandUntilDepthInPath.SearchPath
         // Hierarchy has this structure: A -> label grouping node -> B -> label grouping node -> C.
         const searchPath: HierarchySearchPath = {
           // Path to the element "C"
@@ -636,7 +636,7 @@ describe("Hierarchies", () => {
           },
         };
 
-        // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.HierarchyFiltering.autoExpand.FilteringPath
+        // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.HierarchySearch.autoExpand.SearchPath
         const searchPath: HierarchySearchPath = {
           // Path to the element "C"
           path: [elementKeys.a, elementKeys.b, elementKeys.c],

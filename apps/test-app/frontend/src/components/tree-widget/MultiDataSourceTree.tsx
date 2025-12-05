@@ -77,7 +77,7 @@ function Tree({ imodelAccess, height, width, treeLabel }: { imodelAccess: IModel
         return undefined;
       }
       return Promise.all([
-        getModelsHierarchySearchPaths({ imodelAccess, search: searchText, componentId, componentName: "MultiDataSourceTree" }),
+        getModelsHierarchySearchPaths({ imodelAccess, searchText, componentId, componentName: "MultiDataSourceTree" }),
         RSS_PROVIDER.getSearchPaths(searchText),
       ]).then(([imodelPaths, rssPaths]) => [...imodelPaths, ...rssPaths]);
     };
@@ -300,31 +300,31 @@ function createModelsHierarchyDefinition({ imodelAccess }: { imodelAccess: IMode
 }
 async function getModelsHierarchySearchPaths({
   imodelAccess,
-  search,
+  searchText,
   componentId,
   componentName,
 }: {
   imodelAccess: IModelAccess;
-  search: string;
+  searchText: string;
   componentId: string;
   componentName: string;
 }): Promise<HierarchySearchPath[]> {
   const labelsFactory = createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess });
   const [rootSubjectPath, modelPaths] = await Promise.all([
-    getRootSubjectSearchedPath({ imodelAccess, search, labelsFactory, componentId, componentName }),
-    Array.fromAsync(getModelsSearchPaths({ imodelAccess, search, labelsFactory, componentId, componentName })),
+    getRootSubjectSearchedPath({ imodelAccess, searchText, labelsFactory, componentId, componentName }),
+    Array.fromAsync(getModelsSearchPaths({ imodelAccess, searchText, labelsFactory, componentId, componentName })),
   ]);
   return [...(rootSubjectPath ? [rootSubjectPath] : []), ...modelPaths];
 }
 async function* getModelsSearchPaths({
   imodelAccess,
-  search,
+  searchText,
   labelsFactory,
   componentId,
   componentName,
 }: {
   imodelAccess: IModelAccess;
-  search: string;
+  searchText: string;
   labelsFactory: IInstanceLabelSelectClauseFactory;
   componentId: string;
   componentName: string;
@@ -363,7 +363,7 @@ async function* getModelsSearchPaths({
       FROM ModelsHierarchy mh
       WHERE mh.ParentId IS NULL
     `,
-      bindings: [{ type: "string", value: search.replace(/[%_\\]/g, "\\$&") }],
+      bindings: [{ type: "string", value: searchText.replace(/[%_\\]/g, "\\$&") }],
     },
     { restartToken: `${componentName}/${componentId}/models-paths` },
   );
@@ -382,13 +382,13 @@ async function* getModelsSearchPaths({
 }
 async function getRootSubjectSearchedPath({
   imodelAccess,
-  search,
+  searchText,
   labelsFactory,
   componentId,
   componentName,
 }: {
   imodelAccess: IModelAccess;
-  search: string;
+  searchText: string;
   labelsFactory: IInstanceLabelSelectClauseFactory;
   componentId: string;
   componentName: string;
@@ -402,7 +402,7 @@ async function getRootSubjectSearchedPath({
         ${await labelsFactory.createSelectClause({ classAlias: "this", className: "BisCore.Subject", selectorsConcatenator: ECSql.createConcatenatedValueStringSelector })} LIKE '%' || ? || '%' ESCAPE '\\'
         AND this.ECInstanceId = 0x1
     `,
-      bindings: [{ type: "string", value: search.replace(/[%_\\]/g, "\\$&") }],
+      bindings: [{ type: "string", value: searchText.replace(/[%_\\]/g, "\\$&") }],
     },
     { restartToken: `${componentName}/${componentId}/subject-path` },
   );
@@ -426,7 +426,7 @@ function getIcon(node: PresentationHierarchyNode): ReactElement | undefined {
   return undefined;
 }
 
-function createRssHierarchyProvider(): HierarchyProvider & { getSearchPaths: (search: string) => Promise<HierarchySearchPath[]> } {
+function createRssHierarchyProvider(): HierarchyProvider & { getSearchPaths: (searchText: string) => Promise<HierarchySearchPath[]> } {
   let feedPromise: ReturnType<RssParser["parseURL"]> | undefined;
   async function getFeed() {
     if (!feedPromise) {
@@ -443,19 +443,19 @@ function createRssHierarchyProvider(): HierarchyProvider & { getSearchPaths: (se
   return {
     hierarchyChanged: new BeEvent(),
 
-    async getSearchPaths(searchString: string): Promise<HierarchySearchPath[]> {
+    async getSearchPaths(searchText: string): Promise<HierarchySearchPath[]> {
       const feed = await getFeed();
       if (!feed) {
         return [];
       }
       const paths = new Array<HierarchyNodeIdentifiersPath>();
 
-      if ((feed.title ?? "<no title>").toLocaleLowerCase().includes(searchString.toLocaleLowerCase())) {
+      if ((feed.title ?? "<no title>").toLocaleLowerCase().includes(searchText.toLocaleLowerCase())) {
         paths.push([{ type: "generic", id: "rss-root", source: "rss" }]);
       }
 
       feed.items.forEach((item) => {
-        if ((item.title ?? "<no title>").toLocaleLowerCase().includes(searchString.toLocaleLowerCase())) {
+        if ((item.title ?? "<no title>").toLocaleLowerCase().includes(searchText.toLocaleLowerCase())) {
           paths.push([
             { type: "generic", id: "rss-root", source: "rss" },
             { type: "generic", id: `rss-${item.guid!}`, source: "rss" },

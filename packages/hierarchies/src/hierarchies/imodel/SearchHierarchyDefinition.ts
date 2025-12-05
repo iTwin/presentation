@@ -95,10 +95,10 @@ export class SearchHierarchyDefinition implements RxjsHierarchyDefinition {
     return (row, parentNode) => {
       return this._nodesParser(row).pipe(
         mergeMap((parsedNode) => {
-          if (!row[ECSQL_COLUMN_NAME_FilterECInstanceId] || !row[ECSQL_COLUMN_NAME_FilterClassName]) {
+          if (!row[ECSQL_COLUMN_NAME_FilterECInstanceId] || !row[ECSQL_COLUMN_NAME_SearchClassName]) {
             return of(parsedNode);
           }
-          const rowInstanceKey = { className: row[ECSQL_COLUMN_NAME_FilterClassName], id: row[ECSQL_COLUMN_NAME_FilterECInstanceId] };
+          const rowInstanceKey = { className: row[ECSQL_COLUMN_NAME_SearchClassName], id: row[ECSQL_COLUMN_NAME_FilterECInstanceId] };
           const filteringHelper = createHierarchySearchHelper(this._targetPaths, parentNode);
           const nodeFilteringPropPossiblyPromise = filteringHelper.createChildNodeProps({
             asyncPathMatcher: (identifier): boolean | Promise<boolean> => {
@@ -177,7 +177,7 @@ export class SearchHierarchyDefinition implements RxjsHierarchyDefinition {
       instanceNodeDefinitions.pipe(
         mergeMap((definition) => {
           if (searchHelper.hasSearchTargetAncestor) {
-            // if we have a filter target ancestor, we don't need to filter the definitions - we use all of them
+            // if we have a search target ancestor, we don't need to search the definitions - we use all of them
             return of(applyECInstanceIdsSelector(definition));
           }
           return defer(async () => {
@@ -233,7 +233,7 @@ export class SearchHierarchyDefinition implements RxjsHierarchyDefinition {
             filter((pathIdentifiers) => pathIdentifiers.length > 0),
 
             // for each definition that we're going to use, apply query-level filter
-            map((pathIdentifiers) => applyECInstanceIdsFilter(definition, pathIdentifiers)),
+            map((pathIdentifiers) => applyECInstanceIdsSearch(definition, pathIdentifiers)),
           );
         }),
       ),
@@ -247,7 +247,7 @@ export const ECSQL_COLUMN_NAME_FilterECInstanceId = "FilterECInstanceId";
 
 /** @internal */
 // eslint-disable-next-line @typescript-eslint/naming-convention
-export const ECSQL_COLUMN_NAME_FilterClassName = "FilterClassName";
+export const ECSQL_COLUMN_NAME_SearchClassName = "SearchClassName";
 
 function getClassECInstanceIds(targetInstanceKeys: InstanceKey[]) {
   const classNameECInstanceIds = new Map<string, Id64String[]>();
@@ -263,7 +263,7 @@ function getClassECInstanceIds(targetInstanceKeys: InstanceKey[]) {
 }
 
 /** @internal */
-export function applyECInstanceIdsFilter(def: InstanceNodesQueryDefinition, targetInstanceKeys: InstanceKey[]): InstanceNodesQueryDefinition {
+export function applyECInstanceIdsSearch(def: InstanceNodesQueryDefinition, targetInstanceKeys: InstanceKey[]): InstanceNodesQueryDefinition {
   const instanceIdsByClass = getClassECInstanceIds(targetInstanceKeys);
   return {
     ...def,
@@ -271,11 +271,11 @@ export function applyECInstanceIdsFilter(def: InstanceNodesQueryDefinition, targ
       ...def.query,
       ctes: [
         ...(def.query.ctes ?? []),
-        `FilteringInfo(ECInstanceId, FilterClassName) AS (
+        `SearchInfo(ECInstanceId, SearchClassName) AS (
           ${Array.from(instanceIdsByClass)
             .map(
               ([className, ecInstanceIds]) => `
-                SELECT ECInstanceId, '${className}' AS FilterClassName
+                SELECT ECInstanceId, '${className}' AS SearchClassName
                 FROM ${className}
                 WHERE ECInstanceId IN (${ecInstanceIds.join(", ")})
               `,
@@ -287,11 +287,11 @@ export function applyECInstanceIdsFilter(def: InstanceNodesQueryDefinition, targ
         SELECT
           [q].*,
           IdToHex([f].[ECInstanceId]) AS [${ECSQL_COLUMN_NAME_FilterECInstanceId}],
-          [f].[FilterClassName] AS [${ECSQL_COLUMN_NAME_FilterClassName}]
+          [f].[SearchClassName] AS [${ECSQL_COLUMN_NAME_SearchClassName}]
         FROM (
           ${def.query.ecsql}
         ) [q]
-        JOIN FilteringInfo [f] ON [f].[ECInstanceId] = [q].[ECInstanceId]
+        JOIN SearchInfo [f] ON [f].[ECInstanceId] = [q].[ECInstanceId]
       `,
     },
   };
@@ -307,7 +307,7 @@ export function applyECInstanceIdsSelector(def: InstanceNodesQueryDefinition): I
         SELECT
           [q].*,
           IdToHex([q].[ECInstanceId]) AS [${ECSQL_COLUMN_NAME_FilterECInstanceId}],
-          [q].[${NodeSelectClauseColumnNames.FullClassName}] AS [${ECSQL_COLUMN_NAME_FilterClassName}]
+          [q].[${NodeSelectClauseColumnNames.FullClassName}] AS [${ECSQL_COLUMN_NAME_SearchClassName}]
         FROM (${def.query.ecsql}) [q]
       `,
     },
