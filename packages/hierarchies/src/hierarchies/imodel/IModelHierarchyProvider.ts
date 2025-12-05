@@ -156,8 +156,8 @@ interface IModelHierarchyProviderProps {
    */
   formatter?: IPrimitiveValueFormatter;
 
-  /** Props for filtering the hierarchy. */
-  filtering?: {
+  /** Props for search the hierarchy. */
+  search?: {
     /** A list of node identifiers from root to target node. */
     paths: HierarchySearchPath[];
   };
@@ -255,7 +255,7 @@ class IModelHierarchyProviderImpl implements HierarchyProvider {
     this._localizedStrings = { other: "Other", unspecified: "Not specified", ...props?.localizedStrings };
     this._queryConcurrency = props.queryConcurrency ?? DEFAULT_QUERY_CONCURRENCY;
     this._querySchedulers = new Map();
-    this.setHierarchyFilter(props.filtering);
+    this.setHierarchySearch(props.search);
 
     const queryCacheSize = props.queryCacheSize ?? DEFAULT_QUERY_CACHE_SIZE;
     if (queryCacheSize !== 0) {
@@ -341,11 +341,11 @@ class IModelHierarchyProviderImpl implements HierarchyProvider {
       this._hierarchyChanged.raiseEvent({ searchChange: { newSearch: undefined } });
       return;
     }
-    this._activeHierarchyDefinition = new FilteringHierarchyDefinition({
+    this._activeHierarchyDefinition = new SearchHierarchyDefinition({
       imodelAccess: this.getPrimaryIModelAccess(),
       source: this._sourceHierarchyDefinition,
       sourceName: this.#sourceName,
-      nodeIdentifierPaths: props.paths,
+      targetPaths: props.paths,
     });
     this.invalidateHierarchyCache("Hierarchy search set");
     this._dispose.next();
@@ -426,7 +426,7 @@ class IModelHierarchyProviderImpl implements HierarchyProvider {
           }
           return this.getQueryScheduler(imodelAccess.imodelKey).scheduleSubscription(
             of(def.query).pipe(
-              map((query) => filterQueryByInstanceKeys(query, props.filteredInstanceKeys)),
+              map((query) => createInstanceKeysFilteredQuery(query, props.targetInstanceKeys)),
               mergeMap((query) =>
                 readNodes({
                   queryExecutor: imodelAccess,

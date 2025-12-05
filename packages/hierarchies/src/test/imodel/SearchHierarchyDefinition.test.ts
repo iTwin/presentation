@@ -7,10 +7,9 @@ import { assert, expect } from "chai";
 import { firstValueFrom, from, lastValueFrom, of, toArray } from "rxjs";
 import sinon from "sinon";
 import { ECClassHierarchyInspector, trimWhitespace } from "@itwin/presentation-shared";
-import { FilteringPathRevealDepthInPath, HierarchyFilteringPath, HierarchyFilteringPathOptions } from "../../hierarchies/HierarchyFiltering.js";
 import { HierarchyNode } from "../../hierarchies/HierarchyNode.js";
 import { HierarchyNodeIdentifiersPath } from "../../hierarchies/HierarchyNodeIdentifier.js";
-import { HierarchySearchPath, HierarchySearchPathOptions, SearchPathAutoExpandDepthInPath } from "../../hierarchies/HierarchySearch.js";
+import { HierarchySearchPath, HierarchySearchPathOptions, SearchPathRevealDepthInPath } from "../../hierarchies/HierarchySearch.js";
 import {
   GenericHierarchyNodeDefinition,
   HierarchyDefinitionParentNode,
@@ -401,7 +400,7 @@ describe("SearchHierarchyDefinition", () => {
             key: { type: "instances", instanceKeys: [{ id: "0x1", className: "bis:element" }] },
           });
           const searchFactory = await createSearchHierarchyDefinition({
-            nodeIdentifierPaths: [{ path: [inputNode.key.instanceKeys[0]], options: { reveal } }],
+            targetPaths: [{ path: [inputNode.key.instanceKeys[0]], options: { reveal } }],
           });
           const result = await firstValueFrom(searchFactory.postProcessNode(inputNode));
           expect(result.autoExpand).to.be.undefined;
@@ -416,8 +415,8 @@ describe("SearchHierarchyDefinition", () => {
               },
             ],
           });
-          const filteringFactory = await createFilteringHierarchyDefinition({ nodeIdentifierPaths: [{ path: [inputNode.key], options: { reveal } }] });
-          const result = await firstValueFrom(filteringFactory.postProcessNode(inputNode));
+          const searchFactory = await createSearchHierarchyDefinition({ targetPaths: [{ path: [inputNode.key], options: { reveal } }] });
+          const result = await firstValueFrom(searchFactory.postProcessNode(inputNode));
           expect(result.autoExpand).to.be.undefined;
         });
       });
@@ -445,27 +444,27 @@ describe("SearchHierarchyDefinition", () => {
           it(`${expectation ? "sets" : "doesn't set"} auto-expand on instances' node when it's an ancestor of filter target node and ${condition}`, async () => {
             const inputNode = createTestProcessedInstanceNode({
               key: { type: "instances", instanceKeys: [{ id: "0x1", className: "bis:element" }] },
-              filtering: {
-                filteredChildrenIdentifierPaths: [{ path: [{ id: "child", type: "generic" }], options: { reveal } }],
+              search: {
+                childrenTargetPaths: [{ path: [{ id: "child", type: "generic" }], options: { reveal } }],
               },
             });
-            const filteringFactory = await createFilteringHierarchyDefinition({
-              nodeIdentifierPaths: [{ path: [inputNode.key.instanceKeys[0], { id: "child", type: "generic" }], options: { reveal } }],
+            const searchFactory = await createSearchHierarchyDefinition({
+              targetPaths: [{ path: [inputNode.key.instanceKeys[0], { id: "child", type: "generic" }], options: { reveal } }],
             });
-            const result = await firstValueFrom(filteringFactory.postProcessNode(inputNode));
+            const result = await firstValueFrom(searchFactory.postProcessNode(inputNode));
             expect(result.autoExpand).to.eq(expectation);
           });
 
           it(`${expectation ? "sets" : "doesn't set"} auto-expand on generic node when it's an ancestor of filter target node and ${condition}`, async () => {
             const inputNode = createTestProcessedGenericNode({
-              filtering: {
-                filteredChildrenIdentifierPaths: [{ path: [{ id: "child", type: "generic" }], options: { reveal } }],
+              search: {
+                childrenTargetPaths: [{ path: [{ id: "child", type: "generic" }], options: { reveal } }],
               },
             });
-            const filteringFactory = await createFilteringHierarchyDefinition({
-              nodeIdentifierPaths: [{ path: [inputNode.key, { id: "child", type: "generic" }], options: { reveal } }],
+            const searchFactory = await createSearchHierarchyDefinition({
+              targetPaths: [{ path: [inputNode.key, { id: "child", type: "generic" }], options: { reveal } }],
             });
-            const result = await firstValueFrom(filteringFactory.postProcessNode(inputNode));
+            const result = await firstValueFrom(searchFactory.postProcessNode(inputNode));
             expect(result.autoExpand).to.eq(expectation);
           });
         });
@@ -494,16 +493,16 @@ describe("SearchHierarchyDefinition", () => {
             classDerivesFrom: sinon.stub<[string, string], Promise<boolean>>().resolves(true),
             imodelKey,
           };
-          const filteringFactory = await createFilteringHierarchyDefinition({
+          const searchFactory = await createSearchHierarchyDefinition({
             imodelAccess,
-            nodeIdentifierPaths: [
+            targetPaths: [
               {
                 path: [filterPathNodeKey, { id: "0x2", className: "bis:Element" }],
                 options: { reveal: true },
               },
             ],
           });
-          const result = await firstValueFrom(filteringFactory.postProcessNode(inputNode));
+          const result = await firstValueFrom(searchFactory.postProcessNode(inputNode));
           expect(result.autoExpand).to.eq(undefined);
         });
       });
@@ -608,14 +607,14 @@ describe("SearchHierarchyDefinition", () => {
               children: [
                 {
                   ...createTestProcessedInstanceNode(),
-                  filtering: { isFilterTarget: true, filterTargetOptions: { reveal: false } },
+                  search: { isSearchTarget: true, searchTargetOptions: { reveal: false } },
                 },
               ],
             },
           ],
         };
-        const filteringFactory = await createFilteringHierarchyDefinition();
-        const result = await firstValueFrom(filteringFactory.postProcessNode(inputNode));
+        const searchFactory = await createSearchHierarchyDefinition();
+        const result = await firstValueFrom(searchFactory.postProcessNode(inputNode));
         expect(result.autoExpand).to.be.undefined;
       });
 
@@ -628,7 +627,7 @@ describe("SearchHierarchyDefinition", () => {
               children: [
                 {
                   ...createTestProcessedInstanceNode(),
-                  filtering: { isFilterTarget: true, filterTargetOptions: { reveal: true } },
+                  search: { isSearchTarget: true, searchTargetOptions: { reveal: true } },
                 },
               ],
             },
@@ -648,7 +647,7 @@ describe("SearchHierarchyDefinition", () => {
               children: [
                 {
                   ...createTestProcessedInstanceNode(),
-                  filtering: { isFilterTarget: true, filterTargetOptions: { reveal: false } },
+                  search: { isSearchTarget: true, searchTargetOptions: { reveal: false } },
                 },
               ],
             },
@@ -668,7 +667,7 @@ describe("SearchHierarchyDefinition", () => {
               children: [
                 {
                   ...createTestProcessedInstanceNode(),
-                  filtering: { isFilterTarget: true, filterTargetOptions: { reveal: true } },
+                  search: { isSearchTarget: true, searchTargetOptions: { reveal: true } },
                 },
               ],
             },
@@ -1044,7 +1043,7 @@ describe("SearchHierarchyDefinition", () => {
       expect(result).to.be.empty;
     });
 
-    describe("filtering generic node definitions", () => {
+    describe("search generic node definitions", () => {
       it("omits source generic node definition when using instance key search", async () => {
         const filterClass = classHierarchyInspector.stubEntityClass({ schemaName: "BisCore", className: "FilterClassName" });
         const sourceDefinition: GenericHierarchyNodeDefinition = {
@@ -1084,7 +1083,7 @@ describe("SearchHierarchyDefinition", () => {
         expect(result).to.be.empty;
       });
 
-      it("omits source generic node definition when search filtering by empty path", async () => {
+      it("omits source generic node definition when search search by empty path", async () => {
         const sourceDefinition: GenericHierarchyNodeDefinition = {
           node: createTestSourceGenericNode({
             key: "custom",
@@ -1227,7 +1226,7 @@ describe("SearchHierarchyDefinition", () => {
         ]);
       });
 
-      it("applies correct filtering options to itself", async () => {
+      it("applies correct search options to itself", async () => {
         const sourceDefinition: GenericHierarchyNodeDefinition = {
           node: createTestSourceGenericNode({
             key: "custom",
@@ -1262,7 +1261,7 @@ describe("SearchHierarchyDefinition", () => {
       });
     });
 
-    describe("filtering instance node query definitions", () => {
+    describe("search instance node query definitions", () => {
       it("omits source instance node query definition when using custom node search", async () => {
         const queryClass = classHierarchyInspector.stubEntityClass({ schemaName: "BisCore", className: "SourceQueryClassName" });
         const sourceDefinition: InstanceNodesQueryDefinition = {
@@ -1304,7 +1303,7 @@ describe("SearchHierarchyDefinition", () => {
         expect(result).to.be.empty;
       });
 
-      it("omits source instance node query definition when search filtering by empty path", async () => {
+      it("omits source instance node query definition when search search by empty path", async () => {
         const queryClass = classHierarchyInspector.stubEntityClass({ schemaName: "BisCore", className: "SourceQueryClassName" });
         const sourceDefinition: InstanceNodesQueryDefinition = {
           fullClassName: queryClass.fullName,
@@ -1343,7 +1342,7 @@ describe("SearchHierarchyDefinition", () => {
         expect(result).to.be.empty;
       });
 
-      it("returns unfiltered source instance node query definitions when filtering search target parent node", async () => {
+      it("returns unfiltered source instance node query definitions when search search target parent node", async () => {
         const queryClass = classHierarchyInspector.stubEntityClass({ schemaName: "BisCore", className: "SourceQueryClassName" });
         const sourceDefinition: InstanceNodesQueryDefinition = {
           fullClassName: queryClass.fullName,
@@ -1642,7 +1641,7 @@ describe("SearchHierarchyDefinition", () => {
       });
     });
 
-    it("uses filtering paths from parent node", async () => {
+    it("uses search paths from parent node", async () => {
       const queryClass = classHierarchyInspector.stubEntityClass({ schemaName: "BisCore", className: "SourceQueryClassName" });
       const childFilterClass = classHierarchyInspector.stubEntityClass({
         schemaName: "BisCore",

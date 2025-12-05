@@ -505,8 +505,8 @@ function createRssHierarchyProvider(): HierarchyProvider & { getSearchPaths: (se
       }
       const searchHelper = !parentNode || HierarchyNode.isGeneric(parentNode) ? createHierarchySearchHelper(search, parentNode) : undefined;
 
-      if (!searchHelper.hasSearch) {
-        yield* searchHelper();
+      if (!searchHelper?.hasSearch) {
+        yield* generateNodes();
         return;
       }
 

@@ -6,6 +6,7 @@
 import { GenericInstanceFilter } from "@itwin/core-common";
 import { Event, InstanceKey, IPrimitiveValueFormatter, Props } from "@itwin/presentation-shared";
 import { HierarchyNode, ParentHierarchyNode } from "./HierarchyNode.js";
+import { HierarchySearchPath } from "./HierarchySearch.js";
 
 /**
  * Props for the `HierarchyProvider.getNodes` call.

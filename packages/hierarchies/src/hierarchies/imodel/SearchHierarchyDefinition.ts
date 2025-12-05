@@ -6,10 +6,9 @@
 import { defaultIfEmpty, defer, filter, firstValueFrom, map, merge, mergeAll, mergeMap, Observable, of, take, toArray } from "rxjs";
 import { Id64String } from "@itwin/core-bentley";
 import { ECClassHierarchyInspector, InstanceKey } from "@itwin/presentation-shared";
-import { createHierarchyFilteringHelper, HierarchyFilteringPath, shouldRevealNode } from "../HierarchyFiltering.js";
 import { HierarchyNodeIdentifier } from "../HierarchyNodeIdentifier.js";
 import { HierarchyNodeKey, IModelInstanceKey } from "../HierarchyNodeKey.js";
-import { createHierarchySearchHelper, HierarchySearchPath, HierarchySearchPathOptions } from "../HierarchySearch.js";
+import { createHierarchySearchHelper, HierarchySearchPath, shouldAutoExpandBasedOnReveal } from "../HierarchySearch.js";
 import {
   DefineHierarchyLevelProps,
   GenericHierarchyNodeDefinition,
@@ -21,23 +20,14 @@ import { ProcessedGroupingHierarchyNode, ProcessedHierarchyNode, ProcessedInstan
 import { NodeSelectClauseColumnNames } from "../imodel/NodeSelectQueryFactory.js";
 import { defaultNodesParser } from "../imodel/TreeNodesReader.js";
 import { fromPossiblyPromise } from "../internal/Common.js";
-import { partition, partition } from "../internal/operators/Partition.js";
-import {
-  RxjsHierarchyDefinition,
-  RxjsHierarchyDefinition,
-  RxjsNodeParser,
-  RxjsNodeParser,
-  RxjsNodePostProcessor,
-  RxjsNodePostProcessor,
-  RxjsNodePreProcessor,
-  RxjsNodePreProcessor,
-} from "../internal/RxjsHierarchyDefinition.js";
+import { partition } from "../internal/operators/Partition.js";
+import { RxjsHierarchyDefinition, RxjsNodeParser, RxjsNodePostProcessor, RxjsNodePreProcessor } from "../internal/RxjsHierarchyDefinition.js";
 
-interface FilteringHierarchyDefinitionProps {
+interface SearchHierarchyDefinitionProps {
   imodelAccess: ECClassHierarchyInspector & { imodelKey: string };
   source: RxjsHierarchyDefinition;
   sourceName: string;
-  nodeIdentifierPaths: HierarchyFilteringPath[];
+  targetPaths: HierarchySearchPath[];
   nodesParser?: RxjsNodeParser;
 }
 
@@ -53,7 +43,7 @@ export class SearchHierarchyDefinition implements RxjsHierarchyDefinition {
     this._imodelAccess = props.imodelAccess;
     this._source = props.source;
     this.#sourceName = props.sourceName;
-    this._nodeIdentifierPaths = props.nodeIdentifierPaths;
+    this._targetPaths = props.targetPaths;
     this._nodesParser = props.nodesParser ?? this._source.parseNode ?? ((row) => of(defaultNodesParser(row)));
   }
 
@@ -81,9 +71,9 @@ export class SearchHierarchyDefinition implements RxjsHierarchyDefinition {
                 parentKeysWithoutGroupingNodesLength: processedNode.parentKeys.filter((key) => !HierarchyNodeKey.isGrouping(key)).length,
                 parentKeysLength: processedNode.parentKeys.length,
               })
-            : processedNode.filtering?.filteredChildrenIdentifierPaths?.some((path) =>
-                shouldRevealNode({
-                  reveal: HierarchyFilteringPath.normalize(path).options?.reveal,
+            : processedNode.search?.childrenTargetPaths?.some((path) =>
+                shouldAutoExpandBasedOnReveal({
+                  reveal: HierarchySearchPath.normalize(path).options?.reveal,
                   nodePositionInPath: processedNode.parentKeys.filter((key) => !HierarchyNodeKey.isGrouping(key)).length,
                   nodePositionInHierarchy: processedNode.parentKeys.length,
                 }),
@@ -106,7 +96,7 @@ export class SearchHierarchyDefinition implements RxjsHierarchyDefinition {
             return of(parsedNode);
           }
           const rowInstanceKey = { className: row[ECSQL_COLUMN_NAME_FilterClassName], id: row[ECSQL_COLUMN_NAME_FilterECInstanceId] };
-          const filteringHelper = createHierarchyFilteringHelper(this._nodeIdentifierPaths, parentNode);
+          const filteringHelper = createHierarchySearchHelper(this._targetPaths, parentNode);
           const nodeFilteringPropPossiblyPromise = filteringHelper.createChildNodeProps({
             asyncPathMatcher: (identifier): boolean | Promise<boolean> => {
               if (identifier.id !== rowInstanceKey.id) {
@@ -135,8 +125,8 @@ export class SearchHierarchyDefinition implements RxjsHierarchyDefinition {
           });
           return fromPossiblyPromise(nodeFilteringPropPossiblyPromise).pipe(
             map((nodeExtraProps) => {
-              if (nodeExtraProps?.filtering) {
-                parsedNode.filtering = nodeExtraProps.filtering;
+              if (nodeExtraProps?.search) {
+                parsedNode.search = nodeExtraProps.search;
               }
               return parsedNode;
             }),
@@ -149,9 +139,9 @@ export class SearchHierarchyDefinition implements RxjsHierarchyDefinition {
   public defineHierarchyLevel(props: DefineHierarchyLevelProps): Observable<HierarchyLevelDefinition> {
     const sourceDefinitions = this._source.defineHierarchyLevel(props);
 
-    const filteringHelper = createHierarchySearchHelper(this._targetPaths, props.parentNode);
-    const childNodeFilteringIdentifiers = filteringHelper.getChildNodeSearchIdentifiers();
-    if (!childNodeFilteringIdentifiers) {
+    const searchHelper = createHierarchySearchHelper(this._targetPaths, props.parentNode);
+    const childNodeSearchIdentifiers = searchHelper.getChildNodeSearchIdentifiers();
+    if (!childNodeSearchIdentifiers) {
       return sourceDefinitions;
     }
 
@@ -160,8 +150,8 @@ export class SearchHierarchyDefinition implements RxjsHierarchyDefinition {
       genericNodeDefinitions.pipe(
         map((definition) => {
           if (
-            filteringHelper.hasSearchTargetAncestor ||
-            childNodeFilteringIdentifiers.some(
+            searchHelper.hasSearchTargetAncestor ||
+            childNodeSearchIdentifiers.some(
               (identifier) =>
                 HierarchyNodeIdentifier.isGenericNodeIdentifier(identifier) &&
                 (!identifier.source || identifier.source === this.#sourceName) &&
@@ -172,7 +162,7 @@ export class SearchHierarchyDefinition implements RxjsHierarchyDefinition {
               ...definition,
               node: {
                 ...definition.node,
-                ...filteringHelper.createChildNodeProps({ pathMatcher: ({ id }) => id === definition.node.key }),
+                ...searchHelper.createChildNodeProps({ pathMatcher: ({ id }) => id === definition.node.key }),
               },
             };
           }
@@ -183,7 +173,7 @@ export class SearchHierarchyDefinition implements RxjsHierarchyDefinition {
 
       instanceNodeDefinitions.pipe(
         mergeMap((definition) => {
-          if (filteringHelper.hasSearchTargetAncestor) {
+          if (searchHelper.hasSearchTargetAncestor) {
             // if we have a filter target ancestor, we don't need to filter the definitions - we use all of them
             return of(applyECInstanceIdsSelector(definition));
           }
@@ -212,7 +202,7 @@ export class SearchHierarchyDefinition implements RxjsHierarchyDefinition {
               }
               return entries;
             }
-            for (const id of childNodeFilteringIdentifiers) {
+            for (const id of childNodeSearchIdentifiers) {
               // take only identifiers that match the definition by type, source and class
               if (!HierarchyNodeIdentifier.isInstanceNodeIdentifier(id)) {
                 continue;
@@ -345,9 +335,9 @@ function shouldRevealGroupingNodeBasedOnNestedChildren({
     }
 
     if (
-      child.filtering.isFilterTarget &&
-      shouldRevealNode({
-        reveal: child.filtering.filterTargetOptions?.reveal,
+      child.search.isSearchTarget &&
+      shouldAutoExpandBasedOnReveal({
+        reveal: child.search.searchTargetOptions?.reveal,
         nodePositionInHierarchy: parentKeysLength,
         // Grouping node is not in filtering path, but we can assume that it is at the position of 1 less than `parentKeysWithoutGroupingNodesLength`
         nodePositionInPath: parentKeysWithoutGroupingNodesLength - 1,
@@ -361,10 +351,10 @@ function shouldRevealGroupingNodeBasedOnNestedChildren({
       continue;
     }
 
-    for (const path of child.filtering.filteredChildrenIdentifierPaths) {
+    for (const path of child.search.childrenTargetPaths) {
       if (
         "path" in path &&
-        shouldRevealNode({
+        shouldAutoExpandBasedOnReveal({
           reveal: path.options?.reveal,
           nodePositionInHierarchy: parentKeysLength,
           // Grouping node is not in filtering path, but we can assume that it is at the position of 1 less than `parentKeysWithoutGroupingNodesLength`

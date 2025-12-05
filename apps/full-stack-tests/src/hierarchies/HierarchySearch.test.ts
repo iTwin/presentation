@@ -22,8 +22,6 @@ import {
   DefineInstanceNodeChildHierarchyLevelProps,
   GenericNodeKey,
   HierarchyDefinition,
-  HierarchyFilteringPath,
-  HierarchyFilteringPath,
   HierarchyNode,
   HierarchyNodeIdentifier,
   HierarchyNodeKey,
@@ -387,7 +385,7 @@ describe("Hierarchies", () => {
           provider: createProvider({
             imodel,
             hierarchy,
-            filteredNodePaths: [{ path: [keys.childSubject1, keys.childSubject21, keys.childSubject3], options: { reveal: { depthInHierarchy: 4 } } }],
+            hierarchySearchPaths: [{ path: [keys.childSubject1, keys.childSubject21, keys.childSubject3], options: { reveal: { depthInHierarchy: 4 } } }],
           }),
           expect: [
             NodeValidators.createForClassGroupingNode({
@@ -424,7 +422,7 @@ describe("Hierarchies", () => {
                                           children: [
                                             NodeValidators.createForInstanceNode({
                                               instanceKeys: [keys.childSubject3],
-                                              isFilterTarget: true,
+                                              isSearchTarget: true,
                                               children: false,
                                               autoExpand: false,
                                             }),
@@ -1734,9 +1732,6 @@ describe("Hierarchies", () => {
           },
         });
         const provider4 = new (class implements HierarchyProvider {
-          setHierarchyFilter(props: { paths: HierarchyFilteringPath[] } | undefined): void {
-            throw new Error("Method not implemented.");
-          }
           public hierarchyChanged = new BeEvent();
           private _filter: HierarchySearchPath[] | undefined;
           public getNodes: HierarchyProvider["getNodes"] = ({ parentNode }) => {
@@ -1929,9 +1924,6 @@ describe("Hierarchies", () => {
         const provider2 = createSubjectsHierarchyProvider(createIModelAccess(imodel2));
         // create generic node provider that creates a node for every bis.Subject node of any iModel
         const provider3 = new (class implements HierarchyProvider {
-          setHierarchyFilter(props: { paths: HierarchyFilteringPath[] } | undefined): void {
-            throw new Error("Method not implemented.");
-          }
           public hierarchyChanged = new BeEvent();
           public getNodes: HierarchyProvider["getNodes"] = ({ parentNode }) => {
             if (
@@ -1945,13 +1937,13 @@ describe("Hierarchies", () => {
                 parentKeys: [...parentNode.parentKeys, parentNode.key],
                 children: false,
               };
-              const filteringHelper = createHierarchySearchHelper(undefined, parentNode);
-              if (!filteringHelper.hasSearch) {
+              const searchHelper = createHierarchySearchHelper(undefined, parentNode);
+              if (!searchHelper.hasSearch) {
                 return createAsyncIterator([myNode]);
               }
-              const nodeMatchesFilter = filteringHelper.getChildNodeSearchIdentifiers()?.some((id) => HierarchyNodeIdentifier.equal(id, myNode.key));
+              const nodeMatchesFilter = searchHelper.getChildNodeSearchIdentifiers()?.some((id) => HierarchyNodeIdentifier.equal(id, myNode.key));
               if (nodeMatchesFilter) {
-                return createAsyncIterator([{ ...myNode, ...filteringHelper.createChildNodeProps({ nodeKey: myNode.key, parentKeys: myNode.parentKeys }) }]);
+                return createAsyncIterator([{ ...myNode, ...searchHelper.createChildNodeProps({ nodeKey: myNode.key, parentKeys: myNode.parentKeys }) }]);
               }
             }
             return createAsyncIterator([]);
