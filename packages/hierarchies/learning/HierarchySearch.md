@@ -108,7 +108,7 @@ const searchPath: HierarchySearchPath = {
 
 <!-- END EXTRACTION -->
 
-Also, hierarchies may contain grouping nodes, which don't represent anything by themselves, which means they can't be a filter target. In some cases it may be necessary to auto-expand the hierarchy up to a desired grouping node (and not auto-expand grouping nodes below them), which can be achieved by setting the `autoExpand` property to `{ depthInHierarchy: number }`, where depth represents grouping node depth in the hierarchy:
+Also, hierarchies may contain grouping nodes, which don't represent anything by themselves, which means they can't be a search target. In some cases it may be necessary to auto-expand the hierarchy up to a desired grouping node (and not auto-expand grouping nodes below them), which can be achieved by setting the `autoExpand` property to `{ depthInHierarchy: number }`, where depth represents grouping node depth in the hierarchy:
 
 <!-- [[include: [Presentation.Hierarchies.HierarchySearch.HierarchySearchPathImport, Presentation.Hierarchies.HierarchySearch.AutoExpandUntilDepthInHierarchy.SearchPath], ts]] -->
 <!-- BEGIN EXTRACTION -->
