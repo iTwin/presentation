@@ -283,6 +283,7 @@ export namespace HierarchyFilteringPath {
 
 // @public (undocumented)
 export interface HierarchyFilteringPathOptions {
+    autoExpand?: boolean;
     reveal?: boolean | FilteringPathRevealDepthInHierarchy | FilteringPathRevealDepthInPath;
 }
 
