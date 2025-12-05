@@ -40,28 +40,28 @@ export interface ClassGroupingNodeKey {
 }
 
 // @public
-export function createHierarchySearchHelper(rootLevelSearchProps: HierarchySearchPath[] | undefined, parentNode: Pick<NonGroupingHierarchyNode, "search" | "parentKeys"> | undefined): {
-    hasSearch: boolean;
-    hasSearchTargetAncestor: boolean;
-    getChildNodeSearchIdentifiers: () => HierarchyNodeIdentifier[] | undefined;
+export function createHierarchyFilteringHelper(rootLevelFilteringProps: HierarchyFilteringPath[] | undefined, parentNode: Pick<NonGroupingHierarchyNode, "filtering" | "parentKeys"> | undefined): {
+    hasFilter: boolean;
+    hasFilterTargetAncestor: boolean;
+    getChildNodeFilteringIdentifiers: () => HierarchyNodeIdentifier[] | undefined;
     createChildNodeProps: (props: {
         nodeKey: InstancesNodeKey | GenericNodeKey;
     } | {
         pathMatcher: (identifier: HierarchyNodeIdentifier) => boolean;
-    }) => Pick<HierarchyNode, "autoExpand" | "search"> | undefined;
+    }) => Pick<HierarchyNode, "autoExpand" | "filtering"> | undefined;
     createChildNodePropsAsync: (props: {
         pathMatcher: (identifier: HierarchyNodeIdentifier) => boolean | Promise<boolean>;
-    }) => Promise<Pick<HierarchyNode, "autoExpand" | "search"> | undefined> | Pick<HierarchyNode, "autoExpand" | "search"> | undefined;
+    }) => Promise<Pick<HierarchyNode, "autoExpand" | "filtering"> | undefined> | Pick<HierarchyNode, "autoExpand" | "filtering"> | undefined;
 };
 
 // @public
-export function createIModelHierarchyProvider(props: IModelHierarchyProviderProps): HierarchyProvider & {
-    dispose: () => void;
-    [Symbol.dispose]: () => void;
-};
+export function createIModelHierarchyProvider(props: IModelHierarchyProviderProps): HierarchyProvider & Disposable;
 
 // @public
 export function createLimitingECSqlQueryExecutor(baseExecutor: ECSqlQueryExecutor, defaultLimit: number | "unbounded"): LimitingECSqlQueryExecutor;
+
+// @alpha
+export function createMergedIModelHierarchyProvider(props: MergedIModelHierarchyProviderProps): HierarchyProvider & Disposable;
 
 // @public
 export function createNodesQueryClauseFactory(props: {
@@ -174,6 +174,22 @@ interface ECSqlValueSelector {
     selector: string;
 }
 
+// @public @deprecated
+export function extractFilteringProps(rootLevelFilteringProps: HierarchyFilteringPath[], parentNode: Pick<NonGroupingHierarchyNode, "filtering"> | undefined): {
+    filteredNodePaths: HierarchyFilteringPath[];
+    hasFilterTargetAncestor: boolean;
+} | undefined;
+
+// @public (undocumented)
+interface FilteringPathAutoExpandDepthInHierarchy {
+    depthInHierarchy: number;
+}
+
+// @public (undocumented)
+interface FilteringPathAutoExpandDepthInPath {
+    depthInPath: number;
+}
+
 // @public
 interface GenericHierarchyNodeDefinition {
     node: SourceGenericHierarchyNode;
@@ -235,6 +251,23 @@ export interface HierarchyDefinition {
 
 // @public
 type HierarchyDefinitionParentNode = Omit<NonGroupingHierarchyNode, "children">;
+
+// @public
+export type HierarchyFilteringPath = HierarchyNodeIdentifiersPath | {
+    path: HierarchyNodeIdentifiersPath;
+    options?: HierarchyFilteringPathOptions;
+};
+
+// @public (undocumented)
+export namespace HierarchyFilteringPath {
+    export function mergeOptions(lhs: HierarchyFilteringPathOptions | undefined, rhs: HierarchyFilteringPathOptions | undefined): HierarchyFilteringPathOptions | undefined;
+    export function normalize(source: HierarchyFilteringPath): Exclude<HierarchyFilteringPath, HierarchyNodeIdentifiersPath>;
+}
+
+// @public (undocumented)
+export interface HierarchyFilteringPathOptions {
+    autoExpand?: boolean | FilteringPathAutoExpandDepthInHierarchy | FilteringPathAutoExpandDepthInPath;
+}
 
 // @public
 export type HierarchyLevelDefinition = HierarchyNodesDefinition[];
@@ -531,6 +564,14 @@ export interface LimitingECSqlQueryExecutor {
     }): ReturnType<ECSqlQueryExecutor["createQueryReader"]>;
 }
 
+// @alpha
+interface MergedIModelHierarchyProviderProps extends Omit<IModelHierarchyProviderProps, "imodelAccess" | "imodelChanged"> {
+    imodels: Array<{
+        imodelAccess: IModelAccess;
+        imodelChanged?: Event_2<() => void>;
+    }>;
+}
+
 // @public
 interface MergeHierarchyProvidersProps {
     providers: HierarchyProvider[];
@@ -538,7 +579,6 @@ interface MergeHierarchyProvidersProps {
 
 // @public
 export function mergeProviders({ providers }: MergeHierarchyProvidersProps): HierarchyProvider & {
-    dispose: () => void;
     [Symbol.dispose]: () => void;
 };
 
@@ -611,6 +651,7 @@ export interface NodesQueryClauseFactory {
 
 // @public
 export interface NonGroupingHierarchyNode extends BaseHierarchyNode {
+    filtering?: HierarchyNodeFilteringProps;
     key: GenericNodeKey | InstancesNodeKey;
     supportsFiltering?: boolean;
 }

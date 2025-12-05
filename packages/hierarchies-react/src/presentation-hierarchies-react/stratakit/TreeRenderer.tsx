@@ -3,14 +3,14 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { ComponentPropsWithoutRef, CSSProperties, forwardRef, memo, ReactElement, useCallback, useEffect, useMemo, useRef } from "react";
+import { ComponentPropsWithoutRef, CSSProperties, forwardRef, memo, ReactElement, ReactNode, useCallback, useEffect, useMemo, useRef } from "react";
 import { Tree } from "@stratakit/structures";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { TreeRendererProps } from "../Renderers.js";
 import { PresentationHierarchyNode } from "../TreeNode.js";
 import { SelectionMode, useSelectionHandler } from "../UseSelectionHandler.js";
 import { useEvent } from "../Utils.js";
-import { ErrorItem, FlatTreeItem, isPlaceholderItem, useErrorList, useFlatTreeItems } from "./FlatTreeNode.js";
+import { ErrorItem, FlatTreeItem, FlatTreeNodeItem, isPlaceholderItem, useErrorList, useFlatTreeItems } from "./FlatTreeNode.js";
 import { LocalizationContextProvider } from "./LocalizationContext.js";
 import { RenameContextProvider } from "./RenameAction.js";
 import { TreeErrorRenderer, TreeErrorRendererProps } from "./TreeErrorRenderer.js";
@@ -42,12 +42,41 @@ interface TreeRendererOwnProps {
      */
     onLabelChanged?: (newLabel: string) => void;
   };
+
+  /**
+   * Callback that returns menu actions for tree item.
+   * Must return an array of `<TreeActionBase />` or `<Divider />` elements.
+   */
+  getMenuActions?: (props: { targetNode: PresentationHierarchyNode; selectedNodes: PresentationHierarchyNode[] }) => ReactNode[];
+  /**
+   * Callback that returns inline actions for tree item.
+   * Must return an array of `<TreeActionBase />` elements.
+   * Max 2 items.
+   */
+  getInlineActions?: (props: { targetNode: PresentationHierarchyNode; selectedNodes: PresentationHierarchyNode[] }) => ReactNode[];
+  /**
+   * Callback that returns actions for tree item context menu.
+   * Must return an array of `<TreeActionBase />` or `<Divider />` elements.
+   */
+  getContextMenuActions?: (props: { targetNode: PresentationHierarchyNode; selectedNodes: PresentationHierarchyNode[] }) => ReactNode[];
 }
 
 /** @alpha */
 type StrataKitTreeRendererProps = TreeRendererProps &
   Pick<TreeErrorRendererProps, "onFilterClick"> &
-  Omit<TreeNodeRendererProps, "node" | "aria-level" | "aria-posinset" | "aria-setsize" | "reloadTree" | "selected" | "error"> &
+  Omit<
+    TreeNodeRendererProps,
+    | "node"
+    | "aria-level"
+    | "aria-posinset"
+    | "aria-setsize"
+    | "reloadTree"
+    | "selected"
+    | "error"
+    | "getMenuActions"
+    | "getInlineActions"
+    | "getContextMenuActions"
+  > &
   TreeRendererOwnProps &
   ComponentPropsWithoutRef<typeof LocalizationContextProvider>;
 
@@ -73,6 +102,10 @@ export function StrataKitTreeRenderer({
   onNodeClick: onNodeClickOverride,
   onNodeKeyDown: onNodeKeyDownOverride,
   getEditingProps,
+  id,
+  getInlineActions,
+  getMenuActions,
+  getContextMenuActions,
   ...treeProps
 }: StrataKitTreeRendererProps) {
   const { onNodeClick, onNodeKeyDown } = useSelectionHandler({
@@ -132,10 +165,34 @@ export function StrataKitTreeRenderer({
     reloadTree,
   };
 
+  const getSelectedNodes = useMemo(() => {
+    let calculatedSelectedNodes: PresentationHierarchyNode[];
+    return () => {
+      if (calculatedSelectedNodes === undefined) {
+        calculatedSelectedNodes = flatItems
+          .filter((item): item is FlatTreeNodeItem => !isPlaceholderItem(item) && isNodeSelected?.(item.id))
+          .map((item) => item.node);
+      }
+      return calculatedSelectedNodes;
+    };
+  }, [flatItems, isNodeSelected]);
+
+  const nodeActions = useMemo(() => {
+    return {
+      getMenuActions: getMenuActions ? (node: PresentationHierarchyNode) => getMenuActions({ targetNode: node, selectedNodes: getSelectedNodes() }) : undefined,
+      getInlineActions: getInlineActions
+        ? (node: PresentationHierarchyNode) => getInlineActions({ targetNode: node, selectedNodes: getSelectedNodes() })
+        : undefined,
+      getContextMenuActions: getContextMenuActions
+        ? (node: PresentationHierarchyNode) => getContextMenuActions({ targetNode: node, selectedNodes: getSelectedNodes() })
+        : undefined,
+    };
+  }, [getMenuActions, getInlineActions, getContextMenuActions, getSelectedNodes]);
+
   return (
     <LocalizationContextProvider localizedStrings={localizedStrings}>
       {errorRenderer ? errorRenderer(errorRendererProps) : <TreeErrorRenderer {...errorRendererProps} />}
-      <div style={{ height: "100%", width: "100%", overflowY: "auto" }} ref={parentRef}>
+      <div id={id} style={{ height: "100%", width: "100%", overflowY: "auto" }} ref={parentRef}>
         <Tree.Root style={{ height: virtualizer.getTotalSize(), minHeight: "100%", width: "100%", position: "relative", overflow: "hidden" }}>
           {items.map((virtualizedItem) => {
             const item = flatItems[virtualizedItem.index];
@@ -143,6 +200,7 @@ export function StrataKitTreeRenderer({
             return (
               <VirtualTreeItem
                 {...treeProps}
+                {...nodeActions}
                 onNodeClick={handleNodeClick}
                 onNodeKeyDown={handleKeyDown}
                 ref={virtualizer.measureElement}
@@ -177,6 +235,8 @@ const VirtualTreeItem = memo(
       getDecorations,
       getMenuActions,
       getInlineActions,
+      getContextMenuActions,
+      getClassName,
       getLabel,
       getSublabel,
       expandNode,
@@ -220,6 +280,8 @@ const VirtualTreeItem = memo(
           getDecorations={getDecorations}
           getMenuActions={getMenuActions}
           getInlineActions={getInlineActions}
+          getContextMenuActions={getContextMenuActions}
+          getClassName={getClassName}
           getLabel={getLabel}
           getSublabel={getSublabel}
           onNodeClick={onNodeClick}

@@ -4,6 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import "./PropertiesWidget.css";
+
 import { ComponentPropsWithoutRef, useCallback, useEffect, useMemo, useState } from "react";
 import { useResizeDetector } from "react-resize-detector";
 import {
@@ -265,6 +266,7 @@ function FilterablePropertyGrid({
             console.log(`Updated new value`, newValue); // eslint-disable-line no-console
             return true;
           }}
+          editorSystem="new"
         />
       </NavigationPropertyEditorContextProvider>
       {contextMenuArgs && <PropertiesWidgetContextMenu args={contextMenuArgs} dataProvider={dataProvider} onCloseContextMenu={onCloseContextMenu} />}

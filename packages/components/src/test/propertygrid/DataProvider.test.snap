@@ -155,7 +155,7 @@ Object {
         "imodelKey": "test-imodel",
         "isDisabled": undefined,
         "isMerged": true,
-        "isReadonly": true,
+        "isReadonly": undefined,
         "links": undefined,
         "property": Object {
           "displayLabel": "Simple Field",
@@ -2056,7 +2056,7 @@ Object {
         "imodelKey": "test-imodel",
         "isDisabled": undefined,
         "isMerged": true,
-        "isReadonly": true,
+        "isReadonly": undefined,
         "links": undefined,
         "property": Object {
           "displayLabel": "Simple Field",

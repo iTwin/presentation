@@ -8,8 +8,8 @@ import sinon from "sinon";
 import { EmptyLocalization } from "@itwin/core-common";
 import { IModelApp } from "@itwin/core-frontend";
 import { Presentation } from "@itwin/presentation-frontend";
-import { PresentationInstanceFilterProperty } from "../../presentation-components/instance-filter-builder/PresentationInstanceFilterProperty.js";
 import { createTestPresentationInstanceFilterPropertyInfo, stubRaf } from "../_helpers/Common.js";
+import { PresentationInstanceFilterProperty } from "../../presentation-components/instance-filter-builder/PresentationInstanceFilterProperty.js";
 import { render, waitFor } from "../TestUtils.js";
 
 describe("PresentationInstanceFilterProperty", () => {

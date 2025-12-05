@@ -11,10 +11,10 @@ import { TreeModelNode, TreeNodeItem, UiComponents } from "@itwin/components-rea
 import { EmptyLocalization } from "@itwin/core-common";
 import { IModelConnection } from "@itwin/core-frontend";
 import { NodePathElement } from "@itwin/presentation-common";
+import { createTestPropertyRecord, createTestTreeNodeItem } from "../../_helpers/UiComponents.js";
 import { useFilteredNodeLoader, useNodeHighlightingProps } from "../../../presentation-components/tree/controlled/UseControlledTreeFiltering.js";
 import { FilteredPresentationTreeDataProvider } from "../../../presentation-components/tree/FilteredDataProvider.js";
 import { IFilteredPresentationTreeDataProvider, IPresentationTreeDataProvider } from "../../../presentation-components/tree/IPresentationTreeDataProvider.js";
-import { createTestPropertyRecord, createTestTreeNodeItem } from "../../_helpers/UiComponents.js";
 import { act, createStub, renderHook, waitFor } from "../../TestUtils.js";
 
 describe("useFilteredNodeLoader", () => {

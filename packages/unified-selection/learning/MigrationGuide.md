@@ -125,7 +125,7 @@ The new system doesn't define a list of available scopes for the consumers. Inst
 
 ### Get / set the active selection scope
 
-Similar to the above, the old system provided a way to get / set the active selection scope through the [SelectionScopesManager](https://www.itwinjs.org/reference/presentation-frontend/unifiedselection/selectionscopesmanager/) and, more specifically, its [activeScope](https://www.itwinjs.org/reference/presentation-frontend/unifiedselection/selectionscopesmanager/activescope/) property:
+Similar to the above, the old system provided a way to get / set the active selection scope through the [SelectionScopesManager](https://www.itwinjs.org/reference/presentation-frontend/unifiedselection/selectionscopesmanager/) and, more specifically, its `activeScope` property:
 
 ```ts
 const activeScope = Presentation.selection.scopes.activeScope;

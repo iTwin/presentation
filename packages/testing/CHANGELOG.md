@@ -1,5 +1,28 @@
 # Change Log - @itwin/presentation-testing
 
+## 5.4.10
+
+### Patch Changes
+
+- [#1124](https://github.com/iTwin/presentation/pull/1124): Bump dependencies.
+- Updated dependencies:
+  - @itwin/presentation-components@5.12.14
+
+## 5.4.10-alpha.0
+
+### Patch Changes
+
+- Updated dependencies:
+  - @itwin/presentation-components@5.12.14-alpha.0
+
+## 5.4.9
+
+### Patch Changes
+
+- [#1088](https://github.com/iTwin/presentation/pull/1088): Fix restart tokens not being unique when they need to, causing queries to be cancelled.
+- Updated dependencies:
+  - @itwin/presentation-components@5.12.12
+
 ## 5.4.8
 
 ### Patch Changes

@@ -5,9 +5,9 @@
 
 import { expect } from "chai";
 import { FieldDescriptorType, SortDirection } from "@itwin/presentation-common";
-import { useTableOptions, UseTableOptionsProps } from "../../presentation-components/table/UseTableOptions.js";
 import { createTestPropertyInfo } from "../_helpers/Common.js";
 import { createTestPropertiesContentField } from "../_helpers/Content.js";
+import { useTableOptions, UseTableOptionsProps } from "../../presentation-components/table/UseTableOptions.js";
 import { act, renderHook, waitFor } from "../TestUtils.js";
 
 describe("useTableOptions", () => {

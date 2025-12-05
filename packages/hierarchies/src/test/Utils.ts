@@ -6,8 +6,17 @@
 import sinon from "sinon";
 import { Logger, LogLevel } from "@itwin/core-bentley";
 import { EC, normalizeFullClassName, parseFullClassName } from "@itwin/presentation-shared";
-import { NonGroupingHierarchyNode } from "../hierarchies/HierarchyNode.js";
-import { GenericNodeKey, HierarchyNodeKey, IModelInstanceKey } from "../hierarchies/HierarchyNodeKey.js";
+import { GroupingHierarchyNode, NonGroupingHierarchyNode } from "../hierarchies/HierarchyNode.js";
+import {
+  ClassGroupingNodeKey,
+  GenericNodeKey,
+  HierarchyNodeKey,
+  IModelInstanceKey,
+  InstancesNodeKey,
+  PropertyOtherValuesGroupingNodeKey,
+  PropertyValueGroupingNodeKey,
+  PropertyValueRangeGroupingNodeKey,
+} from "../hierarchies/HierarchyNodeKey.js";
 import {
   ProcessedGenericHierarchyNode,
   ProcessedGroupingHierarchyNode,
@@ -48,17 +57,6 @@ export function createTestSourceGenericNode(src?: Partial<SourceGenericHierarchy
   };
 }
 
-export function createTestSourceInstanceNode(src?: Partial<SourceInstanceHierarchyNode>): SourceInstanceHierarchyNode {
-  return {
-    label: "test",
-    key: {
-      type: "instances",
-      instanceKeys: [],
-    },
-    ...src,
-  };
-}
-
 export function createTestProcessedGenericNode(src?: Partial<ProcessedGenericHierarchyNode>): ProcessedGenericHierarchyNode {
   return {
     label: "test",
@@ -68,13 +66,47 @@ export function createTestProcessedGenericNode(src?: Partial<ProcessedGenericHie
   };
 }
 
+export function createTestInstanceNodeKey(src?: Partial<InstancesNodeKey>): InstancesNodeKey {
+  return {
+    type: "instances",
+    instanceKeys: [],
+    ...src,
+  };
+}
+
+export function createTestInstanceNode(src?: Partial<NonGroupingHierarchyNode>): NonGroupingHierarchyNode {
+  return {
+    label: "test",
+    key: createTestInstanceNodeKey(),
+    children: false,
+    parentKeys: [],
+    ...src,
+  };
+}
+
+export function createTestSourceInstanceNode(src?: Partial<SourceInstanceHierarchyNode>): SourceInstanceHierarchyNode {
+  return {
+    label: "test",
+    key: createTestInstanceNodeKey(),
+    ...src,
+  };
+}
+
 export function createTestProcessedInstanceNode(src?: Partial<ProcessedInstanceHierarchyNode>): ProcessedInstanceHierarchyNode {
   return {
     label: "test",
-    key: {
-      type: "instances",
-      instanceKeys: [],
-    },
+    key: createTestInstanceNodeKey(),
+    parentKeys: [],
+    ...src,
+  };
+}
+
+export function createTestGroupingNode(src?: Partial<GroupingHierarchyNode>): GroupingHierarchyNode {
+  return {
+    label: "test",
+    key: createTestClassGroupingNodeKey(),
+    children: true,
+    groupedInstanceKeys: [createTestInstanceKey({ className: "TestSchema.TestClass", id: "0x1" })],
     parentKeys: [],
     ...src,
   };
@@ -96,6 +128,43 @@ export function createTestProcessedGroupingNode<TChild = ProcessedGroupingHierar
   };
 }
 
+export function createTestClassGroupingNodeKey(src?: Partial<ClassGroupingNodeKey>): ClassGroupingNodeKey {
+  return {
+    type: "class-grouping",
+    className: "TestSchema.TestClass",
+    ...src,
+  };
+}
+
+export function createTestPropertyValueGroupingNodeKey(src?: Partial<PropertyValueGroupingNodeKey>): PropertyValueGroupingNodeKey {
+  return {
+    type: "property-grouping:value",
+    propertyClassName: "TestSchema.TestClass",
+    propertyName: "TestProperty",
+    formattedPropertyValue: "test",
+    ...src,
+  };
+}
+
+export function createTestPropertyValueRangeGroupingNodeKey(src?: Partial<PropertyValueRangeGroupingNodeKey>): PropertyValueRangeGroupingNodeKey {
+  return {
+    type: "property-grouping:range",
+    propertyClassName: "TestSchema.TestClass",
+    propertyName: "TestProperty",
+    fromValue: 1.23,
+    toValue: 4.56,
+    ...src,
+  };
+}
+
+export function createTestPropertyOtherValueGroupingNodeKey(src?: Partial<PropertyOtherValuesGroupingNodeKey>): PropertyOtherValuesGroupingNodeKey {
+  return {
+    type: "property-grouping:other",
+    properties: [{ className: "TestSchema.TestClass", propertyName: "TestProperty" }],
+    ...src,
+  };
+}
+
 export function createTestInstanceKey(src?: Partial<IModelInstanceKey>): IModelInstanceKey {
   return {
     className: "TestSchema.TestClass",
@@ -105,10 +174,7 @@ export function createTestInstanceKey(src?: Partial<IModelInstanceKey>): IModelI
 }
 
 export function createTestNodeKey(): HierarchyNodeKey {
-  return {
-    type: "instances",
-    instanceKeys: [],
-  };
+  return createTestInstanceNodeKey();
 }
 
 interface ECClassExtraMembers {

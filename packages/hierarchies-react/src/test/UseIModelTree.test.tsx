@@ -11,11 +11,11 @@ import { BeEvent } from "@itwin/core-bentley";
 import * as presentationHierarchiesModule from "@itwin/presentation-hierarchies";
 import { Props } from "@itwin/presentation-shared";
 import { createHierarchyProviderStub, getTreeRendererProps, renderHook, waitFor } from "./TestUtils.js";
-
 import type {
   useIModelTree as originalUseIModelTree,
   useIModelUnifiedSelectionTree as originalUseIModelUnifiedSelectionTree,
 } from "../presentation-hierarchies-react/UseIModelTree.js";
+
 describe("useIModelTree hooks", () => {
   let stubs: Awaited<ReturnType<typeof stubIModelHierarchyProviderFactory>>;
   let useIModelTree: typeof originalUseIModelTree;

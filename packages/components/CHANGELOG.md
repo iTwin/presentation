@@ -1,5 +1,40 @@
 # Change Log - @itwin/presentation-components
 
+## 5.12.14
+
+### Patch Changes
+
+- [#1121](https://github.com/iTwin/presentation/pull/1121): Changed quantity editor value to be adjusted to consumer precision in edit mode and to precision of 12 on focus.
+- [#1124](https://github.com/iTwin/presentation/pull/1124): Bump dependencies.
+- Updated dependencies:
+  - @itwin/unified-selection@1.6.2
+  - @itwin/presentation-core-interop@1.3.5
+  - @itwin/presentation-shared@1.2.4
+  - @itwin/unified-selection-react@1.0.2
+
+## 5.12.14-alpha.0
+
+### Patch Changes
+
+- [#1110](https://github.com/iTwin/presentation/pull/1110): Bump dependencies.
+- Updated dependencies:
+  - @itwin/presentation-shared@2.0.0-alpha.3
+  - @itwin/unified-selection@1.6.2-alpha.0
+
+## 5.12.13
+
+### Patch Changes
+
+- [#1091](https://github.com/iTwin/presentation/pull/1091): Fixed merged property records being set as read-only.
+
+## 5.12.12
+
+### Patch Changes
+
+- [#1088](https://github.com/iTwin/presentation/pull/1088): Fix restart tokens not being unique when they need to, causing queries to be cancelled.
+- Updated dependencies:
+  - @itwin/unified-selection@1.6.1
+
 ## 5.12.11
 
 ### Patch Changes

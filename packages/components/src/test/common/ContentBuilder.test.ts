@@ -13,10 +13,6 @@ import {
   PropertyValueFormat as UiPropertyValueFormat,
 } from "@itwin/appui-abstract";
 import { EnumerationInfo, PropertyValueFormat, traverseContentItem } from "@itwin/presentation-common";
-import { PropertyValueConstraints, WithConstraints } from "../../presentation-components/common/ContentBuilder.js";
-import { PropertyRecordsBuilder } from "../../presentation-components/common/PropertyRecordsBuilder.js";
-import { NumericEditorName } from "../../presentation-components/properties/editors/NumericPropertyEditor.js";
-import { QuantityEditorName } from "../../presentation-components/properties/editors/QuantityPropertyEditor.js";
 import { createTestECClassInfo, createTestECInstanceKey, createTestPropertyInfo } from "../_helpers/Common.js";
 import {
   createTestCategoryDescription,
@@ -27,6 +23,10 @@ import {
   createTestSimpleContentField,
 } from "../_helpers/Content.js";
 import { createTestLabelDefinition } from "../_helpers/LabelDefinition.js";
+import { PropertyValueConstraints, WithConstraints } from "../../presentation-components/common/ContentBuilder.js";
+import { PropertyRecordsBuilder } from "../../presentation-components/common/PropertyRecordsBuilder.js";
+import { NumericEditorName } from "../../presentation-components/properties/editors/NumericPropertyEditor.js";
+import { QuantityEditorName } from "../../presentation-components/properties/editors/QuantityPropertyEditor.js";
 
 class TestPropertyRecordsBuilder extends PropertyRecordsBuilder {
   public entries: Array<PropertyRecord> = [];
@@ -361,7 +361,6 @@ describe("PropertyRecordsBuilder", () => {
     expect(builder.entries.length).to.eq(1);
     expect(builder.entries[0].property.name).to.eq(fieldName);
     expect(builder.entries[0].isMerged).to.be.true;
-    expect(builder.entries[0].isReadonly).to.be.true;
     expect(builder.entries[0].value).to.deep.eq({
       valueFormat: UiPropertyValueFormat.Primitive,
     });

@@ -11,6 +11,9 @@ import { FormattingUnitSystemChangedArgs, IModelApp, IModelConnection } from "@i
 import { ContentDescriptorRequestOptions, InstanceKey, Item, KeySet, RulesetVariable } from "@itwin/presentation-common";
 import { Presentation, PresentationManager, SelectionManager } from "@itwin/presentation-frontend";
 import { createStorage, Selectables, SelectionStorage } from "@itwin/unified-selection";
+import { createTestECInstanceKey, createTestPropertyInfo } from "../_helpers/Common.js";
+import { createTestContentDescriptor, createTestContentItem, createTestPropertiesContentField } from "../_helpers/Content.js";
+import { createTestECClassGroupingNodeKey, createTestECInstancesNodeKey } from "../_helpers/Hierarchy.js";
 import { TableColumnDefinition, TableRowDefinition } from "../../presentation-components/table/Types.js";
 import {
   usePresentationTable,
@@ -18,9 +21,6 @@ import {
   usePresentationTableWithUnifiedSelection,
   UsePresentationTableWithUnifiedSelectionProps,
 } from "../../presentation-components/table/UsePresentationTable.js";
-import { createTestECInstanceKey, createTestPropertyInfo } from "../_helpers/Common.js";
-import { createTestContentDescriptor, createTestContentItem, createTestPropertiesContentField } from "../_helpers/Content.js";
-import { createTestECClassGroupingNodeKey, createTestECInstancesNodeKey } from "../_helpers/Hierarchy.js";
 import { act, renderHook, waitFor } from "../TestUtils.js";
 
 /* eslint-disable @typescript-eslint/no-deprecated */

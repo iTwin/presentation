@@ -4,6 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import "../common/DisposePolyfill.js";
+
 import { from, Subject, takeUntil } from "rxjs";
 import { IModelConnection } from "@itwin/core-frontend";
 import { KeySet } from "@itwin/presentation-common";

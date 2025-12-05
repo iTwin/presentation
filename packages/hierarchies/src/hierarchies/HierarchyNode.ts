@@ -55,8 +55,6 @@ interface BaseHierarchyNode {
   autoExpand?: boolean;
   /** Additional data that may be assigned to this node. */
   extendedData?: { [key: string]: any };
-  /** Data that is assigned to the node if hierarchy search is enabled */
-  search?: HierarchyNodeSearchProps;
 }
 
 /**
@@ -71,6 +69,8 @@ export interface NonGroupingHierarchyNode extends BaseHierarchyNode {
    * filter when requesting child hierarchy level will have no effect.
    */
   supportsFiltering?: boolean;
+  /** Data that is assigned to the node if hierarchy search is enabled */
+  search?: HierarchyNodeSearchProps;
 }
 
 /**

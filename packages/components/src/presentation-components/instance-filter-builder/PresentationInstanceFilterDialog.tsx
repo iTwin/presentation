@@ -7,6 +7,7 @@
  */
 
 import "./PresentationInstanceFilterDialog.scss";
+
 import { ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 import { BuildFilterOptions, usePropertyFilterBuilder } from "@itwin/components-react";

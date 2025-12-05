@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 /* eslint-disable no-console */
 
-import { EventEmitter, Next, ScenarioContext } from "artillery";
+import { VUContext, VUEvents } from "artillery";
 import { Guid, StopWatch } from "@itwin/core-bentley";
 import {
   HierarchyRpcRequestOptions,
@@ -15,62 +15,45 @@ import {
   PresentationStatus,
 } from "@itwin/presentation-common";
 import RULESET_ModelsTree from "../rulesets/ModelsTree-GroupedByClass.PresentationRuleSet.json";
-import { doRequest, getCurrentIModelName, loadNodes, openIModelConnectionIfNeeded } from "./common";
+import { doRequest, getCurrentIModelName, loadNodes, loadVariables, openIModelConnectionIfNeeded } from "./common";
 
 /* eslint-disable @typescript-eslint/no-deprecated */
 
-export function initScenario(context: ScenarioContext, _events: EventEmitter, next: Next) {
+export async function initScenario(context: VUContext, _events: VUEvents) {
   context.vars.tooLargeHierarchyLevelsCount = 0;
-  void openIModelConnectionIfNeeded().then(() => {
-    next();
-  });
+  await openIModelConnectionIfNeeded();
+  loadVariables(context);
 }
 
-export function terminateScenario(context: ScenarioContext, _ee: EventEmitter, next: Next) {
+export function terminateScenario(context: VUContext, _ee: VUEvents) {
   console.log(`Total hierarchy levels that exceeded nodes limit: ${context.vars.tooLargeHierarchyLevelsCount as number}`);
   context.vars.tooLargeHierarchyLevelsCount = 0;
-  next();
 }
 
-export function loadInitialHierarchy(context: ScenarioContext, events: EventEmitter, next: Next) {
+export async function loadInitialHierarchy(context: VUContext, events: VUEvents) {
   // we limit loaded hierarchy depth by telling that node has no children if it has `!isExpanded` (root node in models tree is always auto-expanded)
   const timer = new StopWatch(undefined, true);
-  void loadNodes(context, events, createProvider(context, events), (node) => !!node.hasChildren && !!node.isExpanded)
-    .then(() => {
-      events.emit("histogram", `Models Tree initial load: ${getCurrentIModelName(context)}`, timer.current.milliseconds);
-    })
-    .then(() => {
-      next();
-    });
+  await loadNodes(events, createProvider(context, events), (node) => !!node.hasChildren && !!node.isExpanded);
+  events.emit("histogram", `Models Tree initial load: ${getCurrentIModelName(context)}`, timer.current.milliseconds);
 }
 
-export function loadFirstBranch(context: ScenarioContext, events: EventEmitter, next: Next) {
+export async function loadFirstBranch(context: VUContext, events: VUEvents) {
   const timer = new StopWatch(undefined, true);
-  void loadNodes(context, events, createProvider(context, events), (node, index) => !!node.hasChildren && index === 0)
-    .then(() => {
-      events.emit("histogram", `Models Tree first branch load:${getCurrentIModelName(context)}`, timer.current.milliseconds);
-    })
-    .then(() => {
-      next();
-    });
+  await loadNodes(events, createProvider(context, events), (node, index) => !!node.hasChildren && index === 0);
+  events.emit("histogram", `Models Tree first branch load:${getCurrentIModelName(context)}`, timer.current.milliseconds);
 }
 
-export function loadFullHierarchy(context: ScenarioContext, events: EventEmitter, next: Next) {
+export async function loadFullHierarchy(context: VUContext, events: VUEvents) {
   const timer = new StopWatch(undefined, true);
-  void loadNodes(context, events, createProvider(context, events), (node) => !!node.hasChildren)
-    .then(() => {
-      events.emit("histogram", `Models Tree full load:${getCurrentIModelName(context)}`, timer.current.milliseconds);
-    })
-    .then(() => {
-      next();
-    });
+  await loadNodes(events, createProvider(context, events), (node) => !!node.hasChildren);
+  events.emit("histogram", `Models Tree full load:${getCurrentIModelName(context)}`, timer.current.milliseconds);
 }
 
-function createProvider(context: ScenarioContext, events: EventEmitter) {
+function createProvider(context: VUContext, events: VUEvents) {
   const clientId = Guid.createValue();
   return async function (parent: Node | undefined): Promise<Node[]> {
     const requestBody = JSON.stringify([
-      (context.vars.imodelRpcProps as (context: ScenarioContext) => any)(context),
+      (context.vars.imodelRpcProps as (context: VUContext) => any)(context),
       {
         clientId,
         rulesetOrId: RULESET_ModelsTree,
@@ -79,7 +62,7 @@ function createProvider(context: ScenarioContext, events: EventEmitter) {
       } as HierarchyRpcRequestOptions,
     ]);
     async function requestRepeatedly(): Promise<Node[]> {
-      return doRequest("PresentationRpcInterface-4.1.0-getPagedNodes", requestBody, events, "nodes").then(async (response) => {
+      return doRequest("PresentationRpcInterface-5.0.0-getPagedNodes", requestBody, events, "nodes").then(async (response) => {
         const responseBody = response as PresentationRpcResponseData<PagedResponse<Node>>;
         switch (responseBody.statusCode) {
           case PresentationStatus.Canceled:

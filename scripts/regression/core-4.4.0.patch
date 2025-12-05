@@ -1,5 +1,5 @@
 diff --git a/apps/full-stack-tests/src/IModelUtils.ts b/apps/full-stack-tests/src/IModelUtils.ts
-index 9868ec59..9b695982 100644
+index 4282b2d9..6761fbdc 100644
 --- a/apps/full-stack-tests/src/IModelUtils.ts
 +++ b/apps/full-stack-tests/src/IModelUtils.ts
 @@ -7,7 +7,7 @@ import { XMLParser } from "fast-xml-parser";
@@ -11,7 +11,7 @@ index 9868ec59..9b695982 100644
  import { BentleyError, DbResult, Guid, Id64, Id64String, OrderedId64Iterable } from "@itwin/core-bentley";
  import { IModelConnection } from "@itwin/core-frontend";
  import { Schema, SchemaContext, SchemaInfo, SchemaKey, SchemaMatchType } from "@itwin/ecschema-metadata";
-@@ -44,7 +44,7 @@ export class ECDbBuilder {
+@@ -46,7 +46,7 @@ export class ECDbBuilder {
          .map(() => "?")
          .join(", ")})
      `;
@@ -20,8 +20,8 @@ index 9868ec59..9b695982 100644
        Object.values(props).forEach((value, i) => {
          const bindingIndex = i + 1;
          switch (typeof value) {
-@@ -116,7 +116,7 @@ export class ECDbBuilder {
- 
+@@ -118,7 +118,7 @@ export class ECDbBuilder {
+
    public insertInstance(fullClassName: string, props?: { [propertyName: string]: PrimitiveValue | undefined }) {
      const query = this.createInsertQuery(fullClassName, props);
 -    return this._ecdb.withWriteStatement(query.clause, (stmt) => {
@@ -29,7 +29,7 @@ index 9868ec59..9b695982 100644
        try {
          query.binder(stmt);
          const res = stmt.stepForInsert();
-@@ -125,9 +125,6 @@ export class ECDbBuilder {
+@@ -127,9 +127,6 @@ export class ECDbBuilder {
          }
          return { className: fullClassName, id: res.id! };
        } finally {
@@ -39,7 +39,7 @@ index 9868ec59..9b695982 100644
        }
      });
    }
-@@ -138,7 +135,7 @@ export class ECDbBuilder {
+@@ -140,7 +137,7 @@ export class ECDbBuilder {
        sourceECInstanceId: sourceId,
        targetECInstanceId: targetId,
      });
@@ -48,7 +48,7 @@ index 9868ec59..9b695982 100644
        try {
          query.binder(stmt);
          const res = stmt.stepForInsert();
-@@ -147,9 +144,6 @@ export class ECDbBuilder {
+@@ -149,9 +146,6 @@ export class ECDbBuilder {
          }
          return { className: fullClassName, id: res.id! };
        } finally {
@@ -59,42 +59,28 @@ index 9868ec59..9b695982 100644
      });
    }
 diff --git a/apps/full-stack-tests/src/components/properties/PropertyEditors.test.tsx b/apps/full-stack-tests/src/components/properties/PropertyEditors.test.tsx
-deleted file mode 100644
-index cbb631a7..00000000
+index 497eb88e..7cef9c80 100644
 --- a/apps/full-stack-tests/src/components/properties/PropertyEditors.test.tsx
-+++ /dev/null
-@@ -1,136 +0,0 @@
--/*---------------------------------------------------------------------------------------------
-- * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
-- * See LICENSE.md in the project root for license terms and full copyright notice.
-- *--------------------------------------------------------------------------------------------*/
--
--import { expect } from "chai";
--import { insertPhysicalElement, insertPhysicalModelWithPartition, insertSpatialCategory } from "presentation-test-utilities";
--import sinon from "sinon";
++++ b/apps/full-stack-tests/src/components/properties/PropertyEditors.test.tsx
+@@ -6,13 +6,10 @@
+ import { expect } from "chai";
+ import { insertPhysicalElement, insertPhysicalModelWithPartition, insertSpatialCategory } from "presentation-test-utilities";
+ import sinon from "sinon";
 -import { PrimitiveValue } from "@itwin/appui-abstract";
--import { EditorContainer, UiComponents } from "@itwin/components-react";
+ import { EditorContainer, UiComponents } from "@itwin/components-react";
 -import { BeEvent } from "@itwin/core-bentley";
--import { IModelApp } from "@itwin/core-frontend";
+ import { IModelApp } from "@itwin/core-frontend";
 -import { FormatDefinition } from "@itwin/core-quantity";
--import { FieldDescriptorType, KeySet } from "@itwin/presentation-common";
+ import { FieldDescriptorType, KeySet } from "@itwin/presentation-common";
 -import { PresentationPropertyDataProvider, SchemaMetadataContextProvider } from "@itwin/presentation-components";
--import { buildIModel, importSchema } from "../../IModelUtils.js";
--import { initialize, terminate } from "../../IntegrationTests.js";
--import { render, waitFor } from "../../RenderUtils.js";
--
--describe("Presentation filter builder value renderer", () => {
--  before(async () => {
--    await initialize();
--    await UiComponents.initialize(IModelApp.localization);
--  });
--
--  after(async () => {
--    sinon.restore();
--    UiComponents.terminate();
--    await terminate();
--  });
--
++import { PresentationPropertyDataProvider } from "@itwin/presentation-components";
+ import { buildIModel, importSchema } from "../../IModelUtils.js";
+ import { initialize, terminate } from "../../IntegrationTests.js";
+ import { render, waitFor } from "../../RenderUtils.js";
+@@ -29,111 +26,6 @@ describe("Property editors", () => {
+     await terminate();
+   });
+
 -  afterEach(() => {
 -    IModelApp.resetFormatsProvider();
 -  });
@@ -194,12 +180,15 @@ index cbb631a7..00000000
 -    // ensure the commit callback is called with the new value
 -    await waitFor(() => {
 -      expect(commitSpy).to.have.been.calledOnce;
--      expect(commitSpy.firstCall.args[0].newValue.displayValue).to.eq("4.56"); // what user entered
+-      expect(commitSpy.firstCall.args[0].newValue.displayValue).to.eq("4.6 in"); // what is displayed after formatting
 -      expect(commitSpy.firstCall.args[0].newValue.value.toFixed(6)).to.eq("0.115824"); // converted to persistence unit - meters
 -      expect(commitSpy.firstCall.args[0].newValue.roundingError.toFixed(6)).to.eq("0.000127");
 -    });
 -  });
--});
+-
+   it("edits merged values", async function () {
+     const { imodel, schema, ...imodelKeys } = await buildIModel(this, async (builder, mochaContext) => {
+       const mySchema = await importSchema(
 diff --git a/apps/full-stack-tests/src/hierarchies/Formatting.test.ts b/apps/full-stack-tests/src/hierarchies/Formatting.test.ts
 index c84d13bd..bbcfc7af 100644
 --- a/apps/full-stack-tests/src/hierarchies/Formatting.test.ts
@@ -220,7 +209,7 @@ index c84d13bd..bbcfc7af 100644
  import { createValueFormatter } from "@itwin/presentation-core-interop";
  import { createNodesQueryClauseFactory, HierarchyDefinition } from "@itwin/presentation-hierarchies";
 @@ -466,8 +465,8 @@ describe("Hierarchies", () => {
- 
+
      describe("Integer", () => {
        it("formats instance node labels", async function () {
 -        const { imodel, sheetIndexFolder } = await buildIModel(this, async (builder) => {
@@ -229,7 +218,7 @@ index c84d13bd..bbcfc7af 100644
 +          return { category: insertSpatialCategory({ builder, codeValue: "category", rank: Rank.Application }) };
          });
          const imodelAccess = createIModelAccess(imodel);
- 
+
 @@ -480,7 +479,7 @@ describe("Hierarchies", () => {
              if (!parentNode) {
                return [
@@ -259,10 +248,10 @@ index c84d13bd..bbcfc7af 100644
                    },
                  },
 diff --git a/apps/full-stack-tests/src/hierarchies/learning-snippets/CustomHierarchyProvider.test.ts b/apps/full-stack-tests/src/hierarchies/learning-snippets/CustomHierarchyProvider.test.ts
-index 43251cf3..1dd378c8 100644
+index ce0e4e45..43d080df 100644
 --- a/apps/full-stack-tests/src/hierarchies/learning-snippets/CustomHierarchyProvider.test.ts
 +++ b/apps/full-stack-tests/src/hierarchies/learning-snippets/CustomHierarchyProvider.test.ts
-@@ -620,6 +620,7 @@ describe("Hierarchies", () => {
+@@ -621,6 +621,7 @@ describe("Hierarchies", () => {
          // Print the hierarchy level. Output:
          // - Albert Einstein
          // - Mark Twain
@@ -270,7 +259,7 @@ index 43251cf3..1dd378c8 100644
          for await (const node of provider.getNodes({ parentNode: undefined, instanceFilter: createAuthorsFilter() })) {
            console.log(`- ${node.label}`);
          }
-@@ -666,6 +667,7 @@ describe("Hierarchies", () => {
+@@ -667,6 +668,7 @@ describe("Hierarchies", () => {
              label: "J.R.R. Tolkien",
              parentKeys: [],
            },
@@ -291,7 +280,7 @@ index 63947822..621c6df2 100644
  import { ContentBuilder, HierarchyBuilder, TestIModelConnection } from "@itwin/presentation-testing";
  import { initialize, terminate } from "../IntegrationTests.js";
 @@ -210,9 +209,6 @@ describe("RulesetTesting", () => {
- 
+
      // set up for testing iModel presentation data
      iModel = TestIModelConnection.openFile(iModelPath);
 -
@@ -299,7 +288,7 @@ index 63947822..621c6df2 100644
 -    IModelApp.formatsProvider = new SchemaFormatsProvider(iModel.schemaContext, "metric");
      // __PUBLISH_EXTRACT_END__
    });
- 
+
 diff --git a/apps/full-stack-tests/src/testing/ruleset-testing-snapshots/my-test-content.snap b/apps/full-stack-tests/src/testing/ruleset-testing-snapshots/my-test-content.snap
 index c2ba40a4..6c2c3bc3 100644
 --- a/apps/full-stack-tests/src/testing/ruleset-testing-snapshots/my-test-content.snap
@@ -2131,10 +2120,10 @@ index 84221799..7c9384d6 100644
              },
            });
 diff --git a/packages/test-utilities/src/test-utilities/IModelUtils.ts b/packages/test-utilities/src/test-utilities/IModelUtils.ts
-index 477be1c2..8e91d766 100644
+index 7e79a37c..77b57aa3 100644
 --- a/packages/test-utilities/src/test-utilities/IModelUtils.ts
 +++ b/packages/test-utilities/src/test-utilities/IModelUtils.ts
-@@ -24,7 +24,6 @@ import {
+@@ -25,7 +25,6 @@ import {
    PhysicalElementProps,
    RelationshipProps,
    RepositoryLinkProps,
@@ -2142,10 +2131,10 @@ index 477be1c2..8e91d766 100644
    SubCategoryProps,
    SubjectProps,
  } from "@itwin/core-common";
-@@ -480,18 +479,6 @@ export function insertGroupInformationElement(
+@@ -483,18 +482,6 @@ export function insertGroupInformationElement(
    return { className, id };
  }
- 
+
 -export function insertSheetIndexFolder(props: BaseInstanceInsertProps & Partial<Omit<SheetIndexFolderProps, "id" | "parent" | "code" | "model">>) {
 -  const { builder, ...elementProps } = props;
 -  const className = `BisCore${props.fullClassNameSeparator ?? "."}SheetIndexFolder`;

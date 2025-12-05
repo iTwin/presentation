@@ -6,12 +6,12 @@
 
 import { PropertyRecord } from "@itwin/appui-abstract";
 import { CheckBoxState, TreeModelNode, TreeModelNodeInput, TreeNodeItem } from "@itwin/components-react";
+import { createTestECInstancesNodeKey } from "../../_helpers/Hierarchy.js";
 import {
   InfoTreeNodeItemType,
   PresentationInfoTreeNodeItem,
   PresentationTreeNodeItem,
 } from "../../../presentation-components/tree/PresentationTreeNodeItem.js";
-import { createTestECInstancesNodeKey } from "../../_helpers/Hierarchy.js";
 
 export function createTreeNodeItem(item?: Partial<PresentationTreeNodeItem>): PresentationTreeNodeItem {
   return {

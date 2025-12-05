@@ -5,6 +5,7 @@
 
 import { compareStrings, Id64, Id64String } from "@itwin/core-bentley";
 import { PrimitiveValueType } from "./Metadata.js";
+import { normalizeFullClassName } from "./Utils.js";
 
 /**
  * A data structure uniquely identifying an ECInstance in an iModel.
@@ -24,7 +25,7 @@ export namespace InstanceKey {
    * @public
    */
   export function equals(lhs: InstanceKey, rhs: InstanceKey): boolean {
-    return lhs.className === rhs.className && lhs.id === rhs.id;
+    return compare(lhs, rhs) === 0;
   }
   /**
    * Compares two given instance keys.
@@ -34,7 +35,10 @@ export namespace InstanceKey {
    *- `positive value` if lhs key is more than rhs key
    */
   export function compare(lhs: InstanceKey, rhs: InstanceKey): number {
-    const classNameCompareResult = compareStrings(lhs.className, rhs.className);
+    const classNameCompareResult = compareStrings(
+      normalizeFullClassName(lhs.className).toLocaleLowerCase(),
+      normalizeFullClassName(rhs.className).toLocaleLowerCase(),
+    );
     if (classNameCompareResult !== 0) {
       return classNameCompareResult;
     }

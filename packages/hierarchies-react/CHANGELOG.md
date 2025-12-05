@@ -1,5 +1,69 @@
 # @itwin/presentation-hierarchies-react
 
+## 2.0.0-alpha.42
+
+### Patch Changes
+
+- [#1118](https://github.com/iTwin/presentation/pull/1118): Fixed first hidden inline action causing second action to be focused when navigating using keyboard.
+
+## 2.0.0-alpha.41
+
+### Major Changes
+
+- [#1113](https://github.com/iTwin/presentation/pull/1113): Pass selected nodes to tree node action getters to support actions that should be applied on all selected nodes.
+
+  **Breaking changes**
+  - `StrataKitTreeRenderer.getInlineActions` callback receives `{ targetNode: PresentationHierarchyNode; selectedNodes: PresentationHierarchyNode[] }` props instead of `PresentationHierarchyNode`.
+  - `StrataKitTreeRenderer.getMenuActions` callback receives `{ targetNode: PresentationHierarchyNode; selectedNodes: PresentationHierarchyNode[] }` props instead of `PresentationHierarchyNode`.
+
+  Before
+
+  ```tsx
+  return <StrataKitTreeRenderer getInlineActions={(node) => [<InlineAction node={node} />]} getMenuActions={(node) => [<MenuAction node={node} />]} />;
+  ```
+
+  After
+
+  ```tsx
+  return (
+    <StrataKitTreeRenderer
+      getInlineActions={({ targetNode }) => [<InlineAction node={targetNode} />]}
+      getMenuActions={({ targetNode }) => [<MenuAction node={targetNode} />]}
+    />
+  );
+  ```
+
+- [#1115](https://github.com/iTwin/presentation/pull/1115): Unified tree actions handling to make it easier defining actions that could be reused in different contexts: inline, context menu and actions dropdown.
+
+  **Breaking changes**
+  - Removed `reserveSpace` property from `<RenameAction />` and `<FilterAction />`. These actions now automatically infer the context they're used in.
+  - Added requirement to render newly introduced `<TreeActionBase />` component instead of `<Tree.ItemAction />` when rendering custom tree actions.
+
+### Minor Changes
+
+- [#1115](https://github.com/iTwin/presentation/pull/1115): Added `getContextMenuActions` callback for rendering tree actions in context menu.
+
+## 2.0.0-alpha.40
+
+### Patch Changes
+
+- [#1110](https://github.com/iTwin/presentation/pull/1110): Bump dependencies.
+- Updated dependencies:
+  - @itwin/presentation-hierarchies@2.0.0-alpha.5
+  - @itwin/presentation-shared@2.0.0-alpha.3
+  - @itwin/unified-selection@1.6.2-alpha.0
+
+## 2.0.0-alpha.39
+
+### Minor Changes
+
+- [#1106](https://github.com/iTwin/presentation/pull/1106): Added an `id` property to `StrataKitTreeRenderer` that is passed to it's scroll wrapper.
+- [#1107](https://github.com/iTwin/presentation/pull/1107): Introduced new `getClassName` callback to `StrataKitTreeRenderer` and `StrataKitTreeNodeRenderer` for providing class to tree node HTML element.
+
+### Patch Changes
+
+- [#1109](https://github.com/iTwin/presentation/pull/1109): Fixed error item Anchor font size.
+
 ## 2.0.0-alpha.38
 
 ### Patch Changes
@@ -518,6 +582,16 @@
 ### Major Changes
 
 - [#847](https://github.com/iTwin/presentation/pull/847): Moving tree rendering components to a new design systems.
+
+## 1.9.6
+
+### Patch Changes
+
+- [#1124](https://github.com/iTwin/presentation/pull/1124): Bump dependencies.
+- Updated dependencies:
+  - @itwin/unified-selection@1.6.2
+  - @itwin/presentation-hierarchies@1.7.5
+  - @itwin/presentation-shared@1.2.4
 
 ## 1.9.5
 

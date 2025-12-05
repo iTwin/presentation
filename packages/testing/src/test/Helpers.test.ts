@@ -11,7 +11,6 @@ import { Guid } from "@itwin/core-bentley";
 import { IModelApp, NoRenderApp } from "@itwin/core-frontend";
 import { HierarchyCacheMode, Presentation as PresentationBackend } from "@itwin/presentation-backend";
 import { Presentation as PresentationFrontend } from "@itwin/presentation-frontend";
-
 import type { PresentationTestingInitProps } from "../presentation-testing/Helpers.js";
 
 describe("Helpers", () => {

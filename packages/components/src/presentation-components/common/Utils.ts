@@ -7,6 +7,7 @@
  */
 
 import "../common/DisposePolyfill.js";
+
 import * as mm from "micro-memoize";
 import { LegacyRef, MutableRefObject, RefCallback, useCallback, useEffect, useState } from "react";
 import { Primitives, PrimitiveValue, PropertyDescription, PropertyRecord, PropertyValueFormat } from "@itwin/appui-abstract";
@@ -243,6 +244,7 @@ export function memoize<Fn extends mm.AnyFn>(fn: Fn | mm.Memoized<Fn>, options?:
   return microMemoize(fn, options);
 }
 
+// eslint-disable-next-line @typescript-eslint/no-redundant-type-constituents
 export type WithIModelKey<TObj extends {}> = TObj & { imodelKey?: string };
 
 export async function createKeySetFromSelectables(selectables: Selectables): Promise<KeySet> {

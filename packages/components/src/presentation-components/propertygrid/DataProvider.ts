@@ -7,6 +7,7 @@
  */
 
 import "../common/DisposePolyfill.js";
+
 import { inPlaceSort } from "fast-sort";
 import { PropertyRecord, PropertyValueFormat as UiPropertyValueFormat } from "@itwin/appui-abstract";
 import { IPropertyDataProvider, PropertyCategory, PropertyData, PropertyDataChangeEvent } from "@itwin/components-react";

@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { filter, from, Observable, of } from "rxjs";
+import { filter, from, Observable } from "rxjs";
 import {
   DefineHierarchyLevelProps,
   HierarchyDefinition,
@@ -16,6 +16,7 @@ import {
   ProcessedInstanceHierarchyNode,
   SourceInstanceHierarchyNode,
 } from "../imodel/IModelHierarchyNode.js";
+import { fromPossiblyPromise } from "./Common.js";
 
 /**
  * A type for a function that parses a `SourceInstanceHierarchyNode` from provided ECSQL `row` object.
@@ -86,7 +87,7 @@ export function getRxjsHierarchyDefinition(hierarchyDefinition: HierarchyDefinit
     parseNode: hierarchyDefinition.parseNode
       ? (row, parentNode) => {
           const parsedNode = hierarchyDefinition.parseNode!(row, parentNode);
-          return parsedNode instanceof Promise ? from(parsedNode) : of(parsedNode);
+          return fromPossiblyPromise(parsedNode);
         }
       : undefined,
     preProcessNode: hierarchyDefinition.preProcessNode

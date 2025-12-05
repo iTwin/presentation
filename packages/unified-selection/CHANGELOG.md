@@ -1,5 +1,27 @@
 # @itwin/unified-selection
 
+## 1.6.2
+
+### Patch Changes
+
+- [#1124](https://github.com/iTwin/presentation/pull/1124): Bump dependencies.
+- Updated dependencies:
+  - @itwin/presentation-shared@1.2.4
+
+## 1.6.2-alpha.0
+
+### Patch Changes
+
+- [#1112](https://github.com/iTwin/presentation/pull/1112): Version bump
+- Updated dependencies:
+  - @itwin/presentation-shared@2.0.0-alpha.3
+
+## 1.6.1
+
+### Patch Changes
+
+- [#1088](https://github.com/iTwin/presentation/pull/1088): Fix restart tokens not being unique when they need to, causing queries to be cancelled.
+
 ## 1.6.0
 
 ### Minor Changes

@@ -11,7 +11,7 @@ import { collect } from "presentation-test-utilities";
 import * as sinon from "sinon";
 // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.CustomHierarchyProviders.Imports
 import { BeEvent } from "@itwin/core-bentley";
-import { HierarchyNode, HierarchyProvider } from "@itwin/presentation-hierarchies";
+import { HierarchyFilteringPath, HierarchyFilteringPath, HierarchyNode, HierarchyProvider } from "@itwin/presentation-hierarchies";
 import { IPrimitiveValueFormatter, Props } from "@itwin/presentation-shared";
 // __PUBLISH_EXTRACT_END__
 // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.CustomHierarchyProviders.IModelProviderImports
@@ -19,13 +19,7 @@ import { BriefcaseConnection, IModelConnection } from "@itwin/core-frontend";
 import { registerTxnListeners } from "@itwin/presentation-core-interop";
 // __PUBLISH_EXTRACT_END__
 // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.CustomHierarchyProviders.FormattingProviderImports
-import {
-  ConcatenatedValue,
-  ConcatenatedValuePart,
-  createDefaultValueFormatter,
-    EventListener,
-  julianToDateTime,
-} from "@itwin/presentation-shared";
+import { ConcatenatedValue, ConcatenatedValuePart, createDefaultValueFormatter, EventListener, julianToDateTime } from "@itwin/presentation-shared";
 // __PUBLISH_EXTRACT_END__
 // __PUBLISH_EXTRACT_START__ Presentation.Hierarchies.CustomHierarchyProviders.FilteringProviderImports
 import { createHierarchySearchHelper, GenericNodeKey, HierarchyNodeIdentifier, HierarchySearchPath } from "@itwin/presentation-hierarchies";
@@ -123,6 +117,9 @@ describe("Hierarchies", () => {
               // of events that we should listen to - here we're using `registerTxnListeners` helper to simplify subscription.
               this._disposeTxnListeners = registerTxnListeners(this._imodel.txns, () => this.hierarchyChanged.raiseEvent());
             }
+          }
+          setHierarchyFilter(props: { paths: HierarchyFilteringPath[] } | undefined): void {
+            throw new Error("Method not implemented.");
           }
 
           // Make this provider disposable. Owners of the provider should make sure `Symbol.dispose` is called when the
@@ -303,6 +300,9 @@ describe("Hierarchies", () => {
         // Create a hierarchy provider that returns a single root node with formatted label. The formatter used by the
         // provider can be changed by calling the `setFormatter` method.
         class FormattingHierarchyProvider implements HierarchyProvider {
+          setHierarchyFilter(props: { paths: HierarchyFilteringPath[] } | undefined): void {
+            throw new Error("Method not implemented.");
+          }
           private _formatter: IPrimitiveValueFormatter = createDefaultValueFormatter();
           public hierarchyChanged = new BeEvent<EventListener<HierarchyProvider["hierarchyChanged"]>>();
           public async *getNodes(): ReturnType<HierarchyProvider["getNodes"]> {
@@ -390,7 +390,10 @@ describe("Hierarchies", () => {
         // to create.
         async function createHierarchySearchPaths(searchText: string): Promise<HierarchySearchPath[]> {
           const results: HierarchySearchPath[] = [];
-          const [matchingAuthors, matchingBooks] = await Promise.all([booksService.getAuthors({ name: searchText }), booksService.getBooks({ title: searchText })]);
+          const [matchingAuthors, matchingBooks] = await Promise.all([
+            booksService.getAuthors({ name: searchText }),
+            booksService.getBooks({ title: searchText }),
+          ]);
           for (const author of matchingAuthors) {
             results.push([{ type: "generic", id: `author:${author.key}` }]);
           }
@@ -409,8 +412,9 @@ describe("Hierarchies", () => {
         const hierarchyChanged = new BeEvent<EventListener<HierarchyProvider["hierarchyChanged"]>>();
         const provider: HierarchyProvider = {
           async *getNodes({ parentNode }) {
-            const filteringHelper = createHierarchySearchHelper(rootFilter?.paths, parentNode);
-            const targetNodeKeys = filteringHelper.getChildNodeSearchIdentifiers();
+            const filteringHelper =
+              !parentNode || HierarchyNode.isGeneric(parentNode) ? createHierarchyFilteringHelper(rootFilter?.paths, parentNode) : undefined;
+            const targetNodeKeys = filteringHelper?.getChildNodeFilteringIdentifiers();
             if (!parentNode) {
               // For root nodes, query authors and return nodes based on them
               const authors = await booksService.getAuthors(
@@ -430,7 +434,7 @@ describe("Hierarchies", () => {
                   label: author.name,
                   children: author.hasBooks,
                   parentKeys: [],
-                  ...filteringHelper.createChildNodeProps({ nodeKey }),
+                  ...filteringHelper?.createChildNodeProps({ nodeKey, parentKeys: [] }),
                 };
               }
             } else if (HierarchyNode.isGeneric(parentNode) && parentNode.key.id.startsWith("author:")) {
@@ -453,12 +457,13 @@ describe("Hierarchies", () => {
               });
               for (const book of books) {
                 const nodeKey: GenericNodeKey = { type: "generic", id: `book:${book.key}` };
+                const parentKeys = [...parentNode.parentKeys, parentNode.key];
                 yield {
                   key: nodeKey,
                   label: book.title,
                   children: false,
-                  parentKeys: [...parentNode.parentKeys, parentNode.key],
-                  ...filteringHelper.createChildNodeProps({ nodeKey }),
+                  parentKeys,
+                  ...filteringHelper?.createChildNodeProps({ nodeKey, parentKeys }),
                 };
               }
             }

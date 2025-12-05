@@ -375,7 +375,7 @@ async function* getModelsSearchPaths({
         ...path.reverse().map((k) => ({ ...k, imodelKey: imodelAccess.imodelKey })),
       ],
       options: {
-        autoExpand: true,
+        reveal: true,
       },
     };
   }
@@ -463,7 +463,7 @@ function createRssHierarchyProvider(): HierarchyProvider & { getSearchPaths: (se
         }
       });
 
-      return paths.map((path) => ({ path, options: { autoExpand: true } }));
+      return paths.map((path) => ({ path, options: { reveal: true } }));
     },
 
     async *getNodes({ parentNode }: GetHierarchyNodesProps): AsyncIterableIterator<HierarchyNode> {
@@ -503,19 +503,19 @@ function createRssHierarchyProvider(): HierarchyProvider & { getSearchPaths: (se
           }
         }
       }
+      const searchHelper = !parentNode || HierarchyNode.isGeneric(parentNode) ? createHierarchySearchHelper(search, parentNode) : undefined;
 
-      const searchingHelper = createHierarchySearchHelper(search, parentNode);
-      if (!searchingHelper.hasSearch) {
-        yield* generateNodes();
+      if (!searchHelper.hasSearch) {
+        yield* searchHelper();
         return;
       }
 
-      const targetNodeKeys = searchingHelper.getChildNodeSearchIdentifiers()!;
+      const targetNodeKeys = searchHelper.getChildNodeSearchIdentifiers()!;
       for await (const node of generateNodes()) {
         if (targetNodeKeys.some((target) => HierarchyNodeIdentifier.equal(target, node.key))) {
           yield {
             ...node,
-            ...searchingHelper.createChildNodeProps({ nodeKey: node.key }),
+            ...searchHelper.createChildNodeProps({ nodeKey: node.key }),
           };
         }
       }

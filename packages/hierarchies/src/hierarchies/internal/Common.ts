@@ -4,7 +4,9 @@
  *--------------------------------------------------------------------------------------------*/
 
 import "./DisposePolyfill.js";
+
 import naturalCompare from "natural-compare-lite";
+import { from, Observable, of } from "rxjs";
 import { ConcatenatedValue } from "@itwin/presentation-shared";
 import { HierarchyNodeKey } from "../HierarchyNodeKey.js";
 
@@ -56,7 +58,13 @@ export function createNodeIdentifierForLogging(
   }
   const { label, key } = node;
   const parentKeys = "parentKeys" in node ? node.parentKeys : "<unknown>";
-  return JSON.stringify({ label, key, parentKeys });
+  const groupedInstanceKeys =
+    "groupedInstanceKeys" in node && Array.isArray(node.groupedInstanceKeys)
+      ? node.groupedInstanceKeys.length <= 3
+        ? node.groupedInstanceKeys
+        : `<${node.groupedInstanceKeys.length} keys>`
+      : undefined;
+  return JSON.stringify({ label, key, parentKeys, groupedInstanceKeys });
 }
 /* c8 ignore end */
 
@@ -85,4 +93,9 @@ export function safeDispose(disposable: {} | { [Symbol.dispose]: () => void } | 
   } else if (Symbol.dispose in disposable) {
     disposable[Symbol.dispose]();
   }
+}
+
+/** @internal */
+export function fromPossiblyPromise<T>(possiblyPromise: T | Promise<T>): Observable<T> {
+  return possiblyPromise instanceof Promise ? from(possiblyPromise) : of(possiblyPromise);
 }
