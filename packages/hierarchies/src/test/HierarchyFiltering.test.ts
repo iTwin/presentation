@@ -30,14 +30,22 @@ describe("HierarchyFilteringPath", () => {
       });
     });
     describe("autoExpand", () => {
-      const autoExpandOptions: Array<HierarchyFilteringPathOptions | undefined> = [{ autoExpand: true }, { autoExpand: false }, undefined];
+      const filteringPathOptions: Array<HierarchyFilteringPathOptions | undefined> = [
+        { autoExpand: true },
+        { autoExpand: false },
+        { autoExpand: undefined },
+        undefined,
+      ];
 
       it("returns correct result for different autoExpand options", () => {
-        for (const autoExpandOption of autoExpandOptions) {
-          for (const autoExpandOption2 of autoExpandOptions) {
-            expect(HierarchyFilteringPath.mergeOptions(autoExpandOption, autoExpandOption2)).to.deep.eq(
-              autoExpandOption || autoExpandOption2 ? { autoExpand: true } : undefined,
-            );
+        for (const lhs of filteringPathOptions) {
+          for (const rhs of filteringPathOptions) {
+            const mergeResult = HierarchyFilteringPath.mergeOptions(lhs, rhs);
+            if (lhs === undefined || rhs === undefined) {
+              expect(mergeResult).to.deep.eq(lhs ?? rhs);
+            } else {
+              expect(mergeResult).to.deep.eq(lhs.autoExpand || rhs.autoExpand ? { autoExpand: true } : {});
+            }
           }
         }
       });
