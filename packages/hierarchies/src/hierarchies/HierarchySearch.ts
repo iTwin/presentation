@@ -110,13 +110,6 @@ namespace HierarchySearchPathOptions {
   ): HierarchySearchPathOptions["autoExpand"] {
     return lhs || rhs ? true : undefined;
   }
-
-  export function mergeAutoExpandOption(
-    lhs: HierarchyFilteringPathOptions["autoExpand"],
-    rhs: HierarchyFilteringPathOptions["autoExpand"],
-  ): HierarchyFilteringPathOptions["autoExpand"] {
-    return lhs || rhs ? true : undefined;
-  }
 }
 
 /**

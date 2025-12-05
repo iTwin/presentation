@@ -382,15 +382,15 @@ describe("SearchHierarchyDefinition", () => {
     it("sets autoExpand on node when path's autoExpand is set to true and node is filter target", async () => {
       const inputNode = createTestProcessedInstanceNode({
         key: { type: "instances", instanceKeys: [{ id: "0x1", className: "bis:element" }] },
-        filtering: {
-          isFilterTarget: true,
-          filterTargetOptions: {
+        search: {
+          isSearchTarget: true,
+          searchTargetOptions: {
             autoExpand: true,
           },
         },
       });
-      const filteringFactory = await createFilteringHierarchyDefinition({
-        nodeIdentifierPaths: [{ path: [inputNode.key.instanceKeys[0]], options: { autoExpand: true } }],
+      const filteringFactory = await createSearchHierarchyDefinition({
+        targetPaths: [{ path: [inputNode.key.instanceKeys[0]], options: { autoExpand: true } }],
       });
       const result = await firstValueFrom(filteringFactory.postProcessNode(inputNode));
       expect(result.autoExpand).to.be.true;
