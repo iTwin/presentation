@@ -1,6 +1,6 @@
-- - -
-
-## "@itwin/presentation-hierarchies": minor
+---
+"@itwin/presentation-hierarchies": minor
+---
 
 Rename full‑hierarchy "filtering" to "search" across the package; keep hierarchy‑level "filtering".
 Properties and APIs were renamed accordingly to clarify the distinction and avoid confusion between hierarchy‑wide search and per‑level filtering.
