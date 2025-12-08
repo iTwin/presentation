@@ -102,7 +102,7 @@ const searchPath: HierarchySearchPath = {
   options: {
     // Auto-expand all nodes up to element "C".
     reveal: true,
-    // Auto-expand the filter target ("C" node) as well.
+    // Auto-expand the search target ("C" node) as well.
     autoExpand: true,
   },
 };
@@ -123,7 +123,7 @@ const searchPath: HierarchySearchPath = {
   // Path to the element "C"
   path: [elementKeys.a, elementKeys.b, elementKeys.c],
   options: {
-    // Reveal node "B" (index in filtering path equals `1`) in hierarchy by setting auto-expand flag on all its ancestors
+    // Reveal node "B" (index in search path equals `1`) in hierarchy by setting auto-expand flag on all its ancestors
     reveal: { depthInPath: 1 },
   },
 };
