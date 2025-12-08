@@ -2,4 +2,4 @@
 "@itwin/presentation-hierarchies-react": minor
 ---
 
-`UseIModelTreeProps` property `getFilteredPaths` renamed to `getSearchPaths`.
+Renamed `getFilteredPaths` prop to `getSearchPaths` in tree hooks: `useTree`, `useUnifiedSelectionTree`, `useIModelTree`, `useIModelUnifiedSelectionTree`.
