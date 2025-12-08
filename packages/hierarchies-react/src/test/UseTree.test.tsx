@@ -193,7 +193,7 @@ describe("useTree", () => {
     expect(treeRenderProps?.rootNodes).to.have.lengthOf(1);
   });
 
-  it("aborts filtered nodes paths loading on useTree cleanup", async () => {
+  it("aborts search nodes paths loading on useTree cleanup", async () => {
     hierarchyProvider.getNodes.callsFake((props) => {
       return createAsyncIterator(props.parentNode === undefined ? [createTestHierarchyNode({ id: "root-1" })] : []);
     });
@@ -216,7 +216,7 @@ describe("useTree", () => {
     });
   });
 
-  it("loads unfiltered hierarchy when `getSearchPaths` returns `undefined`", async () => {
+  it("loads default hierarchy when `getSearchPaths` returns `undefined`", async () => {
     hierarchyProvider.getNodes.callsFake((props) => {
       return createAsyncIterator(props.parentNode === undefined ? [createTestHierarchyNode({ id: "root-1" })] : []);
     });
@@ -242,7 +242,7 @@ describe("useTree", () => {
     });
   });
 
-  it("loads hierarchy using latest filtered paths", async () => {
+  it("loads hierarchy using latest search paths", async () => {
     const paths1: hierarchiesModule.HierarchyNodeIdentifiersPath[] = [[{ id: "0x1", className: "Schema:Class" }]];
     const paths2: hierarchiesModule.HierarchyNodeIdentifiersPath[] = [[{ id: "0x2", className: "Schema:Class" }]];
 
@@ -307,7 +307,7 @@ describe("useTree", () => {
     });
   });
 
-  it("does not persist tree state when hierarchy is filtered", async () => {
+  it("does not persist tree state when hierarchy is search", async () => {
     const rootNodes1 = [createTestHierarchyNode({ id: "root-1", autoExpand: true, children: true })];
     hierarchyProvider.getNodes.callsFake((props) => {
       if (props.parentNode === undefined) {
@@ -348,7 +348,7 @@ describe("useTree", () => {
     });
   });
 
-  it("ignores error during filtered paths loading", async () => {
+  it("ignores error during search paths loading", async () => {
     hierarchyProvider.getNodes.callsFake(() => {
       return createAsyncIterator([createTestHierarchyNode({ id: "root-1" })]);
     });
