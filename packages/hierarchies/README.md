@@ -50,15 +50,15 @@ Below is a list of learning material related to building hierarchies:
 - General topics:
   - [Formatting](./learning/Formatting.md)
   - [Logging](./learning/Logging.md)
-  - [Hierarchy filtering](./learning/HierarchyFiltering.md)
-  - [Hierarchy level filtering](./learning/HierarchyFiltering.md)
+  - [Hierarchy search](./learning/HierarchySearch.md)
+  - [Hierarchy level filtering](./learning/HierarchyLevelFiltering.md)
   - [Merged hierarchies](./learning/MergedHierarchies.md)
   - [Custom hierarchy providers](./learning/CustomHierarchyProviders.md)
 - iModel-based hierarchies:
   - [Hierarchy provider](./learning/imodel/HierarchyProvider.md)
   - [Hierarchy definition](./learning/imodel/HierarchyDefinition.md)
   - [Hierarchy node labels](./learning/imodel/HierarchyNodeLabels.md)
-  - [Hierarchy filtering](./learning/imodel/HierarchyFiltering.md)
+  - [Hierarchy search](./learning/imodel/HierarchySearch.md)
   - [Hierarchy level filtering](./learning/imodel/HierarchyLevelFiltering.md)
   - [Grouping](./learning/imodel/Grouping.md)
   - [Localization](./learning/imodel/Localization.md)
