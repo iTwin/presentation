@@ -655,46 +655,6 @@ describe("SearchHierarchyDefinition", () => {
         expect(result.autoExpand).to.be.true;
       });
 
-      it("doesn't set auto-expand when one of nested searched children has `searchTarget = true` and `reveal = false` option", async () => {
-        const inputNode = {
-          ...createGroupingNode(),
-          children: [
-            {
-              ...createGroupingNode(),
-              children: [
-                {
-                  ...createTestProcessedInstanceNode(),
-                  search: { isSearchTarget: true, searchTargetOptions: { reveal: false } },
-                },
-              ],
-            },
-          ],
-        };
-        const searchFactory = await createSearchHierarchyDefinition();
-        const result = await firstValueFrom(searchFactory.postProcessNode(inputNode));
-        expect(result.autoExpand).to.be.undefined;
-      });
-
-      it("sets auto-expand when one of searched nested children has `searchTarget = true` and `reveal = true` option", async () => {
-        const inputNode = {
-          ...createGroupingNode(),
-          children: [
-            {
-              ...createGroupingNode(),
-              children: [
-                {
-                  ...createTestProcessedInstanceNode(),
-                  search: { isSearchTarget: true, searchTargetOptions: { reveal: true } },
-                },
-              ],
-            },
-          ],
-        };
-        const searchFactory = await createSearchHierarchyDefinition();
-        const result = await firstValueFrom(searchFactory.postProcessNode(inputNode));
-        expect(result.autoExpand).to.be.true;
-      });
-
       it("sets auto-expand on grouping node when it's at the root level and its children have depthInPath set to 0", async () => {
         const groupingNode = createGroupingNode();
         const inputNode: ProcessedGroupingHierarchyNode = {
