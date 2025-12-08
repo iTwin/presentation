@@ -327,7 +327,7 @@ function addNodesToModel(model: TreeModel, loadedPart: { parent: TreeModelHierar
     model.idToNode.set(node.id, node);
   }
   const parentNode = loadedPart.parent.id ? model.idToNode.get(loadedPart.parent.id) : undefined;
-  if (parentNode) {
+  if (parentNode && loadedPart.loadedNodes.length !== 0) {
     parentNode.isExpanded = true;
   }
 }

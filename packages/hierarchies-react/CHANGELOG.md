@@ -1,5 +1,11 @@
 # @itwin/presentation-hierarchies-react
 
+## 2.0.0-alpha.45
+
+### Patch Changes
+
+- [#1134](https://github.com/iTwin/presentation/pull/1134): Fixed expanded tree nodes showing expander when tree is reloaded and child nodes are removed.
+
 ## 2.0.0-alpha.44
 
 ### Patch Changes
