@@ -56,7 +56,7 @@ describe("models tree", () => {
     test: async ({ imodelAccess, targetItems }) => {
       const idsCache = new ModelsTreeIdsCache(imodelAccess, defaultHierarchyConfiguration);
       const abortSignal = new AbortController().signal;
-      const filtering = {
+      const search = {
         paths: await ModelsTreeDefinition.createInstanceKeyPaths({
           imodelAccess,
           limit: "unbounded",
@@ -65,11 +65,11 @@ describe("models tree", () => {
           abortSignal,
         }),
       };
-      expect(filtering.paths.length).to.eq(50000);
+      expect(search.paths.length).to.eq(50000);
       const provider = new StatelessHierarchyProvider({
         imodelAccess,
         getHierarchyFactory: () => new ModelsTreeDefinition({ imodelAccess, idsCache }),
-        filtering,
+        search,
       });
       const result = await provider.loadHierarchy({ depth: 2 });
       expect(result).to.eq(2);
