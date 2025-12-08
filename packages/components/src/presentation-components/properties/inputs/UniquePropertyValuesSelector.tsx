@@ -45,7 +45,7 @@ export function UniquePropertyValuesSelector(props: UniquePropertyValuesSelector
     descriptorInputKeys,
     typeName: property.typename,
     selectedValues,
-    filterText: searchInput,
+    searchText: searchInput,
   });
 
   const onValueChange = useCallback(
