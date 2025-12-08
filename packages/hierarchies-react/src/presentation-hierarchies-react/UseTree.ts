@@ -71,7 +71,7 @@ export function useUnifiedSelectionTree({
 export interface UseTreeProps {
   /** Provides the hierarchy provider for the tree. */
   getHierarchyProvider: () => HierarchyProvider;
-  /** Provides paths to filtered nodes. */
+  /** Provides paths to search nodes. */
   getSearchPaths?: ({ abortSignal }: { abortSignal: AbortSignal }) => Promise<HierarchySearchPath[] | undefined>;
   /**
    * Callback that is called just after a certain action is finished.
@@ -187,7 +187,7 @@ function useTreeInternal({
 
       if (!getSearchPaths) {
         hierarchyProvider.setHierarchySearch(undefined);
-        // reload tree in case hierarchy provider does not use hierarchy filter to load initial nodes
+        // reload tree in case hierarchy provider does not use hierarchy search to load initial nodes
         actions.reloadTree({ state: "keep" });
         setIsSearching(false);
         return;

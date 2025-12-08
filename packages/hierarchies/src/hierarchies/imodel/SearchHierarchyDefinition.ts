@@ -52,7 +52,7 @@ export class SearchHierarchyDefinition implements RxjsHierarchyDefinition {
       return (this._source.preProcessNode ? this._source.preProcessNode(node) : of(node)).pipe(
         filter((processedNode) => {
           if (processedNode.processingParams?.hideInHierarchy && processedNode.search?.isSearchTarget && !processedNode.search.hasSearchTargetAncestor) {
-            // we want to hide target nodes if they have `hideInHierarchy` param, but only if they're not under another filter target
+            // we want to hide target nodes if they have `hideInHierarchy` param, but only if they're not under another search target
             return false;
           }
           return true;
@@ -99,8 +99,8 @@ export class SearchHierarchyDefinition implements RxjsHierarchyDefinition {
             return of(parsedNode);
           }
           const rowInstanceKey = { className: row[ECSQL_COLUMN_NAME_SearchClassName], id: row[ECSQL_COLUMN_NAME_FilterECInstanceId] };
-          const filteringHelper = createHierarchySearchHelper(this._targetPaths, parentNode);
-          const nodeFilteringPropPossiblyPromise = filteringHelper.createChildNodeProps({
+          const searchHelper = createHierarchySearchHelper(this._targetPaths, parentNode);
+          const nodeSearchPropPossiblyPromise = searchHelper.createChildNodeProps({
             asyncPathMatcher: (identifier): boolean | Promise<boolean> => {
               if (identifier.id !== rowInstanceKey.id) {
                 return false;
@@ -126,7 +126,7 @@ export class SearchHierarchyDefinition implements RxjsHierarchyDefinition {
               );
             },
           });
-          return fromPossiblyPromise(nodeFilteringPropPossiblyPromise).pipe(
+          return fromPossiblyPromise(nodeSearchPropPossiblyPromise).pipe(
             map((nodeExtraProps) => {
               if (nodeExtraProps?.search) {
                 parsedNode.search = nodeExtraProps.search;
@@ -232,7 +232,7 @@ export class SearchHierarchyDefinition implements RxjsHierarchyDefinition {
             // only take definitions that have matching path identifiers
             filter((pathIdentifiers) => pathIdentifiers.length > 0),
 
-            // for each definition that we're going to use, apply query-level filter
+            // for each definition that we're going to use, apply query-level search
             map((pathIdentifiers) => applyECInstanceIdsSearch(definition, pathIdentifiers)),
           );
         }),
@@ -344,7 +344,7 @@ function shouldAutoExpandGroupingNodeBasedOnNestedChildren({
       shouldAutoExpandBasedOnReveal({
         reveal: child.search.searchTargetOptions?.reveal,
         nodePositionInHierarchy: parentKeysLength,
-        // Grouping node is not in filtering path, but we can assume that it is at the position of 1 less than `parentKeysWithoutGroupingNodesLength`
+        // Grouping node is not in search path, but we can assume that it is at the position of 1 less than `parentKeysWithoutGroupingNodesLength`
         nodePositionInPath: parentKeysWithoutGroupingNodesLength - 1,
       })
     ) {
@@ -362,7 +362,7 @@ function shouldAutoExpandGroupingNodeBasedOnNestedChildren({
         shouldAutoExpandBasedOnReveal({
           reveal: path.options?.reveal,
           nodePositionInHierarchy: parentKeysLength,
-          // Grouping node is not in filtering path, but we can assume that it is at the position of 1 less than `parentKeysWithoutGroupingNodesLength`
+          // Grouping node is not in search path, but we can assume that it is at the position of 1 less than `parentKeysWithoutGroupingNodesLength`
           nodePositionInPath: parentKeysWithoutGroupingNodesLength - 1,
         })
       ) {

@@ -433,7 +433,7 @@ For this example, let's use the books service defined in the [3rd party service-
 As described in the [Hierarchy search](./HierarchySearch.md) learning page, the process of searching a hierarchy has two major steps:
 
 1. Determine node identifier paths for the target nodes.
-2. Given the node identifier paths, filter the hierarchy.
+2. Given the node identifier paths, search the hierarchy.
 
 Let's start with the first step:
 
@@ -468,7 +468,7 @@ async function createSearchPaths(searchText: string): Promise<HierarchySearchPat
 
 <!-- END EXTRACTION -->
 
-There could be a number of ways to search the hierarchy, such as by target instance identifier, by a complex query that uses multiple attributes, or simply by label. The above function filters the hierarchy by node label.
+There could be a number of ways to search the hierarchy, such as by target instance identifier, by a complex query that uses multiple attributes, or simply by label. The above function searches the hierarchy by node label.
 
 Now that we're able to find the paths, let's enhance our hierarchy provider to support searching by them:
 
