@@ -530,7 +530,7 @@ describe("Hierarchies", () => {
           // Path to the element "C"
           path: [elementKeys.a, elementKeys.b, elementKeys.c],
           options: {
-            // Reveal node "B" (index in filtering path equals `1`) in hierarchy by setting auto-expand flag on all its ancestors
+            // Reveal node "B" (index in search path equals `1`) in hierarchy by setting auto-expand flag on all its ancestors
             reveal: { depthInPath: 1 },
           },
         };
@@ -586,7 +586,7 @@ describe("Hierarchies", () => {
         ]);
       });
 
-      it("sets auto-expand flag on filter target when `HierarchyFilteringPathOptions.autoExpand` flag is set", async function () {
+      it("sets auto-expand flag on search target when `HierarchySearchPathOptions.autoExpand` flag is set", async function () {
         const imodelAccess = createIModelAccess(imodel);
         const queryClauseFactory = createNodesQueryClauseFactory({
           imodelAccess,
@@ -643,13 +643,13 @@ describe("Hierarchies", () => {
           options: {
             // Auto-expand all nodes up to element "C".
             reveal: true,
-            // Auto-expand the filter target ("C" node) as well.
+            // Auto-expand the search target ("C" node) as well.
             autoExpand: true,
           },
         };
         // __PUBLISH_EXTRACT_END__
 
-        // Construct a hierarchy provider for the filtered hierarchy
+        // Construct a hierarchy provider for the search hierarchy
         const hierarchyProvider = createIModelHierarchyProvider({
           imodelAccess,
           hierarchyDefinition,
@@ -684,7 +684,7 @@ describe("Hierarchies", () => {
                         nodeType: "label-grouping",
                         label: "C",
                         autoExpand: true,
-                        // Child is the filter target. Has auto-expand flag.
+                        // Child is the search target. Has auto-expand flag.
                         children: [
                           {
                             nodeType: "instances",
