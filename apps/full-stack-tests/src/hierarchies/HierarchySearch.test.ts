@@ -446,7 +446,7 @@ describe("Hierarchies", () => {
         });
       });
 
-      it("filters through instance nodes that are in multiple paths", async function () {
+      it("searches through instance nodes that are in multiple paths", async function () {
         const { imodel, ...keys } = await buildIModel(this, async (builder) => {
           const rootSubject = { className: subjectClassName, id: IModel.rootSubjectId };
           const childSubject1 = insertSubject({ builder, codeValue: "test subject 1", parentId: rootSubject.id });
@@ -637,7 +637,7 @@ describe("Hierarchies", () => {
       });
     });
 
-    describe("when filtering through hidden nodes", () => {
+    describe("when searching through hidden nodes", () => {
       it("searches through hidden generic nodes", async function () {
         const { imodel, ...keys } = await buildIModel(this, async (builder) => {
           const rootSubject = { className: subjectClassName, id: IModel.rootSubjectId };
@@ -1637,8 +1637,8 @@ describe("Hierarchies", () => {
       });
     });
 
-    describe("when filtering merged hierarchy provider", () => {
-      it("filters root nodes of individual provider", async function () {
+    describe("when searching merged hierarchy provider", () => {
+      it("searches root nodes of individual provider", async function () {
         const { imodel: imodel1, ...keys1 } = await buildIModel(createFileNameFromString(`${this.test!.fullTitle()}-1`), async (builder) => {
           const testSubject = insertSubject({ builder, codeValue: "A subject", parentId: IModel.rootSubjectId });
           return { testSubject };
@@ -1733,7 +1733,7 @@ describe("Hierarchies", () => {
         });
         const provider4 = new (class implements HierarchyProvider {
           public hierarchyChanged = new BeEvent();
-          private _filter: HierarchySearchPath[] | undefined;
+          private _search: HierarchySearchPath[] | undefined;
           public getNodes: HierarchyProvider["getNodes"] = ({ parentNode }) => {
             if (!parentNode) {
               const myNode = {
@@ -1742,10 +1742,10 @@ describe("Hierarchies", () => {
                 parentKeys: [],
                 children: false,
               };
-              if (!this._filter) {
+              if (!this._search) {
                 return createAsyncIterator([myNode]);
               }
-              const nodeMatchesFilter = this._filter.some((fp) => {
+              const nodeMatchesSearch = this._search.some((fp) => {
                 const { path } = HierarchySearchPath.normalize(fp);
                 return (
                   path.length &&
@@ -1754,7 +1754,7 @@ describe("Hierarchies", () => {
                   path[0].id === myNode.key.id
                 );
               });
-              if (nodeMatchesFilter) {
+              if (nodeMatchesSearch) {
                 return createAsyncIterator([{ ...myNode, search: { isSearchTarget: true } }]);
               }
             }
@@ -1765,11 +1765,11 @@ describe("Hierarchies", () => {
           };
           public setFormatter: HierarchyProvider["setFormatter"] = () => {};
           public setHierarchySearch: HierarchyProvider["setHierarchySearch"] = (props) => {
-            this._filter = props?.paths;
+            this._search = props?.paths;
           };
         })();
 
-        // ensure we have expected non-filtered hierarchy
+        // ensure we have expected default hierarchy
         await validateHierarchy({
           provider: mergeProviders({ providers: [provider1, provider2, provider3, provider4] }),
           expect: [
@@ -1780,11 +1780,11 @@ describe("Hierarchies", () => {
           ],
         });
 
-        // ensure we get the same result when filter paths contain all root nodes
+        // ensure we get the same result when search paths contain all root nodes
         await validateHierarchy({
-          provider: mergeAndFilterProviders({
+          provider: mergeAndSearchProviders({
             providers: [provider1, provider2, provider3, provider4],
-            filterProps: {
+            searchProps: {
               paths: [
                 [testSubjectKey1],
                 [testSubjectKey2],
@@ -1801,38 +1801,38 @@ describe("Hierarchies", () => {
           ],
         });
 
-        // ensure we can filter each root node individually
+        // ensure we can search each root node individually
         await validateHierarchy({
-          provider: mergeAndFilterProviders({
+          provider: mergeAndSearchProviders({
             providers: [provider1, provider2, provider3, provider4],
-            filterProps: {
+            searchProps: {
               paths: [[testSubjectKey1]],
             },
           }),
           expect: [NodeValidators.createForInstanceNode({ instanceKeys: [testSubjectKey1] })],
         });
         await validateHierarchy({
-          provider: mergeAndFilterProviders({
+          provider: mergeAndSearchProviders({
             providers: [provider1, provider2, provider3, provider4],
-            filterProps: {
+            searchProps: {
               paths: [[testSubjectKey2]],
             },
           }),
           expect: [NodeValidators.createForInstanceNode({ instanceKeys: [testSubjectKey2] })],
         });
         await validateHierarchy({
-          provider: mergeAndFilterProviders({
+          provider: mergeAndSearchProviders({
             providers: [provider1, provider2, provider3, provider4],
-            filterProps: {
+            searchProps: {
               paths: [[{ type: "generic", id: "gen", source: "provider3" }]],
             },
           }),
           expect: [NodeValidators.createForGenericNode({ key: { type: "generic", id: "gen", source: "provider3" } })],
         });
         await validateHierarchy({
-          provider: mergeAndFilterProviders({
+          provider: mergeAndSearchProviders({
             providers: [provider1, provider2, provider3, provider4],
-            filterProps: {
+            searchProps: {
               paths: [[{ type: "generic", id: "gen", source: "custom-provider" }]],
             },
           }),
@@ -1840,7 +1840,7 @@ describe("Hierarchies", () => {
         });
       });
 
-      it("filters through multiple providers", async function () {
+      it("searches through multiple providers", async function () {
         const rootSubjectKey = { className: subjectClassName, id: IModel.rootSubjectId };
         const { imodel: imodel1, ...keys1 } = await buildIModel(createFileNameFromString(`${this.test!.fullTitle()}-1`), async (builder) => {
           const subject1 = insertSubject({ builder, codeValue: "A subject 1", parentId: rootSubjectKey.id });
@@ -1941,8 +1941,8 @@ describe("Hierarchies", () => {
               if (!searchHelper.hasSearch) {
                 return createAsyncIterator([myNode]);
               }
-              const nodeMatchesFilter = searchHelper.getChildNodeSearchIdentifiers()?.some((id) => HierarchyNodeIdentifier.equal(id, myNode.key));
-              if (nodeMatchesFilter) {
+              const nodeMatchesSearch = searchHelper.getChildNodeSearchIdentifiers()?.some((id) => HierarchyNodeIdentifier.equal(id, myNode.key));
+              if (nodeMatchesSearch) {
                 return createAsyncIterator([{ ...myNode, ...searchHelper.createChildNodeProps({ nodeKey: myNode.key, parentKeys: myNode.parentKeys }) }]);
               }
             }
@@ -1952,11 +1952,11 @@ describe("Hierarchies", () => {
           public setFormatter: HierarchyProvider["setFormatter"] = () => {};
           public setHierarchySearch: HierarchyProvider["setHierarchySearch"] = () => {
             // don't need to save this, because this provider doesn't return any root nodes and for
-            // child nodes we take filter paths from parent node
+            // child nodes we take search paths from parent node
           };
         })();
 
-        // ensure we have expected non-filtered hierarchy
+        // ensure we have expected default hierarchy
         await validateHierarchy({
           provider: mergeProviders({ providers: [provider1, provider2, provider3] }),
           expect: [
@@ -1983,11 +1983,11 @@ describe("Hierarchies", () => {
           ],
         });
 
-        // ensure we can filter through different providers
+        // ensure we can search through different providers
         await validateHierarchy({
-          provider: mergeAndFilterProviders({
+          provider: mergeAndSearchProviders({
             providers: [provider1, provider2, provider3],
-            filterProps: {
+            searchProps: {
               paths: [
                 [rootSubjectKey, instanceKeys.subject1, instanceKeys.subject11, { type: "generic", id: "gen", source: "custom-provider" }],
                 [rootSubjectKey, instanceKeys.subject2, { type: "generic", id: "gen", source: "custom-provider" }],
@@ -2015,8 +2015,8 @@ describe("Hierarchies", () => {
   });
 });
 
-function mergeAndFilterProviders({ providers, filterProps }: { providers: HierarchyProvider[]; filterProps: Props<HierarchyProvider["setHierarchySearch"]> }) {
+function mergeAndSearchProviders({ providers, searchProps }: { providers: HierarchyProvider[]; searchProps: Props<HierarchyProvider["setHierarchySearch"]> }) {
   const mergedProvider = mergeProviders({ providers });
-  mergedProvider.setHierarchySearch(filterProps);
+  mergedProvider.setHierarchySearch(searchProps);
   return mergedProvider;
 }

@@ -30,7 +30,7 @@ import { LOGGER } from "../util/Logging";
 interface ProviderOptionsBase {
   rowLimit?: number | "unbounded";
   getHierarchyFactory(imodelAccess: ECSchemaProvider & ECClassHierarchyInspector): HierarchyDefinition;
-  filtering?: {
+  search?: {
     paths: HierarchySearchPath[];
   };
 }
@@ -109,7 +109,7 @@ export class StatelessHierarchyProvider {
       imodelAccess,
       hierarchyDefinition: this._props.getHierarchyFactory(imodelAccess),
       queryCacheSize: 0,
-      search: this._props.filtering,
+      search: this._props.search,
     });
   }
 
