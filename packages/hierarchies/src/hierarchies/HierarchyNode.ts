@@ -38,7 +38,6 @@ export type HierarchyNodeSearchProps = {
       searchTargetOptions?: HierarchySearchPathOptions;
     }
 );
-/** @public */
 
 /**
  * A data structure that defines attributes that are common to all types of hierarchy nodes.

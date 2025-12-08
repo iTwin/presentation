@@ -43,7 +43,7 @@ The reasoning for having these two steps separate is twofold:
 - It decouples creation of the searched hierarchy from the type of search being done - the paths could be created based on a variety of ways, such as a search string or a target instance ID, to name a few. And building the searched hierarchy doesn't depend on the way the paths are created.
 - Hierarchies' search is specific in a way that, generally, each hierarchy level has to be queried independently, and target nodes may be located somewhere deep in the hierarchy. Taking the hierarchy defined at the top of this document, for C target node we need to include its ancestors B and A when building their hierarchy levels, even though they aren't our search targets. So the most efficient way to do that is to first find the search targets, and then rebuild the paths in a bottom-up manner.
 
-See [Implementing hierarchy filtering support](./CustomHierarchyProviders.md#implementing-hierarchy-filtering-support) for more information on how to implement hierarchy search in a custom hierarchy provider.
+See [Implementing hierarchy search support](./CustomHierarchyProviders.md#implementing-hierarchy-search-support) for more information on how to implement hierarchy search in a custom hierarchy provider.
 
 ## Handling automatic expansion of nodes
 
