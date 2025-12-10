@@ -95,10 +95,10 @@ export class SearchHierarchyDefinition implements RxjsHierarchyDefinition {
     return (row, parentNode) => {
       return this._nodesParser(row).pipe(
         mergeMap((parsedNode) => {
-          if (!row[ECSQL_COLUMN_NAME_FilterECInstanceId] || !row[ECSQL_COLUMN_NAME_SearchClassName]) {
+          if (!row[ECSQL_COLUMN_NAME_SearchECInstanceId] || !row[ECSQL_COLUMN_NAME_SearchClassName]) {
             return of(parsedNode);
           }
-          const rowInstanceKey = { className: row[ECSQL_COLUMN_NAME_SearchClassName], id: row[ECSQL_COLUMN_NAME_FilterECInstanceId] };
+          const rowInstanceKey = { className: row[ECSQL_COLUMN_NAME_SearchClassName], id: row[ECSQL_COLUMN_NAME_SearchECInstanceId] };
           const searchHelper = createHierarchySearchHelper(this._targetPaths, parentNode);
           const nodeSearchPropPossiblyPromise = searchHelper.createChildNodeProps({
             asyncPathMatcher: (identifier): boolean | Promise<boolean> => {
@@ -243,7 +243,7 @@ export class SearchHierarchyDefinition implements RxjsHierarchyDefinition {
 
 /** @internal */
 // eslint-disable-next-line @typescript-eslint/naming-convention
-export const ECSQL_COLUMN_NAME_FilterECInstanceId = "FilterECInstanceId";
+export const ECSQL_COLUMN_NAME_SearchECInstanceId = "SearchECInstanceId";
 
 /** @internal */
 // eslint-disable-next-line @typescript-eslint/naming-convention
@@ -286,7 +286,7 @@ export function applyECInstanceIdsSearch(def: InstanceNodesQueryDefinition, targ
       ecsql: `
         SELECT
           [q].*,
-          IdToHex([f].[ECInstanceId]) AS [${ECSQL_COLUMN_NAME_FilterECInstanceId}],
+          IdToHex([f].[ECInstanceId]) AS [${ECSQL_COLUMN_NAME_SearchECInstanceId}],
           [f].[SearchClassName] AS [${ECSQL_COLUMN_NAME_SearchClassName}]
         FROM (
           ${def.query.ecsql}
@@ -306,7 +306,7 @@ export function applyECInstanceIdsSelector(def: InstanceNodesQueryDefinition): I
       ecsql: `
         SELECT
           [q].*,
-          IdToHex([q].[ECInstanceId]) AS [${ECSQL_COLUMN_NAME_FilterECInstanceId}],
+          IdToHex([q].[ECInstanceId]) AS [${ECSQL_COLUMN_NAME_SearchECInstanceId}],
           [q].[${NodeSelectClauseColumnNames.FullClassName}] AS [${ECSQL_COLUMN_NAME_SearchClassName}]
         FROM (${def.query.ecsql}) [q]
       `,

@@ -20,7 +20,7 @@ import {
 } from "../../hierarchies/imodel/IModelHierarchyProvider.js";
 import { LimitingECSqlQueryExecutor } from "../../hierarchies/imodel/LimitingECSqlQueryExecutor.js";
 import { NodeSelectClauseColumnNames } from "../../hierarchies/imodel/NodeSelectQueryFactory.js";
-import { ECSQL_COLUMN_NAME_FilterECInstanceId, ECSQL_COLUMN_NAME_SearchClassName } from "../../hierarchies/imodel/SearchHierarchyDefinition.js";
+import { ECSQL_COLUMN_NAME_SearchClassName, ECSQL_COLUMN_NAME_SearchECInstanceId } from "../../hierarchies/imodel/SearchHierarchyDefinition.js";
 import { RowDef } from "../../hierarchies/imodel/TreeNodesReader.js";
 import { createIModelAccessStub, createTestGenericNode, createTestGenericNodeKey, createTestInstanceKey, createTestSourceGenericNode } from "../Utils.js";
 
@@ -718,7 +718,7 @@ describe("createIModelHierarchyProvider", () => {
       imodelAccess.createQueryReader.callsFake(() =>
         createAsyncIterator<
           RowDef & {
-            [ECSQL_COLUMN_NAME_FilterECInstanceId]: string;
+            [ECSQL_COLUMN_NAME_SearchECInstanceId]: string;
             [ECSQL_COLUMN_NAME_SearchClassName]: string;
           }
         >([
@@ -726,7 +726,7 @@ describe("createIModelHierarchyProvider", () => {
             [NodeSelectClauseColumnNames.FullClassName]: "a.b",
             [NodeSelectClauseColumnNames.ECInstanceId]: "0x123",
             [NodeSelectClauseColumnNames.DisplayLabel]: "test label",
-            [ECSQL_COLUMN_NAME_FilterECInstanceId]: "0x123",
+            [ECSQL_COLUMN_NAME_SearchECInstanceId]: "0x123",
             [ECSQL_COLUMN_NAME_SearchClassName]: "a.b",
           },
         ]),
@@ -777,7 +777,7 @@ describe("createIModelHierarchyProvider", () => {
                 `
                 SELECT
                     [q].*,
-                    IdToHex([f].[ECInstanceId]) AS [${ECSQL_COLUMN_NAME_FilterECInstanceId}],
+                    IdToHex([f].[ECInstanceId]) AS [${ECSQL_COLUMN_NAME_SearchECInstanceId}],
                     [f].[SearchClassName] AS [${ECSQL_COLUMN_NAME_SearchClassName}]
                   FROM (QUERY) [q]
                   JOIN SearchInfo [f] ON [f].[ECInstanceId] = [q].[ECInstanceId]
@@ -834,13 +834,13 @@ describe("createIModelHierarchyProvider", () => {
 
       const rootNodePromise = new ResolvablePromise<
         RowDef & {
-          [ECSQL_COLUMN_NAME_FilterECInstanceId]: string;
+          [ECSQL_COLUMN_NAME_SearchECInstanceId]: string;
           [ECSQL_COLUMN_NAME_SearchClassName]: string;
         }
       >();
       const childNodePromise = new ResolvablePromise<
         RowDef & {
-          [ECSQL_COLUMN_NAME_FilterECInstanceId]: string;
+          [ECSQL_COLUMN_NAME_SearchECInstanceId]: string;
           [ECSQL_COLUMN_NAME_SearchClassName]: string;
         }
       >();
@@ -899,14 +899,14 @@ describe("createIModelHierarchyProvider", () => {
         [NodeSelectClauseColumnNames.FullClassName]: "a.b",
         [NodeSelectClauseColumnNames.ECInstanceId]: "0x123",
         [NodeSelectClauseColumnNames.DisplayLabel]: "ab",
-        [ECSQL_COLUMN_NAME_FilterECInstanceId]: "0x123",
+        [ECSQL_COLUMN_NAME_SearchECInstanceId]: "0x123",
         [ECSQL_COLUMN_NAME_SearchClassName]: "a.b",
       });
       await childNodePromise.resolve({
         [NodeSelectClauseColumnNames.FullClassName]: "c.d",
         [NodeSelectClauseColumnNames.ECInstanceId]: "0x456",
         [NodeSelectClauseColumnNames.DisplayLabel]: "cd",
-        [ECSQL_COLUMN_NAME_FilterECInstanceId]: "0x456",
+        [ECSQL_COLUMN_NAME_SearchECInstanceId]: "0x456",
         [ECSQL_COLUMN_NAME_SearchClassName]: "c.d",
       });
 
