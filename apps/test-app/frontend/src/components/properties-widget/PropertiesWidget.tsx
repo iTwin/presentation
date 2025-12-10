@@ -53,18 +53,18 @@ export function PropertiesWidget(props: Props) {
   const { imodel, rulesetId } = props;
   const [diagnosticsOptions, setDiagnosticsOptions] = useState<DiagnosticsProps>({ ruleDiagnostics: undefined, devDiagnostics: undefined });
 
-  const [filterText, setFilterText] = useState("");
+  const [searchText, setSearchText] = useState("");
   const [isFavoritesFilterActive, setIsFavoritesFilterActive] = useState(false);
   const [activeMatchIndex, setActiveMatchIndex] = useState(0);
   const [activeHighlight, setActiveHighlight] = useState<HighlightInfo>();
 
   const setFilter = useCallback(
     (filter: string) => {
-      if (filter !== filterText) {
-        setFilterText(filter);
+      if (filter !== searchText) {
+        setSearchText(filter);
       }
     },
-    [filterText],
+    [searchText],
   );
 
   const [filteringResult, setFilteringResult] = useState<FilteredPropertyData>();
@@ -107,7 +107,7 @@ export function PropertiesWidget(props: Props) {
             }}
             style={{ flex: "auto" }}
             resultSelectorProps={resultSelectorProps}
-            status={filterText.length !== 0 ? FilteringInputStatus.FilteringFinished : FilteringInputStatus.ReadyToFilter}
+            status={searchText.length !== 0 ? FilteringInputStatus.FilteringFinished : FilteringInputStatus.ReadyToFilter}
           />
           <ToggleSwitch
             className="FavoritesToggle"
@@ -123,7 +123,7 @@ export function PropertiesWidget(props: Props) {
             height={height}
             imodel={imodel}
             rulesetId={rulesetId}
-            filtering={{ filter: filterText, onlyFavorites: isFavoritesFilterActive, activeHighlight, onFilteringStateChanged }}
+            filtering={{ filter: searchText, onlyFavorites: isFavoritesFilterActive, activeHighlight, onFilteringStateChanged }}
             diagnostics={diagnosticsOptions}
           />
         ) : null}
@@ -179,13 +179,13 @@ function FilterablePropertyGrid({
 
   const { isOverLimit, numSelectedElements } = usePropertyDataProviderWithUnifiedSelection({ dataProvider, selectionStorage: unifiedSelectionContext.storage });
 
-  const { filter: filterText, onlyFavorites, activeHighlight, onFilteringStateChanged } = filtering;
+  const { filter: searchText, onlyFavorites, activeHighlight, onFilteringStateChanged } = filtering;
   const [filteringProvDataChanged, setFilteringProvDataChanged] = useState({});
   const [filteringDataProvider, setFilteringDataProvider] = useState<FilteringPropertyDataProvider>();
   useEffect(() => {
-    const valueFilterer = new DisplayValuePropertyDataFilterer(filterText);
-    const labelFilterer = new LabelPropertyDataFilterer(filterText);
-    const categoryFilterer = new PropertyCategoryLabelFilterer(filterText);
+    const valueFilterer = new DisplayValuePropertyDataFilterer(searchText);
+    const labelFilterer = new LabelPropertyDataFilterer(searchText);
+    const categoryFilterer = new PropertyCategoryLabelFilterer(searchText);
     const favoriteFilterer = new FavoritePropertiesDataFilterer({ source: dataProvider, favoritesScope: FAVORITES_SCOPE, isActive: onlyFavorites });
 
     const recordFilterer = new CompositePropertyDataFilterer(labelFilterer, CompositeFilterType.Or, valueFilterer);
@@ -199,7 +199,7 @@ function FilterablePropertyGrid({
     return () => {
       filteringDataProv[Symbol.dispose]();
     };
-  }, [dataProvider, filterText, onlyFavorites]);
+  }, [dataProvider, searchText, onlyFavorites]);
 
   const { value: filteringResult } = useDebouncedAsyncValue(
     useCallback(async () => {
@@ -259,7 +259,7 @@ function FilterablePropertyGrid({
           orientation={Orientation.Horizontal}
           horizontalOrientationMinWidth={500}
           highlight={
-            filterText && filterText.length !== 0 ? { highlightedText: filterText, activeHighlight, filteredTypes: filteringResult?.filteredTypes } : undefined
+            searchText && searchText.length !== 0 ? { highlightedText: searchText, activeHighlight, filteredTypes: filteringResult?.filteredTypes } : undefined
           }
           isPropertyEditingEnabled={true}
           onPropertyUpdated={async ({ newValue }) => {

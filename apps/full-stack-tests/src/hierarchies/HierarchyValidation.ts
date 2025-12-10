@@ -9,10 +9,10 @@ import { isDeepStrictEqual } from "util";
 import { Logger } from "@itwin/core-bentley";
 import {
   GenericNodeKey,
-  HierarchyFilteringPathOptions,
   HierarchyNode,
   HierarchyNodeKey,
   HierarchyProvider,
+  HierarchySearchPathOptions,
   InstancesNodeKey,
   NonGroupingHierarchyNode,
 } from "@itwin/presentation-hierarchies";
@@ -54,8 +54,8 @@ interface BaseNodeExpectations {
 
 interface NonGroupingNodeExpectations extends BaseNodeExpectations {
   supportsFiltering?: boolean;
-  isFilterTarget?: boolean;
-  filterTargetOptions?: HierarchyFilteringPathOptions;
+  isSearchTarget?: boolean;
+  searchTargetOptions?: HierarchySearchPathOptions;
 }
 
 export namespace NodeValidators {
@@ -102,24 +102,24 @@ export namespace NodeValidators {
         )}, got ${optionalBooleanToString(node.supportsFiltering)}`,
       );
     }
-    if (expectations.isFilterTarget !== undefined && expectations.isFilterTarget !== !!node.filtering?.isFilterTarget) {
+    if (expectations.isSearchTarget !== undefined && expectations.isSearchTarget !== !!node.search?.isSearchTarget) {
       throw new Error(
-        `[${node.label}] Expected node's \`filtering.isFilterTarget\` to be ${optionalBooleanToString(
-          expectations.isFilterTarget,
-        )}, got ${optionalBooleanToString(node.filtering?.isFilterTarget)}`,
+        `[${node.label}] Expected node's \`search.isSearchTarget\` to be ${optionalBooleanToString(
+          expectations.isSearchTarget,
+        )}, got ${optionalBooleanToString(node.search?.isSearchTarget)}`,
       );
     }
-    if (expectations.filterTargetOptions !== undefined) {
-      assert(node.filtering?.isFilterTarget, `[${node.label}] Expected node to be a filter target`);
-      expect(node.filtering.filterTargetOptions).to.deep.eq(
-        expectations.filterTargetOptions,
-        `[${node.label}] Nodes's 'filtering.filterTargetOptions' flag property doesn't match the expectation.`,
+    if (expectations.searchTargetOptions !== undefined) {
+      assert(node.search?.isSearchTarget, `[${node.label}] Expected node to be a search target`);
+      expect(node.search.searchTargetOptions).to.deep.eq(
+        expectations.searchTargetOptions,
+        `[${node.label}] Nodes's 'search.searchTargetOptions' flag property doesn't match the expectation.`,
       );
     }
   }
 
   export function createForGenericNode<TChildren extends ExpectedHierarchyDef[] | boolean>(
-    expectedNode: Partial<Omit<NonGroupingHierarchyNode, "label" | "children" | "filtering" | "key">> &
+    expectedNode: Partial<Omit<NonGroupingHierarchyNode, "label" | "children" | "search" | "key">> &
       NonGroupingNodeExpectations & {
         key?: string | GenericNodeKey;
         label?: string;

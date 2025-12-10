@@ -12,7 +12,7 @@ import { createCachingECClassHierarchyInspector, Event, IPrimitiveValueFormatter
 import { createSchemaContext } from "../IModelUtils.js";
 
 type HierarchyProviderProps = Props<typeof createIModelHierarchyProvider>;
-type HierarchyFilteringPaths = NonNullable<NonNullable<HierarchyProviderProps["filtering"]>["paths"]>;
+type HierarchySearchPaths = NonNullable<NonNullable<HierarchyProviderProps["search"]>["paths"]>;
 
 export function createIModelAccess(imodel: IModelConnection | IModelDb | ECDb) {
   const schemaProvider = createECSchemaProviderInterop(createSchemaContext(imodel));
@@ -33,7 +33,7 @@ export function createProvider(
         imodelChanged?: Event<() => void>;
         hierarchy: HierarchyDefinition;
         localizedStrings?: Props<typeof createIModelHierarchyProvider>["localizedStrings"];
-        filteredNodePaths?: HierarchyFilteringPaths;
+        hierarchySearchPaths?: HierarchySearchPaths;
         queryCacheSize?: number;
       }
     | {
@@ -44,12 +44,12 @@ export function createProvider(
     imodelChanged?: Event<() => void>;
     hierarchy: HierarchyDefinition;
     localizedStrings?: Props<typeof createIModelHierarchyProvider>["localizedStrings"];
-    filteredNodePaths?: HierarchyFilteringPaths;
+    hierarchySearchPaths?: HierarchySearchPaths;
     queryCacheSize?: number;
     sourceName?: string;
   },
 ) {
-  const { imodelChanged, hierarchy, localizedStrings, filteredNodePaths, queryCacheSize } = props;
+  const { imodelChanged, hierarchy, localizedStrings, hierarchySearchPaths, queryCacheSize } = props;
   const formatter = "imodel" in props && props.formatterFactory ? props.formatterFactory(createSchemaContext(props.imodel)) : undefined;
   return createIModelHierarchyProvider({
     imodelAccess: "imodelAccess" in props ? props.imodelAccess : createIModelAccess(props.imodel),
@@ -57,7 +57,7 @@ export function createProvider(
     hierarchyDefinition: hierarchy,
     formatter,
     localizedStrings,
-    filtering: filteredNodePaths ? { paths: filteredNodePaths } : undefined,
+    search: hierarchySearchPaths ? { paths: hierarchySearchPaths } : undefined,
     queryCacheSize: queryCacheSize ?? 0,
     // @ts-expect-error: using non-exposed way to override source name
     sourceName: props.sourceName,

@@ -20,7 +20,7 @@ interface UseUniquePropertyValuesLoaderProps {
   field?: Field;
   descriptorInputKeys?: Keys;
   typeName: string;
-  filterText?: string;
+  searchText?: string;
   selectedValues?: string[];
 }
 
@@ -36,7 +36,7 @@ export function useUniquePropertyValuesLoader({
   field,
   descriptorInputKeys,
   typeName,
-  filterText,
+  searchText,
   selectedValues,
 }: UseUniquePropertyValuesLoaderProps) {
   const [itemsLoader, setItemsLoader] = useState<ItemsLoader<UniqueValue> | undefined>();
@@ -76,18 +76,18 @@ export function useUniquePropertyValuesLoader({
 
   // On filter text change, check if more items need to be loaded
   useEffect(() => {
-    if (!filterText || !itemsLoader) {
+    if (!searchText || !itemsLoader) {
       return;
     }
 
     const timeout = setTimeout(() => {
-      void itemsLoader.loadItems(filterText);
+      void itemsLoader.loadItems(searchText);
     }, 250);
 
     return () => {
       clearTimeout(timeout);
     };
-  }, [itemsLoader, filterText]);
+  }, [itemsLoader, searchText]);
 
   return {
     selectOptions: useMemo<SelectOption<string>[]>(() => {

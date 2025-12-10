@@ -107,12 +107,12 @@ describe("mergeProviders", () => {
     providers.forEach((provider) => expect(provider.setFormatter).to.be.calledOnceWith(formatter));
   });
 
-  it("sets hierarchy filter on all providers", async () => {
+  it("sets hierarchy search on all providers", async () => {
     const providers = [createTestProvider(), createTestProvider()];
     const mergedProvider = mergeProviders({ providers });
-    const filter = {} as any;
-    mergedProvider.setHierarchyFilter(filter);
-    providers.forEach((provider) => expect(provider.setHierarchyFilter).to.be.calledOnceWith(filter));
+    const search = {} as any;
+    mergedProvider.setHierarchySearch(search);
+    providers.forEach((provider) => expect(provider.setHierarchySearch).to.be.calledOnceWith(search));
   });
 
   it("raises `hierarchyChanged` event when one of the merged providers raises it", async () => {
@@ -163,7 +163,7 @@ function createTestProvider(
       .stub<Parameters<HierarchyProvider["getNodeInstanceKeys"]>>()
       .callsFake((getNodeInstanceKeysProps) => createAsyncIterator(props.instanceKeys ? props.instanceKeys(getNodeInstanceKeysProps) : [])),
     setFormatter: sinon.stub(),
-    setHierarchyFilter: sinon.stub(),
+    setHierarchySearch: sinon.stub(),
     ...(props.disposable === "yes" ? { [Symbol.dispose]: sinon.stub() } : {}),
     ...(props.disposable === "deprecated" ? { dispose: sinon.stub() } : {}),
   };

@@ -4,7 +4,6 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { OmitOverUnion } from "@itwin/presentation-shared";
-import { HierarchyFilteringPath, HierarchyFilteringPathOptions } from "./HierarchyFiltering.js";
 import {
   ClassGroupingNodeKey,
   GenericNodeKey,
@@ -19,48 +18,26 @@ import {
   PropertyValueGroupingNodeKey,
   PropertyValueRangeGroupingNodeKey,
 } from "./HierarchyNodeKey.js";
+import { HierarchySearchPath, HierarchySearchPathOptions } from "./HierarchySearch.js";
 
 /** @public */
-export type HierarchyNodeFilteringProps = {
-  /** If set to true, then one of the ancestor nodes in the hierarchy is the filter target. */
-  hasFilterTargetAncestor?: boolean;
-  /** Paths to node's children that are filter targets. */
-  filteredChildrenIdentifierPaths?: HierarchyFilteringPath[];
+export type HierarchyNodeSearchProps = {
+  /** If set to true, then one of the ancestor nodes in the hierarchy is the search target. */
+  hasSearchTargetAncestor?: boolean;
+  /** Paths to node's children that are search targets. */
+  childrenTargetPaths?: HierarchySearchPath[];
 } & (
   | {
-      /** Whether or not this node is a filter target. */
-      isFilterTarget?: false;
+      /** Whether or not this node is a search target. */
+      isSearchTarget?: false;
     }
   | {
-      /** Whether or not this node is a filter target. */
-      isFilterTarget: true;
-      /** Options that were used to filter the node. */
-      filterTargetOptions?: HierarchyFilteringPathOptions;
+      /** Whether or not this node is a search target. */
+      isSearchTarget: true;
+      /** Options that were used to search the node. */
+      searchTargetOptions?: HierarchySearchPathOptions;
     }
 );
-/** @public */
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export namespace HierarchyNodeFilteringProps {
-  /** @deprecated in 1.3. Use `createHierarchyFilteringHelper` and its `createChildNodeProps` function to create filtering props for nodes. */
-  /* c8 ignore start */
-  export function create(props: {
-    hasFilterTargetAncestor?: boolean;
-    filteredChildrenIdentifierPaths?: HierarchyFilteringPath[];
-    isFilterTarget?: boolean;
-    filterTargetOptions?: HierarchyFilteringPathOptions;
-  }): HierarchyNodeFilteringProps | undefined {
-    const { hasFilterTargetAncestor, filteredChildrenIdentifierPaths, isFilterTarget, filterTargetOptions } = props;
-    if (isFilterTarget || hasFilterTargetAncestor || filteredChildrenIdentifierPaths?.length) {
-      return {
-        ...(isFilterTarget ? { isFilterTarget, filterTargetOptions } : undefined),
-        ...(hasFilterTargetAncestor ? { hasFilterTargetAncestor } : undefined),
-        ...(!!filteredChildrenIdentifierPaths?.length ? { filteredChildrenIdentifierPaths } : undefined),
-      };
-    }
-    return undefined;
-  }
-  /* c8 ignore end */
-}
 
 /**
  * A data structure that defines attributes that are common to all types of hierarchy nodes.
@@ -91,8 +68,8 @@ export interface NonGroupingHierarchyNode extends BaseHierarchyNode {
    * filter when requesting child hierarchy level will have no effect.
    */
   supportsFiltering?: boolean;
-  /** Data that may be assigned to the node if filtering is enabled */
-  filtering?: HierarchyNodeFilteringProps;
+  /** Data that is assigned to the node if hierarchy search is enabled */
+  search?: HierarchyNodeSearchProps;
 }
 
 /**

@@ -32,7 +32,7 @@ interface UseNodeHighlightingResult {
 export function useNodeHighlighting({ highlightText }: UseNodeHighlightingProps): UseNodeHighlightingResult {
   const getLabel = useCallback(
     (node: PresentationHierarchyNode) => {
-      if (!highlightText || HierarchyNode.isGroupingNode(node.nodeData) || !node.nodeData.filtering?.isFilterTarget) {
+      if (!highlightText || HierarchyNode.isGroupingNode(node.nodeData) || !node.nodeData.search?.isSearchTarget) {
         return <span>{node.label}</span>;
       }
 

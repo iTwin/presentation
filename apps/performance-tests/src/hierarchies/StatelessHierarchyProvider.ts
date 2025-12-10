@@ -12,9 +12,9 @@ import {
   createIModelHierarchyProvider,
   createLimitingECSqlQueryExecutor,
   HierarchyDefinition,
-  HierarchyFilteringPath,
   HierarchyNode,
   HierarchyProvider,
+  HierarchySearchPath,
 } from "@itwin/presentation-hierarchies";
 import {
   createCachingECClassHierarchyInspector,
@@ -30,8 +30,8 @@ import { LOGGER } from "../util/Logging";
 interface ProviderOptionsBase {
   rowLimit?: number | "unbounded";
   getHierarchyFactory(imodelAccess: ECSchemaProvider & ECClassHierarchyInspector): HierarchyDefinition;
-  filtering?: {
-    paths: HierarchyFilteringPath[];
+  search?: {
+    paths: HierarchySearchPath[];
   };
 }
 type ProviderOptionsWithIModel = { iModel: IModelDb } & ProviderOptionsBase;
@@ -109,7 +109,7 @@ export class StatelessHierarchyProvider {
       imodelAccess,
       hierarchyDefinition: this._props.getHierarchyFactory(imodelAccess),
       queryCacheSize: 0,
-      filtering: this._props.filtering,
+      search: this._props.search,
     });
   }
 

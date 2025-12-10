@@ -50,13 +50,13 @@ export class ItemsLoader<T> {
     await this.loadUniqueItems(needsItemsLoaded);
   }
 
-  public async loadItems(filterText?: string) {
+  public async loadItems(searchText?: string) {
     const needsItemsLoaded = (options: T[]): boolean => {
-      if (!filterText) {
+      if (!searchText) {
         return options.length < VALUE_BATCH_SIZE;
       }
 
-      const matchingItems = options.filter((option) => this._getOptionLabel(option).toLowerCase().includes(filterText.toLowerCase()));
+      const matchingItems = options.filter((option) => this._getOptionLabel(option).toLowerCase().includes(searchText.toLowerCase()));
       return matchingItems.length < VALUE_BATCH_SIZE;
     };
 
