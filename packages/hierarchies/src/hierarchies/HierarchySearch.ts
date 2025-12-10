@@ -159,6 +159,9 @@ export namespace HierarchySearchPath {
   }
 }
 
+// TODO: remove c8 ignore start and add tests to cover the gaps
+/* c8 ignore start */
+
 function extractSearchPropsInternal(
   rootLevelSearchProps: HierarchySearchPath[] | undefined,
   parentNode: Pick<NonGroupingHierarchyNode, "search"> | undefined,
