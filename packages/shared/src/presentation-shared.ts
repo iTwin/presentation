@@ -23,6 +23,7 @@ export { createCachingECClassHierarchyInspector, EC, getClass, ECClassHierarchyI
 export {
   createMainThreadReleaseOnTimePassedHandler,
   julianToDateTime,
+  compareFullClassNames,
   normalizeFullClassName,
   parseFullClassName,
   releaseMainThread,

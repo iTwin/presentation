@@ -1,6 +1,7 @@
 sep=;
 Release Tag;API Item Type;API Item Name
 public;type;ArrayElement
+public;function;compareFullClassNames
 public;type;ConcatenatedValue
 public;namespace;ConcatenatedValue
 public;type;ConcatenatedValuePart

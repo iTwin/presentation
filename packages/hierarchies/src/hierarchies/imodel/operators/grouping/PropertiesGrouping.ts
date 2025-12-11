@@ -6,6 +6,7 @@
 import { assert } from "@itwin/core-bentley";
 import {
   ArrayElement,
+  compareFullClassNames,
   createMainThreadReleaseOnTimePassedHandler,
   EC,
   ECClassHierarchyInspector,
@@ -183,7 +184,9 @@ export async function createPropertyGroups(
           propertyName: propertyIdentifier.propertyName,
         };
         const hasPropertyIdentifier = groupingNode.key.properties.find(
-          (x) => x.className === thisPropertyIdentifier.className && x.propertyName === thisPropertyIdentifier.propertyName,
+          (x) =>
+            compareFullClassNames(x.className, thisPropertyIdentifier.className) === 0 &&
+            x.propertyName.toLocaleLowerCase() === thisPropertyIdentifier.propertyName.toLocaleLowerCase(),
         );
         if (!hasPropertyIdentifier) {
           groupingNode.key.properties.push(thisPropertyIdentifier);
@@ -281,11 +284,21 @@ function createNodePropertyGroupPathMatchers(node: ParentHierarchyNode): Array<(
   return propertyGroupingNodeKeys.map((key): ((x: ArrayElement<PreviousPropertiesGroupingInfo>) => boolean) => {
     switch (key.type) {
       case "property-grouping:other":
-        return (x) => key.properties.some((p) => p.className === x.propertiesClassName && p.propertyName === x.propertyName && !!x.isRange);
+        return (x) =>
+          key.properties.some(
+            (p) =>
+              compareFullClassNames(p.className, x.propertiesClassName) === 0 &&
+              p.propertyName.toLocaleLowerCase() === x.propertyName.toLocaleLowerCase() &&
+              !!x.isRange,
+          );
       case "property-grouping:range":
-        return (x) => key.propertyClassName === x.propertiesClassName && key.propertyName === x.propertyName;
+        return (x) =>
+          compareFullClassNames(key.propertyClassName, x.propertiesClassName) === 0 &&
+          key.propertyName.toLocaleLowerCase() === x.propertyName.toLocaleLowerCase();
       case "property-grouping:value":
-        return (x) => key.propertyClassName === x.propertiesClassName && key.propertyName === x.propertyName;
+        return (x) =>
+          compareFullClassNames(key.propertyClassName, x.propertiesClassName) === 0 &&
+          key.propertyName.toLocaleLowerCase() === x.propertyName.toLocaleLowerCase();
     }
   });
 }
@@ -393,8 +406,8 @@ export function doPreviousPropertiesMatch(
     previousPropertiesGroupingInfo.length <= nodesProperties.propertyGroups.length &&
     previousPropertiesGroupingInfo.every(
       (groupingInfo, index) =>
-        groupingInfo.propertiesClassName === nodesProperties.propertiesClassName &&
-        groupingInfo.propertyName === nodesProperties.propertyGroups[index].propertyName &&
+        compareFullClassNames(groupingInfo.propertiesClassName, nodesProperties.propertiesClassName) === 0 &&
+        groupingInfo.propertyName.toLocaleLowerCase() === nodesProperties.propertyGroups[index].propertyName.toLocaleLowerCase() &&
         !!groupingInfo.isRange === !!nodesProperties.propertyGroups[index].ranges,
     )
   );

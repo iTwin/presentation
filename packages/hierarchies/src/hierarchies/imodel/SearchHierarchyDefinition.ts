@@ -5,7 +5,7 @@
 
 import { defaultIfEmpty, defer, filter, firstValueFrom, map, merge, mergeAll, mergeMap, Observable, of, take, toArray } from "rxjs";
 import { Id64String } from "@itwin/core-bentley";
-import { ECClassHierarchyInspector, InstanceKey } from "@itwin/presentation-shared";
+import { compareFullClassNames, ECClassHierarchyInspector, InstanceKey } from "@itwin/presentation-shared";
 import { HierarchyNodeIdentifier } from "../HierarchyNodeIdentifier.js";
 import { HierarchyNodeKey, IModelInstanceKey } from "../HierarchyNodeKey.js";
 import { createHierarchySearchHelper, HierarchySearchPath, shouldAutoExpandBasedOnReveal } from "../HierarchySearch.js";
@@ -109,8 +109,7 @@ export class SearchHierarchyDefinition implements RxjsHierarchyDefinition {
               if (identifier.imodelKey && identifier.imodelKey !== imodelKey) {
                 return false;
               }
-              // TODO: class name compare
-              if (identifier.className === rowInstanceKey.className) {
+              if (compareFullClassNames(identifier.className, rowInstanceKey.className) === 0) {
                 return true;
               }
               return firstValueFrom(
@@ -194,8 +193,7 @@ export class SearchHierarchyDefinition implements RxjsHierarchyDefinition {
               // duplicate it
               for (const entry of entries) {
                 if (
-                  // TODO: class name compare
-                  entry.className === x.className ||
+                  compareFullClassNames(entry.className, x.className) === 0 ||
                   (await imodelAccess.classDerivesFrom(entry.className, x.className)) ||
                   (await imodelAccess.classDerivesFrom(x.className, entry.className))
                 ) {
@@ -213,8 +211,7 @@ export class SearchHierarchyDefinition implements RxjsHierarchyDefinition {
                 continue;
               }
               if (
-                // TODO: class name compare
-                id.className !== definition.fullClassName &&
+                compareFullClassNames(id.className, definition.fullClassName) !== 0 &&
                 !(await Promise.all([
                   imodelAccess.classDerivesFrom(id.className, definition.fullClassName),
                   imodelAccess.classDerivesFrom(definition.fullClassName, id.className),

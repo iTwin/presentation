@@ -14,6 +14,7 @@ import {
   GenericInstanceFilterRuleValue,
 } from "@itwin/core-common";
 import {
+  compareFullClassNames,
   EC,
   ECClassHierarchyInspector,
   ECSchemaProvider,
@@ -878,7 +879,7 @@ async function getHiddenClassesTree(selectClass: EC.Class, selectClassAttribute:
 async function getDirectDerivedClasses(ecClass: EC.Class): Promise<EC.Class[]> {
   const allDerived = await ecClass.getDerivedClasses();
   return (await Promise.all(allDerived.map(async (c) => ({ derived: c, base: await c.baseClass }))))
-    .filter(({ base }) => base?.fullName === ecClass.fullName)
+    .filter(({ base }) => base && compareFullClassNames(base.fullName, ecClass.fullName) === 0)
     .map(({ derived }) => derived);
 }
 

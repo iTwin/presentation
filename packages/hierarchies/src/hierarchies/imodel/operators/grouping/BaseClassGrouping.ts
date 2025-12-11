@@ -3,7 +3,14 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { createMainThreadReleaseOnTimePassedHandler, EC, ECClassHierarchyInspector, ECSchemaProvider, getClass } from "@itwin/presentation-shared";
+import {
+  compareFullClassNames,
+  createMainThreadReleaseOnTimePassedHandler,
+  EC,
+  ECClassHierarchyInspector,
+  ECSchemaProvider,
+  getClass,
+} from "@itwin/presentation-shared";
 import { HierarchyNode, ParentHierarchyNode } from "../../../HierarchyNode.js";
 import { ClassGroupingNodeKey } from "../../../HierarchyNodeKey.js";
 import { ProcessedInstanceHierarchyNode } from "../../IModelHierarchyNode.js";
@@ -31,7 +38,7 @@ export async function getBaseClassGroupingECClasses(
 
   if (parentNode && HierarchyNode.isClassGroupingNode(parentNode)) {
     // if we have a class grouping node, we can cut the front of sortedClasses up to a point where our grouping class is
-    const cutPosition = sortedClasses.findIndex((c) => c.fullName === parentNode.key.className);
+    const cutPosition = sortedClasses.findIndex((c) => compareFullClassNames(c.fullName, parentNode.key.className) === 0);
     if (cutPosition >= 0) {
       return sortedClasses.slice(cutPosition + 1);
     }
@@ -55,7 +62,7 @@ export async function createBaseClassGroupsForSingleBaseClass(
     await releaseMainThread();
     if (
       !node.processingParams?.grouping?.byBaseClasses ||
-      !node.processingParams.grouping.byBaseClasses.fullClassNames.some((className) => className === baseClassFullName)
+      !node.processingParams.grouping.byBaseClasses.fullClassNames.some((className) => compareFullClassNames(className, baseClassFullName) === 0)
     ) {
       ungroupedNodes.push(node);
       continue;

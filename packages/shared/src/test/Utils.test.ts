@@ -6,7 +6,13 @@
 import { expect } from "chai";
 import { executionAsyncId } from "node:async_hooks";
 import * as sinon from "sinon";
-import { createMainThreadReleaseOnTimePassedHandler, normalizeFullClassName, parseFullClassName, trimWhitespace } from "../shared/Utils.js";
+import {
+  compareFullClassNames,
+  createMainThreadReleaseOnTimePassedHandler,
+  normalizeFullClassName,
+  parseFullClassName,
+  trimWhitespace,
+} from "../shared/Utils.js";
 
 describe("parseFullClassName", () => {
   it("parses valid full class names", () => {
@@ -27,6 +33,23 @@ describe("normalizeFullClassName", () => {
 
   it("throws on invalid full class name", () => {
     expect(() => normalizeFullClassName("invalid")).to.throw();
+  });
+});
+
+describe("compareFullClassNames", () => {
+  it("detects differences", () => {
+    expect(compareFullClassNames("schema.class", "schema2.class")).to.be.lessThan(0);
+    expect(compareFullClassNames("schema.class2", "schema.class")).to.be.greaterThan(0);
+  });
+
+  it("compares full class names in a case-insensitive way", () => {
+    expect(compareFullClassNames("schema:class", "SCHEMA:CLASS")).to.eq(0);
+    expect(compareFullClassNames("Schema.Class", "schema:class")).to.eq(0);
+  });
+
+  it("compares full class names, ignoring the separator", () => {
+    expect(compareFullClassNames("schema:class", "schema.class")).to.eq(0);
+    expect(compareFullClassNames("schema.class", "schema:class")).to.eq(0);
   });
 });
 
