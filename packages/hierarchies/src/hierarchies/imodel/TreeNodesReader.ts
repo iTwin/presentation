@@ -8,7 +8,6 @@ import { Guid, Id64String } from "@itwin/core-bentley";
 import { ECSqlQueryDef, parseInstanceLabel } from "@itwin/presentation-shared";
 import { LOGGING_NAMESPACE_INTERNAL as BASE_LOGGING_NAMESPACE } from "../internal/Common.js";
 import { log } from "../internal/LoggingUtils.js";
-import { RxjsNodeParser } from "../internal/RxjsHierarchyDefinition.js";
 import { InstanceHierarchyNodeProcessingParams, SourceInstanceHierarchyNode } from "./IModelHierarchyNode.js";
 import { LimitingECSqlQueryExecutor } from "./LimitingECSqlQueryExecutor.js";
 import { NodeSelectClauseColumnNames } from "./NodeSelectQueryFactory.js";
@@ -19,13 +18,13 @@ interface ReadNodesProps {
   queryExecutor: LimitingECSqlQueryExecutor;
   query: ECSqlQueryDef;
   limit?: number | "unbounded";
-  parser?: RxjsNodeParser;
+  parser?: (row: { [columnName: string]: any }) => Observable<SourceInstanceHierarchyNode>;
 }
 
 /** @internal */
 export function readNodes(props: ReadNodesProps): Observable<SourceInstanceHierarchyNode> {
   const { queryExecutor, query, limit } = props;
-  const parser: RxjsNodeParser = props?.parser ?? ((row) => of(defaultNodesParser(row)));
+  const parser = props?.parser ?? ((row) => of(defaultNodesParser(row)));
   const config: Parameters<LimitingECSqlQueryExecutor["createQueryReader"]>[1] = {
     rowFormat: "ECSqlPropertyNames",
     restartToken: `readNodes/${Guid.createValue()}`,

@@ -578,8 +578,8 @@ describe("createIModelHierarchyProvider", () => {
       const rootNodes = await collect(provider.getNodes({ parentNode: undefined }));
       expect(rootNodes).to.deep.eq([{ ...rootNode, key: createTestGenericNodeKey({ id: "root", source: sourceName }), parentKeys: [], children: true }]);
       expect(hierarchyDefinition.defineHierarchyLevel).to.be.calledTwice;
-      expect(hierarchyDefinition.defineHierarchyLevel.firstCall).to.be.calledWith({ parentNode: undefined });
-      expect(hierarchyDefinition.defineHierarchyLevel.secondCall).to.be.calledWith({ parentNode: rootNodes[0] });
+      expect(hierarchyDefinition.defineHierarchyLevel.firstCall).to.be.calledWith({ imodelKey: imodelAccess.imodelKey, parentNode: undefined });
+      expect(hierarchyDefinition.defineHierarchyLevel.secondCall).to.be.calledWith({ imodelKey: imodelAccess.imodelKey, parentNode: rootNodes[0] });
     });
   });
 
@@ -1908,5 +1908,90 @@ describe("createMergedIModelHierarchyProvider", () => {
         },
       }),
     ).to.throw("requires at least one iModel");
+  });
+
+  it("merges instance nodes from different providers", async () => {
+    const imodelAccess1 = {
+      ...createIModelAccessStub(),
+      createQueryReader: sinon.stub().returns(
+        createAsyncIterator([
+          {
+            [NodeSelectClauseColumnNames.FullClassName]: "a.b",
+            [NodeSelectClauseColumnNames.ECInstanceId]: "0x123",
+            [NodeSelectClauseColumnNames.DisplayLabel]: "test label 1",
+            [ECSQL_COLUMN_NAME_SearchECInstanceId]: "0x123",
+            [ECSQL_COLUMN_NAME_SearchClassName]: "a.b",
+          },
+        ]),
+      ),
+      imodelKey: "imodel 1",
+    };
+    const imodelAccess2 = {
+      ...createIModelAccessStub(),
+      createQueryReader: sinon.stub().returns(
+        createAsyncIterator([
+          {
+            [NodeSelectClauseColumnNames.FullClassName]: "a.b",
+            [NodeSelectClauseColumnNames.ECInstanceId]: "0x123",
+            [NodeSelectClauseColumnNames.DisplayLabel]: "test label 2",
+            [ECSQL_COLUMN_NAME_SearchECInstanceId]: "0x123",
+            [ECSQL_COLUMN_NAME_SearchClassName]: "a.b",
+          },
+        ]),
+      ),
+      imodelKey: "imodel 2",
+    };
+
+    using provider = createMergedIModelHierarchyProvider({
+      imodels: [{ imodelAccess: imodelAccess1 }, { imodelAccess: imodelAccess2 }],
+      hierarchyDefinition: {
+        defineHierarchyLevel: async ({ parentNode }) =>
+          parentNode
+            ? []
+            : [
+                {
+                  fullClassName: "a.b",
+                  query: { ecsql: "" },
+                },
+              ],
+      },
+      search: {
+        paths: [
+          { path: [{ className: "a.b", id: "0x123", imodelKey: "imodel 1" }], options: { reveal: true, autoExpand: true } },
+          {
+            path: [
+              { className: "a.b", id: "0x123", imodelKey: "imodel 2" },
+              { className: "c.d", id: "0x456", imodelKey: "imodel 2" },
+            ],
+            options: { reveal: false, autoExpand: false },
+          },
+        ],
+      },
+    });
+
+    const nodes = await collect(provider.getNodes({ parentNode: undefined }));
+    expect(nodes).to.deep.eq([
+      {
+        key: {
+          type: "instances",
+          instanceKeys: [
+            { className: "a.b", id: "0x123", imodelKey: "imodel 2" },
+            { className: "a.b", id: "0x123", imodelKey: "imodel 1" },
+          ],
+        },
+        parentKeys: [],
+        label: "test label 2",
+        children: false,
+        search: {
+          isSearchTarget: true,
+          searchTargetOptions: {
+            reveal: true,
+            autoExpand: true,
+          },
+          childrenTargetPaths: [{ path: [{ className: "c.d", id: "0x456", imodelKey: "imodel 2" }], options: { reveal: false, autoExpand: false } }],
+        },
+        autoExpand: true,
+      } satisfies HierarchyNode,
+    ]);
   });
 });

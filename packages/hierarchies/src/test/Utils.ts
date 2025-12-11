@@ -315,11 +315,11 @@ export function createClassHierarchyInspectorStub(schemaProvider = createECSchem
       const { schemaName: baseSchemaName, className: baseClassName } = parseFullClassName(base);
       const schemaStub = await schemaProvider.getSchema(derivedSchemaName);
       if (!schemaStub) {
-        return false;
+        throw new Error(`Schema "${derivedSchemaName}" is not stubbed.`);
       }
       const derivedClass = await schemaStub.getClass(derivedClassName);
       if (!derivedClass) {
-        return false;
+        throw new Error(`Class "${derivedSchemaName}.${derivedClassName}" is not stubbed.`);
       }
       return derivedClass.is(baseClassName, baseSchemaName);
     }),
