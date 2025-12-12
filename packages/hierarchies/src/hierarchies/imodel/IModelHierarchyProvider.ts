@@ -436,7 +436,7 @@ class IModelHierarchyProviderImpl implements HierarchyProvider {
                   query,
                   limit: props.hierarchyLevelSizeLimit,
                   parser: this._activeHierarchyDefinition.parseNode
-                    ? (row) => this._activeHierarchyDefinition.parseNode!(row, props.parentNode, imodelAccess.imodelKey)
+                    ? ({ row }) => this._activeHierarchyDefinition.parseNode!({ row, parentNode: props.parentNode, imodelKey: imodelAccess.imodelKey })
                     : undefined,
                 }),
               ),

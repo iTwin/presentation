@@ -569,12 +569,13 @@ export function mergeProviders({ providers }: MergeHierarchyProvidersProps): Hie
 };
 
 // @public
-export type NodeParser = (
-row: {
-    [columnName: string]: any;
-},
-parentNode: HierarchyDefinitionParentNode | undefined,
-imodelKey: string) => SourceInstanceHierarchyNode | Promise<SourceInstanceHierarchyNode>;
+export type NodeParser = (props: {
+    row: {
+        [columnName: string]: any;
+    };
+    parentNode?: HierarchyDefinitionParentNode;
+    imodelKey: string;
+}) => SourceInstanceHierarchyNode | Promise<SourceInstanceHierarchyNode>;
 
 // @public
 export type NodePostProcessor = (node: ProcessedHierarchyNode) => Promise<ProcessedHierarchyNode>;

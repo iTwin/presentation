@@ -47,8 +47,8 @@ describe("SearchHierarchyDefinition", () => {
         [NodeSelectClauseColumnNames.FullClassName]: "",
       };
       const searchFactory = await createSearchHierarchyDefinition({ nodesParser: (rowProp) => of(spy(rowProp)) });
-      await firstValueFrom(searchFactory.parseNode(row, undefined, imodelKey));
-      expect(spy).to.be.calledOnceWithExactly(row);
+      await firstValueFrom(searchFactory.parseNode({ row, imodelKey }));
+      expect(spy).to.be.calledOnceWithExactly({ row, imodelKey });
     });
 
     it("uses source's node parser when it has one", async () => {
@@ -62,8 +62,8 @@ describe("SearchHierarchyDefinition", () => {
       const searchFactory = await createSearchHierarchyDefinition({
         sourceFactory,
       });
-      await firstValueFrom(searchFactory.parseNode(row, undefined, imodelKey));
-      expect(stub).to.be.calledOnceWithExactly(row);
+      await firstValueFrom(searchFactory.parseNode({ row, imodelKey }));
+      expect(stub).to.be.calledOnceWithExactly({ row, imodelKey });
     });
 
     it("sets search node attributes when parentNode is undefined", async () => {
@@ -84,7 +84,7 @@ describe("SearchHierarchyDefinition", () => {
         [ECSQL_COLUMN_NAME_SearchECInstanceId]: "0x5",
         [ECSQL_COLUMN_NAME_SearchClassName]: className,
       };
-      const node = await firstValueFrom(searchFactory.parseNode(row, undefined, imodelKey));
+      const node = await firstValueFrom(searchFactory.parseNode({ row, imodelKey }));
       expect(node.search).to.deep.eq({
         childrenTargetPaths: [
           { path: [createTestInstanceKey({ id: "0x1" }), createTestInstanceKey({ id: "0x2" })], options: undefined },
@@ -122,7 +122,7 @@ describe("SearchHierarchyDefinition", () => {
         key: { type: "generic", id: "" },
         search: { childrenTargetPaths: paths },
       };
-      const node = await firstValueFrom(searchFactory.parseNode(row, parentNode, imodelKey));
+      const node = await firstValueFrom(searchFactory.parseNode({ row, parentNode, imodelKey }));
       expect(node.search).to.deep.eq({
         childrenTargetPaths: [{ path: [createTestInstanceKey({ id: "0x1" }), createTestInstanceKey({ id: "0x2" })], options: undefined }],
         isSearchTarget: true,
@@ -154,7 +154,7 @@ describe("SearchHierarchyDefinition", () => {
         key: { type: "generic", id: "" },
         search: { childrenTargetPaths: paths },
       };
-      const node = await firstValueFrom(searchFactory.parseNode(row, parentNode, imodelKey));
+      const node = await firstValueFrom(searchFactory.parseNode({ row, parentNode, imodelKey }));
       expect(node.search).to.deep.eq({
         childrenTargetPaths: [{ path: [createTestInstanceKey({ id: "0x2" })], options: undefined }],
       });
@@ -187,7 +187,7 @@ describe("SearchHierarchyDefinition", () => {
         key: { type: "generic", id: "" },
         search: { childrenTargetPaths: paths },
       };
-      const node = await firstValueFrom(searchFactory.parseNode(row, parentNode, imodelKey));
+      const node = await firstValueFrom(searchFactory.parseNode({ row, parentNode, imodelKey }));
       expect(node.search).to.deep.eq({
         childrenTargetPaths: [
           {
@@ -232,7 +232,7 @@ describe("SearchHierarchyDefinition", () => {
         key: { type: "generic", id: "" },
         search: { childrenTargetPaths: paths },
       };
-      const node = await firstValueFrom(searchFactory.parseNode(row, parentNode, imodelKey));
+      const node = await firstValueFrom(searchFactory.parseNode({ row, parentNode, imodelKey }));
       expect(node.search).to.deep.eq({
         childrenTargetPaths: [
           { path: [createTestInstanceKey({ id: "0x1" }), createTestInstanceKey({ id: "0x2" })], options: undefined },
@@ -264,7 +264,7 @@ describe("SearchHierarchyDefinition", () => {
         [ECSQL_COLUMN_NAME_SearchECInstanceId]: "0x1",
         [ECSQL_COLUMN_NAME_SearchClassName]: testClass.fullName,
       };
-      const node = await firstValueFrom(searchFactory.parseNode(row, undefined, imodelKey));
+      const node = await firstValueFrom(searchFactory.parseNode({ row, imodelKey }));
       expect(node.search).to.deep.eq({
         childrenTargetPaths: [{ path: [createTestInstanceKey({ id: "0x2" })], options: undefined }],
       });
@@ -293,7 +293,7 @@ describe("SearchHierarchyDefinition", () => {
         key: { type: "generic", id: "" },
         search: { childrenTargetPaths: paths },
       };
-      const node = await firstValueFrom(searchFactory.parseNode(row, parentNode, imodelKey));
+      const node = await firstValueFrom(searchFactory.parseNode({ row, parentNode, imodelKey }));
 
       assert(node.search?.isSearchTarget);
       expect(node.search.searchTargetOptions).to.deep.eq(searchOptions);

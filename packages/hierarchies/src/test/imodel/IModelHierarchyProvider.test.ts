@@ -243,7 +243,7 @@ describe("createIModelHierarchyProvider", () => {
         },
       });
       const nodes = await collect(provider.getNodes({ parentNode: undefined }));
-      expect(parser).to.be.calledOnceWith(row);
+      expect(parser).to.be.calledOnceWith({ row, parentNode: undefined, imodelKey: imodelAccess.imodelKey });
       expect(nodes).to.deep.eq([
         { ...node, key: { ...node.key, instanceKeys: node.key.instanceKeys.map((k) => ({ ...k, imodelKey: "test-imodel" })) }, parentKeys: [] },
       ]);
@@ -280,7 +280,7 @@ describe("createIModelHierarchyProvider", () => {
         },
       });
       const nodes = await collect(provider.getNodes({ parentNode: undefined }));
-      expect(parser).to.be.calledOnceWith(row);
+      expect(parser).to.be.calledOnceWith({ row, parentNode: undefined, imodelKey: imodelAccess.imodelKey });
       expect(nodes).to.deep.eq([
         { ...node, key: { ...node.key, instanceKeys: node.key.instanceKeys.map((k) => ({ ...k, imodelKey: "test-imodel" })) }, parentKeys: [] },
       ]);

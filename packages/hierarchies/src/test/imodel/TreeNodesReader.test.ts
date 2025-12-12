@@ -83,7 +83,7 @@ describe("defaultNodesParser", () => {
       [NodeSelectClauseColumnNames.AutoExpand]: true,
       [NodeSelectClauseColumnNames.SupportsFiltering]: true,
     };
-    const node = defaultNodesParser(row);
+    const node = defaultNodesParser({ row });
     expect(node).to.deep.eq({
       key: {
         type: "instances",
@@ -119,7 +119,7 @@ describe("defaultNodesParser", () => {
       [NodeSelectClauseColumnNames.DisplayLabel]: "",
       [NodeSelectClauseColumnNames.HasChildren]: 0 as any,
     };
-    const node = defaultNodesParser(row);
+    const node = defaultNodesParser({ row });
     expect(node.children).to.eq(false);
   });
 
@@ -130,7 +130,7 @@ describe("defaultNodesParser", () => {
       [NodeSelectClauseColumnNames.DisplayLabel]: "",
       [NodeSelectClauseColumnNames.HasChildren]: undefined,
     };
-    const node = defaultNodesParser(row);
+    const node = defaultNodesParser({ row });
     expect(node.children).to.be.undefined;
   });
 
@@ -154,7 +154,7 @@ describe("defaultNodesParser", () => {
       [NodeSelectClauseColumnNames.ECInstanceId]: "0x1",
       [NodeSelectClauseColumnNames.DisplayLabel]: JSON.stringify(labelParts),
     };
-    const node = defaultNodesParser(row);
+    const node = defaultNodesParser({ row });
     expect(node.label).to.deep.eq(labelParts);
   });
 });

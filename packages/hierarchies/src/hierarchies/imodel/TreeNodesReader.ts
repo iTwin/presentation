@@ -3,11 +3,12 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { from, mergeMap, Observable, of } from "rxjs";
+import { from, mergeMap, Observable, ObservedValueOf, of } from "rxjs";
 import { Guid, Id64String } from "@itwin/core-bentley";
-import { ECSqlQueryDef, parseInstanceLabel } from "@itwin/presentation-shared";
+import { ECSqlQueryDef, parseInstanceLabel, Props } from "@itwin/presentation-shared";
 import { LOGGING_NAMESPACE_INTERNAL as BASE_LOGGING_NAMESPACE } from "../internal/Common.js";
 import { log } from "../internal/LoggingUtils.js";
+import { RxjsNodeParser } from "../internal/RxjsHierarchyDefinition.js";
 import { InstanceHierarchyNodeProcessingParams, SourceInstanceHierarchyNode } from "./IModelHierarchyNode.js";
 import { LimitingECSqlQueryExecutor } from "./LimitingECSqlQueryExecutor.js";
 import { NodeSelectClauseColumnNames } from "./NodeSelectQueryFactory.js";
@@ -18,7 +19,7 @@ interface ReadNodesProps {
   queryExecutor: LimitingECSqlQueryExecutor;
   query: ECSqlQueryDef;
   limit?: number | "unbounded";
-  parser?: (row: { [columnName: string]: any }) => Observable<SourceInstanceHierarchyNode>;
+  parser?: (props: Pick<Props<RxjsNodeParser>, "row">) => ReturnType<RxjsNodeParser>;
 }
 
 /** @internal */
@@ -37,7 +38,7 @@ export function readNodes(props: ReadNodesProps): Observable<SourceInstanceHiera
       severity: "trace",
       message: /* c8 ignore next */ (row) => JSON.stringify(row),
     }),
-    mergeMap((row) => parser(row)),
+    mergeMap((row) => parser({ row })),
   );
 }
 
@@ -59,7 +60,7 @@ export interface RowDef {
 }
 
 /** @internal */
-export function defaultNodesParser(row: { [columnName: string]: any }): SourceInstanceHierarchyNode {
+export const defaultNodesParser: (props: Pick<Props<RxjsNodeParser>, "row">) => ObservedValueOf<ReturnType<RxjsNodeParser>> = ({ row }) => {
   const typedRow = row as RowDef;
   const processingParams: InstanceHierarchyNodeProcessingParams = {
     ...(typedRow.HideIfNoChildren ? { hideIfNoChildren: true } : undefined),
@@ -79,4 +80,4 @@ export function defaultNodesParser(row: { [columnName: string]: any }): SourceIn
     ...(typedRow.ExtendedData ? { extendedData: JSON.parse(typedRow.ExtendedData) } : undefined),
     ...(Object.keys(processingParams).length > 0 ? { processingParams } : undefined),
   };
-}
+};

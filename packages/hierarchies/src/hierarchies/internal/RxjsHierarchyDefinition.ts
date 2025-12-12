@@ -22,11 +22,11 @@ import { fromPossiblyPromise } from "./Common.js";
  * A type for a function that parses a `SourceInstanceHierarchyNode` from provided ECSQL `row` object.
  * @internal
  */
-export type RxjsNodeParser = (
-  row: { [columnName: string]: any },
-  parentNode: HierarchyDefinitionParentNode | undefined,
-  imodelKey: string,
-) => Observable<SourceInstanceHierarchyNode>;
+export type RxjsNodeParser = (props: {
+  row: { [columnName: string]: any };
+  parentNode?: HierarchyDefinitionParentNode;
+  imodelKey: string;
+}) => Observable<SourceInstanceHierarchyNode>;
 
 /**
  * A type for a function that pre-processes given node. Unless the function decides not to make any modifications,
@@ -89,8 +89,8 @@ export interface RxjsHierarchyDefinition {
 export function getRxjsHierarchyDefinition(hierarchyDefinition: HierarchyDefinition): RxjsHierarchyDefinition {
   return {
     parseNode: hierarchyDefinition.parseNode
-      ? (row, parentNode, imodelKey) => {
-          const parsedNode = hierarchyDefinition.parseNode!(row, parentNode, imodelKey);
+      ? (props) => {
+          const parsedNode = hierarchyDefinition.parseNode!(props);
           return fromPossiblyPromise(parsedNode);
         }
       : undefined,

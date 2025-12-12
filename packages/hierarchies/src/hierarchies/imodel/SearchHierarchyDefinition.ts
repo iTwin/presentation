@@ -90,9 +90,10 @@ export class SearchHierarchyDefinition implements RxjsHierarchyDefinition {
   }
 
   public get parseNode(): RxjsNodeParser {
-    return (row, parentNode, imodelKey) =>
-      this._nodesParser(row, parentNode, imodelKey).pipe(
+    return (props) =>
+      this._nodesParser(props).pipe(
         mergeMap((parsedNode) => {
+          const { row, parentNode, imodelKey } = props;
           if (!row[ECSQL_COLUMN_NAME_SearchECInstanceId] || !row[ECSQL_COLUMN_NAME_SearchClassName]) {
             return of(parsedNode);
           }
