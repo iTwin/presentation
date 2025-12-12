@@ -1,5 +1,16 @@
 # @itwin/presentation-hierarchies-react
 
+## 2.0.0-alpha.46
+
+### Minor Changes
+
+- [#1011](https://github.com/iTwin/presentation/pull/1011): Renamed `getFilteredPaths` prop to `getSearchPaths` in tree hooks: `useTree`, `useUnifiedSelectionTree`, `useIModelTree`, `useIModelUnifiedSelectionTree`.
+
+### Patch Changes
+
+- Updated dependencies:
+  - @itwin/presentation-hierarchies@2.0.0-alpha.7
+
 ## 2.0.0-alpha.45
 
 ### Patch Changes
