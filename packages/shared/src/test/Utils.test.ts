@@ -44,7 +44,7 @@ describe("compareFullClassNames", () => {
 
   it("compares full class names in a case-insensitive way", () => {
     expect(compareFullClassNames("schema:class", "SCHEMA:CLASS")).to.eq(0);
-    expect(compareFullClassNames("Schema.Class", "schema:class")).to.eq(0);
+    expect(compareFullClassNames("Schema.Class", "schema.class")).to.eq(0);
   });
 
   it("compares full class names, ignoring the separator", () => {
