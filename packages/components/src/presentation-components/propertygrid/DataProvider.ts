@@ -311,6 +311,8 @@ export class PresentationPropertyDataProvider extends ContentDataProvider implem
       wantNestedCategories: this._isNestedPropertyCategoryGroupingEnabled,
       callbacks,
     });
+    // note: using deprecated `traverseContent`, because we can't use the replacement `createContentTraverser` due to our peer dep version
+    // eslint-disable-next-line @typescript-eslint/no-deprecated
     traverseContentItem(builder, content.descriptor, contentItem);
     return builder.getPropertyData();
   });

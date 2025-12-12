@@ -265,6 +265,8 @@ async function loadRows(
 
 function createRows(content: Content, imodel: IModelConnection) {
   const rowsBuilder = new RowsBuilder({ imodel });
+  // note: using deprecated `traverseContent`, because we can't use the replacement `createContentTraverser` due to our peer dep version
+  // eslint-disable-next-line @typescript-eslint/no-deprecated
   traverseContent(rowsBuilder, content);
   return rowsBuilder.rows;
 }

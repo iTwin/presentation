@@ -108,6 +108,8 @@ export class ContentBuilder {
     }
 
     const accumulator = new PropertyRecordsAccumulator(this._decimalPrecision);
+    // note: using deprecated `traverseContent`, because we can't use the replacement `createContentTraverser` due to our peer dep version
+    // eslint-disable-next-line @typescript-eslint/no-deprecated
     traverseContent(accumulator, content);
     return accumulator.records;
   }

@@ -94,6 +94,7 @@
     "@itwin/core-bentley": "catalog:itwinjs-core-dev",
     "@itwin/core-common": "catalog:itwinjs-core-dev",
     "@itwin/core-frontend": "catalog:itwinjs-core-dev",
+    "@itwin/core-orbitgt": "catalog:itwinjs-core-dev",
     "@itwin/core-quantity": "catalog:itwinjs-core-dev",
     "@itwin/core-react": "catalog:appui",
     "@itwin/ecschema-metadata": "catalog:itwinjs-core-dev",

@@ -18,12 +18,6 @@
   "files.associations": {
     ".nycrc": "json",
   },
-  "files.exclude": {
-    "**/coverage": true,
-    "**/node_modules": true,
-    "**/lib": true,
-    "**/build": true
-  },
   "files.insertFinalNewline": true,
   "files.trimFinalNewlines": true,
   "files.trimTrailingWhitespace": true,
