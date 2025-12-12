@@ -3,7 +3,8 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { createMainThreadReleaseOnTimePassedHandler, ECSchemaProvider, getClass } from "@itwin/presentation-shared";
+import { Dictionary } from "@itwin/core-bentley";
+import { compareFullClassNames, createMainThreadReleaseOnTimePassedHandler, ECSchemaProvider, getClass } from "@itwin/presentation-shared";
 import { HierarchyNode, ParentHierarchyNode } from "../../../HierarchyNode.js";
 import { ClassGroupingNodeKey } from "../../../HierarchyNodeKey.js";
 import { ProcessedInstanceHierarchyNode } from "../../IModelHierarchyNode.js";
@@ -17,7 +18,7 @@ interface ClassInfo {
 
 interface ClassGroupingInformation {
   ungrouped: ProcessedInstanceHierarchyNode[];
-  grouped: Map<string, { class: ClassInfo; groupedNodes: ProcessedInstanceHierarchyNode[] }>;
+  grouped: Dictionary<string, { class: ClassInfo; groupedNodes: ProcessedInstanceHierarchyNode[] }>;
 }
 
 /** @internal */
@@ -27,12 +28,12 @@ export async function createClassGroups(
   nodes: ProcessedInstanceHierarchyNode[],
 ): Promise<GroupingHandlerResult> {
   const parentNodeClass = parentNode && HierarchyNode.isClassGroupingNode(parentNode) ? parentNode.key.className : undefined;
-  const groupings: ClassGroupingInformation = { ungrouped: [], grouped: new Map() };
+  const groupings: ClassGroupingInformation = { ungrouped: [], grouped: new Dictionary(compareFullClassNames) };
   const releaseMainThread = createMainThreadReleaseOnTimePassedHandler();
   for (const node of nodes) {
     await releaseMainThread();
     const nodeClassName = node.key.instanceKeys[0].className;
-    if (node.processingParams?.grouping?.byClass && nodeClassName !== parentNodeClass) {
+    if (node.processingParams?.grouping?.byClass && (!parentNodeClass || compareFullClassNames(nodeClassName, parentNodeClass) !== 0)) {
       let groupingInfo = groupings.grouped.get(nodeClassName);
       if (!groupingInfo) {
         const nodeClass = await getClass(schemaProvider, nodeClassName);
@@ -53,7 +54,7 @@ export async function createClassGroups(
 async function createGroupingNodes(groupings: ClassGroupingInformation): Promise<GroupingHandlerResult> {
   const groupedNodes = new Array<ProcessedInstancesGroupingHierarchyNode>();
   const releaseMainThread = createMainThreadReleaseOnTimePassedHandler();
-  for (const [, entry] of groupings.grouped) {
+  for (const { value: entry } of groupings.grouped) {
     await releaseMainThread();
     const groupingNodeKey: ClassGroupingNodeKey = {
       type: "class-grouping",

@@ -3,6 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
+import { SortedArray } from "@itwin/core-bentley";
 import {
   compareFullClassNames,
   createMainThreadReleaseOnTimePassedHandler,
@@ -24,7 +25,7 @@ export async function getBaseClassGroupingECClasses(
 ): Promise<EC.Class[]> {
   // Get all base class names that are provided in the grouping information
   const baseClassesFullClassNames = await getGroupingBaseClassNames(nodes);
-  if (baseClassesFullClassNames.size === 0) {
+  if (baseClassesFullClassNames.length === 0) {
     return [];
   }
 
@@ -99,12 +100,12 @@ export async function createBaseClassGroupsForSingleBaseClass(
 
 async function getGroupingBaseClassNames(nodes: ProcessedInstanceHierarchyNode[]) {
   const releaseMainThread = createMainThreadReleaseOnTimePassedHandler();
-  const baseClasses = new Set<string>();
+  const baseClasses = new SortedArray<string>(compareFullClassNames, false);
   for (const node of nodes) {
     await releaseMainThread();
     if (node.processingParams?.grouping?.byBaseClasses) {
       for (const className of node.processingParams.grouping.byBaseClasses.fullClassNames) {
-        baseClasses.add(className);
+        baseClasses.insert(className);
       }
     }
   }

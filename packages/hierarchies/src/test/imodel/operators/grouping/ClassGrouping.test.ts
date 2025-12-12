@@ -50,6 +50,7 @@ describe("ClassGrouping", () => {
   });
 
   it("groups multiple instance nodes", async () => {
+    // note: class names are intentionally in different casing & format to ensure we support that
     const nodes = [
       createTestProcessedInstanceNode({
         key: { type: "instances", instanceKeys: [{ className: "TestSchema.A", id: "0x1" }] },
@@ -58,7 +59,7 @@ describe("ClassGrouping", () => {
         processingParams: { grouping: { byClass: true } },
       }),
       createTestProcessedInstanceNode({
-        key: { type: "instances", instanceKeys: [{ className: "TestSchema.A", id: "0x2" }] },
+        key: { type: "instances", instanceKeys: [{ className: "testSchema.a", id: "0x2" }] },
         parentKeys: [createTestGenericNodeKey({ id: "x" })],
         label: "2",
         processingParams: { grouping: { byClass: true } },
