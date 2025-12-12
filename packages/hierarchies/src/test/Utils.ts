@@ -4,8 +4,8 @@
  *--------------------------------------------------------------------------------------------*/
 
 import sinon from "sinon";
-import { Logger, LogLevel } from "@itwin/core-bentley";
-import { EC, normalizeFullClassName, parseFullClassName } from "@itwin/presentation-shared";
+import { Dictionary, Logger, LogLevel } from "@itwin/core-bentley";
+import { compareFullClassNames, EC, parseFullClassName } from "@itwin/presentation-shared";
 import { GroupingHierarchyNode, NonGroupingHierarchyNode } from "../hierarchies/HierarchyNode.js";
 import {
   ClassGroupingNodeKey,
@@ -200,8 +200,8 @@ export type TStubRelationshipClassFunc = (props: StubRelationshipClassFuncProps)
 
 export function createECSchemaProviderStub() {
   const schemaStubs: { [schemaName: string]: sinon.SinonStubbedInstance<EC.Schema> } = {};
-  const classes = new Map<string, EC.Class>(); // className -> class
-  const classHierarchy = new Map<string, string>(); // className -> baseClassName
+  const classes = new Dictionary<string, EC.Class>(compareFullClassNames); // className -> class
+  const classHierarchy = new Dictionary<string, string>(compareFullClassNames); // className -> baseClassName
   const getSchemaStub = sinon.stub<[string], sinon.SinonStubbedInstance<EC.Schema>>().callsFake((schemaName: string) => {
     let schemaStub = schemaStubs[schemaName];
     if (!schemaStub) {
@@ -216,8 +216,8 @@ export function createECSchemaProviderStub() {
   });
   const getDerivedClasses = (classFullName: string): EC.Class[] => {
     const derivedClasses = new Array<EC.Class>();
-    for (const [derivedClassName, baseClassName] of classHierarchy.entries()) {
-      if (baseClassName === classFullName) {
+    for (const { key: derivedClassName, value: baseClassName } of classHierarchy) {
+      if (compareFullClassNames(baseClassName, classFullName) === 0) {
         derivedClasses.push(classes.get(derivedClassName)!);
         derivedClasses.push(...getDerivedClasses(derivedClassName));
       }
@@ -252,18 +252,20 @@ export function createECSchemaProviderStub() {
     getDerivedClasses: async () => getDerivedClasses(`${props.schemaName}.${props.className}`),
     is: async (targetClassOrClassName: EC.Class | string, schemaName?: string) => {
       const myName = `${props.schemaName}.${props.className}`;
-      const targetName =
-        typeof targetClassOrClassName === "string" ? `${schemaName!}.${targetClassOrClassName}` : normalizeFullClassName(targetClassOrClassName.fullName);
-      return targetName === myName || getBaseClasses(myName).some((baseClass) => baseClass.fullName === targetName);
+      const targetName = typeof targetClassOrClassName === "string" ? `${schemaName!}.${targetClassOrClassName}` : targetClassOrClassName.fullName;
+      return (
+        compareFullClassNames(targetName, myName) === 0 ||
+        getBaseClasses(myName).some((baseClass) => compareFullClassNames(baseClass.fullName, targetName) === 0)
+      );
     },
     getCustomAttributes: async () => props.customAttributes ?? new Map(),
-    getProperty: async (propertyName: string): Promise<EC.Property | undefined> => {
-      if (!props.properties) {
-        return undefined;
-      }
-      return props.properties.find((p) => p.name === propertyName);
+    async getProperty(this, propertyName: string): Promise<EC.Property | undefined> {
+      const prop = props.properties?.find((p) => p.name.toLocaleLowerCase() === propertyName.toLocaleLowerCase());
+      return prop ? { ...prop, class: this as unknown as EC.Class } : undefined;
     },
-    getProperties: async (): Promise<Array<EC.Property>> => props.properties ?? [],
+    async getProperties(this): Promise<Array<EC.Property>> {
+      return (props.properties ?? []).map((p) => ({ ...p, class: this as unknown as EC.Class }));
+    },
     isEntityClass: () => false,
     isRelationshipClass: () => false,
   });
@@ -315,11 +317,11 @@ export function createClassHierarchyInspectorStub(schemaProvider = createECSchem
       const { schemaName: baseSchemaName, className: baseClassName } = parseFullClassName(base);
       const schemaStub = await schemaProvider.getSchema(derivedSchemaName);
       if (!schemaStub) {
-        return false;
+        throw new Error(`Schema "${derivedSchemaName}" is not stubbed.`);
       }
       const derivedClass = await schemaStub.getClass(derivedClassName);
       if (!derivedClass) {
-        return false;
+        throw new Error(`Class "${derivedSchemaName}.${derivedClassName}" is not stubbed.`);
       }
       return derivedClass.is(baseClassName, baseSchemaName);
     }),

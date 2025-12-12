@@ -5,7 +5,7 @@
 
 import { defaultIfEmpty, defer, filter, firstValueFrom, map, merge, mergeAll, mergeMap, Observable, of, take, toArray } from "rxjs";
 import { Id64String } from "@itwin/core-bentley";
-import { ECClassHierarchyInspector, InstanceKey } from "@itwin/presentation-shared";
+import { compareFullClassNames, ECClassHierarchyInspector, InstanceKey } from "@itwin/presentation-shared";
 import { HierarchyNodeIdentifier } from "../HierarchyNodeIdentifier.js";
 import { HierarchyNodeKey, IModelInstanceKey } from "../HierarchyNodeKey.js";
 import { createHierarchySearchHelper, HierarchySearchPath, shouldAutoExpandBasedOnReveal } from "../HierarchySearch.js";
@@ -24,7 +24,7 @@ import { partition } from "../internal/operators/Partition.js";
 import { RxjsHierarchyDefinition, RxjsNodeParser, RxjsNodePostProcessor, RxjsNodePreProcessor } from "../internal/RxjsHierarchyDefinition.js";
 
 interface SearchHierarchyDefinitionProps {
-  imodelAccess: ECClassHierarchyInspector & { imodelKey: string };
+  imodelAccess: ECClassHierarchyInspector;
   source: RxjsHierarchyDefinition;
   sourceName: string;
   targetPaths: HierarchySearchPath[];
@@ -33,7 +33,7 @@ interface SearchHierarchyDefinitionProps {
 
 /** @internal */
 export class SearchHierarchyDefinition implements RxjsHierarchyDefinition {
-  private _imodelAccess: ECClassHierarchyInspector & { imodelKey: string };
+  private _imodelAccess: ECClassHierarchyInspector;
   private _source: RxjsHierarchyDefinition;
   private _targetPaths: HierarchySearchPath[];
   private _nodesParser: RxjsNodeParser;
@@ -48,8 +48,8 @@ export class SearchHierarchyDefinition implements RxjsHierarchyDefinition {
   }
 
   public get preProcessNode(): RxjsNodePreProcessor {
-    return (node) => {
-      return (this._source.preProcessNode ? this._source.preProcessNode(node) : of(node)).pipe(
+    return (node) =>
+      (this._source.preProcessNode ? this._source.preProcessNode(node) : of(node)).pipe(
         filter((processedNode) => {
           if (processedNode.processingParams?.hideInHierarchy && processedNode.search?.isSearchTarget && !processedNode.search.hasSearchTargetAncestor) {
             // we want to hide target nodes if they have `hideInHierarchy` param, but only if they're not under another search target
@@ -58,12 +58,11 @@ export class SearchHierarchyDefinition implements RxjsHierarchyDefinition {
           return true;
         }),
       );
-    };
   }
 
   public get postProcessNode(): RxjsNodePostProcessor {
-    return (node) => {
-      return (this._source.postProcessNode ? this._source.postProcessNode(node) : of(node)).pipe(
+    return (node) =>
+      (this._source.postProcessNode ? this._source.postProcessNode(node) : of(node)).pipe(
         map((processedNode) => {
           const parentKeysWithoutGroupingNodesLength = processedNode.parentKeys.filter((key) => !HierarchyNodeKey.isGrouping(key)).length;
           const parentKeysLength = processedNode.parentKeys.length;
@@ -88,13 +87,13 @@ export class SearchHierarchyDefinition implements RxjsHierarchyDefinition {
           return processedNode;
         }),
       );
-    };
   }
 
   public get parseNode(): RxjsNodeParser {
-    return (row, parentNode) => {
-      return this._nodesParser(row).pipe(
+    return (props) =>
+      this._nodesParser(props).pipe(
         mergeMap((parsedNode) => {
+          const { row, parentNode, imodelKey } = props;
           if (!row[ECSQL_COLUMN_NAME_SearchECInstanceId] || !row[ECSQL_COLUMN_NAME_SearchClassName]) {
             return of(parsedNode);
           }
@@ -108,10 +107,10 @@ export class SearchHierarchyDefinition implements RxjsHierarchyDefinition {
               if (!HierarchyNodeIdentifier.isInstanceNodeIdentifier(identifier)) {
                 return false;
               }
-              if (identifier.imodelKey && identifier.imodelKey !== this._imodelAccess.imodelKey) {
+              if (identifier.imodelKey && identifier.imodelKey !== imodelKey) {
                 return false;
               }
-              if (identifier.className === rowInstanceKey.className) {
+              if (compareFullClassNames(identifier.className, rowInstanceKey.className) === 0) {
                 return true;
               }
               return firstValueFrom(
@@ -136,7 +135,6 @@ export class SearchHierarchyDefinition implements RxjsHierarchyDefinition {
           );
         }),
       );
-    };
   }
 
   public defineHierarchyLevel(props: DefineHierarchyLevelProps): Observable<HierarchyLevelDefinition> {
@@ -196,7 +194,7 @@ export class SearchHierarchyDefinition implements RxjsHierarchyDefinition {
               // duplicate it
               for (const entry of entries) {
                 if (
-                  entry.className === x.className ||
+                  compareFullClassNames(entry.className, x.className) === 0 ||
                   (await imodelAccess.classDerivesFrom(entry.className, x.className)) ||
                   (await imodelAccess.classDerivesFrom(x.className, entry.className))
                 ) {
@@ -210,11 +208,11 @@ export class SearchHierarchyDefinition implements RxjsHierarchyDefinition {
               if (!HierarchyNodeIdentifier.isInstanceNodeIdentifier(id)) {
                 continue;
               }
-              if (id.imodelKey && id.imodelKey !== imodelAccess.imodelKey) {
+              if (id.imodelKey && id.imodelKey !== props.imodelKey) {
                 continue;
               }
               if (
-                id.className !== definition.fullClassName &&
+                compareFullClassNames(id.className, definition.fullClassName) !== 0 &&
                 !(await Promise.all([
                   imodelAccess.classDerivesFrom(id.className, definition.fullClassName),
                   imodelAccess.classDerivesFrom(definition.fullClassName, id.className),

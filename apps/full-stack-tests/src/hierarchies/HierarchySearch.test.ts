@@ -17,6 +17,7 @@ import { IModel } from "@itwin/core-common";
 import { IModelConnection } from "@itwin/core-frontend";
 import {
   createHierarchySearchHelper,
+  createMergedIModelHierarchyProvider,
   createNodesQueryClauseFactory,
   createPredicateBasedHierarchyDefinition,
   DefineInstanceNodeChildHierarchyLevelProps,
@@ -27,6 +28,7 @@ import {
   HierarchyNodeKey,
   HierarchyProvider,
   HierarchySearchPath,
+  IModelInstanceKey,
   mergeProviders,
 } from "@itwin/presentation-hierarchies";
 import { createBisInstanceLabelSelectClauseFactory, ECSqlBinding, InstanceKey, Props } from "@itwin/presentation-shared";
@@ -1844,25 +1846,14 @@ describe("Hierarchies", () => {
         const rootSubjectKey = { className: subjectClassName, id: IModel.rootSubjectId };
         const { imodel: imodel1, ...keys1 } = await buildIModel(createFileNameFromString(`${this.test!.fullTitle()}-1`), async (builder) => {
           const subject1 = insertSubject({ builder, codeValue: "A subject 1", parentId: rootSubjectKey.id });
-          const subject11 = insertSubject({ builder, codeValue: "A subject 1.1", parentId: subject1.id });
-          return { subject1, subject11 };
+          const subject2 = insertSubject({ builder, codeValue: "A subject 2", parentId: subject1.id });
+          return { subject1, subject2 };
         });
         const { imodel: imodel2, ...keys2 } = await buildIModel(createFileNameFromString(`${this.test!.fullTitle()}-2`), async (builder) => {
-          const subject2 = insertSubject({ builder, codeValue: "B subject 2", parentId: rootSubjectKey.id });
-          const subject21 = insertSubject({ builder, codeValue: "B subject 2.1", parentId: subject2.id });
-          return { subject2, subject21 };
+          const subject1 = insertSubject({ builder, codeValue: "B subject 1", parentId: rootSubjectKey.id });
+          const subject2 = insertSubject({ builder, codeValue: "B subject 2", parentId: subject1.id });
+          return { subject1, subject2 };
         });
-
-        const instanceKeys: (typeof keys1 & typeof keys2) & {} = {
-          ...Object.entries(keys1).reduce<Record<keyof typeof keys1, InstanceKey>>((acc, [key, value]) => {
-            (acc as any)[key as any] = { ...value, imodelKey: imodel1.key };
-            return acc;
-          }, {} as any),
-          ...Object.entries(keys2).reduce<Record<keyof typeof keys2, InstanceKey>>((acc, [key, value]) => {
-            (acc as any)[key as any] = { ...value, imodelKey: imodel2.key };
-            return acc;
-          }, {} as any),
-        };
 
         function createSubjectsHierarchyProvider(imodelAccess: ReturnType<typeof createIModelAccess>): HierarchyProvider {
           return createProvider({
@@ -1893,7 +1884,7 @@ describe("Hierarchies", () => {
                 childNodes: [
                   {
                     parentInstancesNodePredicate: subjectClassName,
-                    definitions: async ({ parentNode }: DefineInstanceNodeChildHierarchyLevelProps) => [
+                    definitions: async ({ parentNodeInstanceIds }: DefineInstanceNodeChildHierarchyLevelProps) => [
                       {
                         fullClassName: subjectClassName,
                         query: {
@@ -1907,7 +1898,7 @@ describe("Hierarchies", () => {
                               nodeLabel: { selector: `this.CodeValue` },
                             })}
                             FROM ${subjectClassName} AS this
-                            WHERE Parent.Id = ${parentNode.key.instanceKeys[0].id}
+                            WHERE Parent.Id IN (${parentNodeInstanceIds.join(",")})
                           `,
                         },
                       },
@@ -1918,6 +1909,9 @@ describe("Hierarchies", () => {
             }),
           });
         }
+
+        Object.values(keys1).forEach((value: IModelInstanceKey) => (value.imodelKey = imodel1.key));
+        Object.values(keys2).forEach((value: IModelInstanceKey) => (value.imodelKey = imodel2.key));
 
         // create subject hierarchy providers for two iModels
         const provider1 = createSubjectsHierarchyProvider(createIModelAccess(imodel1));
@@ -1961,20 +1955,20 @@ describe("Hierarchies", () => {
           provider: mergeProviders({ providers: [provider1, provider2, provider3] }),
           expect: [
             NodeValidators.createForInstanceNode({
-              instanceKeys: [instanceKeys.subject1],
+              instanceKeys: [keys1.subject1],
               children: [
                 NodeValidators.createForInstanceNode({
-                  instanceKeys: [instanceKeys.subject11],
+                  instanceKeys: [keys1.subject2],
                   children: [NodeValidators.createForGenericNode({ key: { type: "generic", id: "gen", source: "custom-provider" } })],
                 }),
                 NodeValidators.createForGenericNode({ key: { type: "generic", id: "gen", source: "custom-provider" } }),
               ],
             }),
             NodeValidators.createForInstanceNode({
-              instanceKeys: [instanceKeys.subject2],
+              instanceKeys: [keys2.subject1],
               children: [
                 NodeValidators.createForInstanceNode({
-                  instanceKeys: [instanceKeys.subject21],
+                  instanceKeys: [keys2.subject2],
                   children: [NodeValidators.createForGenericNode({ key: { type: "generic", id: "gen", source: "custom-provider" } })],
                 }),
                 NodeValidators.createForGenericNode({ key: { type: "generic", id: "gen", source: "custom-provider" } }),
@@ -1989,24 +1983,157 @@ describe("Hierarchies", () => {
             providers: [provider1, provider2, provider3],
             searchProps: {
               paths: [
-                [rootSubjectKey, instanceKeys.subject1, instanceKeys.subject11, { type: "generic", id: "gen", source: "custom-provider" }],
-                [rootSubjectKey, instanceKeys.subject2, { type: "generic", id: "gen", source: "custom-provider" }],
+                [rootSubjectKey, keys1.subject1, keys1.subject2, { type: "generic", id: "gen", source: "custom-provider" }],
+                [rootSubjectKey, keys2.subject1, { type: "generic", id: "gen", source: "custom-provider" }],
               ],
             },
           }),
           expect: [
             NodeValidators.createForInstanceNode({
-              instanceKeys: [instanceKeys.subject1],
+              instanceKeys: [keys1.subject1],
               children: [
                 NodeValidators.createForInstanceNode({
-                  instanceKeys: [instanceKeys.subject11],
+                  instanceKeys: [keys1.subject2],
                   children: [NodeValidators.createForGenericNode({ key: "gen" })],
                 }),
               ],
             }),
             NodeValidators.createForInstanceNode({
-              instanceKeys: [instanceKeys.subject2],
+              instanceKeys: [keys2.subject1],
               children: [NodeValidators.createForGenericNode({ key: "gen" })],
+            }),
+          ],
+        });
+      });
+    });
+
+    describe("when filtering merged imodel hierarchy provider", () => {
+      it("filters through merged nodes", async function () {
+        const { imodel: imodel1, ...keys1 } = await buildIModel(createFileNameFromString(`${this.test!.fullTitle()}-1`), async (builder) => {
+          const a = insertSubject({ builder, codeValue: "A subject / 1", parentId: IModel.rootSubjectId });
+          const b = insertSubject({ builder, codeValue: "B subject / 1", parentId: a.id });
+          const c = insertSubject({ builder, codeValue: "C subject / 1", parentId: a.id });
+          return { a, b, c };
+        });
+        const { imodel: imodel2, ...keys2 } = await buildIModel(createFileNameFromString(`${this.test!.fullTitle()}-2`), async (builder) => {
+          const a = insertSubject({ builder, codeValue: "A subject / 2", parentId: IModel.rootSubjectId });
+          const b = insertSubject({ builder, codeValue: "B subject / 2", parentId: a.id });
+          const c = insertSubject({ builder, codeValue: "C subject / 2", parentId: a.id });
+          return { a, b, c };
+        });
+
+        const imodelAccess1 = createIModelAccess(imodel1);
+        Object.values(keys1).forEach((value: IModelInstanceKey) => (value.imodelKey = imodel1.key));
+
+        const imodelAccess2 = createIModelAccess(imodel2);
+        Object.values(keys2).forEach((value: IModelInstanceKey) => (value.imodelKey = imodel2.key));
+
+        const labels = createBisInstanceLabelSelectClauseFactory({ classHierarchyInspector: imodelAccess2 });
+        const clauses = createNodesQueryClauseFactory({
+          imodelAccess: imodelAccess2,
+          instanceLabelSelectClauseFactory: labels,
+        });
+        const hierarchyDefinition: HierarchyDefinition = createPredicateBasedHierarchyDefinition({
+          classHierarchyInspector: imodelAccess2,
+          hierarchy: {
+            rootNodes: async () => [
+              {
+                fullClassName: "BisCore.Subject",
+                query: {
+                  ecsql: `
+                  SELECT ${await clauses.createSelectClause({
+                    ecClassId: { selector: `this.ECClassId` },
+                    ecInstanceId: { selector: `this.ECInstanceId` },
+                    nodeLabel: { selector: await labels.createSelectClause({ classAlias: "this", className: "BisCore.Subject" }) },
+                    hasChildren: true,
+                  })}
+                  FROM BisCore.Subject AS this
+                  WHERE this.Parent.Id = ${IModel.rootSubjectId}
+                `,
+                },
+              },
+            ],
+            childNodes: [
+              {
+                parentInstancesNodePredicate: "BisCore.Subject",
+                definitions: async ({ parentNodeInstanceIds }: DefineInstanceNodeChildHierarchyLevelProps) => [
+                  {
+                    fullClassName: "BisCore.Subject",
+                    query: {
+                      ecsql: `
+                      SELECT ${await clauses.createSelectClause({
+                        ecClassId: { selector: `this.ECClassId` },
+                        ecInstanceId: { selector: `this.ECInstanceId` },
+                        nodeLabel: { selector: await labels.createSelectClause({ classAlias: "this", className: "BisCore.Subject" }) },
+                        hasChildren: false,
+                      })}
+                      FROM BisCore.Subject AS this
+                      WHERE this.Parent.Id IN (${parentNodeInstanceIds.join(",")})
+                    `,
+                    },
+                  },
+                ],
+              },
+            ],
+          },
+        });
+
+        // ensure we have expected non-filtered hierarchy
+        await validateHierarchy({
+          provider: createMergedIModelHierarchyProvider({ imodels: [{ imodelAccess: imodelAccess1 }, { imodelAccess: imodelAccess2 }], hierarchyDefinition }),
+          expect: [
+            NodeValidators.createForInstanceNode({
+              label: "A subject / 2",
+              instanceKeys: [keys1.a, keys2.a],
+              children: [
+                NodeValidators.createForInstanceNode({ label: "B subject / 2", instanceKeys: [keys1.b, keys2.b] }),
+                NodeValidators.createForInstanceNode({ label: "C subject / 2", instanceKeys: [keys1.c, keys2.c] }),
+              ],
+            }),
+          ],
+        });
+
+        // ensure we get the same result when filter paths contain all nodes
+        await validateHierarchy({
+          provider: createMergedIModelHierarchyProvider({
+            imodels: [{ imodelAccess: imodelAccess1 }, { imodelAccess: imodelAccess2 }],
+            hierarchyDefinition,
+            search: {
+              paths: [[keys1.a], [keys1.a, keys1.b], [keys1.a, keys1.c], [keys2.a], [keys2.a, keys2.b], [keys2.a, keys2.c]],
+            },
+          }),
+          expect: [
+            NodeValidators.createForInstanceNode({
+              label: "A subject / 2",
+              instanceKeys: [keys1.a, keys2.a],
+              children: [
+                NodeValidators.createForInstanceNode({ label: "B subject / 2", instanceKeys: [keys1.b, keys2.b] }),
+                NodeValidators.createForInstanceNode({ label: "C subject / 2", instanceKeys: [keys1.c, keys2.c] }),
+              ],
+            }),
+          ],
+        });
+
+        // ensure we can filter by paths targeting instances from different imodels
+        await validateHierarchy({
+          provider: createMergedIModelHierarchyProvider({
+            imodels: [{ imodelAccess: imodelAccess1 }, { imodelAccess: imodelAccess2 }],
+            hierarchyDefinition,
+            search: {
+              paths: [
+                [keys1.a, keys1.b],
+                [keys2.a, keys2.c],
+              ],
+            },
+          }),
+          expect: [
+            NodeValidators.createForInstanceNode({
+              label: "A subject / 2",
+              instanceKeys: [keys1.a, keys2.a],
+              children: [
+                NodeValidators.createForInstanceNode({ label: "B subject / 1", instanceKeys: [keys1.b] }),
+                NodeValidators.createForInstanceNode({ label: "C subject / 2", instanceKeys: [keys2.c] }),
+              ],
             }),
           ],
         });

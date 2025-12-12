@@ -98,6 +98,7 @@ export type DefineGenericNodeChildHierarchyLevelProps = Omit<DefineHierarchyLeve
 
 // @public
 export interface DefineHierarchyLevelProps {
+    imodelKey: string;
     instanceFilter?: GenericInstanceFilter;
     parentNode: HierarchyDefinitionParentNode | undefined;
 }
@@ -505,7 +506,7 @@ interface IModelHierarchyProviderProps {
 }
 
 // @public
-interface IModelInstanceKey extends InstanceKey {
+export interface IModelInstanceKey extends InstanceKey {
     // (undocumented)
     imodelKey?: string;
 }
@@ -568,9 +569,13 @@ export function mergeProviders({ providers }: MergeHierarchyProvidersProps): Hie
 };
 
 // @public
-export type NodeParser = (row: {
-    [columnName: string]: any;
-}, parentNode?: HierarchyDefinitionParentNode) => SourceInstanceHierarchyNode | Promise<SourceInstanceHierarchyNode>;
+export type NodeParser = (props: {
+    row: {
+        [columnName: string]: any;
+    };
+    parentNode?: HierarchyDefinitionParentNode;
+    imodelKey: string;
+}) => SourceInstanceHierarchyNode | Promise<SourceInstanceHierarchyNode>;
 
 // @public
 export type NodePostProcessor = (node: ProcessedHierarchyNode) => Promise<ProcessedHierarchyNode>;

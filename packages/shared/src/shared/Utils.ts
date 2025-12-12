@@ -33,6 +33,23 @@ export function normalizeFullClassName(fullClassName: string): string {
 }
 
 /**
+ * An utility that compares two full class names in a case insensitive way, ignoring different
+ * supported schema-class name separators (`.` or `:`).
+ * @public
+ */
+export function compareFullClassNames(lhs: string, rhs: string): number {
+  const parsed = {
+    lhs: parseFullClassName(lhs),
+    rhs: parseFullClassName(rhs),
+  };
+  const schemaCompare = parsed.lhs.schemaName.toLocaleLowerCase().localeCompare(parsed.rhs.schemaName.toLocaleLowerCase());
+  if (schemaCompare !== 0) {
+    return schemaCompare;
+  }
+  return parsed.lhs.className.toLocaleLowerCase().localeCompare(parsed.rhs.className.toLocaleLowerCase());
+}
+
+/**
  * An utility to remove all extra whitespace from a given string.
  * @public
  */

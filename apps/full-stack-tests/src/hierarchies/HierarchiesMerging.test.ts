@@ -41,7 +41,7 @@ describe("Hierarchies", () => {
       using dbs = await createChangedDbs(
         mochaContext,
         async (builder) => {
-          const schema = await importXYZSchema(builder, mochaContext);
+          const schema = await importXYZSchema(builder);
           const x = builder.insertInstance(schema.items.X.fullName, { ["Label"]: "x" });
           const y1 = builder.insertInstance(schema.items.Y.fullName, { ["Label"]: "y1" });
           builder.insertRelationship(schema.items.XY.fullName, x.id, y1.id);
@@ -111,22 +111,23 @@ describe("Hierarchies", () => {
       using dbs = await createChangedDbs(
         mochaContext,
         async (builder) => {
-          const schema = await importXYZSchema(builder, mochaContext);
-          const x = builder.insertInstance(schema.items.X.fullName, { ["Label"]: "x" });
-          const y1 = builder.insertInstance(schema.items.Y.fullName, { ["Label"]: "y1" });
-          builder.insertRelationship(schema.items.XY.fullName, x.id, y1.id);
-          const y2 = builder.insertInstance(schema.items.Y.fullName, { ["Label"]: "y2" });
-          builder.insertRelationship(schema.items.XY.fullName, x.id, y2.id);
-          const y3 = builder.insertInstance(schema.items.Y.fullName, { ["Label"]: "y3" });
-          builder.insertRelationship(schema.items.XY.fullName, x.id, y3.id);
-          return { schema, x, y1, y2, y3 };
+          const xyzSchema = await importXYZSchema(builder);
+          const x = builder.insertInstance(xyzSchema.items.X.fullName, { ["Label"]: "x" });
+          const y1 = builder.insertInstance(xyzSchema.items.Y.fullName, { ["Label"]: "y1" });
+          builder.insertRelationship(xyzSchema.items.XY.fullName, x.id, y1.id);
+          const y2 = builder.insertInstance(xyzSchema.items.Y.fullName, { ["Label"]: "y2" });
+          builder.insertRelationship(xyzSchema.items.XY.fullName, x.id, y2.id);
+          const y3 = builder.insertInstance(xyzSchema.items.Y.fullName, { ["Label"]: "y3" });
+          builder.insertRelationship(xyzSchema.items.XY.fullName, x.id, y3.id);
+          return { xyzSchema, x, y1, y2, y3 };
         },
         async (builder, base) => {
+          const qSchema = await importQSchema(builder);
           builder.deleteInstance(base.y2);
           builder.updateInstance(base.y3, { ["Label"]: "y3-updated" });
-          const y4 = builder.insertInstance(base.schema.items.Y.fullName, { ["Label"]: "y4" });
-          builder.insertRelationship(base.schema.items.XY.fullName, base.x.id, y4.id);
-          return { ...omit(base, ["y2"]), y4 };
+          const q = builder.insertInstance(qSchema.items.Q.fullName, { ["Label"]: "q" });
+          builder.insertRelationship(base.xyzSchema.items.XY.fullName, base.x.id, q.id);
+          return { ...omit(base, ["y2"]), qSchema, q };
         },
       );
 
@@ -143,13 +144,20 @@ describe("Hierarchies", () => {
             },
           ],
           createHierarchyDefinition: createHierarchyDefinitionFactory({
-            schema: dbs.base.schema,
+            schema: dbs.base.xyzSchema,
           }),
         }),
         expect: [
           {
             node: (node) => expect(node.label).to.eq(`x`),
             children: [
+              {
+                // exists only in the second imodel, also comes from schema that also exists only in the second imodel
+                node: (node) => {
+                  expect(node.label).to.eq(`q`);
+                  expect((node.key as InstancesNodeKey).instanceKeys).to.deep.equalInAnyOrder([{ ...dbs.changeset1.q, imodelKey: "changeset1" }]);
+                },
+              },
               {
                 // exists in both imodels
                 node: (node) => {
@@ -177,13 +185,6 @@ describe("Hierarchies", () => {
                   ]);
                 },
               },
-              {
-                // exists only in the second imodel
-                node: (node) => {
-                  expect(node.label).to.eq(`y4`);
-                  expect((node.key as InstancesNodeKey).instanceKeys).to.deep.equalInAnyOrder([{ ...dbs.changeset1.y4, imodelKey: "changeset1" }]);
-                },
-              },
             ],
           },
         ],
@@ -196,7 +197,7 @@ describe("Hierarchies", () => {
         using dbs = await createChangedDbs(
           mochaContext,
           async (builder) => {
-            const schema = await importXYZSchema(builder, mochaContext);
+            const schema = await importXYZSchema(builder);
             const x = builder.insertInstance(schema.items.X.fullName, { ["Label"]: "x" });
             const y1 = builder.insertInstance(schema.items.Y.fullName, { ["Label"]: "y-group" });
             builder.insertRelationship(schema.items.XY.fullName, x.id, y1.id);
@@ -222,7 +223,7 @@ describe("Hierarchies", () => {
             ],
             createHierarchyDefinition: createHierarchyDefinitionFactory({
               schema: dbs.base.schema,
-              createGroupingParams: () => ({ byLabel: true }),
+              createYGroupingParams: () => ({ byLabel: true }),
             }),
           }),
           expect: [
@@ -310,7 +311,7 @@ describe("Hierarchies", () => {
         using dbs = await createChangedDbs(
           mochaContext,
           async (builder) => {
-            const schema = await importXYZSchema(builder, mochaContext);
+            const schema = await importXYZSchema(builder);
             const x = builder.insertInstance(schema.items.X.fullName, { ["Label"]: "x" });
             const y1 = builder.insertInstance(schema.items.Y.fullName, { ["Label"]: "y" });
             builder.insertRelationship(schema.items.XY.fullName, x.id, y1.id);
@@ -331,7 +332,7 @@ describe("Hierarchies", () => {
             ],
             createHierarchyDefinition: createHierarchyDefinitionFactory({
               schema: dbs.base.schema,
-              createGroupingParams: () => ({ byLabel: { hideIfOneGroupedNode: true } }),
+              createYGroupingParams: () => ({ byLabel: { hideIfOneGroupedNode: true } }),
             }),
           }),
           expect: [
@@ -377,7 +378,7 @@ describe("Hierarchies", () => {
         using dbs = await createChangedDbs(
           mochaContext,
           async (builder) => {
-            const schema = await importXYZSchema(builder, mochaContext);
+            const schema = await importXYZSchema(builder);
             const x = builder.insertInstance(schema.items.X.fullName, { ["Label"]: "x" });
             const y = builder.insertInstance(schema.items.Y.fullName, { ["Label"]: "y" });
             builder.insertRelationship(schema.items.XY.fullName, x.id, y.id);
@@ -407,7 +408,7 @@ describe("Hierarchies", () => {
             ],
             createHierarchyDefinition: createHierarchyDefinitionFactory({
               schema: dbs.base.schema,
-              createGroupingParams: () => ({ byLabel: { hideIfNoSiblings: true } }),
+              createYGroupingParams: () => ({ byLabel: { hideIfNoSiblings: true } }),
             }),
           }),
           expect: [
@@ -446,7 +447,7 @@ describe("Hierarchies", () => {
         using dbs = await createChangedDbs(
           mochaContext,
           async (builder) => {
-            const schema = await importXYZSchema(builder, mochaContext);
+            const schema = await importXYZSchema(builder);
             const x = builder.insertInstance(schema.items.X.fullName, { ["Label"]: "x" });
             const y1 = builder.insertInstance(schema.items.Y.fullName, { ["Label"]: "y", ["PropY"]: 0 });
             builder.insertRelationship(schema.items.XY.fullName, x.id, y1.id);
@@ -476,7 +477,7 @@ describe("Hierarchies", () => {
             ],
             createHierarchyDefinition: createHierarchyDefinitionFactory({
               schema: dbs.base.schema,
-              createGroupingParams: (alias) => ({ byLabel: { groupId: { selector: `${alias}.PropY` } } }),
+              createYGroupingParams: (alias) => ({ byLabel: { groupId: { selector: `${alias}.PropY` } } }),
             }),
           }),
           expect: [
@@ -526,7 +527,7 @@ describe("Hierarchies", () => {
         using dbs = await createChangedDbs(
           mochaContext,
           async (builder) => {
-            const schema = await importXYZSchema(builder, mochaContext);
+            const schema = await importXYZSchema(builder);
             const x = builder.insertInstance(schema.items.X.fullName, { ["Label"]: "x" });
             const y1 = builder.insertInstance(schema.items.Y.fullName, { ["Label"]: "y" });
             builder.insertRelationship(schema.items.XY.fullName, x.id, y1.id);
@@ -555,7 +556,7 @@ describe("Hierarchies", () => {
             ],
             createHierarchyDefinition: createHierarchyDefinitionFactory({
               schema: dbs.base.schema,
-              createGroupingParams: () => ({ byLabel: { action: "merge" } }),
+              createYGroupingParams: () => ({ byLabel: { action: "merge" } }),
             }),
           }),
           expect: [
@@ -587,7 +588,7 @@ describe("Hierarchies", () => {
         using dbs = await createChangedDbs(
           mochaContext,
           async (builder) => {
-            const schema = await importXYZSchema(builder, mochaContext);
+            const schema = await importXYZSchema(builder);
             const x = builder.insertInstance(schema.items.X.fullName, { ["Label"]: "x" });
             const y1 = builder.insertInstance(schema.items.Y.fullName, { ["Label"]: "y1" });
             builder.insertRelationship(schema.items.XY.fullName, x.id, y1.id);
@@ -620,7 +621,7 @@ describe("Hierarchies", () => {
             ],
             createHierarchyDefinition: createHierarchyDefinitionFactory({
               schema: dbs.base.schema,
-              createGroupingParams: () => ({ byClass: true }),
+              createYGroupingParams: () => ({ byClass: true }),
             }),
           }),
           expect: [
@@ -688,7 +689,7 @@ describe("Hierarchies", () => {
         using dbs = await createChangedDbs(
           mochaContext,
           async (builder) => {
-            const schema = await importXYZSchema(builder, mochaContext);
+            const schema = await importXYZSchema(builder);
             const x = builder.insertInstance(schema.items.X.fullName, { ["Label"]: "x" });
             const y1 = builder.insertInstance(schema.items.Y.fullName, { ["Label"]: "y1" });
             builder.insertRelationship(schema.items.XY.fullName, x.id, y1.id);
@@ -718,7 +719,7 @@ describe("Hierarchies", () => {
             ],
             createHierarchyDefinition: createHierarchyDefinitionFactory({
               schema: dbs.base.schema,
-              createGroupingParams: () => ({ byClass: { hideIfOneGroupedNode: true } }),
+              createYGroupingParams: () => ({ byClass: { hideIfOneGroupedNode: true } }),
             }),
           }),
           expect: [
@@ -760,7 +761,7 @@ describe("Hierarchies", () => {
         using dbs = await createChangedDbs(
           mochaContext,
           async (builder) => {
-            const schema = await importXYZSchema(builder, mochaContext);
+            const schema = await importXYZSchema(builder);
             const x = builder.insertInstance(schema.items.X.fullName, { ["Label"]: "x" });
             const y1 = builder.insertInstance(schema.items.Y.fullName, { ["Label"]: "y1" });
             builder.insertRelationship(schema.items.XY.fullName, x.id, y1.id);
@@ -790,7 +791,7 @@ describe("Hierarchies", () => {
             ],
             createHierarchyDefinition: createHierarchyDefinitionFactory({
               schema: dbs.base.schema,
-              createGroupingParams: () => ({ byClass: { hideIfNoSiblings: true } }),
+              createYGroupingParams: () => ({ byClass: { hideIfNoSiblings: true } }),
             }),
           }),
           expect: [
@@ -831,7 +832,7 @@ describe("Hierarchies", () => {
         using dbs = await createChangedDbs(
           mochaContext,
           async (builder) => {
-            const schema = await importXYZSchema(builder, mochaContext);
+            const schema = await importXYZSchema(builder);
             const x = builder.insertInstance(schema.items.X.fullName, { ["Label"]: "x" });
             const y1 = builder.insertInstance(schema.items.Y.fullName, { ["Label"]: "y1" });
             builder.insertRelationship(schema.items.XY.fullName, x.id, y1.id);
@@ -864,7 +865,7 @@ describe("Hierarchies", () => {
             ],
             createHierarchyDefinition: createHierarchyDefinitionFactory({
               schema: dbs.base.schema,
-              createGroupingParams: () => ({ byBaseClasses: { fullClassNames: [dbs.base.schema.items.Y.fullName] } }),
+              createYGroupingParams: () => ({ byBaseClasses: { fullClassNames: [dbs.base.schema.items.Y.fullName] } }),
             }),
           }),
           expect: [
@@ -932,7 +933,7 @@ describe("Hierarchies", () => {
         using dbs = await createChangedDbs(
           mochaContext,
           async (builder) => {
-            const schema = await importXYZSchema(builder, mochaContext);
+            const schema = await importXYZSchema(builder);
             const x = builder.insertInstance(schema.items.X.fullName, { ["Label"]: "x" });
             const y1 = builder.insertInstance(schema.items.Y.fullName, { ["Label"]: "y1" });
             builder.insertRelationship(schema.items.XY.fullName, x.id, y1.id);
@@ -962,7 +963,7 @@ describe("Hierarchies", () => {
             ],
             createHierarchyDefinition: createHierarchyDefinitionFactory({
               schema: dbs.base.schema,
-              createGroupingParams: () => ({ byBaseClasses: { fullClassNames: [dbs.base.schema.items.Y.fullName], hideIfOneGroupedNode: true } }),
+              createYGroupingParams: () => ({ byBaseClasses: { fullClassNames: [dbs.base.schema.items.Y.fullName], hideIfOneGroupedNode: true } }),
             }),
           }),
           expect: [
@@ -1004,7 +1005,7 @@ describe("Hierarchies", () => {
         using dbs = await createChangedDbs(
           mochaContext,
           async (builder) => {
-            const schema = await importXYZSchema(builder, mochaContext);
+            const schema = await importXYZSchema(builder);
             const x = builder.insertInstance(schema.items.X.fullName, { ["Label"]: "x" });
             const y1 = builder.insertInstance(schema.items.Y.fullName, { ["Label"]: "y1" });
             builder.insertRelationship(schema.items.XY.fullName, x.id, y1.id);
@@ -1034,7 +1035,7 @@ describe("Hierarchies", () => {
             ],
             createHierarchyDefinition: createHierarchyDefinitionFactory({
               schema: dbs.base.schema,
-              createGroupingParams: () => ({ byBaseClasses: { fullClassNames: [dbs.base.schema.items.Y.fullName], hideIfNoSiblings: true } }),
+              createYGroupingParams: () => ({ byBaseClasses: { fullClassNames: [dbs.base.schema.items.Y.fullName], hideIfNoSiblings: true } }),
             }),
           }),
           expect: [
@@ -1075,7 +1076,7 @@ describe("Hierarchies", () => {
         using dbs = await createChangedDbs(
           mochaContext,
           async (builder) => {
-            const schema = await importXYZSchema(builder, mochaContext);
+            const schema = await importXYZSchema(builder);
             const x = builder.insertInstance(schema.items.X.fullName, { ["Label"]: "x" });
             const y1 = builder.insertInstance(schema.items.Y.fullName, { ["Label"]: "y1", ["PropY"]: 123 });
             builder.insertRelationship(schema.items.XY.fullName, x.id, y1.id);
@@ -1108,7 +1109,7 @@ describe("Hierarchies", () => {
             ],
             createHierarchyDefinition: createHierarchyDefinitionFactory({
               schema: dbs.base.schema,
-              createGroupingParams: (alias) => ({
+              createYGroupingParams: (alias) => ({
                 byProperties: {
                   propertiesClassName: dbs.base.schema.items.Y.fullName,
                   propertyGroups: [{ propertyClassAlias: alias, propertyName: "PropY" }],
@@ -1208,7 +1209,7 @@ describe("Hierarchies", () => {
         using dbs = await createChangedDbs(
           mochaContext,
           async (builder) => {
-            const schema = await importXYZSchema(builder, mochaContext);
+            const schema = await importXYZSchema(builder);
             const x = builder.insertInstance(schema.items.X.fullName, { ["Label"]: "x" });
             const y1 = builder.insertInstance(schema.items.Y.fullName, { ["Label"]: "y1", ["PropY"]: 111 });
             builder.insertRelationship(schema.items.XY.fullName, x.id, y1.id);
@@ -1238,7 +1239,7 @@ describe("Hierarchies", () => {
             ],
             createHierarchyDefinition: createHierarchyDefinitionFactory({
               schema: dbs.base.schema,
-              createGroupingParams: (alias) => ({
+              createYGroupingParams: (alias) => ({
                 byProperties: {
                   propertiesClassName: dbs.base.schema.items.Y.fullName,
                   propertyGroups: [{ propertyClassAlias: alias, propertyName: "PropY" }],
@@ -1286,7 +1287,7 @@ describe("Hierarchies", () => {
         using dbs = await createChangedDbs(
           mochaContext,
           async (builder) => {
-            const schema = await importXYZSchema(builder, mochaContext);
+            const schema = await importXYZSchema(builder);
             const x = builder.insertInstance(schema.items.X.fullName, { ["Label"]: "x" });
             const y1 = builder.insertInstance(schema.items.Y.fullName, { ["Label"]: "y1", ["PropY"]: 111 });
             builder.insertRelationship(schema.items.XY.fullName, x.id, y1.id);
@@ -1316,7 +1317,7 @@ describe("Hierarchies", () => {
             ],
             createHierarchyDefinition: createHierarchyDefinitionFactory({
               schema: dbs.base.schema,
-              createGroupingParams: (alias) => ({
+              createYGroupingParams: (alias) => ({
                 byProperties: {
                   propertiesClassName: dbs.base.schema.items.Y.fullName,
                   propertyGroups: [{ propertyClassAlias: alias, propertyName: "PropY" }],
@@ -1363,7 +1364,7 @@ describe("Hierarchies", () => {
         using dbs = await createChangedDbs(
           mochaContext,
           async (builder) => {
-            const schema = await importXYZSchema(builder, mochaContext);
+            const schema = await importXYZSchema(builder);
             const x = builder.insertInstance(schema.items.X.fullName, { ["Label"]: "x" });
             const y1 = builder.insertInstance(schema.items.Y.fullName, { ["Label"]: "y1", ["PropY"]: 11 });
             builder.insertRelationship(schema.items.XY.fullName, x.id, y1.id);
@@ -1396,7 +1397,7 @@ describe("Hierarchies", () => {
             ],
             createHierarchyDefinition: createHierarchyDefinitionFactory({
               schema: dbs.base.schema,
-              createGroupingParams: (alias) => ({
+              createYGroupingParams: (alias) => ({
                 byProperties: {
                   propertiesClassName: dbs.base.schema.items.Y.fullName,
                   propertyGroups: [
@@ -1506,7 +1507,7 @@ describe("Hierarchies", () => {
         using dbs = await createChangedDbs(
           mochaContext,
           async (builder) => {
-            const schema = await importXYZSchema(builder, mochaContext);
+            const schema = await importXYZSchema(builder);
             const x = builder.insertInstance(schema.items.X.fullName, { ["Label"]: "x" });
             const y1 = builder.insertInstance(schema.items.Y.fullName, { ["Label"]: "y1", ["PropY"]: 111 });
             builder.insertRelationship(schema.items.XY.fullName, x.id, y1.id);
@@ -1536,7 +1537,7 @@ describe("Hierarchies", () => {
             ],
             createHierarchyDefinition: createHierarchyDefinitionFactory({
               schema: dbs.base.schema,
-              createGroupingParams: (alias) => ({
+              createYGroupingParams: (alias) => ({
                 byProperties: {
                   propertiesClassName: dbs.base.schema.items.Y.fullName,
                   propertyGroups: [{ propertyClassAlias: alias, propertyName: "PropY", ranges: [{ fromValue: 100, toValue: 200 }] }],
@@ -1584,7 +1585,7 @@ describe("Hierarchies", () => {
         using dbs = await createChangedDbs(
           mochaContext,
           async (builder) => {
-            const schema = await importXYZSchema(builder, mochaContext);
+            const schema = await importXYZSchema(builder);
             const x = builder.insertInstance(schema.items.X.fullName, { ["Label"]: "x" });
             const y1 = builder.insertInstance(schema.items.Y.fullName, { ["Label"]: "y1", ["PropY"]: 111 });
             builder.insertRelationship(schema.items.XY.fullName, x.id, y1.id);
@@ -1614,7 +1615,7 @@ describe("Hierarchies", () => {
             ],
             createHierarchyDefinition: createHierarchyDefinitionFactory({
               schema: dbs.base.schema,
-              createGroupingParams: (alias) => ({
+              createYGroupingParams: (alias) => ({
                 byProperties: {
                   propertiesClassName: dbs.base.schema.items.Y.fullName,
                   propertyGroups: [{ propertyClassAlias: alias, propertyName: "PropY", ranges: [{ fromValue: 100, toValue: 200 }] }],
@@ -1659,11 +1660,11 @@ describe("Hierarchies", () => {
 
 function createHierarchyDefinitionFactory({
   schema,
-  createGroupingParams,
+  createYGroupingParams,
   createGenericNodeForY,
 }: {
   schema: Awaited<ReturnType<typeof importSchema>>;
-  createGroupingParams?: (alias: string) => Props<NodesQueryClauseFactory["createSelectClause"]>["grouping"];
+  createYGroupingParams?: (alias: string) => Props<NodesQueryClauseFactory["createSelectClause"]>["grouping"];
   createGenericNodeForY?: boolean;
 }): Props<typeof createMergedHierarchyProvider>["createHierarchyDefinition"] {
   const classes = schema.items;
@@ -1698,7 +1699,7 @@ function createHierarchyDefinitionFactory({
               ecClassId: { selector: `this.ECClassId` },
               ecInstanceId: { selector: `this.ECInstanceId` },
               nodeLabel: { selector: "this.Label" },
-              grouping: createGroupingParams?.("this"),
+              grouping: createYGroupingParams?.("this"),
             })}
             FROM ${classes.Y.fullName} AS this
             JOIN ${classes.XY.fullName} AS xy ON xy.TargetECInstanceId = this.ECInstanceId
@@ -1767,9 +1768,9 @@ function createHierarchyDefinitionFactory({
     });
 }
 
-async function importXYZSchema(target: ECDbBuilder, mochaContext: Mocha.Context) {
+async function importXYZSchema(target: ECDbBuilder) {
   return importSchema(
-    mochaContext,
+    { schemaName: "XYZ", schemaAlias: "xyz" },
     target,
     `
       <ECEntityClass typeName="X">
@@ -1778,6 +1779,11 @@ async function importXYZSchema(target: ECDbBuilder, mochaContext: Mocha.Context)
       </ECEntityClass>
 
       <ECEntityClass typeName="Y">
+        <ECCustomAttributes>
+            <ClassMap xmlns="ECDbMap.02.00.04">
+                <MapStrategy>TablePerHierarchy</MapStrategy>
+            </ClassMap>
+        </ECCustomAttributes>
         <ECProperty propertyName="Label" typeName="string" />
         <ECProperty propertyName="PropY" typeName="int" />
       </ECEntityClass>
@@ -1802,6 +1808,20 @@ async function importXYZSchema(target: ECDbBuilder, mochaContext: Mocha.Context)
               <Class class="Z" />
           </Target>
       </ECRelationshipClass>
+    `,
+  );
+}
+
+async function importQSchema(target: ECDbBuilder) {
+  return importSchema(
+    { schemaName: "Q", schemaAlias: "q" },
+    target,
+    `
+      <ECSchemaReference name="XYZ" version="01.00.00" alias="xyz"/>
+      <ECEntityClass typeName="Q">
+        <BaseClass>xyz:Y</BaseClass>
+        <ECProperty propertyName="PropQ" typeName="int" />
+      </ECEntityClass>
     `,
   );
 }

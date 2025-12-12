@@ -32,6 +32,7 @@ export {
   GenericNodeKey,
   GroupingNodeKey,
   HierarchyNodeKey,
+  IModelInstanceKey,
   InstancesNodeKey,
   ClassGroupingNodeKey,
   LabelGroupingNodeKey,

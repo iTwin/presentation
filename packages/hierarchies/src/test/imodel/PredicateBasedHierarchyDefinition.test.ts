@@ -15,6 +15,8 @@ import { createPredicateBasedHierarchyDefinition } from "../../hierarchies/imode
 import { createClassHierarchyInspectorStub, createTestGenericNodeKey, createTestSourceGenericNode } from "../Utils.js";
 
 describe("createPredicateBasedHierarchyDefinition", () => {
+  const imodelKey = "test-imodel-key";
+
   let classHierarchyInspector: ReturnType<typeof createClassHierarchyInspectorStub>;
   beforeEach(() => {
     classHierarchyInspector = createClassHierarchyInspectorStub();
@@ -32,7 +34,7 @@ describe("createPredicateBasedHierarchyDefinition", () => {
         childNodes: [],
       },
     });
-    const result = await factory.defineHierarchyLevel({ parentNode: undefined });
+    const result = await factory.defineHierarchyLevel({ imodelKey, parentNode: undefined });
     expect(result).to.deep.eq(rootHierarchyLevel);
   });
 
@@ -78,7 +80,7 @@ describe("createPredicateBasedHierarchyDefinition", () => {
       },
     });
 
-    const result = await factory.defineHierarchyLevel({ parentNode: rootNode });
+    const result = await factory.defineHierarchyLevel({ imodelKey, parentNode: rootNode });
     expect(result).to.deep.eq([...def2, ...def4]);
   });
 
@@ -140,7 +142,7 @@ describe("createPredicateBasedHierarchyDefinition", () => {
       },
     });
 
-    const result = await factory.defineHierarchyLevel({ parentNode: rootNode });
+    const result = await factory.defineHierarchyLevel({ imodelKey, parentNode: rootNode });
     expect(result).to.deep.eq([...def2, ...def5]);
   });
 
@@ -171,8 +173,13 @@ describe("createPredicateBasedHierarchyDefinition", () => {
       },
     });
 
-    const result = await factory.defineHierarchyLevel({ parentNode: rootNode });
-    expect(spy).to.be.calledOnceWithExactly({ parentNodeClassName: "TestSchema.ClassX", parentNodeInstanceIds: ["0x1", "0x2"], parentNode: rootNode });
+    const result = await factory.defineHierarchyLevel({ imodelKey, parentNode: rootNode });
+    expect(spy).to.be.calledOnceWithExactly({
+      imodelKey,
+      parentNodeClassName: "TestSchema.ClassX",
+      parentNodeInstanceIds: ["0x1", "0x2"],
+      parentNode: rootNode,
+    });
     expect(result).to.deep.eq([]);
   });
 
@@ -219,8 +226,9 @@ describe("createPredicateBasedHierarchyDefinition", () => {
       },
     });
 
-    await factory.defineHierarchyLevel({ parentNode: rootNode });
+    await factory.defineHierarchyLevel({ imodelKey, parentNode: rootNode });
     expect(derivedClassDefs).to.be.calledOnceWithExactly({
+      imodelKey,
       parentNodeClassName: "TestSchema.ClassX",
       parentNodeInstanceIds: ["0x1"],
       parentNode: rootNode,
@@ -245,8 +253,9 @@ describe("createPredicateBasedHierarchyDefinition", () => {
       },
     });
 
-    await factory.defineHierarchyLevel({ parentNode: rootNode });
+    await factory.defineHierarchyLevel({ imodelKey, parentNode: rootNode });
     expect(baseClassDefs).to.be.calledOnceWithExactly({
+      imodelKey,
       parentNodeClassName: "TestSchema.ClassX",
       parentNodeInstanceIds: ["0x1"],
       parentNode: rootNode,

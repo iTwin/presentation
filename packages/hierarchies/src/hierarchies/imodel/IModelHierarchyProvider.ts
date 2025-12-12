@@ -357,7 +357,7 @@ class IModelHierarchyProviderImpl implements HierarchyProvider {
   }
 
   private createHierarchyLevelDefinitionsObservable(
-    props: DefineHierarchyLevelProps & RequestContextProp,
+    props: Omit<DefineHierarchyLevelProps, "imodelKey"> & RequestContextProp,
   ): Observable<
     { imodelAccess: IModelAccess; imodelAccessIndex: number } & (
       | { hierarchyNodesDefinition: GenericHierarchyNodeDefinition }
@@ -390,7 +390,7 @@ class IModelHierarchyProviderImpl implements HierarchyProvider {
             return EMPTY;
           }
         }
-        return this._activeHierarchyDefinition.defineHierarchyLevel({ ...defineHierarchyLevelProps, parentNode }).pipe(
+        return this._activeHierarchyDefinition.defineHierarchyLevel({ ...defineHierarchyLevelProps, parentNode, imodelKey: imodelAccess.imodelKey }).pipe(
           mergeAll(),
           map(
             /* Using `as` to work around TS not understanding that `{ x: A, y: B | C }` is the same as `{ x: A } & ({ y: B } | { y: C })` */
@@ -412,7 +412,10 @@ class IModelHierarchyProviderImpl implements HierarchyProvider {
   }
 
   private createSourceNodesObservable(
-    props: DefineHierarchyLevelProps & { hierarchyLevelSizeLimit?: number | "unbounded"; targetInstanceKeys?: InstanceKey[] } & RequestContextProp,
+    props: Omit<DefineHierarchyLevelProps, "imodelKey"> & {
+      hierarchyLevelSizeLimit?: number | "unbounded";
+      targetInstanceKeys?: InstanceKey[];
+    } & RequestContextProp,
   ): SourceNodesObservable {
     // pipe definitions to nodes and put "share replay" on it
     return this.createHierarchyLevelDefinitionsObservable(props).pipe(
@@ -432,7 +435,9 @@ class IModelHierarchyProviderImpl implements HierarchyProvider {
                   queryExecutor: imodelAccess,
                   query,
                   limit: props.hierarchyLevelSizeLimit,
-                  parser: this._activeHierarchyDefinition.parseNode ? (row) => this._activeHierarchyDefinition.parseNode!(row, props.parentNode) : undefined,
+                  parser: this._activeHierarchyDefinition.parseNode
+                    ? ({ row }) => this._activeHierarchyDefinition.parseNode!({ row, parentNode: props.parentNode, imodelKey: imodelAccess.imodelKey })
+                    : undefined,
                 }),
               ),
               map((node) => ({
@@ -441,7 +446,7 @@ class IModelHierarchyProviderImpl implements HierarchyProvider {
               })),
             ),
           );
-        }).pipe(map((node) => ({ imodelAccess, imodelAccessIndex, node }))),
+        }).pipe(map((node: SourceHierarchyNode) => ({ imodelAccess, imodelAccessIndex, node }))),
       ),
       mergeNodes,
       map(({ node }) => node),
@@ -865,14 +870,12 @@ function createInstanceKeysFilteredQuery(query: ECSqlQueryDef, targetInstanceKey
   /* c8 ignore end */
 }
 
-function mergeNodes<
-  TNode extends { key: GenericNodeKey | InstancesNodeKey },
-  TParam extends {
-    imodelAccess: IModelAccess;
-    imodelAccessIndex: number;
-    node: TNode;
-  },
->(source: ObservableInput<TParam>) {
+interface MergeNodesInput {
+  imodelAccess: IModelAccess;
+  imodelAccessIndex: number;
+  node: SourceHierarchyNode;
+}
+function mergeNodes(source: ObservableInput<MergeNodesInput>) {
   return from(source).pipe(
     reduce((acc, input) => {
       for (let i = 0; i < acc.length; ++i) {
@@ -889,38 +892,67 @@ function mergeNodes<
             : { imodelAccess: acc[i].imodelAccess, imodelAccessIndex: acc[i].imodelAccessIndex, primary: acc[i].node, secondary: input.node };
         const merged = tryMergeNodes(candidates.primary, candidates.secondary);
         if (merged) {
-          acc[i] = { ...acc[i], node: merged, imodelAccess: candidates.imodelAccess, imodelAccessIndex: candidates.imodelAccessIndex };
+          acc[i] = { node: merged, imodelAccess: candidates.imodelAccess, imodelAccessIndex: candidates.imodelAccessIndex };
           return acc;
         }
       }
       acc.push(input);
       return acc;
-    }, new Array<TParam>()),
+    }, new Array<MergeNodesInput>()),
     mergeAll(),
   );
 }
-function tryMergeInstanceNodes<TNode extends { key: GenericNodeKey | InstancesNodeKey }>(primary: TNode, secondary: TNode): TNode | undefined {
+function mergeSearchProps(primary: SourceHierarchyNode["search"], secondary: SourceHierarchyNode["search"]): SourceHierarchyNode["search"] {
+  if (!primary || !secondary) {
+    return primary ?? secondary;
+  }
+
+  const hasSearchTargetAncestor = primary.hasSearchTargetAncestor || secondary.hasSearchTargetAncestor;
+  const childrenTargetPaths = [...(primary.childrenTargetPaths ?? []), ...(secondary.childrenTargetPaths ?? [])];
+  return {
+    ...(hasSearchTargetAncestor ? { hasSearchTargetAncestor } : undefined),
+    ...(childrenTargetPaths.length ? { childrenTargetPaths } : undefined),
+    ...(primary.isSearchTarget || secondary.isSearchTarget
+      ? {
+          isSearchTarget: true,
+          searchTargetOptions: HierarchySearchPath.mergeOptions(
+            primary.isSearchTarget ? primary.searchTargetOptions : undefined,
+            secondary.isSearchTarget ? secondary.searchTargetOptions : undefined,
+          ),
+        }
+      : {
+          isSearchTarget: false,
+        }),
+  };
+}
+function tryMergeInstanceNodes(primary: SourceHierarchyNode, secondary: SourceHierarchyNode): SourceHierarchyNode | undefined {
   if (
     HierarchyNode.isInstancesNode(primary) &&
     HierarchyNode.isInstancesNode(secondary) &&
     primary.key.instanceKeys.some((lhsKey) => secondary.key.instanceKeys.some((rhsKey) => InstanceKey.equals(lhsKey, rhsKey)))
   ) {
+    const searchProps = mergeSearchProps(primary.search, secondary.search);
     return {
       ...primary,
       key: {
         type: "instances",
         instanceKeys: primary.key.instanceKeys.concat(secondary.key.instanceKeys),
       },
+      ...(searchProps ? { search: searchProps } : undefined),
     };
   }
   return undefined;
 }
-function tryMergeGenericNodes<TNode extends { key: GenericNodeKey | InstancesNodeKey }>(primary: TNode, secondary: TNode): TNode | undefined {
+function tryMergeGenericNodes(primary: SourceHierarchyNode, secondary: SourceHierarchyNode): SourceHierarchyNode | undefined {
   if (HierarchyNode.isGeneric(primary) && HierarchyNode.isGeneric(secondary) && primary.key.type === secondary.key.type) {
-    return primary;
+    const searchProps = mergeSearchProps(primary.search, secondary.search);
+    return {
+      ...primary,
+      ...(searchProps ? { search: searchProps } : undefined),
+    };
   }
   return undefined;
 }
-function tryMergeNodes<TNode extends { key: GenericNodeKey | InstancesNodeKey }>(primary: TNode, secondary: TNode): TNode | undefined {
+function tryMergeNodes(primary: SourceHierarchyNode, secondary: SourceHierarchyNode): SourceHierarchyNode | undefined {
   return tryMergeInstanceNodes(primary, secondary) ?? tryMergeGenericNodes(primary, secondary) ?? undefined;
 }

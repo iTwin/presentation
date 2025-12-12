@@ -28,30 +28,30 @@ describe("BaseClassGrouping", () => {
           processingParams: {
             grouping: {
               byBaseClasses: {
-                fullClassNames: ["TestSchema.Class2", "TestSchema.Class1", "TestSchema.Class3"],
+                fullClassNames: ["TestSchema.Class1", "TestSchema.Class2", "TestSchema.Class3"],
               },
             },
           },
         }),
       ];
-      const class1 = imodelAccess.stubEntityClass({
-        schemaName: "TestSchema",
-        className: "Class1",
-      });
       const class2 = imodelAccess.stubEntityClass({
         schemaName: "TestSchema",
         className: "Class2",
-        baseClass: class1,
+      });
+      const class1 = imodelAccess.stubEntityClass({
+        schemaName: "TestSchema",
+        className: "Class1",
+        baseClass: class2,
       });
       imodelAccess.stubEntityClass({
         schemaName: "TestSchema",
         className: "Class3",
-        baseClass: class2,
+        baseClass: class1,
       });
       const result = await baseClassGrouping.getBaseClassGroupingECClasses(imodelAccess, undefined, nodes);
       expect(result.length).to.eq(3);
-      expect(result[0].fullName).to.eq("TestSchema.Class1");
-      expect(result[1].fullName).to.eq("TestSchema.Class2");
+      expect(result[0].fullName).to.eq("TestSchema.Class2");
+      expect(result[1].fullName).to.eq("TestSchema.Class1");
       expect(result[2].fullName).to.eq("TestSchema.Class3");
     });
 
@@ -246,6 +246,7 @@ describe("BaseClassGrouping", () => {
     });
 
     it("groups multiple instance nodes", async () => {
+      // note: class names are intentionally in different casing & format to ensure we support that
       const nodes = [
         createTestProcessedInstanceNode({
           key: { type: "instances", instanceKeys: [{ className: "TestSchema.A", id: "0x1" }] },
@@ -254,19 +255,20 @@ describe("BaseClassGrouping", () => {
           processingParams: {
             grouping: {
               byBaseClasses: {
-                fullClassNames: ["TestSchema.ParentClass"],
+                /* cspell:disable-next-line */
+                fullClassNames: ["testschema:parentclass"],
               },
             },
           },
         }),
         createTestProcessedInstanceNode({
-          key: { type: "instances", instanceKeys: [{ className: "TestSchema.B", id: "0x2" }] },
+          key: { type: "instances", instanceKeys: [{ className: "testSchema.b", id: "0x2" }] },
           parentKeys: [createTestGenericNodeKey({ id: "x" })],
           label: "2",
           processingParams: {
             grouping: {
               byBaseClasses: {
-                fullClassNames: ["TestSchema.ParentClass"],
+                fullClassNames: ["testSchema.parentClass"],
               },
             },
           },

@@ -100,7 +100,7 @@ const hierarchyDefinition: HierarchyDefinition = {
     // Otherwise, return an empty array to indicate that there are no children
     return [];
   },
-  parseNode(row) {
+  parseNode({ row }) {
     // Parse the row into an instance node
     return {
       key: {

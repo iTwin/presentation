@@ -32,6 +32,7 @@ public;type;HierarchySearchPath
 public;namespace;HierarchySearchPath
 public;interface;HierarchySearchPathOptions
 public;type;IModelHierarchyNodeKey
+public;interface;IModelInstanceKey
 public;interface;InstancesNodeKey
 public;interface;LabelGroupingNodeKey
 public;interface;LimitingECSqlQueryExecutor

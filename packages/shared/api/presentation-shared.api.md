@@ -29,6 +29,9 @@ interface ClassBasedLabelSelectClause {
 }
 
 // @public
+export function compareFullClassNames(lhs: string, rhs: string): number;
+
+// @public
 export type ConcatenatedValue = ConcatenatedValuePart[];
 
 // @public (undocumented)

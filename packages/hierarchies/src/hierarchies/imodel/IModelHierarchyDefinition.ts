@@ -67,10 +67,16 @@ export type HierarchyLevelDefinition = HierarchyNodesDefinition[];
  * A type for a function that parses a `SourceInstanceHierarchyNode` from provided ECSQL `row` object.
  * @public
  */
-export type NodeParser = (
-  row: { [columnName: string]: any },
-  parentNode?: HierarchyDefinitionParentNode,
-) => SourceInstanceHierarchyNode | Promise<SourceInstanceHierarchyNode>;
+export type NodeParser = (props: {
+  /** The ECSQL row object to parse. Keys & value types depend on the executed query. */
+  row: { [columnName: string]: any };
+
+  /** The parent node whose child node is being parsed. */
+  parentNode?: HierarchyDefinitionParentNode;
+
+  /** The key of iModel which is used to run the query. */
+  imodelKey: string;
+}) => SourceInstanceHierarchyNode | Promise<SourceInstanceHierarchyNode>;
 
 /**
  * A type for a function that pre-processes given node. Unless the function decides not to make any modifications,
@@ -103,6 +109,9 @@ export type HierarchyDefinitionParentNode = Omit<NonGroupingHierarchyNode, "chil
  * @public
  */
 export interface DefineHierarchyLevelProps {
+  /** The key of iModel for which the hierarchy definition is being requested for. */
+  imodelKey: string;
+
   /** Parent node to get children for. Pass `undefined` to get root nodes. */
   parentNode: HierarchyDefinitionParentNode | undefined;
 

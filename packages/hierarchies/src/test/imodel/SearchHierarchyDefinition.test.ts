@@ -39,14 +39,16 @@ import {
 
 describe("SearchHierarchyDefinition", () => {
   describe("parseNode", () => {
+    const imodelKey = "test-imodel-key";
+
     it("uses `defaultNodeParser` when source definitions factory doesn't have one", async () => {
       const spy = sinon.spy();
       const row = {
         [NodeSelectClauseColumnNames.FullClassName]: "",
       };
       const searchFactory = await createSearchHierarchyDefinition({ nodesParser: (rowProp) => of(spy(rowProp)) });
-      await firstValueFrom(searchFactory.parseNode(row));
-      expect(spy).to.be.calledOnceWithExactly(row);
+      await firstValueFrom(searchFactory.parseNode({ row, imodelKey }));
+      expect(spy).to.be.calledOnceWithExactly({ row, imodelKey });
     });
 
     it("uses source's node parser when it has one", async () => {
@@ -60,8 +62,8 @@ describe("SearchHierarchyDefinition", () => {
       const searchFactory = await createSearchHierarchyDefinition({
         sourceFactory,
       });
-      await firstValueFrom(searchFactory.parseNode(row));
-      expect(stub).to.be.calledOnceWithExactly(row);
+      await firstValueFrom(searchFactory.parseNode({ row, imodelKey }));
+      expect(stub).to.be.calledOnceWithExactly({ row, imodelKey });
     });
 
     it("sets search node attributes when parentNode is undefined", async () => {
@@ -82,7 +84,7 @@ describe("SearchHierarchyDefinition", () => {
         [ECSQL_COLUMN_NAME_SearchECInstanceId]: "0x5",
         [ECSQL_COLUMN_NAME_SearchClassName]: className,
       };
-      const node = await firstValueFrom(searchFactory.parseNode(row));
+      const node = await firstValueFrom(searchFactory.parseNode({ row, imodelKey }));
       expect(node.search).to.deep.eq({
         childrenTargetPaths: [
           { path: [createTestInstanceKey({ id: "0x1" }), createTestInstanceKey({ id: "0x2" })], options: undefined },
@@ -120,7 +122,7 @@ describe("SearchHierarchyDefinition", () => {
         key: { type: "generic", id: "" },
         search: { childrenTargetPaths: paths },
       };
-      const node = await firstValueFrom(searchFactory.parseNode(row, parentNode));
+      const node = await firstValueFrom(searchFactory.parseNode({ row, parentNode, imodelKey }));
       expect(node.search).to.deep.eq({
         childrenTargetPaths: [{ path: [createTestInstanceKey({ id: "0x1" }), createTestInstanceKey({ id: "0x2" })], options: undefined }],
         isSearchTarget: true,
@@ -152,7 +154,7 @@ describe("SearchHierarchyDefinition", () => {
         key: { type: "generic", id: "" },
         search: { childrenTargetPaths: paths },
       };
-      const node = await firstValueFrom(searchFactory.parseNode(row, parentNode));
+      const node = await firstValueFrom(searchFactory.parseNode({ row, parentNode, imodelKey }));
       expect(node.search).to.deep.eq({
         childrenTargetPaths: [{ path: [createTestInstanceKey({ id: "0x2" })], options: undefined }],
       });
@@ -185,7 +187,7 @@ describe("SearchHierarchyDefinition", () => {
         key: { type: "generic", id: "" },
         search: { childrenTargetPaths: paths },
       };
-      const node = await firstValueFrom(searchFactory.parseNode(row, parentNode));
+      const node = await firstValueFrom(searchFactory.parseNode({ row, parentNode, imodelKey }));
       expect(node.search).to.deep.eq({
         childrenTargetPaths: [
           {
@@ -215,7 +217,7 @@ describe("SearchHierarchyDefinition", () => {
         [createTestInstanceKey({ id: "0x5", className: class2.fullName }), createTestInstanceKey({ id: "0x4" })],
       ];
       const searchFactory = await createSearchHierarchyDefinition({
-        imodelAccess: { ...classHierarchyInspector, imodelKey: "someKey" },
+        imodelAccess: classHierarchyInspector,
         sourceFactory,
         targetPaths: [],
       });
@@ -230,7 +232,7 @@ describe("SearchHierarchyDefinition", () => {
         key: { type: "generic", id: "" },
         search: { childrenTargetPaths: paths },
       };
-      const node = await firstValueFrom(searchFactory.parseNode(row, parentNode));
+      const node = await firstValueFrom(searchFactory.parseNode({ row, parentNode, imodelKey }));
       expect(node.search).to.deep.eq({
         childrenTargetPaths: [
           { path: [createTestInstanceKey({ id: "0x1" }), createTestInstanceKey({ id: "0x2" })], options: undefined },
@@ -253,7 +255,7 @@ describe("SearchHierarchyDefinition", () => {
         [createTestGenericNodeKey({ id: "0x1" }), createTestInstanceKey({ id: "0x3" })],
       ];
       const searchFactory = await createSearchHierarchyDefinition({
-        imodelAccess: { ...classHierarchyInspector, imodelKey: "someKey" },
+        imodelAccess: classHierarchyInspector,
         sourceFactory,
         targetPaths: paths,
       });
@@ -262,7 +264,7 @@ describe("SearchHierarchyDefinition", () => {
         [ECSQL_COLUMN_NAME_SearchECInstanceId]: "0x1",
         [ECSQL_COLUMN_NAME_SearchClassName]: testClass.fullName,
       };
-      const node = await firstValueFrom(searchFactory.parseNode(row, undefined));
+      const node = await firstValueFrom(searchFactory.parseNode({ row, imodelKey }));
       expect(node.search).to.deep.eq({
         childrenTargetPaths: [{ path: [createTestInstanceKey({ id: "0x2" })], options: undefined }],
       });
@@ -291,7 +293,7 @@ describe("SearchHierarchyDefinition", () => {
         key: { type: "generic", id: "" },
         search: { childrenTargetPaths: paths },
       };
-      const node = await firstValueFrom(searchFactory.parseNode(row, parentNode));
+      const node = await firstValueFrom(searchFactory.parseNode({ row, parentNode, imodelKey }));
 
       assert(node.search?.isSearchTarget);
       expect(node.search.searchTargetOptions).to.deep.eq(searchOptions);
@@ -492,23 +494,19 @@ describe("SearchHierarchyDefinition", () => {
           {
             inputNode: createTestProcessedInstanceNode({ key: { type: "instances", instanceKeys: [{ id: "0x1", className: "bis:Element" }] } }),
             searchPathNodeKey: { type: "generic" as const, id: "0x1" },
-            imodelKey: "",
           },
           { inputNode: createTestProcessedGenericNode(), searchPathNodeKey: { id: "0x1", className: "bis:Element" }, imodelKey: "" },
           {
             inputNode: createTestProcessedInstanceNode({ key: { type: "instances", instanceKeys: [{ id: "0x1", className: "bis:Element" }] } }),
             searchPathNodeKey: { id: "0x2", className: "bis:Element", imodelKey: "" },
-            imodelKey: "",
           },
           {
-            inputNode: createTestProcessedInstanceNode({ key: { type: "instances", instanceKeys: [{ id: "0x1", className: "bis:Element" }] } }),
-            searchPathNodeKey: { id: "0x1", className: "bis:Element", imodelKey: "a" },
-            imodelKey: "b",
+            inputNode: createTestProcessedInstanceNode({ key: { type: "instances", instanceKeys: [{ id: "0x1", className: "bis:Element", imodelKey: "a" }] } }),
+            searchPathNodeKey: { id: "0x1", className: "bis:Element", imodelKey: "b" },
           },
-        ].forEach(async ({ inputNode, searchPathNodeKey, imodelKey }) => {
+        ].forEach(async ({ inputNode, searchPathNodeKey }) => {
           const imodelAccess = {
             classDerivesFrom: sinon.stub<[string, string], Promise<boolean>>().resolves(true),
-            imodelKey,
           };
           const searchFactory = await createSearchHierarchyDefinition({
             imodelAccess,
@@ -974,6 +972,8 @@ describe("SearchHierarchyDefinition", () => {
   });
 
   describe("defineHierarchyLevel", () => {
+    const imodelKey = "test-imodel-key";
+
     let classHierarchyInspector: ReturnType<typeof createClassHierarchyInspectorStub>;
     beforeEach(() => {
       classHierarchyInspector = createClassHierarchyInspectorStub();
@@ -989,11 +989,12 @@ describe("SearchHierarchyDefinition", () => {
         defineHierarchyLevel: () => of(sourceDefinitions),
       };
       const searchFactory = await createSearchHierarchyDefinition({
-        imodelAccess: { ...classHierarchyInspector, imodelKey: "test-imodel-key" },
+        imodelAccess: classHierarchyInspector,
         sourceFactory,
       });
       const result = await lastValueFrom(
         searchFactory.defineHierarchyLevel({
+          imodelKey,
           parentNode: {
             ...createTestProcessedInstanceNode(),
             search: { childrenTargetPaths: undefined },
@@ -1013,10 +1014,10 @@ describe("SearchHierarchyDefinition", () => {
           ]),
       };
       const searchFactory = await createSearchHierarchyDefinition({
-        imodelAccess: { ...classHierarchyInspector, imodelKey: "test-imodel-key" },
+        imodelAccess: classHierarchyInspector,
         sourceFactory,
       });
-      const result = await lastValueFrom(searchFactory.defineHierarchyLevel({ parentNode: undefined }));
+      const result = await lastValueFrom(searchFactory.defineHierarchyLevel({ imodelKey, parentNode: undefined }));
       expect(result).to.be.empty;
     });
 
@@ -1033,11 +1034,11 @@ describe("SearchHierarchyDefinition", () => {
           defineHierarchyLevel: () => of([sourceDefinition]),
         };
         const searchFactory = await createSearchHierarchyDefinition({
-          imodelAccess: { ...classHierarchyInspector, imodelKey: "test-imodel-key" },
+          imodelAccess: classHierarchyInspector,
           sourceFactory,
           targetPaths: [[{ className: searchClass.fullName, id: "0x123" }]],
         });
-        const result = await lastValueFrom(searchFactory.defineHierarchyLevel({ parentNode: undefined }));
+        const result = await lastValueFrom(searchFactory.defineHierarchyLevel({ imodelKey, parentNode: undefined }));
         expect(result).to.be.empty;
       });
 
@@ -1052,11 +1053,11 @@ describe("SearchHierarchyDefinition", () => {
           defineHierarchyLevel: () => of([sourceDefinition]),
         };
         const searchFactory = await createSearchHierarchyDefinition({
-          imodelAccess: { ...classHierarchyInspector, imodelKey: "test-imodel-key" },
+          imodelAccess: classHierarchyInspector,
           sourceFactory,
           targetPaths: [[createTestGenericNodeKey({ id: "xxx" })]],
         });
-        const result = await lastValueFrom(searchFactory.defineHierarchyLevel({ parentNode: undefined }));
+        const result = await lastValueFrom(searchFactory.defineHierarchyLevel({ imodelKey, parentNode: undefined }));
         expect(result).to.be.empty;
       });
 
@@ -1071,11 +1072,11 @@ describe("SearchHierarchyDefinition", () => {
           defineHierarchyLevel: () => of([sourceDefinition]),
         };
         const searchFactory = await createSearchHierarchyDefinition({
-          imodelAccess: { ...classHierarchyInspector, imodelKey: "test-imodel-key" },
+          imodelAccess: classHierarchyInspector,
           sourceFactory,
           targetPaths: [[]],
         });
-        const result = await lastValueFrom(searchFactory.defineHierarchyLevel({ parentNode: undefined }));
+        const result = await lastValueFrom(searchFactory.defineHierarchyLevel({ imodelKey, parentNode: undefined }));
         expect(result).to.be.empty;
       });
 
@@ -1090,11 +1091,11 @@ describe("SearchHierarchyDefinition", () => {
           defineHierarchyLevel: () => of([sourceDefinition]),
         };
         const searchFactory = await createSearchHierarchyDefinition({
-          imodelAccess: { ...classHierarchyInspector, imodelKey: "test-imodel-key" },
+          imodelAccess: classHierarchyInspector,
           sourceFactory,
           targetPaths: [[createTestGenericNodeKey({ id: "xxx", source: "other-source" })]],
         });
-        const result = await lastValueFrom(searchFactory.defineHierarchyLevel({ parentNode: undefined }));
+        const result = await lastValueFrom(searchFactory.defineHierarchyLevel({ imodelKey, parentNode: undefined }));
         expect(result).to.be.empty;
       });
 
@@ -1115,11 +1116,11 @@ describe("SearchHierarchyDefinition", () => {
           defineHierarchyLevel: () => of([sourceDefinition1, sourceDefinition2]),
         };
         const searchFactory = await createSearchHierarchyDefinition({
-          imodelAccess: { ...classHierarchyInspector, imodelKey: "test-imodel-key" },
+          imodelAccess: classHierarchyInspector,
           sourceFactory,
           targetPaths: [{ path: [createTestGenericNodeKey({ id: "custom 2" })], options: { reveal: true } }],
         });
-        const result = await lastValueFrom(searchFactory.defineHierarchyLevel({ parentNode: undefined }));
+        const result = await lastValueFrom(searchFactory.defineHierarchyLevel({ imodelKey, parentNode: undefined }));
         expect(result).to.deep.eq([
           {
             node: {
@@ -1141,14 +1142,14 @@ describe("SearchHierarchyDefinition", () => {
           defineHierarchyLevel: () => of([sourceDefinition]),
         };
         const searchFactory = await createSearchHierarchyDefinition({
-          imodelAccess: { ...classHierarchyInspector, imodelKey: "test-imodel-key" },
+          imodelAccess: classHierarchyInspector,
           sourceFactory,
           targetPaths: [
             [createTestGenericNodeKey({ id: "custom" }), createTestGenericNodeKey({ id: "123" })],
             [createTestGenericNodeKey({ id: "custom" }), createTestGenericNodeKey({ id: "456" })],
           ],
         });
-        const result = await lastValueFrom(searchFactory.defineHierarchyLevel({ parentNode: undefined }));
+        const result = await lastValueFrom(searchFactory.defineHierarchyLevel({ imodelKey, parentNode: undefined }));
         expect(result).to.deep.eq([
           {
             node: {
@@ -1175,7 +1176,7 @@ describe("SearchHierarchyDefinition", () => {
           defineHierarchyLevel: () => of([sourceDefinition]),
         };
         const searchFactory = await createSearchHierarchyDefinition({
-          imodelAccess: { ...classHierarchyInspector, imodelKey: "test-imodel-key" },
+          imodelAccess: classHierarchyInspector,
           sourceFactory,
           targetPaths: [
             { path: [createTestGenericNodeKey({ id: "custom" }), createTestGenericNodeKey({ id: "123" })], options: { reveal: true } },
@@ -1186,7 +1187,7 @@ describe("SearchHierarchyDefinition", () => {
             [createTestGenericNodeKey({ id: "custom" }), createTestGenericNodeKey({ id: "789" })],
           ],
         });
-        const result = await lastValueFrom(searchFactory.defineHierarchyLevel({ parentNode: undefined }));
+        const result = await lastValueFrom(searchFactory.defineHierarchyLevel({ imodelKey, parentNode: undefined }));
         expect(result).to.deep.eq([
           {
             node: {
@@ -1214,7 +1215,7 @@ describe("SearchHierarchyDefinition", () => {
           defineHierarchyLevel: () => of([sourceDefinition]),
         };
         const searchFactory = await createSearchHierarchyDefinition({
-          imodelAccess: { ...classHierarchyInspector, imodelKey: "test-imodel-key" },
+          imodelAccess: classHierarchyInspector,
           sourceFactory,
           targetPaths: [
             { path: [createTestGenericNodeKey({ id: "custom" }), createTestGenericNodeKey({ id: "123" })], options: { reveal: true } },
@@ -1222,7 +1223,7 @@ describe("SearchHierarchyDefinition", () => {
             { path: [createTestGenericNodeKey({ id: "custom" })], options: { reveal: true } },
           ],
         });
-        const result = await lastValueFrom(searchFactory.defineHierarchyLevel({ parentNode: undefined }));
+        const result = await lastValueFrom(searchFactory.defineHierarchyLevel({ imodelKey, parentNode: undefined }));
         expect(result).to.deep.eq([
           {
             node: {
@@ -1251,11 +1252,11 @@ describe("SearchHierarchyDefinition", () => {
           defineHierarchyLevel: () => of([sourceDefinition]),
         };
         const searchFactory = await createSearchHierarchyDefinition({
-          imodelAccess: { ...classHierarchyInspector, imodelKey: "test-imodel-key" },
+          imodelAccess: classHierarchyInspector,
           sourceFactory,
           targetPaths: [[createTestGenericNodeKey({ id: "xxx" })]],
         });
-        const result = await lastValueFrom(searchFactory.defineHierarchyLevel({ parentNode: undefined }));
+        const result = await lastValueFrom(searchFactory.defineHierarchyLevel({ imodelKey, parentNode: undefined }));
         expect(result).to.be.empty;
       });
 
@@ -1272,11 +1273,11 @@ describe("SearchHierarchyDefinition", () => {
           defineHierarchyLevel: () => of([sourceDefinition]),
         };
         const searchFactory = await createSearchHierarchyDefinition({
-          imodelAccess: { ...classHierarchyInspector, imodelKey: "test-imodel-key" },
+          imodelAccess: classHierarchyInspector,
           sourceFactory,
           targetPaths: [[{ className: searchPathClass.fullName, id: "0x123" }]],
         });
-        const result = await lastValueFrom(searchFactory.defineHierarchyLevel({ parentNode: undefined }));
+        const result = await lastValueFrom(searchFactory.defineHierarchyLevel({ imodelKey, parentNode: undefined }));
         expect(result).to.be.empty;
       });
 
@@ -1292,11 +1293,11 @@ describe("SearchHierarchyDefinition", () => {
           defineHierarchyLevel: () => of([sourceDefinition]),
         };
         const searchFactory = await createSearchHierarchyDefinition({
-          imodelAccess: { ...classHierarchyInspector, imodelKey: "test-imodel-key" },
+          imodelAccess: classHierarchyInspector,
           sourceFactory,
           targetPaths: [[]],
         });
-        const result = await lastValueFrom(searchFactory.defineHierarchyLevel({ parentNode: undefined }));
+        const result = await lastValueFrom(searchFactory.defineHierarchyLevel({ imodelKey, parentNode: undefined }));
         expect(result).to.be.empty;
       });
 
@@ -1311,11 +1312,11 @@ describe("SearchHierarchyDefinition", () => {
           defineHierarchyLevel: () => of([sourceDefinition]),
         };
         const searchFactory = await createSearchHierarchyDefinition({
-          imodelAccess: { ...classHierarchyInspector, imodelKey: "test-imodel-key" },
+          imodelAccess: classHierarchyInspector,
           sourceFactory,
           targetPaths: [[{ className: "search.class", id: "0x123", imodelKey: "other-source" }]],
         });
-        const result = await lastValueFrom(searchFactory.defineHierarchyLevel({ parentNode: undefined }));
+        const result = await lastValueFrom(searchFactory.defineHierarchyLevel({ imodelKey, parentNode: undefined }));
         expect(result).to.be.empty;
       });
 
@@ -1331,12 +1332,13 @@ describe("SearchHierarchyDefinition", () => {
           defineHierarchyLevel: () => of([sourceDefinition]),
         };
         const searchFactory = await createSearchHierarchyDefinition({
-          imodelAccess: { ...classHierarchyInspector, imodelKey: "test-imodel-key" },
+          imodelAccess: classHierarchyInspector,
           sourceFactory,
           targetPaths: [],
         });
         const result = await lastValueFrom(
           searchFactory.defineHierarchyLevel({
+            imodelKey,
             parentNode: {
               ...createTestProcessedInstanceNode(),
               search: {
@@ -1373,7 +1375,7 @@ describe("SearchHierarchyDefinition", () => {
           defineHierarchyLevel: () => of([sourceDefinition]),
         };
         const searchFactory = await createSearchHierarchyDefinition({
-          imodelAccess: { ...classHierarchyInspector, imodelKey: "test-imodel-key" },
+          imodelAccess: classHierarchyInspector,
           sourceFactory,
           targetPaths: [
             [
@@ -1383,7 +1385,7 @@ describe("SearchHierarchyDefinition", () => {
             [{ className: searchPathClass1.fullName, id: "0x789" }],
           ],
         });
-        const result = await lastValueFrom(searchFactory.defineHierarchyLevel({ parentNode: undefined }));
+        const result = await lastValueFrom(searchFactory.defineHierarchyLevel({ imodelKey, parentNode: undefined }));
         expect(result).to.deep.eq([
           applyECInstanceIdsSearch(sourceDefinition, [
             {
@@ -1420,11 +1422,11 @@ describe("SearchHierarchyDefinition", () => {
           defineHierarchyLevel: () => of([sourceDefinition]),
         };
         const searchFactory = await createSearchHierarchyDefinition({
-          imodelAccess: { ...classHierarchyInspector, imodelKey: "test-imodel-key" },
+          imodelAccess: classHierarchyInspector,
           sourceFactory,
           targetPaths: [[{ className: searchPathClass1.fullName, id: "0x123" }], [{ className: searchPathClass2.fullName, id: "0x456" }]],
         });
-        const result = await lastValueFrom(searchFactory.defineHierarchyLevel({ parentNode: undefined }));
+        const result = await lastValueFrom(searchFactory.defineHierarchyLevel({ imodelKey, parentNode: undefined }));
         expect(result).to.deep.eq([
           applyECInstanceIdsSearch(sourceDefinition, [
             {
@@ -1458,7 +1460,7 @@ describe("SearchHierarchyDefinition", () => {
           defineHierarchyLevel: () => of([sourceDefinition]),
         };
         const searchFactory = await createSearchHierarchyDefinition({
-          imodelAccess: { ...classHierarchyInspector, imodelKey: "test-imodel-key" },
+          imodelAccess: classHierarchyInspector,
           sourceFactory,
           targetPaths: [
             [
@@ -1471,7 +1473,7 @@ describe("SearchHierarchyDefinition", () => {
             ],
           ],
         });
-        const result = await lastValueFrom(searchFactory.defineHierarchyLevel({ parentNode: undefined }));
+        const result = await lastValueFrom(searchFactory.defineHierarchyLevel({ imodelKey, parentNode: undefined }));
         expect(result).to.deep.eq([
           applyECInstanceIdsSearch(sourceDefinition, [
             {
@@ -1506,7 +1508,7 @@ describe("SearchHierarchyDefinition", () => {
           defineHierarchyLevel: () => of([sourceDefinition]),
         };
         const searchFactory = await createSearchHierarchyDefinition({
-          imodelAccess: { ...classHierarchyInspector, imodelKey: "test-imodel-key" },
+          imodelAccess: classHierarchyInspector,
           sourceFactory,
           targetPaths: [
             [{ className: queryClass.fullName, id: "0x123" }],
@@ -1516,7 +1518,7 @@ describe("SearchHierarchyDefinition", () => {
             ],
           ],
         });
-        const result = await lastValueFrom(searchFactory.defineHierarchyLevel({ parentNode: undefined }));
+        const result = await lastValueFrom(searchFactory.defineHierarchyLevel({ imodelKey, parentNode: undefined }));
         expect(result).to.deep.eq([
           applyECInstanceIdsSearch(sourceDefinition, [
             {
@@ -1548,7 +1550,7 @@ describe("SearchHierarchyDefinition", () => {
           defineHierarchyLevel: () => of([sourceDefinition]),
         };
         const searchFactory = await createSearchHierarchyDefinition({
-          imodelAccess: { ...classHierarchyInspector, imodelKey: "test-imodel-key" },
+          imodelAccess: classHierarchyInspector,
           sourceFactory,
           targetPaths: [
             [{ className: searchPathClass0.fullName, id: "0x123" }],
@@ -1558,7 +1560,7 @@ describe("SearchHierarchyDefinition", () => {
             ],
           ],
         });
-        const result = await lastValueFrom(searchFactory.defineHierarchyLevel({ parentNode: undefined }));
+        const result = await lastValueFrom(searchFactory.defineHierarchyLevel({ imodelKey, parentNode: undefined }));
         expect(result).to.deep.eq([
           applyECInstanceIdsSearch(sourceDefinition, [
             {
@@ -1589,7 +1591,7 @@ describe("SearchHierarchyDefinition", () => {
           defineHierarchyLevel: () => of([sourceDefinition]),
         };
         const searchFactory = await createSearchHierarchyDefinition({
-          imodelAccess: { ...classHierarchyInspector, imodelKey: "test-imodel-key" },
+          imodelAccess: classHierarchyInspector,
           sourceFactory,
           targetPaths: [
             {
@@ -1606,7 +1608,7 @@ describe("SearchHierarchyDefinition", () => {
             },
           ],
         });
-        const result = await lastValueFrom(searchFactory.defineHierarchyLevel({ parentNode: undefined }));
+        const result = await lastValueFrom(searchFactory.defineHierarchyLevel({ imodelKey, parentNode: undefined }));
         expect(result).to.deep.eq([
           applyECInstanceIdsSearch(sourceDefinition, [
             {
@@ -1635,12 +1637,13 @@ describe("SearchHierarchyDefinition", () => {
         defineHierarchyLevel: () => of([sourceDefinition]),
       };
       const searchFactory = await createSearchHierarchyDefinition({
-        imodelAccess: { ...classHierarchyInspector, imodelKey: "test-imodel-key" },
+        imodelAccess: classHierarchyInspector,
         sourceFactory,
         targetPaths: [], // this doesn't matter as we're going to look at what's in the parent node
       });
       const result = await lastValueFrom(
         searchFactory.defineHierarchyLevel({
+          imodelKey,
           parentNode: {
             ...createTestProcessedGenericNode({
               key: createTestGenericNodeKey({ id: "custom" }),
@@ -1673,12 +1676,13 @@ describe("SearchHierarchyDefinition", () => {
         defineHierarchyLevel: () => of([matchingSourceDefinition, nonMatchingSourceDefinition]),
       };
       const searchFactory = await createSearchHierarchyDefinition({
-        imodelAccess: { ...classHierarchyInspector, imodelKey: "test-imodel-key" },
+        imodelAccess: classHierarchyInspector,
         sourceFactory,
         targetPaths: [], // this doesn't matter as we're going to look at what's in the parent node
       });
       const result = await lastValueFrom(
         searchFactory.defineHierarchyLevel({
+          imodelKey,
           parentNode: {
             ...createTestProcessedGenericNode({
               key: createTestGenericNodeKey({ id: "parent" }),
@@ -1764,14 +1768,14 @@ describe("SearchHierarchyDefinition", () => {
 });
 
 async function createSearchHierarchyDefinition(props?: {
-  imodelAccess?: ECClassHierarchyInspector & { imodelKey: string };
+  imodelAccess?: ECClassHierarchyInspector;
   sourceFactory?: RxjsHierarchyDefinition;
   targetPaths?: HierarchySearchPath[];
   nodesParser?: RxjsNodeParser;
 }) {
   const { imodelAccess, sourceFactory, targetPaths } = props ?? {};
   return new SearchHierarchyDefinition({
-    imodelAccess: imodelAccess ?? { classDerivesFrom: async () => false, imodelKey: "" },
+    imodelAccess: imodelAccess ?? { classDerivesFrom: async () => false },
     source: sourceFactory ?? ({} as unknown as RxjsHierarchyDefinition),
     sourceName: "test-source-name",
     targetPaths: targetPaths ?? [],

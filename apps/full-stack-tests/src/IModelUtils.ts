@@ -5,6 +5,7 @@
 
 import { XMLParser } from "fast-xml-parser";
 import * as fs from "fs";
+import { Context as MochaContext } from "mocha";
 import hash from "object-hash";
 import { getFullSchemaXml } from "presentation-test-utilities";
 import { ECDb, ECDbOpenMode, ECSqlWriteStatement, IModelDb, IModelJsFs } from "@itwin/core-backend";
@@ -30,7 +31,7 @@ export class ECDbBuilder {
 
   public importSchema(schemaXml: string) {
     // sadly, there's no API to import schema from string, so we have to save the XML into a file first...
-    const schemaFilePath = limitFilePathLength(`${this._filePath}-${hash(schemaXml)}`);
+    const schemaFilePath = limitFilePathLength(`${this._filePath}-${hash(schemaXml)}.xml`);
     fs.writeFileSync(schemaFilePath, schemaXml);
     this._ecdb.importSchema(schemaFilePath);
   }
@@ -195,12 +196,11 @@ export async function createECDb<TResult extends {}>(
   ecdb.createDb(ecdbPath);
   try {
     const res = await setup(new ECDbBuilder(ecdb, ecdbPath));
+    ecdb.saveChanges("Created test ECDb");
     return { ...res, ecdb, ecdbPath };
   } catch (e) {
     ecdb[Symbol.dispose]();
     throw e;
-  } finally {
-    ecdb.saveChanges("Created test ECDb");
   }
 }
 export async function cloneECDb<TResult extends {}>(
@@ -219,9 +219,11 @@ export async function cloneECDb<TResult extends {}>(
   }
   try {
     const res = await setup(new ECDbBuilder(ecdb, targetECDbPath));
-    return { ...res, ecdb, ecdbPath: targetECDbPath };
-  } finally {
     ecdb.saveChanges("Updated cloned ECDb");
+    return { ...res, ecdb, ecdbPath: targetECDbPath };
+  } catch (e) {
+    ecdb[Symbol.dispose]();
+    throw e;
   }
 }
 
@@ -274,14 +276,24 @@ export async function buildIModel<TFirstArg extends Mocha.Context | string, TRes
 }
 
 export async function importSchema(
-  mochaContextOrTestName: Mocha.Context | string,
+  mochaContextOrTestNameOrSchemaProps: MochaContext | string | { schemaName: string; schemaAlias: string },
   imodel: { importSchema: (xml: string) => Promise<void> | void },
   schemaContentXml: string,
 ) {
-  const testName = typeof mochaContextOrTestName === "string" ? mochaContextOrTestName : mochaContextOrTestName.test!.fullTitle();
-  const schemaName = `SCHEMA_${testName}`.replace(/[^\w\d_]/gi, "_").replace(/_+/g, "_");
-  const schemaAlias = `a_${Guid.createValue().replaceAll("-", "")}`;
-  const schemaXml = getFullSchemaXml({ schemaName, schemaAlias, schemaContentXml });
+  const schemaProps = ((): { schemaName: string; schemaAlias: string } => {
+    if (typeof mochaContextOrTestNameOrSchemaProps === "object" && !(mochaContextOrTestNameOrSchemaProps instanceof MochaContext)) {
+      return mochaContextOrTestNameOrSchemaProps;
+    }
+
+    const testName =
+      typeof mochaContextOrTestNameOrSchemaProps === "string" ? mochaContextOrTestNameOrSchemaProps : mochaContextOrTestNameOrSchemaProps.test!.fullTitle();
+    return {
+      schemaName: `SCHEMA_${testName}`.replace(/[^\w\d_]/gi, "_").replace(/_+/g, "_"),
+      schemaAlias: `ALIAS_${Guid.createValue().replaceAll("-", "")}`,
+    };
+  })();
+
+  const schemaXml = getFullSchemaXml({ ...schemaProps, schemaContentXml });
   await imodel.importSchema(schemaXml);
 
   const parsedSchema = new XMLParser({
@@ -294,14 +306,13 @@ export async function importSchema(
     .filter((itemDef: any) => !!itemDef.typeName);
 
   return {
-    schemaName,
-    schemaAlias,
+    ...schemaProps,
     items: schemaItems.reduce<{ [className: string]: { name: string; fullName: string; label: string } }>((classesObj, schemaItemDef) => {
       const name = schemaItemDef.typeName;
       return {
         ...classesObj,
         [name]: {
-          fullName: `${schemaName}.${name}`,
+          fullName: `${schemaProps.schemaName}.${name}`,
           name,
           label: schemaItemDef.displayLabel,
         },
