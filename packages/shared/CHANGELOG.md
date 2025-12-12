@@ -1,5 +1,13 @@
 # @itwin/presentation-shared
 
+## 2.0.0-alpha.5
+
+### Minor Changes
+
+- [#1137](https://github.com/iTwin/presentation/pull/1137): Add and use a more robust way to check full class names for equality - `compareFullClassNames` function.
+
+  The function compares full class names in case-insensitive way, ignoring different supported schema-class name separators (`:` or `.`).
+
 ## 2.0.0-alpha.4
 
 ### Patch Changes
