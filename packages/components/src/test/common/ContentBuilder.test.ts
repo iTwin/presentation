@@ -12,7 +12,7 @@ import {
   StructValue,
   PropertyValueFormat as UiPropertyValueFormat,
 } from "@itwin/appui-abstract";
-import { EnumerationInfo, PropertyValueFormat, traverseContentItem } from "@itwin/presentation-common";
+import { createContentTraverser, EnumerationInfo, PropertyValueFormat } from "@itwin/presentation-common";
 import { createTestECClassInfo, createTestECInstanceKey, createTestPropertyInfo } from "../_helpers/Common.js";
 import {
   createTestCategoryDescription,
@@ -64,7 +64,7 @@ describe("PropertyRecordsBuilder", () => {
       values: {},
       displayValues: {},
     });
-    traverseContentItem(builder, descriptor, item);
+    createContentTraverser(builder)(descriptor, [item]);
     expect(builder.entries.length).to.eq(1);
     expect(builder.entries[0].property.enum).to.deep.eq(enumerationInfo);
   });
@@ -89,7 +89,7 @@ describe("PropertyRecordsBuilder", () => {
       values: {},
       displayValues: {},
     });
-    traverseContentItem(builder, descriptor, item);
+    createContentTraverser(builder)(descriptor, [item]);
     expect(builder.entries.length).to.eq(1);
     const property: WithConstraints<PropertyDescription> = builder.entries[0].property;
     expect(property.constraints).to.deep.eq(constraints);
@@ -115,7 +115,7 @@ describe("PropertyRecordsBuilder", () => {
       values: {},
       displayValues: {},
     });
-    traverseContentItem(builder, descriptor, item);
+    createContentTraverser(builder)(descriptor, [item]);
     expect(builder.entries.length).to.eq(1);
     const property: WithConstraints<PropertyDescription> = builder.entries[0].property;
     expect(property.constraints).to.deep.eq(constraints);
@@ -141,7 +141,7 @@ describe("PropertyRecordsBuilder", () => {
       values: {},
       displayValues: {},
     });
-    traverseContentItem(builder, descriptor, item);
+    createContentTraverser(builder)(descriptor, [item]);
     expect(builder.entries.length).to.eq(1);
     const property: WithConstraints<PropertyDescription> = builder.entries[0].property;
     expect(property.constraints).to.deep.eq(constraints);
@@ -159,7 +159,7 @@ describe("PropertyRecordsBuilder", () => {
       displayValues: {},
       extendedData,
     });
-    traverseContentItem(builder, descriptor, item);
+    createContentTraverser(builder)(descriptor, [item]);
     expect(builder.entries.length).to.eq(1);
     expect(builder.entries[0].extendedData).to.deep.eq(extendedData);
   });
@@ -193,7 +193,7 @@ describe("PropertyRecordsBuilder", () => {
       },
       displayValues: {},
     });
-    traverseContentItem(builder, descriptor, item);
+    createContentTraverser(builder)(descriptor, [item]);
     expect(builder.entries.length).to.eq(1);
     const record = builder.entries[0];
     expect(record.autoExpand).to.be.true;
@@ -206,7 +206,7 @@ describe("PropertyRecordsBuilder", () => {
       fields: [createTestSimpleContentField({ renderer: { name: "custom-renderer" } })],
     });
     const item = createTestContentItem({ values: {}, displayValues: {} });
-    traverseContentItem(builder, descriptor, item);
+    createContentTraverser(builder)(descriptor, [item]);
     expect(builder.entries.length).to.eq(1);
     expect(builder.entries[0].property.renderer).to.deep.eq({
       name: "custom-renderer",
@@ -218,7 +218,7 @@ describe("PropertyRecordsBuilder", () => {
       fields: [createTestSimpleContentField({ editor: { name: "custom-editor" } })],
     });
     const item = createTestContentItem({ values: {}, displayValues: {} });
-    traverseContentItem(builder, descriptor, item);
+    createContentTraverser(builder)(descriptor, [item]);
     expect(builder.entries.length).to.eq(1);
     expect(builder.entries[0].property.editor).to.deep.eq({
       name: "custom-editor",
@@ -230,7 +230,7 @@ describe("PropertyRecordsBuilder", () => {
       fields: [createTestSimpleContentField({ type: { valueFormat: PropertyValueFormat.Primitive, typeName: StandardTypeNames.Number } })],
     });
     const item = createTestContentItem({ values: {}, displayValues: {} });
-    traverseContentItem(builder, descriptor, item);
+    createContentTraverser(builder)(descriptor, [item]);
     expect(builder.entries.length).to.eq(1);
     expect(builder.entries[0].property.editor).to.deep.eq({
       name: NumericEditorName,
@@ -247,7 +247,7 @@ describe("PropertyRecordsBuilder", () => {
       ],
     });
     const item = createTestContentItem({ values: {}, displayValues: {} });
-    traverseContentItem(builder, descriptor, item);
+    createContentTraverser(builder)(descriptor, [item]);
     expect(builder.entries.length).to.eq(1);
     expect(builder.entries[0].property.editor).to.deep.eq({
       name: "custom-editor",
@@ -276,7 +276,7 @@ describe("PropertyRecordsBuilder", () => {
       ],
     });
     const item = createTestContentItem({ values: {}, displayValues: {} });
-    traverseContentItem(builder, descriptor, item);
+    createContentTraverser(builder)(descriptor, [item]);
     expect(builder.entries.length).to.eq(1);
     expect(builder.entries[0].property.kindOfQuantityName).to.be.eq("testKOQ");
   });
@@ -303,7 +303,7 @@ describe("PropertyRecordsBuilder", () => {
       ],
     });
     const item = createTestContentItem({ values: {}, displayValues: {} });
-    traverseContentItem(builder, descriptor, item);
+    createContentTraverser(builder)(descriptor, [item]);
     expect(builder.entries.length).to.eq(1);
     expect(builder.entries[0].property.kindOfQuantityName).to.be.eq("testKOQ");
     expect(builder.entries[0].property.editor?.name).to.be.eq(QuantityEditorName);
@@ -332,7 +332,7 @@ describe("PropertyRecordsBuilder", () => {
       ],
     });
     const item = createTestContentItem({ values: {}, displayValues: {} });
-    traverseContentItem(builder, descriptor, item);
+    createContentTraverser(builder)(descriptor, [item]);
     expect(builder.entries.length).to.eq(1);
     expect(builder.entries[0].property.kindOfQuantityName).to.be.eq("testKOQ");
     expect(builder.entries[0].property.editor?.name).to.be.eq("custom-editor");
@@ -357,7 +357,7 @@ describe("PropertyRecordsBuilder", () => {
       ],
     });
     const item = createTestContentItem({ values: {}, displayValues: {}, mergedFieldNames: [fieldName] });
-    traverseContentItem(builder, descriptor, item);
+    createContentTraverser(builder)(descriptor, [item]);
     expect(builder.entries.length).to.eq(1);
     expect(builder.entries[0].property.name).to.eq(fieldName);
     expect(builder.entries[0].isMerged).to.be.true;
@@ -400,7 +400,7 @@ describe("PropertyRecordsBuilder", () => {
         },
       },
     });
-    traverseContentItem(builder, descriptor, item);
+    createContentTraverser(builder)(descriptor, [item]);
     expect(builder.entries.length).to.eq(1);
     expect(Object.keys((builder.entries[0].value as StructValue).members)).to.eql(["member1", "member2", "member3"]);
   });
@@ -436,7 +436,7 @@ describe("PropertyRecordsBuilder", () => {
       },
       displayValues: {},
     });
-    traverseContentItem(builder, descriptor, item);
+    createContentTraverser(builder)(descriptor, [item]);
     expect(builder.entries.length).to.eq(1);
     expect((builder.entries[0].value as ArrayValue).items[0].description).to.eq(labelDefinition.displayValue);
   });
@@ -473,7 +473,7 @@ describe("PropertyRecordsBuilder", () => {
       },
       displayValues: {},
     });
-    traverseContentItem(builder, descriptor, item);
+    createContentTraverser(builder)(descriptor, [item]);
     expect(builder.entries.length).to.eq(1);
     expect((builder.entries[0].value as ArrayValue).items[0].description).to.be.undefined;
   });

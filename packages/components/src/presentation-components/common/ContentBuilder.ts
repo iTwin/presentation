@@ -67,7 +67,6 @@ export type PropertyValueConstraints =
  * Expands specified type with additional constraints property.
  * @public
  */
-// eslint-disable-next-line @typescript-eslint/no-redundant-type-constituents
 export type WithConstraints<T extends {}> = T & { constraints?: PropertyValueConstraints };
 
 /** @internal */
