@@ -1,5 +1,13 @@
 # @itwin/unified-selection-react
 
+## 1.0.3
+
+### Patch Changes
+
+- [#1139](https://github.com/iTwin/presentation/pull/1139): Bump dependencies.
+- Updated dependencies:
+  - @itwin/unified-selection@1.6.3
+
 ## 1.0.2
 
 ### Patch Changes
