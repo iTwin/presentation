@@ -113,6 +113,14 @@
 - Updated dependencies:
   - @itwin/presentation-shared@2.0.0-alpha.0
 
+## 1.7.6
+
+### Patch Changes
+
+- [#1139](https://github.com/iTwin/presentation/pull/1139): Bump dependencies.
+- Updated dependencies:
+  - @itwin/presentation-shared@1.2.5
+
 ## 1.7.5
 
 ### Patch Changes

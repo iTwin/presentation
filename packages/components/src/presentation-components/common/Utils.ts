@@ -244,7 +244,6 @@ export function memoize<Fn extends mm.AnyFn>(fn: Fn | mm.Memoized<Fn>, options?:
   return microMemoize(fn, options);
 }
 
-// eslint-disable-next-line @typescript-eslint/no-redundant-type-constituents
 export type WithIModelKey<TObj extends {}> = TObj & { imodelKey?: string };
 
 export async function createKeySetFromSelectables(selectables: Selectables): Promise<KeySet> {

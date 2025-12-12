@@ -1,6 +1,6 @@
 {
   "name": "@itwin/presentation-testing",
-  "version": "5.4.11-alpha.0",
+  "version": "5.4.11",
   "description": "Testing utilities for iTwin.js Presentation library",
   "license": "MIT",
   "repository": {
@@ -68,6 +68,7 @@
     "@itwin/core-bentley": "catalog:itwinjs-core-dev",
     "@itwin/core-common": "catalog:itwinjs-core-dev",
     "@itwin/core-frontend": "catalog:itwinjs-core-dev",
+    "@itwin/core-orbitgt": "catalog:itwinjs-core-dev",
     "@itwin/eslint-plugin": "catalog:build-tools",
     "@itwin/itwinui-react": "catalog:itwinui",
     "@itwin/presentation-backend": "catalog:itwinjs-core-dev",
