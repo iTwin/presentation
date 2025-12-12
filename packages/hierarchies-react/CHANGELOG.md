@@ -1,5 +1,15 @@
 # @itwin/presentation-hierarchies-react
 
+## 2.0.0-alpha.47
+
+### Patch Changes
+
+- [#1142](https://github.com/iTwin/presentation/pull/1142): Bump dependencies.
+- [#1142](https://github.com/iTwin/presentation/pull/1142): Fix `StrataKitTreeRenderer` getting into infinite React render loop.
+- Updated dependencies:
+  - @itwin/presentation-hierarchies@2.0.0-alpha.8
+  - @itwin/presentation-shared@2.0.0-alpha.5
+
 ## 2.0.0-alpha.46
 
 ### Minor Changes
