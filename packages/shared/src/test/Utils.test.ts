@@ -38,8 +38,17 @@ describe("normalizeFullClassName", () => {
 
 describe("compareFullClassNames", () => {
   it("detects differences", () => {
-    expect(compareFullClassNames("schema.class", "schema2.class")).to.be.lessThan(0);
-    expect(compareFullClassNames("schema.class2", "schema.class")).to.be.greaterThan(0);
+    const differentSchemaCompare = compareFullClassNames("schema.class", "schema2.class");
+    const differentSchemaCompareInverted = compareFullClassNames("schema2.class", "schema.class");
+    expect(differentSchemaCompare).to.not.eq(0);
+    expect(differentSchemaCompareInverted).to.not.eq(0);
+    expect(differentSchemaCompareInverted).to.eq(differentSchemaCompare * -1);
+
+    const differentClassCompare = compareFullClassNames("schema.class", "schema.class2");
+    const differentClassCompareInverted = compareFullClassNames("schema.class2", "schema.class");
+    expect(differentClassCompare).to.not.eq(0);
+    expect(differentClassCompareInverted).to.not.eq(0);
+    expect(differentClassCompareInverted).to.eq(differentClassCompare * -1);
   });
 
   it("compares full class names in a case-insensitive way", () => {
