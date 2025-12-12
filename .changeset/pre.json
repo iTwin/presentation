@@ -23,6 +23,7 @@
     "@itwin/unified-selection-react": "1.0.0"
   },
   "changesets": [
+    "all-meals-fetch",
     "angry-wings-accept",
     "breezy-rockets-throw",
     "brown-peaches-smash",
@@ -70,6 +71,7 @@
     "odd-poems-follow",
     "old-rivers-smell",
     "olive-meals-move",
+    "open-masks-behave",
     "plain-impalas-hunt",
     "plenty-boats-judge",
     "proud-jeans-bow",
