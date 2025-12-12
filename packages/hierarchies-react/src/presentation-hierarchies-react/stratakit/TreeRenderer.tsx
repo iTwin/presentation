@@ -124,7 +124,7 @@ export function StrataKitTreeRenderer({
   const virtualizer = useVirtualizer({
     count: flatItems.length,
     getScrollElement: () => parentRef.current,
-    getItemKey: (index) => flatItems[index].id,
+    getItemKey: useCallback((index: number) => flatItems[index].id, [flatItems]),
     estimateSize: () => 28,
     overscan: 10,
   });
