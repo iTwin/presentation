@@ -903,14 +903,8 @@ function mergeNodes(source: ObservableInput<MergeNodesInput>) {
   );
 }
 function mergeSearchProps(primary: SourceHierarchyNode["search"], secondary: SourceHierarchyNode["search"]): SourceHierarchyNode["search"] {
-  if (!primary && !secondary) {
-    return undefined;
-  }
-  if (!primary) {
-    return secondary;
-  }
-  if (!secondary) {
-    return primary;
+  if (!primary || !secondary) {
+    return primary ?? secondary;
   }
 
   const hasSearchTargetAncestor = primary.hasSearchTargetAncestor || secondary.hasSearchTargetAncestor;
