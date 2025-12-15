@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { expect } from "chai";
-import { HierarchySearchPath, HierarchySearchPathOptions } from "../hierarchies/HierarchySearch.js";
+import { createHierarchySearchHelper, HierarchySearchPath, HierarchySearchPathOptions } from "../hierarchies/HierarchySearch.js";
 
 describe("HierarchySearchPath", () => {
   describe("mergeOptions", () => {
@@ -44,6 +44,97 @@ describe("HierarchySearchPath", () => {
         expect(HierarchySearchPath.mergeOptions(undefined, { autoExpand: true })).to.deep.eq({ autoExpand: true });
         expect(HierarchySearchPath.mergeOptions(undefined, { autoExpand: false })).to.eq(undefined);
         expect(HierarchySearchPath.mergeOptions(undefined, undefined)).to.eq(undefined);
+      });
+    });
+  });
+});
+
+describe("createHierarchySearchHelper", () => {
+  describe("createChildNodeProps", () => {
+    it("returns undefined child node props when parent node and search paths are undefined", () => {
+      const result = createHierarchySearchHelper(undefined, undefined).createChildNodeProps({
+        parentKeys: [],
+        asyncPathMatcher: async () => true,
+      });
+      expect(result).to.be.undefined;
+    });
+
+    it("returns undefined child node props when parent node has no search set and search paths are empty", () => {
+      const result = createHierarchySearchHelper([], { search: undefined }).createChildNodeProps({
+        parentKeys: [],
+        asyncPathMatcher: async () => true,
+      });
+      expect(result).to.be.undefined;
+    });
+
+    it("returns correct child node props when parent node has no search target paths but has a search target ancestor set and search paths are empty", () => {
+      const result = createHierarchySearchHelper([], { search: { childrenTargetPaths: undefined, hasSearchTargetAncestor: true } }).createChildNodeProps({
+        parentKeys: [],
+        asyncPathMatcher: async () => true,
+      });
+      expect(result).to.deep.eq({ search: { hasSearchTargetAncestor: true } });
+    });
+
+    it("returns correct child node props when parent node has generic node target path", () => {
+      const result = createHierarchySearchHelper([], {
+        search: { childrenTargetPaths: [[{ type: "generic", id: "test" }]], hasSearchTargetAncestor: true },
+      }).createChildNodeProps({
+        parentKeys: [],
+        nodeKey: { type: "generic", id: "test" },
+      });
+
+      expect(result).to.deep.eq({
+        search: {
+          hasSearchTargetAncestor: true,
+          isSearchTarget: true,
+          searchTargetOptions: undefined,
+        },
+      });
+    });
+
+    it("returns correct child node props when parent node has instance node target path", () => {
+      const result = createHierarchySearchHelper([], {
+        search: { childrenTargetPaths: [[{ imodelKey: "a", className: "test:className", id: "id" }]], hasSearchTargetAncestor: true },
+      }).createChildNodeProps({
+        parentKeys: [],
+        nodeKey: { type: "instances", instanceKeys: [{ imodelKey: "test", className: "test:className", id: "id" }] },
+      });
+
+      expect(result).to.deep.eq({
+        search: {
+          hasSearchTargetAncestor: true,
+        },
+      });
+    });
+
+    it("returns empty child paths props when parent node has target paths, but has no target ancestor", () => {
+      const result = createHierarchySearchHelper([], {
+        search: { childrenTargetPaths: [[{ type: "generic", id: "test" }]], hasSearchTargetAncestor: false },
+      }).createChildNodeProps({
+        parentKeys: [],
+        pathMatcher: () => false,
+      });
+
+      expect(result).to.deep.eq({});
+    });
+
+    it("returns correct child node props when provided paths have reveal = `false`, autoExpand = `true`", () => {
+      const result = createHierarchySearchHelper(
+        [{ path: [{ type: "generic", id: "test" }], options: { reveal: false, autoExpand: true } }],
+        undefined,
+      ).createChildNodeProps({
+        parentKeys: [],
+        pathMatcher: () => true,
+      });
+
+      expect(result).to.deep.eq({
+        autoExpand: true,
+        search: {
+          isSearchTarget: true,
+          searchTargetOptions: {
+            autoExpand: true,
+          },
+        },
       });
     });
   });
