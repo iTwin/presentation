@@ -209,7 +209,7 @@ export namespace NodeValidators {
         if (props.className && node.key.className !== props.className) {
           throw new Error(`[${node.label}] Expected node to represent class "${props.className}", got "${node.key.className}"`);
         }
-        validateGroupingNodeAttributes(node as GroupingHierarchyNode, props);
+        validateGroupingNodeAttributes(node, props);
       },
       ...("children" in props ? { children: props.children } : undefined),
       ...("childrenUnordered" in props ? { childrenUnordered: props.childrenUnordered } : undefined),
@@ -233,7 +233,7 @@ export namespace NodeValidators {
         if (props.groupId && node.key.groupId !== props.groupId) {
           throw new Error(`[${node.label}] Expected node to have groupId = ${JSON.stringify(props.groupId)}, got ${JSON.stringify(node.key.groupId)}`);
         }
-        validateGroupingNodeAttributes(node as GroupingHierarchyNode, props);
+        validateGroupingNodeAttributes(node, props);
       },
       ...("children" in props ? { children: props.children } : undefined),
       ...("childrenUnordered" in props ? { childrenUnordered: props.childrenUnordered } : undefined),
@@ -243,10 +243,10 @@ export namespace NodeValidators {
   export function createForPropertyOtherValuesGroupingNode(props: GroupingNodeExpectations) {
     return {
       node: (node: HierarchyNode) => {
-        if (node.key.type !== "property-grouping:other") {
+        if (!HierarchyNode.isPropertyOtherValuesGroupingNode(node)) {
           throw new Error(`[${node.label}] Expected a property other values grouping node, got "${node.key.type}"`);
         }
-        validateGroupingNodeAttributes(node as GroupingHierarchyNode, props);
+        validateGroupingNodeAttributes(node, props);
       },
       ...("children" in props ? { children: props.children } : undefined),
       ...("childrenUnordered" in props ? { childrenUnordered: props.childrenUnordered } : undefined),
@@ -263,7 +263,7 @@ export namespace NodeValidators {
   ) {
     return {
       node: (node: HierarchyNode) => {
-        if (node.key.type !== "property-grouping:range") {
+        if (!HierarchyNode.isPropertyValueRangeGroupingNode(node)) {
           throw new Error(`[${node.label}] Expected a property value range grouping node, got "${node.key.type}"`);
         }
         if (props.propertyName && node.key.propertyName !== props.propertyName) {
@@ -278,7 +278,7 @@ export namespace NodeValidators {
         if (props.toValue && node.key.toValue !== props.toValue) {
           throw new Error(`[${node.label}] Expected node to have toValue "${props.toValue}", got "${node.key.toValue}"`);
         }
-        validateGroupingNodeAttributes(node as GroupingHierarchyNode, props);
+        validateGroupingNodeAttributes(node, props);
       },
       ...("children" in props ? { children: props.children } : undefined),
       ...("childrenUnordered" in props ? { childrenUnordered: props.childrenUnordered } : undefined),
@@ -294,7 +294,7 @@ export namespace NodeValidators {
   ) {
     return {
       node: (node: HierarchyNode) => {
-        if (node.key.type !== "property-grouping:value") {
+        if (!HierarchyNode.isPropertyValueGroupingNode(node)) {
           throw new Error(`[${node.label}] Expected a property value grouping node, got "${node.key.type}"`);
         }
         if (props.propertyName && node.key.propertyName !== props.propertyName) {
@@ -308,7 +308,7 @@ export namespace NodeValidators {
             `[${node.label}] Expected node to have formattedPropertyValue "${props.formattedPropertyValue}", got "${node.key.formattedPropertyValue}"`,
           );
         }
-        validateGroupingNodeAttributes(node as GroupingHierarchyNode, props);
+        validateGroupingNodeAttributes(node, props);
       },
       ...("children" in props ? { children: props.children } : undefined),
       ...("childrenUnordered" in props ? { childrenUnordered: props.childrenUnordered } : undefined),
