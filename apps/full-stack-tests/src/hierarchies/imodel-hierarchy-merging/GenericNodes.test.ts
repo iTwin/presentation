@@ -6,7 +6,7 @@
 import { createMergedIModelHierarchyProvider } from "@itwin/presentation-hierarchies";
 import { initialize, terminate } from "../../IntegrationTests.js";
 import { NodeValidators, validateHierarchy } from "../HierarchyValidation.js";
-import { createChangedDbs, createHierarchyDefinitionFactory, createMergedHierarchyProvider, importXYZSchema } from "./HierarchiesMerging.js";
+import { createChangedDbs, createHierarchyDefinitionFactory, createMergedHierarchyProvider, importXYZSchema, pickAndTransform } from "./HierarchiesMerging.js";
 
 describe("Hierarchies", () => {
   before(async function () {
@@ -23,25 +23,33 @@ describe("Hierarchies", () => {
         return createChangedDbs(
           mochaContext,
           async (builder) => {
-            const schema = await importXYZSchema(builder);
-            const x = builder.insertInstance(schema.items.X.fullName, { ["Label"]: "x" });
-            const y1 = builder.insertInstance(schema.items.Y.fullName, { ["Label"]: "y1" });
-            builder.insertRelationship(schema.items.XY.fullName, x.id, y1.id);
-            return { schema, x, y1 };
+            const xyzSchema = await importXYZSchema(builder);
+            const x = builder.insertInstance(xyzSchema.items.X.fullName, { ["Label"]: "x" });
+            const y1 = builder.insertInstance(xyzSchema.items.Y.fullName, { ["Label"]: "y1" });
+            builder.insertRelationship(xyzSchema.items.XY.fullName, x.id, y1.id);
+            return { xyzSchema, x, y1 };
           },
           async (builder, base) => {
-            const y2 = builder.insertInstance(base.schema.items.Y.fullName, { ["Label"]: "y2" });
-            builder.insertRelationship(base.schema.items.XY.fullName, base.x.id, y2.id);
+            const y2 = builder.insertInstance(base.xyzSchema.items.Y.fullName, { ["Label"]: "y2" });
+            builder.insertRelationship(base.xyzSchema.items.XY.fullName, base.x.id, y2.id);
             return { ...base, y2 };
           },
         );
       }
 
       let dbs: Awaited<ReturnType<typeof setupDbs>>;
+      let keys: {
+        base: Omit<typeof dbs.base, "ecdb" | "ecdbPath" | "xyzSchema">;
+        changeset1: Omit<typeof dbs.changeset1, "ecdb" | "ecdbPath" | "xyzSchema" | "qSchema">;
+      };
       let provider: ReturnType<typeof createMergedIModelHierarchyProvider>;
 
       before(async function () {
         dbs = await setupDbs(this);
+        keys = {
+          base: pickAndTransform(dbs.base, ["x", "y1"], (_, value) => ({ ...value, imodelKey: "base" })),
+          changeset1: pickAndTransform(dbs.changeset1, ["x", "y1", "y2"], (_, value) => ({ ...value, imodelKey: "changeset1" })),
+        };
       });
 
       after(async () => {
@@ -61,7 +69,7 @@ describe("Hierarchies", () => {
             },
           ],
           createHierarchyDefinition: createHierarchyDefinitionFactory({
-            schema: dbs.base.schema,
+            schema: dbs.base.xyzSchema,
             createGenericNodeForY: true,
           }),
         });
@@ -73,10 +81,7 @@ describe("Hierarchies", () => {
           expect: [
             NodeValidators.createForInstanceNode({
               label: "x",
-              instanceKeys: [
-                { ...dbs.base.x, imodelKey: "base" },
-                { ...dbs.changeset1.x, imodelKey: "changeset1" },
-              ],
+              instanceKeys: [keys.base.x, keys.changeset1.x],
               children: [
                 NodeValidators.createForGenericNode({
                   label: "Y elements",
@@ -85,15 +90,12 @@ describe("Hierarchies", () => {
                     // exists in both imodels
                     NodeValidators.createForInstanceNode({
                       label: "y1",
-                      instanceKeys: [
-                        { ...dbs.base.y1, imodelKey: "base" },
-                        { ...dbs.changeset1.y1, imodelKey: "changeset1" },
-                      ],
+                      instanceKeys: [keys.base.y1, keys.changeset1.y1],
                     }),
                     // exists only in the second imodel
                     NodeValidators.createForInstanceNode({
                       label: "y2",
-                      instanceKeys: [{ ...dbs.changeset1.y2, imodelKey: "changeset1" }],
+                      instanceKeys: [keys.changeset1.y2],
                     }),
                   ],
                 }),
@@ -107,16 +109,8 @@ describe("Hierarchies", () => {
         it("creates hierarchy when targeting instances from both imodels", async () => {
           provider.setHierarchySearch({
             paths: [
-              [
-                { ...dbs.base.x, imodelKey: "base" },
-                { type: "generic", id: "y-elements" },
-                { ...dbs.base.y1, imodelKey: "base" },
-              ],
-              [
-                { ...dbs.changeset1.x, imodelKey: "changeset1" },
-                { type: "generic", id: "y-elements" },
-                { ...dbs.changeset1.y2, imodelKey: "changeset1" },
-              ],
+              [keys.base.x, { type: "generic", id: "y-elements" }, keys.base.y1],
+              [keys.changeset1.x, { type: "generic", id: "y-elements" }, keys.changeset1.y2],
             ],
           });
           await validateHierarchy({
@@ -124,10 +118,7 @@ describe("Hierarchies", () => {
             expect: [
               NodeValidators.createForInstanceNode({
                 label: "x",
-                instanceKeys: [
-                  { ...dbs.base.x, imodelKey: "base" },
-                  { ...dbs.changeset1.x, imodelKey: "changeset1" },
-                ],
+                instanceKeys: [keys.base.x, keys.changeset1.x],
                 children: [
                   NodeValidators.createForGenericNode({
                     label: "Y elements",
@@ -136,12 +127,12 @@ describe("Hierarchies", () => {
                       // exists in both imodels
                       NodeValidators.createForInstanceNode({
                         label: "y1",
-                        instanceKeys: [{ ...dbs.base.y1, imodelKey: "base" }],
+                        instanceKeys: [keys.base.y1],
                       }),
                       // exists only in the second imodel
                       NodeValidators.createForInstanceNode({
                         label: "y2",
-                        instanceKeys: [{ ...dbs.changeset1.y2, imodelKey: "changeset1" }],
+                        instanceKeys: [keys.changeset1.y2],
                       }),
                     ],
                   }),
@@ -153,20 +144,14 @@ describe("Hierarchies", () => {
 
         it("creates hierarchy when targeting instances from base imodel", async () => {
           provider.setHierarchySearch({
-            paths: [
-              [
-                { ...dbs.base.x, imodelKey: "base" },
-                { type: "generic", id: "y-elements" },
-                { ...dbs.base.y1, imodelKey: "base" },
-              ],
-            ],
+            paths: [[keys.base.x, { type: "generic", id: "y-elements" }, keys.base.y1]],
           });
           await validateHierarchy({
             provider,
             expect: [
               NodeValidators.createForInstanceNode({
                 label: "x",
-                instanceKeys: [{ ...dbs.base.x, imodelKey: "base" }],
+                instanceKeys: [keys.base.x],
                 children: [
                   NodeValidators.createForGenericNode({
                     label: "Y elements",
@@ -174,7 +159,7 @@ describe("Hierarchies", () => {
                     children: [
                       NodeValidators.createForInstanceNode({
                         label: "y1",
-                        instanceKeys: [{ ...dbs.base.y1, imodelKey: "base" }],
+                        instanceKeys: [keys.base.y1],
                       }),
                     ],
                   }),
@@ -187,16 +172,8 @@ describe("Hierarchies", () => {
         it("creates hierarchy when targeting instances from changeset1 imodel", async () => {
           provider.setHierarchySearch({
             paths: [
-              [
-                { ...dbs.changeset1.x, imodelKey: "changeset1" },
-                { type: "generic", id: "y-elements" },
-                { ...dbs.changeset1.y1, imodelKey: "changeset1" },
-              ],
-              [
-                { ...dbs.changeset1.x, imodelKey: "changeset1" },
-                { type: "generic", id: "y-elements" },
-                { ...dbs.changeset1.y2, imodelKey: "changeset1" },
-              ],
+              [keys.changeset1.x, { type: "generic", id: "y-elements" }, keys.changeset1.y1],
+              [keys.changeset1.x, { type: "generic", id: "y-elements" }, keys.changeset1.y2],
             ],
           });
           await validateHierarchy({
@@ -204,7 +181,7 @@ describe("Hierarchies", () => {
             expect: [
               NodeValidators.createForInstanceNode({
                 label: "x",
-                instanceKeys: [{ ...dbs.changeset1.x, imodelKey: "changeset1" }],
+                instanceKeys: [keys.changeset1.x],
                 children: [
                   NodeValidators.createForGenericNode({
                     label: "Y elements",
@@ -212,11 +189,11 @@ describe("Hierarchies", () => {
                     children: [
                       NodeValidators.createForInstanceNode({
                         label: "y1",
-                        instanceKeys: [{ ...dbs.changeset1.y1, imodelKey: "changeset1" }],
+                        instanceKeys: [keys.changeset1.y1],
                       }),
                       NodeValidators.createForInstanceNode({
                         label: "y2",
-                        instanceKeys: [{ ...dbs.changeset1.y2, imodelKey: "changeset1" }],
+                        instanceKeys: [keys.changeset1.y2],
                       }),
                     ],
                   }),

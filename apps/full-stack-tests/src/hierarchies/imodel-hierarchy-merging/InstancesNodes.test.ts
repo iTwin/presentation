@@ -7,7 +7,14 @@ import { omit } from "@itwin/core-bentley";
 import { createMergedIModelHierarchyProvider } from "@itwin/presentation-hierarchies";
 import { initialize, terminate } from "../../IntegrationTests.js";
 import { NodeValidators, validateHierarchy } from "../HierarchyValidation.js";
-import { createChangedDbs, createHierarchyDefinitionFactory, createMergedHierarchyProvider, importQSchema, importXYZSchema } from "./HierarchiesMerging.js";
+import {
+  createChangedDbs,
+  createHierarchyDefinitionFactory,
+  createMergedHierarchyProvider,
+  importQSchema,
+  importXYZSchema,
+  pickAndTransform,
+} from "./HierarchiesMerging.js";
 
 describe("Hierarchies", () => {
   before(async function () {
@@ -38,18 +45,29 @@ describe("Hierarchies", () => {
             const qSchema = await importQSchema(builder);
             builder.deleteInstance(base.y2);
             builder.updateInstance(base.y3, { ["Label"]: "y3-updated" });
-            const q = builder.insertInstance(qSchema.items.Q.fullName, { ["Label"]: "q" });
-            builder.insertRelationship(base.xyzSchema.items.XY.fullName, base.x.id, q.id);
-            return { ...omit(base, ["y2"]), qSchema, q };
+            const q1 = builder.insertInstance(qSchema.items.Q.fullName, { ["Label"]: "q1" });
+            builder.insertRelationship(base.xyzSchema.items.XY.fullName, base.x.id, q1.id);
+            const w = builder.insertInstance(qSchema.items.W.fullName, { ["Label"]: "w" });
+            const q2 = builder.insertInstance(qSchema.items.Q.fullName, { ["Label"]: "q2" });
+            builder.insertRelationship(base.xyzSchema.items.XY.fullName, w.id, q2.id);
+            return { ...omit(base, ["y2"]), qSchema, w, q1, q2 };
           },
         );
       }
 
       let dbs: Awaited<ReturnType<typeof setupDbs>>;
+      let keys: {
+        base: Omit<typeof dbs.base, "ecdb" | "ecdbPath" | "xyzSchema">;
+        changeset1: Omit<typeof dbs.changeset1, "ecdb" | "ecdbPath" | "xyzSchema" | "qSchema">;
+      };
       let provider: ReturnType<typeof createMergedIModelHierarchyProvider>;
 
       before(async function () {
         dbs = await setupDbs(this);
+        keys = {
+          base: pickAndTransform(dbs.base, ["x", "y1", "y2", "y3"], (_, value) => ({ ...value, imodelKey: "base" })),
+          changeset1: pickAndTransform(dbs.changeset1, ["x", "y1", "y3", "w", "q1", "q2"], (_, value) => ({ ...value, imodelKey: "changeset1" })),
+        };
       });
 
       after(async () => {
@@ -78,38 +96,141 @@ describe("Hierarchies", () => {
         await validateHierarchy({
           provider,
           expect: [
+            // the whole branch exists only in the second imodel, also comes from schema that also exists only in the second imodel
+            NodeValidators.createForInstanceNode({
+              label: "w",
+              children: [
+                NodeValidators.createForInstanceNode({
+                  label: "q2",
+                  instanceKeys: [keys.changeset1.q2],
+                }),
+              ],
+            }),
             NodeValidators.createForInstanceNode({
               label: "x",
               children: [
                 // exists only in the second imodel, also comes from schema that also exists only in the second imodel
                 NodeValidators.createForInstanceNode({
-                  label: "q",
-                  instanceKeys: [{ ...dbs.changeset1.q, imodelKey: "changeset1" }],
+                  label: "q1",
+                  instanceKeys: [keys.changeset1.q1],
                 }),
                 // exists in both imodels
                 NodeValidators.createForInstanceNode({
                   label: "y1",
-                  instanceKeys: [
-                    { ...dbs.changeset1.y1, imodelKey: "changeset1" },
-                    { ...dbs.base.y1, imodelKey: "base" },
-                  ],
+                  instanceKeys: [keys.changeset1.y1, keys.base.y1],
                 }),
                 // exists only in the first imodel
                 NodeValidators.createForInstanceNode({
                   label: "y2",
-                  instanceKeys: [{ ...dbs.base.y2, imodelKey: "base" }],
+                  instanceKeys: [keys.base.y2],
                 }),
                 // exists in both, but have different values
                 NodeValidators.createForInstanceNode({
                   label: "y3-updated",
-                  instanceKeys: [
-                    { ...dbs.changeset1.y3, imodelKey: "changeset1" },
-                    { ...dbs.base.y3, imodelKey: "base" },
-                  ],
+                  instanceKeys: [keys.changeset1.y3, keys.base.y3],
                 }),
               ],
             }),
           ],
+        });
+      });
+
+      describe("Hierarchy search", () => {
+        it("creates hierarchy when targeting all instances from both imodels", async () => {
+          provider.setHierarchySearch({
+            paths: [
+              [keys.base.x],
+              [keys.base.x, keys.base.y1],
+              [keys.base.x, keys.base.y2],
+              [keys.base.x, keys.base.y3],
+              [keys.changeset1.x],
+              [keys.changeset1.x, keys.changeset1.y1],
+              [keys.changeset1.x, keys.changeset1.y3],
+              [keys.changeset1.x, keys.changeset1.q1],
+              [keys.changeset1.w],
+              [keys.changeset1.w, keys.changeset1.q2],
+            ],
+          });
+          await validateHierarchy({
+            provider,
+            expect: [
+              // the whole branch exists only in the second imodel, also comes from schema that also exists only in the second imodel
+              NodeValidators.createForInstanceNode({
+                label: "w",
+                children: [
+                  NodeValidators.createForInstanceNode({
+                    label: "q2",
+                    instanceKeys: [keys.changeset1.q2],
+                  }),
+                ],
+              }),
+              NodeValidators.createForInstanceNode({
+                label: "x",
+                children: [
+                  // exists only in the second imodel, also comes from schema that also exists only in the second imodel
+                  NodeValidators.createForInstanceNode({
+                    label: "q1",
+                    instanceKeys: [keys.changeset1.q1],
+                  }),
+                  // exists in both imodels
+                  NodeValidators.createForInstanceNode({
+                    label: "y1",
+                    instanceKeys: [keys.changeset1.y1, keys.base.y1],
+                  }),
+                  // exists only in the first imodel
+                  NodeValidators.createForInstanceNode({
+                    label: "y2",
+                    instanceKeys: [keys.base.y2],
+                  }),
+                  // exists in both, but have different values
+                  NodeValidators.createForInstanceNode({
+                    label: "y3-updated",
+                    instanceKeys: [keys.changeset1.y3, keys.base.y3],
+                  }),
+                ],
+              }),
+            ],
+          });
+        });
+
+        it("creates hierarchy when targeting instances from different imodels", async () => {
+          provider.setHierarchySearch({
+            paths: [
+              [keys.base.x, keys.base.y2],
+              [keys.changeset1.x, keys.changeset1.q1],
+              [keys.changeset1.w, keys.changeset1.q2],
+            ],
+          });
+          await validateHierarchy({
+            provider,
+            expect: [
+              // the whole branch exists only in the second imodel, also comes from schema that also exists only in the second imodel
+              NodeValidators.createForInstanceNode({
+                label: "w",
+                children: [
+                  NodeValidators.createForInstanceNode({
+                    label: "q2",
+                    instanceKeys: [keys.changeset1.q2],
+                  }),
+                ],
+              }),
+              NodeValidators.createForInstanceNode({
+                label: "x",
+                children: [
+                  // exists only in the second imodel, also comes from schema that also exists only in the second imodel
+                  NodeValidators.createForInstanceNode({
+                    label: "q1",
+                    instanceKeys: [keys.changeset1.q1],
+                  }),
+                  // exists only in the first imodel
+                  NodeValidators.createForInstanceNode({
+                    label: "y2",
+                    instanceKeys: [keys.base.y2],
+                  }),
+                ],
+              }),
+            ],
+          });
         });
       });
     });

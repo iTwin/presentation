@@ -8,7 +8,7 @@ import { omit } from "@itwin/core-bentley";
 import { createMergedIModelHierarchyProvider } from "@itwin/presentation-hierarchies";
 import { initialize, terminate } from "../../IntegrationTests.js";
 import { NodeValidators, validateHierarchy } from "../HierarchyValidation.js";
-import { createChangedDbs, createHierarchyDefinitionFactory, createMergedHierarchyProvider, importXYZSchema } from "./HierarchiesMerging.js";
+import { createChangedDbs, createHierarchyDefinitionFactory, createMergedHierarchyProvider, importXYZSchema, pickAndTransform } from "./HierarchiesMerging.js";
 
 describe("Hierarchies", () => {
   before(async function () {
@@ -26,31 +26,39 @@ describe("Hierarchies", () => {
           return createChangedDbs(
             mochaContext,
             async (builder) => {
-              const schema = await importXYZSchema(builder);
-              const x = builder.insertInstance(schema.items.X.fullName, { ["Label"]: "x" });
-              const y1 = builder.insertInstance(schema.items.Y.fullName, { ["Label"]: "y1" });
-              builder.insertRelationship(schema.items.XY.fullName, x.id, y1.id);
-              const y2 = builder.insertInstance(schema.items.Y.fullName, { ["Label"]: "y2" });
-              builder.insertRelationship(schema.items.XY.fullName, x.id, y2.id);
-              const y3 = builder.insertInstance(schema.items.Y.fullName, { ["Label"]: "y3" });
-              builder.insertRelationship(schema.items.XY.fullName, x.id, y3.id);
-              return { schema, x, y1, y2, y3 };
+              const xyzSchema = await importXYZSchema(builder);
+              const x = builder.insertInstance(xyzSchema.items.X.fullName, { ["Label"]: "x" });
+              const y1 = builder.insertInstance(xyzSchema.items.Y.fullName, { ["Label"]: "y1" });
+              builder.insertRelationship(xyzSchema.items.XY.fullName, x.id, y1.id);
+              const y2 = builder.insertInstance(xyzSchema.items.Y.fullName, { ["Label"]: "y2" });
+              builder.insertRelationship(xyzSchema.items.XY.fullName, x.id, y2.id);
+              const y3 = builder.insertInstance(xyzSchema.items.Y.fullName, { ["Label"]: "y3" });
+              builder.insertRelationship(xyzSchema.items.XY.fullName, x.id, y3.id);
+              return { xyzSchema, x, y1, y2, y3 };
             },
             async (builder, base) => {
               builder.deleteInstance(base.y2);
               builder.updateInstance(base.y3, { ["Label"]: "y3-updated" });
-              const y4 = builder.insertInstance(base.schema.items.Y.fullName, { ["Label"]: "y4" });
-              builder.insertRelationship(base.schema.items.XY.fullName, base.x.id, y4.id);
+              const y4 = builder.insertInstance(base.xyzSchema.items.Y.fullName, { ["Label"]: "y4" });
+              builder.insertRelationship(base.xyzSchema.items.XY.fullName, base.x.id, y4.id);
               return { ...omit(base, ["y2"]), y4 };
             },
           );
         }
 
         let dbs: Awaited<ReturnType<typeof setupDbs>>;
+        let keys: {
+          base: Omit<typeof dbs.base, "ecdb" | "ecdbPath" | "xyzSchema">;
+          changeset1: Omit<typeof dbs.changeset1, "ecdb" | "ecdbPath" | "xyzSchema" | "qSchema">;
+        };
         let provider: ReturnType<typeof createMergedIModelHierarchyProvider>;
 
         before(async function () {
           dbs = await setupDbs(this);
+          keys = {
+            base: pickAndTransform(dbs.base, ["x", "y1", "y2", "y3"], (_, value) => ({ ...value, imodelKey: "base" })),
+            changeset1: pickAndTransform(dbs.changeset1, ["x", "y1", "y3", "y4"], (_, value) => ({ ...value, imodelKey: "changeset1" })),
+          };
         });
 
         after(async () => {
@@ -70,7 +78,7 @@ describe("Hierarchies", () => {
               },
             ],
             createHierarchyDefinition: createHierarchyDefinitionFactory({
-              schema: dbs.base.schema,
+              schema: dbs.base.xyzSchema,
               createYGroupingParams: () => ({ byClass: true }),
             }),
           });
@@ -85,36 +93,23 @@ describe("Hierarchies", () => {
                 children: [
                   NodeValidators.createForClassGroupingNode({
                     label: "Y",
-                    groupedInstanceKeys: [
-                      { ...dbs.base.y1, imodelKey: "base" },
-                      { ...dbs.base.y2, imodelKey: "base" },
-                      { ...dbs.base.y3, imodelKey: "base" },
-                      { ...dbs.changeset1.y1, imodelKey: "changeset1" },
-                      { ...dbs.changeset1.y3, imodelKey: "changeset1" },
-                      { ...dbs.changeset1.y4, imodelKey: "changeset1" },
-                    ],
+                    groupedInstanceKeys: [keys.base.y1, keys.base.y2, keys.base.y3, keys.changeset1.y1, keys.changeset1.y3, keys.changeset1.y4],
                     children: [
                       NodeValidators.createForInstanceNode({
                         label: "y1",
-                        instanceKeys: [
-                          { ...dbs.changeset1.y1, imodelKey: "changeset1" },
-                          { ...dbs.base.y1, imodelKey: "base" },
-                        ],
+                        instanceKeys: [keys.changeset1.y1, keys.base.y1],
                       }),
                       NodeValidators.createForInstanceNode({
                         label: "y2",
-                        instanceKeys: [{ ...dbs.base.y2, imodelKey: "base" }],
+                        instanceKeys: [keys.base.y2],
                       }),
                       NodeValidators.createForInstanceNode({
                         label: "y3-updated",
-                        instanceKeys: [
-                          { ...dbs.changeset1.y3, imodelKey: "changeset1" },
-                          { ...dbs.base.y3, imodelKey: "base" },
-                        ],
+                        instanceKeys: [keys.changeset1.y3, keys.base.y3],
                       }),
                       NodeValidators.createForInstanceNode({
                         label: "y4",
-                        instanceKeys: [{ ...dbs.changeset1.y4, imodelKey: "changeset1" }],
+                        instanceKeys: [keys.changeset1.y4],
                       }),
                     ],
                   }),
@@ -143,6 +138,10 @@ describe("Hierarchies", () => {
             return { ...omit(base, ["y1"]), y2 };
           },
         );
+        const keys = {
+          base: pickAndTransform(dbs.base, ["x", "y1"], (_, value) => ({ ...value, imodelKey: "base" })),
+          changeset1: pickAndTransform(dbs.changeset1, ["x", "y2"], (_, value) => ({ ...value, imodelKey: "changeset1" })),
+        };
 
         await validateHierarchy({
           provider: createMergedHierarchyProvider({
@@ -169,18 +168,15 @@ describe("Hierarchies", () => {
               children: [
                 NodeValidators.createForClassGroupingNode({
                   label: "Y",
-                  groupedInstanceKeys: [
-                    { ...dbs.base.y1, imodelKey: "base" },
-                    { ...dbs.changeset1.y2, imodelKey: "changeset1" },
-                  ],
+                  groupedInstanceKeys: [keys.base.y1, keys.changeset1.y2],
                   children: [
                     NodeValidators.createForInstanceNode({
                       label: "y1",
-                      instanceKeys: [{ ...dbs.base.y1, imodelKey: "base" }],
+                      instanceKeys: [keys.base.y1],
                     }),
                     NodeValidators.createForInstanceNode({
                       label: "y2",
-                      instanceKeys: [{ ...dbs.changeset1.y2, imodelKey: "changeset1" }],
+                      instanceKeys: [keys.changeset1.y2],
                     }),
                   ],
                 }),
@@ -208,6 +204,10 @@ describe("Hierarchies", () => {
             return { ...omit(base, ["y1"]), z };
           },
         );
+        const keys = {
+          base: pickAndTransform(dbs.base, ["x", "y1"], (_, value) => ({ ...value, imodelKey: "base" })),
+          changeset1: pickAndTransform(dbs.changeset1, ["x", "z"], (_, value) => ({ ...value, imodelKey: "changeset1" })),
+        };
 
         await validateHierarchy({
           provider: createMergedHierarchyProvider({
@@ -234,17 +234,17 @@ describe("Hierarchies", () => {
               children: [
                 NodeValidators.createForClassGroupingNode({
                   label: "Y",
-                  groupedInstanceKeys: [{ ...dbs.base.y1, imodelKey: "base" }],
+                  groupedInstanceKeys: [keys.base.y1],
                   children: [
                     NodeValidators.createForInstanceNode({
                       label: "y1",
-                      instanceKeys: [{ ...dbs.base.y1, imodelKey: "base" }],
+                      instanceKeys: [keys.base.y1],
                     }),
                   ],
                 }),
                 NodeValidators.createForInstanceNode({
                   label: "z",
-                  instanceKeys: [{ ...dbs.changeset1.z, imodelKey: "changeset1" }],
+                  instanceKeys: [keys.changeset1.z],
                 }),
               ],
             }),

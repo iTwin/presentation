@@ -135,6 +135,11 @@ export async function importXYZSchema(target: ECDbBuilder) {
     target,
     `
       <ECEntityClass typeName="X">
+        <ECCustomAttributes>
+            <ClassMap xmlns="ECDbMap.02.00.04">
+                <MapStrategy>TablePerHierarchy</MapStrategy>
+            </ClassMap>
+        </ECCustomAttributes>
         <ECProperty propertyName="Label" typeName="string" />
         <ECProperty propertyName="PropX" typeName="int" />
       </ECEntityClass>
@@ -182,6 +187,10 @@ export async function importQSchema(target: ECDbBuilder) {
       <ECEntityClass typeName="Q">
         <BaseClass>xyz:Y</BaseClass>
         <ECProperty propertyName="PropQ" typeName="int" />
+      </ECEntityClass>
+      <ECEntityClass typeName="W">
+        <BaseClass>xyz:X</BaseClass>
+        <ECProperty propertyName="PropW" typeName="int" />
       </ECEntityClass>
     `,
   );
@@ -244,4 +253,18 @@ export function createMergedHierarchyProvider(props: {
     imodels,
     hierarchyDefinition: props.createHierarchyDefinition({ imodelAccess: primaryIModelAccess, selectQueryFactory }),
   });
+}
+
+export function pickAndTransform<TObj extends {}, TKey extends keyof TObj>(
+  obj: TObj,
+  keys: Array<TKey>,
+  transform: (key: TKey, value: TObj[TKey]) => TObj[TKey],
+) {
+  return keys.reduce(
+    (acc: Pick<TObj, TKey>, key: TKey) => {
+      acc[key] = transform(key, obj[key]);
+      return acc;
+    },
+    {} as Pick<TObj, TKey>,
+  );
 }
