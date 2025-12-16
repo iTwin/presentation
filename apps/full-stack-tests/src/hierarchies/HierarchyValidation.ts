@@ -9,6 +9,7 @@ import { isDeepStrictEqual } from "util";
 import { Logger } from "@itwin/core-bentley";
 import {
   GenericNodeKey,
+  GroupingHierarchyNode,
   HierarchyNode,
   HierarchyNodeKey,
   HierarchyProvider,
@@ -16,7 +17,7 @@ import {
   InstancesNodeKey,
   NonGroupingHierarchyNode,
 } from "@itwin/presentation-hierarchies";
-import { ArrayElement, InstanceKey } from "@itwin/presentation-shared";
+import { ArrayElement, InstanceKey, OmitOverUnion } from "@itwin/presentation-shared";
 
 const loggingNamespace = `Presentation.HierarchyBuilder.HierarchyValidation`;
 
@@ -31,10 +32,7 @@ export type ExpectedHierarchyDef = {
   node: (node: HierarchyNode) => void;
 } & (
   | {
-      children?: boolean;
-    }
-  | {
-      children?: Array<ExpectedHierarchyDef>;
+      children?: Array<ExpectedHierarchyDef> | boolean;
     }
   | {
       childrenUnordered?: Array<ExpectedHierarchyDef>;
@@ -45,20 +43,27 @@ function optionalBooleanToString(value: boolean | undefined) {
   return value === undefined ? "undefined" : value ? "TRUE" : "FALSE";
 }
 
-interface BaseNodeExpectations {
+type BaseNodeExpectations = {
   label?: string | RegExp;
   autoExpand?: boolean;
   extendedData?: { [key: string]: any };
-  children?: ExpectedHierarchyDef[] | boolean;
-}
+} & OmitOverUnion<ExpectedHierarchyDef, "node">;
 
-interface NonGroupingNodeExpectations extends BaseNodeExpectations {
+type NonGroupingNodeExpectations = BaseNodeExpectations & {
   supportsFiltering?: boolean;
   isSearchTarget?: boolean;
   searchTargetOptions?: HierarchySearchPathOptions;
-}
+};
+
+type GroupingNodeExpectations = BaseNodeExpectations & {
+  groupedInstanceKeys?: IModelInstanceKey[];
+};
 
 export namespace NodeValidators {
+  function toComparableInstanceKey(k: IModelInstanceKey) {
+    return `${k.className}|${k.id}|${k.imodelKey ?? ""}`;
+  }
+
   function validateBaseNodeAttributes(node: HierarchyNode, expectations: BaseNodeExpectations) {
     if (expectations.label) {
       const nodeLabel = node.label;
@@ -84,7 +89,10 @@ export namespace NodeValidators {
         `[${node.label}] Expected node's \`extendedData\` to be ${JSON.stringify(expectations.extendedData)}, got ${JSON.stringify(node.extendedData)}`,
       );
     }
-    if (expectations.children !== undefined && hasChildren(expectations) !== hasChildren(node)) {
+    if ("children" in expectations && expectations.children !== undefined && hasChildren(expectations) !== hasChildren(node)) {
+      throw new Error(`[${node.label}] Expected node to ${hasChildren(expectations) ? "" : "not "}have children but it does ${hasChildren(node) ? "" : "not"}`);
+    }
+    if ("childrenOrdered" in expectations && expectations.childrenOrdered !== undefined && hasChildren(expectations) !== hasChildren(node)) {
       throw new Error(`[${node.label}] Expected node to ${hasChildren(expectations) ? "" : "not "}have children but it does ${hasChildren(node) ? "" : "not"}`);
     }
   }
@@ -118,12 +126,26 @@ export namespace NodeValidators {
     }
   }
 
-  export function createForGenericNode<TChildren extends ExpectedHierarchyDef[] | boolean>(
-    expectedNode: Partial<Omit<NonGroupingHierarchyNode, "label" | "children" | "search" | "key">> &
+  function validateGroupingNodeAttributes(node: GroupingHierarchyNode, expectations: GroupingNodeExpectations) {
+    validateBaseNodeAttributes(node, expectations);
+    if (expectations.groupedInstanceKeys !== undefined) {
+      const actual = node.groupedInstanceKeys.map(toComparableInstanceKey).sort();
+      const expected = expectations.groupedInstanceKeys.map(toComparableInstanceKey).sort();
+      if (actual.length !== expected.length || !actual.every((v, i) => v === expected[i])) {
+        throw new Error(
+          `[${node.label}] Expected node's \`groupedInstanceKeys\` to be ${JSON.stringify(expectations.groupedInstanceKeys)}, got ${JSON.stringify(
+            node.groupedInstanceKeys,
+          )}`,
+        );
+      }
+    }
+  }
+
+  export function createForGenericNode(
+    props: Partial<Omit<NonGroupingHierarchyNode, "label" | "children" | "search" | "key">> &
       NonGroupingNodeExpectations & {
         key?: string | GenericNodeKey;
         label?: string;
-        children?: TChildren;
       },
   ) {
     return {
@@ -131,27 +153,24 @@ export namespace NodeValidators {
         if (!HierarchyNode.isGeneric(node)) {
           throw new Error(`[${node.label}] Expected a generic node, got a standard "${node.key.type}" one`);
         }
-        if (expectedNode.key !== undefined) {
-          if (typeof expectedNode.key === "string" && node.key.id !== expectedNode.key) {
-            throw new Error(`[${node.label}] Expected a generic node with id "${expectedNode.key}", got "${node.key.id}"`);
+        if (props.key !== undefined) {
+          if (typeof props.key === "string" && node.key.id !== props.key) {
+            throw new Error(`[${node.label}] Expected a generic node with id "${props.key}", got "${node.key.id}"`);
           }
-          if (
-            typeof expectedNode.key === "object" &&
-            !HierarchyNodeKey.equals(node.key, expectedNode.key.source ? expectedNode.key : { ...expectedNode.key, source: node.key.source })
-          ) {
-            throw new Error(`[${node.label}] Expected a generic node with attributes "${JSON.stringify(expectedNode.key)}", got "${JSON.stringify(node.key)}"`);
+          if (typeof props.key === "object" && !HierarchyNodeKey.equals(node.key, props.key.source ? props.key : { ...props.key, source: node.key.source })) {
+            throw new Error(`[${node.label}] Expected a generic node with attributes "${JSON.stringify(props.key)}", got "${JSON.stringify(node.key)}"`);
           }
         }
-        validateNonGroupingNodeAttributes(node, expectedNode);
+        validateNonGroupingNodeAttributes(node, props);
       },
-      children: expectedNode.children,
+      ...("children" in props ? { children: props.children } : undefined),
+      ...("childrenUnordered" in props ? { childrenUnordered: props.childrenUnordered } : undefined),
     };
   }
 
-  export function createForInstanceNode<TChildren extends ExpectedHierarchyDef[] | boolean>(
+  export function createForInstanceNode(
     props: NonGroupingNodeExpectations & {
       instanceKeys?: IModelInstanceKey[];
-      children?: TChildren;
     },
   ) {
     return {
@@ -172,14 +191,14 @@ export namespace NodeValidators {
         }
         validateNonGroupingNodeAttributes(node, props);
       },
-      children: props.children,
+      ...("children" in props ? { children: props.children } : undefined),
+      ...("childrenUnordered" in props ? { childrenUnordered: props.childrenUnordered } : undefined),
     };
   }
 
-  export function createForClassGroupingNode<TChildren extends ExpectedHierarchyDef[] | boolean>(
-    props: BaseNodeExpectations & {
+  export function createForClassGroupingNode(
+    props: GroupingNodeExpectations & {
       className?: string;
-      children?: TChildren;
     },
   ) {
     return {
@@ -190,17 +209,17 @@ export namespace NodeValidators {
         if (props.className && node.key.className !== props.className) {
           throw new Error(`[${node.label}] Expected node to represent class "${props.className}", got "${node.key.className}"`);
         }
-        validateBaseNodeAttributes(node, props);
+        validateGroupingNodeAttributes(node as GroupingHierarchyNode, props);
       },
-      children: props.children,
+      ...("children" in props ? { children: props.children } : undefined),
+      ...("childrenUnordered" in props ? { childrenUnordered: props.childrenUnordered } : undefined),
     };
   }
 
-  export function createForLabelGroupingNode<TChildren extends ExpectedHierarchyDef[] | boolean>(
-    props: BaseNodeExpectations & {
+  export function createForLabelGroupingNode(
+    props: GroupingNodeExpectations & {
       label?: string;
       groupId?: string;
-      children?: TChildren;
     },
   ) {
     return {
@@ -214,31 +233,32 @@ export namespace NodeValidators {
         if (props.groupId && node.key.groupId !== props.groupId) {
           throw new Error(`[${node.label}] Expected node to have groupId = ${JSON.stringify(props.groupId)}, got ${JSON.stringify(node.key.groupId)}`);
         }
-        validateBaseNodeAttributes(node, props);
+        validateGroupingNodeAttributes(node as GroupingHierarchyNode, props);
       },
-      children: props.children,
+      ...("children" in props ? { children: props.children } : undefined),
+      ...("childrenUnordered" in props ? { childrenUnordered: props.childrenUnordered } : undefined),
     };
   }
 
-  export function createForPropertyOtherValuesGroupingNode(props: BaseNodeExpectations) {
+  export function createForPropertyOtherValuesGroupingNode(props: GroupingNodeExpectations) {
     return {
       node: (node: HierarchyNode) => {
         if (node.key.type !== "property-grouping:other") {
           throw new Error(`[${node.label}] Expected a property other values grouping node, got "${node.key.type}"`);
         }
-        validateBaseNodeAttributes(node, props);
+        validateGroupingNodeAttributes(node as GroupingHierarchyNode, props);
       },
-      children: props.children,
+      ...("children" in props ? { children: props.children } : undefined),
+      ...("childrenUnordered" in props ? { childrenUnordered: props.childrenUnordered } : undefined),
     };
   }
 
-  export function createForPropertyValueRangeGroupingNode<TChildren extends ExpectedHierarchyDef[] | boolean>(
-    props: BaseNodeExpectations & {
+  export function createForPropertyValueRangeGroupingNode(
+    props: GroupingNodeExpectations & {
       propertyName?: string;
       propertyClassName?: string;
       fromValue?: number;
       toValue?: number;
-      children?: TChildren;
     },
   ) {
     return {
@@ -258,18 +278,18 @@ export namespace NodeValidators {
         if (props.toValue && node.key.toValue !== props.toValue) {
           throw new Error(`[${node.label}] Expected node to have toValue "${props.toValue}", got "${node.key.toValue}"`);
         }
-        validateBaseNodeAttributes(node, props);
+        validateGroupingNodeAttributes(node as GroupingHierarchyNode, props);
       },
-      children: props.children,
+      ...("children" in props ? { children: props.children } : undefined),
+      ...("childrenUnordered" in props ? { childrenUnordered: props.childrenUnordered } : undefined),
     };
   }
 
-  export function createForPropertyValueGroupingNode<TChildren extends ExpectedHierarchyDef[] | boolean>(
-    props: BaseNodeExpectations & {
+  export function createForPropertyValueGroupingNode(
+    props: GroupingNodeExpectations & {
       propertyName?: string;
       propertyClassName?: string;
       formattedPropertyValue?: string;
-      children?: TChildren;
     },
   ) {
     return {
@@ -288,14 +308,18 @@ export namespace NodeValidators {
             `[${node.label}] Expected node to have formattedPropertyValue "${props.formattedPropertyValue}", got "${node.key.formattedPropertyValue}"`,
           );
         }
-        validateBaseNodeAttributes(node, props);
+        validateGroupingNodeAttributes(node as GroupingHierarchyNode, props);
       },
-      children: props.children,
+      ...("children" in props ? { children: props.children } : undefined),
+      ...("childrenUnordered" in props ? { childrenUnordered: props.childrenUnordered } : undefined),
     };
   }
 
-  function hasChildren<TNode extends { children?: boolean | Array<unknown> }>(node: TNode) {
-    return node.children === true || (Array.isArray(node.children) && node.children.length > 0);
+  function hasChildren<TNode extends { children?: boolean | Array<unknown> } | { childrenUnordered?: Array<unknown> }>(node: TNode) {
+    return (
+      ("children" in node && (node.children === true || (Array.isArray(node.children) && node.children.length > 0))) ||
+      ("childrenUnordered" in node && Array.isArray(node.childrenUnordered) && node.childrenUnordered.length > 0)
+    );
   }
 }
 
@@ -339,7 +363,7 @@ export async function validateHierarchy(props: ValidateHierarchyProps) {
   return resultHierarchy;
 }
 
-export function validateHierarchyLevel(props: { nodes: HierarchyNode[]; expect: Array<Pick<ExpectedHierarchyDef, "node"> & { children?: boolean }> }) {
+export function validateHierarchyLevel(props: { nodes: HierarchyNode[]; expect: Array<Pick<ExpectedHierarchyDef, "node">> }) {
   const { nodes, expect: expectations } = props;
   if (props.nodes.length !== props.expect.length) {
     throw new Error(`Expected ${expectations.length} nodes, got ${nodes.length}`);
