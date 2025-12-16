@@ -131,7 +131,7 @@ export namespace NodeValidators {
     if (expectations.groupedInstanceKeys !== undefined) {
       const actual = node.groupedInstanceKeys.map(toComparableInstanceKey).sort();
       const expected = expectations.groupedInstanceKeys.map(toComparableInstanceKey).sort();
-      if (actual.length !== expected.length || !actual.every((v, i) => v === expected[i])) {
+      if (actual.length !== expected.length || actual.some((v, i) => v !== expected[i])) {
         throw new Error(
           `[${node.label}] Expected node's \`groupedInstanceKeys\` to be ${JSON.stringify(expectations.groupedInstanceKeys)}, got ${JSON.stringify(
             node.groupedInstanceKeys,
