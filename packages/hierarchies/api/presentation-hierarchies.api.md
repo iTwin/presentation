@@ -628,7 +628,6 @@ interface NodeSelectClauseProps {
 // @public
 export interface NodesQueryClauseFactory {
     createFilterClauses(props: {
-        imodelAccess?: ECSchemaProvider & ECClassHierarchyInspector;
         contentClass: {
             fullName: string;
             alias: string;
