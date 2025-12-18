@@ -994,7 +994,7 @@ async function tryGetClass(schemaProvider: ECSchemaProvider, fullClassName: stri
   }
 }
 function isSchemaOrClassNotFoundError(e: unknown): e is Error {
-  return e instanceof Error && (!!e.message.match(/^Schema "\w\d_+" not found/) || !!e.message.match(/^Class "[\w\d_\.:]+" not found/));
+  return e instanceof Error && (!!e.message.match(/^Schema "[\w\d_]+" not found/) || !!e.message.match(/^Class "[\w\d_\.:]+" not found/));
 }
 function isPropertyNotFoundError(e: unknown): e is Error {
   return e instanceof Error && !!e.message.match(/^Property "[\w\d]+" not found in ECClass/);
