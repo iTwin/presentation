@@ -246,8 +246,8 @@ export interface NodesQueryClauseFactory {
    *
    * Special cases:
    * - If `filter` is `undefined`, `joins` and `where` are set to empty strings and `from` is set to `contentClass.fullName`.
-   * - If the provided content class doesn't intersect with the property class in provided filter, a special result
-   * is returned to make sure the resulting query is valid and doesn't return anything.
+   * - If the provided content class doesn't intersect with the property class in provided filter OR referenced schema items (classes/properties)
+   * don't exist in the iModel, a special result is returned to make sure the resulting query is valid and doesn't return anything.
    */
   createFilterClauses(props: {
     contentClass: { fullName: string; alias: string };
@@ -311,8 +311,8 @@ class NodeSelectQueryFactory {
    *
    * Special cases:
    * - If `filter` is `undefined`, `joins` and `where` are set to empty strings and `from` is set to `contentClass.fullName`.
-   * - If the provided content class doesn't intersect with the property class in provided filter, a special result
-   * is returned to make sure the resulting query is valid and doesn't return anything.
+   * - If the provided content class doesn't intersect with the property class in provided filter OR referenced schema items (classes/properties)
+   * don't exist in the iModel, a special result is returned to make sure the resulting query is valid and doesn't return anything.
    */
   public async createFilterClauses(props: {
     contentClass: { fullName: string; alias: string };
@@ -360,59 +360,105 @@ async function createInstanceFilterClauses(props: {
 }): Promise<{ from: string; where: string[]; joins: string[] }> {
   const { imodelAccess, contentClass, filter } = props;
 
+  // In some cases the given filter means we want the query to return nothing - e.g. when filtering by classes that don't intersect
+  // with the given content class. Return a special result that makes sure the resulting query is valid, but returns no rows.
+  const DISABLE_QUERY = { from: contentClass.fullName, joins: [], where: ["FALSE"] };
+
   const from = await specializeContentClass({
-    classHierarchyInspector: imodelAccess,
+    classHierarchyInspector: {
+      async classDerivesFrom(derivedClassName: string, baseClassName: string): Promise<boolean> {
+        try {
+          return await imodelAccess.classDerivesFrom(derivedClassName, baseClassName);
+        } catch (e) {
+          if (isSchemaOrClassNotFoundError(e)) {
+            // either derived or base class doesn't exist in this iModel
+            return false;
+          }
+          /* c8 ignore next 2 */
+          throw e;
+        }
+      },
+    },
     contentClassName: contentClass.fullName,
     filterClassNames: filter.propertyClassNames,
   });
   if (!from) {
-    // filter class doesn't intersect with content class - make sure the query returns nothing by returning a `FALSE` WHERE clause
-    return { from: contentClass.fullName, joins: [], where: ["FALSE"] };
+    // filter class doesn't intersect with content class
+    return DISABLE_QUERY;
   }
 
-  /**
-   * TODO:
-   * There may be similar related instance paths, e.g.:
-   * - A -> B -> C,
-   * - A -> B -> D.
-   * At this moment we're handling each path individually which means A and B would get joined twice. We could look into
-   * creating a join tree first, e.g.
-   *         C
-   *        /
-   * A -> B
-   *        \
-   *         D
-   */
-  const joins = await Promise.all(
-    filter.relatedInstances.map(async (rel, i) =>
-      ECSql.createRelationshipPathJoinClause({
-        schemaProvider: imodelAccess,
-        path: assignRelationshipPathAliases(rel.path, i, contentClass.alias, rel.alias),
-      }),
-    ),
-  );
+  let filteredClassNamesInThisIModel: string[] | undefined;
+  if (filter.filteredClassNames && filter.filteredClassNames.length > 0) {
+    filteredClassNamesInThisIModel = (
+      await Promise.all(
+        filter.filteredClassNames.map(async (fullClassName) => ({
+          fullClassName,
+          filteredClass: await tryGetClass(imodelAccess, fullClassName),
+        })),
+      )
+    )
+      .filter(({ filteredClass }) => !!filteredClass)
+      .map(({ fullClassName }) => fullClassName);
+
+    if (filteredClassNamesInThisIModel.length === 0) {
+      // we had filter classes, but none of them exist in this iModel
+      return DISABLE_QUERY;
+    }
+  }
+
+  let joins: string[] | undefined;
+  try {
+    joins = await Promise.all(
+      filter.relatedInstances.map(async (rel, i) =>
+        ECSql.createRelationshipPathJoinClause({
+          schemaProvider: imodelAccess,
+          path: assignRelationshipPathAliases(rel.path, i, contentClass.alias, rel.alias),
+        }),
+      ),
+    );
+  } catch (e) {
+    if (isSchemaOrClassNotFoundError(e)) {
+      // at least one related instance spec uses a class that doesn't exist in this iModel
+      return DISABLE_QUERY;
+    }
+    /* c8 ignore next 2 */
+    throw e;
+  }
+
+  const classAliasMap = new Map<string, string>([[contentClass.alias, from]]);
+  filter.relatedInstances.forEach(({ path, alias }) => path.length > 0 && classAliasMap.set(alias, path[path.length - 1].targetClassName));
+  let propertiesFilter: string | undefined;
+  try {
+    propertiesFilter = await createWhereClause(
+      contentClass.alias,
+      async (alias) => {
+        const aliasClassName = classAliasMap.get(alias);
+        return aliasClassName ? getClass(imodelAccess, aliasClassName) : undefined;
+      },
+      filter.rules,
+    );
+  } catch (e) {
+    // note: don't need to worry about schemas & classes here, because that's taken care of above, when
+    // validating property class names & related instance defs
+    if (isPropertyNotFoundError(e)) {
+      // filter uses a property that doesn't exist in this iModel
+      return DISABLE_QUERY;
+    }
+    /* c8 ignore next 2 */
+    throw e;
+  }
 
   const where = new Array<string>();
-  if (filter.filteredClassNames && filter.filteredClassNames.length > 0) {
+  if (filteredClassNamesInThisIModel) {
     where.push(
       `${ECSql.createRawPropertyValueSelector(contentClass.alias, "ECClassId")} IS (
-          ${filter.filteredClassNames
+          ${filteredClassNamesInThisIModel
             .map(parseFullClassName)
             .map(({ schemaName, className }) => `[${schemaName}].[${className}]`)
             .join(", ")}
         )`,
     );
   }
-  const classAliasMap = new Map<string, string>([[contentClass.alias, from]]);
-  filter.relatedInstances.forEach(({ path, alias }) => path.length > 0 && classAliasMap.set(alias, path[path.length - 1].targetClassName));
-  const propertiesFilter = await createWhereClause(
-    contentClass.alias,
-    async (alias) => {
-      const aliasClassName = classAliasMap.get(alias);
-      return aliasClassName ? getClass(imodelAccess, aliasClassName) : undefined;
-    },
-    filter.rules,
-  );
   if (propertiesFilter) {
     where.push(propertiesFilter);
   }
@@ -649,8 +695,18 @@ async function createWhereClause(
       .join(` ${getECSqlLogicalOperator(rule.operator)} `);
     return clause ? (rule.operator === "or" ? `(${clause})` : clause) : undefined;
   }
+
   const sourceAlias = rule.sourceAlias ? rule.sourceAlias : contentClassAlias;
-  const propertyValueSelector = ECSql.createRawPropertyValueSelector(sourceAlias, rule.propertyName);
+  const propertyClass = await classLoader(sourceAlias);
+  if (!propertyClass) {
+    throw new Error(`Class with alias "${sourceAlias}" not found.`);
+  }
+  const property = await propertyClass.getProperty(rule.propertyName);
+  if (!property) {
+    throw new Error(`Property "${rule.propertyName}" not found in ECClass "${propertyClass.fullName}".`);
+  }
+
+  const propertyValueSelector = ECSql.createRawPropertyValueSelector(sourceAlias, property.name);
   if (isUnaryRuleOperator(rule.operator)) {
     switch (rule.operator) {
       case "is-true":
@@ -674,14 +730,7 @@ async function createWhereClause(
     const escapedValue = value.replace(/[%_\\]/g, "\\$&");
     return `${propertyValueSelector} ${ecsqlOperator} '%${escapedValue}%' ESCAPE '\\'`;
   }
-  const propertyClass = await classLoader(sourceAlias);
-  if (!propertyClass) {
-    throw new Error(`Class with alias "${sourceAlias}" not found.`);
-  }
-  const property = await propertyClass.getProperty(rule.propertyName);
-  if (!property) {
-    throw new Error(`Property "${rule.propertyName}" not found in ECClass "${propertyClass.fullName}".`);
-  }
+
   if (property.isNavigation()) {
     assert(rule.value !== undefined && GenericInstanceFilterRuleValue.isInstanceKey(value));
     return `${propertyValueSelector}.[Id] ${ecsqlOperator} ${ECSql.createRawPrimitiveValueSelector(value.id)}`;
@@ -931,4 +980,22 @@ function createWhereClauseForHiddenClasses(hiddenClasses: HiddenClassNode[], sel
   }
 
   return res;
+}
+
+async function tryGetClass(schemaProvider: ECSchemaProvider, fullClassName: string): Promise<EC.Class | undefined> {
+  try {
+    return await getClass(schemaProvider, fullClassName);
+  } catch (e) {
+    if (isSchemaOrClassNotFoundError(e)) {
+      return undefined;
+    }
+    /* c8 ignore next 2 */
+    throw e;
+  }
+}
+function isSchemaOrClassNotFoundError(e: unknown): e is Error {
+  return e instanceof Error && (!!e.message.match(/^Schema "\w\d_+" not found/) || !!e.message.match(/^Class "[\w\d_\.:]+" not found/));
+}
+function isPropertyNotFoundError(e: unknown): e is Error {
+  return e instanceof Error && !!e.message.match(/^Property "[\w\d]+" not found in ECClass/);
 }

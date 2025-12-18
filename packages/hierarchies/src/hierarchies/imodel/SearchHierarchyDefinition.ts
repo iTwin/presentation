@@ -208,7 +208,7 @@ export class SearchHierarchyDefinition implements RxjsHierarchyDefinition {
               if (!HierarchyNodeIdentifier.isInstanceNodeIdentifier(id)) {
                 continue;
               }
-              if (id.imodelKey && id.imodelKey !== props.imodelKey) {
+              if (id.imodelKey && id.imodelKey !== props.imodelAccess.imodelKey) {
                 continue;
               }
               if (

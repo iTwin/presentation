@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { GenericInstanceFilter } from "@itwin/core-common";
-import { ECSqlQueryDef } from "@itwin/presentation-shared";
+import { ECClassHierarchyInspector, ECSchemaProvider, ECSqlQueryDef } from "@itwin/presentation-shared";
 import { NonGroupingHierarchyNode } from "../HierarchyNode.js";
 import {
   ProcessedGenericHierarchyNode,
@@ -109,8 +109,8 @@ export type HierarchyDefinitionParentNode = Omit<NonGroupingHierarchyNode, "chil
  * @public
  */
 export interface DefineHierarchyLevelProps {
-  /** The key of iModel for which the hierarchy definition is being requested for. */
-  imodelKey: string;
+  /** The iModel for which the hierarchy definition is being requested for. */
+  imodelAccess: ECSchemaProvider & ECClassHierarchyInspector & { imodelKey: string };
 
   /** Parent node to get children for. Pass `undefined` to get root nodes. */
   parentNode: HierarchyDefinitionParentNode | undefined;

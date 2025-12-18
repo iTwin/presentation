@@ -5,7 +5,7 @@
 
 import sinon from "sinon";
 import { Dictionary, Logger, LogLevel } from "@itwin/core-bentley";
-import { compareFullClassNames, EC, parseFullClassName } from "@itwin/presentation-shared";
+import { compareFullClassNames, EC, getClass } from "@itwin/presentation-shared";
 import { GroupingHierarchyNode, NonGroupingHierarchyNode } from "../hierarchies/HierarchyNode.js";
 import {
   ClassGroupingNodeKey,
@@ -313,17 +313,9 @@ export function createClassHierarchyInspectorStub(schemaProvider = createECSchem
     stubRelationshipClass: schemaProvider.stubRelationshipClass,
     stubOtherClass: schemaProvider.stubOtherClass,
     classDerivesFrom: sinon.fake(async (derived: string, base: string) => {
-      const { schemaName: derivedSchemaName, className: derivedClassName } = parseFullClassName(derived);
-      const { schemaName: baseSchemaName, className: baseClassName } = parseFullClassName(base);
-      const schemaStub = await schemaProvider.getSchema(derivedSchemaName);
-      if (!schemaStub) {
-        throw new Error(`Schema "${derivedSchemaName}" is not stubbed.`);
-      }
-      const derivedClass = await schemaStub.getClass(derivedClassName);
-      if (!derivedClass) {
-        throw new Error(`Class "${derivedSchemaName}.${derivedClassName}" is not stubbed.`);
-      }
-      return derivedClass.is(baseClassName, baseSchemaName);
+      const derivedClass = await getClass(schemaProvider, derived);
+      const baseClass = await getClass(schemaProvider, base);
+      return derivedClass.is(baseClass);
     }),
   };
 }

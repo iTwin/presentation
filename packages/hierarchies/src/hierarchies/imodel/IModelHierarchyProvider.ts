@@ -357,7 +357,7 @@ class IModelHierarchyProviderImpl implements HierarchyProvider {
   }
 
   private createHierarchyLevelDefinitionsObservable(
-    props: Omit<DefineHierarchyLevelProps, "imodelKey"> & RequestContextProp,
+    props: Omit<DefineHierarchyLevelProps, "imodelAccess"> & RequestContextProp,
   ): Observable<
     { imodelAccess: IModelAccess; imodelAccessIndex: number } & (
       | { hierarchyNodesDefinition: GenericHierarchyNodeDefinition }
@@ -390,7 +390,7 @@ class IModelHierarchyProviderImpl implements HierarchyProvider {
             return EMPTY;
           }
         }
-        return this._activeHierarchyDefinition.defineHierarchyLevel({ ...defineHierarchyLevelProps, parentNode, imodelKey: imodelAccess.imodelKey }).pipe(
+        return this._activeHierarchyDefinition.defineHierarchyLevel({ ...defineHierarchyLevelProps, parentNode, imodelAccess }).pipe(
           mergeAll(),
           map(
             /* Using `as` to work around TS not understanding that `{ x: A, y: B | C }` is the same as `{ x: A } & ({ y: B } | { y: C })` */
@@ -412,7 +412,7 @@ class IModelHierarchyProviderImpl implements HierarchyProvider {
   }
 
   private createSourceNodesObservable(
-    props: Omit<DefineHierarchyLevelProps, "imodelKey"> & {
+    props: Omit<DefineHierarchyLevelProps, "imodelAccess"> & {
       hierarchyLevelSizeLimit?: number | "unbounded";
       targetInstanceKeys?: InstanceKey[];
     } & RequestContextProp,

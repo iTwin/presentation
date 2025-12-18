@@ -578,8 +578,8 @@ describe("createIModelHierarchyProvider", () => {
       const rootNodes = await collect(provider.getNodes({ parentNode: undefined }));
       expect(rootNodes).to.deep.eq([{ ...rootNode, key: createTestGenericNodeKey({ id: "root", source: sourceName }), parentKeys: [], children: true }]);
       expect(hierarchyDefinition.defineHierarchyLevel).to.be.calledTwice;
-      expect(hierarchyDefinition.defineHierarchyLevel.firstCall).to.be.calledWith({ imodelKey: imodelAccess.imodelKey, parentNode: undefined });
-      expect(hierarchyDefinition.defineHierarchyLevel.secondCall).to.be.calledWith({ imodelKey: imodelAccess.imodelKey, parentNode: rootNodes[0] });
+      expect(hierarchyDefinition.defineHierarchyLevel.firstCall).to.be.calledWith({ imodelAccess, parentNode: undefined });
+      expect(hierarchyDefinition.defineHierarchyLevel.secondCall).to.be.calledWith({ imodelAccess, parentNode: rootNodes[0] });
     });
   });
 
