@@ -88,7 +88,7 @@ describe("Hierarchies", () => {
               },
             ],
             createHierarchyDefinition: createHierarchyDefinitionFactory({
-              schema: dbs.base.xyzSchema,
+              xyzSchema: dbs.base.xyzSchema,
               createYGroupingParams: (alias) => ({
                 byProperties: {
                   propertiesClassName: dbs.base.xyzSchema.items.Y.fullName,
@@ -356,7 +356,7 @@ describe("Hierarchies", () => {
               },
             ],
             createHierarchyDefinition: createHierarchyDefinitionFactory({
-              schema: dbs.base.schema,
+              xyzSchema: dbs.base.schema,
               createYGroupingParams: (alias) => ({
                 byProperties: {
                   propertiesClassName: dbs.base.schema.items.Y.fullName,
@@ -428,7 +428,7 @@ describe("Hierarchies", () => {
               },
             ],
             createHierarchyDefinition: createHierarchyDefinitionFactory({
-              schema: dbs.base.schema,
+              xyzSchema: dbs.base.schema,
               createYGroupingParams: (alias) => ({
                 byProperties: {
                   propertiesClassName: dbs.base.schema.items.Y.fullName,

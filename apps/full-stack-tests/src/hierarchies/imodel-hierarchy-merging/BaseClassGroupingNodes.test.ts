@@ -89,7 +89,7 @@ describe("Hierarchies", () => {
               },
             ],
             createHierarchyDefinition: createHierarchyDefinitionFactory({
-              schema: dbs.base.xyzSchema,
+              xyzSchema: dbs.base.xyzSchema,
               createYGroupingParams: () => ({ byBaseClasses: { fullClassNames: [dbs.base.xyzSchema.items.Y.fullName] } }),
             }),
           });
@@ -299,7 +299,7 @@ describe("Hierarchies", () => {
               },
             ],
             createHierarchyDefinition: createHierarchyDefinitionFactory({
-              schema: dbs.base.schema,
+              xyzSchema: dbs.base.schema,
               createYGroupingParams: () => ({ byBaseClasses: { fullClassNames: [dbs.base.schema.items.Y.fullName], hideIfOneGroupedNode: true } }),
             }),
           }),
@@ -365,7 +365,7 @@ describe("Hierarchies", () => {
               },
             ],
             createHierarchyDefinition: createHierarchyDefinitionFactory({
-              schema: dbs.base.schema,
+              xyzSchema: dbs.base.schema,
               createYGroupingParams: () => ({ byBaseClasses: { fullClassNames: [dbs.base.schema.items.Y.fullName], hideIfNoSiblings: true } }),
             }),
           }),

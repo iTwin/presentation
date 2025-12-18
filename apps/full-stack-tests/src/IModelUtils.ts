@@ -276,11 +276,11 @@ export async function buildIModel<TFirstArg extends Mocha.Context | string, TRes
 }
 
 export async function importSchema(
-  mochaContextOrTestNameOrSchemaProps: MochaContext | string | { schemaName: string; schemaAlias: string },
+  mochaContextOrTestNameOrSchemaProps: MochaContext | string | { schemaName: string; schemaAlias: string; schemaVersion?: `${string}.${string}.${string}` },
   imodel: { importSchema: (xml: string) => Promise<void> | void },
   schemaContentXml: string,
 ) {
-  const schemaProps = ((): { schemaName: string; schemaAlias: string } => {
+  const schemaProps = ((): { schemaName: string; schemaAlias: string; schemaVersion?: `${string}.${string}.${string}` } => {
     if (typeof mochaContextOrTestNameOrSchemaProps === "object" && !(mochaContextOrTestNameOrSchemaProps instanceof MochaContext)) {
       return mochaContextOrTestNameOrSchemaProps;
     }
@@ -290,6 +290,7 @@ export async function importSchema(
     return {
       schemaName: `SCHEMA_${testName}`.replace(/[^\w\d_]/gi, "_").replace(/_+/g, "_"),
       schemaAlias: `ALIAS_${Guid.createValue().replaceAll("-", "")}`,
+      schemaVersion: "1.0.0",
     };
   })();
 
