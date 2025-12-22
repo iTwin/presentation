@@ -1,5 +1,20 @@
 # @itwin/presentation-hierarchies
 
+## 2.0.0-alpha.9
+
+### Major Changes
+
+- [#1150](https://github.com/iTwin/presentation/pull/1150): Support creating ECSQL query definitions based on instance filters, containing schema items that don't exist in the _current_ iModel.
+
+  To support that, the `NodesQueryClauseFactory` created by `createNodesQueryClauseFactory` returns a query-disabling result when it encounters such schema items. To ensure that's possible,
+  the `createNodesQueryClauseFactory` function should be called with `imodelAccess` that is passed to `HierarchyDefinition.defineHierarchyLevel`.
+
+  **Breaking changes:**
+  - `DefineHierarchyLevelProps.imodelKey` was replaced with `imodelAccess`. If needed, the key can be accessed using `imodelAccess.imodelKey`. This affects the following APIs:
+    - `HierarchyDefinition.defineHierarchyLevel` (function that uses these props),
+    - `DefineRootHierarchyLevelProps` (extends the props type),
+    - `DefineInstanceNodeChildHierarchyLevelProps` (extends the props type).
+
 ## 2.0.0-alpha.8
 
 ### Minor Changes
