@@ -82,7 +82,7 @@ describe("Hierarchies", () => {
               { ecdb: dbs.changeset1.ecdb, key: "changeset1" },
             ],
             createHierarchyDefinition: createHierarchyDefinitionFactory({
-              schema: dbs.base.xyzSchema,
+              xyzSchema: dbs.base.xyzSchema,
               createYGroupingParams: () => ({ byLabel: true }),
             }),
           });
@@ -313,7 +313,7 @@ describe("Hierarchies", () => {
               { ecdb: dbs.changeset1.ecdb, key: "changeset1" },
             ],
             createHierarchyDefinition: createHierarchyDefinitionFactory({
-              schema: dbs.base.schema,
+              xyzSchema: dbs.base.schema,
               createYGroupingParams: () => ({ byLabel: { hideIfOneGroupedNode: true } }),
             }),
           }),
@@ -379,7 +379,7 @@ describe("Hierarchies", () => {
               },
             ],
             createHierarchyDefinition: createHierarchyDefinitionFactory({
-              schema: dbs.base.schema,
+              xyzSchema: dbs.base.schema,
               createYGroupingParams: () => ({ byLabel: { hideIfNoSiblings: true } }),
             }),
           }),
@@ -445,7 +445,7 @@ describe("Hierarchies", () => {
               },
             ],
             createHierarchyDefinition: createHierarchyDefinitionFactory({
-              schema: dbs.base.schema,
+              xyzSchema: dbs.base.schema,
               createYGroupingParams: (alias) => ({ byLabel: { groupId: { selector: `${alias}.PropY` } } }),
             }),
           }),
@@ -510,7 +510,7 @@ describe("Hierarchies", () => {
               },
             ],
             createHierarchyDefinition: createHierarchyDefinitionFactory({
-              schema: dbs.base.schema,
+              xyzSchema: dbs.base.schema,
               createYGroupingParams: () => ({ byLabel: { action: "merge" } }),
             }),
           }),

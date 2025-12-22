@@ -3,10 +3,11 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
+import { collect } from "presentation-test-utilities";
 import { omit } from "@itwin/core-bentley";
 import { createMergedIModelHierarchyProvider } from "@itwin/presentation-hierarchies";
 import { initialize, terminate } from "../../IntegrationTests.js";
-import { NodeValidators, validateHierarchy } from "../HierarchyValidation.js";
+import { NodeValidators, validateHierarchy, validateHierarchyLevel } from "../HierarchyValidation.js";
 import {
   createChangedDbs,
   createHierarchyDefinitionFactory,
@@ -42,15 +43,17 @@ describe("Hierarchies", () => {
             return { xyzSchema, x, y1, y2, y3 };
           },
           async (builder, base) => {
-            const qSchema = await importQSchema(builder);
+            const xyzSchema = await importXYZSchema(builder, "1.0.1");
+            const qSchema = await importQSchema(builder, xyzSchema);
+            builder.updateInstance(base.x, { ["PropX2"]: 111 });
             builder.deleteInstance(base.y2);
-            builder.updateInstance(base.y3, { ["Label"]: "y3-updated" });
+            builder.updateInstance(base.y3, { ["Label"]: "y3-updated", ["PropY2"]: 222 });
             const q1 = builder.insertInstance(qSchema.items.Q.fullName, { ["Label"]: "q1" });
             builder.insertRelationship(base.xyzSchema.items.XY.fullName, base.x.id, q1.id);
             const w = builder.insertInstance(qSchema.items.W.fullName, { ["Label"]: "w" });
             const q2 = builder.insertInstance(qSchema.items.Q.fullName, { ["Label"]: "q2" });
             builder.insertRelationship(base.xyzSchema.items.XY.fullName, w.id, q2.id);
-            return { ...omit(base, ["y2"]), qSchema, w, q1, q2 };
+            return { ...omit(base, ["xyzSchema", "y2"]), xyzSchema, qSchema, w, q1, q2 };
           },
         );
       }
@@ -87,7 +90,7 @@ describe("Hierarchies", () => {
             },
           ],
           createHierarchyDefinition: createHierarchyDefinitionFactory({
-            schema: dbs.base.xyzSchema,
+            xyzSchema: dbs.changeset1.xyzSchema,
           }),
         });
       });
@@ -230,6 +233,139 @@ describe("Hierarchies", () => {
                 ],
               }),
             ],
+          });
+        });
+      });
+
+      describe("Hierarchy level filtering", () => {
+        it("filters hierarchy level using filter class that exists only in one imodel", async () => {
+          validateHierarchyLevel({
+            nodes: await collect(
+              provider.getNodes({
+                parentNode: undefined,
+                instanceFilter: {
+                  filteredClassNames: [dbs.changeset1.qSchema.items.W.fullName],
+                  propertyClassNames: [],
+                  relatedInstances: [],
+                  rules: {
+                    operator: "and",
+                    rules: [],
+                  },
+                },
+              }),
+            ),
+            expect: [NodeValidators.createForInstanceNode({ instanceKeys: [keys.changeset1.w] })],
+          });
+        });
+
+        it("filters hierarchy level using property class that exists only in one imodel", async () => {
+          validateHierarchyLevel({
+            nodes: await collect(
+              provider.getNodes({
+                parentNode: undefined,
+                instanceFilter: {
+                  propertyClassNames: [dbs.changeset1.qSchema.items.W.fullName],
+                  relatedInstances: [],
+                  rules: {
+                    sourceAlias: "this",
+                    propertyName: `PropW`,
+                    operator: "is-null",
+                    propertyTypeName: "int",
+                  },
+                },
+              }),
+            ),
+            expect: [NodeValidators.createForInstanceNode({ instanceKeys: [keys.changeset1.w] })],
+          });
+        });
+
+        it("filters hierarchy level using property that exists only in one imodel", async () => {
+          validateHierarchyLevel({
+            nodes: await collect(
+              provider.getNodes({
+                parentNode: undefined,
+                instanceFilter: {
+                  propertyClassNames: [dbs.changeset1.xyzSchema.items.X.fullName],
+                  relatedInstances: [],
+                  rules: {
+                    sourceAlias: "this",
+                    propertyName: `PropX2`,
+                    operator: "is-not-null",
+                    propertyTypeName: "int",
+                  },
+                },
+              }),
+            ),
+            expect: [NodeValidators.createForInstanceNode({ instanceKeys: [keys.changeset1.x] })],
+          });
+        });
+
+        it("filters hierarchy level using related class that exists only in one imodel", async () => {
+          validateHierarchyLevel({
+            nodes: await collect(
+              provider.getNodes({
+                parentNode: undefined,
+                instanceFilter: {
+                  propertyClassNames: [dbs.changeset1.xyzSchema.items.X.fullName],
+                  relatedInstances: [
+                    {
+                      alias: "qq",
+                      path: [
+                        {
+                          sourceClassName: dbs.changeset1.xyzSchema.items.X.fullName,
+                          relationshipClassName: dbs.changeset1.xyzSchema.items.XY.fullName,
+                          isForwardRelationship: true,
+                          targetClassName: dbs.changeset1.qSchema.items.Q.fullName,
+                        },
+                      ],
+                    },
+                  ],
+                  rules: {
+                    sourceAlias: "qq",
+                    propertyName: "Label",
+                    operator: "is-not-null",
+                    propertyTypeName: "int",
+                  },
+                },
+              }),
+            ),
+            expect: [
+              NodeValidators.createForInstanceNode({ instanceKeys: [keys.changeset1.w] }),
+              NodeValidators.createForInstanceNode({ instanceKeys: [keys.changeset1.x] }),
+            ],
+          });
+        });
+
+        it("filters hierarchy level using related class property that exists only in one imodel", async () => {
+          validateHierarchyLevel({
+            nodes: await collect(
+              provider.getNodes({
+                parentNode: undefined,
+                instanceFilter: {
+                  propertyClassNames: [dbs.changeset1.xyzSchema.items.X.fullName],
+                  relatedInstances: [
+                    {
+                      alias: "yy",
+                      path: [
+                        {
+                          sourceClassName: dbs.changeset1.xyzSchema.items.X.fullName,
+                          relationshipClassName: dbs.changeset1.xyzSchema.items.XY.fullName,
+                          isForwardRelationship: true,
+                          targetClassName: dbs.changeset1.xyzSchema.items.Y.fullName,
+                        },
+                      ],
+                    },
+                  ],
+                  rules: {
+                    sourceAlias: "yy",
+                    propertyName: "PropY2",
+                    operator: "is-not-null",
+                    propertyTypeName: "int",
+                  },
+                },
+              }),
+            ),
+            expect: [NodeValidators.createForInstanceNode({ instanceKeys: [keys.changeset1.x] })],
           });
         });
       });

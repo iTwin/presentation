@@ -98,7 +98,9 @@ export type DefineGenericNodeChildHierarchyLevelProps = Omit<DefineHierarchyLeve
 
 // @public
 export interface DefineHierarchyLevelProps {
-    imodelKey: string;
+    imodelAccess: ECSchemaProvider & ECClassHierarchyInspector & {
+        imodelKey: string;
+    };
     instanceFilter?: GenericInstanceFilter;
     parentNode: HierarchyDefinitionParentNode | undefined;
 }

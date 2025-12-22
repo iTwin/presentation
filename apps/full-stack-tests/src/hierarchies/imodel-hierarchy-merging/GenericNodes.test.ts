@@ -69,7 +69,7 @@ describe("Hierarchies", () => {
             },
           ],
           createHierarchyDefinition: createHierarchyDefinitionFactory({
-            schema: dbs.base.xyzSchema,
+            xyzSchema: dbs.base.xyzSchema,
             createGenericNodeForY: true,
           }),
         });

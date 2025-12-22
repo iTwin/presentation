@@ -12,14 +12,14 @@ import {
   InstanceNodesQueryDefinition,
 } from "../../hierarchies/imodel/IModelHierarchyDefinition.js";
 import { createPredicateBasedHierarchyDefinition } from "../../hierarchies/imodel/PredicateBasedHierarchyDefinition.js";
-import { createClassHierarchyInspectorStub, createTestGenericNodeKey, createTestSourceGenericNode } from "../Utils.js";
+import { createIModelAccessStub, createTestGenericNodeKey, createTestSourceGenericNode } from "../Utils.js";
 
 describe("createPredicateBasedHierarchyDefinition", () => {
   const imodelKey = "test-imodel-key";
 
-  let classHierarchyInspector: ReturnType<typeof createClassHierarchyInspectorStub>;
+  let imodelAccess: ReturnType<typeof createIModelAccessStub> & { imodelKey: string };
   beforeEach(() => {
-    classHierarchyInspector = createClassHierarchyInspectorStub();
+    imodelAccess = { ...createIModelAccessStub(), imodelKey };
   });
   afterEach(() => {
     sinon.restore();
@@ -28,13 +28,13 @@ describe("createPredicateBasedHierarchyDefinition", () => {
   it("returns root hierarchy level definition", async () => {
     const rootHierarchyLevel: HierarchyLevelDefinition = [createGenericNodeDefinition(), createInstanceNodesQueryDefinition()];
     const factory = createPredicateBasedHierarchyDefinition({
-      classHierarchyInspector,
+      classHierarchyInspector: imodelAccess,
       hierarchy: {
         rootNodes: async () => rootHierarchyLevel,
         childNodes: [],
       },
     });
-    const result = await factory.defineHierarchyLevel({ imodelKey, parentNode: undefined });
+    const result = await factory.defineHierarchyLevel({ imodelAccess, parentNode: undefined });
     expect(result).to.deep.eq(rootHierarchyLevel);
   });
 
@@ -47,7 +47,7 @@ describe("createPredicateBasedHierarchyDefinition", () => {
     const def4: HierarchyLevelDefinition = [createGenericNodeDefinition({ node: createTestSourceGenericNode({ label: "4" }) })];
 
     const factory = createPredicateBasedHierarchyDefinition({
-      classHierarchyInspector,
+      classHierarchyInspector: imodelAccess,
       hierarchy: {
         rootNodes: async () => [],
         childNodes: [
@@ -80,7 +80,7 @@ describe("createPredicateBasedHierarchyDefinition", () => {
       },
     });
 
-    const result = await factory.defineHierarchyLevel({ imodelKey, parentNode: rootNode });
+    const result = await factory.defineHierarchyLevel({ imodelAccess, parentNode: rootNode });
     expect(result).to.deep.eq([...def2, ...def4]);
   });
 
@@ -92,10 +92,10 @@ describe("createPredicateBasedHierarchyDefinition", () => {
       },
     });
 
-    const baseClass = classHierarchyInspector.stubEntityClass({ schemaName: "TestSchema", className: "BaseOfX" });
-    const xClass = classHierarchyInspector.stubEntityClass({ schemaName: "TestSchema", className: "ClassX", baseClass });
-    classHierarchyInspector.stubEntityClass({ schemaName: "TestSchema", className: "DerivedFromX", baseClass: xClass });
-    classHierarchyInspector.stubEntityClass({ schemaName: "TestSchema", className: "UnrelatedClass" });
+    const baseClass = imodelAccess.stubEntityClass({ schemaName: "TestSchema", className: "BaseOfX" });
+    const xClass = imodelAccess.stubEntityClass({ schemaName: "TestSchema", className: "ClassX", baseClass });
+    imodelAccess.stubEntityClass({ schemaName: "TestSchema", className: "DerivedFromX", baseClass: xClass });
+    imodelAccess.stubEntityClass({ schemaName: "TestSchema", className: "UnrelatedClass" });
 
     const def1: HierarchyLevelDefinition = [createGenericNodeDefinition({ node: createTestSourceGenericNode({ label: "1" }) })];
     const def2: HierarchyLevelDefinition = [createGenericNodeDefinition({ node: createTestSourceGenericNode({ label: "2" }) })];
@@ -104,7 +104,7 @@ describe("createPredicateBasedHierarchyDefinition", () => {
     const def5: HierarchyLevelDefinition = [createGenericNodeDefinition({ node: createTestSourceGenericNode({ label: "5" }) })];
 
     const factory = createPredicateBasedHierarchyDefinition({
-      classHierarchyInspector,
+      classHierarchyInspector: imodelAccess,
       hierarchy: {
         rootNodes: async () => [],
         childNodes: [
@@ -142,7 +142,7 @@ describe("createPredicateBasedHierarchyDefinition", () => {
       },
     });
 
-    const result = await factory.defineHierarchyLevel({ imodelKey, parentNode: rootNode });
+    const result = await factory.defineHierarchyLevel({ imodelAccess, parentNode: rootNode });
     expect(result).to.deep.eq([...def2, ...def5]);
   });
 
@@ -157,11 +157,11 @@ describe("createPredicateBasedHierarchyDefinition", () => {
       },
     });
 
-    classHierarchyInspector.stubEntityClass({ schemaName: "TestSchema", className: "ClassX" });
+    imodelAccess.stubEntityClass({ schemaName: "TestSchema", className: "ClassX" });
 
     const spy = sinon.stub().resolves([]);
     const factory = createPredicateBasedHierarchyDefinition({
-      classHierarchyInspector,
+      classHierarchyInspector: imodelAccess,
       hierarchy: {
         rootNodes: async () => [],
         childNodes: [
@@ -173,9 +173,9 @@ describe("createPredicateBasedHierarchyDefinition", () => {
       },
     });
 
-    const result = await factory.defineHierarchyLevel({ imodelKey, parentNode: rootNode });
+    const result = await factory.defineHierarchyLevel({ imodelAccess, parentNode: rootNode });
     expect(spy).to.be.calledOnceWithExactly({
-      imodelKey,
+      imodelAccess,
       parentNodeClassName: "TestSchema.ClassX",
       parentNodeInstanceIds: ["0x1", "0x2"],
       parentNode: rootNode,
@@ -191,16 +191,16 @@ describe("createPredicateBasedHierarchyDefinition", () => {
       },
     });
 
-    const baseClass = classHierarchyInspector.stubEntityClass({
+    const baseClass = imodelAccess.stubEntityClass({
       schemaName: "TestSchema",
       className: "BaseClass",
     });
-    const childClass = classHierarchyInspector.stubEntityClass({
+    const childClass = imodelAccess.stubEntityClass({
       schemaName: "TestSchema",
       className: "ChildClass",
       baseClass,
     });
-    classHierarchyInspector.stubEntityClass({
+    imodelAccess.stubEntityClass({
       schemaName: "TestSchema",
       className: "ClassX",
       baseClass: childClass,
@@ -209,7 +209,7 @@ describe("createPredicateBasedHierarchyDefinition", () => {
     const derivedClassDefs = sinon.stub().resolves([]);
     const baseClassDefs = sinon.stub().resolves([]);
     let factory = createPredicateBasedHierarchyDefinition({
-      classHierarchyInspector,
+      classHierarchyInspector: imodelAccess,
       hierarchy: {
         rootNodes: async () => [],
         childNodes: [
@@ -226,9 +226,9 @@ describe("createPredicateBasedHierarchyDefinition", () => {
       },
     });
 
-    await factory.defineHierarchyLevel({ imodelKey, parentNode: rootNode });
+    await factory.defineHierarchyLevel({ imodelAccess, parentNode: rootNode });
     expect(derivedClassDefs).to.be.calledOnceWithExactly({
-      imodelKey,
+      imodelAccess,
       parentNodeClassName: "TestSchema.ClassX",
       parentNodeInstanceIds: ["0x1"],
       parentNode: rootNode,
@@ -236,7 +236,7 @@ describe("createPredicateBasedHierarchyDefinition", () => {
     expect(baseClassDefs).not.to.be.called;
 
     factory = createPredicateBasedHierarchyDefinition({
-      classHierarchyInspector,
+      classHierarchyInspector: imodelAccess,
       hierarchy: {
         rootNodes: async () => [],
         childNodes: [
@@ -253,9 +253,9 @@ describe("createPredicateBasedHierarchyDefinition", () => {
       },
     });
 
-    await factory.defineHierarchyLevel({ imodelKey, parentNode: rootNode });
+    await factory.defineHierarchyLevel({ imodelAccess, parentNode: rootNode });
     expect(baseClassDefs).to.be.calledOnceWithExactly({
-      imodelKey,
+      imodelAccess,
       parentNodeClassName: "TestSchema.ClassX",
       parentNodeInstanceIds: ["0x1"],
       parentNode: rootNode,
@@ -265,7 +265,7 @@ describe("createPredicateBasedHierarchyDefinition", () => {
   it("uses provided node parser", () => {
     const parseNode = sinon.stub();
     const factory = createPredicateBasedHierarchyDefinition({
-      classHierarchyInspector,
+      classHierarchyInspector: imodelAccess,
       parseNode,
       hierarchy: {
         rootNodes: async () => [],
@@ -278,7 +278,7 @@ describe("createPredicateBasedHierarchyDefinition", () => {
   it("uses provided node pre-processor", () => {
     const preprocessor = sinon.stub();
     const factory = createPredicateBasedHierarchyDefinition({
-      classHierarchyInspector,
+      classHierarchyInspector: imodelAccess,
       preProcessNode: preprocessor,
       hierarchy: {
         rootNodes: async () => [],
@@ -291,7 +291,7 @@ describe("createPredicateBasedHierarchyDefinition", () => {
   it("uses provided node post-processor", () => {
     const postprocessor = sinon.stub();
     const factory = createPredicateBasedHierarchyDefinition({
-      classHierarchyInspector,
+      classHierarchyInspector: imodelAccess,
       postProcessNode: postprocessor,
       hierarchy: {
         rootNodes: async () => [],
