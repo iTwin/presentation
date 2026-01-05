@@ -13,5 +13,7 @@ built-packages
 
 /apps/performance-tests/*benchmark.json
 
+/apps/full-stack-tests/run-forever.sh
+
 npm-debug.log*
 pnpm-debug.log*
