@@ -16,8 +16,6 @@ concurrency: ${{ github.workflow }}-${{ github.ref }}
 jobs:
   release:
     name: Release
-    permissions:
-      id-token: write
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
