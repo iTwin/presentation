@@ -3,27 +3,34 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { ComponentPropsWithoutRef, CSSProperties, forwardRef, memo, ReactElement, ReactNode, useCallback, useEffect, useMemo, useRef } from "react";
+import {
+  ComponentProps,
+  ComponentPropsWithoutRef,
+  CSSProperties,
+  forwardRef,
+  memo,
+  ReactElement,
+  ReactNode,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+} from "react";
 import { Tree } from "@stratakit/structures";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { TreeRendererProps } from "../Renderers.js";
 import { PresentationHierarchyNode } from "../TreeNode.js";
 import { SelectionMode, useSelectionHandler } from "../UseSelectionHandler.js";
-import { useEvent } from "../Utils.js";
+import { useEvent, useMergedRefs } from "../Utils.js";
 import { ErrorItem, FlatTreeItem, FlatTreeNodeItem, isPlaceholderItem, useErrorList, useFlatTreeItems } from "./FlatTreeNode.js";
 import { LocalizationContextProvider } from "./LocalizationContext.js";
 import { RenameContextProvider } from "./RenameAction.js";
 import { TreeErrorRenderer, TreeErrorRendererProps } from "./TreeErrorRenderer.js";
-import { PlaceholderNode, StrataKitTreeNodeRenderer } from "./TreeNodeRenderer.js";
-
-/** @alpha */
-export type TreeProps = ComponentPropsWithoutRef<typeof Tree.Root>;
-
-/** @alpha */
-export type TreeNodeRendererProps = ComponentPropsWithoutRef<typeof StrataKitTreeNodeRenderer>;
+import { PlaceholderNode, StrataKitTreeItemProps, StrataKitTreeNodeRenderer, TreeNodeRendererProps } from "./TreeNodeRenderer.js";
 
 /** @alpha */
 interface TreeRendererOwnProps {
+  id?: string;
   /**
    * A user friendly display label of the tree. Should be unique within the consuming application,
    * as it's used for accessibility purposes.
@@ -42,6 +49,10 @@ interface TreeRendererOwnProps {
      */
     onLabelChanged?: (newLabel: string) => void;
   };
+
+  treeRootProps?: Partial<Omit<ComponentProps<typeof Tree.Root>, "style">>;
+
+  getTreeItemProps?: (node: PresentationHierarchyNode) => Partial<Omit<StrataKitTreeItemProps, "selected" | "aria-level" | "aria-posinset" | "aria-setsize">>;
 
   /**
    * Callback that returns menu actions for tree item.
@@ -64,19 +75,6 @@ interface TreeRendererOwnProps {
 /** @alpha */
 type StrataKitTreeRendererProps = TreeRendererProps &
   Pick<TreeErrorRendererProps, "onFilterClick"> &
-  Omit<
-    TreeNodeRendererProps,
-    | "node"
-    | "aria-level"
-    | "aria-posinset"
-    | "aria-setsize"
-    | "reloadTree"
-    | "selected"
-    | "error"
-    | "getMenuActions"
-    | "getInlineActions"
-    | "getContextMenuActions"
-  > &
   TreeRendererOwnProps &
   ComponentPropsWithoutRef<typeof LocalizationContextProvider>;
 
@@ -87,34 +85,28 @@ type StrataKitTreeRendererProps = TreeRendererProps &
  * @see https://itwinui.bentley.com/docs/tree
  * @alpha
  */
-export function StrataKitTreeRenderer({
-  rootNodes,
-  selectNodes,
-  selectionMode,
-  expandNode,
-  treeLabel,
-  localizedStrings,
-  getHierarchyLevelDetails,
-  onFilterClick,
-  reloadTree,
-  isNodeSelected,
-  errorRenderer,
-  onNodeClick: onNodeClickOverride,
-  onNodeKeyDown: onNodeKeyDownOverride,
-  getEditingProps,
-  id,
-  getInlineActions,
-  getMenuActions,
-  getContextMenuActions,
-  ...treeProps
-}: StrataKitTreeRendererProps) {
+export function StrataKitTreeRenderer(props: StrataKitTreeRendererProps) {
+  const {
+    id,
+    rootNodes,
+    selectNodes,
+    selectionMode,
+    expandNode,
+    treeLabel,
+    localizedStrings,
+    getHierarchyLevelDetails,
+    onFilterClick,
+    reloadTree,
+    isNodeSelected,
+    errorRenderer,
+    treeRootProps,
+    ...restProps
+  } = props;
   const { onNodeClick, onNodeKeyDown } = useSelectionHandler({
     rootNodes,
     selectNodes: selectNodes ?? noopSelectNodes,
     selectionMode: selectionMode ?? "single",
   });
-  const handleNodeClick = useEvent(onNodeClickOverride ?? onNodeClick);
-  const handleKeyDown = useEvent(onNodeKeyDownOverride ?? onNodeKeyDown);
   const flatItems = useFlatTreeItems(rootNodes);
   const errorList = useErrorList(rootNodes);
 
@@ -177,41 +169,31 @@ export function StrataKitTreeRenderer({
     };
   }, [flatItems, isNodeSelected]);
 
-  const nodeActions = useMemo(() => {
-    return {
-      getMenuActions: getMenuActions ? (node: PresentationHierarchyNode) => getMenuActions({ targetNode: node, selectedNodes: getSelectedNodes() }) : undefined,
-      getInlineActions: getInlineActions
-        ? (node: PresentationHierarchyNode) => getInlineActions({ targetNode: node, selectedNodes: getSelectedNodes() })
-        : undefined,
-      getContextMenuActions: getContextMenuActions
-        ? (node: PresentationHierarchyNode) => getContextMenuActions({ targetNode: node, selectedNodes: getSelectedNodes() })
-        : undefined,
-    };
-  }, [getMenuActions, getInlineActions, getContextMenuActions, getSelectedNodes]);
-
   return (
     <LocalizationContextProvider localizedStrings={localizedStrings}>
       {errorRenderer ? errorRenderer(errorRendererProps) : <TreeErrorRenderer {...errorRendererProps} />}
       <div id={id} style={{ height: "100%", width: "100%", overflowY: "auto" }} ref={parentRef}>
-        <Tree.Root style={{ height: virtualizer.getTotalSize(), minHeight: "100%", width: "100%", position: "relative", overflow: "hidden" }}>
+        <Tree.Root
+          {...treeRootProps}
+          style={{ height: virtualizer.getTotalSize(), minHeight: "100%", width: "100%", position: "relative", overflow: "hidden" }}
+        >
           {items.map((virtualizedItem) => {
             const item = flatItems[virtualizedItem.index];
             const selected = isNodeSelected?.(item.id) ?? false;
             return (
               <VirtualTreeItem
-                {...treeProps}
-                {...nodeActions}
-                onNodeClick={handleNodeClick}
-                onNodeKeyDown={handleKeyDown}
+                {...restProps}
                 ref={virtualizer.measureElement}
-                start={virtualizedItem.start}
-                expandNode={expandNode}
-                item={item}
                 key={virtualizedItem.key}
                 data-index={virtualizedItem.index}
-                reloadTree={reloadTree}
+                start={virtualizedItem.start}
+                item={item}
                 selected={selected}
-                getEditingProps={getEditingProps}
+                expandNode={expandNode}
+                reloadTree={reloadTree}
+                onNodeClick={onNodeClick}
+                onNodeKeyDown={onNodeKeyDown}
+                getSelectedNodes={getSelectedNodes}
               />
             );
           })}
@@ -221,33 +203,14 @@ export function StrataKitTreeRenderer({
   );
 }
 
-type VirtualTreeItemProps = Omit<TreeNodeRendererProps, "node" | "aria-level" | "aria-posinset" | "aria-setsize"> & {
+type VirtualTreeItemProps = Omit<HierarchyNodeItemProps, "item" | "aria-level" | "aria-posinset" | "aria-setsize"> & {
   start: number;
+  "data-index": number;
   item: FlatTreeItem;
-  getEditingProps?: TreeRendererOwnProps["getEditingProps"];
 };
 
 const VirtualTreeItem = memo(
-  forwardRef<HTMLElement, VirtualTreeItemProps>(function VirtualTreeItem(
-    {
-      start,
-      item,
-      getDecorations,
-      getMenuActions,
-      getInlineActions,
-      getContextMenuActions,
-      getClassName,
-      getLabel,
-      getSublabel,
-      expandNode,
-      reloadTree,
-      onNodeClick,
-      onNodeKeyDown,
-      getEditingProps,
-      ...props
-    },
-    forwardedRef,
-  ) {
+  forwardRef<HTMLElement, VirtualTreeItemProps>(function VirtualTreeItem({ start, item, "data-index": dataIndex, ...props }, forwardedRef) {
     const style: CSSProperties = useMemo(
       () => ({
         position: "absolute",
@@ -261,31 +224,93 @@ const VirtualTreeItem = memo(
     );
 
     if (isPlaceholderItem(item)) {
-      return <PlaceholderNode {...props} ref={forwardedRef} style={style} aria-level={item.level} aria-posinset={1} aria-setsize={1} />;
+      return <PlaceholderNode ref={forwardedRef} data-index={dataIndex} style={style} aria-level={item.level} aria-posinset={1} aria-setsize={1} />;
     }
 
+    return <HierarchyNodeItem {...props} ref={forwardedRef} data-index={dataIndex} style={style} item={item} />;
+  }),
+);
+
+type HierarchyNodeItemProps = {
+  item: FlatTreeNodeItem;
+  style?: CSSProperties;
+  getSelectedNodes: () => PresentationHierarchyNode[];
+} & Pick<TreeNodeRendererProps, "expandNode" | "reloadTree" | "selected"> &
+  Pick<TreeRendererOwnProps, "getContextMenuActions" | "getInlineActions" | "getMenuActions" | "getTreeItemProps" | "getEditingProps"> &
+  Pick<ReturnType<typeof useSelectionHandler>, "onNodeClick" | "onNodeKeyDown">;
+
+const HierarchyNodeItem = memo(
+  forwardRef<HTMLElement, HierarchyNodeItemProps>(function HierarchyNodeItem(
+    {
+      item,
+      style,
+      selected,
+      getEditingProps,
+      getTreeItemProps,
+      expandNode,
+      reloadTree,
+      onNodeClick,
+      onNodeKeyDown,
+      getSelectedNodes,
+      getMenuActions,
+      getInlineActions,
+      getContextMenuActions,
+      ...rest
+    },
+    forwardedRef,
+  ) {
+    const nodeRef = useRef<HTMLElement>(null);
+    const node = item.node;
+    const treeItemProps = getTreeItemProps?.(node);
+
+    const isDisabled = treeItemProps?.["aria-disabled"] === true;
+    const nodeActions = useMemo(() => {
+      return {
+        menuActions: getMenuActions ? getMenuActions({ targetNode: node, selectedNodes: getSelectedNodes() }) : undefined,
+        inlineActions: getInlineActions ? getInlineActions({ targetNode: node, selectedNodes: getSelectedNodes() }) : undefined,
+        contextMenuActions: getContextMenuActions ? getContextMenuActions({ targetNode: node, selectedNodes: getSelectedNodes() }) : undefined,
+      };
+    }, [node, getMenuActions, getInlineActions, getContextMenuActions, getSelectedNodes]);
+
+    const onClick = useEvent<Required<TreeNodeRendererProps>["onClick"]>((e) => {
+      if (treeItemProps?.onClick) {
+        treeItemProps.onClick(e);
+      }
+      if (isDisabled) {
+        return;
+      }
+      onNodeClick?.(node, !selected, e);
+    });
+    const onKeyDown = useEvent<Required<TreeNodeRendererProps>["onKeyDown"]>((e) => {
+      if (treeItemProps?.onKeyDown) {
+        treeItemProps.onKeyDown(e);
+      }
+      // Ignore if it is called on the element inside, e.g. checkbox or expander
+      if (isDisabled || e.target !== nodeRef.current) {
+        return;
+      }
+      onNodeKeyDown?.(node, !selected, e);
+    });
+
     const editingProps = getEditingProps?.(item.node);
+    const ref = useMergedRefs(forwardedRef, nodeRef);
     return (
       <RenameContextProvider onLabelChanged={editingProps?.onLabelChanged}>
         <StrataKitTreeNodeRenderer
-          {...props}
-          ref={forwardedRef}
+          {...treeItemProps}
+          ref={ref}
           style={style}
           aria-level={item.level}
           aria-posinset={item.posInLevel}
           aria-setsize={item.levelSize}
           node={item.node}
+          selected={selected}
           expandNode={expandNode}
           reloadTree={reloadTree}
-          getDecorations={getDecorations}
-          getMenuActions={getMenuActions}
-          getInlineActions={getInlineActions}
-          getContextMenuActions={getContextMenuActions}
-          getClassName={getClassName}
-          getLabel={getLabel}
-          getSublabel={getSublabel}
-          onNodeClick={onNodeClick}
-          onNodeKeyDown={onNodeKeyDown}
+          onClick={onClick}
+          onKeyDown={onKeyDown}
+          {...nodeActions}
+          {...rest}
         />
       </RenameContextProvider>
     );

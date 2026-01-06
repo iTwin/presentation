@@ -167,10 +167,6 @@ function Tree({
     return (descriptor: Descriptor) => fromGenericFilter(descriptor, currentFilter);
   }, [filteringOptions]);
 
-  const getDecorations = useCallback((node: PresentationHierarchyNode) => {
-    return <Icon href={getIcon(node)} />;
-  }, []);
-
   const renderContent = () => {
     if (treeProps.rootErrorRendererProps) {
       return <StrataKitRootErrorRenderer {...treeProps.rootErrorRendererProps} />;
@@ -195,11 +191,12 @@ function Tree({
     return (
       <TreeRendererWithFilterAction
         {...treeProps.treeRendererProps}
-        style={{ height: "100%", width: "100%" }}
         onFilterClick={setFilteringOptions}
         selectionMode={"extended"}
-        getDecorations={getDecorations}
         treeLabel={treeLabel}
+        getTreeItemProps={(node) => ({
+          decorations: <Icon href={getIcon(node)} />,
+        })}
       />
     );
   };
