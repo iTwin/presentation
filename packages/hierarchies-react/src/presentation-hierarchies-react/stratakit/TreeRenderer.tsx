@@ -100,7 +100,11 @@ export function StrataKitTreeRenderer(props: StrataKitTreeRendererProps) {
     isNodeSelected,
     errorRenderer,
     treeRootProps,
-    ...restProps
+    getContextMenuActions,
+    getEditingProps,
+    getInlineActions,
+    getMenuActions,
+    getTreeItemProps,
   } = props;
   const { onNodeClick, onNodeKeyDown } = useSelectionHandler({
     rootNodes,
@@ -182,7 +186,6 @@ export function StrataKitTreeRenderer(props: StrataKitTreeRendererProps) {
             const selected = isNodeSelected?.(item.id) ?? false;
             return (
               <VirtualTreeItem
-                {...restProps}
                 ref={virtualizer.measureElement}
                 key={virtualizedItem.key}
                 data-index={virtualizedItem.index}
@@ -194,6 +197,11 @@ export function StrataKitTreeRenderer(props: StrataKitTreeRendererProps) {
                 onNodeClick={onNodeClick}
                 onNodeKeyDown={onNodeKeyDown}
                 getSelectedNodes={getSelectedNodes}
+                getContextMenuActions={getContextMenuActions}
+                getEditingProps={getEditingProps}
+                getInlineActions={getInlineActions}
+                getMenuActions={getMenuActions}
+                getTreeItemProps={getTreeItemProps}
               />
             );
           })}
@@ -210,7 +218,7 @@ type VirtualTreeItemProps = Omit<HierarchyNodeItemProps, "item" | "aria-level" |
 };
 
 const VirtualTreeItem = memo(
-  forwardRef<HTMLElement, VirtualTreeItemProps>(function VirtualTreeItem({ start, item, "data-index": dataIndex, ...props }, forwardedRef) {
+  forwardRef<HTMLElement, VirtualTreeItemProps>(function VirtualTreeItem({ start, item, ...props }, forwardedRef) {
     const style: CSSProperties = useMemo(
       () => ({
         position: "absolute",
@@ -224,10 +232,10 @@ const VirtualTreeItem = memo(
     );
 
     if (isPlaceholderItem(item)) {
-      return <PlaceholderNode ref={forwardedRef} data-index={dataIndex} style={style} aria-level={item.level} aria-posinset={1} aria-setsize={1} />;
+      return <PlaceholderNode ref={forwardedRef} data-index={props["data-index"]} style={style} aria-level={item.level} aria-posinset={1} aria-setsize={1} />;
     }
 
-    return <HierarchyNodeItem {...props} ref={forwardedRef} data-index={dataIndex} style={style} item={item} />;
+    return <HierarchyNodeItem {...props} ref={forwardedRef} style={style} item={item} />;
   }),
 );
 
@@ -243,12 +251,9 @@ const HierarchyNodeItem = memo(
   forwardRef<HTMLElement, HierarchyNodeItemProps>(function HierarchyNodeItem(
     {
       item,
-      style,
       selected,
       getEditingProps,
       getTreeItemProps,
-      expandNode,
-      reloadTree,
       onNodeClick,
       onNodeKeyDown,
       getSelectedNodes,
@@ -264,11 +269,14 @@ const HierarchyNodeItem = memo(
     const treeItemProps = getTreeItemProps?.(node);
 
     const isDisabled = treeItemProps?.["aria-disabled"] === true;
-    const nodeActions = useMemo(() => ({
-      menuActions: getMenuActions ? getMenuActions({ targetNode: node, selectedNodes: getSelectedNodes() }) : undefined,
-      inlineActions: getInlineActions ? getInlineActions({ targetNode: node, selectedNodes: getSelectedNodes() }) : undefined,
-      contextMenuActions: getContextMenuActions ? getContextMenuActions({ targetNode: node, selectedNodes: getSelectedNodes() }) : undefined,
-    }), [node, getMenuActions, getInlineActions, getContextMenuActions, getSelectedNodes]);
+    const nodeActions = useMemo(
+      () => ({
+        menuActions: getMenuActions ? getMenuActions({ targetNode: node, selectedNodes: getSelectedNodes() }) : undefined,
+        inlineActions: getInlineActions ? getInlineActions({ targetNode: node, selectedNodes: getSelectedNodes() }) : undefined,
+        contextMenuActions: getContextMenuActions ? getContextMenuActions({ targetNode: node, selectedNodes: getSelectedNodes() }) : undefined,
+      }),
+      [node, getMenuActions, getInlineActions, getContextMenuActions, getSelectedNodes],
+    );
 
     const onClick = useEvent<Required<TreeNodeRendererProps>["onClick"]>((e) => {
       if (treeItemProps?.onClick) {
@@ -296,19 +304,16 @@ const HierarchyNodeItem = memo(
       <RenameContextProvider onLabelChanged={editingProps?.onLabelChanged}>
         <StrataKitTreeNodeRenderer
           {...treeItemProps}
+          {...rest}
+          {...nodeActions}
           ref={ref}
-          style={style}
           aria-level={item.level}
           aria-posinset={item.posInLevel}
           aria-setsize={item.levelSize}
           node={item.node}
           selected={selected}
-          expandNode={expandNode}
-          reloadTree={reloadTree}
           onClick={onClick}
           onKeyDown={onKeyDown}
-          {...nodeActions}
-          {...rest}
         />
       </RenameContextProvider>
     );

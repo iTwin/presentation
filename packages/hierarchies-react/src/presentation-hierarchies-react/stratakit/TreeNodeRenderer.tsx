@@ -76,8 +76,7 @@ export type TreeNodeRendererProps = StrataKitTreeItemProps & TreeNodeRendererOwn
  */
 export const StrataKitTreeNodeRenderer: FC<PropsWithRef<TreeNodeRendererProps & RefAttributes<HTMLElement>>> = memo(
   forwardRef<HTMLElement, TreeNodeRendererProps>(function HierarchyNode(props, forwardedRef) {
-    const { node, selected, className, description, decorations, inlineActions, menuActions, contextMenuActions, expandNode, reloadTree, ...treeItemProps } =
-      props;
+    const { node, decorations, inlineActions, menuActions, contextMenuActions, expandNode, reloadTree, ...treeItemProps } = props;
     const { localizedStrings } = useLocalizationContext();
     const renameContext = useRenameContext();
     const [contextMenuProps, setContextMenuProps] = useState<{ position: { x: number; y: number }; actions: ReactNode[] } | undefined>(undefined);
@@ -97,7 +96,7 @@ export const StrataKitTreeNodeRenderer: FC<PropsWithRef<TreeNodeRendererProps & 
         ];
       }
       if (!inlineActions) {
-        return [];
+        return undefined;
       }
       return injectActionVariant(inlineActions, "inline");
     }, [node, inlineActions, localizedStrings.retry, reloadTree]);
@@ -140,10 +139,7 @@ export const StrataKitTreeNodeRenderer: FC<PropsWithRef<TreeNodeRendererProps & 
         <Tree.Item
           {...treeItemProps}
           ref={forwardedRef}
-          className={className}
           label={labelEditor ?? label}
-          description={description}
-          selected={selected}
           expanded={expanded}
           onExpandedChange={useCallback(
             (isExpanded: boolean) => {
