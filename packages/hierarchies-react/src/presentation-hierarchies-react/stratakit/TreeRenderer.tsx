@@ -211,7 +211,7 @@ export function StrataKitTreeRenderer(props: StrataKitTreeRendererProps) {
   );
 }
 
-type VirtualTreeItemProps = Omit<HierarchyNodeItemProps, "item" | "aria-level" | "aria-posinset" | "aria-setsize"> & {
+type VirtualTreeItemProps = Omit<HierarchyNodeItemProps, "item"> & {
   start: number;
   "data-index": number;
   item: FlatTreeItem;

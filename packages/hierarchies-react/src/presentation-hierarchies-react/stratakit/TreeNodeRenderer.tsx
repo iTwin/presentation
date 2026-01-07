@@ -32,7 +32,6 @@ import { TreeActionBase, TreeActionBaseAttributes } from "./TreeAction.js";
 export interface TreeNodeRendererOwnProps extends Pick<TreeRendererProps, "expandNode" | "reloadTree"> {
   /** Node that is rendered. */
   node: PresentationHierarchyNode;
-
   /**
    * Menu actions for tree item.
    * Must be an array of `<TreeActionBase />` or `<Divider />` elements.
