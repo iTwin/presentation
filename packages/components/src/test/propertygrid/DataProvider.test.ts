@@ -23,7 +23,6 @@ import {
   Item,
   KoqPropertyValueFormatter,
   LabelDefinition,
-  Property,
   PropertyValueFormat,
   RelationshipMeaning,
   StructFieldMemberDescription,
@@ -298,40 +297,49 @@ describe("PropertyDataProvider", () => {
     const createPrimitiveField = createTestSimpleContentField;
 
     const createArrayField = (props?: { name?: string; itemsType?: TypeDescription }) => {
-      const property: Property = {
-        property: createTestPropertyInfo(),
-      };
-      const typeDescription: ArrayTypeDescription = {
+      const itemsType = props?.itemsType ?? { valueFormat: PropertyValueFormat.Primitive, typeName: "MyArrayItemType" };
+      const arrayType: ArrayTypeDescription = {
         valueFormat: PropertyValueFormat.Array,
-        typeName: "MyArray[]",
-        memberType: props?.itemsType ?? { valueFormat: PropertyValueFormat.Primitive, typeName: "MyType" },
+        typeName: "MyArrayItemType[]",
+        memberType: itemsType,
       };
       return createTestPropertiesContentField({
-        name: props?.name,
-        type: typeDescription,
-        properties: [property],
+        name: props?.name ?? "MyArray",
+        type: arrayType,
+        properties: [{ property: createTestPropertyInfo() }],
+        itemsField: createTestPropertiesContentField({
+          name: "MyArrayItem",
+          type: itemsType,
+          properties: [{ property: createTestPropertyInfo({ name: itemsType.typeName }) }],
+        }),
       });
     };
 
     const createStructField = (props?: { name?: string; members?: StructFieldMemberDescription[] }) => {
-      const property: Property = {
-        property: createTestPropertyInfo(),
-      };
-      const typeDescription: StructTypeDescription = {
+      const memberTypes = props?.members ?? [
+        {
+          name: "MyMemberProperty",
+          label: "My member property",
+          type: { valueFormat: PropertyValueFormat.Primitive, typeName: "MyMemberType" },
+        },
+      ];
+      const structType: StructTypeDescription = {
         valueFormat: PropertyValueFormat.Struct,
-        typeName: "MyStruct",
-        members: props?.members ?? [
-          {
-            name: "MyProperty",
-            label: "My Property",
-            type: { valueFormat: PropertyValueFormat.Primitive, typeName: "MyType" },
-          },
-        ],
+        typeName: "MyStructType",
+        members: memberTypes,
       };
       return createTestPropertiesContentField({
-        name: props?.name,
-        type: typeDescription,
-        properties: [property],
+        name: props?.name ?? "MyStruct",
+        type: structType,
+        properties: [{ property: createTestPropertyInfo() }],
+        memberFields: memberTypes.map((member) =>
+          createTestPropertiesContentField({
+            name: member.name,
+            label: member.label,
+            type: member.type,
+            properties: [{ property: createTestPropertyInfo({ name: member.name }) }],
+          }),
+        ),
       });
     };
 

@@ -1711,8 +1711,8 @@ Object {
         "links": undefined,
         "property": Object {
           "displayLabel": "Properties Field",
-          "name": "PropertiesField",
-          "typename": "MyArray[]",
+          "name": "MyArray",
+          "typename": "MyArrayItemType[]",
         },
         "value": Object {
           "items": Array [
@@ -1727,8 +1727,8 @@ Object {
               "links": undefined,
               "property": Object {
                 "displayLabel": "Properties Field",
-                "name": "PropertiesField",
-                "typename": "MyType",
+                "name": "MyArray$MyArrayItem",
+                "typename": "MyArrayItemType",
               },
               "value": Object {
                 "displayValue": "some display value 1",
@@ -1747,8 +1747,8 @@ Object {
               "links": undefined,
               "property": Object {
                 "displayLabel": "Properties Field",
-                "name": "PropertiesField",
-                "typename": "MyType",
+                "name": "MyArray$MyArrayItem",
+                "typename": "MyArrayItemType",
               },
               "value": Object {
                 "displayValue": "some display value 2",
@@ -1757,7 +1757,7 @@ Object {
               },
             },
           ],
-          "itemsTypeName": "MyType",
+          "itemsTypeName": "MyArrayItemType",
           "valueFormat": 1,
         },
       },
@@ -1866,12 +1866,12 @@ Object {
         "links": undefined,
         "property": Object {
           "displayLabel": "Properties Field",
-          "name": "PropertiesField",
-          "typename": "MyStruct",
+          "name": "MyStruct",
+          "typename": "MyStructType",
         },
         "value": Object {
           "members": Object {
-            "MyProperty": PropertyRecord {
+            "MyMemberProperty": PropertyRecord {
               "autoExpand": undefined,
               "description": "some display value",
               "extendedData": undefined,
@@ -1881,9 +1881,9 @@ Object {
               "isReadonly": undefined,
               "links": undefined,
               "property": Object {
-                "displayLabel": "My Property",
-                "name": "MyProperty",
-                "typename": "MyType",
+                "displayLabel": "My member property",
+                "name": "MyStruct$MyMemberProperty",
+                "typename": "MyMemberType",
               },
               "value": Object {
                 "displayValue": "some display value",
@@ -3612,8 +3612,8 @@ Object {
         "links": undefined,
         "property": Object {
           "displayLabel": "Properties Field",
-          "name": "PropertiesField",
-          "typename": "MyArray[]",
+          "name": "MyArray",
+          "typename": "MyArrayItemType[]",
         },
         "value": Object {
           "items": Array [
@@ -3628,8 +3628,8 @@ Object {
               "links": undefined,
               "property": Object {
                 "displayLabel": "Properties Field",
-                "name": "PropertiesField",
-                "typename": "MyType",
+                "name": "MyArray$MyArrayItem",
+                "typename": "MyArrayItemType",
               },
               "value": Object {
                 "displayValue": "some display value 1",
@@ -3648,8 +3648,8 @@ Object {
               "links": undefined,
               "property": Object {
                 "displayLabel": "Properties Field",
-                "name": "PropertiesField",
-                "typename": "MyType",
+                "name": "MyArray$MyArrayItem",
+                "typename": "MyArrayItemType",
               },
               "value": Object {
                 "displayValue": "some display value 2",
@@ -3658,7 +3658,7 @@ Object {
               },
             },
           ],
-          "itemsTypeName": "MyType",
+          "itemsTypeName": "MyArrayItemType",
           "valueFormat": 1,
         },
       },
@@ -3767,12 +3767,12 @@ Object {
         "links": undefined,
         "property": Object {
           "displayLabel": "Properties Field",
-          "name": "PropertiesField",
-          "typename": "MyStruct",
+          "name": "MyStruct",
+          "typename": "MyStructType",
         },
         "value": Object {
           "members": Object {
-            "MyProperty": PropertyRecord {
+            "MyMemberProperty": PropertyRecord {
               "autoExpand": undefined,
               "description": "some display value",
               "extendedData": undefined,
@@ -3782,9 +3782,9 @@ Object {
               "isReadonly": undefined,
               "links": undefined,
               "property": Object {
-                "displayLabel": "My Property",
-                "name": "MyProperty",
-                "typename": "MyType",
+                "displayLabel": "My member property",
+                "name": "MyStruct$MyMemberProperty",
+                "typename": "MyMemberType",
               },
               "value": Object {
                 "displayValue": "some display value",

@@ -20,9 +20,11 @@ import {
   Item,
   KeySet,
   Paged,
+  PropertyValueFormat,
   RegisteredRuleset,
   Ruleset,
   SelectionInfo,
+  TypeDescription,
   VariableValue,
 } from "@itwin/presentation-common";
 import { IModelContentChangeEventArgs, Presentation, PresentationManager, RulesetManager, RulesetVariablesManager } from "@itwin/presentation-frontend";
@@ -614,7 +616,7 @@ describe("ContentDataProvider", () => {
   describe("getFieldByPropertyDescription", () => {
     let propertyDescription: PropertyDescription;
 
-    before(() => {
+    beforeEach(() => {
       propertyDescription = {
         name: "propertyName",
         displayLabel: "labelString",
@@ -677,6 +679,90 @@ describe("ContentDataProvider", () => {
       const resultField = await provider.getFieldByPropertyDescription(propertyDescription);
       expect(presentationManager.getContentDescriptor).to.be.calledOnce;
       expect(resultField).to.eq(nestedField);
+    });
+
+    it("return a struct member field", async () => {
+      const memberFieldType: TypeDescription = {
+        valueFormat: PropertyValueFormat.Primitive,
+        typeName: "string",
+      };
+      const memberField = createTestPropertiesContentField({
+        name: "member-field",
+        type: memberFieldType,
+        properties: [
+          {
+            property: createTestPropertyInfo({ name: "test-member-property" }),
+          },
+        ],
+      });
+      const structFieldType: TypeDescription = {
+        valueFormat: PropertyValueFormat.Struct,
+        typeName: "TestStruct",
+        members: [
+          {
+            name: "member",
+            label: "Struct Member",
+            type: memberFieldType,
+          },
+        ],
+      };
+      const structField = createTestPropertiesContentField({
+        name: "struct-field",
+        type: structFieldType,
+        properties: [
+          {
+            property: createTestPropertyInfo({ name: "test-struct-property", type: structFieldType.typeName }),
+          },
+        ],
+        memberFields: [memberField],
+      });
+      const descriptor = createTestContentDescriptor({ fields: [structField] });
+      presentationManager.getContentDescriptor.resolves(descriptor);
+
+      propertyDescription.name = combineFieldNames(memberField.name, structField.name);
+
+      const resultField = await provider.getFieldByPropertyDescription(propertyDescription);
+      expect(presentationManager.getContentDescriptor).to.be.calledOnce;
+      expect(resultField).to.eq(memberField);
+    });
+
+    it("return an array item field", async () => {
+      const itemsFieldType: TypeDescription = {
+        valueFormat: PropertyValueFormat.Primitive,
+        typeName: "string",
+      };
+      const itemsField = createTestPropertiesContentField({
+        name: "items-field",
+        type: itemsFieldType,
+        properties: [
+          {
+            property: createTestPropertyInfo({ name: "test-items-property" }),
+          },
+        ],
+      });
+      const arrayFieldType: TypeDescription = {
+        valueFormat: PropertyValueFormat.Array,
+        typeName: "TestArray",
+        memberType: itemsFieldType,
+      };
+      const arrayField = createTestPropertiesContentField({
+        name: "array-field",
+        type: arrayFieldType,
+        properties: [
+          {
+            property: createTestPropertyInfo({ name: "test-array-property", type: arrayFieldType.typeName }),
+          },
+        ],
+        itemsField,
+      });
+      const descriptor = createTestContentDescriptor({ fields: [arrayField] });
+      presentationManager.getContentDescriptor.resolves(descriptor);
+
+      propertyDescription.name = combineFieldNames(itemsField.name, arrayField.name);
+
+      const resultField = await provider.getFieldByPropertyDescription(propertyDescription);
+      expect(presentationManager.getContentDescriptor).to.be.calledOnce;
+      expect(resultField).to.eq(itemsField);
     });
   });
 
