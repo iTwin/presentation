@@ -264,13 +264,11 @@ const HierarchyNodeItem = memo(
     const treeItemProps = getTreeItemProps?.(node);
 
     const isDisabled = treeItemProps?.["aria-disabled"] === true;
-    const nodeActions = useMemo(() => {
-      return {
-        menuActions: getMenuActions ? getMenuActions({ targetNode: node, selectedNodes: getSelectedNodes() }) : undefined,
-        inlineActions: getInlineActions ? getInlineActions({ targetNode: node, selectedNodes: getSelectedNodes() }) : undefined,
-        contextMenuActions: getContextMenuActions ? getContextMenuActions({ targetNode: node, selectedNodes: getSelectedNodes() }) : undefined,
-      };
-    }, [node, getMenuActions, getInlineActions, getContextMenuActions, getSelectedNodes]);
+    const nodeActions = useMemo(() => ({
+      menuActions: getMenuActions ? getMenuActions({ targetNode: node, selectedNodes: getSelectedNodes() }) : undefined,
+      inlineActions: getInlineActions ? getInlineActions({ targetNode: node, selectedNodes: getSelectedNodes() }) : undefined,
+      contextMenuActions: getContextMenuActions ? getContextMenuActions({ targetNode: node, selectedNodes: getSelectedNodes() }) : undefined,
+    }), [node, getMenuActions, getInlineActions, getContextMenuActions, getSelectedNodes]);
 
     const onClick = useEvent<Required<TreeNodeRendererProps>["onClick"]>((e) => {
       if (treeItemProps?.onClick) {
