@@ -52,7 +52,7 @@ export const getDisplayName = <P>(component: React.ComponentType<P>): string => 
  */
 export const findField = (descriptor: Descriptor, recordPropertyName: string): Field | undefined => {
   // note: define `fieldsSource` as an object with optional `getFieldByName` method, because some field sources received this
-  // method later than our minimum required version of `@itwin/presentation-components`
+  // method later than our minimum required version of `@itwin/presentation-common`
   let fieldsSource: { getFieldByName?: (name: string) => Field | undefined } = descriptor;
   const fieldNames = parseCombinedFieldNames(recordPropertyName);
   while (fieldNames.length) {
