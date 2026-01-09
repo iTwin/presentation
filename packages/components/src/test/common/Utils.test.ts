@@ -60,6 +60,13 @@ describe("Utils", () => {
       expect(result).to.be.undefined;
     });
 
+    it("returns undefined for field of invalid type", () => {
+      const invalidParentField = createTestPropertiesContentField({ name: "parent field", properties: [] });
+      const descriptor = createTestContentDescriptor({ fields: [invalidParentField] });
+      const result = findField(descriptor, combineFieldNames("child field", invalidParentField.name));
+      expect(result).to.be.undefined;
+    });
+
     it("finds field in Descriptor.fields list", () => {
       const descriptor = createTestContentDescriptor({
         fields: [createTestSimpleContentField()],
@@ -77,6 +84,22 @@ describe("Utils", () => {
       const descriptor = createTestContentDescriptor({ fields: [nestingField] });
       const result = findField(descriptor, combineFieldNames(nestedField.name, nestingField.name));
       expect(result!.name).to.eq(nestedField.name);
+    });
+
+    it("finds array item field", () => {
+      const itemsField = createTestPropertiesContentField({ name: "items field", properties: [] });
+      const arrayField = createTestPropertiesContentField({ itemsField, properties: [] });
+      const descriptor = createTestContentDescriptor({ fields: [arrayField] });
+      const result = findField(descriptor, combineFieldNames(itemsField.name, arrayField.name));
+      expect(result!.name).to.eq(itemsField.name);
+    });
+
+    it("finds struct member field", () => {
+      const memberField = createTestPropertiesContentField({ name: "member field", properties: [] });
+      const structField = createTestPropertiesContentField({ memberFields: [memberField], properties: [] });
+      const descriptor = createTestContentDescriptor({ fields: [structField] });
+      const result = findField(descriptor, combineFieldNames(memberField.name, structField.name));
+      expect(result!.name).to.eq(memberField.name);
     });
   });
 
