@@ -189,6 +189,86 @@ index 497eb88e..7cef9c80 100644
    it("edits merged values", async function () {
      const { imodel, schema, ...imodelKeys } = await buildIModel(this, async (builder, mochaContext) => {
        const mySchema = await importSchema(
+diff --git a/apps/full-stack-tests/src/components/properties/PropertyPaneDataProvider.test.ts b/apps/full-stack-tests/src/components/properties/PropertyPaneDataProvider.test.ts
+index eb48a47c..86433d78 100644
+--- a/apps/full-stack-tests/src/components/properties/PropertyPaneDataProvider.test.ts
++++ b/apps/full-stack-tests/src/components/properties/PropertyPaneDataProvider.test.ts
+@@ -15,7 +15,7 @@ import * as sinon from "sinon";
+ import { PrimitiveValue, PropertyDescription, PropertyRecord, PropertyValue, PropertyValueFormat } from "@itwin/appui-abstract";
+ import { PropertyCategory } from "@itwin/components-react";
+ import { assert } from "@itwin/core-bentley";
+-import { ArrayPropertiesField, combineFieldNames, InstanceKey, KeySet, PropertiesField, RuleTypes, StructPropertiesField } from "@itwin/presentation-common";
++import { combineFieldNames, InstanceKey, KeySet, PropertiesField, RuleTypes } from "@itwin/presentation-common";
+ import { DEFAULT_PROPERTY_GRID_RULESET, PresentationPropertyDataProvider, PresentationPropertyDataProviderProps } from "@itwin/presentation-components";
+ import { Presentation } from "@itwin/presentation-frontend";
+ import { buildTestIModel } from "@itwin/presentation-testing";
+@@ -323,7 +323,8 @@ describe("PropertyDataProvider", async () => {
+   runTests("with flat property categories", (provider) => (provider.isNestedPropertyCategoryGroupingEnabled = false));
+   runTests("with nested property categories", (provider) => (provider.isNestedPropertyCategoryGroupingEnabled = true));
+ 
+-  it("finds array item & struct member fields", async function () {
++  // requires iTwin.js@5.6
++  it.skip("finds array item & struct member fields", async function () {
+     const { imodel, ...keys } = await buildIModel(this, async (builder, mochaContext) => {
+       const schema = await importSchema(
+         mochaContext,
+@@ -449,15 +450,6 @@ describe("PropertyDataProvider", async () => {
+       name: "[*]",
+       label: "ArrayProperty",
+     });
+-    expect(arrayItemField.parentArrayField)
+-      .to.be.instanceOf(ArrayPropertiesField)
+-      .and.to.containSubset({
+-        label: "ArrayProperty",
+-        type: {
+-          valueFormat: "Array",
+-          typeName: "string[]",
+-        },
+-      });
+ 
+     // test retrieving struct member field
+     const structRecord = properties.records["/selected-item/"].find((r) => r.property.name.endsWith("StructProperty"));
+@@ -467,15 +459,6 @@ describe("PropertyDataProvider", async () => {
+     expect(structMemberField).to.containSubset({
+       name: "StringMember",
+     });
+-    expect(structMemberField.parentStructField)
+-      .to.be.instanceOf(StructPropertiesField)
+-      .and.to.containSubset({
+-        label: "StructProperty",
+-        type: {
+-          valueFormat: "Struct",
+-          typeName: "TestStruct",
+-        },
+-      });
+ 
+     // test retrieving struct array member field
+     const structArrayRecord = properties.records["/selected-item/"].find((r) => r.property.name.endsWith("StructArrayProperty"));
+@@ -487,24 +470,6 @@ describe("PropertyDataProvider", async () => {
+     expect(structArrayMemberField).to.containSubset({
+       name: "StringMember",
+     });
+-    expect(structArrayMemberField.parentStructField)
+-      .to.be.instanceOf(StructPropertiesField)
+-      .and.to.containSubset({
+-        label: "StructArrayProperty",
+-        type: {
+-          valueFormat: "Struct",
+-          typeName: "TestStruct",
+-        },
+-      });
+-    expect((structArrayMemberField.parentStructField as StructPropertiesField).parentArrayField)
+-      .to.be.instanceOf(ArrayPropertiesField)
+-      .and.to.containSubset({
+-        label: "StructArrayProperty",
+-        type: {
+-          valueFormat: "Array",
+-          typeName: "TestStruct[]",
+-        },
+-      });
+   });
+ 
+   it("gets property data after re-initializing Presentation", async function () {
 diff --git a/apps/full-stack-tests/src/testing/RulesetTesting.test.ts b/apps/full-stack-tests/src/testing/RulesetTesting.test.ts
 index 63947822..621c6df2 100644
 --- a/apps/full-stack-tests/src/testing/RulesetTesting.test.ts
