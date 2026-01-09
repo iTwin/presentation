@@ -155,6 +155,7 @@ export const TreeNodeRenderer: React.ForwardRefExoticComponent<TreeNodeRendererP
       return (
         <TreeNode
           {...treeNodeProps}
+          className="stateless-tree-node"
           ref={forwardedRef}
           label={localizedStrings.noFilteredChildren}
           isDisabled={true}
@@ -167,6 +168,7 @@ export const TreeNodeRenderer: React.ForwardRefExoticComponent<TreeNodeRendererP
     return (
       <TreeNode
         {...treeNodeProps}
+        className="stateless-tree-node"
         ref={forwardedRef}
         label={<ErrorNodeLabel message={node.message} onRetry={onRetry} />}
         isDisabled={true}
@@ -254,6 +256,7 @@ const PlaceholderNode = forwardRef<
     <TreeNode
       {...props}
       ref={forwardedRef}
+      className="stateless-tree-node"
       label={localizedStrings.loading}
       icon={
         <ProgressRadial

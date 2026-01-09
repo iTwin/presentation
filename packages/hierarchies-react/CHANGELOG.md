@@ -1,5 +1,11 @@
 # @itwin/presentation-hierarchies-react
 
+## 1.9.9
+
+### Patch Changes
+
+- [#1160](https://github.com/iTwin/presentation/pull/1160): Fixed tree placeholder node spinner size to match tree node icons.
+
 ## 1.9.8
 
 ### Patch Changes
