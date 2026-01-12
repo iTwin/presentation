@@ -260,14 +260,19 @@ type StrataKitRootErrorRendererProps = {
     error: ErrorInfo;
 } & RootErrorRendererProps;
 
+// @alpha (undocumented)
+type StrataKitTreeItemProps = Omit<ComponentPropsWithoutRef<typeof Tree.Item>, "actions" | "inlineActions" | "expanded" | "onExpandedChange" | "icon" | "unstable_decorations" | "error"> & {
+    decorations?: ReactNode;
+};
+
 // @public
 export const StrataKitTreeNodeRenderer: FC<PropsWithRef<TreeNodeRendererProps & RefAttributes<HTMLElement>>>;
 
 // @alpha
-export function StrataKitTreeRenderer({ rootNodes, selectNodes, selectionMode, expandNode, treeLabel, localizedStrings, getHierarchyLevelDetails, onFilterClick, reloadTree, isNodeSelected, errorRenderer, onNodeClick: onNodeClickOverride, onNodeKeyDown: onNodeKeyDownOverride, getEditingProps, id, getInlineActions, getMenuActions, getContextMenuActions, ...treeProps }: StrataKitTreeRendererProps): JSX_2.Element;
+export function StrataKitTreeRenderer(props: StrataKitTreeRendererProps): JSX_2.Element;
 
 // @alpha (undocumented)
-type StrataKitTreeRendererProps = TreeRendererProps & Pick<TreeErrorRendererProps, "onFilterClick"> & Omit<TreeNodeRendererProps_2, "node" | "aria-level" | "aria-posinset" | "aria-setsize" | "reloadTree" | "selected" | "error" | "getMenuActions" | "getInlineActions" | "getContextMenuActions"> & TreeRendererOwnProps & ComponentPropsWithoutRef<typeof LocalizationContextProvider>;
+type StrataKitTreeRendererProps = TreeRendererProps & Pick<TreeErrorRendererProps, "onFilterClick"> & TreeRendererOwnProps & ComponentPropsWithoutRef<typeof LocalizationContextProvider>;
 
 // @alpha
 export const TreeActionBase: NamedExoticComponent<TreeActionBaseProps>;
@@ -305,27 +310,15 @@ interface TreeErrorRendererOwnProps {
 type TreeErrorRendererProps = TreeErrorRendererOwnProps & TreeErrorItemProps & Pick<TreeRendererProps, "getHierarchyLevelDetails">;
 
 // @alpha (undocumented)
-type TreeNodeProps = ComponentPropsWithoutRef<typeof Tree.Item>;
-
-// @alpha (undocumented)
-interface TreeNodeRendererOwnProps {
-    getClassName?: (node: PresentationHierarchyNode) => string | undefined;
-    getContextMenuActions?: (node: PresentationHierarchyNode) => ReactNode[];
-    getDecorations?: (node: PresentationHierarchyNode) => ReactNode;
-    getInlineActions?: (node: PresentationHierarchyNode) => ReactNode[];
-    getLabel?: (node: PresentationHierarchyNode) => ReactElement | undefined;
-    getMenuActions?: (node: PresentationHierarchyNode) => ReactNode[];
-    getSublabel?: (node: PresentationHierarchyNode) => ReactElement | undefined;
+interface TreeNodeRendererOwnProps extends Pick<TreeRendererProps, "expandNode" | "reloadTree"> {
+    contextMenuActions?: ReactNode[];
+    inlineActions?: ReactNode[];
+    menuActions?: ReactNode[];
     node: PresentationHierarchyNode;
-    onNodeClick?: (node: PresentationHierarchyNode, isSelected: boolean, event: React.MouseEvent<HTMLElement>) => void;
-    onNodeKeyDown?: (node: PresentationHierarchyNode, isSelected: boolean, event: React.KeyboardEvent<HTMLElement>) => void;
 }
 
 // @alpha (undocumented)
-type TreeNodeRendererProps = Pick<TreeRendererProps, "expandNode" | "reloadTree"> & Omit<TreeNodeProps, "actions" | "label" | "expanded" | "unstable_decorations" | "error"> & TreeNodeRendererOwnProps;
-
-// @alpha (undocumented)
-type TreeNodeRendererProps_2 = ComponentPropsWithoutRef<typeof StrataKitTreeNodeRenderer>;
+type TreeNodeRendererProps = StrataKitTreeItemProps & TreeNodeRendererOwnProps;
 
 // @alpha (undocumented)
 interface TreeRendererOwnProps {
@@ -345,8 +338,14 @@ interface TreeRendererOwnProps {
         targetNode: PresentationHierarchyNode;
         selectedNodes: PresentationHierarchyNode[];
     }) => ReactNode[];
+    // (undocumented)
+    getTreeItemProps?: (node: PresentationHierarchyNode) => Partial<Omit<StrataKitTreeItemProps, "selected" | "aria-level" | "aria-posinset" | "aria-setsize">>;
+    // (undocumented)
+    id?: string;
     selectionMode?: SelectionMode_2;
     treeLabel: string;
+    // (undocumented)
+    treeRootProps?: Partial<Omit<ComponentProps<typeof Tree.Root>, "style">>;
 }
 
 // @alpha

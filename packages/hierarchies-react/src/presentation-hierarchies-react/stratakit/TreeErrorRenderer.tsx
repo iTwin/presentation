@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { ReactElement } from "react";
+import { cloneElement, ReactElement } from "react";
 import { unstable_ErrorRegion as ErrorRegion } from "@stratakit/structures";
 import { HierarchyLevelDetails, TreeRendererProps } from "../Renderers.js";
 import { ErrorItemRenderer, ErrorItemRendererProps } from "./ErrorItemRenderer.js";
@@ -69,7 +69,7 @@ export function TreeErrorRenderer({
     };
 
     if (renderError) {
-      return renderError(errorRendererProps);
+      return cloneElement(renderError(errorRendererProps), { key: errorItem.errorNode.id });
     }
 
     return <ErrorItemRenderer key={errorItem.errorNode.id} {...errorRendererProps} />;

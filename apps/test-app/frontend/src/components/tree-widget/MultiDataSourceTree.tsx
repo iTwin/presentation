@@ -141,7 +141,14 @@ function Tree({ imodelAccess, height, width, treeLabel }: { imodelAccess: IModel
 
     return (
       <Flex.Item alignSelf="flex-start" style={{ width: "100%", overflow: "auto" }}>
-        <StrataKitTreeRenderer {...treeProps.treeRendererProps} getDecorations={(node) => getIcon(node)} selectionMode={"extended"} treeLabel={treeLabel} />
+        <StrataKitTreeRenderer
+          {...treeProps.treeRendererProps}
+          selectionMode={"extended"}
+          treeLabel={treeLabel}
+          getTreeItemProps={(node) => ({
+            decorations: getIcon(node),
+          })}
+        />
       </Flex.Item>
     );
   };

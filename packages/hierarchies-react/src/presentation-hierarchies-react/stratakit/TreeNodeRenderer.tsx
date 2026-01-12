@@ -9,13 +9,9 @@ import {
   FC,
   forwardRef,
   isValidElement,
-  LegacyRef,
   memo,
-  MutableRefObject,
   PropsWithRef,
-  ReactElement,
   ReactNode,
-  Ref,
   RefAttributes,
   useCallback,
   useEffect,
@@ -33,49 +29,41 @@ import { useRenameContext } from "./RenameAction.js";
 import { TreeActionBase, TreeActionBaseAttributes } from "./TreeAction.js";
 
 /** @alpha */
-type TreeNodeProps = ComponentPropsWithoutRef<typeof Tree.Item>;
-
-/** @alpha */
-export interface TreeNodeRendererOwnProps {
+export interface TreeNodeRendererOwnProps extends Pick<TreeRendererProps, "expandNode" | "reloadTree"> {
   /** Node that is rendered. */
   node: PresentationHierarchyNode;
-  /** Returns the class name for a given node. */
-  getClassName?: (node: PresentationHierarchyNode) => string | undefined;
-  /** Returns a label for a given node. */
-  getLabel?: (node: PresentationHierarchyNode) => ReactElement | undefined;
-  /** Returns sublabel for a given node. */
-  getSublabel?: (node: PresentationHierarchyNode) => ReactElement | undefined;
-  /** Action to perform when the node is clicked. */
-  onNodeClick?: (node: PresentationHierarchyNode, isSelected: boolean, event: React.MouseEvent<HTMLElement>) => void;
-  /** Action to perform when a key is pressed when the node is hovered on. */
-  onNodeKeyDown?: (node: PresentationHierarchyNode, isSelected: boolean, event: React.KeyboardEvent<HTMLElement>) => void;
+  /**
+   * Menu actions for tree item.
+   * Must be an array of `<TreeActionBase />` or `<Divider />` elements.
+   */
+  menuActions?: ReactNode[];
+  /**
+   * Inline actions for tree item.
+   * Must be an array of `<TreeActionBase />` elements.
+   * Max 2 items.
+   */
+  inlineActions?: ReactNode[];
+  /**
+   * Context menu actions for tree item.
+   * Must be an array of `<TreeActionBase />` or `<Divider />` elements.
+   */
+  contextMenuActions?: ReactNode[];
+}
+
+/** @alpha */
+export type StrataKitTreeItemProps = Omit<
+  ComponentPropsWithoutRef<typeof Tree.Item>,
+  "actions" | "inlineActions" | "expanded" | "onExpandedChange" | "icon" | "unstable_decorations" | "error"
+> & {
   /**
    * Used to render elements between expander and label.
    * E.g. icons, color picker, etc.
    */
-  getDecorations?: (node: PresentationHierarchyNode) => ReactNode;
-  /**
-   * Callback that returns menu actions for tree item.
-   * Must return an array of `<TreeActionBase />` or `<Divider />` elements.
-   */
-  getMenuActions?: (node: PresentationHierarchyNode) => ReactNode[];
-  /**
-   * Callback that returns inline actions for tree item.
-   * Must return an array of `<TreeActionBase />` elements.
-   * Max 2 items.
-   */
-  getInlineActions?: (node: PresentationHierarchyNode) => ReactNode[];
-  /**
-   * Callback that returns actions for tree item context menu.
-   * Must return an array of `<TreeActionBase />` or `<Divider />` elements.
-   */
-  getContextMenuActions?: (node: PresentationHierarchyNode) => ReactNode[];
-}
+  decorations?: ReactNode;
+};
 
 /** @alpha */
-type TreeNodeRendererProps = Pick<TreeRendererProps, "expandNode" | "reloadTree"> &
-  Omit<TreeNodeProps, "actions" | "label" | "expanded" | "unstable_decorations" | "error"> &
-  TreeNodeRendererOwnProps;
+export type TreeNodeRendererProps = StrataKitTreeItemProps & TreeNodeRendererOwnProps;
 
 /**
  * A component that renders given `FlatTreeNode` using the `Tree.Item` component from `@itwin/itwinui-react`. The
@@ -86,36 +74,14 @@ type TreeNodeRendererProps = Pick<TreeRendererProps, "expandNode" | "reloadTree"
  * @public
  */
 export const StrataKitTreeNodeRenderer: FC<PropsWithRef<TreeNodeRendererProps & RefAttributes<HTMLElement>>> = memo(
-  forwardRef<HTMLElement, TreeNodeRendererProps>(function HierarchyNode(
-    {
-      node,
-      selected,
-      expandNode,
-      onNodeClick,
-      onNodeKeyDown,
-      reloadTree,
-      getClassName,
-      getLabel,
-      getSublabel,
-      getMenuActions,
-      getInlineActions,
-      getDecorations,
-      getContextMenuActions,
-      ...treeItemProps
-    },
-    forwardedRef,
-  ) {
-    const nodeRef = useRef<HTMLElement>(null);
-    const ref = useMergedRefs(forwardedRef, nodeRef);
+  forwardRef<HTMLElement, TreeNodeRendererProps>(function HierarchyNode(props, forwardedRef) {
+    const { node, decorations, inlineActions, menuActions, contextMenuActions, expandNode, reloadTree, ...treeItemProps } = props;
     const { localizedStrings } = useLocalizationContext();
     const renameContext = useRenameContext();
     const [contextMenuProps, setContextMenuProps] = useState<{ position: { x: number; y: number }; actions: ReactNode[] } | undefined>(undefined);
 
-    const className = useMemo(() => getClassName?.(node), [getClassName, node]);
-    const label = useMemo(() => (getLabel ? getLabel(node) : node.label), [getLabel, node]);
-    const description = useMemo(() => (getSublabel ? getSublabel(node) : undefined), [getSublabel, node]);
-    const decorations = useMemo(() => getDecorations?.(node), [getDecorations, node]);
-    const inlineActions = useMemo(() => {
+    const label = treeItemProps.label ?? node.label;
+    const inlineActionItems = useMemo(() => {
       if (node.error !== undefined && node.error.type === "ChildrenLoad") {
         return [
           <TreeActionBase
@@ -128,18 +94,18 @@ export const StrataKitTreeNodeRenderer: FC<PropsWithRef<TreeNodeRendererProps & 
           />,
         ];
       }
-      if (!getInlineActions) {
-        return [];
-      }
-      return injectActionVariant(getInlineActions(node), "inline");
-    }, [node, getInlineActions, localizedStrings.retry, reloadTree]);
-
-    const menuItems = useMemo(() => {
-      if (!getMenuActions) {
+      if (!inlineActions) {
         return undefined;
       }
-      return injectActionVariant(getMenuActions(node), "default");
-    }, [getMenuActions, node]);
+      return injectActionVariant(inlineActions, "inline");
+    }, [node, inlineActions, localizedStrings.retry, reloadTree]);
+
+    const menuActionItems = useMemo(() => {
+      if (!menuActions) {
+        return undefined;
+      }
+      return injectActionVariant(menuActions, "default");
+    }, [menuActions]);
 
     const expanded = useMemo(() => {
       if (node.error) {
@@ -152,8 +118,6 @@ export const StrataKitTreeNodeRenderer: FC<PropsWithRef<TreeNodeRendererProps & 
 
       return undefined;
     }, [node.children, node.error, node.isExpanded]);
-
-    const isDisabled = treeItemProps["aria-disabled"] === true;
 
     const { onLabelChanged, setIsRenaming, isRenaming } = renameContext ?? {};
     const labelEditor = isRenaming ? (
@@ -173,11 +137,8 @@ export const StrataKitTreeNodeRenderer: FC<PropsWithRef<TreeNodeRendererProps & 
       <>
         <Tree.Item
           {...treeItemProps}
-          ref={ref}
-          className={className}
+          ref={forwardedRef}
           label={labelEditor ?? label}
-          description={description}
-          selected={selected}
           expanded={expanded}
           onExpandedChange={useCallback(
             (isExpanded: boolean) => {
@@ -185,37 +146,22 @@ export const StrataKitTreeNodeRenderer: FC<PropsWithRef<TreeNodeRendererProps & 
             },
             [node, expandNode],
           )}
-          onClick={useCallback<Required<TreeNodeProps>["onClick"]>(
-            (event) => {
-              if (isDisabled) {
-                return;
-              }
-
-              onNodeClick?.(node, !selected, event);
-            },
-            [node, isDisabled, selected, onNodeClick],
-          )}
-          onKeyDown={useCallback<Required<TreeNodeProps>["onKeyDown"]>(
-            (event) => {
-              // Ignore if it is called on the element inside, e.g. checkbox or expander
-              if (!isDisabled && event.target === nodeRef.current) {
-                onNodeKeyDown?.(node, !selected, event);
-              }
-            },
-            [onNodeKeyDown, selected, isDisabled, node],
-          )}
-          inlineActions={inlineActions}
-          actions={menuItems}
+          inlineActions={inlineActionItems}
+          actions={menuActionItems}
           unstable_decorations={decorations}
           error={node.error ? node.error.id : undefined}
           onContextMenu={(e) => {
-            if (!getContextMenuActions) {
+            if (treeItemProps.onContextMenu) {
+              treeItemProps.onContextMenu(e);
+            }
+
+            if (!contextMenuActions) {
               return;
             }
 
             e.preventDefault();
-            const contextMenuActions = injectActionVariant(getContextMenuActions(node), "context-menu");
-            if (contextMenuActions.length === 0) {
+            const actions = injectActionVariant(contextMenuActions, "context-menu");
+            if (actions.length === 0) {
               return;
             }
 
@@ -224,7 +170,7 @@ export const StrataKitTreeNodeRenderer: FC<PropsWithRef<TreeNodeRendererProps & 
                 x: e.clientX,
                 y: e.clientY,
               },
-              actions: contextMenuActions,
+              actions,
             });
           }}
         />
@@ -253,10 +199,22 @@ export const StrataKitTreeNodeRenderer: FC<PropsWithRef<TreeNodeRendererProps & 
   }),
 );
 
-export const PlaceholderNode: FC<PropsWithRef<Omit<TreeNodeProps, "onExpanded" | "label" | "actions" | "icon" | "error"> & RefAttributes<HTMLElement>>> = memo(
-  forwardRef<HTMLElement, Omit<TreeNodeProps, "onExpanded" | "label" | "actions" | "icon" | "error">>(function PlaceholderNode({ ...props }, forwardedRef) {
+export const PlaceholderNode: FC<
+  PropsWithRef<Pick<StrataKitTreeItemProps, "style" | "aria-level" | "aria-posinset" | "aria-setsize"> & RefAttributes<HTMLElement>>
+> = memo(
+  forwardRef<HTMLElement, Pick<StrataKitTreeItemProps, "style" | "aria-level" | "aria-posinset" | "aria-setsize">>(function PlaceholderNode(
+    { ...props },
+    forwardedRef,
+  ) {
     const { localizedStrings } = useLocalizationContext();
-    return <Tree.Item {...props} ref={forwardedRef} label={localizedStrings.loading} icon={<Spinner size={"small"} title={localizedStrings.loading} />} />;
+    return (
+      <Tree.Item
+        {...props}
+        ref={forwardedRef}
+        label={localizedStrings.loading}
+        unstable_decorations={<Spinner size={"small"} title={localizedStrings.loading} />}
+      />
+    );
   }),
 );
 
@@ -306,19 +264,4 @@ function injectActionVariant(actions: ReactNode[], variant: TreeActionBaseAttrib
   return actions
     .filter((action) => isValidElement<TreeActionBaseAttributes>(action))
     .map((action) => cloneElement<TreeActionBaseAttributes>(action, { variant }));
-}
-
-function useMergedRefs<T>(...refs: ReadonlyArray<Ref<T> | LegacyRef<T> | undefined | null>) {
-  return useCallback(
-    (instance: T | null) => {
-      refs.forEach((ref) => {
-        if (typeof ref === "function") {
-          ref(instance);
-        } else if (ref) {
-          (ref as MutableRefObject<T | null>).current = instance;
-        }
-      });
-    }, // eslint-disable-next-line react-hooks/exhaustive-deps
-    [...refs],
-  );
 }
