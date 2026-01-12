@@ -4,6 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import {
+  ArrayPropertiesField,
   CategoryDescription,
   ClassInfo,
   Descriptor,
@@ -22,6 +23,7 @@ import {
   RelationshipPath,
   RendererDescription,
   SelectClassInfo,
+  StructPropertiesField,
   StructTypeDescription,
   TypeDescription,
   ValuesMap,
@@ -64,26 +66,47 @@ export function createTestSimpleContentField(props?: {
   });
 }
 
-export function createTestPropertiesContentField(props: {
-  properties: Property[];
-  category?: CategoryDescription;
-  type?: TypeDescription;
-  name?: string;
-  label?: string;
-  isReadonly?: boolean;
-  priority?: number;
-  editor?: EditorDescription;
-  renderer?: RendererDescription;
-}) {
-  return new PropertiesField({
-    ...props,
+export function createTestPropertiesContentField(
+  props: {
+    properties: Property[];
+    category?: CategoryDescription;
+    type?: TypeDescription;
+    name?: string;
+    label?: string;
+    isReadonly?: boolean;
+    priority?: number;
+    editor?: EditorDescription;
+    renderer?: RendererDescription;
+  } & (
+    | {
+        itemsField?: PropertiesField;
+      }
+    | {
+        memberFields?: PropertiesField[];
+      }
+  ),
+) {
+  const baseProps = {
     category: props.category ?? createTestCategoryDescription(),
     name: props.name ?? "PropertiesField",
     label: props.label ?? "Properties Field",
     type: props.type ?? { valueFormat: PropertyValueFormat.Primitive, typeName: "string" },
     isReadonly: props.isReadonly ?? false,
     priority: props.priority ?? 0,
-  });
+  };
+  if ("itemsField" in props) {
+    const itemsField = props.itemsField;
+    if (!!itemsField) {
+      return new ArrayPropertiesField({ ...props, ...baseProps, itemsField });
+    }
+  }
+  if ("memberFields" in props) {
+    const memberFields = props.memberFields;
+    if (!!memberFields) {
+      return new StructPropertiesField({ ...props, ...baseProps, memberFields });
+    }
+  }
+  return new PropertiesField({ ...props, ...baseProps });
 }
 
 export function createTestNestedContentField(props: {
