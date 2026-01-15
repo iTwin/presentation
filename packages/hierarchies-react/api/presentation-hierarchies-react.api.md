@@ -267,7 +267,6 @@ export const StrataKitTreeRenderer: FC<PropsWithoutRef<StrataKitTreeRendererProp
 
 // @alpha (undocumented)
 export interface StrataKitTreeRendererAttributes {
-    // (undocumented)
     renameNode: (predicate: (node: PresentationHierarchyNode) => boolean) => void;
 }
 
