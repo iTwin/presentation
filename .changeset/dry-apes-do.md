@@ -16,9 +16,7 @@ function MyTree() {
       <div className="tree-header">
         <button
           onClick={() => {
-            if (treeRef.current) {
-              treeRef.current.renameNode((node) => node.label === "Node to Rename");
-            }
+            treeRef.current?.renameNode((node) => node.label === "Node to rename");
           }}
         >
           Rename node
