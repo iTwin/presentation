@@ -78,6 +78,10 @@ interface TreeRendererOwnProps {
 
 /** @alpha */
 export interface StrataKitTreeRendererAttributes {
+  /**
+   * Opens rename mode for the first node that matches the given predicate. Node must be already loaded in the tree.
+   * If the node is not visible (because its parent is collapsed), all parents will be expanded to make it visible and node will be scrolled into view.
+   */
   renameNode: (predicate: (node: PresentationHierarchyNode) => boolean) => void;
 }
 
