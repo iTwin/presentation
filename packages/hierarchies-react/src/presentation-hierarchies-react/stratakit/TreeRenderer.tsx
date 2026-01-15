@@ -81,8 +81,10 @@ export interface StrataKitTreeRendererAttributes {
   /**
    * Opens rename mode for the first node that matches the given predicate. Node must be already loaded in the tree.
    * If the node is not visible (because its parent is collapsed), all parents will be expanded to make it visible and node will be scrolled into view.
+   *
+   * Returns "node-not-found" if no node matches the predicate, "success" if rename was initiated.
    */
-  renameNode: (predicate: (node: PresentationHierarchyNode) => boolean) => void;
+  renameNode: (predicate: (node: PresentationHierarchyNode) => boolean) => "node-not-found" | "success";
 }
 
 /** @alpha */
@@ -178,7 +180,7 @@ export const StrataKitTreeRenderer: FC<PropsWithoutRef<StrataKitTreeRendererProp
     renameNode: (predicate) => {
       const pathToNode = findPathToNode(rootNodes, predicate);
       if (!pathToNode) {
-        return;
+        return "node-not-found";
       }
       const targetNode = pathToNode.pop()!;
       pathToNode.filter((pathNode) => !pathNode.isExpanded).forEach((node) => expandNode(node.id, true));
@@ -188,6 +190,7 @@ export const StrataKitTreeRenderer: FC<PropsWithoutRef<StrataKitTreeRendererProp
           renameContext.startRename(targetNode);
         },
       };
+      return "success";
     },
   }));
 
