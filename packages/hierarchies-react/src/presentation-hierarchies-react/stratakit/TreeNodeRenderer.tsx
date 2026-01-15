@@ -28,7 +28,7 @@ import { useLocalizationContext } from "./LocalizationContext.js";
 import { useRenameContext } from "./RenameAction.js";
 import { TreeActionBase, TreeActionBaseAttributes } from "./TreeAction.js";
 
-/** @alpha */
+/** @internal */
 export interface TreeNodeRendererOwnProps extends Pick<TreeRendererProps, "expandNode" | "reloadTree"> {
   /** Node that is rendered. */
   node: PresentationHierarchyNode;
@@ -62,7 +62,7 @@ export type StrataKitTreeItemProps = Omit<
   decorations?: ReactNode;
 };
 
-/** @alpha */
+/** @internal */
 export type TreeNodeRendererProps = StrataKitTreeItemProps & TreeNodeRendererOwnProps;
 
 /**

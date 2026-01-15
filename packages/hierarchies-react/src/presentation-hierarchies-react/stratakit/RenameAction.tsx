@@ -45,12 +45,12 @@ export const useRenameContext = () => {
   return useContext(renameContext);
 };
 
-/** @alpha */
+/** @internal */
 export function RenameContextProvider({ value, children }: PropsWithChildren<{ value: RenameContext }>) {
   return <renameContext.Provider value={value}>{children}</renameContext.Provider>;
 }
 
-/** @alpha */
+/** @internal */
 export function useNodeRenameContextValue({
   getEditingProps,
 }: {
