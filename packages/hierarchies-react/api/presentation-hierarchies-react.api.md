@@ -22,7 +22,7 @@ import { NamedExoticComponent } from 'react';
 import { NonGroupingHierarchyNode } from '@itwin/presentation-hierarchies';
 import { Props } from '@itwin/presentation-shared';
 import { PropsWithChildren } from 'react';
-import { PropsWithRef } from 'react';
+import { PropsWithoutRef } from 'react';
 import { ReactElement } from 'react';
 import { ReactNode } from 'react';
 import { RefAttributes } from 'react';
@@ -212,12 +212,9 @@ interface ReloadTreeOptions {
 }
 
 // @alpha
-export const RenameAction: NamedExoticComponent<TreeActionBaseAttributes>;
-
-// @alpha (undocumented)
-export function RenameContextProvider({ onLabelChanged, children }: PropsWithChildren<{
-    onLabelChanged?: (newLabel: string) => void;
-}>): JSX_2.Element;
+export const RenameAction: NamedExoticComponent<TreeActionBaseAttributes & {
+node: PresentationHierarchyNode;
+}>;
 
 // @alpha
 type RendererProps = {
@@ -265,11 +262,14 @@ type StrataKitTreeItemProps = Omit<ComponentPropsWithoutRef<typeof Tree.Item>, "
     decorations?: ReactNode;
 };
 
-// @public
-export const StrataKitTreeNodeRenderer: FC<PropsWithRef<TreeNodeRendererProps & RefAttributes<HTMLElement>>>;
-
 // @alpha
-export function StrataKitTreeRenderer(props: StrataKitTreeRendererProps): JSX_2.Element;
+export const StrataKitTreeRenderer: FC<PropsWithoutRef<StrataKitTreeRendererProps> & RefAttributes<StrataKitTreeRendererAttributes>>;
+
+// @alpha (undocumented)
+export interface StrataKitTreeRendererAttributes {
+    // (undocumented)
+    renameNode: (predicate: (node: PresentationHierarchyNode) => boolean) => void;
+}
 
 // @alpha (undocumented)
 type StrataKitTreeRendererProps = TreeRendererProps & Pick<TreeErrorRendererProps, "onFilterClick"> & TreeRendererOwnProps & ComponentPropsWithoutRef<typeof LocalizationContextProvider>;
@@ -308,17 +308,6 @@ interface TreeErrorRendererOwnProps {
 
 // @alpha (undocumented)
 type TreeErrorRendererProps = TreeErrorRendererOwnProps & TreeErrorItemProps & Pick<TreeRendererProps, "getHierarchyLevelDetails">;
-
-// @alpha (undocumented)
-interface TreeNodeRendererOwnProps extends Pick<TreeRendererProps, "expandNode" | "reloadTree"> {
-    contextMenuActions?: ReactNode[];
-    inlineActions?: ReactNode[];
-    menuActions?: ReactNode[];
-    node: PresentationHierarchyNode;
-}
-
-// @alpha (undocumented)
-type TreeNodeRendererProps = StrataKitTreeItemProps & TreeNodeRendererOwnProps;
 
 // @alpha (undocumented)
 interface TreeRendererOwnProps {

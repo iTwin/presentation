@@ -71,7 +71,7 @@ export type TreeNodeRendererProps = StrataKitTreeItemProps & TreeNodeRendererOwn
  *
  * @see `TreeRenderer`
  * @see https://itwinui.bentley.com/docs/tree
- * @public
+ * @internal
  */
 export const StrataKitTreeNodeRenderer: FC<PropsWithRef<TreeNodeRendererProps & RefAttributes<HTMLElement>>> = memo(
   forwardRef<HTMLElement, TreeNodeRendererProps>(function HierarchyNode(props, forwardedRef) {
@@ -119,19 +119,19 @@ export const StrataKitTreeNodeRenderer: FC<PropsWithRef<TreeNodeRendererProps & 
       return undefined;
     }, [node.children, node.error, node.isExpanded]);
 
-    const { onLabelChanged, setIsRenaming, isRenaming } = renameContext ?? {};
-    const labelEditor = isRenaming ? (
-      <LabelEditor
-        initialLabel={node.label}
-        onChange={(newLabel) => {
-          onLabelChanged?.(newLabel);
-          setIsRenaming?.(false);
-        }}
-        onCancel={() => {
-          setIsRenaming?.(false);
-        }}
-      />
-    ) : undefined;
+    const { renameParameters, cancelRename } = renameContext ?? {};
+    const labelEditor =
+      renameParameters?.nodeId === node.id ? (
+        <LabelEditor
+          initialLabel={node.label}
+          onChange={(newLabel) => {
+            renameParameters?.commit(newLabel);
+          }}
+          onCancel={() => {
+            cancelRename?.();
+          }}
+        />
+      ) : undefined;
 
     return (
       <>

@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { ComponentPropsWithoutRef, useCallback, useEffect, useMemo, useState } from "react";
+import { ComponentPropsWithoutRef, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { debounceTime, Subject } from "rxjs";
 import { BeEvent } from "@itwin/core-bentley";
 import { IModelConnection } from "@itwin/core-frontend";
@@ -17,11 +17,12 @@ import {
 } from "@itwin/presentation-components";
 import { createECSchemaProvider, createECSqlQueryExecutor, createIModelKey, registerTxnListeners } from "@itwin/presentation-core-interop";
 import { Presentation } from "@itwin/presentation-frontend";
-import { createLimitingECSqlQueryExecutor, GenericInstanceFilter } from "@itwin/presentation-hierarchies";
+import { createLimitingECSqlQueryExecutor, GenericInstanceFilter, HierarchyNodeKey } from "@itwin/presentation-hierarchies";
 import {
   HierarchyLevelDetails,
   PresentationHierarchyNode,
   StrataKitRootErrorRenderer,
+  StrataKitTreeRendererAttributes,
   useIModelUnifiedSelectionTree,
 } from "@itwin/presentation-hierarchies-react";
 import { ModelsTreeDefinition } from "@itwin/presentation-models-tree";
@@ -82,6 +83,8 @@ function Tree({
       });
     };
   }, [searchText]);
+
+  const treeRef = useRef<StrataKitTreeRendererAttributes>(null);
 
   const [imodelChanged] = useState(new BeEvent<() => void>());
   useEffect(() => {
@@ -191,6 +194,7 @@ function Tree({
     return (
       <TreeRendererWithFilterAction
         {...treeProps.treeRendererProps}
+        ref={treeRef}
         onFilterClick={setFilteringOptions}
         selectionMode={"extended"}
         treeLabel={treeLabel}
@@ -239,6 +243,19 @@ function Tree({
         <DebouncedSearchBox onChange={setSearchText} />
         <ToggleSwitch onChange={toggleFormatter} checked={shouldUseCustomFormatter} />
         {imodel.isBriefcaseConnection() ? <Button onClick={() => void removeSelectedElements(imodel)}>Delete</Button> : null}
+        <Button
+          onClick={() => {
+            if (!treeRef.current) {
+              return;
+            }
+            const selectedElements = getSelectedElementIds(imodel);
+            treeRef.current.renameNode(
+              (node) => HierarchyNodeKey.isInstances(node.nodeData.key) && selectedElements.includes(node.nodeData.key.instanceKeys[0].id),
+            );
+          }}
+        >
+          Rename selected node
+        </Button>
       </Flex>
       {renderContent()}
       {renderLoadingOverlay()}

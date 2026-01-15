@@ -9,11 +9,10 @@ export { useTree, useUnifiedSelectionTree } from "./presentation-hierarchies-rea
 export { useNodeHighlighting } from "./presentation-hierarchies-react/UseNodeHighlighting.js";
 export { HierarchyLevelDetails, TreeRendererProps } from "./presentation-hierarchies-react/Renderers.js";
 export { useIModelTree, useIModelUnifiedSelectionTree } from "./presentation-hierarchies-react/UseIModelTree.js";
-export { StrataKitTreeNodeRenderer } from "./presentation-hierarchies-react/stratakit/TreeNodeRenderer.js";
 export { TreeActionBase, TreeActionBaseAttributes } from "./presentation-hierarchies-react/stratakit/TreeAction.js";
 export { FilterAction } from "./presentation-hierarchies-react/stratakit/FilterAction.js";
-export { RenameAction, RenameContextProvider } from "./presentation-hierarchies-react/stratakit/RenameAction.js";
-export { StrataKitTreeRenderer } from "./presentation-hierarchies-react/stratakit/TreeRenderer.js";
+export { RenameAction } from "./presentation-hierarchies-react/stratakit/RenameAction.js";
+export { StrataKitTreeRenderer, StrataKitTreeRendererAttributes } from "./presentation-hierarchies-react/stratakit/TreeRenderer.js";
 export { StrataKitRootErrorRenderer } from "./presentation-hierarchies-react/stratakit/RootErrorRenderer.js";
 export { TreeErrorRenderer } from "./presentation-hierarchies-react/stratakit/TreeErrorRenderer.js";
 export { ErrorItemRenderer } from "./presentation-hierarchies-react/stratakit/ErrorItemRenderer.js";
