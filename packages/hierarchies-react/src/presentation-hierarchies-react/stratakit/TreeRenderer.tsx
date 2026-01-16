@@ -183,13 +183,18 @@ export const StrataKitTreeRenderer: FC<PropsWithoutRef<StrataKitTreeRendererProp
         return "node-not-found";
       }
       const targetNode = pathToNode.pop()!;
-      pathToNode.filter((pathNode) => !pathNode.isExpanded).forEach((node) => expandNode(node.id, true));
-      scrollToNode.current = {
-        id: targetNode.id,
-        action: () => {
-          renameContext.startRename(targetNode);
-        },
-      };
+      const collapsedNodes = pathToNode.filter((pathNode) => !pathNode.isExpanded);
+      if (collapsedNodes.length > 0) {
+        collapsedNodes.forEach((node) => expandNode(node.id, true));
+        scrollToNode.current = {
+          id: targetNode.id,
+          action: () => {
+            renameContext.startRename(targetNode);
+          },
+        };
+      } else {
+        renameContext.startRename(targetNode);
+      }
       return "success";
     },
   }));
